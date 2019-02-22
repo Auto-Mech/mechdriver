@@ -1,0 +1,4 @@
+[MASTER]
+disable=
+    too-many-arguments,
+    superfluous-parens
