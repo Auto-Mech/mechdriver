@@ -48,10 +48,12 @@ if __name__ == '__main__':
 
     # call readers to get information from output
     ENE = elstruct.reader.energy(PROG, METHOD, OUT_STR)
-    ZMA, VAR_DCT = elstruct.reader.optimized_zmatrix(PROG, OUT_STR)
     GEO = elstruct.reader.optimized_geometry(PROG, OUT_STR)
+    RET = elstruct.reader.optimized_zmatrix(PROG, OUT_STR)
 
     # write things to files
     autofile.write.energy('h2o', ENE)
-    autofile.write.zmatrix('h2o', ZMA, var_dct=VAR_DCT)
     autofile.write.geometry('h2o', GEO)
+    if RET is not None:
+        ZMA, VAR_DCT = RET
+        autofile.write.zmatrix('h2o', ZMA, var_dct=VAR_DCT)
