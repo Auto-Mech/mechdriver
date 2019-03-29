@@ -1,0 +1,4 @@
+basis: sto-3g
+method: hf
+open_shell: false
+orb_restricted: true
