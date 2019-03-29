@@ -1,0 +1,27 @@
+# cmd: conda build . -c pacchem -c psi4 -c rdkit -c openbabel
+package:
+    name: moldriver
+    version: "0.1.0"
+
+source:
+    path: .
+
+requirements:
+    build:
+        - python
+    run:
+        - python
+        - numpy
+        - pyyaml
+        - mako
+        - pytest
+        - pytest-cov
+        - future
+        - flake8
+        - pylint
+        - rdkit::rdkit
+        - openbabel::openbabel
+        - psi4::psi4
+        - pacchem::autoparse
+        - pacchem::autochem
+        - pacchem::elstruct

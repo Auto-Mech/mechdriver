@@ -1,4 +1,6 @@
 [MASTER]
 disable=
     too-many-arguments,
+    too-many-locals,
+    too-few-public-methods,
     superfluous-parens
