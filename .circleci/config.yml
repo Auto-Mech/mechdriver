@@ -1,0 +1,29 @@
+jobs:
+    build-debian:
+        docker:
+            - image: continuumio/miniconda3
+        steps:
+            - checkout  # checkout the code
+            - run: 
+                name: Create conda environment
+                command: |
+                    apt-get update --yes
+                    apt-get install --yes libxrender-dev  # needed for rdkit
+                    conda env create -f environment.yml
+            - run:
+                name: Run tests
+                command: |
+                    source activate moldr-env
+                    # temporary fix
+                    conda install -c conda-forge pylint>=2.3
+                    # temporary fix
+                    python setup.py install
+                    cd examples
+                    python input.py
+                    flake8 --exit-zero moldr
+                    pylint --rcfile=../.pylintrc moldr
+workflows:
+    version: 2
+    build-all:
+        jobs:
+            - build-debian
