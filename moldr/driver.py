@@ -30,6 +30,9 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
             autodir.conf.read_geometry_file(save_prefix, rid) for rid in rids]
 
     if nsamp == 0:
+        print("Updating trajectory file at {}"
+              .format(autodir.conf.trajectory_file_path(save_prefix)))
+        autodir.conf.update_trajectory_file(save_prefix)
         return
 
     # generate the sample z-matrices
@@ -103,6 +106,10 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
         autodir.conf.write_information_file(save_prefix, rid, inf_obj)
         autodir.conf.write_energy_file(save_prefix, rid, ene)
         autodir.conf.write_geometry_file(save_prefix, rid, geo)
+
+    print("Updating trajectory file at {}"
+          .format(autodir.conf.trajectory_file_path(save_prefix)))
+    autodir.conf.update_trajectory_file(save_prefix)
 
 
 def add_conformer_gradients(script_str, run_prefix, save_prefix,
