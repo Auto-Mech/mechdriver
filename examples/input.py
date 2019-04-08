@@ -2,6 +2,7 @@
 """
 import os
 import moldr
+import elstruct
 import automol
 import autodir
 
@@ -63,7 +64,7 @@ for smi, mult in SMILES_MULTS:
         basis=BASIS,
         geo=geo,
         mult=mult,
-        charge=CHARGE
+        charge=CHARGE,
     )
 
     # add gradients

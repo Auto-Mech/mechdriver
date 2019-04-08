@@ -36,7 +36,8 @@ def geometries(geoms, run_prefixes, run_name,
             errors, options_mat,
             **kwargs)
 
-        autodir.run.add_end_time_to_information(inf_obj)
-        autodir.run.write_information_file(run_prefix, run_name, inf_obj)
-        autodir.run.write_input_file(run_prefix, run_name, inp_str)
-        autodir.run.write_output_file(run_prefix, run_name, out_str)
+        if elstruct.reader.has_normal_exit_message(prog, out_str):
+            autodir.run.add_end_time_to_information(inf_obj)
+            autodir.run.write_information_file(run_prefix, run_name, inf_obj)
+            autodir.run.write_input_file(run_prefix, run_name, inp_str)
+            autodir.run.write_output_file(run_prefix, run_name, out_str)

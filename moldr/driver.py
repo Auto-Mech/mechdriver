@@ -1,5 +1,6 @@
 """ molecule driver routines
 """
+import os
 import elstruct
 import automol
 import autodir
@@ -66,50 +67,60 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
     )
 
     # read out the optimized z-matrices and energies
-    inp_strs, inf_objs, vals_lst = moldr.read.values(
+    idxs, inp_strs, inf_objs, vals_lst = moldr.read.values(
         run_prefixes=run_prefixes,
         run_name=autodir.conf.OPT_RUN_NAME,
         output_readers=(
             elstruct.reader.energy_(prog, method),
-            elstruct.reader.opt_zmatrix_(prog),
+            elstruct.reader.opt_geometry_(prog),
         ),
     )
-    enes, zmas = zip(*vals_lst)
-    geos = tuple(map(automol.zmatrix.geometry, zmas))
 
-    # filter out the non-unique geometries
-    filter_idxs = automol.geom.argunique_coulomb_spectrum(
-        geos, seen_geos=seen_geos, rtol=7e-2)
-    nuniq = len(filter_idxs)
+    if not vals_lst:
+        print("No valid runs found.")
+    else:
+        if len(idxs) < len(rids):
+            dropped_run_prefixes = [
+                run_prefix for idx, run_prefix in enumerate(run_prefixes)
+                if not idx in idxs]
+            print("Dropped samples:\n\t{}"
+                  .format("\n\t".join(dropped_run_prefixes)))
 
-    # save them
-    autodir.conf.create_base(save_prefix)
-    base_inf_obj = autodir.conf.base_information(nsamp=nsamp_tot)
-    autodir.conf.write_base_information_file(save_prefix, base_inf_obj)
+        enes, geos = zip(*vals_lst)
 
-    if not filter_idxs:
-        print("No new conformers found.")
+        # filter out the non-unique geometries
+        filter_idxs = automol.geom.argunique_coulomb_spectrum(
+            geos, seen_geos=seen_geos, rtol=7e-2)
+        nuniq = len(filter_idxs)
 
-    for idx, filter_idx in enumerate(filter_idxs):
-        rid = rids[filter_idx]
-        dir_path = autodir.conf.directory_path(save_prefix, rid)
-        print("Saving new conformer {}/{} at {}"
-              .format(idx+1, nuniq, dir_path))
+        # save them
+        autodir.conf.create_base(save_prefix)
+        base_inf_obj = autodir.conf.base_information(nsamp=nsamp_tot)
+        autodir.conf.write_base_information_file(save_prefix, base_inf_obj)
 
-        autodir.conf.create(save_prefix, rid)
-        inp_str = inp_strs[filter_idx]
-        inf_obj = inf_objs[filter_idx]
-        ene = enes[filter_idx]
-        geo = geos[filter_idx]
+        if not filter_idxs:
+            print("No new conformers found.")
 
-        autodir.conf.write_input_file(save_prefix, rid, inp_str)
-        autodir.conf.write_information_file(save_prefix, rid, inf_obj)
-        autodir.conf.write_energy_file(save_prefix, rid, ene)
-        autodir.conf.write_geometry_file(save_prefix, rid, geo)
+        for idx, filter_idx in enumerate(filter_idxs):
+            rid = rids[idxs[filter_idx]]
+            dir_path = autodir.conf.directory_path(save_prefix, rid)
+            print("Saving new conformer {}/{} at {}"
+                  .format(idx+1, nuniq, dir_path))
 
-    print("Updating trajectory file at {}"
-          .format(autodir.conf.trajectory_file_path(save_prefix)))
-    autodir.conf.update_trajectory_file(save_prefix)
+            autodir.conf.create(save_prefix, rid)
+            inp_str = inp_strs[filter_idx]
+            inf_obj = inf_objs[filter_idx]
+            ene = enes[filter_idx]
+            geo = geos[filter_idx]
+
+            autodir.conf.write_input_file(save_prefix, rid, inp_str)
+            autodir.conf.write_information_file(save_prefix, rid, inf_obj)
+            autodir.conf.write_energy_file(save_prefix, rid, ene)
+            autodir.conf.write_geometry_file(save_prefix, rid, geo)
+
+        print("Updating trajectory file at {}"
+              .format(autodir.conf.trajectory_file_path(save_prefix)))
+        autodir.conf.update_trajectory_file(save_prefix)
 
 
 def add_conformer_gradients(script_str, run_prefix, save_prefix,
@@ -119,11 +130,11 @@ def add_conformer_gradients(script_str, run_prefix, save_prefix,
                             **kwargs):
     """ determine gradients for conformers
     """
-    # filter out the ones that already have gradients
-    rids = [rid for rid in autodir.conf.identifiers(save_prefix)
-            if not autodir.conf.has_gradient_file(save_prefix, rid)]
+    if os.path.isdir(autodir.conf.base_path(save_prefix)):
+        # filter out the ones that already have gradients
+        rids = [rid for rid in autodir.conf.identifiers(save_prefix)
+                if not autodir.conf.has_gradient_file(save_prefix, rid)]
 
-    if rids:
         geos = [autodir.conf.read_geometry_file(save_prefix, rid)
                 for rid in rids]
 
@@ -148,7 +159,7 @@ def add_conformer_gradients(script_str, run_prefix, save_prefix,
         )
 
         # save the gradient values
-        inp_strs, inf_objs, vals_lst = moldr.read.values(
+        idxs, inp_strs, inf_objs, vals_lst = moldr.read.values(
             run_prefixes=run_prefixes,
             run_name=autodir.conf.GRAD_RUN_NAME,
             output_readers=(
@@ -156,18 +167,29 @@ def add_conformer_gradients(script_str, run_prefix, save_prefix,
             ),
         )
 
-        grads, = zip(*vals_lst)
-        ngrad = len(grads)
+        if not vals_lst:
+            print("No valid runs found.")
+        else:
+            if len(idxs) < len(rids):
+                dropped_run_prefixes = [
+                    run_prefix for idx, run_prefix in enumerate(run_prefixes)
+                    if not idx in idxs]
+                print("Dropped samples:\n\t{}"
+                      .format("\n\t".join(dropped_run_prefixes)))
 
-        for idx, (rid, inp_str, inf_obj, grad) in enumerate(
-                zip(rids, inp_strs, inf_objs, grads)):
-            dir_path = autodir.conf.directory_path(save_prefix, rid)
-            print("Saving gradient {}/{} at {}"
-                  .format(idx+1, ngrad, dir_path))
-            autodir.conf.write_gradient_information_file(
-                save_prefix, rid, inf_obj)
-            autodir.conf.write_gradient_input_file(save_prefix, rid, inp_str)
-            autodir.conf.write_gradient_file(save_prefix, rid, grad)
+            grads, = zip(*vals_lst)
+            ngrad = len(grads)
+
+            for idx, inp_str, inf_obj, grad in zip(idxs, inp_strs, inf_objs,
+                                                   grads):
+                rid = rids[idx]
+                dir_path = autodir.conf.directory_path(save_prefix, rid)
+                print("Saving gradient {}/{} at {}"
+                      .format(idx+1, ngrad, dir_path))
+                autodir.conf.write_gradient_information_file(
+                    save_prefix, rid, inf_obj)
+                autodir.conf.write_gradient_input_file(save_prefix, rid, inp_str)
+                autodir.conf.write_gradient_file(save_prefix, rid, grad)
 
 
 def add_conformer_hessians(script_str, run_prefix, save_prefix,
@@ -177,11 +199,11 @@ def add_conformer_hessians(script_str, run_prefix, save_prefix,
                            **kwargs):
     """ determine hessians for conformers
     """
-    # filter out the ones that already have hessians
-    rids = [rid for rid in autodir.conf.identifiers(save_prefix)
-            if not autodir.conf.has_hessian_file(save_prefix, rid)]
+    if os.path.isdir(autodir.conf.base_path(save_prefix)):
+        # filter out the ones that already have hessians
+        rids = [rid for rid in autodir.conf.identifiers(save_prefix)
+                if not autodir.conf.has_hessian_file(save_prefix, rid)]
 
-    if rids:
         geos = [autodir.conf.read_geometry_file(save_prefix, rid)
                 for rid in rids]
 
@@ -206,7 +228,7 @@ def add_conformer_hessians(script_str, run_prefix, save_prefix,
         )
 
         # save the hessian values
-        inp_strs, inf_objs, vals_lst = moldr.read.values(
+        idxs, inp_strs, inf_objs, vals_lst = moldr.read.values(
             run_prefixes=run_prefixes,
             run_name=autodir.conf.HESS_RUN_NAME,
             output_readers=(
@@ -214,15 +236,26 @@ def add_conformer_hessians(script_str, run_prefix, save_prefix,
             ),
         )
 
-        hess_lst, = zip(*vals_lst)
-        nhess = len(hess_lst)
+        if not vals_lst:
+            print("No valid runs found.")
+        else:
+            if len(idxs) < len(rids):
+                dropped_run_prefixes = [
+                    run_prefix for idx, run_prefix in enumerate(run_prefixes)
+                    if not idx in idxs]
+                print("Dropped samples:\n\t{}"
+                      .format("\n\t".join(dropped_run_prefixes)))
 
-        for idx, (rid, inp_str, inf_obj, hess) in enumerate(
-                zip(rids, inp_strs, inf_objs, hess_lst)):
-            dir_path = autodir.conf.directory_path(save_prefix, rid)
-            print("Saving hessian {}/{} at {}"
-                  .format(idx+1, nhess, dir_path))
-            autodir.conf.write_hessian_information_file(
-                save_prefix, rid, inf_obj)
-            autodir.conf.write_hessian_input_file(save_prefix, rid, inp_str)
-            autodir.conf.write_hessian_file(save_prefix, rid, hess)
+            hess_lst, = zip(*vals_lst)
+            nhess = len(hess_lst)
+
+            for idx, inp_str, inf_obj, hess in zip(idxs, inp_strs, inf_objs,
+                                                   hess_lst):
+                rid = rids[idx]
+                dir_path = autodir.conf.directory_path(save_prefix, rid)
+                print("Saving hessian {}/{} at {}"
+                      .format(idx+1, nhess, dir_path))
+                autodir.conf.write_hessian_information_file(
+                    save_prefix, rid, inf_obj)
+                autodir.conf.write_hessian_input_file(save_prefix, rid, inp_str)
+                autodir.conf.write_hessian_file(save_prefix, rid, hess)
