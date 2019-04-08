@@ -20,8 +20,6 @@ jobs:
                     python setup.py install
                     cd examples
                     python input.py
-                    flake8 --exit-zero moldr
-                    pylint --rcfile=../.pylintrc moldr
 workflows:
     version: 2
     build-all:
