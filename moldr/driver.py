@@ -1,9 +1,12 @@
 """ molecule driver routines
 """
 import os
+import functools
 import elstruct
+import elcarro
 import automol
 import autodir
+import autoinf
 import moldr.run
 import moldr.read
 
@@ -11,15 +14,25 @@ import moldr.read
 def conformers(nsamp, script_str, run_prefix, save_prefix,
                # elstruct robust run arguments
                prog, method, basis, geo, mult, charge,
-               errors=(), options_mat=(),
                **kwargs):
     """ optimize from randomly sampled torions to find unique conformers
     """
     nsamp_tot = nsamp
     seen_geos = ()
 
+    # generate the sample z-matrices
+    zma = automol.geom.zmatrix(geo)
+    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    tors_ranges = automol.zmatrix.tors.sampling_ranges(zma, tors_names)
+    tors_info = dict(zip(tors_names, tors_ranges))
+
     if autodir.conf.has_base_information_file(save_prefix):
+        assert autodir.conf.has_base_vmatrix_file(save_prefix)
+        vma = autodir.conf.read_base_vmatrix_file(save_prefix)
         inf_obj = autodir.conf.read_base_information_file(save_prefix)
+        assert vma == automol.zmatrix.var_(zma)
+        assert inf_obj.tors_info == autoinf.object_(tors_info)
+
         nsamp = max(nsamp_tot - inf_obj.nsamp, 0)
         nsamp_tot = max(nsamp_tot, inf_obj.nsamp)
         print("Found previous saved run. Adjusting `nsamp`.")
@@ -37,9 +50,8 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
         return
 
     # generate the sample z-matrices
-    zma = automol.geom.zmatrix(geo)
-    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    inp_zmas = automol.zmatrix.tors.samples(zma, nsamp, tors_names)
+    inp_zmas = automol.zmatrix.tors.samples(zma, nsamp,
+                                            tors_names, tors_ranges)
 
     # generate random ids for each
     rids = tuple(autodir.id_.identifier() for _ in range(nsamp))
@@ -54,15 +66,14 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
         geoms=inp_zmas,
         run_prefixes=run_prefixes,
         run_name=autodir.conf.OPT_RUN_NAME,
+        job_name=elstruct.writer.optimization.__name__,
+        runner_=elcarro.feedback_optimization,
         script_str=script_str,
-        input_writer=elstruct.writer.optimization,
         prog=prog,
         method=method,
         basis=basis,
         mult=mult,
         charge=charge,
-        errors=errors,
-        options_mat=options_mat,
         **kwargs,
     )
 
@@ -82,7 +93,7 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
         if len(idxs) < len(rids):
             dropped_run_prefixes = [
                 run_prefix for idx, run_prefix in enumerate(run_prefixes)
-                if not idx in idxs]
+                if idx not in idxs]
             print("Dropped samples:\n\t{}"
                   .format("\n\t".join(dropped_run_prefixes)))
 
@@ -94,8 +105,11 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
         nuniq = len(filter_idxs)
 
         # save them
+        vma = automol.zmatrix.var_(zma)
         autodir.conf.create_base(save_prefix)
-        base_inf_obj = autodir.conf.base_information(nsamp=nsamp_tot)
+        base_inf_obj = autodir.conf.base_information(
+            nsamp=nsamp_tot, tors_info=tors_info)
+        autodir.conf.write_base_vmatrix_file(save_prefix, vma)
         autodir.conf.write_base_information_file(save_prefix, base_inf_obj)
 
         if not filter_idxs:
@@ -126,7 +140,6 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
 def add_conformer_gradients(script_str, run_prefix, save_prefix,
                             # elstruct robust run arguments
                             prog, method, basis, mult, charge,
-                            errors=(), options_mat=(),
                             **kwargs):
     """ determine gradients for conformers
     """
@@ -146,15 +159,15 @@ def add_conformer_gradients(script_str, run_prefix, save_prefix,
             geoms=geos,
             run_prefixes=run_prefixes,
             run_name=autodir.conf.GRAD_RUN_NAME,
+            job_name=elstruct.writer.gradient.__name__,
             script_str=script_str,
-            input_writer=elstruct.writer.gradient,
+            runner_=functools.partial(
+                elstruct.run.direct, elstruct.writer.gradient),
             prog=prog,
             method=method,
             basis=basis,
             mult=mult,
             charge=charge,
-            errors=errors,
-            options_mat=options_mat,
             **kwargs,
         )
 
@@ -173,7 +186,7 @@ def add_conformer_gradients(script_str, run_prefix, save_prefix,
             if len(idxs) < len(rids):
                 dropped_run_prefixes = [
                     run_prefix for idx, run_prefix in enumerate(run_prefixes)
-                    if not idx in idxs]
+                    if idx not in idxs]
                 print("Dropped samples:\n\t{}"
                       .format("\n\t".join(dropped_run_prefixes)))
 
@@ -188,14 +201,14 @@ def add_conformer_gradients(script_str, run_prefix, save_prefix,
                       .format(idx+1, ngrad, dir_path))
                 autodir.conf.write_gradient_information_file(
                     save_prefix, rid, inf_obj)
-                autodir.conf.write_gradient_input_file(save_prefix, rid, inp_str)
+                autodir.conf.write_gradient_input_file(
+                    save_prefix, rid, inp_str)
                 autodir.conf.write_gradient_file(save_prefix, rid, grad)
 
 
 def add_conformer_hessians(script_str, run_prefix, save_prefix,
                            # elstruct robust run arguments
                            prog, method, basis, mult, charge,
-                           errors=(), options_mat=(),
                            **kwargs):
     """ determine hessians for conformers
     """
@@ -215,15 +228,15 @@ def add_conformer_hessians(script_str, run_prefix, save_prefix,
             geoms=geos,
             run_prefixes=run_prefixes,
             run_name=autodir.conf.HESS_RUN_NAME,
+            job_name=elstruct.writer.hessian.__name__,
             script_str=script_str,
-            input_writer=elstruct.writer.hessian,
+            runner_=functools.partial(
+                elstruct.run.direct, elstruct.writer.hessian),
             prog=prog,
             method=method,
             basis=basis,
             mult=mult,
             charge=charge,
-            errors=errors,
-            options_mat=options_mat,
             **kwargs,
         )
 
@@ -242,7 +255,7 @@ def add_conformer_hessians(script_str, run_prefix, save_prefix,
             if len(idxs) < len(rids):
                 dropped_run_prefixes = [
                     run_prefix for idx, run_prefix in enumerate(run_prefixes)
-                    if not idx in idxs]
+                    if idx not in idxs]
                 print("Dropped samples:\n\t{}"
                       .format("\n\t".join(dropped_run_prefixes)))
 
@@ -257,5 +270,6 @@ def add_conformer_hessians(script_str, run_prefix, save_prefix,
                       .format(idx+1, nhess, dir_path))
                 autodir.conf.write_hessian_information_file(
                     save_prefix, rid, inf_obj)
-                autodir.conf.write_hessian_input_file(save_prefix, rid, inp_str)
+                autodir.conf.write_hessian_input_file(
+                    save_prefix, rid, inp_str)
                 autodir.conf.write_hessian_file(save_prefix, rid, hess)
