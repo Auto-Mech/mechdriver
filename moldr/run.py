@@ -5,11 +5,9 @@ import autodir
 import elstruct
 
 
-def geometries(geoms, run_prefixes, run_name,
-               # elstruct robust run arguments
-               script_str, input_writer,
-               prog, method, basis, mult, charge,
-               errors, options_mat,
+def geometries(geoms, run_prefixes, run_name, job_name, runner_,
+               # runner arguments
+               script_str, prog, method, basis, mult, charge,
                **kwargs):
     """ run jobs for multiple geometries of a single species
     """
@@ -22,7 +20,7 @@ def geometries(geoms, run_prefixes, run_name,
         print("Starting run {}/{} at {}".format(idx+1, nruns, run_path))
 
         inf_obj = autodir.run.information(
-            job=input_writer.__name__,
+            job=job_name,
             prog=prog,
             method=method,
             basis=basis,
@@ -30,10 +28,9 @@ def geometries(geoms, run_prefixes, run_name,
         autodir.run.add_start_time_to_information(inf_obj)
         autodir.run.write_information_file(run_prefix, run_name, inf_obj)
 
-        inp_str, out_str = elstruct.run.robust(
-            script_str, run_path, input_writer,
+        inp_str, out_str = runner_(
+            script_str, run_path,
             prog, method, basis, geom, mult, charge,
-            errors, options_mat,
             **kwargs)
 
         if elstruct.reader.has_normal_exit_message(prog, out_str):
