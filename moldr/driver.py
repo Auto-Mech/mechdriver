@@ -27,10 +27,7 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
     tors_info = dict(zip(tors_names, tors_ranges))
 
     if autodir.conf.has_base_information_file(save_prefix):
-        assert autodir.conf.has_base_vmatrix_file(save_prefix)
-        vma = autodir.conf.read_base_vmatrix_file(save_prefix)
         inf_obj = autodir.conf.read_base_information_file(save_prefix)
-        assert vma == automol.zmatrix.var_(zma)
         assert inf_obj.tors_info == autoinf.object_(tors_info)
 
         nsamp = max(nsamp_tot - inf_obj.nsamp, 0)
