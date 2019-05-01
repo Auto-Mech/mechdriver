@@ -10,7 +10,6 @@ dependencies:
     - python
     - numpy
     - pyyaml
-    - mako
     - pytest
     - pytest-cov
     - future
@@ -21,5 +20,4 @@ dependencies:
     - psi4::psi4
     - pacchem::autoparse
     - pacchem::autochem
-    - pacchem::filesystem
     - pacchem::elstruct

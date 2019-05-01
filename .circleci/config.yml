@@ -11,13 +11,18 @@ jobs:
                     apt-get install --yes libxrender-dev  # needed for rdkit
                     conda env create -f environment.yml
             - run:
-                name: Run tests
+                name: Test autofile
                 command: |
                     source activate moldr-env
-                    # temporary fix
-                    conda install -c conda-forge pylint>=2.3
-                    # temporary fix
                     python setup.py install
+                    cd autofile
+                    pytest -v --cov=autofile --pyargs autofile
+                    flake8 --exit-zero autofile
+                    pylint --rcfile=../.pylintrc autofile
+            - run:
+                name: Test moldr
+                command: |
+                    source activate moldr-env
                     cd examples
                     python input.py
 workflows:

@@ -1,0 +1,26 @@
+# cmd: conda build . -c pacchem -c psi4 -c rdkit -c openbabel
+package:
+    name: moldr
+    version: "0.1.1"
+
+source:
+    path: .
+
+requirements:
+    build:
+        - python
+    run:
+        - python
+        - numpy
+        - pyyaml
+        - pytest
+        - pytest-cov
+        - future
+        - flake8
+        - pylint
+        - rdkit::rdkit
+        - openbabel::openbabel
+        - psi4::psi4
+        - pacchem::autoparse
+        - pacchem::autochem
+        - pacchem::elstruct
