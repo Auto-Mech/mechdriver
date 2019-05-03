@@ -8,6 +8,7 @@ from autofile.system import model
 
 class FilePrefix():
     """ file prefixes """
+    RUN = 'run'
     CONF = 'conf'
     SCAN = 'scan'
     GEOM = 'geom'
@@ -18,10 +19,12 @@ class FilePrefix():
 class DataFileAttributeName():
     """ DataFile attribute names """
     INFO = 'info'
+    INPUT = 'input'
+    OUTPUT = 'output'
     VMATRIX = 'vmatrix'
-    GEOM_INFO = 'geometry_information'
-    GRAD_INFO = 'gradient_information'
-    HESS_INFO = 'hessian_information'
+    GEOM_INFO = 'geometry_info'
+    GRAD_INFO = 'gradient_info'
+    HESS_INFO = 'hessian_info'
     GEOM_INPUT = 'geometry_input'
     GRAD_INPUT = 'gradient_input'
     HESS_INPUT = 'hessian_input'
@@ -52,13 +55,35 @@ def theory_leaf(root_dsdir=None):
     return model.DataSeries(dsdir=dsdir)
 
 
+def run_trunk(root_dsdir=None):
+    """ run trunk DataSeries
+    """
+    dsdir = dir_.run_trunk(root_dsdir)
+    return model.DataSeries(dsdir=dsdir)
+
+
+def run_leaf(root_dsdir=None):
+    """ run leaf DataSeries
+    """
+    dsdir = dir_.run_leaf(root_dsdir)
+    inf_dfile = file_.information(FilePrefix.RUN, function=info.run)
+    inp_dfile = file_.input_file(FilePrefix.RUN)
+    out_dfile = file_.output_file(FilePrefix.RUN)
+    return model.DataSeries(
+        dsdir=dsdir,
+        dfile_dct={
+            DataFileAttributeName.INFO: inf_dfile,
+            DataFileAttributeName.INPUT: inp_dfile,
+            DataFileAttributeName.OUTPUT: out_dfile})
+
+
 def conformer_trunk(root_dsdir=None):
     """ conformer trunk DataSeries
     """
     dsdir = dir_.conformer_trunk(root_dsdir)
     vma_dfile = file_.vmatrix(FilePrefix.CONF)
-    inf_dfile = file_.information(
-        FilePrefix.CONF, function=info.torsion_sampling)
+    inf_dfile = file_.information(FilePrefix.CONF,
+                                  function=info.conformer_trunk)
 
     dlayer = model.DataSeries(
         dsdir=dsdir,
@@ -116,7 +141,7 @@ def scan_branch(root_dsdir=None):
     """ scan branch DataSeries
     """
     dsdir = dir_.scan_branch(root_dsdir)
-    inf_dfile = file_.information(FilePrefix.SCAN, function=info.scan)
+    inf_dfile = file_.information(FilePrefix.SCAN, function=info.scan_branch)
 
     dlayer = model.DataSeries(
         dsdir=dsdir,

@@ -4,6 +4,7 @@ import os
 import base64
 import hashlib
 import numbers
+import datetime
 import automol
 import autoparse.pattern as app
 import autoparse.find as apf
@@ -45,3 +46,9 @@ def is_random_string_identifier(sid):
     """
     sid_pattern = app.URLSAFE_CHAR * 12
     return apf.full_match(sid_pattern, sid)
+
+
+def utc_time():
+    """ get the current UTC time
+    """
+    return datetime.datetime.utcnow()

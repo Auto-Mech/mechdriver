@@ -55,6 +55,21 @@ def theory_leaf(method, basis, orb_restricted):
     return dir_name
 
 
+# run
+def run_trunk():
+    """ run trunk directory name
+    """
+    return 'RUN'
+
+
+def run_leaf(job):
+    """ run leaf directory name
+    """
+    assert elstruct.Job.contains(job)
+    dir_name = job[:4].upper()
+    return dir_name
+
+
 # conformer
 def conformer_trunk():
     """ conformer trunk directory name

@@ -112,7 +112,7 @@ class DataSeriesDir():
                 self.spec_dfile.write(specs, pth)
 
     def existing(self, prefix, root_specs=()):
-        """ return the list of specifiers
+        """ return the list of specifiers for existing paths
         """
         if self.spec_dfile is None:
             raise ValueError("This function does not work "
@@ -123,7 +123,7 @@ class DataSeriesDir():
         return specs_lst
 
     def existing_paths(self, prefix, root_specs=()):
-        """ specifiers for all existing paths at this prefix/root directory
+        """ existing paths at this prefix/root directory
         """
         if self.root is None:
             pfx = prefix
@@ -131,8 +131,6 @@ class DataSeriesDir():
             pfx = self.root.path(prefix, root_specs)
 
         pfx = os.path.abspath(pfx)
-        assert os.path.isdir(pfx)
-
         pth_pattern = os.path.join(pfx, *('*' * self.depth))
         pths = filter(os.path.isdir, glob.glob(pth_pattern))
         pths = tuple(os.path.join(pfx, pth) for pth in pths)
