@@ -1,9 +1,8 @@
 """ moldr script
 """
 import os
-# import moldr
+import moldr
 import automol
-from autofile import fs
 
 # PROG = 'g09'
 # SCRIPT_STR = ("#!/usr/bin/env bash\n"
@@ -15,12 +14,12 @@ SCRIPT_STR = ("#!/usr/bin/env bash\n"
 
 NSAMP = 2
 SMILES_MULT_LST = [
+    ('O', 1),
     ('CO[O]', 2),
     ('OCO', 1),
 ]
 METHOD = 'hf'
 BASIS = 'sto-3g'
-CHARGE = 0
 RUN_PREFIX = 'run'
 SAVE_PREFIX = 'save'
 
@@ -32,9 +31,25 @@ if not os.path.exists(SAVE_PREFIX):
 
 for smi, mult in SMILES_MULT_LST:
     ich = automol.smiles.inchi(smi)
-    orb_restricted = (mult == 1)
-    specs = (ich, mult, METHOD, BASIS, orb_restricted)
 
-    print('specs: ', specs)
-    fs.theory.dir.create(RUN_PREFIX, specs)
-    fs.theory.dir.create(SAVE_PREFIX, specs)
+    moldr.driver.run_conformers(
+        ich=ich,
+        mult=mult,
+        method=METHOD,
+        basis=BASIS,
+        orb_restricted=(mult == 1),
+        # run arguments
+        run_prefix=RUN_PREFIX,
+        save_prefix=SAVE_PREFIX,
+        nsamp=NSAMP,
+        script_str=SCRIPT_STR,
+        prog=PROG,)
+
+    moldr.driver.save_conformers(
+        ich=ich,
+        mult=mult,
+        method=METHOD,
+        basis=BASIS,
+        orb_restricted=(mult == 1),
+        run_prefix=RUN_PREFIX,
+        save_prefix=SAVE_PREFIX,)

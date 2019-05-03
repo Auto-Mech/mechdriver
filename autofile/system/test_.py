@@ -292,6 +292,70 @@ def test__file__lennard_jones_sigma():
     print(sig)
 
 
+def test__dir__run_trunk():
+    """ test dir_.run_trunk
+    """
+    prefix = os.path.join(PREFIX, 'run_trunk')
+    os.mkdir(prefix)
+
+    dsdir = autofile.system.dir_.run_trunk(ROOT_DSDIR)
+
+    root_specs_lst = (
+        (1, 'a'),
+        (1, 'b'),
+        (2, 'a'),
+        (2, 'b'),
+        (2, 'c'),
+    )
+
+    for root_specs in root_specs_lst:
+        specs = root_specs
+
+        assert not dsdir.exists(prefix, specs)
+        dsdir.create(prefix, specs)
+        assert dsdir.exists(prefix, specs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+
+
+def test__dir__run_leaf():
+    """ test dir_.run_leaf
+    """
+    prefix = os.path.join(PREFIX, 'run_leaf')
+    os.mkdir(prefix)
+
+    dsdir = autofile.system.dir_.run_leaf(ROOT_DSDIR)
+
+    root_specs_lst = (
+        (1, 'a'),
+        (1, 'b'),
+        (2, 'a'),
+        (2, 'b'),
+        (2, 'c'),
+    )
+    branch_specs_lst = (
+        ('energy',),
+        ('gradient',),
+        ('hessian',),
+        ('optimization',),
+    )
+
+    for root_specs in root_specs_lst:
+        for branch_specs in branch_specs_lst:
+            specs = root_specs + branch_specs
+
+            assert not dsdir.exists(prefix, specs)
+            dsdir.create(prefix, specs)
+            assert dsdir.exists(prefix, specs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+
+    print(dsdir.existing(prefix, root_specs_lst[-1]))
+    for root_specs in root_specs_lst:
+        assert (sorted(dsdir.existing(prefix, root_specs)) ==
+                sorted(branch_specs_lst))
+
+
 def test__dir__species_trunk():
     """ test dir_.species_trunk
     """
@@ -605,11 +669,13 @@ if __name__ == '__main__':
     # test__file__trajectory()
     # test__file__lennard_jones_epsilon()
     # test__file__lennard_jones_sigma()
-    test__dir__species_trunk()
-    test__dir__species_leaf()
-    test__dir__theory_leaf()
-    test__dir__conformer_trunk()
-    test__dir__conformer_leaf()
-    test__dir__scan_trunk()
-    test__dir__scan_branch()
-    test__dir__scan_leaf()
+    # test__dir__run_trunk()
+    test__dir__run_leaf()
+    # test__dir__species_trunk()
+    # test__dir__species_leaf()
+    # test__dir__theory_leaf()
+    # test__dir__conformer_trunk()
+    # test__dir__conformer_leaf()
+    # test__dir__scan_trunk()
+    # test__dir__scan_branch()
+    # test__dir__scan_leaf()

@@ -2,10 +2,11 @@
 """
 import numbers
 import autofile.info
+from autofile.system._util import utc_time as _utc_time
 
 
-def torsion_sampling(nsamp, tors_ranges):
-    """ torsion sampling information
+def conformer_trunk(nsamp, tors_ranges):
+    """ conformer trunk information
 
     :param nsamp: the number of samples
     :type nsamp: int
@@ -22,12 +23,12 @@ def torsion_sampling(nsamp, tors_ranges):
     tors_ranges = autofile.info.Info(**tors_range_dct)
     assert isinstance(nsamp, numbers.Integral)
     inf_obj = autofile.info.Info(nsamp=nsamp, tors_ranges=tors_ranges)
-    assert autofile.info.matches_function_signature(inf_obj, torsion_sampling)
+    assert autofile.info.matches_function_signature(inf_obj, conformer_trunk)
     return inf_obj
 
 
-def scan(tors_linspaces):
-    """ scan information
+def scan_branch(tors_linspaces):
+    """ scan trunk information
 
     :param tors_linspaces: sampling linspaces [(start, end, num)] for each
         torsional coordinate, by z-matrix coordinate name
@@ -42,7 +43,7 @@ def scan(tors_linspaces):
 
     tors_linspaces = autofile.info.Info(**tors_linspace_dct)
     inf_obj = autofile.info.Info(tors_linspaces=tors_linspaces)
-    assert autofile.info.matches_function_signature(inf_obj, scan)
+    assert autofile.info.matches_function_signature(inf_obj, scan_branch)
     return inf_obj
 
 
@@ -59,3 +60,9 @@ def run(job, prog, method, basis, utc_start_time=None, utc_end_time=None):
     )
     assert autofile.info.matches_function_signature(inf_obj, run)
     return inf_obj
+
+
+def utc_time():
+    """ current run time
+    """
+    return _utc_time()

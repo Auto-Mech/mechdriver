@@ -91,7 +91,7 @@ def test__conformer():
     assert trunk_vma == ref_trunk_vma
 
     # create the trunk information file
-    ref_trunk_inf_obj = autofile.system.info.torsion_sampling(
+    ref_trunk_inf_obj = autofile.system.info.conformer_trunk(
         nsamp=7, tors_ranges={'d3': (0, 6.283185307179586),
                               'd4': (0, 6.283185307179586)})
     fs.conformer_trunk.file.info.write(ref_trunk_inf_obj, prefix, root_specs)
@@ -128,11 +128,11 @@ def test__conformer():
         # (I'm not bothering with the hessian for now)
 
         # writes
-        fs.conformer.file.geometry_information.write(
+        fs.conformer.file.geometry_info.write(
             ref_geom_inf_obj, prefix, specs)
-        fs.conformer.file.gradient_information.write(
+        fs.conformer.file.gradient_info.write(
             ref_grad_inf_obj, prefix, specs)
-        fs.conformer.file.hessian_information.write(
+        fs.conformer.file.hessian_info.write(
             ref_hess_inf_obj, prefix, specs)
         fs.conformer.file.geometry_input.write(ref_geom_inp_str, prefix, specs)
         fs.conformer.file.gradient_input.write(ref_grad_inp_str, prefix, specs)
@@ -142,12 +142,9 @@ def test__conformer():
         fs.conformer.file.gradient.write(ref_grad, prefix, specs)
 
         # reads
-        geom_inf_obj = fs.conformer.file.geometry_information.read(prefix,
-                                                                   specs)
-        grad_inf_obj = fs.conformer.file.gradient_information.read(prefix,
-                                                                   specs)
-        hess_inf_obj = fs.conformer.file.hessian_information.read(prefix,
-                                                                  specs)
+        geom_inf_obj = fs.conformer.file.geometry_info.read(prefix, specs)
+        grad_inf_obj = fs.conformer.file.gradient_info.read(prefix, specs)
+        hess_inf_obj = fs.conformer.file.hessian_info.read(prefix, specs)
         geom_inp_str = fs.conformer.file.geometry_input.read(prefix, specs)
         grad_inp_str = fs.conformer.file.gradient_input.read(prefix, specs)
         hess_inp_str = fs.conformer.file.hessian_input.read(prefix, specs)
@@ -168,6 +165,36 @@ def test__conformer():
 
     print(fs.conformer.dir.existing(prefix, root_specs))
     assert len(fs.conformer.dir.existing(prefix, root_specs)) == nconfs
+
+
+def test__conformer_run():
+    """ tets fsys.conformer_run
+    """
+    prefix = os.path.join(PREFIX, 'conformer_run')
+    os.mkdir(prefix)
+
+    cid = autofile.system.generate_new_conformer_id()
+    root_specs = (
+        'InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 2,
+        'hf', 'sto-3g', False, cid)
+    specs_lst = (
+        root_specs + ('energy',),
+        root_specs + ('gradient',),
+        root_specs + ('hessian',),
+        root_specs + ('optimization',),
+    )
+
+    for specs in specs_lst:
+        fs.conformer_run.dir.create(prefix, specs)
+        job = specs[-1]
+        ref_inf_obj = autofile.system.info.run(
+            job=job, prog='psi4', method='hf', basis='sto-3g')
+        ref_inp_str = '<input file>'
+        ref_out_str = '<output file>'
+
+        fs.conformer_run.file.info.write(ref_inf_obj, prefix, specs)
+        fs.conformer_run.file.input.write(ref_inp_str, prefix, specs)
+        fs.conformer_run.file.output.write(ref_out_str, prefix, specs)
 
 
 def test__scan():
@@ -201,7 +228,7 @@ def test__scan():
     assert trunk_vma == ref_trunk_vma
 
     # create the branch information file
-    ref_scan_inf_obj = autofile.system.info.scan(
+    ref_scan_inf_obj = autofile.system.info.scan_branch(
         tors_linspaces={'d3': (0, 6.283185307179586, 3),
                         'd4': (0, 6.283185307179586, 2)})
     fs.scan_branch.file.info.write(ref_scan_inf_obj, prefix, branch_specs)
@@ -237,14 +264,13 @@ def test__scan():
                    ('H', (-1.61092727126, 2.32295906780, -1.19178601663)))
 
         # writes
-        fs.scan.file.geometry_information.write(
-            ref_geom_inf_obj, prefix, specs)
+        fs.scan.file.geometry_info.write(ref_geom_inf_obj, prefix, specs)
         fs.scan.file.geometry_input.write(ref_geom_inp_str, prefix, specs)
         fs.scan.file.energy.write(ref_ene, prefix, specs)
         fs.scan.file.geometry.write(ref_geo, prefix, specs)
 
         # reads
-        geom_inf_obj = fs.scan.file.geometry_information.read(prefix, specs)
+        geom_inf_obj = fs.scan.file.geometry_info.read(prefix, specs)
         geom_inp_str = fs.scan.file.geometry_input.read(prefix, specs)
         ene = fs.scan.file.energy.read(prefix, specs)
         geo = fs.scan.file.geometry.read(prefix, specs)
@@ -258,8 +284,40 @@ def test__scan():
     print(fs.scan.dir.existing(prefix, branch_specs))
 
 
+def test__scan_run():
+    """ tets fsys.scan_run
+    """
+    prefix = os.path.join(PREFIX, 'scan_run')
+    os.mkdir(prefix)
+
+    cid = autofile.system.generate_new_conformer_id()
+    root_specs = (
+        'InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 2,
+        'hf', 'sto-3g', False, cid, ['d4', 'd8'], [0, 0])
+    specs_lst = (
+        root_specs + ('energy',),
+        root_specs + ('gradient',),
+        root_specs + ('hessian',),
+        root_specs + ('optimization',),
+    )
+
+    for specs in specs_lst:
+        fs.scan_run.dir.create(prefix, specs)
+        job = specs[-1]
+        ref_inf_obj = autofile.system.info.run(
+            job=job, prog='psi4', method='hf', basis='sto-3g')
+        ref_inp_str = '<input file>'
+        ref_out_str = '<output file>'
+
+        fs.scan_run.file.info.write(ref_inf_obj, prefix, specs)
+        fs.scan_run.file.input.write(ref_inp_str, prefix, specs)
+        fs.scan_run.file.output.write(ref_out_str, prefix, specs)
+
+
 if __name__ == '__main__':
     # test__species()
     # test__theory()
     # test__conformer()
-    test__scan()
+    # test__scan()
+    # test__conformer_run()
+    test__scan_run()

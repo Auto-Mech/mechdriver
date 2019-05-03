@@ -58,6 +58,31 @@ def theory_leaf(root_dsdir=None):
                                root_dsdir=root_dsdir)
 
 
+def run_trunk(root_dsdir=None):
+    """ run trunk DataSeriesDir
+    """
+    _map = _pack_arguments(map_.run_trunk)
+    nspecs = _count_arguments(map_.run_trunk)
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
+                               root_dsdir=root_dsdir)
+
+
+def run_leaf(root_dsdir=None):
+    """ run leaf DataSeriesDir
+    """
+    spec_dfile = file_.data_series_specifier(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={
+            'job': lambda specs: specs[0]},
+        spec_keys=['job'])
+
+    _map = _pack_arguments(map_.run_leaf)
+    nspecs = _count_arguments(map_.run_leaf)
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
+                               spec_dfile=spec_dfile,
+                               root_dsdir=root_dsdir)
+
+
 def conformer_trunk(root_dsdir=None):
     """ conformer trunk DataSeriesDir
     """
