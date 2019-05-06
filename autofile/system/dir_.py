@@ -29,13 +29,14 @@ def species_leaf(root_dsdir=None):
         file_prefix=SPEC_FILE_PREFIX,
         map_dct_={
             'inchi': lambda specs: specs[0],
-            'smiles': lambda specs: automol.inchi.smiles(specs[0]),
-            'multiplicity': lambda specs: specs[1]},
-        spec_keys=['inchi', 'multiplicity'])
+            'charge': lambda specs: specs[1],
+            'multiplicity': lambda specs: specs[2],
+            'smiles': lambda specs: automol.inchi.smiles(specs[0])},
+        spec_keys=['inchi', 'charge', 'multiplicity'])
 
     _map = _pack_arguments(map_.species_leaf)
     nspecs = _count_arguments(map_.species_leaf)
-    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=4,
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=5,
                                spec_dfile=spec_dfile,
                                root_dsdir=root_dsdir)
 
@@ -107,6 +108,15 @@ def conformer_leaf(root_dsdir=None):
                                root_dsdir=root_dsdir)
 
 
+def single_point_trunk(root_dsdir=None):
+    """ single point trunk DataSeriesDir
+    """
+    _map = _pack_arguments(map_.single_point_trunk)
+    nspecs = _count_arguments(map_.single_point_trunk)
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
+                               root_dsdir=root_dsdir)
+
+
 def scan_trunk(root_dsdir=None):
     """ scan trunk DataSeriesDir
     """
@@ -144,6 +154,12 @@ def scan_leaf(root_dsdir=None):
     return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
                                spec_dfile=spec_dfile,
                                root_dsdir=root_dsdir)
+
+
+def single_point_leaf(root_dsdir=None):
+    """ single-point leaf DataSeriesDir
+    """
+    return theory_leaf(root_dsdir=root_dsdir)
 
 
 # helpers

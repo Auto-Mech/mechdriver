@@ -34,6 +34,7 @@ for smi, mult in SMILES_MULT_LST:
 
     moldr.driver.run_conformers(
         ich=ich,
+        charge=0,
         mult=mult,
         method=METHOD,
         basis=BASIS,
@@ -47,6 +48,7 @@ for smi, mult in SMILES_MULT_LST:
 
     moldr.driver.save_conformers(
         ich=ich,
+        charge=0,
         mult=mult,
         method=METHOD,
         basis=BASIS,
