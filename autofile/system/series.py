@@ -10,6 +10,7 @@ class FilePrefix():
     """ file prefixes """
     RUN = 'run'
     CONF = 'conf'
+    SP = 'sp'
     SCAN = 'scan'
     GEOM = 'geom'
     GRAD = 'grad'
@@ -121,6 +122,25 @@ def conformer_leaf(root_dsdir=None):
             DataFileAttributeName.GEOM: geom_dfile,
             DataFileAttributeName.GRAD: grad_dfile,
             DataFileAttributeName.HESS: hess_dfile})
+    return dlayer
+
+
+def single_point_trunk(root_dsdir=None):
+    """ single point trunk DataSeries
+    """
+    dsdir = dir_.single_point_trunk(root_dsdir)
+    return model.DataSeries(dsdir=dsdir)
+
+
+def single_point_leaf(root_dsdir=None):
+    """ single_point leaf DataSeries
+    """
+    dsdir = dir_.single_point_leaf(root_dsdir)
+    ene_dfile = file_.energy(FilePrefix.SP)
+    dlayer = model.DataSeries(
+        dsdir=dsdir,
+        dfile_dct={
+            DataFileAttributeName.ENERGY: ene_dfile})
     return dlayer
 
 

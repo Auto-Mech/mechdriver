@@ -1,6 +1,7 @@
 """ directory naming functions
 """
 import os
+import numbers
 import elstruct
 import automol
 from autofile.system._util import (is_valid_stereo_inchi as
@@ -21,19 +22,26 @@ def species_trunk():
     return 'SPC'
 
 
-def species_leaf(ich, mult):
+def species_leaf(ich, charge, mult):
     """ species leaf directory name
     """
     assert _is_valid_stereo_inchi(ich)
     assert _is_valid_inchi_multiplicity(ich, mult)
     ich_key = automol.inchi.inchi_key(ich)
-    assert automol.inchi.key.is_standard_neutral(ich_key)
+    ver = automol.inchi.key.version_indicator(ich_key)
+    prot = automol.inchi.key.protonation_indicator(ich_key)
+    assert isinstance(charge, numbers.Integral)
+    assert isinstance(mult, numbers.Integral)
+    assert ver == 'SA'
 
+    charge_str = '{:d}'.format(charge)
     mult_str = '{:d}'.format(mult)
+    tag = '-'.join([ver, prot])
     dir_names = (automol.inchi.formula_layer(ich),
                  automol.inchi.key.first_hash(ich_key),
+                 charge_str,
                  mult_str,
-                 automol.inchi.key.second_hash(ich_key),)
+                 automol.inchi.key.second_hash(ich_key) + tag,)
     return os.path.join(*dir_names)
 
 
@@ -88,6 +96,13 @@ def generate_new_conformer_id():
     """ generate a new conformer identifier
     """
     return _random_string_identifier()
+
+
+# single point
+def single_point_trunk():
+    """ single point trunk directory name
+    """
+    return 'SP'
 
 
 # scan

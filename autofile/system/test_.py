@@ -406,11 +406,11 @@ def test__dir__species_leaf():
         (2, 'c'),
     )
     branch_specs_lst = (
-        ('InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1+', 1),
-        ('InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1-', 1),
-        ('InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 2),
-        ('InChI=1S/O', 1),
-        ('InChI=1S/O', 3),
+        ('InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1+', 0, 1),
+        ('InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1-', 0, 1),
+        ('InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 0, 2),
+        ('InChI=1S/O', 0, 1),
+        ('InChI=1S/O', 0, 3),
     )
 
     for root_specs in root_specs_lst:
@@ -535,6 +535,32 @@ def test__dir__conformer_leaf():
     for root_specs in root_specs_lst:
         assert (sorted(dsdir.existing(prefix, root_specs)) ==
                 sorted(branch_specs_lst))
+
+
+def test__dir__single_point_trunk():
+    """ test dir_.single_point_trunk
+    """
+    prefix = os.path.join(PREFIX, 'single_point_trunk')
+    os.mkdir(prefix)
+
+    dsdir = autofile.system.dir_.single_point_trunk(ROOT_DSDIR)
+
+    root_specs_lst = (
+        (1, 'a'),
+        (1, 'b'),
+        (2, 'a'),
+        (2, 'b'),
+        (2, 'c'),
+    )
+
+    for root_specs in root_specs_lst:
+        specs = root_specs
+
+        assert not dsdir.exists(prefix, specs)
+        dsdir.create(prefix, specs)
+        assert dsdir.exists(prefix, specs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
 
 
 def test__dir__scan_trunk():
@@ -670,12 +696,13 @@ if __name__ == '__main__':
     # test__file__lennard_jones_epsilon()
     # test__file__lennard_jones_sigma()
     # test__dir__run_trunk()
-    test__dir__run_leaf()
+    # test__dir__run_leaf()
     # test__dir__species_trunk()
     # test__dir__species_leaf()
     # test__dir__theory_leaf()
     # test__dir__conformer_trunk()
     # test__dir__conformer_leaf()
+    test__dir__single_point_trunk()
     # test__dir__scan_trunk()
     # test__dir__scan_branch()
     # test__dir__scan_leaf()
