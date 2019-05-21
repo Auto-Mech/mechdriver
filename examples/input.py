@@ -1,8 +1,8 @@
 """ moldr script
 """
 import os
-import moldr
 import automol
+import moldr
 
 # PROG = 'g09'
 # SCRIPT_STR = ("#!/usr/bin/env bash\n"
@@ -29,6 +29,7 @@ if not os.path.exists(RUN_PREFIX):
 if not os.path.exists(SAVE_PREFIX):
     os.mkdir(SAVE_PREFIX)
 
+# sample conformers
 for smi, mult in SMILES_MULT_LST:
     ich = automol.smiles.inchi(smi)
 
@@ -40,9 +41,9 @@ for smi, mult in SMILES_MULT_LST:
         basis=BASIS,
         orb_restricted=(mult == 1),
         # run arguments
+        nsamp=NSAMP,
         run_prefix=RUN_PREFIX,
         save_prefix=SAVE_PREFIX,
-        nsamp=NSAMP,
         script_str=SCRIPT_STR,
         prog=PROG,)
 
