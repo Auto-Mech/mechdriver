@@ -1,5 +1,7 @@
 """ drivers
 """
+# import itertools
+import numpy
 import automol
 import elstruct
 import elcarro
@@ -8,7 +10,7 @@ from autofile import fs
 
 
 def run_conformers(ich, charge, mult, method, basis, orb_restricted,
-                   run_prefix, save_prefix, nsamp, script_str, prog,
+                   nsamp, run_prefix, save_prefix, script_str, prog,
                    **kwargs):
     """ run sampling algorithm to find conformers
     """
@@ -66,7 +68,8 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
 
             inp_str, out_str = elcarro.feedback_optimization(
                 script_str, run_path,
-                prog, method, basis, inp_zma, mult, charge,
+                geom=inp_zma, charge=charge, mult=mult, method=method,
+                basis=basis, prog=prog,
                 **kwargs)
 
             run_inf_obj.utc_end_time = autofile.system.info.utc_time()
@@ -74,10 +77,10 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
             fs.conf_run.file.info.write(run_inf_obj, run_prefix, specs)
             fs.conf_run.file.input.write(inp_str, run_prefix, specs)
 
-            status = "succeeded"
+            status = "failed"
             if elstruct.reader.has_normal_exit_message(prog, out_str):
                 fs.conf_run.file.output.write(out_str, run_prefix, specs)
-                status = "failed"
+                status = "succeeded"
 
             print("Run {}/{} {} at {}".format(idx+1, nsamp, status, run_path))
 
@@ -153,3 +156,84 @@ def save_conformers(ich, charge, mult, method, basis, orb_restricted,
     trunk_inf_obj = fs.conf_trunk.file.info.read(save_prefix, root_specs)
     trunk_inf_obj.nsamp += nsamp_new
     fs.conf_trunk.file.info.write(trunk_inf_obj, save_prefix, root_specs)
+
+
+def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
+             run_prefix, save_prefix, script_str, prog,
+             # ncoords, run_prefix, save_prefix, script_str, prog,
+             **kwargs):
+    """ run a scan
+    """
+    root_specs = (ich, charge, mult, method, basis, orb_restricted, cid)
+
+    assert fs.conf.file.geometry.exists(save_prefix, root_specs)
+    geo = fs.conf.file.geometry.read(save_prefix, root_specs)
+    zma = automol.geom.zmatrix(geo)
+
+    vma = automol.zmatrix.var_(zma)
+    if fs.scan_trunk.dir.exists(save_prefix, root_specs):
+        _vma = fs.scan_trunk.file.vmatrix.read(save_prefix, root_specs)
+        assert vma == _vma
+    else:
+        fs.scan_trunk.dir.create(save_prefix, root_specs)
+    fs.scan_trunk.file.vmatrix.write(vma, save_prefix, root_specs)
+
+    print(root_specs)
+    print(run_prefix, save_prefix, script_str, prog, kwargs)
+    print(fs.scan_trunk.dir.path(save_prefix, root_specs))
+
+    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    tors_linspace_vals = automol.zmatrix.tors.scan_grids(zma, tors_names)
+    tors_linspaces = dict(zip(tors_names, tors_linspace_vals))
+
+    job = 'optimization'
+    for tors_name, linspace in tors_linspaces.items():
+        branch_specs = root_specs + ([tors_name],)
+        inf_obj = autofile.system.info.scan_branch({tors_name: linspace})
+
+        fs.scan_branch.dir.create(save_prefix, branch_specs)
+        fs.scan_branch.file.info.write(inf_obj, save_prefix, branch_specs)
+
+        last_zma = zma
+
+        grid = numpy.linspace(*linspace)
+        npoint = len(grid)
+        for grid_idx, grid_val in enumerate(grid):
+            specs = branch_specs + ([grid_idx], job)
+
+            if not fs.scan_run.dir.exists(run_prefix, specs):
+                run_path = fs.scan_run.dir.path(run_prefix, specs)
+                print("Starting run {}/{} at {}"
+                      .format(grid_idx+1, npoint, run_path))
+                inp_zma = automol.zmatrix.set_values(
+                    last_zma, {tors_name: grid_val})
+
+                fs.scan_run.dir.create(run_prefix, specs)
+
+                run_inf_obj = autofile.system.info.run(
+                    job=job, prog=prog, method=method, basis=basis)
+                run_inf_obj.utc_start_time = autofile.system.info.utc_time()
+
+                fs.scan_run.dir.create(run_prefix, specs)
+                fs.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
+
+                inp_str, out_str = elcarro.feedback_optimization(
+                    script_str, run_path,
+                    prog, method, basis, inp_zma, mult, charge,
+                    frozen_coordinates=[tors_name],
+                    **kwargs)
+
+                run_inf_obj.utc_end_time = autofile.system.info.utc_time()
+
+                fs.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
+                fs.scan_run.file.input.write(inp_str, run_prefix, specs)
+
+                status = "failed"
+                if elstruct.reader.has_normal_exit_message(prog, out_str):
+                    fs.scan_run.file.output.write(out_str, run_prefix, specs)
+                    status = "succeeded"
+
+                    last_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+                print("Run {}/{} {} at {}"
+                      .format(grid_idx+1, npoint, status, run_path))

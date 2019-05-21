@@ -86,12 +86,12 @@ def conformer_trunk(root_dsdir=None):
     inf_dfile = file_.information(FilePrefix.CONF,
                                   function=info.conformer_trunk)
 
-    dlayer = model.DataSeries(
+    dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
             DataFileAttributeName.VMATRIX: vma_dfile,
             DataFileAttributeName.INFO: inf_dfile})
-    return dlayer
+    return dseries
 
 
 def conformer_leaf(root_dsdir=None):
@@ -109,7 +109,7 @@ def conformer_leaf(root_dsdir=None):
     grad_dfile = file_.gradient(FilePrefix.GRAD)
     hess_dfile = file_.hessian(FilePrefix.HESS)
 
-    dlayer = model.DataSeries(
+    dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
             DataFileAttributeName.GEOM_INFO: geom_inf_dfile,
@@ -122,7 +122,7 @@ def conformer_leaf(root_dsdir=None):
             DataFileAttributeName.GEOM: geom_dfile,
             DataFileAttributeName.GRAD: grad_dfile,
             DataFileAttributeName.HESS: hess_dfile})
-    return dlayer
+    return dseries
 
 
 def single_point_trunk(root_dsdir=None):
@@ -137,11 +137,11 @@ def single_point_leaf(root_dsdir=None):
     """
     dsdir = dir_.single_point_leaf(root_dsdir)
     ene_dfile = file_.energy(FilePrefix.SP)
-    dlayer = model.DataSeries(
+    dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
             DataFileAttributeName.ENERGY: ene_dfile})
-    return dlayer
+    return dseries
 
 
 def scan_trunk(root_dsdir=None):
@@ -150,11 +150,11 @@ def scan_trunk(root_dsdir=None):
     dsdir = dir_.scan_trunk(root_dsdir)
     vma_dfile = file_.vmatrix(FilePrefix.SCAN)
 
-    dlayer = model.DataSeries(
+    dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
             DataFileAttributeName.VMATRIX: vma_dfile})
-    return dlayer
+    return dseries
 
 
 def scan_branch(root_dsdir=None):
@@ -163,11 +163,11 @@ def scan_branch(root_dsdir=None):
     dsdir = dir_.scan_branch(root_dsdir)
     inf_dfile = file_.information(FilePrefix.SCAN, function=info.scan_branch)
 
-    dlayer = model.DataSeries(
+    dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
             DataFileAttributeName.INFO: inf_dfile})
-    return dlayer
+    return dseries
 
 
 def scan_leaf(root_dsdir=None):
@@ -185,7 +185,7 @@ def scan_leaf(root_dsdir=None):
     grad_dfile = file_.gradient(FilePrefix.GRAD)
     hess_dfile = file_.hessian(FilePrefix.HESS)
 
-    dlayer = model.DataSeries(
+    dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
             DataFileAttributeName.GEOM_INFO: geom_inf_dfile,
@@ -198,4 +198,4 @@ def scan_leaf(root_dsdir=None):
             DataFileAttributeName.GEOM: geom_dfile,
             DataFileAttributeName.GRAD: grad_dfile,
             DataFileAttributeName.HESS: hess_dfile})
-    return dlayer
+    return dseries
