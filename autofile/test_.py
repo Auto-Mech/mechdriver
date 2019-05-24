@@ -343,6 +343,146 @@ def test__scan_run():
         fs.scan_run.file.output.write(ref_out_str, prefix, specs)
 
 
+def test__tau():
+    """ test fsys.tau
+    """
+    prefix = os.path.join(PREFIX, 'tau')
+    os.mkdir(prefix)
+
+    ntaus = 10
+
+    # generate IDs for each tau
+    cids = (autofile.system.generate_new_conformer_id()
+            for _ in range(ntaus))
+
+    root_specs = (
+        'InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 0, 2,
+        'hf', 'sto-3g', False)
+    specs_lst = [root_specs + (cid,) for cid in cids]
+
+    assert not fs.tau_trunk.dir.exists(prefix, root_specs)
+    fs.tau_trunk.dir.create(prefix, root_specs)
+    assert fs.tau_trunk.dir.exists(prefix, root_specs)
+
+    # create the trunk vmatrix file
+    ref_trunk_vma = (('C', (None, None, None), (None, None, None)),
+                     ('O', (0, None, None), ('r1', None, None)),
+                     ('O', (0, 1, None), ('r2', 'a1', None)),
+                     ('H', (0, 1, 2), ('r3', 'a2', 'd1')),
+                     ('H', (0, 1, 2), ('r4', 'a3', 'd2')),
+                     ('H', (1, 0, 2), ('r5', 'a4', 'd3')),
+                     ('H', (2, 0, 1), ('r6', 'a5', 'd4')))
+    fs.tau_trunk.file.vmatrix.write(ref_trunk_vma, prefix, root_specs)
+    trunk_vma = fs.tau_trunk.file.vmatrix.read(prefix, root_specs)
+    assert trunk_vma == ref_trunk_vma
+
+    # create the trunk information file
+    ref_trunk_inf_obj = autofile.system.info.tau_trunk(
+        nsamp=7, tors_ranges={'d3': (0, 6.283185307179586),
+                              'd4': (0, 6.283185307179586)})
+    fs.tau_trunk.file.info.write(ref_trunk_inf_obj, prefix, root_specs)
+    trunk_inf_obj = fs.tau_trunk.file.info.read(prefix, root_specs)
+    assert trunk_inf_obj == ref_trunk_inf_obj
+
+    for specs in specs_lst:
+        fs.tau.dir.create(prefix, specs)
+
+        ref_geom_inf_obj = autofile.system.info.run(
+            job='optimization', prog='psi4', method='mp2', basis='sto-3g')
+        ref_grad_inf_obj = autofile.system.info.run(
+            job='gradient', prog='psi4', method='mp2', basis='sto-3g')
+        ref_hess_inf_obj = autofile.system.info.run(
+            job='hessian', prog='psi4', method='mp2', basis='sto-3g')
+        ref_geom_inp_str = '<geometry input file>'
+        ref_grad_inp_str = '<gradient input file>'
+        ref_hess_inp_str = '<hessian input file>'
+        ref_ene = -187.38518070487598
+        ref_geo = (('C', (0.066541036329, -0.86543409422, -0.56994517889)),
+                   ('O', (0.066541036329, -0.86543409422, 2.13152981129)),
+                   ('O', (0.066541036329, 1.6165813318, -1.63686376233)),
+                   ('H', (-1.52331011945, -1.99731957213, -1.31521725797)),
+                   ('H', (1.84099386813, -1.76479255185, -1.16213243427)),
+                   ('H', (-1.61114836922, -0.17751142359, 2.6046492029)),
+                   ('H', (-1.61092727126, 2.32295906780, -1.19178601663)))
+        ref_grad = ((0.00004103632, 0.00003409422, 0.00004517889),
+                    (0.00004103632, 0.00003409422, 0.00002981129),
+                    (0.00004103632, 0.00008133180, 0.00006376233),
+                    (0.00001011945, 0.00001957213, 0.00001725797),
+                    (0.00009386813, 0.00009255185, 0.00003243427),
+                    (0.00004836922, 0.00001142359, 0.00004920290),
+                    (0.00002727126, 0.00005906780, 0.00008601663))
+        # (I'm not bothering with the hessian for now)
+
+        # writes
+        fs.tau.file.geometry_info.write(
+            ref_geom_inf_obj, prefix, specs)
+        fs.tau.file.gradient_info.write(
+            ref_grad_inf_obj, prefix, specs)
+        fs.tau.file.hessian_info.write(
+            ref_hess_inf_obj, prefix, specs)
+        fs.tau.file.geometry_input.write(ref_geom_inp_str, prefix, specs)
+        fs.tau.file.gradient_input.write(ref_grad_inp_str, prefix, specs)
+        fs.tau.file.hessian_input.write(ref_hess_inp_str, prefix, specs)
+        fs.tau.file.energy.write(ref_ene, prefix, specs)
+        fs.tau.file.geometry.write(ref_geo, prefix, specs)
+        fs.tau.file.gradient.write(ref_grad, prefix, specs)
+
+        # reads
+        geom_inf_obj = fs.tau.file.geometry_info.read(prefix, specs)
+        grad_inf_obj = fs.tau.file.gradient_info.read(prefix, specs)
+        hess_inf_obj = fs.tau.file.hessian_info.read(prefix, specs)
+        geom_inp_str = fs.tau.file.geometry_input.read(prefix, specs)
+        grad_inp_str = fs.tau.file.gradient_input.read(prefix, specs)
+        hess_inp_str = fs.tau.file.hessian_input.read(prefix, specs)
+        ene = fs.tau.file.energy.read(prefix, specs)
+        geo = fs.tau.file.geometry.read(prefix, specs)
+        grad = fs.tau.file.gradient.read(prefix, specs)
+
+        # check read values
+        assert geom_inf_obj == ref_geom_inf_obj
+        assert grad_inf_obj == ref_grad_inf_obj
+        assert hess_inf_obj == ref_hess_inf_obj
+        assert geom_inp_str == ref_geom_inp_str
+        assert grad_inp_str == ref_grad_inp_str
+        assert hess_inp_str == ref_hess_inp_str
+        assert numpy.isclose(ene, ref_ene)
+        assert automol.geom.almost_equal(geo, ref_geo)
+        assert numpy.allclose(grad, ref_grad)
+
+    print(fs.tau.dir.existing(prefix, root_specs))
+    assert len(fs.tau.dir.existing(prefix, root_specs)) == ntaus
+
+
+def test__tau_run():
+    """ tets fsys.tau_run
+    """
+    prefix = os.path.join(PREFIX, 'tau_run')
+    os.mkdir(prefix)
+
+    cid = autofile.system.generate_new_conformer_id()
+    root_specs = (
+        'InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 0, 2,
+        'hf', 'sto-3g', False, cid)
+    specs_lst = (
+        root_specs + ('energy',),
+        root_specs + ('gradient',),
+        root_specs + ('hessian',),
+        root_specs + ('optimization',),
+    )
+
+    for specs in specs_lst:
+        fs.tau_run.dir.create(prefix, specs)
+        job = specs[-1]
+        ref_inf_obj = autofile.system.info.run(
+            job=job, prog='psi4', method='hf', basis='sto-3g')
+        ref_inp_str = '<input file>'
+        ref_out_str = '<output file>'
+
+        fs.tau_run.file.info.write(ref_inf_obj, prefix, specs)
+        fs.tau_run.file.input.write(ref_inp_str, prefix, specs)
+        fs.tau_run.file.output.write(ref_out_str, prefix, specs)
+
+
 if __name__ == '__main__':
     # test__species()
     # test__theory()
@@ -350,4 +490,6 @@ if __name__ == '__main__':
     # test__scan()
     # test__conformer_run()
     # test__scan_run()
-    test__single_point()
+    test__tau()
+    test__tau_run()
+    # test__single_point()

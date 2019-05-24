@@ -3,6 +3,7 @@
 import os
 import glob
 import types
+import shutil
 import autofile.file
 
 
@@ -56,7 +57,7 @@ class DataSeriesDir():
     """
 
     def __init__(self, map_, nspecs, depth, spec_dfile=None,
-                 root_dsdir=None):
+                 root_dsdir=None, removable=False):
         """
         :param map_: maps `nspecs` specifiers to a segment path consisting of
             `depth` directories
@@ -68,6 +69,7 @@ class DataSeriesDir():
         self.depth = depth
         self.spec_dfile = spec_dfile
         self.root = root_dsdir
+        self.removable = removable
 
     def path(self, prefix, specs=()):
         """ absolute directory path
@@ -92,6 +94,16 @@ class DataSeriesDir():
         """
         pth = self.path(prefix, specs)
         return os.path.isdir(pth)
+
+    def remove(self, prefix, specs=()):
+        """ does this directory exist?
+        """
+        if not self.removable:
+            raise ValueError("This data series is not removable")
+        else:
+            pth = self.path(prefix, specs)
+            if self.exists(prefix, specs):
+                shutil.rmtree(pth)
 
     def create(self, prefix, specs=()):
         """ create a directory at this prefix

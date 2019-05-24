@@ -4,6 +4,7 @@ import os
 import tempfile
 import numbers
 import numpy
+import pytest
 import automol
 import autofile.info
 import autofile.system
@@ -681,6 +682,79 @@ def test__dir__scan_leaf():
         assert (sorted(dsdir.existing(prefix, root_specs)) ==
                 sorted(leaf_specs_lst))
 
+def test__dir__tau_trunk():
+    """ test dir_.tau_trunk
+    """
+    prefix = os.path.join(PREFIX, 'tau_trunk')
+    os.mkdir(prefix)
+
+    # without a root directory
+    dsdir = autofile.system.dir_.tau_trunk()
+
+    assert not dsdir.exists(prefix)
+    dsdir.create(prefix)
+    assert dsdir.exists(prefix)
+
+    # with a root directory
+    dsdir = autofile.system.dir_.tau_trunk(ROOT_DSDIR)
+
+    root_specs_lst = (
+        (1, 'a'),
+        (1, 'b'),
+        (2, 'a'),
+        (2, 'b'),
+        (2, 'c'),
+    )
+
+    for root_specs in root_specs_lst:
+        specs = root_specs
+
+        assert not dsdir.exists(prefix, specs)
+        dsdir.create(prefix, specs)
+        assert dsdir.exists(prefix, specs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+
+
+def test__dir__tau_leaf():
+    """ test dir_.tau_leaf
+    """
+    prefix = os.path.join(PREFIX, 'tau_leaf')
+    os.mkdir(prefix)
+
+    dsdir = autofile.system.dir_.tau_leaf(ROOT_DSDIR)
+
+    root_specs_lst = (
+        (1, 'a'),
+        (1, 'b'),
+        (2, 'a'),
+        (2, 'b'),
+        (2, 'c'),
+    )
+
+    nconfs = 10
+    branch_specs_lst = tuple(
+        (autofile.system.generate_new_conformer_id(),) for _ in range(nconfs))
+
+    for root_specs in root_specs_lst:
+        for branch_specs in branch_specs_lst:
+            specs = root_specs + branch_specs
+
+            assert not dsdir.exists(prefix, specs)
+            dsdir.create(prefix, specs)
+            assert dsdir.exists(prefix, specs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+
+    print(dsdir.existing(prefix, root_specs_lst[-1]))
+    for root_specs in root_specs_lst:
+        assert (sorted(dsdir.existing(prefix, root_specs)) ==
+                sorted(branch_specs_lst))
+
+    with pytest.raises(ValueError):
+        dsdir.remove(prefix, specs)
+    assert dsdir.exists(prefix, specs)
+
 
 if __name__ == '__main__':
     # test__file__input_file()
@@ -706,3 +780,5 @@ if __name__ == '__main__':
     # test__dir__scan_trunk()
     # test__dir__scan_branch()
     # test__dir__scan_leaf()
+    test__dir__tau_trunk()
+    test__dir__tau_leaf()

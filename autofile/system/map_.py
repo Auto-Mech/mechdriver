@@ -122,3 +122,18 @@ def scan_leaf(grid_idxs):
     """ scan leaf directory name
     """
     return '_'.join(map('{:0>2d}'.format, grid_idxs))
+
+
+# tau
+def tau_trunk():
+    """ tau trunk directory name
+    """
+    return 'TAU'
+
+
+def tau_leaf(cid):
+    """ tau leaf directory name
+    """
+    assert _is_random_string_identifier(cid)
+    return cid
+

@@ -81,7 +81,7 @@ def run_leaf(root_dsdir=None):
     nspecs = _count_arguments(map_.run_leaf)
     return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
                                spec_dfile=spec_dfile,
-                               root_dsdir=root_dsdir)
+                               root_dsdir=root_dsdir, removable=True)
 
 
 def conformer_trunk(root_dsdir=None):
@@ -160,6 +160,30 @@ def single_point_leaf(root_dsdir=None):
     """ single-point leaf DataSeriesDir
     """
     return theory_leaf(root_dsdir=root_dsdir)
+
+
+def tau_trunk(root_dsdir=None):
+    """ tau trunk DataSeriesDir
+    """
+    _map = _pack_arguments(map_.tau_trunk)
+    nspecs = _count_arguments(map_.tau_trunk)
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
+                               root_dsdir=root_dsdir)
+
+
+def tau_leaf(root_dsdir=None):
+    """ tau leaf DataSeriesDir
+    """
+    spec_dfile = file_.data_series_specifier(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'conformer_id': lambda specs: specs[0]},
+        spec_keys=['conformer_id'])
+
+    _map = _pack_arguments(map_.tau_leaf)
+    nspecs = _count_arguments(map_.tau_leaf)
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
+                               spec_dfile=spec_dfile,
+                               root_dsdir=root_dsdir)
 
 
 # helpers
