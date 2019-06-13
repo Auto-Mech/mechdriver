@@ -98,12 +98,12 @@ class DataSeriesDir():
     def remove(self, prefix, specs=()):
         """ does this directory exist?
         """
-        if not self.removable:
-            raise ValueError("This data series is not removable")
-        else:
+        if self.removable:
             pth = self.path(prefix, specs)
             if self.exists(prefix, specs):
                 shutil.rmtree(pth)
+        else:
+            raise ValueError("This data series is not removable")
 
     def create(self, prefix, specs=()):
         """ create a directory at this prefix

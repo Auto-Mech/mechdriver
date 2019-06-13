@@ -247,4 +247,3 @@ def tau_leaf(root_dsdir=None):
             DataFileAttributeName.GRAD: grad_dfile,
             DataFileAttributeName.HESS: hess_dfile})
     return dseries
-

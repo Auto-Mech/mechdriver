@@ -102,11 +102,14 @@ def test__conformer():
         fs.conf.dir.create(prefix, specs)
 
         ref_geom_inf_obj = autofile.system.info.run(
-            job='optimization', prog='psi4', method='mp2', basis='sto-3g')
+            job='optimization', prog='psi4', method='mp2', basis='sto-3g',
+            status="succeeded")
         ref_grad_inf_obj = autofile.system.info.run(
-            job='gradient', prog='psi4', method='mp2', basis='sto-3g')
+            job='gradient', prog='psi4', method='mp2', basis='sto-3g',
+            status="succeeded")
         ref_hess_inf_obj = autofile.system.info.run(
-            job='hessian', prog='psi4', method='mp2', basis='sto-3g')
+            job='hessian', prog='psi4', method='mp2', basis='sto-3g',
+            status="succeeded")
         ref_geom_inp_str = '<geometry input file>'
         ref_grad_inp_str = '<gradient input file>'
         ref_hess_inp_str = '<hessian input file>'
@@ -188,7 +191,8 @@ def test__conformer_run():
         fs.conf_run.dir.create(prefix, specs)
         job = specs[-1]
         ref_inf_obj = autofile.system.info.run(
-            job=job, prog='psi4', method='hf', basis='sto-3g')
+            job=job, prog='psi4', method='hf', basis='sto-3g',
+            status="succeeded")
         ref_inp_str = '<input file>'
         ref_out_str = '<output file>'
 
@@ -281,7 +285,8 @@ def test__scan():
         fs.scan.dir.create(prefix, specs)
 
         ref_geom_inf_obj = autofile.system.info.run(
-            job='optimization', prog='psi4', method='mp2', basis='sto-3g')
+            job='optimization', prog='psi4', method='mp2', basis='sto-3g',
+            status="succeeded")
         ref_geom_inp_str = '<geometry input file>'
         ref_ene = -187.38518070487598
         ref_geo = (('C', (0.066541036329, -0.86543409422, -0.56994517889)),
@@ -334,7 +339,8 @@ def test__scan_run():
         fs.scan_run.dir.create(prefix, specs)
         job = specs[-1]
         ref_inf_obj = autofile.system.info.run(
-            job=job, prog='psi4', method='hf', basis='sto-3g')
+            job=job, prog='psi4', method='hf', basis='sto-3g',
+            status="succeeded")
         ref_inp_str = '<input file>'
         ref_out_str = '<output file>'
 
@@ -388,11 +394,14 @@ def test__tau():
         fs.tau.dir.create(prefix, specs)
 
         ref_geom_inf_obj = autofile.system.info.run(
-            job='optimization', prog='psi4', method='mp2', basis='sto-3g')
+            job='optimization', prog='psi4', method='mp2', basis='sto-3g',
+            status="succeeded")
         ref_grad_inf_obj = autofile.system.info.run(
-            job='gradient', prog='psi4', method='mp2', basis='sto-3g')
+            job='gradient', prog='psi4', method='mp2', basis='sto-3g',
+            status="succeeded")
         ref_hess_inf_obj = autofile.system.info.run(
-            job='hessian', prog='psi4', method='mp2', basis='sto-3g')
+            job='hessian', prog='psi4', method='mp2', basis='sto-3g',
+            status="succeeded")
         ref_geom_inp_str = '<geometry input file>'
         ref_grad_inp_str = '<gradient input file>'
         ref_hess_inp_str = '<hessian input file>'
@@ -474,7 +483,8 @@ def test__tau_run():
         fs.tau_run.dir.create(prefix, specs)
         job = specs[-1]
         ref_inf_obj = autofile.system.info.run(
-            job=job, prog='psi4', method='hf', basis='sto-3g')
+            job=job, prog='psi4', method='hf', basis='sto-3g',
+            status="succeeded")
         ref_inp_str = '<input file>'
         ref_out_str = '<output file>'
 

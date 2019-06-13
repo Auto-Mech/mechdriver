@@ -682,6 +682,7 @@ def test__dir__scan_leaf():
         assert (sorted(dsdir.existing(prefix, root_specs)) ==
                 sorted(leaf_specs_lst))
 
+
 def test__dir__tau_trunk():
     """ test dir_.tau_trunk
     """

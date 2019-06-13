@@ -2,17 +2,16 @@
 """
 import os
 import automol
-import autofile.system
 import moldr
 from autofile import fs
 
-PROG = 'g09'
-SCRIPT_STR = ("#!/usr/bin/env bash\n"
-              "g09 run.inp run.out")
+# PROG = 'g09'
+# SCRIPT_STR = ("#!/usr/bin/env bash\n"
+#               "g09 run.inp run.out")
 
-#PROG = 'psi4'
-#SCRIPT_STR = ("#!/usr/bin/env bash\n"
-#              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
+PROG = 'psi4'
+SCRIPT_STR = ("#!/usr/bin/env bash\n"
+              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
 
 NSAMP = 4
 SMILES_MULT_LST = [
@@ -73,14 +72,14 @@ for smi, mult in SMILES_MULT_LST:
         run_prefix=RUN_PREFIX,
         save_prefix=SAVE_PREFIX,)
 
-    ROOT_SPECS = (ich,0,mult,METHOD,BASIS,(mult==1))
+    ROOT_SPECS = (ich, 0, mult, METHOD, BASIS, (mult == 1))
 #    cid_lst = fs.conf.dir.existing(RUN_PREFIX,ROOT_SPECS)
     cid_lst = fs.conf.dir.existing(
-            prefix=SAVE_PREFIX,
-            root_specs=ROOT_SPECS)
+        prefix=SAVE_PREFIX,
+        root_specs=ROOT_SPECS)
     print(cid_lst)
     for cid in cid_lst:
-        print (cid)
+        print(cid)
         moldr.driver.run_scan(
             ich=ich,
             charge=0,
@@ -89,7 +88,7 @@ for smi, mult in SMILES_MULT_LST:
             basis=BASIS,
             orb_restricted=(mult == 1),
             cid=cid[0],
-        # run arguments
+            # run arguments
             run_prefix=RUN_PREFIX,
             save_prefix=SAVE_PREFIX,
             script_str=SCRIPT_STR,
@@ -144,4 +143,3 @@ for smi, mult in SMILES_MULT_LST:
         save_prefix=SAVE_PREFIX,
         script_str=SCRIPT_STR,
         prog=PROG,)
-

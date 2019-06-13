@@ -17,7 +17,7 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
     geo = automol.inchi.geometry(ich)
     zma = automol.geom.zmatrix(geo)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    tors_range_vals = automol.zmatrix.tors.sampling_ranges(zma, tors_names)
+    tors_range_vals = automol.zmatrix.torsional_sampling_ranges(zma, tors_names)
     tors_ranges = dict(zip(tors_names, tors_range_vals))
 
     if not tors_ranges:
@@ -44,7 +44,7 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
 
     # update the number of samples
 
-    inp_zmas = automol.zmatrix.tors.samples(zma, nsamp, tors_ranges)
+    inp_zmas = automol.zmatrix.samples(zma, nsamp, tors_ranges)
 
     cids = tuple(autofile.system.generate_new_conformer_id()
                  for _ in range(nsamp))
@@ -183,7 +183,7 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
     print(fs.scan_trunk.dir.path(save_prefix, root_specs))
 
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    tors_linspace_vals = automol.zmatrix.tors.scan_grids(zma, tors_names)
+    tors_linspace_vals = automol.zmatrix.torsional_scan_grids(zma, tors_names)
     tors_linspaces = dict(zip(tors_names, tors_linspace_vals))
 
     job = 'optimization'
@@ -246,7 +246,7 @@ def run_tau(ich, charge, mult, method, basis, orb_restricted,
     geo = automol.inchi.geometry(ich)
     zma = automol.geom.zmatrix(geo)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    tors_range_vals = automol.zmatrix.tors.sampling_ranges(zma, tors_names)
+    tors_range_vals = automol.zmatrix.torsional_sampling_ranges(zma, tors_names)
     tors_ranges = dict(zip(tors_names, tors_range_vals))
 
     if not tors_ranges:
@@ -273,7 +273,7 @@ def run_tau(ich, charge, mult, method, basis, orb_restricted,
 
     # update the number of samples
 
-    inp_zmas = automol.zmatrix.tors.samples(zma, nsamp, tors_ranges)
+    inp_zmas = automol.zmatrix.samples(zma, nsamp, tors_ranges)
 
     cids = tuple(autofile.system.generate_new_conformer_id()
                  for _ in range(nsamp))

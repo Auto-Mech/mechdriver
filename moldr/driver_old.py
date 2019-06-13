@@ -40,7 +40,7 @@ def conformers(nsamp, script_str, run_prefix, save_prefix,
     print (zma)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
     print (tors_names)
-    inp_zmas = automol.zmatrix.tors.samples(zma, nsamp, tors_names)
+    inp_zmas = automol.zmatrix.samples(zma, nsamp, tors_names)
 
     # generate random ids for each
     rids = tuple(autodir.id_.identifier() for _ in range(nsamp))

@@ -5,9 +5,9 @@ import functools
 import os
 import warnings
 import numpy
+from qcelemental import constants as qcc
 import automol
 import elstruct
-from qcelemental import constants as qcc
 import autofile
 from autofile import fs
 from moldr import optsmat
@@ -21,7 +21,8 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
     geo = automol.inchi.geometry(ich)
     zma = automol.geom.zmatrix(geo)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    tors_range_vals = automol.zmatrix.tors.sampling_ranges(zma, tors_names)
+    tors_range_vals = automol.zmatrix.torsional_sampling_ranges(
+        zma, tors_names)
     tors_ranges = dict(zip(tors_names, tors_range_vals))
 
     if not tors_ranges:
@@ -48,7 +49,7 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
 
     # update the number of samples
 
-    inp_zmas = automol.zmatrix.tors.samples(zma, nsamp, tors_ranges)
+    inp_zmas = automol.zmatrix.samples(zma, nsamp, tors_ranges)
 
     cids = tuple(autofile.system.generate_new_conformer_id()
                  for _ in range(nsamp))
@@ -99,7 +100,6 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
                 errors=errors, options_mat=options_mat, **kwargs)
 
             run_inf_obj.utc_end_time = autofile.system.info.utc_time()
-
 
             if elstruct.reader.has_normal_exit_message(prog, out_str):
                 fs.conf_run.file.output.write(out_str, run_prefix, specs)
@@ -206,7 +206,7 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
     print(root_specs)
     print(fs.conf.file.geometry.path(save_prefix, root_specs))
 #    assert fs.conf.file.geometry.exists(save_prefix, root_specs)
-    if not  fs.conf.file.geometry.exists(save_prefix, root_specs):
+    if not fs.conf.file.geometry.exists(save_prefix, root_specs):
         print('file does not exist')
     else:
         geo = fs.conf.file.geometry.read(save_prefix, root_specs)
@@ -225,7 +225,8 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
 
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         increment = scan_incr*qcc.conversion_factor('degree', 'radian')
-        tors_linspace_vals = automol.zmatrix.tors.scan_grids(zma, tors_names, increment)
+        tors_linspace_vals = automol.zmatrix.torsional_scan_grids(
+            zma, tors_names, increment)
         tors_linspaces = dict(zip(tors_names, tors_linspace_vals))
 
         job = 'optimization'
@@ -254,8 +255,10 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
 
                     status = "running"
                     run_inf_obj = autofile.system.info.run(
-                        job=job, prog=prog, method=method, basis=basis, status=status)
-                    run_inf_obj.utc_start_time = autofile.system.info.utc_time()
+                        job=job, prog=prog, method=method, basis=basis,
+                        status=status)
+                    run_inf_obj.utc_start_time = (
+                        autofile.system.info.utc_time())
 
                     fs.scan_run.dir.create(run_prefix, specs)
                     fs.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
@@ -343,7 +346,7 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
 #    print(fs.scan_trunk.dir.path(save_prefix, root_specs))
 #
 #    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-#    tors_linspace_vals = automol.zmatrix.tors.scan_grids(zma, tors_names)
+#    tors_linspace_vals = automol.zmatrix.torsional_scan_grids(zma, tors_names)
 #    tors_linspaces = dict(zip(tors_names, tors_linspace_vals))
 #
 #    job = 'optimization'
@@ -408,7 +411,7 @@ def run_tau(ich, charge, mult, method, basis, orb_restricted,
     geo = automol.inchi.geometry(ich)
     zma = automol.geom.zmatrix(geo)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    tors_range_vals = automol.zmatrix.tors.sampling_ranges(zma, tors_names)
+    tors_range_vals = automol.zmatrix.torsional_sampling_ranges(zma, tors_names)
     tors_ranges = dict(zip(tors_names, tors_range_vals))
 
     if not tors_ranges:
@@ -435,7 +438,7 @@ def run_tau(ich, charge, mult, method, basis, orb_restricted,
 
     # update the number of samples
 
-    inp_zmas = automol.zmatrix.tors.samples(zma, nsamp, tors_ranges)
+    inp_zmas = automol.zmatrix.samples(zma, nsamp, tors_ranges)
 
     cids = tuple(autofile.system.generate_new_conformer_id()
                  for _ in range(nsamp))

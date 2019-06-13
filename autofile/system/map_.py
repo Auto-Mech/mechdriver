@@ -4,8 +4,6 @@ import os
 import numbers
 import elstruct
 import automol
-from autofile.system._util import (is_valid_stereo_inchi as
-                                   _is_valid_stereo_inchi)
 from autofile.system._util import (is_valid_inchi_multiplicity as
                                    _is_valid_inchi_multiplicity)
 from autofile.system._util import short_hash as _short_hash
@@ -25,11 +23,11 @@ def species_trunk():
 def species_leaf(ich, charge, mult):
     """ species leaf directory name
     """
-    assert _is_valid_stereo_inchi(ich)
+    assert automol.inchi.is_complete(ich)
     assert _is_valid_inchi_multiplicity(ich, mult)
     ich_key = automol.inchi.inchi_key(ich)
-    ver = automol.inchi.key.version_indicator(ich_key)
-    prot = automol.inchi.key.protonation_indicator(ich_key)
+    ver = automol.inchi_key.version_indicator(ich_key)
+    prot = automol.inchi_key.protonation_indicator(ich_key)
     assert isinstance(charge, numbers.Integral)
     assert isinstance(mult, numbers.Integral)
     assert ver == 'SA'
@@ -37,11 +35,11 @@ def species_leaf(ich, charge, mult):
     charge_str = '{:d}'.format(charge)
     mult_str = '{:d}'.format(mult)
     tag = '-'.join([ver, prot])
-    dir_names = (automol.inchi.formula_layer(ich),
-                 automol.inchi.key.first_hash(ich_key),
+    dir_names = (automol.inchi.formula_sublayer(ich),
+                 automol.inchi_key.first_hash(ich_key),
                  charge_str,
                  mult_str,
-                 automol.inchi.key.second_hash(ich_key) + tag,)
+                 automol.inchi_key.second_hash(ich_key) + tag,)
     return os.path.join(*dir_names)
 
 
@@ -136,4 +134,3 @@ def tau_leaf(cid):
     """
     assert _is_random_string_identifier(cid)
     return cid
-
