@@ -23,6 +23,7 @@ def species_trunk():
 def species_leaf(ich, charge, mult):
     """ species leaf directory name
     """
+    assert automol.inchi.is_standard_form(ich)
     assert automol.inchi.is_complete(ich)
     assert _is_valid_inchi_multiplicity(ich, mult)
     ich_key = automol.inchi.inchi_key(ich)
