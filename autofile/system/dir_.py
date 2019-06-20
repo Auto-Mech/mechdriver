@@ -41,6 +41,37 @@ def species_leaf(root_dsdir=None):
                                root_dsdir=root_dsdir)
 
 
+def reaction_trunk(root_dsdir=None):
+    """ reaction trunk DataSeriesDir
+    """
+    _map = _pack_arguments(map_.reaction_trunk)
+    nspecs = _count_arguments(map_.reaction_trunk)
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
+                               root_dsdir=root_dsdir)
+
+
+def reaction_leaf(root_dsdir=None):
+    """ reaction leaf DataSeriesDir
+    """
+    spec_dfile = file_.data_series_specifier(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={
+            'inchis': lambda specs: specs[0],
+            'charges': lambda specs: specs[1],
+            'multiplicities': lambda specs: specs[2],
+            'smiles': lambda specs: [
+                list(map(automol.inchi.smiles, specs[0][0])),
+                list(map(automol.inchi.smiles, specs[0][1]))],
+        },
+        spec_keys=['inchis', 'charges', 'multiplicities'])
+
+    _map = _pack_arguments(map_.reaction_leaf)
+    nspecs = _count_arguments(map_.reaction_leaf)
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=10,
+                               spec_dfile=spec_dfile,
+                               root_dsdir=root_dsdir)
+
+
 def theory_leaf(root_dsdir=None):
     """ theory leaf DataSeriesDir
     """

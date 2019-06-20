@@ -5,9 +5,10 @@ channels:
     - psi4
     - rdkit
     - openbabel
+    - conda-forge
 
 dependencies:
-    - python
+    - python=3.7
     - numpy
     - pyyaml
     - pytest

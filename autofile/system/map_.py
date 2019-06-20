@@ -23,24 +23,81 @@ def species_trunk():
 def species_leaf(ich, charge, mult):
     """ species leaf directory name
     """
-    assert automol.inchi.is_standard_form(ich)
-    assert automol.inchi.is_complete(ich)
-    assert _is_valid_inchi_multiplicity(ich, mult)
-    ich_key = automol.inchi.inchi_key(ich)
-    ver = automol.inchi_key.version_indicator(ich_key)
-    prot = automol.inchi_key.protonation_indicator(ich_key)
-    assert isinstance(charge, numbers.Integral)
-    assert isinstance(mult, numbers.Integral)
-    assert ver == 'SA'
+    return _reactant_leaf([ich], [charge], [mult])
 
-    charge_str = '{:d}'.format(charge)
-    mult_str = '{:d}'.format(mult)
-    tag = '-'.join([ver, prot])
+
+# reactions
+def reaction_trunk():
+    """ reaction trunk directory name
+    """
+    return 'RXN'
+
+
+def reaction_leaf(ichs_pair, charges_pair, mults_pair):
+    """ reaction leaf directory name
+    """
+    assert ((ichs_pair, charges_pair, mults_pair) ==
+            sort_together(ichs_pair, charges_pair, mults_pair))
+    ichs1, ichs2 = ichs_pair
+    charges1, charges2 = charges_pair
+    mults1, mults2 = mults_pair
+    return os.path.join(_reactant_leaf(ichs1, charges1, mults1),
+                        _reactant_leaf(ichs2, charges2, mults2))
+
+
+def sort_together(ichs_pair, charges_pair, mults_pair):
+    """ sort inchis, charges, and multiplicities together
+    """
+
+    def _sort_together(ichs, charges, mults):
+        idxs = automol.inchi.argsort(ichs)
+        ichs = tuple(ichs[idx] for idx in idxs)
+        charges = tuple(charges[idx] for idx in idxs)
+        mults = tuple(mults[idx] for idx in idxs)
+        return (ichs, charges, mults)
+
+    def _sortable_representation(ichs):
+        return (len(ichs), sorted(automol.inchi.argsort(ichs)))
+
+    assert len(ichs_pair) == len(charges_pair) == len(mults_pair) == 2
+
+    ichs1, ichs2 = ichs_pair
+    charges1, charges2 = charges_pair
+    mults1, mults2 = mults_pair
+
+    ichs1, charges1, mults1 = _sort_together(ichs1, charges1, mults1)
+    ichs2, charges2, mults2 = _sort_together(ichs2, charges2, mults2)
+
+    if _sortable_representation(ichs1) > _sortable_representation(ichs2):
+        ichs1, ichs2 = ichs2, ichs1
+        charges1, charges2 = charges2, charges1
+        mults1, mults2 = mults2, mults1
+
+    return ((ichs1, ichs2), (charges1, charges2), (mults1, mults2))
+
+
+def _reactant_leaf(ichs, charges, mults):
+    """ reactant leaf directory name
+    """
+    assert all(map(automol.inchi.is_standard_form, ichs))
+    assert all(map(automol.inchi.is_complete, ichs))
+    assert tuple(ichs) == automol.inchi.sorted_(ichs)
+    assert len(ichs) == len(charges) == len(mults)
+    assert all(isinstance(charge, numbers.Integral) for charge in charges)
+    assert all(isinstance(mult, numbers.Integral) for mult in mults)
+    assert all(_is_valid_inchi_multiplicity(ich, mult)
+               for ich, mult in zip(ichs, mults))
+
+    ich = automol.inchi.standard_form(automol.inchi.join(ichs))
+    ick = automol.inchi.inchi_key(ich)
+    charge_str = '_'.join(map(str, charges))
+    mult_str = '_'.join(map(str, mults))
+
     dir_names = (automol.inchi.formula_sublayer(ich),
-                 automol.inchi_key.first_hash(ich_key),
+                 automol.inchi_key.first_hash(ick),
                  charge_str,
                  mult_str,
-                 automol.inchi_key.second_hash(ich_key) + tag,)
+                 automol.inchi_key.second_hash_with_extension(ick))
     return os.path.join(*dir_names)
 
 

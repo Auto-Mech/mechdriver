@@ -12,11 +12,37 @@ from autofile.info._inspect import function_keys as _function_keys
 def object_(inf_dct):
     """ create an information object from a dictionary
     """
-    inf_dct = {key: (object_(val) if isinstance(val, dict) else
-                     (list(val) if _is_nonstring_sequence(val) else val))
-               for key, val in inf_dct.items()}
-    inf_obj = Info(**inf_dct)
+
+    def _cast(obj):
+        if isinstance(obj, dict):
+            ret = {key: _cast(val) for key, val in obj.items()}
+            ret = Info(**ret)
+        elif _is_nonstring_sequence(obj):
+            ret = list(map(_cast, obj))
+        else:
+            ret = obj
+        return ret
+
+    inf_obj = _cast(inf_dct)
     return inf_obj
+
+
+def dict_(inf_obj):
+    """ convert an information object back to a dictionary
+    """
+
+    def _cast(obj):
+        if isinstance(obj, Info):
+            keys = obj.keys_()
+            ret = {key: _cast(val)
+                   for key, val in vars(obj).items() if key in keys}
+        elif _is_nonstring_sequence(obj):
+            ret = tuple(map(_cast, obj))
+        else:
+            ret = obj
+        return ret
+    inf_dct = _cast(inf_obj)
+    return inf_dct
 
 
 def string(inf_obj):
@@ -64,21 +90,16 @@ class Info(SimpleNamespace):
                          if not key == '_frozen')
         return keys
 
-    def _dict(self):
-        keys = self.keys_()
-        return {key: val for key, val in vars(self).items() if key in keys}
-
     def __iter__(self):
         """ used by the dict() function for conversion to dictionary """
-        for key, val in self._dict().items():
-            val = val if not isinstance(val, self.__class__) else dict(val)
+        for key, val in dict_(self).items():
             yield key, val
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
     def __repr__(self):
-        dct = self._dict()
+        dct = dict_(self)
         items = ("{}={!r}".format(k, dct[k]) for k in sorted(dct.keys()))
         return "Info({})".format(", ".join(items))
 

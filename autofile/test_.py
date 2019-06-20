@@ -5,7 +5,8 @@ import tempfile
 import numpy
 import automol
 import autofile.system
-from autofile import fs
+from autofile import SFS
+from autofile import RFS
 
 PREFIX = tempfile.mkdtemp()
 print(PREFIX)
@@ -26,11 +27,47 @@ def test__species():
     ]
 
     for specs in specs_lst:
-        assert not fs.species.dir.exists(prefix, specs)
-        fs.species.dir.create(prefix, specs)
-        assert fs.species.dir.exists(prefix, specs)
+        assert not SFS.species.dir.exists(prefix, specs)
+        SFS.species.dir.create(prefix, specs)
+        assert SFS.species.dir.exists(prefix, specs)
 
-    for specs in fs.species.dir.existing(prefix):
+    for specs in SFS.species.dir.existing(prefix):
+        print(specs)
+
+
+def test__reaction():
+    """ tets fsys.reaction
+    """
+    prefix = os.path.join(PREFIX, 'reaction')
+    os.mkdir(prefix)
+
+    specs_lst = [
+        (
+            (('InChI=1S/C2H5O2/c1-2-4-3/h3H,1-2H2',),
+             ('InChI=1S/C2H4/c1-2/h1-2H2', 'InChI=1S/HO2/c1-2/h1H')),
+            ((0,), (0, 0)),
+            ((2,), (1, 2)),
+        ),
+        (
+            (('InChI=1S/CH3/h1H3', 'InChI=1S/HO/h1H'),
+             ('InChI=1S/CH2/h1H2', 'InChI=1S/H2O/h1H2')),
+            ((0, 0), (0, 0)),
+            ((2, 2), (1, 1)),
+        ),
+        (
+            (('InChI=1S/CH3O3/c2-1-4-3/h3H,1H2',),
+             ('InChI=1S/CH3O3/c2-1-4-3/h2H,1H2',)),
+            ((0,), (0,)),
+            ((2,), (2,)),
+        ),
+    ]
+
+    for specs in specs_lst:
+        assert not RFS.reaction.dir.exists(prefix, specs)
+        RFS.reaction.dir.create(prefix, specs)
+        assert RFS.reaction.dir.exists(prefix, specs)
+
+    for specs in RFS.reaction.dir.existing(prefix):
         print(specs)
 
 
@@ -49,11 +86,11 @@ def test__theory():
     ]
 
     for specs in specs_lst:
-        assert not fs.theory.dir.exists(prefix, specs)
-        fs.theory.dir.create(prefix, specs)
-        assert fs.theory.dir.exists(prefix, specs)
+        assert not SFS.theory.dir.exists(prefix, specs)
+        SFS.theory.dir.create(prefix, specs)
+        assert SFS.theory.dir.exists(prefix, specs)
 
-    for specs in fs.theory.dir.existing(prefix, root_specs):
+    for specs in SFS.theory.dir.existing(prefix, root_specs):
         print(specs)
 
 
@@ -74,9 +111,9 @@ def test__conformer():
         'hf', 'sto-3g', False)
     specs_lst = [root_specs + (cid,) for cid in cids]
 
-    assert not fs.conf_trunk.dir.exists(prefix, root_specs)
-    fs.conf_trunk.dir.create(prefix, root_specs)
-    assert fs.conf_trunk.dir.exists(prefix, root_specs)
+    assert not SFS.conf_trunk.dir.exists(prefix, root_specs)
+    SFS.conf_trunk.dir.create(prefix, root_specs)
+    assert SFS.conf_trunk.dir.exists(prefix, root_specs)
 
     # create the trunk vmatrix file
     ref_trunk_vma = (('C', (None, None, None), (None, None, None)),
@@ -86,20 +123,20 @@ def test__conformer():
                      ('H', (0, 1, 2), ('r4', 'a3', 'd2')),
                      ('H', (1, 0, 2), ('r5', 'a4', 'd3')),
                      ('H', (2, 0, 1), ('r6', 'a5', 'd4')))
-    fs.conf_trunk.file.vmatrix.write(ref_trunk_vma, prefix, root_specs)
-    trunk_vma = fs.conf_trunk.file.vmatrix.read(prefix, root_specs)
+    SFS.conf_trunk.file.vmatrix.write(ref_trunk_vma, prefix, root_specs)
+    trunk_vma = SFS.conf_trunk.file.vmatrix.read(prefix, root_specs)
     assert trunk_vma == ref_trunk_vma
 
     # create the trunk information file
     ref_trunk_inf_obj = autofile.system.info.conformer_trunk(
         nsamp=7, tors_ranges={'d3': (0, 6.283185307179586),
                               'd4': (0, 6.283185307179586)})
-    fs.conf_trunk.file.info.write(ref_trunk_inf_obj, prefix, root_specs)
-    trunk_inf_obj = fs.conf_trunk.file.info.read(prefix, root_specs)
+    SFS.conf_trunk.file.info.write(ref_trunk_inf_obj, prefix, root_specs)
+    trunk_inf_obj = SFS.conf_trunk.file.info.read(prefix, root_specs)
     assert trunk_inf_obj == ref_trunk_inf_obj
 
     for specs in specs_lst:
-        fs.conf.dir.create(prefix, specs)
+        SFS.conf.dir.create(prefix, specs)
 
         ref_geom_inf_obj = autofile.system.info.run(
             job='optimization', prog='psi4', method='mp2', basis='sto-3g',
@@ -131,29 +168,29 @@ def test__conformer():
         # (I'm not bothering with the hessian for now)
 
         # writes
-        fs.conf.file.geometry_info.write(
+        SFS.conf.file.geometry_info.write(
             ref_geom_inf_obj, prefix, specs)
-        fs.conf.file.gradient_info.write(
+        SFS.conf.file.gradient_info.write(
             ref_grad_inf_obj, prefix, specs)
-        fs.conf.file.hessian_info.write(
+        SFS.conf.file.hessian_info.write(
             ref_hess_inf_obj, prefix, specs)
-        fs.conf.file.geometry_input.write(ref_geom_inp_str, prefix, specs)
-        fs.conf.file.gradient_input.write(ref_grad_inp_str, prefix, specs)
-        fs.conf.file.hessian_input.write(ref_hess_inp_str, prefix, specs)
-        fs.conf.file.energy.write(ref_ene, prefix, specs)
-        fs.conf.file.geometry.write(ref_geo, prefix, specs)
-        fs.conf.file.gradient.write(ref_grad, prefix, specs)
+        SFS.conf.file.geometry_input.write(ref_geom_inp_str, prefix, specs)
+        SFS.conf.file.gradient_input.write(ref_grad_inp_str, prefix, specs)
+        SFS.conf.file.hessian_input.write(ref_hess_inp_str, prefix, specs)
+        SFS.conf.file.energy.write(ref_ene, prefix, specs)
+        SFS.conf.file.geometry.write(ref_geo, prefix, specs)
+        SFS.conf.file.gradient.write(ref_grad, prefix, specs)
 
         # reads
-        geom_inf_obj = fs.conf.file.geometry_info.read(prefix, specs)
-        grad_inf_obj = fs.conf.file.gradient_info.read(prefix, specs)
-        hess_inf_obj = fs.conf.file.hessian_info.read(prefix, specs)
-        geom_inp_str = fs.conf.file.geometry_input.read(prefix, specs)
-        grad_inp_str = fs.conf.file.gradient_input.read(prefix, specs)
-        hess_inp_str = fs.conf.file.hessian_input.read(prefix, specs)
-        ene = fs.conf.file.energy.read(prefix, specs)
-        geo = fs.conf.file.geometry.read(prefix, specs)
-        grad = fs.conf.file.gradient.read(prefix, specs)
+        geom_inf_obj = SFS.conf.file.geometry_info.read(prefix, specs)
+        grad_inf_obj = SFS.conf.file.gradient_info.read(prefix, specs)
+        hess_inf_obj = SFS.conf.file.hessian_info.read(prefix, specs)
+        geom_inp_str = SFS.conf.file.geometry_input.read(prefix, specs)
+        grad_inp_str = SFS.conf.file.gradient_input.read(prefix, specs)
+        hess_inp_str = SFS.conf.file.hessian_input.read(prefix, specs)
+        ene = SFS.conf.file.energy.read(prefix, specs)
+        geo = SFS.conf.file.geometry.read(prefix, specs)
+        grad = SFS.conf.file.gradient.read(prefix, specs)
 
         # check read values
         assert geom_inf_obj == ref_geom_inf_obj
@@ -166,8 +203,8 @@ def test__conformer():
         assert automol.geom.almost_equal(geo, ref_geo)
         assert numpy.allclose(grad, ref_grad)
 
-    print(fs.conf.dir.existing(prefix, root_specs))
-    assert len(fs.conf.dir.existing(prefix, root_specs)) == nconfs
+    print(SFS.conf.dir.existing(prefix, root_specs))
+    assert len(SFS.conf.dir.existing(prefix, root_specs)) == nconfs
 
 
 def test__conformer_run():
@@ -188,7 +225,7 @@ def test__conformer_run():
     )
 
     for specs in specs_lst:
-        fs.conf_run.dir.create(prefix, specs)
+        SFS.conf_run.dir.create(prefix, specs)
         job = specs[-1]
         ref_inf_obj = autofile.system.info.run(
             job=job, prog='psi4', method='hf', basis='sto-3g',
@@ -196,9 +233,9 @@ def test__conformer_run():
         ref_inp_str = '<input file>'
         ref_out_str = '<output file>'
 
-        fs.conf_run.file.info.write(ref_inf_obj, prefix, specs)
-        fs.conf_run.file.input.write(ref_inp_str, prefix, specs)
-        fs.conf_run.file.output.write(ref_out_str, prefix, specs)
+        SFS.conf_run.file.info.write(ref_inf_obj, prefix, specs)
+        SFS.conf_run.file.input.write(ref_inp_str, prefix, specs)
+        SFS.conf_run.file.output.write(ref_out_str, prefix, specs)
 
 
 def test__single_point():
@@ -221,12 +258,12 @@ def test__single_point():
     for specs in specs_lst:
         ref_ene = -187.38518070487598
 
-        fs.conf_sp.dir.create(prefix, specs)
-        fs.conf_sp.file.energy.write(ref_ene, prefix, specs)
-        ene = fs.conf_sp.file.energy.read(prefix, specs)
+        SFS.conf_sp.dir.create(prefix, specs)
+        SFS.conf_sp.file.energy.write(ref_ene, prefix, specs)
+        ene = SFS.conf_sp.file.energy.read(prefix, specs)
         assert numpy.isclose(ene, ref_ene)
 
-    for specs in fs.conf_sp.dir.existing(prefix, root_specs):
+    for specs in SFS.conf_sp.dir.existing(prefix, root_specs):
         print(specs)
 
 
@@ -241,7 +278,7 @@ def test__scan():
         'hf', 'sto-3g', False, 'HS2I1PDureBE')
     branch_specs = root_specs + (['d4', 'd8'],)
 
-    fs.scan_branch.dir.create(prefix, branch_specs)
+    SFS.scan_branch.dir.create(prefix, branch_specs)
 
     # create the trunk vmatrix file
     ref_trunk_vma = (('C', (None, None, None), (None, None, None)),
@@ -256,19 +293,19 @@ def test__scan():
                      ('H', (6, 4, 8), ('r9', 'a8', 'd7')),
                      ('O', (8, 6, 4), ('r10', 'a9', 'd8')),
                      ('H', (8, 6, 10), ('r11', 'a10', 'd9')))
-    fs.scan_trunk.file.vmatrix.write(ref_trunk_vma, prefix, root_specs)
-    trunk_vma = fs.scan_trunk.file.vmatrix.read(prefix, root_specs)
+    SFS.scan_trunk.file.vmatrix.write(ref_trunk_vma, prefix, root_specs)
+    trunk_vma = SFS.scan_trunk.file.vmatrix.read(prefix, root_specs)
     assert trunk_vma == ref_trunk_vma
 
     # create the branch information file
     ref_scan_inf_obj = autofile.system.info.scan_branch(
         tors_linspaces={'d3': (0, 6.283185307179586, 3),
                         'd4': (0, 6.283185307179586, 2)})
-    fs.scan_branch.file.info.write(ref_scan_inf_obj, prefix, branch_specs)
-    scan_inf_obj = fs.scan_branch.file.info.read(prefix, branch_specs)
+    SFS.scan_branch.file.info.write(ref_scan_inf_obj, prefix, branch_specs)
+    scan_inf_obj = SFS.scan_branch.file.info.read(prefix, branch_specs)
     assert scan_inf_obj == ref_scan_inf_obj
 
-    print(fs.scan_branch.dir.existing(prefix, root_specs))
+    print(SFS.scan_branch.dir.existing(prefix, root_specs))
 
     main_specs_lst = (
         ([0, 0],),
@@ -282,7 +319,7 @@ def test__scan():
                       for main_specs in main_specs_lst)
 
     for specs in specs_lst:
-        fs.scan.dir.create(prefix, specs)
+        SFS.scan.dir.create(prefix, specs)
 
         ref_geom_inf_obj = autofile.system.info.run(
             job='optimization', prog='psi4', method='mp2', basis='sto-3g',
@@ -298,16 +335,16 @@ def test__scan():
                    ('H', (-1.61092727126, 2.32295906780, -1.19178601663)))
 
         # writes
-        fs.scan.file.geometry_info.write(ref_geom_inf_obj, prefix, specs)
-        fs.scan.file.geometry_input.write(ref_geom_inp_str, prefix, specs)
-        fs.scan.file.energy.write(ref_ene, prefix, specs)
-        fs.scan.file.geometry.write(ref_geo, prefix, specs)
+        SFS.scan.file.geometry_info.write(ref_geom_inf_obj, prefix, specs)
+        SFS.scan.file.geometry_input.write(ref_geom_inp_str, prefix, specs)
+        SFS.scan.file.energy.write(ref_ene, prefix, specs)
+        SFS.scan.file.geometry.write(ref_geo, prefix, specs)
 
         # reads
-        geom_inf_obj = fs.scan.file.geometry_info.read(prefix, specs)
-        geom_inp_str = fs.scan.file.geometry_input.read(prefix, specs)
-        ene = fs.scan.file.energy.read(prefix, specs)
-        geo = fs.scan.file.geometry.read(prefix, specs)
+        geom_inf_obj = SFS.scan.file.geometry_info.read(prefix, specs)
+        geom_inp_str = SFS.scan.file.geometry_input.read(prefix, specs)
+        ene = SFS.scan.file.energy.read(prefix, specs)
+        geo = SFS.scan.file.geometry.read(prefix, specs)
 
         # check read values
         assert geom_inf_obj == ref_geom_inf_obj
@@ -315,7 +352,7 @@ def test__scan():
         assert numpy.isclose(ene, ref_ene)
         assert automol.geom.almost_equal(geo, ref_geo)
 
-    print(fs.scan.dir.existing(prefix, branch_specs))
+    print(SFS.scan.dir.existing(prefix, branch_specs))
 
 
 def test__scan_run():
@@ -336,7 +373,7 @@ def test__scan_run():
     )
 
     for specs in specs_lst:
-        fs.scan_run.dir.create(prefix, specs)
+        SFS.scan_run.dir.create(prefix, specs)
         job = specs[-1]
         ref_inf_obj = autofile.system.info.run(
             job=job, prog='psi4', method='hf', basis='sto-3g',
@@ -344,9 +381,9 @@ def test__scan_run():
         ref_inp_str = '<input file>'
         ref_out_str = '<output file>'
 
-        fs.scan_run.file.info.write(ref_inf_obj, prefix, specs)
-        fs.scan_run.file.input.write(ref_inp_str, prefix, specs)
-        fs.scan_run.file.output.write(ref_out_str, prefix, specs)
+        SFS.scan_run.file.info.write(ref_inf_obj, prefix, specs)
+        SFS.scan_run.file.input.write(ref_inp_str, prefix, specs)
+        SFS.scan_run.file.output.write(ref_out_str, prefix, specs)
 
 
 def test__tau():
@@ -366,9 +403,9 @@ def test__tau():
         'hf', 'sto-3g', False)
     specs_lst = [root_specs + (cid,) for cid in cids]
 
-    assert not fs.tau_trunk.dir.exists(prefix, root_specs)
-    fs.tau_trunk.dir.create(prefix, root_specs)
-    assert fs.tau_trunk.dir.exists(prefix, root_specs)
+    assert not SFS.tau_trunk.dir.exists(prefix, root_specs)
+    SFS.tau_trunk.dir.create(prefix, root_specs)
+    assert SFS.tau_trunk.dir.exists(prefix, root_specs)
 
     # create the trunk vmatrix file
     ref_trunk_vma = (('C', (None, None, None), (None, None, None)),
@@ -378,20 +415,20 @@ def test__tau():
                      ('H', (0, 1, 2), ('r4', 'a3', 'd2')),
                      ('H', (1, 0, 2), ('r5', 'a4', 'd3')),
                      ('H', (2, 0, 1), ('r6', 'a5', 'd4')))
-    fs.tau_trunk.file.vmatrix.write(ref_trunk_vma, prefix, root_specs)
-    trunk_vma = fs.tau_trunk.file.vmatrix.read(prefix, root_specs)
+    SFS.tau_trunk.file.vmatrix.write(ref_trunk_vma, prefix, root_specs)
+    trunk_vma = SFS.tau_trunk.file.vmatrix.read(prefix, root_specs)
     assert trunk_vma == ref_trunk_vma
 
     # create the trunk information file
     ref_trunk_inf_obj = autofile.system.info.tau_trunk(
         nsamp=7, tors_ranges={'d3': (0, 6.283185307179586),
                               'd4': (0, 6.283185307179586)})
-    fs.tau_trunk.file.info.write(ref_trunk_inf_obj, prefix, root_specs)
-    trunk_inf_obj = fs.tau_trunk.file.info.read(prefix, root_specs)
+    SFS.tau_trunk.file.info.write(ref_trunk_inf_obj, prefix, root_specs)
+    trunk_inf_obj = SFS.tau_trunk.file.info.read(prefix, root_specs)
     assert trunk_inf_obj == ref_trunk_inf_obj
 
     for specs in specs_lst:
-        fs.tau.dir.create(prefix, specs)
+        SFS.tau.dir.create(prefix, specs)
 
         ref_geom_inf_obj = autofile.system.info.run(
             job='optimization', prog='psi4', method='mp2', basis='sto-3g',
@@ -423,29 +460,29 @@ def test__tau():
         # (I'm not bothering with the hessian for now)
 
         # writes
-        fs.tau.file.geometry_info.write(
+        SFS.tau.file.geometry_info.write(
             ref_geom_inf_obj, prefix, specs)
-        fs.tau.file.gradient_info.write(
+        SFS.tau.file.gradient_info.write(
             ref_grad_inf_obj, prefix, specs)
-        fs.tau.file.hessian_info.write(
+        SFS.tau.file.hessian_info.write(
             ref_hess_inf_obj, prefix, specs)
-        fs.tau.file.geometry_input.write(ref_geom_inp_str, prefix, specs)
-        fs.tau.file.gradient_input.write(ref_grad_inp_str, prefix, specs)
-        fs.tau.file.hessian_input.write(ref_hess_inp_str, prefix, specs)
-        fs.tau.file.energy.write(ref_ene, prefix, specs)
-        fs.tau.file.geometry.write(ref_geo, prefix, specs)
-        fs.tau.file.gradient.write(ref_grad, prefix, specs)
+        SFS.tau.file.geometry_input.write(ref_geom_inp_str, prefix, specs)
+        SFS.tau.file.gradient_input.write(ref_grad_inp_str, prefix, specs)
+        SFS.tau.file.hessian_input.write(ref_hess_inp_str, prefix, specs)
+        SFS.tau.file.energy.write(ref_ene, prefix, specs)
+        SFS.tau.file.geometry.write(ref_geo, prefix, specs)
+        SFS.tau.file.gradient.write(ref_grad, prefix, specs)
 
         # reads
-        geom_inf_obj = fs.tau.file.geometry_info.read(prefix, specs)
-        grad_inf_obj = fs.tau.file.gradient_info.read(prefix, specs)
-        hess_inf_obj = fs.tau.file.hessian_info.read(prefix, specs)
-        geom_inp_str = fs.tau.file.geometry_input.read(prefix, specs)
-        grad_inp_str = fs.tau.file.gradient_input.read(prefix, specs)
-        hess_inp_str = fs.tau.file.hessian_input.read(prefix, specs)
-        ene = fs.tau.file.energy.read(prefix, specs)
-        geo = fs.tau.file.geometry.read(prefix, specs)
-        grad = fs.tau.file.gradient.read(prefix, specs)
+        geom_inf_obj = SFS.tau.file.geometry_info.read(prefix, specs)
+        grad_inf_obj = SFS.tau.file.gradient_info.read(prefix, specs)
+        hess_inf_obj = SFS.tau.file.hessian_info.read(prefix, specs)
+        geom_inp_str = SFS.tau.file.geometry_input.read(prefix, specs)
+        grad_inp_str = SFS.tau.file.gradient_input.read(prefix, specs)
+        hess_inp_str = SFS.tau.file.hessian_input.read(prefix, specs)
+        ene = SFS.tau.file.energy.read(prefix, specs)
+        geo = SFS.tau.file.geometry.read(prefix, specs)
+        grad = SFS.tau.file.gradient.read(prefix, specs)
 
         # check read values
         assert geom_inf_obj == ref_geom_inf_obj
@@ -458,8 +495,8 @@ def test__tau():
         assert automol.geom.almost_equal(geo, ref_geo)
         assert numpy.allclose(grad, ref_grad)
 
-    print(fs.tau.dir.existing(prefix, root_specs))
-    assert len(fs.tau.dir.existing(prefix, root_specs)) == ntaus
+    print(SFS.tau.dir.existing(prefix, root_specs))
+    assert len(SFS.tau.dir.existing(prefix, root_specs)) == ntaus
 
 
 def test__tau_run():
@@ -480,7 +517,7 @@ def test__tau_run():
     )
 
     for specs in specs_lst:
-        fs.tau_run.dir.create(prefix, specs)
+        SFS.tau_run.dir.create(prefix, specs)
         job = specs[-1]
         ref_inf_obj = autofile.system.info.run(
             job=job, prog='psi4', method='hf', basis='sto-3g',
@@ -488,9 +525,9 @@ def test__tau_run():
         ref_inp_str = '<input file>'
         ref_out_str = '<output file>'
 
-        fs.tau_run.file.info.write(ref_inf_obj, prefix, specs)
-        fs.tau_run.file.input.write(ref_inp_str, prefix, specs)
-        fs.tau_run.file.output.write(ref_out_str, prefix, specs)
+        SFS.tau_run.file.info.write(ref_inf_obj, prefix, specs)
+        SFS.tau_run.file.input.write(ref_inp_str, prefix, specs)
+        SFS.tau_run.file.output.write(ref_out_str, prefix, specs)
 
 
 if __name__ == '__main__':
@@ -500,6 +537,7 @@ if __name__ == '__main__':
     # test__scan()
     # test__conformer_run()
     # test__scan_run()
-    test__tau()
-    test__tau_run()
+    # test__tau()
+    # test__tau_run()
     # test__single_point()
+    test__reaction()

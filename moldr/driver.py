@@ -9,7 +9,7 @@ from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
-from autofile import fs
+from autofile import SFS
 from moldr import optsmat
 
 
@@ -33,19 +33,19 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
 
     # check for a previously saved run
     vma = automol.zmatrix.var_(zma)
-    if fs.conf_trunk.dir.exists(save_prefix, root_specs):
-        _vma = fs.conf_trunk.file.vmatrix.read(save_prefix, root_specs)
+    if SFS.conf_trunk.dir.exists(save_prefix, root_specs):
+        _vma = SFS.conf_trunk.file.vmatrix.read(save_prefix, root_specs)
         assert vma == _vma
-        inf_obj = fs.conf_trunk.file.info.read(save_prefix, root_specs)
+        inf_obj = SFS.conf_trunk.file.info.read(save_prefix, root_specs)
         nsamp = max(nsamp - inf_obj.nsamp, 0)
         print("Found previous saved run. Adjusting nsamp.")
         print("    New nsamp is {:d}.".format(nsamp))
     else:
-        fs.conf_trunk.dir.create(save_prefix, root_specs)
+        SFS.conf_trunk.dir.create(save_prefix, root_specs)
         inf_obj = autofile.system.info.conformer_trunk(
             nsamp=0, tors_ranges=tors_ranges)
-    fs.conf_trunk.file.vmatrix.write(vma, save_prefix, root_specs)
-    fs.conf_trunk.file.info.write(inf_obj, save_prefix, root_specs)
+    SFS.conf_trunk.file.vmatrix.write(vma, save_prefix, root_specs)
+    SFS.conf_trunk.file.info.write(inf_obj, save_prefix, root_specs)
 
     # update the number of samples
 
@@ -60,8 +60,8 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
     for idx, (cid, inp_zma) in enumerate(zip(cids, inp_zmas)):
         specs = root_specs + (cid, job)
 
-        if not fs.conf_run.dir.exists(run_prefix, specs):
-            run_path = fs.conf_run.dir.path(run_prefix, specs)
+        if not SFS.conf_run.dir.exists(run_prefix, specs):
+            run_path = SFS.conf_run.dir.path(run_prefix, specs)
             print("Starting run {}/{} at {}".format(idx+1, nsamp, run_path))
 
             status = "running"
@@ -69,8 +69,8 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
                 job=job, prog=prog, method=method, basis=basis, status=status)
             run_inf_obj.utc_start_time = autofile.system.info.utc_time()
 
-            fs.conf_run.dir.create(run_prefix, specs)
-            fs.conf_run.file.info.write(run_inf_obj, run_prefix, specs)
+            SFS.conf_run.dir.create(run_prefix, specs)
+            SFS.conf_run.file.info.write(run_inf_obj, run_prefix, specs)
 
 #            inp_str, out_str = feedback_optimization(
 #                script_str, run_path,
@@ -102,13 +102,13 @@ def run_conformers(ich, charge, mult, method, basis, orb_restricted,
             run_inf_obj.utc_end_time = autofile.system.info.utc_time()
 
             if elstruct.reader.has_normal_exit_message(prog, out_str):
-                fs.conf_run.file.output.write(out_str, run_prefix, specs)
+                SFS.conf_run.file.output.write(out_str, run_prefix, specs)
                 status = "succeeded"
             else:
                 status = "failed"
             run_inf_obj.status = status
-            fs.conf_run.file.info.write(run_inf_obj, run_prefix, specs)
-            fs.conf_run.file.input.write(inp_str, run_prefix, specs)
+            SFS.conf_run.file.info.write(run_inf_obj, run_prefix, specs)
+            SFS.conf_run.file.input.write(inp_str, run_prefix, specs)
 
             print("Run {}/{} {} at {}".format(idx+1, nsamp, status, run_path))
 
@@ -117,15 +117,15 @@ def save_conformers(ich, charge, mult, method, basis, orb_restricted,
                     run_prefix, save_prefix):
     """ save the conformers that have been found so far
     """
-#    if not fs.conf.dir.exists(run_prefix, root_specs):
+#    if not SFS.conf.dir.exists(run_prefix, root_specs):
 #        print ('conformer directory does not exist')
 #    else:
-#        fs.conf_trunk.dir.create(run_prefix, root_specs)
+#        SFS.conf_trunk.dir.create(run_prefix, root_specs)
     root_specs = (ich, charge, mult, method, basis, orb_restricted)
     print('save_conf_test', run_prefix, root_specs)
-    if fs.conf_trunk.dir.exists(run_prefix, root_specs):
-        run_conf_specs_lst = fs.conf.dir.existing(run_prefix, root_specs)
-        saved_conf_specs_lst = fs.conf.dir.existing(save_prefix, root_specs)
+    if SFS.conf_trunk.dir.exists(run_prefix, root_specs):
+        run_conf_specs_lst = SFS.conf.dir.existing(run_prefix, root_specs)
+        saved_conf_specs_lst = SFS.conf.dir.existing(save_prefix, root_specs)
 
         conf_specs_lst = []
         ene_lst = []
@@ -140,13 +140,13 @@ def save_conformers(ich, charge, mult, method, basis, orb_restricted,
         for conf_specs in run_conf_specs_lst:
             specs = root_specs + conf_specs + run_specs
 
-            run_path = fs.conf_run.dir.path(run_prefix, specs)
+            run_path = SFS.conf_run.dir.path(run_prefix, specs)
             print("Reading from run at {}".format(run_path))
 
-            if fs.conf_run.file.output.exists(run_prefix, specs):
-                inf_obj = fs.conf_run.file.info.read(run_prefix, specs)
-                inp_str = fs.conf_run.file.input.read(run_prefix, specs)
-                out_str = fs.conf_run.file.output.read(run_prefix, specs)
+            if SFS.conf_run.file.output.exists(run_prefix, specs):
+                inf_obj = SFS.conf_run.file.info.read(run_prefix, specs)
+                inp_str = SFS.conf_run.file.input.read(run_prefix, specs)
+                out_str = SFS.conf_run.file.output.read(run_prefix, specs)
                 prog = inf_obj.prog
                 if elstruct.reader.has_normal_exit_message(prog, out_str):
                     ene = elstruct.reader.energy(prog, method, out_str)
@@ -163,7 +163,7 @@ def save_conformers(ich, charge, mult, method, basis, orb_restricted,
         seen_geo_lst = []
         for conf_specs in saved_conf_specs_lst:
             specs = root_specs + conf_specs
-            geo = fs.conf.file.geometry.read(save_prefix, specs)
+            geo = SFS.conf.file.geometry.read(save_prefix, specs)
             seen_geo_lst.append(geo)
 
         print("Writing unique conformer information to save directories.")
@@ -177,20 +177,20 @@ def save_conformers(ich, charge, mult, method, basis, orb_restricted,
             geo = geo_lst[idx]
 
             specs = root_specs + conf_specs
-            save_path = fs.conf.dir.path(save_prefix, specs)
+            save_path = SFS.conf.dir.path(save_prefix, specs)
             print("Saving values from run at {}".format(save_path))
 
-            fs.conf.dir.create(save_prefix, specs)
-            fs.conf.file.geometry_info.write(inf_obj, save_prefix, specs)
-            fs.conf.file.geometry_input.write(inp_str, save_prefix, specs)
-            fs.conf.file.energy.write(ene, save_prefix, specs)
-            fs.conf.file.geometry.write(geo, save_prefix, specs)
+            SFS.conf.dir.create(save_prefix, specs)
+            SFS.conf.file.geometry_info.write(inf_obj, save_prefix, specs)
+            SFS.conf.file.geometry_input.write(inp_str, save_prefix, specs)
+            SFS.conf.file.energy.write(ene, save_prefix, specs)
+            SFS.conf.file.geometry.write(geo, save_prefix, specs)
 
         # update the number of samples
         nsamp_new = len(conf_specs_lst)
-        trunk_inf_obj = fs.conf_trunk.file.info.read(save_prefix, root_specs)
+        trunk_inf_obj = SFS.conf_trunk.file.info.read(save_prefix, root_specs)
         trunk_inf_obj.nsamp += nsamp_new
-        fs.conf_trunk.file.info.write(trunk_inf_obj, save_prefix, root_specs)
+        SFS.conf_trunk.file.info.write(trunk_inf_obj, save_prefix, root_specs)
 
 
 def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
@@ -204,24 +204,24 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
     print(cid)
     print(save_prefix)
     print(root_specs)
-    print(fs.conf.file.geometry.path(save_prefix, root_specs))
-#    assert fs.conf.file.geometry.exists(save_prefix, root_specs)
-    if not fs.conf.file.geometry.exists(save_prefix, root_specs):
+    print(SFS.conf.file.geometry.path(save_prefix, root_specs))
+#    assert SFS.conf.file.geometry.exists(save_prefix, root_specs)
+    if not SFS.conf.file.geometry.exists(save_prefix, root_specs):
         print('file does not exist')
     else:
-        geo = fs.conf.file.geometry.read(save_prefix, root_specs)
+        geo = SFS.conf.file.geometry.read(save_prefix, root_specs)
         zma = automol.geom.zmatrix(geo)
 
         vma = automol.zmatrix.var_(zma)
-        if fs.scan_trunk.dir.exists(save_prefix, root_specs):
-            _vma = fs.scan_trunk.file.vmatrix.read(save_prefix, root_specs)
+        if SFS.scan_trunk.dir.exists(save_prefix, root_specs):
+            _vma = SFS.scan_trunk.file.vmatrix.read(save_prefix, root_specs)
             assert vma == _vma
-        fs.scan_trunk.dir.create(save_prefix, root_specs)
-        fs.scan_trunk.file.vmatrix.write(vma, save_prefix, root_specs)
+        SFS.scan_trunk.dir.create(save_prefix, root_specs)
+        SFS.scan_trunk.file.vmatrix.write(vma, save_prefix, root_specs)
 
         print(root_specs)
         print(run_prefix, save_prefix, script_str, prog, kwargs)
-        print(fs.scan_trunk.dir.path(save_prefix, root_specs))
+        print(SFS.scan_trunk.dir.path(save_prefix, root_specs))
 
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         increment = scan_incr*qcc.conversion_factor('degree', 'radian')
@@ -234,8 +234,8 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
             branch_specs = root_specs + ([tors_name],)
             inf_obj = autofile.system.info.scan_branch({tors_name: linspace})
 
-            fs.scan_branch.dir.create(save_prefix, branch_specs)
-            fs.scan_branch.file.info.write(inf_obj, save_prefix, branch_specs)
+            SFS.scan_branch.dir.create(save_prefix, branch_specs)
+            SFS.scan_branch.file.info.write(inf_obj, save_prefix, branch_specs)
 
             last_zma = zma
 
@@ -244,14 +244,14 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
             for grid_idx, grid_val in enumerate(grid):
                 specs = branch_specs + ([grid_idx], job)
 
-                if not fs.scan_run.dir.exists(run_prefix, specs):
-                    run_path = fs.scan_run.dir.path(run_prefix, specs)
+                if not SFS.scan_run.dir.exists(run_prefix, specs):
+                    run_path = SFS.scan_run.dir.path(run_prefix, specs)
                     print("Starting run {}/{} at {}"
                           .format(grid_idx+1, npoint, run_path))
                     inp_zma = automol.zmatrix.set_values(
                         last_zma, {tors_name: grid_val})
 
-                    fs.scan_run.dir.create(run_prefix, specs)
+                    SFS.scan_run.dir.create(run_prefix, specs)
 
                     status = "running"
                     run_inf_obj = autofile.system.info.run(
@@ -260,8 +260,8 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
                     run_inf_obj.utc_start_time = (
                         autofile.system.info.utc_time())
 
-                    fs.scan_run.dir.create(run_prefix, specs)
-                    fs.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
+                    SFS.scan_run.dir.create(run_prefix, specs)
+                    SFS.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
 
     #                print (inp_zma)
     #                inp_str, out_str = feedback_optimization(
@@ -297,15 +297,15 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
 
 
                     if elstruct.reader.has_normal_exit_message(prog, out_str):
-                        fs.scan_run.file.output.write(out_str, run_prefix, specs)
+                        SFS.scan_run.file.output.write(out_str, run_prefix, specs)
                         status = "succeeded"
                         last_zma = elstruct.reader.opt_zmatrix(prog, out_str)
                     else:
                         status = "failed"
 
                     run_inf_obj.status = status
-                    fs.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
-                    fs.scan_run.file.input.write(inp_str, run_prefix, specs)
+                    SFS.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
+                    SFS.scan_run.file.input.write(inp_str, run_prefix, specs)
                     print("Run {}/{} {} at {}"
                           .format(grid_idx+1, npoint, status, run_path))
 
@@ -316,9 +316,9 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
 #    """
 #    root_specs = (ich, charge, mult, method, basis, orb_restricted, cid)
 #
-#    run_conf_specs_lst = fs.conf.dir.existing(run_prefix, root_specs)
-#    saved_conf_specs_lst = fs.conf.dir.existing(save_prefix, root_specs)
-#    saved_scan_lst = fs.conf.
+#    run_conf_specs_lst = SFS.conf.dir.existing(run_prefix, root_specs)
+#    saved_conf_specs_lst = SFS.conf.dir.existing(save_prefix, root_specs)
+#    saved_scan_lst = SFS.conf.
 #    conf_specs_lst = []
 #    ene_lst = []
 #    geo_lst = []
@@ -329,21 +329,21 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
 #    print("Reading torsional scans from run directories.")
 #    print(root_specs)
 #
-#    assert fs.conf.file.geometry.exists(save_prefix, root_specs)
-#    geo = fs.conf.file.geometry.read(save_prefix, root_specs)
+#    assert SFS.conf.file.geometry.exists(save_prefix, root_specs)
+#    geo = SFS.conf.file.geometry.read(save_prefix, root_specs)
 #    zma = automol.geom.zmatrix(geo)
 #
 #    vma = automol.zmatrix.var_(zma)
-#    if fs.scan_trunk.dir.exists(save_prefix, root_specs):
-#        _vma = fs.scan_trunk.file.vmatrix.read(save_prefix, root_specs)
+#    if SFS.scan_trunk.dir.exists(save_prefix, root_specs):
+#        _vma = SFS.scan_trunk.file.vmatrix.read(save_prefix, root_specs)
 #        assert vma == _vma
 #    else:
-#        fs.scan_trunk.dir.create(save_prefix, root_specs)
-#    fs.scan_trunk.file.vmatrix.write(vma, save_prefix, root_specs)
+#        SFS.scan_trunk.dir.create(save_prefix, root_specs)
+#    SFS.scan_trunk.file.vmatrix.write(vma, save_prefix, root_specs)
 #
 #    print(root_specs)
 #    print(run_prefix, save_prefix, script_str, prog, kwargs)
-#    print(fs.scan_trunk.dir.path(save_prefix, root_specs))
+#    print(SFS.scan_trunk.dir.path(save_prefix, root_specs))
 #
 #    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
 #    tors_linspace_vals = automol.zmatrix.torsional_scan_grids(zma, tors_names)
@@ -354,8 +354,8 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
 #        branch_specs = root_specs + ([tors_name],)
 #        inf_obj = autofile.system.info.scan_branch({tors_name: linspace})
 #
-#        fs.scan_branch.dir.create(save_prefix, branch_specs)
-#        fs.scan_branch.file.info.write(inf_obj, save_prefix, branch_specs)
+#        SFS.scan_branch.dir.create(save_prefix, branch_specs)
+#        SFS.scan_branch.file.info.write(inf_obj, save_prefix, branch_specs)
 #
 #        last_zma = zma
 #
@@ -364,21 +364,21 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
 #        for grid_idx, grid_val in enumerate(grid):
 #            specs = branch_specs + ([grid_idx], job)
 #
-#            if not fs.scan_run.dir.exists(run_prefix, specs):
-#                run_path = fs.scan_run.dir.path(run_prefix, specs)
+#            if not SFS.scan_run.dir.exists(run_prefix, specs):
+#                run_path = SFS.scan_run.dir.path(run_prefix, specs)
 #                print("Starting run {}/{} at {}"
 #                      .format(grid_idx+1, npoint, run_path))
 #                inp_zma = automol.zmatrix.set_values(
 #                    last_zma, {tors_name: grid_val})
 #
-#                fs.scan_run.dir.create(run_prefix, specs)
+#                SFS.scan_run.dir.create(run_prefix, specs)
 #
 #                run_inf_obj = autofile.system.info.run(
 #                    job=job, prog=prog, method=method, basis=basis)
 #                run_inf_obj.utc_start_time = autofile.system.info.utc_time()
 #
-#                fs.scan_run.dir.create(run_prefix, specs)
-#                fs.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
+#                SFS.scan_run.dir.create(run_prefix, specs)
+#                SFS.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
 #
 #                inp_str, out_str = feedback_optimization(
 #                    script_str, run_path,
@@ -388,12 +388,12 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
 #
 #                run_inf_obj.utc_end_time = autofile.system.info.utc_time()
 #
-#                fs.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
-#                fs.scan_run.file.input.write(inp_str, run_prefix, specs)
+#                SFS.scan_run.file.info.write(run_inf_obj, run_prefix, specs)
+#                SFS.scan_run.file.input.write(inp_str, run_prefix, specs)
 #
 #                status = "failed"
 #                if elstruct.reader.has_normal_exit_message(prog, out_str):
-#                    fs.scan_run.file.output.write(out_str, run_prefix, specs)
+#                    SFS.scan_run.file.output.write(out_str, run_prefix, specs)
 #                    status = "succeeded"
 #
 #                    last_zma = elstruct.reader.opt_zmatrix(prog, out_str)
@@ -422,19 +422,19 @@ def run_tau(ich, charge, mult, method, basis, orb_restricted,
 
     # check for a previously saved run
     vma = automol.zmatrix.var_(zma)
-    if fs.tau_trunk.dir.exists(save_prefix, root_specs):
-        _vma = fs.tau_trunk.file.vmatrix.read(save_prefix, root_specs)
+    if SFS.tau_trunk.dir.exists(save_prefix, root_specs):
+        _vma = SFS.tau_trunk.file.vmatrix.read(save_prefix, root_specs)
         assert vma == _vma
-        inf_obj = fs.tau_trunk.file.info.read(save_prefix, root_specs)
+        inf_obj = SFS.tau_trunk.file.info.read(save_prefix, root_specs)
         nsamp = max(nsamp - inf_obj.nsamp, 0)
         print("Found previous saved run. Adjusting nsamp.")
         print("    New nsamp is {:d}.".format(nsamp))
     else:
-        fs.tau_trunk.dir.create(save_prefix, root_specs)
+        SFS.tau_trunk.dir.create(save_prefix, root_specs)
         inf_obj = autofile.system.info.tau_trunk(
             nsamp=0, tors_ranges=tors_ranges)
-    fs.tau_trunk.file.vmatrix.write(vma, save_prefix, root_specs)
-    fs.tau_trunk.file.info.write(inf_obj, save_prefix, root_specs)
+    SFS.tau_trunk.file.vmatrix.write(vma, save_prefix, root_specs)
+    SFS.tau_trunk.file.info.write(inf_obj, save_prefix, root_specs)
 
     # update the number of samples
 
@@ -449,8 +449,8 @@ def run_tau(ich, charge, mult, method, basis, orb_restricted,
     for idx, (cid, inp_zma) in enumerate(zip(cids, inp_zmas)):
         specs = root_specs + (cid, job)
 
-        if not fs.tau_run.dir.exists(run_prefix, specs):
-            run_path = fs.tau_run.dir.path(run_prefix, specs)
+        if not SFS.tau_run.dir.exists(run_prefix, specs):
+            run_path = SFS.tau_run.dir.path(run_prefix, specs)
             print("Starting run {}/{} at {}".format(idx+1, nsamp, run_path))
 
             status = "running"
@@ -458,8 +458,8 @@ def run_tau(ich, charge, mult, method, basis, orb_restricted,
                 job=job, prog=prog, method=method, basis=basis, status=status)
             run_inf_obj.utc_start_time = autofile.system.info.utc_time()
 
-            fs.tau_run.dir.create(run_prefix, specs)
-            fs.tau_run.file.info.write(run_inf_obj, run_prefix, specs)
+            SFS.tau_run.dir.create(run_prefix, specs)
+            SFS.tau_run.file.info.write(run_inf_obj, run_prefix, specs)
 
 #            inp_str, out_str = feedback_optimization(
 #                script_str, run_path,
@@ -491,13 +491,13 @@ def run_tau(ich, charge, mult, method, basis, orb_restricted,
             run_inf_obj.utc_end_time = autofile.system.info.utc_time()
 
             if elstruct.reader.has_normal_exit_message(prog, out_str):
-                fs.tau_run.file.output.write(out_str, run_prefix, specs)
+                SFS.tau_run.file.output.write(out_str, run_prefix, specs)
                 status = "succeeded"
             else:
                 status = "failed"
             run_inf_obj.status = status
-            fs.tau_run.file.info.write(run_inf_obj, run_prefix, specs)
-            fs.tau_run.file.input.write(inp_str, run_prefix, specs)
+            SFS.tau_run.file.info.write(run_inf_obj, run_prefix, specs)
+            SFS.tau_run.file.input.write(inp_str, run_prefix, specs)
             print("Run {}/{} {} at {}".format(idx+1, nsamp, status, run_path))
 
 
@@ -506,8 +506,8 @@ def save_tau(ich, charge, mult, method, basis, orb_restricted,
     """ save the taus that have been found so far
     """
     root_specs = (ich, charge, mult, method, basis, orb_restricted)
-    run_tau_specs_lst = fs.tau.dir.existing(run_prefix, root_specs)
-    saved_tau_specs_lst = fs.tau.dir.existing(save_prefix, root_specs)
+    run_tau_specs_lst = SFS.tau.dir.existing(run_prefix, root_specs)
+    saved_tau_specs_lst = SFS.tau.dir.existing(save_prefix, root_specs)
 
     tau_specs_lst = []
     ene_lst = []
@@ -523,13 +523,13 @@ def save_tau(ich, charge, mult, method, basis, orb_restricted,
     for tau_specs in run_tau_specs_lst:
         specs = root_specs + tau_specs + run_specs
 
-        run_path = fs.tau_run.dir.path(run_prefix, specs)
+        run_path = SFS.tau_run.dir.path(run_prefix, specs)
         print("Reading from run at {}".format(run_path))
 
-        if fs.tau_run.file.output.exists(run_prefix, specs):
-            inf_obj = fs.tau_run.file.info.read(run_prefix, specs)
-            inp_str = fs.tau_run.file.input.read(run_prefix, specs)
-            out_str = fs.tau_run.file.output.read(run_prefix, specs)
+        if SFS.tau_run.file.output.exists(run_prefix, specs):
+            inf_obj = SFS.tau_run.file.info.read(run_prefix, specs)
+            inp_str = SFS.tau_run.file.input.read(run_prefix, specs)
+            out_str = SFS.tau_run.file.output.read(run_prefix, specs)
             prog = inf_obj.prog
             if elstruct.reader.has_normal_exit_message(prog, out_str):
                 ene = elstruct.reader.energy(prog, method, out_str)
@@ -537,20 +537,20 @@ def save_tau(ich, charge, mult, method, basis, orb_restricted,
 
             print(automol.geom.coulomb_spectrum(geo))
             save_specs = root_specs + tau_specs
-            save_path = fs.tau.dir.path(save_prefix, save_specs)
+            save_path = SFS.tau.dir.path(save_prefix, save_specs)
             print("Saving values from run at {}".format(save_path))
 
-            fs.tau.dir.create(save_prefix, save_specs)
-            fs.tau.file.geometry_info.write(inf_obj, save_prefix, save_specs)
-            fs.tau.file.geometry_input.write(inp_str, save_prefix, save_specs)
-            fs.tau.file.energy.write(ene, save_prefix, save_specs)
-            fs.tau.file.geometry.write(geo, save_prefix, save_specs)
+            SFS.tau.dir.create(save_prefix, save_specs)
+            SFS.tau.file.geometry_info.write(inf_obj, save_prefix, save_specs)
+            SFS.tau.file.geometry_input.write(inp_str, save_prefix, save_specs)
+            SFS.tau.file.energy.write(ene, save_prefix, save_specs)
+            SFS.tau.file.geometry.write(geo, save_prefix, save_specs)
 
     # update the number of samples
     nsamp_new = len(tau_specs_lst)
-    trunk_inf_obj = fs.tau_trunk.file.info.read(save_prefix, root_specs)
+    trunk_inf_obj = SFS.tau_trunk.file.info.read(save_prefix, root_specs)
     trunk_inf_obj.nsamp += nsamp_new
-    fs.tau_trunk.file.info.write(trunk_inf_obj, save_prefix, root_specs)
+    SFS.tau_trunk.file.info.write(trunk_inf_obj, save_prefix, root_specs)
 
 
 def run_tau_hessian(ich, charge, mult, method, basis, orb_restricted, 
@@ -559,7 +559,7 @@ def run_tau_hessian(ich, charge, mult, method, basis, orb_restricted,
     """ save the taus that have been found so far
     """
     root_specs = (ich, charge, mult, method, basis, orb_restricted)
-    saved_tau_specs_lst = fs.tau.dir.existing(save_prefix, root_specs)
+    saved_tau_specs_lst = SFS.tau.dir.existing(save_prefix, root_specs)
 
     tau_specs_lst = []
     ene_lst = []
@@ -575,28 +575,28 @@ def run_tau_hessian(ich, charge, mult, method, basis, orb_restricted,
 
     for tau_specs in saved_tau_specs_lst:
         specs = root_specs + tau_specs
-        geo = fs.tau.file.geometry.read(save_prefix, specs)
-        ene = fs.tau.file.energy.read(save_prefix, specs)
+        geo = SFS.tau.file.geometry.read(save_prefix, specs)
+        ene = SFS.tau.file.energy.read(save_prefix, specs)
         if ene < vignore:
             geo_lst.append(geo)
             ene_lst.append(ene)
             tau_specs_lst.append(tau_specs)
     for idx, (tau_specs, geo) in enumerate(zip(tau_specs_lst, geo_lst)):
         specs = root_specs + tau_specs + run_specs 
-        run_path = fs.tau_run.dir.path(run_prefix, specs)
-        if not fs.tau_run.dir.exists(run_prefix, specs):
+        run_path = SFS.tau_run.dir.path(run_prefix, specs)
+        if not SFS.tau_run.dir.exists(run_prefix, specs):
             do_run = True
         else:
-            run_inf_obj = fs.tau_run.file.info.read(run_prefix, specs) 
+            run_inf_obj = SFS.tau_run.file.info.read(run_prefix, specs) 
             do_run = run_inf_obj.status == "failed"
             if do_run:
                 print ('Found failed hessian at {}'.format(run_path))
-                fs.tau_run.dir.remove (run_prefix,specs)
+                SFS.tau_run.dir.remove (run_prefix,specs)
             else:
                 print ('Skipping hessian at {}'.format(run_path))
 
         if do_run:
-            run_path = fs.tau_run.dir.path(run_prefix, specs)
+            run_path = SFS.tau_run.dir.path(run_prefix, specs)
             print("Starting run {} at {}".format(idx+1, run_path))
 
             status = "running"
@@ -604,8 +604,8 @@ def run_tau_hessian(ich, charge, mult, method, basis, orb_restricted,
                 job='hessian', prog=prog, method=method, basis=basis, status=status)
             run_inf_obj.utc_start_time = autofile.system.info.utc_time()
 
-            fs.tau_run.dir.create(run_prefix, specs)
-            fs.tau_run.file.info.write(run_inf_obj, run_prefix, specs)
+            SFS.tau_run.dir.create(run_prefix, specs)
+            SFS.tau_run.file.info.write(run_inf_obj, run_prefix, specs)
 
             options_mat = [
                 [{'scf_options': (elstruct.Option.Scf.Guess.CORE,)},
@@ -626,16 +626,15 @@ def run_tau_hessian(ich, charge, mult, method, basis, orb_restricted,
 
             run_inf_obj.utc_end_time = autofile.system.info.utc_time()
 
-
             if elstruct.reader.has_normal_exit_message(prog, out_str):
-                fs.tau_run.file.output.write(out_str, run_prefix, specs)
+                SFS.tau_run.file.output.write(out_str, run_prefix, specs)
                 status = "succeeded"
             else:
                 status = "failed"
 
             run_inf_obj.status = status
-            fs.tau_run.file.info.write(run_inf_obj, run_prefix, specs)
-            fs.tau_run.file.input.write(inp_str, run_prefix, specs)
+            SFS.tau_run.file.info.write(run_inf_obj, run_prefix, specs)
+            SFS.tau_run.file.input.write(inp_str, run_prefix, specs)
             print("Run {} {} at {}".format(idx+1, status, run_path))
 
 

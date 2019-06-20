@@ -1,4 +1,4 @@
-""" creates the filesystem
+""" creates the species filesystem
 """
 from autofile.system import model
 from autofile.system import series
@@ -8,6 +8,8 @@ class AttributeName():
     """ DataFile attribute names """
     SPC_TRUNK = 'species_trunk'
     SPC_LEAF = 'species'
+    RXN_TRUNK = 'reaction_trunk'
+    RXN_LEAF = 'reaction'
     THY_LEAF = 'theory'
     CNF_TRUNK = 'conf_trunk'
     CNF_LEAF = 'conf'
@@ -25,49 +27,77 @@ class AttributeName():
     SPT_LEAF = 'tau_sp'
 
 
-SPC_TRUNK_DS = series.species_trunk()
-SPC_LEAF_DS = series.species_leaf(root_dsdir=SPC_TRUNK_DS.dir)
-THY_LEAF_DS = series.theory_leaf(root_dsdir=SPC_LEAF_DS.dir)
-CNF_TRUNK_DS = series.conformer_trunk(root_dsdir=THY_LEAF_DS.dir)
-CNF_LEAF_DS = series.conformer_leaf(root_dsdir=CNF_TRUNK_DS.dir)
-CNF_RUN_TRUNK_DS = series.run_trunk(root_dsdir=CNF_LEAF_DS.dir)
-CNF_RUN_LEAF_DS = series.run_leaf(root_dsdir=CNF_RUN_TRUNK_DS.dir)
-TAU_TRUNK_DS = series.tau_trunk(root_dsdir=THY_LEAF_DS.dir)
-TAU_LEAF_DS = series.tau_leaf(root_dsdir=TAU_TRUNK_DS.dir)
-TAU_RUN_TRUNK_DS = series.run_trunk(root_dsdir=TAU_LEAF_DS.dir)
-TAU_RUN_LEAF_DS = series.run_leaf(root_dsdir=TAU_RUN_TRUNK_DS.dir)
+def species_filesystem():
+    """ construct the species filesystem
+    """
+    spc_trunk_ds = series.species_trunk()
+    spc_leaf_ds = series.species_leaf(root_dsdir=spc_trunk_ds.dir)
+    thy_leaf_ds = series.theory_leaf(root_dsdir=spc_leaf_ds.dir)
+    cnf_trunk_ds = series.conformer_trunk(root_dsdir=thy_leaf_ds.dir)
+    cnf_leaf_ds = series.conformer_leaf(root_dsdir=cnf_trunk_ds.dir)
+    cnf_run_trunk_ds = series.run_trunk(root_dsdir=cnf_leaf_ds.dir)
+    cnf_run_leaf_ds = series.run_leaf(root_dsdir=cnf_run_trunk_ds.dir)
+    tau_trunk_ds = series.tau_trunk(root_dsdir=thy_leaf_ds.dir)
+    tau_leaf_ds = series.tau_leaf(root_dsdir=tau_trunk_ds.dir)
+    tau_run_trunk_ds = series.run_trunk(root_dsdir=tau_leaf_ds.dir)
+    tau_run_leaf_ds = series.run_leaf(root_dsdir=tau_run_trunk_ds.dir)
 
-# subdirectories of conformer
-# 1. single-point
-SP_TRUNK_DS = series.single_point_trunk(root_dsdir=CNF_LEAF_DS.dir)
-SP_LEAF_DS = series.single_point_leaf(root_dsdir=SP_TRUNK_DS.dir)
-# 2. scan
-SCN_TRUNK_DS = series.scan_trunk(root_dsdir=CNF_LEAF_DS.dir)
-SCN_BRANCH_DS = series.scan_branch(root_dsdir=SCN_TRUNK_DS.dir)
-SCN_LEAF_DS = series.scan_leaf(root_dsdir=SCN_BRANCH_DS.dir)
-SCN_RUN_TRUNK_DS = series.run_trunk(root_dsdir=SCN_LEAF_DS.dir)
-SCN_RUN_LEAF_DS = series.run_leaf(root_dsdir=SCN_RUN_TRUNK_DS.dir)
-# subdirectories of tau
-# 1. single-point
-SPT_TRUNK_DS = series.single_point_trunk(root_dsdir=TAU_LEAF_DS.dir)
-SPT_LEAF_DS = series.single_point_leaf(root_dsdir=SPT_TRUNK_DS.dir)
+    # subdirectories of conformer
+    # 1. single-point
+    sp_trunk_ds = series.single_point_trunk(root_dsdir=cnf_leaf_ds.dir)
+    sp_leaf_ds = series.single_point_leaf(root_dsdir=sp_trunk_ds.dir)
+    # 2. scan
+    scn_trunk_ds = series.scan_trunk(root_dsdir=cnf_leaf_ds.dir)
+    scn_branch_ds = series.scan_branch(root_dsdir=scn_trunk_ds.dir)
+    scn_leaf_ds = series.scan_leaf(root_dsdir=scn_branch_ds.dir)
+    scn_run_trunk_ds = series.run_trunk(root_dsdir=scn_leaf_ds.dir)
+    scn_run_leaf_ds = series.run_leaf(root_dsdir=scn_run_trunk_ds.dir)
+    # subdirectories of tau
+    # 1. single-point
+    spt_trunk_ds = series.single_point_trunk(root_dsdir=tau_leaf_ds.dir)
+    spt_leaf_ds = series.single_point_leaf(root_dsdir=spt_trunk_ds.dir)
 
-FS_ = model.FileSystem({
-    AttributeName.SPC_TRUNK: SPC_TRUNK_DS,
-    AttributeName.SPC_LEAF: SPC_LEAF_DS,
-    AttributeName.THY_LEAF: THY_LEAF_DS,
-    AttributeName.CNF_TRUNK: CNF_TRUNK_DS,
-    AttributeName.CNF_LEAF: CNF_LEAF_DS,
-    AttributeName.CNF_RUN_LEAF: CNF_RUN_LEAF_DS,
-    AttributeName.SP_TRUNK: SP_TRUNK_DS,
-    AttributeName.SP_LEAF: SP_LEAF_DS,
-    AttributeName.SCN_TRUNK: SCN_TRUNK_DS,
-    AttributeName.SCN_BRANCH: SCN_BRANCH_DS,
-    AttributeName.SCN_LEAF: SCN_LEAF_DS,
-    AttributeName.SCN_RUN_LEAF: SCN_RUN_LEAF_DS,
-    AttributeName.TAU_TRUNK: TAU_TRUNK_DS,
-    AttributeName.TAU_LEAF: TAU_LEAF_DS,
-    AttributeName.TAU_RUN_LEAF: TAU_RUN_LEAF_DS,
-    AttributeName.SPT_TRUNK: SPT_TRUNK_DS,
-    AttributeName.SPT_LEAF: SPT_LEAF_DS,
-})
+    spc_fs = model.FileSystem({
+        AttributeName.SPC_TRUNK: spc_trunk_ds,
+        AttributeName.SPC_LEAF: spc_leaf_ds,
+        AttributeName.THY_LEAF: thy_leaf_ds,
+        AttributeName.CNF_TRUNK: cnf_trunk_ds,
+        AttributeName.CNF_LEAF: cnf_leaf_ds,
+        AttributeName.CNF_RUN_LEAF: cnf_run_leaf_ds,
+        AttributeName.SP_TRUNK: sp_trunk_ds,
+        AttributeName.SP_LEAF: sp_leaf_ds,
+        AttributeName.SCN_TRUNK: scn_trunk_ds,
+        AttributeName.SCN_BRANCH: scn_branch_ds,
+        AttributeName.SCN_LEAF: scn_leaf_ds,
+        AttributeName.SCN_RUN_LEAF: scn_run_leaf_ds,
+        AttributeName.TAU_TRUNK: tau_trunk_ds,
+        AttributeName.TAU_LEAF: tau_leaf_ds,
+        AttributeName.TAU_RUN_LEAF: tau_run_leaf_ds,
+        AttributeName.SPT_TRUNK: spt_trunk_ds,
+        AttributeName.SPT_LEAF: spt_leaf_ds,
+    })
+
+    return spc_fs
+
+
+def reaction_filesystem():
+    """ construct the reaction filesystem
+    """
+    rxn_trunk_ds = series.reaction_trunk()
+    rxn_leaf_ds = series.reaction_leaf(root_dsdir=rxn_trunk_ds.dir)
+    thy_leaf_ds = series.theory_leaf(root_dsdir=rxn_leaf_ds.dir)
+    cnf_trunk_ds = series.conformer_trunk(root_dsdir=thy_leaf_ds.dir)
+    cnf_leaf_ds = series.conformer_leaf(root_dsdir=cnf_trunk_ds.dir)
+    cnf_run_trunk_ds = series.run_trunk(root_dsdir=cnf_leaf_ds.dir)
+    cnf_run_leaf_ds = series.run_leaf(root_dsdir=cnf_run_trunk_ds.dir)
+
+    rxn_fs = model.FileSystem({
+        AttributeName.RXN_TRUNK: rxn_trunk_ds,
+        AttributeName.RXN_LEAF: rxn_leaf_ds,
+        AttributeName.THY_LEAF: thy_leaf_ds,
+        AttributeName.CNF_TRUNK: cnf_trunk_ds,
+        AttributeName.CNF_LEAF: cnf_leaf_ds,
+        AttributeName.CNF_RUN_LEAF: cnf_run_leaf_ds,
+    })
+
+    return rxn_fs

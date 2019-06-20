@@ -50,6 +50,20 @@ def species_leaf(root_dsdir=None):
     return model.DataSeries(dsdir=dsdir)
 
 
+def reaction_trunk(root_dsdir=None):
+    """ reaction trunk DataSeries
+    """
+    dsdir = dir_.reaction_trunk(root_dsdir)
+    return model.DataSeries(dsdir=dsdir)
+
+
+def reaction_leaf(root_dsdir=None):
+    """ reaction leaf DataSeries
+    """
+    dsdir = dir_.reaction_leaf(root_dsdir)
+    return model.DataSeries(dsdir=dsdir)
+
+
 def theory_leaf(root_dsdir=None):
     """ theory leaf DataSeries
     """

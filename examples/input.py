@@ -3,7 +3,7 @@
 import os
 import automol
 import moldr
-from autofile import fs
+from autofile import SFS
 
 # PROG = 'g09'
 # SCRIPT_STR = ("#!/usr/bin/env bash\n"
@@ -73,8 +73,8 @@ for smi, mult in SMILES_MULT_LST:
         save_prefix=SAVE_PREFIX,)
 
     ROOT_SPECS = (ich, 0, mult, METHOD, BASIS, (mult == 1))
-#    cid_lst = fs.conf.dir.existing(RUN_PREFIX,ROOT_SPECS)
-    cid_lst = fs.conf.dir.existing(
+#    cid_lst = SFS.conf.dir.existing(RUN_PREFIX,ROOT_SPECS)
+    cid_lst = SFS.conf.dir.existing(
         prefix=SAVE_PREFIX,
         root_specs=ROOT_SPECS)
     print(cid_lst)
