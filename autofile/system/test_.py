@@ -4,6 +4,7 @@ import os
 import tempfile
 import numbers
 import numpy
+import pytest
 import automol
 import autofile.info
 import autofile.system
@@ -429,6 +430,93 @@ def test__dir__species_leaf():
                 sorted(branch_specs_lst))
 
 
+def test__dir__reaction_trunk():
+    """ test dir_.reaction_trunk
+    """
+    prefix = os.path.join(PREFIX, 'reaction_trunk')
+    os.mkdir(prefix)
+
+    # without a root directory
+    dsdir = autofile.system.dir_.reaction_trunk()
+
+    assert not dsdir.exists(prefix)
+    dsdir.create(prefix)
+    assert dsdir.exists(prefix)
+
+    # with a root directory
+    dsdir = autofile.system.dir_.reaction_trunk(ROOT_DSDIR)
+
+    root_specs_lst = (
+        (1, 'a'),
+        (1, 'b'),
+        (2, 'a'),
+        (2, 'b'),
+        (2, 'c'),
+    )
+
+    for root_specs in root_specs_lst:
+        specs = root_specs
+
+        assert not dsdir.exists(prefix, specs)
+        dsdir.create(prefix, specs)
+        assert dsdir.exists(prefix, specs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+
+
+def test__dir__reaction_leaf():
+    """ test dir_.reaction_leaf
+    """
+    prefix = os.path.join(PREFIX, 'reaction_leaf')
+    os.mkdir(prefix)
+
+    dsdir = autofile.system.dir_.reaction_leaf(ROOT_DSDIR)
+
+    root_specs_lst = (
+        (1, 'a'),
+        (1, 'b'),
+        (2, 'a'),
+        (2, 'b'),
+        (2, 'c'),
+    )
+
+    branch_specs_lst = (
+        (
+            (('InChI=1S/C2H5O2/c1-2-4-3/h3H,1-2H2',),
+             ('InChI=1S/C2H4/c1-2/h1-2H2', 'InChI=1S/HO2/c1-2/h1H')),
+            ((0,), (0, 0)),
+            ((2,), (1, 2)),
+        ),
+        (
+            (('InChI=1S/CH3/h1H3', 'InChI=1S/HO/h1H'),
+             ('InChI=1S/CH2/h1H2', 'InChI=1S/H2O/h1H2')),
+            ((0, 0), (0, 0)),
+            ((2, 2), (1, 1)),
+        ),
+        (
+            (('InChI=1S/CH3O3/c2-1-4-3/h3H,1H2',),
+             ('InChI=1S/CH3O3/c2-1-4-3/h2H,1H2',)),
+            ((0,), (0,)),
+            ((2,), (2,)),
+        ),
+    )
+
+    for root_specs in root_specs_lst:
+        for branch_specs in branch_specs_lst:
+            specs = root_specs + branch_specs
+
+            assert not dsdir.exists(prefix, specs)
+            dsdir.create(prefix, specs)
+            assert dsdir.exists(prefix, specs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+
+    print(dsdir.existing(prefix, root_specs_lst[-1]))
+    for root_specs in root_specs_lst:
+        assert (sorted(dsdir.existing(prefix, root_specs)) ==
+                sorted(branch_specs_lst))
+
+
 def test__dir__theory_leaf():
     """ test dir_.theory_leaf
     """
@@ -613,8 +701,8 @@ def test__dir__scan_branch():
         (2, 'c'),
     )
     branch_specs_lst = (
-        (['d3'],),
-        (['d3', 'd4'],),
+        (('d3',),),
+        (('d3', 'd4'),),
     )
 
     for root_specs in root_specs_lst:
@@ -649,21 +737,21 @@ def test__dir__scan_leaf():
         (2, 'c'),
     )
     leaf_specs_lst = (
-        ([0, 0],),
-        ([1, 0],),
-        ([2, 0],),
-        ([0, 1],),
-        ([1, 1],),
-        ([2, 1],),
-        ([0, 2],),
-        ([1, 2],),
-        ([2, 2],),
-        ([0, 3],),
-        ([1, 3],),
-        ([2, 3],),
-        ([0, 4],),
-        ([1, 4],),
-        ([2, 4],),
+        ((0, 0),),
+        ((1, 0),),
+        ((2, 0),),
+        ((0, 1),),
+        ((1, 1),),
+        ((2, 1),),
+        ((0, 2),),
+        ((1, 2),),
+        ((2, 2),),
+        ((0, 3),),
+        ((1, 3),),
+        ((2, 3),),
+        ((0, 4),),
+        ((1, 4),),
+        ((2, 4),),
     )
 
     for root_specs in root_specs_lst:
@@ -680,6 +768,80 @@ def test__dir__scan_leaf():
     for root_specs in root_specs_lst:
         assert (sorted(dsdir.existing(prefix, root_specs)) ==
                 sorted(leaf_specs_lst))
+
+
+def test__dir__tau_trunk():
+    """ test dir_.tau_trunk
+    """
+    prefix = os.path.join(PREFIX, 'tau_trunk')
+    os.mkdir(prefix)
+
+    # without a root directory
+    dsdir = autofile.system.dir_.tau_trunk()
+
+    assert not dsdir.exists(prefix)
+    dsdir.create(prefix)
+    assert dsdir.exists(prefix)
+
+    # with a root directory
+    dsdir = autofile.system.dir_.tau_trunk(ROOT_DSDIR)
+
+    root_specs_lst = (
+        (1, 'a'),
+        (1, 'b'),
+        (2, 'a'),
+        (2, 'b'),
+        (2, 'c'),
+    )
+
+    for root_specs in root_specs_lst:
+        specs = root_specs
+
+        assert not dsdir.exists(prefix, specs)
+        dsdir.create(prefix, specs)
+        assert dsdir.exists(prefix, specs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+
+
+def test__dir__tau_leaf():
+    """ test dir_.tau_leaf
+    """
+    prefix = os.path.join(PREFIX, 'tau_leaf')
+    os.mkdir(prefix)
+
+    dsdir = autofile.system.dir_.tau_leaf(ROOT_DSDIR)
+
+    root_specs_lst = (
+        (1, 'a'),
+        (1, 'b'),
+        (2, 'a'),
+        (2, 'b'),
+        (2, 'c'),
+    )
+
+    nconfs = 10
+    branch_specs_lst = tuple(
+        (autofile.system.generate_new_conformer_id(),) for _ in range(nconfs))
+
+    for root_specs in root_specs_lst:
+        for branch_specs in branch_specs_lst:
+            specs = root_specs + branch_specs
+
+            assert not dsdir.exists(prefix, specs)
+            dsdir.create(prefix, specs)
+            assert dsdir.exists(prefix, specs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+
+    print(dsdir.existing(prefix, root_specs_lst[-1]))
+    for root_specs in root_specs_lst:
+        assert (sorted(dsdir.existing(prefix, root_specs)) ==
+                sorted(branch_specs_lst))
+
+    with pytest.raises(ValueError):
+        dsdir.remove(prefix, specs)
+    assert dsdir.exists(prefix, specs)
 
 
 if __name__ == '__main__':
@@ -702,7 +864,11 @@ if __name__ == '__main__':
     # test__dir__theory_leaf()
     # test__dir__conformer_trunk()
     # test__dir__conformer_leaf()
-    test__dir__single_point_trunk()
+    # test__dir__single_point_trunk()
     # test__dir__scan_trunk()
     # test__dir__scan_branch()
     # test__dir__scan_leaf()
+    # test__dir__tau_trunk()
+    # test__dir__tau_leaf()
+    test__dir__reaction_trunk()
+    test__dir__reaction_leaf()

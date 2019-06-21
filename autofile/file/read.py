@@ -38,7 +38,7 @@ def zmatrix(zma_str):
 def vmatrix(vma_str):
     """ read a variable zmatrix (bohr/radian) from a string (angstrom/degree)
     """
-    vma = automol.zmatrix.v.from_string(vma_str)
+    vma = automol.vmatrix.from_string(vma_str)
     return vma
 
 

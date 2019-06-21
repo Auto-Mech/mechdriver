@@ -10,19 +10,12 @@ import autoparse.pattern as app
 import autoparse.find as apf
 
 
-def is_valid_stereo_inchi(ich):
-    """ is this a valid inchi with complete stereo information?
-    """
-    return (automol.inchi.is_closed(ich) and
-            automol.inchi.has_unknown_stereo_elements(ich) is False)
-
-
 def is_valid_inchi_multiplicity(ich, mult):
     """ is this multiplicity compatible with this inchi string?
     """
     assert isinstance(mult, numbers.Integral)
     return mult in automol.graph.possible_spin_multiplicities(
-        automol.inchi.connectivity_graph(ich))
+        automol.inchi.graph(ich, no_stereo=True))
 
 
 def short_hash(string):

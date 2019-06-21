@@ -55,8 +55,8 @@ def zmatrix(zma):
 def vmatrix(vma):
     """ write a variable zmatrix (bohr/radian) to a string (angstroms/degree)
     """
-    assert automol.zmatrix.v.is_valid(vma)
-    vma_str = automol.zmatrix.v.string(vma)
+    assert automol.vmatrix.is_valid(vma)
+    vma_str = automol.vmatrix.string(vma)
     return vma_str
 
 
