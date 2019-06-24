@@ -104,8 +104,7 @@ def run_leaf(root_dsdir=None):
     """
     spec_dfile = file_.data_series_specifier(
         file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={
-            'job': lambda specs: specs[0]},
+        map_dct_={'job': lambda specs: specs[0]},
         spec_keys=['job'])
 
     _map = _pack_arguments(map_.run_leaf)

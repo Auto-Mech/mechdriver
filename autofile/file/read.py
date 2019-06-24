@@ -61,6 +61,41 @@ def hessian(hess_str):
     return tuple(map(tuple, hess))
 
 
+def harmonic_frequencies(freq_str):
+    """ read harmonic frequencies (cm^-1) from a string (cm^-1)
+    """
+    return _frequencies(freq_str)
+
+
+def anharmonic_frequencies(freq_str):
+    """ read anharmonic frequencies (cm^-1) from a string (cm^-1)
+    """
+    return _frequencies(freq_str)
+
+
+def anharmonicity_matrix(xmat_str):
+    """ read a hessian (hartree bohr^-2) from a string (hartree bohr^-2)
+    """
+    xmat_str_io = _StringIO(xmat_str)
+    xmat = numpy.loadtxt(xmat_str_io)
+    assert xmat.ndim == 2
+    assert xmat.shape[0] == xmat.shape[1]
+    return tuple(map(tuple, xmat))
+
+
+def projected_frequencies(freq_str):
+    """ read projected frequencies (cm^-1) from a string (cm^-1)
+    """
+    return _frequencies(freq_str)
+
+
+def _frequencies(freq_str):
+    freq_str_io = _StringIO(freq_str)
+    freq = numpy.loadtxt(freq_str_io)
+    assert freq.ndim == 1
+    return tuple(map(tuple, freq))
+
+
 def lennard_jones_epsilon(eps_str):
     """ read a lennard-jones epsilon (waveunmbers) from a string (wavenumbers)
     """
@@ -73,6 +108,13 @@ def lennard_jones_sigma(sig_str):
     """
     sig = _float(sig_str)
     return sig
+
+
+def external_symmetry_factor(esf_str):
+    """ read an external symmetry factor from a string
+    """
+    esf = _float(esf_str)
+    return esf
 
 
 def _float(val_str):

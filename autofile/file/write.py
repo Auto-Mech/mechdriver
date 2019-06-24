@@ -87,6 +87,52 @@ def hessian(hess):
     return hess_str
 
 
+def harmonic_frequencies(freq):
+    """ write harmonic frequencies (cm^-1) to a string (cm^-1)
+    """
+    assert list(freq) == sorted(freq)
+    return _frequencies(freq)
+
+
+def anharmonic_frequencies(freq):
+    """ write anharmonic frequencies (cm^-1) to a string (cm^-1)
+    """
+    assert list(freq) == sorted(freq)
+    return _frequencies(freq)
+
+
+def anharmonicity_matrix(xmat):
+    """ write anharmonicity matrix (cm^-1) to a string (cm^-1)
+    """
+    xmat = numpy.array(xmat)
+    assert xmat.ndim == 2
+    assert xmat.shape[0] == xmat.shape[1]
+
+    xmat_str_io = _StringIO()
+    numpy.savetxt(xmat_str_io, xmat)
+    xmat_str = xmat_str_io.getvalue()
+    xmat_str_io.close()
+    return xmat_str
+
+
+def projected_frequencies(freq):
+    """ write projected frequencies (cm^-1) to a string (cm^-1)
+    """
+    assert list(freq) == sorted(freq)
+    return _frequencies(freq)
+
+
+def _frequencies(freq):
+    freq = numpy.array(freq)
+    assert freq.ndim == 1
+
+    freq_str_io = _StringIO()
+    numpy.savetxt(freq_str_io, freq)
+    freq_str = freq_str_io.getvalue()
+    freq_str_io.close()
+    return freq_str
+
+
 def lennard_jones_epsilon(eps):
     """ write a lennard-jones epsilon (waveunmbers) to a string (wavenumbers)
     """
@@ -99,6 +145,13 @@ def lennard_jones_sigma(sig):
     """
     sig_str = _float(sig)
     return sig_str
+
+
+def external_symmetry_factor(esf):
+    """ read an external symmetry factor from a string
+    """
+    esf_str = _float(esf)
+    return esf_str
 
 
 def _float(val):

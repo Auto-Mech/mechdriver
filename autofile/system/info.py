@@ -69,6 +69,13 @@ def scan_branch(tors_linspaces):
     return inf_obj
 
 
+class RunStatus():
+    """ run statuses """
+    RUNNING = "running"
+    SUCCESS = "succeeded"
+    FAILURE = "failed"
+
+
 def run(job, prog, method, basis, status, utc_start_time=None,
         utc_end_time=None):
     """ run information
