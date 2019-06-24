@@ -207,37 +207,6 @@ def test__conformer():
     assert len(SFS.conf.dir.existing(prefix, root_specs)) == nconfs
 
 
-def test__conformer_run():
-    """ tets fsys.conformer_run
-    """
-    prefix = os.path.join(PREFIX, 'conformer_run')
-    os.mkdir(prefix)
-
-    cid = autofile.system.generate_new_conformer_id()
-    root_specs = (
-        'InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 0, 2,
-        'hf', 'sto-3g', False, cid)
-    specs_lst = (
-        root_specs + ('energy',),
-        root_specs + ('gradient',),
-        root_specs + ('hessian',),
-        root_specs + ('optimization',),
-    )
-
-    for specs in specs_lst:
-        SFS.conf_run.dir.create(prefix, specs)
-        job = specs[-1]
-        ref_inf_obj = autofile.system.info.run(
-            job=job, prog='psi4', method='hf', basis='sto-3g',
-            status="succeeded")
-        ref_inp_str = '<input file>'
-        ref_out_str = '<output file>'
-
-        SFS.conf_run.file.info.write(ref_inf_obj, prefix, specs)
-        SFS.conf_run.file.input.write(ref_inp_str, prefix, specs)
-        SFS.conf_run.file.output.write(ref_out_str, prefix, specs)
-
-
 def test__single_point():
     """ tets fsys.single_point
     """
@@ -355,37 +324,6 @@ def test__scan():
     print(SFS.scan.dir.existing(prefix, branch_specs))
 
 
-def test__scan_run():
-    """ tets fsys.scan_run
-    """
-    prefix = os.path.join(PREFIX, 'scan_run')
-    os.mkdir(prefix)
-
-    cid = autofile.system.generate_new_conformer_id()
-    root_specs = (
-        'InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 0, 2,
-        'hf', 'sto-3g', False, cid, ['d4', 'd8'], [0, 0])
-    specs_lst = (
-        root_specs + ('energy',),
-        root_specs + ('gradient',),
-        root_specs + ('hessian',),
-        root_specs + ('optimization',),
-    )
-
-    for specs in specs_lst:
-        SFS.scan_run.dir.create(prefix, specs)
-        job = specs[-1]
-        ref_inf_obj = autofile.system.info.run(
-            job=job, prog='psi4', method='hf', basis='sto-3g',
-            status="succeeded")
-        ref_inp_str = '<input file>'
-        ref_out_str = '<output file>'
-
-        SFS.scan_run.file.info.write(ref_inf_obj, prefix, specs)
-        SFS.scan_run.file.input.write(ref_inp_str, prefix, specs)
-        SFS.scan_run.file.output.write(ref_out_str, prefix, specs)
-
-
 def test__tau():
     """ test fsys.tau
     """
@@ -499,45 +437,11 @@ def test__tau():
     assert len(SFS.tau.dir.existing(prefix, root_specs)) == ntaus
 
 
-def test__tau_run():
-    """ tets fsys.tau_run
-    """
-    prefix = os.path.join(PREFIX, 'tau_run')
-    os.mkdir(prefix)
-
-    cid = autofile.system.generate_new_conformer_id()
-    root_specs = (
-        'InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 0, 2,
-        'hf', 'sto-3g', False, cid)
-    specs_lst = (
-        root_specs + ('energy',),
-        root_specs + ('gradient',),
-        root_specs + ('hessian',),
-        root_specs + ('optimization',),
-    )
-
-    for specs in specs_lst:
-        SFS.tau_run.dir.create(prefix, specs)
-        job = specs[-1]
-        ref_inf_obj = autofile.system.info.run(
-            job=job, prog='psi4', method='hf', basis='sto-3g',
-            status="succeeded")
-        ref_inp_str = '<input file>'
-        ref_out_str = '<output file>'
-
-        SFS.tau_run.file.info.write(ref_inf_obj, prefix, specs)
-        SFS.tau_run.file.input.write(ref_inp_str, prefix, specs)
-        SFS.tau_run.file.output.write(ref_out_str, prefix, specs)
-
-
 if __name__ == '__main__':
     # test__species()
     # test__theory()
     # test__conformer()
     test__scan()
-    # test__conformer_run()
-    # test__scan_run()
     # test__tau()
-    # test__tau_run()
     # test__single_point()
     # test__reaction()
