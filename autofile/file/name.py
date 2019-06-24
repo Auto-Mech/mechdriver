@@ -7,6 +7,7 @@ class Extension():
     INFORMATION = '.yaml'
     INPUT_LOG = '.inp'
     OUTPUT_LOG = '.out'
+    PROJROT_LOG = '.prot'
     SHELL_SCRIPT = '.sh'
     ENERGY = '.ene'
     GEOMETRY = '.xyz'
@@ -15,8 +16,13 @@ class Extension():
     VMATRIX = '.vmat'
     GRADIENT = '.grad'
     HESSIAN = '.hess'
+    HARMONIC_FREQUENCIES = '.hfrq'
+    ANHARMONIC_FREQUENCIES = '.afrq'
+    ANHARMONICITY_MATRIX = '.xmat'
+    PROJECTED_FREQUENCIES = '.pfrq'
     LJ_EPSILON = '.eps'
     LJ_SIGMA = '.sig'
+    EXTERNAL_SYMMETRY_FACTOR = '.esym'
 
 
 def information(file_name):
@@ -35,6 +41,12 @@ def output_file(file_name):
     """ adds output file extension, if missing
     """
     return _add_extension(file_name, Extension.OUTPUT_LOG)
+
+
+def projrot_file(file_name):
+    """ adds projrot file extension, if missing
+    """
+    return _add_extension(file_name, Extension.PROJROT_LOG)
 
 
 def run_script(file_name):
@@ -85,6 +97,30 @@ def hessian(file_name):
     return _add_extension(file_name, Extension.HESSIAN)
 
 
+def harmonic_frequencies(file_name):
+    """ adds harmonic frequencies extension, if missing
+    """
+    return _add_extension(file_name, Extension.HARMONIC_FREQUENCIES)
+
+
+def anharmonic_frequencies(file_name):
+    """ adds anharmonic frequencies extension, if missing
+    """
+    return _add_extension(file_name, Extension.ANHARMONIC_FREQUENCIES)
+
+
+def anharmonicity_matrix(file_name):
+    """ adds anharmonic frequencies extension, if missing
+    """
+    return _add_extension(file_name, Extension.ANHARMONICITY_MATRIX)
+
+
+def projected_frequencies(file_name):
+    """ adds projected frequencies extension, if missing
+    """
+    return _add_extension(file_name, Extension.PROJECTED_FREQUENCIES)
+
+
 def lennard_jones_epsilon(file_name):
     """ adds lennard-jones epsilon extension, if missing
     """
@@ -95,6 +131,12 @@ def lennard_jones_sigma(file_name):
     """ adds lennard-jones sigma extension, if missing
     """
     return _add_extension(file_name, Extension.LJ_SIGMA)
+
+
+def external_symmetry_factor(file_name):
+    """ adds external symmetry number extension, if missing
+    """
+    return _add_extension(file_name, Extension.EXTERNAL_SYMMETRY_FACTOR)
 
 
 def _add_extension(file_name, ext):
