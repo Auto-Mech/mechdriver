@@ -20,14 +20,18 @@ if not os.path.exists(SAVE_PREFIX):
     os.mkdir(SAVE_PREFIX)
 
 REACTION_LIST = (
-    ((('InChI=1S/C2H5O/c1-2-3/h2H2,1H3',),
-      ('InChI=1S/CH2O/c1-2/h1H2', 'InChI=1S/CH3/h1H3')),
-     ((0,), (0, 0)),
-     ((2,), (1, 2))),
+    # ((('InChI=1S/C2H5O/c1-2-3/h2H2,1H3',),
+    #   ('InChI=1S/CH2O/c1-2/h1H2', 'InChI=1S/CH3/h1H3')),
+    #  ((0,), (0, 0)),
+    #  ((2,), (1, 2))),
     # ((('InChI=1S/CH2O/c1-2/h1H2', 'InChI=1S/CH3/h1H3'),
     #   ('InChI=1S/C2H5O/c1-2-3/h2H2,1H3',)),
     #  ((0, 0), (0,)),
     #  ((1, 2), (2,))),
+    ((('InChI=1/CH4O/c1-2/h2H,1H3', 'InChI=1/CHO/c1-2/h1H'),
+      ('InChI=1/CH3O/c1-2/h2H,1H2', 'InChI=1/CH2O/c1-2/h1H2')),
+     ((0, 0), (0, 0)),
+     ((1, 2), (2, 1))),
 )
 
 for inchis_pair, charges_pair, mults_pair in REACTION_LIST:

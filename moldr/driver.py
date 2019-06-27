@@ -495,6 +495,10 @@ def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis,
             dist_start = 1.2 * ANG2BOHR
             npoints = 10
             dist_increment = 0.1 * ANG2BOHR  # hardcoded for now (0.2 bohr)
+        elif reaction_type == ReactionType.H_ABSTRACTION:
+            dist_start = 1.0 * ANG2BOHR
+            npoints = 10
+            dist_increment = 0.1 * ANG2BOHR  # hardcoded for now (0.2 bohr)
 
         grid_zmats = [
             automol.zmatrix.set_values(
@@ -508,6 +512,8 @@ def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis,
             if not RFS.scan.dir.exists(run_prefix, specs):
                 RFS.scan.dir.create(run_prefix, specs)
 
+            # TODO: take out the geometry write -- this is just for testing
+            # purposes
             grid_geom = automol.zmatrix.geometry(grid_zmat)
             RFS.scan.file.geometry.write(grid_geom, run_prefix, specs)
 
@@ -533,42 +539,12 @@ def build_ts_zmatrix(reactant_zmats, product_zmats):
     reactants_graph = combined_graph_from_zmatrices(reactant_zmats)
     products_graph = combined_graph_from_zmatrices(product_zmats)
 
-    ret = classify(reactants_graph, products_graph)
-    if ret is not None:
-        reaction_type, (bonds_formed, bonds_broken) = ret
-        if reaction_type == ReactionType.ADDITION:
-            bond_formed, = bonds_formed
-            atom1_system_key, _ = sorted(bond_formed)
+    ret = None
+    classify_ret = classify(reactants_graph, products_graph)
+    if classify_ret is not None:
+        reaction_type, (bonds_formed, bonds_broken) = classify_ret
 
-            reac1_zmat, reac2_zmat = reactant_zmats
-
-            reac1_natoms = automol.zmatrix.count(reac1_zmat)
-            reac2_zmat = automol.zmatrix.standard_form(
-                reac2_zmat, shift=reac1_natoms)
-
-            reac1_isite_key = atom1_system_key
-
-            reac1_graph = automol.zmatrix.graph(reac1_zmat)
-            reac1_isite_longest_chain = automol.graph.atom_longest_chains(
-                reac1_graph)[reac1_isite_key]
-            reac1_isite_neighbor_keys = automol.graph.atom_neighbor_keys(
-                reac1_graph)[reac1_isite_key]
-
-            assert len(reac1_isite_longest_chain) > 1
-            reac1_jsite_key = reac1_isite_longest_chain[1]
-            if len(reac1_isite_longest_chain) > 2:
-                reac2_ksite_key = reac1_isite_longest_chain[2]
-            else:
-                assert len(reac1_isite_neighbor_keys) > 1
-                reac1_isite_neighbor_keys = sorted(reac1_isite_neighbor_keys)
-                reac1_isite_neighbor_keys.remove(reac1_jsite_key)
-                reac2_ksite_key = reac1_isite_neighbor_keys[0]
-
-            ts_zmat, dist_name = build_init_addn_ts_zmatrix(
-                reac1_zmat, reac2_zmat, reac1_isite_key, reac1_jsite_key,
-                reac2_ksite_key)
-
-        elif reaction_type == ReactionType.BETA_SCISSION:
+        if reaction_type == ReactionType.BETA_SCISSION:
             ts_zmat, = reactant_zmats
 
             bond_broken, = bonds_broken
@@ -579,8 +555,69 @@ def build_ts_zmatrix(reactant_zmats, product_zmats):
             assert key_matrix[atom2_key][0] == atom1_key
 
             dist_name = name_matrix[atom2_key][0]
+            ret = ts_zmat, dist_name, reaction_type
 
-    return ts_zmat, dist_name, reaction_type
+        elif reaction_type == ReactionType.ADDITION:
+            bond_formed, = bonds_formed
+            atom1_system_key, _ = sorted(bond_formed)
+
+            reac1_zmat, reac2_zmat = reactant_zmats
+
+            reac1_natoms = automol.zmatrix.count(reac1_zmat)
+            reac2_zmat = automol.zmatrix.standard_form(
+                reac2_zmat, shift=reac1_natoms)
+
+            reac1_isite_key = atom1_system_key
+            reac1_jsite_key, reac1_ksite_key = _get_j_and_k_site_keys(
+                reac1_zmat, reac1_isite_key)
+
+            ts_zmat, dist_name = build_init_addn_ts_zmatrix(
+                reac1_zmat, reac2_zmat, reac1_isite_key, reac1_jsite_key,
+                reac1_ksite_key, standardize=True)
+            ret = ts_zmat, dist_name, reaction_type
+
+        elif reaction_type == ReactionType.H_ABSTRACTION:
+            bond_formed, = bonds_formed
+            bond_broken, = bonds_broken
+
+            reac1_zmat, reac2_zmat = reactant_zmats
+
+            reac1_natoms = automol.zmatrix.count(reac1_zmat)
+            reac2_zmat = automol.zmatrix.standard_form(
+                reac2_zmat, shift=reac1_natoms)
+
+            atoms_transferred = bond_formed & bond_broken
+            assert len(atoms_transferred) == 1
+            reac1_isite_key, = atoms_transferred
+            reac1_jsite_key, reac1_ksite_key = _get_j_and_k_site_keys(
+                reac1_zmat, reac1_isite_key)
+
+            ts_zmat, dist_name = build_init_abst_ts_zmatrix(
+                reac1_zmat, reac2_zmat, reac1_isite_key, reac1_jsite_key,
+                reac1_ksite_key, standardize=False)
+            ret = ts_zmat, dist_name, reaction_type
+
+    return ret
+
+
+def _get_j_and_k_site_keys(zmat, isite_key):
+    graph = automol.zmatrix.graph(zmat)
+    isite_longest_chain = automol.graph.atom_longest_chains(
+        graph)[isite_key]
+    isite_neighbor_keys = automol.graph.atom_neighbor_keys(
+        graph)[isite_key]
+
+    assert len(isite_longest_chain) > 1
+    jsite_key = isite_longest_chain[1]
+    if len(isite_longest_chain) > 2:
+        ksite_key = isite_longest_chain[2]
+    else:
+        assert len(isite_neighbor_keys) > 1
+        isite_neighbor_keys = sorted(isite_neighbor_keys)
+        isite_neighbor_keys.remove(jsite_key)
+        ksite_key = isite_neighbor_keys[0]
+
+    return jsite_key, ksite_key
 
 
 def classify(xgr1, xgr2):
@@ -614,7 +651,8 @@ def classify(xgr1, xgr2):
 def combined_graph_from_zmatrices(zmats):
     """ get a graph representing the union of several molecules
     """
-    graphs = list(map(automol.zmatrix.graph, zmats))
+    graphs = list(map(
+        automol.graph.without_dummy_atoms, map(automol.zmatrix.graph, zmats)))
     shift = 0
     for idx, graph in enumerate(graphs):
         graphs[idx] = automol.graph.transform_keys(graph, lambda x: x+shift)
@@ -666,6 +704,83 @@ def build_init_addn_ts_zmatrix(reac1_zmat, reac2_zmat,
     ts_zmat = automol.zmatrix.join(
         reac1_zmat, reac2_zmat, r1_r2_join_keys, r1_r2_join_name,
         r1_r2_join_vals)
+
+    # Put in standard form if requested
+    if standardize:
+        ts_zmat = automol.zmatrix.standard_form(ts_zmat)
+
+    # Get the scan_coord using the reac2_natom (lazy do better)
+    scan_coord = ts_zmat[0][-1*reac2_natom][2][0]
+
+    return ts_zmat, scan_coord
+
+
+def build_init_abst_ts_zmatrix(reac1_zmat, reac2_zmat,
+                               isite, jsite, ksite,
+                               aabs1=DEG2RAD * 85.,
+                               aabs2=DEG2RAD * 85.,
+                               babs1=DEG2RAD * 180.,
+                               babs2=DEG2RAD * 90.,
+                               babs3=DEG2RAD * 90.,
+                               standardize=False):
+    """ Builds the initial ts z-matrix for abstractions
+    """
+    reac1_natom = automol.zmatrix.count(reac1_zmat)
+    reac2_natom = automol.zmatrix.count(reac2_zmat)
+
+    # Set default values for dummy matrix
+    rx = 1.00 * 1.88973
+    ax = numpy.radians(90.0)
+    dx = numpy.radians(180.0)
+
+    # Set a blank Z-Matrix for the dummy atom
+    x_zmat = ((('X', (None, None, None), (None, None, None)),), {})
+
+    # Set the values for the dummy Z-Matrix based on the reactants
+    assert reac1_natom >= 2
+    if reac1_natom == 2:
+        r1_x_join_keys = ((isite, jsite, None),)
+        r1_x_join_name = (('rx', 'ax', None),)
+        r1_x_join_vals = {'rx': rx, 'ax': ax}
+    else:
+        r1_x_join_keys = ((isite, jsite, ksite),)
+        r1_x_join_name = (('rx', 'ax', 'dx'),)
+        r1_x_join_vals = {'rx': rx, 'ax': ax, 'dx': dx}
+
+    # Join the Reac1 and Dummy Z-Matrices
+    reac1_x_zmat = automol.zmatrix.join(
+        reac1_zmat, x_zmat, r1_x_join_keys, r1_x_join_name, r1_x_join_vals)
+
+    # Set the RTS value to 111.11 as a holdover
+    rts = 111.111
+
+    # Set the join values for the Reac2 Z-Matrix values; based on Reac2 natom
+    if reac2_natom == 1:
+        r1x_r2_join_keys = ((isite, reac1_natom, jsite),)
+        r1x_r2_join_name = (('rts', 'aabs1', 'babs1'),)
+        r1x_r2_join_vals = {'rts': rts, 'aabs1': aabs1, 'babs1': babs1}
+    elif reac2_natom == 2:
+        r1x_r2_join_keys = ((isite, reac1_natom, jsite),
+                            (None, isite, reac1_natom))
+        r1x_r2_join_name = (('rts', 'aabs1', 'babs1'),
+                            (None, 'aabs2', 'babs2'))
+        r1x_r2_join_vals = {'rts': rts, 'aabs1': aabs1, 'babs1': babs1,
+                            'aabs2': aabs2, 'babs2': babs2}
+    else:
+        r1x_r2_join_keys = ((isite, reac1_natom, jsite),
+                            (None, isite, reac1_natom),
+                            (None, None, isite))
+        r1x_r2_join_name = (('rts', 'aabs1', 'babs1'),
+                            (None, 'aabs2', 'babs2'),
+                            (None, None, 'babs3'))
+        r1x_r2_join_vals = {'rts': rts, 'aabs1': aabs1, 'babs1': babs1,
+                            'aabs2': aabs2, 'babs2': babs2,
+                            'babs3': babs3}
+
+    # Join the Init TS and Reac2 Z-Matrices
+    ts_zmat = automol.zmatrix.join(
+        reac1_x_zmat, reac2_zmat, r1x_r2_join_keys, r1x_r2_join_name,
+        r1x_r2_join_vals)
 
     # Put in standard form if requested
     if standardize:
