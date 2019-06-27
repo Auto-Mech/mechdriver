@@ -1,9 +1,7 @@
 """ moldr script
 """
 import os
-import automol
 import moldr
-from autofile import SFS
 
 PROG = 'psi4'
 SCRIPT_STR = ("#!/usr/bin/env bash\n"
@@ -22,12 +20,14 @@ if not os.path.exists(SAVE_PREFIX):
     os.mkdir(SAVE_PREFIX)
 
 REACTION_LIST = (
-    # ((('InChI=1S/C2H5O/c1-2-3/h2H2,1H3',), ('InChI=1S/CH2O/c1-2/h1H2', 'InChI=1S/CH3/h1H3')),
-    #   ((0,), (0, 0)),
-    #   ((2,), (1, 2))),
-    ((('InChI=1S/CH2O/c1-2/h1H2', 'InChI=1S/CH3/h1H3'), ('InChI=1S/C2H5O/c1-2-3/h2H2,1H3',)),
-      ((0, 0), (0,)),
-      ((1, 2), (2,))),
+    ((('InChI=1S/C2H5O/c1-2-3/h2H2,1H3',),
+      ('InChI=1S/CH2O/c1-2/h1H2', 'InChI=1S/CH3/h1H3')),
+     ((0,), (0, 0)),
+     ((2,), (1, 2))),
+    # ((('InChI=1S/CH2O/c1-2/h1H2', 'InChI=1S/CH3/h1H3'),
+    #   ('InChI=1S/C2H5O/c1-2-3/h2H2,1H3',)),
+    #  ((0, 0), (0,)),
+    #  ((1, 2), (2,))),
 )
 
 for inchis_pair, charges_pair, mults_pair in REACTION_LIST:

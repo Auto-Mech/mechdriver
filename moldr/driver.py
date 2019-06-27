@@ -446,14 +446,19 @@ class ReactionType():
     H_ABSTRACTION = 'HABS'
 
 
-def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis, orb_restricted,
-                run_prefix, save_prefix, script_str, prog,
+def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis,
+                orb_restricted, run_prefix, save_prefix, script_str, prog,
                 ts_mult, **kwargs):
+    """ grid optimization for transition state guess
+    """
 
     direction = autofile.system.reaction_direction(
         inchis_pair, charges_pair, mults_pair)
+
+    assert save_prefix is not None  # do-nothing line for style checkers
     print("The direction of the reaction is", direction)
     print("The transition state multiplicity is", ts_mult)
+
     reactant_inchis = inchis_pair[0]
     product_inchis = inchis_pair[1]
 
@@ -464,7 +469,22 @@ def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis, orb_restri
     product_zmats = list(map(automol.geom.zmatrix, product_geoms))
 
     ret = build_ts_zmatrix(reactant_zmats, product_zmats)
-    if ret:
+
+    # get stereo-specific inchis from the geometries
+    reactant_inchis = list(map(automol.inchi.standard_form,
+                               map(automol.geom.inchi, reactant_geoms)))
+    product_inchis = list(map(automol.inchi.standard_form,
+                              map(automol.geom.inchi, product_geoms)))
+    inchis_pair = (reactant_inchis, product_inchis)
+    inchis_pair, charges_pair, mults_pair = autofile.system.sort_together(
+        inchis_pair, charges_pair, mults_pair)
+    cid = autofile.system.generate_new_conformer_id()
+    root_specs = (inchis_pair, charges_pair, mults_pair, ts_mult,
+                  method, basis, orb_restricted, cid)
+
+    if ret is None:
+        print("Failed to classify reaction for this system.")
+    else:
         ts_zmat, dist_name, reaction_type = ret
 
         if reaction_type == ReactionType.BETA_SCISSION:
@@ -481,137 +501,35 @@ def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis, orb_restri
                 ts_zmat, {dist_name: dist_start + dist_increment * num})
             for num in range(npoints)]
 
-        for grid_zmat in grid_zmats:
-            print(automol.zmatrix.string(grid_zmat))
+        for grid_index, grid_zmat in enumerate(grid_zmats):
+            specs = root_specs + ((dist_name,), (grid_index,))
+            path = RFS.scan.dir.path(run_prefix, specs)
 
-    #         value_dict = automol.zmatrix.values(reac1_zmat)
-    #         dist_name = name_matrix[atom2_key][0]
-    #         dist_value = value_dict[dist_name]
+            if not RFS.scan.dir.exists(run_prefix, specs):
+                RFS.scan.dir.create(run_prefix, specs)
 
-    #         dist_increment = 0.2 # hardcoded for now (0.2 bohr)
-    #         npoints = 10         # hardcoded for now
-    #         grid_zmats = [
-    #             automol.zmatrix.set_values(
-    #                 reac1_zmat, {dist_name: dist_value + dist_increment * num})
-    #             for num in range(npoints)
-    #         ]
+            grid_geom = automol.zmatrix.geometry(grid_zmat)
+            RFS.scan.file.geometry.write(grid_geom, run_prefix, specs)
 
-    #         # set up the run filesystem
-    #         cid = autofile.system.generate_new_conformer_id()
-    #         branch_specs = (inchis_pair, charges_pair, mults_pair, method, basis, orb_restricted,
-    #                         cid, [dist_name])
-    #         path = RFS.scan_branch.dir.path(run_prefix, branch_specs)
-    #         RFS.scan_branch.dir.create(run_prefix, branch_specs)
-
-    #         for grid_index, grid_zmat in enumerate(grid_zmats):
-    #             specs = branch_specs + ((grid_index,),)
-
-    #             if not RFS.scan.dir.exists(run_prefix, specs):
-    #                 RFS.scan.dir.create(run_prefix, specs)
-
-    #             path = RFS.scan.dir.path(run_prefix, specs)
-
-    #             print("Point {}/{}".format(grid_index+1, npoints))
-    #             run_job(
-    #                 job=elstruct.Job.OPTIMIZATION,
-    #                 script_str=script_str,
-    #                 prefix=path,
-    #                 geom=grid_zmat,
-    #                 charge=charge,
-    #                 mult=mult,
-    #                 method=method,
-    #                 basis=basis,
-    #                 prog=prog,
-    #                 frozen_coordinates=[dist_name],
-    #                 **kwargs
-    #             )
-
-    # old, delete:
-    # # get stereo-specific inchis from the geometries
-    # reactant_inchis = list(map(automol.inchi.standard_form,
-    #                        map(automol.geom.inchi, reactant_geoms)))
-    # product_inchis = list(map(automol.inchi.standard_form,
-    #                       map(automol.geom.inchi, product_geoms)))
-    # inchis_pair = (reactant_inchis, product_inchis)
-    # inchis_pair, charges_pair, mults_pair = autofile.system.sort_together(
-    #     inchis_pair, charges_pair, mults_pair)
-
-    # # space the geometries out to make sure they aren't overlapping
-    # reactant_geoms = [
-    #     automol.geom.translated(geom, [100. * num, 0., 0.])
-    #     for num, geom in enumerate(reactant_geoms)]
-    # product_geoms = [
-    #     automol.geom.translated(geom, [100. * num, 0., 0.])
-    #     for num, geom in enumerate(product_geoms)]
-
-    # reactants_geom = functools.reduce(automol.geom.join, reactant_geoms)
-    # products_geom = functools.reduce(automol.geom.join, product_geoms)
-
-    # reactants_graph = automol.geom.graph(reactants_geom)
-    # products_graph = automol.geom.graph(products_geom)
-
-    # ret = classify(reactants_graph, products_graph)
-    # if ret is not None:
-    #     reaction_type, (bonds_formed, bonds_broken) = ret
-    #     if reaction_type == ReactionType.ADDITION:
-    #         mult = mults_pair[0][0]   # TODO: don't do this -- specifiers
-    #                                   # should only be used for addresses in
-    #                                   # the filesystem
-    #         charge = 0
-    #         bond_formed, = bonds_formed
-    #         atom1_system_key, atom2_system_key = sorted(bond_formed)
-
-    #         reac1_geom, reac2_geom = reactant_geoms
-    #         reac1_zmat = automol.geom.zmatrix(reac1_geom)
-    #         reac1_zmat_atom_ordering_dict = automol.geom.zmatrix_atom_ordering(reac1_geom)
-
-    #         reac1_natoms = automol.zmatrix.count(reac1_zmat)
-    #         reac2_zmat = automol.geom.zmatrix(reac2_geom)
-    #         reac2_zmat = automol.zmatrix.standard_form(reac2_zmat, shift=reac1_natoms)
-    #         reac2_zmat_atom_ordering_dict = automol.geom.zmatrix_atom_ordering(reac2_geom)
-
-    #         atom1_key = reac1_zmat_atom_ordering_dict[atom1_system_key]
-    #         atom2_key = reac2_zmat_atom_ordering_dict[atom2_system_key - reac1_natoms]
-
-    #         reac1_graph = automol.zmatrix.graph(reac1_zmat)
-    #         atom1_longest_chain = automol.graph.atom_longest_chains(reac1_graph)[atom1_key]
-    #         atom1_neighbor_keys = automol.graph.atom_neighbor_keys(reac1_graph)[atom1_key]
-
-    #         assert len(atom1_longest_chain) > 1
-    #         atomj_key = atom1_longest_chain[1]
-    #         if len(atom1_longest_chain) > 2:
-    #             atomk_key = atom1_longest_chain[2]
-    #         else:
-    #             assert len(atom1_neighbor_keys) > 1
-    #             atom1_neighbor_keys = sorted(atom1_neighbor_keys)
-    #             atom1_neighbor_keys.remove(atomj_key)
-    #             atomk_key = atom1_neighbor_keys[0]
-
-    #         ts_zmat, dist_name = build_init_addn_ts_zmatrix(
-    #             reac1_zmat, reac2_zmat, atom1_key, atomj_key, atomk_key)
-    #         print(automol.zmatrix.string(ts_zmat))
-    #         print(dist_name)
-
-    #     elif reaction_type == ReactionType.BETA_SCISSION:
-    #         mult = mults_pair[0][0]   # TODO: don't do this
-    #         charge = 0
-    #         reac1_zmat = automol.geom.zmatrix(reactants_geom)
-    #         zmat_atom_ordering_dict = automol.geom.zmatrix_atom_ordering(reactants_geom)
-
-    #         bond_broken, = bonds_broken
-    #         atom1_key, atom2_key = sorted(map(zmat_atom_ordering_dict.__getitem__, bond_broken))
-
-    #         key_matrix = automol.zmatrix.key_matrix(reac1_zmat)
-    #         name_matrix = automol.zmatrix.name_matrix(reac1_zmat)
-    #         assert key_matrix[atom2_key][0] == atom1_key
-
+            print("Point {}/{}".format(grid_index+1, npoints))
+            run_job(
+                job=elstruct.Job.OPTIMIZATION,
+                script_str=script_str,
+                prefix=path,
+                geom=grid_zmat,
+                charge=sum(charges_pair[0]),
+                mult=ts_mult,
+                method=method,
+                basis=basis,
+                prog=prog,
+                frozen_coordinates=[dist_name],
+                **kwargs
+            )
 
 
 def build_ts_zmatrix(reactant_zmats, product_zmats):
     """ build the transition state z-matrix for a reaction
     """
-    reactant_geoms = list(map(automol.zmatrix.geometry, reactant_zmats))
-    product_geoms = list(map(automol.zmatrix.geometry, product_zmats))
     reactants_graph = combined_graph_from_zmatrices(reactant_zmats)
     products_graph = combined_graph_from_zmatrices(product_zmats)
 
@@ -620,20 +538,21 @@ def build_ts_zmatrix(reactant_zmats, product_zmats):
         reaction_type, (bonds_formed, bonds_broken) = ret
         if reaction_type == ReactionType.ADDITION:
             bond_formed, = bonds_formed
-            atom1_system_key, atom2_system_key = sorted(bond_formed)
+            atom1_system_key, _ = sorted(bond_formed)
 
-            reac1_geom, reac2_geom = reactant_geoms
             reac1_zmat, reac2_zmat = reactant_zmats
 
             reac1_natoms = automol.zmatrix.count(reac1_zmat)
-            reac2_zmat = automol.zmatrix.standard_form(reac2_zmat, shift=reac1_natoms)
+            reac2_zmat = automol.zmatrix.standard_form(
+                reac2_zmat, shift=reac1_natoms)
 
             reac1_isite_key = atom1_system_key
-            reac2_atom_key = atom2_system_key
 
             reac1_graph = automol.zmatrix.graph(reac1_zmat)
-            reac1_isite_longest_chain = automol.graph.atom_longest_chains(reac1_graph)[reac1_isite_key]
-            reac1_isite_neighbor_keys = automol.graph.atom_neighbor_keys(reac1_graph)[reac1_isite_key]
+            reac1_isite_longest_chain = automol.graph.atom_longest_chains(
+                reac1_graph)[reac1_isite_key]
+            reac1_isite_neighbor_keys = automol.graph.atom_neighbor_keys(
+                reac1_graph)[reac1_isite_key]
 
             assert len(reac1_isite_longest_chain) > 1
             reac1_jsite_key = reac1_isite_longest_chain[1]
@@ -646,7 +565,8 @@ def build_ts_zmatrix(reactant_zmats, product_zmats):
                 reac2_ksite_key = reac1_isite_neighbor_keys[0]
 
             ts_zmat, dist_name = build_init_addn_ts_zmatrix(
-                reac1_zmat, reac2_zmat, reac1_isite_key, reac1_jsite_key, reac2_ksite_key)
+                reac1_zmat, reac2_zmat, reac1_isite_key, reac1_jsite_key,
+                reac2_ksite_key)
 
         elif reaction_type == ReactionType.BETA_SCISSION:
             ts_zmat, = reactant_zmats
@@ -658,7 +578,6 @@ def build_ts_zmatrix(reactant_zmats, product_zmats):
             name_matrix = automol.zmatrix.name_matrix(ts_zmat)
             assert key_matrix[atom2_key][0] == atom1_key
 
-            value_dict = automol.zmatrix.values(ts_zmat)
             dist_name = name_matrix[atom2_key][0]
 
     return ts_zmat, dist_name, reaction_type
@@ -693,6 +612,8 @@ def classify(xgr1, xgr2):
 
 
 def combined_graph_from_zmatrices(zmats):
+    """ get a graph representing the union of several molecules
+    """
     graphs = list(map(automol.zmatrix.graph, zmats))
     shift = 0
     for idx, graph in enumerate(graphs):
@@ -713,7 +634,6 @@ def build_init_addn_ts_zmatrix(reac1_zmat, reac2_zmat,
     """ Builds the initial ts z-matrix
         CHECK MANUAL, IS KSITE USED FOR ANYTHING?
     """
-    reac1_natom = automol.zmatrix.count(reac1_zmat)
     reac2_natom = automol.zmatrix.count(reac2_zmat)
 
     # Set the RTS value to 111.11 as a holdover
@@ -726,29 +646,30 @@ def build_init_addn_ts_zmatrix(reac1_zmat, reac2_zmat,
         r1_r2_join_vals = {'rts': rts, 'aabs1': aabs1, 'babs1': babs1}
     elif reac2_natom == 2:
         r1_r2_join_keys = ((isite, jsite, ksite),
-                            (None, isite, jsite))
+                           (None, isite, jsite))
         r1_r2_join_name = (('rts', 'aabs1', 'babs1'),
-                            (None, 'aabs2', 'babs2'))
+                           (None, 'aabs2', 'babs2'))
         r1_r2_join_vals = {'rts': rts, 'aabs1': aabs1, 'babs1': babs1,
-                                        'aabs2': aabs2, 'babs2': babs2}
+                           'aabs2': aabs2, 'babs2': babs2}
     else:
         r1_r2_join_keys = ((isite, jsite, ksite),
-                            (None, isite, jsite),
-                            (None, None, isite))
+                           (None, isite, jsite),
+                           (None, None, isite))
         r1_r2_join_name = (('rts', 'aabs1', 'babs1'),
-                            (None, 'aabs2', 'babs2'),
-                            (None, None, 'babs3'))
+                           (None, 'aabs2', 'babs2'),
+                           (None, None, 'babs3'))
         r1_r2_join_vals = {'rts': rts, 'aabs1': aabs1, 'babs1': babs1,
-                                        'aabs2': aabs2, 'babs2': babs2,
-                                                        'babs3': babs3}
+                           'aabs2': aabs2, 'babs2': babs2,
+                           'babs3': babs3}
 
     # Join the Init TS and Reac2 Z-Matrices
-    ts_zmat = automol.zmatrix.join(reac1_zmat, reac2_zmat,
-                           r1_r2_join_keys, r1_r2_join_name, r1_r2_join_vals)
-    
+    ts_zmat = automol.zmatrix.join(
+        reac1_zmat, reac2_zmat, r1_r2_join_keys, r1_r2_join_name,
+        r1_r2_join_vals)
+
     # Put in standard form if requested
     if standardize:
-        ts_zmat = zmatrix.standard_form(ts_zmat)
+        ts_zmat = automol.zmatrix.standard_form(ts_zmat)
 
     # Get the scan_coord using the reac2_natom (lazy do better)
     scan_coord = ts_zmat[0][-1*reac2_natom][2][0]
@@ -756,6 +677,7 @@ def build_init_addn_ts_zmatrix(reac1_zmat, reac2_zmat,
     return ts_zmat, scan_coord
 
 # end of gridopt functions
+
 
 # centralized job runner
 def run_job(job, script_str, prefix,
