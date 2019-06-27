@@ -486,18 +486,21 @@ def test__dir__reaction_leaf():
              ('InChI=1S/C2H4/c1-2/h1-2H2', 'InChI=1S/HO2/c1-2/h1H')),
             ((0,), (0, 0)),
             ((2,), (1, 2)),
+            2,
         ),
         (
             (('InChI=1S/CH3/h1H3', 'InChI=1S/HO/h1H'),
              ('InChI=1S/CH2/h1H2', 'InChI=1S/H2O/h1H2')),
             ((0, 0), (0, 0)),
             ((2, 2), (1, 1)),
+            1,
         ),
         (
             (('InChI=1S/CH3O3/c2-1-4-3/h3H,1H2',),
              ('InChI=1S/CH3O3/c2-1-4-3/h2H,1H2',)),
             ((0,), (0,)),
             ((2,), (2,)),
+            2,
         ),
     )
 

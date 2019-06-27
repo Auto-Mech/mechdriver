@@ -59,15 +59,16 @@ def reaction_leaf(root_dsdir=None):
             'inchis': lambda specs: specs[0],
             'charges': lambda specs: specs[1],
             'multiplicities': lambda specs: specs[2],
+            'ts_multiplicity': lambda specs: specs[3],
             'smiles': lambda specs: [
                 list(map(automol.inchi.smiles, specs[0][0])),
                 list(map(automol.inchi.smiles, specs[0][1]))],
         },
-        spec_keys=['inchis', 'charges', 'multiplicities'])
+        spec_keys=['inchis', 'charges', 'multiplicities', 'ts_multiplicity'])
 
     _map = _pack_arguments(map_.reaction_leaf)
     nspecs = _count_arguments(map_.reaction_leaf)
-    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=10,
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=11,
                                spec_dfile=spec_dfile,
                                root_dsdir=root_dsdir)
 

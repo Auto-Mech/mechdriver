@@ -33,7 +33,7 @@ def reaction_trunk():
     return 'RXN'
 
 
-def reaction_leaf(ichs_pair, charges_pair, mults_pair):
+def reaction_leaf(ichs_pair, charges_pair, mults_pair, ts_mult):
     """ reaction leaf directory name
     """
     ichs_pair = tuple(map(tuple, ichs_pair))
@@ -45,7 +45,8 @@ def reaction_leaf(ichs_pair, charges_pair, mults_pair):
     charges1, charges2 = charges_pair
     mults1, mults2 = mults_pair
     return os.path.join(_reactant_leaf(ichs1, charges1, mults1),
-                        _reactant_leaf(ichs2, charges2, mults2))
+                        _reactant_leaf(ichs2, charges2, mults2),
+                        str(ts_mult))
 
 
 def reaction_direction(ichs_pair, charges_pair, mults_pair):
