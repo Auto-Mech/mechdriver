@@ -36,6 +36,9 @@ def reaction_trunk():
 def reaction_leaf(ichs_pair, charges_pair, mults_pair):
     """ reaction leaf directory name
     """
+    ichs_pair = tuple(map(tuple, ichs_pair))
+    charges_pair = tuple(map(tuple, charges_pair))
+    mults_pair = tuple(map(tuple, mults_pair))
     assert ((ichs_pair, charges_pair, mults_pair) ==
             sort_together(ichs_pair, charges_pair, mults_pair))
     ichs1, ichs2 = ichs_pair
@@ -43,6 +46,33 @@ def reaction_leaf(ichs_pair, charges_pair, mults_pair):
     mults1, mults2 = mults_pair
     return os.path.join(_reactant_leaf(ichs1, charges1, mults1),
                         _reactant_leaf(ichs2, charges2, mults2))
+
+
+def reaction_direction(ichs_pair, charges_pair, mults_pair):
+    """ sort inchis, charges, and multiplicities together
+    """
+
+    def _sort_together(ichs, charges, mults):
+        idxs = automol.inchi.argsort(ichs)
+        ichs = tuple(ichs[idx] for idx in idxs)
+        charges = tuple(charges[idx] for idx in idxs)
+        mults = tuple(mults[idx] for idx in idxs)
+        return (ichs, charges, mults)
+
+    def _sortable_representation(ichs, charges, mults):
+        return (len(ichs), sorted(automol.inchi.argsort(ichs)), charges, mults)
+
+    assert len(ichs_pair) == len(charges_pair) == len(mults_pair) == 2
+
+    ichs1, ichs2 = ichs_pair
+    charges1, charges2 = charges_pair
+    mults1, mults2 = mults_pair
+
+    ichs1, charges1, mults1 = _sort_together(ichs1, charges1, mults1)
+    ichs2, charges2, mults2 = _sort_together(ichs2, charges2, mults2)
+
+    return (_sortable_representation(ichs1, charges1, mults1) <
+            _sortable_representation(ichs2, charges1, mults1))
 
 
 def sort_together(ichs_pair, charges_pair, mults_pair):
@@ -56,8 +86,8 @@ def sort_together(ichs_pair, charges_pair, mults_pair):
         mults = tuple(mults[idx] for idx in idxs)
         return (ichs, charges, mults)
 
-    def _sortable_representation(ichs):
-        return (len(ichs), sorted(automol.inchi.argsort(ichs)))
+    def _sortable_representation(ichs, charges, mults):
+        return (len(ichs), sorted(automol.inchi.argsort(ichs)), charges, mults)
 
     assert len(ichs_pair) == len(charges_pair) == len(mults_pair) == 2
 
@@ -68,7 +98,8 @@ def sort_together(ichs_pair, charges_pair, mults_pair):
     ichs1, charges1, mults1 = _sort_together(ichs1, charges1, mults1)
     ichs2, charges2, mults2 = _sort_together(ichs2, charges2, mults2)
 
-    if _sortable_representation(ichs1) > _sortable_representation(ichs2):
+    if (_sortable_representation(ichs1, charges1, mults1) >
+            _sortable_representation(ichs2, charges1, mults1)):
         ichs1, ichs2 = ichs2, ichs1
         charges1, charges2 = charges2, charges1
         mults1, mults2 = mults2, mults1
