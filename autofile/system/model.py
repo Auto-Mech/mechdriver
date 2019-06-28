@@ -145,7 +145,7 @@ class DataSeriesDir():
         pfx = os.path.abspath(pfx)
         pth_pattern = os.path.join(pfx, *('*' * self.depth))
         pths = filter(os.path.isdir, glob.glob(pth_pattern))
-        pths = tuple(os.path.join(pfx, pth) for pth in pths)
+        pths = tuple(sorted(os.path.join(pfx, pth) for pth in pths))
         return pths
 
     # helpers

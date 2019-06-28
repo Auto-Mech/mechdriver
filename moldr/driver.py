@@ -157,6 +157,22 @@ def save_conformers(ich, charge, mult, method, basis, orb_restricted,
         trunk_inf_obj.nsamp += nsamp_new
         SFS.conf_trunk.file.info.write(trunk_inf_obj, save_prefix, root_specs)
 
+        # finally, update the conformer trajectory file
+        conf_specs_lst = SFS.conf.dir.existing(save_prefix, root_specs)
+        ene_lst = [
+            SFS.conf.file.energy.read(save_prefix, root_specs+conf_specs)
+            for conf_specs in conf_specs_lst]
+        geo_lst = [
+            SFS.conf.file.geometry.read(save_prefix, root_specs+conf_specs)
+            for conf_specs in conf_specs_lst]
+
+        traj = []
+        for ene, geo in sorted(zip(ene_lst, geo_lst), key=lambda x: x[0]):
+            comment = 'energy: {:>15.10f}'.format(ene)
+            traj.append((comment, geo))
+
+        SFS.conf_trunk.file.trajectory.write(traj, save_prefix, root_specs)
+
 
 def run_conformer_job(ich, charge, mult, method, basis, orb_restricted, job,
                       run_prefix, save_prefix, script_str, prog,
@@ -291,6 +307,30 @@ def save_scan(ich, charge, mult, method, basis, orb_restricted, cid,
                     SFS.scan.file.energy.write(ene, save_prefix, specs)
                     SFS.scan.file.geometry.write(geo, save_prefix, specs)
 
+        # finally, update the scan trajectory file
+        leaf_specs_lst = SFS.scan.dir.existing(
+            save_prefix, root_specs+branch_specs)
+        ene_lst = [
+            SFS.scan.file.energy.read(
+                save_prefix, root_specs+branch_specs+leaf_specs)
+            for leaf_specs in leaf_specs_lst]
+        geo_lst = [
+            SFS.scan.file.geometry.read(
+                save_prefix, root_specs+branch_specs+leaf_specs)
+            for leaf_specs in leaf_specs_lst]
+
+        traj = []
+        for leaf_specs, ene, geo in sorted(
+                zip(leaf_specs_lst, ene_lst, geo_lst), key=lambda x: x[0]):
+            grid_idxs, = leaf_specs
+            point_str = ', '.join(map('{:0>2d}'.format, grid_idxs))
+            comment = 'point: {:s}; energy: {:>15.10f}'.format(
+                point_str, ene)
+            traj.append((comment, geo))
+
+        SFS.scan_branch.file.trajectory.write(
+            traj, save_prefix, root_specs+branch_specs)
+
 
 def run_tau(ich, charge, mult, method, basis, orb_restricted,
             nsamp, run_prefix, save_prefix, script_str, prog,
@@ -407,7 +447,7 @@ def save_tau(ich, charge, mult, method, basis, orb_restricted,
 def run_tau_job(ich, charge, mult, method, basis, orb_restricted, job,
                 run_prefix, save_prefix, script_str, prog, vignore=1e10,
                 **kwargs):
-    """ save the taus that have been found so far
+    """ run gradients or hessians for taus
     """
     root_specs = (ich, charge, mult, method, basis, orb_restricted)
 
@@ -511,11 +551,6 @@ def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis,
 
             if not RFS.scan.dir.exists(run_prefix, specs):
                 RFS.scan.dir.create(run_prefix, specs)
-
-            # TODO: take out the geometry write -- this is just for testing
-            # purposes
-            grid_geom = automol.zmatrix.geometry(grid_zmat)
-            RFS.scan.file.geometry.write(grid_geom, run_prefix, specs)
 
             print("Point {}/{}".format(grid_index+1, npoints))
             run_job(
@@ -670,7 +705,6 @@ def build_init_addn_ts_zmatrix(reac1_zmat, reac2_zmat,
                                babs3=DEG2RAD * 90.,
                                standardize=False):
     """ Builds the initial ts z-matrix
-        CHECK MANUAL, IS KSITE USED FOR ANYTHING?
     """
     reac2_natom = automol.zmatrix.count(reac2_zmat)
 
@@ -729,9 +763,9 @@ def build_init_abst_ts_zmatrix(reac1_zmat, reac2_zmat,
     reac2_natom = automol.zmatrix.count(reac2_zmat)
 
     # Set default values for dummy matrix
-    rx = 1.00 * 1.88973
-    ax = numpy.radians(90.0)
-    dx = numpy.radians(180.0)
+    rx_val = 1. * ANG2BOHR
+    ax_val = 90. * DEG2RAD
+    dx_val = 180. * DEG2RAD
 
     # Set a blank Z-Matrix for the dummy atom
     x_zmat = ((('X', (None, None, None), (None, None, None)),), {})
@@ -741,11 +775,11 @@ def build_init_abst_ts_zmatrix(reac1_zmat, reac2_zmat,
     if reac1_natom == 2:
         r1_x_join_keys = ((isite, jsite, None),)
         r1_x_join_name = (('rx', 'ax', None),)
-        r1_x_join_vals = {'rx': rx, 'ax': ax}
+        r1_x_join_vals = {'rx': rx_val, 'ax': ax_val}
     else:
         r1_x_join_keys = ((isite, jsite, ksite),)
         r1_x_join_name = (('rx', 'ax', 'dx'),)
-        r1_x_join_vals = {'rx': rx, 'ax': ax, 'dx': dx}
+        r1_x_join_vals = {'rx': rx_val, 'ax': ax_val, 'dx': dx_val}
 
     # Join the Reac1 and Dummy Z-Matrices
     reac1_x_zmat = automol.zmatrix.join(

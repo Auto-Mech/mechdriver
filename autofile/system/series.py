@@ -34,6 +34,7 @@ class DataFileAttributeName():
     GEOM = 'geometry'
     GRAD = 'gradient'
     HESS = 'hessian'
+    TRAJ = 'trajectory'
 
 
 def species_trunk(root_dsdir=None):
@@ -101,12 +102,14 @@ def conformer_trunk(root_dsdir=None):
     vma_dfile = file_.vmatrix(FilePrefix.CONF)
     inf_dfile = file_.information(FilePrefix.CONF,
                                   function=info.conformer_trunk)
+    traj_dfile = file_.trajectory(FilePrefix.CONF)
 
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
             DataFileAttributeName.VMATRIX: vma_dfile,
-            DataFileAttributeName.INFO: inf_dfile})
+            DataFileAttributeName.INFO: inf_dfile,
+            DataFileAttributeName.TRAJ: traj_dfile})
     return dseries
 
 
@@ -178,11 +181,13 @@ def scan_branch(root_dsdir=None):
     """
     dsdir = dir_.scan_branch(root_dsdir)
     inf_dfile = file_.information(FilePrefix.SCAN, function=info.scan_branch)
+    traj_dfile = file_.trajectory(FilePrefix.SCAN)
 
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.INFO: inf_dfile})
+            DataFileAttributeName.INFO: inf_dfile,
+            DataFileAttributeName.TRAJ: traj_dfile})
     return dseries
 
 
