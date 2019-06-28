@@ -86,13 +86,9 @@ def reaction_filesystem():
     rxn_trunk_ds = series.reaction_trunk()
     rxn_leaf_ds = series.reaction_leaf(root_dsdir=rxn_trunk_ds.dir)
     thy_leaf_ds = series.theory_leaf(root_dsdir=rxn_leaf_ds.dir)
-    cnf_trunk_ds = series.conformer_trunk(root_dsdir=thy_leaf_ds.dir)
-    cnf_leaf_ds = series.conformer_leaf(root_dsdir=cnf_trunk_ds.dir)
-    cnf_run_trunk_ds = series.run_trunk(root_dsdir=cnf_leaf_ds.dir)
-    cnf_run_leaf_ds = series.run_leaf(root_dsdir=cnf_run_trunk_ds.dir)
 
     # (gridopt) scan directories
-    scn_trunk_ds = series.scan_trunk(root_dsdir=cnf_leaf_ds.dir)
+    scn_trunk_ds = series.scan_trunk(root_dsdir=thy_leaf_ds.dir)
     scn_branch_ds = series.scan_branch(root_dsdir=scn_trunk_ds.dir)
     scn_leaf_ds = series.scan_leaf(root_dsdir=scn_branch_ds.dir)
     scn_run_trunk_ds = series.run_trunk(root_dsdir=scn_leaf_ds.dir)
@@ -102,9 +98,6 @@ def reaction_filesystem():
         AttributeName.RXN_TRUNK: rxn_trunk_ds,
         AttributeName.RXN_LEAF: rxn_leaf_ds,
         AttributeName.THY_LEAF: thy_leaf_ds,
-        AttributeName.CNF_TRUNK: cnf_trunk_ds,
-        AttributeName.CNF_LEAF: cnf_leaf_ds,
-        AttributeName.CNF_RUN_LEAF: cnf_run_leaf_ds,
         AttributeName.SCN_TRUNK: scn_trunk_ds,
         AttributeName.SCN_BRANCH: scn_branch_ds,
         AttributeName.SCN_LEAF: scn_leaf_ds,

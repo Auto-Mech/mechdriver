@@ -486,21 +486,21 @@ class ReactionType():
     H_ABSTRACTION = 'HABS'
 
 
-def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis,
-                orb_restricted, run_prefix, save_prefix, script_str, prog,
-                ts_mult, **kwargs):
+def run_gridopt(rxn_inchis, rxn_charges, rxn_mults, method, basis,
+                orb_restricted, ts_mult, run_prefix, save_prefix, script_str,
+                prog, **kwargs):
     """ grid optimization for transition state guess
     """
 
     direction = autofile.system.reaction_direction(
-        inchis_pair, charges_pair, mults_pair)
+        rxn_inchis, rxn_charges, rxn_mults)
 
     assert save_prefix is not None  # do-nothing line for style checkers
     print("The direction of the reaction is", direction)
     print("The transition state multiplicity is", ts_mult)
 
-    reactant_inchis = inchis_pair[0]
-    product_inchis = inchis_pair[1]
+    reactant_inchis = rxn_inchis[0]
+    product_inchis = rxn_inchis[1]
 
     reactant_geoms = list(map(automol.inchi.geometry, reactant_inchis))
     product_geoms = list(map(automol.inchi.geometry, product_inchis))
@@ -515,12 +515,11 @@ def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis,
                                map(automol.geom.inchi, reactant_geoms)))
     product_inchis = list(map(automol.inchi.standard_form,
                               map(automol.geom.inchi, product_geoms)))
-    inchis_pair = (reactant_inchis, product_inchis)
-    inchis_pair, charges_pair, mults_pair = autofile.system.sort_together(
-        inchis_pair, charges_pair, mults_pair)
-    cid = autofile.system.generate_new_conformer_id()
-    root_specs = (inchis_pair, charges_pair, mults_pair, ts_mult,
-                  method, basis, orb_restricted, cid)
+    rxn_inchis = (reactant_inchis, product_inchis)
+    rxn_inchis, rxn_charges, rxn_mults = autofile.system.sort_together(
+        rxn_inchis, rxn_charges, rxn_mults)
+    root_specs = (rxn_inchis, rxn_charges, rxn_mults, ts_mult, method, basis,
+                  orb_restricted)
 
     if ret is None:
         print("Failed to classify reaction for this system.")
@@ -558,7 +557,7 @@ def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis,
                 script_str=script_str,
                 prefix=path,
                 geom=grid_zmat,
-                charge=sum(charges_pair[0]),
+                charge=sum(rxn_charges[0]),
                 mult=ts_mult,
                 method=method,
                 basis=basis,
@@ -566,6 +565,72 @@ def run_gridopt(inchis_pair, charges_pair, mults_pair, method, basis,
                 frozen_coordinates=[dist_name],
                 **kwargs
             )
+
+
+def save_gridopt(rxn_inchis, rxn_charges, rxn_mults, method, basis,
+                 orb_restricted, ts_mult, run_prefix, save_prefix):
+    """ save grid optimization results
+
+    (ultimately, we don't actually care about this information, but we want it
+    for debugging purposes)
+    """
+    root_specs = (rxn_inchis, rxn_charges, rxn_mults, ts_mult, method, basis,
+                  orb_restricted)
+    branch_specs = RFS.scan_branch.dir.existing(run_prefix, root_specs)
+    if branch_specs:
+        assert len(branch_specs) == 1
+        root_specs += branch_specs[0]
+
+        for scan_specs in RFS.scan.dir.existing(run_prefix, root_specs):
+            specs = root_specs + scan_specs
+
+            print("Reading grid points from run directories.")
+            run_specs = specs + ('optimization',)
+            run_path = RFS.scan_run.dir.path(run_prefix, run_specs)
+            print("Reading from gridopt run at {}".format(run_path))
+
+            if RFS.scan_run.file.output.exists(run_prefix, run_specs):
+                inf_obj = RFS.scan_run.file.info.read(run_prefix, run_specs)
+                inp_str = RFS.scan_run.file.input.read(run_prefix, run_specs)
+                out_str = RFS.scan_run.file.output.read(run_prefix, run_specs)
+                prog = inf_obj.prog
+                if not elstruct.reader.has_normal_exit_message(prog, out_str):
+                    print("Job failed. Skipping ...")
+                else:
+                    ene = elstruct.reader.energy(prog, method, out_str)
+                    geo = elstruct.reader.opt_geometry(prog, out_str)
+
+                    save_path = RFS.scan.dir.path(save_prefix, specs)
+                    print("Saving values from scan run at {}"
+                          .format(save_path))
+
+                    RFS.scan.dir.create(save_prefix, specs)
+                    RFS.scan.file.geometry_info.write(
+                        inf_obj, save_prefix, specs)
+                    RFS.scan.file.geometry_input.write(
+                        inp_str, save_prefix, specs)
+                    RFS.scan.file.energy.write(ene, save_prefix, specs)
+                    RFS.scan.file.geometry.write(geo, save_prefix, specs)
+
+        # finally, update the scan trajectory file
+        leaf_specs_lst = RFS.scan.dir.existing(save_prefix, root_specs)
+        ene_lst = [
+            RFS.scan.file.energy.read(save_prefix, root_specs+leaf_specs)
+            for leaf_specs in leaf_specs_lst]
+        geo_lst = [
+            RFS.scan.file.geometry.read(save_prefix, root_specs+leaf_specs)
+            for leaf_specs in leaf_specs_lst]
+
+        traj = []
+        for leaf_specs, ene, geo in sorted(
+                zip(leaf_specs_lst, ene_lst, geo_lst), key=lambda x: x[0]):
+            grid_idxs, = leaf_specs
+            point_str = ', '.join(map('{:0>2d}'.format, grid_idxs))
+            comment = 'point: {:s}; energy: {:>15.10f}'.format(
+                point_str, ene)
+            traj.append((comment, geo))
+
+        RFS.scan_branch.file.trajectory.write(traj, save_prefix, root_specs)
 
 
 def build_ts_zmatrix(reactant_zmats, product_zmats):
