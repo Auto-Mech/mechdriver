@@ -1,6 +1,7 @@
 """ directory naming functions
 """
 import os
+import string
 import numbers
 import elstruct
 import automol
@@ -164,6 +165,17 @@ def run_leaf(job):
     assert elstruct.Job.contains(job)
     dir_name = job[:4].upper()
     return dir_name
+
+
+def subrun_leaf(macro_idx, micro_idx):
+    """ run leaf directory name
+    """
+    assert isinstance(macro_idx, numbers.Integral)
+    assert isinstance(micro_idx, numbers.Integral)
+    assert macro_idx < 26  # for now -- if needed we can add AA, AB, etc.
+    macro_str = string.ascii_uppercase[macro_idx]
+    micro_str = '{:0>2d}'.format(micro_idx)
+    return ''.join([macro_str, micro_str])
 
 
 # conformer

@@ -76,4 +76,3 @@ def _update_kwargs(kwargs_dct, opts_dct):
 def _is_nonstring_sequence(obj):
     return (isinstance(obj, _Sequence)
             and not isinstance(obj, (str, bytes, bytearray)))
-

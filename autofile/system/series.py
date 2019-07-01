@@ -95,6 +95,22 @@ def run_leaf(root_dsdir=None):
     return dseries
 
 
+def subrun_leaf(root_dsdir=None):
+    """ subrun leaf DataSeries
+    """
+    dsdir = dir_.subrun_leaf(root_dsdir)
+    inf_dfile = file_.information(FilePrefix.RUN, function=info.run)
+    inp_dfile = file_.input_file(FilePrefix.RUN)
+    out_dfile = file_.output_file(FilePrefix.RUN)
+    dseries = model.DataSeries(
+        dsdir=dsdir,
+        dfile_dct={
+            DataFileAttributeName.INFO: inf_dfile,
+            DataFileAttributeName.INPUT: inp_dfile,
+            DataFileAttributeName.OUTPUT: out_dfile})
+    return dseries
+
+
 def conformer_trunk(root_dsdir=None):
     """ conformer trunk DataSeries
     """

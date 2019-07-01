@@ -115,6 +115,22 @@ def run_leaf(root_dsdir=None):
                                root_dsdir=root_dsdir, removable=True)
 
 
+def subrun_leaf(root_dsdir=None):
+    """ subrun leaf DataSeriesDir
+    """
+    spec_dfile = file_.data_series_specifier(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'macro_idx': lambda specs: specs[0],
+                  'micro_idx': lambda specs: specs[1]},
+        spec_keys=['macro_idx', 'micro_idx'])
+
+    _map = _pack_arguments(map_.subrun_leaf)
+    nspecs = _count_arguments(map_.subrun_leaf)
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
+                               spec_dfile=spec_dfile,
+                               root_dsdir=root_dsdir)
+
+
 def conformer_trunk(root_dsdir=None):
     """ conformer trunk DataSeriesDir
     """
