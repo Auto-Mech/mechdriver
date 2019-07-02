@@ -1,8 +1,6 @@
 """ drivers
 """
 import functools
-import os
-import warnings
 import numpy
 from qcelemental import constants as qcc
 import automol
@@ -10,7 +8,7 @@ import elstruct
 import autofile
 from autofile import SFS
 from autofile import RFS
-from moldr import optsmat
+import moldr.runner
 
 
 DEG2RAD = qcc.conversion_factor('degree', 'radian')
@@ -896,17 +894,18 @@ def build_init_abst_ts_zmatrix(reac1_zmat, reac2_zmat,
 # centralized job runner
 def run_job(job, script_str, prefix,
             geom, charge, mult, method, basis, prog,
+            errors=(), options_mat=(),
             **kwargs):
     """ run an elstruct job by name
     """
     runner_dct = {
-        elstruct.Job.ENERGY: functools.partial(elstruct.run.direct,
-                                               elstruct.writer.energy),
-        elstruct.Job.GRADIENT: functools.partial(elstruct.run.direct,
-                                                 elstruct.writer.gradient),
-        elstruct.Job.HESSIAN: functools.partial(elstruct.run.direct,
-                                                elstruct.writer.hessian),
-        elstruct.Job.OPTIMIZATION: feedback_optimization,
+        elstruct.Job.ENERGY: functools.partial(
+            moldr.runner.options_matrix_run, elstruct.writer.energy),
+        elstruct.Job.GRADIENT: functools.partial(
+            moldr.runner.options_matrix_run, elstruct.writer.gradient),
+        elstruct.Job.HESSIAN: functools.partial(
+            moldr.runner.options_matrix_run, elstruct.writer.hessian),
+        elstruct.Job.OPTIMIZATION: moldr.runner.feedback_optimization,
     }
 
     assert job in runner_dct
@@ -951,7 +950,8 @@ def run_job(job, script_str, prefix,
         inp_str, out_str = runner(
             script_str, run_path,
             geom=geom, charge=charge, mult=mult, method=method,
-            basis=basis, prog=prog, **kwargs
+            basis=basis, prog=prog, errors=errors, options_mat=options_mat,
+            **kwargs
         )
 
         inf_obj.utc_end_time = autofile.system.info.utc_time()
@@ -966,131 +966,3 @@ def run_job(job, script_str, prefix,
         inf_obj.status = status
         run_ds.file.info.write(inf_obj, prefix, [job])
         run_ds.file.input.write(inp_str, prefix, [job])
-
-
-def feedback_optimization(script_str, run_dir,
-                          geom, charge, mult, method, basis, prog,
-                          ntries=3, **kwargs):
-    """ retry an optimization from the last (unoptimized) structure
-    """
-    assert automol.geom.is_valid(geom) or automol.zmatrix.is_valid(geom)
-    is_zmat = automol.zmatrix.is_valid(geom)
-    read_geom_ = (elstruct.reader.opt_geometry_(prog) if not is_zmat else
-                  elstruct.reader.opt_zmatrix_(prog))
-    has_noconv_error_ = functools.partial(
-        elstruct.reader.has_error_message, prog, elstruct.Error.OPT_NOCONV)
-
-    for try_idx in range(ntries):
-        try_dir_name = 'try{:d}'.format(try_idx)
-        try_dir_path = os.path.join(run_dir, try_dir_name)
-        assert not os.path.exists(try_dir_path)
-        os.mkdir(try_dir_path)
-
-        # filter out the warnings from the trial runs
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            input_str, output_str = elstruct.run.direct(
-                elstruct.writer.optimization, script_str, try_dir_path,
-                geom=geom, charge=charge, mult=mult, method=method,
-                basis=basis, prog=prog, **kwargs)
-
-        if has_noconv_error_(output_str):
-            geom = read_geom_(output_str)
-        else:
-            break
-
-    if has_noconv_error_(output_str):
-        warnings.resetwarnings()
-        warnings.warn("elstruct feedback optimization failed; "
-                      "last try was in {}".format(run_dir))
-
-    return input_str, output_str
-
-
-def robust_run(input_writer, script_str, run_dir,
-               geom, charge, mult, method, basis, prog,
-               errors=(), options_mat=(),
-               **kwargs):
-    """ try several sets of options to generate an output file
-    :returns: the input string, the output string, and the run directory
-    :rtype: (str, str, str)
-    """
-    assert len(errors) == len(options_mat)
-
-    try_idx = 0
-    kwargs_dct = dict(kwargs)
-    while not optsmat.is_exhausted(options_mat):
-        if try_idx > 0:
-            kwargs_dct = optsmat.updated_kwargs(kwargs, options_mat)
-        try_dir_name = 'try{:d}'.format(try_idx)
-        try_dir_path = os.path.join(run_dir, try_dir_name)
-        assert not os.path.exists(try_dir_path)
-        os.mkdir(try_dir_path)
-
-        # filter out the warnings from the trial runs
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            input_str, output_str = elstruct.run.direct(
-                input_writer, script_str, try_dir_path,
-                geom=geom, charge=charge, mult=mult, method=method,
-                basis=basis, prog=prog, **kwargs_dct)
-
-        error_vals = [
-            elstruct.reader.has_error_message(prog, error, output_str)
-            for error in errors]
-
-        if not any(error_vals):
-            break
-
-        try_idx += 1
-        row_idx = error_vals.index(True)
-        options_mat = optsmat.advance(row_idx, options_mat)
-
-    if (any(error_vals) or not
-            elstruct.reader.has_normal_exit_message(prog, output_str)):
-        warnings.resetwarnings()
-        warnings.warn("elstruct robust run failed; last run was in {}"
-                      .format(run_dir))
-
-    return input_str, output_str
-
-
-def robust_feedback_opt(script_str, run_dir,
-                        geom, charge, mult, method, basis, prog,
-                        errors=(), options_mat=(), ntries=3, **kwargs):
-    """ try several sets of options to generate an output file
-        retry an optimization from the last (unoptimized) structure
-    """
-    assert automol.geom.is_valid(geom) or automol.zmatrix.is_valid(geom)
-    is_zmat = automol.zmatrix.is_valid(geom)
-    read_geom_ = (elstruct.reader.opt_geometry_(prog) if not is_zmat else
-                  elstruct.reader.opt_zmatrix_(prog))
-    has_no_opt_conv_error_ = functools.partial(
-        elstruct.reader.has_error_message, prog, elstruct.Error.OPT_NOCONV)
-
-    for try_idx in range(ntries):
-        try_dir_name = 'try{:d}'.format(try_idx)
-        try_dir_path = os.path.join(run_dir, try_dir_name)
-        assert not os.path.exists(try_dir_path)
-        os.mkdir(try_dir_path)
-
-        # filter out the warnings from the trial runs
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            input_str, output_str = robust_run(
-                elstruct.writer.optimization, script_str, try_dir_path,
-                geom=geom, charge=charge, mult=mult, method=method,
-                basis=basis, prog=prog, errors=errors, options_mat=options_mat,
-                **kwargs)
-
-        if has_no_opt_conv_error_(output_str):
-            geom = read_geom_(output_str)
-        else:
-            break
-
-    if has_no_opt_conv_error_(output_str):
-        warnings.resetwarnings()
-        warnings.warn("elstruct feedback optimization failed; "
-                      "last try was in {}".format(run_dir))
-
-    return input_str, output_str

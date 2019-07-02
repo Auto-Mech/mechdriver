@@ -36,19 +36,19 @@ REACTION_LIST = (
 
 for rxn_inchis, rxn_charges, rxn_mults in REACTION_LIST:
     ts_mult = sum(rxn_mults[0]) - len(rxn_mults[0]) + 1
-    # moldr.driver.run_gridopt(
-    #     rxn_inchis=rxn_inchis,
-    #     rxn_charges=rxn_charges,
-    #     rxn_mults=rxn_mults,
-    #     ts_mult=ts_mult,
-    #     method=METHOD,
-    #     basis=BASIS,
-    #     orb_restricted=ORB_RESTRICTED,
-    #     run_prefix=RUN_PREFIX,
-    #     save_prefix=SAVE_PREFIX,
-    #     script_str=SCRIPT_STR,
-    #     prog=PROG,
-    # )
+    moldr.driver.run_gridopt(
+        rxn_inchis=rxn_inchis,
+        rxn_charges=rxn_charges,
+        rxn_mults=rxn_mults,
+        ts_mult=ts_mult,
+        method=METHOD,
+        basis=BASIS,
+        orb_restricted=ORB_RESTRICTED,
+        run_prefix=RUN_PREFIX,
+        save_prefix=SAVE_PREFIX,
+        script_str=SCRIPT_STR,
+        prog=PROG,
+    )
     moldr.driver.save_gridopt(
         rxn_inchis=rxn_inchis,
         rxn_charges=rxn_charges,

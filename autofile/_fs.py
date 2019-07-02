@@ -27,21 +27,6 @@ class AttributeName():
     SPT_LEAF = 'tau_sp'
 
 
-def run_filesystem():
-    """ construct the run filesystem
-    """
-    run_trunk_ds = series.run_trunk()
-    run_leaf_ds = series.run_leaf(root_dsdir=run_trunk_ds.dir)
-    subrun_leaf_ds = series.subrun_leaf(root_dsdir=run_leaf_ds.dir)
-
-    run_fs = model.FileSystem({
-        'run': run_leaf_ds,
-        'subrun': subrun_leaf_ds,
-    })
-
-    return run_fs
-
-
 def species_filesystem():
     """ construct the species filesystem
     """
