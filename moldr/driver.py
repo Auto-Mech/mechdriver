@@ -264,6 +264,48 @@ def run_scan(ich, charge, mult, method, basis, orb_restricted, cid,
                     **kwargs
                 )
 
+                run_specs = specs + ('optimization',)
+                if SFS.scan_run.file.output.exists(run_prefix, run_specs):
+                    out_str = SFS.scan_run.file.output.read(run_prefix,
+                                                            run_specs)
+                    if elstruct.reader.has_normal_exit_message(prog, out_str):
+                        last_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+            # now, run through in reverse to fill in the ones we missed
+            grid = numpy.linspace(*linspace)
+            npoint = len(grid)
+            for grid_idx, grid_val in reversed(list(enumerate(grid))):
+                specs = branch_specs + ((grid_idx,),)
+                inp_zma = automol.zmatrix.set_values(
+                    last_zma, {tors_name: grid_val})
+
+                if not SFS.scan.dir.exists(run_prefix, specs):
+                    SFS.scan.dir.create(run_prefix, specs)
+
+                path = SFS.scan.dir.path(run_prefix, specs)
+
+                print("Point {}/{}".format(grid_idx+1, npoint))
+                run_job(
+                    job=elstruct.Job.OPTIMIZATION,
+                    script_str=script_str,
+                    prefix=path,
+                    geom=inp_zma,
+                    charge=charge,
+                    mult=mult,
+                    method=method,
+                    basis=basis,
+                    prog=prog,
+                    frozen_coordinates=[tors_name],
+                    **kwargs
+                )
+
+                run_specs = specs + ('optimization',)
+                if SFS.scan_run.file.output.exists(run_prefix, run_specs):
+                    out_str = SFS.scan_run.file.output.read(run_prefix,
+                                                            run_specs)
+                    if elstruct.reader.has_normal_exit_message(prog, out_str):
+                        last_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
 
 def save_scan(ich, charge, mult, method, basis, orb_restricted, cid,
               run_prefix, save_prefix):
@@ -894,7 +936,7 @@ def build_init_abst_ts_zmatrix(reac1_zmat, reac2_zmat,
 # centralized job runner
 def run_job(job, script_str, prefix,
             geom, charge, mult, method, basis, prog,
-            errors=(), options_mat=(),
+            errors=(), options_mat=(), retry_failed=True,
             **kwargs):
     """ run an elstruct job by name
     """
@@ -920,10 +962,12 @@ def run_job(job, script_str, prefix,
     if run_ds.file.info.exists(prefix, [job]):
         inf_obj = run_ds.file.info.read(prefix, [job])
         if inf_obj.status == autofile.system.RunStatus.FAILURE:
-            do_run = True
             print(" - Found failed {} job at {}".format(job, run_path))
-            print(" - Removing and retrying...")
-            run_ds.dir.remove(prefix, [job])
+            if retry_failed:
+                print(" - Retrying...")
+                do_run = True
+            else:
+                do_run = False
         else:
             do_run = False
             if inf_obj.status == autofile.system.RunStatus.SUCCESS:
