@@ -59,15 +59,16 @@ def reaction_leaf(root_dsdir=None):
             'inchis': lambda specs: specs[0],
             'charges': lambda specs: specs[1],
             'multiplicities': lambda specs: specs[2],
+            'ts_multiplicity': lambda specs: specs[3],
             'smiles': lambda specs: [
                 list(map(automol.inchi.smiles, specs[0][0])),
                 list(map(automol.inchi.smiles, specs[0][1]))],
         },
-        spec_keys=['inchis', 'charges', 'multiplicities'])
+        spec_keys=['inchis', 'charges', 'multiplicities', 'ts_multiplicity'])
 
     _map = _pack_arguments(map_.reaction_leaf)
     nspecs = _count_arguments(map_.reaction_leaf)
-    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=10,
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=11,
                                spec_dfile=spec_dfile,
                                root_dsdir=root_dsdir)
 
@@ -112,6 +113,22 @@ def run_leaf(root_dsdir=None):
     return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
                                spec_dfile=spec_dfile,
                                root_dsdir=root_dsdir, removable=True)
+
+
+def subrun_leaf(root_dsdir=None):
+    """ subrun leaf DataSeriesDir
+    """
+    spec_dfile = file_.data_series_specifier(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'macro_idx': lambda specs: specs[0],
+                  'micro_idx': lambda specs: specs[1]},
+        spec_keys=['macro_idx', 'micro_idx'])
+
+    _map = _pack_arguments(map_.subrun_leaf)
+    nspecs = _count_arguments(map_.subrun_leaf)
+    return model.DataSeriesDir(map_=_map, nspecs=nspecs, depth=1,
+                               spec_dfile=spec_dfile,
+                               root_dsdir=root_dsdir)
 
 
 def conformer_trunk(root_dsdir=None):
