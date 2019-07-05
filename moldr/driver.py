@@ -517,15 +517,6 @@ def run_tau_job(ich, charge, mult, method, basis, orb_restricted, job,
 
 
 # gridopt functions
-class ReactionType():
-    """ reaction types """
-
-    H_MIGRATION = 'HMIG'
-    BETA_SCISSION = 'BSC'
-    ADDITION = 'ADD'
-    H_ABSTRACTION = 'HABS'
-
-
 def run_gridopt(rxn_inchis, rxn_charges, rxn_mults, method, basis,
                 orb_restricted, ts_mult, run_prefix, save_prefix, script_str,
                 prog,
@@ -536,11 +527,7 @@ def run_gridopt(rxn_inchis, rxn_charges, rxn_mults, method, basis,
     """ grid optimization for transition state guess
     """
 
-    direction = autofile.system.reaction_direction(
-        rxn_inchis, rxn_charges, rxn_mults)
-
     assert save_prefix is not None  # do-nothing line for style checkers
-    print("The direction of the reaction is", direction)
     print("The transition state multiplicity is", ts_mult)
 
     reactant_inchis = rxn_inchis[0]
@@ -569,8 +556,6 @@ def run_gridopt(rxn_inchis, rxn_charges, rxn_mults, method, basis,
     product_inchis = list(map(automol.inchi.standard_form,
                               map(automol.geom.inchi, product_geoms)))
     rxn_inchis = (reactant_inchis, product_inchis)
-    rxn_inchis, rxn_charges, rxn_mults = autofile.system.sort_together(
-        rxn_inchis, rxn_charges, rxn_mults)
     root_specs = (rxn_inchis, rxn_charges, rxn_mults, ts_mult, method, basis,
                   orb_restricted)
 
@@ -695,10 +680,10 @@ def run_job(job, script_str, prefix,
     run_ds = autofile.system.series.run_leaf(root_dsdir=run_trunk_ds.dir)
 
     run_path = run_ds.dir.path(prefix, [job])
-    if not run_ds.dir.exists(prefix, [job]):
+    if not run_ds.file.info.exists(prefix, [job]):
         do_run = True
         print(" - Running {} job at {}".format(job, run_path))
-    if run_ds.file.info.exists(prefix, [job]):
+    else:  
         inf_obj = run_ds.file.info.read(prefix, [job])
         if inf_obj.status == autofile.system.RunStatus.FAILURE:
             print(" - Found failed {} job at {}".format(job, run_path))
