@@ -1,0 +1,130 @@
+ELEMENTS  
+C H N O 
+END    
+
+SPECIES  
+CCH
+C2H3
+C2H5
+CL
+HS
+NH2
+O2
+CH4
+CH3
+C2H6
+C2H4
+C2H2
+CH3OH
+CH3O
+CH2OH
+OCHOH
+HOCO
+OCHO
+CH3OCH3
+CH3OCH2
+H2CO
+HCO
+CH3CL
+CH2CL
+H2S
+NH3
+HCL
+HO2
+END
+
+
+REACTIONS   MOLES  KELVINS   
+CH4+CCH=CH3+C2H2                1.e10           0.0         10000.
+CH4+C2H3=CH3+C2H4                1.e10           0.0         10000.
+CH4+C2H5=CH3+C2H6                1.e10           0.0         10000.
+CH4+CL=CH3+HCL                1.e10           0.0         10000.
+CH4+HS=CH3+H2S                1.e10           0.0         10000.
+CH4+NH2=CH3+NH3                1.e10           0.0         10000.
+CH4+O2=CH3+HO2                1.e10           0.0         10000.
+C2H6+CCH=C2H5+C2H2                1.e10           0.0         10000.
+C2H6+C2H3=C2H5+C2H4                1.e10           0.0         10000.
+C2H6+C2H5=C2H5+C2H6                1.e10           0.0         10000.
+C2H6+CL=C2H5+HCL                1.e10           0.0         10000.
+C2H6+HS=C2H5+H2S                1.e10           0.0         10000.
+C2H6+NH2=C2H5+NH3                1.e10           0.0         10000.
+C2H6+O2=C2H5+HO2                1.e10           0.0         10000.
+C2H4+CCH=C2H2+C2H2                1.e10           0.0         10000.
+C2H4+C2H3=C2H2+C2H4                1.e10           0.0         10000.
+C2H4+C2H5=C2H2+C2H6                1.e10           0.0         10000.
+C2H4+CL=C2H2+HCL                1.e10           0.0         10000.
+C2H4+HS=C2H2+H2S                1.e10           0.0         10000.
+C2H4+NH2=C2H2+NH3                1.e10           0.0         10000.
+C2H4+O2=C2H2+HO2                1.e10           0.0         10000.
+C2H2+CCH=CCH+C2H2                1.e10           0.0         10000.
+C2H2+C2H3=CCH+C2H4                1.e10           0.0         10000.
+C2H2+C2H5=CCH+C2H6                1.e10           0.0         10000.
+C2H2+CL=CCH+HCL                1.e10           0.0         10000.
+C2H2+HS=CCH+H2S                1.e10           0.0         10000.
+C2H2+NH2=CCH+NH3                1.e10           0.0         10000.
+C2H2+O2=CCH+HO2                1.e10           0.0         10000.
+CH3OH+CCH=CH3O+C2H2                1.e10           0.0         10000.
+CH3OH+C2H3=CH3O+C2H4                1.e10           0.0         10000.
+CH3OH+C2H5=CH3O+C2H6                1.e10           0.0         10000.
+CH3OH+CL=CH3O+HCL                1.e10           0.0         10000.
+CH3OH+HS=CH3O+H2S                1.e10           0.0         10000.
+CH3OH+NH2=CH3O+NH3                1.e10           0.0         10000.
+CH3OH+O2=CH3O+HO2                1.e10           0.0         10000.
+CH3OH+CCH=CH2OH+C2H2                1.e10           0.0         10000.
+CH3OH+C2H3=CH2OH+C2H4                1.e10           0.0         10000.
+CH3OH+C2H5=CH2OH+C2H6                1.e10           0.0         10000.
+CH3OH+CL=CH2OH+HCL                1.e10           0.0         10000.
+CH3OH+HS=CH2OH+H2S                1.e10           0.0         10000.
+CH3OH+NH2=CH2OH+NH3                1.e10           0.0         10000.
+CH3OH+O2=CH2OH+HO2                1.e10           0.0         10000.
+OCHOH+CCH=OCHO+C2H2                1.e10           0.0         10000.
+OCHOH+C2H3=OCHO+C2H4                1.e10           0.0         10000.
+OCHOH+C2H5=OCHO+C2H6                1.e10           0.0         10000.
+OCHOH+CL=OCHO+HCL                1.e10           0.0         10000.
+OCHOH+HS=OCHO+H2S                1.e10           0.0         10000.
+OCHOH+NH2=OCHO+NH3                1.e10           0.0         10000.
+OCHOH+O2=OCHO+HO2                1.e10           0.0         10000.
+OCHOH+CCH=HOCO+C2H2                1.e10           0.0         10000.
+OCHOH+C2H3=HOCO+C2H4                1.e10           0.0         10000.
+OCHOH+C2H5=HOCO+C2H6                1.e10           0.0         10000.
+OCHOH+CL=HOCO+HCL                1.e10           0.0         10000.
+OCHOH+HS=HOCO+H2S                1.e10           0.0         10000.
+OCHOH+NH2=HOCO+NH3                1.e10           0.0         10000.
+OCHOH+O2=HOCO+HO2                1.e10           0.0         10000.
+CH3OCH3+CCH=CH3OCH2+C2H2                1.e10           0.0         10000.
+CH3OCH3+C2H3=CH3OCH2+C2H4                1.e10           0.0         10000.
+CH3OCH3+C2H5=CH3OCH2+C2H6                1.e10           0.0         10000.
+CH3OCH3+CL=CH3OCH2+HCL                1.e10           0.0         10000.
+CH3OCH3+HS=CH3OCH2+H2S                1.e10           0.0         10000.
+CH3OCH3+NH2=CH3OCH2+NH3                1.e10           0.0         10000.
+CH3OCH3+O2=CH3OCH2+HO2                1.e10           0.0         10000.
+H2CO+CCH=HCO+C2H2                1.e10           0.0         10000.
+H2CO+C2H3=HCO+C2H4                1.e10           0.0         10000.
+H2CO+C2H5=HCO+C2H6                1.e10           0.0         10000.
+H2CO+CL=HCO+HCL                1.e10           0.0         10000.
+H2CO+HS=HCO+H2S                1.e10           0.0         10000.
+H2CO+NH2=HCO+NH3                1.e10           0.0         10000.
+H2CO+O2=HCO+HO2                1.e10           0.0         10000.
+CH3CL+CCH=CH2CL+C2H2                1.e10           0.0         10000.
+CH3CL+C2H3=CH2CL+C2H4                1.e10           0.0         10000.
+CH3CL+C2H5=CH2CL+C2H6                1.e10           0.0         10000.
+CH3CL+CL=CH2CL+HCL                1.e10           0.0         10000.
+CH3CL+HS=CH2CL+H2S                1.e10           0.0         10000.
+CH3CL+NH2=CH2CL+NH3                1.e10           0.0         10000.
+CH3CL+O2=CH2CL+HO2                1.e10           0.0         10000.
+H2S+CCH=HS+C2H2                1.e10           0.0         10000.
+H2S+C2H3=HS+C2H4                1.e10           0.0         10000.
+H2S+C2H5=HS+C2H6                1.e10           0.0         10000.
+H2S+CL=HS+HCL                1.e10           0.0         10000.
+H2S+HS=HS+H2S                1.e10           0.0         10000.
+H2S+NH2=HS+NH3                1.e10           0.0         10000.
+H2S+O2=HS+HO2                1.e10           0.0         10000.
+NH3+CCH=NH2+C2H2                1.e10           0.0         10000.
+NH3+C2H3=NH2+C2H4                1.e10           0.0         10000.
+NH3+C2H5=NH2+C2H6                1.e10           0.0         10000.
+NH3+CL=NH2+HCL                1.e10           0.0         10000.
+NH3+HS=NH2+H2S                1.e10           0.0         10000.
+NH3+NH2=NH2+NH3                1.e10           0.0         10000.
+NH3+O2=CH3+HO2                1.e10           0.0         10000.
+END 
+

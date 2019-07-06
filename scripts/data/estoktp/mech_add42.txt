@@ -1,0 +1,99 @@
+ELEMENTS  
+C H N O 
+END    
+
+SPECIES  
+CCH
+C2H3
+C2H5
+CL
+HS
+NH2
+O2A
+
+C2H4
+CH2CH2CCH
+CH2CH2CHCH2
+CH2CH2CH2CH3
+C2H4CL
+C2H4SH
+C2H4NH2
+C2H4OO
+
+C2H2
+C4H3
+CHCHCHCH2
+CHCHCH2CH3
+CHCHCL
+CHCHSH
+CHCHNH2
+CHCHOO
+
+OCHOH
+CHCCH(O)OH
+CH2CHCH(O)OH
+CH3CH2CH(O)OH
+OCH(CL)OH
+OCH(SH)OH
+OCH(NH2)OH
+OCH(OO)OH
+
+CHCOCHOH
+CH2CHOCHOH
+CH3CH2OCHOH
+CLOCHOH
+SHOCHOH
+NH2OCHOH
+OOOCHOH
+
+CH2O Species
+END
+
+REACTIONS   MOLES  KELVINS   
+C2H4+C2H=CH2CH2CCH                1.e10           0.0         10000.
+C2H4+C2H3=CH2CH2CHCH2           1.e10           0.0         10000.
+C2H4+C2H5=CH2CH2CH2CH3                1.e10           0.0         10000.
+C2H4+CL=CH2CH2CL                1.e10           0.0         10000.
+C2H4+HS=CH2CH2SH                1.e10           0.0         10000.
+C2H4+NH2=CH2CH2NH2                1.e10           0.0         10000.
+C2H4+O2=CH2CH2OO                1.e10           0.0         10000.
+C2H2+C2H=CHCHCCH                1.e10           0.0         10000.
+C2H2+C2H3=CHCHCHCH2                1.e10           0.0         10000.
+C2H2+C2H5=CHCHCH2CH3                1.e10           0.0         10000.
+C2H2+CL=CHCHCL                1.e10           0.0         10000.
+C2H2+HS=CHCHSH                1.e10           0.0         10000.
+C2H2+NH2=CHCHNH2                1.e10           0.0         10000.
+C2H2+O2=CHCHOO                1.e10           0.0         10000.
+OCHOH+C2H=CHCCH(O)OH                1.e10           0.0         10000.
+OCHOH+C2H3=CH2CHCH(O)OH                1.e10           0.0         10000.
+OCHOH+C2H5=CH3CH2CH(O)OH                1.e10           0.0         10000.
+OCHOH+CL=OCH(CL)OH                1.e10           0.0         10000.
+OCHOH+HS=OCH(SH)OH                1.e10           0.0         10000.
+OCHOH+NH2=OCH(NH2)OH                1.e10           0.0         10000.
+OCHOH+O2=OCH(OO)OH
+OCHOH+C2H=CHCOCHOH                1.e10           0.0         10000.
+OCHOH+C2H3=CH2CHOCHOH                1.e10           0.0         10000.
+OCHOH+C2H5=CH3CH2OCHOH                1.e10           0.0         10000.
+OCHOH+CL=CLOCHOH                1.e10           0.0         10000.
+OCHOH+HS=SHOCHOH                1.e10           0.0         10000.
+OCHOH+NH2=NH2OCHOH                1.e10           0.0         10000.
+OCHOH+O2=OOOCHOH                1.e10           0.0         10000.
+H2CO+C2H=CHCCH2O                1.e10           0.0         10000.
+H2CO+C2H3=CH2CHCH2O
+H2CO+C2H5=CH3CH2CH2O                1.e10           0.0         10000.
+H2CO+CL=CLCH2O                1.e10           0.0         10000.
+H2CO+HS=SHCH2O                1.e10           0.0         10000.
+H2CO+NH2=NH2CH2O                1.e10           0.0         10000.
+H2CO+O2=OOCH2O                1.e10           0.0         10000.
+H2CO+C2H=CH2OCCH                1.e10           0.0         10000.
+H2CO+C2H3=CH2OCHCH2                1.e10           0.0         10000.
+H2CO+C2H5=CH2OCH2CH3                1.e10           0.0         10000.
+H2CO+CL=CH2OCL                1.e10           0.0         10000.
+H2CO+HS=CH2OSH                1.e10           0.0         10000.
+H2CO+NH2=CH2ONH2                1.e10           0.0         10000.
+H2CO+O2=CH2OOO                1.e10           0.0         10000.
+END
+
+
+ 
+

@@ -13,20 +13,20 @@ PREFIX = tempfile.mkdtemp()
 print(PREFIX)
 
 # create a dummy root DataSeriesDir for testing
-ROOT_SPEC_DFILE = autofile.system.file_.data_series_specifier(
+ROOT_SPEC_DFILE = autofile.system.file_.locator(
     file_prefix='dir',
     map_dct_={
-        'spec1': lambda specs: specs[0],
-        'spec2': lambda specs: specs[1],
-        'other': lambda specs: 'something else',
+        'loc1': lambda locs: locs[0],
+        'loc2': lambda locs: locs[1],
+        'other': lambda locs: 'something else',
     },
-    spec_keys=['spec1', 'spec2'],
+    loc_keys=['loc1', 'loc2'],
 )
 ROOT_DSDIR = autofile.system.model.DataSeriesDir(
     map_=lambda x: os.path.join(*map(str, x)),
-    nspecs=2,
+    nlocs=2,
     depth=2,
-    spec_dfile=ROOT_SPEC_DFILE,
+    loc_dfile=ROOT_SPEC_DFILE,
 )
 
 
@@ -301,7 +301,7 @@ def test__dir__run_trunk():
 
     dsdir = autofile.system.dir_.run_trunk(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -309,14 +309,14 @@ def test__dir__run_trunk():
         (2, 'c'),
     )
 
-    for root_specs in root_specs_lst:
-        specs = root_specs
+    for root_locs in root_locs_lst:
+        locs = root_locs
 
-        assert not dsdir.exists(prefix, specs)
-        dsdir.create(prefix, specs)
-        assert dsdir.exists(prefix, specs)
+        assert not dsdir.exists(prefix, locs)
+        dsdir.create(prefix, locs)
+        assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
 
 def test__dir__run_leaf():
@@ -327,34 +327,34 @@ def test__dir__run_leaf():
 
     dsdir = autofile.system.dir_.run_leaf(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
         (2, 'b'),
         (2, 'c'),
     )
-    leaf_specs_lst = (
+    leaf_locs_lst = (
         ('energy',),
         ('gradient',),
         ('hessian',),
         ('optimization',),
     )
 
-    for root_specs in root_specs_lst:
-        for leaf_specs in leaf_specs_lst:
-            specs = root_specs + leaf_specs
+    for root_locs in root_locs_lst:
+        for leaf_locs in leaf_locs_lst:
+            locs = root_locs + leaf_locs
 
-            assert not dsdir.exists(prefix, specs)
-            dsdir.create(prefix, specs)
-            assert dsdir.exists(prefix, specs)
+            assert not dsdir.exists(prefix, locs)
+            dsdir.create(prefix, locs)
+            assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
-    print(dsdir.existing(prefix, root_specs_lst[-1]))
-    for root_specs in root_specs_lst:
-        assert (sorted(dsdir.existing(prefix, root_specs)) ==
-                sorted(leaf_specs_lst))
+    print(dsdir.existing(prefix, root_locs_lst[-1]))
+    for root_locs in root_locs_lst:
+        assert (sorted(dsdir.existing(prefix, root_locs)) ==
+                sorted(leaf_locs_lst))
 
 
 def test__dir__subrun_leaf():
@@ -365,14 +365,14 @@ def test__dir__subrun_leaf():
 
     dsdir = autofile.system.dir_.subrun_leaf(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
         (2, 'b'),
         (2, 'c'),
     )
-    leaf_specs_lst = (
+    leaf_locs_lst = (
         (0, 0),
         (0, 1),
         (0, 2),
@@ -381,20 +381,20 @@ def test__dir__subrun_leaf():
         (2, 0),
     )
 
-    for root_specs in root_specs_lst:
-        for leaf_specs in leaf_specs_lst:
-            specs = root_specs + leaf_specs
+    for root_locs in root_locs_lst:
+        for leaf_locs in leaf_locs_lst:
+            locs = root_locs + leaf_locs
 
-            assert not dsdir.exists(prefix, specs)
-            dsdir.create(prefix, specs)
-            assert dsdir.exists(prefix, specs)
+            assert not dsdir.exists(prefix, locs)
+            dsdir.create(prefix, locs)
+            assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
-    print(dsdir.existing(prefix, root_specs_lst[-1]))
-    for root_specs in root_specs_lst:
-        assert (sorted(dsdir.existing(prefix, root_specs)) ==
-                sorted(leaf_specs_lst))
+    print(dsdir.existing(prefix, root_locs_lst[-1]))
+    for root_locs in root_locs_lst:
+        assert (sorted(dsdir.existing(prefix, root_locs)) ==
+                sorted(leaf_locs_lst))
 
 
 def test__dir__species_trunk():
@@ -413,7 +413,7 @@ def test__dir__species_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.species_trunk(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -421,14 +421,14 @@ def test__dir__species_trunk():
         (2, 'c'),
     )
 
-    for root_specs in root_specs_lst:
-        specs = root_specs
+    for root_locs in root_locs_lst:
+        locs = root_locs
 
-        assert not dsdir.exists(prefix, specs)
-        dsdir.create(prefix, specs)
-        assert dsdir.exists(prefix, specs)
+        assert not dsdir.exists(prefix, locs)
+        dsdir.create(prefix, locs)
+        assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
 
 def test__dir__species_leaf():
@@ -439,14 +439,14 @@ def test__dir__species_leaf():
 
     dsdir = autofile.system.dir_.species_leaf(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
         (2, 'b'),
         (2, 'c'),
     )
-    branch_specs_lst = (
+    branch_locs_lst = (
         ('InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1+', 0, 1),
         ('InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1-', 0, 1),
         ('InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 0, 2),
@@ -454,20 +454,20 @@ def test__dir__species_leaf():
         ('InChI=1S/O', 0, 3),
     )
 
-    for root_specs in root_specs_lst:
-        for branch_specs in branch_specs_lst:
-            specs = root_specs + branch_specs
+    for root_locs in root_locs_lst:
+        for branch_locs in branch_locs_lst:
+            locs = root_locs + branch_locs
 
-            assert not dsdir.exists(prefix, specs)
-            dsdir.create(prefix, specs)
-            assert dsdir.exists(prefix, specs)
+            assert not dsdir.exists(prefix, locs)
+            dsdir.create(prefix, locs)
+            assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
-    print(dsdir.existing(prefix, root_specs_lst[-1]))
-    for root_specs in root_specs_lst:
-        assert (sorted(dsdir.existing(prefix, root_specs)) ==
-                sorted(branch_specs_lst))
+    print(dsdir.existing(prefix, root_locs_lst[-1]))
+    for root_locs in root_locs_lst:
+        assert (sorted(dsdir.existing(prefix, root_locs)) ==
+                sorted(branch_locs_lst))
 
 
 def test__dir__reaction_trunk():
@@ -486,7 +486,7 @@ def test__dir__reaction_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.reaction_trunk(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -494,14 +494,14 @@ def test__dir__reaction_trunk():
         (2, 'c'),
     )
 
-    for root_specs in root_specs_lst:
-        specs = root_specs
+    for root_locs in root_locs_lst:
+        locs = root_locs
 
-        assert not dsdir.exists(prefix, specs)
-        dsdir.create(prefix, specs)
-        assert dsdir.exists(prefix, specs)
+        assert not dsdir.exists(prefix, locs)
+        dsdir.create(prefix, locs)
+        assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
 
 def test__dir__reaction_leaf():
@@ -512,7 +512,7 @@ def test__dir__reaction_leaf():
 
     dsdir = autofile.system.dir_.reaction_leaf(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -520,7 +520,7 @@ def test__dir__reaction_leaf():
         (2, 'c'),
     )
 
-    branch_specs_lst = (
+    branch_locs_lst = (
         (
             (('InChI=1S/C2H5O2/c1-2-4-3/h3H,1-2H2',),
              ('InChI=1S/C2H4/c1-2/h1-2H2', 'InChI=1S/HO2/c1-2/h1H')),
@@ -544,20 +544,20 @@ def test__dir__reaction_leaf():
         ),
     )
 
-    for root_specs in root_specs_lst:
-        for branch_specs in branch_specs_lst:
-            specs = root_specs + branch_specs
+    for root_locs in root_locs_lst:
+        for branch_locs in branch_locs_lst:
+            locs = root_locs + branch_locs
 
-            assert not dsdir.exists(prefix, specs)
-            dsdir.create(prefix, specs)
-            assert dsdir.exists(prefix, specs)
+            assert not dsdir.exists(prefix, locs)
+            dsdir.create(prefix, locs)
+            assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
-    print(dsdir.existing(prefix, root_specs_lst[-1]))
-    for root_specs in root_specs_lst:
-        assert (sorted(dsdir.existing(prefix, root_specs)) ==
-                sorted(branch_specs_lst))
+    print(dsdir.existing(prefix, root_locs_lst[-1]))
+    for root_locs in root_locs_lst:
+        assert (sorted(dsdir.existing(prefix, root_locs)) ==
+                sorted(branch_locs_lst))
 
 
 def test__dir__theory_leaf():
@@ -568,34 +568,34 @@ def test__dir__theory_leaf():
 
     dsdir = autofile.system.dir_.theory_leaf(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
         (2, 'b'),
         (2, 'c'),
     )
-    branch_specs_lst = (
+    branch_locs_lst = (
         ('hf', 'sto-3g', True),
         ('hf', 'sto-3g', False),
         ('b3lyp', 'sto-3g', False),
         ('b3lyp', '6-31g*', False),
     )
 
-    for root_specs in root_specs_lst:
-        for branch_specs in branch_specs_lst:
-            specs = root_specs + branch_specs
+    for root_locs in root_locs_lst:
+        for branch_locs in branch_locs_lst:
+            locs = root_locs + branch_locs
 
-            assert not dsdir.exists(prefix, specs)
-            dsdir.create(prefix, specs)
-            assert dsdir.exists(prefix, specs)
+            assert not dsdir.exists(prefix, locs)
+            dsdir.create(prefix, locs)
+            assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
-    print(dsdir.existing(prefix, root_specs_lst[-1]))
-    for root_specs in root_specs_lst:
-        assert (sorted(dsdir.existing(prefix, root_specs)) ==
-                sorted(branch_specs_lst))
+    print(dsdir.existing(prefix, root_locs_lst[-1]))
+    for root_locs in root_locs_lst:
+        assert (sorted(dsdir.existing(prefix, root_locs)) ==
+                sorted(branch_locs_lst))
 
 
 def test__dir__conformer_trunk():
@@ -614,7 +614,7 @@ def test__dir__conformer_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.conformer_trunk(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -622,14 +622,14 @@ def test__dir__conformer_trunk():
         (2, 'c'),
     )
 
-    for root_specs in root_specs_lst:
-        specs = root_specs
+    for root_locs in root_locs_lst:
+        locs = root_locs
 
-        assert not dsdir.exists(prefix, specs)
-        dsdir.create(prefix, specs)
-        assert dsdir.exists(prefix, specs)
+        assert not dsdir.exists(prefix, locs)
+        dsdir.create(prefix, locs)
+        assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
 
 def test__dir__conformer_leaf():
@@ -640,7 +640,7 @@ def test__dir__conformer_leaf():
 
     dsdir = autofile.system.dir_.conformer_leaf(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -649,23 +649,23 @@ def test__dir__conformer_leaf():
     )
 
     nconfs = 10
-    branch_specs_lst = tuple(
+    branch_locs_lst = tuple(
         (autofile.system.generate_new_conformer_id(),) for _ in range(nconfs))
 
-    for root_specs in root_specs_lst:
-        for branch_specs in branch_specs_lst:
-            specs = root_specs + branch_specs
+    for root_locs in root_locs_lst:
+        for branch_locs in branch_locs_lst:
+            locs = root_locs + branch_locs
 
-            assert not dsdir.exists(prefix, specs)
-            dsdir.create(prefix, specs)
-            assert dsdir.exists(prefix, specs)
+            assert not dsdir.exists(prefix, locs)
+            dsdir.create(prefix, locs)
+            assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
-    print(dsdir.existing(prefix, root_specs_lst[-1]))
-    for root_specs in root_specs_lst:
-        assert (sorted(dsdir.existing(prefix, root_specs)) ==
-                sorted(branch_specs_lst))
+    print(dsdir.existing(prefix, root_locs_lst[-1]))
+    for root_locs in root_locs_lst:
+        assert (sorted(dsdir.existing(prefix, root_locs)) ==
+                sorted(branch_locs_lst))
 
 
 def test__dir__single_point_trunk():
@@ -676,7 +676,7 @@ def test__dir__single_point_trunk():
 
     dsdir = autofile.system.dir_.single_point_trunk(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -684,14 +684,14 @@ def test__dir__single_point_trunk():
         (2, 'c'),
     )
 
-    for root_specs in root_specs_lst:
-        specs = root_specs
+    for root_locs in root_locs_lst:
+        locs = root_locs
 
-        assert not dsdir.exists(prefix, specs)
-        dsdir.create(prefix, specs)
-        assert dsdir.exists(prefix, specs)
+        assert not dsdir.exists(prefix, locs)
+        dsdir.create(prefix, locs)
+        assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
 
 def test__dir__scan_trunk():
@@ -710,7 +710,7 @@ def test__dir__scan_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.scan_trunk(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -718,14 +718,14 @@ def test__dir__scan_trunk():
         (2, 'c'),
     )
 
-    for root_specs in root_specs_lst:
-        specs = root_specs
+    for root_locs in root_locs_lst:
+        locs = root_locs
 
-        assert not dsdir.exists(prefix, specs)
-        dsdir.create(prefix, specs)
-        assert dsdir.exists(prefix, specs)
+        assert not dsdir.exists(prefix, locs)
+        dsdir.create(prefix, locs)
+        assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
 
 def test__dir__scan_branch():
@@ -736,32 +736,32 @@ def test__dir__scan_branch():
 
     dsdir = autofile.system.dir_.scan_branch(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
         (2, 'b'),
         (2, 'c'),
     )
-    branch_specs_lst = (
+    branch_locs_lst = (
         (('d3',),),
         (('d3', 'd4'),),
     )
 
-    for root_specs in root_specs_lst:
-        for branch_specs in branch_specs_lst:
-            specs = root_specs + branch_specs
+    for root_locs in root_locs_lst:
+        for branch_locs in branch_locs_lst:
+            locs = root_locs + branch_locs
 
-            assert not dsdir.exists(prefix, specs)
-            dsdir.create(prefix, specs)
-            assert dsdir.exists(prefix, specs)
+            assert not dsdir.exists(prefix, locs)
+            dsdir.create(prefix, locs)
+            assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
-    print(dsdir.existing(prefix, root_specs_lst[-1]))
-    for root_specs in root_specs_lst:
-        assert (sorted(dsdir.existing(prefix, root_specs)) ==
-                sorted(branch_specs_lst))
+    print(dsdir.existing(prefix, root_locs_lst[-1]))
+    for root_locs in root_locs_lst:
+        assert (sorted(dsdir.existing(prefix, root_locs)) ==
+                sorted(branch_locs_lst))
 
 
 def test__dir__scan_leaf():
@@ -772,14 +772,14 @@ def test__dir__scan_leaf():
 
     dsdir = autofile.system.dir_.scan_leaf(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
         (2, 'b'),
         (2, 'c'),
     )
-    leaf_specs_lst = (
+    leaf_locs_lst = (
         ((0, 0),),
         ((1, 0),),
         ((2, 0),),
@@ -797,20 +797,20 @@ def test__dir__scan_leaf():
         ((2, 4),),
     )
 
-    for root_specs in root_specs_lst:
-        for leaf_specs in leaf_specs_lst:
-            specs = root_specs + leaf_specs
+    for root_locs in root_locs_lst:
+        for leaf_locs in leaf_locs_lst:
+            locs = root_locs + leaf_locs
 
-            assert not dsdir.exists(prefix, specs)
-            dsdir.create(prefix, specs)
-            assert dsdir.exists(prefix, specs)
+            assert not dsdir.exists(prefix, locs)
+            dsdir.create(prefix, locs)
+            assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
-    print(dsdir.existing(prefix, root_specs_lst[-1]))
-    for root_specs in root_specs_lst:
-        assert (sorted(dsdir.existing(prefix, root_specs)) ==
-                sorted(leaf_specs_lst))
+    print(dsdir.existing(prefix, root_locs_lst[-1]))
+    for root_locs in root_locs_lst:
+        assert (sorted(dsdir.existing(prefix, root_locs)) ==
+                sorted(leaf_locs_lst))
 
 
 def test__dir__tau_trunk():
@@ -829,7 +829,7 @@ def test__dir__tau_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.tau_trunk(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -837,14 +837,14 @@ def test__dir__tau_trunk():
         (2, 'c'),
     )
 
-    for root_specs in root_specs_lst:
-        specs = root_specs
+    for root_locs in root_locs_lst:
+        locs = root_locs
 
-        assert not dsdir.exists(prefix, specs)
-        dsdir.create(prefix, specs)
-        assert dsdir.exists(prefix, specs)
+        assert not dsdir.exists(prefix, locs)
+        dsdir.create(prefix, locs)
+        assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
 
 def test__dir__tau_leaf():
@@ -855,7 +855,7 @@ def test__dir__tau_leaf():
 
     dsdir = autofile.system.dir_.tau_leaf(ROOT_DSDIR)
 
-    root_specs_lst = (
+    root_locs_lst = (
         (1, 'a'),
         (1, 'b'),
         (2, 'a'),
@@ -864,27 +864,27 @@ def test__dir__tau_leaf():
     )
 
     nconfs = 10
-    branch_specs_lst = tuple(
+    branch_locs_lst = tuple(
         (autofile.system.generate_new_conformer_id(),) for _ in range(nconfs))
 
-    for root_specs in root_specs_lst:
-        for branch_specs in branch_specs_lst:
-            specs = root_specs + branch_specs
+    for root_locs in root_locs_lst:
+        for branch_locs in branch_locs_lst:
+            locs = root_locs + branch_locs
 
-            assert not dsdir.exists(prefix, specs)
-            dsdir.create(prefix, specs)
-            assert dsdir.exists(prefix, specs)
+            assert not dsdir.exists(prefix, locs)
+            dsdir.create(prefix, locs)
+            assert dsdir.exists(prefix, locs)
 
-    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_specs_lst)
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_locs_lst)
 
-    print(dsdir.existing(prefix, root_specs_lst[-1]))
-    for root_specs in root_specs_lst:
-        assert (sorted(dsdir.existing(prefix, root_specs)) ==
-                sorted(branch_specs_lst))
+    print(dsdir.existing(prefix, root_locs_lst[-1]))
+    for root_locs in root_locs_lst:
+        assert (sorted(dsdir.existing(prefix, root_locs)) ==
+                sorted(branch_locs_lst))
 
     with pytest.raises(ValueError):
-        dsdir.remove(prefix, specs)
-    assert dsdir.exists(prefix, specs)
+        dsdir.remove(prefix, locs)
+    assert dsdir.exists(prefix, locs)
 
 
 if __name__ == '__main__':
