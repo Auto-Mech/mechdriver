@@ -317,13 +317,15 @@ JOB_RUNNER_DCT = {
         moldr.runner.options_matrix_run, elstruct.writer.gradient),
     elstruct.Job.HESSIAN: functools.partial(
         moldr.runner.options_matrix_run, elstruct.writer.hessian),
-    elstruct.Job.OPTIMIZATION: moldr.runner.feedback_optimization,
+    elstruct.Job.OPTIMIZATION: functools.partial(
+        moldr.runner.options_matrix_run, elstruct.writer.optimization),
+#   elstruct.Job.OPTIMIZATION: moldr.runner.feedback_optimization,
 }
 
 
 def run_job(job, script_str, prefix,
             geom, charge, mult, method, basis, orb_restr, prog,
-            errors=(), options_mat=(), retry_failed=True,
+            errors=(), options_mat=(), retry_failed=True, feedback=False,
             **kwargs):
     """ run an elstruct job by name
     """
@@ -366,6 +368,8 @@ def run_job(job, script_str, prefix,
         afs.run.file.info.write(inf_obj, prefix, [job])
 
         runner = JOB_RUNNER_DCT[job]
+        if job == elstruct.Job.OPTIMIZATION:
+            runner = functools.partial(runner, feedback=feedback)
 
         print(" - Starting the run...")
         inp_str, out_str = runner(

@@ -11,13 +11,39 @@ import elstruct
 import autofile
 import moldr
 
+ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
+
 # 0. choose which mechanism to run
 MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane, etc.
 
 # 1. script control parameters
-PROG = 'psi4'
+#PROG = 'psi4'
+#SCRIPT_STR = ("#!/usr/bin/env bash\n"
+#              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
+#KWARGS={
+#}
+
+PROG = 'g09'
 SCRIPT_STR = ("#!/usr/bin/env bash\n"
-              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
+              "g09 run.inp run.out >> stdout.log &> stderr.log")
+KWARGS = {
+        'memory': 10,
+        'machine_options': ['%NProcShared=10'],
+        'gen_lines': ['# int=ultrafine'],
+        'feedback': True,
+        'errors': [
+            elstruct.Error.OPT_NOCONV
+        ],
+        'options_mat': [
+            [{},
+             {},
+             {},
+             {'job_options': ['calcfc']},
+             {'job_options': ['calcfc']},
+             {'job_options': ['calcall']}]
+        ],
+}
+
 METHOD = 'wb97xd'
 BASIS = '6-31g*'
 RESTRICT_OPEN_SHELL = False
@@ -29,7 +55,6 @@ RUN_GRADIENT = True
 RUN_HESSIAN = True
 RUN_CONFORMER_SCAN = True
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
-KWARGS = {}
 
 # 2. create run and save directories
 RUN_PREFIX = 'run'
@@ -54,9 +79,6 @@ CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
 MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
 SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
 SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
-
-# (throw this in here somewhere)
-ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 
 if RUN_SPECIES:
     for name in SPC_NAMES:
@@ -115,7 +137,7 @@ if RUN_SPECIES:
             save_prefix=thy_save_path,
             script_str=SCRIPT_STR,
             prog=PROG,
-            **KWARGS
+            **KWARGS,
         )
 
         moldr.driver.save_conformers(
@@ -147,6 +169,7 @@ if RUN_SPECIES:
                     basis=basis,
                     orb_restr=orb_restr,
                     prog=PROG,
+                    **KWARGS,
                 )
 
                 ret = moldr.driver.read_job(
@@ -240,7 +263,7 @@ if RUN_SPECIES:
                     save_prefix=cnf_save_path,
                     script_str=SCRIPT_STR,
                     prog=PROG,
-                    **KWARGS
+                    **KWARGS,
                 )
 
                 moldr.driver.save_scan(
