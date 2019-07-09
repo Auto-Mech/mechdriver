@@ -156,7 +156,9 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
     if afs.scan_branch.file.info.exists(save_prefix, [[coo_name]]):
         inf_obj = afs.scan_branch.file.info.read(save_prefix, [[coo_name]])
         existing_grid_dct = dict(inf_obj.grids)
-        assert numpy.allclose([grid_vals], existing_grid_dct[coo_name])
+        existing_grid_vals = existing_grid_dct[coo_name]
+        assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
+                numpy.allclose(grid_vals, existing_grid_vals))
 
     inf_obj = autofile.system.info.scan_branch({coo_name: grid_vals})
     afs.scan_branch.file.info.write(inf_obj, save_prefix, [[coo_name]])
@@ -407,7 +409,7 @@ def read_job(job, prefix):
         prog = inf_obj.prog
 
         if is_successful_output(out_str, job, prog):
-            print(" - Found succesfull output. Reading...")
+            print(" - Found successful output. Reading...")
             ret = (inf_obj, inp_str, out_str)
         else:
             print(" - Output has an error message. Skipping...")
