@@ -61,7 +61,7 @@ def feedback_optimization(script_str, prefix,
 
 def options_matrix_run(input_writer, script_str, prefix,
                        geom, charge, mult, method, basis, prog,
-                       errors=(), options_mat=(),
+                       errors=(), options_mat=(), feedback=False,
                        **kwargs):
     """ try several sets of options to generate an output file
 
@@ -74,6 +74,9 @@ def options_matrix_run(input_writer, script_str, prefix,
     max_macro_idx, _ = max(subrun_ds.dir.existing(prefix), default=(-1, -1))
     macro_idx = max_macro_idx + 1
     micro_idx = 0
+    read_geom_ = (elstruct.reader.opt_zmatrix_(prog)
+                  if automol.zmatrix.is_valid(geom) else
+                  elstruct.reader.opt_geometry_(prog))
 
     kwargs_ = dict(kwargs)
     while True:
@@ -99,6 +102,8 @@ def options_matrix_run(input_writer, script_str, prefix,
             error_row_idx = error_vals.index(True)
             kwargs_ = moldr.optsmat.updated_kwargs(kwargs, options_mat)
             options_mat = moldr.optsmat.advance(error_row_idx, options_mat)
+            if feedback: 
+                geom = read_geom_(out_str)
         else:
             # failure
             warnings.resetwarnings()

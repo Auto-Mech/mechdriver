@@ -1,0 +1,399 @@
+""" reaction list test
+"""
+import os
+import sys
+import numpy
+import pandas
+from qcelemental import constants as qcc
+import chemkin_io
+import automol
+import elstruct
+import autofile
+import moldr
+
+# 0. choose which mechanism to run
+MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane, etc.
+
+# 1. script control parameters
+#PROG = 'psi4'
+#SCRIPT_STR = ("#!/usr/bin/env bash\n"
+#              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
+#KWARGS={
+#}
+
+PROG = 'g09'
+SCRIPT_STR = ("#!/usr/bin/env bash\n"
+              "g09 run.inp run.out >> stdout.log &> stderr.log")
+KWARGS = {
+        'memory': 10,
+        'machine_options': ['%NProcShared=10'],
+        'feedback': True,
+        'errors': [
+            elstruct.Error.OPT_NOCONV
+        ],
+        'options_mat': [
+            [{},
+             {},
+             {},
+             {'job_options': ['calcfc']},
+             {'job_options': ['calcfc']},
+             {'job_options': ['calcall']}]
+        ],
+}
+
+METHOD = 'wb97xd'
+BASIS = '6-31g*'
+RESTRICT_OPEN_SHELL = False
+NSAMP = 5
+RUN_SPECIES = False
+RUN_REACTIONS = True
+
+RUN_GRADIENT = True
+RUN_HESSIAN = True
+RUN_CONFORMER_SCAN = True
+SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
+
+# 2. create run and save directories
+RUN_PREFIX = 'run'
+if not os.path.exists(RUN_PREFIX):
+    os.mkdir(RUN_PREFIX)
+
+SAVE_PREFIX = 'save'
+if not os.path.exists(SAVE_PREFIX):
+    os.mkdir(SAVE_PREFIX)
+
+# 3. read in data from the mechanism directory
+DATA_PATH = os.path.dirname(os.path.realpath(__file__))
+MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
+MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
+SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
+
+# 4. process species data from the mechanism file
+SPC_TAB['inchi'] = list(map(automol.smiles.inchi, SPC_TAB['smiles']))
+SPC_TAB['charge'] = 0
+ICH_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['inchi']))
+CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
+MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
+SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
+SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
+
+if RUN_SPECIES:
+    for name in SPC_NAMES:
+        # species
+        ich = ICH_DCT[name]
+        charge = CHG_DCT[name]
+        mult = MUL_DCT[name]
+        print("Species: {}".format(name))
+
+        # theory
+        method = METHOD
+        basis = BASIS
+        if RESTRICT_OPEN_SHELL:
+            orb_restr = True
+        else:
+            orb_restr = (mult == 1)
+
+        # set up the filesystem
+        spc_alocs = [ich, charge, mult]         # aloc = absolute locator
+        thy_rlocs = [method, basis, orb_restr]  # rloc = relative locator
+        thy_alocs = spc_alocs + thy_rlocs
+
+        spc_afs = autofile.fs.species()
+        thy_afs = autofile.fs.theory(spc_afs, 'species')
+
+        thy_afs.theory.dir.create(RUN_PREFIX, thy_alocs)
+        thy_afs.theory.dir.create(SAVE_PREFIX, thy_alocs)
+
+        thy_run_path = thy_afs.theory.dir.path(RUN_PREFIX, thy_alocs)
+        thy_save_path = thy_afs.theory.dir.path(SAVE_PREFIX, thy_alocs)
+
+        # a. conformer sampling
+        # generate the z-matrix and sampling ranges
+        geo = automol.inchi.geometry(ich)
+        zma = automol.geom.zmatrix(geo)
+        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+        tors_ranges = automol.zmatrix.torsional_sampling_ranges(zma,
+                                                                tors_names)
+        tors_range_dct = dict(zip(tors_names, tors_ranges))
+
+        moldr.driver.save_conformers(
+            run_prefix=thy_run_path,
+            save_prefix=thy_save_path,
+        )
+
+        moldr.driver.run_conformers(
+            zma=zma,
+            charge=charge,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            nsamp=NSAMP,
+            tors_range_dct=tors_range_dct,
+            run_prefix=thy_run_path,
+            save_prefix=thy_save_path,
+            script_str=SCRIPT_STR,
+            prog=PROG,
+            **KWARGS,
+        )
+
+        moldr.driver.save_conformers(
+            run_prefix=thy_run_path,
+            save_prefix=thy_save_path,
+        )
+
+        # get the list of saved conformers, and their filesystem
+        cnf_afs = autofile.fs.conformer()
+        cnf_alocs_lst = cnf_afs.conf.dir.existing(thy_save_path)
+
+        # b. conformer gradients and hessians
+        for cnf_alocs in cnf_alocs_lst:
+            geo = cnf_afs.conf.file.geometry.read(thy_save_path, cnf_alocs)
+
+            cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, cnf_alocs)
+            cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, cnf_alocs)
+
+            if RUN_GRADIENT:
+                print('Running conformer gradient')
+                moldr.driver.run_job(
+                    job='gradient',
+                    script_str=SCRIPT_STR,
+                    prefix=cnf_run_path,
+                    geom=geo,
+                    charge=charge,
+                    mult=mult,
+                    method=method,
+                    basis=basis,
+                    orb_restr=orb_restr,
+                    prog=PROG,
+                    **KWARGS,
+                )
+
+                ret = moldr.driver.read_job(
+                    job='gradient',
+                    prefix=cnf_run_path,
+                )
+
+                if ret is not None:
+                    inf_obj, inp_str, out_str = ret
+
+                    print(" - Reading gradient from output...")
+                    grad = elstruct.reader.gradient(inf_obj.prog, out_str)
+
+                    save_path = cnf_afs.conf.dir.path(thy_save_path, cnf_alocs)
+                    print(" - Saving gradient...")
+                    print(" - Save path: {}".format(save_path))
+                    print(cnf_afs.conf.dir.exists(thy_save_path, cnf_alocs))
+                    cnf_afs.conf.file.gradient_info.write(
+                        inf_obj, thy_save_path, cnf_alocs)
+                    cnf_afs.conf.file.gradient_input.write(
+                        inp_str, thy_save_path, cnf_alocs)
+                    cnf_afs.conf.file.gradient.write(
+                        grad, thy_save_path, cnf_alocs)
+
+            if RUN_HESSIAN:
+                print('Running conformer hessian')
+                moldr.driver.run_job(
+                    job='hessian',
+                    script_str=SCRIPT_STR,
+                    prefix=cnf_run_path,
+                    geom=geo,
+                    charge=charge,
+                    mult=mult,
+                    method=method,
+                    basis=basis,
+                    orb_restr=orb_restr,
+                    prog=PROG,
+                )
+
+                ret = moldr.driver.read_job(
+                    job='hessian',
+                    prefix=cnf_run_path,
+                )
+
+                if ret is not None:
+                    inf_obj, inp_str, out_str = ret
+
+                    print(" - Reading hessian from output...")
+                    grad = elstruct.reader.hessian(inf_obj.prog, out_str)
+
+                    save_path = cnf_afs.conf.dir.path(thy_save_path, cnf_alocs)
+                    print(" - Saving hessian...")
+                    print(" - Save path: {}".format(save_path))
+                    print(cnf_afs.conf.dir.exists(thy_save_path, cnf_alocs))
+                    cnf_afs.conf.file.hessian_info.write(
+                        inf_obj, thy_save_path, cnf_alocs)
+                    cnf_afs.conf.file.hessian_input.write(
+                        inp_str, thy_save_path, cnf_alocs)
+                    cnf_afs.conf.file.hessian.write(
+                        grad, thy_save_path, cnf_alocs)
+
+        # d. hindered rotor scans
+        if RUN_CONFORMER_SCAN:
+            # determine the lowest energy conformer to get the correct path
+            cnf_enes = [cnf_afs.conf.file.energy.read(thy_save_path, alocs)
+                        for alocs in cnf_alocs_lst]
+            min_cnf_alocs = cnf_alocs_lst[cnf_enes.index(min(cnf_enes))]
+            cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, min_cnf_alocs)
+            cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+
+            # generate the z-matrix and sampling grids (grids)
+            geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+            zma = automol.geom.zmatrix(geo)
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+            tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                zma, tors_names, SCAN_INCREMENT)
+            tors_grids = [
+                numpy.linspace(*linspace) for linspace in tors_linspaces]
+
+            # run one-dimensional scans for each torsional coordinate
+            for tors_name, tors_grid in zip(tors_names, tors_grids):
+                moldr.driver.run_scan(
+                    zma=zma,
+                    charge=charge,
+                    mult=mult,
+                    method=method,
+                    basis=basis,
+                    orb_restr=orb_restr,
+                    grid_dct={tors_name: tors_grid},
+                    run_prefix=cnf_run_path,
+                    save_prefix=cnf_save_path,
+                    script_str=SCRIPT_STR,
+                    prog=PROG,
+                    **KWARGS,
+                )
+
+                moldr.driver.save_scan(
+                    run_prefix=cnf_run_path,
+                    save_prefix=cnf_save_path,
+                    coo_names=[tors_name],
+                )
+
+# 5. process reaction data from the mechanism file
+RXN_BLOCK_STR = chemkin_io.reaction_block(MECH_STR)
+RXN_STRS = chemkin_io.reaction.data_strings(RXN_BLOCK_STR)
+RCT_NAMES_LST = list(
+    map(chemkin_io.reaction.DataString.reactant_names, RXN_STRS))
+PRD_NAMES_LST = list(
+    map(chemkin_io.reaction.DataString.product_names, RXN_STRS))
+
+if RUN_REACTIONS:
+    for rct_names, prd_names in zip(RCT_NAMES_LST, PRD_NAMES_LST):
+        # print the CHEMKIN reaction name for reference
+        rxn_name = '='.join(['+'.join(rct_names), '+'.join(prd_names)])
+        print()
+        print("Reaction: {}".format(rxn_name))
+
+        # determine inchis, charges, and multiplicities
+        rct_ichs = list(map(ICH_DCT.__getitem__, rct_names))
+        prd_ichs = list(map(ICH_DCT.__getitem__, prd_names))
+        rct_chgs = list(map(CHG_DCT.__getitem__, rct_names))
+        prd_chgs = list(map(CHG_DCT.__getitem__, prd_names))
+        rct_muls = list(map(MUL_DCT.__getitem__, rct_names))
+        prd_muls = list(map(MUL_DCT.__getitem__, prd_names))
+
+        # determine the transition state z-matrix
+        rct_zmas = list(
+            map(automol.geom.zmatrix, map(automol.inchi.geometry, rct_ichs)))
+        prd_zmas = list(
+            map(automol.geom.zmatrix, map(automol.inchi.geometry, prd_ichs)))
+
+        typ = None
+
+        # # (migrations are not yet implemented)
+        # ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
+        # if ret and typ is None:
+        #     typ = 'hydrogen migration'
+
+        ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
+        if ret and typ is None:
+            typ = 'beta scission'
+            ts_zma, dist_name = ret
+            dist_min = automol.zmatrix.values(ts_zma)[dist_name]
+            dist_incr = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
+            npoints = 10
+
+        ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas)
+        if ret and typ is None:
+            typ = 'addition'
+            ts_zma, dist_name = ret
+            dist_min = 1.2 * qcc.conversion_factor('angstrom', 'bohr')
+            dist_incr = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
+            npoints = 10
+
+        ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas)
+        if ret and typ is None:
+            typ = 'hydrogen abstraction'
+            ts_zma, dist_name = ret
+            dist_min = 1.0 * qcc.conversion_factor('angstrom', 'bohr')
+            dist_incr = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
+            npoints = 10
+
+        if typ is None:
+            print("Failed to classify reaction.")
+        else:
+            print("Detected a {} reaction".format(typ))
+
+            # determine the grid
+            dist_max = dist_min + npoints * dist_incr
+            grid = numpy.linspace(dist_min, dist_max, npoints)
+
+            # determine the transition state multiplicity
+            ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
+
+            # theory
+            method = METHOD
+            basis = BASIS
+            if RESTRICT_OPEN_SHELL:
+                orb_restr = True
+            else:
+                orb_restr = (ts_mul == 1)
+
+            # construct the filesystem
+            rxn_ichs = [rct_ichs, prd_ichs]
+            rxn_chgs = [rct_chgs, prd_chgs]
+            rxn_muls = [rct_muls, prd_muls]
+
+            # set up the filesystem
+            direction = autofile.system.reaction_direction(
+                rxn_ichs, rxn_chgs, rxn_muls)
+            rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
+                rxn_ichs, rxn_chgs, rxn_muls)
+            print(" - The reaction direction is {}"
+                  .format('forward' if direction else 'backward'))
+            rxn_alocs = [rxn_ichs, rxn_chgs, rxn_muls, ts_mul]
+            thy_rlocs = [method, basis, orb_restr]
+            thy_alocs = rxn_alocs + thy_rlocs
+
+            rxn_afs = autofile.fs.reaction()
+            thy_afs = autofile.fs.theory(rxn_afs, 'reaction')
+
+            thy_afs.theory.dir.create(RUN_PREFIX, thy_alocs)
+            thy_afs.theory.dir.create(SAVE_PREFIX, thy_alocs)
+
+            thy_run_path = thy_afs.theory.dir.path(RUN_PREFIX, thy_alocs)
+            thy_save_path = thy_afs.theory.dir.path(SAVE_PREFIX, thy_alocs)
+            moldr.driver.run_scan(
+                zma=ts_zma,
+                charge=0,
+                mult=ts_mul,
+                method=method,
+                basis=basis,
+                orb_restr=orb_restr,
+                grid_dct={dist_name: grid},
+                run_prefix=thy_run_path,
+                save_prefix=thy_save_path,
+                script_str=SCRIPT_STR,
+                prog=PROG,
+                update_guess=False,
+                reverse_sweep=False,
+                **KWARGS,
+            )
+
+            moldr.driver.save_scan(
+                run_prefix=thy_run_path,
+                save_prefix=thy_save_path,
+                coo_names=[dist_name],
+            )
+
+sys.exit()
