@@ -1,6 +1,7 @@
 """ Info objects
 """
 import numbers
+import numpy
 import autofile.info
 from autofile.system._util import utc_time as _utc_time
 
@@ -49,22 +50,21 @@ def tau_trunk(nsamp, tors_ranges):
     return inf_obj
 
 
-def scan_branch(tors_linspaces):
+def scan_branch(grids):
     """ scan trunk information
 
-    :param tors_linspaces: sampling linspaces [(start, end, num)] for each
-        torsional coordinate, by z-matrix coordinate name
-    :type tors_linspaces: dict[str: (float, float, int)]
+    :param grids: sampling grids, [val1, val2, ...], for each coordinate,
+        by coordinate name
+    :type grids: dict[str: list[float]]
     """
-    tors_linspace_dct = dict(tors_linspaces)
+    grid_dct = dict(grids)
 
-    assert all(isinstance(key, str) and len(lsp) == 3
-               and all(isinstance(x, numbers.Real) for x in lsp[:2])
-               and isinstance(lsp[2], numbers.Integral)
-               for key, lsp in tors_linspace_dct.items())
+    assert all(isinstance(key, str) and numpy.ndim(vals) == 1
+               and all(isinstance(x, numbers.Real) for x in vals)
+               for key, vals in grid_dct.items())
 
-    tors_linspaces = autofile.info.Info(**tors_linspace_dct)
-    inf_obj = autofile.info.Info(tors_linspaces=tors_linspaces)
+    grids = autofile.info.Info(**grid_dct)
+    inf_obj = autofile.info.Info(grids=grids)
     assert autofile.info.matches_function_signature(inf_obj, scan_branch)
     return inf_obj
 

@@ -48,7 +48,7 @@ def species(root_fs=None, top_ds_name=None, name_prefix=''):
     return spc_fs
 
 
-def reaction(root_dsdir=None, root_fs={}, name_prefix=''):
+def reaction(root_fs=None, top_ds_name=None, name_prefix=''):
     """ construct the reaction filesystem
     """
     root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
@@ -57,8 +57,8 @@ def reaction(root_dsdir=None, root_fs={}, name_prefix=''):
     rxn_leaf_ds = series.reaction_leaf(root_dsdir=rxn_trunk_ds.dir)
 
     rxn_fs = model.FileSystem({
-        AttributeName.RXN_TRUNK: rxn_trunk_ds,
-        AttributeName.RXN_LEAF: rxn_leaf_ds,
+        (name_prefix + AttributeName.RXN_TRUNK): rxn_trunk_ds,
+        (name_prefix + AttributeName.RXN_LEAF): rxn_leaf_ds,
     })
     rxn_fs.update(root_fs)
     return rxn_fs

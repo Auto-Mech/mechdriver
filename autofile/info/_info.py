@@ -1,10 +1,11 @@
 """ implements an class for YAML-style information
 """
+import numbers
 from types import SimpleNamespace
 try:
-    from collections.abc import Sequence as _Sequence
+    from collections.abc import Collection as _Collection
 except ImportError:
-    from collections import Sequence as _Sequence
+    from collections import Collection as _Collection
 import yaml
 from autofile.info._inspect import function_keys as _function_keys
 
@@ -18,7 +19,7 @@ def object_(inf_dct):
             ret = {key: _cast(val) for key, val in obj.items()}
             ret = Info(**ret)
         elif _is_nonstring_sequence(obj):
-            ret = list(map(_cast, obj))
+            ret = _normalized_nonstring_sequence(map(_cast, obj))
         else:
             ret = obj
         return ret
@@ -37,7 +38,7 @@ def dict_(inf_obj):
             ret = {key: _cast(val)
                    for key, val in vars(obj).items() if key in keys}
         elif _is_nonstring_sequence(obj):
-            ret = tuple(map(_cast, obj))
+            ret = _normalized_nonstring_sequence(map(_cast, obj))
         else:
             ret = obj
         return ret
@@ -79,7 +80,8 @@ class Info(SimpleNamespace):
         self._frozen = True
 
     def __init__(self, **kwargs):
-        kwargs = {key: list(val) if _is_nonstring_sequence(val) else val
+        kwargs = {key: (_normalized_nonstring_sequence(val) if
+                        _is_nonstring_sequence(val) else val)
                   for key, val in kwargs.items()}
         super(Info, self).__init__(**kwargs)
         self._freeze()
@@ -111,6 +113,12 @@ class Info(SimpleNamespace):
         object.__setattr__(self, key, value)
 
 
+def _normalized_nonstring_sequence(seq):
+    return [
+        int(val) if isinstance(val, numbers.Integral) else
+        float(val) if isinstance(val, numbers.Real) else val for val in seq]
+
+
 def _is_nonstring_sequence(obj):
-    return (isinstance(obj, _Sequence)
-            and not isinstance(obj, (str, bytes, bytearray)))
+    return (isinstance(obj, _Collection)
+            and not isinstance(obj, (dict, str, bytes, bytearray)))

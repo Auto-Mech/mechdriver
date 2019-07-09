@@ -23,8 +23,8 @@ jobs:
                 name: Test moldr
                 command: |
                     source activate moldr-env
-                    cd examples
-                    python input.py
+                    cd scripts 
+                    python estoktp.py
 workflows:
     version: 2
     build-all:
