@@ -1,0 +1,7 @@
+name,smiles,mult
+CO,[C-]#[O+],1
+H2,[H][H],1
+H,[H],2
+OH,[OH],2
+H2O,O,1
+HCO,[CH]=O,2

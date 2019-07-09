@@ -12,7 +12,7 @@ import autofile
 import moldr
 
 # 0. choose which mechanism to run
-MECHANISM_NAME = 'syngas'  # options: syngas, natgas, heptane, etc.
+MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane, etc.
 
 # 1. script control parameters
 PROG = 'psi4'
@@ -29,6 +29,7 @@ RUN_GRADIENT = True
 RUN_HESSIAN = True
 RUN_CONFORMER_SCAN = True
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
+KWARGS = {}
 
 # 2. create run and save directories
 RUN_PREFIX = 'run'
@@ -53,6 +54,9 @@ CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
 MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
 SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
 SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
+
+# (throw this in here somewhere)
+ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 
 if RUN_SPECIES:
     for name in SPC_NAMES:
@@ -111,6 +115,7 @@ if RUN_SPECIES:
             save_prefix=thy_save_path,
             script_str=SCRIPT_STR,
             prog=PROG,
+            **KWARGS
         )
 
         moldr.driver.save_conformers(
@@ -235,6 +240,7 @@ if RUN_SPECIES:
                     save_prefix=cnf_save_path,
                     script_str=SCRIPT_STR,
                     prog=PROG,
+                    **KWARGS
                 )
 
                 moldr.driver.save_scan(
@@ -283,34 +289,56 @@ if RUN_REACTIONS:
         if ret and typ is None:
             typ = 'beta scission'
             ts_zma, dist_name = ret
-            dist_min = automol.zmatrix.values(ts_zma)[dist_name]
-            dist_incr = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
-            npoints = 10
 
         ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas)
         if ret and typ is None:
             typ = 'addition'
             ts_zma, dist_name = ret
-            dist_min = 1.2 * qcc.conversion_factor('angstrom', 'bohr')
-            dist_incr = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
-            npoints = 10
 
         ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas)
         if ret and typ is None:
             typ = 'hydrogen abstraction'
             ts_zma, dist_name = ret
-            dist_min = 1.0 * qcc.conversion_factor('angstrom', 'bohr')
-            dist_incr = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
-            npoints = 10
 
         if typ is None:
             print("Failed to classify reaction.")
         else:
-            print("Detected a {} reaction".format(typ))
+            print("Type: {}".format(typ))
 
             # determine the grid
-            dist_max = dist_min + npoints * dist_incr
-            grid = numpy.linspace(dist_min, dist_max, npoints)
+            dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
+            syms = automol.zmatrix.symbols(ts_zma)
+            bnd_len_key = tuple(sorted(map(syms.__getitem__, dist_coo)))
+
+            bnd_len_dct = {
+                ('C', 'C'): 1.54 * ANG2BOHR,
+                ('C', 'H'): 1.09 * ANG2BOHR,
+                ('H', 'H'): 0.74 * ANG2BOHR,
+                ('N', 'N'): 1.45 * ANG2BOHR,
+                ('O', 'O'): 1.48 * ANG2BOHR,
+                ('C', 'N'): 1.47 * ANG2BOHR,
+                ('C', 'O'): 1.43 * ANG2BOHR,
+                ('H', 'O'): 1.20 * ANG2BOHR,
+                ('H', 'N'): 0.99 * ANG2BOHR,
+            }
+
+            if typ in ('beta scission', 'addition'):
+                rmin = 1.4 * ANG2BOHR
+                rmin = 2.8 * ANG2BOHR
+                if bnd_len_key in bnd_len_dct:
+                    bnd_len = bnd_len_dct[bnd_len_key]
+                    rmin = bnd_len + 0.2 * ANG2BOHR
+                    rmax = bnd_len + 1.6 * ANG2BOHR
+            elif typ == 'hydrogen abstraction':
+                rmin = 0.7 * ANG2BOHR
+                rmax = 2.2 * ANG2BOHR
+                if bnd_len_key in bnd_len_dct:
+                    bnd_len = bnd_len_dct[bnd_len_key]
+                    rmin = bnd_len
+                    rmax = bnd_len + 1.0 * ANG2BOHR
+
+            npoints = 8
+            grid = numpy.linspace(rmin, rmax, npoints)
 
             # determine the transition state multiplicity
             ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
@@ -361,6 +389,7 @@ if RUN_REACTIONS:
                 prog=PROG,
                 update_guess=False,
                 reverse_sweep=False,
+                **KWARGS
             )
 
             moldr.driver.save_scan(
