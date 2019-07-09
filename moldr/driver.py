@@ -135,7 +135,7 @@ def _unique_coulomb_spectrum(geo, seen_geos, rtol=2e-5):
 # constrained optimization scans
 def run_scan(zma, charge, mult, method, basis, orb_restr,
              grid_dct, run_prefix, save_prefix, script_str,
-             prog, update_guess=True, **kwargs):
+             prog, update_guess=True, reverse_sweep=True, **kwargs):
     """ run constrained optimization scan
     """
     if len(grid_dct) > 1:
@@ -187,22 +187,23 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
         **kwargs
     )
 
-    _run_1d_scan(
-        script_str=script_str,
-        prefixes=list(reversed(prefixes)),
-        guess_zma=zma,
-        coo_name=coo_name,
-        grid_idxs=list(reversed(grid_idxs)),
-        grid_vals=list(reversed(grid_vals)),
-        charge=charge,
-        mult=mult,
-        method=method,
-        basis=basis,
-        orb_restr=orb_restr,
-        prog=prog,
-        update_guess=update_guess,
-        **kwargs
-    )
+    if reverse_sweep:
+        _run_1d_scan(
+            script_str=script_str,
+            prefixes=list(reversed(prefixes)),
+            guess_zma=zma,
+            coo_name=coo_name,
+            grid_idxs=list(reversed(grid_idxs)),
+            grid_vals=list(reversed(grid_vals)),
+            charge=charge,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prog=prog,
+            update_guess=update_guess,
+            **kwargs
+        )
 
 
 def _run_1d_scan(script_str, prefixes,

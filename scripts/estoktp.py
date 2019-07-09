@@ -22,11 +22,11 @@ METHOD = 'wb97xd'
 BASIS = '6-31g*'
 RESTRICT_OPEN_SHELL = False
 NSAMP = 5
-RUN_SPECIES = True
+RUN_SPECIES = False
 RUN_REACTIONS = True
 
-RUN_GRADIENT = False
-RUN_HESSIAN = False
+RUN_GRADIENT = True
+RUN_HESSIAN = True
 RUN_CONFORMER_SCAN = True
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
 
@@ -266,10 +266,6 @@ if RUN_REACTIONS:
         rct_muls = list(map(MUL_DCT.__getitem__, rct_names))
         prd_muls = list(map(MUL_DCT.__getitem__, prd_names))
 
-        # determine the transition state multiplicity
-        ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
-        orb_restr = (ts_mul == 1)
-
         # determine the transition state z-matrix
         rct_zmas = list(
             map(automol.geom.zmatrix, map(automol.inchi.geometry, rct_ichs)))
@@ -287,7 +283,7 @@ if RUN_REACTIONS:
         if ret and typ is None:
             typ = 'beta scission'
             ts_zma, dist_name = ret
-            dist_val = automol.zmatrix.values(ts_zma)[dist_name]
+            dist_min = automol.zmatrix.values(ts_zma)[dist_name]
             dist_incr = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
             npoints = 10
 
@@ -295,7 +291,7 @@ if RUN_REACTIONS:
         if ret and typ is None:
             typ = 'addition'
             ts_zma, dist_name = ret
-            dist_val = 1.2 * qcc.conversion_factor('angstrom', 'bohr')
+            dist_min = 1.2 * qcc.conversion_factor('angstrom', 'bohr')
             dist_incr = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
             npoints = 10
 
@@ -303,7 +299,7 @@ if RUN_REACTIONS:
         if ret and typ is None:
             typ = 'hydrogen abstraction'
             ts_zma, dist_name = ret
-            dist_val = 1.0 * qcc.conversion_factor('angstrom', 'bohr')
+            dist_min = 1.0 * qcc.conversion_factor('angstrom', 'bohr')
             dist_incr = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
             npoints = 10
 
@@ -311,9 +307,66 @@ if RUN_REACTIONS:
             print("Failed to classify reaction.")
         else:
             print("Detected a {} reaction".format(typ))
-            print(automol.zmatrix.string(ts_zma))
 
-        # determine the grid
-        grid = (dist_val, dist_val + npoints * dist_incr, npoints)
+            # determine the grid
+            dist_max = dist_min + npoints * dist_incr
+            grid = numpy.linspace(dist_min, dist_max, npoints)
+
+            # determine the transition state multiplicity
+            ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
+
+            # theory
+            method = METHOD
+            basis = BASIS
+            if RESTRICT_OPEN_SHELL:
+                orb_restr = True
+            else:
+                orb_restr = (ts_mul == 1)
+
+            # construct the filesystem
+            rxn_ichs = [rct_ichs, prd_ichs]
+            rxn_chgs = [rct_chgs, prd_chgs]
+            rxn_muls = [rct_muls, prd_muls]
+
+            # set up the filesystem
+            direction = autofile.system.reaction_direction(
+                rxn_ichs, rxn_chgs, rxn_muls)
+            rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
+                rxn_ichs, rxn_chgs, rxn_muls)
+            print(" - The reaction direction is {}"
+                  .format('forward' if direction else 'backward'))
+            rxn_alocs = [rxn_ichs, rxn_chgs, rxn_muls, ts_mul]
+            thy_rlocs = [method, basis, orb_restr]
+            thy_alocs = rxn_alocs + thy_rlocs
+
+            rxn_afs = autofile.fs.reaction()
+            thy_afs = autofile.fs.theory(rxn_afs, 'reaction')
+
+            thy_afs.theory.dir.create(RUN_PREFIX, thy_alocs)
+            thy_afs.theory.dir.create(SAVE_PREFIX, thy_alocs)
+
+            thy_run_path = thy_afs.theory.dir.path(RUN_PREFIX, thy_alocs)
+            thy_save_path = thy_afs.theory.dir.path(SAVE_PREFIX, thy_alocs)
+            moldr.driver.run_scan(
+                zma=ts_zma,
+                charge=0,
+                mult=ts_mul,
+                method=method,
+                basis=basis,
+                orb_restr=orb_restr,
+                grid_dct={dist_name: grid},
+                run_prefix=thy_run_path,
+                save_prefix=thy_save_path,
+                script_str=SCRIPT_STR,
+                prog=PROG,
+                update_guess=False,
+                reverse_sweep=False,
+            )
+
+            moldr.driver.save_scan(
+                run_prefix=thy_run_path,
+                save_prefix=thy_save_path,
+                coo_names=[dist_name],
+            )
 
 sys.exit()

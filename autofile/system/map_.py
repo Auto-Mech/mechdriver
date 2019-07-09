@@ -34,79 +34,71 @@ def reaction_trunk():
     return 'RXN'
 
 
-def reaction_leaf(ichs_pair, charges_pair, mults_pair, ts_mult):
+def reaction_leaf(rxn_ichs, rxn_chgs, rxn_muls, ts_mult):
     """ reaction leaf directory name
     """
-    ichs_pair = tuple(map(tuple, ichs_pair))
-    charges_pair = tuple(map(tuple, charges_pair))
-    mults_pair = tuple(map(tuple, mults_pair))
-    assert ((ichs_pair, charges_pair, mults_pair) ==
-            sort_together(ichs_pair, charges_pair, mults_pair))
-    ichs1, ichs2 = ichs_pair
-    charges1, charges2 = charges_pair
-    mults1, mults2 = mults_pair
+    rxn_ichs = tuple(map(tuple, rxn_ichs))
+    rxn_chgs = tuple(map(tuple, rxn_chgs))
+    rxn_muls = tuple(map(tuple, rxn_muls))
+    assert ((rxn_ichs, rxn_chgs, rxn_muls) ==
+            sort_together(rxn_ichs, rxn_chgs, rxn_muls))
+    ichs1, ichs2 = rxn_ichs
+    charges1, charges2 = rxn_chgs
+    mults1, mults2 = rxn_muls
     return os.path.join(_reactant_leaf(ichs1, charges1, mults1),
                         _reactant_leaf(ichs2, charges2, mults2),
                         str(ts_mult))
 
 
-def reaction_direction(ichs_pair, charges_pair, mults_pair):
-    """ sort inchis, charges, and multiplicities together
+def reaction_direction(rxn_ichs, rxn_chgs, rxn_muls):
+    """ sort inchis, chgs, and muliplicities together
     """
 
-    def _sort_together(ichs, charges, mults):
-        idxs = automol.inchi.argsort(ichs)
-        ichs = tuple(ichs[idx] for idx in idxs)
-        charges = tuple(charges[idx] for idx in idxs)
-        mults = tuple(mults[idx] for idx in idxs)
-        return (ichs, charges, mults)
+    assert len(rxn_ichs) == len(rxn_chgs) == len(rxn_muls) == 2
 
-    def _sortable_representation(ichs, charges, mults):
-        return (len(ichs), sorted(automol.inchi.argsort(ichs)), charges, mults)
+    ichs1, ichs2 = rxn_ichs
+    chgs1, chgs2 = rxn_chgs
+    muls1, muls2 = rxn_muls
 
-    assert len(ichs_pair) == len(charges_pair) == len(mults_pair) == 2
+    ichs1, chgs1, muls1 = _sort_together(ichs1, chgs1, muls1)
+    ichs2, chgs2, muls2 = _sort_together(ichs2, chgs2, muls2)
 
-    ichs1, ichs2 = ichs_pair
-    charges1, charges2 = charges_pair
-    mults1, mults2 = mults_pair
-
-    ichs1, charges1, mults1 = _sort_together(ichs1, charges1, mults1)
-    ichs2, charges2, mults2 = _sort_together(ichs2, charges2, mults2)
-
-    return (_sortable_representation(ichs1, charges1, mults1) <
-            _sortable_representation(ichs2, charges1, mults1))
+    return (_sortable_representation(ichs1, chgs1, muls1) <
+            _sortable_representation(ichs2, chgs1, muls1))
 
 
-def sort_together(ichs_pair, charges_pair, mults_pair):
-    """ sort inchis, charges, and multiplicities together
+def sort_together(rxn_ichs, rxn_chgs, rxn_muls):
+    """ sort inchis, chgs, and muliplicities together
     """
 
-    def _sort_together(ichs, charges, mults):
-        idxs = automol.inchi.argsort(ichs)
-        ichs = tuple(ichs[idx] for idx in idxs)
-        charges = tuple(charges[idx] for idx in idxs)
-        mults = tuple(mults[idx] for idx in idxs)
-        return (ichs, charges, mults)
+    assert len(rxn_ichs) == len(rxn_chgs) == len(rxn_muls) == 2
 
-    def _sortable_representation(ichs, charges, mults):
-        return (len(ichs), sorted(automol.inchi.argsort(ichs)), charges, mults)
+    ichs1, ichs2 = rxn_ichs
+    chgs1, chgs2 = rxn_chgs
+    muls1, muls2 = rxn_muls
 
-    assert len(ichs_pair) == len(charges_pair) == len(mults_pair) == 2
+    ichs1, chgs1, muls1 = _sort_together(ichs1, chgs1, muls1)
+    ichs2, chgs2, muls2 = _sort_together(ichs2, chgs2, muls2)
 
-    ichs1, ichs2 = ichs_pair
-    charges1, charges2 = charges_pair
-    mults1, mults2 = mults_pair
-
-    ichs1, charges1, mults1 = _sort_together(ichs1, charges1, mults1)
-    ichs2, charges2, mults2 = _sort_together(ichs2, charges2, mults2)
-
-    if (_sortable_representation(ichs1, charges1, mults1) >
-            _sortable_representation(ichs2, charges1, mults1)):
+    if (_sortable_representation(ichs1, chgs1, muls1) >
+            _sortable_representation(ichs2, chgs1, muls1)):
         ichs1, ichs2 = ichs2, ichs1
-        charges1, charges2 = charges2, charges1
-        mults1, mults2 = mults2, mults1
+        chgs1, chgs2 = chgs2, chgs1
+        muls1, muls2 = muls2, muls1
 
-    return ((ichs1, ichs2), (charges1, charges2), (mults1, mults2))
+    return ((ichs1, ichs2), (chgs1, chgs2), (muls1, muls2))
+
+
+def _sort_together(ichs, chgs, muls):
+    idxs = automol.inchi.argsort(ichs)
+    ichs = tuple(ichs[idx] for idx in idxs)
+    chgs = tuple(chgs[idx] for idx in idxs)
+    muls = tuple(muls[idx] for idx in idxs)
+    return (ichs, chgs, muls)
+
+
+def _sortable_representation(ichs, chgs, muls):
+    return (len(ichs), sorted(automol.inchi.argsort(ichs)), chgs, muls)
 
 
 def _reactant_leaf(ichs, charges, mults):
