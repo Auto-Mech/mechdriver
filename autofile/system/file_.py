@@ -51,7 +51,7 @@ def locator(file_prefix, map_dct_, loc_keys):
     def reader_(inf_str):
         inf_obj = autofile.file.read.information(inf_str)
         inf_dct = dict(inf_obj)
-        return tuple(map(inf_dct.__getitem__, loc_keys))
+        return list(map(inf_dct.__getitem__, loc_keys))
 
     name = autofile.file.name.information(file_prefix)
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)

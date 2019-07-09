@@ -301,13 +301,13 @@ def test__dir__run_trunk():
 
     dsdir = autofile.system.dir_.run_trunk(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
     for root_locs in root_locs_lst:
         locs = root_locs
@@ -327,19 +327,19 @@ def test__dir__run_leaf():
 
     dsdir = autofile.system.dir_.run_leaf(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
-    leaf_locs_lst = (
-        ('energy',),
-        ('gradient',),
-        ('hessian',),
-        ('optimization',),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
+    leaf_locs_lst = [
+        ['energy'],
+        ['gradient'],
+        ['hessian'],
+        ['optimization'],
+    ]
 
     for root_locs in root_locs_lst:
         for leaf_locs in leaf_locs_lst:
@@ -365,21 +365,21 @@ def test__dir__subrun_leaf():
 
     dsdir = autofile.system.dir_.subrun_leaf(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
-    leaf_locs_lst = (
-        (0, 0),
-        (0, 1),
-        (0, 2),
-        (1, 0),
-        (1, 1),
-        (2, 0),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
+    leaf_locs_lst = [
+        [0, 0],
+        [0, 1],
+        [0, 2],
+        [1, 0],
+        [1, 1],
+        [2, 0],
+    ]
 
     for root_locs in root_locs_lst:
         for leaf_locs in leaf_locs_lst:
@@ -413,13 +413,13 @@ def test__dir__species_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.species_trunk(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
     for root_locs in root_locs_lst:
         locs = root_locs
@@ -439,20 +439,20 @@ def test__dir__species_leaf():
 
     dsdir = autofile.system.dir_.species_leaf(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
-    branch_locs_lst = (
-        ('InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1+', 0, 1),
-        ('InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1-', 0, 1),
-        ('InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 0, 2),
-        ('InChI=1S/O', 0, 1),
-        ('InChI=1S/O', 0, 3),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
+    branch_locs_lst = [
+        ['InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1+', 0, 1],
+        ['InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1-', 0, 1],
+        ['InChI=1S/C5H5O/c1-2-3-4-5-6/h1-5H/b4-3-', 0, 2],
+        ['InChI=1S/O', 0, 1],
+        ['InChI=1S/O', 0, 3],
+    ]
 
     for root_locs in root_locs_lst:
         for branch_locs in branch_locs_lst:
@@ -486,13 +486,13 @@ def test__dir__reaction_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.reaction_trunk(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
     for root_locs in root_locs_lst:
         locs = root_locs
@@ -512,37 +512,37 @@ def test__dir__reaction_leaf():
 
     dsdir = autofile.system.dir_.reaction_leaf(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
-    branch_locs_lst = (
-        (
-            (('InChI=1S/C2H5O2/c1-2-4-3/h3H,1-2H2',),
-             ('InChI=1S/C2H4/c1-2/h1-2H2', 'InChI=1S/HO2/c1-2/h1H')),
-            ((0,), (0, 0)),
-            ((2,), (1, 2)),
+    branch_locs_lst = [
+        [
+            [['InChI=1S/C2H5O2/c1-2-4-3/h3H,1-2H2'],
+             ['InChI=1S/C2H4/c1-2/h1-2H2', 'InChI=1S/HO2/c1-2/h1H']],
+            [[0], [0, 0]],
+            [[2], [1, 2]],
             2,
-        ),
-        (
-            (('InChI=1S/CH3/h1H3', 'InChI=1S/HO/h1H'),
-             ('InChI=1S/CH2/h1H2', 'InChI=1S/H2O/h1H2')),
-            ((0, 0), (0, 0)),
-            ((2, 2), (1, 1)),
+        ],
+        [
+            [['InChI=1S/CH3/h1H3', 'InChI=1S/HO/h1H'],
+             ['InChI=1S/CH2/h1H2', 'InChI=1S/H2O/h1H2']],
+            [[0, 0], [0, 0]],
+            [[2, 2], [1, 1]],
             1,
-        ),
-        (
-            (('InChI=1S/CH3O3/c2-1-4-3/h3H,1H2',),
-             ('InChI=1S/CH3O3/c2-1-4-3/h2H,1H2',)),
-            ((0,), (0,)),
-            ((2,), (2,)),
+        ],
+        [
+            [['InChI=1S/CH3O3/c2-1-4-3/h3H,1H2'],
+             ['InChI=1S/CH3O3/c2-1-4-3/h2H,1H2']],
+            [[0], [0]],
+            [[2], [2]],
             2,
-        ),
-    )
+        ],
+    ]
 
     for root_locs in root_locs_lst:
         for branch_locs in branch_locs_lst:
@@ -568,19 +568,19 @@ def test__dir__theory_leaf():
 
     dsdir = autofile.system.dir_.theory_leaf(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
-    branch_locs_lst = (
-        ('hf', 'sto-3g', True),
-        ('hf', 'sto-3g', False),
-        ('b3lyp', 'sto-3g', False),
-        ('b3lyp', '6-31g*', False),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
+    branch_locs_lst = [
+        ['hf', 'sto-3g', True],
+        ['hf', 'sto-3g', False],
+        ['b3lyp', 'sto-3g', False],
+        ['b3lyp', '6-31g*', False],
+    ]
 
     for root_locs in root_locs_lst:
         for branch_locs in branch_locs_lst:
@@ -614,13 +614,13 @@ def test__dir__conformer_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.conformer_trunk(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
     for root_locs in root_locs_lst:
         locs = root_locs
@@ -640,17 +640,17 @@ def test__dir__conformer_leaf():
 
     dsdir = autofile.system.dir_.conformer_leaf(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
     nconfs = 10
-    branch_locs_lst = tuple(
-        (autofile.system.generate_new_conformer_id(),) for _ in range(nconfs))
+    branch_locs_lst = [
+        [autofile.system.generate_new_conformer_id()] for _ in range(nconfs)]
 
     for root_locs in root_locs_lst:
         for branch_locs in branch_locs_lst:
@@ -676,13 +676,13 @@ def test__dir__single_point_trunk():
 
     dsdir = autofile.system.dir_.single_point_trunk(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
     for root_locs in root_locs_lst:
         locs = root_locs
@@ -710,13 +710,13 @@ def test__dir__scan_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.scan_trunk(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
     for root_locs in root_locs_lst:
         locs = root_locs
@@ -736,17 +736,17 @@ def test__dir__scan_branch():
 
     dsdir = autofile.system.dir_.scan_branch(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
-    branch_locs_lst = (
-        (('d3',),),
-        (('d3', 'd4'),),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
+    branch_locs_lst = [
+        [['d3']],
+        [['d3', 'd4']],
+    ]
 
     for root_locs in root_locs_lst:
         for branch_locs in branch_locs_lst:
@@ -772,30 +772,30 @@ def test__dir__scan_leaf():
 
     dsdir = autofile.system.dir_.scan_leaf(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
-    leaf_locs_lst = (
-        ((0, 0),),
-        ((1, 0),),
-        ((2, 0),),
-        ((0, 1),),
-        ((1, 1),),
-        ((2, 1),),
-        ((0, 2),),
-        ((1, 2),),
-        ((2, 2),),
-        ((0, 3),),
-        ((1, 3),),
-        ((2, 3),),
-        ((0, 4),),
-        ((1, 4),),
-        ((2, 4),),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
+    leaf_locs_lst = [
+        [[0, 0]],
+        [[1, 0]],
+        [[2, 0]],
+        [[0, 1]],
+        [[1, 1]],
+        [[2, 1]],
+        [[0, 2]],
+        [[1, 2]],
+        [[2, 2]],
+        [[0, 3]],
+        [[1, 3]],
+        [[2, 3]],
+        [[0, 4]],
+        [[1, 4]],
+        [[2, 4]],
+    ]
 
     for root_locs in root_locs_lst:
         for leaf_locs in leaf_locs_lst:
@@ -829,13 +829,13 @@ def test__dir__tau_trunk():
     # with a root directory
     dsdir = autofile.system.dir_.tau_trunk(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
     for root_locs in root_locs_lst:
         locs = root_locs
@@ -855,17 +855,17 @@ def test__dir__tau_leaf():
 
     dsdir = autofile.system.dir_.tau_leaf(ROOT_DSDIR)
 
-    root_locs_lst = (
-        (1, 'a'),
-        (1, 'b'),
-        (2, 'a'),
-        (2, 'b'),
-        (2, 'c'),
-    )
+    root_locs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
 
     nconfs = 10
-    branch_locs_lst = tuple(
-        (autofile.system.generate_new_conformer_id(),) for _ in range(nconfs))
+    branch_locs_lst = [
+        [autofile.system.generate_new_conformer_id()] for _ in range(nconfs)]
 
     for root_locs in root_locs_lst:
         for branch_locs in branch_locs_lst:
