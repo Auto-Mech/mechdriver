@@ -4,6 +4,7 @@ disable=
     too-many-arguments,
     too-many-locals,
     too-many-statements,
+    too-many-branches,
     superfluous-parens,
     deprecated-method,
     duplicate-code,

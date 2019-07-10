@@ -17,32 +17,31 @@ ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane, etc.
 
 # 1. script control parameters
-#PROG = 'psi4'
-#SCRIPT_STR = ("#!/usr/bin/env bash\n"
-#              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
-#KWARGS={
-#}
-
-PROG = 'g09'
+PROG = 'psi4'
 SCRIPT_STR = ("#!/usr/bin/env bash\n"
-              "g09 run.inp run.out >> stdout.log &> stderr.log")
-KWARGS = {
-        'memory': 10,
-        'machine_options': ['%NProcShared=10'],
-        'gen_lines': ['# int=ultrafine'],
-        'feedback': True,
-        'errors': [
-            elstruct.Error.OPT_NOCONV
-        ],
-        'options_mat': [
-            [{},
-             {},
-             {},
-             {'job_options': ['calcfc']},
-             {'job_options': ['calcfc']},
-             {'job_options': ['calcall']}]
-        ],
-}
+              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
+KWARGS = {}
+
+# PROG = 'g09'
+# SCRIPT_STR = ("#!/usr/bin/env bash\n"
+#               "g09 run.inp run.out >> stdout.log &> stderr.log")
+# KWARGS = {
+#     'memory': 10,
+#     'machine_options': ['%NProcShared=10'],
+#     'gen_lines': ['# int=ultrafine'],
+#     'feedback': True,
+#     'errors': [
+#         elstruct.Error.OPT_NOCONV
+#     ],
+#     'options_mat': [
+#         [{},
+#          {},
+#          {},
+#          {'job_options': ['calcfc']},
+#          {'job_options': ['calcfc']},
+#          {'job_options': ['calcall']}]
+#     ],
+# }
 
 METHOD = 'wb97xd'
 BASIS = '6-31g*'

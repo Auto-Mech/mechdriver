@@ -319,13 +319,14 @@ JOB_RUNNER_DCT = {
         moldr.runner.options_matrix_run, elstruct.writer.hessian),
     elstruct.Job.OPTIMIZATION: functools.partial(
         moldr.runner.options_matrix_run, elstruct.writer.optimization),
-#   elstruct.Job.OPTIMIZATION: moldr.runner.feedback_optimization,
+    # elstruct.Job.OPTIMIZATION: moldr.runner.feedback_optimization,
 }
 
 
 def run_job(job, script_str, prefix,
             geom, charge, mult, method, basis, orb_restr, prog,
             errors=(), options_mat=(), retry_failed=True, feedback=False,
+            frozen_coordinates=(), freeze_dummy_atoms=True,
             **kwargs):
     """ run an elstruct job by name
     """
@@ -370,6 +371,14 @@ def run_job(job, script_str, prefix,
         runner = JOB_RUNNER_DCT[job]
         if job == elstruct.Job.OPTIMIZATION:
             runner = functools.partial(runner, feedback=feedback)
+
+        # freeze dummy atoms, if requested
+        if job == elstruct.Job.OPTIMIZATION and automol.zmatrix.is_valid(geom):
+            zma = geom
+            frz_names = tuple(frozen_coordinates)
+            if freeze_dummy_atoms:
+                frz_names += automol.zmatrix.dummy_coordinate_names(zma)
+            runner = functools.partial(runner, frozen_coordinates=frz_names)
 
         print(" - Starting the run...")
         inp_str, out_str = runner(
