@@ -1,4 +1,5 @@
 name,smiles,mult
+H2O2,OO,1
 CO,[C-]#[O+],1
 H2,[H][H],1
 H,[H],2
