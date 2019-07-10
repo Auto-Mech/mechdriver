@@ -10,6 +10,7 @@ import automol
 import elstruct
 import autofile
 import moldr
+import mess_io.writer
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 
@@ -17,37 +18,37 @@ ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane, etc.
 
 # 1. script control parameters
-PROG = 'psi4'
-SCRIPT_STR = ("#!/usr/bin/env bash\n"
-              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
-KWARGS = {}
+#PROG = 'psi4'
+#SCRIPT_STR = ("#!/usr/bin/env bash\n"
+#              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
+#KWARGS = {}
 
-# PROG = 'g09'
-# SCRIPT_STR = ("#!/usr/bin/env bash\n"
-#               "g09 run.inp run.out >> stdout.log &> stderr.log")
-# KWARGS = {
-#     'memory': 10,
-#     'machine_options': ['%NProcShared=10'],
-#     'gen_lines': ['# int=ultrafine'],
-#     'feedback': True,
-#     'errors': [
-#         elstruct.Error.OPT_NOCONV
-#     ],
-#     'options_mat': [
-#         [{},
-#          {},
-#          {},
-#          {'job_options': ['calcfc']},
-#          {'job_options': ['calcfc']},
-#          {'job_options': ['calcall']}]
-#     ],
-# }
+PROG = 'g09'
+SCRIPT_STR = ("#!/usr/bin/env bash\n"
+              "g09 run.inp run.out >> stdout.log &> stderr.log")
+KWARGS = {
+    'memory': 10,
+    'machine_options': ['%NProcShared=10'],
+    'gen_lines': ['# int=ultrafine'],
+    'feedback': True,
+    'errors': [
+        elstruct.Error.OPT_NOCONV
+    ],
+    'options_mat': [
+        [{},
+         {},
+         {},
+         {'job_options': ['calcfc']},
+         {'job_options': ['calcfc']},
+         {'job_options': ['calcall']}]
+    ],
+}
 
 METHOD = 'wb97xd'
 BASIS = '6-31g*'
 RESTRICT_OPEN_SHELL = False
 NSAMP = 5
-RUN_SPECIES = False
+RUN_SPECIES = True
 RUN_REACTIONS = True
 
 RUN_GRADIENT = True
@@ -78,6 +79,28 @@ CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
 MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
 SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
 SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
+
+GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
+GEOM_DCT = {}
+for dir_path, _, file_names in os.walk(GEOM_PATH):
+    for file_name in file_names:
+        file_path = os.path.join(dir_path, file_name)
+        if file_path.endswith('.xyz'):
+            xyz_str = autofile.file.read_file(file_path)
+            geo = automol.geom.from_xyz_string(xyz_str)
+            ich = automol.geom.inchi(geo)
+            if ich in GEOM_DCT:
+                print('Warning: Dupilicate xyz geometry for ', ich)
+            GEOM_DCT[ich] = geo
+
+
+def inchi_to_geometry(ich):
+    if ich in GEOM_DCT:
+        geo = GEOM_DCT[ich]
+    else:
+        geo = automol.inchi.geometry(ich)
+    return geo
+
 
 if RUN_SPECIES:
     for name in SPC_NAMES:
@@ -111,7 +134,9 @@ if RUN_SPECIES:
 
         # a. conformer sampling
         # generate the z-matrix and sampling ranges
-        geo = automol.inchi.geometry(ich)
+
+        geo = inchi_to_geometry(ich)
+
         zma = automol.geom.zmatrix(geo)
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         tors_ranges = automol.zmatrix.torsional_sampling_ranges(zma,
@@ -231,24 +256,24 @@ if RUN_SPECIES:
                         grad, thy_save_path, cnf_alocs)
 
         # d. hindered rotor scans
+        # determine the lowest energy conformer to get the correct path
+        cnf_enes = [cnf_afs.conf.file.energy.read(thy_save_path, alocs)
+                    for alocs in cnf_alocs_lst]
+        min_cnf_alocs = cnf_alocs_lst[cnf_enes.index(min(cnf_enes))]
+        cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, min_cnf_alocs)
+        cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+
+        # generate the z-matrix and sampling grids (grids)
+        geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+        zma = automol.geom.zmatrix(geo)
+        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+        tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+            zma, tors_names, SCAN_INCREMENT)
+        tors_grids = [
+            numpy.linspace(*linspace) for linspace in tors_linspaces]
+
+        # run one-dimensional scans for each torsional coordinate
         if RUN_CONFORMER_SCAN:
-            # determine the lowest energy conformer to get the correct path
-            cnf_enes = [cnf_afs.conf.file.energy.read(thy_save_path, alocs)
-                        for alocs in cnf_alocs_lst]
-            min_cnf_alocs = cnf_alocs_lst[cnf_enes.index(min(cnf_enes))]
-            cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, min_cnf_alocs)
-            cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
-
-            # generate the z-matrix and sampling grids (grids)
-            geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
-            zma = automol.geom.zmatrix(geo)
-            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-            tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
-                zma, tors_names, SCAN_INCREMENT)
-            tors_grids = [
-                numpy.linspace(*linspace) for linspace in tors_linspaces]
-
-            # run one-dimensional scans for each torsional coordinate
             for tors_name, tors_grid in zip(tors_names, tors_grids):
                 moldr.driver.run_scan(
                     zma=zma,
@@ -270,6 +295,35 @@ if RUN_SPECIES:
                     save_prefix=cnf_save_path,
                     coo_names=[tors_name],
                 )
+            hind_rot_dct = {}
+            scan_afs = autofile.fs.scan()
+            min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
+            for tors_name in tors_names:
+                enes = [scan_afs.scan.file.energy.read(cnf_save_path, [[tors_name]] + rlocs)
+                    for rlocs in scan_afs.scan.dir.existing(cnf_save_path, [[tors_name]])]
+                enes = numpy.subtract(enes, min_ene)
+                hind_rot_dct[tors_name] = enes
+
+            print(hind_rot_dct)
+
+        hess = cnf_afs.conf.file.hessian.read(thy_save_path, min_cnf_alocs)
+        freqs = elstruct.util.harmonic_frequencies(geo, hess)
+        zpe = sum(freqs)/2.
+
+#       hind_rot = 
+# to be generalized
+        symfactor = 1.
+# in pyx2z but not in automol yet.
+        elec_levels = [[mult, 0.]]
+        
+        core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
+        molecule_section_str1 = mess_io.writer.write_molecule(
+            core, freqs, zpe, elec_levels,
+            hind_rot='',
+        ) 
+        print (molecule_section_str1)
+
+        sys.exit()
 
 # 5. process reaction data from the mechanism file
 RXN_BLOCK_STR = chemkin_io.reaction_block(MECH_STR)
@@ -296,9 +350,9 @@ if RUN_REACTIONS:
 
         # determine the transition state z-matrix
         rct_zmas = list(
-            map(automol.geom.zmatrix, map(automol.inchi.geometry, rct_ichs)))
+            map(automol.geom.zmatrix, map(inchi_to_geometry, rct_ichs)))
         prd_zmas = list(
-            map(automol.geom.zmatrix, map(automol.inchi.geometry, prd_ichs)))
+            map(automol.geom.zmatrix, map(inchi_to_geometry, prd_ichs)))
 
         typ = None
 
