@@ -887,6 +887,75 @@ def test__dir__tau_leaf():
     assert dsdir.exists(prefix, locs)
 
 
+def test__dir__build_trunk():
+    """ test dir_.build_trunk
+    """
+    prefix = os.path.join(PREFIX, 'build_trunk')
+    os.mkdir(prefix)
+
+    dsdir = autofile.system.dir_.build_trunk(ROOT_DSDIR)
+
+    root_alocs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
+    rlocs_lst = [
+        ['MESS'],
+    ]
+
+    for root_alocs in root_alocs_lst:
+        for rlocs in rlocs_lst:
+            alocs = root_alocs + rlocs
+
+            assert not dsdir.exists(prefix, alocs)
+            dsdir.create(prefix, alocs)
+            assert dsdir.exists(prefix, alocs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_alocs_lst)
+
+    print(dsdir.existing(prefix, root_alocs_lst[-1]))
+    for root_alocs in root_alocs_lst:
+        assert (sorted(dsdir.existing(prefix, root_alocs)) ==
+                sorted(rlocs_lst))
+
+
+def test__dir__build_leaf():
+    """ test dir_.build_leaf
+    """
+    prefix = os.path.join(PREFIX, 'build_leaf')
+    os.mkdir(prefix)
+
+    dsdir = autofile.system.dir_.build_leaf(ROOT_DSDIR)
+
+    root_alocs_lst = [
+        [1, 'a'],
+        [1, 'b'],
+        [2, 'a'],
+        [2, 'b'],
+        [2, 'c'],
+    ]
+    rlocs_lst = [
+        [autofile.system.get_next_build_number(num)] for num in range(7, 14)]
+
+    for root_alocs in root_alocs_lst:
+        for rlocs in rlocs_lst:
+            alocs = root_alocs + rlocs
+
+            assert not dsdir.exists(prefix, alocs)
+            dsdir.create(prefix, alocs)
+            assert dsdir.exists(prefix, alocs)
+
+    assert sorted(ROOT_DSDIR.existing(prefix)) == sorted(root_alocs_lst)
+
+    print(dsdir.existing(prefix, root_alocs_lst[-1]))
+    for root_alocs in root_alocs_lst:
+        assert (sorted(dsdir.existing(prefix, root_alocs)) ==
+                sorted(rlocs_lst))
+
+
 if __name__ == '__main__':
     # test__file__input_file()
     # test__file__output_file()
@@ -901,8 +970,8 @@ if __name__ == '__main__':
     # test__file__lennard_jones_epsilon()
     # test__file__lennard_jones_sigma()
     # test__dir__run_trunk()
-    test__dir__run_leaf()
-    test__dir__subrun_leaf()
+    # test__dir__run_leaf()
+    # test__dir__subrun_leaf()
     # test__dir__species_trunk()
     # test__dir__species_leaf()
     # test__dir__theory_leaf()
@@ -916,3 +985,5 @@ if __name__ == '__main__':
     # test__dir__tau_leaf()
     # test__dir__reaction_trunk()
     # test__dir__reaction_leaf()
+    test__dir__build_trunk()
+    test__dir__build_leaf()

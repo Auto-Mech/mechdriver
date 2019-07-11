@@ -9,6 +9,7 @@ from autofile.system import model
 class FilePrefix():
     """ file prefixes """
     RUN = 'run'
+    BUILD = 'build'
     CONF = 'conf'
     TAU = 'tau'
     SP = 'sp'
@@ -282,4 +283,25 @@ def tau_leaf(root_dsdir=None):
             DataFileAttributeName.GEOM: geom_dfile,
             DataFileAttributeName.GRAD: grad_dfile,
             DataFileAttributeName.HESS: hess_dfile})
+    return dseries
+
+
+def build_trunk(root_dsdir=None):
+    """ build trunk DataSeries
+    """
+    dsdir = dir_.build_trunk(root_dsdir)
+    return model.DataSeries(dsdir=dsdir)
+
+
+def build_leaf(root_dsdir=None):
+    """ build leaf DataSeries
+    """
+    dsdir = dir_.build_leaf(root_dsdir)
+    inp_dfile = file_.input_file(FilePrefix.BUILD)
+    out_dfile = file_.output_file(FilePrefix.BUILD)
+    dseries = model.DataSeries(
+        dsdir=dsdir,
+        dfile_dct={
+            DataFileAttributeName.INPUT: inp_dfile,
+            DataFileAttributeName.OUTPUT: out_dfile})
     return dseries
