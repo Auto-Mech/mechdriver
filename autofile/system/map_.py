@@ -27,6 +27,13 @@ def species_leaf(ich, charge, mult):
     return _reactant_leaf([ich], [charge], [mult])
 
 
+# ts
+def ts_trunk():
+    """ ts trunk directory name
+    """
+    return 'TS'
+
+
 # reactions
 def reaction_trunk():
     """ reaction trunk directory name

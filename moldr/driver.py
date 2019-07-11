@@ -270,6 +270,7 @@ def save_scan(run_prefix, save_prefix, coo_names):
                 method = inf_obj.method
                 ene = elstruct.reader.energy(prog, method, out_str)
                 geo = elstruct.reader.opt_geometry(prog, out_str)
+                zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
                 save_path = afs.scan.dir.path(save_prefix, alocs)
                 print(" - Saving...")
@@ -280,6 +281,7 @@ def save_scan(run_prefix, save_prefix, coo_names):
                 afs.scan.file.geometry_input.write(inp_str, save_prefix, alocs)
                 afs.scan.file.energy.write(ene, save_prefix, alocs)
                 afs.scan.file.geometry.write(geo, save_prefix, alocs)
+                afs.scan.file.zmatrix.write(zma, save_prefix, alocs)
 
                 alocs_lst.append(alocs)
 

@@ -102,6 +102,9 @@ def inchi_to_geometry(ich):
     return geo
 
 
+SPC_AFS = autofile.fs.species()
+THY_AFS = autofile.fs.theory(SPC_AFS, 'species')
+
 if RUN_SPECIES:
     for name in SPC_NAMES:
         # species
@@ -123,14 +126,11 @@ if RUN_SPECIES:
         thy_rlocs = [method, basis, orb_restr]  # rloc = relative locator
         thy_alocs = spc_alocs + thy_rlocs
 
-        spc_afs = autofile.fs.species()
-        thy_afs = autofile.fs.theory(spc_afs, 'species')
+        THY_AFS.theory.dir.create(RUN_PREFIX, thy_alocs)
+        THY_AFS.theory.dir.create(SAVE_PREFIX, thy_alocs)
 
-        thy_afs.theory.dir.create(RUN_PREFIX, thy_alocs)
-        thy_afs.theory.dir.create(SAVE_PREFIX, thy_alocs)
-
-        thy_run_path = thy_afs.theory.dir.path(RUN_PREFIX, thy_alocs)
-        thy_save_path = thy_afs.theory.dir.path(SAVE_PREFIX, thy_alocs)
+        thy_run_path = THY_AFS.theory.dir.path(RUN_PREFIX, thy_alocs)
+        thy_save_path = THY_AFS.theory.dir.path(SAVE_PREFIX, thy_alocs)
 
         # a. conformer sampling
         # generate the z-matrix and sampling ranges
@@ -298,6 +298,7 @@ if RUN_SPECIES:
             hind_rot_dct = {}
             scan_afs = autofile.fs.scan()
             min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
+            cnf_afs.conf_trunk.file.energy.write(min_ene, thy_save_path)
             for tors_name in tors_names:
                 enes = [scan_afs.scan.file.energy.read(cnf_save_path, [[tors_name]] + rlocs)
                     for rlocs in scan_afs.scan.dir.existing(cnf_save_path, [[tors_name]])]
@@ -323,7 +324,6 @@ if RUN_SPECIES:
         ) 
         print (molecule_section_str1)
 
-        sys.exit()
 
 # 5. process reaction data from the mechanism file
 RXN_BLOCK_STR = chemkin_io.reaction_block(MECH_STR)
@@ -332,6 +332,7 @@ RCT_NAMES_LST = list(
     map(chemkin_io.reaction.DataString.reactant_names, RXN_STRS))
 PRD_NAMES_LST = list(
     map(chemkin_io.reaction.DataString.product_names, RXN_STRS))
+
 
 if RUN_REACTIONS:
     for rct_names, prd_names in zip(RCT_NAMES_LST, PRD_NAMES_LST):
@@ -347,6 +348,18 @@ if RUN_REACTIONS:
         prd_chgs = list(map(CHG_DCT.__getitem__, prd_names))
         rct_muls = list(map(MUL_DCT.__getitem__, rct_names))
         prd_muls = list(map(MUL_DCT.__getitem__, prd_names))
+
+        # check direction of reaction
+        rxn_ichs = [rct_ichs, prd_ichs]
+        rxn_chgs = [rct_chgs, prd_chgs]
+        rxn_muls = [rct_muls, prd_muls]
+        rxn_exo = moldr.util.reaction_energy(SAVE_PREFIX, rxn_ichs, rxn_chgs, rxn_muls, method, basis, RESTRICT_OPEN_SHELL)
+        print(rxn_exo)
+        if rxn_exo > 0:
+            rct_ichs, prd_ichs = prd_ichs, rct_ichs
+            rct_chgs, prd_chgs = prd_chgs, rct_chgs
+            rct_muls, prd_muls = prd_muls, rct_muls
+            print('reactions reversed')
 
         # determine the transition state z-matrix
         rct_zmas = list(
@@ -444,13 +457,13 @@ if RUN_REACTIONS:
             thy_alocs = rxn_alocs + thy_rlocs
 
             rxn_afs = autofile.fs.reaction()
-            thy_afs = autofile.fs.theory(rxn_afs, 'reaction')
+            THY_AFS = autofile.fs.theory(rxn_afs, 'reaction')
 
-            thy_afs.theory.dir.create(RUN_PREFIX, thy_alocs)
-            thy_afs.theory.dir.create(SAVE_PREFIX, thy_alocs)
+            THY_AFS.theory.dir.create(RUN_PREFIX, thy_alocs)
+            THY_AFS.theory.dir.create(SAVE_PREFIX, thy_alocs)
 
-            thy_run_path = thy_afs.theory.dir.path(RUN_PREFIX, thy_alocs)
-            thy_save_path = thy_afs.theory.dir.path(SAVE_PREFIX, thy_alocs)
+            thy_run_path = THY_AFS.theory.dir.path(RUN_PREFIX, thy_alocs)
+            thy_save_path = THY_AFS.theory.dir.path(SAVE_PREFIX, thy_alocs)
             moldr.driver.run_scan(
                 zma=ts_zma,
                 charge=0,
@@ -473,5 +486,93 @@ if RUN_REACTIONS:
                 save_prefix=thy_save_path,
                 coo_names=[dist_name],
             )
+
+            scan_afs = autofile.fs.scan()
+            rlocs_lst = scan_afs.scan.dir.existing(thy_save_path, [[dist_name]])
+            enes = [scan_afs.scan.file.energy.read(thy_save_path, [[dist_name]] + rlocs)
+                    for rlocs in rlocs_lst]
+            max_ene = max(enes)
+            max_rlocs = rlocs_lst[enes.index(max(enes))]
+            geos = [scan_afs.scan.file.energy.read(thy_save_path, [[dist_name]] + rlocs)
+                    for rlocs in rlocs_lst]
+            max_ene = max(enes)
+            max_zma = scan_afs.scan.file.zmatrix.read(thy_save_path, [[dist_name]] + max_rlocs)
+            print(max_ene)
+            print(max_rlocs)
+            print('optimizing ts')
+            ts_afs = autofile.fs.ts()
+            ts_afs.ts.dir.create(thy_run_path)
+            ts_afs.ts.dir.create(thy_save_path)
+            ts_run_path = ts_afs.ts.dir.path(thy_run_path)
+            ts_save_path = ts_afs.ts.dir.path(thy_save_path)
+            moldr.driver.run_job(
+                job='optimization',
+                script_str=SCRIPT_STR,
+                prefix=ts_run_path,
+                geom=max_zma,
+                charge=0,
+                mult=ts_mul,
+                method=method,
+                basis=basis,
+                orb_restr=orb_restr,
+                prog=PROG,
+                saddle=True,
+                **KWARGS,
+            )
+            opt_ret = moldr.driver.read_job(
+                job='optimization',
+                prefix=ts_run_path,
+            )
+            if opt_ret is not None:
+                inf_obj, inp_str, out_str = opt_ret
+                prog = inf_obj.prog
+                method = inf_obj.method
+                ene = elstruct.reader.energy(prog, method, out_str)
+                geo = elstruct.reader.opt_geometry(prog, out_str)
+                zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+                print(" - Saving...")
+                print(" - Save path: {}".format(ts_save_path))
+
+                ts_afs.ts.file.geometry_info.write(inf_obj, thy_save_path)
+                ts_afs.ts.file.geometry_input.write(inp_str, thy_save_path)
+                ts_afs.ts.file.energy.write(ene, thy_save_path)
+                ts_afs.ts.file.geometry.write(geo, thy_save_path)
+                ts_afs.ts.file.zmatrix.write(zma, thy_save_path)
+
+                print(" - Running hessian")
+                moldr.driver.run_job(
+                    job='hessian',
+                    script_str=SCRIPT_STR,
+                    prefix=ts_run_path,
+                    geom=geo,
+                    charge=0,
+                    mult=ts_mul,
+                    method=method,
+                    basis=basis,
+                    orb_restr=orb_restr,
+                    prog=PROG,
+                    **KWARGS,
+                )
+                hess_ret = moldr.driver.read_job(
+                    job='hessian',
+                    prefix=ts_run_path,
+                )
+                if hess_ret is not None:
+                    inf_obj, inp_str, out_str = hess_ret
+                    prog = inf_obj.prog
+                    method = inf_obj.method
+                    hess = elstruct.reader.hessian(prog, out_str)
+                    freqs = elstruct.util.harmonic_frequencies(geo, hess)
+
+                    print(" - Saving hessian...")
+                    print(" - Save path: {}".format(ts_save_path))
+
+                    ts_afs.ts.file.hessian_info.write(inf_obj, thy_save_path)
+                    ts_afs.ts.file.hessian_input.write(inp_str, thy_save_path)
+                    ts_afs.ts.file.hessian.write(hess, thy_save_path)
+                    ts_afs.ts.file.harmonic_frequencies.write(freqs, thy_save_path)
+
+
 
 sys.exit()
