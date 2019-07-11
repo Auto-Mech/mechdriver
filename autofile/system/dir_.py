@@ -233,6 +233,36 @@ def tau_leaf(root_dsdir=None):
                                root_dsdir=root_dsdir)
 
 
+def build_trunk(root_dsdir=None):
+    """ build trunk DataSeriesDir
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'head': lambda locs: locs[0]},
+        loc_keys=['head'])
+
+    _map = _pack_arguments(map_.build_trunk)
+    nlocs = _count_arguments(map_.build_trunk)
+    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
+                               loc_dfile=loc_dfile,
+                               root_dsdir=root_dsdir)
+
+
+def build_leaf(root_dsdir=None):
+    """ build leaf DataSeriesDir
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'num': lambda locs: locs[0]},
+        loc_keys=['num'])
+
+    _map = _pack_arguments(map_.build_leaf)
+    nlocs = _count_arguments(map_.build_leaf)
+    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
+                               loc_dfile=loc_dfile,
+                               root_dsdir=root_dsdir, removable=True)
+
+
 # helpers
 def _pack_arguments(function):
     """ generate an equivalent function that takes all of its arguments packed

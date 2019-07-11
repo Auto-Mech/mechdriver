@@ -24,6 +24,8 @@ class AttributeName():
     SPT_LEAF = 'tau_sp'
     RUN_TRUNK = 'run_trunk'
     RUN_LEAF = 'run'
+    BUILD_TRUNK = 'build_trunk'
+    BUILD_LEAF = 'build_leaf'
 
 
 def empty():
@@ -158,6 +160,22 @@ def run(root_fs=None, top_ds_name=None, name_prefix=''):
     })
     run_fs.update(root_fs)
     return run_fs
+
+
+def build(root_fs=None, top_ds_name=None, name_prefix=''):
+    """ construct the run filesystem
+    """
+    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+
+    build_trunk_ds = series.build_trunk(root_dsdir=top_dsdir)
+    build_leaf_ds = series.build_leaf(root_dsdir=build_trunk_ds.dir)
+
+    build_fs = model.FileSystem({
+        (name_prefix + AttributeName.BUILD_TRUNK): build_trunk_ds,
+        (name_prefix + AttributeName.BUILD_LEAF): build_leaf_ds,
+    })
+    build_fs.update(root_fs)
+    return build_fs
 
 
 def _process_root_args(root_fs=None, top_ds_name=None):

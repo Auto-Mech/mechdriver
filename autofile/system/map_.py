@@ -228,3 +228,24 @@ def tau_leaf(cid):
     """
     assert _is_random_string_identifier(cid)
     return cid
+
+
+# builds (MESS, NASA Poly, etc.)
+def build_trunk(head):
+    """ build trunk directory name
+    """
+    assert isinstance(head, str)
+    return head.upper()[:4]
+
+
+def build_leaf(num):
+    """ build leaf directory name
+    """
+    assert isinstance(num, numbers.Integral) and 0 <= num <= 9
+    return str(num)
+
+
+def get_next_build_number(num):
+    """ determine the next build number
+    """
+    return int(num % 10)
