@@ -8,6 +8,7 @@ class AttributeName():
     """ DataFile attribute names """
     SPC_TRUNK = 'species_trunk'
     SPC_LEAF = 'species'
+    TS_TRUNK = 'ts'
     RXN_TRUNK = 'reaction_trunk'
     RXN_LEAF = 'reaction'
     THY_LEAF = 'theory'
@@ -48,6 +49,20 @@ def species(root_fs=None, top_ds_name=None, name_prefix=''):
     })
     spc_fs.update(root_fs)
     return spc_fs
+
+
+def ts(root_fs=None, top_ds_name=None, name_prefix=''):
+    """ construct the species filesystem
+    """
+    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+
+    ts_trunk_ds = series.ts_trunk(root_dsdir=top_dsdir)
+
+    ts_fs = model.FileSystem({
+        (name_prefix + AttributeName.TS_TRUNK): ts_trunk_ds,
+    })
+    ts_fs.update(root_fs)
+    return ts_fs
 
 
 def reaction(root_fs=None, top_ds_name=None, name_prefix=''):

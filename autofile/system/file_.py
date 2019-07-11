@@ -107,6 +107,15 @@ def hessian(file_prefix):
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)
 
 
+def harmonic_frequencies(file_prefix):
+    """ generate harmonic_frequencies DataFile
+    """
+    name = autofile.file.name.harmonic_frequencies(file_prefix)
+    writer_ = autofile.file.write.harmonic_frequencies
+    reader_ = autofile.file.read.harmonic_frequencies
+    return model.DataFile(name=name, writer_=writer_, reader_=reader_)
+
+
 def zmatrix(file_prefix):
     """ generate zmatrix DataFile
     """

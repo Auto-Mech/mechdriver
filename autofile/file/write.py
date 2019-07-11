@@ -125,11 +125,9 @@ def projected_frequencies(freq):
 def _frequencies(freq):
     freq = numpy.array(freq)
     assert freq.ndim == 1
-
-    freq_str_io = _StringIO()
-    numpy.savetxt(freq_str_io, freq)
-    freq_str = freq_str_io.getvalue()
-    freq_str_io.close()
+    freq_str = ""
+    for val in freq:
+        freq_str += "{:>8.1f}\n".format(val)
     return freq_str
 
 

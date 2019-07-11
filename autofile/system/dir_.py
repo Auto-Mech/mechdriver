@@ -21,6 +21,14 @@ def species_trunk(root_dsdir=None):
     return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
                                root_dsdir=root_dsdir)
 
+def ts_trunk(root_dsdir=None):
+    """ ts trunk DataSeriesDir
+    """
+    _map = _pack_arguments(map_.ts_trunk)
+    nlocs = _count_arguments(map_.ts_trunk)
+    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
+                               root_dsdir=root_dsdir)
+
 
 def species_leaf(root_dsdir=None):
     """ species leaf DataSeriesDir
