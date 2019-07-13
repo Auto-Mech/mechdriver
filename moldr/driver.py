@@ -11,7 +11,7 @@ import moldr.runner
 # conformer sampling
 def run_conformers(zma, charge, mult, method, basis, orb_restr,
                    nsamp, tors_range_dct, run_prefix, save_prefix, script_str,
-                   prog, **kwargs):
+                   prog, overwrite, run_over, **kwargs):
     """ run sampling algorithm to find conformers
     """
     if not tors_range_dct:
@@ -25,28 +25,36 @@ def run_conformers(zma, charge, mult, method, basis, orb_restr,
     if afs.conf_trunk.file.vmatrix.exists(save_prefix):
         existing_vma = afs.conf_trunk.file.vmatrix.read(save_prefix)
         assert vma == existing_vma
+    idx = 0
+    nsamp0 = nsamp
+    inf_obj = autofile.system.info.conformer_trunk(0, tors_ranges=tors_range_dct)
+    while nsamp > 0:
+        idx += 1
+        if afs.conf_trunk.file.info.exists(save_prefix):
+            inf_obj = afs.conf_trunk.file.info.read(save_prefix)
+            nsampd = inf_obj.nsamp
+            nsamp = max(nsamp0 - nsampd,0)
+            print("Found previous saved run. Adjusting nsamp.")
+            print("    New nsamp is {:d}.".format(nsamp))
+        else:
+            nsampd = 0
 
-    if afs.conf_trunk.file.info.exists(save_prefix):
-        inf_obj = afs.conf_trunk.file.info.read(save_prefix)
-        nsamp = max(nsamp - inf_obj.nsamp, 0)
-        print("Found previous saved run. Adjusting nsamp.")
-        print("    New nsamp is {:d}.".format(nsamp))
-    else:
-        inf_obj = autofile.system.info.conformer_trunk(
-            nsamp=0, tors_ranges=tors_range_dct)
-    afs.conf_trunk.file.vmatrix.write(vma, save_prefix)
-    afs.conf_trunk.file.info.write(inf_obj, save_prefix)
+        if nsamp <= 0:
+            break
+        afs.conf_trunk.file.vmatrix.write(vma, save_prefix)
 
-    samp_zmas = automol.zmatrix.samples(zma, nsamp, tors_range_dct)
-    alocs = [[autofile.system.generate_new_conformer_id()]
-             for _ in range(nsamp)]
+        samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+        cid = autofile.system.generate_new_conformer_id()
+        alocs = [cid]
 
-    for idx, (aloc, samp_zma) in enumerate(zip(alocs, samp_zmas)):
-        afs.conf.dir.create(run_prefix, aloc)
+        afs.conf.dir.create(run_prefix, alocs)
 
-        run_path = afs.conf.dir.path(run_prefix, aloc)
+        run_path = afs.conf.dir.path(run_prefix, alocs)
 
-        print("Run {}/{}".format(idx+1, nsamp))
+        print("Run {}/{}".format(idx, nsamp0))
+        nsampd += 1
+        inf_obj.nsamp = nsampd
+        afs.conf_trunk.file.info.write(inf_obj, save_prefix)
         run_job(
             job=elstruct.Job.OPTIMIZATION,
             script_str=script_str,
@@ -58,8 +66,11 @@ def run_conformers(zma, charge, mult, method, basis, orb_restr,
             basis=basis,
             orb_restr=orb_restr,
             prog=prog,
+            overwrite=overwrite,
+            run_over=run_over,
             **kwargs
         )
+        afs.conf_trunk.file.info.write(inf_obj, save_prefix)
 
 
 def save_conformers(run_prefix, save_prefix):
@@ -67,7 +78,7 @@ def save_conformers(run_prefix, save_prefix):
     """
     afs = autofile.fs.conformer()
 
-    saved_geos = [afs.conf.file.geometry.read(save_prefix, alocs)
+    seen_geos = [afs.conf.file.geometry.read(save_prefix, alocs)
                   for alocs in afs.conf.dir.existing(save_prefix)]
 
     if not afs.conf_trunk.dir.exists(run_prefix):
@@ -85,31 +96,30 @@ def save_conformers(run_prefix, save_prefix):
                 ene = elstruct.reader.energy(prog, method, out_str)
 
                 geo = elstruct.reader.opt_geometry(prog, out_str)
+                gra = automol.geom.graph(geo)
 
-                if not _unique_coulomb_spectrum(geo, saved_geos):
-                    print(" - Geometry is not unique. Skipping...")
+                if len(automol.graph.connected_components(gra)) > 1:
+                    print(" - Geometry is disconnected.. Skipping...")
                 else:
-                    save_path = afs.conf.dir.path(save_prefix, alocs)
-                    print(" - Geometry is unique. Saving...")
-                    print(" - Save path: {}".format(save_path))
+                    if not _unique_coulomb_spectrum(geo, seen_geos):
+                        print(" - Geometry is not unique. Skipping...")
+                    else:
+                        save_path = afs.conf.dir.path(save_prefix, alocs)
+                        print(" - Geometry is unique. Saving...")
+                        print(" - Save path: {}".format(save_path))
 
-                    afs.conf.dir.create(save_prefix, alocs)
-                    afs.conf.file.geometry_info.write(
-                        inf_obj, save_prefix, alocs)
-                    afs.conf.file.geometry_input.write(
-                        inp_str, save_prefix, alocs)
-                    afs.conf.file.energy.write(ene, save_prefix, alocs)
-                    afs.conf.file.geometry.write(geo, save_prefix, alocs)
+                        afs.conf.dir.create(save_prefix, alocs)
+                        afs.conf.file.geometry_info.write(
+                            inf_obj, save_prefix, alocs)
+                        afs.conf.file.geometry_input.write(
+                            inp_str, save_prefix, alocs)
+                        afs.conf.file.energy.write(ene, save_prefix, alocs)
+                        afs.conf.file.geometry.write(geo, save_prefix, alocs)
 
-                    saved_geos.append(geo)
-
-        # update the number of samples in the trunk information file
-        alocs_lst = afs.conf.dir.existing(save_prefix)
-        trunk_inf_obj = afs.conf_trunk.file.info.read(save_prefix)
-        trunk_inf_obj.nsamp = len(alocs_lst)
-        afs.conf_trunk.file.info.write(trunk_inf_obj, save_prefix)
+                seen_geos.append(geo)
 
         # update the conformer trajectory file
+        alocs_lst = afs.conf.dir.existing(save_prefix)
         if alocs_lst:
             enes = [afs.conf.file.energy.read(save_prefix, alocs)
                     for alocs in alocs_lst]
@@ -126,6 +136,128 @@ def save_conformers(run_prefix, save_prefix):
             afs.conf_trunk.file.trajectory.write(traj, save_prefix)
 
 
+# tau sampling for partition function
+def run_tau(zma, charge, mult, method, basis, orb_restr,
+            nsamp, tors_range_dct, run_prefix, save_prefix, script_str,
+            prog, overwrite, run_over, **kwargs):
+    """ run sampling algorithm to find tau dependent geometries
+    """
+    if not tors_range_dct:
+        print("No torsional coordinates. Setting nsamp to 1.")
+        nsamp = 1
+
+    afs = autofile.fs.tau()
+    afs.tau_trunk.dir.create(save_prefix)
+
+    vma = automol.zmatrix.var_(zma)
+    if afs.tau_trunk.file.vmatrix.exists(save_prefix):
+        existing_vma = afs.tau_trunk.file.vmatrix.read(save_prefix)
+        assert vma == existing_vma
+    idx = 0
+    nsamp0 = nsamp
+    inf_obj = autofile.system.info.tau_trunk(0, tors_ranges=tors_range_dct)
+    while nsamp > 0:
+        idx += 1
+        if afs.tau_trunk.file.info.exists(save_prefix):
+            inf_obj = afs.tau_trunk.file.info.read(save_prefix)
+            nsampd = inf_obj.nsamp
+            nsamp = max(nsamp0 - nsampd, 0)
+            print("Found previous saved run. Adjusting nsamp.")
+            print("    New nsamp is {:d}.".format(nsamp))
+        else:
+            nsampd = 0
+
+        if nsamp <= 0:
+            break
+        afs.tau_trunk.file.vmatrix.write(vma, save_prefix)
+
+        samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+        cid = autofile.system.generate_new_conformer_id()
+        alocs = [cid]
+
+        afs.tau.dir.create(run_prefix, alocs)
+
+        run_path = afs.tau.dir.path(run_prefix, alocs)
+
+        print("Run {}/{}".format(idx, nsamp0))
+        nsampd += 1
+        inf_obj.nsamp = nsampd
+        afs.tau_trunk.file.info.write(inf_obj, save_prefix)
+        run_job(
+            job=elstruct.Job.OPTIMIZATION,
+            script_str=script_str,
+            prefix=run_path,
+            geom=samp_zma,
+            charge=charge,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prog=prog,
+            overwrite=overwrite,
+            run_over=run_over,
+            frozen_coordinates=tors_range_dct.keys(),
+            **kwargs
+        )
+        afs.tau_trunk.file.info.write(inf_obj, save_prefix)
+
+
+def save_tau(run_prefix, save_prefix):
+    """ save the tau dependent geometries that have been found so far
+    """
+    afs = autofile.fs.tau()
+
+    saved_geos = [afs.tau.file.geometry.read(save_prefix, alocs)
+                  for alocs in afs.tau.dir.existing(save_prefix)]
+
+    if not afs.tau_trunk.dir.exists(run_prefix):
+        print("No tau geometries to save. Skipping...")
+    else:
+        for alocs in afs.tau.dir.existing(run_prefix):
+            run_path = afs.tau.dir.path(run_prefix, alocs)
+            print("Reading from tau run at {}".format(run_path))
+
+            ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=run_path)
+            if ret:
+                inf_obj, inp_str, out_str = ret
+                prog = inf_obj.prog
+                method = inf_obj.method
+                ene = elstruct.reader.energy(prog, method, out_str)
+
+                geo = elstruct.reader.opt_geometry(prog, out_str)
+
+                save_path = afs.tau.dir.path(save_prefix, alocs)
+                print(" - Saving...")
+                print(" - Save path: {}".format(save_path))
+
+                afs.tau.dir.create(save_prefix, alocs)
+                afs.tau.file.geometry_info.write(
+                    inf_obj, save_prefix, alocs)
+                afs.tau.file.geometry_input.write(
+                    inp_str, save_prefix, alocs)
+                afs.tau.file.energy.write(ene, save_prefix, alocs)
+                afs.tau.file.geometry.write(geo, save_prefix, alocs)
+
+                saved_geos.append(geo)
+
+        # update the tau trajectory file
+        alocs_lst = afs.tau.dir.existing(save_prefix)
+        if alocs_lst:
+            enes = [afs.tau.file.energy.read(save_prefix, alocs)
+                    for alocs in alocs_lst]
+            geos = [afs.tau.file.geometry.read(save_prefix, alocs)
+                    for alocs in alocs_lst]
+
+            traj = []
+            for ene, geo in sorted(zip(enes, geos), key=lambda x: x[0]):
+                comment = 'energy: {:>15.10f}'.format(ene)
+                traj.append((comment, geo))
+
+            traj_path = afs.tau_trunk.file.trajectory.path(save_prefix)
+            print("Updating tau trajectory file at {}".format(traj_path))
+            afs.tau_trunk.file.trajectory.write(traj, save_prefix)
+
+
 def _unique_coulomb_spectrum(geo, seen_geos, rtol=2e-5):
     return not any(
         automol.geom.almost_equal_coulomb_spectrum(geo, seen_geo, rtol)
@@ -135,7 +267,8 @@ def _unique_coulomb_spectrum(geo, seen_geos, rtol=2e-5):
 # constrained optimization scans
 def run_scan(zma, charge, mult, method, basis, orb_restr,
              grid_dct, run_prefix, save_prefix, script_str,
-             prog, update_guess=True, reverse_sweep=True, **kwargs):
+             prog, overwrite, run_over, update_guess=True, 
+             reverse_sweep=True, **kwargs):
     """ run constrained optimization scan
     """
     if len(grid_dct) > 1:
@@ -185,6 +318,8 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
         basis=basis,
         orb_restr=orb_restr,
         prog=prog,
+        overwrite=overwrite,
+        run_over=run_over,
         update_guess=update_guess,
         **kwargs
     )
@@ -203,6 +338,8 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
             basis=basis,
             orb_restr=orb_restr,
             prog=prog,
+            overwrite=overwrite,
+            run_over=run_over,
             update_guess=update_guess,
             **kwargs
         )
@@ -211,7 +348,9 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
 def _run_1d_scan(script_str, prefixes,
                  guess_zma, coo_name, grid_idxs, grid_vals,
                  charge, mult, method, basis, orb_restr, prog,
-                 errors=(), options_mat=(), retry_failed=True,
+                 overwrite, run_over, 
+                 errors=(), options_mat=(), 
+                 retry_failed=True,
                  update_guess=True,
                  **kwargs):
     npoints = len(grid_idxs)
@@ -231,6 +370,8 @@ def _run_1d_scan(script_str, prefixes,
             basis=basis,
             orb_restr=orb_restr,
             prog=prog,
+            overwrite=overwrite,
+            run_over=run_over,
             frozen_coordinates=[coo_name],
             errors=errors,
             options_mat=options_mat,
@@ -326,7 +467,8 @@ JOB_RUNNER_DCT = {
 def run_job(job, script_str, prefix,
             geom, charge, mult, method, basis, orb_restr, prog,
             errors=(), options_mat=(), retry_failed=True, feedback=False,
-            frozen_coordinates=(), freeze_dummy_atoms=True,
+            frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
+            run_over=False,
             **kwargs):
     """ run an elstruct job by name
     """
@@ -336,25 +478,34 @@ def run_job(job, script_str, prefix,
     afs = autofile.fs.run()
 
     run_path = afs.run.dir.path(prefix, [job])
-    if not afs.run.file.info.exists(prefix, [job]):
+    if overwrite:
         do_run = True
         print(" - Running {} job at {}".format(job, run_path))
     else:
-        inf_obj = afs.run.file.info.read(prefix, [job])
-        if inf_obj.status == autofile.system.RunStatus.FAILURE:
-            print(" - Found failed {} job at {}".format(job, run_path))
-            if retry_failed:
-                print(" - Retrying...")
-                do_run = True
+        if not afs.run.file.info.exists(prefix, [job]):
+            do_run = True
+            print(" - Running {} job at {}".format(job, run_path))
+        else:
+            inf_obj = afs.run.file.info.read(prefix, [job])
+            if inf_obj.status == autofile.system.RunStatus.FAILURE:
+                print(" - Found failed {} job at {}".format(job, run_path))
+                if retry_failed:
+                    print(" - Retrying...")
+                    do_run = True
+                else:
+                    do_run = False
             else:
                 do_run = False
-        else:
-            do_run = False
-            if inf_obj.status == autofile.system.RunStatus.SUCCESS:
-                print(" - Found completed {} job at {}".format(job, run_path))
-            else:
-                print(" - Found running {} job at {}".format(job, run_path))
-            print(" - Skipping...")
+                if inf_obj.status == autofile.system.RunStatus.SUCCESS:
+                    print(" - Found completed {} job at {}".format(job, run_path))
+                else:
+                    if run_over:
+                        do_run = True
+                        print(" - Found apparent running {} job at {}".format(job, run_path))
+                        print(" - but will rerun anyway...")
+                    else:
+                        print(" - Found running {} job at {}".format(job, run_path))
+                        print(" - Skipping...")
 
     if do_run:
         # create the run directory
