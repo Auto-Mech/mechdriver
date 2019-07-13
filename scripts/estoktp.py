@@ -13,11 +13,16 @@ import moldr
 import mess_io.writer
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
+WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
+#WAVEN2KCAL = 1./349.7
 
 # 0. choose which mechanism to run
-MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane, etc.
+MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas, heptane, test, estoktp, ...
+#MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas, heptane, test, estoktp, ...
 
 # 1. script control parameters
+# Program, method, basis, convergence control
+
 #PROG = 'psi4'
 #SCRIPT_STR = ("#!/usr/bin/env bash\n"
 #              "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
@@ -26,6 +31,8 @@ MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane, etc.
 PROG = 'g09'
 SCRIPT_STR = ("#!/usr/bin/env bash\n"
               "g09 run.inp run.out >> stdout.log &> stderr.log")
+METHOD = 'wb97xd'
+BASIS = '6-31g*'
 KWARGS = {
     'memory': 10,
     'machine_options': ['%NProcShared=10'],
@@ -44,17 +51,25 @@ KWARGS = {
     ],
 }
 
-METHOD = 'wb97xd'
-BASIS = '6-31g*'
-RESTRICT_OPEN_SHELL = False
-NSAMP = 5
+# What to run
 RUN_SPECIES = True
 RUN_REACTIONS = True
-
 RUN_GRADIENT = True
 RUN_HESSIAN = True
 RUN_CONFORMER_SCAN = True
+RUN_TAU_SAMPLING = True
+
+# Parameters for number of torsional samplings
+NSAMP_A = 3
+NSAMP_B = 1
+NSAMP_C = 3
+NSAMP_D = 15
+
+# Defaults
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
+RESTRICT_OPEN_SHELL = False
+OVERWRITE = False
+RUN_OVER = False
 
 # 2. create run and save directories
 RUN_PREFIX = 'run'
@@ -72,27 +87,40 @@ MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
 SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
 
 # 4. process species data from the mechanism file
-SPC_TAB['inchi'] = list(map(automol.smiles.inchi, SPC_TAB['smiles']))
+#SMILES_LST = ['[H]', '[OH]', 'O[O]', '[CH3]', '[O]', 'C', 'CC', 'C[CH2]', 'C=C', 'C=[CH]',
+#              'C#C', 'C#[C]', 'CO', '[CH2]=O', 'C[O]', 'OC=O', 'OC=[O]', 'O[C]O', 'COC',
+#              'CO[CH2]', 'C=O', 'O=[CH]', 'CCl', '[CH2]Cl', 'S', '[SH]', 'N', '[NH2]']
+
+#for smiles in SMILES_LST:
+#    ich = automol.convert.smiles.inchi(smiles)
+#    print(ich)
+#SPC_TAB['inchi'] = list(map(automol.smiles.inchi, SPC_TAB['smiles']))
+
 SPC_TAB['charge'] = 0
-ICH_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['inchi']))
+SMI_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['smiles']))
 CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
 MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
 SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
 SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
 
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
+print(GEOM_PATH)
 GEOM_DCT = {}
 for dir_path, _, file_names in os.walk(GEOM_PATH):
     for file_name in file_names:
         file_path = os.path.join(dir_path, file_name)
         if file_path.endswith('.xyz'):
             xyz_str = autofile.file.read_file(file_path)
+            print(file_path)
+            print(xyz_str)
             geo = automol.geom.from_xyz_string(xyz_str)
             ich = automol.geom.inchi(geo)
             if ich in GEOM_DCT:
                 print('Warning: Dupilicate xyz geometry for ', ich)
             GEOM_DCT[ich] = geo
+            print(geo)
 
+# take starting geometry from saved directory if possible, otherwise get it from inchi via rdkit
 
 def inchi_to_geometry(ich):
     if ich in GEOM_DCT:
@@ -108,10 +136,13 @@ THY_AFS = autofile.fs.theory(SPC_AFS, 'species')
 if RUN_SPECIES:
     for name in SPC_NAMES:
         # species
-        ich = ICH_DCT[name]
+        print("Species: {}".format(name))
+        smi = SMI_DCT[name]
+        ich = automol.smiles.inchi(smi)
+        print("smiles: {}".format(smi),"inchi: {}".format(ich))
+#        ich = ICH_DCT[name]
         charge = CHG_DCT[name]
         mult = MUL_DCT[name]
-        print("Species: {}".format(name))
 
         # theory
         method = METHOD
@@ -125,7 +156,8 @@ if RUN_SPECIES:
         spc_alocs = [ich, charge, mult]         # aloc = absolute locator
         thy_rlocs = [method, basis, orb_restr]  # rloc = relative locator
         thy_alocs = spc_alocs + thy_rlocs
-
+        print(RUN_PREFIX)
+        print(thy_alocs)
         THY_AFS.theory.dir.create(RUN_PREFIX, thy_alocs)
         THY_AFS.theory.dir.create(SAVE_PREFIX, thy_alocs)
 
@@ -139,9 +171,16 @@ if RUN_SPECIES:
 
         zma = automol.geom.zmatrix(geo)
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        tors_ranges = automol.zmatrix.torsional_sampling_ranges(zma,
-                                                                tors_names)
+        tors_ranges = automol.zmatrix.torsional_sampling_ranges(
+            zma, tors_names)
         tors_range_dct = dict(zip(tors_names, tors_ranges))
+
+        gra = automol.inchi.graph(ich)
+        ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+        print ('nsamp generation')
+        print(ntaudof)
+        nsamp = min(NSAMP_A + NSAMP_B * NSAMP_C**ntaudof, NSAMP_D)
+        print(nsamp)
 
         moldr.driver.save_conformers(
             run_prefix=thy_run_path,
@@ -155,12 +194,14 @@ if RUN_SPECIES:
             method=method,
             basis=basis,
             orb_restr=orb_restr,
-            nsamp=NSAMP,
+            nsamp=nsamp,
             tors_range_dct=tors_range_dct,
             run_prefix=thy_run_path,
             save_prefix=thy_save_path,
             script_str=SCRIPT_STR,
             prog=PROG,
+            overwrite=OVERWRITE,
+            run_over=RUN_OVER,
             **KWARGS,
         )
 
@@ -193,6 +234,8 @@ if RUN_SPECIES:
                     basis=basis,
                     orb_restr=orb_restr,
                     prog=PROG,
+                    overwrite=OVERWRITE,
+                    run_over=RUN_OVER,
                     **KWARGS,
                 )
 
@@ -231,6 +274,8 @@ if RUN_SPECIES:
                     basis=basis,
                     orb_restr=orb_restr,
                     prog=PROG,
+                    overwrite=OVERWRITE,
+                    run_over=RUN_OVER,
                 )
 
                 ret = moldr.driver.read_job(
@@ -287,6 +332,8 @@ if RUN_SPECIES:
                     save_prefix=cnf_save_path,
                     script_str=SCRIPT_STR,
                     prog=PROG,
+                    overwrite=OVERWRITE,
+                    run_over=RUN_OVER,
                     **KWARGS,
                 )
 
@@ -307,9 +354,37 @@ if RUN_SPECIES:
 
             print(hind_rot_dct)
 
+        if RUN_TAU_SAMPLING:
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+            tors_ranges = automol.zmatrix.torsional_sampling_ranges(
+                zma, tors_names)
+            tors_range_dct = dict(zip(tors_names, tors_ranges))
+            moldr.driver.run_tau(
+                zma=zma,
+                charge=charge,
+                mult=mult,
+                method=method,
+                basis=basis,
+                orb_restr=orb_restr,
+                nsamp=nsamp,
+                tors_range_dct=tors_range_dct,
+                run_prefix=thy_run_path,
+                save_prefix=thy_save_path,
+                script_str=SCRIPT_STR,
+                prog=PROG,
+                overwrite=OVERWRITE,
+                run_over=RUN_OVER,
+                **KWARGS,
+            )
+
+            moldr.driver.save_tau(
+                run_prefix=thy_run_path,
+                save_prefix=thy_save_path,
+            )
+
         hess = cnf_afs.conf.file.hessian.read(thy_save_path, min_cnf_alocs)
         freqs = elstruct.util.harmonic_frequencies(geo, hess)
-        zpe = sum(freqs)/2.
+        zpe = sum(freqs)*WAVEN2KCAL/2.
 
 #       hind_rot = 
 # to be generalized
@@ -342,8 +417,11 @@ if RUN_REACTIONS:
         print("Reaction: {}".format(rxn_name))
 
         # determine inchis, charges, and multiplicities
-        rct_ichs = list(map(ICH_DCT.__getitem__, rct_names))
-        prd_ichs = list(map(ICH_DCT.__getitem__, prd_names))
+
+        rct_smis = list(map(SMI_DCT.__getitem__, rct_names))
+        prd_smis = list(map(SMI_DCT.__getitem__, prd_names))
+        rct_ichs = list(map(automol.smiles.inchi,rct_smis))
+        prd_ichs = list(map(automol.smiles.inchi,prd_smis))
         rct_chgs = list(map(CHG_DCT.__getitem__, rct_names))
         prd_chgs = list(map(CHG_DCT.__getitem__, prd_names))
         rct_muls = list(map(MUL_DCT.__getitem__, rct_names))
@@ -359,7 +437,7 @@ if RUN_REACTIONS:
             rct_ichs, prd_ichs = prd_ichs, rct_ichs
             rct_chgs, prd_chgs = prd_chgs, rct_chgs
             rct_muls, prd_muls = prd_muls, rct_muls
-            print('reactions reversed')
+            print('ts search will be performed in reverse direction')
 
         # determine the transition state z-matrix
         rct_zmas = list(
@@ -476,6 +554,8 @@ if RUN_REACTIONS:
                 save_prefix=thy_save_path,
                 script_str=SCRIPT_STR,
                 prog=PROG,
+                overwrite=OVERWRITE,
+                run_over=RUN_OVER,
                 update_guess=False,
                 reverse_sweep=False,
                 **KWARGS
@@ -517,6 +597,8 @@ if RUN_REACTIONS:
                 orb_restr=orb_restr,
                 prog=PROG,
                 saddle=True,
+                overwrite=OVERWRITE,
+                run_over=RUN_OVER,
                 **KWARGS,
             )
             opt_ret = moldr.driver.read_job(
@@ -552,6 +634,8 @@ if RUN_REACTIONS:
                     basis=basis,
                     orb_restr=orb_restr,
                     prog=PROG,
+                    overwrite=OVERWRITE,
+                    run_over=RUN_OVER,
                     **KWARGS,
                 )
                 hess_ret = moldr.driver.read_job(
@@ -572,7 +656,6 @@ if RUN_REACTIONS:
                     ts_afs.ts.file.hessian_input.write(inp_str, thy_save_path)
                     ts_afs.ts.file.hessian.write(hess, thy_save_path)
                     ts_afs.ts.file.harmonic_frequencies.write(freqs, thy_save_path)
-
 
 
 sys.exit()

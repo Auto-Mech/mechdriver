@@ -4,8 +4,11 @@ END
 
 SPECIES  
 H
+H2
 OH
+H2O
 OOH
+H2O2
 CH3
 O
 CH4
@@ -25,12 +28,12 @@ CH3OCH3
 CH3OCH2
 H2CO
 HCO
-CH3CL
-CH2CL
-H2S
-HS
 NH3
 NH2
+H2S
+HS
+CH3CL
+CH2CL
 END
 
 
@@ -57,7 +60,7 @@ C2H2+CH3=CCH+CH4             1.e10           0.0         10000.
 C2H2+O=CCH+OH                1.e10           0.0         10000.
 CH3OH+H=CH2OH+H2                1.e10           0.0         10000.
 CH3OH+OH=CH2OH+H2O              1.e10           0.0         10000.
-CH3OH+OOH=CH2OH+H2              1.e10           0.0         10000.
+CH3OH+OOH=CH2OH+H2O2              1.e10           0.0         10000.
 CH3OH+CH3=CH2OH+CH4             1.e10           0.0         10000.
 CH3OH+O=CH2OH+OH                1.e10           0.0         10000.
 CH3OH+H=CH3O+H2                1.e10           0.0         10000.
