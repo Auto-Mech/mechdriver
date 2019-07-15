@@ -18,6 +18,8 @@ def run_conformers(zma, charge, mult, method, basis, orb_restr,
         print("No torsional coordinates. Setting nsamp to 1.")
         nsamp = 1
 
+    print('Number of samples requested:', nsamp)
+
     afs = autofile.fs.conformer()
     afs.conf_trunk.dir.create(save_prefix)
 
@@ -25,52 +27,56 @@ def run_conformers(zma, charge, mult, method, basis, orb_restr,
     if afs.conf_trunk.file.vmatrix.exists(save_prefix):
         existing_vma = afs.conf_trunk.file.vmatrix.read(save_prefix)
         assert vma == existing_vma
+    afs.conf_trunk.file.vmatrix.write(vma, save_prefix)
     idx = 0
     nsamp0 = nsamp
     inf_obj = autofile.system.info.conformer_trunk(0, tors_ranges=tors_range_dct)
-    while nsamp > 0:
-        idx += 1
+    while True:
         if afs.conf_trunk.file.info.exists(save_prefix):
-            inf_obj = afs.conf_trunk.file.info.read(save_prefix)
-            nsampd = inf_obj.nsamp
-            nsamp = max(nsamp0 - nsampd,0)
-            print("Found previous saved run. Adjusting nsamp.")
-            print("    New nsamp is {:d}.".format(nsamp))
+            inf_obj_s = afs.conf_trunk.file.info.read(save_prefix)
+            nsampd = inf_obj_s.nsamp
+        elif afs.conf_trunk.file.info.exists(run_prefix):
+            inf_obj_r = afs.conf_trunk.file.info.read(run_prefix)
+            nsampd = inf_obj_r.nsamp
         else:
             nsampd = 0
 
+        nsamp = nsamp0 - nsampd
         if nsamp <= 0:
+            print('Reached requested number of samples. Conformer search complete.')
             break
-        afs.conf_trunk.file.vmatrix.write(vma, save_prefix)
+        else:
+            print("    New nsamp requested is {:d}.".format(nsamp))
 
-        samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
-        cid = autofile.system.generate_new_conformer_id()
-        alocs = [cid]
+            samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+            cid = autofile.system.generate_new_conformer_id()
+            alocs = [cid]
 
-        afs.conf.dir.create(run_prefix, alocs)
+            afs.conf.dir.create(run_prefix, alocs)
 
-        run_path = afs.conf.dir.path(run_prefix, alocs)
+            run_path = afs.conf.dir.path(run_prefix, alocs)
 
-        print("Run {}/{}".format(idx, nsamp0))
-        nsampd += 1
-        inf_obj.nsamp = nsampd
-        afs.conf_trunk.file.info.write(inf_obj, save_prefix)
-        run_job(
-            job=elstruct.Job.OPTIMIZATION,
-            script_str=script_str,
-            prefix=run_path,
-            geom=samp_zma,
-            charge=charge,
-            mult=mult,
-            method=method,
-            basis=basis,
-            orb_restr=orb_restr,
-            prog=prog,
-            overwrite=overwrite,
-            run_over=run_over,
-            **kwargs
-        )
-        afs.conf_trunk.file.info.write(inf_obj, save_prefix)
+            idx += 1
+            print("Run {}/{}".format(idx, nsamp))
+            run_job(
+                job=elstruct.Job.OPTIMIZATION,
+                script_str=script_str,
+                prefix=run_path,
+                geom=samp_zma,
+                charge=charge,
+                mult=mult,
+                method=method,
+                basis=basis,
+                orb_restr=orb_restr,
+                prog=prog,
+                overwrite=overwrite,
+                run_over=run_over,
+                **kwargs
+            )
+            nsampd += 1
+            inf_obj.nsamp = nsampd
+            afs.conf_trunk.file.info.write(inf_obj, save_prefix)
+            afs.conf_trunk.file.info.write(inf_obj, run_prefix)
 
 
 def save_conformers(run_prefix, save_prefix):
@@ -79,7 +85,10 @@ def save_conformers(run_prefix, save_prefix):
     afs = autofile.fs.conformer()
 
     seen_geos = [afs.conf.file.geometry.read(save_prefix, alocs)
-                  for alocs in afs.conf.dir.existing(save_prefix)]
+                 for alocs in afs.conf.dir.existing(save_prefix)]
+    seen_enes = [afs.conf.file.energy.read(save_prefix, alocs)
+                 for alocs in afs.conf.dir.existing(save_prefix)]
+    assert len(seen_geos) == len(seen_enes)
 
     if not afs.conf_trunk.dir.exists(run_prefix):
         print("No conformers to save. Skipping...")
@@ -101,7 +110,17 @@ def save_conformers(run_prefix, save_prefix):
                 if len(automol.graph.connected_components(gra)) > 1:
                     print(" - Geometry is disconnected.. Skipping...")
                 else:
-                    if not _unique_coulomb_spectrum(geo, seen_geos):
+                    unique = True
+
+                    for idx in range(len(seen_geos)):
+                        geoi = seen_geos[idx]
+                        enei = seen_enes[idx]
+                        etol = 1.e-6
+                        if automol.geom.almost_equal_coulomb_spectrum(geo, geoi, rtol=1e-2):
+                            if abs(ene-enei) < etol:
+                                unique = False
+
+                    if not unique:
                         print(" - Geometry is not unique. Skipping...")
                     else:
                         save_path = afs.conf.dir.path(save_prefix, alocs)
@@ -117,6 +136,7 @@ def save_conformers(run_prefix, save_prefix):
                         afs.conf.file.geometry.write(geo, save_prefix, alocs)
 
                 seen_geos.append(geo)
+                seen_enes.append(ene)
 
         # update the conformer trajectory file
         alocs_lst = afs.conf.dir.existing(save_prefix)
@@ -138,8 +158,8 @@ def save_conformers(run_prefix, save_prefix):
 
 # tau sampling for partition function
 def run_tau(zma, charge, mult, method, basis, orb_restr,
-            nsamp, tors_range_dct, run_prefix, save_prefix, script_str,
-            prog, overwrite, run_over, **kwargs):
+                   nsamp, tors_range_dct, run_prefix, save_prefix, script_str,
+                   prog, overwrite, run_over, **kwargs):
     """ run sampling algorithm to find tau dependent geometries
     """
     if not tors_range_dct:
@@ -153,53 +173,62 @@ def run_tau(zma, charge, mult, method, basis, orb_restr,
     if afs.tau_trunk.file.vmatrix.exists(save_prefix):
         existing_vma = afs.tau_trunk.file.vmatrix.read(save_prefix)
         assert vma == existing_vma
+    afs.tau_trunk.file.vmatrix.write(vma, save_prefix)
     idx = 0
     nsamp0 = nsamp
     inf_obj = autofile.system.info.tau_trunk(0, tors_ranges=tors_range_dct)
-    while nsamp > 0:
-        idx += 1
+    while True:
         if afs.tau_trunk.file.info.exists(save_prefix):
-            inf_obj = afs.tau_trunk.file.info.read(save_prefix)
-            nsampd = inf_obj.nsamp
-            nsamp = max(nsamp0 - nsampd, 0)
-            print("Found previous saved run. Adjusting nsamp.")
-            print("    New nsamp is {:d}.".format(nsamp))
+            inf_obj_s = afs.tau_trunk.file.info.read(save_prefix)
+            nsampd = inf_obj_s.nsamp
+            if nsampd > 0:
+                print("Found previous nsamp in save directory. Adjusting nsamp.")
+                print("    New nsamp is {:d}.".format(nsamp))
+        elif afs.tau_trunk.file.info.exists(run_prefix):
+            inf_obj_r = afs.tau_trunk.file.info.read(run_prefix)
+            nsampd = inf_obj_r.nsamp
+            if nsampd > 0:
+                print("Found previous nsamp in run directory. Adjusting nsamp.")
+                print("    New nsamp is {:d}.".format(nsamp))
         else:
             nsampd = 0
 
+        nsamp = nsamp0 - nsampd
         if nsamp <= 0:
+            print('Reached requested number of samples. Tau sampling complete.')
             break
-        afs.tau_trunk.file.vmatrix.write(vma, save_prefix)
+        else:
 
-        samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
-        cid = autofile.system.generate_new_conformer_id()
-        alocs = [cid]
+            samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+            tid = autofile.system.generate_new_tau_id()
+            alocs = [tid]
 
-        afs.tau.dir.create(run_prefix, alocs)
+            afs.tau.dir.create(run_prefix, alocs)
 
-        run_path = afs.tau.dir.path(run_prefix, alocs)
+            run_path = afs.tau.dir.path(run_prefix, alocs)
 
-        print("Run {}/{}".format(idx, nsamp0))
-        nsampd += 1
-        inf_obj.nsamp = nsampd
-        afs.tau_trunk.file.info.write(inf_obj, save_prefix)
-        run_job(
-            job=elstruct.Job.OPTIMIZATION,
-            script_str=script_str,
-            prefix=run_path,
-            geom=samp_zma,
-            charge=charge,
-            mult=mult,
-            method=method,
-            basis=basis,
-            orb_restr=orb_restr,
-            prog=prog,
-            overwrite=overwrite,
-            run_over=run_over,
-            frozen_coordinates=tors_range_dct.keys(),
-            **kwargs
-        )
-        afs.tau_trunk.file.info.write(inf_obj, save_prefix)
+            idx += 1
+            print("Run {}/{}".format(idx, nsamp))
+            run_job(
+                job=elstruct.Job.OPTIMIZATION,
+                script_str=script_str,
+                prefix=run_path,
+                geom=samp_zma,
+                charge=charge,
+                mult=mult,
+                method=method,
+                basis=basis,
+                orb_restr=orb_restr,
+                prog=prog,
+                overwrite=overwrite,
+                run_over=run_over,
+                frozen_coordinates=tors_range_dct.keys(),
+                **kwargs
+            )
+            nsampd += 1
+            inf_obj.nsamp = nsampd
+            afs.tau_trunk.file.info.write(inf_obj, save_prefix)
+            afs.tau_trunk.file.info.write(inf_obj, run_prefix)
 
 
 def save_tau(run_prefix, save_prefix):
@@ -258,16 +287,10 @@ def save_tau(run_prefix, save_prefix):
             afs.tau_trunk.file.trajectory.write(traj, save_prefix)
 
 
-def _unique_coulomb_spectrum(geo, seen_geos, rtol=2e-5):
-    return not any(
-        automol.geom.almost_equal_coulomb_spectrum(geo, seen_geo, rtol)
-        for seen_geo in seen_geos)
-
-
 # constrained optimization scans
 def run_scan(zma, charge, mult, method, basis, orb_restr,
              grid_dct, run_prefix, save_prefix, script_str,
-             prog, overwrite, run_over, update_guess=True, 
+             prog, overwrite, run_over, update_guess=True,
              reverse_sweep=True, **kwargs):
     """ run constrained optimization scan
     """
