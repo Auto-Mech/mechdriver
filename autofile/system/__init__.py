@@ -6,6 +6,7 @@ from autofile.system import file_
 from autofile.system import dir_
 from autofile.system import series
 from autofile.system.map_ import generate_new_conformer_id
+from autofile.system.map_ import generate_new_tau_id
 from autofile.system.map_ import sort_together
 from autofile.system.map_ import reaction_direction
 from autofile.system.map_ import get_next_build_number
@@ -19,6 +20,7 @@ __all__ = [
     'dir_',
     'series',
     'generate_new_conformer_id',
+    'generate_new_tau_id',
     'sort_together',
     'reaction_direction',
     'utc_time',

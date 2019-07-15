@@ -194,7 +194,7 @@ def conformer_leaf(cid):
 def generate_new_conformer_id():
     """ generate a new conformer identifier
     """
-    return _random_string_identifier()
+    return 'c'+_random_string_identifier()
 
 
 # single point
@@ -235,6 +235,12 @@ def tau_leaf(cid):
     """
     assert _is_random_string_identifier(cid)
     return cid
+
+
+def generate_new_tau_id():
+    """ generate a new conformer identifier
+    """
+    return 't'+_random_string_identifier()
 
 
 # builds (MESS, NASA Poly, etc.)

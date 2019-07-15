@@ -57,13 +57,30 @@ RUN_REACTIONS = True
 RUN_GRADIENT = True
 RUN_HESSIAN = True
 RUN_CONFORMER_SCAN = True
-RUN_TAU_SAMPLING = True
+RUN_TAU_SAMPLING = False
 
 # Parameters for number of torsional samplings
 NSAMP_A = 3
 NSAMP_B = 1
 NSAMP_C = 3
 NSAMP_D = 15
+
+# Parameters for partition function and kinetics
+# Temperatue and pressure
+TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
+TEMP_STEP = 100.
+NTEMPS = 30.
+PRESS = [0.1, 1., 10., 100.]
+# Collisional parameters
+EXP_FACTOR = 150.0
+EXP_POWER = 50.0
+EXP_CUTOFF = 80.0
+EPS1 = 100.0
+EPS2 = 200.0
+SIG1 = 10.0
+SIG2 = 20.0
+MASS1 = 15.0
+MASS2 = 25.0
 
 # Defaults
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
@@ -87,6 +104,7 @@ MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
 SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
 
 # 4. process species data from the mechanism file
+
 #SMILES_LST = ['[H]', '[OH]', 'O[O]', '[CH3]', '[O]', 'C', 'CC', 'C[CH2]', 'C=C', 'C=[CH]',
 #              'C#C', 'C#[C]', 'CO', '[CH2]=O', 'C[O]', 'OC=O', 'OC=[O]', 'O[C]O', 'COC',
 #              'CO[CH2]', 'C=O', 'O=[CH]', 'CCl', '[CH2]Cl', 'S', '[SH]', 'N', '[NH2]']
@@ -177,10 +195,7 @@ if RUN_SPECIES:
 
         gra = automol.inchi.graph(ich)
         ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
-        print ('nsamp generation')
-        print(ntaudof)
         nsamp = min(NSAMP_A + NSAMP_B * NSAMP_C**ntaudof, NSAMP_D)
-        print(nsamp)
 
         moldr.driver.save_conformers(
             run_prefix=thy_run_path,
@@ -355,6 +370,11 @@ if RUN_SPECIES:
             print(hind_rot_dct)
 
         if RUN_TAU_SAMPLING:
+            moldr.driver.save_tau(
+                run_prefix=thy_run_path,
+                save_prefix=thy_save_path,
+            )
+
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
             tors_ranges = automol.zmatrix.torsional_sampling_ranges(
                 zma, tors_names)
@@ -391,13 +411,28 @@ if RUN_SPECIES:
         symfactor = 1.
 # in pyx2z but not in automol yet.
         elec_levels = [[mult, 0.]]
-        
+
+# create a messpf input file
+        temp_step = TEMP_STEP
+        ntemps = NTEMPS
+        print(temp_step)
+        print(ntemps)
+#        atom_dist_min = '0.6'
+#        global_pf_str ='AtomDistanceMin[angstrom] ' + atom_dist_min
+        global_pf_str = mess_io.writer.write_global_pf(
+            temp_step, ntemps, rel_temp_inc=0.001, atom_dist_min=0.6)
+        print(global_pf_str)
+        species_head_str = 'Species ' + name
+        print(species_head_str)
+
         core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
-        molecule_section_str1 = mess_io.writer.write_molecule(
-            core, freqs, zpe, elec_levels,
-            hind_rot='',
-        ) 
-        print (molecule_section_str1)
+        species_str = mess_io.writer.write_molecule(
+            core, freqs, zpe, elec_levels, hind_rot='',
+        )
+        print(species_str)
+# how do I store this string in a list of strings addressable by name?
+
+        sys.exit()
 
 
 # 5. process reaction data from the mechanism file
@@ -420,8 +455,8 @@ if RUN_REACTIONS:
 
         rct_smis = list(map(SMI_DCT.__getitem__, rct_names))
         prd_smis = list(map(SMI_DCT.__getitem__, prd_names))
-        rct_ichs = list(map(automol.smiles.inchi,rct_smis))
-        prd_ichs = list(map(automol.smiles.inchi,prd_smis))
+        rct_ichs = list(map(automol.smiles.inchi, rct_smis))
+        prd_ichs = list(map(automol.smiles.inchi, prd_smis))
         rct_chgs = list(map(CHG_DCT.__getitem__, rct_names))
         prd_chgs = list(map(CHG_DCT.__getitem__, prd_names))
         rct_muls = list(map(MUL_DCT.__getitem__, rct_names))
@@ -431,7 +466,9 @@ if RUN_REACTIONS:
         rxn_ichs = [rct_ichs, prd_ichs]
         rxn_chgs = [rct_chgs, prd_chgs]
         rxn_muls = [rct_muls, prd_muls]
-        rxn_exo = moldr.util.reaction_energy(SAVE_PREFIX, rxn_ichs, rxn_chgs, rxn_muls, method, basis, RESTRICT_OPEN_SHELL)
+        rxn_exo = moldr.util.reaction_energy(
+            SAVE_PREFIX, rxn_ichs, rxn_chgs, rxn_muls, method, basis, RESTRICT_OPEN_SHELL
+            )
         print(rxn_exo)
         if rxn_exo > 0:
             rct_ichs, prd_ichs = prd_ichs, rct_ichs
@@ -657,5 +694,49 @@ if RUN_REACTIONS:
                     ts_afs.ts.file.hessian.write(hess, thy_save_path)
                     ts_afs.ts.file.harmonic_frequencies.write(freqs, thy_save_path)
 
+        sys.exit()
+
+        print('Mess Input for')
+        print(rxn_name)
+# header section
+        header_section_str = mess_io.writer.write_global_reaction(temperatures, pressures)
+        print(header_section_str)
+# energy transfer section
+        energy_trans_section_str = mess_io.writer.write_energy_transfer(
+            exp_factor, exp_power, exp_cutoff, eps1, eps2, sig1, sig2, mass1, mass2)
+        print(energy_trans_section_str)
+#        if reaction_typ = addition:
+# reactants
+#            print(species_str(rct1))
+#            print(species_str(rct2))
+# well
+#            print(species_str(prod1))
+#        if reaction_typ = abstraction:
+# reactants
+#            print(species_str(rct1))
+#            print(species_str(rct2))
+# vdw
+#           for vdw_species in ...
+#                   print(species_str(vdwi))
+# products
+#            print(species_str(prod1))
+#            print(species_str(prod2))
+
+#        if reaction_typ = abstraction
+# reactants
+#            print(species_str(rct1))
+#            print(species_str(rct2))
+# vdw
+#            print(species_str(vdw1))
+#            print(species_str(vdw2))
+# products
+#            print(species_str(prod1))
+#            print(species_str(prod2))
+# ts
+        core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
+        molecule_section_str1 = mess_io.writer.write_molecule(
+            core, freqs, zpe, elec_levels, hind_rot='',
+        )
+        print(molecule_section_str1)
 
 sys.exit()
