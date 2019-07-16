@@ -19,12 +19,6 @@ jobs:
                     pytest -v --cov=autofile --pyargs autofile
                     flake8 --exit-zero autofile
                     pylint --rcfile=../.pylintrc autofile
-            - run:
-                name: Test moldr
-                command: |
-                    source activate moldr-env
-                    cd scripts 
-                    python estoktp.py
 workflows:
     version: 2
     build-all:

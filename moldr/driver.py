@@ -11,7 +11,7 @@ import moldr.runner
 # conformer sampling
 def run_conformers(zma, charge, mult, method, basis, orb_restr,
                    nsamp, tors_range_dct, run_prefix, save_prefix, script_str,
-                   prog, overwrite, run_over, **kwargs):
+                   prog, overwrite, **kwargs):
     """ run sampling algorithm to find conformers
     """
     if not tors_range_dct:
@@ -57,7 +57,7 @@ def run_conformers(zma, charge, mult, method, basis, orb_restr,
             run_path = afs.conf.dir.path(run_prefix, alocs)
 
             idx += 1
-            print("Run {}/{}".format(idx, nsamp))
+            print("Run {}/{}".format(idx, nsamp0))
             run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
@@ -70,7 +70,6 @@ def run_conformers(zma, charge, mult, method, basis, orb_restr,
                 orb_restr=orb_restr,
                 prog=prog,
                 overwrite=overwrite,
-                run_over=run_over,
                 **kwargs
             )
             nsampd += 1
@@ -158,8 +157,8 @@ def save_conformers(run_prefix, save_prefix):
 
 # tau sampling for partition function
 def run_tau(zma, charge, mult, method, basis, orb_restr,
-                   nsamp, tors_range_dct, run_prefix, save_prefix, script_str,
-                   prog, overwrite, run_over, **kwargs):
+            nsamp, tors_range_dct, run_prefix, save_prefix, script_str,
+            prog, overwrite, **kwargs):
     """ run sampling algorithm to find tau dependent geometries
     """
     if not tors_range_dct:
@@ -208,7 +207,7 @@ def run_tau(zma, charge, mult, method, basis, orb_restr,
             run_path = afs.tau.dir.path(run_prefix, alocs)
 
             idx += 1
-            print("Run {}/{}".format(idx, nsamp))
+            print("Run {}/{}".format(idx, nsamp0))
             run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
@@ -221,7 +220,6 @@ def run_tau(zma, charge, mult, method, basis, orb_restr,
                 orb_restr=orb_restr,
                 prog=prog,
                 overwrite=overwrite,
-                run_over=run_over,
                 frozen_coordinates=tors_range_dct.keys(),
                 **kwargs
             )
@@ -290,7 +288,7 @@ def save_tau(run_prefix, save_prefix):
 # constrained optimization scans
 def run_scan(zma, charge, mult, method, basis, orb_restr,
              grid_dct, run_prefix, save_prefix, script_str,
-             prog, overwrite, run_over, update_guess=True,
+             prog, overwrite,  update_guess=True,
              reverse_sweep=True, **kwargs):
     """ run constrained optimization scan
     """
@@ -342,7 +340,6 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
         orb_restr=orb_restr,
         prog=prog,
         overwrite=overwrite,
-        run_over=run_over,
         update_guess=update_guess,
         **kwargs
     )
@@ -362,7 +359,6 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
             orb_restr=orb_restr,
             prog=prog,
             overwrite=overwrite,
-            run_over=run_over,
             update_guess=update_guess,
             **kwargs
         )
@@ -371,7 +367,7 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
 def _run_1d_scan(script_str, prefixes,
                  guess_zma, coo_name, grid_idxs, grid_vals,
                  charge, mult, method, basis, orb_restr, prog,
-                 overwrite, run_over, 
+                 overwrite,  
                  errors=(), options_mat=(), 
                  retry_failed=True,
                  update_guess=True,
@@ -394,7 +390,6 @@ def _run_1d_scan(script_str, prefixes,
             orb_restr=orb_restr,
             prog=prog,
             overwrite=overwrite,
-            run_over=run_over,
             frozen_coordinates=[coo_name],
             errors=errors,
             options_mat=options_mat,
@@ -491,7 +486,6 @@ def run_job(job, script_str, prefix,
             geom, charge, mult, method, basis, orb_restr, prog,
             errors=(), options_mat=(), retry_failed=True, feedback=False,
             frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
-            run_over=False,
             **kwargs):
     """ run an elstruct job by name
     """
@@ -522,13 +516,8 @@ def run_job(job, script_str, prefix,
                 if inf_obj.status == autofile.system.RunStatus.SUCCESS:
                     print(" - Found completed {} job at {}".format(job, run_path))
                 else:
-                    if run_over:
-                        do_run = True
-                        print(" - Found apparent running {} job at {}".format(job, run_path))
-                        print(" - but will rerun anyway...")
-                    else:
-                        print(" - Found running {} job at {}".format(job, run_path))
-                        print(" - Skipping...")
+                    print(" - Found running {} job at {}".format(job, run_path))
+                    print(" - Skipping...")
 
     if do_run:
         # create the run directory

@@ -26,7 +26,7 @@ class AttributeName():
     RUN_TRUNK = 'run_trunk'
     RUN_LEAF = 'run'
     BUILD_TRUNK = 'build_trunk'
-    BUILD_LEAF = 'build_leaf'
+    BUILD_LEAF = 'build'
 
 
 def empty():

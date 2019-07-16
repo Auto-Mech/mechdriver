@@ -57,7 +57,7 @@ def reaction_leaf(rxn_ichs, rxn_chgs, rxn_muls, ts_mult):
                         str(ts_mult))
 
 
-def reaction_direction(rxn_ichs, rxn_chgs, rxn_muls):
+def reaction_is_reversed(rxn_ichs, rxn_chgs, rxn_muls):
     """ sort inchis, chgs, and muliplicities together
     """
 
@@ -70,7 +70,7 @@ def reaction_direction(rxn_ichs, rxn_chgs, rxn_muls):
     ichs1, chgs1, muls1 = _sort_together(ichs1, chgs1, muls1)
     ichs2, chgs2, muls2 = _sort_together(ichs2, chgs2, muls2)
 
-    return (_sortable_representation(ichs1, chgs1, muls1) <
+    return (_sortable_representation(ichs1, chgs1, muls1) >
             _sortable_representation(ichs2, chgs1, muls1))
 
 
@@ -87,8 +87,7 @@ def sort_together(rxn_ichs, rxn_chgs, rxn_muls):
     ichs1, chgs1, muls1 = _sort_together(ichs1, chgs1, muls1)
     ichs2, chgs2, muls2 = _sort_together(ichs2, chgs2, muls2)
 
-    if (_sortable_representation(ichs1, chgs1, muls1) >
-            _sortable_representation(ichs2, chgs1, muls1)):
+    if reaction_is_reversed(rxn_ichs, rxn_chgs, rxn_muls):
         ichs1, ichs2 = ichs2, ichs1
         chgs1, chgs2 = chgs2, chgs1
         muls1, muls2 = muls2, muls1
@@ -187,7 +186,8 @@ def conformer_trunk():
 def conformer_leaf(cid):
     """ conformer leaf directory name
     """
-    assert _is_random_string_identifier(cid)
+    assert cid[0] == 'c'
+    assert _is_random_string_identifier(cid[1:])
     return cid
 
 
@@ -230,11 +230,12 @@ def tau_trunk():
     return 'TAU'
 
 
-def tau_leaf(cid):
+def tau_leaf(tid):
     """ tau leaf directory name
     """
-    assert _is_random_string_identifier(cid)
-    return cid
+    assert tid[0] == 't'
+    assert _is_random_string_identifier(tid[1:])
+    return tid
 
 
 def generate_new_tau_id():
