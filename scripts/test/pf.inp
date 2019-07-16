@@ -1,0 +1,19 @@
+Temperature(step[K],size)              100.0    30
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.6
+Species OH
+RRHO
+  Geometry[angstrom]        2
+    O     0.00000000    0.00000000    0.10855196
+    H     0.00000000    0.00000000   -0.86841565
+  Core RigidRotor
+    SymmetryFactor          1.0
+  End
+  Frequencies[1/cm]         1
+   3745.84   
+  ZeroEnergy[kcal/mol]      5.609766683500413
+  ElectronicLevels[1/cm]    1
+    0.0  2
+End
+
+

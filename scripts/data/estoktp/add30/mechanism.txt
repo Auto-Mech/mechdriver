@@ -3,11 +3,10 @@ C H N O
 END    
 
 SPECIES  
-OCH(OOH)OH
+H
 OH
 OOH
 CH3
-H
 O
 C2H4
 C2H5
@@ -25,6 +24,7 @@ OCHOH
 OCH2OH
 OCH(OH)2
 OCH(O)OH
+OCH(OOH)OH
 CH(OH)2
 CH3OCHOH
 OOCHOH
@@ -43,8 +43,8 @@ END
 
 
 REACTIONS   MOLES  KELVINS   
-C2H4+H=C2H5                1.e10           0.0         10000.
 C2H4+OH=C2H4OH                1.e10           0.0         10000.
+C2H4+H=C2H5                1.e10           0.0         10000.
 C2H4+OOH=C2H4OOH                1.e10           0.0         10000.
 C2H4+CH3=C3H7                1.e10           0.0         10000.
 C2H4+O=CH2CH2O                1.e10           0.0         10000.

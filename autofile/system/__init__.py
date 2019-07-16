@@ -8,7 +8,7 @@ from autofile.system import series
 from autofile.system.map_ import generate_new_conformer_id
 from autofile.system.map_ import generate_new_tau_id
 from autofile.system.map_ import sort_together
-from autofile.system.map_ import reaction_direction
+from autofile.system.map_ import reaction_is_reversed
 from autofile.system.map_ import get_next_build_number
 from autofile.system.info import utc_time
 from autofile.system.info import RunStatus
