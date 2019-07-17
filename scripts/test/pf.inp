@@ -1,19 +1,37 @@
+!+++++++++++++++++++++++++++++++++++++++++++++++++++
+!  GLOBAL SECTION
+!+++++++++++++++++++++++++++++++++++++++++++++++++++
 Temperature(step[K],size)              100.0    30
 RelativeTemperatureIncrement           0.001
 AtomDistanceMin[angstrom]              0.6
-Species OH
+Species C2H6
 RRHO
-  Geometry[angstrom]        2
-    O     0.00000000    0.00000000    0.10855196
-    H     0.00000000    0.00000000   -0.86841565
+  Geometry[angstrom]        8
+    C    -0.00000000    0.76343570    0.00005100
+    C     0.00000000   -0.76343570    0.00005100
+    H    -0.50967880    1.15986654   -0.88438365
+    H    -0.51049780    1.16010954    0.88384865
+    H     1.02083259    1.15988754    0.00023000
+    H     0.50967880   -1.15986654   -0.88438365
+    H     0.51049780   -1.16010954    0.88384865
+    H    -1.02083259   -1.15988754    0.00023000
   Core RigidRotor
     SymmetryFactor          1.0
   End
-  Frequencies[1/cm]         1
-   3745.84   
-  ZeroEnergy[kcal/mol]      5.609766683500413
+  Frequencies[1/cm]         18
+    308.94    837.26    841.98    1027.32   1238.67   1240.48   
+    1434.80   1464.76   1537.53   1539.16   1542.39   1545.32   
+    3075.64   3076.89   3138.76   3139.51   3161.37   3162.09   
+  ZeroEnergy[kcal/mol]      47.512534548652106
   ElectronicLevels[1/cm]    1
-    0.0  2
+    0.0  1
+  Rotor  Hindered
+    Group                3   4   5   
+    Axis                 2   1   
+    Symmetry             1
+    Potential[kcal/mol]  4
+      0.00    1.33    2.78    1.34     
+  End
 End
 
 

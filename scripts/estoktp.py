@@ -65,6 +65,7 @@ KWARGS = {
 RUN_SPECIES_QCHEM = True
 RUN_REACTIONS_QCHEM = False
 RUN_VDW_QCHEM = False
+
 KICKOFF_SADDLE = False
 KICKOFF_BACKWARD = False
 KICKOFF_SIZE = 0.1
@@ -77,7 +78,7 @@ RUN_TS_CONFORMER_OPT = True
 RUN_TS_CONFORMER_SCAN = True
 RUN_TS_TAU_SAMPLING = False
 
-RUN_GRADIENT = True
+RUN_GRADIENT = False
 RUN_HESSIAN = True
 
 # What to run for thermochemical kinetics
@@ -189,6 +190,7 @@ def inchi_to_geometry(ich):
 
 
 if RUN_SPECIES_QCHEM:
+    species_str={}
     for name in SPC_NAMES:
         # species
         print("Species: {}".format(name))
@@ -538,6 +540,7 @@ if RUN_SPECIES_PF:
         if min_cnf_alocs is not None:
             geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
             hess = cnf_afs.conf.file.hessian.read(thy_save_path, min_cnf_alocs)
+            freqs = elstruct.util.harmonic_frequencies(geo, hess)
             zpe = sum(freqs)*WAVEN2KCAL/2.
             zma = automol.geom.zmatrix(geo)
             gra = automol.zmatrix.graph(zma, remove_stereo=True)
@@ -548,38 +551,31 @@ if RUN_SPECIES_PF:
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
             coo_dct = automol.zmatrix.coordinates(zma, multi=False)
             group_dct = {}
-            axis_dct = {}
-            sym_dct = {}
-            pot_dct = {}
+#            axis_dct = {}
+#            sym_dct = {}
+#            pot_dct = {}
+            hind_rot_str = ""
             for tors_name in tors_names:
                 enes = [scan_afs.scan.file.energy.read(cnf_save_path, [[tors_name]] + rlocs)
                         for rlocs in scan_afs.scan.dir.existing(cnf_save_path, [[tors_name]])]
                 enes = numpy.subtract(enes, min_ene)
-                pot_dct[tors_name] = enes*EH2KCAL
+                pot = list(enes*EH2KCAL)
                 axis = coo_dct[tors_name][1:3]
-                axis_dct[tors_name] = numpy.add(axis, 1)
                 group = list(automol.graph.branch_atom_keys(gra, axis[0], axis) - set(axis))
-                group_dct[tors_name] = numpy.add(group, 1)
-                sym_dct[tors_name] = 1
-                hind_rot_dct = {}
-                hind_rot_dct[tors_name] = mess.io.writer.write_hind_rot(
-                    group_dct[tors_name], axis_dct[tors_name],
-                    sym_dct[tors_name], pot_dct[tors_name])
+                group = list(numpy.add(group, 1))
+                axis = list(numpy.add(axis, 1))
+                sym = 1
+                hind_rot_str += mess_io.writer.write_rotor_hindered(
+                    group, axis, sym, pot)
+#                hind_rot_str += hind_roti_str
 
-            print('Species hindered rotor potential')
-            print(pot_dct)
-            print(group_dct)
-            print(axis_dct)
-
-#            hind_rot_key_str = '/n'.join([potential_dct,group_dct,axis_dct])
-#            print(hind_rot_key_str)
-
+            print('hina_rot_str test')
+            print(hind_rot_str)
 
 # set up messpf input
         elec_levels = [[0., mult]]
         if (ich, mult) in ELC_DEG_DCT:
             elec_levels = ELC_DEG_DCT[(ich, mult)]
-        freqs = elstruct.util.harmonic_frequencies(geo, hess)
 # to be generalized
         symfactor = 1.
 
@@ -593,20 +589,22 @@ if RUN_SPECIES_PF:
         print(species_head_str)
         if automol.geom.is_atom(geo):
             print('This is an atom')
-            species_str = mess_io.writer.write_atom(name, elec_levels)
+            species_str[name] = mess_io.writer.write_atom(name, elec_levels)
         else:
             if len(automol.geom.symbols(geo)) == 2:
                 freq_offset = 5
             else:
                 freq_offset = 6
             core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
-            if pot_dct is not None:
-                species_str = mess_io.writer.write_molecule(
+            if pot is not None:
+                species_str[name] = mess_io.writer.write_molecule(
                     core, freqs[freq_offset:], zpe, elec_levels,
-                    hind_rot='hind_rot_key_str',
+                    hind_rot=hind_rot_str,
                 )
-        print(species_str)
-        pf_inp_str = '\n'.join([global_pf_str, species_head_str, species_str])
+                freq_offset += 1
+        print(species_str[name])
+        pf_inp_str = '\n'.join(
+            [global_pf_str, species_head_str, species_str[name]])
         bld_afs = autofile.fs.build()
         bld_alocs = ['PF', 0]
         bld_afs.build.dir.create(thy_save_path, bld_alocs)
