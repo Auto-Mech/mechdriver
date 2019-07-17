@@ -52,6 +52,24 @@ class DataFile():
         return val
 
 
+class DataFileManager(types.SimpleNamespace):
+    """ manager mapping locator values to files and directories in a series
+    """
+
+    def __init__(self, dfile_dct=None):
+        """
+        :param dsdir: a DataSeriesDir object
+        :param dfiles: a sequence of pairs `("name", obj)` where `obj` is a
+            DataSeriesFile instance that will be accessible as `obj.file.name`
+        """
+        dfile_dct = {} if dfile_dct is None else dfile_dct
+
+        for name, dfile in dfile_dct.items():
+            assert isinstance(name, str)
+            assert isinstance(dfile, DataFile)
+            setattr(self, name, dfile)
+
+
 class DataSeriesDir():
     """ directory manager mapping locator values to a directory series
     """
@@ -166,6 +184,7 @@ class DataSeriesDir():
         return locs[:root_nlocs]
 
 
+# deprecated:
 class DataSeriesFile():
     """ file manager mapping locator values to files in a directory series
     """
