@@ -37,6 +37,10 @@ SCRIPT_STR = ("#!/usr/bin/env bash\n"
               "g09 run.inp run.out >> stdout.log &> stderr.log")
 PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
               "messpf build.inp build.out >> stdout.log &> stderr.log")
+NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+              "cp ../PF/build.out pf.dat"
+              "cp /tcghome/sjklipp/PACC/nasa/new.groups ."
+              "python /tcghome/sjklipp/PACC/nasa/makepoly.py >> stdout.log &> stderr.log")
 METHOD = 'wb97xd'
 BASIS = '6-31g*'
 KWARGS = {
@@ -57,18 +61,31 @@ KWARGS = {
     ],
 }
 
-# What to run
+# What to run for electronic structure calculations
 RUN_SPECIES_QCHEM = True
-RUN_SPECIES_PF = True
-RUN_SPECIES_THERMO = False
 RUN_REACTIONS_QCHEM = False
-RUN_REACTIONS_RATES = False
-RUN_GRADIENT = True
-RUN_HESSIAN = True
+RUN_VDW_QCHEM = False
+KICKOFF_SADDLE = False
+KICKOFF_BACKWARD = False
+KICKOFF_SIZE = 0.1
+
+RUN_CONFORMER_OPT = True
 RUN_CONFORMER_SCAN = True
 RUN_TAU_SAMPLING = False
+
+RUN_TS_CONFORMER_OPT = True
 RUN_TS_CONFORMER_SCAN = True
 RUN_TS_TAU_SAMPLING = False
+
+RUN_GRADIENT = True
+RUN_HESSIAN = True
+
+# What to run for thermochemical kinetics
+RUN_SPECIES_PF = True
+RUN_SPECIES_THERMO = False
+RUN_REACTIONS_RATES = False
+RUN_VDW_RCT_RATES = False
+RUN_VDW_PRD_RATES = False
 
 # Parameters for number of torsional samplings
 NSAMP_A = 3
@@ -111,8 +128,6 @@ ELC_DEG_DCT = {
     ('InChI=1S/NO/c1-2', 2): [[0., 2], [123.1, 2]],
     ('InChI=1S/O2/c1-2', 1): [[0., 2]]
     }
-ELEC_LEVELS = [[0., 1]]
-# when the multiplicity is available it replaces the 1 and the result serves as the default elecronic state, degneracy list
 
 # 2. create run and save directories
 RUN_PREFIX = 'run'
@@ -196,12 +211,102 @@ if RUN_SPECIES_QCHEM:
         thy_run_path = moldr.util.species_theory_path(ich, charge, mult, method, basis, orb_restr, RUN_PREFIX)
         thy_save_path = moldr.util.species_theory_path(ich, charge, mult, method, basis, orb_restr, SAVE_PREFIX)
 
-        # a. conformer sampling
+        # generate reference geometry
         # generate the z-matrix and sampling ranges
 
         geo = inchi_to_geometry(ich)
-
         zma = automol.geom.zmatrix(geo)
+        moldr.driver.run_job(
+            job=elstruct.Job.OPTIMIZATION,
+            geom=zma,
+            charge=charge,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prefix=thy_run_path,
+            script_str=SCRIPT_STR,
+            prog=PROG,
+            overwrite=OVERWRITE,
+            **KWARGS,
+        )
+
+        if KICKOFF_SADDLE:
+            print('Checking for saddle')
+            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
+            if ret:
+                inf_obj, _, out_str = ret
+                prog = inf_obj.prog
+                geo = elstruct.reader.opt_geometry(prog, out_str)
+                moldr.driver.run_job(
+                    job=elstruct.Job.HESSIAN,
+                    geom=geo,
+                    charge=charge,
+                    mult=mult,
+                    method=method,
+                    basis=basis,
+                    orb_restr=orb_restr,
+                    prefix=thy_run_path,
+                    script_str=SCRIPT_STR,
+                    prog=PROG,
+                    overwrite=OVERWRITE,
+                    **KWARGS,
+                )
+                ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, prefix=thy_run_path)
+                if ret:
+                    inf_obj, _, out_str = ret
+                    prog = inf_obj.prog
+                    hess = elstruct.reader.hessian(prog, out_str)
+                    freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
+                    norm_coos = elstruct.util.normal_coordinates(geo, hess, project=True)
+
+                    # if there's an imaginary frequency, try again after displacing along
+                    # the mode
+                    if freqs[0] < -10:
+                        print('Imaginary mode found: Attempting to kickoff from saddle')
+                        im_norm_coo = numpy.array(norm_coos)[:, 0]
+                        disp_len = KICKOFF_SIZE * qcc.conversion_factor('angstrom', 'bohr')
+                        if KICKOFF_BACKWARD:
+                            disp_len *= -1
+                        disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3)) * disp_len
+                        geo = automol.geom.displaced(geo, disp_xyzs)
+                        zma = automol.geom.zmatrix(geo)
+                        moldr.driver.run_job(
+                            job=elstruct.Job.OPTIMIZATION,
+                            geom=zma,
+                            charge=charge,
+                            mult=mult,
+                            method=method,
+                            basis=basis,
+                            orb_restr=orb_restr,
+                            prefix=thy_run_path,
+                            script_str=SCRIPT_STR,
+                            prog=PROG,
+                            overwrite=OVERWRITE,
+                            **KWARGS,
+                        )
+
+        ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
+        if ret:
+            inf_obj, _, out_str = ret
+            prog = inf_obj.prog
+            geo = elstruct.reader.opt_geometry(prog, out_str)
+            zma = automol.geom.zmatrix(geo)
+#            save_path = afs.conf.dir.path(save_prefix, alocs)
+#            print(" - Geometry is unique. Saving...")
+#            print(" - Save path: {}".format(save_path))
+
+#            afs.dir.create(save_prefix, alocs)
+#            afs.file.geometry_info.write(
+#                inf_obj, save_prefix, alocs)
+#            afs.file.geometry_input.write(
+#                inp_str, save_prefix, alocs)
+#            afs.file.energy.write(ene, save_prefix, alocs)
+#            afs.file.geometry.write(geo, save_prefix, alocs)
+#            afs.file.zmatrix.write(zma, save_prefix, alocs)
+
+
+        # a. conformer sampling
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         tors_ranges = automol.zmatrix.torsional_sampling_ranges(
             zma, tors_names)
@@ -332,50 +437,50 @@ if RUN_SPECIES_QCHEM:
 #                    for alocs in cnf_alocs_lst]
 #        min_cnf_alocs = cnf_alocs_lst[cnf_enes.index(min(cnf_enes))]
         min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+        if min_cnf_alocs is not None:
+            cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, min_cnf_alocs)
+            cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
 
-        cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, min_cnf_alocs)
-        cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+            # generate the z-matrix and sampling grids (grids)
+            geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+            zma = automol.geom.zmatrix(geo)
+            val_dct = automol.zmatrix.values(zma)
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+            tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                zma, tors_names, SCAN_INCREMENT)
+            print('SCAN_INCREMENT test')
+            print(SCAN_INCREMENT)
+            tors_grids = [
+                numpy.linspace(*linspace) +val_dct[name]
+                for name, linspace in zip(tors_names, tors_linspaces)]
 
-        # generate the z-matrix and sampling grids (grids)
-        geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
-        zma = automol.geom.zmatrix(geo)
-        val_dct = automol.zmatrix.values(zma)
-        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
-            zma, tors_names, SCAN_INCREMENT)
-        print('SCAN_INCREMENT test')
-        print(SCAN_INCREMENT)
-        tors_grids = [
-            numpy.linspace(*linspace) +val_dct[name]
-            for name, linspace in zip(tors_names, tors_linspaces)]
+            print(tors_grids)
+            print(2*numpy.pi/12.)
 
-        print(tors_grids)
-        print(2*numpy.pi/12.)
+            # run one-dimensional scans for each torsional coordinate
+            if RUN_CONFORMER_SCAN:
+                for tors_name, tors_grid in zip(tors_names, tors_grids):
+                    moldr.driver.run_scan(
+                        zma=zma,
+                        charge=charge,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        grid_dct={tors_name: tors_grid},
+                        run_prefix=cnf_run_path,
+                        save_prefix=cnf_save_path,
+                        script_str=SCRIPT_STR,
+                        prog=PROG,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                    )
 
-        # run one-dimensional scans for each torsional coordinate
-        if RUN_CONFORMER_SCAN:
-            for tors_name, tors_grid in zip(tors_names, tors_grids):
-                moldr.driver.run_scan(
-                    zma=zma,
-                    charge=charge,
-                    mult=mult,
-                    method=method,
-                    basis=basis,
-                    orb_restr=orb_restr,
-                    grid_dct={tors_name: tors_grid},
-                    run_prefix=cnf_run_path,
-                    save_prefix=cnf_save_path,
-                    script_str=SCRIPT_STR,
-                    prog=PROG,
-                    overwrite=OVERWRITE,
-                    **KWARGS,
-                )
-
-                moldr.driver.save_scan(
-                    run_prefix=cnf_run_path,
-                    save_prefix=cnf_save_path,
-                    coo_names=[tors_name],
-                )
+                    moldr.driver.save_scan(
+                        run_prefix=cnf_run_path,
+                        save_prefix=cnf_save_path,
+                        coo_names=[tors_name],
+                    )
 
         if RUN_TAU_SAMPLING:
             moldr.driver.save_tau(
@@ -411,30 +516,29 @@ if RUN_SPECIES_QCHEM:
 
 if RUN_SPECIES_PF:
     for name in SPC_NAMES:
-        # set up the filesystemA
+# set up species information
         smi = SMI_DCT[name]
         ich = automol.smiles.inchi(smi)
         print("smiles: {}".format(smi), "inchi: {}".format(ich))
-#        ich = ICH_DCT[name]
         charge = CHG_DCT[name]
         mult = MUL_DCT[name]
-        ELEC_LEVELS = [[0., mult]]
-
-        # theory
+# specify electronic structure method used
         method = METHOD
         basis = BASIS
         if RESTRICT_OPEN_SHELL:
             orb_restr = True
         else:
             orb_restr = (mult == 1)
-
+# read in geometry, hess and hindered rotor potentials for minimum energy conformer
         thy_save_path = moldr.util.species_theory_path(
             ich, charge, mult, method, basis, orb_restr, SAVE_PREFIX)
-
         cnf_afs = autofile.fs.conformer()
         min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+# I think we need something for if it is none
         if min_cnf_alocs is not None:
             geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+            hess = cnf_afs.conf.file.hessian.read(thy_save_path, min_cnf_alocs)
+            zpe = sum(freqs)*WAVEN2KCAL/2.
             zma = automol.geom.zmatrix(geo)
             gra = automol.zmatrix.graph(zma, remove_stereo=True)
             scan_afs = autofile.fs.scan()
@@ -443,34 +547,41 @@ if RUN_SPECIES_PF:
             cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
             coo_dct = automol.zmatrix.coordinates(zma, multi=False)
-            potential_dct = {}
-            axis_dct = {}
             group_dct = {}
+            axis_dct = {}
+            sym_dct = {}
+            pot_dct = {}
             for tors_name in tors_names:
                 enes = [scan_afs.scan.file.energy.read(cnf_save_path, [[tors_name]] + rlocs)
                         for rlocs in scan_afs.scan.dir.existing(cnf_save_path, [[tors_name]])]
                 enes = numpy.subtract(enes, min_ene)
-                potential_dct[tors_name] = enes*EH2KCAL
+                pot_dct[tors_name] = enes*EH2KCAL
                 axis = coo_dct[tors_name][1:3]
                 axis_dct[tors_name] = numpy.add(axis, 1)
                 group = list(automol.graph.branch_atom_keys(gra, axis[0], axis) - set(axis))
                 group_dct[tors_name] = numpy.add(group, 1)
+                sym_dct[tors_name] = 1
+                hind_rot_dct = {}
+                hind_rot_dct[tors_name] = mess.io.writer.write_hind_rot(
+                    group_dct[tors_name], axis_dct[tors_name],
+                    sym_dct[tors_name], pot_dct[tors_name])
 
             print('Species hindered rotor potential')
-            print(potential_dct)
+            print(pot_dct)
             print(group_dct)
             print(axis_dct)
 
-        hess = cnf_afs.conf.file.hessian.read(thy_save_path, min_cnf_alocs)
-        freqs = elstruct.util.harmonic_frequencies(geo, hess)
-        zpe = sum(freqs)*WAVEN2KCAL/2.
+#            hind_rot_key_str = '/n'.join([potential_dct,group_dct,axis_dct])
+#            print(hind_rot_key_str)
 
-# to be generalized
-        symfactor = 1.
 
-        elec_levels = ELEC_LEVELS
+# set up messpf input
+        elec_levels = [[0., mult]]
         if (ich, mult) in ELC_DEG_DCT:
             elec_levels = ELC_DEG_DCT[(ich, mult)]
+        freqs = elstruct.util.harmonic_frequencies(geo, hess)
+# to be generalized
+        symfactor = 1.
 
 # create a messpf input file
         temp_step = TEMP_STEP
@@ -489,24 +600,50 @@ if RUN_SPECIES_PF:
             else:
                 freq_offset = 6
             core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
-            species_str = mess_io.writer.write_molecule(
-                core, freqs[freq_offset:], zpe, elec_levels, hind_rot='',
-            )
+            if pot_dct is not None:
+                species_str = mess_io.writer.write_molecule(
+                    core, freqs[freq_offset:], zpe, elec_levels,
+                    hind_rot='hind_rot_key_str',
+                )
         print(species_str)
         pf_inp_str = '\n'.join([global_pf_str, species_head_str, species_str])
         bld_afs = autofile.fs.build()
         bld_alocs = ['PF', 0]
         bld_afs.build.dir.create(thy_save_path, bld_alocs)
         path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
-        print('Build Path')
+        print('Build Path for Partition Functions')
         print(path)
         bld_afs.build.file.input.write(pf_inp_str, thy_save_path, bld_alocs)
         moldr.util.run_script(PF_SCRIPT_STR, path)
 
+if RUN_SPECIES_THERMO:
+    for name in SPC_NAMES:
+# set up species information
+        smi = SMI_DCT[name]
+        ich = automol.smiles.inchi(smi)
+        print("smiles: {}".format(smi), "inchi: {}".format(ich))
+        charge = CHG_DCT[name]
+        mult = MUL_DCT[name]
+# specify electronic structure method used
+        method = METHOD
+        basis = BASIS
+        if RESTRICT_OPEN_SHELL:
+            orb_restr = True
+        else:
+            orb_restr = (mult == 1)
+# read in geometry, hess and hindered rotor potentials for minimum energy conformer
+        thy_save_path = moldr.util.species_theory_path(
+            ich, charge, mult, method, basis, orb_restr, SAVE_PREFIX)
+        bld_afs = autofile.fs.build()
+        bld_alocs = ['NASA_POLY', 0]
+        bld_afs.build.dir.create(thy_save_path, bld_alocs)
+        path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
+        print('Build Path for NASA Polynomials')
+        print(path)
+        bld_afs.build.file.input.write(nasa_inp_str, thy_save_path, bld_alocs)
+        moldr.util.run_script(NASA_SCRIPT_STR, path)
 
-# how do I store this string in a list of strings addressable by name?
-
-#        sys.exit()
+sys.exit()
 
 
 # 5. process reaction data from the mechanism file
@@ -843,15 +980,66 @@ if RUN_REACTIONS_QCHEM:
 
         sys.exit()
 
+if RUN_REACTIONS_RATES:
+    for rct_names, prd_names in zip(RCT_NAMES_LST, PRD_NAMES_LST):
+        # print the CHEMKIN reaction name for reference
+        rxn_name = '='.join(['+'.join(rct_names), '+'.join(prd_names)])
+        print()
+        print("Reaction: {}".format(rxn_name))
         print('Mess Input for')
         print(rxn_name)
+        rct_smis = list(map(SMI_DCT.__getitem__, rct_names))
+        prd_smis = list(map(SMI_DCT.__getitem__, prd_names))
+        rct_ichs = list(map(automol.smiles.inchi, rct_smis))
+        prd_ichs = list(map(automol.smiles.inchi, prd_smis))
+        rct_chgs = list(map(CHG_DCT.__getitem__, rct_names))
+        prd_chgs = list(map(CHG_DCT.__getitem__, prd_names))
+        rct_muls = list(map(MUL_DCT.__getitem__, rct_names))
+        prd_muls = list(map(MUL_DCT.__getitem__, prd_names))
+
 # header section
+        temperatures = TEMPS
+        pressures = PRESS
         header_section_str = mess_io.writer.write_global_reaction(temperatures, pressures)
         print(header_section_str)
+
 # energy transfer section
+        exp_factor = EXP_FACTOR 
+        exp_ppower = EXP_POWER 
+        exp_cutoff = EXP_CUTOFF 
+        eps1 = EPS1 
+        eps2 = EPS2 
+        sig1 = SIG1 
+        sig2 = SIG2 
+        mass1 = MASS1 
+        mass2 = MASS2 
         energy_trans_section_str = mess_io.writer.write_energy_transfer(
             exp_factor, exp_power, exp_cutoff, eps1, eps2, sig1, sig2, mass1, mass2)
         print(energy_trans_section_str)
+# cycle over reactant and product species
+# check if unimolecular or bimolecular species
+        print('Unimolecular or bimolecular test')
+        indxw = 0
+        indxp = 0
+        if rct_ichs[1]:
+            print(rct_ichs)
+            indxw += 1
+# write W_indxw 
+        else:
+            indxp += 1
+# write P_indxp
+        if prd_ichs[1]:
+            print(prd_ichs)
+            indxw += 1
+# write W_indxw 
+        else:
+            indxp += 1
+# write P_indxp
+
+# cycle over vdw Species
+# cycle over transition states
+# for now - have only one TS
+
 #        if reaction_typ = addition:
 # reactants
 #            print(species_str(rct1))

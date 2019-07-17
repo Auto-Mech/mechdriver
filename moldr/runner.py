@@ -1,8 +1,6 @@
 """ elstruct runners (formerly elcarro)
 """
 import warnings
-import numpy
-from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
@@ -14,8 +12,6 @@ def options_matrix_optimization(script_str, prefix,
                                 errors=(), options_mat=(), feedback=False,
                                 frozen_coordinates=(),
                                 freeze_dummy_atoms=True,
-                                saddle=False,
-                                kickoff_saddle=False,
                                 **kwargs):
     """ try several sets of options to generate an output file
 
@@ -23,8 +19,6 @@ def options_matrix_optimization(script_str, prefix,
     :rtype: (str, str)
     """
     assert len(errors) == len(options_mat)
-
-    success = False
 
     subrun_ds = autofile.system.series.subrun_leaf()
     max_macro_idx, _ = max(subrun_ds.dir.existing(prefix), default=(-1, -1))
@@ -49,14 +43,13 @@ def options_matrix_optimization(script_str, prefix,
                 elstruct.writer.optimization, script_str, path,
                 geom=geom, charge=charge, mult=mult, method=method,
                 basis=basis, prog=prog, frozen_coordinates=frozen_coordinates,
-                saddle=saddle, **kwargs_)
+                **kwargs_)
 
         error_vals = [elstruct.reader.has_error_message(prog, error, out_str)
                       for error in errors]
 
         if not any(error_vals):
             # success
-            success = True
             break
         elif not moldr.optsmat.is_exhausted(options_mat):
             # try again
@@ -72,39 +65,6 @@ def options_matrix_optimization(script_str, prefix,
             warnings.warn("elstruct robust run failed; "
                           "last run was in, {}".format(path))
             break
-
-    if success and not saddle and kickoff_saddle:
-        geo = elstruct.reader.opt_geometry(prog, out_str)
-        _, hess_out_str = options_matrix_run(
-            elstruct.writer.hessian, script_str, prefix, geo, charge, mult,
-            method, basis, prog)
-        hess = elstruct.reader.hessian(prog, hess_out_str)
-        freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
-        norm_coos = elstruct.util.normal_coordinates(geo, hess, project=True)
-
-        # if there's an imaginary frequency, try again after displacing along
-        # the mode
-        if freqs[0] < -1e-1:
-            im_norm_coo = numpy.array(norm_coos)[:, 0]
-            disp_len = 0.1 * qcc.conversion_factor('angstrom', 'bohr')
-            disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3)) * disp_len
-            geo = automol.geom.displace(geo, disp_xyzs)
-            if automol.geom.is_valid(geom):
-                geom = geo
-            else:
-                assert automol.zmatrix.is_valid(geom)
-                vma = automol.zmatrix.var_(geom)
-                geom = automol.vmatrix.zmatrix_from_geometry(vma, geo)
-
-            options_matrix_optimization(
-                script_str, prefix,
-                geom, charge, mult, method, basis, prog,
-                errors=errors, options_mat=options_mat, feedback=feedback,
-                frozen_coordinates=frozen_coordinates,
-                freeze_dummy_atoms=freeze_dummy_atoms,
-                saddle=saddle,
-                kickoff_saddle=False,
-                **kwargs)
 
     return inp_str, out_str
 

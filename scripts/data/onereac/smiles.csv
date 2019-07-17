@@ -1,6 +1,7 @@
 name,smiles,mult
 H,[H],2
 H2,[H][H],1
+C2H2,C#C,1
 C2H6,CC,1
 C2H5,C[CH2],2
 CN,[C]#[N],2
