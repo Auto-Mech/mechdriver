@@ -2,6 +2,7 @@
 """
 import functools
 import numpy
+from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
@@ -9,9 +10,10 @@ import moldr.runner
 
 
 # conformer sampling
-def run_conformers(zma, charge, mult, method, basis, orb_restr,
-                   nsamp, tors_range_dct, run_prefix, save_prefix, script_str,
-                   prog, overwrite, **kwargs):
+def run_conformers(
+        zma, charge, mult, method, basis, orb_restr, nsamp, tors_range_dct,
+        run_prefix, save_prefix, script_str, prog, overwrite,
+        **kwargs):
     """ run sampling algorithm to find conformers
     """
     if not tors_range_dct:
@@ -72,6 +74,7 @@ def run_conformers(zma, charge, mult, method, basis, orb_restr,
                 overwrite=overwrite,
                 **kwargs
             )
+                
             nsampd += 1
             inf_obj.nsamp = nsampd
             afs.conf_trunk.file.info.write(inf_obj, save_prefix)
@@ -104,6 +107,7 @@ def save_conformers(run_prefix, save_prefix):
                 ene = elstruct.reader.energy(prog, method, out_str)
 
                 geo = elstruct.reader.opt_geometry(prog, out_str)
+                zma = automol.geom.zmatrix(geo)
                 gra = automol.geom.graph(geo)
 
                 if len(automol.graph.connected_components(gra)) > 1:
@@ -133,6 +137,7 @@ def save_conformers(run_prefix, save_prefix):
                             inp_str, save_prefix, alocs)
                         afs.conf.file.energy.write(ene, save_prefix, alocs)
                         afs.conf.file.geometry.write(geo, save_prefix, alocs)
+                        afs.conf.file.zmatrix.write(zma, save_prefix, alocs)
 
                 seen_geos.append(geo)
                 seen_enes.append(ene)
@@ -533,10 +538,10 @@ def run_job(job, script_str, prefix,
 
         runner = JOB_RUNNER_DCT[job]
         if job == elstruct.Job.OPTIMIZATION:
-            runner = functools.partial(runner,
-                                       feedback=feedback,
-                                       frozen_coordinates=frozen_coordinates,
-                                       freeze_dummy_atoms=freeze_dummy_atoms)
+            runner = functools.partial(
+                runner, feedback=feedback,
+                frozen_coordinates=frozen_coordinates,
+                freeze_dummy_atoms=freeze_dummy_atoms)
 
         print(" - Starting the run...")
         inp_str, out_str = runner(

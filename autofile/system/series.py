@@ -108,7 +108,35 @@ def theory_leaf(root_dsdir=None):
     """ theory leaf DataSeries
     """
     dsdir = dir_.theory_leaf(root_dsdir)
-    return model.DataSeries(dsdir=dsdir)
+    geom_inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
+    grad_inf_dfile = file_.information(FilePrefix.GRAD, function=info.run)
+    hess_inf_dfile = file_.information(FilePrefix.HESS, function=info.run)
+    geom_inp_dfile = file_.input_file(FilePrefix.GEOM)
+    grad_inp_dfile = file_.input_file(FilePrefix.GRAD)
+    hess_inp_dfile = file_.input_file(FilePrefix.HESS)
+    ene_dfile = file_.energy(FilePrefix.GEOM)
+    geom_dfile = file_.geometry(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+    grad_dfile = file_.gradient(FilePrefix.GRAD)
+    hess_dfile = file_.hessian(FilePrefix.HESS)
+    hfreq_dfile = file_.harmonic_frequencies(FilePrefix.HESS)
+
+    dseries = model.DataSeries(
+        dsdir=dsdir,
+        dfile_dct={
+            DataFileAttributeName.GEOM_INFO: geom_inf_dfile,
+            DataFileAttributeName.GRAD_INFO: grad_inf_dfile,
+            DataFileAttributeName.HESS_INFO: hess_inf_dfile,
+            DataFileAttributeName.GEOM_INPUT: geom_inp_dfile,
+            DataFileAttributeName.GRAD_INPUT: grad_inp_dfile,
+            DataFileAttributeName.HESS_INPUT: hess_inp_dfile,
+            DataFileAttributeName.ENERGY: ene_dfile,
+            DataFileAttributeName.GEOM: geom_dfile,
+            DataFileAttributeName.ZMAT: zmat_dfile,
+            DataFileAttributeName.GRAD: grad_dfile,
+            DataFileAttributeName.HESS: hess_dfile,
+            DataFileAttributeName.HFREQ: hfreq_dfile})
+    return dseries
 
 
 def run_trunk(root_dsdir=None):
@@ -182,6 +210,7 @@ def conformer_leaf(root_dsdir=None):
     hess_inp_dfile = file_.input_file(FilePrefix.HESS)
     ene_dfile = file_.energy(FilePrefix.GEOM)
     geom_dfile = file_.geometry(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
     grad_dfile = file_.gradient(FilePrefix.GRAD)
     hess_dfile = file_.hessian(FilePrefix.HESS)
 
@@ -196,6 +225,7 @@ def conformer_leaf(root_dsdir=None):
             DataFileAttributeName.HESS_INPUT: hess_inp_dfile,
             DataFileAttributeName.ENERGY: ene_dfile,
             DataFileAttributeName.GEOM: geom_dfile,
+            DataFileAttributeName.ZMAT: zmat_dfile,
             DataFileAttributeName.GRAD: grad_dfile,
             DataFileAttributeName.HESS: hess_dfile})
     return dseries
@@ -311,6 +341,7 @@ def tau_leaf(root_dsdir=None):
     hess_inp_dfile = file_.input_file(FilePrefix.HESS)
     ene_dfile = file_.energy(FilePrefix.GEOM)
     geom_dfile = file_.geometry(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
     grad_dfile = file_.gradient(FilePrefix.GRAD)
     hess_dfile = file_.hessian(FilePrefix.HESS)
 
@@ -325,6 +356,7 @@ def tau_leaf(root_dsdir=None):
             DataFileAttributeName.HESS_INPUT: hess_inp_dfile,
             DataFileAttributeName.ENERGY: ene_dfile,
             DataFileAttributeName.GEOM: geom_dfile,
+            DataFileAttributeName.ZMAT: zmat_dfile,
             DataFileAttributeName.GRAD: grad_dfile,
             DataFileAttributeName.HESS: hess_dfile})
     return dseries
