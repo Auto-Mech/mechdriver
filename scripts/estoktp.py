@@ -25,7 +25,7 @@ MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane, test, estoktp, .
 #MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas, heptane, test, estoktp, ...
 
 # 1. script control parameters
-# Program, method, basis, convergence control
+# a. Electronic structure parameters; code, Program, method, basis, convergence control
 
 #PROG = 'psi4'
 #SCRIPT_STR = ("#!/usr/bin/env bash\n"
@@ -43,11 +43,12 @@ NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
               "python /tcghome/sjklipp/PACC/nasa/makepoly.py >> stdout.log &> stderr.log")
 METHOD = 'wb97xd'
 BASIS = '6-31g*'
-KWARGS = {
+OPT_KWARGS = {
     'memory': 10,
     'machine_options': ['%NProcShared=10'],
     'gen_lines': ['# int=ultrafine'],
     'feedback': True,
+    'job_options': ['verytight'],
     'errors': [
         elstruct.Error.OPT_NOCONV
     ],
@@ -60,38 +61,74 @@ KWARGS = {
          {'job_options': ['calcall']}]
     ],
 }
+KWARGS = {
+    'memory': 10,
+    'machine_options': ['%NProcShared=10'],
+    'gen_lines': ['# int=ultrafine'],
+}
 
-# What to run for electronic structure calculations
+# b. What to run for electronic structure calculations
 RUN_SPECIES_QCHEM = True
 RUN_REACTIONS_QCHEM = False
 RUN_VDW_QCHEM = False
+
 KICKOFF_SADDLE = False
 KICKOFF_BACKWARD = False
 KICKOFF_SIZE = 0.1
 
-RUN_CONFORMER_OPT = True
-RUN_CONFORMER_SCAN = True
-RUN_TAU_SAMPLING = False
+RUN_CONF_OPT = True
+RUN_MIN_GRAD = True
+RUN_MIN_HESS = True
+RUN_CONF_GRAD = False
+RUN_CONF_HESS = False
 
-RUN_TS_CONFORMER_OPT = True
-RUN_TS_CONFORMER_SCAN = True
+RUN_CONF_SCAN = True
+RUN_CONF_SCAN_GRAD = False
+RUN_CONF_SCAN_HESS = False
+
+RUN_TAU_SAMP = True
+RUN_TAU_GRAD = True
+RUN_TAU_HESS = True
+
+RUN_TS_CONF_OPT = True
+RUN_TS_CONF_SCAN = True
 RUN_TS_TAU_SAMPLING = False
 
-RUN_GRADIENT = True
-RUN_HESSIAN = True
+RUN_GRAD = False
+if RUN_GRAD:
+    RUN_MIN_GRAD = True
+    RUN_CONF_GRAD = True
+    RUN_CONF_SCAN_GRAD = True
+    RUN_TAU_GRAD = True
 
-# What to run for thermochemical kinetics
+RUN_HESS = False
+if RUN_HESS:
+    RUN_MIN_HESS = True
+    RUN_CONF_HESS = True
+    RUN_CONF_SCAN_HESS = True
+    RUN_TAU_HESS = True
+
+# c. What to run for thermochemical kinetics
 RUN_SPECIES_PF = True
 RUN_SPECIES_THERMO = False
 RUN_REACTIONS_RATES = False
 RUN_VDW_RCT_RATES = False
 RUN_VDW_PRD_RATES = False
 
-# Parameters for number of torsional samplings
-NSAMP_A = 3
-NSAMP_B = 1
-NSAMP_C = 3
-NSAMP_D = 15
+# d. Parameters for number of torsional samplings
+NSAMP_CONF = 5
+NSAMP_CONF_EXPR = False
+NSAMP_CONF_A = 3
+NSAMP_CONF_B = 1
+NSAMP_CONF_C = 3
+NSAMP_CONF_D = 15
+
+NSAMP_TAU = 10
+NSAMP_TAU_EXPR = False
+NSAMP_TAU_A = 3
+NSAMP_TAU_B = 1
+NSAMP_TAU_C = 3
+NSAMP_TAU_D = 15
 
 # Parameters for partition function and kinetics
 # Temperatue and pressure
@@ -188,9 +225,11 @@ def inchi_to_geometry(ich):
     return geo
 
 
+DFM = autofile.system.data_file_manager()
 if RUN_SPECIES_QCHEM:
+    species_str={}
     for name in SPC_NAMES:
-        # species
+# species
         print("Species: {}".format(name))
         smi = SMI_DCT[name]
         ich = automol.smiles.inchi(smi)
@@ -199,7 +238,7 @@ if RUN_SPECIES_QCHEM:
         charge = CHG_DCT[name]
         mult = MUL_DCT[name]
 
-        # theory
+# theory
         method = METHOD
         basis = BASIS
         if RESTRICT_OPEN_SHELL:
@@ -207,12 +246,12 @@ if RUN_SPECIES_QCHEM:
         else:
             orb_restr = (mult == 1)
 
-        # set up the filesystem
+# set up the filesystem
         thy_run_path = moldr.util.species_theory_path(ich, charge, mult, method, basis, orb_restr, RUN_PREFIX)
         thy_save_path = moldr.util.species_theory_path(ich, charge, mult, method, basis, orb_restr, SAVE_PREFIX)
 
-        # generate reference geometry
-        # generate the z-matrix and sampling ranges
+# generate reference geometry
+# generate the z-matrix and sampling ranges
 
         geo = inchi_to_geometry(ich)
         zma = automol.geom.zmatrix(geo)
@@ -228,13 +267,14 @@ if RUN_SPECIES_QCHEM:
             script_str=SCRIPT_STR,
             prog=PROG,
             overwrite=OVERWRITE,
-            **KWARGS,
+            **OPT_KWARGS,
         )
-
         if KICKOFF_SADDLE:
-            print('Checking for saddle')
+# check if optimized geometry has negative frequencies
+# if it does then kick in direction of imaginary mode
             ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
             if ret:
+                print('Checking for saddle')
                 inf_obj, _, out_str = ret
                 prog = inf_obj.prog
                 geo = elstruct.reader.opt_geometry(prog, out_str)
@@ -257,11 +297,15 @@ if RUN_SPECIES_QCHEM:
                     inf_obj, _, out_str = ret
                     prog = inf_obj.prog
                     hess = elstruct.reader.hessian(prog, out_str)
+                    print('hess test')
+                    print(automol.geom.string(geo))
+                    print(numpy.array(hess))
                     freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
+                    print('projected freqs')
+                    print(freqs)
                     norm_coos = elstruct.util.normal_coordinates(geo, hess, project=True)
 
-                    # if there's an imaginary frequency, try again after displacing along
-                    # the mode
+# if there's an imaginary frequency, optimize again after displacing along the mode
                     if freqs[0] < -10:
                         print('Imaginary mode found: Attempting to kickoff from saddle')
                         im_norm_coo = numpy.array(norm_coos)[:, 0]
@@ -282,31 +326,32 @@ if RUN_SPECIES_QCHEM:
                             prefix=thy_run_path,
                             script_str=SCRIPT_STR,
                             prog=PROG,
-                            overwrite=OVERWRITE,
-                            **KWARGS,
+                            overwrite=True,
+                            **OPT_KWARGS,
                         )
+                        print('removing saddlepoint hessian')
+                        run_afs = autofile.fs.run()
+                        run_afs.run.dir.remove(thy_run_path, ['hessian'])
+                        print('writing corrected geometry to data directory')
+                        geom_dfile = autofile.system.file_.geometry(name)
+                        geom_dfile.write(geo, GEOM_PATH)
 
+# save info for the minimum geometry
         ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
         if ret:
-            inf_obj, _, out_str = ret
+            inf_obj, inp_str, out_str = ret
             prog = inf_obj.prog
+            method = inf_obj.method
+            ene = elstruct.reader.energy(prog, method, out_str)
             geo = elstruct.reader.opt_geometry(prog, out_str)
             zma = automol.geom.zmatrix(geo)
-#            save_path = afs.conf.dir.path(save_prefix, alocs)
-#            print(" - Geometry is unique. Saving...")
-#            print(" - Save path: {}".format(save_path))
+            DFM.geometry_input.write(inp_str, thy_save_path)
+            DFM.geometry_info.write(inf_obj, thy_save_path)
+            DFM.geometry_energy.write(ene, thy_save_path)
+            DFM.geometry.write(geo, thy_save_path)
+            DFM.zmatrix.write(zma, thy_save_path)
 
-#            afs.dir.create(save_prefix, alocs)
-#            afs.file.geometry_info.write(
-#                inf_obj, save_prefix, alocs)
-#            afs.file.geometry_input.write(
-#                inp_str, save_prefix, alocs)
-#            afs.file.energy.write(ene, save_prefix, alocs)
-#            afs.file.geometry.write(geo, save_prefix, alocs)
-#            afs.file.zmatrix.write(zma, save_prefix, alocs)
-
-
-        # a. conformer sampling
+# a. conformer sampling
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         tors_ranges = automol.zmatrix.torsional_sampling_ranges(
             zma, tors_names)
@@ -314,7 +359,10 @@ if RUN_SPECIES_QCHEM:
 
         gra = automol.inchi.graph(ich)
         ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
-        nsamp = min(NSAMP_A + NSAMP_B * NSAMP_C**ntaudof, NSAMP_D)
+        if NSAMP_CONF_EXPR:
+            nsamp = min(NSAMP_CONF_A + NSAMP_CONF_B * NSAMP_CONF_C**ntaudof, NSAMP_CONF_D)
+        else:
+            nsamp = NSAMP_CONF
 
         moldr.driver.save_conformers(
             run_prefix=thy_run_path,
@@ -335,7 +383,7 @@ if RUN_SPECIES_QCHEM:
             script_str=SCRIPT_STR,
             prog=PROG,
             overwrite=OVERWRITE,
-            **KWARGS,
+            **OPT_KWARGS,
         )
 
         moldr.driver.save_conformers(
@@ -343,23 +391,33 @@ if RUN_SPECIES_QCHEM:
             save_prefix=thy_save_path,
         )
 
-        # get the list of saved conformers, and their filesystem
+# b. save information about the minimum energy conformer in top directory
         cnf_afs = autofile.fs.conformer()
         cnf_alocs_lst = cnf_afs.conf.dir.existing(thy_save_path)
+        min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+        if min_cnf_alocs:
+            min_cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+            inf_obj = DFM.geometry_info.read(min_cnf_save_path)
+            inf_str = DFM.geometry_input.read(min_cnf_save_path)
+            ene = DFM.geometry_energy.read(min_cnf_save_path)
+            geo = DFM.geometry.read(min_cnf_save_path)
+            zma = DFM.zmatrix.read(min_cnf_save_path)
+            DFM.geometry_input.write(inp_str, thy_save_path)
+            DFM.geometry_info.write(inf_obj, thy_save_path)
+            DFM.geometry_energy.write(ene, thy_save_path)
+            DFM.geometry.write(geo, thy_save_path)
+            DFM.zmatrix.write(zma, thy_save_path)
 
-        # b. conformer gradients and hessians
-        for cnf_alocs in cnf_alocs_lst:
-            geo = cnf_afs.conf.file.geometry.read(thy_save_path, cnf_alocs)
+# c. gradients and hessians for minimum energy conformer
+        if DFM.geometry.exists(thy_save_path):
+            geo = DFM.geometry.read(thy_save_path)
 
-            cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, cnf_alocs)
-            cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, cnf_alocs)
-
-            if RUN_GRADIENT:
-                print('Running conformer gradient')
+            if RUN_MIN_GRAD:
+                print('Running gradient for minimum energy conformer')
                 moldr.driver.run_job(
                     job='gradient',
                     script_str=SCRIPT_STR,
-                    prefix=cnf_run_path,
+                    prefix=thy_run_path,
                     geom=geo,
                     charge=charge,
                     mult=mult,
@@ -373,7 +431,7 @@ if RUN_SPECIES_QCHEM:
 
                 ret = moldr.driver.read_job(
                     job='gradient',
-                    prefix=cnf_run_path,
+                    prefix=thy_run_path,
                 )
 
                 if ret is not None:
@@ -382,18 +440,149 @@ if RUN_SPECIES_QCHEM:
                     print(" - Reading gradient from output...")
                     grad = elstruct.reader.gradient(inf_obj.prog, out_str)
 
-                    save_path = cnf_afs.conf.dir.path(thy_save_path, cnf_alocs)
                     print(" - Saving gradient...")
-                    print(" - Save path: {}".format(save_path))
-                    print(cnf_afs.conf.dir.exists(thy_save_path, cnf_alocs))
-                    cnf_afs.conf.file.gradient_info.write(
-                        inf_obj, thy_save_path, cnf_alocs)
-                    cnf_afs.conf.file.gradient_input.write(
-                        inp_str, thy_save_path, cnf_alocs)
-                    cnf_afs.conf.file.gradient.write(
-                        grad, thy_save_path, cnf_alocs)
+                    print(" - Save path: {}".format(thy_save_path))
+                    DFM.gradient_info.write(inf_obj, thy_save_path)
+                    DFM.gradient_input.write(inp_str, thy_save_path)
+                    DFM.gradient.write(grad, thy_save_path)
 
-            if RUN_HESSIAN:
+            if RUN_MIN_HESS:
+                print('Running hessian for minimum energy conformer')
+                moldr.driver.run_job(
+                    job='hessian',
+                    script_str=SCRIPT_STR,
+                    prefix=thy_run_path,
+                    geom=geo,
+                    charge=charge,
+                    mult=mult,
+                    method=method,
+                    basis=basis,
+                    orb_restr=orb_restr,
+                    prog=PROG,
+                    overwrite=OVERWRITE,
+                )
+
+                ret = moldr.driver.read_job(
+                    job='hessian',
+                    prefix=thy_run_path,
+                )
+
+                if ret is not None:
+                    inf_obj, inp_str, out_str = ret
+
+                    print(" - Reading hessian from output...")
+                    hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+                    freqs = elstruct.util.harmonic_frequencies(geo, hess, project=False)
+                    print('Freqs test')
+                    print(freqs)
+                    freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
+                    print('Projected freqs test')
+                    print(freqs)
+                    
+
+                    print(" - Saving hessian...")
+                    print(" - Save path: {}".format(thy_save_path))
+                    DFM.hessian_info.write(inf_obj, thy_save_path)
+                    DFM.hessian_input.write(inp_str, thy_save_path)
+                    DFM.hessian.write(hess, thy_save_path)
+                    DFM.harmonic_frequencies.write(freqs, thy_save_path)
+
+# d. hindered rotor scans
+            zma = DFM.zmatrix.read(thy_save_path)
+            assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo)) 
+
+            val_dct = automol.zmatrix.values(zma)
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+            tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                zma, tors_names, SCAN_INCREMENT)
+            print('SCAN_INCREMENT test')
+            print(SCAN_INCREMENT)
+            tors_grids = [
+                numpy.linspace(*linspace) +val_dct[name]
+                for name, linspace in zip(tors_names, tors_linspaces)]
+
+            print(tors_grids)
+            print(2*numpy.pi/12.)
+
+            if RUN_CONF_SCAN:
+                for tors_name, tors_grid in zip(tors_names, tors_grids):
+                    moldr.driver.run_scan(
+                        zma=zma,
+                        charge=charge,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        grid_dct={tors_name: tors_grid},
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        script_str=SCRIPT_STR,
+                        prog=PROG,
+                        overwrite=OVERWRITE,
+                        **OPT_KWARGS,
+                    )
+
+                    moldr.driver.save_scan(
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        coo_names=[tors_name],
+                    )
+# need to add grad and hessian for each point on the conf_scan
+#                    if RUN_CONF_SCAN_GRAD:
+
+#                    if RUN_CONF_SCAN_HESS:
+
+# determine gradient and hessian for each of the conformers
+            if RUN_CONF_GRAD:
+#                cnf_afs = autofile.fs.conformer()
+#                cnf_alocs_lst = cnf_afs.conf.dir.existing(thy_save_path)
+#                print(cnf_alocs_lst)
+                for alocs in cnf_locs_lst:
+                    cnf_run_path = afs.conf.dir.path(run_prefix, alocs)
+                    cnf_save_path = afs.conf.dir.path(save_prefix, alocs)
+                    geo = afs.conf.file.geometry.read(save_prefix, alocs)
+
+                    print('Running conformer gradient')
+                    moldr.driver.run_job(
+                        job='gradient',
+                        script_str=SCRIPT_STR,
+                        prefix=cnf_run_path,
+                        geom=geo,
+                        charge=charge,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        prog=PROG,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                    )
+
+                    ret = moldr.driver.read_job(
+                        job='gradient',
+                        prefix=cnf_run_path,
+                    )
+
+                    if ret is not None:
+                        inf_obj, inp_str, out_str = ret
+
+                        print(" - Reading gradient from output...")
+                        grad = elstruct.reader.gradient(inf_obj.prog, out_str)
+
+                        print(" - Saving gradient...")
+                        print(" - Save path: {}".format(cnf_save_path))
+                        cnf_afs.conf.file.gradient_info.write(inf_obj, cnf_save_path)
+                        cnf_afs.conf.file.gradient_input.write(inp_str, cnf_save_path)
+                        cnf_afs.conf.file.gradient.write(grad, cnf_save_path)
+
+            if RUN_CONF_HESS:
+#                cnf_afs = autofile.fs.conformer()
+#                cnf_alocs_lst = cnf_afs.conf.dir.existing(thy_save_path)
+                for alocs in cnf_alocs_lst:
+                    cnf_run_path = afs.conf.dir.path(run_prefix, alocs)
+                    cnf_save_path = afs.conf.dir.path(save_prefix, alocs)
+                    geo = afs.conf.file.geometry.read(save_prefix, alocs)
+
                 print('Running conformer hessian')
                 moldr.driver.run_job(
                     job='hessian',
@@ -418,71 +607,23 @@ if RUN_SPECIES_QCHEM:
                     inf_obj, inp_str, out_str = ret
 
                     print(" - Reading hessian from output...")
-                    grad = elstruct.reader.hessian(inf_obj.prog, out_str)
+                    hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+                    freqs = elstruct.util.harmonic_frequencies(geo, hess, project=False)
+                    print('Conformer Freqs test')
+                    print(freqs)
 
-                    save_path = cnf_afs.conf.dir.path(thy_save_path, cnf_alocs)
                     print(" - Saving hessian...")
-                    print(" - Save path: {}".format(save_path))
-                    print(cnf_afs.conf.dir.exists(thy_save_path, cnf_alocs))
-                    cnf_afs.conf.file.hessian_info.write(
-                        inf_obj, thy_save_path, cnf_alocs)
-                    cnf_afs.conf.file.hessian_input.write(
-                        inp_str, thy_save_path, cnf_alocs)
-                    cnf_afs.conf.file.hessian.write(
-                        grad, thy_save_path, cnf_alocs)
+                    print(" - Save path: {}".format(cnf_save_path))
+                    cnf_afs.conf.file.hessian_info.write(inf_obj, cnf_save_path)
+                    cnf_afs.conf.file.hessian_input.write(inp_str, cnf_save_path)
+                    cnf_afs.conf.file.hessian.write(hess, cnf_save_path)
+                    cnf_afs.conf.file.harmonic_frequencies.write(freqs, cnf_save_path)
 
-        # d. hindered rotor scans
-        # determine the lowest energy conformer to get the correct path
-#        cnf_enes = [cnf_afs.conf.file.energy.read(thy_save_path, alocs)
-#                    for alocs in cnf_alocs_lst]
-#        min_cnf_alocs = cnf_alocs_lst[cnf_enes.index(min(cnf_enes))]
-        min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
-        if min_cnf_alocs is not None:
-            cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, min_cnf_alocs)
-            cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
-
-            # generate the z-matrix and sampling grids (grids)
-            geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
-            zma = automol.geom.zmatrix(geo)
-            val_dct = automol.zmatrix.values(zma)
-            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-            tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
-                zma, tors_names, SCAN_INCREMENT)
-            print('SCAN_INCREMENT test')
-            print(SCAN_INCREMENT)
-            tors_grids = [
-                numpy.linspace(*linspace) +val_dct[name]
-                for name, linspace in zip(tors_names, tors_linspaces)]
-
-            print(tors_grids)
-            print(2*numpy.pi/12.)
-
-            # run one-dimensional scans for each torsional coordinate
-            if RUN_CONFORMER_SCAN:
-                for tors_name, tors_grid in zip(tors_names, tors_grids):
-                    moldr.driver.run_scan(
-                        zma=zma,
-                        charge=charge,
-                        mult=mult,
-                        method=method,
-                        basis=basis,
-                        orb_restr=orb_restr,
-                        grid_dct={tors_name: tors_grid},
-                        run_prefix=cnf_run_path,
-                        save_prefix=cnf_save_path,
-                        script_str=SCRIPT_STR,
-                        prog=PROG,
-                        overwrite=OVERWRITE,
-                        **KWARGS,
-                    )
-
-                    moldr.driver.save_scan(
-                        run_prefix=cnf_run_path,
-                        save_prefix=cnf_save_path,
-                        coo_names=[tors_name],
-                    )
-
-        if RUN_TAU_SAMPLING:
+        if RUN_TAU_SAMP:
+            if NSAMP_TAU_EXPR:
+                nsamp = min(NSAMP_TAU_A + NSAMP_TAU_B * NSAMP_TAU_C**ntaudof, NSAMP_TAU_D)
+            else:
+                nsamp = NSAMP_TAU
             moldr.driver.save_tau(
                 run_prefix=thy_run_path,
                 save_prefix=thy_save_path,
@@ -506,13 +647,100 @@ if RUN_SPECIES_QCHEM:
                 script_str=SCRIPT_STR,
                 prog=PROG,
                 overwrite=OVERWRITE,
-                **KWARGS,
+                **OPT_KWARGS,
             )
 
             moldr.driver.save_tau(
                 run_prefix=thy_run_path,
                 save_prefix=thy_save_path,
             )
+
+            if RUN_TAU_GRAD:
+# cycle through saved tau geometries
+                afs = autofile.fs.tau()
+                for alocs in afs.tau.dir.existing(thy_save_path):
+#                    tau_run_path = afs.tau.dir.path(thy_run_path, alocs)
+#                    print('path test')
+#                    print(thy_save_path)
+#                    print(alocs)
+#                    print(tau_run_path)
+#                    print(tau_save_path)
+#                    tau_save_path = afs.tau.dir.path(thy_save_path, alocs)
+#                    geo = afs.tau.file.geometry.read(tau_save_path)
+                    geo = afs.tau.file.geometry.read(thy_save_path, alocs)
+                    print('Running tau gradient')
+                    moldr.driver.run_job(
+                        job='gradient',
+                        script_str=SCRIPT_STR,
+                        prefix=thy_run_path,
+                        geom=geo,
+                        charge=charge,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        prog=PROG,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                    )
+
+                    ret = moldr.driver.read_job(
+                        job='gradient',
+                        prefix=thy_run_path,
+                    )
+
+                    if ret is not None:
+                        inf_obj, inp_str, out_str = ret
+
+                        print(" - Reading gradient from output...")
+                        grad = elstruct.reader.gradient(inf_obj.prog, out_str)
+
+                        print(" - Saving gradient...")
+                        print(" - Save path: {}".format(thy_save_path))
+                        afs.tau.file.gradient_info.write(inf_obj, thy_save_path, alocs)
+                        afs.tau.file.gradient_input.write(inp_str, thy_save_path, alocs)
+                        afs.tau.file.gradient.write(grad, thy_save_path, alocs)
+
+# cycle through saved tau geometries
+            if RUN_TAU_HESS:
+# cycle through saved tau geometries
+                afs = autofile.fs.tau()
+                for alocs in afs.tau.dir.existing(thy_save_path):
+#                    tau_run_path = afs.tau.dir.path(thy_run_path, alocs)
+#                    tau_save_path = afs.tau.dir.path(thy_save_path, alocs)
+                    geo = afs.tau.file.geometry.read(thy_save_path, alocs)
+                    print('Running tau Hessian')
+                    moldr.driver.run_job(
+                        job='hessian',
+                        script_str=SCRIPT_STR,
+                        prefix=thy_run_path,
+                        geom=geo,
+                        charge=charge,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        prog=PROG,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                    )
+
+                    ret = moldr.driver.read_job(
+                        job='hessian',
+                        prefix=thy_run_path,
+                    )
+
+                    if ret is not None:
+                        inf_obj, inp_str, out_str = ret
+
+                        print(" - Reading hessian from output...")
+                        hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+
+                        print(" - Saving hessian...")
+                        print(" - Save path: {}".format(thy_save_path, alocs))
+                        afs.tau.file.hessian_info.write(inf_obj, thy_save_path, alocs)
+                        afs.tau.file.hessian_input.write(inp_str, thy_save_path, alocs)
+                        afs.tau.file.hessian.write(hess, thy_save_path, alocs)
 
 if RUN_SPECIES_PF:
     for name in SPC_NAMES:
@@ -529,57 +757,71 @@ if RUN_SPECIES_PF:
             orb_restr = True
         else:
             orb_restr = (mult == 1)
-# read in geometry, hess and hindered rotor potentials for minimum energy conformer
+# read in geometry, hessian and hindered rotor potentials for minimum energy conformer
         thy_save_path = moldr.util.species_theory_path(
             ich, charge, mult, method, basis, orb_restr, SAVE_PREFIX)
         cnf_afs = autofile.fs.conformer()
         min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
 # I think we need something for if it is none
         if min_cnf_alocs is not None:
-            geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
-            hess = cnf_afs.conf.file.hessian.read(thy_save_path, min_cnf_alocs)
+            print('path test')
+            print(thy_save_path)
+            print(min_cnf_alocs)
+#            geo = cnf_afs.conf.file.geometry.read(thy_save_path)
+#            geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+#            geo = cnf_afs.file.geometry.read(thy_save_path)
+#            geo = cnf_afs.conf.geometry.read(thy_save_path)
+#            geo = cnf_afs.geometry.read(thy_save_path)
+            geo = DFM.geometry.read(thy_save_path)
+            hess = DFM.hessian.read(thy_save_path)
+#            hess = cnf_afs.conf.file.hessian.read(thy_save_path, min_cnf_alocs)
+            freqs = elstruct.util.harmonic_frequencies(geo, hess)
             zpe = sum(freqs)*WAVEN2KCAL/2.
             zma = automol.geom.zmatrix(geo)
             gra = automol.zmatrix.graph(zma, remove_stereo=True)
             scan_afs = autofile.fs.scan()
+#            min_ene = DFM.energy.read(thy_save_path)
             min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
-            cnf_afs.conf_trunk.file.energy.write(min_ene, thy_save_path)
+#            cnf_afs.conf_trunk.file.energy.write(min_ene, thy_save_path)
+            print('path test')
+            print(thy_save_path)
+            print(min_cnf_alocs)
             cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+            print(cnf_save_path)
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+            print(tors_names)
             coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+            print(coo_dct)
             group_dct = {}
-            axis_dct = {}
-            sym_dct = {}
-            pot_dct = {}
+#            axis_dct = {}
+#            sym_dct = {}
+#            pot_dct = {}
+            hind_rot_str = ""
+
             for tors_name in tors_names:
                 enes = [scan_afs.scan.file.energy.read(cnf_save_path, [[tors_name]] + rlocs)
                         for rlocs in scan_afs.scan.dir.existing(cnf_save_path, [[tors_name]])]
+                print(enes)
+                print(min_ene)
                 enes = numpy.subtract(enes, min_ene)
-                pot_dct[tors_name] = enes*EH2KCAL
+                print(enes)
+                pot = list(enes*EH2KCAL)
                 axis = coo_dct[tors_name][1:3]
-                axis_dct[tors_name] = numpy.add(axis, 1)
                 group = list(automol.graph.branch_atom_keys(gra, axis[0], axis) - set(axis))
-                group_dct[tors_name] = numpy.add(group, 1)
-                sym_dct[tors_name] = 1
-                hind_rot_dct = {}
-                hind_rot_dct[tors_name] = mess.io.writer.write_hind_rot(
-                    group_dct[tors_name], axis_dct[tors_name],
-                    sym_dct[tors_name], pot_dct[tors_name])
+                group = list(numpy.add(group, 1))
+                axis = list(numpy.add(axis, 1))
+                sym = 1
+                hind_rot_str += mess_io.writer.write_rotor_hindered(
+                    group, axis, sym, pot)
+#                hind_rot_str += hind_roti_str
 
-            print('Species hindered rotor potential')
-            print(pot_dct)
-            print(group_dct)
-            print(axis_dct)
-
-#            hind_rot_key_str = '/n'.join([potential_dct,group_dct,axis_dct])
-#            print(hind_rot_key_str)
-
+            print('hina_rot_str test')
+            print(hind_rot_str)
 
 # set up messpf input
         elec_levels = [[0., mult]]
         if (ich, mult) in ELC_DEG_DCT:
             elec_levels = ELC_DEG_DCT[(ich, mult)]
-        freqs = elstruct.util.harmonic_frequencies(geo, hess)
 # to be generalized
         symfactor = 1.
 
@@ -593,20 +835,22 @@ if RUN_SPECIES_PF:
         print(species_head_str)
         if automol.geom.is_atom(geo):
             print('This is an atom')
-            species_str = mess_io.writer.write_atom(name, elec_levels)
+            species_str[name] = mess_io.writer.write_atom(name, elec_levels)
         else:
             if len(automol.geom.symbols(geo)) == 2:
                 freq_offset = 5
             else:
                 freq_offset = 6
             core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
-            if pot_dct is not None:
-                species_str = mess_io.writer.write_molecule(
+            if pot is not None:
+                species_str[name] = mess_io.writer.write_molecule(
                     core, freqs[freq_offset:], zpe, elec_levels,
-                    hind_rot='hind_rot_key_str',
+                    hind_rot=hind_rot_str,
                 )
-        print(species_str)
-        pf_inp_str = '\n'.join([global_pf_str, species_head_str, species_str])
+                freq_offset += 1
+        print(species_str[name])
+        pf_inp_str = '\n'.join(
+            [global_pf_str, species_head_str, species_str[name]])
         bld_afs = autofile.fs.build()
         bld_alocs = ['PF', 0]
         bld_afs.build.dir.create(thy_save_path, bld_alocs)
@@ -800,7 +1044,7 @@ if RUN_REACTIONS_QCHEM:
                 overwrite=OVERWRITE,
                 update_guess=False,
                 reverse_sweep=False,
-                **KWARGS
+                **OPT_KWARGS
             )
 
             moldr.driver.save_scan(
@@ -841,7 +1085,7 @@ if RUN_REACTIONS_QCHEM:
                 prog=PROG,
                 saddle=True,
                 overwrite=OVERWRITE,
-                **KWARGS,
+                **OPT_KWARGS,
             )
             opt_ret = moldr.driver.read_job(
                 job='optimization',
@@ -898,7 +1142,7 @@ if RUN_REACTIONS_QCHEM:
                     ts_afs.ts.file.hessian.write(hess, thy_save_path)
                     ts_afs.ts.file.harmonic_frequencies.write(freqs, thy_save_path)
 
-            if RUN_TS_TAU_SAMPLING:
+            if RUN_TS_TAU_SAMP:
 
                 moldr.driver.save_tau(
                     run_prefix=thy_run_path,
@@ -925,7 +1169,7 @@ if RUN_REACTIONS_QCHEM:
                     prog=PROG,
                     saddle=True,
                     overwrite=OVERWRITE,
-                    **KWARGS,
+                    **OPT_KWARGS,
                 )
 
                 moldr.driver.save_tau(
@@ -933,7 +1177,7 @@ if RUN_REACTIONS_QCHEM:
                     save_prefix=thy_save_path,
                 )
 
-            if RUN_TS_CONFORMER_SCAN:
+            if RUN_TS_CONF_SCAN:
                 zma = ts_afs.ts.file.zmatrix.read(thy_save_path)
                 val_dct = automol.zmatrix.values(zma)
                 tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
@@ -956,7 +1200,7 @@ if RUN_REACTIONS_QCHEM:
                         prog=PROG,
                         saddle=True,
                         overwrite=OVERWRITE,
-                        **KWARGS,
+                        **OPT_KWARGS,
                     )
 
                     moldr.driver.save_scan(
