@@ -1,4 +1,7 @@
 name,smiles,mult
+CH3OH,CO,1
+CH2,[CH2],1
+CH3,[CH3],2
 H,[H],2
 H2,[H][H],1
 C2H2,C#C,1
