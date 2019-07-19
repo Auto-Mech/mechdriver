@@ -3,20 +3,23 @@ C H N O
 END    
 
 SPECIES  
-CH3OH
-!CH2
-!CH3
+C2H3
+C2H4
+OH
+H2O
 !HNC
-!HCN
 !CN
+!HCN
 !O
 !OH
+!CH2
+!CH3
 END
 
 
 REACTIONS   MOLES  KELVINS   
-CN+OH=HCN+O             1.e10 0. 10000.
-CN+OH=HNC+O             1.e10 0. 10000.
+C2H4+OH=C2H3+H2O        1.e10 0. 10000.
+!CN+OH=HCN+O             1.e10 0. 10000.
 END 
 
 

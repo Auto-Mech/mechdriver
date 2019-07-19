@@ -9,6 +9,40 @@ import autofile
 import moldr.runner
 
 
+# kickoff from saddle
+def run_kickoff_saddle(
+        geo, disp_xyzs, charge, mult, method, basis, orb_restr, run_path,
+        script_str, prog, overwrite, kickoff_size=0.1, kickoff_backward=False,
+        opt_cart=True,
+        **kwargs):
+    """ kickoff from saddle to find connected minima
+    """
+    print('kickoff from saddle')
+    disp_len = kickoff_size * qcc.conversion_factor('angstrom', 'bohr')
+    if kickoff_backward:
+        disp_len *= -1
+    disp_xyzs = numpy.multiply(disp_xyzs, disp_len)
+    geo = automol.geom.displaced(geo, disp_xyzs)
+    if opt_cart:
+        geom = geo
+    else:
+        geom = automol.geom.zmatrix(geo)
+    moldr.driver.run_job(
+        job=elstruct.Job.OPTIMIZATION,
+        geom=geom,
+        charge=charge,
+        mult=mult,
+        method=method,
+        basis=basis,
+        orb_restr=orb_restr,
+        prefix=run_path,
+        script_str=script_str,
+        prog=prog,
+        overwrite=True,
+        **kwargs,
+    )
+
+
 # conformer sampling
 def run_conformers(
         zma, charge, mult, method, basis, orb_restr, nsamp, tors_range_dct,

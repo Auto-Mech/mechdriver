@@ -1,0 +1,19 @@
+ELEMENTS  
+C H N O 
+END    
+
+SPECIES  
+CH4
+CH3
+NH2
+NH3
+END
+
+
+REACTIONS   MOLES  KELVINS   
+CH4+NH2=CH3+NH3        1.e10 0. 10000.
+END 
+
+
+ 
+
