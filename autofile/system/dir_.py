@@ -13,6 +13,22 @@ from autofile.system import model
 SPEC_FILE_PREFIX = 'dir'
 
 
+def reference_trunk(root_dsdir=None):
+    """ reference trunk DataSeriesDir
+    """
+    _map = _pack_arguments(map_.reference_trunk)
+    nlocs = _count_arguments(map_.reference_trunk)
+    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
+                               root_dsdir=root_dsdir)
+
+def direction_leaf(root_dsdir=None):
+    """ direction leaf  DataSeriesDir
+    """
+    _map = _pack_arguments(map_.direction_leaf)
+    nlocs = _count_arguments(map_.direction_leaf)
+    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
+                               root_dsdir=root_dsdir)
+
 def species_trunk(root_dsdir=None):
     """ species trunk DataSeriesDir
     """

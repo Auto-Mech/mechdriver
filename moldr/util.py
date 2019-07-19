@@ -5,29 +5,76 @@ import stat
 import subprocess
 import warnings
 import autofile
+import automol
 
-def species_theory_path(ich, chg, mult, method, basis, orb_restr, prefix):
+
+def orbital_restriction(mult, restrict_open_shell=False):
+    if restrict_open_shell:
+        orb_restr = True
+    else:
+        orb_restr = (mult == 1)
+    return orb_restr
+
+
+def geometry_dictionary(geom_path):
+    geom_dct = {}
+    for dir_path, _, file_names in os.walk(geom_path):
+        for file_name in file_names:
+            file_path = os.path.join(dir_path, file_name)
+            if file_path.endswith('.xyz'):
+                xyz_str = autofile.file.read_file(file_path)
+                geo = automol.geom.from_xyz_string(xyz_str)
+                ich = automol.geom.inchi(geo)
+                if ich in geom_dct:
+                    print('Warning: Dupilicate xyz geometry for ', ich)
+                geom_dct[ich] = geo
+    return geom_dct
+
+
+def reference_geometry(ich, chg, mult, method, basis, orb_restr, prefix, geom_dct):
+    spc_path = species_path(ich, chg, mult, prefix)
+    thy_afs = autofile.fs.theory()
+    thy_alocs = [method, basis, orb_restr]
+    if ich in geom_dct:
+        print('getting reference geometry from geom_dct')
+        geo = geom_dct[ich]
+    else:
+        if thy_afs.theory.file.geometry.exists(spc_path, thy_alocs):
+            thy_path = thy_afs.theory.dir.path(spc_path, thy_alocs)
+            print('getting reference geometry from',thy_path)
+            geo = thy_afs.theory.file.geometry.read(spc_path, thy_alocs)
+        else:
+            print('getting reference geometry from inchi')
+            geo = automol.inchi.geometry(ich)
+    print(automol.geom.xyz_string(geo))
+    return geo
+
+
+def theory_path(method, basis, orb_restr, prefix):
     """ path to theory directory """
+    thy_alocs = [method, basis, orb_restr]
+    thy_afs = autofile.fs.theory()
+    thy_afs.theory.dir.create(prefix, thy_alocs)
+    thy_path = thy_afs.theory.dir.path(prefix, thy_alocs)
+    return thy_path
+
+
+def species_path(ich, chg, mult, prefix):
+    """ path to species directory """
     spc_alocs = [ich, chg, mult]         # aloc = absolute locator
-    thy_rlocs = [method, basis, orb_restr]  # rloc = relative locator
-    thy_alocs = spc_alocs + thy_rlocs
     spc_afs = autofile.fs.species()
-    thy_afs = autofile.fs.theory(spc_afs, 'species')
-    thy_afs.theory.dir.create(prefix, thy_alocs)
-    thy_path = thy_afs.theory.dir.path(prefix, thy_alocs)
-    return thy_path
+    spc_afs.species.dir.create(prefix, spc_alocs)
+    spc_path = spc_afs.species.dir.path(prefix, spc_alocs)
+    return spc_path
 
 
-def reaction_theory_path(rxn_ichs, rxn_chgs, rxn_muls, ts_mul, method, basis, orb_restr, prefix):
-    """ path to theory directory """
+def reaction_path(rxn_ichs, rxn_chgs, rxn_muls, ts_mul, prefix):
+    """ path to reaction directory """
     rxn_alocs = [rxn_ichs, rxn_chgs, rxn_muls, ts_mul]
-    thy_rlocs = [method, basis, orb_restr]
-    thy_alocs = rxn_alocs + thy_rlocs
     rxn_afs = autofile.fs.reaction()
-    thy_afs = autofile.fs.theory(rxn_afs, 'reaction')
-    thy_afs.theory.dir.create(prefix, thy_alocs)
-    thy_path = thy_afs.theory.dir.path(prefix, thy_alocs)
-    return thy_path
+    rxn_afs.reaction.dir.create(prefix, rxn_alocs)
+    rxn_path = rxn_afs.reaction.dir.path(prefix, rxn_alocs)
+    return rxn_path
 
 
 def min_energy_conformer_locators(save_prefix):
@@ -73,7 +120,9 @@ def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, method, basis, r
         spc_alocs = [rgt_ich, rgt_chg, rgt_mul]
         thy_rlocs = [method, basis, orb_restr]
         thy_alocs = spc_alocs + thy_rlocs
-        ene = cnf_afs.conf_trunk.file.energy.read(save_prefix, thy_alocs)
+        thy_save_path = thy_afs.theory.dir.path(save_prefix, thy_alocs)
+        min_cnf_alocs = min_energy_conformer_locators(thy_save_path)
+        ene = cnf_afs.conf.file.energy.read(save_prefix, thy_alocs + min_cnf_alocs)
         enes.append(ene)
     return enes
 

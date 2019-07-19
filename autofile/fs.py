@@ -6,6 +6,8 @@ from autofile.system import series
 
 class AttributeName():
     """ DataFile attribute names """
+    REF_TRUNK = 'reference'
+    DIR_LEAF = 'direction'
     SPC_TRUNK = 'species_trunk'
     SPC_LEAF = 'species'
     TS_TRUNK = 'ts'
@@ -33,6 +35,34 @@ def empty():
     """ create an empty filesystem
     """
     return model.FileSystem({})
+
+
+def reference(root_fs=None, top_ds_name=None, name_prefix=''):
+    """ construct the reference filesystem
+    """
+    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+
+    ref_trunk_ds = series.reference_trunk(root_dsdir=top_dsdir)
+
+    ref_fs = model.FileSystem({
+        (name_prefix + AttributeName.REF_TRUNK): ref_trunk_ds,
+    })
+    ref_fs.update(root_fs)
+    return ref_fs
+
+
+def direction(root_fs=None, top_ds_name=None, name_prefix=''):
+    """ construct the direction filesystem
+    """
+    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+
+    dir_trunk_ds = series.direction_leaf(root_dsdir=top_dsdir)
+
+    dir_fs = model.FileSystem({
+        (name_prefix + AttributeName.DIR_LEAF): dir_trunk_ds,
+    })
+    dir_fs.update(root_fs)
+    return dir_fs
 
 
 def species(root_fs=None, top_ds_name=None, name_prefix=''):

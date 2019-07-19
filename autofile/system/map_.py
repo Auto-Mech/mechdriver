@@ -15,6 +15,12 @@ from autofile.system._util import (is_random_string_identifier as
 
 
 # species
+def reference_trunk():
+    """ reference trunk directory name
+    """
+    return 'REF'
+
+
 def species_trunk():
     """ species trunk directory name
     """
@@ -24,7 +30,22 @@ def species_trunk():
 def species_leaf(ich, charge, mult):
     """ species leaf directory name
     """
-    return _reactant_leaf([ich], [charge], [mult])
+    assert automol.inchi.is_standard_form(ich)
+    assert automol.inchi.is_complete(ich)
+    assert isinstance(charge, numbers.Integral)
+    assert isinstance(mult, numbers.Integral)
+    assert _is_valid_inchi_multiplicity(ich, mult)
+
+    ick = automol.inchi.inchi_key(ich)
+    charge_str = str(charge)
+    mult_str = str(mult)
+
+    dir_names = (automol.inchi.formula_sublayer(ich),
+                 automol.inchi_key.first_hash(ick),
+                 charge_str,
+                 mult_str,
+                 automol.inchi_key.second_hash_with_extension(ick))
+    return os.path.join(*dir_names)
 
 
 # ts
@@ -32,6 +53,12 @@ def ts_trunk():
     """ ts trunk directory name
     """
     return 'TS'
+
+
+def direction_leaf(forw):
+    """ direction leaf directory name
+    """
+    return 'F' if forw else 'B'
 
 
 # reactions
@@ -71,7 +98,7 @@ def reaction_is_reversed(rxn_ichs, rxn_chgs, rxn_muls):
     ichs2, chgs2, muls2 = _sort_together(ichs2, chgs2, muls2)
 
     return (_sortable_representation(ichs1, chgs1, muls1) >
-            _sortable_representation(ichs2, chgs1, muls1))
+            _sortable_representation(ichs2, chgs2, muls2))
 
 
 def sort_together(rxn_ichs, rxn_chgs, rxn_muls):
