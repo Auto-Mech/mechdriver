@@ -1,20 +1,648 @@
 """ drivers
 """
+import os
 import functools
 import numpy
 from qcelemental import constants as qcc
 import automol
+import moldr
+from moldr import runner
 import elstruct
 import autofile
-import moldr.runner
 
 
-# kickoff from saddle
+def run_initial_geometry_opt(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, geom_dct, overwrite, geom_ll=None, **kwargs):
+    """ generate initial geometry via optimization from either reference geometries or from inchi
+    """
+    # set up the filesystem
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+
+    # generate reference geometry - use value from lower level calculation if available
+    if geom_ll is None:
+        geo = moldr.util.reference_geometry(
+            ich, chg, mult, method, basis, orb_restr, save_prefix, geom_dct)
+    else:
+        geo = geom_ll
+
+    print('starting geometry')
+    # generate the z-matrix and sampling ranges
+    zma = automol.geom.zmatrix(geo)
+
+    # call the electronic structure optimizer
+    run_job(
+        job=elstruct.Job.OPTIMIZATION,
+        geom=zma,
+        chg=chg,
+        mult=mult,
+        method=method,
+        basis=basis,
+        orb_restr=orb_restr,
+        prefix=thy_run_path,
+        script_str=script_str,
+        prog=prog,
+        overwrite=overwrite,
+        **kwargs,
+    )
+    ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
+    if ret:
+        print('Saving reference geometry')
+        print(" - Save path: {}".format(thy_save_path))
+
+        inf_obj, _, out_str = ret
+        prog = inf_obj.prog
+        method = inf_obj.method
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+        zma = automol.geom.zmatrix(geo)
+        thy_afs = autofile.fs.theory()
+        thy_afs.theory.file.geometry.write(geo, spc_save_path, [method, basis, orb_restr])
+        thy_afs.theory.file.zmatrix.write(zma, spc_save_path, [method, basis, orb_restr])
+
+    return geo
+
+
+def run_remove_imaginary(
+        ich, chg, mult, method, basis, orb_restr, run_prefix,
+        script_str, prog, overwrite, kickoff_backward='False', kickoff_size=0.1, **kwargs):
+    """ if species has an imaginary frequency then find new geometry with all real
+    frequencies by making a kick off of the saddlepoint and then reoptimizing
+    """
+# check if optimized geometry has negative frequencies
+# if it does then kick in direction of imaginary mode and reoptimize
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+
+    ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
+    if ret:
+        print('Checking for saddle')
+        inf_obj, _, out_str = ret
+        prog = inf_obj.prog
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+        run_job(
+            job=elstruct.Job.HESSIAN,
+            geom=geo,
+            chg=chg,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prefix=thy_run_path,
+            script_str=script_str,
+            prog=prog,
+            overwrite=overwrite,
+            **kwargs,
+        )
+        ret = read_job(job=elstruct.Job.HESSIAN, prefix=thy_run_path)
+        if ret:
+            inf_obj, _, out_str = ret
+            prog = inf_obj.prog
+            hess = elstruct.reader.hessian(prog, out_str)
+            print('hess test')
+            print(automol.geom.string(geo))
+            print(numpy.array(hess))
+            freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
+            print('projected freqs')
+            print(freqs)
+            norm_coos = elstruct.util.normal_coordinates(geo, hess, project=True)
+
+# if there's an imaginary frequency, optimize again after displacing along the mode
+# for now set the imaginary frequency check to -100:
+# Ultimately should decrease once frequency projector is functioning properly
+            if freqs[0] < -100:
+                print('Imaginary mode found: Attempting a kickoff from the saddle')
+                im_norm_coo = numpy.array(norm_coos)[:, 0]
+                disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3))
+                run_kickoff_saddle(
+                    geo, disp_xyzs, chg, mult, method, basis,
+                    orb_restr, thy_run_path, script_str, prog,
+                    kickoff_size, kickoff_backward, opt_cart=False,
+                    **kwargs)
+                print('removing saddlepoint hessian')
+                run_afs = autofile.fs.run()
+                run_afs.run.dir.remove(thy_run_path, ['hessian'])
+
+
+def save_initial_geometry(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix, prog):
+    """ save the geometry from the initial optimization as a reference geometry
+    """
+# save info for the initial optimized geometry as a reference geometry
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+    ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
+    if ret:
+        print('Saving reference geometry')
+        print(" - Save path: {}".format(thy_save_path))
+
+        inf_obj, _, out_str = ret
+        prog = inf_obj.prog
+        method = inf_obj.method
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+        zma = automol.geom.zmatrix(geo)
+        thy_afs = autofile.fs.theory()
+        thy_afs.theory.file.geometry.write(geo, spc_save_path, [method, basis, orb_restr])
+        thy_afs.theory.file.zmatrix.write(zma, spc_save_path, [method, basis, orb_restr])
+
+
+def conformer_sampling(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, nsamp_par=[False, 3, 3, 1, 50, 50], **kwargs):
+    """ Find the minimum energy conformer by optimizing from nsamp random initial torsional states
+    """
+
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+    print('Starting conformer sampling')
+    print(thy_save_path)
+    thy_afs = autofile.fs.theory()
+    geo = thy_afs.theory.file.geometry.read(spc_save_path, [method, basis, orb_restr])
+#    geo = thy_afs.theory.file.geometry.read(thy_save_path, [method, basis, orb_restr])
+#    geo = thy_afs.theory.file.geometry.read(thy_save_path)
+    print('geo')
+    zma = automol.geom.zmatrix(geo)
+    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    tors_ranges = automol.zmatrix.torsional_sampling_ranges(
+        zma, tors_names)
+    tors_range_dct = dict(zip(tors_names, tors_ranges))
+    gra = automol.inchi.graph(ich)
+    ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+    if nsamp_par[0]:
+        nsamp = min(nsamp[1] + nsamp[2] * nsamp[3]**ntaudof, nsamp[4])
+    else:
+        nsamp = nsamp_par[5]
+
+    save_conformers(
+        run_prefix=thy_run_path,
+        save_prefix=thy_save_path,
+    )
+    print('zma test in conformer sampling')
+    print(zma)
+
+    run_conformers(
+        zma=zma,
+        chg=chg,
+        mult=mult,
+        method=method,
+        basis=basis,
+        orb_restr=orb_restr,
+        nsamp=nsamp,
+        tors_range_dct=tors_range_dct,
+        run_prefix=thy_run_path,
+        save_prefix=thy_save_path,
+        script_str=script_str,
+        prog=prog,
+        overwrite=overwrite,
+        **kwargs,
+    )
+
+    save_conformers(
+        run_prefix=thy_run_path,
+        save_prefix=thy_save_path,
+    )
+
+    # save information about the minimum energy conformer in top directory
+    thy_afs = autofile.fs.theory()
+    cnf_afs = autofile.fs.conformer()
+    min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+    if min_cnf_alocs:
+        geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+        zma = cnf_afs.conf.file.zmatrix.read(thy_save_path, min_cnf_alocs)
+        assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
+        thy_afs.theory.file.geometry.write(geo, spc_save_path, [method, basis, orb_restr])
+        thy_afs.theory.file.zmatrix.write(zma, spc_save_path, [method, basis, orb_restr])
+
+
+def run_minimum_energy_gradient(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, **kwargs):
+    """ Find the gradient for the minimum energy conformer
+    """
+
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+    cnf_afs = autofile.fs.conformer()
+    min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+    if min_cnf_alocs:
+        min_cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, min_cnf_alocs)
+        min_cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+        geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+        print('Minimum energy conformer gradient')
+        run_job(
+            job='gradient',
+            script_str=script_str,
+            prefix=min_cnf_run_path,
+            geom=geo,
+            chg=chg,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prog=prog,
+            overwrite=overwrite,
+            **kwargs,
+        )
+
+        ret = read_job(
+            job='gradient',
+            prefix=min_cnf_run_path,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading gradient from output...")
+            grad = elstruct.reader.gradient(inf_obj.prog, out_str)
+
+            print(" - Saving gradient...")
+            print(" - Save path: {}".format(min_cnf_save_path))
+            cnf_afs.conf.file.gradient_info.write(inf_obj, thy_save_path, min_cnf_alocs)
+            cnf_afs.conf.file.gradient_input.write(inp_str, thy_save_path, min_cnf_alocs)
+            cnf_afs.conf.file.gradient.write(grad, thy_save_path, min_cnf_alocs)
+
+
+def run_minimum_energy_hessian(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, **kwargs):
+    """ Find the hessian for the minimum energy conformer
+    """
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+    cnf_afs = autofile.fs.conformer()
+    min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+    if min_cnf_alocs:
+        min_cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, min_cnf_alocs)
+        min_cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+        geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+        print('Minimum energy conformer hessian')
+        run_job(
+            job='hessian',
+            script_str=script_str,
+            prefix=min_cnf_run_path,
+            geom=geo,
+            chg=chg,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prog=prog,
+            overwrite=overwrite,
+            **kwargs
+        )
+
+        ret = read_job(
+            job='hessian',
+            prefix=min_cnf_run_path,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading hessian from output...")
+            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+            freqs = elstruct.util.harmonic_frequencies(geo, hess, project=False)
+            print('Freqs test')
+            print(freqs)
+            freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
+            print('Projected freqs test')
+            print(freqs)
+
+            print(" - Saving hessian...")
+            print(" - Save path: {}".format(min_cnf_save_path))
+            cnf_afs.conf.file.hessian_info.write(inf_obj, thy_save_path, min_cnf_alocs)
+            cnf_afs.conf.file.hessian_input.write(inp_str, thy_save_path, min_cnf_alocs)
+            cnf_afs.conf.file.hessian.write(hess, thy_save_path, min_cnf_alocs)
+            cnf_afs.conf.file.harmonic_frequencies.write(freqs, thy_save_path, min_cnf_alocs)
+
+
+#def minimum_conformer_energy(
+#        smi, ich, chg, mult, methods, bases, orb_restr, run_prefix, save_prefix, prog, overwrite,
+# d. hindered rotor scans
+
+def hindered_rotor_scans(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, scan_increment=30., **opt_kwargs):
+    """ Perform 1d scans over each of the torsional coordinates
+    """
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+    cnf_afs = autofile.fs.conformer()
+    min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+    if min_cnf_alocs:
+        min_cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, min_cnf_alocs)
+        min_cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+        geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+        zma = cnf_afs.conf.file.zmatrix.read(thy_save_path, min_cnf_alocs)
+        val_dct = automol.zmatrix.values(zma)
+        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+        tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+            zma, tors_names, scan_increment)
+        tors_grids = [
+            numpy.linspace(*linspace) +val_dct[name]
+            for name, linspace in zip(tors_names, tors_linspaces)]
+
+        for tors_name, tors_grid in zip(tors_names, tors_grids):
+            run_scan(
+                zma=zma,
+                chg=chg,
+                mult=mult,
+                method=method,
+                basis=basis,
+                orb_restr=orb_restr,
+                grid_dct={tors_name: tors_grid},
+                run_prefix=min_cnf_run_path,
+                save_prefix=min_cnf_save_path,
+                script_str=script_str,
+                prog=prog,
+                overwrite=overwrite,
+                **opt_kwargs,
+            )
+
+            save_scan(
+                run_prefix=min_cnf_run_path,
+                save_prefix=min_cnf_save_path,
+                coo_names=[tors_name],
+            )
+
+
+def run_conformer_gradients(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, **kwargs):
+    """ Determine the gradient for each of the conformers
+    """
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+    cnf_afs = autofile.fs.conformer()
+    cnf_alocs_lst = cnf_afs.conf.dir.existing(thy_save_path)
+    for alocs in cnf_alocs_lst:
+        cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, alocs)
+        cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, alocs)
+        geo = cnf_afs.conf.file.geometry.read(thy_save_path, alocs)
+#        print('conformer paths')
+#        print(thy_save_path)
+#        print(cnf_save_path)
+#        print(alocs)
+
+        print('Running conformer gradient')
+        run_job(
+            job='gradient',
+            script_str=script_str,
+            prefix=cnf_run_path,
+            geom=geo,
+            chg=chg,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prog=prog,
+            overwrite=overwrite,
+            **kwargs,
+        )
+
+        ret = read_job(
+            job='gradient',
+            prefix=cnf_run_path,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading gradient from output...")
+            grad = elstruct.reader.gradient(inf_obj.prog, out_str)
+
+            print(" - Saving gradient...")
+            print(" - Save path: {}".format(cnf_save_path))
+            cnf_afs.conf.file.gradient_info.write(inf_obj, thy_save_path, alocs)
+            cnf_afs.conf.file.gradient_input.write(inp_str, thy_save_path, alocs)
+            cnf_afs.conf.file.gradient.write(grad, thy_save_path, alocs)
+
+
+def run_conformer_hessians(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, **kwargs):
+    """ Determine the hessian for each of the conformers
+    """
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+    cnf_afs = autofile.fs.conformer()
+    cnf_alocs_lst = cnf_afs.conf.dir.existing(thy_save_path)
+    for alocs in cnf_alocs_lst:
+        cnf_run_path = cnf_afs.conf.dir.path(thy_run_path, alocs)
+        cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, alocs)
+        geo = cnf_afs.conf.file.geometry.read(thy_save_path, alocs)
+
+        print('Running conformer hessian')
+        run_job(
+            job='hessian',
+            script_str=script_str,
+            prefix=cnf_run_path,
+            geom=geo,
+            chg=chg,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prog=prog,
+            overwrite=overwrite,
+            **kwargs,
+        )
+
+        ret = read_job(
+            job='hessian',
+            prefix=cnf_run_path,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading hessian from output...")
+            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+            freqs = elstruct.util.harmonic_frequencies(geo, hess, project=False)
+            print('Conformer Freqs test')
+            print(freqs)
+
+            print(" - Saving hessian...")
+            print(" - Save path: {}".format(cnf_save_path))
+            cnf_afs.conf.file.hessian_info.write(inf_obj, thy_save_path, alocs)
+            cnf_afs.conf.file.hessian_input.write(inp_str, thy_save_path, alocs)
+            cnf_afs.conf.file.hessian.write(hess, thy_save_path, alocs)
+            cnf_afs.conf.file.harmonic_frequencies.write(freqs, thy_save_path, alocs)
+
+
+def tau_sampling(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, nsamp_par, **opt_kwargs):
+    """ Sample over torsions optimizing all other coordinates
+    """
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+
+    save_tau(
+        run_prefix=thy_run_path,
+        save_prefix=thy_save_path,
+    )
+
+    thy_afs = autofile.fs.theory()
+    geo = thy_afs.theory.file.geometry.read(spc_save_path, [method, basis, orb_restr])
+    zma = automol.geom.zmatrix(geo)
+    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    tors_ranges = automol.zmatrix.torsional_sampling_ranges(
+        zma, tors_names)
+    tors_range_dct = dict(zip(tors_names, tors_ranges))
+    gra = automol.inchi.graph(ich)
+    ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+    if nsamp_par[0]:
+        nsamp = min(nsamp[1] + nsamp[2] * nsamp[3]**ntaudof, nsamp[4])
+    else:
+        nsamp = nsamp_par[5]
+
+    run_tau(
+        zma=zma,
+        chg=chg,
+        mult=mult,
+        method=method,
+        basis=basis,
+        orb_restr=orb_restr,
+        nsamp=nsamp,
+        tors_range_dct=tors_range_dct,
+        run_prefix=thy_run_path,
+        save_prefix=thy_save_path,
+        script_str=script_str,
+        prog=prog,
+        overwrite=overwrite,
+        **opt_kwargs,
+    )
+
+    save_tau(
+        run_prefix=thy_run_path,
+        save_prefix=thy_save_path,
+    )
+
+
+def run_tau_gradients(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, **kwargs):
+    """ Determine gradients for all tau dependent optimized geometries
+    """
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+# cycle through saved tau geometries
+    afs = autofile.fs.tau()
+    for alocs in afs.tau.dir.existing(thy_save_path):
+        geo = afs.tau.file.geometry.read(thy_save_path, alocs)
+        print('Running tau gradient')
+#        afs.tau.dir.create(run_prefix, alocs)
+        tau_run_path = afs.tau.dir.path(thy_run_path, alocs)
+        tau_save_path = afs.tau.dir.path(thy_save_path, alocs)
+
+        run_job(
+            job='gradient',
+            script_str=script_str,
+            prefix=tau_run_path,
+            geom=geo,
+            chg=chg,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prog=prog,
+            overwrite=overwrite,
+            **kwargs,
+        )
+
+        ret = read_job(
+            job='gradient',
+            prefix=tau_run_path,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading gradient from output...")
+            grad = elstruct.reader.gradient(inf_obj.prog, out_str)
+
+            print(" - Saving gradient...")
+            print(" - Save path: {}".format(tau_save_path))
+            afs.tau.file.gradient_info.write(inf_obj, thy_save_path, alocs)
+            afs.tau.file.gradient_input.write(inp_str, thy_save_path, alocs)
+            afs.tau.file.gradient.write(grad, thy_save_path, alocs)
+
+
+def run_tau_hessians(
+        ich, chg, mult, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, **kwargs):
+    """ Determine hessians for all tau dependent optimized geometries
+    """
+    spc_run_path = moldr.util.species_path(ich, chg, mult, run_prefix)
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+# cycle through saved tau geometries
+    afs = autofile.fs.tau()
+    for alocs in afs.tau.dir.existing(thy_save_path):
+        geo = afs.tau.file.geometry.read(thy_save_path, alocs)
+        print('Running tau Hessian')
+#        afs.tau.dir.create(run_prefix, alocs)
+        tau_run_path = afs.tau.dir.path(thy_run_path, alocs)
+        tau_save_path = afs.tau.dir.path(thy_save_path, alocs)
+        run_job(
+            job='hessian',
+            script_str=script_str,
+            prefix=tau_run_path,
+            geom=geo,
+            chg=chg,
+            mult=mult,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prog=prog,
+            overwrite=overwrite,
+            **kwargs,
+        )
+
+        ret = read_job(
+            job='hessian',
+            prefix=tau_run_path,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading hessian from output...")
+            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+
+            print(" - Saving hessian...")
+            print(" - Save path: {}".format(tau_save_path))
+            afs.tau.file.hessian_info.write(inf_obj, thy_save_path, alocs)
+            afs.tau.file.hessian_input.write(inp_str, thy_save_path, alocs)
+            afs.tau.file.hessian.write(hess, thy_save_path, alocs)
+
+
 def run_kickoff_saddle(
-        geo, disp_xyzs, charge, mult, method, basis, orb_restr, run_path,
-        script_str, prog, overwrite, kickoff_size=0.1, kickoff_backward=False,
-        opt_cart=True,
-        **kwargs):
+        geo, disp_xyzs, chg, mult, method, basis, orb_restr, run_path,
+        script_str, prog, kickoff_size=0.1, kickoff_backward=False,
+        opt_cart=True, **kwargs):
     """ kickoff from saddle to find connected minima
     """
     print('kickoff from saddle')
@@ -27,10 +655,10 @@ def run_kickoff_saddle(
         geom = geo
     else:
         geom = automol.geom.zmatrix(geo)
-    moldr.driver.run_job(
+    run_job(
         job=elstruct.Job.OPTIMIZATION,
         geom=geom,
-        charge=charge,
+        chg=chg,
         mult=mult,
         method=method,
         basis=basis,
@@ -43,9 +671,59 @@ def run_kickoff_saddle(
     )
 
 
-# conformer sampling
+def tau_pf_write(
+        name, ich, chg, mult, method, basis, orb_restr, save_prefix, **kwargs):
+    """ Determine gradients for all tau dependent optimized geometries
+    """
+
+    spc_save_path = moldr.util.species_path(ich, chg, mult, save_prefix)
+    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+    cnf_afs = autofile.fs.conformer()
+    min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+    if min_cnf_alocs:
+#        min_cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+#        ene_ref = afs.tau.file.energy.read(min_cnf_save_path, min_cnf_alocs)
+        ene_ref = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
+        print('ene_ref')
+        print(ene_ref)
+
+    afs = autofile.fs.tau()
+    evr = name+'\n'
+    idx = 0
+# cycle through saved tau geometries
+    for alocs in afs.tau.dir.existing(thy_save_path):
+        geo = afs.tau.file.geometry.read(thy_save_path, alocs)
+        grad = afs.tau.file.gradient.read(thy_save_path, alocs)
+        hess = afs.tau.file.hessian.read(thy_save_path, alocs)
+        ene = afs.tau.file.energy.read(thy_save_path, alocs)
+        ene = (ene - ene_ref)*qcc.conversion_factor('hartree', 'kcal/mol')
+
+        ene_str = autofile.file.write.energy(ene)
+        geo_str = autofile.file.write.geometry(geo)
+        grad_str = autofile.file.write.gradient(grad)
+        hess_str = autofile.file.write.hessian(hess)
+
+        idx += 1
+        idx_str = str(idx)
+
+        evr += 'Sampling point'+idx_str+'\n'
+        evr += 'Energy'+'\n'
+        evr += ene_str+'\n'
+        evr += 'Geometry'+'\n'
+        evr += geo_str+'\n'
+        evr += 'Gradient'+'\n'
+        evr += grad_str
+        evr += 'Hessian'+'\n'
+        evr += hess_str+'\n'
+
+    file_name = os.path.join(thy_save_path, 'TAU', 'tau.out')
+    with open(file_name, 'w') as tau_file:
+        tau_file.write(evr)
+#    print(evr)
+
+
 def run_conformers(
-        zma, charge, mult, method, basis, orb_restr, nsamp, tors_range_dct,
+        zma, chg, mult, method, basis, orb_restr, nsamp, tors_range_dct,
         run_prefix, save_prefix, script_str, prog, overwrite,
         **kwargs):
     """ run sampling algorithm to find conformers
@@ -89,7 +767,6 @@ def run_conformers(
             alocs = [cid]
 
             afs.conf.dir.create(run_prefix, alocs)
-
             run_path = afs.conf.dir.path(run_prefix, alocs)
 
             idx += 1
@@ -99,7 +776,7 @@ def run_conformers(
                 script_str=script_str,
                 prefix=run_path,
                 geom=samp_zma,
-                charge=charge,
+                chg=chg,
                 mult=mult,
                 method=method,
                 basis=basis,
@@ -108,7 +785,7 @@ def run_conformers(
                 overwrite=overwrite,
                 **kwargs
             )
-                
+
             nsampd += 1
             inf_obj.nsamp = nsampd
             afs.conf_trunk.file.info.write(inf_obj, save_prefix)
@@ -194,8 +871,7 @@ def save_conformers(run_prefix, save_prefix):
             afs.conf_trunk.file.trajectory.write(traj, save_prefix)
 
 
-# tau sampling for partition function
-def run_tau(zma, charge, mult, method, basis, orb_restr,
+def run_tau(zma, chg, mult, method, basis, orb_restr,
             nsamp, tors_range_dct, run_prefix, save_prefix, script_str,
             prog, overwrite, **kwargs):
     """ run sampling algorithm to find tau dependent geometries
@@ -219,15 +895,14 @@ def run_tau(zma, charge, mult, method, basis, orb_restr,
         if afs.tau_trunk.file.info.exists(save_prefix):
             inf_obj_s = afs.tau_trunk.file.info.read(save_prefix)
             nsampd = inf_obj_s.nsamp
-            if nsampd > 0:
-                print("Found previous nsamp in save directory. Adjusting nsamp.")
-                print("    New nsamp is {:d}.".format(nsamp))
+#            if nsampd > 0:
+#                print("Found previous nsamp in save directory. Adjusting nsamp.")
+#                print("    New nsamp is {:d}.".format(nsamp))
         elif afs.tau_trunk.file.info.exists(run_prefix):
             inf_obj_r = afs.tau_trunk.file.info.read(run_prefix)
             nsampd = inf_obj_r.nsamp
-            if nsampd > 0:
-                print("Found previous nsamp in run directory. Adjusting nsamp.")
-                print("    New nsamp is {:d}.".format(nsamp))
+#            if nsampd > 0:
+#                print("Found previous nsamp in run directory. Adjusting nsamp.")
         else:
             nsampd = 0
 
@@ -236,13 +911,13 @@ def run_tau(zma, charge, mult, method, basis, orb_restr,
             print('Reached requested number of samples. Tau sampling complete.')
             break
         else:
+            print("    New nsamp is {:d}.".format(nsamp))
 
             samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
             tid = autofile.system.generate_new_tau_id()
             alocs = [tid]
 
             afs.tau.dir.create(run_prefix, alocs)
-
             run_path = afs.tau.dir.path(run_prefix, alocs)
 
             idx += 1
@@ -252,7 +927,7 @@ def run_tau(zma, charge, mult, method, basis, orb_restr,
                 script_str=script_str,
                 prefix=run_path,
                 geom=samp_zma,
-                charge=charge,
+                chg=chg,
                 mult=mult,
                 method=method,
                 basis=basis,
@@ -262,6 +937,7 @@ def run_tau(zma, charge, mult, method, basis, orb_restr,
                 frozen_coordinates=tors_range_dct.keys(),
                 **kwargs
             )
+
             nsampd += 1
             inf_obj.nsamp = nsampd
             afs.tau_trunk.file.info.write(inf_obj, save_prefix)
@@ -324,10 +1000,9 @@ def save_tau(run_prefix, save_prefix):
             afs.tau_trunk.file.trajectory.write(traj, save_prefix)
 
 
-# constrained optimization scans
-def run_scan(zma, charge, mult, method, basis, orb_restr,
+def run_scan(zma, chg, mult, method, basis, orb_restr,
              grid_dct, run_prefix, save_prefix, script_str,
-             prog, overwrite,  update_guess=True,
+             prog, overwrite, update_guess=True,
              reverse_sweep=True, **kwargs):
     """ run constrained optimization scan
     """
@@ -372,7 +1047,7 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
         coo_name=coo_name,
         grid_idxs=grid_idxs,
         grid_vals=grid_vals,
-        charge=charge,
+        chg=chg,
         mult=mult,
         method=method,
         basis=basis,
@@ -391,7 +1066,7 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
             coo_name=coo_name,
             grid_idxs=list(reversed(grid_idxs)),
             grid_vals=list(reversed(grid_vals)),
-            charge=charge,
+            chg=chg,
             mult=mult,
             method=method,
             basis=basis,
@@ -405,9 +1080,9 @@ def run_scan(zma, charge, mult, method, basis, orb_restr,
 
 def _run_1d_scan(script_str, prefixes,
                  guess_zma, coo_name, grid_idxs, grid_vals,
-                 charge, mult, method, basis, orb_restr, prog,
-                 overwrite,  
-                 errors=(), options_mat=(), 
+                 chg, mult, method, basis, orb_restr, prog,
+                 overwrite,
+                 errors=(), options_mat=(),
                  retry_failed=True,
                  update_guess=True,
                  **kwargs):
@@ -422,7 +1097,7 @@ def _run_1d_scan(script_str, prefixes,
             script_str=script_str,
             prefix=prefix,
             geom=zma,
-            charge=charge,
+            chg=chg,
             mult=mult,
             method=method,
             basis=basis,
@@ -512,17 +1187,17 @@ JOB_ERROR_DCT = {
 
 JOB_RUNNER_DCT = {
     elstruct.Job.ENERGY: functools.partial(
-        moldr.runner.options_matrix_run, elstruct.writer.energy),
+        runner.options_matrix_run, elstruct.writer.energy),
     elstruct.Job.GRADIENT: functools.partial(
-        moldr.runner.options_matrix_run, elstruct.writer.gradient),
+        runner.options_matrix_run, elstruct.writer.gradient),
     elstruct.Job.HESSIAN: functools.partial(
-        moldr.runner.options_matrix_run, elstruct.writer.hessian),
-    elstruct.Job.OPTIMIZATION: moldr.runner.options_matrix_optimization,
+        runner.options_matrix_run, elstruct.writer.hessian),
+    elstruct.Job.OPTIMIZATION: runner.options_matrix_optimization,
 }
 
 
 def run_job(job, script_str, prefix,
-            geom, charge, mult, method, basis, orb_restr, prog,
+            geom, chg, mult, method, basis, orb_restr, prog,
             errors=(), options_mat=(), retry_failed=True, feedback=False,
             frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
             **kwargs):
@@ -580,7 +1255,7 @@ def run_job(job, script_str, prefix,
         print(" - Starting the run...")
         inp_str, out_str = runner(
             script_str, run_path,
-            geom=geom, charge=charge, mult=mult, method=method, basis=basis,
+            geom=geom, chg=chg, mult=mult, method=method, basis=basis,
             orb_restricted=orb_restr, prog=prog, errors=errors,
             options_mat=options_mat,
             **kwargs

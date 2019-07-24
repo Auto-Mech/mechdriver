@@ -1,4 +1,4 @@
-""" utilites 
+""" utilites
 """
 import os
 import stat
@@ -6,9 +6,92 @@ import subprocess
 import warnings
 import autofile
 import automol
+import elstruct
 
+
+def run_qchem_par(prog):
+    """ dictionary of parameters for different electronic structure codes
+    """
+
+    if prog == 'g09':
+        script_str = ("#!/usr/bin/env bash\n"
+                      "g09 run.inp run.out >> stdout.log &> stderr.log")
+        opt_script_str = script_str
+        kwargs = {
+            'memory': 20,
+            'machine_options': ['%NProcShared=10'],
+            'gen_lines': ['# int=ultrafine'],
+        }
+        opt_kwargs = {
+            'memory': 20,
+            'machine_options': ['%NProcShared=10'],
+            'gen_lines': ['# int=ultrafine'],
+            'feedback': True,
+            # 'job_options': ['verytight'],
+            'errors': [
+                elstruct.Error.OPT_NOCONV
+            ],
+            'options_mat': [
+                [{},
+                 {},
+                 {},
+                 {'job_options': ['calcfc']},
+                 {'job_options': ['calcfc']},
+                 {'job_options': ['calcall']}]
+            ],
+        }
+
+    if prog == 'psi4':
+        script_str = ("#!/usr/bin/env bash\n"
+                      "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
+        opt_script_str = script_str
+        kwargs = {}
+        opt_kwargs = {}
+
+    if prog == 'molpro':
+        script_str = ("#!/usr/bin/env bash\n"
+                      "molpro -n 8 -i run.inp -o run.out >> stdout.log &> stderr.log")
+        opt_script_str = ("#!/usr/bin/env bash\n"
+                          "molpro --mppx -n 12 -i run.inp -o run.out >> stdout.log &> stderr.log")
+        kwargs = {
+            'memory': 50,
+        }
+        opt_kwargs = {
+            'memory': 50,
+        }
+
+    if prog == 'qchem':
+        script_str = ("#!/usr/bin/env bash\n"
+                      "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
+        opt_script_str = script_str
+        kwargs = {
+            'memory': 50,
+        }
+        opt_kwargs = {}
+
+    if prog == 'cfour':
+        script_str = ("#!/usr/bin/env bash\n"
+                      "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
+        opt_script_str = script_str
+        kwargs = {
+            'memory': 50,
+        }
+        opt_kwargs = {}
+
+    if prog == 'orca':
+        script_str = ("#!/usr/bin/env bash\n"
+                      "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
+        opt_script_str = script_str
+        kwargs = {
+            'memory': 50,
+        }
+        opt_kwargs = {}
+
+    return  script_str, opt_script_str, kwargs, opt_kwargs
 
 def orbital_restriction(mult, restrict_open_shell=False):
+    """ orbital restriction logical
+    """
     if restrict_open_shell:
         orb_restr = True
     else:
@@ -17,6 +100,8 @@ def orbital_restriction(mult, restrict_open_shell=False):
 
 
 def geometry_dictionary(geom_path):
+    """ read in dictionary of saved geometries
+    """
     geom_dct = {}
     for dir_path, _, file_names in os.walk(geom_path):
         for file_name in file_names:
@@ -32,6 +117,10 @@ def geometry_dictionary(geom_path):
 
 
 def reference_geometry(ich, chg, mult, method, basis, orb_restr, prefix, geom_dct):
+    """ obtain reference geometry
+    geometry dictionary takes precedence
+    then from inchi
+    """
     spc_path = species_path(ich, chg, mult, prefix)
     thy_afs = autofile.fs.theory()
     thy_alocs = [method, basis, orb_restr]
@@ -41,7 +130,7 @@ def reference_geometry(ich, chg, mult, method, basis, orb_restr, prefix, geom_dc
     else:
         if thy_afs.theory.file.geometry.exists(spc_path, thy_alocs):
             thy_path = thy_afs.theory.dir.path(spc_path, thy_alocs)
-            print('getting reference geometry from',thy_path)
+            print('getting reference geometry from', thy_path)
             geo = thy_afs.theory.file.geometry.read(spc_path, thy_alocs)
         else:
             print('getting reference geometry from inchi')
@@ -160,4 +249,3 @@ class _EnterDirectory():
 
     def __exit__(self, _exc_type, _exc_value, _traceback):
         os.chdir(self.working_directory)
-
