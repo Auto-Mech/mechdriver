@@ -2,6 +2,7 @@
 """
 import autofile.file
 import autofile.info
+import autofile.system.info
 from autofile.system import model
 
 
@@ -28,30 +29,30 @@ def information(file_prefix, function=None):
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)
 
 
-def data_series_specifier(file_prefix, map_dct_, spec_keys):
-    """ data series specifier DataFile
+def locator(file_prefix, map_dct_, loc_keys):
+    """ locator DataFile
 
     Specifiers are stored in information files according to `map_dct_` and read
-    back out according to `spec_keys_`. The file may contain auxiliary
+    back out according to `loc_keys_`. The file may contain auxiliary
     information (such as SMILES along with InChI), but for the read to work it
-    must contain each specifier value.
+    must contain each locator value.
 
-    :param map_dct_: Maps on the specifier list to the values stored in the
+    :param map_dct_: Maps on the locator list to the values stored in the
         information file, by key.
     :type map_dct_: dict[key: callable]
-    :param spec_keys: Keys to the original specifier values.
-    :type spec_keys: tuple[str]
+    :param loc_keys: Keys to the original locator values.
+    :type loc_keys: tuple[str]
     """
 
-    def writer_(specs):
-        inf_dct = {key: map_(specs) for key, map_ in map_dct_.items()}
+    def writer_(locs):
+        inf_dct = {key: map_(locs) for key, map_ in map_dct_.items()}
         inf_obj = autofile.info.object_(inf_dct)
         return autofile.file.write.information(inf_obj)
 
     def reader_(inf_str):
         inf_obj = autofile.file.read.information(inf_str)
         inf_dct = dict(inf_obj)
-        return tuple(map(inf_dct.__getitem__, spec_keys))
+        return list(map(inf_dct.__getitem__, loc_keys))
 
     name = autofile.file.name.information(file_prefix)
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)
@@ -107,6 +108,15 @@ def hessian(file_prefix):
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)
 
 
+def harmonic_frequencies(file_prefix):
+    """ generate harmonic_frequencies DataFile
+    """
+    name = autofile.file.name.harmonic_frequencies(file_prefix)
+    writer_ = autofile.file.write.harmonic_frequencies
+    reader_ = autofile.file.read.harmonic_frequencies
+    return model.DataFile(name=name, writer_=writer_, reader_=reader_)
+
+
 def zmatrix(file_prefix):
     """ generate zmatrix DataFile
     """
@@ -150,6 +160,50 @@ def lennard_jones_sigma(file_prefix):
     writer_ = autofile.file.write.lennard_jones_sigma
     reader_ = autofile.file.read.lennard_jones_sigma
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)
+
+
+# file manager
+class FilePrefix():
+    """ file prefixes """
+    GENERIC = 'gen'
+    GEOM = 'geom'
+    GRAD = 'grad'
+    HESS = 'hess'
+
+
+def data_file_manager():
+    """ file manager
+    """
+    return model.DataFileManager({
+        'geometry_info':
+        information(FilePrefix.GEOM, function=autofile.system.info.run),
+        'gradient_info':
+        information(FilePrefix.GRAD, function=autofile.system.info.run),
+        'hessian_info':
+        information(FilePrefix.HESS, function=autofile.system.info.run),
+        'geometry_input':
+        input_file(FilePrefix.GEOM),
+        'gradient_input':
+        input_file(FilePrefix.GRAD),
+        'hessian_input':
+        input_file(FilePrefix.HESS),
+        'geometry_energy':
+        energy(FilePrefix.GEOM),
+        'geometry':
+        geometry(FilePrefix.GEOM),
+        'zmatrix':
+        zmatrix(FilePrefix.GEOM),
+        'gradient':
+        gradient(FilePrefix.GRAD),
+        'hessian':
+        hessian(FilePrefix.HESS),
+        'harmonic_frequencies':
+        harmonic_frequencies(FilePrefix.HESS),
+        'vmatrix':
+        vmatrix(FilePrefix.GENERIC),
+        'trajectory':
+        trajectory(FilePrefix.GENERIC),
+    })
 
 
 # helpers

@@ -111,7 +111,7 @@ for smi, mult in SMILES_MULT_LST:
             save_prefix=SAVE_PREFIX,
             script_str=SCRIPT_STR,
             prog=PROG,
-            scan_incr=60.)
+            scan_incr=30.)
 
         moldr.driver.save_scan(
             ich=ich,

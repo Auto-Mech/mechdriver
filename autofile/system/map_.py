@@ -1,6 +1,7 @@
 """ directory naming functions
 """
 import os
+import string
 import numbers
 import elstruct
 import automol
@@ -14,6 +15,12 @@ from autofile.system._util import (is_random_string_identifier as
 
 
 # species
+def reference_trunk():
+    """ reference trunk directory name
+    """
+    return 'REF'
+
+
 def species_trunk():
     """ species trunk directory name
     """
@@ -23,7 +30,35 @@ def species_trunk():
 def species_leaf(ich, charge, mult):
     """ species leaf directory name
     """
-    return _reactant_leaf([ich], [charge], [mult])
+    assert automol.inchi.is_standard_form(ich)
+    assert automol.inchi.is_complete(ich)
+    assert isinstance(charge, numbers.Integral)
+    assert isinstance(mult, numbers.Integral)
+    assert _is_valid_inchi_multiplicity(ich, mult)
+
+    ick = automol.inchi.inchi_key(ich)
+    charge_str = str(charge)
+    mult_str = str(mult)
+
+    dir_names = (automol.inchi.formula_sublayer(ich),
+                 automol.inchi_key.first_hash(ick),
+                 charge_str,
+                 mult_str,
+                 automol.inchi_key.second_hash_with_extension(ick))
+    return os.path.join(*dir_names)
+
+
+# ts
+def ts_trunk():
+    """ ts trunk directory name
+    """
+    return 'TS'
+
+
+def direction_leaf(forw):
+    """ direction leaf directory name
+    """
+    return 'F' if forw else 'B'
 
 
 # reactions
@@ -33,79 +68,70 @@ def reaction_trunk():
     return 'RXN'
 
 
-def reaction_leaf(ichs_pair, charges_pair, mults_pair, ts_mult):
+def reaction_leaf(rxn_ichs, rxn_chgs, rxn_muls, ts_mult):
     """ reaction leaf directory name
     """
-    ichs_pair = tuple(map(tuple, ichs_pair))
-    charges_pair = tuple(map(tuple, charges_pair))
-    mults_pair = tuple(map(tuple, mults_pair))
-    assert ((ichs_pair, charges_pair, mults_pair) ==
-            sort_together(ichs_pair, charges_pair, mults_pair))
-    ichs1, ichs2 = ichs_pair
-    charges1, charges2 = charges_pair
-    mults1, mults2 = mults_pair
+    rxn_ichs = tuple(map(tuple, rxn_ichs))
+    rxn_chgs = tuple(map(tuple, rxn_chgs))
+    rxn_muls = tuple(map(tuple, rxn_muls))
+    assert ((rxn_ichs, rxn_chgs, rxn_muls) ==
+            sort_together(rxn_ichs, rxn_chgs, rxn_muls))
+    ichs1, ichs2 = rxn_ichs
+    charges1, charges2 = rxn_chgs
+    mults1, mults2 = rxn_muls
     return os.path.join(_reactant_leaf(ichs1, charges1, mults1),
                         _reactant_leaf(ichs2, charges2, mults2),
                         str(ts_mult))
 
 
-def reaction_direction(ichs_pair, charges_pair, mults_pair):
-    """ sort inchis, charges, and multiplicities together
+def reaction_is_reversed(rxn_ichs, rxn_chgs, rxn_muls):
+    """ sort inchis, chgs, and muliplicities together
     """
 
-    def _sort_together(ichs, charges, mults):
-        idxs = automol.inchi.argsort(ichs)
-        ichs = tuple(ichs[idx] for idx in idxs)
-        charges = tuple(charges[idx] for idx in idxs)
-        mults = tuple(mults[idx] for idx in idxs)
-        return (ichs, charges, mults)
+    assert len(rxn_ichs) == len(rxn_chgs) == len(rxn_muls) == 2
 
-    def _sortable_representation(ichs, charges, mults):
-        return (len(ichs), sorted(automol.inchi.argsort(ichs)), charges, mults)
+    ichs1, ichs2 = rxn_ichs
+    chgs1, chgs2 = rxn_chgs
+    muls1, muls2 = rxn_muls
 
-    assert len(ichs_pair) == len(charges_pair) == len(mults_pair) == 2
+    ichs1, chgs1, muls1 = _sort_together(ichs1, chgs1, muls1)
+    ichs2, chgs2, muls2 = _sort_together(ichs2, chgs2, muls2)
 
-    ichs1, ichs2 = ichs_pair
-    charges1, charges2 = charges_pair
-    mults1, mults2 = mults_pair
-
-    ichs1, charges1, mults1 = _sort_together(ichs1, charges1, mults1)
-    ichs2, charges2, mults2 = _sort_together(ichs2, charges2, mults2)
-
-    return (_sortable_representation(ichs1, charges1, mults1) <
-            _sortable_representation(ichs2, charges1, mults1))
+    return (_sortable_representation(ichs1, chgs1, muls1) >
+            _sortable_representation(ichs2, chgs2, muls2))
 
 
-def sort_together(ichs_pair, charges_pair, mults_pair):
-    """ sort inchis, charges, and multiplicities together
+def sort_together(rxn_ichs, rxn_chgs, rxn_muls):
+    """ sort inchis, chgs, and muliplicities together
     """
 
-    def _sort_together(ichs, charges, mults):
-        idxs = automol.inchi.argsort(ichs)
-        ichs = tuple(ichs[idx] for idx in idxs)
-        charges = tuple(charges[idx] for idx in idxs)
-        mults = tuple(mults[idx] for idx in idxs)
-        return (ichs, charges, mults)
+    assert len(rxn_ichs) == len(rxn_chgs) == len(rxn_muls) == 2
 
-    def _sortable_representation(ichs, charges, mults):
-        return (len(ichs), sorted(automol.inchi.argsort(ichs)), charges, mults)
+    ichs1, ichs2 = rxn_ichs
+    chgs1, chgs2 = rxn_chgs
+    muls1, muls2 = rxn_muls
 
-    assert len(ichs_pair) == len(charges_pair) == len(mults_pair) == 2
+    ichs1, chgs1, muls1 = _sort_together(ichs1, chgs1, muls1)
+    ichs2, chgs2, muls2 = _sort_together(ichs2, chgs2, muls2)
 
-    ichs1, ichs2 = ichs_pair
-    charges1, charges2 = charges_pair
-    mults1, mults2 = mults_pair
-
-    ichs1, charges1, mults1 = _sort_together(ichs1, charges1, mults1)
-    ichs2, charges2, mults2 = _sort_together(ichs2, charges2, mults2)
-
-    if (_sortable_representation(ichs1, charges1, mults1) >
-            _sortable_representation(ichs2, charges1, mults1)):
+    if reaction_is_reversed(rxn_ichs, rxn_chgs, rxn_muls):
         ichs1, ichs2 = ichs2, ichs1
-        charges1, charges2 = charges2, charges1
-        mults1, mults2 = mults2, mults1
+        chgs1, chgs2 = chgs2, chgs1
+        muls1, muls2 = muls2, muls1
 
-    return ((ichs1, ichs2), (charges1, charges2), (mults1, mults2))
+    return ((ichs1, ichs2), (chgs1, chgs2), (muls1, muls2))
+
+
+def _sort_together(ichs, chgs, muls):
+    idxs = automol.inchi.argsort(ichs)
+    ichs = tuple(ichs[idx] for idx in idxs)
+    chgs = tuple(chgs[idx] for idx in idxs)
+    muls = tuple(muls[idx] for idx in idxs)
+    return (ichs, chgs, muls)
+
+
+def _sortable_representation(ichs, chgs, muls):
+    return (len(ichs), sorted(automol.inchi.argsort(ichs)), chgs, muls)
 
 
 def _reactant_leaf(ichs, charges, mults):
@@ -166,6 +192,17 @@ def run_leaf(job):
     return dir_name
 
 
+def subrun_leaf(macro_idx, micro_idx):
+    """ run leaf directory name
+    """
+    assert isinstance(macro_idx, numbers.Integral)
+    assert isinstance(micro_idx, numbers.Integral)
+    assert macro_idx < 26  # for now -- if needed we can add AA, AB, etc.
+    macro_str = string.ascii_uppercase[macro_idx]
+    micro_str = '{:0>2d}'.format(micro_idx)
+    return ''.join([macro_str, micro_str])
+
+
 # conformer
 def conformer_trunk():
     """ conformer trunk directory name
@@ -176,14 +213,15 @@ def conformer_trunk():
 def conformer_leaf(cid):
     """ conformer leaf directory name
     """
-    assert _is_random_string_identifier(cid)
+    assert cid[0] == 'c'
+    assert _is_random_string_identifier(cid[1:])
     return cid
 
 
 def generate_new_conformer_id():
     """ generate a new conformer identifier
     """
-    return _random_string_identifier()
+    return 'c'+_random_string_identifier()
 
 
 # single point
@@ -219,8 +257,36 @@ def tau_trunk():
     return 'TAU'
 
 
-def tau_leaf(cid):
+def tau_leaf(tid):
     """ tau leaf directory name
     """
-    assert _is_random_string_identifier(cid)
-    return cid
+    assert tid[0] == 't'
+    assert _is_random_string_identifier(tid[1:])
+    return tid
+
+
+def generate_new_tau_id():
+    """ generate a new conformer identifier
+    """
+    return 't'+_random_string_identifier()
+
+
+# builds (MESS, NASA Poly, etc.)
+def build_trunk(head):
+    """ build trunk directory name
+    """
+    assert isinstance(head, str)
+    return head.upper()[:4]
+
+
+def build_leaf(num):
+    """ build leaf directory name
+    """
+    assert isinstance(num, numbers.Integral) and 0 <= num <= 9
+    return str(num)
+
+
+def get_next_build_number(num):
+    """ determine the next build number
+    """
+    return int(num % 10)

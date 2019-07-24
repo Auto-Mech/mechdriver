@@ -52,155 +52,174 @@ class DataFile():
         return val
 
 
-class DataSeriesDir():
-    """ directory manager mapping specifier values to a directory series
+class DataFileManager(types.SimpleNamespace):
+    """ manager mapping locator values to files and directories in a series
     """
 
-    def __init__(self, map_, nspecs, depth, spec_dfile=None,
+    def __init__(self, dfile_dct=None):
+        """
+        :param dsdir: a DataSeriesDir object
+        :param dfiles: a sequence of pairs `("name", obj)` where `obj` is a
+            DataSeriesFile instance that will be accessible as `obj.file.name`
+        """
+        dfile_dct = {} if dfile_dct is None else dfile_dct
+
+        for name, dfile in dfile_dct.items():
+            assert isinstance(name, str)
+            assert isinstance(dfile, DataFile)
+            setattr(self, name, dfile)
+
+
+class DataSeriesDir():
+    """ directory manager mapping locator values to a directory series
+    """
+
+    def __init__(self, map_, nlocs, depth, loc_dfile=None,
                  root_dsdir=None, removable=False):
         """
-        :param map_: maps `nspecs` specifiers to a segment path consisting of
+        :param map_: maps `nlocs` locators to a segment path consisting of
             `depth` directories
-        :param info_map_: maps `nspecs` specifiers to an information object, to
+        :param info_map_: maps `nlocs` locators to an information object, to
             be written in the data directory
         """
         self.map_ = map_
-        self.nspecs = nspecs
+        self.nlocs = nlocs
         self.depth = depth
-        self.spec_dfile = spec_dfile
+        self.loc_dfile = loc_dfile
         self.root = root_dsdir
         self.removable = removable
 
-    def path(self, prefix, specs=()):
+    def path(self, prefix, locs=()):
         """ absolute directory path
         """
         if self.root is None:
             pfx = prefix
         else:
-            root_specs = self._root_specifiers(specs)
-            specs = self._self_specifiers(specs)
-            pfx = self.root.path(prefix, root_specs)
+            root_locs = self._root_locators(locs)
+            locs = self._self_locators(locs)
+            pfx = self.root.path(prefix, root_locs)
         pfx = os.path.abspath(pfx)
 
-        assert len(specs) == self.nspecs
+        assert len(locs) == self.nlocs
 
-        pth = self.map_(specs)
+        pth = self.map_(locs)
         assert _path_is_relative(pth)
         assert _path_has_depth(pth, self.depth)
         return os.path.join(pfx, pth)
 
-    def exists(self, prefix, specs=()):
+    def exists(self, prefix, locs=()):
         """ does this directory exist?
         """
-        pth = self.path(prefix, specs)
+        pth = self.path(prefix, locs)
         return os.path.isdir(pth)
 
-    def remove(self, prefix, specs=()):
+    def remove(self, prefix, locs=()):
         """ does this directory exist?
         """
         if self.removable:
-            pth = self.path(prefix, specs)
-            if self.exists(prefix, specs):
+            pth = self.path(prefix, locs)
+            if self.exists(prefix, locs):
                 shutil.rmtree(pth)
         else:
             raise ValueError("This data series is not removable")
 
-    def create(self, prefix, specs=()):
+    def create(self, prefix, locs=()):
         """ create a directory at this prefix
         """
         # recursively create starting from the first root directory
         if self.root is not None:
-            root_specs = self._root_specifiers(specs)
-            self.root.create(prefix, root_specs)
+            root_locs = self._root_locators(locs)
+            self.root.create(prefix, root_locs)
 
         # create this directory in the chain, if it doesn't already exist
         assert os.path.isdir(prefix)
-        if not self.exists(prefix, specs):
-            pth = self.path(prefix, specs)
+        if not self.exists(prefix, locs):
+            pth = self.path(prefix, locs)
             os.makedirs(pth)
 
-            if self.spec_dfile is not None:
-                specs = self._self_specifiers(specs)
-                self.spec_dfile.write(specs, pth)
+            if self.loc_dfile is not None:
+                locs = self._self_locators(locs)
+                self.loc_dfile.write(locs, pth)
 
-    def existing(self, prefix, root_specs=()):
-        """ return the list of specifiers for existing paths
+    def existing(self, prefix, root_locs=()):
+        """ return the list of locators for existing paths
         """
-        if self.spec_dfile is None:
+        if self.loc_dfile is None:
             raise ValueError("This function does not work "
-                             "without a specifier DataFile")
+                             "without a locator DataFile")
 
-        pths = self.existing_paths(prefix, root_specs)
-        specs_lst = tuple(self.spec_dfile.read(pth) for pth in pths)
-        return specs_lst
+        pths = self.existing_paths(prefix, root_locs)
+        locs_lst = tuple(self.loc_dfile.read(pth) for pth in pths)
+        return locs_lst
 
-    def existing_paths(self, prefix, root_specs=()):
+    def existing_paths(self, prefix, root_locs=()):
         """ existing paths at this prefix/root directory
         """
         if self.root is None:
             pfx = prefix
         else:
-            pfx = self.root.path(prefix, root_specs)
+            pfx = self.root.path(prefix, root_locs)
 
         pfx = os.path.abspath(pfx)
         pth_pattern = os.path.join(pfx, *('*' * self.depth))
         pths = filter(os.path.isdir, glob.glob(pth_pattern))
-        pths = tuple(os.path.join(pfx, pth) for pth in pths)
+        pths = tuple(sorted(os.path.join(pfx, pth) for pth in pths))
         return pths
 
     # helpers
-    def _self_specifiers(self, specs):
-        """ specifiers for this DataSeriesDir
+    def _self_locators(self, locs):
+        """ locators for this DataSeriesDir
         """
-        nspecs = len(specs)
-        assert nspecs >= self.nspecs
-        root_nspecs = nspecs - self.nspecs
-        return specs[root_nspecs:]
+        nlocs = len(locs)
+        assert nlocs >= self.nlocs
+        root_nlocs = nlocs - self.nlocs
+        return locs[root_nlocs:]
 
-    def _root_specifiers(self, specs):
-        """ specifiers for the root DataSeriesDir, if there is one
+    def _root_locators(self, locs):
+        """ locators for the root DataSeriesDir, if there is one
         """
-        nspecs = len(specs)
-        assert nspecs >= self.nspecs
-        root_nspecs = nspecs - self.nspecs
-        return specs[:root_nspecs]
+        nlocs = len(locs)
+        assert nlocs >= self.nlocs
+        root_nlocs = nlocs - self.nlocs
+        return locs[:root_nlocs]
 
 
+# deprecated:
 class DataSeriesFile():
-    """ file manager mapping specifier values to files in a directory series
+    """ file manager mapping locator values to files in a directory series
     """
 
     def __init__(self, dsdir, dfile):
         self.dir = dsdir
         self.file = dfile
 
-    def path(self, prefix, specs=()):
+    def path(self, prefix, locs=()):
         """ absolute file path
         """
-        dir_pth = self.dir.path(prefix, specs)
+        dir_pth = self.dir.path(prefix, locs)
         return self.file.path(dir_pth)
 
-    def exists(self, prefix, specs=()):
+    def exists(self, prefix, locs=()):
         """ does this file exist?
         """
-        dir_pth = self.dir.path(prefix, specs)
+        dir_pth = self.dir.path(prefix, locs)
         return self.file.exists(dir_pth)
 
-    def write(self, val, prefix, specs=()):
+    def write(self, val, prefix, locs=()):
         """ write data to this file
         """
-        dir_pth = self.dir.path(prefix, specs)
+        dir_pth = self.dir.path(prefix, locs)
         self.file.write(val, dir_pth)
 
-    def read(self, prefix, specs=()):
+    def read(self, prefix, locs=()):
         """ read data from this file
         """
-        dir_pth = self.dir.path(prefix, specs)
+        dir_pth = self.dir.path(prefix, locs)
         return self.file.read(dir_pth)
 
 
 class DataSeries():
-    """ manager mapping specifier values to files and directories in a series
+    """ manager mapping locator values to files and directories in a series
     """
 
     def __init__(self, dsdir, dfile_dct=None):
@@ -226,7 +245,16 @@ class FileSystem(types.SimpleNamespace):
     """
 
     def __init__(self, dseries_dct):
-        for name, obj in dseries_dct.items():
+        self.update(dseries_dct)
+
+    def __iter__(self):
+        for key, val in vars(self).items():
+            yield key, val
+
+    def update(self, dseries_dct):
+        """ update the filesystem dataseries
+        """
+        for name, obj in dict(dseries_dct).items():
             assert isinstance(name, str)
             assert isinstance(obj, DataSeries)
             setattr(self, name, obj)
