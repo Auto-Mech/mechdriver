@@ -17,38 +17,16 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 # 0. choose which mechanism to run
+
 #MECHANISM_NAME = 'ch4+nh2'  # options: syngas, natgas, heptane, test, estoktp, ...
 MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane, test, estoktp, ...
 #MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas, heptane, test, estoktp, ...
 #MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas, heptane, test, estoktp, ...
 
 # 1. script control parameters
-# a. Electronic structure parameters; code, Program, method, basis, convergence control
 
-PROG = 'g09'
-METHOD = 'wb97xd'
-BASIS = '6-31g*'
-
-PROG_LL = 'g09'
-METHOD_LL = 'wb97xd'
-BASIS_LL = '6-31g*'
-
-PROG_2L = 'g09'
-METHOD_2L = 'b2plypd3'
-BASIS_2L = 'cc-pvtz'
-
-PROG_HL = 'MOLPRO'
-METHOD_HL = 'CCSD(T)'
-BASIS_HL = 'cc-pVDZ'
-
-SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(PROG)
-
-#METHOD_HL = 'CCSD(T)-F12'
-BASIS_NZ = ['cc-pVDZ', 'cc-pVTZ', 'cc-pVQZ', 'cc-pV5Z']
-BASIS_NZF = ['cc-pVDZ-F12', 'cc-pVTZ-F12', 'cc-pvqz-F12', 'cc-pV5Z-F12']
-BASIS_ANZ = ['AUG-cc-pVDZ', 'AUG-cc-pVTZ', 'AUG-cc-pVQZ']
-TWO_LVL_OPT = False
-HIGH_LVL_ENE = False
+# a. Strings to launch executable
+# script_strings for electronic structure are obtained from run_qchem_par since they vary with method
 
 PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                  "messpf build.inp build.out >> stdout.log &> stderr.log")
@@ -59,24 +37,57 @@ NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                    "cp /tcghome/sjklipp/PACC/nasa/new.groups ."
                    "python /tcghome/sjklipp/PACC/nasa/makepoly.py >> stdout.log &> stderr.log")
 
-# b. What to run for electronic structure calculations
+# b. Electronic structure parameters; code, method, basis, convergence control
+
+# use reference to determine starting geometries, which are used to define z-matrices
+# also used for reference geometries in HL calculations
+REF_LEVEL = ['wb97xd', '6-31g*']
+
+# use indices to easily choose between a set of standard opts to call
+IDX_OPTS = [0, 3]
+# set up standard prog, method, basis for opts
+
+OPT_LEVELS = []
+OPT_LEVELS.append(['g09', 'wb97xd', '6-31g*'])
+OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ'])
+OPT_LEVELS.append(['g09', 'b2plypd3', 'cc-pVTZ'])
+OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ'])
+OPT_LEVELS.append(['g09', 'm062x', 'cc-pVTZ'])
+OPT_LEVELS.append(['g09', 'b3lyp', '6-31g*'])
+RUN_OPT_LEVELS = [OPT_LEVELS[0]]
+
+# set up a set of standard hl methods
+HIGH_LEVEL_REF = ['wb97xd', '6-31g*']
+HIGH_LEVELS = []
+HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVDZ'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVQZ'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pV5Z'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVDZ-F12'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVTZ-F12'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVQZ-F12'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVDZ'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVTZ'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVQZ'])
+HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pV5Z'])
+RUN_HIGH_LEVELS = [HIGH_LEVELS[0]]
+
+# c. What type of electronic structure calculations to run
 RUN_SPECIES_QCHEM = True
 RUN_REACTIONS_QCHEM = True
 RUN_TS_KICKS_QCHEM = True
 RUN_VDW_QCHEM = True
 
 RUN_INI_GEOM = True
-RUN_REMOVE_IMAG = True
+RUN_REMOVE_IMAG = False
 
-KICKOFF_SADDLE = True
-KICKOFF_BACKWARD = False
-KICKOFF_SIZE = 0.1
+KICKOFF_SADDLE = False
 
 RUN_CONF_SAMP = True
 RUN_CONF_OPT = True
 RUN_MIN_GRAD = True
 RUN_MIN_HESS = True
-RUN_CONF_GRAD = True
+RUN_CONF_GRAD = False
 RUN_CONF_HESS = False
 
 RUN_CONF_SCAN = True
@@ -91,26 +102,22 @@ RUN_TS_CONF_OPT = False
 RUN_TS_CONF_SCAN = False
 RUN_TS_TAU_SAMP = False
 
+RUN_HL_MIN_ENE = True
+
+# setting these to true turns on corresponding run for min, conf, conf_scan, and tau
 RUN_GRAD = False
+RUN_HESS = False
 if RUN_GRAD:
     RUN_MIN_GRAD = True
     RUN_CONF_GRAD = True
     RUN_CONF_SCAN_GRAD = True
     RUN_TAU_GRAD = True
 
-RUN_HESS = False
 if RUN_HESS:
     RUN_MIN_HESS = True
     RUN_CONF_HESS = True
     RUN_CONF_SCAN_HESS = True
     RUN_TAU_HESS = True
-
-# c. What to run for thermochemical kinetics
-RUN_SPECIES_PF = False
-RUN_SPECIES_THERMO = False
-RUN_REACTIONS_RATES = False
-RUN_VDW_RCT_RATES = False
-RUN_VDW_PRD_RATES = False
 
 # d. Parameters for number of torsional samplings
 NSAMP_CONF = 5
@@ -137,11 +144,23 @@ NSAMP_VDW_C = 3
 NSAMP_VDW_D = 15
 NSAMP_VDW_PAR = [NSAMP_VDW_EXPR, NSAMP_VDW_A, NSAMP_VDW_B, NSAMP_VDW_C, NSAMP_VDW_D, NSAMP_VDW]
 
-# Partition function parameters
-TAU_PF_WRITE = True
+# e. What to run for thermochemical kinetics
+RUN_SPECIES_PF = False
+RUN_SPECIES_THERMO = False
+RUN_REACTIONS_RATES = False
+RUN_VDW_RCT_RATES = False
+RUN_VDW_PRD_RATES = False
 
-# Parameters for partition function and kinetics
+# f. Partition function parameters
+TAU_PF_WRITE = True
 SPECIES_STR = {}
+
+# Defaults
+SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
+KICKOFF_SIZE = 0.1
+KICKOFF_BACKWARD = False
+RESTRICT_OPEN_SHELL = False
+OVERWRITE = False
 # Temperatue and pressure
 TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
 TEMP_STEP = 100.
@@ -158,10 +177,6 @@ SIG2 = 20.0
 MASS1 = 15.0
 MASS2 = 25.0
 
-# Defaults
-SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
-RESTRICT_OPEN_SHELL = False
-OVERWRITE = False
 #SMILES_LST = ['[O]', '[OH]', '[N]=O', '[CH2]', '[C]', '[B]', '[N]', '[F]', '[Cl]', '[Br]',
 #              '[BH]', '[BH2]', 'C[C]', '[O][O]']
 ELC_DEG_DCT = {
@@ -176,12 +191,17 @@ ELC_DEG_DCT = {
     ('InChI=1S/NO/c1-2', 2): [[0., 2], [123.1, 2]],
     ('InChI=1S/O2/c1-2', 1): [[0., 2]]
     }
-#SMILES_LST = ['[C]#N']
-#for smiles in SMILES_LST:
-#    ich = automol.convert.smiles.inchi(smiles)
-#    print(ich)
+REF_REF = ['[H],[H]', 'C', 'O', 'N']
+CHG_REF = [0, 0, 0, 0]
+MULT_REF = [1, 1, 1, 1]
+#for smiles in SMILES_REF:
+#    ICH_REF = ICH_REF.append(automol.convert.smiles.inchi(SMILES_REF))
+
+#REF_SPC_NAMES = .join(SMILES_REF, CHG_REF, MULT_REF)
 
 ELC_SIG_LST = {'InChI=1S/CN/c1-2'}
+# add CCH to this list
+
 
 # 2. create run and save directories
 RUN_PREFIX = 'run'
@@ -206,10 +226,26 @@ SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
 
 SPC_TAB['charge'] = 0
 SMI_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['smiles']))
+#SMI_DCT['REF_H2'] = '[H][H]'
+SMI_DCT['REF_CH4'] = 'C'
+SMI_DCT['REF_H2O'] = 'O'
+SMI_DCT['REF_NH3'] = 'N'
 CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
+#CHG_DCT['REF_H2'] = 0
+CHG_DCT['REF_CH4'] = 0
+CHG_DCT['REF_H2O'] = 0
+CHG_DCT['REF_NH3'] = 0
 MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
+#MUL_DCT['REF_H2'] = 1
+MUL_DCT['REF_CH4'] = 1
+MUL_DCT['REF_H2O'] = 1
+MUL_DCT['REF_NH3'] = 1
 SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
 SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
+#SPC_NAMES += ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
+SPC_NAMES += ('REF_CH4', 'REF_H2O', 'REF_NH3')
+print('SPC_NAMES')
+print(SPC_NAMES)
 
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 print(GEOM_PATH)
@@ -217,149 +253,132 @@ GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
 # take starting geometry from saved directory if possible, otherwise get it from inchi via rdkit
 
-
 if RUN_SPECIES_QCHEM:
     for name in SPC_NAMES:
-# species
+        # species
         print("Species: {}".format(name))
         smi = SMI_DCT[name]
         ich = automol.smiles.inchi(smi)
         print("smiles: {}".format(smi), "inchi: {}".format(ich))
-#        ich = ICH_DCT[name]
+        # ich = ICH_DCT[name]
         chg = CHG_DCT[name]
         mult = MUL_DCT[name]
-
-# theory
-#        methods = [METHOD_LL, METHOD_2L, METHOD_HL]
-#        bases = [BASIS_LL, BASIS_2L, BASIS_HL]
-#        progs = [PROG_LL, PROG_2L, PROG_HL]
-        method = METHOD
-        basis = BASIS
         orb_restr = moldr.util.orbital_restriction(mult, RESTRICT_OPEN_SHELL)
+        method_ref = REF_LEVEL[0]
+        basis_ref = REF_LEVEL[1]
+        for prog, method, basis in RUN_OPT_LEVELS:
+            # theory
+            SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(prog)
 
+            # a. conformer sampling
+            spc_run_path = moldr.util.species_path(ich, chg, mult, RUN_PREFIX)
+            spc_save_path = moldr.util.species_path(ich, chg, mult, SAVE_PREFIX)
+            thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+            thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
 
-        GEOM_LL = None
-#        if RUN_LL:
-#            moldr.driver.run_initial_geometry_opt(
-#                ich, chg, mult, method, basis, orb_restr, RUN_PREFIX,
-#                SAVE_PREFIX, SCRIPT_STR, PROG, GEO_LL, GEOM_DCT, OVERWRITE,
-#                OPT_KWARGS
-#                )
-#            GEO_LL = geo
-#            level = = 'low_level'
-#            # low_level builds conformational and vibrational analyses from a reference smiles_geometry
-#            method = METHOD_LL
-#            basis = BASIS_LL
-#            moldr.qchem.species(
-#                smi, ich, chg, mult, methods, bases, progs, orb_restr, run_prefix, save_prefix, prog, overwrite)
-#
-#        if RUN_2L:
-#            # two_level builds conformational and vibrational analyes from preceding low_level reference geometry
-#            level = = 'two_level'
-#            moldr.qchem.species(
-#                smi, ich, chg, mult, methods, bases, progs, orb_restr, run_prefix, save_prefix, prog, overwrite)
-#
-#        if RUN_HL:
-#            # high_level runs energies only from reference geometry
-#            level = = 'high_level'
-#            moldr.qchem.species(
-#                smi, ich, chg, mult, methods, bases, progs, orb_restr, run_prefix, save_prefix, prog, overwrite)
-
-# a. conformer sampling
-        if RUN_INI_GEOM:
-            geo = moldr.driver.run_initial_geometry_opt(
+            geo_init = moldr.util.reference_geometry(
                 ich=ich,
                 chg=chg,
                 mult=mult,
-                method=method,
-                basis=basis,
+                method=method_ref,
+                basis=basis_ref,
                 orb_restr=orb_restr,
-                run_prefix=RUN_PREFIX,
-                save_prefix=SAVE_PREFIX,
-                script_str=SCRIPT_STR,
-                prog=PROG,
-                geom_dct=GEOM_DCT,
-                overwrite=OVERWRITE,
-                geom_ll=GEOM_LL,
-                **OPT_KWARGS,
-                )
+                prefix=SAVE_PREFIX,
+                geom_dct=GEOM_DCT)
 
-            if RUN_REMOVE_IMAG:
-                moldr.driver.run_remove_imaginary(
+            if RUN_INI_GEOM:
+                geo = moldr.driver.run_initial_geometry_opt(
                     ich=ich,
                     chg=chg,
                     mult=mult,
                     method=method,
                     basis=basis,
                     orb_restr=orb_restr,
-                    run_prefix=RUN_PREFIX,
+                    run_prefix=spc_run_path,
+                    save_prefix=spc_save_path,
                     script_str=SCRIPT_STR,
-                    prog=PROG,
+                    prog=prog,
                     overwrite=OVERWRITE,
-                    kickoff_backward=KICKOFF_BACKWARD,
-                    kickoff_size=KICKOFF_SIZE,
-                    **KWARGS
+                    geo_init=geo_init,
+                    **OPT_KWARGS,
                     )
 
-            moldr.driver.save_initial_geometry(
-                ich=ich,
-                chg=chg,
-                mult=mult,
-                method=method,
-                basis=basis,
-                orb_restr=orb_restr,
-                run_prefix=RUN_PREFIX,
-                save_prefix=SAVE_PREFIX,
-                prog=PROG,
-                )
+                if RUN_REMOVE_IMAG:
+                    moldr.driver.run_remove_imaginary(
+                        ich=ich,
+                        chg=chg,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        run_prefix=spc_run_path,
+                        script_str=SCRIPT_STR,
+                        prog=prog,
+                        overwrite=OVERWRITE,
+                        kickoff_backward=KICKOFF_BACKWARD,
+                        kickoff_size=KICKOFF_SIZE,
+                        **KWARGS
+                        )
 
-        if RUN_CONF_SAMP:
-            moldr.driver.conformer_sampling(
-                ich=ich,
-                chg=chg,
-                mult=mult,
-                method=method,
-                basis=basis,
-                orb_restr=orb_restr,
-                run_prefix=RUN_PREFIX,
-                save_prefix=SAVE_PREFIX,
-                script_str=SCRIPT_STR,
-                prog=PROG,
-                overwrite=OVERWRITE,
-                nsamp_par=NSAMP_CONF_PAR,
-                **OPT_KWARGS,
-                )
-
-            if RUN_MIN_GRAD:
-                moldr.driver.run_minimum_energy_gradient(
-                    ich=ich,
-                    chg=chg,
-                    mult=mult,
-                    method=method,
-                    basis=basis, orb_restr=orb_restr,
-                    run_prefix=RUN_PREFIX,
-                    save_prefix=SAVE_PREFIX,
-                    script_str=SCRIPT_STR,
-                    prog=PROG,
-                    overwrite=OVERWRITE,
-                    **KWARGS,
-                    )
-
-            if RUN_MIN_HESS:
-                moldr.driver.run_minimum_energy_hessian(
+                moldr.driver.save_initial_geometry(
                     ich=ich,
                     chg=chg,
                     mult=mult,
                     method=method,
                     basis=basis,
                     orb_restr=orb_restr,
-                    run_prefix=RUN_PREFIX,
-                    save_prefix=SAVE_PREFIX,
-                    script_str=SCRIPT_STR,
-                    prog=PROG,
-                    overwrite=OVERWRITE,
-                    **KWARGS,
+                    run_prefix=spc_run_path,
+                    save_prefix=spc_save_path,
+                    prog=prog,
                     )
+
+            if RUN_CONF_SAMP:
+                moldr.driver.conformer_sampling(
+                    ich=ich,
+                    chg=chg,
+                    mult=mult,
+                    method=method,
+                    basis=basis,
+                    orb_restr=orb_restr,
+                    run_prefix=spc_run_path,
+                    save_prefix=spc_save_path,
+                    script_str=SCRIPT_STR,
+                    prog=prog,
+                    overwrite=OVERWRITE,
+                    nsamp_par=NSAMP_CONF_PAR,
+                    **OPT_KWARGS,
+                    )
+
+                if RUN_MIN_GRAD:
+                    moldr.driver.run_minimum_energy_gradient(
+                        ich=ich,
+                        chg=chg,
+                        mult=mult,
+                        method=method,
+                        basis=basis, orb_restr=orb_restr,
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        script_str=SCRIPT_STR,
+                        prog=prog,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                        )
+
+                if RUN_MIN_HESS:
+                    moldr.driver.run_minimum_energy_hessian(
+                        ich=ich,
+                        chg=chg,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        script_str=SCRIPT_STR,
+                        prog=prog,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                        )
 
             if RUN_CONF_SCAN:
                 moldr.driver.hindered_rotor_scans(
@@ -369,109 +388,154 @@ if RUN_SPECIES_QCHEM:
                     method=method,
                     basis=basis,
                     orb_restr=orb_restr,
-                    run_prefix=RUN_PREFIX,
-                    save_prefix=SAVE_PREFIX,
+                    run_prefix=thy_run_path,
+                    save_prefix=thy_save_path,
                     script_str=SCRIPT_STR,
-                    prog=PROG,
+                    prog=prog,
                     overwrite=OVERWRITE,
                     scan_increment=SCAN_INCREMENT,
                     **OPT_KWARGS,
                     )
 
-            if RUN_CONF_GRAD:
-                moldr.driver.run_conformer_gradients(
+                if RUN_CONF_GRAD:
+                    moldr.driver.run_conformer_gradients(
+                        ich=ich,
+                        chg=chg,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        script_str=SCRIPT_STR,
+                        prog=prog,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                        )
+
+                if RUN_CONF_HESS:
+                    moldr.driver.run_conformer_hessians(
+                        ich=ich,
+                        chg=chg,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        script_str=SCRIPT_STR,
+                        prog=prog,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                        )
+
+            if RUN_TAU_SAMP:
+                moldr.driver.tau_sampling(
                     ich=ich,
                     chg=chg,
                     mult=mult,
                     method=method,
                     basis=basis,
                     orb_restr=orb_restr,
-                    run_prefix=RUN_PREFIX,
-                    save_prefix=SAVE_PREFIX,
+                    run_prefix=spc_run_path,
+                    save_prefix=spc_save_path,
                     script_str=SCRIPT_STR,
-                    prog=PROG,
+                    prog=prog,
                     overwrite=OVERWRITE,
-                    **KWARGS,
+                    nsamp_par=NSAMP_TAU_PAR,
+                    **OPT_KWARGS,
                     )
 
-            if RUN_CONF_HESS:
-                moldr.driver.run_conformer_hessians(
+                if RUN_TAU_GRAD:
+                    moldr.driver.run_tau_gradients(
+                        ich=ich,
+                        chg=chg,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        script_str=SCRIPT_STR,
+                        prog=prog,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                        )
+
+                if RUN_TAU_HESS:
+                    moldr.driver.run_tau_hessians(
+                        ich=ich,
+                        chg=chg,
+                        mult=mult,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        script_str=SCRIPT_STR,
+                        prog=prog,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                        )
+
+            if TAU_PF_WRITE:
+                moldr.driver.tau_pf_write(
+                    name=name,
                     ich=ich,
                     chg=chg,
                     mult=mult,
                     method=method,
                     basis=basis,
                     orb_restr=orb_restr,
-                    run_prefix=RUN_PREFIX,
-                    save_prefix=SAVE_PREFIX,
-                    script_str=SCRIPT_STR,
-                    prog=PROG,
-                    overwrite=OVERWRITE,
+                    save_prefix=thy_save_path,
                     **KWARGS,
                     )
 
-        if RUN_TAU_SAMP:
-            moldr.driver.tau_sampling(
-                ich=ich,
-                chg=chg,
-                mult=mult,
-                method=method,
-                basis=basis,
+        for prog, method, basis, in RUN_HIGH_LEVELS:
+            SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(prog)
+            method_ref = HIGH_LEVEL_REF[0]
+            basis_ref = HIGH_LEVEL_REF[1]
+#            geo_init = moldr.util.reference_geometry(
+#                ich=ich,
+#                chg=chg,
+#                mult=mult,
+#                method=method_ref,
+#                basis=basis_ref,
+#                orb_restr=orb_restr,
+#                prefix=SAVE_PREFIX,
+#                geom_dct=GEOM_DCT)
+            spc_run_path = moldr.util.species_path(ich, chg, mult, RUN_PREFIX)
+            spc_save_path = moldr.util.species_path(ich, chg, mult, SAVE_PREFIX)
+            thy_run_path = moldr.util.theory_path(
+                method=method_ref,
+                basis=basis_ref,
                 orb_restr=orb_restr,
-                run_prefix=RUN_PREFIX,
-                save_prefix=SAVE_PREFIX,
-                script_str=SCRIPT_STR,
-                prog=PROG,
-                overwrite=OVERWRITE,
-                nsamp_par=NSAMP_TAU_PAR,
-                **OPT_KWARGS,
-                )
-
-        if RUN_TAU_GRAD:
-            moldr.driver.run_tau_gradients(
-                ich=ich,
-                chg=chg,
-                mult=mult,
-                method=method,
-                basis=basis,
+                prefix=spc_run_path)
+            thy_save_path = moldr.util.theory_path(
+                method=method_ref,
+                basis=basis_ref,
                 orb_restr=orb_restr,
-                run_prefix=RUN_PREFIX,
-                save_prefix=SAVE_PREFIX,
-                script_str=SCRIPT_STR,
-                prog=PROG,
-                overwrite=OVERWRITE,
-                **KWARGS,
-                )
-
-        if RUN_TAU_HESS:
-            moldr.driver.run_tau_hessians(
-                ich=ich,
-                chg=chg,
-                mult=mult,
-                method=method,
-                basis=basis,
-                orb_restr=orb_restr,
-                run_prefix=RUN_PREFIX,
-                save_prefix=SAVE_PREFIX,
-                script_str=SCRIPT_STR,
-                prog=PROG,
-                overwrite=OVERWRITE,
-                **KWARGS,
-                )
-
-        if TAU_PF_WRITE:
-            moldr.driver.tau_pf_write(
-                name=name,
-                ich=ich,
-                chg=chg,
-                mult=mult,
-                method=method,
-                basis=basis,
-                orb_restr=orb_restr,
-                save_prefix=SAVE_PREFIX,
-                **KWARGS,
-                )
-
+                prefix=spc_save_path)
+            print('HL test')
+            print(prog)
+            print(method)
+            print(SCRIPT_STR)
+            print(KWARGS)
+            if RUN_HL_MIN_ENE:
+                moldr.driver.run_conformer_energy(
+                    ich=ich,
+                    chg=chg,
+                    mult=mult,
+                    method=method,
+                    basis=basis,
+                    orb_restr=orb_restr,
+                    run_prefix=thy_run_path,
+                    save_prefix=thy_save_path,
+                    script_str=SCRIPT_STR,
+                    prog=prog,
+                    overwrite=OVERWRITE,
+                    **KWARGS,
+                    )
 
 #def species_energy(
 #        smi, ich, chg, mult, methods, bases, orb_restr, run_prefix, save_prefix, prog, overwrite, 

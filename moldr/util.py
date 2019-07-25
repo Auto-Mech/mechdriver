@@ -50,9 +50,9 @@ def run_qchem_par(prog):
 
     if prog == 'molpro':
         script_str = ("#!/usr/bin/env bash\n"
-                      "molpro -n 8 -i run.inp -o run.out >> stdout.log &> stderr.log")
+                      "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = ("#!/usr/bin/env bash\n"
-                          "molpro --mppx -n 12 -i run.inp -o run.out >> stdout.log &> stderr.log")
+                          "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
         kwargs = {
             'memory': 50,
         }
@@ -118,20 +118,21 @@ def geometry_dictionary(geom_path):
 
 def reference_geometry(ich, chg, mult, method, basis, orb_restr, prefix, geom_dct):
     """ obtain reference geometry
-    geometry dictionary takes precedence
-    then from inchi
+    if data for reference method exists use that
+    then geometry dictionary takes precedence
+    if nothing else from inchi
     """
     spc_path = species_path(ich, chg, mult, prefix)
     thy_afs = autofile.fs.theory()
     thy_alocs = [method, basis, orb_restr]
-    if ich in geom_dct:
-        print('getting reference geometry from geom_dct')
-        geo = geom_dct[ich]
+    if thy_afs.theory.file.geometry.exists(spc_path, thy_alocs):
+        thy_path = thy_afs.theory.dir.path(spc_path, thy_alocs)
+        print('getting reference geometry from', thy_path)
+        geo = thy_afs.theory.file.geometry.read(spc_path, thy_alocs)
     else:
-        if thy_afs.theory.file.geometry.exists(spc_path, thy_alocs):
-            thy_path = thy_afs.theory.dir.path(spc_path, thy_alocs)
-            print('getting reference geometry from', thy_path)
-            geo = thy_afs.theory.file.geometry.read(spc_path, thy_alocs)
+        if ich in geom_dct:
+            print('getting reference geometry from geom_dct')
+            geo = geom_dct[ich]
         else:
             print('getting reference geometry from inchi')
             geo = automol.inchi.geometry(ich)

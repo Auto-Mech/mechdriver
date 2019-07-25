@@ -44,14 +44,14 @@ def run_qchem_par(prog):
 
     if prog == 'molpro':
         script_str = ("#!/usr/bin/env bash\n"
-                      "molpro -n 8 -i run.inp -o run.out >> stdout.log &> stderr.log")
+                      "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = ("#!/usr/bin/env bash\n"
-                      "molpro --mppx -n 12 -i run.inp -o run.out >> stdout.log &> stderr.log")
+                          "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
         kwargs = {
-            'memory': 50,
+            'memory': 10,
         }
         opt_kwargs = {
-            'memory': 50,
+            'memory': 10,
         }
 
     if prog == 'qchem':
@@ -59,7 +59,7 @@ def run_qchem_par(prog):
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = script_str
         kwargs = {
-            'memory': 50,
+            'memory': 10,
         }
         opt_kwargs = {}
 
@@ -68,7 +68,7 @@ def run_qchem_par(prog):
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = script_str
         kwargs = {
-            'memory': 50,
+            'memory': 10,
         }
         opt_kwargs = {}
 
@@ -77,7 +77,7 @@ def run_qchem_par(prog):
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = script_str
         kwargs = {
-            'memory': 50,
+            'memory': 10,
         }
         opt_kwargs = {}
 
