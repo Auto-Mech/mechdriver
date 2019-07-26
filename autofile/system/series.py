@@ -20,7 +20,7 @@ class FilePrefix():
     MIN = 'min'
 
 
-class DataFileAttributeName():
+class FileAttributeName():
     """ DataFile attribute names """
     INFO = 'info'
     INPUT = 'input'
@@ -68,33 +68,18 @@ def ts_trunk(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.GEOM_INFO: geom_inf_dfile,
-            DataFileAttributeName.GRAD_INFO: grad_inf_dfile,
-            DataFileAttributeName.HESS_INFO: hess_inf_dfile,
-            DataFileAttributeName.GEOM_INPUT: geom_inp_dfile,
-            DataFileAttributeName.GRAD_INPUT: grad_inp_dfile,
-            DataFileAttributeName.HESS_INPUT: hess_inp_dfile,
-            DataFileAttributeName.ENERGY: ene_dfile,
-            DataFileAttributeName.GEOM: geom_dfile,
-            DataFileAttributeName.ZMAT: zmat_dfile,
-            DataFileAttributeName.GRAD: grad_dfile,
-            DataFileAttributeName.HESS: hess_dfile,
-            DataFileAttributeName.HFREQ: hfreq_dfile})
-    return dseries
-
-
-def reference_trunk(root_dsdir=None):
-    """ reference leaf DataSeries
-    """
-    dsdir = dir_.reference_trunk(root_dsdir)
-    geom_dfile = file_.geometry(FilePrefix.GEOM)
-    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
-
-    dseries = model.DataSeries(
-        dsdir=dsdir,
-        dfile_dct={
-            DataFileAttributeName.GEOM: geom_dfile,
-            DataFileAttributeName.ZMAT: zmat_dfile})
+            FileAttributeName.GEOM_INFO: geom_inf_dfile,
+            FileAttributeName.GRAD_INFO: grad_inf_dfile,
+            FileAttributeName.HESS_INFO: hess_inf_dfile,
+            FileAttributeName.GEOM_INPUT: geom_inp_dfile,
+            FileAttributeName.GRAD_INPUT: grad_inp_dfile,
+            FileAttributeName.HESS_INPUT: hess_inp_dfile,
+            FileAttributeName.ENERGY: ene_dfile,
+            FileAttributeName.GEOM: geom_dfile,
+            FileAttributeName.ZMAT: zmat_dfile,
+            FileAttributeName.GRAD: grad_dfile,
+            FileAttributeName.HESS: hess_dfile,
+            FileAttributeName.HFREQ: hfreq_dfile})
     return dseries
 
 
@@ -111,11 +96,11 @@ def direction_leaf(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.GEOM_INPUT: inp_dfile,
-            DataFileAttributeName.GEOM_INFO: inf_dfile,
-            DataFileAttributeName.ENERGY: ene_dfile,
-            DataFileAttributeName.GEOM: geom_dfile,
-            DataFileAttributeName.ZMAT: zmat_dfile})
+            FileAttributeName.GEOM_INPUT: inp_dfile,
+            FileAttributeName.GEOM_INFO: inf_dfile,
+            FileAttributeName.ENERGY: ene_dfile,
+            FileAttributeName.GEOM: geom_dfile,
+            FileAttributeName.ZMAT: zmat_dfile})
     return dseries
 
 
@@ -151,9 +136,9 @@ def theory_leaf(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.ENERGY: ene_dfile,
-            DataFileAttributeName.GEOM: geom_dfile,
-            DataFileAttributeName.ZMAT: zmat_dfile})
+            FileAttributeName.ENERGY: ene_dfile,
+            FileAttributeName.GEOM: geom_dfile,
+            FileAttributeName.ZMAT: zmat_dfile})
     return dseries
 
 
@@ -174,9 +159,9 @@ def run_leaf(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.INFO: inf_dfile,
-            DataFileAttributeName.INPUT: inp_dfile,
-            DataFileAttributeName.OUTPUT: out_dfile})
+            FileAttributeName.INFO: inf_dfile,
+            FileAttributeName.INPUT: inp_dfile,
+            FileAttributeName.OUTPUT: out_dfile})
     return dseries
 
 
@@ -190,9 +175,9 @@ def subrun_leaf(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.INFO: inf_dfile,
-            DataFileAttributeName.INPUT: inp_dfile,
-            DataFileAttributeName.OUTPUT: out_dfile})
+            FileAttributeName.INFO: inf_dfile,
+            FileAttributeName.INPUT: inp_dfile,
+            FileAttributeName.OUTPUT: out_dfile})
     return dseries
 
 
@@ -209,10 +194,10 @@ def conformer_trunk(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.VMATRIX: vma_dfile,
-            DataFileAttributeName.INFO: inf_dfile,
-            DataFileAttributeName.ENERGY: min_ene_dfile,
-            DataFileAttributeName.TRAJ: traj_dfile})
+            FileAttributeName.VMATRIX: vma_dfile,
+            FileAttributeName.INFO: inf_dfile,
+            FileAttributeName.ENERGY: min_ene_dfile,
+            FileAttributeName.TRAJ: traj_dfile})
     return dseries
 
 
@@ -236,18 +221,18 @@ def conformer_leaf(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.GEOM_INFO: geom_inf_dfile,
-            DataFileAttributeName.GRAD_INFO: grad_inf_dfile,
-            DataFileAttributeName.HESS_INFO: hess_inf_dfile,
-            DataFileAttributeName.GEOM_INPUT: geom_inp_dfile,
-            DataFileAttributeName.GRAD_INPUT: grad_inp_dfile,
-            DataFileAttributeName.HESS_INPUT: hess_inp_dfile,
-            DataFileAttributeName.ENERGY: ene_dfile,
-            DataFileAttributeName.GEOM: geom_dfile,
-            DataFileAttributeName.ZMAT: zmat_dfile,
-            DataFileAttributeName.GRAD: grad_dfile,
-            DataFileAttributeName.HESS: hess_dfile,
-            DataFileAttributeName.HFREQ: hfreq_dfile})
+            FileAttributeName.GEOM_INFO: geom_inf_dfile,
+            FileAttributeName.GRAD_INFO: grad_inf_dfile,
+            FileAttributeName.HESS_INFO: hess_inf_dfile,
+            FileAttributeName.GEOM_INPUT: geom_inp_dfile,
+            FileAttributeName.GRAD_INPUT: grad_inp_dfile,
+            FileAttributeName.HESS_INPUT: hess_inp_dfile,
+            FileAttributeName.ENERGY: ene_dfile,
+            FileAttributeName.GEOM: geom_dfile,
+            FileAttributeName.ZMAT: zmat_dfile,
+            FileAttributeName.GRAD: grad_dfile,
+            FileAttributeName.HESS: hess_dfile,
+            FileAttributeName.HFREQ: hfreq_dfile})
     return dseries
 
 
@@ -266,7 +251,7 @@ def single_point_leaf(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.ENERGY: ene_dfile})
+            FileAttributeName.ENERGY: ene_dfile})
     return dseries
 
 
@@ -279,7 +264,7 @@ def scan_trunk(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.VMATRIX: vma_dfile})
+            FileAttributeName.VMATRIX: vma_dfile})
     return dseries
 
 
@@ -293,8 +278,8 @@ def scan_branch(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.INFO: inf_dfile,
-            DataFileAttributeName.TRAJ: traj_dfile})
+            FileAttributeName.INFO: inf_dfile,
+            FileAttributeName.TRAJ: traj_dfile})
     return dseries
 
 
@@ -318,18 +303,18 @@ def scan_leaf(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.GEOM_INFO: geom_inf_dfile,
-            DataFileAttributeName.GRAD_INFO: grad_inf_dfile,
-            DataFileAttributeName.HESS_INFO: hess_inf_dfile,
-            DataFileAttributeName.GEOM_INPUT: geom_inp_dfile,
-            DataFileAttributeName.GRAD_INPUT: grad_inp_dfile,
-            DataFileAttributeName.HESS_INPUT: hess_inp_dfile,
-            DataFileAttributeName.ENERGY: ene_dfile,
-            DataFileAttributeName.GEOM: geom_dfile,
-            DataFileAttributeName.ZMAT: zmat_dfile,
-            DataFileAttributeName.GRAD: grad_dfile,
-            DataFileAttributeName.HESS: hess_dfile,
-            DataFileAttributeName.HFREQ: hfreq_dfile})
+            FileAttributeName.GEOM_INFO: geom_inf_dfile,
+            FileAttributeName.GRAD_INFO: grad_inf_dfile,
+            FileAttributeName.HESS_INFO: hess_inf_dfile,
+            FileAttributeName.GEOM_INPUT: geom_inp_dfile,
+            FileAttributeName.GRAD_INPUT: grad_inp_dfile,
+            FileAttributeName.HESS_INPUT: hess_inp_dfile,
+            FileAttributeName.ENERGY: ene_dfile,
+            FileAttributeName.GEOM: geom_dfile,
+            FileAttributeName.ZMAT: zmat_dfile,
+            FileAttributeName.GRAD: grad_dfile,
+            FileAttributeName.HESS: hess_dfile,
+            FileAttributeName.HFREQ: hfreq_dfile})
     return dseries
 
 
@@ -345,9 +330,9 @@ def tau_trunk(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.VMATRIX: vma_dfile,
-            DataFileAttributeName.INFO: inf_dfile,
-            DataFileAttributeName.TRAJ: traj_dfile})
+            FileAttributeName.VMATRIX: vma_dfile,
+            FileAttributeName.INFO: inf_dfile,
+            FileAttributeName.TRAJ: traj_dfile})
     return dseries
 
 
@@ -371,18 +356,18 @@ def tau_leaf(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.GEOM_INFO: geom_inf_dfile,
-            DataFileAttributeName.GRAD_INFO: grad_inf_dfile,
-            DataFileAttributeName.HESS_INFO: hess_inf_dfile,
-            DataFileAttributeName.GEOM_INPUT: geom_inp_dfile,
-            DataFileAttributeName.GRAD_INPUT: grad_inp_dfile,
-            DataFileAttributeName.HESS_INPUT: hess_inp_dfile,
-            DataFileAttributeName.ENERGY: ene_dfile,
-            DataFileAttributeName.GEOM: geom_dfile,
-            DataFileAttributeName.ZMAT: zmat_dfile,
-            DataFileAttributeName.GRAD: grad_dfile,
-            DataFileAttributeName.HESS: hess_dfile,
-            DataFileAttributeName.HFREQ: hfreq_dfile})
+            FileAttributeName.GEOM_INFO: geom_inf_dfile,
+            FileAttributeName.GRAD_INFO: grad_inf_dfile,
+            FileAttributeName.HESS_INFO: hess_inf_dfile,
+            FileAttributeName.GEOM_INPUT: geom_inp_dfile,
+            FileAttributeName.GRAD_INPUT: grad_inp_dfile,
+            FileAttributeName.HESS_INPUT: hess_inp_dfile,
+            FileAttributeName.ENERGY: ene_dfile,
+            FileAttributeName.GEOM: geom_dfile,
+            FileAttributeName.ZMAT: zmat_dfile,
+            FileAttributeName.GRAD: grad_dfile,
+            FileAttributeName.HESS: hess_dfile,
+            FileAttributeName.HFREQ: hfreq_dfile})
     return dseries
 
 
@@ -402,6 +387,6 @@ def build_leaf(root_dsdir=None):
     dseries = model.DataSeries(
         dsdir=dsdir,
         dfile_dct={
-            DataFileAttributeName.INPUT: inp_dfile,
-            DataFileAttributeName.OUTPUT: out_dfile})
+            FileAttributeName.INPUT: inp_dfile,
+            FileAttributeName.OUTPUT: out_dfile})
     return dseries

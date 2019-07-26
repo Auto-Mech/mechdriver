@@ -40,6 +40,7 @@ def run_initial_geometry_opt(
         **kwargs,
     )
     ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
+    geo = None
     if ret:
         print('Saving reference geometry')
         print(" - Save path: {}".format(thy_save_path))

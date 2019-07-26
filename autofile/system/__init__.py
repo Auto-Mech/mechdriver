@@ -3,7 +3,6 @@
 from autofile.system import model
 from autofile.system import map_
 from autofile.system import file_
-from autofile.system.file_ import data_file_manager
 from autofile.system import dir_
 from autofile.system import series
 from autofile.system.map_ import generate_new_conformer_id
@@ -17,7 +16,6 @@ __all__ = [
     'model',
     'map_',
     'file_',
-    'data_file_manager',
     'dir_',
     'series',
     'generate_new_conformer_id',

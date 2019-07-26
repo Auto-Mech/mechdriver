@@ -131,7 +131,9 @@ def _sort_together(ichs, chgs, muls):
 
 
 def _sortable_representation(ichs, chgs, muls):
-    return (len(ichs), sorted(automol.inchi.argsort(ichs)), chgs, muls)
+    idxs = automol.inchi.argsort(ichs)
+    ichs = tuple(ichs[idx] for idx in idxs)
+    return (len(ichs), ichs, chgs, muls)
 
 
 def _reactant_leaf(ichs, charges, mults):

@@ -52,28 +52,28 @@ IDX_OPTS = [0, 3]
 # set up standard prog, method, basis for opts
 
 OPT_LEVELS = []
-OPT_LEVELS.append(['g09', 'wb97xd', '6-31g*'])
-OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ'])
-OPT_LEVELS.append(['g09', 'b2plypd3', 'cc-pVTZ'])
-OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ'])
-OPT_LEVELS.append(['g09', 'm062x', 'cc-pVTZ'])
-OPT_LEVELS.append(['g09', 'b3lyp', '6-31g*'])
+OPT_LEVELS.append(['psi4', 'wb97xd', '6-31g*'])
+# OPT_LEVELS.append(['psi4', 'wb97xd', 'cc-pVTZ'])
+# OPT_LEVELS.append(['psi4', 'b2plypd3', 'cc-pVTZ'])
+# OPT_LEVELS.append(['psi4', 'wb97xd', 'cc-pVTZ'])
+# OPT_LEVELS.append(['psi4', 'm062x', 'cc-pVTZ'])
+# OPT_LEVELS.append(['psi4', 'b3lyp', '6-31g*'])
 RUN_OPT_LEVELS = [OPT_LEVELS[0]]
 
 # set up a set of standard hl methods
 HIGH_LEVEL_REF = ['wb97xd', '6-31g*']
 HIGH_LEVELS = []
-HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVDZ'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVQZ'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pV5Z'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVDZ-F12'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVTZ-F12'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVQZ-F12'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVDZ'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVTZ'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVQZ'])
-HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pV5Z'])
+HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'cc-pVDZ'])
+HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'cc-pVTZ'])
+# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'cc-pVQZ'])
+# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'cc-pV5Z'])
+# HIGH_LEVELS.append(['psi4', 'CCSD(T)-F12', 'cc-pVDZ-F12'])
+# HIGH_LEVELS.append(['psi4', 'CCSD(T)-F12', 'cc-pVTZ-F12'])
+# HIGH_LEVELS.append(['psi4', 'CCSD(T)-F12', 'cc-pVQZ-F12'])
+# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'aug-cc-pVDZ'])
+# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'aug-cc-pVTZ'])
+# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'aug-cc-pVQZ'])
+# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'aug-cc-pV5Z'])
 RUN_HIGH_LEVELS = [HIGH_LEVELS[0]]
 
 # c. What type of electronic structure calculations to run

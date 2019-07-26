@@ -52,29 +52,11 @@ class DataFile():
         return val
 
 
-class DataFileManager(types.SimpleNamespace):
-    """ manager mapping locator values to files and directories in a series
-    """
-
-    def __init__(self, dfile_dct=None):
-        """
-        :param dsdir: a DataSeriesDir object
-        :param dfiles: a sequence of pairs `("name", obj)` where `obj` is a
-            DataSeriesFile instance that will be accessible as `obj.file.name`
-        """
-        dfile_dct = {} if dfile_dct is None else dfile_dct
-
-        for name, dfile in dfile_dct.items():
-            assert isinstance(name, str)
-            assert isinstance(dfile, DataFile)
-            setattr(self, name, dfile)
-
-
 class DataSeriesDir():
     """ directory manager mapping locator values to a directory series
     """
 
-    def __init__(self, map_, nlocs, depth, loc_dfile=None,
+    def __init__(self, prefix, map_, nlocs, depth, loc_dfile=None,
                  root_dsdir=None, removable=False):
         """
         :param map_: maps `nlocs` locators to a segment path consisting of
@@ -82,6 +64,8 @@ class DataSeriesDir():
         :param info_map_: maps `nlocs` locators to an information object, to
             be written in the data directory
         """
+        assert os.path.isdir(prefix)
+        self.prefix = os.path.abspath(prefix)
         self.map_ = map_
         self.nlocs = nlocs
         self.depth = depth
@@ -89,81 +73,78 @@ class DataSeriesDir():
         self.root = root_dsdir
         self.removable = removable
 
-    def path(self, prefix, locs=()):
+    def path(self, locs=()):
         """ absolute directory path
         """
         if self.root is None:
-            pfx = prefix
+            prefix = self.prefix
         else:
             root_locs = self._root_locators(locs)
             locs = self._self_locators(locs)
-            pfx = self.root.path(prefix, root_locs)
-        pfx = os.path.abspath(pfx)
+            prefix = self.root.path(root_locs)
 
         assert len(locs) == self.nlocs
 
         pth = self.map_(locs)
         assert _path_is_relative(pth)
         assert _path_has_depth(pth, self.depth)
-        return os.path.join(pfx, pth)
+        return os.path.join(prefix, pth)
 
-    def exists(self, prefix, locs=()):
+    def exists(self, locs=()):
         """ does this directory exist?
         """
-        pth = self.path(prefix, locs)
+        pth = self.path(locs)
         return os.path.isdir(pth)
 
-    def remove(self, prefix, locs=()):
+    def remove(self, locs=()):
         """ does this directory exist?
         """
         if self.removable:
-            pth = self.path(prefix, locs)
-            if self.exists(prefix, locs):
+            pth = self.path(locs)
+            if self.exists(locs):
                 shutil.rmtree(pth)
         else:
             raise ValueError("This data series is not removable")
 
-    def create(self, prefix, locs=()):
+    def create(self, locs=()):
         """ create a directory at this prefix
         """
         # recursively create starting from the first root directory
         if self.root is not None:
             root_locs = self._root_locators(locs)
-            self.root.create(prefix, root_locs)
+            self.root.create(root_locs)
 
         # create this directory in the chain, if it doesn't already exist
-        assert os.path.isdir(prefix)
-        if not self.exists(prefix, locs):
-            pth = self.path(prefix, locs)
+        if not self.exists(locs):
+            pth = self.path(locs)
             os.makedirs(pth)
 
             if self.loc_dfile is not None:
                 locs = self._self_locators(locs)
                 self.loc_dfile.write(locs, pth)
 
-    def existing(self, prefix, root_locs=()):
+    def existing(self, root_locs=()):
         """ return the list of locators for existing paths
         """
         if self.loc_dfile is None:
             raise ValueError("This function does not work "
                              "without a locator DataFile")
 
-        pths = self.existing_paths(prefix, root_locs)
+        pths = self.existing_paths(root_locs)
         locs_lst = tuple(self.loc_dfile.read(pth) for pth in pths)
         return locs_lst
 
-    def existing_paths(self, prefix, root_locs=()):
+    def existing_paths(self, root_locs=()):
         """ existing paths at this prefix/root directory
         """
         if self.root is None:
-            pfx = prefix
+            prefix = self.prefix
         else:
-            pfx = self.root.path(prefix, root_locs)
+            prefix = self.root.path(root_locs)
 
-        pfx = os.path.abspath(pfx)
-        pth_pattern = os.path.join(pfx, *('*' * self.depth))
+        pth_pattern = os.path.join(prefix, *('*' * self.depth))
         pths = filter(os.path.isdir, glob.glob(pth_pattern))
-        pths = tuple(sorted(os.path.join(pfx, pth) for pth in pths))
+        pths = tuple(sorted(os.path.join(prefix, pth) for pth in pths))
         return pths
 
     # helpers
@@ -193,29 +174,25 @@ class DataSeriesFile():
         self.dir = dsdir
         self.file = dfile
 
-    def path(self, prefix, locs=()):
+    def path(self, locs=()):
         """ absolute file path
         """
-        dir_pth = self.dir.path(prefix, locs)
-        return self.file.path(dir_pth)
+        return self.file.path(self.dir.path(locs))
 
-    def exists(self, prefix, locs=()):
+    def exists(self, locs=()):
         """ does this file exist?
         """
-        dir_pth = self.dir.path(prefix, locs)
-        return self.file.exists(dir_pth)
+        return self.file.exists(self.dir.path(locs))
 
-    def write(self, val, prefix, locs=()):
+    def write(self, val, locs=()):
         """ write data to this file
         """
-        dir_pth = self.dir.path(prefix, locs)
-        self.file.write(val, dir_pth)
+        self.file.write(val, self.dir.path(locs))
 
-    def read(self, prefix, locs=()):
+    def read(self, locs=()):
         """ read data from this file
         """
-        dir_pth = self.dir.path(prefix, locs)
-        return self.file.read(dir_pth)
+        return self.file.read(self.dir.path(locs))
 
 
 class DataSeries():
