@@ -52,12 +52,12 @@ class DataFile():
         return val
 
 
-class DataSeriesDir():
+class DataSeries():
     """ directory manager mapping locator values to a directory series
     """
 
     def __init__(self, prefix, map_, nlocs, depth, loc_dfile=None,
-                 root_dsdir=None, removable=False):
+                 root_ds=None, removable=False):
         """
         :param map_: maps `nlocs` locators to a segment path consisting of
             `depth` directories
@@ -70,8 +70,20 @@ class DataSeriesDir():
         self.nlocs = nlocs
         self.depth = depth
         self.loc_dfile = loc_dfile
-        self.root = root_dsdir
+        self.root = root_ds
         self.removable = removable
+        self.file = types.SimpleNamespace()
+
+    def add_data_files(self, dfile_dct):
+        """ add DataFiles to the DataSeries
+        """
+        dfile_dct = {} if dfile_dct is None else dfile_dct
+
+        for name, dfile in dfile_dct.items():
+            assert isinstance(name, str)
+            assert isinstance(dfile, DataFile)
+            dsfile = _DataSeriesFile(ds=self, dfile=dfile)
+            setattr(self.file, name, dsfile)
 
     def path(self, locs=()):
         """ absolute directory path
@@ -165,13 +177,33 @@ class DataSeriesDir():
         return locs[:root_nlocs]
 
 
-# deprecated:
-class DataSeriesFile():
+class FileSystem(types.SimpleNamespace):
+    """ a collection of DataSeries
+    """
+
+    def __init__(self, dseries_dct):
+        self.update(dseries_dct)
+
+    def __iter__(self):
+        for key, val in vars(self).items():
+            yield key, val
+
+    def update(self, dseries_dct):
+        """ update the filesystem dataseries
+        """
+        for name, obj in dict(dseries_dct).items():
+            assert isinstance(name, str)
+            assert isinstance(obj, DataSeries)
+            setattr(self, name, obj)
+
+
+# helpers:
+class _DataSeriesFile():
     """ file manager mapping locator values to files in a directory series
     """
 
-    def __init__(self, dsdir, dfile):
-        self.dir = dsdir
+    def __init__(self, ds, dfile):
+        self.dir = ds
         self.file = dfile
 
     def path(self, locs=()):
@@ -195,49 +227,6 @@ class DataSeriesFile():
         return self.file.read(self.dir.path(locs))
 
 
-class DataSeries():
-    """ manager mapping locator values to files and directories in a series
-    """
-
-    def __init__(self, dsdir, dfile_dct=None):
-        """
-        :param dsdir: a DataSeriesDir object
-        :param dfiles: a sequence of pairs `("name", obj)` where `obj` is a
-            DataSeriesFile instance that will be accessible as `obj.file.name`
-        """
-        dfile_dct = {} if dfile_dct is None else dfile_dct
-
-        assert isinstance(dsdir, DataSeriesDir)
-        self.dir = dsdir
-        self.file = types.SimpleNamespace()
-        for name, dfile in dfile_dct.items():
-            assert isinstance(name, str)
-            assert isinstance(dfile, DataFile)
-            dsfile = DataSeriesFile(dsdir=dsdir, dfile=dfile)
-            setattr(self.file, name, dsfile)
-
-
-class FileSystem(types.SimpleNamespace):
-    """ a collection of DataSeries
-    """
-
-    def __init__(self, dseries_dct):
-        self.update(dseries_dct)
-
-    def __iter__(self):
-        for key, val in vars(self).items():
-            yield key, val
-
-    def update(self, dseries_dct):
-        """ update the filesystem dataseries
-        """
-        for name, obj in dict(dseries_dct).items():
-            assert isinstance(name, str)
-            assert isinstance(obj, DataSeries)
-            setattr(self, name, obj)
-
-
-# helpers
 def _path_is_relative(pth):
     """ is this a relative path?
     """

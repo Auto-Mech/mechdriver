@@ -52,181 +52,268 @@ class SeriesAttributeName():
 def direction(prefix):
     """ construct the direction filesystem
     """
+    leaf_ds = dir_.direction_leaf(prefix)
+
     inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
     inp_dfile = file_.input_file(FilePrefix.GEOM)
     ene_dfile = file_.energy(FilePrefix.GEOM)
     geom_dfile = file_.geometry(FilePrefix.GEOM)
     zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
 
-    dir_fs = model.FileSystem({
-        SeriesAttributeName.LEAF: model.DataSeries(
-            dsdir=dir_.direction_leaf(prefix),
-            dfile_dct={
-                FileAttributeName.GEOM_INPUT: inp_dfile,
-                FileAttributeName.GEOM_INFO: inf_dfile,
-                FileAttributeName.ENERGY: ene_dfile,
-                FileAttributeName.GEOM: geom_dfile,
-                FileAttributeName.ZMAT: zmat_dfile}),
-    })
+    leaf_ds.add_data_files({
+        FileAttributeName.GEOM_INPUT: inp_dfile,
+        FileAttributeName.GEOM_INFO: inf_dfile,
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.ZMAT: zmat_dfile})
+
+    dir_fs = model.FileSystem({SeriesAttributeName.LEAF: leaf_ds})
     return dir_fs
 
 
-def species(root_fs=None, top_ds_name=None, name_prefix=''):
+def species(prefix):
     """ construct the species filesystem
     """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+    trunk_ds = dir_.species_trunk(prefix)
+    leaf_ds = dir_.species_leaf(prefix, root_ds=trunk_ds)
 
-    spc_trunk_ds = series.species_trunk(root_dsdir=top_dsdir)
-    spc_leaf_ds = series.species_leaf(root_dsdir=spc_trunk_ds.dir)
-
-    spc_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.SPC_TRUNK): spc_trunk_ds,
-        (name_prefix + SeriesAttributeName.SPC_LEAF): spc_leaf_ds,
-    })
-    spc_fs.update(root_fs)
-    return spc_fs
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
 
 
-def ts(root_fs=None, top_ds_name=None, name_prefix=''):
-    """ construct the species filesystem
-    """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
-
-    ts_trunk_ds = series.ts_trunk(root_dsdir=top_dsdir)
-
-    ts_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.TS_TRUNK): ts_trunk_ds,
-    })
-    ts_fs.update(root_fs)
-    return ts_fs
-
-
-def reaction(root_fs=None, top_ds_name=None, name_prefix=''):
+def reaction(prefix):
     """ construct the reaction filesystem
     """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+    trunk_ds = dir_.reaction_trunk(prefix)
+    leaf_ds = dir_.reaction_leaf(prefix, root_ds=trunk_ds)
 
-    rxn_trunk_ds = series.reaction_trunk(root_dsdir=top_dsdir)
-    rxn_leaf_ds = series.reaction_leaf(root_dsdir=rxn_trunk_ds.dir)
-
-    rxn_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.RXN_TRUNK): rxn_trunk_ds,
-        (name_prefix + SeriesAttributeName.RXN_LEAF): rxn_leaf_ds,
-    })
-    rxn_fs.update(root_fs)
-    return rxn_fs
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
 
 
-def theory(root_fs=None, top_ds_name=None, name_prefix=''):
+def ts(prefix):
+    """ construct the ts filesystem
+    """
+    trunk_ds = dir_.ts_trunk(prefix)
+
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds})
+    return dir_fs
+
+
+def theory(prefix):
     """ construct the theory filesystem
     """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+    leaf_ds = dir_.theory_leaf(prefix)
 
-    thy_leaf_ds = series.theory_leaf(root_dsdir=top_dsdir)
+    geom_dfile = file_.geometry(FilePrefix.GEOM)
+    ene_dfile = file_.energy(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+    leaf_ds.add_data_files({
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.ZMAT: zmat_dfile})
 
-    thy_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.THY_LEAF): thy_leaf_ds,
-    })
-    thy_fs.update(root_fs)
-    return thy_fs
+    dir_fs = model.FileSystem({SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
 
 
-def conformer(root_fs=None, top_ds_name=None, name_prefix=''):
+def conformer(prefix):
     """ construct the conformer filesystem
     """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+    trunk_ds = dir_.conformer_trunk(prefix)
+    leaf_ds = dir_.conformer_leaf(prefix, root_ds=trunk_ds)
 
-    cnf_trunk_ds = series.conformer_trunk(root_dsdir=top_dsdir)
-    cnf_leaf_ds = series.conformer_leaf(root_dsdir=cnf_trunk_ds.dir)
+    min_ene_dfile = file_.energy(FilePrefix.MIN)
+    vma_dfile = file_.vmatrix(FilePrefix.CONF)
+    inf_dfile = file_.information(FilePrefix.CONF,
+                                  function=info.conformer_trunk)
+    traj_dfile = file_.trajectory(FilePrefix.CONF)
+    trunk_ds.add_data_files({
+        FileAttributeName.VMATRIX: vma_dfile,
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.ENERGY: min_ene_dfile,
+        FileAttributeName.TRAJ: traj_dfile})
 
-    cnf_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.CNF_TRUNK): cnf_trunk_ds,
-        (name_prefix + SeriesAttributeName.CNF_LEAF): cnf_leaf_ds,
-    })
-    cnf_fs.update(root_fs)
-    return cnf_fs
+    geom_inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
+    grad_inf_dfile = file_.information(FilePrefix.GRAD, function=info.run)
+    hess_inf_dfile = file_.information(FilePrefix.HESS, function=info.run)
+    geom_inp_dfile = file_.input_file(FilePrefix.GEOM)
+    grad_inp_dfile = file_.input_file(FilePrefix.GRAD)
+    hess_inp_dfile = file_.input_file(FilePrefix.HESS)
+    ene_dfile = file_.energy(FilePrefix.GEOM)
+    geom_dfile = file_.geometry(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+    grad_dfile = file_.gradient(FilePrefix.GRAD)
+    hess_dfile = file_.hessian(FilePrefix.HESS)
+    hfreq_dfile = file_.harmonic_frequencies(FilePrefix.HESS)
+    leaf_ds.add_data_files({
+        FileAttributeName.GEOM_INFO: geom_inf_dfile,
+        FileAttributeName.GRAD_INFO: grad_inf_dfile,
+        FileAttributeName.HESS_INFO: hess_inf_dfile,
+        FileAttributeName.GEOM_INPUT: geom_inp_dfile,
+        FileAttributeName.GRAD_INPUT: grad_inp_dfile,
+        FileAttributeName.HESS_INPUT: hess_inp_dfile,
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.ZMAT: zmat_dfile,
+        FileAttributeName.GRAD: grad_dfile,
+        FileAttributeName.HESS: hess_dfile,
+        FileAttributeName.HFREQ: hfreq_dfile})
+
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
 
 
-def tau(root_fs=None, top_ds_name=None, name_prefix=''):
+def tau(prefix):
     """ construct the tau filesystem
     """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+    trunk_ds = dir_.tau_trunk(prefix)
+    leaf_ds = dir_.tau_leaf(prefix, root_ds=trunk_ds)
 
-    tau_trunk_ds = series.tau_trunk(root_dsdir=top_dsdir)
-    tau_leaf_ds = series.tau_leaf(root_dsdir=tau_trunk_ds.dir)
+    vma_dfile = file_.vmatrix(FilePrefix.TAU)
+    inf_dfile = file_.information(FilePrefix.TAU,
+                                  function=info.tau_trunk)
+    traj_dfile = file_.trajectory(FilePrefix.TAU)
+    trunk_ds.add_data_files({
+        FileAttributeName.VMATRIX: vma_dfile,
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.TRAJ: traj_dfile})
 
-    tau_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.TAU_TRUNK): tau_trunk_ds,
-        (name_prefix + SeriesAttributeName.TAU_LEAF): tau_leaf_ds,
-    })
-    tau_fs.update(root_fs)
-    return tau_fs
+    geom_inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
+    grad_inf_dfile = file_.information(FilePrefix.GRAD, function=info.run)
+    hess_inf_dfile = file_.information(FilePrefix.HESS, function=info.run)
+    geom_inp_dfile = file_.input_file(FilePrefix.GEOM)
+    grad_inp_dfile = file_.input_file(FilePrefix.GRAD)
+    hess_inp_dfile = file_.input_file(FilePrefix.HESS)
+    ene_dfile = file_.energy(FilePrefix.GEOM)
+    geom_dfile = file_.geometry(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+    grad_dfile = file_.gradient(FilePrefix.GRAD)
+    hess_dfile = file_.hessian(FilePrefix.HESS)
+    hfreq_dfile = file_.harmonic_frequencies(FilePrefix.HESS)
+    leaf_ds.add_data_files({
+        FileAttributeName.GEOM_INFO: geom_inf_dfile,
+        FileAttributeName.GRAD_INFO: grad_inf_dfile,
+        FileAttributeName.HESS_INFO: hess_inf_dfile,
+        FileAttributeName.GEOM_INPUT: geom_inp_dfile,
+        FileAttributeName.GRAD_INPUT: grad_inp_dfile,
+        FileAttributeName.HESS_INPUT: hess_inp_dfile,
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.ZMAT: zmat_dfile,
+        FileAttributeName.GRAD: grad_dfile,
+        FileAttributeName.HESS: hess_dfile,
+        FileAttributeName.HFREQ: hfreq_dfile})
+
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
 
 
-def single_point(root_fs=None, top_ds_name=None, name_prefix=''):
+def single_point(prefix):
     """ construct the single-point filesystem
     """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+    trunk_ds = dir_.single_point_trunk(prefix)
+    leaf_ds = dir_.single_point_leaf(prefix, root_ds=trunk_ds)
 
-    sp_trunk_ds = series.single_point_trunk(root_dsdir=top_dsdir)
-    sp_leaf_ds = series.single_point_leaf(root_dsdir=sp_trunk_ds.dir)
+    inp_dfile = file_.input_file(FilePrefix.SP)
+    inf_dfile = file_.information(FilePrefix.SP, function=info.run)
+    ene_dfile = file_.energy(FilePrefix.SP)
+    leaf_ds.add_data_files({
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.INPUT: inp_dfile,
+        FileAttributeName.ENERGY: ene_dfile})
 
-    sp_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.SP_TRUNK): sp_trunk_ds,
-        (name_prefix + SeriesAttributeName.SP_LEAF): sp_leaf_ds,
-    })
-    sp_fs.update(root_fs)
-    return sp_fs
+    dir_fs = model.FileSystem({SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
 
 
-def scan(root_fs=None, top_ds_name=None, name_prefix=''):
+def scan(prefix):
     """ construct the scan filesystem
     """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+    trunk_ds = dir_.scan_trunk(prefix)
+    branch_ds = dir_.scan_branch(prefix, root_ds=trunk_ds)
+    leaf_ds = dir_.scan_leaf(prefix, root_ds=branch_ds)
 
-    scn_trunk_ds = series.scan_trunk(root_dsdir=top_dsdir)
-    scn_branch_ds = series.scan_branch(root_dsdir=scn_trunk_ds.dir)
-    scn_leaf_ds = series.scan_leaf(root_dsdir=scn_branch_ds.dir)
+    vma_dfile = file_.vmatrix(FilePrefix.SCAN)
+    leaf_ds.add_data_files({
+        FileAttributeName.VMATRIX: vma_dfile})
 
-    scn_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.SCN_TRUNK): scn_trunk_ds,
-        (name_prefix + SeriesAttributeName.SCN_BRANCH): scn_branch_ds,
-        (name_prefix + SeriesAttributeName.SCN_LEAF): scn_leaf_ds,
-    })
-    scn_fs.update(root_fs)
-    return scn_fs
+    inf_dfile = file_.information(FilePrefix.SCAN, function=info.scan_branch)
+    traj_dfile = file_.trajectory(FilePrefix.SCAN)
+    branch_ds.add_data_files({
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.TRAJ: traj_dfile})
+
+    geom_inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
+    grad_inf_dfile = file_.information(FilePrefix.GRAD, function=info.run)
+    hess_inf_dfile = file_.information(FilePrefix.HESS, function=info.run)
+    geom_inp_dfile = file_.input_file(FilePrefix.GEOM)
+    grad_inp_dfile = file_.input_file(FilePrefix.GRAD)
+    hess_inp_dfile = file_.input_file(FilePrefix.HESS)
+    ene_dfile = file_.energy(FilePrefix.GEOM)
+    geom_dfile = file_.geometry(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+    grad_dfile = file_.gradient(FilePrefix.GRAD)
+    hess_dfile = file_.hessian(FilePrefix.HESS)
+    hfreq_dfile = file_.harmonic_frequencies(FilePrefix.HESS)
+    leaf_ds.add_data_files({
+        FileAttributeName.GEOM_INFO: geom_inf_dfile,
+        FileAttributeName.GRAD_INFO: grad_inf_dfile,
+        FileAttributeName.HESS_INFO: hess_inf_dfile,
+        FileAttributeName.GEOM_INPUT: geom_inp_dfile,
+        FileAttributeName.GRAD_INPUT: grad_inp_dfile,
+        FileAttributeName.HESS_INPUT: hess_inp_dfile,
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.ZMAT: zmat_dfile,
+        FileAttributeName.GRAD: grad_dfile,
+        FileAttributeName.HESS: hess_dfile,
+        FileAttributeName.HFREQ: hfreq_dfile})
+
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.BRANCH: branch_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
 
 
-def run(root_fs=None, top_ds_name=None, name_prefix=''):
+def run(prefix):
     """ construct the run filesystem
     """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+    trunk_ds = dir_.run_trunk(prefix)
+    leaf_ds = dir_.run_leaf(prefix, root_ds=trunk_ds)
 
-    run_trunk_ds = series.run_trunk(root_dsdir=top_dsdir)
-    run_leaf_ds = series.run_leaf(root_dsdir=run_trunk_ds.dir)
+    inf_dfile = file_.information(FilePrefix.RUN, function=info.run)
+    inp_dfile = file_.input_file(FilePrefix.RUN)
+    out_dfile = file_.output_file(FilePrefix.RUN)
+    leaf_ds.add_data_files({
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.INPUT: inp_dfile,
+        FileAttributeName.OUTPUT: out_dfile})
 
-    run_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.RUN_TRUNK): run_trunk_ds,
-        (name_prefix + SeriesAttributeName.RUN_LEAF): run_leaf_ds,
-    })
-    run_fs.update(root_fs)
-    return run_fs
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
 
 
-def build(root_fs=None, top_ds_name=None, name_prefix=''):
-    """ construct the run filesystem
+def build(prefix):
+    """ construct the build filesystem
     """
-    root_fs, top_dsdir = _process_root_args(root_fs, top_ds_name)
+    trunk_ds = dir_.build_trunk(prefix)
+    leaf_ds = dir_.build_leaf(prefix, root_ds=trunk_ds)
 
-    build_trunk_ds = series.build_trunk(root_dsdir=top_dsdir)
-    build_leaf_ds = series.build_leaf(root_dsdir=build_trunk_ds.dir)
+    inp_dfile = file_.input_file(FilePrefix.BUILD)
+    out_dfile = file_.output_file(FilePrefix.BUILD)
+    leaf_ds.add_data_files({
+        FileAttributeName.INPUT: inp_dfile,
+        FileAttributeName.OUTPUT: out_dfile})
 
-    build_fs = model.FileSystem({
-        (name_prefix + SeriesAttributeName.BUILD_TRUNK): build_trunk_ds,
-        (name_prefix + SeriesAttributeName.BUILD_LEAF): build_leaf_ds,
-    })
-    build_fs.update(root_fs)
-    return build_fs
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
 
 
 def _process_root_args(root_fs=None, top_ds_name=None):
