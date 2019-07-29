@@ -49,28 +49,6 @@ class SeriesAttributeName():
     LEAF = 'leaf'
 
 
-def direction(prefix):
-    """ construct the direction filesystem
-    """
-    leaf_ds = dir_.direction_leaf(prefix)
-
-    inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
-    inp_dfile = file_.input_file(FilePrefix.GEOM)
-    ene_dfile = file_.energy(FilePrefix.GEOM)
-    geom_dfile = file_.geometry(FilePrefix.GEOM)
-    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
-
-    leaf_ds.add_data_files({
-        FileAttributeName.GEOM_INPUT: inp_dfile,
-        FileAttributeName.GEOM_INFO: inf_dfile,
-        FileAttributeName.ENERGY: ene_dfile,
-        FileAttributeName.GEOM: geom_dfile,
-        FileAttributeName.ZMAT: zmat_dfile})
-
-    dir_fs = model.FileSystem({SeriesAttributeName.LEAF: leaf_ds})
-    return dir_fs
-
-
 def species(prefix):
     """ construct the species filesystem
     """
@@ -79,26 +57,6 @@ def species(prefix):
 
     dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
                                SeriesAttributeName.LEAF: leaf_ds})
-    return dir_fs
-
-
-def reaction(prefix):
-    """ construct the reaction filesystem
-    """
-    trunk_ds = dir_.reaction_trunk(prefix)
-    leaf_ds = dir_.reaction_leaf(prefix, root_ds=trunk_ds)
-
-    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
-                               SeriesAttributeName.LEAF: leaf_ds})
-    return dir_fs
-
-
-def ts(prefix):
-    """ construct the ts filesystem
-    """
-    trunk_ds = dir_.ts_trunk(prefix)
-
-    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds})
     return dir_fs
 
 
@@ -134,52 +92,6 @@ def conformer(prefix):
         FileAttributeName.VMATRIX: vma_dfile,
         FileAttributeName.INFO: inf_dfile,
         FileAttributeName.ENERGY: min_ene_dfile,
-        FileAttributeName.TRAJ: traj_dfile})
-
-    geom_inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
-    grad_inf_dfile = file_.information(FilePrefix.GRAD, function=info.run)
-    hess_inf_dfile = file_.information(FilePrefix.HESS, function=info.run)
-    geom_inp_dfile = file_.input_file(FilePrefix.GEOM)
-    grad_inp_dfile = file_.input_file(FilePrefix.GRAD)
-    hess_inp_dfile = file_.input_file(FilePrefix.HESS)
-    ene_dfile = file_.energy(FilePrefix.GEOM)
-    geom_dfile = file_.geometry(FilePrefix.GEOM)
-    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
-    grad_dfile = file_.gradient(FilePrefix.GRAD)
-    hess_dfile = file_.hessian(FilePrefix.HESS)
-    hfreq_dfile = file_.harmonic_frequencies(FilePrefix.HESS)
-    leaf_ds.add_data_files({
-        FileAttributeName.GEOM_INFO: geom_inf_dfile,
-        FileAttributeName.GRAD_INFO: grad_inf_dfile,
-        FileAttributeName.HESS_INFO: hess_inf_dfile,
-        FileAttributeName.GEOM_INPUT: geom_inp_dfile,
-        FileAttributeName.GRAD_INPUT: grad_inp_dfile,
-        FileAttributeName.HESS_INPUT: hess_inp_dfile,
-        FileAttributeName.ENERGY: ene_dfile,
-        FileAttributeName.GEOM: geom_dfile,
-        FileAttributeName.ZMAT: zmat_dfile,
-        FileAttributeName.GRAD: grad_dfile,
-        FileAttributeName.HESS: hess_dfile,
-        FileAttributeName.HFREQ: hfreq_dfile})
-
-    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
-                               SeriesAttributeName.LEAF: leaf_ds})
-    return dir_fs
-
-
-def tau(prefix):
-    """ construct the tau filesystem
-    """
-    trunk_ds = dir_.tau_trunk(prefix)
-    leaf_ds = dir_.tau_leaf(prefix, root_ds=trunk_ds)
-
-    vma_dfile = file_.vmatrix(FilePrefix.TAU)
-    inf_dfile = file_.information(FilePrefix.TAU,
-                                  function=info.tau_trunk)
-    traj_dfile = file_.trajectory(FilePrefix.TAU)
-    trunk_ds.add_data_files({
-        FileAttributeName.VMATRIX: vma_dfile,
-        FileAttributeName.INFO: inf_dfile,
         FileAttributeName.TRAJ: traj_dfile})
 
     geom_inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
@@ -277,6 +189,101 @@ def scan(prefix):
     dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
                                SeriesAttributeName.BRANCH: branch_ds,
                                SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
+
+
+def tau(prefix):
+    """ construct the tau filesystem
+    """
+    trunk_ds = dir_.tau_trunk(prefix)
+    leaf_ds = dir_.tau_leaf(prefix, root_ds=trunk_ds)
+
+    vma_dfile = file_.vmatrix(FilePrefix.TAU)
+    inf_dfile = file_.information(FilePrefix.TAU,
+                                  function=info.tau_trunk)
+    traj_dfile = file_.trajectory(FilePrefix.TAU)
+    trunk_ds.add_data_files({
+        FileAttributeName.VMATRIX: vma_dfile,
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.TRAJ: traj_dfile})
+
+    geom_inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
+    grad_inf_dfile = file_.information(FilePrefix.GRAD, function=info.run)
+    hess_inf_dfile = file_.information(FilePrefix.HESS, function=info.run)
+    geom_inp_dfile = file_.input_file(FilePrefix.GEOM)
+    grad_inp_dfile = file_.input_file(FilePrefix.GRAD)
+    hess_inp_dfile = file_.input_file(FilePrefix.HESS)
+    ene_dfile = file_.energy(FilePrefix.GEOM)
+    geom_dfile = file_.geometry(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+    grad_dfile = file_.gradient(FilePrefix.GRAD)
+    hess_dfile = file_.hessian(FilePrefix.HESS)
+    hfreq_dfile = file_.harmonic_frequencies(FilePrefix.HESS)
+    leaf_ds.add_data_files({
+        FileAttributeName.GEOM_INFO: geom_inf_dfile,
+        FileAttributeName.GRAD_INFO: grad_inf_dfile,
+        FileAttributeName.HESS_INFO: hess_inf_dfile,
+        FileAttributeName.GEOM_INPUT: geom_inp_dfile,
+        FileAttributeName.GRAD_INPUT: grad_inp_dfile,
+        FileAttributeName.HESS_INPUT: hess_inp_dfile,
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.ZMAT: zmat_dfile,
+        FileAttributeName.GRAD: grad_dfile,
+        FileAttributeName.HESS: hess_dfile,
+        FileAttributeName.HFREQ: hfreq_dfile})
+
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
+
+
+def reaction(prefix):
+    """ construct the reaction filesystem
+    """
+    trunk_ds = dir_.reaction_trunk(prefix)
+    leaf_ds = dir_.reaction_leaf(prefix, root_ds=trunk_ds)
+
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
+
+
+def ts(prefix):
+    """ construct the ts filesystem
+    """
+    trunk_ds = dir_.ts_trunk(prefix)
+
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds})
+    return dir_fs
+
+
+def direction(prefix):
+    """ filesystem object for reaction direction
+
+    :param prefix: sets the path containing this filesystem
+    :type prefix: str
+
+    leaf specifiers: [forw]
+        :param forw: whether the reaction is in the forward direction or not
+        :type forw: bool
+    """
+    leaf_ds = dir_.direction_leaf(prefix)
+
+    inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
+    inp_dfile = file_.input_file(FilePrefix.GEOM)
+    ene_dfile = file_.energy(FilePrefix.GEOM)
+    geom_dfile = file_.geometry(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+
+    leaf_ds.add_data_files({
+        FileAttributeName.GEOM_INPUT: inp_dfile,
+        FileAttributeName.GEOM_INFO: inf_dfile,
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.ZMAT: zmat_dfile})
+
+    dir_fs = model.FileSystem({SeriesAttributeName.LEAF: leaf_ds})
     return dir_fs
 
 

@@ -13,38 +13,11 @@ from autofile.system import model
 SPEC_FILE_PREFIX = 'dir'
 
 
-def reference_trunk(prefix, root_ds=None):
-    """ reference trunk DataSeries
-    """
-    _map = _pack_arguments(map_.reference_trunk)
-    nlocs = _count_arguments(map_.reference_trunk)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            root_ds=root_ds)
-
-
-def direction_leaf(prefix, root_ds=None):
-    """ direction leaf  DataSeries
-    """
-    _map = _pack_arguments(map_.direction_leaf)
-    nlocs = _count_arguments(map_.direction_leaf)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            root_ds=root_ds)
-
-
 def species_trunk(prefix, root_ds=None):
     """ species trunk DataSeries
     """
     _map = _pack_arguments(map_.species_trunk)
     nlocs = _count_arguments(map_.species_trunk)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            root_ds=root_ds)
-
-
-def ts_trunk(prefix, root_ds=None):
-    """ ts trunk DataSeries
-    """
-    _map = _pack_arguments(map_.ts_trunk)
-    nlocs = _count_arguments(map_.ts_trunk)
     return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
                             root_ds=root_ds)
 
@@ -67,37 +40,6 @@ def species_leaf(prefix, root_ds=None):
                             loc_dfile=loc_dfile, root_ds=root_ds)
 
 
-def reaction_trunk(prefix, root_ds=None):
-    """ reaction trunk DataSeries
-    """
-    _map = _pack_arguments(map_.reaction_trunk)
-    nlocs = _count_arguments(map_.reaction_trunk)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            root_ds=root_ds)
-
-
-def reaction_leaf(prefix, root_ds=None):
-    """ reaction leaf DataSeries
-    """
-    loc_dfile = file_.locator(
-        file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={
-            'inchis': lambda locs: locs[0],
-            'charges': lambda locs: locs[1],
-            'multiplicities': lambda locs: locs[2],
-            'ts_multiplicity': lambda locs: locs[3],
-            'smiles': lambda locs: [
-                list(map(automol.inchi.smiles, locs[0][0])),
-                list(map(automol.inchi.smiles, locs[0][1]))],
-        },
-        loc_keys=['inchis', 'charges', 'multiplicities', 'ts_multiplicity'])
-
-    _map = _pack_arguments(map_.reaction_leaf)
-    nlocs = _count_arguments(map_.reaction_leaf)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=11,
-                            loc_dfile=loc_dfile, root_ds=root_ds)
-
-
 def theory_leaf(prefix, root_ds=None):
     """ theory leaf DataSeries
     """
@@ -111,45 +53,6 @@ def theory_leaf(prefix, root_ds=None):
 
     _map = _pack_arguments(map_.theory_leaf)
     nlocs = _count_arguments(map_.theory_leaf)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            loc_dfile=loc_dfile, root_ds=root_ds)
-
-
-def run_trunk(prefix, root_ds=None):
-    """ run trunk DataSeries
-    """
-    _map = _pack_arguments(map_.run_trunk)
-    nlocs = _count_arguments(map_.run_trunk)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            root_ds=root_ds)
-
-
-def run_leaf(prefix, root_ds=None):
-    """ run leaf DataSeries
-    """
-    loc_dfile = file_.locator(
-        file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={'job': lambda locs: locs[0]},
-        loc_keys=['job'])
-
-    _map = _pack_arguments(map_.run_leaf)
-    nlocs = _count_arguments(map_.run_leaf)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            loc_dfile=loc_dfile, root_ds=root_ds,
-                            removable=True)
-
-
-def subrun_leaf(prefix, root_ds=None):
-    """ subrun leaf DataSeries
-    """
-    loc_dfile = file_.locator(
-        file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={'macro_idx': lambda locs: locs[0],
-                  'micro_idx': lambda locs: locs[1]},
-        loc_keys=['macro_idx', 'micro_idx'])
-
-    _map = _pack_arguments(map_.subrun_leaf)
-    nlocs = _count_arguments(map_.subrun_leaf)
     return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
                             loc_dfile=loc_dfile, root_ds=root_ds)
 
@@ -175,15 +78,6 @@ def conformer_leaf(prefix, root_ds=None):
     nlocs = _count_arguments(map_.conformer_leaf)
     return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
                             loc_dfile=loc_dfile, root_ds=root_ds)
-
-
-def single_point_trunk(prefix, root_ds=None):
-    """ single point trunk DataSeries
-    """
-    _map = _pack_arguments(map_.single_point_trunk)
-    nlocs = _count_arguments(map_.single_point_trunk)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            root_ds=root_ds)
 
 
 def single_point_leaf(prefix, root_ds=None):
@@ -250,6 +144,103 @@ def tau_leaf(prefix, root_ds=None):
     nlocs = _count_arguments(map_.tau_leaf)
     return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
                             loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def reaction_trunk(prefix, root_ds=None):
+    """ reaction trunk DataSeries
+    """
+    _map = _pack_arguments(map_.reaction_trunk)
+    nlocs = _count_arguments(map_.reaction_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def reaction_leaf(prefix, root_ds=None):
+    """ reaction leaf DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={
+            'inchis': lambda locs: locs[0],
+            'charges': lambda locs: locs[1],
+            'multiplicities': lambda locs: locs[2],
+            'ts_multiplicity': lambda locs: locs[3],
+            'smiles': lambda locs: [
+                list(map(automol.inchi.smiles, locs[0][0])),
+                list(map(automol.inchi.smiles, locs[0][1]))],
+        },
+        loc_keys=['inchis', 'charges', 'multiplicities', 'ts_multiplicity'])
+
+    _map = _pack_arguments(map_.reaction_leaf)
+    nlocs = _count_arguments(map_.reaction_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=11,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def ts_trunk(prefix, root_ds=None):
+    """ ts trunk DataSeries
+    """
+    _map = _pack_arguments(map_.ts_trunk)
+    nlocs = _count_arguments(map_.ts_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def direction_leaf(prefix, root_ds=None):
+    """ direction leaf  DataSeries
+    """
+    _map = _pack_arguments(map_.direction_leaf)
+    nlocs = _count_arguments(map_.direction_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def run_trunk(prefix, root_ds=None):
+    """ run trunk DataSeries
+    """
+    _map = _pack_arguments(map_.run_trunk)
+    nlocs = _count_arguments(map_.run_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def run_leaf(prefix, root_ds=None):
+    """ run leaf DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'job': lambda locs: locs[0]},
+        loc_keys=['job'])
+
+    _map = _pack_arguments(map_.run_leaf)
+    nlocs = _count_arguments(map_.run_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds,
+                            removable=True)
+
+
+def subrun_leaf(prefix, root_ds=None):
+    """ subrun leaf DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'macro_idx': lambda locs: locs[0],
+                  'micro_idx': lambda locs: locs[1]},
+        loc_keys=['macro_idx', 'micro_idx'])
+
+    _map = _pack_arguments(map_.subrun_leaf)
+    nlocs = _count_arguments(map_.subrun_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def single_point_trunk(prefix, root_ds=None):
+    """ single point trunk DataSeries
+    """
+    _map = _pack_arguments(map_.single_point_trunk)
+    nlocs = _count_arguments(map_.single_point_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
 
 
 def build_trunk(prefix, root_ds=None):
