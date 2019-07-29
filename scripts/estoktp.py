@@ -95,8 +95,8 @@ RUN_CONF_SCAN_GRAD = False
 RUN_CONF_SCAN_HESS = False
 
 RUN_TAU_SAMP = True
-RUN_TAU_GRAD = True
-RUN_TAU_HESS = True
+RUN_TAU_GRAD = False
+RUN_TAU_HESS = False
 
 RUN_TS_CONF_OPT = False
 RUN_TS_CONF_SCAN = False
@@ -118,17 +118,19 @@ if RUN_HESS:
     RUN_CONF_HESS = True
     RUN_CONF_SCAN_HESS = True
     RUN_TAU_HESS = True
+RUN_GRAD_PF = False
+RUN_HESS_PF = False
 
 # d. Parameters for number of torsional samplings
 NSAMP_CONF = 5
-NSAMP_CONF_EXPR = False
+NSAMP_CONF_EXPR = True
 NSAMP_CONF_A = 3
 NSAMP_CONF_B = 1
 NSAMP_CONF_C = 3
-NSAMP_CONF_D = 15
+NSAMP_CONF_D = 100
 NSAMP_CONF_PAR = [NSAMP_CONF_EXPR, NSAMP_CONF_A, NSAMP_CONF_B, NSAMP_CONF_C, NSAMP_CONF_D, NSAMP_CONF]
 
-NSAMP_TAU = 10
+NSAMP_TAU = 1000
 NSAMP_TAU_EXPR = False
 NSAMP_TAU_A = 3
 NSAMP_TAU_B = 1
@@ -243,7 +245,7 @@ MUL_DCT['REF_NH3'] = 1
 SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
 SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
 #SPC_NAMES += ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
-SPC_NAMES += ('REF_CH4', 'REF_H2O', 'REF_NH3')
+#SPC_NAMES += ('REF_CH4', 'REF_H2O', 'REF_NH3')
 print('SPC_NAMES')
 print(SPC_NAMES)
 
@@ -488,6 +490,8 @@ if RUN_SPECIES_QCHEM:
                     basis=basis,
                     orb_restr=orb_restr,
                     save_prefix=thy_save_path,
+                    run_grad=RUN_GRAD_PF,
+                    run_hess=RUN_HESS_PF,
                     **KWARGS,
                     )
 

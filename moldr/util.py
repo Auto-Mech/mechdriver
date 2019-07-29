@@ -27,7 +27,8 @@ def run_qchem_par(prog):
             'machine_options': ['%NProcShared=10'],
             'gen_lines': ['# int=ultrafine'],
             'feedback': True,
-            # 'job_options': ['verytight'],
+#            'job_options': ['verytight'],
+#            'job_options': ['verytight'],
             'errors': [
                 elstruct.Error.OPT_NOCONV
             ],
