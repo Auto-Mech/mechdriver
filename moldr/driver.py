@@ -158,7 +158,7 @@ def conformer_sampling(
     gra = automol.inchi.graph(ich)
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
     if nsamp_par[0]:
-        nsamp = min(nsamp[1] + nsamp[2] * nsamp[3]**ntaudof, nsamp[4])
+        nsamp = min(nsamp_par[1] + nsamp_par[2] * nsamp_par[3]**ntaudof, nsamp_par[4])
     else:
         nsamp = nsamp_par[5]
 
@@ -523,7 +523,7 @@ def tau_sampling(
     gra = automol.inchi.graph(ich)
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
     if nsamp_par[0]:
-        nsamp = min(nsamp[1] + nsamp[2] * nsamp[3]**ntaudof, nsamp[4])
+        nsamp_par = min(nsamp_par[1] + nsamp_par[2] * nsamp_par[3]**ntaudof, nsamp_par[4])
     else:
         nsamp = nsamp_par[5]
 
@@ -674,8 +674,8 @@ def run_kickoff_saddle(
 
 
 def tau_pf_write(
-        name, ich, chg, mult, method, basis, orb_restr, save_prefix, **kwargs):
-    """ Determine gradients for all tau dependent optimized geometries
+        name, ich, chg, mult, method, basis, orb_restr, save_prefix, run_grad=False, run_hess=False, **kwargs):
+    """ Print out data fle for partition function evaluation 
     """
 
     cnf_afs = autofile.fs.conformer()
@@ -687,22 +687,14 @@ def tau_pf_write(
 
     afs = autofile.fs.tau()
     evr = name+'\n'
-    idx = 0
 # cycle through saved tau geometries
-    temp = 1000.
-    sum = 0.
-    sum2 = 0.
     idx = 0
     for alocs in afs.tau.dir.existing(save_prefix):
         geo = afs.tau.file.geometry.read(save_prefix, alocs)
-        grad = afs.tau.file.gradient.read(save_prefix, alocs)
-        hess = afs.tau.file.hessian.read(save_prefix, alocs)
         ene = afs.tau.file.energy.read(save_prefix, alocs)
         ene = (ene - ene_ref)*qcc.conversion_factor('hartree', 'kcal/mol')
         ene_str = autofile.file.write.energy(ene)
         geo_str = autofile.file.write.geometry(geo)
-        grad_str = autofile.file.write.gradient(grad)
-        hess_str = autofile.file.write.hessian(hess)
 
         idx += 1
         idx_str = str(idx)
@@ -712,22 +704,38 @@ def tau_pf_write(
         evr += ene_str+'\n'
         evr += 'Geometry'+'\n'
         evr += geo_str+'\n'
-        evr += 'Gradient'+'\n'
-        evr += grad_str
-        evr += 'Hessian'+'\n'
-        evr += hess_str+'\n'
-
-        tmp = numpy.exp(-ene*349.7/(0.695*temp))
-        sum = sum + tmp
-        sum2 = sum2 + tmp**2
-        sigma = numpy.sqrt((abs(sum2/float(idx)-(sum/float(idx))**2)))
-        print('integral convergence')
-        print(sum/float(idx),numpy.sqrt(sum2)/float(idx),sigma,idx)
+        if run_grad:
+            grad = afs.tau.file.gradient.read(save_prefix, alocs)
+            grad_str = autofile.file.write.gradient(grad)
+            evr += 'Gradient'+'\n'
+            evr += grad_str
+        if run_hess:
+            hess = afs.tau.file.hessian.read(save_prefix, alocs)
+            hess_str = autofile.file.write.hessian(hess)
+            evr += 'Hessian'+'\n'
+            evr += hess_str+'\n'
 
     file_name = os.path.join(save_prefix, 'TAU', 'tau.out')
     with open(file_name, 'w') as tau_file:
         tau_file.write(evr)
 #    print(evr)
+
+    temp_list = [300., 500., 750., 1000., 1500.]
+    for temp in temp_list:
+        sumq = 0.
+        sum2 = 0.
+        idx = 0
+        print('integral convergence for T = ', temp)
+        for alocs in afs.tau.dir.existing(save_prefix):
+            idx += 1
+            ene = afs.tau.file.energy.read(save_prefix, alocs)
+            ene = (ene - ene_ref)*qcc.conversion_factor('hartree', 'kcal/mol')
+            tmp = numpy.exp(-ene*349.7/(0.695*temp))
+            sumq = sumq + tmp
+            sum2 = sum2 + tmp**2
+            sigma = numpy.sqrt((abs(sum2/float(idx)-(sumq/float(idx))**2))/float(idx))
+            print(sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
+#            print(sumq/float(idx), (sumq/float(idx))**2, sum2/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
 
 
 def run_conformers(
