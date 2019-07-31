@@ -6,6 +6,8 @@ import numpy
 import pandas
 from qcelemental import constants as qcc
 import chemkin_io
+import projrot_io
+import thermo
 import automol
 import elstruct
 import autofile
@@ -28,8 +30,10 @@ MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane, test, estoktp, .
 # a. Strings to launch executable
 # script_strings for electronic structure are obtained from run_qchem_par since they vary with method
 
+PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                       "RPHt.exe")
 PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                 "messpf build.inp build.out >> stdout.log &> stderr.log")
+                 "messpf pf.inp build.out >> stdout.log &> stderr.log")
 RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                    "mess build.inp build.out >> stdout.log &> stderr.log")
 NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
@@ -94,15 +98,18 @@ RUN_CONF_SCAN = True
 RUN_CONF_SCAN_GRAD = False
 RUN_CONF_SCAN_HESS = False
 
-RUN_TAU_SAMP = True
+RUN_TAU_SAMP = False
 RUN_TAU_GRAD = False
 RUN_TAU_HESS = False
+#RUN_TAU_SAMP = True
+#RUN_TAU_GRAD = True
+#RUN_TAU_HESS = True
 
 RUN_TS_CONF_OPT = False
 RUN_TS_CONF_SCAN = False
 RUN_TS_TAU_SAMP = False
 
-RUN_HL_MIN_ENE = True
+RUN_HL_MIN_ENE = False
 
 # setting these to true turns on corresponding run for min, conf, conf_scan, and tau
 RUN_GRAD = False
@@ -130,7 +137,7 @@ NSAMP_CONF_C = 3
 NSAMP_CONF_D = 100
 NSAMP_CONF_PAR = [NSAMP_CONF_EXPR, NSAMP_CONF_A, NSAMP_CONF_B, NSAMP_CONF_C, NSAMP_CONF_D, NSAMP_CONF]
 
-NSAMP_TAU = 1000
+NSAMP_TAU = 100
 NSAMP_TAU_EXPR = False
 NSAMP_TAU_A = 3
 NSAMP_TAU_B = 1
@@ -147,15 +154,16 @@ NSAMP_VDW_D = 15
 NSAMP_VDW_PAR = [NSAMP_VDW_EXPR, NSAMP_VDW_A, NSAMP_VDW_B, NSAMP_VDW_C, NSAMP_VDW_D, NSAMP_VDW]
 
 # e. What to run for thermochemical kinetics
-RUN_SPECIES_PF = False
-RUN_SPECIES_THERMO = False
+RUN_SPECIES_PF = True
+RUN_SPECIES_THERMO = True
 RUN_REACTIONS_RATES = False
 RUN_VDW_RCT_RATES = False
 RUN_VDW_PRD_RATES = False
 
 # f. Partition function parameters
-TAU_PF_WRITE = True
-SPECIES_STR = {}
+TAU_PF_WRITE = False
+SPECIES_RRHO_STR = {}
+SPECIES_HR_STR = {}
 
 # Defaults
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
@@ -546,93 +554,145 @@ if RUN_SPECIES_QCHEM:
 
 if RUN_SPECIES_PF:
     for name in SPC_NAMES:
+        for prog, method, basis in RUN_OPT_LEVELS:
 # set up species information
-        smi = SMI_DCT[name]
-        ich = automol.smiles.inchi(smi)
-        print("smiles: {}".format(smi), "inchi: {}".format(ich))
-        chg = CHG_DCT[name]
-        mult = MUL_DCT[name]
-# specify electronic structure method used
-        method = METHOD
-        basis = BASIS
-        orb_restr = moldr.util.orbital_restriction(mult, RESTRICT_OPEN_SHELL)
-# read in geometry, hessian and hindered rotor potentials for minimum energy conformer
-        spc_save_path = moldr.util.species_path(ich, chg, mult, SAVE_PREFIX)
-        thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
-        cnf_afs = autofile.fs.conformer()
-        min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
-# I think we need something for if it is none
-        if min_cnf_alocs is not None:
-            geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
-            hess = cnf_afs.conf.file.hessian.read(thy_save_path, min_cnf_alocs)
-            freqs = elstruct.util.harmonic_frequencies(geo, hess)
-            zpe = sum(freqs)*WAVEN2KCAL/2.
-            zma = automol.geom.zmatrix(geo)
-            gra = automol.zmatrix.graph(zma, remove_stereo=True)
-            scan_afs = autofile.fs.scan()
-            min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
-            cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
-            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-            coo_dct = automol.zmatrix.coordinates(zma, multi=False)
-            hind_rot_str = ""
+            smi = SMI_DCT[name]
+            ich = automol.smiles.inchi(smi)
+            print("smiles: {}".format(smi), "inchi: {}".format(ich))
+            chg = CHG_DCT[name]
+            mult = MUL_DCT[name]
+    # specify electronic structure method used
+#            method = METHOD
+#            basis = BASIS
+            orb_restr = moldr.util.orbital_restriction(mult, RESTRICT_OPEN_SHELL)
+    # read in geometry, hessian and hindered rotor potentials for minimum energy conformer
+            spc_save_path = moldr.util.species_path(ich, chg, mult, SAVE_PREFIX)
+            thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+            cnf_afs = autofile.fs.conformer()
+            min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+    # I think we need something for if it is none
+            if min_cnf_alocs is not None:
+                geo = cnf_afs.conf.file.geometry.read(thy_save_path, min_cnf_alocs)
+                grad = cnf_afs.conf.file.gradient.read(thy_save_path, min_cnf_alocs)
+                hess = cnf_afs.conf.file.hessian.read(thy_save_path, min_cnf_alocs)
+                freqs = elstruct.util.harmonic_frequencies(geo, hess)
+                zpe = sum(freqs)*WAVEN2KCAL/2.
+                zma = automol.geom.zmatrix(geo)
+                gra = automol.zmatrix.graph(zma, remove_stereo=True)
+                scan_afs = autofile.fs.scan()
+                min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
+                cnf_save_path = cnf_afs.conf.dir.path(thy_save_path, min_cnf_alocs)
+                tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+                coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+                hind_rot_str = ""
+                rotors_str = ""
 
-            for tors_name in tors_names:
-                enes = [scan_afs.scan.file.energy.read(cnf_save_path, [[tors_name]] + rlocs)
-                        for rlocs in scan_afs.scan.dir.existing(cnf_save_path, [[tors_name]])]
-                enes = numpy.subtract(enes, min_ene)
-                pot = list(enes*EH2KCAL)
-                axis = coo_dct[tors_name][1:3]
-                group = list(automol.graph.branch_atom_keys(gra, axis[0], axis) - set(axis))
-                group = list(numpy.add(group, 1))
-                axis = list(numpy.add(axis, 1))
-                sym = 1
-                hind_rot_str += mess_io.writer.write_rotor_hindered(
-                    group, axis, sym, pot)
+                # prepare axis, group, and projection info
 
-            print('hina_rot_str test')
-            print(hind_rot_str)
+                for tors_name in tors_names:
+                    enes = [scan_afs.scan.file.energy.read(cnf_save_path, [[tors_name]] + rlocs)
+                            for rlocs in scan_afs.scan.dir.existing(cnf_save_path, [[tors_name]])]
+                    enes = numpy.subtract(enes, min_ene)
+                    pot = list(enes*EH2KCAL)
+                    axis = coo_dct[tors_name][1:3]
+                    group = list(automol.graph.branch_atom_keys(gra, axis[0], axis) - set(axis))
+                    group = list(numpy.add(group, 1))
+                    axis = list(numpy.add(axis, 1))
+                    sym = 1
+                    hind_rot_str += mess_io.writer.write_rotor_hindered(
+                        group, axis, sym, pot)
+                    rotors_str += projrot_io._write.write_rotors_str(axis, group)
 
-# set up messpf input
-        elec_levels = [[0., mult]]
-        if (ich, mult) in ELC_DEG_DCT:
-            elec_levels = ELC_DEG_DCT[(ich, mult)]
-# to be generalized
-        symfactor = 1.
+                print('hind_rot_str test')
+                print(hind_rot_str)
 
-# create a messpf input file
-        temp_step = TEMP_STEP
-        ntemps = NTEMPS
-        global_pf_str = mess_io.writer.write_global_pf(
-            [], temp_step, ntemps, rel_temp_inc=0.001, atom_dist_min=0.6)
-        print(global_pf_str)
-        species_head_str = 'Species ' + name
-        print(species_head_str)
-        if automol.geom.is_atom(geo):
-            print('This is an atom')
-            SPECIES_STR[name] = mess_io.writer.write_atom(name, elec_levels)
-        else:
-            if len(automol.geom.symbols(geo)) == 2:
-                freq_offset = 5
-            else:
-                freq_offset = 6
-            core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
-            if pot is not None:
-                SPECIES_STR[name] = mess_io.writer.write_molecule(
-                    core, freqs[freq_offset:], zpe, elec_levels,
-                    hind_rot=hind_rot_str,
-                )
-                freq_offset += 1
-        print(SPECIES_STR[name])
-        pf_inp_str = '\n'.join(
-            [global_pf_str, species_head_str, SPECIES_STR[name]])
-        bld_afs = autofile.fs.build()
-        bld_alocs = ['PF', 0]
-        bld_afs.build.dir.create(thy_save_path, bld_alocs)
-        path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
-        print('Build Path for Partition Functions')
-        print(path)
-        bld_afs.build.file.input.write(pf_inp_str, thy_save_path, bld_alocs)
-        moldr.util.run_script(PF_SCRIPT_STR, path)
+      # Write the string for the ProjRot input
+                COORD_PROJ = 'cartesian'
+                print('grad')
+                print(grad)
+                print('hess')
+                print(hess)
+                projrot_inp_str = projrot_io._write.write_rpht_input(
+                        geo, grad, hess, rotors_str=rotors_str,
+                        coord_proj=COORD_PROJ)
+
+                bld_afs = autofile.fs.build()
+                bld_alocs = ['PROJROT', 0]
+                bld_afs.build.dir.create(thy_save_path, bld_alocs)
+                path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
+                print('Build Path for Partition Functions')
+                print(path)
+                with open(os.path.join(path, 'RPHt_input_data.dat'), 'w') as proj_file:
+                    proj_file.write(projrot_inp_str)
+
+#                bld_afs.build.file.input.write(pf_inp_str, thy_save_path, bld_alocs)
+
+                moldr.util.run_script(PROJROT_SCRIPT_STR, path)
+
+                rtproj_freqs, _ = projrot_io._read.read_rpht_output(path+'/RTproj_freq.dat')
+                rthrproj_freqs, _ = projrot_io._read.read_rpht_output(path+'/hrproj_freq.dat')
+                # the second variable above is the imaginary frequency list
+                print('Projection test')
+                print(rtproj_freqs)
+                print(rthrproj_freqs)
+
+        # set up messpf input
+                elec_levels = [[0., mult]]
+                if (ich, mult) in ELC_DEG_DCT:
+                    elec_levels = ELC_DEG_DCT[(ich, mult)]
+        # to be generalized
+                symfactor = 1.
+
+        # create a messpf input file
+                temp_step = TEMP_STEP
+                ntemps = NTEMPS
+                global_pf_str = mess_io.writer.write_global_pf(
+                    [], temp_step, ntemps, rel_temp_inc=0.001, atom_dist_min=0.6)
+                print(global_pf_str)
+                species_head_str = 'Species ' + name
+                print(species_head_str)
+                if automol.geom.is_atom(geo):
+                    print('This is an atom')
+                    SPECIES_RRHO_STR[name] = mess_io.writer.write_atom(name, elec_levels)
+                else:
+                    core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
+                    SPECIES_RRHO_STR[name] = mess_io.writer.write_molecule(
+                        core, rtproj_freqs, zpe, elec_levels,
+                        hind_rot='',
+                        )
+                    pf_rrho_inp_str = '\n'.join(
+                        [global_pf_str, species_head_str, SPECIES_RRHO_STR[name]])
+                    print(SPECIES_RRHO_STR[name])
+
+                    if pot is not None:
+                        SPECIES_HR_STR[name] = mess_io.writer.write_molecule(
+                            core, rthrproj_freqs, zpe, elec_levels,
+                            hind_rot=hind_rot_str,
+                        )
+                    pf_hr_inp_str = '\n'.join(
+                        [global_pf_str, species_head_str, SPECIES_HR_STR[name]])
+                    print(SPECIES_HR_STR[name])
+
+                bld_afs = autofile.fs.build()
+                bld_alocs = ['PF', 0]
+                bld_afs.build.dir.create(thy_save_path, bld_alocs)
+                path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
+                print('Build Path for Partition Functions')
+                print(path)
+
+                with open(os.path.join(path, 'pf_rrho.inp'), 'w') as pf_file:
+                    pf_file.write(pf_rrho_inp_str)
+                pf_script_str = PF_SCRIPT_STR.replace('pf.inp','pf_rrho.inp')
+                moldr.util.run_script(pf_script_str, path)
+
+                if hind_rot_str != '':
+                    pf_1dhr_inp_str = '\n'.join(
+                    [global_pf_str, species_head_str, SPECIES_HR_STR[name]])
+                    with open(os.path.join(path, 'pf_1dhr.inp'), 'w') as pf_file:
+                        pf_file.write(pf_1dhr_inp_str)
+                    pf_script_str = PF_SCRIPT_STR.replace('pf.inp','pf_1dhr.inp')
+                    moldr.util.run_script(pf_script_str, path)
+#                bld_afs.build.file.input.write(pf_inp_str, thy_save_path, bld_alocs)
 
 if RUN_SPECIES_THERMO:
     for name in SPC_NAMES:
@@ -641,24 +701,120 @@ if RUN_SPECIES_THERMO:
         ich = automol.smiles.inchi(smi)
         print("smiles: {}".format(smi), "inchi: {}".format(ich))
         chg = CHG_DCT[name]
-        mult = MUL_DCT[name]
-# specify electronic structure method used
-        method = METHOD
-        basis = BASIS
-        orb_restr = moldr.util.orbital_restriction(mult, RESTRICT_OPEN_SHELL)
-# read in geometry, hess and hindered rotor potentials for minimum energy conformer
-        spc_save_path = moldr.util.species_path(ich, chg, mult, SAVE_PREFIX)
-        thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
-        nasa_inp_str=('nasa')
-        # above needs to fixed
-        bld_afs = autofile.fs.build()
-        bld_alocs = ['NASA_POLY', 0]
-        bld_afs.build.dir.create(thy_save_path, bld_alocs)
-        path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
-        print('Build Path for NASA Polynomials')
-        print(path)
-        bld_afs.build.file.input.write(nasa_inp_str, thy_save_path, bld_alocs)
-        moldr.util.run_script(NASA_SCRIPT_STR, path)
+        for prog, method, basis in RUN_OPT_LEVELS:
+            mult = MUL_DCT[name]
+    # specify electronic structure method used
+    #        method = METHOD
+    #        basis = BASIS
+            orb_restr = moldr.util.orbital_restriction(mult, RESTRICT_OPEN_SHELL)
+    # read in geometry, hess and hindered rotor potentials for minimum energy conformer
+            spc_save_path = moldr.util.species_path(ich, chg, mult, SAVE_PREFIX)
+            thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+            spc_save_path = moldr.util.species_path(ich, chg, mult, SAVE_PREFIX)
+            thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+
+
+            bld_alocs = ['PF', 0]
+            bld_afs.build.dir.create(thy_save_path, bld_alocs)
+            pf_path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
+            print('pf build path')
+            print(pf_path)
+
+            nasa_inp_str = ('nasa')
+            bld_afs = autofile.fs.build()
+            bld_alocs = ['NASA_POLY', 0]
+            bld_afs.build.dir.create(thy_save_path, bld_alocs)
+            nasa_path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
+            print('NASA build path')
+            print(path)
+
+            cnf_afs = autofile.fs.conformer()
+            min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+    # I think we need something for if it is none
+            if min_cnf_alocs is not None:
+                min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
+
+            formula = thermo.util.inchi_formula(ich)
+            print('\nformula:')
+            print(formula)
+
+            # Get atom count dictionary
+            atom_dict = thermo.util.get_atom_counts_dict(formula)
+            print('\natom dict:')
+            print(atom_dict)
+
+            # Get the list of the basis
+            basis = thermo.heatform.select_basis(atom_dict)
+            print('\nbasis:')
+            print(basis)
+
+            # Get the coefficients for the balanced heat-of-formation eqn
+            coeff = thermo.heatform.calc_coefficients(basis, atom_dict)
+            print('\ncoeff:')
+            print(coeff)
+
+            # Get the energy for each of the basis species
+            e_basis = thermo.heatform.get_basis_energy(basis)
+            print('\ne_basis:')
+            print(e_basis)
+
+            # Get the 0 K heat of formation
+            h0form = thermo.heatform.calc_hform_0k(min_ene, e_basis, coeff)
+
+            os.chdir(path)
+
+            # Write thermp input file
+            ENTHALPYT = 0.
+            BREAKT = 1000.
+            thermo.runner.write_thermp_input(
+                    formula=formula,
+                    deltaH=h0form,
+                    enthalpyT=ENTHALPYT,
+                    breakT=BREAKT,
+                    thermp_file_name='thermp.dat')
+
+            PF_TYPES = ['pf_rrho.dat', 'pf_1dhr.dat']
+            for pf_type in PF_TYPES:
+
+                # Run thermp
+                thermo.runner.run_thermp(
+                        pf_path=pf_path,
+                        thermp_path=path,
+                        thermp_file_name='thermp.dat',
+                        pf_file_name=pf_type
+                        )
+
+                # Run pac99
+                print('formula test')
+                print(formula)
+                print(path)
+                FORMULA = 'CH4O'
+                thermo.runner.run_pac99(path, FORMULA)
+#                thermo.runner.run_pac99(path, formula)
+
+                with open(os.path.join(path, 'thermp.out'), 'r') as thermp_outfile:
+                    thermp_out_str = thermp_outfile.read()
+
+                # Get the 298 K heat of formation
+                h298form = thermo.heatform.get_hform_298k_thermp(thermp_out_str)
+                print('\nhform(298 K):')
+                print(h298form)
+
+                with open(os.path.join(path, formula+'.o97'), 'r') as pac99_file:
+                    pac99_str = pac99_file.read()
+
+                # Get the pac99 polynomial
+                pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
+                print('\nPAC99 Polynomial:')
+                print(pac99_poly_str)
+
+                # Convert the pac99 polynomial to chemkin polynomial
+                chemkin_poly_str = thermo.nasapoly.convert_pac_to_chemkin(pac99_poly_str)
+                print('\nCHEMKIN Polynomial:')
+                print(chemkin_poly_str)
+
+                bld_afs.build.file.input.write(nasa_inp_str, thy_save_path, bld_alocs)
+                moldr.util.run_script(NASA_SCRIPT_STR, path)
 
 # 5. process reaction data from the mechanism file
 RXN_BLOCK_STR = chemkin_io.reaction_block(MECH_STR)
