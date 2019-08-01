@@ -15,50 +15,117 @@ from autofile.system._util import (is_random_string_identifier as
 
 
 # species
-def reference_trunk():
-    """ reference trunk directory name
-    """
-    return 'REF'
-
-
 def species_trunk():
     """ species trunk directory name
     """
     return 'SPC'
 
 
-def species_leaf(ich, charge, mult):
+def species_leaf(ich, chg, mul):
     """ species leaf directory name
     """
     assert automol.inchi.is_standard_form(ich)
     assert automol.inchi.is_complete(ich)
-    assert isinstance(charge, numbers.Integral)
-    assert isinstance(mult, numbers.Integral)
-    assert _is_valid_inchi_multiplicity(ich, mult)
+    assert isinstance(chg, numbers.Integral)
+    assert isinstance(mul, numbers.Integral)
+    assert _is_valid_inchi_multiplicity(ich, mul)
 
     ick = automol.inchi.inchi_key(ich)
-    charge_str = str(charge)
-    mult_str = str(mult)
+    chg_str = str(chg)
+    mul_str = str(mul)
 
     dir_names = (automol.inchi.formula_sublayer(ich),
                  automol.inchi_key.first_hash(ick),
-                 charge_str,
-                 mult_str,
+                 chg_str,
+                 mul_str,
                  automol.inchi_key.second_hash_with_extension(ick))
     return os.path.join(*dir_names)
 
 
-# ts
-def ts_trunk():
-    """ ts trunk directory name
+# theory
+def theory_leaf(method, basis, orb_restricted):
+    """ theory leaf directory name
+
+    This need not be tied to elstruct -- just take out the name checks.
+    Note that we are (no longer) checking the orbital restriction.
     """
-    return 'TS'
+    assert elstruct.Method.contains(method)
+    assert elstruct.Basis.contains(basis)
+    assert isinstance(orb_restricted, bool)
+
+    ref_char = 'R' if orb_restricted else 'U'
+    dir_name = ''.join([_short_hash(method),
+                        _short_hash(basis),
+                        ref_char])
+    return dir_name
 
 
-def direction_leaf(forw):
-    """ direction leaf directory name
+# conformer
+def conformer_trunk():
+    """ conformer trunk directory name
     """
-    return 'F' if forw else 'B'
+    return 'CONFS'
+
+
+def conformer_leaf(cid):
+    """ conformer leaf directory name
+    """
+    assert cid[0] == 'c'
+    assert _is_random_string_identifier(cid[1:])
+    return cid
+
+
+def generate_new_conformer_id():
+    """ generate a new conformer identifier
+    """
+    return 'c'+_random_string_identifier()
+
+
+# single point
+def single_point_trunk():
+    """ single point trunk directory name
+    """
+    return 'SP'
+
+
+# scan
+def scan_trunk():
+    """ scan trunk directory name
+    """
+    return 'SCANS'
+
+
+def scan_branch(coo_names):
+    """ scan branch directory name
+    """
+    return '_'.join(sorted(coo_names))
+
+
+def scan_leaf(grid_idxs):
+    """ scan leaf directory name
+    """
+    return '_'.join(map('{:0>2d}'.format, grid_idxs))
+
+
+# tau
+def tau_trunk():
+    """ tau trunk directory name
+    """
+    return 'TAU'
+
+
+def tau_leaf(tid):
+    """ tau leaf directory name
+    """
+    assert tid[0] == 't'
+    assert _is_random_string_identifier(tid[1:])
+    return tid
+
+
+def generate_new_tau_id():
+    """ generate a new conformer identifier
+    """
+    return 't'+_random_string_identifier()
 
 
 # reactions
@@ -68,7 +135,7 @@ def reaction_trunk():
     return 'RXN'
 
 
-def reaction_leaf(rxn_ichs, rxn_chgs, rxn_muls, ts_mult):
+def reaction_leaf(rxn_ichs, rxn_chgs, rxn_muls, ts_mul):
     """ reaction leaf directory name
     """
     rxn_ichs = tuple(map(tuple, rxn_ichs))
@@ -77,11 +144,11 @@ def reaction_leaf(rxn_ichs, rxn_chgs, rxn_muls, ts_mult):
     assert ((rxn_ichs, rxn_chgs, rxn_muls) ==
             sort_together(rxn_ichs, rxn_chgs, rxn_muls))
     ichs1, ichs2 = rxn_ichs
-    charges1, charges2 = rxn_chgs
-    mults1, mults2 = rxn_muls
-    return os.path.join(_reactant_leaf(ichs1, charges1, mults1),
-                        _reactant_leaf(ichs2, charges2, mults2),
-                        str(ts_mult))
+    chgs1, chgs2 = rxn_chgs
+    muls1, muls2 = rxn_muls
+    return os.path.join(_reactant_leaf(ichs1, chgs1, muls1),
+                        _reactant_leaf(ichs2, chgs2, muls2),
+                        str(ts_mul))
 
 
 def reaction_is_reversed(rxn_ichs, rxn_chgs, rxn_muls):
@@ -131,50 +198,47 @@ def _sort_together(ichs, chgs, muls):
 
 
 def _sortable_representation(ichs, chgs, muls):
-    return (len(ichs), sorted(automol.inchi.argsort(ichs)), chgs, muls)
+    idxs = automol.inchi.argsort(ichs)
+    ichs = tuple(ichs[idx] for idx in idxs)
+    return (len(ichs), ichs, chgs, muls)
 
 
-def _reactant_leaf(ichs, charges, mults):
+def _reactant_leaf(ichs, chgs, muls):
     """ reactant leaf directory name
     """
     assert all(map(automol.inchi.is_standard_form, ichs))
     assert all(map(automol.inchi.is_complete, ichs))
     assert tuple(ichs) == automol.inchi.sorted_(ichs)
-    assert len(ichs) == len(charges) == len(mults)
-    assert all(isinstance(charge, numbers.Integral) for charge in charges)
-    assert all(isinstance(mult, numbers.Integral) for mult in mults)
-    assert all(_is_valid_inchi_multiplicity(ich, mult)
-               for ich, mult in zip(ichs, mults))
+    assert len(ichs) == len(chgs) == len(muls)
+    assert all(isinstance(chg, numbers.Integral) for chg in chgs)
+    assert all(isinstance(mul, numbers.Integral) for mul in muls)
+    assert all(_is_valid_inchi_multiplicity(ich, mul)
+               for ich, mul in zip(ichs, muls))
 
     ich = automol.inchi.standard_form(automol.inchi.join(ichs))
     ick = automol.inchi.inchi_key(ich)
-    charge_str = '_'.join(map(str, charges))
-    mult_str = '_'.join(map(str, mults))
+    chg_str = '_'.join(map(str, chgs))
+    mul_str = '_'.join(map(str, muls))
 
     dir_names = (automol.inchi.formula_sublayer(ich),
                  automol.inchi_key.first_hash(ick),
-                 charge_str,
-                 mult_str,
+                 chg_str,
+                 mul_str,
                  automol.inchi_key.second_hash_with_extension(ick))
     return os.path.join(*dir_names)
 
 
-# theory
-def theory_leaf(method, basis, orb_restricted):
-    """ theory leaf directory name
-
-    This need not be tied to elstruct -- just take out the name checks.
-    Note that we are (no longer) checking the orbital restriction.
+# ts
+def ts_trunk():
+    """ ts trunk directory name
     """
-    assert elstruct.Method.contains(method)
-    assert elstruct.Basis.contains(basis)
-    assert isinstance(orb_restricted, bool)
+    return 'TS'
 
-    ref_char = 'R' if orb_restricted else 'U'
-    dir_name = ''.join([_short_hash(method),
-                        _short_hash(basis),
-                        ref_char])
-    return dir_name
+
+def direction_leaf(forw):
+    """ direction leaf directory name
+    """
+    return 'F' if forw else 'B'
 
 
 # run
@@ -201,74 +265,6 @@ def subrun_leaf(macro_idx, micro_idx):
     macro_str = string.ascii_uppercase[macro_idx]
     micro_str = '{:0>2d}'.format(micro_idx)
     return ''.join([macro_str, micro_str])
-
-
-# conformer
-def conformer_trunk():
-    """ conformer trunk directory name
-    """
-    return 'CONFS'
-
-
-def conformer_leaf(cid):
-    """ conformer leaf directory name
-    """
-    assert cid[0] == 'c'
-    assert _is_random_string_identifier(cid[1:])
-    return cid
-
-
-def generate_new_conformer_id():
-    """ generate a new conformer identifier
-    """
-    return 'c'+_random_string_identifier()
-
-
-# single point
-def single_point_trunk():
-    """ single point trunk directory name
-    """
-    return 'SP'
-
-
-# scan
-def scan_trunk():
-    """ scan trunk directory name
-    """
-    return 'SCANS'
-
-
-def scan_branch(tors_names):
-    """ scan branch directory name
-    """
-    return '_'.join(sorted(tors_names))
-
-
-def scan_leaf(grid_idxs):
-    """ scan leaf directory name
-    """
-    return '_'.join(map('{:0>2d}'.format, grid_idxs))
-
-
-# tau
-def tau_trunk():
-    """ tau trunk directory name
-    """
-    return 'TAU'
-
-
-def tau_leaf(tid):
-    """ tau leaf directory name
-    """
-    assert tid[0] == 't'
-    assert _is_random_string_identifier(tid[1:])
-    return tid
-
-
-def generate_new_tau_id():
-    """ generate a new conformer identifier
-    """
-    return 't'+_random_string_identifier()
 
 
 # builds (MESS, NASA Poly, etc.)

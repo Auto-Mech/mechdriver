@@ -162,50 +162,6 @@ def lennard_jones_sigma(file_prefix):
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)
 
 
-# file manager
-class FilePrefix():
-    """ file prefixes """
-    GENERIC = 'gen'
-    GEOM = 'geom'
-    GRAD = 'grad'
-    HESS = 'hess'
-
-
-def data_file_manager():
-    """ file manager
-    """
-    return model.DataFileManager({
-        'geometry_info':
-        information(FilePrefix.GEOM, function=autofile.system.info.run),
-        'gradient_info':
-        information(FilePrefix.GRAD, function=autofile.system.info.run),
-        'hessian_info':
-        information(FilePrefix.HESS, function=autofile.system.info.run),
-        'geometry_input':
-        input_file(FilePrefix.GEOM),
-        'gradient_input':
-        input_file(FilePrefix.GRAD),
-        'hessian_input':
-        input_file(FilePrefix.HESS),
-        'geometry_energy':
-        energy(FilePrefix.GEOM),
-        'geometry':
-        geometry(FilePrefix.GEOM),
-        'zmatrix':
-        zmatrix(FilePrefix.GEOM),
-        'gradient':
-        gradient(FilePrefix.GRAD),
-        'hessian':
-        hessian(FilePrefix.HESS),
-        'harmonic_frequencies':
-        harmonic_frequencies(FilePrefix.HESS),
-        'vmatrix':
-        vmatrix(FilePrefix.GENERIC),
-        'trajectory':
-        trajectory(FilePrefix.GENERIC),
-    })
-
-
 # helpers
 def _not_implemented(*_args, **_kwargs):
     raise NotImplementedError
