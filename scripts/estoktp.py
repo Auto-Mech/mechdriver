@@ -515,15 +515,15 @@ if RUN_SPECIES_QCHEM:
             method_ref = HIGH_LEVEL_REF[0]
             basis_ref = HIGH_LEVEL_REF[1]
 
-            min_cnf_alocs = moldr.util.min_energy_conformer_locators(
+            min_cnf_locs = moldr.util.min_energy_conformer_locators(
                 thy_save_path)
 
             cnf_run_fs = autofile.fs.conformer(thy_run_path)
-            cnf_run_path = cnf_run_fs.leaf.path(min_cnf_alocs)
+            cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
 
             cnf_save_fs = autofile.fs.conformer(thy_save_path)
-            cnf_save_path = cnf_save_fs.leaf.path(min_cnf_alocs)
-            min_cnf_geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_alocs)
+            cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+            min_cnf_geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
             print('HL test')
             if RUN_HL_MIN_ENE:
                 moldr.driver.run_single_point_energy(
@@ -562,22 +562,22 @@ if RUN_SPECIES_PF:
             thy_save_fs = autofile.fs.theory(spc_save_path)
             thy_save_path = thy_save_fs.leaf.path([method, basis, orb_restr])
 
-            min_cnf_alocs = moldr.util.min_energy_conformer_locators(
+            min_cnf_locs = moldr.util.min_energy_conformer_locators(
                 thy_save_path)
             cnf_save_fs = autofile.fs.conformer(thy_save_path)
-            cnf_save_path = cnf_save_fs.leaf.path(min_cnf_alocs)
+            cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
 
             # I think we need something for if it is none
-            if min_cnf_alocs is not None:
-                geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_alocs)
-                grad = cnf_save_fs.leaf.file.gradient.read(min_cnf_alocs)
-                hess = cnf_save_fs.leaf.file.hessian.read(min_cnf_alocs)
+            if min_cnf_locs is not None:
+                geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+                grad = cnf_save_fs.leaf.file.gradient.read(min_cnf_locs)
+                hess = cnf_save_fs.leaf.file.hessian.read(min_cnf_locs)
                 freqs = elstruct.util.harmonic_frequencies(geo, hess)
                 zpe = sum(freqs)*WAVEN2KCAL/2.
                 zma = automol.geom.zmatrix(geo)
                 gra = automol.zmatrix.graph(zma, remove_stereo=True)
-                min_ene = cnf_save_fs.leaf.file.energy.read(min_cnf_alocs)
-                cnf_save_path = cnf_save_fs.leaf.path(min_cnf_alocs)
+                min_ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
+                cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
                 tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
                 coo_dct = automol.zmatrix.coordinates(zma, multi=False)
                 hind_rot_str = ""
@@ -586,7 +586,7 @@ if RUN_SPECIES_PF:
                 # prepare axis, group, and projection info
                 scn_save_fs = autofile.fs.scan(cnf_save_path)
                 for tors_name in tors_names:
-                    enes = [scn_save_fs.leaf.file.energy.read(alocs) for alocs
+                    enes = [scn_save_fs.leaf.file.energy.read(locs) for locs
                             in scn_save_fs.leaf.existing([[tors_name]])]
                     enes = numpy.subtract(enes, min_ene)
                     pot = list(enes*EH2KCAL)
@@ -612,13 +612,13 @@ if RUN_SPECIES_PF:
                 print('hess')
                 print(hess)
                 projrot_inp_str = projrot_io._write.write_rpht_input(
-                        geo, grad, hess, rotors_str=rotors_str,
-                        coord_proj=COORD_PROJ)
+                    geo, grad, hess, rotors_str=rotors_str,
+                    coord_proj=COORD_PROJ)
 
-                bld_alocs = ['PROJROT', 0]
+                bld_locs = ['PROJROT', 0]
                 bld_save_fs = autofile.fs.build(thy_save_path)
-                bld_save_fs.leaf.create(bld_alocs)
-                path = bld_save_fs.leaf.path(bld_alocs)
+                bld_save_fs.leaf.create(bld_locs)
+                path = bld_save_fs.leaf.path(bld_locs)
                 print('Build Path for Partition Functions')
                 print(path)
                 proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
@@ -677,10 +677,10 @@ if RUN_SPECIES_PF:
                          SPECIES_HR_STR[name]])
                     print(SPECIES_HR_STR[name])
 
-                bld_alocs = ['PF', 0]
+                bld_locs = ['PF', 0]
                 bld_save_fs = autofile.fs.build(thy_save_path)
-                bld_save_fs.leaf.create(bld_alocs)
-                path = bld_save_fs.leaf.path(bld_alocs)
+                bld_save_fs.leaf.create(bld_locs)
+                path = bld_save_fs.leaf.path(bld_locs)
                 print('Build Path for Partition Functions')
                 print(path)
 
@@ -719,25 +719,25 @@ if RUN_SPECIES_THERMO:
             thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
 
 
-            bld_alocs = ['PF', 0]
-            bld_afs.build.dir.create(thy_save_path, bld_alocs)
-            pf_path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
+            bld_locs = ['PF', 0]
+            bld_afs.build.dir.create(thy_save_path, bld_locs)
+            pf_path = bld_afs.build.dir.path(thy_save_path, bld_locs)
             print('pf build path')
             print(pf_path)
 
             nasa_inp_str = ('nasa')
             bld_afs = autofile.fs.build()
-            bld_alocs = ['NASA_POLY', 0]
-            bld_afs.build.dir.create(thy_save_path, bld_alocs)
-            nasa_path = bld_afs.build.dir.path(thy_save_path, bld_alocs)
+            bld_locs = ['NASA_POLY', 0]
+            bld_afs.build.dir.create(thy_save_path, bld_locs)
+            nasa_path = bld_afs.build.dir.path(thy_save_path, bld_locs)
             print('NASA build path')
             print(path)
 
             cnf_afs = autofile.fs.conformer()
-            min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
+            min_cnf_locs = moldr.util.min_energy_conformer_locators(thy_save_path)
     # I think we need something for if it is none
-            if min_cnf_alocs is not None:
-                min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
+            if min_cnf_locs is not None:
+                min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_locs)
 
             formula = thermo.util.inchi_formula(ich)
             print('\nformula:')
@@ -818,7 +818,7 @@ if RUN_SPECIES_THERMO:
                 print('\nCHEMKIN Polynomial:')
                 print(chemkin_poly_str)
 
-                bld_afs.build.file.input.write(nasa_inp_str, thy_save_path, bld_alocs)
+                bld_afs.build.file.input.write(nasa_inp_str, thy_save_path, bld_locs)
                 moldr.util.run_script(NASA_SCRIPT_STR, path)
 
 # 5. process reaction data from the mechanism file
@@ -1018,15 +1018,15 @@ if RUN_REACTIONS_QCHEM:
                 )
 
                 scn_save_fs = autofile.fs.scan(thy_save_path)
-                alocs_lst = [
-                    alocs for alocs in scn_save_fs.leaf.existing([[dist_name]])
-                    if scn_save_fs.leaf.file.energy.exists(alocs)]
-                print(alocs_lst)
-                enes = [scn_save_fs.leaf.file.energy.read(alocs)
-                        for alocs in alocs_lst]
-                max_alocs = alocs_lst[enes.index(max(enes))]
+                locs_lst = [
+                    locs for locs in scn_save_fs.leaf.existing([[dist_name]])
+                    if scn_save_fs.leaf.file.energy.exists(locs)]
+                print(locs_lst)
+                enes = [scn_save_fs.leaf.file.energy.read(locs)
+                        for locs in locs_lst]
+                max_locs = locs_lst[enes.index(max(enes))]
                 max_ene = max(enes)
-                max_zma = scn_save_fs.leaf.file.zmatrix.read(max_alocs)
+                max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
 
                 print('optimizing ts')
                 # find saddlepoint from maximum on the grid opt scan
@@ -1159,8 +1159,8 @@ if RUN_REACTIONS_QCHEM:
                             basis=basis,
                             orb_restr=orb_restr,
                             grid_dct={tors_name: tors_grid},
-                            run_prefix=thy_run_path,
-                            save_prefix=thy_save_path,
+                            run_prefix=ts_run_path,
+                            save_prefix=ts_save_path,
                             script_str=SCRIPT_STR,
                             prog=prog,
                             saddle=True,
@@ -1169,19 +1169,19 @@ if RUN_REACTIONS_QCHEM:
                         )
 
                         moldr.driver.save_scan(
-                            run_prefix=thy_run_path,
-                            save_prefix=thy_save_path,
+                            run_prefix=ts_run_path,
+                            save_prefix=ts_save_path,
                             coo_names=[tors_name],
                         )
-# AVC: left off here
+# AVC: debugged to here
                     hind_rot_dct = {}
-                    scan_afs = autofile.fs.scan()
-                    min_ene = ts_afs.ts.file.energy.read(thy_save_path)
-    #                min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
-    #                cnf_afs.conf_trunk.file.energy.write(min_ene, thy_save_path)
+                    scn_run_fs = autofile.fs.scan(ts_run_path)
+                    scn_save_fs = autofile.fs.scan(ts_save_path)
+
+                    min_ene = ts_save_fs.leaf.file.energy.read()
                     for tors_name in tors_names:
-                        enes = [scan_afs.scan.file.energy.read(thy_save_path, [[tors_name]] + rlocs)
-                                for rlocs in scan_afs.scan.dir.existing(thy_save_path, [[tors_name]])]
+                        enes = [scn_save_fs.leaf.file.energy.read(locs)
+                                for locs in scn_save_fs.leaf.existing()]
                         enes = numpy.subtract(enes, min_ene)
                         hind_rot_dct[tors_name] = enes*EH2KCAL
 
@@ -1189,7 +1189,8 @@ if RUN_REACTIONS_QCHEM:
                     print(hind_rot_dct)
 
                 if RUN_TS_KICKS_QCHEM:
-                    ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, prefix=ts_run_path)
+                    ret = moldr.driver.read_job(
+                        job=elstruct.Job.HESSIAN, prefix=ts_run_path)
                     if ret:
                         inf_obj, _, out_str = ret
                         prog = inf_obj.prog

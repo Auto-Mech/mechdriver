@@ -220,10 +220,10 @@ def conformer_sampling(
 
     # save information about the minimum energy conformer in top directory
     cnf_save_fs = autofile.fs.conformer(thy_save_path)
-    min_cnf_alocs = moldr.util.min_energy_conformer_locators(thy_save_path)
-    if min_cnf_alocs:
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_alocs)
-        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_alocs)
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(thy_save_path)
+    if min_cnf_locs:
+        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
         assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
         thy_save_fs.leaf.file.geometry.write(geo, [method, basis, orb_restr])
         thy_save_fs.leaf.file.zmatrix.write(zma, [method, basis, orb_restr])
@@ -273,10 +273,10 @@ def run_conformers(
 
             samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
             cid = autofile.system.generate_new_conformer_id()
-            alocs = [cid]
+            locs = [cid]
 
-            cnf_run_fs.leaf.create(alocs)
-            cnf_run_path = cnf_run_fs.leaf.path(alocs)
+            cnf_run_fs.leaf.create(locs)
+            cnf_run_path = cnf_run_fs.leaf.path(locs)
 
             idx += 1
             print("Run {}/{}".format(idx, nsamp0))
@@ -307,17 +307,17 @@ def save_conformers(run_prefix, save_prefix):
     cnf_run_fs = autofile.fs.conformer(run_prefix)
     cnf_save_fs = autofile.fs.conformer(save_prefix)
 
-    alocs_lst = cnf_save_fs.leaf.existing()
-    seen_geos = [cnf_save_fs.leaf.file.geometry.read(alocs)
-                 for alocs in alocs_lst]
-    seen_enes = [cnf_save_fs.leaf.file.energy.read(alocs)
-                 for alocs in alocs_lst]
+    locs_lst = cnf_save_fs.leaf.existing()
+    seen_geos = [cnf_save_fs.leaf.file.geometry.read(locs)
+                 for locs in locs_lst]
+    seen_enes = [cnf_save_fs.leaf.file.energy.read(locs)
+                 for locs in locs_lst]
 
     if not cnf_run_fs.trunk.exists():
         print("No conformers to save. Skipping...")
     else:
-        for alocs in cnf_run_fs.leaf.existing():
-            run_path = cnf_run_fs.leaf.path(alocs)
+        for locs in cnf_run_fs.leaf.existing():
+            run_path = cnf_run_fs.leaf.path(locs)
             print("Reading from conformer run at {}".format(run_path))
 
             ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=run_path)
@@ -347,29 +347,29 @@ def save_conformers(run_prefix, save_prefix):
                     if not unique:
                         print(" - Geometry is not unique. Skipping...")
                     else:
-                        save_path = cnf_save_fs.leaf.path(alocs)
+                        save_path = cnf_save_fs.leaf.path(locs)
                         print(" - Geometry is unique. Saving...")
                         print(" - Save path: {}".format(save_path))
 
-                        cnf_save_fs.leaf.create(alocs)
+                        cnf_save_fs.leaf.create(locs)
                         cnf_save_fs.leaf.file.geometry_info.write(
-                            inf_obj, alocs)
+                            inf_obj, locs)
                         cnf_save_fs.leaf.file.geometry_input.write(
-                            inp_str, alocs)
-                        cnf_save_fs.leaf.file.energy.write(ene, alocs)
-                        cnf_save_fs.leaf.file.geometry.write(geo, alocs)
-                        cnf_save_fs.leaf.file.zmatrix.write(zma, alocs)
+                            inp_str, locs)
+                        cnf_save_fs.leaf.file.energy.write(ene, locs)
+                        cnf_save_fs.leaf.file.geometry.write(geo, locs)
+                        cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
 
                 seen_geos.append(geo)
                 seen_enes.append(ene)
 
         # update the conformer trajectory file
-        alocs_lst = cnf_save_fs.leaf.existing()
-        if alocs_lst:
-            enes = [cnf_save_fs.leaf.file.energy.read(alocs)
-                    for alocs in alocs_lst]
-            geos = [cnf_save_fs.leaf.file.geometry.read(alocs)
-                    for alocs in alocs_lst]
+        locs_lst = cnf_save_fs.leaf.existing()
+        if locs_lst:
+            enes = [cnf_save_fs.leaf.file.energy.read(locs)
+                    for locs in locs_lst]
+            geos = [cnf_save_fs.leaf.file.geometry.read(locs)
+                    for locs in locs_lst]
 
             traj = []
             for ene, geo in sorted(zip(enes, geos), key=lambda x: x[0]):
@@ -436,11 +436,11 @@ def run_minimum_energy_gradient(
     cnf_run_fs = autofile.fs.conformer(run_prefix)
     cnf_save_fs = autofile.fs.conformer(save_prefix)
 
-    min_cnf_alocs = moldr.util.min_energy_conformer_locators(save_prefix)
-    if min_cnf_alocs:
-        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_alocs)
-        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_alocs)
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_alocs)
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(save_prefix)
+    if min_cnf_locs:
+        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
+        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         print('Minimum energy conformer gradient')
         run_job(
             job='gradient',
@@ -470,9 +470,9 @@ def run_minimum_energy_gradient(
 
             print(" - Saving gradient...")
             print(" - Save path: {}".format(min_cnf_save_path))
-            cnf_save_fs.leaf.file.gradient_info.write(inf_obj, min_cnf_alocs)
-            cnf_save_fs.leaf.file.gradient_input.write(inp_str, min_cnf_alocs)
-            cnf_save_fs.leaf.file.gradient.write(grad, min_cnf_alocs)
+            cnf_save_fs.leaf.file.gradient_info.write(inf_obj, min_cnf_locs)
+            cnf_save_fs.leaf.file.gradient_input.write(inp_str, min_cnf_locs)
+            cnf_save_fs.leaf.file.gradient.write(grad, min_cnf_locs)
 
 
 def run_minimum_energy_hessian(
@@ -483,11 +483,11 @@ def run_minimum_energy_hessian(
     cnf_run_fs = autofile.fs.conformer(run_prefix)
     cnf_save_fs = autofile.fs.conformer(save_prefix)
 
-    min_cnf_alocs = moldr.util.min_energy_conformer_locators(save_prefix)
-    if min_cnf_alocs:
-        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_alocs)
-        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_alocs)
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_alocs)
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(save_prefix)
+    if min_cnf_locs:
+        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
+        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         print('Minimum energy conformer hessian')
         run_job(
             job='hessian',
@@ -525,11 +525,11 @@ def run_minimum_energy_hessian(
 
             print(" - Saving hessian...")
             print(" - Save path: {}".format(min_cnf_save_path))
-            cnf_save_fs.leaf.file.hessian_info.write(inf_obj, min_cnf_alocs)
-            cnf_save_fs.leaf.file.hessian_input.write(inp_str, min_cnf_alocs)
-            cnf_save_fs.leaf.file.hessian.write(hess, min_cnf_alocs)
+            cnf_save_fs.leaf.file.hessian_info.write(inf_obj, min_cnf_locs)
+            cnf_save_fs.leaf.file.hessian_input.write(inp_str, min_cnf_locs)
+            cnf_save_fs.leaf.file.hessian.write(hess, min_cnf_locs)
             cnf_save_fs.leaf.file.harmonic_frequencies.write(
-                freqs, min_cnf_alocs)
+                freqs, min_cnf_locs)
 
 
 def run_conformer_gradients(
@@ -540,11 +540,11 @@ def run_conformer_gradients(
     cnf_run_fs = autofile.fs.conformer(run_prefix)
     cnf_save_fs = autofile.fs.conformer(save_prefix)
 
-    cnf_alocs_lst = cnf_save_fs.leaf.existing()
-    for alocs in cnf_alocs_lst:
-        cnf_run_path = cnf_run_fs.leaf.path(alocs)
-        cnf_save_path = cnf_run_fs.leaf.path(alocs)
-        geo = cnf_save_fs.leaf.file.geometry.read(alocs)
+    cnf_locs_lst = cnf_save_fs.leaf.existing()
+    for locs in cnf_locs_lst:
+        cnf_run_path = cnf_run_fs.leaf.path(locs)
+        cnf_save_path = cnf_run_fs.leaf.path(locs)
+        geo = cnf_save_fs.leaf.file.geometry.read(locs)
 
         print('Running conformer gradient')
         run_job(
@@ -575,9 +575,9 @@ def run_conformer_gradients(
 
             print(" - Saving gradient...")
             print(" - Save path: {}".format(cnf_save_path))
-            cnf_save_fs.leaf.file.gradient_info.write(inf_obj, alocs)
-            cnf_save_fs.leaf.file.gradient_input.write(inp_str, alocs)
-            cnf_save_fs.leaf.file.gradient.write(grad, alocs)
+            cnf_save_fs.leaf.file.gradient_info.write(inf_obj, locs)
+            cnf_save_fs.leaf.file.gradient_input.write(inp_str, locs)
+            cnf_save_fs.leaf.file.gradient.write(grad, locs)
 
 
 def run_conformer_hessians(
@@ -588,11 +588,11 @@ def run_conformer_hessians(
     cnf_run_fs = autofile.fs.conformer(run_prefix)
     cnf_save_fs = autofile.fs.conformer(save_prefix)
 
-    cnf_alocs_lst = cnf_save_fs.leaf.existing()
-    for alocs in cnf_alocs_lst:
-        cnf_run_path = cnf_run_fs.leaf.path(alocs)
-        cnf_save_path = cnf_run_fs.leaf.path(alocs)
-        geo = cnf_save_fs.leaf.file.geometry.read(alocs)
+    cnf_locs_lst = cnf_save_fs.leaf.existing()
+    for locs in cnf_locs_lst:
+        cnf_run_path = cnf_run_fs.leaf.path(locs)
+        cnf_save_path = cnf_run_fs.leaf.path(locs)
+        geo = cnf_save_fs.leaf.file.geometry.read(locs)
 
         print('Running conformer hessian')
         run_job(
@@ -627,10 +627,10 @@ def run_conformer_hessians(
 
             print(" - Saving hessian...")
             print(" - Save path: {}".format(cnf_save_path))
-            cnf_save_fs.leaf.file.hessian_info.write(inf_obj, alocs)
-            cnf_save_fs.leaf.file.hessian_input.write(inp_str, alocs)
-            cnf_save_fs.leaf.file.hessian.write(hess, alocs)
-            cnf_save_fs.leaf.file.harmonic_frequencies.write(freqs, alocs)
+            cnf_save_fs.leaf.file.hessian_info.write(inf_obj, locs)
+            cnf_save_fs.leaf.file.hessian_input.write(inp_str, locs)
+            cnf_save_fs.leaf.file.hessian.write(hess, locs)
+            cnf_save_fs.leaf.file.harmonic_frequencies.write(freqs, locs)
 
 
 # d. hindered rotor scans
@@ -642,12 +642,12 @@ def hindered_rotor_scans(
     cnf_run_fs = autofile.fs.conformer(run_prefix)
     cnf_save_fs = autofile.fs.conformer(save_prefix)
 
-    min_cnf_alocs = moldr.util.min_energy_conformer_locators(save_prefix)
-    if min_cnf_alocs:
-        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_alocs)
-        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_alocs)
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_alocs)
-        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_alocs)
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(save_prefix)
+    if min_cnf_locs:
+        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
+        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
         val_dct = automol.zmatrix.values(zma)
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
@@ -808,10 +808,10 @@ def run_tau(zma, chg, mul, method, basis, orb_restr,
 
             samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
             tid = autofile.system.generate_new_tau_id()
-            alocs = [tid]
+            locs = [tid]
 
-            tau_run_fs.leaf.create(alocs)
-            run_path = tau_run_fs.leaf.path(alocs)
+            tau_run_fs.leaf.create(locs)
+            run_path = tau_run_fs.leaf.path(locs)
 
             idx += 1
             print("Run {}/{}".format(idx, nsamp0))
@@ -843,14 +843,14 @@ def save_tau(run_prefix, save_prefix):
     tau_run_fs = autofile.fs.tau(run_prefix)
     tau_save_fs = autofile.fs.tau(save_prefix)
 
-    saved_geos = [tau_save_fs.leaf.file.geometry.read(alocs)
-                  for alocs in tau_save_fs.leaf.existing()]
+    saved_geos = [tau_save_fs.leaf.file.geometry.read(locs)
+                  for locs in tau_save_fs.leaf.existing()]
 
     if not tau_run_fs.trunk.exists():
         print("No tau geometries to save. Skipping...")
     else:
-        for alocs in tau_run_fs.leaf.existing():
-            run_path = tau_run_fs.leaf.path(alocs)
+        for locs in tau_run_fs.leaf.existing():
+            run_path = tau_run_fs.leaf.path(locs)
             print("Reading from tau run at {}".format(run_path))
 
             ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=run_path)
@@ -862,25 +862,25 @@ def save_tau(run_prefix, save_prefix):
 
                 geo = elstruct.reader.opt_geometry(prog, out_str)
 
-                save_path = tau_save_fs.leaf.path(alocs)
+                save_path = tau_save_fs.leaf.path(locs)
                 print(" - Saving...")
                 print(" - Save path: {}".format(save_path))
 
-                tau_save_fs.leaf.create(alocs)
-                tau_save_fs.leaf.file.geometry_info.write(inf_obj, alocs)
-                tau_save_fs.leaf.file.geometry_input.write(inp_str, alocs)
-                tau_save_fs.leaf.file.energy.write(ene, alocs)
-                tau_save_fs.leaf.file.geometry.write(geo, alocs)
+                tau_save_fs.leaf.create(locs)
+                tau_save_fs.leaf.file.geometry_info.write(inf_obj, locs)
+                tau_save_fs.leaf.file.geometry_input.write(inp_str, locs)
+                tau_save_fs.leaf.file.energy.write(ene, locs)
+                tau_save_fs.leaf.file.geometry.write(geo, locs)
 
                 saved_geos.append(geo)
 
         # update the tau trajectory file
-        alocs_lst = tau_save_fs.leaf.existing()
-        if alocs_lst:
-            enes = [tau_save_fs.leaf.file.energy.read(alocs)
-                    for alocs in alocs_lst]
-            geos = [tau_save_fs.leaf.file.geometry.read(alocs)
-                    for alocs in alocs_lst]
+        locs_lst = tau_save_fs.leaf.existing()
+        if locs_lst:
+            enes = [tau_save_fs.leaf.file.energy.read(locs)
+                    for locs in locs_lst]
+            geos = [tau_save_fs.leaf.file.geometry.read(locs)
+                    for locs in locs_lst]
 
             traj = []
             for ene, geo in sorted(zip(enes, geos), key=lambda x: x[0]):
@@ -900,11 +900,11 @@ def run_tau_gradients(
     tau_run_fs = autofile.fs.tau(run_prefix)
     tau_save_fs = autofile.fs.tau(save_prefix)
 
-    for alocs in tau_save_fs.leaf.existing():
-        geo = tau_save_fs.leaf.file.geometry.read(alocs)
+    for locs in tau_save_fs.leaf.existing():
+        geo = tau_save_fs.leaf.file.geometry.read(locs)
         print('Running tau gradient')
-        tau_run_path = tau_run_fs.leaf.path(alocs)
-        tau_save_path = tau_save_fs.leaf.path(alocs)
+        tau_run_path = tau_run_fs.leaf.path(locs)
+        tau_save_path = tau_save_fs.leaf.path(locs)
 
         run_job(
             job='gradient',
@@ -934,9 +934,9 @@ def run_tau_gradients(
 
             print(" - Saving gradient...")
             print(" - Save path: {}".format(tau_save_path))
-            tau_save_fs.leaf.file.gradient_info.write(inf_obj, alocs)
-            tau_save_fs.leaf.file.gradient_input.write(inp_str, alocs)
-            tau_save_fs.leaf.file.gradient.write(grad, alocs)
+            tau_save_fs.leaf.file.gradient_info.write(inf_obj, locs)
+            tau_save_fs.leaf.file.gradient_input.write(inp_str, locs)
+            tau_save_fs.leaf.file.gradient.write(grad, locs)
 
 
 def run_tau_hessians(
@@ -947,11 +947,11 @@ def run_tau_hessians(
     tau_run_fs = autofile.fs.tau(run_prefix)
     tau_save_fs = autofile.fs.tau(save_prefix)
 
-    for alocs in tau_save_fs.leaf.existing():
-        geo = tau_save_fs.leaf.file.geometry.read(alocs)
+    for locs in tau_save_fs.leaf.existing():
+        geo = tau_save_fs.leaf.file.geometry.read(locs)
         print('Running tau Hessian')
-        tau_run_path = tau_run_fs.leaf.path(alocs)
-        tau_save_path = tau_run_fs.leaf.path(alocs)
+        tau_run_path = tau_run_fs.leaf.path(locs)
+        tau_save_path = tau_run_fs.leaf.path(locs)
         run_job(
             job='hessian',
             script_str=script_str,
@@ -980,9 +980,9 @@ def run_tau_hessians(
 
             print(" - Saving hessian...")
             print(" - Save path: {}".format(tau_save_path))
-            tau_save_fs.leaf.file.hessian_info.write(inf_obj, alocs)
-            tau_save_fs.leaf.file.hessian_input.write(inp_str, alocs)
-            tau_save_fs.leaf.file.hessian.write(hess, alocs)
+            tau_save_fs.leaf.file.hessian_info.write(inf_obj, locs)
+            tau_save_fs.leaf.file.hessian_input.write(inp_str, locs)
+            tau_save_fs.leaf.file.hessian.write(hess, locs)
 
 
 def tau_pf_write(
@@ -991,9 +991,9 @@ def tau_pf_write(
     """ Print out data fle for partition function evaluation 
     """
     cnf_save_fs = autofile.fs.conformer(save_prefix)
-    min_cnf_alocs = moldr.util.min_energy_conformer_locators(save_prefix)
-    if min_cnf_alocs:
-        ene_ref = cnf_save_fs.leaf.file.energy.read(min_cnf_alocs)
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(save_prefix)
+    if min_cnf_locs:
+        ene_ref = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
         print('ene_ref')
         print(ene_ref)
 
@@ -1001,9 +1001,9 @@ def tau_pf_write(
     evr = name+'\n'
 # cycle through saved tau geometries
     idx = 0
-    for alocs in tau_save_fs.leaf.existing():
-        geo = tau_save_fs.leaf.file.geometry.read(alocs)
-        ene = tau_save_fs.leaf.file.energy.read(alocs)
+    for locs in tau_save_fs.leaf.existing():
+        geo = tau_save_fs.leaf.file.geometry.read(locs)
+        ene = tau_save_fs.leaf.file.energy.read(locs)
         ene = (ene - ene_ref)*qcc.conversion_factor('hartree', 'kcal/mol')
         ene_str = autofile.file.write.energy(ene)
         geo_str = autofile.file.write.geometry(geo)
@@ -1017,12 +1017,12 @@ def tau_pf_write(
         evr += 'Geometry'+'\n'
         evr += geo_str+'\n'
         if run_grad:
-            grad = tau_save_fs.leaf.file.gradient.read(alocs)
+            grad = tau_save_fs.leaf.file.gradient.read(locs)
             grad_str = autofile.file.write.gradient(grad)
             evr += 'Gradient'+'\n'
             evr += grad_str
         if run_hess:
-            hess = tau_save_fs.leaf.file.hessian.read(alocs)
+            hess = tau_save_fs.leaf.file.hessian.read(locs)
             hess_str = autofile.file.write.hessian(hess)
             evr += 'Hessian'+'\n'
             evr += hess_str+'\n'
@@ -1037,9 +1037,9 @@ def tau_pf_write(
         sum2 = 0.
         idx = 0
         print('integral convergence for T = ', temp)
-        for alocs in tau_save_fs.leaf.existing():
+        for locs in tau_save_fs.leaf.existing():
             idx += 1
-            ene = tau_save_fs.leaf.file.energy.read(alocs)
+            ene = tau_save_fs.leaf.file.energy.read(locs)
             ene = (ene - ene_ref)*qcc.conversion_factor('hartree', 'kcal/mol')
             tmp = numpy.exp(-ene*349.7/(0.695*temp))
             sumq = sumq + tmp
@@ -1180,9 +1180,9 @@ def save_scan(run_prefix, save_prefix, coo_names):
     if not scn_run_fs.branch.exists([coo_names]):
         print("No scan to save. Skipping...")
     else:
-        alocs_lst = []
-        for alocs in scn_run_fs.branch.existing():
-            run_path = scn_run_fs.branch.path(alocs)
+        locs_lst = []
+        for locs in scn_run_fs.branch.existing():
+            run_path = scn_run_fs.branch.path(locs)
             print("Reading from scan run at {}".format(run_path))
 
             ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=run_path)
@@ -1194,25 +1194,25 @@ def save_scan(run_prefix, save_prefix, coo_names):
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
-                save_path = scn_save_fs.leaf.path(alocs)
+                save_path = scn_save_fs.leaf.path(locs)
                 print(" - Saving...")
                 print(" - Save path: {}".format(save_path))
 
-                scn_save_fs.leaf.create(alocs)
-                scn_save_fs.leaf.file.geometry_info.write(inf_obj, alocs)
-                scn_save_fs.leaf.file.geometry_input.write(inp_str, alocs)
-                scn_save_fs.leaf.file.energy.write(ene, alocs)
-                scn_save_fs.leaf.file.geometry.write(geo, alocs)
-                scn_save_fs.leaf.file.zmatrix.write(zma, alocs)
+                scn_save_fs.leaf.create(locs)
+                scn_save_fs.leaf.file.geometry_info.write(inf_obj, locs)
+                scn_save_fs.leaf.file.geometry_input.write(inp_str, locs)
+                scn_save_fs.leaf.file.energy.write(ene, locs)
+                scn_save_fs.leaf.file.geometry.write(geo, locs)
+                scn_save_fs.leaf.file.zmatrix.write(zma, locs)
 
-                alocs_lst.append(alocs)
+                locs_lst.append(locs)
 
-        if alocs_lst:
-            idxs_lst = [alocs[-1] for alocs in alocs_lst]
-            enes = [scn_save_fs.leaf.file.energy.read(alocs)
-                    for alocs in alocs_lst]
-            geos = [scn_save_fs.leaf.file.geometry.read(alocs)
-                    for alocs in alocs_lst]
+        if locs_lst:
+            idxs_lst = [locs[-1] for locs in locs_lst]
+            enes = [scn_save_fs.leaf.file.energy.read(locs)
+                    for locs in locs_lst]
+            geos = [scn_save_fs.leaf.file.geometry.read(locs)
+                    for locs in locs_lst]
 
             traj = []
             for idxs, ene, geo in zip(idxs_lst, enes, geos):

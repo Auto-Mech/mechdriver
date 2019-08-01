@@ -150,14 +150,14 @@ def reference_geometry(ich, chg, mul, method, basis, orb_restr, prefix,
 def min_energy_conformer_locators(save_prefix):
     """ locators for minimum energy conformer """
     cnf_save_fs = autofile.fs.conformer(save_prefix)
-    cnf_alocs_lst = cnf_save_fs.leaf.existing()
-    if cnf_alocs_lst:
-        cnf_enes = [cnf_save_fs.leaf.file.energy.read(alocs)
-                    for alocs in cnf_alocs_lst]
-        min_cnf_alocs = cnf_alocs_lst[cnf_enes.index(min(cnf_enes))]
+    cnf_locs_lst = cnf_save_fs.leaf.existing()
+    if cnf_locs_lst:
+        cnf_enes = [cnf_save_fs.leaf.file.energy.read(locs)
+                    for locs in cnf_locs_lst]
+        min_cnf_locs = cnf_locs_lst[cnf_enes.index(min(cnf_enes))]
     else:
-        min_cnf_alocs = None
-    return min_cnf_alocs
+        min_cnf_locs = None
+    return min_cnf_locs
 
 
 def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul, method, basis,
@@ -187,9 +187,9 @@ def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, method, basis,
         thy_save_fs = autofile.fs.theory(spc_save_path)
         thy_save_path = thy_save_fs.leaf.path([method, basis, orb_restr])
 
-        min_cnf_alocs = min_energy_conformer_locators(thy_save_path)
+        min_cnf_locs = min_energy_conformer_locators(thy_save_path)
         cnf_save_fs = autofile.fs.conformer(thy_save_path)
-        ene = cnf_save_fs.leaf.file.energy.read(min_cnf_alocs)
+        ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
         enes.append(ene)
     return enes
 
