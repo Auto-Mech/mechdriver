@@ -50,7 +50,14 @@ class SeriesAttributeName():
 
 
 def species(prefix):
-    """ construct the species filesystem
+    """ construct the species filesystem [trunk/leaf]
+
+    layers:
+     - trunk (specifiers: [])
+     - leaf (specifiers: [ich, chg, mul])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     trunk_ds = dir_.species_trunk(prefix)
     leaf_ds = dir_.species_leaf(prefix, root_ds=trunk_ds)
@@ -61,7 +68,13 @@ def species(prefix):
 
 
 def theory(prefix):
-    """ construct the theory filesystem
+    """ construct the theory filesystem [leaf]
+
+    layers:
+     - leaf (specifiers: [method, basis, orb_restricted])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     leaf_ds = dir_.theory_leaf(prefix)
 
@@ -78,7 +91,14 @@ def theory(prefix):
 
 
 def conformer(prefix):
-    """ construct the conformer filesystem
+    """ construct the conformer filesystem [trunk/leaf]
+
+    layers:
+     - trunk (specifiers: [])
+     - leaf (specifiers: [cid])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     trunk_ds = dir_.conformer_trunk(prefix)
     leaf_ds = dir_.conformer_leaf(prefix, root_ds=trunk_ds)
@@ -126,7 +146,14 @@ def conformer(prefix):
 
 
 def single_point(prefix):
-    """ construct the single-point filesystem
+    """ construct the single-point filesystem [trunk/leaf]
+
+    layers:
+     - trunk (specifiers: [])
+     - leaf (specifiers: [method, basis, orb_restricted])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     trunk_ds = dir_.single_point_trunk(prefix)
     leaf_ds = dir_.single_point_leaf(prefix, root_ds=trunk_ds)
@@ -139,19 +166,29 @@ def single_point(prefix):
         FileAttributeName.INPUT: inp_dfile,
         FileAttributeName.ENERGY: ene_dfile})
 
-    dir_fs = model.FileSystem({SeriesAttributeName.LEAF: leaf_ds})
+    dir_fs = model.FileSystem({
+        SeriesAttributeName.TRUNK: trunk_ds,
+        SeriesAttributeName.LEAF: leaf_ds})
     return dir_fs
 
 
 def scan(prefix):
     """ construct the scan filesystem
+
+    layers:
+     - trunk (specifiers: [])
+     - branch (specifiers: [coo_names])
+     - leaf (specifiers: [coo_names, grid_idxs])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     trunk_ds = dir_.scan_trunk(prefix)
     branch_ds = dir_.scan_branch(prefix, root_ds=trunk_ds)
     leaf_ds = dir_.scan_leaf(prefix, root_ds=branch_ds)
 
     vma_dfile = file_.vmatrix(FilePrefix.SCAN)
-    leaf_ds.add_data_files({
+    trunk_ds.add_data_files({
         FileAttributeName.VMATRIX: vma_dfile})
 
     inf_dfile = file_.information(FilePrefix.SCAN, function=info.scan_branch)
@@ -194,6 +231,13 @@ def scan(prefix):
 
 def tau(prefix):
     """ construct the tau filesystem
+
+    layers:
+     - trunk (specifiers: [])
+     - leaf (specifiers: [tid])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     trunk_ds = dir_.tau_trunk(prefix)
     leaf_ds = dir_.tau_leaf(prefix, root_ds=trunk_ds)
@@ -240,6 +284,13 @@ def tau(prefix):
 
 def reaction(prefix):
     """ construct the reaction filesystem
+
+    layers:
+     - trunk (specifiers: [])
+     - leaf (specifiers: [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     trunk_ds = dir_.reaction_trunk(prefix)
     leaf_ds = dir_.reaction_leaf(prefix, root_ds=trunk_ds)
@@ -251,6 +302,12 @@ def reaction(prefix):
 
 def ts(prefix):
     """ construct the ts filesystem
+
+    layers:
+     - trunk (specifiers: [])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     trunk_ds = dir_.ts_trunk(prefix)
 
@@ -261,12 +318,11 @@ def ts(prefix):
 def direction(prefix):
     """ filesystem object for reaction direction
 
-    :param prefix: sets the path containing this filesystem
-    :type prefix: str
+    layers:
+     - leaf (specifiers: [forw])
 
-    leaf specifiers: [forw]
-        :param forw: whether the reaction is in the forward direction or not
-        :type forw: bool
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     leaf_ds = dir_.direction_leaf(prefix)
 
@@ -288,7 +344,14 @@ def direction(prefix):
 
 
 def run(prefix):
-    """ construct the run filesystem
+    """ construct the run filesystem [trunk/leaf]
+
+    layers:
+     - trunk (specifiers: [])
+     - leaf (specifiers: [job])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     trunk_ds = dir_.run_trunk(prefix)
     leaf_ds = dir_.run_leaf(prefix, root_ds=trunk_ds)
@@ -306,8 +369,38 @@ def run(prefix):
     return dir_fs
 
 
+def subrun(prefix):
+    """ construct the subrun filesystem [leaf]
+
+    layers:
+     - leaf (specifiers: [macro_idx, micro_idx])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
+    """
+    leaf_ds = dir_.subrun_leaf(prefix)
+
+    inf_dfile = file_.information(FilePrefix.RUN, function=info.run)
+    inp_dfile = file_.input_file(FilePrefix.RUN)
+    out_dfile = file_.output_file(FilePrefix.RUN)
+    leaf_ds.add_data_files({
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.INPUT: inp_dfile,
+        FileAttributeName.OUTPUT: out_dfile})
+
+    dir_fs = model.FileSystem({SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
+
+
 def build(prefix):
     """ construct the build filesystem
+
+    layers:
+     - trunk (specifiers: [head])
+     - leaf (specifiers: [head, num])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
     """
     trunk_ds = dir_.build_trunk(prefix)
     leaf_ds = dir_.build_leaf(prefix, root_ds=trunk_ds)

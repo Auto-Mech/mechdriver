@@ -135,7 +135,7 @@ class DataSeries():
                 locs = self._self_locators(locs)
                 self.loc_dfile.write(locs, pth)
 
-    def existing(self, root_locs=()):
+    def existing(self, root_locs=(), relative=False):
         """ return the list of locators for existing paths
         """
         if self.loc_dfile is None:
@@ -144,6 +144,9 @@ class DataSeries():
 
         pths = self.existing_paths(root_locs)
         locs_lst = tuple(self.loc_dfile.read(pth) for pth in pths)
+        if not relative:
+            locs_lst = tuple(map(list(root_locs).__add__, locs_lst))
+
         return locs_lst
 
     def existing_paths(self, root_locs=()):

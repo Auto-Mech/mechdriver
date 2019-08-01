@@ -21,23 +21,23 @@ def species_trunk():
     return 'SPC'
 
 
-def species_leaf(ich, charge, mult):
+def species_leaf(ich, chg, mul):
     """ species leaf directory name
     """
     assert automol.inchi.is_standard_form(ich)
     assert automol.inchi.is_complete(ich)
-    assert isinstance(charge, numbers.Integral)
-    assert isinstance(mult, numbers.Integral)
-    assert _is_valid_inchi_multiplicity(ich, mult)
+    assert isinstance(chg, numbers.Integral)
+    assert isinstance(mul, numbers.Integral)
+    assert _is_valid_inchi_multiplicity(ich, mul)
 
     ick = automol.inchi.inchi_key(ich)
-    charge_str = str(charge)
-    mult_str = str(mult)
+    chg_str = str(chg)
+    mul_str = str(mul)
 
     dir_names = (automol.inchi.formula_sublayer(ich),
                  automol.inchi_key.first_hash(ick),
-                 charge_str,
-                 mult_str,
+                 chg_str,
+                 mul_str,
                  automol.inchi_key.second_hash_with_extension(ick))
     return os.path.join(*dir_names)
 
@@ -95,10 +95,10 @@ def scan_trunk():
     return 'SCANS'
 
 
-def scan_branch(tors_names):
+def scan_branch(coo_names):
     """ scan branch directory name
     """
-    return '_'.join(sorted(tors_names))
+    return '_'.join(sorted(coo_names))
 
 
 def scan_leaf(grid_idxs):
@@ -135,7 +135,7 @@ def reaction_trunk():
     return 'RXN'
 
 
-def reaction_leaf(rxn_ichs, rxn_chgs, rxn_muls, ts_mult):
+def reaction_leaf(rxn_ichs, rxn_chgs, rxn_muls, ts_mul):
     """ reaction leaf directory name
     """
     rxn_ichs = tuple(map(tuple, rxn_ichs))
@@ -144,11 +144,11 @@ def reaction_leaf(rxn_ichs, rxn_chgs, rxn_muls, ts_mult):
     assert ((rxn_ichs, rxn_chgs, rxn_muls) ==
             sort_together(rxn_ichs, rxn_chgs, rxn_muls))
     ichs1, ichs2 = rxn_ichs
-    charges1, charges2 = rxn_chgs
-    mults1, mults2 = rxn_muls
-    return os.path.join(_reactant_leaf(ichs1, charges1, mults1),
-                        _reactant_leaf(ichs2, charges2, mults2),
-                        str(ts_mult))
+    chgs1, chgs2 = rxn_chgs
+    muls1, muls2 = rxn_muls
+    return os.path.join(_reactant_leaf(ichs1, chgs1, muls1),
+                        _reactant_leaf(ichs2, chgs2, muls2),
+                        str(ts_mul))
 
 
 def reaction_is_reversed(rxn_ichs, rxn_chgs, rxn_muls):
@@ -203,27 +203,27 @@ def _sortable_representation(ichs, chgs, muls):
     return (len(ichs), ichs, chgs, muls)
 
 
-def _reactant_leaf(ichs, charges, mults):
+def _reactant_leaf(ichs, chgs, muls):
     """ reactant leaf directory name
     """
     assert all(map(automol.inchi.is_standard_form, ichs))
     assert all(map(automol.inchi.is_complete, ichs))
     assert tuple(ichs) == automol.inchi.sorted_(ichs)
-    assert len(ichs) == len(charges) == len(mults)
-    assert all(isinstance(charge, numbers.Integral) for charge in charges)
-    assert all(isinstance(mult, numbers.Integral) for mult in mults)
-    assert all(_is_valid_inchi_multiplicity(ich, mult)
-               for ich, mult in zip(ichs, mults))
+    assert len(ichs) == len(chgs) == len(muls)
+    assert all(isinstance(chg, numbers.Integral) for chg in chgs)
+    assert all(isinstance(mul, numbers.Integral) for mul in muls)
+    assert all(_is_valid_inchi_multiplicity(ich, mul)
+               for ich, mul in zip(ichs, muls))
 
     ich = automol.inchi.standard_form(automol.inchi.join(ichs))
     ick = automol.inchi.inchi_key(ich)
-    charge_str = '_'.join(map(str, charges))
-    mult_str = '_'.join(map(str, mults))
+    chg_str = '_'.join(map(str, chgs))
+    mul_str = '_'.join(map(str, muls))
 
     dir_names = (automol.inchi.formula_sublayer(ich),
                  automol.inchi_key.first_hash(ick),
-                 charge_str,
-                 mult_str,
+                 chg_str,
+                 mul_str,
                  automol.inchi_key.second_hash_with_extension(ick))
     return os.path.join(*dir_names)
 

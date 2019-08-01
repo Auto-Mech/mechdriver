@@ -360,7 +360,7 @@ def test__dir__run_leaf():
 
     print(ds_.existing(root_locs_lst[-1]))
     for root_locs in root_locs_lst:
-        assert (sorted(ds_.existing(root_locs)) ==
+        assert (sorted(ds_.existing(root_locs, relative=True)) ==
                 sorted(leaf_locs_lst))
 
 
@@ -401,7 +401,7 @@ def test__dir__subrun_leaf():
 
     print(ds_.existing(root_locs_lst[-1]))
     for root_locs in root_locs_lst:
-        assert (sorted(ds_.existing(root_locs)) ==
+        assert (sorted(ds_.existing(root_locs, relative=True)) ==
                 sorted(leaf_locs_lst))
 
 
@@ -476,7 +476,7 @@ def test__dir__species_leaf():
 
     print(ds_.existing(root_locs_lst[-1]))
     for root_locs in root_locs_lst:
-        assert (sorted(ds_.existing(root_locs)) ==
+        assert (sorted(ds_.existing(root_locs, relative=True)) ==
                 sorted(branch_locs_lst))
 
 
@@ -568,7 +568,7 @@ def test__dir__reaction_leaf():
 
     print(ds_.existing(root_locs_lst[-1]))
     for root_locs in root_locs_lst:
-        assert (sorted(ds_.existing(root_locs)) ==
+        assert (sorted(ds_.existing(root_locs, relative=True)) ==
                 sorted(branch_locs_lst))
 
 
@@ -607,7 +607,7 @@ def test__dir__theory_leaf():
 
     print(ds_.existing(root_locs_lst[-1]))
     for root_locs in root_locs_lst:
-        assert (sorted(ds_.existing(root_locs)) ==
+        assert (sorted(ds_.existing(root_locs, relative=True)) ==
                 sorted(branch_locs_lst))
 
 
@@ -679,7 +679,7 @@ def test__dir__conformer_leaf():
 
     print(ds_.existing(root_locs_lst[-1]))
     for root_locs in root_locs_lst:
-        assert (sorted(ds_.existing(root_locs)) ==
+        assert (sorted(ds_.existing(root_locs, relative=True)) ==
                 sorted(branch_locs_lst))
 
 
@@ -690,8 +690,7 @@ def test__dir__single_point_trunk():
     os.mkdir(prefix)
 
     root_ds = root_data_series_directory(prefix)
-    ds_ = autofile.system.dir_.single_point_trunk(prefix,
-                                                    root_ds=root_ds)
+    ds_ = autofile.system.dir_.single_point_trunk(prefix, root_ds=root_ds)
 
     root_locs_lst = [
         [1, 'a'],
@@ -779,7 +778,7 @@ def test__dir__scan_branch():
 
     print(ds_.existing(root_locs_lst[-1]))
     for root_locs in root_locs_lst:
-        assert (sorted(ds_.existing(root_locs)) ==
+        assert (sorted(ds_.existing(root_locs, relative=True)) ==
                 sorted(branch_locs_lst))
 
 
@@ -829,7 +828,7 @@ def test__dir__scan_leaf():
 
     print(ds_.existing(root_locs_lst[-1]))
     for root_locs in root_locs_lst:
-        assert (sorted(ds_.existing(root_locs)) ==
+        assert (sorted(ds_.existing(root_locs, relative=True)) ==
                 sorted(leaf_locs_lst))
 
 
@@ -901,7 +900,7 @@ def test__dir__tau_leaf():
 
     print(ds_.existing(root_locs_lst[-1]))
     for root_locs in root_locs_lst:
-        assert (sorted(ds_.existing(root_locs)) ==
+        assert (sorted(ds_.existing(root_locs, relative=True)) ==
                 sorted(branch_locs_lst))
 
     with pytest.raises(ValueError):
@@ -941,7 +940,7 @@ def test__dir__build_trunk():
 
     print(ds_.existing(root_alocs_lst[-1]))
     for root_alocs in root_alocs_lst:
-        assert (sorted(ds_.existing(root_alocs)) ==
+        assert (sorted(ds_.existing(root_alocs, relative=True)) ==
                 sorted(rlocs_lst))
 
 

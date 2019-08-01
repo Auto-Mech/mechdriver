@@ -100,8 +100,8 @@ def scan_branch(prefix, root_ds=None):
     """
     loc_dfile = file_.locator(
         file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={'tors_names': lambda locs: locs[0]},
-        loc_keys=['tors_names'])
+        map_dct_={'coo_names': lambda locs: locs[0]},
+        loc_keys=['coo_names'])
 
     _map = _pack_arguments(map_.scan_branch)
     nlocs = _count_arguments(map_.scan_branch)
