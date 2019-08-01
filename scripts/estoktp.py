@@ -851,396 +851,407 @@ if RUN_REACTIONS_QCHEM:
         ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
 
         # theory
-        method = REF_LEVEL[0]
-        basis = REF_LEVEL[1]
-        ts_orb_restr = moldr.util.orbital_restriction(
-            ts_mul, RESTRICT_OPEN_SHELL)
+        for prog, method, basis in RUN_OPT_LEVELS:
+            ts_orb_restr = moldr.util.orbital_restriction(
+                ts_mul, RESTRICT_OPEN_SHELL)
 
-        # check direction of reaction
-        rxn_ichs = [rct_ichs, prd_ichs]
-        rxn_chgs = [rct_chgs, prd_chgs]
-        rxn_muls = [rct_muls, prd_muls]
-        rxn_exo = moldr.util.reaction_energy(
-            SAVE_PREFIX, rxn_ichs, rxn_chgs, rxn_muls, method, basis,
-            RESTRICT_OPEN_SHELL)
-        print(rxn_exo)
-        if rxn_exo > 0:
-            rct_ichs, prd_ichs = prd_ichs, rct_ichs
-            rct_chgs, prd_chgs = prd_chgs, rct_chgs
-            rct_muls, prd_muls = prd_muls, rct_muls
-            print('ts search will be performed in reverse direction')
-
-        # obtain geometries from a hierachy of (i) data directory and (ii)
-        # previous species calculation
-        rct_geos = []
-        for ich, chg, mult in zip(rct_ichs, rct_chgs, rct_muls):
-            orb_restr = moldr.util.orbital_restriction(
-                mult, RESTRICT_OPEN_SHELL)
-            geo = moldr.util.reference_geometry(
-                ich, chg, mult, method, basis, orb_restr, SAVE_PREFIX,
-                GEOM_DCT)
-            rct_geos.append(geo)
-
-        prd_geos = []
-        for ich, chg, mult in zip(prd_ichs, prd_chgs, prd_muls):
-            orb_restr = moldr.util.orbital_restriction(
-                mult, RESTRICT_OPEN_SHELL)
-            geo = moldr.util.reference_geometry(
-                ich, chg, mult, method, basis, orb_restr, SAVE_PREFIX,
-                GEOM_DCT)
-            prd_geos.append(geo)
-
-        # determine the transition state z-matrix
-        # replace this with save values if they are available
-        rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
-        prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
-
-        typ = None
-
-        # # (migrations are not yet implemented)
-        # ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
-        # if ret and typ is None:
-        #     typ = 'hydrogen migration'
-
-        ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
-        if ret and typ is None:
-            typ = 'beta scission'
-            ts_zma, dist_name, tors_names = ret
-
-        ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas)
-        if ret and typ is None:
-            typ = 'addition'
-            ts_zma, dist_name, tors_names = ret
-
-# fix this later
-        # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
-        #                                               sigma=True)
-        ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
-                                                      sigma=False)
-        if ret and typ is None:
-            typ = 'hydrogen abstraction'
-            ts_zma, dist_name, tors_names = ret
-
-        if typ is None:
-            print("Failed to classify reaction.")
-        else:
-            print("Type: {}".format(typ))
-
-            # determine the grid
-            dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
-            syms = automol.zmatrix.symbols(ts_zma)
-            bnd_len_key = tuple(sorted(map(syms.__getitem__, dist_coo)))
-
-            bnd_len_dct = {
-                ('C', 'C'): 1.54 * ANG2BOHR,
-                ('C', 'H'): 1.09 * ANG2BOHR,
-                ('H', 'H'): 0.74 * ANG2BOHR,
-                ('N', 'N'): 1.45 * ANG2BOHR,
-                ('O', 'O'): 1.48 * ANG2BOHR,
-                ('C', 'N'): 1.47 * ANG2BOHR,
-                ('C', 'O'): 1.43 * ANG2BOHR,
-                ('H', 'O'): 1.20 * ANG2BOHR,
-                ('H', 'N'): 0.99 * ANG2BOHR,
-            }
-
-            if typ in ('beta scission', 'addition'):
-                rmin = 1.4 * ANG2BOHR
-                rmin = 2.8 * ANG2BOHR
-                if bnd_len_key in bnd_len_dct:
-                    bnd_len = bnd_len_dct[bnd_len_key]
-                    rmin = bnd_len + 0.2 * ANG2BOHR
-                    rmax = bnd_len + 1.6 * ANG2BOHR
-            elif typ == 'hydrogen abstraction':
-                rmin = 0.7 * ANG2BOHR
-                rmax = 2.2 * ANG2BOHR
-                if bnd_len_key in bnd_len_dct:
-                    bnd_len = bnd_len_dct[bnd_len_key]
-                    rmin = bnd_len
-                    rmax = bnd_len + 1.0 * ANG2BOHR
-
-            npoints = 8
-            grid = numpy.linspace(rmin, rmax, npoints)
-
-            # construct the filesystem
+            # check direction of reaction
             rxn_ichs = [rct_ichs, prd_ichs]
             rxn_chgs = [rct_chgs, prd_chgs]
             rxn_muls = [rct_muls, prd_muls]
+            rxn_exo = moldr.util.reaction_energy(
+                SAVE_PREFIX, rxn_ichs, rxn_chgs, rxn_muls, method, basis,
+                RESTRICT_OPEN_SHELL)
+            print(rxn_exo)
+            if rxn_exo > 0:
+                rct_ichs, prd_ichs = prd_ichs, rct_ichs
+                rct_chgs, prd_chgs = prd_chgs, rct_chgs
+                rct_muls, prd_muls = prd_muls, rct_muls
+                print('ts search will be performed in reverse direction')
 
-            # set up the filesystem
-            is_rev = autofile.system.reaction_is_reversed(
-                rxn_ichs, rxn_chgs, rxn_muls)
-            rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
-                rxn_ichs, rxn_chgs, rxn_muls)
-            print(" - The reaction direction is {}"
-                  .format('backward' if is_rev else 'forward'))
+            # obtain geometries from a hierachy of (i) data directory and (ii)
+            # previous species calculation
+            rct_geos = []
+            for ich, chg, mul in zip(rct_ichs, rct_chgs, rct_muls):
+                orb_restr = moldr.util.orbital_restriction(
+                    mul, RESTRICT_OPEN_SHELL)
+                geo = moldr.util.reference_geometry(
+                    ich, chg, mul, method, basis, orb_restr, SAVE_PREFIX,
+                    GEOM_DCT)
+                rct_geos.append(geo)
 
-            rxn_run_fs = autofile.fs.reaction(RUN_PREFIX)
-            rxn_run_fs.leaf.create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
-            print(rxn_run_fs.leaf.path([rxn_ichs, rxn_chgs, rxn_muls, ts_mul]))
-            sys.exit()
+            prd_geos = []
+            for ich, chg, mul in zip(prd_ichs, prd_chgs, prd_muls):
+                orb_restr = moldr.util.orbital_restriction(
+                    mul, RESTRICT_OPEN_SHELL)
+                geo = moldr.util.reference_geometry(
+                    ich, chg, mul, method, basis, orb_restr, SAVE_PREFIX,
+                    GEOM_DCT)
+                prd_geos.append(geo)
 
-            rxn_run_path = moldr.util.reaction_path(
-                rxn_ichs, rxn_chgs, rxn_muls, ts_mul, RUN_PREFIX)
-            rxn_save_path = moldr.util.reaction_path(
-                rxn_ichs, rxn_chgs, rxn_muls, ts_mul, SAVE_PREFIX)
-            thy_run_path = moldr.util.theory_path(method, basis, orb_restr, rxn_run_path)
-            thy_save_path = moldr.util.theory_path(method, basis, orb_restr, rxn_save_path)
-            moldr.driver.run_scan(
-                zma=ts_zma,
-                chg=0,
-                mult=ts_mul,
-                method=method,
-                basis=basis,
-                orb_restr=ts_orb_restr,
-                grid_dct={dist_name: grid},
-                run_prefix=thy_run_path,
-                save_prefix=thy_save_path,
-                script_str=SCRIPT_STR,
-                prog=PROG,
-                overwrite=OVERWRITE,
-                update_guess=False,
-                reverse_sweep=False,
-                **OPT_KWARGS
-            )
+            # determine the transition state z-matrix
+            # replace this with save values if they are available
+            rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
+            prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
 
-            moldr.driver.save_scan(
-                run_prefix=thy_run_path,
-                save_prefix=thy_save_path,
-                coo_names=[dist_name],
-            )
+            typ = None
 
-            scan_afs = autofile.fs.scan()
-            rlocs_lst = scan_afs.scan.dir.existing(thy_save_path, [[dist_name]])
-            enes = [scan_afs.scan.file.energy.read(thy_save_path, [[dist_name]] + rlocs)
-                    for rlocs in rlocs_lst]
-            max_ene = max(enes)
-            max_rlocs = rlocs_lst[enes.index(max(enes))]
-            geos = [scan_afs.scan.file.energy.read(thy_save_path, [[dist_name]] + rlocs)
-                    for rlocs in rlocs_lst]
-            max_ene = max(enes)
-            max_zma = scan_afs.scan.file.zmatrix.read(thy_save_path, [[dist_name]] + max_rlocs)
-            print(max_ene)
-            print(max_rlocs)
-            print('optimizing ts')
-# find saddlepoint from maximum on the grid opt scan
-            ts_afs = autofile.fs.ts()
-            ts_afs.ts.dir.create(thy_run_path)
-            ts_afs.ts.dir.create(thy_save_path)
-            ts_run_path = ts_afs.ts.dir.path(thy_run_path)
-            ts_save_path = ts_afs.ts.dir.path(thy_save_path)
-            moldr.driver.run_job(
-                job='optimization',
-                script_str=SCRIPT_STR,
-                prefix=ts_run_path,
-                geom=max_zma,
-                chg=0,
-                mult=ts_mul,
-                method=method,
-                basis=basis,
-                orb_restr=ts_orb_restr,
-                prog=PROG,
-                saddle=True,
-                overwrite=OVERWRITE,
-                **OPT_KWARGS,
-            )
-            opt_ret = moldr.driver.read_job(
-                job='optimization',
-                prefix=ts_run_path,
-            )
-            if opt_ret is not None:
-                inf_obj, inp_str, out_str = opt_ret
-                prog = inf_obj.prog
-                method = inf_obj.method
-                ene = elstruct.reader.energy(prog, method, out_str)
-                geo = elstruct.reader.opt_geometry(prog, out_str)
-                zma = elstruct.reader.opt_zmatrix(prog, out_str)
+            # # (migrations are not yet implemented)
+            # ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
+            # if ret and typ is None:
+            #     typ = 'hydrogen migration'
 
-                print(" - Saving...")
-                print(" - Save path: {}".format(ts_save_path))
+            ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
+            if ret and typ is None:
+                typ = 'beta scission'
+                ts_zma, dist_name, tors_names = ret
 
-                ts_afs.ts.file.geometry_info.write(inf_obj, thy_save_path)
-                ts_afs.ts.file.geometry_input.write(inp_str, thy_save_path)
-                ts_afs.ts.file.energy.write(ene, thy_save_path)
-                ts_afs.ts.file.geometry.write(geo, thy_save_path)
-                ts_afs.ts.file.zmatrix.write(zma, thy_save_path)
+            ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas)
+            if ret and typ is None:
+                typ = 'addition'
+                ts_zma, dist_name, tors_names = ret
+
+            # fix this later
+            # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
+            #                                               sigma=True)
+            ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
+                                                          sigma=False)
+            if ret and typ is None:
+                typ = 'hydrogen abstraction'
+                ts_zma, dist_name, tors_names = ret
+
+            if typ is None:
+                print("Failed to classify reaction.")
+            else:
+                print("Type: {}".format(typ))
+
+                # determine the grid
+                dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
+                syms = automol.zmatrix.symbols(ts_zma)
+                bnd_len_key = tuple(sorted(map(syms.__getitem__, dist_coo)))
+
+                bnd_len_dct = {
+                    ('C', 'C'): 1.54 * ANG2BOHR,
+                    ('C', 'H'): 1.09 * ANG2BOHR,
+                    ('H', 'H'): 0.74 * ANG2BOHR,
+                    ('N', 'N'): 1.45 * ANG2BOHR,
+                    ('O', 'O'): 1.48 * ANG2BOHR,
+                    ('C', 'N'): 1.47 * ANG2BOHR,
+                    ('C', 'O'): 1.43 * ANG2BOHR,
+                    ('H', 'O'): 1.20 * ANG2BOHR,
+                    ('H', 'N'): 0.99 * ANG2BOHR,
+                }
+
+                if typ in ('beta scission', 'addition'):
+                    rmin = 1.4 * ANG2BOHR
+                    rmin = 2.8 * ANG2BOHR
+                    if bnd_len_key in bnd_len_dct:
+                        bnd_len = bnd_len_dct[bnd_len_key]
+                        rmin = bnd_len + 0.2 * ANG2BOHR
+                        rmax = bnd_len + 1.6 * ANG2BOHR
+                elif typ == 'hydrogen abstraction':
+                    rmin = 0.7 * ANG2BOHR
+                    rmax = 2.2 * ANG2BOHR
+                    if bnd_len_key in bnd_len_dct:
+                        bnd_len = bnd_len_dct[bnd_len_key]
+                        rmin = bnd_len
+                        rmax = bnd_len + 1.0 * ANG2BOHR
+
+                npoints = 8
+                grid = numpy.linspace(rmin, rmax, npoints)
+
+                # construct the filesystem
+                rxn_ichs = [rct_ichs, prd_ichs]
+                rxn_chgs = [rct_chgs, prd_chgs]
+                rxn_muls = [rct_muls, prd_muls]
+
+                # set up the filesystem
+                is_rev = autofile.system.reaction_is_reversed(
+                    rxn_ichs, rxn_chgs, rxn_muls)
+                rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
+                    rxn_ichs, rxn_chgs, rxn_muls)
+                print(" - The reaction direction is {}"
+                      .format('backward' if is_rev else 'forward'))
+
+                rxn_run_fs = autofile.fs.reaction(RUN_PREFIX)
+                rxn_run_fs.leaf.create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+                rxn_run_path = rxn_run_fs.leaf.path(
+                    [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+
+                rxn_save_fs = autofile.fs.reaction(RUN_PREFIX)
+                rxn_save_fs.leaf.create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+                rxn_save_path = rxn_save_fs.leaf.path(
+                    [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+
+                thy_run_fs = autofile.fs.theory(rxn_run_path)
+                thy_run_fs.leaf.create([method, basis, orb_restr])
+                thy_run_path = thy_run_fs.leaf.path(
+                    [method, basis, orb_restr])
+
+                thy_save_fs = autofile.fs.theory(rxn_save_path)
+                thy_save_fs.leaf.create([method, basis, orb_restr])
+                thy_save_path = thy_save_fs.leaf.path(
+                    [method, basis, orb_restr])
+
+                moldr.driver.run_scan(
+                    zma=ts_zma,
+                    chg=0,
+                    mul=ts_mul,
+                    method=method,
+                    basis=basis,
+                    orb_restr=ts_orb_restr,
+                    grid_dct={dist_name: grid},
+                    run_prefix=thy_run_path,
+                    save_prefix=thy_save_path,
+                    script_str=SCRIPT_STR,
+                    prog=prog,
+                    overwrite=OVERWRITE,
+                    update_guess=False,
+                    reverse_sweep=False,
+                    **OPT_KWARGS
+                )
+
+                moldr.driver.save_scan(
+                    run_prefix=thy_run_path,
+                    save_prefix=thy_save_path,
+                    coo_names=[dist_name],
+                )
+
+                scn_save_fs = autofile.fs.scan(thy_save_path)
+                alocs_lst = [
+                    alocs for alocs in scn_save_fs.leaf.existing([[dist_name]])
+                    if scn_save_fs.leaf.file.energy.exists(alocs)]
+                print(alocs_lst)
+                enes = [scn_save_fs.leaf.file.energy.read(alocs)
+                        for alocs in alocs_lst]
+                max_alocs = alocs_lst[enes.index(max(enes))]
+                max_ene = max(enes)
+                max_zma = scn_save_fs.leaf.file.zmatrix.read(max_alocs)
+
+                print('optimizing ts')
+                # find saddlepoint from maximum on the grid opt scan
+                ts_run_fs = autofile.fs.ts(thy_run_path)
+                ts_run_fs.trunk.create()
+                ts_run_path = ts_run_fs.trunk.path()
+
+                ts_save_fs = autofile.fs.ts(thy_save_path)
+                ts_save_fs.trunk.create()
+                ts_save_path = ts_save_fs.trunk.path()
 
                 moldr.driver.run_job(
-                    job='hessian',
+                    job='optimization',
                     script_str=SCRIPT_STR,
                     prefix=ts_run_path,
-                    geom=geo,
+                    geom=max_zma,
                     chg=0,
                     mult=ts_mul,
                     method=method,
                     basis=basis,
-                    orb_restr=orb_restr,
-                    prog=PROG,
-                    overwrite=OVERWRITE,
-                    **KWARGS,
-                )
-                hess_ret = moldr.driver.read_job(
-                    job='hessian',
-                    prefix=ts_run_path,
-                )
-                if hess_ret is not None:
-                    inf_obj, inp_str, out_str = hess_ret
-                    prog = inf_obj.prog
-                    method = inf_obj.method
-                    hess = elstruct.reader.hessian(prog, out_str)
-                    freqs = elstruct.util.harmonic_frequencies(geo, hess)
-
-                    print(" - Saving hessian...")
-                    print(" - Save path: {}".format(ts_save_path))
-
-                    ts_afs.ts.file.hessian_info.write(inf_obj, thy_save_path)
-                    ts_afs.ts.file.hessian_input.write(inp_str, thy_save_path)
-                    ts_afs.ts.file.hessian.write(hess, thy_save_path)
-                    ts_afs.ts.file.harmonic_frequencies.write(freqs, thy_save_path)
-
-            if RUN_TS_TAU_SAMP:
-
-                moldr.driver.save_tau(
-                    run_prefix=thy_run_path,
-                    save_prefix=thy_save_path,
-                )
-
-                zma = ts_afs.ts.file.zmatrix.read(thy_save_path)
-                tors_ranges = automol.zmatrix.torsional_sampling_ranges(
-                    zma, tors_names)
-                tors_range_dct = dict(zip(tors_names, tors_ranges))
-
-                moldr.driver.run_tau(
-                    zma=zma,
-                    chg=chg,
-                    mult=ts_mul,
-                    method=method,
-                    basis=basis,
-                    orb_restr=orb_restr,
-                    nsamp=nsamp,
-                    tors_range_dct=tors_range_dct,
-                    run_prefix=thy_run_path,
-                    save_prefix=thy_save_path,
-                    script_str=SCRIPT_STR,
-                    prog=PROG,
+                    orb_restr=ts_orb_restr,
+                    prog=prog,
                     saddle=True,
                     overwrite=OVERWRITE,
                     **OPT_KWARGS,
                 )
-
-                moldr.driver.save_tau(
-                    run_prefix=thy_run_path,
-                    save_prefix=thy_save_path,
+                opt_ret = moldr.driver.read_job(
+                    job='optimization',
+                    prefix=ts_run_path,
                 )
+                if opt_ret is not None:
+                    inf_obj, inp_str, out_str = opt_ret
+                    prog = inf_obj.prog
+                    method = inf_obj.method
+                    ene = elstruct.reader.energy(prog, method, out_str)
+                    geo = elstruct.reader.opt_geometry(prog, out_str)
+                    zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
-            if RUN_TS_CONF_SCAN:
-                zma = ts_afs.ts.file.zmatrix.read(thy_save_path)
-                val_dct = automol.zmatrix.values(zma)
-                tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
-                    zma, tors_names, SCAN_INCREMENT)
-                tors_grids = [
-                    numpy.linspace(*linspace) +val_dct[name]
-                    for name, linspace in zip(tors_name, tors_linspaces)]
-                for tors_name, tors_grid in zip(tors_names, tors_grids):
-                    moldr.driver.run_scan(
+                    print(" - Saving...")
+                    print(" - Save path: {}".format(ts_save_path))
+
+                    ts_save_fs.leaf.file.geometry_info.write(inf_obj)
+                    ts_save_fs.leaf.file.geometry_input.write(inp_str)
+                    ts_save_fs.leaf.file.energy.write(ene)
+                    ts_save_fs.leaf.file.geometry.write(geo)
+                    ts_save_fs.leaf.file.zmatrix.write(zma)
+
+                    moldr.driver.run_job(
+                        job='hessian',
+                        script_str=SCRIPT_STR,
+                        prefix=ts_run_path,
+                        geom=geo,
+                        chg=0,
+                        mult=ts_mul,
+                        method=method,
+                        basis=basis,
+                        orb_restr=orb_restr,
+                        prog=prog,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                    )
+                    hess_ret = moldr.driver.read_job(
+                        job='hessian',
+                        prefix=ts_run_path,
+                    )
+                    if hess_ret is not None:
+                        inf_obj, inp_str, out_str = hess_ret
+                        prog = inf_obj.prog
+                        method = inf_obj.method
+                        hess = elstruct.reader.hessian(prog, out_str)
+                        freqs = elstruct.util.harmonic_frequencies(geo, hess)
+
+                        print(" - Saving hessian...")
+                        print(" - Save path: {}".format(ts_save_path))
+
+                        ts_save_fs.leaf.file.hessian_info.write(inf_obj)
+                        ts_save_fs.leaf.file.hessian_input.write(inp_str)
+                        ts_save_fs.leaf.file.hessian.write(hess)
+                        ts_save_fs.leaf.file.harmonic_frequencies.write(freqs)
+
+                if RUN_TS_TAU_SAMP:
+
+                    moldr.driver.save_tau(
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                    )
+
+                    zma = ts_save_fs.leaf.file.zmatrix.read()
+                    tors_ranges = automol.zmatrix.torsional_sampling_ranges(
+                        zma, tors_names)
+                    tors_range_dct = dict(zip(tors_names, tors_ranges))
+
+                    moldr.driver.run_tau(
                         zma=zma,
                         chg=chg,
                         mult=ts_mul,
                         method=method,
                         basis=basis,
                         orb_restr=orb_restr,
-                        grid_dct={tors_name: tors_grid},
+                        nsamp=nsamp,
+                        tors_range_dct=tors_range_dct,
                         run_prefix=thy_run_path,
                         save_prefix=thy_save_path,
                         script_str=SCRIPT_STR,
-                        prog=PROG,
+                        prog=prog,
                         saddle=True,
                         overwrite=OVERWRITE,
                         **OPT_KWARGS,
                     )
 
-                    moldr.driver.save_scan(
+                    moldr.driver.save_tau(
                         run_prefix=thy_run_path,
                         save_prefix=thy_save_path,
-                        coo_names=[tors_name],
                     )
-                hind_rot_dct = {}
-                scan_afs = autofile.fs.scan()
-                min_ene = ts_afs.ts.file.energy.read(thy_save_path)
-#                min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
-#                cnf_afs.conf_trunk.file.energy.write(min_ene, thy_save_path)
-                for tors_name in tors_names:
-                    enes = [scan_afs.scan.file.energy.read(thy_save_path, [[tors_name]] + rlocs)
-                            for rlocs in scan_afs.scan.dir.existing(thy_save_path, [[tors_name]])]
-                    enes = numpy.subtract(enes, min_ene)
-                    hind_rot_dct[tors_name] = enes*EH2KCAL
 
-                print('ts hindered rotor potential')
-                print(hind_rot_dct)
+                if RUN_TS_CONF_SCAN:
+                    zma = ts_save_fs.leaf.file.zmatrix.read(thy_save_path)
+                    val_dct = automol.zmatrix.values(zma)
+                    tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                        zma, tors_names, SCAN_INCREMENT)
+                    tors_grids = [
+                        numpy.linspace(*linspace) + val_dct[name]
+                        for name, linspace in zip(tors_name, tors_linspaces)]
+                    for tors_name, tors_grid in zip(tors_names, tors_grids):
+                        moldr.driver.run_scan(
+                            zma=zma,
+                            chg=chg,
+                            mult=ts_mul,
+                            method=method,
+                            basis=basis,
+                            orb_restr=orb_restr,
+                            grid_dct={tors_name: tors_grid},
+                            run_prefix=thy_run_path,
+                            save_prefix=thy_save_path,
+                            script_str=SCRIPT_STR,
+                            prog=prog,
+                            saddle=True,
+                            overwrite=OVERWRITE,
+                            **OPT_KWARGS,
+                        )
 
-            if RUN_TS_KICKS_QCHEM:
-                ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, prefix=ts_run_path)
-                if ret:
-                    inf_obj, _, out_str = ret
-                    prog = inf_obj.prog
-                    hess = elstruct.reader.hessian(prog, out_str)
-                    freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
-                    norm_coos = elstruct.util.normal_coordinates(geo, hess, project=True)
-                    assert freqs[0] < -100
+                        moldr.driver.save_scan(
+                            run_prefix=thy_run_path,
+                            save_prefix=thy_save_path,
+                            coo_names=[tors_name],
+                        )
+# AVC: left off here
+                    hind_rot_dct = {}
+                    scan_afs = autofile.fs.scan()
+                    min_ene = ts_afs.ts.file.energy.read(thy_save_path)
+    #                min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_alocs)
+    #                cnf_afs.conf_trunk.file.energy.write(min_ene, thy_save_path)
+                    for tors_name in tors_names:
+                        enes = [scan_afs.scan.file.energy.read(thy_save_path, [[tors_name]] + rlocs)
+                                for rlocs in scan_afs.scan.dir.existing(thy_save_path, [[tors_name]])]
+                        enes = numpy.subtract(enes, min_ene)
+                        hind_rot_dct[tors_name] = enes*EH2KCAL
 
-                    print('Kicking off from saddle in forward direction')
-                    im_norm_coo = numpy.array(norm_coos)[:, 0]
-                    disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3))
-                    dir_afs = autofile.fs.direction()
-                    fwd_run_path = dir_afs.direction.dir.path(thy_run_path, [True])
-                    dir_afs.direction.dir.create(thy_run_path, [True])
-                    fwd_save_path = dir_afs.direction.dir.path(thy_save_path, [True])
-                    dir_afs.direction.dir.create(thy_save_path, [True])
-                    print(automol.geom.string(geo))
-                    print(disp_xyzs)
-                    moldr.driver.run_kickoff_saddle(
-                        geo, disp_xyzs, chg, mult, method, basis, orb_restr,
-                        fwd_run_path, SCRIPT_STR, prog, OVERWRITE,
-                        kickoff_size=KICKOFF_SIZE, kickoff_backward=False,
-                        opt_cart=True, **OPT_KWARGS)
-                    print('Saving product of kick off from saddle in forward direction')
-                    ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=fwd_run_path)
+                    print('ts hindered rotor potential')
+                    print(hind_rot_dct)
+
+                if RUN_TS_KICKS_QCHEM:
+                    ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, prefix=ts_run_path)
                     if ret:
-                        inf_obj, inp_str, out_str = ret
+                        inf_obj, _, out_str = ret
                         prog = inf_obj.prog
-                        method = inf_obj.method
-                        ene = elstruct.reader.energy(prog, method, out_str)
-                        geo = elstruct.reader.opt_geometry(prog, out_str)
+                        hess = elstruct.reader.hessian(prog, out_str)
+                        freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
+                        norm_coos = elstruct.util.normal_coordinates(geo, hess, project=True)
+                        assert freqs[0] < -100
+
+                        print('Kicking off from saddle in forward direction')
+                        im_norm_coo = numpy.array(norm_coos)[:, 0]
+                        disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3))
+                        dir_afs = autofile.fs.direction()
+                        fwd_run_path = dir_afs.direction.dir.path(thy_run_path, [True])
+                        dir_afs.direction.dir.create(thy_run_path, [True])
                         fwd_save_path = dir_afs.direction.dir.path(thy_save_path, [True])
-                        print('save path', fwd_save_path)
-                        dir_afs.direction.file.geometry_info.write(inf_obj, thy_save_path, [True])
-                        dir_afs.direction.file.geometry_input.write(inp_str, thy_save_path, [True])
-                        dir_afs.direction.file.geometry.write(geo, thy_save_path, [True])
-                        dir_afs.direction.file.energy.write(ene, thy_save_path, [True])
+                        dir_afs.direction.dir.create(thy_save_path, [True])
+                        print(automol.geom.string(geo))
+                        print(disp_xyzs)
+                        moldr.driver.run_kickoff_saddle(
+                            geo, disp_xyzs, chg, mult, method, basis, orb_restr,
+                            fwd_run_path, SCRIPT_STR, prog, OVERWRITE,
+                            kickoff_size=KICKOFF_SIZE, kickoff_backward=False,
+                            opt_cart=True, **OPT_KWARGS)
+                        print('Saving product of kick off from saddle in forward direction')
+                        ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=fwd_run_path)
+                        if ret:
+                            inf_obj, inp_str, out_str = ret
+                            prog = inf_obj.prog
+                            method = inf_obj.method
+                            ene = elstruct.reader.energy(prog, method, out_str)
+                            geo = elstruct.reader.opt_geometry(prog, out_str)
+                            fwd_save_path = dir_afs.direction.dir.path(thy_save_path, [True])
+                            print('save path', fwd_save_path)
+                            dir_afs.direction.file.geometry_info.write(inf_obj, thy_save_path, [True])
+                            dir_afs.direction.file.geometry_input.write(inp_str, thy_save_path, [True])
+                            dir_afs.direction.file.geometry.write(geo, thy_save_path, [True])
+                            dir_afs.direction.file.energy.write(ene, thy_save_path, [True])
 
-                    print('Kicking off from saddle in backward direction')
-                    bwd_run_path = dir_afs.direction.dir.path(thy_run_path, [False])
-                    dir_afs.direction.dir.create(thy_run_path, [False])
-                    bwd_save_path = dir_afs.direction.dir.path(thy_save_path, [False])
-                    dir_afs.direction.dir.create(thy_save_path, [False])
-                    moldr.driver.run_kickoff_saddle(
-                        geo, disp_xyzs, chg, mult, method, basis,
-                        orb_restr, bwd_run_path, SCRIPT_STR, prog,
-                        OVERWRITE, kickoff_size=KICKOFF_SIZE,
-                        kickoff_backward=True, **OPT_KWARGS)
-                    print('Saving product of kick off from saddle in backward direction')
-                    ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=bwd_run_path)
-                    if ret:
-                        inf_obj, inp_str, out_str = ret
-                        prog = inf_obj.prog
-                        method = inf_obj.method
-                        ene = elstruct.reader.energy(prog, method, out_str)
-                        geo = elstruct.reader.opt_geometry(prog, out_str)
+                        print('Kicking off from saddle in backward direction')
+                        bwd_run_path = dir_afs.direction.dir.path(thy_run_path, [False])
+                        dir_afs.direction.dir.create(thy_run_path, [False])
                         bwd_save_path = dir_afs.direction.dir.path(thy_save_path, [False])
-                        print('save path', bwd_save_path)
-                        dir_afs.direction.file.geometry_info.write(inf_obj, thy_save_path, [False])
-                        dir_afs.direction.file.geometry_input.write(inp_str, thy_save_path, [False])
-                        dir_afs.direction.file.geometry.write(geo, thy_save_path, [False])
-                        dir_afs.direction.file.energy.write(ene, thy_save_path, [False])
+                        dir_afs.direction.dir.create(thy_save_path, [False])
+                        moldr.driver.run_kickoff_saddle(
+                            geo, disp_xyzs, chg, mult, method, basis,
+                            orb_restr, bwd_run_path, SCRIPT_STR, prog,
+                            OVERWRITE, kickoff_size=KICKOFF_SIZE,
+                            kickoff_backward=True, **OPT_KWARGS)
+                        print('Saving product of kick off from saddle in backward direction')
+                        ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=bwd_run_path)
+                        if ret:
+                            inf_obj, inp_str, out_str = ret
+                            prog = inf_obj.prog
+                            method = inf_obj.method
+                            ene = elstruct.reader.energy(prog, method, out_str)
+                            geo = elstruct.reader.opt_geometry(prog, out_str)
+                            bwd_save_path = dir_afs.direction.dir.path(thy_save_path, [False])
+                            print('save path', bwd_save_path)
+                            dir_afs.direction.file.geometry_info.write(inf_obj, thy_save_path, [False])
+                            dir_afs.direction.file.geometry_input.write(inp_str, thy_save_path, [False])
+                            dir_afs.direction.file.geometry.write(geo, thy_save_path, [False])
+                            dir_afs.direction.file.energy.write(ene, thy_save_path, [False])
 
 if RUN_VDW_QCHEM:
     if NSAMP_VDW_EXPR:
