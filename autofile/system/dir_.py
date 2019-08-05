@@ -1,4 +1,4 @@
-""" DataSeriesDirs
+""" DataSeriess
 """
 try:
     from inspect import getfullargspec as function_argspec
@@ -13,41 +13,17 @@ from autofile.system import model
 SPEC_FILE_PREFIX = 'dir'
 
 
-def reference_trunk(root_dsdir=None):
-    """ reference trunk DataSeriesDir
-    """
-    _map = _pack_arguments(map_.reference_trunk)
-    nlocs = _count_arguments(map_.reference_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
-
-def direction_leaf(root_dsdir=None):
-    """ direction leaf  DataSeriesDir
-    """
-    _map = _pack_arguments(map_.direction_leaf)
-    nlocs = _count_arguments(map_.direction_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
-
-def species_trunk(root_dsdir=None):
-    """ species trunk DataSeriesDir
+def species_trunk(prefix, root_ds=None):
+    """ species trunk DataSeries
     """
     _map = _pack_arguments(map_.species_trunk)
     nlocs = _count_arguments(map_.species_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
-
-def ts_trunk(root_dsdir=None):
-    """ ts trunk DataSeriesDir
-    """
-    _map = _pack_arguments(map_.ts_trunk)
-    nlocs = _count_arguments(map_.ts_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
 
 
-def species_leaf(root_dsdir=None):
-    """ species leaf DataSeriesDir
+def species_leaf(prefix, root_ds=None):
+    """ species leaf DataSeries
     """
     loc_dfile = file_.locator(
         file_prefix=SPEC_FILE_PREFIX,
@@ -60,22 +36,127 @@ def species_leaf(root_dsdir=None):
 
     _map = _pack_arguments(map_.species_leaf)
     nlocs = _count_arguments(map_.species_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=5,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=5,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
 
 
-def reaction_trunk(root_dsdir=None):
-    """ reaction trunk DataSeriesDir
+def theory_leaf(prefix, root_ds=None):
+    """ theory leaf DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={
+            'method': lambda locs: locs[0],
+            'basis': lambda locs: locs[1],
+            'orb_restricted': lambda locs: locs[2]},
+        loc_keys=['method', 'basis', 'orb_restricted'])
+
+    _map = _pack_arguments(map_.theory_leaf)
+    nlocs = _count_arguments(map_.theory_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def conformer_trunk(prefix, root_ds=None):
+    """ conformer trunk DataSeries
+    """
+    _map = _pack_arguments(map_.conformer_trunk)
+    nlocs = _count_arguments(map_.conformer_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def conformer_leaf(prefix, root_ds=None):
+    """ conformer leaf DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'conformer_id': lambda locs: locs[0]},
+        loc_keys=['conformer_id'])
+
+    _map = _pack_arguments(map_.conformer_leaf)
+    nlocs = _count_arguments(map_.conformer_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def single_point_leaf(prefix, root_ds=None):
+    """ single-point leaf DataSeries
+    """
+    return theory_leaf(prefix, root_ds=root_ds)
+
+
+def scan_trunk(prefix, root_ds=None):
+    """ scan trunk DataSeries
+    """
+    _map = _pack_arguments(map_.scan_trunk)
+    nlocs = _count_arguments(map_.scan_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def scan_branch(prefix, root_ds=None):
+    """ scan branch DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'coo_names': lambda locs: locs[0]},
+        loc_keys=['coo_names'])
+
+    _map = _pack_arguments(map_.scan_branch)
+    nlocs = _count_arguments(map_.scan_branch)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def scan_leaf(prefix, root_ds=None):
+    """ scan leaf DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'grid_idxs': lambda locs: locs[0]},
+        loc_keys=['grid_idxs'])
+
+    _map = _pack_arguments(map_.scan_leaf)
+    nlocs = _count_arguments(map_.scan_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def tau_trunk(prefix, root_ds=None):
+    """ tau trunk DataSeries
+    """
+    _map = _pack_arguments(map_.tau_trunk)
+    nlocs = _count_arguments(map_.tau_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def tau_leaf(prefix, root_ds=None):
+    """ tau leaf DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'conformer_id': lambda locs: locs[0]},
+        loc_keys=['conformer_id'])
+
+    _map = _pack_arguments(map_.tau_leaf)
+    nlocs = _count_arguments(map_.tau_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def reaction_trunk(prefix, root_ds=None):
+    """ reaction trunk DataSeries
     """
     _map = _pack_arguments(map_.reaction_trunk)
     nlocs = _count_arguments(map_.reaction_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
 
 
-def reaction_leaf(root_dsdir=None):
-    """ reaction leaf DataSeriesDir
+def reaction_leaf(prefix, root_ds=None):
+    """ reaction leaf DataSeries
     """
     loc_dfile = file_.locator(
         file_prefix=SPEC_FILE_PREFIX,
@@ -92,40 +173,39 @@ def reaction_leaf(root_dsdir=None):
 
     _map = _pack_arguments(map_.reaction_leaf)
     nlocs = _count_arguments(map_.reaction_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=11,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=11,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
 
 
-def theory_leaf(root_dsdir=None):
-    """ theory leaf DataSeriesDir
+def ts_trunk(prefix, root_ds=None):
+    """ ts trunk DataSeries
     """
-    loc_dfile = file_.locator(
-        file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={
-            'method': lambda locs: locs[0],
-            'basis': lambda locs: locs[1],
-            'orb_restricted': lambda locs: locs[2]},
-        loc_keys=['method', 'basis', 'orb_restricted'])
-
-    _map = _pack_arguments(map_.theory_leaf)
-    nlocs = _count_arguments(map_.theory_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir)
+    _map = _pack_arguments(map_.ts_trunk)
+    nlocs = _count_arguments(map_.ts_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
 
 
-def run_trunk(root_dsdir=None):
-    """ run trunk DataSeriesDir
+def direction_leaf(prefix, root_ds=None):
+    """ direction leaf  DataSeries
+    """
+    _map = _pack_arguments(map_.direction_leaf)
+    nlocs = _count_arguments(map_.direction_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def run_trunk(prefix, root_ds=None):
+    """ run trunk DataSeries
     """
     _map = _pack_arguments(map_.run_trunk)
     nlocs = _count_arguments(map_.run_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
 
 
-def run_leaf(root_dsdir=None):
-    """ run leaf DataSeriesDir
+def run_leaf(prefix, root_ds=None):
+    """ run leaf DataSeries
     """
     loc_dfile = file_.locator(
         file_prefix=SPEC_FILE_PREFIX,
@@ -134,13 +214,13 @@ def run_leaf(root_dsdir=None):
 
     _map = _pack_arguments(map_.run_leaf)
     nlocs = _count_arguments(map_.run_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir, removable=True)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds,
+                            removable=True)
 
 
-def subrun_leaf(root_dsdir=None):
-    """ subrun leaf DataSeriesDir
+def subrun_leaf(prefix, root_ds=None):
+    """ subrun leaf DataSeries
     """
     loc_dfile = file_.locator(
         file_prefix=SPEC_FILE_PREFIX,
@@ -150,115 +230,21 @@ def subrun_leaf(root_dsdir=None):
 
     _map = _pack_arguments(map_.subrun_leaf)
     nlocs = _count_arguments(map_.subrun_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
 
 
-def conformer_trunk(root_dsdir=None):
-    """ conformer trunk DataSeriesDir
-    """
-    _map = _pack_arguments(map_.conformer_trunk)
-    nlocs = _count_arguments(map_.conformer_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
-
-
-def conformer_leaf(root_dsdir=None):
-    """ conformer leaf DataSeriesDir
-    """
-    loc_dfile = file_.locator(
-        file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={'conformer_id': lambda locs: locs[0]},
-        loc_keys=['conformer_id'])
-
-    _map = _pack_arguments(map_.conformer_leaf)
-    nlocs = _count_arguments(map_.conformer_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir)
-
-
-def single_point_trunk(root_dsdir=None):
-    """ single point trunk DataSeriesDir
+def single_point_trunk(prefix, root_ds=None):
+    """ single point trunk DataSeries
     """
     _map = _pack_arguments(map_.single_point_trunk)
     nlocs = _count_arguments(map_.single_point_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
 
 
-def scan_trunk(root_dsdir=None):
-    """ scan trunk DataSeriesDir
-    """
-    _map = _pack_arguments(map_.scan_trunk)
-    nlocs = _count_arguments(map_.scan_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
-
-
-def scan_branch(root_dsdir=None):
-    """ scan branch DataSeriesDir
-    """
-    loc_dfile = file_.locator(
-        file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={'tors_names': lambda locs: locs[0]},
-        loc_keys=['tors_names'])
-
-    _map = _pack_arguments(map_.scan_branch)
-    nlocs = _count_arguments(map_.scan_branch)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir)
-
-
-def scan_leaf(root_dsdir=None):
-    """ scan leaf DataSeriesDir
-    """
-    loc_dfile = file_.locator(
-        file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={'grid_idxs': lambda locs: locs[0]},
-        loc_keys=['grid_idxs'])
-
-    _map = _pack_arguments(map_.scan_leaf)
-    nlocs = _count_arguments(map_.scan_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir)
-
-
-def single_point_leaf(root_dsdir=None):
-    """ single-point leaf DataSeriesDir
-    """
-    return theory_leaf(root_dsdir=root_dsdir)
-
-
-def tau_trunk(root_dsdir=None):
-    """ tau trunk DataSeriesDir
-    """
-    _map = _pack_arguments(map_.tau_trunk)
-    nlocs = _count_arguments(map_.tau_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               root_dsdir=root_dsdir)
-
-
-def tau_leaf(root_dsdir=None):
-    """ tau leaf DataSeriesDir
-    """
-    loc_dfile = file_.locator(
-        file_prefix=SPEC_FILE_PREFIX,
-        map_dct_={'conformer_id': lambda locs: locs[0]},
-        loc_keys=['conformer_id'])
-
-    _map = _pack_arguments(map_.tau_leaf)
-    nlocs = _count_arguments(map_.tau_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir)
-
-
-def build_trunk(root_dsdir=None):
-    """ build trunk DataSeriesDir
+def build_trunk(prefix, root_ds=None):
+    """ build trunk DataSeries
     """
     loc_dfile = file_.locator(
         file_prefix=SPEC_FILE_PREFIX,
@@ -267,13 +253,12 @@ def build_trunk(root_dsdir=None):
 
     _map = _pack_arguments(map_.build_trunk)
     nlocs = _count_arguments(map_.build_trunk)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
 
 
-def build_leaf(root_dsdir=None):
-    """ build leaf DataSeriesDir
+def build_leaf(prefix, root_ds=None):
+    """ build leaf DataSeries
     """
     loc_dfile = file_.locator(
         file_prefix=SPEC_FILE_PREFIX,
@@ -282,9 +267,9 @@ def build_leaf(root_dsdir=None):
 
     _map = _pack_arguments(map_.build_leaf)
     nlocs = _count_arguments(map_.build_leaf)
-    return model.DataSeriesDir(map_=_map, nlocs=nlocs, depth=1,
-                               loc_dfile=loc_dfile,
-                               root_dsdir=root_dsdir, removable=True)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds,
+                            removable=True)
 
 
 # helpers

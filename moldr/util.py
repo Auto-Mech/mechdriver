@@ -27,7 +27,8 @@ def run_qchem_par(prog):
             'machine_options': ['%NProcShared=10'],
             'gen_lines': ['# int=ultrafine'],
             'feedback': True,
-            # 'job_options': ['verytight'],
+#            'job_options': ['verytight'],
+#            'job_options': ['verytight'],
             'errors': [
                 elstruct.Error.OPT_NOCONV
             ],
@@ -50,9 +51,9 @@ def run_qchem_par(prog):
 
     if prog == 'molpro':
         script_str = ("#!/usr/bin/env bash\n"
-                      "molpro -n 8 -i run.inp -o run.out >> stdout.log &> stderr.log")
+                      "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = ("#!/usr/bin/env bash\n"
-                          "molpro --mppx -n 12 -i run.inp -o run.out >> stdout.log &> stderr.log")
+                          "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
         kwargs = {
             'memory': 50,
         }
@@ -87,15 +88,16 @@ def run_qchem_par(prog):
         }
         opt_kwargs = {}
 
-    return  script_str, opt_script_str, kwargs, opt_kwargs
+    return script_str, opt_script_str, kwargs, opt_kwargs
 
-def orbital_restriction(mult, restrict_open_shell=False):
+
+def orbital_restriction(mul, restrict_open_shell=False):
     """ orbital restriction logical
     """
     if restrict_open_shell:
         orb_restr = True
     else:
-        orb_restr = (mult == 1)
+        orb_restr = (mul == 1)
     return orb_restr
 
 
@@ -116,70 +118,50 @@ def geometry_dictionary(geom_path):
     return geom_dct
 
 
-def reference_geometry(ich, chg, mult, method, basis, orb_restr, prefix, geom_dct):
+def reference_geometry(ich, chg, mul, method, basis, orb_restr, prefix,
+                       geom_dct):
     """ obtain reference geometry
-    geometry dictionary takes precedence
-    then from inchi
+    if data for reference method exists use that
+    then geometry dictionary takes precedence
+    if nothing else from inchi
     """
-    spc_path = species_path(ich, chg, mult, prefix)
-    thy_afs = autofile.fs.theory()
-    thy_alocs = [method, basis, orb_restr]
-    if ich in geom_dct:
-        print('getting reference geometry from geom_dct')
-        geo = geom_dct[ich]
+    spc_fs = autofile.fs.species(prefix)
+    spc_fs.leaf.create([ich, chg, mul])
+    spc_path = spc_fs.leaf.path([ich, chg, mul])
+
+    thy_fs = autofile.fs.theory(spc_path)
+    thy_fs.leaf.create([method, basis, orb_restr])
+    thy_path = thy_fs.leaf.path([method, basis, orb_restr])
+
+    if thy_fs.leaf.file.geometry.exists([method, basis, orb_restr]):
+        thy_path = thy_fs.leaf.path([method, basis, orb_restr])
+        print('getting reference geometry from', thy_path)
+        geo = thy_fs.leaf.file.geometry.read([method, basis, orb_restr])
     else:
-        if thy_afs.theory.file.geometry.exists(spc_path, thy_alocs):
-            thy_path = thy_afs.theory.dir.path(spc_path, thy_alocs)
-            print('getting reference geometry from', thy_path)
-            geo = thy_afs.theory.file.geometry.read(spc_path, thy_alocs)
+        if ich in geom_dct:
+            print('getting reference geometry from geom_dct')
+            geo = geom_dct[ich]
         else:
             print('getting reference geometry from inchi')
             geo = automol.inchi.geometry(ich)
-    print(automol.geom.xyz_string(geo))
     return geo
-
-
-def theory_path(method, basis, orb_restr, prefix):
-    """ path to theory directory """
-    thy_alocs = [method, basis, orb_restr]
-    thy_afs = autofile.fs.theory()
-    thy_afs.theory.dir.create(prefix, thy_alocs)
-    thy_path = thy_afs.theory.dir.path(prefix, thy_alocs)
-    return thy_path
-
-
-def species_path(ich, chg, mult, prefix):
-    """ path to species directory """
-    spc_alocs = [ich, chg, mult]         # aloc = absolute locator
-    spc_afs = autofile.fs.species()
-    spc_afs.species.dir.create(prefix, spc_alocs)
-    spc_path = spc_afs.species.dir.path(prefix, spc_alocs)
-    return spc_path
-
-
-def reaction_path(rxn_ichs, rxn_chgs, rxn_muls, ts_mul, prefix):
-    """ path to reaction directory """
-    rxn_alocs = [rxn_ichs, rxn_chgs, rxn_muls, ts_mul]
-    rxn_afs = autofile.fs.reaction()
-    rxn_afs.reaction.dir.create(prefix, rxn_alocs)
-    rxn_path = rxn_afs.reaction.dir.path(prefix, rxn_alocs)
-    return rxn_path
 
 
 def min_energy_conformer_locators(save_prefix):
     """ locators for minimum energy conformer """
-    cnf_afs = autofile.fs.conformer()
-    cnf_alocs_lst = cnf_afs.conf.dir.existing(save_prefix)
-    if cnf_alocs_lst:
-        cnf_enes = [cnf_afs.conf.file.energy.read(save_prefix, alocs)
-                    for alocs in cnf_alocs_lst]
-        min_cnf_alocs = cnf_alocs_lst[cnf_enes.index(min(cnf_enes))]
+    cnf_save_fs = autofile.fs.conformer(save_prefix)
+    cnf_locs_lst = cnf_save_fs.leaf.existing()
+    if cnf_locs_lst:
+        cnf_enes = [cnf_save_fs.leaf.file.energy.read(locs)
+                    for locs in cnf_locs_lst]
+        min_cnf_locs = cnf_locs_lst[cnf_enes.index(min(cnf_enes))]
     else:
-        min_cnf_alocs = None
-    return min_cnf_alocs
+        min_cnf_locs = None
+    return min_cnf_locs
 
 
-def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul, method, basis, restrict_open_shell):
+def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul, method, basis,
+                    restrict_open_shell):
     """ reaction energy """
     rct_ichs, prd_ichs = rxn_ich
     rct_chgs, prd_chgs = rxn_chg
@@ -193,25 +175,21 @@ def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul, method, basis, restr
     return sum(prd_enes) - sum(rct_enes)
 
 
-def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, method, basis, restrict_open_shell):
+def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, method, basis,
+                     restrict_open_shell):
     """ reagent energies """
     enes = []
-    spc_afs = autofile.fs.species()
-    thy_afs = autofile.fs.theory(spc_afs, 'species')
-    cnf_afs = autofile.fs.conformer(thy_afs, 'theory')
-
     for rgt_ich, rgt_chg, rgt_mul in zip(rgt_ichs, rgt_chgs, rgt_muls):
-        print(rgt_ich, rgt_mul)
-        if restrict_open_shell:
-            orb_restr = True
-        else:
-            orb_restr = (rgt_mul == 1)
-        spc_alocs = [rgt_ich, rgt_chg, rgt_mul]
-        thy_rlocs = [method, basis, orb_restr]
-        thy_alocs = spc_alocs + thy_rlocs
-        thy_save_path = thy_afs.theory.dir.path(save_prefix, thy_alocs)
-        min_cnf_alocs = min_energy_conformer_locators(thy_save_path)
-        ene = cnf_afs.conf.file.energy.read(save_prefix, thy_alocs + min_cnf_alocs)
+        spc_save_fs = autofile.fs.species(save_prefix)
+        spc_save_path = spc_save_fs.leaf.path([rgt_ich, rgt_chg, rgt_mul])
+
+        orb_restr = orbital_restriction(rgt_mul, restrict_open_shell)
+        thy_save_fs = autofile.fs.theory(spc_save_path)
+        thy_save_path = thy_save_fs.leaf.path([method, basis, orb_restr])
+
+        min_cnf_locs = min_energy_conformer_locators(thy_save_path)
+        cnf_save_fs = autofile.fs.conformer(thy_save_path)
+        ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
         enes.append(ene)
     return enes
 
