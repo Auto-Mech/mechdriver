@@ -110,7 +110,7 @@ def anharmonic_frequencies(file_name):
 
 
 def anharmonicity_matrix(file_name):
-    """ adds anharmonic frequencies extension, if missing
+    """ adds anharmonicity maxtrix extension, if missing
     """
     return _add_extension(file_name, Extension.ANHARMONICITY_MATRIX)
 

@@ -37,6 +37,7 @@ class DataFile():
     def write(self, val, dir_pth):
         """ write data to this file
         """
+        print(dir_pth)
         assert os.path.exists(dir_pth)
         pth = self.path(dir_pth)
         val_str = self.writer_(val)

@@ -117,6 +117,15 @@ def harmonic_frequencies(file_prefix):
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)
 
 
+def anharmonicity_matrix(file_prefix):
+    """ generate anharmonicity matrix DataFile
+    """
+    name = autofile.file.name.anharmonicity_matrix(file_prefix)
+    writer_ = autofile.file.write.anharmonicity_matrix
+    reader_ = autofile.file.read.anharmonicity_matrix
+    return model.DataFile(name=name, writer_=writer_, reader_=reader_)
+
+
 def zmatrix(file_prefix):
     """ generate zmatrix DataFile
     """
