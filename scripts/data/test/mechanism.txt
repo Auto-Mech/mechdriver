@@ -3,7 +3,8 @@ C H O
 END    
 
 SPECIES  
-H2O2    H     H2     OH      H2O     CO   !   HCO            
+H2O2  H2O
+!H2O2    H     H2     OH      H2O     CO   !   HCO            
 END
 
 THERMO ALL     300.000  1000.000  5000.000  

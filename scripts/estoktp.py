@@ -22,6 +22,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 # MECHANISM_NAME = 'ch4+nh2'  # options: syngas, natgas, heptane
 MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane
+#MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas
 # MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas
 
@@ -37,46 +38,63 @@ PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                  "messpf pf.inp build.out >> stdout.log &> stderr.log")
 RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                    "mess build.inp build.out >> stdout.log &> stderr.log")
-NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                   "cp ../PF/build.out pf.dat\n"
-                   "cp /tcghome/sjklipp/PACC/nasa/new.groups .\n"
-                   "python /tcghome/sjklipp/PACC/nasa/makepoly.py"
-                   " >> stdout.log &> stderr.log")
+#NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+#                   "cp ../PF/build.out pf.dat\n"
+#                   "cp /tcghome/sjklipp/PACC/nasa/new.groups .\n"
+#                   "python /tcghome/sjklipp/PACC/nasa/makepoly.py"
+#                   " >> stdout.log &> stderr.log")
 
 # b. Electronic structure parameters; code, method, basis, convergence control
 
 # use reference to determine starting geometries, which are used to define
 # z-matrices also used for reference geometries in HL calculations
-REF_LEVEL = ['wb97xd', '6-31g*']
+LL_METHOD_REF = 'wb97xd'
+LL_BASIS_REF = '6-31g*'
 
-# use indices to easily choose between a set of standard opts to call
-IDX_OPTS = [0, 3]
+
+# code is designed to run
+# (i) an arbitrary number of low level optimizations
+# (ii) an arbitrary number of high level energies at geometries corresponding to a single reference method
+# the code presumes that the optimizations for the reference method already exist
+# the low level optimizations are used to determine the temperature dependence of the partition functions
+# the high level energies are used to determine the energy part of the 0 K Heat of formation
+# the latter requires the specification of some reference species and reference Heats of formation
 # set up standard prog, method, basis for opts
 
-OPT_LEVELS = []
-OPT_LEVELS.append(['psi4', 'wb97xd', '6-31g*'])
-# OPT_LEVELS.append(['psi4', 'wb97xd', 'cc-pVTZ'])
-# OPT_LEVELS.append(['psi4', 'b2plypd3', 'cc-pVTZ'])
-# OPT_LEVELS.append(['psi4', 'wb97xd', 'cc-pVTZ'])
-# OPT_LEVELS.append(['psi4', 'm062x', 'cc-pVTZ'])
-# OPT_LEVELS.append(['psi4', 'b3lyp', '6-31g*'])
-RUN_OPT_LEVELS = [OPT_LEVELS[0]]
+RUN_OPT_LEVELS = []
+RUN_OPT_LEVELS.append(['g09', 'wb97xd', '6-31g*'])
+# RUN_OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ'])
+# RUN_OPT_LEVELS.append(['g09', 'b2plypd3', 'cc-pVTZ'])
+# RUN_OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ'])
+# RUN_OPT_LEVELS.append(['g09', 'm062x', 'cc-pVTZ'])
+# RUN_OPT_LEVELS.append(['g09', 'b3lyp', '6-31g*'])
 
 # set up a set of standard hl methods
-HIGH_LEVEL_REF = ['wb97xd', '6-31g*']
-HIGH_LEVELS = []
-HIGH_LEVELS.append(['psi4', 'mp2', 'cc-pVTZ'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'cc-pVTZ'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'cc-pVQZ'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'cc-pV5Z'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)-F12', 'cc-pVDZ-F12'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)-F12', 'cc-pVTZ-F12'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)-F12', 'cc-pVQZ-F12'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'aug-cc-pVDZ'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'aug-cc-pVTZ'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'aug-cc-pVQZ'])
-# HIGH_LEVELS.append(['psi4', 'CCSD(T)', 'aug-cc-pV5Z'])
-RUN_HIGH_LEVELS = [HIGH_LEVELS[0]]
+HL_METHOD_REF = 'wb97xd'
+HL_BASIS_REF = '6-31g*'
+RUN_HIGH_LEVELS = []
+#RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVTZ'])
+RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVDZ'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVQZ'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pV5Z'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVDZ-F12'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVTZ-F12'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVQZ-F12'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVDZ'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVTZ'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVQZ'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pV5Z'])
+
+PF_LEVELS = []
+PF_LEVELS.append([['wb97xd', '6-31g*'], ['wb97xd', '6-31g*'], ['wb97xd', '6-31g*']])
+# PF_LEVELS contains the elec. struc. levels for the harmonic, torsional, and anharmonic analyses
+#HAR_LEVELS = []
+#HAR_LEVELS.append(['wb97xd','6-31g*'])
+#TORS = []
+#TORS.append(['wb97xd','6-31g*'])
+#ANH_LEVELS = []
+#ANH_LEVELS.append(['wb97xd','6-31g*'])
 
 # c. What type of electronic structure calculations to run
 RUN_SPECIES_QCHEM = True
@@ -85,7 +103,7 @@ RUN_TS_KICKS_QCHEM = True
 RUN_VDW_QCHEM = True
 
 RUN_INI_GEOM = True
-RUN_REMOVE_IMAG = True
+RUN_REMOVE_IMAG = False
 
 KICKOFF_SADDLE = True
 
@@ -93,8 +111,10 @@ RUN_CONF_SAMP = True
 RUN_CONF_OPT = True
 RUN_MIN_GRAD = True
 RUN_MIN_HESS = True
+RUN_MIN_VPT2 = False
 RUN_CONF_GRAD = True
 RUN_CONF_HESS = True
+RUN_CONF_VPT2 = False
 
 RUN_CONF_SCAN = True
 RUN_CONF_SCAN_GRAD = False
@@ -112,14 +132,14 @@ RUN_HL_MIN_ENE = True
 
 # setting these to true turns on corresponding run for min, conf, conf_scan,
 # and tau
-RUN_GRAD = True
-RUN_HESS = True
+RUN_GRAD = False
 if RUN_GRAD:
     RUN_MIN_GRAD = True
     RUN_CONF_GRAD = True
     RUN_CONF_SCAN_GRAD = True
     RUN_TAU_GRAD = True
 
+RUN_HESS = False
 if RUN_HESS:
     RUN_MIN_HESS = True
     RUN_CONF_HESS = True
@@ -158,16 +178,21 @@ NSAMP_VDW_PAR = [NSAMP_VDW_EXPR, NSAMP_VDW_A, NSAMP_VDW_B, NSAMP_VDW_C,
                  NSAMP_VDW_D, NSAMP_VDW]
 
 # e. What to run for thermochemical kinetics
-RUN_SPECIES_PF = False
-RUN_SPECIES_THERMO = False
+RUN_SPECIES_THERMO = True
+SPECIES_MODELS = [['1DHR', 'HARM']]
+#SPECIES_MODELS = [['RRHO', 'HARM']]
+#SPECIES_MODELS = [['RRHO', 'HARM'], ['1DHR', 'HARM']]
+#SPECIES_MODELS = [['1DHR', 'HARM']]
+# The first component specifies the torsional model - TORS_MODEL.
+# It can take 'RIGID', '1DHR', or 'TAU'
+# The second component specifies the vibrational model - VIB_MODEL.
+# It can take 'HARM', or 'VPT2' values.
 RUN_REACTIONS_RATES = False
 RUN_VDW_RCT_RATES = False
 RUN_VDW_PRD_RATES = False
 
 # f. Partition function parameters
 TAU_PF_WRITE = True
-SPECIES_RRHO_STR = {}
-SPECIES_HR_STR = {}
 
 # Defaults
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
@@ -203,12 +228,12 @@ ELC_DEG_DCT = {
     ('InChI=1S/NO/c1-2', 2): [[0., 2], [123.1, 2]],
     ('InChI=1S/O2/c1-2', 1): [[0., 2]]
 }
-REF_REF = ['[H],[H]', 'C', 'O', 'N']
-CHG_REF = [0, 0, 0, 0]
-MULT_REF = [1, 1, 1, 1]
 
-ELC_SIG_LST = {'InChI=1S/CN/c1-2'}
-# add CCH to this list
+ELC_SIG_LST = {'InChI=1S/CN/c1-2', 'InChI=1S/C2H/c1-2/h1H'}
+#SMILES_TEST = '[C]#C'
+#for smiles in SMILES_TEST:
+#    ICH_TEST = (automol.convert.smiles.inchi(SMILES_TEST))
+#    print(SMILES_TEST, ICH_TEST)
 
 # 2. create run and save directories
 RUN_PREFIX = 'run'
@@ -226,29 +251,37 @@ MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
 SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
 
 # 4. process species data from the mechanism file
+# Also add in basis set species
 
 SPC_TAB['charge'] = 0
 SMI_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['smiles']))
-# SMI_DCT['REF_H2'] = '[H][H]'
+SMI_DCT['REF_H2'] = '[H][H]'
 SMI_DCT['REF_CH4'] = 'C'
 SMI_DCT['REF_H2O'] = 'O'
 SMI_DCT['REF_NH3'] = 'N'
 CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
-# CHG_DCT['REF_H2'] = 0
+CHG_DCT['REF_H2'] = 0
 CHG_DCT['REF_CH4'] = 0
 CHG_DCT['REF_H2O'] = 0
 CHG_DCT['REF_NH3'] = 0
 MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
-# MUL_DCT['REF_H2'] = 1
+MUL_DCT['REF_H2'] = 1
 MUL_DCT['REF_CH4'] = 1
 MUL_DCT['REF_H2O'] = 1
 MUL_DCT['REF_NH3'] = 1
 SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
 SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
-# SPC_NAMES += ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
-# SPC_NAMES += ('REF_CH4', 'REF_H2O', 'REF_NH3')
+# You need one species reference for each element in the set of references and species
+SPC_REF_NAMES = ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
+SPC_REF_FORMULAE = []
+for ref_name in SPC_REF_NAMES:
+    smi = SMI_DCT[ref_name]
+    SPC_REF_FORMULAE.append(thermo.util.inchi_formula(automol.smiles.inchi(smi)))
+SPC_NAMES += SPC_REF_NAMES
 print('SPC_NAMES')
 print(SPC_NAMES)
+
+species_str = {}
 
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 print(GEOM_PATH)
@@ -268,8 +301,8 @@ if RUN_SPECIES_QCHEM:
         chg = CHG_DCT[name]
         mul = MUL_DCT[name]
         orb_restr = moldr.util.orbital_restriction(mul, RESTRICT_OPEN_SHELL)
-        method_ref = REF_LEVEL[0]
-        basis_ref = REF_LEVEL[1]
+        method_ref = LL_METHOD_REF
+        basis_ref = LL_BASIS_REF
         for prog, method, basis in RUN_OPT_LEVELS:
             # theory
             SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
@@ -304,7 +337,6 @@ if RUN_SPECIES_QCHEM:
 
             if RUN_INI_GEOM:
                 geo = moldr.driver.run_initial_geometry_opt(
-                    ich=ich,
                     chg=chg,
                     mul=mul,
                     method=method,
@@ -321,7 +353,6 @@ if RUN_SPECIES_QCHEM:
 
                 if RUN_REMOVE_IMAG:
                     moldr.driver.run_remove_imaginary(
-                        ich=ich,
                         chg=chg,
                         mul=mul,
                         method=method,
@@ -333,13 +364,10 @@ if RUN_SPECIES_QCHEM:
                         overwrite=OVERWRITE,
                         kickoff_backward=KICKOFF_BACKWARD,
                         kickoff_size=KICKOFF_SIZE,
-                        **KWARGS
+                        **KWARGS,
                     )
 
                 moldr.driver.save_initial_geometry(
-                    ich=ich,
-                    chg=chg,
-                    mul=mul,
                     method=method,
                     basis=basis,
                     orb_restr=orb_restr,
@@ -367,7 +395,6 @@ if RUN_SPECIES_QCHEM:
 
                 if RUN_MIN_GRAD:
                     moldr.driver.run_minimum_energy_gradient(
-                        ich=ich,
                         chg=chg,
                         mul=mul,
                         method=method,
@@ -382,7 +409,6 @@ if RUN_SPECIES_QCHEM:
 
                 if RUN_MIN_HESS:
                     moldr.driver.run_minimum_energy_hessian(
-                        ich=ich,
                         chg=chg,
                         mul=mul,
                         method=method,
@@ -396,9 +422,25 @@ if RUN_SPECIES_QCHEM:
                         **KWARGS,
                     )
 
+                if RUN_MIN_VPT2:
+                    moldr.driver.run_minimum_energy_vpt2(
+                        chg=chg,
+                        mul=mul,
+                        method=method,
+                        basis=basis, orb_restr=orb_restr,
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        script_str=SCRIPT_STR,
+                        prog=prog,
+                        overwrite=OVERWRITE,
+                        **KWARGS,
+                    )
+
+                print('thy_paths in conformer scan')
+                print(thy_run_path)
+                print(thy_save_path)
                 if RUN_CONF_SCAN:
                     moldr.driver.hindered_rotor_scans(
-                        ich=ich,
                         chg=chg,
                         mul=mul,
                         method=method,
@@ -415,7 +457,6 @@ if RUN_SPECIES_QCHEM:
 
                 if RUN_CONF_GRAD:
                     moldr.driver.run_conformer_gradients(
-                        ich=ich,
                         chg=chg,
                         mul=mul,
                         method=method,
@@ -431,7 +472,6 @@ if RUN_SPECIES_QCHEM:
 
                 if RUN_CONF_HESS:
                     moldr.driver.run_conformer_hessians(
-                        ich=ich,
                         chg=chg,
                         mul=mul,
                         method=method,
@@ -464,7 +504,6 @@ if RUN_SPECIES_QCHEM:
 
                 if RUN_TAU_GRAD:
                     moldr.driver.run_tau_gradients(
-                        ich=ich,
                         chg=chg,
                         mul=mul,
                         method=method,
@@ -480,7 +519,6 @@ if RUN_SPECIES_QCHEM:
 
                 if RUN_TAU_HESS:
                     moldr.driver.run_tau_hessians(
-                        ich=ich,
                         chg=chg,
                         mul=mul,
                         method=method,
@@ -497,34 +535,42 @@ if RUN_SPECIES_QCHEM:
             if TAU_PF_WRITE:
                 moldr.driver.tau_pf_write(
                     name=name,
-                    ich=ich,
-                    chg=chg,
-                    mul=mul,
-                    method=method,
-                    basis=basis,
-                    orb_restr=orb_restr,
                     save_prefix=thy_save_path,
                     run_grad=RUN_GRAD_PF,
                     run_hess=RUN_HESS_PF,
-                    **KWARGS,
                 )
 
         for prog, method, basis, in RUN_HIGH_LEVELS:
-            SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
-                moldr.util.run_qchem_par(prog))
-            method_ref = HIGH_LEVEL_REF[0]
-            basis_ref = HIGH_LEVEL_REF[1]
+            # get path and geometry for reference method, basis
+            method_ref = HL_METHOD_REF
+            basis_ref = HL_BASIS_REF
+
+            spc_run_fs = autofile.fs.species(RUN_PREFIX)
+            spc_run_fs.leaf.create([ich, chg, mul])
+            spc_run_path = spc_run_fs.leaf.path([ich, chg, mul])
+            spc_save_fs = autofile.fs.species(SAVE_PREFIX)
+            spc_save_fs.leaf.create([ich, chg, mul])
+            spc_save_path = spc_save_fs.leaf.path([ich, chg, mul])
+
+            ref_run_fs = autofile.fs.theory(spc_run_path)
+            ref_run_fs.leaf.create([method_ref, basis_ref, orb_restr])
+            ref_run_path = ref_run_fs.leaf.path([method_ref, basis_ref, orb_restr])
+            ref_save_fs = autofile.fs.theory(spc_save_path)
+            ref_save_fs.leaf.create([method_ref, basis_ref, orb_restr])
+            ref_save_path = ref_save_fs.leaf.path([method_ref, basis_ref, orb_restr])
 
             min_cnf_locs = moldr.util.min_energy_conformer_locators(
-                thy_save_path)
-
-            cnf_run_fs = autofile.fs.conformer(thy_run_path)
+                ref_save_path)
+            cnf_run_fs = autofile.fs.conformer(ref_run_path)
             cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
-
-            cnf_save_fs = autofile.fs.conformer(thy_save_path)
+            cnf_save_fs = autofile.fs.conformer(ref_save_path)
             cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
             min_cnf_geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
-            print('HL test')
+
+            # evaluate the high level energy and save it
+
+            SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
+                moldr.util.run_qchem_par(prog))
             if RUN_HL_MIN_ENE:
                 moldr.driver.run_single_point_energy(
                     geo=min_cnf_geo,
@@ -533,8 +579,8 @@ if RUN_SPECIES_QCHEM:
                     method=method,
                     basis=basis,
                     orb_restr=orb_restr,
-                    run_prefix=thy_run_path,
-                    save_prefix=thy_save_path,
+                    run_prefix=ref_run_path,
+                    save_prefix=ref_save_path,
                     script_str=SCRIPT_STR,
                     prog=prog,
                     overwrite=OVERWRITE,
@@ -543,105 +589,121 @@ if RUN_SPECIES_QCHEM:
 
 # everything through here is converted over
 
-if RUN_SPECIES_PF:
+if RUN_SPECIES_THERMO:
+    # get the high level basis energies 
+    ref_method = HL_METHOD_REF
+    ref_basis = HL_BASIS_REF
+    splen = len(RUN_HIGH_LEVELS)
+    ene_ref = []
+#    reflen = len(SPC_REF_NAMES)
+##    for idx1, name_ref in enumerate(SPC_REF_NAMES):
+#        smi_ref = SMI_DCT[name_ref]
+#        chg_ref = CHG_DCT[name_ref]
+#        mul_ref = MUL_DCT[name_ref]
+#        orb_restr_ref = moldr.util.orbital_restriction(mul_ref, RESTRICT_OPEN_SHELL)
+#
+##        for idx2, _, hl_method, hl_basis, in enumerate(RUN_HIGH_LEVELS):
+#        for _, hl_method, hl_basis, in RUN_HIGH_LEVELS:
+#
+#            # get high level energy from save directory
+#            min_ene = moldr.driver.get_high_level_energy(
+#                ich=ich_ref, chg=chg_ref, mul=mul_ref,
+#                ll_method=ref_method, ll_basis=ref_basis,
+#                ll_orb_restr=orb_restr_ref, hl_method=hl_method,
+#                hl_basis=hl_basis, hl_orb_restr=orb_restr_ref,
+#                save_prefix=SAVE_PREFIX,)
+#            ene_ref.append(min_ene)
+
+#    print('ref energies')
+#    print(ene_ref)
+
+    # generate and store the energies so that the reference energies can be used as needed
+    ene_hl = {}
+    print('Evaluating thermo for following species')
+    print(SPC_NAMES)
     for name in SPC_NAMES:
-        for prog, method, basis in RUN_OPT_LEVELS:
-            # set up species information
-            smi = SMI_DCT[name]
-            ich = automol.smiles.inchi(smi)
-            print("smiles: {}".format(smi), "inchi: {}".format(ich))
-            chg = CHG_DCT[name]
-            mult = MUL_DCT[name]
-            orb_restr = moldr.util.orbital_restriction(
-                mult, RESTRICT_OPEN_SHELL)
-            # read in geometry, hessian and hindered rotor potentials for
-            # minimum energy conformer
-            spc_save_fs = autofile.fs.species(SAVE_PREFIX)
-            spc_save_path = spc_save_fs.leaf.path([ich, chg, mul])
+        # set up species information
+        smi = SMI_DCT[name]
+        ich = automol.smiles.inchi(smi)
+        print("smiles: {}".format(smi), "inchi: {}".format(ich))
+        chg = CHG_DCT[name]
+        mul = MUL_DCT[name]
+        orb_restr = moldr.util.orbital_restriction(
+            mul, RESTRICT_OPEN_SHELL)
 
-            thy_save_fs = autofile.fs.theory(spc_save_path)
-            thy_save_path = thy_save_fs.leaf.path([method, basis, orb_restr])
+        # get and store the high level energies
+        print('name in high level energy routine')
+        print(name)
+        idx = 0
+        for _, hl_method, hl_basis, in RUN_HIGH_LEVELS:
+            min_ene = moldr.driver.get_high_level_energy(
+                ich=ich, chg=chg, mul=mul, ll_method=ref_method,
+                ll_basis=ref_basis, ll_orb_restr=orb_restr,
+                hl_method=hl_method, hl_basis=hl_basis,
+                hl_orb_restr=orb_restr, save_prefix=SAVE_PREFIX,)
+            ene_hl[(name, idx)] = min_ene
+            idx += 1
 
-            min_cnf_locs = moldr.util.min_energy_conformer_locators(
-                thy_save_path)
-            cnf_save_fs = autofile.fs.conformer(thy_save_path)
-            cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+    spc_save_fs = autofile.fs.species(SAVE_PREFIX)
+    for tors_model, vib_model in SPECIES_MODELS:
+    # rot_model = RRHO or 1DHR or MDHR or TAU
+        for har_level, tors_level, vpt2_level in PF_LEVELS:
+            # get the zero-point energy for each species
+            species_zpe = {}
+            for name in SPC_NAMES:
+                smi = SMI_DCT[name]
+                ich = automol.smiles.inchi(smi)
+                print("smiles: {}".format(smi), "inchi: {}".format(ich))
+                chg = CHG_DCT[name]
+                mul = MUL_DCT[name]
+                orb_restr = moldr.util.orbital_restriction(
+                    mul, RESTRICT_OPEN_SHELL)
+                spc_save_fs.leaf.create([ich, chg, mul])
+                spc_save_path = spc_save_fs.leaf.path([ich, chg, mul])
 
-            # I think we need something for if it is none
-            if min_cnf_locs is not None:
-                geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
-                grad = cnf_save_fs.leaf.file.gradient.read(min_cnf_locs)
-                hess = cnf_save_fs.leaf.file.hessian.read(min_cnf_locs)
-                freqs = elstruct.util.harmonic_frequencies(geo, hess)
-                zpe = sum(freqs)*WAVEN2KCAL/2.
-                zma = automol.geom.zmatrix(geo)
-                gra = automol.zmatrix.graph(zma, remove_stereo=True)
-                min_ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
-                cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
-                tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-                coo_dct = automol.zmatrix.coordinates(zma, multi=False)
-                hind_rot_str = ""
-                rotors_str = ""
+                species_zpe[name] = moldr.driver.get_zero_point_energy(
+                    tors_model, vib_model,
+                    har_level, tors_level, vpt2_level,
+                    orb_restr, script_str=PF_SCRIPT_STR,
+                    elec_levels=[[0., 1]], sym_factor=1.,
+                    save_prefix=spc_save_path)
 
-                # prepare axis, group, and projection info
-                scn_save_fs = autofile.fs.scan(cnf_save_path)
-                for tors_name in tors_names:
-                    enes = [scn_save_fs.leaf.file.energy.read(locs) for locs
-                            in scn_save_fs.leaf.existing([[tors_name]])]
-                    enes = numpy.subtract(enes, min_ene)
-                    pot = list(enes*EH2KCAL)
-                    axis = coo_dct[tors_name][1:3]
-                    group = list(
-                        automol.graph.branch_atom_keys(gra, axis[0], axis) -
-                        set(axis))
-                    group = list(numpy.add(group, 1))
-                    axis = list(numpy.add(axis, 1))
-                    sym = 1
-                    hind_rot_str += mess_io.writer.write_rotor_hindered(
-                        group, axis, sym, pot)
-                    rotors_str += projrot_io._write.write_rotors_str(
-                        axis, group)
+            pf_inp_str = {}
+            print('finished zpe')
+            # get the partition function for each species
+            
+            chemkin_poly_strs = ['' for i in range(len(RUN_HIGH_LEVELS))]
+            for name in SPC_NAMES:
+                # set up species information
+                smi = SMI_DCT[name]
+                ich = automol.smiles.inchi(smi)
+                print("smiles: {}".format(smi), "inchi: {}".format(ich))
+                chg = CHG_DCT[name]
+                mul = MUL_DCT[name]
+                orb_restr = moldr.util.orbital_restriction(
+                    mul, RESTRICT_OPEN_SHELL)
+                spc_save_fs.leaf.create([ich, chg, mul])
+                spc_save_path = spc_save_fs.leaf.path([ich, chg, mul])
 
-                print('hind_rot_str test')
-                print(hind_rot_str)
-
-                # Write the string for the ProjRot input
-                COORD_PROJ = 'cartesian'
-                print('grad')
-                print(grad)
-                print('hess')
-                print(hess)
-                projrot_inp_str = projrot_io._write.write_rpht_input(
-                    geo, grad, hess, rotors_str=rotors_str,
-                    coord_proj=COORD_PROJ)
-
-                bld_locs = ['PROJROT', 0]
-                bld_save_fs = autofile.fs.build(thy_save_path)
-                bld_save_fs.leaf.create(bld_locs)
-                path = bld_save_fs.leaf.path(bld_locs)
-                print('Build Path for Partition Functions')
-                print(path)
-                proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
-                with open(proj_file_path, 'w') as proj_file:
-                    proj_file.write(projrot_inp_str)
-
-                moldr.util.run_script(PROJROT_SCRIPT_STR, path)
-
-                rtproj_freqs, _ = projrot_io._read.read_rpht_output(
-                    path+'/RTproj_freq.dat')
-                rthrproj_freqs, _ = projrot_io._read.read_rpht_output(
-                    path+'/hrproj_freq.dat')
-                # the second variable above is the imaginary frequency list
-                print('Projection test')
-                print(rtproj_freqs)
-                print(rthrproj_freqs)
-
-                # set up messpf input
-                elec_levels = [[0., mult]]
-                if (ich, mult) in ELC_DEG_DCT:
-                    elec_levels = ELC_DEG_DCT[(ich, mult)]
                 # to be generalized
-                symfactor = 1.
+                sym_factor = 1.
+                elec_levels = [[0., mul]]
+                if (ich, mul) in ELC_DEG_DCT:
+                    elec_levels = ELC_DEG_DCT[(ich, mul)]
+
+                # cycle through the low levels generating partition functions  for each
+                species_str = moldr.driver.species_block(
+                    tors_model=tors_model,
+                    vib_model=vib_model,
+                    har_level=har_level,
+                    tors_level=tors_level,
+                    vpt2_level=vpt2_level,
+                    orb_restr=orb_restr,
+                    script_str=PROJROT_SCRIPT_STR,
+                    elec_levels=elec_levels,
+                    sym_factor=sym_factor,
+                    save_prefix=spc_save_path,
+                    )
 
                 # create a messpf input file
                 temp_step = TEMP_STEP
@@ -652,174 +714,158 @@ if RUN_SPECIES_PF:
                 print(global_pf_str)
                 species_head_str = 'Species ' + name
                 print(species_head_str)
-                if automol.geom.is_atom(geo):
-                    print('This is an atom')
-                    SPECIES_RRHO_STR[name] = mess_io.writer.write_atom(
-                        name, elec_levels)
-                else:
-                    core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
-                    SPECIES_RRHO_STR[name] = mess_io.writer.write_molecule(
-                        core, rtproj_freqs, zpe, elec_levels,
-                        hind_rot='',
-                        )
-                    pf_rrho_inp_str = '\n'.join(
-                        [global_pf_str, species_head_str,
-                         SPECIES_RRHO_STR[name]])
-                    print(SPECIES_RRHO_STR[name])
+                pf_inp_str[name] = '\n'.join(
+                    [global_pf_str, species_head_str,
+                     species_str])
+                print(species_str)
 
-                    if pot is not None:
-                        SPECIES_HR_STR[name] = mess_io.writer.write_molecule(
-                            core, rthrproj_freqs, zpe, elec_levels,
-                            hind_rot=hind_rot_str,
-                        )
-                    pf_hr_inp_str = '\n'.join(
-                        [global_pf_str, species_head_str,
-                         SPECIES_HR_STR[name]])
-                    print(SPECIES_HR_STR[name])
+                method = tors_level[0]
+                basis = tors_level[1]
 
+                print('method and basis for torsional pf')
+                print(method)
+                print(basis)
+
+                thy_save_fs = autofile.fs.theory(spc_save_path)
+                thy_save_fs.leaf.create([method, basis, orb_restr])
+                thy_save_path = thy_save_fs.leaf.path([method, basis, orb_restr])
                 bld_locs = ['PF', 0]
                 bld_save_fs = autofile.fs.build(thy_save_path)
                 bld_save_fs.leaf.create(bld_locs)
-                path = bld_save_fs.leaf.path(bld_locs)
+                pf_path = bld_save_fs.leaf.path(bld_locs)
                 print('Build Path for Partition Functions')
-                print(path)
+                print(pf_path)
 
-                with open(os.path.join(path, 'pf_rrho.inp'), 'w') as pf_file:
-                    pf_file.write(pf_rrho_inp_str)
-                pf_script_str = PF_SCRIPT_STR.replace('pf.inp', 'pf_rrho.inp')
-                moldr.util.run_script(pf_script_str, path)
+                # run messpf
+                with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
+                    pf_file.write(pf_inp_str[name])
+                moldr.util.run_script(PF_SCRIPT_STR, pf_path)
 
-                if hind_rot_str != '':
-                    pf_1dhr_inp_str = '\n'.join(
-                        [global_pf_str, species_head_str,
-                         SPECIES_HR_STR[name]])
-                    pf_file_path = os.path.join(path, 'pf_1dhr.inp')
-                    with open(pf_file_path, 'w') as pf_file:
-                        pf_file.write(pf_1dhr_inp_str)
+                # prepare NASA polynomials
+                nasa_inp_str = ('nasa')
+                bld_locs = ['NASA_POLY', 0]
+                bld_save_fs.leaf.create(bld_locs)
+                nasa_path = bld_save_fs.leaf.path(bld_locs)
+                print('NASA build path')
+                print(nasa_path)
 
-                    pf_script_str = PF_SCRIPT_STR.replace(
-                        'pf.inp', 'pf_1dhr.inp')
-                    moldr.util.run_script(pf_script_str, path)
+                formula = thermo.util.inchi_formula(ich)
+                print('\nformula:')
+                print(formula)
 
-# AVC: didn't fix this section
-if RUN_SPECIES_THERMO:
-    for name in SPC_NAMES:
-        # set up species information
-        smi = SMI_DCT[name]
-        ich = automol.smiles.inchi(smi)
-        print("smiles: {}".format(smi), "inchi: {}".format(ich))
-        chg = CHG_DCT[name]
-        for prog, method, basis in RUN_OPT_LEVELS:
-            mult = MUL_DCT[name]
-            orb_restr = moldr.util.orbital_restriction(mult, RESTRICT_OPEN_SHELL)
-            # read in geometry, hess and hindered rotor potentials for minimum energy conformer
-            spc_save_path = moldr.util.species_path(ich, chg, mult, SAVE_PREFIX)
-            thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
-            spc_save_path = moldr.util.species_path(ich, chg, mult, SAVE_PREFIX)
-            thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+                # Get atom count dictionary
+                atom_dict = thermo.util.get_atom_counts_dict(formula)
+                print('\natom dict:')
+                print(atom_dict)
 
+                # Get the list of the basis
+                spc_bas = thermo.heatform.get_reduced_basis(SPC_REF_FORMULAE, formula)
+                print('\nbasis:')
+                print(spc_bas)
 
-            bld_locs = ['PF', 0]
-            bld_afs.build.dir.create(thy_save_path, bld_locs)
-            pf_path = bld_afs.build.dir.path(thy_save_path, bld_locs)
-            print('pf build path')
-            print(pf_path)
+                # Get the coefficients for the balanced heat-of-formation eqn
+                coeff = thermo.heatform.calc_coefficients(spc_bas, atom_dict)
+                print('\ncoeff:')
+                print(coeff)
 
-            nasa_inp_str = ('nasa')
-            bld_afs = autofile.fs.build()
-            bld_locs = ['NASA_POLY', 0]
-            bld_afs.build.dir.create(thy_save_path, bld_locs)
-            nasa_path = bld_afs.build.dir.path(thy_save_path, bld_locs)
-            print('NASA build path')
-            print(path)
+                hl_idx = 0
+                h_basis = []
+                for _, hl_method, hl_basis, in RUN_HIGH_LEVELS:
+                    for  name_ref in SPC_REF_NAMES:
+                        smi = SMI_DCT[name_ref]
+                        ich = automol.convert.smiles.inchi(smi)
+                        formula_ref = thermo.util.inchi_formula(ich)
+                        if formula_ref in spc_bas:
+                            # print('indices')
+                            # print(hl_idx)
+                            # print(ene_hl[(name_ref, hl_idx)], species_zpe[name_ref]/EH2KCAL)
+                            tmp = ene_hl[(name_ref, hl_idx)] + species_zpe[name_ref]/EH2KCAL
+                            h_basis.append(tmp)
+                    print('\ne_basis:')
+                    print(h_basis)
 
-            cnf_afs = autofile.fs.conformer()
-            min_cnf_locs = moldr.util.min_energy_conformer_locators(thy_save_path)
-    # I think we need something for if it is none
-            if min_cnf_locs is not None:
-                min_ene = cnf_afs.conf.file.energy.read(thy_save_path, min_cnf_locs)
+                    # Get the 0 K heat of formation
+                    h0form = thermo.heatform.calc_hform_0k(min_ene, h_basis, coeff)
 
-            formula = thermo.util.inchi_formula(ich)
-            print('\nformula:')
-            print(formula)
+                    # need to change back to starting directory after running thermp and pac99 or rest of code is confused
+                    starting_path = os.getcwd()
+                    os.chdir(nasa_path)
 
-            # Get atom count dictionary
-            atom_dict = thermo.util.get_atom_counts_dict(formula)
-            print('\natom dict:')
-            print(atom_dict)
+                    # Write thermp input file
+                    ENTHALPYT = 0.
+                    BREAKT = 1000.
+                    thermo.runner.write_thermp_input(
+                        formula=formula,
+                        deltaH=h0form,
+                        enthalpyT=ENTHALPYT,
+                        breakT=BREAKT,
+                        thermp_file_name='thermp.dat')
 
-            # Get the list of the basis
-            basis = thermo.heatform.select_basis(atom_dict)
-            print('\nbasis:')
-            print(basis)
-
-            # Get the coefficients for the balanced heat-of-formation eqn
-            coeff = thermo.heatform.calc_coefficients(basis, atom_dict)
-            print('\ncoeff:')
-            print(coeff)
-
-            # Get the energy for each of the basis species
-            e_basis = thermo.heatform.get_basis_energy(basis)
-            print('\ne_basis:')
-            print(e_basis)
-
-            # Get the 0 K heat of formation
-            h0form = thermo.heatform.calc_hform_0k(min_ene, e_basis, coeff)
-
-            os.chdir(path)
-
-            # Write thermp input file
-            ENTHALPYT = 0.
-            BREAKT = 1000.
-            thermo.runner.write_thermp_input(
-                    formula=formula,
-                    deltaH=h0form,
-                    enthalpyT=ENTHALPYT,
-                    breakT=BREAKT,
-                    thermp_file_name='thermp.dat')
-
-            PF_TYPES = ['pf_rrho.dat', 'pf_1dhr.dat']
-            for pf_type in PF_TYPES:
-
-                # Run thermp
-                thermo.runner.run_thermp(
+                    # Run thermp
+                    thermo.runner.run_thermp(
                         pf_path=pf_path,
-                        thermp_path=path,
+                        thermp_path=nasa_path,
                         thermp_file_name='thermp.dat',
-                        pf_file_name=pf_type
+                        pf_file_name='pf.dat'
                         )
 
-                # Run pac99
-                print('formula test')
-                print(formula)
-                print(path)
-                FORMULA = 'CH4O'
-                thermo.runner.run_pac99(path, FORMULA)
-#                thermo.runner.run_pac99(path, formula)
+    # cycle through the species generating the ZPEs
+    # cycle through the species generating the partition functions with the correct ZPEs
+    # cycle through the species generating the thermo data and polynomials
+                    # Run pac99
+                    print('formula test')
+                    print(formula)
+                    print(nasa_path)
+    #                FORMULA = 'CH4O'
+    #                thermo.runner.run_pac99(path, FORMULA)
+                    thermo.runner.run_pac99(nasa_path, formula)
 
-                with open(os.path.join(path, 'thermp.out'), 'r') as thermp_outfile:
-                    thermp_out_str = thermp_outfile.read()
+                    with open(os.path.join(nasa_path, 'thermp.out'), 'r') as thermp_outfile:
+                        thermp_out_str = thermp_outfile.read()
 
-                # Get the 298 K heat of formation
-                h298form = thermo.heatform.get_hform_298k_thermp(thermp_out_str)
-                print('\nhform(298 K):')
-                print(h298form)
+#                    # Get the 298 K heat of formation
+#                    h298form = thermo.heatform.get_hform_298k_thermp(thermp_out_str)
+#                    print('\nhform(298 K):')
+#                    print(h298form)
 
-                with open(os.path.join(path, formula+'.o97'), 'r') as pac99_file:
-                    pac99_str = pac99_file.read()
+                    with open(os.path.join(nasa_path, formula+'.c97'), 'r') as pac99_file:
+                        pac99_str = pac99_file.read()
 
-                # Get the pac99 polynomial
-                pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
-                print('\nPAC99 Polynomial:')
-                print(pac99_poly_str)
+                    # Get the pac99 polynomial
+                    pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
+                    print('\nPAC99 Polynomial:')
+                    print(pac99_poly_str)
 
-                # Convert the pac99 polynomial to chemkin polynomial
-                chemkin_poly_str = thermo.nasapoly.convert_pac_to_chemkin(pac99_poly_str)
-                print('\nCHEMKIN Polynomial:')
-                print(chemkin_poly_str)
+                    # Convert the pac99 polynomial to chemkin polynomial
+                    comment_str = '! tors model: {0}\n'.format(tors_model)
+                    comment_str += '! vib model: {0}\n'.format(vib_model)
+                    comment_str += '! har level: {0}\n'.format(har_level)
+                    comment_str += '! tors level: {0}\n'.format(tors_level)
+                    comment_str += '! vpt2 level: {0}\n'.format(vpt2_level)
+                    comment_str += '! hl_method level: {0}\n'.format(hl_method)
+                    comment_str += '! hl_basis level: {0}\n'.format(hl_basis)
 
-                bld_afs.build.file.input.write(nasa_inp_str, thy_save_path, bld_locs)
-                moldr.util.run_script(NASA_SCRIPT_STR, path)
+                    chemkin_poly_str = thermo.nasapoly.convert_pac_to_chemkin(name, atom_dict, comment_str, pac99_poly_str)
+                    print('\nCHEMKIN Polynomial:')
+                    print(chemkin_poly_str)
+                    print(hl_idx)
+                    chemkin_poly_strs[hl_idx] += chemkin_poly_str
+                    
+                    print('starting_path in thermo')
+                    print(starting_path)
+                    os.chdir(starting_path) 
+                    with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
+                        nasa_file.write(chemkin_poly_str)
+                    with open(os.path.join(starting_path, formula+'.ckin'), 'w') as nasa_file:
+                        nasa_file.write(chemkin_poly_str)
+                    hl_idx += 1
+
+            hl_idx = 0
+            for _, hl_method, hl_basis, in RUN_HIGH_LEVELS:
+                with open(os.path.join(starting_path, formula+'.ckin'), 'w') as nasa_file:
+                    nasa_file.write(chemkin_poly_strs[hl_idx])
+                hl_idx += 1
+
 
 # 5. process reaction data from the mechanism file
 RXN_BLOCK_STR = chemkin_io.reaction_block(MECH_STR)
@@ -852,6 +898,9 @@ if RUN_REACTIONS_QCHEM:
 
         # theory
         for prog, method, basis in RUN_OPT_LEVELS:
+            SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
+                moldr.util.run_qchem_par(prog))
+
             ts_orb_restr = moldr.util.orbital_restriction(
                 ts_mul, RESTRICT_OPEN_SHELL)
 
@@ -972,6 +1021,7 @@ if RUN_REACTIONS_QCHEM:
                     rxn_ichs, rxn_chgs, rxn_muls)
                 print(" - The reaction direction is {}"
                       .format('backward' if is_rev else 'forward'))
+
 
                 rxn_run_fs = autofile.fs.reaction(RUN_PREFIX)
                 rxn_run_fs.leaf.create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
@@ -1122,7 +1172,7 @@ if RUN_REACTIONS_QCHEM:
                     moldr.driver.run_tau(
                         zma=zma,
                         chg=chg,
-                        mult=ts_mul,
+                        mul=ts_mul,
                         method=method,
                         basis=basis,
                         orb_restr=orb_restr,
@@ -1132,10 +1182,11 @@ if RUN_REACTIONS_QCHEM:
                         save_prefix=thy_save_path,
                         script_str=SCRIPT_STR,
                         prog=prog,
-                        saddle=True,
                         overwrite=OVERWRITE,
                         **OPT_KWARGS,
                     )
+#                        saddle=True,
+# used to have saddle=True in call, but this is not used. Probably a bug.
 
                     moldr.driver.save_tau(
                         run_prefix=thy_run_path,
@@ -1154,7 +1205,7 @@ if RUN_REACTIONS_QCHEM:
                         moldr.driver.run_scan(
                             zma=zma,
                             chg=chg,
-                            mult=ts_mul,
+                            mul=ts_mul,
                             method=method,
                             basis=basis,
                             orb_restr=orb_restr,
@@ -1163,10 +1214,11 @@ if RUN_REACTIONS_QCHEM:
                             save_prefix=ts_save_path,
                             script_str=SCRIPT_STR,
                             prog=prog,
-                            saddle=True,
                             overwrite=OVERWRITE,
                             **OPT_KWARGS,
                         )
+#                            saddle=True,
+# ??
 
                         moldr.driver.save_scan(
                             run_prefix=ts_run_path,
@@ -1210,7 +1262,7 @@ if RUN_REACTIONS_QCHEM:
                         print(automol.geom.string(geo))
                         print(disp_xyzs)
                         moldr.driver.run_kickoff_saddle(
-                            geo, disp_xyzs, chg, mult, method, basis, orb_restr,
+                            geo, disp_xyzs, chg, mul, method, basis, orb_restr,
                             fwd_run_path, SCRIPT_STR, prog, OVERWRITE,
                             kickoff_size=KICKOFF_SIZE, kickoff_backward=False,
                             opt_cart=True, **OPT_KWARGS)
@@ -1235,7 +1287,7 @@ if RUN_REACTIONS_QCHEM:
                         bwd_save_path = dir_afs.direction.dir.path(thy_save_path, [False])
                         dir_afs.direction.dir.create(thy_save_path, [False])
                         moldr.driver.run_kickoff_saddle(
-                            geo, disp_xyzs, chg, mult, method, basis,
+                            geo, disp_xyzs, chg, mul, method, basis,
                             orb_restr, bwd_run_path, SCRIPT_STR, prog,
                             OVERWRITE, kickoff_size=KICKOFF_SIZE,
                             kickoff_backward=True, **OPT_KWARGS)
@@ -1281,10 +1333,10 @@ if RUN_VDW_QCHEM:
         method = METHOD
         basis = BASIS
         geos = []
-        for ich, chg, mult in zip(ichs, chgs, muls):
-            orb_restr = moldr.util.orbital_restriction(mult, RESTRICT_OPEN_SHELL)
+        for ich, chg, mul in zip(ichs, chgs, muls):
+            orb_restr = moldr.util.orbital_restriction(mul, RESTRICT_OPEN_SHELL)
             geo = moldr.util.reference_geometry(
-                ich, chg, mult, method, basis, orb_restr, SAVE_PREFIX, GEOM_DCT)
+                ich, chg, mul, method, basis, orb_restr, SAVE_PREFIX, GEOM_DCT)
             geos.append(geo)
            
         geo1, geo2 = geos
@@ -1324,7 +1376,7 @@ if RUN_VDW_QCHEM:
                 job=elstruct.Job.OPTIMIZATION,
                 geom=geo,
                 chg=chg,
-                mult=mul,
+                mul=mul,
                 method=method,
                 basis=basis,
                 orb_restr=orb_restr,
@@ -1389,62 +1441,187 @@ if RUN_REACTIONS_RATES:
         energy_trans_section_str = mess_io.writer.write_energy_transfer(
             exp_factor, exp_power, exp_cutoff, eps1, eps2, sig1, sig2, mass1, mass2)
         print(energy_trans_section_str)
-# cycle over reactant and product species
-# check if unimolecular or bimolecular species
-        print('Unimolecular or bimolecular test')
-        indxw = 0
-        indxp = 0
-        if rct_ichs[1]:
-            print(rct_ichs)
-            indxw += 1
-# write W_indxw 
-        else:
-            indxp += 1
-# write P_indxp
-        if prd_ichs[1]:
-            print(prd_ichs)
-            indxw += 1
-# write W_indxw 
-        else:
-            indxp += 1
-# write P_indxp
+        for prog, method, basis in RUN_OPT_LEVELS:
+        # theory
+            SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(prog)
 
-# cycle over vdw Species
-# cycle over transition states
-# for now - have only one TS
+            # a. conformer sampling
 
-#        if reaction_typ = addition:
-# reactants
-#            print(species_str(rct1))
-#            print(species_str(rct2))
-# well
-#            print(species_str(prod1))
-#        if reaction_typ = abstraction:
-# reactants
-#            print(species_str(rct1))
-#            print(species_str(rct2))
-# vdw
-#           for vdw_species in ...
-#                   print(species_str(vdwi))
-# products
-#            print(species_str(prod1))
-#            print(species_str(prod2))
+            rct_block_str = []
+            for i, _ in enumerate(rct_ichs):
+                elec_levels = [[0., mul]]
+                if (ich, mul) in ELC_DEG_DCT:
+                    elec_levels = ELC_DEG_DCT[(ich, mul)]
+                symfactor = 1.
+                orb_restr = moldr.util.orbital_restriction(rct_muls[i], RESTRICT_OPEN_SHELL)
+                spc_save_path = moldr.util.species_path(
+                        rct_ichs[i], rct_chgs[i], rct_muls[i], SAVE_PREFIX)
+                thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+                rct_block_str.append(moldr.driver.species_block(
+                        tors_model=tors_model,
+                        vib_model=vib_model,
+                        har_level=har_level,
+                        tors_level=tors_level,
+                        vpt2_level=vpt2_level,
+                        orb_restr=orb_restr,
+                        script_str=PROJROT_SCRIPT_STR,
+                        elec_levels=elec_levels,
+                        sym_factor=sym_factor,
+                        save_prefix=thy_save_path,
+                        ))
+            indx_well = 0
+            indx_bim = 0
+            if rct_ichs[1]:
+                print(rct_ichs)
+                indx_well += 1
+                reac_lable = 'W{}'.format(indx_well)
 
-#        if reaction_typ = abstraction
-# reactants
-#            print(species_str(rct1))
-#            print(species_str(rct2))
-# vdw
-#            print(species_str(vdw1))
-#            print(species_str(vdw2))
-# products
-#            print(species_str(prod1))
-#            print(species_str(prod2))
-# ts
-        core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
-        molecule_section_str1 = mess_io.writer.write_molecule(
-            core, freqs, zpe, elec_levels, hind_rot='',
-        )
-        print(molecule_section_str1)
+# write W_indxw
+            else:
+                indx_bim += 1
+
+                prd_block_str = []
+                for i, _ in enumerate(prd_ichs):
+                    elec_levels = [[0., mul]]
+                    if (ich, mul) in ELC_DEG_DCT:
+                        elec_levels = ELC_DEG_DCT[(ich, mul)]
+                    symfactor = 1.
+                    orb_restr = moldr.util.orbital_restriction(prd_muls[i], RESTRICT_OPEN_SHELL)
+                    spc_save_path = moldr.util.species_path(
+                            prd_ichs[i], prd_chgs[i], prd_muls[i], SAVE_PREFIX)
+                    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+                    prd_block_str.append(moldr.driver.species_block(
+                            tors_model=tors_model,
+                            vib_model=vib_model,
+                            har_level=har_level,
+                            tors_level=tors_level,
+                            vpt2_level=vpt2_level,
+                            script_str=PROJROT_SCRIPT_STR,
+                            elec_levels=elec_levels,
+                            sym_factor=sym_factor,
+                            save_prefix=thy_save_path,
+                            ))
+
+
+                # theory
+                ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
+                ts_orb_restr = moldr.util.orbital_restriction(ts_mul, RESTRICT_OPEN_SHELL)
+
+                # check direction of reaction
+                rxn_ichs = [rct_ichs, prd_ichs]
+                rxn_chgs = [rct_chgs, prd_chgs]
+                rxn_muls = [rct_muls, prd_muls]
+                rxn_exo = moldr.util.reaction_energy(
+                    SAVE_PREFIX, rxn_ichs, rxn_chgs, rxn_muls, method, basis, RESTRICT_OPEN_SHELL
+                    )
+                print(rxn_exo)
+                if rxn_exo > 0:
+                    rct_ichs, prd_ichs = prd_ichs, rct_ichs
+                    rct_chgs, prd_chgs = prd_chgs, rct_chgs
+                    rct_muls, prd_muls = prd_muls, rct_muls
+                    print('ts search will be performed in reverse direction')
+
+                    # construct the filesystem
+                    rxn_ichs = [rct_ichs, prd_ichs]
+                    rxn_chgs = [rct_chgs, prd_chgs]
+                    rxn_muls = [rct_muls, prd_muls]
+
+                    # set up the filesystem
+                    is_rev = autofile.system.reaction_is_reversed(
+                        rxn_ichs, rxn_chgs, rxn_muls)
+                    rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
+                        rxn_ichs, rxn_chgs, rxn_muls)
+                    print(" - The reaction direction is {}"
+                          .format('backward' if is_rev else 'forward'))
+
+                    rxn_save_path = moldr.util.reaction_path(
+                        rxn_ichs, rxn_chgs, rxn_muls, ts_mul, SAVE_PREFIX)
+                    thy_save_path = moldr.util.theory_path(method, basis, ts_orb_restr, rxn_save_path)
+
+                ts_block_str = []
+                elec_levels = [[0., mul]]
+                symfactor = 1.
+                spc_save_path = moldr.util.species_path(
+                prd_ichs[i], prd_chgs[i], prd_muls[i], SAVE_PREFIX)
+                thy_save_path = moldr.util.theory_path(method, basis, ts_orb_restr, spc_save_path)
+                ts_block_str.append(moldr.driver.species_block(
+                    tors_model=tors_model,
+                    vib_model=vib_model,
+                    har_level=har_level,
+                    tors_level=tors_level,
+                    vpt2_level=vpt2_level,
+                    elec_levels=elec_levels,
+                    orb_restr=orb_restr,
+                    script_str=PROJROT_SCRIPT_STR,
+                    sym_factor=sym_factor,
+                    save_prefix=thy_save_path,
+                    ))
+
+                ts_sadpt_str = mess_io.writer.write_ts_sadpt(ts_label, reac_label, prod_label, ts_data)
+
+#                    ts_sadpt_writer
+                core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
+                molecule_section_str1 = mess_io.writer.write_molecule(
+                    core, freqs, zpe, elec_levels, hind_rot='',
+                )
+                print(molecule_section_str1)
+        #
+        # cycle over reactant and product species
+        # check if unimolecular or bimolecular species
+                print('Unimolecular or bimolecular test')
+                indxw = 0
+                indxp = 0
+                if rct_ichs[1]:
+                    print(rct_ichs)
+                    indxw += 1
+        # write W_indxw 
+                else:
+                    indxp += 1
+        # write P_indxp
+                if prd_ichs[1]:
+                    print(prd_ichs)
+                    indxw += 1
+        # write W_indxw 
+                else:
+                    indxp += 1
+        # write P_indxp
+
+        # cycle over vdw Species
+        # cycle over transition states
+        # for now - have only one TS
+
+        #        if reaction_typ = addition:
+        # reactants
+        #            print(species_str(rct1))
+        #            print(species_str(rct2))
+        # well
+        #            print(species_str(prod1))
+        #        if reaction_typ = abstraction:
+        # reactants
+        #            print(species_str(rct1))
+        #            print(species_str(rct2))
+        # vdw
+        #           for vdw_species in ...
+        #                   print(species_str(vdwi))
+        # products
+        #            print(species_str(prod1))
+        #            print(species_str(prod2))
+
+        #        if reaction_typ = abstraction
+        # reactants
+        #            print(species_str(rct1))
+        #            print(species_str(rct2))
+        # vdw
+        #            print(species_str(vdw1))
+        #            print(species_str(vdw2))
+        # products
+        #            print(species_str(prod1))
+        #            print(species_str(prod2))
+        # ts
+                core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
+                molecule_section_str1 = mess_io.writer.write_molecule(
+                    core, freqs, zpe, elec_levels, hind_rot='',
+                )
+                print(molecule_section_str1)
 
 sys.exit()
