@@ -18,6 +18,7 @@ class FilePrefix():
     GRAD = 'grad'
     HESS = 'hess'
     MIN = 'min'
+    VPT2 = 'vpt2'
 
 
 class FileAttributeName():
@@ -29,9 +30,11 @@ class FileAttributeName():
     GEOM_INFO = 'geometry_info'
     GRAD_INFO = 'gradient_info'
     HESS_INFO = 'hessian_info'
+    VPT2_INFO = 'vpt2_info'
     GEOM_INPUT = 'geometry_input'
     GRAD_INPUT = 'gradient_input'
     HESS_INPUT = 'hessian_input'
+    VPT2_INPUT = 'vpt2_input'
     ENERGY = 'energy'
     GEOM = 'geometry'
     ZMAT = 'zmatrix'
@@ -39,6 +42,7 @@ class FileAttributeName():
     HESS = 'hessian'
     HFREQ = 'harmonic_frequencies'
     TRAJ = 'trajectory'
+    XMAT = 'anharmonicity_matrix'
 
 
 class SeriesAttributeName():
@@ -279,6 +283,31 @@ def tau(prefix):
 
     dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
                                SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
+
+
+def vpt2(prefix):
+    """ construct the vpt2 filesystem
+
+    layers:
+     - trunk (specifiers: [])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
+    """
+    trunk_ds = dir_.vpt2_trunk(prefix)
+
+    vpt2_inf_dfile = file_.information(FilePrefix.VPT2, function=info.run)
+    vpt2_inp_dfile = file_.input_file(FilePrefix.VPT2)
+    xmat_dfile = file_.anharmonicity_matrix(FilePrefix.VPT2)
+
+    trunk_ds.add_data_files({
+        FileAttributeName.VPT2_INFO: vpt2_inf_dfile,
+        FileAttributeName.VPT2_INPUT: vpt2_inp_dfile,
+        FileAttributeName.XMAT: xmat_dfile})
+
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds})
+
     return dir_fs
 
 

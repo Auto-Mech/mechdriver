@@ -138,6 +138,22 @@ def test__single_point():
     assert sp_fs.leaf.file.energy.read(locs) == ref_ene
 
 
+def test__vpt2():
+    """ test autofile.fs.vpt2
+    """
+    prefix = os.path.join(PREFIX, 'vpt2')
+    os.mkdir(prefix)
+
+    vpt2_fs = autofile.fs.vpt2(prefix)
+    print(vpt2_fs.trunk.path())
+
+    ref_xmat = ((1.000, 2.000), (3.000, 4.000))
+    print(vpt2_fs.trunk.file.anharmonicity_matrix.path())
+    vpt2_fs.trunk.create()
+    vpt2_fs.trunk.file.anharmonicity_matrix.write(ref_xmat)
+    assert vpt2_fs.trunk.file.anharmonicity_matrix.read() == ref_xmat
+
+
 def test__scan():
     """ test autofile.fs.scan
     """
@@ -188,14 +204,15 @@ def test__build():
 
 
 if __name__ == '__main__':
-    test__direction()
-    test__species()
-    test__reaction()
-    test__ts()
-    test__theory()
-    test__conformer()
-    test__tau()
-    test__single_point()
-    test__scan()
-    test__run()
-    test__build()
+    # test__direction()
+    # test__species()
+    # test__reaction()
+    # test__ts()
+    # test__theory()
+    # test__conformer()
+    # test__tau()
+    # test__single_point()
+    test__vpt2()
+    # test__scan()
+    # test__run()
+    # test__build()

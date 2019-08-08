@@ -69,6 +69,19 @@ def scan_branch(grids):
     return inf_obj
 
 
+def vpt2_trunk(fermi):
+    """ vpt2 trunk information
+
+    :param fermi: description of fermi resonance treatment
+    :type fermi: str
+    """
+
+    assert isinstance(fermi, str)
+    inf_obj = autofile.info.Info(fermi=fermi)
+    assert autofile.info.matches_function_signature(inf_obj, vpt2_trunk)
+    return inf_obj
+
+
 class RunStatus():
     """ run statuses """
     RUNNING = "running"

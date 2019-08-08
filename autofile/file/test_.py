@@ -275,6 +275,18 @@ def test__lennard_jones_sigma():
     assert numpy.isclose(ref_sig, sig)
 
 
+def test__anharmonicity_matrix():
+    """ test the anharmonicity matrix
+    """
+
+    ref_xmat = ((1.0, 1.0), (1.0, 1.0))
+
+    xmat_file_name = autofile.file.name.anharmonicity_matrix('test')
+    xmat_file_path = os.path.join(TMP_DIR, xmat_file_name)
+    xmat_str = autofile.file.write.anharmonicity_matrix(ref_xmat)
+
+    print(xmat_str)
+
 if __name__ == '__main__':
     # test__energy()
     # test__geometry()
@@ -285,5 +297,6 @@ if __name__ == '__main__':
     # test__information()
     # test__gradient()
     # test__hessian()
-    test__trajectory()
-    test__vmatrix()
+    # test__trajectory()
+    # test__vmatrix()
+    test__anharmonicity_matrix()

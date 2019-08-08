@@ -128,6 +128,13 @@ def generate_new_tau_id():
     return 't'+_random_string_identifier()
 
 
+# vpt2
+def vpt2_trunk():
+    """ vpt2 trunk directory name
+    """
+    return 'VPT2'
+
+
 # reactions
 def reaction_trunk():
     """ reaction trunk directory name
