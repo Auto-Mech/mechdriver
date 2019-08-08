@@ -3,16 +3,22 @@
 import os
 import functools
 import numpy
+import qcelemental
 from qcelemental import constants as qcc
+from qcelemental import periodictable as ptab
+import projrot_io
 import automol
-import moldr
-from moldr import runner
 import elstruct
 import autofile
+import moldr
+from moldr import runner
+import mess_io
 
+WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
+EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def run_initial_geometry_opt(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
         script_str, prog, overwrite, geo_init, **kwargs):
     """ generate initial geometry via optimization from either reference
     geometries or from inchi
@@ -64,7 +70,7 @@ def run_initial_geometry_opt(
 
 
 def run_remove_imaginary(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, script_str, prog,
+        chg, mul, method, basis, orb_restr, run_prefix, script_str, prog,
         overwrite, kickoff_backward=False, kickoff_size=0.1, **kwargs):
     """ if species has an imaginary frequency then find new geometry with all real
     frequencies by making a kick off of the saddlepoint and then reoptimizing
@@ -97,7 +103,7 @@ def run_remove_imaginary(
             **kwargs,
         )
         ret = read_job(job=elstruct.Job.HESSIAN, prefix=thy_run_path)
-        if ret:
+        if ret and len(geo) > 1:
             inf_obj, _, out_str = ret
             prog = inf_obj.prog
             hess = elstruct.reader.hessian(prog, out_str)
@@ -132,7 +138,7 @@ def run_remove_imaginary(
 
 
 def save_initial_geometry(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        method, basis, orb_restr, run_prefix, save_prefix,
         prog):
     """ save the geometry from the initial optimization as a reference geometry
     """
@@ -395,6 +401,8 @@ def run_single_point_energy(
     sp_save_fs.leaf.create([method, basis, orb_restr])
     sp_save_path = sp_save_fs.leaf.path([method, basis, orb_restr])
 
+    print(method)
+    print(prog)
     run_job(
         job='energy',
         script_str=script_str,
@@ -429,7 +437,7 @@ def run_single_point_energy(
 
 
 def run_minimum_energy_gradient(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
         script_str, prog, overwrite, **kwargs):
     """ Find the gradient for the minimum energy conformer
     """
@@ -476,7 +484,7 @@ def run_minimum_energy_gradient(
 
 
 def run_minimum_energy_hessian(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
         script_str, prog, overwrite, **kwargs):
     """ Find the hessian for the minimum energy conformer
     """
@@ -532,8 +540,68 @@ def run_minimum_energy_hessian(
                 freqs, min_cnf_locs)
 
 
+def run_minimum_energy_vpt2(
+        chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        script_str, prog, overwrite, **kwargs):
+    """  Run vpt2 for the minimum energy conformer
+    """
+    cnf_run_fs = autofile.fs.conformer(run_prefix)
+    cnf_save_fs = autofile.fs.conformer(save_prefix)
+
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(save_prefix)
+    if min_cnf_locs:
+        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
+        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+        print('Minimum energy conformer vpt2')
+        run_job(
+            job='vpt2',
+            script_str=script_str,
+            prefix=min_cnf_run_path,
+            geom=geo,
+            chg=chg,
+            mul=mul,
+            method=method,
+            basis=basis,
+            orb_restr=orb_restr,
+            prog=prog,
+            overwrite=overwrite,
+            **kwargs
+        )
+
+        ret = read_job(
+            job='vpt2',
+            prefix=min_cnf_run_path,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+
+            vpt2_dict = elstruct.reader.vpt2(prog, out_str)
+            anh_freqs = vpt2_dict['freqs']
+            anh_zpe = vpt2_dict['zpe']
+            xmat = vpt2_dict['xmat']
+            vibrot_mat = vpt2_dict['vibrot']
+            cent_dist = vpt2_dict['cent_dist']
+
+            print(" - Reading anharmonic data from output...")
+            # replace following with vpt2 information
+#            print(" - Saving hessian...")
+#            print(" - Save path: {}".format(min_cnf_save_path))
+            cnf_save_fs.leaf.file.vpt2_info.write(inf_obj, min_cnf_locs)
+            cnf_save_fs.leaf.file.vpt2_input.write(inp_str, min_cnf_locs)
+            cnf_save_fs.leaf.file.anh_freqs.write(anh_freqs, min_cnf_locs)
+#            cnf_save_fs.leaf.file.zpe.write(zpe, min_cnf_locs)
+#            cnf_save_fs.leaf.file.harmonic_frequencies.write(freqs, min_cnf_locs)
+            cnf_save_fs.leaf.file.anh_freqs.write(anh_freqs, min_cnf_locs)
+            cnf_save_fs.leaf.file.xmat.write(xmat, min_cnf_locs)
+#            cnf_save_fs.leaf.file.vibrot.write(vibrot, min_cnf_locs)
+            cnf_save_fs.leaf.file.cent_dist.write(cent_dist, min_cnf_locs)
+
+
 def run_conformer_gradients(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
         script_str, prog, overwrite, **kwargs):
     """ Determine the gradient for each of the conformers
     """
@@ -581,7 +649,7 @@ def run_conformer_gradients(
 
 
 def run_conformer_hessians(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
         script_str, prog, overwrite, **kwargs):
     """ Determine the hessian for each of the conformers
     """
@@ -635,7 +703,7 @@ def run_conformer_hessians(
 
 # d. hindered rotor scans
 def hindered_rotor_scans(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
         script_str, prog, overwrite, scan_increment=30., **opt_kwargs):
     """ Perform 1d scans over each of the torsional coordinates
     """
@@ -672,6 +740,9 @@ def hindered_rotor_scans(
                 overwrite=overwrite,
                 **opt_kwargs,
             )
+
+            print('min_cnf_save_path in hindered_rotor_scan')
+            print(min_cnf_save_path)
 
             save_scan(
                 run_prefix=min_cnf_run_path,
@@ -893,7 +964,7 @@ def save_tau(run_prefix, save_prefix):
 
 
 def run_tau_gradients(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
         script_str, prog, overwrite, **kwargs):
     """ Determine gradients for all tau dependent optimized geometries
     """
@@ -940,7 +1011,7 @@ def run_tau_gradients(
 
 
 def run_tau_hessians(
-        ich, chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
+        chg, mul, method, basis, orb_restr, run_prefix, save_prefix,
         script_str, prog, overwrite, **kwargs):
     """ Determine hessians for all tau dependent optimized geometries
     """
@@ -986,8 +1057,8 @@ def run_tau_hessians(
 
 
 def tau_pf_write(
-        name, ich, chg, mul, method, basis, orb_restr, save_prefix,
-        run_grad=False, run_hess=False, **kwargs):
+        name, save_prefix,
+        run_grad=False, run_hess=False):
     """ Print out data fle for partition function evaluation 
     """
     cnf_save_fs = autofile.fs.conformer(save_prefix)
@@ -1171,6 +1242,9 @@ def _run_1d_scan(script_str, prefixes,
 def save_scan(run_prefix, save_prefix, coo_names):
     """ save the scans that have been run so far
     """
+    print(run_prefix)
+    print(save_prefix)
+    print(coo_names)
     if len(coo_names) > 1:
         raise NotImplementedError
 
@@ -1181,8 +1255,10 @@ def save_scan(run_prefix, save_prefix, coo_names):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs in scn_run_fs.branch.existing():
-            run_path = scn_run_fs.branch.path(locs)
+#        for locs in scn_run_fs.branch.existing():
+        for locs in scn_run_fs.leaf.existing([coo_names]):
+#            run_path = scn_run_fs.branch.path(locs)
+            run_path = scn_run_fs.leaf.path(locs)
             print("Reading from scan run at {}".format(run_path))
 
             ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=run_path)
@@ -1282,6 +1358,9 @@ def run_job(job, script_str, prefix,
                     print(" - Found running {} job at {}"
                           .format(job, run_path))
                     print(" - Skipping...")
+    if len(geom) == 1:
+        if job == 'HESSIAN' or 'OPTIMIZATION':
+            do_run = False
 
     if do_run:
         # create the run directory
@@ -1361,3 +1440,449 @@ def is_successful_output(out_str, job, prog):
             ret = True
 
     return ret
+
+
+def species_block(
+        tors_model, vib_model, 
+        har_level, tors_level, vpt2_level,
+        orb_restr, script_str,
+        elec_levels=[[0., 1]], sym_factor=1.,
+        save_prefix='spc_save_path'):
+    """ prepare the species input for messpf
+    """
+
+    # prepare the three sets of file systems
+    har_method = har_level[0]
+    har_basis = har_level[1]
+    thy_save_fs = autofile.fs.theory(save_prefix)
+
+    har_save_path = thy_save_fs.leaf.path([har_method, har_basis, orb_restr])
+    har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_save_path)
+    har_cnf_save_fs = autofile.fs.conformer(har_save_path)
+    har_cnf_save_path = har_cnf_save_fs.leaf.path(har_min_cnf_locs)
+
+    tors_method = tors_level[0]
+    tors_basis = tors_level[1]
+    tors_save_path = thy_save_fs.leaf.path([tors_method, tors_basis, orb_restr])
+    tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_save_path)
+    tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
+    tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
+
+    anh_method = vpt2_level[0]
+    anh_basis = vpt2_level[1]
+    anh_save_path = thy_save_fs.leaf.path([anh_method, anh_basis, orb_restr])
+    anh_min_cnf_locs = moldr.util.min_energy_conformer_locators(anh_save_path)
+    anh_cnf_save_fs = autofile.fs.conformer(anh_save_path)
+    anh_cnf_save_path = anh_cnf_save_fs.leaf.path(anh_min_cnf_locs)
+
+# atom case - do as first step in each of other cases
+# pure harmonic case
+    species_str = ''
+    if vib_model == 'HARM' and tors_model == 'RIGID':
+        if har_min_cnf_locs is not None:
+            har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
+            min_ene = har_cnf_save_fs.leaf.file.energy.read(har_min_cnf_locs)
+            if automol.geom.is_atom(har_geo):
+                print('This is an atom')
+                mass = ptab.to_mass(har_geo([0][0]))
+                species_str = mess_io.writer.write_atom(
+                    mass, elec_levels)
+            else:
+                grad = har_cnf_save_fs.leaf.file.gradient.read(har_min_cnf_locs)
+                hess = har_cnf_save_fs.leaf.file.hessian.read(har_min_cnf_locs)
+                freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=True)
+                if automol.geom.is_linear(har_geo):
+                    proj_freqs = freqs[5:]
+                else:
+                   proj_freqs = freqs[6:]
+
+                print('projected freqs including low frequencies')
+                print(freqs)
+                print('projected freqs')
+                print(proj_freqs)
+                zpe = sum(proj_freqs)*WAVEN2KCAL/2.
+                hind_rot_str = ""
+
+                core = mess_io.writer.write_core_rigidrotor(har_geo, sym_factor)
+                species_str = mess_io.writer.write_molecule(
+                    core, proj_freqs, zpe, elec_levels,
+                    hind_rot=hind_rot_str,
+                    )
+        else:
+            species_str = ''
+
+    if vib_model == 'HARM' and tors_model == '1DHR':
+        if har_min_cnf_locs is not None:
+            har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
+            min_ene = har_cnf_save_fs.leaf.file.energy.read(har_min_cnf_locs)
+            print('vib_model = harm, 1dhr, block test')
+            print(har_geo)
+            print(har_min_cnf_locs)
+            print(min_ene)
+            if automol.geom.is_atom(har_geo):
+                print('This is an atom')
+                mass = ptab.to_mass(har_geo([0][0]))
+                species_str = mess_io.writer.write_atom(
+                    mass, elec_levels)
+            else:
+                grad = har_cnf_save_fs.leaf.file.gradient.read(har_min_cnf_locs)
+                hess = har_cnf_save_fs.leaf.file.hessian.read(har_min_cnf_locs)
+                freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
+                # freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=True)
+                print('logic test')
+                print(automol.geom.is_linear(har_geo))
+                hind_rot_str = ""
+                proj_rotors_str = ""
+                print('tors_min_cnf_locs')
+                print(tors_min_cnf_locs)
+
+                if tors_min_cnf_locs is not None:
+                    tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
+                    if automol.geom.is_linear(har_geo):
+                        proj_freqs = freqs[5:]
+                        zpe = sum(proj_freqs)*WAVEN2KCAL/2.
+                    else:
+                        zma = automol.geom.zmatrix(tors_geo)
+                        gra = automol.zmatrix.graph(zma, remove_stereo=True)
+                        tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
+                        coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+
+                        # prepare axis, group, and projection info
+                        scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
+                        print('tors_names')
+                        print(tors_names)
+                        pot = []
+                        for tors_name in tors_names:
+                            enes = [scn_save_fs.leaf.file.energy.read(locs) for locs
+                                    in scn_save_fs.leaf.existing([[tors_name]])]
+                            enes = numpy.subtract(enes, min_ene)
+                            pot = list(enes*EH2KCAL)
+                            axis = coo_dct[tors_name][1:3]
+                            group = list(
+                                automol.graph.branch_atom_keys(gra, axis[0], axis) -
+                                set(axis))
+                            group = list(numpy.add(group, 1))
+                            axis = list(numpy.add(axis, 1))
+                            sym = 1
+                            hind_rot_str += mess_io.writer.write_rotor_hindered(
+                                group, axis, sym, pot)
+                            proj_rotors_str += projrot_io._write.write_rotors_str(
+                                axis, group)
+                        print('hind_rot_str test')
+                        print(hind_rot_str)
+                        print(pot)
+
+                        # Write the string for the ProjRot input
+                        COORD_PROJ = 'cartesian'
+                        projrot_inp_str = projrot_io._write.write_rpht_input(
+                            tors_geo, grad, hess, rotors_str=proj_rotors_str,
+                            coord_proj=COORD_PROJ)
+
+                        bld_locs = ['PROJROT', 0]
+                        bld_save_fs = autofile.fs.build(tors_save_path)
+                        bld_save_fs.leaf.create(bld_locs)
+                        path = bld_save_fs.leaf.path(bld_locs)
+                        print('Build Path for Partition Functions')
+                        print(path)
+                        proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
+                        with open(proj_file_path, 'w') as proj_file:
+                            proj_file.write(projrot_inp_str)
+
+                        moldr.util.run_script(script_str, path)
+
+                        rtproj_freqs, _ = projrot_io._read.read_rpht_output(
+                            path+'/RTproj_freq.dat')
+                        rthrproj_freqs, _ = projrot_io._read.read_rpht_output(
+                            path+'/hrproj_freq.dat')
+                        # the second variable above is the imaginary frequency list
+                        print('Projection test')
+                        print(rtproj_freqs)
+                        print(rthrproj_freqs)
+                        if pot is None:
+                            proj_freqs = rtproj_freqs
+                            zpe = sum(rtproj_freqs)*WAVEN2KCAL/2.
+                        else:
+                            proj_freqs = rthrproj_freqs
+                            zpe = sum(rthrproj_freqs)*WAVEN2KCAL/2.
+
+                    core = mess_io.writer.write_core_rigidrotor(tors_geo, sym_factor)
+                    species_str = mess_io.writer.write_molecule(
+                        core, proj_freqs, zpe, elec_levels,
+                        hind_rot=hind_rot_str,
+                        )
+
+        else:
+            species_str = ''
+
+    if vib_model == 'HARM' and tors_model == 'MDHR':
+        print('HARM and MDHR combination is not yet implemented')
+
+    if vib_model == 'HARM' and tors_model == 'TAU':
+        print('HARM and TAU combination is not yet implemented')
+
+    if vib_model == 'VPT2' and tors_model == 'RIGID':
+        if anh_min_cnf_locs is not None:
+            anh_geo = anh_cnf_save_fs.leaf.file.geometry.read(anh_min_cnf_locs)
+            min_ene = anh_cnf_save_fs.leaf.file.energy.read(anh_min_cnf_locs)
+            if automol.geom.is_atom(anh_geo):
+                print('This is an atom')
+                mass = ptab.to_mass(anh_geo([0][0]))
+                species_str = mess_io.writer.write_atom(
+                    mass, elec_levels)
+            else:
+                hess = anh_cnf_save_fs.leaf.file.hessian.read(anh_min_cnf_locs)
+                freqs = elstruct.util.harmonic_frequencies(anh_geo, hess, project=True)
+                if automol.geom.is_linear(anh_geo):
+                    proj_freqs = freqs[5:]
+                else:
+                    proj_freqs = freqs[6:]
+
+                print('projected freqs including low frequencies')
+                print(freqs)
+                print('projected freqs')
+                print(proj_freqs)
+                zpe = sum(proj_freqs)*WAVEN2KCAL/2.
+                hind_rot_str = ""
+
+                core = mess_io.writer.write_core_rigidrotor(anh_geo, sym_factor)
+                species_str = mess_io.writer.write_molecule(
+                    core, proj_freqs, zpe, elec_levels,
+                    hind_rot=hind_rot_str,
+                    )
+        else:
+            species_str = ''
+        print('VPT2 and RIGID combination is not yet properly implemented')
+
+    if vib_model == 'VPT2' and tors_model == '1DHR':
+        print('VPT2 and 1DHR combination is not yet implemented')
+
+    if vib_model == 'VPT2' and tors_model == 'TAU':
+        print('VPT2 and TAU combination is not yet implemented')
+
+    return species_str
+
+
+def get_high_level_energy(
+        ich, chg, mul, ll_method, ll_basis, ll_orb_restr, hl_method,
+        hl_basis, hl_orb_restr, save_prefix):
+    """ get high level energy at low level optimized geometry
+    """
+
+    print('save_prefix test in get high level energy')
+    print(save_prefix)
+    spc_save_fs = autofile.fs.species(save_prefix)
+    spc_save_fs.leaf.create([ich, chg, mul])
+    spc_save_path = spc_save_fs.leaf.path([ich, chg, mul])
+
+    ll_save_fs = autofile.fs.theory(spc_save_path)
+    ll_save_fs.leaf.create([ll_method, ll_basis, ll_orb_restr])
+    ll_save_path = ll_save_fs.leaf.path([ll_method, ll_basis, ll_orb_restr])
+
+#    min_cnf_locs = moldr.util.min_energy_conformer_locators(
+#        ll_save_path)
+#    cnf_save_fs = autofile.fs.conformer(ll_save_path)
+
+    sp_save_fs = autofile.fs.single_point(ll_save_path)
+    sp_save_fs.leaf.create([hl_method, hl_basis, hl_orb_restr])
+    # read in the high level energy
+
+    min_ene = sp_save_fs.leaf.file.energy.read([hl_method, hl_basis, hl_orb_restr])
+    print('high level energy test')
+    print(min_ene)
+
+    return min_ene
+
+
+def get_zero_point_energy(
+        tors_model, vib_model,
+        har_level, tors_level, vpt2_level,
+        orb_restr, script_str,
+        elec_levels=[[0., 1]], sym_factor=1.,
+        save_prefix='spc_save_path'):
+    """ compute the ZPE including torsional and anharmonic corrections
+    """
+
+    # prepare the three sets of file systems
+    har_method = har_level[0]
+    har_basis = har_level[1]
+    print('save_prefix in get zpe')
+    print(save_prefix)
+    thy_save_fs = autofile.fs.theory(save_prefix)
+
+    har_save_path = thy_save_fs.leaf.path([har_method, har_basis, orb_restr])
+    har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_save_path)
+    har_cnf_save_fs = autofile.fs.conformer(har_save_path)
+
+    tors_method = tors_level[0]
+    tors_basis = tors_level[1]
+    tors_save_path = thy_save_fs.leaf.path([tors_method, tors_basis, orb_restr])
+    tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_save_path)
+    tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
+    tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
+
+    anh_method = vpt2_level[0]
+    anh_basis = vpt2_level[1]
+    anh_save_path = thy_save_fs.leaf.path([anh_method, anh_basis, orb_restr])
+    anh_min_cnf_locs = moldr.util.min_energy_conformer_locators(anh_save_path)
+    anh_cnf_save_fs = autofile.fs.conformer(anh_save_path)
+    anh_cnf_save_path = anh_cnf_save_fs.leaf.path(anh_min_cnf_locs)
+
+    har_zpe = 0.0
+    # get reference harmonic
+    har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
+    if automol.geom.is_atom(har_geo):
+        har_zpe = 0.0
+
+    else:
+        hess = har_cnf_save_fs.leaf.file.hessian.read(har_min_cnf_locs)
+        full_freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
+        freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=True)
+        if automol.geom.is_linear(har_geo):
+            proj_freqs = full_freqs[5:]
+            # proj_freqs = freqs[5:]
+        else:
+            proj_freqs = full_freqs[6:]
+            # proj_freqs = freqs[6:]
+        har_zpe = sum(proj_freqs)*WAVEN2KCAL/2.
+        print('har zpe test')
+        print(full_freqs)
+        print(freqs)
+        print(har_zpe)
+
+    if vib_model == 'HARM' and tors_model == 'RIGID':
+        ret = har_zpe
+
+    if vib_model == 'HARM' and tors_model == '1DHR':
+        # make pf string for 1d rotor
+        # run messpf
+        # read 1d harmonic and torsional ZPEs
+        # modify har_zpe
+
+        hind_rot_str = ""
+
+        if tors_min_cnf_locs is not None:
+            min_ene = tors_cnf_save_fs.leaf.file.energy.read(tors_min_cnf_locs)
+            tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
+            zma = automol.geom.zmatrix(tors_geo)
+            gra = automol.zmatrix.graph(zma, remove_stereo=True)
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
+            tors_zpe_cor = 0.0
+            if tors_names is not None:
+                coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+
+                # prepare axis, group, info
+                scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
+                pot = []
+                for tors_name in tors_names:
+                    enes = [scn_save_fs.leaf.file.energy.read(locs) for locs
+                            in scn_save_fs.leaf.existing([[tors_name]])]
+                    enes = numpy.subtract(enes, min_ene)
+                    pot = list(enes*EH2KCAL)
+                    axis = coo_dct[tors_name][1:3]
+                    group = list(
+                        automol.graph.branch_atom_keys(gra, axis[0], axis) -
+                        set(axis))
+                    group = list(numpy.add(group, 1))
+                    axis = list(numpy.add(axis, 1))
+                    sym = 1
+                    hind_rot_str += mess_io.writer.write_rotor_hindered(
+                        group, axis, sym, pot)
+
+                dummy_freqs = [1000.]
+                dummy_zpe = 0.0
+                core = mess_io.writer.write_core_rigidrotor(tors_geo, sym_factor)
+                print('mess writer in get zpe')
+                print(core)
+                print(elec_levels)
+                print(hind_rot_str)
+                species_str = mess_io.writer.write_molecule(
+                    core, dummy_freqs, dummy_zpe, elec_levels,
+                    hind_rot=hind_rot_str,
+                    )
+
+                # create a messpf input file
+                temp_step = 100.
+                ntemps = 5
+                global_pf_str = mess_io.writer.write_global_pf(
+                    [], temp_step, ntemps, rel_temp_inc=0.001,
+                    atom_dist_min=0.6)
+                species_head_str = 'Species ' + ' Tmp'
+                pf_inp_str = '\n'.join(
+                    [global_pf_str, species_head_str,
+                     species_str])
+
+                bld_locs = ['PF', 0]
+                bld_save_fs = autofile.fs.build(tors_save_path)
+                bld_save_fs.leaf.create(bld_locs)
+                pf_path = bld_save_fs.leaf.path(bld_locs)
+
+                # run messpf
+                with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
+                    pf_file.write(pf_inp_str)
+                moldr.util.run_script(script_str, pf_path)
+
+                with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
+                    output_string = mess_file.read()
+
+                # Read the freqs and zpes
+                tors_freqs = mess_io.reader.tors.read_freqs(output_string)
+                tors_zpes = mess_io.reader.tors.read_zpes(output_string)
+                tors_zpe_cor = 0.0
+                print('tors zpe test')
+                for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
+                    tors_zpe_cor += tors_1dhr_zpe - tors_freq*WAVEN2KCAL/2
+                    print(tors_1dhr_zpe, tors_freq, tors_freq*WAVEN2KCAL/2)
+
+                # read torsional harmonic zpe and actual zpe
+
+            zpe = har_zpe + tors_zpe_cor
+            print (zpe,har_zpe,tors_zpe_cor)
+        ret = zpe
+
+    if vib_model == 'HARM' and tors_model == 'MDHR':
+        print('HARM and MDHR combination is not yet implemented')
+
+    if vib_model == 'HARM' and tors_model == 'TAU':
+        print('HARM and TAU combination is not yet implemented')
+
+    if vib_model == 'VPT2' and tors_model == 'RIGID':
+        if anh_min_cnf_locs is not None:
+            anh_geo = anh_cnf_save_fs.leaf.file.geometry.read(anh_min_cnf_locs)
+            min_ene = anh_cnf_save_fs.leaf.file.energy.read(anh_min_cnf_locs)
+            if automol.geom.is_atom(anh_geo):
+                print('This is an atom')
+                mass = ptab.to_mass(anh_geo([0][0]))
+                species_str = mess_io.writer.write_atom(
+                    mass, elec_levels)
+            else:
+                hess = anh_cnf_save_fs.leaf.file.hessian.read(anh_min_cnf_locs)
+                freqs = elstruct.util.harmonic_frequencies(anh_geo, hess, project=True)
+                if automol.geom.is_linear(anh_geo):
+                    proj_freqs = freqs[5:]
+                else:
+                    proj_freqs = freqs[6:]
+
+                print('projected freqs including low frequencies')
+                print(freqs)
+                print('projected freqs')
+                print(proj_freqs)
+                zpe = sum(proj_freqs)*WAVEN2KCAL/2.
+                hind_rot_str = ""
+
+                core = mess_io.writer.write_core_rigidrotor(anh_geo, sym_factor)
+                species_str = mess_io.writer.write_molecule(
+                    core, proj_freqs, zpe, elec_levels,
+                    hind_rot=hind_rot_str,
+                    )
+        else:
+            species_str = ''
+        print('VPT2 and RIGID combination is not yet properly implemented')
+
+    if vib_model == 'VPT2' and tors_model == '1DHR':
+        print('VPT2 and 1DHR combination is not yet implemented')
+
+    if vib_model == 'VPT2' and tors_model == 'TAU':
+        print('VPT2 and TAU combination is not yet implemented')
+
+    return ret
+
