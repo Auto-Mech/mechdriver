@@ -14,9 +14,9 @@ def run_qchem_par(prog):
     """
 
     if prog == 'g09':
-        script_str = ("#!/usr/bin/env bash\n"
+        sp_script_str = ("#!/usr/bin/env bash\n"
                       "g09 run.inp run.out >> stdout.log &> stderr.log")
-        opt_script_str = script_str
+        opt_script_str = sp_script_str
         kwargs = {
             'memory': 20,
             'machine_options': ['%NProcShared=10'],
@@ -43,14 +43,14 @@ def run_qchem_par(prog):
         }
 
     if prog == 'psi4':
-        script_str = ("#!/usr/bin/env bash\n"
+        sp_script_str = ("#!/usr/bin/env bash\n"
                       "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
-        opt_script_str = script_str
+        opt_script_str = sp_script_str
         kwargs = {}
         opt_kwargs = {}
 
     if prog == 'molpro':
-        script_str = ("#!/usr/bin/env bash\n"
+        sp_script_str = ("#!/usr/bin/env bash\n"
                       "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = ("#!/usr/bin/env bash\n"
                           "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
@@ -62,42 +62,48 @@ def run_qchem_par(prog):
         }
 
     if prog == 'qchem':
-        script_str = ("#!/usr/bin/env bash\n"
+        sp_script_str = ("#!/usr/bin/env bash\n"
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
-        opt_script_str = script_str
+        opt_script_str = sp_script_str
         kwargs = {
             'memory': 50,
         }
         opt_kwargs = {}
 
     if prog == 'cfour':
-        script_str = ("#!/usr/bin/env bash\n"
+        sp_script_str = ("#!/usr/bin/env bash\n"
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
-        opt_script_str = script_str
+        opt_script_str = sp_script_str
         kwargs = {
             'memory': 50,
         }
         opt_kwargs = {}
 
     if prog == 'orca':
-        script_str = ("#!/usr/bin/env bash\n"
+        sp_script_str = ("#!/usr/bin/env bash\n"
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
-        opt_script_str = script_str
+        opt_script_str = sp_script_str
         kwargs = {
             'memory': 50,
         }
         opt_kwargs = {}
 
-    return script_str, opt_script_str, kwargs, opt_kwargs
+    return sp_script_str, opt_script_str, kwargs, opt_kwargs
 
 
-def orbital_restriction(mul, restrict_open_shell=False):
+def orbital_restriction(species_info, theory_level):
     """ orbital restriction logical
     """
-    if restrict_open_shell:
+    mul = species_info[2]
+    if theory_level[3] == 'RR':
         orb_restr = True
-    else:
-        orb_restr = (mul == 1)
+    elif theory_level[3] == 'UU':
+        orb_restr = False
+    elif theory_level[3] == 'RU':
+        if mul == 1:
+            orb_restr = True
+        else:
+            orb_restr = False
     return orb_restr
 
 
@@ -118,7 +124,7 @@ def geometry_dictionary(geom_path):
     return geom_dct
 
 
-def reference_geometry(ich, chg, mul, method, basis, orb_restr, prefix,
+def reference_geometry(species_info, theory_level, prefix,
                        geom_dct):
     """ obtain reference geometry
     if data for reference method exists use that
@@ -126,17 +132,22 @@ def reference_geometry(ich, chg, mul, method, basis, orb_restr, prefix,
     if nothing else from inchi
     """
     spc_fs = autofile.fs.species(prefix)
-    spc_fs.leaf.create([ich, chg, mul])
-    spc_path = spc_fs.leaf.path([ich, chg, mul])
+    spc_fs.leaf.create(species_info)
+    spc_path = spc_fs.leaf.path(species_info)
+ 
+    orb_restr = orbital_restriction(species_info, theory_level)
+    thy_level = theory_level[1:3]
+    thy_level.append(orb_restr)
 
     thy_fs = autofile.fs.theory(spc_path)
-    thy_fs.leaf.create([method, basis, orb_restr])
-    thy_path = thy_fs.leaf.path([method, basis, orb_restr])
+    thy_fs.leaf.create(thy_level)
+    thy_path = thy_fs.leaf.path(thy_level)
 
-    if thy_fs.leaf.file.geometry.exists([method, basis, orb_restr]):
-        thy_path = thy_fs.leaf.path([method, basis, orb_restr])
+    ich = species_info[0]
+    if thy_fs.leaf.file.geometry.exists(thy_level):
+        thy_path = thy_fs.leaf.path(thy_level)
         print('getting reference geometry from', thy_path)
-        geo = thy_fs.leaf.file.geometry.read([method, basis, orb_restr])
+        geo = thy_fs.leaf.file.geometry.read(thy_level)
     else:
         if ich in geom_dct:
             print('getting reference geometry from geom_dct')
@@ -160,32 +171,27 @@ def min_energy_conformer_locators(save_prefix):
     return min_cnf_locs
 
 
-def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul, method, basis,
-                    restrict_open_shell):
+def reaction_energy(save_prefix, rxn_info, theory_level):
     """ reaction energy """
     rct_ichs, prd_ichs = rxn_ich
     rct_chgs, prd_chgs = rxn_chg
     rct_muls, prd_muls = rxn_mul
     rct_enes = reagent_energies(
-        save_prefix, rct_ichs, rct_chgs, rct_muls, method, basis,
-        restrict_open_shell)
+        save_prefix, rct_info, theory_level)
     prd_enes = reagent_energies(
-        save_prefix, prd_ichs, prd_chgs, prd_muls, method, basis,
-        restrict_open_shell)
+        save_prefix, prd_info, theory_level)
     return sum(prd_enes) - sum(rct_enes)
 
 
-def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, method, basis,
-                     restrict_open_shell):
+def reagent_energies(save_prefix, rgt_infos, theory_level):
     """ reagent energies """
     enes = []
-    for rgt_ich, rgt_chg, rgt_mul in zip(rgt_ichs, rgt_chgs, rgt_muls):
+    for rgt_info in rgt_infos:
         spc_save_fs = autofile.fs.species(save_prefix)
-        spc_save_path = spc_save_fs.leaf.path([rgt_ich, rgt_chg, rgt_mul])
+        spc_save_path = spc_save_fs.leaf.path(rgt_info)
 
-        orb_restr = orbital_restriction(rgt_mul, restrict_open_shell)
         thy_save_fs = autofile.fs.theory(spc_save_path)
-        thy_save_path = thy_save_fs.leaf.path([method, basis, orb_restr])
+        thy_save_path = thy_save_fs.leaf.path(theory_level)
 
         min_cnf_locs = min_energy_conformer_locators(thy_save_path)
         cnf_save_fs = autofile.fs.conformer(thy_save_path)

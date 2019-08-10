@@ -8,6 +8,7 @@ import moldr.optsmat
 
 
 def options_matrix_optimization(script_str, prefix,
+#                                geom, species_info, theory_level, 
                                 geom, chg, mul, method, basis, prog,
                                 errors=(), options_mat=(), feedback=False,
                                 frozen_coordinates=(),
@@ -20,6 +21,7 @@ def options_matrix_optimization(script_str, prefix,
     """
     assert len(errors) == len(options_mat)
 
+#    prog = theory_level[0]
     subrun_fs = autofile.fs.subrun(prefix)
     max_macro_idx, _ = max(subrun_fs.leaf.existing(), default=(-1, -1))
     macro_idx = max_macro_idx + 1
@@ -41,6 +43,8 @@ def options_matrix_optimization(script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 elstruct.writer.optimization, script_str, path,
+#                geom=geom, species_info, theory_level,
+#                basis=basis, frozen_coordinates=frozen_coordinates,
                 geom=geom, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, frozen_coordinates=frozen_coordinates,
                 **kwargs_)
@@ -70,6 +74,7 @@ def options_matrix_optimization(script_str, prefix,
 
 
 def options_matrix_run(input_writer, script_str, prefix,
+#                       geom, species_info, theory_level,
                        geom, chg, mul, method, basis, prog,
                        errors=(), options_mat=(),
                        **kwargs):
@@ -94,6 +99,8 @@ def options_matrix_run(input_writer, script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 input_writer, script_str, path,
+#                geom=geom, species_info, theory_level,
+#                basis=basis, prog=prog, **kwargs_)
                 geom=geom, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, **kwargs_)
 
