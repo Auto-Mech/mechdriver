@@ -90,9 +90,13 @@ class RunStatus():
 
 
 def run(job, prog, method, basis, status, utc_start_time=None,
+#def run(job, theory_level, status, utc_start_time=None,
         utc_end_time=None):
     """ run information
     """
+#    prog = theory_level[0]
+#    method = theory_level[1]
+#    basis = theory_level[2]
     inf_obj = autofile.info.Info(
         job=job,
         prog=prog,
@@ -102,6 +106,8 @@ def run(job, prog, method, basis, status, utc_start_time=None,
         utc_start_time=utc_start_time,
         utc_end_time=utc_end_time,
     )
+    print('inf_obj in run:', inf_obj)
+    print('run in run:', run)
     assert autofile.info.matches_function_signature(inf_obj, run)
     return inf_obj
 
