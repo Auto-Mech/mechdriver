@@ -388,6 +388,7 @@ def run_single_point_energy(
     sp_save_fs.leaf.create(thy_level)
     sp_save_path = sp_save_fs.leaf.path(thy_level)
 
+    print('run_job test:', script_str, sp_run_path, geo, species_info, theory_level, overwrite, kwargs)
     run_job(
         job='energy',
         script_str=script_str,
@@ -493,24 +494,29 @@ def run_minimum_energy_hessian(
         if ret is not None:
             inf_obj, inp_str, out_str = ret
 
-            print(" - Reading hessian from output...")
-            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-            freqs = elstruct.util.harmonic_frequencies(
-                geo, hess, project=False)
-            print('Freqs test')
-            print(freqs)
-            freqs = elstruct.util.harmonic_frequencies(
-                geo, hess, project=True)
-            print('Projected freqs test')
-            print(freqs)
+            if automol.geom.is_atom(geo):
+                freqs = ()
+                print('Freqs test')
+                print(freqs)
+            else:
+                print(" - Reading hessian from output...")
+                hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+                freqs = elstruct.util.harmonic_frequencies(
+                    geo, hess, project=False)
+                print('Freqs test')
+                print(freqs)
+                freqs = elstruct.util.harmonic_frequencies(
+                    geo, hess, project=True)
+                print('Projected freqs test')
+                print(freqs)
 
-            print(" - Saving hessian...")
-            print(" - Save path: {}".format(min_cnf_save_path))
-            cnf_save_fs.leaf.file.hessian_info.write(inf_obj, min_cnf_locs)
-            cnf_save_fs.leaf.file.hessian_input.write(inp_str, min_cnf_locs)
-            cnf_save_fs.leaf.file.hessian.write(hess, min_cnf_locs)
-            cnf_save_fs.leaf.file.harmonic_frequencies.write(
-                freqs, min_cnf_locs)
+                print(" - Saving hessian...")
+                print(" - Save path: {}".format(min_cnf_save_path))
+                cnf_save_fs.leaf.file.hessian_info.write(inf_obj, min_cnf_locs)
+                cnf_save_fs.leaf.file.hessian_input.write(inp_str, min_cnf_locs)
+                cnf_save_fs.leaf.file.hessian.write(hess, min_cnf_locs)
+                cnf_save_fs.leaf.file.harmonic_frequencies.write(
+                    freqs, min_cnf_locs)
 
 
 def run_minimum_energy_vpt2(
@@ -647,19 +653,24 @@ def run_conformer_hessians(
         if ret is not None:
             inf_obj, inp_str, out_str = ret
 
-            print(" - Reading hessian from output...")
-            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-            freqs = elstruct.util.harmonic_frequencies(
-                geo, hess, project=False)
-            print('Conformer Freqs test')
-            print(freqs)
+            if automol.geom.is_atom(geo):
+                freqs = ()
+                print('Freqs test')
+                print(freqs)
+            else:
+                print(" - Reading hessian from output...")
+                hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+                freqs = elstruct.util.harmonic_frequencies(
+                    geo, hess, project=False)
+                print('Conformer Freqs test')
+                print(freqs)
 
-            print(" - Saving hessian...")
-            print(" - Save path: {}".format(cnf_save_path))
-            cnf_save_fs.leaf.file.hessian_info.write(inf_obj, locs)
-            cnf_save_fs.leaf.file.hessian_input.write(inp_str, locs)
-            cnf_save_fs.leaf.file.hessian.write(hess, locs)
-            cnf_save_fs.leaf.file.harmonic_frequencies.write(freqs, locs)
+                print(" - Saving hessian...")
+                print(" - Save path: {}".format(cnf_save_path))
+                cnf_save_fs.leaf.file.hessian_info.write(inf_obj, locs)
+                cnf_save_fs.leaf.file.hessian_input.write(inp_str, locs)
+                cnf_save_fs.leaf.file.hessian.write(hess, locs)
+                cnf_save_fs.leaf.file.harmonic_frequencies.write(freqs, locs)
 
 
 # d. hindered rotor scans
@@ -1283,10 +1294,26 @@ def run_job(
                     print(" - Found running {} job at {}"
                           .format(job, run_path))
                     print(" - Skipping...")
-    if len(geom) == 1:
-        if job == 'HESSIAN' or 'OPTIMIZATION':
-            do_run = False
 
+    # I think the len(geom) test was supposed to stop the call for gradients and hessians for atoms
+    # It didn't work properly for two reasons:
+    # (i) if the geom is passed as a z-matrix, len(geom) is 2 not 1
+    # (ii) it was checking for UPPERCASE job words and its or logic made it always true
+    # (ii) if I fix those problems then if you turn off the optimization, then the conformer directories are not created
+    # which creates evern more problems. For now I just turned these tests off, since gaussians seems to run fine for atom
+    # gradients and hessians, etc.
+#    print('do_run_0 test:', do_run)
+#    print('geom test:',geom)
+#    print(len(geom))
+#    if len(geom) == 1:
+#        print(len(geom))
+#        print(job)
+#        if job in ('hessian', 'optimization', 'gradient', 'vpt2'):
+#            print(job)
+#            do_run = False
+#            print('do_run_1 test:', do_run)
+
+#    print ('do_run test:', do_run)
     if do_run:
         # create the run directory
         status = autofile.system.RunStatus.RUNNING

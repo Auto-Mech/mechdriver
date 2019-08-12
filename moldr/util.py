@@ -173,13 +173,24 @@ def min_energy_conformer_locators(save_prefix):
 
 def reaction_energy(save_prefix, rxn_info, theory_level):
     """ reaction energy """
-    rct_ichs, prd_ichs = rxn_ich
-    rct_chgs, prd_chgs = rxn_chg
-    rct_muls, prd_muls = rxn_mul
+    for rxn_ich, rxn_chg, rxn_mul in rxn_info:
+        rct_ichs, prd_ichs = rxn_ich
+        rct_chgs, prd_chgs = rxn_chg
+        rct_muls, prd_muls = rxn_mul
+    rct_info = zip(rct_ichs, rct_chgs, rct_muls)
+    prd_info = zip(prd_ichs, prd_chgs, prd_muls)
+#    rct_info, prd_info = rxn_info
+#    rct_info = [rct_ichs, rct_chgs, rct_muls]
+#    prd_info = [prd_ichs, prd_chgs, prd_muls]
+    print('rct_info test:', rct_info)
+    print(theory_level)
     rct_enes = reagent_energies(
         save_prefix, rct_info, theory_level)
+    print(rct_enes)
+    print(rct_enes)
     prd_enes = reagent_energies(
         save_prefix, prd_info, theory_level)
+    print(prd_enes)
     return sum(prd_enes) - sum(rct_enes)
 
 
@@ -187,11 +198,15 @@ def reagent_energies(save_prefix, rgt_infos, theory_level):
     """ reagent energies """
     enes = []
     for rgt_info in rgt_infos:
+        print('rgt_info test:', rgt_info)
         spc_save_fs = autofile.fs.species(save_prefix)
         spc_save_path = spc_save_fs.leaf.path(rgt_info)
 
+        orb_restr = orbital_restriction(rgt_info, theory_level)
+        thy_level = theory_level[1:3]
+        thy_level.append(orb_restr)
         thy_save_fs = autofile.fs.theory(spc_save_path)
-        thy_save_path = thy_save_fs.leaf.path(theory_level)
+        thy_save_path = thy_save_fs.leaf.path(thy_level)
 
         min_cnf_locs = min_energy_conformer_locators(thy_save_path)
         cnf_save_fs = autofile.fs.conformer(thy_save_path)
