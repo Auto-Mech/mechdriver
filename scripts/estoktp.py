@@ -558,8 +558,8 @@ if RUN_SPECIES_QCHEM:
                     geo=min_cnf_geo,
                     species_info=species_info[name],
                     theory_level=RUN_HIGH_LEVELS[high_level_idx],
-                    run_prefix=ref_run_path,
-                    save_prefix=ref_save_path,
+                    run_prefix=cnf_run_path,
+                    save_prefix=cnf_save_path,
                     script_str=SP_SCRIPT_STR,
                     overwrite=OVERWRITE,
                     **KWARGS,
@@ -825,22 +825,35 @@ if RUN_REACTIONS_QCHEM:
 
         # determine the transition state multiplicity
         ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
+        ts_chg = sum(rct_chgs)
+        print('ts_chg test:',ts_chg)
+        ts_info = ('', ts_chg, ts_mul)
 
         # theory
-        for prog, method, basis in RUN_OPT_LEVELS:
+        for opt_level_idx, _ in enumerate(RUN_OPT_LEVELS):
+#        for prog, method, basis in RUN_OPT_LEVELS:
+            prog = RUN_OPT_LEVELS[opt_level_idx][0]
             SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
                 moldr.util.run_qchem_par(prog))
 
             ts_orb_restr = moldr.util.orbital_restriction(
-                ts_mul, RESTRICT_OPEN_SHELL)
+                ts_info, RUN_OPT_LEVELS[opt_level_idx])
+            thy_level = RUN_OPT_LEVELS[opt_level_idx][1:3]
+            thy_level.append(orb_restr)
+
+#            ts_orb_restr = moldr.util.orbital_restriction(
+#                ts_mul, RESTRICT_OPEN_SHELL)
 
             # check direction of reaction
             rxn_ichs = [rct_ichs, prd_ichs]
             rxn_chgs = [rct_chgs, prd_chgs]
             rxn_muls = [rct_muls, prd_muls]
+            rxn_info = zip(rxn_ichs, rxn_chgs, rxn_muls)
+            print('rxn_info test:', rxn_info)
             rxn_exo = moldr.util.reaction_energy(
-                SAVE_PREFIX, rxn_ichs, rxn_chgs, rxn_muls, method, basis,
-                RESTRICT_OPEN_SHELL)
+                    SAVE_PREFIX, rxn_info, thy_level)
+#                SAVE_PREFIX, rxn_ichs, rxn_chgs, rxn_muls, method, basis,
+#                RESTRICT_OPEN_SHELL)
             print(rxn_exo)
             if rxn_exo > 0:
                 rct_ichs, prd_ichs = prd_ichs, rct_ichs
@@ -975,6 +988,8 @@ if RUN_REACTIONS_QCHEM:
 
                 moldr.driver.run_scan(
                     zma=ts_zma,
+                        speces_model=species_model,
+                        theory_level=theory_level,
                     chg=0,
                     mul=ts_mul,
                     method=method,
@@ -1023,6 +1038,8 @@ if RUN_REACTIONS_QCHEM:
                     script_str=SCRIPT_STR,
                     prefix=ts_run_path,
                     geom=max_zma,
+                        speces_model=species_model,
+                        theory_level=theory_level,
                     chg=0,
                     mult=ts_mul,
                     method=method,
@@ -1059,12 +1076,8 @@ if RUN_REACTIONS_QCHEM:
                         script_str=SCRIPT_STR,
                         prefix=ts_run_path,
                         geom=geo,
-                        chg=0,
-                        mult=ts_mul,
-                        method=method,
-                        basis=basis,
-                        orb_restr=orb_restr,
-                        prog=prog,
+                        speces_model=species_model,
+                        theory_level=theory_level,
                         overwrite=OVERWRITE,
                         **KWARGS,
                     )
@@ -1089,16 +1102,11 @@ if RUN_REACTIONS_QCHEM:
 
             if RUN_TS_CONF_SAMP:
                 moldr.driver.conformer_sampling(
-                    ich=ich,
-                    chg=chg,
-                    mul=mul,
-                    method=method,
-                    basis=basis,
-                    orb_restr=orb_restr,
+                    speces_model=species_model,
+                    theory_level=theory_level,
                     run_prefix=spc_run_path,
                     save_prefix=spc_save_path,
                     script_str=SCRIPT_STR,
-                    prog=prog,
                     overwrite=OVERWRITE,
                     nsamp_par=NSAMP_CONF_PAR,
                     **OPT_KWARGS,
@@ -1106,43 +1114,33 @@ if RUN_REACTIONS_QCHEM:
 
                 if RUN_TS_MIN_GRAD:
                     moldr.driver.run_minimum_energy_gradient(
-                        chg=chg,
-                        mul=mul,
-                        method=method,
-                        basis=basis, orb_restr=orb_restr,
+                        speces_model=species_model,
+                        theory_level=theory_level,
                         run_prefix=thy_run_path,
                         save_prefix=thy_save_path,
                         script_str=SCRIPT_STR,
-                        prog=prog,
                         overwrite=OVERWRITE,
                         **KWARGS,
                     )
 
                 if RUN_TS_MIN_HESS:
                     moldr.driver.run_minimum_energy_hessian(
-                        chg=chg,
-                        mul=mul,
-                        method=method,
-                        basis=basis,
-                        orb_restr=orb_restr,
+                        speces_model=species_model,
+                        theory_level=theory_level,
                         run_prefix=thy_run_path,
                         save_prefix=thy_save_path,
                         script_str=SCRIPT_STR,
-                        prog=prog,
                         overwrite=OVERWRITE,
                         **KWARGS,
                     )
 
                 if RUN_TS_MIN_VPT2:
                     moldr.driver.run_minimum_energy_vpt2(
-                        chg=chg,
-                        mul=mul,
-                        method=method,
-                        basis=basis, orb_restr=orb_restr,
+                        speces_model=species_model,
+                        theory_level=theory_level,
                         run_prefix=thy_run_path,
                         save_prefix=thy_save_path,
                         script_str=SCRIPT_STR,
-                        prog=prog,
                         overwrite=OVERWRITE,
                         **KWARGS,
                     )
@@ -1161,17 +1159,13 @@ if RUN_REACTIONS_QCHEM:
 
                     moldr.driver.run_tau(
                         zma=zma,
-                        chg=chg,
-                        mul=ts_mul,
-                        method=method,
-                        basis=basis,
-                        orb_restr=orb_restr,
+                        speces_model=species_model,
+                        theory_level=theory_level,
                         nsamp=nsamp,
                         tors_range_dct=tors_range_dct,
                         run_prefix=thy_run_path,
                         save_prefix=thy_save_path,
                         script_str=SCRIPT_STR,
-                        prog=prog,
                         overwrite=OVERWRITE,
                         **OPT_KWARGS,
                     )
