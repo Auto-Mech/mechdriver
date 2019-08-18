@@ -55,10 +55,10 @@ def run_qchem_par(prog):
         opt_script_str = ("#!/usr/bin/env bash\n"
                           "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
         kwargs = {
-            'memory': 50,
+            'memory': 20,
         }
         opt_kwargs = {
-            'memory': 50,
+            'memory': 20,
         }
 
     if prog == 'qchem':
@@ -91,10 +91,10 @@ def run_qchem_par(prog):
     return sp_script_str, opt_script_str, kwargs, opt_kwargs
 
 
-def orbital_restriction(species_info, theory_level):
+def orbital_restriction(spc_info, theory_level):
     """ orbital restriction logical
     """
-    mul = species_info[2]
+    mul = spc_info[2]
     if theory_level[3] == 'RR':
         orb_restr = True
     elif theory_level[3] == 'UU':
@@ -124,7 +124,7 @@ def geometry_dictionary(geom_path):
     return geom_dct
 
 
-def reference_geometry(species_info, theory_level, prefix,
+def reference_geometry(spc_info, theory_level, prefix,
                        geom_dct):
     """ obtain reference geometry
     if data for reference method exists use that
@@ -132,10 +132,10 @@ def reference_geometry(species_info, theory_level, prefix,
     if nothing else from inchi
     """
     spc_fs = autofile.fs.species(prefix)
-    spc_fs.leaf.create(species_info)
-    spc_path = spc_fs.leaf.path(species_info)
+    spc_fs.leaf.create(spc_info)
+    spc_path = spc_fs.leaf.path(spc_info)
  
-    orb_restr = orbital_restriction(species_info, theory_level)
+    orb_restr = orbital_restriction(spc_info, theory_level)
     thy_level = theory_level[1:3]
     thy_level.append(orb_restr)
 
@@ -143,7 +143,7 @@ def reference_geometry(species_info, theory_level, prefix,
     thy_fs.leaf.create(thy_level)
     thy_path = thy_fs.leaf.path(thy_level)
 
-    ich = species_info[0]
+    ich = spc_info[0]
     if thy_fs.leaf.file.geometry.exists(thy_level):
         thy_path = thy_fs.leaf.path(thy_level)
         print('getting reference geometry from', thy_path)
@@ -171,37 +171,48 @@ def min_energy_conformer_locators(save_prefix):
     return min_cnf_locs
 
 
-def reaction_energy(save_prefix, rxn_info, theory_level):
+def nsamp_init(nsamp_par, ntaudof):
+    """ determine nsamp for given species"""
+    if nsamp_par[0]:
+        nsamp = min(nsamp_par[1] + nsamp_par[2] * nsamp_par[3]**ntaudof,
+                    nsamp_par[4])
+    else:
+        nsamp = nsamp_par[5]
+    return nsamp
+
+
+def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul, theory_level):
     """ reaction energy """
-    for rxn_ich, rxn_chg, rxn_mul in rxn_info:
-        rct_ichs, prd_ichs = rxn_ich
-        rct_chgs, prd_chgs = rxn_chg
-        rct_muls, prd_muls = rxn_mul
-    rct_info = zip(rct_ichs, rct_chgs, rct_muls)
-    prd_info = zip(prd_ichs, prd_chgs, prd_muls)
+    rct_ichs, prd_ichs = rxn_ich
+    rct_chgs, prd_chgs = rxn_chg
+    rct_muls, prd_muls = rxn_mul
+#    rct_info = zip(rct_ichs, rct_chgs, rct_muls)
+#    prd_info = zip(prd_ichs, prd_chgs, prd_muls)
 #    rct_info, prd_info = rxn_info
 #    rct_info = [rct_ichs, rct_chgs, rct_muls]
 #    prd_info = [prd_ichs, prd_chgs, prd_muls]
-    print('rct_info test:', rct_info)
+#    print('rct_info test:', rct_info)
     print(theory_level)
     rct_enes = reagent_energies(
-        save_prefix, rct_info, theory_level)
-    print(rct_enes)
+        save_prefix, rct_ichs, rct_chgs, rct_muls, theory_level)
     print(rct_enes)
     prd_enes = reagent_energies(
-        save_prefix, prd_info, theory_level)
+        save_prefix, prd_ichs, prd_chgs, prd_muls, theory_level)
     print(prd_enes)
     return sum(prd_enes) - sum(rct_enes)
 
 
-def reagent_energies(save_prefix, rgt_infos, theory_level):
+def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, theory_level):
     """ reagent energies """
     enes = []
-    for rgt_info in rgt_infos:
-        print('rgt_info test:', rgt_info)
+    for rgt_ich, rgt_chg, rgt_mul in zip(rgt_ichs, rgt_chgs, rgt_muls):
+#    for rgt_info in rgt_infos:
+#        print('rgt_info test:', rgt_info)
         spc_save_fs = autofile.fs.species(save_prefix)
+        rgt_info = [rgt_ich, rgt_chg, rgt_mul]
         spc_save_path = spc_save_fs.leaf.path(rgt_info)
 
+        print('reagent energies test:',rgt_info, theory_level)
         orb_restr = orbital_restriction(rgt_info, theory_level)
         thy_level = theory_level[1:3]
         thy_level.append(orb_restr)

@@ -104,6 +104,7 @@ def conformer(prefix):
     :param prefix: sets the path where this filesystem will sit
     :type prefix: str
     """
+    print('prefix test in conformer:', prefix)
     trunk_ds = dir_.conformer_trunk(prefix)
     leaf_ds = dir_.conformer_leaf(prefix, root_ds=trunk_ds)
 
@@ -339,6 +340,14 @@ def ts(prefix):
     :type prefix: str
     """
     trunk_ds = dir_.ts_trunk(prefix)
+
+    geom_dfile = file_.geometry(FilePrefix.GEOM)
+    ene_dfile = file_.energy(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+    trunk_ds.add_data_files({
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.ZMAT: zmat_dfile})
 
     dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds})
     return dir_fs

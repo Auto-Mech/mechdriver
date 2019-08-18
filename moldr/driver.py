@@ -18,13 +18,13 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def run_initial_geometry_opt(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, geo_init, **kwargs):
     """ generate initial geometry via optimization from either reference
     geometries or from inchi
     """
     # set up the filesystem
-    orb_restr = moldr.util.orbital_restriction(species_info, theory_level)
+    orb_restr = moldr.util.orbital_restriction(spc_info, theory_level)
     thy_level = theory_level[1:3]
     thy_level.append(orb_restr)
 
@@ -44,7 +44,7 @@ def run_initial_geometry_opt(
     run_job(
         job=elstruct.Job.OPTIMIZATION,
         geom=zma,
-        species_info=species_info,
+        spc_info=spc_info,
         theory_level=theory_level,
         prefix=thy_run_path,
         script_str=script_str,
@@ -69,11 +69,11 @@ def run_initial_geometry_opt(
 
 
 def run_check_imaginary(
-        species_info, theory_level, run_prefix, script_str, 
+        spc_info, theory_level, run_prefix, script_str, 
         overwrite, kickoff_backward=False, kickoff_size=0.1, **kwargs):
     """ check if species has an imaginary frequency 
     """
-    orb_restr = moldr.util.orbital_restriction(species_info, theory_level)
+    orb_restr = moldr.util.orbital_restriction(spc_info, theory_level)
     thy_level = theory_level[1:3]
     thy_level.append(orb_restr)
 
@@ -92,8 +92,9 @@ def run_check_imaginary(
         geo = elstruct.reader.opt_geometry(prog, out_str)
         run_job(
             job=elstruct.Job.HESSIAN,
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
+            geom=geo,
             prefix=thy_run_path,
             script_str=script_str,
             overwrite=overwrite,
@@ -124,10 +125,10 @@ def run_check_imaginary(
 
 
 def save_initial_geometry(
-        species_info, theory_level, run_prefix, save_prefix):
+        spc_info, theory_level, run_prefix, save_prefix):
     """ save the geometry from the initial optimization as a reference geometry
     """
-    orb_restr = moldr.util.orbital_restriction(species_info, theory_level)
+    orb_restr = moldr.util.orbital_restriction(spc_info, theory_level)
     thy_level = theory_level[1:3]
     thy_level.append(orb_restr)
 
@@ -153,13 +154,13 @@ def save_initial_geometry(
 
 
 def conformer_sampling(
-        species_info, theory_level, run_prefix, save_prefix,
-        script_str, overwrite, nsamp_par=(False, 3, 3, 1, 50, 50),
+        spc_info, theory_level, run_prefix, save_prefix,
+        script_str, overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
         **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
     """
-    orb_restr = moldr.util.orbital_restriction(species_info, theory_level)
+    orb_restr = moldr.util.orbital_restriction(spc_info, theory_level)
     thy_level = theory_level[1:3]
     thy_level.append(orb_restr)
 
@@ -172,20 +173,21 @@ def conformer_sampling(
     thy_save_path = thy_save_fs.leaf.path(thy_level)
 
     print('Starting conformer sampling')
+    print(run_prefix)
+    print(save_prefix)
+    print(thy_run_path)
+    print(thy_save_path)
+    print(thy_level)
     geo = thy_save_fs.leaf.file.geometry.read(thy_level)
     zma = automol.geom.zmatrix(geo)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
     tors_ranges = automol.zmatrix.torsional_sampling_ranges(
         zma, tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
-    ich = species_info[0]
+    ich = spc_info[0]
     gra = automol.inchi.graph(ich)
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
-    if nsamp_par[0]:
-        nsamp = min(nsamp_par[1] + nsamp_par[2] * nsamp_par[3]**ntaudof,
-                    nsamp_par[4])
-    else:
-        nsamp = nsamp_par[5]
+    nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
 
     save_conformers(
         run_prefix=thy_run_path,
@@ -196,7 +198,7 @@ def conformer_sampling(
 
     run_conformers(
         zma=zma,
-        species_info=species_info,
+        spc_info=spc_info,
         theory_level=theory_level,
         nsamp=nsamp,
         tors_range_dct=tors_range_dct,
@@ -224,7 +226,7 @@ def conformer_sampling(
 
 
 def run_conformers(
-        zma, species_info, theory_level, nsamp, tors_range_dct,
+        zma, spc_info, theory_level, nsamp, tors_range_dct,
         run_prefix, save_prefix, script_str, overwrite,
         **kwargs):
     """ run sampling algorithm to find conformers
@@ -279,7 +281,7 @@ def run_conformers(
                 script_str=script_str,
                 prefix=cnf_run_path,
                 geom=samp_zma,
-                species_info=species_info,
+                spc_info=spc_info,
                 theory_level=theory_level,
                 overwrite=overwrite,
                 **kwargs
@@ -372,11 +374,11 @@ def save_conformers(run_prefix, save_prefix):
 
 # TODO: rewrite this
 def run_single_point_energy(
-        geo, species_info, theory_level, run_prefix, save_prefix,
+        geo, spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, **kwargs):
     """ Find the energy for the minimum energy conformer
     """
-    orb_restr = moldr.util.orbital_restriction(species_info, theory_level)
+    orb_restr = moldr.util.orbital_restriction(spc_info, theory_level)
     thy_level = theory_level[1:3]
     thy_level.append(orb_restr)
 
@@ -388,13 +390,13 @@ def run_single_point_energy(
     sp_save_fs.leaf.create(thy_level)
     sp_save_path = sp_save_fs.leaf.path(thy_level)
 
-    print('run_job test:', script_str, sp_run_path, geo, species_info, theory_level, overwrite, kwargs)
+    print('run_job test:', script_str, sp_run_path, geo, spc_info, theory_level, overwrite, kwargs)
     run_job(
         job='energy',
         script_str=script_str,
         prefix=sp_run_path,
         geom=geo,
-        species_info=species_info,
+        spc_info=spc_info,
         theory_level=theory_level,
         overwrite=overwrite,
         **kwargs,
@@ -419,7 +421,7 @@ def run_single_point_energy(
 
 
 def run_minimum_energy_gradient(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, **kwargs):
     """ Find the gradient for the minimum energy conformer
     """
@@ -437,7 +439,7 @@ def run_minimum_energy_gradient(
             script_str=script_str,
             prefix=min_cnf_run_path,
             geom=geo,
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
             overwrite=overwrite,
             **kwargs,
@@ -462,7 +464,7 @@ def run_minimum_energy_gradient(
 
 
 def run_minimum_energy_hessian(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, **kwargs):
     """ Find the hessian for the minimum energy conformer
     """
@@ -480,7 +482,7 @@ def run_minimum_energy_hessian(
             script_str=script_str,
             prefix=min_cnf_run_path,
             geom=geo,
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
             overwrite=overwrite,
             **kwargs
@@ -520,7 +522,7 @@ def run_minimum_energy_hessian(
 
 
 def run_minimum_energy_vpt2(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, **kwargs):
     """  Run vpt2 for the minimum energy conformer
     """
@@ -538,7 +540,7 @@ def run_minimum_energy_vpt2(
             script_str=script_str,
             prefix=min_cnf_run_path,
             geom=geo,
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
             overwrite=overwrite,
             **kwargs
@@ -576,7 +578,7 @@ def run_minimum_energy_vpt2(
 
 
 def run_conformer_gradients(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, **kwargs):
     """ Determine the gradient for each of the conformers
     """
@@ -595,7 +597,7 @@ def run_conformer_gradients(
             script_str=script_str,
             prefix=cnf_run_path,
             geom=geo,
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
             overwrite=overwrite,
             **kwargs,
@@ -620,7 +622,7 @@ def run_conformer_gradients(
 
 
 def run_conformer_hessians(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, **kwargs):
     """ Determine the hessian for each of the conformers
     """
@@ -639,7 +641,7 @@ def run_conformer_hessians(
             script_str=script_str,
             prefix=cnf_run_path,
             geom=geo,
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
             overwrite=overwrite,
             **kwargs,
@@ -675,7 +677,7 @@ def run_conformer_hessians(
 
 # d. hindered rotor scans
 def hindered_rotor_scans(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, scan_increment=30., **opt_kwargs):
     """ Perform 1d scans over each of the torsional coordinates
     """
@@ -699,7 +701,7 @@ def hindered_rotor_scans(
         for tors_name, tors_grid in zip(tors_names, tors_grids):
             run_scan(
                 zma=zma,
-                species_info=species_info,
+                spc_info=spc_info,
                 theory_level=theory_level,
                 grid_dct={tors_name: tors_grid},
                 run_prefix=min_cnf_run_path,
@@ -720,11 +722,11 @@ def hindered_rotor_scans(
 
 
 def tau_sampling(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, nsamp_par, **opt_kwargs):
     """ Sample over torsions optimizing all other coordinates
     """
-    orb_restr = moldr.util.orbital_restriction(species_info, theory_level)
+    orb_restr = moldr.util.orbital_restriction(spc_info, theory_level)
     thy_level = theory_level[1:3]
     thy_level.append(orb_restr)
 
@@ -747,18 +749,14 @@ def tau_sampling(
     tors_ranges = automol.zmatrix.torsional_sampling_ranges(
         zma, tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
-    ich = species_info[0]
+    ich = spc_info[0]
     gra = automol.inchi.graph(ich)
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
-    if nsamp_par[0]:
-        nsamp_par = min(nsamp_par[1] + nsamp_par[2] * nsamp_par[3]**ntaudof,
-                        nsamp_par[4])
-    else:
-        nsamp = nsamp_par[5]
+    nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
 
     run_tau(
         zma=zma,
-        species_info=species_info,
+        spc_info=spc_info,
         theory_level=theory_level,
         nsamp=nsamp,
         tors_range_dct=tors_range_dct,
@@ -776,7 +774,7 @@ def tau_sampling(
 
 
 def run_kickoff_saddle(
-        geo, disp_xyzs, species_info, theory_level, run_path,
+        geo, disp_xyzs, spc_info, theory_level, run_path,
         script_str, kickoff_size=0.1, kickoff_backward=False,
         opt_cart=True, **kwargs):
     """ kickoff from saddle to find connected minima
@@ -794,7 +792,7 @@ def run_kickoff_saddle(
     run_job(
         job=elstruct.Job.OPTIMIZATION,
         geom=geom,
-        species_info=species_info,
+        spc_info=spc_info,
         theory_level=theory_level,
         prefix=run_path,
         script_str=script_str,
@@ -804,7 +802,7 @@ def run_kickoff_saddle(
 
 
 def run_tau(
-        zma, species_info, theory_level, nsamp, tors_range_dct,
+        zma, spc_info, theory_level, nsamp, tors_range_dct,
         run_prefix, save_prefix, script_str, overwrite, **kwargs):
     """ run sampling algorithm to find tau dependent geometries
     """
@@ -856,7 +854,7 @@ def run_tau(
                 script_str=script_str,
                 prefix=run_path,
                 geom=samp_zma,
-                species_info=species_info,
+                spc_info=spc_info,
                 theory_level=theory_level,
                 overwrite=overwrite,
                 frozen_coordinates=tors_range_dct.keys(),
@@ -925,7 +923,7 @@ def save_tau(run_prefix, save_prefix):
 
 
 def run_tau_gradients(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, **kwargs):
     """ Determine gradients for all tau dependent optimized geometries
     """
@@ -943,7 +941,7 @@ def run_tau_gradients(
             script_str=script_str,
             prefix=tau_run_path,
             geom=geo,
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
             overwrite=overwrite,
             **kwargs,
@@ -968,7 +966,7 @@ def run_tau_gradients(
 
 
 def run_tau_hessians(
-        species_info, theory_level, run_prefix, save_prefix,
+        spc_info, theory_level, run_prefix, save_prefix,
         script_str, overwrite, **kwargs):
     """ Determine hessians for all tau dependent optimized geometries
     """
@@ -985,7 +983,7 @@ def run_tau_hessians(
             script_str=script_str,
             prefix=tau_run_path,
             geom=geo,
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
             overwrite=overwrite,
             **kwargs,
@@ -1074,7 +1072,7 @@ def tau_pf_write(
 
 
 def run_scan(
-        zma, species_info, theory_level, grid_dct, run_prefix,
+        zma, spc_info, theory_level, grid_dct, run_prefix,
         save_prefix, script_str, overwrite, update_guess=True,
         reverse_sweep=True, **kwargs):
     """ run constrained optimization scan
@@ -1120,7 +1118,7 @@ def run_scan(
         coo_name=coo_name,
         grid_idxs=grid_idxs,
         grid_vals=grid_vals,
-        species_info=species_info,
+        spc_info=spc_info,
         theory_level=theory_level,
         overwrite=overwrite,
         update_guess=update_guess,
@@ -1135,7 +1133,7 @@ def run_scan(
             coo_name=coo_name,
             grid_idxs=list(reversed(grid_idxs)),
             grid_vals=list(reversed(grid_vals)),
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
             overwrite=overwrite,
             update_guess=update_guess,
@@ -1145,7 +1143,7 @@ def run_scan(
 
 def _run_1d_scan(
         script_str, prefixes, guess_zma, coo_name, grid_idxs, grid_vals,
-        species_info, theory_level, overwrite, errors=(),
+        spc_info, theory_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, **kwargs):
     npoints = len(grid_idxs)
     assert len(grid_vals) == len(prefixes) == npoints
@@ -1158,7 +1156,7 @@ def _run_1d_scan(
             script_str=script_str,
             prefix=prefix,
             geom=zma,
-            species_info=species_info,
+            spc_info=spc_info,
             theory_level=theory_level,
             overwrite=overwrite,
             frozen_coordinates=[coo_name],
@@ -1256,7 +1254,7 @@ JOB_RUNNER_DCT = {
 
 def run_job(
         job, script_str, prefix,
-        geom, species_info, theory_level, 
+        geom, spc_info, theory_level, 
         errors=(), options_mat=(), retry_failed=True, feedback=False,
         frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
         **kwargs):
@@ -1265,6 +1263,11 @@ def run_job(
     assert job in JOB_RUNNER_DCT
     assert job in JOB_ERROR_DCT
 
+    print('inside run_job')
+    print('job:', job)
+    print('errors:', errors)
+    print('options_mat:', options_mat)
+    print('kwargs:', kwargs)
     run_fs = autofile.fs.run(prefix)
     run_fs.leaf.create([job])
     run_path = run_fs.leaf.path([job])
@@ -1333,10 +1336,10 @@ def run_job(
                 freeze_dummy_atoms=freeze_dummy_atoms)
 
         print(" - Starting the run...")
-        orb_restr = moldr.util.orbital_restriction(species_info, theory_level)
+        orb_restr = moldr.util.orbital_restriction(spc_info, theory_level)
         inp_str, out_str = runner(
-            script_str, run_path, geom=geom, chg=species_info[1],
-            mul=species_info[2], method=theory_level[1], basis=theory_level[2],
+            script_str, run_path, geom=geom, chg=spc_info[1],
+            mul=spc_info[2], method=theory_level[1], basis=theory_level[2],
             orb_restricted=orb_restr, prog=theory_level[0],
             errors=errors, options_mat=options_mat, **kwargs
         )
@@ -1354,6 +1357,7 @@ def run_job(
         inf_obj.status = status
         run_fs.leaf.file.info.write(inf_obj, [job])
         run_fs.leaf.file.input.write(inp_str, [job])
+        print('finished run_job')
 
 
 def read_job(job, prefix):
@@ -1399,7 +1403,7 @@ def is_successful_output(out_str, job, prog):
 
 
 def species_block(
-        species_info,
+        spc_info,
         tors_model, vib_model, 
         har_level, tors_level, vpt2_level,
         script_str,
@@ -1411,7 +1415,7 @@ def species_block(
 
     # prepare the three sets of file systems
     orb_restr = moldr.util.orbital_restriction(
-        species_info, har_level)
+        spc_info, har_level)
     har_levelp = har_level[1:3]
     har_levelp.append(orb_restr)
 
@@ -1423,7 +1427,7 @@ def species_block(
     har_cnf_save_path = har_cnf_save_fs.leaf.path(har_min_cnf_locs)
 
     orb_restr = moldr.util.orbital_restriction(
-        species_info, tors_level)
+        spc_info, tors_level)
     tors_levelp = tors_level[1:3]
     tors_levelp.append(orb_restr)
 
@@ -1433,7 +1437,7 @@ def species_block(
     tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
 
     orb_restr = moldr.util.orbital_restriction(
-        species_info, vpt2_level)
+        spc_info, vpt2_level)
     vpt2_levelp = vpt2_level[1:3]
     vpt2_levelp.append(orb_restr)
 
@@ -1444,24 +1448,25 @@ def species_block(
 
     # atom case - do as first step in each of other cases
     # pure harmonic case
-    species_str = ''
+    spc_str = ''
     if vib_model == 'HARM' and tors_model == 'RIGID':
         if har_min_cnf_locs is not None:
             har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
             min_ene = har_cnf_save_fs.leaf.file.energy.read(har_min_cnf_locs)
             if automol.geom.is_atom(har_geo):
                 print('This is an atom')
-                mass = ptab.to_mass(har_geo([0][0]))
-                species_str = mess_io.writer.write_atom(
+                mass = ptab.to_mass(har_geo[0][0])
+                spc_str = mess_io.writer.write_atom(
                     mass, elec_levels)
             else:
                 grad = har_cnf_save_fs.leaf.file.gradient.read(har_min_cnf_locs)
                 hess = har_cnf_save_fs.leaf.file.hessian.read(har_min_cnf_locs)
-                freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=True)
+                freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
+#                freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=True)
                 if automol.geom.is_linear(har_geo):
                     proj_freqs = freqs[5:]
                 else:
-                   proj_freqs = freqs[6:]
+                    proj_freqs = freqs[6:]
 
                 print('projected freqs including low frequencies')
                 print(freqs)
@@ -1471,12 +1476,12 @@ def species_block(
                 hind_rot_str = ""
 
                 core = mess_io.writer.write_core_rigidrotor(har_geo, sym_factor)
-                species_str = mess_io.writer.write_molecule(
-                    core, proj_freqs, zpe, elec_levels,
+                spc_str = mess_io.writer.write_molecule(
+                    core, proj_freqs, elec_levels,
                     hind_rot=hind_rot_str,
                     )
         else:
-            species_str = ''
+            spc_str = ''
 
     if vib_model == 'HARM' and tors_model == '1DHR':
         if har_min_cnf_locs is not None:
@@ -1488,8 +1493,8 @@ def species_block(
             print(min_ene)
             if automol.geom.is_atom(har_geo):
                 print('This is an atom')
-                mass = ptab.to_mass(har_geo([0][0]))
-                species_str = mess_io.writer.write_atom(
+                mass = ptab.to_mass(har_geo[0][0])
+                spc_str = mess_io.writer.write_atom(
                     mass, elec_levels)
             else:
                 grad = har_cnf_save_fs.leaf.file.gradient.read(har_min_cnf_locs)
@@ -1573,19 +1578,25 @@ def species_block(
                             zpe = sum(rthrproj_freqs)*WAVEN2KCAL/2.
 
                     core = mess_io.writer.write_core_rigidrotor(tors_geo, sym_factor)
-                    species_str = mess_io.writer.write_molecule(
-                        core, proj_freqs, zpe, elec_levels,
+                    spc_str = mess_io.writer.write_molecule(
+                        core, proj_freqs, elec_levels,
                         hind_rot=hind_rot_str,
                         )
 
         else:
-            species_str = ''
+            spc_str = ''
 
     if vib_model == 'HARM' and tors_model == 'MDHR':
         print('HARM and MDHR combination is not yet implemented')
 
     if vib_model == 'HARM' and tors_model == 'TAU':
         print('HARM and TAU combination is not yet implemented')
+        moldr.driver.tau_pf_write(
+            name=name,
+            save_prefix=thy_save_path,
+            run_grad=run_grad_pf,
+            run_hess=run_hess_pf,
+        )
 
     if vib_model == 'VPT2' and tors_model == 'RIGID':
         if anh_min_cnf_locs is not None:
@@ -1593,8 +1604,8 @@ def species_block(
             min_ene = anh_cnf_save_fs.leaf.file.energy.read(anh_min_cnf_locs)
             if automol.geom.is_atom(anh_geo):
                 print('This is an atom')
-                mass = ptab.to_mass(anh_geo([0][0]))
-                species_str = mess_io.writer.write_atom(
+                mass = ptab.to_mass(anh_geo[0][0])
+                spc_str = mess_io.writer.write_atom(
                     mass, elec_levels)
             else:
                 hess = anh_cnf_save_fs.leaf.file.hessian.read(anh_min_cnf_locs)
@@ -1612,12 +1623,12 @@ def species_block(
                 hind_rot_str = ""
 
                 core = mess_io.writer.write_core_rigidrotor(anh_geo, sym_factor)
-                species_str = mess_io.writer.write_molecule(
-                    core, proj_freqs, zpe, elec_levels,
+                spc_str = mess_io.writer.write_molecule(
+                    core, proj_freqs, elec_levels,
                     hind_rot=hind_rot_str,
                     )
         else:
-            species_str = ''
+            spc_str = ''
         print('VPT2 and RIGID combination is not yet properly implemented')
 
     if vib_model == 'VPT2' and tors_model == '1DHR':
@@ -1625,23 +1636,29 @@ def species_block(
 
     if vib_model == 'VPT2' and tors_model == 'TAU':
         print('VPT2 and TAU combination is not yet implemented')
+        moldr.driver.tau_pf_write(
+            name=name,
+            save_prefix=thy_save_path,
+            run_grad=run_grad_pf,
+            run_hess=run_hess_pf,
+        )
 
-    return species_str
+    return spc_str
 
 
 def get_high_level_energy(
-        species_info, theory_low_level, theory_high_level, save_prefix):
+        spc_info, theory_low_level, theory_high_level, save_prefix):
     """ get high level energy at low level optimized geometry
     """
 
     print('save_prefix test in get high level energy')
     print(save_prefix)
     spc_save_fs = autofile.fs.species(save_prefix)
-    spc_save_fs.leaf.create(species_info)
-    spc_save_path = spc_save_fs.leaf.path(species_info)
+    spc_save_fs.leaf.create(spc_info)
+    spc_save_path = spc_save_fs.leaf.path(spc_info)
 
     orb_restr = moldr.util.orbital_restriction(
-        species_info, theory_low_level)
+        spc_info, theory_low_level)
     thy_low_level = theory_low_level[1:3]
     thy_low_level.append(orb_restr)
 
@@ -1649,13 +1666,25 @@ def get_high_level_energy(
     ll_save_fs.leaf.create(thy_low_level)
     ll_save_path = ll_save_fs.leaf.path(thy_low_level)
 
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(
+        ll_save_path)
+    cnf_save_fs = autofile.fs.conformer(ll_save_path)
+    cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+    min_cnf_geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+
     orb_restr = moldr.util.orbital_restriction(
-        species_info, theory_high_level)
+        spc_info, theory_high_level)
     thy_high_level = theory_high_level[1:3]
     thy_high_level.append(orb_restr)
 
-    sp_save_fs = autofile.fs.single_point(ll_save_path)
+    sp_save_fs = autofile.fs.single_point(cnf_save_path)
     sp_save_fs.leaf.create(thy_high_level)
+
+    print('paths in get_high_level_energy')
+    print(thy_low_level)
+    print(thy_high_level)
+    print(ll_save_path)
+    print(cnf_save_path)
 
     min_ene = sp_save_fs.leaf.file.energy.read(thy_high_level)
     print('high level energy test')
@@ -1665,7 +1694,7 @@ def get_high_level_energy(
 
 
 def get_zero_point_energy(
-        species_info, tors_model, vib_model,
+        spc_info, tors_model, vib_model,
         har_level, tors_level, vpt2_level,
         script_str,
         elec_levels=[[0., 1]], sym_factor=1.,
@@ -1679,7 +1708,7 @@ def get_zero_point_energy(
     thy_save_fs = autofile.fs.theory(save_prefix)
 
     orb_restr = moldr.util.orbital_restriction(
-        species_info, har_level)
+        spc_info, har_level)
     har_levelp = har_level[1:3]
     har_levelp.append(orb_restr)
 
@@ -1688,7 +1717,7 @@ def get_zero_point_energy(
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
 
     orb_restr = moldr.util.orbital_restriction(
-        species_info, tors_level)
+        spc_info, tors_level)
     tors_levelp = tors_level[1:3]
     tors_levelp.append(orb_restr)
 
@@ -1698,7 +1727,7 @@ def get_zero_point_energy(
     tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
 
     orb_restr = moldr.util.orbital_restriction(
-        species_info, vpt2_level)
+        spc_info, vpt2_level)
     vpt2_levelp = vpt2_level[1:3]
     vpt2_levelp.append(orb_restr)
 
@@ -1708,10 +1737,12 @@ def get_zero_point_energy(
     anh_cnf_save_path = anh_cnf_save_fs.leaf.path(anh_min_cnf_locs)
 
     har_zpe = 0.0
+    is_atom = False
     # get reference harmonic
     har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
     if automol.geom.is_atom(har_geo):
         har_zpe = 0.0
+        is_atom = True
 
     else:
         hess = har_cnf_save_fs.leaf.file.hessian.read(har_min_cnf_locs)
@@ -1775,8 +1806,8 @@ def get_zero_point_energy(
                 print(core)
                 print(elec_levels)
                 print(hind_rot_str)
-                species_str = mess_io.writer.write_molecule(
-                    core, dummy_freqs, dummy_zpe, elec_levels,
+                spc_str = mess_io.writer.write_molecule(
+                    core, dummy_freqs, elec_levels,
                     hind_rot=hind_rot_str,
                     )
 
@@ -1786,10 +1817,10 @@ def get_zero_point_energy(
                 global_pf_str = mess_io.writer.write_global_pf(
                     [], temp_step, ntemps, rel_temp_inc=0.001,
                     atom_dist_min=0.6)
-                species_head_str = 'Species ' + ' Tmp'
+                spc_head_str = 'Species ' + ' Tmp'
                 pf_inp_str = '\n'.join(
-                    [global_pf_str, species_head_str,
-                     species_str])
+                    [global_pf_str, spc_head_str,
+                     spc_str])
 
                 bld_locs = ['PF', 0]
                 bld_save_fs = autofile.fs.build(tors_save_path)
@@ -1831,8 +1862,8 @@ def get_zero_point_energy(
             min_ene = anh_cnf_save_fs.leaf.file.energy.read(anh_min_cnf_locs)
             if automol.geom.is_atom(anh_geo):
                 print('This is an atom')
-                mass = ptab.to_mass(anh_geo([0][0]))
-                species_str = mess_io.writer.write_atom(
+                mass = ptab.to_mass(anh_geo[0][0])
+                spc_str = mess_io.writer.write_atom(
                     mass, elec_levels)
             else:
                 hess = anh_cnf_save_fs.leaf.file.hessian.read(anh_min_cnf_locs)
@@ -1850,12 +1881,12 @@ def get_zero_point_energy(
                 hind_rot_str = ""
 
                 core = mess_io.writer.write_core_rigidrotor(anh_geo, sym_factor)
-                species_str = mess_io.writer.write_molecule(
-                    core, proj_freqs, zpe, elec_levels,
+                spc_str = mess_io.writer.write_molecule(
+                    core, proj_freqs, elec_levels,
                     hind_rot=hind_rot_str,
                     )
         else:
-            species_str = ''
+            spc_str = ''
         print('VPT2 and RIGID combination is not yet properly implemented')
 
     if vib_model == 'VPT2' and tors_model == '1DHR':
@@ -1864,6 +1895,6 @@ def get_zero_point_energy(
     if vib_model == 'VPT2' and tors_model == 'TAU':
         print('VPT2 and TAU combination is not yet implemented')
 
-    return ret
+    return ret, is_atom
 
 
