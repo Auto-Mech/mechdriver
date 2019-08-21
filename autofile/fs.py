@@ -85,9 +85,11 @@ def theory(prefix):
     geom_dfile = file_.geometry(FilePrefix.GEOM)
     ene_dfile = file_.energy(FilePrefix.GEOM)
     zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+    hess_dfile = file_.hessian(FilePrefix.HESS)
     leaf_ds.add_data_files({
         FileAttributeName.ENERGY: ene_dfile,
         FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.HESS: hess_dfile,
         FileAttributeName.ZMAT: zmat_dfile})
 
     dir_fs = model.FileSystem({SeriesAttributeName.LEAF: leaf_ds})
@@ -104,7 +106,6 @@ def conformer(prefix):
     :param prefix: sets the path where this filesystem will sit
     :type prefix: str
     """
-    print('prefix test in conformer:', prefix)
     trunk_ds = dir_.conformer_trunk(prefix)
     leaf_ds = dir_.conformer_leaf(prefix, root_ds=trunk_ds)
 

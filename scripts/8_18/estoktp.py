@@ -1,12 +1,23 @@
 """ reaction list test
 """
 import os
+import sys
+import numpy
 import pandas
 from qcelemental import constants as qcc
 import chemkin_io
+import projrot_io
+import thermo
 import automol
+import elstruct
+import autofile
 import moldr
 import scripts
+#import scripts.es
+#import scripts.ktp
+#from scripts import ktp
+#from scripts import es
+import mess_io.writer
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -15,9 +26,8 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 # 0. choose which mechanism to run
 
 # MECHANISM_NAME = 'ch4+nh2'  # options: syngas, natgas, heptane
-# MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane
-MECHANISM_NAME = 'vhp'  # options: syngas, natgas, heptane
-# MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
+MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane
+#MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas
 # MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas
 
@@ -43,6 +53,9 @@ RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
 
 # use reference to determine starting geometries, which are used to define
 # z-matrices also used for reference geometries in HL calculations
+#LL_METHOD_REF = 'wb97xd'
+#LL_BASIS_REF = '6-31g*'
+#LL_ORB_RESTR_REF = False
 
 # code is designed to run
 # (i) an arbitrary number of low level optimizations
@@ -65,6 +78,9 @@ RUN_OPT_LEVELS.append(['g09', 'wb97xd', '6-31g*', 'RU'])
 # RUN_OPT_LEVELS.append(['g09', 'b3lyp', '6-31g*', 'RU'])
 
 # set up a set of standard hl methods
+#HL_METHOD_REF = 'wb97xd'
+#HL_BASIS_REF = '6-31g*'
+#HL_ORB_RESTR_REF = 'RU'
 THEORY_REF_HIGH_LEVEL = ['', 'wb97xd', '6-31g*', 'RU']
 RUN_HIGH_LEVELS = []
 #RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVTZ'])
@@ -83,32 +99,41 @@ RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ', 'RR'])
 PF_LEVELS = []
 PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
 # PF_LEVELS contains the elec. struc. levels for the harmonic, torsional, and anharmonic analyses
+#HAR_LEVELS = []
+#HAR_LEVELS.append(['wb97xd','6-31g*'])
+#TORS = []
+#TORS.append(['wb97xd','6-31g*'])
+#ANH_LEVELS = []
+#ANH_LEVELS.append(['wb97xd','6-31g*'])
 
 # c. What type of electronic structure calculations to run
 RUN_SPC_QCHEM = True
-RUN_TS_QCHEM = False
-RUN_TS_KICKS_QCHEM = False
+RUN_TS_QCHEM = True
+RUN_TS_KICKS_QCHEM = True
 RUN_VDW_QCHEM = False
 
 RUN_INI_GEOM = True
-RUN_REMOVE_IMAG = True
+RUN_REMOVE_IMAG = False
 
 KICKOFF_SADDLE = True
 
 RUN_CONF_SAMP = True
 RUN_CONF_OPT = True
-RUN_MIN_GRAD = False
+RUN_MIN_GRAD = True
 RUN_MIN_HESS = True
 RUN_MIN_VPT2 = False
-RUN_CONF_GRAD = False
-RUN_CONF_HESS = False
+RUN_CONF_GRAD = True
+RUN_CONF_HESS = True
 RUN_CONF_VPT2 = False
-RUN_CONF_SCAN = True
+
+RUN_CONF_SCAN = False
 RUN_CONF_SCAN_GRAD = False
 RUN_CONF_SCAN_HESS = False
+
 RUN_TAU_SAMP = False
 RUN_TAU_GRAD = False
 RUN_TAU_HESS = False
+
 RUN_HL_MIN_ENE = True
 
 RUN_TS_CONF_SAMP = True
@@ -125,6 +150,7 @@ RUN_TS_CONF_SCAN_HESS = False
 RUN_TS_TAU_SAMP = False
 RUN_TS_TAU_GRAD = False
 RUN_TS_TAU_HESS = False
+
 RUN_TS_HL_MIN_ENE = True
 
 RUN_VDW_CONF_SAMP = False
@@ -141,14 +167,33 @@ RUN_VDW_CONF_SCAN_HESS = False
 RUN_VDW_TAU_SAMP = False
 RUN_VDW_TAU_GRAD = False
 RUN_VDW_TAU_HESS = False
+
 RUN_VDW_HL_MIN_ENE = True
+
+# setting these to true turns on corresponding run for min, conf, conf_scan,
+# and tau
+RUN_GRAD = False
+if RUN_GRAD:
+    RUN_MIN_GRAD = True
+    RUN_CONF_GRAD = True
+    RUN_CONF_SCAN_GRAD = True
+    RUN_TAU_GRAD = True
+
+RUN_HESS = False
+if RUN_HESS:
+    RUN_MIN_HESS = True
+    RUN_CONF_HESS = True
+    RUN_CONF_SCAN_HESS = True
+    RUN_TAU_HESS = True
+RUN_GRAD_PF = False
+RUN_HESS_PF = False
 
 # d. Parameters for number of torsional samplings
 NSAMP_CONF = 5
 NSAMP_CONF_EXPR = True
 NSAMP_CONF_A = 3
 NSAMP_CONF_B = 1
-NSAMP_CONF_C = 4
+NSAMP_CONF_C = 3
 NSAMP_CONF_D = 100
 NSAMP_CONF_PAR = [NSAMP_CONF_EXPR, NSAMP_CONF_A, NSAMP_CONF_B, NSAMP_CONF_C,
                   NSAMP_CONF_D, NSAMP_CONF]
@@ -162,15 +207,6 @@ NSAMP_TAU_D = 15
 NSAMP_TAU_PAR = [NSAMP_TAU_EXPR, NSAMP_TAU_A, NSAMP_TAU_B, NSAMP_TAU_C,
                  NSAMP_TAU_D, NSAMP_TAU]
 
-NSAMP_TS_CONF = 5
-NSAMP_TS_CONF_EXPR = True
-NSAMP_TS_CONF_A = 3
-NSAMP_TS_CONF_B = 1
-NSAMP_TS_CONF_C = 3
-NSAMP_TS_CONF_D = 100
-NSAMP_TS_CONF_PAR = [NSAMP_TS_CONF_EXPR, NSAMP_TS_CONF_A, NSAMP_TS_CONF_B, NSAMP_TS_CONF_C,
-                     NSAMP_TS_CONF_D, NSAMP_TS_CONF]
-
 NSAMP_TS_TAU = 5
 NSAMP_TS_TAU_EXPR = True
 NSAMP_TS_TAU_A = 3
@@ -179,6 +215,15 @@ NSAMP_TS_TAU_C = 3
 NSAMP_TS_TAU_D = 100
 NSAMP_TS_TAU_PAR = [NSAMP_TS_TAU_EXPR, NSAMP_TS_TAU_A, NSAMP_TS_TAU_B, NSAMP_TS_TAU_C,
                     NSAMP_TS_TAU_D, NSAMP_TS_TAU]
+
+NSAMP_TS_CONF = 5
+NSAMP_TS_CONF_EXPR = True
+NSAMP_TS_CONF_A = 3
+NSAMP_TS_CONF_B = 1
+NSAMP_TS_CONF_C = 3
+NSAMP_TS_CONF_D = 100
+NSAMP_TS_CONF_PAR = [NSAMP_TS_CONF_EXPR, NSAMP_TS_CONF_A, NSAMP_TS_CONF_B, NSAMP_TS_CONF_C,
+                     NSAMP_TS_CONF_D, NSAMP_TS_CONF]
 
 NSAMP_VDW = 10
 NSAMP_VDW_EXPR = False
@@ -191,9 +236,10 @@ NSAMP_VDW_PAR = [NSAMP_VDW_EXPR, NSAMP_VDW_A, NSAMP_VDW_B, NSAMP_VDW_C,
 
 # e. What to run for thermochemical kinetics
 RUN_SPC_THERMO = True
-SPC_MODELS = [['RIGID', 'HARM']]
 #SPC_MODELS = [['1DHR', 'HARM']]
+SPC_MODELS = [['RIGID', 'HARM']]
 #SPC_MODELS = [['RIGID', 'HARM'], ['1DHR', 'HARM']]
+#SPC_MODELS = [['1DHR', 'HARM']]
 # The first component specifies the torsional model - TORS_MODEL.
 # It can take 'RIGID', '1DHR', or 'TAU'
 # The second component specifies the vibrational model - VIB_MODEL.
@@ -205,7 +251,7 @@ RUN_VDW_PRD_RATES = False
 # f. Partition function parameters
 TAU_PF_WRITE = True
 
-# Defaults and dictionaries
+# Defaults
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
 KICKOFF_SIZE = 0.1
 KICKOFF_BACKWARD = False
@@ -283,7 +329,6 @@ MUL_DCT['REF_H2O'] = 1
 MUL_DCT['REF_NH3'] = 1
 SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
 SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
-
 # You need one species reference for each element in the set of references and species
 SPC_REF_NAMES = ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
 SPC_REF_ICH = []
