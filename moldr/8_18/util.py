@@ -66,7 +66,7 @@ def run_qchem_par(prog):
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
         kwargs = {
-            'memory': 20,
+            'memory': 50,
         }
         opt_kwargs = {}
 
@@ -75,7 +75,7 @@ def run_qchem_par(prog):
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
         kwargs = {
-            'memory': 20,
+            'memory': 50,
         }
         opt_kwargs = {}
 
@@ -84,7 +84,7 @@ def run_qchem_par(prog):
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
         kwargs = {
-            'memory': 20,
+            'memory': 50,
         }
         opt_kwargs = {}
 
@@ -143,12 +143,12 @@ def reference_geometry(spc_info, theory_level, prefix,
     thy_fs.leaf.create(thy_level)
     thy_path = thy_fs.leaf.path(thy_level)
 
+    ich = spc_info[0]
     if thy_fs.leaf.file.geometry.exists(thy_level):
         thy_path = thy_fs.leaf.path(thy_level)
         print('getting reference geometry from', thy_path)
         geo = thy_fs.leaf.file.geometry.read(thy_level)
     else:
-        ich = spc_info[0]
         if ich in geom_dct:
             print('getting reference geometry from geom_dct')
             geo = geom_dct[ich]

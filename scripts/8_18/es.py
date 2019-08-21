@@ -123,17 +123,16 @@ def species_qchem(
             thy_save_fs.leaf.create(thy_level)
             thy_save_path = thy_save_fs.leaf.path(thy_level)
 
+            geo_init = moldr.util.reference_geometry(
+                spc_info=spc_info[name],
+                theory_level=run_opt_levels[opt_level_idx],
+                prefix=save_prefix,
+                geom_dct=geom_dct)
+
             # this uses theory run path - should start with a check in save path to see if initial geometry has already been saved
             # eventually theory data will be removed
             # also may need to remove hessian etc from saved geometry ...
             if run_ini_geom:
-
-                geo_init = moldr.util.reference_geometry(
-                    spc_info=spc_info[name],
-                    theory_level=run_opt_levels[opt_level_idx],
-                    prefix=save_prefix,
-                    geom_dct=geom_dct)
-
                 geo = moldr.driver.run_initial_geometry_opt(
                     spc_info=spc_info[name],
                     theory_level=run_opt_levels[opt_level_idx],
@@ -145,40 +144,38 @@ def species_qchem(
                     **OPT_KWARGS,
                 )
 
-            if run_remove_imag:
-                imag, geo, disp_xyzs = moldr.driver.run_check_imaginary(
+                if run_remove_imag:
+                    imag, geo, disp_xyzs = moldr.driver.run_check_imaginary(
+                        spc_info=spc_info[name],
+                        theory_level=run_opt_levels[opt_level_idx],
+                        run_prefix=spc_run_path,
+                        script_str=OPT_SCRIPT_STR,
+                        overwrite=overwrite,
+                        **KWARGS,
+                    )
+                    if imag:
+                        moldr.driver.run_kickoff_saddle(
+                            geo, disp_xyzs,
+                            spc_info=spc_info[name],
+                            theory_level=run_opt_levels[opt_level_idx],
+                            run_path=thy_run_path,
+                            script_str=OPT_SCRIPT_STR,
+                            kickoff_backward=kickoff_backward,
+                            kickoff_size=kickoff_size,
+                            opt_cart=False,
+                            **OPT_KWARGS)
+                        print('removing saddlepoint hessian')
+
+                        run_fs = autofile.fs.run(thy_run_path)
+                        run_fs.leaf.remove([elstruct.Job.HESSIAN])
+
+
+                moldr.driver.save_initial_geometry(
                     spc_info=spc_info[name],
                     theory_level=run_opt_levels[opt_level_idx],
                     run_prefix=spc_run_path,
                     save_prefix=spc_save_path,
-                    script_str=OPT_SCRIPT_STR,
-                    overwrite=overwrite,
-                    **KWARGS,
                 )
-                if imag:
-                    moldr.driver.run_kickoff_saddle(
-                        geo, disp_xyzs,
-                        spc_info=spc_info[name],
-                        theory_level=run_opt_levels[opt_level_idx],
-                        run_path=thy_run_path,
-                        script_str=OPT_SCRIPT_STR,
-                        kickoff_backward=kickoff_backward,
-                        kickoff_size=kickoff_size,
-                        opt_cart=False,
-                        **OPT_KWARGS)
-                    print('removing saddlepoint hessian')
-
-                    run_fs = autofile.fs.run(thy_run_path)
-                    run_fs.leaf.remove([elstruct.Job.HESSIAN])
-                    save_fs = autofile.fs.save(thy_save_path)
-                    save_fs.leaf.remove('hess')
-
-                    moldr.driver.save_initial_geometry(
-                        spc_info=spc_info[name],
-                        theory_level=run_opt_levels[opt_level_idx],
-                        run_prefix=spc_run_path,
-                        save_prefix=spc_save_path,
-                    )
 
             if run_conf_samp:
                 moldr.driver.conformer_sampling(
@@ -338,51 +335,6 @@ def species_qchem(
                     overwrite=overwrite,
                     **KWARGS,
                 )
-
-            if run_hl_conf_ene:
-                # add cycle over conformer geometries
-                cnf_run_fs = autofile.fs.conformer(run_prefix)
-                cnf_save_fs = autofile.fs.conformer(save_prefix)
-
-                cnf_locs_lst = cnf_save_fs.leaf.existing()
-                for locs in cnf_locs_lst:
-                    cnf_run_path = cnf_run_fs.leaf.path(locs)
-                    cnf_save_path = cnf_save_fs.leaf.path(locs)
-                    cnf_geo = cnf_save_fs.leaf.file.geometry.read(locs)
-
-                    moldr.driver.run_single_point_energy(
-                        geo=min_cnf_geo,
-                        spc_info=spc_info[name],
-                        theory_level=run_high_levels[high_level_idx],
-                        run_prefix=cnf_run_path,
-                        save_prefix=cnf_save_path,
-                        script_str=SP_SCRIPT_STR,
-                        overwrite=overwrite,
-                        **KWARGS,
-                    )
-
-            if run_hl_conf_opt:
-                # add cycle over conformer geometries
-                cnf_run_fs = autofile.fs.conformer(run_prefix)
-                cnf_save_fs = autofile.fs.conformer(save_prefix)
-
-                cnf_locs_lst = cnf_save_fs.leaf.existing()
-                for locs in cnf_locs_lst:
-                    cnf_run_path = cnf_run_fs.leaf.path(locs)
-                    cnf_save_path = cnf_save_fs.leaf.path(locs)
-                    cnf_geo = cnf_save_fs.leaf.file.geometry.read(locs)
-
-                    moldr.driver.run_optimization(
-                        geo=min_cnf_geo,
-                        spc_info=spc_info[name],
-                        theory_level=run_high_levels[high_level_idx],
-                        run_prefix=cnf_run_path,
-                        save_prefix=cnf_save_path,
-                        script_str=SP_SCRIPT_STR,
-                        overwrite=overwrite,
-                        **KWARGS,
-                    )
-
 
 
 def ts_qchem(

@@ -55,7 +55,7 @@ def species_thermo(
         print('name in high level energy routine')
         print(name)
         for hl_idx, _ in enumerate(run_high_levels):
-            min_ene = moldr.pfdriver.get_high_level_energy(
+            min_ene = moldr.driver.get_high_level_energy(
                 spc_info=spc_info[name],
                 theory_low_level=ref_high_level,
                 theory_high_level=run_high_levels[hl_idx],
@@ -83,7 +83,7 @@ def species_thermo(
                 spc_save_fs.leaf.create(spc_info[name])
                 spc_save_path = spc_save_fs.leaf.path(spc_info[name])
 
-                spc_zpe[name], is_atom[name] = moldr.pfdriver.get_zero_point_energy(
+                spc_zpe[name], is_atom[name] = moldr.driver.get_zero_point_energy(
                     spc_info[name],
                     tors_model, vib_model,
                     har_level, tors_level, vpt2_level,
@@ -120,7 +120,7 @@ def species_thermo(
                     elec_levels = elc_deg_dct[(ich, mul)]
 
                 # cycle through the low levels generating partition functions  for each
-                spc_str = moldr.pfdriver.species_block(
+                spc_str = moldr.driver.species_block(
                     spc_info=spc_info[name],
                     tors_model=tors_model,
                     vib_model=vib_model,
@@ -460,7 +460,7 @@ def reaction_rates(
                 spc_info = (rct_ichs[0], rct_chgs[0], rct_muls[0])
                 spc_save_fs.leaf.create(spc_info)
                 spc_save_path = spc_save_fs.leaf.path(spc_info)
-                well_data = moldr.pfdriver.species_block(
+                well_data = moldr.driver.species_block(
                     spc_info=spc_info,
                     tors_model=tors_model,
                     vib_model=vib_model,
@@ -490,7 +490,7 @@ def reaction_rates(
                     spc_info = (rct_ich, rct_chg, rct_mul)
                     spc_save_fs.leaf.create(spc_info)
                     spc_save_path = spc_save_fs.leaf.path(spc_info)
-                    spc_data[idx] = moldr.pfdriver.species_block(
+                    spc_data[idx] = moldr.driver.species_block(
                         spc_info=spc_info,
                         tors_model=tors_model,
                         vib_model=vib_model,
@@ -516,7 +516,7 @@ def reaction_rates(
                     spc_info = (prd_ich, prd_chg, prd_mul)
                     spc_save_fs.leaf.create(spc_info)
                     spc_save_path = spc_save_fs.leaf.path(spc_info)
-                    well_data = moldr.pfdriver.species_block(
+                    well_data = moldr.driver.species_block(
                         spc_info=spc_info,
                         tors_model=tors_model,
                         vib_model=vib_model,
@@ -544,7 +544,7 @@ def reaction_rates(
                     spc_info = (prd_ich, prd_chg, prd_mul)
                     spc_save_fs.leaf.create(spc_info)
                     spc_save_path = spc_save_fs.leaf.path(spc_info)
-                    spc_data[idx] = moldr.pfdriver.species_block(
+                    spc_data[idx] = moldr.driver.species_block(
                         spc_info=spc_info,
                         tors_model=tors_model,
                         vib_model=vib_model,
@@ -570,7 +570,7 @@ def reaction_rates(
 #                prd_ichs[i], prd_chgs[i], prd_muls[i], save_prefix)
 #            thy_save_path = moldr.util.theory_path(method, basis, ts_orb_restr, spc_save_path)
             print('thy_save_path:', thy_save_path)
-            ts_data_str = moldr.pfdriver.species_block(
+            ts_data_str = moldr.driver.species_block(
                 spc_info=ts_info,
                 tors_model=tors_model,
                 vib_model=vib_model,
@@ -616,7 +616,7 @@ def reaction_rates(
 #                spc_save_path = moldr.util.species_path(
 #                    rct_ichs[i], rct_chgs[i], rct_muls[i], save_prefix)
 #                thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
-#                rct_block_str.append(moldr.pfdriver.species_block(
+#                rct_block_str.append(moldr.driver.species_block(
 #                        spc_info=rct_info,
 #                        tors_model=tors_model,
 #                        vib_model=vib_model,
@@ -651,7 +651,7 @@ def reaction_rates(
 #                    spc_save_path = moldr.util.species_path(
 #                            prd_ichs[i], prd_chgs[i], prd_muls[i], save_prefix)
 #                    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
-#                    prd_block_str.append(moldr.pfdriver.species_block(
+#                    prd_block_str.append(moldr.driver.species_block(
 #                            spc_info=prd_info,
 #                            tors_model=tors_model,
 #                            vib_model=vib_model,

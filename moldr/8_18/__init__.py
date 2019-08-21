@@ -6,7 +6,6 @@ from moldr import util
 
 __all__ = [
     'driver',
-    'pfdriver',
     'runner',
     'util',
 ]
