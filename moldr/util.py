@@ -12,7 +12,6 @@ import elstruct
 def run_qchem_par(prog):
     """ dictionary of parameters for different electronic structure codes
     """
-
     if prog == 'g09':
         sp_script_str = ("#!/usr/bin/env bash\n"
                       "g09 run.inp run.out >> stdout.log &> stderr.log")
@@ -123,9 +122,8 @@ def geometry_dictionary(geom_path):
                 geom_dct[ich] = geo
     return geom_dct
 
-
 def reference_geometry(spc_info, theory_level, prefix,
-                       geom_dct):
+                       geom_dct={}, geom_obj = None, return_msg = False):
     """ obtain reference geometry
     if data for reference method exists use that
     then geometry dictionary takes precedence
@@ -143,18 +141,24 @@ def reference_geometry(spc_info, theory_level, prefix,
     thy_fs.leaf.create(thy_level)
     thy_path = thy_fs.leaf.path(thy_level)
 
+    ich = spc_info[0]
     if thy_fs.leaf.file.geometry.exists(thy_level):
         thy_path = thy_fs.leaf.path(thy_level)
-        print('getting reference geometry from', thy_path)
+        msg = 'getting reference geometry from directory {}'.format(thy_path)
         geo = thy_fs.leaf.file.geometry.read(thy_level)
     else:
-        ich = spc_info[0]
-        if ich in geom_dct:
-            print('getting reference geometry from geom_dct')
+        if geom_obj:
+            msg = 'Using reference geometry from input file'
+            geo = geom_obj
+        elif ich in geom_dct:
+            msg = 'getting reference geometry from geom_dct'
             geo = geom_dct[ich]
         else:
-            print('getting reference geometry from inchi')
+            msg = 'getting reference geometry from inchi'
             geo = automol.inchi.geometry(ich)
+    if return_msg:
+        return geo, msg
+    print(msg)
     return geo
 
 

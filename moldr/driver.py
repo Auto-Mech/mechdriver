@@ -18,10 +18,12 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def run_initial_geometry_opt(
         spc_info, theory_level, run_prefix, save_prefix,
-        script_str, overwrite, geo_init, **kwargs):
+        script_str, overwrite, geo_init, return_msg = False, **kwargs):
     """ generate initial geometry via optimization from either reference
     geometries or from inchi
     """
+    msg = ''
+
     # set up the filesystem
     orb_restr = moldr.util.orbital_restriction(spc_info, theory_level)
     thy_level = theory_level[1:3]
@@ -38,12 +40,14 @@ def run_initial_geometry_opt(
     # check if geometry has already been saved
     if thy_save_fs.leaf.file.geometry.exists(thy_level):
         geo = thy_save_fs.leaf.file.geometry.read(thy_level)
+        msg = 'initial geometry found in {}'.format(thy_save_path)
     # or if geometry has already been run
     elif thy_run_fs.leaf.file.geometry.exists(thy_level):
         geo = thy_run_fs.leaf.file.geometry.read(thy_level)
         zma = automol.geom.zmatrix(geo)
         thy_save_fs.leaf.file.geometry.write(geo, thy_level)
         thy_save_fs.leaf.file.zmatrix.write(zma, thy_level)
+        msg = 'initial geometry found in {}'.format(thy_save_path)
     else:
         # if not call the electronic structure optimizer
         zma = automol.geom.zmatrix(geo_init)
@@ -60,14 +64,17 @@ def run_initial_geometry_opt(
         ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
         geo = None
         if ret:
-            print('Saving reference geometry')
-            print(" - Save path: {}".format(thy_save_path))
+            msg = 'Saving reference geometry'
+            msg = " - Save path: {}".format(thy_save_path)
             inf_obj, _, out_str = ret
             prog = inf_obj.prog
             geo = elstruct.reader.opt_geometry(prog, out_str)
             zma = automol.geom.zmatrix(geo)
             thy_save_fs.leaf.file.geometry.write(geo, thy_level)
             thy_save_fs.leaf.file.zmatrix.write(zma, thy_level)
+    if return_msg:
+        return geo, msg
+    print(msg)
     return geo
 
 
@@ -87,16 +94,14 @@ def run_check_imaginary(
     thy_save_fs = autofile.fs.theory(save_prefix)
     thy_save_fs.leaf.create(thy_level)
     thy_save_path = thy_save_fs.leaf.path(thy_level)
-    print('thy_save_path in check imag:', thy_save_path)
-    print('thy_level:', thy_level)
-    print('save_prefix:', save_prefix)
 
     ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
     geo = None
     imag = False
     disp_xyzs = []
+    msg = ''
     if ret:
-        print('Checking for saddle')
+        msg += 'Checking for saddle'
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
         geo = elstruct.reader.opt_geometry(prog, out_str)
@@ -135,11 +140,12 @@ def run_check_imaginary(
 # Ultimately should decrease once frequency projector is functioning properly
                 if freqs[0] < -100:
                     imag = True
-                    print('Imaginary mode found:')
+                    msg += 'Imaginary mode found:'
                     norm_coos = elstruct.util.normal_coordinates(
                         geo, hess, project=True)
                     im_norm_coo = numpy.array(norm_coos)[:, 0]
                     disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3))
+    print(msg)
     return imag, geo, disp_xyzs
 
 

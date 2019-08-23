@@ -1,0 +1,15 @@
+task t1
+    job        =  thermo rates
+    paths      =  rundir savedir
+    reactants  =  reac1 reac2
+    products   =  prod1
+    references =  cbh0
+    
+    mc      = mclev  input  false
+    tsfind  = mclev  mclev  false
+    geom    = optlev mclev  false
+    freq    = optlev optlev false
+    hr      = hrlev  mclev false
+    anharm  = anlev  optlev false
+    sp      = splev  optlev false
+end 

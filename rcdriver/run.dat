@@ -1,0 +1,14 @@
+task t1
+    job =  thermo rates
+    paths =  runfiles savefiles
+    reactants =  reac1 methane
+    products  =  methyl
+    references =  cbh0
+    
+    mc   = mclev  input
+    geom = optlev mclev
+    freq = optlev optlev
+    hr   = hrlev  optlev
+    anharm  = anlev  optlev
+    sp   = splev  optlev
+end 
