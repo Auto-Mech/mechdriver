@@ -9,7 +9,7 @@ import automol
 import elstruct
 
 
-def run_qchem_par(prog):
+def run_qchem_par(prog, method):
     """ dictionary of parameters for different electronic structure codes
     """
 
@@ -52,13 +52,28 @@ def run_qchem_par(prog):
     if prog == 'molpro':
         sp_script_str = ("#!/usr/bin/env bash\n"
                       "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
-        opt_script_str = ("#!/usr/bin/env bash\n"
-                          "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
+        if method == 'caspt2':
+            opt_script_str = ("#!/usr/bin/env bash\n"
+                              "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
+        else:
+            opt_script_str = ("#!/usr/bin/env bash\n"
+                              "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
         kwargs = {
-            'memory': 20,
+            'memory': 10,
+            'corr_options': ['shift=0.2'],
+            'mol_options': ['nosym'],
         }
         opt_kwargs = {
-            'memory': 20,
+            'memory': 5,
+            'corr_options': ['shift=0.2'],
+            'mol_options': ['nosym'],
+            'options_mat': [
+                [{},
+                 {},
+                 {'job_options': ['numhess']},
+                 {'job_options': ['numhess=10']},
+                 {'job_options': ['numhess=1']}]
+            ],
         }
 
     if prog == 'qchem':

@@ -16,6 +16,8 @@ def conformer_trunk(nsamp, tors_ranges):
     :type tors_ranges: dict[str: (float, float)]
     """
     tors_range_dct = dict(tors_ranges)
+    for key, rng in tors_range_dct.items():
+        tors_range_dct[key] = (rng[0]*180./numpy.pi, rng[1]*180./numpy.pi)
 
     assert all(isinstance(key, str) and len(rng) == 2
                and all(isinstance(x, numbers.Real) for x in rng)
@@ -38,6 +40,8 @@ def tau_trunk(nsamp, tors_ranges):
     :type tors_ranges: dict[str: (float, float)]
     """
     tors_range_dct = dict(tors_ranges)
+    for key, rng in tors_range_dct.items():
+        tors_range_dct[key] = (rng[0]*180./numpy.pi, rng[1]*180./numpy.pi)
 
     assert all(isinstance(key, str) and len(rng) == 2
                and all(isinstance(x, numbers.Real) for x in rng)
@@ -57,7 +61,12 @@ def scan_branch(grids):
         by coordinate name
     :type grids: dict[str: list[float]]
     """
+    print('grids test:',grids)
     grid_dct = dict(grids)
+    # note this renormalization of angle ranges needs to be updated for 2D grids.
+    for key, rng in grid_dct.items():
+        if 'R' not in key:
+            grid_dct[key] = rng*180./numpy.pi
 
     assert all(isinstance(key, str) and numpy.ndim(vals) == 1
                and all(isinstance(x, numbers.Real) for x in vals)
