@@ -1304,12 +1304,15 @@ def run_scan(
         )
  
 
-def run_multiref_rscan(
-        formula, high_mul, zma, spc_info, theory_level, dist_name, grid1, grid2, 
+def run_multiref_scan(
+        formula, high_mul, zma, spc_info, theory_level, grid_dct, 
         run_prefix, save_prefix, script_str, overwrite, update_guess=True,
         **kwargs):
     """ run constrained optimization scan
     """
+    if len(grid_dct) > 1:
+#    if len(grid_dct) > 1 or len(grid_dct2) > 1:
+        raise NotImplementedError
 
     electron_count = automol.formula._formula.electron_count(formula)
     # this is only for 2e,2o case
@@ -1333,15 +1336,15 @@ def run_multiref_rscan(
         existing_vma = scn_save_fs.trunk.file.vmatrix.read()
         assert vma == existing_vma
 
-    grid = numpy.append(grid1, grid2)
-    grid_dct = {dist_name: grid}
-    if len(grid_dct) > 1:
-        raise NotImplementedError
+    # for now, running only one-dimensional hindered rotor scans
 
+    print('length test:', len(grid_dct))
     ((coo_name, grid_vals),) = grid_dct.items()
+    print('coo_name test:', coo_name)
     scn_save_fs.branch.create([[coo_name]])
     if scn_save_fs.branch.file.info.exists([[coo_name]]):
         inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
+        print('inf_obj test:', inf_obj)
         existing_grid_dct = dict(inf_obj.grids)
         existing_grid_vals = existing_grid_dct[coo_name]
         print('grid_vals test:', grid_vals, existing_grid_vals)
@@ -1388,7 +1391,7 @@ def run_multiref_rscan(
         **kwargs)
     guess_str2 += '\n\n'
     guess_str2 = '\n'.join(guess_str2.splitlines()[2:])
-
+    
     guess_str = guess_str1 + guess_str2
     guess_lines = guess_str.splitlines()
     kwargs['gen_lines'] = guess_lines
@@ -1396,52 +1399,18 @@ def run_multiref_rscan(
     npoint = len(grid_vals)
     grid_idxs = tuple(range(npoint))
 
-    grid1_dct = {dist_name: grid1}
-    ((_, grid1_vals),) = grid1_dct.items()
-    npoint1 = len(grid1_vals)
-    grid1_idxs = tuple(range(npoint1))
-
-    for grid_idx in grid1_idxs:
+    for grid_idx in grid_idxs:
         scn_run_fs.leaf.create([[coo_name], [grid_idx]])
     prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
-                     for grid_idx in grid1_idxs)
+                     for grid_idx in grid_idxs)
     print('update_guess0 test:', update_guess)
     _run_1d_scan(
         script_str=script_str,
         prefixes=prefixes,
         guess_zma=zma,
         coo_name=coo_name,
-        grid_idxs=grid1_idxs,
-        grid_vals=grid1_vals,
-        spc_info=spc_info,
-        theory_level=theory_level,
-        overwrite=overwrite,
-        update_guess=update_guess,
-        **kwargs
-    )
-
-    # grid2 = numpy.append(grid1[0], grid2)
-    print('grid2 test in multi:', grid2)
-    grid2_dct = {dist_name: grid2}
-    ((_, grid2_vals),) = grid2_dct.items()
-    npoint2 = len(grid2_vals)
-    grid2_idxs = tuple(range(npoint2))
-    grid2_idxs = tuple(x + npoint1 for x in grid2_idxs)
-    print('grid2_idxs test:', grid2_idxs)
-
-    for grid_idx in grid2_idxs:
-        scn_run_fs.leaf.create([[coo_name], [grid_idx]])
-
-    prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
-                     for grid_idx in grid2_idxs)
-    print('update_guess0 test:', update_guess)
-    _run_1d_scan(
-        script_str=script_str,
-        prefixes=prefixes,
-        guess_zma=zma,
-        coo_name=coo_name,
-        grid_idxs=grid2_idxs,
-        grid_vals=grid2_vals,
+        grid_idxs=grid_idxs,
+        grid_vals=grid_vals,
         spc_info=spc_info,
         theory_level=theory_level,
         overwrite=overwrite,
@@ -1500,8 +1469,6 @@ def _run_1d_scan(
         script_str, prefixes, guess_zma, coo_name, grid_idxs, grid_vals,
         spc_info, theory_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, **kwargs):
-
-    print('prefixes test:', prefixes)
     npoints = len(grid_idxs)
     assert len(grid_vals) == len(prefixes) == npoints
     for grid_idx, grid_val, prefix in zip(grid_idxs, grid_vals, prefixes):
@@ -1525,11 +1492,14 @@ def _run_1d_scan(
         )
 
         ret = read_job(job=elstruct.Job.OPTIMIZATION, prefix=prefix)
-        print('prefix test:', prefix)
         # print('ret test:', ret)
+        print('update_guess test:', update_guess)
         if update_guess and ret is not None:
             inf_obj, _, out_str = ret
+            print('inf_obj test:', inf_obj)
+            print('out_str test:', out_str)
             prog = inf_obj.prog
+            method = inf_obj.method
             guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
             print('guess_zma test:', guess_zma)
 

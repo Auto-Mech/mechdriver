@@ -4,6 +4,7 @@ import numpy
 from qcelemental import constants as qcc
 import automol
 import elstruct
+import thermo
 import autofile
 import moldr
 import scripts
@@ -99,7 +100,8 @@ def species_qchem(
         for opt_level_idx, _ in enumerate(run_opt_levels):
             # theory
             prog = run_opt_levels[opt_level_idx][0]
-            SP_SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(prog)
+            method = run_opt_levels[opt_level_idx][1]
+            SP_SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(prog, method)
 
             orb_restr = moldr.util.orbital_restriction(
                 spc_info[name], run_opt_levels[opt_level_idx])
@@ -325,8 +327,9 @@ def species_qchem(
             # evaluate the high level energy and save it
 
             prog = run_high_levels[high_level_idx][0]
+            method = run_high_levels[opt_level_idx][1]
             SP_SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
-                moldr.util.run_qchem_par(prog))
+                moldr.util.run_qchem_par(prog, method))
             if run_hl_min_ene:
                 moldr.driver.run_single_point_energy(
                     geo=min_cnf_geo,
@@ -339,6 +342,7 @@ def species_qchem(
                     **KWARGS,
                 )
 
+            run_hl_conf_ene = False
             if run_hl_conf_ene:
                 # add cycle over conformer geometries
                 cnf_run_fs = autofile.fs.conformer(run_prefix)
@@ -361,6 +365,7 @@ def species_qchem(
                         **KWARGS,
                     )
 
+            run_hl_conf_opt = False
             if run_hl_conf_opt:
                 # add cycle over conformer geometries
                 cnf_run_fs = autofile.fs.conformer(run_prefix)
@@ -382,7 +387,6 @@ def species_qchem(
                         overwrite=overwrite,
                         **KWARGS,
                     )
-
 
 
 def ts_qchem(
@@ -478,6 +482,8 @@ def ts_qchem(
 
         # determine the transition state multiplicity
         ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
+        high_mul = automol.mult.ts._high(rct_muls)
+        print('high_mul in es:', high_mul)
         ts_chg = sum(rct_chgs)
         print('ts_chg test:',ts_chg)
         ts_info = ('', ts_chg, ts_mul)
@@ -485,8 +491,9 @@ def ts_qchem(
         # theory
         for opt_level_idx, _ in enumerate(run_opt_levels):
             prog = run_opt_levels[opt_level_idx][0]
+            method = run_opt_levels[opt_level_idx][1]
             SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
-                moldr.util.run_qchem_par(prog))
+                moldr.util.run_qchem_par(prog, method))
 
             ts_orb_restr = moldr.util.orbital_restriction(
                 ts_info, run_opt_levels[opt_level_idx])
@@ -553,6 +560,8 @@ def ts_qchem(
                 print('ts zma:', ts_zma)
                 print('dist name:', dist_name)
                 print('tors names:', tors_names)
+                if rct_muls[0] != 1 and rct_muls[1] != 1:
+                   typ = 'radical radical addition' 
 
             # fix this later
             # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
@@ -589,13 +598,17 @@ def ts_qchem(
                     ('H', 'N'): 0.99 * ANG2BOHR,
                 }
 
+                npoints = 8
+                npoints1 = 4
+                npoints2 = 4
                 if typ in ('beta scission', 'addition'):
                     rmin = 1.4 * ANG2BOHR
-                    rmin = 2.8 * ANG2BOHR
+                    rmax = 2.8 * ANG2BOHR
                     if bnd_len_key in bnd_len_dct:
                         bnd_len = bnd_len_dct[bnd_len_key]
                         rmin = bnd_len + 0.2 * ANG2BOHR
                         rmax = bnd_len + 1.6 * ANG2BOHR
+                    grid = numpy.linspace(rmin, rmax, npoints)
                 elif typ == 'hydrogen abstraction':
                     rmin = 0.7 * ANG2BOHR
                     rmax = 2.2 * ANG2BOHR
@@ -603,9 +616,14 @@ def ts_qchem(
                         bnd_len = bnd_len_dct[bnd_len_key]
                         rmin = bnd_len
                         rmax = bnd_len + 1.0 * ANG2BOHR
-
-                npoints = 8
-                grid = numpy.linspace(rmin, rmax, npoints)
+                    grid = numpy.linspace(rmin, rmax, npoints)
+                elif typ == 'radical radical addition':
+                    rstart = 2.4 * ANG2BOHR
+                    rend1 = 3.0 * ANG2BOHR
+                    rend2 = 1.8 * ANG2BOHR
+                    grid1 = numpy.linspace(rstart, rend1, npoints1)
+                    grid2 = numpy.linspace(rstart, rend2, npoints2)
+                    grid2 = numpy.delete(grid2, 0)
 
                 # construct the filesystem
                 rxn_ichs = [rct_ichs, prd_ichs]
@@ -658,6 +676,117 @@ def ts_qchem(
                 print(thy_save_path)
 
                 print('entering run_scan:')
+
+
+                if typ == 'radical radical addition':
+                    ts_formula = ''
+                    for ich in rct_ichs:
+                        formula_i = thermo.util.inchi_formula(ich)
+                        formula_i_dict = thermo.util.get_atom_counts_dict(formula_i)
+                        ts_formula = automol.formula._formula.join(ts_formula, formula_i_dict)
+
+                    grid = numpy.append(grid1, grid2)
+                    high_mul = automol.mult.ts._high(rct_muls)
+                    moldr.driver.run_multiref_rscan(
+                        formula=ts_formula,
+                        high_mul=high_mul,
+                        zma=ts_zma,
+                        spc_info=ts_info,
+                        theory_level=run_opt_levels[opt_level_idx],
+                        dist_name=dist_name,
+                        grid1=grid1,
+                        grid2=grid2,
+                        # grid_dct={dist_name: grid},
+                        # grid_dct1={dist_name: grid1},
+                        # grid_dct2={dist_name: grid2},
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        script_str=SCRIPT_STR,
+                        overwrite=overwrite,
+                        update_guess=True,
+                        **OPT_KWARGS
+                    )
+
+                    moldr.driver.save_scan(
+                        run_prefix=thy_run_path,
+                        save_prefix=thy_save_path,
+                        coo_names=[dist_name],
+                    )
+
+                    ref_ene = -40.
+
+                    nsamp_max = 2000
+                    nsamp_min = 500
+                    flux_err = 5
+                    pes_size = 1
+                    tst_inp_str = varecof_io.writer.write_tst_input(
+                        nsamp_max, nsamp_min, flux_err, pes_size)
+
+                    print('\ntst.inp:')
+                    print(tst_inp_str)
+
+                    # Write the divsur input file string; distances in Angstrom
+                    distances = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
+                    divsur_inp_str = varecof_io.writer.write_divsur_input(
+                        distances)
+                    print('\ndivsur.inp:')
+                    print(divsur_inp_str)
+
+                    with open(os.path.join(varecof_path, 'divsur.inp'), 'w') as divsur_file:
+                        divsur_file.write(divsur_inp_str)
+
+                    # Write the els input string
+                    exe_path = molpro_path_str
+                    base_name = formula
+                    els_inp_str = varecof_io.writer.write_els_input(
+                        exe_path, base_name)
+                    print('\nels.inp:')
+                    print(els_inp_str)
+
+                    with open(os.path.join(varecof_path, 'els.inp'), 'w') as els_file:
+                        els_file.write(els_inp_str)
+
+                    # Write the structure input string
+                    struct_inp_str = varecof_io.writer.write_structure_input(
+                        rct_geos[0], rct_geos[1])
+                    print('\nstructure.inp:')
+                    print(struct_inp_str)
+
+                    with open(os.path.join(varecof_path, 'structure.inp'), 'w') as struct_file:
+                        struct_file.write(tml_inp_str)
+
+
+                    # Write the *.tml input string
+                    electron_count = automol.formula._formula.electron_count(formula)
+                    # this is only for 2e,2o case
+                    closed_orb = electron_count//2 - 1
+                    occ_orb = electron_count//2 + 1
+                    # end of 2e,2o case
+                    two_spin = spc_info[2]-1
+                    chg = spc_info[1]
+                    wfn_info = [electron_count, closed_orb, occ_orb, chg, high_spin, low_spin]
+                    method = method
+                    shift_key = '0.2'
+                    ipea_shift_key = '0.25'
+                    inf_sep_energy = -654.3210123456
+                    tml_inp_str = varecof_io.writer.write_tml_input(
+                        prog = prog,
+                        method = method,
+                        basis = basis,
+                        memory = kwargs['memory'],
+                        wfn_info = wfn_info,
+                        inf_sep_energy = inf_sep_energy
+                        )
+                    print('\nmol.tml:')
+                    print(tml_inp_str)
+
+                    with open(os.path.join(varecof_path, basename+'.tml'), 'w') as tml_file:
+                        tml_file.write(tml_inp_str)
+
+                    with open(Omol.tml
+
+                    sys.exit()
+
 
                 moldr.driver.run_scan(
                     zma=ts_zma,
@@ -983,8 +1112,9 @@ def ts_qchem(
                     min_cnf_geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
 
                     prog = run_high_levels[high_level_idx][0]
+                    method = run_high_levels[opt_level_idx][1]
                     SP_SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
-                        moldr.util.run_qchem_par(prog))
+                        moldr.util.run_qchem_par(prog, method))
                     if run_ts_hl_min_ene:
                         moldr.driver.run_single_point_energy(
                             geo=min_cnf_geo,
@@ -1028,7 +1158,8 @@ def vdw_qchem(
         for opt_level_idx, _ in enumerate(run_opt_levels):
             # theory
             prog = run_opt_levels[opt_level_idx][0]
-            SP_SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(prog)
+            method = run_opt_levels[opt_level_idx][1]
+            SP_SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(prog, method)
 
             geos = []
             for ich, chg, mul in zip(ichs, chgs, muls):

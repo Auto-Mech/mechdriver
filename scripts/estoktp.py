@@ -15,8 +15,8 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 # 0. choose which mechanism to run
 
 # MECHANISM_NAME = 'ch4+nh2'  # options: syngas, natgas, heptane
-# MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane
-MECHANISM_NAME = 'vhp'  # options: syngas, natgas, heptane
+MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane
+#MECHANISM_NAME = 'vhp'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas
 # MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas
@@ -33,6 +33,7 @@ PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                  "messpf pf.inp build.out >> stdout.log &> stderr.log")
 RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                    "mess mess.inp build.out >> stdout.log &> stderr.log")
+MOLPRO_PATH_STR = {
 #NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
 #                   "cp ../PF/build.out pf.dat\n"
 #                   "cp /tcghome/sjklipp/PACC/nasa/new.groups .\n"
@@ -57,6 +58,7 @@ RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
 # UU => UHF for singlet, UHF for multiplets
 
 RUN_OPT_LEVELS = []
+#RUN_OPT_LEVELS.append(['molpro', 'casscf', 'cc-pVDZ', 'RR'])
 RUN_OPT_LEVELS.append(['g09', 'wb97xd', '6-31g*', 'RU'])
 # RUN_OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ', 'RU'])
 # RUN_OPT_LEVELS.append(['g09', 'b2plypd3', 'cc-pVTZ', 'RU'])
@@ -69,7 +71,7 @@ THEORY_REF_HIGH_LEVEL = ['', 'wb97xd', '6-31g*', 'RU']
 RUN_HIGH_LEVELS = []
 #RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVTZ'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVDZ', 'RR'])
-RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ', 'RR'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVQZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pV5Z', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVDZ-F12', 'RR'])
@@ -81,12 +83,12 @@ RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pV5Z', 'RR'])
 
 PF_LEVELS = []
-PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
+#PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
 # PF_LEVELS contains the elec. struc. levels for the harmonic, torsional, and anharmonic analyses
 
 # c. What type of electronic structure calculations to run
 RUN_SPC_QCHEM = True
-RUN_TS_QCHEM = False
+RUN_TS_QCHEM = True
 RUN_TS_KICKS_QCHEM = False
 RUN_VDW_QCHEM = False
 
