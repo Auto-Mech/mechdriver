@@ -507,7 +507,23 @@ def find_ts(run_prefix, save_prefix, reacs, prods, spcs, thy_info, overwrite):
         ts_save_fs.trunk.file.energy.write(ene)
         ts_save_fs.trunk.file.geometry.write(geo)
         ts_save_fs.trunk.file.zmatrix.write(zma)
-    return
+
+        ts_info[0] = automol.geom.inchi(geo)
+        print(ts_info)
+        spc_save_path = get_spc_save_path(save_prefix, ts_info)
+        ts_save_fs = autofile.fs.theory(spc_save_path)
+        ts_save_fs.leaf.create(ref_level)
+        ts_save_path = ts_save_fs.leaf.path(ref_level)
+        print(ts_save_path)
+
+        ts_save_fs.trunk.file.energy.write(ene)
+        ts_save_fs.trunk.file.geometry.write(geo)
+        ts_save_fs.trunk.file.zmatrix.write(zma)
+        
+    else:
+        geo = 'failed'
+        zma = 'failed'
+    return geo, zma
 #############
 def species_qchem(
         spc_names, spc_info, run_opt_levels, ref_high_level,

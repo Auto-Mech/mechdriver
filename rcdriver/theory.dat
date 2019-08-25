@@ -1,5 +1,5 @@
 level mclev
-    program=psi4
+    program=g09
     method=b3lyp
     basis=6-31g*
     ncycles=60
@@ -10,7 +10,7 @@ level mclev
 end
 
 level optlev 
-    program=psi4
+    program=g09
     method=b3lyp
     basis=cc-pvdz
     ncycles=60
@@ -21,7 +21,7 @@ level optlev
 end
 
 level hrlev 
-    program=psi4
+    program=g09
     method=b3lyp
     basis=6-31g*
     ncycles=60

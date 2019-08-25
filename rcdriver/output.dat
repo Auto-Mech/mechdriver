@@ -5,108 +5,38 @@
            ==   Carlo Cavolotti, Yuri Georgievski, Stephen Klippenstein  ==
            ================================================================
 
-||| Model t1 will compute thermo and rates for the reaction: N + C --> [CH3]
-||| using the following modules: mc, geom, freq, hr, anharm, sp 
-
-  | Task mc 			 Species reac1: N
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/H3N/QGZKDVFQNNGYKY/0/1/UHFFFAOYSA-N/ezvlpJR
-    | checking for imaginary frequencies
-    | running task mc with abcd of 2 1 2 100 12
+||| Model t1 will compute thermo and rates for the reaction: C + [H] --> [CH3] + [HH]
+||| using the following modules: mc, tsfind, geom 
 
   | Task mc 			 Species methane: C
     | initializing...
-    | found initial geometry in species input file
-    |  - Save path: /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvlpJR
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/savedir/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvlpJR
     | checking for imaginary frequencies
     | running task mc for 4 points
+
+  | Task mc 			 Species hyd: [H]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/savedir/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/ezvlpJU
+    | checking for imaginary frequencies
+    | running task mc for 1 points
 
   | Task mc 			 Species methyl: [CH3]
     | initializing...
-    | found initial geometry in species input file
-    |  - Save path: /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvlpJU
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/savedir/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvlpJU
     | checking for imaginary frequencies
     | running task mc for 4 points
 
-  | Task geom 			 Species reac1: N
+  | Task mc 			 Species h2: [HH]
     | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/H3N/QGZKDVFQNNGYKY/0/1/UHFFFAOYSA-N/ezvN4wR
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/savedir/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/ezvlpJR
     | checking for imaginary frequencies
-
-  | Task geom 			 Species methane: C
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvlpJR
-    |  - Save path: /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvN4wR
-    | checking for imaginary frequencies
-
-  | Task geom 			 Species methyl: [CH3]
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvlpJU
-    |  - Save path: /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvN4wU
-    | checking for imaginary frequencies
-
-  | Task freq 			 Species reac1: N
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/H3N/QGZKDVFQNNGYKY/0/1/UHFFFAOYSA-N/ezvN4wR
-    | checking for imaginary frequencies
-    | running task freq
-
-  | Task freq 			 Species methane: C
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvN4wR
-    | checking for imaginary frequencies
-    | running task freq
-
-  | Task freq 			 Species methyl: [CH3]
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvN4wU
-    | checking for imaginary frequencies
-    | running task freq
-
-  | Task hr 			 Species reac1: N
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/H3N/QGZKDVFQNNGYKY/0/1/UHFFFAOYSA-N/ezvlpJR
-    | checking for imaginary frequencies
-
-  | Task hr 			 Species methane: C
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvlpJR
-    | checking for imaginary frequencies
-
-  | Task hr 			 Species methyl: [CH3]
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvlpJU
-    | checking for imaginary frequencies
-
-  | Task anharm 			 Species reac1: N
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/H3N/QGZKDVFQNNGYKY/0/1/UHFFFAOYSA-N/ezvN4wR
-    | checking for imaginary frequencies
-    | running task anharm
-
-  | Task anharm 			 Species methane: C
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvN4wR
-    | checking for imaginary frequencies
-    | running task anharm
-
-  | Task anharm 			 Species methyl: [CH3]
-    | initializing...
-    | getting reference geometry from directory /home/snelliott/Packages/PACC/moldriver/rcdriver/savefiles/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvN4wU
-    | checking for imaginary frequencies
-    | running task anharm
-
-  | Task sp 			 Species reac1: N
-    | initializing...
-    | running sp on geo
-(('N', (0.12874515120131635, -0.057974907802920715, 0.0)), ('H', (0.12874515120131635, 1.878614535840136, 0.0)), ('H', (-0.9587865648212874, -0.5365404901706138, 1.529258977300622)), ('H', (-0.9587865648212874, -0.5365404901706138, -1.529258977300622)))
-
-  | Task sp 			 Species methane: C
-    | initializing...
-    | running sp on geo
-(('C', (0.0, -1.889726125457828e-06, 0.0)), ('H', (0.0, 2.0789689688395514, 0.0)), ('H', (-0.9800327556498097, -0.6929814674666401, 1.6974653894537486)), ('H', (-0.9800327556498097, -0.6929814674666401, -1.6974653894537486)), ('H', (1.960063621573494, -0.6929814674666401, 0.0)))
-
-  | Task sp 			 Species methyl: [CH3]
-    | initializing...
-    | running sp on geo
-(('C', (0.0, 0.0, -0.0)), ('H', (0.0, 0.0, 2.0620294638509473)), ('H', (0.0, 1.7857609529396403, -1.0310100076101603)), ('H', (0.0, -1.7857609529396403, -1.0310100076101603)))
+    | running task mc for 1 points
+  | Task tsfind 			
+   | prepping ts scan:
+    | checking exothermicity of reaction
+    | reaction is 0.00
+    | ts search will be performed in reverse direction
+    | The reaction direction is forward
+    | H abs
+    | Type: hydrogen abstraction
+   | running ts scan:

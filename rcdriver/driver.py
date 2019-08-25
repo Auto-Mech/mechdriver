@@ -44,18 +44,31 @@ def prepare_refs(mods, spcs):
              if needtoadd:
                  msg = ' || Adding reference species ref_{}'.format(ref)
                  logging.info(msg)
-                 spcs['ref_' + ref] = {}
-                 spcs['ref_' + ref][ 'inchi'] = ref
-                 spcs['ref_' + ref]['geoobj']  = automol.inchi.geometry(ref)
-                 spcs['ref_' + ref]['charge'] = 0
-                 spcs['ref_' + ref]['mc_nsamp'] = [True, 3, 1, 3, 100, 12]
-                 spcs['ref_' + ref]['hind_inc'] = 360. * qcc.conversion_factor('degree', 'radian') 
-                 if '\[' in automol.inchi.smiles(ref):
-                     spcs['ref_' + ref]['mult'] =   2
-                 else:
-                     spcs['ref_' + ref]['mult'] =   1
+                 spcs['ref_' + ref] = create_spec(ref)
                  mods[mod]['references'].append('ref_' + ref)
      return
+
+def create_spec(val, charge = 0, mc_nsamp = [True, 3, 1, 3, 100, 12], hind_inc = 360.):
+    spec = {}
+    if isinstance(val, str):
+        ich = val
+        geo = automol.ichi.geo(ich)
+        zma = automol.geom.zmatrix(geo)
+        spec['zmatrix'] = ich
+    else:
+        geo = val
+        ich = automol.geom.inchi(geo)
+        print(ich)
+    smi = automol.inchi.smiles(ich)
+    mult = 0
+    mult += smi.count('[')
+    spec[   'inchi'] = ich
+    spec[  'geoobj'] = geo
+    spec[  'charge'] = charge
+    spec[    'mult'] = mult
+    spec['mc_nsamp'] = mc_nsamp
+    spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian') 
+    return spec
 
 def get_overwrite(array):
     overwrite = False
@@ -120,8 +133,13 @@ if __name__ == "__main__":
             running_thy_info = scripts.es.get_thy_info(lvls[tsks[mod][tsk][0]])
                 
             if tsk == 'tsfind':
-                log.info('time to find ts!!!!')
-                scripts.es.find_ts(run_prefix, save_prefix, mods[mod]['reactants'],  mods[mod]['products'], spcs, running_thy_info, overwrite)
+                log.info('  | Task {} \t\t\t'.format(tsk))
+                geo, zma = scripts.es.find_ts(run_prefix, save_prefix, mods[mod]['reactants'],  mods[mod]['products'], spcs, running_thy_info, overwrite)
+                if not isinstance(geo, str):
+                    spcs['ts_' + tsk] = create_spec(geo)
+                    spcs['ts_' + tsk]['zmatrix'] = zma
+                    log.info('   | Success, ts_{} added to queue'.format(tsk))
+                    species.append('ts_' + tsk)
                 continue
 
             for spc in species:
