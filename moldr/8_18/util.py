@@ -9,7 +9,7 @@ import automol
 import elstruct
 
 
-def run_qchem_par(prog, method):
+def run_qchem_par(prog):
     """ dictionary of parameters for different electronic structure codes
     """
 
@@ -52,28 +52,13 @@ def run_qchem_par(prog, method):
     if prog == 'molpro':
         sp_script_str = ("#!/usr/bin/env bash\n"
                       "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
-        if method == 'caspt2':
-            opt_script_str = ("#!/usr/bin/env bash\n"
-                              "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
-        else:
-            opt_script_str = ("#!/usr/bin/env bash\n"
-                              "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
+        opt_script_str = ("#!/usr/bin/env bash\n"
+                          "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
         kwargs = {
-            'memory': 10,
-            'corr_options': ['shift=0.2'],
-            'mol_options': ['nosym'],
+            'memory': 20,
         }
         opt_kwargs = {
-            'memory': 5,
-            'corr_options': ['shift=0.2'],
-            'mol_options': ['nosym'],
-            'options_mat': [
-                [{},
-                 {},
-                 {'job_options': ['numhess']},
-                 {'job_options': ['numhess=10']},
-                 {'job_options': ['numhess=1']}]
-            ],
+            'memory': 20,
         }
 
     if prog == 'qchem':
@@ -81,7 +66,7 @@ def run_qchem_par(prog, method):
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
         kwargs = {
-            'memory': 20,
+            'memory': 50,
         }
         opt_kwargs = {}
 
@@ -90,7 +75,7 @@ def run_qchem_par(prog, method):
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
         kwargs = {
-            'memory': 20,
+            'memory': 50,
         }
         opt_kwargs = {}
 
@@ -99,7 +84,7 @@ def run_qchem_par(prog, method):
                       "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
         kwargs = {
-            'memory': 20,
+            'memory': 50,
         }
         opt_kwargs = {}
 
@@ -158,12 +143,12 @@ def reference_geometry(spc_info, theory_level, prefix,
     thy_fs.leaf.create(thy_level)
     thy_path = thy_fs.leaf.path(thy_level)
 
+    ich = spc_info[0]
     if thy_fs.leaf.file.geometry.exists(thy_level):
         thy_path = thy_fs.leaf.path(thy_level)
         print('getting reference geometry from', thy_path)
         geo = thy_fs.leaf.file.geometry.read(thy_level)
     else:
-        ich = spc_info[0]
         if ich in geom_dct:
             print('getting reference geometry from geom_dct')
             geo = geom_dct[ich]
