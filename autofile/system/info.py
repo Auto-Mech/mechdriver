@@ -61,9 +61,9 @@ def scan_branch(grids):
         by coordinate name
     :type grids: dict[str: list[float]]
     """
-    print('grids test:',grids)
+    print('grids test:', grids)
     grid_dct = dict(grids)
-    # note this renormalization of angle ranges needs to be updated for 2D grids.
+    # note:renormalization of angle ranges needs to be updated for 2D grids.
     for key, rng in grid_dct.items():
         if 'R' not in key:
             grid_dct[key] = rng*180./numpy.pi
@@ -91,6 +91,16 @@ def vpt2_trunk(fermi):
     return inf_obj
 
 
+def energy_transfer_trunk(potential, nsamp,
+                          method, basis):
+    """ energy transfer trunk """
+    inf_obj = autofile.info.Info(potential=potential, nsamp=nsamp,
+                                 method=method, basis=basis)
+    assert autofile.info.matches_function_signature(
+        inf_obj, energy_transfer_trunk)
+    return inf_obj
+
+
 class RunStatus():
     """ run statuses """
     RUNNING = "running"
@@ -99,10 +109,10 @@ class RunStatus():
 
 
 def run(job, prog, method, basis, status, utc_start_time=None,
-#def run(job, theory_level, status, utc_start_time=None,
+        # def run(job, theory_level, status, utc_start_time=None,
         utc_end_time=None):
     """ run information
-    """
+     """
 #    prog = theory_level[0]
 #    method = theory_level[1]
 #    basis = theory_level[2]

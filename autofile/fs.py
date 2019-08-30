@@ -19,7 +19,7 @@ class FilePrefix():
     HESS = 'hess'
     MIN = 'min'
     VPT2 = 'vpt2'
-
+    LJ = 'lj'
 
 class FileAttributeName():
     """ DataFile attribute names """
@@ -43,6 +43,8 @@ class FileAttributeName():
     HFREQ = 'harmonic_frequencies'
     TRAJ = 'trajectory'
     XMAT = 'anharmonicity_matrix'
+    LJ_EPS = 'lj_epsilon'
+    LJ_SIG = 'lj_sigma'
 
 
 class SeriesAttributeName():
@@ -310,6 +312,41 @@ def vpt2(prefix):
 
     dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds})
 
+    return dir_fs
+
+
+def energy_transfer(prefix):
+    """ construct the energy transfer filesystem [trunk/leaf]
+
+    layers:
+     - trunk (specifiers: [])
+     - leaf (specifiers: [method, basis, orb_restricted])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
+    """
+    trunk_ds = dir_.energy_transfer_trunk(prefix)
+    leaf_ds = dir_.energy_transfer_leaf(prefix, root_ds=trunk_ds)
+
+    inp_dfile = file_.input_file(FilePrefix.SP)
+    inf_dfile = file_.information(FilePrefix.LJ,
+        function=info.lennard_jones)
+    ene_dfile = file_.energy(FilePrefix.LJ)
+    eps_dfile = file_.lennard_jones_epsilon(FilePrefix.LJ)
+    sig_dfile = file_.lennard_jones_sigma(FilePrefix.LJ)
+    traj_dfile = file_.trajectory(FilePrefix.LJ)
+
+    leaf_ds.add_data_files({
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.INPUT: inp_dfile,
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.LJ_EPS: eps_dfile,
+        FileAttributeName.LJ_SIG: sig_dfile,
+        FileAttributeName.TRAJ: traj_dfile})
+
+    dir_fs = model.FileSystem({
+        SeriesAttributeName.TRUNK: trunk_ds,
+        SeriesAttributeName.LEAF: leaf_ds})
     return dir_fs
 
 
