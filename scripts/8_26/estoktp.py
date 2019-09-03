@@ -1,14 +1,10 @@
 """ reaction list test
 """
 import os
-from itertools import chain
-import collections
 import pandas
 from qcelemental import constants as qcc
-import thermo
 import chemkin_io
 import automol
-from automol import formula
 import moldr
 import scripts
 
@@ -19,7 +15,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 # 0. choose which mechanism to run
 
 # MECHANISM_NAME = 'ch4+nh2'  # options: syngas, natgas, heptane
-MECHANISM_NAME = 'syngas'  # options: syngas, natgas, heptane
+MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane
 #MECHANISM_NAME = 'vhp'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas
@@ -37,14 +33,14 @@ PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                  "messpf pf.inp build.out >> stdout.log &> stderr.log")
 RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                    "mess mess.inp build.out >> stdout.log &> stderr.log")
-VARECOF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "/home/ygeorgi/build/rotd/multi ")
-MCFLUX_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+VARECOFMCFLUX_SCRIPT_STR = {"#!/usr/bin/env bash\n"
+                     "/home/ygeorgi/build/rotd/multi ")
+MCFLUX_SCRIPT_STR = {"#!/usr/bin/env bash\n"
                      "/home/ygeorgi/build/rotd/mc_flux ")
-CONV_MULTI_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                         "/home/ygeorgi/build/rotd/mc_flux ")
-TST_CHECK_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                        "/home/ygeorgi/build/rotd/tst_check ")
+CONV_MULTI_SCRIPT_STR = {"#!/usr/bin/env bash\n"
+                     "/home/ygeorgi/build/rotd/mc_flux ")
+TST_CHECK_SCRIPT_STR = {"#!/usr/bin/env bash\n"
+                     "/home/ygeorgi/build/rotd/tst_check ")
 MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
 #NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
 #                   "cp ../PF/build.out pf.dat\n"
@@ -81,8 +77,7 @@ RUN_OPT_LEVELS.append(['g09', 'wb97xd', '6-31g*', 'RU'])
 # set up a set of standard hl methods
 THEORY_REF_HIGH_LEVEL = ['', 'wb97xd', '6-31g*', 'RU']
 RUN_HIGH_LEVELS = []
-RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVDZ', 'RU'])
-RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVTZ', 'RU'])
+#RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVTZ'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVDZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVQZ', 'RR'])
@@ -95,14 +90,8 @@ RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVTZ', 'RU'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVQZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pV5Z', 'RR'])
 
-# set up a combination of energies
-# E_HL = sum_i E_HL(i) * Coeff(i)
-#HIGH_LEVEL_COEFF = [1]
-#HIGH_LEVEL_COEFF = None
-HIGH_LEVEL_COEFF = [-0.5, 1.5]
-
 PF_LEVELS = []
-PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
+#PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
 # PF_LEVELS contains the elec. struc. levels for the harmonic, torsional, and anharmonic analyses
 
 # c. What type of electronic structure calculations to run
@@ -135,7 +124,7 @@ RUN_HL_MIN_ENE = True
 RUN_TS_CONF_SAMP = True
 RUN_TS_CONF_OPT = False
 RUN_TS_MIN_GRAD = False
-RUN_TS_MIN_HESS = True
+RUN_TS_MIN_HESS = False
 RUN_TS_MIN_VPT2 = False
 RUN_TS_CONF_GRAD = False
 RUN_TS_CONF_HESS = False
@@ -146,7 +135,7 @@ RUN_TS_CONF_SCAN_HESS = False
 RUN_TS_TAU_SAMP = False
 RUN_TS_TAU_GRAD = False
 RUN_TS_TAU_HESS = False
-RUN_TS_HL_MIN_ENE = False
+RUN_TS_HL_MIN_ENE = True
 
 RUN_VDW_CONF_SAMP = False
 RUN_VDW_CONF_OPT = False
@@ -216,7 +205,7 @@ SPC_MODELS = [['RIGID', 'HARM']]
 #SPC_MODELS = [['1DHR', 'HARM']]
 #SPC_MODELS = [['RIGID', 'HARM'], ['1DHR', 'HARM']]
 # The first component specifies the torsional model - TORS_MODEL.
-# It can take 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
+# It can take 'RIGID', '1DHR', or 'TAU'
 # The second component specifies the vibrational model - VIB_MODEL.
 # It can take 'HARM', or 'VPT2' values.
 RUN_REACTION_RATES = True
@@ -239,14 +228,15 @@ TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
 PRESS = [0.1, 1., 10., 100.]
 # Collisional parameters
 EXP_FACTOR = 150.0
-EXP_POWER = 0.85
-EXP_CUTOFF = 15.
+EXP_POWER = 50.0
+EXP_CUTOFF = 80.0
 EPS1 = 100.0
 EPS2 = 200.0
-SIG1 = 6.
-SIG2 = 6.
+SIG1 = 10.0
+SIG2 = 20.0
 MASS1 = 15.0
-ETSFR_PAR = [EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2, SIG1, SIG2, MASS1]
+MASS2 = 25.0
+ETSFR_PAR = [EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2, SIG1, SIG2, MASS1, MASS2]
 
 ELC_DEG_DCT = {
     ('InChI=1S/B', 2): [[0., 2], [16., 4]],
@@ -330,47 +320,6 @@ RCT_NAMES_LST = list(
 PRD_NAMES_LST = list(
     map(chemkin_io.reaction.DataString.product_names, RXN_STRS))
 
-# Sort reactant and product name lists by formula to facilitate 
-# multichannel, multiwell rate evaluations
-
-FORMULA_STR = ''
-RXN_NAME_LST = []
-FORMULA_STR_LST = []
-for rct_names, prd_names in zip(RCT_NAMES_LST, PRD_NAMES_LST):
-    rxn_name = '='.join(['+'.join(rct_names), '+'.join(prd_names)])
-    RXN_NAME_LST.append(rxn_name)
-    rct_smis = list(map(SMI_DCT.__getitem__, rct_names))
-    rct_ichs = list(map(automol.smiles.inchi, rct_smis))
-    prd_smis = list(map(SMI_DCT.__getitem__, prd_names))
-    prd_ichs = list(map(automol.smiles.inchi, prd_smis))
-    formula_dict = ''
-    for rct_ich in rct_ichs:
-        formula_i = thermo.util.inchi_formula(rct_ich)
-        formula_i_dict = thermo.util.get_atom_counts_dict(formula_i)
-        formula_dict = automol.formula._formula.join(formula_dict, formula_i_dict)
-    formula_dict = collections.OrderedDict(sorted(formula_dict.items()))
-    FORMULA_STR = ''.join(map(str, chain.from_iterable(formula_dict.items())))
-    FORMULA_STR_LST.append(FORMULA_STR)
-
-#print('formula string test list', formula_str_lst, 'rxn name list', rxn_name_lst)
-#for rct_names in RCT_NAMES_LST:
-#    print('first rct names test:', rct_names)
-RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
-#for _, rct_names_lst, _, _ in RXN_INFO_LST:
-#    print('second rct names test:', rct_names_lst)
-#    for rct_names in rct_names_lst:
-#        print('rct names test:', rct_names)
-RXN_INFO_LST.sort()
-FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
-for rxn_name in RXN_NAME_LST:
-    print("Reaction: {}".format(rxn_name))
-#for rct_names in RCT_NAMES_LST:
-#    print('rct names test:', rct_names)
-#for formula in FORMULA_STR_LST:
-#    print("Reaction: {}".format(formula))
-
-#os.sys.exit()
-
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 print(GEOM_PATH)
 GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
@@ -421,7 +370,8 @@ if RUN_SPC_QCHEM:
 
 if RUN_TS_QCHEM:
     scripts.es.ts_qchem(
-        rxn_info_lst=RXN_INFO_LST,
+        rct_names_lst=RCT_NAMES_LST,
+        prd_names_lst=PRD_NAMES_LST,
         smi_dct=SMI_DCT,
         chg_dct=CHG_DCT,
         mul_dct=MUL_DCT,
@@ -471,7 +421,6 @@ if RUN_SPC_THERMO:
         temp_par=TEMP_PAR,
         ref_high_level=THEORY_REF_HIGH_LEVEL,
         run_high_levels=RUN_HIGH_LEVELS,
-        high_level_coeff=HIGH_LEVEL_COEFF,
         spc_models=SPC_MODELS,
         pf_levels=PF_LEVELS,
         save_prefix=SAVE_PREFIX,
@@ -481,7 +430,8 @@ if RUN_SPC_THERMO:
 
 if RUN_REACTION_RATES:
     scripts.ktp.reaction_rates(
-        rxn_info_lst=RXN_INFO_LST,
+        rct_names_lst=RCT_NAMES_LST,
+        prd_names_lst=PRD_NAMES_LST,
         smi_dct=SMI_DCT,
         chg_dct=CHG_DCT,
         mul_dct=MUL_DCT,
@@ -492,7 +442,6 @@ if RUN_REACTION_RATES:
         run_opt_levels=RUN_OPT_LEVELS,
         ref_high_level=THEORY_REF_HIGH_LEVEL,
         run_high_levels=RUN_HIGH_LEVELS,
-        high_level_coeff=HIGH_LEVEL_COEFF,
         spc_models=SPC_MODELS,
         pf_levels=PF_LEVELS,
         save_prefix=SAVE_PREFIX,
