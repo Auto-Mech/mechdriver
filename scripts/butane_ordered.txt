@@ -1,0 +1,2 @@
+cp: missing destination file operand after 'butane.log'
+Try 'cp --help' for more information.

@@ -110,8 +110,8 @@ class RunStatus():
 
 def run(job, prog, method, basis, status, utc_start_time=None,
         utc_end_time=None):
-     """ run information
-     """
+    """ run information
+    """
     inf_obj = autofile.info.Info(
         job=job,
         prog=prog,
