@@ -1,0 +1,16 @@
+
+           ================================================================
+           ==                          ES to k(T,P)                      ==
+           ====        Andreas Copan, Kevin Moore, Sarah Elliott,      ====
+           ==   Carlo Cavolotti, Yuri Georgievski, Stephen Klippenstein  ==
+           ================================================================
+
+||| Reaction t1 will compute thermo and rates for the reaction: C + [H] --> [CH3] + [HH]
+||| using the following rxnules: mc, tsfind, geom 
+
+  | Task mc 			 Species methane: C
+    | initializing...
+    | found initial geometry in species input file
+    | 
+    | the initial geometries will be checked for imaginary frequencies
+    | running task mc for 4 points

@@ -1,0 +1,24 @@
+!+++++++++++++++++++++++++++++++++++++++++++++++++++
+!  GLOBAL SECTION
+!+++++++++++++++++++++++++++++++++++++++++++++++++++
+Temperature(step[K],size)              100.0    30
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.6
+Species prod1
+RRHO
+  Geometry[angstrom]        4
+    O     0.00000000    0.72640471    0.02939399
+    O     0.00000000   -0.72640471    0.02939399
+    H    -0.82075467    0.89289364   -0.46649781
+    H     0.82075467   -0.89289364   -0.46649781
+  Core RigidRotor
+    SymmetryFactor          1.0
+  End
+  Frequencies[1/cm]         6
+    335.24    946.24    1298.26   1438.19   3709.16   3710.95   
+  ElectronicLevels[1/cm]    1
+    0.0  1
+
+ ZeroEnergy[kcal/mol] 16.35   
+End
+

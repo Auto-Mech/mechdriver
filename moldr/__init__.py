@@ -1,6 +1,7 @@
 """ moldr modules
 """
 from moldr import driver
+from moldr import pf
 from moldr import conformer
 from moldr import geom
 from moldr import pf
@@ -13,7 +14,14 @@ from moldr import util
 
 __all__ = [
     'driver',
-    'pfdriver',
+    'pf',
+    'conformer',
+    'geom',
+    'pf',
+    'scan',
+    'sp',
+    'tau',
+    'ts',
     'runner',
     'util',
 ]

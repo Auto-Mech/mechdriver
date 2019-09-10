@@ -1,0 +1,105 @@
+
+           ================================================================
+           ==                          ES to k(T,P)                      ==
+           ====        Andreas Copan, Kevin Moore, Sarah Elliott,      ====
+           ==   Carlo Cavolotti, Yuri Georgievski, Stephen Klippenstein  ==
+           ================================================================
+
+||| Reaction t1 will compute thermo and rates for the reaction: C + [H] --> [CH3] + [HH]
+||| using the following rxnules: mc, tsfind, geom, freq 
+
+  | Task mc 			 Species methane: C
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvlpJR
+    | the initial geometries will be checked for imaginary frequencies
+    | running task mc for 4 points
+
+  | Task mc 			 Species hyd: [H]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/ezvlpJU
+    | the initial geometries will be checked for imaginary frequencies
+    | running task mc for 1 points
+
+  | Task mc 			 Species methyl: [CH3]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvlpJU
+    | the initial geometries will be checked for imaginary frequencies
+    | running task mc for 4 points
+
+  | Task mc 			 Species h2: [HH]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/ezvlpJR
+    | the initial geometries will be checked for imaginary frequencies
+    | running task mc for 1 points
+  | Task tsfind 			
+   | prepping ts scan:
+    | checking exothermicity of reaction
+    | reaction is 0.00
+    | ts search will be performed in reverse direction
+    | The reaction direction is forward
+    | H abs
+    | Type: hydrogen abstraction
+   | running ts scan:
+   | Success, ts_tsfind added to queue
+
+  | Task geom 			 Species methane: C
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvN4wR
+    | the initial geometries will be checked for imaginary frequencies
+
+  | Task geom 			 Species hyd: [H]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/ezvN4wU
+    | the initial geometries will be checked for imaginary frequencies
+
+  | Task geom 			 Species methyl: [CH3]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvN4wU
+    | the initial geometries will be checked for imaginary frequencies
+
+  | Task geom 			 Species h2: [HH]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/ezvN4wR
+    | the initial geometries will be checked for imaginary frequencies
+
+  | Task geom 			 Species ts_t1: [CH3].[HH]
+    | H abs
+    | Type: hydrogen abstraction
+    | checking exothermicity of reaction
+    | reaction is 0.00
+    | ts search will be performed in reverse direction
+    | The reaction direction is forward
+    | checking exothermicity of reaction
+    | reaction is 0.00
+    | ts search will be performed in reverse direction
+    | The reaction direction is forward
+   | running ts scan:
+
+  | Task freq 			 Species methane: C
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/ezvN4wR
+    | the initial geometries will be checked for imaginary frequencies
+    | running task freq
+
+  | Task freq 			 Species hyd: [H]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/ezvN4wU
+    | the initial geometries will be checked for imaginary frequencies
+    | running task freq
+
+  | Task freq 			 Species methyl: [CH3]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/CH3/WCYWZMWISLQXQU/0/2/UHFFFAOYSA-N/ezvN4wU
+    | the initial geometries will be checked for imaginary frequencies
+    | running task freq
+
+  | Task freq 			 Species h2: [HH]
+    | initializing...
+    | getting reference geometry from directory /blues/gpfs/home/elliott/Packages/PACC/moldriver/rcdriver/tmpsavedir/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/ezvN4wR
+    | the initial geometries will be checked for imaginary frequencies
+    | running task freq
+
+  | Task freq 			 Species ts_t1: [CH3].[HH]
+    | H abs
+    | Type: hydrogen abstraction
+    | checking exothermicity of reaction

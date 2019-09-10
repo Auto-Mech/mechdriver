@@ -1,0 +1,7 @@
+basis: cc-pvdz
+job: optimization
+method: b3lyp
+prog: g09
+status: succeeded
+utc_end_time: 2019-09-06 03:26:54.187975
+utc_start_time: 2019-09-06 03:26:51.510083

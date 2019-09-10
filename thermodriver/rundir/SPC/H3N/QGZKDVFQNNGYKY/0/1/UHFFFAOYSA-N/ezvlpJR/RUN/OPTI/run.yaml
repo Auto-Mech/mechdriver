@@ -1,0 +1,7 @@
+basis: 6-31g*
+job: optimization
+method: b3lyp
+prog: psi4
+status: succeeded
+utc_end_time: 2019-09-09 19:59:02.206994
+utc_start_time: 2019-09-09 19:58:58.493867

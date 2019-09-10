@@ -12,11 +12,12 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def run_initial_geometry_opt(
         spc_info, thy_level, run_fs, thy_run_fs, thy_save_fs, 
-        script_str, overwrite, geo_init, **kwargs):
+        script_str, overwrite, geo_init, return_msg = False, **kwargs):
     """ generate initial geometry via optimization from either reference
     geometries or from inchi
     """
     # set up the filesystem
+    print(thy_run_fs)
     thy_run_fs.leaf.create(thy_level[1:4])
     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
 
@@ -49,14 +50,17 @@ def run_initial_geometry_opt(
         ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
         geo = None
         if ret:
-            print('Saving reference geometry')
-            print(" - Save path: {}".format(thy_save_path))
+            msg = 'Saving reference geometry'
+            msg +="\n - Save path: {}".format(thy_save_path)
             inf_obj, _, out_str = ret
             prog = inf_obj.prog
             geo = elstruct.reader.opt_geometry(prog, out_str)
             zma = automol.geom.zmatrix(geo)
             thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
             thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
+    if return_msg:
+        return geo, msg
+    print(msg)
     return geo
 
 
