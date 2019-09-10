@@ -31,7 +31,7 @@ ELC_DEG_DCT = {
 }
 
 def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix):
-    ene = moldr.pfdriver.get_high_level_energy(
+    ene = moldr.pf.get_high_level_energy(
         spc_info=spc_info,
         theory_low_level=geo_theory,
         theory_high_level=sp_theory,
@@ -100,7 +100,7 @@ def get_zpe(spc, spcdct, spc_info, spc_save_path, pf_levels, model):
     smi = automol.inchi.smiles(ich)
     print("smiles: {}".format(smi), "inchi: {}".format(ich))
     
-    spc_zpe, is_atom = moldr.pfdriver.get_zero_point_energy(
+    spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
         spc_info,
         tors_model, vib_model,
         har_level, tors_level, vpt2_level,
@@ -141,7 +141,7 @@ def get_spcinput(spc, spcdct, spc_info, spc_save_path, pf_levels, model):
         elec_levels = ELC_DEG_DCT[(ich, mul)]
     
     # cycle through the low levels generating partition functions  for each
-    spc_str = moldr.pfdriver.species_block(
+    spc_str = moldr.pf.species_block(
         spc_info=spc_info,
         tors_model=tors_model,
         vib_model=vib_model,
@@ -371,7 +371,7 @@ def write_nasa_file(spc_spcdct, ckin_path, nasa_path, chemkin_poly_str):
 #                spc_save_fs.leaf.create(spc_info[name])
 #                spc_save_path = spc_save_fs.leaf.path(spc_info[name])
 #
-#                spc_zpe[name], is_atom[name] = moldr.pfdriver.get_zero_point_energy(
+#                spc_zpe[name], is_atom[name] = moldr.pf.get_zero_point_energy(
 #                    spc_info[name],
 #                    tors_model, vib_model,
 #                    har_level, tors_level, vpt2_level,
@@ -408,7 +408,7 @@ def write_nasa_file(spc_spcdct, ckin_path, nasa_path, chemkin_poly_str):
 #                    elec_levels = elc_deg_dct[(ich, mul)]
 #
 #                # cycle through the low levels generating partition functions  for each
-#                spc_str = moldr.pfdriver.species_block(
+#                spc_str = moldr.pf.species_block(
 #                    spc_info=spc_info[name],
 #                    tors_model=tors_model,
 #                    vib_model=vib_model,

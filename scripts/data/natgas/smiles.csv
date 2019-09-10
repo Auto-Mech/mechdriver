@@ -1,4 +1,4 @@
-name_,smiles,mult
+name,smiles,mult
 Ne,[Ne],1
 methane(1),C,1
 ethane(2),CC,1

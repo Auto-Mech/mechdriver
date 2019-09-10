@@ -1,10 +1,16 @@
 """ reaction list test
 """
 import os
+from itertools import chain
+import collections
 import pandas
+import numpy 
+import json
 from qcelemental import constants as qcc
+import thermo
 import chemkin_io
 import automol
+from automol import formula
 import moldr
 import scripts
 
@@ -15,8 +21,11 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 # 0. choose which mechanism to run
 
 # MECHANISM_NAME = 'ch4+nh2'  # options: syngas, natgas, heptane
-# MECHANISM_NAME = 'test'  # options: syngas, natgas, heptane
-MECHANISM_NAME = 'vhp'  # options: syngas, natgas, heptane
+#MECHANISM_NAME = 'isooctane'  # options: syngas, natgas, heptane
+#MECHANISM_NAME = 'natgas'  # options: syngas, natgas, heptane
+MECHANISM_NAME = 'butane'  # options: syngas, natgas, heptane
+#MECHANISM_NAME = 'syngas'  # options: syngas, natgas, heptane
+#MECHANISM_NAME = 'vhp'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas
 # MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas
@@ -33,6 +42,15 @@ PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                  "messpf pf.inp build.out >> stdout.log &> stderr.log")
 RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                    "mess mess.inp build.out >> stdout.log &> stderr.log")
+VARECOF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                      "/home/ygeorgi/build/rotd/multi ")
+MCFLUX_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                     "/home/ygeorgi/build/rotd/mc_flux ")
+CONV_MULTI_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                         "/home/ygeorgi/build/rotd/mc_flux ")
+TST_CHECK_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                        "/home/ygeorgi/build/rotd/tst_check ")
+MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
 #NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
 #                   "cp ../PF/build.out pf.dat\n"
 #                   "cp /tcghome/sjklipp/PACC/nasa/new.groups .\n"
@@ -57,6 +75,7 @@ RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
 # UU => UHF for singlet, UHF for multiplets
 
 RUN_OPT_LEVELS = []
+#RUN_OPT_LEVELS.append(['molpro', 'casscf', 'cc-pVDZ', 'RR'])
 RUN_OPT_LEVELS.append(['g09', 'wb97xd', '6-31g*', 'RU'])
 # RUN_OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ', 'RU'])
 # RUN_OPT_LEVELS.append(['g09', 'b2plypd3', 'cc-pVTZ', 'RU'])
@@ -67,9 +86,10 @@ RUN_OPT_LEVELS.append(['g09', 'wb97xd', '6-31g*', 'RU'])
 # set up a set of standard hl methods
 THEORY_REF_HIGH_LEVEL = ['', 'wb97xd', '6-31g*', 'RU']
 RUN_HIGH_LEVELS = []
-#RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVTZ'])
+RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVDZ', 'RU'])
+RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVTZ', 'RU'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVDZ', 'RR'])
-RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ', 'RR'])
+#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVQZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pV5Z', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVDZ-F12', 'RR'])
@@ -80,13 +100,19 @@ RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVQZ', 'RR'])
 #RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pV5Z', 'RR'])
 
+# set up a combination of energies
+# E_HL = sum_i E_HL(i) * Coeff(i)
+#HIGH_LEVEL_COEFF = [1]
+#HIGH_LEVEL_COEFF = None
+HIGH_LEVEL_COEFF = [-0.5, 1.5]
+
 PF_LEVELS = []
 PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
 # PF_LEVELS contains the elec. struc. levels for the harmonic, torsional, and anharmonic analyses
 
 # c. What type of electronic structure calculations to run
 RUN_SPC_QCHEM = True
-RUN_TS_QCHEM = False
+RUN_TS_QCHEM = True
 RUN_TS_KICKS_QCHEM = False
 RUN_VDW_QCHEM = False
 
@@ -114,7 +140,7 @@ RUN_HL_MIN_ENE = True
 RUN_TS_CONF_SAMP = True
 RUN_TS_CONF_OPT = False
 RUN_TS_MIN_GRAD = False
-RUN_TS_MIN_HESS = False
+RUN_TS_MIN_HESS = True
 RUN_TS_MIN_VPT2 = False
 RUN_TS_CONF_GRAD = False
 RUN_TS_CONF_HESS = False
@@ -125,7 +151,7 @@ RUN_TS_CONF_SCAN_HESS = False
 RUN_TS_TAU_SAMP = False
 RUN_TS_TAU_GRAD = False
 RUN_TS_TAU_HESS = False
-RUN_TS_HL_MIN_ENE = True
+RUN_TS_HL_MIN_ENE = False
 
 RUN_VDW_CONF_SAMP = False
 RUN_VDW_CONF_OPT = False
@@ -195,7 +221,7 @@ SPC_MODELS = [['RIGID', 'HARM']]
 #SPC_MODELS = [['1DHR', 'HARM']]
 #SPC_MODELS = [['RIGID', 'HARM'], ['1DHR', 'HARM']]
 # The first component specifies the torsional model - TORS_MODEL.
-# It can take 'RIGID', '1DHR', or 'TAU'
+# It can take 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
 # The second component specifies the vibrational model - VIB_MODEL.
 # It can take 'HARM', or 'VPT2' values.
 RUN_REACTION_RATES = True
@@ -218,15 +244,14 @@ TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
 PRESS = [0.1, 1., 10., 100.]
 # Collisional parameters
 EXP_FACTOR = 150.0
-EXP_POWER = 50.0
-EXP_CUTOFF = 80.0
+EXP_POWER = 0.85
+EXP_CUTOFF = 15.
 EPS1 = 100.0
 EPS2 = 200.0
-SIG1 = 10.0
-SIG2 = 20.0
+SIG1 = 6.
+SIG2 = 6.
 MASS1 = 15.0
-MASS2 = 25.0
-ETSFR_PAR = [EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2, SIG1, SIG2, MASS1, MASS2]
+ETSFR_PAR = [EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2, SIG1, SIG2, MASS1]
 
 ELC_DEG_DCT = {
     ('InChI=1S/B', 2): [[0., 2], [16., 4]],
@@ -259,59 +284,286 @@ if not os.path.exists(SAVE_PREFIX):
 # 3. read in data from the mechanism directory
 DATA_PATH = os.path.dirname(os.path.realpath(__file__))
 MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
-MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
-SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
-
+#MECH_TYPE='CHEMKIN'
+MECH_TYPE='json'
+MECH_FILE='mech.json'
+RAD_RAD_SORT=True
+if MECH_TYPE == 'CHEMKIN':
+    MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
+    SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
 # 4. process species data from the mechanism file
 # Also add in basis set species
 
-SPC_TAB['charge'] = 0
-SMI_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['smiles']))
-SMI_DCT['REF_H2'] = '[H][H]'
-SMI_DCT['REF_CH4'] = 'C'
-SMI_DCT['REF_H2O'] = 'O'
-SMI_DCT['REF_NH3'] = 'N'
-CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
-CHG_DCT['REF_H2'] = 0
-CHG_DCT['REF_CH4'] = 0
-CHG_DCT['REF_H2O'] = 0
-CHG_DCT['REF_NH3'] = 0
-MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
-MUL_DCT['REF_H2'] = 1
-MUL_DCT['REF_CH4'] = 1
-MUL_DCT['REF_H2O'] = 1
-MUL_DCT['REF_NH3'] = 1
-SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
-SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
+    SPC_TAB['charge'] = 0
+    #print('SPC_TAB:', SPC_TAB)
+    #print('SPC_TAB TEST', SPC_TAB['name'])
+    SMI_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['smiles']))
+    SMI_DCT['REF_H2'] = '[H][H]'
+    SMI_DCT['REF_CH4'] = 'C'
+    SMI_DCT['REF_H2O'] = 'O'
+    SMI_DCT['REF_NH3'] = 'N'
+    CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
+    CHG_DCT['REF_H2'] = 0
+    CHG_DCT['REF_CH4'] = 0
+    CHG_DCT['REF_H2O'] = 0
+    CHG_DCT['REF_NH3'] = 0
+    MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
+    MUL_DCT['REF_H2'] = 1
+    MUL_DCT['REF_CH4'] = 1
+    MUL_DCT['REF_H2O'] = 1
+    MUL_DCT['REF_NH3'] = 1
+    SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
+    SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
 
-# You need one species reference for each element in the set of references and species
-SPC_REF_NAMES = ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
-SPC_REF_ICH = []
-for ref_name in SPC_REF_NAMES:
-    smi = SMI_DCT[ref_name]
-    SPC_REF_ICH.append(automol.smiles.inchi(smi))
-SPC_NAMES += SPC_REF_NAMES
-print('SPC_NAMES')
-print(SPC_NAMES)
-SPC_INFO = {}
-for name in SPC_NAMES:
-    smi = SMI_DCT[name]
-    ich = automol.smiles.inchi(smi)
-    chg = CHG_DCT[name]
-    mul = MUL_DCT[name]
-    SPC_INFO[name] = [ich, chg, mul]
+    # You need one species reference for each element in the set of references and species
+    SPC_REF_NAMES = ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
+    SPC_REF_ICH = []
+    for ref_name in SPC_REF_NAMES:
+        smi = SMI_DCT[ref_name]
+        SPC_REF_ICH.append(automol.smiles.inchi(smi))
+    SPC_NAMES += SPC_REF_NAMES
+    print('SPC_NAMES')
+    print(SPC_NAMES)
+    SPC_INFO = {}
+    for name in SPC_NAMES:
+        smi = SMI_DCT[name]
+        ich = automol.smiles.inchi(smi)
+        chg = CHG_DCT[name]
+        mul = MUL_DCT[name]
+        SPC_INFO[name] = [ich, chg, mul]
 
-SPC_STR = {}
+    SPC_STR = {}
 
-RXN_BLOCK_STR = chemkin_io.reaction_block(MECH_STR)
-RXN_STRS = chemkin_io.reaction.data_strings(RXN_BLOCK_STR)
-RCT_NAMES_LST = list(
-    map(chemkin_io.reaction.DataString.reactant_names, RXN_STRS))
-PRD_NAMES_LST = list(
-    map(chemkin_io.reaction.DataString.product_names, RXN_STRS))
+    RXN_BLOCK_STR = chemkin_io.reaction_block(MECH_STR)
+    RXN_STRS = chemkin_io.reaction.data_strings(RXN_BLOCK_STR)
+    RCT_NAMES_LST = list(
+        map(chemkin_io.reaction.DataString.reactant_names, RXN_STRS))
+    PRD_NAMES_LST = list(
+        map(chemkin_io.reaction.DataString.product_names, RXN_STRS))
+
+    # Sort reactant and product name lists by formula to facilitate 
+    # multichannel, multiwell rate evaluations
+
+    FORMULA_STR = ''
+    RXN_NAME_LST = []
+    FORMULA_STR_LST = []
+    for rct_names, prd_names in zip(RCT_NAMES_LST, PRD_NAMES_LST):
+        rxn_name = '='.join(['+'.join(rct_names), '+'.join(prd_names)])
+        RXN_NAME_LST.append(rxn_name)
+        rct_smis = list(map(SMI_DCT.__getitem__, rct_names))
+        rct_ichs = list(map(automol.smiles.inchi, rct_smis))
+        prd_smis = list(map(SMI_DCT.__getitem__, prd_names))
+        prd_ichs = list(map(automol.smiles.inchi, prd_smis))
+        formula_dict = ''
+        for rct_ich in rct_ichs:
+            formula_i = thermo.util.inchi_formula(rct_ich)
+            formula_i_dict = thermo.util.get_atom_counts_dict(formula_i)
+            formula_dict = automol.formula._formula.join(formula_dict, formula_i_dict)
+        formula_dict = collections.OrderedDict(sorted(formula_dict.items()))
+        FORMULA_STR = ''.join(map(str, chain.from_iterable(formula_dict.items())))
+        FORMULA_STR_LST.append(FORMULA_STR)
+
+    #print('formula string test list', formula_str_lst, 'rxn name list', rxn_name_lst)
+    #for rct_names in RCT_NAMES_LST:
+    #    print('first rct names test:', rct_names)
+    RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
+    #for _, rct_names_lst, _, _ in RXN_INFO_LST:
+    #    print('second rct names test:', rct_names_lst)
+    #    for rct_names in rct_names_lst:
+    #        print('rct names test:', rct_names)
+    RXN_INFO_LST.sort()
+    FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
+    for rxn_name in RXN_NAME_LST:
+        print("Reaction: {}".format(rxn_name))
+    #for rct_names in RCT_NAMES_LST:
+    #    print('rct names test:', rct_names)
+    for formula in FORMULA_STR_LST:
+        print("Reaction: {}".format(formula))
+
+elif MECH_TYPE == 'json':
+    with open(os.path.join(MECH_PATH, MECH_FILE)) as f:
+        mech_data_in = json.load(f, object_pairs_hook=collections.OrderedDict)
+        mech_data = []
+    for reaction in mech_data_in:
+        if isinstance(reaction, dict):
+            mech_data = mech_data_in
+            break
+        else:
+            for entry in mech_data_in[reaction]:
+                mech_data.append(entry)
+
+#    print(mech_data)
+#    SENS_SORT = sorted(mech_data, key = lambda i: i['Sensitivity'])
+    FORMULA_STR = ''
+#    RXN_NAME_LST = []
+    FORMULA_STR_LST = []
+#    print ('mech_data test', mech_data)
+    RXN_NAME_LST = []
+    RCT_ICHS_LST = []
+    RCT_MULS_LST = []
+    RCT_NAMES_LST = []
+    PRD_ICHS_LST = []
+    PRD_MULS_LST = []
+    PRD_NAMES_LST = []
+    RXN_SENS = []
+    RXN_UNC = []
+    RXN_VAL = []
+    RXN_FAM = []
+    for reaction in mech_data:
+        # set up reaction info 
+#        print('reaction test:', reaction)
+        rct_ichs = []
+        rct_muls = []
+        rct_names = []
+        prd_ichs = []
+        prd_muls = []
+        prd_names = []
+#        print('reaction name json test:', reaction['name'])
+        if 'Reactants' in reaction and 'Products' in reaction:
+            for i, rct in enumerate(reaction['Reactants']):
+                rct_ichs.append(rct['InChi'])
+                rct_muls.append(rct['multiplicity'])
+                rct_names.append(rct['name'])
+            rad_rad_reac = True
+            if len(rct_ichs) == 1:
+                rad_rad_reac = False
+            else:
+                if min(rct_muls) == 1:
+                    rad_rad_reac = False
+            for i, prd in enumerate(reaction['Products']):
+                prd_names.append(prd['name'])
+                prd_ichs.append(prd['InChi'])
+                prd_muls.append(prd['multiplicity'])
+#                print('prd_muls test:', prd['name'], prd['multiplicity'])
+            rad_rad_prod = True
+            if len(prd_ichs) == 1:
+                rad_rad_prod = False
+            else:
+                if min(prd_muls) == 1:
+                    rad_rad_prod = False
+            if RAD_RAD_SORT == True and rad_rad_reac == False and rad_rad_prod == False:
+                continue
+            RCT_ICHS_LST.append(rct_ichs)
+            RCT_MULS_LST.append(rct_muls)
+            RCT_NAMES_LST.append(rct_names)
+            PRD_ICHS_LST.append(prd_ichs)
+            PRD_MULS_LST.append(prd_muls)
+            PRD_NAMES_LST.append(prd_names)
+#        print(reaction['name'], RAD_RAD_SORT, rad_rad_reac, rad_rad_prod)
+        RXN_NAME_LST.append(reaction['name'])
+        if 'Sensitivity' in reaction:
+            RXN_SENS.append(reaction['Sensitivity'])
+        else:
+            RXN_SENS.append('')
+        if 'Uncertainty' in reaction:
+            RXN_UNC.append(reaction['Uncertainty'])
+        else:
+            RXN_UNC.append('')
+        if 'Value' in reaction:
+            RXN_VAL.append(reaction['Value'])
+        else:
+            RXN_VAL.append('')
+        if 'Family' in reaction:
+            RXN_FAM.append(reaction['Family'])
+        else:
+            RXN_FAM.append('')
+
+        formula = ''
+#        formula_dict = ''
+        for rct_ich in rct_ichs:
+            formula_i = automol.inchi.formula(rct_ich)
+#            formula_i = thermo.util.inchi_formula(rct_ich)
+#            formula_i_dict = thermo.util.get_atom_counts_dict(formula_i)
+#            print('formula test:', formula_i_test, formula_i, formula_i_dict)
+            formula = automol.formula._formula.join(formula, formula_i)
+        formula = collections.OrderedDict(sorted(formula.items()))
+        FORMULA_STR = ''.join(map(str, chain.from_iterable(formula.items())))
+#            formula_dict = automol.formula._formula.join(formula_dict, formula_i_dict)
+#        formula_dict = collections.OrderedDict(sorted(formula_dict.items()))
+#        FORMULA_STR = ''.join(map(str, chain.from_iterable(formula_dict.items())))
+        FORMULA_STR_LST.append(FORMULA_STR)
+
+    RXN_INFO_LST = list(zip(
+                            FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST,
+                            RXN_NAME_LST, RXN_SENS, RXN_UNC, RXN_VAL, RXN_FAM,
+                            RCT_ICHS_LST, RCT_MULS_LST, PRD_ICHS_LST,
+                            PRD_MULS_LST))
+    #for _, rct_names_lst, _, _ in RXN_INFO_LST:
+    #    print('second rct names test:', rct_names_lst)
+    #    for rct_names in rct_names_lst:
+    #        print('rct names test:', rct_names)
+#    print('sens test:', RXN_SENS)
+    RXN_INFO_LST = sorted(RXN_INFO_LST, key=lambda x: (x[0]))
+    OLD_FORMULA = RXN_INFO_LST[0][0]
+    sens = RXN_INFO_LST[0][4]
+    ordered_formula = []
+    ordered_sens = []
+    for entry in RXN_INFO_LST:
+        formula = entry[0]
+        if formula == OLD_FORMULA:
+            sens = max(sens, entry[4])
+        else:
+            ordered_sens.append(sens)
+            ordered_formula.append(OLD_FORMULA)
+            sens = entry[4]
+            OLD_FORMULA = formula
+    ordered_sens.append(sens)
+    ordered_formula.append(OLD_FORMULA)
+    SENS_DCT = {}
+    for i, sens in enumerate(ordered_sens):
+        SENS_DCT[ordered_formula[i]] = sens
+    RXN_INFO_LST = sorted(RXN_INFO_LST, key=lambda x: (SENS_DCT[x[0]],x[4]), reverse=True)
+
+#    SORTED_RXN_LST = list(zip(ordered_sens, ordered_formula))
+#    SORTED_RXN_LST.sort()
+#    ordered_sens, ordered_formula = zip(*SORTED_RXN_LST)
+#    for ordered
+
+#    RXN_INFO_LST = sorted(RXN_INFO_LST, key=lambda x: (x[0], x[4]))
+#    RXN_INFO_LST.sort()
+    FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST, RXN_SENS, RXN_UNC, RXN_VAL, RXN_FAM, RCT_ICHS_LST, RCT_MULS_LST, PRD_ICHS_LST, PRD_MULS_LST = zip(*RXN_INFO_LST)
+#    print('rxn_names test:', RXN_NAME_LST)
+    for i, rxn_name in enumerate(RXN_NAME_LST):
+        rct_smis = []
+        for rct_ich in RCT_ICHS_LST[i]:
+            rct_smis.append(automol.inchi.smiles(rct_ich))
+        rct_smis = ' + '.join(rct_smis)
+        prd_smis = []
+        for prd_ich in PRD_ICHS_LST[i]:
+            prd_smis.append(automol.inchi.smiles(prd_ich))
+        prd_smis = ' + '.join(prd_smis)
+        print("Reaction: {} {:.2f}".format(rxn_name, RXN_SENS[i]))
+        print("          {}: {} <=> {}".format(FORMULA_STR_LST[i], rct_smis, prd_smis))
+
+    # set up species info
+    SPC_NAMES = []
+    SPC_INFO = {}
+    SMI_DCT = {}
+    CHG_DCT = {}
+    MUL_DCT = {}
+    for i, spc_names_lst in enumerate(RCT_NAMES_LST):
+        for j, spc_name in enumerate(spc_names_lst):
+            chg = 0
+            if spc_name not in SPC_NAMES:
+                SPC_NAMES.append(spc_name)
+                SPC_INFO[spc_name] = [RCT_ICHS_LST[i][j], chg, RCT_MULS_LST[i][j]]
+                SMI_DCT[spc_name] = RCT_ICHS_LST[i][j]
+                CHG_DCT[spc_name] = chg
+                MUL_DCT[spc_name] = RCT_MULS_LST[i][j]
+    for i, spc_names_lst in enumerate(PRD_NAMES_LST):
+        for j, spc_name in enumerate(spc_names_lst):
+            chg = 0
+            if spc_name not in SPC_NAMES:
+                SPC_NAMES.append(spc_name)
+                SPC_INFO[spc_name] = [PRD_ICHS_LST[i][j], chg, PRD_MULS_LST[i][j]]
+                SMI_DCT[spc_name] = PRD_ICHS_LST[i][j]
+                CHG_DCT[spc_name] = chg
+                MUL_DCT[spc_name] = PRD_MULS_LST[i][j]
+    RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
+#os.sys.exit()
 
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
-print(GEOM_PATH)
+#print(GEOM_PATH)
 GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
 # take starting geometry from saved directory if possible, otherwise get it
@@ -360,8 +612,7 @@ if RUN_SPC_QCHEM:
 
 if RUN_TS_QCHEM:
     scripts.es.ts_qchem(
-        rct_names_lst=RCT_NAMES_LST,
-        prd_names_lst=PRD_NAMES_LST,
+        rxn_info_lst=RXN_INFO_LST,
         smi_dct=SMI_DCT,
         chg_dct=CHG_DCT,
         mul_dct=MUL_DCT,
@@ -411,6 +662,7 @@ if RUN_SPC_THERMO:
         temp_par=TEMP_PAR,
         ref_high_level=THEORY_REF_HIGH_LEVEL,
         run_high_levels=RUN_HIGH_LEVELS,
+        high_level_coeff=HIGH_LEVEL_COEFF,
         spc_models=SPC_MODELS,
         pf_levels=PF_LEVELS,
         save_prefix=SAVE_PREFIX,
@@ -420,8 +672,7 @@ if RUN_SPC_THERMO:
 
 if RUN_REACTION_RATES:
     scripts.ktp.reaction_rates(
-        rct_names_lst=RCT_NAMES_LST,
-        prd_names_lst=PRD_NAMES_LST,
+        rxn_info_lst=RXN_INFO_LST,
         smi_dct=SMI_DCT,
         chg_dct=CHG_DCT,
         mul_dct=MUL_DCT,
@@ -432,6 +683,7 @@ if RUN_REACTION_RATES:
         run_opt_levels=RUN_OPT_LEVELS,
         ref_high_level=THEORY_REF_HIGH_LEVEL,
         run_high_levels=RUN_HIGH_LEVELS,
+        high_level_coeff=HIGH_LEVEL_COEFF,
         spc_models=SPC_MODELS,
         pf_levels=PF_LEVELS,
         save_prefix=SAVE_PREFIX,

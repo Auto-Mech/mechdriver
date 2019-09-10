@@ -22,6 +22,7 @@ def species_thermo(
         temp_par,
         ref_high_level,
         run_high_levels,
+        high_level_coeff,
         spc_models,
         pf_levels,
         save_prefix,
@@ -54,6 +55,7 @@ def species_thermo(
         # get and store the high level energies
         print('name in high level energy routine')
         print(name)
+        ene_cbs[name] = 0.
         for hl_idx, _ in enumerate(run_high_levels):
             min_ene = moldr.pfdriver.get_high_level_energy(
                 spc_info=spc_info[name],
@@ -61,6 +63,9 @@ def species_thermo(
                 theory_high_level=run_high_levels[hl_idx],
                 save_prefix=save_prefix,)
             ene_hl[(name, hl_idx)] = min_ene
+            if high_level_coeff:
+                ene_cbs[name] += min_ene*high_level_coeff(hl_idx)
+        ene_hl[(name, hl_idx+1)] = ene_cbs[name]
 
     spc_save_fs = autofile.fs.species(save_prefix)
     for tors_model, vib_model in spc_models:
@@ -195,7 +200,12 @@ def species_thermo(
                 print(nasa_path)
 
                 h_basis = []
-                for hl_idx, _ in enumerate(run_high_levels):
+                if high_level_coeff:
+                    len_high_levels = len(run_high_levels)+1
+                else:
+                    len_high_levels = len(run_high_levels)
+                for hl_idx in range(len_high_levels):
+#                for hl_idx, _ in enumerate(run_high_levels):
                     for  name_ref in spc_ref_names:
                         ich = spc_info[name_ref][0]
                         if ich in spc_bas:
@@ -206,6 +216,7 @@ def species_thermo(
 
                     # Get the 0 K heat of formation
                     spc_ene = ene_hl[(name, hl_idx)] + spc_zpe[name]/EH2KCAL
+                    spc_ene_cbs = ene_cbs + spc_zpe[name]/EH2KCAL
                     h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ATcT')
                     print('h0form = ',h0form)
 
@@ -259,7 +270,13 @@ def species_thermo(
                         vpt2_level[3], vpt2_level[1], vpt2_level[2])
                     comment_str += '! ref level for energy: {0}{1}/{2}\n'.format(
                         ref_high_level[3], ref_high_level[1], ref_high_level[2])
-                    comment_str += '! energy level: {0}/{1}\n'.format(
+                    if hl_idx == len_high_levels-1:
+                        comment_str += '! energy level from following sum of high levels:\n'
+                        for hl_idx2, _ in enumerate(run_high_levels):
+                            comment_str += '! energy level: {0}/{1}\n'.format(
+                            run_high_levels[hl_idx2][1], run_high_levels[hl_idx2][2])
+                    else:
+                        comment_str += '! energy level: {0}/{1}\n'.format(
                         run_high_levels[hl_idx][1], run_high_levels[hl_idx][2])
 
                     chemkin_poly_str = thermo.nasapoly.convert_pac_to_chemkin(
@@ -283,15 +300,15 @@ def species_thermo(
                     with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
                         nasa_file.write(chemkin_poly_str)
 
-            for hl_idx, _ in enumerate(run_high_levels):
+            for hl_idx in range(len_high_levels):
+#            for hl_idx, _ in enumerate(run_high_levels):
                 hl_idx_str = str(hl_idx)
                 with open(os.path.join(ckin_path, 'SPECIES'+hl_idx_str+'.ckin'), 'w') as nasa_file:
                     nasa_file.write(chemkin_poly_strs[hl_idx])
 
 
 def reaction_rates(
-        rct_names_lst,
-        prd_names_lst,
+        rxn_info_lst,
         smi_dct,
         chg_dct,
         mul_dct,
@@ -302,6 +319,7 @@ def reaction_rates(
         run_opt_levels,
         ref_high_level,
         run_high_levels,
+        high_level_coeff,
         spc_models,
         pf_levels,
         save_prefix,
@@ -336,366 +354,342 @@ def reaction_rates(
     mass1 = etsfr_par[idx]
     idx += 1
 
-    mass2 = etsfr_par[idx]
-    idx += 1
+    # set mass2 to mass of molecule
+#    mass2 = etsfr_par[idx]
+#    idx += 1
 
-    energy_trans_str = mess_io.writer.write_energy_transfer(
-        exp_factor, exp_power, exp_cutoff, eps1, eps2, sig1, sig2, mass1, mass2)
-    print(energy_trans_str)
+    # determine the number of pes
 
-    for rct_names, prd_names in zip(rct_names_lst, prd_names_lst):
-        # print the CHEMKIN reaction name for reference
-        rxn_name = '='.join(['+'.join(rct_names), '+'.join(prd_names)])
-        print()
-        print('Mess Input for')
-        print("Reaction: {}".format(rxn_name))
+    formula_str_old = ''
+    formula_pes = []
+    pes_idx = -1
+    nch_pes = []
+    for formula_str, _, _, _  in rxn_info_lst:
+        if formula_str != formula_str_old:
+            pes_idx += 1
+            formula_str_old = formula_str
+            nch_pes.append(1)
+            formula_pes.append(formula_str)
+        else:
+            nch_pes[pes_idx] += 1
 
-        # determine inchis, charges, and multiplicities
+    num_pes = pes_idx+1
 
-        rct_smis = list(map(smi_dct.__getitem__, rct_names))
-        prd_smis = list(map(smi_dct.__getitem__, prd_names))
-        rct_ichs = list(map(automol.smiles.inchi, rct_smis))
-        prd_ichs = list(map(automol.smiles.inchi, prd_smis))
-        rct_chgs = list(map(chg_dct.__getitem__, rct_names))
-        prd_chgs = list(map(chg_dct.__getitem__, prd_names))
-        rct_muls = list(map(mul_dct.__getitem__, rct_names))
-        prd_muls = list(map(mul_dct.__getitem__, prd_names))
-        rxn_name = '='.join(['+'.join(rct_names), '+'.join(prd_names)])
+    print('number of rxns:', sum(nch_pes))
+    print('number of pes:', num_pes)
+    for pes_idx in range(0, num_pes):
+        print('There are ', nch_pes[pes_idx], 'channels on pes ', pes_idx+1)
 
-        ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
-        ts_chg = sum(rct_chgs)
-        print('ts_chg test:',ts_chg)
-        ts_info = ('', ts_chg, ts_mul)
-
-# header section
-        header_str = mess_io.writer.write_global_reaction(temperatures, pressures)
-        print(header_str)
-
-# energy transfer section
-
+    # spc_models, tors_model, and vib_model taken as outermost loops 
+    # facilitates formation of full PES data and thus ME calculation or each model
     for tors_model, vib_model in spc_models:
-    # rot_model = RRHO or 1DHR or MDHR or TAU
-        print('tors_model:',tors_model)
-        print('vib_model:',vib_model)
+        # tors_model = RRHO or 1DHR or MDHR or TAU
+        print('tors_model:', tors_model)
+        # vib_model = HARM or VPT2
+        print('vib_model:', vib_model)
         for har_level, tors_level, vpt2_level in pf_levels:
             # get the zero-point energy for each species
-            print('harmonic_level:',har_level)
-            print('tors_level:',tors_level)
-            print('vpt2_level:',vpt2_level)
-        for opt_level_idx, _ in enumerate(run_opt_levels):
-#        for prog, method, basis in run_opt_levels:
-            prog = run_opt_levels[opt_level_idx][0]
-            SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
-                moldr.util.run_qchem_par(prog))
+            print('harmonic_level:', har_level)
+            print('tors_level:', tors_level)
+            print('vpt2_level:', vpt2_level)
+            for opt_level_idx, _ in enumerate(run_opt_levels):
+                # for prog, method, basis in run_opt_levels:
+                prog = run_opt_levels[opt_level_idx][0]
+                method = run_opt_levels[opt_level_idx][1]
+                SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
+                    moldr.util.run_qchem_par(prog, method))
 
-            ts_orb_restr = moldr.util.orbital_restriction(
-                ts_info, run_opt_levels[opt_level_idx])
-            thy_level = run_opt_levels[opt_level_idx][1:3]
-            thy_level.append(ts_orb_restr)
+                ts_orb_restr = moldr.util.orbital_restriction(
+                    ts_info, run_opt_levels[opt_level_idx])
+                thy_level = run_opt_levels[opt_level_idx][0:3]
+                thy_level.append(ts_orb_restr)
+                idx = -1
+                for pes_idx in range(0, num_pes):
+                    formula = formula_pes[pes_idx]
+                    print()
+                    print("Calcuating rate for {} Potential Energy Surface".format(formula))
+                    print('nch test:', nch_pes[pes_idx])
+                    for chn_idx in range(0,nch_pes[pes_idx]):
+                        idx += 1
+                        print('idx test:', idx)
+                        _, rct_names, prd_names, rxn_name = rxn_info_lst[idx]
+                        print('rct_names test:', rct_names)
+                        print('prd_names test:', prd_names)
+                        print('rxn_name test:', rxn_name)
 
-            # check direction of reaction
-            rxn_ichs = [rct_ichs, prd_ichs]
-            rxn_chgs = [rct_chgs, prd_chgs]
-            rxn_muls = [rct_muls, prd_muls]
-            rxn_exo = moldr.util.reaction_energy(
-                save_prefix, rxn_ichs, rxn_chgs, rxn_muls, run_opt_levels[opt_level_idx])
-            print(rxn_exo)
-            if rxn_exo > 0:
-                rct_ichs, prd_ichs = prd_ichs, rct_ichs
-                rct_chgs, prd_chgs = prd_chgs, rct_chgs
-                rct_muls, prd_muls = prd_muls, rct_muls
-                print('ts search will be performed in reverse direction')
+                        # print the CHEMKIN reaction name for reference
+                        print("Reaction: {}".format(rxn_name))
 
-            # construct the filesystem
-            rxn_ichs = [rct_ichs, prd_ichs]
-            rxn_chgs = [rct_chgs, prd_chgs]
-            rxn_muls = [rct_muls, prd_muls]
+                        # determine inchis, charges, and multiplicities
 
-            # set up the filesystem
-            is_rev = autofile.system.reaction_is_reversed(
-                rxn_ichs, rxn_chgs, rxn_muls)
-            rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
-                rxn_ichs, rxn_chgs, rxn_muls)
-            print(" - The reaction direction is {}"
-                  .format('backward' if is_rev else 'forward'))
+                        rct_smis = list(map(smi_dct.__getitem__, rct_names))
+                        prd_smis = list(map(smi_dct.__getitem__, prd_names))
+                        rct_ichs = list(map(automol.smiles.inchi, rct_smis))
+                        prd_ichs = list(map(automol.smiles.inchi, prd_smis))
+                        rct_chgs = list(map(chg_dct.__getitem__, rct_names))
+                        prd_chgs = list(map(chg_dct.__getitem__, prd_names))
+                        rct_muls = list(map(mul_dct.__getitem__, rct_names))
+                        prd_muls = list(map(mul_dct.__getitem__, prd_names))
 
-            ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
-            ts_chg = 0
-            for rct_chg in rct_chgs:
-                ts_chg += rct_chg
-            ts_info = ['', ts_chg, ts_mul]
+                        ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
+                        ts_chg = sum(rct_chgs)
+                        print('ts_chg test:',ts_chg)
+                        ts_info = ('', ts_chg, ts_mul)
 
-            rxn_ichs = tuple(map(tuple, rxn_ichs))
-            rxn_chgs = tuple(map(tuple, rxn_chgs))
-            rxn_muls = tuple(map(tuple, rxn_muls))
-            print('rxn_save test', rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
-            print(save_prefix)
-            rxn_save_fs = autofile.fs.reaction(save_prefix)
-#            rxn_save_fs.leaf.create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
-            rxn_save_path = rxn_save_fs.leaf.path(
-                [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+                        # print header and energy transfer sections only for the first channel
+                        if chn_idx == 0:
+                            # header section
+                            header_str = mess_io.writer.global_reaction(temperatures, pressures)
+                            print(header_str)
 
-            orb_restr = moldr.util.orbital_restriction(
-                ts_info, run_opt_levels[opt_level_idx])
-            ref_level = run_opt_levels[opt_level_idx][1:3]
-            ref_level.append(orb_restr)
-            print('ref level test:', ref_level)
-            thy_save_fs = autofile.fs.theory(rxn_save_path)
-            thy_save_fs.leaf.create(ref_level)
-            thy_save_path = thy_save_fs.leaf.path(ref_level)
-            spc_save_fs = autofile.fs.species(save_prefix)
+                            tot_mass = 0.
+                            for rct_ich in rct_ichs:
+                                geo = automol.convert.inchi.geometry(rct_ich)
+                                masses = automol.geom.masses(geo)
+                                for mass in masses:
+                                    tot_mass += mass
 
-            # cycle over reactant and product species
-            # check if unimolecular or bimolecular species
-            print('Unimolecular or bimolecular test')
-            indxw = 0
-            indxp = 0
-            well_str = ''
-            bim_str = ''
-            # first reactants
-            if not rct_ichs[1]:
-                # well
-                print(rct_ichs)
-                indxw += 1
-                spc_info = (rct_ichs[0], rct_chgs[0], rct_muls[0])
-                spc_save_fs.leaf.create(spc_info)
-                spc_save_path = spc_save_fs.leaf.path(spc_info)
-                well_data = moldr.pfdriver.species_block(
-                    spc_info=spc_info,
-                    tors_model=tors_model,
-                    vib_model=vib_model,
-                    har_level=har_level,
-                    tors_level=tors_level,
-                    vpt2_level=vpt2_level,
-                    script_str=projrot_script_str,
-                    elec_levels=[[0., 1]], sym_factor=1.,
-                    save_prefix=spc_save_path,
-                    )
-                well_label = 'W'+str(indxw)
-                reac_label = well_label
-                zero_energy = 0.0
-                well_str += mess_io.writer.write_well(well_label, well_data, zero_energy)
-                print('well_str:', well_str)
-                well_data.replace()
-            else:
-                # bimolecular
-                indxp += 1
-                spc_data = ['', '']
-                spc_label = ['', '']
-                bimol_label = 'P'+str(indxp)
-                reac_label = bimol_label
-                sym_factor = 1.
-                for idx, (rct_ich, rct_chg, rct_mul) in enumerate(zip(rct_ichs, rct_chgs, rct_muls)):
-                    spc_label[idx] = automol.inchi.smiles(rct_ich)
-                    spc_info = (rct_ich, rct_chg, rct_mul)
-                    spc_save_fs.leaf.create(spc_info)
-                    spc_save_path = spc_save_fs.leaf.path(spc_info)
-                    spc_data[idx] = moldr.pfdriver.species_block(
-                        spc_info=spc_info,
-                        tors_model=tors_model,
-                        vib_model=vib_model,
-                        har_level=har_level,
-                        tors_level=tors_level,
-                        vpt2_level=vpt2_level,
-                        script_str=projrot_script_str,
-                        elec_levels=[[0., 1]], sym_factor=1.,
-                        save_prefix=spc_save_path,
-                        )
-                ground_energy = 0.0
-                bim_str += mess_io.writer.write_bimolecular(
-                    bimol_label, spc_label[0], spc_data[0],
-                    spc_label[1], spc_data[1], ground_energy)
-                print('bim str:', bim_str)
+                            # energy transfer section
+                            energy_trans_str = mess_io.writer.energy_transfer(
+                                exp_factor, exp_power, exp_cutoff, eps1, eps2, sig1, sig2, mass1, tot_mass)
 
-            # now products
-            if not prd_ichs[1]:
-                # well
-                print(prd_ichs)
-                indxw += 1
-                for prd_ich, prd_chg, prd_mul in zip(prd_ichs, prd_chgs, prd_muls):
-                    spc_info = (prd_ich, prd_chg, prd_mul)
-                    spc_save_fs.leaf.create(spc_info)
-                    spc_save_path = spc_save_fs.leaf.path(spc_info)
-                    well_data = moldr.pfdriver.species_block(
-                        spc_info=spc_info,
-                        tors_model=tors_model,
-                        vib_model=vib_model,
-                        har_level=har_level,
-                        tors_level=tors_level,
-                        vpt2_level=vpt2_level,
-                        script_str=projrot_script_str,
-                        elec_levels=[[0., 1]], sym_factor=1.,
-                        save_prefix=spc_save_path,
-                        )
-                well_label = 'W'+str(indxw)
-                prod_label = well_label
-                zero_energy = 0.0
-                well_str += mess_io.writer.write_well(well_label, well_data, zero_energy)
-                print('well_str:', well_str)
-    # write W_indxw 
-            else:
-                # bimolecular
-                indxp += 1
-                spc_data = ['', '']
-                spc_label = ['', '']
-                bimol_label = 'P'+str(indxp)
-                prod_label = bimol_label
-                for idx, (prd_ich, prd_chg, prd_mul) in enumerate(zip(prd_ichs, prd_chgs, prd_muls)):
-                    spc_info = (prd_ich, prd_chg, prd_mul)
-                    spc_save_fs.leaf.create(spc_info)
-                    spc_save_path = spc_save_fs.leaf.path(spc_info)
-                    spc_data[idx] = moldr.pfdriver.species_block(
-                        spc_info=spc_info,
-                        tors_model=tors_model,
-                        vib_model=vib_model,
-                        har_level=har_level,
-                        tors_level=tors_level,
-                        vpt2_level=vpt2_level,
-                        script_str=projrot_script_str,
-                        elec_levels=[[0., 1]], sym_factor=1.,
-                        save_prefix=spc_save_path,
-                        )
-                    spc_label[idx] = automol.inchi.smiles(prd_ich)
-                ground_energy = 0.0
-                bim_str += mess_io.writer.write_bimolecular(
-                    bimol_label, spc_label[0], spc_data[0],
-                    spc_label[1], spc_data[1], ground_energy)
-                print('bim str:', bim_str)
+                        # create channel sections for each channel
+                        # check direction of reaction
+                        rxn_ichs = [rct_ichs, prd_ichs]
+                        rxn_chgs = [rct_chgs, prd_chgs]
+                        rxn_muls = [rct_muls, prd_muls]
+                        rxn_exo = moldr.util.reaction_energy(
+                            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, run_opt_levels[opt_level_idx])
+                        print(rxn_exo)
+                        if rxn_exo > 0:
+                            rct_ichs, prd_ichs = prd_ichs, rct_ichs
+                            rct_chgs, prd_chgs = prd_chgs, rct_chgs
+                            rct_muls, prd_muls = prd_muls, rct_muls
+                            print('ts search will be performed in reverse direction')
 
-            elec_levels = [[0., ts_mul]]
-            symfactor = 1.
-#            prd_info=[prd_ichs[i], prd_chgs[i], prd_muls[i]]
-            # is it OK to use product info??
-#            spc_save_path = moldr.util.species_path(
-#                prd_ichs[i], prd_chgs[i], prd_muls[i], save_prefix)
-#            thy_save_path = moldr.util.theory_path(method, basis, ts_orb_restr, spc_save_path)
-            print('thy_save_path:', thy_save_path)
-            ts_data_str = moldr.pfdriver.species_block(
-                spc_info=ts_info,
-                tors_model=tors_model,
-                vib_model=vib_model,
-                har_level=har_level,
-                tors_level=tors_level,
-                vpt2_level=vpt2_level,
-                script_str=projrot_script_str,
-                elec_levels=[[0., 1]], sym_factor=1.,
-                save_prefix=thy_save_path,
-                )
-            ts_label = 'B1'
+                        # construct the filesystem
+                        rxn_ichs = [rct_ichs, prd_ichs]
+                        rxn_chgs = [rct_chgs, prd_chgs]
+                        rxn_muls = [rct_muls, prd_muls]
 
-            ts_str = mess_io.writer.write_ts_sadpt(ts_label, reac_label, prod_label, ts_data_str, zero_energy)
-            print(ts_str)
+                        # set up the filesystem
+                        is_rev = autofile.system.reaction_is_reversed(
+                            rxn_ichs, rxn_chgs, rxn_muls)
+                        rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
+                            rxn_ichs, rxn_chgs, rxn_muls)
+                        print(" - The reaction direction is {}"
+                              .format('backward' if is_rev else 'forward'))
 
-#                    ts_sadpt_writer
-            core = mess_io.writer.write_core_rigidrotor(geo, symfactor)
-            molecule_section_str1 = mess_io.writer.write_molecule(
-                core, freqs, zpe, elec_levels, hind_rot='',
-            )
-            print(molecule_section_str1)
-    #
-            mess_inp_str = '/n'.join([header_str, energy_trans_str, well_str, bim_str, ts_str])
+                        ts_mul = automol.mult.ts.low(rct_muls, prd_muls)
 
-            bld_locs = ['MESS', 0]
-            bld_save_fs = autofile.fs.build(thy_save_path)
-            bld_save_fs.leaf.create(bld_locs)
-            mess_path = bld_save_fs.leaf.path(bld_locs)
-            print('Build Path for MESS rate files:')
-            print(mess_path)
-            with open(os.path.join(mess_path, 'mess.inp'), 'w') as mess_file:
-                mess_file.write(mess_inp_str[name])
-            moldr.util.run_script(rate_script_str, mess_path)
+                        rxn_ichs = tuple(map(tuple, rxn_ichs))
+                        rxn_chgs = tuple(map(tuple, rxn_chgs))
+                        rxn_muls = tuple(map(tuple, rxn_muls))
+     
+
+                        print('rxn_save test', rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
+                        print(save_prefix)
+                        rxn_save_fs = autofile.fs.reaction(save_prefix)
+            #            rxn_save_fs.leaf.create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+                        rxn_save_path = rxn_save_fs.leaf.path(
+                            [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+
+                        orb_restr = moldr.util.orbital_restriction(
+                            ts_info, run_opt_levels[opt_level_idx])
+                        ref_level = run_opt_levels[opt_level_idx][1:3]
+                        ref_level.append(orb_restr)
+                        print('ref level test:', ref_level)
+                        thy_save_fs = autofile.fs.theory(rxn_save_path)
+                        thy_save_fs.leaf.create(ref_level)
+                        thy_save_path = thy_save_fs.leaf.path(ref_level)
+                        spc_save_fs = autofile.fs.species(save_prefix)
+
+                        # cycle over reactant and product species
+                        # check if unimolecular or bimolecular species
+                        print('Unimolecular or bimolecular test')
+                        # initialize some strings if this is the first channel
+                        if chn_idx == 0:
+                            indxw = 0
+                            indxp = 0
+                            well_str = ''
+                            bim_str = ''
+                            ts_str = ''
+                            well_ich = []
+                            bim1_ich = []
+                            bim2_ich = []
+                        # first reactants
+                        print(rct_ichs)
+                        if len(rct_ichs) == 1:
+                            # well
+                            new_well = True
+                            for idx in range(indxw):
+                                if well_ich[idx] == rct_ichs[0]:
+                                    new_well = False
+                                    reac_label = 'W'+str(idx)
+                            if new_well:
+                                indxw += 1
+                                well_ich.append = rct_ichs[0]
+                                spc_info = (rct_ichs[0], rct_chgs[0], rct_muls[0])
+                                spc_save_fs.leaf.create(spc_info)
+                                spc_save_path = spc_save_fs.leaf.path(spc_info)
+                                well_data = moldr.pfdriver.species_block(
+                                    spc_info=spc_info,
+                                    tors_model=tors_model,
+                                    vib_model=vib_model,
+                                    har_level=har_level,
+                                    tors_level=tors_level,
+                                    vpt2_level=vpt2_level,
+                                    script_str=projrot_script_str,
+                                    elec_levels=[[0., 1]], sym_factor=1.,
+                                    save_prefix=spc_save_path,
+                                    )
+                                well_label = 'W'+str(indxw)
+                                reac_label = well_label
+                                zero_energy = 0.0
+                                well_str += mess_io.writer.well(well_label, well_data, zero_energy)
+                                print('well_str:', well_str)
+                        else:
+                            # bimolecular
+                            new_bim = True
+                            for idx in range(indxp):
+                                if well_ich[idx] == rct_ichs[0]:
+                                    new_bim = False
+                                    reac_label = 'P'+str(idx)
+                            if new_bim:
+                                spc_data = ['', '']
+                                spc_label = ['', '']
+                                indxp += 1
+                                bim_label = 'P'+str(indxp)
+                                reac_label = bim_label
+                                sym_factor = 1.
+                                for idx, (rct_ich, rct_chg, rct_mul) in enumerate(zip(rct_ichs, rct_chgs, rct_muls)):
+                                    spc_label[idx] = automol.inchi.smiles(rct_ich)
+                                    spc_info = (rct_ich, rct_chg, rct_mul)
+                                    spc_save_fs.leaf.create(spc_info)
+                                    spc_save_path = spc_save_fs.leaf.path(spc_info)
+                                    spc_data[idx] = moldr.pf.species_block(
+                                        spc_info=spc_info,
+                                        tors_model=tors_model,
+                                        vib_model=vib_model,
+                                        har_level=har_level,
+                                        tors_level=tors_level,
+                                        vpt2_level=vpt2_level,
+                                        script_str=projrot_script_str,
+                                        elec_levels=[[0., 1]], sym_factor=1.,
+                                        save_prefix=spc_save_path,
+                                        )
+                                ground_energy = 0.0
+                                bim_str += mess_io.writer.bimolecular(
+                                    bim_label, spc_label[0], spc_data[0],
+                                    spc_label[1], spc_data[1], ground_energy)
+                                print('bim str:', bim_str)
+
+                        # now products
+                        print(prd_ichs)
+                        if len(prd_ichs) == 1:
+                            # well
+                            new_well = True
+                            for idx in range(indxw):
+                                if well_ich[idx] == rct_ichs[0]:
+                                    new_well = False
+                                    reac_label = 'W'+str(idx)
+                            if new_well:
+                                indxw += 1
+                                well_ich.append = rct_ichs[0]
+                                for prd_ich, prd_chg, prd_mul in zip(prd_ichs, prd_chgs, prd_muls):
+                                    spc_info = (prd_ich, prd_chg, prd_mul)
+                                    spc_save_fs.leaf.create(spc_info)
+                                    spc_save_path = spc_save_fs.leaf.path(spc_info)
+                                    well_data = moldr.pf.species_block(
+                                        spc_info=spc_info,
+                                        tors_model=tors_model,
+                                        vib_model=vib_model,
+                                        har_level=har_level,
+                                        tors_level=tors_level,
+                                        vpt2_level=vpt2_level,
+                                        script_str=projrot_script_str,
+                                        elec_levels=[[0., 1]], sym_factor=1.,
+                                        save_prefix=spc_save_path,
+                                        )
+                                well_label = 'W'+str(indxw)
+                                prod_label = well_label
+                                zero_energy = 0.0
+                                well_str += mess_io.writer.well(well_label, well_data, zero_energy)
+                                print('well_str:', well_str)
+                # write W_indxw 
+                        else:
+                            new_bim = True
+                            for idx in range(indxp):
+                                if well_ich[idx] == rct_ichs[0]:
+                                    new_bim = False
+                                    prod_label = 'P'+str(idx)
+                            if new_bim:
+                            # bimolecular
+                                indxp += 1
+                                spc_data = ['', '']
+                                spc_label = ['', '']
+                                bimol_label = 'P'+str(indxp)
+                                prod_label = bimol_label
+                                for idx, (prd_ich, prd_chg, prd_mul) in enumerate(zip(prd_ichs, prd_chgs, prd_muls)):
+                                    spc_info = (prd_ich, prd_chg, prd_mul)
+                                    spc_save_fs.leaf.create(spc_info)
+                                    spc_save_path = spc_save_fs.leaf.path(spc_info)
+                                    spc_data[idx] = moldr.pf.species_block(
+                                        spc_info=spc_info,
+                                        tors_model=tors_model,
+                                        vib_model=vib_model,
+                                        har_level=har_level,
+                                        tors_level=tors_level,
+                                        vpt2_level=vpt2_level,
+                                        script_str=projrot_script_str,
+                                        elec_levels=[[0., 1]], sym_factor=1.,
+                                        save_prefix=spc_save_path,
+                                        )
+                                    spc_label[idx] = automol.inchi.smiles(prd_ich)
+                                ground_energy = 0.0
+                                bim_str += mess_io.writer.bimolecular(
+                                    bimol_label, spc_label[0], spc_data[0],
+                                    spc_label[1], spc_data[1], ground_energy)
+                                print('bim str:', bim_str)
+
+                        elec_levels = [[0., ts_mul]]
+                        symfactor = 1.
+            #            prd_info=[prd_ichs[i], prd_chgs[i], prd_muls[i]]
+                        # is it OK to use product info??
+            #            spc_save_path = moldr.util.species_path(
+            #                prd_ichs[i], prd_chgs[i], prd_muls[i], save_prefix)
+            #            thy_save_path = moldr.util.theory_path(method, basis, ts_orb_restr, spc_save_path)
+                        print('thy_save_path:', thy_save_path)
+                        ts_data_str = moldr.pf.species_block(
+                            spc_info=ts_info,
+                            tors_model=tors_model,
+                            vib_model=vib_model,
+                            har_level=har_level,
+                            tors_level=tors_level,
+                            vpt2_level=vpt2_level,
+                            script_str=projrot_script_str,
+                            elec_levels=[[0., 1]], sym_factor=1.,
+                            save_prefix=rxn_save_path,
+                            )
+                        ts_label = 'B1'
+                        zero_energy = 50.
+
+                        ts_str += mess_io.writer.ts_sadpt(ts_label, reac_label, prod_label, ts_data_str, zero_energy)
+                        print(ts_str)
+
+                        if chn_idx == nch_pes[pes_idx] - 1:
+                            mess_inp_str = '\n'.join([header_str, energy_trans_str, well_str, bim_str, ts_str])
+                            print('mess input file')
+                            print(mess_inp_str)
+
+                            bld_locs = ['MESS', 0]
+                            bld_save_fs = autofile.fs.build(thy_save_path)
+                            bld_save_fs.leaf.create(bld_locs)
+                            mess_path = bld_save_fs.leaf.path(bld_locs)
+                            print('Build Path for MESS rate files:')
+                            print(mess_path)
+                            with open(os.path.join(mess_path, 'mess.inp'), 'w') as mess_file:
+                                mess_file.write(mess_inp_str)
+                            moldr.util.run_script(rate_script_str, mess_path)
                 
-#            rct_block_str = []
-#            for i, _ in enumerate(rct_ichs):
-#                elec_levels = [[0., mul]]
-#                if (ich, mul) in elc_deg_dct:
-#                    elec_levels = elc_deg_dct[(ich, mul)]
-#                symfactor = 1.
-#                rct_info=[rct_ichs[i], rct_chgs[i], rct_muls[i]]
-#                orb_restr = moldr.util.orbital_restriction(rct_muls[i], RESTRICT_OPEN_SHELL)
-#                spc_save_path = moldr.util.species_path(
-#                    rct_ichs[i], rct_chgs[i], rct_muls[i], save_prefix)
-#                thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
-#                rct_block_str.append(moldr.pfdriver.species_block(
-#                        spc_info=rct_info,
-#                        tors_model=tors_model,
-#                        vib_model=vib_model,
-#                        har_level=har_level,
-#                        tors_level=tors_level,
-#                        vpt2_level=vpt2_level,
-#                        orb_restr=orb_restr,
-#                        script_str=projrot_script_str,
-#                        elec_levels=elec_levels,
-#                        sym_factor=sym_factor,
-#                        save_prefix=thy_save_path,
-#                        ))
-#            indx_well = 0
-#            indx_bim = 0
-#            if rct_ichs[1]:
-#                print(rct_ichs)
-#                indx_well += 1
-#                reac_label = 'W{}'.format(indx_well)
-#
-## write W_indxw
-#            else:
-#                indx_bim += 1
-#
-#                prd_block_str = []
-#                for i, _ in enumerate(prd_ichs):
-#                    elec_levels = [[0., mul]]
-#                    if (ich, mul) in elc_deg_dct:
-#                        elec_levels = elc_deg_dct[(ich, mul)]
-#                    symfactor = 1.
-#                    prd_info=[prd_ichs[i], prd_chgs[i], prd_muls[i]]
-#                    orb_restr = moldr.util.orbital_restriction(prd_muls[i], RESTRICT_OPEN_SHELL)
-#                    spc_save_path = moldr.util.species_path(
-#                            prd_ichs[i], prd_chgs[i], prd_muls[i], save_prefix)
-#                    thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
-#                    prd_block_str.append(moldr.pfdriver.species_block(
-#                            spc_info=prd_info,
-#                            tors_model=tors_model,
-#                            vib_model=vib_model,
-#                            har_level=har_level,
-#                            tors_level=tors_level,
-#                            vpt2_level=vpt2_level,
-#                            script_str=projrot_script_str,
-#                            elec_levels=elec_levels,
-#                            sym_factor=sym_factor,
-#                            save_prefix=thy_save_path,
-#                            ))
-
-
-        # write P_indxp
-        # cycle over vdw Species
-        # cycle over transition states
-        # for now - have only one TS
-
-        #        if reaction_typ = addition:
-        # reactants
-        #            print(spc_str(rct1))
-        #            print(spc_str(rct2))
-        # well
-        #            print(spc_str(prod1))
-        #        if reaction_typ = abstraction:
-        # reactants
-        #            print(spc_str(rct1))
-        #            print(spc_str(rct2))
-        # vdw
-        #           for vdw_species in ...
-        #                   print(spc_str(vdwi))
-        # products
-        #            print(spc_str(prod1))
-        #            print(spc_str(prod2))
-
-        #        if reaction_typ = abstraction
-        # reactants
-        #            print(spc_str(rct1))
-        #            print(spc_str(rct2))
-        # vdw
-        #            print(spc_str(vdw1))
-        #            print(spc_str(vdw2))
-        # products
-        #            print(spc_str(prod1))
-        #            print(spc_str(prod2))
-        # ts
 
