@@ -289,7 +289,7 @@ if __name__ == "__main__":
 
     tsk_info_lst = [
              #       [  'mc', 'mclev',   'mclev', True],
-                    ['geom', 'optlev', 'optlev', False],
+                    ['geom', 'optlev', 'optlev', True],
                     ['freq', 'optlev', 'optlev', False]
               #      [ 'hr', 'hrlev', 'optlev', False]
                                                      ]
@@ -297,9 +297,9 @@ if __name__ == "__main__":
 
     es_dct = { 'mclev':  {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
     #es_dct = { 'mclev':  {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
-                   'optlev': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+                  # 'optlev': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                   # 'testlvl': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
-                  # 'optlev': {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+                   'optlev': {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    'hrlev':  {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    'anlev':  {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    '2':      {'orb_res': 'RU', 'program': 'molpro', 'method': 'ccsd(t)', 'basis': 'cc-pvtz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
