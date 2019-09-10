@@ -1,0 +1,10 @@
+task t1
+    job        =  thermo rates
+    paths      =  rundir savedir
+    reactants  =  methane hyd
+    products   =  methyl  h2
+    references =  cbh0
+    
+    mc      = mclev  input  false
+    tsfind  = mclev  mclev  false
+end 

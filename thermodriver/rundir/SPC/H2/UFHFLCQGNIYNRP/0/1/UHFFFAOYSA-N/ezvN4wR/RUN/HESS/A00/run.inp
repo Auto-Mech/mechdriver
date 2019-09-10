@@ -1,0 +1,17 @@
+#! 
+memory 1 GB
+
+molecule {
+
+0 1
+H    0.000000   0.000000  -0.380782
+H    0.000000   0.000000   0.380782
+}
+set basis cc-pvdz
+set scf_type pk
+set reference rks
+set mp2_type conv
+_, wfn = frequency('B3LYP', return_wfn=True)
+hess = wfn.hessian()
+hess.name = 'Hessian'
+hess.print_out()
