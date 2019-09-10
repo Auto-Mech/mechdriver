@@ -149,7 +149,11 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
             starting_path = scripts.thermo.go_to_nasapath(nasa_path)
             scripts.thermo.write_thermp_inp(spcdct[spc])
             scripts.thermo.run_thermp(pf_path, nasa_path)
-            scripts.thermo.run_pac(spc, spcdct[spc], nasa_path, pf_levels, models)
+            chemkin_poly_str = scripts.thermo.run_pac(spc, spcdct[spc], nasa_path, pf_levels, model)
+            ckin_path = scripts.thermo.return_to_startpath(starting_path)
+            if not os.path.exists(ckin_path):
+                os.makedirs(ckin_path)
+            scripts.thermo.write_nasa_file(spcdct[spc], ckin_path, nasa_path, chemkin_poly_str)
 
     #Collect ES info into PF files
     for tsk in tsk_info_lst:
@@ -264,7 +268,8 @@ def fix(tsk_info_lst):
             has_sp = True
         if tsk[0] == 'geom' or tsk[0] == 'opt':
             last_geom = ['sp']
-            last_geom.extend(tsk[1:])
+            last_geom.extend(tsk[1:-1])
+            last_geom.append(False)
     if not has_sp:
         tsk_info_lst.append(last_geom)
     return tsk_info_lst
@@ -283,13 +288,17 @@ if __name__ == "__main__":
     ref  = 'cbh0'
 
     tsk_info_lst = [
+                    [  'mc', 'mclev',   'mclev', True],
                     ['geom', 'optlev', 'optlev', False],
-                    ['freq', 'optlev', 'optlev', False]]
+                    ['freq', 'optlev', 'optlev', False],
+                    [ 'hr', 'hrlev', 'optlev', False]]
+            #        [ 'sp', 'splev', 'optlev', False]]
 
-    es_dct = { 'mclev':  {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
-                   'optlev': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
-                   'testlvl': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
-                   #'optlev': {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+    es_dct = { 'mclev':  {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+    #es_dct = { 'mclev':  {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+                  # 'optlev': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+                  # 'testlvl': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+                   'optlev': {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    'hrlev':  {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    'anlev':  {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    '2':      {'orb_res': 'RU', 'program': 'molpro', 'method': 'ccsd(t)', 'basis': 'cc-pvtz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 

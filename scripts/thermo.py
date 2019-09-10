@@ -220,6 +220,12 @@ def go_to_nasapath(nasa_path):
     os.chdir(nasa_path)
     return starting_path
 
+def return_to_startpath(starting_path):
+    ckin_path = ''.join([starting_path, '/ckin'])
+    print(ckin_path)
+    os.chdir(starting_path)
+    return ckin_path
+
 def write_thermp_inp(spc_spcdct): 
     
     ich     = spc_spcdct['inchi']
@@ -283,7 +289,7 @@ def run_pac(spc, spc_spcdct, nasa_path, pf_levels, models):
     comment_str += '! ref level for energy: {0}{1}/{2}\n'.format(
         geo_level[3], geo_level[1], geo_level[2])
     comment_str += '! energy level: {0}/{1}\n'.format(
-        sp_levels[1], sp_levels[2])
+        sp_level[1], sp_level[2])
     
     chemkin_poly_str = thermo.nasapoly.convert_pac_to_chemkin(
         spc, atom_dict, comment_str, pac99_poly_str)
@@ -291,28 +297,16 @@ def run_pac(spc, spc_spcdct, nasa_path, pf_levels, models):
         spc, atom_dict, '', pac99_poly_str)
     print('\nCHEMKIN Polynomial:')
     print(chemkin_poly_str)
+    return chemkin_poly_str
+
+def write_nasa_file(spc_spcdct, ckin_path, nasa_path, chemkin_poly_str):
+    ich       = spc_spcdct['inchi']
+    formula   = thermo.util.inchi_formula(ich)
+    with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
+        nasa_file.write(chemkin_poly_str)
+    with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
+        nasa_file.write(chemkin_poly_str)
     return
-    #print(hl_idx)
-    #if chemkin_poly_strs[hl_idx] == '':
-    #    chemkin_poly_strs[hl_idx] += chemkin_poly_str
-    #else:
-    #    chemkin_poly_strs[hl_idx] += chemkin_set_str
-    #print('startig_path in thermo')
-    #print(starting_path)
-    #ckin_path = ''.join([starting_path, '/ckin'])
-    #print(ckin_path)
-    #os.chdir(starting_path)
-    #with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
-    #    nasa_file.write(chemkin_poly_str)
-    #with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
-    #    nasa_file.write(chemkin_poly_str)
-#
-#            for hl_idx, _ in enumerate(run_high_levels):
-#                hl_idx_str = str(hl_idx)
-#                with open(os.path.join(ckin_path, 'SPECIES'+hl_idx_str+'.ckin'), 'w') as nasa_file:
-#                    nasa_file.write(chemkin_poly_strs[hl_idx])
-
-
 # create a messpf input file
 #
 #def species_thermo(
