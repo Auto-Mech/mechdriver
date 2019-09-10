@@ -288,17 +288,18 @@ if __name__ == "__main__":
     ref  = 'cbh0'
 
     tsk_info_lst = [
-                    [  'mc', 'mclev',   'mclev', True],
+             #       [  'mc', 'mclev',   'mclev', True],
                     ['geom', 'optlev', 'optlev', False],
-                    ['freq', 'optlev', 'optlev', False],
-                    [ 'hr', 'hrlev', 'optlev', False]]
+                    ['freq', 'optlev', 'optlev', False]
+              #      [ 'hr', 'hrlev', 'optlev', False]
+                                                     ]
             #        [ 'sp', 'splev', 'optlev', False]]
 
     es_dct = { 'mclev':  {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
     #es_dct = { 'mclev':  {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
-                  # 'optlev': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+                   'optlev': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                   # 'testlvl': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
-                   'optlev': {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+                  # 'optlev': {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    'hrlev':  {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    'anlev':  {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    '2':      {'orb_res': 'RU', 'program': 'molpro', 'method': 'ccsd(t)', 'basis': 'cc-pvtz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
@@ -319,4 +320,4 @@ if __name__ == "__main__":
 
               'h2':     {'charge': 0, 'mult': 1, 'smiles': '[H][H]', 'mc_nsamp': [False, 0, 0, 0, 0, 1], 'mc_tau': {}, 'hind_inc': 6.283185307179586, 'sym_factor': 2.0, 'inchi': 'InChI=1S/H2/h1H', 'geeobj': (('H', (0.6693776859397009, 0.0, 0.0)), ('H', (-0.6693776859397009, 0.0, 0.0))), 'geoobj': (('H', (0.6717316790925176, 0.0, 0.0)), ('H', (-0.6717316790925176, 0.0, 0.0)))}} 
     
-    run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'rundir', 'savedir') 
+    run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'runtest', 'savetest') 

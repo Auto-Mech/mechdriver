@@ -19,8 +19,8 @@ log   = logging.getLogger(__name__)
 
 def run_freq(save_prefix, spcdic, params, OPT_KWARGS):
     log.info('    | running task {}'.format('freq'))
-    moldr.driver.run_minimum_energy_hessian(**params, **OPT_KWARGS)
-    moldr.driver.run_minimum_energy_gradient(**params, **OPT_KWARGS)
+    moldr.sp.run_minimum_energy_hessian(**params, **OPT_KWARGS)
+    moldr.sp.run_minimum_energy_gradient(**params, **OPT_KWARGS)
     return
 
 def run_anharm(prefixes, spcdic, params, OPT_KWARGS):
@@ -40,13 +40,13 @@ def run_mc(prefixes, spcdic, params, OPT_KWARGS):
     params[  'run_prefix'] = spc_run_path
     params[ 'save_prefix'] = spc_save_path
     params[   'nsamp_par'] = spcdic['mc_nsamp']
-    moldr.driver.conformer_sampling(**params, **OPT_KWARGS)
+    moldr.conformer.conformer_sampling(**params, **OPT_KWARGS)
     return
 
 def run_hr(prefixes, spcdic, params, OPT_KWARGS):
     log.info('    | running task {}'.format('hr'))
     params['scan_increment'] = spcdic['hind_inc']
-    moldr.driver.hindered_rotor_scans(**params, **OPT_KWARGS)
+    moldr.scan.hindered_rotor_scans(**params, **OPT_KWARGS)
     return
 
 def run_task(tsk, spcdic, thydic, ini_thy_info, thy_info, spc_info, run_prefix, save_prefix, overwrite):
@@ -55,7 +55,7 @@ def run_task(tsk, spcdic, thydic, ini_thy_info, thy_info, spc_info, run_prefix, 
     thy_run_path  = get_thy_run_path(run_prefix, spc_info, thy_info)
     spc_save_path = get_spc_save_path(save_prefix, spc_info) 
     thy_save_path = get_thy_save_path(save_prefix, spc_info, thy_info) 
-    sp_script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(thy_info[0])
+    sp_script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
     prefixes = [run_prefix, save_prefix]
  
     params =  {    'spc_info': spc_info, 
@@ -99,7 +99,7 @@ def run_task(tsk, spcdic, thydic, ini_thy_info, thy_info, spc_info, run_prefix, 
         params['save_prefix'] = cnf_save_path
         params[ 'script_str'] = sp_script_str
 
-        moldr.driver.run_single_point_energy(**params, **KWARGS)
+        moldr.sp.run_single_point_energy(**params, **KWARGS)
     return
 
 
@@ -115,11 +115,12 @@ def geo_ref(spcdic, ini_thy_info, running_thy_info, run_prefix, save_prefix, ove
 
     spc_run_path  = get_spc_run_path(run_prefix, spc_info) 
     spc_save_path = get_spc_save_path(save_prefix, spc_info)
- 
+    thy_save_fs, thy_info   = get_thy_save_fs(save_prefix, spc_info, running_thy_info)
+
     #Check to see if geo already exists at running_theroy
     params =  {    'spc_info': spc_info ,
-               'theory_level': running_thy_info, 
-                     'prefix': save_prefix, 
+               'thy_level': thy_info, 
+                     'thy_fs': thy_save_fs, 
                  'return_msg': True} 
     geom_obj = spcdic['geoobj']
     params['geom_obj'] = geom_obj
@@ -135,13 +136,15 @@ def geo_ref(spcdic, ini_thy_info, running_thy_info, run_prefix, save_prefix, ove
             geo_init_ = geom_obj
             msg      = 'found initial geometry in species input file'
         else:
-            params['theory_level'] = ini_thy_info
             params[    'geom_obj'] = geom_obj
+            thy_save_fs, thy_info   = get_thy_save_fs(save_prefix, spc_info, ini_thy_info)
+            params['thy_fs'] = thy_save_fs
+            params['thy_level'] = thy_info
             geo_init_, msg = geo_init(params)
         log.info('    | ' + msg)
 
         #Optimize from initial geometry to get reference geometry
-        _, script_str, _, OPT_KWARGS = moldr.util.run_qchem_par(running_thy_info[0])
+        _, script_str, _, OPT_KWARGS = moldr.util.run_qchem_par(*running_thy_info[0:2])
         params['theory_level'] = running_thy_info
         params[  'script_str'] = script_str
         params[   'overwrite'] = overwrite
@@ -149,7 +152,8 @@ def geo_ref(spcdic, ini_thy_info, running_thy_info, run_prefix, save_prefix, ove
         params[ 'save_prefix'] = spc_save_path
         params[    'geo_init'] = geo_init_
         del params['geom_obj']
-        del params[  'prefix']
+        del params[  'thy_fs']
+        del params[  'thy_level']
         geo, msg = moldr.driver.run_initial_geometry_opt(**params, **OPT_KWARGS)
 
     log.info('    | ' + msg)
@@ -168,7 +172,7 @@ def remove_imag(spcdic, thydic, run_prefix, save_prefix, overwrite):
     thy_run_path  = get_thy_run_path(run_prefix, spc_info, thy_info) 
     spc_save_path = get_spc_save_path(save_prefix, spc_info) 
     thy_save_path = get_thy_save_path(save_prefix, spc_info, thy_info) 
-    _, script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(thy_info[0])
+    _, script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
     
     params =  {    'spc_info': spc_info, 
                'theory_level': thy_info, 
@@ -254,7 +258,7 @@ def ts_geo_ref(spc, spcs, reacs, prods, ini_thy_info, running_thy_info, run_pref
          geo_init_  = ini_ts_save_fs.trunk.file.geometry.read()
          msg = 'initial zmat found in {}'.format(ini_ts_save_path)
 
-         _, script_str, _, OPT_KWARGS = moldr.util.run_qchem_par(running_thy_info[0])
+         _, script_str, _, OPT_KWARGS = moldr.util.run_qchem_par(*running_thy_info[0:2])
          params =  {    'spc_info': run_ts_info ,
                   'theory_level': running_thy_info, 
                      'prefix': run_ts_run_path,
@@ -297,10 +301,19 @@ def get_spc_save_path(save_prefix, spc_info):
     spc_save_path = spc_save_fs.leaf.path(spc_info)
     return spc_save_path
 
+def get_thy_save_fs(save_prefix, spc_info, thy_info):
+    orb_restr = moldr.util.orbital_restriction(
+        spc_info, thy_info)
+    thy_lvl = thy_info[0:3]
+    thy_lvl.append(orb_restr)
+    spc_save_path = get_spc_save_path(save_prefix, spc_info)
+    thy_save_fs   = autofile.fs.theory(spc_save_path)
+    return thy_save_fs, thy_lvl
+
 def get_thy_run_path(run_prefix, spc_info, thy_info):
     orb_restr = moldr.util.orbital_restriction(
         spc_info, thy_info)
-    thy_lvl = thy_info[1:3]
+    thy_lvl = thy_info[0:3]
     thy_lvl.append(orb_restr)
     spc_run_path = get_spc_run_path(run_prefix, spc_info)
     thy_run_fs   = autofile.fs.theory(spc_run_path)
@@ -311,7 +324,7 @@ def get_thy_run_path(run_prefix, spc_info, thy_info):
 def get_thy_save_path(save_prefix, spc_info, thy_info):
     orb_restr = moldr.util.orbital_restriction(
         spc_info, thy_info)
-    thy_lvl = thy_info[1:3]
+    thy_lvl = thy_info[0:3]
     thy_lvl.append(orb_restr)
     spc_save_path = get_spc_save_path(save_prefix, spc_info)
     thy_save_fs = autofile.fs.theory(spc_save_path)
@@ -470,7 +483,7 @@ def ts_params(rct_zmas, prd_zmas):
 def find_ts(run_prefix, save_prefix, reacs, prods, spcs, thy_info, overwrite):
 
     log.info('   | prepping ts scan:')
-    script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(thy_info[0])
+    script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
     
     
     rxn_run_path, rxn_save_path, ts_info = rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info)
