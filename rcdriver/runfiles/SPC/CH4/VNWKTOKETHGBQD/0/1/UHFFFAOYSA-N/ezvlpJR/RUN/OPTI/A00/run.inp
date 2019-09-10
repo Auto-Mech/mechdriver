@@ -1,0 +1,26 @@
+#! 
+memory 1 GB
+
+molecule {
+
+0 1
+C  
+H  1    R1 
+H  1    R2  2    A2 
+H  1    R3  2    A3  3    D3 
+H  1    R4  2    A4  3    D4 
+R1   =   1.092201
+R2   =   1.092201
+A2   = 109.471000
+R3   =   1.092201
+A3   = 109.471000
+D3   = 120.000000
+R4   =   1.092201
+A4   = 109.471000
+D4   = 240.000000
+}
+set basis 6-31g*
+set scf_type pk
+set reference rks
+set mp2_type conv
+optimize('B3LYP')

@@ -1,0 +1,13 @@
+%mem=20GB
+%NProcShared=10
+#P b3lyp/6-31g*
+# SCF=(xqc)
+# POpt=()
+# int=ultrafine
+
+comment: 
+
+0 2
+H  
+  Variables:
+

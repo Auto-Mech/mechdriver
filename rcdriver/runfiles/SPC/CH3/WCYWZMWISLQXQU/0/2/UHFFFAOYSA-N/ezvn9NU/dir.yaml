@@ -1,0 +1,3 @@
+basis: cc-pvtz
+method: b3lyp
+orb_restricted: false
