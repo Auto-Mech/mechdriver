@@ -80,6 +80,15 @@ def conformer_leaf(prefix, root_ds=None):
                             loc_dfile=loc_dfile, root_ds=root_ds)
 
 
+def single_point_trunk(prefix, root_ds=None):
+    """ single point trunk DataSeries
+    """
+    _map = _pack_arguments(map_.single_point_trunk)
+    nlocs = _count_arguments(map_.single_point_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
 def single_point_leaf(prefix, root_ds=None):
     """ single-point leaf DataSeries
     """
@@ -130,6 +139,21 @@ def tau_trunk(prefix, root_ds=None):
     nlocs = _count_arguments(map_.tau_trunk)
     return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
                             root_ds=root_ds)
+
+
+def energy_transfer_trunk(prefix, root_ds=None):
+    """ single point trunk DataSeries
+    """
+    _map = _pack_arguments(map_.energy_transfer_trunk)
+    nlocs = _count_arguments(map_.energy_transfer_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def energy_transfer_leaf(prefix, root_ds=None):
+    """ single-point leaf DataSeries
+    """
+    return theory_leaf(prefix, root_ds=root_ds)
 
 
 def tau_leaf(prefix, root_ds=None):
@@ -241,15 +265,6 @@ def subrun_leaf(prefix, root_ds=None):
     nlocs = _count_arguments(map_.subrun_leaf)
     return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
                             loc_dfile=loc_dfile, root_ds=root_ds)
-
-
-def single_point_trunk(prefix, root_ds=None):
-    """ single point trunk DataSeries
-    """
-    _map = _pack_arguments(map_.single_point_trunk)
-    nlocs = _count_arguments(map_.single_point_trunk)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            root_ds=root_ds)
 
 
 def build_trunk(prefix, root_ds=None):

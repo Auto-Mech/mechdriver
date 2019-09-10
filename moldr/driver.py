@@ -1,17 +1,10 @@
 """ drivers
 """
-import os
 import functools
-import numpy
 from qcelemental import constants as qcc
-from qcelemental import periodictable as ptab
-import projrot_io
-import automol
 import elstruct
 import autofile
-import moldr
 from moldr import runner
-import mess_io
 
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
@@ -1421,8 +1414,8 @@ JOB_RUNNER_DCT = {
 
 
 def run_job(
-        job, script_str, prefix,
-        geom, spc_info, theory_level, 
+        job, script_str, run_fs,
+        geom, spc_info, thy_level,
         errors=(), options_mat=(), retry_failed=True, feedback=False,
         frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
         **kwargs):
@@ -1431,7 +1424,6 @@ def run_job(
     assert job in JOB_RUNNER_DCT
     assert job in JOB_ERROR_DCT
 
-    run_fs = autofile.fs.run(prefix)
     run_fs.leaf.create([job])
     run_path = run_fs.leaf.path([job])
 
@@ -1483,9 +1475,9 @@ def run_job(
     if do_run:
         # create the run directory
         status = autofile.system.RunStatus.RUNNING
-        prog = theory_level[0]
-        method = theory_level[1]
-        basis = theory_level[2]
+        prog = thy_level[0]
+        method = thy_level[1]
+        basis = thy_level[2]
         inf_obj = autofile.system.info.run(
             job=job, prog=prog, method=method, basis=basis, status=status)
         inf_obj.utc_start_time = autofile.system.info.utc_time()
@@ -1498,12 +1490,10 @@ def run_job(
                 frozen_coordinates=frozen_coordinates,
                 freeze_dummy_atoms=freeze_dummy_atoms)
 
-        print(" - Starting the run...")
-        orb_restr = moldr.util.orbital_restriction(spc_info, theory_level)
         inp_str, out_str = runner(
             script_str, run_path, geom=geom, chg=spc_info[1],
-            mul=spc_info[2], method=theory_level[1], basis=theory_level[2],
-            orb_restricted=orb_restr, prog=theory_level[0],
+            mul=spc_info[2], method=thy_level[1], basis=thy_level[2],
+            orb_restricted=thy_level[3], prog=thy_level[0],
             errors=errors, options_mat=options_mat, **kwargs
         )
 
@@ -1523,12 +1513,11 @@ def run_job(
         print('finished run_job')
 
 
-def read_job(job, prefix):
+def read_job(job, run_fs):
     """ read from an elstruct job by name
     """
     ret = None
 
-    run_fs = autofile.fs.run(prefix)
     run_path = run_fs.leaf.path([job])
 
     print(" - Reading from {} job at {}".format(job, run_path))

@@ -16,6 +16,8 @@ def conformer_trunk(nsamp, tors_ranges):
     :type tors_ranges: dict[str: (float, float)]
     """
     tors_range_dct = dict(tors_ranges)
+    for key, rng in tors_range_dct.items():
+        tors_range_dct[key] = (rng[0]*180./numpy.pi, rng[1]*180./numpy.pi)
 
     assert all(isinstance(key, str) and len(rng) == 2
                and all(isinstance(x, numbers.Real) for x in rng)
@@ -38,6 +40,8 @@ def tau_trunk(nsamp, tors_ranges):
     :type tors_ranges: dict[str: (float, float)]
     """
     tors_range_dct = dict(tors_ranges)
+    for key, rng in tors_range_dct.items():
+        tors_range_dct[key] = (rng[0]*180./numpy.pi, rng[1]*180./numpy.pi)
 
     assert all(isinstance(key, str) and len(rng) == 2
                and all(isinstance(x, numbers.Real) for x in rng)
@@ -57,7 +61,12 @@ def scan_branch(grids):
         by coordinate name
     :type grids: dict[str: list[float]]
     """
+    print('grids test:', grids)
     grid_dct = dict(grids)
+    # note:renormalization of angle ranges needs to be updated for 2D grids.
+    for key, rng in grid_dct.items():
+        if 'R' not in key:
+            grid_dct[key] = rng*180./numpy.pi
 
     assert all(isinstance(key, str) and numpy.ndim(vals) == 1
                and all(isinstance(x, numbers.Real) for x in vals)
@@ -82,6 +91,16 @@ def vpt2_trunk(fermi):
     return inf_obj
 
 
+def energy_transfer_trunk(potential, nsamp,
+                          method, basis):
+    """ energy transfer trunk """
+    inf_obj = autofile.info.Info(potential=potential, nsamp=nsamp,
+                                 method=method, basis=basis)
+    assert autofile.info.matches_function_signature(
+        inf_obj, energy_transfer_trunk)
+    return inf_obj
+
+
 class RunStatus():
     """ run statuses """
     RUNNING = "running"
@@ -90,13 +109,9 @@ class RunStatus():
 
 
 def run(job, prog, method, basis, status, utc_start_time=None,
-#def run(job, theory_level, status, utc_start_time=None,
         utc_end_time=None):
     """ run information
     """
-#    prog = theory_level[0]
-#    method = theory_level[1]
-#    basis = theory_level[2]
     inf_obj = autofile.info.Info(
         job=job,
         prog=prog,
@@ -106,8 +121,6 @@ def run(job, prog, method, basis, status, utc_start_time=None,
         utc_start_time=utc_start_time,
         utc_end_time=utc_end_time,
     )
-    print('inf_obj in run:', inf_obj)
-    print('run in run:', run)
     assert autofile.info.matches_function_signature(inf_obj, run)
     return inf_obj
 
