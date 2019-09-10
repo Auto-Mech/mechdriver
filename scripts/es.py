@@ -15,8 +15,6 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 import logging
 log   = logging.getLogger(__name__)
 
-
-
 def run_freq(save_prefix, spcdic, params, OPT_KWARGS):
     log.info('    | running task {}'.format('freq'))
     moldr.driver.run_minimum_energy_hessian(**params, **OPT_KWARGS)
@@ -49,10 +47,8 @@ def run_hr(prefixes, spcdic, params, OPT_KWARGS):
     moldr.driver.hindered_rotor_scans(**params, **OPT_KWARGS)
     return
 
-def run_task(tsk, spcdic, thydic, initial_thy_info, run_prefix, save_prefix, overwrite):
+def run_task(tsk, spcdic, thydic, ini_thy_info, thy_info, spc_info, run_prefix, save_prefix, overwrite):
 
-    spc_info      = get_spc_info(spcdic)
-    thy_info      = get_thy_info(thydic)
     spc_run_path  = get_spc_run_path(run_prefix, spc_info) 
     thy_run_path  = get_thy_run_path(run_prefix, spc_info, thy_info)
     spc_save_path = get_spc_save_path(save_prefix, spc_info) 
@@ -75,14 +71,14 @@ def run_task(tsk, spcdic, thydic, initial_thy_info, run_prefix, save_prefix, ove
     if tsk in choose_function:
         eval( choose_function[tsk] )(prefixes, spcdic, params, OPT_KWARGS)
 
-    elif tsk == 'sp':  #I still have to make a function for this one
+    elif tsk == 'sp' or tsk == 'energy':  #I still have to make a function for this one
         log.info('    | initializing...')
-        ref_run_path  = get_thy_run_path(run_prefix, spc_info, initial_thy_info) 
-        ref_save_path = get_thy_save_path(save_prefix, spc_info, initial_thy_info)
+        ref_run_path  = get_thy_run_path(run_prefix, spc_info, ini_thy_info) 
+        ref_save_path = get_thy_save_path(save_prefix, spc_info, ini_thy_info)
         #Make sure there is at least one CONF for this level of theory
         params[  'run_prefix'] = spc_run_path
         params[ 'save_prefix'] = spc_save_path
-        params['theory_level'] = initial_thy_info
+        params['theory_level'] = ini_thy_info
         params[   'nsamp_par'] = [False, 0, 0, 0, 0, 1]
         moldr.driver.conformer_sampling(**params, **OPT_KWARGS)
         min_cnf_locs  = moldr.util.min_energy_conformer_locators(
@@ -109,7 +105,7 @@ def geo_init(params):
     geo, msg =  moldr.util.reference_geometry(**params)
     return geo, msg
 
-def geo_ref(spcdic, initial_thy_info, running_thy_info, run_prefix, save_prefix, overwrite):
+def geo_ref(spcdic, ini_thy_info, running_thy_info, run_prefix, save_prefix, overwrite):
 
 
     log.info('    | initializing...')
@@ -128,16 +124,16 @@ def geo_ref(spcdic, initial_thy_info, running_thy_info, run_prefix, save_prefix,
     geo_init_, msg = geo_init(params)
 
     #If not, Compute geo at running_theory, using geo from iniitial_level as the starting point
-    if 'getting reference geometry from directory'  in msg:
+    if 'getting reference geometry from directory'  in msg and not overwrite:
         geo = geo_init_
 
     else:
         #Obtain initial geometry
-        if 'placeholder' in initial_thy_info: #placeholders are put if geo is to be read in from spc input file
+        if 'placeholder' in ini_thy_info: #placeholders are put if geo is to be read in from spc input file
             geo_init_ = geom_obj
             msg      = 'found initial geometry in species input file'
         else:
-            params['theory_level'] = initial_thy_info
+            params['theory_level'] = ini_thy_info
             params[    'geom_obj'] = geom_obj
             geo_init_, msg = geo_init(params)
         log.info('    | ' + msg)
@@ -155,7 +151,7 @@ def geo_ref(spcdic, initial_thy_info, running_thy_info, run_prefix, save_prefix,
         geo, msg = moldr.driver.run_initial_geometry_opt(**params, **OPT_KWARGS)
 
     log.info('    | ' + msg)
-    return geo 
+    return geo, msg
 
 def remove_imag(spcdic, thydic, run_prefix, save_prefix, overwrite):
     
@@ -204,7 +200,7 @@ def remove_imag(spcdic, thydic, run_prefix, save_prefix, overwrite):
 
     return
 
-def ts_geo_ref(spc, spcs, reacs, prods, initial_thy_info, running_thy_info, run_prefix, save_prefix, overwrite):
+def ts_geo_ref(spc, spcs, reacs, prods, ini_thy_info, running_thy_info, run_prefix, save_prefix, overwrite):
 
     #I will do a better way of getting ts_info
     reaczmats = [automol.geom.zmatrix(spcs[x]['geoobj']) for x in reacs]
@@ -212,8 +208,8 @@ def ts_geo_ref(spc, spcs, reacs, prods, initial_thy_info, running_thy_info, run_
     ts_zma, dist_name, grid = ts_params(reaczmats, prodzmats)
 
     #Find TS filesystems
-    ini_rxn_run_path, ini_rxn_save_path, ini_ts_info = rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, initial_thy_info)
-    run_rxn_run_path, run_rxn_save_path, run_ts_info = rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, running_thy_info, initial_thy_info)
+    ini_rxn_run_path, ini_rxn_save_path, ini_ts_info = rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, ini_thy_info)
+    run_rxn_run_path, run_rxn_save_path, run_ts_info = rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, running_thy_info, ini_thy_info)
     orb_restr = moldr.util.orbital_restriction(run_ts_info, running_thy_info)
     ref_level = running_thy_info[1:3]
     ref_level.append(orb_restr)
@@ -226,8 +222,8 @@ def ts_geo_ref(spc, spcs, reacs, prods, initial_thy_info, running_thy_info, run_
     run_thy_save_fs.leaf.create(ref_level)
     run_thy_save_path = run_thy_save_fs.leaf.path(ref_level)
     
-    orb_restr = moldr.util.orbital_restriction(ini_ts_info, initial_thy_info)
-    ref_level = initial_thy_info[1:3]
+    orb_restr = moldr.util.orbital_restriction(ini_ts_info, ini_thy_info)
+    ref_level = ini_thy_info[1:3]
     ref_level.append(orb_restr)
 
     ini_thy_run_fs = autofile.fs.theory(ini_rxn_run_path)
@@ -284,7 +280,7 @@ def ts_geo_ref(spc, spcs, reacs, prods, initial_thy_info, running_thy_info, run_
              run_ts_save_fs.trunk.file.zmatrix.write(zma)
     return geo
 
-def ts_run_task(tsk, spc, spcs, reacs, prods, thydic, initial_thy_info, run_prefix, save_prefix, overwrite):
+def ts_run_task(tsk, spc, spcs, reacs, prods, thydic, ini_thy_info, run_prefix, save_prefix, overwrite):
     return
 
 def get_spc_run_path(run_prefix, spc_info):
@@ -321,7 +317,7 @@ def get_thy_save_path(save_prefix, spc_info, thy_info):
     thy_save_path = thy_save_fs.leaf.path(thy_lvl)
     return thy_save_path
 
-def rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info, initial_thy_info=None):
+def rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info, ini_thy_info=None):
     ts_mul = automol.mult.ts.low([spcs[spc]['mult'] for spc in reacs], [spcs[spc]['mult'] for spc in reacs])
     ts_chg = sum([spcs[spc]['charge'] for spc in reacs])
     ts_info = ('', ts_chg, ts_mul)
@@ -345,7 +341,7 @@ def rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info, initia
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, thy_info)
     except:
         rxn_exo = moldr.util.reaction_energy(
-            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, initial_thy_info)
+            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
     log.info('    | reaction is {:.2f}'.format(rxn_exo))
     if rxn_exo > 0:
         rxn_ichs =  rxn_ichs[::-1]
@@ -1656,18 +1652,6 @@ def vdw_qchem(
                     thy_afs.theory.file.energy.write(ene, spc_save_path, [method, basis, orb_restr])
 
 
-def get_spc_info(spcdic):
-    err_msg = ''
-    props   = ['inchi', 'charge', 'mult']
-    for i, prop in enumerate(props):
-        if prop in spcdic:
-            props[i] = spcdic[prop]
-        else:
-            err_msg = prop
-    if err_msg:
-         log.error('No {} found'.format(err_msg))
-    return props
-
 def get_thy_info(lvldic):
     err_msg = ''
     info    = ['program', 'method', 'basis', 'orb_res']
@@ -1680,4 +1664,15 @@ def get_thy_info(lvldic):
          log.error('No {} found'.format(err_msg))
     return info
  
+def get_spc_info(spcdct):
+    err_msg = ''
+    props   = ['inchi', 'charge', 'mult']
+    for i, prop in enumerate(props):
+        if prop in spcdct:
+            props[i] = spcdct[prop]
+        else:
+            err_msg = prop
+    if err_msg:
+         log.error('No {} found'.format(err_msg))
+    return props
 
