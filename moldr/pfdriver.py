@@ -262,7 +262,7 @@ def get_high_level_energy(
     spc_save_fs = autofile.fs.species(save_prefix)
     spc_save_fs.leaf.create(spc_info)
     spc_save_path = spc_save_fs.leaf.path(spc_info)
-
+ 
     orb_restr = moldr.util.orbital_restriction(
         spc_info, theory_low_level)
     thy_low_level = theory_low_level[1:3]
@@ -272,6 +272,7 @@ def get_high_level_energy(
     ll_save_fs.leaf.create(thy_low_level)
     ll_save_path = ll_save_fs.leaf.path(thy_low_level)
 
+    print(ll_save_path)
     min_cnf_locs = moldr.util.min_energy_conformer_locators(
         ll_save_path)
     cnf_save_fs = autofile.fs.conformer(ll_save_path)
@@ -287,8 +288,6 @@ def get_high_level_energy(
     sp_save_fs.leaf.create(thy_high_level)
 
     min_ene = sp_save_fs.leaf.file.energy.read(thy_high_level)
-    print('high level energy test')
-    print(min_ene)
 
     return min_ene
 
@@ -315,7 +314,8 @@ def get_zero_point_energy(
     har_save_path = thy_save_fs.leaf.path(har_levelp)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_save_path)
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
-
+    print(spc_info)
+    print(tors_level)
     orb_restr = moldr.util.orbital_restriction(
         spc_info, tors_level)
     tors_levelp = tors_level[1:3]
