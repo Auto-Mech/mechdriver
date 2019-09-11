@@ -180,9 +180,10 @@ def reference_geometry(spc_info, thy_level, thy_fs,
     then geometry dictionary takes precedence
     if nothing else from inchi
     """
+    msg = ''
     if thy_fs.leaf.file.geometry.exists(thy_level[1:4]):
         thy_path = thy_fs.leaf.path(thy_level[1:4])
-        print('getting reference geometry from', thy_path)
+        msg = 'getting reference geometry from {}'.format( thy_path)
         geo = thy_fs.leaf.file.geometry.read(thy_level[1:4])
     else:
         ich = spc_info[0]
