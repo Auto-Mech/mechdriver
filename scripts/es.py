@@ -15,7 +15,7 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 import logging
-log   = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 def run_freq(spcdic, params, thy_save_fs, tau_run_fs, tau_save_fs,  OPT_KWARGS):
     log.info('    | running task {}'.format('freq'))
@@ -66,7 +66,7 @@ def run_single_mc(spc_info, thy_level, thy_save_fs, cnf_run_fs, cnf_save_fs, ove
 
 def run_mc(spcdic, params, thy_save_fs, tau_run_fs, tau_save_fs, OPT_KWARGS):
     if spcdic['mc_nsamp'][0]:
-       log.info('    | running task {} with abcd of {}'.format('mc', ' '.join([str(x) for x in spcdic['mc_nsamp'][1:]])))
+        log.info('    | running task {} with abcd of {}'.format('mc', ' '.join([str(x) for x in spcdic['mc_nsamp'][1:]])))
     else:
         log.info('    | running task {} for {:g} points'.format('mc', spcdic['mc_nsamp'][5]))
     params['nsamp_par']   = spcdic['mc_nsamp']
@@ -82,6 +82,32 @@ def run_hr(spcdic, params, thy_save_fs, tau_run_fs, tau_save_fs, OPT_KWARGS):
 
 def run_task(tsk, spcdic, thydic, ini_thy_info, ini_thy_save_fs, ini_thy_run_path, ini_thy_save_path, 
                 thy_info, spc_info, thy_run_fs, thy_save_fs, run_fs, conf_run_fs, conf_save_fs, tau_run_fs, tau_save_fs, overwrite):
+#def run_task(tsk, spcdic, thydic, ini_thy_info, thy_info, spc_info, run_prefix, save_prefix, overwrite):
+
+    orb_restr = moldr.util.orbital_restriction(
+        spc_info, thy_info)
+    thy_level = thy_info[0:3]
+    thy_level.append(orb_restr)
+    thy_info = thy_level
+
+    spc_run_fs = autofile.fs.species(run_prefix)
+    spc_run_fs.leaf.create(spc_info)
+    spc_run_path = spc_run_fs.leaf.path(spc_info)
+
+    spc_save_fs = autofile.fs.species(save_prefix)
+    spc_save_fs.leaf.create(spc_info)
+    spc_save_path = spc_save_fs.leaf.path(spc_info)
+
+    thy_run_fs = autofile.fs.theory(spc_run_path)
+    thy_run_fs.leaf.create(run_thy_level[1:4])
+    thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
+
+    thy_save_fs = autofile.fs.theory(spc_save_path)
+    thy_save_fs.leaf.create(run_thy_level[1:4])
+    thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+
+    run_fs = autofile.fs.run(run_thy_run_path)
+# remove run directories
 
     sp_script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
 
