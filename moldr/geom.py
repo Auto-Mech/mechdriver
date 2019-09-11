@@ -16,6 +16,7 @@ def run_initial_geometry_opt(
     """ generate initial geometry via optimization from either reference
     geometries or from inchi
     """
+    msg = ''
     # set up the filesystem
     print(thy_run_fs)
     thy_run_fs.leaf.create(thy_level[1:4])

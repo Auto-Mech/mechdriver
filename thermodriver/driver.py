@@ -289,7 +289,7 @@ if __name__ == "__main__":
 
     tsk_info_lst = [
              #       [  'mc', 'mclev',   'mclev', True],
-                    ['geom', 'optlev', 'optlev', True],
+                    ['geom', 'optlev', 'optlev', False],
                     ['freq', 'optlev', 'optlev', False]
               #      [ 'hr', 'hrlev', 'optlev', False]
                                                      ]

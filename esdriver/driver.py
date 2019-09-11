@@ -4,6 +4,8 @@ import automol.inchi
 import automol.geom
 import scripts.es
 import thermo.heatform
+import moldr
+import autofile.fs
 
 import os
 from qcelemental import constants as qcc
@@ -51,19 +53,18 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
     
         #Task information
         tsk          = tsk_info[0]
-        es_ini_key = tsk_info[1]
+        es_ini_key   = tsk_info[1]
         es_run_key   = tsk_info[2]
         overwrite    = tsk_info[3]
-    
         #Theory information
-        ini_es_info = get_es_info(es_dct, es_ini_key)
-        run_es_info = get_es_info(es_dct, es_run_key)
+        ini_thy_info = get_es_info(es_dct, es_ini_key)
+        run_thy_info = get_es_info(es_dct, es_run_key)
            
         #If task is to find the transition state, find all TSs for your reactionlist
         if tsk == 'tsfind':
             for ts in enumerate(ts_dct):
                 log.info('  | Task {} \t\t\t'.format(tsk))
-                geo, zma = scripts.es.find_ts(run_prefix, save_prefix, ts['reacs'],  ts['prods'], spcsdct, run_es_info, overwrite)
+                geo, zma = scripts.es.find_ts(run_prefix, save_prefix, ts['reacs'],  ts['prods'], spcsdct, run_thy_info, overwrite)
                 if not isinstance(geo, str):
                     spcs[ts] = create_spec(geo)
                     spcs[ts]['zmatrix'] = zma
@@ -78,24 +79,70 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
             
             #Get params
             spc_info = scripts.es.get_spc_info(spcdct[spc])
+            orb_restr = moldr.util.orbital_restriction(
+                spc_info, run_thy_info)
+            run_thy_level = run_thy_info[0:3]
+            run_thy_level.append(orb_restr)
+            #run_thy_info = run_thy_level
             
+            orb_restr = moldr.util.orbital_restriction(
+                spc_info, ini_thy_info)
+            ini_thy_level = ini_thy_info[0:3]
+            ini_thy_level.append(orb_restr)
+            #ini_thy_info = ini_thy_level
+
+            spc_run_fs = autofile.fs.species(run_prefix)
+            spc_run_fs.leaf.create(spc_info)
+            spc_run_path = spc_run_fs.leaf.path(spc_info)
+            
+            spc_save_fs = autofile.fs.species(save_prefix)
+            spc_save_fs.leaf.create(spc_info)
+            spc_save_path = spc_save_fs.leaf.path(spc_info)
+            
+            run_thy_run_fs = autofile.fs.theory(spc_run_path)
+            run_thy_run_fs.leaf.create(run_thy_level[1:4])
+            run_thy_run_path = run_thy_run_fs.leaf.path(run_thy_level[1:4])
+            
+            run_thy_save_fs = autofile.fs.theory(spc_save_path)
+            run_thy_save_fs.leaf.create(run_thy_level[1:4])
+            run_thy_save_path = run_thy_save_fs.leaf.path(run_thy_level[1:4])
+            
+            ini_thy_run_fs = autofile.fs.theory(spc_run_path)
+            ini_thy_run_fs.leaf.create(ini_thy_level[1:4])
+            ini_thy_run_path = ini_thy_run_fs.leaf.path(ini_thy_level[1:4])
+
+            ini_thy_save_fs = autofile.fs.theory(spc_save_path)
+            ini_thy_save_fs.leaf.create(ini_thy_level[1:4])
+            ini_thy_save_path = ini_thy_save_fs.leaf.path(ini_thy_level[1:4])
+
+            run_fs = autofile.fs.run(run_thy_run_path)
+           
+            cnf_run_fs = autofile.fs.conformer(run_thy_run_path)
+            cnf_save_fs = autofile.fs.conformer(run_thy_save_path)
+
+            tau_run_fs = autofile.fs.tau(run_thy_run_path)
+            tau_save_fs = autofile.fs.tau(run_thy_save_path)
             #Run tasks
             if 'ts' in spc:
                 #Check if the task has been completed at the requested running theory level
     
                 #Every task starts with a geometry optimization at the running theory level
-                scripts.es.ts_geo_ref(spc, spcdct, ts_dct[spc]['reacs'], ts_dct[spc]['prods'], ini_es_info, run_es_info, run_prefix, save_prefix, overwrite)
+                scripts.es.ts_geo_ref(spc, spcdct, ts_dct[spc]['reacs'], ts_dct[spc]['prods'], 
+                                         ini_thy_level, run_thy_level, ini_thy_run_fs, ini_thy_save_fs, run_thy_run_fs, run_thy_save_fs, run_fs, overwrite)
                 #Run the requested task at the requested running theory level
-                scripts.es.ts_run_task(tsk, spc, spcdct, ts_dct[spc]['reacs'], ts_dct[spc]['prods'], es_dct[run_es_key], ini_es_info, run_prefix, save_prefix, overwrite)
+                scripts.es.ts_run_task(tsk, spc, spcdct, ts_dct[spc]['reacs'], ts_dct[spc]['prods'], es_dct[run_es_key], ini_thy_level, run_prefix, save_prefix, overwrite)
             else:
                 #Check if the task has been completed at the requested running theory level
     
                 #Every task starts with a geometry optimization at the running theory level
-                geo, msg = scripts.es.geo_ref(      spcdct[spc], ini_es_info, run_es_info, run_prefix, save_prefix, overwrite)
-                if not 'reference' in msg:   #newly computed geometry should be checked for imaginary frequencies
-                    scripts.es.remove_imag(  spcdct[spc], es_dct[es_run_key], run_prefix, save_prefix, overwrite)
+                if not tsk == 'sp' or tsk == 'energy':
+                    geo, msg = scripts.es.geo_ref(spcdct[spc], ini_thy_level, run_thy_level, ini_thy_run_fs, ini_thy_save_fs, run_thy_run_fs, run_thy_save_fs, run_fs, overwrite)
+                    scripts.es.remove_imag(  spcdct[spc], es_dct[es_run_key], run_thy_level, run_thy_run_fs, run_thy_save_fs, run_fs, overwrite)
+                    scripts.es.run_single_mc(spc_info, run_thy_level, run_thy_save_fs, cnf_run_fs, cnf_save_fs, overwrite)
+
                 #Run the requested task at the requested running theory level
-                scripts.es.run_task(tsk, spcdct[spc], es_dct[es_run_key], ini_es_info, run_es_info, spc_info, run_prefix, save_prefix, overwrite)
+                scripts.es.run_task(tsk, spcdct[spc], es_dct[es_run_key], ini_thy_level, ini_thy_save_fs, ini_thy_run_path, ini_thy_save_path,
+                                     run_thy_level, spc_info, run_thy_run_fs, run_thy_save_fs, run_fs, cnf_run_fs, cnf_save_fs, tau_run_fs, tau_save_fs, overwrite)
     return
               
 
