@@ -308,21 +308,21 @@ def get_thy_save_path(save_prefix, spc_info, thy_info):
     return thy_save_path
 
 def rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info, ini_thy_info=None):
-    ts_mul = automol.mult.ts.low([spcs[spc]['mult'] for spc in reacs], [spcs[spc]['mult'] for spc in reacs])
-    ts_chg = sum([spcs[spc]['charge'] for spc in reacs])
+    ts_mul = automol.mult.ts.low([spcs[spc]['mul'] for spc in reacs], [spcs[spc]['mul'] for spc in reacs])
+    ts_chg = sum([spcs[spc]['chg'] for spc in reacs])
     ts_info = ('', ts_chg, ts_mul)
 
     rxn_ichs = [[],[]] 
     rxn_chgs = [[],[]]
     rxn_muls = [[],[]]
     for spc in reacs:
-         rxn_ichs[0].append(spcs[spc][ 'inchi'])
-         rxn_chgs[0].append(spcs[spc]['charge'])
-         rxn_muls[0].append(spcs[spc][  'mult'])
+         rxn_ichs[0].append(spcs[spc][ 'ich'])
+         rxn_chgs[0].append(spcs[spc]['chg'])
+         rxn_muls[0].append(spcs[spc][  'mul'])
     for spc in prods:
-         rxn_ichs[1].append(spcs[spc][ 'inchi'])
-         rxn_chgs[1].append(spcs[spc]['charge'])
-         rxn_muls[1].append(spcs[spc][  'mult'])
+         rxn_ichs[1].append(spcs[spc][ 'ich'])
+         rxn_chgs[1].append(spcs[spc]['chg'])
+         rxn_muls[1].append(spcs[spc][  'mul'])
 
     # check direction of reaction
     print('checking exothermicity of reaction')
@@ -1905,7 +1905,7 @@ def get_thy_info(lvldic):
  
 def get_spc_info(spcdct):
     err_msg = ''
-    props   = ['inchi', 'charge', 'mult']
+    props   = ['ich', 'chg', 'mul']
     for i, prop in enumerate(props):
         if prop in spcdct:
             props[i] = spcdct[prop]

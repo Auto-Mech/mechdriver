@@ -45,8 +45,8 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
 
         #Task information
         tsk = tsk_info[0]
-        es_ini_key = tsk_info[1]
-        es_run_key = tsk_info[2]
+        es_ini_key = tsk_info[2]
+        es_run_key = tsk_info[1]
         overwrite = tsk_info[3]
         #Theory information
         ini_thy_info = get_es_info(es_dct, es_ini_key)
@@ -70,7 +70,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
         #Loop over all species
         for spc in spc_queue:
             print('\n  | Task {} \t\t\t Species {}: {}'.format(tsk, spc,
-                  automol.inchi.smiles(spcdct[spc]['inchi'])))
+                  automol.inchi.smiles(spcdct[spc]['ich'])))
 
             #Get params
             spc_info = scripts.es.get_spc_info(spcdct[spc])
@@ -78,13 +78,6 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 spc_info, thy_info)
             thy_level = thy_info[0:3]
             thy_level.append(orb_restr)
-            #thy_info = thy_level
-
-            orb_restr = moldr.util.orbital_restriction(
-                spc_info, ini_thy_info)
-            ini_thy_level = ini_thy_info[0:3]
-            ini_thy_level.append(orb_restr)
-            #ini_thy_info = ini_thy_level
 
             spc_run_fs = autofile.fs.species(run_prefix)
             spc_run_fs.leaf.create(spc_info)
@@ -101,8 +94,13 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
             thy_save_fs = autofile.fs.theory(spc_save_path)
             thy_save_fs.leaf.create(thy_level[1:4])
             thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+         
+            if ini_thy_info[0] != 'input_geom':
+                orb_restr = moldr.util.orbital_restriction(
+                    spc_info, ini_thy_info)
+                ini_thy_level = ini_thy_info[0:3]
+                ini_thy_level.append(orb_restr)
 
-            if ini_thy_level[0] == 'input_geom':
                 ini_thy_run_fs = autofile.fs.theory(spc_run_path)
                 ini_thy_run_fs.leaf.create(ini_thy_level[1:4])
                 ini_thy_run_path = ini_thy_run_fs.leaf.path(ini_thy_level[1:4])
@@ -116,6 +114,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 ini_thy_run_path = None
                 ini_thy_save_fs = None
                 ini_thy_save_path = None
+                ini_thy_level = ini_thy_info
 
             run_fs = autofile.fs.run(thy_run_path)
 
@@ -185,10 +184,10 @@ def create_spec(val, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.)
     smi = automol.inchi.smiles(ich)
     mult = 1
     mult += smi.count('[')
-    spec['inchi'] = ich
+    spec['ich'] = ich
     spec['geoobj'] = geo
-    spec['charge'] = charge
-    spec['mult'] = mult
+    spec['chg'] = charge
+    spec['mul'] = mult
     spec['mc_nsamp'] = mc_nsamp
     spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian')
     return spec

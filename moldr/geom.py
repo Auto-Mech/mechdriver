@@ -15,7 +15,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def reference_geometry(
         spcdct, thy_level, thy_run_fs, thy_save_fs, cnf_run_fs, cnf_save_fs,
-        run_fs, ini_thy_level=None, ini_thy_save_fs=None, kickoff_size=0.1,
+        run_fs, ini_thy_level=[], ini_thy_save_fs=None, kickoff_size=0.1,
         kickoff_backward=False, projrot_script_str='RPHt.exe',
         overwrite=False):
     """ determine what to use as the reference geometry for all future runs
@@ -62,7 +62,7 @@ def reference_geometry(
             'spc_info': spc_info,
             'run_fs': run_fs,
             'thy_run_fs': thy_run_fs,
-            'thy_save_fs': thy_save_fs,
+           # 'thy_save_fs': thy_save_fs,
             'script_str': opt_script_str,
             'overwrite': overwrite,
             'thy_level': thy_level,
@@ -308,7 +308,7 @@ def projrot_frequencies(geo, hess, thy_level, thy_run_fs, projrot_script_str='RP
     proj_file_path = os.path.join(thy_run_path, 'RPHt_input_data.dat')
     with open(proj_file_path, 'w') as proj_file:
         proj_file.write(projrot_inp_str)
-
+    print(projrot_script_str, proj_file_path)
     moldr.util.run_script(projrot_script_str, proj_file_path)
 
     rtproj_freqs, _ = projrot_io._read.read_rpht_output(
