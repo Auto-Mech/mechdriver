@@ -89,8 +89,8 @@ def species_block(
                 zpe = sum(proj_freqs)*WAVEN2KCAL/2.
                 hind_rot_str = ""
 
-                core = mess_io.writer.mol_data.core_rigidrotor(har_geo, sym_factor)
-                spc_str = mess_io.writer.molecule(
+                core = mess_io.writer.write_core_rigidrotor(har_geo, sym_factor)
+                spc_str = mess_io.writer.write_molecule(
                     core, proj_freqs, elec_levels,
                     hind_rot=hind_rot_str,
                     )
@@ -184,8 +184,8 @@ def species_block(
                             proj_freqs = rthrproj_freqs
                             zpe = sum(rthrproj_freqs)*WAVEN2KCAL/2.
 
-                    core = mess_io.writer.mol_data.core_rigidrotor(tors_geo, sym_factor)
-                    spc_str = mess_io.writer.molecule(
+                    core = mess_io.writer.write_core_rigidrotor(tors_geo, sym_factor)
+                    spc_str = mess_io.writer.write_molecule(
                         core, proj_freqs, elec_levels,
                         hind_rot=hind_rot_str,
                         )
@@ -204,7 +204,6 @@ def species_block(
             run_grad=run_grad_pf,
             run_hess=run_hess_pf,
         )
-
     if vib_model == 'VPT2' and tors_model == 'RIGID':
         if anh_min_cnf_locs is not None:
             anh_geo = anh_cnf_save_fs.leaf.file.geometry.read(anh_min_cnf_locs)
@@ -229,8 +228,8 @@ def species_block(
                 zpe = sum(proj_freqs)*WAVEN2KCAL/2.
                 hind_rot_str = ""
 
-                core = mess_io.writer.mol_data.core_rigidrotor(anh_geo, sym_factor)
-                spc_str = mess_io.writer.molecule(
+                core = mess_io.writer.write_core_rigidrotor(anh_geo, sym_factor)
+                spc_str = mess_io.writer.write_molecule(
                     core, proj_freqs, elec_levels,
                     hind_rot=hind_rot_str,
                     )
@@ -271,9 +270,11 @@ def get_high_level_energy(
     ll_save_fs.leaf.create(thy_low_level)
     ll_save_path = ll_save_fs.leaf.path(thy_low_level)
 
-    min_cnf_locs = moldr.util.min_energy_conformer_locators(
-        ll_save_path)
     cnf_save_fs = autofile.fs.conformer(ll_save_path)
+    #min_cnf_locs = moldr.util.min_energy_conformer_locators(
+    #    ll_save_fs)
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(
+        cnf_save_fs)
     cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
     min_cnf_geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
 
@@ -312,8 +313,10 @@ def get_zero_point_energy(
     har_levelp.append(orb_restr)
 
     har_save_path = thy_save_fs.leaf.path(har_levelp[1:4])
-    har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_save_path)
+    
+    #har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_save_path)
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
+    har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
 
     orb_restr = moldr.util.orbital_restriction(
         spc_info, tors_level)
@@ -321,8 +324,9 @@ def get_zero_point_energy(
     tors_levelp.append(orb_restr)
 
     tors_save_path = thy_save_fs.leaf.path(tors_levelp[1:4])
-    tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_save_path)
+    #tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_save_path)
     tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
+    tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs)
     tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
 
     orb_restr = moldr.util.orbital_restriction(
@@ -331,8 +335,9 @@ def get_zero_point_energy(
     vpt2_levelp.append(orb_restr)
 
     anh_save_path = thy_save_fs.leaf.path(vpt2_levelp[1:4])
-    anh_min_cnf_locs = moldr.util.min_energy_conformer_locators(anh_save_path)
+    #anh_min_cnf_locs = moldr.util.min_energy_conformer_locators(anh_save_path)
     anh_cnf_save_fs = autofile.fs.conformer(anh_save_path)
+    anh_min_cnf_locs = moldr.util.min_energy_conformer_locators(anh_cnf_save_fs)
     anh_cnf_save_path = anh_cnf_save_fs.leaf.path(anh_min_cnf_locs)
 
     har_zpe = 0.0
@@ -398,12 +403,12 @@ def get_zero_point_energy(
 
                 dummy_freqs = [1000.]
                 dummy_zpe = 0.0
-                core = mess_io.writer.mol_data.core_rigidrotor(tors_geo, sym_factor)
+                core = mess_io.writer.write_core_rigidrotor(tors_geo, sym_factor)
                 print('mess writer in get zpe')
                 print(core)
                 print(elec_levels)
                 print(hind_rot_str)
-                spc_str = mess_io.writer.molecule(
+                spc_str = mess_io.writer.write_molecule(
                     core, dummy_freqs, elec_levels,
                     hind_rot=hind_rot_str,
                     )
@@ -477,8 +482,8 @@ def get_zero_point_energy(
                 zpe = sum(proj_freqs)*WAVEN2KCAL/2.
                 hind_rot_str = ""
 
-                core = mess_io.writer.mol_data.core_rigidrotor(anh_geo, sym_factor)
-                spc_str = mess_io.writer.molecule(
+                core = mess_io.writer.write_core_rigidrotor(anh_geo, sym_factor)
+                spc_str = mess_io.writer.write_molecule(
                     core, proj_freqs, elec_levels,
                     hind_rot=hind_rot_str,
                     )
@@ -501,7 +506,8 @@ def tau_pf_write(
     """ Print out data fle for partition function evaluation
     """
     cnf_save_fs = autofile.fs.conformer(save_prefix)
-    min_cnf_locs = moldr.util.min_energy_conformer_locators(save_prefix)
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
+    #min_cnf_locs = moldr.util.min_energy_conformer_locators(save_prefix)
     if min_cnf_locs:
         ene_ref = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
         print('ene_ref')

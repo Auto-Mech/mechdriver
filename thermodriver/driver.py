@@ -27,7 +27,6 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
 
     #Fix any issues in tsk_list
     tsk_info_lst = fix(tsk_info_lst)
-    print(tsk_info_lst)
     #Add reference molecules
     refs, msg  = prepare_refs(ref, spcdct, spc_queue)
     full_queue  = spc_queue + refs
@@ -190,19 +189,19 @@ def get_refs(species, spcs, scheme):
     msg   = ''
     for spc in species:
         spc_ref = call(spcs[spc]['ich'])
-        msg += ' || Species {} with basis {}\n'.format(spc, ', '.join(spc_ref))
+        msg += 'Species {} with basis {}\n'.format(spc, ', '.join(spc_ref))
         ref.extend(spc_ref)
     return list(dict.fromkeys(ref)), msg
 
 
 def prepare_refs(refscheme, spcdct, spc_queue):
      if isinstance(refscheme, str):
-         msg  = '||| Determining {} reference molecules for: \n'.format(refscheme)
+         msg  = 'Determining {} reference molecules for: \n'.format(refscheme)
          if is_scheme(refscheme):
              refs, newmsg = get_refs(spc_queue, spcdct, refscheme)
              msg += newmsg
      else:
-         msg  = '||| Reference set was set to be {}: \n'.format(','.join(refscheme))
+         msg  = 'Reference set was set to be {}: \n'.format(','.join(refscheme))
          refs = refscheme
      unique_refs = []
      for ref in refs:
@@ -213,7 +212,7 @@ def prepare_refs(refscheme, spcdct, spc_queue):
                  unique_refs.append(spc)
                  break
          if needtoadd:
-             msg += '  | Adding reference species ref_{}\n'.format(ref)
+             msg += 'Adding reference species ref_{}\n'.format(ref)
              spcdct['ref_' + ref] = create_spec(ref)
              unique_refs.append('ref_' + ref)
      return unique_refs, msg
@@ -285,7 +284,7 @@ if __name__ == "__main__":
 
     tsk_info_lst = [
              #       [  'mc', 'mclev',   'mclev', True],
-                    ['geom', 'optlev', 'input', False],
+                    ['geom', 'optlev', 'optlev', False],
                     ['freq', 'optlev', 'optlev', False]
               #      [ 'hr', 'hrlev', 'optlev', False]
                                                      ]
@@ -293,9 +292,9 @@ if __name__ == "__main__":
 
     es_dct = { 'mclev':  {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
     #es_dct = { 'mclev':  {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
-                   'optlev': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+                  # 'optlev': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                   # 'testlvl': {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
-                  # 'optlev': {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
+                   'optlev': {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    'hrlev':  {'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    'anlev':  {'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
                    '2':      {'orb_res': 'RU', 'program': 'molpro', 'method': 'ccsd(t)', 'basis': 'cc-pvtz', 'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'}, 
@@ -316,5 +315,5 @@ if __name__ == "__main__":
 
               'h2':     {'chg': 0, 'mul': 1, 'smiles': '[H][H]', 'mc_nsamp': [False, 0, 0, 0, 0, 1], 'mc_tau': {}, 'hind_inc': 6.283185307179586, 'sym_factor': 2.0, 'ich': 'InChI=1S/H2/h1H', 'geeobj': (('H', (0.6693776859397009, 0.0, 0.0)), ('H', (-0.6693776859397009, 0.0, 0.0))), 'geoobj': (('H', (0.6717316790925176, 0.0, 0.0)), ('H', (-0.6717316790925176, 0.0, 0.0)))}} 
     
-    #run(tsk_info_lst, es_dct, spcdct, spcs, ref, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save') 
-    run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'runtest', 'savetest') 
+    run(tsk_info_lst, es_dct, spcdct, spcs, ref, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save') 
+    #run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'runtest', 'savetest') 

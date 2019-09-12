@@ -69,7 +69,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
 
         #Loop over all species
         for spc in spc_queue:
-            print('\n  | Task {} \t\t\t Species {}: {}'.format(tsk, spc,
+            print('\nTask {} \t\t\t Species {}: {}'.format(tsk, spc,
                   automol.inchi.smiles(spcdct[spc]['ich'])))
 
             #Get params
@@ -149,7 +149,8 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 if not tsk == 'sp' or tsk == 'energy':
                     geo = moldr.geom.reference_geometry(
                         spcdct[spc], thy_level, thy_run_fs,
-                        thy_save_fs, run_fs, ini_thy_level,
+                        thy_save_fs, cnf_run_fs, cnf_save_fs, 
+                        run_fs, ini_thy_level,
                         ini_thy_save_fs, kickoff_size=KICKOFF_SIZE,
                         kickoff_backward=KICKOFF_BACKWARD,
                         projrot_script_str=PROJROT_SCRIPT_STR,

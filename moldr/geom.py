@@ -33,6 +33,7 @@ def reference_geometry(
     spc_info = [spcdct['ich'], spcdct['chg'], spcdct['mul']]
     if 'input_geom' in ini_thy_level: # geo is to be read in from dictionary of goemetries
         geo_init = geom_obj
+        overwrite = True
         print('found initial geometry from geometry dictionary')
     else:
     # Check to see if geo already exists at running_theory
@@ -198,6 +199,7 @@ def run_check_imaginary(
     run_fs = autofile.fs.run(thy_run_path)
     imag = False
     disp_xyzs = []
+    hess = ()
     if automol.geom.is_atom(geo):
         hess = {}
     else:
@@ -308,9 +310,10 @@ def projrot_frequencies(geo, hess, thy_level, thy_run_fs, projrot_script_str='RP
     proj_file_path = os.path.join(thy_run_path, 'RPHt_input_data.dat')
     with open(proj_file_path, 'w') as proj_file:
         proj_file.write(projrot_inp_str)
-    print(projrot_script_str, proj_file_path)
-    moldr.util.run_script(projrot_script_str, proj_file_path)
 
+    proj_file_path = thy_run_path
+    moldr.util.run_script(projrot_script_str, proj_file_path)
+   
     rtproj_freqs, _ = projrot_io._read.read_rpht_output(
         proj_file_path+'/RTproj_freq.dat')
     rthrproj_freqs, _ = projrot_io._read.read_rpht_output(
