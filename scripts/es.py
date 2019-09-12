@@ -89,15 +89,15 @@ def run_hr(spcdic, params, thy_save_fs, tau_run_fs, tau_save_fs, OPT_KWARGS):
 
 def run_task(tsk, spcdic, thydic, ini_thy_info, ini_thy_save_fs,
         ini_thy_run_path, ini_thy_save_path, thy_info, spc_info, thy_run_fs,
-        thy_save_fs, run_fs, conf_run_fs, conf_save_fs, tau_run_fs,
+        thy_save_fs, run_fs, cnf_run_fs, cnf_save_fs, tau_run_fs,
         tau_save_fs, overwrite):
 
     sp_script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
 
     params = {'spc_info': spc_info,
                   'thy_level': thy_info,
-                 'cnf_run_fs': conf_run_fs,
-                'cnf_save_fs': conf_save_fs,
+                 'cnf_run_fs': cnf_run_fs,
+                'cnf_save_fs': cnf_save_fs,
                  'script_str': opt_script_str,
                   'overwrite': overwrite} 
 
@@ -115,8 +115,6 @@ def run_task(tsk, spcdic, thydic, ini_thy_info, ini_thy_save_fs,
         ref_save_path = ini_thy_save_path
         #Make sure there is at least one CONF for this level of theory
         params['thy_level'] = ini_thy_info
-        cnf_run_fs  = autofile.fs.conformer(ref_run_path)
-        cnf_save_fs = autofile.fs.conformer(ref_save_path)
         run_single_mc(spc_info, ini_thy_info, ini_thy_save_fs, cnf_run_fs, cnf_save_fs, overwrite)
 
         min_cnf_locs = moldr.util.min_energy_conformer_locators(
@@ -160,7 +158,7 @@ def remove_imag(spcdic, thy_info, thy_run_fs, thy_save_fs, run_fs, overwrite):
 
     imag, geo, disp_xyzs = moldr.geom.run_check_imaginary(**params, **KWARGS)
     if imag:
-        print('  | imaginary frequency detected, attempting to kick off')
+        print('imaginary frequency detected, attempting to kick off')
         params[          'run_fs'] = run_fs
         params['kickoff_backward'] = KICKOFF_BACKWARD
         params[    'kickoff_size'] = KICKOFF_SIZE
@@ -169,7 +167,7 @@ def remove_imag(spcdic, thy_info, thy_run_fs, thy_save_fs, run_fs, overwrite):
         del params['thy_save_fs']
 
         moldr.geom.run_kickoff_saddle(geo, disp_xyzs, **params, **OPT_KWARGS)
-        print('  | removing saddlepoint hessian')
+        print('removing saddlepoint hessian')
 
         run_fs = autofile.fs.run(thy_run_path)
         run_fs.leaf.remove([elstruct.Job.HESSIAN])
@@ -308,21 +306,21 @@ def get_thy_save_path(save_prefix, spc_info, thy_info):
     return thy_save_path
 
 def rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info, ini_thy_info=None):
-    ts_mul = automol.mult.ts.low([spcs[spc]['mult'] for spc in reacs], [spcs[spc]['mult'] for spc in reacs])
-    ts_chg = sum([spcs[spc]['charge'] for spc in reacs])
+    ts_mul = automol.mult.ts.low([spcs[spc]['mul'] for spc in reacs], [spcs[spc]['mul'] for spc in reacs])
+    ts_chg = sum([spcs[spc]['chg'] for spc in reacs])
     ts_info = ('', ts_chg, ts_mul)
 
     rxn_ichs = [[],[]] 
     rxn_chgs = [[],[]]
     rxn_muls = [[],[]]
     for spc in reacs:
-         rxn_ichs[0].append(spcs[spc][ 'inchi'])
-         rxn_chgs[0].append(spcs[spc]['charge'])
-         rxn_muls[0].append(spcs[spc][  'mult'])
+         rxn_ichs[0].append(spcs[spc][ 'ich'])
+         rxn_chgs[0].append(spcs[spc]['chg'])
+         rxn_muls[0].append(spcs[spc][  'mul'])
     for spc in prods:
-         rxn_ichs[1].append(spcs[spc][ 'inchi'])
-         rxn_chgs[1].append(spcs[spc]['charge'])
-         rxn_muls[1].append(spcs[spc][  'mult'])
+         rxn_ichs[1].append(spcs[spc][ 'ich'])
+         rxn_chgs[1].append(spcs[spc]['chg'])
+         rxn_muls[1].append(spcs[spc][  'mul'])
 
     # check direction of reaction
     print('checking exothermicity of reaction')
@@ -1905,7 +1903,7 @@ def get_thy_info(lvldic):
  
 def get_spc_info(spcdct):
     err_msg = ''
-    props   = ['inchi', 'charge', 'mult']
+    props   = ['ich', 'chg', 'mul']
     for i, prop in enumerate(props):
         if prop in spcdct:
             props[i] = spcdct[prop]

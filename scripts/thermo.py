@@ -33,8 +33,8 @@ ELC_DEG_DCT = {
 def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix):
     ene = moldr.pf.get_high_level_energy(
         spc_info=spc_info,
-        theory_low_level=geo_theory,
-        theory_high_level=sp_theory,
+        thy_low_level=geo_theory,
+        thy_high_level=sp_theory,
         save_prefix=save_prefix)
     return ene
 
@@ -46,7 +46,7 @@ def basis_energy(spc_bas, spcdct):
     h_basis = []
     for ich in spc_bas:
         for key in spcdct:
-            if ich == spcdct[key]['inchi']:
+            if ich == spcdct[key]['ich']:
                 tmp = spc_energy(spcdct[key]['ene'], spcdct[key]['zpe'])
                 h_basis.append(tmp)
                 break
@@ -54,7 +54,7 @@ def basis_energy(spc_bas, spcdct):
 
 def get_coeff(spc, spcdct, spc_bas):
 
-    ich      = spcdct[spc]['inchi']
+    ich      = spcdct[spc]['ich']
     formula = thermo.util.inchi_formula(ich)
     print('\nformula:')
     print(formula)
@@ -65,7 +65,7 @@ def get_coeff(spc, spcdct, spc_bas):
     print(atom_dict)
     
     if len(spc_bas) == 1:
-        if spcdct[spc]['inchi'] == spc_bas[0]:
+        if spcdct[spc]['ich'] == spc_bas[0]:
             coeff = [1]
             print('\ncoeff:')
             print(coeff)
@@ -96,7 +96,7 @@ def get_zpe(spc, spcdct, spc_info, spc_save_path, pf_levels, model):
     spc_zpe = {}
     is_atom = {}
     zero_energy_str = {}
-    ich = spcdct['inchi']
+    ich = spcdct['ich']
     smi = automol.inchi.smiles(ich)
     print("smiles: {}".format(smi), "inchi: {}".format(ich))
     
@@ -193,9 +193,6 @@ def get_pfinput(spc, spc_info, spc_str, global_pf_str, zpe_str):
 
     # create a messpf input file
     spc_head_str = 'Species ' + spc
-    print("HHIIII")
-    print(zpe_str)
-    print(spc_head_str)
     pf_inp_str = '\n'.join(
         [global_pf_str, spc_head_str,
          spc_str, zpe_str, '\n'])
@@ -228,7 +225,7 @@ def return_to_startpath(starting_path):
 
 def write_thermp_inp(spc_spcdct): 
     
-    ich     = spc_spcdct['inchi']
+    ich     = spc_spcdct['ich']
     h0form  = spc_spcdct[ 'Hf0K']
     formula = thermo.util.inchi_formula(ich)
     # Write thermp input file
@@ -254,7 +251,7 @@ def run_thermp(pf_path, nasa_path):
 
 def run_pac(spc, spc_spcdct, nasa_path, pf_levels, models):
 
-    ich       = spc_spcdct['inchi']
+    ich       = spc_spcdct['ich']
     formula   = thermo.util.inchi_formula(ich)
     atom_dict = thermo.util.get_atom_counts_dict(formula)
     tors_model, vib_model = models
@@ -300,7 +297,7 @@ def run_pac(spc, spc_spcdct, nasa_path, pf_levels, models):
     return chemkin_poly_str
 
 def write_nasa_file(spc_spcdct, ckin_path, nasa_path, chemkin_poly_str):
-    ich       = spc_spcdct['inchi']
+    ich       = spc_spcdct['ich']
     formula   = thermo.util.inchi_formula(ich)
     with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)
