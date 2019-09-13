@@ -435,6 +435,8 @@ def run(prefix):
     inf_dfile = file_.information(FilePrefix.RUN, function=info.run)
     inp_dfile = file_.input_file(FilePrefix.RUN)
     out_dfile = file_.output_file(FilePrefix.RUN)
+    trunk_ds.add_data_files({
+        FileAttributeName.INFO: inf_dfile})
     leaf_ds.add_data_files({
         FileAttributeName.INFO: inf_dfile,
         FileAttributeName.INPUT: inp_dfile,

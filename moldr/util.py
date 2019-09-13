@@ -173,35 +173,6 @@ def geometry_dictionary(geom_path):
     return geom_dct
 
 
-def reference_geometry(spc_info, thy_level, thy_fs,
-                       geom_dct={}, geom_obj = None, return_msg = False):
-    """ obtain reference geometry
-    if data for reference method exists use that
-    then geometry dictionary takes precedence
-    if nothing else from inchi
-    """
-    msg = ''
-    if thy_fs.leaf.file.geometry.exists(thy_level[1:4]):
-        thy_path = thy_fs.leaf.path(thy_level[1:4])
-        msg = 'getting reference geometry from {}'.format( thy_path)
-        geo = thy_fs.leaf.file.geometry.read(thy_level[1:4])
-    else:
-        ich = spc_info[0]
-        if geom_obj:
-            msg = 'Using reference geometry from input file'
-            geo = geom_obj
-        elif ich in geom_dct:
-            msg = 'getting reference geometry from geom_dct'
-            geo = geom_dct[ich]
-        else:
-            msg = 'getting reference geometry from inchi'
-            geo = automol.inchi.geometry(ich)
-    if return_msg:
-        return geo, msg
-    print(msg)
-    return geo
-
-
 def min_energy_conformer_locators(cnf_save_fs):
     """ locators for minimum energy conformer """
     cnf_locs_lst = cnf_save_fs.leaf.existing()
@@ -266,8 +237,13 @@ def run_script(script_str, run_dir):
     script_name = 'build.sh'
     with _EnterDirectory(run_dir):
         # write the submit script to the run directory
-        with open(script_name, 'w') as script_obj:
-            script_obj.write(script_str)
+        try:
+            os.remove('build.sh')
+            with open(script_name, 'w') as script_obj:
+                script_obj.write(script_str)
+        except:
+            with open(script_name, 'w') as script_obj:
+                script_obj.write(script_str)
 
         # make the script executable
         os.chmod(script_name, mode=os.stat(script_name).st_mode | stat.S_IEXEC)

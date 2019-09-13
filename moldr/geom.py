@@ -14,8 +14,7 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def reference_geometry(
-        spcdct, thy_level, thy_run_fs, thy_save_fs, cnf_run_fs, cnf_save_fs,
-        run_fs, ini_thy_level=[], ini_thy_save_fs=None, kickoff_size=0.1,
+        spcdct, thy_level, ini_thy_level, fs, kickoff_size=0.1,
         kickoff_backward=False, projrot_script_str='RPHt.exe',
         overwrite=False):
     """ determine what to use as the reference geometry for all future runs
@@ -26,12 +25,34 @@ def reference_geometry(
     an imaginary frequency and then a conformer file system is set up.
     """
 
+    ret = None
+
+    thy_run_fs = fs[2]
+    thy_save_fs = fs[3] 
+    ini_thy_save_fs = fs[5]
+    cnf_run_fs = fs[6]  
+    cnf_save_fs = fs[7]
+    run_fs = fs[-1] 
+    if run_fs.trunk.file.info.exists([]):
+        inf_obj = run_fs.trunk.file.info.read([])
+        if inf_obj.status == autofile.system.RunStatus.RUNNING:
+            print('reference geometry already running')
+            return ret
+    else:
+        prog = thy_level[0]
+        method = thy_level[1]
+        basis = thy_level[2]
+        status = autofile.system.RunStatus.RUNNING
+        inf_obj = autofile.system.info.run(
+            job='', prog=prog, method=method, basis=basis, status=status)
+        run_fs.trunk.file.info.write(inf_obj, [])
+
     print('initializing geometry')
     geo = None
     # Check to see if geometry should be obtained from dictionary
-    geom_obj = spcdct['geoobj']
     spc_info = [spcdct['ich'], spcdct['chg'], spcdct['mul']]
-    if 'input_geom' in ini_thy_level: # geo is to be read in from dictionary of goemetries
+    if 'input_geom' in ini_thy_level: 
+        geom_obj = spcdct['geoobj']
         geo_init = geom_obj
         overwrite = True
         print('found initial geometry from geometry dictionary')
@@ -63,7 +84,6 @@ def reference_geometry(
             'spc_info': spc_info,
             'run_fs': run_fs,
             'thy_run_fs': thy_run_fs,
-           # 'thy_save_fs': thy_save_fs,
             'script_str': opt_script_str,
             'overwrite': overwrite,
             'thy_level': thy_level,
@@ -78,9 +98,6 @@ def reference_geometry(
             overwrite=overwrite)
 
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-#        ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
-#        nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
-
         locs_lst = cnf_save_fs.leaf.existing()
         if locs_lst:
             saved_geo = cnf_save_fs.leaf.file.geometry.read(locs_lst[0])
@@ -91,26 +108,22 @@ def reference_geometry(
                 cnf_run_fs.remove()
                 cnf_save_fs.remove()
 
-#        thy_run_fs.leaf.create(thy_level[1:4])
-#        thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
-#        run_fs = autofile.fs.run(thy_run_path)
         thy_save_fs.leaf.create(thy_level[1:4])
         thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
         print('Saving reference geometry')
         print(" - Save path: {}".format(thy_save_path))
-#       ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-#        inf_obj, _, out_str = ret
-#        prog = inf_obj.prog
-#        geo = elstruct.reader.opt_geometry(prog, out_str)
         zma = automol.geom.zmatrix(geo)
         thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
         thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
         thy_save_fs.leaf.file.hessian.write(hess, thy_level[1:4])
 
-        scripts.es.run_single_mc(
-            spc_info, thy_level,
-            thy_save_fs, cnf_run_fs, cnf_save_fs,
+        scripts.es.run_single_conformer(
+            spc_info, thy_level, fs,
             overwrite)
+
+    if geo:
+        inf_obj.status = autofile.system.RunStatus.SUCCESS
+        run_fs.trunk.file.info.write(inf_obj, [])
 
     return geo
 
@@ -187,6 +200,7 @@ def remove_imag(
             overwrite, **kwargs)
     return geo, hess
 
+
 def run_check_imaginary(
         spc_info, geo, thy_level, thy_run_fs, script_str,
         projrot_script_str='RPHt.exe',
@@ -220,15 +234,23 @@ def run_check_imaginary(
             hess = elstruct.reader.hessian(prog, out_str)
 
             if hess:
+                imag = False
                 if automol.geom.is_linear(geo):
+                    proj_freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
                     freqs = elstruct.util.harmonic_frequencies(geo, hess, project=False)
+                    print('Freqs test in check_imag:', proj_freqs, freqs)
+                    if min(proj_freqs) < -100:
+                        imag = True
                 else:
                     freqs = projrot_frequencies(
                         geo, hess, thy_level, thy_run_fs, projrot_script_str)
+                    print('Freqs test in check_imag:', freqs)
+                    if min(freqs) < -0:
+                        imag = True
 
     # mode for now set the imaginary frequency check to -100:
     # Ultimately should decrease once frequency projector is functioning properly
-                if min(freqs) < 0:
+                if imag: 
                     imag = True
                     print('Imaginary mode found:')
                     norm_coos = elstruct.util.normal_coordinates(
@@ -303,7 +325,7 @@ def projrot_frequencies(geo, hess, thy_level, thy_run_fs, projrot_script_str='RP
     coord_proj = 'cartesian'
     grad = ''
     rotors_str = ''
-    projrot_inp_str = projrot_io._write.write_rpht_input(
+    projrot_inp_str = projrot_io.writer.rpht_input(
         geo, grad, hess, rotors_str=rotors_str,
         coord_proj=coord_proj)
 
@@ -314,9 +336,9 @@ def projrot_frequencies(geo, hess, thy_level, thy_run_fs, projrot_script_str='RP
     proj_file_path = thy_run_path
     moldr.util.run_script(projrot_script_str, proj_file_path)
    
-    rtproj_freqs, _ = projrot_io._read.read_rpht_output(
+    rtproj_freqs, _ = projrot_io.reader.rpht_output(
         proj_file_path+'/RTproj_freq.dat')
-    rthrproj_freqs, _ = projrot_io._read.read_rpht_output(
+    rthrproj_freqs, _ = projrot_io.reader.rpht_output(
         proj_file_path+'/hrproj_freq.dat')
     print('Projection test')
     print(rtproj_freqs)

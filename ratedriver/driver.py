@@ -1,3 +1,6 @@
+"""
+import os
+from qcelemental import constants as qcc
 from rcdriver.load import load_logger
 from rcdriver.load import load_params
 import automol.inchi
@@ -5,8 +8,6 @@ import automol.geom
 import scripts.es
 import thermo.heatform
 
-import os
-from qcelemental import constants as qcc
 import logging
 log   = logging.getLogger(__name__)
 
