@@ -1,9 +1,11 @@
-""" drivers for conformer sampling 
+""" drivers for conformer sampling
 """
+import numpy
 from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
+import autowrite
 import moldr
 
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -20,8 +22,10 @@ def conformer_sampling(
     geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
     zma = automol.geom.zmatrix(geo)
-    tors_ranges = automol.zmatrix.torsional_sampling_ranges(
-        zma, tors_names)
+    tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
+
+    # tors_ranges = automol.zmatrix.torsional_sampling_ranges(
+    #    zma, tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
     ich = spc_info[0]
     gra = automol.inchi.graph(ich)
@@ -62,6 +66,13 @@ def conformer_sampling(
         thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
         thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
 
+        ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
+        int_sym_num = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
+        print('internal symmetry number test:')
+        print(geo)
+        print(ene)
+        print(int_sym_num)
+
 
 def run_conformers(
         zma, spc_info, thy_level, nsamp, tors_range_dct,
@@ -85,16 +96,16 @@ def run_conformers(
     idx = 0
     nsamp0 = nsamp
     inf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
-    while True:
-        if cnf_save_fs.trunk.file.info.exists():
-            inf_obj_s = cnf_save_fs.trunk.file.info.read()
-            nsampd = inf_obj_s.nsamp
-        elif cnf_run_fs.trunk.file.info.exists():
-            inf_obj_r = cnf_run_fs.trunk.file.info.read()
-            nsampd = inf_obj_r.nsamp
-        else:
-            nsampd = 0
+    if cnf_save_fs.trunk.file.info.exists():
+        inf_obj_s = cnf_save_fs.trunk.file.info.read()
+        nsampd = inf_obj_s.nsamp
+    elif cnf_run_fs.trunk.file.info.exists():
+        inf_obj_r = cnf_run_fs.trunk.file.info.read()
+        nsampd = inf_obj_r.nsamp
+    else:
+        nsampd = 0
 
+    while True:
         nsamp = nsamp0 - nsampd
         if nsamp <= 0:
             print('Reached requested number of samples. '
@@ -113,7 +124,7 @@ def run_conformers(
 #            print('run_conformers test:', cid, cnf_run_path)
 
             idx += 1
-            print("Run {}/{}".format(idx, nsamp0))
+            print("Run {}/{}".format(nsampd+1, nsamp0))
             moldr.driver.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
@@ -125,6 +136,12 @@ def run_conformers(
                 **kwargs
             )
 
+            if cnf_save_fs.trunk.file.info.exists():
+                inf_obj_s = cnf_save_fs.trunk.file.info.read()
+                nsampd = inf_obj_s.nsamp
+            elif cnf_run_fs.trunk.file.info.exists():
+                inf_obj_r = cnf_run_fs.trunk.file.info.read()
+                nsampd = inf_obj_r.nsamp
             nsampd += 1
             inf_obj.nsamp = nsampd
             cnf_save_fs.trunk.file.info.write(inf_obj)
@@ -162,15 +179,16 @@ def save_conformers(cnf_run_fs, cnf_save_fs):
                 if len(automol.graph.connected_components(gra)) > 1:
                     print(" - Geometry is disconnected.. Skipping...")
                 else:
-                    unique = True
+                    unique = is_unique_dist_mat_energy(geo, ene, seen_geos, seen_enes)
+#                    unique = True
 
-                    for idx, geoi in enumerate(seen_geos):
-                        enei = seen_enes[idx]
-                        etol = 1.e-6
-                        if automol.geom.almost_equal_coulomb_spectrum(
-                                geo, geoi, rtol=1e-2):
-                            if abs(ene-enei) < etol:
-                                unique = False
+#                    for idx, geoi in enumerate(seen_geos):
+#                        enei = seen_enes[idx]
+#                        etol = 1.e-6
+#                        if automol.geom.almost_equal_coulomb_spectrum(
+#                                geo, geoi, rtol=1e-2):
+#                            if abs(ene-enei) < etol:
+#                                unique = False
 
                     if not unique:
                         print(" - Geometry is not unique. Skipping...")
@@ -207,6 +225,98 @@ def save_conformers(cnf_run_fs, cnf_save_fs):
             traj_path = cnf_save_fs.trunk.file.trajectory.path()
             print("Updating conformer trajectory file at {}".format(traj_path))
             cnf_save_fs.trunk.file.trajectory.write(traj)
+
+
+def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):
+    """ compare given geo with list of geos all to see if any have the same
+    coulomb spectrum and energy
+    """
+    unique = True
+    for idx, geoi in enumerate(geo_list):
+        enei = ene_list[idx]
+        etol = 1.e-6
+        if abs(ene-enei) < etol:
+            if automol.geom.almost_equal_coulomb_spectrum(
+                    geo, geoi, rtol=1e-2):
+                unique = False
+    return unique
+
+
+def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
+    """ compare given geo with list of geos all to see if any have the same
+    coulomb spectrum and energy
+    """
+    unique = True
+#    amin = 1e10
+#    geo_ame = None
+    for idx, geoi in enumerate(geo_list):
+        enei = ene_list[idx]
+        etol = 1.e-6
+        print(abs(ene-enei))
+        if abs(ene-enei) < etol:
+#            almost_equal, amax = automol.geom.almost_equal_dist_mat(
+#                    geo, geoi, thresh=1e-2)
+#            if almost_equal:
+#                if amax < amin:
+#                    geo_ame = geoi
+#                    amin = amax
+            if automol.geom.almost_equal_dist_mat(
+                    geo, geoi, thresh=1e-1):
+                unique = False
+#    print('dist test:', amin)
+#    syms = automol.geom.symbols(geo)
+#    xyzs = automol.geom.coordinates(geo)
+#    print(autowrite.geom.write(syms, xyzs))
+#    syms = automol.geom.symbols(geo_ame)
+#    xyzs = automol.geom.coordinates(geo_ame)
+#    print(autowrite.geom.write(syms, xyzs))
+    return unique
+
+
+def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
+    """ Determine the symmetry number for a given conformer geometry.
+    First explore the saved conformers to find the list of similar conformers -
+    i.e. those with a coulomb matrix and energy that are equivalent to those for the
+    reference geometry. Then expand each of those similar conformers by applying
+    rotational permutations to each of the terminal groups. Finally count how many
+    distinct distance matrices there are in the fully expanded conformer list.
+    """
+
+    locs_lst = cnf_save_fs.leaf.existing()
+    geo_sim = [geo]
+    geo_sim_exp = [geo]
+    ene_sim = [ene]
+    int_sym_num = 1.
+    if locs_lst:
+        enes = [cnf_save_fs.leaf.file.energy.read(locs)
+                for locs in locs_lst]
+        geos = [cnf_save_fs.leaf.file.geometry.read(locs)
+                for locs in locs_lst]
+        for geoi, enei in zip(geos, enes):
+            geo_lst = [geoi]
+            ene_lst = [enei]
+            if not is_unique_coulomb_energy(geo, ene, geo_lst, ene_lst):
+                geo_sim.append(geoi)
+                ene_sim.append(enei)
+
+        for geo_sim_i in geo_sim:
+            geo_sim_exp.append(automol.geom.rot_permutated_geoms(geo_sim_i))
+
+        int_sym_num = 0
+        for i, geoi in enumerate(geo_sim_exp):
+            new_geom = True
+            for j, geoj in enumerate(geo_sim_exp):
+                if j < i:
+                    print('geo test:', geoi, geoj)
+                    if automol.geom.almost_equal_dist_mat(
+                            geoi, geoj, thresh=1e-1):
+                        new_geom = False
+                else:
+                    break
+            if new_geom:
+                int_sym_num += 1
+    print(int_sym_num)
+    return int_sym_num
 
 
 def run_conformer_gradients(

@@ -61,8 +61,8 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                     ts['reacs'], ts['prods'], spcdct, thy_info,
                     overwrite)
                 if not isinstance(geo, str):
-                    spcs[ts] = create_spec(geo)
-                    spcs[ts]['zmatrix'] = zma
+                    spcdct[ts] = create_spec(geo)
+                    spcdct[ts]['zmatrix'] = zma
                     print('Success, transition state {} added to ES queue'.format(ts))
                     spc_queue.append(ts)
                     continue
@@ -117,6 +117,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 ini_thy_level = ini_thy_info
 
             run_fs = autofile.fs.run(thy_run_path)
+            run_fs.trunk.create()
 
             cnf_run_fs = autofile.fs.conformer(thy_run_path)
             cnf_save_fs = autofile.fs.conformer(thy_save_path)
@@ -148,25 +149,17 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 #Every task starts with a geometry optimization at the running theory level
                 if not tsk == 'sp' or tsk == 'energy':
                     geo = moldr.geom.reference_geometry(
-                        spcdct[spc], thy_level, thy_run_fs,
-                        thy_save_fs, cnf_run_fs, cnf_save_fs, 
-                        run_fs, ini_thy_level,
-                        ini_thy_save_fs, kickoff_size=KICKOFF_SIZE,
+                        spcdct[spc], thy_level, ini_thy_level, fs,
+                        kickoff_size=KICKOFF_SIZE,
                         kickoff_backward=KICKOFF_BACKWARD,
                         projrot_script_str=PROJROT_SCRIPT_STR,
                         overwrite=overwrite)
-                    scripts.es.run_single_mc(
-                        spc_info, thy_level,
-                        thy_save_fs, cnf_run_fs, cnf_save_fs,
-                        overwrite)
-
+                if geo: 
                 #Run the requested task at the requested running theory level
-                scripts.es.run_task(
-                    tsk, spcdct[spc], es_dct[es_run_key],
-                    ini_thy_level, ini_thy_save_fs, ini_thy_run_path,
-                    ini_thy_save_path, thy_level, spc_info,
-                    thy_run_fs, thy_save_fs, run_fs, cnf_run_fs,
-                    cnf_save_fs, tau_run_fs, tau_save_fs, overwrite)
+                    scripts.es.run_task(
+                        tsk, spcdct[spc], es_dct[es_run_key],
+                        ini_thy_level, thy_level, fs, spc_info,
+                        overwrite)
 
 
 def create_spec(val, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.):

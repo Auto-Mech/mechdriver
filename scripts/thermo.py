@@ -1,14 +1,12 @@
 """ reaction list test
 """
 import os
-import sys
 from qcelemental import constants as qcc
 import thermo
 import automol
 import autofile
 import moldr
 import mess_io.writer
-import scripts
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -31,6 +29,8 @@ ELC_DEG_DCT = {
 }
 
 def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix):
+    """ return the electronic energy for a specific species for a given level of theory
+    """
     ene = moldr.pf.get_high_level_energy(
         spc_info=spc_info,
         thy_low_level=geo_theory,
@@ -39,10 +39,14 @@ def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix):
     return ene
 
 def spc_energy(spc_ene, spc_zpe):
+    """ return the sum of the electronic and zero point energies
+    """
     spc_ene = spc_ene + spc_zpe/EH2KCAL
     return spc_ene
 
 def basis_energy(spc_bas, spcdct):
+    """ return the electronic + zero point energies for a set of species
+    """
     h_basis = []
     for ich in spc_bas:
         for key in spcdct:
@@ -53,17 +57,19 @@ def basis_energy(spc_bas, spcdct):
     return h_basis
 
 def get_coeff(spc, spcdct, spc_bas):
-
-    ich      = spcdct[spc]['ich']
+    """ return the coefficients for the expansion of a species in terms of a
+    set of basis species
+    """
+    ich = spcdct[spc]['ich']
     formula = thermo.util.inchi_formula(ich)
     print('\nformula:')
     print(formula)
-    
+
     # Get atom count dictionary
     atom_dict = thermo.util.get_atom_counts_dict(formula)
     print('\natom dict:')
     print(atom_dict)
-    
+
     if len(spc_bas) == 1:
         if spcdct[spc]['ich'] == spc_bas[0]:
             coeff = [1]
@@ -77,29 +83,40 @@ def get_coeff(spc, spcdct, spc_bas):
     return coeff
 
 def get_hf0k(spc, spcdct, spc_bas):
-    spc_ene  = spc_energy(spcdct[spc]['ene'], spcdct[spc]['zpe'])
-    h_basis  = basis_energy(spc_bas, spcdct)
-    coeff    =  get_coeff(spc, spcdct, spc_bas)
+    """ determine the 0 K heat of formation from the
+    species dictionary and a set of references species
+    """
+    spc_ene = spc_energy(spcdct[spc]['ene'], spcdct[spc]['zpe'])
+    h_basis = basis_energy(spc_bas, spcdct)
+    coeff = get_coeff(spc, spcdct, spc_bas)
 
     # Get the 0 K heat of formation
+    # ref_set should be a parameter for this routine
+    print('spc_ene:', spc_ene)
+    print('h_basis:', h_basis)
+    print('coeff:', coeff)
     h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ATcT')
-    return h0form 
+    print('Hf0K test:', spc, h0form)
+    return h0form
 
-def get_zpe(spc, spcdct, spc_info, spc_save_path, pf_levels, model):
-    har_level, tors_level, vpt2_level =  pf_levels
-    tors_model, vib_model = model
+def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
+    """ return the zpe for a given species according a specified set of
+    partition function levels
+    """
+    har_level, tors_level, vpt2_level = pf_levels
+    tors_model, vib_model = spc_model
     # get the zero-point energy for each species
-    print('harmonic_level:', har_level)
-    print('tors_level:', tors_level)
-    print('vpt2_level:', vpt2_level)
-    print('Calculating zpe')
+    # print('harmonic_level:', har_level)
+    # print('tors_level:', tors_level)
+    # print('vpt2_level:', vpt2_level)
+    # print('Calculating zpe')
     spc_zpe = {}
     is_atom = {}
     zero_energy_str = {}
     ich = spcdct['ich']
     smi = automol.inchi.smiles(ich)
     print("smiles: {}".format(smi), "inchi: {}".format(ich))
-    
+
     spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
         spc_info,
         tors_model, vib_model,
@@ -110,36 +127,37 @@ def get_zpe(spc, spcdct, spc_info, spc_save_path, pf_levels, model):
     zpe_str = '{0:<8.2f}\n'.format(spc_zpe)
     print(zpe_str)
     if is_atom:
-       zero_energy_str = 'End'
+        zero_energy_str = 'End'
     else:
-       zero_energy_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
-       zero_energy_str += 'End'
+        zero_energy_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
+        zero_energy_str += 'End'
     print('zero_energy_str:', zero_energy_str)
-    
-    pf_inp_str = {}
+
     print('finished zpe')
     return spc_zpe, zero_energy_str
 
-def get_spcinput(spc, spcdct, spc_info, spc_save_path, pf_levels, model):
+def get_spcinput(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
+    """ set up the input string for a given species section in mess input
+    """
 
-    har_level, tors_level, vpt2_level =  pf_levels
-    tors_model, vib_model = model
+    har_level, tors_level, vpt2_level = pf_levels
+    tors_model, vib_model = spc_model
 
     # set up species information
     ich = spc_info[0]
     smi = automol.inchi.smiles(ich)
     mul = spc_info[2]
     print("smiles: {}".format(smi), "inchi: {}".format(ich))
-    
+
     sym_factor = 1.
     elec_levels = [[0., mul]]
     if 'sym' in spcdct:
-       sym_factor = spcdct['sym']
+        sym_factor = spcdct['sym']
     if 'elec_levs' in spcdct:
-       elec_levels = spcdct['elec_levs']
+        elec_levels = spcdct['elec_levs']
     if (ich, mul) in  ELC_DEG_DCT:
         elec_levels = ELC_DEG_DCT[(ich, mul)]
-    
+
     # cycle through the low levels generating partition functions  for each
     spc_str = moldr.pf.species_block(
         spc_info=spc_info,
@@ -157,28 +175,34 @@ def get_spcinput(spc, spcdct, spc_info, spc_save_path, pf_levels, model):
     return spc_str
 
 def get_pfheader(temp_step, ntemps):
-    global_pf_str = mess_io.writer.write_global_pf(
+    """ prepare partition function header string
+    """
+    global_pf_str = mess_io.writer.global_pf(
         [], temp_step, ntemps, rel_temp_inc=0.001,
         atom_dist_min=0.6)
     print(global_pf_str)
     return global_pf_str
 
-def get_thermo_paths(spc_save_path, spc_info, tors_level):
+def get_thermo_paths(spc_save_path, spc_info, har_level):
+    """ set up the path for saving the pf input and output
+    currently using the harmonic theory directory for this because
+    there is no obvious place to save this information for a random
+    assortment of har_level, tors_level, vpt2_level
+    """
     orb_restr = moldr.util.orbital_restriction(
-            spc_info, tors_level)
-    tors_levelp = tors_level[1:3]
-    tors_levelp.append(orb_restr)
-    
+        spc_info, har_level)
+    har_levelp = har_level[1:3]
+    har_levelp.append(orb_restr)
+
     thy_save_fs = autofile.fs.theory(spc_save_path)
-    thy_save_fs.leaf.create(tors_levelp)
-    thy_save_path = thy_save_fs.leaf.path(tors_levelp)
+    thy_save_fs.leaf.create(har_levelp)
+    thy_save_path = thy_save_fs.leaf.path(har_levelp)
     bld_locs = ['PF', 0]
     bld_save_fs = autofile.fs.build(thy_save_path)
     bld_save_fs.leaf.create(bld_locs)
     pf_path = bld_save_fs.leaf.path(bld_locs)
 
     # prepare NASA polynomials
-    nasa_inp_str = ('nasa')
     bld_locs = ['NASA_POLY', 0]
     bld_save_fs.leaf.create(bld_locs)
     nasa_path = bld_save_fs.leaf.path(bld_locs)
@@ -189,7 +213,9 @@ def get_thermo_paths(spc_save_path, spc_info, tors_level):
     print(nasa_path)
     return pf_path, nasa_path
 
-def get_pfinput(spc, spc_info, spc_str, global_pf_str, zpe_str):
+def get_pfinput(spc, spc_str, global_pf_str, zpe_str):
+    """ prepare the full pf input string for running messpf
+    """
 
     # create a messpf input file
     spc_head_str = 'Species ' + spc
@@ -201,45 +227,55 @@ def get_pfinput(spc, spc_info, spc_str, global_pf_str, zpe_str):
     return pf_inp_str
 
 def write_pfinput(pf_inp_str, pf_path):
+    """ write the pf.inp file
+    """
     # run messpf
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
         pf_file.write(pf_inp_str)
-    return
 
 def run_pf(pf_path, pf_script_str=PF_SCRIPT_STR):
+    """ run messpf
+    """
     moldr.util.run_script(pf_script_str, pf_path)
     print('finished partition function')
-    return
 
-def go_to_nasapath(nasa_path):
-    # need to change back to starting directory after running thermp and pac99 or rest of code is confused
+def go_to_path(path):
+    """ change directory to path and return the original working directory
+    """
     starting_path = os.getcwd()
-    os.chdir(nasa_path)
+    os.chdir(path)
     return starting_path
 
-def return_to_startpath(starting_path):
-    ckin_path = ''.join([starting_path, '/ckin'])
-    print(ckin_path)
-    os.chdir(starting_path)
-    return ckin_path
+def return_to_path(path):
+    """ change directory to starting path
+    """
+    os.chdir(path)
 
-def write_thermp_inp(spc_spcdct): 
-    
-    ich     = spc_spcdct['ich']
-    h0form  = spc_spcdct[ 'Hf0K']
+def prepare_path(path, loc):
+    """ change directory to starting path, return chemkin path
+    """
+    new_path = os.path.join(path, loc)
+    return new_path
+
+def write_thermp_inp(spc_spcdct):
+    """ write the thermp input file
+    """
+    ich = spc_spcdct['ich']
+    h0form = spc_spcdct['Hf0K']
     formula = thermo.util.inchi_formula(ich)
     # Write thermp input file
-    ENTHALPYT = 0.
-    BREAKT = 1000.
+    enthalpyt = 0.
+    breakt = 1000.
     thermo.runner.write_thermp_input(
         formula=formula,
-        deltaH=h0form,
-        enthalpyT=ENTHALPYT,
-        breakT=BREAKT,
+        delta_h=h0form,
+        enthalpy_temp=enthalpyt,
+        break_temp=breakt,
         thermp_file_name='thermp.dat')
-    return
 
 def run_thermp(pf_path, nasa_path):
+    """ run thermp to convert partition functions to thermochemical data
+    """
     # Run thermp
     thermo.runner.run_thermp(
         pf_path=pf_path,
@@ -247,47 +283,55 @@ def run_thermp(pf_path, nasa_path):
         thermp_file_name='thermp.dat',
         pf_file_name='pf.dat'
         )
-    return
 
-def run_pac(spc, spc_spcdct, nasa_path, pf_levels, models):
-
-    ich       = spc_spcdct['ich']
-    formula   = thermo.util.inchi_formula(ich)
+def run_pac(spc, spc_spcdct, nasa_path, pf_levels, spc_model):
+    """ run pac99 to convert thermochemical data to nasa polynomials
+    """
+    ich = spc_spcdct['ich']
+    formula = thermo.util.inchi_formula(ich)
     atom_dict = thermo.util.get_atom_counts_dict(formula)
-    tors_model, vib_model = models
+    tors_model, vib_model = spc_model
     har_level, tors_level, vpt2_level, geo_level, sp_level = pf_levels
-   
+
     # Run pac99
     print('formula test')
     print(formula)
     print(nasa_path)
     thermo.runner.run_pac99(nasa_path, formula)
-    
-    with open(os.path.join(nasa_path, 'thermp.out'), 'r') as thermp_outfile:
-        thermp_out_str = thermp_outfile.read()
-    
+
+    # this looks like it is not used - I wonder why it was there?
+    # with open(os.path.join(nasa_path, 'thermp.out'), 'r') as thermp_outfile:
+    #     thermp_out_str = thermp_outfile.read()
+
     with open(os.path.join(nasa_path, formula+'.c97'), 'r') as pac99_file:
         pac99_str = pac99_file.read()
-    
+
     # Get the pac99 polynomial
     pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
     print('\nPAC99 Polynomial:')
     print(pac99_poly_str)
-    
+
     # Convert the pac99 polynomial to chemkin polynomial
-    comment_str = '! tors model: {0}\n'.format(tors_model)
-    comment_str += '! vib model: {0}\n'.format(vib_model)
-    comment_str += '! har level: {0}{1}/{2}\n'.format(
-        har_level[3], har_level[1], har_level[2])
-    comment_str += '! tors level: {0}{1}/{2}\n'.format(
-        tors_level[3], tors_level[1], tors_level[2])
-    comment_str += '! vpt2 level: {0}{1}/{2}\n'.format(
-        vpt2_level[3], vpt2_level[1], vpt2_level[2])
-    comment_str += '! ref level for energy: {0}{1}/{2}\n'.format(
-        geo_level[3], geo_level[1], geo_level[2])
-    comment_str += '! energy level: {0}/{1}\n'.format(
-        sp_level[1], sp_level[2])
-    
+    if tors_model:
+        comment_str = '! tors model: {0}\n'.format(tors_model)
+    if vib_model:
+        comment_str += '! vib model: {0}\n'.format(vib_model)
+    if har_level:
+        comment_str += '! har level: {0}{1}/{2}\n'.format(
+            har_level[3], har_level[1], har_level[2])
+    if tors_level:
+        comment_str += '! tors level: {0}{1}/{2}\n'.format(
+            tors_level[3], tors_level[1], tors_level[2])
+    if vpt2_level:
+        comment_str += '! vpt2 level: {0}{1}/{2}\n'.format(
+            vpt2_level[3], vpt2_level[1], vpt2_level[2])
+    if geo_level:
+        comment_str += '! ref level for energy: {0}{1}/{2}\n'.format(
+            geo_level[3], geo_level[1], geo_level[2])
+    if sp_level:
+        comment_str += '! energy level: {0}/{1}\n'.format(
+            sp_level[1], sp_level[2])
+
     chemkin_poly_str = thermo.nasapoly.convert_pac_to_chemkin(
         spc, atom_dict, comment_str, pac99_poly_str)
     chemkin_set_str = thermo.nasapoly.convert_pac_to_chemkin(
@@ -297,8 +341,10 @@ def run_pac(spc, spc_spcdct, nasa_path, pf_levels, models):
     return chemkin_poly_str
 
 def write_nasa_file(spc_spcdct, ckin_path, nasa_path, chemkin_poly_str):
-    ich       = spc_spcdct['ich']
-    formula   = thermo.util.inchi_formula(ich)
+    """ write out the nasa polynomials
+    """
+    ich = spc_spcdct['ich']
+    formula = thermo.util.inchi_formula(ich)
     with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)
     with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
