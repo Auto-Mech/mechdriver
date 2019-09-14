@@ -133,7 +133,7 @@ def get_prog(inp_str, lvl):
     patt_str = first_capture(pattern, patt_str)
     assert patt_str is not None
     if 'gaussian' in patt_str:
-        patt_str = 'g09'
+        patt_str = 'gaussian09'
     return patt_str 
 
 def get_meth(inp_str, lvl):

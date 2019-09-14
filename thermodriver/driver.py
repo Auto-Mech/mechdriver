@@ -308,7 +308,7 @@ if __name__ == "__main__":
         ]
 
     ES_DCT = {'mclev': {
-        'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp', 'basis': '6-31g*',
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
         'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv':
         '1.e-4'},
 #   es_dct = {'mclev': {
@@ -323,11 +323,11 @@ if __name__ == "__main__":
 #                 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
 #                 'econv': '1.e-8', 'gconv': '1.e-4'},
               'optlev': {
-                  'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp',
+                  'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp',
                   'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
                   'econv': '1.e-8', 'gconv': '1.e-4'},
               'hrlev':  {
-                  'orb_res': 'RU', 'program': 'g09', 'method': 'b3lyp',
+                  'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp',
                   'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
                   'econv': '1.e-8', 'gconv': '1.e-4'},
               'anlev':  {

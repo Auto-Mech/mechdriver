@@ -12,7 +12,7 @@ import elstruct
 def run_qchem_par(prog, method):
     """ dictionary of parameters for different electronic structure codes
     """
-    if prog == 'g09':
+    if prog == 'gaussian09':
         sp_script_str = ("#!/usr/bin/env bash\n"
                          "g09 run.inp run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
@@ -48,7 +48,7 @@ def run_qchem_par(prog, method):
         kwargs = {}
         opt_kwargs = {}
 
-    if prog == 'molpro':
+    if prog == 'molpro2015':
         sp_script_str = ("#!/usr/bin/env bash\n"
                       "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
         if method == 'caspt2':
