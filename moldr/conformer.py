@@ -68,10 +68,7 @@ def conformer_sampling(
 
         ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
         int_sym_num = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
-        print('internal symmetry number test:')
-        print(geo)
-        print(ene)
-        print(int_sym_num)
+        print('internal symmetry number test:', int_sym_num)
 
 
 def run_conformers(
@@ -299,15 +296,23 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
                 geo_sim.append(geoi)
                 ene_sim.append(enei)
 
+        # print('geo_sim test:')
+        # for geot in geo_sim:
+        #     print(geot)
         for geo_sim_i in geo_sim:
-            geo_sim_exp.append(automol.geom.rot_permutated_geoms(geo_sim_i))
+            new_geos = automol.geom.rot_permutated_geoms(geo_sim_i)
+            for new_geo in new_geos:
+                geo_sim_exp.append(new_geo)
 
+        # print('geo_sim_exp test:')
+        # for geot in geo_sim_exp:
+        #     print(geot)
         int_sym_num = 0
         for i, geoi in enumerate(geo_sim_exp):
             new_geom = True
             for j, geoj in enumerate(geo_sim_exp):
                 if j < i:
-                    print('geo test:', geoi, geoj)
+                    # print('geo test:', geoi, geoj)
                     if automol.geom.almost_equal_dist_mat(
                             geoi, geoj, thresh=1e-1):
                         new_geom = False
