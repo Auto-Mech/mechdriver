@@ -14,8 +14,8 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def reference_geometry(
-        spcdct, thy_level, ini_thy_level, fs, kickoff_size=0.1,
-        kickoff_backward=False, projrot_script_str='RPHt.exe',
+        spcdct, thy_level, ini_thy_level, fs, ini_fs, kickoff_size=0.1,
+       kickoff_backward=False, projrot_script_str='RPHt.exe',
         overwrite=False):
     """ determine what to use as the reference geometry for all future runs
     If ini_thy_info refers to geometry dictionary then use that,
@@ -29,9 +29,9 @@ def reference_geometry(
 
     thy_run_fs = fs[2]
     thy_save_fs = fs[3] 
-    ini_thy_save_fs = fs[5]
-    cnf_run_fs = fs[6]  
-    cnf_save_fs = fs[7]
+    ini_thy_save_fs = ini_fs[1]
+    cnf_run_fs = fs[4]  
+    cnf_save_fs = fs[5]
     run_fs = fs[-1] 
     if run_fs.trunk.file.info.exists([]):
         inf_obj = run_fs.trunk.file.info.read([])

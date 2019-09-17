@@ -50,7 +50,7 @@ def run_qchem_par(prog, method):
 
     if prog == 'molpro2015':
         sp_script_str = ("#!/usr/bin/env bash\n"
-                      "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
+                         "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
         if method == 'caspt2':
             opt_script_str = ("#!/usr/bin/env bash\n"
                               "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
@@ -183,6 +183,37 @@ def min_energy_conformer_locators(cnf_save_fs):
     else:
         min_cnf_locs = None
     return min_cnf_locs
+
+
+def locs_sort(save_fs):
+    """ sort trajectory file according to energies
+    """
+    locs_lst = save_fs.leaf.existing()
+    if locs_lst:
+        enes = [save_fs.leaf.file.energy.read(locs)
+                for locs in locs_lst]
+        sorted_locs = []
+        for _, loc in sorted(zip(enes, locs_lst), key=lambda x: x[0]):
+            sorted_locs.append(loc)
+    return sorted_locs
+
+
+def traj_sort(save_fs):
+    """ sort trajectory file according to energies
+    """
+    locs_lst = save_fs.leaf.existing()
+    if locs_lst:
+        enes = [save_fs.leaf.file.energy.read(locs)
+                for locs in locs_lst]
+        geos = [save_fs.leaf.file.geometry.read(locs)
+                for locs in locs_lst]
+        traj = []
+        for ene, geo in sorted(zip(enes, geos), key=lambda x: x[0]):
+            comment = 'energy: {:>15.10f}'.format(ene)
+            traj.append((comment, geo))
+        traj_path = save_fs.trunk.file.trajectory.path()
+        print("Updating trajectory file at {}".format(traj_path))
+        save_fs.trunk.file.trajectory.write(traj)
 
 
 def nsamp_init(nsamp_par, ntaudof):

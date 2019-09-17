@@ -94,7 +94,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
             thy_save_fs = autofile.fs.theory(spc_save_path)
             thy_save_fs.leaf.create(thy_level[1:4])
             thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
-         
+
             if ini_thy_info[0] != 'input_geom':
                 orb_restr = moldr.util.orbital_restriction(
                     spc_info, ini_thy_info)
@@ -109,12 +109,32 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 ini_thy_save_fs.leaf.create(ini_thy_level[1:4])
                 ini_thy_save_path = ini_thy_save_fs.leaf.path(ini_thy_level[1:4])
 
+                ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
+                ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
+
+                ini_tau_run_fs = autofile.fs.tau(ini_thy_run_path)
+                ini_tau_save_fs = autofile.fs.tau(ini_thy_save_path)
+                min_cnf_locs = moldr.util.min_energy_conformer_locators(ini_cnf_save_fs)
+                if min_cnf_locs:
+                    min_cnf_run_path = ini_cnf_run_fs.leaf.path(min_cnf_locs)
+                    min_cnf_save_path = ini_cnf_save_fs.leaf.path(min_cnf_locs)
+                    ini_scn_run_fs = autofile.fs.conformer(min_cnf_run_path)
+                    ini_scn_save_fs = autofile.fs.conformer(min_cnf_save_path)
+                else:
+                    ini_scn_run_fs = None
+                    ini_scn_save_fs = None
             else:
                 ini_thy_run_fs = None
                 ini_thy_run_path = None
                 ini_thy_save_fs = None
                 ini_thy_save_path = None
+                ini_cnf_run_fs = None
+                ini_cnf_save_fs = None
+                ini_tau_run_fs = None
+                ini_tau_save_fs = None
                 ini_thy_level = ini_thy_info
+                ini_scn_run_fs = None
+                ini_scn_save_fs = None
 
             run_fs = autofile.fs.run(thy_run_path)
             run_fs.trunk.create()
@@ -125,8 +145,22 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
             tau_run_fs = autofile.fs.tau(thy_run_path)
             tau_save_fs = autofile.fs.tau(thy_save_path)
 
-            fs = [spc_run_fs, spc_save_fs, thy_run_fs, thy_save_fs, ini_thy_run_fs, ini_thy_save_fs,
-                  cnf_run_fs, cnf_save_fs, tau_run_fs, tau_save_fs, run_fs]
+            min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
+            if min_cnf_locs:
+                min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
+                min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+                scn_run_fs = autofile.fs.conformer(min_cnf_run_path)
+                scn_save_fs = autofile.fs.conformer(min_cnf_save_path)
+            else:
+                scn_run_fs = None
+                scn_save_fs = None
+
+            FS = [spc_run_fs, spc_save_fs, thy_run_fs, thy_save_fs, cnf_run_fs,
+                  cnf_save_fs, tau_run_fs, tau_save_fs, scn_run_fs, scn_save_fs, run_fs]
+
+            INI_FS = [ini_thy_run_fs, ini_thy_save_fs, ini_cnf_run_fs,
+                    ini_cnf_save_fs, ini_tau_run_fs, ini_tau_save_fs,
+                    ini_scn_run_fs, ini_scn_save_fs]
 
             #Run tasks
             if 'ts' in spc:
@@ -147,19 +181,21 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 #Check if the task has been completed at the requested running theory level
 
                 #Every task starts with a geometry optimization at the running theory level
-                if not tsk == 'sp' or tsk == 'energy':
+                if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
+                # if not tsk == 'sp' or tsk == 'energy':
                     geo = moldr.geom.reference_geometry(
-                        spcdct[spc], thy_level, ini_thy_level, fs,
+                        spcdct[spc], thy_level, ini_thy_level, FS, INI_FS,
                         kickoff_size=KICKOFF_SIZE,
                         kickoff_backward=KICKOFF_BACKWARD,
                         projrot_script_str=PROJROT_SCRIPT_STR,
                         overwrite=overwrite)
-                if geo: 
+                if geo:
                 #Run the requested task at the requested running theory level
-                    scripts.es.run_task(
-                        tsk, spcdct[spc], es_dct[es_run_key],
-                        ini_thy_level, thy_level, fs, spc_info,
-                        overwrite)
+                    scripts.es.geometry_generation(tsk, spcdct[spc],
+                                                   thy_level, FS, spc_info, overwrite)
+                selection = 'min'
+                scripts.es.geometry_analysis(tsk, thy_level, INI_FS,
+                                             selection, spc_info, overwrite)
 
 
 def create_spec(val, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.):
