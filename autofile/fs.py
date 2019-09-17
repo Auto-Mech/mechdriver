@@ -21,6 +21,7 @@ class FilePrefix():
     VPT2 = 'vpt2'
     LJ = 'lj'
 
+
 class FileAttributeName():
     """ DataFile attribute names """
     INFO = 'info'
@@ -43,8 +44,8 @@ class FileAttributeName():
     HFREQ = 'harmonic_frequencies'
     TRAJ = 'trajectory'
     XMAT = 'anharmonicity_matrix'
-    LJ_EPS = 'lj_epsilon'
-    LJ_SIG = 'lj_sigma'
+    LJ_EPS = 'lennard_jones_epsilon'
+    LJ_SIG = 'lennard_jones_sigma'
 
 
 class SeriesAttributeName():
@@ -328,17 +329,17 @@ def energy_transfer(prefix):
     trunk_ds = dir_.energy_transfer_trunk(prefix)
     leaf_ds = dir_.energy_transfer_leaf(prefix, root_ds=trunk_ds)
 
-    inp_dfile = file_.input_file(FilePrefix.SP)
-    inf_dfile = file_.information(FilePrefix.LJ,
-        function=info.lennard_jones)
+    # inp_dfile = file_.input_file(FilePrefix.SP)
+    #inf_dfile = file_.information(
+    #    FilePrefix.LJ, function=info.lennard_jones)
     ene_dfile = file_.energy(FilePrefix.LJ)
     eps_dfile = file_.lennard_jones_epsilon(FilePrefix.LJ)
     sig_dfile = file_.lennard_jones_sigma(FilePrefix.LJ)
     traj_dfile = file_.trajectory(FilePrefix.LJ)
 
     leaf_ds.add_data_files({
-        FileAttributeName.INFO: inf_dfile,
-        FileAttributeName.INPUT: inp_dfile,
+    #    FileAttributeName.INFO: inf_dfile,
+    #    FileAttributeName.INPUT: inp_dfile,
         FileAttributeName.ENERGY: ene_dfile,
         FileAttributeName.LJ_EPS: eps_dfile,
         FileAttributeName.LJ_SIG: sig_dfile,

@@ -154,6 +154,27 @@ def test__vpt2():
     assert vpt2_fs.trunk.file.anharmonicity_matrix.read() == ref_xmat
 
 
+def test__energy_transfer():
+    """ test autofile.fs.energy_transfer
+    """
+    prefix = os.path.join(PREFIX, 'etrans')
+    os.mkdir(prefix)
+
+    etrans_fs = autofile.fs.energy_transfer(prefix)
+    locs = ['hf', 'sto-3g', True]
+    print(etrans_fs.leaf.path(locs))
+
+    ref_eps = 300.0
+    ref_sig = 3.50
+    print(etrans_fs.leaf.file.lennard_jones_epsilon.path(locs))
+    print(etrans_fs.leaf.file.lennard_jones_sigma.path(locs))
+    etrans_fs.leaf.create(locs)
+    etrans_fs.leaf.file.lennard_jones_epsilon.write(ref_eps, locs)
+    etrans_fs.leaf.file.lennard_jones_sigma.write(ref_sig, locs)
+    assert etrans_fs.leaf.file.lennard_jones_epsilon.read(locs) == ref_eps
+    assert etrans_fs.leaf.file.lennard_jones_sigma.read(locs) == ref_sig
+
+
 def test__scan():
     """ test autofile.fs.scan
     """
@@ -212,7 +233,8 @@ if __name__ == '__main__':
     # test__conformer()
     # test__tau()
     # test__single_point()
-    test__vpt2()
+    # test__vpt2()
+    test__energy_transfer()
     # test__scan()
     # test__run()
     # test__build()
