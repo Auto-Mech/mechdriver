@@ -94,7 +94,7 @@ def run_job(
         method = thy_level[1]
         basis = thy_level[2]
         inf_obj = autofile.system.info.run(
-            job=job, prog=prog, method=method, basis=basis, status=status)
+            job=job, prog=prog, version='', method=method, basis=basis, status=status)
         inf_obj.utc_start_time = autofile.system.info.utc_time()
         run_fs.leaf.file.info.write(inf_obj, [job])
 
@@ -122,6 +122,8 @@ def run_job(
         else:
             print(" - Run failed.")
             status = autofile.system.RunStatus.FAILURE
+        version = elstruct.reader.program_version(out_str)
+        inf_obj.version = version
         inf_obj.status = status
         run_fs.leaf.file.info.write(inf_obj, [job])
         run_fs.leaf.file.input.write(inp_str, [job])

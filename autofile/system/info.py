@@ -108,13 +108,14 @@ class RunStatus():
     FAILURE = "failed"
 
 
-def run(job, prog, method, basis, status, utc_start_time=None,
+def run(job, prog, version, method, basis, status, utc_start_time=None,
         utc_end_time=None):
     """ run information
     """
     inf_obj = autofile.info.Info(
         job=job,
         prog=prog,
+        version=version,
         method=method,
         basis=basis,
         status=status,
