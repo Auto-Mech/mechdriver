@@ -53,16 +53,17 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
         thy_info = get_es_info(es_dct, es_run_key)
 
         #If task is to find the transition state, find all TSs for your reactionlist
-        if tsk == 'tsfind':
+        if tsk == 'find_ts':
             for ts in enumerate(ts_dct):
                 print('Task {} \t\t\t'.format(tsk))
+                spcdct[ts] = create_spec(ts)
+                ts_info = (ts['ich'], ts['chg'], ts['mul'])
+                rxn_file_paths(run_prefix, save_prefix, ts_info, spcdct[ts]['reacs'], 
+                          spcdct[ts]['prods'], spcdct, thy_level, ini_thy_level)
                 geo, zma = scripts.es.find_ts(
-                    run_prefix, save_prefix,
-                    ts['reacs'], ts['prods'], spcdct, thy_info,
-                    overwrite)
+                    ts['reacs'], ts['prods'], spcdct, 
+                    fs, thy_info, ini_thy_info, overwrite)
                 if not isinstance(geo, str):
-                    spcdct[ts] = create_spec(geo)
-                    spcdct[ts]['zmatrix'] = zma
                     print('Success, transition state {} added to ES queue'.format(ts))
                     spc_queue.append(ts)
                     continue
@@ -164,6 +165,9 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
 
             #Run tasks
             if 'ts' in spc:
+                rxn_file_paths(run_prefix, save_prefix, spcdct[ts]['reacs'], 
+                          spcdct[ts]['prods'], spcdct, thy_level, ini_thy_level)
+
                 #Check if the task has been completed at the requested running theory level
 
                 #Every task starts with a geometry optimization at the running theory level
@@ -198,36 +202,20 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                                              selection, spc_info, overwrite)
 
 
-def create_spec(val, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.):
+def create_spec(geo, spcs, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.):
     """
-    Create species
+    Create a transition state entry for the spcdct
     """
-    spec = {}
-    if isinstance(val, str):
-        ich = val
-        geo = automol.ichi.geo(ich)
-        zma = automol.geom.zmatrix(geo)
-        spec['zmatrix'] = zma
-    else:
-        geo = val
-        ich = automol.geom.inchi(geo)
-    smi = automol.inchi.smiles(ich)
-    mult = 1
-    mult += smi.count('[')
-    spec['ich'] = ich
-    spec['geoobj'] = geo
-    spec['chg'] = charge
-    spec['mul'] = mult
+    spec = {'ich': ''}
+    spec['reacs'] = ts['reacs']
+    spec['prods'] = ts['prods']
+    ts_mul = automol.mult.ts.low([spcs[spc]['mul'] for spc in ts['reacs']], [spcs[spc]['mul'] for spc in ts['prods']])
+    ts_chg = sum([spcs[spc]['chg'] for spc in ts['reacs'])
+    spec['chg'] = ts_chg
+    spec['mul'] = ts_mul
     spec['mc_nsamp'] = mc_nsamp
     spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian')
     return spec
-
-#def get_overwrite(array):
-#    overwrite = False
-#    if len(array) > 2:
-#         if array[2] == 'true':
-#             overwrite = True
-#    return overwrite
 
 def get_es_info(es_dct, key):
     """

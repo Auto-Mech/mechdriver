@@ -119,6 +119,7 @@ def geometry_generation(tsk, spcdic, thy_level, fs,
     choose_function = {'conf_samp': 'run_conf_samp',
                        'tau_samp': 'run_tau_samp',
                        'hr_scan': 'run_hr_scan'}
+    
     if tsk in ['conf_samp', 'tau_samp']:
         params['nsamp_par'] = spcdic['mc_nsamp']
     elif tsk in ['hr_scan']:
@@ -324,22 +325,22 @@ def get_thy_save_path(save_prefix, spc_info, thy_info):
     thy_save_path = thy_save_fs.leaf.path(thy_lvl)
     return thy_save_path
 
-def rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info, ini_thy_info=None):
-    ts_mul = automol.mult.ts.low([spcs[spc]['mul'] for spc in reacs], [spcs[spc]['mul'] for spc in reacs])
-    ts_chg = sum([spcs[spc]['chg'] for spc in reacs])
-    ts_info = ('', ts_chg, ts_mul)
+def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
 
+    ts_info = (ts['ich'], ts['chg'], ts['mul'])
+    reacs = ts['reacs']
+    prods = ts['prods']
     rxn_ichs = [[],[]] 
     rxn_chgs = [[],[]]
     rxn_muls = [[],[]]
     for spc in reacs:
-         rxn_ichs[0].append(spcs[spc][ 'ich'])
+         rxn_ichs[0].append(spcs[spc]['ich'])
          rxn_chgs[0].append(spcs[spc]['chg'])
-         rxn_muls[0].append(spcs[spc][  'mul'])
+         rxn_muls[0].append(spcs[spc]['mul'])
     for spc in prods:
-         rxn_ichs[1].append(spcs[spc][ 'ich'])
+         rxn_ichs[1].append(spcs[spc]['ich'])
          rxn_chgs[1].append(spcs[spc]['chg'])
-         rxn_muls[1].append(spcs[spc][  'mul'])
+         rxn_muls[1].append(spcs[spc]['mul'])
 
     # check direction of reaction
     print('checking exothermicity of reaction')
@@ -364,7 +365,19 @@ def rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info, ini_th
     print("The reaction direction is {}"
           .format('backward' if is_rev else 'forward'))
 
-    ts_info = ['', ts_chg, ts_mul]
+    ts['rxn_ichs'] = rxn_ichs
+    ts['rxn_chgs'] = rxn_chgs
+    ts['rxn_muls'] = rxn_muls
+
+    return ts
+
+def get_rxn_fs(run_prefix, save_prefix, ts):
+    """get filesystems for a reaction
+    """
+    rxn_ichs = ts['rxn_ichs']
+    rxn_chgs = ts['rxn_chgs']
+    rxn_muls = ts['rxn_muls']
+    ts_mul = ts['mul']
 
     rxn_run_fs = autofile.fs.reaction(run_prefix)
     rxn_run_fs.leaf.create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
@@ -378,7 +391,8 @@ def rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info, ini_th
     rxn_save_fs.leaf.create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
     rxn_save_path = rxn_save_fs.leaf.path(
         [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
-    return rxn_run_path, rxn_save_path, ts_info
+
+    return rxn_run_path, rxn_save_path
 
 def ts_paths(thy_run_path, thy_save_path):
 
@@ -472,7 +486,7 @@ def ts_params(rct_zmas, prd_zmas):
         grid = numpy.linspace(rmin, rmax, npoints)
         return ts_zma, dist_name, grid
 
-def find_ts(run_prefix, save_prefix, reacs, prods, spcs, thy_info, overwrite):
+def find_ts(rxn_run_path, rxn_save_path, ts_info, reacs, prods, spcs, thy_info, fs, overwrite):
 
     print('prepping ts scan:')
     script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
