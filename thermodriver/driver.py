@@ -68,7 +68,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
         if 'geom' in tsk[0] or 'opt' in tsk[0]:
             ene_lvl = tsk[1]
             geo_lvl = tsk[1]
-        if 'freq' in tsk[0] or 'harm' in tsk[0]:
+        if 'hess' in tsk[0] or 'harm' in tsk[0]:
             harm_lvl = tsk[1]
 #            tors_lvl = tsk[1]
 #            anharm_lvl = tsk[1]
@@ -125,7 +125,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
 
     #Compute Hf0K
     for tsk in tsk_info_lst:
-        if 'sp' in tsk[0] or 'ene' in tsk[0]:
+        if 'ene' in tsk[0]:
             ene_lvl = tsk[1]
             geo_lvl = tsk[2]
     geo_thy_info = scripts.es.get_thy_info(es_dct[geo_lvl])
@@ -271,10 +271,10 @@ def fix(tsk_info_lst):
     has_sp = False
     last_geom = []
     for tsk in tsk_info_lst:
-        if tsk[0] == 'sp' or tsk[0] == 'energy':
+        if tsk[0] == 'conf_energy':
             has_sp = True
         if tsk[0] == 'geom' or tsk[0] == 'opt':
-            last_geom = ['sp']
+            last_geom = ['conf_energy']
             last_geom.extend(tsk[1:-1])
             last_geom.append(False)
     if not has_sp:
@@ -302,7 +302,7 @@ if __name__ == "__main__":
     TSK_INFO_LST = [
         ['conf_samp', 'mclev', 'mclev', False],
         ['geom', 'optlev', 'optlev', False],
-        ['freq', 'optlev', 'optlev', False]
+        ['conf_hess', 'optlev', 'optlev', False]
         # [ 'hr', 'hrlev', 'optlev', False]
         # [ 'sp', 'splev', 'optlev', False]]
         ]

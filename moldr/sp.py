@@ -9,14 +9,20 @@ import moldr
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
-def run_single_point_energy(
-        geo, spc_info, thy_level, sp_run_fs, sp_save_fs,
+def run_energy(
+        spc_info, thy_level, geo_run_fs, save_fs,
         script_str, overwrite, **kwargs):
-    """ Find the energy for the minimum energy conformer
+    """ Find the energy for the given structure
     """
+
+    # prepare special file system since there may be many energies under same directory
+    geo_run_path = geo_run_fs.leaf.path(locs)
+    geo_save_path = geo_save_fs.leaf.path(locs)
+    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    sp_run_fs = autofile.fs.single_point(geo_run_path)
+    sp_save_fs = autofile.fs.single_point(geo_save_path)
     sp_run_fs.leaf.create(thy_level[1:4])
     sp_run_path = sp_run_fs.leaf.path(thy_level[1:4])
-
     sp_save_fs.leaf.create(thy_level[1:4])
     sp_save_path = sp_save_fs.leaf.path(thy_level[1:4])
     run_fs = autofile.fs.run(sp_run_path)
@@ -50,152 +56,143 @@ def run_single_point_energy(
         sp_save_fs.leaf.file.info.write(inf_obj, thy_level[1:4])
 
 
-def run_minimum_energy_gradient(
-        spc_info, thy_level, cnf_run_fs, cnf_save_fs,
+def run_gradient(
+        spc_info, thy_level, geo_run_fs, geo_save_fs, locs,
         script_str, overwrite, **kwargs):
-    """ Find the gradient for the minimum energy conformer
+    """ Determine the gradient for the geometry in the given location
     """
 
-    min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
-    if min_cnf_locs:
-        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
-        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
-        run_fs = autofile.fs.run(min_cnf_run_path)
-        print('Minimum energy conformer gradient')
-        moldr.driver.run_job(
-            job='gradient',
-            script_str=script_str,
-            run_fs=run_fs,
-            geom=geo,
-            spc_info=spc_info,
-            thy_level=thy_level,
-            overwrite=overwrite,
-            **kwargs,
-        )
+    geo_run_path = geo_run_fs.leaf.path(locs)
+    geo_save_path = geo_save_fs.leaf.path(locs)
+    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    run_fs = autofile.fs.run(geo_run_path)
 
-        ret = moldr.driver.read_job(
-            job='gradient',
-            run_fs=run_fs,
-        )
+    print('Running gradient')
+    moldr.driver.run_job(
+        job='gradient',
+        script_str=script_str,
+        run_fs=run_fs,
+        geom=geo,
+        spc_info=spc_info,
+        thy_level=thy_level,
+        overwrite=overwrite,
+        **kwargs,
+    )
 
-        if ret is not None:
-            inf_obj, inp_str, out_str = ret
+    ret = moldr.driver.read_job(
+        job='gradient',
+        run_fs=run_fs,
+    )
 
+    if ret is not None:
+        inf_obj, inp_str, out_str = ret
+
+        if automol.geom.is_atom(geo):
+            freqs = ()
+        else:
             print(" - Reading gradient from output...")
             grad = elstruct.reader.gradient(inf_obj.prog, out_str)
+#                print('Conformer Freqs test')
+#                print(freqs)
 
             print(" - Saving gradient...")
-            print(" - Save path: {}".format(min_cnf_save_path))
-            cnf_save_fs.leaf.file.gradient_info.write(inf_obj, min_cnf_locs)
-            cnf_save_fs.leaf.file.gradient_input.write(inp_str, min_cnf_locs)
-            cnf_save_fs.leaf.file.gradient.write(grad, min_cnf_locs)
+            print(" - Save path: {}".format(geo_save_path))
+            geo_save_fs.leaf.file.gradient_info.write(inf_obj, locs)
+            geo_save_fs.leaf.file.gradient_input.write(inp_str, locs)
+            geo_save_fs.leaf.file.gradient.write(grad, locs)
 
 
-def run_minimum_energy_hessian(
-        spc_info, thy_level, cnf_run_fs, cnf_save_fs,
+def run_hessian(
+        spc_info, thy_level, geo_run_fs, geo_save_fs, locs,
         script_str, overwrite, **kwargs):
-    """ Find the hessian for the minimum energy conformer
+    """ Determine the hessian for the geometry in the given location
     """
 
-    min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
-    if min_cnf_locs:
-        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
-        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
-        run_fs = autofile.fs.run(min_cnf_run_path)
-        moldr.driver.run_job(
-            job='hessian',
-            script_str=script_str,
-            run_fs=run_fs,
-            geom=geo,
-            spc_info=spc_info,
-            thy_level=thy_level,
-            overwrite=overwrite,
-            **kwargs
-        )
+    print('run hessian test:', locs) 
+    geo_run_path = geo_run_fs.leaf.path(locs)
+    geo_save_path = geo_save_fs.leaf.path(locs)
+    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    run_fs = autofile.fs.run(geo_run_path)
 
-        ret = moldr.driver.read_job(
-            job='hessian',
-            run_fs=run_fs,
-        )
+    print('Running hessian')
+    moldr.driver.run_job(
+        job='hessian',
+        script_str=script_str,
+        run_fs=run_fs,
+        geom=geo,
+        spc_info=spc_info,
+        thy_level=thy_level,
+        overwrite=overwrite,
+        **kwargs,
+    )
 
-        if ret is not None:
-            inf_obj, inp_str, out_str = ret
+    ret = moldr.driver.read_job(
+        job='hessian',
+        run_fs=run_fs,
+    )
 
-            if automol.geom.is_atom(geo):
-                freqs = ()
-            else:
-                print(" - Reading hessian from output...")
-                hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-                freqs = elstruct.util.harmonic_frequencies(
-                    geo, hess, project=False)
-                print('Freqs test')
-                print(freqs)
-                freqs = elstruct.util.harmonic_frequencies(
-                    geo, hess, project=True)
+    if ret is not None:
+        inf_obj, inp_str, out_str = ret
 
-                print(" - Saving hessian...")
-                print(" - Save path: {}".format(min_cnf_save_path))
-                cnf_save_fs.leaf.file.hessian_info.write(inf_obj, min_cnf_locs)
-                cnf_save_fs.leaf.file.hessian_input.write(inp_str, min_cnf_locs)
-                cnf_save_fs.leaf.file.hessian.write(hess, min_cnf_locs)
-                cnf_save_fs.leaf.file.harmonic_frequencies.write(
-                    freqs, min_cnf_locs)
+        if automol.geom.is_atom(geo):
+            freqs = ()
+        else:
+            print(" - Reading hessian from output...")
+            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+            freqs = elstruct.util.harmonic_frequencies(
+                geo, hess, project=False)
+#                print('Conformer Freqs test')
+#                print(freqs)
+
+            print(" - Saving hessian...")
+            print(" - Save path: {}".format(geo_save_path))
+            geo_save_fs.leaf.file.hessian_info.write(inf_obj, locs)
+            geo_save_fs.leaf.file.hessian_input.write(inp_str, locs)
+            geo_save_fs.leaf.file.hessian.write(hess, locs)
+            geo_save_fs.leaf.file.harmonic_frequencies.write(freqs, locs)
 
 
-def run_minimum_energy_vpt2(
-        spc_info, thy_level, cnf_run_fs, cnf_save_fs,
+def run_vpt2(
+        spc_info, thy_level, geo_run_fs, geo_save_fs, locs,
         script_str, overwrite, **kwargs):
-    """  Run vpt2 for the minimum energy conformer
+    """ Perform vpt2 analysis for the geometry in the given location
     """
 
-    min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
-    if min_cnf_locs:
-        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
-        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
-        run_fs = autofile.fs.run(min_cnf_run_path)
-        print('Minimum energy conformer vpt2')
-        moldr.driver.run_job(
-            job='vpt2',
-            script_str=script_str,
-            run_fs=run_fs,
-            geom=geo,
-            spc_info=spc_info,
-            thy_level=thy_level,
-            overwrite=overwrite,
-            **kwargs
-        )
+    geo_run_path = geo_run_fs.leaf.path(locs)
+    geo_save_path = geo_save_fs.leaf.path(locs)
+    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    run_fs = autofile.fs.run(geo_run_path)
 
-        ret = moldr.driver.read_job(
-            job='vpt2',
-            run_fs=run_fs,
-        )
+    print('Running hessian')
+    moldr.driver.run_job(
+        job='vpt2',
+        script_str=script_str,
+        run_fs=run_fs,
+        geom=geo,
+        spc_info=spc_info,
+        thy_level=thy_level,
+        overwrite=overwrite,
+        **kwargs,
+    )
 
-        if ret is not None:
-            inf_obj, inp_str, out_str = ret
-            prog = inf_obj.prog
+    ret = moldr.driver.read_job(
+        job='vpt2',
+        run_fs=run_fs,
+    )
 
-            vpt2_dict = elstruct.reader.vpt2(prog, out_str)
-            anh_freqs = vpt2_dict['freqs']
-            anh_zpe = vpt2_dict['zpe']
-            xmat = vpt2_dict['xmat']
-            vibrot_mat = vpt2_dict['vibrot']
-            cent_dist = vpt2_dict['cent_dist']
+    if ret is not None:
+        inf_obj, inp_str, out_str = ret
 
-            print(" - Reading anharmonic data from output...")
-            # replace following with vpt2 information
-#            print(" - Saving hessian...")
-#            print(" - Save path: {}".format(min_cnf_save_path))
-            cnf_save_fs.leaf.file.vpt2_info.write(inf_obj, min_cnf_locs)
-            cnf_save_fs.leaf.file.vpt2_input.write(inp_str, min_cnf_locs)
-            cnf_save_fs.leaf.file.anh_freqs.write(anh_freqs, min_cnf_locs)
-#            cnf_save_fs.leaf.file.zpe.write(zpe, min_cnf_locs)
-#            cnf_save_fs.leaf.file.harmonic_frequencies.write(freqs, min_cnf_locs)
-            cnf_save_fs.leaf.file.anh_freqs.write(anh_freqs, min_cnf_locs)
-            cnf_save_fs.leaf.file.xmat.write(xmat, min_cnf_locs)
-#            cnf_save_fs.leaf.file.vibrot.write(vibrot, min_cnf_locs)
-            cnf_save_fs.leaf.file.cent_dist.write(cent_dist, min_cnf_locs)
+        if automol.geom.is_atom(geo):
+            freqs = ()
+        else:
+            print(" - Reading hessian from output...")
+            vpt2 = elstruct.reader.vpt2(inf_obj.prog, out_str)
+#                print('Conformer Freqs test')
+#                print(freqs)
 
-
+            print(" - Saving hessian...")
+            print(" - Save path: {}".format(geo_save_path))
+            geo_save_fs.leaf.file.vpt2.info.write(inf_obj, locs)
+            geo_save_fs.leaf.file.vpt2.input.write(inp_str, locs)
+            geo_save_fs.leaf.file.vpt2.write(vpt2, locs)

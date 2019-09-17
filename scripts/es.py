@@ -13,70 +13,50 @@ ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
-def run_grad(fs, params, opt_kwargs):
-    """ generate gradient for given starting geometry
+def run_energy(params, kwargs):
+    """ gradient for minimum energy conformer
     """
-    params['cnf_run_fs'] = fs[6]
-    params['cnf_save_fs'] = fs[7]
     print('running task {}'.format('gradient'))
-    moldr.sp.run_minimum_energy_gradient(**params, **opt_kwargs)
+    moldr.sp.run_gradient(**params, **kwargs)
 
 
-def run_hess(fs, params, opt_kwargs):
-    """ generate hessian for given starting geometry
+def run_grad(params, kwargs):
+    """ gradient for minimum energy conformer
     """
-    params['cnf_run_fs'] = fs[6]
-    params['cnf_save_fs'] = fs[7]
+    print('running task {}'.format('gradient'))
+    moldr.sp.run_gradient(**params, **kwargs)
+
+
+def run_hess(params, kwargs):
+    """ hessian for geometry in given fs directory
+    """
     print('running task {}'.format('hessian'))
-    moldr.sp.run_minimum_energy_hessian(**params, **opt_kwargs)
+    moldr.sp.run_hessian(**params, **kwargs)
 
 
-def run_vpt2(fs, params, opt_kwargs):
-    """ run second order vibrational perturbation theory
+def run_vpt2(params, kwargs):
+    """ second order vibrational perturbation theory for minimum energy conformer
     """
-    params['cnf_run_fs'] = fs[6]
-    params['cnf_save_fs'] = fs[7]
     print('running task {}'.format('vpt2'))
     print('anharm may not be working in moldr right now')
-    moldr.driver.run_minimum_energy_vpt2(**params, **opt_kwargs)
+    moldr.sp.run_vpt2(**params, **kwargs)
 
 
-def run_tau(fs, params, opt_kwargs):
-    """ generate energies, gradients, and hessians,
-    for set of arbitrarily sampled torsional coordinates
-    with all other coordinates optimized
-    """
-
-#    nsamp_par = opt_kwargs['mc_nsamp']  #turn to tau specific at some point
-    params['tau_run_fs'] = fs[8]
-    params['tau_save_fs'] = fs[9]
-    params['thy_save_fs'] = fs[3]
-#    params['nsamp_par'] = nsamp_par
-    moldr.tau.tau_sampling(**params, **opt_kwargs)
-
-    del params['thy_save_fs']
-    del params['nsamp_par']
-
-    moldr.tau.run_tau_gradients(**params, **opt_kwargs)
-    moldr.tau.run_tau_hessians(**params, **opt_kwargs)
-
-
-def run_single_conformer(spc_info, thy_level, fs, overwrite):
+def run_single_conformer(spc_info, thy_level, FS, overwrite):
     """ generate single optimized geometry for randomly sampled initial torsional angles
     """
-
     mc_nsamp = [False, 0, 0, 0, 0, 1]
-    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
+    sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_level[0:2])
     moldr.conformer.conformer_sampling(
         spc_info=spc_info,
         thy_level=thy_level,
-        thy_save_fs=fs[3],
-        cnf_run_fs=fs[6],
-        cnf_save_fs=fs[7],
-        script_str=opt_script_str,
+        thy_save_fs=FS[3],
+        cnf_run_fs=FS[4],
+        cnf_save_fs=FS[5],
+        script_str=sp_script_str,
         overwrite=overwrite,
         nsamp_par=mc_nsamp,
-        **opt_kwargs,
+        **kwargs,
     )
 
 
@@ -92,8 +72,8 @@ def run_conf_samp(fs, params, opt_kwargs):
             'conformer sampling', params['nsamp_par'][5]))
     #params['nsamp_par'] = spcdic['mc_nsamp']
     params['thy_save_fs'] = fs[3]
-    params['cnf_run_fs'] = fs[6]
-    params['cnf_save_fs'] = fs[7]
+    params['cnf_run_fs'] = fs[4]
+    params['cnf_save_fs'] = fs[5]
     moldr.conformer.conformer_sampling(**params, **opt_kwargs)
 
 
@@ -101,23 +81,43 @@ def run_hr_scan(fs, params, opt_kwargs):
     """ run a scan over the specified torsional coordinates
     """
     print('running task {}'.format('hr'))
-    params['cnf_run_fs'] = fs[6]
-    params['cnf_save_fs'] = fs[7]
+    params['cnf_run_fs'] = fs[4]
+    params['cnf_save_fs'] = fs[5]
     moldr.scan.hindered_rotor_scans(**params, **opt_kwargs)
 
 
-def run_task(tsk, spcdic, thydic, ini_thy_level,
-        thy_level, fs, spc_info, overwrite):
-    """ run the specified electronic structure task
+def run_tau_sampling(fs, params, opt_kwargs):
+    """ energies, gradients, and hessians,
+    for set of arbitrarily sampled torsional coordinates
+    with all other coordinates optimized
     """
-    sp_script_str, opt_script_str, kwargs, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
+
+#    nsamp_par = opt_kwargs['mc_nsamp']  #turn to tau specific at some point
+    params['tau_run_fs'] = fs[6]
+    params['tau_save_fs'] = fs[7]
+    params['thy_save_fs'] = fs[3]
+#    params['nsamp_par'] = nsamp_par
+    moldr.tau.tau_sampling(**params, **opt_kwargs)
+
+    del params['thy_save_fs']
+    del params['nsamp_par']
+
+    moldr.tau.run_tau_gradients(**params, **opt_kwargs)
+    moldr.tau.run_tau_hessians(**params, **opt_kwargs)
+
+
+def geometry_generation(tsk, spcdic, thy_level, fs,
+        spc_info, overwrite):
+    """ run an electronic structure task
+    for generating a list of conformer or tau sampling geometries
+    """
+    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
     params = {'spc_info': spc_info,
               'thy_level': thy_level,
               'script_str': opt_script_str,
               'overwrite': overwrite}
-    choose_function = {'freq': 'run_hess',
-                       'vpt2': 'run_vpt2',
-                       'conf_samp': 'run_conf_samp',
+    choose_function = {'conf_samp': 'run_conf_samp',
+                       'tau_samp': 'run_tau_samp',
                        'hr_scan': 'run_hr_scan'}
     if tsk in ['conf_samp', 'tau_samp']:
         params['nsamp_par'] = spcdic['mc_nsamp']
@@ -127,41 +127,75 @@ def run_task(tsk, spcdic, thydic, ini_thy_level,
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
 
-    elif tsk == 'sp' or  'energy': 
-        print('initializing...')
-        #Make sure there is at least one CONF for this level of theory
-        sp_fs = fs
-        sp_fs[3] = sp_fs[5]
 
-        ini_thy_run_path = fs[4].leaf.path(ini_thy_level[1:4])
-        ini_thy_save_path = fs[5].leaf.path(ini_thy_level[1:4])
+def geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info,
+        overwrite):
+    """ run the specified electronic structure task
+    for a set of geometries
+    """
 
-        cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
-        cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
+    # specify the fs for the runs
+    if 'conf' in tsk:
+        run_dir = ini_fs[2]
+        save_dir = ini_fs[3]
+    elif 'tau' in tsk:
+        run_dir = ini_fs[4]
+        save_dir = ini_fs[5]
+    elif 'hr' in tsk:
+        run_dir = ini_fs[6]
+        save_dir = ini_fs[7]
+    else:
+        return
+    # still need to setup mep
+#    elif 'mep' in tsk:
+#        run_dir = ini_fs[6]
+#        save_dir = ini_fs[7]
+    if isinstance(selection, str):
+        if selection == 'all':
+            locs_lst = save_dir.leaf.existing()
+        elif selection == 'min':
+            locs_lst = [moldr.util.min_energy_conformer_locators(save_dir)]
+    elif isinstance(selection, int):
+        locs_lst = moldr.util.geom_sort(save_dir)[0:selection]
+    else:
+        locs_lst = selection
 
-        sp_fs[6] = cnf_run_fs
-        sp_fs[7] = cnf_save_fs
+    sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_level[0:2])
+    params = {'spc_info': spc_info,
+              'thy_level': thy_level,
+              'script_str': sp_script_str,
+              'overwrite': overwrite}
+    choose_function = {'conf_energy': 'run_energy',
+                       'tau_energy': 'run_energy',
+                       'hr_energy': 'run_energy',
+                       'mep_energy': 'run_energy',
+                       'conf_grad': 'run_grad',
+                       'tau_grad': 'run_grad',
+                       'hr_grad': 'run_grad',
+                       'mep_grad': 'run_grad',
+                       'conf_hess': 'run_hess',
+                       'tau_hess': 'run_hess',
+                       'hr_hess': 'run_hess',
+                       'mep_hess': 'run_hess',
+                       'conf_vpt2': 'run_vpt2',
+                       'tau_vpt2': 'run_vpt2',
+                       'conf_reopt': 'run_reopt',
+                       'tau_reopt': 'run_reopt',
+                       'hr_reopt': 'run_reopt',
+                       'mep_reopt': 'run_reopt'}
 
-        run_single_conformer(spc_info, ini_thy_level, sp_fs, overwrite)
-
-        min_cnf_locs = moldr.util.min_energy_conformer_locators(
-            cnf_save_fs)
-        cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
-        cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
-        min_cnf_geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
-
-        print('running sp on geo')
-        sp_run_fs = autofile.fs.single_point(cnf_run_path)
-        sp_save_fs = autofile.fs.single_point(cnf_save_path)
-        moldr.sp.run_single_point_energy(
-            geo=min_cnf_geo,
-            spc_info=spc_info,
-            thy_level=thy_level,
-            sp_run_fs=sp_run_fs,
-            sp_save_fs=sp_save_fs,
-            script_str=sp_script_str,
-            overwrite=overwrite,
-            **kwargs)
+    # cycle over the locations
+    if tsk in choose_function:
+        task_call = eval(choose_function[tsk])
+        for locs in locs_lst:
+            if locs:
+                params['geo_run_fs'] = run_dir
+                params['geo_save_fs'] = save_dir
+                params['locs'] = locs
+                task_call(params, kwargs)
+            else:
+                print('No initial geometry available for {} on {}'.format(
+                    spc_info[0], '/'.join(thy_level[1:3])))
 
 
 def ts_geo_ref(spc, spcs, reacs, prods, ini_thy_info, running_thy_info, run_prefix, save_prefix, overwrite):
@@ -1875,26 +1909,30 @@ def vdw_qchem(
 
 
 def get_thy_info(lvldic):
+    """ convert theory level dictionary to theory information array
+    """
     err_msg = ''
-    info    = ['program', 'method', 'basis', 'orb_res']
+    info = ['program', 'method', 'basis', 'orb_res']
     for i, inf in enumerate(info):
         if inf in lvldic:
             info[i] = lvldic[inf]
         else:
             err_msg = inf
     if err_msg:
-         print('ERROR: No {} found'.format(err_msg))
+        print('ERROR: No {} found'.format(err_msg))
     return info
- 
+
+
 def get_spc_info(spcdct):
+    """ convert species dictionary to species_info array 
+    """
     err_msg = ''
-    props   = ['ich', 'chg', 'mul']
+    props = ['ich', 'chg', 'mul']
     for i, prop in enumerate(props):
         if prop in spcdct:
             props[i] = spcdct[prop]
         else:
             err_msg = prop
     if err_msg:
-         print('ERROR: No {} found'.format(err_msg))
+        print('ERROR: No {} found'.format(err_msg))
     return props
-

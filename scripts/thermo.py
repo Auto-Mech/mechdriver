@@ -28,6 +28,7 @@ ELC_DEG_DCT = {
     ('InChI=1S/O2/c1-2', 1): [[0., 2]]
 }
 
+
 def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix):
     """ return the electronic energy for a specific species for a given level of theory
     """
@@ -38,11 +39,13 @@ def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix):
         save_prefix=save_prefix)
     return ene
 
+
 def spc_energy(spc_ene, spc_zpe):
     """ return the sum of the electronic and zero point energies
     """
     spc_ene = spc_ene + spc_zpe/EH2KCAL
     return spc_ene
+
 
 def basis_energy(spc_bas, spcdct):
     """ return the electronic + zero point energies for a set of species
@@ -55,6 +58,7 @@ def basis_energy(spc_bas, spcdct):
                 h_basis.append(tmp)
                 break
     return h_basis
+
 
 def get_coeff(spc, spcdct, spc_bas):
     """ return the coefficients for the expansion of a species in terms of a
@@ -82,6 +86,7 @@ def get_coeff(spc, spcdct, spc_bas):
         print(coeff)
     return coeff
 
+
 def get_hf0k(spc, spcdct, spc_bas):
     """ determine the 0 K heat of formation from the
     species dictionary and a set of references species
@@ -98,6 +103,7 @@ def get_hf0k(spc, spcdct, spc_bas):
     h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ATcT')
     print('Hf0K test:', spc, h0form)
     return h0form
+
 
 def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
     """ return the zpe for a given species according a specified set of
@@ -135,6 +141,7 @@ def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
 
     print('finished zpe')
     return spc_zpe, zero_energy_str
+
 
 def get_spcinput(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
     """ set up the input string for a given species section in mess input
@@ -174,6 +181,7 @@ def get_spcinput(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
     print(spc_str)
     return spc_str
 
+
 def get_pfheader(temp_step, ntemps):
     """ prepare partition function header string
     """
@@ -182,6 +190,7 @@ def get_pfheader(temp_step, ntemps):
         atom_dist_min=0.6)
     print(global_pf_str)
     return global_pf_str
+
 
 def get_thermo_paths(spc_save_path, spc_info, har_level):
     """ set up the path for saving the pf input and output
@@ -213,6 +222,7 @@ def get_thermo_paths(spc_save_path, spc_info, har_level):
     print(nasa_path)
     return pf_path, nasa_path
 
+
 def get_pfinput(spc, spc_str, global_pf_str, zpe_str):
     """ prepare the full pf input string for running messpf
     """
@@ -226,6 +236,7 @@ def get_pfinput(spc, spc_str, global_pf_str, zpe_str):
     print(pf_inp_str)
     return pf_inp_str
 
+
 def write_pfinput(pf_inp_str, pf_path):
     """ write the pf.inp file
     """
@@ -233,11 +244,13 @@ def write_pfinput(pf_inp_str, pf_path):
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
         pf_file.write(pf_inp_str)
 
+
 def run_pf(pf_path, pf_script_str=PF_SCRIPT_STR):
     """ run messpf
     """
     moldr.util.run_script(pf_script_str, pf_path)
     print('finished partition function')
+
 
 def go_to_path(path):
     """ change directory to path and return the original working directory
@@ -246,16 +259,19 @@ def go_to_path(path):
     os.chdir(path)
     return starting_path
 
+
 def return_to_path(path):
     """ change directory to starting path
     """
     os.chdir(path)
+
 
 def prepare_path(path, loc):
     """ change directory to starting path, return chemkin path
     """
     new_path = os.path.join(path, loc)
     return new_path
+
 
 def write_thermp_inp(spc_spcdct):
     """ write the thermp input file
@@ -273,6 +289,7 @@ def write_thermp_inp(spc_spcdct):
         break_temp=breakt,
         thermp_file_name='thermp.dat')
 
+
 def run_thermp(pf_path, nasa_path):
     """ run thermp to convert partition functions to thermochemical data
     """
@@ -283,6 +300,7 @@ def run_thermp(pf_path, nasa_path):
         thermp_file_name='thermp.dat',
         pf_file_name='pf.dat'
         )
+
 
 def run_pac(spc, spc_spcdct, nasa_path, pf_levels, spc_model):
     """ run pac99 to convert thermochemical data to nasa polynomials
@@ -340,6 +358,7 @@ def run_pac(spc, spc_spcdct, nasa_path, pf_levels, spc_model):
     print(chemkin_poly_str)
     return chemkin_poly_str
 
+
 def write_nasa_file(spc_spcdct, ckin_path, nasa_path, chemkin_poly_str):
     """ write out the nasa polynomials
     """
@@ -350,6 +369,8 @@ def write_nasa_file(spc_spcdct, ckin_path, nasa_path, chemkin_poly_str):
     with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)
     return
+
+
 # create a messpf input file
 #
 #def species_thermo(

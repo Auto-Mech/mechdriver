@@ -1,25 +1,19 @@
 """ drivers
 """
 import os
-import functools
 import numpy
 from qcelemental import constants as qcc
-from qcelemental import periodictable as ptab
-import projrot_io
 import automol
 import elstruct
-import thermo
 import autofile
 import moldr
-from moldr import runner
-import mess_io
 
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 
 def tau_sampling(
-        spc_info, thy_level, thy_save_fs, tau_run_fs, tau_save_fs, 
+        spc_info, thy_level, thy_save_fs, tau_run_fs, tau_save_fs,
         script_str, overwrite, nsamp_par, **opt_kwargs):
     """ Sample over torsions optimizing all other coordinates
     """
@@ -168,104 +162,7 @@ def save_tau(tau_run_fs, tau_save_fs):
                 saved_geos.append(geo)
 
         # update the tau trajectory file
-        locs_lst = tau_save_fs.leaf.existing()
-        if locs_lst:
-            enes = [tau_save_fs.leaf.file.energy.read(locs)
-                    for locs in locs_lst]
-            geos = [tau_save_fs.leaf.file.geometry.read(locs)
-                    for locs in locs_lst]
-
-            traj = []
-            for ene, geo in sorted(zip(enes, geos), key=lambda x: x[0]):
-                comment = 'energy: {:>15.10f}'.format(ene)
-                traj.append((comment, geo))
-
-            traj_path = tau_save_fs.trunk.file.trajectory.path()
-            print("Updating tau trajectory file at {}".format(traj_path))
-            tau_save_fs.trunk.file.trajectory.write(traj)
-
-
-def run_tau_gradients(
-        spc_info, thy_level, tau_run_fs, tau_save_fs, 
-        script_str, overwrite, **kwargs):
-    """ Determine gradients for all tau dependent optimized geometries
-    """
-
-    for locs in tau_save_fs.leaf.existing():
-        geo = tau_save_fs.leaf.file.geometry.read(locs)
-        print('Running tau gradient')
-        tau_run_path = tau_run_fs.leaf.path(locs)
-        tau_save_path = tau_save_fs.leaf.path(locs)
-
-        moldr.driver.run_job(
-            job='gradient',
-            script_str=script_str,
-            run_fs=tau_run_fs,
-            geom=geo,
-            spc_info=spc_info,
-            thy_level=thy_level,
-            overwrite=overwrite,
-            **kwargs,
-        )
-
-        run_fs = autofile.fs.run(tau_run_path)
-        ret = moldr.driver.read_job(
-            job='gradient',
-            run_fs=run_fs,
-        )
-
-        if ret is not None:
-            inf_obj, inp_str, out_str = ret
-
-            print(" - Reading gradient from output...")
-            grad = elstruct.reader.gradient(inf_obj.prog, out_str)
-
-            print(" - Saving gradient...")
-            print(" - Save path: {}".format(tau_save_path))
-            tau_save_fs.leaf.file.gradient_info.write(inf_obj, locs)
-            tau_save_fs.leaf.file.gradient_input.write(inp_str, locs)
-            tau_save_fs.leaf.file.gradient.write(grad, locs)
-
-
-def run_tau_hessians(
-        spc_info, thy_level, tau_run_fs, tau_save_fs,
-        script_str, overwrite, **kwargs):
-    """ Determine hessians for all tau dependent optimized geometries
-    """
-
-    for locs in tau_save_fs.leaf.existing():
-        geo = tau_save_fs.leaf.file.geometry.read(locs)
-        print('Running tau Hessian')
-        tau_run_path = tau_run_fs.leaf.path(locs)
-        tau_save_path = tau_run_fs.leaf.path(locs)
-        moldr.driver.run_job(
-            job='hessian',
-            script_str=script_str,
-            run_fs=tau_run_fs,
-            geom=geo,
-            spc_info=spc_info,
-            thy_level=thy_level,
-            overwrite=overwrite,
-            **kwargs,
-        )
-
-        run_fs = autofile.fs.run(tau_run_path)
-        ret = moldr.driver.read_job(
-            job='hessian',
-            run_fs=run_fs,
-        )
-
-        if ret is not None:
-            inf_obj, inp_str, out_str = ret
-
-            print(" - Reading hessian from output...")
-            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-
-            print(" - Saving hessian...")
-            print(" - Save path: {}".format(tau_save_path))
-            tau_save_fs.leaf.file.hessian_info.write(inf_obj, locs)
-            tau_save_fs.leaf.file.hessian_input.write(inp_str, locs)
-            tau_save_fs.leaf.file.hessian.write(hess, locs)
+        moldr.util.traj_sort(tau_save_fs)
 
 
 def tau_pf_write(

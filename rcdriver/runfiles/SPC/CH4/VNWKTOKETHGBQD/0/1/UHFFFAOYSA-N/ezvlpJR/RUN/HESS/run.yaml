@@ -1,7 +1,0 @@
-basis: 6-31g*
-job: hessian
-method: b3lyp
-prog: psi4
-status: succeeded
-utc_end_time: 2019-08-23 20:31:53.444069
-utc_start_time: 2019-08-23 20:30:40.878881

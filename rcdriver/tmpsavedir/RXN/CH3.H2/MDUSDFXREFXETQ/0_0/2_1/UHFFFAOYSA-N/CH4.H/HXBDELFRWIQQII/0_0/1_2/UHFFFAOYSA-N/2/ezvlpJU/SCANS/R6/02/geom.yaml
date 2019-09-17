@@ -1,7 +1,0 @@
-basis: 6-31g*
-job: optimization
-method: b3lyp
-prog: g09
-status: succeeded
-utc_end_time: 2019-09-06 04:07:34.030099
-utc_start_time: 2019-09-06 04:07:20.608565

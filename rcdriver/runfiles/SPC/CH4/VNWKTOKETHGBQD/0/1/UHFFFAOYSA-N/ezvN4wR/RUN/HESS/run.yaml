@@ -1,7 +1,0 @@
-basis: cc-pvdz
-job: hessian
-method: b3lyp
-prog: psi4
-status: succeeded
-utc_end_time: 2019-08-23 20:35:40.784901
-utc_start_time: 2019-08-23 20:34:19.785235
