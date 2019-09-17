@@ -452,4 +452,4 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
     print(int_sym_num)
     return int_sym_num
 
-
+def sym_num

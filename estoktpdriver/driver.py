@@ -30,228 +30,16 @@ MECHANISM_NAME = 'butane'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas
 # MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas
 
-# 1. script control parameters
+# 1. create run and save directories
+RUN_PREFIX = '/lcrc/project/PACC/run'
+if not os.path.exists(RUN_PREFIX):
+    os.mkdir(RUN_PREFIX)
 
-# a. Strings to launch executable
-# script_strings for electronic structure are obtained from run_qchem_par since
-# they vary with method
+SAVE_PREFIX = '/lcrc/project/PACC/save'
+if not os.path.exists(SAVE_PREFIX):
+    os.mkdir(SAVE_PREFIX)
 
-PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "RPHt.exe")
-PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                 "messpf pf.inp build.out >> stdout.log &> stderr.log")
-RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                   "mess mess.inp build.out >> stdout.log &> stderr.log")
-VARECOF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "/home/ygeorgi/build/rotd/multi ")
-MCFLUX_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                     "/home/ygeorgi/build/rotd/mc_flux ")
-CONV_MULTI_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                         "/home/ygeorgi/build/rotd/mc_flux ")
-TST_CHECK_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                        "/home/ygeorgi/build/rotd/tst_check ")
-MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
-#NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-#                   "cp ../PF/build.out pf.dat\n"
-#                   "cp /tcghome/sjklipp/PACC/nasa/new.groups .\n"
-#                   "python /tcghome/sjklipp/PACC/nasa/makepoly.py"
-#                   " >> stdout.log &> stderr.log")
-
-# b. Electronic structure parameters; code, method, basis, convergence control
-
-# use reference to determine starting geometries, which are used to define
-# z-matrices also used for reference geometries in HL calculations
-
-# code is designed to run
-# (i) an arbitrary number of low level optimizations
-# (ii) an arbitrary number of high level energies at geometries corresponding to a single reference method
-# the code presumes that the optimizations for the reference method already exist
-# the low level optimizations are used to determine the temperature dependence of the partition functions
-# the high level energies are used to determine the energy part of the 0 K Heat of formation
-# the latter requires the specification of some reference species and reference Heats of formation
-# set up standard prog, method, basis for opts
-# RU => RHF for singlet, UHF for multiplets
-# RR => RHF for singlet, RHF for multiplets
-# UU => UHF for singlet, UHF for multiplets
-
-RUN_OPT_LEVELS = []
-#RUN_OPT_LEVELS.append(['molpro', 'casscf', 'cc-pVDZ', 'RR'])
-RUN_OPT_LEVELS.append(['g09', 'wb97xd', '6-31g*', 'RU'])
-# RUN_OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ', 'RU'])
-# RUN_OPT_LEVELS.append(['g09', 'b2plypd3', 'cc-pVTZ', 'RU'])
-# RUN_OPT_LEVELS.append(['g09', 'wb97xd', 'cc-pVTZ', 'RU'])
-# RUN_OPT_LEVELS.append(['g09', 'm062x', 'cc-pVTZ', 'RU'])
-# RUN_OPT_LEVELS.append(['g09', 'b3lyp', '6-31g*', 'RU'])
-
-# set up a set of standard hl methods
-THEORY_REF_HIGH_LEVEL = ['', 'wb97xd', '6-31g*', 'RU']
-RUN_HIGH_LEVELS = []
-RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVDZ', 'RU'])
-RUN_HIGH_LEVELS.append(['molpro', 'mp2', 'cc-pVTZ', 'RU'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVDZ', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVTZ', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pVQZ', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'cc-pV5Z', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVDZ-F12', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVTZ-F12', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)-F12', 'cc-pVQZ-F12', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVDZ', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVTZ', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pVQZ', 'RR'])
-#RUN_HIGH_LEVELS.append(['molpro', 'CCSD(T)', 'aug-cc-pV5Z', 'RR'])
-
-# set up a combination of energies
-# E_HL = sum_i E_HL(i) * Coeff(i)
-#HIGH_LEVEL_COEFF = [1]
-#HIGH_LEVEL_COEFF = None
-HIGH_LEVEL_COEFF = [-0.5, 1.5]
-
-PF_LEVELS = []
-PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
-# PF_LEVELS contains the elec. struc. levels for the harmonic, torsional, and anharmonic analyses
-
-# c. What type of electronic structure calculations to run
-RUN_SPC_QCHEM = True
-RUN_TS_QCHEM = True
-RUN_TS_KICKS_QCHEM = False
-RUN_VDW_QCHEM = False
-
-RUN_INI_GEOM = True
-RUN_REMOVE_IMAG = True
-
-KICKOFF_SADDLE = True
-
-RUN_CONF_SAMP = True
-RUN_CONF_OPT = True
-RUN_MIN_GRAD = False
-RUN_MIN_HESS = True
-RUN_MIN_VPT2 = False
-RUN_CONF_GRAD = False
-RUN_CONF_HESS = False
-RUN_CONF_VPT2 = False
-RUN_CONF_SCAN = True
-RUN_CONF_SCAN_GRAD = False
-RUN_CONF_SCAN_HESS = False
-RUN_TAU_SAMP = False
-RUN_TAU_GRAD = False
-RUN_TAU_HESS = False
-RUN_HL_MIN_ENE = True
-
-RUN_TS_CONF_SAMP = True
-RUN_TS_CONF_OPT = False
-RUN_TS_MIN_GRAD = False
-RUN_TS_MIN_HESS = True
-RUN_TS_MIN_VPT2 = False
-RUN_TS_CONF_GRAD = False
-RUN_TS_CONF_HESS = False
-RUN_TS_CONF_VPT2 = False
-RUN_TS_CONF_SCAN = True
-RUN_TS_CONF_SCAN_GRAD = False
-RUN_TS_CONF_SCAN_HESS = False
-RUN_TS_TAU_SAMP = False
-RUN_TS_TAU_GRAD = False
-RUN_TS_TAU_HESS = False
-RUN_TS_HL_MIN_ENE = False
-
-RUN_VDW_CONF_SAMP = False
-RUN_VDW_CONF_OPT = False
-RUN_VDW_MIN_GRAD = False
-RUN_VDW_MIN_HESS = False
-RUN_VDW_MIN_VPT2 = False
-RUN_VDW_CONF_GRAD = False
-RUN_VDW_CONF_HESS = False
-RUN_VDW_CONF_VPT2 = False
-RUN_VDW_CONF_SCAN = False
-RUN_VDW_CONF_SCAN_GRAD = False
-RUN_VDW_CONF_SCAN_HESS = False
-RUN_VDW_TAU_SAMP = False
-RUN_VDW_TAU_GRAD = False
-RUN_VDW_TAU_HESS = False
-RUN_VDW_HL_MIN_ENE = True
-
-# d. Parameters for number of torsional samplings
-NSAMP_CONF = 5
-NSAMP_CONF_EXPR = True
-NSAMP_CONF_A = 3
-NSAMP_CONF_B = 1
-NSAMP_CONF_C = 4
-NSAMP_CONF_D = 100
-NSAMP_CONF_PAR = [NSAMP_CONF_EXPR, NSAMP_CONF_A, NSAMP_CONF_B, NSAMP_CONF_C,
-                  NSAMP_CONF_D, NSAMP_CONF]
-
-NSAMP_TAU = 10
-NSAMP_TAU_EXPR = False
-NSAMP_TAU_A = 3
-NSAMP_TAU_B = 1
-NSAMP_TAU_C = 3
-NSAMP_TAU_D = 15
-NSAMP_TAU_PAR = [NSAMP_TAU_EXPR, NSAMP_TAU_A, NSAMP_TAU_B, NSAMP_TAU_C,
-                 NSAMP_TAU_D, NSAMP_TAU]
-
-NSAMP_TS_CONF = 5
-NSAMP_TS_CONF_EXPR = True
-NSAMP_TS_CONF_A = 3
-NSAMP_TS_CONF_B = 1
-NSAMP_TS_CONF_C = 3
-NSAMP_TS_CONF_D = 100
-NSAMP_TS_CONF_PAR = [NSAMP_TS_CONF_EXPR, NSAMP_TS_CONF_A, NSAMP_TS_CONF_B, NSAMP_TS_CONF_C,
-                     NSAMP_TS_CONF_D, NSAMP_TS_CONF]
-
-NSAMP_TS_TAU = 5
-NSAMP_TS_TAU_EXPR = True
-NSAMP_TS_TAU_A = 3
-NSAMP_TS_TAU_B = 1
-NSAMP_TS_TAU_C = 3
-NSAMP_TS_TAU_D = 100
-NSAMP_TS_TAU_PAR = [NSAMP_TS_TAU_EXPR, NSAMP_TS_TAU_A, NSAMP_TS_TAU_B, NSAMP_TS_TAU_C,
-                    NSAMP_TS_TAU_D, NSAMP_TS_TAU]
-
-NSAMP_VDW = 10
-NSAMP_VDW_EXPR = False
-NSAMP_VDW_A = 3
-NSAMP_VDW_B = 1
-NSAMP_VDW_C = 3
-NSAMP_VDW_D = 15
-NSAMP_VDW_PAR = [NSAMP_VDW_EXPR, NSAMP_VDW_A, NSAMP_VDW_B, NSAMP_VDW_C,
-                 NSAMP_VDW_D, NSAMP_VDW]
-
-# e. What to run for thermochemical kinetics
-RUN_SPC_THERMO = True
-SPC_MODELS = [['RIGID', 'HARM']]
-#SPC_MODELS = [['1DHR', 'HARM']]
-#SPC_MODELS = [['RIGID', 'HARM'], ['1DHR', 'HARM']]
-# The first component specifies the torsional model - TORS_MODEL.
-# It can take 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
-# The second component specifies the vibrational model - VIB_MODEL.
-# It can take 'HARM', or 'VPT2' values.
-RUN_REACTION_RATES = True
-RUN_VDW_RCT_RATES = False
-RUN_VDW_PRD_RATES = False
-
-# f. Partition function parameters
-TAU_PF_WRITE = True
-
-# Defaults and dictionaries
-SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
-KICKOFF_SIZE = 0.1
-KICKOFF_BACKWARD = False
-RESTRICT_OPEN_SHELL = False
-OVERWRITE = False
-# Temperatue and pressure
-TEMP_STEP = 100.
-NTEMPS = 30
-TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
-PRESS = [0.1, 1., 10., 100.]
-# Collisional parameters
-EXP_FACTOR = 150.0
-EXP_POWER = 0.85
-EXP_CUTOFF = 15.
-EPS1 = 100.0
-EPS2 = 200.0
-SIG1 = 6.
-SIG2 = 6.
-MASS1 = 15.0
-ETSFR_PAR = [EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2, SIG1, SIG2, MASS1]
+# 2. Prepare species and reaction lists and dictionaries
 
 ELC_DEG_DCT = {
     ('InChI=1S/B', 2): [[0., 2], [16., 4]],
@@ -272,16 +60,7 @@ ELC_SIG_LST = {'InChI=1S/CN/c1-2', 'InChI=1S/C2H/c1-2/h1H'}
 #    ICH_TEST = (automol.convert.smiles.inchi(SMILES_TEST))
 #    print(SMILES_TEST, ICH_TEST)
 
-# 2. create run and save directories
-RUN_PREFIX = '/lcrc/project/PACC/run'
-if not os.path.exists(RUN_PREFIX):
-    os.mkdir(RUN_PREFIX)
-
-SAVE_PREFIX = '/lcrc/project/PACC/save'
-if not os.path.exists(SAVE_PREFIX):
-    os.mkdir(SAVE_PREFIX)
-
-# 3. read in data from the mechanism directory
+# read in data from the mechanism directory
 DATA_PATH = os.path.dirname(os.path.realpath(__file__))
 MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
 #MECH_TYPE='CHEMKIN'
@@ -550,6 +329,9 @@ elif MECH_TYPE == 'json':
                 SMI_DCT[spc_name] = RCT_ICHS_LST[i][j]
                 CHG_DCT[spc_name] = chg
                 MUL_DCT[spc_name] = RCT_MULS_LST[i][j]
+                SPC_DCT[spc_name]['chg'] = [chg]
+                SPC_DCT[spc_name]['smi'] = RCT_ICHS_LST[i][j]
+                SPC_DCT[spc_name]['mul'] = RCT_MULS_LST[i][j]
     for i, spc_names_lst in enumerate(PRD_NAMES_LST):
         for j, spc_name in enumerate(spc_names_lst):
             chg = 0
@@ -559,12 +341,211 @@ elif MECH_TYPE == 'json':
                 SMI_DCT[spc_name] = PRD_ICHS_LST[i][j]
                 CHG_DCT[spc_name] = chg
                 MUL_DCT[spc_name] = PRD_MULS_LST[i][j]
+                SPC_DCT[spc_name]['chg'] = [chg]
+                SPC_DCT[spc_name]['smi'] = RCT_ICHS_LST[i][j]
+                SPC_DCT[spc_name]['mul'] = RCT_MULS_LST[i][j]
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
+
 #os.sys.exit()
 
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 #print(GEOM_PATH)
 GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
+
+# 2. script control parameters
+
+# a. Strings to launch executable
+# script_strings for electronic structure are obtained from run_qchem_par since
+# they vary with method
+
+PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                      "RPHt.exe")
+PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                 "messpf pf.inp build.out >> stdout.log &> stderr.log")
+RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                   "mess mess.inp build.out >> stdout.log &> stderr.log")
+VARECOF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                      "/home/ygeorgi/build/rotd/multi ")
+MCFLUX_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                     "/home/ygeorgi/build/rotd/mc_flux ")
+CONV_MULTI_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                         "/home/ygeorgi/build/rotd/mc_flux ")
+TST_CHECK_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                        "/home/ygeorgi/build/rotd/tst_check ")
+MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
+#NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+#                   "cp ../PF/build.out pf.dat\n"
+#                   "cp /tcghome/sjklipp/PACC/nasa/new.groups .\n"
+#                   "python /tcghome/sjklipp/PACC/nasa/makepoly.py"
+#                   " >> stdout.log &> stderr.log")
+
+# b. Electronic structure parameters; code, method, basis, convergence control
+
+ES_DCT = {
+        'lvl_wbs': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31g*',
+            },
+        'lvl_wbm': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31+g*',
+            },
+        'lvl_wbt': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': 'cc-pvtz',
+            },
+        'lvl_b2t': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',
+            },
+        'lvl_b3s': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
+            },
+        'lvl_b3t': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
+            },
+        'cc_lvl_d': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)', 'basis': 'cc-pvdz',
+            },
+        'cc_lvl_t': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)', 'basis': 'cc-pvtz',
+            },
+        'cc_lvl_q': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)', 'basis': 'cc-pvqz',
+            },
+        'cc_lvl_df': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)-f12', 'basis': 'cc-pvdz-f12',
+            },
+        'cc_lvl_tf': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)-f12', 'basis': 'cc-pvtz-f12',
+            },
+        'cc_lvl_qf': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)-f12', 'basis': 'cc-pvqz-f12',
+            },
+        }
+
+OPT_LVL0 = 'lvl_wbs'
+OPT_LVL1 = 'lvl_wbm'
+OPT_LVL2 = 'lvl_wbt'
+SCAN_LVL1 = OPT_LVL1
+SP_LVL1 = 'cc_lvl_df'
+SP_LVL2 = 'cc_lvl_tf'
+SP_LVL3 = 'cc_lvl_qf'
+
+TSK_INFO_LST = [
+    ['conf_samp', OPT_LVL1, OPT_LVL0, False],
+    ['hr', SCAN_LVL1, OPT_LVL1, False],
+    ['energy', SP_LVL1, OPT_LVL1, False],
+    ['energy', SP_LVL2, OPT_LVL1, False],
+    ['energy', SP_LVL3, OPT_LVL1, False],
+    ]
+
+HIGH_LEVEL_COEFF = [-0.5, 1.5]
+
+OPT_ES = True
+OPT_MESS= False
+OPT_THERMO = False
+OPT_ALLPF = False
+OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
+
+thermodriver.driver.run(TSK_INFO_LST, ES_DCT, SPCDCT, SPC_QUEUE, REF, RUN_PREFIX, SAVE_PREFIX, OPTIONS)
+
+OPT_ES = False
+OPT_MESS= True
+OPT_THERMO = True
+OPT_ALLPF = True
+
+thermodriver.driver.run(TSK_INFO_LST, ES_DCT, SPCDCT, SPC_QUEUE, REF, RUN_PREFIX, SAVE_PREFIX, OPTIONS)
+# set up a combination of energies
+# E_HL = sum_i E_HL(i) * Coeff(i)
+#HIGH_LEVEL_COEFF = [1]
+#HIGH_LEVEL_COEFF = None
+
+PF_LEVELS = []
+PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
+# PF_LEVELS contains the elec. struc. lvlels for the harmonic, torsional, and anharmonic analyses
+
+# c. What type of electronic structure calculations to run
+
+# d. Parameters for number of torsional samplings
+NSAMP_CONF = 5
+NSAMP_CONF_EXPR = True
+NSAMP_CONF_A = 3
+NSAMP_CONF_B = 1
+NSAMP_CONF_C = 4
+NSAMP_CONF_D = 100
+NSAMP_CONF_PAR = [NSAMP_CONF_EXPR, NSAMP_CONF_A, NSAMP_CONF_B, NSAMP_CONF_C,
+                  NSAMP_CONF_D, NSAMP_CONF]
+
+NSAMP_TAU = 10
+NSAMP_TAU_EXPR = False
+NSAMP_TAU_A = 3
+NSAMP_TAU_B = 1
+NSAMP_TAU_C = 3
+NSAMP_TAU_D = 15
+NSAMP_TAU_PAR = [NSAMP_TAU_EXPR, NSAMP_TAU_A, NSAMP_TAU_B, NSAMP_TAU_C,
+                 NSAMP_TAU_D, NSAMP_TAU]
+
+NSAMP_TS_CONF = 5
+NSAMP_TS_CONF_EXPR = True
+NSAMP_TS_CONF_A = 3
+NSAMP_TS_CONF_B = 1
+NSAMP_TS_CONF_C = 3
+NSAMP_TS_CONF_D = 100
+NSAMP_TS_CONF_PAR = [NSAMP_TS_CONF_EXPR, NSAMP_TS_CONF_A, NSAMP_TS_CONF_B, NSAMP_TS_CONF_C,
+                     NSAMP_TS_CONF_D, NSAMP_TS_CONF]
+
+NSAMP_TS_TAU = 5
+NSAMP_TS_TAU_EXPR = True
+NSAMP_TS_TAU_A = 3
+NSAMP_TS_TAU_B = 1
+NSAMP_TS_TAU_C = 3
+NSAMP_TS_TAU_D = 100
+NSAMP_TS_TAU_PAR = [NSAMP_TS_TAU_EXPR, NSAMP_TS_TAU_A, NSAMP_TS_TAU_B, NSAMP_TS_TAU_C,
+                    NSAMP_TS_TAU_D, NSAMP_TS_TAU]
+
+NSAMP_VDW = 10
+NSAMP_VDW_EXPR = False
+NSAMP_VDW_A = 3
+NSAMP_VDW_B = 1
+NSAMP_VDW_C = 3
+NSAMP_VDW_D = 15
+NSAMP_VDW_PAR = [NSAMP_VDW_EXPR, NSAMP_VDW_A, NSAMP_VDW_B, NSAMP_VDW_C,
+                 NSAMP_VDW_D, NSAMP_VDW]
+
+# e. What to run for thermochemical kinetics
+RUN_SPC_THERMO = True
+SPC_MODELS = [['RIGID', 'HARM']]
+#SPC_MODELS = [['1DHR', 'HARM']]
+#SPC_MODELS = [['RIGID', 'HARM'], ['1DHR', 'HARM']]
+# The first component specifies the torsional model - TORS_MODEL.
+# It can take 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
+# The second component specifies the vibrational model - VIB_MODEL.
+# It can take 'HARM', or 'VPT2' values.
+RUN_REACTION_RATES = True
+RUN_VDW_RCT_RATES = False
+RUN_VDW_PRD_RATES = False
+
+# f. Partition function parameters
+TAU_PF_WRITE = True
+
+# Defaults and dictionaries
+SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
+KICKOFF_SIZE = 0.1
+KICKOFF_BACKWARD = False
+RESTRICT_OPEN_SHELL = False
+OVERWRITE = False
+# Temperatue and pressure
+TEMP_STEP = 100.
+NTEMPS = 30
+TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
+PRESS = [0.1, 1., 10., 100.]
+# Collisional parameters
+EXP_FACTOR = 150.0
+EXP_POWER = 0.85
+EXP_CUTOFF = 15.
+EPS1 = 100.0
+EPS2 = 200.0
+SIG1 = 6.
+SIG2 = 6.
+MASS1 = 15.0
+ETSFR_PAR = [EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2, SIG1, SIG2, MASS1]
 
 # take starting geometry from saved directory if possible, otherwise get it
 # from inchi via rdkit
@@ -593,14 +574,22 @@ KICKOFF_PARS = [KICKOFF_BACKWARD, KICKOFF_SIZE]
 #    nsamp_ts_conf_par = nsamp_pars[3]
 #    nsamp_ts_taupar = nsamp_pars[4]
 
-              'methanol': {'chg': 0, 'mul': 1, 'smiles': 'CO', 'mc_nsamp': [False, 0, 0, 0, 0, 1]},
---              'ethane': {'chg': 0, 'mul': 1, 'smiles': 'CC', 'mc_nsamp': [False, 0, 0, 0, 0, 10]},
---              'propane': {'chg': 0, 'mul': 1, 'smiles': 'CCC', 'mc_nsamp': [False, 0, 0, 0, 0, 10]}
+
+
+
+    SPCDCT = {'reac1': {'chg': 0, 'mul': 1, 'geom': ' n1 \n         h2 n1 R1 \n         h3 n1 R2 h2 A2 \n         h4   n1 R3 h2 A3 h3 D3\n         R1 = 1.01899\n         R2 = 1.01899\n         A2 = 105.997\n         R3 = 1.01899\n           A3 = 105.999\n         D3 = 112.362\n  ', 'mc_nsamp': [True, 2, 1, 2, 100, 12], 'hind_inc': 6.283185307179586,   'mc_tau': {}, 'elec_levels': [[1.0, 0.0]], 'geoobj': (('N', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 1.9256120245802724)),   ('H', (0.0, 1.851044869013889, -0.5306736870295058)), ('H', (1.7118265078919384, -0.704236134131304, -0.53073830036  13204))), 'ich': 'InChI=1S/H3N/h1H3'},
+
+
+            'methanol': {'chg': 0, 'mul': 1, 'smiles': 'CO', 'mc_nsamp': [False, 0, 0, 0, 0, 1]},
+            'ethane': {'chg': 0, 'mul': 1, 'smiles': 'CC', 'mc_nsamp': [False, 0, 0, 0, 0, 10]},
+            'propane': {'chg': 0, 'mul': 1, 'smiles': 'CCC', 'mc_nsamp': [False, 0, 0, 0, 0, 10]}
                 }
                 TSK_INFO_LST = 
 
    run(TSK_INFO_LST, ES_DCT, SPCDCT, SPCS, REF, run_prefix, save_prefix) 
    run(TSK_INFO_LST, ES_DCT, SPCDCT, SPCS, REF, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
+ 
+ --def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
 
 if RUN_SPC_QCHEM:
     scripts.es.species_qchem(
