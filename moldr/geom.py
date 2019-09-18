@@ -196,7 +196,7 @@ def remove_imag(
         chk_idx += 1
         print('imaginary frequency detected, attempting to kick off')
 
-        moldr.geom.run_kickoff_saddle(
+        geo = moldr.geom.run_kickoff_saddle(
             geo, disp_xyzs, spc_info, thy_level, run_fs, thy_run_fs,
             opt_script_str, kickoff_size, kickoff_backward,
             opt_cart=True, **opt_kwargs)
@@ -250,7 +250,9 @@ def run_check_imaginary(
                     proj_freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
                     freqs = elstruct.util.harmonic_frequencies(geo, hess, project=False)
                     print('Freqs test in check_imag:', proj_freqs, freqs)
-                    if min(proj_freqs) < -100:
+                    # proj_freqs doesn't work correctly right now - replace with freqs
+                    # if min(proj_freqs) < -100:
+                    if min(freqs) < -100:
                         imag = True
                 else:
                     freqs = projrot_frequencies(
@@ -300,6 +302,12 @@ def run_kickoff_saddle(
         overwrite=True,
         **kwargs,
     )
+    ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+    if ret:
+        inf_obj, _, out_str = ret
+        prog = inf_obj.prog
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+    return geo
 
 
 def save_initial_geometry(
@@ -351,7 +359,6 @@ def projrot_frequencies(geo, hess, thy_level, thy_run_fs, projrot_script_str='RP
         proj_file_path+'/RTproj_freq.dat')
     rthrproj_freqs, _ = projrot_io.reader.rpht_output(
         proj_file_path+'/hrproj_freq.dat')
-    print('Projection test')
     print(rtproj_freqs)
     proj_freqs = rtproj_freqs
     return proj_freqs

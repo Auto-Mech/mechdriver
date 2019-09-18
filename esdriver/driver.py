@@ -217,13 +217,38 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                         kickoff_backward=KICKOFF_BACKWARD,
                         projrot_script_str=PROJROT_SCRIPT_STR,
                         overwrite=overwrite)
-                if geo:
-                #Run the requested task at the requested running theory level
-                    scripts.es.geometry_generation(tsk, spcdct[spc], es_dct[es_run_key],
+                    if geo:
+                    #Run the requested task at the requested running theory level
+                        scripts.es.geometry_generation(tsk, spcdct[spc], es_dct[es_run_key],
                                                    thy_level, fs, spc_info, overwrite)
-                selection = 'min'
-                scripts.es.geometry_analysis(tsk, thy_level, ini_fs,
-                                             selection, spc_info, overwrite)
+                else:
+                    selection = 'min'
+                    if 'conf' in tsk:
+                        min_cnf_locs = moldr.util.min_energy_conformer_locators(ini_cnf_save_fs)
+                        if not min_cnf_locs:
+                            print('Initial level of theory for conformers must be run before {} '.format(tsk))
+                            continue
+                        elif not ini_cnf_save_fs.leaf.file.geometry.exists(min_cnf_locs):
+                            print('Initial level of theory for conformers must be run before {} '.format(tsk))
+                            continue
+                    elif 'tau' in tsk:
+                        tau_locs = ini_tau_save_fs.leaf.existing()
+                        if not tau_locs:
+                            print('Initial level of theory for tau must be run before {} '.format(tsk))
+                            continue
+                        elif not ini_tau_save_fs.leaf.file.geometry.exists([tau_locs[0]]):
+                            print('Initial level of theory for tau must be run before {} '.format(tsk))
+                            continue
+                    elif 'scan' in tsk:
+                        scn_locs = ini_scn_save_fs.leaf.existing()
+                        if not scn_locs:
+                            print('Initial level of theory for scn must be run before {} '.format(tsk))
+                            continue
+                        elif not ini_scn_save_fs.leaf.file.geometry.exists([scn_locs[0]]):
+                            print('Initial level of theory for scn must be run before {} '.format(tsk))
+                            continue
+                    scripts.es.geometry_analysis(tsk, thy_level, ini_fs,
+                                                 selection, spc_info, overwrite)
 
 
 def create_spec(ts, ts_dct, spcs, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.):

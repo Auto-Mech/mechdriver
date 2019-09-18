@@ -37,8 +37,10 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
     print('spc_queue test', spc_queue)
     print('refs test', refs)
     full_queue = spc_queue + refs
+    print('full_queue test 1:', full_queue)
     full_queue = list(dict.fromkeys(full_queue))
     print(msg)
+    print('full_queue test 2:', full_queue)
 
     #prepare filesystem
     if not os.path.exists(save_prefix):
@@ -77,14 +79,14 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
         if 'hr' in tsk[0] or 'tau' in tsk[0]:
             tors_lvl = tsk[1]
             if 'md' in tsk[0]:
-                spc_model[0] = ['MDHR']
+                spc_model[0] = 'MDHR'
             if 'tau' in tsk[0]:
-                spc_model[0] = ['TAU']
+                spc_model[0] = 'TAU'
             else:
-                spc_model[0] = ['1DHR']
+                spc_model[0] = '1DHR'
         if 'anharm' in tsk[0] or 'vpt2' in tsk[0]:
             anharm_lvl = tsk[1]
-            spc_model[1] = ['ANHARM']
+            spc_model[1] = 'ANHARM'
     geo_thy_info = get_thy_info(es_dct, geo_lvl)
     harm_thy_info = get_thy_info(es_dct, harm_lvl)
     tors_thy_info = get_thy_info(es_dct, tors_lvl)
@@ -92,6 +94,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
     pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info]
 
     #Collect the PF input for each species
+    print('full_queue test 3:', full_queue)
     for spc in full_queue:
         spc_info = scripts.es.get_spc_info(spcdct[spc])
         spc_save_fs = autofile.fs.species(save_prefix)
@@ -108,6 +111,8 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
         spcdct[spc]['zpe'] = zpe
         spcdct[spc]['zpe_str'] = zpe_str
         spcdct[spc]['spc_str'] = spc_str
+        print('full_queue test 4:', full_queue)
+        print('zpe_str test:', zpe_str)
 
     #Make and Run the PF file
     for spc in spc_queue:

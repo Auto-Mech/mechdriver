@@ -1,0 +1,10 @@
+! tors model: 1DHR
+! vib model: HARM
+! har level: RUwb97xd/6-31+g*
+! tors level: RUwb97xd/6-31+g*
+! ref level for energy: RUwb97xd/6-31+g*
+! energy level: ccsd(t)-f12/cc-pvtz-f12
+REF_NH3                 H  3 C  0 O  0 N  1 G    200.0    3000.0   1000.0      1
+ 2.06803169E+00 6.16429695E-03-1.98867572E-06 2.75801674E-10-1.10011025E-14    2
+-5.92847055E+03 1.08822955E+01 4.37304668E+00-5.02709660E-03 2.01526217E-05    3
+-1.99346781E-08 6.94455985E-12-6.35671347E+03 7.84971932E-02                   4

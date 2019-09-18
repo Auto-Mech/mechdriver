@@ -1,6 +1,7 @@
 """ drivers
 """
 import os
+import shutil
 import numpy
 from qcelemental import constants as qcc
 from qcelemental import periodictable as ptab
@@ -139,14 +140,14 @@ def species_block(
                             pot = list(enes*EH2KCAL)
                             axis = coo_dct[tors_name][1:3]
                             group = list(
-                                automol.graph.branch_atom_keys(gra, axis[0], axis) -
+                                automol.graph.branch_atom_keys(gra, axis[1], axis) -
                                 set(axis))
                             group = list(numpy.add(group, 1))
                             axis = list(numpy.add(axis, 1))
                             sym = 1
                             hind_rot_str += mess_io.writer.rotor_hindered(
                                 group, axis, sym, pot)
-                            proj_rotors_str += projrot_io._write.write_rotors_str(
+                            proj_rotors_str += projrot_io.writer.rotors(
                                 axis, group)
 #                        print('hind_rot_str test')
 #                        print(hind_rot_str)
@@ -155,7 +156,7 @@ def species_block(
                         # Write the string for the ProjRot input
                         COORD_PROJ = 'cartesian'
                         grad = ''
-                        projrot_inp_str = projrot_io._write.write_rpht_input(
+                        projrot_inp_str = projrot_io.writer.rpht_input(
                             tors_geo, grad, hess, rotors_str=proj_rotors_str,
                             coord_proj=COORD_PROJ)
 
@@ -171,14 +172,16 @@ def species_block(
 
                         moldr.util.run_script(script_str, path)
 
-                        rtproj_freqs, _ = projrot_io._read.read_rpht_output(
+                        rtproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/RTproj_freq.dat')
-                        rthrproj_freqs, _ = projrot_io._read.read_rpht_output(
+                        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         # the second variable above is the imaginary frequency list
                         print('Projection test')
                         print(rtproj_freqs)
                         print(rthrproj_freqs)
+                        # PROJROT just produces temporary files that are removed
+                        shutil.rmtree(path)
                         if pot is None:
                             proj_freqs = rtproj_freqs
                             zpe = sum(rtproj_freqs)*WAVEN2KCAL/2.
@@ -189,9 +192,8 @@ def species_block(
                     core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
                     spc_str = mess_io.writer.molecule(
                         core, proj_freqs, elec_levels,
-                        hind_rot=hind_rot_str,
+                        hind_rot=hind_rot_str
                         )
-
         else:
             spc_str = ''
 
@@ -319,6 +321,10 @@ def get_zero_point_energy(
     #har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_save_path)
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
+    print('har_save_path test:', har_save_path)
+    print('har_min_cnf_locs test:', har_min_cnf_locs)
+    print('level test:', har_level, tors_level, vpt2_level)
+    print('model test:', tors_model, vib_model)
 
     if tors_level:
         orb_restr = moldr.util.orbital_restriction(
@@ -377,82 +383,84 @@ def get_zero_point_energy(
 
         hind_rot_str = ""
 
-        if tors_min_cnf_locs is not None:
-            min_ene = tors_cnf_save_fs.leaf.file.energy.read(tors_min_cnf_locs)
-            tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
-            zma = automol.geom.zmatrix(tors_geo)
-            gra = automol.zmatrix.graph(zma, remove_stereo=True)
-            tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
+        min_ene = tors_cnf_save_fs.leaf.file.energy.read(tors_min_cnf_locs)
+        tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
+        zma = automol.geom.zmatrix(tors_geo)
+        gra = automol.zmatrix.graph(zma, remove_stereo=True)
+        tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
+        tors_zpe_cor = 0.0
+        if tors_names:
+            coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+
+            # prepare axis, group, info
+            scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
+            pot = []
+            for tors_name in tors_names:
+                enes = [scn_save_fs.leaf.file.energy.read(locs) for locs
+                        in scn_save_fs.leaf.existing([[tors_name]])]
+                enes = numpy.subtract(enes, min_ene)
+                pot = list(enes*EH2KCAL)
+                axis = coo_dct[tors_name][1:3]
+                group = list(
+                    automol.graph.branch_atom_keys(gra, axis[1], axis) -
+                    set(axis))
+                group = list(numpy.add(group, 1))
+                axis = list(numpy.add(axis, 1))
+                sym = 1
+                hind_rot_str += mess_io.writer.rotor_hindered(
+                    group, axis, sym, pot)
+
+            dummy_freqs = [1000.]
+            dummy_zpe = 0.0
+            core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
+            print('mess writer in get zpe')
+            print(core)
+            print(elec_levels)
+            print(hind_rot_str)
+            spc_str = mess_io.writer.molecule(
+                core, dummy_freqs, elec_levels,
+                hind_rot=hind_rot_str,
+                )
+
+            # create a messpf input file
+            temp_step = 100.
+            ntemps = 5
+            zpe_str = '{0:<8.2f}\n'.format(dummy_zpe)
+            zpe_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
+            zpe_str += 'End\n'
+            global_pf_str = mess_io.writer.global_pf(
+                [], temp_step, ntemps, rel_temp_inc=0.001,
+                atom_dist_min=0.6)
+            spc_head_str = 'Species ' + ' Tmp'
+            pf_inp_str = '\n'.join(
+                [global_pf_str, spc_head_str,
+                 spc_str, zpe_str])
+
+            bld_locs = ['PF', 0]
+            bld_save_fs = autofile.fs.build(tors_save_path)
+            bld_save_fs.leaf.create(bld_locs)
+            pf_path = bld_save_fs.leaf.path(bld_locs)
+
+            # run messpf
+            with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
+                pf_file.write(pf_inp_str)
+            moldr.util.run_script(script_str, pf_path)
+
+            with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
+                output_string = mess_file.read()
+
+            # Read the freqs and zpes
+            tors_freqs = mess_io.reader.tors.freqs(output_string)
+            tors_zpes = mess_io.reader.tors.zpves(output_string)
             tors_zpe_cor = 0.0
-            if tors_names is not None:
-                coo_dct = automol.zmatrix.coordinates(zma, multi=False)
-
-                # prepare axis, group, info
-                scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
-                pot = []
-                for tors_name in tors_names:
-                    enes = [scn_save_fs.leaf.file.energy.read(locs) for locs
-                            in scn_save_fs.leaf.existing([[tors_name]])]
-                    enes = numpy.subtract(enes, min_ene)
-                    pot = list(enes*EH2KCAL)
-                    axis = coo_dct[tors_name][1:3]
-                    group = list(
-                        automol.graph.branch_atom_keys(gra, axis[0], axis) -
-                        set(axis))
-                    group = list(numpy.add(group, 1))
-                    axis = list(numpy.add(axis, 1))
-                    sym = 1
-                    hind_rot_str += mess_io.writer.rotor_hindered(
-                        group, axis, sym, pot)
-
-                dummy_freqs = [1000.]
-                dummy_zpe = 0.0
-                core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
-                print('mess writer in get zpe')
-                print(core)
-                print(elec_levels)
-                print(hind_rot_str)
-                spc_str = mess_io.writer.molecule(
-                    core, dummy_freqs, elec_levels,
-                    hind_rot=hind_rot_str,
-                    )
-
-                # create a messpf input file
-                temp_step = 100.
-                ntemps = 5
-                global_pf_str = mess_io.writer.global_pf(
-                    [], temp_step, ntemps, rel_temp_inc=0.001,
-                    atom_dist_min=0.6)
-                spc_head_str = 'Species ' + ' Tmp'
-                pf_inp_str = '\n'.join(
-                    [global_pf_str, spc_head_str,
-                     spc_str])
-
-                bld_locs = ['PF', 0]
-                bld_save_fs = autofile.fs.build(tors_save_path)
-                bld_save_fs.leaf.create(bld_locs)
-                pf_path = bld_save_fs.leaf.path(bld_locs)
-
-                # run messpf
-                with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
-                    pf_file.write(pf_inp_str)
-                moldr.util.run_script(script_str, pf_path)
-
-                with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
-                    output_string = mess_file.read()
-
-                # Read the freqs and zpes
-                tors_freqs = mess_io.reader.tors.read_freqs(output_string)
-                tors_zpes = mess_io.reader.tors.read_zpes(output_string)
-                tors_zpe_cor = 0.0
 #                print('tors zpe test')
-                for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
-                    tors_zpe_cor += tors_1dhr_zpe - tors_freq*WAVEN2KCAL/2
-                    print(tors_1dhr_zpe, tors_freq, tors_freq*WAVEN2KCAL/2)
+            for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
+                tors_zpe_cor += tors_1dhr_zpe - tors_freq*WAVEN2KCAL/2
+                print(tors_1dhr_zpe, tors_freq, tors_freq*WAVEN2KCAL/2)
 
-                # read torsional harmonic zpe and actual zpe
+            # read torsional harmonic zpe and actual zpe
 
-            zpe = har_zpe + tors_zpe_cor
+        zpe = har_zpe + tors_zpe_cor
 #            print (zpe,har_zpe,tors_zpe_cor)
         ret = zpe
 
