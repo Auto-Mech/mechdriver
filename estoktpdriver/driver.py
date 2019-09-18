@@ -453,6 +453,7 @@ SP_LVL3 = 'cc_lvl_qf'
 
 TSK_INFO_LST = [
     ['conf_samp', OPT_LVL1, OPT_LVL0, False],
+    ['conf_hess', OPT_LVL1, OPT_LVL1, False],
     ['hr_scan', SCAN_LVL1, OPT_LVL1, False],
     ['conf_energy', SP_LVL1, OPT_LVL1, False],
     ['conf_energy', SP_LVL2, OPT_LVL1, False],
@@ -468,6 +469,7 @@ OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
 SPC_QUEUE = list(SPC_NAMES)
 
+REF_MOLS='basic'
 thermodriver.driver.run(
         TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX, SAVE_PREFIX, OPTIONS)
 

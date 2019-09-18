@@ -74,16 +74,16 @@ def get_coeff(spc, spcdct, spc_bas):
     print('\natom dict:')
     print(atom_dict)
 
-    if len(spc_bas) == 1:
-        if spcdct[spc]['ich'] == spc_bas[0]:
-            coeff = [1]
-            print('\ncoeff:')
-            print(coeff)
+    if len(spc_bas) == 1 and spcdct[spc]['ich'] == spc_bas[0]:
+        coeff = [1]
+        print('\ncoeff:')
+        print(coeff)
     else:
         # Get the coefficients for the balanced heat-of-formation eqn
         coeff = thermo.heatform.calc_coefficients(spc_bas, atom_dict)
         print('\ncoeff:')
         print(coeff)
+    print('coeff test:', spcdct[spc]['ich'], spc_bas)
     return coeff
 
 
@@ -123,6 +123,7 @@ def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
     smi = automol.inchi.smiles(ich)
     print("smiles: {}".format(smi), "inchi: {}".format(ich))
 
+    print('har_level in get_zpe:', har_level)
     spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
         spc_info,
         tors_model, vib_model,
