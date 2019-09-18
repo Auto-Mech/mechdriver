@@ -146,12 +146,60 @@ def test__vpt2():
 
     vpt2_fs = autofile.fs.vpt2(prefix)
     print(vpt2_fs.trunk.path())
-
-    ref_xmat = ((1.000, 2.000), (3.000, 4.000))
-    print(vpt2_fs.trunk.file.anharmonicity_matrix.path())
     vpt2_fs.trunk.create()
+
+    ref_anh_freqs = tuple(sorted([3123.2, 2013.5, 1830.3, 745.3,
+                                  23.0, 1.2]))
+    print(vpt2_fs.trunk.file.anharmonic_frequencies.path())
+    vpt2_fs.trunk.file.anharmonic_frequencies.write(ref_anh_freqs)
+    assert vpt2_fs.trunk.file.anharmonic_frequencies.read() == ref_anh_freqs
+
+    ref_anh_zpve = -25.123455
+    print(vpt2_fs.trunk.file.anharmonic_zpve.path())
+    vpt2_fs.trunk.file.anharmonic_zpve.write(ref_anh_zpve)
+    assert vpt2_fs.trunk.file.anharmonic_zpve.read() == ref_anh_zpve
+
+    ref_xmat = ((1.1, 2.4, 7.5),
+                (3.3, 4.1, 9.3),
+                (5.3, 6.7, 8.3))
+    print(vpt2_fs.trunk.file.anharmonicity_matrix.path())
     vpt2_fs.trunk.file.anharmonicity_matrix.write(ref_xmat)
     assert vpt2_fs.trunk.file.anharmonicity_matrix.read() == ref_xmat
+
+    ref_vibro_rot_mat = ((1.1, 2.4, 7.5),
+                         (3.3, 4.1, 9.3),
+                         (5.3, 6.7, 8.3))
+    print(vpt2_fs.trunk.file.vibro_rot_alpha_matrix.path())
+    vpt2_fs.trunk.file.vibro_rot_alpha_matrix.write(ref_vibro_rot_mat)
+    assert (vpt2_fs.trunk.file.vibro_rot_alpha_matrix.read() ==
+            ref_vibro_rot_mat)
+
+    ref_qcds = (('aaaa', 1.1), ('bbbb', 2.4), ('cccc', 4.1))
+    print(vpt2_fs.trunk.file.quartic_centrifugal_dist_consts.path())
+    vpt2_fs.trunk.file.quartic_centrifugal_dist_consts.write(ref_qcds)
+    assert (vpt2_fs.trunk.file.quartic_centrifugal_dist_consts.read() ==
+            ref_qcds)
+
+
+def test__energy_transfer():
+    """ test autofile.fs.energy_transfer
+    """
+    prefix = os.path.join(PREFIX, 'etrans')
+    os.mkdir(prefix)
+
+    etrans_fs = autofile.fs.energy_transfer(prefix)
+    locs = ['hf', 'sto-3g', True]
+    print(etrans_fs.leaf.path(locs))
+
+    ref_eps = 300.0
+    ref_sig = 3.50
+    print(etrans_fs.leaf.file.lennard_jones_epsilon.path(locs))
+    print(etrans_fs.leaf.file.lennard_jones_sigma.path(locs))
+    etrans_fs.leaf.create(locs)
+    etrans_fs.leaf.file.lennard_jones_epsilon.write(ref_eps, locs)
+    etrans_fs.leaf.file.lennard_jones_sigma.write(ref_sig, locs)
+    assert etrans_fs.leaf.file.lennard_jones_epsilon.read(locs) == ref_eps
+    assert etrans_fs.leaf.file.lennard_jones_sigma.read(locs) == ref_sig
 
 
 def test__scan():
@@ -213,6 +261,7 @@ if __name__ == '__main__':
     # test__tau()
     # test__single_point()
     test__vpt2()
+    # test__energy_transfer()
     # test__scan()
     # test__run()
     # test__build()

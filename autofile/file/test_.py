@@ -239,6 +239,112 @@ def test__hessian():
     assert numpy.allclose(ref_hess, hess)
 
 
+def test__anharmonic_frequencies():
+    """ test the anharmonic frequencies read/write functions
+    """
+    ref_anh_freqs = sorted([3123.20334, 2013.56563, 1830.34050, 745.33024,
+                            23.049560, 1.2344])
+
+    anh_freqs_file_name = autofile.file.name.anharmonic_frequencies('test')
+    anh_freqs_file_path = os.path.join(TMP_DIR, anh_freqs_file_name)
+    anh_freqs_str = autofile.file.write.anharmonic_frequencies(ref_anh_freqs)
+
+    assert not os.path.isfile(anh_freqs_file_path)
+    autofile.file.write_file(anh_freqs_file_path, anh_freqs_str)
+    assert os.path.isfile(anh_freqs_file_path)
+
+    anh_freqs_str = autofile.file.read_file(anh_freqs_file_path)
+    anh_freqs = autofile.file.read.anharmonic_frequencies(anh_freqs_str)
+    assert numpy.allclose(ref_anh_freqs, anh_freqs, atol=1e00)
+
+
+def test__anharmonic_zpve():
+    """ test the anharmonic ZPVE read/write functions
+    """
+    ref_anh_zpve = -25.123455
+
+    anh_zpve_file_name = autofile.file.name.anharmonic_zpve('test')
+    anh_zpve_file_path = os.path.join(TMP_DIR, anh_zpve_file_name)
+    anh_zpve_str = autofile.file.write.anharmonic_zpve(ref_anh_zpve)
+
+    assert not os.path.isfile(anh_zpve_file_path)
+    autofile.file.write_file(anh_zpve_file_path, anh_zpve_str)
+    assert os.path.isfile(anh_zpve_file_path)
+
+    anh_zpve_str = autofile.file.read_file(anh_zpve_file_path)
+    anh_zpve = autofile.file.read.anharmonic_zpve(anh_zpve_str)
+    assert numpy.isclose(ref_anh_zpve, anh_zpve)
+
+
+def test__anharmonicity_matrix():
+    """ test the anharmonicity matrix read/write functions
+    """
+
+    ref_xmat = ((1.123, 2.451, 7.593),
+                (3.321, 4.123, 9.382),
+                (5.342, 6.768, 8.392))
+
+    xmat_file_name = autofile.file.name.anharmonicity_matrix('test')
+    xmat_file_path = os.path.join(TMP_DIR, xmat_file_name)
+    xmat_str = autofile.file.write.anharmonicity_matrix(ref_xmat)
+
+    assert not os.path.isfile(xmat_file_path)
+    autofile.file.write_file(xmat_file_path, xmat_str)
+    assert os.path.isfile(xmat_file_path)
+
+    xmat_str = autofile.file.read_file(xmat_file_path)
+    xmat = autofile.file.read.anharmonicity_matrix(xmat_str)
+    assert numpy.allclose(ref_xmat, xmat)
+
+
+def test__vibro_rot_alpha_matrix():
+    """ test the vibro-rot alpha matrix read/write functions
+    """
+
+    ref_vibro_rot_mat = ((1.123, 2.451, 7.593),
+                         (3.321, 4.123, 9.382),
+                         (5.342, 6.768, 8.392))
+
+    vibro_rot_mat_file_name = autofile.file.name.vibro_rot_alpha_matrix('test')
+    vibro_rot_mat_file_path = os.path.join(TMP_DIR, vibro_rot_mat_file_name)
+    vibro_rot_mat_str = autofile.file.write.vibro_rot_alpha_matrix(
+        ref_vibro_rot_mat)
+
+    assert not os.path.isfile(vibro_rot_mat_file_path)
+    autofile.file.write_file(vibro_rot_mat_file_path, vibro_rot_mat_str)
+    assert os.path.isfile(vibro_rot_mat_file_path)
+
+    vibro_rot_mat_str = autofile.file.read_file(
+        vibro_rot_mat_file_path)
+    vibro_rot_mat = autofile.file.read.vibro_rot_alpha_matrix(
+        vibro_rot_mat_str)
+    assert numpy.allclose(ref_vibro_rot_mat, vibro_rot_mat)
+
+
+def test__quartic_centrifugal_distortion_constants():
+    """ test the quartic centrifugal distortion constants read/write functions
+    """
+
+    ref_qcds = (('aaaa', 1.123), ('bbbb', 2.451), ('cccc', 4.123))
+
+    qcds_file_name = autofile.file.name.quartic_centrifugal_dist_consts('test')
+    qcds_file_path = os.path.join(TMP_DIR, qcds_file_name)
+    qcds_str = autofile.file.write.quartic_centrifugal_dist_consts(ref_qcds)
+
+    assert not os.path.isfile(qcds_file_path)
+    autofile.file.write_file(qcds_file_path, qcds_str)
+    assert os.path.isfile(qcds_file_path)
+
+    qcds_str = autofile.file.read_file(qcds_file_path)
+    qcds = autofile.file.read.quartic_centrifugal_dist_consts(qcds_str)
+    assert ref_qcds[0][0] == qcds[0][0]
+    assert ref_qcds[1][0] == qcds[1][0]
+    assert ref_qcds[2][0] == qcds[2][0]
+    assert numpy.isclose(ref_qcds[0][1], qcds[0][1])
+    assert numpy.isclose(ref_qcds[1][1], qcds[1][1])
+    assert numpy.isclose(ref_qcds[2][1], qcds[2][1])
+
+
 def test__lennard_jones_epsilon():
     """ test the epsilon read/write functions
     """
@@ -275,28 +381,20 @@ def test__lennard_jones_sigma():
     assert numpy.isclose(ref_sig, sig)
 
 
-def test__anharmonicity_matrix():
-    """ test the anharmonicity matrix
-    """
-
-    ref_xmat = ((1.0, 1.0), (1.0, 1.0))
-
-    xmat_file_name = autofile.file.name.anharmonicity_matrix('test')
-    xmat_file_path = os.path.join(TMP_DIR, xmat_file_name)
-    xmat_str = autofile.file.write.anharmonicity_matrix(ref_xmat)
-
-    print(xmat_str)
-
 if __name__ == '__main__':
     # test__energy()
     # test__geometry()
     # test__zmatrix()
-    # test__lennard_jones_epsilon()
-    # test__lennard_jones_sigma()
     # test__file()
     # test__information()
     # test__gradient()
     # test__hessian()
     # test__trajectory()
     # test__vmatrix()
+    test__anharmonic_frequencies()
+    test__anharmonic_zpve()
     test__anharmonicity_matrix()
+    test__vibro_rot_alpha_matrix()
+    test__quartic_centrifugal_distortion_constants()
+    test__lennard_jones_epsilon()
+    test__lennard_jones_sigma()
