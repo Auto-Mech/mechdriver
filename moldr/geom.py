@@ -44,86 +44,96 @@ def reference_geometry(
         basis = thy_level[2]
         status = autofile.system.RunStatus.RUNNING
         inf_obj = autofile.system.info.run(
-            job='', prog=prog, method=method, basis=basis, status=status)
+            job='', prog=prog, version='version', method=method, basis=basis,
+            status=status)
         run_fs.trunk.file.info.write(inf_obj, [])
 
     print('initializing geometry')
     geo = None
-    # Check to see if geometry should be obtained from dictionary
-    spc_info = [spcdct['ich'], spcdct['chg'], spcdct['mul']]
-    if 'input_geom' in ini_thy_level: 
-        geom_obj = spcdct['geoobj']
-        geo_init = geom_obj
-        overwrite = True
-        print('found initial geometry from geometry dictionary')
-    else:
-    # Check to see if geo already exists at running_theory
-        if thy_save_fs.leaf.file.geometry.exists(thy_level[1:4]):
-            thy_path = thy_save_fs.leaf.path(thy_level[1:4])
-            print('getting reference geometry from {}'.format(thy_path))
-            geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
-        if not geo:
-            if ini_thy_save_fs:
-                if ini_thy_save_fs.leaf.file.geometry.exists(ini_thy_level[1:4]):
-                # If not, Compute geo at running_theory, using geo from
-                # initial_level as the starting point
-                # or from inchi is no initial level geometry
-                    thy_path = ini_thy_save_fs.leaf.path(ini_thy_level[1:4])
-                    print('getting reference geometry from {}'.format(thy_path))
-                    geo_init = ini_thy_save_fs.leaf.file.geometry.read(ini_thy_level[1:4])
+    try:
+        # Check to see if geometry should be obtained from dictionary
+        spc_info = [spcdct['ich'], spcdct['chg'], spcdct['mul']]
+        if 'input_geom' in ini_thy_level: 
+            geom_obj = spcdct['geoobj']
+            geo_init = geom_obj
+            overwrite = True
+            print('found initial geometry from geometry dictionary')
+        else:
+        # Check to see if geo already exists at running_theory
+            if thy_save_fs.leaf.file.geometry.exists(thy_level[1:4]):
+                thy_path = thy_save_fs.leaf.path(thy_level[1:4])
+                print('getting reference geometry from {}'.format(thy_path))
+                geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
+            if not geo:
+                if ini_thy_save_fs:
+                    if ini_thy_save_fs.leaf.file.geometry.exists(ini_thy_level[1:4]):
+                    # If not, Compute geo at running_theory, using geo from
+                    # initial_level as the starting point
+                    # or from inchi is no initial level geometry
+                        thy_path = ini_thy_save_fs.leaf.path(ini_thy_level[1:4])
+                        print('getting reference geometry from {}'.format(thy_path))
+                        geo_init = ini_thy_save_fs.leaf.file.geometry.read(ini_thy_level[1:4])
+                    else:
+                        geo_init = automol.inchi.geometry(spc_info[0])
+                        print('getting reference geometry from inchi')
                 else:
                     geo_init = automol.inchi.geometry(spc_info[0])
                     print('getting reference geometry from inchi')
-            else:
-                geo_init = automol.inchi.geometry(spc_info[0])
-                print('getting reference geometry from inchi')
         # Optimize from initial geometry to get reference geometry
-    if not geo:
-        _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
-        params = {
-            'spc_info': spc_info,
-            'run_fs': run_fs,
-            'thy_run_fs': thy_run_fs,
-            'script_str': opt_script_str,
-            'overwrite': overwrite,
-            'thy_level': thy_level,
-            'geo_init': geo_init}
-        geo = run_initial_geometry_opt(**params, **opt_kwargs)
+        if not geo:
+            _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
+            params = {
+                'spc_info': spc_info,
+                'run_fs': run_fs,
+                'thy_run_fs': thy_run_fs,
+                'script_str': opt_script_str,
+                'overwrite': overwrite,
+                'thy_level': thy_level,
+                'geo_init': geo_init}
+            geo = run_initial_geometry_opt(**params, **opt_kwargs)
 
-        thy_save_fs.leaf.create(thy_level[1:4])
-        thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
-        if len(geo) > 1:
-            geo, hess = remove_imag(
-                spcdct, geo, thy_level, thy_run_fs,
-                run_fs, kickoff_size,
-                kickoff_backward,
-                projrot_script_str,
-                overwrite=overwrite)
+            thy_save_fs.leaf.create(thy_level[1:4])
+            thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+            if not automol.geom.is_atom(geo):
+                geo, hess = remove_imag(
+                    spcdct, geo, thy_level, thy_run_fs,
+                    run_fs, kickoff_size,
+                    kickoff_backward,
+                    projrot_script_str,
+                    overwrite=overwrite)
 
-            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-            locs_lst = cnf_save_fs.leaf.existing()
-            if locs_lst:
-                saved_geo = cnf_save_fs.leaf.file.geometry.read(locs_lst[0])
-                saved_tors_names = automol.geom.zmatrix_torsion_coordinate_names(saved_geo)
-                if tors_names != saved_tors_names:
-                    print("new reference geometry doesn't match original reference geometry")
-                    print('removing original conformer save data')
-                    cnf_run_fs.remove()
-                    cnf_save_fs.remove()
+                tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+                locs_lst = cnf_save_fs.leaf.existing()
+                if locs_lst:
+                    saved_geo = cnf_save_fs.leaf.file.geometry.read(locs_lst[0])
+                    saved_tors_names = automol.geom.zmatrix_torsion_coordinate_names(saved_geo)
+                    if tors_names != saved_tors_names:
+                        print("new reference geometry doesn't match original reference geometry")
+                        print('removing original conformer save data')
+                        cnf_run_fs.remove()
+                        cnf_save_fs.remove()
 
-            print('Saving reference geometry')
-            print(" - Save path: {}".format(thy_save_path))
-            thy_save_fs.leaf.file.hessian.write(hess, thy_level[1:4])
-        zma = automol.geom.zmatrix(geo)
-        thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
-        thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
+                print('Saving reference geometry')
+                print(" - Save path: {}".format(thy_save_path))
+                thy_save_fs.leaf.file.hessian.write(hess, thy_level[1:4])
 
-        scripts.es.run_single_conformer(
-            spc_info, thy_level, fs,
-            overwrite)
+            zma = automol.geom.zmatrix(geo)
+            thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
+            thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
 
-    if geo:
-        inf_obj.status = autofile.system.RunStatus.SUCCESS
+            scripts.es.run_single_conformer(
+                spc_info, thy_level, fs,
+                overwrite)
+
+        if geo:
+            inf_obj.status = autofile.system.RunStatus.SUCCESS
+            run_fs.trunk.file.info.write(inf_obj, [])
+        else:
+            inf_obj.status = autofile.system.RunStatus.FAILURE
+            run_fs.trunk.file.info.write(inf_obj, [])
+
+    except:
+        inf_obj.status = autofile.system.RunStatus.FAILURE
         run_fs.trunk.file.info.write(inf_obj, [])
 
     return geo

@@ -79,8 +79,8 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 spc_run_fs, spc_save_fs, spc_run_path, spc_save_path = spcdct[spc]['rxn_fs']
                 spc_info = scripts.es.get_spc_info(spcdct[spc])
             else:
-                print('\nTask {} \t\t\t Species {}: {}'.format(tsk, spc,
-                      automol.inchi.smiles(spcdct[spc]['ich'])))
+                print('\nTask {} \t Species {}: {}'.format(
+                    tsk, spc, automol.inchi.smiles(spcdct[spc]['ich'])))
                 spc_info = scripts.es.get_spc_info(spcdct[spc])
                 spc_run_fs = autofile.fs.species(run_prefix)
                 spc_run_fs.leaf.create(spc_info)
@@ -187,10 +187,10 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 scn_run_fs = None
                 scn_save_fs = None
 
-            FS = [spc_run_fs, spc_save_fs, thy_run_fs, thy_save_fs, cnf_run_fs,
+            fs = [spc_run_fs, spc_save_fs, thy_run_fs, thy_save_fs, cnf_run_fs,
                   cnf_save_fs, tau_run_fs, tau_save_fs, scn_run_fs, scn_save_fs, ts_run_fs, ts_save_fs, run_fs]
 
-            INI_FS = [ini_thy_run_fs, ini_thy_save_fs, ini_cnf_run_fs,
+            ini_fs = [ini_thy_run_fs, ini_thy_save_fs, ini_cnf_run_fs,
                     ini_cnf_save_fs, ini_tau_run_fs, ini_tau_save_fs,
                     ini_scn_run_fs, ini_scn_save_fs, ini_ts_run_fs, ini_ts_save_fs]
 
@@ -200,16 +200,11 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
 
                 #Every task starts with a geometry optimization at the running theory level
                 if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
-                    geo = moldr.ts.reference_geometry(spcdct[spc], thy_level, ini_thy_level, FS, INI_FS, overwrite)
+                    geo = moldr.ts.reference_geometry(spcdct[spc], thy_level, ini_thy_level, fs, ini_fs, overwrite)
                 #Run the requested task at the requested running theory level
-                    if geo:
-                        scripts.es.ts_geometry_generation(tsk, spcdct[spc],
-                                                   thy_level, FS, spc_info, overwrite)
-                #selection = 'min'
-                #scripts.es.ts_run_task(
-                #    tsk, spc, spcdct, ts_dct[spc]['reacs'],
-                #    ts_dct[spc]['prods'], es_dct[run_es_key],
-                #    ini_thy_level, run_prefix, save_prefix, overwrite)
+                if geo:
+                    scripts.es.ts_geometry_generation(tsk, spcdct[spc], es_dct[es_run_key]
+                                               thy_level, fs, spc_info, overwrite)
             else:
                 #Check if the task has been completed at the requested running theory level
 
@@ -217,17 +212,17 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
                 # if not tsk == 'sp' or tsk == 'energy':
                     geo = moldr.geom.reference_geometry(
-                        spcdct[spc], thy_level, ini_thy_level, FS, INI_FS,
+                        spcdct[spc], thy_level, ini_thy_level, fs, ini_fs,
                         kickoff_size=KICKOFF_SIZE,
                         kickoff_backward=KICKOFF_BACKWARD,
                         projrot_script_str=PROJROT_SCRIPT_STR,
                         overwrite=overwrite)
-                    if geo:
-                     #Run the requested task at the requested running theory level
-                        scripts.es.geometry_generation(tsk, spcdct[spc],
-                                                   thy_level, FS, spc_info, overwrite)
+                if geo:
+                #Run the requested task at the requested running theory level
+                    scripts.es.geometry_generation(tsk, spcdct[spc], es_dct[es_run_key],
+                                                   thy_level, fs, spc_info, overwrite)
                 selection = 'min'
-                scripts.es.geometry_analysis(tsk, thy_level, INI_FS,
+                scripts.es.geometry_analysis(tsk, thy_level, ini_fs,
                                              selection, spc_info, overwrite)
 
 
@@ -245,6 +240,7 @@ def create_spec(ts, ts_dct, spcs, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], h
     spec['mc_nsamp'] = mc_nsamp
     spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian')
     return spec
+
 
 def get_es_info(es_dct, key):
     """

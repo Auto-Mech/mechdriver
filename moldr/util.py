@@ -233,10 +233,10 @@ def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul, thy_level):
     rct_muls, prd_muls = rxn_mul
     rct_enes = reagent_energies(
         save_prefix, rct_ichs, rct_chgs, rct_muls, thy_level)
-    print(rct_enes)
+    print('rct_enes:', rct_enes)
     prd_enes = reagent_energies(
         save_prefix, prd_ichs, prd_chgs, prd_muls, thy_level)
-    print(prd_enes)
+    print('prd_enes:', prd_enes)
     return sum(prd_enes) - sum(rct_enes)
 
 

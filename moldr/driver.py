@@ -68,25 +68,6 @@ def run_job(
                           .format(job, run_path))
                     print(" - Skipping...")
 
-    # I think the len(geom) test was supposed to stop the call for gradients and hessians for atoms
-    # It didn't work properly for two reasons:
-    # (i) if the geom is passed as a z-matrix, len(geom) is 2 not 1
-    # (ii) it was checking for UPPERCASE job words and its or logic made it always true
-    # (ii) if I fix those problems then if you turn off the optimization, then the conformer directories are not created
-    # which creates evern more problems. For now I just turned these tests off, since gaussians seems to run fine for atom
-    # gradients and hessians, etc.
-#    print('do_run_0 test:', do_run)
-#    print('geom test:',geom)
-#    print(len(geom))
-#    if len(geom) == 1:
-#        print(len(geom))
-#        print(job)
-#        if job in ('hessian', 'optimization', 'gradient', 'vpt2'):
-#            print(job)
-#            do_run = False
-#            print('do_run_1 test:', do_run)
-
-#    print ('do_run test:', do_run)
     if do_run:
         # create the run directory
         status = autofile.system.RunStatus.RUNNING
@@ -94,7 +75,7 @@ def run_job(
         method = thy_level[1]
         basis = thy_level[2]
         inf_obj = autofile.system.info.run(
-            job=job, prog=prog, method=method, basis=basis, status=status)
+            job=job, prog=prog, version='', method=method, basis=basis, status=status)
         inf_obj.utc_start_time = autofile.system.info.utc_time()
         run_fs.leaf.file.info.write(inf_obj, [job])
 
@@ -122,6 +103,8 @@ def run_job(
         else:
             print(" - Run failed.")
             status = autofile.system.RunStatus.FAILURE
+        version = elstruct.reader.program_version(out_str)
+        inf_obj.version = version
         inf_obj.status = status
         run_fs.leaf.file.info.write(inf_obj, [job])
         run_fs.leaf.file.input.write(inp_str, [job])
@@ -167,5 +150,3 @@ def is_successful_output(out_str, job, prog):
             ret = True
 
     return ret
-
-

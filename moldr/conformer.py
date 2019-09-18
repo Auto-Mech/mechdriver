@@ -42,8 +42,6 @@ def conformer_sampling(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
     )
-#    print('zma test in conformer sampling')
-#    print(automol.zmatrix.string(zma))
 
     run_conformers(
         zma=zma,
@@ -128,7 +126,6 @@ def run_conformers(
             cnf_run_fs.leaf.create(locs)
             cnf_run_path = cnf_run_fs.leaf.path(locs)
             run_fs = autofile.fs.run(cnf_run_path)
-#            print('run_conformers test:', cid, cnf_run_path)
 
             idx += 1
             print("Run {}/{}".format(nsampd+1, nsamp0))
@@ -191,15 +188,6 @@ def save_conformers(cnf_run_fs, cnf_save_fs):
                     print(" - Geometry is disconnected.. Skipping...")
                 else:
                     unique = is_unique_dist_mat_energy(geo, ene, seen_geos, seen_enes)
-#                    unique = True
-
-#                    for idx, geoi in enumerate(seen_geos):
-#                        enei = seen_enes[idx]
-#                        etol = 1.e-6
-#                        if automol.geom.almost_equal_coulomb_spectrum(
-#                                geo, geoi, rtol=1e-2):
-#                            if abs(ene-enei) < etol:
-#                                unique = False
 
                     if not unique:
                         print(" - Geometry is not unique. Skipping...")
@@ -260,8 +248,6 @@ def run_gradient(
         else:
             print(" - Reading gradient from output...")
             grad = elstruct.reader.gradient(inf_obj.prog, out_str)
-#                print('Conformer Freqs test')
-#                print(freqs)
 
             print(" - Saving gradient...")
             print(" - Save path: {}".format(geo_save_path))
@@ -308,8 +294,6 @@ def run_hessian(
             hess = elstruct.reader.hessian(inf_obj.prog, out_str)
             freqs = elstruct.util.harmonic_frequencies(
                 geo, hess, project=False)
-#                print('Conformer Freqs test')
-#                print(freqs)
 
             print(" - Saving hessian...")
             print(" - Save path: {}".format(geo_save_path))
@@ -355,8 +339,6 @@ def run_vpt2(
         else:
             print(" - Reading hessian from output...")
             vpt2 = elstruct.reader.vpt2(inf_obj.prog, out_str)
-#                print('Conformer Freqs test')
-#                print(freqs)
 
             print(" - Saving hessian...")
             print(" - Save path: {}".format(geo_save_path))
@@ -387,29 +369,13 @@ def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
     coulomb spectrum and energy
     """
     unique = True
-#    amin = 1e10
-#    geo_ame = None
     for idx, geoi in enumerate(geo_list):
         enei = ene_list[idx]
         etol = 1.e-6
-        print(abs(ene-enei))
         if abs(ene-enei) < etol:
-#            almost_equal, amax = automol.geom.almost_equal_dist_mat(
-#                    geo, geoi, thresh=1e-2)
-#            if almost_equal:
-#                if amax < amin:
-#                    geo_ame = geoi
-#                    amin = amax
             if automol.geom.almost_equal_dist_mat(
                     geo, geoi, thresh=1e-1):
                 unique = False
-#    print('dist test:', amin)
-#    syms = automol.geom.symbols(geo)
-#    xyzs = automol.geom.coordinates(geo)
-#    print(autowrite.geom.write(syms, xyzs))
-#    syms = automol.geom.symbols(geo_ame)
-#    xyzs = automol.geom.coordinates(geo_ame)
-#    print(autowrite.geom.write(syms, xyzs))
     return unique
 
 
@@ -439,23 +405,16 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
                 geo_sim.append(geoi)
                 ene_sim.append(enei)
 
-        # print('geo_sim test:')
-        # for geot in geo_sim:
-        #     print(geot)
         for geo_sim_i in geo_sim:
             new_geos = automol.geom.rot_permutated_geoms(geo_sim_i)
             for new_geo in new_geos:
                 geo_sim_exp.append(new_geo)
 
-        # print('geo_sim_exp test:')
-        # for geot in geo_sim_exp:
-        #     print(geot)
         int_sym_num = 0
         for i, geoi in enumerate(geo_sim_exp):
             new_geom = True
             for j, geoj in enumerate(geo_sim_exp):
                 if j < i:
-                    # print('geo test:', geoi, geoj)
                     if automol.geom.almost_equal_dist_mat(
                             geoi, geoj, thresh=1e-1):
                         new_geom = False
@@ -463,7 +422,4 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
                     break
             if new_geom:
                 int_sym_num += 1
-    print(int_sym_num)
     return int_sym_num
-
-

@@ -14,14 +14,14 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def run_energy(params, kwargs):
-    """ gradient for minimum energy conformer
+    """ energy for geometry in fiven fs directory
     """
-    print('running task {}'.format('gradient'))
-    moldr.sp.run_gradient(**params, **kwargs)
+    print('running task {}'.format('energy'))
+    moldr.sp.run_energy(**params, **kwargs)
 
 
 def run_grad(params, kwargs):
-    """ gradient for minimum energy conformer
+    """ gradient for geometry in given fs directory
     """
     print('running task {}'.format('gradient'))
     moldr.sp.run_gradient(**params, **kwargs)
@@ -42,7 +42,7 @@ def run_vpt2(params, kwargs):
     moldr.sp.run_vpt2(**params, **kwargs)
 
 
-def run_single_conformer(spc_info, thy_level, FS, overwrite):
+def run_single_conformer(spc_info, thy_level, fs, overwrite):
     """ generate single optimized geometry for randomly sampled initial torsional angles
     """
     mc_nsamp = [False, 0, 0, 0, 0, 1]
@@ -50,9 +50,9 @@ def run_single_conformer(spc_info, thy_level, FS, overwrite):
     moldr.conformer.conformer_sampling(
         spc_info=spc_info,
         thy_level=thy_level,
-        thy_save_fs=FS[3],
-        cnf_run_fs=FS[4],
-        cnf_save_fs=FS[5],
+        thy_save_fs=fs[3],
+        cnf_run_fs=fs[4],
+        cnf_save_fs=fs[5],
         script_str=sp_script_str,
         overwrite=overwrite,
         nsamp_par=mc_nsamp,
@@ -106,7 +106,7 @@ def run_tau_sampling(fs, params, opt_kwargs):
     moldr.tau.run_tau_hessians(**params, **opt_kwargs)
 
 
-def geometry_generation(tsk, spcdic, thy_level, fs,
+def geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
         spc_info, overwrite):
     """ run an electronic structure task
     for generating a list of conformer or tau sampling geometries
@@ -121,9 +121,12 @@ def geometry_generation(tsk, spcdic, thy_level, fs,
                        'hr_scan': 'run_hr_scan'}
     
     if tsk in ['conf_samp', 'tau_samp']:
-        params['nsamp_par'] = spcdic['mc_nsamp']
+        params['nsamp_par'] = es_dct['mc_nsamp']
     elif tsk in ['hr_scan']:
-        params['scan_increment'] = spcdic['hind_inc']
+        if 'hind_inc' in spcdic:
+            params['scan_increment'] = spcdic['hind_inc']
+        else:
+            params['scan_increment'] = 30. * qcc.conversion_factor('degree', 'radian')
 
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
@@ -158,6 +161,7 @@ def geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info,
     for a set of geometries
     """
 
+    print('Task in geometry_analysis:', tsk)
     # specify the fs for the runs
     if 'conf' in tsk:
         run_dir = ini_fs[2]
