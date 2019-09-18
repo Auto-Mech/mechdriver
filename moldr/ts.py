@@ -137,3 +137,104 @@ def ts_save_conformers(cnf_run_fs, cnf_save_fs):
             cnf_save_fs.trunk.file.trajectory.write(traj)
 
 
+def reference_geometry(
+    spcdct, thy_level, ini_thy_level, fs, ini_fs, overwrite=False):
+    """ determine what to use as the reference geometry for all future runs
+    If ini_thy_info refers to geometry dictionary then use that,
+    otherwise values are from a hierarchy of:
+    running level of theory, input level of theory, inchis.
+    From the hierarchy an optimization is performed followed by a check for
+    an imaginary frequency and then a conformer file system is set up.
+    """
+
+    ret = None
+
+    thy_run_fs = fs[2]
+    thy_save_fs = fs[3] 
+    ts_run_fs = fs[10]
+    ts_save_fs = fs[11] 
+    ini_thy_save_fs = ini_fs[1]
+    ini_ts_save_fs = ini_fs[9]
+    cnf_run_fs = fs[4]  
+    cnf_save_fs = fs[5]
+    run_fs = fs[-1] 
+#    if run_fs.trunk.file.info.exists([]):
+#        inf_obj = run_fs.trunk.file.info.read([])
+#        if inf_obj.status == autofile.system.RunStatus.RUNNING:
+#            print('reference geometry already running')
+#            return ret
+#    else:
+#        prog = thy_level[0]
+#        method = thy_level[1]
+#        basis = thy_level[2]
+#        status = autofile.system.RunStatus.RUNNING
+#        inf_obj = autofile.system.info.run(
+#            job='', prog=prog, method=method, basis=basis, status=status)
+#        run_fs.trunk.file.info.write(inf_obj, [])
+#
+#    print('initializing geometry')
+    geo = None
+    # Check to see if geometry should be obtained from dictionary
+    spc_info = [spcdct['ich'], spcdct['chg'], spcdct['mul']]
+    if 'input_geom' in ini_thy_level: 
+        geom_obj = spcdct['geoobj']
+        geo_init = geom_obj
+        overwrite = True
+        print('found initial geometry from geometry dictionary')
+    else:
+    # Check to see if geo already exists at running_theory
+        if ts_save_fs.trunk.file.geometry.exists():
+            thy_path = ts_save_fs.trunk.path()
+            print('getting reference geometry from {}'.format(thy_path))
+            geo = ts_save_fs.trunk.file.geometry.read()
+            zma = ts_save_fs.trunk.file.zmatrix.read()
+        if not geo:
+            if ini_thy_save_fs:
+                if ini_ts_save_fs.trunk.file.geometry.exists():
+                # If not, Compute geo at running_theory, using geo from
+                # initial_level as the starting point
+                # or from inchi is no initial level geometry
+                    thy_path = ini_ts_save_fs.trunk.path()
+                    print('getting reference geometry from {}'.format(thy_path))
+                    zma_init = ini_ts_save_fs.trunk.file.zmatrix.read()
+                    geo_init = ini_ts_save_fs.trunk.file.geometry.read()
+#                else:
+#                    geo_init = automol.inchi.geometry(spc_info[0])
+#                    print('getting reference geometry from inchi')
+#            else:
+#                geo_init = automol.inchi.geometry(spc_info[0])
+#                print('getting reference geometry from inchi')
+#        # Optimize from initial geometry to get reference geometry
+    if not geo and geo_init:
+        script_str, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
+        moldr.driver.run_job(
+                job='optimization',
+                script_str=script_str,
+                run_fs=run_fs,
+                geom=zma_init,
+                #geom=geo_init,
+                spc_info=spc_info,
+                thy_level=thy_level,
+                saddle=True,
+                overwrite=overwrite,
+                **opt_kwargs,
+                )
+        opt_ret = moldr.driver.read_job(
+                job='optimization',
+                run_fs=run_fs,
+                 )
+        if opt_ret is not None:
+            inf_obj, inp_str, out_str = opt_ret
+            prog = inf_obj.prog
+            method = inf_obj.method
+            ene = elstruct.reader.energy(prog, method, out_str)
+            geo = elstruct.reader.opt_geometry(prog, out_str)
+            zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+            print(" - Saving...")
+            print(" - Save path: {}".format(ts_save_fs.trunk.path()))
+
+            ts_save_fs.trunk.file.energy.write(ene)
+            ts_save_fs.trunk.file.geometry.write(geo)
+            ts_save_fs.trunk.file.zmatrix.write(zma)
+    return geo

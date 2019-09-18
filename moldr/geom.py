@@ -79,7 +79,7 @@ def reference_geometry(
                 else:
                     geo_init = automol.inchi.geometry(spc_info[0])
                     print('getting reference geometry from inchi')
-            # Optimize from initial geometry to get reference geometry
+        # Optimize from initial geometry to get reference geometry
         if not geo:
             _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
             params = {
@@ -224,9 +224,9 @@ def run_check_imaginary(
     run_fs = autofile.fs.run(thy_run_path)
     imag = False
     disp_xyzs = []
-    hess = ()
+    hess = ((),())
     if automol.geom.is_atom(geo):
-        hess = {}
+        hess = ((),())
     else:
         moldr.driver.run_job(
             job=elstruct.Job.HESSIAN,

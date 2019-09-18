@@ -53,40 +53,50 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
         thy_info = get_es_info(es_dct, es_run_key)
 
         #If task is to find the transition state, find all TSs for your reactionlist
-        if tsk == 'tsfind':
-            for ts in enumerate(ts_dct):
+        if tsk == 'find_ts':
+            for ts in ts_dct:
                 print('Task {} \t\t\t'.format(tsk))
-                geo, zma = scripts.es.find_ts(
-                    run_prefix, save_prefix,
-                    ts['reacs'], ts['prods'], spcdct, thy_info,
-                    overwrite)
+                spcdct[ts] = create_spec(ts, ts_dct, spcdct)
+                ts_info = (spcdct[ts]['ich'], spcdct[ts]['chg'], spcdct[ts]['mul'])
+                spcdct[ts] = scripts.es.rxn_info(run_prefix, save_prefix, ts, spcdct, thy_info, ini_thy_info)
+                rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = scripts.es.get_rxn_fs(run_prefix, save_prefix, spcdct[ts])
+                spcdct[ts]['rxn_fs'] = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
+                rct_zmas, prd_zmas = scripts.es.get_zmas(spcdct[ts]['reacs'], spcdct[ts]['prods'], spcdct, ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE, KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
+                rxn_class, ts_zma, dist_name, grid, tors_names = scripts.es.ts_params(rct_zmas, prd_zmas)
+                spcdct[ts]['class']= rxn_class
+                spcdct[ts]['tors_names'] = tors_names
+                spcdct[ts]['original_zma']= ts_zma
+                geo, zma = scripts.es.find_ts(ts_info, ts_zma, rxn_class, dist_name, grid, thy_info, rxn_run_path, rxn_save_path, overwrite)
                 if not isinstance(geo, str):
-                    spcdct[ts] = create_spec(geo)
-                    spcdct[ts]['zmatrix'] = zma
-                    print('Success, transition state {} added to ES queue'.format(ts))
+                    print('Success, transition state {} added to species queue'.format(ts))
                     spc_queue.append(ts)
-                    continue
+            continue
 
         #Loop over all species
         for spc in spc_queue:
-            print('\nTask {} \t Species {}: {}'.format(
-                tsk, spc, automol.inchi.smiles(spcdct[spc]['ich'])))
+            if 'ts' in spc:
+                print('\nTask {} \t\t\t Species {}'.format(tsk, spc))
+                spc_run_fs, spc_save_fs, spc_run_path, spc_save_path = spcdct[spc]['rxn_fs']
+                spc_info = scripts.es.get_spc_info(spcdct[spc])
+            else:
+                print('\nTask {} \t Species {}: {}'.format(
+                    tsk, spc, automol.inchi.smiles(spcdct[spc]['ich'])))
+                spc_info = scripts.es.get_spc_info(spcdct[spc])
+                spc_run_fs = autofile.fs.species(run_prefix)
+                spc_run_fs.leaf.create(spc_info)
+                spc_run_path = spc_run_fs.leaf.path(spc_info)
+
+                spc_save_fs = autofile.fs.species(save_prefix)
+                spc_save_fs.leaf.create(spc_info)
+                spc_save_path = spc_save_fs.leaf.path(spc_info)
 
             #Get params
-            spc_info = scripts.es.get_spc_info(spcdct[spc])
+
             orb_restr = moldr.util.orbital_restriction(
                 spc_info, thy_info)
             thy_level = thy_info[0:3]
             thy_level.append(orb_restr)
-
-            spc_run_fs = autofile.fs.species(run_prefix)
-            spc_run_fs.leaf.create(spc_info)
-            spc_run_path = spc_run_fs.leaf.path(spc_info)
-
-            spc_save_fs = autofile.fs.species(save_prefix)
-            spc_save_fs.leaf.create(spc_info)
-            spc_save_path = spc_save_fs.leaf.path(spc_info)
-
+           
             thy_run_fs = autofile.fs.theory(spc_run_path)
             thy_run_fs.leaf.create(thy_level[1:4])
             thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
@@ -123,6 +133,15 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 else:
                     ini_scn_run_fs = None
                     ini_scn_save_fs = None
+                if  'ts' in spc:
+                    ini_ts_run_fs = autofile.fs.ts(ini_thy_run_path)
+                    ini_ts_run_fs.trunk.create()
+                    ini_ts_save_fs = autofile.fs.ts(ini_thy_save_path)
+                    ini_ts_save_fs.trunk.create()
+                else:
+                    ini_ts_run_fs = None
+                    ini_ts_save_fs = None
+
             else:
                 ini_thy_run_fs = None
                 ini_thy_run_path = None
@@ -135,9 +154,22 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 ini_thy_level = ini_thy_info
                 ini_scn_run_fs = None
                 ini_scn_save_fs = None
+                ini_ts_run_fs = None
+                ini_ts_run_path = None
+                ini_ts_save_fs = None
 
-            run_fs = autofile.fs.run(thy_run_path)
-            run_fs.trunk.create()
+            if 'ts' in spc:
+                ts_run_fs = autofile.fs.ts(thy_run_path)
+                ts_run_fs.trunk.create()
+                ts_run_path = ts_run_fs.trunk.path()
+                run_fs = autofile.fs.run(ts_run_path)
+                ts_save_fs = autofile.fs.ts(thy_save_path)
+                ts_save_fs.trunk.create()
+            else:
+                run_fs = autofile.fs.run(thy_run_path)
+                run_fs.trunk.create()
+                ts_run_fs = None
+                ts_save_fs = None
 
             cnf_run_fs = autofile.fs.conformer(thy_run_path)
             cnf_save_fs = autofile.fs.conformer(thy_save_path)
@@ -156,27 +188,23 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 scn_save_fs = None
 
             fs = [spc_run_fs, spc_save_fs, thy_run_fs, thy_save_fs, cnf_run_fs,
-                  cnf_save_fs, tau_run_fs, tau_save_fs, scn_run_fs, scn_save_fs, run_fs]
+                  cnf_save_fs, tau_run_fs, tau_save_fs, scn_run_fs, scn_save_fs, ts_run_fs, ts_save_fs, run_fs]
 
             ini_fs = [ini_thy_run_fs, ini_thy_save_fs, ini_cnf_run_fs,
                     ini_cnf_save_fs, ini_tau_run_fs, ini_tau_save_fs,
-                    ini_scn_run_fs, ini_scn_save_fs]
+                    ini_scn_run_fs, ini_scn_save_fs, ini_ts_run_fs, ini_ts_save_fs]
 
             #Run tasks
             if 'ts' in spc:
                 #Check if the task has been completed at the requested running theory level
 
                 #Every task starts with a geometry optimization at the running theory level
-                scripts.es.ts_geo_ref(
-                    spc, spcdct, ts_dct[spc]['reacs'],
-                    ts_dct[spc]['prods'], ini_thy_level, thy_level,
-                    ini_thy_run_fs, ini_thy_save_fs, thy_run_fs,
-                    thy_save_fs, run_fs, overwrite)
+                if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
+                    geo = moldr.ts.reference_geometry(spcdct[spc], thy_level, ini_thy_level, fs, ini_fs, overwrite)
                 #Run the requested task at the requested running theory level
-                scripts.es.ts_run_task(
-                    tsk, spc, spcdct, ts_dct[spc]['reacs'],
-                    ts_dct[spc]['prods'], es_dct[run_es_key],
-                    ini_thy_level, run_prefix, save_prefix, overwrite)
+                if geo:
+                    scripts.es.ts_geometry_generation(tsk, spcdct[spc], es_dct[es_run_key]
+                                               thy_level, fs, spc_info, overwrite)
             else:
                 #Check if the task has been completed at the requested running theory level
 
@@ -198,26 +226,17 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                                              selection, spc_info, overwrite)
 
 
-def create_spec(val, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.):
+def create_spec(ts, ts_dct, spcs, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.):
     """
-    Create species
+    Create a transition state entry for the spcdct
     """
-    spec = {}
-    if isinstance(val, str):
-        ich = val
-        geo = automol.ichi.geo(ich)
-        zma = automol.geom.zmatrix(geo)
-        spec['zmatrix'] = zma
-    else:
-        geo = val
-        ich = automol.geom.inchi(geo)
-    smi = automol.inchi.smiles(ich)
-    mult = 1
-    mult += smi.count('[')
-    spec['ich'] = ich
-    spec['geoobj'] = geo
-    spec['chg'] = charge
-    spec['mul'] = mult
+    spec = {'ich': ''}
+    spec['reacs'] = ts_dct[ts]['reacs']
+    spec['prods'] = ts_dct[ts]['prods']
+    ts_mul = automol.mult.ts.low([spcs[spc]['mul'] for spc in spec['reacs']], [spcs[spc]['mul'] for spc in spec['prods']])
+    ts_chg = sum([spcs[spc]['chg'] for spc in spec['reacs']])
+    spec['chg'] = ts_chg
+    spec['mul'] = ts_mul
     spec['mc_nsamp'] = mc_nsamp
     spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian')
     return spec
