@@ -34,6 +34,8 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
         if not 'ich' in spcdct[spc]:
             spcdct[spc]['ich'] = automol.smiles.inchi(spcdct[spc]['smiles'])
     refs, msg = prepare_refs(ref, spcdct, spc_queue)
+    print('spc_queue test', spc_queue)
+    print('refs test', refs)
     full_queue = spc_queue + refs
     full_queue = list(dict.fromkeys(full_queue))
     print(msg)

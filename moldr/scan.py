@@ -45,9 +45,6 @@ def hindered_rotor_scans(
                 **opt_kwargs,
             )
 
-            print('min_cnf_save_path in hindered_rotor_scan')
-            print(min_cnf_save_path)
-
             save_scan(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
@@ -64,9 +61,6 @@ def run_scan(
     if len(grid_dct) > 1:
         raise NotImplementedError
 
-#    scn_run_fs = autofile.fs.scan(run_prefix)
-#    scn_save_fs = autofile.fs.scan(save_prefix)
-
     vma = automol.zmatrix.var_(zma)
     if scn_save_fs.trunk.file.vmatrix.exists():
         existing_vma = scn_save_fs.trunk.file.vmatrix.read()
@@ -80,7 +74,6 @@ def run_scan(
         inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
         existing_grid_dct = dict(inf_obj.grids)
         existing_grid_vals = existing_grid_dct[coo_name]
-#        print('grid test:', grid_vals, existing_grid_vals)
         assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
                 (numpy.allclose(grid_vals*180.0/numpy.pi, existing_grid_vals) or
                  numpy.allclose(grid_vals, existing_grid_vals)))
@@ -167,7 +160,6 @@ def run_multiref_rscan(
         inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
         existing_grid_dct = dict(inf_obj.grids)
         existing_grid_vals = existing_grid_dct[coo_name]
-#        print('grid_vals test:', grid_vals, existing_grid_vals)
         assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
                 numpy.allclose(grid_vals, existing_grid_vals))
 
@@ -178,12 +170,10 @@ def run_multiref_rscan(
     basis = thy_level[2]
     prog = thy_level[0]
     orb_restr = moldr.util.orbital_restriction(spc_info, thy_level)
-    #orb_restr = thy_level[3]
     thy_level[0] = 'molpro'
     prog = 'molpro'
     thy_level[1] = 'caspt2'
     _, script_str, _, kwargs = moldr.util.run_qchem_par(thy_level[0], thy_level[1])
-#    print('orb_restr test:', orb_restr)
 
     guess_str1 = elstruct.writer.energy(
         geom=automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]}),
@@ -227,7 +217,6 @@ def run_multiref_rscan(
         scn_run_fs.leaf.create([[coo_name], [grid_idx]])
     prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
                      for grid_idx in grid1_idxs)
-#    print('update_guess0 test:', update_guess)
     _run_1d_scan(
         script_str=script_str,
         prefixes=prefixes,
@@ -242,21 +231,17 @@ def run_multiref_rscan(
         **kwargs
     )
 
-    # grid2 = numpy.append(grid1[0], grid2)
-#    print('grid2 test in multi:', grid2)
     grid2_dct = {dist_name: grid2}
     ((_, grid2_vals),) = grid2_dct.items()
     npoint2 = len(grid2_vals)
     grid2_idxs = tuple(range(npoint2))
     grid2_idxs = tuple(x + npoint1 for x in grid2_idxs)
-#    print('grid2_idxs test:', grid2_idxs)
 
     for grid_idx in grid2_idxs:
         scn_run_fs.leaf.create([[coo_name], [grid_idx]])
 
     prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
                      for grid_idx in grid2_idxs)
-#    print('update_guess0 test:', update_guess)
     _run_1d_scan(
         script_str=script_str,
         prefixes=prefixes,
@@ -277,13 +262,11 @@ def _run_1d_scan(
         spc_info, thy_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, **kwargs):
 
-#    print('prefixes test:', prefixes)
     npoints = len(grid_idxs)
     assert len(grid_vals) == len(prefixes) == npoints
     for grid_idx, grid_val, prefix in zip(grid_idxs, grid_vals, prefixes):
         print("Point {}/{}".format(grid_idx+1, npoints))
         zma = automol.zmatrix.set_values(guess_zma, {coo_name: grid_val})
-#        print('zma test:', zma)
         run_fs = autofile.fs.run(prefix)
 
         moldr.driver.run_job(
@@ -302,19 +285,15 @@ def _run_1d_scan(
         )
 
         ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-#        print('prefix test:', prefix)
-        # print('ret test:', ret)
         if update_guess and ret is not None:
             inf_obj, _, out_str = ret
             prog = inf_obj.prog
             guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
-#            print('guess_zma test:', guess_zma)
 
 
 def save_scan(scn_run_fs, scn_save_fs, coo_names):
     """ save the scans that have been run so far
     """
-    print(coo_names)
     if len(coo_names) > 1:
         raise NotImplementedError
 

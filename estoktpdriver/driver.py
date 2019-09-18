@@ -3,16 +3,15 @@
 import os
 from itertools import chain
 import collections
-import pandas
-import numpy 
 import json
+import pandas
 from qcelemental import constants as qcc
 import thermo
 import chemkin_io
 import automol
 from automol import formula
 import moldr
-import scripts
+import thermodriver
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -23,8 +22,8 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 # MECHANISM_NAME = 'ch4+nh2'  # options: syngas, natgas, heptane
 #MECHANISM_NAME = 'isooctane'  # options: syngas, natgas, heptane
 #MECHANISM_NAME = 'natgas'  # options: syngas, natgas, heptane
-MECHANISM_NAME = 'butane'  # options: syngas, natgas, heptane
-#MECHANISM_NAME = 'syngas'  # options: syngas, natgas, heptane
+#MECHANISM_NAME = 'butane'  # options: syngas, natgas, heptane
+MECHANISM_NAME = 'syngas'  # options: syngas, natgas, heptane
 #MECHANISM_NAME = 'vhp'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas
@@ -63,10 +62,10 @@ ELC_SIG_LST = {'InChI=1S/CN/c1-2', 'InChI=1S/C2H/c1-2/h1H'}
 # read in data from the mechanism directory
 DATA_PATH = os.path.dirname(os.path.realpath(__file__))
 MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
-#MECH_TYPE='CHEMKIN'
-MECH_TYPE='json'
-MECH_FILE='mech.json'
-RAD_RAD_SORT=True
+MECH_TYPE = 'CHEMKIN'
+#MECH_TYPE = 'json'
+#MECH_FILE = 'mech.json'
+RAD_RAD_SORT = True
 if MECH_TYPE == 'CHEMKIN':
     MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
     SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
@@ -101,17 +100,21 @@ if MECH_TYPE == 'CHEMKIN':
         smi = SMI_DCT[ref_name]
         SPC_REF_ICH.append(automol.smiles.inchi(smi))
     SPC_NAMES += SPC_REF_NAMES
+
     print('SPC_NAMES')
     print(SPC_NAMES)
     SPC_INFO = {}
+    SPC_DCT = {}
     for name in SPC_NAMES:
+        SPC_DCT[name] = {}
         smi = SMI_DCT[name]
         ich = automol.smiles.inchi(smi)
         chg = CHG_DCT[name]
         mul = MUL_DCT[name]
         SPC_INFO[name] = [ich, chg, mul]
-
-    SPC_STR = {}
+        SPC_DCT[name]['ich'] = ich
+        SPC_DCT[name]['chg'] = chg
+        SPC_DCT[name]['mul'] = mul
 
     RXN_BLOCK_STR = chemkin_io.reaction_block(MECH_STR)
     RXN_STRS = chemkin_io.reaction.data_strings(RXN_BLOCK_STR)
@@ -120,7 +123,7 @@ if MECH_TYPE == 'CHEMKIN':
     PRD_NAMES_LST = list(
         map(chemkin_io.reaction.DataString.product_names, RXN_STRS))
 
-    # Sort reactant and product name lists by formula to facilitate 
+    # Sort reactant and product name lists by formula to facilitate
     # multichannel, multiwell rate evaluations
 
     FORMULA_STR = ''
@@ -142,6 +145,7 @@ if MECH_TYPE == 'CHEMKIN':
         FORMULA_STR = ''.join(map(str, chain.from_iterable(formula_dict.items())))
         FORMULA_STR_LST.append(FORMULA_STR)
 
+
     #print('formula string test list', formula_str_lst, 'rxn name list', rxn_name_lst)
     #for rct_names in RCT_NAMES_LST:
     #    print('first rct names test:', rct_names)
@@ -161,15 +165,15 @@ if MECH_TYPE == 'CHEMKIN':
 
 elif MECH_TYPE == 'json':
     with open(os.path.join(MECH_PATH, MECH_FILE)) as f:
-        mech_data_in = json.load(f, object_pairs_hook=collections.OrderedDict)
-        mech_data = []
-    for reaction in mech_data_in:
+        MECH_DATA_IN = json.load(f, object_pairs_hook=collections.OrderedDict)
+        MECH_DATA = []
+    for reaction in MECH_DATA_IN:
         if isinstance(reaction, dict):
-            mech_data = mech_data_in
+            MECH_DATA = MECH_DATA_IN
             break
         else:
-            for entry in mech_data_in[reaction]:
-                mech_data.append(entry)
+            for entry in MECH_DATA_IN[reaction]:
+                MECH_DATA.append(entry)
 
 #    print(mech_data)
 #    SENS_SORT = sorted(mech_data, key = lambda i: i['Sensitivity'])
@@ -188,8 +192,8 @@ elif MECH_TYPE == 'json':
     RXN_UNC = []
     RXN_VAL = []
     RXN_FAM = []
-    for reaction in mech_data:
-        # set up reaction info 
+    for reaction in MECH_DATA:
+        # set up reaction info
 #        print('reaction test:', reaction)
         rct_ichs = []
         rct_muls = []
@@ -220,7 +224,7 @@ elif MECH_TYPE == 'json':
             else:
                 if min(prd_muls) == 1:
                     rad_rad_prod = False
-            if RAD_RAD_SORT == True and rad_rad_reac == False and rad_rad_prod == False:
+            if RAD_RAD_SORT and not rad_rad_reac and not rad_rad_prod:
                 continue
             RCT_ICHS_LST.append(rct_ichs)
             RCT_MULS_LST.append(rct_muls)
@@ -263,10 +267,10 @@ elif MECH_TYPE == 'json':
         FORMULA_STR_LST.append(FORMULA_STR)
 
     RXN_INFO_LST = list(zip(
-                            FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST,
-                            RXN_NAME_LST, RXN_SENS, RXN_UNC, RXN_VAL, RXN_FAM,
-                            RCT_ICHS_LST, RCT_MULS_LST, PRD_ICHS_LST,
-                            PRD_MULS_LST))
+        FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST,
+        RXN_NAME_LST, RXN_SENS, RXN_UNC, RXN_VAL, RXN_FAM,
+        RCT_ICHS_LST, RCT_MULS_LST, PRD_ICHS_LST,
+        PRD_MULS_LST))
     #for _, rct_names_lst, _, _ in RXN_INFO_LST:
     #    print('second rct names test:', rct_names_lst)
     #    for rct_names in rct_names_lst:
@@ -274,24 +278,24 @@ elif MECH_TYPE == 'json':
 #    print('sens test:', RXN_SENS)
     RXN_INFO_LST = sorted(RXN_INFO_LST, key=lambda x: (x[0]))
     OLD_FORMULA = RXN_INFO_LST[0][0]
-    sens = RXN_INFO_LST[0][4]
-    ordered_formula = []
-    ordered_sens = []
+    SENS = RXN_INFO_LST[0][4]
+    ORDERED_FORMULA = []
+    ORDERED_SENS = []
     for entry in RXN_INFO_LST:
         formula = entry[0]
         if formula == OLD_FORMULA:
-            sens = max(sens, entry[4])
+            SENS = max(SENS, entry[4])
         else:
-            ordered_sens.append(sens)
-            ordered_formula.append(OLD_FORMULA)
-            sens = entry[4]
+            ORDERED_SENS.append(SENS)
+            ORDERED_FORMULA.append(OLD_FORMULA)
+            SENS = entry[4]
             OLD_FORMULA = formula
-    ordered_sens.append(sens)
-    ordered_formula.append(OLD_FORMULA)
+    ORDERED_SENS.append(SENS)
+    ORDERED_FORMULA.append(OLD_FORMULA)
     SENS_DCT = {}
-    for i, sens in enumerate(ordered_sens):
-        SENS_DCT[ordered_formula[i]] = sens
-    RXN_INFO_LST = sorted(RXN_INFO_LST, key=lambda x: (SENS_DCT[x[0]],x[4]), reverse=True)
+    for i, sens in enumerate(ORDERED_SENS):
+        SENS_DCT[ORDERED_FORMULA[i]] = sens
+    RXN_INFO_LST = sorted(RXN_INFO_LST, key=lambda x: (SENS_DCT[x[0]], x[4]), reverse=True)
 
 #    SORTED_RXN_LST = list(zip(ordered_sens, ordered_formula))
 #    SORTED_RXN_LST.sort()
@@ -320,6 +324,7 @@ elif MECH_TYPE == 'json':
     SMI_DCT = {}
     CHG_DCT = {}
     MUL_DCT = {}
+    SPC_DCT = {}
     for i, spc_names_lst in enumerate(RCT_NAMES_LST):
         for j, spc_name in enumerate(spc_names_lst):
             chg = 0
@@ -346,6 +351,7 @@ elif MECH_TYPE == 'json':
                 SPC_DCT[spc_name]['mul'] = RCT_MULS_LST[i][j]
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
 
+REF_MOLS = [automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'), automol.smiles.inchi('O')]
 #os.sys.exit()
 
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
@@ -381,42 +387,59 @@ MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
 
 # b. Electronic structure parameters; code, method, basis, convergence control
 
+mc_nsamp0 = [True, 3, 1, 3, 100]
+
 ES_DCT = {
         'lvl_wbs': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31g*',
+            'mc_nsamp': mc_nsamp0
             },
         'lvl_wbm': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31+g*',
+            'mc_nsamp': mc_nsamp0
             },
         'lvl_wbt': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': 'cc-pvtz',
+            'mc_nsamp': mc_nsamp0
             },
         'lvl_b2t': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',
+            'mc_nsamp': mc_nsamp0
             },
         'lvl_b3s': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
+            'mc_nsamp': mc_nsamp0
             },
         'lvl_b3t': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
+            'mc_nsamp': mc_nsamp0
             },
         'cc_lvl_d': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)', 'basis': 'cc-pvdz',
+            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvdz',
+            'mc_nsamp': mc_nsamp0
             },
         'cc_lvl_t': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)', 'basis': 'cc-pvtz',
+            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvtz',
+            'mc_nsamp': mc_nsamp0
             },
         'cc_lvl_q': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)', 'basis': 'cc-pvqz',
+            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvqz',
+            'mc_nsamp': mc_nsamp0
             },
         'cc_lvl_df': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)-f12', 'basis': 'cc-pvdz-f12',
+            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
+            'basis': 'cc-pvdz-f12',
+            'mc_nsamp': mc_nsamp0
             },
         'cc_lvl_tf': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)-f12', 'basis': 'cc-pvtz-f12',
+            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
+            'basis': 'cc-pvtz-f12',
+            'mc_nsamp': mc_nsamp0
             },
         'cc_lvl_qf': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'ccsd(t)-f12', 'basis': 'cc-pvqz-f12',
+            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
+            'basis': 'cc-pvqz-f12',
+            'mc_nsamp': mc_nsamp0
             },
         }
 
@@ -430,100 +453,57 @@ SP_LVL3 = 'cc_lvl_qf'
 
 TSK_INFO_LST = [
     ['conf_samp', OPT_LVL1, OPT_LVL0, False],
-    ['hr', SCAN_LVL1, OPT_LVL1, False],
-    ['energy', SP_LVL1, OPT_LVL1, False],
-    ['energy', SP_LVL2, OPT_LVL1, False],
-    ['energy', SP_LVL3, OPT_LVL1, False],
+    ['hr_scan', SCAN_LVL1, OPT_LVL1, False],
+    ['conf_energy', SP_LVL1, OPT_LVL1, False],
+    ['conf_energy', SP_LVL2, OPT_LVL1, False],
     ]
 
 HIGH_LEVEL_COEFF = [-0.5, 1.5]
 
 OPT_ES = True
-OPT_MESS= False
+OPT_MESS = False
 OPT_THERMO = False
 OPT_ALLPF = False
 OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
-thermodriver.driver.run(TSK_INFO_LST, ES_DCT, SPCDCT, SPC_QUEUE, REF, RUN_PREFIX, SAVE_PREFIX, OPTIONS)
+SPC_QUEUE = list(SPC_NAMES)
+
+thermodriver.driver.run(
+        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX, SAVE_PREFIX, OPTIONS)
 
 OPT_ES = False
-OPT_MESS= True
+OPT_MESS = True
 OPT_THERMO = True
 OPT_ALLPF = True
+OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
-thermodriver.driver.run(TSK_INFO_LST, ES_DCT, SPCDCT, SPC_QUEUE, REF, RUN_PREFIX, SAVE_PREFIX, OPTIONS)
+thermodriver.driver.run(
+        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX, SAVE_PREFIX, OPTIONS)
 # set up a combination of energies
 # E_HL = sum_i E_HL(i) * Coeff(i)
 #HIGH_LEVEL_COEFF = [1]
 #HIGH_LEVEL_COEFF = None
 
-PF_LEVELS = []
-PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
+# for now pf_levels and spc_models are automatically determined on basis of electronic structure levels
+#PF_LEVELS = []
+#PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
 # PF_LEVELS contains the elec. struc. lvlels for the harmonic, torsional, and anharmonic analyses
 
-# c. What type of electronic structure calculations to run
-
-# d. Parameters for number of torsional samplings
-NSAMP_CONF = 5
-NSAMP_CONF_EXPR = True
-NSAMP_CONF_A = 3
-NSAMP_CONF_B = 1
-NSAMP_CONF_C = 4
-NSAMP_CONF_D = 100
-NSAMP_CONF_PAR = [NSAMP_CONF_EXPR, NSAMP_CONF_A, NSAMP_CONF_B, NSAMP_CONF_C,
-                  NSAMP_CONF_D, NSAMP_CONF]
-
-NSAMP_TAU = 10
-NSAMP_TAU_EXPR = False
-NSAMP_TAU_A = 3
-NSAMP_TAU_B = 1
-NSAMP_TAU_C = 3
-NSAMP_TAU_D = 15
-NSAMP_TAU_PAR = [NSAMP_TAU_EXPR, NSAMP_TAU_A, NSAMP_TAU_B, NSAMP_TAU_C,
-                 NSAMP_TAU_D, NSAMP_TAU]
-
-NSAMP_TS_CONF = 5
-NSAMP_TS_CONF_EXPR = True
-NSAMP_TS_CONF_A = 3
-NSAMP_TS_CONF_B = 1
-NSAMP_TS_CONF_C = 3
-NSAMP_TS_CONF_D = 100
-NSAMP_TS_CONF_PAR = [NSAMP_TS_CONF_EXPR, NSAMP_TS_CONF_A, NSAMP_TS_CONF_B, NSAMP_TS_CONF_C,
-                     NSAMP_TS_CONF_D, NSAMP_TS_CONF]
-
-NSAMP_TS_TAU = 5
-NSAMP_TS_TAU_EXPR = True
-NSAMP_TS_TAU_A = 3
-NSAMP_TS_TAU_B = 1
-NSAMP_TS_TAU_C = 3
-NSAMP_TS_TAU_D = 100
-NSAMP_TS_TAU_PAR = [NSAMP_TS_TAU_EXPR, NSAMP_TS_TAU_A, NSAMP_TS_TAU_B, NSAMP_TS_TAU_C,
-                    NSAMP_TS_TAU_D, NSAMP_TS_TAU]
-
-NSAMP_VDW = 10
-NSAMP_VDW_EXPR = False
-NSAMP_VDW_A = 3
-NSAMP_VDW_B = 1
-NSAMP_VDW_C = 3
-NSAMP_VDW_D = 15
-NSAMP_VDW_PAR = [NSAMP_VDW_EXPR, NSAMP_VDW_A, NSAMP_VDW_B, NSAMP_VDW_C,
-                 NSAMP_VDW_D, NSAMP_VDW]
-
 # e. What to run for thermochemical kinetics
-RUN_SPC_THERMO = True
-SPC_MODELS = [['RIGID', 'HARM']]
+#RUN_SPC_THERMO = True
+#SPC_MODELS = [['RIGID', 'HARM']]
 #SPC_MODELS = [['1DHR', 'HARM']]
 #SPC_MODELS = [['RIGID', 'HARM'], ['1DHR', 'HARM']]
 # The first component specifies the torsional model - TORS_MODEL.
 # It can take 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
 # The second component specifies the vibrational model - VIB_MODEL.
 # It can take 'HARM', or 'VPT2' values.
-RUN_REACTION_RATES = True
-RUN_VDW_RCT_RATES = False
-RUN_VDW_PRD_RATES = False
+#RUN_REACTION_RATES = True
+#RUN_VDW_RCT_RATES = False
+#RUN_VDW_PRD_RATES = False
 
 # f. Partition function parameters
-TAU_PF_WRITE = True
+#TAU_PF_WRITE = True
 
 # Defaults and dictionaries
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
@@ -546,145 +526,3 @@ SIG1 = 6.
 SIG2 = 6.
 MASS1 = 15.0
 ETSFR_PAR = [EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2, SIG1, SIG2, MASS1]
-
-# take starting geometry from saved directory if possible, otherwise get it
-# from inchi via rdkit
-SPC_QCHEM_RUN_FLAGS = [
-    RUN_INI_GEOM, RUN_REMOVE_IMAG, RUN_CONF_SAMP, RUN_MIN_GRAD, RUN_MIN_HESS,
-    RUN_MIN_VPT2, RUN_CONF_SCAN, RUN_CONF_GRAD, RUN_CONF_HESS, RUN_TAU_SAMP,
-    RUN_TAU_GRAD, RUN_TAU_HESS, RUN_HL_MIN_ENE]
-
-TS_QCHEM_RUN_FLAGS = [
-    RUN_TS_CONF_SAMP, RUN_TS_MIN_GRAD, RUN_TS_MIN_HESS,
-    RUN_TS_MIN_VPT2, RUN_TS_CONF_SCAN, RUN_TS_CONF_GRAD, RUN_TS_CONF_HESS, RUN_TS_TAU_SAMP,
-    RUN_TS_TAU_GRAD, RUN_TS_TAU_HESS, RUN_TS_HL_MIN_ENE, RUN_TS_KICKS_QCHEM]
-
-VDW_QCHEM_RUN_FLAGS = [
-    RUN_VDW_CONF_SAMP, RUN_VDW_MIN_GRAD, RUN_VDW_MIN_HESS,
-    RUN_VDW_MIN_VPT2, RUN_VDW_CONF_SCAN, RUN_VDW_CONF_GRAD, RUN_VDW_CONF_HESS, RUN_VDW_TAU_SAMP,
-    RUN_VDW_TAU_GRAD, RUN_VDW_TAU_HESS, RUN_VDW_HL_MIN_ENE]
-
-SPC_NSAMP_PARS = [NSAMP_CONF_PAR, NSAMP_TAU_PAR]
-TS_NSAMP_PARS = [NSAMP_TS_CONF_PAR, NSAMP_TS_TAU_PAR]
-VDW_NSAMP_PARS = [NSAMP_VDW_PAR]
-#NSAMP_PARS = [NSAMP_CONF_PAR, NSAMP_TAU_PAR, NSAMP_VDW_PAR, NSAMP_TS_CONF_PAR, NSAMP_TS_TAU_PAR]
-KICKOFF_PARS = [KICKOFF_BACKWARD, KICKOFF_SIZE]
-
-#    nsamp_vdw_par = nsamp_pars[2]
-#    nsamp_ts_conf_par = nsamp_pars[3]
-#    nsamp_ts_taupar = nsamp_pars[4]
-
-
-
-
-    SPCDCT = {'reac1': {'chg': 0, 'mul': 1, 'geom': ' n1 \n         h2 n1 R1 \n         h3 n1 R2 h2 A2 \n         h4   n1 R3 h2 A3 h3 D3\n         R1 = 1.01899\n         R2 = 1.01899\n         A2 = 105.997\n         R3 = 1.01899\n           A3 = 105.999\n         D3 = 112.362\n  ', 'mc_nsamp': [True, 2, 1, 2, 100, 12], 'hind_inc': 6.283185307179586,   'mc_tau': {}, 'elec_levels': [[1.0, 0.0]], 'geoobj': (('N', (0.0, 0.0, 0.0)), ('H', (0.0, 0.0, 1.9256120245802724)),   ('H', (0.0, 1.851044869013889, -0.5306736870295058)), ('H', (1.7118265078919384, -0.704236134131304, -0.53073830036  13204))), 'ich': 'InChI=1S/H3N/h1H3'},
-
-
-            'methanol': {'chg': 0, 'mul': 1, 'smiles': 'CO', 'mc_nsamp': [False, 0, 0, 0, 0, 1]},
-            'ethane': {'chg': 0, 'mul': 1, 'smiles': 'CC', 'mc_nsamp': [False, 0, 0, 0, 0, 10]},
-            'propane': {'chg': 0, 'mul': 1, 'smiles': 'CCC', 'mc_nsamp': [False, 0, 0, 0, 0, 10]}
-                }
-                TSK_INFO_LST = 
-
-   run(TSK_INFO_LST, ES_DCT, SPCDCT, SPCS, REF, run_prefix, save_prefix) 
-   run(TSK_INFO_LST, ES_DCT, SPCDCT, SPCS, REF, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
- 
- --def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
-
-if RUN_SPC_QCHEM:
-    scripts.es.species_qchem(
-        spc_names=SPC_NAMES,
-        spc_info=SPC_INFO,
-        run_opt_levels=RUN_OPT_LEVELS,
-        ref_high_level=THEORY_REF_HIGH_LEVEL,
-        run_high_levels=RUN_HIGH_LEVELS,
-        geom_dct=GEOM_DCT,
-        run_prefix=RUN_PREFIX,
-        save_prefix=SAVE_PREFIX,
-        qchem_flags=SPC_QCHEM_RUN_FLAGS,
-        nsamp_pars=SPC_NSAMP_PARS,
-        scan_increment=SCAN_INCREMENT,
-        kickoff_pars=KICKOFF_PARS,
-        overwrite=OVERWRITE,
-        )
-
-if RUN_TS_QCHEM:
-    scripts.es.ts_qchem(
-        rxn_info_lst=RXN_INFO_LST,
-        smi_dct=SMI_DCT,
-        chg_dct=CHG_DCT,
-        mul_dct=MUL_DCT,
-        run_opt_levels=RUN_OPT_LEVELS,
-        ref_high_level=THEORY_REF_HIGH_LEVEL,
-        run_high_levels=RUN_HIGH_LEVELS,
-        geom_dct=GEOM_DCT,
-        run_prefix=RUN_PREFIX,
-        save_prefix=SAVE_PREFIX,
-        qchem_flags=TS_QCHEM_RUN_FLAGS,
-        nsamp_pars=TS_NSAMP_PARS,
-        scan_increment=SCAN_INCREMENT,
-        kickoff_pars=KICKOFF_PARS,
-        overwrite=OVERWRITE,
-        )
-
-if RUN_VDW_QCHEM:
-    scripts.es.vdw_qchem(
-        rct_names_lst=RCT_NAMES_LST,
-        prd_names_lst=PRD_NAMES_LST,
-        smi_dct=SMI_DCT,
-        chg_dct=CHG_DCT,
-        mul_dct=MUL_DCT,
-        run_opt_levels=RUN_OPT_LEVELS,
-        ref_high_level=THEORY_REF_HIGH_LEVEL,
-        run_high_levels=RUN_HIGH_LEVELS,
-        geom_dct=GEOM_DCT,
-        run_prefix=RUN_PREFIX,
-        save_prefix=SAVE_PREFIX,
-        qchem_flags=VDW_QCHEM_RUN_FLAGS,
-        nsamp_pars=VDW_NSAMP_PARS,
-        scan_increment=SCAN_INCREMENT,
-        kickoff_pars=KICKOFF_PARS,
-        overwrite=OVERWRITE,
-        )
-
-TEMP_PAR = [TEMP_STEP, NTEMPS]
-
-print('RUN_SPC_THERMO test:')
-print(RUN_SPC_THERMO)
-if RUN_SPC_THERMO:
-    scripts.ktp.species_thermo(
-        spc_names=SPC_NAMES,
-        spc_info=SPC_INFO,
-        spc_ref_names=SPC_REF_NAMES,
-        elc_deg_dct=ELC_DEG_DCT,
-        temp_par=TEMP_PAR,
-        ref_high_level=THEORY_REF_HIGH_LEVEL,
-        run_high_levels=RUN_HIGH_LEVELS,
-        high_level_coeff=HIGH_LEVEL_COEFF,
-        spc_models=SPC_MODELS,
-        pf_levels=PF_LEVELS,
-        save_prefix=SAVE_PREFIX,
-        projrot_script_str=PROJROT_SCRIPT_STR,
-        pf_script_str=PF_SCRIPT_STR,
-        )
-
-if RUN_REACTION_RATES:
-    scripts.ktp.reaction_rates(
-        rxn_info_lst=RXN_INFO_LST,
-        smi_dct=SMI_DCT,
-        chg_dct=CHG_DCT,
-        mul_dct=MUL_DCT,
-        elc_deg_dct=ELC_DEG_DCT,
-        temperatures=TEMPS,
-        pressures=PRESS,
-        etsfr_par=ETSFR_PAR,
-        run_opt_levels=RUN_OPT_LEVELS,
-        ref_high_level=THEORY_REF_HIGH_LEVEL,
-        run_high_levels=RUN_HIGH_LEVELS,
-        high_level_coeff=HIGH_LEVEL_COEFF,
-        spc_models=SPC_MODELS,
-        pf_levels=PF_LEVELS,
-        save_prefix=SAVE_PREFIX,
-        projrot_script_str=PROJROT_SCRIPT_STR,
-        rate_script_str=RATE_SCRIPT_STR,
-        )
