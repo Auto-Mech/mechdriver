@@ -128,6 +128,29 @@ def geometry_generation(tsk, spcdic, thy_level, fs,
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
 
+def ts_geometry_generation(tsk, spcdic, thy_level, fs,
+        spc_info, overwrite):
+    """ run an electronic structure task
+    for generating a list of conformer or tau sampling geometries
+    """
+    fs[3] = fs[11]
+    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
+    params = {'spc_info': spc_info,
+              'thy_level': thy_level,
+              'script_str': opt_script_str,
+              'overwrite': overwrite}
+    choose_function = {'conf_samp': 'run_conf_samp',
+                       'tau_samp': 'run_tau_samp',
+                       'hr_scan': 'run_hr_scan'}
+    
+    if tsk in ['conf_samp', 'tau_samp']:
+        params['nsamp_par'] = spcdic['mc_nsamp']
+        params['tors_names'] = spcdic['tors_names']
+    elif tsk in ['hr_scan']:
+        params['scan_increment'] = spcdic['hind_inc']
+
+    if tsk in choose_function:
+        eval(choose_function[tsk])(fs, params, opt_kwargs)
 
 def geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info,
         overwrite):
@@ -199,89 +222,6 @@ def geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info,
                     spc_info[0], '/'.join(thy_level[1:3])))
 
 
-def ts_geo_ref(spc, spcs, reacs, prods, ini_thy_info, running_thy_info, run_prefix, save_prefix, overwrite):
-
-    #I will do a better way of getting ts_info
-    reaczmats = [automol.geom.zmatrix(spcs[x]['geoobj']) for x in reacs]
-    prodzmats = [automol.geom.zmatrix(spcs[x]['geoobj']) for x in prods]
-    ts_zma, dist_name, grid = ts_params(reaczmats, prodzmats)
-
-    #Find TS filesystems
-    ini_rxn_run_path, ini_rxn_save_path, ini_ts_info = rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, ini_thy_info)
-    run_rxn_run_path, run_rxn_save_path, run_ts_info = rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, running_thy_info, ini_thy_info)
-    orb_restr = moldr.util.orbital_restriction(run_ts_info, running_thy_info)
-    ref_level = running_thy_info[1:3]
-    ref_level.append(orb_restr)
-    
-    run_thy_run_fs = autofile.fs.theory(run_rxn_run_path)
-    run_thy_run_fs.leaf.create(ref_level)
-    run_thy_run_path = run_thy_run_fs.leaf.path(ref_level)
-    
-    run_thy_save_fs = autofile.fs.theory(run_rxn_save_path)
-    run_thy_save_fs.leaf.create(ref_level)
-    run_thy_save_path = run_thy_save_fs.leaf.path(ref_level)
-    
-    orb_restr = moldr.util.orbital_restriction(ini_ts_info, ini_thy_info)
-    ref_level = ini_thy_info[1:3]
-    ref_level.append(orb_restr)
-
-    ini_thy_run_fs = autofile.fs.theory(ini_rxn_run_path)
-    ini_thy_run_fs.leaf.create(ref_level)
-    ini_thy_run_path = ini_thy_run_fs.leaf.path(ref_level)
-    
-    ini_thy_save_fs = autofile.fs.theory(ini_rxn_save_path)
-    ini_thy_save_fs.leaf.create(ref_level)
-    ini_thy_save_path = ini_thy_save_fs.leaf.path(ref_level)
-    
-    run_ts_run_path, run_ts_save_path, run_ts_save_fs = ts_paths(run_thy_run_path, run_thy_save_path)
-    ini_ts_run_path, ini_ts_save_path, ini_ts_save_fs = ts_paths(ini_thy_run_path, ini_thy_save_path)
-    
-    print('running ts scan:')
- 
-    spc_save_fs = autofile.fs.species(save_prefix)
-
-    try:
-         zmat_init_ = run_ts_save_fs.trunk.file.zmatrix.read()
-         geo_init_  = run_ts_save_fs.trunk.file.geometry.read()
-         msg = 'getting reference geometry from directory {}'.format(run_ts_save_path)
-         return geo
-
-    except:
-         zmat_init_ = ini_ts_save_fs.trunk.file.zmatrix.read()
-         geo_init_  = ini_ts_save_fs.trunk.file.geometry.read()
-         msg = 'initial zmat found in {}'.format(ini_ts_save_path)
-
-         _, script_str, _, OPT_KWARGS = moldr.util.run_qchem_par(*running_thy_info[0:2])
-         params =  {    'spc_info': run_ts_info ,
-                  'theory_level': running_thy_info, 
-                     'prefix': run_ts_run_path,
-                 'script_str': script_str,
-                 'overwrite': overwrite,
-                       'geom':  geo_init_,
-                        'job':  'optimization',
-                     'saddle': True}
-         moldr.driver.run_job(**params)
-         opt_ret = moldr.driver.read_job(job='optimization', prefix=run_ts_run_path)
-         if opt_ret is not None:
-             inf_obj, inp_str, out_str = opt_ret
-             prog = inf_obj.prog
-             method = inf_obj.method
-             ene = elstruct.reader.energy(prog, method, out_str)
-             geo = elstruct.reader.opt_geometry(prog, out_str)
-             zma = elstruct.reader.opt_zmatrix(prog, out_str)
-
-             print(" - Saving...")
-             print(" - Save path: {}".format(run_ts_save_path))
-             msg = 'ts optimization successful at running level' 
-
-             run_ts_save_fs.trunk.file.energy.write(ene)
-             run_ts_save_fs.trunk.file.geometry.write(geo)
-             run_ts_save_fs.trunk.file.zmatrix.write(zma)
-    return geo
-
-def ts_run_task(tsk, spc, spcs, reacs, prods, thydic, ini_thy_info, run_prefix, save_prefix, overwrite):
-    return
-
 def get_spc_run_path(run_prefix, spc_info):
     spc_run_fs = autofile.fs.species(run_prefix)
     spc_run_fs.leaf.create(spc_info)
@@ -327,9 +267,9 @@ def get_thy_save_path(save_prefix, spc_info, thy_info):
 
 def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
 
-    ts_info = (ts['ich'], ts['chg'], ts['mul'])
-    reacs = ts['reacs']
-    prods = ts['prods']
+    ts_info = (spcs[ts]['ich'], spcs[ts]['chg'], spcs[ts]['mul'])
+    reacs = spcs[ts]['reacs']
+    prods = spcs[ts]['prods']
     rxn_ichs = [[],[]] 
     rxn_chgs = [[],[]]
     rxn_muls = [[],[]]
@@ -365,11 +305,10 @@ def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
     print("The reaction direction is {}"
           .format('backward' if is_rev else 'forward'))
 
-    ts['rxn_ichs'] = rxn_ichs
-    ts['rxn_chgs'] = rxn_chgs
-    ts['rxn_muls'] = rxn_muls
-
-    return ts
+    spcs[ts]['rxn_ichs'] = rxn_ichs
+    spcs[ts]['rxn_chgs'] = rxn_chgs
+    spcs[ts]['rxn_muls'] = rxn_muls
+    return spcs[ts]
 
 def get_rxn_fs(run_prefix, save_prefix, ts):
     """get filesystems for a reaction
@@ -392,23 +331,54 @@ def get_rxn_fs(run_prefix, save_prefix, ts):
     rxn_save_path = rxn_save_fs.leaf.path(
         [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
 
-    return rxn_run_path, rxn_save_path
+    return rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path
 
-def ts_paths(thy_run_path, thy_save_path):
-
-    print('thy_run_path in ts_opt:', thy_run_path)
-    ts_run_fs = autofile.fs.ts(thy_run_path)
-    ts_run_fs.trunk.create()
-    ts_run_path = ts_run_fs.trunk.path()
-    print('ts_run_path:', ts_run_path)
-    
-    ts_save_fs = autofile.fs.ts(thy_save_path)
-    ts_save_fs.trunk.create()
-    ts_save_path = ts_save_fs.trunk.path()
-    print('ts_save_path:', ts_save_path)
-    
-    return ts_run_path, ts_save_path, ts_save_fs
-
+def get_zmas(reacs, prods, spcdct, ini_thy_info, save_prefix, run_prefix, kickoff_size, kickoff_backward, projrot_script_str):
+  """get the zmats for reactants and products using at the initial level of theory
+  """
+  rct_geos = get_geos(reacs, spcdct, ini_thy_info, save_prefix, run_prefix, kickoff_size, kickoff_backward, projrot_script_str)
+  prd_geos = get_geos(prods, spcdct, ini_thy_info, save_prefix, run_prefix, kickoff_size, kickoff_backward, projrot_script_str)
+  rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
+  prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
+  return rct_zmas, prd_zmas
+  
+def get_geos(spcs, spcdct, ini_thy_info, save_prefix, run_prefix, kickoff_size, kickoff_backward, projrot_script_str):
+    """get geos for reactants and products using the initial level of theory
+    """
+    spc_geos = []
+    for spc in spcs:
+        spc_info = [spcdct[spc]['ich'], spcdct[spc]['chg'], spcdct[spc]['mul']]
+        orb_restr = moldr.util.orbital_restriction(
+                    spc_info, ini_thy_info)
+        ini_thy_level = ini_thy_info[0:3]
+        ini_thy_level.append(orb_restr)
+        spc_save_fs = autofile.fs.species(save_prefix)
+        spc_save_fs.leaf.create(spc_info)
+        spc_save_path = spc_save_fs.leaf.path(spc_info)
+        spc_run_fs = autofile.fs.species(run_prefix)
+        spc_run_fs.leaf.create(spc_info)
+        spc_run_path = spc_run_fs.leaf.path(spc_info)
+        ini_thy_save_fs = autofile.fs.theory(spc_save_path)
+        ini_thy_save_path = ini_thy_save_fs.leaf.path(ini_thy_level[1:4])
+        ini_thy_run_fs = autofile.fs.theory(spc_run_path)
+        ini_thy_run_path = ini_thy_run_fs.leaf.path(ini_thy_level[1:4])
+        cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
+        cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
+        min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
+        if min_cnf_locs:
+            cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+            geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+        else:
+            run_fs = autofile.fs.run(ini_thy_run_path)
+            run_fs.trunk.create()
+            tmpdct = spcdct[spc]
+            tmp_ini_fs = [None, ini_thy_save_fs] 
+            tmp_fs = [spc_save_fs, spc_run_fs, ini_thy_save_fs, ini_thy_run_fs, cnf_save_fs, cnf_run_fs, run_fs]
+            geo = moldr.geom.reference_geometry(spcdct[spc], ini_thy_level, ini_thy_level,
+                    tmp_fs, tmp_ini_fs, kickoff_size, kickoff_backward,
+                    projrot_script_str, overwrite=False)
+        spc_geos.append(geo)
+    return spc_geos
 
 def ts_params(rct_zmas, prd_zmas):
     typ = None
@@ -484,53 +454,101 @@ def ts_params(rct_zmas, prd_zmas):
 
         npoints = 8
         grid = numpy.linspace(rmin, rmax, npoints)
-        return ts_zma, dist_name, grid
+        return typ, ts_zma, dist_name, grid, tors_names
 
-def find_ts(rxn_run_path, rxn_save_path, ts_info, reacs, prods, spcs, thy_info, fs, overwrite):
+def find_ts(ts_info, ts_zma, typ, dist_name, grid, thy_info, rxn_run_path, rxn_save_path, overwrite):
 
     print('prepping ts scan:')
     script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
     
-    
-    rxn_run_path, rxn_save_path, ts_info = rxn_file_paths(run_prefix, save_prefix, reacs, prods, spcs, thy_info)
-    reaczmats = [automol.geom.zmatrix(spcs[x]['geoobj']) for x in reacs]
-    prodzmats = [automol.geom.zmatrix(spcs[x]['geoobj']) for x in prods]
-    ts_zma, dist_name, grid = ts_params(reaczmats, prodzmats)
     orb_restr = moldr.util.orbital_restriction(ts_info, thy_info)
-    ref_level = thy_info[1:3]
+    ref_level = thy_info[0:3]
     ref_level.append(orb_restr)
     
     thy_run_fs = autofile.fs.theory(rxn_run_path)
-    thy_run_fs.leaf.create(ref_level)
-    thy_run_path = thy_run_fs.leaf.path(ref_level)
+    thy_run_fs.leaf.create(ref_level[1:4])
+    thy_run_path = thy_run_fs.leaf.path(ref_level[1:4])
     
     thy_save_fs = autofile.fs.theory(rxn_save_path)
-    thy_save_fs.leaf.create(ref_level)
-    thy_save_path = thy_save_fs.leaf.path(ref_level)
+    thy_save_fs.leaf.create(ref_level[1:4])
+    thy_save_path = thy_save_fs.leaf.path(ref_level[1:4])
     
-    print('running ts scan:')
- 
-    moldr.can.run_scan(
-        zma=ts_zma,
-        spc_info=ts_info,
-        theory_level=thy_info,
-        grid_dct={dist_name: grid},
-        run_prefix=thy_run_path,
-        save_prefix=thy_save_path,
-        script_str=script_str,
-        overwrite=overwrite,
-        update_guess=False,
-        reverse_sweep=False,
-        **OPT_KWARGS
-    )
-    
-    moldr.scan.save_scan(
-        run_prefix=thy_run_path,
-        save_prefix=thy_save_path,
-        coo_names=[dist_name],
-    )
-    
+    scn_run_fs = autofile.fs.scan(thy_run_path)
     scn_save_fs = autofile.fs.scan(thy_save_path)
+
+    print('running ts scan:')
+    if typ == 'radical radical addition':
+        pass
+#        ts_formula = ''
+#        for ich in rct_ichs:
+#            formula_i = thermo.util.inchi_formula(ich)
+#            formula_i_dict = thermo.util.get_atom_counts_dict(formula_i)
+#            ts_formula = automol.formula._formula.join(ts_formula, formula_i_dict)
+#
+#        grid = numpy.append(grid1, grid2)
+#        high_mul = automol.mult.ts._high(rct_muls)
+#        moldr.scan.run_multiref_rscan(
+#            formula=ts_formula,
+#            high_mul=high_mul,
+#            zma=ts_zma,
+#            spc_info=ts_info,
+#            thy_level=ref_level,
+#            dist_name=dist_name,
+#            grid1=grid1,
+#            grid2=grid2,
+#            run_prefix=thy_run_path,
+#            save_prefix=thy_save_path,
+#            script_str=SCRIPT_STR,
+#            overwrite=overwrite,
+#            update_guess=True,
+#            **OPT_KWARGS
+#        )
+#
+#        moldr.scan.save_scan(
+#            scn_run_fs=scn_run_fs,
+#            scn_save_fs=scn_save_fs,
+#            coo_names=[dist_name],
+#        )
+#
+#        ref_ene = -40.
+#
+#        nsamp_max = 2000
+#        nsamp_min = 500
+#        flux_err = 5
+#        pes_size = 1
+#        tst_inp_str = varecof_io.writer.write_tst_input(
+#            nsamp_max, nsamp_min, flux_err, pes_size)
+#
+#        print('\ntst.inp:')
+#        print(tst_inp_str)
+#
+#        # Write the divsur input file string; distances in Angstrom
+#        distances = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
+#        divsur_inp_str = varecof_io.writer.write_divsur_input(
+#            distances)
+#        print('\ndivsur.inp:')
+#        print(divsur_inp_str)
+    else: 
+        moldr.scan.run_scan(
+            zma=ts_zma,
+            spc_info=ts_info,
+            thy_level=ref_level,
+            grid_dct={dist_name: grid},
+            scn_run_fs = scn_run_fs,
+            scn_save_fs = scn_save_fs,
+            script_str=script_str,
+            overwrite=overwrite,
+            update_guess=False,
+            reverse_sweep=False,
+            **OPT_KWARGS
+        )
+        
+    moldr.scan.save_scan(
+            scn_run_fs=scn_run_fs,
+            scn_save_fs=scn_save_fs,
+            coo_names=[dist_name],
+    )
+    
     locs_lst = [
         locs for locs in scn_save_fs.leaf.existing([[dist_name]])
         if scn_save_fs.leaf.file.energy.exists(locs)]
@@ -541,29 +559,41 @@ def find_ts(rxn_run_path, rxn_save_path, ts_info, reacs, prods, spcs, thy_info, 
     max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
     print('geometry for maximum along scan:', max_zma)
     print('energy for maximum along scan:', max_ene)
-    
+
     print('optimizing ts')
     # find saddlepoint from maximum on the grid opt scan
+    print('thy_run_path in ts_opt:', thy_run_path)
+    ts_run_fs = autofile.fs.ts(thy_run_path)
+    ts_run_fs.trunk.create()
+    ts_run_path = ts_run_fs.trunk.path()
+    run_fs = autofile.fs.run(ts_run_path)
 
-    ts_run_path, ts_save_path, ts_save_fs = ts_paths(thy_run_path, thy_save_path)
+    print('ts_run_path:', ts_run_path)
+
+    ts_save_fs = autofile.fs.ts(thy_save_path)
+    ts_save_fs.trunk.create()
+    ts_save_path = ts_save_fs.trunk.path()
+    print('ts_save_path:', ts_save_path)
+    scn_run_fs = autofile.fs.scan(ts_run_path)
+    scn_save_fs = autofile.fs.scan(ts_save_path)
+
     print('starting ts optimization')
     print('theory_level=:', thy_info)
     print('ts_run_path=:', ts_run_path)
-
     moldr.driver.run_job(
         job='optimization',
         script_str=script_str,
-        prefix=ts_run_path,
+        run_fs=run_fs,
         geom=max_zma,
         spc_info=ts_info,
-        theory_level=thy_info,
+        thy_level=ref_level,
         saddle=True,
         overwrite=overwrite,
         **OPT_KWARGS,
     )
     opt_ret = moldr.driver.read_job(
         job='optimization',
-        prefix=ts_run_path,
+        run_fs=run_fs,
     )
     if opt_ret is not None:
         inf_obj, inp_str, out_str = opt_ret

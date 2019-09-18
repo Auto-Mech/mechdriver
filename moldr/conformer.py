@@ -18,19 +18,25 @@ def conformer_sampling(
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
     """
-
-    geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
-    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    zma = automol.geom.zmatrix(geo)
+    ich = spc_info[0]
+    if ich:
+        geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
+        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+        zma = automol.geom.zmatrix(geo)
+    else:
+        geo = thy_save_fs.trunk.file.geometry.read()
+        zma = thy_save_fs.trunk.file.zmatrix.read()
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
-
     # tors_ranges = automol.zmatrix.torsional_sampling_ranges(
     #    zma, tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
-    ich = spc_info[0]
-    gra = automol.inchi.graph(ich)
-    ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
-    nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
+    if ich:
+        gra = automol.inchi.graph(ich)
+        ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+        nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
+    else:
+        ntaudof = len(tors_names)
+        nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
 
     save_conformers(
         cnf_run_fs=cnf_run_fs,
@@ -63,13 +69,17 @@ def conformer_sampling(
         geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
         assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
-        thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
-        thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
+        if ich:
+            thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
+            thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
+
+        else:
+            thy_save_fs.trunk.file.geometry.write(geo)
+            thy_save_fs.trunk.file.zmatrix.write(zma)
 
         ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
         int_sym_num = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
         print('internal symmetry number test:', int_sym_num)
-
 
 def run_conformers(
         zma, spc_info, thy_level, nsamp, tors_range_dct,
@@ -84,7 +94,7 @@ def run_conformers(
     print('Number of samples requested:', nsamp)
 
     cnf_save_fs.trunk.create()
-
+    
     vma = automol.zmatrix.var_(zma)
     if cnf_save_fs.trunk.file.vmatrix.exists():
         existing_vma = cnf_save_fs.trunk.file.vmatrix.read()
@@ -170,7 +180,11 @@ def save_conformers(cnf_run_fs, cnf_save_fs):
                 method = inf_obj.method
                 ene = elstruct.reader.energy(prog, method, out_str)
                 geo = elstruct.reader.opt_geometry(prog, out_str)
-                zma = automol.geom.zmatrix(geo)
+                try:
+                    zma = automol.geom.zmatrix(geo)
+                except:
+                    zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
                 gra = automol.geom.graph(geo)
 
                 if len(automol.graph.connected_components(gra)) > 1:

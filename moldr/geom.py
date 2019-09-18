@@ -90,32 +90,33 @@ def reference_geometry(
             'geo_init': geo_init}
         geo = run_initial_geometry_opt(**params, **opt_kwargs)
 
-        geo, hess = remove_imag(
-            spcdct, geo, thy_level, thy_run_fs,
-            run_fs, kickoff_size,
-            kickoff_backward,
-            projrot_script_str,
-            overwrite=overwrite)
-
-        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        locs_lst = cnf_save_fs.leaf.existing()
-        if locs_lst:
-            saved_geo = cnf_save_fs.leaf.file.geometry.read(locs_lst[0])
-            saved_tors_names = automol.geom.zmatrix_torsion_coordinate_names(saved_geo)
-            if tors_names != saved_tors_names:
-                print("new reference geometry doesn't match original reference geometry")
-                print('removing original conformer save data')
-                cnf_run_fs.remove()
-                cnf_save_fs.remove()
-
         thy_save_fs.leaf.create(thy_level[1:4])
         thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
-        print('Saving reference geometry')
-        print(" - Save path: {}".format(thy_save_path))
+        if len(geo) > 1:
+            geo, hess = remove_imag(
+                spcdct, geo, thy_level, thy_run_fs,
+                run_fs, kickoff_size,
+                kickoff_backward,
+                projrot_script_str,
+                overwrite=overwrite)
+
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+            locs_lst = cnf_save_fs.leaf.existing()
+            if locs_lst:
+                saved_geo = cnf_save_fs.leaf.file.geometry.read(locs_lst[0])
+                saved_tors_names = automol.geom.zmatrix_torsion_coordinate_names(saved_geo)
+                if tors_names != saved_tors_names:
+                    print("new reference geometry doesn't match original reference geometry")
+                    print('removing original conformer save data')
+                    cnf_run_fs.remove()
+                    cnf_save_fs.remove()
+
+            print('Saving reference geometry')
+            print(" - Save path: {}".format(thy_save_path))
+            thy_save_fs.leaf.file.hessian.write(hess, thy_level[1:4])
         zma = automol.geom.zmatrix(geo)
         thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
         thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
-        thy_save_fs.leaf.file.hessian.write(hess, thy_level[1:4])
 
         scripts.es.run_single_conformer(
             spc_info, thy_level, fs,
@@ -213,9 +214,9 @@ def run_check_imaginary(
     run_fs = autofile.fs.run(thy_run_path)
     imag = False
     disp_xyzs = []
-    hess = ()
+    hess = ((),())
     if automol.geom.is_atom(geo):
-        hess = {}
+        hess = ((),())
     else:
         moldr.driver.run_job(
             job=elstruct.Job.HESSIAN,
