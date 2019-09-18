@@ -117,12 +117,48 @@ def harmonic_frequencies(file_prefix):
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)
 
 
+def anharmonic_frequencies(file_prefix):
+    """ generate anharmonic_frequencies DataFile
+    """
+    name = autofile.file.name.anharmonic_frequencies(file_prefix)
+    writer_ = autofile.file.write.anharmonic_frequencies
+    reader_ = autofile.file.read.anharmonic_frequencies
+    return model.DataFile(name=name, writer_=writer_, reader_=reader_)
+
+
+def anharmonic_zpve(file_prefix):
+    """ generate anharmonic_zpve DataFile
+    """
+    name = autofile.file.name.anharmonic_zpve(file_prefix)
+    writer_ = autofile.file.write.anharmonic_zpve
+    reader_ = autofile.file.read.anharmonic_zpve
+    return model.DataFile(name=name, writer_=writer_, reader_=reader_)
+
+
 def anharmonicity_matrix(file_prefix):
     """ generate anharmonicity matrix DataFile
     """
     name = autofile.file.name.anharmonicity_matrix(file_prefix)
     writer_ = autofile.file.write.anharmonicity_matrix
     reader_ = autofile.file.read.anharmonicity_matrix
+    return model.DataFile(name=name, writer_=writer_, reader_=reader_)
+
+
+def vibro_rot_alpha_matrix(file_prefix):
+    """ generate vibro_rot_alpha matrix DataFile
+    """
+    name = autofile.file.name.vibro_rot_alpha_matrix(file_prefix)
+    writer_ = autofile.file.write.vibro_rot_alpha_matrix
+    reader_ = autofile.file.read.vibro_rot_alpha_matrix
+    return model.DataFile(name=name, writer_=writer_, reader_=reader_)
+
+
+def quartic_centrifugal_dist_consts(file_prefix):
+    """ generate vibro_rot_alpha matrix DataFile
+    """
+    name = autofile.file.name.quartic_centrifugal_dist_consts(file_prefix)
+    writer_ = autofile.file.write.quartic_centrifugal_dist_consts
+    reader_ = autofile.file.read.quartic_centrifugal_dist_consts
     return model.DataFile(name=name, writer_=writer_, reader_=reader_)
 
 

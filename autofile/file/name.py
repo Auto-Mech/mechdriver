@@ -16,10 +16,14 @@ class Extension():
     VMATRIX = '.vmat'
     GRADIENT = '.grad'
     HESSIAN = '.hess'
+    HARMONIC_ZPVE = '.hzpve'
+    ANHARMONIC_ZPVE = '.azpve'
     HARMONIC_FREQUENCIES = '.hfrq'
     ANHARMONIC_FREQUENCIES = '.afrq'
-    ANHARMONICITY_MATRIX = '.xmat'
     PROJECTED_FREQUENCIES = '.pfrq'
+    ANHARMONICITY_MATRIX = '.xmat'
+    VIBRO_ROT_MATRIX = '.vrmat'
+    CENTRIF_DIST_CONSTS = '.qcd'
     LJ_EPSILON = '.eps'
     LJ_SIGMA = '.sig'
     EXTERNAL_SYMMETRY_FACTOR = '.esym'
@@ -97,6 +101,18 @@ def hessian(file_name):
     return _add_extension(file_name, Extension.HESSIAN)
 
 
+def harmonic_zpve(file_name):
+    """ adds harmonic zpve extension, if missing
+    """
+    return _add_extension(file_name, Extension.HARMONIC_ZPVE)
+
+
+def anharmonic_zpve(file_name):
+    """ adds anharmonic zpve extension, if missing
+    """
+    return _add_extension(file_name, Extension.ANHARMONIC_ZPVE)
+
+
 def harmonic_frequencies(file_name):
     """ adds harmonic frequencies extension, if missing
     """
@@ -109,16 +125,28 @@ def anharmonic_frequencies(file_name):
     return _add_extension(file_name, Extension.ANHARMONIC_FREQUENCIES)
 
 
+def projected_frequencies(file_name):
+    """ adds projected frequencies extension, if missing
+    """
+    return _add_extension(file_name, Extension.PROJECTED_FREQUENCIES)
+
+
 def anharmonicity_matrix(file_name):
     """ adds anharmonicity maxtrix extension, if missing
     """
     return _add_extension(file_name, Extension.ANHARMONICITY_MATRIX)
 
 
-def projected_frequencies(file_name):
-    """ adds projected frequencies extension, if missing
+def vibro_rot_alpha_matrix(file_name):
+    """ adds vibro_rot_alpha maxtrix extension, if missing
     """
-    return _add_extension(file_name, Extension.PROJECTED_FREQUENCIES)
+    return _add_extension(file_name, Extension.VIBRO_ROT_MATRIX)
+
+
+def quartic_centrifugal_dist_consts(file_name):
+    """ adds quartic centrifugal distortion constants, if missing
+    """
+    return _add_extension(file_name, Extension.CENTRIF_DIST_CONSTS)
 
 
 def lennard_jones_epsilon(file_name):

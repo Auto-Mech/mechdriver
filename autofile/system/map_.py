@@ -134,12 +134,12 @@ def vpt2_trunk():
     """
     return 'VPT2'
 
+
 # energy transfer
 def energy_transfer_trunk():
     """ energy_transfer trunk directory name
     """
     return 'ETRANS'
-
 
 
 # reactions

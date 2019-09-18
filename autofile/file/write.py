@@ -87,32 +87,18 @@ def hessian(hess):
     return hess_str
 
 
-def harmonic_frequencies(freq):
+def harmonic_frequencies(freqs):
     """ write harmonic frequencies (cm^-1) to a string (cm^-1)
     """
-    assert list(freq) == sorted(freq)
-    return _frequencies(freq)
+    assert list(freqs) == sorted(freqs)
+    return _frequencies(freqs)
 
 
-def anharmonic_frequencies(freq):
+def anharmonic_frequencies(freqs):
     """ write anharmonic frequencies (cm^-1) to a string (cm^-1)
     """
-    assert list(freq) == sorted(freq)
-    return _frequencies(freq)
-
-
-def anharmonicity_matrix(xmat):
-    """ write anharmonicity matrix (cm^-1) to a string (cm^-1)
-    """
-    xmat = numpy.array(xmat)
-    assert xmat.ndim == 2
-    assert xmat.shape[0] == xmat.shape[1]
-
-    xmat_str_io = _StringIO()
-    numpy.savetxt(xmat_str_io, xmat)
-    xmat_str = xmat_str_io.getvalue()
-    xmat_str_io.close()
-    return xmat_str
+    assert list(freqs) == sorted(freqs)
+    return _frequencies(freqs)
 
 
 def projected_frequencies(freq):
@@ -122,13 +108,34 @@ def projected_frequencies(freq):
     return _frequencies(freq)
 
 
-def _frequencies(freq):
-    freq = numpy.array(freq)
-    assert freq.ndim == 1
-    freq_str = ""
-    for val in freq:
-        freq_str += "{:>8.1f}\n".format(val)
-    return freq_str
+def anharmonic_zpve(zpve):
+    """ write the anharmonic ZPVE (hartree) to a string (hartree)
+    """
+    anh_zpve_str = _float(zpve)
+    return anh_zpve_str
+
+
+def anharmonicity_matrix(xmat):
+    """ write anharmonicity matrix (cm^-1) to a string (cm^-1)
+    """
+    return _2d_square_matrix(xmat)
+
+
+def vibro_rot_alpha_matrix(vibro_rot_mat):
+    """ write vibro-rot alph matrix (cm^-1) to a string (cm^-1)
+    """
+    return _2d_square_matrix(vibro_rot_mat)
+
+
+def quartic_centrifugal_dist_consts(qcd_consts):
+    """ write the quartic centrifugal distortion constant
+        labels and values (cm^-1) to a string (cm^-1)
+    """
+    qcd_consts_str = ''
+    for const in qcd_consts:
+        qcd_consts_str += "{0:<6s}{1:>16.12f}\n".format(
+            const[0], const[1])
+    return qcd_consts_str
 
 
 def lennard_jones_epsilon(eps):
@@ -156,3 +163,24 @@ def _float(val):
     assert isinstance(val, _Real)
     val_str = str(val)
     return val_str
+
+
+def _frequencies(freq):
+    freq = numpy.array(freq)
+    assert freq.ndim == 1
+    freq_str = ""
+    for val in freq:
+        freq_str += "{:>8.1f}\n".format(val)
+    return freq_str
+
+
+def _2d_square_matrix(mat):
+    mat = numpy.array(mat)
+    assert mat.ndim == 2
+    assert mat.shape[0] == mat.shape[1]
+
+    mat_str_io = _StringIO()
+    numpy.savetxt(mat_str_io, mat)
+    mat_str = mat_str_io.getvalue()
+    mat_str_io.close()
+    return mat_str

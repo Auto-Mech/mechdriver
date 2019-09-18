@@ -43,7 +43,11 @@ class FileAttributeName():
     HESS = 'hessian'
     HFREQ = 'harmonic_frequencies'
     TRAJ = 'trajectory'
+    ANHFREQ = 'anharmonic_frequencies'
+    ANHZPVE = 'anharmonic_zpve'
     XMAT = 'anharmonicity_matrix'
+    VIBROT_MAX = 'vibro_rot_alpha_matrix'
+    CENTIF_DIST = 'quartic_centrifugal_dist_consts'
     LJ_EPS = 'lennard_jones_epsilon'
     LJ_SIG = 'lennard_jones_sigma'
 
@@ -302,14 +306,23 @@ def vpt2(prefix):
     """
     trunk_ds = dir_.vpt2_trunk(prefix)
 
-    vpt2_inf_dfile = file_.information(FilePrefix.VPT2, function=info.run)
+    vpt2_inf_dfile = file_.information(
+        FilePrefix.VPT2, function=info.vpt2_trunk)
     vpt2_inp_dfile = file_.input_file(FilePrefix.VPT2)
+    anhfreq_dfile = file_.anharmonic_frequencies(FilePrefix.VPT2)
+    anhzpve_dfile = file_.anharmonic_zpve(FilePrefix.VPT2)
     xmat_dfile = file_.anharmonicity_matrix(FilePrefix.VPT2)
+    vibrot_mat_dfile = file_.vibro_rot_alpha_matrix(FilePrefix.VPT2)
+    centrif_dist_dfile = file_.quartic_centrifugal_dist_consts(FilePrefix.VPT2)
 
     trunk_ds.add_data_files({
         FileAttributeName.VPT2_INFO: vpt2_inf_dfile,
         FileAttributeName.VPT2_INPUT: vpt2_inp_dfile,
-        FileAttributeName.XMAT: xmat_dfile})
+        FileAttributeName.ANHFREQ: anhfreq_dfile,
+        FileAttributeName.ANHZPVE: anhzpve_dfile,
+        FileAttributeName.XMAT: xmat_dfile,
+        FileAttributeName.VIBROT_MAX: vibrot_mat_dfile,
+        FileAttributeName.CENTIF_DIST: centrif_dist_dfile})
 
     dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds})
 
@@ -330,16 +343,16 @@ def energy_transfer(prefix):
     leaf_ds = dir_.energy_transfer_leaf(prefix, root_ds=trunk_ds)
 
     # inp_dfile = file_.input_file(FilePrefix.SP)
-    #inf_dfile = file_.information(
-    #    FilePrefix.LJ, function=info.lennard_jones)
+    # inf_dfile = file_.information(
+    #     FilePrefix.LJ, function=info.lennard_jones)
     ene_dfile = file_.energy(FilePrefix.LJ)
     eps_dfile = file_.lennard_jones_epsilon(FilePrefix.LJ)
     sig_dfile = file_.lennard_jones_sigma(FilePrefix.LJ)
     traj_dfile = file_.trajectory(FilePrefix.LJ)
 
     leaf_ds.add_data_files({
-    #    FileAttributeName.INFO: inf_dfile,
-    #    FileAttributeName.INPUT: inp_dfile,
+        #    FileAttributeName.INFO: inf_dfile,
+        #    FileAttributeName.INPUT: inp_dfile,
         FileAttributeName.ENERGY: ene_dfile,
         FileAttributeName.LJ_EPS: eps_dfile,
         FileAttributeName.LJ_SIG: sig_dfile,
