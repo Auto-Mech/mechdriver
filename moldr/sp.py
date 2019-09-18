@@ -10,7 +10,7 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def run_energy(
-        spc_info, thy_level, geo_run_fs, save_fs,
+        spc_info, thy_level, geo_run_fs, geo_save_fs, locs,
         script_str, overwrite, **kwargs):
     """ Find the energy for the given structure
     """
@@ -27,6 +27,7 @@ def run_energy(
     sp_save_path = sp_save_fs.leaf.path(thy_level[1:4])
     run_fs = autofile.fs.run(sp_run_path)
 
+    print('thy_level in run_energy:', thy_level) 
     moldr.driver.run_job(
         job='energy',
         script_str=script_str,
@@ -88,12 +89,10 @@ def run_gradient(
         inf_obj, inp_str, out_str = ret
 
         if automol.geom.is_atom(geo):
-            freqs = ()
+            grad = ()
         else:
             print(" - Reading gradient from output...")
             grad = elstruct.reader.gradient(inf_obj.prog, out_str)
-#                print('Conformer Freqs test')
-#                print(freqs)
 
             print(" - Saving gradient...")
             print(" - Save path: {}".format(geo_save_path))
@@ -108,7 +107,7 @@ def run_hessian(
     """ Determine the hessian for the geometry in the given location
     """
 
-    print('run hessian test:', locs) 
+    print('run hessian test:', locs)
     geo_run_path = geo_run_fs.leaf.path(locs)
     geo_save_path = geo_save_fs.leaf.path(locs)
     geo = geo_save_fs.leaf.file.geometry.read(locs)
@@ -141,8 +140,6 @@ def run_hessian(
             hess = elstruct.reader.hessian(inf_obj.prog, out_str)
             freqs = elstruct.util.harmonic_frequencies(
                 geo, hess, project=False)
-#                print('Conformer Freqs test')
-#                print(freqs)
 
             print(" - Saving hessian...")
             print(" - Save path: {}".format(geo_save_path))
@@ -184,12 +181,10 @@ def run_vpt2(
         inf_obj, inp_str, out_str = ret
 
         if automol.geom.is_atom(geo):
-            freqs = ()
+            anh = ()
         else:
             print(" - Reading hessian from output...")
             vpt2 = elstruct.reader.vpt2(inf_obj.prog, out_str)
-#                print('Conformer Freqs test')
-#                print(freqs)
 
             print(" - Saving hessian...")
             print(" - Save path: {}".format(geo_save_path))
