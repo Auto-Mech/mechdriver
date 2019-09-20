@@ -42,20 +42,24 @@ def run_vpt2(params, kwargs):
     moldr.sp.run_vpt2(**params, **kwargs)
 
 
-def run_single_conformer(spc_info, thy_level, fs, overwrite):
+def run_single_conformer(spc_info, thy_level, fs, overwrite, saddle=False):
     """ generate single optimized geometry for randomly sampled initial torsional angles
     """
     mc_nsamp = [False, 0, 0, 0, 0, 1]
     sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_level[0:2])
+    thy_save_fs=fs[3]
+    if saddle:
+        thy_save_fs=fs[11]
     moldr.conformer.conformer_sampling(
         spc_info=spc_info,
         thy_level=thy_level,
-        thy_save_fs=fs[3],
+        thy_save_fs=thy_save_fs,
         cnf_run_fs=fs[4],
         cnf_save_fs=fs[5],
         script_str=sp_script_str,
         overwrite=overwrite,
         nsamp_par=mc_nsamp,
+        saddle=saddle,
         **kwargs,
     )
 
@@ -111,6 +115,7 @@ def geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
     """ run an electronic structure task
     for generating a list of conformer or tau sampling geometries
     """
+    print('Task in geometry_generation:', tsk)
     _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
     params = {'spc_info': spc_info,
               'thy_level': thy_level,
@@ -131,7 +136,7 @@ def geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
 
-def ts_geometry_generation(tsk, spcdic, thy_level, fs,
+def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
         spc_info, overwrite):
     """ run an electronic structure task
     for generating a list of conformer or tau sampling geometries
@@ -141,21 +146,96 @@ def ts_geometry_generation(tsk, spcdic, thy_level, fs,
     params = {'spc_info': spc_info,
               'thy_level': thy_level,
               'script_str': opt_script_str,
+              'saddle' :  True,
+              'tors_names': spcdic['tors_names'],
               'overwrite': overwrite}
     choose_function = {'conf_samp': 'run_conf_samp',
                        'tau_samp': 'run_tau_samp',
                        'hr_scan': 'run_hr_scan'}
     
     if tsk in ['conf_samp', 'tau_samp']:
-        params['nsamp_par'] = spcdic['mc_nsamp']
-        params['tors_names'] = spcdic['tors_names']
+        params['nsamp_par'] = es_dct['mc_nsamp']
     elif tsk in ['hr_scan']:
-        params['scan_increment'] = spcdic['hind_inc']
+        if 'hind_inc' in spcdic:
+            params['scan_increment'] = spcdic['hind_inc']
+        else:
+            params['scan_increment'] = 30. * qcc.conversion_factor('degree', 'radian')
 
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
 
 def geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info,
+        overwrite):
+    """ run the specified electronic structure task
+    for a set of geometries
+    """
+
+    print('Task in geometry_analysis:', tsk)
+    # specify the fs for the runs
+    if 'conf' in tsk:
+        run_dir = ini_fs[2]
+        save_dir = ini_fs[3]
+    elif 'tau' in tsk:
+        run_dir = ini_fs[4]
+        save_dir = ini_fs[5]
+    elif 'hr' in tsk:
+        run_dir = ini_fs[6]
+        save_dir = ini_fs[7]
+    else:
+        return
+    # still need to setup mep
+#    elif 'mep' in tsk:
+#        run_dir = ini_fs[6]
+#        save_dir = ini_fs[7]
+    if isinstance(selection, str):
+        if selection == 'all':
+            locs_lst = save_dir.leaf.existing()
+        elif selection == 'min':
+            locs_lst = [moldr.util.min_energy_conformer_locators(save_dir)]
+    elif isinstance(selection, int):
+        locs_lst = moldr.util.geom_sort(save_dir)[0:selection]
+    else:
+        locs_lst = selection
+
+    sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_level[0:2])
+    params = {'spc_info': spc_info,
+              'thy_level': thy_level,
+              'script_str': sp_script_str,
+              'overwrite': overwrite}
+    choose_function = {'conf_energy': 'run_energy',
+                       'tau_energy': 'run_energy',
+                       'hr_energy': 'run_energy',
+                       'mep_energy': 'run_energy',
+                       'conf_grad': 'run_grad',
+                       'tau_grad': 'run_grad',
+                       'hr_grad': 'run_grad',
+                       'mep_grad': 'run_grad',
+                       'conf_hess': 'run_hess',
+                       'tau_hess': 'run_hess',
+                       'hr_hess': 'run_hess',
+                       'mep_hess': 'run_hess',
+                       'conf_vpt2': 'run_vpt2',
+                       'tau_vpt2': 'run_vpt2',
+                       'conf_reopt': 'run_reopt',
+                       'tau_reopt': 'run_reopt',
+                       'hr_reopt': 'run_reopt',
+                       'mep_reopt': 'run_reopt'}
+
+    # cycle over the locations
+    if tsk in choose_function:
+        task_call = eval(choose_function[tsk])
+        for locs in locs_lst:
+            if locs:
+                params['geo_run_fs'] = run_dir
+                params['geo_save_fs'] = save_dir
+                params['locs'] = locs
+                task_call(params, kwargs)
+            else:
+                print('No initial geometry available for {} on {}'.format(
+                    spc_info[0], '/'.join(thy_level[1:3])))
+
+
+def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info,
         overwrite):
     """ run the specified electronic structure task
     for a set of geometries
@@ -272,11 +352,11 @@ def get_thy_save_path(save_prefix, spc_info, thy_info):
 def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
 
     ts_info = (spcs[ts]['ich'], spcs[ts]['chg'], spcs[ts]['mul'])
-    reacs = spcs[ts]['reacs']
-    prods = spcs[ts]['prods']
     rxn_ichs = [[],[]] 
     rxn_chgs = [[],[]]
     rxn_muls = [[],[]]
+    reacs = spcs[ts]['reacs']
+    prods = spcs[ts]['prods']
     for spc in reacs:
          rxn_ichs[0].append(spcs[spc]['ich'])
          rxn_chgs[0].append(spcs[spc]['chg'])
@@ -285,7 +365,6 @@ def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
          rxn_ichs[1].append(spcs[spc]['ich'])
          rxn_chgs[1].append(spcs[spc]['chg'])
          rxn_muls[1].append(spcs[spc]['mul'])
-
     # check direction of reaction
     print('checking exothermicity of reaction')
     try:
@@ -309,9 +388,12 @@ def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
     print("The reaction direction is {}"
           .format('backward' if is_rev else 'forward'))
 
+    high_mul = automol.mult.ts._high(rxn_muls[0])
+
     spcs[ts]['rxn_ichs'] = rxn_ichs
     spcs[ts]['rxn_chgs'] = rxn_chgs
     spcs[ts]['rxn_muls'] = rxn_muls
+    spcs[ts]['high_mul'] = high_mul
     return spcs[ts]
 
 def get_rxn_fs(run_prefix, save_prefix, ts):
@@ -441,6 +523,9 @@ def ts_params(rct_zmas, prd_zmas):
             ('H', 'O'): 1.20 * ANG2BOHR,
         }
 
+        npoints = 8
+        npoints1 = 4
+        npoints2 = 4
         if typ in ('beta scission', 'addition'):
             rmin = 1.4 * ANG2BOHR
             rmin = 2.8 * ANG2BOHR
@@ -448,6 +533,7 @@ def ts_params(rct_zmas, prd_zmas):
                 bnd_len = bnd_len_dct[bnd_len_key]
                 rmin = bnd_len + 0.2 * ANG2BOHR
                 rmax = bnd_len + 1.6 * ANG2BOHR
+            grid = numpy.linspace(rmin, rmax, npoints)
         elif typ == 'hydrogen abstraction':
             rmin = 0.7 * ANG2BOHR
             rmax = 2.2 * ANG2BOHR
@@ -455,12 +541,18 @@ def ts_params(rct_zmas, prd_zmas):
                 bnd_len = bnd_len_dct[bnd_len_key]
                 rmin = bnd_len
                 rmax = bnd_len + 1.0 * ANG2BOHR
-
-        npoints = 8
-        grid = numpy.linspace(rmin, rmax, npoints)
+            grid = numpy.linspace(rmin, rmax, npoints)
+        elif typ == 'radical radical addition':
+            rstart = 2.4 * ANG2BOHR
+            rend1 = 3.0 * ANG2BOHR
+            rend2 = 1.8 * ANG2BOHR
+            grid1 = numpy.linspace(rstart, rend1, npoints1)
+            grid2 = numpy.linspace(rstart, rend2, npoints2)
+            grid2 = numpy.delete(grid2, 0)
+            grid = [grid1, grid2]
         return typ, ts_zma, dist_name, grid, tors_names
 
-def find_ts(ts_info, ts_zma, typ, dist_name, grid, thy_info, rxn_run_path, rxn_save_path, overwrite):
+def find_ts(ts_dct, ts_info, ts_zma, typ, dist_name, grid, thy_info, rxn_run_path, rxn_save_path, overwrite):
 
     print('prepping ts scan:')
     script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
@@ -482,56 +574,50 @@ def find_ts(ts_info, ts_zma, typ, dist_name, grid, thy_info, rxn_run_path, rxn_s
 
     print('running ts scan:')
     if typ == 'radical radical addition':
-        pass
-#        ts_formula = ''
-#        for ich in rct_ichs:
-#            formula_i = thermo.util.inchi_formula(ich)
-#            formula_i_dict = thermo.util.get_atom_counts_dict(formula_i)
-#            ts_formula = automol.formula._formula.join(ts_formula, formula_i_dict)
-#
-#        grid = numpy.append(grid1, grid2)
-#        high_mul = automol.mult.ts._high(rct_muls)
-#        moldr.scan.run_multiref_rscan(
-#            formula=ts_formula,
-#            high_mul=high_mul,
-#            zma=ts_zma,
-#            spc_info=ts_info,
-#            thy_level=ref_level,
-#            dist_name=dist_name,
-#            grid1=grid1,
-#            grid2=grid2,
-#            run_prefix=thy_run_path,
-#            save_prefix=thy_save_path,
-#            script_str=SCRIPT_STR,
-#            overwrite=overwrite,
-#            update_guess=True,
-#            **OPT_KWARGS
-#        )
-#
-#        moldr.scan.save_scan(
-#            scn_run_fs=scn_run_fs,
-#            scn_save_fs=scn_save_fs,
-#            coo_names=[dist_name],
-#        )
-#
-#        ref_ene = -40.
-#
-#        nsamp_max = 2000
-#        nsamp_min = 500
-#        flux_err = 5
-#        pes_size = 1
-#        tst_inp_str = varecof_io.writer.write_tst_input(
-#            nsamp_max, nsamp_min, flux_err, pes_size)
-#
-#        print('\ntst.inp:')
-#        print(tst_inp_str)
-#
-#        # Write the divsur input file string; distances in Angstrom
-#        distances = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
-#        divsur_inp_str = varecof_io.writer.write_divsur_input(
-#            distances)
-#        print('\ndivsur.inp:')
-#        print(divsur_inp_str)
+        ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
+        grid = numpy.append(grid[0], grid[1])
+        high_mul = ts_dct['high_mul']
+        moldr.scan.run_multiref_rscan(
+            formula=ts_formula,
+            high_mul=high_mul,
+            zma=ts_zma,
+            spc_info=ts_info,
+            thy_level=ref_level,
+            dist_name=dist_name,
+            grid1=grid1,
+            grid2=grid2,
+            scn_run_fs = scn_run_fs,
+            scn_save_fs = scn_save_fs,
+            script_str=script_str,
+            overwrite=overwrite,
+            update_guess=False,
+            **OPT_KWARGS
+        )
+
+        moldr.scan.save_scan(
+            scn_run_fs=scn_run_fs,
+            scn_save_fs=scn_save_fs,
+            coo_names=[dist_name],
+        )
+
+        ref_ene = -40.
+
+        nsamp_max = 2000
+        nsamp_min = 500
+        flux_err = 5
+        pes_size = 1
+        tst_inp_str = varecof_io.writer.write_tst_input(
+            nsamp_max, nsamp_min, flux_err, pes_size)
+
+        print('\ntst.inp:')
+        print(tst_inp_str)
+
+        # Write the divsur input file string; distances in Angstrom
+        distances = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
+        divsur_inp_str = varecof_io.writer.write_divsur_input(
+            distances)
+        print('\ndivsur.inp:')
+        print(divsur_inp_str)
     else: 
         moldr.scan.run_scan(
             zma=ts_zma,
