@@ -227,7 +227,6 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                     if geo:
                     #Run the requested task at the requested running theory level
                         scripts.es.geometry_generation(tsk, spcdct[spc], es_dct[es_run_key],
-<<<<<<< 65e8d47ce53278fe38d351bdbb3e80e646bbaa71
                                                    thy_level, fs, spc_info, overwrite)
                 else:
                     selection = 'min'
