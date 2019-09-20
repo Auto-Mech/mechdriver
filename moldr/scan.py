@@ -12,10 +12,9 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def hindered_rotor_scans(
         spc_info, thy_level, cnf_run_fs, cnf_save_fs,
-        script_str, overwrite, scan_increment=30., **opt_kwargs):
+        script_str, overwrite, scan_increment=30., saddle=False, tors_names='', **opt_kwargs):
     """ Perform 1d scans over each of the torsional coordinates
     """
-
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
         min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
@@ -25,7 +24,8 @@ def hindered_rotor_scans(
         geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
         val_dct = automol.zmatrix.values(zma)
-        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+        if not saddle:
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment)
         tors_grids = [
@@ -122,7 +122,7 @@ def run_scan(
 
 def run_multiref_rscan(
         formula, high_mul, zma, spc_info, thy_level, dist_name, grid1, grid2,
-        run_prefix, save_prefix, script_str, overwrite, update_guess=True,
+        scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True,
         **kwargs):
     """ run constrained optimization scan
     """
@@ -140,9 +140,6 @@ def run_multiref_rscan(
         elstruct.option.specify(elstruct.Option.Casscf.CLOSED_, closed_orb),
         elstruct.option.specify(elstruct.Option.Casscf.WFN_, electron_count, 1, two_spin, chg)
         ]
-
-    scn_run_fs = autofile.fs.scan(run_prefix)
-    scn_save_fs = autofile.fs.scan(save_prefix)
 
     vma = automol.zmatrix.var_(zma)
     if scn_save_fs.trunk.file.vmatrix.exists():
