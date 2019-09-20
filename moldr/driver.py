@@ -14,6 +14,7 @@ JOB_ERROR_DCT = {
     elstruct.Job.ENERGY: elstruct.Error.SCF_NOCONV,
     elstruct.Job.GRADIENT: elstruct.Error.SCF_NOCONV,
     elstruct.Job.HESSIAN: elstruct.Error.SCF_NOCONV,
+    elstruct.Job.VPT2: elstruct.Error.SCF_NOCONV,
     elstruct.Job.OPTIMIZATION: elstruct.Error.OPT_NOCONV,
 }
 
@@ -23,6 +24,8 @@ JOB_RUNNER_DCT = {
     elstruct.Job.GRADIENT: functools.partial(
         runner.options_matrix_run, elstruct.writer.gradient),
     elstruct.Job.HESSIAN: functools.partial(
+        runner.options_matrix_run, elstruct.writer.hessian),
+    elstruct.Job.VPT2: functools.partial(
         runner.options_matrix_run, elstruct.writer.hessian),
     elstruct.Job.OPTIMIZATION: runner.options_matrix_optimization,
 }

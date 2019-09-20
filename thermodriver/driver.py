@@ -15,7 +15,8 @@ REF_CALLS = {"basic": "get_basis",
              "cbh2": "get_cbhtwo"}
 
 
-def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, options=[True, True, True, False]):
+def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, ene_coeff=[1.],
+        options=[True, True, True, False]):
     """ main driver for thermo run
     """
 
@@ -34,13 +35,9 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
         if not 'ich' in spcdct[spc]:
             spcdct[spc]['ich'] = automol.smiles.inchi(spcdct[spc]['smiles'])
     refs, msg = prepare_refs(ref, spcdct, spc_queue)
-    print('spc_queue test', spc_queue)
-    print('refs test', refs)
     full_queue = spc_queue + refs
-    print('full_queue test 1:', full_queue)
     full_queue = list(dict.fromkeys(full_queue))
     print(msg)
-    print('full_queue test 2:', full_queue)
 
     #prepare filesystem
     if not os.path.exists(save_prefix):
@@ -57,7 +54,9 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
     harm_lvl = ''
     anharm_lvl = ''
     tors_lvl = ''
-    ene_lvl = ''
+    harm_lvl_ref = ''
+    anharm_lvl_ref = ''
+    tors_lvl_ref = ''
 
     #Get PF input header
     temp_step = 100.
@@ -68,16 +67,22 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
 
     #Gather PF model and theory level info
     spc_model = ['RIGID', 'HARM']
+    geom = False
+    hess = False
     for tsk in tsk_info_lst:
-        if 'geom' in tsk[0] or 'opt' in tsk[0]:
-            ene_lvl = tsk[1]
+        if 'samp' in tsk[0] or 'geom' in tsk[0]:
             geo_lvl = tsk[1]
-        if 'hess' in tsk[0] or 'harm' in tsk[0]:
+            geom = True
+        if 'hess' in tsk[0]:
             harm_lvl = tsk[1]
-#            tors_lvl = tsk[1]
-#            anharm_lvl = tsk[1]
+            harm_lvl_ref = tsk[2]
+            hess = True
+            if not geom:
+                ene_lvl = tsk[1]
+                geo_lvl = tsk[1]
         if 'hr' in tsk[0] or 'tau' in tsk[0]:
             tors_lvl = tsk[1]
+            tors_lvl_ref = tsk[2]
             if 'md' in tsk[0]:
                 spc_model[0] = 'MDHR'
             if 'tau' in tsk[0]:
@@ -86,15 +91,23 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
                 spc_model[0] = '1DHR'
         if 'anharm' in tsk[0] or 'vpt2' in tsk[0]:
             anharm_lvl = tsk[1]
+            anharm_lvl_ref = tsk[2]
             spc_model[1] = 'ANHARM'
+            if not hess:
+                geo_lvl = tsk[1]
     geo_thy_info = get_thy_info(es_dct, geo_lvl)
     harm_thy_info = get_thy_info(es_dct, harm_lvl)
     tors_thy_info = get_thy_info(es_dct, tors_lvl)
     anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
     pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info]
 
+    harm_ref_thy_info = get_thy_info(es_dct, harm_lvl_ref)
+    tors_ref_thy_info = get_thy_info(es_dct, tors_lvl_ref)
+    anharm_ref_thy_info = get_thy_info(es_dct, anharm_lvl_ref)
+    ref_levels = [harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info]
+
     #Collect the PF input for each species
-    print('full_queue test 3:', full_queue)
+    # Initialize the ene for each of the species
     for spc in full_queue:
         spc_info = scripts.es.get_spc_info(spcdct[spc])
         spc_save_fs = autofile.fs.species(save_prefix)
@@ -111,8 +124,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
         spcdct[spc]['zpe'] = zpe
         spcdct[spc]['zpe_str'] = zpe_str
         spcdct[spc]['spc_str'] = spc_str
-        print('full_queue test 4:', full_queue)
-        print('zpe_str test:', zpe_str)
+        spcdct[spc]['ene'] = 0
 
     #Make and Run the PF file
     for spc in spc_queue:
@@ -131,32 +143,49 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
             scripts.thermo.run_pf(pf_path)
 
     #Compute Hf0K
+    ene_strl = []
+    ene_str = '! energy level:'
+    ene_lvl = ''
+    ene_lvl_ref = ''
+    ene_idx = 0
     for tsk in tsk_info_lst:
         if 'ene' in tsk[0]:
+            if ene_idx > len(ene_coeff)-1:
+                print('Warning - an insufficient energy coefficient list was provided')
+                break
             ene_lvl = tsk[1]
             geo_lvl = tsk[2]
-    geo_thy_info = scripts.es.get_thy_info(es_dct[geo_lvl])
-    ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
-    pf_levels.extend([geo_thy_info, ene_thy_info])
+            geo_thy_info = scripts.es.get_thy_info(es_dct[geo_lvl])
+            ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
+            ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
+                ene_coeff[ene_idx], ene_thy_info[3], ene_thy_info[1], ene_thy_info[2],
+                geo_thy_info[3], geo_thy_info[1], geo_thy_info[2]))
 
-    for spc in full_queue:
-        spc_info = spcdct[spc]['spc_info']
-        ene = scripts.thermo.get_electronic_energy(
-            spc_info, geo_thy_info, ene_thy_info, save_prefix)
-        spcdct[spc]['ene'] = ene
-
+            for spc in full_queue:
+                spc_info = spcdct[spc]['spc_info']
+                ene = scripts.thermo.get_electronic_energy(
+                    spc_info, geo_thy_info, ene_thy_info, save_prefix)
+                spcdct[spc]['ene'] += ene*ene_coeff[ene_idx]
+            ene_idx += 1
+    ene_str += '!               '.join(ene_strl)
+    pf_levels.append(ene_str)
     #Need to get zpe for reference molecules too
-    if is_scheme(ref) or not ref:
+    calc_bas = True
+    if isinstance(ref, list):
+        spc_bas = ref
+        calc_bas = False
+    elif is_scheme(ref) or not ref:
         reference_function = get_function_call(ref)
-    else:
-        reference_function = ref
     for spc in spc_queue:
-        spc_bas = get_ref(spc, spcdct, reference_function)
-        print(spc_bas)
+        if calc_bas:
+            spc_bas = get_ref(spc, spcdct, reference_function)
         hf0k = scripts.thermo.get_hf0k(spc, spcdct, spc_bas)
-        spcdct[spc]['Hf0K'] = hf0k
+        spcdct[spc]['Hfs'] = [hf0k]
 
+    print('pf levels test:', pf_levels)
     if runthermo:
+        chemkin_header_str = scripts.thermo.run_ckin_header(pf_levels, ref_levels, spc_model)
+        chemkin_set_str = chemkin_header_str
         for spc in spc_queue:
             pf_path = spcdct[spc]['pf_path']
             nasa_path = spcdct[spc]['nasa_path']
@@ -164,15 +193,21 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, o
             # need to change back to starting directory after running thermp and pac99 
             # or rest of code is confused
             scripts.thermo.write_thermp_inp(spcdct[spc])
-            scripts.thermo.run_thermp(pf_path, nasa_path)
-            chemkin_poly_str = scripts.thermo.run_pac(
-                spc, spcdct[spc], nasa_path, pf_levels, spc_model)
-            _ = scripts.thermo.go_to_path(starting_path)
+            # run thermp creats thermo and also passed back the 298 K heat of formation
+            hf298k = scripts.thermo.run_thermp(pf_path, nasa_path)
+            spcdct[spc]['Hfs'].append(hf298k)
+            pac99_poly_str = scripts.thermo.run_pac(spcdct[spc], nasa_path)
+            chemkin_poly_str = scripts.thermo.run_ckin_poly(spc, spcdct[spc], pac99_poly_str)
+            chemkin_spc_str = chemkin_header_str + chemkin_poly_str
+            chemkin_set_str += chemkin_poly_str
+            scripts.thermo.go_to_path(starting_path)
             ckin_path = scripts.thermo.prepare_path(starting_path, 'ckin')
             if not os.path.exists(ckin_path):
                 os.makedirs(ckin_path)
-            scripts.thermo.write_nasa_file(spcdct[spc], ckin_path, nasa_path, chemkin_poly_str)
+            scripts.thermo.write_nasa_file(spcdct[spc], ckin_path, nasa_path, chemkin_spc_str)
 
+        with open(os.path.join(ckin_path,'automech.ckin'), 'w') as nasa_file:
+              nasa_file.write(chemkin_set_str)
 
 def is_scheme(entry):
     """ Check whether this is a basis set scheme

@@ -67,24 +67,24 @@ def get_coeff(spc, spcdct, spc_bas):
     """
     ich = spcdct[spc]['ich']
     formula = thermo.util.inchi_formula(ich)
-    print('\nformula:')
-    print(formula)
+    #print('\nformula:')
+    #print(formula)
 
     # Get atom count dictionary
     atom_dict = thermo.util.get_atom_counts_dict(formula)
-    print('\natom dict:')
-    print(atom_dict)
+    #print('\natom dict:')
+    #print(atom_dict)
 
     if len(spc_bas) == 1 and spcdct[spc]['ich'] == spc_bas[0]:
         coeff = [1]
-        print('\ncoeff:')
-        print(coeff)
+        # print('\ncoeff:')
+        # print(coeff)
     else:
         # Get the coefficients for the balanced heat-of-formation eqn
         coeff = thermo.heatform.calc_coefficients(spc_bas, atom_dict)
-        print('\ncoeff:')
-        print(coeff)
-    print('coeff test:', spcdct[spc]['ich'], spc_bas)
+        # print('\ncoeff:')
+        # print(coeff)
+    #print('coeff test:', spcdct[spc]['ich'], spc_bas)
     return coeff
 
 
@@ -92,14 +92,15 @@ def get_hf0k(spc, spcdct, spc_bas):
     """ determine the 0 K heat of formation from the
     species dictionary and a set of references species
     """
+    print('spc_bas:', spc_bas)
     spc_ene = spc_energy(spcdct[spc]['ene'], spcdct[spc]['zpe'])
     h_basis = basis_energy(spc_bas, spcdct)
+    print('spc_ene:', spc_ene)
+    print('h_basis:', h_basis)
     coeff = get_coeff(spc, spcdct, spc_bas)
 
     # Get the 0 K heat of formation
     # ref_set should be a parameter for this routine
-    print('spc_ene:', spc_ene)
-    print('h_basis:', h_basis)
     print('coeff:', coeff)
     h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ATcT')
     print('Hf0K test:', spc, h0form)
@@ -120,10 +121,8 @@ def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
     spc_zpe = {}
     is_atom = {}
     zero_energy_str = {}
-    ich = spcdct['ich']
-    print("inchi: {}".format(ich))
 
-    print('har_level in get_zpe:', har_level)
+    # print('har_level in get_zpe:', har_level)
     spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
         spc_info,
         tors_model, vib_model,
@@ -132,15 +131,15 @@ def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix=spc_save_path)
     zpe_str = '{0:<8.2f}\n'.format(spc_zpe)
-    print(zpe_str)
+    # print(zpe_str)
     if is_atom:
         zero_energy_str = 'End'
     else:
         zero_energy_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
         zero_energy_str += 'End'
-    print('zero_energy_str:', zero_energy_str)
+    # print('zero_energy_str:', zero_energy_str)
 
-    print('finished zpe')
+    # print('finished zpe')
     return spc_zpe, zero_energy_str
 
 
@@ -219,8 +218,8 @@ def get_thermo_paths(spc_save_path, spc_info, har_level):
 
     print('Build Path for Partition Functions')
     print(pf_path)
-    print('NASA build path')
-    print(nasa_path)
+    # print('NASA build path')
+    # print(nasa_path)
     return pf_path, nasa_path
 
 
@@ -233,8 +232,8 @@ def get_pfinput(spc, spc_str, global_pf_str, zpe_str):
     pf_inp_str = '\n'.join(
         [global_pf_str, spc_head_str,
          spc_str, zpe_str, '\n'])
-    print(spc_str)
-    print(pf_inp_str)
+    # print(spc_str)
+    # print(pf_inp_str)
     return pf_inp_str
 
 
@@ -250,7 +249,7 @@ def run_pf(pf_path, pf_script_str=PF_SCRIPT_STR):
     """ run messpf
     """
     moldr.util.run_script(pf_script_str, pf_path)
-    print('finished partition function')
+    # print('finished partition function')
 
 
 def go_to_path(path):
@@ -278,7 +277,7 @@ def write_thermp_inp(spc_spcdct):
     """ write the thermp input file
     """
     ich = spc_spcdct['ich']
-    h0form = spc_spcdct['Hf0K']
+    h0form = spc_spcdct['Hfs'][0]
     formula = thermo.util.inchi_formula(ich)
     # Write thermp input file
     enthalpyt = 0.
@@ -301,21 +300,21 @@ def run_thermp(pf_path, nasa_path):
         thermp_file_name='thermp.dat',
         pf_file_name='pf.dat'
         )
+    with open('thermp.out', 'r') as f:
+        lines = f.readlines()
+    line = lines[-1]
+    hf298k = line.split()[-1]
+    return hf298k
 
 
-def run_pac(spc, spc_spcdct, nasa_path, pf_levels, spc_model):
+def run_pac(spc_spcdct, nasa_path):
     """ run pac99 to convert thermochemical data to nasa polynomials
     """
     ich = spc_spcdct['ich']
     formula = thermo.util.inchi_formula(ich)
     atom_dict = thermo.util.get_atom_counts_dict(formula)
-    tors_model, vib_model = spc_model
-    har_level, tors_level, vpt2_level, geo_level, sp_level = pf_levels
 
     # Run pac99
-    print('formula test')
-    print(formula)
-    print(nasa_path)
     thermo.runner.run_pac99(nasa_path, formula)
 
     # this looks like it is not used - I wonder why it was there?
@@ -327,34 +326,52 @@ def run_pac(spc, spc_spcdct, nasa_path, pf_levels, spc_model):
 
     # Get the pac99 polynomial
     pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
-    print('\nPAC99 Polynomial:')
-    print(pac99_poly_str)
+    #print('\nPAC99 Polynomial:')
+    #print('pac99_poly_str test:', pac99_poly_str)
+
+    return pac99_poly_str
+
+
+def run_ckin_header(pf_info, ref_info, spc_model):
+    """ prepare chemkin header info and convert pac 99 format to chemkin format
+    """
+    tors_model, vib_model = spc_model
+    har_info, tors_info, vpt2_info, sp_str = pf_info
+    har_ref_info, tors_ref_info, vpt2_ref_info = ref_info
 
     # Convert the pac99 polynomial to chemkin polynomial
-    if tors_model:
-        comment_str = '! tors model: {0}\n'.format(tors_model)
-    if vib_model:
-        comment_str += '! vib model: {0}\n'.format(vib_model)
-    if har_level:
-        comment_str += '! har level: {0}{1}/{2}\n'.format(
-            har_level[3], har_level[1], har_level[2])
-    if tors_level:
-        comment_str += '! tors level: {0}{1}/{2}\n'.format(
-            tors_level[3], tors_level[1], tors_level[2])
-    if vpt2_level:
-        comment_str += '! vpt2 level: {0}{1}/{2}\n'.format(
-            vpt2_level[3], vpt2_level[1], vpt2_level[2])
-    if geo_level:
-        comment_str += '! ref level for energy: {0}{1}/{2}\n'.format(
-            geo_level[3], geo_level[1], geo_level[2])
-    if sp_level:
-        comment_str += '! energy level: {0}/{1}\n'.format(
-            sp_level[1], sp_level[2])
 
+    chemkin_header_str = '! tors model: {0}\n'.format(tors_model)
+    chemkin_header_str += '! vib model: {0}\n'.format(vib_model)
+    if har_info:
+        chemkin_header_str += '! har level: {}{}/{}//{}{}/{}\n'.format(
+            har_info[3], har_info[1], har_info[2],
+            har_ref_info[3], har_ref_info[1], har_ref_info[2])
+    if tors_info:
+        chemkin_header_str += '! tors level: {}{}/{}//{}{}/{}\n'.format(
+            tors_info[3], tors_info[1], tors_info[2],
+            tors_ref_info[3], tors_ref_info[1], tors_ref_info[2])
+    if vpt2_info:
+        chemkin_header_str += '! vpt2 level: {}{}/{}//{}{}/{}\n'.format(
+            vpt2_info[3], vpt2_info[1], vpt2_info[2],
+            vpt2_ref_info[3], vpt2_ref_info[1], vpt2_ref_info[2])
+    if sp_str:
+        chemkin_header_str += sp_str
+
+    return chemkin_header_str
+
+
+def run_ckin_poly(spc, spc_spcdct, pac99_poly_str):
+    """ prepare chemkin header info and convert pac 99 format to chemkin format
+    """
+
+    hf_str = '! Hf(0 K) = {:.2f}, Hf(298 K) = {:.2f} kcal/mol\n'.format(
+        float(spc_spcdct['Hfs'][0]), float(spc_spcdct['Hfs'][1]))
+    ich = spc_spcdct['ich']
+    formula = thermo.util.inchi_formula(ich)
+    atom_dict = thermo.util.get_atom_counts_dict(formula)
     chemkin_poly_str = thermo.nasapoly.convert_pac_to_chemkin(
-        spc, atom_dict, comment_str, pac99_poly_str)
-    chemkin_set_str = thermo.nasapoly.convert_pac_to_chemkin(
-        spc, atom_dict, '', pac99_poly_str)
+        spc, atom_dict, hf_str, pac99_poly_str)
     print('\nCHEMKIN Polynomial:')
     print(chemkin_poly_str)
     return chemkin_poly_str

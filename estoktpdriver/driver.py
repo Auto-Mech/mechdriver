@@ -351,7 +351,6 @@ elif MECH_TYPE == 'json':
                 SPC_DCT[spc_name]['mul'] = RCT_MULS_LST[i][j]
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
 
-REF_MOLS = [automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'), automol.smiles.inchi('O')]
 #os.sys.exit()
 
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
@@ -406,6 +405,10 @@ ES_DCT = {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',
             'mc_nsamp': mc_nsamp0
             },
+        'lvl_b2q': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',
+            'mc_nsamp': mc_nsamp0
+            },
         'lvl_b3s': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
             'mc_nsamp': mc_nsamp0
@@ -443,23 +446,29 @@ ES_DCT = {
             },
         }
 
-OPT_LVL0 = 'lvl_wbs'
-OPT_LVL1 = 'lvl_wbm'
-OPT_LVL2 = 'lvl_wbt'
+OPT_LVL0 = 'lvl_wbm'
+OPT_LVL1 = 'lvl_b2t'
+OPT_LVL2 = 'lvl_b2q'
 SCAN_LVL1 = OPT_LVL1
 SP_LVL1 = 'cc_lvl_df'
 SP_LVL2 = 'cc_lvl_tf'
 SP_LVL3 = 'cc_lvl_qf'
 
+# The logic key in tsk_info_lst is for overwrite
+OVERWRITE = False
 TSK_INFO_LST = [
-    ['conf_samp', OPT_LVL1, OPT_LVL0, False],
-    ['conf_hess', OPT_LVL1, OPT_LVL1, False],
-    ['hr_scan', SCAN_LVL1, OPT_LVL1, False],
-    ['conf_energy', SP_LVL1, OPT_LVL1, False],
-    ['conf_energy', SP_LVL2, OPT_LVL1, False],
+    ['conf_samp', OPT_LVL1, OPT_LVL0, OVERWRITE],
+    ['conf_hess', OPT_LVL1, OPT_LVL1, OVERWRITE],
+    ['conf_hess', OPT_LVL2, OPT_LVL2, OVERWRITE],
+    ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
+    ['conf_energy', SP_LVL1, OPT_LVL1, OVERWRITE],
+    ['conf_energy', SP_LVL2, OPT_LVL1, OVERWRITE],
+    ['conf_energy', SP_LVL3, OPT_LVL1, OVERWRITE],
+    # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
     ]
 
-HIGH_LEVEL_COEFF = [-0.5, 1.5]
+ENE_COEFF = [0.0, -0.693, 1.693]
+#ENE_COEFF = [-0.4, 1.4]
 
 OPT_ES = True
 OPT_MESS = False
@@ -469,9 +478,12 @@ OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
 SPC_QUEUE = list(SPC_NAMES)
 
-REF_MOLS='basic'
+# REF_MOLS = 'basic'
+# REF_MOLS = [automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'), automol.smiles.inchi('O'), automol.smiles.inchi('N')]
+REF_MOLS = [automol.smiles.inchi('[H]'), automol.smiles.inchi('[C]'), automol.smiles.inchi('[O]'), automol.smiles.inchi('[N]')]
+# REF_MOLS = [automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'), automol.smiles.inchi('O=O'), automol.smiles.inchi('N#N')]
 thermodriver.driver.run(
-        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX, SAVE_PREFIX, OPTIONS)
+    TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX, SAVE_PREFIX, options=OPTIONS)
 
 OPT_ES = False
 OPT_MESS = True
@@ -480,7 +492,7 @@ OPT_ALLPF = True
 OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
 thermodriver.driver.run(
-        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX, SAVE_PREFIX, OPTIONS)
+        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX, SAVE_PREFIX, ENE_COEFF, OPTIONS)
 # set up a combination of energies
 # E_HL = sum_i E_HL(i) * Coeff(i)
 #HIGH_LEVEL_COEFF = [1]
