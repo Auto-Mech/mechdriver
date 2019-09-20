@@ -66,7 +66,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 spcdct[ts]['class']= rxn_class
                 spcdct[ts]['tors_names'] = tors_names
                 spcdct[ts]['original_zma']= ts_zma
-                geo, zma = scripts.es.find_ts(ts_info, ts_zma, rxn_class, dist_name, grid, thy_info, rxn_run_path, rxn_save_path, overwrite)
+                geo, zma = scripts.es.find_ts(spcdct[ts], ts_info, ts_zma, rxn_class, dist_name, grid, thy_info, rxn_run_path, rxn_save_path, overwrite)
                 if not isinstance(geo, str):
                     print('Success, transition state {} added to species queue'.format(ts))
                     spc_queue.append(ts)
@@ -74,7 +74,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
 
         #Loop over all species
         for spc in spc_queue:
-            if 'ts' in spc:
+            if 'ts_' in spc:
                 print('\nTask {} \t\t\t Species {}'.format(tsk, spc))
                 spc_run_fs, spc_save_fs, spc_run_path, spc_save_path = spcdct[spc]['rxn_fs']
                 spc_info = scripts.es.get_spc_info(spcdct[spc])
@@ -171,6 +171,9 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 ts_run_fs = None
                 ts_save_fs = None
 
+            run_fs = autofile.fs.run(thy_run_path)
+            run_fs.trunk.create()
+
             cnf_run_fs = autofile.fs.conformer(thy_run_path)
             cnf_save_fs = autofile.fs.conformer(thy_save_path)
 
@@ -195,16 +198,20 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                     ini_scn_run_fs, ini_scn_save_fs, ini_ts_run_fs, ini_ts_save_fs]
 
             #Run tasks
-            if 'ts' in spc:
+            if 'ts_' in spc:
                 #Check if the task has been completed at the requested running theory level
 
                 #Every task starts with a geometry optimization at the running theory level
                 if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
                     geo = moldr.ts.reference_geometry(spcdct[spc], thy_level, ini_thy_level, fs, ini_fs, overwrite)
                 #Run the requested task at the requested running theory level
-                if geo:
-                    scripts.es.ts_geometry_generation(tsk, spcdct[spc], es_dct[es_run_key]
-                                               thy_level, fs, spc_info, overwrite)
+                    if geo:
+                        scripts.es.ts_geometry_generation(tsk, spcdct[spc], es_dct[es_run_key],
+                                                   thy_level, fs, spc_info, overwrite)
+                else:
+                    selection = 'min'
+                    scripts.es.ts_geometry_analysis(tsk, thy_level, ini_fs,
+                                                 selection, spc_info, overwrite)
             else:
                 #Check if the task has been completed at the requested running theory level
 
@@ -220,6 +227,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                     if geo:
                     #Run the requested task at the requested running theory level
                         scripts.es.geometry_generation(tsk, spcdct[spc], es_dct[es_run_key],
+<<<<<<< 65e8d47ce53278fe38d351bdbb3e80e646bbaa71
                                                    thy_level, fs, spc_info, overwrite)
                 else:
                     selection = 'min'
@@ -249,9 +257,11 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                             continue
                     scripts.es.geometry_analysis(tsk, thy_level, ini_fs,
                                                  selection, spc_info, overwrite)
+                                                       thy_level, fs, spc_info, overwrite)
+    return spcdct
 
 
-def create_spec(ts, ts_dct, spcs, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.):
+def create_spec(ts, ts_dct, spcs, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=30.):
     """
     Create a transition state entry for the spcdct
     """

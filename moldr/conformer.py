@@ -19,7 +19,7 @@ def conformer_sampling(
     initial torsional states
     """
     ich = spc_info[0]
-    if ich:
+    if not saddle:
         geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         zma = automol.geom.zmatrix(geo)
@@ -30,7 +30,7 @@ def conformer_sampling(
     # tors_ranges = automol.zmatrix.torsional_sampling_ranges(
     #    zma, tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
-    if ich:
+    if not saddle:
         gra = automol.inchi.graph(ich)
         ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
         nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
@@ -40,7 +40,7 @@ def conformer_sampling(
 
     save_conformers(
         cnf_run_fs=cnf_run_fs,
-        cnf_save_fs=cnf_save_fs,
+        cnf_save_fs=cnf_save_fs, saddle=saddle 
     )
 
     run_conformers(
@@ -55,10 +55,9 @@ def conformer_sampling(
         overwrite=overwrite,
         **kwargs,
     )
-
     save_conformers(
         cnf_run_fs=cnf_run_fs,
-        cnf_save_fs=cnf_save_fs,
+        cnf_save_fs=cnf_save_fs,saddle=saddle
     )
 
     # save information about the minimum energy conformer in top directory
@@ -66,8 +65,8 @@ def conformer_sampling(
     if min_cnf_locs:
         geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
-        assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
-        if ich:
+        if not saddle:
+            assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
             thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
             thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
 
@@ -152,7 +151,7 @@ def run_conformers(
             cnf_run_fs.trunk.file.info.write(inf_obj)
 
 
-def save_conformers(cnf_run_fs, cnf_save_fs):
+def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False):
     """ save the conformers that have been found so far
     """
 
@@ -177,33 +176,40 @@ def save_conformers(cnf_run_fs, cnf_save_fs):
                 method = inf_obj.method
                 ene = elstruct.reader.energy(prog, method, out_str)
                 geo = elstruct.reader.opt_geometry(prog, out_str)
-                try:
-                    zma = automol.geom.zmatrix(geo)
-                except:
+                if saddle:
                     zma = elstruct.reader.opt_zmatrix(prog, out_str)
-
-                gra = automol.geom.graph(geo)
-
-                if len(automol.graph.connected_components(gra)) > 1:
-                    print(" - Geometry is disconnected.. Skipping...")
+                    unique = True
+                    for idx, geoi in enumerate(seen_geos):
+                        enei = seen_enes[idx]
+                        etol = 1.e-6
+                        if automol.geom.almost_equal_coulomb_spectrum(
+                                geo, geoi, rtol=1e-2):
+                            if abs(ene-enei) < etol:
+                                unique = False
                 else:
-                    unique = is_unique_dist_mat_energy(geo, ene, seen_geos, seen_enes)
+                    zma = automol.geom.zmatrix(geo)
+                    gra = automol.geom.graph(geo)
 
-                    if not unique:
-                        print(" - Geometry is not unique. Skipping...")
+                    if len(automol.graph.connected_components(gra)) > 1:
+                        print(" - Geometry is disconnected.. Skipping...")
                     else:
-                        save_path = cnf_save_fs.leaf.path(locs)
-                        print(" - Geometry is unique. Saving...")
-                        print(" - Save path: {}".format(save_path))
+                        unique = is_unique_dist_mat_energy(geo, ene, seen_geos, seen_enes)
 
-                        cnf_save_fs.leaf.create(locs)
-                        cnf_save_fs.leaf.file.geometry_info.write(
-                            inf_obj, locs)
-                        cnf_save_fs.leaf.file.geometry_input.write(
-                            inp_str, locs)
-                        cnf_save_fs.leaf.file.energy.write(ene, locs)
-                        cnf_save_fs.leaf.file.geometry.write(geo, locs)
-                        cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
+                if not unique:
+                    print(" - Geometry is not unique. Skipping...")
+                else:
+                    save_path = cnf_save_fs.leaf.path(locs)
+                    print(" - Geometry is unique. Saving...")
+                    print(" - Save path: {}".format(save_path))
+
+                    cnf_save_fs.leaf.create(locs)
+                    cnf_save_fs.leaf.file.geometry_info.write(
+                        inf_obj, locs)
+                    cnf_save_fs.leaf.file.geometry_input.write(
+                        inp_str, locs)
+                    cnf_save_fs.leaf.file.energy.write(ene, locs)
+                    cnf_save_fs.leaf.file.geometry.write(geo, locs)
+                    cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
 
                 seen_geos.append(geo)
                 seen_enes.append(ene)
