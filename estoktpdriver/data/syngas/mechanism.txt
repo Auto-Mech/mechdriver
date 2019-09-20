@@ -32,6 +32,8 @@ SPECIES
     CHO4(45)        
     CHO3(61)        
     CH2O3(82)       
+    N
+    C
 END
 
 

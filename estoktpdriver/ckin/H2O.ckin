@@ -1,10 +1,12 @@
 ! tors model: 1DHR
 ! vib model: HARM
-! har level: RUwb97xd/6-31+g*
-! tors level: RUwb97xd/6-31+g*
-! ref level for energy: RUwb97xd/6-31+g*
-! energy level: ccsd(t)-f12/cc-pvtz-f12
+! har level: RUb2plypd3/cc-pvtz//RUb2plypd3/cc-pvtz
+! tors level: RUb2plypd3/cc-pvtz//RUb2plypd3/cc-pvtz
+! energy level: 0.00 x RRccsd(t)-f12/cc-pvdz-f12//RUb2plypd3/cc-pvtz
+!                -0.69 x RRccsd(t)-f12/cc-pvtz-f12//RUb2plypd3/cc-pvtz
+!                1.69 x RRccsd(t)-f12/cc-pvqz-f12//RUb2plypd3/cc-pvtz
+! Hf(0 K) = -57.15, Hf(298 K) = -57.84 kcal/mol
 REF_H2O                 H  2 C  0 O  1 N  0 G    200.0    3000.0   1000.0      1
- 3.18728767E+00 1.75366020E-03 8.42213033E-08-1.95608718E-10 3.12543210E-14    2
--2.99226109E+04 4.84216948E+00 4.19819985E+00-2.02028944E-03 6.09999589E-06    3
--4.93180551E-09 1.51471399E-12-3.01644492E+04-1.67034747E-01                   4
+ 3.20191833E+00 1.75477253E-03 7.96759696E-08-1.94231946E-10 3.11346220E-14    2
+-3.00759256E+04 4.74651786E+00 4.20637835E+00-2.13040762E-03 6.55012524E-06    3
+-5.49855541E-09 1.74572895E-12-3.03114500E+04-2.02631358E-01                   4
