@@ -146,7 +146,7 @@ def species_block(
                             sym = 1
                             hind_rot_str += mess_io.writer.rotor_hindered(
                                 group, axis, sym, pot)
-                            proj_rotors_str += projrot_io._write.write_rotors_str(
+                            proj_rotors_str += projrot_io.writer.rotors(
                                 axis, group)
 #                        print('hind_rot_str test')
 #                        print(hind_rot_str)
@@ -155,7 +155,7 @@ def species_block(
                         # Write the string for the ProjRot input
                         COORD_PROJ = 'cartesian'
                         grad = ''
-                        projrot_inp_str = projrot_io._write.write_rpht_input(
+                        projrot_inp_str = projrot_io.writer.rpht_input(
                             tors_geo, grad, hess, rotors_str=proj_rotors_str,
                             coord_proj=COORD_PROJ)
 
@@ -171,9 +171,9 @@ def species_block(
 
                         moldr.util.run_script(script_str, path)
 
-                        rtproj_freqs, _ = projrot_io._read.read_rpht_output(
+                        rtproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/RTproj_freq.dat')
-                        rthrproj_freqs, _ = projrot_io._read.read_rpht_output(
+                        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         # the second variable above is the imaginary frequency list
                         print('Projection test')
@@ -255,13 +255,15 @@ def species_block(
 
 
 def get_high_level_energy(
-        spc_info, thy_low_level, thy_high_level, save_prefix):
+        spc_info, thy_low_level, thy_high_level, save_prefix, saddle=False):
     """ get high level energy at low level optimized geometry
     """
-
-    spc_save_fs = autofile.fs.species(save_prefix)
-    spc_save_fs.leaf.create(spc_info)
-    spc_save_path = spc_save_fs.leaf.path(spc_info)
+    if saddle:
+        spc_save_path = save_prefix
+    else:
+        spc_save_fs = autofile.fs.species(save_prefix)
+        spc_save_fs.leaf.create(spc_info)
+        spc_save_path = spc_save_fs.leaf.path(spc_info)
 
     orb_restr = moldr.util.orbital_restriction(
         spc_info, thy_low_level)

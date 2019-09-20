@@ -5,6 +5,7 @@ import automol
 import elstruct
 import autofile
 import moldr
+import scripts.es
 
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
@@ -174,6 +175,7 @@ def reference_geometry(
 #
 #    print('initializing geometry')
     geo = None
+    geo_init = None
     # Check to see if geometry should be obtained from dictionary
     spc_info = [spcdct['ich'], spcdct['chg'], spcdct['mul']]
     if 'input_geom' in ini_thy_level: 
@@ -230,6 +232,74 @@ def reference_geometry(
             ene = elstruct.reader.energy(prog, method, out_str)
             geo = elstruct.reader.opt_geometry(prog, out_str)
             zma = elstruct.reader.opt_zmatrix(prog, out_str)
+        if geo:
+           # moldr.driver.run_job(
+           #     job=elstruct.Job.HESSIAN,
+           #     spc_info=spc_info,
+           #     thy_level=thy_level,
+           #     geom=geo,
+           #     run_fs=run_fs,
+           #     script_str=script_str,
+           #     overwrite=overwrite,
+           #     **kwargs,
+           #         )
+           # ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
+           # if ret:
+           #     inf_obj, _, out_str = ret
+           #     prog = inf_obj.prog
+           #     hess = elstruct.reader.hessian(prog, out_str)
+           #     freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
+           #     norm_coos = elstruct.util.normal_coordinates(geo, hess, project=True)
+           #     count = 0
+           #     while( freqs[0] < -100 and count < 5):
+           #         count += 1
+           #         print('Kicking off from saddle in forward direction')
+           #         im_norm_coo = numpy.array(norm_coos)[:, 0]
+           #         disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3))
+           #         dir_afs = autofile.fs.direction()
+           #         fwd_run_path = dir_afs.direction.dir.path(thy_run_path, [True])
+           #         dir_afs.direction.dir.create(thy_run_path, [True])
+           #         fwd_save_path = dir_afs.direction.dir.path(thy_save_path, [True])
+           #         dir_afs.direction.dir.create(thy_save_path, [True])
+           #         print(automol.geom.string(geo))
+           #         print(disp_xyzs)
+           #         moldr.geom.run_kickoff_saddle(
+           #                 geo, disp_xyzs, ts_info, thy_level,
+           #                 script_str,kickoff_size=kickoff_size, kickoff_backward=False,
+           #                 opt_cart=True, **OPT_KWARGS)
+           #         print('Saving product of kick off from saddle in forward direction')
+           #         ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=fwd_run_path)
+           #         if ret:
+           #             inf_obj, inp_str, out_str = ret
+           #             prog = inf_obj.prog
+           #             method = inf_obj.method
+           #             ene = elstruct.reader.energy(prog, method, out_str)
+           #             geo = elstruct.reader.opt_geometry(prog, out_str)
+           #             fwd_save_path = dir_afs.direction.dir.path(thy_save_path, [True])
+           #             print('save path', fwd_save_path)
+           #             dir_afs.direction.file.geometry_info.write(inf_obj, thy_save_path, [True])
+           #             dir_afs.direction.file.geometry_input.write(inp_str, thy_save_path, [True])
+           #             dir_afs.direction.file.geometry.write(geo, thy_save_path, [True])
+           #             dir_afs.direction.file.energy.write(ene, thy_save_path, [True])
+
+           #             moldr.driver.run_job(
+           #                 job=elstruct.Job.HESSIAN,
+           #                 spc_info=spc_info,
+           #                 thy_level=thy_level,
+           #                 geom=geo,
+           #                 run_fs=run_fs,
+           #                 script_str=script_str,
+           #                 overwrite=overwrite,
+           #                 **kwargs,
+           #                     )
+           #             ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
+           #             if ret:
+           #                 inf_obj, _, out_str = ret
+           #                 prog = inf_obj.prog
+           #                 hess = elstruct.reader.hessian(prog, out_str)
+           #                 freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
+           #                 norm_coos = elstruct.util.normal_coordinates(geo, hess, project=True)
+           # 
 
             print(" - Saving...")
             print(" - Save path: {}".format(ts_save_fs.trunk.path()))
@@ -237,4 +307,8 @@ def reference_geometry(
             ts_save_fs.trunk.file.energy.write(ene)
             ts_save_fs.trunk.file.geometry.write(geo)
             ts_save_fs.trunk.file.zmatrix.write(zma)
+
+            scripts.es.run_single_conformer(
+                spc_info, thy_level, fs,
+                overwrite, True)
     return geo

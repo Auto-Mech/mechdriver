@@ -29,14 +29,15 @@ ELC_DEG_DCT = {
 }
 
 
-def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix):
+def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix, saddle=False):
     """ return the electronic energy for a specific species for a given level of theory
     """
     ene = moldr.pf.get_high_level_energy(
         spc_info=spc_info,
         thy_low_level=geo_theory,
         thy_high_level=sp_theory,
-        save_prefix=save_prefix)
+        save_prefix=save_prefix,
+        saddle=saddle)
     return ene
 
 
@@ -120,8 +121,7 @@ def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
     is_atom = {}
     zero_energy_str = {}
     ich = spcdct['ich']
-    smi = automol.inchi.smiles(ich)
-    print("smiles: {}".format(smi), "inchi: {}".format(ich))
+    print("inchi: {}".format(ich))
 
     spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
         spc_info,

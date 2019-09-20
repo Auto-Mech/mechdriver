@@ -41,7 +41,6 @@ def run_job(
 
     run_fs.leaf.create([job])
     run_path = run_fs.leaf.path([job])
-
     if overwrite:
         do_run = True
         print(" - Running {} job at {}".format(job, run_path))
@@ -103,7 +102,7 @@ def run_job(
         else:
             print(" - Run failed.")
             status = autofile.system.RunStatus.FAILURE
-        version = elstruct.reader.program_version(out_str)
+        version = elstruct.reader.program_version(prog, out_str)
         inf_obj.version = version
         inf_obj.status = status
         run_fs.leaf.file.info.write(inf_obj, [job])

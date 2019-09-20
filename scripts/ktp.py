@@ -13,6 +13,183 @@ import scripts
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
+RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                           "mess mess.inp build.out >> stdout.log &> stderr.log")
+PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                      "RPHt.exe")
+
+def pf_headers(rct_ichs, temps, press, exp_factor, exp_power, exp_cutoff,
+             eps1, eps2, sig1, sig2, mass1):
+
+# print header and energy transfer sections only for the first channel
+    # header section
+    header_str = mess_io.writer.global_reaction(temps, press)
+    print(header_str)
+    tot_mass = 0.
+    for rct_ich in rct_ichs:
+        geo = automol.convert.inchi.geometry(rct_ich)
+        masses = automol.geom.masses(geo)
+        for mass in masses:
+            tot_mass += mass
+
+    # energy transfer section
+    energy_trans_str = mess_io.writer.energy_transfer(
+        exp_factor, exp_power, exp_cutoff, eps1, eps2, sig1, sig2, mass1, tot_mass)
+
+    return header_str, energy_trans_str
+
+def make_all_well_data(rxn_lst, spcdct, save_prefix, model_info, pf_info):
+    wells = {}
+    spc_save_fs = autofile.fs.species(save_prefix)
+    for idx, rxn in enumerate(rxn_lst):
+        tsname = 'ts_{:g}'.format(idx)
+        ts = spcdct[tsname]
+        welllist = rxn['reactants'] + rxn['products'] 
+        for name in welllist:
+            if not name in wells:
+                wells[name] = make_well_data(spcdct[name], spc_save_fs, model_info, pf_info)
+        wells[tsname] = make_well_data(ts, spc_save_fs, model_info, pf_info)
+    return wells
+
+def make_well_data(spc_spcdct, spc_save_fs, model_info, pf_info):
+    tors_model, vib_model = model_info
+    har_info, tors_info, vpt2_info = pf_info
+    print(har_info, tors_info, vpt2_info)
+    print(tors_model, vib_model)
+    print(spc_spcdct['ich'])
+    spc_info = (spc_spcdct['ich'], spc_spcdct['chg'], spc_spcdct['mul'])
+    if 'rxn_fs' in spc_spcdct:
+        save_path = spc_spcdct['rxn_fs'][3]
+    else:
+        spc_save_fs.leaf.create(spc_info)
+        save_path = spc_save_fs.leaf.path(spc_info)
+    well_data = moldr.pf.species_block(
+        spc_info=spc_info,
+        tors_model=tors_model,
+        vib_model=vib_model,
+        har_level=har_info,
+        tors_level=tors_info,
+        vpt2_level=vpt2_info,
+        script_str=PROJROT_SCRIPT_STR,
+        elec_levels=[[0., 1]], sym_factor=1.,
+        save_prefix=save_path,
+        )
+    return well_data
+
+def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene):
+    bim_str, well_str, ts_str = strs
+#Find the number of uni and bimolecular wells already in the dictionary
+    pidx = 1
+    widx = 1
+    for val in idx_dct.values():
+        if 'P' in val:
+            pidx += 1
+        elif 'W' in val:
+            widx += 1
+#Set up a new well for the reactants if that combo isn't already in the dct
+    reac_label = ''
+    reac_ene = 0.
+    bimol = False
+    if len(rxn['reactants']) > 1:
+        bimol = True
+    well_data = []
+    spc_label = []
+    for reac in rxn['reactants']:
+        spc_label.append(automol.inchi.smiles(spcdct[reac]['ich']))
+        well_data.append(wells[reac])
+        reac_ene += scripts.thermo.spc_energy(spcdct[reac]['ene'],spcdct[reac]['zpe'])
+    well_dct_key1 = '.'.join(spc_label)
+    well_dct_key2 = '.'.join(spc_label[::-1])
+    if not well_dct_key1 in idx_dct:
+        if well_dct_key2 in idx_dct:
+            well_dct_key1 = well_dct_key2
+        else:
+            if bimol:
+                reac_label = 'P'+str(pidx)
+                pidx += 1
+                if not first_ground_ene:
+                    first_ground_ene = reac_ene
+                ground_energy = reac_ene - first_ground_ene
+                bim_str +=  '\n' + mess_io.writer.bimolecular(
+                    reac_label, spc_label[0], well_data[0],
+                    spc_label[1], well_data[1], ground_energy)
+                idx_dct[well_dct_key1] = reac_label
+            else: 
+                reac_label = 'W'+str(widx)
+                widx += 1
+                zero_energy = 0.0
+                well_str += '\n' + mess_io.writer.well(reac_label, well_data[0], zero_energy)
+                idx_dct[well_dct_key1] = reac_label
+    if not reac_label:
+        reac_label = idx_dct[well_dct_key1]
+    print('reac_ene:', reac_ene)
+#Set up a new well for the products if that combo isn't already in the dct
+    prod_label = ''
+    prod_ene = 0.
+    bimol = False
+    if len(rxn['products']) > 1:
+        bimol = True
+    well_data = []
+    spc_label = []
+    for prod in rxn['products']:
+        spc_label.append(automol.inchi.smiles(spcdct[prod]['ich']))
+        well_data.append(wells[prod])
+        prod_ene += scripts.thermo.spc_energy(spcdct[prod]['ene'],spcdct[prod]['zpe'])
+    zero_energy = prod_ene - reac_ene
+    well_dct_key1 = '.'.join(spc_label)
+    well_dct_key2 = '.'.join(spc_label[::-1])
+    if not well_dct_key1 in idx_dct:
+        if well_dct_key2 in idx_dct:
+            well_dct_key1 = well_dct_key2
+        else:
+            if bimol:
+                prod_label = 'P'+str(pidx)
+                ground_energy = prod_ene - first_ground_ene
+                bim_str +=  '\n' + mess_io.writer.bimolecular(
+                   prod_label, spc_label[0], well_data[0],
+                    spc_label[1], well_data[1], ground_energy)
+                idx_dct[well_dct_key1] = prod_label
+            else: 
+                prod_label = 'W'+str(widx)
+                zero_energy = 0.0
+                well_str +=  '\n' + mess_io.writer.well(prod_label, well_data[0], zero_energy)
+                idx_dct[well_dct_key1] = prod_label
+    if not prod_label:
+        prod_label = idx_dct[well_dct_key1]
+    print('prod_ene:', prod_ene)
+
+#Set up a new well for the ts
+    ts_ene = scripts.thermo.spc_energy(spcdct[tsname]['ene'],spcdct[tsname]['zpe'])
+    zero_energy = ts_ene - reac_ene
+    ts_label = 'B' + str(int(tsname.replace('ts_',''))+1)
+    ts_str +=  '\n' + mess_io.writer.ts_sadpt(ts_label, reac_label, prod_label, wells[tsname], zero_energy)
+    
+    return [well_str, bim_str, ts_str], first_ground_ene
+
+def run_rate(header_str, energy_trans_str, well_str, bim_str, ts_str, tsdct, thy_info, rxn_save_path):
+    ts_info = (tsdct['ich'], tsdct['chg'], tsdct['mul'])
+    orb_restr = moldr.util.orbital_restriction(ts_info, thy_info)
+    ref_level = thy_info[1:3]
+    ref_level.append(orb_restr)
+    print('ref level test:', ref_level)
+    thy_save_fs = autofile.fs.theory(rxn_save_path)
+    thy_save_fs.leaf.create(ref_level)
+    thy_save_path = thy_save_fs.leaf.path(ref_level)
+
+    mess_inp_str = '\n'.join([header_str, energy_trans_str, well_str, bim_str, ts_str])
+    print('mess input file')
+    print(mess_inp_str)
+    
+    bld_locs = ['MESS', 0]
+    bld_save_fs = autofile.fs.build(thy_save_path)
+    bld_save_fs.leaf.create(bld_locs)
+    mess_path = bld_save_fs.leaf.path(bld_locs)
+    print('Build Path for MESS rate files:')
+    print(mess_path)
+    with open(os.path.join(mess_path, 'mess.inp'), 'w') as mess_file:
+        mess_file.write(mess_inp_str)
+    moldr.util.run_script(RATE_SCRIPT_STR, mess_path)
+    return   
 
 def species_thermo(
         spc_names,
