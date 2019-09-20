@@ -51,7 +51,7 @@ def reference_geometry(
     print('initializing geometry')
     geo = None
     try:
-        # Check to see if geometry should be obtained from dictionary
+#    Check to see if geometry should be obtained from dictionary
         spc_info = [spcdct['ich'], spcdct['chg'], spcdct['mul']]
         if 'input_geom' in ini_thy_level: 
             geom_obj = spcdct['geoobj']
@@ -91,7 +91,6 @@ def reference_geometry(
                 'thy_level': thy_level,
                 'geo_init': geo_init}
             geo = run_initial_geometry_opt(**params, **opt_kwargs)
-
             thy_save_fs.leaf.create(thy_level[1:4])
             thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
             if not automol.geom.is_atom(geo):
@@ -101,7 +100,7 @@ def reference_geometry(
                     kickoff_backward,
                     projrot_script_str,
                     overwrite=overwrite)
-
+    
                 tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
                 locs_lst = cnf_save_fs.leaf.existing()
                 if locs_lst:
@@ -112,19 +111,19 @@ def reference_geometry(
                         print('removing original conformer save data')
                         cnf_run_fs.remove()
                         cnf_save_fs.remove()
-
+    
                 print('Saving reference geometry')
                 print(" - Save path: {}".format(thy_save_path))
                 thy_save_fs.leaf.file.hessian.write(hess, thy_level[1:4])
-
+    
             zma = automol.geom.zmatrix(geo)
             thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
             thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
-
+    
             scripts.es.run_single_conformer(
                 spc_info, thy_level, fs,
                 overwrite)
-
+    
         if geo:
             inf_obj.status = autofile.system.RunStatus.SUCCESS
             run_fs.trunk.file.info.write(inf_obj, [])
@@ -148,7 +147,6 @@ def run_initial_geometry_opt(
     # set up the filesystem
     thy_run_fs.leaf.create(thy_level[1:4])
     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
-
     # check if geometry has already been saved
     # if not call the electronic structure optimizer
     zma = automol.geom.zmatrix(geo_init)

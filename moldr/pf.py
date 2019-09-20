@@ -257,13 +257,15 @@ def species_block(
 
 
 def get_high_level_energy(
-        spc_info, thy_low_level, thy_high_level, save_prefix):
+        spc_info, thy_low_level, thy_high_level, save_prefix, saddle=False):
     """ get high level energy at low level optimized geometry
     """
-
-    spc_save_fs = autofile.fs.species(save_prefix)
-    spc_save_fs.leaf.create(spc_info)
-    spc_save_path = spc_save_fs.leaf.path(spc_info)
+    if saddle:
+        spc_save_path = save_prefix
+    else:
+        spc_save_fs = autofile.fs.species(save_prefix)
+        spc_save_fs.leaf.create(spc_info)
+        spc_save_path = spc_save_fs.leaf.path(spc_info)
 
     orb_restr = moldr.util.orbital_restriction(
         spc_info, thy_low_level)

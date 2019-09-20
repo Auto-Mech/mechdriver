@@ -9,6 +9,16 @@ import thermo.heatform
 import esdriver.driver
 import autofile.fs
 
+TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
+PRESS = [0.1, 1., 10., 100.]
+EXP_FACTOR = 150.0
+EXP_POWER = 0.85
+EXP_CUTOFF = 15.
+EPS1 = 100.0
+EPS2 = 200.0
+SIG1 = 6.
+SIG2 = 6.
+MASS1 = 15.0
 
 def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, save_prefix, options=[True, True, True, False]):
     """ main driver for thermo run
@@ -24,16 +34,18 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
 
     spc_queue = []
     for rxn, _ in enumerate(rct_names_lst):
-        rxn_spc = rct_names_lst[rxn]
+        rxn_spc = rct_names_lst[rxn].copy()
         rxn_spc.extend(prd_names_lst[rxn])
         for spc in rxn_spc:
             if spc not in spc_queue:
                 spc_queue.append(spc)
-
-    #Add reference molecules
     for spc in spc_queue:
         if not 'ich' in spcdct[spc]:
             spcdct[spc]['ich'] = automol.smiles.inchi(spcdct[spc]['smi'])
+
+    rxn_lst = []
+    for rxn, _ in enumerate(rct_names_lst):
+        rxn_lst.append({'species': [], 'reactants': rct_names_lst[rxn], 'products': prd_names_lst[rxn]})
 
     #prepare filesystem
     if not os.path.exists(save_prefix):
@@ -43,17 +55,115 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
 
     #Run ESDriver
     if runes:
-        rxn_lst = []
-        for rxn, _ in enumerate(rct_names_lst):
-            rxn_lst.append({'species': [], 'reactants': rct_names_lst[rxn], 'products': prd_names_lst[rxn]})
         if runspcfirst:
             rxn_lst[0]['species'] = spc_queue
-        esdriver.driver.run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix)
+        spc_dct = esdriver.driver.run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix)
+    else:
+        pass 
+    #BUT if we don't run ES I need to construct the following info right here for ts dict
+    #ts_zma, rxn_fs, 
+              
 
+    #Figure out the model and theory levels for the MESS files (better version in thermodriver, will copy)
     geo_lvl = ''
     harm_lvl = ''
     anharm_lvl = ''
     tors_lvl = ''
+    model_info = ['RIGID', 'HARM']
+    for tsk in tsk_info_lst:
+        if 'geom' in tsk[0] or 'conf' in tsk[0]:
+            ene_lvl = tsk[1]
+            geo_lvl = tsk[1]
+        if 'hess' in tsk[0] or 'harm' in tsk[0]:
+            harm_lvl = tsk[1]
+#            tors_lvl = tsk[1]
+#            anharm_lvl = tsk[1]
+        if 'hr' in tsk[0] or 'tau' in tsk[0]:
+            tors_lvl = tsk[1]
+            if 'md' in tsk[0]:
+                model_info[0] = 'MDHR'
+            if 'tau' in tsk[0]:
+                model_info[0] = 'TAU'
+            else:
+                model_info[0] = '1DHR'
+        if 'anharm' in tsk[0] or 'vpt2' in tsk[0]:
+            anharm_lvl = tsk[1]
+            model_info[1] = 'ANHARM'
+    geo_thy_info = get_thy_info(es_dct, geo_lvl)
+    harm_thy_info = get_thy_info(es_dct, harm_lvl)
+    tors_thy_info = get_thy_info(es_dct, tors_lvl)
+    anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
+    pf_info = [harm_thy_info, tors_thy_info, anharm_thy_info]
+    for tsk in tsk_info_lst:
+        if 'ene' in tsk[0]:
+            ene_lvl = tsk[1]
+            ene_ref_lvl = tsk[2]
+    ene_ref_thy_info = scripts.es.get_thy_info(es_dct[ene_ref_lvl])
+    ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
+
+    #Collect energies for zero points
+    for spc in spc_queue:
+        spc_info = (spcdct[spc]['ich'], spcdct[spc]['chg'], spcdct[spc]['mul'])
+        ene = scripts.thermo.get_electronic_energy(
+            spc_info, ene_ref_thy_info, ene_thy_info, save_prefix)
+        spc_save_fs = autofile.fs.species(save_prefix)
+        spc_save_fs.leaf.create(spc_info)
+        spc_save_path = spc_save_fs.leaf.path(spc_info)
+        zpe, zpe_str = scripts.thermo.get_zpe(
+            spcdct[spc], spc_info, spc_save_path, pf_info, model_info)
+        spcdct[spc]['ene'] = ene
+        spcdct[spc]['zpe'] = zpe
+    for spc in spcdct:   #have to make sure you get them for the TS too
+        if 'ts_' in spc:
+            rxn_save_path = spcdct[spc]['rxn_fs'][3]
+            ene = scripts.thermo.get_electronic_energy(
+                spc_info, ene_ref_thy_info, ene_thy_info, rxn_save_path, True)
+            spc_save_fs = autofile.fs.species(save_prefix)
+            spc_save_fs.leaf.create(spc_info)
+            spc_save_path = spc_save_fs.leaf.path(spc_info)
+            zpe, zpe_str = scripts.thermo.get_zpe(
+                spcdct[spc], spc_info, spc_save_path, pf_info, model_info)
+            spcdct[spc]['ene'] = ene
+            spcdct[spc]['zpe'] = zpe
+ 
+    #Collect formula and header string for the PES
+    tsname_0 = 'ts_0'
+    pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
+    rct_ichs = spc_dct[tsname_0]['rxn_ichs'][0]
+    header_str, energy_trans_str = scripts.ktp.pf_headers(
+                                            rct_ichs, TEMPS, PRESS, 
+                                            EXP_FACTOR, EXP_POWER, EXP_CUTOFF,
+                                            EPS1, EPS2, SIG1, SIG2, MASS1)
+
+
+    mess_strs = ['','','']
+    idx_dct = {}
+    first_ground_ene = 0.
+    wells = scripts.ktp.make_all_well_data(rxn_lst, spc_dct, save_prefix, model_info, pf_info)
+    for idx, rxn in enumerate(rxn_lst):
+        tsname = 'ts_{:g}'.format(idx)
+        tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma'])) 
+        if tsform != pes_formula:
+            print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(tsform, pes_formula))
+            print('Will proceed to construct only {}'.format(pes_formula))
+            continue
+        mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, mess_strs, first_ground_ene)
+        print(idx_dct)
+    well_str, bim_str, ts_str = mess_strs
+    print(well_str)
+    print(bim_str)
+    print(ts_str)
+    scripts.ktp.run_rate(header_str, energy_trans_str, well_str, bim_str, ts_str, spcdct[tsname_0], geo_thy_info, spcdct[tsname_0]['rxn_fs'][3])
+
+        
+
+def get_thy_info(es_dct, key):
+    """ setup theory info file from es dictionary
+    """
+    ret = []
+    if key:
+        ret = scripts.es.get_thy_info(es_dct[key])
+    return ret
 
 if __name__ == "__main__":
 
@@ -76,8 +186,10 @@ if __name__ == "__main__":
         ['conf_samp', 'mclev', 'mclev', False],
         ['find_ts', 'mclev', 'mclev', False],
         ['conf_samp', 'mclev', 'mclev', False],
-        ['geom', 'optlev', 'optlev', False],
-        ['conf_hess', 'optlev', 'optlev', False]
+        ['geom', 'optlev', 'mclev', False],
+        ['conf_hess', 'optlev', 'optlev', False],
+       # ['hr_scan', 'cheap', 'optlev', False],
+        ['conf_energy', 'optlev', 'optlev', False]
         # [ 'hr', 'hrlev', 'optlev', False]
         # [ 'sp', 'splev', 'optlev', False]]
         ]
@@ -85,50 +197,53 @@ if __name__ == "__main__":
     ES_DCT = {'mclev': {
         'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
         'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv':
-        '1.e-4'},
-#   es_dct = {'mclev': {
-#       'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp', 'basis': '6-31g*',
-#       'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv': '1.e-4'},
-#             'optlev': {
-#                 'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp',
-#                 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-#                 'econv': '1.e-8', 'gconv': '1.e-4'},
-#             'testlvl': {
-#                 'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp',
-#                 'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-#                 'econv': '1.e-8', 'gconv': '1.e-4'},
+        '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
               'optlev': {
                   'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp',
                   'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4'},
+                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
               'hrlev':  {
                   'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp',
                   'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4'},
+                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
               'anlev':  {
                   'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp',
                   'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4'},
+                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
               '2':      {
                   'orb_res': 'RU', 'program': 'molpro', 'method': 'ccsd(t)',
                   'basis': 'cc-pvtz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4'},
+                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
               'splev':  {
                   'orb_res': 'RU', 'program': 'molpro', 'method': 'b3lyp',
                   'basis': 'cc-pvtz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4'}}
+                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
+              'cheap': {'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': 'sto-3g',  'mc_nsamp': [True, 3, 1, 3 , 100, 5]}
+              }
 
 
-    # SPCS = ['prod1']
-    RCT_NAME_LST = [['methane', 'oh']]
-    PRD_NAME_LST = [['methyl','water']]
+    #RCT_NAME_LST = [['nh3', 'oh']]
+    #PRD_NAME_LST = [['nh2','water']]
+    RCT_NAME_LST = [['ch3oh', 'h'], ['ch3oh', 'h']]
+    PRD_NAME_LST = [['ch2oh','h2'], ['ch3o', 'h2']]
+    #RCT_NAME_LST = [['ch3oh', 'h']]
+    #PRD_NAME_LST = [['ch3o', 'h2']]
 
-#    SPCS = ['reac1', 'prod1', 'methyl']
+    #RCT_NAME_LST = [['methane', 'h'], ['methane', 'oh']]
+    #PRD_NAME_LST = [['methyl','h2'], ['methyl','water']]
+
     SPCDCT = {
             'methane': {'smi': 'C', 'mul': 1, 'chg': 0},
+            'h': {'smi': '[H]', 'mul': 2, 'chg': 0},
+            'h2': {'smi': '[H][H]', 'mul': 1, 'chg': 0},
             'oh': {'smi': '[OH]', 'mul': 2, 'chg': 0},
-            'methyl': {'smi': '[C]', 'mul': 1, 'chg': 0},
-            'water': {'smi': 'O', 'mul': 1, 'chg': 0}
+            'methyl': {'smi': '[CH3]', 'mul': 2, 'chg': 0},
+            'nh3': {'smi': '[NH3]', 'mul': 1, 'chg': 0},
+            'nh2': {'smi': '[NH2]', 'mul': 2, 'chg': 0},
+            'water': {'smi': 'O', 'mul': 1, 'chg': 0},
+            'ch3oh': {'smi': 'CO', 'mul': 1, 'chg': 0},
+            'ch2oh': {'smi': '[CH2]O', 'mul': 2, 'chg': 0},
+            'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0}
              }
-    run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
+    run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/elliott/run', '/lcrc/project/PACC/elliott/save')
     #run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'runtest', 'savetest')
