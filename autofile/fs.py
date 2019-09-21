@@ -334,21 +334,26 @@ def energy_transfer(prefix):
 
     layers:
      - trunk (specifiers: [])
+     - branch (specifiers: [ich, chg, mul])
      - leaf (specifiers: [method, basis, orb_restricted])
 
     :param prefix: sets the path where this filesystem will sit
     :type prefix: str
     """
     trunk_ds = dir_.energy_transfer_trunk(prefix)
-    leaf_ds = dir_.energy_transfer_leaf(prefix, root_ds=trunk_ds)
+    branch_ds = dir_.energy_transfer_branch(prefix, root_ds=trunk_ds)
+    leaf_ds = dir_.energy_transfer_leaf(prefix, root_ds=branch_ds)
 
-    # inp_dfile = file_.input_file(FilePrefix.SP)
-    # inf_dfile = file_.information(
-    #     FilePrefix.LJ, function=info.lennard_jones)
+    # inp_dfile = file_.input_file(FilePrefix.LJ)
+    inf_dfile = file_.information(
+        FilePrefix.LJ, function=info.lennard_jones)
     ene_dfile = file_.energy(FilePrefix.LJ)
     eps_dfile = file_.lennard_jones_epsilon(FilePrefix.LJ)
     sig_dfile = file_.lennard_jones_sigma(FilePrefix.LJ)
     traj_dfile = file_.trajectory(FilePrefix.LJ)
+
+    trunk_ds.add_data_files({
+        FileAttributeName.INFO: inf_dfile})
 
     leaf_ds.add_data_files({
         #    FileAttributeName.INFO: inf_dfile,
@@ -360,6 +365,7 @@ def energy_transfer(prefix):
 
     dir_fs = model.FileSystem({
         SeriesAttributeName.TRUNK: trunk_ds,
+        SeriesAttributeName.BRANCH: branch_ds,
         SeriesAttributeName.LEAF: leaf_ds})
     return dir_fs
 

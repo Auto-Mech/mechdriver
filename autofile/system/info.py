@@ -90,13 +90,14 @@ def vpt2_trunk(fermi):
     return inf_obj
 
 
-def energy_transfer_trunk(potential, nsamp,
-                          method, basis):
+def lennard_jones(potential, nsamp,
+                  method, basis, program, version):
     """ energy transfer trunk """
     inf_obj = autofile.info.Info(potential=potential, nsamp=nsamp,
-                                 method=method, basis=basis)
+                                 method=method, basis=basis,
+                                 program=program, version=version)
     assert autofile.info.matches_function_signature(
-        inf_obj, energy_transfer_trunk)
+        inf_obj, lennard_jones)
     return inf_obj
 
 
