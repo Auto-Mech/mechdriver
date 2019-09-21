@@ -12,7 +12,7 @@ from esdriver.load import load_params
 KICKOFF_SIZE = 0.1
 KICKOFF_BACKWARD = False
 PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "RPHt.exe")
+                      "RPHt.exe >& /dev/null")
 
 def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
     """ driver for all electronic structure tasks
