@@ -142,16 +142,28 @@ def tau_trunk(prefix, root_ds=None):
 
 
 def energy_transfer_trunk(prefix, root_ds=None):
-    """ single point trunk DataSeries
+    """ energy transfer trunk DataSeries
     """
     _map = _pack_arguments(map_.energy_transfer_trunk)
     nlocs = _count_arguments(map_.energy_transfer_trunk)
+    print('in dir.py')
+    print(nlocs)
+    tmp = model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+    print('in dir.py 2')
+    print(nlocs)
     return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
                             root_ds=root_ds)
 
 
+def energy_transfer_branch(prefix, root_ds=None):
+    """ energy transfer branch DataSeries
+    """
+    return species_leaf(prefix, root_ds=root_ds)
+
+
 def energy_transfer_leaf(prefix, root_ds=None):
-    """ single-point leaf DataSeries
+    """ energy transfer leaf DataSeries
     """
     return theory_leaf(prefix, root_ds=root_ds)
 

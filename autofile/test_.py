@@ -187,15 +187,33 @@ def test__energy_transfer():
     prefix = os.path.join(PREFIX, 'etrans')
     os.mkdir(prefix)
 
+ #   spc_fs = autofile.fs.species(prefix)
+ #   spc_locs = ['InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1+', 0, 1]
+ #   spc_fs.leaf.create(spc_locs)
+ #   spc_path = spc_fs.leaf.path(spc_locs)
+ #   print(spc_fs.leaf.path(spc_locs))
+
     etrans_fs = autofile.fs.energy_transfer(prefix)
-    locs = ['hf', 'sto-3g', True]
+    spc_locs = [['InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1+', 0, 1],[],[]]
+    etrans_fs.leaf.create(spc_locs)
+    etrans_spc_path = etrans_fs.leaf.path(spc_locs)
+    print(etrans_spc_path)
+    thy_locs = [ 'hf', 'sto-3g', True]
+    etrans_thy_fs = autofile.fs.theory(etrans_spc_path)
+    etrans_thy_fs.leaf.create(thy_locs)
+    etrans_thy_path = etrans_thy_fs.leaf.path(thy_locs)
+    print(etrans_thy_path)
+    spc_path = print(etrans_spc_s.leaf.path(spc_locs))
+    print(etrans_spc_s.leaf.path(spc_locs))
+    locs = ['InChI=1S/C2H2F2/c3-1-2-4/h1-2H/b2-1+', 0, 1]
+    etrans_fs.leaf.create(locs)
     print(etrans_fs.leaf.path(locs))
 
     ref_eps = 300.0
     ref_sig = 3.50
     print(etrans_fs.leaf.file.lennard_jones_epsilon.path(locs))
     print(etrans_fs.leaf.file.lennard_jones_sigma.path(locs))
-    etrans_fs.leaf.create(locs)
+    # etrans_fs.leaf.create(locs)
     etrans_fs.leaf.file.lennard_jones_epsilon.write(ref_eps, locs)
     etrans_fs.leaf.file.lennard_jones_sigma.write(ref_sig, locs)
     assert etrans_fs.leaf.file.lennard_jones_epsilon.read(locs) == ref_eps
@@ -260,8 +278,8 @@ if __name__ == '__main__':
     # test__conformer()
     # test__tau()
     # test__single_point()
-    test__vpt2()
-    # test__energy_transfer()
+    # test__vpt2()
+    test__energy_transfer()
     # test__scan()
     # test__run()
     # test__build()
