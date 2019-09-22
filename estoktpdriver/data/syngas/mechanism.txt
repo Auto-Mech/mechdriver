@@ -34,6 +34,8 @@ SPECIES
     CH2O3(82)       
     N
     C
+    CHOH
+    CH2OH
 END
 
 

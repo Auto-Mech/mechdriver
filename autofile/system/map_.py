@@ -128,13 +128,6 @@ def generate_new_tau_id():
     return 't'+_random_string_identifier()
 
 
-# vpt2
-def vpt2_trunk():
-    """ vpt2 trunk directory name
-    """
-    return 'VPT2'
-
-
 # energy transfer
 def energy_transfer_trunk():
     """ energy_transfer trunk directory name

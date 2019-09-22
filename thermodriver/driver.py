@@ -54,29 +54,34 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
     harm_lvl = ''
     anharm_lvl = ''
     tors_lvl = ''
+    sym_lvl = ''
     harm_lvl_ref = ''
     anharm_lvl_ref = ''
     tors_lvl_ref = ''
+    sym_lvl_ref = ''
 
     #Get PF input header
     temp_step = 100.
     ntemps = 30
     # temp_step = TEMP_STEP
     # ntemps = NTEMPS
-    global_pf_str = scripts.thermo.get_pfheader(temp_step, ntemps)
+    global_pf_str = scripts.thermo.get_pf_header(temp_step, ntemps)
 
     #Gather PF model and theory level info
-    spc_model = ['RIGID', 'HARM']
+    spc_model = ['RIGID', 'HARM', '']
     geom = False
     hess = False
     for tsk in tsk_info_lst:
         if 'samp' in tsk[0] or 'geom' in tsk[0]:
             geo_lvl = tsk[1]
             geom = True
-        if 'hess' in tsk[0]:
+        if 'grad' in tsk[0] or 'hess' in tsk[0]:
             harm_lvl = tsk[1]
             harm_lvl_ref = tsk[2]
-            hess = True
+            if 'grad' in tsk[0]:
+                grad = True
+            if 'hess' in tsk[0]:
+                hess = True
             if not geom:
                 ene_lvl = tsk[1]
                 geo_lvl = tsk[1]
@@ -95,16 +100,26 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
             spc_model[1] = 'ANHARM'
             if not hess:
                 geo_lvl = tsk[1]
+        if 'sym' in tsk[0]:
+            sym_lvl = tsk[1]
+            sym_lvl_ref = tsk[2]
+            if 'samp' in tsk[0]:
+                spc_model[2] = 'SAMPLING'
+            if '1DHR' in tsk[0]:
+                spc_model[2] = '1DHR'
     geo_thy_info = get_thy_info(es_dct, geo_lvl)
     harm_thy_info = get_thy_info(es_dct, harm_lvl)
     tors_thy_info = get_thy_info(es_dct, tors_lvl)
     anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
-    pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info]
+    sym_thy_info = get_thy_info(es_dct, sym_lvl)
+    pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
 
     harm_ref_thy_info = get_thy_info(es_dct, harm_lvl_ref)
     tors_ref_thy_info = get_thy_info(es_dct, tors_lvl_ref)
     anharm_ref_thy_info = get_thy_info(es_dct, anharm_lvl_ref)
-    ref_levels = [harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info]
+    sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
+    ref_levels = [
+        harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
 
     #Collect the PF input for each species
     # Initialize the ene for each of the species
@@ -115,8 +130,8 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
         spc_save_path = spc_save_fs.leaf.path(spc_info)
 
         zpe, zpe_str = scripts.thermo.get_zpe(
-            spcdct[spc], spc_info, spc_save_path, pf_levels, spc_model)
-        spc_str = scripts.thermo.get_spcinput(
+            spc_info, spc_save_path, pf_levels, spc_model)
+        spc_str = scripts.thermo.get_spc_input(
             spcdct[spc], spc_info, spc_save_path, pf_levels, spc_model)
 
         spcdct[spc]['spc_info'] = spc_info
@@ -132,13 +147,13 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
         spc_str = spcdct[spc]['spc_str']
         zpe_str = spcdct[spc]['zpe_str']
         spc_info = spcdct[spc]['spc_info']
-        pf_input = scripts.thermo.get_pfinput(spc, spc_str, global_pf_str, zpe_str)
+        pf_input = scripts.thermo.get_pf_input(spc, spc_str, global_pf_str, zpe_str)
 
         pf_path, nasa_path = scripts.thermo.get_thermo_paths(spc_save_path, spc_info, harm_thy_info)
         spcdct[spc]['pf_path'] = pf_path
         spcdct[spc]['nasa_path'] = nasa_path
 
-        scripts.thermo.write_pfinput(pf_input, pf_path)
+        scripts.thermo.write_pf_input(pf_input, pf_path)
         if runmess:
             scripts.thermo.run_pf(pf_path)
 
@@ -182,7 +197,6 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
         hf0k = scripts.thermo.get_hf0k(spc, spcdct, spc_bas)
         spcdct[spc]['Hfs'] = [hf0k]
 
-    print('pf levels test:', pf_levels)
     if runthermo:
         chemkin_header_str = scripts.thermo.run_ckin_header(pf_levels, ref_levels, spc_model)
         chemkin_set_str = chemkin_header_str
@@ -255,7 +269,7 @@ def prepare_refs(refscheme, spcdct, spc_queue):
             refs, newmsg = get_refs(spc_queue, spcdct, refscheme)
             msg += newmsg
     else:
-        msg = 'Reference set was set to be {}: \n'.format(','.join(refscheme))
+        msg = 'Reference set = {}: \n'.format(', '.join(refscheme))
         refs = refscheme
     unique_refs = []
     for ref in refs:
@@ -328,14 +342,14 @@ if __name__ == "__main__":
 
     MSG = """
            ================================================================
-           ==                          AUTOMECHANIC                      ==
+           ==                        AUTOMECHANIC                        ==
            ===         Andreas Copan, Sarah Elliott, Kevin Moore,       ===
-           ===  Carlo Cavallotti, Yuri Georgievski, Murat Keceli,       === 
-           ==                   Stephen Klippenstein                     ==
+           ===     Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,   ===
+           ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
            ================================================================
-           ==                          THERMODRIVER                      ==
+           ==                        THERMODRIVER                        ==
            ===         Sarah Elliott, Kevin Moore, Andreas Copan,       ===
-           ==   Carlo Cavallotti, Yuri Georgievski, Stephen Klippenstein ==
+           ===    Murat Keceli, Yuri Georgievski, Stephen Klippenstein   ==
            ================================================================\n"""
     print(MSG)
     #tsk_info_lst, es_dct, spcs = load_params()

@@ -124,7 +124,14 @@ def anharmonicity_matrix(xmat):
 def vibro_rot_alpha_matrix(vibro_rot_mat):
     """ write vibro-rot alph matrix (cm^-1) to a string (cm^-1)
     """
-    return _2d_square_matrix(vibro_rot_mat)
+    vibro_rot_mat = numpy.array(vibro_rot_mat)
+    assert vibro_rot_mat.ndim == 2
+
+    mat_str_io = _StringIO()
+    numpy.savetxt(mat_str_io, vibro_rot_mat)
+    mat_str = mat_str_io.getvalue()
+    mat_str_io.close()
+    return mat_str
 
 
 def quartic_centrifugal_dist_consts(qcd_consts):

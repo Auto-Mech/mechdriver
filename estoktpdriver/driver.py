@@ -12,6 +12,7 @@ import automol
 from automol import formula
 import moldr
 import thermodriver
+import ktpdriver
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -386,69 +387,73 @@ MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
 
 # b. Electronic structure parameters; code, method, basis, convergence control
 
-mc_nsamp0 = [True, 3, 1, 3, 100]
+MC_NSAMP0 = [True, 6, 1, 3, 100]
 
 ES_DCT = {
         'lvl_wbs': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31g*',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'lvl_wbm': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31+g*',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'lvl_wbt': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': 'cc-pvtz',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
+            },
+        'lvl_b2d': {
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvdz',
+            'mc_nsamp': MC_NSAMP0
             },
         'lvl_b2t': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'lvl_b2q': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',
-            'mc_nsamp': mc_nsamp0
+            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvqz',
+            'mc_nsamp': MC_NSAMP0
             },
         'lvl_b3s': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'lvl_b3t': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'cc_lvl_d': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvdz',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'cc_lvl_t': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvtz',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'cc_lvl_q': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvqz',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'cc_lvl_df': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
             'basis': 'cc-pvdz-f12',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'cc_lvl_tf': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
             'basis': 'cc-pvtz-f12',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         'cc_lvl_qf': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
             'basis': 'cc-pvqz-f12',
-            'mc_nsamp': mc_nsamp0
+            'mc_nsamp': MC_NSAMP0
             },
         }
 
 OPT_LVL0 = 'lvl_wbm'
-OPT_LVL1 = 'lvl_b2t'
-OPT_LVL2 = 'lvl_b2q'
+OPT_LVL1 = 'lvl_b2d'
+OPT_LVL2 = 'lvl_b2t'
 SCAN_LVL1 = OPT_LVL1
 SP_LVL1 = 'cc_lvl_df'
 SP_LVL2 = 'cc_lvl_tf'
@@ -456,43 +461,85 @@ SP_LVL3 = 'cc_lvl_qf'
 
 # The logic key in tsk_info_lst is for overwrite
 OVERWRITE = False
-TSK_INFO_LST = [
-    ['conf_samp', OPT_LVL1, OPT_LVL0, OVERWRITE],
-    ['conf_hess', OPT_LVL1, OPT_LVL1, OVERWRITE],
-    ['conf_hess', OPT_LVL2, OPT_LVL2, OVERWRITE],
-    ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
-    ['conf_energy', SP_LVL1, OPT_LVL1, OVERWRITE],
-    ['conf_energy', SP_LVL2, OPT_LVL1, OVERWRITE],
-    ['conf_energy', SP_LVL3, OPT_LVL1, OVERWRITE],
-    # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
-    ]
 
-ENE_COEFF = [0.0, -0.693, 1.693]
-#ENE_COEFF = [-0.4, 1.4]
+run_thermo = True
+if run_thermo:
+    TSK_INFO_LST = [
+        ['geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_samp', OPT_LVL1, OPT_LVL0, OVERWRITE],
+        ['conf_hess', OPT_LVL1, OPT_LVL1, OVERWRITE],
+        ['geom', OPT_LVL2, OPT_LVL1, OVERWRITE],
+        ['conf_hess', OPT_LVL2, OPT_LVL2, OVERWRITE],
+        ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
+        ['conf_energy', SP_LVL1, OPT_LVL2, OVERWRITE],
+        ['conf_energy', SP_LVL2, OPT_LVL2, OVERWRITE],
+        ['conf_energy', SP_LVL3, OPT_LVL2, OVERWRITE],
+        ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
+        ]
 
-OPT_ES = True
-OPT_MESS = False
-OPT_THERMO = False
-OPT_ALLPF = False
-OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
+    ENE_COEFF = [0.0, -0.693, 1.693]
+    #ENE_COEFF = [-0.4, 1.4]
 
-SPC_QUEUE = list(SPC_NAMES)
+    OPT_ES = True
+    OPT_MESS = False
+    OPT_THERMO = False
+    OPT_ALLPF = False
+    OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
-# REF_MOLS = 'basic'
-# REF_MOLS = [automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'), automol.smiles.inchi('O'), automol.smiles.inchi('N')]
-REF_MOLS = [automol.smiles.inchi('[H]'), automol.smiles.inchi('[C]'), automol.smiles.inchi('[O]'), automol.smiles.inchi('[N]')]
-# REF_MOLS = [automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'), automol.smiles.inchi('O=O'), automol.smiles.inchi('N#N')]
-thermodriver.driver.run(
-    TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX, SAVE_PREFIX, options=OPTIONS)
+    SPC_QUEUE = list(SPC_NAMES)
+    SPC_QUEUE = ['H2O2(11)']
+    # SPC_QUEUE = ['CHOH']
+    # SPC_QUEUE = ['CH2OH']
 
-OPT_ES = False
-OPT_MESS = True
-OPT_THERMO = True
-OPT_ALLPF = True
-OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
+    # REF_MOLS = 'basic'
+    REF_MOLS = [
+        automol.smiles.inchi('[H][H]'), automol.smiles.inchi('O')
+        # automol.smiles.inchi('C'),
+        # automol.smiles.inchi('O'), automol.smiles.inchi('N')]
+    # REF_MOLS = [
+        # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'),
+        # automol.smiles.inchi('O'), automol.smiles.inchi('N')]
+    # REF_MOLS = [
+        # automol.smiles.inchi('[H]'), automol.smiles.inchi('[C]'),
+        # automol.smiles.inchi('[O]'), automol.smiles.inchi('[N]')]
+    # REF_MOLS = [
+        # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'),
+        # automol.smiles.inchi('O=O'), automol.smiles.inchi('N#N')]
+        ]
+    thermodriver.driver.run(
+        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
+        SAVE_PREFIX, options=OPTIONS)
 
-thermodriver.driver.run(
-        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX, SAVE_PREFIX, ENE_COEFF, OPTIONS)
+    OPT_ES = False
+    OPT_MESS = True
+    OPT_THERMO = True
+    OPT_ALLPF = True
+    OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
+
+    thermodriver.driver.run(
+        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
+        SAVE_PREFIX, ENE_COEFF, OPTIONS)
+
+run_rates = False
+if run_rates:
+    TSK_INFO_LST = [
+        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['find_ts', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
+        ['conf_energy', SP_LVL1, OPT_LVL1, OVERWRITE],
+        ['conf_energy', SP_LVL2, OPT_LVL1, OVERWRITE],
+        ['conf_energy', SP_LVL3, OPT_LVL1, OVERWRITE],
+        ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
+        ]
+
+    ktpdriver.driver.run(
+        TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST,
+        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
+
 # set up a combination of energies
 # E_HL = sum_i E_HL(i) * Coeff(i)
 #HIGH_LEVEL_COEFF = [1]

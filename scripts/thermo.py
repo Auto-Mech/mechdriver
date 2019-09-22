@@ -92,27 +92,25 @@ def get_hf0k(spc, spcdct, spc_bas):
     """ determine the 0 K heat of formation from the
     species dictionary and a set of references species
     """
-    print('spc_bas:', spc_bas)
+    # print('spc_bas:', spc_bas)
     spc_ene = spc_energy(spcdct[spc]['ene'], spcdct[spc]['zpe'])
     h_basis = basis_energy(spc_bas, spcdct)
-    print('spc_ene:', spc_ene)
-    print('h_basis:', h_basis)
+    # print('spc_ene:', spc_ene)
+    # print('h_basis:', h_basis)
     coeff = get_coeff(spc, spcdct, spc_bas)
 
     # Get the 0 K heat of formation
     # ref_set should be a parameter for this routine
-    print('coeff:', coeff)
+    # print('coeff:', coeff)
     h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ATcT')
-    print('Hf0K test:', spc, h0form)
+    # print('Hf0K test:', spc, h0form)
     return h0form
 
 
-def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
+def get_zpe(spc_info, spc_save_path, pf_levels, spc_model):
     """ return the zpe for a given species according a specified set of
     partition function levels
     """
-    har_level, tors_level, vpt2_level = pf_levels
-    tors_model, vib_model = spc_model
     # get the zero-point energy for each species
     # print('harmonic_level:', har_level)
     # print('tors_level:', tors_level)
@@ -124,9 +122,7 @@ def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
 
     # print('har_level in get_zpe:', har_level)
     spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
-        spc_info,
-        tors_model, vib_model,
-        har_level, tors_level, vpt2_level,
+        spc_info, pf_levels, spc_model,
         script_str=PF_SCRIPT_STR,
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix=spc_save_path)
@@ -143,52 +139,35 @@ def get_zpe(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
     return spc_zpe, zero_energy_str
 
 
-def get_spcinput(spcdct, spc_info, spc_save_path, pf_levels, spc_model):
+def get_spc_input(spc_spcdct, spc_info, spc_save_path, pf_levels, spc_model):
     """ set up the input string for a given species section in mess input
     """
-
-    har_level, tors_level, vpt2_level = pf_levels
-    tors_model, vib_model = spc_model
 
     # set up species information
     ich = spc_info[0]
     smi = automol.inchi.smiles(ich)
-    mul = spc_info[2]
     print("smiles: {}".format(smi), "inchi: {}".format(ich))
 
-    sym_factor = 1.
-    elec_levels = [[0., mul]]
-    if 'sym' in spcdct:
-        sym_factor = spcdct['sym']
-    if 'elec_levs' in spcdct:
-        elec_levels = spcdct['elec_levs']
-    if (ich, mul) in  ELC_DEG_DCT:
-        elec_levels = ELC_DEG_DCT[(ich, mul)]
-
-    # cycle through the low levels generating partition functions  for each
+    # generate the partition function
     spc_str = moldr.pf.species_block(
+        spc_spcdct=spc_spcdct,
         spc_info=spc_info,
-        tors_model=tors_model,
-        vib_model=vib_model,
-        har_level=har_level,
-        tors_level=tors_level,
-        vpt2_level=vpt2_level,
+        spc_model=spc_model,
+        pf_levels=pf_levels,
         script_str=PROJROT_SCRIPT_STR,
-        elec_levels=elec_levels,
-        sym_factor=sym_factor,
         save_prefix=spc_save_path,
         )
     print(spc_str)
     return spc_str
 
 
-def get_pfheader(temp_step, ntemps):
+def get_pf_header(temp_step, ntemps):
     """ prepare partition function header string
     """
     global_pf_str = mess_io.writer.global_pf(
         [], temp_step, ntemps, rel_temp_inc=0.001,
         atom_dist_min=0.6)
-    print(global_pf_str)
+    # print(global_pf_str)
     return global_pf_str
 
 
@@ -223,7 +202,7 @@ def get_thermo_paths(spc_save_path, spc_info, har_level):
     return pf_path, nasa_path
 
 
-def get_pfinput(spc, spc_str, global_pf_str, zpe_str):
+def get_pf_input(spc, spc_str, global_pf_str, zpe_str):
     """ prepare the full pf input string for running messpf
     """
 
@@ -237,7 +216,7 @@ def get_pfinput(spc, spc_str, global_pf_str, zpe_str):
     return pf_inp_str
 
 
-def write_pfinput(pf_inp_str, pf_path):
+def write_pf_input(pf_inp_str, pf_path):
     """ write the pf.inp file
     """
     # run messpf
@@ -335,9 +314,9 @@ def run_pac(spc_spcdct, nasa_path):
 def run_ckin_header(pf_info, ref_info, spc_model):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
-    tors_model, vib_model = spc_model
-    har_info, tors_info, vpt2_info, sp_str = pf_info
-    har_ref_info, tors_ref_info, vpt2_ref_info = ref_info
+    tors_model, vib_model, sym_model = spc_model
+    har_info, tors_info, vpt2_info, _, sp_str, = pf_info
+    har_ref_info, tors_ref_info, vpt2_ref_info, _ = ref_info
 
     # Convert the pac99 polynomial to chemkin polynomial
 

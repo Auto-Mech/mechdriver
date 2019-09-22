@@ -234,7 +234,7 @@ def species_thermo(
         print(name)
         ene_cbs[name] = 0.
         for hl_idx, _ in enumerate(run_high_levels):
-            min_ene = moldr.pfdriver.get_high_level_energy(
+            min_ene = moldr.pf.get_high_level_energy(
                 spc_info=spc_info[name],
                 theory_low_level=ref_high_level,
                 theory_high_level=run_high_levels[hl_idx],

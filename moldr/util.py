@@ -208,8 +208,9 @@ def traj_sort(save_fs):
         geos = [save_fs.leaf.file.geometry.read(locs)
                 for locs in locs_lst]
         traj = []
-        for ene, geo in sorted(zip(enes, geos), key=lambda x: x[0]):
-            comment = 'energy: {:>15.10f}'.format(ene)
+        for ene, geo, locs in sorted(zip(enes, geos, locs_lst), key=lambda x: x[0]):
+            print('loc tst in traj:', locs)
+            comment = 'energy: {0:>15.10f} \t {1}'.format(ene, locs[0])
             traj.append((comment, geo))
         traj_path = save_fs.trunk.file.trajectory.path()
         print("Updating trajectory file at {}".format(traj_path))

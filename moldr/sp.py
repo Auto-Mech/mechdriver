@@ -21,10 +21,13 @@ def run_energy(
     geo = geo_save_fs.leaf.file.geometry.read(locs)
     sp_run_fs = autofile.fs.single_point(geo_run_path)
     sp_save_fs = autofile.fs.single_point(geo_save_path)
+    print('run_energy path test:', thy_level[1:4])
     sp_run_fs.leaf.create(thy_level[1:4])
     sp_run_path = sp_run_fs.leaf.path(thy_level[1:4])
+    print('sp_run_path test:', sp_run_path)
     sp_save_fs.leaf.create(thy_level[1:4])
     sp_save_path = sp_save_fs.leaf.path(thy_level[1:4])
+    print('sp_save_path test:', sp_run_path)
     run_fs = autofile.fs.run(sp_run_path)
 
     print('thy_level in run_energy:', thy_level) 
@@ -160,7 +163,7 @@ def run_vpt2(
     geo = geo_save_fs.leaf.file.geometry.read(locs)
     run_fs = autofile.fs.run(geo_run_path)
 
-    print('Running hessian')
+    print('Running vpt2')
     moldr.driver.run_job(
         job='vpt2',
         script_str=script_str,
@@ -188,11 +191,10 @@ def run_vpt2(
 
             print(" - Saving hessian...")
             print(" - Save path: {}".format(geo_save_path))
-            geo_save_fs = autofile.fs.vpt2(geo_save_path)
-            geo_save_fs.trunk.file.vpt2.info.write(inf_obj)
-            geo_save_fs.trunk.file.vpt2.input.write(inp_str)
-            geo_save_fs.trunk.file.anharmonic_frequencies.write(vpt2_dct['freqs'])
-            geo_save_fs.trunk.file.anharmonic_zpve.write(vpt2_dct['zpve'])
-            geo_save_fs.trunk.file.anharmonicity_matrix.write(vpt2_dct['x_mat'])
-            geo_save_fs.trunk.file.vibro_rot_alpha_matrix.write(vpt2_dct['vibrot_mat'])
-            geo_save_fs.trunk.file.quartic_centrifugal_dist_consts.write(vpt2_dct['cent_dist_const'])
+            # geo_save_fs.leaf.file.vpt2_info.write(inf_obj, locs)
+            geo_save_fs.leaf.file.vpt2_input.write(inp_str, locs)
+            geo_save_fs.leaf.file.anharmonic_frequencies.write(vpt2_dct['freqs'], locs)
+            geo_save_fs.leaf.file.anharmonic_zpve.write(vpt2_dct['zpve'], locs)
+            geo_save_fs.leaf.file.anharmonicity_matrix.write(vpt2_dct['x_mat'], locs)
+            geo_save_fs.leaf.file.vibro_rot_alpha_matrix.write(vpt2_dct['vibrot_mat'], locs)
+            geo_save_fs.leaf.file.quartic_centrifugal_dist_consts.write(vpt2_dct['cent_dist_const'], locs)

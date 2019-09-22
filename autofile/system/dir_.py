@@ -182,15 +182,6 @@ def tau_leaf(prefix, root_ds=None):
                             loc_dfile=loc_dfile, root_ds=root_ds)
 
 
-def vpt2_trunk(prefix, root_ds=None):
-    """ vpt2 trunk DataSeries
-    """
-    _map = _pack_arguments(map_.vpt2_trunk)
-    nlocs = _count_arguments(map_.vpt2_trunk)
-    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
-                            root_ds=root_ds)
-
-
 def reaction_trunk(prefix, root_ds=None):
     """ reaction trunk DataSeries
     """
