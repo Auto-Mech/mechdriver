@@ -26,7 +26,7 @@ JOB_RUNNER_DCT = {
     elstruct.Job.HESSIAN: functools.partial(
         runner.options_matrix_run, elstruct.writer.hessian),
     elstruct.Job.VPT2: functools.partial(
-        runner.options_matrix_run, elstruct.writer.hessian),
+        runner.options_matrix_run, elstruct.writer.vpt2),
     elstruct.Job.OPTIMIZATION: runner.options_matrix_optimization,
 }
 

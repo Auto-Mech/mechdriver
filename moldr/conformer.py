@@ -5,7 +5,6 @@ from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
-import autowrite
 import moldr
 
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -40,7 +39,8 @@ def conformer_sampling(
 
     save_conformers(
         cnf_run_fs=cnf_run_fs,
-        cnf_save_fs=cnf_save_fs, saddle=saddle 
+        cnf_save_fs=cnf_save_fs,
+        saddle=saddle
     )
 
     run_conformers(
@@ -57,7 +57,8 @@ def conformer_sampling(
     )
     save_conformers(
         cnf_run_fs=cnf_run_fs,
-        cnf_save_fs=cnf_save_fs,saddle=saddle
+        cnf_save_fs=cnf_save_fs,
+        saddle=saddle
     )
 
     # save information about the minimum energy conformer in top directory
@@ -91,7 +92,6 @@ def run_conformers(
     print('Number of samples requested:', nsamp)
 
     cnf_save_fs.trunk.create()
-    
     vma = automol.zmatrix.var_(zma)
     if cnf_save_fs.trunk.file.vmatrix.exists():
         existing_vma = cnf_save_fs.trunk.file.vmatrix.read()
@@ -181,7 +181,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False):
                     unique = True
                     for idx, geoi in enumerate(seen_geos):
                         enei = seen_enes[idx]
-                        etol = 1.e-6
+                        etol = 2.e-5
                         if automol.geom.almost_equal_coulomb_spectrum(
                                 geo, geoi, rtol=1e-2):
                             if abs(ene-enei) < etol:
@@ -193,8 +193,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False):
                     if len(automol.graph.connected_components(gra)) > 1:
                         print(" - Geometry is disconnected.. Skipping...")
                     else:
-                        unique = is_unique_dist_mat_energy(geo, ene, seen_geos, seen_enes)
-
+                        unique = is_unique_stereo_dist_mat_energy(geo, ene, seen_geos, seen_enes)
                 if not unique:
                     print(" - Geometry is not unique. Skipping...")
                 else:
@@ -320,7 +319,7 @@ def run_vpt2(
     geo = geo_save_fs.leaf.file.geometry.read(locs)
     run_fs = autofile.fs.run(geo_run_path)
 
-    print('Running hessian')
+    print('Running vpt2')
     moldr.driver.run_job(
         job='vpt2',
         script_str=script_str,
@@ -340,19 +339,15 @@ def run_vpt2(
     if ret is not None:
         inf_obj, inp_str, out_str = ret
 
-        if automol.geom.is_atom(geo):
-            freqs = ()
-        else:
-            print(" - Reading hessian from output...")
+        if not automol.geom.is_atom(geo):
+            print(" - Reading vpt2 from output...")
             vpt2 = elstruct.reader.vpt2(inf_obj.prog, out_str)
 
-            print(" - Saving hessian...")
+            print(" - Saving vpt2...")
             print(" - Save path: {}".format(geo_save_path))
             geo_save_fs.leaf.file.vpt2.info.write(inf_obj, locs)
             geo_save_fs.leaf.file.vpt2.input.write(inp_str, locs)
             geo_save_fs.leaf.file.vpt2.write(vpt2, locs)
-
-
 
 
 def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):
@@ -362,7 +357,7 @@ def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):
     unique = True
     for idx, geoi in enumerate(geo_list):
         enei = ene_list[idx]
-        etol = 1.e-6
+        etol = 2.e-5
         if abs(ene-enei) < etol:
             if automol.geom.almost_equal_coulomb_spectrum(
                     geo, geoi, rtol=1e-2):
@@ -377,7 +372,7 @@ def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
     unique = True
     for idx, geoi in enumerate(geo_list):
         enei = ene_list[idx]
-        etol = 1.e-6
+        etol = 2.e-5
         if abs(ene-enei) < etol:
             if automol.geom.almost_equal_dist_mat(
                     geo, geoi, thresh=1e-1):
@@ -429,3 +424,40 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
             if new_geom:
                 int_sym_num += 1
     return int_sym_num
+
+
+def is_unique_stereo_dist_mat_energy(geo, ene, geo_list, ene_list):
+    """ compare given geo with list of geos all to see if any have the same
+    coulomb spectrum and energy and stereo specific inchi
+    """
+    unique = True
+    # xyzs = automol.geom.coordinates(geo)
+    # print('xyzs test:', xyzs)
+    # atm_xyz_dct = dict(enumerate(xyzs))
+    # print('atm_xyz_dct test:', atm_xyz_dct)
+    # gra = automol.convert.geom._connectivity_graph(geo)
+    # print('has stereos:', automol.graph._stereo.has_stereo(gra))
+    # print('stereos:', automol.graph._stereo.stereomers(gra))
+    # print('substereos:', automol.graph._stereo.substereomers(gra))
+    #print('gra test:', gra)
+    #ich = automol.convert.graph.inchi_from_coordinates(gra, atm_xyz_dct)
+    ich = automol.convert.geom.inchi(geo)
+    for idx, geoi in enumerate(geo_list):
+        enei = ene_list[idx]
+        etol = 2.e-5
+        ichi = automol.convert.geom.inchi(geoi)
+        # print('xyzsi test:', xyzs)
+        # print('inchi test 0 in conformer save:', ich, ichi)
+        # if ich != ichi:
+            # print('ichis are different:')
+        # check energy
+        if abs(ene-enei) < etol:
+            # check distance matrix
+            if automol.geom.almost_equal_dist_mat(
+                    geo, geoi, thresh=1e-1):
+                # check stereo by generates stero label
+                ichi = automol.convert.geom.inchi(geoi)
+                # print('inchi test in conformer save:', ich, ichi)
+                if ich == ichi:
+                    unique = False
+    return unique

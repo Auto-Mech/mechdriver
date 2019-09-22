@@ -139,6 +139,15 @@ def conformer(prefix):
     grad_dfile = file_.gradient(FilePrefix.GRAD)
     hess_dfile = file_.hessian(FilePrefix.HESS)
     hfreq_dfile = file_.harmonic_frequencies(FilePrefix.HESS)
+    vpt2_inf_dfile = file_.information(
+        FilePrefix.VPT2, function=info.vpt2_trunk)
+    vpt2_inp_dfile = file_.input_file(FilePrefix.VPT2)
+    anhfreq_dfile = file_.anharmonic_frequencies(FilePrefix.VPT2)
+    anhzpve_dfile = file_.anharmonic_zpve(FilePrefix.VPT2)
+    xmat_dfile = file_.anharmonicity_matrix(FilePrefix.VPT2)
+    vibrot_mat_dfile = file_.vibro_rot_alpha_matrix(FilePrefix.VPT2)
+    centrif_dist_dfile = file_.quartic_centrifugal_dist_consts(FilePrefix.VPT2)
+
     leaf_ds.add_data_files({
         FileAttributeName.GEOM_INFO: geom_inf_dfile,
         FileAttributeName.GRAD_INFO: grad_inf_dfile,
@@ -151,7 +160,14 @@ def conformer(prefix):
         FileAttributeName.ZMAT: zmat_dfile,
         FileAttributeName.GRAD: grad_dfile,
         FileAttributeName.HESS: hess_dfile,
-        FileAttributeName.HFREQ: hfreq_dfile})
+        FileAttributeName.HFREQ: hfreq_dfile,
+        FileAttributeName.VPT2_INFO: vpt2_inf_dfile,
+        FileAttributeName.VPT2_INPUT: vpt2_inp_dfile,
+        FileAttributeName.ANHFREQ: anhfreq_dfile,
+        FileAttributeName.ANHZPVE: anhzpve_dfile,
+        FileAttributeName.XMAT: xmat_dfile,
+        FileAttributeName.VIBROT_MAX: vibrot_mat_dfile,
+        FileAttributeName.CENTIF_DIST: centrif_dist_dfile})
 
     dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
                                SeriesAttributeName.LEAF: leaf_ds})
@@ -292,40 +308,6 @@ def tau(prefix):
 
     dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
                                SeriesAttributeName.LEAF: leaf_ds})
-    return dir_fs
-
-
-def vpt2(prefix):
-    """ construct the vpt2 filesystem
-
-    layers:
-     - trunk (specifiers: [])
-
-    :param prefix: sets the path where this filesystem will sit
-    :type prefix: str
-    """
-    trunk_ds = dir_.vpt2_trunk(prefix)
-
-    vpt2_inf_dfile = file_.information(
-        FilePrefix.VPT2, function=info.vpt2_trunk)
-    vpt2_inp_dfile = file_.input_file(FilePrefix.VPT2)
-    anhfreq_dfile = file_.anharmonic_frequencies(FilePrefix.VPT2)
-    anhzpve_dfile = file_.anharmonic_zpve(FilePrefix.VPT2)
-    xmat_dfile = file_.anharmonicity_matrix(FilePrefix.VPT2)
-    vibrot_mat_dfile = file_.vibro_rot_alpha_matrix(FilePrefix.VPT2)
-    centrif_dist_dfile = file_.quartic_centrifugal_dist_consts(FilePrefix.VPT2)
-
-    trunk_ds.add_data_files({
-        FileAttributeName.VPT2_INFO: vpt2_inf_dfile,
-        FileAttributeName.VPT2_INPUT: vpt2_inp_dfile,
-        FileAttributeName.ANHFREQ: anhfreq_dfile,
-        FileAttributeName.ANHZPVE: anhzpve_dfile,
-        FileAttributeName.XMAT: xmat_dfile,
-        FileAttributeName.VIBROT_MAX: vibrot_mat_dfile,
-        FileAttributeName.CENTIF_DIST: centrif_dist_dfile})
-
-    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds})
-
     return dir_fs
 
 

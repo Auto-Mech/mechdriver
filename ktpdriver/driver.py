@@ -69,37 +69,81 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
     harm_lvl = ''
     anharm_lvl = ''
     tors_lvl = ''
-    model_info = ['RIGID', 'HARM']
+    sym_lvl = ''
+    harm_lvl_ref = ''
+    anharm_lvl_ref = ''
+    tors_lvl_ref = ''
+    sym_lvl_ref = ''
+
+    ts_model = ['RIGID', 'HARM']
     for tsk in tsk_info_lst:
-        if 'geom' in tsk[0] or 'conf' in tsk[0]:
-            ene_lvl = tsk[1]
+        if 'samp' in tsk[0] or 'geom' in tsk[0]:
             geo_lvl = tsk[1]
-        if 'hess' in tsk[0] or 'harm' in tsk[0]:
+            geom = True
+        if 'grad' or 'hess' in tsk[0]:
             harm_lvl = tsk[1]
-#            tors_lvl = tsk[1]
-#            anharm_lvl = tsk[1]
+            harm_lvl_ref = tsk[2]
+            if 'grad' in tsk[0]:
+                grad = True
+            if 'hess' in tsk[0]:
+                hess = True
         if 'hr' in tsk[0] or 'tau' in tsk[0]:
             tors_lvl = tsk[1]
+            tors_lvl_ref = tsk[2]
             if 'md' in tsk[0]:
-                model_info[0] = 'MDHR'
+                ts_model[0] = 'MDHR'
             if 'tau' in tsk[0]:
-                model_info[0] = 'TAU'
+                ts_model[0] = 'TAU'
             else:
-                model_info[0] = '1DHR'
+                ts_model[0] = '1DHR'
         if 'anharm' in tsk[0] or 'vpt2' in tsk[0]:
             anharm_lvl = tsk[1]
-            model_info[1] = 'ANHARM'
+            anharm_lvl_ref = tsk[2]
+
+            ts_model[1] = 'ANHARM'
+        if 'sym' in tsk[0]:
+            sym_lvl = tsk[1]
+            sym_lvl_ref = tsk[2]
+            if 'samp' in tsk[0]:
+                ts_model[2] = 'SAMPLING'
+            if '1DHR' in tsk[0]:
+                ts_model[2] = '1DHR'
+
     geo_thy_info = get_thy_info(es_dct, geo_lvl)
     harm_thy_info = get_thy_info(es_dct, harm_lvl)
     tors_thy_info = get_thy_info(es_dct, tors_lvl)
     anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
-    pf_info = [harm_thy_info, tors_thy_info, anharm_thy_info]
+    sym_thy_info = get_thy_info(es_dct, sym_lvl)
+    pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
+    sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
+    ref_levels = [
+        harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
+
+    ene_strl = []
+    ene_str = '! energy level:'
+    ene_lvl = ''
+    ene_lvl_ref = ''
+    ene_idx = 0
     for tsk in tsk_info_lst:
         if 'ene' in tsk[0]:
+            if ene_idx > len(ene_coeff)-1:
+                print('Warning - an insufficient energy coefficient list was provided')
+                break
             ene_lvl = tsk[1]
-            ene_ref_lvl = tsk[2]
-    ene_ref_thy_info = scripts.es.get_thy_info(es_dct[ene_ref_lvl])
-    ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
+            geo_lvl = tsk[2]
+            geo_thy_info = scripts.es.get_thy_info(es_dct[geo_lvl])
+            ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
+            ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
+                ene_coeff[ene_idx], ene_thy_info[3], ene_thy_info[1], ene_thy_info[2],
+                geo_thy_info[3], geo_thy_info[1], geo_thy_info[2]))
+
+            for spc in full_queue:
+                spc_info = spcdct[spc]['spc_info']
+                ene = scripts.thermo.get_electronic_energy(
+                    spc_info, geo_thy_info, ene_thy_info, save_prefix)
+                spcdct[spc]['ene'] += ene*ene_coeff[ene_idx]
+            ene_idx += 1
+    ene_str += '!               '.join(ene_strl)
 
     #Collect energies for zero points
     for spc in spc_queue:
@@ -110,7 +154,7 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
         spc_save_fs.leaf.create(spc_info)
         spc_save_path = spc_save_fs.leaf.path(spc_info)
         zpe, zpe_str = scripts.thermo.get_zpe(
-            spcdct[spc], spc_info, spc_save_path, pf_info, model_info)
+            spcdct[spc], spc_info, spc_save_path, pf_levels, ts_model)
         spcdct[spc]['ene'] = ene
         spcdct[spc]['zpe'] = zpe
     for spc in spcdct:   #have to make sure you get them for the TS too
@@ -122,7 +166,7 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
             spc_save_fs.leaf.create(spc_info)
             spc_save_path = spc_save_fs.leaf.path(spc_info)
             zpe, zpe_str = scripts.thermo.get_zpe(
-                spcdct[spc], spc_info, spc_save_path, pf_info, model_info)
+                spcdct[spc], spc_info, spc_save_path, pf_levels, ts_model)
             spcdct[spc]['ene'] = ene
             spcdct[spc]['zpe'] = zpe
  
@@ -139,7 +183,7 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
     mess_strs = ['','','']
     idx_dct = {}
     first_ground_ene = 0.
-    wells = scripts.ktp.make_all_well_data(rxn_lst, spc_dct, save_prefix, model_info, pf_info)
+    wells = scripts.ktp.make_all_well_data(rxn_lst, spc_dct, save_prefix, ts_model, pf_levels)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
         tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma'])) 
@@ -169,14 +213,15 @@ if __name__ == "__main__":
 
     MSG = """
            ================================================================
-           ==                          AUTOMECHANIC                      ==
+           ==                        AUTOMECHANIC                        ==
            ===         Andreas Copan, Sarah Elliott, Kevin Moore,       ===
-           ===  Carlo Cavallotti, Yuri Georgievski, Murat Keceli,       === 
-           ==                   Stephen Klippenstein                     ==
+           ===     Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,   ===
+           ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
            ================================================================
-           ==                          KTPDRIVER                      ==
+           ==                         KTPDRIVER                          ==
            ===         Sarah Elliott, Kevin Moore, Andreas Copan,       ===
-           ==   Carlo Cavallotti, Yuri Georgievski, Stephen Klippenstein ==
+           ===      Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,  ===
+           ==            Ahren Jasper, Stephen Klippenstein              ==
            ================================================================\n"""
     print(MSG)
     #tsk_info_lst, es_dct, spcs = load_params()
@@ -245,5 +290,5 @@ if __name__ == "__main__":
             'ch2oh': {'smi': '[CH2]O', 'mul': 2, 'chg': 0},
             'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0}
              }
-    run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/elliott/run', '/lcrc/project/PACC/elliott/save')
+    run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
     #run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'runtest', 'savetest')

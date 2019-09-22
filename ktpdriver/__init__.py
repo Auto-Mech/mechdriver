@@ -1,4 +1,4 @@
-from ratedriver import driver
+from ktpdriver import driver
 
 __all__ = [
     'driver',
