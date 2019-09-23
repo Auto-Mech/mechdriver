@@ -76,24 +76,23 @@ def species_block(
 
     sym_factor = 1.
     if 'sym' in spc_spcdct:
-          sym_factor = spc_spcdct['sym']
+        sym_factor = spc_spcdct['sym']
     else:
         if sym_model == 'SAMPLING':
             sym_geo = sym_cnf_save_fs.leaf.file.geometry.read(sym_min_cnf_locs)
             sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
-            sym_factor = automol.geom.symmetry_factor(sym_geo, sym_ene, sym_cnf_save_fs)
+            sym_factor = moldr.conformer.symmetry_factor(sym_geo, sym_ene, sym_cnf_save_fs)
             xyzs = automol.geom.coordinates(sym_geo)
-            print('xyzs test:', xyzs, sym_ene)
+            # print('xyzs test:', xyzs, sym_ene)
             # int_sym_num = moldr.conformer.int_sym_num_from_sampling(
                 # sym_geo, sym_ene, sym_cnf_save_fs)
             # ext_sym_num = automol.geom.external_symmetry_number(sym_geo)
             # sym_factor = int_sym_num * ext_sym_fac
-            print('sym factor test:', sym_factor)
             # print('sym factor test:', int_sym_num, ext_sym_num, sym_factor)
         if sym_model == '1DHR':
             # Warning: the 1DHR based symmetry number has not yet been set up
             sym_factor = 1
-    
+
     if vib_model == 'HARM' and tors_model == 'RIGID':
         if har_min_cnf_locs is not None:
             har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)

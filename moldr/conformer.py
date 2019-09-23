@@ -6,6 +6,7 @@ import automol
 import elstruct
 import autofile
 import moldr
+from automol.convert import _pyx2z
 
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
@@ -81,7 +82,6 @@ def conformer_sampling(
             int_sym_num=1.#####SET THIS UP FOR TS 
         else:
             int_sym_num = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
-            print('internal symmetry number test:', int_sym_num)
 
 def run_conformers(
         zma, spc_info, thy_level, nsamp, tors_range_dct,
@@ -207,7 +207,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                                 if abs(ene-enei) < etol:
                                     unique = False
                     else:
-                        unique = is_unique_stereo_dist_mat_energy(geo, ene, seen_geos, seen_enes)
+                        unique = is_unique_tors_dist_mat_energy(geo, ene, seen_geos, seen_enes)
 
                     if not unique:
                         print(" - Geometry is not unique. Skipping...")
@@ -382,7 +382,7 @@ def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):
 
 def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
     """ compare given geo with list of geos all to see if any have the same
-    coulomb spectrum and energy
+    distance matrix and energy
     """
     unique = True
     for idx, geoi in enumerate(geo_list):
@@ -405,6 +405,7 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
     """
 
     locs_lst = cnf_save_fs.leaf.existing()
+    # print('locs_lst test:', locs_lst)
     geo_sim = [geo]
     geo_sim_exp = [geo]
     ene_sim = [ene]
@@ -432,18 +433,43 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
             for j, geoj in enumerate(geo_sim_exp):
                 if j < i:
                     if automol.geom.almost_equal_dist_mat(
-                            geoi, geoj, thresh=1e-1):
-                        new_geom = False
+                        geoi, geoj, thresh=1e-1):
+                        if are_torsions_same(geoi, geoj):
+                            new_geom = False
                 else:
                     break
             if new_geom:
                 int_sym_num += 1
+    # print('int_sym_num test:', int_sym_num)
     return int_sym_num
+
+
+def external_symmetry_factor(geo):
+    """ obtain external symmetry number for a geometry using x2z
+    """
+    # Get initial external symmetry number
+    oriented_geom = _pyx2z.to_oriented_geometry(geo)
+    ext_sym_fac = oriented_geom.sym_num()
+    # Change symmetry number if geometry has enantiomers
+    if oriented_geom.is_enantiomer():
+        ext_sym_fac *= 0.5
+    return ext_sym_fac
+
+
+def symmetry_factor(geo, ene, cnf_save_fs):
+    """ obtain overall symmetry number for a geometry as a product
+    of the external and internal symmetry numbers
+    """
+    ext_sym = external_symmetry_factor(geo)
+    int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
+    # print('sym_fac test:', ext_sym, int_sym, geo, ene, cnf_save_fs)
+    sym_fac = ext_sym * int_sym
+    return sym_fac
 
 
 def is_unique_stereo_dist_mat_energy(geo, ene, geo_list, ene_list):
     """ compare given geo with list of geos all to see if any have the same
-    coulomb spectrum and energy and stereo specific inchi
+    distance matrix and energy and stereo specific inchi
     """
     unique = True
     # xyzs = automol.geom.coordinates(geo)
@@ -475,4 +501,58 @@ def is_unique_stereo_dist_mat_energy(geo, ene, geo_list, ene_list):
                 # print('inchi test in conformer save:', ich, ichi)
                 if ich == ichi:
                     unique = False
+    return unique
+
+
+def are_torsions_same(geo, geoi):
+    """ compare all torsional angle values
+    """
+    dtol = 0.01
+    same_dihed = True
+    zma = automol.geom.zmatrix(geo)
+    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    zmai = automol.geom.zmatrix(geoi)
+    tors_namesi = automol.geom.zmatrix_torsion_coordinate_names(geoi)
+    for idx, tors_name in enumerate(tors_names):
+        val = automol.zmatrix.values(zma)[tors_name]
+        vali = automol.zmatrix.values(zmai)[tors_namesi[idx]]
+        # print('val test:', val, vali)
+        if abs(val - vali) > dtol:
+            same_dihed = False
+    return same_dihed
+
+
+def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list):
+    """ compare given geo with list of geos all to see if any have the same
+    coulomb spectrum and energy and stereo specific inchi
+    """
+    unique = True
+    # xyzs = automol.geom.coordinates(geo)
+    # print('xyzs test:', xyzs)
+    # zma = automol.geom.zmatrix(geo)
+    # tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    etol = 2.e-5
+    for idx, geoi in enumerate(geo_list):
+        enei = ene_list[idx]
+        # zmai = automol.geom.zmatrix(geoi)
+        # tors_namesi = automol.geom.zmatrix_torsion_coordinate_names(geoi)
+        # xyzsi = automol.geom.coordinates(geoi)
+        # print('xyzsi test:', xyzsi)
+        # check energy
+        if abs(ene-enei) < etol:
+            # check distance matrix
+            if automol.geom.almost_equal_dist_mat(
+                    geo, geoi, thresh=1e-1):
+                # check dihedrals
+                # same_dihed = True
+                # for idx2, tors_name in enumerate(tors_names):
+                    # val = automol.zmatrix.values(zma)[tors_name]
+                    # vali = automol.zmatrix.values(zmai)[tors_namesi[idx2]]
+                    # print('val test:', val, vali)
+                    # if abs(val - vali) > dtol:
+                        # same_dihed = False
+                #if same_dihed:
+                if are_torsions_same(geo, geoi):
+                    unique = False
+    print('unique test:', unique)
     return unique

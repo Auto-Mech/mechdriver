@@ -14,7 +14,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                  "messpf pf.inp build.out >> stdout.log &> stderr.log")
 PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "RPHt.exe")
+                      "RPHt.exe >& /dev/null")
 ELC_DEG_DCT = {
     ('InChI=1S/B', 2): [[0., 2], [16., 4]],
     ('InChI=1S/C', 3): [[0., 1], [16.4, 3], [43.5, 5]],
