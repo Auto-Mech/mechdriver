@@ -12,7 +12,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def conformer_sampling(
         spc_info, thy_level, thy_save_fs, cnf_run_fs, cnf_save_fs,
-        script_str, overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50), tors_names='',
+        script_str, overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50), tors_names='', dist_info = [],
         **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
@@ -36,11 +36,11 @@ def conformer_sampling(
     else:
         ntaudof = len(tors_names)
         nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
-
     save_conformers(
         cnf_run_fs=cnf_run_fs,
-        cnf_save_fs=cnf_save_fs,
-        saddle=saddle
+        cnf_save_fs=cnf_save_fs, 
+        saddle=saddle, 
+        dist_info=dist_info
     )
 
     run_conformers(
@@ -58,7 +58,8 @@ def conformer_sampling(
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
-        saddle=saddle
+        saddle=saddle,
+        dist_info=dist_info
     )
 
     # save information about the minimum energy conformer in top directory
@@ -76,8 +77,11 @@ def conformer_sampling(
             thy_save_fs.trunk.file.zmatrix.write(zma)
 
         ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
-        int_sym_num = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
-        print('internal symmetry number test:', int_sym_num)
+        if saddle:
+            int_sym_num=1.#####SET THIS UP FOR TS 
+        else:
+            int_sym_num = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
+            print('internal symmetry number test:', int_sym_num)
 
 def run_conformers(
         zma, spc_info, thy_level, nsamp, tors_range_dct,
@@ -108,7 +112,7 @@ def run_conformers(
         nsampd = inf_obj_r.nsamp
     else:
         nsampd = 0
-
+    
     while True:
         nsamp = nsamp0 - nsampd
         if nsamp <= 0:
@@ -151,7 +155,7 @@ def run_conformers(
             cnf_run_fs.trunk.file.info.write(inf_obj)
 
 
-def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False):
+def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
     """ save the conformers that have been found so far
     """
 
@@ -178,40 +182,51 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False):
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 if saddle:
                     zma = elstruct.reader.opt_zmatrix(prog, out_str)
-                    unique = True
-                    for idx, geoi in enumerate(seen_geos):
-                        enei = seen_enes[idx]
-                        etol = 2.e-5
-                        if automol.geom.almost_equal_coulomb_spectrum(
-                                geo, geoi, rtol=1e-2):
-                            if abs(ene-enei) < etol:
-                                unique = False
+                    dist_name = dist_info[0]
+                    dist_len = dist_info[1]
+                    conf_dist_len = automol.zmatrix.values(zma)[dist_name]
+                    if abs(conf_dist_len - dist_len) > 0.5:
+                        print(" - Transition State conformer has diverged from original structure of dist {:.3f} with dist {:.3f}".format(dist_len, conf_dist_len))
+                        continue
+                    gra = automol.geom.weakly_connected_graph(geo)
                 else:
                     zma = automol.geom.zmatrix(geo)
                     gra = automol.geom.graph(geo)
 
-                    if len(automol.graph.connected_components(gra)) > 1:
-                        print(" - Geometry is disconnected.. Skipping...")
+                conns = automol.graph.connected_components(gra)
+                if len(conns) >  1:
+                    print(" - Geometry is disconnected.. Skipping...")
+                else:
+                    if saddle:
+                        unique = True
+                        for idx, geoi in enumerate(seen_geos):
+                            enei = seen_enes[idx]
+                            etol = 2.e-5
+                            if automol.geom.almost_equal_coulomb_spectrum(
+                                    geo, geoi, rtol=1e-2):
+                                if abs(ene-enei) < etol:
+                                    unique = False
                     else:
                         unique = is_unique_stereo_dist_mat_energy(geo, ene, seen_geos, seen_enes)
-                if not unique:
-                    print(" - Geometry is not unique. Skipping...")
-                else:
-                    save_path = cnf_save_fs.leaf.path(locs)
-                    print(" - Geometry is unique. Saving...")
-                    print(" - Save path: {}".format(save_path))
 
-                    cnf_save_fs.leaf.create(locs)
-                    cnf_save_fs.leaf.file.geometry_info.write(
-                        inf_obj, locs)
-                    cnf_save_fs.leaf.file.geometry_input.write(
-                        inp_str, locs)
-                    cnf_save_fs.leaf.file.energy.write(ene, locs)
-                    cnf_save_fs.leaf.file.geometry.write(geo, locs)
-                    cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
+                    if not unique:
+                        print(" - Geometry is not unique. Skipping...")
+                    else:
+                        save_path = cnf_save_fs.leaf.path(locs)
+                        print(" - Geometry is unique. Saving...")
+                        print(" - Save path: {}".format(save_path))
 
-                seen_geos.append(geo)
-                seen_enes.append(ene)
+                        cnf_save_fs.leaf.create(locs)
+                        cnf_save_fs.leaf.file.geometry_info.write(
+                            inf_obj, locs)
+                        cnf_save_fs.leaf.file.geometry_input.write(
+                            inp_str, locs)
+                        cnf_save_fs.leaf.file.energy.write(ene, locs)
+                        cnf_save_fs.leaf.file.geometry.write(geo, locs)
+                        cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
+
+                    seen_geos.append(geo)
+                    seen_enes.append(ene)
 
         # update the conformer trajectory file
         moldr.util.traj_sort(cnf_save_fs)

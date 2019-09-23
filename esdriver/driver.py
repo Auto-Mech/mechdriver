@@ -72,10 +72,11 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                     rct_zmas, prd_zmas)
                 spcdct[ts]['class'] = rxn_class
                 spcdct[ts]['tors_names'] = tors_names
-                spcdct[ts]['original_zma'] = ts_zma
-                geo, zma = scripts.es.find_ts(
-                    spcdct[ts], ts_info, ts_zma, rxn_class, dist_name, grid,
-                    thy_info, rxn_run_path, rxn_save_path, overwrite)
+                spcdct[ts]['original_zma']= ts_zma
+                geo, zma, final_dist = scripts.es.find_ts(
+                        spcdct[ts], ts_info, ts_zma, rxn_class, dist_name,
+                        grid, thy_info, rxn_run_path, rxn_save_path, overwrite)
+                spcdct[ts]['dist_info'] = [dist_name, final_dist]
                 if not isinstance(geo, str):
                     print('Success, transition state {} added to species queue'.format(ts))
                     spc_queue.append(ts)
@@ -220,12 +221,13 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
                 #Every task starts with a geometry optimization at the running theory level
                 if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
                     geo = moldr.ts.reference_geometry(
-                        spcdct[spc], thy_level, ini_thy_level, fs, ini_fs, overwrite)
+                            spcdct[spc], thy_level, ini_thy_level, fs, ini_fs,
+                            spcdct[spc]['dist_info'], overwrite)
                 #Run the requested task at the requested running theory level
                     if geo:
                         scripts.es.ts_geometry_generation(
-                            tsk, spcdct[spc], es_dct[es_run_key], thy_level,
-                            fs, spc_info, overwrite)
+                                tsk, spcdct[spc], es_dct[es_run_key],
+                                thy_level, fs, spc_info,  overwrite)
                 else:
                     selection = 'min'
                     scripts.es.ts_geometry_analysis(

@@ -139,7 +139,7 @@ def ts_save_conformers(cnf_run_fs, cnf_save_fs):
 
 
 def reference_geometry(
-    spcdct, thy_level, ini_thy_level, fs, ini_fs, overwrite=False):
+    spcdct, thy_level, ini_thy_level, fs, ini_fs, dist_info=[], overwrite=False):
     """ determine what to use as the reference geometry for all future runs
     If ini_thy_info refers to geometry dictionary then use that,
     otherwise values are from a hierarchy of:
@@ -310,5 +310,5 @@ def reference_geometry(
 
             scripts.es.run_single_conformer(
                 spc_info, thy_level, fs,
-                overwrite, True)
+                overwrite, True, dist_info)
     return geo

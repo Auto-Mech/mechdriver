@@ -10,6 +10,7 @@ import moldr
 import mess_io.writer
 import scripts
 
+EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
@@ -97,7 +98,7 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
     for reac in rxn['reactants']:
         spc_label.append(automol.inchi.smiles(spcdct[reac]['ich']))
         well_data.append(wells[reac])
-        reac_ene += scripts.thermo.spc_energy(spcdct[reac]['ene'],spcdct[reac]['zpe'])
+        reac_ene += scripts.thermo.spc_energy(spcdct[reac]['ene'],spcdct[reac]['zpe']) * EH2KCAL
     well_dct_key1 = '.'.join(spc_label)
     well_dct_key2 = '.'.join(spc_label[::-1])
     if not well_dct_key1 in idx_dct:
@@ -134,7 +135,7 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
     for prod in rxn['products']:
         spc_label.append(automol.inchi.smiles(spcdct[prod]['ich']))
         well_data.append(wells[prod])
-        prod_ene += scripts.thermo.spc_energy(spcdct[prod]['ene'],spcdct[prod]['zpe'])
+        prod_ene += scripts.thermo.spc_energy(spcdct[prod]['ene'],spcdct[prod]['zpe']) * EH2KCAL
     zero_energy = prod_ene - reac_ene
     well_dct_key1 = '.'.join(spc_label)
     well_dct_key2 = '.'.join(spc_label[::-1])
@@ -159,7 +160,7 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
     print('prod_ene:', prod_ene)
 
 #Set up a new well for the ts
-    ts_ene = scripts.thermo.spc_energy(spcdct[tsname]['ene'],spcdct[tsname]['zpe'])
+    ts_ene = scripts.thermo.spc_energy(spcdct[tsname]['ene'],spcdct[tsname]['zpe']) * EH2KCAL
     zero_energy = ts_ene - reac_ene
     ts_label = 'B' + str(int(tsname.replace('ts_',''))+1)
     ts_str +=  '\n' + mess_io.writer.ts_sadpt(ts_label, reac_label, prod_label, wells[tsname], zero_energy)

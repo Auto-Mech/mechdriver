@@ -80,7 +80,6 @@ def run_job(
             job=job, prog=prog, version='', method=method, basis=basis, status=status)
         inf_obj.utc_start_time = autofile.system.info.utc_time()
         run_fs.leaf.file.info.write(inf_obj, [job])
-
         runner = JOB_RUNNER_DCT[job]
         if job == elstruct.Job.OPTIMIZATION:
             runner = functools.partial(
@@ -97,7 +96,6 @@ def run_job(
 
         inf_obj.utc_end_time = autofile.system.info.utc_time()
         prog = inf_obj.prog
-
         if is_successful_output(out_str, job, prog):
             run_fs.leaf.file.output.write(out_str, [job])
             print(" - Run succeeded.")
