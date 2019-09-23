@@ -68,15 +68,11 @@ class DataSeries():
         self.prefix = os.path.abspath(prefix)
         self.map_ = map_
         self.nlocs = nlocs
-        print('In DataSeries __init__')
-        print(self.nlocs)
         self.depth = depth
         self.loc_dfile = loc_dfile
         self.root = root_ds
         self.removable = removable
         self.file = types.SimpleNamespace()
-        print('In DataSeries __init__ 2')
-        print(self.nlocs)
 
     def add_data_files(self, dfile_dct):
         """ add DataFiles to the DataSeries
