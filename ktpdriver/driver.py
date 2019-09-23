@@ -233,6 +233,9 @@ if __name__ == "__main__":
         ['conf_samp', 'mclev', 'mclev', False],
         ['geom', 'optlev', 'mclev', False],
         ['conf_hess', 'optlev', 'optlev', False],
+        ['geom', 'b2tz', 'optlev', False],
+        ['conf_hess', 'b2tz', 'b2tz', False],
+       # ['hr_scan', 'cheap', 'optlev', False],
        # ['hr_scan', 'cheap', 'optlev', False],
         ['conf_energy', 'optlev', 'optlev', False]
         # [ 'hr', 'hrlev', 'optlev', False]
@@ -263,7 +266,8 @@ if __name__ == "__main__":
                   'orb_res': 'RU', 'program': 'molpro', 'method': 'b3lyp',
                   'basis': 'cc-pvtz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
                   'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
-              'cheap': {'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': 'sto-3g',  'mc_nsamp': [True, 3, 1, 3 , 100, 5]}
+              'cheap': {'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': 'sto-3g',  'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
+              'b2tz': {'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',  'mc_nsamp': [True, 3, 1, 3 , 100, 5]}
               }
 
 
@@ -291,4 +295,5 @@ if __name__ == "__main__":
             'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0}
              }
     run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
+    #run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/elliott/run2', '/lcrc/project/PACC/elliott/save2')
     #run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'runtest', 'savetest')

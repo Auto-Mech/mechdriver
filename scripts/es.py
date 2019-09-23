@@ -42,7 +42,7 @@ def run_vpt2(params, kwargs):
     moldr.sp.run_vpt2(**params, **kwargs)
 
 
-def run_single_conformer(spc_info, thy_level, fs, overwrite, saddle=False):
+def run_single_conformer(spc_info, thy_level, fs, overwrite, saddle=False, dist_info=[]):
     """ generate single optimized geometry for randomly sampled initial torsional angles
     """
     mc_nsamp = [False, 0, 0, 0, 0, 1]
@@ -60,6 +60,7 @@ def run_single_conformer(spc_info, thy_level, fs, overwrite, saddle=False):
         overwrite=overwrite,
         nsamp_par=mc_nsamp,
         saddle=saddle,
+        dist_info=dist_info,
         **kwargs,
     )
 
@@ -155,6 +156,7 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
     
     if tsk in ['conf_samp', 'tau_samp']:
         params['nsamp_par'] = es_dct['mc_nsamp']
+        params['dist_info'] = spcdic['dist_info']
     elif tsk in ['hr_scan']:
         if 'hind_inc' in spcdic:
             params['scan_increment'] = spcdic['hind_inc']
@@ -700,10 +702,13 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_name, grid, thy_info, rxn_run_pat
         ts_save_fs.trunk.file.geometry.write(geo)
         ts_save_fs.trunk.file.zmatrix.write(zma)
 
+        vals = automol.zmatrix.values(zma)
+        final_dist = vals[dist_name]
+        print('Test final distance for reactant coordinate', final_dist)
     else:                                                      
         geo = 'failed'                                         
         zma = 'failed'
-    return geo, zma
+    return geo, zma, final_dist
 #############
 def species_qchem(
         spc_names, spc_info, run_opt_levels, ref_high_level,
