@@ -465,16 +465,16 @@ OVERWRITE = False
 run_thermo = True
 if run_thermo:
     TSK_INFO_LST = [
-        ['geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_samp', OPT_LVL1, OPT_LVL0, OVERWRITE],
         ['conf_hess', OPT_LVL1, OPT_LVL1, OVERWRITE],
-        ['geom', OPT_LVL2, OPT_LVL1, OVERWRITE],
+        ['find_geom', OPT_LVL2, OPT_LVL1, OVERWRITE],
         ['conf_hess', OPT_LVL2, OPT_LVL2, OVERWRITE],
         ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
         ['conf_energy', SP_LVL1, OPT_LVL2, OVERWRITE],
         ['conf_energy', SP_LVL2, OPT_LVL2, OVERWRITE],
         ['conf_energy', SP_LVL3, OPT_LVL2, OVERWRITE],
-        ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['sym_samp', OPT_LVL1, OPT_LVL1, OVERWRITE],
         # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
         ]
 

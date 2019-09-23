@@ -17,7 +17,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                            "mess mess.inp build.out >> stdout.log &> stderr.log")
 PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "RPHt.exe")
+                      "RPHt.exe >& /dev/null")
 
 def pf_headers(rct_ichs, temps, press, exp_factor, exp_power, exp_cutoff,
              eps1, eps2, sig1, sig2, mass1):
