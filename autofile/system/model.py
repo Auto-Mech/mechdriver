@@ -174,12 +174,6 @@ class DataSeries():
         """ locators for the root DataSeriesDir, if there is one
         """
         nlocs = len(locs)
-        print('In DataSeries _root_locatores')
-        print('locs and nlocs')
-        print(locs)
-        print(nlocs)
-        print('self.nlocs')
-        print(self.nlocs)
         assert nlocs >= self.nlocs
         root_nlocs = nlocs - self.nlocs
         return locs[:root_nlocs]

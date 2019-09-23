@@ -39,7 +39,7 @@ def pf_headers(rct_ichs, temps, press, exp_factor, exp_power, exp_cutoff,
 
     return header_str, energy_trans_str
 
-def make_all_well_data(rxn_lst, spcdct, save_prefix, model_info, pf_info):
+def make_all_well_data(rxn_lst, spcdct, save_prefix, model_info, pf_info, projrot_script_str):
     wells = {}
     spc_save_fs = autofile.fs.species(save_prefix)
     for idx, rxn in enumerate(rxn_lst):
@@ -48,13 +48,13 @@ def make_all_well_data(rxn_lst, spcdct, save_prefix, model_info, pf_info):
         welllist = rxn['reactants'] + rxn['products'] 
         for name in welllist:
             if not name in wells:
-                wells[name] = make_well_data(spcdct[name], spc_save_fs, model_info, pf_info)
-        wells[tsname] = make_well_data(ts, spc_save_fs, model_info, pf_info)
+                wells[name] = make_well_data(spcdct[name], spc_save_fs, model_info, pf_info, projrot_script_str)
+        wells[tsname] = make_well_data(ts, spc_save_fs, model_info, pf_info, projrot_script_str)
     return wells
 
-def make_well_data(spc_spcdct, spc_save_fs, model_info, pf_info):
-    tors_model, vib_model = model_info
-    har_info, tors_info, vpt2_info = pf_info
+def make_well_data(spc_spcdct, spc_save_fs, model_info, pf_info, projrot_script_str):
+    tors_model, vib_model, _ = model_info
+    har_info, tors_info, vpt2_info, sym_info = pf_info
     print(har_info, tors_info, vpt2_info)
     print(tors_model, vib_model)
     print(spc_spcdct['ich'])
@@ -65,13 +65,11 @@ def make_well_data(spc_spcdct, spc_save_fs, model_info, pf_info):
         spc_save_fs.leaf.create(spc_info)
         save_path = spc_save_fs.leaf.path(spc_info)
     well_data = moldr.pf.species_block(
+        spc_spcdct = spc_spcdct,
         spc_info=spc_info,
-        tors_model=tors_model,
-        vib_model=vib_model,
-        har_level=har_info,
-        tors_level=tors_info,
-        vpt2_level=vpt2_info,
-        script_str=PROJROT_SCRIPT_STR,
+        spc_model=model_info,
+        pf_levels=pf_info,
+        script_str=projrot_script_str,
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix=save_path,
         )

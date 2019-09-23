@@ -19,8 +19,10 @@ EPS2 = 200.0
 SIG1 = 6.
 SIG2 = 6.
 MASS1 = 15.0
+PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
+                      "RPHt.exe >& /dev/null")
 
-def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, save_prefix, options=[True, True, True, False]):
+def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, save_prefix, ene_coeff=[1.], vdw_params = [False, False, True], options=[True, True, True, False]):
     """ main driver for thermo run
     """
 
@@ -57,7 +59,7 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
     if runes:
         if runspcfirst:
             rxn_lst[0]['species'] = spc_queue
-        spc_dct = esdriver.driver.run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix)
+        spc_dct = esdriver.driver.run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_params)
     else:
         pass 
     #BUT if we don't run ES I need to construct the following info right here for ts dict
@@ -75,7 +77,7 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
     tors_lvl_ref = ''
     sym_lvl_ref = ''
 
-    ts_model = ['RIGID', 'HARM']
+    ts_model = ['RIGID', 'HARM', '']
     for tsk in tsk_info_lst:
         if 'samp' in tsk[0] or 'geom' in tsk[0]:
             geo_lvl = tsk[1]
@@ -114,62 +116,59 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
     tors_thy_info = get_thy_info(es_dct, tors_lvl)
     anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
     sym_thy_info = get_thy_info(es_dct, sym_lvl)
-    pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
+    harm_ref_thy_info = get_thy_info(es_dct, harm_lvl_ref)
+    tors_ref_thy_info = get_thy_info(es_dct, tors_lvl_ref)
+    anharm_ref_thy_info = get_thy_info(es_dct, anharm_lvl_ref)
     sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
+    pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
     ref_levels = [
         harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
 
+    #Collect energies for zero points
     ene_strl = []
-    ene_str = '! energy level:'
     ene_lvl = ''
     ene_lvl_ref = ''
-    ene_idx = 0
-    for tsk in tsk_info_lst:
-        if 'ene' in tsk[0]:
-            if ene_idx > len(ene_coeff)-1:
-                print('Warning - an insufficient energy coefficient list was provided')
-                break
-            ene_lvl = tsk[1]
-            geo_lvl = tsk[2]
-            geo_thy_info = scripts.es.get_thy_info(es_dct[geo_lvl])
-            ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
-            ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
-                ene_coeff[ene_idx], ene_thy_info[3], ene_thy_info[1], ene_thy_info[2],
-                geo_thy_info[3], geo_thy_info[1], geo_thy_info[2]))
-
-            for spc in full_queue:
-                spc_info = spcdct[spc]['spc_info']
-                ene = scripts.thermo.get_electronic_energy(
-                    spc_info, geo_thy_info, ene_thy_info, save_prefix)
-                spcdct[spc]['ene'] += ene*ene_coeff[ene_idx]
-            ene_idx += 1
-    ene_str += '!               '.join(ene_strl)
-
-    #Collect energies for zero points
-    for spc in spc_queue:
-        spc_info = (spcdct[spc]['ich'], spcdct[spc]['chg'], spcdct[spc]['mul'])
-        ene = scripts.thermo.get_electronic_energy(
-            spc_info, ene_ref_thy_info, ene_thy_info, save_prefix)
-        spc_save_fs = autofile.fs.species(save_prefix)
-        spc_save_fs.leaf.create(spc_info)
-        spc_save_path = spc_save_fs.leaf.path(spc_info)
-        zpe, zpe_str = scripts.thermo.get_zpe(
-            spcdct[spc], spc_info, spc_save_path, pf_levels, ts_model)
-        spcdct[spc]['ene'] = ene
-        spcdct[spc]['zpe'] = zpe
+    spc_save_fs = autofile.fs.species(save_prefix)
+    ts_queue =  []
     for spc in spcdct:   #have to make sure you get them for the TS too
         if 'ts_' in spc:
-            rxn_save_path = spcdct[spc]['rxn_fs'][3]
-            ene = scripts.thermo.get_electronic_energy(
-                spc_info, ene_ref_thy_info, ene_thy_info, rxn_save_path, True)
-            spc_save_fs = autofile.fs.species(save_prefix)
+            ts_queue.append(spc)
+    for spc in spc_queue +  ts_queue:
+        spc_info = (spcdct[spc]['ich'], spcdct[spc]['chg'], spcdct[spc]['mul'])
+        if 'ts_' in spc:
+            spc_save_path = spcdct[spc]['rxn_fs'][3]
+            saddle = True
+            save_path=spc_save_path
+        else:
             spc_save_fs.leaf.create(spc_info)
             spc_save_path = spc_save_fs.leaf.path(spc_info)
-            zpe, zpe_str = scripts.thermo.get_zpe(
-                spcdct[spc], spc_info, spc_save_path, pf_levels, ts_model)
-            spcdct[spc]['ene'] = ene
-            spcdct[spc]['zpe'] = zpe
- 
+            saddle=False
+            save_path=save_prefix
+        zpe, zpe_str = scripts.thermo.get_zpe(
+            spc_info, spc_save_path, pf_levels, ts_model)
+        spcdct[spc]['zpe'] = zpe
+        ene_idx = 0
+        spcdct[spc]['ene'] = 0.
+        ene_str = '! energy level:'
+        for tsk in tsk_info_lst:
+            if 'ene' in tsk[0]:
+                if ene_idx > len(ene_coeff)-1:
+                    print('Warning - an insufficient energy coefficient list was provided')
+                    break
+                ene_lvl = tsk[1]
+                ene_lvl_ref = tsk[2]
+                ene_ref_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl_ref])
+                ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
+                ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
+                    ene_coeff[ene_idx], ene_thy_info[3], ene_thy_info[1], ene_thy_info[2],
+                    ene_ref_thy_info[3], ene_ref_thy_info[1], ene_ref_thy_info[2]))
+                ene = scripts.thermo.get_electronic_energy(
+                    spc_info, ene_ref_thy_info, ene_thy_info, save_path, saddle)
+                spcdct[spc]['ene'] += ene*ene_coeff[ene_idx]
+                ene_idx += 1
+    ene_str += '!               '.join(ene_strl)
+   # pf_levels.append(ene_str)
+
     #Collect formula and header string for the PES
     tsname_0 = 'ts_0'
     pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
@@ -183,7 +182,7 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
     mess_strs = ['','','']
     idx_dct = {}
     first_ground_ene = 0.
-    wells = scripts.ktp.make_all_well_data(rxn_lst, spc_dct, save_prefix, ts_model, pf_levels)
+    wells = scripts.ktp.make_all_well_data(rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
         tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma'])) 
@@ -226,15 +225,16 @@ if __name__ == "__main__":
     print(MSG)
     #tsk_info_lst, es_dct, spcs = load_params()
     REF = 'cbh0'
-
+    VDW_PARAMS = [True, True, False]  #[for reac (T/F), for reac (T/F), from reactants(T)/from TS (F)]
     TSK_INFO_LST = [
         ['conf_samp', 'mclev', 'mclev', False],
         ['find_ts', 'mclev', 'mclev', False],
+       # ['find_vdw', 'mclev', 'mclev', False],
         ['conf_samp', 'mclev', 'mclev', False],
-        ['geom', 'optlev', 'mclev', False],
+        ['find_geom', 'optlev', 'mclev', False],
         ['conf_hess', 'optlev', 'optlev', False],
-        ['geom', 'b2tz', 'optlev', False],
-        ['conf_hess', 'b2tz', 'b2tz', False],
+       # ['geom', 'b2tz', 'optlev', False],
+       # ['conf_hess', 'b2tz', 'b2tz', False],
        # ['hr_scan', 'cheap', 'optlev', False],
        # ['hr_scan', 'cheap', 'optlev', False],
         ['conf_energy', 'optlev', 'optlev', False]
@@ -294,6 +294,6 @@ if __name__ == "__main__":
             'ch2oh': {'smi': '[CH2]O', 'mul': 2, 'chg': 0},
             'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0}
              }
-    run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
-    #run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/elliott/run2', '/lcrc/project/PACC/elliott/save2')
+    #run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
+    run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/elliott/run2', '/lcrc/project/PACC/elliott/save2', vdw_params=VDW_PARAMS)
     #run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'runtest', 'savetest')
