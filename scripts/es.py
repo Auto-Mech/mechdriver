@@ -391,11 +391,13 @@ def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
           .format('backward' if is_rev else 'forward'))
 
     high_mul = automol.mult.ts._high(rxn_muls[0])
+    low_mul = automol.mult.ts._low(rxn_muls[0])
 
     spcs[ts]['rxn_ichs'] = rxn_ichs
     spcs[ts]['rxn_chgs'] = rxn_chgs
     spcs[ts]['rxn_muls'] = rxn_muls
     spcs[ts]['high_mul'] = high_mul
+    spcs[ts]['low_mul'] = low_mul
     return spcs[ts]
 
 def get_rxn_fs(run_prefix, save_prefix, ts):
@@ -709,6 +711,118 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_name, grid, thy_info, rxn_run_pat
         geo = 'failed'                                         
         zma = 'failed'
     return geo, zma, final_dist
+
+def find_vdw(ts_name, spcdct, thy_info, vdw_params, nsamp_par, run_prefix, save_prefix,
+        kickoff_size, kickoff_backward, projrot_script_str, overwrite):
+    new_vdws = []
+    #spcdct, thy_info, kickoff_size, kickoff_backward, prorot_script_str,overwrite, vdwparam, run_prefix, save_prefix
+    mul = spcdct[ts_name]['low_mul']
+    vdw_names_lst = []
+    if vdw_params[0]:
+        vdw_names_lst.append([sorted(spcdct[ts_name]['reacs']), mul, 'r'])
+    if vdw_params[1]:
+        vdw_names_lst.append([sorted(spcdct[ts_name]['prods']), mul, 'p'])  
+
+    for names, ts_mul, label in VDW_NAMES_LST:
+        if len(names) < 2:
+             print("Cannot find Well for unimolecular reactant or product")
+        ichs = list(map(spcdct[names]['ich'], names))
+        chgs = list(map(spcdct[names]['chg'], names))
+        muls = list(map(spcdct[names]['mul'], names))
+
+        # theory
+        prog = thy_info[0]
+        method = thy_info[1]
+        SP_SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(prog, method)
+
+        geos = []
+        ntaudof = 0.
+        for name, ich, chg, mul in zip(names, ichs, chgs, muls):
+            spc_info = [ich, chg, mul]
+            orb_restr = moldr.util.orbital_restriction(spc_info, thy_info[0])
+            thy_level = thy_info[0:3]
+            thy_level = thy_level.append(orb_restr)
+            geo = moldr.geom.reference_geometry(
+                 spcdct[name], thy_level, ini_thy_level, fs, ini_fs,
+                 kickoff_size=kickoff_size,
+                 kickoff_backward=kickoff_backward,
+                 projrot_script_str=projrot_script_str,
+                 overwrite=overwrite)
+            geos.append(geo)
+            gra = automol.geom.graph(geo)
+            ntaudof += len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+        nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
+        geo1, geo2 = geos
+        geo1 = automol.geom.mass_centered(geo1)
+        geo2 = automol.geom.mass_centered(geo2)
+        for idx in range(nsamp):
+            print('Optimizing vdw geometry {}/{}'.format(idx+1, nsamp))
+            angs1 = numpy.multiply(
+                numpy.random.rand(3), [1*numpy.pi, 2*numpy.pi, 2*numpy.pi])
+            angs2 = numpy.multiply(
+                numpy.random.rand(3), [1*numpy.pi, 2*numpy.pi, 2*numpy.pi])
+            angs12 = numpy.multiply(
+                numpy.random.rand(2), [1*numpy.pi, 2*numpy.pi])
+            geo1 = automol.geom.euler_rotated(geo1, *angs1)
+            geo2 = automol.geom.euler_rotated(geo2, *angs2)
+            dist_cutoff = 3.*qcc.conversion_factor('angstrom', 'bohr')
+
+            geo = automol.geom.join(geo1, geo2, dist_cutoff, *angs12)
+            print("Species: {}".format('+'.join(names)))
+            print('vdw starting geometry')
+            print(automol.geom.xyz_string(geo))
+
+   #  set up the filesystem
+            ich = automol.inchi.recalculate(automol.inchi.join(ichs))
+            chg = sum(chgs)
+            mul = ts_mul
+            orb_restr = moldr.util.orbital_restriction(mul, RESTRICT_OPEN_SHELL)
+            spc_run_path = moldr.util.species_path(ich, chg, mul, run_prefix)
+            spc_save_path = moldr.util.species_path(ich, chg, mul, save_prefix)
+            thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
+            thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
+
+   #  generate reference geometry
+   #  generate the z-matrix and sampling ranges
+
+            moldr.driver.run_job(
+                job=elstruct.Job.OPTIMIZATION,
+                geom=geo,
+                spc_info=ts_info,
+                thy_level=run_opt_levels[opt_level_idx],
+                prefix=thy_run_path,
+                script_str=SCRIPT_STR,
+                overwrite=overwrite,
+                **OPT_KWARGS,
+            )
+
+   #  save info for the initial geometry (from inchi or from save directory)
+            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
+            if ret:
+                print('Saving reference geometry')
+                print(" - Save path: {}".format(thy_save_path))
+
+                inf_obj, inp_str, out_str = ret
+                prog = inf_obj.prog
+                method = inf_obj.method
+                geo = elstruct.reader.opt_geometry(prog, out_str)
+                print('vdw ending geometry')
+                print(automol.geom.xyz_string(geo))
+                thy_afs = autofile.fs.theory()
+                thy_afs.theory.file.geometry.write(geo, spc_save_path, [method, basis, orb_restr])
+                ene = elstruct.reader.energy(prog, method, out_str)
+                print('ene test in vdw')
+                print(ene)
+                thy_afs.theory.file.energy.write(ene, spc_save_path, [method, basis, orb_restr])
+                print('Saving reference geometry')
+                print(" - Save path: {}".format(thy_save_path))
+                vdw_name = label + ts_name.replace('ts', 'vdw')
+                spcdct[vdw_name] = spcdct[ts].copy()
+                new_vdws.append(vdw_name)
+    return new_vdws
+
+
+
 #############
 def species_qchem(
         spc_names, spc_info, run_opt_levels, ref_high_level,

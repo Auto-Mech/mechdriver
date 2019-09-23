@@ -14,7 +14,7 @@ KICKOFF_BACKWARD = False
 PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                       "RPHt.exe >& /dev/null")
 
-def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
+def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_params):
     """ driver for all electronic structure tasks
     """
 
@@ -54,32 +54,50 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix):
         thy_info = get_es_info(es_dct, es_run_key)
 
         #If task is to find the transition state, find all TSs for your reactionlist
-        if tsk == 'find_ts':
+        if tsk == 'find_ts' or tsk == 'find_vdw':
             for ts in ts_dct:
                 print('Task {} \t\t\t'.format(tsk))
-                spcdct[ts] = create_spec(ts, ts_dct, spcdct)
-                ts_info = (spcdct[ts]['ich'], spcdct[ts]['chg'], spcdct[ts]['mul'])
-                spcdct[ts] = scripts.es.rxn_info(
-                    run_prefix, save_prefix, ts, spcdct, thy_info, ini_thy_info)
-                rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = scripts.es.get_rxn_fs(
-                    run_prefix, save_prefix, spcdct[ts])
-                spcdct[ts]['rxn_fs'] = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
-                rct_zmas, prd_zmas = scripts.es.get_zmas(
-                    spcdct[ts]['reacs'], spcdct[ts]['prods'], spcdct,
-                    ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
-                    KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
-                rxn_class, ts_zma, dist_name, grid, tors_names = scripts.es.ts_params(
-                    rct_zmas, prd_zmas)
-                spcdct[ts]['class'] = rxn_class
-                spcdct[ts]['tors_names'] = tors_names
-                spcdct[ts]['original_zma']= ts_zma
-                geo, zma, final_dist = scripts.es.find_ts(
-                        spcdct[ts], ts_info, ts_zma, rxn_class, dist_name,
-                        grid, thy_info, rxn_run_path, rxn_save_path, overwrite)
-                spcdct[ts]['dist_info'] = [dist_name, final_dist]
-                if not isinstance(geo, str):
-                    print('Success, transition state {} added to species queue'.format(ts))
-                    spc_queue.append(ts)
+                if not ts in spcdct:
+                    spcdct[ts] = create_spec(ts, ts_dct, spcdct)
+                    ts_info = (spcdct[ts]['ich'], spcdct[ts]['chg'], spcdct[ts]['mul'])
+                    spcdct[ts] = scripts.es.rxn_info(
+                        run_prefix, save_prefix, ts, spcdct, thy_info, ini_thy_info)
+                    rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = scripts.es.get_rxn_fs(
+                        run_prefix, save_prefix, spcdct[ts])
+                    spcdct[ts]['rxn_fs'] = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
+                    rct_zmas, prd_zmas = scripts.es.get_zmas(
+                        spcdct[ts]['reacs'], spcdct[ts]['prods'], spcdct,
+                        ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
+                        KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
+                    rxn_class, ts_zma, dist_name, grid, tors_names = scripts.es.ts_params(
+                        rct_zmas, prd_zmas)
+                    spcdct[ts]['class'] = rxn_class
+                    spcdct[ts]['tors_names'] = tors_names
+                    spcdct[ts]['original_zma']= ts_zma
+                    spcdct[ts]['dist_info'] = [dist_name, 0.] 
+                else:
+                    ts_info = (spcdct[ts]['ich'], spcdct[ts]['chg'], spcdct[ts]['mul'])
+                    ts_zma = spcdct[ts]['original_zma']
+                    rxn_class = spcdct[ts]['class']
+                    dist_name = spcdct[ts]['dist_info']
+                    grid = spcdct[ts]['grid']
+                    _, _, rxn_run_path, rxn_save_path = spcdct[ts]['rxn_fs']
+                if 'ts' in tsk:
+                    geo, zma, final_dist = scripts.es.find_ts(
+                            spcdct[ts], ts_info, ts_zma, rxn_class, dist_name,
+                            grid, thy_info, rxn_run_path, rxn_save_path, overwrite)
+                    spcdct[ts]['dist_info'][1] = final_dist
+                    if not isinstance(geo, str):
+                        print('Success, transition state {} added to species queue'.format(ts))
+                        spc_queue.append(ts)
+                elif 'vdw' in tsk:
+                    new_vdws = scripts.es.find_vdw(
+                                   ts, spcdct, thy_info, ini_thy_info, vdw_params,
+                                   es_dct[es_run_key]['mc_nsamp'], run_prefix,
+                                   save_prefix, KICKOFF_SIZE, KICKOFF_BACKWARD,
+                                   PROJROT_SCRIPT_STR, overwrite)
+                    spc_queue.extend(new_vdws)
+
             continue
 
         #Loop over all species
