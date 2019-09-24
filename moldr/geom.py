@@ -120,9 +120,7 @@ def reference_geometry(
             thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
             thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
     
-            scripts.es.run_single_conformer(
-                spc_info, thy_level, fs,
-                overwrite)
+            scripts.es.run_single_conformer(spc_info, thy_level, fs, overwrite)
     
         if geo:
             inf_obj.status = autofile.system.RunStatus.SUCCESS

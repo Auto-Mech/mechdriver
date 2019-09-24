@@ -45,27 +45,25 @@ def make_all_well_data(rxn_lst, spcdct, save_prefix, model_info, pf_info, projro
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
         ts = spcdct[tsname]
-        welllist = rxn['reactants'] + rxn['products'] 
+        welllist = rxn['reactants'] + rxn['products']
         for name in welllist:
             if not name in wells:
-                wells[name] = make_well_data(spcdct[name], spc_save_fs, model_info, pf_info, projrot_script_str)
-        wells[tsname] = make_well_data(ts, spc_save_fs, model_info, pf_info, projrot_script_str)
+                wells[name], _ = make_well_data(
+                    name, spcdct[name], spc_save_fs, model_info, pf_info, projrot_script_str)
+        wells[tsname], spcdct[tsname]['imag_freq'] = make_well_data(
+            tsname, ts, spc_save_fs, model_info, pf_info, projrot_script_str)
     return wells
 
-def make_well_data(spc_spcdct, spc_save_fs, model_info, pf_info, projrot_script_str):
-    tors_model, vib_model, _ = model_info
-    har_info, tors_info, vpt2_info, sym_info = pf_info
-    print(har_info, tors_info, vpt2_info)
-    print(tors_model, vib_model)
-    print(spc_spcdct['ich'])
+def make_well_data(spc, spc_spcdct, spc_save_fs, model_info, pf_info, projrot_script_str):
     spc_info = (spc_spcdct['ich'], spc_spcdct['chg'], spc_spcdct['mul'])
-    if 'rxn_fs' in spc_spcdct:
+    if 'ts_' in spc:
         save_path = spc_spcdct['rxn_fs'][3]
     else:
         spc_save_fs.leaf.create(spc_info)
         save_path = spc_save_fs.leaf.path(spc_info)
     well_data = moldr.pf.species_block(
-        spc_spcdct = spc_spcdct,
+        spc=spc,
+        spc_spcdct=spc_spcdct,
         spc_info=spc_info,
         spc_model=model_info,
         pf_levels=pf_info,
@@ -96,7 +94,7 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
     for reac in rxn['reactants']:
         spc_label.append(automol.inchi.smiles(spcdct[reac]['ich']))
         well_data.append(wells[reac])
-        reac_ene += scripts.thermo.spc_energy(spcdct[reac]['ene'],spcdct[reac]['zpe']) * EH2KCAL
+        reac_ene += scripts.thermo.spc_energy(spcdct[reac]['ene'], spcdct[reac]['zpe']) * EH2KCAL
     well_dct_key1 = '.'.join(spc_label)
     well_dct_key2 = '.'.join(spc_label[::-1])
     if not well_dct_key1 in idx_dct:
@@ -104,20 +102,24 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
             well_dct_key1 = well_dct_key2
         else:
             if bimol:
-                reac_label = 'P'+str(pidx)
+                reac_label = 'P' + str(pidx)
                 pidx += 1
                 if not first_ground_ene:
                     first_ground_ene = reac_ene
                 ground_energy = reac_ene - first_ground_ene
-                bim_str +=  '\n' + mess_io.writer.bimolecular(
-                    reac_label, spc_label[0], well_data[0],
-                    spc_label[1], well_data[1], ground_energy)
+                bim_str += ' \t ! {} + {} \n'.format(rxn['reactants'][0], rxn['reactants'][1])
+                bim_str += mess_io.writer.bimolecular(
+                    reac_label, spc_label[0], well_data[0], spc_label[1],
+                    well_data[1], ground_energy)
                 idx_dct[well_dct_key1] = reac_label
-            else: 
-                reac_label = 'W'+str(widx)
+            else:
+                if not first_ground_ene:
+                    first_ground_ene = reac_ene
+                reac_label = 'W' + str(widx)
                 widx += 1
-                zero_energy = 0.0
-                well_str += '\n' + mess_io.writer.well(reac_label, well_data[0], zero_energy)
+                zero_energy = reac_ene - first_ground_ene
+                well_str += ' \t ! {} \n'.format(rxn['reactants'][0])
+                well_str += mess_io.writer.well(reac_label, well_data[0], zero_energy)
                 idx_dct[well_dct_key1] = reac_label
     if not reac_label:
         reac_label = idx_dct[well_dct_key1]
@@ -133,7 +135,7 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
     for prod in rxn['products']:
         spc_label.append(automol.inchi.smiles(spcdct[prod]['ich']))
         well_data.append(wells[prod])
-        prod_ene += scripts.thermo.spc_energy(spcdct[prod]['ene'],spcdct[prod]['zpe']) * EH2KCAL
+        prod_ene += scripts.thermo.spc_energy(spcdct[prod]['ene'], spcdct[prod]['zpe']) * EH2KCAL
     zero_energy = prod_ene - reac_ene
     well_dct_key1 = '.'.join(spc_label)
     well_dct_key2 = '.'.join(spc_label[::-1])
@@ -142,27 +144,34 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
             well_dct_key1 = well_dct_key2
         else:
             if bimol:
-                prod_label = 'P'+str(pidx)
+                prod_label = 'P' + str(pidx)
                 ground_energy = prod_ene - first_ground_ene
-                bim_str +=  '\n' + mess_io.writer.bimolecular(
-                   prod_label, spc_label[0], well_data[0],
-                    spc_label[1], well_data[1], ground_energy)
+                bim_str += ' \t ! {} + {} \n'.format(
+                    rxn['products'][0], rxn['products'][1])
+                bim_str += mess_io.writer.bimolecular(
+                    prod_label, spc_label[0], well_data[0], spc_label[1], well_data[1],
+                    ground_energy)
                 idx_dct[well_dct_key1] = prod_label
-            else: 
-                prod_label = 'W'+str(widx)
-                zero_energy = 0.0
-                well_str +=  '\n' + mess_io.writer.well(prod_label, well_data[0], zero_energy)
+            else:
+                prod_label = 'W' + str(widx)
+                zero_energy = prod_ene - first_ground_ene
+                well_str += ' \t ! {} \n'.format(rxn['products'][0])
+                well_str += mess_io.writer.well(prod_label, well_data[0], zero_energy)
                 idx_dct[well_dct_key1] = prod_label
     if not prod_label:
         prod_label = idx_dct[well_dct_key1]
     print('prod_ene:', prod_ene)
 
 #Set up a new well for the ts
-    ts_ene = scripts.thermo.spc_energy(spcdct[tsname]['ene'],spcdct[tsname]['zpe']) * EH2KCAL
-    zero_energy = ts_ene - reac_ene
-    ts_label = 'B' + str(int(tsname.replace('ts_',''))+1)
-    ts_str +=  '\n' + mess_io.writer.ts_sadpt(ts_label, reac_label, prod_label, wells[tsname], zero_energy)
-    
+    ts_ene = scripts.thermo.spc_energy(spcdct[tsname]['ene'], spcdct[tsname]['zpe']) * EH2KCAL
+    zero_energy = ts_ene - first_ground_ene
+    ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
+    imag_freq = abs(spcdct[tsname]['imag_freq'])
+    tunnel_str = mess_io.writer.tunnel_eckart(
+        imag_freq, ts_ene-reac_ene, ts_ene-prod_ene)
+    ts_str += '\n' + mess_io.writer.ts_sadpt(
+        ts_label, reac_label, prod_label, wells[tsname], zero_energy, tunnel_str)
+
     return [well_str, bim_str, ts_str], first_ground_ene
 
 def run_rate(header_str, energy_trans_str, well_str, bim_str, ts_str, tsdct, thy_info, rxn_save_path):
@@ -178,7 +187,7 @@ def run_rate(header_str, energy_trans_str, well_str, bim_str, ts_str, tsdct, thy
     mess_inp_str = '\n'.join([header_str, energy_trans_str, well_str, bim_str, ts_str])
     print('mess input file')
     print(mess_inp_str)
-    
+
     bld_locs = ['MESS', 0]
     bld_save_fs = autofile.fs.build(thy_save_path)
     bld_save_fs.leaf.create(bld_locs)
@@ -188,7 +197,7 @@ def run_rate(header_str, energy_trans_str, well_str, bim_str, ts_str, tsdct, thy
     with open(os.path.join(mess_path, 'mess.inp'), 'w') as mess_file:
         mess_file.write(mess_inp_str)
     moldr.util.run_script(RATE_SCRIPT_STR, mess_path)
-    return   
+    return
 
 def species_thermo(
         spc_names,
@@ -265,6 +274,7 @@ def species_thermo(
                 spc_save_path = spc_save_fs.leaf.path(spc_info[name])
 
                 spc_zpe[name], is_atom[name] = moldr.pfdriver.get_zero_point_energy(
+                    name,
                     spc_info[name],
                     tors_model, vib_model,
                     har_level, tors_level, vpt2_level,

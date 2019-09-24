@@ -107,7 +107,7 @@ def get_hf0k(spc, spcdct, spc_bas):
     return h0form
 
 
-def get_zpe(spc_info, spc_save_path, pf_levels, spc_model):
+def get_zpe(spc, spc_info, spc_save_path, pf_levels, spc_model):
     """ return the zpe for a given species according a specified set of
     partition function levels
     """
@@ -122,7 +122,7 @@ def get_zpe(spc_info, spc_save_path, pf_levels, spc_model):
 
     # print('har_level in get_zpe:', har_level)
     spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
-        spc_info, pf_levels, spc_model,
+        spc, spc_info, pf_levels, spc_model,
         script_str=PF_SCRIPT_STR,
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix=spc_save_path)
@@ -139,7 +139,7 @@ def get_zpe(spc_info, spc_save_path, pf_levels, spc_model):
     return spc_zpe, zero_energy_str
 
 
-def get_spc_input(spc_spcdct, spc_info, spc_save_path, pf_levels, spc_model):
+def get_spc_input(spc, spc_spcdct, spc_info, spc_save_path, pf_levels, spc_model):
     """ set up the input string for a given species section in mess input
     """
 
@@ -150,6 +150,7 @@ def get_spc_input(spc_spcdct, spc_info, spc_save_path, pf_levels, spc_model):
 
     # generate the partition function
     spc_str = moldr.pf.species_block(
+        spc=spc,
         spc_spcdct=spc_spcdct,
         spc_info=spc_info,
         spc_model=spc_model,
