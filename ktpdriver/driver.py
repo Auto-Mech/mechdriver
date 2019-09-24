@@ -4,6 +4,7 @@ import os
 from qcelemental import constants as qcc
 import automol.inchi
 import automol.geom
+import chemkin_io
 import scripts.es
 import thermo.heatform
 import esdriver.driver
@@ -24,7 +25,7 @@ PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
 
 def run(
         tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix,
-        save_prefix, ene_coeff=[1.], vdw_params = [False, False, True],
+        save_prefix, ene_coeff=[1.], vdw_params=[False, False, True],
         options=[True, True, True, False]):
     """ main driver for thermo run
     """
@@ -52,7 +53,7 @@ def run(
     for rxn, _ in enumerate(rct_names_lst):
         rxn_lst.append(
             {'species': [], 'reactants': list(rct_names_lst[rxn]), 'products':
-                list(prd_names_lst[rxn])})
+             list(prd_names_lst[rxn])})
 
     #prepare filesystem
     if not os.path.exists(save_prefix):
@@ -71,7 +72,7 @@ def run(
     #BUT if we don't run ES I need to construct the following info right here for ts dict
     #ts_zma, rxn_fs,
 
-    #Figure out the model and theory levels for the MESS files 
+    #Figure out the model and theory levels for the MESS files
     geo_lvl = ''
     harm_lvl = ''
     anharm_lvl = ''
@@ -134,11 +135,8 @@ def run(
         harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
 
     #Collect energies for zero points
-    ene_strl = []
-    ene_lvl = ''
-    ene_lvl_ref = ''
     spc_save_fs = autofile.fs.species(save_prefix)
-    ts_queue =  []
+    ts_queue = []
     for spc in spcdct:   #have to make sure you get them for the TS too
         if 'ts_' in spc:
             ts_queue.append(spc)
@@ -147,15 +145,18 @@ def run(
         if 'ts_' in spc:
             spc_save_path = spcdct[spc]['rxn_fs'][3]
             saddle = True
-            save_path=spc_save_path
+            save_path = spc_save_path
         else:
             spc_save_fs.leaf.create(spc_info)
             spc_save_path = spc_save_fs.leaf.path(spc_info)
-            saddle=False
-            save_path=save_prefix
-        zpe, zpe_str = scripts.thermo.get_zpe(
+            saddle = False
+            save_path = save_prefix
+        zpe, _ = scripts.thermo.get_zpe(
             spc, spc_info, spc_save_path, pf_levels, ts_model)
         spcdct[spc]['zpe'] = zpe
+        ene_strl = []
+        ene_lvl = ''
+        ene_lvl_ref = ''
         ene_idx = 0
         spcdct[spc]['ene'] = 0.
         ene_str = '! energy level:'
@@ -176,7 +177,6 @@ def run(
                 spcdct[spc]['ene'] += ene*ene_coeff[ene_idx]
                 ene_idx += 1
     ene_str += '!               '.join(ene_strl)
-   # pf_levels.append(ene_str)
 
     #Collect formula and header string for the PES
     tsname_0 = 'ts_0'
@@ -189,7 +189,8 @@ def run(
     mess_strs = ['', '', '']
     idx_dct = {}
     first_ground_ene = 0.
-    wells = scripts.ktp.make_all_well_data(rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
+    wells = scripts.ktp.make_all_well_data(
+        rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
         tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
@@ -206,10 +207,47 @@ def run(
     print(well_str)
     print(bim_str)
     print(ts_str)
-    scripts.ktp.run_rate(
+
+    # run mess to produce rate output
+
+    mess_path = scripts.ktp.run_rate(
         header_str, energy_trans_str, well_str, bim_str, ts_str,
         spcdct[tsname_0], geo_thy_info, spcdct[tsname_0]['rxn_fs'][3])
-        
+
+    # fit rate output to modified Arrhenius forms and print in ChemKin format
+    pf_levels.append(ene_str)
+    chemkin_header_str = scripts.thermo.run_ckin_header(pf_levels, ref_levels, ts_model)
+    chemkin_str = chemkin_header_str
+    starting_path = os.getcwd()
+    labels = idx_dct.values()
+    names = idx_dct.keys()
+    err_thresh = 15.
+    for lab_i, name_i in zip(labels, names):
+        for lab_j, name_j in zip(labels, names):
+            ene = 0.
+            if lab_i != lab_j:
+                for spc in name_i.split('+'):
+                    ene += scripts.thermo.spc_energy(spcdct[spc]['ene'], spcdct[spc]['zpe'])
+                for spc in name_j.split('+'):
+                    ene -= scripts.thermo.spc_energy(spcdct[spc]['ene'], spcdct[spc]['zpe'])
+                if ene > 0.:
+                    reaction = name_i + '=' + name_j
+                    sing_rate_params, sing_errs, doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
+                        lab_i, lab_j, mess_path)
+                    max_err = max([vals[1] for vals in sing_errs.values()])
+                    print('max_err test:', max_err, err_thresh)
+                    print('sing err test:', sing_errs)
+                    print('doub err test:', doub_errs)
+                    print('sing_rate_params:', sing_rate_params)
+                    if max_err < err_thresh:
+                        chemkin_str += chemkin_io.write_plog(reaction, sing_rate_params, sing_errs)
+                    else:
+                        chemkin_str += chemkin_io.write_plog(reaction, doub_rate_params, doub_errs)
+
+    print(chemkin_str)
+    with open(starting_path+'/rates.ckin', 'w') as f:
+        f.write(chemkin_str)
+
 
 def get_thy_info(es_dct, key):
     """ setup theory info file from es dictionary
