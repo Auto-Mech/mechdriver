@@ -1,4 +1,8 @@
 name,smiles,mult
+CH2O,C=O,1
+CH2OH,[CH2]O,2
+CH3O,C[O],2
+H,[H],2
 C2H6,CC,1
 C3H8,CCC,1
 C4H10,CCCC,1

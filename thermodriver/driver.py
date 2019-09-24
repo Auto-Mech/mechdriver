@@ -130,9 +130,9 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
         spc_save_path = spc_save_fs.leaf.path(spc_info)
 
         zpe, zpe_str = scripts.thermo.get_zpe(
-            spc_info, spc_save_path, pf_levels, spc_model)
+            spc, spc_info, spc_save_path, pf_levels, spc_model)
         spc_str = scripts.thermo.get_spc_input(
-            spcdct[spc], spc_info, spc_save_path, pf_levels, spc_model)
+            spc, spcdct[spc], spc_info, spc_save_path, pf_levels, spc_model)
 
         spcdct[spc]['spc_info'] = spc_info
         spcdct[spc]['spc_save_path'] = spc_save_path
@@ -161,7 +161,6 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
     ene_strl = []
     ene_str = '! energy level:'
     ene_lvl = ''
-    ene_lvl_ref = ''
     ene_idx = 0
     for tsk in tsk_info_lst:
         if 'ene' in tsk[0]:
@@ -220,8 +219,8 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
                 os.makedirs(ckin_path)
             scripts.thermo.write_nasa_file(spcdct[spc], ckin_path, nasa_path, chemkin_spc_str)
 
-        with open(os.path.join(ckin_path,'automech.ckin'), 'w') as nasa_file:
-              nasa_file.write(chemkin_set_str)
+        with open(os.path.join(ckin_path, 'automech.ckin'), 'w') as nasa_file:
+            nasa_file.write(chemkin_set_str)
 
 def is_scheme(entry):
     """ Check whether this is a basis set scheme

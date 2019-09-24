@@ -22,7 +22,10 @@ MASS1 = 15.0
 PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                       "RPHt.exe >& /dev/null")
 
-def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, save_prefix, ene_coeff=[1.], vdw_params = [False, False, True], options=[True, True, True, False]):
+def run(
+        tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix,
+        save_prefix, ene_coeff=[1.], vdw_params = [False, False, True],
+        options=[True, True, True, False]):
     """ main driver for thermo run
     """
 
@@ -36,8 +39,8 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
 
     spc_queue = []
     for rxn, _ in enumerate(rct_names_lst):
-        rxn_spc = rct_names_lst[rxn].copy()
-        rxn_spc.extend(prd_names_lst[rxn])
+        rxn_spc = list(rct_names_lst[rxn])
+        rxn_spc.extend(list(prd_names_lst[rxn]))
         for spc in rxn_spc:
             if spc not in spc_queue:
                 spc_queue.append(spc)
@@ -47,7 +50,9 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
 
     rxn_lst = []
     for rxn, _ in enumerate(rct_names_lst):
-        rxn_lst.append({'species': [], 'reactants': rct_names_lst[rxn], 'products': prd_names_lst[rxn]})
+        rxn_lst.append(
+            {'species': [], 'reactants': list(rct_names_lst[rxn]), 'products':
+                list(prd_names_lst[rxn])})
 
     #prepare filesystem
     if not os.path.exists(save_prefix):
@@ -59,14 +64,14 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
     if runes:
         if runspcfirst:
             rxn_lst[0]['species'] = spc_queue
-        spc_dct = esdriver.driver.run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_params)
+        spc_dct = esdriver.driver.run(
+            tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_params)
     else:
-        pass 
+        pass
     #BUT if we don't run ES I need to construct the following info right here for ts dict
-    #ts_zma, rxn_fs, 
-              
+    #ts_zma, rxn_fs,
 
-    #Figure out the model and theory levels for the MESS files (better version in thermodriver, will copy)
+    #Figure out the model and theory levels for the MESS files 
     geo_lvl = ''
     harm_lvl = ''
     anharm_lvl = ''
@@ -82,13 +87,16 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
         if 'samp' in tsk[0] or 'geom' in tsk[0]:
             geo_lvl = tsk[1]
             geom = True
-        if 'grad' or 'hess' in tsk[0]:
+        if 'grad' in tsk[0] or 'hess' in tsk[0]:
             harm_lvl = tsk[1]
             harm_lvl_ref = tsk[2]
             if 'grad' in tsk[0]:
                 grad = True
             if 'hess' in tsk[0]:
                 hess = True
+            if not geom:
+                ene_lvl = tsk[1]
+                geo_lvl = tsk[1]
         if 'hr' in tsk[0] or 'tau' in tsk[0]:
             tors_lvl = tsk[1]
             tors_lvl_ref = tsk[2]
@@ -101,8 +109,9 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
         if 'anharm' in tsk[0] or 'vpt2' in tsk[0]:
             anharm_lvl = tsk[1]
             anharm_lvl_ref = tsk[2]
-
             ts_model[1] = 'ANHARM'
+            if not hess:
+                geo_lvl = tsk[1]
         if 'sym' in tsk[0]:
             sym_lvl = tsk[1]
             sym_lvl_ref = tsk[2]
@@ -145,7 +154,7 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
             saddle=False
             save_path=save_prefix
         zpe, zpe_str = scripts.thermo.get_zpe(
-            spc_info, spc_save_path, pf_levels, ts_model)
+            spc, spc_info, spc_save_path, pf_levels, ts_model)
         spcdct[spc]['zpe'] = zpe
         ene_idx = 0
         spcdct[spc]['ene'] = 0.
@@ -174,30 +183,32 @@ def run(tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix, 
     pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
     rct_ichs = spc_dct[tsname_0]['rxn_ichs'][0]
     header_str, energy_trans_str = scripts.ktp.pf_headers(
-                                            rct_ichs, TEMPS, PRESS, 
-                                            EXP_FACTOR, EXP_POWER, EXP_CUTOFF,
-                                            EPS1, EPS2, SIG1, SIG2, MASS1)
+        rct_ichs, TEMPS, PRESS, EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2,
+        SIG1, SIG2, MASS1)
 
-
-    mess_strs = ['','','']
+    mess_strs = ['', '', '']
     idx_dct = {}
     first_ground_ene = 0.
     wells = scripts.ktp.make_all_well_data(rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
-        tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma'])) 
+        tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
         if tsform != pes_formula:
-            print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(tsform, pes_formula))
+            print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(
+                tsform, pes_formula))
             print('Will proceed to construct only {}'.format(pes_formula))
             continue
-        mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, mess_strs, first_ground_ene)
+        mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
+            tsname, rxn, wells, spcdct, idx_dct, mess_strs, first_ground_ene)
         print(idx_dct)
     well_str, bim_str, ts_str = mess_strs
+    ts_str += '\nEnd\n'
     print(well_str)
     print(bim_str)
     print(ts_str)
-    scripts.ktp.run_rate(header_str, energy_trans_str, well_str, bim_str, ts_str, spcdct[tsname_0], geo_thy_info, spcdct[tsname_0]['rxn_fs'][3])
-
+    scripts.ktp.run_rate(
+        header_str, energy_trans_str, well_str, bim_str, ts_str,
+        spcdct[tsname_0], geo_thy_info, spcdct[tsname_0]['rxn_fs'][3])
         
 
 def get_thy_info(es_dct, key):
@@ -233,10 +244,10 @@ if __name__ == "__main__":
         ['conf_samp', 'mclev', 'mclev', False],
         ['find_geom', 'optlev', 'mclev', False],
         ['conf_hess', 'optlev', 'optlev', False],
-       # ['geom', 'b2tz', 'optlev', False],
-       # ['conf_hess', 'b2tz', 'b2tz', False],
-       # ['hr_scan', 'cheap', 'optlev', False],
-       # ['hr_scan', 'cheap', 'optlev', False],
+        # ['geom', 'b2tz', 'optlev', False],
+        # ['conf_hess', 'b2tz', 'b2tz', False],
+        # ['hr_scan', 'cheap', 'optlev', False],
+        # ['hr_scan', 'cheap', 'optlev', False],
         ['conf_energy', 'optlev', 'optlev', False]
         # [ 'hr', 'hrlev', 'optlev', False]
         # [ 'sp', 'splev', 'optlev', False]]
@@ -274,7 +285,7 @@ if __name__ == "__main__":
     #RCT_NAME_LST = [['nh3', 'oh']]
     #PRD_NAME_LST = [['nh2','water']]
     RCT_NAME_LST = [['ch3oh', 'h'], ['ch3oh', 'h']]
-    PRD_NAME_LST = [['ch2oh','h2'], ['ch3o', 'h2']]
+    PRD_NAME_LST = [['ch2oh', 'h2'], ['ch3o', 'h2']]
     #RCT_NAME_LST = [['ch3oh', 'h']]
     #PRD_NAME_LST = [['ch3o', 'h2']]
 
@@ -295,5 +306,8 @@ if __name__ == "__main__":
             'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0}
              }
     #run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
-    run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/elliott/run2', '/lcrc/project/PACC/elliott/save2', vdw_params=VDW_PARAMS)
+    run(
+        TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST,
+        '/lcrc/project/PACC/elliott/run2', '/lcrc/project/PACC/elliott/save2',
+        vdw_params=VDW_PARAMS)
     #run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'runtest', 'savetest')

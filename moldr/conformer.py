@@ -12,9 +12,9 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def conformer_sampling(
-        spc_info, thy_level, thy_save_fs, cnf_run_fs, cnf_save_fs,
-        script_str, overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50), tors_names='', dist_info = [],
-        **kwargs):
+        spc_info, thy_level, thy_save_fs, cnf_run_fs, cnf_save_fs, script_str,
+        overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
+        tors_names='', dist_info=[], **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
     """
@@ -24,6 +24,7 @@ def conformer_sampling(
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         zma = automol.geom.zmatrix(geo)
     else:
+        #geo = thy_save_fs.trunk.file.geometry.read(thy_level[1:4])
         geo = thy_save_fs.trunk.file.geometry.read()
         zma = thy_save_fs.trunk.file.zmatrix.read()
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
@@ -39,8 +40,8 @@ def conformer_sampling(
         nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
     save_conformers(
         cnf_run_fs=cnf_run_fs,
-        cnf_save_fs=cnf_save_fs, 
-        saddle=saddle, 
+        cnf_save_fs=cnf_save_fs,
+        saddle=saddle,
         dist_info=dist_info
     )
 
@@ -79,7 +80,8 @@ def conformer_sampling(
 
         ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
         if saddle:
-            int_sym_num=1.#####SET THIS UP FOR TS 
+            #####SET THIS UP FOR TS 
+            int_sym_num=1.
         else:
             int_sym_num = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
 
@@ -112,7 +114,7 @@ def run_conformers(
         nsampd = inf_obj_r.nsamp
     else:
         nsampd = 0
-    
+
     while True:
         nsamp = nsamp0 - nsampd
         if nsamp <= 0:

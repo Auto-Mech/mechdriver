@@ -24,12 +24,14 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 #MECHANISM_NAME = 'isooctane'  # options: syngas, natgas, heptane
 #MECHANISM_NAME = 'natgas'  # options: syngas, natgas, heptane
 #MECHANISM_NAME = 'butane'  # options: syngas, natgas, heptane
-MECHANISM_NAME = 'syngas'  # options: syngas, natgas, heptane
+# MECHANISM_NAME = 'syngas'  # options: syngas, natgas, heptane
 #MECHANISM_NAME = 'vhp'  # options: syngas, natgas, heptane
-# MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
+MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
 # MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas
 # MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas
 
+run_thermo = False
+run_rates = True
 # 1. create run and save directories
 RUN_PREFIX = '/lcrc/project/PACC/run'
 if not os.path.exists(RUN_PREFIX):
@@ -39,7 +41,9 @@ SAVE_PREFIX = '/lcrc/project/PACC/save'
 if not os.path.exists(SAVE_PREFIX):
     os.mkdir(SAVE_PREFIX)
 
-# 2. Prepare species and reaction lists and dictionaries
+# 2. Prepare species and reaction dictionaries
+
+ELC_SIG_LST = {'InChI=1S/CN/c1-2', 'InChI=1S/C2H/c1-2/h1H'}
 
 ELC_DEG_DCT = {
     ('InChI=1S/B', 2): [[0., 2], [16., 4]],
@@ -54,7 +58,15 @@ ELC_DEG_DCT = {
     ('InChI=1S/O2/c1-2', 1): [[0., 2]]
 }
 
-ELC_SIG_LST = {'InChI=1S/CN/c1-2', 'InChI=1S/C2H/c1-2/h1H'}
+SYMM_DCT = {
+    ('InChI=1S/HO/h1H', 2): 1.
+}
+
+GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
+#print(GEOM_PATH)
+GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
+
+# 2. Prepare species and reaction lists 
 #SMILES_TEST = '[C]#C'
 #for smiles in SMILES_TEST:
 #    ICH_TEST = (automol.convert.smiles.inchi(SMILES_TEST))
@@ -352,11 +364,15 @@ elif MECH_TYPE == 'json':
                 SPC_DCT[spc_name]['mul'] = RCT_MULS_LST[i][j]
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
 
+for spc in SPC_DCT:
+    if tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']) in ELC_DEG_DCT:
+        SPC_DCT[spc]['elec_levs'] = ELC_DEG_DCT[tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul'])]
+        print('elec_levs test', spc, SPC_DCT[spc]['elec_levs'])
+    if tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']) in SYMM_DCT:
+        SPC_DCT[spc]['sym'] = SYMM_DCT[tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul'])]
+        print('symm_dct test', spc, SPC_DCT[spc]['sym'])
 #os.sys.exit()
 
-GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
-#print(GEOM_PATH)
-GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
 # 2. script control parameters
 
@@ -462,7 +478,6 @@ SP_LVL3 = 'cc_lvl_qf'
 # The logic key in tsk_info_lst is for overwrite
 OVERWRITE = False
 
-run_thermo = True
 if run_thermo:
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
@@ -521,23 +536,26 @@ if run_thermo:
         TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
         SAVE_PREFIX, ENE_COEFF, OPTIONS)
 
-run_rates = False
 if run_rates:
     TSK_INFO_LST = [
-        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        #['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['find_ts', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        # ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
-        ['conf_energy', SP_LVL1, OPT_LVL1, OVERWRITE],
-        ['conf_energy', SP_LVL2, OPT_LVL1, OVERWRITE],
-        ['conf_energy', SP_LVL3, OPT_LVL1, OVERWRITE],
-        ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        # ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
+        ['conf_energy', SP_LVL1, OPT_LVL0, OVERWRITE],
+        # ['conf_energy', SP_LVL1, OPT_LVL1, OVERWRITE],
+        # ['conf_energy', SP_LVL2, OPT_LVL1, OVERWRITE],
+        # ['conf_energy', SP_LVL3, OPT_LVL1, OVERWRITE],
+        # ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
         ]
 
+    print('RCT_NAMES_LST test:', RCT_NAMES_LST)
+    print('PRD_NAMES_LST test:', PRD_NAMES_LST)
     ktpdriver.driver.run(
-        TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST,
+        TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
         '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
 
 # set up a combination of energies

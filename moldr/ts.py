@@ -152,10 +152,10 @@ def reference_geometry(
 
     thy_run_fs = fs[2]
     thy_save_fs = fs[3] 
-    ts_run_fs = fs[10]
-    ts_save_fs = fs[11] 
+    # ts_run_fs = fs[10]
+    # ts_save_fs = fs[11] 
     ini_thy_save_fs = ini_fs[1]
-    ini_ts_save_fs = ini_fs[9]
+    # ini_ts_save_fs = ini_fs[9]
     cnf_run_fs = fs[4]  
     cnf_save_fs = fs[5]
     run_fs = fs[-1] 
@@ -185,21 +185,34 @@ def reference_geometry(
         print('found initial geometry from geometry dictionary')
     else:
     # Check to see if geo already exists at running_theory
-        if ts_save_fs.trunk.file.geometry.exists():
-            thy_path = ts_save_fs.trunk.path()
+        # if ts_save_fs.trunk.file.geometry.exists():
+            # thy_path = ts_save_fs.trunk.path()
+            # print('getting reference geometry from {}'.format(thy_path))
+            # geo = ts_save_fs.trunk.file.geometry.read()
+            # zma = ts_save_fs.trunk.file.zmatrix.read()
+        if thy_save_fs.trunk.file.geometry.exists():
+            thy_path = thy_save_fs.trunk.path()
             print('getting reference geometry from {}'.format(thy_path))
-            geo = ts_save_fs.trunk.file.geometry.read()
-            zma = ts_save_fs.trunk.file.zmatrix.read()
+            geo = thy_save_fs.trunk.file.geometry.read()
+            zma = thy_save_fs.trunk.file.zmatrix.read()
         if not geo:
             if ini_thy_save_fs:
-                if ini_ts_save_fs.trunk.file.geometry.exists():
+                # if ini_ts_save_fs.trunk.file.geometry.exists():
                 # If not, Compute geo at running_theory, using geo from
                 # initial_level as the starting point
                 # or from inchi is no initial level geometry
-                    thy_path = ini_ts_save_fs.trunk.path()
+                    # thy_path = ini_ts_save_fs.trunk.path()
+                    # print('getting reference geometry from {}'.format(thy_path))
+                    # zma_init = ini_ts_save_fs.trunk.file.zmatrix.read()
+                    # geo_init = ini_ts_save_fs.trunk.file.geometry.read()
+                if ini_thy_save_fs.trunk.file.geometry.exists():
+                # If not, Compute geo at running_theory, using geo from
+                # initial_level as the starting point
+                # or from inchi is no initial level geometry
+                    thy_path = ini_thy_save_fs.trunk.path()
                     print('getting reference geometry from {}'.format(thy_path))
-                    zma_init = ini_ts_save_fs.trunk.file.zmatrix.read()
-                    geo_init = ini_ts_save_fs.trunk.file.geometry.read()
+                    zma_init = ini_thy_save_fs.trunk.file.zmatrix.read()
+                    geo_init = ini_thy_save_fs.trunk.file.geometry.read()
 #                else:
 #                    geo_init = automol.inchi.geometry(spc_info[0])
 #                    print('getting reference geometry from inchi')
@@ -302,11 +315,11 @@ def reference_geometry(
            # 
 
             print(" - Saving...")
-            print(" - Save path: {}".format(ts_save_fs.trunk.path()))
+            print(" - Save path: {}".format(thy_save_fs.trunk.path()))
 
-            ts_save_fs.trunk.file.energy.write(ene)
-            ts_save_fs.trunk.file.geometry.write(geo)
-            ts_save_fs.trunk.file.zmatrix.write(zma)
+            thy_save_fs.trunk.file.energy.write(ene)
+            thy_save_fs.trunk.file.geometry.write(geo)
+            thy_save_fs.trunk.file.zmatrix.write(zma)
 
             scripts.es.run_single_conformer(
                 spc_info, thy_level, fs,
