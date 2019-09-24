@@ -1,0 +1,5 @@
+           4
+{multi;closed, 4;occ, 6;wf, 10,1,0;state,1  ;maxiter,40}
+{multi;closed, 3;occ, 7;wf, 10,1,0;state,1  ;maxiter,40}
+{multi;closed, 2;occ, 8;wf, 10,1,0;state,1  ;maxiter,40}
+{multi;closed, 1;occ, 9;wf, 10,1,0;state,1  ;maxiter,40}

@@ -1,0 +1,36 @@
+ Debug  2
+ ReactionType Addition 1TS
+ WellR
+ Prods
+ Opt_Reac1
+ Opt_Reac2 
+ Opt_Prod1 
+ Opt_Prod2 
+ Opt_WellR
+ Grid_Opt_TS 
+ Opt_TS_0 
+ Tauo_Ts
+ Opt_Reac1_1
+ Opt_Reac2_1
+ Opt_Prod1_1 
+ Opt_Prod2_1
+ Opt_WellR_1
+ Opt_TS_1 
+ 1dTau_Reac1 
+ 1dTau_Reac2 
+ 1dTau_Prod1 
+ 1dTau_Prod2 
+ 1dTau_WellR
+ 1dTau_ts
+ noIrc
+ HL_Reac1
+ HL_Reac2
+ HL_Prod1
+ HL_Prod2
+ HL_WellR
+ HL_Ts
+ kTP
+ noModArr 
+End
+ 48,10,10
+ nodeno,numprocll,numprochl

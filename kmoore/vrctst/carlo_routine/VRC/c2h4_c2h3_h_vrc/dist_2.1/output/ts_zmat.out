@@ -1,0 +1,15 @@
+ entering ts_zmat
+ WORDNOSMP                                                                                                                                                           
+ WORD1                                                                                                                                                               
+ WORDNTAU                                                                                                                                                            
+ WORD0                                                                                                                                                               
+ WORD-->TAUMN,TAUMX                                                                                                                                                  
+ WORDB92                                                                                                                                                             
+ WORDNHIND                                                                                                                                                           
+ WORD0                                                                                                                                                               
+ WORD-->NAMEHIND,HINDMN,HINDMX,NHINDSTEPS                                                                                                                            
+ WORDB92                                                                                                                                                             
+ WORDNATOM                                                                                                                                                           
+ WORD5                                                                                                                                                               
+ entering atom reads           5
+ atomlabel reac_3a H91         1 rts    2 aabs1    3 babs1                    

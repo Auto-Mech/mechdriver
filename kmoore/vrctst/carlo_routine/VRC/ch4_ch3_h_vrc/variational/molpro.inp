@@ -1,0 +1,74 @@
+ memory,         500 ,m
+   nosym                                                                                   
+                                                                                           
+   geometry={angstrom                                                                      
+    c1                                                                                     
+    h2 c1 rch1                                                                             
+    h3 c1 rch2 h2 ahcc1                                                                    
+    h4 c1 rch3 h2 ahcc2 h3 b1                                                              
+    h5 c1 rch4 h2 ahcc3 h3 b2                                                              
+   }                                                                                       
+   RCH1                           =    1.0834999999999999                                  
+   RCH2                           =    1.0833999999999999                                  
+   RCH3                           =    1.0833999999999999                                  
+   AHCC1                          =    115.63310000000000                                  
+   AHCC2                          =    115.63809999999999                                  
+   AHCC3                          =    102.23660000000000                                  
+   B1                             =    139.67920000000001                                  
+   B2                             =   -110.13890000000001                                  
+   RCH4                           =    1.8000000000000000                                  
+                                                                                           
+   SET,SPIN=           0                                                                   
+                                                                                           
+   !closed shell input                                                                     
+                                                                                           
+   nosym                                                                                   
+                                                                                           
+   basis=6-31+g(d,p)                                                                       
+                                                                                           
+   hf                                                                                      
+                                                                                           
+   !{multi;closed,14;occ,17;wf,32,1,0}                                                     
+   !{multi;closed,8;occ,10;wf,18,1,0}                                                      
+   {multi;closed, 4;occ, 6;wf, 10,1,0;state,1  ;maxiter,40}                                
+ geometry={angstrom
+   c1                                                        
+   h2 c1 rch1                                                
+   h3 c1 rch2 h2 ahcc1                                       
+   h4 c1 rch3 h2 ahcc2 h3 b1                                 
+   h5 c1 rch4 h2 ahcc3 h3 b2                                 
+ }
+ RCH1                           =    1.0940896217932601     
+ RCH2                           =    1.0940897133306571     
+ RCH3                           =    1.0940898636498331     
+ AHCC1                          =    115.52258588584090     
+ AHCC2                          =    115.52258760610189     
+ AHCC3                          =    102.39693923839980     
+ B1                             =    139.20552111858660     
+ B2                             =   -110.39724836757669     
+ RCH4                           =    1.8000000000000000     
+
+ SET,SPIN=           0
+                                                                                           
+  !closed shell input                                                                      
+                                                                                           
+                                                                                           
+  !{multi;closed,14;occ,17;wf,32,1,0}                                                      
+  !{multi;closed,8;occ,10;wf,18,1,0}                                                       
+                                                                                           
+ {multi;closed, 1;occ, 9;wf, 10,1,0;state,1  ;maxiter,40}                                  
+                                                                                           
+  basis=cc-pvtz                                                                            
+                                                                                           
+ {multi;closed, 1;occ, 9;wf, 10,1,0;state,1  ;maxiter,40}                                  
+                                                                                           
+  {rs2c,shift=0.2}                                                                         
+                                                                                           
+  CBSen = energy                                                                           
+                                                                                           
+  put,molden,molpro.molden                                                                 
+                                                                                           
+  ---                                                                                      
+                                                                                           
+ put,molden,molpro.molden
+ ---

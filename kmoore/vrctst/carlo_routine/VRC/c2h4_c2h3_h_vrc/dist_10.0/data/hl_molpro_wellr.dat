@@ -1,0 +1,51 @@
+memory,500,m
+End1 
+
+!closed shell input
+basis=aug-cc-pvtz
+hf
+ccsd(t)
+en_cc=energy
+
+gdirect
+basis=aug-cc-pvtz
+hf
+df-mp2
+en_mp2_tz=energy
+
+basis=aug-cc-pvqz
+hf
+df-mp2
+en_mp2_qz=energy
+
+CBSen = en_cc+en_mp2_qz-en_mp2_tz
+
+---
+
+End2
+
+!open shell input
+
+basis=aug-cc-pvtz
+rhf
+multi;closed,18;occ,21;wf,40,1,2;canonical;state,3
+!uccsd(t)
+!en_cc = energy
+
+!uhf
+!ump2
+!en_mp2_tz=energy
+
+basis=aug-cc-pvqz
+uhf
+ump2
+en_mp2_qz=energy
+
+CBSen = en_cc+en_mp2_qz-en_mp2_tz
+
+---
+
+End3
+
+
+

@@ -1,0 +1,79 @@
+ memory,         204 ,m
+  nosym                                                                                    
+                                                                                           
+  geometry={angstrom                                                                       
+   c1                                                                                      
+   h2 c1 rch1                                                                              
+   h3 c1 rch2 h2 ahcc1                                                                     
+   h4 c1 rch3 h2 ahcc2 h3 b1                                                               
+   h5 c1 rch4 h2 ahcc3 h3 b2                                                               
+  }                                                                                        
+  RCH1                           =    1.0834999999999999                                   
+  RCH2                           =    1.0833999999999999                                   
+  RCH3                           =    1.0833999999999999                                   
+  AHCC1                          =    115.63310000000000                                   
+  AHCC2                          =    115.63809999999999                                   
+  AHCC3                          =    102.23660000000000                                   
+  B1                             =    139.67920000000001                                   
+  B2                             =   -110.13890000000001                                   
+  RCH4                           =    1.8000000000000000                                   
+                                                                                           
+  SET,SPIN=           0                                                                    
+                                                                                           
+  !closed shell input                                                                      
+                                                                                           
+  nosym                                                                                    
+                                                                                           
+  basis=6-31+g(d,p)                                                                        
+                                                                                           
+  hf                                                                                       
+                                                                                           
+  !{multi;closed,14;occ,17;wf,32,1,0}                                                      
+  !{multi;closed,8;occ,10;wf,18,1,0}                                                       
+  {multi;closed, 4;occ, 6;wf, 10,1,0;state,1  ;maxiter,40}                                 
+ geometry={angstrom
+  c91                                                        
+  h92 c91 rch91                                              
+  h93 c91 rch92 h92 ahcc91                                   
+  h94 c91 rch93 h92 ahcc92 h93 b91                           
+  H91         1 rts    2 aabs1    3 babs1                    
+ }
+ RCH91                          =    1.0764000000000000     
+ RCH92                          =    1.0764000000000000     
+ RCH93                          =    1.0764000000000000     
+ AHCC91                         =    120.00300000000000     
+ AHCC92                         =    120.00180000000000     
+ B91                            =    179.99680000000001     
+ AABS1                          =    90.000000000000000     
+ BABS1                          =    90.000000000000000     
+ RTS                            =    3.2000000000000002     
+
+ SET,SPIN=           0
+                                                                                           
+  {multi;closed, 4;occ, 6;wf, 10,1,0;state,1  ;maxiter,40}                                 
+                                                                                           
+  {rs2,shift=0.2}                                                                          
+                                                                                           
+  {optg,maxit=10;method,diis,25,STEP;STEP,0.1,0.2,3,0.1,4.;active,aabs1,babs1}             
+  {optg,maxit=50;method,diis,25,STEP;STEP,0.1,0.2,3,0.1,4.;active,aabs1,babs1}             
+  !{optg;active,aabs1,babs1}                                                               
+                                                                                           
+  basis=cc-pvdz                                                                            
+                                                                                           
+  !{multi;closed,8;occ,10;wf,18,1,0}                                                       
+  {multi;closed, 4;occ, 6;wf, 10,1,0;state,1  ;maxiter,40}                                 
+                                                                                           
+  {rs2,shift=0.2}                                                                          
+                                                                                           
+  {optg,maxit=100;method,diis,25,STEP;STEP,0.1,0.2,3,0.1,4.;active,aabs1,babs1}            
+  !{optg;active,aabs1,babs1}                                                               
+                                                                                           
+                                                                                           
+  CBSen = energy                                                                           
+                                                                                           
+  put,molden,molpro.molden                                                                 
+                                                                                           
+  ---                                                                                      
+                                                                                           
+ put,molden,molpro.molden
+ ---

@@ -1,0 +1,9 @@
+/programs/adMin/scripts/epilog.sh: line 7: /tmp/epilog.log: Permission denied
+/programs/adMin/scripts/epilog.sh: line 41: /tmp/epilog.log: Permission denied
+cp: cannot stat `./me_files/*dhr*.dat': No such file or directory
+sed: -e expression #1, char 33: unknown option to `s'
+/programs/adMin/scripts/epilog.sh: line 7: /tmp/epilog.log: Permission denied
+/programs/adMin/scripts/epilog.sh: line 41: /tmp/epilog.log: Permission denied
+cp: cannot stat `./me_files/*dhr*.dat': No such file or directory
+/programs/adMin/scripts/epilog.sh: line 7: /tmp/epilog.log: Permission denied
+/programs/adMin/scripts/epilog.sh: line 41: /tmp/epilog.log: Permission denied

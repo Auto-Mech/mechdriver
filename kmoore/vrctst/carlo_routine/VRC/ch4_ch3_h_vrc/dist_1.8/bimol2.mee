@@ -1,0 +1,28 @@
+ Bimolecular PRODS
+ Fragment PROD1
+ RRHO     
+ Geometry[angstrom]               4
+  C    0.00000   0.00000   0.00000                                                    
+  H    0.00000   0.00000   1.07637                                                    
+  H    0.93214   0.00000  -0.53823                                                    
+  H   -0.93214  -0.00005  -0.53821                                                    
+ 	Core 	RigidRotor
+ 		SymmetryFactor    6.0000000000000000     
+ 	End
+     Frequencies[1/cm]            6
+   436.31      1413.2      1414.1      3144.7      3320.4      3322.1    
+  ZeroEnergy[kcal/mol]             0.
+  ElectronicLevels[1/cm]                      1
+   0.0000000000000000        2.0000000000000000     
+   
+ End
+ !************************************
+ Fragment PROD2
+  Atom
+  Name H 
+  ElectronicLevels[1/cm]                      1
+   0.0000000000000000        2.0000000000000000     
+ End 
+ GroundEnergy[kcal/mol]   102.57 
+ End
+ !************************************

@@ -1,0 +1,15 @@
+ entering ts_zmat_beta
+ WORDNOSMP                                                                                                                                                           
+ WORD1                                                                                                                                                               
+ WORDNTAU                                                                                                                                                            
+ WORD0                                                                                                                                                               
+ WORD-->TAUMN,TAUMX                                                                                                                                                  
+ WORDB92                                                                                                                                                             
+ WORDNHIND                                                                                                                                                           
+ WORD0                                                                                                                                                               
+ WORD-->NAMEHIND,HINDMN,HINDMX,NHINDSTEPS                                                                                                                            
+ WORDB92                                                                                                                                                             
+ WORDNATOM                                                                                                                                                           
+ WORD6                                                                                                                                                               
+ entering atom reads           6
+ past z-matrix

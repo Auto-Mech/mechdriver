@@ -1,0 +1,23 @@
+Default parameters:
+gauss_inp_file  gauss.inp
+molpro_inp_file  molpro.inp
+multipole_inp_file  multipole.inp
+sjk_inp_file  sjk.inp
+
+Initializing potential ...
+Molpro::init: FailurePattern is not found in molpro.inp; using the default: molpro_failure
+Initializing potential done
+Reading molecular structure ... done
+Reading dividing surfaces ... done
+Fragment 0: 
+ C1  0.00 -0.00 -0.00
+ H2  2.02 -0.23  0.00
+ H3 -1.21 -1.64  0.00
+ H4 -0.81  1.86  0.00
+Fragment mass: 27386.12
+Inertia moments:   11400.78  11401.89  22802.67
+Fragment 1: 
+ H1  0.00  0.00  0.00
+Fragment mass: 1837.15
+Inertia moments:   0.00  0.00  0.00
+Reduced mass = 1721.66

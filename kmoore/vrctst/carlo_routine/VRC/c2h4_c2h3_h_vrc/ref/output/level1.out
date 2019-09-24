@@ -1,0 +1,4 @@
+  starting zmat input
+ test0           5  c1                                                         
+ coml 12  uwb97xd/cc-pvtz opt=internal                                          int=ultrafine nosym freq                                             
+ coml 34 UWB97XD/CC-PVTZ                                                       opt(calcfc,maxcyc=1) iop(7/33=1) guess=read geom=check   int=ultra    

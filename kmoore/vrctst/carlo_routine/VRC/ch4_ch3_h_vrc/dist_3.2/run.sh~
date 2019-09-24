@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd ./dist_24_tz
+ssh tt108 
+wait
+cd ../dist_25_tz
+runes2k
+

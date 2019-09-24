@@ -1,0 +1,168 @@
+SURFACE INDEX = 0
+
+pivot points for 1-th fragment:
+
+x =  0.00 y =  0.00 z =  0.50
+x =  0.00 y =  0.00 z = -0.50
+
+pivot points for 2-th fragment:
+
+x =  0.00 y =  0.00 z =  0.00
+
+distances between pivot points:
+
+r[1,1] =  6.75   
+r[2,1] =  6.75   
+
+independent variables:
+
+a1 = 0.01 a2 = 0.01 d1 = 0.50 p1 = 0.01 p2 = 179.99 r = 7.00 
+
+
+SURFACE INDEX = 1
+
+pivot points for 1-th fragment:
+
+x =  0.00 y =  0.00 z =  0.50
+x =  0.00 y =  0.00 z = -0.50
+
+pivot points for 2-th fragment:
+
+x =  0.00 y =  0.00 z =  0.00
+
+distances between pivot points:
+
+r[1,1] =  6.25   
+r[2,1] =  6.25   
+
+independent variables:
+
+a1 = 0.01 a2 = 0.01 d1 = 0.50 p1 = 0.01 p2 = 179.99 r = 6.50 
+
+
+SURFACE INDEX = 2
+
+pivot points for 1-th fragment:
+
+x =  0.00 y =  0.00 z =  0.50
+x =  0.00 y =  0.00 z = -0.50
+
+pivot points for 2-th fragment:
+
+x =  0.00 y =  0.00 z =  0.00
+
+distances between pivot points:
+
+r[1,1] =  5.50   
+r[2,1] =  5.50   
+
+independent variables:
+
+a1 = 0.01 a2 = 0.01 d1 = 0.50 p1 = 0.01 p2 = 179.99 r = 5.75 
+
+
+SURFACE INDEX = 3
+
+pivot points for 1-th fragment:
+
+x =  0.00 y =  0.00 z =  0.50
+x =  0.00 y =  0.00 z = -0.50
+
+pivot points for 2-th fragment:
+
+x =  0.00 y =  0.00 z =  0.00
+
+distances between pivot points:
+
+r[1,1] =  5.25   
+r[2,1] =  5.25   
+
+independent variables:
+
+a1 = 0.01 a2 = 0.01 d1 = 0.50 p1 = 0.01 p2 = 179.99 r = 5.50 
+
+
+SURFACE INDEX = 4
+
+pivot points for 1-th fragment:
+
+x =  0.00 y =  0.00 z =  1.00
+x =  0.00 y =  0.00 z = -1.00
+
+pivot points for 2-th fragment:
+
+x =  0.00 y =  0.00 z =  0.00
+
+distances between pivot points:
+
+r[1,1] =  6.50   
+r[2,1] =  6.50   
+
+independent variables:
+
+a1 = 0.01 a2 = 0.01 d1 = 1.00 p1 = 0.01 p2 = 179.99 r = 7.00 
+
+
+SURFACE INDEX = 5
+
+pivot points for 1-th fragment:
+
+x =  0.00 y =  0.00 z =  1.00
+x =  0.00 y =  0.00 z = -1.00
+
+pivot points for 2-th fragment:
+
+x =  0.00 y =  0.00 z =  0.00
+
+distances between pivot points:
+
+r[1,1] =  6.00   
+r[2,1] =  6.00   
+
+independent variables:
+
+a1 = 0.01 a2 = 0.01 d1 = 1.00 p1 = 0.01 p2 = 179.99 r = 6.50 
+
+
+SURFACE INDEX = 6
+
+pivot points for 1-th fragment:
+
+x =  0.00 y =  0.00 z =  1.00
+x =  0.00 y =  0.00 z = -1.00
+
+pivot points for 2-th fragment:
+
+x =  0.00 y =  0.00 z =  0.00
+
+distances between pivot points:
+
+r[1,1] =  5.25   
+r[2,1] =  5.25   
+
+independent variables:
+
+a1 = 0.01 a2 = 0.01 d1 = 1.00 p1 = 0.01 p2 = 179.99 r = 5.75 
+
+
+SURFACE INDEX = 7
+
+pivot points for 1-th fragment:
+
+x =  0.00 y =  0.00 z =  1.00
+x =  0.00 y =  0.00 z = -1.00
+
+pivot points for 2-th fragment:
+
+x =  0.00 y =  0.00 z =  0.00
+
+distances between pivot points:
+
+r[1,1] =  5.00   
+r[2,1] =  5.00   
+
+independent variables:
+
+a1 = 0.01 a2 = 0.01 d1 = 1.00 p1 = 0.01 p2 = 179.99 r = 5.50 
+
+

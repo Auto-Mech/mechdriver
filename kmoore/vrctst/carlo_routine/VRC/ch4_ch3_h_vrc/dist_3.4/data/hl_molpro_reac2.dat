@@ -1,0 +1,32 @@
+memory,400,m
+End1 
+
+!closed shell input
+basis=cc-pvtz-f12
+hf
+en_mp2_tz=energy
+en_cc=energy
+
+basis=cc-pvqz-f12
+hf
+en_mp2_qz=energy
+
+CBSen=en_cc + en_mp2_qz - en_mp2_tz
+End2
+
+!open shell input
+basis=cc-pvtz-f12
+rhf
+en_mp2_tz=energy
+en_cc=energy
+
+basis=cc-pvqz-f12
+rhf
+en_mp2_qz=energy
+
+CBSen=en_cc + en_mp2_qz - en_mp2_tz
+
+End3
+
+
+

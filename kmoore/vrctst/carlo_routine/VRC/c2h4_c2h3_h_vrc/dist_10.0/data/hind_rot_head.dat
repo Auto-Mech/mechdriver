@@ -1,0 +1,20 @@
+E_reactants_withZPE[hartree]:    -40.997833
+Initial_Temperature:             200.
+Temperature_steps:               10.
+Temperature_increment:           50.
+Delta_Energy[kcal/mol]:          -0.9
+Maxstep:                         1
+NpointsInt:                      3
+Maxtdev:                         0.5
+Rearrange(1=yes,0=no):           1
+SaddlePBKF(1=deriv,0=stand)      1
+ds(1=noexp,0=standard)           0
+isct_vtst(1=vtst_sct,0=sct)      1
+zerocurvature(1)                 0
+reduced_mass                     1.12
+minimum_frequency                150
+anim_freq(if_Maxstep=1)          2
+onlyrotors(0=yes,1=no)		 0			 
+
+
+

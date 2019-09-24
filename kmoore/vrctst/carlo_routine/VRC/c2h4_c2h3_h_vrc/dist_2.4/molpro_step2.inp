@@ -1,0 +1,84 @@
+   nosym                                                                                   
+                                                                                           
+   geometry={angstrom                                                                      
+    c1                                                                                     
+    c2 c1 rcc1                                                                             
+    h3 c2 rcc2 c1 accc1                                                                    
+    h4 c2 rcc3 c1 ahcc1 h3 b1                                                              
+    h5 c1 rch1 c2 ahcc2 h3 b2                                                              
+    h6 c1 rch2 c2 ahcc3 h5 b3                                                              
+   }                                                                                       
+   RCC1                           =    1.3109999999999999                                  
+   RCC2                           =    1.0884000000000000                                  
+   RCC3                           =    1.0823000000000000                                  
+   RCH2                           =    1.0791999999999999                                  
+   ACCC1                          =    119.62930000000000                                  
+   AHCC1                          =    122.83260000000000                                  
+   AHCC2                          =    118.47550000000000                                  
+   AHCC3                          =    131.85030000000000                                  
+   B1                             =    180.00020000000001                                  
+   B2                             =    179.99990000000000                                  
+   B3                             =    179.99990000000000                                  
+   RCH1                           =    1.8000000000000000                                  
+                                                                                           
+   SET,SPIN=           0                                                                   
+                                                                                           
+   !closed shell input                                                                     
+                                                                                           
+   nosym                                                                                   
+                                                                                           
+   basis=6-31+g(d,p)                                                                       
+                                                                                           
+   hf                                                                                      
+                                                                                           
+   !{multi;closed,14;occ,17;wf,32,1,0}                                                     
+   !{multi;closed,8;occ,10;wf,18,1,0}                                                      
+   {multi;closed, 7;occ, 9;wf, 16,1,0;state,1  ;maxiter,40}                                
+   {multi;closed, 6;occ,10;wf, 16,1,0;state,1  ;maxiter,40}                                
+ geometry={angstrom
+    c1                                                       
+    c2 c1 rcc1                                               
+    h3 c2 rcc2 c1 accc1                                      
+    h4 c2 rcc3 c1 ahcc1 h3 b1                                
+    h5 c1 rch1 c2 ahcc2 h3 b2                                
+    h6 c1 rch2 c2 ahcc3 h5 b3                                
+ }
+ RCC1                           =    1.3337770560604889     
+ RCC2                           =    1.0991623694687060     
+ RCC3                           =    1.0932474190891710     
+ RCH2                           =    1.0906844726036860     
+ ACCC1                          =    120.07798308722630     
+ AHCC1                          =    122.24417397442861     
+ AHCC2                          =    118.00574627975000     
+ AHCC3                          =    135.38160490685789     
+ B1                             =    179.99471382601169     
+ B2                             =    180.00995862145089     
+ B3                             =    180.00762707712281     
+ RCH1                           =    2.3999999999999999     
+
+ SET,SPIN=           0
+                                                                                           
+  !closed shell input                                                                      
+                                                                                           
+                                                                                           
+  !{multi;closed,14;occ,17;wf,32,1,0}                                                      
+  !{multi;closed,8;occ,10;wf,18,1,0}                                                       
+                                                                                           
+ {multi;closed, 6;occ,10;wf, 16,1,0;state,1  ;maxiter,40}                                  
+                                                                                           
+  basis=cc-pvtz                                                                            
+                                                                                           
+ {multi;closed, 6;occ,10;wf, 16,1,0;state,1  ;maxiter,40}                                  
+                                                                                           
+  {rs2c,shift=0.2}                                                                         
+                                                                                           
+  CBSen = energy                                                                           
+                                                                                           
+  put,molden,molpro.molden                                                                 
+                                                                                           
+  ---                                                                                      
+                                                                                           
+ End2
+ put,molden,molpro.molden
+ ---
+ End3

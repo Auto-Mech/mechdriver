@@ -1,0 +1,15 @@
+ entering ts_zmat_beta
+ WORDNOSMP                                                                                                                                                           
+ WORD3                                                                                                                                                               
+ WORDNTAU                                                                                                                                                            
+ WORD1                                                                                                                                                               
+ WORD-->TAUMN,TAUMX                                                                                                                                                  
+ WORDB2                                                                                                                                                              
+ WORDNHIND                                                                                                                                                           
+ WORD1                                                                                                                                                               
+ WORD-->NAMEHIND,HINDMN,HINDMX,NHINDSTEPS                                                                                                                            
+ WORDB2                                                                                                                                                              
+ WORDNATOM                                                                                                                                                           
+ WORD8                                                                                                                                                               
+ entering atom reads           8
+ past z-matrix

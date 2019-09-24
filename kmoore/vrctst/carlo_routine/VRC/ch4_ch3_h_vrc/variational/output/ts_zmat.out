@@ -1,0 +1,14 @@
+ entering ts_zmat_beta
+ WORDNOSMP                                                                                                                                                           
+ WORD1                                                                                                                                                               
+ WORDNTAU                                                                                                                                                            
+ WORD0                                                                                                                                                               
+ WORD-->TAUMN,TAUMX                                                                                                                                                  
+ WORDNHIND                                                                                                                                                           
+ WORD0                                                                                                                                                               
+ WORD-->NAMEHIND,HINDMN,HINDMX,NHINDSTEPS                                                                                                                            
+ WORDB2                                                                                                                                                              
+ WORDNATOM                                                                                                                                                           
+ WORD5                                                                                                                                                               
+ entering atom reads           5
+ past z-matrix

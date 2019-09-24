@@ -1,0 +1,52 @@
+ idebug test           2
+ starting hl_reac1
+  starting zmat input
+ vtot is  -78.466689410000001     
+ cootoread is RCC1=                         
+ cootoread is RCC2=                         
+ cootoread is RCC3=                         
+ cootoread is RCH1=                         
+ cootoread is RCH2=                         
+ cootoread is ACCC1=                        
+ cootoread is AHCC1=                        
+ cootoread is AHCC2=                        
+ cootoread is AHCC3=                        
+ cootoread is B1=                           
+ cootoread is B2=                           
+ cootoread is B3=                           
+ opt coord is   1.3212999999999999     
+ opt coord is   1.0825000000000000     
+ opt coord is   1.0825000000000000     
+ opt coord is   1.0825000000000000     
+ opt coord is   1.0825000000000000     
+ opt coord is   121.62090000000001     
+ opt coord is   121.62090000000001     
+ opt coord is   121.62170000000000     
+ opt coord is   121.62170000000000     
+ opt coord is   179.99390000000000     
+ opt coord is   180.00129999999999     
+ opt coord is   180.00319999999999     
+ out of molprofopt
+ starting hl_prod1
+  starting zmat input
+ vtot is  -77.778967699999995     
+ cootoread is RCC91=                        
+ cootoread is RCC92=                        
+ cootoread is RCC93=                        
+ cootoread is RCH91=                        
+ cootoread is ACCC91=                       
+ cootoread is AHCC91=                       
+ cootoread is AHCC92=                       
+ cootoread is B91=                          
+ cootoread is B92=                          
+ opt coord is   1.3000000000000000     
+ opt coord is   1.0851999999999999     
+ opt coord is   1.0900000000000001     
+ opt coord is   1.0786000000000000     
+ opt coord is   122.01770000000000     
+ opt coord is   121.63379999999999     
+ opt coord is   137.87270000000001     
+ opt coord is   179.97499999999999     
+ opt coord is   179.98470000000000     
+ out of molprofopt
+ starting ktp

@@ -1,0 +1,49 @@
+ level of theory  uwb97xd/6-311+g(d,p)  opt=internal                                    int=ultrafine nosym guess(mix,always)                                
+ past z-matrix
+ number of sampling points           1
+ number of sampled coordinates           0
+ number of other coordinates          12
+ *******************************
+ Random number point            1  out  of            1
+ Sampled Tau coordinates
+
+ starting g09pot
+ finished g09pot
+
+ optimized tau coordinates,energy,sampling point
+  -78.580683468299995                1
+ optimized coordinates
+    1.33    1.09    1.09    1.09    1.09  121.63  121.62  121.63  121.63  179.95  180.02  180.00
+ geom diff for geom iopt          and threshold
+ new geom
+ tau 
+
+ internal coordinates 
+ RCC1                             1.3254999999999999     
+ RCC2                             1.0851999999999999     
+ RCC3                             1.0851999999999999     
+ RCH1                             1.0851999999999999     
+ RCH2                             1.0851999999999999     
+ ACCC1                            121.62520000000001     
+ AHCC1                            121.62390000000001     
+ AHCC2                            121.63060000000000     
+ AHCC3                            121.62970000000000     
+ B1                               179.94690000000000     
+ B2                               180.02240000000000     
+ B3                               179.99719999999999     
+ coordinates 
+   0.0000000000000000        0.0000000000000000        0.0000000000000000     
+   0.0000000000000000        0.0000000000000000        1.3255340000000000     
+  0.92401199999999994        0.0000000000000000        1.8945520000000000     
+ -0.92402499999999999       8.55999999999999990E-004   1.8945300000000000     
+ -0.92396100000000003       3.60999999999999993E-004 -0.56910499999999997     
+  0.92396999999999996      -3.15000000000000013E-004 -0.56908999999999998     
+ rotational constants
+   146.83693640000001        30.336225400000000        25.141948599999999     
+ energy and its difference with minimum energy
+  -78.580683468299995        0.0000000000000000     
+
+ new energy also
+
+ *******************************
+ noptg voptmin ioptmin           1  -78.580683468299995                1

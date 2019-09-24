@@ -1,0 +1,1757 @@
+Wells (G - ground energy, D - dissociation limit, kcal/mol):
+      Name        G        D
+     REACS      0.0    102.1
+
+Bimolecular Products (G - ground energy, kcal/mol):
+      Name        G
+     PRODS    102.6
+
+Well-to-Bimolecular Barriers (H/G - barrier height/well depth, kcal/mol)
+      Name        H     Well        G  Product
+        TS    102.1    REACS      0.0    PRODS
+
+________________________________________________________________________________________
+
+Unimolecular Rate Units: 1/sec;  Bimolecular Rate Units: cm^3/sec
+
+______________________________________________________________________________________
+
+Species-Species Rate Tables:
+
+Temperature = 300 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  2.28447e-60
+PRODS     2.54617e-10          ***
+
+Temperature = 300 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     1.82384e-60  1.82384e-60
+PRODS     2.03277e-10  2.03277e-10
+
+Temperature = 300 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     2.19968e-60  2.19968e-60
+PRODS     2.45166e-10  2.45166e-10
+
+Temperature = 300 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     2.27472e-60  2.27472e-60
+PRODS      2.5353e-10   2.5353e-10
+
+Temperature = 300 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     2.28361e-60  2.28361e-60
+PRODS     2.54521e-10  2.54521e-10
+
+Temperature = 300 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     2.28452e-60  2.28452e-60
+PRODS     2.54623e-10  2.54623e-10
+
+Temperature = 400 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  1.89494e-41
+PRODS     2.62744e-10          ***
+
+Temperature = 400 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     1.17675e-41  1.17675e-41
+PRODS     1.63163e-10  1.63163e-10
+
+Temperature = 400 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     1.70349e-41  1.70349e-41
+PRODS     2.36198e-10  2.36198e-10
+
+Temperature = 400 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     1.86765e-41  1.86765e-41
+PRODS      2.5896e-10   2.5896e-10
+
+Temperature = 400 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     1.89199e-41  1.89199e-41
+PRODS     2.62335e-10  2.62335e-10
+
+Temperature = 400 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     1.89461e-41  1.89461e-41
+PRODS     2.62698e-10  2.62698e-10
+
+Temperature = 500 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  4.80683e-30
+PRODS     2.75637e-10          ***
+
+Temperature = 500 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     2.22888e-30  2.22888e-30
+PRODS      1.2781e-10   1.2781e-10
+
+Temperature = 500 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     3.87996e-30  3.87996e-30
+PRODS     2.22487e-10  2.22487e-10
+
+Temperature = 500 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     4.63865e-30  4.63865e-30
+PRODS     2.65993e-10  2.65993e-10
+
+Temperature = 500 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     4.78672e-30  4.78672e-30
+PRODS     2.74483e-10  2.74483e-10
+
+Temperature = 500 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     4.80422e-30  4.80422e-30
+PRODS     2.75487e-10  2.75487e-10
+
+Temperature = 600 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  2.05081e-22
+PRODS     2.87981e-10          ***
+
+Temperature = 600 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     6.98615e-23  6.98615e-23
+PRODS     9.81016e-11  9.81016e-11
+
+Temperature = 600 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     1.43892e-22  1.43892e-22
+PRODS     2.02057e-10  2.02057e-10
+
+Temperature = 600 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     1.91027e-22  1.91027e-22
+PRODS     2.68245e-10  2.68245e-10
+
+Temperature = 600 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     2.03246e-22  2.03246e-22
+PRODS     2.85403e-10  2.85403e-10
+
+Temperature = 600 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     2.04899e-22  2.04899e-22
+PRODS     2.87725e-10  2.87725e-10
+
+Temperature = 700 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  5.97332e-17
+PRODS      2.9862e-10          ***
+
+Temperature = 700 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     1.48788e-17  1.48788e-17
+PRODS     7.43826e-11  7.43826e-11
+
+Temperature = 700 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     3.55276e-17  3.55276e-17
+PRODS     1.77611e-10  1.77611e-10
+
+Temperature = 700 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     5.28078e-17  5.28078e-17
+PRODS     2.63999e-10  2.63999e-10
+
+Temperature = 700 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     5.86803e-17  5.86803e-17
+PRODS     2.93357e-10  2.93357e-10
+
+Temperature = 700 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     5.96189e-17  5.96189e-17
+PRODS     2.98049e-10  2.98049e-10
+
+Temperature = 800 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***   7.6162e-13
+PRODS     3.07442e-10          ***
+
+Temperature = 800 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     1.38959e-13  1.38959e-13
+PRODS     5.60932e-11  5.60932e-11
+
+Temperature = 800 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     3.77261e-13  3.77261e-13
+PRODS     1.52288e-10  1.52288e-10
+
+Temperature = 800 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     6.28364e-13  6.28364e-13
+PRODS     2.53651e-10  2.53651e-10
+
+Temperature = 800 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     7.37833e-13  7.37833e-13
+PRODS      2.9784e-10   2.9784e-10
+
+Temperature = 800 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     7.58862e-13  7.58862e-13
+PRODS     3.06328e-10  3.06328e-10
+
+Temperature = 900 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  1.19769e-09
+PRODS     3.14601e-10          ***
+
+Temperature = 900 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     1.60692e-10  1.60692e-10
+PRODS     4.22093e-11  4.22093e-11
+
+Temperature = 900 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     4.87877e-10  4.87877e-10
+PRODS     1.28152e-10  1.28152e-10
+
+Temperature = 900 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     9.07518e-10  9.07518e-10
+PRODS      2.3838e-10   2.3838e-10
+
+Temperature = 900 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     1.13677e-09  1.13677e-09
+PRODS     2.98598e-10  2.98598e-10
+
+Temperature = 900 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     1.19002e-09  1.19002e-09
+PRODS     3.12585e-10  3.12585e-10
+
+Temperature = 1000 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  4.33324e-07
+PRODS     3.20307e-10          ***
+
+Temperature = 1000 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     4.30228e-08  4.30228e-08
+PRODS     3.18019e-11  3.18019e-11
+
+Temperature = 1000 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     1.43952e-07  1.43952e-07
+PRODS     1.06408e-10  1.06408e-10
+
+Temperature = 1000 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     2.97297e-07  2.97297e-07
+PRODS     2.19758e-10  2.19758e-10
+
+Temperature = 1000 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     3.99963e-07  3.99963e-07
+PRODS     2.95647e-10  2.95647e-10
+
+Temperature = 1000 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     4.28741e-07  4.28741e-07
+PRODS      3.1692e-10   3.1692e-10
+
+Temperature = 1100 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  5.36999e-05
+PRODS     3.24763e-10          ***
+
+Temperature = 1100 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     3.97044e-06  3.97044e-06
+PRODS     2.40121e-11  2.40121e-11
+
+Temperature = 1100 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     1.44698e-05  1.44698e-05
+PRODS     8.75093e-11  8.75093e-11
+
+Temperature = 1100 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     3.29523e-05  3.29523e-05
+PRODS     1.99287e-10  1.99287e-10
+
+Temperature = 1100 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     4.78118e-05  4.78118e-05
+PRODS     2.89153e-10  2.89153e-10
+
+Temperature = 1100 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     5.28068e-05  5.28068e-05
+PRODS     3.19362e-10  3.19362e-10
+
+Temperature = 1200 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***   0.00297429
+PRODS     3.28155e-10          ***
+
+Temperature = 1200 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS     0.000164948  0.000164948
+PRODS     1.81988e-11  1.81988e-11
+
+Temperature = 1200 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS     0.000648149  0.000648149
+PRODS     7.15107e-11  7.15107e-11
+
+Temperature = 1200 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS      0.00161592   0.00161592
+PRODS     1.78286e-10  1.78286e-10
+
+Temperature = 1200 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS      0.00253366   0.00253366
+PRODS      2.7954e-10   2.7954e-10
+
+Temperature = 1200 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS       0.0029004    0.0029004
+PRODS     3.20003e-10  3.20003e-10
+
+Temperature = 1300 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***    0.0885654
+PRODS     3.30653e-10          ***
+
+Temperature = 1300 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS      0.00370468   0.00370468
+PRODS     1.38312e-11  1.38312e-11
+
+Temperature = 1300 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS       0.0155669    0.0155669
+PRODS      5.8118e-11   5.8118e-11
+
+Temperature = 1300 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS        0.042213     0.042213
+PRODS       1.576e-10    1.576e-10
+
+Temperature = 1300 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS       0.0715585    0.0715585
+PRODS     2.67159e-10  2.67159e-10
+
+Temperature = 1300 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS       0.0853664    0.0853664
+PRODS      3.1871e-10   3.1871e-10
+
+Temperature = 1400 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***      1.61833
+PRODS     3.32409e-10          ***
+
+Temperature = 1400 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS       0.0514257    0.0514257
+PRODS      1.0563e-11   1.0563e-11
+
+Temperature = 1400 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS         0.22942      0.22942
+PRODS     4.71236e-11  4.71236e-11
+
+Temperature = 1400 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS        0.672188     0.672188
+PRODS     1.38069e-10  1.38069e-10
+
+Temperature = 1400 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS         1.23065      1.23065
+PRODS     2.52779e-10  2.52779e-10
+
+Temperature = 1400 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS           1.537        1.537
+PRODS     3.15705e-10  3.15705e-10
+
+Temperature = 1500 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***      19.9996
+PRODS     3.33557e-10          ***
+
+Temperature = 1500 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS        0.485794     0.485794
+PRODS     8.10215e-12  8.10215e-12
+
+Temperature = 1500 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS         2.28774      2.28774
+PRODS     3.81553e-11  3.81553e-11
+
+Temperature = 1500 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS         7.19946      7.19946
+PRODS     1.20074e-10  1.20074e-10
+
+Temperature = 1500 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS          14.209       14.209
+PRODS      2.3698e-10   2.3698e-10
+
+Temperature = 1500 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS         18.6496      18.6496
+PRODS     3.11041e-10  3.11041e-10
+
+Temperature = 1600 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***      179.834
+PRODS     3.34213e-10          ***
+
+Temperature = 1600 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS         3.35931      3.35931
+PRODS      6.2431e-12   6.2431e-12
+
+Temperature = 1600 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS         16.6096      16.6096
+PRODS      3.0868e-11   3.0868e-11
+
+Temperature = 1600 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS          55.847       55.847
+PRODS     1.03789e-10  1.03789e-10
+
+Temperature = 1600 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS         118.545      118.545
+PRODS      2.2031e-10   2.2031e-10
+
+Temperature = 1600 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS         163.999      163.999
+PRODS     3.04782e-10  3.04782e-10
+
+Temperature = 1700 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***      1244.34
+PRODS     3.34475e-10          ***
+
+Temperature = 1700 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS         17.9733      17.9733
+PRODS     4.83116e-12  4.83116e-12
+
+Temperature = 1700 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS         92.9302      92.9302
+PRODS     2.49794e-11  2.49794e-11
+
+Temperature = 1700 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS         332.207      332.207
+PRODS     8.92964e-11  8.92964e-11
+
+Temperature = 1700 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS         756.319      756.319
+PRODS     2.03297e-10  2.03297e-10
+
+Temperature = 1700 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS         1105.24      1105.24
+PRODS     2.97085e-10  2.97085e-10
+
+Temperature = 1800 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***      6920.89
+PRODS     3.34425e-10          ***
+
+Temperature = 1800 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS         77.7334      77.7334
+PRODS     3.75616e-12  3.75616e-12
+
+Temperature = 1800 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS         418.546      418.546
+PRODS     2.02246e-11  2.02246e-11
+
+Temperature = 1800 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS         1583.64      1583.64
+PRODS      7.6523e-11   7.6523e-11
+
+Temperature = 1800 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS         3855.88      3855.88
+PRODS      1.8632e-10   1.8632e-10
+
+Temperature = 1800 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS         5960.84      5960.84
+PRODS     2.88034e-10  2.88034e-10
+
+Temperature = 1900 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***      32027.1
+PRODS      3.3413e-10          ***
+
+Temperature = 1900 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS         281.323      281.323
+PRODS     2.93495e-12  2.93495e-12
+
+Temperature = 1900 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS         1572.06      1572.06
+PRODS     1.64009e-11  1.64009e-11
+
+Temperature = 1900 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS         6270.62      6270.62
+PRODS     6.54196e-11  6.54196e-11
+
+Temperature = 1900 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS         16279.7      16279.7
+PRODS     1.69841e-10  1.69841e-10
+
+Temperature = 1900 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS         26644.3      26644.3
+PRODS     2.77972e-10  2.77972e-10
+
+Temperature = 2000 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***       126765
+PRODS     3.33644e-10          ***
+
+Temperature = 2000 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS         875.375      875.375
+PRODS     2.30397e-12  2.30397e-12
+
+Temperature = 2000 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS         5062.33      5062.33
+PRODS      1.3324e-11   1.3324e-11
+
+Temperature = 2000 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS         21209.9      21209.9
+PRODS     5.58241e-11  5.58241e-11
+
+Temperature = 2000 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS         58537.1      58537.1
+PRODS     1.54069e-10  1.54069e-10
+
+Temperature = 2000 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS          101454       101454
+PRODS     2.67026e-10  2.67026e-10
+
+Temperature = 2100 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***       438853
+PRODS     3.33011e-10          ***
+
+Temperature = 2100 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS         2393.61      2393.61
+PRODS      1.8163e-12   1.8163e-12
+
+Temperature = 2100 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS         14286.2      14286.2
+PRODS     1.08406e-11  1.08406e-11
+
+Temperature = 2100 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS         62659.8      62659.8
+PRODS     4.75475e-11  4.75475e-11
+
+Temperature = 2100 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS          183326       183326
+PRODS     1.39112e-10  1.39112e-10
+
+Temperature = 2100 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS          336451       336451
+PRODS     2.55306e-10  2.55306e-10
+
+Temperature = 2200 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  1.35343e+06
+PRODS     3.32268e-10          ***
+
+Temperature = 2200 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS          5854.2       5854.2
+PRODS     1.43717e-12  1.43717e-12
+
+Temperature = 2200 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS           35988        35988
+PRODS     8.83494e-12  8.83494e-12
+
+Temperature = 2200 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS          164823       164823
+PRODS      4.0464e-11   4.0464e-11
+
+Temperature = 2200 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS          509840       509840
+PRODS     1.25166e-10  1.25166e-10
+
+Temperature = 2200 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS          990307       990307
+PRODS     2.43121e-10  2.43121e-10
+
+Temperature = 2300 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  3.77505e+06
+PRODS     3.31444e-10          ***
+
+Temperature = 2300 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS         13009.2      13009.2
+PRODS     1.14212e-12  1.14212e-12
+
+Temperature = 2300 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS         82197.4      82197.4
+PRODS     7.21655e-12  7.21655e-12
+
+Temperature = 2300 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS          391956       391956
+PRODS     3.44126e-11  3.44126e-11
+
+Temperature = 2300 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     1.27847e+06  1.27847e+06
+PRODS     1.12247e-10  1.12247e-10
+
+Temperature = 2300 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     2.62643e+06  2.62643e+06
+PRODS     2.30596e-10  2.30596e-10
+
+Temperature = 2400 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  9.64412e+06
+PRODS     3.30563e-10          ***
+
+Temperature = 2400 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS         26597.5      26597.5
+PRODS     9.11543e-13  9.11543e-13
+
+Temperature = 2400 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS          172422       172422
+PRODS      5.9095e-12   5.9095e-12
+
+Temperature = 2400 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS          854027       854027
+PRODS     2.92718e-11  2.92718e-11
+
+Temperature = 2400 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     2.92966e+06  2.92966e+06
+PRODS     1.00417e-10  1.00417e-10
+
+Temperature = 2400 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     6.35879e+06  6.35879e+06
+PRODS     2.17955e-10  2.17955e-10
+
+Temperature = 2500 K
+
+High Pressure Rate Coefficients:
+
+From\To         REACS        PRODS
+REACS             ***  2.28065e+07
+PRODS     3.29644e-10          ***
+
+Temperature = 2500 K    Pressure = 1 atm
+
+From\To         REACS        PRODS
+REACS         50545.4      50545.4
+PRODS     7.30398e-13  7.30398e-13
+
+Temperature = 2500 K    Pressure = 10 atm
+
+From\To         REACS        PRODS
+REACS          335553       335553
+PRODS     4.84931e-12  4.84931e-12
+
+Temperature = 2500 K    Pressure = 100 atm
+
+From\To         REACS        PRODS
+REACS     1.72217e+06  1.72217e+06
+PRODS     2.48904e-11  2.48904e-11
+
+Temperature = 2500 K    Pressure = 1000 atm
+
+From\To         REACS        PRODS
+REACS     6.19879e+06  6.19879e+06
+PRODS     8.95953e-11  8.95953e-11
+
+Temperature = 2500 K    Pressure = 10000 atm
+
+From\To         REACS        PRODS
+REACS     1.42006e+07  1.42006e+07
+PRODS     2.05255e-10  2.05255e-10
+
+______________________________________________________________________________________
+
+High Pressure Rate Coefficients (Temperature-Species Rate Tables):
+
+   T(K) REACS->REACS REACS->PRODS
+    300          ***  2.28447e-60
+    400          ***  1.89494e-41
+    500          ***  4.80683e-30
+    600          ***  2.05081e-22
+    700          ***  5.97332e-17
+    800          ***   7.6162e-13
+    900          ***  1.19769e-09
+   1000          ***  4.33324e-07
+   1100          ***  5.36999e-05
+   1200          ***   0.00297429
+   1300          ***    0.0885654
+   1400          ***      1.61833
+   1500          ***      19.9996
+   1600          ***      179.834
+   1700          ***      1244.34
+   1800          ***      6920.89
+   1900          ***      32027.1
+   2000          ***       126765
+   2100          ***       438853
+   2200          ***  1.35343e+06
+   2300          ***  3.77505e+06
+   2400          ***  9.64412e+06
+   2500          ***  2.28065e+07
+
+   T(K) PRODS->REACS PRODS->PRODS
+    300  2.54617e-10          ***
+    400  2.62744e-10          ***
+    500  2.75637e-10          ***
+    600  2.87981e-10          ***
+    700   2.9862e-10          ***
+    800  3.07442e-10          ***
+    900  3.14601e-10          ***
+   1000  3.20307e-10          ***
+   1100  3.24763e-10          ***
+   1200  3.28155e-10          ***
+   1300  3.30653e-10          ***
+   1400  3.32409e-10          ***
+   1500  3.33557e-10          ***
+   1600  3.34213e-10          ***
+   1700  3.34475e-10          ***
+   1800  3.34425e-10          ***
+   1900   3.3413e-10          ***
+   2000  3.33644e-10          ***
+   2100  3.33011e-10          ***
+   2200  3.32268e-10          ***
+   2300  3.31444e-10          ***
+   2400  3.30563e-10          ***
+   2500  3.29644e-10          ***
+
+Capture/Escape Rate Coefficients:
+
+   T(K)        REACS        PRODS
+    300  2.28447e-60  2.54617e-10
+    400  1.89494e-41  2.62744e-10
+    500  4.80683e-30  2.75637e-10
+    600  2.05081e-22  2.87981e-10
+    700  5.97332e-17   2.9862e-10
+    800   7.6162e-13  3.07442e-10
+    900  1.19769e-09  3.14601e-10
+   1000  4.33324e-07  3.20307e-10
+   1100  5.36999e-05  3.24763e-10
+   1200   0.00297429  3.28155e-10
+   1300    0.0885654  3.30653e-10
+   1400      1.61833  3.32409e-10
+   1500      19.9996  3.33557e-10
+   1600      179.834  3.34213e-10
+   1700      1244.34  3.34475e-10
+   1800      6920.89  3.34425e-10
+   1900      32027.1   3.3413e-10
+   2000       126765  3.33644e-10
+   2100       438853  3.33011e-10
+   2200  1.35343e+06  3.32268e-10
+   2300  3.77505e+06  3.31444e-10
+   2400  9.64412e+06  3.30563e-10
+   2500  2.28065e+07  3.29644e-10
+
+______________________________________________________________________________________
+
+Pressure-Species Rate Tables:
+
+   Temperature = 300 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  1.82384e-60  1.82384e-60
+       10  2.19968e-60  2.19968e-60
+      100  2.27472e-60  2.27472e-60
+     1000  2.28361e-60  2.28361e-60
+    10000  2.28452e-60  2.28452e-60
+    O-O  2.28447e-60  2.28447e-60
+
+   Temperature = 400 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  1.17675e-41  1.17675e-41
+       10  1.70349e-41  1.70349e-41
+      100  1.86765e-41  1.86765e-41
+     1000  1.89199e-41  1.89199e-41
+    10000  1.89461e-41  1.89461e-41
+    O-O  1.89494e-41  1.89494e-41
+
+   Temperature = 500 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  2.22888e-30  2.22888e-30
+       10  3.87996e-30  3.87996e-30
+      100  4.63865e-30  4.63865e-30
+     1000  4.78672e-30  4.78672e-30
+    10000  4.80422e-30  4.80422e-30
+    O-O  4.80683e-30  4.80683e-30
+
+   Temperature = 600 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  6.98615e-23  6.98615e-23
+       10  1.43892e-22  1.43892e-22
+      100  1.91027e-22  1.91027e-22
+     1000  2.03246e-22  2.03246e-22
+    10000  2.04899e-22  2.04899e-22
+    O-O  2.05081e-22  2.05081e-22
+
+   Temperature = 700 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  1.48788e-17  1.48788e-17
+       10  3.55276e-17  3.55276e-17
+      100  5.28078e-17  5.28078e-17
+     1000  5.86803e-17  5.86803e-17
+    10000  5.96189e-17  5.96189e-17
+    O-O  5.97332e-17  5.97332e-17
+
+   Temperature = 800 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  1.38959e-13  1.38959e-13
+       10  3.77261e-13  3.77261e-13
+      100  6.28364e-13  6.28364e-13
+     1000  7.37833e-13  7.37833e-13
+    10000  7.58862e-13  7.58862e-13
+    O-O   7.6162e-13   7.6162e-13
+
+   Temperature = 900 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  1.60692e-10  1.60692e-10
+       10  4.87877e-10  4.87877e-10
+      100  9.07518e-10  9.07518e-10
+     1000  1.13677e-09  1.13677e-09
+    10000  1.19002e-09  1.19002e-09
+    O-O  1.19769e-09  1.19769e-09
+
+   Temperature = 1000 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  4.30228e-08  4.30228e-08
+       10  1.43952e-07  1.43952e-07
+      100  2.97297e-07  2.97297e-07
+     1000  3.99963e-07  3.99963e-07
+    10000  4.28741e-07  4.28741e-07
+    O-O  4.33324e-07  4.33324e-07
+
+   Temperature = 1100 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  3.97044e-06  3.97044e-06
+       10  1.44698e-05  1.44698e-05
+      100  3.29523e-05  3.29523e-05
+     1000  4.78118e-05  4.78118e-05
+    10000  5.28068e-05  5.28068e-05
+    O-O  5.36999e-05  5.36999e-05
+
+   Temperature = 1200 K
+
+   P(atm) REACS->PRODS      REACS->
+        1  0.000164948  0.000164948
+       10  0.000648149  0.000648149
+      100   0.00161592   0.00161592
+     1000   0.00253366   0.00253366
+    10000    0.0029004    0.0029004
+    O-O   0.00297429   0.00297429
+
+   Temperature = 1300 K
+
+   P(atm) REACS->PRODS      REACS->
+        1   0.00370468   0.00370468
+       10    0.0155669    0.0155669
+      100     0.042213     0.042213
+     1000    0.0715585    0.0715585
+    10000    0.0853664    0.0853664
+    O-O    0.0885654    0.0885654
+
+   Temperature = 1400 K
+
+   P(atm) REACS->PRODS      REACS->
+        1    0.0514257    0.0514257
+       10      0.22942      0.22942
+      100     0.672188     0.672188
+     1000      1.23065      1.23065
+    10000        1.537        1.537
+    O-O      1.61833      1.61833
+
+   Temperature = 1500 K
+
+   P(atm) REACS->PRODS      REACS->
+        1     0.485794     0.485794
+       10      2.28774      2.28774
+      100      7.19946      7.19946
+     1000       14.209       14.209
+    10000      18.6496      18.6496
+    O-O      19.9996      19.9996
+
+   Temperature = 1600 K
+
+   P(atm) REACS->PRODS      REACS->
+        1      3.35931      3.35931
+       10      16.6096      16.6096
+      100       55.847       55.847
+     1000      118.545      118.545
+    10000      163.999      163.999
+    O-O      179.834      179.834
+
+   Temperature = 1700 K
+
+   P(atm) REACS->PRODS      REACS->
+        1      17.9733      17.9733
+       10      92.9302      92.9302
+      100      332.207      332.207
+     1000      756.319      756.319
+    10000      1105.24      1105.24
+    O-O      1244.34      1244.34
+
+   Temperature = 1800 K
+
+   P(atm) REACS->PRODS      REACS->
+        1      77.7334      77.7334
+       10      418.546      418.546
+      100      1583.64      1583.64
+     1000      3855.88      3855.88
+    10000      5960.84      5960.84
+    O-O      6920.89      6920.89
+
+   Temperature = 1900 K
+
+   P(atm) REACS->PRODS      REACS->
+        1      281.323      281.323
+       10      1572.06      1572.06
+      100      6270.62      6270.62
+     1000      16279.7      16279.7
+    10000      26644.3      26644.3
+    O-O      32027.1      32027.1
+
+   Temperature = 2000 K
+
+   P(atm) REACS->PRODS      REACS->
+        1      875.375      875.375
+       10      5062.33      5062.33
+      100      21209.9      21209.9
+     1000      58537.1      58537.1
+    10000       101454       101454
+    O-O       126765       126765
+
+   Temperature = 2100 K
+
+   P(atm) REACS->PRODS      REACS->
+        1      2393.61      2393.61
+       10      14286.2      14286.2
+      100      62659.8      62659.8
+     1000       183326       183326
+    10000       336451       336451
+    O-O       438853       438853
+
+   Temperature = 2200 K
+
+   P(atm) REACS->PRODS      REACS->
+        1       5854.2       5854.2
+       10        35988        35988
+      100       164823       164823
+     1000       509840       509840
+    10000       990307       990307
+    O-O  1.35343e+06  1.35343e+06
+
+   Temperature = 2300 K
+
+   P(atm) REACS->PRODS      REACS->
+        1      13009.2      13009.2
+       10      82197.4      82197.4
+      100       391956       391956
+     1000  1.27847e+06  1.27847e+06
+    10000  2.62643e+06  2.62643e+06
+    O-O  3.77505e+06  3.77505e+06
+
+   Temperature = 2400 K
+
+   P(atm) REACS->PRODS      REACS->
+        1      26597.5      26597.5
+       10       172422       172422
+      100       854027       854027
+     1000  2.92966e+06  2.92966e+06
+    10000  6.35879e+06  6.35879e+06
+    O-O  9.64412e+06  9.64412e+06
+
+   Temperature = 2500 K
+
+   P(atm) REACS->PRODS      REACS->
+        1      50545.4      50545.4
+       10       335553       335553
+      100  1.72217e+06  1.72217e+06
+     1000  6.19879e+06  6.19879e+06
+    10000  1.42006e+07  1.42006e+07
+    O-O  2.28065e+07  2.28065e+07
+
+   Temperature = 300 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  2.03277e-10  2.03277e-10
+       10  2.45166e-10  2.45166e-10
+      100   2.5353e-10   2.5353e-10
+     1000  2.54521e-10  2.54521e-10
+    10000  2.54623e-10  2.54623e-10
+    O-O  2.54617e-10  2.54617e-10
+
+   Temperature = 400 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  1.63163e-10  1.63163e-10
+       10  2.36198e-10  2.36198e-10
+      100   2.5896e-10   2.5896e-10
+     1000  2.62335e-10  2.62335e-10
+    10000  2.62698e-10  2.62698e-10
+    O-O  2.62744e-10  2.62744e-10
+
+   Temperature = 500 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1   1.2781e-10   1.2781e-10
+       10  2.22487e-10  2.22487e-10
+      100  2.65993e-10  2.65993e-10
+     1000  2.74483e-10  2.74483e-10
+    10000  2.75487e-10  2.75487e-10
+    O-O  2.75637e-10  2.75637e-10
+
+   Temperature = 600 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  9.81016e-11  9.81016e-11
+       10  2.02057e-10  2.02057e-10
+      100  2.68245e-10  2.68245e-10
+     1000  2.85403e-10  2.85403e-10
+    10000  2.87725e-10  2.87725e-10
+    O-O  2.87981e-10  2.87981e-10
+
+   Temperature = 700 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  7.43826e-11  7.43826e-11
+       10  1.77611e-10  1.77611e-10
+      100  2.63999e-10  2.63999e-10
+     1000  2.93357e-10  2.93357e-10
+    10000  2.98049e-10  2.98049e-10
+    O-O   2.9862e-10   2.9862e-10
+
+   Temperature = 800 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  5.60932e-11  5.60932e-11
+       10  1.52288e-10  1.52288e-10
+      100  2.53651e-10  2.53651e-10
+     1000   2.9784e-10   2.9784e-10
+    10000  3.06328e-10  3.06328e-10
+    O-O  3.07442e-10  3.07442e-10
+
+   Temperature = 900 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  4.22093e-11  4.22093e-11
+       10  1.28152e-10  1.28152e-10
+      100   2.3838e-10   2.3838e-10
+     1000  2.98598e-10  2.98598e-10
+    10000  3.12585e-10  3.12585e-10
+    O-O  3.14601e-10  3.14601e-10
+
+   Temperature = 1000 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  3.18019e-11  3.18019e-11
+       10  1.06408e-10  1.06408e-10
+      100  2.19758e-10  2.19758e-10
+     1000  2.95647e-10  2.95647e-10
+    10000   3.1692e-10   3.1692e-10
+    O-O  3.20307e-10  3.20307e-10
+
+   Temperature = 1100 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  2.40121e-11  2.40121e-11
+       10  8.75093e-11  8.75093e-11
+      100  1.99287e-10  1.99287e-10
+     1000  2.89153e-10  2.89153e-10
+    10000  3.19362e-10  3.19362e-10
+    O-O  3.24763e-10  3.24763e-10
+
+   Temperature = 1200 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  1.81988e-11  1.81988e-11
+       10  7.15107e-11  7.15107e-11
+      100  1.78286e-10  1.78286e-10
+     1000   2.7954e-10   2.7954e-10
+    10000  3.20003e-10  3.20003e-10
+    O-O  3.28155e-10  3.28155e-10
+
+   Temperature = 1300 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  1.38312e-11  1.38312e-11
+       10   5.8118e-11   5.8118e-11
+      100    1.576e-10    1.576e-10
+     1000  2.67159e-10  2.67159e-10
+    10000   3.1871e-10   3.1871e-10
+    O-O  3.30653e-10  3.30653e-10
+
+   Temperature = 1400 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1   1.0563e-11   1.0563e-11
+       10  4.71236e-11  4.71236e-11
+      100  1.38069e-10  1.38069e-10
+     1000  2.52779e-10  2.52779e-10
+    10000  3.15705e-10  3.15705e-10
+    O-O  3.32409e-10  3.32409e-10
+
+   Temperature = 1500 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  8.10215e-12  8.10215e-12
+       10  3.81553e-11  3.81553e-11
+      100  1.20074e-10  1.20074e-10
+     1000   2.3698e-10   2.3698e-10
+    10000  3.11041e-10  3.11041e-10
+    O-O  3.33557e-10  3.33557e-10
+
+   Temperature = 1600 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1   6.2431e-12   6.2431e-12
+       10   3.0868e-11   3.0868e-11
+      100  1.03789e-10  1.03789e-10
+     1000   2.2031e-10   2.2031e-10
+    10000  3.04782e-10  3.04782e-10
+    O-O  3.34213e-10  3.34213e-10
+
+   Temperature = 1700 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  4.83116e-12  4.83116e-12
+       10  2.49794e-11  2.49794e-11
+      100  8.92964e-11  8.92964e-11
+     1000  2.03297e-10  2.03297e-10
+    10000  2.97085e-10  2.97085e-10
+    O-O  3.34475e-10  3.34475e-10
+
+   Temperature = 1800 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  3.75616e-12  3.75616e-12
+       10  2.02246e-11  2.02246e-11
+      100   7.6523e-11   7.6523e-11
+     1000   1.8632e-10   1.8632e-10
+    10000  2.88034e-10  2.88034e-10
+    O-O  3.34425e-10  3.34425e-10
+
+   Temperature = 1900 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  2.93495e-12  2.93495e-12
+       10  1.64009e-11  1.64009e-11
+      100  6.54196e-11  6.54196e-11
+     1000  1.69841e-10  1.69841e-10
+    10000  2.77972e-10  2.77972e-10
+    O-O   3.3413e-10   3.3413e-10
+
+   Temperature = 2000 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  2.30397e-12  2.30397e-12
+       10   1.3324e-11   1.3324e-11
+      100  5.58241e-11  5.58241e-11
+     1000  1.54069e-10  1.54069e-10
+    10000  2.67026e-10  2.67026e-10
+    O-O  3.33644e-10  3.33644e-10
+
+   Temperature = 2100 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1   1.8163e-12   1.8163e-12
+       10  1.08406e-11  1.08406e-11
+      100  4.75475e-11  4.75475e-11
+     1000  1.39112e-10  1.39112e-10
+    10000  2.55306e-10  2.55306e-10
+    O-O  3.33011e-10  3.33011e-10
+
+   Temperature = 2200 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  1.43717e-12  1.43717e-12
+       10  8.83494e-12  8.83494e-12
+      100   4.0464e-11   4.0464e-11
+     1000  1.25166e-10  1.25166e-10
+    10000  2.43121e-10  2.43121e-10
+    O-O  3.32268e-10  3.32268e-10
+
+   Temperature = 2300 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  1.14212e-12  1.14212e-12
+       10  7.21655e-12  7.21655e-12
+      100  3.44126e-11  3.44126e-11
+     1000  1.12247e-10  1.12247e-10
+    10000  2.30596e-10  2.30596e-10
+    O-O  3.31444e-10  3.31444e-10
+
+   Temperature = 2400 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  9.11543e-13  9.11543e-13
+       10   5.9095e-12   5.9095e-12
+      100  2.92718e-11  2.92718e-11
+     1000  1.00417e-10  1.00417e-10
+    10000  2.17955e-10  2.17955e-10
+    O-O  3.30563e-10  3.30563e-10
+
+   Temperature = 2500 K
+
+   P(atm) PRODS->REACS      PRODS->
+        1  7.30398e-13  7.30398e-13
+       10  4.84931e-12  4.84931e-12
+      100  2.48904e-11  2.48904e-11
+     1000  8.95953e-11  8.95953e-11
+    10000  2.05255e-10  2.05255e-10
+    O-O  3.29644e-10  3.29644e-10
+
+______________________________________________________________________________________
+
+Temperature-Species Rate Tables:
+
+   Pressure = 1 atm
+
+   T(K) REACS->PRODS      REACS->      Capture
+    300  1.82384e-60  1.82384e-60  2.28447e-60
+    400  1.17675e-41  1.17675e-41  1.89494e-41
+    500  2.22888e-30  2.22888e-30  4.80683e-30
+    600  6.98615e-23  6.98615e-23  2.05081e-22
+    700  1.48788e-17  1.48788e-17  5.97332e-17
+    800  1.38959e-13  1.38959e-13   7.6162e-13
+    900  1.60692e-10  1.60692e-10  1.19769e-09
+   1000  4.30228e-08  4.30228e-08  4.33324e-07
+   1100  3.97044e-06  3.97044e-06  5.36999e-05
+   1200  0.000164948  0.000164948   0.00297429
+   1300   0.00370468   0.00370468    0.0885654
+   1400    0.0514257    0.0514257      1.61833
+   1500     0.485794     0.485794      19.9996
+   1600      3.35931      3.35931      179.834
+   1700      17.9733      17.9733      1244.34
+   1800      77.7334      77.7334      6920.89
+   1900      281.323      281.323      32027.1
+   2000      875.375      875.375       126765
+   2100      2393.61      2393.61       438853
+   2200       5854.2       5854.2  1.35343e+06
+   2300      13009.2      13009.2  3.77505e+06
+   2400      26597.5      26597.5  9.64412e+06
+   2500      50545.4      50545.4  2.28065e+07
+
+   Pressure = 10 atm
+
+   T(K) REACS->PRODS      REACS->      Capture
+    300  2.19968e-60  2.19968e-60  2.28447e-60
+    400  1.70349e-41  1.70349e-41  1.89494e-41
+    500  3.87996e-30  3.87996e-30  4.80683e-30
+    600  1.43892e-22  1.43892e-22  2.05081e-22
+    700  3.55276e-17  3.55276e-17  5.97332e-17
+    800  3.77261e-13  3.77261e-13   7.6162e-13
+    900  4.87877e-10  4.87877e-10  1.19769e-09
+   1000  1.43952e-07  1.43952e-07  4.33324e-07
+   1100  1.44698e-05  1.44698e-05  5.36999e-05
+   1200  0.000648149  0.000648149   0.00297429
+   1300    0.0155669    0.0155669    0.0885654
+   1400      0.22942      0.22942      1.61833
+   1500      2.28774      2.28774      19.9996
+   1600      16.6096      16.6096      179.834
+   1700      92.9302      92.9302      1244.34
+   1800      418.546      418.546      6920.89
+   1900      1572.06      1572.06      32027.1
+   2000      5062.33      5062.33       126765
+   2100      14286.2      14286.2       438853
+   2200        35988        35988  1.35343e+06
+   2300      82197.4      82197.4  3.77505e+06
+   2400       172422       172422  9.64412e+06
+   2500       335553       335553  2.28065e+07
+
+   Pressure = 100 atm
+
+   T(K) REACS->PRODS      REACS->      Capture
+    300  2.27472e-60  2.27472e-60  2.28447e-60
+    400  1.86765e-41  1.86765e-41  1.89494e-41
+    500  4.63865e-30  4.63865e-30  4.80683e-30
+    600  1.91027e-22  1.91027e-22  2.05081e-22
+    700  5.28078e-17  5.28078e-17  5.97332e-17
+    800  6.28364e-13  6.28364e-13   7.6162e-13
+    900  9.07518e-10  9.07518e-10  1.19769e-09
+   1000  2.97297e-07  2.97297e-07  4.33324e-07
+   1100  3.29523e-05  3.29523e-05  5.36999e-05
+   1200   0.00161592   0.00161592   0.00297429
+   1300     0.042213     0.042213    0.0885654
+   1400     0.672188     0.672188      1.61833
+   1500      7.19946      7.19946      19.9996
+   1600       55.847       55.847      179.834
+   1700      332.207      332.207      1244.34
+   1800      1583.64      1583.64      6920.89
+   1900      6270.62      6270.62      32027.1
+   2000      21209.9      21209.9       126765
+   2100      62659.8      62659.8       438853
+   2200       164823       164823  1.35343e+06
+   2300       391956       391956  3.77505e+06
+   2400       854027       854027  9.64412e+06
+   2500  1.72217e+06  1.72217e+06  2.28065e+07
+
+   Pressure = 1000 atm
+
+   T(K) REACS->PRODS      REACS->      Capture
+    300  2.28361e-60  2.28361e-60  2.28447e-60
+    400  1.89199e-41  1.89199e-41  1.89494e-41
+    500  4.78672e-30  4.78672e-30  4.80683e-30
+    600  2.03246e-22  2.03246e-22  2.05081e-22
+    700  5.86803e-17  5.86803e-17  5.97332e-17
+    800  7.37833e-13  7.37833e-13   7.6162e-13
+    900  1.13677e-09  1.13677e-09  1.19769e-09
+   1000  3.99963e-07  3.99963e-07  4.33324e-07
+   1100  4.78118e-05  4.78118e-05  5.36999e-05
+   1200   0.00253366   0.00253366   0.00297429
+   1300    0.0715585    0.0715585    0.0885654
+   1400      1.23065      1.23065      1.61833
+   1500       14.209       14.209      19.9996
+   1600      118.545      118.545      179.834
+   1700      756.319      756.319      1244.34
+   1800      3855.88      3855.88      6920.89
+   1900      16279.7      16279.7      32027.1
+   2000      58537.1      58537.1       126765
+   2100       183326       183326       438853
+   2200       509840       509840  1.35343e+06
+   2300  1.27847e+06  1.27847e+06  3.77505e+06
+   2400  2.92966e+06  2.92966e+06  9.64412e+06
+   2500  6.19879e+06  6.19879e+06  2.28065e+07
+
+   Pressure = 10000 atm
+
+   T(K) REACS->PRODS      REACS->      Capture
+    300  2.28452e-60  2.28452e-60  2.28447e-60
+    400  1.89461e-41  1.89461e-41  1.89494e-41
+    500  4.80422e-30  4.80422e-30  4.80683e-30
+    600  2.04899e-22  2.04899e-22  2.05081e-22
+    700  5.96189e-17  5.96189e-17  5.97332e-17
+    800  7.58862e-13  7.58862e-13   7.6162e-13
+    900  1.19002e-09  1.19002e-09  1.19769e-09
+   1000  4.28741e-07  4.28741e-07  4.33324e-07
+   1100  5.28068e-05  5.28068e-05  5.36999e-05
+   1200    0.0029004    0.0029004   0.00297429
+   1300    0.0853664    0.0853664    0.0885654
+   1400        1.537        1.537      1.61833
+   1500      18.6496      18.6496      19.9996
+   1600      163.999      163.999      179.834
+   1700      1105.24      1105.24      1244.34
+   1800      5960.84      5960.84      6920.89
+   1900      26644.3      26644.3      32027.1
+   2000       101454       101454       126765
+   2100       336451       336451       438853
+   2200       990307       990307  1.35343e+06
+   2300  2.62643e+06  2.62643e+06  3.77505e+06
+   2400  6.35879e+06  6.35879e+06  9.64412e+06
+   2500  1.42006e+07  1.42006e+07  2.28065e+07
+
+   Pressure = 1 atm
+
+   T(K) PRODS->REACS      PRODS->      Capture
+    300  2.03277e-10  2.03277e-10  2.54617e-10
+    400  1.63163e-10  1.63163e-10  2.62744e-10
+    500   1.2781e-10   1.2781e-10  2.75637e-10
+    600  9.81016e-11  9.81016e-11  2.87981e-10
+    700  7.43826e-11  7.43826e-11   2.9862e-10
+    800  5.60932e-11  5.60932e-11  3.07442e-10
+    900  4.22093e-11  4.22093e-11  3.14601e-10
+   1000  3.18019e-11  3.18019e-11  3.20307e-10
+   1100  2.40121e-11  2.40121e-11  3.24763e-10
+   1200  1.81988e-11  1.81988e-11  3.28155e-10
+   1300  1.38312e-11  1.38312e-11  3.30653e-10
+   1400   1.0563e-11   1.0563e-11  3.32409e-10
+   1500  8.10215e-12  8.10215e-12  3.33557e-10
+   1600   6.2431e-12   6.2431e-12  3.34213e-10
+   1700  4.83116e-12  4.83116e-12  3.34475e-10
+   1800  3.75616e-12  3.75616e-12  3.34425e-10
+   1900  2.93495e-12  2.93495e-12   3.3413e-10
+   2000  2.30397e-12  2.30397e-12  3.33644e-10
+   2100   1.8163e-12   1.8163e-12  3.33011e-10
+   2200  1.43717e-12  1.43717e-12  3.32268e-10
+   2300  1.14212e-12  1.14212e-12  3.31444e-10
+   2400  9.11543e-13  9.11543e-13  3.30563e-10
+   2500  7.30398e-13  7.30398e-13  3.29644e-10
+
+   Pressure = 10 atm
+
+   T(K) PRODS->REACS      PRODS->      Capture
+    300  2.45166e-10  2.45166e-10  2.54617e-10
+    400  2.36198e-10  2.36198e-10  2.62744e-10
+    500  2.22487e-10  2.22487e-10  2.75637e-10
+    600  2.02057e-10  2.02057e-10  2.87981e-10
+    700  1.77611e-10  1.77611e-10   2.9862e-10
+    800  1.52288e-10  1.52288e-10  3.07442e-10
+    900  1.28152e-10  1.28152e-10  3.14601e-10
+   1000  1.06408e-10  1.06408e-10  3.20307e-10
+   1100  8.75093e-11  8.75093e-11  3.24763e-10
+   1200  7.15107e-11  7.15107e-11  3.28155e-10
+   1300   5.8118e-11   5.8118e-11  3.30653e-10
+   1400  4.71236e-11  4.71236e-11  3.32409e-10
+   1500  3.81553e-11  3.81553e-11  3.33557e-10
+   1600   3.0868e-11   3.0868e-11  3.34213e-10
+   1700  2.49794e-11  2.49794e-11  3.34475e-10
+   1800  2.02246e-11  2.02246e-11  3.34425e-10
+   1900  1.64009e-11  1.64009e-11   3.3413e-10
+   2000   1.3324e-11   1.3324e-11  3.33644e-10
+   2100  1.08406e-11  1.08406e-11  3.33011e-10
+   2200  8.83494e-12  8.83494e-12  3.32268e-10
+   2300  7.21655e-12  7.21655e-12  3.31444e-10
+   2400   5.9095e-12   5.9095e-12  3.30563e-10
+   2500  4.84931e-12  4.84931e-12  3.29644e-10
+
+   Pressure = 100 atm
+
+   T(K) PRODS->REACS      PRODS->      Capture
+    300   2.5353e-10   2.5353e-10  2.54617e-10
+    400   2.5896e-10   2.5896e-10  2.62744e-10
+    500  2.65993e-10  2.65993e-10  2.75637e-10
+    600  2.68245e-10  2.68245e-10  2.87981e-10
+    700  2.63999e-10  2.63999e-10   2.9862e-10
+    800  2.53651e-10  2.53651e-10  3.07442e-10
+    900   2.3838e-10   2.3838e-10  3.14601e-10
+   1000  2.19758e-10  2.19758e-10  3.20307e-10
+   1100  1.99287e-10  1.99287e-10  3.24763e-10
+   1200  1.78286e-10  1.78286e-10  3.28155e-10
+   1300    1.576e-10    1.576e-10  3.30653e-10
+   1400  1.38069e-10  1.38069e-10  3.32409e-10
+   1500  1.20074e-10  1.20074e-10  3.33557e-10
+   1600  1.03789e-10  1.03789e-10  3.34213e-10
+   1700  8.92964e-11  8.92964e-11  3.34475e-10
+   1800   7.6523e-11   7.6523e-11  3.34425e-10
+   1900  6.54196e-11  6.54196e-11   3.3413e-10
+   2000  5.58241e-11  5.58241e-11  3.33644e-10
+   2100  4.75475e-11  4.75475e-11  3.33011e-10
+   2200   4.0464e-11   4.0464e-11  3.32268e-10
+   2300  3.44126e-11  3.44126e-11  3.31444e-10
+   2400  2.92718e-11  2.92718e-11  3.30563e-10
+   2500  2.48904e-11  2.48904e-11  3.29644e-10
+
+   Pressure = 1000 atm
+
+   T(K) PRODS->REACS      PRODS->      Capture
+    300  2.54521e-10  2.54521e-10  2.54617e-10
+    400  2.62335e-10  2.62335e-10  2.62744e-10
+    500  2.74483e-10  2.74483e-10  2.75637e-10
+    600  2.85403e-10  2.85403e-10  2.87981e-10
+    700  2.93357e-10  2.93357e-10   2.9862e-10
+    800   2.9784e-10   2.9784e-10  3.07442e-10
+    900  2.98598e-10  2.98598e-10  3.14601e-10
+   1000  2.95647e-10  2.95647e-10  3.20307e-10
+   1100  2.89153e-10  2.89153e-10  3.24763e-10
+   1200   2.7954e-10   2.7954e-10  3.28155e-10
+   1300  2.67159e-10  2.67159e-10  3.30653e-10
+   1400  2.52779e-10  2.52779e-10  3.32409e-10
+   1500   2.3698e-10   2.3698e-10  3.33557e-10
+   1600   2.2031e-10   2.2031e-10  3.34213e-10
+   1700  2.03297e-10  2.03297e-10  3.34475e-10
+   1800   1.8632e-10   1.8632e-10  3.34425e-10
+   1900  1.69841e-10  1.69841e-10   3.3413e-10
+   2000  1.54069e-10  1.54069e-10  3.33644e-10
+   2100  1.39112e-10  1.39112e-10  3.33011e-10
+   2200  1.25166e-10  1.25166e-10  3.32268e-10
+   2300  1.12247e-10  1.12247e-10  3.31444e-10
+   2400  1.00417e-10  1.00417e-10  3.30563e-10
+   2500  8.95953e-11  8.95953e-11  3.29644e-10
+
+   Pressure = 10000 atm
+
+   T(K) PRODS->REACS      PRODS->      Capture
+    300  2.54623e-10  2.54623e-10  2.54617e-10
+    400  2.62698e-10  2.62698e-10  2.62744e-10
+    500  2.75487e-10  2.75487e-10  2.75637e-10
+    600  2.87725e-10  2.87725e-10  2.87981e-10
+    700  2.98049e-10  2.98049e-10   2.9862e-10
+    800  3.06328e-10  3.06328e-10  3.07442e-10
+    900  3.12585e-10  3.12585e-10  3.14601e-10
+   1000   3.1692e-10   3.1692e-10  3.20307e-10
+   1100  3.19362e-10  3.19362e-10  3.24763e-10
+   1200  3.20003e-10  3.20003e-10  3.28155e-10
+   1300   3.1871e-10   3.1871e-10  3.30653e-10
+   1400  3.15705e-10  3.15705e-10  3.32409e-10
+   1500  3.11041e-10  3.11041e-10  3.33557e-10
+   1600  3.04782e-10  3.04782e-10  3.34213e-10
+   1700  2.97085e-10  2.97085e-10  3.34475e-10
+   1800  2.88034e-10  2.88034e-10  3.34425e-10
+   1900  2.77972e-10  2.77972e-10   3.3413e-10
+   2000  2.67026e-10  2.67026e-10  3.33644e-10
+   2100  2.55306e-10  2.55306e-10  3.33011e-10
+   2200  2.43121e-10  2.43121e-10  3.32268e-10
+   2300  2.30596e-10  2.30596e-10  3.31444e-10
+   2400  2.17955e-10  2.17955e-10  3.30563e-10
+   2500  2.05255e-10  2.05255e-10  3.29644e-10
+
+______________________________________________________________________________________
+
+Temperature-Pressure Rate Tables:
+
+REACS->PRODS
+
+P\T              300          400          500          600          700          800          900         1000         1100         1200         1300         1400         1500         1600         1700         1800         1900         2000         2100         2200         2300         2400         2500
+1        1.82384e-60  1.17675e-41  2.22888e-30  6.98615e-23  1.48788e-17  1.38959e-13  1.60692e-10  4.30228e-08  3.97044e-06  0.000164948   0.00370468    0.0514257     0.485794      3.35931      17.9733      77.7334      281.323      875.375      2393.61       5854.2      13009.2      26597.5      50545.4
+10       2.19968e-60  1.70349e-41  3.87996e-30  1.43892e-22  3.55276e-17  3.77261e-13  4.87877e-10  1.43952e-07  1.44698e-05  0.000648149    0.0155669      0.22942      2.28774      16.6096      92.9302      418.546      1572.06      5062.33      14286.2        35988      82197.4       172422       335553
+100      2.27472e-60  1.86765e-41  4.63865e-30  1.91027e-22  5.28078e-17  6.28364e-13  9.07518e-10  2.97297e-07  3.29523e-05   0.00161592     0.042213     0.672188      7.19946       55.847      332.207      1583.64      6270.62      21209.9      62659.8       164823       391956       854027  1.72217e+06
+1000     2.28361e-60  1.89199e-41  4.78672e-30  2.03246e-22  5.86803e-17  7.37833e-13  1.13677e-09  3.99963e-07  4.78118e-05   0.00253366    0.0715585      1.23065       14.209      118.545      756.319      3855.88      16279.7      58537.1       183326       509840  1.27847e+06  2.92966e+06  6.19879e+06
+10000    2.28452e-60  1.89461e-41  4.80422e-30  2.04899e-22  5.96189e-17  7.58862e-13  1.19002e-09  4.28741e-07  5.28068e-05    0.0029004    0.0853664        1.537      18.6496      163.999      1105.24      5960.84      26644.3       101454       336451       990307  2.62643e+06  6.35879e+06  1.42006e+07
+O-O      2.28447e-60  1.89494e-41  4.80683e-30  2.05081e-22  5.97332e-17   7.6162e-13  1.19769e-09  4.33324e-07  5.36999e-05   0.00297429    0.0885654      1.61833      19.9996      179.834      1244.34      6920.89      32027.1       126765       438853  1.35343e+06  3.77505e+06  9.64412e+06  2.28065e+07
+
+PRODS->REACS
+
+P\T              300          400          500          600          700          800          900         1000         1100         1200         1300         1400         1500         1600         1700         1800         1900         2000         2100         2200         2300         2400         2500
+1        2.03277e-10  1.63163e-10   1.2781e-10  9.81016e-11  7.43826e-11  5.60932e-11  4.22093e-11  3.18019e-11  2.40121e-11  1.81988e-11  1.38312e-11   1.0563e-11  8.10215e-12   6.2431e-12  4.83116e-12  3.75616e-12  2.93495e-12  2.30397e-12   1.8163e-12  1.43717e-12  1.14212e-12  9.11543e-13  7.30398e-13
+10       2.45166e-10  2.36198e-10  2.22487e-10  2.02057e-10  1.77611e-10  1.52288e-10  1.28152e-10  1.06408e-10  8.75093e-11  7.15107e-11   5.8118e-11  4.71236e-11  3.81553e-11   3.0868e-11  2.49794e-11  2.02246e-11  1.64009e-11   1.3324e-11  1.08406e-11  8.83494e-12  7.21655e-12   5.9095e-12  4.84931e-12
+100       2.5353e-10   2.5896e-10  2.65993e-10  2.68245e-10  2.63999e-10  2.53651e-10   2.3838e-10  2.19758e-10  1.99287e-10  1.78286e-10    1.576e-10  1.38069e-10  1.20074e-10  1.03789e-10  8.92964e-11   7.6523e-11  6.54196e-11  5.58241e-11  4.75475e-11   4.0464e-11  3.44126e-11  2.92718e-11  2.48904e-11
+1000     2.54521e-10  2.62335e-10  2.74483e-10  2.85403e-10  2.93357e-10   2.9784e-10  2.98598e-10  2.95647e-10  2.89153e-10   2.7954e-10  2.67159e-10  2.52779e-10   2.3698e-10   2.2031e-10  2.03297e-10   1.8632e-10  1.69841e-10  1.54069e-10  1.39112e-10  1.25166e-10  1.12247e-10  1.00417e-10  8.95953e-11
+10000    2.54623e-10  2.62698e-10  2.75487e-10  2.87725e-10  2.98049e-10  3.06328e-10  3.12585e-10   3.1692e-10  3.19362e-10  3.20003e-10   3.1871e-10  3.15705e-10  3.11041e-10  3.04782e-10  2.97085e-10  2.88034e-10  2.77972e-10  2.67026e-10  2.55306e-10  2.43121e-10  2.30596e-10  2.17955e-10  2.05255e-10
+O-O      2.54617e-10  2.62744e-10  2.75637e-10  2.87981e-10   2.9862e-10  3.07442e-10  3.14601e-10  3.20307e-10  3.24763e-10  3.28155e-10  3.30653e-10  3.32409e-10  3.33557e-10  3.34213e-10  3.34475e-10  3.34425e-10   3.3413e-10  3.33644e-10  3.33011e-10  3.32268e-10  3.31444e-10  3.30563e-10  3.29644e-10
+
+REACS-> 
+
+P\T              300          400          500          600          700          800          900         1000         1100         1200         1300         1400         1500         1600         1700         1800         1900         2000         2100         2200         2300         2400         2500
+1        1.82384e-60  1.17675e-41  2.22888e-30  6.98615e-23  1.48788e-17  1.38959e-13  1.60692e-10  4.30228e-08  3.97044e-06  0.000164948   0.00370468    0.0514257     0.485794      3.35931      17.9733      77.7334      281.323      875.375      2393.61       5854.2      13009.2      26597.5      50545.4
+10       2.19968e-60  1.70349e-41  3.87996e-30  1.43892e-22  3.55276e-17  3.77261e-13  4.87877e-10  1.43952e-07  1.44698e-05  0.000648149    0.0155669      0.22942      2.28774      16.6096      92.9302      418.546      1572.06      5062.33      14286.2        35988      82197.4       172422       335553
+100      2.27472e-60  1.86765e-41  4.63865e-30  1.91027e-22  5.28078e-17  6.28364e-13  9.07518e-10  2.97297e-07  3.29523e-05   0.00161592     0.042213     0.672188      7.19946       55.847      332.207      1583.64      6270.62      21209.9      62659.8       164823       391956       854027  1.72217e+06
+1000     2.28361e-60  1.89199e-41  4.78672e-30  2.03246e-22  5.86803e-17  7.37833e-13  1.13677e-09  3.99963e-07  4.78118e-05   0.00253366    0.0715585      1.23065       14.209      118.545      756.319      3855.88      16279.7      58537.1       183326       509840  1.27847e+06  2.92966e+06  6.19879e+06
+10000    2.28452e-60  1.89461e-41  4.80422e-30  2.04899e-22  5.96189e-17  7.58862e-13  1.19002e-09  4.28741e-07  5.28068e-05    0.0029004    0.0853664        1.537      18.6496      163.999      1105.24      5960.84      26644.3       101454       336451       990307  2.62643e+06  6.35879e+06  1.42006e+07
+O-O      2.28447e-60  1.89494e-41  4.80683e-30  2.05081e-22  5.97332e-17   7.6162e-13  1.19769e-09  4.33324e-07  5.36999e-05   0.00297429    0.0885654      1.61833      19.9996      179.834      1244.34      6920.89      32027.1       126765       438853  1.35343e+06  3.77505e+06  9.64412e+06  2.28065e+07
+
+PRODS-> 
+
+P\T              300          400          500          600          700          800          900         1000         1100         1200         1300         1400         1500         1600         1700         1800         1900         2000         2100         2200         2300         2400         2500
+1        2.03277e-10  1.63163e-10   1.2781e-10  9.81016e-11  7.43826e-11  5.60932e-11  4.22093e-11  3.18019e-11  2.40121e-11  1.81988e-11  1.38312e-11   1.0563e-11  8.10215e-12   6.2431e-12  4.83116e-12  3.75616e-12  2.93495e-12  2.30397e-12   1.8163e-12  1.43717e-12  1.14212e-12  9.11543e-13  7.30398e-13
+10       2.45166e-10  2.36198e-10  2.22487e-10  2.02057e-10  1.77611e-10  1.52288e-10  1.28152e-10  1.06408e-10  8.75093e-11  7.15107e-11   5.8118e-11  4.71236e-11  3.81553e-11   3.0868e-11  2.49794e-11  2.02246e-11  1.64009e-11   1.3324e-11  1.08406e-11  8.83494e-12  7.21655e-12   5.9095e-12  4.84931e-12
+100       2.5353e-10   2.5896e-10  2.65993e-10  2.68245e-10  2.63999e-10  2.53651e-10   2.3838e-10  2.19758e-10  1.99287e-10  1.78286e-10    1.576e-10  1.38069e-10  1.20074e-10  1.03789e-10  8.92964e-11   7.6523e-11  6.54196e-11  5.58241e-11  4.75475e-11   4.0464e-11  3.44126e-11  2.92718e-11  2.48904e-11
+1000     2.54521e-10  2.62335e-10  2.74483e-10  2.85403e-10  2.93357e-10   2.9784e-10  2.98598e-10  2.95647e-10  2.89153e-10   2.7954e-10  2.67159e-10  2.52779e-10   2.3698e-10   2.2031e-10  2.03297e-10   1.8632e-10  1.69841e-10  1.54069e-10  1.39112e-10  1.25166e-10  1.12247e-10  1.00417e-10  8.95953e-11
+10000    2.54623e-10  2.62698e-10  2.75487e-10  2.87725e-10  2.98049e-10  3.06328e-10  3.12585e-10   3.1692e-10  3.19362e-10  3.20003e-10   3.1871e-10  3.15705e-10  3.11041e-10  3.04782e-10  2.97085e-10  2.88034e-10  2.77972e-10  2.67026e-10  2.55306e-10  2.43121e-10  2.30596e-10  2.17955e-10  2.05255e-10
+O-O      2.54617e-10  2.62744e-10  2.75637e-10  2.87981e-10   2.9862e-10  3.07442e-10  3.14601e-10  3.20307e-10  3.24763e-10  3.28155e-10  3.30653e-10  3.32409e-10  3.33557e-10  3.34213e-10  3.34475e-10  3.34425e-10   3.3413e-10  3.33644e-10  3.33011e-10  3.32268e-10  3.31444e-10  3.30563e-10  3.29644e-10
+

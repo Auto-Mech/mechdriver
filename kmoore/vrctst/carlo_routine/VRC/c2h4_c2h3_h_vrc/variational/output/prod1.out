@@ -1,0 +1,45 @@
+ level of theory  uwb97xd/6-311+g(d,p)  opt=internal                                    int=ultrafine nosym guess(mix,always)                                
+ past z-matrix
+ number of sampling points           1
+ number of sampled coordinates           0
+ number of other coordinates           9
+ *******************************
+ Random number point            1  out  of            1
+ Sampled Tau coordinates
+
+ starting g09pot
+ finished g09pot
+
+ optimized tau coordinates,energy,sampling point
+  -77.892515780400004                1
+ optimized coordinates
+    1.30    1.09    1.09    1.08  122.04  121.65  138.03  179.92  180.00
+ geom diff for geom iopt          and threshold
+ new geom
+ tau 
+
+ internal coordinates 
+ RCC91                            1.3045000000000000     
+ RCC92                            1.0879000000000001     
+ RCC93                            1.0928000000000000     
+ RCH91                            1.0810999999999999     
+ ACCC91                           122.04100000000000     
+ AHCC91                           121.65219999999999     
+ AHCC92                           138.03210000000001     
+ B91                              179.91790000000000     
+ B92                              180.00040000000001     
+ coordinates 
+   0.0000000000000000        0.0000000000000000        0.0000000000000000     
+   0.0000000000000000        0.0000000000000000        1.3044960000000001     
+  0.92215999999999998        0.0000000000000000        1.8816440000000001     
+ -0.93025999999999998       1.33399999999999990E-003   1.8779640000000000     
+ -0.72294099999999994       5.00000000000000041E-006 -0.80381199999999997     
+ rotational constants
+   235.36840390000000        32.741392300000001        28.743037399999999     
+ energy and its difference with minimum energy
+  -77.892515780400004        0.0000000000000000     
+
+ new energy also
+
+ *******************************
+ noptg voptmin ioptmin           1  -77.892515780400004                1

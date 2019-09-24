@@ -1,0 +1,10 @@
+MolproExecFile          /home/carlo/bin/molpro
+GeometryPattern                 GEOMETRY_HERE
+EnergyPattern                   molpro_energy
+BaseFileName            	vrc_molpro
+DebugLevel                      5
+PotentialCorrectionTable /programs/exes/libcorrpot.so    
+estoktp_vrc_corr_         1
+ParameterInteger    1
+End
+

@@ -1,0 +1,44 @@
+ nosmp dthresh ethresh
+ 1  1.0  0.00001
+
+ ntau number of sampled coordinates
+ 0
+ -->taumn,taumx sampling interval
+ b92 0 120.
+
+ nhind
+ 0
+ -->namehind,hindmn,hindmx,nhindsteps
+ b92 0 60. 6 6
+ 
+ natom natomt ilin
+ 5 5 0
+ 
+ charge  spin  atomlabel
+ 0  2
+ c91
+ c92 c91 rcc91
+ h93 c92 rcc92 c91 accc91
+ h94 c92 rcc93 c91 ahcc91 h93 b91
+ h95 c91 rch91 c92 ahcc92 h93 b92
+
+ intcoor 
+ rcc91 1.5
+ rcc92 1.1
+ rcc93 1.1
+ rch91 1.08
+ accc91 110.
+ ahcc91 110.
+ ahcc92 110.
+ b91   177.
+ b92   180.
+
+ SymmetryFactor 
+ 1.
+
+ nelec
+ 1
+  0.  2. 
+
+ end
+
