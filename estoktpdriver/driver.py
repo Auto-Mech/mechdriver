@@ -62,6 +62,7 @@ SYMM_DCT = {
     ('InChI=1S/HO/h1H', 2): 1.
 }
 
+DATA_PATH = os.path.dirname(os.path.realpath(__file__))
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 #print(GEOM_PATH)
 GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
@@ -73,7 +74,6 @@ GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 #    print(SMILES_TEST, ICH_TEST)
 
 # read in data from the mechanism directory
-DATA_PATH = os.path.dirname(os.path.realpath(__file__))
 MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
 MECH_TYPE = 'CHEMKIN'
 #MECH_TYPE = 'json'
@@ -365,10 +365,10 @@ elif MECH_TYPE == 'json':
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
 
 for spc in SPC_DCT:
-    if tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']) in ELC_DEG_DCT:
+    if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in ELC_DEG_DCT:
         SPC_DCT[spc]['elec_levs'] = ELC_DEG_DCT[tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul'])]
         print('elec_levs test', spc, SPC_DCT[spc]['elec_levs'])
-    if tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']) in SYMM_DCT:
+    if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in SYMM_DCT:
         SPC_DCT[spc]['sym'] = SYMM_DCT[tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul'])]
         print('symm_dct test', spc, SPC_DCT[spc]['sym'])
 #os.sys.exit()

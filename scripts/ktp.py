@@ -7,7 +7,9 @@ import thermo
 import automol
 import autofile
 import moldr
+import mess_io
 import mess_io.writer
+import ratefit
 import scripts
 
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
@@ -95,8 +97,8 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
         spc_label.append(automol.inchi.smiles(spcdct[reac]['ich']))
         well_data.append(wells[reac])
         reac_ene += scripts.thermo.spc_energy(spcdct[reac]['ene'], spcdct[reac]['zpe']) * EH2KCAL
-    well_dct_key1 = '.'.join(spc_label)
-    well_dct_key2 = '.'.join(spc_label[::-1])
+    well_dct_key1 = '+'.join(rxn['reactants'])
+    well_dct_key2 = '+'.join(rxn['reactants'][::-1])
     if not well_dct_key1 in idx_dct:
         if well_dct_key2 in idx_dct:
             well_dct_key1 = well_dct_key2
@@ -137,8 +139,8 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
         well_data.append(wells[prod])
         prod_ene += scripts.thermo.spc_energy(spcdct[prod]['ene'], spcdct[prod]['zpe']) * EH2KCAL
     zero_energy = prod_ene - reac_ene
-    well_dct_key1 = '.'.join(spc_label)
-    well_dct_key2 = '.'.join(spc_label[::-1])
+    well_dct_key1 = '+'.join(rxn['products'])
+    well_dct_key2 = '+'.join(rxn['products'][::-1])
     if not well_dct_key1 in idx_dct:
         if well_dct_key2 in idx_dct:
             well_dct_key1 = well_dct_key2
@@ -197,7 +199,153 @@ def run_rate(header_str, energy_trans_str, well_str, bim_str, ts_str, tsdct, thy
     with open(os.path.join(mess_path, 'mess.inp'), 'w') as mess_file:
         mess_file.write(mess_inp_str)
     moldr.util.run_script(RATE_SCRIPT_STR, mess_path)
-    return
+    return mess_path
+
+
+    #(3) Write Arrhenus parameters to a string formatted for
+        # a CHEMKIN mechanism file
+
+def mod_arr_fit(rct_lab, prd_lab, mess_path):
+    """
+    Routine for a single reaction:
+        (1) Grab high-pressure and pressure-dependent rate constants
+            from a MESS output file
+        (2) Fit rate constants to an Arrhenius expression
+    """
+    # Dictionaries to store info; indexed by pressure (given in fit_ps)
+    calc_k_dct = {}
+    filt_calc_tk_dct = {}
+    fit_param_dct = {}
+    fit_params_lst = []
+    fit_err = []
+    fit_k_dct = {}
+    fit_err_dct = {}
+
+    # Fit info
+    t_ref = 1.
+    fit_types = ['single', 'double']
+    fit_method = 'python'
+
+    # Loop over the single and double Arrhenius fits
+    for fit_type in fit_types:
+
+        print('\n\nfitting test for', fit_type)
+
+        # Read the MESS output file into a string
+        with open(mess_path+'/rate.out', 'r') as mess_file:
+            output_string = mess_file.read()
+
+        # Read the temperatures and pressures out of the MESS output
+        mess_temps, _ = mess_io.reader.rates.get_temperatures(
+            output_string)
+        mess_pressures, punit = mess_io.reader.rates.get_pressures(
+            output_string)
+
+        # Loop over the pressures obtained from the MESS output
+        for pressure in mess_pressures:
+
+            # Read the rate constants
+            if pressure == 'high':
+                rate_ks = mess_io.reader.highp_ks(
+                    output_string, rct_lab, prd_lab)
+            else:
+                rate_ks = mess_io.reader.pdep_ks(
+                    output_string, rct_lab, prd_lab,  pressure, punit)
+
+            # Store in a the dictionary
+            calc_k_dct[pressure] = rate_ks
+
+        # print('\ncalculated rate constants')
+        # for key, val in calc_k_dct.items():
+            # print(key)
+            # print(val)
+
+        # Filter temperatures and rate_constants stored in the dictionary
+        for pressure, calc_ks in calc_k_dct.items():
+            flt_temps, flt_ks = ratefit.fit.util.get_valid_tk(
+                mess_temps, calc_ks)
+
+            # Store in a the dictionary
+            filt_calc_tk_dct[pressure] = [flt_temps, flt_ks]
+
+        # print('\nfiltered calculated rate constants')
+        # for key, val in filt_calc_tk_dct.items():
+            # print(key)
+            # print(val)
+
+        # Calculate the fitting parameters from the filtered T,k lists
+        for pressure, tk_lsts in filt_calc_tk_dct.items():
+
+            # Set the temperatures and rate constants
+            temps = tk_lsts[0]
+            rate_constants = tk_lsts[1]
+
+            # Obtain the fitting parameters based on the desired fit
+            if fit_type == 'single' and fit_method == 'python':
+                fit_params = ratefit.fit.arrhenius.single(
+                    temps, rate_constants, t_ref, fit_method)
+            elif fit_type == 'double' and fit_method == 'python':
+                init_params = ratefit.fit.arrhenius.single(
+                    temps, rate_constants, t_ref, fit_method)
+                fit_params = ratefit.fit.arrhenius.double(
+                    temps, rate_constants, t_ref, fit_method,
+                    a_guess=init_params[0],
+                    n_guess=init_params[1],
+                    ea_guess=init_params[2])
+
+            # Store the fitting parameters in a dictionary
+            fit_param_dct[pressure] = fit_params
+
+        # print('\nfitting parameters')
+        # for key, val in fit_param_dct.items():
+            # print(key)
+            # print(val)
+
+        # Calculate fitted rate constants using the fitted parameters
+        for pressure, params in fit_param_dct.items():
+
+            # Set the temperatures
+            temps = filt_calc_tk_dct[pressure][0]
+
+            # Calculate fitted rate constants, based on fit type
+            if fit_type == 'single':
+                fit_ks = ratefit.fxns.single_arrhenius(
+                    params[0], params[1], params[2],
+                    t_ref, temps)
+            elif fit_type == 'double':
+                fit_ks = ratefit.fxns.double_arrhenius(
+                    params[0], params[1], params[2],
+                    params[3], params[4], params[5],
+                    t_ref, temps)
+
+            # Store the fitting parameters in a dictionary
+            fit_k_dct[pressure] = fit_ks
+
+        # print('\nfitted rate constants')
+        # for key, val in fit_k_dct.items():
+            # print(key)
+            # print(val)
+
+        # Calculate the error between the calc and fit ks
+        for pressure, fit_ks in fit_k_dct.items():
+
+            calc_ks = filt_calc_tk_dct[pressure][1]
+            sse, mean_avg_err, max_avg_err = ratefit.err.calc_sse_and_mae(
+                calc_ks, fit_ks)
+
+            # Store in a dictionary
+            fit_err_dct[pressure] = [sse, mean_avg_err, max_avg_err]
+
+        # print('\nfitting errors')
+        # for key, val in fit_err_dct.items():
+            # print(key)
+            # print(val)
+        fit_params_lst.append(fit_param_dct.copy())
+        fit_err.append(fit_err_dct.copy())
+        # print('fit_param_lst test:', fit_param_lst)
+
+    return fit_params_lst[0], fit_err[0], fit_params_lst[1], fit_err[1]
+
 
 def species_thermo(
         spc_names,

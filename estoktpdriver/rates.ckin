@@ -1,0 +1,46 @@
+! tors model: RIGID
+! vib model: HARM
+! har level: RUwb97xd/6-31+g*//RUwb97xd/6-31+g*
+! energy level: 1.00 x RRccsd(t)-f12/cc-pvdz-f12//RUwb97xd/6-31+g*
+CH2O+H=CH3O                     1.2363E-16   1.6780  13662.1 /
+              PLOG /       0.1  2.0840E+01  -4.7621  24572.7 /
+              PLOG /       1.0  4.0601E+01  -4.5307  27440.9 /
+              PLOG /      10.0  2.3219E+00  -3.8496  28916.1 /
+              PLOG /     100.0  3.5226E-03  -2.7392  28284.3 /
+! 0.1: MeanAbsErr = 3.540%, MaxErr = 7.338% 
+! 1: MeanAbsErr = 4.191%, MaxErr = 8.607% 
+! 10: MeanAbsErr = 5.834%, MaxErr = 11.608% 
+! 100: MeanAbsErr = 8.825%, MaxErr = 20.503% 
+! high: MeanAbsErr = 0.621%, MaxErr = 1.478% 
+CH2O+H=CH2OH                    5.7293E-16   1.5523  39275.2 /
+              PLOG /       0.1  2.9610E+13  -7.9038  75340.0 /
+              PLOG /       1.0  4.2804E+04  -5.0317  55858.0 /
+              PLOG /      10.0  9.3004E+02  -4.2485  59930.9 /
+              PLOG /     100.0  3.7595E-02  -2.7140  58559.2 /
+DUPLICATE
+CH2O+H=CH2OH                    4.4344E-23   3.3417  20146.2 /
+              PLOG /       0.1  2.5882E-02  -3.7085  32596.9 /
+              PLOG /       1.0  1.0006E-13 -11.7096-145373.4 /
+              PLOG /      10.0  7.8665E-15  -7.9962 -96866.4 /
+              PLOG /     100.0  2.3926E-20  -7.8126-123811.7 /
+! 0.1: MeanAbsErr = 0.243%, MaxErr = 0.499% 
+! 1: MeanAbsErr = 3.720%, MaxErr = 9.957% 
+! 10: MeanAbsErr = 4.561%, MaxErr = 12.131% 
+! 100: MeanAbsErr = 5.550%, MaxErr = 14.230% 
+! high: MeanAbsErr = 0.295%, MaxErr = 0.513% 
+CH3O=CH2OH                      1.3676E+06   2.0816 104757.8 /
+              PLOG /       0.1  1.0526E+34  -7.8132 129265.5 /
+              PLOG /       1.0  6.1838E+28  -6.0114 120951.2 /
+              PLOG /      10.0  5.2168E+90 -26.5625 182834.8 /
+              PLOG /     100.0  7.3920E+23  -3.7524 125002.0 /
+DUPLICATE
+CH3O=CH2OH                      3.0269E-20 -10.6200-238022.5 /
+              PLOG /       0.1  4.7655E+67 -18.7004 166572.6 /
+              PLOG /       1.0  1.7955E+61 -16.6751 157307.7 /
+              PLOG /      10.0  6.5216E+27  -5.3117 126142.2 /
+              PLOG /     100.0  2.1775E+08  -0.6386  78264.1 /
+! 0.1: MeanAbsErr = 1.064%, MaxErr = 2.493% 
+! 1: MeanAbsErr = 0.621%, MaxErr = 1.527% 
+! 10: MeanAbsErr = 0.219%, MaxErr = 0.551% 
+! 100: MeanAbsErr = 3.660%, MaxErr = 6.779% 
+! high: MeanAbsErr = 3.822%, MaxErr = 10.048% 
