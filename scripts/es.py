@@ -600,8 +600,6 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_name, grid, thy_info, rxn_run_pat
             coo_names=[dist_name],
         )
 
-        ref_ene = -40.
-
         nsamp_max = 2000
         nsamp_min = 500
         flux_err = 5
@@ -611,13 +609,6 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_name, grid, thy_info, rxn_run_pat
 
         print('\ntst.inp:')
         print(tst_inp_str)
-
-        # Write the divsur input file string; distances in Angstrom
-        distances = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
-        divsur_inp_str = varecof_io.writer.write_divsur_input(
-            distances)
-        print('\ndivsur.inp:')
-        print(divsur_inp_str)
     else: 
         moldr.scan.run_scan(
             zma=ts_zma,

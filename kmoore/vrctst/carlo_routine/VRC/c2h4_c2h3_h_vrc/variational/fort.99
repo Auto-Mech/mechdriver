@@ -1,1 +1,0 @@
- egrep 'rate calculation done' me_ktp.log                > temp.log

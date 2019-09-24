@@ -1,4 +1,0 @@
- MultiInputFile          tst.inp
- OutputFile              mc_flux.out  
- Face                    0
- ElectronicSurface       0
