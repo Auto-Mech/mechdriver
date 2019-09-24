@@ -4,8 +4,12 @@
 
 import automol
 import varecof_io
+from pivot import build_pivot_frames
+from pivot import calc_pivot_angles
+from pivot import calc_pivot_xyzs
 
 
+# GEOM INPUT FOR C2H5 + OH RXN
 GEO = (('C', (-2.5191523897, -0.5633331563, -0.0362123265)),
        ('C', (0.3603207881, -0.5331062394, -0.0031081202)),
        ('H', (-3.2419651558, -0.1921939889, -1.9771748689)),
@@ -15,154 +19,89 @@ GEO = (('C', (-2.5191523897, -0.5633331563, -0.0362123265)),
        ('H', (1.0582003205, -0.8619737454, 1.9486756979)),
        ('O', (-5.7269478282, -6.6386704961, 0.8614633075)),
        ('H', (-5.3970505334, -7.9045286243, -0.4840514744)))
-BND_IDX = [0, 7]
+RXN_IDXS = [0, 7]
+
+# GEOM INPUT FOR CH3 + H RXN
+ZMA = ((('C', (None, None, None), (None, None, None)),
+        ('H', (0, None, None), ('R1', None, None)),
+        ('H', (0, 1, None), ('R2', 'A2', None)),
+        ('H', (0, 1, 2), ('R3', 'A3', 'D3')),
+        ('H', (0, 1, 2), ('R4', 'A4', 'D4'))),
+       {'R1': 2.09646,
+        'R2': 2.09646, 'A2': 1.9106293854507126,
+        'R3': 2.09646, 'A3': 1.9106293854507126, 'D3': 4.1887902047863905,
+        'R4': 12.09646, 'A4': 1.9106293854507126, 'D4': 2.0943951023931953})
+RXN_IDXS2 = [0, 4]
+
+# Grid for the distances for points in the divsur file (in angstrom)
+RDISTS_LR = [10.5, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0,
+             5.5, 5.25, 5.0, 4.5, 4.25, 4.0]
+RDISTS_SR = [4.25, 4.0, 3.75, 3.5, 3.25, 3.0, 2.75],
+D1DISTS = [0.05, 0.15, 0.25],
+D2DISTS = [0.05, 0.15, 0.25],
 
 
-def test__routine():
+def vrctst():
     """ run the routine for vrctst
     """
 
-    # Get the fragment geoms, including a dummy
-    # make switch symbol and switch coord fxn in automol.geom
-    geo1 = GEO[:BND_IDX[1]]
-    dummy_row = ('X', GEO[BND_IDX[1]][1])
-    geo1_wdummy = geo1 + (dummy_row,)
-    geo2 = GEO[BND_IDX[1]:]
-    dummy_row = ('X', GEO[BND_IDX[0]][1])
-    geo2_wdummy = (dummy_row,) + geo2
+    # run mep scan (some code in scripts/es.py)
 
-    print('GEO')
-    for x in GEO:
-        print(x)
-    print('geo1')
-    for x in geo1:
-        print(x)
-    print('geo1_wdummy')
-    for x in geo1_wdummy:
-        print(x)
-    print('geo2')
-    for x in geo2:
-        print(x)
-    print('geo2_wdummy')
-    for x in geo2_wdummy:
-        print(x)
+    # calculate the infinite seperation energy
 
-    # For each fragment, get indices for a
-    # chain (up to three atoms, that terminates at the dummy atom)
-    gra1 = automol.geom.graph(geo1)
-    gra2 = automol.geom.graph(geo2)
-    gra1_neighbor_dct = automol.graph.atom_neighbor_keys(gra1)
-    gra2_neighbor_dct = automol.graph.atom_neighbor_keys(gra2)
+    # Get the geometry from a zmat on the MEP (here is ZMA)
+    total_geom = automol.zmatrix.geometry(ZMA)
 
-    # Find the index in each fragment geom that corresponds to the bond index
-    for i, coords in enumerate(geo1):
-        if coords == GEO[BND_IDX[0]]:
-            f1_bnd_idx = i
-    for i, coords in enumerate(geo2):
-        if coords == GEO[BND_IDX[1]]:
-            f2_bnd_idx = i
-    f1_bnd_neighbors = gra1_neighbor_dct[f1_bnd_idx]
-    f2_bnd_neighbors = gra2_neighbor_dct[f2_bnd_idx]
+    # Build list of the fragment geometries:
+    # (1) without dummy atoms and,
+    # (2) with dummy atom assuming position of 2nd bond atom
+    frag_geoms = [GEO[:RXN_IDXS[1]], GEO[RXN_IDXS[1]:]]
+    dummy_row = ('X', GEO[RXN_IDXS[1]][1])
+    geo1_wdummy = frag_geoms[0] + (dummy_row,)
+    dummy_row = ('X', GEO[RXN_IDXS[0]][1])
+    geo2_wdummy = (dummy_row,) + frag_geoms[1]
+    frag_geoms_wdummy = [geo1_wdummy, geo2_wdummy]
 
-    print('f1_bnd_idx')
-    print(f1_bnd_idx)
-    print('f2_bnd_idx')
-    print(f2_bnd_idx)
+    # Get pivot point info
+    frames, npivots = build_pivot_frames(
+        RXN_IDXS2, total_geom, frag_geoms, frag_geoms_wdummy)
+    angles = calc_pivot_angles(frag_geoms, frag_geoms_wdummy, frames)
+    xyzs = calc_pivot_xyzs(RXN_IDXS2, total_geom, frag_geoms)
 
-    print('f1 bond neighbors')
-    print(f1_bnd_neighbors)
-    print('f2 bond neighbors')
-    print(f2_bnd_neighbors)
-
-    # Get the bond atom keys of the neighbors
-    for i, idx in enumerate(f1_bnd_neighbors):
-        if geo1[idx][0] != 'H':
-            f1_bnd_neighbor_idx = idx
-            break
-        elif geo1[idx][0] == 'H' and i == (len(f1_bnd_neighbors) - 1):
-            f1_bnd_neighbor_idx = idx
-    for i, idx in enumerate(f2_bnd_neighbors):
-        if geo2[idx][0] != 'H':
-            f2_bnd_neighbor_idx = idx
-            break
-        elif geo2[idx][0] == 'H' and i == (len(f2_bnd_neighbors) - 1):
-            f2_bnd_neighbor_idx = idx
-
-    print('f1 bond_neighbor idx')
-    print(f1_bnd_neighbor_idx)
-    print('f2 bond_neighbor idx')
-    print(f2_bnd_neighbor_idx)
-
-    # Build the list of indexes for fragments starting with pivot
-    f1_idxs = [len(geo1), f1_bnd_idx, f1_bnd_neighbor_idx]
-    f2_idxs = [0, f2_bnd_idx+1, f2_bnd_neighbor_idx+1]
-    print('f1_idxs')
-    print(f1_idxs)
-    print('f2_idxs')
-    print(f2_idxs)
-
-    # Compute the needed coordinates for defining positions
-    f1_dist = automol.geom.distance(
-        geo1_wdummy, f1_idxs[0], f1_idxs[1])
-    f1_angle = automol.geom.central_angle(
-        geo1_wdummy, f1_idxs[0], f1_idxs[1], f1_idxs[2])
-    f2_dist = automol.geom.distance(
-        geo2_wdummy, f2_idxs[0], f2_idxs[1])
-    f2_angle = automol.geom.central_angle(
-        geo2_wdummy, f2_idxs[0], f2_idxs[1], f2_idxs[2])
-
-    print('f1 coords')
-    print(f1_dist)
-    print(f1_angle)
-    print('f2 coords')
-    print(f2_dist)
-    print(f2_angle)
-
-    # Set up the frame indices
-    f1_frame = [f1_idxs[1], f1_idxs[0], f1_idxs[2], f1_idxs[1]]
-    f2_frame = [f2_idxs[1], f2_idxs[0], f2_idxs[2], f2_idxs[1]]
-    print('f1_frame')
-    print(f1_frame)
-    print('f2_frame')
-    print(f2_frame)
-
-    # Write the long-range and short-range divsur files
-    rdists_lr = [10.5, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0,
-                 5.5, 5.25, 5.0, 4.5, 4.25, 4.0]
+    # Write the long- and short-range divsur input files
     lr_divsur_inp_str = varecof_io.writer.input_file.divsur(
-        rdists_lr, 1, 1, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
-
-    # Write the short-range divsur files
-    if automol.geom.is_atom(geo1):
-        npivot1 = 1
-    else:
-        npivot1 = 2
-    if automol.geom.is_atom(geo2):
-        npivot2 = 1
-    else:
-        npivot2 = 2
-
-    # xyz might just be 0.0,0.0,0.0
-    # pivot_xyz1 = geo1[f1_bnd_idx][1]
-    # pivot_xyz2 = geo2[f2_bnd_idx][1]
-    rdists_sr = [4.25, 4.0, 3.75, 3.5, 3.25, 3.0, 2.75]
-    d1dists = [0.05, 0.15, 0.25]
-    d2dists = [0.05, 0.15, 0.25]
-    sr_divsur_inp_str = varecof_io.writer.input_file.divsur(
-        rdists_sr, npivot1, npivot2, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0],
-        frame1=[val + 1 for val in f1_frame],
-        frame2=[val + 1 for val in f2_frame],
-        d1dists=d1dists,
-        d2dists=d2dists,
-        t1angs=[f1_angle],
-        t2angs=[f2_angle])
-
-    print('\n\n\ndivsur input files')
+        RDISTS_LR, 1, 1, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
     print('\nlong-range divsur input file:')
     print(lr_divsur_inp_str)
-    print('\n\nshort-range divsur input file:')
+
+    # Write the short-range divsur files
+    t1angs = [angles[0]] if angles[0] is not None else None
+    t2angs = [angles[1]] if angles[0] is not None else None
+    sr_divsur_inp_str = varecof_io.writer.input_file.divsur(
+        RDISTS_SR, npivots[0], npivots[1], xyzs[0], xyzs[1],
+        frame1=frames[0],
+        frame2=frames[1],
+        d1dists=D1DISTS,
+        d2dists=D2DISTS,
+        t1angs=t1angs,
+        t2angs=t2angs)
+    print('\nshort-range divsur input file:')
     print(sr_divsur_inp_str)
 
+    # Write the structure input files
+    struct_inp_str = varecof_io.writer.input_file.structure(
+        frag_geoms_wdummy[0], frag_geoms_wdummy[1])
+    print('\nstructure.inp:')
+    print(struct_inp_str)
 
-if __name__ == '__main__':
-    test__routine()
+    # Write the tst.inp file
+    nsamp_max = 2000
+    nsamp_min = 500
+    flux_err = 5
+    pes_size = 1
+    tst_inp_str = varecof_io.writer.input_file.tst(
+        nsamp_max, nsamp_min, flux_err, pes_size)
+    print('\ntst.inp:')
+    print(tst_inp_str)
+
+
