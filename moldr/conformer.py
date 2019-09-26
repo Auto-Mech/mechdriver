@@ -14,11 +14,12 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 def conformer_sampling(
         spc_info, thy_level, thy_save_fs, cnf_run_fs, cnf_save_fs, script_str,
         overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
-        tors_names='', dist_info=[], **kwargs):
+        tors_names='', dist_info=[], two_stage=False, **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
     """
     ich = spc_info[0]
+    coo_names = []
     if not saddle:
         geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
@@ -27,6 +28,9 @@ def conformer_sampling(
         #geo = thy_save_fs.trunk.file.geometry.read(thy_level[1:4])
         geo = thy_save_fs.trunk.file.geometry.read()
         zma = thy_save_fs.trunk.file.zmatrix.read()
+        coo_names.append(tors_names)
+
+
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
     # tors_ranges = automol.zmatrix.torsional_sampling_ranges(
     #    zma, tors_names)
@@ -55,6 +59,7 @@ def conformer_sampling(
         cnf_save_fs=cnf_save_fs,
         script_str=script_str,
         overwrite=overwrite,
+        two_stage=two_stage,
         **kwargs,
     )
     save_conformers(
@@ -87,7 +92,7 @@ def conformer_sampling(
 
 def run_conformers(
         zma, spc_info, thy_level, nsamp, tors_range_dct,
-        cnf_run_fs, cnf_save_fs, script_str, overwrite,
+        cnf_run_fs, cnf_save_fs, script_str, overwrite, two_stage,
         **kwargs):
     """ run sampling algorithm to find conformers
     """
@@ -134,6 +139,45 @@ def run_conformers(
 
             idx += 1
             print("Run {}/{}".format(nsampd+1, nsamp0))
+            #if two_stage:
+            #    tors_names = tors_range_dct.keys()
+            #    moldr.driver.run_job(
+            #        job=elstruct.Job.OPTIMIZATION,
+            #        script_str=script_str,
+            #        run_fs=run_fs,
+            #        geom=samp_zma,
+            #        spc_info=spc_info,
+            #        thy_level=thy_level,
+            #        overwrite=overwrite,
+            #        frozen_coordinates=[tors_names],
+            #        **kwargs
+            #    )
+            #    ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            #    if ret:
+            #        inf_obj, inp_str, out_str = ret
+            #        prog = inf_obj.prog
+            #        samp_zma = elstruct.read.opt_zmatrix(prog, out_str)
+            #        moldr.driver.run_job(
+            #            job=elstruct.Job.OPTIMIZATION,
+            #            script_str=script_str,
+            #            run_fs=run_fs,
+            #            geom=samp_zma,
+            #            spc_info=spc_info,
+            #            thy_level=thy_level,
+            #            overwrite=overwrite,
+            #            **kwargs
+            #        )
+            #else:
+            #    moldr.driver.run_job(
+            #        job=elstruct.Job.OPTIMIZATION,
+            #        script_str=script_str,
+            #        run_fs=run_fs,
+            #        geom=samp_zma,
+            #        spc_info=spc_info,
+            #        thy_level=thy_level,
+            #        overwrite=overwrite,
+            #        **kwargs
+            #    )
             moldr.driver.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
