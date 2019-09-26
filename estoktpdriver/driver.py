@@ -1,6 +1,6 @@
 """ reaction list test
 """
-import os
+import os, sys
 from itertools import chain
 import collections
 import json
@@ -20,18 +20,11 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 # 0. choose which mechanism to run
 
-# MECHANISM_NAME = 'ch4+nh2'  # options: syngas, natgas, heptane
-#MECHANISM_NAME = 'isooctane'  # options: syngas, natgas, heptane
-#MECHANISM_NAME = 'natgas'  # options: syngas, natgas, heptane
-#MECHANISM_NAME = 'butane'  # options: syngas, natgas, heptane
-# MECHANISM_NAME = 'syngas'  # options: syngas, natgas, heptane
-#MECHANISM_NAME = 'vhp'  # options: syngas, natgas, heptane
-MECHANISM_NAME = 'onereac'  # options: syngas, natgas, heptane
-# MECHANISM_NAME = 'estoktp/add30'  # options: syngas, natgas
-# MECHANISM_NAME = 'estoktp/habs65'  # options: syngas, natgas
+MECHANISM_NAME = sys.argv[1]
+MECH_TYPE = sys.argv[2]
 
-run_thermo = False
-run_rates = True
+RUN_THERMO = False
+RUN_RATES = True
 # 1. create run and save directories
 RUN_PREFIX = '/lcrc/project/PACC/run'
 if not os.path.exists(RUN_PREFIX):
@@ -41,7 +34,7 @@ SAVE_PREFIX = '/lcrc/project/PACC/save'
 if not os.path.exists(SAVE_PREFIX):
     os.mkdir(SAVE_PREFIX)
 
-# 2. Prepare species and reaction dictionaries
+# 2. Prepare special species and reaction dictionaries
 
 ELC_SIG_LST = {'InChI=1S/CN/c1-2', 'InChI=1S/C2H/c1-2/h1H'}
 
@@ -62,12 +55,12 @@ SYMM_DCT = {
     ('InChI=1S/HO/h1H', 2): 1.
 }
 
-DATA_PATH = os.path.dirname(os.path.realpath(__file__))
+DATA_PATH = '/home/sjklipp/PACC/mech_test'
+# DATA_PATH = os.path.dirname(os.path.realpath(__file__))
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
-#print(GEOM_PATH)
 GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
-# 2. Prepare species and reaction lists 
+# 3. Prepare species and reaction lists 
 #SMILES_TEST = '[C]#C'
 #for smiles in SMILES_TEST:
 #    ICH_TEST = (automol.convert.smiles.inchi(SMILES_TEST))
@@ -75,15 +68,17 @@ GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
 # read in data from the mechanism directory
 MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
-MECH_TYPE = 'CHEMKIN'
+#MECH_TYPE = 'CHEMKIN'
 #MECH_TYPE = 'json'
-#MECH_FILE = 'mech.json'
+MECH_FILE = 'mech.json'
 RAD_RAD_SORT = True
+
+# 4. process species data from the mechanism file
+# Also add in basis set species
+
 if MECH_TYPE == 'CHEMKIN':
     MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
     SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
-# 4. process species data from the mechanism file
-# Also add in basis set species
 
     SPC_TAB['charge'] = 0
     #print('SPC_TAB:', SPC_TAB)
@@ -103,8 +98,8 @@ if MECH_TYPE == 'CHEMKIN':
     MUL_DCT['REF_CH4'] = 1
     MUL_DCT['REF_H2O'] = 1
     MUL_DCT['REF_NH3'] = 1
-    SPC_BLK_STR = chemkin_io.species_block(MECH_STR)
-    SPC_NAMES = chemkin_io.species.names(SPC_BLK_STR)
+    SPC_BLK_STR = chemkin_io.mechparser.mechanism.species_block(MECH_STR)
+    SPC_NAMES = chemkin_io.mechparser.species.names(SPC_BLK_STR)
 
     # You need one species reference for each element in the set of references and species
     SPC_REF_NAMES = ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
@@ -129,12 +124,12 @@ if MECH_TYPE == 'CHEMKIN':
         SPC_DCT[name]['chg'] = chg
         SPC_DCT[name]['mul'] = mul
 
-    RXN_BLOCK_STR = chemkin_io.reaction_block(MECH_STR)
-    RXN_STRS = chemkin_io.reaction.data_strings(RXN_BLOCK_STR)
+    RXN_BLOCK_STR = chemkin_io.mechparser.mechanism.reaction_block(MECH_STR)
+    RXN_STRS = chemkin_io.mechparser.reaction.data_strings(RXN_BLOCK_STR)
     RCT_NAMES_LST = list(
-        map(chemkin_io.reaction.DataString.reactant_names, RXN_STRS))
+        map(chemkin_io.mechparser.reaction.reactant_names, RXN_STRS))
     PRD_NAMES_LST = list(
-        map(chemkin_io.reaction.DataString.product_names, RXN_STRS))
+        map(chemkin_io.mechparser.reaction.product_names, RXN_STRS))
 
     # Sort reactant and product name lists by formula to facilitate
     # multichannel, multiwell rate evaluations
@@ -157,7 +152,6 @@ if MECH_TYPE == 'CHEMKIN':
         formula_dict = collections.OrderedDict(sorted(formula_dict.items()))
         FORMULA_STR = ''.join(map(str, chain.from_iterable(formula_dict.items())))
         FORMULA_STR_LST.append(FORMULA_STR)
-
 
     #print('formula string test list', formula_str_lst, 'rxn name list', rxn_name_lst)
     #for rct_names in RCT_NAMES_LST:
@@ -208,18 +202,26 @@ elif MECH_TYPE == 'json':
     for reaction in MECH_DATA:
         # set up reaction info
 #        print('reaction test:', reaction)
+        rct_smis = []
         rct_ichs = []
         rct_muls = []
         rct_names = []
+        prd_smis = []
         prd_ichs = []
         prd_muls = []
         prd_names = []
 #        print('reaction name json test:', reaction['name'])
         if 'Reactants' in reaction and 'Products' in reaction:
             for i, rct in enumerate(reaction['Reactants']):
-                rct_ichs.append(rct['InChi'])
-                rct_muls.append(rct['multiplicity'])
                 rct_names.append(rct['name'])
+                rct_smis.append(rct['SMILES'][0])
+                rct_ichs_smi = automol.smiles.inchi(rct['SMILES'][0])
+                rct_ichs_rmg = rct['InChi']
+                if rct_ichs_smi != rct_ichs_rmg:
+                    print('Warning: RMG inchi {} differs from conversion from smiles {}:'.format(
+                        rct_ichs_rmg, rct_ichs_smi))
+                rct_ichs.append(rct_ichs_smi)
+                rct_muls.append(rct['multiplicity'])
             rad_rad_reac = True
             if len(rct_ichs) == 1:
                 rad_rad_reac = False
@@ -228,7 +230,13 @@ elif MECH_TYPE == 'json':
                     rad_rad_reac = False
             for i, prd in enumerate(reaction['Products']):
                 prd_names.append(prd['name'])
-                prd_ichs.append(prd['InChi'])
+                prd_smis.append(prd['SMILES'][0])
+                prd_ichs_smi = automol.smiles.inchi(prd['SMILES'][0])
+                prd_ichs_rmg = prd['InChi']
+                if prd_ichs_smi != prd_ichs_rmg:
+                    print('Warning: RMG inchi {} differs from conversion from smiles {}:'.format(
+                        prd_ichs_rmg, prd_ichs_smi))
+                prd_ichs.append(prd_ichs_smi)
                 prd_muls.append(prd['multiplicity'])
 #                print('prd_muls test:', prd['name'], prd['multiplicity'])
             rad_rad_prod = True
@@ -279,6 +287,7 @@ elif MECH_TYPE == 'json':
 #        FORMULA_STR = ''.join(map(str, chain.from_iterable(formula_dict.items())))
         FORMULA_STR_LST.append(FORMULA_STR)
 
+    print('rct_names_list before sort:', RCT_NAMES_LST)
     RXN_INFO_LST = list(zip(
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST,
         RXN_NAME_LST, RXN_SENS, RXN_UNC, RXN_VAL, RXN_FAM,
@@ -334,21 +343,22 @@ elif MECH_TYPE == 'json':
     # set up species info
     SPC_NAMES = []
     SPC_INFO = {}
-    SMI_DCT = {}
     CHG_DCT = {}
     MUL_DCT = {}
     SPC_DCT = {}
     for i, spc_names_lst in enumerate(RCT_NAMES_LST):
+        # print('spc_names_lst test:', spc_names_lst)
         for j, spc_name in enumerate(spc_names_lst):
             chg = 0
             if spc_name not in SPC_NAMES:
                 SPC_NAMES.append(spc_name)
                 SPC_INFO[spc_name] = [RCT_ICHS_LST[i][j], chg, RCT_MULS_LST[i][j]]
-                SMI_DCT[spc_name] = RCT_ICHS_LST[i][j]
                 CHG_DCT[spc_name] = chg
                 MUL_DCT[spc_name] = RCT_MULS_LST[i][j]
-                SPC_DCT[spc_name]['chg'] = [chg]
-                SPC_DCT[spc_name]['smi'] = RCT_ICHS_LST[i][j]
+                # print('spc_name test:', spc_name)
+                SPC_DCT[spc_name] = {}
+                SPC_DCT[spc_name]['chg'] = chg
+                SPC_DCT[spc_name]['ich'] = RCT_ICHS_LST[i][j]
                 SPC_DCT[spc_name]['mul'] = RCT_MULS_LST[i][j]
     for i, spc_names_lst in enumerate(PRD_NAMES_LST):
         for j, spc_name in enumerate(spc_names_lst):
@@ -356,20 +366,34 @@ elif MECH_TYPE == 'json':
             if spc_name not in SPC_NAMES:
                 SPC_NAMES.append(spc_name)
                 SPC_INFO[spc_name] = [PRD_ICHS_LST[i][j], chg, PRD_MULS_LST[i][j]]
-                SMI_DCT[spc_name] = PRD_ICHS_LST[i][j]
                 CHG_DCT[spc_name] = chg
                 MUL_DCT[spc_name] = PRD_MULS_LST[i][j]
-                SPC_DCT[spc_name]['chg'] = [chg]
-                SPC_DCT[spc_name]['smi'] = RCT_ICHS_LST[i][j]
-                SPC_DCT[spc_name]['mul'] = RCT_MULS_LST[i][j]
+                SPC_DCT[spc_name] = {}
+                SPC_DCT[spc_name]['chg'] = chg
+                SPC_DCT[spc_name]['ich'] = PRD_ICHS_LST[i][j]
+                SPC_DCT[spc_name]['mul'] = PRD_MULS_LST[i][j]
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
+
+PES_LST = {}
+current_formula = ''
+for fidx, formula in enumerate(FORMULA_STR_LST):
+    if current_formula == formula:
+        PES_LST[formula]['RCT_NAMES_LST'].append(RCT_NAMES_LST[fidx])
+        PES_LST[formula]['PRD_NAMES_LST'].append(PRD_NAMES_LST[fidx])
+        PES_LST[formula]['RXN_NAME_LST'].append(RXN_NAME_LST[fidx])
+    else:
+        current_formula = formula
+        PES_LST[formula] = {}
+        PES_LST[formula]['RCT_NAMES_LST'] = [RCT_NAMES_LST[fidx]]
+        PES_LST[formula]['PRD_NAMES_LST'] = [PRD_NAMES_LST[fidx]]
+        PES_LST[formula]['RXN_NAME_LST'] = [RXN_NAME_LST[fidx]]
 
 for spc in SPC_DCT:
     if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in ELC_DEG_DCT:
-        SPC_DCT[spc]['elec_levs'] = ELC_DEG_DCT[tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul'])]
+        SPC_DCT[spc]['elec_levs'] = ELC_DEG_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
         print('elec_levs test', spc, SPC_DCT[spc]['elec_levs'])
     if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in SYMM_DCT:
-        SPC_DCT[spc]['sym'] = SYMM_DCT[tuple(SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul'])]
+        SPC_DCT[spc]['sym'] = SYMM_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
         print('symm_dct test', spc, SPC_DCT[spc]['sym'])
 #os.sys.exit()
 
@@ -403,7 +427,7 @@ MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
 
 # b. Electronic structure parameters; code, method, basis, convergence control
 
-MC_NSAMP0 = [True, 6, 1, 3, 100]
+MC_NSAMP0 = [True, 4, 1, 3, 100]
 
 ES_DCT = {
         'lvl_wbs': {
@@ -467,10 +491,10 @@ ES_DCT = {
             },
         }
 
-OPT_LVL0 = 'lvl_wbm'
-OPT_LVL1 = 'lvl_b2d'
+OPT_LVL0 = 'lvl_wbs'
+OPT_LVL1 = 'lvl_wbm'
 OPT_LVL2 = 'lvl_b2t'
-SCAN_LVL1 = OPT_LVL1
+SCAN_LVL1 = OPT_LVL0
 SP_LVL1 = 'cc_lvl_df'
 SP_LVL2 = 'cc_lvl_tf'
 SP_LVL3 = 'cc_lvl_qf'
@@ -478,7 +502,7 @@ SP_LVL3 = 'cc_lvl_qf'
 # The logic key in tsk_info_lst is for overwrite
 OVERWRITE = False
 
-if run_thermo:
+if RUN_THERMO:
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_samp', OPT_LVL1, OPT_LVL0, OVERWRITE],
@@ -536,14 +560,16 @@ if run_thermo:
         TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
         SAVE_PREFIX, ENE_COEFF, OPTIONS)
 
-if run_rates:
+if RUN_RATES:
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        #['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['find_ts', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        # ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        # ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
+        ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
+        ['find_ts', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
         ['conf_energy', SP_LVL1, OPT_LVL0, OVERWRITE],
         # ['conf_energy', SP_LVL1, OPT_LVL1, OVERWRITE],
         # ['conf_energy', SP_LVL2, OPT_LVL1, OVERWRITE],
@@ -554,9 +580,13 @@ if run_rates:
 
     print('RCT_NAMES_LST test:', RCT_NAMES_LST)
     print('PRD_NAMES_LST test:', PRD_NAMES_LST)
-    ktpdriver.driver.run(
-        TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
-        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
+    for PES in PES_LST:
+        RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
+        PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
+        print('running ktp on PES ', PES)
+        ktpdriver.driver.run(
+            TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
+            '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
 
 # set up a combination of energies
 # E_HL = sum_i E_HL(i) * Coeff(i)

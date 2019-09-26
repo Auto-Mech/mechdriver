@@ -26,30 +26,34 @@ def hindered_rotor_scans(
         val_dct = automol.zmatrix.values(zma)
         if not saddle:
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
-            zma, tors_names, scan_increment)
-        tors_grids = [
-            numpy.linspace(*linspace) + val_dct[name]
-            for name, linspace in zip(tors_names, tors_linspaces)]
+        print('tors_names test', tors_names)
+        print('zma test', zma)
+        print('scan_increment test', scan_increment)
+        if tors_names:
+            tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                zma, tors_names, scan_increment)
+            tors_grids = [
+                numpy.linspace(*linspace) + val_dct[name]
+                for name, linspace in zip(tors_names, tors_linspaces)]
 
-        for tors_name, tors_grid in zip(tors_names, tors_grids):
-            run_scan(
-                zma=zma,
-                spc_info=spc_info,
-                thy_level=thy_level,
-                grid_dct={tors_name: tors_grid},
-                scn_run_fs=scn_run_fs,
-                scn_save_fs=scn_save_fs,
-                script_str=script_str,
-                overwrite=overwrite,
-                **opt_kwargs,
-            )
+            for tors_name, tors_grid in zip(tors_names, tors_grids):
+                run_scan(
+                    zma=zma,
+                    spc_info=spc_info,
+                    thy_level=thy_level,
+                    grid_dct={tors_name: tors_grid},
+                    scn_run_fs=scn_run_fs,
+                    scn_save_fs=scn_save_fs,
+                    script_str=script_str,
+                    overwrite=overwrite,
+                    **opt_kwargs,
+                )
 
-            save_scan(
-                scn_run_fs=scn_run_fs,
-                scn_save_fs=scn_save_fs,
-                coo_names=[tors_name],
-            )
+                save_scan(
+                    scn_run_fs=scn_run_fs,
+                    scn_save_fs=scn_save_fs,
+                    coo_names=[tors_name],
+                )
 
 
 def run_scan(

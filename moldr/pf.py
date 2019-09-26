@@ -22,8 +22,6 @@ def species_block(
     """ prepare the species input for messpf
     """
 
-    print('spc_spcdct test:', spc_spcdct)
-    print('spc_info test:', spc_info)
     har_level, tors_level, vpt2_level, sym_level = pf_levels
     tors_model, vib_model, sym_model = spc_model
 
@@ -107,12 +105,6 @@ def species_block(
             sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
             sym_factor = moldr.conformer.symmetry_factor(sym_geo, sym_ene, sym_cnf_save_fs)
             xyzs = automol.geom.coordinates(sym_geo)
-            # print('xyzs test:', xyzs, sym_ene)
-            # int_sym_num = moldr.conformer.int_sym_num_from_sampling(
-                # sym_geo, sym_ene, sym_cnf_save_fs)
-            # ext_sym_num = automol.geom.external_symmetry_number(sym_geo)
-            # sym_factor = int_sym_num * ext_sym_fac
-            # print('sym factor test:', int_sym_num, ext_sym_num, sym_factor)
         if sym_model == '1DHR':
             # Warning: the 1DHR based symmetry number has not yet been set up
             sym_factor = 1
@@ -321,7 +313,6 @@ def get_high_level_energy(
     thy_low_level.append(orb_restr)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
-    # ll_save_fs.leaf.create(thy_low_level)
     ll_save_path = ll_save_fs.leaf.path(thy_low_level)
 
     if saddle:
@@ -330,8 +321,6 @@ def get_high_level_energy(
         ll_save_path = ll_save_fs.trunk.path()
 
     cnf_save_fs = autofile.fs.conformer(ll_save_path)
-    #min_cnf_locs = moldr.util.min_energy_conformer_locators(
-    #    ll_save_fs)
     min_cnf_locs = moldr.util.min_energy_conformer_locators(
         cnf_save_fs)
     cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
@@ -346,8 +335,6 @@ def get_high_level_energy(
     sp_save_fs.leaf.create(thy_high_level)
 
     min_ene = sp_save_fs.leaf.file.energy.read(thy_high_level)
-#    print('high level energy test')
-#    print(min_ene)
 
     return min_ene
 
@@ -359,8 +346,7 @@ def get_zero_point_energy(
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
-    print('spc test in get_zero_point_energy:', spc)
-    # prepare the three sets of file systems
+    # prepare the sets of file systems
     har_level, tors_level, vpt2_level, _ = pf_levels
     tors_model, vib_model, _ = spc_model
 
@@ -371,7 +357,6 @@ def get_zero_point_energy(
     har_levelp = har_level[0:3]
     har_levelp.append(orb_restr)
 
-    # thy_save_fs.leaf.create(har_levelp[1:4])
     har_save_path = thy_save_fs.leaf.path(har_levelp[1:4])
     if 'ts_' in spc:
         har_save_fs = autofile.fs.ts(har_save_path)
@@ -380,8 +365,6 @@ def get_zero_point_energy(
 
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
-    print('har_save_path test:', har_save_path)
-    print('har_min_cnf_locs test:', har_min_cnf_locs)
 
     if tors_level:
         orb_restr = moldr.util.orbital_restriction(
@@ -406,7 +389,6 @@ def get_zero_point_energy(
         vpt2_levelp = vpt2_level[0:3]
         vpt2_levelp.append(orb_restr)
 
-        # thy_save_fs.leaf.create(vpt2_levelp[1:4])
         anh_save_path = thy_save_fs.leaf.path(vpt2_levelp[1:4])
         if 'ts_' in spc:
             anh_save_fs = autofile.fs.ts(anh_save_path)
@@ -428,7 +410,6 @@ def get_zero_point_energy(
     else:
         hess = har_cnf_save_fs.leaf.file.hessian.read(har_min_cnf_locs)
         full_freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
-        # freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=True)
 
         mode_start = 6
         if 'ts_' in spc:
@@ -438,8 +419,6 @@ def get_zero_point_energy(
         proj_freqs = full_freqs[mode_start:]
 
         har_zpe = sum(proj_freqs)*WAVEN2KCAL/2.
-#        print('har zpe test')
-#        print(har_zpe)
 
     if vib_model == 'HARM' and tors_model == 'RIGID':
         ret = har_zpe
@@ -522,7 +501,6 @@ def get_zero_point_energy(
             tors_freqs = mess_io.reader.tors.freqs(output_string)
             tors_zpes = mess_io.reader.tors.zpves(output_string)
             tors_zpe_cor = 0.0
-#                print('tors zpe test')
             for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
                 tors_zpe_cor += tors_1dhr_zpe - tors_freq*WAVEN2KCAL/2
                 print(tors_1dhr_zpe, tors_freq, tors_freq*WAVEN2KCAL/2)
@@ -530,7 +508,6 @@ def get_zero_point_energy(
             # read torsional harmonic zpe and actual zpe
 
         zpe = har_zpe + tors_zpe_cor
-#            print (zpe,har_zpe,tors_zpe_cor)
         ret = zpe
 
     if vib_model == 'HARM' and tors_model == 'MDHR':
@@ -588,7 +565,6 @@ def tau_pf_write(
     """
     cnf_save_fs = autofile.fs.conformer(save_prefix)
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
-    #min_cnf_locs = moldr.util.min_energy_conformer_locators(save_prefix)
     if min_cnf_locs:
         ene_ref = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
         print('ene_ref')

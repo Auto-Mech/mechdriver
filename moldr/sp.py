@@ -21,16 +21,12 @@ def run_energy(
     geo = geo_save_fs.leaf.file.geometry.read(locs)
     sp_run_fs = autofile.fs.single_point(geo_run_path)
     sp_save_fs = autofile.fs.single_point(geo_save_path)
-    print('run_energy path test:', thy_level[1:4])
     sp_run_fs.leaf.create(thy_level[1:4])
     sp_run_path = sp_run_fs.leaf.path(thy_level[1:4])
-    print('sp_run_path test:', sp_run_path)
     sp_save_fs.leaf.create(thy_level[1:4])
     sp_save_path = sp_save_fs.leaf.path(thy_level[1:4])
-    print('sp_save_path test:', sp_run_path)
     run_fs = autofile.fs.run(sp_run_path)
 
-    print('thy_level in run_energy:', thy_level) 
     moldr.driver.run_job(
         job='energy',
         script_str=script_str,
@@ -110,7 +106,6 @@ def run_hessian(
     """ Determine the hessian for the geometry in the given location
     """
 
-    print('run hessian test:', locs)
     geo_run_path = geo_run_fs.leaf.path(locs)
     geo_save_path = geo_save_fs.leaf.path(locs)
     geo = geo_save_fs.leaf.file.geometry.read(locs)
