@@ -769,11 +769,11 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
 
     return geo, zma, final_dist
 
-
-def find_vdw(ts_name, spcdct, thy_info, vdw_params, nsamp_par, run_prefix, save_prefix,
-        kickoff_size, kickoff_backward, projrot_script_str, overwrite):
+def find_vdw(ts_name, spcdct, thy_info, ini_thy_info, ts_info, vdw_params,
+        nsamp_par, run_prefix, save_prefix, kickoff_size, kickoff_backward,
+        projrot_script_str, overwrite):
     new_vdws = []
-    #spcdct, thy_info, kickoff_size, kickoff_backward, prorot_script_str,overwrite, vdwparam, run_prefix, save_prefix
+    SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[:2])
     mul = spcdct[ts_name]['low_mul']
     vdw_names_lst = []
     if vdw_params[0]:
@@ -781,12 +781,12 @@ def find_vdw(ts_name, spcdct, thy_info, vdw_params, nsamp_par, run_prefix, save_
     if vdw_params[1]:
         vdw_names_lst.append([sorted(spcdct[ts_name]['prods']), mul, 'p'])  
 
-    for names, ts_mul, label in VDW_NAMES_LST:
+    for names, ts_mul, label in vdw_names_lst:
         if len(names) < 2:
              print("Cannot find Well for unimolecular reactant or product")
-        ichs = list(map(spcdct[names]['ich'], names))
-        chgs = list(map(spcdct[names]['chg'], names))
-        muls = list(map(spcdct[names]['mul'], names))
+        ichs = list(map(lambda name: spcdct[name]['ich'], names))
+        chgs = list(map(lambda name: spcdct[name]['chg'], names))
+        muls = list(map(lambda name: spcdct[name]['mul'], names))
 
         # theory
         prog = thy_info[0]
@@ -797,9 +797,39 @@ def find_vdw(ts_name, spcdct, thy_info, vdw_params, nsamp_par, run_prefix, save_
         ntaudof = 0.
         for name, ich, chg, mul in zip(names, ichs, chgs, muls):
             spc_info = [ich, chg, mul]
-            orb_restr = moldr.util.orbital_restriction(spc_info, thy_info[0])
+            orb_restr = moldr.util.orbital_restriction(spc_info, ini_thy_info)
+            ini_thy_level = ini_thy_info[0:3]
+            ini_thy_level.append(orb_restr)
+            orb_restr = moldr.util.orbital_restriction(spc_info, thy_info)
             thy_level = thy_info[0:3]
-            thy_level = thy_level.append(orb_restr)
+            thy_level.append(orb_restr)
+            spc_run_fs = autofile.fs.species(run_prefix)
+            spc_run_fs.leaf.create(spc_info)
+            spc_run_path = spc_run_fs.leaf.path(spc_info)
+            spc_save_fs = autofile.fs.species(save_prefix)
+            spc_save_fs.leaf.create(spc_info)
+            spc_save_path = spc_save_fs.leaf.path(spc_info)
+
+            thy_run_fs = autofile.fs.theory(spc_run_path)
+            thy_run_fs.leaf.create(thy_level[1:4])
+            thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
+            thy_save_fs = autofile.fs.theory(spc_save_path)
+            thy_save_fs.leaf.create(thy_level[1:4])
+            thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+            run_fs = autofile.fs.run(thy_run_path)
+            
+            ini_thy_save_fs = autofile.fs.theory(spc_save_path)
+            ini_thy_save_fs.leaf.create(ini_thy_level[1:4])
+            
+            cnf_run_fs = autofile.fs.conformer(thy_run_path)
+            cnf_save_fs = autofile.fs.conformer(thy_save_path)
+          
+            ini_fs = [None, ini_thy_save_fs]
+            fs = [spc_run_fs, spc_save_fs, thy_run_fs, thy_save_fs,
+                  cnf_run_fs, cnf_save_fs, None, None,
+                  None, None, run_fs]
+    # fs = [None, None, thy_run_fs, thy_save_fs,
+          # cnf_run_fs, cnf_save_fs, None, None,
             geo = moldr.geom.reference_geometry(
                  spcdct[name], thy_level, ini_thy_level, fs, ini_fs,
                  kickoff_size=kickoff_size,
@@ -813,7 +843,8 @@ def find_vdw(ts_name, spcdct, thy_info, vdw_params, nsamp_par, run_prefix, save_
         geo1, geo2 = geos
         geo1 = automol.geom.mass_centered(geo1)
         geo2 = automol.geom.mass_centered(geo2)
-        for idx in range(nsamp):
+        min_ene = 0.
+        for idx in range(int(nsamp)):
             print('Optimizing vdw geometry {}/{}'.format(idx+1, nsamp))
             angs1 = numpy.multiply(
                 numpy.random.rand(3), [1*numpy.pi, 2*numpy.pi, 2*numpy.pi])
@@ -834,28 +865,41 @@ def find_vdw(ts_name, spcdct, thy_info, vdw_params, nsamp_par, run_prefix, save_
             ich = automol.inchi.recalculate(automol.inchi.join(ichs))
             chg = sum(chgs)
             mul = ts_mul
-            orb_restr = moldr.util.orbital_restriction(mul, RESTRICT_OPEN_SHELL)
-            spc_run_path = moldr.util.species_path(ich, chg, mul, run_prefix)
-            spc_save_path = moldr.util.species_path(ich, chg, mul, save_prefix)
-            thy_run_path = moldr.util.theory_path(method, basis, orb_restr, spc_run_path)
-            thy_save_path = moldr.util.theory_path(method, basis, orb_restr, spc_save_path)
-
+            spc_info = (ich, chg, mul)
+            #orb_restr = moldr.util.orbital_restriction(mul, thy_info[0:3] restrict_open_shell)
+            #orb_restr = restrict_open_shell
+            spc_run_fs = autofile.fs.species(run_prefix)
+            spc_run_fs.leaf.create(spc_info)
+            spc_run_path = spc_run_fs.leaf.path(spc_info)
+            spc_save_fs = autofile.fs.species(save_prefix)
+            spc_save_fs.leaf.create(spc_info)
+            spc_save_path = spc_save_fs.leaf.path(spc_info)
+            orb_restr = moldr.util.orbital_restriction(spc_info, thy_info)
+            thy_level = thy_info[0:3]
+            thy_level.append(orb_restr)
+            thy_run_fs = autofile.fs.theory(spc_run_path)
+            thy_run_fs.leaf.create(thy_level[1:4])
+            thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
+            thy_save_fs = autofile.fs.theory(spc_save_path)
+            thy_save_fs.leaf.create(thy_level[1:4])
+            thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+            run_fs = autofile.fs.run(thy_run_path)
    #  generate reference geometry
    #  generate the z-matrix and sampling ranges
 
             moldr.driver.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 geom=geo,
-                spc_info=ts_info,
-                thy_level=run_opt_levels[opt_level_idx],
-                prefix=thy_run_path,
-                script_str=OPT_SCRIPT_STR,
+                spc_info=spc_info,
+                thy_level=thy_level,
+                run_fs=run_fs,
+                script_str=SCRIPT_STR,
                 overwrite=overwrite,
                 **OPT_KWARGS,
             )
 
    #  save info for the initial geometry (from inchi or from save directory)
-            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, prefix=thy_run_path)
+            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret:
                 print('Saving reference geometry')
                 print(" - Save path: {}".format(thy_save_path))
@@ -866,20 +910,103 @@ def find_vdw(ts_name, spcdct, thy_info, vdw_params, nsamp_par, run_prefix, save_
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 print('vdw ending geometry')
                 print(automol.geom.xyz_string(geo))
-                thy_afs = autofile.fs.theory()
-                thy_afs.theory.file.geometry.write(geo, spc_save_path, [method, basis, orb_restr])
+                thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
                 ene = elstruct.reader.energy(prog, method, out_str)
-                print('ene test in vdw')
-                print(ene)
-                thy_afs.theory.file.energy.write(ene, spc_save_path, [method, basis, orb_restr])
-                print('Saving reference geometry')
-                print(" - Save path: {}".format(thy_save_path))
-                vdw_name = label + ts_name.replace('ts', 'vdw')
-                spcdct[vdw_name] = spcdct[ts].copy()
-                new_vdws.append(vdw_name)
+                if ene < min_ene:
+                    min_ene = ene
+                    print('ene test in vdw')
+                    print(ene)
+                    thy_save_fs.leaf.file.energy.write(ene, thy_level[1:4])
+                    print('Saving reference geometry')
+                    print(" - Save path: {}".format(thy_save_path))
+                    vdw_name = label + ts_name.replace('ts', 'vdw')
+                    spcdct[vdw_name] = spcdct[ts_name].copy()
+                    print(vdw_name)
+                    print(ich)
+                    spcdct[vdw_name]['ich'] = ich
+                    spcdct[vdw_name]['mul'] = mul
+                    spcdct[vdw_name]['chg'] = chg
+                    spcdct[vdw_name]['dist_info'][1] = dist_cutoff
+                    fs = [spc_run_fs, spc_save_fs, thy_run_fs, thy_save_fs,
+                          cnf_run_fs, cnf_save_fs, None, None,
+                          None, None, run_fs]
+                    #Make a fake conformer
+                    cnf_save_fs = autofile.fs.conformer(thy_save_path)
+                    cnf_run_fs = autofile.fs.conformer(thy_run_path)
+                    cnf_save_fs.trunk.create()
+                    cnf_run_fs.trunk.create()
+                    tors_range_dct = {}
+                    cinf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
+                    cinf_obj.nsamp = 1
+                    cnf_save_fs.trunk.file.info.write(cinf_obj)
+                    locs_lst = cnf_save_fs.leaf.existing()
+                    if not locs_lst:
+                        cid = autofile.system.generate_new_conformer_id()
+                        locs = [cid]
+                    else:
+                        locs = locs_lst[0]
+                    cnf_save_fs.leaf.create(locs)
+                    cnf_run_fs.leaf.create(locs)
+                    cnf_save_fs.leaf.file.geometry_info.write(
+                        inf_obj, locs)
+                    cnf_save_fs.leaf.file.geometry_input.write(
+                        inp_str, locs)
+                    cnf_save_fs.leaf.file.energy.write(ene, locs)
+                    cnf_save_fs.leaf.file.geometry.write(geo, locs)
+        if min_ene:
+            new_vdws.append(vdw_name)
+                
     return new_vdws
 
 
+def fake_conf(thy_level, fs, inf=[]):
+    cnf_save_fs = fs[5]
+    cnf_run_fs = fs[4]
+    thy_save_fs = fs[3]
+    run_fs = fs[-1]
+    thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+    geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
+    if inf:
+        inf_obj, ene = inf
+    else:
+        ene = thy_save_fs.leaf.file.energy.read(thy_level[1:4])
+        inf_obj = run_fs.trunk.file.info.read()
+    tors_range_dct = {}
+    cinf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
+    cinf_obj.nsamp = 1
+    cnf_save_fs = autofile.fs.conformer(thy_save_path)
+    cnf_save_fs.trunk.create()
+    cnf_run_fs.trunk.create()
+    cnf_save_fs.trunk.file.info.write(cinf_obj)
+    cnf_run_fs.trunk.file.info.write(cinf_obj)
+    locs_lst = cnf_save_fs.leaf.existing()
+    if not locs_lst:
+        cid = autofile.system.generate_new_conformer_id()
+        locs = [cid]
+    else:
+        locs = locs_lst[0]
+    cnf_save_fs.leaf.create(locs)
+    cnf_run_fs.leaf.create(locs)
+    cnf_save_fs.leaf.file.geometry_info.write(
+        inf_obj, locs)
+    cnf_run_fs.leaf.file.geometry_info.write(
+        inf_obj, locs)
+    method = inf_obj.method
+    cnf_save_fs.leaf.file.energy.write(ene, locs)
+    cnf_run_fs.leaf.file.energy.write(ene, locs)
+    cnf_save_fs.leaf.file.geometry.write(geo, locs)
+    cnf_run_fs.leaf.file.geometry.write(geo, locs)
+
+
+def fake_geo_gen(tsk, spcdic, es_dct, thy_level, fs,
+        spc_info, overwrite):
+    if 'conf' in tsk:
+        fake_conf(thy_level, fs)
+
+    if 'scan' in tsk:
+        pass
+    if 'tau' in tsk:
+        pass
 
 #############
 def species_qchem(

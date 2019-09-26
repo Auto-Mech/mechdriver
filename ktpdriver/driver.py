@@ -280,7 +280,7 @@ if __name__ == "__main__":
     TSK_INFO_LST = [
         ['conf_samp', 'mclev', 'mclev', False],
         ['find_ts', 'mclev', 'mclev', False],
-       # ['find_vdw', 'mclev', 'mclev', False],
+        #['find_vdw', 'mclev', 'mclev', False],
         ['conf_samp', 'mclev', 'mclev', False],
         ['find_geom', 'optlev', 'mclev', False],
         ['conf_hess', 'optlev', 'optlev', False],
@@ -324,10 +324,10 @@ if __name__ == "__main__":
 
     #RCT_NAME_LST = [['nh3', 'oh']]
     #PRD_NAME_LST = [['nh2','water']]
-    RCT_NAME_LST = [['ch3oh', 'h'], ['ch3oh', 'h']]
-    PRD_NAME_LST = [['ch2oh', 'h2'], ['ch3o', 'h2']]
-    #RCT_NAME_LST = [['ch3oh', 'h']]
-    #PRD_NAME_LST = [['ch3o', 'h2']]
+    #RCT_NAME_LST = [['ch3oh', 'h'], ['ch3oh', 'h']]
+    #PRD_NAME_LST = [['ch2oh', 'h2'], ['ch3o', 'h2']]
+    RCT_NAME_LST = [['ch3oh', 'h']]
+    PRD_NAME_LST = [['ch3o', 'h2']]
 
     #RCT_NAME_LST = [['methane', 'h'], ['methane', 'oh']]
     #PRD_NAME_LST = [['methyl','h2'], ['methyl','water']]
