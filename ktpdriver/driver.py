@@ -240,9 +240,11 @@ def run(
                     print('doub err test:', doub_errs)
                     print('sing_rate_params:', sing_rate_params)
                     if max_err < err_thresh:
-                        chemkin_str += chemkin_io.write_plog(reaction, sing_rate_params, sing_errs)
+                        chemkin_str += chemkin_io.mechwriter.reaction.plog(
+                            reaction, sing_rate_params, sing_errs)
                     else:
-                        chemkin_str += chemkin_io.write_plog(reaction, doub_rate_params, doub_errs)
+                        chemkin_str += chemkin_io.mechwriter.reaction.plog(
+                            reaction, doub_rate_params, doub_errs)
 
     print(chemkin_str)
     with open(starting_path+'/rates.ckin', 'w') as f:

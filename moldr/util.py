@@ -176,7 +176,6 @@ def geometry_dictionary(geom_path):
 def min_energy_conformer_locators(cnf_save_fs):
     """ locators for minimum energy conformer """
     cnf_locs_lst = cnf_save_fs.leaf.existing()
-    print('cnf_locs_lst test in min energy:',cnf_locs_lst)
     if cnf_locs_lst:
         cnf_enes = [cnf_save_fs.leaf.file.energy.read(locs)
                     for locs in cnf_locs_lst]
@@ -189,7 +188,6 @@ def min_energy_conformer_locators(cnf_save_fs):
 def min_dist_conformer_zma(dist_name, cnf_save_fs):
     """ locators for minimum energy conformer """
     cnf_locs_lst = cnf_save_fs.leaf.existing()
-    print('cnf_locs_lst test in min dist conformer:', cnf_locs_lst)
     cnf_zmas = [cnf_save_fs.leaf.file.zmatrix.read(locs)
                 for locs in cnf_locs_lst]
     min_dist = 100.
@@ -199,14 +197,8 @@ def min_dist_conformer_zma(dist_name, cnf_save_fs):
         if dist < min_dist:
             min_dist = dist
             min_zma = zma
-    print('min_zma test:', min_zma)
     min_zma = [min_zma]
-    print('min_zma test:', min_zma)
-    #print('min_zma 1,2 test:', min_zma[1], min_zma[2])
-    #print('min_zma list test:', list(min_zma))
-    #print('min_zma () test:', (min_zma[0:2], min_zma[2]))
     return min_zma
-    # return (min_zma[0], min_zma[1])
 
 
 def locs_sort(save_fs):
@@ -233,7 +225,6 @@ def traj_sort(save_fs):
                 for locs in locs_lst]
         traj = []
         for ene, geo, locs in sorted(zip(enes, geos, locs_lst), key=lambda x: x[0]):
-            print('loc tst in traj:', locs)
             comment = 'energy: {0:>15.10f} \t {1}'.format(ene, locs[0])
             traj.append((comment, geo))
         traj_path = save_fs.trunk.file.trajectory.path()

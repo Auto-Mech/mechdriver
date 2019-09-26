@@ -407,7 +407,6 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
     """
 
     locs_lst = cnf_save_fs.leaf.existing()
-    # print('locs_lst test:', locs_lst)
     geo_sim = [geo]
     geo_sim_exp = [geo]
     ene_sim = [ene]
@@ -435,14 +434,13 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
             for j, geoj in enumerate(geo_sim_exp):
                 if j < i:
                     if automol.geom.almost_equal_dist_mat(
-                        geoi, geoj, thresh=1e-1):
+                            geoi, geoj, thresh=1e-1):
                         if are_torsions_same(geoi, geoj):
                             new_geom = False
                 else:
                     break
             if new_geom:
                 int_sym_num += 1
-    # print('int_sym_num test:', int_sym_num)
     return int_sym_num
 
 
@@ -464,7 +462,6 @@ def symmetry_factor(geo, ene, cnf_save_fs):
     """
     ext_sym = external_symmetry_factor(geo)
     int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
-    # print('sym_fac test:', ext_sym, int_sym, geo, ene, cnf_save_fs)
     sym_fac = ext_sym * int_sym
     return sym_fac
 
@@ -474,25 +471,11 @@ def is_unique_stereo_dist_mat_energy(geo, ene, geo_list, ene_list):
     distance matrix and energy and stereo specific inchi
     """
     unique = True
-    # xyzs = automol.geom.coordinates(geo)
-    # print('xyzs test:', xyzs)
-    # atm_xyz_dct = dict(enumerate(xyzs))
-    # print('atm_xyz_dct test:', atm_xyz_dct)
-    # gra = automol.convert.geom._connectivity_graph(geo)
-    # print('has stereos:', automol.graph._stereo.has_stereo(gra))
-    # print('stereos:', automol.graph._stereo.stereomers(gra))
-    # print('substereos:', automol.graph._stereo.substereomers(gra))
-    #print('gra test:', gra)
-    #ich = automol.convert.graph.inchi_from_coordinates(gra, atm_xyz_dct)
     ich = automol.convert.geom.inchi(geo)
     for idx, geoi in enumerate(geo_list):
         enei = ene_list[idx]
         etol = 2.e-5
         ichi = automol.convert.geom.inchi(geoi)
-        # print('xyzsi test:', xyzs)
-        # print('inchi test 0 in conformer save:', ich, ichi)
-        # if ich != ichi:
-            # print('ichis are different:')
         # check energy
         if abs(ene-enei) < etol:
             # check distance matrix
@@ -500,7 +483,6 @@ def is_unique_stereo_dist_mat_energy(geo, ene, geo_list, ene_list):
                     geo, geoi, thresh=1e-1):
                 # check stereo by generates stero label
                 ichi = automol.convert.geom.inchi(geoi)
-                # print('inchi test in conformer save:', ich, ichi)
                 if ich == ichi:
                     unique = False
     return unique
@@ -518,7 +500,6 @@ def are_torsions_same(geo, geoi):
     for idx, tors_name in enumerate(tors_names):
         val = automol.zmatrix.values(zma)[tors_name]
         vali = automol.zmatrix.values(zmai)[tors_namesi[idx]]
-        # print('val test:', val, vali)
         if abs(val - vali) > dtol:
             same_dihed = False
     return same_dihed
@@ -529,32 +510,15 @@ def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list):
     coulomb spectrum and energy and stereo specific inchi
     """
     unique = True
-    # xyzs = automol.geom.coordinates(geo)
-    # print('xyzs test:', xyzs)
-    # zma = automol.geom.zmatrix(geo)
-    # tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
     etol = 2.e-5
     for idx, geoi in enumerate(geo_list):
         enei = ene_list[idx]
-        # zmai = automol.geom.zmatrix(geoi)
-        # tors_namesi = automol.geom.zmatrix_torsion_coordinate_names(geoi)
-        # xyzsi = automol.geom.coordinates(geoi)
-        # print('xyzsi test:', xyzsi)
         # check energy
         if abs(ene-enei) < etol:
             # check distance matrix
             if automol.geom.almost_equal_dist_mat(
                     geo, geoi, thresh=1e-1):
                 # check dihedrals
-                # same_dihed = True
-                # for idx2, tors_name in enumerate(tors_names):
-                    # val = automol.zmatrix.values(zma)[tors_name]
-                    # vali = automol.zmatrix.values(zmai)[tors_namesi[idx2]]
-                    # print('val test:', val, vali)
-                    # if abs(val - vali) > dtol:
-                        # same_dihed = False
-                #if same_dihed:
                 if are_torsions_same(geo, geoi):
                     unique = False
-    print('unique test:', unique)
     return unique

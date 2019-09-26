@@ -255,10 +255,6 @@ def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, overwrite)
         save_dir = ini_fs[7]
     else:
         return
-    print('run_dir test:', run_dir)
-    print('save_dir test:', save_dir)
-    print('spc_info test:', spc_info)
-    print('selection test:', selection)
     # still need to setup mep
 #    elif 'mep' in tsk:
 #        run_dir = ini_fs[6]
@@ -272,7 +268,6 @@ def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, overwrite)
         locs_lst = moldr.util.geom_sort(save_dir)[0:selection]
     else:
         locs_lst = selection
-    print('locs_lst test:', locs_lst)
     sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_level[0:2])
     params = {'spc_info': spc_info,
               'thy_level': thy_level,
@@ -300,7 +295,6 @@ def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, overwrite)
     # cycle over the locations
     if tsk in choose_function:
         task_call = eval(choose_function[tsk])
-        print('task_call test:', task_call)
         for locs in locs_lst:
             if locs:
                 params['geo_run_fs'] = run_dir
@@ -505,14 +499,12 @@ def ts_params(rct_zmas, prd_zmas, rct_cnf_save_fs):
         print('tors names:')
         print(tors_names)
 
-    print('rct_zmas test:', rct_zmas)
     ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
     if ret and typ is None:
         typ = 'hydrogen migration'
         ts_zma, dist_name, tors_names = ret
         # rct_zmas = list(moldr.util.min_dist_conformer_zma(dist_name, rct_cnf_save_fs[0]))
         rct_zmas = moldr.util.min_dist_conformer_zma(dist_name, rct_cnf_save_fs[0])
-        print('rct_zmas test 2:', rct_zmas)
         ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
         ts_zma, dist_name, tors_names = ret
         print('H migration')
@@ -582,7 +574,6 @@ def ts_params(rct_zmas, prd_zmas, rct_cnf_save_fs):
                     grid1 = []
                 grid2 = numpy.linspace(rmin1, rmin2, 9)
                 grid = numpy.concatenate((grid1, grid2), axis=None)
-                # print('h migration grid test:', grid, grid1, grid2)
                 update_guess = True
 
         elif typ == 'hydrogen abstraction':
@@ -605,10 +596,12 @@ def ts_params(rct_zmas, prd_zmas, rct_cnf_save_fs):
             update_guess = False
         return typ, ts_zma, dist_name, grid, tors_names, update_guess
 
-def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_path, rxn_save_path, overwrite):
 
+def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_path, rxn_save_path, overwrite):
+    """ find the ts geometry
+    """
     print('prepping ts scan:')
-    script_str, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
+    _, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
     
     orb_restr = moldr.util.orbital_restriction(ts_info, thy_info)
     ref_level = thy_info[0:3]
@@ -669,7 +662,7 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
             grid2=grid2,
             scn_run_fs=scn_run_fs,
             scn_save_fs=scn_save_fs,
-            script_str=script_str,
+            script_str=opt_script_str,
             overwrite=overwrite,
             update_guess=update_guess,
             **OPT_KWARGS
@@ -704,7 +697,7 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
             grid_dct={dist_name: grid},
             scn_run_fs=scn_run_fs,
             scn_save_fs=scn_save_fs,
-            script_str=script_str,
+            script_str=opt_script_str,
             overwrite=overwrite,
             update_guess=update_guess,
             reverse_sweep=False,
@@ -736,7 +729,7 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
     print('ts_run_path=:', ts_run_path)
     moldr.driver.run_job(
         job='optimization',
-        script_str=script_str,
+        script_str=opt_script_str,
         run_fs=run_fs,
         geom=max_zma,
         spc_info=ts_info,
@@ -774,8 +767,8 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
         geo = 'failed'
         zma = 'failed'
 
-
     return geo, zma, final_dist
+
 
 def find_vdw(ts_name, spcdct, thy_info, vdw_params, nsamp_par, run_prefix, save_prefix,
         kickoff_size, kickoff_backward, projrot_script_str, overwrite):
@@ -856,7 +849,7 @@ def find_vdw(ts_name, spcdct, thy_info, vdw_params, nsamp_par, run_prefix, save_
                 spc_info=ts_info,
                 thy_level=run_opt_levels[opt_level_idx],
                 prefix=thy_run_path,
-                script_str=SCRIPT_STR,
+                script_str=OPT_SCRIPT_STR,
                 overwrite=overwrite,
                 **OPT_KWARGS,
             )

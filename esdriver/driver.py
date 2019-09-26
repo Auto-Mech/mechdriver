@@ -70,8 +70,12 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
                         spcdct[ts]['reacs'], spcdct[ts]['prods'], spcdct,
                         ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
                         KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
-                    rxn_class, ts_zma, dist_name, grid, tors_names, update_guess = scripts.es.ts_params(
+                    ret = scripts.es.ts_params(
                         rct_zmas, prd_zmas, rct_cnf_save_fs)
+                    if ret:
+                        rxn_class, ts_zma, dist_name, grid, tors_names, update_guess = ret
+                    else:
+                        continue
                     spcdct[ts]['class'] = rxn_class
                     spcdct[ts]['tors_names'] = tors_names
                     spcdct[ts]['original_zma'] = ts_zma
@@ -117,6 +121,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
                     automol.inchi.smiles(spcdct[spc]['ich'])))
                 spc_info = scripts.es.get_spc_info(spcdct[spc])
                 spc_run_fs = autofile.fs.species(run_prefix)
+                print('spc_info test:', spc_info)
                 spc_run_fs.leaf.create(spc_info)
                 spc_run_path = spc_run_fs.leaf.path(spc_info)
 
@@ -205,8 +210,6 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
                     ini_thy_save_fs.leaf.create(ini_thy_level[1:4])
                     ini_thy_save_path = ini_thy_save_fs.leaf.path(ini_thy_level[1:4])
 
-                print('ini_thy_run_path test:', ini_thy_run_path)
-                print('ini_thy_save_path test:', ini_thy_save_path)
                 ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
                 ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
 
