@@ -56,8 +56,9 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
         #If task is to find the transition state, find all TSs for your reactionlist
         if tsk in ('find_ts', 'find_vdw'):
             for ts in ts_dct:
-                print('Task {} \t {} = {}'.format(
-                    tsk, '+'.join(ts_dct[ts]['reacs']), '+'.join(ts_dct[ts]['prods'])))
+                print('Task {} \t {}//{} \t {} = {}'.format(
+                    tsk, '/'.join(thy_info), '/'.join(ini_thy_info),
+                     '+'.join(ts_dct[ts]['reacs']), '+'.join(ts_dct[ts]['prods'])))
                 if not ts in spcdct:
                     spcdct[ts] = create_spec(ts, ts_dct, spcdct)
                     ts_info = (spcdct[ts]['ich'], spcdct[ts]['chg'], spcdct[ts]['mul'])
@@ -77,6 +78,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
                     else:
                         continue
                     spcdct[ts]['class'] = rxn_class
+                    spcdct[ts]['grid'] = grid
                     spcdct[ts]['tors_names'] = tors_names
                     spcdct[ts]['original_zma'] = ts_zma
                     dist_info = [dist_name, 0., update_guess]
@@ -97,13 +99,12 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
                         print('Success, transition state {} added to species queue'.format(ts))
                         spc_queue.append(ts)
                 elif 'vdw' in tsk:
-                    new_vdws = scripts.es.find_vdw(
-                                   ts, spcdct, thy_info, ini_thy_info, vdw_params,
-                                   es_dct[es_run_key]['mc_nsamp'], run_prefix,
-                                   save_prefix, KICKOFF_SIZE, KICKOFF_BACKWARD,
-                                   PROJROT_SCRIPT_STR, overwrite)
-                    spc_queue.extend(new_vdws)
-
+                    vdws = scripts.es.find_vdw(
+                              ts, spcdct, thy_info, ini_thy_info, ts_info, vdw_params,
+                              es_dct[es_run_key]['mc_nsamp'], run_prefix,
+                              save_prefix, KICKOFF_SIZE, KICKOFF_BACKWARD,
+                              PROJROT_SCRIPT_STR, overwrite)
+                    spc_queue.extend(vdws)
             continue
 
         #Loop over all species
@@ -251,14 +252,10 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
 
             #Run tasks
             if 'ts_' in spc:
-                #Check if the task has been completed at the requested running theory level
-
-                #Every task starts with a geometry optimization at the running theory level
                 if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
                     geo = moldr.ts.reference_geometry(
                         spcdct[spc], thy_level, ini_thy_level, fs, ini_fs,
                         spcdct[spc]['dist_info'], overwrite)
-                #Run the requested task at the requested running theory level
                     if geo:
                         scripts.es.ts_geometry_generation(
                             tsk, spcdct[spc], es_dct[es_run_key],
@@ -268,11 +265,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
                     scripts.es.ts_geometry_analysis(
                         tsk, thy_level, ini_fs, selection, spc_info, overwrite)
             else:
-                #Check if the task has been completed at the requested running theory level
-
-                #Every task starts with a geometry optimization at the running theory level
                 if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
-                # if not tsk == 'sp' or tsk == 'energy':
                     geo = moldr.geom.reference_geometry(
                         spcdct[spc], thy_level, ini_thy_level, fs, ini_fs,
                         kickoff_size=KICKOFF_SIZE,
@@ -280,10 +273,14 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
                         projrot_script_str=PROJROT_SCRIPT_STR,
                         overwrite=overwrite)
                     if geo:
-                    #Run the requested task at the requested running theory level
-                        scripts.es.geometry_generation(
-                            tsk, spcdct[spc], es_dct[es_run_key], thy_level,
-                            fs, spc_info, overwrite)
+                        if not 'vdw_' in spc:
+                            scripts.es.geometry_generation(
+                                tsk, spcdct[spc], es_dct[es_run_key], thy_level,
+                                fs, spc_info, overwrite)
+                        else:
+                            scripts.es.fake_geo_gen(
+                                tsk, spcdct[spc], es_dct[es_run_key], thy_level,
+                                fs, spc_info, overwrite)
                 else:
                     selection = 'min'
                     if 'conf' in tsk:

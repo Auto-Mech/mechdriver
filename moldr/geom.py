@@ -90,10 +90,10 @@ def reference_geometry(
                 'overwrite': overwrite,
                 'thy_level': thy_level,
                 'geo_init': geo_init}
-            geo = run_initial_geometry_opt(**params, **opt_kwargs)
+            geo, inf = run_initial_geometry_opt(**params, **opt_kwargs)
             thy_save_fs.leaf.create(thy_level[1:4])
             thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
-            if not automol.geom.is_atom(geo):
+            if not automol.geom.is_atom(geo) and len(automol.graph.connected_components(automol.geom.graph(geo))) < 2:
                 geo, hess = remove_imag(
                     spcdct, geo, thy_level, thy_run_fs,
                     run_fs, kickoff_size,
@@ -116,11 +116,15 @@ def reference_geometry(
                 print(" - Save path: {}".format(thy_save_path))
                 thy_save_fs.leaf.file.hessian.write(hess, thy_level[1:4])
     
-            zma = automol.geom.zmatrix(geo)
             thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
-            thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
+            if  len(automol.graph.connected_components(automol.geom.graph(geo))) < 2:
+                zma = automol.geom.zmatrix(geo)
+                thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
+                scripts.es.run_single_conformer(spc_info, thy_level, fs, overwrite)
+            else:
+                print("Cannot create zmatrix for disconnected species")
+                scripts.es.fake_conf(thy_level, fs, inf)
     
-            scripts.es.run_single_conformer(spc_info, thy_level, fs, overwrite)
     
         if geo:
             inf_obj.status = autofile.system.RunStatus.SUCCESS
@@ -147,13 +151,17 @@ def run_initial_geometry_opt(
     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
     # check if geometry has already been saved
     # if not call the electronic structure optimizer
-    zma = automol.geom.zmatrix(geo_init)
+    if  len(automol.graph.connected_components(automol.geom.graph(geo_init))) < 2:
+        geom = automol.geom.zmatrix(geo_init)
+    else:
+        geom = geo_init
     run_fs = autofile.fs.run(thy_run_path)
+    print('thy_run_path')
     moldr.driver.run_job(
         job=elstruct.Job.OPTIMIZATION,
         script_str=script_str,
         run_fs=run_fs,
-        geom=zma,
+        geom=geom,
         spc_info=spc_info,
         thy_level=thy_level,
         overwrite=overwrite,
@@ -161,13 +169,19 @@ def run_initial_geometry_opt(
     )
     ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
     geo = None
+    inf = None
     if ret:
         print('Succesful reference geometry optimization')
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
         geo = elstruct.reader.opt_geometry(prog, out_str)
-        zma = automol.geom.zmatrix(geo)
-    return geo
+        if  len(automol.graph.connected_components(automol.geom.graph(geo))) < 2:
+            zma = automol.geom.zmatrix(geo)
+        else:
+            method = inf_obj.method
+            ene = elstruct.reader.energy(prog, method, out_str)
+            inf = [inf_obj, ene]
+    return geo, inf
 
 
 def remove_imag(
