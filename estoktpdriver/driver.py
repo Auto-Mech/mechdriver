@@ -13,6 +13,7 @@ from automol import formula
 import moldr
 import thermodriver
 import ktpdriver
+import scripts
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -588,41 +589,46 @@ if RUN_RATES:
         # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
         ]
 
+    # loop over PESs
     for PES in PES_LST:
+        # set up name lists and ts species dictionary for a given PES
         RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
         PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
+        RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
         print('running ktp on PES ', PES)
         print('RCT_NAMES_LST test:', RCT_NAMES_LST)
         print('PRD_NAMES_LST test:', PRD_NAMES_LST)
+        print('RXT_NAME_LST test:', RXN_NAME_LST)
+        RXN_LST = []
+        for rxn, _ in enumerate(RCT_NAMES_LST):
+            RXN_LST.append(
+            {'species': [], 'reacs': list(RCT_NAMES_LST[rxn]), 'prods':
+             list(PRD_NAMES_LST[rxn])})
+        for idx, rxn in enumerate(RXN_LST):
+            reacs = rxn['reacs']
+            prods = rxn['prods']
+            tsname = 'ts_{:g}'.format(idx)
+            SPC_DCT[tsname] = {}
+            if reacs and prods:
+                SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
+            SPC_DCT[tsname]['ich'] = ''
+            ts_chg = 0
+            for rct in RCT_NAMES_LST[idx]:
+                ts_chg += SPC_DCT[rct]['chg']
+            SPC_DCT[tsname]['chg'] = ts_chg
+            ts_mul, rad_rad = moldr.util.ts_mul_from_reaction_muls(
+                RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
+            SPC_DCT[tsname]['mul'] = ts_mul
+            SPC_DCT[tsname]['rad_rad'] = rad_rad
+
+        # run ktp for a given PES
         ktpdriver.driver.run(
-            TSK_INFO_LST, ES_DCT, SPC_DCT.copy(), RCT_NAMES_LST, PRD_NAMES_LST,
+            TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
             '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
 
-# set up a combination of energies
-# E_HL = sum_i E_HL(i) * Coeff(i)
-#HIGH_LEVEL_COEFF = [1]
-#HIGH_LEVEL_COEFF = None
-
-# for now pf_levels and spc_models are automatically determined on basis of electronic structure levels
-#PF_LEVELS = []
-#PF_LEVELS.append([['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU'], ['', 'wb97xd', '6-31g*', 'RU']])
-# PF_LEVELS contains the elec. struc. lvlels for the harmonic, torsional, and anharmonic analyses
-
-# e. What to run for thermochemical kinetics
-#RUN_SPC_THERMO = True
-#SPC_MODELS = [['RIGID', 'HARM']]
-#SPC_MODELS = [['1DHR', 'HARM']]
-#SPC_MODELS = [['RIGID', 'HARM'], ['1DHR', 'HARM']]
-# The first component specifies the torsional model - TORS_MODEL.
-# It can take 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
-# The second component specifies the vibrational model - VIB_MODEL.
-# It can take 'HARM', or 'VPT2' values.
-#RUN_REACTION_RATES = True
-#RUN_VDW_RCT_RATES = False
-#RUN_VDW_PRD_RATES = False
-
-# f. Partition function parameters
-#TAU_PF_WRITE = True
+# f. Partition function parameters determined internally
+# TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
+# VIB_MODEL can take values: 'HARM', or 'VPT2' values.
 
 # Defaults and dictionaries
 SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')

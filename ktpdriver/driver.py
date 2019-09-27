@@ -1,4 +1,4 @@
-""" drivers for thermochemistry evaluations
+""" driver for rate constant evaluations
 """
 import os
 from qcelemental import constants as qcc
@@ -6,7 +6,6 @@ import automol.inchi
 import automol.geom
 import chemkin_io
 import scripts.es
-import thermo.heatform
 import esdriver.driver
 import autofile.fs
 
@@ -20,15 +19,25 @@ EPS2 = 200.0
 SIG1 = 6.
 SIG2 = 6.
 MASS1 = 15.0
+
+KICKOFF_SIZE = 0.1
+KICKOFF_BACKWARD = False
+HIND_INC = 30.
 PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                       "RPHt.exe >& /dev/null")
 
 def run(
-        tsk_info_lst, es_dct, spcdct, rct_names_lst, prd_names_lst, run_prefix,
+        tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst, run_prefix,
         save_prefix, ene_coeff=[1.], vdw_params=[False, False, True],
         options=[True, True, True, False]):
-    """ main driver for thermo run
+    """ main driver for generation of full set of rate constants on a single PES
     """
+
+    #prepare prefix filesystem
+    if not os.path.exists(save_prefix):
+        os.makedirs(save_prefix)
+    if not os.path.exists(run_prefix):
+        os.makedirs(run_prefix)
 
     #Determine options
     runes = options[0]  #run electronic structure theory (True/False)
@@ -38,6 +47,8 @@ def run(
     if not runmess:
         runrates = False
 
+    # First run ESDriver for the species on the PES so that information on exothermicity is available 
+    # in order to sort the reactions by exothermicity
     spc_queue = []
     for rxn, _ in enumerate(rct_names_lst):
         rxn_spc = list(rct_names_lst[rxn])
@@ -45,36 +56,91 @@ def run(
         for spc in rxn_spc:
             if spc not in spc_queue:
                 spc_queue.append(spc)
-    for spc in spc_queue:
-        if not 'ich' in spcdct[spc]:
-            spcdct[spc]['ich'] = automol.smiles.inchi(spcdct[spc]['smi'])
 
+    spc_tsk_lst = []
+    ts_tsk_lst = []
+    ts_tsk = False
+    for tsk in tsk_info_lst:
+        if 'find_ts' in tsk[0]:
+            ts_tsk = True
+        if ts_tsk:
+            ts_tsk_lst.append(tsk)
+        else:
+            spc_tsk_lst.append(tsk)
+
+    if runes:
+        runspecies = [{'species': spc_queue, 'reacs': [], 'prods': []}]
+        # spc_tsk_info = [['find_geom', tsk_info_lst[0][1], tsk_info_lst[0][2], tsk_info_lst[0][3]]]
+        esdriver.driver.run(
+            spc_tsk_lst, es_dct, runspecies, spc_dct, run_prefix, save_prefix, vdw_params)
+
+    # Form the reaction list
     rxn_lst = []
     for rxn, _ in enumerate(rct_names_lst):
         rxn_lst.append(
-            {'species': [], 'reactants': list(rct_names_lst[rxn]), 'products':
+            {'species': [], 'reacs': list(rct_names_lst[rxn]), 'prods':
              list(prd_names_lst[rxn])})
 
-    #prepare filesystem
-    if not os.path.exists(save_prefix):
-        os.makedirs(save_prefix)
-    if not os.path.exists(run_prefix):
-        os.makedirs(run_prefix)
+    # Add addtional dictionary items for all the TSs
+    # This presumes that es has been run previously for species list to produce energies in save
+    # file system
+    if len(ts_tsk_lst) > 0:
+        for ts in spc_dct:
+            if 'ts_' in ts:
+                spc_dct[ts]['hind_inc'] = HIND_INC * qcc.conversion_factor('degree', 'radian')
+                # spc_dct[ts] = create_ts_spec(ts, ts_dct, spc_dct)
+                # have to figure out how to pass ts_info or have it recalculated in esdriver
+                ts_info = (spc_dct[ts]['ich'], spc_dct[ts]['chg'], spc_dct[ts]['mul'])
+                # Exothermicity reordering requires electronic energy which requires theory level and
+                # tsk_info
+                es_ini_key = ts_tsk_lst[0][2]
+                es_run_key = ts_tsk_lst[0][1]
+                ini_thy_info = esdriver.driver.get_es_info(es_dct, es_ini_key)
+                thy_info = esdriver.driver.get_es_info(es_dct, es_run_key)
+                # generate rxn data, reorder if necessary, and put in spc_dct for given ts
+                rxn_ichs, rxn_chgs, rxn_muls, low_mul, high_mul = scripts.es.rxn_info(
+                    run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info)
+                spc_dct[ts]['rxn_ichs'] = rxn_ichs
+                spc_dct[ts]['rxn_chgs'] = rxn_chgs
+                spc_dct[ts]['rxn_muls'] = rxn_muls
+                spc_dct[ts]['low_mul'] = low_mul
+                spc_dct[ts]['high_mul'] = high_mul
+                # generate rxn_fs from rxn_info stored in spc_dct
+                rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = scripts.es.get_rxn_fs(
+                    run_prefix, save_prefix, spc_dct[ts])
+                spc_dct[ts]['rxn_fs'] = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
 
-    #Run ESDriver
-    if runes:
-        if runspcfirst:
-            rxn_lst[0]['species'] = spc_queue
-        spc_dct = esdriver.driver.run(
-            tsk_info_lst, es_dct, rxn_lst, spcdct.copy(), run_prefix, save_prefix, vdw_params)
-    else:
-        pass
-    #BUT if we don't run ES I need to construct the following info right here for ts dict
-    #ts_zma, rxn_fs,
-    tsname_0 = 'ts_0'
-    if 'original_zma' in spc_dct[tsname_0]:
-        pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
-        print('Starting mess file preparation for {}:'.format(pes_formula))
+                rct_zmas, prd_zmas, rct_cnf_save_fs = scripts.es.get_zmas(
+                    spc_dct[ts]['reacs'], spc_dct[ts]['prods'], spc_dct,
+                    ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
+                    KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
+                ret = scripts.es.ts_class(
+                    rct_zmas, prd_zmas, spc_dct[ts]['rad_rad'], rct_cnf_save_fs)
+                if ret:
+                    rxn_class, ts_zma, dist_name, grid, tors_names, update_guess = ret
+                    spc_dct[ts]['class'] = rxn_class
+                    spc_dct[ts]['grid'] = grid
+                    spc_dct[ts]['tors_names'] = tors_names
+                    spc_dct[ts]['original_zma'] = ts_zma
+                    dist_info = [dist_name, 0., update_guess]
+                    spc_dct[ts]['dist_info'] = dist_info
+                else:
+                    spc_dct[ts]['class'] = None
+
+        #Run ESDriver
+        if runes:
+            esdriver.driver.run(
+                ts_tsk_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix, vdw_params)
+
+        # if spc_dct[ts]['rad_rad']:
+            # print('Skipping radical radical')
+
+    for ts in spc_dct:
+        if 'original_zma' in spc_dct[ts]:
+            pes_formula = automol.geom.formula(
+                automol.zmatrix.geometry(spc_dct[ts]['original_zma']))
+            print('Starting mess file preparation for {}:'.format(pes_formula))
+            break
 
     #Figure out the model and theory levels for the MESS files
     geo_lvl = ''
@@ -88,8 +154,8 @@ def run(
     sym_lvl_ref = ''
 
     ts_model = ['RIGID', 'HARM', '']
-    for tsk in tsk_info_lst:
-        if 'samp' in tsk[0] or 'geom' in tsk[0]:
+    for tsk in ts_tsk_lst:
+        if 'samp' in tsk[0] or 'find' in tsk[0]:
             geo_lvl = tsk[1]
             geom = True
         if 'grad' in tsk[0] or 'hess' in tsk[0]:
@@ -141,16 +207,16 @@ def run(
     #Collect energies for zero points
     spc_save_fs = autofile.fs.species(save_prefix)
     ts_queue = []
-    for spc in spcdct:   #have to make sure you get them for the TS too
+    for spc in spc_dct:   #have to make sure you get them for the TS too
         if 'ts_' in spc:
             ts_queue.append(spc)
-            if 'radical radical' in spcdct[spc]['class']:
+            if 'radical radical' in spc_dct[spc]['class']:
                 print('skipping rate for radical radical reaction: {}'.format(spc))
                 continue
     for spc in spc_queue +  ts_queue:
-        spc_info = (spcdct[spc]['ich'], spcdct[spc]['chg'], spcdct[spc]['mul'])
+        spc_info = (spc_dct[spc]['ich'], spc_dct[spc]['chg'], spc_dct[spc]['mul'])
         if 'ts_' in spc:
-            spc_save_path = spcdct[spc]['rxn_fs'][3]
+            spc_save_path = spc_dct[spc]['rxn_fs'][3]
             saddle = True
             save_path = spc_save_path
         else:
@@ -159,15 +225,15 @@ def run(
             saddle = False
             save_path = save_prefix
         zpe, _ = scripts.thermo.get_zpe(
-            spc, spcdct[spc], spc_save_path, pf_levels, ts_model)
-        spcdct[spc]['zpe'] = zpe
+            spc, spc_dct[spc], spc_save_path, pf_levels, ts_model)
+        spc_dct[spc]['zpe'] = zpe
         ene_strl = []
         ene_lvl = ''
         ene_lvl_ref = ''
         ene_idx = 0
-        spcdct[spc]['ene'] = 0.
+        spc_dct[spc]['ene'] = 0.
         ene_str = '! energy level:'
-        for tsk in tsk_info_lst:
+        for tsk in ts_tsk_lst:
             if 'ene' in tsk[0]:
                 if ene_idx > len(ene_coeff)-1:
                     print('Warning - an insufficient energy coefficient list was provided')
@@ -181,13 +247,13 @@ def run(
                     ene_ref_thy_info[3], ene_ref_thy_info[1], ene_ref_thy_info[2]))
                 ene = scripts.thermo.get_electronic_energy(
                     spc_info, ene_ref_thy_info, ene_thy_info, save_path, saddle)
-                spcdct[spc]['ene'] += ene*ene_coeff[ene_idx]
+                spc_dct[spc]['ene'] += ene*ene_coeff[ene_idx]
                 ene_idx += 1
     ene_str += '!               '.join(ene_strl)
 
     #Collect formula and header string for the PES
+    # pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
     tsname_0 = 'ts_0'
-    pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
     rct_ichs = spc_dct[tsname_0]['rxn_ichs'][0]
     header_str, energy_trans_str = scripts.ktp.pf_headers(
         rct_ichs, TEMPS, PRESS, EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2,
@@ -196,12 +262,13 @@ def run(
     mess_strs = ['', '', '']
     idx_dct = {}
     first_ground_ene = 0.
-    wells = scripts.ktp.make_all_well_data(
-        rxn_lst, spcdct.copy(), save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
+    species = scripts.ktp.make_all_species_data(
+        rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
+        # if spc_dct[ts]['rad_rad']:
         if 'radical radical' in spc_dct[tsname]['class']:
-            print('skipping rate for radical radical reaction: {}'.format(tsname))
+            print('skipping rate for {} reaction: {}'.format(spc_dct[tsname]['class'], tsname))
             continue
         tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
         if tsform != pes_formula:
@@ -210,7 +277,7 @@ def run(
             print('Will proceed to construct only {}'.format(pes_formula))
             continue
         mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
-            tsname, rxn, wells, spcdct.copy(), idx_dct, mess_strs, first_ground_ene)
+            tsname, rxn, species, spc_dct, idx_dct, mess_strs, first_ground_ene)
         print(idx_dct)
     well_str, bim_str, ts_str = mess_strs
     ts_str += '\nEnd\n'
@@ -222,7 +289,7 @@ def run(
 
     mess_path = scripts.ktp.run_rate(
         header_str, energy_trans_str, well_str, bim_str, ts_str,
-        spcdct[tsname_0], geo_thy_info, spcdct[tsname_0]['rxn_fs'][3])
+        spc_dct[tsname_0], geo_thy_info, spc_dct[tsname_0]['rxn_fs'][3])
 
     # fit rate output to modified Arrhenius forms and print in ChemKin format
     pf_levels.append(ene_str)
@@ -237,9 +304,9 @@ def run(
             ene = 0.
             if lab_i != lab_j:
                 for spc in name_i.split('+'):
-                    ene += scripts.thermo.spc_energy(spcdct[spc]['ene'], spcdct[spc]['zpe'])
+                    ene += scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
                 for spc in name_j.split('+'):
-                    ene -= scripts.thermo.spc_energy(spcdct[spc]['ene'], spcdct[spc]['zpe'])
+                    ene -= scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
                 if ene > 0.:
                     reaction = name_i + '=' + name_j
                     sing_rate_params, sing_errs, doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
@@ -342,7 +409,7 @@ if __name__ == "__main__":
     #RCT_NAME_LST = [['methane', 'h'], ['methane', 'oh']]
     #PRD_NAME_LST = [['methyl','h2'], ['methyl','water']]
 
-    SPCDCT = {
+    SPC_DCT = {
             'methane': {'smi': 'C', 'mul': 1, 'chg': 0},
             'h': {'smi': '[H]', 'mul': 2, 'chg': 0},
             'h2': {'smi': '[H][H]', 'mul': 1, 'chg': 0},
@@ -355,9 +422,9 @@ if __name__ == "__main__":
             'ch2oh': {'smi': '[CH2]O', 'mul': 2, 'chg': 0},
             'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0}
              }
-    #run(TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
+    #run(TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
     run(
-        TSK_INFO_LST, ES_DCT, SPCDCT, RCT_NAME_LST, PRD_NAME_LST,
+        TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST,
         '/lcrc/project/PACC/elliott/run2', '/lcrc/project/PACC/elliott/save2',
         vdw_params=VDW_PARAMS)
-    #run(tsk_info_lst, es_dct, spcdct, spcs, ref, 'runtest', 'savetest')
+    #run(tsk_info_lst, es_dct, spc_dct, spcs, ref, 'runtest', 'savetest')
