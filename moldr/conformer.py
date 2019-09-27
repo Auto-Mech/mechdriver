@@ -139,55 +139,58 @@ def run_conformers(
 
             idx += 1
             print("Run {}/{}".format(nsampd+1, nsamp0))
-            #if two_stage:
-            #    tors_names = tors_range_dct.keys()
-            #    moldr.driver.run_job(
-            #        job=elstruct.Job.OPTIMIZATION,
-            #        script_str=script_str,
-            #        run_fs=run_fs,
-            #        geom=samp_zma,
-            #        spc_info=spc_info,
-            #        thy_level=thy_level,
-            #        overwrite=overwrite,
-            #        frozen_coordinates=[tors_names],
-            #        **kwargs
-            #    )
-            #    ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-            #    if ret:
-            #        inf_obj, inp_str, out_str = ret
-            #        prog = inf_obj.prog
-            #        samp_zma = elstruct.read.opt_zmatrix(prog, out_str)
-            #        moldr.driver.run_job(
-            #            job=elstruct.Job.OPTIMIZATION,
-            #            script_str=script_str,
-            #            run_fs=run_fs,
-            #            geom=samp_zma,
-            #            spc_info=spc_info,
-            #            thy_level=thy_level,
-            #            overwrite=overwrite,
-            #            **kwargs
-            #        )
-            #else:
-            #    moldr.driver.run_job(
-            #        job=elstruct.Job.OPTIMIZATION,
-            #        script_str=script_str,
-            #        run_fs=run_fs,
-            #        geom=samp_zma,
-            #        spc_info=spc_info,
-            #        thy_level=thy_level,
-            #        overwrite=overwrite,
-            #        **kwargs
-            #    )
-            moldr.driver.run_job(
-                job=elstruct.Job.OPTIMIZATION,
-                script_str=script_str,
-                run_fs=run_fs,
-                geom=samp_zma,
-                spc_info=spc_info,
-                thy_level=thy_level,
-                overwrite=overwrite,
-                **kwargs
-            )
+            tors_names = list(tors_range_dct.keys())
+            if two_stage and len(tors_names) > 0:
+                print('Stage one beginning, holding the coordinates constant', tors_names, samp_zma)
+                moldr.driver.run_job(
+                    job=elstruct.Job.OPTIMIZATION,
+                    script_str=script_str,
+                    run_fs=run_fs,
+                    geom=samp_zma,
+                    spc_info=spc_info,
+                    thy_level=thy_level,
+                    overwrite=overwrite,
+                    frozen_coordinates=[tors_names],
+                    **kwargs
+                )
+                print('Stage one success, reading for stage 2')
+                ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+                if ret:
+                    sinf_obj, inp_str, out_str = ret
+                    prog = sinf_obj.prog
+                    samp_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                    print('Stage one success beginning stage two on', samp_zma)
+                    moldr.driver.run_job(
+                        job=elstruct.Job.OPTIMIZATION,
+                        script_str=script_str,
+                        run_fs=run_fs,
+                        geom=samp_zma,
+                        spc_info=spc_info,
+                        thy_level=thy_level,
+                        overwrite=overwrite,
+                        **kwargs
+                    )
+            else:
+                moldr.driver.run_job(
+                    job=elstruct.Job.OPTIMIZATION,
+                    script_str=script_str,
+                    run_fs=run_fs,
+                    geom=samp_zma,
+                    spc_info=spc_info,
+                    thy_level=thy_level,
+                    overwrite=overwrite,
+                    **kwargs
+                )
+            #moldr.driver.run_job(
+            #    job=elstruct.Job.OPTIMIZATION,
+            #    script_str=script_str,
+            #    run_fs=run_fs,
+            #    geom=samp_zma,
+            #    spc_info=spc_info,
+            #    thy_level=thy_level,
+            #    overwrite=overwrite,
+            #    **kwargs
+            #)
 
             if cnf_save_fs.trunk.file.info.exists():
                 inf_obj_s = cnf_save_fs.trunk.file.info.read()
