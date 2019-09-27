@@ -13,34 +13,6 @@ ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
-def ts_mul_from_reaction_muls(rcts, prds, spcdct):
-    """
-    evaluate the ts multiplicity from the multiplicities of the reactants and products
-    """
-    nrcts = len(rcts)
-    nprds = len(prds)
-    rct_spin_sum = 0
-    prd_spin_sum = 0
-    rad_rad = True
-    rct_muls = []
-    prd_muls = []
-    if nrcts == 1 and nprds == 1:
-        ts_mul = max(spcdct[rcts[0]]['mul'], spcdct[prds[0]]['mul'])
-    else:
-        ts_mul = min(spcdct[rcts[0]]['mul'], spcdct[prds[0]]['mul'])
-        for rct in rcts:
-            rct_spin_sum += (spcdct[rct]['mul'] - 1.)/2.
-            rct_muls.append(spcdct[rct]['mul'])
-        for prd in prds:
-            prd_spin_sum += (spcdct[prd]['mul'] - 1.)/2.
-            prd_muls.append(spcdct[prd]['mul'])
-        if (min(rct_muls) == 1 or nrcts == 1) and (min(prd_muls) == 1 or nrcts == 1):
-            rad_rad = False
-        ts_mul = min(rct_spin_sum, prd_spin_sum)
-        ts_mul = 2*ts_mul + 1.
-    return ts_mul, rad_rad
-
-
 def run_energy(params, kwargs):
     """ energy for geometry in fiven fs directory
     """
@@ -153,7 +125,7 @@ def geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
     choose_function = {'conf_samp': 'run_conf_samp',
                        'tau_samp': 'run_tau_samp',
                        'hr_scan': 'run_hr_scan'}
-    
+
     if tsk in ['conf_samp', 'tau_samp']:
         params['nsamp_par'] = es_dct['mc_nsamp']
     elif tsk in ['hr_scan']:
@@ -165,8 +137,8 @@ def geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
 
-def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
-        spc_info, overwrite):
+
+def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs, spc_info, overwrite):
     """ run an electronic structure task
     for generating a list of conformer or tau sampling geometries
     """
@@ -181,7 +153,7 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
     choose_function = {'conf_samp': 'run_conf_samp',
                        'tau_samp': 'run_tau_samp',
                        'hr_scan': 'run_hr_scan'}
-    
+
     if tsk in ['conf_samp', 'tau_samp']:
         params['nsamp_par'] = es_dct['mc_nsamp']
         params['dist_info'] = spcdic['dist_info']
@@ -193,6 +165,7 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
 
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
+
 
 def geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info,
         overwrite):
@@ -340,11 +313,13 @@ def get_spc_run_path(run_prefix, spc_info):
     spc_run_path = spc_run_fs.leaf.path(spc_info)
     return spc_run_path
 
+
 def get_spc_save_path(save_prefix, spc_info):
     spc_save_fs = autofile.fs.species(save_prefix)
     spc_save_fs.leaf.create(spc_info)
     spc_save_path = spc_save_fs.leaf.path(spc_info)
     return spc_save_path
+
 
 def get_thy_save_fs(save_prefix, spc_info, thy_info):
     orb_restr = moldr.util.orbital_restriction(
@@ -354,6 +329,7 @@ def get_thy_save_fs(save_prefix, spc_info, thy_info):
     spc_save_path = get_spc_save_path(save_prefix, spc_info)
     thy_save_fs = autofile.fs.theory(spc_save_path)
     return thy_save_fs, thy_lvl
+
 
 def get_thy_run_path(run_prefix, spc_info, thy_info):
     orb_restr = moldr.util.orbital_restriction(
@@ -366,6 +342,7 @@ def get_thy_run_path(run_prefix, spc_info, thy_info):
     thy_run_path = thy_run_fs.leaf.path(thy_lvl)
     return thy_run_path
 
+
 def get_thy_save_path(save_prefix, spc_info, thy_info):
     orb_restr = moldr.util.orbital_restriction(
         spc_info, thy_info)
@@ -377,22 +354,23 @@ def get_thy_save_path(save_prefix, spc_info, thy_info):
     thy_save_path = thy_save_fs.leaf.path(thy_lvl)
     return thy_save_path
 
-def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
 
-    ts_info = (spcs[ts]['ich'], spcs[ts]['chg'], spcs[ts]['mul'])
-    rxn_ichs = [[],[]] 
-    rxn_chgs = [[],[]]
-    rxn_muls = [[],[]]
-    reacs = spcs[ts]['reacs']
-    prods = spcs[ts]['prods']
+def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
+    rxn_ichs = [[], []]
+    rxn_chgs = [[], []]
+    rxn_muls = [[], []]
+    print('ts test:', ts)
+    print('spc_dct reacs test:',spc_dct[ts]['reacs'])
+    reacs = spc_dct[ts]['reacs']
+    prods = spc_dct[ts]['prods']
     for spc in reacs:
-         rxn_ichs[0].append(spcs[spc]['ich'])
-         rxn_chgs[0].append(spcs[spc]['chg'])
-         rxn_muls[0].append(spcs[spc]['mul'])
+        rxn_ichs[0].append(spc_dct[spc]['ich'])
+        rxn_chgs[0].append(spc_dct[spc]['chg'])
+        rxn_muls[0].append(spc_dct[spc]['mul'])
     for spc in prods:
-         rxn_ichs[1].append(spcs[spc]['ich'])
-         rxn_chgs[1].append(spcs[spc]['chg'])
-         rxn_muls[1].append(spcs[spc]['mul'])
+        rxn_ichs[1].append(spc_dct[spc]['ich'])
+        rxn_chgs[1].append(spc_dct[spc]['chg'])
+        rxn_muls[1].append(spc_dct[spc]['mul'])
     # check direction of reaction
     print('checking exothermicity of reaction')
     try:
@@ -407,7 +385,7 @@ def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
         rxn_chgs = rxn_chgs[::-1]
         rxn_muls = rxn_muls[::-1]
         print('ts search will be performed in reverse direction')
-    
+
     # set up the filesystem
     is_rev = autofile.system.reaction_is_reversed(
         rxn_ichs, rxn_chgs, rxn_muls)
@@ -416,15 +394,11 @@ def rxn_info(run_prefix, save_prefix, ts, spcs, thy_info, ini_thy_info=None):
     print("The reaction direction is {}"
           .format('backward' if is_rev else 'forward'))
 
-    high_mul = automol.mult.ts._high(rxn_muls[0])
     low_mul = automol.mult.ts._low(rxn_muls[0])
+    high_mul = automol.mult.ts._high(rxn_muls[0])
 
-    spcs[ts]['rxn_ichs'] = rxn_ichs
-    spcs[ts]['rxn_chgs'] = rxn_chgs
-    spcs[ts]['rxn_muls'] = rxn_muls
-    spcs[ts]['high_mul'] = high_mul
-    spcs[ts]['low_mul'] = low_mul
-    return spcs[ts]
+    return rxn_ichs, rxn_chgs, rxn_muls, low_mul, high_mul
+
 
 def get_rxn_fs(run_prefix, save_prefix, ts):
     """get filesystems for a reaction
@@ -432,6 +406,7 @@ def get_rxn_fs(run_prefix, save_prefix, ts):
     rxn_ichs = ts['rxn_ichs']
     rxn_chgs = ts['rxn_chgs']
     rxn_muls = ts['rxn_muls']
+    # print('ts_mul test:', ts_mul)
     ts_mul = ts['mul']
 
     rxn_run_fs = autofile.fs.reaction(run_prefix)
@@ -449,30 +424,33 @@ def get_rxn_fs(run_prefix, save_prefix, ts):
 
     return rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path
 
+
 def get_zmas(
-        reacs, prods, spcdct, ini_thy_info, save_prefix, run_prefix,
+        reacs, prods, spc_dct, ini_thy_info, save_prefix, run_prefix,
         kickoff_size, kickoff_backward, projrot_script_str):
-    """get the zmats for reactants and products using at the initial level of theory
+    """get the zmats for reactants and products using the initial level of theory
     """
     rct_geos, cnf_save_fs_lst = get_geos(
-        reacs, spcdct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
+        reacs, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
         kickoff_backward, projrot_script_str)
     prd_geos, _ = get_geos(
-        prods, spcdct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
+        prods, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
         kickoff_backward, projrot_script_str)
     rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
     prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
     return rct_zmas, prd_zmas, cnf_save_fs_lst
-  
-def get_geos(spcs, spcdct, ini_thy_info, save_prefix, run_prefix, kickoff_size, kickoff_backward, projrot_script_str):
+
+
+def get_geos(
+        spcs, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
+        kickoff_backward, projrot_script_str):
     """get geos for reactants and products using the initial level of theory
     """
     spc_geos = []
     cnf_save_fs_lst = []
     for spc in spcs:
-        spc_info = [spcdct[spc]['ich'], spcdct[spc]['chg'], spcdct[spc]['mul']]
-        orb_restr = moldr.util.orbital_restriction(
-                    spc_info, ini_thy_info)
+        spc_info = [spc_dct[spc]['ich'], spc_dct[spc]['chg'], spc_dct[spc]['mul']]
+        orb_restr = moldr.util.orbital_restriction(spc_info, ini_thy_info)
         ini_thy_level = ini_thy_info[0:3]
         ini_thy_level.append(orb_restr)
         spc_save_fs = autofile.fs.species(save_prefix)
@@ -490,21 +468,22 @@ def get_geos(spcs, spcdct, ini_thy_info, save_prefix, run_prefix, kickoff_size, 
         cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
         min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
         if min_cnf_locs:
-            cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
             geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         else:
             run_fs = autofile.fs.run(ini_thy_run_path)
             run_fs.trunk.create()
-            tmpdct = spcdct[spc]
             tmp_ini_fs = [None, ini_thy_save_fs]
-            tmp_fs = [spc_save_fs, spc_run_fs, ini_thy_save_fs, ini_thy_run_fs, cnf_save_fs, cnf_run_fs, run_fs]
-            geo = moldr.geom.reference_geometry(spcdct[spc], ini_thy_level, ini_thy_level,
-                    tmp_fs, tmp_ini_fs, kickoff_size, kickoff_backward,
-                    projrot_script_str, overwrite=False)
+            tmp_fs = [spc_save_fs, spc_run_fs, ini_thy_save_fs, ini_thy_run_fs,
+                      cnf_save_fs, cnf_run_fs, run_fs]
+            geo = moldr.geom.reference_geometry(
+                spc_dct[spc], ini_thy_level, ini_thy_level, tmp_fs, tmp_ini_fs,
+                kickoff_size, kickoff_backward, projrot_script_str,
+                overwrite=False)
         spc_geos.append(geo)
     return spc_geos, cnf_save_fs_lst
 
-def ts_params(rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs):
+
+def ts_class(rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs):
     typ = None
     ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
     if ret and typ is None:
@@ -579,20 +558,31 @@ def ts_params(rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs):
         npoints = 8
         npoints1 = 4
         npoints2 = 4
-        if typ in ('beta scission', 'addition'):
+        if typ in ('beta scission'):
             rmin = 1.4 * ANG2BOHR
-            rmin = 2.8 * ANG2BOHR
+            rmax = 2.0 * ANG2BOHR
+            if bnd_len_key in bnd_len_dct:
+                bnd_len = bnd_len_dct[bnd_len_key]
+                rmin = bnd_len + 0.1 * ANG2BOHR
+                rmax = bnd_len + 0.5 * ANG2BOHR
+            grid = numpy.linspace(rmin, rmax, npoints)
+            update_guess = False
+
+        elif typ in ('addition'):
+            rmin = 1.6 * ANG2BOHR
+            rmax = 2.8 * ANG2BOHR
             if bnd_len_key in bnd_len_dct:
                 bnd_len = bnd_len_dct[bnd_len_key]
                 rmin = bnd_len + 0.2 * ANG2BOHR
-                rmax = bnd_len + 1.6 * ANG2BOHR
+                rmax = bnd_len + 1.4 * ANG2BOHR
             grid = numpy.linspace(rmin, rmax, npoints)
             update_guess = False
+
         elif typ == 'hydrogen migration':
 
             interval = 0.2*ANG2BOHR
             rmin = 1.4 * ANG2BOHR
-            rmin = 2.8 * ANG2BOHR
+            rmax = 2.8 * ANG2BOHR
             if bnd_len_key in bnd_len_dct:
                 rmax = bnd_len_dct[bnd_len_key]
                 rmin1 = 2.*ANG2BOHR
@@ -615,6 +605,7 @@ def ts_params(rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs):
                 rmax = bnd_len + 1.0 * ANG2BOHR
             grid = numpy.linspace(rmin, rmax, npoints)
             update_guess = False
+
         elif typ == 'radical radical addition':
             rstart = 2.4 * ANG2BOHR
             rend1 = 3.0 * ANG2BOHR
@@ -634,21 +625,29 @@ def ts_params(rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs):
 def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_path, rxn_save_path, overwrite):
     """ find the ts geometry
     """
-    print('prepping ts scan:')
-    _, opt_script_str, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[0:2])
-    
+    print('prepping ts scan for:', typ)
+    if 'radical radical' in typ or not typ:
+        print('skipping reaction because type =:', typ)
+        return 'Failure', None, None
+
+    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_info[0:2])
+
+    print('rxn_run_path test in find_ts:', rxn_run_path)
+    print('ts_info test in find_ts:', ts_info)
+    print('thy_info test in find_ts:', thy_info)
     orb_restr = moldr.util.orbital_restriction(ts_info, thy_info)
     ref_level = thy_info[0:3]
     ref_level.append(orb_restr)
-    
+    print('ref_level test in find_ts:', ref_level)
+
     thy_run_fs = autofile.fs.theory(rxn_run_path)
     thy_run_fs.leaf.create(ref_level[1:4])
     thy_run_path = thy_run_fs.leaf.path(ref_level[1:4])
-    
+
     thy_save_fs = autofile.fs.theory(rxn_save_path)
     thy_save_fs.leaf.create(ref_level[1:4])
     thy_save_path = thy_save_fs.leaf.path(ref_level[1:4])
-    
+
     scn_run_fs = autofile.fs.scan(thy_run_path)
     scn_save_fs = autofile.fs.scan(thy_save_path)
 
@@ -699,7 +698,7 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
             script_str=opt_script_str,
             overwrite=overwrite,
             update_guess=update_guess,
-            **OPT_KWARGS
+            **opt_kwargs
         )
 
         moldr.scan.save_scan(
@@ -724,6 +723,8 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
         #print('\ndivsur.inp:')
         #print(divsur_inp_str)
     else:
+        print('grid dct test:', dist_name, grid)
+        print('scan fs test:', scn_run_fs.trunk.path())
         moldr.scan.run_scan(
             zma=ts_zma,
             spc_info=ts_info,
@@ -735,7 +736,7 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
             overwrite=overwrite,
             update_guess=update_guess,
             reverse_sweep=False,
-            **OPT_KWARGS
+            **opt_kwargs
         )
 
     moldr.scan.save_scan(
@@ -770,7 +771,7 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
         thy_level=ref_level,
         saddle=True,
         overwrite=overwrite,
-        **OPT_KWARGS,
+        **opt_kwargs,
     )
     opt_ret = moldr.driver.read_job(
         job='optimization',
@@ -803,29 +804,32 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
 
     return geo, zma, final_dist
 
-def find_vdw(ts_name, spcdct, thy_info, ini_thy_info, ts_info, vdw_params,
-        nsamp_par, run_prefix, save_prefix, kickoff_size, kickoff_backward,
-        projrot_script_str, overwrite):
+
+def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
+             nsamp_par, run_prefix, save_prefix, kickoff_size, kickoff_backward,
+             projrot_script_str, overwrite):
+    """ find van der Waals structures for all the pairs of species in a reaction list
+    """
     new_vdws = []
-    SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(*thy_info[:2])
-    mul = spcdct[ts_name]['low_mul']
+    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_info[:2])
+    mul = spc_dct[ts_name]['low_mul']
     vdw_names_lst = []
     if vdw_params[0]:
-        vdw_names_lst.append([sorted(spcdct[ts_name]['reacs']), mul, 'r'])
+        vdw_names_lst.append([sorted(spc_dct[ts_name]['reacs']), mul, 'r'])
     if vdw_params[1]:
-        vdw_names_lst.append([sorted(spcdct[ts_name]['prods']), mul, 'p'])  
+        vdw_names_lst.append([sorted(spc_dct[ts_name]['prods']), mul, 'p'])
 
     for names, ts_mul, label in vdw_names_lst:
         if len(names) < 2:
-             print("Cannot find Well for unimolecular reactant or product")
-        ichs = list(map(lambda name: spcdct[name]['ich'], names))
-        chgs = list(map(lambda name: spcdct[name]['chg'], names))
-        muls = list(map(lambda name: spcdct[name]['mul'], names))
+            print("Cannot find van der Waals well for unimolecular reactant or product")
+        ichs = list(map(lambda name: spc_dct[name]['ich'], names))
+        chgs = list(map(lambda name: spc_dct[name]['chg'], names))
+        muls = list(map(lambda name: spc_dct[name]['mul'], names))
 
         # theory
         prog = thy_info[0]
         method = thy_info[1]
-        SP_SCRIPT_STR, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = moldr.util.run_qchem_par(prog, method)
+        _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(prog, method)
 
         geos = []
         ntaudof = 0.
@@ -851,13 +855,13 @@ def find_vdw(ts_name, spcdct, thy_info, ini_thy_info, ts_info, vdw_params,
             thy_save_fs.leaf.create(thy_level[1:4])
             thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
             run_fs = autofile.fs.run(thy_run_path)
-            
+
             ini_thy_save_fs = autofile.fs.theory(spc_save_path)
             ini_thy_save_fs.leaf.create(ini_thy_level[1:4])
-            
+
             cnf_run_fs = autofile.fs.conformer(thy_run_path)
             cnf_save_fs = autofile.fs.conformer(thy_save_path)
-          
+
             ini_fs = [None, ini_thy_save_fs]
             fs = [spc_run_fs, spc_save_fs, thy_run_fs, thy_save_fs,
                   cnf_run_fs, cnf_save_fs, None, None,
@@ -865,11 +869,11 @@ def find_vdw(ts_name, spcdct, thy_info, ini_thy_info, ts_info, vdw_params,
     # fs = [None, None, thy_run_fs, thy_save_fs,
           # cnf_run_fs, cnf_save_fs, None, None,
             geo = moldr.geom.reference_geometry(
-                 spcdct[name], thy_level, ini_thy_level, fs, ini_fs,
-                 kickoff_size=kickoff_size,
-                 kickoff_backward=kickoff_backward,
-                 projrot_script_str=projrot_script_str,
-                 overwrite=overwrite)
+                spc_dct[name], thy_level, ini_thy_level, fs, ini_fs,
+                kickoff_size=kickoff_size,
+                kickoff_backward=kickoff_backward,
+                projrot_script_str=projrot_script_str,
+                overwrite=overwrite)
             geos.append(geo)
             gra = automol.geom.graph(geo)
             ntaudof += len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
@@ -927,9 +931,9 @@ def find_vdw(ts_name, spcdct, thy_info, ini_thy_info, ts_info, vdw_params,
                 spc_info=spc_info,
                 thy_level=thy_level,
                 run_fs=run_fs,
-                script_str=SCRIPT_STR,
+                script_str=opt_script_str,
                 overwrite=overwrite,
-                **OPT_KWARGS,
+                **opt_kwargs,
             )
 
    #  save info for the initial geometry (from inchi or from save directory)
@@ -954,13 +958,13 @@ def find_vdw(ts_name, spcdct, thy_info, ini_thy_info, ts_info, vdw_params,
                     print('Saving reference geometry')
                     print(" - Save path: {}".format(thy_save_path))
                     vdw_name = label + ts_name.replace('ts', 'vdw')
-                    spcdct[vdw_name] = spcdct[ts_name].copy()
+                    spc_dct[vdw_name] = spc_dct[ts_name].copy()
                     print(vdw_name)
                     print(ich)
-                    spcdct[vdw_name]['ich'] = ich
-                    spcdct[vdw_name]['mul'] = mul
-                    spcdct[vdw_name]['chg'] = chg
-                    spcdct[vdw_name]['dist_info'][1] = dist_cutoff
+                    spc_dct[vdw_name]['ich'] = ich
+                    spc_dct[vdw_name]['mul'] = mul
+                    spc_dct[vdw_name]['chg'] = chg
+                    spc_dct[vdw_name]['dist_info'][1] = dist_cutoff
                     fs = [spc_run_fs, spc_save_fs, thy_run_fs, thy_save_fs,
                           cnf_run_fs, cnf_save_fs, None, None,
                           None, None, run_fs]
@@ -989,7 +993,7 @@ def find_vdw(ts_name, spcdct, thy_info, ini_thy_info, ts_info, vdw_params,
                     cnf_save_fs.leaf.file.geometry.write(geo, locs)
         if min_ene:
             new_vdws.append(vdw_name)
-                
+
     return new_vdws
 
 
@@ -1033,7 +1037,7 @@ def fake_conf(thy_level, fs, inf=[]):
 
 
 def fake_geo_gen(tsk, spcdic, es_dct, thy_level, fs,
-        spc_info, overwrite):
+       spc_info, overwrite):
     if 'conf' in tsk:
         fake_conf(thy_level, fs)
 
@@ -1187,7 +1191,7 @@ def species_qchem(
                     run_fs=run_fs,
                     thy_run_fs=thy_run_fs,
                     thy_save_fs=thy_save_fs,
-                    script_str=OPT_SCRIPT_STR,
+                    script_str=opt_script_str,
                     overwrite=overwrite,
                     geo_init=geo_init,
                     **OPT_KWARGS,
@@ -1210,7 +1214,7 @@ def species_qchem(
                     thy_level=thy_level,
                     thy_run_fs=thy_run_fs,
                     thy_save_fs=thy_save_fs,
-                    script_str=OPT_SCRIPT_STR,
+                    script_str=opt_script_str,
                     overwrite=overwrite,
                     **KWARGS,
                 )
@@ -2391,14 +2395,14 @@ def get_thy_info(lvldic):
     return info
 
 
-def get_spc_info(spcdct):
+def get_spc_info(spc_dct_i):
     """ convert species dictionary to species_info array 
     """
     err_msg = ''
     props = ['ich', 'chg', 'mul']
     for i, prop in enumerate(props):
-        if prop in spcdct:
-            props[i] = spcdct[prop]
+        if prop in spc_dct_i:
+            props[i] = spc_dct_i[prop]
         else:
             err_msg = prop
     if err_msg:

@@ -276,6 +276,35 @@ def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, thy_level):
     return enes
 
 
+def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
+    """
+    evaluate the ts multiplicity from the multiplicities of the reactants and products
+    """
+    nrcts = len(rcts)
+    nprds = len(prds)
+    rct_spin_sum = 0
+    prd_spin_sum = 0
+    rad_rad = True
+    rct_muls = []
+    prd_muls = []
+    if nrcts == 1 and nprds == 1:
+        ts_mul = max(spc_dct[rcts[0]]['mul'], spc_dct[prds[0]]['mul'])
+        rad_rad = False
+    else:
+        ts_mul = min(spc_dct[rcts[0]]['mul'], spc_dct[prds[0]]['mul'])
+        for rct in rcts:
+            rct_spin_sum += (spc_dct[rct]['mul'] - 1.)/2.
+            rct_muls.append(spc_dct[rct]['mul'])
+        for prd in prds:
+            prd_spin_sum += (spc_dct[prd]['mul'] - 1.)/2.
+            prd_muls.append(spc_dct[prd]['mul'])
+        if (min(rct_muls) == 1 or nrcts == 1) and (min(prd_muls) == 1 or nprds == 1):
+            rad_rad = False
+        ts_mul = min(rct_spin_sum, prd_spin_sum)
+        ts_mul = int(round(2*ts_mul + 1))
+    return ts_mul, rad_rad
+
+
 def run_script(script_str, run_dir):
     """ run a program from a script
     """

@@ -16,7 +16,7 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def species_block(
-        spc, spc_dct, spc_info, spc_model, pf_levels, script_str,
+        spc, spc_dct_i, spc_info, spc_model, pf_levels, script_str,
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix='spc_save_path'):
     """ prepare the species input for messpf
@@ -87,24 +87,24 @@ def species_block(
 
         anh_cnf_save_fs = autofile.fs.conformer(anh_save_path)
         anh_min_cnf_locs = moldr.util.min_energy_conformer_locators(anh_cnf_save_fs)
-        anh_cnf_save_path = anh_cnf_save_fs.leaf.path(anh_min_cnf_locs)
+        # anh_cnf_save_path = anh_cnf_save_fs.leaf.path(anh_min_cnf_locs)
 
     # atom case - do as first step in each of other cases
     # pure harmonic case
     spc_str = ''
     elec_levels = [[0., spc_info[2]]]
-    if 'elec_levs' in spc_dct:
-        elec_levels = spc_dct['elec_levs']
+    if 'elec_levs' in spc_dct_i:
+        elec_levels = spc_dct_i['elec_levs']
 
     sym_factor = 1.
-    if 'sym' in spc_dct:
-        sym_factor = spc_dct['sym']
+    if 'sym' in spc_dct_i:
+        sym_factor = spc_dct_i['sym']
     else:
         if sym_model == 'SAMPLING':
             sym_geo = sym_cnf_save_fs.leaf.file.geometry.read(sym_min_cnf_locs)
             sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
             sym_factor = moldr.conformer.symmetry_factor(sym_geo, sym_ene, sym_cnf_save_fs)
-            xyzs = automol.geom.coordinates(sym_geo)
+            # xyzs = automol.geom.coordinates(sym_geo)
         if sym_model == '1DHR':
             # Warning: the 1DHR based symmetry number has not yet been set up
             sym_factor = 1
@@ -133,7 +133,7 @@ def species_block(
 
                 print('projected freqs including low frequencies')
                 print(freqs)
-                zpe = sum(freqs)*WAVEN2KCAL/2.
+                # zpe = sum(freqs)*WAVEN2KCAL/2.
                 hind_rot_str = ""
 
                 core = mess_io.writer.core_rigidrotor(har_geo, sym_factor)
@@ -168,7 +168,7 @@ def species_block(
                     # else:
                     if 'ts_' in spc:
                         zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
-                        tors_names = spc_dct['tors_names']
+                        tors_names = spc_dct_i['tors_names']
                     else:
                         zma = automol.geom.zmatrix(tors_geo)
                         tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
@@ -196,11 +196,11 @@ def species_block(
                             axis, group)
 
                     # Write the string for the ProjRot input
-                    COORD_PROJ = 'cartesian'
+                    coord_proj = 'cartesian'
                     grad = ''
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess, rotors_str=proj_rotors_str,
-                        coord_proj=COORD_PROJ)
+                        coord_proj=coord_proj)
 
                     bld_locs = ['PROJROT', 0]
                     bld_save_fs = autofile.fs.build(tors_save_path)
@@ -324,7 +324,7 @@ def get_high_level_energy(
     min_cnf_locs = moldr.util.min_energy_conformer_locators(
         cnf_save_fs)
     cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
-    min_cnf_geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+    # min_cnf_geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
 
     orb_restr = moldr.util.orbital_restriction(
         spc_info, thy_high_level)
@@ -340,13 +340,13 @@ def get_high_level_energy(
 
 
 def get_zero_point_energy(
-        spc, spc_dct, pf_levels, spc_model, script_str,
+        spc, spc_dct_i, pf_levels, spc_model, script_str,
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix='spc_save_path'):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
-    spc_info = (spc_dct['ich'], spc_dct['chg'], spc_dct['mul'])
+    spc_info = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
     # prepare the sets of file systems
     har_level, tors_level, vpt2_level, _ = pf_levels
     tors_model, vib_model, _ = spc_model
@@ -398,7 +398,7 @@ def get_zero_point_energy(
 
         anh_cnf_save_fs = autofile.fs.conformer(anh_save_path)
         anh_min_cnf_locs = moldr.util.min_energy_conformer_locators(anh_cnf_save_fs)
-        anh_cnf_save_path = anh_cnf_save_fs.leaf.path(anh_min_cnf_locs)
+        # anh_cnf_save_path = anh_cnf_save_fs.leaf.path(anh_min_cnf_locs)
 
     har_zpe = 0.0
     is_atom = False
@@ -436,7 +436,7 @@ def get_zero_point_energy(
         tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
         if 'ts_' in spc:
             zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
-            tors_names = spc_dct['tors_names']
+            tors_names = spc_dct_i['tors_names']
         else:
             zma = automol.geom.zmatrix(tors_geo)
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)

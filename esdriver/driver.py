@@ -14,7 +14,7 @@ KICKOFF_BACKWARD = False
 PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                       "RPHt.exe >& /dev/null")
 
-def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
+def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
         vdw_params=[False, False, True]):
     """ driver for all electronic structure tasks
     """
@@ -22,16 +22,13 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
     print(tsk_info_lst)
     #prepare species queue
     spc_queue = []
-    ts_dct = {}
     for i, rxn in enumerate(rxn_lst):
-        reacs = rxn['reactants']
-        prods = rxn['products']
+        reacs = rxn['reacs']
+        prods = rxn['prods']
 
         spc_queue.extend(rxn['species'])
         spc_queue.extend(reacs)
         spc_queue.extend(prods)
-        if reacs and prods:
-            ts_dct['ts_{:g}'.format(i)] = {'reacs': reacs, 'prods': prods}
 
     spc_queue = list(dict.fromkeys(spc_queue))
     # removes duplicates
@@ -51,70 +48,49 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
         es_run_key = tsk_info[1]
         overwrite = tsk_info[3]
         #Theory information
+        ini_thy_info = scripts.es.get_thy_info(es_dct[es_ini_key])
+        thy_info = scripts.es.get_thy_info(es_dct[es_run_key])
+        print('original ini_thy_info test;', ini_thy_info)
+        print('original thy_info test;', thy_info)
         ini_thy_info = get_es_info(es_dct, es_ini_key)
         thy_info = get_es_info(es_dct, es_run_key)
+        print('ini_thy_info test;', ini_thy_info)
+        print('thy_info test;', thy_info)
 
         #If task is to find the transition state, find all TSs for your reactionlist
         if tsk in ('find_ts', 'find_vdw'):
-            for ts in ts_dct:
-                print('Task {} \t {}//{} \t {} = {}'.format(
-                    tsk, '/'.join(thy_info), '/'.join(ini_thy_info),
-                     '+'.join(ts_dct[ts]['reacs']), '+'.join(ts_dct[ts]['prods'])))
-                if not ts in spcdct:
-                    spcdct[ts] = create_spec(ts, ts_dct, spcdct)
-                    ts_info = (spcdct[ts]['ich'], spcdct[ts]['chg'], spcdct[ts]['mul'])
-                    spcdct[ts] = scripts.es.rxn_info(
-                        run_prefix, save_prefix, ts, spcdct, thy_info, ini_thy_info)
-                    print('spcdct[ts]:', spcdct[ts])
-                    rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = scripts.es.get_rxn_fs(
-                        run_prefix, save_prefix, spcdct[ts])
-                    spcdct[ts]['rxn_fs'] = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
-                    rct_zmas, prd_zmas, rct_cnf_save_fs = scripts.es.get_zmas(
-                        spcdct[ts]['reacs'], spcdct[ts]['prods'], spcdct,
-                        ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
-                        KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
-                    ts_mul, rad_rad = scripts.es.ts_mul_from_reaction_muls(
-                        spcdct[ts]['reacs'], spcdct[ts]['prods'], spcdct)
-                    print('rad_rad test:', rad_rad, spcdct[ts]['reacs'], spcdct[ts]['prods'])
-                    spcdct[ts]['mul'] = ts_mul
-                    ret = scripts.es.ts_params(
-                        rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs)
-                    if ret:
-                        rxn_class, ts_zma, dist_name, grid, tors_names, update_guess = ret
-                        spcdct[ts]['class'] = rxn_class
-                        spcdct[ts]['grid'] = grid
-                        spcdct[ts]['tors_names'] = tors_names
-                        spcdct[ts]['original_zma'] = ts_zma
-                        dist_info = [dist_name, 0., update_guess]
-                        spcdct[ts]['dist_info'] = dist_info
-                        if rad_rad:
-                            print('Skipping radical radical')
-                            continue
-                    else:
+            for ts in spc_dct:
+                if 'ts_' in ts:
+                    print('Task {} \t {}//{} \t {} = {}'.format(
+                        tsk, '/'.join(thy_info), '/'.join(ini_thy_info),
+                         '+'.join(spc_dct[ts]['reacs']), '+'.join(spc_dct[ts]['prods'])))
+                    ts_info = (spc_dct[ts]['ich'], spc_dct[ts]['chg'], spc_dct[ts]['mul'])
+                    rxn_class = spc_dct[ts]['class']
+                    if not rxn_class:
+                        print('skipping reaction because type =:', rxn_class)
                         continue
-                else:
-                    ts_info = (spcdct[ts]['ich'], spcdct[ts]['chg'], spcdct[ts]['mul'])
-                    ts_zma = spcdct[ts]['original_zma']
-                    rxn_class = spcdct[ts]['class']
-                    dist_info = spcdct[ts]['dist_info']
-                    grid = spcdct[ts]['grid']
-                    _, _, rxn_run_path, rxn_save_path = spcdct[ts]['rxn_fs']
-                if 'ts' in tsk:
-                    geo, _, final_dist = scripts.es.find_ts(
-                        spcdct[ts], ts_info, ts_zma, rxn_class, dist_info,
-                        grid, thy_info, rxn_run_path, rxn_save_path, overwrite)
-                    spcdct[ts]['dist_info'][1] = final_dist
-                    if not isinstance(geo, str):
-                        print('Success, transition state {} added to species queue'.format(ts))
-                        spc_queue.append(ts)
-                elif 'vdw' in tsk:
-                    vdws = scripts.es.find_vdw(
-                              ts, spcdct, thy_info, ini_thy_info, ts_info, vdw_params,
-                              es_dct[es_run_key]['mc_nsamp'], run_prefix,
-                              save_prefix, KICKOFF_SIZE, KICKOFF_BACKWARD,
-                              PROJROT_SCRIPT_STR, overwrite)
-                    spc_queue.extend(vdws)
-            continue
+                    elif 'radical radical' in rxn_class:
+                        print('skipping reaction because type =:', rxn_class)
+                        continue
+                    ts_zma = spc_dct[ts]['original_zma']
+                    dist_info = spc_dct[ts]['dist_info']
+                    grid = spc_dct[ts]['grid']
+                    _, _, rxn_run_path, rxn_save_path = spc_dct[ts]['rxn_fs']
+                    if 'ts' in tsk:
+                        geo, _, final_dist = scripts.es.find_ts(
+                            spc_dct[ts], ts_info, ts_zma, rxn_class, dist_info,
+                            grid, thy_info, rxn_run_path, rxn_save_path, overwrite)
+                        spc_dct[ts]['dist_info'][1] = final_dist
+                        if not isinstance(geo, str):
+                            print('Success, transition state {} added to species queue'.format(ts))
+                            spc_queue.append(ts)
+                    elif 'vdw' in tsk:
+                        vdws = scripts.es.find_vdw(
+                            ts, spc_dct, thy_info, ini_thy_info, ts_info, vdw_params,
+                            es_dct[es_run_key]['mc_nsamp'], run_prefix,
+                            save_prefix, KICKOFF_SIZE, KICKOFF_BACKWARD,
+                            PROJROT_SCRIPT_STR, overwrite)
+                        spc_queue.extend(vdws)
 
         #Loop over all species
         for spc in spc_queue:
@@ -122,18 +98,19 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
             if 'ts_' in spc:
                 print('\nTask {} \t {}//{} \t Species {}'.format(
                     tsk, '/'.join(thy_info), '/'.join(ini_thy_info), spc))
-                spc_run_fs, spc_save_fs, spc_run_path, spc_save_path = spcdct[spc]['rxn_fs']
-                spc_info = scripts.es.get_spc_info(spcdct[spc])
+                spc_run_fs, spc_save_fs, spc_run_path, spc_save_path = spc_dct[spc]['rxn_fs']
+                spc_info = scripts.es.get_spc_info(spc_dct[spc])
 
             else:
                 print('\nTask {} \t {}//{} \t Species {}: {}'.format(
                     tsk, '/'.join(thy_info), '/'.join(ini_thy_info), spc,
-                    automol.inchi.smiles(spcdct[spc]['ich'])))
-                spc_info = scripts.es.get_spc_info(spcdct[spc])
+                    automol.inchi.smiles(spc_dct[spc]['ich'])))
+                spc_info = scripts.es.get_spc_info(spc_dct[spc])
                 spc_run_fs = autofile.fs.species(run_prefix)
                 print('spc_info test:', spc_info)
                 spc_run_fs.leaf.create(spc_info)
                 spc_run_path = spc_run_fs.leaf.path(spc_info)
+                print('spc_run_path test:', spc_run_path)
 
                 spc_save_fs = autofile.fs.species(save_prefix)
                 spc_save_fs.leaf.create(spc_info)
@@ -145,6 +122,8 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
                 spc_info, thy_info)
             thy_level = thy_info[0:3]
             thy_level.append(orb_restr)
+            print('thy_info test in es:', thy_info)
+            print('thy_level test in es:', thy_level)
 
             thy_run_fs = autofile.fs.theory(spc_run_path)
             thy_save_fs = autofile.fs.theory(spc_save_path)
@@ -169,6 +148,10 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
                     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
                     thy_save_fs.leaf.create(thy_level[1:4])
                     thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+
+            print('thy_run_path test in es:', thy_run_path)
+            print('thy_save_path test in es:', thy_save_path)
+
 
             if 'ene' not in tsk and 'hess' not in tsk:
                 cnf_run_fs = autofile.fs.conformer(thy_run_path)
@@ -263,11 +246,11 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
             if 'ts_' in spc:
                 if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
                     geo = moldr.ts.reference_geometry(
-                        spcdct[spc], thy_level, ini_thy_level, fs, ini_fs,
-                        spcdct[spc]['dist_info'], overwrite)
+                        spc_dct[spc], thy_level, ini_thy_level, fs, ini_fs,
+                        spc_dct[spc]['dist_info'], overwrite)
                     if geo:
                         scripts.es.ts_geometry_generation(
-                            tsk, spcdct[spc], es_dct[es_run_key],
+                            tsk, spc_dct[spc], es_dct[es_run_key],
                             thy_level, fs, spc_info, overwrite)
                 else:
                     selection = 'min'
@@ -276,7 +259,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
             else:
                 if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
                     geo = moldr.geom.reference_geometry(
-                        spcdct[spc], thy_level, ini_thy_level, fs, ini_fs,
+                        spc_dct[spc], thy_level, ini_thy_level, fs, ini_fs,
                         kickoff_size=KICKOFF_SIZE,
                         kickoff_backward=KICKOFF_BACKWARD,
                         projrot_script_str=PROJROT_SCRIPT_STR,
@@ -284,11 +267,11 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
                     if geo:
                         if not 'vdw_' in spc:
                             scripts.es.geometry_generation(
-                                tsk, spcdct[spc], es_dct[es_run_key], thy_level,
+                                tsk, spc_dct[spc], es_dct[es_run_key], thy_level,
                                 fs, spc_info, overwrite)
                         else:
                             scripts.es.fake_geo_gen(
-                                tsk, spcdct[spc], es_dct[es_run_key], thy_level,
+                                tsk, spc_dct[spc], es_dct[es_run_key], thy_level,
                                 fs, spc_info, overwrite)
                 else:
                     selection = 'min'
@@ -330,24 +313,22 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
                             continue
                     scripts.es.geometry_analysis(tsk, thy_level, ini_fs,
                             selection, spc_info, overwrite)
-    return spcdct
+    return 
 
 
-def create_spec(ts, ts_dct, spcs, charge=0, hind_inc=30.):
-    """
-    Create a transition state entry for the spcdct
-    """
-    spec = {'ich': ''}
-    spec['reacs'] = ts_dct[ts]['reacs']
-    spec['prods'] = ts_dct[ts]['prods']
-    # this ts_mul should be removed at some point - it is overwritten elsewhere and shouldn't be used
-    ts_mul = automol.mult.ts.low(
-        [spcs[spc]['mul'] for spc in spec['reacs']], [spcs[spc]['mul'] for spc in spec['prods']])
-    ts_chg = sum([spcs[spc]['chg'] for spc in spec['reacs']])
-    spec['chg'] = ts_chg
-    spec['mul'] = ts_mul
-    spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian')
-    return spec
+# def create_ts_spec(ts, ts_dct, spcs, charge=0, hind_inc=30.):
+    # """
+    # Create a transition state entry for the spc_dct
+    # """
+    # ts_spec = {'ich': ''}
+    # ts_spec['reacs'] = ts_dct[ts]['reacs']
+    # ts_spec['prods'] = ts_dct[ts]['prods']
+    # ts_mul = ts_dct[ts]['mul']
+    # ts_chg = sum([spcs[spc]['chg'] for spc in ts_spec['reacs']])
+    # ts_spec['chg'] = ts_chg
+    # ts_spec['mul'] = ts_mul
+    # ts_spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian')
+    # return ts_spec
 
 
 def get_es_info(es_dct, key):
