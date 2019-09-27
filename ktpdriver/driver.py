@@ -425,6 +425,6 @@ if __name__ == "__main__":
     #run(TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
     run(
         TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST,
-        '/lcrc/project/PACC/elliott/run2', '/lcrc/project/PACC/elliott/save2',
+        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save',
         vdw_params=VDW_PARAMS)
     #run(tsk_info_lst, es_dct, spc_dct, spcs, ref, 'runtest', 'savetest')

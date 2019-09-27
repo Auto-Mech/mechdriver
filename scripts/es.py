@@ -48,6 +48,9 @@ def run_single_conformer(spc_info, thy_level, fs, overwrite, saddle=False, dist_
     mc_nsamp = [False, 0, 0, 0, 0, 1]
     sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_level[0:2])
     thy_save_fs = fs[3]
+    two_stage = False
+    if saddle:
+        two_stage=True
     # if saddle:
         # thy_save_fs=fs[11]
     moldr.conformer.conformer_sampling(
@@ -61,6 +64,7 @@ def run_single_conformer(spc_info, thy_level, fs, overwrite, saddle=False, dist_
         nsamp_par=mc_nsamp,
         saddle=saddle,
         dist_info=dist_info,
+        two_stage=two_stage,
         **kwargs,
     )
 
@@ -157,6 +161,7 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs, spc_info, overwri
     if tsk in ['conf_samp', 'tau_samp']:
         params['nsamp_par'] = es_dct['mc_nsamp']
         params['dist_info'] = spcdic['dist_info']
+        params['two_stage'] = True
     elif tsk in ['hr_scan']:
         if 'hind_inc' in spcdic:
             params['scan_increment'] = spcdic['hind_inc']
