@@ -13,6 +13,34 @@ ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
+def ts_mul_from_reaction_muls(rcts, prds, spcdct):
+    """
+    evaluate the ts multiplicity from the multiplicities of the reactants and products
+    """
+    nrcts = len(rcts)
+    nprds = len(prds)
+    rct_spin_sum = 0
+    prd_spin_sum = 0
+    rad_rad = True
+    rct_muls = []
+    prd_muls = []
+    if nrcts == 1 and nprds == 1:
+        ts_mul = max(spcdct[rcts[0]]['mul'], spcdct[prds[0]]['mul'])
+    else:
+        ts_mul = min(spcdct[rcts[0]]['mul'], spcdct[prds[0]]['mul'])
+        for rct in rcts:
+            rct_spin_sum += (spcdct[rct]['mul'] - 1.)/2.
+            rct_muls.append(spcdct[rct]['mul'])
+        for prd in prds:
+            prd_spin_sum += (spcdct[prd]['mul'] - 1.)/2.
+            prd_muls.append(spcdct[prd]['mul'])
+        if (min(rct_muls) == 1 or nrcts == 1) and (min(prd_muls) == 1 or nrcts == 1):
+            rad_rad = False
+        ts_mul = min(rct_spin_sum, prd_spin_sum)
+        ts_mul = 2*ts_mul + 1.
+    return ts_mul, rad_rad
+
+
 def run_energy(params, kwargs):
     """ energy for geometry in fiven fs directory
     """
@@ -476,7 +504,7 @@ def get_geos(spcs, spcdct, ini_thy_info, save_prefix, run_prefix, kickoff_size, 
         spc_geos.append(geo)
     return spc_geos, cnf_save_fs_lst
 
-def ts_params(rct_zmas, prd_zmas, rct_cnf_save_fs):
+def ts_params(rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs):
     typ = None
     ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
     if ret and typ is None:
@@ -528,6 +556,8 @@ def ts_params(rct_zmas, prd_zmas, rct_cnf_save_fs):
     if typ is None:
         print("Failed to classify reaction.")
     else:
+        if rad_rad:
+            typ = 'radical radical ' + typ
         print("Type: {}".format(typ))
 
         # determine the grid
@@ -594,6 +624,10 @@ def ts_params(rct_zmas, prd_zmas, rct_cnf_save_fs):
             grid2 = numpy.delete(grid2, 0)
             grid = [grid1, grid2]
             update_guess = False
+        elif 'radical radical' in typ:
+            grid = None
+            update_guess = False
+
         return typ, ts_zma, dist_name, grid, tors_names, update_guess
 
 

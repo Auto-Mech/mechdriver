@@ -215,12 +215,17 @@ elif MECH_TYPE == 'json':
             for i, rct in enumerate(reaction['Reactants']):
                 rct_names.append(rct['name'])
                 rct_smis.append(rct['SMILES'][0])
-                rct_ichs_smi = automol.smiles.inchi(rct['SMILES'][0])
-                rct_ichs_rmg = rct['InChi']
-                if rct_ichs_smi != rct_ichs_rmg:
-                    print('Warning: RMG inchi {} differs from conversion from smiles {}:'.format(
-                        rct_ichs_rmg, rct_ichs_smi))
-                rct_ichs.append(rct_ichs_smi)
+                # rct_ichs_smi = automol.smiles.inchi(rct['SMILES'][0])
+                # rct_ichs_rmg = rct['InChi']
+                #if rct_ichs_smi != rct_ichs_rmg:
+                    # print('Warning: RMG inchi {} differs from conversion from smiles {}{}:'.format(
+                        # rct_ichs_rmg, rct_ichs_smi, rct['name']))
+                ich = rct['InChi']
+                if not automol.inchi.is_complete(ich):
+                    print('adding stereochemsiry for {}'.format(ich))
+                    ich=automol.inchi.add_stereo(rct['InChi'])[0]
+                rct_ichs.append(ich)
+                #rct_ichs.append(rct_ichs_smi)
                 rct_muls.append(rct['multiplicity'])
             rad_rad_reac = True
             if len(rct_ichs) == 1:
@@ -230,13 +235,19 @@ elif MECH_TYPE == 'json':
                     rad_rad_reac = False
             for i, prd in enumerate(reaction['Products']):
                 prd_names.append(prd['name'])
-                prd_smis.append(prd['SMILES'][0])
-                prd_ichs_smi = automol.smiles.inchi(prd['SMILES'][0])
-                prd_ichs_rmg = prd['InChi']
-                if prd_ichs_smi != prd_ichs_rmg:
-                    print('Warning: RMG inchi {} differs from conversion from smiles {}:'.format(
-                        prd_ichs_rmg, prd_ichs_smi))
-                prd_ichs.append(prd_ichs_smi)
+                prd_ichs.append(automol.inchi.add_stereo(prd['InChi'])[0])
+                #prd_smis.append(prd['SMILES'][0])
+                # prd_ichs_smi = automol.smiles.inchi(prd['SMILES'][0])
+                # prd_ichs_rmg = prd['InChi']
+                # if prd_ichs_smi != prd_ichs_rmg:
+                    # print('Warning: RMG inchi {} differs from conversion from smiles {}{}:'.format(
+                        # prd_ichs_rmg, prd_ichs_smi, prd['name']))
+                # prd_ichs.append(prd_ichs_smi)
+                ich = prd['InChi']
+                if not automol.inchi.is_complete(ich):
+                    print('adding stereochemsiry for {}'.format(ich))
+                    ich=automol.inchi.add_stereo(prd['InChi'])[0]
+                prd_ichs.append(ich)
                 prd_muls.append(prd['multiplicity'])
 #                print('prd_muls test:', prd['name'], prd['multiplicity'])
             rad_rad_prod = True
@@ -287,7 +298,6 @@ elif MECH_TYPE == 'json':
 #        FORMULA_STR = ''.join(map(str, chain.from_iterable(formula_dict.items())))
         FORMULA_STR_LST.append(FORMULA_STR)
 
-    print('rct_names_list before sort:', RCT_NAMES_LST)
     RXN_INFO_LST = list(zip(
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST,
         RXN_NAME_LST, RXN_SENS, RXN_UNC, RXN_VAL, RXN_FAM,
@@ -578,14 +588,14 @@ if RUN_RATES:
         # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
         ]
 
-    print('RCT_NAMES_LST test:', RCT_NAMES_LST)
-    print('PRD_NAMES_LST test:', PRD_NAMES_LST)
     for PES in PES_LST:
         RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
         PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
         print('running ktp on PES ', PES)
+        print('RCT_NAMES_LST test:', RCT_NAMES_LST)
+        print('PRD_NAMES_LST test:', PRD_NAMES_LST)
         ktpdriver.driver.run(
-            TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
+            TSK_INFO_LST, ES_DCT, SPC_DCT.copy(), RCT_NAMES_LST, PRD_NAMES_LST,
             '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
 
 # set up a combination of energies

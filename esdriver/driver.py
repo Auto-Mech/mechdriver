@@ -14,7 +14,8 @@ KICKOFF_BACKWARD = False
 PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                       "RPHt.exe >& /dev/null")
 
-def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_params):
+def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix,
+        vdw_params=[False, False, True]):
     """ driver for all electronic structure tasks
     """
 
@@ -64,6 +65,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
                     ts_info = (spcdct[ts]['ich'], spcdct[ts]['chg'], spcdct[ts]['mul'])
                     spcdct[ts] = scripts.es.rxn_info(
                         run_prefix, save_prefix, ts, spcdct, thy_info, ini_thy_info)
+                    print('spcdct[ts]:', spcdct[ts])
                     rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = scripts.es.get_rxn_fs(
                         run_prefix, save_prefix, spcdct[ts])
                     spcdct[ts]['rxn_fs'] = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
@@ -71,18 +73,25 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
                         spcdct[ts]['reacs'], spcdct[ts]['prods'], spcdct,
                         ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
                         KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
+                    ts_mul, rad_rad = scripts.es.ts_mul_from_reaction_muls(
+                        spcdct[ts]['reacs'], spcdct[ts]['prods'], spcdct)
+                    print('rad_rad test:', rad_rad, spcdct[ts]['reacs'], spcdct[ts]['prods'])
+                    spcdct[ts]['mul'] = ts_mul
                     ret = scripts.es.ts_params(
-                        rct_zmas, prd_zmas, rct_cnf_save_fs)
+                        rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs)
                     if ret:
                         rxn_class, ts_zma, dist_name, grid, tors_names, update_guess = ret
+                        spcdct[ts]['class'] = rxn_class
+                        spcdct[ts]['grid'] = grid
+                        spcdct[ts]['tors_names'] = tors_names
+                        spcdct[ts]['original_zma'] = ts_zma
+                        dist_info = [dist_name, 0., update_guess]
+                        spcdct[ts]['dist_info'] = dist_info
+                        if rad_rad:
+                            print('Skipping radical radical')
+                            continue
                     else:
                         continue
-                    spcdct[ts]['class'] = rxn_class
-                    spcdct[ts]['grid'] = grid
-                    spcdct[ts]['tors_names'] = tors_names
-                    spcdct[ts]['original_zma'] = ts_zma
-                    dist_info = [dist_name, 0., update_guess]
-                    spcdct[ts]['dist_info'] = dist_info
                 else:
                     ts_info = (spcdct[ts]['ich'], spcdct[ts]['chg'], spcdct[ts]['mul'])
                     ts_zma = spcdct[ts]['original_zma']
@@ -324,19 +333,19 @@ def run(tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_para
     return spcdct
 
 
-def create_spec(ts, ts_dct, spcs, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=30.):
+def create_spec(ts, ts_dct, spcs, charge=0, hind_inc=30.):
     """
     Create a transition state entry for the spcdct
     """
     spec = {'ich': ''}
     spec['reacs'] = ts_dct[ts]['reacs']
     spec['prods'] = ts_dct[ts]['prods']
+    # this ts_mul should be removed at some point - it is overwritten elsewhere and shouldn't be used
     ts_mul = automol.mult.ts.low(
         [spcs[spc]['mul'] for spc in spec['reacs']], [spcs[spc]['mul'] for spc in spec['prods']])
     ts_chg = sum([spcs[spc]['chg'] for spc in spec['reacs']])
     spec['chg'] = ts_chg
     spec['mul'] = ts_mul
-    spec['mc_nsamp'] = mc_nsamp
     spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian')
     return spec
 
