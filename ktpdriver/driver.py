@@ -66,11 +66,15 @@ def run(
         if runspcfirst:
             rxn_lst[0]['species'] = spc_queue
         spc_dct = esdriver.driver.run(
-            tsk_info_lst, es_dct, rxn_lst, spcdct, run_prefix, save_prefix, vdw_params)
+            tsk_info_lst, es_dct, rxn_lst, spcdct.copy(), run_prefix, save_prefix, vdw_params)
     else:
         pass
     #BUT if we don't run ES I need to construct the following info right here for ts dict
     #ts_zma, rxn_fs,
+    tsname_0 = 'ts_0'
+    if 'original_zma' in spc_dct[tsname_0]:
+        pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
+        print('Starting mess file preparation for {}:'.format(pes_formula))
 
     #Figure out the model and theory levels for the MESS files
     geo_lvl = ''
@@ -140,6 +144,9 @@ def run(
     for spc in spcdct:   #have to make sure you get them for the TS too
         if 'ts_' in spc:
             ts_queue.append(spc)
+            if 'radical radical' in spcdct[spc]['class']:
+                print('skipping rate for radical radical reaction: {}'.format(spc))
+                continue
     for spc in spc_queue +  ts_queue:
         spc_info = (spcdct[spc]['ich'], spcdct[spc]['chg'], spcdct[spc]['mul'])
         if 'ts_' in spc:
@@ -152,7 +159,7 @@ def run(
             saddle = False
             save_path = save_prefix
         zpe, _ = scripts.thermo.get_zpe(
-            spc, spc_info, spc_save_path, pf_levels, ts_model)
+            spc, spcdct[spc], spc_save_path, pf_levels, ts_model)
         spcdct[spc]['zpe'] = zpe
         ene_strl = []
         ene_lvl = ''
@@ -190,9 +197,12 @@ def run(
     idx_dct = {}
     first_ground_ene = 0.
     wells = scripts.ktp.make_all_well_data(
-        rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
+        rxn_lst, spcdct.copy(), save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
+        if 'radical radical' in spc_dct[tsname]['class']:
+            print('skipping rate for radical radical reaction: {}'.format(tsname))
+            continue
         tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
         if tsform != pes_formula:
             print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(
@@ -200,7 +210,7 @@ def run(
             print('Will proceed to construct only {}'.format(pes_formula))
             continue
         mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
-            tsname, rxn, wells, spcdct, idx_dct, mess_strs, first_ground_ene)
+            tsname, rxn, wells, spcdct.copy(), idx_dct, mess_strs, first_ground_ene)
         print(idx_dct)
     well_str, bim_str, ts_str = mess_strs
     ts_str += '\nEnd\n'

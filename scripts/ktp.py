@@ -56,16 +56,16 @@ def make_all_well_data(rxn_lst, spcdct, save_prefix, model_info, pf_info, projro
             tsname, ts, spc_save_fs, model_info, pf_info, projrot_script_str)
     return wells
 
-def make_well_data(spc, spc_spcdct, spc_save_fs, model_info, pf_info, projrot_script_str):
-    spc_info = (spc_spcdct['ich'], spc_spcdct['chg'], spc_spcdct['mul'])
+def make_well_data(spc, spc_dct, spc_save_fs, model_info, pf_info, projrot_script_str):
+    spc_info = (spc_dct['ich'], spc_dct['chg'], spc_dct['mul'])
     if 'ts_' in spc:
-        save_path = spc_spcdct['rxn_fs'][3]
+        save_path = spc_dct['rxn_fs'][3]
     else:
         spc_save_fs.leaf.create(spc_info)
         save_path = spc_save_fs.leaf.path(spc_info)
     well_data = moldr.pf.species_block(
         spc=spc,
-        spc_spcdct=spc_spcdct,
+        spc_dct=spc_dct,
         spc_info=spc_info,
         spc_model=model_info,
         pf_levels=pf_info,
@@ -168,7 +168,7 @@ def make_channel_pfs(tsname, rxn, wells, spcdct, idx_dct, strs, first_ground_ene
     ts_ene = scripts.thermo.spc_energy(spcdct[tsname]['ene'], spcdct[tsname]['zpe']) * EH2KCAL
     zero_energy = ts_ene - first_ground_ene
     ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
-    imag_freq = abs(spcdct[tsname]['imag_freq'])
+    imag_freq = abs(spcdct[tsname]['imag_freq'][0])
     tunnel_str = mess_io.writer.tunnel_eckart(
         imag_freq, ts_ene-reac_ene, ts_ene-prod_ene)
     ts_str += '\n' + mess_io.writer.ts_sadpt(

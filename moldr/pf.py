@@ -16,7 +16,7 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def species_block(
-        spc, spc_spcdct, spc_info, spc_model, pf_levels, script_str,
+        spc, spc_dct, spc_info, spc_model, pf_levels, script_str,
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix='spc_save_path'):
     """ prepare the species input for messpf
@@ -93,12 +93,12 @@ def species_block(
     # pure harmonic case
     spc_str = ''
     elec_levels = [[0., spc_info[2]]]
-    if 'elec_levs' in spc_spcdct:
-        elec_levels = spc_spcdct['elec_levs']
+    if 'elec_levs' in spc_dct:
+        elec_levels = spc_dct['elec_levs']
 
     sym_factor = 1.
-    if 'sym' in spc_spcdct:
-        sym_factor = spc_spcdct['sym']
+    if 'sym' in spc_dct:
+        sym_factor = spc_dct['sym']
     else:
         if sym_model == 'SAMPLING':
             sym_geo = sym_cnf_save_fs.leaf.file.geometry.read(sym_min_cnf_locs)
@@ -166,9 +166,13 @@ def species_block(
                         # proj_freqs = freqs[5:]
                         # zpe = sum(proj_freqs)*WAVEN2KCAL/2.
                     # else:
-                    zma = automol.geom.zmatrix(tors_geo)
+                    if 'ts_' in spc:
+                        zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
+                        tors_names = spc_dct['tors_names']
+                    else:
+                        zma = automol.geom.zmatrix(tors_geo)
+                        tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
                     gra = automol.zmatrix.graph(zma, remove_stereo=True)
-                    tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
                     coo_dct = automol.zmatrix.coordinates(zma, multi=False)
 
                     # prepare axis, group, and projection info
@@ -210,23 +214,19 @@ def species_block(
 
                     moldr.util.run_script(script_str, path)
 
-                    rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-                        path+'/RTproj_freq.dat')
-                    rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-                        path+'/hrproj_freq.dat')
-                    # the second variable above is the imaginary frequency list
-                    # print('Projection test')
-                    # print(rtproj_freqs)
-                    # print(rthrproj_freqs)
-                    # PROJROT just produces temporary files that are removed
-                    shutil.rmtree(path)
-                    if pot is None:
-                        proj_freqs = rtproj_freqs
-                        zpe = sum(rtproj_freqs)*WAVEN2KCAL/2.
-                    else:
-                        proj_freqs = rthrproj_freqs
-                        zpe = sum(rthrproj_freqs)*WAVEN2KCAL/2.
+                    print('pot test:', pot)
 
+                    if len(pot) > 0:
+                        rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                            path+'/hrproj_freq.dat')
+                        proj_freqs = rthrproj_freqs
+                    else:
+                        rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                            path+'/RTproj_freq.dat')
+                        proj_freqs = rtproj_freqs
+                    # shutil.rmtree(path)
+                    zpe = sum(proj_freqs)*WAVEN2KCAL/2.
+                    print(proj_freqs)
                     core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
                     spc_str = mess_io.writer.molecule(
                         core, proj_freqs, elec_levels,
@@ -340,12 +340,13 @@ def get_high_level_energy(
 
 
 def get_zero_point_energy(
-        spc, spc_info, pf_levels, spc_model, script_str,
+        spc, spc_dct, pf_levels, spc_model, script_str,
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix='spc_save_path'):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
+    spc_info = (spc_dct['ich'], spc_dct['chg'], spc_dct['mul'])
     # prepare the sets of file systems
     har_level, tors_level, vpt2_level, _ = pf_levels
     tors_model, vib_model, _ = spc_model
@@ -433,9 +434,13 @@ def get_zero_point_energy(
 
         min_ene = tors_cnf_save_fs.leaf.file.energy.read(tors_min_cnf_locs)
         tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
-        zma = automol.geom.zmatrix(tors_geo)
+        if 'ts_' in spc:
+            zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
+            tors_names = spc_dct['tors_names']
+        else:
+            zma = automol.geom.zmatrix(tors_geo)
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
         gra = automol.zmatrix.graph(zma, remove_stereo=True)
-        tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
         tors_zpe_cor = 0.0
         if tors_names:
             coo_dct = automol.zmatrix.coordinates(zma, multi=False)

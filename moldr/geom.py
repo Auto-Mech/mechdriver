@@ -368,11 +368,14 @@ def projrot_frequencies(geo, hess, thy_level, thy_run_fs, projrot_script_str='RP
         proj_file.write(projrot_inp_str)
 
     moldr.util.run_script(projrot_script_str, projrot_path)
-   
-    rtproj_freqs, _ = projrot_io.reader.rpht_output(
-        projrot_path+'/RTproj_freq.dat')
-    rthrproj_freqs, _ = projrot_io.reader.rpht_output(
-        projrot_path+'/hrproj_freq.dat')
-    print(rtproj_freqs)
-    proj_freqs = rtproj_freqs
+
+    if os.path.exists(projrot_path+'/hrproj_freq.dat'):
+        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
+            projrot_path+'/hrproj_freq.dat')
+        proj_freqs = rthrproj_freqs
+    else:
+        rtproj_freqs, _ = projrot_io.reader.rpht_output(
+            projrot_path+'/RTproj_freq.dat')
+        proj_freqs = rtproj_freqs
+    print(proj_freqs)
     return proj_freqs
