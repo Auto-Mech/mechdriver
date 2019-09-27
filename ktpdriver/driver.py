@@ -263,13 +263,10 @@ def run(
     idx_dct = {}
     first_ground_ene = 0.
     species = scripts.ktp.make_all_species_data(
-        rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
+        rxn_lst, spc_dct, spc_save_fs, ts_model, pf_levels, PROJROT_SCRIPT_STR)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
         # if spc_dct[ts]['rad_rad']:
-        if 'radical radical' in spc_dct[tsname]['class']:
-            print('skipping rate for {} reaction: {}'.format(spc_dct[tsname]['class'], tsname))
-            continue
         tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
         if tsform != pes_formula:
             print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(
@@ -277,7 +274,8 @@ def run(
             print('Will proceed to construct only {}'.format(pes_formula))
             continue
         mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
-            tsname, rxn, species, spc_dct, idx_dct, mess_strs, first_ground_ene)
+            tsname, rxn, species, spc_dct, idx_dct, mess_strs,
+            first_ground_ene, spc_save_fs, pf_levels, projrot_script_str)
         print(idx_dct)
     well_str, bim_str, ts_str = mess_strs
     ts_str += '\nEnd\n'

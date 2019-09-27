@@ -41,9 +41,8 @@ def pf_headers(rct_ichs, temps, press, exp_factor, exp_power, exp_cutoff,
 
     return header_str, energy_trans_str
 
-def make_all_species_data(rxn_lst, spc_dct, save_prefix, model_info, pf_info, projrot_script_str):
+def make_all_species_data(rxn_lst, spc_dct, spc_save_fs, model_info, pf_info, projrot_script_str):
     species = {}
-    spc_save_fs = autofile.fs.species(save_prefix)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
         ts = spc_dct[tsname]
@@ -75,16 +74,41 @@ def make_species_data(spc, spc_dct_i, spc_save_fs, model_info, pf_info, projrot_
         )
     return species_data
 
-def make_channel_pfs(tsname, rxn, wells, spc_dct, idx_dct, strs, first_ground_ene):
+def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, pf_info, projrot_script_str):
+    spc_info_i = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
+    spc_info_j = (spc_dct_j['ich'], spc_dct_j['chg'], spc_dct_j['mul']
+            )
+    spc_save_fs.leaf.create(spc_info_i)
+    spc_save_fs.leaf.create(spc_info_j)
+    save_path_i = spc_save_fs.leaf.path(spc_info_i)
+    save_path_j = spc_save_fs.leaf.path(spc_info_j)
+    species_data_i = moldr.pf.species_block(
+        spc_dct_i=spc_dct_i,
+        spc_dct_j=spc_dct_j,
+        spc_info_i=spc_info_i,
+        spc_info_j=spc_info_j,
+        spc_model=['RIGID', 'HARM'],
+        pf_levels=pf_info,
+        script_str=projrot_script_str,
+        elec_levels=[[0., 1]], sym_factor=1.,
+        save_prefix=save_path_i,
+        save_prefix=save_path_j
+        )
+    return species_data
+
+def make_channel_pfs(tsname, rxn, wells, spc_dct, idx_dct, strs, first_ground_ene, spc_save_fs, pf_info, projrot_script_str):
     bim_str, well_str, ts_str = strs
 #Find the number of uni and bimolecular wells already in the dictionary
     pidx = 1
     widx = 1
+    fidx = 1
     for val in idx_dct.values():
         if 'P' in val:
             pidx += 1
         elif 'W' in val:
             widx += 1
+        elif 'F' in val:
+            fidx += 1
 #Set up a new well for the reactants if that combo isn't already in the dct
     reac_label = ''
     reac_ene = 0.
@@ -171,8 +195,33 @@ def make_channel_pfs(tsname, rxn, wells, spc_dct, idx_dct, strs, first_ground_en
     imag_freq = abs(spc_dct[tsname]['imag_freq'][0])
     tunnel_str = mess_io.writer.tunnel_eckart(
         imag_freq, ts_ene-reac_ene, ts_ene-prod_ene)
-    ts_str += '\n' + mess_io.writer.ts_sadpt(
-        ts_label, reac_label, prod_label, wells[tsname], zero_energy, tunnel_str)
+
+    if 'abstraction' in spc_dct[tsname]['class']:
+    #if len(rxn['reacs']) > 1:
+    #Make a fake well if need be
+        well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
+        well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
+        if not well_dct_key1 in idx_dct:
+            if well_dct_key2 in idx_dct:
+                well_dct_key1 = well_dct_key2
+        else:
+                fake_well_label = 'F' + str(fidx)
+                zero_energy = reac_ene 
+                well_str += ' \t ! {} Fake Well for {}\n'.format('+'.join(rxn['reacs']))
+                fake_well = make_fake_species_data(spc_dct[rxn['reacs'][0]],
+                        spc_dct[rxn['reacs'][1]], spc_save_fs, pf_info,
+                        projrot_script_str)
+                well_str += mess_io.writer.fake_well(fake_well_label, fake_well, zero_energy)
+                idx_dct[well_dct_key1] = fake_well_label
+
+        fake_ts_label =  'FB' + str(int(tsname.replace('ts_', ''))+1)
+        ts_str += '\n' + mess_io.writer.ts_sadpt(
+            fake_ts_label, reac_label, fake_well_label, wells[tsname], zero_energy, tunnel_str)
+        ts_str += '\n' + mess_io.writer.ts_sadpt(
+            ts_label, fake_well_label, prod_label, wells[tsname], zero_energy, tunnel_str)
+    else:
+        ts_str += '\n' + mess_io.writer.ts_sadpt(
+            ts_label, reac_label, prod_label, wells[tsname], zero_energy, tunnel_str)
 
     return [well_str, bim_str, ts_str], first_ground_ene
 
