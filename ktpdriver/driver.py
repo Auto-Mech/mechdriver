@@ -193,13 +193,20 @@ def run(
 
     geo_thy_info = get_thy_info(es_dct, geo_lvl)
     harm_thy_info = get_thy_info(es_dct, harm_lvl)
-    tors_thy_info = get_thy_info(es_dct, tors_lvl)
-    anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
-    sym_thy_info = get_thy_info(es_dct, sym_lvl)
-    harm_ref_thy_info = get_thy_info(es_dct, harm_lvl_ref)
-    tors_ref_thy_info = get_thy_info(es_dct, tors_lvl_ref)
-    anharm_ref_thy_info = get_thy_info(es_dct, anharm_lvl_ref)
-    sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
+    if tors_lvl:
+        tors_thy_info = get_thy_info(es_dct, tors_lvl)
+    if anharm_lvl:
+        anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
+    if sym_lvl:
+        sym_thy_info = get_thy_info(es_dct, sym_lvl)
+    if harm_lvl_ref:
+        harm_ref_thy_info = get_thy_info(es_dct, harm_lvl_ref)
+    if tors_lvl_ref:
+        tors_ref_thy_info = get_thy_info(es_dct, tors_lvl_ref)
+    if anharm_lvl_ref:
+        anharm_ref_thy_info = get_thy_info(es_dct, anharm_lvl_ref)
+    if sym_lvl_ref:
+        sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
     pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
     ref_levels = [
         harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
