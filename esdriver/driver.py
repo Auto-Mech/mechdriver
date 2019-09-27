@@ -40,6 +40,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
         os.makedirs(run_prefix)
 
     #Loop over Tasks
+    ts_found = []
     for tsk_info in tsk_info_lst:
 
         #Task information
@@ -84,6 +85,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                         if not isinstance(geo, str):
                             print('Success, transition state {} added to species queue'.format(ts))
                             spc_queue.append(ts)
+                            ts_found.append(ts)
                     elif 'vdw' in tsk:
                         vdws = scripts.es.find_vdw(
                             ts, spc_dct, thy_info, ini_thy_info, ts_info, vdw_params,
@@ -313,7 +315,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                             continue
                     scripts.es.geometry_analysis(tsk, thy_level, ini_fs,
                             selection, spc_info, overwrite)
-    return 
+    return ts_found
 
 
 # def create_ts_spec(ts, ts_dct, spcs, charge=0, hind_inc=30.):

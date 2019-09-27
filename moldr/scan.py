@@ -78,6 +78,7 @@ def run_scan(
         inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
         existing_grid_dct = dict(inf_obj.grids)
         existing_grid_vals = existing_grid_dct[coo_name]
+        print('grid vals test:', grid_vals, existing_grid_vals)
         assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
                 (numpy.allclose(grid_vals*180.0/numpy.pi, existing_grid_vals) or
                  numpy.allclose(grid_vals, existing_grid_vals)))

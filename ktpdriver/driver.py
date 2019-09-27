@@ -129,8 +129,9 @@ def run(
 
         #Run ESDriver
         if runes:
-            esdriver.driver.run(
+            ts_found = esdriver.driver.run(
                 ts_tsk_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix, vdw_params)
+            print('ts_found test:', ts_found)
 
         # if spc_dct[ts]['rad_rad']:
             # print('Skipping radical radical')
@@ -193,6 +194,13 @@ def run(
 
     geo_thy_info = get_thy_info(es_dct, geo_lvl)
     harm_thy_info = get_thy_info(es_dct, harm_lvl)
+    tors_thy_info = None
+    anharm_thy_info = None
+    sym_thy_info = None
+    harm_ref_thy_info = None
+    tors_ref_thy_info = None
+    anharm_ref_thy_info = None
+    sym_ref_thy_info = None
     if tors_lvl:
         tors_thy_info = get_thy_info(es_dct, tors_lvl)
     if anharm_lvl:
@@ -215,7 +223,7 @@ def run(
     spc_save_fs = autofile.fs.species(save_prefix)
     ts_queue = []
     for spc in spc_dct:   #have to make sure you get them for the TS too
-        if 'ts_' in spc:
+        if spc in ts_found:
             ts_queue.append(spc)
             if 'radical radical' in spc_dct[spc]['class']:
                 print('skipping rate for radical radical reaction: {}'.format(spc))
@@ -273,17 +281,17 @@ def run(
         rxn_lst, spc_dct, spc_save_fs, ts_model, pf_levels, PROJROT_SCRIPT_STR)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
-        # if spc_dct[ts]['rad_rad']:
-        tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
-        if tsform != pes_formula:
-            print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(
-                tsform, pes_formula))
-            print('Will proceed to construct only {}'.format(pes_formula))
-            continue
-        mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
-            tsname, rxn, species, spc_dct, idx_dct, mess_strs,
-            first_ground_ene, spc_save_fs, pf_levels, projrot_script_str)
-        print(idx_dct)
+        if tsname in ts_found:
+            # if spc_dct[ts]['rad_rad']:
+            tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
+            if tsform != pes_formula:
+                print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(
+                    tsform, pes_formula))
+                print('Will proceed to construct only {}'.format(pes_formula))
+                continue
+            mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
+                tsname, rxn, species, spc_dct, idx_dct, mess_strs, first_ground_ene)
+            print(idx_dct)
     well_str, bim_str, ts_str = mess_strs
     ts_str += '\nEnd\n'
     print(well_str)
