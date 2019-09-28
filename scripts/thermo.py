@@ -48,24 +48,24 @@ def spc_energy(spc_ene, spc_zpe):
     return spc_ene
 
 
-def basis_energy(spc_bas, spcdct):
+def basis_energy(spc_bas, spc_dct):
     """ return the electronic + zero point energies for a set of species
     """
     h_basis = []
     for ich in spc_bas:
-        for key in spcdct:
-            if ich == spcdct[key]['ich']:
-                tmp = spc_energy(spcdct[key]['ene'], spcdct[key]['zpe'])
+        for key in spc_dct:
+            if ich == spc_dct[key]['ich']:
+                tmp = spc_energy(spc_dct[key]['ene'], spc_dct[key]['zpe'])
                 h_basis.append(tmp)
                 break
     return h_basis
 
 
-def get_coeff(spc, spcdct, spc_bas):
+def get_coeff(spc, spc_dct, spc_bas):
     """ return the coefficients for the expansion of a species in terms of a
     set of basis species
     """
-    ich = spcdct[spc]['ich']
+    ich = spc_dct[spc]['ich']
     formula = thermo.util.inchi_formula(ich)
     #print('\nformula:')
     #print(formula)
@@ -75,7 +75,7 @@ def get_coeff(spc, spcdct, spc_bas):
     #print('\natom dict:')
     #print(atom_dict)
 
-    if len(spc_bas) == 1 and spcdct[spc]['ich'] == spc_bas[0]:
+    if len(spc_bas) == 1 and spc_dct[spc]['ich'] == spc_bas[0]:
         coeff = [1]
         # print('\ncoeff:')
         # print(coeff)
@@ -84,20 +84,20 @@ def get_coeff(spc, spcdct, spc_bas):
         coeff = thermo.heatform.calc_coefficients(spc_bas, atom_dict)
         # print('\ncoeff:')
         # print(coeff)
-    #print('coeff test:', spcdct[spc]['ich'], spc_bas)
+    #print('coeff test:', spc_dct[spc]['ich'], spc_bas)
     return coeff
 
 
-def get_hf0k(spc, spcdct, spc_bas):
+def get_hf0k(spc, spc_dct, spc_bas):
     """ determine the 0 K heat of formation from the
     species dictionary and a set of references species
     """
     # print('spc_bas:', spc_bas)
-    spc_ene = spc_energy(spcdct[spc]['ene'], spcdct[spc]['zpe'])
-    h_basis = basis_energy(spc_bas, spcdct)
+    spc_ene = spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
+    h_basis = basis_energy(spc_bas, spc_dct)
     # print('spc_ene:', spc_ene)
     # print('h_basis:', h_basis)
-    coeff = get_coeff(spc, spcdct, spc_bas)
+    coeff = get_coeff(spc, spc_dct, spc_bas)
 
     # Get the 0 K heat of formation
     # ref_set should be a parameter for this routine
@@ -123,7 +123,7 @@ def get_zpe(spc, spc_info, spc_save_path, pf_levels, spc_model):
     # print('har_level in get_zpe:', har_level)
     spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
         spc, spc_info, pf_levels, spc_model,
-        script_str=PF_SCRIPT_STR,
+        pf_script_str=PF_SCRIPT_STR,
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix=spc_save_path)
     zpe_str = '{0:<8.2f}\n'.format(spc_zpe)
@@ -139,7 +139,7 @@ def get_zpe(spc, spc_info, spc_save_path, pf_levels, spc_model):
     return spc_zpe, zero_energy_str
 
 
-def get_spc_input(spc, spc_spcdct, spc_info, spc_save_path, pf_levels, spc_model):
+def get_spc_input(spc, spc_dct_i, spc_info, spc_save_path, pf_levels, spc_model):
     """ set up the input string for a given species section in mess input
     """
 
@@ -151,11 +151,11 @@ def get_spc_input(spc, spc_spcdct, spc_info, spc_save_path, pf_levels, spc_model
     # generate the partition function
     spc_str = moldr.pf.species_block(
         spc=spc,
-        spc_spcdct=spc_spcdct,
+        spc_dct_i=spc_dct_i,
         spc_info=spc_info,
         spc_model=spc_model,
         pf_levels=pf_levels,
-        script_str=PROJROT_SCRIPT_STR,
+        projrot_script_str=PROJROT_SCRIPT_STR,
         save_prefix=spc_save_path,
         )
     print(spc_str)
@@ -253,11 +253,11 @@ def prepare_path(path, loc):
     return new_path
 
 
-def write_thermp_inp(spc_spcdct):
+def write_thermp_inp(spc_dct_i):
     """ write the thermp input file
     """
-    ich = spc_spcdct['ich']
-    h0form = spc_spcdct['Hfs'][0]
+    ich = spc_dct_i['ich']
+    h0form = spc_dct_i['Hfs'][0]
     formula = thermo.util.inchi_formula(ich)
     # Write thermp input file
     enthalpyt = 0.
@@ -287,12 +287,11 @@ def run_thermp(pf_path, nasa_path):
     return hf298k
 
 
-def run_pac(spc_spcdct, nasa_path):
+def run_pac(spc_dct_i, nasa_path):
     """ run pac99 to convert thermochemical data to nasa polynomials
     """
-    ich = spc_spcdct['ich']
+    ich = spc_dct_i['ich']
     formula = thermo.util.inchi_formula(ich)
-    atom_dict = thermo.util.get_atom_counts_dict(formula)
 
     # Run pac99
     thermo.runner.run_pac99(nasa_path, formula)
@@ -315,7 +314,7 @@ def run_pac(spc_spcdct, nasa_path):
 def run_ckin_header(pf_info, ref_info, spc_model):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
-    tors_model, vib_model, sym_model = spc_model
+    tors_model, vib_model, _ = spc_model
     har_info, tors_info, vpt2_info, _, sp_str, = pf_info
     har_ref_info, tors_ref_info, vpt2_ref_info, _ = ref_info
 
@@ -341,13 +340,13 @@ def run_ckin_header(pf_info, ref_info, spc_model):
     return chemkin_header_str
 
 
-def run_ckin_poly(spc, spc_spcdct, pac99_poly_str):
+def run_ckin_poly(spc, spc_dct_i, pac99_poly_str):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
 
     hf_str = '! Hf(0 K) = {:.2f}, Hf(298 K) = {:.2f} kcal/mol\n'.format(
-        float(spc_spcdct['Hfs'][0]), float(spc_spcdct['Hfs'][1]))
-    ich = spc_spcdct['ich']
+        float(spc_dct_i['Hfs'][0]), float(spc_dct_i['Hfs'][1]))
+    ich = spc_dct_i['ich']
     formula = thermo.util.inchi_formula(ich)
     atom_dict = thermo.util.get_atom_counts_dict(formula)
     chemkin_poly_str = thermo.nasapoly.convert_pac_to_chemkin(
@@ -357,16 +356,15 @@ def run_ckin_poly(spc, spc_spcdct, pac99_poly_str):
     return chemkin_poly_str
 
 
-def write_nasa_file(spc_spcdct, ckin_path, nasa_path, chemkin_poly_str):
+def write_nasa_file(spc_dct_i, ckin_path, nasa_path, chemkin_poly_str):
     """ write out the nasa polynomials
     """
-    ich = spc_spcdct['ich']
+    ich = spc_dct_i['ich']
     formula = thermo.util.inchi_formula(ich)
     with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)
     with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)
-    return
 
 
 # create a messpf input file

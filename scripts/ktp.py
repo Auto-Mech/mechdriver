@@ -1,7 +1,6 @@
 """ reaction list test
 """
 import os
-import sys
 from qcelemental import constants as qcc
 import thermo
 import automol
@@ -17,14 +16,15 @@ ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                           "mess mess.inp build.out >> stdout.log &> stderr.log")
+                   "mess mess.inp build.out >> stdout.log &> stderr.log")
 PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
                       "RPHt.exe >& /dev/null")
 
-def pf_headers(rct_ichs, temps, press, exp_factor, exp_power, exp_cutoff,
-             eps1, eps2, sig1, sig2, mass1):
-
-# print header and energy transfer sections only for the first channel
+def pf_headers(
+        rct_ichs, temps, press, exp_factor, exp_power, exp_cutoff, eps1, eps2,
+        sig1, sig2, mass1):
+    """ makes the standard header and energy transfer sections for MESS input file
+    """
     # header section
     header_str = mess_io.writer.global_reaction(temps, press)
     print(header_str)
@@ -41,7 +41,10 @@ def pf_headers(rct_ichs, temps, press, exp_factor, exp_power, exp_cutoff,
 
     return header_str, energy_trans_str
 
-def make_all_species_data(rxn_lst, spc_dct, spc_save_fs, model_info, pf_info, projrot_script_str):
+
+def make_all_species_data(rxn_lst, spc_dct, spc_save_fs, spc_model, pf_levels, projrot_script_str):
+    """ generate the MESS species blocks for all the species
+    """
     species = {}
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
@@ -50,12 +53,15 @@ def make_all_species_data(rxn_lst, spc_dct, spc_save_fs, model_info, pf_info, pr
         for name in specieslist:
             if not name in species:
                 species[name], _ = make_species_data(
-                    name, spc_dct[name], spc_save_fs, model_info, pf_info, projrot_script_str)
+                    name, spc_dct[name], spc_save_fs, spc_model, pf_levels, projrot_script_str)
         species[tsname], spc_dct[tsname]['imag_freq'] = make_species_data(
-            tsname, ts, spc_save_fs, model_info, pf_info, projrot_script_str)
+            tsname, ts, spc_save_fs, spc_model, pf_levels, projrot_script_str)
     return species
 
-def make_species_data(spc, spc_dct_i, spc_save_fs, model_info, pf_info, projrot_script_str):
+
+def make_species_data(spc, spc_dct_i, spc_save_fs, spc_model, pf_levels, projrot_script_str):
+    """ makes the main part of the MESS species block for a given species
+    """
     spc_info = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
     if 'ts_' in spc:
         save_path = spc_dct_i['rxn_fs'][3]
@@ -66,37 +72,53 @@ def make_species_data(spc, spc_dct_i, spc_save_fs, model_info, pf_info, projrot_
         spc=spc,
         spc_dct_i=spc_dct_i,
         spc_info=spc_info,
-        spc_model=model_info,
-        pf_levels=pf_info,
-        script_str=projrot_script_str,
+        spc_model=spc_model,
+        pf_levels=pf_levels,
+        projrot_script_str=projrot_script_str,
         elec_levels=[[0., 1]], sym_factor=1.,
         save_prefix=save_path,
         )
     return species_data
 
-def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, pf_info, projrot_script_str):
+
+def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, pf_levels, projrot_script_str):
+    """ make a fake MESS species block to represent the van der Waals well
+    arising from the combination of two fragment species
+    """
     spc_info_i = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
-    spc_info_j = (spc_dct_j['ich'], spc_dct_j['chg'], spc_dct_j['mul']
-            )
+    spc_info_j = (spc_dct_j['ich'], spc_dct_j['chg'], spc_dct_j['mul'])
     spc_save_fs.leaf.create(spc_info_i)
     spc_save_fs.leaf.create(spc_info_j)
     save_path_i = spc_save_fs.leaf.path(spc_info_i)
     save_path_j = spc_save_fs.leaf.path(spc_info_j)
-    species_data_i = moldr.pf.species_block(
+    if pf_levels[3]:
+        spc_model = ['RIGID', 'HARM', 'SAMPLING']
+    else:
+        spc_model = ['RIGID', 'HARM', '']
+    species_data = moldr.pf.fake_species_block(
         spc_dct_i=spc_dct_i,
         spc_dct_j=spc_dct_j,
         spc_info_i=spc_info_i,
         spc_info_j=spc_info_j,
-        spc_model=['RIGID', 'HARM'],
-        pf_levels=pf_info,
-        script_str=projrot_script_str,
+        spc_model=spc_model,
+        pf_levels=pf_levels,
+        projrot_script_str=projrot_script_str,
         elec_levels=[[0., 1]], sym_factor=1.,
-        save_prefix=save_path_i,
-        save_prefix=save_path_j
+        save_prefix_i=save_path_i,
+        save_prefix_j=save_path_j
         )
     return species_data
 
-def make_channel_pfs(tsname, rxn, wells, spc_dct, idx_dct, strs, first_ground_ene, spc_save_fs, pf_info, projrot_script_str):
+
+def make_channel_pfs(
+        tsname, rxn, wells, spc_dct, idx_dct, strs, first_ground_ene,
+        spc_save_fs, pf_levels, projrot_script_str):
+    """ make the partition function strings for each of the channels
+    includes strings for each of the unimolecular wells, bimolecular fragments, and
+    transition states connecting them.
+    It also includes a special treatment for abstraction to include phase space blocks
+    coupling bimolecular fragments to fake van der Waals wells
+    """
     bim_str, well_str, ts_str = strs
 #Find the number of uni and bimolecular wells already in the dictionary
     pidx = 1
@@ -149,7 +171,7 @@ def make_channel_pfs(tsname, rxn, wells, spc_dct, idx_dct, strs, first_ground_en
                 idx_dct[well_dct_key1] = reac_label
     if not reac_label:
         reac_label = idx_dct[well_dct_key1]
-    print('reac_ene:', reac_ene)
+    print('reac_ene:', reac_ene-first_ground_ene)
 #Set up a new well for the products if that combo isn't already in the dct
     prod_label = ''
     prod_ene = 0.
@@ -186,46 +208,119 @@ def make_channel_pfs(tsname, rxn, wells, spc_dct, idx_dct, strs, first_ground_en
                 idx_dct[well_dct_key1] = prod_label
     if not prod_label:
         prod_label = idx_dct[well_dct_key1]
-    print('prod_ene:', prod_ene)
+    print('prod_ene:', prod_ene-first_ground_ene)
 
-#Set up a new well for the ts
+    #Set up a new well connected to ts
     ts_ene = scripts.thermo.spc_energy(spc_dct[tsname]['ene'], spc_dct[tsname]['zpe']) * EH2KCAL
     zero_energy = ts_ene - first_ground_ene
     ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
     imag_freq = abs(spc_dct[tsname]['imag_freq'][0])
-    tunnel_str = mess_io.writer.tunnel_eckart(
-        imag_freq, ts_ene-reac_ene, ts_ene-prod_ene)
 
+    fake_wellr_label = ''
+    fake_wellp_label = ''
     if 'abstraction' in spc_dct[tsname]['class']:
     #if len(rxn['reacs']) > 1:
-    #Make a fake well if need be
+    #Make fake wells and PST TSs as needed
         well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
         well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
+        print('idx_dct test:', well_dct_key1, well_dct_key2, idx_dct)
         if not well_dct_key1 in idx_dct:
             if well_dct_key2 in idx_dct:
                 well_dct_key1 = well_dct_key2
-        else:
-                fake_well_label = 'F' + str(fidx)
-                zero_energy = reac_ene 
-                well_str += ' \t ! {} Fake Well for {}\n'.format('+'.join(rxn['reacs']))
-                fake_well = make_fake_species_data(spc_dct[rxn['reacs'][0]],
-                        spc_dct[rxn['reacs'][1]], spc_save_fs, pf_info,
-                        projrot_script_str)
-                well_str += mess_io.writer.fake_well(fake_well_label, fake_well, zero_energy)
-                idx_dct[well_dct_key1] = fake_well_label
+            else:
+                fake_wellr_label = 'F' + str(fidx)
+                fidx += 1
+                vdwr_ene = reac_ene - 1.0
+                zero_energy = vdwr_ene - first_ground_ene
+                well_str += ' \t ! Fake Well for {}\n'.format('+'.join(rxn['reacs']))
+                fake_wellr = make_fake_species_data(
+                    spc_dct[rxn['reacs'][0]], spc_dct[rxn['reacs'][1]],
+                    spc_save_fs, pf_levels, projrot_script_str)
+                well_str += mess_io.writer.well(fake_wellr_label, fake_wellr, zero_energy)
+                idx_dct[well_dct_key1] = fake_wellr_label
 
-        fake_ts_label =  'FB' + str(int(tsname.replace('ts_', ''))+1)
+                pst_r_label = 'FRB' + str(int(tsname.replace('ts_', ''))+1)
+                idx_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
+                spc_dct_i = spc_dct[rxn['reacs'][0]]
+                spc_dct_j = spc_dct[rxn['reacs'][1]]
+                if pf_levels[3]:
+                    spc_model = ['RIGID', 'HARM', 'SAMPLING']
+                else:
+                    spc_model = ['RIGID', 'HARM', '']
+                pst_r_ts_str = moldr.pf.pst_block(
+                    spc_dct_i, spc_dct_j, spc_model=spc_model,
+                    pf_levels=pf_levels, projrot_script_str=projrot_script_str,
+                    spc_save_fs=spc_save_fs)
+        print('fake_wellr_label test:', fake_wellr_label)
+        if not fake_wellr_label:
+            print('well_dct_key1 test:', well_dct_key1)
+            fake_wellr_label = idx_dct[well_dct_key1]
+            pst_r_label = idx_dct[well_dct_key1.replace('F', 'FRB')]
+        zero_energy = reac_ene - first_ground_ene
+        tunnel_str = ''
         ts_str += '\n' + mess_io.writer.ts_sadpt(
-            fake_ts_label, reac_label, fake_well_label, wells[tsname], zero_energy, tunnel_str)
+            pst_r_label, reac_label, fake_wellr_label, pst_r_ts_str,
+            zero_energy, tunnel_str)
+        # ts_str += '\n' + mess_io.writer.ts_sadpt(
+            # ts_label, fake_well_label, prod_label, wells[tsname], zero_energy, tunnel_str)
+
+        well_dct_key1 = 'F' + '+'.join(rxn['prods'])
+        well_dct_key2 = 'F' + '+'.join(rxn['prods'][::-1])
+        if not well_dct_key1 in idx_dct:
+            if well_dct_key2 in idx_dct:
+                well_dct_key1 = well_dct_key2
+            else:
+                fake_wellp_label = 'F' + str(fidx)
+                fidx += 1
+                vdwp_ene = prod_ene - 1.0
+                zero_energy = vdwp_ene - first_ground_ene
+                well_str += ' \t ! Fake Well for {}\n'.format('+'.join(rxn['prods']))
+                fake_wellp = make_fake_species_data(
+                    spc_dct[rxn['prods'][0]], spc_dct[rxn['prods'][1]],
+                    spc_save_fs, pf_levels, projrot_script_str)
+                well_str += mess_io.writer.well(fake_wellp_label, fake_wellp, zero_energy)
+                idx_dct[well_dct_key1] = fake_wellp_label
+
+                pst_p_label = 'FPB' + str(int(tsname.replace('ts_', ''))+1)
+                idx_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
+                spc_dct_i = spc_dct[rxn['prods'][0]]
+                spc_dct_j = spc_dct[rxn['prods'][1]]
+                if pf_levels[3]:
+                    spc_model = ['RIGID', 'HARM', 'SAMPLING']
+                else:
+                    spc_model = ['RIGID', 'HARM', '']
+                pst_p_ts_str = moldr.pf.pst_block(
+                    spc_dct_i, spc_dct_j, spc_model=spc_model,
+                    pf_levels=pf_levels, projrot_script_str=projrot_script_str,
+                    spc_save_fs=spc_save_fs)
+        if not fake_wellp_label:
+            fake_wellp_label = idx_dct[well_dct_key1]
+            pst_p_label = idx_dct[well_dct_key1.replace('F', 'FPB')]
+        zero_energy = prod_ene - first_ground_ene
+        tunnel_str = ''
         ts_str += '\n' + mess_io.writer.ts_sadpt(
-            ts_label, fake_well_label, prod_label, wells[tsname], zero_energy, tunnel_str)
+            pst_p_label, prod_label, fake_wellp_label, pst_p_ts_str,
+            zero_energy, tunnel_str)
+
+        zero_energy = ts_ene - first_ground_ene
+        tunnel_str = mess_io.writer.tunnel_eckart(
+            imag_freq, ts_ene-vdwr_ene, ts_ene-vdwp_ene)
+        ts_str += '\n' + mess_io.writer.ts_sadpt(
+            ts_label, fake_wellr_label, fake_wellp_label, wells[tsname], zero_energy, tunnel_str)
     else:
+        tunnel_str = mess_io.writer.tunnel_eckart(
+            imag_freq, ts_ene-reac_ene, ts_ene-prod_ene)
         ts_str += '\n' + mess_io.writer.ts_sadpt(
             ts_label, reac_label, prod_label, wells[tsname], zero_energy, tunnel_str)
 
     return [well_str, bim_str, ts_str], first_ground_ene
 
-def run_rate(header_str, energy_trans_str, well_str, bim_str, ts_str, tsdct, thy_info, rxn_save_path):
+
+def run_rate(
+        header_str, energy_trans_str, well_str, bim_str, ts_str, tsdct,
+        thy_info, rxn_save_path):
+    """ Generate k(T,P) by first compiling all the MESS strings and then running MESS
+    """
     ts_info = (tsdct['ich'], tsdct['chg'], tsdct['mul'])
     orb_restr = moldr.util.orbital_restriction(ts_info, thy_info)
     ref_level = thy_info[1:3]
@@ -250,9 +345,6 @@ def run_rate(header_str, energy_trans_str, well_str, bim_str, ts_str, tsdct, thy
     moldr.util.run_script(RATE_SCRIPT_STR, mess_path)
     return mess_path
 
-
-    #(3) Write Arrhenus parameters to a string formatted for
-        # a CHEMKIN mechanism file
 
 def mod_arr_fit(rct_lab, prd_lab, mess_path):
     """
@@ -299,7 +391,7 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path):
                     output_string, rct_lab, prd_lab)
             else:
                 rate_ks = mess_io.reader.pdep_ks(
-                    output_string, rct_lab, prd_lab,  pressure, punit)
+                    output_string, rct_lab, prd_lab, pressure, punit)
 
             # Store in a the dictionary
             calc_k_dct[pressure] = rate_ks
