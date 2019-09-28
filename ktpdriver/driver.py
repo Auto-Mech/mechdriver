@@ -290,7 +290,8 @@ def run(
                 print('Will proceed to construct only {}'.format(pes_formula))
                 continue
             mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
-                tsname, rxn, species, spc_dct, idx_dct, mess_strs, first_ground_ene)
+                tsname, rxn, species, spc_dct, idx_dct, mess_strs,
+                first_ground_ene, spc_save_fs, pf_levels, PROJROT_SCRIPT_STR)
             print(idx_dct)
     well_str, bim_str, ts_str = mess_strs
     ts_str += '\nEnd\n'
