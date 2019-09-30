@@ -42,21 +42,22 @@ def pf_headers(
     return header_str, energy_trans_str
 
 
-def make_all_species_data(rxn_lst, spc_dct, save_prefix, model_info, pf_info, projrot_script_str):
+def make_all_species_data(rxn_lst, spc_dct, save_prefix, model_info, pf_info, ts_found, projrot_script_str):
     """ generate the MESS species blocks for all the species
     """
     species = {}
     spc_save_fs = autofile.fs.species(save_prefix)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
-        ts = spc_dct[tsname]
-        specieslist = rxn['reacs'] + rxn['prods']
-        for name in specieslist:
-            if not name in species:
-                species[name], _ = make_species_data(
-                    name, spc_dct[niame], spc_save_fs, model_info, pf_info, projrot_script_str)
-        species[tsname], spc_dct[tsname]['imag_freq'] = make_species_data(
-            tsname, ts, save_prefix, model_info, pf_info, projrot_script_str)
+        if tsname in ts_found:
+            ts = spc_dct[tsname]
+            specieslist = rxn['reacs'] + rxn['prods']
+            for name in specieslist:
+                if not name in species:
+                    species[name], _ = make_species_data(
+                        name, spc_dct[name], spc_save_fs, model_info, pf_info, projrot_script_str)
+            species[tsname], spc_dct[tsname]['imag_freq'] = make_species_data(
+                tsname, ts, save_prefix, model_info, pf_info, projrot_script_str)
     return species
 
 
@@ -215,7 +216,12 @@ def make_channel_pfs(
     ts_ene = scripts.thermo.spc_energy(spc_dct[tsname]['ene'], spc_dct[tsname]['zpe']) * EH2KCAL
     zero_energy = ts_ene - first_ground_ene
     ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
-    imag_freq = abs(spc_dct[tsname]['imag_freq'][0])
+    imag_freq = 0
+    if 'imag_freq' in spc_dct[tsname]:
+        imag_freq = abs(spc_dct[tsname]['imag_freq'])
+    if not imag_freq:
+        print('No imaginary freq for ts: {}'.format(tsname))
+
 
     fake_wellr_label = ''
     fake_wellp_label = ''
@@ -366,7 +372,7 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path):
     # Fit info
     t_ref = 1.
     fit_types = ['single', 'double']
-    fit_method = 'python'
+    fit_method = 'dsarrfit'
 
     # Loop over the single and double Arrhenius fits
     for fit_type in fit_types:
@@ -409,7 +415,6 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path):
 
             # Store in a the dictionary
             filt_calc_tk_dct[pressure] = [flt_temps, flt_ks]
-
         # print('\nfiltered calculated rate constants')
         # for key, val in filt_calc_tk_dct.items():
             # print(key)
@@ -421,22 +426,22 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path):
             # Set the temperatures and rate constants
             temps = tk_lsts[0]
             rate_constants = tk_lsts[1]
+            if len(temps) > 0: 
+                # Obtain the fitting parameters based on the desired fit
+                if fit_type == 'single':
+                    fit_params = ratefit.fit.arrhenius.single(
+                        temps, rate_constants, t_ref, fit_method, dsarrfit_path=mess_path)
+                elif fit_type == 'double':
+                    init_params = ratefit.fit.arrhenius.single(
+                        temps, rate_constants, t_ref, fit_method, dsarrfit_path=mess_path)
+                    fit_params = ratefit.fit.arrhenius.double(
+                        temps, rate_constants, t_ref, fit_method,
+                        a_guess=init_params[0],
+                        n_guess=init_params[1],
+                        ea_guess=init_params[2], dsarrfit_path=mess_path)
 
-            # Obtain the fitting parameters based on the desired fit
-            if fit_type == 'single' and fit_method == 'python':
-                fit_params = ratefit.fit.arrhenius.single(
-                    temps, rate_constants, t_ref, fit_method)
-            elif fit_type == 'double' and fit_method == 'python':
-                init_params = ratefit.fit.arrhenius.single(
-                    temps, rate_constants, t_ref, fit_method)
-                fit_params = ratefit.fit.arrhenius.double(
-                    temps, rate_constants, t_ref, fit_method,
-                    a_guess=init_params[0],
-                    n_guess=init_params[1],
-                    ea_guess=init_params[2])
-
-            # Store the fitting parameters in a dictionary
-            fit_param_dct[pressure] = fit_params
+                # Store the fitting parameters in a dictionary
+                fit_param_dct[pressure] = fit_params
 
         # print('\nfitting parameters')
         # for key, val in fit_param_dct.items():
@@ -448,7 +453,7 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path):
 
             # Set the temperatures
             temps = filt_calc_tk_dct[pressure][0]
-
+            
             # Calculate fitted rate constants, based on fit type
             if fit_type == 'single':
                 fit_ks = ratefit.fxns.single_arrhenius(

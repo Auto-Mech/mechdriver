@@ -741,6 +741,7 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
             overwrite=overwrite,
             update_guess=update_guess,
             reverse_sweep=False,
+            fix_failures=False,
             **opt_kwargs
         )
 
@@ -806,6 +807,7 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
     else:
         geo = 'failed'
         zma = 'failed'
+        final_dist = 0.
 
     return geo, zma, final_dist
 

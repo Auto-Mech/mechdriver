@@ -93,6 +93,8 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                             save_prefix, KICKOFF_SIZE, KICKOFF_BACKWARD,
                             PROJROT_SCRIPT_STR, overwrite)
                         spc_queue.extend(vdws)
+            continue
+
 
         #Loop over all species
         for spc in spc_queue:
@@ -129,8 +131,10 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
 
             thy_run_fs = autofile.fs.theory(spc_run_path)
             thy_save_fs = autofile.fs.theory(spc_save_path)
-            if 'ts_' in spc:
-                if 'ene' not in tsk and 'hess' not in tsk:
+            
+            print(spc)
+            if 'ene' not in tsk and 'hess' not in tsk:
+                if 'ts_' in spc:
                     thy_run_fs.leaf.create(thy_level[1:4])
                     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
                     thy_save_fs.leaf.create(thy_level[1:4])
@@ -144,18 +148,17 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                     thy_save_fs.trunk.create()
                     thy_save_path = thy_save_fs.trunk.path()
 
-            else:
-                if 'ene' not in tsk and 'hess' not in tsk:
+                else:
                     thy_run_fs.leaf.create(thy_level[1:4])
                     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
                     thy_save_fs.leaf.create(thy_level[1:4])
                     thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+                    print('thy_run_path test in es:', thy_run_path)
+                    print('thy_save_path test in es:', thy_save_path)
 
-            print('thy_run_path test in es:', thy_run_path)
-            print('thy_save_path test in es:', thy_save_path)
+                print('thy_run_path test in es:', thy_run_path)
+                print('thy_save_path test in es:', thy_save_path)
 
-
-            if 'ene' not in tsk and 'hess' not in tsk:
                 cnf_run_fs = autofile.fs.conformer(thy_run_path)
                 cnf_save_fs = autofile.fs.conformer(thy_save_path)
                 tau_run_fs = autofile.fs.tau(thy_run_path)
