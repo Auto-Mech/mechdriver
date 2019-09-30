@@ -724,7 +724,7 @@ if RUN_RATES:
             RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
             PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
             RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
-            print('running ktp on PES ', PES)
+            print('running ktp on PES{}: {}'.format(str(pes_idx), PES))
             print('RCT_NAMES_LST test:', RCT_NAMES_LST)
             print('PRD_NAMES_LST test:', PRD_NAMES_LST)
             print('RXT_NAME_LST test:', RXN_NAME_LST)
