@@ -280,7 +280,7 @@ def run(
         idx_dct = {}
         first_ground_ene = 0.
         species = scripts.ktp.make_all_species_data(
-            rxn_lst, spc_dct, spc_save_fs, ts_model, pf_levels, PROJROT_SCRIPT_STR)
+            rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, PROJROT_SCRIPT_STR)
         for idx, rxn in enumerate(rxn_lst):
             tsname = 'ts_{:g}'.format(idx)
             if tsname in ts_found:
