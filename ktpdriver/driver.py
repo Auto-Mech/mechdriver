@@ -33,6 +33,7 @@ def run(
     """ main driver for generation of full set of rate constants on a single PES
     """
 
+    print('options test:', options)
     #prepare prefix filesystem
     if not os.path.exists(save_prefix):
         os.makedirs(save_prefix)
@@ -136,210 +137,211 @@ def run(
         # if spc_dct[ts]['rad_rad']:
             # print('Skipping radical radical')
 
-    for ts in spc_dct:
-        if 'original_zma' in spc_dct[ts]:
-            pes_formula = automol.geom.formula(
-                automol.zmatrix.geometry(spc_dct[ts]['original_zma']))
-            print('Starting mess file preparation for {}:'.format(pes_formula))
-            break
+    if runrates:
+        for ts in spc_dct:
+            if 'original_zma' in spc_dct[ts]:
+                pes_formula = automol.geom.formula(
+                    automol.zmatrix.geometry(spc_dct[ts]['original_zma']))
+                print('Starting mess file preparation for {}:'.format(pes_formula))
+                break
 
-    #Figure out the model and theory levels for the MESS files
-    geo_lvl = ''
-    harm_lvl = ''
-    anharm_lvl = ''
-    tors_lvl = ''
-    sym_lvl = ''
-    harm_lvl_ref = ''
-    anharm_lvl_ref = ''
-    tors_lvl_ref = ''
-    sym_lvl_ref = ''
+        #Figure out the model and theory levels for the MESS files
+        geo_lvl = ''
+        harm_lvl = ''
+        anharm_lvl = ''
+        tors_lvl = ''
+        sym_lvl = ''
+        harm_lvl_ref = ''
+        anharm_lvl_ref = ''
+        tors_lvl_ref = ''
+        sym_lvl_ref = ''
 
-    ts_model = ['RIGID', 'HARM', '']
-    for tsk in ts_tsk_lst:
-        if 'samp' in tsk[0] or 'find' in tsk[0]:
-            geo_lvl = tsk[1]
-            geom = True
-        if 'grad' in tsk[0] or 'hess' in tsk[0]:
-            harm_lvl = tsk[1]
-            harm_lvl_ref = tsk[2]
-            if 'grad' in tsk[0]:
-                grad = True
-            if 'hess' in tsk[0]:
-                hess = True
-            if not geom:
-                ene_lvl = tsk[1]
-                geo_lvl = tsk[1]
-        if 'hr' in tsk[0] or 'tau' in tsk[0]:
-            tors_lvl = tsk[1]
-            tors_lvl_ref = tsk[2]
-            if 'md' in tsk[0]:
-                ts_model[0] = 'MDHR'
-            if 'tau' in tsk[0]:
-                ts_model[0] = 'TAU'
-            else:
-                ts_model[0] = '1DHR'
-        if 'anharm' in tsk[0] or 'vpt2' in tsk[0]:
-            anharm_lvl = tsk[1]
-            anharm_lvl_ref = tsk[2]
-            ts_model[1] = 'ANHARM'
-            if not hess:
-                geo_lvl = tsk[1]
-        if 'sym' in tsk[0]:
-            sym_lvl = tsk[1]
-            sym_lvl_ref = tsk[2]
-            if 'samp' in tsk[0]:
-                ts_model[2] = 'SAMPLING'
-            if '1DHR' in tsk[0]:
-                ts_model[2] = '1DHR'
-
-    geo_thy_info = get_thy_info(es_dct, geo_lvl)
-    harm_thy_info = get_thy_info(es_dct, harm_lvl)
-    tors_thy_info = None
-    anharm_thy_info = None
-    sym_thy_info = None
-    harm_ref_thy_info = None
-    tors_ref_thy_info = None
-    anharm_ref_thy_info = None
-    sym_ref_thy_info = None
-    if tors_lvl:
-        tors_thy_info = get_thy_info(es_dct, tors_lvl)
-    if anharm_lvl:
-        anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
-    if sym_lvl:
-        sym_thy_info = get_thy_info(es_dct, sym_lvl)
-    if harm_lvl_ref:
-        harm_ref_thy_info = get_thy_info(es_dct, harm_lvl_ref)
-    if tors_lvl_ref:
-        tors_ref_thy_info = get_thy_info(es_dct, tors_lvl_ref)
-    if anharm_lvl_ref:
-        anharm_ref_thy_info = get_thy_info(es_dct, anharm_lvl_ref)
-    if sym_lvl_ref:
-        sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
-    pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
-    ref_levels = [
-        harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
-
-    #Collect energies for zero points
-    spc_save_fs = autofile.fs.species(save_prefix)
-    ts_queue = []
-    for spc in spc_dct:   #have to make sure you get them for the TS too
-        if spc in ts_found:
-            ts_queue.append(spc)
-            if 'radical radical' in spc_dct[spc]['class']:
-                print('skipping rate for radical radical reaction: {}'.format(spc))
-                continue
-    for spc in spc_queue +  ts_queue:
-        spc_info = (spc_dct[spc]['ich'], spc_dct[spc]['chg'], spc_dct[spc]['mul'])
-        if 'ts_' in spc:
-            spc_save_path = spc_dct[spc]['rxn_fs'][3]
-            saddle = True
-            save_path = spc_save_path
-        else:
-            spc_save_fs.leaf.create(spc_info)
-            spc_save_path = spc_save_fs.leaf.path(spc_info)
-            saddle = False
-            save_path = save_prefix
-        zpe, _ = scripts.thermo.get_zpe(
-            spc, spc_dct[spc], spc_save_path, pf_levels, ts_model)
-        spc_dct[spc]['zpe'] = zpe
-        ene_strl = []
-        ene_lvl = ''
-        ene_lvl_ref = ''
-        ene_idx = 0
-        spc_dct[spc]['ene'] = 0.
-        ene_str = '! energy level:'
+        ts_model = ['RIGID', 'HARM', '']
         for tsk in ts_tsk_lst:
-            if 'ene' in tsk[0]:
-                if ene_idx > len(ene_coeff)-1:
-                    print('Warning - an insufficient energy coefficient list was provided')
-                    break
-                ene_lvl = tsk[1]
-                ene_lvl_ref = tsk[2]
-                ene_ref_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl_ref])
-                ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
-                ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
-                    ene_coeff[ene_idx], ene_thy_info[3], ene_thy_info[1], ene_thy_info[2],
-                    ene_ref_thy_info[3], ene_ref_thy_info[1], ene_ref_thy_info[2]))
-                ene = scripts.thermo.get_electronic_energy(
-                    spc_info, ene_ref_thy_info, ene_thy_info, save_path, saddle)
-                spc_dct[spc]['ene'] += ene*ene_coeff[ene_idx]
-                ene_idx += 1
-    ene_str += '!               '.join(ene_strl)
+            if 'samp' in tsk[0] or 'find' in tsk[0]:
+                geo_lvl = tsk[1]
+                geom = True
+            if 'grad' in tsk[0] or 'hess' in tsk[0]:
+                harm_lvl = tsk[1]
+                harm_lvl_ref = tsk[2]
+                if 'grad' in tsk[0]:
+                    grad = True
+                if 'hess' in tsk[0]:
+                    hess = True
+                if not geom:
+                    ene_lvl = tsk[1]
+                    geo_lvl = tsk[1]
+            if 'hr' in tsk[0] or 'tau' in tsk[0]:
+                tors_lvl = tsk[1]
+                tors_lvl_ref = tsk[2]
+                if 'md' in tsk[0]:
+                    ts_model[0] = 'MDHR'
+                if 'tau' in tsk[0]:
+                    ts_model[0] = 'TAU'
+                else:
+                    ts_model[0] = '1DHR'
+            if 'anharm' in tsk[0] or 'vpt2' in tsk[0]:
+                anharm_lvl = tsk[1]
+                anharm_lvl_ref = tsk[2]
+                ts_model[1] = 'ANHARM'
+                if not hess:
+                    geo_lvl = tsk[1]
+            if 'sym' in tsk[0]:
+                sym_lvl = tsk[1]
+                sym_lvl_ref = tsk[2]
+                if 'samp' in tsk[0]:
+                    ts_model[2] = 'SAMPLING'
+                if '1DHR' in tsk[0]:
+                    ts_model[2] = '1DHR'
 
-    #Collect formula and header string for the PES
-    # pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
-    tsname_0 = 'ts_0'
-    rct_ichs = spc_dct[tsname_0]['rxn_ichs'][0]
-    header_str, energy_trans_str = scripts.ktp.pf_headers(
-        rct_ichs, TEMPS, PRESS, EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2,
-        SIG1, SIG2, MASS1)
+        geo_thy_info = get_thy_info(es_dct, geo_lvl)
+        harm_thy_info = get_thy_info(es_dct, harm_lvl)
+        tors_thy_info = None
+        anharm_thy_info = None
+        sym_thy_info = None
+        harm_ref_thy_info = None
+        tors_ref_thy_info = None
+        anharm_ref_thy_info = None
+        sym_ref_thy_info = None
+        if tors_lvl:
+            tors_thy_info = get_thy_info(es_dct, tors_lvl)
+        if anharm_lvl:
+            anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
+        if sym_lvl:
+            sym_thy_info = get_thy_info(es_dct, sym_lvl)
+        if harm_lvl_ref:
+            harm_ref_thy_info = get_thy_info(es_dct, harm_lvl_ref)
+        if tors_lvl_ref:
+            tors_ref_thy_info = get_thy_info(es_dct, tors_lvl_ref)
+        if anharm_lvl_ref:
+            anharm_ref_thy_info = get_thy_info(es_dct, anharm_lvl_ref)
+        if sym_lvl_ref:
+            sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
+        pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
+        ref_levels = [
+            harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
 
-    mess_strs = ['', '', '']
-    idx_dct = {}
-    first_ground_ene = 0.
-    species = scripts.ktp.make_all_species_data(
-        rxn_lst, spc_dct, spc_save_fs, ts_model, pf_levels, PROJROT_SCRIPT_STR)
-    for idx, rxn in enumerate(rxn_lst):
-        tsname = 'ts_{:g}'.format(idx)
-        if tsname in ts_found:
-            # if spc_dct[ts]['rad_rad']:
-            tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
-            if tsform != pes_formula:
-                print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(
-                    tsform, pes_formula))
-                print('Will proceed to construct only {}'.format(pes_formula))
-                continue
-            mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
-                tsname, rxn, species, spc_dct, idx_dct, mess_strs,
-                first_ground_ene, spc_save_fs, pf_levels, PROJROT_SCRIPT_STR)
-            print(idx_dct)
-    well_str, bim_str, ts_str = mess_strs
-    ts_str += '\nEnd\n'
-    print(well_str)
-    print(bim_str)
-    print(ts_str)
+        #Collect energies for zero points
+        spc_save_fs = autofile.fs.species(save_prefix)
+        ts_queue = []
+        for spc in spc_dct:   #have to make sure you get them for the TS too
+            if spc in ts_found:
+                ts_queue.append(spc)
+                if 'radical radical' in spc_dct[spc]['class']:
+                    print('skipping rate for radical radical reaction: {}'.format(spc))
+                    continue
+        for spc in spc_queue +  ts_queue:
+            spc_info = (spc_dct[spc]['ich'], spc_dct[spc]['chg'], spc_dct[spc]['mul'])
+            if 'ts_' in spc:
+                spc_save_path = spc_dct[spc]['rxn_fs'][3]
+                saddle = True
+                save_path = spc_save_path
+            else:
+                spc_save_fs.leaf.create(spc_info)
+                spc_save_path = spc_save_fs.leaf.path(spc_info)
+                saddle = False
+                save_path = save_prefix
+            zpe, _ = scripts.thermo.get_zpe(
+                spc, spc_dct[spc], spc_save_path, pf_levels, ts_model)
+            spc_dct[spc]['zpe'] = zpe
+            ene_strl = []
+            ene_lvl = ''
+            ene_lvl_ref = ''
+            ene_idx = 0
+            spc_dct[spc]['ene'] = 0.
+            ene_str = '! energy level:'
+            for tsk in ts_tsk_lst:
+                if 'ene' in tsk[0]:
+                    if ene_idx > len(ene_coeff)-1:
+                        print('Warning - an insufficient energy coefficient list was provided')
+                        break
+                    ene_lvl = tsk[1]
+                    ene_lvl_ref = tsk[2]
+                    ene_ref_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl_ref])
+                    ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
+                    ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
+                        ene_coeff[ene_idx], ene_thy_info[3], ene_thy_info[1], ene_thy_info[2],
+                        ene_ref_thy_info[3], ene_ref_thy_info[1], ene_ref_thy_info[2]))
+                    ene = scripts.thermo.get_electronic_energy(
+                        spc_info, ene_ref_thy_info, ene_thy_info, save_path, saddle)
+                    spc_dct[spc]['ene'] += ene*ene_coeff[ene_idx]
+                    ene_idx += 1
+        ene_str += '!               '.join(ene_strl)
 
-    # run mess to produce rate output
+        #Collect formula and header string for the PES
+        # pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
+        tsname_0 = 'ts_0'
+        rct_ichs = spc_dct[tsname_0]['rxn_ichs'][0]
+        header_str, energy_trans_str = scripts.ktp.pf_headers(
+            rct_ichs, TEMPS, PRESS, EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2,
+            SIG1, SIG2, MASS1)
 
-    mess_path = scripts.ktp.run_rate(
-        header_str, energy_trans_str, well_str, bim_str, ts_str,
-        spc_dct[tsname_0], geo_thy_info, spc_dct[tsname_0]['rxn_fs'][3])
+        mess_strs = ['', '', '']
+        idx_dct = {}
+        first_ground_ene = 0.
+        species = scripts.ktp.make_all_species_data(
+            rxn_lst, spc_dct, spc_save_fs, ts_model, pf_levels, PROJROT_SCRIPT_STR)
+        for idx, rxn in enumerate(rxn_lst):
+            tsname = 'ts_{:g}'.format(idx)
+            if tsname in ts_found:
+                # if spc_dct[ts]['rad_rad']:
+                tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
+                if tsform != pes_formula:
+                    print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(
+                        tsform, pes_formula))
+                    print('Will proceed to construct only {}'.format(pes_formula))
+                    continue
+                mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
+                    tsname, rxn, species, spc_dct, idx_dct, mess_strs,
+                    first_ground_ene, spc_save_fs, pf_levels, PROJROT_SCRIPT_STR)
+                print(idx_dct)
+        well_str, bim_str, ts_str = mess_strs
+        ts_str += '\nEnd\n'
+        print(well_str)
+        print(bim_str)
+        print(ts_str)
 
-    # fit rate output to modified Arrhenius forms and print in ChemKin format
-    pf_levels.append(ene_str)
-    chemkin_header_str = scripts.thermo.run_ckin_header(pf_levels, ref_levels, ts_model)
-    chemkin_str = chemkin_header_str
-    starting_path = os.getcwd()
-    labels = idx_dct.values()
-    names = idx_dct.keys()
-    err_thresh = 15.
-    for lab_i, name_i in zip(labels, names):
-        for lab_j, name_j in zip(labels, names):
-            ene = 0.
-            if lab_i != lab_j:
-                for spc in name_i.split('+'):
-                    ene += scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
-                for spc in name_j.split('+'):
-                    ene -= scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
-                if ene > 0.:
-                    reaction = name_i + '=' + name_j
-                    sing_rate_params, sing_errs, doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
-                        lab_i, lab_j, mess_path)
-                    max_err = max([vals[1] for vals in sing_errs.values()])
-                    print('max_err test:', max_err, err_thresh)
-                    print('sing err test:', sing_errs)
-                    print('doub err test:', doub_errs)
-                    print('sing_rate_params:', sing_rate_params)
-                    if max_err < err_thresh:
-                        chemkin_str += chemkin_io.mechwriter.reaction.plog(
-                            reaction, sing_rate_params, sing_errs)
-                    else:
-                        chemkin_str += chemkin_io.mechwriter.reaction.plog(
-                            reaction, doub_rate_params, doub_errs)
+        # run mess to produce rate output
 
-    print(chemkin_str)
-    with open(starting_path+'/rates.ckin', 'w') as f:
-        f.write(chemkin_str)
+        mess_path = scripts.ktp.run_rate(
+            header_str, energy_trans_str, well_str, bim_str, ts_str,
+            spc_dct[tsname_0], geo_thy_info, spc_dct[tsname_0]['rxn_fs'][3])
+
+        # fit rate output to modified Arrhenius forms and print in ChemKin format
+        pf_levels.append(ene_str)
+        chemkin_header_str = scripts.thermo.run_ckin_header(pf_levels, ref_levels, ts_model)
+        chemkin_str = chemkin_header_str
+        starting_path = os.getcwd()
+        labels = idx_dct.values()
+        names = idx_dct.keys()
+        err_thresh = 15.
+        for lab_i, name_i in zip(labels, names):
+            for lab_j, name_j in zip(labels, names):
+                ene = 0.
+                if lab_i != lab_j:
+                    for spc in name_i.split('+'):
+                        ene += scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
+                    for spc in name_j.split('+'):
+                        ene -= scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
+                    if ene > 0.:
+                        reaction = name_i + '=' + name_j
+                        sing_rate_params, sing_errs, doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
+                            lab_i, lab_j, mess_path)
+                        max_err = max([vals[1] for vals in sing_errs.values()])
+                        print('max_err test:', max_err, err_thresh)
+                        print('sing err test:', sing_errs)
+                        print('doub err test:', doub_errs)
+                        print('sing_rate_params:', sing_rate_params)
+                        if max_err < err_thresh:
+                            chemkin_str += chemkin_io.mechwriter.reaction.plog(
+                                reaction, sing_rate_params, sing_errs)
+                        else:
+                            chemkin_str += chemkin_io.mechwriter.reaction.plog(
+                                reaction, doub_rate_params, doub_errs)
+
+        print(chemkin_str)
+        with open(starting_path+'/rates.ckin', 'w') as f:
+            f.write(chemkin_str)
 
 
 def get_thy_info(es_dct, key):

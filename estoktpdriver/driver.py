@@ -72,10 +72,11 @@ MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
 #MECH_TYPE = 'CHEMKIN'
 #MECH_TYPE = 'json'
 MECH_FILE = 'mech.json'
-RAD_RAD_SORT = True
+RAD_RAD_SORT = False
 
 # 4. process species data from the mechanism file
 # Also add in basis set species
+SORT_RXNS = False
 
 if MECH_TYPE == 'CHEMKIN':
     MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
@@ -103,15 +104,15 @@ if MECH_TYPE == 'CHEMKIN':
     SPC_NAMES = chemkin_io.mechparser.species.names(SPC_BLK_STR)
 
     # You need one species reference for each element in the set of references and species
-    SPC_REF_NAMES = ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
-    SPC_REF_ICH = []
-    for ref_name in SPC_REF_NAMES:
-        smi = SMI_DCT[ref_name]
-        SPC_REF_ICH.append(automol.smiles.inchi(smi))
-    SPC_NAMES += SPC_REF_NAMES
+    #SPC_REF_NAMES = ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
+    #SPC_REF_ICH = []
+    #for ref_name in SPC_REF_NAMES:
+    #    smi = SMI_DCT[ref_name]
+    #    SPC_REF_ICH.append(automol.smiles.inchi(smi))
+    #SPC_NAMES += SPC_REF_NAMES
 
-    print('SPC_NAMES')
-    print(SPC_NAMES)
+    #print('SPC_NAMES')
+    #print(SPC_NAMES)
     SPC_INFO = {}
     SPC_DCT = {}
     for name in SPC_NAMES:
@@ -154,24 +155,17 @@ if MECH_TYPE == 'CHEMKIN':
         FORMULA_STR = ''.join(map(str, chain.from_iterable(formula_dict.items())))
         FORMULA_STR_LST.append(FORMULA_STR)
 
-    #print('formula string test list', formula_str_lst, 'rxn name list', rxn_name_lst)
-    #for rct_names in RCT_NAMES_LST:
-    #    print('first rct names test:', rct_names)
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
-    #for _, rct_names_lst, _, _ in RXN_INFO_LST:
-    #    print('second rct names test:', rct_names_lst)
-    #    for rct_names in rct_names_lst:
-    #        print('rct names test:', rct_names)
-    RXN_INFO_LST.sort()
-    FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
-    for rxn_name in RXN_NAME_LST:
-        print("Reaction: {}".format(rxn_name))
-    #for rct_names in RCT_NAMES_LST:
-    #    print('rct names test:', rct_names)
-    for formula in FORMULA_STR_LST:
-        print("Reaction: {}".format(formula))
+    if SORT_RXNS:
+        RXN_INFO_LST.sort()
+        FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
+        for rxn_name in RXN_NAME_LST:
+            print("Reaction: {}".format(rxn_name))
+        for formula in FORMULA_STR_LST:
+            print("Reaction: {}".format(formula))
 
 elif MECH_TYPE == 'json':
+    CHECK_STEREO = False
     with open(os.path.join(MECH_PATH, MECH_FILE)) as f:
         MECH_DATA_IN = json.load(f, object_pairs_hook=collections.OrderedDict)
         MECH_DATA = []
@@ -183,16 +177,20 @@ elif MECH_TYPE == 'json':
             for entry in MECH_DATA_IN[reaction]:
                 MECH_DATA.append(entry)
 
-#    print(mech_data)
-#    SENS_SORT = sorted(mech_data, key = lambda i: i['Sensitivity'])
+    # first convert the essential pieces of the json file to chemkin formatted data so
+    # (i) can easily remove species that don't really exist
+    # (ii) revise products of reactions for species that don't exist
+    # (iii) do the stereochemistry generation only one
+
     FORMULA_STR = ''
-#    RXN_NAME_LST = []
     FORMULA_STR_LST = []
-#    print ('mech_data test', mech_data)
     RXN_NAME_LST = []
+    RCT_NAMES_LST = []
+    PRD_NAMES_LST = []
+    RCT_SMIS_LST = []
     RCT_ICHS_LST = []
     RCT_MULS_LST = []
-    RCT_NAMES_LST = []
+    PRD_SMIS_LST = []
     PRD_ICHS_LST = []
     PRD_MULS_LST = []
     PRD_NAMES_LST = []
@@ -200,9 +198,21 @@ elif MECH_TYPE == 'json':
     RXN_UNC = []
     RXN_VAL = []
     RXN_FAM = []
-    for reaction in MECH_DATA:
+    UNQ_RXN_LST = []
+    FLL_RXN_LST = []
+    idxp = 0
+    for idx, reaction in enumerate(MECH_DATA):
+        if 'Reactants' in reaction and 'Products' in reaction:
+            print(idx, reaction['name'])
+            if reaction['name'] in FLL_RXN_LST:
+                print('duplicate reaction found:', reaction['name'], idx)
+            else:
+                UNQ_RXN_LST.append(reaction['name'])
+            FLL_RXN_LST.append(reaction['name'])
+    print('reaction duplicate test:', len(UNQ_RXN_LST), len(FLL_RXN_LST))
+
+    for ridx, reaction in enumerate(MECH_DATA):
         # set up reaction info
-#        print('reaction test:', reaction)
         rct_smis = []
         rct_ichs = []
         rct_muls = []
@@ -211,20 +221,22 @@ elif MECH_TYPE == 'json':
         prd_ichs = []
         prd_muls = []
         prd_names = []
-#        print('reaction name json test:', reaction['name'])
         if 'Reactants' in reaction and 'Products' in reaction:
-            for i, rct in enumerate(reaction['Reactants']):
+            for rct in reaction['Reactants']:
                 rct_names.append(rct['name'])
                 rct_smis.append(rct['SMILES'][0])
                 # rct_ichs_smi = automol.smiles.inchi(rct['SMILES'][0])
                 # rct_ichs_rmg = rct['InChi']
                 #if rct_ichs_smi != rct_ichs_rmg:
-                    # print('Warning: RMG inchi {} differs from conversion from smiles {}{}:'.format(
+                    # print('Warning: RMG inchi {} differs from conversion from
+                    # smiles {}{}:'.format(
                         # rct_ichs_rmg, rct_ichs_smi, rct['name']))
                 ich = rct['InChi']
-                if not automol.inchi.is_complete(ich):
-                    print('adding stereochemsiry for {}'.format(ich))
-                    ich=automol.inchi.add_stereo(rct['InChi'])[0]
+                # print('{} , {} , {}'.format(rct['name'], rct['SMILES'][0], rct['multiplicity']))
+                if CHECK_STEREO:
+                    if not automol.inchi.is_complete(ich):
+                        print('adding stereochemsiry for {}'.format(ich))
+                        ich = automol.inchi.add_stereo(rct['InChi'])[0]
                 rct_ichs.append(ich)
                 #rct_ichs.append(rct_ichs_smi)
                 rct_muls.append(rct['multiplicity'])
@@ -234,23 +246,24 @@ elif MECH_TYPE == 'json':
             else:
                 if min(rct_muls) == 1:
                     rad_rad_reac = False
-            for i, prd in enumerate(reaction['Products']):
+            for prd in reaction['Products']:
                 prd_names.append(prd['name'])
-                prd_ichs.append(automol.inchi.add_stereo(prd['InChi'])[0])
-                #prd_smis.append(prd['SMILES'][0])
+                prd_smis.append(prd['SMILES'][0])
                 # prd_ichs_smi = automol.smiles.inchi(prd['SMILES'][0])
                 # prd_ichs_rmg = prd['InChi']
                 # if prd_ichs_smi != prd_ichs_rmg:
-                    # print('Warning: RMG inchi {} differs from conversion from smiles {}{}:'.format(
+                    # print('Warning: RMG inchi {} differs from conversion from
+                    # smiles {}{}:'.format(
                         # prd_ichs_rmg, prd_ichs_smi, prd['name']))
                 # prd_ichs.append(prd_ichs_smi)
                 ich = prd['InChi']
-                if not automol.inchi.is_complete(ich):
-                    print('adding stereochemsiry for {}'.format(ich))
-                    ich=automol.inchi.add_stereo(prd['InChi'])[0]
+                # print('{} , {} , {}'.format(prd['name'], prd['SMILES'][0], prd['multiplicity']))
+                if CHECK_STEREO:
+                    if not automol.inchi.is_complete(ich):
+                        print('adding stereochemsiry for {}'.format(ich))
+                        ich = automol.inchi.add_stereo(prd['InChi'])[0]
                 prd_ichs.append(ich)
                 prd_muls.append(prd['multiplicity'])
-#                print('prd_muls test:', prd['name'], prd['multiplicity'])
             rad_rad_prod = True
             if len(prd_ichs) == 1:
                 rad_rad_prod = False
@@ -259,13 +272,14 @@ elif MECH_TYPE == 'json':
                     rad_rad_prod = False
             if RAD_RAD_SORT and not rad_rad_reac and not rad_rad_prod:
                 continue
+            RCT_SMIS_LST.append(rct_smis)
             RCT_ICHS_LST.append(rct_ichs)
             RCT_MULS_LST.append(rct_muls)
             RCT_NAMES_LST.append(rct_names)
+            PRD_SMIS_LST.append(prd_smis)
             PRD_ICHS_LST.append(prd_ichs)
             PRD_MULS_LST.append(prd_muls)
             PRD_NAMES_LST.append(prd_names)
-#        print(reaction['name'], RAD_RAD_SORT, rad_rad_reac, rad_rad_prod)
         RXN_NAME_LST.append(reaction['name'])
         if 'Sensitivity' in reaction:
             RXN_SENS.append(reaction['Sensitivity'])
@@ -285,30 +299,119 @@ elif MECH_TYPE == 'json':
             RXN_FAM.append('')
 
         formula = ''
-#        formula_dict = ''
         for rct_ich in rct_ichs:
             formula_i = automol.inchi.formula(rct_ich)
-#            formula_i = thermo.util.inchi_formula(rct_ich)
-#            formula_i_dict = thermo.util.get_atom_counts_dict(formula_i)
-#            print('formula test:', formula_i_test, formula_i, formula_i_dict)
             formula = automol.formula._formula.join(formula, formula_i)
         formula = collections.OrderedDict(sorted(formula.items()))
         FORMULA_STR = ''.join(map(str, chain.from_iterable(formula.items())))
-#            formula_dict = automol.formula._formula.join(formula_dict, formula_i_dict)
-#        formula_dict = collections.OrderedDict(sorted(formula_dict.items()))
-#        FORMULA_STR = ''.join(map(str, chain.from_iterable(formula_dict.items())))
         FORMULA_STR_LST.append(FORMULA_STR)
 
+    UNQ_ICH_LST = []
+    UNQ_MUL_LST = []
+    UNQ_SMI_LST = []
+    UNQ_LAB_LST = []
+    UNQ_LAB_IDX_LST = []
+    csv_str = 'name,smiles,mult'
+    csv_str += '\n'
+    spc_str = 'SPECIES'
+    spc_str += '\n'
+    for ichs, muls, smis in zip(RCT_ICHS_LST, RCT_MULS_LST, RCT_SMIS_LST):
+        for ich, mul, smi in zip(ichs, muls, smis):
+            unique = True
+            for unq_ich, unq_mul in zip(UNQ_ICH_LST, UNQ_MUL_LST):
+                if ich == unq_ich and mul == unq_mul:
+                    unique = False
+            if unique:
+                UNQ_ICH_LST.append(ich)
+                UNQ_MUL_LST.append(mul)
+                UNQ_SMI_LST.append(smi)
+                formula = ''
+                formula_i = automol.inchi.formula(ich)
+                formula = automol.formula._formula.join(formula, formula_i)
+                formula = collections.OrderedDict(sorted(formula.items()))
+                lab = ''.join(map(str, chain.from_iterable(formula.items())))
+                UNQ_LAB_LST.append(lab)
+                lab_idx = -1
+                for lab_i in UNQ_LAB_LST:
+                    if lab == lab_i:
+                        lab_idx += 1
+                UNQ_LAB_IDX_LST.append(lab_idx)
+                if lab_idx == 0:
+                    label = lab 
+                else:
+                    label = lab + '(' + str(lab_idx) + ')'
+                csv_str += ','.join([label, smi, str(mul)])
+                csv_str += '\n'
+                spc_str += label
+                spc_str += '\n'
+    for ichs, muls, smis in zip(PRD_ICHS_LST, PRD_MULS_LST, PRD_SMIS_LST):
+        for ich, mul, smi in zip(ichs, muls, smis):
+            unique = True
+            for unq_ich, unq_mul in zip(UNQ_ICH_LST, UNQ_MUL_LST):
+                if ich == unq_ich and mul == unq_mul:
+                    unique = False
+            if unique:
+                UNQ_ICH_LST.append(ich)
+                UNQ_MUL_LST.append(mul)
+                UNQ_SMI_LST.append(smi)
+                formula = ''
+                formula_i = automol.inchi.formula(ich)
+                formula = automol.formula._formula.join(formula, formula_i)
+                formula = collections.OrderedDict(sorted(formula.items()))
+                lab = ''.join(map(str, chain.from_iterable(formula.items())))
+                UNQ_LAB_LST.append(lab)
+                lab_idx = -1
+                for lab_i in UNQ_LAB_LST:
+                    if lab == lab_i:
+                        lab_idx += 1
+                UNQ_LAB_IDX_LST.append(lab_idx)
+                if lab_idx == 0:
+                    label = lab 
+                else:
+                    label = lab + '(' + str(lab_idx) + ')'
+                csv_str += ','.join([label, smi, str(mul)])
+                csv_str += '\n'
+                spc_str += label
+                spc_str += '\n'
+
+    spc_str += 'END'
+    spc_str += '\n'
+    spc_str += '\n'
+
+    path = os.getcwd()
+    with open(os.path.join(path, 'smiles_sort.csv'), 'w') as sorted_csv_file:
+        sorted_csv_file.write(csv_str)
+
+    # UNQ_SMI_LST = []
+    # rsmi = 0
+    # psmi = 0
+    # spc_str = 'SPECIES'
+    # spc_str += '\n'
+    # for smis in RCT_SMIS_LST:
+        # for smi in smis:
+            # rsmi += 1
+            # print('rct_smi test:', smi)
+            # if smi not in UNQ_SMI_LST:
+                # UNQ_SMI_LST.append(smi)
+                # print('unq_smi test:', smi)
+                # spc_str += smi
+                # spc_str += '\n'
+    # for smis in PRD_SMIS_LST:
+        # for smi in smis:
+            # psmi += 1
+            # print('prd_smi test:', smi)
+            # if smi not in UNQ_SMI_LST:
+                # UNQ_SMI_LST.append(smi)
+                # print('unq_smi test:', smi)
+                # spc_str += smi
+                # spc_str += '\n'
+    # spc_str += 'END'
+    # spc_str += '\n'
+        
     RXN_INFO_LST = list(zip(
-        FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST,
-        RXN_NAME_LST, RXN_SENS, RXN_UNC, RXN_VAL, RXN_FAM,
-        RCT_ICHS_LST, RCT_MULS_LST, PRD_ICHS_LST,
-        PRD_MULS_LST))
-    #for _, rct_names_lst, _, _ in RXN_INFO_LST:
-    #    print('second rct names test:', rct_names_lst)
-    #    for rct_names in rct_names_lst:
-    #        print('rct names test:', rct_names)
-#    print('sens test:', RXN_SENS)
+        FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST, RXN_SENS,
+        RXN_UNC, RXN_VAL, RXN_FAM, RCT_SMIS_LST, RCT_ICHS_LST, RCT_MULS_LST,
+        PRD_SMIS_LST, PRD_ICHS_LST, PRD_MULS_LST))
     RXN_INFO_LST = sorted(RXN_INFO_LST, key=lambda x: (x[0]))
     OLD_FORMULA = RXN_INFO_LST[0][0]
     SENS = RXN_INFO_LST[0][4]
@@ -330,26 +433,47 @@ elif MECH_TYPE == 'json':
         SENS_DCT[ORDERED_FORMULA[i]] = sens
     RXN_INFO_LST = sorted(RXN_INFO_LST, key=lambda x: (SENS_DCT[x[0]], x[4]), reverse=True)
 
-#    SORTED_RXN_LST = list(zip(ordered_sens, ordered_formula))
-#    SORTED_RXN_LST.sort()
-#    ordered_sens, ordered_formula = zip(*SORTED_RXN_LST)
-#    for ordered
+    FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST, RXN_SENS, RXN_UNC, RXN_VAL, RXN_FAM, RCT_SMIS_LST, RCT_ICHS_LST, RCT_MULS_LST, PRD_SMIS_LST, PRD_ICHS_LST, PRD_MULS_LST = zip(*RXN_INFO_LST)
 
-#    RXN_INFO_LST = sorted(RXN_INFO_LST, key=lambda x: (x[0], x[4]))
-#    RXN_INFO_LST.sort()
-    FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST, RXN_SENS, RXN_UNC, RXN_VAL, RXN_FAM, RCT_ICHS_LST, RCT_MULS_LST, PRD_ICHS_LST, PRD_MULS_LST = zip(*RXN_INFO_LST)
-#    print('rxn_names test:', RXN_NAME_LST)
+    RXN_NAMEP_LST = []
+    rxn_namep_str = 'REACTIONS   KCAL/MOLE   MOLES'
+    rxn_namep_str += '\n'
     for i, rxn_name in enumerate(RXN_NAME_LST):
-        rct_smis = []
-        for rct_ich in RCT_ICHS_LST[i]:
-            rct_smis.append(automol.inchi.smiles(rct_ich))
-        rct_smis = ' + '.join(rct_smis)
-        prd_smis = []
-        for prd_ich in PRD_ICHS_LST[i]:
-            prd_smis.append(automol.inchi.smiles(prd_ich))
-        prd_smis = ' + '.join(prd_smis)
-        print("Reaction: {} {:.2f}".format(rxn_name, RXN_SENS[i]))
-        print("          {}: {} <=> {}".format(FORMULA_STR_LST[i], rct_smis, prd_smis))
+        rxn_namep = []
+        rct_labs = []
+        for rct_smi, rct_ich, rct_mul in zip(RCT_SMIS_LST[i], RCT_ICHS_LST[i], RCT_MULS_LST[i]):
+            for ich, mul, lab, lab_idx in zip(UNQ_ICH_LST, UNQ_MUL_LST, UNQ_LAB_LST, UNQ_LAB_IDX_LST):
+                if rct_ich == ich and rct_mul == mul:
+                    if lab_idx == 0:
+                        rct_lab = lab
+                    else:
+                        rct_lab = lab + '(' + str(lab_idx) + ')'
+                    break
+            rct_labs.append(rct_lab)
+        rct_label = '+'.join(rct_labs)
+        prd_labs = []
+        for prd_smi, prd_ich, prd_mul in zip(PRD_SMIS_LST[i], PRD_ICHS_LST[i], PRD_MULS_LST[i]):
+            for ich, mul, lab, lab_idx in zip(UNQ_ICH_LST, UNQ_MUL_LST, UNQ_LAB_LST, UNQ_LAB_IDX_LST):
+                if prd_ich == ich and prd_mul == mul:
+                    if lab_idx == 0:
+                        prd_lab = lab
+                    else:
+                        prd_lab = lab + '(' + str(lab_idx) + ')'
+                    break
+            prd_labs.append(prd_lab)
+        prd_label = '+'.join(prd_labs)
+        rate_str = str('  1.e10   1.0   10000.  ! Sens = ')
+        rxn_namep = rct_label + ' <=> ' + prd_label + rate_str + str(RXN_SENS[i])
+        rxn_namep_str += rxn_namep 
+        rxn_namep_str += '\n'
+        RXN_NAMEP_LST.append(rxn_namep)
+
+    mech_str = spc_str + rxn_namep_str
+    mech_str += 'END'
+    mech_str += '\n'
+
+    with open(os.path.join(path, 'mech_sort.txt'), 'w') as sorted_mech_file:
+        sorted_mech_file.write(mech_str)
 
     # set up species info
     SPC_NAMES = []
@@ -358,7 +482,6 @@ elif MECH_TYPE == 'json':
     MUL_DCT = {}
     SPC_DCT = {}
     for i, spc_names_lst in enumerate(RCT_NAMES_LST):
-        # print('spc_names_lst test:', spc_names_lst)
         for j, spc_name in enumerate(spc_names_lst):
             chg = 0
             if spc_name not in SPC_NAMES:
@@ -366,7 +489,6 @@ elif MECH_TYPE == 'json':
                 SPC_INFO[spc_name] = [RCT_ICHS_LST[i][j], chg, RCT_MULS_LST[i][j]]
                 CHG_DCT[spc_name] = chg
                 MUL_DCT[spc_name] = RCT_MULS_LST[i][j]
-                # print('spc_name test:', spc_name)
                 SPC_DCT[spc_name] = {}
                 SPC_DCT[spc_name]['chg'] = chg
                 SPC_DCT[spc_name]['ich'] = RCT_ICHS_LST[i][j]
@@ -402,12 +524,8 @@ for fidx, formula in enumerate(FORMULA_STR_LST):
 for spc in SPC_DCT:
     if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in ELC_DEG_DCT:
         SPC_DCT[spc]['elec_levs'] = ELC_DEG_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
-        print('elec_levs test', spc, SPC_DCT[spc]['elec_levs'])
     if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in SYMM_DCT:
         SPC_DCT[spc]['sym'] = SYMM_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
-        print('symm_dct test', spc, SPC_DCT[spc]['sym'])
-#os.sys.exit()
-
 
 # 2. script control parameters
 
@@ -542,9 +660,9 @@ if RUN_THERMO:
     # SPC_QUEUE = ['CHOH']
     # SPC_QUEUE = ['CH2OH']
 
-    # REF_MOLS = 'basic'
-    REF_MOLS = [
-        automol.smiles.inchi('[H][H]'), automol.smiles.inchi('O')
+    REF_MOLS = 'basic'
+    # REF_MOLS = [
+        # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('O')
         # automol.smiles.inchi('C'),
         # automol.smiles.inchi('O'), automol.smiles.inchi('N')]
     # REF_MOLS = [
@@ -556,7 +674,7 @@ if RUN_THERMO:
     # REF_MOLS = [
         # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'),
         # automol.smiles.inchi('O=O'), automol.smiles.inchi('N#N')]
-        ]
+        # ]
     thermodriver.driver.run(
         TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
         SAVE_PREFIX, options=OPTIONS)
@@ -569,18 +687,26 @@ if RUN_THERMO:
 
     thermodriver.driver.run(
         TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
-        SAVE_PREFIX, ENE_COEFF, OPTIONS)
+        SAVE_PREFIX, ENE_COEFF, options=OPTIONS)
 
 if RUN_RATES:
+
+    OPT_ES = True
+    OPT_MESS = False
+    OPT_THERMO = False
+    OPT_ALLPF = False
+    OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
+
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
+        ['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
+        # ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['find_ts', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
+        ['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
         ['conf_energy', SP_LVL1, OPT_LVL0, OVERWRITE],
         # ['conf_energy', SP_LVL1, OPT_LVL1, OVERWRITE],
         # ['conf_energy', SP_LVL2, OPT_LVL1, OVERWRITE],
@@ -624,7 +750,7 @@ if RUN_RATES:
         # run ktp for a given PES
         ktpdriver.driver.run(
             TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
-            '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
+            '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=OPTIONS)
 
 # f. Partition function parameters determined internally
 # TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
