@@ -80,29 +80,54 @@ RAD_RAD_SORT = False
 SORT_RXNS = False
 
 if MECH_TYPE == 'CHEMKIN':
-    MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
-    SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'smiles.csv'))
 
-    SPC_TAB['charge'] = 0
+    MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
+    SPC_STR = open(os.path.join(MECH_PATH, 'species.csv')).read()
+    # SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'species.csv'))
+    SMI_DCT = species_name_smiles_dct(SPC_STR)
+    ICH_DCT = species_name_inchi_dct(SPC_STR)
+    MUL_DCT = species_name_mult_dct(SPC_STR)
+    CHG_DCT = species_name_charge_dct(SPC_STR)
+    SENS_DCT = species_name_sens_dct(SPC_STR)
+
+    if CHECK_STEREO:
+        SPC_STR = 'name, SMILES, InChi, mult, charge, sens'
+        for name in ICH_DCT:
+            ich = ICH_DCT[name]
+            smi = SMI_DCT[name]
+            mul = MUL_DCT[name]
+            chg = CHG_DCT[name]
+            sens = SENS_DCT[name]
+            if not automol.inchi.is_complete(ich):
+                print('adding stereochemsiry for {}'.format(ich))
+                ich = automol.inchi.add_stereo(ich)
+            SPC_STR += '{0},{1},{2},{3},{4},{5}'.format(
+                name, smi, ich, mul, chg, sens)
+
+        with open(os.path.join(DATA_PATH, 'species_stereo.csv'), 'w') as stereo_csv_file:
+            stereo_csv_file.write(SPC_STR)
+        ICH_DCT = species_name_inchi_dct(SPC_STR)
+
+    #SPC_TAB['charge'] = 0
     #print('SPC_TAB:', SPC_TAB)
     #print('SPC_TAB TEST', SPC_TAB['name'])
-    SMI_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['smiles']))
-    SMI_DCT['REF_H2'] = '[H][H]'
-    SMI_DCT['REF_CH4'] = 'C'
-    SMI_DCT['REF_H2O'] = 'O'
-    SMI_DCT['REF_NH3'] = 'N'
-    CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
-    CHG_DCT['REF_H2'] = 0
-    CHG_DCT['REF_CH4'] = 0
-    CHG_DCT['REF_H2O'] = 0
-    CHG_DCT['REF_NH3'] = 0
-    MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
-    MUL_DCT['REF_H2'] = 1
-    MUL_DCT['REF_CH4'] = 1
-    MUL_DCT['REF_H2O'] = 1
-    MUL_DCT['REF_NH3'] = 1
-    SPC_BLK_STR = chemkin_io.mechparser.mechanism.species_block(MECH_STR)
-    SPC_NAMES = chemkin_io.mechparser.species.names(SPC_BLK_STR)
+    #SMI_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['smiles']))
+    #SMI_DCT['REF_H2'] = '[H][H]'
+    #SMI_DCT['REF_CH4'] = 'C'
+    #SMI_DCT['REF_H2O'] = 'O'
+    #SMI_DCT['REF_NH3'] = 'N'
+    #CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
+    #CHG_DCT['REF_H2'] = 0
+    #CHG_DCT['REF_CH4'] = 0
+    #CHG_DCT['REF_H2O'] = 0
+    #CHG_DCT['REF_NH3'] = 0
+    #MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
+    #MUL_DCT['REF_H2'] = 1
+    #MUL_DCT['REF_CH4'] = 1
+    #MUL_DCT['REF_H2O'] = 1
+    #MUL_DCT['REF_NH3'] = 1
+    #SPC_BLK_STR = chemkin_io.mechparser.mechanism.species_block(MECH_STR)
+    #SPC_NAMES = chemkin_io.mechparser.species.names(SPC_BLK_STR)
 
     # You need one species reference for each element in the set of references and species
     #SPC_REF_NAMES = ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
@@ -114,18 +139,15 @@ if MECH_TYPE == 'CHEMKIN':
 
     #print('SPC_NAMES')
     #print(SPC_NAMES)
-    SPC_INFO = {}
+    # SPC_INFO = {}
     SPC_DCT = {}
-    for name in SPC_NAMES:
+    for name in MUL_DCT:
         SPC_DCT[name] = {}
-        smi = SMI_DCT[name]
-        ich = automol.smiles.inchi(smi)
-        chg = CHG_DCT[name]
-        mul = MUL_DCT[name]
-        SPC_INFO[name] = [ich, chg, mul]
-        SPC_DCT[name]['ich'] = ich
-        SPC_DCT[name]['chg'] = chg
-        SPC_DCT[name]['mul'] = mul
+        # SPC_INFO[name] = [ICH_DCT[name], CHG_DCT[name], MUL_DCT[name]] 
+        SPC_DCT[name]['smi'] = SMI_DCT[name]
+        SPC_DCT[name]['ich'] = ICH_DCT[name]
+        SPC_DCT[name]['chg'] = CHG_DCT[name]
+        SPC_DCT[name]['mul'] = MUL_DCT[name]
 
     RXN_BLOCK_STR = chemkin_io.mechparser.mechanism.reaction_block(MECH_STR)
     RXN_STRS = chemkin_io.mechparser.reaction.data_strings(RXN_BLOCK_STR)
@@ -144,9 +166,9 @@ if MECH_TYPE == 'CHEMKIN':
         rxn_name = '='.join(['+'.join(rct_names), '+'.join(prd_names)])
         RXN_NAME_LST.append(rxn_name)
         rct_smis = list(map(SMI_DCT.__getitem__, rct_names))
-        rct_ichs = list(map(automol.smiles.inchi, rct_smis))
+        rct_ichs = list(map(ICH_DCT.__getitem__, rct_names))
         prd_smis = list(map(SMI_DCT.__getitem__, prd_names))
-        prd_ichs = list(map(automol.smiles.inchi, prd_smis))
+        prd_ichs = list(map(ICH_DCT.__getitem__, prd_names))
         formula_dict = ''
         for rct_ich in rct_ichs:
             formula_i = thermo.util.inchi_formula(rct_ich)
@@ -379,8 +401,7 @@ elif MECH_TYPE == 'json':
     spc_str += '\n'
     spc_str += '\n'
 
-    path = os.getcwd()
-    with open(os.path.join(path, 'smiles_sort.csv'), 'w') as sorted_csv_file:
+    with open(os.path.join(DATA_PATH, 'smiles_sort.csv'), 'w') as sorted_csv_file:
         sorted_csv_file.write(csv_str)
 
     # UNQ_SMI_LST = []
@@ -473,12 +494,12 @@ elif MECH_TYPE == 'json':
     mech_str += 'END'
     mech_str += '\n'
 
-    with open(os.path.join(path, 'mech_sort.txt'), 'w') as sorted_mech_file:
+    with open(os.path.join(DATA_PATH, 'mech_sort.txt'), 'w') as sorted_mech_file:
         sorted_mech_file.write(mech_str)
 
     # set up species info
     SPC_NAMES = []
-    SPC_INFO = {}
+    # SPC_INFO = {}
     CHG_DCT = {}
     MUL_DCT = {}
     SPC_DCT = {}
@@ -487,7 +508,7 @@ elif MECH_TYPE == 'json':
             chg = 0
             if spc_name not in SPC_NAMES:
                 SPC_NAMES.append(spc_name)
-                SPC_INFO[spc_name] = [RCT_ICHS_LST[i][j], chg, RCT_MULS_LST[i][j]]
+                # SPC_INFO[spc_name] = [RCT_ICHS_LST[i][j], chg, RCT_MULS_LST[i][j]]
                 CHG_DCT[spc_name] = chg
                 MUL_DCT[spc_name] = RCT_MULS_LST[i][j]
                 SPC_DCT[spc_name] = {}
@@ -499,7 +520,7 @@ elif MECH_TYPE == 'json':
             chg = 0
             if spc_name not in SPC_NAMES:
                 SPC_NAMES.append(spc_name)
-                SPC_INFO[spc_name] = [PRD_ICHS_LST[i][j], chg, PRD_MULS_LST[i][j]]
+                # SPC_INFO[spc_name] = [PRD_ICHS_LST[i][j], chg, PRD_MULS_LST[i][j]]
                 CHG_DCT[spc_name] = chg
                 MUL_DCT[spc_name] = PRD_MULS_LST[i][j]
                 SPC_DCT[spc_name] = {}
