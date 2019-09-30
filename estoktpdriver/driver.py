@@ -18,7 +18,8 @@ import scripts
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
-
+#PESNUMS= 'all'
+PESNUMS=  [2, 3]
 # 0. choose which mechanism to run
 
 MECHANISM_NAME = sys.argv[1]
@@ -714,43 +715,45 @@ if RUN_RATES:
         # ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
         ]
-
+    if PESNUMS == 'all':
+        PESNUMS = range(len(PES_LST)-1)
     # loop over PESs
-    for PES in PES_LST:
-        # set up name lists and ts species dictionary for a given PES
-        RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
-        PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
-        RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
-        print('running ktp on PES ', PES)
-        print('RCT_NAMES_LST test:', RCT_NAMES_LST)
-        print('PRD_NAMES_LST test:', PRD_NAMES_LST)
-        print('RXT_NAME_LST test:', RXN_NAME_LST)
-        RXN_LST = []
-        for rxn, _ in enumerate(RCT_NAMES_LST):
-            RXN_LST.append(
-            {'species': [], 'reacs': list(RCT_NAMES_LST[rxn]), 'prods':
-             list(PRD_NAMES_LST[rxn])})
-        for idx, rxn in enumerate(RXN_LST):
-            reacs = rxn['reacs']
-            prods = rxn['prods']
-            tsname = 'ts_{:g}'.format(idx)
-            SPC_DCT[tsname] = {}
-            if reacs and prods:
-                SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
-            SPC_DCT[tsname]['ich'] = ''
-            ts_chg = 0
-            for rct in RCT_NAMES_LST[idx]:
-                ts_chg += SPC_DCT[rct]['chg']
-            SPC_DCT[tsname]['chg'] = ts_chg
-            ts_mul, rad_rad = moldr.util.ts_mul_from_reaction_muls(
-                RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
-            SPC_DCT[tsname]['mul'] = ts_mul
-            SPC_DCT[tsname]['rad_rad'] = rad_rad
-        print('RUNNING WITH MESS')
-        # run ktp for a given PES
-        ktpdriver.driver.run(
-            TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
-            '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=OPTIONS)
+    for pes_idx, PES in enumerate(PES_LST):
+        if pes_idx in PESNUMS:
+            # set up name lists and ts species dictionary for a given PES
+            RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
+            PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
+            RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
+            print('running ktp on PES ', PES)
+            print('RCT_NAMES_LST test:', RCT_NAMES_LST)
+            print('PRD_NAMES_LST test:', PRD_NAMES_LST)
+            print('RXT_NAME_LST test:', RXN_NAME_LST)
+            RXN_LST = []
+            for rxn, _ in enumerate(RCT_NAMES_LST):
+                RXN_LST.append(
+                {'species': [], 'reacs': list(RCT_NAMES_LST[rxn]), 'prods':
+                 list(PRD_NAMES_LST[rxn])})
+            for idx, rxn in enumerate(RXN_LST):
+                reacs = rxn['reacs']
+                prods = rxn['prods']
+                tsname = 'ts_{:g}'.format(idx)
+                SPC_DCT[tsname] = {}
+                if reacs and prods:
+                    SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
+                SPC_DCT[tsname]['ich'] = ''
+                ts_chg = 0
+                for rct in RCT_NAMES_LST[idx]:
+                    ts_chg += SPC_DCT[rct]['chg']
+                SPC_DCT[tsname]['chg'] = ts_chg
+                ts_mul, rad_rad = moldr.util.ts_mul_from_reaction_muls(
+                    RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
+                SPC_DCT[tsname]['mul'] = ts_mul
+                SPC_DCT[tsname]['rad_rad'] = rad_rad
+            print('RUNNING WITH MESS')
+            # run ktp for a given PES
+            ktpdriver.driver.run(
+                TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
+                '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=OPTIONS)
 
 # f. Partition function parameters determined internally
 # TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
