@@ -280,7 +280,7 @@ def run(
         idx_dct = {}
         first_ground_ene = 0.
         species = scripts.ktp.make_all_species_data(
-            rxn_lst, spc_dct, spc_save_fs, ts_model, pf_levels, PROJROT_SCRIPT_STR)
+            rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, ts_found, PROJROT_SCRIPT_STR)
         for idx, rxn in enumerate(rxn_lst):
             tsname = 'ts_{:g}'.format(idx)
             if tsname in ts_found:
@@ -307,41 +307,41 @@ def run(
             header_str, energy_trans_str, well_str, bim_str, ts_str,
             spc_dct[tsname_0], geo_thy_info, spc_dct[tsname_0]['rxn_fs'][3])
 
-        # fit rate output to modified Arrhenius forms and print in ChemKin format
-        pf_levels.append(ene_str)
-        chemkin_header_str = scripts.thermo.run_ckin_header(pf_levels, ref_levels, ts_model)
-        chemkin_str = chemkin_header_str
-        starting_path = os.getcwd()
-        labels = idx_dct.values()
-        names = idx_dct.keys()
-        err_thresh = 15.
-        for lab_i, name_i in zip(labels, names):
-            for lab_j, name_j in zip(labels, names):
-                ene = 0.
-                if lab_i != lab_j:
-                    for spc in name_i.split('+'):
-                        ene += scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
-                    for spc in name_j.split('+'):
-                        ene -= scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
-                    if ene > 0.:
-                        reaction = name_i + '=' + name_j
-                        sing_rate_params, sing_errs, doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
-                            lab_i, lab_j, mess_path)
-                        max_err = max([vals[1] for vals in sing_errs.values()])
-                        print('max_err test:', max_err, err_thresh)
-                        print('sing err test:', sing_errs)
-                        print('doub err test:', doub_errs)
-                        print('sing_rate_params:', sing_rate_params)
-                        if max_err < err_thresh:
-                            chemkin_str += chemkin_io.mechwriter.reaction.plog(
-                                reaction, sing_rate_params, sing_errs)
-                        else:
-                            chemkin_str += chemkin_io.mechwriter.reaction.plog(
-                                reaction, doub_rate_params, doub_errs)
-
-        print(chemkin_str)
-        with open(starting_path+'/rates.ckin', 'w') as f:
-            f.write(chemkin_str)
+#       # fit rate output to modified Arrhenius forms and print in ChemKin format
+#       pf_levels.append(ene_str)
+#       chemkin_header_str = scripts.thermo.run_ckin_header(pf_levels, ref_levels, ts_model)
+#       chemkin_str = chemkin_header_str
+#       starting_path = os.getcwd()
+#       labels = idx_dct.values()
+#       names = idx_dct.keys()
+#       err_thresh = 15.
+#       for lab_i, name_i in zip(labels, names):
+#           for lab_j, name_j in zip(labels, names):
+#               ene = 0.
+#               if lab_i != lab_j:
+#                   for spc in name_i.split('+'):
+#                       ene += scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
+#                   for spc in name_j.split('+'):
+#                       ene -= scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
+#                   if ene > 0.:
+#                       reaction = name_i + '=' + name_j
+#                       sing_rate_params, sing_errs, doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
+#                           lab_i, lab_j, mess_path)
+#                       max_err = max([vals[1] for vals in sing_errs.values()])
+#                       print('max_err test:', max_err, err_thresh)
+#                       print('sing err test:', sing_errs)
+#                       print('doub err test:', doub_errs)
+#                       print('sing_rate_params:', sing_rate_params)
+#                       if max_err < err_thresh:
+#                           chemkin_str += chemkin_io.mechwriter.reaction.plog(
+#                               reaction, sing_rate_params, sing_errs)
+#                       else:
+#                           chemkin_str += chemkin_io.mechwriter.reaction.plog(
+#                               reaction, doub_rate_params, doub_errs)
+#
+#       print(chemkin_str)
+#       with open(starting_path+'/rates.ckin', 'w') as f:
+#           f.write(chemkin_str)
 
 
 def get_thy_info(es_dct, key):

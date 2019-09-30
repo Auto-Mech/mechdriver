@@ -40,8 +40,9 @@ def species_block(
 
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
-
+    print('spc')
     print('sym model test in species_block:', sym_model, sym_level)
+    print('tors model test in species_block:', tors_model, tors_level)
     if sym_level:
         orb_restr = moldr.util.orbital_restriction(
             spc_info, sym_level)
@@ -68,7 +69,7 @@ def species_block(
             tors_save_fs = autofile.fs.ts(tors_save_path)
             tors_save_fs.trunk.create()
             tors_save_path = tors_save_fs.trunk.path()
-
+        print(tors_save_path)
         tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
         tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs)
         tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
@@ -154,6 +155,7 @@ def species_block(
                 spc_str = mess_io.writer.atom(
                     mass, elec_levels)
             else:
+                print('getting freqs for {}'.format(spc))
                 hess = har_cnf_save_fs.leaf.file.hessian.read(har_min_cnf_locs)
                 freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
                 # freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=True)
@@ -215,20 +217,26 @@ def species_block(
                     moldr.util.run_script(projrot_script_str, path)
 
                     print('pot test:', pot)
-
+                    freqs = []
                     if len(pot) > 0:
                         rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
-                        proj_freqs = rthrproj_freqs
-                    else:
+                        freqs = rthrproj_freqs
+                    if not freqs:
                         rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
                             path+'/RTproj_freq.dat')
-                        proj_freqs = rtproj_freqs
+                        freqs = rtproj_freqs
+                    if 'ts_' in spc:
+                        if imag_freq:
+                           imag_freq = imag_freq[0]
+                        else:
+                            imag_freq = freqs[-1]
+                            freqs = freqs[:-1]
                     # shutil.rmtree(path)
-                    print(proj_freqs)
+                    print(freqs)
                     core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
                     spc_str = mess_io.writer.molecule(
-                        core, proj_freqs, elec_levels,
+                        core, freqs, elec_levels,
                         hind_rot=hind_rot_str
                         )
         else:

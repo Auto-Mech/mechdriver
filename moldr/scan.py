@@ -59,7 +59,7 @@ def hindered_rotor_scans(
 def run_scan(
         zma, spc_info, thy_level, grid_dct, scn_run_fs, scn_save_fs,
         script_str, overwrite, update_guess=True,
-        reverse_sweep=True, **kwargs):
+        reverse_sweep=True, fix_failures=True,**kwargs):
     """ run constrained optimization scan
     """
     if len(grid_dct) > 1:
@@ -106,6 +106,7 @@ def run_scan(
         thy_level=thy_level,
         overwrite=overwrite,
         update_guess=update_guess,
+        retry_failed=fix_failures,
         **kwargs
     )
 

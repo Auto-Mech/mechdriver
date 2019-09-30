@@ -692,9 +692,9 @@ if RUN_THERMO:
 if RUN_RATES:
 
     OPT_ES = True
-    OPT_MESS = False
-    OPT_THERMO = False
-    OPT_ALLPF = False
+    OPT_MESS = True
+    OPT_THERMO = True
+    OPT_ALLPF = True
     OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
     TSK_INFO_LST = [
@@ -746,7 +746,7 @@ if RUN_RATES:
                 RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
             SPC_DCT[tsname]['mul'] = ts_mul
             SPC_DCT[tsname]['rad_rad'] = rad_rad
-
+        print('RUNNING WITH MESS')
         # run ktp for a given PES
         ktpdriver.driver.run(
             TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
