@@ -42,10 +42,11 @@ def pf_headers(
     return header_str, energy_trans_str
 
 
-def make_all_species_data(rxn_lst, spc_dct, spc_save_fs, spc_model, pf_levels, projrot_script_str):
+def make_all_species_data(rxn_lst, spc_dct, save_prefix, model_info, pf_info, projrot_script_str):
     """ generate the MESS species blocks for all the species
     """
     species = {}
+    spc_save_fs = autofile.fs.species(save_prefix)
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
         ts = spc_dct[tsname]
@@ -53,9 +54,9 @@ def make_all_species_data(rxn_lst, spc_dct, spc_save_fs, spc_model, pf_levels, p
         for name in specieslist:
             if not name in species:
                 species[name], _ = make_species_data(
-                    name, spc_dct[name], spc_save_fs, spc_model, pf_levels, projrot_script_str)
+                    name, spc_dct[niame], spc_save_fs, model_info, pf_info, projrot_script_str)
         species[tsname], spc_dct[tsname]['imag_freq'] = make_species_data(
-            tsname, ts, spc_save_fs, spc_model, pf_levels, projrot_script_str)
+            tsname, ts, save_prefix, model_info, pf_info, projrot_script_str)
     return species
 
 
