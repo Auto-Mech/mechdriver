@@ -222,6 +222,10 @@ def _reactant_leaf(ichs, chgs, muls):
     assert all(_is_valid_inchi_multiplicity(ich, mul)
                for ich, mul in zip(ichs, muls))
 
+   # ich = []
+   # for ich_i in ichs:
+   #     ich.append(automol.inchi.standard_form(ich_i))
+   # ich = automol.inchi.join(ich)
     ich = automol.inchi.standard_form(automol.inchi.join(ichs))
     ick = automol.inchi.inchi_key(ich)
     chg_str = '_'.join(map(str, chgs))

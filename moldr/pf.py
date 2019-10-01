@@ -414,20 +414,24 @@ def pst_block(
     sym_factor_j = 1.
     if 'sym' in spc_dct_i:
         sym_factor_i = spc_dct_i['sym']
-        sym_factor_j = spc_dct_j['sym']
     else:
         if sym_model == 'SAMPLING':
             sym_geo_i = sym_cnf_save_fs_i.leaf.file.geometry.read(sym_min_cnf_locs_i)
             sym_ene_i = sym_cnf_save_fs_i.leaf.file.energy.read(sym_min_cnf_locs_i)
             sym_factor_i = moldr.conformer.symmetry_factor(sym_geo_i, sym_ene_i, sym_cnf_save_fs_i)
-
+        if sym_model == '1DHR':
+            # Warning: the 1DHR based symmetry number has not yet been set up
+            sym_factor_i = 1
+    if 'sym' in spc_dct_j:
+        sym_factor_j = spc_dct_j['sym']
+    else:
+        if sym_model == 'SAMPLING':
             sym_geo_j = sym_cnf_save_fs_j.leaf.file.geometry.read(sym_min_cnf_locs_j)
             sym_ene_j = sym_cnf_save_fs_j.leaf.file.energy.read(sym_min_cnf_locs_j)
             sym_factor_j = moldr.conformer.symmetry_factor(sym_geo_j, sym_ene_j, sym_cnf_save_fs_j)
         if sym_model == '1DHR':
             # Warning: the 1DHR based symmetry number has not yet been set up
-            sym_factor_i = 1
-            sym_factor_j = 1
+            sym_factor_ = 1
     sym_factor = sym_factor_i * sym_factor_j
 
     if vib_model:
@@ -727,7 +731,8 @@ def get_zero_point_energy(
         tors_zpe_cor = 0.0
         if tors_names:
             coo_dct = automol.zmatrix.coordinates(zma, multi=False)
-
+            print('tors_name:', tors_names)
+            print('coo_dct:', coo_dct)
             # prepare axis, group, info
             scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
             pot = []
@@ -737,8 +742,10 @@ def get_zero_point_energy(
                 enes = numpy.subtract(enes, min_ene)
                 pot = list(enes*EH2KCAL)
                 axis = coo_dct[tors_name][1:3]
+                print('axis:', axis)
+                print('axis:', gra)
                 group = list(
-                    automol.graph.branch_atom_keys(gra, axis[1], axis) -
+                    automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=True) -
                     set(axis))
                 group = list(numpy.add(group, 1))
                 axis = list(numpy.add(axis, 1))
