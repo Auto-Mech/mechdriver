@@ -20,11 +20,13 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 #PES_NUMS= 'all'
 #PES_NUMS = [2, 3]
+PESNUMS= 'all'
+#PESNUMS=  [16,17,18,19,20]
 # 0. choose which mechanism to run
 
 MECHANISM_NAME = sys.argv[1]
 MECH_TYPE = sys.argv[2]
-PES_NUMS = int(sys.argv[3])
+PESNUMS = sys.argv[3]
 
 RUN_THERMO = False
 RUN_RATES = True
@@ -760,15 +762,18 @@ if RUN_RATES:
         # ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
         ]
-    # if isinstance(PES_NUMS, str):
-        # if PES_NUMS == 'all':
-            # PES_NUMS = numpy.arange(0, len(PES_LST))
-        # elif '-' in PES_NUMS:
-            # START, END = PES_NUMS.split('-')
-            # PES_NUMS = numpy.arange(int(START)-1, int(END))
+    if isinstance(PESNUMS, str):
+        if PESNUMS== 'all':
+            PESNUMS = numpy.arange(len(PES_LST)+1)
+        elif '-' in PESNUMS:
+            start, end = PESNUMS.split('-')
+            PESNUMS = numpy.arange(int(start), int(end)+1)
+        elif '[' in PESNUMS:
+            nums = PESNUMS.replace('[','').replace(']','').split(',')
+            PESNUMS = [int(num) for num in nums]
     # loop over PESs
-    for pes_idx, PES in enumerate(PES_LST):
-        if pes_idx == PES_NUMS:
+    for pes_idx, PES in enumerate(PES_LST, start=1):
+        if pes_idx in PESNUMS:
             # set up name lists and ts species dictionary for a given PES
             RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
             PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']

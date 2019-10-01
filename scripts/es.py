@@ -382,6 +382,7 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
         rxn_exo = moldr.util.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, thy_info)
     except:
+        print(rxn_ichs)
         rxn_exo = moldr.util.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
     print('reaction is {:.2f}'.format(rxn_exo))
@@ -401,7 +402,7 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
 
     low_mul = automol.mult.ts._low(rxn_muls[0])
     high_mul = automol.mult.ts._high(rxn_muls[0])
-
+   
     return rxn_ichs, rxn_chgs, rxn_muls, low_mul, high_mul
 
 
@@ -494,22 +495,22 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs):
     if ret and typ is None:
         typ = 'beta scission'
         ts_zma, dist_name, tors_names = ret
-        print('beta scission')
-        print('ts zma:', ts_zma)
-        print('dist name:', dist_name)
-        print('tors names:', tors_names)
+        #print('beta scission')
+        #print('ts zma:', ts_zma)
+        #print('dist name:', dist_name)
+        #print('tors names:', tors_names)
 
     ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas)
     if ret and typ is None:
         typ = 'addition'
         ts_zma, dist_name, tors_names = ret
-        print('addn')
-        print('ts zma:')
-        print(ts_zma)
-        print('dist name:')
-        print(dist_name)
-        print('tors names:')
-        print(tors_names)
+        #print('addn')
+        #print('ts zma:')
+        #print(ts_zma)
+        #print('dist name:')
+        #print(dist_name)
+        #print('tors names:')
+        #print(tors_names)
 
     ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
     if ret and typ is None:
@@ -519,7 +520,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs):
         rct_zmas = moldr.util.min_dist_conformer_zma(dist_name, rct_cnf_save_fs[0])
         ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
         ts_zma, dist_name, tors_names = ret
-        print('H migration')
+        #print('H migration')
         print('ts zma:', ts_zma)
         print('dist name:', dist_name)
         print('tors names:', tors_names)
@@ -532,10 +533,10 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, rct_cnf_save_fs):
     if ret and typ is None:
         typ = 'hydrogen abstraction'
         ts_zma, dist_name, tors_names = ret
-        print('H abs')
-        print('ts zma:', ts_zma)
-        print('dist name:', dist_name)
-        print('tors names:', tors_names)
+        #print('H abs')
+        #print('ts zma:', ts_zma)
+        #print('dist name:', dist_name)
+        #print('tors names:', tors_names)
 
     if typ is None:
         print("Failed to classify reaction.")
@@ -637,13 +638,9 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
 
     _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_info[0:2])
 
-    print('rxn_run_path test in find_ts:', rxn_run_path)
-    print('ts_info test in find_ts:', ts_info)
-    print('thy_info test in find_ts:', thy_info)
     orb_restr = moldr.util.orbital_restriction(ts_info, thy_info)
     ref_level = thy_info[0:3]
     ref_level.append(orb_restr)
-    print('ref_level test in find_ts:', ref_level)
 
     thy_run_fs = autofile.fs.theory(rxn_run_path)
     thy_run_fs.leaf.create(ref_level[1:4])
@@ -656,19 +653,14 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
     scn_run_fs = autofile.fs.scan(thy_run_path)
     scn_save_fs = autofile.fs.scan(thy_save_path)
 
-    print('thy_run_path in ts_opt:', thy_run_path)
-
     ts_run_fs = autofile.fs.ts(thy_run_path)
     ts_run_fs.trunk.create()
     ts_run_path = ts_run_fs.trunk.path()
     run_fs = autofile.fs.run(ts_run_path)
 
-    print('ts_run_path:', ts_run_path)
-
     ts_save_fs = autofile.fs.ts(thy_save_path)
     ts_save_fs.trunk.create()
     ts_save_path = ts_save_fs.trunk.path()
-    print('ts_save_path:', ts_save_path)
 
     cnf_run_fs = autofile.fs.conformer(ts_run_path)
     cnf_save_fs = autofile.fs.conformer(ts_save_path)
