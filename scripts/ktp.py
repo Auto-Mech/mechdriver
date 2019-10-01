@@ -653,7 +653,7 @@ def species_thermo(
                 moldr.util.run_script(pf_script_str, pf_path)
                 print('finished partition function')
 
-                formula = thermo.util.inchi_formula(ich)
+                formula = automol.inchi.formula(ich)
                 print('\nformula:')
                 print(formula)
 

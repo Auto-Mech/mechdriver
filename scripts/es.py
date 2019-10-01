@@ -1837,8 +1837,9 @@ def ts_qchem(
                 if typ == 'radical radical addition':
                     ts_formula = ''
                     for ich in rct_ichs:
-                        formula_i = thermo.util.inchi_formula(ich)
-                        formula_i_dict = thermo.util.get_atom_counts_dict(formula_i)
+                        #formula_i = thermo.util.inchi_formula(ich)
+                        #formula_i_dict = thermo.util.get_atom_counts_dict(formula_i)
+                        formula_i_dict = automol.inchi.formula_dct(ich)
                         ts_formula = automol.formula._formula.join(ts_formula, formula_i_dict)
 
                     grid = numpy.append(grid1, grid2)

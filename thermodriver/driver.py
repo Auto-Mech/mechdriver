@@ -297,7 +297,7 @@ def create_spec(val, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.)
     else:
         geo = val
         ich = automol.geom.inchi(geo)
-    form = automol.inchi.formula(ich)
+    form = automol.inchi.formula_dct(ich)
     rad = automol.formula.electron_count(form)%2
     if rad:
         mult = 2
