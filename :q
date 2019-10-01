@@ -97,10 +97,10 @@ if MECH_TYPE == 'CHEMKIN':
     CHECK_STEREO = True
 
     if CHECK_STEREO:
-        SPC_STR = 'name,SMILES,InChI,mult,charge,sens \n'
+        SPC_STR = 'name,SMILES,InChi,mult,charge,sens \n'
         for name in ICH_DCT:
             ich = ICH_DCT[name]
-            # print('ich test:', ich)
+            print('ich test:', ich)
             smi = SMI_DCT[name]
             mul = MUL_DCT[name]
             chg = CHG_DCT[name]
@@ -261,7 +261,7 @@ elif MECH_TYPE == 'json':
                 rct_names.append(rct['name'])
                 rct_smis.append(rct['SMILES'][0])
                 # rct_ichs_smi = automol.smiles.inchi(rct['SMILES'][0])
-                # rct_ichs_rmg = rct['InChI']
+                # rct_ichs_rmg = rct['InChi']
                 #if rct_ichs_smi != rct_ichs_rmg:
                     # print('Warning: RMG inchi {} differs from conversion from
                     # smiles {}{}:'.format(
