@@ -14,8 +14,8 @@ WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def reference_geometry(
-        spcdct, thy_level, ini_thy_level, fs, ini_fs, kickoff_size=0.1,
-       kickoff_backward=False, projrot_script_str='RPHt.exe',
+        spc_dct_i, thy_level, ini_thy_level, fs, ini_fs, kickoff_size=0.1,
+        kickoff_backward=False, projrot_script_str='RPHt.exe',
         overwrite=False):
     """ determine what to use as the reference geometry for all future runs
     If ini_thy_info refers to geometry dictionary then use that,
@@ -28,11 +28,11 @@ def reference_geometry(
     ret = None
 
     thy_run_fs = fs[2]
-    thy_save_fs = fs[3] 
+    thy_save_fs = fs[3]
     ini_thy_save_fs = ini_fs[1]
-    cnf_run_fs = fs[4]  
+    cnf_run_fs = fs[4]
     cnf_save_fs = fs[5]
-    run_fs = fs[-1] 
+    run_fs = fs[-1]
     if run_fs.trunk.file.info.exists([]):
         inf_obj = run_fs.trunk.file.info.read([])
         if inf_obj.status == autofile.system.RunStatus.RUNNING:
@@ -52,9 +52,9 @@ def reference_geometry(
     geo = None
     try:
 #    Check to see if geometry should be obtained from dictionary
-        spc_info = [spcdct['ich'], spcdct['chg'], spcdct['mul']]
-        if 'input_geom' in ini_thy_level: 
-            geom_obj = spcdct['geoobj']
+        spc_info = [spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul']]
+        if 'input_geom' in ini_thy_level:
+            geom_obj = spc_dct_i['geo_obj']
             geo_init = geom_obj
             overwrite = True
             print('found initial geometry from geometry dictionary')
@@ -73,9 +73,15 @@ def reference_geometry(
                         thy_path = ini_thy_save_fs.leaf.path(ini_thy_level[1:4])
                         print('getting reference geometry from {}'.format(thy_path))
                         geo_init = ini_thy_save_fs.leaf.file.geometry.read(ini_thy_level[1:4])
+                    elif 'geo_obj' in spc_dct_i:
+                        geo_init = spc_dct_i['geo_obj']
+                        print('getting geometry from geom dictionary')
                     else:
                         geo_init = automol.inchi.geometry(spc_info[0])
                         print('getting reference geometry from inchi')
+                elif 'geo_obj' in spc_dct_i:
+                    geo_init = spc_dct_i['geo_obj']
+                    print('getting geometry from geom dictionary')
                 else:
                     geo_init = automol.inchi.geometry(spc_info[0])
                     print('getting reference geometry from inchi')
@@ -93,14 +99,15 @@ def reference_geometry(
             geo, inf = run_initial_geometry_opt(**params, **opt_kwargs)
             thy_save_fs.leaf.create(thy_level[1:4])
             thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
-            if not automol.geom.is_atom(geo) and len(automol.graph.connected_components(automol.geom.graph(geo))) < 2:
+            if not automol.geom.is_atom(geo) and len(
+                    automol.graph.connected_components(automol.geom.graph(geo))) < 2:
                 geo, hess = remove_imag(
-                    spcdct, geo, thy_level, thy_run_fs,
+                    spc_dct_i, geo, thy_level, thy_run_fs,
                     run_fs, kickoff_size,
                     kickoff_backward,
                     projrot_script_str,
                     overwrite=overwrite)
-    
+
                 tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
                 locs_lst = cnf_save_fs.leaf.existing()
                 if locs_lst:
@@ -111,11 +118,11 @@ def reference_geometry(
                         print('removing original conformer save data')
                         cnf_run_fs.remove()
                         cnf_save_fs.remove()
-    
+
                 print('Saving reference geometry')
                 print(" - Save path: {}".format(thy_save_path))
                 thy_save_fs.leaf.file.hessian.write(hess, thy_level[1:4])
-    
+
             thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
             if  len(automol.graph.connected_components(automol.geom.graph(geo))) < 2:
                 zma = automol.geom.zmatrix(geo)
@@ -124,8 +131,8 @@ def reference_geometry(
             else:
                 print("Cannot create zmatrix for disconnected species")
                 scripts.es.fake_conf(thy_level, fs, inf)
-    
-    
+
+
         if geo:
             inf_obj.status = autofile.system.RunStatus.SUCCESS
             run_fs.trunk.file.info.write(inf_obj, [])
@@ -175,9 +182,7 @@ def run_initial_geometry_opt(
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
         geo = elstruct.reader.opt_geometry(prog, out_str)
-        if  len(automol.graph.connected_components(automol.geom.graph(geo))) < 2:
-            zma = automol.geom.zmatrix(geo)
-        else:
+        if  len(automol.graph.connected_components(automol.geom.graph(geo))) >= 2:
             method = inf_obj.method
             ene = elstruct.reader.energy(prog, method, out_str)
             inf = [inf_obj, ene]
@@ -185,7 +190,7 @@ def run_initial_geometry_opt(
 
 
 def remove_imag(
-        spcdct, geo, thy_level, thy_run_fs, run_fs, kickoff_size=0.1,
+        spc_dct_i, geo, thy_level, thy_run_fs, run_fs, kickoff_size=0.1,
         kickoff_backward=False,
         projrot_script_str='RPHt.exe',
         overwrite=False):
@@ -194,7 +199,7 @@ def remove_imag(
     """
 
     print('the initial geometries will be checked for imaginary frequencies')
-    spc_info = scripts.es.get_spc_info(spcdct)
+    spc_info = scripts.es.get_spc_info(spc_dct_i)
     script_str, opt_script_str, kwargs, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
 
     imag, geo, disp_xyzs, hess = run_check_imaginary(
@@ -234,9 +239,9 @@ def run_check_imaginary(
     run_fs = autofile.fs.run(thy_run_path)
     imag = False
     disp_xyzs = []
-    hess = ((),())
+    hess = ((), ())
     if automol.geom.is_atom(geo):
-        hess = ((),())
+        hess = ((), ())
     else:
         moldr.driver.run_job(
             job=elstruct.Job.HESSIAN,

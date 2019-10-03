@@ -1,7 +1,6 @@
 """ electronic structure drivers
 """
 import os
-from qcelemental import constants as qcc
 import automol.inchi
 import automol.geom
 import moldr
@@ -22,7 +21,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
     print(tsk_info_lst)
     #prepare species queue
     spc_queue = []
-    for i, rxn in enumerate(rxn_lst):
+    for _, rxn in enumerate(rxn_lst):
         reacs = rxn['reacs']
         prods = rxn['prods']
 
@@ -51,27 +50,23 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
         #Theory information
         ini_thy_info = scripts.es.get_thy_info(es_dct[es_ini_key])
         thy_info = scripts.es.get_thy_info(es_dct[es_run_key])
-        print('original ini_thy_info test;', ini_thy_info)
-        print('original thy_info test;', thy_info)
         ini_thy_info = get_es_info(es_dct, es_ini_key)
         thy_info = get_es_info(es_dct, es_run_key)
-        print('ini_thy_info test;', ini_thy_info)
-        print('thy_info test;', thy_info)
 
         #If task is to find the transition state, find all TSs for your reactionlist
         if tsk in ('find_ts', 'find_vdw'):
             for ts in spc_dct:
                 if 'ts_' in ts:
-                    print('Task {} \t {}//{} \t {} = {}'.format(
-                        tsk, '/'.join(thy_info), '/'.join(ini_thy_info),
-                         '+'.join(spc_dct[ts]['reacs']), '+'.join(spc_dct[ts]['prods'])))
+                    print('Task {} \t for {} \t {}//{} \t {} = {}'.format(
+                        tsk, ts, '/'.join(thy_info), '/'.join(ini_thy_info),
+                        '+'.join(spc_dct[ts]['reacs']), '+'.join(spc_dct[ts]['prods'])))
                     ts_info = (spc_dct[ts]['ich'], spc_dct[ts]['chg'], spc_dct[ts]['mul'])
                     rxn_class = spc_dct[ts]['class']
                     if not rxn_class:
-                        print('skipping reaction because type =:', rxn_class)
+                        print('skipping reaction because type =', rxn_class)
                         continue
-                    elif 'radical radical' in rxn_class:
-                        print('skipping reaction because type =:', rxn_class)
+                    elif 'radical radical' in rxn_class and not 'high spin' in rxn_class:
+                        print('skipping reaction because type =', rxn_class)
                         continue
                     ts_zma = spc_dct[ts]['original_zma']
                     dist_info = spc_dct[ts]['dist_info']
@@ -98,7 +93,6 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
 
         #Loop over all species
         for spc in spc_queue:
-            print('spc test in esdriver:', spc)
             if 'ts_' in spc:
                 print('\nTask {} \t {}//{} \t Species {}'.format(
                     tsk, '/'.join(thy_info), '/'.join(ini_thy_info), spc))
@@ -111,10 +105,8 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                     automol.inchi.smiles(spc_dct[spc]['ich'])))
                 spc_info = scripts.es.get_spc_info(spc_dct[spc])
                 spc_run_fs = autofile.fs.species(run_prefix)
-                print('spc_info test:', spc_info)
                 spc_run_fs.leaf.create(spc_info)
                 spc_run_path = spc_run_fs.leaf.path(spc_info)
-                print('spc_run_path test:', spc_run_path)
 
                 spc_save_fs = autofile.fs.species(save_prefix)
                 spc_save_fs.leaf.create(spc_info)
@@ -126,12 +118,10 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                 spc_info, thy_info)
             thy_level = thy_info[0:3]
             thy_level.append(orb_restr)
-            print('thy_info test in es:', thy_info)
-            print('thy_level test in es:', thy_level)
 
             thy_run_fs = autofile.fs.theory(spc_run_path)
             thy_save_fs = autofile.fs.theory(spc_save_path)
-            
+
             print(spc)
             if 'ene' not in tsk and 'hess' not in tsk:
                 if 'ts_' in spc:
@@ -153,11 +143,6 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
                     thy_save_fs.leaf.create(thy_level[1:4])
                     thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
-                    print('thy_run_path test in es:', thy_run_path)
-                    print('thy_save_path test in es:', thy_save_path)
-
-                print('thy_run_path test in es:', thy_run_path)
-                print('thy_save_path test in es:', thy_save_path)
 
                 cnf_run_fs = autofile.fs.conformer(thy_run_path)
                 cnf_save_fs = autofile.fs.conformer(thy_save_path)
