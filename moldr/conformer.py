@@ -59,6 +59,7 @@ def conformer_sampling(
         cnf_save_fs=cnf_save_fs,
         script_str=script_str,
         overwrite=overwrite,
+        saddle=saddle,
         two_stage=two_stage,
         **kwargs,
     )
@@ -92,7 +93,7 @@ def conformer_sampling(
 
 def run_conformers(
         zma, spc_info, thy_level, nsamp, tors_range_dct,
-        cnf_run_fs, cnf_save_fs, script_str, overwrite, two_stage,
+        cnf_run_fs, cnf_save_fs, script_str, overwrite, saddle, two_stage,
         **kwargs):
     """ run sampling algorithm to find conformers
     """
@@ -151,6 +152,7 @@ def run_conformers(
                     thy_level=thy_level,
                     overwrite=overwrite,
                     frozen_coordinates=[tors_names],
+                    saddle=saddle,
                     **kwargs
                 )
                 print('Stage one success, reading for stage 2')
@@ -168,6 +170,7 @@ def run_conformers(
                         spc_info=spc_info,
                         thy_level=thy_level,
                         overwrite=overwrite,
+                        saddle=saddle,
                         **kwargs
                     )
             else:
@@ -179,6 +182,7 @@ def run_conformers(
                     spc_info=spc_info,
                     thy_level=thy_level,
                     overwrite=overwrite,
+                    saddle=saddle,
                     **kwargs
                 )
             #moldr.driver.run_job(

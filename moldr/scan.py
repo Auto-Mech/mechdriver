@@ -26,9 +26,6 @@ def hindered_rotor_scans(
         val_dct = automol.zmatrix.values(zma)
         if not saddle:
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        print('tors_names test', tors_names)
-        print('zma test', zma)
-        print('scan_increment test', scan_increment)
         if tors_names:
             tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
                 zma, tors_names, scan_increment)
@@ -46,6 +43,7 @@ def hindered_rotor_scans(
                     scn_save_fs=scn_save_fs,
                     script_str=script_str,
                     overwrite=overwrite,
+                    saddle=saddle,
                     **opt_kwargs,
                 )
 
@@ -59,7 +57,7 @@ def hindered_rotor_scans(
 def run_scan(
         zma, spc_info, thy_level, grid_dct, scn_run_fs, scn_save_fs,
         script_str, overwrite, update_guess=True,
-        reverse_sweep=True, fix_failures=True,**kwargs):
+        reverse_sweep=True, fix_failures=True, saddle=False, **kwargs):
     """ run constrained optimization scan
     """
     if len(grid_dct) > 1:
@@ -106,6 +104,7 @@ def run_scan(
         thy_level=thy_level,
         overwrite=overwrite,
         update_guess=update_guess,
+        saddle=saddle,
         retry_failed=fix_failures,
         **kwargs
     )
@@ -122,6 +121,7 @@ def run_scan(
             thy_level=thy_level,
             overwrite=overwrite,
             update_guess=update_guess,
+            saddle=saddle,
             **kwargs
         )
 
@@ -263,7 +263,7 @@ def run_multiref_rscan(
 def _run_1d_scan(
         script_str, prefixes, guess_zma, coo_name, grid_idxs, grid_vals,
         spc_info, thy_level, overwrite, errors=(),
-        options_mat=(), retry_failed=True, update_guess=True, **kwargs):
+        options_mat=(), retry_failed=True, update_guess=True, saddle=False, **kwargs):
 
     npoints = len(grid_idxs)
     assert len(grid_vals) == len(prefixes) == npoints
@@ -284,6 +284,7 @@ def _run_1d_scan(
             errors=errors,
             options_mat=options_mat,
             retry_failed=retry_failed,
+            saddle=saddle,
             **kwargs
         )
 

@@ -61,7 +61,6 @@ SYMM_DCT = {
 }
 
 DATA_PATH = '/home/sjklipp/PACC/mech_test'
-# DATA_PATH = os.path.dirname(os.path.realpath(__file__))
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
@@ -73,8 +72,6 @@ GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
 # read in data from the mechanism directory
 MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
-#MECH_TYPE = 'CHEMKIN'
-#MECH_TYPE = 'json'
 MECH_FILE = 'mech.json'
 RAD_RAD_SORT = False
 
@@ -87,16 +84,13 @@ if MECH_TYPE == 'CHEMKIN':
     MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
     SPC_STR = open(os.path.join(MECH_PATH, 'species.csv')).read()
 
-    # SPC_TAB = pandas.read_csv(os.path.join(MECH_PATH, 'species.csv'))
     SMI_DCT = chemkin_io.mechparser.mechanism.species_name_smiles_dct(SPC_STR)
     ICH_DCT = chemkin_io.mechparser.mechanism.species_name_inchi_dct(SPC_STR)
-    print('ICH_DCT test:', ICH_DCT)
-    #print('SPC_STR test:', SPC_STR)
     MUL_DCT = chemkin_io.mechparser.mechanism.species_name_mult_dct(SPC_STR)
     CHG_DCT = chemkin_io.mechparser.mechanism.species_name_charge_dct(SPC_STR)
     SENS_DCT = chemkin_io.mechparser.mechanism.species_name_sens_dct(SPC_STR)
 
-    CHECK_STEREO = True
+    CHECK_STEREO = False
 
     if CHECK_STEREO:
         SPC_STR = 'name,SMILES,InChI,mult,charge,sens \n'
@@ -574,6 +568,11 @@ for spc in SPC_DCT:
         SPC_DCT[spc]['elec_levs'] = ELC_DEG_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
     if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in SYMM_DCT:
         SPC_DCT[spc]['sym'] = SYMM_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
+
+for spc in SPC_DCT:
+    ich = SPC_DCT[spc]['ich']
+    if ich in GEOM_DCT:
+        SPC_DCT[spc]['geo_obj'] = GEOM_DCT[ich]
 
 # 2. script control parameters
 

@@ -289,7 +289,6 @@ def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
         ts_mul = max(spc_dct[rcts[0]]['mul'], spc_dct[prds[0]]['mul'])
         rad_rad = False
     else:
-        ts_mul = min(spc_dct[rcts[0]]['mul'], spc_dct[prds[0]]['mul'])
         for rct in rcts:
             rct_spin_sum += (spc_dct[rct]['mul'] - 1.)/2.
             rct_muls.append(spc_dct[rct]['mul'])
