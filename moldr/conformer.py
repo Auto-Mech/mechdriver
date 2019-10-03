@@ -25,15 +25,12 @@ def conformer_sampling(
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         zma = automol.geom.zmatrix(geo)
     else:
-        #geo = thy_save_fs.trunk.file.geometry.read(thy_level[1:4])
         geo = thy_save_fs.trunk.file.geometry.read()
         zma = thy_save_fs.trunk.file.zmatrix.read()
         coo_names.append(tors_names)
 
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
-    # tors_ranges = automol.zmatrix.torsional_sampling_ranges(
-    #    zma, tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
     if not saddle:
         gra = automol.inchi.graph(ich)
@@ -265,18 +262,24 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                     if not unique:
                         print(" - Geometry is not unique. Skipping...")
                     else:
-                        save_path = cnf_save_fs.leaf.path(locs)
-                        print(" - Geometry is unique. Saving...")
-                        print(" - Save path: {}".format(save_path))
+                        vma = automol.zmatrix.var_(zma)
+                        if cnf_save_fs.trunk.file.vmatrix.exists():
+                            existing_vma = cnf_save_fs.trunk.file.vmatrix.read()
+                            if vma != existing_vma:
+                                print(" - Isomer is not the same as starting isomer. Skipping...")
+                            else:
+                                save_path = cnf_save_fs.leaf.path(locs)
+                                print(" - Geometry is unique. Saving...")
+                                print(" - Save path: {}".format(save_path))
 
-                        cnf_save_fs.leaf.create(locs)
-                        cnf_save_fs.leaf.file.geometry_info.write(
-                            inf_obj, locs)
-                        cnf_save_fs.leaf.file.geometry_input.write(
-                            inp_str, locs)
-                        cnf_save_fs.leaf.file.energy.write(ene, locs)
-                        cnf_save_fs.leaf.file.geometry.write(geo, locs)
-                        cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
+                                cnf_save_fs.leaf.create(locs)
+                                cnf_save_fs.leaf.file.geometry_info.write(
+                                    inf_obj, locs)
+                                cnf_save_fs.leaf.file.geometry_input.write(
+                                    inp_str, locs)
+                                cnf_save_fs.leaf.file.energy.write(ene, locs)
+                                cnf_save_fs.leaf.file.geometry.write(geo, locs)
+                                cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
 
                     seen_geos.append(geo)
                     seen_enes.append(ene)

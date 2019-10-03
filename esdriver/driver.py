@@ -71,11 +71,12 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                     ts_zma = spc_dct[ts]['original_zma']
                     dist_info = spc_dct[ts]['dist_info']
                     grid = spc_dct[ts]['grid']
+                    bkp_data = spc_dct[ts]['bkp_data']
                     _, _, rxn_run_path, rxn_save_path = spc_dct[ts]['rxn_fs']
                     if 'ts' in tsk:
                         geo, _, final_dist = scripts.es.find_ts(
                             spc_dct[ts], ts_info, ts_zma, rxn_class, dist_info,
-                            grid, thy_info, rxn_run_path, rxn_save_path, overwrite)
+                            grid, bkp_data, thy_info, rxn_run_path, rxn_save_path, overwrite)
                         spc_dct[ts]['dist_info'][1] = final_dist
                         if not isinstance(geo, str):
                             print('Success, transition state {} added to species queue'.format(ts))

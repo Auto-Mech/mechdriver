@@ -490,41 +490,51 @@ def get_geos(
 
 
 def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_save_fs):
-    typ = None
-    ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
-    if ret and typ is None:
-        typ = 'beta scission'
-        ts_zma, dist_name, tors_names = ret
 
+    typ = None
+    bkp_typ = ''
     ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas)
-    if ret and typ is None:
+    if ret:
         typ = 'addition'
         ts_zma, dist_name, tors_names = ret
         if ts_mul == high_mul:
             typ += ': high spin'
         elif ts_mul == low_mul:
             typ += ': low spin'
+        # set up beta scission as a fall back option for failed addition TS search
+        ret2 = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
+        if ret2:
+            bkp_typ = 'beta scission'
+            bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
 
-    ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
-    if ret and typ is None:
-        typ = 'hydrogen migration'
-        ts_zma, dist_name, tors_names = ret
-        rct_zmas = moldr.util.min_dist_conformer_zma(dist_name, rct_cnf_save_fs[0])
+    if typ is None:
+        ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
+        if ret:
+            typ = 'beta scission'
+            ts_zma, dist_name, tors_names = ret
+
+    if typ is None:
         ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
-        ts_zma, dist_name, tors_names = ret
+        if ret:
+            typ = 'hydrogen migration'
+            ts_zma, dist_name, tors_names = ret
+            rct_zmas = moldr.util.min_dist_conformer_zma(dist_name, rct_cnf_save_fs[0])
+            ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
+            ts_zma, dist_name, tors_names = ret
 
     # fix this later
     # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
     #                                               sigma=True)
-    ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
-                                                  sigma=False)
-    if ret and typ is None:
-        typ = 'hydrogen abstraction'
-        ts_zma, dist_name, tors_names = ret
-        if ts_mul == high_mul:
-            typ += ': high spin'
-        elif ts_mul == low_mul:
-            typ += ': low spin'
+    if typ is None:
+        ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
+                                                      sigma=False)
+        if ret:
+            typ = 'hydrogen abstraction'
+            ts_zma, dist_name, tors_names = ret
+            if ts_mul == high_mul:
+                typ += ': high spin'
+            elif ts_mul == low_mul:
+                typ += ': low spin'
 
     if typ is None:
         print("Failed to classify reaction.")
@@ -552,6 +562,16 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         npoints = 8
         npoints1 = 4
         npoints2 = 4
+        if 'beta scission' in bkp_typ:
+            rmin = 1.4 * ANG2BOHR
+            rmax = 2.0 * ANG2BOHR
+            if bnd_len_key in bnd_len_dct:
+                bnd_len = bnd_len_dct[bnd_len_key]
+                rmin = bnd_len + 0.1 * ANG2BOHR
+                rmax = bnd_len + 0.5 * ANG2BOHR
+            bkp_grid = numpy.linspace(rmin, rmax, npoints)
+            bkp_update_guess = False
+
         if 'beta scission' in typ:
             rmin = 1.4 * ANG2BOHR
             rmax = 2.0 * ANG2BOHR
@@ -614,10 +634,20 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             grid = None
             update_guess = False
 
-        return typ, ts_zma, dist_name, grid, tors_names, update_guess
+        if typ:
+            ts_class_data = [typ, ts_zma, dist_name, grid, tors_names, update_guess]
+        else:
+            ts_class_data = []
+        if bkp_typ:
+            bkp_ts_class_data = [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess]
+        else:
+            bkp_ts_class_data = []
 
+        return [ts_class_data, bkp_ts_class_data]
 
-def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_path, rxn_save_path, overwrite):
+def find_ts(
+        ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data,
+        thy_info, rxn_run_path, rxn_save_path, overwrite, attempt=1):
     """ find the ts geometry
     """
     print('prepping ts scan for:', typ)
@@ -773,6 +803,20 @@ def find_ts(ts_dct, ts_info, ts_zma, typ, dist_info, grid, thy_info, rxn_run_pat
         print('Test final distance for reactant coordinate', final_dist)
         run_single_conformer(ts_info, ref_level, fs, overwrite, saddle=True, dist_info=dist_info)
 
+    elif ('addition ' in typ or 'abstraction' in typ) and attempt < 2:
+        babs1 = 180. * qcc.conversion_factor('degree', 'radian')
+        if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
+            babs1 = 90. * qcc.conversion_factor('degree', 'radian')
+        ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
+        geo, zma, final_dist = find_ts(
+            ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data, thy_info,
+            rxn_run_path, rxn_save_path, overwrite=True, attempt=2)
+    elif 'addition' in typ and bkp_ts_class_data and attempt < 3:
+        bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, _, bkp_update_guess = bkp_ts_class_data 
+        bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
+        geo, zma, final_dist = find_ts(
+            ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
+            rxn_run_path, rxn_save_path, overwrite=True, attempt=2)
     else:
         geo = 'failed'
         zma = 'failed'
