@@ -86,6 +86,7 @@ def run(
     # This presumes that es has been run previously for species list to produce energies in save
     # file system
     if len(ts_tsk_lst) > 0:
+        print('\nBegin transition state prep')
         for ts in spc_dct:
             if 'ts_' in ts:
                 spc_dct[ts]['hind_inc'] = HIND_INC * qcc.conversion_factor('degree', 'radian')
@@ -134,6 +135,7 @@ def run(
                 else:
                     spc_dct[ts]['class'] = None
                     spc_dct[ts]['bkp_data'] = None
+        print('End transition state prep\n')
 
         #Run ESDriver
         if runes:

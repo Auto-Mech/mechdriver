@@ -297,9 +297,11 @@ def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
             prd_muls.append(spc_dct[prd]['mul'])
         if (min(rct_muls) == 1 or nrcts == 1) and (min(prd_muls) == 1 or nprds == 1):
             rad_rad = False
-        ts_mul = min(rct_spin_sum, prd_spin_sum)
-        ts_mul = int(round(2*ts_mul + 1))
-    return ts_mul, rad_rad
+        ts_mul_low = min(rct_spin_sum, prd_spin_sum)
+        ts_mul_low = int(round(2*ts_mul + 1))
+        ts_mul_high = max(rct_spin_sum, prd_spin_sum)
+        ts_mul_high = int(round(2*ts_mul + 1))
+    return ts_mul_low, ts_mul_high, rad_rad
 
 
 def run_script(script_str, run_dir):
