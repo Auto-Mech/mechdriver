@@ -766,13 +766,13 @@ if RUN_RATES:
         # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
         ]
     if isinstance(PESNUMS, str):
-        if PESNUMS== 'all':
+        if PESNUMS == 'all':
             PESNUMS = numpy.arange(len(PES_LST)+1)
         elif '-' in PESNUMS:
             start, end = PESNUMS.split('-')
             PESNUMS = numpy.arange(int(start), int(end)+1)
         elif '[' in PESNUMS:
-            nums = PESNUMS.replace('[','').replace(']','').split(',')
+            nums = PESNUMS.replace('[', '').replace(']', '').split(',')
             PESNUMS = [int(num) for num in nums]
     # loop over PESs
     for pes_idx, PES in enumerate(PES_LST, start=1):
@@ -788,7 +788,7 @@ if RUN_RATES:
                     start, end = CHANNELS.split('-')
                     pes_chns = numpy.arange(int(start), int(end)+1)
                 elif '[' in CHANNELS:
-                    nums = CHANNELS.replace('[','').replace(']','').split(',')
+                    nums = CHANNELS.replace('[', '').replace(']', '').split(',')
                     pes_chns = [int(num) for num in nums]
             RCT_NAMES_LST = []
             PRD_NAMES_LST = []
@@ -803,9 +803,9 @@ if RUN_RATES:
                     '+ '.join(PES_RCT_NAMES_LST[chn_idx]),
                     '+ '.join(PES_PRD_NAMES_LST[chn_idx])))
             # set up name lists and ts species dictionary for a given PES
-           # print('RCT_NAMES_LST test:', RCT_NAMES_LST)
-           # print('PRD_NAMES_LST test:', PRD_NAMES_LST)
-           # print('RXT_NAME_LST test:', RXN_NAME_LST)
+            RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
+            PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
+            RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
             RXN_LST = []
             for rxn, _ in enumerate(RCT_NAMES_LST):
                 RXN_LST.append(
@@ -835,7 +835,7 @@ if RUN_RATES:
                     SPC_DCT[tsname] = spc_dct
                     SPC_DCT[tsname]['mul'] = ts_mul_high
                     ts_idx += 1
-                    
+
             print('RUNNING WITH MESS')
             # run ktp for a given PES
             ktpdriver.driver.run(

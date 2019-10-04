@@ -769,7 +769,7 @@ def find_ts(
         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
         chk_bkp = False
         if automol.zmatrix.names(zma) == automol.zmatrix.names(ts_zma):
-            if not automol.zmatrix.almost_equal(zma,  ts_zma, 4e-1, True):
+            if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1, True):
                 if 'babs1' in automol.zmatrix.names(ts_zma):
                     babs1 = 180. * qcc.conversion_factor('degree', 'radian')
                     if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
@@ -785,9 +785,9 @@ def find_ts(
 
         is_bkp = False
         if chk_bkp and bkp_ts_class_data:
-            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data 
+            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data
             if automol.zmatrix.names(zma) == automol.zmatrix.names(bkp_ts_zma):
-                if automol.zmatrix.almost_equal(zma,  bkp_ts_zma, 4e-1, True):
+                if automol.zmatrix.almost_equal(zma, bkp_ts_zma, 4e-1, True):
                     is_bkp = True
                 elif 'babs1' in automol.zmatrix.names(bkp_ts_zma):
                     babs1 = 180. * qcc.conversion_factor('degree', 'radian')
@@ -821,10 +821,19 @@ def find_ts(
         if attempt > 1:
             new_grid=True
         print('running ts scan:')
-        if typ == 'radical radical addition':
+        if 'radical radical addition' in typ:
             ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
+            print('grid 0 test:', grid[0])
+            print('grid 1 test:', grid[1])
+            grid1 = grid[0]
+            grid2 = grid[1]
             grid = numpy.append(grid[0], grid[1])
+            print('grid test:', grid)
             high_mul = ts_dct['high_mul']
+            print('starting multiref scan:', scn_run_fs.trunk.path())
+            # print('starting multiref scan:', scn_run_fs.leaf.path())
+            print('formulat test:', ts_formula)
+            print('ts_zma test:', ts_zma)
             moldr.scan.run_multiref_rscan(
                 formula=ts_formula,
                 high_mul=high_mul,
@@ -848,6 +857,11 @@ def find_ts(
                 coo_names=[dist_name],
             )
 
+        # continue on to finish setting up the correction potential
+
+        # now call vrctst which sets up all the vrctst files
+
+            # vrctst(ts_zma, 
             nsamp_max = 2000
             nsamp_min = 500
             flux_err = 5
@@ -863,28 +877,22 @@ def find_ts(
             #    distances)
             #print('\ndivsur.inp:')
             #print(divsur_inp_str)
+
         else:
             moldr.scan.run_scan(
                 zma=ts_zma,
                 spc_info=ts_info,
                 thy_level=ref_level,
-                grid_dct={dist_name: grid},
+                saddle=True,
+                overwrite=overwrite,
+                **opt_kwargs,
+                )
+
+            moldr.scan.save_scan(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
-                script_str=opt_script_str,
-                overwrite=overwrite,
-                update_guess=update_guess,
-                reverse_sweep=False,
-                fix_failures=False,
-                new_grid=new_grid,
-                **opt_kwargs
-            )
-
-        moldr.scan.save_scan(
-            scn_run_fs=scn_run_fs,
-            scn_save_fs=scn_save_fs,
-            coo_names=[dist_name],
-        )
+                coo_names=[dist_name],
+                )
 
         locs_lst = [
             locs for locs in scn_save_fs.leaf.existing([[dist_name]])
@@ -910,7 +918,8 @@ def find_ts(
             saddle=True,
             overwrite=overwrite,
             **opt_kwargs,
-        )
+            )
+
         opt_ret = moldr.driver.read_job(
             job='optimization',
             run_fs=run_fs,
