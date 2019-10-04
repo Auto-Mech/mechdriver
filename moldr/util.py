@@ -286,7 +286,8 @@ def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
     rct_muls = []
     prd_muls = []
     if nrcts == 1 and nprds == 1:
-        ts_mul = max(spc_dct[rcts[0]]['mul'], spc_dct[prds[0]]['mul'])
+        ts_mul_low = max(spc_dct[rcts[0]]['mul'], spc_dct[prds[0]]['mul'])
+        ts_mul_high= ts_mul_low
         rad_rad = False
     else:
         for rct in rcts:
@@ -298,9 +299,9 @@ def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
         if (min(rct_muls) == 1 or nrcts == 1) and (min(prd_muls) == 1 or nprds == 1):
             rad_rad = False
         ts_mul_low = min(rct_spin_sum, prd_spin_sum)
-        ts_mul_low = int(round(2*ts_mul + 1))
+        ts_mul_low = int(round(2*ts_mul_low + 1))
         ts_mul_high = max(rct_spin_sum, prd_spin_sum)
-        ts_mul_high = int(round(2*ts_mul + 1))
+        ts_mul_high = int(round(2*ts_mul_high + 1))
     return ts_mul_low, ts_mul_high, rad_rad
 
 

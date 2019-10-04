@@ -821,7 +821,6 @@ def find_ts(
         geo = 'failed'
         zma = 'failed'
         final_dist = 0.
-
     return geo, zma, final_dist
 
 

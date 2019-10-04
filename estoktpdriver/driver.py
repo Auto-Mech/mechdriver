@@ -28,10 +28,9 @@ CHANNELS= 'all'
 MECHANISM_NAME = sys.argv[1]
 MECH_TYPE = sys.argv[2]
 if len(sys.argv) > 3:
-   PESNUMS = sys.argv[3]
-   if len(sys.argv) > 4:
-      CHANNELS = sys.argv[4]
-
+    PESNUMS = sys.argv[3]
+    if len(sys.argv) > 4:
+        CHANNELS = sys.argv[4]
 RUN_THERMO = False
 RUN_RATES = True
 # 1. create run and save directories
@@ -782,19 +781,20 @@ if RUN_RATES:
             PES_RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
             if isinstance(CHANNELS, str):
                 if CHANNELS == 'all':
-                    CHANNELS = numpy.arange(len(PES_RXN_NAME_LST)+1)
+                    print(len(PES_RXN_NAME_LST))
+                    pes_chns = numpy.arange(len(PES_RXN_NAME_LST)+1)
                 elif '-' in CHANNELS:
                     start, end = CHANNELS.split('-')
-                    CHANNELS = numpy.arange(int(start), int(end)+1)
+                    pes_chns = numpy.arange(int(start), int(end)+1)
                 elif '[' in CHANNELS:
                     nums = CHANNELS.replace('[','').replace(']','').split(',')
-                    CHANNELS = [int(num) for num in nums]
+                    pes_chns = [int(num) for num in nums]
             RCT_NAMES_LST = []
             PRD_NAMES_LST = []
             RXN_NAME_LST = []
             print('running ktp on PES{}: {} for the following channels...'.format(str(pes_idx), PES))
             for chn_idx, _ in enumerate(PES_RXN_NAME_LST):
-                if chn_idx+1 in CHANNELS:
+                if chn_idx+1 in pes_chns:
                     RCT_NAMES_LST.append(PES_RCT_NAMES_LST[chn_idx])
                     PRD_NAMES_LST.append(PES_PRD_NAMES_LST[chn_idx])
                     RXN_NAME_LST.append(PES_RXN_NAME_LST[chn_idx])
@@ -810,11 +810,11 @@ if RUN_RATES:
                 RXN_LST.append(
                     {'species': [], 'reacs': list(RCT_NAMES_LST[rxn]), 'prods':
                      list(PRD_NAMES_LST[rxn])})
-            idx = 0
-            for rxn in RXN_LST:
+            ts_idx = 0
+            for idx, rxn in enumerate(RXN_LST):
                 reacs = rxn['reacs']
                 prods = rxn['prods']
-                tsname = 'ts_{:g}'.format(idx)
+                tsname = 'ts_{:g}'.format(ts_idx)
                 SPC_DCT[tsname] = {}
                 if reacs and prods:
                     SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
@@ -827,15 +827,13 @@ if RUN_RATES:
                     RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
                 SPC_DCT[tsname]['mul'] = ts_mul_low
                 SPC_DCT[tsname]['rad_rad'] = rad_rad
-                idx += 1
-                print(SPC_DCT[tsname])
+                ts_idx += 1
                 if ts_mul_low != ts_mul_high and rad_rad:
                     spc_dct = SPC_DCT[tsname].copy()
-                    tsname = 'ts_{:g}'.format(idx)
+                    tsname = 'ts_{:g}'.format(ts_idx)
                     SPC_DCT[tsname] = spc_dct
                     SPC_DCT[tsname]['mul'] = ts_mul_high
-                    idx += 1
-                    print(SPC_DCT[tsname])
+                    ts_idx += 1
                     
             print('RUNNING WITH MESS')
             # run ktp for a given PES
