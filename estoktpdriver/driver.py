@@ -64,6 +64,7 @@ SYMM_DCT = {
 }
 
 DATA_PATH = '/home/sjklipp/PACC/mech_test'
+#DATA_PATH = '/home/elliott/pacc-tests/'
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
@@ -749,9 +750,9 @@ if RUN_RATES:
 
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
+        #['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        #['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        #['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
         # ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['find_ts', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
