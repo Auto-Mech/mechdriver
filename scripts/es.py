@@ -444,13 +444,11 @@ def get_zmas(
     """
     if len(reacs) > 2:
         ich = spc_dct[reacs[-1]]['ich']
-        print('ich in get_zma',ich)
         ichgeo = automol.inchi.geometry(ich)
         ichzma = automol.geom.zmatrix(ichgeo)
         reacs = reacs[:-1] 
     elif len(prods) > 2:
         ich = spc_dct[prods[-1]]['ich']
-        print('ich in get_zma',ich)
         ichgeo = automol.inchi.geometry(ich)
         ichzma = automol.geom.zmatrix(ichgeo)
         prods = prods[:-1]
@@ -462,48 +460,10 @@ def get_zmas(
         kickoff_backward, projrot_script_str)
     rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
     prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
-    #if  len(rct_zmas) > 2:
-    #    ret = automol.zmatrix.ts.addition(rct_zmas[1:], [ichzma])
-    #    new_zma, dist_name, _ = ret
-    #    vma, val_dct = new_zma
-    #    new_val_dct = {}
-    #    new_vma = []
-    #    for key in val_dct:
-    #        new_val_dct[key] = val_dct[key]
-    #        if 'abs' in key:
-    #            new_val_dct[key.replace('abs','con')] = val_dct[key]
-    #    for row in vma:
-    #        new_row = list(row)
-    #        for i, key in enumerate(row[2]):
-    #            if 'abs' in key:
-    #                new_row[2][i] = key.repace('abs', 'con')
-    #            row = tuple(row)
-    #            new_vma.append(row)
-    #    new_vma = tuple(new_vma)
-    #    new_zma = (new_vma, new_val_dct)
-    #    rct_zmas = [rct_zmas[0], new_zma]
-    #if len(prd_zmas) > 2:
-    #    print(prd_zmas[1:])
-    #    print(ichzma)
-    #    ret = automol.zmatrix.ts.addition(prd_zmas[1:], [ichzma])
-    #    new_zma, dist_name, _ = ret
-    #    vma, val_dct = new_zma
-    #    new_val_dct = {}
-    #    new_vma = []
-    #    for key in val_dct:
-    #        new_val_dct[key] = val_dct[key]
-    #        if 'abs' in key:
-    #            new_val_dct[key.replace('abs','con')] = val_dct[key]
-    #    for row in vma:
-    #        new_row = list(row)
-    #        for i, key in enumerate(row[2]):
-    #            if 'abs' in key:
-    #                new_row[2][i] = key.repace('abs', 'con')
-    #            row = tuple(row)
-    #            new_vma.append(row)
-    #    new_vma = tuple(new_vma)
-    #    new_zma = (new_vma, new_val_dct)
-    #    prod_zmas = [prd_zmas[0], new_zma]
+    if  len(rct_zmas) > 2:
+        rct_zmas.append(ichzma)
+    if len(prd_zmas) > 2:
+        prd_zmas.append(ichzma)
     return rct_zmas, prd_zmas, cnf_save_fs_lst
 
 
@@ -551,9 +511,29 @@ def get_geos(
 
 def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_save_fs):
 
+    rct_tors_names = []
+    if  len(rct_zmas) > 2:
+        ret = automol.zmatrix.ts.addition(rct_zmas[1:-1], [prd_zmas[-1]])
+        new_zma, dist_name, rct_tors_names = ret
+        new_zma = automol.zmatrix.standard_form(new_zma)
+        babs2 = automol.zmatrix.get_babs2(new_zma, dist_name)
+        new_zma = automol.zmatrix.set_values(new_zma, {dist_name: 2.2, babs2: 180.})
+        rct_zmas = [rct_zmas[0], new_zma]
+    elif len(prd_zmas) > 2:
+        ret = automol.zmatrix.ts.addition(prd_zmas[1:-1], [prd_zmas[-1]])
+        new_zma, dist_name, rct_tors_names = ret
+        new_zma = automol.zmatrix.standard_form(new_zma)
+        babs1 = automol.zmatrix.get_babs1(new_zma, dist_name)
+        aabs1 = babs1.replace('D','A')
+        new_zma = automol.zmatrix.set_values(new_zma, {dist_name: 2.2, aabs1: 180. * qcc.conversion_factor('degree', 'radian')})
+        print(automol.geom.xyz_string(automol.zmatrix.geometry(new_zma)))
+        prd_zmas = [prd_zmas[0], new_zma]
+
     typ = None
     bkp_typ = ''
-    ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas)
+    print('rxn zmas test', rct_zmas)
+    print('rxn zmas test', prd_zmas)
+    ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
     if ret:
         typ = 'addition'
         ts_zma, dist_name, tors_names = ret
@@ -572,7 +552,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         if ret:
             typ = 'beta scission'
             ts_zma, dist_name, tors_names = ret
-            ret2 = automol.zmatrix.ts.addition(prd_zmas, rct_zmas)
+            ret2 = automol.zmatrix.ts.addition(prd_zmas, rct_zmas, rct_tors_names)
             if ret2:
                 bkp_typ = 'addition'
                 bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
