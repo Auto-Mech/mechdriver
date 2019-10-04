@@ -389,6 +389,10 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
         rxn_ichs = rxn_ichs[::-1]
         rxn_chgs = rxn_chgs[::-1]
         rxn_muls = rxn_muls[::-1]
+        spc_dct[ts]['reacs'] = prods
+        spc_dct[ts]['prods'] = reacs
+        print('Reaction will proceed as {}: {} = {}'.format(
+            ts, '+'.join(spc_dct[ts]['reacs']), '+'.join(spc_dct[ts]['prods'])))
         # print('ts search will be performed in reverse direction')
 
     # set up the filesystem
@@ -436,6 +440,18 @@ def get_zmas(
         kickoff_size, kickoff_backward, projrot_script_str):
     """get the zmats for reactants and products using the initial level of theory
     """
+    if len(reacs) > 2:
+        ich = spc_dct[reacs[-1]]['ich']
+        print('ich in get_zma',ich)
+        ichgeo = automol.inchi.geometry(ich)
+        ichzma = automol.geom.zmatrix(ichgeo)
+        reacs = reacs[:-1] 
+    elif len(prods) > 2:
+        ich = spc_dct[prods[-1]]['ich']
+        print('ich in get_zma',ich)
+        ichgeo = automol.inchi.geometry(ich)
+        ichzma = automol.geom.zmatrix(ichgeo)
+        prods = prods[:-1]
     rct_geos, cnf_save_fs_lst = get_geos(
         reacs, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
         kickoff_backward, projrot_script_str)
@@ -444,6 +460,48 @@ def get_zmas(
         kickoff_backward, projrot_script_str)
     rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
     prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
+    #if  len(rct_zmas) > 2:
+    #    ret = automol.zmatrix.ts.addition(rct_zmas[1:], [ichzma])
+    #    new_zma, dist_name, _ = ret
+    #    vma, val_dct = new_zma
+    #    new_val_dct = {}
+    #    new_vma = []
+    #    for key in val_dct:
+    #        new_val_dct[key] = val_dct[key]
+    #        if 'abs' in key:
+    #            new_val_dct[key.replace('abs','con')] = val_dct[key]
+    #    for row in vma:
+    #        new_row = list(row)
+    #        for i, key in enumerate(row[2]):
+    #            if 'abs' in key:
+    #                new_row[2][i] = key.repace('abs', 'con')
+    #            row = tuple(row)
+    #            new_vma.append(row)
+    #    new_vma = tuple(new_vma)
+    #    new_zma = (new_vma, new_val_dct)
+    #    rct_zmas = [rct_zmas[0], new_zma]
+    #if len(prd_zmas) > 2:
+    #    print(prd_zmas[1:])
+    #    print(ichzma)
+    #    ret = automol.zmatrix.ts.addition(prd_zmas[1:], [ichzma])
+    #    new_zma, dist_name, _ = ret
+    #    vma, val_dct = new_zma
+    #    new_val_dct = {}
+    #    new_vma = []
+    #    for key in val_dct:
+    #        new_val_dct[key] = val_dct[key]
+    #        if 'abs' in key:
+    #            new_val_dct[key.replace('abs','con')] = val_dct[key]
+    #    for row in vma:
+    #        new_row = list(row)
+    #        for i, key in enumerate(row[2]):
+    #            if 'abs' in key:
+    #                new_row[2][i] = key.repace('abs', 'con')
+    #            row = tuple(row)
+    #            new_vma.append(row)
+    #    new_vma = tuple(new_vma)
+    #    new_zma = (new_vma, new_val_dct)
+    #    prod_zmas = [prd_zmas[0], new_zma]
     return rct_zmas, prd_zmas, cnf_save_fs_lst
 
 
@@ -606,7 +664,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             grid1 = numpy.linspace(rstart, rend1, npoints1)
             grid2 = numpy.linspace(rstart, rend2, npoints2)
             grid2 = numpy.delete(grid2, 0)
-            grid = [grid1, grid2]
+            grid = numpy.concatenate((grid1, grid2), axis=None)
             update_guess = False
 
         elif 'addition' in typ:
@@ -697,37 +755,130 @@ def find_ts(
 
     cnf_run_fs = autofile.fs.conformer(ts_run_path)
     cnf_save_fs = autofile.fs.conformer(ts_save_path)
-
-    fs = [None, None, ts_run_fs, ts_save_fs,
-          cnf_run_fs, cnf_save_fs, None, None,
-          scn_run_fs, scn_save_fs, run_fs]
+    cnf_save_fs.trunk.create()
 
     dist_name = dist_info[0]
     update_guess = dist_info[2]
-    new_grid=False
-    if attempt > 1:
-        new_grid=True
-    print('running ts scan:')
-    if typ == 'radical radical addition':
-        ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
-        grid = numpy.append(grid[0], grid[1])
-        high_mul = ts_dct['high_mul']
-        moldr.scan.run_multiref_rscan(
-            formula=ts_formula,
-            high_mul=high_mul,
-            zma=ts_zma,
-            spc_info=ts_info,
-            thy_level=ref_level,
-            dist_name=dist_name,
-            grid1=grid1,
-            grid2=grid2,
-            scn_run_fs=scn_run_fs,
-            scn_save_fs=scn_save_fs,
-            script_str=opt_script_str,
-            overwrite=overwrite,
-            update_guess=update_guess,
-            **opt_kwargs
-        )
+
+    #Check if TS already is found, and determine if it fits original guess
+    min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
+    if min_cnf_locs and not overwrite:
+        cnf_path = cnf_save_fs.trunk.path()
+        print('Found TS at {}'.format(cnf_path))
+        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
+        chk_bkp = False
+        if automol.zmatrix.names(zma) == automol.zmatrix.names(ts_zma):
+            if not automol.zmatrix.almost_equal(zma,  ts_zma, 4e-1, True):
+                if 'babs1' in automol.zmatrix.names(ts_zma):
+                    babs1 = 180. * qcc.conversion_factor('degree', 'radian')
+                    if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
+                        babs1 = 90. * qcc.conversion_factor('degree', 'radian')
+                    ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
+                    ts_dct['original_zma'] = ts_zma
+                    if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1):
+                        chk_bkp = True
+                else:
+                    chk_bkp = True
+        else:
+            chk_bkp = True
+
+        is_bkp = False
+        if chk_bkp and bkp_ts_class_data:
+            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data 
+            if automol.zmatrix.names(zma) == automol.zmatrix.names(bkp_ts_zma):
+                if automol.zmatrix.almost_equal(zma,  bkp_ts_zma, 4e-1, True):
+                    is_bkp = True
+                elif 'babs1' in automol.zmatrix.names(bkp_ts_zma):
+                    babs1 = 180. * qcc.conversion_factor('degree', 'radian')
+                    if automol.zmatrix.values(bkp_ts_zma)['babs1'] == babs1:
+                        babs1 = 90. * qcc.conversion_factor('degree', 'radian')
+                    bkp_ts_zma = automol.zmatrix.set_value(bkp_ts_zma, {'babs1': babs1})
+                    if not automol.zmatrix.almost_equal(zma,  bkp_ts_zma, 4e-1):
+                        is_bkp = True
+        if not chk_bkp:
+            print("TS is type {}".format(typ))
+        elif is_bkp:
+            print('updating reaction class to {}'.format(bkp_typ))
+            ts_dct['class'] =  bkp_typ
+            ts_dct['original_zma'] =  bkp_ts_zma
+            ts_dct['dist_info'] =  bkp_dist_info
+            ts_dct['tors_names'] =  bkp_tors_names
+            print("TS is backup type {}".format(bkp_typ))
+        else:
+            print("TS is not original type or backup type")
+        vals = automol.zmatrix.values(zma)
+        final_dist = vals[dist_name]
+        dist_info[1] = final_dist
+
+    #Find TS
+    else:
+        fs = [None, None, ts_run_fs, ts_save_fs,
+              cnf_run_fs, cnf_save_fs, None, None,
+              scn_run_fs, scn_save_fs, run_fs]
+
+        new_grid=False
+        if attempt > 1:
+            new_grid=True
+        print('running ts scan:')
+        if typ == 'radical radical addition':
+            ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
+            grid = numpy.append(grid[0], grid[1])
+            high_mul = ts_dct['high_mul']
+            moldr.scan.run_multiref_rscan(
+                formula=ts_formula,
+                high_mul=high_mul,
+                zma=ts_zma,
+                spc_info=ts_info,
+                thy_level=ref_level,
+                dist_name=dist_name,
+                grid1=grid1,
+                grid2=grid2,
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                script_str=opt_script_str,
+                overwrite=overwrite,
+                update_guess=update_guess,
+                **opt_kwargs
+            )
+
+            moldr.scan.save_scan(
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                coo_names=[dist_name],
+            )
+
+            nsamp_max = 2000
+            nsamp_min = 500
+            flux_err = 5
+            pes_size = 1
+            tst_inp_str = varecof_io.writer.write_tst_input(
+                nsamp_max, nsamp_min, flux_err, pes_size)
+
+            print('\ntst.inp:')
+            print(tst_inp_str)
+            # Write the divsur input file string; distances in Angstrom
+            #distances = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
+            #divsur_inp_str = varecof_io.writer.write_divsur_input(
+            #    distances)
+            #print('\ndivsur.inp:')
+            #print(divsur_inp_str)
+        else:
+            moldr.scan.run_scan(
+                zma=ts_zma,
+                spc_info=ts_info,
+                thy_level=ref_level,
+                grid_dct={dist_name: grid},
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                script_str=opt_script_str,
+                overwrite=overwrite,
+                update_guess=update_guess,
+                reverse_sweep=False,
+                fix_failures=False,
+                new_grid=new_grid,
+                **opt_kwargs
+            )
 
         moldr.scan.save_scan(
             scn_run_fs=scn_run_fs,
@@ -735,128 +886,95 @@ def find_ts(
             coo_names=[dist_name],
         )
 
-        nsamp_max = 2000
-        nsamp_min = 500
-        flux_err = 5
-        pes_size = 1
-        tst_inp_str = varecof_io.writer.write_tst_input(
-            nsamp_max, nsamp_min, flux_err, pes_size)
+        locs_lst = [
+            locs for locs in scn_save_fs.leaf.existing([[dist_name]])
+            if scn_save_fs.leaf.file.energy.exists(locs)]
+        enes = [scn_save_fs.leaf.file.energy.read(locs)
+                for locs in locs_lst]
+        max_locs = locs_lst[enes.index(max(enes))]
+        max_ene = max(enes)
+        max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
+        print('geometry for maximum along scan:', max_zma)
+        print('energy for maximum along scan:', max_ene)
 
-        print('\ntst.inp:')
-        print(tst_inp_str)
-        # Write the divsur input file string; distances in Angstrom
-        #distances = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
-        #divsur_inp_str = varecof_io.writer.write_divsur_input(
-        #    distances)
-        #print('\ndivsur.inp:')
-        #print(divsur_inp_str)
-    else:
-        moldr.scan.run_scan(
-            zma=ts_zma,
+        print('optimizing ts')
+        # find saddlepoint from maximum on the grid opt scan
+
+        moldr.driver.run_job(
+            job='optimization',
+            script_str=opt_script_str,
+            run_fs=run_fs,
+            geom=max_zma,
             spc_info=ts_info,
             thy_level=ref_level,
-            grid_dct={dist_name: grid},
-            scn_run_fs=scn_run_fs,
-            scn_save_fs=scn_save_fs,
-            script_str=opt_script_str,
+            saddle=True,
             overwrite=overwrite,
-            update_guess=update_guess,
-            reverse_sweep=False,
-            fix_failures=False,
-            new_grid=new_grid,
-            **opt_kwargs
+            **opt_kwargs,
         )
+        opt_ret = moldr.driver.read_job(
+            job='optimization',
+            run_fs=run_fs,
+        )
+        if opt_ret is not None:
+            inf_obj, _, out_str = opt_ret
+            prog = inf_obj.prog
+            method = inf_obj.method
+            ene = elstruct.reader.energy(prog, method, out_str)
+            geo = elstruct.reader.opt_geometry(prog, out_str)
+            zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
-    moldr.scan.save_scan(
-        scn_run_fs=scn_run_fs,
-        scn_save_fs=scn_save_fs,
-        coo_names=[dist_name],
-    )
+            print(" - Saving...")
+            print(" - Save path: {}".format(ts_save_path))
 
-    locs_lst = [
-        locs for locs in scn_save_fs.leaf.existing([[dist_name]])
-        if scn_save_fs.leaf.file.energy.exists(locs)]
-    enes = [scn_save_fs.leaf.file.energy.read(locs)
-            for locs in locs_lst]
-    max_locs = locs_lst[enes.index(max(enes))]
-    max_ene = max(enes)
-    max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
-    print('geometry for maximum along scan:', max_zma)
-    print('energy for maximum along scan:', max_ene)
+            ts_save_fs.trunk.file.energy.write(ene)
+            ts_save_fs.trunk.file.geometry.write(geo)
+            ts_save_fs.trunk.file.zmatrix.write(zma)
 
-    print('optimizing ts')
-    # find saddlepoint from maximum on the grid opt scan
+            vals = automol.zmatrix.values(zma)
+            final_dist = vals[dist_name]
+            dist_info[1] = final_dist
+            print('Test final distance for reactant coordinate', final_dist)
+            run_single_conformer(ts_info, ref_level, fs, overwrite, saddle=True, dist_info=dist_info)
 
-    moldr.driver.run_job(
-        job='optimization',
-        script_str=opt_script_str,
-        run_fs=run_fs,
-        geom=max_zma,
-        spc_info=ts_info,
-        thy_level=ref_level,
-        saddle=True,
-        overwrite=overwrite,
-        **opt_kwargs,
-    )
-    opt_ret = moldr.driver.read_job(
-        job='optimization',
-        run_fs=run_fs,
-    )
-    if opt_ret is not None:
-        inf_obj, _, out_str = opt_ret
-        prog = inf_obj.prog
-        method = inf_obj.method
-        ene = elstruct.reader.energy(prog, method, out_str)
-        geo = elstruct.reader.opt_geometry(prog, out_str)
-        zma = elstruct.reader.opt_zmatrix(prog, out_str)
-
-        print(" - Saving...")
-        print(" - Save path: {}".format(ts_save_path))
-
-        ts_save_fs.trunk.file.energy.write(ene)
-        ts_save_fs.trunk.file.geometry.write(geo)
-        ts_save_fs.trunk.file.zmatrix.write(zma)
-
-        vals = automol.zmatrix.values(zma)
-        final_dist = vals[dist_name]
-        dist_info[1] = final_dist
-        print('Test final distance for reactant coordinate', final_dist)
-        run_single_conformer(ts_info, ref_level, fs, overwrite, saddle=True, dist_info=dist_info)
-
-    elif 'addition' in typ and bkp_ts_class_data and attempt > 2:
-        bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, _, bkp_update_guess = bkp_ts_class_data 
-        bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
-        ts_dct['class'] =  bkp_typ
-        ts_dct['original_zma'] =  bkp_zma
-        ts_dct['dist_info'] =  bkp_dist_info
-        attempt += 1
-        geo, zma, final_dist = find_ts(
-            ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
-            rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
-    elif ('addition ' in typ or 'abstraction' in typ) and attempt < 3:
-        babs1 = 180. * qcc.conversion_factor('degree', 'radian')
-        if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
-            babs1 = 90. * qcc.conversion_factor('degree', 'radian')
-        ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
-        ts_dct['original_zma'] =  ts_zma
-        attempt += 1
-        geo, zma, final_dist = find_ts(
-            ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data, thy_info,
-            rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
-    elif 'beta scission' in typ and bkp_ts_class_data and attempt < 2:
-        bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, _, bkp_update_guess = bkp_ts_class_data 
-        bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
-        ts_dct['class'] =  bkp_typ
-        ts_dct['original_zma'] =  bkp_zma
-        ts_dct['dist_info'] =  bkp_dist_info
-        attempt += 1
-        geo, zma, final_dist = find_ts(
-            ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
-            rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
-    else:
-        geo = 'failed'
-        zma = 'failed'
-        final_dist = 0.
+        elif 'addition' in typ and bkp_ts_class_data and attempt > 2:
+            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data 
+            print('TS find failed. Attempting to find with new reaction class: {}'.format(bkp_typ))
+            bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
+            ts_dct['class'] =  bkp_typ
+            ts_dct['original_zma'] =  bkp_ts_zma
+            ts_dct['dist_info'] =  bkp_dist_info
+            ts_dct['tors_names'] =  bkp_tors_names
+            attempt += 1
+            geo, zma, final_dist = find_ts(
+                ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
+                rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
+        elif ('addition ' in typ or 'abstraction' in typ) and attempt < 3:
+            babs1 = 180. * qcc.conversion_factor('degree', 'radian')
+            if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
+                babs1 = 90. * qcc.conversion_factor('degree', 'radian')
+            print('TS find failed. Attempting to find with new angle of attack: {:.1f}'.format(babs1))
+            ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
+            ts_dct['original_zma'] =  ts_zma
+            attempt += 1
+            geo, zma, final_dist = find_ts(
+                ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data, thy_info,
+                rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
+        elif 'beta scission' in typ and bkp_ts_class_data and attempt < 2:
+            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data 
+            print('TS find failed. Attempting to find with new reaction class: {}'.format(bkp_typ))
+            bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
+            ts_dct['class'] =  bkp_typ
+            ts_dct['original_zma'] =  bkp_ts_zma
+            ts_dct['dist_info'] =  bkp_dist_info
+            ts_dct['tors_names'] =  bkp_tors_names
+            attempt += 1
+            geo, zma, final_dist = find_ts(
+                ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
+                rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
+        else:
+            geo = 'failed'
+            zma = 'failed'
+            final_dist = 0.
     return geo, zma, final_dist
 
 
