@@ -231,16 +231,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                 ene = elstruct.reader.energy(prog, method, out_str)
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 if saddle:
-                    zma = elstruct.reader.opt_zmatrix(prog, out_str)
-                    dist_name = dist_info[0]
-                    dist_len = dist_info[1]
-                    conf_dist_len = automol.zmatrix.values(zma)[dist_name]
-                    if abs(conf_dist_len - dist_len) > 0.5:
-                        print(" - Transition State conformer has diverged from original structure of dist {:.3f} with dist {:.3f}".format(dist_len, conf_dist_len))
-                        continue
                     gra = automol.geom.weakly_connected_graph(geo)
                 else:
-                    zma = automol.geom.zmatrix(geo)
                     gra = automol.geom.graph(geo)
 
                 conns = automol.graph.connected_components(gra)
@@ -248,6 +240,13 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                     print(" - Geometry is disconnected.. Skipping...")
                 else:
                     if saddle:
+                        zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                        dist_name = dist_info[0]
+                        dist_len = dist_info[1]
+                        conf_dist_len = automol.zmatrix.values(zma)[dist_name]
+                        if abs(conf_dist_len - dist_len) > 0.5:
+                            print(" - Transition State conformer has diverged from original structure of dist {:.3f} with dist {:.3f}".format(dist_len, conf_dist_len))
+                            continue
                         unique = True
                         for idx, geoi in enumerate(seen_geos):
                             enei = seen_enes[idx]
@@ -257,6 +256,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                                 if abs(ene-enei) < etol:
                                     unique = False
                     else:
+                        zma = automol.geom.zmatrix(geo)
                         unique = is_unique_tors_dist_mat_energy(geo, ene, seen_geos, seen_enes)
 
                     if not unique:
