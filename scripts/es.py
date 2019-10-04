@@ -1,12 +1,14 @@
 """ cycle over electronic structure calls
 for species, TSs, and vdw species
 """
+import os
 import numpy
 from qcelemental import constants as qcc
 import automol
 import elstruct
 import thermo
 import autofile
+import varecof_io
 import moldr
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
@@ -822,6 +824,7 @@ def find_ts(
             new_grid=True
         print('running ts scan:')
         if 'radical radical addition' in typ:
+            # run mep scan 
             ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
             print('grid 0 test:', grid[0])
             print('grid 1 test:', grid[1])
@@ -857,20 +860,49 @@ def find_ts(
                 coo_names=[dist_name],
             )
 
+        # calculate the infinite seperation energy
         # continue on to finish setting up the correction potential
 
         # now call vrctst which sets up all the vrctst files
+            bnd_frm_idxs = automol.zmatrix.bond_idxs(ts_zma, dist_name)
+            input_strs = moldr.vrctst.input_prep(ts_zma, bnd_frm_idxs)
+            [struct_inp_str, lr_divsur_inp_str, sr_divsur_inp_str, tst_inp_str,
+            els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
 
-            # vrctst(ts_zma, 
-            nsamp_max = 2000
-            nsamp_min = 500
-            flux_err = 5
-            pes_size = 1
-            tst_inp_str = varecof_io.writer.write_tst_input(
-                nsamp_max, nsamp_min, flux_err, pes_size)
+            vrc_path = os.getcwd()
+            with open(os.path.join(vrc_path, 'structure.inp'), 'w') as inp_file:
+                inp_file.write(struct_inp_str)
+            with open(os.path.join(vrc_path, 'sr_divsur.inp'), 'w') as inp_file:
+                inp_file.write(sr_divsur_inp_str)
+            with open(os.path.join(vrc_path, 'lr_divsur.inp'), 'w') as inp_file:
+                inp_file.write(lr_divsur_inp_str)
+            with open(os.path.join(vrc_path, 'tst.inp'), 'w') as inp_file:
+                inp_file.write(tst_inp_str)
+            with open(os.path.join(vrc_path, 'molpro.inp'), 'w') as inp_file:
+                inp_file.write(els_inp_str)
+            with open(os.path.join(vrc_path, 'mc_flux.inp'), 'w') as inp_file:
+                inp_file.write(mc_flux_inp_str)
+            with open(os.path.join(vrc_path, 'convert.inp'), 'w') as inp_file:
+                inp_file.write(conv_inp_str)
 
-            print('\ntst.inp:')
-            print(tst_inp_str)
+
+        # generate the molpro template file
+                  # Write the *.tml input string
+            memory = 4.0
+            basis = 'cc-pvdz'
+            num_act_elc = 2
+            num_act_orb = 2
+
+            ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_dct['orginal_zma']))
+
+            _, wfn_str = moldr.vrctst.cas_options(ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+            method = '{rs2c, shift=0.25}'
+            inf_sep_energy = -654.3210123456
+            tml_inp_str = varecof_io.writer.input_file.tml(
+                memory, basis, wfn_str, method, inf_sep_energy)
+            print('\n\nmol.tml:')
+            print(tml_inp_str)
+
             # Write the divsur input file string; distances in Angstrom
             #distances = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
             #divsur_inp_str = varecof_io.writer.write_divsur_input(

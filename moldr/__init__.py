@@ -9,6 +9,7 @@ from moldr import scan
 from moldr import sp
 from moldr import tau
 from moldr import ts
+from moldr import vrctst
 from moldr import runner
 from moldr import util
 
@@ -22,6 +23,7 @@ __all__ = [
     'sp',
     'tau',
     'ts',
+    'vrctst',
     'runner',
     'util',
 ]

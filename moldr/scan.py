@@ -135,19 +135,6 @@ def run_multiref_rscan(
     """ run constrained optimization scan
     """
 
-    electron_count = automol.formula.electron_count(formula)
-    # this is only for 2e,2o case
-    closed_orb = electron_count//2 - 1
-    occ_orb = electron_count//2 + 1
-    # end of 2e,2o case
-    two_spin = spc_info[2]-1
-    chg = spc_info[1]
-    cas_options = [
-        elstruct.option.specify(elstruct.Option.Scf.MAXITER_, 40),
-        elstruct.option.specify(elstruct.Option.Casscf.OCC_, occ_orb),
-        elstruct.option.specify(elstruct.Option.Casscf.CLOSED_, closed_orb),
-        elstruct.option.specify(elstruct.Option.Casscf.WFN_, electron_count, 1, two_spin, chg)
-        ]
 
     vma = automol.zmatrix.var_(zma)
     if scn_save_fs.trunk.file.vmatrix.exists():
@@ -180,38 +167,15 @@ def run_multiref_rscan(
     print('thy_level test:', thy_level)
     prog = 'molpro2015'
     thy_level[1] = 'caspt2'
-    _, script_str, _, kwargs = moldr.util.run_qchem_par(thy_level[0], thy_level[1])
 
-    guess_str1 = elstruct.writer.energy(
-        geom=automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]}),
-        charge=charge,
-        mult=high_mul,
-        method='hf',
-        basis=basis,
-        prog=prog,
-        orb_restricted=False,
-        mol_options=['nosym'],
-        )
-    guess_str1 += '\n\n'
-    guess_str1 = '\n'.join(guess_str1.splitlines()[2:])
+    num_act_elc = 2
+    num_act_orb = 2
+    cas_opt, _ = moldr.vrctst.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
+    guess_str = moldr.vrctst.multiref_wavefunction_guess(
+        formula, high_mul, zma, spc_info, thy_level, dist_name, coo_name, grid_vals, cas_opt)
+    guess_lines, kwargs = guess_str.splitlines()
 
-    guess_str2 = elstruct.writer.energy(
-        geom=automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]}),
-        charge=charge,
-        mult=mul,
-        method='casscf',
-        basis=basis,
-        prog=prog,
-        orb_restricted=True,
-        casscf_options=cas_options,
-        mol_options=['nosym'],
-        )
-    guess_str2 += '\n\n'
-    guess_str2 = '\n'.join(guess_str2.splitlines()[2:])
-
-    guess_str = guess_str1 + guess_str2
-    guess_lines = guess_str.splitlines()
-    kwargs['casscf_options'] = cas_options
+    kwargs['casscf_options'] = cas_opt
     kwargs['mol_options'] = ['nosym']
     kwargs['gen_lines'] = guess_lines
 

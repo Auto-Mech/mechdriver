@@ -5,6 +5,7 @@ import automol
 import elstruct
 import autofile
 import moldr
+import numpy
 import scripts.es
 
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -203,3 +204,74 @@ def reference_geometry(
                 spc_info, thy_level, fs,
                 overwrite, True, dist_info)
     return geo
+
+
+def cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul):
+    """ prepare cas options for multireference wavefunctions
+    """
+
+    elec_count = automol.formula.electron_count(formula)
+    closed_orb = (elec_count-num_act_elc)//2 - 1
+    occ_orb = closed_orb + num_act_orb
+    two_spin = spc_info[2]-1
+    chg = spc_info[1]
+    cas_options = [
+        elstruct.option.specify(elstruct.Option.Scf.MAXITER_, 40),
+        elstruct.option.specify(elstruct.Option.Casscf.OCC_, occ_orb),
+        elstruct.option.specify(elstruct.Option.Casscf.CLOSED_, closed_orb),
+        elstruct.option.specify(elstruct.Option.Casscf.WFN_, elec_count, 1, two_spin, chg)
+        ]
+    wfn_str = """{{uhf,maxit=300;wf,{0},1,{1}}}
+             {{multi,maxit=40;closed,{2};occ,{3};wf,{0},1,{4};orbprint,3}}""".format(
+             elec_count, high_mul, closed_orb, occ_orb, two_spin)
+
+    return cas_options, wfn_str
+
+
+def multiref_wavefunction_guess(
+        formula, high_mul, zma, spc_info, thy_level, dist_name, coo_name, grid_vals, cas_options):
+    """ prepare wavefunction template for multireference electronic structure calcs
+    """
+
+    charge = spc_info[1]
+    mul = spc_info[2]
+    basis = thy_level[2]
+    prog = thy_level[0]
+    #orb_restr = moldr.util.orbital_restriction(spc_info, thy_level)
+    thy_level[0] = 'molpro2015'
+    prog = 'molpro2015'
+    thy_level[1] = 'caspt2'
+    _, script_str, _, kwargs = moldr.util.run_qchem_par(thy_level[0], thy_level[1])
+
+    guess_str1 = elstruct.writer.energy(
+        geom=automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]}),
+        charge=charge,
+        mult=high_mul,
+        method='hf',
+        basis=basis,
+        prog=prog,
+        orb_restricted=False,
+        mol_options=['nosym'],
+        )
+    guess_str1 += '\n\n'
+    guess_str1 = '\n'.join(guess_str1.splitlines()[2:])
+
+    guess_str2 = elstruct.writer.energy(
+        geom=automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]}),
+        charge=charge,
+        mult=mul,
+        method='casscf',
+        basis=basis,
+        prog=prog,
+        orb_restricted=True,
+        casscf_options=cas_options,
+        mol_options=['nosym'],
+        )
+    guess_str2 += '\n\n'
+    guess_str2 = '\n'.join(guess_str2.splitlines()[2:])
+
+    guess_str = guess_str1 + guess_str2
+
+    return guess_str, kwargs
+
+
