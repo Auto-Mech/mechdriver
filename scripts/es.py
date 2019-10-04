@@ -512,6 +512,10 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         if ret:
             typ = 'beta scission'
             ts_zma, dist_name, tors_names = ret
+            ret2 = automol.zmatrix.ts.addition(prd_zmas, rct_zmas)
+            if ret2:
+                bkp_typ = 'addition'
+                bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
 
     if typ is None:
         ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
@@ -538,10 +542,14 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
     if typ is None:
         print("Failed to classify reaction.")
+        return [],[]
     else:
         if rad_rad:
             typ = 'radical radical ' + typ
         print("Type: {}".format(typ))
+        if bkp_typ:
+            if rad_rad:
+                bkp_typ = 'radical radical ' + bkp_typ
 
         # determine the grid
         dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
@@ -569,6 +577,15 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                 bnd_len = bnd_len_dct[bnd_len_key]
                 rmin = bnd_len + 0.1 * ANG2BOHR
                 rmax = bnd_len + 0.5 * ANG2BOHR
+            bkp_grid = numpy.linspace(rmin, rmax, npoints)
+            bkp_update_guess = False
+        elif 'addition' in bkp_typ:
+            rmin = 1.6 * ANG2BOHR
+            rmax = 2.8 * ANG2BOHR
+            if bnd_len_key in bnd_len_dct:
+                bnd_len = bnd_len_dct[bnd_len_key]
+                rmin = bnd_len + 0.2 * ANG2BOHR
+                rmax = bnd_len + 1.4 * ANG2BOHR
             bkp_grid = numpy.linspace(rmin, rmax, npoints)
             bkp_update_guess = False
 
@@ -642,8 +659,8 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             bkp_ts_class_data = [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess]
         else:
             bkp_ts_class_data = []
-
-        return [ts_class_data, bkp_ts_class_data]
+        
+        return ts_class_data, bkp_ts_class_data
 
 def find_ts(
         ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data,
@@ -687,7 +704,9 @@ def find_ts(
 
     dist_name = dist_info[0]
     update_guess = dist_info[2]
-
+    new_grid=False
+    if attempt > 1:
+        new_grid=True
     print('running ts scan:')
     if typ == 'radical radical addition':
         ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
@@ -744,6 +763,7 @@ def find_ts(
             update_guess=update_guess,
             reverse_sweep=False,
             fix_failures=False,
+            new_grid=new_grid,
             **opt_kwargs
         )
 
@@ -803,20 +823,36 @@ def find_ts(
         print('Test final distance for reactant coordinate', final_dist)
         run_single_conformer(ts_info, ref_level, fs, overwrite, saddle=True, dist_info=dist_info)
 
-    elif ('addition ' in typ or 'abstraction' in typ) and attempt < 2:
+    elif 'addition' in typ and bkp_ts_class_data and attempt > 2:
+        bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, _, bkp_update_guess = bkp_ts_class_data 
+        bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
+        ts_dct['class'] =  bkp_typ
+        ts_dct['original_zma'] =  bkp_zma
+        ts_dct['dist_info'] =  bkp_dist_info
+        attempt += 1
+        geo, zma, final_dist = find_ts(
+            ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
+            rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
+    elif ('addition ' in typ or 'abstraction' in typ) and attempt < 3:
         babs1 = 180. * qcc.conversion_factor('degree', 'radian')
         if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
             babs1 = 90. * qcc.conversion_factor('degree', 'radian')
         ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
+        ts_dct['original_zma'] =  ts_zma
+        attempt += 1
         geo, zma, final_dist = find_ts(
             ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data, thy_info,
-            rxn_run_path, rxn_save_path, overwrite=True, attempt=2)
-    elif 'addition' in typ and bkp_ts_class_data and attempt < 3:
+            rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
+    elif 'beta scission' in typ and bkp_ts_class_data and attempt < 2:
         bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, _, bkp_update_guess = bkp_ts_class_data 
         bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
+        ts_dct['class'] =  bkp_typ
+        ts_dct['original_zma'] =  bkp_zma
+        ts_dct['dist_info'] =  bkp_dist_info
+        attempt += 1
         geo, zma, final_dist = find_ts(
             ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
-            rxn_run_path, rxn_save_path, overwrite=True, attempt=2)
+            rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
     else:
         geo = 'failed'
         zma = 'failed'
