@@ -65,9 +65,9 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                     if not rxn_class:
                         print('skipping reaction because type =', rxn_class)
                         continue
-                    elif 'radical radical' in rxn_class and not 'high spin' in rxn_class:
-                        print('skipping reaction because type =', rxn_class)
-                        continue
+                    #elif 'radical radical' in rxn_class and not 'high spin' in rxn_class:
+                        #print('skipping reaction because type =', rxn_class)
+                       # continue
                     ts_zma = spc_dct[ts]['original_zma']
                     dist_info = spc_dct[ts]['dist_info']
                     grid = spc_dct[ts]['grid']

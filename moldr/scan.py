@@ -82,7 +82,7 @@ def run_scan(
             assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
                     (numpy.allclose(grid_vals*180.0/numpy.pi, existing_grid_vals) or
                      numpy.allclose(grid_vals, existing_grid_vals)))
-    
+
     inf_obj = autofile.system.info.scan_branch({coo_name: grid_vals})
     scn_save_fs.branch.file.info.write(inf_obj, [[coo_name]])
 
@@ -135,7 +135,7 @@ def run_multiref_rscan(
     """ run constrained optimization scan
     """
 
-    electron_count = automol.formula._formula.electron_count(formula)
+    electron_count = automol.formula.electron_count(formula)
     # this is only for 2e,2o case
     closed_orb = electron_count//2 - 1
     occ_orb = electron_count//2 + 1
@@ -161,6 +161,7 @@ def run_multiref_rscan(
 
     ((coo_name, grid_vals),) = grid_dct.items()
     scn_save_fs.branch.create([[coo_name]])
+    print('scan_save_fs branch test:', scn_save_fs.trunk.path())
     if scn_save_fs.branch.file.info.exists([[coo_name]]):
         inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
         existing_grid_dct = dict(inf_obj.grids)
@@ -174,9 +175,10 @@ def run_multiref_rscan(
     mul = spc_info[2]
     basis = thy_level[2]
     prog = thy_level[0]
-    orb_restr = moldr.util.orbital_restriction(spc_info, thy_level)
-    thy_level[0] = 'molpro'
-    prog = 'molpro'
+    #orb_restr = moldr.util.orbital_restriction(spc_info, thy_level)
+    thy_level[0] = 'molpro2015'
+    print('thy_level test:', thy_level)
+    prog = 'molpro2015'
     thy_level[1] = 'caspt2'
     _, script_str, _, kwargs = moldr.util.run_qchem_par(thy_level[0], thy_level[1])
 
@@ -187,7 +189,7 @@ def run_multiref_rscan(
         method='hf',
         basis=basis,
         prog=prog,
-        orb_restricted=orb_restr,
+        orb_restricted=False,
         mol_options=['nosym'],
         )
     guess_str1 += '\n\n'
@@ -200,7 +202,7 @@ def run_multiref_rscan(
         method='casscf',
         basis=basis,
         prog=prog,
-        orb_restricted=orb_restr,
+        orb_restricted=True,
         casscf_options=cas_options,
         mol_options=['nosym'],
         )

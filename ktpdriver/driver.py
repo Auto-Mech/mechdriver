@@ -33,7 +33,6 @@ def run(
     """ main driver for generation of full set of rate constants on a single PES
     """
 
-    print('options test:', options)
     #prepare prefix filesystem
     if not os.path.exists(save_prefix):
         os.makedirs(save_prefix)
@@ -143,9 +142,6 @@ def run(
             ts_found = esdriver.driver.run(
                 ts_tsk_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix, vdw_params)
             print('ts_found test:', ts_found)
-
-        # if spc_dct[ts]['rad_rad']:
-            # print('Skipping radical radical')
 
     if runrates:
         for ts in spc_dct:
@@ -279,7 +275,6 @@ def run(
         ene_str += '!               '.join(ene_strl)
 
         #Collect formula and header string for the PES
-        # pes_formula = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname_0]['original_zma']))
         tsname_0 = 'ts_0'
         rct_ichs = spc_dct[tsname_0]['rxn_ichs'][0]
         header_str, energy_trans_str = scripts.ktp.pf_headers(
@@ -295,10 +290,11 @@ def run(
             tsname = 'ts_{:g}'.format(idx)
             if tsname in ts_found:
                 # if spc_dct[ts]['rad_rad']:
-                tsform = automol.geom.formula(automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
+                tsform = automol.geom.formula(
+                    automol.zmatrix.geometry(spc_dct[tsname]['original_zma']))
                 if tsform != pes_formula:
-                    print('Reaction list contains reactions on different potential energy surfaces: {} and {}'.format(
-                        tsform, pes_formula))
+                    print('Reaction list contains reactions on different potential energy',
+                          'surfaces: {} and {}'.format(tsform, pes_formula))
                     print('Will proceed to construct only {}'.format(pes_formula))
                     continue
                 mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(

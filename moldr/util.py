@@ -26,8 +26,8 @@ def run_qchem_par(prog, method):
             'machine_options': ['%NProcShared=10'],
             'gen_lines': ['# int=ultrafine'],
             'feedback': True,
-#            'job_options': ['verytight'],
-#            'job_options': ['verytight'],
+            # 'job_options': ['verytight'],
+            # 'job_options': ['verytight'],
             'errors': [
                 elstruct.Error.OPT_NOCONV
             ],
@@ -57,7 +57,7 @@ def run_qchem_par(prog, method):
         else:
             opt_script_str = ("#!/usr/bin/env bash\n"
                               "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
-        if method == 'caspt2' or method == 'caspt2c':
+        if method in ('caspt2', 'caspt2c'):
             kwargs = {
                 'memory': 10,
                 'corr_options': ['shift=0.2'],
@@ -67,6 +67,9 @@ def run_qchem_par(prog, method):
                 'memory': 5,
                 'corr_options': ['shift=0.2'],
                 'mol_options': ['nosym'],
+                'errors': [
+                    elstruct.Error.OPT_NOCONV
+                ],
                 'options_mat': [
                     [{},
                      {},
@@ -85,6 +88,9 @@ def run_qchem_par(prog, method):
                 'memory': 5,
                 'corr_options': ['shift=0.2', 'ipea=0.25'],
                 'mol_options': ['nosym'],
+                'errors': [
+                    elstruct.Error.OPT_NOCONV
+                ],
                 'options_mat': [
                     [{},
                      {},
@@ -101,6 +107,8 @@ def run_qchem_par(prog, method):
             opt_kwargs = {
                 'memory': 5,
                 'mol_options': ['nosym'],
+                'errors': [
+                ],
                 'options_mat': [
                     [{},
                      {},
@@ -112,7 +120,7 @@ def run_qchem_par(prog, method):
 
     if prog == 'qchem':
         sp_script_str = ("#!/usr/bin/env bash\n"
-                      "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
+                         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
         kwargs = {
             'memory': 20,
@@ -121,7 +129,7 @@ def run_qchem_par(prog, method):
 
     if prog == 'cfour':
         sp_script_str = ("#!/usr/bin/env bash\n"
-                      "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
+                         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
         kwargs = {
             'memory': 20,
@@ -130,7 +138,7 @@ def run_qchem_par(prog, method):
 
     if prog == 'orca':
         sp_script_str = ("#!/usr/bin/env bash\n"
-                      "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
+                         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
         opt_script_str = sp_script_str
         kwargs = {
             'memory': 20,
