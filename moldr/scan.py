@@ -12,7 +12,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def hindered_rotor_scans(
         spc_info, thy_level, cnf_run_fs, cnf_save_fs,
-        script_str, overwrite, scan_increment=30., saddle=False, tors_names='', **opt_kwargs):
+        script_str, overwrite, scan_increment=30., saddle=False, tors_names='', new_grid=False, **opt_kwargs):
     """ Perform 1d scans over each of the torsional coordinates
     """
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
@@ -44,6 +44,7 @@ def hindered_rotor_scans(
                     script_str=script_str,
                     overwrite=overwrite,
                     saddle=saddle,
+                    new_grid=new_grid,
                     **opt_kwargs,
                 )
 
@@ -57,7 +58,8 @@ def hindered_rotor_scans(
 def run_scan(
         zma, spc_info, thy_level, grid_dct, scn_run_fs, scn_save_fs,
         script_str, overwrite, update_guess=True,
-        reverse_sweep=True, fix_failures=True, saddle=False, **kwargs):
+        reverse_sweep=True, fix_failures=True, saddle=False, 
+        new_grid = True, **kwargs):
     """ run constrained optimization scan
     """
     if len(grid_dct) > 1:
@@ -71,16 +73,16 @@ def run_scan(
     # for now, running only one-dimensional hindered rotor scans
     ((coo_name, grid_vals),) = grid_dct.items()
     scn_save_fs.branch.create([[coo_name]])
-
-    if scn_save_fs.branch.file.info.exists([[coo_name]]):
-        inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
-        existing_grid_dct = dict(inf_obj.grids)
-        existing_grid_vals = existing_grid_dct[coo_name]
-        print('grid vals test:', grid_vals, existing_grid_vals)
-        assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
-                (numpy.allclose(grid_vals*180.0/numpy.pi, existing_grid_vals) or
-                 numpy.allclose(grid_vals, existing_grid_vals)))
-
+    if not new_grid:
+        if scn_save_fs.branch.file.info.exists([[coo_name]]):
+            inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
+            existing_grid_dct = dict(inf_obj.grids)
+            existing_grid_vals = existing_grid_dct[coo_name]
+            print('grid vals test:', grid_vals, existing_grid_vals)
+            assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
+                    (numpy.allclose(grid_vals*180.0/numpy.pi, existing_grid_vals) or
+                     numpy.allclose(grid_vals, existing_grid_vals)))
+    
     inf_obj = autofile.system.info.scan_branch({coo_name: grid_vals})
     scn_save_fs.branch.file.info.write(inf_obj, [[coo_name]])
 

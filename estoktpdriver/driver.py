@@ -21,13 +21,16 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 #PES_NUMS= 'all'
 #PES_NUMS = [2, 3]
 PESNUMS= 'all'
+CHANNELS= 'all'
 #PESNUMS=  [16,17,18,19,20]
 # 0. choose which mechanism to run
 
 MECHANISM_NAME = sys.argv[1]
 MECH_TYPE = sys.argv[2]
-PESNUMS = sys.argv[3]
-
+if len(sys.argv) > 3:
+    PESNUMS = sys.argv[3]
+    if len(sys.argv) > 4:
+        CHANNELS = sys.argv[4]
 RUN_THERMO = False
 RUN_RATES = True
 # 1. create run and save directories
@@ -773,23 +776,45 @@ if RUN_RATES:
     # loop over PESs
     for pes_idx, PES in enumerate(PES_LST, start=1):
         if pes_idx in PESNUMS:
+            PES_RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
+            PES_PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
+            PES_RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
+            if isinstance(CHANNELS, str):
+                if CHANNELS == 'all':
+                    print(len(PES_RXN_NAME_LST))
+                    pes_chns = numpy.arange(len(PES_RXN_NAME_LST)+1)
+                elif '-' in CHANNELS:
+                    start, end = CHANNELS.split('-')
+                    pes_chns = numpy.arange(int(start), int(end)+1)
+                elif '[' in CHANNELS:
+                    nums = CHANNELS.replace('[','').replace(']','').split(',')
+                    pes_chns = [int(num) for num in nums]
+            RCT_NAMES_LST = []
+            PRD_NAMES_LST = []
+            RXN_NAME_LST = []
+            print('running ktp on PES{}: {} for the following channels...'.format(str(pes_idx), PES))
+            for chn_idx, _ in enumerate(PES_RXN_NAME_LST):
+                if chn_idx+1 in pes_chns:
+                    RCT_NAMES_LST.append(PES_RCT_NAMES_LST[chn_idx])
+                    PRD_NAMES_LST.append(PES_PRD_NAMES_LST[chn_idx])
+                    RXN_NAME_LST.append(PES_RXN_NAME_LST[chn_idx])
+                print('{} = {}'.format(
+                    '+ '.join(PES_RCT_NAMES_LST[chn_idx]),
+                    '+ '.join(PES_PRD_NAMES_LST[chn_idx])))
             # set up name lists and ts species dictionary for a given PES
-            RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
-            PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
-            RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
-            print('running ktp on PES{}: {}'.format(str(pes_idx), PES))
-            print('RCT_NAMES_LST test:', RCT_NAMES_LST)
-            print('PRD_NAMES_LST test:', PRD_NAMES_LST)
-            print('RXT_NAME_LST test:', RXN_NAME_LST)
+           # print('RCT_NAMES_LST test:', RCT_NAMES_LST)
+           # print('PRD_NAMES_LST test:', PRD_NAMES_LST)
+           # print('RXT_NAME_LST test:', RXN_NAME_LST)
             RXN_LST = []
             for rxn, _ in enumerate(RCT_NAMES_LST):
                 RXN_LST.append(
                     {'species': [], 'reacs': list(RCT_NAMES_LST[rxn]), 'prods':
                      list(PRD_NAMES_LST[rxn])})
+            ts_idx = 0
             for idx, rxn in enumerate(RXN_LST):
                 reacs = rxn['reacs']
                 prods = rxn['prods']
-                tsname = 'ts_{:g}'.format(idx)
+                tsname = 'ts_{:g}'.format(ts_idx)
                 SPC_DCT[tsname] = {}
                 if reacs and prods:
                     SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
@@ -798,10 +823,18 @@ if RUN_RATES:
                 for rct in RCT_NAMES_LST[idx]:
                     ts_chg += SPC_DCT[rct]['chg']
                 SPC_DCT[tsname]['chg'] = ts_chg
-                ts_mul, rad_rad = moldr.util.ts_mul_from_reaction_muls(
+                ts_mul_low, ts_mul_high, rad_rad = moldr.util.ts_mul_from_reaction_muls(
                     RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
-                SPC_DCT[tsname]['mul'] = ts_mul
+                SPC_DCT[tsname]['mul'] = ts_mul_low
                 SPC_DCT[tsname]['rad_rad'] = rad_rad
+                ts_idx += 1
+                if ts_mul_low != ts_mul_high and rad_rad:
+                    spc_dct = SPC_DCT[tsname].copy()
+                    tsname = 'ts_{:g}'.format(ts_idx)
+                    SPC_DCT[tsname] = spc_dct
+                    SPC_DCT[tsname]['mul'] = ts_mul_high
+                    ts_idx += 1
+                    
             print('RUNNING WITH MESS')
             # run ktp for a given PES
             ktpdriver.driver.run(
