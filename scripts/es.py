@@ -844,8 +844,7 @@ def find_ts(
         # continue on to finish setting up the correction potential
 
         # now call vrctst which sets up all the vrctst files
-            bnd_frm_idxs = automol.zmatrix.bond_idxs(ts_zma, dist_name)
-            input_strs = moldr.vrctst.input_prep(ts_zma, bnd_frm_idxs)
+            input_strs = moldr.vrctst.input_prep(ts_zma, dist_name)
             [struct_inp_str, lr_divsur_inp_str, sr_divsur_inp_str, tst_inp_str,
             els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
 
@@ -895,8 +894,16 @@ def find_ts(
                 zma=ts_zma,
                 spc_info=ts_info,
                 thy_level=ref_level,
+                grid_dct={dist_name: grid},
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                script_str=opt_script_str,
                 saddle=True,
                 overwrite=overwrite,
+                update_guess=update_guess,
+                reverse_sweep=False,
+                fix_failures=False,
+                new_grid=new_grid,
                 **opt_kwargs,
                 )
 
