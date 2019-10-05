@@ -2,25 +2,30 @@
 """
 
 import varecof_io
+import automol
 
-def input_prep(ts_zma, bnd_frm_idxs)
+def input_prep(ts_zma, dist_name):
     """ prepare all the input files for a vrc-tst calculation
     """
-    bnd_frm_idxs = bond_indices(tz_zma, dist_name)
-    total_geom, frag_geoms, frag_geoms_wdummy = vrctst.frag_geoms(
+    bnd_frm_idxs = automol.bond_idxs(ts_zma, dist_name)
+    total_geom, frag_geoms, frag_geoms_wdummy = fragment_geometries(
         ts_zma, bnd_frm_idxs)
-    frames, npivots = vrctst.build_pivot_frames(
+    frames, npivots = build_pivot_frames(
         bnd_frm_idxs, total_geom, frag_geoms, frag_geoms_wdummy)
-    angles = .calc_pivot_angles(frag_geoms, frag_geoms_wdummy, frames)
+    angles = calc_pivot_angles(frag_geoms, frag_geoms_wdummy, frames)
     xyzs = calc_pivot_xyzs(bnd_frm_idxs, total_geom, frag_geoms)
 
     # Write the long- and short-range divsur input files
+    rdists_lr = [15., 12., 10., 9., 8.]
     lr_divsur_inp_str = varecof_io.writer.input_file.divsur(
-        RDISTS_LR, 1, 1, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+        rdists_lr, 1, 1, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
     print('\nlong-range divsur input file:')
     print(lr_divsur_inp_str)
 
     # Write the short-range divsur files
+    rdists_sr = [8., 7.5, 7., 6.5, 6., 5.5, 5.25, 5., 4.75, 4.5, 4.25, 4., 3.75, 3.5]
+    d1dists = [0., 0.5, 1.]
+    d2dists = [0., 0.5, 1.]
     t1angs = [angles[0]] if angles[0] is not None else None
     t2angs = [angles[1]] if angles[0] is not None else None
     sr_divsur_inp_str = varecof_io.writer.input_file.divsur(
@@ -74,24 +79,24 @@ def input_prep(ts_zma, bnd_frm_idxs)
     return input_str
 
 
-def frag_geoms(ts_zma, bnd_frm_idxs)
+def fragment_geometries(ts_zma, bnd_frm_idxs):
     """ Generate the fragment geometries from the ts Z-matrix and the indices involved in the forming bond
     """
 
-        # Get the geometry from a zmat on the MEP (here is ZMA)
-        total_geom = automol.zmatrix.geometry(ts_zma)
+    # Get the geometry from a zmat on the MEP (here is ZMA)
+    total_geom = automol.zmatrix.geometry(ts_zma)
 
-        # Build list of the fragment geometries:
-        # (1) without dummy atoms and,
-        # (2) with dummy atom assuming position of 2nd bond atom
-        frag_geoms = [total_geom[:bnd_frm_idxs[1]], total_geom[bnd_frm_idxs[1]:]]
-        dummy_row = ('X', total_geom[bnd_frm_idxs[1]][1])
-        geo1_wdummy = frag_geoms[0] + (dummy_row,)
-        dummy_row = ('X', total_geom[bnd_frm_idxs[0]][1])
-        geo2_wdummy = (dummy_row,) + frag_geoms[1]
-        frag_geoms_wdummy = [geo1_wdummy, geo2_wdummy]
+    # Build list of the fragment geometries:
+    # (1) without dummy atoms and,
+    # (2) with dummy atom assuming position of 2nd bond atom
+    frag_geoms = [total_geom[:bnd_frm_idxs[1]], total_geom[bnd_frm_idxs[1]:]]
+    dummy_row = ('X', total_geom[bnd_frm_idxs[1]][1])
+    geo1_wdummy = frag_geoms[0] + (dummy_row,)
+    dummy_row = ('X', total_geom[bnd_frm_idxs[0]][1])
+    geo2_wdummy = (dummy_row,) + frag_geoms[1]
+    frag_geoms_wdummy = [geo1_wdummy, geo2_wdummy]
 
-        return total_geom, frag_geoms, frag_geoms_wdummy
+    return total_geom, frag_geoms, frag_geoms_wdummy
 
 
 def build_pivot_frames(rxn_idxs, total_geom, frag_geoms, frag_geoms_wdummy):
