@@ -6,7 +6,6 @@ import numpy
 from qcelemental import constants as qcc
 import automol
 import elstruct
-import thermo
 import autofile
 import varecof_io
 import moldr
@@ -460,6 +459,9 @@ def get_zmas(
         kickoff_backward, projrot_script_str)
     rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
     prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
+    for geo in prd_geos:
+        xyzs = automol.geom.coordinates(geo)
+        print('xyzs for products:', xyzs)
     if  len(rct_zmas) > 2:
         rct_zmas.append(ichzma)
     if len(prd_zmas) > 2:
@@ -524,15 +526,14 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         new_zma, dist_name, rct_tors_names = ret
         new_zma = automol.zmatrix.standard_form(new_zma)
         babs1 = automol.zmatrix.get_babs1(new_zma, dist_name)
-        aabs1 = babs1.replace('D','A')
-        new_zma = automol.zmatrix.set_values(new_zma, {dist_name: 2.2, aabs1: 180. * qcc.conversion_factor('degree', 'radian')})
+        aabs1 = babs1.replace('D', 'A')
+        new_zma = automol.zmatrix.set_values(
+            new_zma, {dist_name: 2.2, aabs1: 180. * qcc.conversion_factor('degree', 'radian')})
         print(automol.geom.xyz_string(automol.zmatrix.geometry(new_zma)))
         prd_zmas = [prd_zmas[0], new_zma]
 
     typ = None
     bkp_typ = ''
-    print('rxn zmas test', rct_zmas)
-    print('rxn zmas test', prd_zmas)
     ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
     if ret:
         typ = 'addition'
@@ -678,6 +679,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                 update_guess = True
 
         elif 'hydrogen abstraction' in typ:
+            npoints = 16
             rmin = 0.7 * ANG2BOHR
             rmax = 2.2 * ANG2BOHR
             if bnd_len_key in bnd_len_dct:
@@ -696,7 +698,8 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         else:
             ts_class_data = []
         if bkp_typ:
-            bkp_ts_class_data = [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess]
+            bkp_ts_class_data = [
+                bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess]
         else:
             bkp_ts_class_data = []
         
@@ -767,7 +770,8 @@ def find_ts(
 
         is_bkp = False
         if chk_bkp and bkp_ts_class_data:
-            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data
+            [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names,
+                bkp_update_guess] = bkp_ts_class_data
             if automol.zmatrix.names(zma) == automol.zmatrix.names(bkp_ts_zma):
                 if automol.zmatrix.almost_equal(zma, bkp_ts_zma, 4e-1, True):
                     is_bkp = True
@@ -782,9 +786,9 @@ def find_ts(
             print("TS is type {}".format(typ))
         elif is_bkp:
             print('updating reaction class to {}'.format(bkp_typ))
-            ts_dct['class'] =  bkp_typ
-            ts_dct['original_zma'] =  bkp_ts_zma
-            ts_dct['dist_info'] =  bkp_dist_info
+            ts_dct['class'] = bkp_typ
+            ts_dct['original_zma'] = bkp_ts_zma
+            ts_dct['dist_info'] = bkp_dist_info
             ts_dct['tors_names'] =  bkp_tors_names
             print("TS is backup type {}".format(bkp_typ))
         else:
@@ -965,13 +969,13 @@ def find_ts(
             run_single_conformer(ts_info, ref_level, fs, overwrite, saddle=True, dist_info=dist_info)
 
         elif 'addition' in typ and bkp_ts_class_data and attempt > 2:
-            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data 
+            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data
             print('TS find failed. Attempting to find with new reaction class: {}'.format(bkp_typ))
             bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
-            ts_dct['class'] =  bkp_typ
-            ts_dct['original_zma'] =  bkp_ts_zma
-            ts_dct['dist_info'] =  bkp_dist_info
-            ts_dct['tors_names'] =  bkp_tors_names
+            ts_dct['class'] = bkp_typ
+            ts_dct['original_zma'] = bkp_ts_zma
+            ts_dct['dist_info'] = bkp_dist_info
+            ts_dct['tors_names'] = bkp_tors_names
             attempt += 1
             geo, zma, final_dist = find_ts(
                 ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
@@ -982,19 +986,19 @@ def find_ts(
                 babs1 = 90. * qcc.conversion_factor('degree', 'radian')
             print('TS find failed. Attempting to find with new angle of attack: {:.1f}'.format(babs1))
             ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
-            ts_dct['original_zma'] =  ts_zma
+            ts_dct['original_zma'] = ts_zma
             attempt += 1
             geo, zma, final_dist = find_ts(
                 ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data, thy_info,
                 rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
         elif 'beta scission' in typ and bkp_ts_class_data and attempt < 2:
-            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data 
+            [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess] = bkp_ts_class_data
             print('TS find failed. Attempting to find with new reaction class: {}'.format(bkp_typ))
             bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
-            ts_dct['class'] =  bkp_typ
-            ts_dct['original_zma'] =  bkp_ts_zma
-            ts_dct['dist_info'] =  bkp_dist_info
-            ts_dct['tors_names'] =  bkp_tors_names
+            ts_dct['class'] = bkp_typ
+            ts_dct['original_zma'] = bkp_ts_zma
+            ts_dct['dist_info'] = bkp_dist_info
+            ts_dct['tors_names'] = bkp_tors_names
             attempt += 1
             geo, zma, final_dist = find_ts(
                 ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,

@@ -94,7 +94,7 @@ if MECH_TYPE == 'CHEMKIN':
     CHG_DCT = chemkin_io.mechparser.mechanism.species_name_charge_dct(SPC_STR)
     SENS_DCT = chemkin_io.mechparser.mechanism.species_name_sens_dct(SPC_STR)
 
-    CHECK_STEREO = False
+    CHECK_STEREO = True
 
     if CHECK_STEREO:
         SPC_STR = 'name,SMILES,InChI,mult,charge,sens \n'
@@ -105,12 +105,15 @@ if MECH_TYPE == 'CHEMKIN':
             mul = MUL_DCT[name]
             chg = CHG_DCT[name]
             sens = SENS_DCT[name]
+            # print('dct test:', ich, smi, mul, chg)
             if not automol.inchi.is_complete(ich):
                 print('adding stereochemistry for {0}, {1}, {2}'.format(name, smi, ich))
                 # note this returns a list of ich's with the different possible stereo values
                 # for now just taking the first of these
                 ich = automol.inchi.add_stereo(ich)
-                ich = ich[0]
+                # print('new ich possibilities:', ich)
+                ich = ich[-1]
+                #ich = ich[0]
                 print('new ich:', ich)
                 ICH_DCT[name] = ich
                 # print('new dct:', ICH_DCT[name])
@@ -750,10 +753,10 @@ if RUN_RATES:
 
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        #['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        #['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        #['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
-        # ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
+        #['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['find_ts', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
@@ -775,7 +778,10 @@ if RUN_RATES:
             nums = PESNUMS.replace('[', '').replace(']', '').split(',')
             PESNUMS = [int(num) for num in nums]
     # loop over PESs
+    print('PESNUMS test:', PESNUMS)
+    CHANNELS == 'all'
     for pes_idx, PES in enumerate(PES_LST, start=1):
+        print('PES NAME test:', pes_idx, PES)
         if pes_idx in PESNUMS:
             PES_RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
             PES_PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
