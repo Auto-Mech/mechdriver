@@ -135,6 +135,8 @@ def run(
                 else:
                     spc_dct[ts]['class'] = None
                     spc_dct[ts]['bkp_data'] = None
+
+                print('ts_zma test:', ts_zma)
         print('End transition state prep\n')
 
         #Run ESDriver
