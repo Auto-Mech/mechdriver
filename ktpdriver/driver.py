@@ -33,13 +33,13 @@ def run(
     """ main driver for generation of full set of rate constants on a single PES
     """
 
-    #prepare prefix filesystem
+#   prepare prefix filesystem
     if not os.path.exists(save_prefix):
         os.makedirs(save_prefix)
     if not os.path.exists(run_prefix):
         os.makedirs(run_prefix)
 
-    #Determine options
+#   Determine options
     runes = options[0]  #run electronic structure theory (True/False)
     runspcfirst = options[1]
     runmess = options[2]  #run mess (True) / just make the mess input file (False)
@@ -47,8 +47,8 @@ def run(
     if not runmess:
         runrates = False
 
-    # First run ESDriver for the species on the PES so that information on exothermicity is available 
-    # in order to sort the reactions by exothermicity
+#   First run ESDriver for the species on the PES so that information on exothermicity is available 
+#   in order to sort the reactions by exothermicity
     spc_queue = []
     for rxn, _ in enumerate(rct_names_lst):
         rxn_spc = list(rct_names_lst[rxn])
@@ -427,8 +427,10 @@ if __name__ == "__main__":
     #PRD_NAME_LST = [['nh2','water']]
     #RCT_NAME_LST = [['ch3oh', 'h'], ['ch3oh', 'h']]
     #PRD_NAME_LST = [['ch2oh', 'h2'], ['ch3o', 'h2']]
+    #RCT_NAME_LST = [['ch3oh', 'h']]
+    #PRD_NAME_LST = [['ch3o', 'h2']]
     RCT_NAME_LST = [['ch3oh', 'h']]
-    PRD_NAME_LST = [['ch3o', 'h2']]
+    PRD_NAME_LST = [['methane', 'oh']]
 
     #RCT_NAME_LST = [['methane', 'h'], ['methane', 'oh']]
     #PRD_NAME_LST = [['methyl','h2'], ['methyl','water']]
@@ -444,8 +446,12 @@ if __name__ == "__main__":
             'water': {'smi': 'O', 'mul': 1, 'chg': 0},
             'ch3oh': {'smi': 'CO', 'mul': 1, 'chg': 0},
             'ch2oh': {'smi': '[CH2]O', 'mul': 2, 'chg': 0},
-            'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0}
+            'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0},
+            'nh2oh': {'smi': 'C[O]', 'mul': 1, 'chg': 0},
+            'nh3': {'smi': 'C[O]', 'mul': 1, 'chg': 0}
              }
+    for SPC in SPC_DCT:
+        SPC_DCT[SPC]["ich"] = automol.smiles.inchi(SPC_DCT[SPC]["smi"])
     #run(TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
     run(
         TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST,
