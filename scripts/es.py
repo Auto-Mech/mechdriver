@@ -513,6 +513,7 @@ def get_geos(
 
 def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_save_fs):
 
+# Stuff for forcing a trimolecular to behave like a bimolecular
     rct_tors_names = []
     if  len(rct_zmas) > 2:
         ret = automol.zmatrix.ts.addition(rct_zmas[1:-1], [prd_zmas[-1]])
@@ -531,6 +532,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             new_zma, {dist_name: 2.2, aabs1: 180. * qcc.conversion_factor('degree', 'radian')})
         print(automol.geom.xyz_string(automol.zmatrix.geometry(new_zma)))
         prd_zmas = [prd_zmas[0], new_zma]
+
 
     typ = None
     bkp_typ = ''
@@ -575,6 +577,26 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                                                       sigma=False)
         if ret:
             typ = 'hydrogen abstraction'
+            ts_zma, dist_name, tors_names = ret
+            if ts_mul == high_mul:
+                typ += ': high spin'
+            elif ts_mul == low_mul:
+                typ += ': low spin'
+                
+    if typ is None:
+        ret = automol.zmatrix.ts.insertion(rct_zmas, prd_zmas)
+        if ret:
+            typ = 'insertion'
+            ts_zma, dist_name, tors_names = ret
+            if ts_mul == high_mul:
+                typ += ': high spin'
+            elif ts_mul == low_mul:
+                typ += ': low spin'
+    
+    if typ is None:
+        ret = automol.zmatrix.ts.substitution(rct_zmas, prd_zmas)
+        if ret:
+            typ = 'substitution'
             ts_zma, dist_name, tors_names = ret
             if ts_mul == high_mul:
                 typ += ': high spin'
@@ -686,6 +708,26 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                 bnd_len = bnd_len_dct[bnd_len_key]
                 rmin = bnd_len
                 rmax = bnd_len + 1.0 * ANG2BOHR
+            grid = numpy.linspace(rmin, rmax, npoints)
+            update_guess = False
+
+        elif 'substitution' in typ:
+            rmin = 0.7 * ANG2BOHR
+            rmax = 2.4 * ANG2BOHR
+            if bnd_len_key in bnd_len_dct:
+                bnd_len = bnd_len_dct[bnd_len_key]
+                rmin = bnd_len
+                rmax = bnd_len + 1.4 * ANG2BOHR
+            grid = numpy.linspace(rmin, rmax, npoints)
+            update_guess = False
+
+        elif 'insertion' in typ:
+            rmin = 1.4 * ANG2BOHR
+            rmax = 2.4 * ANG2BOHR
+            if bnd_len_key in bnd_len_dct:
+                bnd_len = bnd_len_dct[bnd_len_key]
+                rmin = bnd_len
+                rmax = bnd_len + 1.4 * ANG2BOHR
             grid = numpy.linspace(rmin, rmax, npoints)
             update_guess = False
 
