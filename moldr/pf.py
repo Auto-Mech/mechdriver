@@ -163,26 +163,46 @@ def species_block(
                 proj_rotors_str = ""
 
                 if tors_min_cnf_locs is not None:
-                    tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
-                    #if automol.geom.is_linear(har_geo):
-                        # proj_freqs = freqs[5:]
-                        # zpe = sum(proj_freqs)*WAVEN2KCAL/2.
-                    # else:
-                    if 'ts_' in spc:
-                        zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
-                        tors_names = spc_dct_i['tors_names']
+                    if har_cnf_save_fs.trunk.file.info.exists():
+                        inf_obj_s = har_cnf_save_fs.trunk.file.info.read()
+                        tors_ranges = inf_obj_s.tors_ranges
+                        tors_ranges = autofile.info.dict_(tors_ranges)
+                        print(tors_ranges)
+                        tors_names = list(tors_ranges.keys())
                     else:
-                        zma = automol.geom.zmatrix(tors_geo)
-                        tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
+                        print('No inf obj to identify torsional angles')
+                        tors_names = []
+                    zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
+                    
+                    tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
+                    #if 'ts_' in spc:
+                    #    zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
+                    #    tors_names = spc_dct_i['tors_names']
+                    #else:
+                    #    #zma = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
+                    #    zma = automol.geom.zmatrix(tors_geo)
+                    #    tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
                     gra = automol.zmatrix.graph(zma, remove_stereo=True)
                     coo_dct = automol.zmatrix.coordinates(zma, multi=False)
 
                     # prepare axis, group, and projection info
                     scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
                     pot = []
-                    for tors_name in tors_names:
+                    scan_increment = 30.
+                    val_dct = automol.zmatrix.values(zma)
+                    tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                        zma, tors_names, scan_increment)
+                    tors_grids = [
+                         numpy.linspace(*linspace) + val_dct[name]
+                         for name, linspace in zip(tors_names, tors_linspaces)]
+                    for tors_name, tors_grid in zip(tors_names, tors_grids):
+                        locs_list = []
+                        for grid_val in tors_grid:
+                            locs_list.append([[tors_name], [grid_val]])
                         enes = [scn_save_fs.leaf.file.energy.read(locs) for locs
-                                in scn_save_fs.leaf.existing([[tors_name]])]
+                                in locs_list]
+                        #enes = [scn_save_fs.leaf.file.energy.read(locs) for locs
+                        #        in scn_save_fs.leaf.existing([[tors_name]])]
                         enes = numpy.subtract(enes, min_ene)
                         pot = list(enes*EH2KCAL)
                         axis = coo_dct[tors_name][1:3]
@@ -191,11 +211,24 @@ def species_block(
                             set(axis))
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
+
+                        #check for dummy transformations
+                        atom_symbols = automol.zmatrix.symbols(zma)
+                        dummy_idx = []
+                        for atm_idx, atm in enumerate(atom_symbols):
+                            if atm == 'X':
+                                dummy_idx.append(atm_idx)
+                        dummy_rem = numpy.zeros(len(zma[0]))     
+                        for dummy in dummy_idx:
+                            for idx, _ in enumerate(dummy_rem):
+                                if dummy < idx:
+                                   dummy_rem[idx] += 1
                         sym = 1
+                        print('dummy_rem', dummy_rem)
                         hind_rot_str += mess_io.writer.rotor_hindered(
-                            group, axis, sym, pot)
+                            group, axis, sym, pot, dummy_rem)
                         proj_rotors_str += projrot_io.writer.rotors(
-                            axis, group)
+                            axis, group, dummy_rem=dummy_rem)
 
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'

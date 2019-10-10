@@ -746,9 +746,9 @@ if RUN_THERMO:
 if RUN_RATES:
 
     OPT_ES = True
-    OPT_MESS = False
-    OPT_THERMO = False
-    OPT_ALLPF = False
+    OPT_MESS = True
+    OPT_THERMO = True
+    OPT_ALLPF = True
     OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
     TSK_INFO_LST = [
@@ -779,7 +779,7 @@ if RUN_RATES:
             PESNUMS = [int(num) for num in nums]
     # loop over PESs
     print('PESNUMS test:', PESNUMS)
-    CHANNELS == 'all'
+    #CHANNELS == 'all'
     for pes_idx, PES in enumerate(PES_LST, start=1):
         print('PES NAME test:', pes_idx, PES)
         if pes_idx in PESNUMS:
@@ -805,13 +805,13 @@ if RUN_RATES:
                     RCT_NAMES_LST.append(PES_RCT_NAMES_LST[chn_idx])
                     PRD_NAMES_LST.append(PES_PRD_NAMES_LST[chn_idx])
                     RXN_NAME_LST.append(PES_RXN_NAME_LST[chn_idx])
-                print('{} = {}'.format(
-                    '+ '.join(PES_RCT_NAMES_LST[chn_idx]),
-                    '+ '.join(PES_PRD_NAMES_LST[chn_idx])))
+                    print('{} = {}'.format(
+                        '+ '.join(PES_RCT_NAMES_LST[chn_idx]),
+                        '+ '.join(PES_PRD_NAMES_LST[chn_idx])))
             # set up name lists and ts species dictionary for a given PES
-            RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
-            PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
-            RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
+           # RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
+           # PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
+           # RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
             RXN_LST = []
             for rxn, _ in enumerate(RCT_NAMES_LST):
                 RXN_LST.append(
@@ -847,6 +847,7 @@ if RUN_RATES:
             ktpdriver.driver.run(
                 TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
                 '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=OPTIONS)
+                #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 
 # f. Partition function parameters determined internally
 # TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
