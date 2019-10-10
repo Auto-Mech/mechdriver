@@ -200,7 +200,7 @@ def run_multiref_rscan(
     """ run constrained optimization scan
     """
 
-
+    #print('grid1:', grid1)
     vma = automol.zmatrix.var_(zma)
     if scn_save_fs.trunk.file.vmatrix.exists():
         existing_vma = scn_save_fs.trunk.file.vmatrix.read()
@@ -229,23 +229,28 @@ def run_multiref_rscan(
     prog = thy_level[0]
     #orb_restr = moldr.util.orbital_restriction(spc_info, thy_level)
     thy_level[0] = 'molpro2015'
-    print('thy_level test:', thy_level)
-    prog = 'molpro2015'
+    #print('thy_level test:', thy_level)
     thy_level[1] = 'caspt2'
+    prog = 'molpro2015'
+    method = 'caspt2'
+
+    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(prog, method)
 
     num_act_elc = 2
     num_act_orb = 2
-    cas_opt, _ = moldr.vrctst.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = moldr.vrctst.multiref_wavefunction_guess(
+    cas_opt, _ = moldr.ts.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
+    guess_str = moldr.ts.multiref_wavefunction_guess(
         formula, high_mul, zma, spc_info, thy_level, dist_name, coo_name, grid_vals, cas_opt)
-    guess_lines, kwargs = guess_str.splitlines()
+    guess_lines = guess_str.splitlines()
 
-    kwargs['casscf_options'] = cas_opt
-    kwargs['mol_options'] = ['nosym']
-    kwargs['gen_lines'] = guess_lines
+    #print('guess_str test:', guess_str)
+    opt_kwargs['casscf_options'] = cas_opt
+    opt_kwargs['mol_options'] = ['nosym']
+    opt_kwargs['gen_lines'] = guess_lines
 
     grid1_dct = {dist_name: grid1}
     ((_, grid1_vals),) = grid1_dct.items()
+    #print('grid1_vals test:', grid1_vals)
     npoint1 = len(grid1_vals)
     grid1_idxs = tuple(range(npoint1))
 
@@ -253,8 +258,9 @@ def run_multiref_rscan(
         scn_run_fs.leaf.create([[coo_name], [grid_idx]])
     prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
                      for grid_idx in grid1_idxs)
+    #print('theory level:', thy_level)
     _run_1d_scan(
-        script_str=script_str,
+        script_str=opt_script_str,
         prefixes=prefixes,
         guess_zma=zma,
         coo_name=coo_name,
@@ -264,7 +270,7 @@ def run_multiref_rscan(
         thy_level=thy_level,
         overwrite=overwrite,
         update_guess=update_guess,
-        **kwargs
+        **opt_kwargs,
     )
 
     grid2_dct = {dist_name: grid2}
@@ -279,7 +285,7 @@ def run_multiref_rscan(
     prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
                      for grid_idx in grid2_idxs)
     _run_1d_scan(
-        script_str=script_str,
+        script_str=opt_script_str,
         prefixes=prefixes,
         guess_zma=zma,
         coo_name=coo_name,
@@ -289,7 +295,7 @@ def run_multiref_rscan(
         thy_level=thy_level,
         overwrite=overwrite,
         update_guess=update_guess,
-        **kwargs
+        **opt_kwargs,
     )
 
 
@@ -305,6 +311,7 @@ def _run_1d_scan(
         zma = automol.zmatrix.set_values(guess_zma, {coo_name: grid_val})
         run_fs = autofile.fs.run(prefix)
 
+        #print('kwargs test', kwargs)
         moldr.driver.run_job(
             job=elstruct.Job.OPTIMIZATION,
             script_str=script_str,
@@ -322,6 +329,7 @@ def _run_1d_scan(
         )
 
         ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+        #print('update_guess and ret test:', update_guess, ret)
         if update_guess and ret is not None:
             inf_obj, _, out_str = ret
             prog = inf_obj.prog

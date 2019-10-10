@@ -115,11 +115,13 @@ def run(
                     spc_dct[ts]['reacs'], spc_dct[ts]['prods'], spc_dct,
                     ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
                     KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
+                print('rct, prd, _zmas test:', rct_zmas, prd_zmas)
                 ret = scripts.es.ts_class(
                     rct_zmas, prd_zmas, spc_dct[ts]['rad_rad'],
                     spc_dct[ts]['mul'], low_mul, high_mul,
                     rct_cnf_save_fs)
                 ret1, ret2 = ret
+                print('ret:', ret)
                 if ret1:
                     rxn_class, ts_zma, dist_name, break_name, grid, tors_names, update_guess = ret1
                     spc_dct[ts]['class'] = rxn_class

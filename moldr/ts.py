@@ -211,9 +211,10 @@ def cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul):
     """
 
     elec_count = automol.formula.electron_count(formula)
-    closed_orb = (elec_count-num_act_elc)//2 - 1
+    closed_orb = (elec_count-num_act_elc)//2
     occ_orb = closed_orb + num_act_orb
     two_spin = spc_info[2]-1
+    high_two_spin = high_mul - 1
     chg = spc_info[1]
     cas_options = [
         elstruct.option.specify(elstruct.Option.Scf.MAXITER_, 40),
@@ -223,7 +224,7 @@ def cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul):
         ]
     wfn_str = """{{uhf,maxit=300;wf,{0},1,{1}}}
              {{multi,maxit=40;closed,{2};occ,{3};wf,{0},1,{4};orbprint,3}}""".format(
-             elec_count, high_mul, closed_orb, occ_orb, two_spin)
+             elec_count, high_two_spin, closed_orb, occ_orb, two_spin)
 
     return cas_options, wfn_str
 
@@ -238,10 +239,7 @@ def multiref_wavefunction_guess(
     basis = thy_level[2]
     prog = thy_level[0]
     #orb_restr = moldr.util.orbital_restriction(spc_info, thy_level)
-    thy_level[0] = 'molpro2015'
     prog = 'molpro2015'
-    thy_level[1] = 'caspt2'
-    _, script_str, _, kwargs = moldr.util.run_qchem_par(thy_level[0], thy_level[1])
 
     guess_str1 = elstruct.writer.energy(
         geom=automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]}),
@@ -272,6 +270,6 @@ def multiref_wavefunction_guess(
 
     guess_str = guess_str1 + guess_str2
 
-    return guess_str, kwargs
+    return guess_str 
 
 

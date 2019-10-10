@@ -31,6 +31,7 @@ if len(sys.argv) > 3:
     PESNUMS = sys.argv[3]
     if len(sys.argv) > 4:
         CHANNELS = sys.argv[4]
+print('PESNUMS and CHANNELS:', PESNUMS, CHANNELS)
 RUN_THERMO = False
 RUN_RATES = True
 # 1. create run and save directories
@@ -81,7 +82,10 @@ RAD_RAD_SORT = False
 
 # 4. process species data from the mechanism file
 # Also add in basis set species
-SORT_RXNS = False
+
+# setting SORT_RXNS to False leads to missing channels
+# for now just leave them sorted
+SORT_RXNS = True
 
 if MECH_TYPE == 'CHEMKIN':
 
@@ -93,6 +97,10 @@ if MECH_TYPE == 'CHEMKIN':
     MUL_DCT = chemkin_io.mechparser.mechanism.species_name_mult_dct(SPC_STR)
     CHG_DCT = chemkin_io.mechparser.mechanism.species_name_charge_dct(SPC_STR)
     SENS_DCT = chemkin_io.mechparser.mechanism.species_name_sens_dct(SPC_STR)
+    #ICH_DCT = {}
+    #for name in SMI_DCT:
+        #print('smiles test:', name, SMI_DCT[name])
+        #ICH_DCT[name] = automol.smiles.inchi(SMI_DCT[name])
 
     CHECK_STEREO = True
 
@@ -105,13 +113,13 @@ if MECH_TYPE == 'CHEMKIN':
             mul = MUL_DCT[name]
             chg = CHG_DCT[name]
             sens = SENS_DCT[name]
-            # print('dct test:', ich, smi, mul, chg)
+            # print('dct test:', ich, smi, mul)
             if not automol.inchi.is_complete(ich):
                 print('adding stereochemistry for {0}, {1}, {2}'.format(name, smi, ich))
                 # note this returns a list of ich's with the different possible stereo values
                 # for now just taking the first of these
                 ich = automol.inchi.add_stereo(ich)
-                # print('new ich possibilities:', ich)
+                print('new ich possibilities:', ich)
                 ich = ich[-1]
                 #ich = ich[0]
                 print('new ich:', ich)
@@ -197,10 +205,10 @@ if MECH_TYPE == 'CHEMKIN':
     if SORT_RXNS:
         RXN_INFO_LST.sort()
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
-        for rxn_name in RXN_NAME_LST:
-            print("Reaction: {}".format(rxn_name))
-        for formula in FORMULA_STR_LST:
-            print("Reaction: {}".format(formula))
+        #for rxn_name in RXN_NAME_LST:
+            #print("Reaction: {}".format(rxn_name))
+        #for formula in FORMULA_STR_LST:
+            #print("Reaction: {}".format(formula))
 
 elif MECH_TYPE == 'json':
     CHECK_STEREO = False
@@ -745,11 +753,11 @@ if RUN_THERMO:
 
 if RUN_RATES:
 
-    OPT_ES = True
-    OPT_MESS = True
-    OPT_THERMO = True
-    OPT_ALLPF = True
-    OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
+    RUN_ES = True
+    RUN_SPECIES = True
+    RUN_MESS = True
+    RUN_RATES = True
+    OPTIONS = [RUN_ES, RUN_SPECIES, RUN_MESS, RUN_RATES]
 
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
@@ -768,6 +776,18 @@ if RUN_RATES:
         # ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
         ]
+
+    # print all the channels for all the PESs
+    for pes_idx, PES in enumerate(PES_LST, start=1):
+        print ('PES test:', pes_idx, PES)
+        PES_RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
+        PES_RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
+        PES_PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
+        for chn_idx, _ in enumerate(PES_RXN_NAME_LST):
+            print('channel {}: {} = {}'.format(
+                chn_idx, ' + '.join(PES_RCT_NAMES_LST[chn_idx]),
+                ' + '.join(PES_PRD_NAMES_LST[chn_idx])))
+
     if isinstance(PESNUMS, str):
         if PESNUMS == 'all':
             PESNUMS = numpy.arange(len(PES_LST)+1)
@@ -778,10 +798,9 @@ if RUN_RATES:
             nums = PESNUMS.replace('[', '').replace(']', '').split(',')
             PESNUMS = [int(num) for num in nums]
     # loop over PESs
-    print('PESNUMS test:', PESNUMS)
-    #CHANNELS == 'all'
+    print('PESNUMS and CHANNELS:', PESNUMS, CHANNELS)
+
     for pes_idx, PES in enumerate(PES_LST, start=1):
-        print('PES NAME test:', pes_idx, PES)
         if pes_idx in PESNUMS:
             PES_RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
             PES_PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
@@ -796,22 +815,25 @@ if RUN_RATES:
                 elif '[' in CHANNELS:
                     nums = CHANNELS.replace('[', '').replace(']', '').split(',')
                     pes_chns = [int(num) for num in nums]
+            print('for pes:', pes_idx)
+            print('channels:', pes_chns)
+            print('running ktp on PES{}: {} for the following channels...'.format(str(pes_idx), PES))
             RCT_NAMES_LST = []
             PRD_NAMES_LST = []
             RXN_NAME_LST = []
-            print('running ktp on PES{}: {} for the following channels...'.format(str(pes_idx), PES))
             for chn_idx, _ in enumerate(PES_RXN_NAME_LST):
                 if chn_idx+1 in pes_chns:
+                    print('chn_idx test:', chn_idx, pes_chns)
                     RCT_NAMES_LST.append(PES_RCT_NAMES_LST[chn_idx])
                     PRD_NAMES_LST.append(PES_PRD_NAMES_LST[chn_idx])
                     RXN_NAME_LST.append(PES_RXN_NAME_LST[chn_idx])
                     print('{} = {}'.format(
-                        '+ '.join(PES_RCT_NAMES_LST[chn_idx]),
-                        '+ '.join(PES_PRD_NAMES_LST[chn_idx])))
+                        ' + '.join(PES_RCT_NAMES_LST[chn_idx]),
+                        ' + '.join(PES_PRD_NAMES_LST[chn_idx])))
             # set up name lists and ts species dictionary for a given PES
-           # RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
-           # PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
-           # RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
+                    #RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
+                    #PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
+                    #RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
             RXN_LST = []
             for rxn, _ in enumerate(RCT_NAMES_LST):
                 RXN_LST.append(

@@ -67,13 +67,12 @@ def run_qchem_par(prog, method):
                 'memory': 5,
                 'corr_options': ['shift=0.2'],
                 'mol_options': ['nosym'],
+                'feedback': True,
                 'errors': [
                     elstruct.Error.OPT_NOCONV
                 ],
                 'options_mat': [
-                    [{},
-                     {},
-                     {'job_options': ['numhess']},
+                    [{'job_options': ['numhess=0']},
                      {'job_options': ['numhess=10']},
                      {'job_options': ['numhess=1']}]
                 ],
@@ -88,13 +87,12 @@ def run_qchem_par(prog, method):
                 'memory': 5,
                 'corr_options': ['shift=0.2', 'ipea=0.25'],
                 'mol_options': ['nosym'],
+                'feedback': True,
                 'errors': [
                     elstruct.Error.OPT_NOCONV
                 ],
                 'options_mat': [
-                    [{},
-                     {},
-                     {'job_options': ['numhess']},
+                    [{'job_options': ['numhess=0']},
                      {'job_options': ['numhess=10']},
                      {'job_options': ['numhess=1']}]
                 ],
@@ -107,12 +105,11 @@ def run_qchem_par(prog, method):
             opt_kwargs = {
                 'memory': 5,
                 'mol_options': ['nosym'],
+                'feedback': True,
                 'errors': [
                 ],
                 'options_mat': [
-                    [{},
-                     {},
-                     {'job_options': ['numhess']},
+                    [{'job_options': ['numhess=0']},
                      {'job_options': ['numhess=10']},
                      {'job_options': ['numhess=1']}]
                 ],

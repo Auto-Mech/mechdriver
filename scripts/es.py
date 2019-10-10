@@ -397,13 +397,8 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
         # print('ts search will be performed in reverse direction')
 
     # set up the filesystem
-    #is_rev = autofile.system.reaction_is_reversed(
-    #    rxn_ichs, rxn_chgs, rxn_muls)
     rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
         rxn_ichs, rxn_chgs, rxn_muls)
-    # print("For the filesystem the reaction direction is {}"
-          # .format('backward' if is_rev else 'forward'))
-
     low_mul = min(automol.mult.ts._low(rxn_muls[0]),
         automol.mult.ts._low(rxn_muls[1]))
     high_mul = max(automol.mult.ts._high(rxn_muls[0]),
@@ -575,6 +570,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
     if typ is None:
         ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
                                                       sigma=False)
+        print('abstraction ret test in ts_class:', ret)
         if ret:
             typ = 'hydrogen abstraction'
             ts_zma, dist_name, tors_names = ret
@@ -683,8 +679,8 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             grid1 = numpy.linspace(rstart, rend1, npoints1)
             grid2 = numpy.linspace(rstart, rend2, npoints2)
             grid2 = numpy.delete(grid2, 0)
-            grid = numpy.concatenate((grid1, grid2), axis=None)
-            update_guess = False
+            grid = [grid1, grid2]
+            update_guess = True
 
         elif 'addition' in typ:
             rmin = 1.6 * ANG2BOHR
@@ -921,6 +917,9 @@ def find_ts(
                 coo_names=[dist_name],
             )
 
+            #loc = [[dist_name], [grid1[0]]]
+            loc = [[dist_name], [00]]
+            ts_zma = scn_save_fs.leaf.file.zmatrix.read(loc)
         # calculate the infinite seperation energy
         # continue on to finish setting up the correction potential
 
@@ -929,7 +928,33 @@ def find_ts(
             [struct_inp_str, lr_divsur_inp_str, sr_divsur_inp_str, tst_inp_str,
             els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
 
-            vrc_path = os.getcwd()
+        # generate the molpro template file
+                  # Write the *.tml input string
+            memory = 4.0
+            basis = 'cc-pvdz'
+            num_act_elc = 2
+            num_act_orb = 2
+
+            ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
+
+            _, wfn_str = moldr.ts.cas_options(ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+            method = '{rs2c, shift=0.25}'
+            inf_sep_energy = -78.137635
+            tml_inp_str = varecof_io.writer.input_file.tml(
+                memory, basis, wfn_str, method, inf_sep_energy)
+            print('\n\nmol.tml:')
+            print(tml_inp_str)
+
+            vrc_path = os.path.join(os.getcwd(), 'vrc')
+            scr_path = os.path.join(vrc_path, 'scratch')
+            os.makedirs(vrc_path, exist_ok=True)
+            os.makedirs(vrc_path, exist_ok=True)
+            machines = ['b450:8', 'b451:8', 'b452:8', 'b453:8']
+            
+            print('vrc_path test:', vrc_path)
+            with open(os.path.join(vrc_path, 'machines'), 'w') as machine_file:
+                for machine in machines:
+                    machine_file.writelines(machine + '\n')
             with open(os.path.join(vrc_path, 'structure.inp'), 'w') as inp_file:
                 inp_file.write(struct_inp_str)
             with open(os.path.join(vrc_path, 'sr_divsur.inp'), 'w') as inp_file:
@@ -944,31 +969,10 @@ def find_ts(
                 inp_file.write(mc_flux_inp_str)
             with open(os.path.join(vrc_path, 'convert.inp'), 'w') as inp_file:
                 inp_file.write(conv_inp_str)
+            with open(os.path.join(vrc_path, 'mol.tml'), 'w') as tml_file:
+                tml_file.write(tml_inp_str)
 
 
-        # generate the molpro template file
-                  # Write the *.tml input string
-            memory = 4.0
-            basis = 'cc-pvdz'
-            num_act_elc = 2
-            num_act_orb = 2
-
-            ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_dct['orginal_zma']))
-
-            _, wfn_str = moldr.vrctst.cas_options(ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-            method = '{rs2c, shift=0.25}'
-            inf_sep_energy = -654.3210123456
-            tml_inp_str = varecof_io.writer.input_file.tml(
-                memory, basis, wfn_str, method, inf_sep_energy)
-            print('\n\nmol.tml:')
-            print(tml_inp_str)
-
-            # Write the divsur input file string; distances in Angstrom
-            #distances = [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
-            #divsur_inp_str = varecof_io.writer.write_divsur_input(
-            #    distances)
-            #print('\ndivsur.inp:')
-            #print(divsur_inp_str)
 
         else:
             if 'elimination' in typ:

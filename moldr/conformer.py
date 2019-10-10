@@ -460,6 +460,8 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
     distinct distance matrices there are in the fully expanded conformer list.
     """
 
+    print('entering int_sym_num:', geo, ene)
+    ethrsh = 1.e-5
     locs_lst = cnf_save_fs.leaf.existing()
     geo_sim = [geo]
     geo_sim_exp = [geo]
@@ -471,20 +473,27 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
         geos = [cnf_save_fs.leaf.file.geometry.read(locs)
                 for locs in locs_lst]
         for geoi, enei in zip(geos, enes):
-            geo_lst = [geoi]
-            ene_lst = [enei]
-            if not is_unique_coulomb_energy(geo, ene, geo_lst, ene_lst):
-                geo_sim.append(geoi)
-                ene_sim.append(enei)
+            if enei - enes[0] < ethrsh:
+                geo_lst = [geoi]
+                ene_lst = [enei]
+                if not is_unique_coulomb_energy(geo, ene, geo_lst, ene_lst):
+                    geo_sim.append(geoi)
+                    ene_sim.append(enei)
 
+        print('len geo_sim', len(geo_sim))
+        idx = 0
         for geo_sim_i in geo_sim:
+            idx += 1
+            print('geo_sim_i test:', idx, geo_sim_i)
             new_geos = automol.geom.rot_permutated_geoms(geo_sim_i)
             for new_geo in new_geos:
                 geo_sim_exp.append(new_geo)
 
         int_sym_num = 0
+        print('len geo_sim_exp', len(geo_sim_exp))
         for i, geoi in enumerate(geo_sim_exp):
             new_geom = True
+            print('geoi test:', i, geoi)
             for j, geoj in enumerate(geo_sim_exp):
                 if j < i:
                     if automol.geom.almost_equal_dist_mat(
@@ -495,6 +504,7 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
                     break
             if new_geom:
                 int_sym_num += 1
+    print('exiting int_sym_num:', int_sym_num)
     return int_sym_num
 
 
