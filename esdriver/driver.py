@@ -18,7 +18,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
     """ driver for all electronic structure tasks
     """
 
-    print(tsk_info_lst)
+    print("Tasks:\n", tsk_info_lst)
     #prepare species queue
     spc_queue = []
     for _, rxn in enumerate(rxn_lst):
@@ -123,7 +123,6 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
             thy_run_fs = autofile.fs.theory(spc_run_path)
             thy_save_fs = autofile.fs.theory(spc_save_path)
 
-            print(spc)
             if 'ene' not in tsk and 'hess' not in tsk:
                 if 'ts_' in spc:
                     thy_run_fs.leaf.create(thy_level[1:4])
