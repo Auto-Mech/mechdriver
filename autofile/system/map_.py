@@ -104,7 +104,8 @@ def scan_branch(coo_names):
 def scan_leaf(grid_idxs):
     """ scan leaf directory name
     """
-    return '_'.join(map('{:0>2d}'.format, grid_idxs))
+    #return '_'.join(map('{:0>2d}'.format, grid_idxs))
+    return '_'.join(map('{:.2f}'.format, grid_idxs))
 
 
 # tau

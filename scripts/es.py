@@ -14,6 +14,7 @@ ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
+
 def run_energy(params, kwargs):
     """ energy for geometry in fiven fs directory
     """
@@ -382,7 +383,6 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
         rxn_exo = moldr.util.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, thy_info)
     except:
-        print(rxn_ichs)
         rxn_exo = moldr.util.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
     print('reaction is {:.2f} endothermic'.format(rxn_exo*EH2KCAL))
@@ -397,8 +397,8 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
         # print('ts search will be performed in reverse direction')
 
     # set up the filesystem
-    is_rev = autofile.system.reaction_is_reversed(
-        rxn_ichs, rxn_chgs, rxn_muls)
+    #is_rev = autofile.system.reaction_is_reversed(
+    #    rxn_ichs, rxn_chgs, rxn_muls)
     rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
         rxn_ichs, rxn_chgs, rxn_muls)
     # print("For the filesystem the reaction direction is {}"
@@ -462,7 +462,7 @@ def get_zmas(
     for geo in prd_geos:
         xyzs = automol.geom.coordinates(geo)
         print('xyzs for products:', xyzs)
-    if  len(rct_zmas) > 2:
+    if len(rct_zmas) > 2:
         rct_zmas.append(ichzma)
     if len(prd_zmas) > 2:
         prd_zmas.append(ichzma)
@@ -515,7 +515,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
 # Stuff for forcing a trimolecular to behave like a bimolecular
     rct_tors_names = []
-    if  len(rct_zmas) > 2:
+    if len(rct_zmas) > 2:
         ret = automol.zmatrix.ts.addition(rct_zmas[1:-1], [prd_zmas[-1]])
         new_zma, dist_name, rct_tors_names = ret
         new_zma = automol.zmatrix.standard_form(new_zma)
@@ -530,12 +530,12 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         aabs1 = babs1.replace('D', 'A')
         new_zma = automol.zmatrix.set_values(
             new_zma, {dist_name: 2.2, aabs1: 180. * qcc.conversion_factor('degree', 'radian')})
-        print(automol.geom.xyz_string(automol.zmatrix.geometry(new_zma)))
         prd_zmas = [prd_zmas[0], new_zma]
-
 
     typ = None
     bkp_typ = ''
+    brk_name = None
+    #rct_zmas, prd_zmas = prd_zmas, rct_zmas
     ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
     if ret:
         typ = 'addition'
@@ -602,6 +602,20 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                 typ += ': high spin'
             elif ts_mul == low_mul:
                 typ += ': low spin'
+
+    if typ is None:
+        orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(rct_zmas, prd_zmas)
+        print('orig dist', orig_dist)
+        if orig_dist:
+            rct_zmas = moldr.util.min_dist_conformer_zma_geo(orig_dist, rct_cnf_save_fs[0])
+            ret = automol.zmatrix.ts.concerted_unimolecular_elimination(rct_zmas, prd_zmas)
+            if ret:
+                typ = 'elimination'
+                ts_zma, dist_name, brk_name, tors_names = ret
+                if ts_mul == high_mul:
+                    typ += ': high spin'
+                elif ts_mul == low_mul:
+                    typ += ': low spin'
 
     if typ is None:
         print("Failed to classify reaction.")
@@ -700,6 +714,26 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                 grid = numpy.concatenate((grid1, grid2), axis=None)
                 update_guess = True
 
+        elif 'elimination' in typ:
+
+            brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
+            brk_len_key = tuple(sorted(map(syms.__getitem__, brk_coo)))
+
+            interval = 0.2*ANG2BOHR
+            rmin = 1.4 * ANG2BOHR
+            rmax = 2.8 * ANG2BOHR
+            if bnd_len_key in bnd_len_dct:
+                bnd_len = bnd_len_dct[bnd_len_key]
+                brk_len = bnd_len_dct[brk_len_key]
+                r1min = bnd_len + 0.2 * ANG2BOHR
+                r1max = bnd_len + 1.4 * ANG2BOHR
+                r2min = brk_len + 0.2 * ANG2BOHR
+                r2max = brk_len + 0.8 * ANG2BOHR
+                grid1 = numpy.linspace(r1min, r1max, 8)
+                grid2 = numpy.linspace(r2min, r2max, 4)
+                grid = [grid1, grid2]
+                update_guess = False
+
         elif 'hydrogen abstraction' in typ:
             npoints = 16
             rmin = 0.7 * ANG2BOHR
@@ -736,7 +770,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             update_guess = False
 
         if typ:
-            ts_class_data = [typ, ts_zma, dist_name, grid, tors_names, update_guess]
+            ts_class_data = [typ, ts_zma, dist_name, brk_name, grid, tors_names, update_guess]
         else:
             ts_class_data = []
         if bkp_typ:
@@ -786,6 +820,7 @@ def find_ts(
 
     dist_name = dist_info[0]
     update_guess = dist_info[2]
+    break_name = dist_info[3]
 
     #Check if TS already is found, and determine if it fits original guess
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
@@ -936,11 +971,16 @@ def find_ts(
             #print(divsur_inp_str)
 
         else:
+            if 'elimination' in typ:
+                grid1, grid2 = grid
+                grid_dct = {dist_name: grid1, break_name: grid2}
+            else:    
+                grid_dct = {dist_name: grid}
             moldr.scan.run_scan(
                 zma=ts_zma,
                 spc_info=ts_info,
                 thy_level=ref_level,
-                grid_dct={dist_name: grid},
+                grid_dct=grid_dct,
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
                 script_str=opt_script_str,
@@ -952,24 +992,75 @@ def find_ts(
                 new_grid=new_grid,
                 **opt_kwargs,
                 )
+            if 'elimination' in typ:
+                moldr.scan.save_scan(
+                    scn_run_fs=scn_run_fs,
+                    scn_save_fs=scn_save_fs,
+                    coo_names=[dist_name, break_name],
+                    )
+            else:    
+                moldr.scan.save_scan(
+                    scn_run_fs=scn_run_fs,
+                    scn_save_fs=scn_save_fs,
+                    coo_names=[dist_name],
+                    )
 
-            moldr.scan.save_scan(
-                scn_run_fs=scn_run_fs,
-                scn_save_fs=scn_save_fs,
-                coo_names=[dist_name],
-                )
+        if 'elimination' in typ:
+            enes_lst = []
+            locs_lst_lst = []
+            for grid_val_j in grid2:
+                locs_list = []
+                for grid_val_i in grid1:
+                    locs_list.append([[dist_name, break_name], [grid_val_i, grid_val_j]])
+                print('locs_lst', locs_list)    
+                enes = []
+                locs_lst = []
+                for locs in locs_list:
+                    if scn_save_fs.leaf.exists(locs):
+                        print(scn_save_fs.leaf.path(locs))
+                        enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                        locs_lst.append(locs)
+                locs_lst_lst.append(locs_lst)
+                enes_lst.append(enes)
+                print('enes_lst', enes_lst)    
+            max_enes = []  
+            max_locs = []
+            for idx_j, enes in enumerate(enes_lst):
+                max_ene = -10000.
+                max_loc = ''
+                for idx_i, ene in enumerate(enes):
+                    if ene > max_ene:
+                        max_ene = ene
+                        max_loc = locs_lst_lst[idx_j][idx_i]
+                        print('new max', max_ene, max_loc)    
+                max_enes.append(max_ene)
+                max_locs.append(max_loc)
+            min_ene = 10000.    
+            locs = []
+            for idx_j, ene in enumerate(max_enes):
+                if ene < min_ene:
+                    min_ene = ene
+                    locs = max_locs[idx_j]
+            max_locs = locs
+            max_ene = min_ene
+            print('min max loc', max_ene, max_locs)    
+            print('min max loc', scn_save_fs.leaf.path(max_locs))    
+            max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
+        else:
+            locs_list = []
+            locs_lst = []
+            for grid_val_i in grid:
+                locs_list.append([[dist_name], [grid_val_i]])
+            for locs in locs_list:
+                if scn_save_fs.leaf.exists(locs):
+                    enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                    locs_lst.append(locs)
+            max_ene = max(enes)
+            max_locs = locs_lst[enes.index(max(enes))]
+            max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
 
-        locs_lst = [
-            locs for locs in scn_save_fs.leaf.existing([[dist_name]])
-            if scn_save_fs.leaf.file.energy.exists(locs)]
-        enes = [scn_save_fs.leaf.file.energy.read(locs)
-                for locs in locs_lst]
-        max_locs = locs_lst[enes.index(max(enes))]
-        max_ene = max(enes)
-        max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
         print('geometry for maximum along scan:', max_zma)
         print('energy for maximum along scan:', max_ene)
-
         print('optimizing ts')
         # find saddlepoint from maximum on the grid opt scan
 
@@ -1206,8 +1297,6 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
                     print(" - Save path: {}".format(thy_save_path))
                     vdw_name = label + ts_name.replace('ts', 'vdw')
                     spc_dct[vdw_name] = spc_dct[ts_name].copy()
-                    print(vdw_name)
-                    print(ich)
                     spc_dct[vdw_name]['ich'] = ich
                     spc_dct[vdw_name]['mul'] = mul
                     spc_dct[vdw_name]['chg'] = chg

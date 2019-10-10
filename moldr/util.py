@@ -209,6 +209,25 @@ def min_dist_conformer_zma(dist_name, cnf_save_fs):
     return min_zma
 
 
+def min_dist_conformer_zma_geo(dist_coords, cnf_save_fs):
+    """ locators for minimum energy conformer """
+    cnf_locs_lst = cnf_save_fs.leaf.existing()
+    cnf_zmas = [cnf_save_fs.leaf.file.zmatrix.read(locs)
+                for locs in cnf_locs_lst]
+    min_dist = 100.
+    min_zma = []
+    for zma in cnf_zmas:
+        zmas, gras = automol.zmatrix.ts._shifted_standard_forms_with_gaphs([zma])
+        zma = zmas[0]
+        geo = automol.zmatrix.geometry(zma)
+        dist = automol.geom.distance(geo, *list(dist_coords))
+        if dist < min_dist:
+            min_dist = dist
+            min_zma = zma
+    min_zma = [min_zma]
+    return min_zma
+
+
 def locs_sort(save_fs):
     """ sort trajectory file according to energies
     """
