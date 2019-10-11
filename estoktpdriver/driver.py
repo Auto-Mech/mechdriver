@@ -92,11 +92,11 @@ if MECH_TYPE == 'CHEMKIN':
     MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
     SPC_STR = open(os.path.join(MECH_PATH, 'species.csv')).read()
 
-    SMI_DCT = chemkin_io.mechparser.mechanism.species_name_smiles_dct(SPC_STR)
-    ICH_DCT = chemkin_io.mechparser.mechanism.species_name_inchi_dct(SPC_STR)
-    MUL_DCT = chemkin_io.mechparser.mechanism.species_name_mult_dct(SPC_STR)
-    CHG_DCT = chemkin_io.mechparser.mechanism.species_name_charge_dct(SPC_STR)
-    SENS_DCT = chemkin_io.mechparser.mechanism.species_name_sens_dct(SPC_STR)
+    SMI_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'smiles')
+    ICH_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'inchi')
+    MUL_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'mult')
+    CHG_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'charge')
+    SENS_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'sens')
     #ICH_DCT = {}
     #for name in SMI_DCT:
         #print('smiles test:', name, SMI_DCT[name])
@@ -130,8 +130,6 @@ if MECH_TYPE == 'CHEMKIN':
 
         with open(os.path.join(MECH_PATH, 'species_stereo.csv'), 'w') as stereo_csv_file:
             stereo_csv_file.write(SPC_STR)
-
-        # ICH_DCT = chemkin_io.mechparser.mechanism.species_name_inchi_dct(SPC_STR)
 
     #SPC_TAB['charge'] = 0
     #print('SPC_TAB:', SPC_TAB)
@@ -176,12 +174,12 @@ if MECH_TYPE == 'CHEMKIN':
         SPC_DCT[name]['mul'] = MUL_DCT[name]
         SPC_NAMES.append(name)
 
-    RXN_BLOCK_STR = chemkin_io.mechparser.mechanism.reaction_block(MECH_STR)
-    RXN_STRS = chemkin_io.mechparser.reaction.data_strings(RXN_BLOCK_STR)
+    RXN_BLOCK_STR = chemkin_io.parser.mechanism.reaction_block(MECH_STR)
+    RXN_STRS = chemkin_io.parser.reaction.data_strings(RXN_BLOCK_STR)
     RCT_NAMES_LST = list(
-        map(chemkin_io.mechparser.reaction.reactant_names, RXN_STRS))
+        map(chemkin_io.parser.reaction.reactant_names, RXN_STRS))
     PRD_NAMES_LST = list(
-        map(chemkin_io.mechparser.reaction.product_names, RXN_STRS))
+        map(chemkin_io.parser.reaction.product_names, RXN_STRS))
 
     # Sort reactant and product name lists by formula to facilitate
     # multichannel, multiwell rate evaluations
