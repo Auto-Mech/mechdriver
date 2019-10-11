@@ -245,7 +245,7 @@ def infinite_separation_energy(
 
 def run_multiref_rscan(
         formula, high_mul, zma, spc_info, thy_level, dist_name, grid1, grid2,
-        scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True,
+        scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True, hessian=False,
         **kwargs):
     """ run constrained optimization scan
     """
@@ -320,6 +320,7 @@ def run_multiref_rscan(
         thy_level=thy_level,
         overwrite=overwrite,
         update_guess=update_guess,
+        hessian=hessian,
         **opt_kwargs,
     )
 
@@ -345,14 +346,16 @@ def run_multiref_rscan(
         thy_level=thy_level,
         overwrite=overwrite,
         update_guess=update_guess,
+        hessian=hessian,
         **opt_kwargs,
     )
 
 
 def _run_1d_scan(
-        script_str, prefixes, guess_zma, coo_name, grid_idxs, grid_vals, 
-        spc_info, thy_level, overwrite, errors=(),
-        options_mat=(), retry_failed=True, update_guess=True, saddle=False, **kwargs):
+        script_str, prefixes, guess_zma, coo_name, grid_idxs, grid_vals,
+        spc_info, thy_level, overwrite, errors=(), options_mat=(),
+        retry_failed=True, update_guess=True, saddle=False, hessian=False,
+        **kwargs):
 
     npoints = len(grid_idxs)
     assert len(grid_vals) == len(prefixes) == npoints
@@ -380,16 +383,39 @@ def _run_1d_scan(
 
         ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
         #print('update_guess and ret test:', update_guess, ret)
-        if update_guess and ret is not None:
+        if ret is not None:
             inf_obj, _, out_str = ret
             prog = inf_obj.prog
-            guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+            opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+            if update_guess:
+                guess_zma = opt_zma 
+
+        if hessian:
+            moldr.driver.run_job(
+                job=elstruct.Job.HESSIAN,
+                script_str=script_str,
+                run_fs=run_fs,
+                geom=opt_zma,
+                spc_info=spc_info,
+                thy_level=thy_level,
+                overwrite=overwrite,
+                frozen_coordinates=[coo_name],
+                errors=errors,
+                options_mat=options_mat,
+                retry_failed=retry_failed,
+                saddle=saddle,
+                **kwargs
+            )
+
+            ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
 
 
 def _run_2d_scan(
         script_str, prefixes, guess_zma, coo_names, grid_idxs, grid_vals, 
         spc_info, thy_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False, **kwargs):
+    """ run 2-dimensional scan with constrained optimization
+    """
 
     npoints = len(grid_idxs)
     assert len(grid_vals[0]) * len(grid_vals[1]) == len(prefixes) == npoints
@@ -426,7 +452,8 @@ def _run_2d_scan(
                 prog = inf_obj.prog
                 guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
-def save_scan(scn_run_fs, scn_save_fs, coo_names):
+
+def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=True):
     """ save the scans that have been run so far
     """
     if not scn_run_fs.branch.exists([coo_names]):
@@ -463,6 +490,14 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names):
                 scn_save_fs.leaf.file.zmatrix.write(zma, locs)
 
                 locs_lst.append(locs)
+                if hessian:
+                    ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
+                    if ret:
+                        inf_obj, inp_str, out_str = ret
+                        prog = inf_obj.prog
+                        method = inf_obj.method
+                        hess = elstruct.reader.hessian(prog, method, out_str)
+                        scn_save_fs.leaf.file.hessian.write(geo, locs)
 
         if locs_lst:
             idxs_lst = [locs[-1] for locs in locs_lst]

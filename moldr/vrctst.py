@@ -224,3 +224,46 @@ def calc_pivot_xyzs(min_idx, max_idx, total_geom, frag_geoms):
         xyzs.append(xyz)
 
     return xyzs
+
+
+def build_correction_potential(
+    mep_vals,
+    potentials,
+    bond_form_idxs,
+    fortran_compiler,
+    fortran_make_path,
+    bond_form_syms=(),
+    species_name='',
+    pot_labels=(),
+    pot_file_names=()):
+    """  use the MEP potentials to compile the correction potential .so file
+    """
+
+    # Write strings corresponding to each of the correction potential files
+    species_corr_str = varecof_io.writer.corr_potentials.species(
+        mep_distances,
+        potentials,
+        bnd_frm_idxs,
+        bnd_frm_syms=bnd_frm_syms,
+        species_name=species_name,
+        pot_labels=pot_labels)
+    dummy_corr_str = varecof_io.writer.corr_potentials.dummy()
+    pot_aux_str = varecof_io.writer.corr_potentials.auxiliary()
+    makefile_str = varecof_io.writer.corr_potentials.makefile(
+        fortran_compiler,
+        pot_file_names=pot_file_names)
+
+    # Write all of the files needed to build the correction potential
+    with open('mol_corr.f', 'w') as mol_corr_file:
+        mol_corr_file.write(species_corr_str)
+    with open('dummy_corr.f', 'w') as dummy_corr_file:
+        dummy_corr_file.write(dummy_corr_str)
+    with open('pot_aux.f', 'w') as pot_aux_file:
+        pot_aux_file.write(pot_aux_str)
+    with open('makefile', 'w') as makefile_file:
+        makefile_file.write(makefile_str)
+
+    # Compile the correction potential
+    varecof_io.writer.corr_potentials.compile_corr_pot(
+        fortran_make_path)
+
