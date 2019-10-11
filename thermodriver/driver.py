@@ -47,7 +47,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
 
     #Run ESDriver
     if runes:
-        runspecies = [{'species': full_queue, 'reactants': [], 'products': []}]
+        runspecies = [{'species': full_queue, 'reacs': [], 'prods': []}]
         esdriver.driver.run(tsk_info_lst, es_dct, runspecies, spcdct, run_prefix, save_prefix)
 
     geo_lvl = ''
@@ -179,6 +179,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
                 spc_info = spcdct[spc]['spc_info']
                 ene = scripts.thermo.get_electronic_energy(
                     spc_info, geo_thy_info, ene_thy_info, save_prefix)
+                print('ene test:', ene, ene_coeff[ene_idx], ene_idx)
                 spcdct[spc]['ene'] += ene*ene_coeff[ene_idx]
             ene_idx += 1
     ene_str += '!               '.join(ene_strl)
@@ -328,7 +329,7 @@ def fix(tsk_info_lst):
     for tsk in tsk_info_lst:
         if tsk[0] == 'conf_energy':
             has_sp = True
-        if tsk[0] == 'geom' or tsk[0] == 'opt':
+        if 'find' in tsk[0] or tsk[0] == 'opt':
             last_geom = ['conf_energy']
             last_geom.extend(tsk[1:-1])
             last_geom.append(False)

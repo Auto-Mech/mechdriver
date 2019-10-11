@@ -87,9 +87,12 @@ def get_hf0k(spc, spc_dct, spc_bas):
     h_basis = basis_energy(spc_bas, spc_dct)
     coeff = get_coeff(spc, spc_dct, spc_bas)
 
+    print('hf0k test:', spc, spc_dct[spc]['ene'], spc_dct[spc]['zpe'], spc_ene, spc_bas, h_basis, coeff)
+
     # Get the 0 K heat of formation
     # ref_set should be a parameter for this routine
-    h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ATcT')
+    h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ANL0')
+    #h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ATcT')
     return h0form
 
 
@@ -140,8 +143,7 @@ def get_spc_input(spc, spc_dct_i, spc_info, spc_save_path, pf_levels, spc_model)
         projrot_script_str=PROJROT_SCRIPT_STR,
         save_prefix=spc_save_path,
         )
-    print(spc_str)
-    return spc_str
+    return spc_str[0]
 
 
 def get_pf_header(temp_step, ntemps):
@@ -188,6 +190,7 @@ def get_pf_input(spc, spc_str, global_pf_str, zpe_str):
 
     # create a messpf input file
     spc_head_str = 'Species ' + spc
+    print('pf string test:', global_pf_str, spc_head_str, spc_str, zpe_str)
     pf_inp_str = '\n'.join(
         [global_pf_str, spc_head_str,
          spc_str, zpe_str, '\n'])

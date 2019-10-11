@@ -61,7 +61,6 @@ def reference_geometry(
             print('found initial geometry from geometry dictionary')
         else:
         # Check to see if geo already exists at running_theory
-            print('entering first else:')
             if thy_save_fs.leaf.file.geometry.exists(thy_level[1:4]):
                 # print('geo exists in file system:')
                 thy_path = thy_save_fs.leaf.path(thy_level[1:4])
