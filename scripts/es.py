@@ -315,6 +315,8 @@ def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, overwrite)
 
 
 def get_spc_run_path(run_prefix, spc_info):
+    """ create species run path
+    """
     spc_run_fs = autofile.fs.species(run_prefix)
     spc_run_fs.leaf.create(spc_info)
     spc_run_path = spc_run_fs.leaf.path(spc_info)
@@ -322,23 +324,17 @@ def get_spc_run_path(run_prefix, spc_info):
 
 
 def get_spc_save_path(save_prefix, spc_info):
+    """ create species save path
+    """
     spc_save_fs = autofile.fs.species(save_prefix)
     spc_save_fs.leaf.create(spc_info)
     spc_save_path = spc_save_fs.leaf.path(spc_info)
     return spc_save_path
 
 
-def get_thy_save_fs(save_prefix, spc_info, thy_info):
-    orb_restr = moldr.util.orbital_restriction(
-        spc_info, thy_info)
-    thy_lvl = thy_info[0:3]
-    thy_lvl.append(orb_restr)
-    spc_save_path = get_spc_save_path(save_prefix, spc_info)
-    thy_save_fs = autofile.fs.theory(spc_save_path)
-    return thy_save_fs, thy_lvl
-
-
 def get_thy_run_path(run_prefix, spc_info, thy_info):
+    """ create theory run path
+    """
     orb_restr = moldr.util.orbital_restriction(
         spc_info, thy_info)
     thy_lvl = thy_info[0:3]
@@ -350,7 +346,21 @@ def get_thy_run_path(run_prefix, spc_info, thy_info):
     return thy_run_path
 
 
+def get_thy_save_fs(save_prefix, spc_info, thy_info):
+    """ create theory save filesystem
+    """
+    orb_restr = moldr.util.orbital_restriction(
+        spc_info, thy_info)
+    thy_lvl = thy_info[0:3]
+    thy_lvl.append(orb_restr)
+    spc_save_path = get_spc_save_path(save_prefix, spc_info)
+    thy_save_fs = autofile.fs.theory(spc_save_path)
+    return thy_save_fs, thy_lvl
+
+
 def get_thy_save_path(save_prefix, spc_info, thy_info):
+    """ create theory save path
+    """
     orb_restr = moldr.util.orbital_restriction(
         spc_info, thy_info)
     thy_lvl = thy_info[0:3]
@@ -363,6 +373,8 @@ def get_thy_save_path(save_prefix, spc_info, thy_info):
 
 
 def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
+    """ prepare rxn info and reverse reactants and products if reaction is endothermic
+    """
     rxn_ichs = [[], []]
     rxn_chgs = [[], []]
     rxn_muls = [[], []]
@@ -399,16 +411,16 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
     # set up the filesystem
     rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
         rxn_ichs, rxn_chgs, rxn_muls)
-    low_mul = min(automol.mult.ts._low(rxn_muls[0]),
-        automol.mult.ts._low(rxn_muls[1]))
-    high_mul = max(automol.mult.ts._high(rxn_muls[0]),
-        automol.mult.ts._high(rxn_muls[1]))
-   
+    low_mul = min(
+        automol.mult.ts._low(rxn_muls[0]), automol.mult.ts._low(rxn_muls[1]))
+    high_mul = max(
+        automol.mult.ts._high(rxn_muls[0]), automol.mult.ts._high(rxn_muls[1]))
+
     return rxn_ichs, rxn_chgs, rxn_muls, low_mul, high_mul
 
 
 def get_rxn_fs(run_prefix, save_prefix, ts):
-    """get filesystems for a reaction
+    """ get filesystems for a reaction
     """
     rxn_ichs = ts['rxn_ichs']
     rxn_chgs = ts['rxn_chgs']
@@ -440,7 +452,7 @@ def get_zmas(
         ich = spc_dct[reacs[-1]]['ich']
         ichgeo = automol.inchi.geometry(ich)
         ichzma = automol.geom.zmatrix(ichgeo)
-        reacs = reacs[:-1] 
+        reacs = reacs[:-1]
     elif len(prods) > 2:
         ich = spc_dct[prods[-1]]['ich']
         ichgeo = automol.inchi.geometry(ich)
@@ -615,167 +627,167 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
     if typ is None:
         print("Failed to classify reaction.")
-        return [],[]
-    else:
+        return [], []
+
+    if rad_rad:
+        typ = 'radical radical ' + typ
+    print("Type: {}".format(typ))
+    if bkp_typ:
         if rad_rad:
-            typ = 'radical radical ' + typ
-        print("Type: {}".format(typ))
-        if bkp_typ:
-            if rad_rad:
-                bkp_typ = 'radical radical ' + bkp_typ
+            bkp_typ = 'radical radical ' + bkp_typ
 
-        # determine the grid
-        dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
-        syms = automol.zmatrix.symbols(ts_zma)
-        bnd_len_key = tuple(sorted(map(syms.__getitem__, dist_coo)))
+    # determine the grid
+    dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
+    syms = automol.zmatrix.symbols(ts_zma)
+    bnd_len_key = tuple(sorted(map(syms.__getitem__, dist_coo)))
 
-        bnd_len_dct = {
-            ('C', 'C'): 1.54 * ANG2BOHR,
-            ('C', 'H'): 1.09 * ANG2BOHR,
-            ('H', 'H'): 0.74 * ANG2BOHR,
-            ('N', 'N'): 1.45 * ANG2BOHR,
-            ('O', 'O'): 1.48 * ANG2BOHR,
-            ('C', 'N'): 1.47 * ANG2BOHR,
-            ('C', 'O'): 1.43 * ANG2BOHR,
-            ('H', 'O'): 1.20 * ANG2BOHR,
-        }
+    bnd_len_dct = {
+        ('C', 'C'): 1.54 * ANG2BOHR,
+        ('C', 'H'): 1.09 * ANG2BOHR,
+        ('H', 'H'): 0.74 * ANG2BOHR,
+        ('N', 'N'): 1.45 * ANG2BOHR,
+        ('O', 'O'): 1.48 * ANG2BOHR,
+        ('C', 'N'): 1.47 * ANG2BOHR,
+        ('C', 'O'): 1.43 * ANG2BOHR,
+        ('H', 'O'): 1.20 * ANG2BOHR,
+    }
 
-        npoints = 8
-        npoints1 = 4
-        npoints2 = 4
-        if 'beta scission' in bkp_typ:
-            rmin = 1.4 * ANG2BOHR
-            rmax = 2.0 * ANG2BOHR
-            if bnd_len_key in bnd_len_dct:
-                bnd_len = bnd_len_dct[bnd_len_key]
-                rmin = bnd_len + 0.1 * ANG2BOHR
-                rmax = bnd_len + 0.5 * ANG2BOHR
-            bkp_grid = numpy.linspace(rmin, rmax, npoints)
-            bkp_update_guess = False
-        elif 'addition' in bkp_typ:
-            rmin = 1.6 * ANG2BOHR
-            rmax = 2.8 * ANG2BOHR
-            if bnd_len_key in bnd_len_dct:
-                bnd_len = bnd_len_dct[bnd_len_key]
-                rmin = bnd_len + 0.2 * ANG2BOHR
-                rmax = bnd_len + 1.4 * ANG2BOHR
-            bkp_grid = numpy.linspace(rmin, rmax, npoints)
-            bkp_update_guess = False
+    npoints = 8
+    npoints1 = 4
+    npoints2 = 4
+    if 'beta scission' in bkp_typ:
+        rmin = 1.4 * ANG2BOHR
+        rmax = 2.0 * ANG2BOHR
+        if bnd_len_key in bnd_len_dct:
+            bnd_len = bnd_len_dct[bnd_len_key]
+            rmin = bnd_len + 0.1 * ANG2BOHR
+            rmax = bnd_len + 0.5 * ANG2BOHR
+        bkp_grid = numpy.linspace(rmin, rmax, npoints)
+        bkp_update_guess = False
+    elif 'addition' in bkp_typ:
+        rmin = 1.6 * ANG2BOHR
+        rmax = 2.8 * ANG2BOHR
+        if bnd_len_key in bnd_len_dct:
+            bnd_len = bnd_len_dct[bnd_len_key]
+            rmin = bnd_len + 0.2 * ANG2BOHR
+            rmax = bnd_len + 1.4 * ANG2BOHR
+        bkp_grid = numpy.linspace(rmin, rmax, npoints)
+        bkp_update_guess = False
 
-        if 'beta scission' in typ:
-            rmin = 1.4 * ANG2BOHR
-            rmax = 2.0 * ANG2BOHR
-            if bnd_len_key in bnd_len_dct:
-                bnd_len = bnd_len_dct[bnd_len_key]
-                rmin = bnd_len + 0.1 * ANG2BOHR
-                rmax = bnd_len + 0.5 * ANG2BOHR
-            grid = numpy.linspace(rmin, rmax, npoints)
-            update_guess = False
+    if 'beta scission' in typ:
+        rmin = 1.4 * ANG2BOHR
+        rmax = 2.0 * ANG2BOHR
+        if bnd_len_key in bnd_len_dct:
+            bnd_len = bnd_len_dct[bnd_len_key]
+            rmin = bnd_len + 0.1 * ANG2BOHR
+            rmax = bnd_len + 0.5 * ANG2BOHR
+        grid = numpy.linspace(rmin, rmax, npoints)
+        update_guess = False
 
-        elif 'radical radical addition' in typ:
-            rstart = 2.4 * ANG2BOHR
-            rend1 = 3.0 * ANG2BOHR
-            rend2 = 1.8 * ANG2BOHR
-            grid1 = numpy.linspace(rstart, rend1, npoints1)
-            grid2 = numpy.linspace(rstart, rend2, npoints2)
-            grid2 = numpy.delete(grid2, 0)
-            grid = [grid1, grid2]
+    elif 'radical radical addition' in typ:
+        rstart = 2.4 * ANG2BOHR
+        rend1 = 3.0 * ANG2BOHR
+        rend2 = 1.8 * ANG2BOHR
+        grid1 = numpy.linspace(rstart, rend1, npoints1)
+        grid2 = numpy.linspace(rstart, rend2, npoints2)
+        grid2 = numpy.delete(grid2, 0)
+        grid = [grid1, grid2]
+        update_guess = True
+
+    elif 'addition' in typ:
+        rmin = 1.6 * ANG2BOHR
+        rmax = 2.8 * ANG2BOHR
+        if bnd_len_key in bnd_len_dct:
+            bnd_len = bnd_len_dct[bnd_len_key]
+            rmin = bnd_len + 0.2 * ANG2BOHR
+            rmax = bnd_len + 1.4 * ANG2BOHR
+        grid = numpy.linspace(rmin, rmax, npoints)
+        update_guess = False
+
+    elif 'hydrogen migration' in typ:
+
+        interval = 0.2*ANG2BOHR
+        rmin = 1.4 * ANG2BOHR
+        rmax = 2.8 * ANG2BOHR
+        if bnd_len_key in bnd_len_dct:
+            rmax = bnd_len_dct[bnd_len_key]
+            rmin1 = 2.*ANG2BOHR
+            rmin2 = 1.1*ANG2BOHR
+            if rmax > rmin:
+                npoints = (rmax-rmin)/interval
+                grid1 = numpy.linspace(rmax, rmin, npoints)
+            else:
+                grid1 = []
+            grid2 = numpy.linspace(rmin1, rmin2, 9)
+            grid = numpy.concatenate((grid1, grid2), axis=None)
             update_guess = True
 
-        elif 'addition' in typ:
-            rmin = 1.6 * ANG2BOHR
-            rmax = 2.8 * ANG2BOHR
-            if bnd_len_key in bnd_len_dct:
-                bnd_len = bnd_len_dct[bnd_len_key]
-                rmin = bnd_len + 0.2 * ANG2BOHR
-                rmax = bnd_len + 1.4 * ANG2BOHR
-            grid = numpy.linspace(rmin, rmax, npoints)
+    elif 'elimination' in typ:
+
+        brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
+        brk_len_key = tuple(sorted(map(syms.__getitem__, brk_coo)))
+
+        interval = 0.2*ANG2BOHR
+        rmin = 1.4 * ANG2BOHR
+        rmax = 2.8 * ANG2BOHR
+        if bnd_len_key in bnd_len_dct:
+            bnd_len = bnd_len_dct[bnd_len_key]
+            brk_len = bnd_len_dct[brk_len_key]
+            r1min = bnd_len + 0.2 * ANG2BOHR
+            r1max = bnd_len + 1.4 * ANG2BOHR
+            r2min = brk_len + 0.2 * ANG2BOHR
+            r2max = brk_len + 0.8 * ANG2BOHR
+            grid1 = numpy.linspace(r1min, r1max, 8)
+            grid2 = numpy.linspace(r2min, r2max, 4)
+            grid = [grid1, grid2]
             update_guess = False
 
-        elif 'hydrogen migration' in typ:
+    elif 'hydrogen abstraction' in typ:
+        npoints = 16
+        rmin = 0.7 * ANG2BOHR
+        rmax = 2.2 * ANG2BOHR
+        if bnd_len_key in bnd_len_dct:
+            bnd_len = bnd_len_dct[bnd_len_key]
+            rmin = bnd_len
+            rmax = bnd_len + 1.0 * ANG2BOHR
+        grid = numpy.linspace(rmin, rmax, npoints)
+        update_guess = False
 
-            interval = 0.2*ANG2BOHR
-            rmin = 1.4 * ANG2BOHR
-            rmax = 2.8 * ANG2BOHR
-            if bnd_len_key in bnd_len_dct:
-                rmax = bnd_len_dct[bnd_len_key]
-                rmin1 = 2.*ANG2BOHR
-                rmin2 = 1.1*ANG2BOHR
-                if rmax > rmin:
-                    npoints = (rmax-rmin)/interval
-                    grid1 = numpy.linspace(rmax, rmin, npoints)
-                else:
-                    grid1 = []
-                grid2 = numpy.linspace(rmin1, rmin2, 9)
-                grid = numpy.concatenate((grid1, grid2), axis=None)
-                update_guess = True
+    elif 'substitution' in typ:
+        rmin = 0.7 * ANG2BOHR
+        rmax = 2.4 * ANG2BOHR
+        if bnd_len_key in bnd_len_dct:
+            bnd_len = bnd_len_dct[bnd_len_key]
+            rmin = bnd_len
+            rmax = bnd_len + 1.4 * ANG2BOHR
+        grid = numpy.linspace(rmin, rmax, npoints)
+        update_guess = False
 
-        elif 'elimination' in typ:
+    elif 'insertion' in typ:
+        rmin = 1.4 * ANG2BOHR
+        rmax = 2.4 * ANG2BOHR
+        if bnd_len_key in bnd_len_dct:
+            bnd_len = bnd_len_dct[bnd_len_key]
+            rmin = bnd_len
+            rmax = bnd_len + 1.4 * ANG2BOHR
+        grid = numpy.linspace(rmin, rmax, npoints)
+        update_guess = False
 
-            brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
-            brk_len_key = tuple(sorted(map(syms.__getitem__, brk_coo)))
+    elif 'radical radical' in typ:
+        grid = None
+        update_guess = False
 
-            interval = 0.2*ANG2BOHR
-            rmin = 1.4 * ANG2BOHR
-            rmax = 2.8 * ANG2BOHR
-            if bnd_len_key in bnd_len_dct:
-                bnd_len = bnd_len_dct[bnd_len_key]
-                brk_len = bnd_len_dct[brk_len_key]
-                r1min = bnd_len + 0.2 * ANG2BOHR
-                r1max = bnd_len + 1.4 * ANG2BOHR
-                r2min = brk_len + 0.2 * ANG2BOHR
-                r2max = brk_len + 0.8 * ANG2BOHR
-                grid1 = numpy.linspace(r1min, r1max, 8)
-                grid2 = numpy.linspace(r2min, r2max, 4)
-                grid = [grid1, grid2]
-                update_guess = False
+    if typ:
+        ts_class_data = [typ, ts_zma, dist_name, brk_name, grid, tors_names, update_guess]
+    else:
+        ts_class_data = []
+    if bkp_typ:
+        bkp_ts_class_data = [
+            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess]
+    else:
+        bkp_ts_class_data = []
 
-        elif 'hydrogen abstraction' in typ:
-            npoints = 16
-            rmin = 0.7 * ANG2BOHR
-            rmax = 2.2 * ANG2BOHR
-            if bnd_len_key in bnd_len_dct:
-                bnd_len = bnd_len_dct[bnd_len_key]
-                rmin = bnd_len
-                rmax = bnd_len + 1.0 * ANG2BOHR
-            grid = numpy.linspace(rmin, rmax, npoints)
-            update_guess = False
-
-        elif 'substitution' in typ:
-            rmin = 0.7 * ANG2BOHR
-            rmax = 2.4 * ANG2BOHR
-            if bnd_len_key in bnd_len_dct:
-                bnd_len = bnd_len_dct[bnd_len_key]
-                rmin = bnd_len
-                rmax = bnd_len + 1.4 * ANG2BOHR
-            grid = numpy.linspace(rmin, rmax, npoints)
-            update_guess = False
-
-        elif 'insertion' in typ:
-            rmin = 1.4 * ANG2BOHR
-            rmax = 2.4 * ANG2BOHR
-            if bnd_len_key in bnd_len_dct:
-                bnd_len = bnd_len_dct[bnd_len_key]
-                rmin = bnd_len
-                rmax = bnd_len + 1.4 * ANG2BOHR
-            grid = numpy.linspace(rmin, rmax, npoints)
-            update_guess = False
-
-        elif 'radical radical' in typ:
-            grid = None
-            update_guess = False
-
-        if typ:
-            ts_class_data = [typ, ts_zma, dist_name, brk_name, grid, tors_names, update_guess]
-        else:
-            ts_class_data = []
-        if bkp_typ:
-            bkp_ts_class_data = [
-                bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess]
-        else:
-            bkp_ts_class_data = []
-        
-        return ts_class_data, bkp_ts_class_data
+    return ts_class_data, bkp_ts_class_data
 
 def find_ts(
         ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data,
@@ -844,7 +856,7 @@ def find_ts(
         is_bkp = False
         if chk_bkp and bkp_ts_class_data:
             [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names,
-                bkp_update_guess] = bkp_ts_class_data
+             bkp_update_guess] = bkp_ts_class_data
             if automol.zmatrix.names(zma) == automol.zmatrix.names(bkp_ts_zma):
                 if automol.zmatrix.almost_equal(zma, bkp_ts_zma, 4e-1, True):
                     is_bkp = True
@@ -853,7 +865,7 @@ def find_ts(
                     if automol.zmatrix.values(bkp_ts_zma)['babs1'] == babs1:
                         babs1 = 90. * qcc.conversion_factor('degree', 'radian')
                     bkp_ts_zma = automol.zmatrix.set_value(bkp_ts_zma, {'babs1': babs1})
-                    if not automol.zmatrix.almost_equal(zma,  bkp_ts_zma, 4e-1):
+                    if not automol.zmatrix.almost_equal(zma, bkp_ts_zma, 4e-1):
                         is_bkp = True
         if not chk_bkp:
             print("TS is type {}".format(typ))
@@ -862,7 +874,7 @@ def find_ts(
             ts_dct['class'] = bkp_typ
             ts_dct['original_zma'] = bkp_ts_zma
             ts_dct['dist_info'] = bkp_dist_info
-            ts_dct['tors_names'] =  bkp_tors_names
+            ts_dct['tors_names'] = bkp_tors_names
             print("TS is backup type {}".format(bkp_typ))
         else:
             print("TS is not original type or backup type")
@@ -876,18 +888,21 @@ def find_ts(
               cnf_run_fs, cnf_save_fs, None, None,
               scn_run_fs, scn_save_fs, run_fs]
 
-        new_grid=False
+        new_grid = False
         if attempt > 1:
-            new_grid=True
+            new_grid = True
         print('running ts scan:')
         if 'radical radical addition' in typ:
-            # run mep scan 
+            # run mep scan
             ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
             grid1 = grid[0]
             grid2 = grid[1]
             grid = numpy.append(grid[0], grid[1])
             high_mul = ts_dct['high_mul']
             print('starting multiref scan:', scn_run_fs.trunk.path())
+            vtst = True
+            if vtst:
+                hessian = True
             moldr.scan.run_multiref_rscan(
                 formula=ts_formula,
                 high_mul=high_mul,
@@ -902,6 +917,7 @@ def find_ts(
                 script_str=opt_script_str,
                 overwrite=overwrite,
                 update_guess=update_guess,
+                hessian=hessian,
                 **opt_kwargs
             )
 
@@ -914,16 +930,17 @@ def find_ts(
             #loc = [[dist_name], [grid1[0]]]
             loc = [[dist_name], [00]]
             ts_zma = scn_save_fs.leaf.file.zmatrix.read(loc)
-        # calculate the infinite seperation energyA
-            first get the energy for the reference geometry and reference energy
+        # calculate the infinite seperation energy
+            #first get the energy for the reference geometry and reference energy
 
-            inf_sep_ene = infinite_separation_energy(
+            # inf_sep_ene = infinite_separation_energy(
         # continue on to finish setting up the correction potential
+
 
         # now call vrctst which sets up all the vrctst files
             input_strs = moldr.vrctst.input_prep(ts_zma, dist_name)
             [struct_inp_str, lr_divsur_inp_str, sr_divsur_inp_str, tst_inp_str,
-            els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
+             els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
 
         # generate the molpro template file
                   # Write the *.tml input string
@@ -934,7 +951,8 @@ def find_ts(
 
             ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
 
-            _, wfn_str = moldr.ts.cas_options(ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+            _, wfn_str = moldr.ts.cas_options(
+                ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
             method = '{rs2c, shift=0.25}'
             inf_sep_energy = -78.137635
             tml_inp_str = varecof_io.writer.input_file.tml(
@@ -945,9 +963,9 @@ def find_ts(
             vrc_path = os.path.join(os.getcwd(), 'vrc')
             scr_path = os.path.join(vrc_path, 'scratch')
             os.makedirs(vrc_path, exist_ok=True)
-            os.makedirs(vrc_path, exist_ok=True)
+            os.makedirs(scr_path, exist_ok=True)
             machines = ['b450:8', 'b451:8', 'b452:8', 'b453:8']
-            
+
             print('vrc_path test:', vrc_path)
             with open(os.path.join(vrc_path, 'machines'), 'w') as machine_file:
                 for machine in machines:

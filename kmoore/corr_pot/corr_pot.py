@@ -30,7 +30,7 @@ def build_correction_potential(
     fortran_make_path,
     bond_form_syms=(),
     species_name='',
-    pot_labels=()
+    pot_labels=(),
     pot_file_names=()):
     """  use the MEP potentials to compile the correction potential .so file
     """
