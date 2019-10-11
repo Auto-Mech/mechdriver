@@ -883,17 +883,11 @@ def find_ts(
         if 'radical radical addition' in typ:
             # run mep scan 
             ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
-            print('grid 0 test:', grid[0])
-            print('grid 1 test:', grid[1])
             grid1 = grid[0]
             grid2 = grid[1]
             grid = numpy.append(grid[0], grid[1])
-            print('grid test:', grid)
             high_mul = ts_dct['high_mul']
             print('starting multiref scan:', scn_run_fs.trunk.path())
-            # print('starting multiref scan:', scn_run_fs.leaf.path())
-            print('formulat test:', ts_formula)
-            print('ts_zma test:', ts_zma)
             moldr.scan.run_multiref_rscan(
                 formula=ts_formula,
                 high_mul=high_mul,
@@ -920,7 +914,10 @@ def find_ts(
             #loc = [[dist_name], [grid1[0]]]
             loc = [[dist_name], [00]]
             ts_zma = scn_save_fs.leaf.file.zmatrix.read(loc)
-        # calculate the infinite seperation energy
+        # calculate the infinite seperation energyA
+            first get the energy for the reference geometry and reference energy
+
+            inf_sep_ene = infinite_separation_energy(
         # continue on to finish setting up the correction potential
 
         # now call vrctst which sets up all the vrctst files

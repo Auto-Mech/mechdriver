@@ -751,15 +751,20 @@ def get_zero_point_energy(
         # modify har_zpe
 
         hind_rot_str = ""
+        if tors_min_cnf_locs is not None:
+            if har_cnf_save_fs.trunk.file.info.exists():
+                inf_obj_s = har_cnf_save_fs.trunk.file.info.read()
+                tors_ranges = inf_obj_s.tors_ranges
+                tors_ranges = autofile.info.dict_(tors_ranges)
+                print(tors_ranges)
+                tors_names = list(tors_ranges.keys())
+            else:
+                print('No inf obj to identify torsional angles')
+                tors_names = []
 
         min_ene = tors_cnf_save_fs.leaf.file.energy.read(tors_min_cnf_locs)
         tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
-        if 'ts_' in spc:
-            zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
-            tors_names = spc_dct_i['tors_names']
-        else:
-            zma = automol.geom.zmatrix(tors_geo)
-            tors_names = automol.geom.zmatrix_torsion_coordinate_names(tors_geo)
+        zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
         gra = automol.zmatrix.graph(zma, remove_stereo=True)
         tors_zpe_cor = 0.0
         if tors_names:
@@ -769,9 +774,18 @@ def get_zero_point_energy(
             # prepare axis, group, info
             scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
             pot = []
-            for tors_name in tors_names:
+            scan_increment = 30.
+            val_dct = automol.zmatrix.values(zma)
+            tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                zma, tors_names, scan_increment)
+            tors_grids = [numpy.linspace(*linspace) + val_dct[name]
+                          for name, linspace in zip(tors_names, tors_linspaces)]
+            for tors_name, tors_grid in zip(tors_names, tors_grids):
+                locs_lst = []
+                for grid_val in tors_grid:
+                    locs_lst.append([[tors_name], [grid_val]])
                 enes = [scn_save_fs.leaf.file.energy.read(locs) for locs
-                        in scn_save_fs.leaf.existing([[tors_name]])]
+                        in locs_lst]
                 enes = numpy.subtract(enes, min_ene)
                 pot = list(enes*EH2KCAL)
                 axis = coo_dct[tors_name][1:3]
@@ -782,9 +796,21 @@ def get_zero_point_energy(
                     set(axis))
                 group = list(numpy.add(group, 1))
                 axis = list(numpy.add(axis, 1))
-                sym = 1
+
+                #check for dummy transformations
+                atom_symbols = automol.zmatrix.symbols(zma)
+                dummy_idx = []
+                for atm_idx, atm in enumerate(atom_symbols):
+                    if atm == 'X':
+                        dummy_idx.append(atm_idx)
+                dummy_rem = numpy.zeros(len(zma[0]))
+                for dummy in dummy_idx:
+                    for idx, _ in enumerate(dummy_rem):
+                        if dummy < idx:
+                            dummy_rem[idx] += 1
+                sym = 1  #<<--------- This should be updated
                 hind_rot_str += mess_io.writer.rotor_hindered(
-                    group, axis, sym, pot)
+                    group, axis, sym, pot, dummy_rem)
 
             dummy_freqs = [1000.]
             dummy_zpe = 0.0

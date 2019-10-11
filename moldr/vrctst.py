@@ -19,15 +19,16 @@ def input_prep(ts_zma, dist_name):
     xyzs = calc_pivot_xyzs(min_idx, max_idx, total_geom, frag_geoms)
 
     # Write the long- and short-range divsur input files
-    rdists_lr = [8., 6., 5., 4.5, 4.]
+    r1dists_lr = [8., 6., 5., 4.5, 4.]
     #rdists_lr = [15., 12., 10., 9., 8.]
     lr_divsur_inp_str = varecof_io.writer.input_file.divsur(
-        rdists_lr, 1, 1, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
+        r1dists_lr, 1, 1, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
     print('\nlong-range divsur input file:')
     print(lr_divsur_inp_str)
 
     # Write the short-range divsur files
-    rdists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
+    r1dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
+    r2dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
     #rdists_sr = [8., 7.5, 7., 6.5, 6., 5.5, 5.25, 5., 4.75, 4.5, 4.25, 4., 3.75, 3.5]
     d1dists = [0.01, 0.5, 1.]
     d2dists = [0.01, 0.5, 1.]
@@ -46,14 +47,17 @@ def input_prep(ts_zma, dist_name):
         d2dists = [0.]
         t2angs = []
     #print('sr_divsur test:', rdists_sr, npivots, xyzs, frames, d1dists, d2dists, t1angs, t2angs)
+    conditions = {'delta_r': 0}
     sr_divsur_inp_str = varecof_io.writer.input_file.divsur(
-        rdists_sr, npivots[0], npivots[1], xyzs[0], xyzs[1],
+        r1dists_sr, npivots[0], npivots[1], xyzs[0], xyzs[1],
         frame1=frames[0],
         frame2=frames[1],
         d1dists=d1dists,
         d2dists=d2dists,
         t1angs=t1angs,
-        t2angs=t2angs)
+        t2angs=t2angs,
+        r2dists=r2dists_sr,
+        **conditions)
     print('\nshort-range divsur input file:')
     print(sr_divsur_inp_str)
                   # Write the structure input files

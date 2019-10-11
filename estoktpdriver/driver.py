@@ -32,7 +32,7 @@ if len(sys.argv) > 3:
     if len(sys.argv) > 4:
         CHANNELS = sys.argv[4]
 print('PESNUMS and CHANNELS:', PESNUMS, CHANNELS)
-RUN_THERMO = False
+RUN_THERMO = True
 RUN_RATES = True
 # 1. create run and save directories
 RUN_PREFIX = '/lcrc/project/PACC/run'
@@ -165,6 +165,7 @@ if MECH_TYPE == 'CHEMKIN':
     #print('SPC_NAMES')
     #print(SPC_NAMES)
     # SPC_INFO = {}
+    SPC_NAMES = []
     SPC_DCT = {}
     for name in MUL_DCT:
         SPC_DCT[name] = {}
@@ -173,6 +174,7 @@ if MECH_TYPE == 'CHEMKIN':
         SPC_DCT[name]['ich'] = ICH_DCT[name]
         SPC_DCT[name]['chg'] = CHG_DCT[name]
         SPC_DCT[name]['mul'] = MUL_DCT[name]
+        SPC_NAMES.append(name)
 
     RXN_BLOCK_STR = chemkin_io.mechparser.mechanism.reaction_block(MECH_STR)
     RXN_STRS = chemkin_io.mechparser.reaction.data_strings(RXN_BLOCK_STR)
@@ -696,20 +698,27 @@ OVERWRITE = False
 if RUN_THERMO:
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_samp', OPT_LVL1, OPT_LVL0, OVERWRITE],
-        ['conf_hess', OPT_LVL1, OPT_LVL1, OVERWRITE],
-        ['find_geom', OPT_LVL2, OPT_LVL1, OVERWRITE],
-        ['conf_hess', OPT_LVL2, OPT_LVL2, OVERWRITE],
-        ['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
-        ['conf_energy', SP_LVL1, OPT_LVL2, OVERWRITE],
-        ['conf_energy', SP_LVL2, OPT_LVL2, OVERWRITE],
-        ['conf_energy', SP_LVL3, OPT_LVL2, OVERWRITE],
-        ['sym_samp', OPT_LVL1, OPT_LVL1, OVERWRITE],
+        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['conf_energy', OPT_LVL0, OPT_LVL0, OVERWRITE]
+        #['conf_energy', SP_LVL1, OPT_LVL0, OVERWRITE]
+        #['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        #['conf_samp', OPT_LVL1, OPT_LVL0, OVERWRITE],
+        #['conf_hess', OPT_LVL1, OPT_LVL1, OVERWRITE],
+        #['find_geom', OPT_LVL2, OPT_LVL1, OVERWRITE],
+        #['conf_hess', OPT_LVL2, OPT_LVL2, OVERWRITE],
+        #['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
+        #['conf_energy', SP_LVL1, OPT_LVL2, OVERWRITE],
+        #['conf_energy', SP_LVL2, OPT_LVL2, OVERWRITE],
+        #['conf_energy', SP_LVL3, OPT_LVL2, OVERWRITE],
+        #['sym_samp', OPT_LVL1, OPT_LVL1, OVERWRITE],
         # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
         ]
 
-    ENE_COEFF = [0.0, -0.693, 1.693]
+    #ENE_COEFF = [0.0, -0.693, 1.693]
     #ENE_COEFF = [-0.4, 1.4]
+    ENE_COEFF = [1.]
 
     OPT_ES = True
     OPT_MESS = False
@@ -718,11 +727,12 @@ if RUN_THERMO:
     OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
     SPC_QUEUE = list(SPC_NAMES)
-    SPC_QUEUE = ['H2O2(11)']
+    #SPC_QUEUE = ['H2O2(11)']
     # SPC_QUEUE = ['CHOH']
     # SPC_QUEUE = ['CH2OH']
 
-    REF_MOLS = 'basic'
+    # REF_MOLS = 'basic'
+    REF_MOLS = 'cbh1'
     # REF_MOLS = [
         # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('O')
         # automol.smiles.inchi('C'),
@@ -741,15 +751,15 @@ if RUN_THERMO:
         TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
         SAVE_PREFIX, options=OPTIONS)
 
-    OPT_ES = False
+    OPT_ES = True
     OPT_MESS = True
     OPT_THERMO = True
-    OPT_ALLPF = True
+    OPT_ALLPF = False
     OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
     thermodriver.driver.run(
         TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
-        SAVE_PREFIX, ENE_COEFF, options=OPTIONS)
+        SAVE_PREFIX, ene_coeff=ENE_COEFF, options=OPTIONS)
 
 if RUN_RATES:
 
@@ -762,12 +772,13 @@ if RUN_RATES:
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
+        #['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
         #['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        #['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
         ['find_ts', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
+        ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
         ['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
         ['conf_energy', SP_LVL1, OPT_LVL0, OVERWRITE],
         # ['conf_energy', SP_LVL1, OPT_LVL1, OVERWRITE],

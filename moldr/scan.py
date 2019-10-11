@@ -191,7 +191,57 @@ def run_scan(
                 saddle=saddle,
                 **kwargs
             )
-    
+
+
+def infinite_separation_energy(
+        rct_zmas, rcts_spc_info, 
+        frag_geos, ref_sep_geo, ref_sep_ene, ts_mul, high_mul, frag_muls,
+        thy_info, multi_thy_info, 
+        scn_run_fs, scn_save_fs, script_str, overwrite, 
+        **kwargs):
+    """ Obtain the infinite separation energy from the multireference energy at a given 
+    reference point, the high-spin low-spin splitting at that reference point, and the 
+    high level energy for the high spin state at the reference geometry and for the fragments
+    """
+
+    delta_spin = multi_high_spin_energy - mult_low_spin_energy
+    ene_thy_geo1 = 
+    ene_thy_geo2 = 
+    ene_thy_ref_high_spin
+    ene_inf = ene_ref + delta_spin + ene_thy_geo1 + ene_thy_geo2 - ene_thy_ref_high_spin
+
+#    for spc in enumerate(rcts_spc_info):
+
+#        spc_run_fs = autofile.fs.species(run_prefix)
+#        spc_run_fs.leaf.create(spc_info)
+#        spc_run_path = spc_run_fs.leaf.path(spc_info)
+#        spc_save_fs = autofile.fs.species(save_prefix)
+#        spc_save_fs.leaf.create(spc_info)
+#        spc_save_path = spc_save_fs.leaf.path(spc_info)
+#
+#        orb_restr = moldr.util.orbital_restriction(
+#            spc_info, thy_info)
+#        thy_lvl = thy_info[0:3]
+#        thy_lvl.append(orb_restr)
+#        thy_run_fs = autofile.fs.theory(spc_run_path)
+#        thy_run_fs.leaf.create(thy_lvl)
+#        thy_run_path = thy_run_fs.leaf.path(thy_lvl)
+#        thy_save_fs = autofile.fs.theory(spc_save_path)
+#        thy_save_fs.leaf.create(thy_lvl)
+#        thy_save_path = thy_save_fs.leaf.path(thy_lvl)
+#        cnf_run_fs = autofile.fs.conformer(thy_run_path)
+#        cnf_save_fs = autofile.fs.conformer(thy_save_path)
+#        min_cnf_locs = moldr.util.min_energy_conformer_locators(ini_cnf_save_fs)
+#        min_cnf_run_path = ini_cnf_run_fs.leaf.path(min_cnf_locs)
+#        min_cnf_save_path = ini_cnf_save_fs.leaf.path(min_cnf_locs)
+
+
+#        for frag_geo in frag_geos
+#            sp.run_energy(frag_spc_info, thy_level, frag_geo_run_fs, frag_geo_save_fs, locs, script_str, overwrite)
+#            sp_save_fs = autofile.fs.single_point(geo_save_path)
+#            sp_save_fs.leaf.create(thy_level[1:4])
+#            sp_save_fs.leaf.file.energy.write(ene, thy_level[1:4])
+
 
 def run_multiref_rscan(
         formula, high_mul, zma, spc_info, thy_level, dist_name, grid1, grid2,
@@ -384,6 +434,9 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names):
     else:
         locs_lst = []
         for locs in scn_run_fs.leaf.existing([coo_names]):
+            if '.' not in locs:
+                continue
+            print('locs test:', locs)
             run_path = scn_run_fs.leaf.path(locs)
             run_fs = autofile.fs.run(run_path)
 

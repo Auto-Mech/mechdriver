@@ -104,7 +104,6 @@ def run_job(
             print(" - Run failed.")
             status = autofile.system.RunStatus.FAILURE
         version = elstruct.reader.program_version(prog, out_str)
-        print('version test:', version)
         inf_obj.version = version
         inf_obj.status = status
         run_fs.leaf.file.info.write(inf_obj, [job])
