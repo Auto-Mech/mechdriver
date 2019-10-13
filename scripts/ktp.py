@@ -353,7 +353,12 @@ def run_rate(
     return mess_path
 
 
-def mod_arr_fit(rct_lab, prd_lab, mess_path):
+def mod_arr_fit(rct_lab, prd_lab, mess_path, temps_kt_compare,
+                nodep_pval=1.0,
+                pdep_tolerance=20.0,
+                pdep_low=None,
+                pdep_high=None):
+
     """
     Routine for a single reaction:
         (1) Grab high-pressure and pressure-dependent rate constants
@@ -362,7 +367,8 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path):
     """
     # Dictionaries to store info; indexed by pressure (given in fit_ps)
     calc_k_dct = {}
-    filt_calc_tk_dct = {}
+    valid_calc_tk_dct = {}
+    ktp_dct = {}
     fit_param_dct = {}
     fit_params_lst = []
     fit_err = []
@@ -400,60 +406,61 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path):
                 rate_ks = mess_io.reader.pdep_ks(
                     output_string, rct_lab, prd_lab, pressure, punit)
 
-            # Store in a the dictionary
+            # Store in a dictionary
             calc_k_dct[pressure] = rate_ks
-
-        # print('\ncalculated rate constants')
-        # for key, val in calc_k_dct.items():
-            # print(key)
-            # print(val)
 
         # Filter temperatures and rate_constants stored in the dictionary
         for pressure, calc_ks in calc_k_dct.items():
-            flt_temps, flt_ks = ratefit.fit.util.get_valid_tk(
+            filtered_temps, filtered_ks = ratefit.fit.util.get_valid_tk(
                 mess_temps, calc_ks)
 
             # Store in a the dictionary
-            filt_calc_tk_dct[pressure] = [flt_temps, flt_ks]
-        # print('\nfiltered calculated rate constants')
-        # for key, val in filt_calc_tk_dct.items():
-            # print(key)
-            # print(val)
+            valid_calc_tk_dct[pressure] = [filtered_temps, filtered_ks]
+
+        # Filter the ktp dictionary by assessing the presure dependence
+        is_pdependent = ratefit.err.assess_pressure_dependence(
+            valid_calc_tk_dct, filtered_temps, temps_kt_compare,
+            tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
+
+        if is_pdependent:
+            # Set dct to fit as copy of dct to do PLOG fits at all pressures
+            ktp_dct = valid_calc_tk_dct.deepcopy()
+        else:
+            # Set dct to fit as copy the k(T, P) vals at desired pressure
+            ktp_dct[nodep_pval] = valid_calc_tk_dct[nodep_pval]
 
         # Calculate the fitting parameters from the filtered T,k lists
-        for pressure, tk_lsts in filt_calc_tk_dct.items():
+        for pressure, tk_lsts in ktp_dct.items():
 
             # Set the temperatures and rate constants
             temps = tk_lsts[0]
             rate_constants = tk_lsts[1]
-            if len(temps) > 0: 
+            if temps:
                 # Obtain the fitting parameters based on the desired fit
                 if fit_type == 'single':
                     fit_params = ratefit.fit.arrhenius.single(
-                        temps, rate_constants, t_ref, fit_method, dsarrfit_path=mess_path)
+                        temps, rate_constants, t_ref, fit_method,
+                        dsarrfit_path=mess_path)
                 elif fit_type == 'double':
                     init_params = ratefit.fit.arrhenius.single(
-                        temps, rate_constants, t_ref, fit_method, dsarrfit_path=mess_path)
+                        temps, rate_constants, t_ref, fit_method,
+                        dsarrfit_path=mess_path)
                     fit_params = ratefit.fit.arrhenius.double(
                         temps, rate_constants, t_ref, fit_method,
                         a_guess=init_params[0],
                         n_guess=init_params[1],
-                        ea_guess=init_params[2], dsarrfit_path=mess_path)
+                        ea_guess=init_params[2],
+                        dsarrfit_path=mess_path)
 
                 # Store the fitting parameters in a dictionary
                 fit_param_dct[pressure] = fit_params
-
-        # print('\nfitting parameters')
-        # for key, val in fit_param_dct.items():
-            # print(key)
-            # print(val)
 
         # Calculate fitted rate constants using the fitted parameters
         for pressure, params in fit_param_dct.items():
 
             # Set the temperatures
-            temps = filt_calc_tk_dct[pressure][0]
-            
+            temps = valid_calc_tk_dct[pressure][0]
+
             # Calculate fitted rate constants, based on fit type
             if fit_type == 'single':
                 fit_ks = ratefit.fxns.single_arrhenius(
@@ -468,28 +475,18 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path):
             # Store the fitting parameters in a dictionary
             fit_k_dct[pressure] = fit_ks
 
-        # print('\nfitted rate constants')
-        # for key, val in fit_k_dct.items():
-            # print(key)
-            # print(val)
-
         # Calculate the error between the calc and fit ks
         for pressure, fit_ks in fit_k_dct.items():
 
-            calc_ks = filt_calc_tk_dct[pressure][1]
+            calc_ks = valid_calc_tk_dct[pressure][1]
             sse, mean_avg_err, max_avg_err = ratefit.err.calc_sse_and_mae(
                 calc_ks, fit_ks)
 
             # Store in a dictionary
             fit_err_dct[pressure] = [sse, mean_avg_err, max_avg_err]
 
-        # print('\nfitting errors')
-        # for key, val in fit_err_dct.items():
-            # print(key)
-            # print(val)
         fit_params_lst.append(fit_param_dct.copy())
         fit_err.append(fit_err_dct.copy())
-        # print('fit_param_lst test:', fit_param_lst)
 
     return fit_params_lst[0], fit_err[0], fit_params_lst[1], fit_err[1]
 
