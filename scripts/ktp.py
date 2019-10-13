@@ -460,7 +460,7 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
             if fit_type == 'single':
                 fit_param_dct['high'] = [1.00, 0.00, 0.00]
             elif fit_type == 'double':
-                fit_params['high'] = [1.00, 0.00, 0.00, 1.00, 0.00, 0.00]
+                fit_param_dct['high'] = [1.00, 0.00, 0.00, 1.00, 0.00, 0.00]
 
         # Calculate fitted rate constants using the fitted parameters
         for pressure, params in fit_param_dct.items():
