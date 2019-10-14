@@ -95,6 +95,21 @@ def single_point_leaf(prefix, root_ds=None):
     return theory_leaf(prefix, root_ds=root_ds)
 
 
+def high_spin_trunk(prefix, root_ds=None):
+    """ high spin, single point trunk DataSeries
+    """
+    _map = _pack_arguments(map_.high_spin_trunk)
+    nlocs = _count_arguments(map_.high_spin_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def high_spin_leaf(prefix, root_ds=None):
+    """ high-spin, single-point leaf DataSeries
+    """
+    return theory_leaf(prefix, root_ds=root_ds)
+
+
 def scan_trunk(prefix, root_ds=None):
     """ scan trunk DataSeries
     """

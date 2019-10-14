@@ -9,7 +9,7 @@ import thermo.heatform
 import esdriver.driver
 import autofile.fs
 
-REF_CALLS = {"basic": "get_basis",
+REF_CALLS = {"basic": "get_basic",
              "cbh0": "get_cbhzed",
              "cbh1": "get_cbhone",
              "cbh2": "get_cbhtwo"}
@@ -20,7 +20,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
     """ main driver for thermo run
     """
 
-    #Determine options
+    # Determine options
     runes = options[0]  #run electronic structure theory (True/False)
     runmess = options[1]  #run mess (True) / just make the mess input file (False)
     runthermo = options[2]
@@ -28,9 +28,9 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
         runthermo = False
     everypf = options[3]  #make PF for every computation (True) / only with final info (False)
 
-    #Fix any issues in tsk_list
+    # Fix any issues in tsk_list
     tsk_info_lst = fix(tsk_info_lst)
-    #Add reference molecules
+    # Add reference molecules
     for spc in spc_queue:
         if not 'ich' in spcdct[spc]:
             spcdct[spc]['ich'] = automol.smiles.inchi(spcdct[spc]['smiles'])
@@ -39,13 +39,13 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
     full_queue = list(dict.fromkeys(full_queue))
     print(msg)
 
-    #prepare filesystem
+    # prepare filesystem
     if not os.path.exists(save_prefix):
         os.makedirs(save_prefix)
     if not os.path.exists(run_prefix):
         os.makedirs(run_prefix)
 
-    #Run ESDriver
+    # Run ESDriver
     if runes:
         runspecies = [{'species': full_queue, 'reacs': [], 'prods': []}]
         esdriver.driver.run(tsk_info_lst, es_dct, runspecies, spcdct, run_prefix, save_prefix)
@@ -141,15 +141,17 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
         spcdct[spc]['spc_str'] = spc_str
         spcdct[spc]['ene'] = 0
 
-    #Make and Run the PF file
+    # Make and Run the PF file
     for spc in spc_queue:
         spc_save_path = spcdct[spc]['spc_save_path']
         spc_str = spcdct[spc]['spc_str']
         zpe_str = spcdct[spc]['zpe_str']
         spc_info = spcdct[spc]['spc_info']
-        pf_input = scripts.thermo.get_pf_input(spc, spc_str, global_pf_str, zpe_str)
+        pf_input = scripts.thermo.get_pf_input(
+            spc, spc_str, global_pf_str, zpe_str)
 
-        pf_path, nasa_path = scripts.thermo.get_thermo_paths(spc_save_path, spc_info, harm_thy_info)
+        pf_path, nasa_path = scripts.thermo.get_thermo_paths(
+            spc_save_path, spc_info, harm_thy_info)
         spcdct[spc]['pf_path'] = pf_path
         spcdct[spc]['nasa_path'] = nasa_path
 
@@ -157,7 +159,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
         if runmess:
             scripts.thermo.run_pf(pf_path)
 
-    #Compute Hf0K
+    # Compute Hf0K
     ene_strl = []
     ene_str = '! energy level:'
     ene_lvl = ''
@@ -165,14 +167,16 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
     for tsk in tsk_info_lst:
         if 'ene' in tsk[0]:
             if ene_idx > len(ene_coeff)-1:
-                print('Warning - an insufficient energy coefficient list was provided')
+                print('WARNING:',
+                      'an insufficient energy coefficient list was provided')
                 break
             ene_lvl = tsk[1]
             geo_lvl = tsk[2]
             geo_thy_info = scripts.es.get_thy_info(es_dct[geo_lvl])
             ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
             ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
-                ene_coeff[ene_idx], ene_thy_info[3], ene_thy_info[1], ene_thy_info[2],
+                ene_coeff[ene_idx], ene_thy_info[3],
+                ene_thy_info[1], ene_thy_info[2],
                 geo_thy_info[3], geo_thy_info[1], geo_thy_info[2]))
 
             for spc in full_queue:
@@ -184,7 +188,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
             ene_idx += 1
     ene_str += '!               '.join(ene_strl)
     pf_levels.append(ene_str)
-    #Need to get zpe for reference molecules too
+    # Need to get zpe for reference molecules too
     calc_bas = True
     if isinstance(ref, list):
         spc_bas = ref
@@ -193,12 +197,13 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
         reference_function = get_function_call(ref)
     for spc in spc_queue:
         if calc_bas:
-            spc_bas = get_ref(spc, spcdct, reference_function)
-        hf0k = scripts.thermo.get_hf0k(spc, spcdct, spc_bas)
+            spc_bas, clist = get_ref(spc, spcdct, reference_function)
+        hf0k = scripts.thermo.get_hf0k(spc, spcdct, spc_bas, clist)
         spcdct[spc]['Hfs'] = [hf0k]
 
     if runthermo:
-        chemkin_header_str = scripts.thermo.run_ckin_header(pf_levels, ref_levels, spc_model)
+        chemkin_header_str = scripts.thermo.run_ckin_header(
+            pf_levels, ref_levels, spc_model)
         chemkin_set_str = chemkin_header_str
         for spc in spc_queue:
             pf_path = spcdct[spc]['pf_path']
@@ -207,21 +212,24 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
             # need to change back to starting directory after running thermp and pac99 
             # or rest of code is confused
             scripts.thermo.write_thermp_inp(spcdct[spc])
-            # run thermp creats thermo and also passed back the 298 K heat of formation
+            # run thermp creats thermo and also passed back the 298 K Hf
             hf298k = scripts.thermo.run_thermp(pf_path, nasa_path)
             spcdct[spc]['Hfs'].append(hf298k)
             pac99_poly_str = scripts.thermo.run_pac(spcdct[spc], nasa_path)
-            chemkin_poly_str = scripts.thermo.run_ckin_poly(spc, spcdct[spc], pac99_poly_str)
+            chemkin_poly_str = scripts.thermo.run_ckin_poly(
+                spc, spcdct[spc], pac99_poly_str)
             chemkin_spc_str = chemkin_header_str + chemkin_poly_str
             chemkin_set_str += chemkin_poly_str
             scripts.thermo.go_to_path(starting_path)
             ckin_path = scripts.thermo.prepare_path(starting_path, 'ckin')
             if not os.path.exists(ckin_path):
                 os.makedirs(ckin_path)
-            scripts.thermo.write_nasa_file(spcdct[spc], ckin_path, nasa_path, chemkin_spc_str)
+            scripts.thermo.write_nasa_file(
+                spcdct[spc], ckin_path, nasa_path, chemkin_spc_str)
 
         with open(os.path.join(ckin_path, 'automech.ckin'), 'w') as nasa_file:
             nasa_file.write(chemkin_set_str)
+
 
 def is_scheme(entry):
     """ Check whether this is a basis set scheme
@@ -243,7 +251,7 @@ def get_function_call(scheme):
 def get_ref(spc, spcdct, call):
     """ references for a single species
     """
-    ref = call(spcdct[spc]['ich'])
+    ref, _ = call(spcdct[spc]['ich'])
     return ref
 
 
@@ -299,7 +307,7 @@ def create_spec(val, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.)
         geo = val
         ich = automol.geom.inchi(geo)
     form = automol.inchi.formula_dct(ich)
-    rad = automol.formula.electron_count(form)%2
+    rad = automol.formula.electron_count(form) % 2
     if rad:
         mult = 2
     else:
@@ -341,18 +349,18 @@ def fix(tsk_info_lst):
 if __name__ == "__main__":
 
     MSG = """
-           ================================================================
-           ==                        AUTOMECHANIC                        ==
-           ===         Andreas Copan, Sarah Elliott, Kevin Moore,       ===
-           ===     Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,   ===
-           ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
-           ================================================================
-           ==                        THERMODRIVER                        ==
-           ===         Sarah Elliott, Kevin Moore, Andreas Copan,       ===
-           ===    Murat Keceli, Yuri Georgievski, Stephen Klippenstein   ==
-           ================================================================\n"""
+          ================================================================
+          ==                        AUTOMECHANIC                        ==
+          ===         Andreas Copan, Sarah Elliott, Kevin Moore,       ===
+          ===     Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,   ===
+          ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
+          ================================================================
+          ==                        THERMODRIVER                        ==
+          ===         Sarah Elliott, Kevin Moore, Andreas Copan,       ===
+          ===    Murat Keceli, Yuri Georgievski, Stephen Klippenstein   ==
+          ================================================================\n"""
     print(MSG)
-    #tsk_info_lst, es_dct, spcs = load_params()
+    # tsk_info_lst, es_dct, spcs = load_params()
     REF = 'cbh0'
 
     TSK_INFO_LST = [

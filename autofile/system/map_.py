@@ -88,6 +88,13 @@ def single_point_trunk():
     return 'SP'
 
 
+# high spin
+def high_spin_trunk():
+    """ high spin, single point trunk directory name
+    """
+    return 'HS'
+
+
 # scan
 def scan_trunk():
     """ scan trunk directory name
