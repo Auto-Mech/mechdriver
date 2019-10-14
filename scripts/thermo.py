@@ -2,11 +2,11 @@
 """
 import os
 from qcelemental import constants as qcc
-import thermo
 import automol
 import autofile
 import moldr
 import mess_io.writer
+import thermo
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -61,38 +61,20 @@ def basis_energy(spc_bas, spc_dct):
     return h_basis
 
 
-def get_coeff(spc, spc_dct, spc_bas):
-    """ return the coefficients for the expansion of a species in terms of a
-    set of basis species
-    """
-    ich = spc_dct[spc]['ich']
-    formula = automol.inchi.formula(ich)
-
-    # Get atom count dictionary
-    atom_dict = thermo.util.get_atom_counts_dict(formula)
-
-    if len(spc_bas) == 1 and spc_dct[spc]['ich'] == spc_bas[0]:
-        coeff = [1]
-    else:
-        # Get the coefficients for the balanced heat-of-formation eqn
-        coeff = thermo.heatform.calc_coefficients(spc_bas, atom_dict)
-    return coeff
-
-
-def get_hf0k(spc, spc_dct, spc_bas):
+def get_hf0k(spc, spc_dct, spc_bas, coeff):
     """ determine the 0 K heat of formation from the
     species dictionary and a set of references species
     """
     spc_ene = spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
     h_basis = basis_energy(spc_bas, spc_dct)
-    coeff = get_coeff(spc, spc_dct, spc_bas)
-
-    print('hf0k test:', spc, spc_dct[spc]['ene'], spc_dct[spc]['zpe'], spc_ene, spc_bas, h_basis, coeff)
+    print('hf0k test:', spc, spc_dct[spc]['ene'], spc_dct[spc]['zpe'], spc_ene,
+          spc_bas, h_basis, coeff)
 
     # Get the 0 K heat of formation
     # ref_set should be a parameter for this routine
-    h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ANL0')
-    #h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ATcT')
+    h0form = thermo.heatform.calc_hform_0k(
+        spc_ene, h_basis, spc_bas, coeff, ref_set='ANL0')
+    # h0form = thermo.heatform.calc_hform_0k(spc_ene, h_basis, spc_bas, coeff, ref_set='ATcT')
     return h0form
 
 
