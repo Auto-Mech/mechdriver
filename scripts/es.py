@@ -789,9 +789,11 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
     return ts_class_data, bkp_ts_class_data
 
+
 def find_ts(
-        ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data,
-        thy_info, rxn_run_path, rxn_save_path, overwrite, attempt=1):
+        spc_dct, ts_dct, ts_info, ts_zma, typ, dist_info, grid,
+        bkp_ts_class_data, ini_thy_info, thy_info, run_prefix, save_prefix,
+        rxn_run_path, rxn_save_path, overwrite, attempt=1):
     """ find the ts geometry
     """
     print('prepping ts scan for:', typ)
@@ -927,13 +929,19 @@ def find_ts(
                 coo_names=[dist_name],
             )
 
-            #loc = [[dist_name], [grid1[0]]]
-            loc = [[dist_name], [00]]
-            ts_zma = scn_save_fs.leaf.file.zmatrix.read(loc)
+            locs = [[dist_name], [grid1[0]]]
+            ts_zma = scn_save_fs.leaf.file.zmatrix.read(locs)
         # calculate the infinite seperation energy
             #first get the energy for the reference geometry and reference energy
+            rcts = ts_dct['reacts']
+            spc_1_info = [spc_dct[rcts[0]]['ich'], spc_dct[rcts[0]]['chg'], spc_dct[rcts[0]]['mul']]
+            spc_2_info = [spc_dct[rcts[1]]['ich'], spc_dct[rcts[1]]['chg'], spc_dct[rcts[1]]['mul']]
+            multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
 
-            # inf_sep_ene = infinite_separation_energy(
+            inf_sep_ene = moldr.scan.infinite_separation_energy(
+                spc_1_info, spc_2_info, ts_info, high_mul, ts_zma, ini_thy_info, thy_info,
+                multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs)
+
         # continue on to finish setting up the correction potential
 
 
@@ -954,9 +962,9 @@ def find_ts(
             _, wfn_str = moldr.ts.cas_options(
                 ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
             method = '{rs2c, shift=0.25}'
-            inf_sep_energy = -78.137635
+            # inf_sep_energy = -78.137635
             tml_inp_str = varecof_io.writer.input_file.tml(
-                memory, basis, wfn_str, method, inf_sep_energy)
+                memory, basis, wfn_str, method, inf_sep_ene)
             print('\n\nmol.tml:')
             print(tml_inp_str)
 
@@ -986,8 +994,6 @@ def find_ts(
                 inp_file.write(conv_inp_str)
             with open(os.path.join(vrc_path, 'mol.tml'), 'w') as tml_file:
                 tml_file.write(tml_inp_str)
-
-
 
         else:
             if 'elimination' in typ:
@@ -1130,8 +1136,10 @@ def find_ts(
             ts_dct['tors_names'] = bkp_tors_names
             attempt += 1
             geo, zma, final_dist = find_ts(
-                ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
-                rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
+                spc_dct, ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info,
+                bkp_grid, None, ini_thy_info, thy_info, run_prefix,
+                save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
+                attempt=attempt)
         elif ('addition ' in typ or 'abstraction' in typ) and attempt < 3:
             babs1 = 180. * qcc.conversion_factor('degree', 'radian')
             if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
@@ -1141,8 +1149,10 @@ def find_ts(
             ts_dct['original_zma'] = ts_zma
             attempt += 1
             geo, zma, final_dist = find_ts(
-                ts_dct, ts_info, ts_zma, typ, dist_info, grid, bkp_ts_class_data, thy_info,
-                rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
+                spc_dct, ts_dct, ts_info, ts_zma, typ, dist_info, grid,
+                bkp_ts_class_data, ini_thy_info, thy_info, run_prefix,
+                save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
+                attempt=attempt)
         elif 'beta scission' in typ and bkp_ts_class_data and attempt < 2:
             [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess] = bkp_ts_class_data
             print('TS find failed. Attempting to find with new reaction class: {}'.format(bkp_typ))
@@ -1153,8 +1163,10 @@ def find_ts(
             ts_dct['tors_names'] = bkp_tors_names
             attempt += 1
             geo, zma, final_dist = find_ts(
-                ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info, bkp_grid, None, thy_info,
-                rxn_run_path, rxn_save_path, overwrite=True, attempt=attempt)
+                spc_dct, ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info,
+                bkp_grid, None, ini_thy_info, thy_info, run_prefix,
+                save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
+                attempt=attempt)
         else:
             geo = 'failed'
             zma = 'failed'

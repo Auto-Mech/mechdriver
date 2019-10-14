@@ -113,7 +113,7 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, pf_levels, projrot
 
 
 def make_channel_pfs(
-        tsname, rxn, wells, spc_dct, idx_dct, strs, first_ground_ene,
+        tsname, rxn, species_data, spc_dct, idx_dct, strs, first_ground_ene,
         spc_save_fs, pf_levels, projrot_script_str):
     """ make the partition function strings for each of the channels
     includes strings for each of the unimolecular wells, bimolecular fragments, and
@@ -143,7 +143,7 @@ def make_channel_pfs(
     spc_label = []
     for reac in rxn['reacs']:
         spc_label.append(automol.inchi.smiles(spc_dct[reac]['ich']))
-        well_data.append(wells[reac])
+        well_data.append(species_data[reac])
         reac_ene += scripts.thermo.spc_energy(spc_dct[reac]['ene'], spc_dct[reac]['zpe']) * EH2KCAL
     well_dct_key1 = '+'.join(rxn['reacs'])
     well_dct_key2 = '+'.join(rxn['reacs'][::-1])
@@ -184,7 +184,7 @@ def make_channel_pfs(
     spc_label = []
     for prod in rxn['prods']:
         spc_label.append(automol.inchi.smiles(spc_dct[prod]['ich']))
-        well_data.append(wells[prod])
+        well_data.append(species_data[prod])
         prod_ene += scripts.thermo.spc_energy(spc_dct[prod]['ene'], spc_dct[prod]['zpe']) * EH2KCAL
     zero_energy = prod_ene - reac_ene
     well_dct_key1 = '+'.join(rxn['prods'])
@@ -313,12 +313,12 @@ def make_channel_pfs(
         tunnel_str = mess_io.writer.tunnel_eckart(
             imag_freq, ts_ene-vdwr_ene, ts_ene-vdwp_ene)
         ts_str += '\n' + mess_io.writer.ts_sadpt(
-            ts_label, fake_wellr_label, fake_wellp_label, wells[tsname], zero_energy, tunnel_str)
+            ts_label, fake_wellr_label, fake_wellp_label, species_data[tsname], zero_energy, tunnel_str)
     else:
         tunnel_str = mess_io.writer.tunnel_eckart(
             imag_freq, ts_ene-reac_ene, ts_ene-prod_ene)
         ts_str += '\n' + mess_io.writer.ts_sadpt(
-            ts_label, reac_label, prod_label, wells[tsname], zero_energy, tunnel_str)
+            ts_label, reac_label, prod_label, species_data[tsname], zero_energy, tunnel_str)
 
     return [well_str, bim_str, ts_str], first_ground_ene
 
