@@ -13,6 +13,7 @@ class FilePrefix():
     CONF = 'conf'
     TAU = 'tau'
     SP = 'sp'
+    HS = 'hs'
     SCAN = 'scan'
     GEOM = 'geom'
     GRAD = 'grad'
@@ -190,6 +191,33 @@ def single_point(prefix):
     inp_dfile = file_.input_file(FilePrefix.SP)
     inf_dfile = file_.information(FilePrefix.SP, function=info.run)
     ene_dfile = file_.energy(FilePrefix.SP)
+    leaf_ds.add_data_files({
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.INPUT: inp_dfile,
+        FileAttributeName.ENERGY: ene_dfile})
+
+    dir_fs = model.FileSystem({
+        SeriesAttributeName.TRUNK: trunk_ds,
+        SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
+
+
+def high_spin(prefix):
+    """ construct the high-spin, single-point filesystem [trunk/leaf]
+
+    layers:
+     - trunk (specifiers: [])
+     - leaf (specifiers: [method, basis, orb_restricted])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
+    """
+    trunk_ds = dir_.high_spin_trunk(prefix)
+    leaf_ds = dir_.high_spin_leaf(prefix, root_ds=trunk_ds)
+
+    inp_dfile = file_.input_file(FilePrefix.HS)
+    inf_dfile = file_.information(FilePrefix.HS, function=info.run)
+    ene_dfile = file_.energy(FilePrefix.HS)
     leaf_ds.add_data_files({
         FileAttributeName.INFO: inf_dfile,
         FileAttributeName.INPUT: inp_dfile,
