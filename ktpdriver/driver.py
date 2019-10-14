@@ -231,7 +231,7 @@ def run(
         ref_levels = [
             harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
 
-        #Collect energies for zero points
+        #Collect ground energies and zero-point energies
         spc_save_fs = autofile.fs.species(save_prefix)
         ts_queue = []
         for spc in spc_dct:   #have to make sure you get them for the TS too
@@ -240,7 +240,7 @@ def run(
                 if 'radical radical' in spc_dct[spc]['class']:
                     print('skipping rate for radical radical reaction: {}'.format(spc))
                     continue
-        for spc in spc_queue +  ts_queue:
+        for spc in spc_queue + ts_queue:
             spc_info = (spc_dct[spc]['ich'], spc_dct[spc]['chg'], spc_dct[spc]['mul'])
             if 'ts_' in spc:
                 spc_save_path = spc_dct[spc]['rxn_fs'][3]

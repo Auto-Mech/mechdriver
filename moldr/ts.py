@@ -216,7 +216,7 @@ def cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul):
     two_spin = spc_info[2]-1
     high_two_spin = high_mul - 1
     chg = spc_info[1]
-    cas_options = [
+    cas_opt = [
         elstruct.option.specify(elstruct.Option.Scf.MAXITER_, 40),
         elstruct.option.specify(elstruct.Option.Casscf.OCC_, occ_orb),
         elstruct.option.specify(elstruct.Option.Casscf.CLOSED_, closed_orb),
@@ -226,11 +226,11 @@ def cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul):
              {{multi,maxit=40;closed,{2};occ,{3};wf,{0},1,{4};orbprint,3}}""".format(
              elec_count, high_two_spin, closed_orb, occ_orb, two_spin)
 
-    return cas_options, wfn_str
+    return cas_opt, wfn_str
 
 
 def multiref_wavefunction_guess(
-        formula, high_mul, zma, spc_info, thy_level, dist_name, coo_name, grid_vals, cas_options):
+        high_mul, zma, spc_info, thy_level, cas_options):
     """ prepare wavefunction template for multireference electronic structure calcs
     """
 
@@ -238,11 +238,10 @@ def multiref_wavefunction_guess(
     mul = spc_info[2]
     basis = thy_level[2]
     prog = thy_level[0]
-    #orb_restr = moldr.util.orbital_restriction(spc_info, thy_level)
     prog = 'molpro2015'
 
     guess_str1 = elstruct.writer.energy(
-        geom=automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]}),
+        geom=zma,
         charge=charge,
         mult=high_mul,
         method='hf',
@@ -255,7 +254,7 @@ def multiref_wavefunction_guess(
     guess_str1 = '\n'.join(guess_str1.splitlines()[2:])
 
     guess_str2 = elstruct.writer.energy(
-        geom=automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]}),
+        geom=zma,
         charge=charge,
         mult=mul,
         method='casscf',
@@ -270,6 +269,4 @@ def multiref_wavefunction_guess(
 
     guess_str = guess_str1 + guess_str2
 
-    return guess_str 
-
-
+    return guess_str

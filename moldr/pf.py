@@ -336,6 +336,87 @@ def species_block(
     return spc_str, imag_freq
 
 
+def vtst_with_saddle_block(
+        spc_dct_i, spc_dct_j, spc_model, pf_levels, projrot_script_str,
+        spc_save_fs, elec_levels=[[0., 1]], sym_factor=1.
+        ):
+    """ prepare the mess input string for a variational TS that has 
+    a saddle point. Do it by calling the species block for each grid point 
+    in the scan file system
+    """
+
+    # read the scan save file system to get the energies, zero-point energies, symmetry numbers, 
+    # geometries, hessians, torsional potentials for each point on the MEP
+    call species_block()
+
+    # Determine the the number of points along the irc
+    nirc = 21
+
+    # Loop over all the points of the irc and build MESS strings
+    irc_pt_strings = []
+    for i in range(nirc):
+
+        # Iniialize the header of the string
+        irc_pt_string = '!-----------------------------------------------'
+        irc_pt_string += '! IRC Point {0}\n'.format(str(i+1))
+
+        # Write the molecule section for each irc point
+        core = mess_io.writer.mol_data.core_rigidrotor(geom1, sym_factor, interp_emax=''):
+        irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
+             hind_rot='', xmat=None, rovib_coups='', rot_dists=''):
+
+        # Append the zero point energy for the molecule
+        irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
+        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}'.format(zero_energy)
+
+        # Append string to list
+        irc_pt_strings.append(irc_pt_string)
+
+    # Write the MESS string for the variational sections
+    varational_str = mess_io.writer.rxnchan.ts_variational(
+        ts_label, reac_label, prod_label, irc_pt_strings)
+
+    return variational_str
+
+
+def vtst_no_saddle_block(scn_save_fs, geoms, frequencies, energies):
+    """ prepare the mess input string for a variational TS where there is not a 
+    saddle point on the MEP. In this case, there is limited torsional information.
+    """
+
+    # read the scan save file system to get the energies, zero-point energies, symmetry numbers, 
+    # geometries, hessians, torsional potentials for each point on the MEP
+
+    # Determine the the number of points along the irc
+    nirc = 21
+
+    # Loop over all the points of the irc and build MESS strings
+    irc_pt_strings = []
+    for i in range(nirc):
+
+        # Iniialize the header of the string
+        irc_pt_string = '!-----------------------------------------------'
+        irc_pt_string += '! IRC Point {0}\n'.format(str(i+1))
+
+        # Write the molecule section for each irc point
+        core = mess_io.writer.mol_data.core_rigidrotor(geom1, sym_factor, interp_emax=''):
+        irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
+             hind_rot='', xmat=None, rovib_coups='', rot_dists=''):
+
+        # Append the zero point energy for the molecule
+        irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
+        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}'.format(zero_energy)
+
+        # Append string to list
+        irc_pt_strings.append(irc_pt_string)
+
+    # Write the MESS string for the variational sections
+    varational_str = mess_io.writer.rxnchan.ts_variational(
+        ts_label, reac_label, prod_label, irc_pt_strings)
+
+    return variational_str
+
+
 def pst_block(
         spc_dct_i, spc_dct_j, spc_model, pf_levels, projrot_script_str,
         spc_save_fs, elec_levels=[[0., 1]], sym_factor=1.

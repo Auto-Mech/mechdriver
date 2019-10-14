@@ -194,53 +194,343 @@ def run_scan(
 
 
 def infinite_separation_energy(
-        rct_zmas, rcts_spc_info, 
-        frag_geos, ref_sep_geo, ref_sep_ene, ts_mul, high_mul, frag_muls,
-        thy_info, multi_thy_info, 
-        scn_run_fs, scn_save_fs, script_str, overwrite, 
-        **kwargs):
+    spc_1_info, spc_2_info, ts_info, high_mul, ref_zma, ini_thy_info, thy_info,
+    multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs):
     """ Obtain the infinite separation energy from the multireference energy at a given 
     reference point, the high-spin low-spin splitting at that reference point, and the 
     high level energy for the high spin state at the reference geometry and for the fragments
     """
 
-    delta_spin = multi_high_spin_energy - mult_low_spin_energy
-    ene_thy_geo1 = 
-    ene_thy_geo2 = 
-    ene_thy_ref_high_spin
-    ene_inf = ene_ref + delta_spin + ene_thy_geo1 + ene_thy_geo2 - ene_thy_ref_high_spin
+    # set up all the file systems for the TS
+    # start with the geo and reference theory info
+    geo_run_path = scn_run_fs.leaf.path(locs)
+    geo_save_path = scn_save_fs.leaf.path(locs)
+    geo = scn_save_fs.leaf.file.geometry.read(locs)
+    sp_run_fs = autofile.fs.single_point(geo_run_path)
+    sp_save_fs = autofile.fs.single_point(geo_save_path)
 
-#    for spc in enumerate(rcts_spc_info):
+    # get the multi reference energy for the low spin state for the reference point on the scan
 
-#        spc_run_fs = autofile.fs.species(run_prefix)
-#        spc_run_fs.leaf.create(spc_info)
-#        spc_run_path = spc_run_fs.leaf.path(spc_info)
-#        spc_save_fs = autofile.fs.species(save_prefix)
-#        spc_save_fs.leaf.create(spc_info)
-#        spc_save_path = spc_save_fs.leaf.path(spc_info)
-#
-#        orb_restr = moldr.util.orbital_restriction(
-#            spc_info, thy_info)
-#        thy_lvl = thy_info[0:3]
-#        thy_lvl.append(orb_restr)
-#        thy_run_fs = autofile.fs.theory(spc_run_path)
-#        thy_run_fs.leaf.create(thy_lvl)
-#        thy_run_path = thy_run_fs.leaf.path(thy_lvl)
-#        thy_save_fs = autofile.fs.theory(spc_save_path)
-#        thy_save_fs.leaf.create(thy_lvl)
-#        thy_save_path = thy_save_fs.leaf.path(thy_lvl)
-#        cnf_run_fs = autofile.fs.conformer(thy_run_path)
-#        cnf_save_fs = autofile.fs.conformer(thy_save_path)
-#        min_cnf_locs = moldr.util.min_energy_conformer_locators(ini_cnf_save_fs)
-#        min_cnf_run_path = ini_cnf_run_fs.leaf.path(min_cnf_locs)
-#        min_cnf_save_path = ini_cnf_save_fs.leaf.path(min_cnf_locs)
+    # file system for low spin multireference calculation
+
+    multi_info[0] = 'molpro2015'
+    multi_info[1] = 'caspt2'
+    # ultimately the above should be properly passed
+    prog = multi_info[0]
+    method = multi_info[1]
+
+    orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
+    multi_lvl = multi_info[0:3]
+    multi_lvl.append(orb_restr)
+
+    sp_run_fs.leaf.create(multi_lvl[1:4])
+    sp_save_fs.leaf.create(multi_lvl[1:4])
+
+    sp_mr_run_path = sp_run_fs.leaf.path(multi_lvl[1:4])
+    sp_mr_save_path = sp_save_fs.leaf.path(multi_lvl[1:4])
+    run_mr_fs = autofile.fs.run(sp_mr_run_path)
+
+    mr_script_str, _, mr_kwargs, _ = moldr.util.run_qchem_par(prog, method)
+
+    num_act_elc = 2
+    num_act_orb = 2
+    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
+
+    cas_opt, _ = moldr.ts.cas_options(ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+    guess_str = moldr.ts.multiref_wavefunction_guess(high_mul, ref_zma, ts_info, multi_lvl, cas_opt)
+    guess_lines = guess_str.splitlines()
+
+    mr_kwargs['casscf_options'] = cas_opt
+    mr_kwargs['mol_options'] = ['nosym']
+    mr_kwargs['gen_lines'] = guess_lines
+
+    ret = moldr.driver.read_job(
+        job='energy',
+        run_fs=run_mr_fs,
+    )
+    if ret:
+        print(" - Reading low spin multi reference energy from output...")
+        inf_obj, inp_str, out_str = ret
+        ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+        sp_save_fs.leaf.file.energy.write(ene, multi_lvl[1:4])
+        sp_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
+        sp_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
+
+    if not sp_save_fs.leaf.file.energy.exists(multi_lvl) or overwrite:
+        print(" - Running low spin multi reference energy ...")
+        moldr.driver.run_job(
+            job='energy',
+            script_str=sp_script_str,
+            run_fs=run_mr_fs,
+            geom=geo,
+            spc_info=ts_info,
+            thy_level=multi_lvl,
+            overwrite=overwrite,
+            **kwargs,
+        )
+
+        ret = moldr.driver.read_job(
+            job='energy',
+            run_fs=run_mr_fs,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading low spin multi reference energy from output...")
+            ls_mr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+
+            print(" - Saving low spin multi reference energy...")
+            print(" - Save path: {}".format(sp_save_path))
+            sp_save_fs.leaf.file.energy.write(ls_mr_ene, multi_lvl[1:4])
+            sp_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
+            sp_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
+        else:
+            print('ERROR: low spin multi reference energy job fails: ',
+                'Energy is needed to evaluate infinite separation energy')
+            return
+
+    else:
+        ls_mr_ene = sp_save_fs.leaf.file.energy.read(multi_lvl) 
+
+    # get the multi reference energy for the high spin state for the reference point on the scan
+
+    ts_info[2] = high_mul
+    orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
+    multi_lvl = multi_info[0:3]
+    multi_lvl.append(orb_restr)
+
+    hs_run_fs = autofile.fs.high_spin(geo_run_path)
+    hs_save_fs = autofile.fs.high_spin(geo_save_path)
+    hs_run_fs.leaf.create(multi_lvl[1:4])
+    hs_save_fs.leaf.create(multi_lvl[1:4])
+
+    hs_mr_run_path = hs_run_fs.leaf.path(multi_lvl[1:4])
+    hs_mr_save_path = hs_save_fs.leaf.path(multi_lvl[1:4])
+    run_mr_fs = autofile.fs.run(hs_mr_run_path)
+
+    cas_opt, _ = moldr.ts.cas_options(ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+    guess_str = moldr.ts.multiref_wavefunction_guess(high_mul, ref_zma, ts_info, multi_lvl, cas_opt)
+    guess_lines = guess_str.splitlines()
+
+    mr_kwargs['casscf_options'] = cas_opt
+    mr_kwargs['mol_options'] = ['nosym']
+    mr_kwargs['gen_lines'] = guess_lines
+
+    ret = moldr.driver.read_job(
+        job='energy',
+        run_fs=run_mr_fs,
+    )
+    if ret:
+        print(" - Reading low spin multi reference energy from output...")
+        inf_obj, inp_str, out_str = ret
+        ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+        hs_save_fs.leaf.file.energy.write(ene, multi_lvl[1:4])
+        hs_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
+        hs_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
+
+    if not hs_save_fs.leaf.file.energy.exists(multi_lvl) or overwrite:
+        print(" - Running low spin multi reference energy ...")
+        moldr.driver.run_job(
+            job='energy',
+            script_str=sp_script_str,
+            run_fs=run_mr_fs,
+            geom=geo,
+            spc_info=ts_info,
+            thy_level=multi_lvl,
+            overwrite=overwrite,
+            **kwargs,
+        )
+
+        ret = moldr.driver.read_job(
+            job='energy',
+            run_fs=run_mr_fs,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading low spin multi reference energy from output...")
+            hs_mr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+
+            print(" - Saving low spin multi reference energy...")
+            print(" - Save path: {}".format(hs_save_path))
+            hs_save_fs.leaf.file.energy.write(hs_mr_ene, multi_lvl[1:4])
+            hs_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
+            hs_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
+        else:
+            print('ERROR: high spin multi reference energy job fails: ',
+                'Energy is needed to evaluate infinite separation energy')
+            return
+
+    else:
+        hs_mr_ene = hs_save_fs.leaf.file.energy.read(multi_lvl) 
 
 
-#        for frag_geo in frag_geos
-#            sp.run_energy(frag_spc_info, thy_level, frag_geo_run_fs, frag_geo_save_fs, locs, script_str, overwrite)
-#            sp_save_fs = autofile.fs.single_point(geo_save_path)
-#            sp_save_fs.leaf.create(thy_level[1:4])
-#            sp_save_fs.leaf.file.energy.write(ene, thy_level[1:4])
+    # get the single reference energy for the high spin state for the reference point on the scan
+    # file system for high spin single ireference calculation
+    orb_restr = moldr.util.orbital_restriction(ts_info, thy_info)
+    thy_lvl = thy_info[0:3]
+    thy_lvl.append(orb_restr)
+
+    hs_run_fs.leaf.create(thy_lvl[1:4])
+    hs_save_fs.leaf.create(thy_lvl[1:4])
+
+    hs_sr_run_path = hs_run_fs.leaf.path(thy_lvl[1:4])
+    hs_sr_save_path = hs_save_fs.leaf.path(thy_lvl[1:4])
+    run_sr_fs = autofile.fs.run(hs_sr_run_path)
+
+    sp_script_str, _, kwargs, _ = run_qchem_par(*thy_lvl[0:2])
+    ret = moldr.driver.read_job(
+        job='energy',
+        run_fs=run_sr_fs,
+    )
+    if ret:
+        print(" - Reading high spin single reference energy from output...")
+        inf_obj, inp_str, out_str = ret
+        ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+        hs_save_fs.leaf.file.energy.write(ene, thy_lvl[1:4])
+        hs_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
+        hs_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
+
+    if not hs_save_fs.leaf.file.energy.exists(thy_lvl) or overwrite:
+        print(" - Running high spin single reference energy ...")
+        moldr.driver.run_job(
+            job='energy',
+            script_str=sp_script_str,
+            run_fs=run_sr_fs,
+            geom=geo,
+            spc_info=ts_info,
+            thy_level=thy_lvl,
+            overwrite=overwrite,
+            **kwargs,
+        )
+
+        ret = moldr.driver.read_job(
+            job='energy',
+            run_fs=run_sr_fs,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading high spin single reference energy from output...")
+            hs_sr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+
+            print(" - Saving high spin single reference energy...")
+            print(" - Save path: {}".format(hs_save_path))
+            hs_save_fs.leaf.file.energy.write(hs_sr_ene, thy_lvl[1:4])
+            hs_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
+            hs_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
+        else:
+            print('ERROR: High spin single reference energy job fails: ',
+                'Energy is needed to evaluate infinite separation energy')
+            return
+
+    else:
+        hs_sr_ene = hs_save_fs.leaf.file.energy.read(thy_lvl) 
+
+    # get the single reference energy for each of the reactant configurations
+    spc_ene = []
+    for spc_info in zip(spc_1_info, spc_2_info):
+        # set up the file systems for the reactants one by one
+        spc_run_fs = autofile.fs.species(run_prefix)
+        spc_run_fs.leaf.create(spc_info)
+        spc_run_path = spc_run_fs.leaf.path(spc_info)
+        spc_save_fs = autofile.fs.species(save_prefix)
+        spc_save_fs.leaf.create(spc_info)
+        spc_save_path = spc_save_fs.leaf.path(spc_info)
+
+        orb_restr = moldr.util.orbital_restriction(spc_info, ini_thy_info)
+        ini_thy_lvl = ini_thy_info[0:3]
+        ini_thy_lvl.append(orb_restr)
+
+        orb_restr = moldr.util.orbital_restriction(spc_info, thy_info)
+        thy_lvl = thy_info[0:3]
+        thy_lvl.append(orb_restr)
+
+        ini_thy_run_fs = autofile.fs.theory(spc_run_path)
+        ini_thy_run_fs.leaf.create(ini_thy_lvl)
+        ini_thy_run_path = ini_thy_run_fs.leaf.path(ini_thy_lvl)
+        ini_thy_save_fs = autofile.fs.theory(spc_save_path)
+        ini_thy_save_fs.leaf.create(ini_thy_lvl)
+        ini_thy_save_path = ini_thy_save_fs.leaf.path(ini_thy_lvl)
+        ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
+        ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
+        min_cnf_locs = moldr.util.min_energy_conformer_locators(ini_cnf_save_fs)
+        min_cnf_run_path = ini_cnf_run_fs.leaf.path(min_cnf_locs)
+        min_cnf_save_path = ini_cnf_save_fs.leaf.path(min_cnf_locs)
+
+        thy_run_fs = autofile.fs.theory(spc_run_path)
+        thy_run_fs.leaf.create(thy_lvl)
+        thy_run_path = thy_run_fs.leaf.path(thy_lvl)
+        thy_save_fs = autofile.fs.theory(spc_save_path)
+        thy_save_fs.leaf.create(thy_lvl)
+        thy_save_path = thy_save_fs.leaf.path(thy_lvl)
+
+        geo = ini_cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+        sp_run_fs = autofile.fs.single_point(min_cnf_run_path)
+        sp_save_fs = autofile.fs.single_point(min_cnf_save_path)
+     
+        sp_sr_run_path = sp_run_fs.leaf.path(thy_lvl[1:4])
+        sp_sr_save_path = sp_save_fs.leaf.path(thy_lvl[1:4])
+        run_sr_fs = autofile.fs.run(sp_sr_run_path)
+
+        # get the single reference energy for the high spin state for the reference point on the scan
+
+        ret = moldr.driver.read_job(
+            job='energy',
+            run_fs=run_sr_fs,
+        )
+        if ret:
+            print(" - Reading single reference energy for {} from output...".format(spc_info[0]))
+            inf_obj, inp_str, out_str = ret
+            ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+            sp_save_fs.leaf.file.energy.write(ene, thy_lvl[1:4])
+            sp_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
+            sp_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
+
+        if not sp_save_fs.leaf.file.energy.exists(thy_lvl) or overwrite:
+            print(" - Running single reference energy for {} from output...".format(spc_info[0]))
+            moldr.driver.run_job(
+                job='energy',
+                script_str=sp_script_str,
+                run_fs=run_sr_fs,
+                geom=geo,
+                spc_info=spc_info,
+                thy_level=thy_lvl,
+                overwrite=overwrite,
+                **kwargs,
+            )
+
+            ret = moldr.driver.read_job(
+                job='energy',
+                run_fs=run_sr_fs,
+            )
+
+            if ret is not None:
+                inf_obj, inp_str, out_str = ret
+
+                print(" - Reading single reference energy for {} from output...".format(spc_info[0]))
+                sp_sr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+
+                print(" - Saving single reference energy for {} from output...".format(spc_info[0]))
+                print(" - Save path: {}".format(sp_save_path))
+                sp_save_fs.leaf.file.energy.write(sp_sr_ene, thy_lvl[1:4])
+                sp_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
+                sp_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
+
+            else:
+                print('ERROR: Single reference energy job fails for {}: '.format(spc_info[0]),
+                    'Energy is needed to evaluate infinite separation energy')
+                return
+
+        else:
+            sp_sr_ene = sp_save_fs.leaf.file.energy.read(thy_lvl) 
+
+        spc_ene.append(sp_sr_ene)
+
+    inf_sep_ene = spc_ene[0] + spc_ene[1] - hs_sr_ene + hs_mr_ene - ls_mr_ene
 
 
 def run_multiref_rscan(
@@ -288,9 +578,9 @@ def run_multiref_rscan(
 
     num_act_elc = 2
     num_act_orb = 2
+    ref_zma = automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]})
     cas_opt, _ = moldr.ts.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = moldr.ts.multiref_wavefunction_guess(
-        formula, high_mul, zma, spc_info, thy_level, dist_name, coo_name, grid_vals, cas_opt)
+    guess_str = moldr.ts.multiref_wavefunction_guess( high_mul, ref_zma, spc_info, thy_level, cas_opt)
     guess_lines = guess_str.splitlines()
 
     #print('guess_str test:', guess_str)
@@ -467,35 +757,6 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=True):
             run_path = scn_run_fs.leaf.path(locs)
             run_fs = autofile.fs.run(run_path)
 
-            print("Reading from scan run at {}".format(run_path))
-
-            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-            if ret:
-                inf_obj, inp_str, out_str = ret
-                prog = inf_obj.prog
-                method = inf_obj.method
-                ene = elstruct.reader.energy(prog, method, out_str)
-                geo = elstruct.reader.opt_geometry(prog, out_str)
-                zma = elstruct.reader.opt_zmatrix(prog, out_str)
-
-                save_path = scn_save_fs.leaf.path(locs)
-                print(" - Saving...")
-                print(" - Save path: {}".format(save_path))
-
-                scn_save_fs.leaf.create(locs)
-                scn_save_fs.leaf.file.geometry_info.write(inf_obj, locs)
-                scn_save_fs.leaf.file.geometry_input.write(inp_str, locs)
-                scn_save_fs.leaf.file.energy.write(ene, locs)
-                scn_save_fs.leaf.file.geometry.write(geo, locs)
-                scn_save_fs.leaf.file.zmatrix.write(zma, locs)
-
-                locs_lst.append(locs)
-                if hessian:
-                    ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
-                    if ret:
-                        inf_obj, inp_str, out_str = ret
-                        prog = inf_obj.prog
-                        method = inf_obj.method
                         hess = elstruct.reader.hessian(prog, method, out_str)
                         scn_save_fs.leaf.file.hessian.write(geo, locs)
 
