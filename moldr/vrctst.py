@@ -225,26 +225,26 @@ def assess_face_symmetries():
         fgeo2, [f2_dummy_idx], ['x', 'y'])
 
     # Compate coloumb spectrum for each geom to its reflected version
-    fgeo1_sym = automol.geom.almost_equal_coulomb_spectrum(
+    fgeo1_symm = automol.geom.almost_equal_coulomb_spectrum(
         fgeo1, fgeo1_reflect, rtol=5e-2)
-    fgeo2_sym = automol.geom.almost_equal_coulomb_spectrum(
+    fgeo2_symm = automol.geom.almost_equal_coulomb_spectrum(
         fgeo2, fgeo2_reflect, rtol=5e-2)
 
     # Set the face and face_sym keywords based on the above tests
-    if frag1_symm and frag2_symm:
+    if fgeo1_symm and fgeo2_symm:
         faces = [0, 1]
         face_symm = 4
-    elif frag1_symm and not frag2_symm:
+    elif fgeo1_symm and not fgeo2_symm:
         faces = [0, 1]
         face_symm = 2
-    elif frag1_symm and not frag2_symm:
+    elif fgeo1_symm and not fgeo2_symm:
         faces = [0, 1]
         face_symm = 2
-    else not frag1_symm and not frag2_symm:
+    elif not fgeo1_symm and not fgeo2_symm:
         faces = [0]
         face_symm = 1
 
-    return faces, faces_symm
+    return faces, face_symm
 
 
 def build_pivot_frames(min_idx, max_idx,
