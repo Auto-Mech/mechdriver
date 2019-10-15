@@ -756,9 +756,37 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=True):
             print('locs test:', locs)
             run_path = scn_run_fs.leaf.path(locs)
             run_fs = autofile.fs.run(run_path)
+            print("Reading from scan run at {}".format(run_path))
 
-                        hess = elstruct.reader.hessian(prog, method, out_str)
-                        scn_save_fs.leaf.file.hessian.write(geo, locs)
+            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            if ret:
+                inf_obj, inp_str, out_str = ret
+                prog = inf_obj.prog
+                method = inf_obj.method
+                ene = elstruct.reader.energy(prog, method, out_str)
+                geo = elstruct.reader.opt_geometry(prog, out_str)
+                zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+                save_path = scn_save_fs.leaf.path(locs)
+                print(" - Saving...")
+                print(" - Save path: {}".format(save_path))
+
+                scn_save_fs.leaf.create(locs)
+                scn_save_fs.leaf.file.geometry_info.write(inf_obj, locs)
+                scn_save_fs.leaf.file.geometry_input.write(inp_str, locs)
+                scn_save_fs.leaf.file.energy.write(ene, locs)
+                scn_save_fs.leaf.file.geometry.write(geo, locs)
+                scn_save_fs.leaf.file.zmatrix.write(zma, locs)
+
+                locs_lst.append(locs)
+                if hessian:
+                    ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
+                    if ret:
+                        inf_obj, inp_str, out_str = ret
+                        prog = inf_obj.prog
+                        method = inf_obj.method
+                        hess = elstruct.reader.hessian(prog, out_str)
+                        scn_save_fs.leaf.file.hessian.write(hess, locs)
 
         if locs_lst:
             idxs_lst = [locs[-1] for locs in locs_lst]

@@ -50,158 +50,158 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
         runspecies = [{'species': full_queue, 'reacs': [], 'prods': []}]
         esdriver.driver.run(tsk_info_lst, es_dct, runspecies, spcdct, run_prefix, save_prefix)
 
-    geo_lvl = ''
-    harm_lvl = ''
-    anharm_lvl = ''
-    tors_lvl = ''
-    sym_lvl = ''
-    harm_lvl_ref = ''
-    anharm_lvl_ref = ''
-    tors_lvl_ref = ''
-    sym_lvl_ref = ''
+    if runmess:
+        geo_lvl = ''
+        harm_lvl = ''
+        anharm_lvl = ''
+        tors_lvl = ''
+        sym_lvl = ''
+        harm_lvl_ref = ''
+        anharm_lvl_ref = ''
+        tors_lvl_ref = ''
+        sym_lvl_ref = ''
 
-    #Get PF input header
-    temp_step = 100.
-    ntemps = 30
-    # temp_step = TEMP_STEP
-    # ntemps = NTEMPS
-    global_pf_str = scripts.thermo.get_pf_header(temp_step, ntemps)
+        #Get PF input header
+        temp_step = 100.
+        ntemps = 30
+        # temp_step = TEMP_STEP
+        # ntemps = NTEMPS
+        global_pf_str = scripts.thermo.get_pf_header(temp_step, ntemps)
 
-    #Gather PF model and theory level info
-    spc_model = ['RIGID', 'HARM', '']
-    geom = False
-    hess = False
-    for tsk in tsk_info_lst:
-        if 'samp' in tsk[0] or 'geom' in tsk[0]:
-            geo_lvl = tsk[1]
-            geom = True
-        if 'grad' in tsk[0] or 'hess' in tsk[0]:
-            harm_lvl = tsk[1]
-            harm_lvl_ref = tsk[2]
-            if 'grad' in tsk[0]:
-                grad = True
-            if 'hess' in tsk[0]:
-                hess = True
-            if not geom:
-                ene_lvl = tsk[1]
+        #Gather PF model and theory level info
+        spc_model = ['RIGID', 'HARM', '']
+        geom = False
+        hess = False
+        for tsk in tsk_info_lst:
+            if 'samp' in tsk[0] or 'geom' in tsk[0]:
                 geo_lvl = tsk[1]
-        if 'hr' in tsk[0] or 'tau' in tsk[0]:
-            tors_lvl = tsk[1]
-            tors_lvl_ref = tsk[2]
-            if 'md' in tsk[0]:
-                spc_model[0] = 'MDHR'
-            if 'tau' in tsk[0]:
-                spc_model[0] = 'TAU'
-            else:
-                spc_model[0] = '1DHR'
-        if 'anharm' in tsk[0] or 'vpt2' in tsk[0]:
-            anharm_lvl = tsk[1]
-            anharm_lvl_ref = tsk[2]
-            spc_model[1] = 'ANHARM'
-            if not hess:
-                geo_lvl = tsk[1]
-        if 'sym' in tsk[0]:
-            sym_lvl = tsk[1]
-            sym_lvl_ref = tsk[2]
-            if 'samp' in tsk[0]:
-                spc_model[2] = 'SAMPLING'
-            if '1DHR' in tsk[0]:
-                spc_model[2] = '1DHR'
-    geo_thy_info = get_thy_info(es_dct, geo_lvl)
-    harm_thy_info = get_thy_info(es_dct, harm_lvl)
-    tors_thy_info = get_thy_info(es_dct, tors_lvl)
-    anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
-    sym_thy_info = get_thy_info(es_dct, sym_lvl)
-    pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
+                geom = True
+            if 'grad' in tsk[0] or 'hess' in tsk[0]:
+                harm_lvl = tsk[1]
+                harm_lvl_ref = tsk[2]
+                if 'grad' in tsk[0]:
+                    grad = True
+                if 'hess' in tsk[0]:
+                    hess = True
+                if not geom:
+                    ene_lvl = tsk[1]
+                    geo_lvl = tsk[1]
+            if 'hr' in tsk[0] or 'tau' in tsk[0]:
+                tors_lvl = tsk[1]
+                tors_lvl_ref = tsk[2]
+                if 'md' in tsk[0]:
+                    spc_model[0] = 'MDHR'
+                if 'tau' in tsk[0]:
+                    spc_model[0] = 'TAU'
+                else:
+                    spc_model[0] = '1DHR'
+            if 'anharm' in tsk[0] or 'vpt2' in tsk[0]:
+                anharm_lvl = tsk[1]
+                anharm_lvl_ref = tsk[2]
+                spc_model[1] = 'ANHARM'
+                if not hess:
+                    geo_lvl = tsk[1]
+            if 'sym' in tsk[0]:
+                sym_lvl = tsk[1]
+                sym_lvl_ref = tsk[2]
+                if 'samp' in tsk[0]:
+                    spc_model[2] = 'SAMPLING'
+                if '1DHR' in tsk[0]:
+                    spc_model[2] = '1DHR'
+        geo_thy_info = get_thy_info(es_dct, geo_lvl)
+        harm_thy_info = get_thy_info(es_dct, harm_lvl)
+        tors_thy_info = get_thy_info(es_dct, tors_lvl)
+        anharm_thy_info = get_thy_info(es_dct, anharm_lvl)
+        sym_thy_info = get_thy_info(es_dct, sym_lvl)
+        pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
 
-    harm_ref_thy_info = get_thy_info(es_dct, harm_lvl_ref)
-    tors_ref_thy_info = get_thy_info(es_dct, tors_lvl_ref)
-    anharm_ref_thy_info = get_thy_info(es_dct, anharm_lvl_ref)
-    sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
-    ref_levels = [
-        harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
+        harm_ref_thy_info = get_thy_info(es_dct, harm_lvl_ref)
+        tors_ref_thy_info = get_thy_info(es_dct, tors_lvl_ref)
+        anharm_ref_thy_info = get_thy_info(es_dct, anharm_lvl_ref)
+        sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
+        ref_levels = [
+            harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
 
-    #Collect the PF input for each species
-    # Initialize the ene for each of the species
-    for spc in full_queue:
-        spc_info = scripts.es.get_spc_info(spcdct[spc])
-        spc_save_fs = autofile.fs.species(save_prefix)
-        spc_save_fs.leaf.create(spc_info)
-        spc_save_path = spc_save_fs.leaf.path(spc_info)
+        #Collect the PF input for each species
+        # Initialize the ene for each of the species
+        for spc in full_queue:
+            spc_info = scripts.es.get_spc_info(spcdct[spc])
+            spc_save_fs = autofile.fs.species(save_prefix)
+            spc_save_fs.leaf.create(spc_info)
+            spc_save_path = spc_save_fs.leaf.path(spc_info)
 
-        zpe, zpe_str = scripts.thermo.get_zpe(
-            spc, spcdct[spc], spc_save_path, pf_levels, spc_model)
-        spc_str = scripts.thermo.get_spc_input(
-            spc, spcdct[spc], spc_info, spc_save_path, pf_levels, spc_model)
+            zpe, zpe_str = scripts.thermo.get_zpe(
+                spc, spcdct[spc], spc_save_path, pf_levels, spc_model)
+            spc_str = scripts.thermo.get_spc_input(
+                spc, spcdct[spc], spc_info, spc_save_path, pf_levels, spc_model)
 
-        spcdct[spc]['spc_info'] = spc_info
-        spcdct[spc]['spc_save_path'] = spc_save_path
-        spcdct[spc]['zpe'] = zpe
-        spcdct[spc]['zpe_str'] = zpe_str
-        spcdct[spc]['spc_str'] = spc_str
-        spcdct[spc]['ene'] = 0
+            spcdct[spc]['spc_info'] = spc_info
+            spcdct[spc]['spc_save_path'] = spc_save_path
+            spcdct[spc]['zpe'] = zpe
+            spcdct[spc]['zpe_str'] = zpe_str
+            spcdct[spc]['spc_str'] = spc_str
+            spcdct[spc]['ene'] = 0
 
-    # Make and Run the PF file
-    for spc in spc_queue:
-        spc_save_path = spcdct[spc]['spc_save_path']
-        spc_str = spcdct[spc]['spc_str']
-        zpe_str = spcdct[spc]['zpe_str']
-        spc_info = spcdct[spc]['spc_info']
-        pf_input = scripts.thermo.get_pf_input(
-            spc, spc_str, global_pf_str, zpe_str)
+        # Make and Run the PF file
+    if runthermo:
+        for spc in spc_queue:
+            spc_save_path = spcdct[spc]['spc_save_path']
+            spc_str = spcdct[spc]['spc_str']
+            zpe_str = spcdct[spc]['zpe_str']
+            spc_info = spcdct[spc]['spc_info']
+            pf_input = scripts.thermo.get_pf_input(
+                spc, spc_str, global_pf_str, zpe_str)
 
-        pf_path, nasa_path = scripts.thermo.get_thermo_paths(
-            spc_save_path, spc_info, harm_thy_info)
-        spcdct[spc]['pf_path'] = pf_path
-        spcdct[spc]['nasa_path'] = nasa_path
+            pf_path, nasa_path = scripts.thermo.get_thermo_paths(
+                spc_save_path, spc_info, harm_thy_info)
+            spcdct[spc]['pf_path'] = pf_path
+            spcdct[spc]['nasa_path'] = nasa_path
 
-        scripts.thermo.write_pf_input(pf_input, pf_path)
-        if runmess:
+            scripts.thermo.write_pf_input(pf_input, pf_path)
             scripts.thermo.run_pf(pf_path)
 
-    # Compute Hf0K
-    ene_strl = []
-    ene_str = '! energy level:'
-    ene_lvl = ''
-    ene_idx = 0
-    for tsk in tsk_info_lst:
-        if 'ene' in tsk[0]:
-            if ene_idx > len(ene_coeff)-1:
-                print('WARNING:',
-                      'an insufficient energy coefficient list was provided')
-                break
-            ene_lvl = tsk[1]
-            geo_lvl = tsk[2]
-            geo_thy_info = scripts.es.get_thy_info(es_dct[geo_lvl])
-            ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
-            ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
-                ene_coeff[ene_idx], ene_thy_info[3],
-                ene_thy_info[1], ene_thy_info[2],
-                geo_thy_info[3], geo_thy_info[1], geo_thy_info[2]))
+        # Compute Hf0K
+        ene_strl = []
+        ene_str = '! energy level:'
+        ene_lvl = ''
+        ene_idx = 0
+        for tsk in tsk_info_lst:
+            if 'ene' in tsk[0]:
+                if ene_idx > len(ene_coeff)-1:
+                    print('WARNING:',
+                          'an insufficient energy coefficient list was provided')
+                    break
+                ene_lvl = tsk[1]
+                geo_lvl = tsk[2]
+                geo_thy_info = scripts.es.get_thy_info(es_dct[geo_lvl])
+                ene_thy_info = scripts.es.get_thy_info(es_dct[ene_lvl])
+                ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
+                    ene_coeff[ene_idx], ene_thy_info[3],
+                    ene_thy_info[1], ene_thy_info[2],
+                    geo_thy_info[3], geo_thy_info[1], geo_thy_info[2]))
 
-            for spc in full_queue:
-                spc_info = spcdct[spc]['spc_info']
-                ene = scripts.thermo.get_electronic_energy(
-                    spc_info, geo_thy_info, ene_thy_info, save_prefix)
-                print('ene test:', ene, ene_coeff[ene_idx], ene_idx)
-                spcdct[spc]['ene'] += ene*ene_coeff[ene_idx]
-            ene_idx += 1
-    ene_str += '!               '.join(ene_strl)
-    pf_levels.append(ene_str)
-    # Need to get zpe for reference molecules too
-    calc_bas = True
-    if isinstance(ref, list):
-        spc_bas = ref
-        calc_bas = False
-    elif is_scheme(ref) or not ref:
-        reference_function = get_function_call(ref)
-    for spc in spc_queue:
-        if calc_bas:
-            spc_bas, clist = get_ref(spc, spcdct, reference_function)
-        hf0k = scripts.thermo.get_hf0k(spc, spcdct, spc_bas, clist)
-        spcdct[spc]['Hfs'] = [hf0k]
+                for spc in full_queue:
+                    spc_info = spcdct[spc]['spc_info']
+                    ene = scripts.thermo.get_electronic_energy(
+                        spc_info, geo_thy_info, ene_thy_info, save_prefix)
+                    print('ene test:', ene, ene_coeff[ene_idx], ene_idx)
+                    spcdct[spc]['ene'] += ene*ene_coeff[ene_idx]
+                ene_idx += 1
+        ene_str += '!               '.join(ene_strl)
+        pf_levels.append(ene_str)
+        # Need to get zpe for reference molecules too
+        calc_bas = True
+        if isinstance(ref, list):
+            spc_bas = ref
+            calc_bas = False
+        elif is_scheme(ref) or not ref:
+            reference_function = get_function_call(ref)
+        for spc in spc_queue:
+            if calc_bas:
+                spc_bas, clist = get_ref(spc, spcdct, reference_function)
+            hf0k = scripts.thermo.get_hf0k(spc, spcdct, spc_bas, clist)
+            spcdct[spc]['Hfs'] = [hf0k]
 
-    if runthermo:
         chemkin_header_str = scripts.thermo.run_ckin_header(
             pf_levels, ref_levels, spc_model)
         chemkin_set_str = chemkin_header_str
@@ -251,8 +251,8 @@ def get_function_call(scheme):
 def get_ref(spc, spcdct, call):
     """ references for a single species
     """
-    ref, _ = call(spcdct[spc]['ich'])
-    return ref
+    ref, clist = call(spcdct[spc]['ich'])
+    return ref, clist
 
 
 def get_refs(species, spcs, scheme):
@@ -262,7 +262,7 @@ def get_refs(species, spcs, scheme):
     ref = []
     msg = ''
     for spc in species:
-        spc_ref = call(spcs[spc]['ich'])
+        spc_ref, _ = call(spcs[spc]['ich'])
         msg += 'Species {} with basis {}\n'.format(spc, ', '.join(spc_ref))
         ref.extend(spc_ref)
     return list(dict.fromkeys(ref)), msg
@@ -300,6 +300,7 @@ def create_spec(val, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.)
     spec = {}
     if isinstance(val, str):
         ich = val
+        print('ich test in create_spec:', ich)
         geo = automol.inchi.geometry(ich)
         zma = automol.geom.zmatrix(geo)
         spec['zmatrix'] = zma
