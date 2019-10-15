@@ -101,7 +101,7 @@ def species_block(
     else:
         if sym_model == 'SAMPLING':
             if not sym_min_cnf_locs:
-                print('ERROR: Reference geometry is missing for symmetry for species {].'.format(spc_info[0]))
+                print('ERROR: Reference geometry is missing for symmetry for species {}'.format(spc_info[0]))
                 return '', 0.
             sym_geo = sym_cnf_save_fs.leaf.file.geometry.read(sym_min_cnf_locs)
             sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
@@ -144,10 +144,10 @@ def species_block(
                     hind_rot=hind_rot_str,
                     )
         else:
-            print('ERROR: Reference geometry is missing for harmonic frequencies for species {].'.format(spc_info[0]))
-            return '', 0.
+            print('ERROR: Reference geometry is missing for harmonic frequencies for species {}'.format(spc_info[0]))
             spc_str = ''
             imag_freq = 0.
+            return '', 0.
 
     if vib_model == 'HARM' and tors_model == '1DHR':
         if har_min_cnf_locs is not None:
@@ -277,10 +277,10 @@ def species_block(
                         hind_rot=hind_rot_str
                         )
         else:
-            print('ERROR: Reference geometry is missing for harmonic frequencies for species {].'.format(spc_info[0]))
-            return '', 0.
+            print('ERROR: Reference geometry is missing for harmonic frequencies for species {}'.format(spc_info[0]))
             spc_str = ''
             imag_freq = 0.
+            return '', 0.
 
     if vib_model == 'HARM' and tors_model == 'MDHR':
         print('HARM and MDHR combination is not yet implemented')
@@ -325,11 +325,10 @@ def species_block(
                     hind_rot=hind_rot_str,
                     )
         else:
-            print('ERROR: Reference geometry is missing for anharmonic analysis for species {].'.format(spc_info[0]))
-            return '', 0.
+            print('ERROR: Reference geometry is missing for anharmonic analysis for species {}'.format(spc_info[0]))
             spc_str = ''
             imag_freq = 0.
-            spc_str = ''
+            return '', 0.
         print('VPT2 and RIGID combination is not yet properly implemented')
 
     if vib_model == 'VPT2' and tors_model == '1DHR':
