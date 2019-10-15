@@ -40,9 +40,7 @@ def species_block(
 
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
-    print('spc')
-    print('sym model test in species_block:', sym_model, sym_level)
-    print('tors model test in species_block:', tors_model, tors_level)
+    print('har_save_path', har_save_path)
     if sym_level:
         orb_restr = moldr.util.orbital_restriction(
             spc_info, sym_level)
@@ -102,6 +100,9 @@ def species_block(
         sym_factor = spc_dct_i['sym']
     else:
         if sym_model == 'SAMPLING':
+            if not sym_min_cnf_locs:
+                print('ERROR: Reference geometry is missing for symmetry for species {].'.format(spc_info[0]))
+                return '', 0.
             sym_geo = sym_cnf_save_fs.leaf.file.geometry.read(sym_min_cnf_locs)
             sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
             sym_factor = moldr.conformer.symmetry_factor(sym_geo, sym_ene, sym_cnf_save_fs)
@@ -143,7 +144,10 @@ def species_block(
                     hind_rot=hind_rot_str,
                     )
         else:
+            print('ERROR: Reference geometry is missing for harmonic frequencies for species {].'.format(spc_info[0]))
+            return '', 0.
             spc_str = ''
+            imag_freq = 0.
 
     if vib_model == 'HARM' and tors_model == '1DHR':
         if har_min_cnf_locs is not None:
@@ -218,17 +222,17 @@ def species_block(
                         for atm_idx, atm in enumerate(atom_symbols):
                             if atm == 'X':
                                 dummy_idx.append(atm_idx)
-                        dummy_rem = numpy.zeros(len(zma[0]))     
+                        remdummy = numpy.zeros(len(zma[0]))     
                         for dummy in dummy_idx:
-                            for idx, _ in enumerate(dummy_rem):
+                            for idx, _ in enumerate(remdummy):
                                 if dummy < idx:
-                                   dummy_rem[idx] += 1
+                                   remdummy[idx] += 1
                         sym = 1
-                        print('dummy_rem', dummy_rem)
+                        print('remdummy', remdummy)
                         hind_rot_str += mess_io.writer.rotor_hindered(
-                            group, axis, sym, pot, dummy_rem)
+                            group, axis, sym, pot, remdummy)
                         proj_rotors_str += projrot_io.writer.rotors(
-                            axis, group, dummy_rem=dummy_rem)
+                            axis, group, remdummy=remdummy)
 
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
@@ -273,7 +277,10 @@ def species_block(
                         hind_rot=hind_rot_str
                         )
         else:
+            print('ERROR: Reference geometry is missing for harmonic frequencies for species {].'.format(spc_info[0]))
+            return '', 0.
             spc_str = ''
+            imag_freq = 0.
 
     if vib_model == 'HARM' and tors_model == 'MDHR':
         print('HARM and MDHR combination is not yet implemented')
@@ -318,6 +325,10 @@ def species_block(
                     hind_rot=hind_rot_str,
                     )
         else:
+            print('ERROR: Reference geometry is missing for anharmonic analysis for species {].'.format(spc_info[0]))
+            return '', 0.
+            spc_str = ''
+            imag_freq = 0.
             spc_str = ''
         print('VPT2 and RIGID combination is not yet properly implemented')
 
@@ -347,7 +358,7 @@ def vtst_with_saddle_block(
 
     # read the scan save file system to get the energies, zero-point energies, symmetry numbers, 
     # geometries, hessians, torsional potentials for each point on the MEP
-    call species_block()
+    #call species_block()
 
     # Determine the the number of points along the irc
     nirc = 21
@@ -361,13 +372,12 @@ def vtst_with_saddle_block(
         irc_pt_string += '! IRC Point {0}\n'.format(str(i+1))
 
         # Write the molecule section for each irc point
-        core = mess_io.writer.mol_data.core_rigidrotor(geom1, sym_factor, interp_emax=''):
-        irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
-             hind_rot='', xmat=None, rovib_coups='', rot_dists=''):
+        #core = mess_io.writer.mol_data.core_rigidrotor(geom1, sym_factor, interp_emax='')
+        #irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
+             #hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
         # Append the zero point energy for the molecule
-        irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
-        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}'.format(zero_energy)
+        #irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}'.format(zero_energy)
 
         # Append string to list
         irc_pt_strings.append(irc_pt_string)
@@ -399,12 +409,11 @@ def vtst_no_saddle_block(scn_save_fs, geoms, frequencies, energies):
         irc_pt_string += '! IRC Point {0}\n'.format(str(i+1))
 
         # Write the molecule section for each irc point
-        core = mess_io.writer.mol_data.core_rigidrotor(geom1, sym_factor, interp_emax=''):
+        core = mess_io.writer.mol_data.core_rigidrotor(geom1, sym_factor, interp_emax='')
         irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
-             hind_rot='', xmat=None, rovib_coups='', rot_dists=''):
+             hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
         # Append the zero point energy for the molecule
-        irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
         irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}'.format(zero_energy)
 
         # Append string to list
@@ -804,6 +813,10 @@ def get_zero_point_energy(
     har_zpe = 0.0
     is_atom = False
     # get reference harmonic
+    print('har_geo test:', har_min_cnf_locs, har_save_path, spc_info[0])
+    if not har_min_cnf_locs:
+        print('ERROR: No harmonic reference geometry for this species {}'.format(spc_info[0]))
+        return har_zpe, is_atom
     har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
     if automol.geom.is_atom(har_geo):
         har_zpe = 0.0
@@ -884,14 +897,14 @@ def get_zero_point_energy(
                 for atm_idx, atm in enumerate(atom_symbols):
                     if atm == 'X':
                         dummy_idx.append(atm_idx)
-                dummy_rem = numpy.zeros(len(zma[0]))
+                remdummy = numpy.zeros(len(zma[0]))
                 for dummy in dummy_idx:
-                    for idx, _ in enumerate(dummy_rem):
+                    for idx, _ in enumerate(remdummy):
                         if dummy < idx:
-                            dummy_rem[idx] += 1
+                            remdummy[idx] += 1
                 sym = 1  #<<--------- This should be updated
                 hind_rot_str += mess_io.writer.rotor_hindered(
-                    group, axis, sym, pot, dummy_rem)
+                    group, axis, sym, pot, remdummy)
 
             dummy_freqs = [1000.]
             dummy_zpe = 0.0

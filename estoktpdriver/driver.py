@@ -729,8 +729,8 @@ if RUN_THERMO:
     # SPC_QUEUE = ['CHOH']
     # SPC_QUEUE = ['CH2OH']
 
-    # REF_MOLS = 'basic'
-    REF_MOLS = 'cbh1'
+    REF_MOLS = 'basic'
+    #REF_MOLS = 'cbh1'
     # REF_MOLS = [
         # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('O')
         # automol.smiles.inchi('C'),
@@ -745,11 +745,11 @@ if RUN_THERMO:
         # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'),
         # automol.smiles.inchi('O=O'), automol.smiles.inchi('N#N')]
         # ]
-    thermodriver.driver.run(
-        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
-        SAVE_PREFIX, options=OPTIONS)
+    #thermodriver.driver.run(
+        #TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
+        #SAVE_PREFIX, options=OPTIONS)
 
-    OPT_ES = True
+    OPT_ES = False
     OPT_MESS = True
     OPT_THERMO = True
     OPT_ALLPF = False
