@@ -568,13 +568,13 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                 bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
 
     if typ is None:
-        ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
-        if ret:
-            typ = 'hydrogen migration'
-            ts_zma, dist_name, tors_names = ret
-            rct_zmas = moldr.util.min_dist_conformer_zma(dist_name, rct_cnf_save_fs[0])
+        orig_dist = automol.zmatrix.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
+        if orig_dist:
+            rct_zmas = moldr.util.min_dist_conformer_zma_geo(orig_dist, rct_cnf_save_fs[0])
             ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
-            ts_zma, dist_name, tors_names = ret
+            if ret:
+                typ = 'hydrogen migration'
+                ts_zma, dist_name, tors_names = ret
 
     # fix this later
     # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
@@ -613,7 +613,6 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
     if typ is None:
         orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(rct_zmas, prd_zmas)
-        print('orig dist', orig_dist)
         if orig_dist:
             rct_zmas = moldr.util.min_dist_conformer_zma_geo(orig_dist, rct_cnf_save_fs[0])
             ret = automol.zmatrix.ts.concerted_unimolecular_elimination(rct_zmas, prd_zmas)

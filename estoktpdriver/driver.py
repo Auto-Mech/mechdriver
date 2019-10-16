@@ -760,10 +760,14 @@ if RUN_THERMO:
 
 if RUN_RATES:
 
-    RUN_ES = True
-    RUN_SPECIES = True
-    RUN_MESS = True
-    RUN_RATES = True
+    # RUN_ES = True
+    # RUN_SPECIES = True
+    # RUN_MESS = True
+    # RUN_RATES = True
+    RUN_ES = False
+    RUN_SPECIES = False
+    RUN_MESS = False
+    RUN_RATES = False
     OPTIONS = [RUN_ES, RUN_SPECIES, RUN_MESS, RUN_RATES]
 
     TSK_INFO_LST = [
@@ -807,7 +811,6 @@ if RUN_RATES:
             PESNUMS = [int(num) for num in nums]
     # loop over PESs
     print('PESNUMS and CHANNELS:', PESNUMS, CHANNELS)
-
     for pes_idx, PES in enumerate(PES_LST, start=1):
         if pes_idx in PESNUMS:
             PES_RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
@@ -824,60 +827,98 @@ if RUN_RATES:
                     nums = CHANNELS.replace('[', '').replace(']', '').split(',')
                     pes_chns = [int(num) for num in nums]
             print('for pes:', pes_idx)
-            print('channels:', pes_chns)
-            print('running ktp on PES{}: {} for the following channels...'.format(str(pes_idx), PES))
             RCT_NAMES_LST = []
             PRD_NAMES_LST = []
             RXN_NAME_LST = []
-            for chn_idx, _ in enumerate(PES_RXN_NAME_LST):
-                if chn_idx+1 in pes_chns:
-                    print('chn_idx test:', chn_idx, pes_chns)
-                    RCT_NAMES_LST.append(PES_RCT_NAMES_LST[chn_idx])
-                    PRD_NAMES_LST.append(PES_PRD_NAMES_LST[chn_idx])
-                    RXN_NAME_LST.append(PES_RXN_NAME_LST[chn_idx])
-                    print('{} = {}'.format(
-                        ' + '.join(PES_RCT_NAMES_LST[chn_idx]),
-                        ' + '.join(PES_PRD_NAMES_LST[chn_idx])))
-            # set up name lists and ts species dictionary for a given PES
-                    #RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
-                    #PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
-                    #RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
-            RXN_LST = []
-            for rxn, _ in enumerate(RCT_NAMES_LST):
-                RXN_LST.append(
-                    {'species': [], 'reacs': list(RCT_NAMES_LST[rxn]), 'prods':
-                     list(PRD_NAMES_LST[rxn])})
-            ts_idx = 0
-            for idx, rxn in enumerate(RXN_LST):
-                reacs = rxn['reacs']
-                prods = rxn['prods']
-                tsname = 'ts_{:g}'.format(ts_idx)
-                SPC_DCT[tsname] = {}
-                if reacs and prods:
-                    SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
-                SPC_DCT[tsname]['ich'] = ''
-                ts_chg = 0
-                for rct in RCT_NAMES_LST[idx]:
-                    ts_chg += SPC_DCT[rct]['chg']
-                SPC_DCT[tsname]['chg'] = ts_chg
-                ts_mul_low, ts_mul_high, rad_rad = moldr.util.ts_mul_from_reaction_muls(
-                    RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
-                SPC_DCT[tsname]['mul'] = ts_mul_low
-                SPC_DCT[tsname]['rad_rad'] = rad_rad
-                ts_idx += 1
-                if ts_mul_low != ts_mul_high and rad_rad:
-                    spc_dct = SPC_DCT[tsname].copy()
-                    tsname = 'ts_{:g}'.format(ts_idx)
-                    SPC_DCT[tsname] = spc_dct
-                    SPC_DCT[tsname]['mul'] = ts_mul_high
-                    ts_idx += 1
 
-            print('RUNNING WITH MESS')
-            # run ktp for a given PES
-            ktpdriver.driver.run(
-                TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
-                '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=OPTIONS)
-                #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
+            # Split up sub-pes within a formula
+            subpes_idx = 0
+            conndct = {}
+            connchnls = {}
+            for chnl_idx, chnl_name in enumerate(PES_RXN_NAME_LST):
+                print('Channel name', chnl_name)
+                connected_to = []
+                chnl_species = [list(PES_RCT_NAMES_LST[chnl_idx]), list(PES_PRD_NAMES_LST[chnl_idx])]
+                for conn_chnls_idx in conndct:
+                    for spc_pair in chnl_species:
+                        if spc_pair in conndct[conn_chnls_idx]:
+                            if conn_chnls_idx not in connected_to:
+                                connected_to.append(conn_chnls_idx)
+                        elif spc_pair[::-1] in conndct[conn_chnls_idx]:
+                            if conn_chnls_idx not in connected_to:
+                                connected_to.append(conn_chnls_idx)
+                if not connected_to:
+                    conndct[subpes_idx] = chnl_species
+                    connchnls[subpes_idx] = [chnl_idx]
+                    subpes_idx += 1
+                else:
+                    conndct[connected_to[0]].extend(chnl_species)
+                    connchnls[connected_to[0]].append(chnl_idx)
+                    if len(connected_to) > 1:
+                        for cidx, cval in enumerate(connected_to):
+                            if cidx > 0:
+                                conn_specs = conndct.pop(cval, None)
+                                conn_chnls = connchnls.pop(cval, None)
+                                conndct[connected_to[0]].extend(conn_specs)
+                                connchnls[connected_to[0]].extend(conn_chnls)
+                    for cidx in conndct:
+                        conndct[cidx].sort()
+                        conndct[cidx] = [conndct[cidx][i] for i in
+                                         range(len(conndct[cidx])) if i == 0 or
+                                         conndct[cidx][i] != conndct[cidx][i-1]]
+
+            # Loop ktp runs over the sub-pes
+            for cidx, cvals in enumerate(connchnls.values()):
+                print('running ktp on PES{}_{}: {} for the following channels...'.format(str(pes_idx), str(cidx+1), PES))
+                for chn_idx, _ in enumerate(PES_RXN_NAME_LST):
+                    if chn_idx+1 in pes_chns and chn_idx in cvals:
+                        RCT_NAMES_LST.append(PES_RCT_NAMES_LST[chn_idx])
+                        PRD_NAMES_LST.append(PES_PRD_NAMES_LST[chn_idx])
+                        RXN_NAME_LST.append(PES_RXN_NAME_LST[chn_idx])
+                        print('channel {}: {} = {}'.format(
+                            str(chn_idx+1),
+                            ' + '.join(PES_RCT_NAMES_LST[chn_idx]),
+                            ' + '.join(PES_PRD_NAMES_LST[chn_idx])))
+                # set up name lists and ts species dictionary for a given PES
+                        #RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
+                        #PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
+                        #RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
+                RXN_LST = []
+                for rxn, _ in enumerate(RCT_NAMES_LST):
+                    RXN_LST.append(
+                        {'species': [], 'reacs': list(RCT_NAMES_LST[rxn]), 'prods':
+                         list(PRD_NAMES_LST[rxn])})
+                ts_idx = 0
+                for idx, rxn in enumerate(RXN_LST):
+                    reacs = rxn['reacs']
+                    prods = rxn['prods']
+                    tsname = 'ts_{:g}'.format(ts_idx)
+                    SPC_DCT[tsname] = {}
+                    if reacs and prods:
+                        SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
+                    SPC_DCT[tsname]['ich'] = ''
+                    ts_chg = 0
+                    for rct in RCT_NAMES_LST[idx]:
+                        ts_chg += SPC_DCT[rct]['chg']
+                    SPC_DCT[tsname]['chg'] = ts_chg
+                    ts_mul_low, ts_mul_high, rad_rad = moldr.util.ts_mul_from_reaction_muls(
+                        RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
+                    SPC_DCT[tsname]['mul'] = ts_mul_low
+                    SPC_DCT[tsname]['rad_rad'] = rad_rad
+                    ts_idx += 1
+                    if ts_mul_low != ts_mul_high and rad_rad:
+                        spc_dct = SPC_DCT[tsname].copy()
+                        tsname = 'ts_{:g}'.format(ts_idx)
+                        SPC_DCT[tsname] = spc_dct
+                        SPC_DCT[tsname]['mul'] = ts_mul_high
+                        ts_idx += 1
+
+                print('RUNNING WITH MESS')
+                # run ktp for a given PES
+                ktpdriver.driver.run(
+                    TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
+                    '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=OPTIONS)
+                    #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 
 # f. Partition function parameters determined internally
 # TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
