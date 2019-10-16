@@ -93,15 +93,11 @@ def input_prep(ts_zma, rct_zmas, dist_name):
     return input_strs
 
 
-def build_correction_potential(mep_distances,
-                               potentials,
-                               bnd_frm_idxs,
-                               fortran_compiler,
-                               fortran_make_path,
-                               bnd_frm_syms=(),
-                               species_name='',
+def build_correction_potential(mep_distances, potentials,
+                               bnd_frm_idxs, fortran_compiler, make_path,
+                               dist_comp_idxs=(),
                                pot_labels=(),
-                               pot_file_names=()):
+                               pot_file_names=(), spc_name='mol'):
     """  use the MEP potentials to compile the correction potential .so file
     """
 
@@ -110,9 +106,9 @@ def build_correction_potential(mep_distances,
         mep_distances,
         potentials,
         bnd_frm_idxs,
-        bnd_frm_syms=bnd_frm_syms,
-        species_name=species_name,
-        pot_labels=pot_labels)
+        dist_comp_idxs=dist_comp_idxs,
+        pot_labels=pot_labels,
+        species_name=spc_name)
     dummy_corr_str = varecof_io.writer.corr_potentials.dummy()
     pot_aux_str = varecof_io.writer.corr_potentials.auxiliary()
     makefile_str = varecof_io.writer.corr_potentials.makefile(
@@ -120,18 +116,18 @@ def build_correction_potential(mep_distances,
         pot_file_names=pot_file_names)
 
     # Write all of the files needed to build the correction potential
-    with open('mol_corr.f', 'w') as mol_corr_file:
-        mol_corr_file.write(species_corr_str)
-    with open('dummy_corr.f', 'w') as dummy_corr_file:
-        dummy_corr_file.write(dummy_corr_str)
-    with open('pot_aux.f', 'w') as pot_aux_file:
-        pot_aux_file.write(pot_aux_str)
-    with open('makefile', 'w') as makefile_file:
-        makefile_file.write(makefile_str)
+    with open(os.path.join(make_path, spc_name+'_corr.f'), 'w') as corr_file:
+        corr_file.write(species_corr_str)
+    with open(os.path.join(make_path, 'dummy_corr.f'), 'w') as corr_file:
+        corr_file.write(dummy_corr_str)
+    with open(os.path.join(make_path, 'pot_aux.f'), 'w') as corr_file:
+        corr_file.write(pot_aux_str)
+    with open(os.path.join(make_path, 'makefile'), 'w') as corr_file:
+        corr_file.write(makefile_str)
 
     # Compile the correction potential
     varecof_io.writer.corr_potentials.compile_corr_pot(
-        fortran_make_path)
+        make_path)
 
 
 def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):

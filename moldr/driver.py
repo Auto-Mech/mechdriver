@@ -16,6 +16,7 @@ JOB_ERROR_DCT = {
     elstruct.Job.HESSIAN: elstruct.Error.SCF_NOCONV,
     elstruct.Job.VPT2: elstruct.Error.SCF_NOCONV,
     elstruct.Job.OPTIMIZATION: elstruct.Error.OPT_NOCONV,
+    elstruct.Job.IRC: elstruct.Error.IRC_NOCONV,
 }
 
 JOB_RUNNER_DCT = {
@@ -28,6 +29,8 @@ JOB_RUNNER_DCT = {
     elstruct.Job.VPT2: functools.partial(
         runner.options_matrix_run, elstruct.writer.vpt2),
     elstruct.Job.OPTIMIZATION: runner.options_matrix_optimization,
+    elstruct.Job.IRC: functools.partial(
+        runner.options_matrix_run, elstruct.writer.irc),
 }
 
 
