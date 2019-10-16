@@ -9,7 +9,8 @@ import scripts.es
 import esdriver.driver
 import autofile.fs
 
-TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
+#TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
+TEMPS = [500., 750., 1000., 1250., 1500., 1750., 2000.]
 PRESS = [0.1, 1., 10., 100.]
 EXP_FACTOR = 150.0
 EXP_POWER = 0.85
@@ -115,7 +116,6 @@ def run(
                     spc_dct[ts]['reacs'], spc_dct[ts]['prods'], spc_dct,
                     ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
                     KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
-                print('rct, prd, _zmas test:', rct_zmas, prd_zmas)
                 ret = scripts.es.ts_class(
                     rct_zmas, prd_zmas, spc_dct[ts]['rad_rad'],
                     spc_dct[ts]['mul'], low_mul, high_mul,
@@ -134,7 +134,6 @@ def run(
                         spc_dct[ts]['bkp_data'] = ret2
                     else:
                         spc_dct[ts]['bkp_data'] = None
-                    print('ts_zma test:', ts_zma)
                 else:
                     spc_dct[ts]['class'] = None
                     spc_dct[ts]['bkp_data'] = None
@@ -325,7 +324,11 @@ def run(
         labels = idx_dct.values()
         names = idx_dct.keys()
         err_thresh = 15.
+        assess_pdep_temps = [1000.0]
+        a_conv_factor = 1.
         for lab_i, name_i in zip(labels, names):
+            if 'W' not in lab_i:
+                a_conv_factor = 6.0221e23
             if  'F' not in lab_i:
                 for lab_j, name_j in zip(labels, names):
                     if 'F' not in lab_j:
@@ -338,12 +341,10 @@ def run(
                             if ene > 0.:
                                 reaction = name_i + '=' + name_j
                                 sing_rate_params, sing_errs, doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
-                                    lab_i, lab_j, mess_path)
+                                    lab_i, lab_j, mess_path, assess_pdep_temps,
+                                    pdep_tolerance=20, no_pdep_pval=1.0,
+                                    a_conv_factor=a_conv_factor)
                                 max_err = max([vals[1] for vals in sing_errs.values()])
-                                print('max_err test:', max_err, err_thresh)
-                                print('sing err test:', sing_errs)
-                                print('doub err test:', doub_errs)
-                                print('sing_rate_params:', sing_rate_params)
                                 if max_err < err_thresh:
                                     chemkin_str += chemkin_io.writer.reaction.plog(
                                         reaction, sing_rate_params, sing_errs)

@@ -205,7 +205,6 @@ def sort_together(rxn_ichs, rxn_chgs, rxn_muls):
 
 
 def _sort_together(ichs, chgs, muls):
-    print('ichs in sort_together:', ichs)
     idxs = automol.inchi.argsort(ichs)
     ichs = tuple(ichs[idx] for idx in idxs)
     chgs = tuple(chgs[idx] for idx in idxs)

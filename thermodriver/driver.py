@@ -213,6 +213,9 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
             # or rest of code is confused
             scripts.thermo.write_thermp_inp(spcdct[spc])
             # run thermp creats thermo and also passed back the 298 K Hf
+            if spcdct[spc]['ene'] == 0.0 or spcdct[spc]['spc_str'] == '':
+                print('Cannot generate thermo for species {} because information is still missing:'.format(spcdct[spc]['ich']))
+                continue
             hf298k = scripts.thermo.run_thermp(pf_path, nasa_path)
             spcdct[spc]['Hfs'].append(hf298k)
             pac99_poly_str = scripts.thermo.run_pac(spcdct[spc], nasa_path)

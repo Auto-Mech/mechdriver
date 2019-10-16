@@ -173,7 +173,6 @@ def make_channel_pfs(
                 idx_dct[well_dct_key1] = reac_label
     if not reac_label:
         reac_label = idx_dct[well_dct_key1]
-    print('reac_ene:', reac_ene-first_ground_ene)
 #Set up a new well for the products if that combo isn't already in the dct
     prod_label = ''
     prod_ene = 0.
@@ -210,7 +209,6 @@ def make_channel_pfs(
                 idx_dct[well_dct_key1] = prod_label
     if not prod_label:
         prod_label = idx_dct[well_dct_key1]
-    print('prod_ene:', prod_ene-first_ground_ene)
 
     #Set up a new well connected to ts
     ts_ene = scripts.thermo.spc_energy(spc_dct[tsname]['ene'], spc_dct[tsname]['zpe']) * EH2KCAL
@@ -226,11 +224,9 @@ def make_channel_pfs(
     fake_wellr_label = ''
     fake_wellp_label = ''
     if 'abstraction' in spc_dct[tsname]['class']:
-    #if len(rxn['reacs']) > 1:
     #Make fake wells and PST TSs as needed
         well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
         well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
-        print('idx_dct test:', well_dct_key1, well_dct_key2, idx_dct)
         if not well_dct_key1 in idx_dct:
             if well_dct_key2 in idx_dct:
                 well_dct_key1 = well_dct_key2
@@ -268,8 +264,6 @@ def make_channel_pfs(
         ts_str += '\n' + mess_io.writer.ts_sadpt(
             pst_r_label, reac_label, fake_wellr_label, pst_r_ts_str,
             zero_energy, tunnel_str)
-        # ts_str += '\n' + mess_io.writer.ts_sadpt(
-            # ts_label, fake_well_label, prod_label, wells[tsname], zero_energy, tunnel_str)
 
         well_dct_key1 = 'F' + '+'.join(rxn['prods'])
         well_dct_key2 = 'F' + '+'.join(rxn['prods'][::-1])
@@ -357,7 +351,7 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
                 no_pdep_pval=1.0,
                 pdep_tolerance=20.0,
                 pdep_low=None,
-                pdep_high=None):
+                pdep_high=None, a_conv_factor=1.):
 
     """
     Routine for a single reaction:
@@ -383,17 +377,22 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
     # Loop over the single and double Arrhenius fits
     for fit_type in fit_types:
 
-        print('\n\nfitting test for', fit_type)
+        print('\n\nfitting for', fit_type)
 
         # Read the MESS output file into a string
         with open(mess_path+'/rate.out', 'r') as mess_file:
             output_string = mess_file.read()
+
+        #with open(mess_path+'/mess.inp', 'r') as mess_file:
+            #input_string = mess_file.read()
 
         # Read the temperatures and pressures out of the MESS output
         mess_temps, _ = mess_io.reader.rates.get_temperatures(
             output_string)
         mess_pressures, punit = mess_io.reader.rates.get_pressures(
             output_string)
+        #mess_pressures, punit = mess_io.reader.rates.get_pressures_input(
+            #input_string)
 
         # Loop over the pressures obtained from the MESS output
         for pressure in mess_pressures:
@@ -419,7 +418,7 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
 
         # Filter the ktp dictionary by assessing the presure dependence
         rxn_is_pdependent = ratefit.err.assess_pressure_dependence(
-            valid_calc_tk_dct, filtered_temps, assess_pdep_temps,
+            valid_calc_tk_dct, assess_pdep_temps,
             tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
 
         if rxn_is_pdependent:
@@ -427,7 +426,9 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
             ktp_dct = valid_calc_tk_dct.deepcopy()
         else:
             # Set dct to have single set of k(T, P) vals: P is desired pressure
-            ktp_dct[no_pdep_pval] = valid_calc_tk_dct[no_pdep_pval]
+            #ktp_dct[no_pdep_pval] = valid_calc_tk_dct[no_pdep_pval]
+            ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
+            premap = no_pdep_pval
 
         # Calculate the fitting parameters from the filtered T,k lists
         for pressure, tk_lsts in ktp_dct.items():
@@ -440,33 +441,27 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
             if fit_type == 'single':
                 fit_params = ratefit.fit.arrhenius.single(
                     temps, rate_constants, t_ref, fit_method,
-                    dsarrfit_path=mess_path)
+                    dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
             elif fit_type == 'double':
                 init_params = ratefit.fit.arrhenius.single(
                     temps, rate_constants, t_ref, fit_method,
-                    dsarrfit_path=mess_path)
+                    dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
                 fit_params = ratefit.fit.arrhenius.double(
                     temps, rate_constants, t_ref, fit_method,
                     a_guess=init_params[0],
                     n_guess=init_params[1],
                     ea_guess=init_params[2],
-                    dsarrfit_path=mess_path)
+                    dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
 
             # Store the fitting parameters in a dictionary
             fit_param_dct[pressure] = fit_params
-
-        # If no high-pressure is found in dct, add fake fitting parameters
-        if 'high' not in fit_param_dct:
-            if fit_type == 'single':
-                fit_param_dct['high'] = [1.00, 0.00, 0.00]
-            elif fit_type == 'double':
-                fit_param_dct['high'] = [1.00, 0.00, 0.00, 1.00, 0.00, 0.00]
 
         # Calculate fitted rate constants using the fitted parameters
         for pressure, params in fit_param_dct.items():
 
             # Set the temperatures
-            temps = valid_calc_tk_dct[pressure][0]
+            #temps = valid_calc_tk_dct[pressure][0]
+            temps = ktp_dct[pressure][0]
 
             # Calculate fitted rate constants, based on fit type
             if fit_type == 'single':
@@ -480,17 +475,26 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
                     t_ref, temps)
 
             # Store the fitting parameters in a dictionary
-            fit_k_dct[pressure] = fit_ks
+            fit_k_dct[pressure] = fit_ks/a_conv_factor
 
         # Calculate the error between the calc and fit ks
         for pressure, fit_ks in fit_k_dct.items():
 
+            if pressure == 'high' and not rxn_is_pdependent:
+                pressure = premap
             calc_ks = valid_calc_tk_dct[pressure][1]
-            sse, mean_avg_err, max_avg_err = ratefit.err.calc_sse_and_mae(
+            mean_avg_err, max_avg_err = ratefit.err.calc_sse_and_mae(
                 calc_ks, fit_ks)
 
             # Store in a dictionary
-            fit_err_dct[pressure] = [sse, mean_avg_err, max_avg_err]
+            fit_err_dct[pressure] = [mean_avg_err, max_avg_err]
+
+        # If no high-pressure is found in dct, add fake fitting parameters
+        if 'high' not in fit_param_dct:
+            if fit_type == 'single':
+                fit_param_dct['high'] = [1.00, 0.00, 0.00]
+            elif fit_type == 'double':
+                fit_param_dct['high'] = [1.00, 0.00, 0.00, 1.00, 0.00, 0.00]
 
         fit_params_lst.append(fit_param_dct.copy())
         fit_err.append(fit_err_dct.copy())

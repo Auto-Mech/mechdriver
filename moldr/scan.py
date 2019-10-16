@@ -12,8 +12,9 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 
 def hindered_rotor_scans(
-        spc_info, thy_level, cnf_run_fs, cnf_save_fs,
-        script_str, overwrite, scan_increment=30., saddle=False, tors_names='', new_grid=False, **opt_kwargs):
+        spc_info, thy_level, cnf_run_fs, cnf_save_fs, script_str, overwrite,
+        scan_increment=30., saddle=False, tors_names='', new_grid=False,
+        **opt_kwargs):
     """ Perform 1d scans over each of the torsional coordinates
     """
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
@@ -35,6 +36,12 @@ def hindered_rotor_scans(
                 for name, linspace in zip(tors_names, tors_linspaces)]
 
             for tors_name, tors_grid in zip(tors_names, tors_grids):
+                save_scan(
+                    scn_run_fs=scn_run_fs,
+                    scn_save_fs=scn_save_fs,
+                    coo_names=[tors_name],
+                )
+
                 run_scan(
                     zma=zma,
                     spc_info=spc_info,
@@ -59,12 +66,10 @@ def hindered_rotor_scans(
 def run_scan(
         zma, spc_info, thy_level, grid_dct, scn_run_fs, scn_save_fs,
         script_str, overwrite, update_guess=True,
-        reverse_sweep=True, fix_failures=True, saddle=False, 
-        new_grid = True, **kwargs):
+        reverse_sweep=True, fix_failures=True, saddle=False,
+        new_grid=True, **kwargs):
     """ run constrained optimization scan
     """
-#    if len(grid_dct) > 1:
-#        raise NotImplementedError
 
     vma = automol.zmatrix.var_(zma)
     if scn_save_fs.trunk.file.vmatrix.exists():
@@ -79,20 +84,6 @@ def run_scan(
         grid_vals.append(coo_grid_vals)
 
     # for now, running only one-dimensional hindered rotor scans
-#    ((coo_name, grid_vals),) = grid_dct.items()
-#    if scn_save_fs.branch.file.info.exists([[coo_name]]):
-#        if not new_grid:
-#            inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
-#            existing_grid_dct = dict(inf_obj.grids)
-#            existing_grid_vals = existing_grid_dct[coo_name]
-#            print('grid vals test:', grid_vals, existing_grid_vals)
-#            assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
-#                    (numpy.allclose(grid_vals*180.0/numpy.pi, existing_grid_vals) or
-#                     numpy.allclose(grid_vals, existing_grid_vals)))
-#
-    #inf_obj = autofile.system.info.scan_branch({coo_name: grid_vals})
-    #scn_save_fs.branch.file.info.write(inf_obj, [[coo_name]])
-    print('coo names test:', coo_names)
     scn_save_fs.branch.create([coo_names])
     inf_obj = autofile.system.info.scan_branch(grid_dct)
     scn_save_fs.branch.file.info.write(inf_obj, [coo_names])
@@ -100,25 +91,15 @@ def run_scan(
     for coo_grid_vals in grid_vals:
         npoint *= len(coo_grid_vals)
     grid_idxs = tuple(range(npoint))
-   # grid_names = ['{:.3f}'.format(val) for val in grid_vals]
-
-    #for grid_idx in grid_idxs:
-    #    scn_run_fs.leaf.create([[coo_name], [grid_idx]])
-   # for grid_name in grid_names:
-   #     scn_run_fs.leaf.create([[coo_name], [grid_name]])
-
-   # prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
-   #                  for grid_idx in grid_idxs)
-    #prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_name]])
-    #                 for grid_name in grid_names)
     if len(grid_vals) == 1:
         for grid_val in grid_vals[0]:
             scn_run_fs.leaf.create([coo_names, [grid_val]])
-        prefixes = tuple(scn_run_fs.leaf.path([coo_names, [grid_val]])
-                        for grid_val in grid_vals[0])
+        run_prefixes = tuple(scn_run_fs.leaf.path([coo_names, [grid_val]])
+                             for grid_val in grid_vals[0])
         _run_1d_scan(
             script_str=script_str,
-            prefixes=prefixes,
+            run_prefixes=run_prefixes,
+            scn_save_fs=scn_save_fs,
             guess_zma=zma,
             coo_name=coo_names[0],
             grid_idxs=grid_idxs,
@@ -135,7 +116,8 @@ def run_scan(
         if reverse_sweep:
             _run_1d_scan(
                 script_str=script_str,
-                prefixes=list(reversed(prefixes)),
+                run_prefixes=list(reversed(run_prefixes)),
+                scn_save_fs=scn_save_fs,
                 guess_zma=zma,
                 coo_name=coo_names[0],
                 grid_idxs=list(reversed(grid_idxs)),
@@ -149,16 +131,17 @@ def run_scan(
             )
 
     elif len(grid_vals) == 2:
-        prefixes = []
+        run_prefixes = []
         for grid_val_i in grid_vals[0]:
             for grid_val_j in grid_vals[1]:
                 scn_run_fs.leaf.create([coo_names, [grid_val_i, grid_val_j]])
-                prefixes.append(scn_run_fs.leaf.path([coo_names, [grid_val_i, grid_val_j]]))
-        prefixes = tuple(prefixes)                
+                run_prefixes.append(scn_run_fs.leaf.path([coo_names, [grid_val_i, grid_val_j]]))
+        run_prefixes = tuple(run_prefixes)
 
         _run_2d_scan(
             script_str=script_str,
-            prefixes=prefixes,
+            run_prefixes=run_prefixes,
+            scn_save_fs=scn_save_fs,
             guess_zma=zma,
             coo_names=coo_names,
             grid_idxs=grid_idxs,
@@ -173,13 +156,15 @@ def run_scan(
         )
 
         if reverse_sweep:
-            prefixes = []
+            run_prefixes = []
             for grid_val_i in grid_vals[0][::-1]:
                 for grid_val_j in grid_vals[1][::-1]:
-                    prefixes.append(scn_run_fs.leaf.path([coo_names, [grid_val_i, grid_val_j]]))
+                    run_prefixes.append(scn_run_fs.leaf.path([coo_names, [grid_val_i, grid_val_j]]))
+            run_prefixes = tuple(run_prefixes)
             _run_2d_scan(
                 script_str=script_str,
-                prefixes=prefixes,
+                run_prefixes=run_prefixes,
+                scn_save_fs=scn_save_fs,
                 guess_zma=zma,
                 coo_names=coo_names,
                 grid_idxs=list(reversed(grid_idxs)),
@@ -193,11 +178,282 @@ def run_scan(
             )
 
 
+def run_multiref_rscan(
+        formula, high_mul, zma, spc_info, thy_level, dist_name, grid1, grid2,
+        scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True, hessian=False,
+        **kwargs):
+    """ run constrained optimization scan
+    """
+
+    vma = automol.zmatrix.var_(zma)
+    if scn_save_fs.trunk.file.vmatrix.exists():
+        existing_vma = scn_save_fs.trunk.file.vmatrix.read()
+        assert vma == existing_vma
+
+    grid = numpy.append(grid1, grid2)
+    grid_dct = {dist_name: grid}
+    if len(grid_dct) > 1:
+        raise NotImplementedError
+
+    ((coo_name, grid_vals),) = grid_dct.items()
+    scn_save_fs.branch.create([[coo_name]])
+    if scn_save_fs.branch.file.info.exists([[coo_name]]):
+        inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
+        existing_grid_dct = dict(inf_obj.grids)
+        existing_grid_vals = existing_grid_dct[coo_name]
+        assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
+                numpy.allclose(grid_vals, existing_grid_vals))
+
+    inf_obj = autofile.system.info.scan_branch({coo_name: grid_vals})
+    scn_save_fs.branch.file.info.write(inf_obj, [[coo_name]])
+    charge = spc_info[1]
+    mul = spc_info[2]
+    basis = thy_level[2]
+    prog = thy_level[0]
+    thy_level[0] = 'molpro2015'
+    thy_level[1] = 'caspt2'
+    prog = 'molpro2015'
+    method = 'caspt2'
+
+    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(prog, method)
+
+    num_act_elc = 2
+    num_act_orb = 2
+    ref_zma = automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]})
+    cas_opt, _ = moldr.ts.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
+    guess_str = moldr.ts.multiref_wavefunction_guess(
+        high_mul, ref_zma, spc_info, thy_level, cas_opt)
+    guess_lines = guess_str.splitlines()
+
+    opt_kwargs['casscf_options'] = cas_opt
+    opt_kwargs['mol_options'] = ['nosym']
+    opt_kwargs['gen_lines'] = guess_lines
+
+    grid1_dct = {dist_name: grid1}
+    ((_, grid1_vals),) = grid1_dct.items()
+    npoint1 = len(grid1_vals)
+    grid1_idxs = tuple(range(npoint1))
+
+    for grid_idx in grid1_idxs:
+        scn_run_fs.leaf.create([[coo_name], [grid_idx]])
+    run_prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
+                         for grid_idx in grid1_idxs)
+    _run_1d_scan(
+        script_str=opt_script_str,
+        run_prefixes=run_prefixes,
+        scn_save_fs=scn_save_fs,
+        guess_zma=zma,
+        coo_name=coo_name,
+        grid_idxs=grid1_idxs,
+        grid_vals=grid1_vals,
+        spc_info=spc_info,
+        thy_level=thy_level,
+        overwrite=overwrite,
+        update_guess=update_guess,
+        hessian=hessian,
+        **opt_kwargs,
+    )
+
+    grid2_dct = {dist_name: grid2}
+    ((_, grid2_vals),) = grid2_dct.items()
+    npoint2 = len(grid2_vals)
+    grid2_idxs = tuple(range(npoint2))
+    grid2_idxs = tuple(x + npoint1 for x in grid2_idxs)
+
+    for grid_idx in grid2_idxs:
+        scn_run_fs.leaf.create([[coo_name], [grid_idx]])
+
+    run_prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
+                         for grid_idx in grid2_idxs)
+    _run_1d_scan(
+        script_str=opt_script_str,
+        run_prefixes=run_prefixes,
+        scn_save_fs=scn_save_fs,
+        guess_zma=zma,
+        coo_name=coo_name,
+        grid_idxs=grid2_idxs,
+        grid_vals=grid2_vals,
+        spc_info=spc_info,
+        thy_level=thy_level,
+        overwrite=overwrite,
+        update_guess=update_guess,
+        hessian=hessian,
+        **opt_kwargs,
+    )
+
+
+def _run_1d_scan(
+        script_str, run_prefixes, scn_save_fs, guess_zma, coo_name, grid_idxs, grid_vals,
+        spc_info, thy_level, overwrite, errors=(), options_mat=(),
+        retry_failed=True, update_guess=True, saddle=False, hessian=False,
+        **kwargs):
+    """ run 1 dimensional scan with constrained optimization
+    """
+
+    npoints = len(grid_idxs)
+    assert len(grid_vals) == len(run_prefixes) == npoints
+    for grid_idx, grid_val, run_prefix in zip(grid_idxs, grid_vals, run_prefixes):
+        print("Point {}/{}".format(grid_idx+1, npoints))
+        zma = automol.zmatrix.set_values(guess_zma, {coo_name: grid_val})
+        run_fs = autofile.fs.run(run_prefix)
+
+        if not scn_save_fs.leaf.file.geometry.exists([[coo_name], [grid_val]]) or overwrite:
+            moldr.driver.run_job(
+                job=elstruct.Job.OPTIMIZATION,
+                script_str=script_str,
+                run_fs=run_fs,
+                geom=zma,
+                spc_info=spc_info,
+                thy_level=thy_level,
+                overwrite=overwrite,
+                frozen_coordinates=[coo_name],
+                errors=errors,
+                options_mat=options_mat,
+                retry_failed=retry_failed,
+                saddle=saddle,
+                **kwargs
+            )
+
+            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            if ret is not None:
+                inf_obj, _, out_str = ret
+                prog = inf_obj.prog
+                opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                if update_guess:
+                    guess_zma = opt_zma
+
+            if hessian:
+                moldr.driver.run_job(
+                    job=elstruct.Job.HESSIAN,
+                    script_str=script_str,
+                    run_fs=run_fs,
+                    geom=opt_zma,
+                    spc_info=spc_info,
+                    thy_level=thy_level,
+                    overwrite=overwrite,
+                    frozen_coordinates=[coo_name],
+                    errors=errors,
+                    options_mat=options_mat,
+                    retry_failed=retry_failed,
+                    saddle=saddle,
+                    **kwargs
+                )
+
+                ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
+
+
+def _run_2d_scan(
+        script_str, run_prefixes, scn_save_fs, guess_zma, coo_names, grid_idxs, grid_vals,
+        spc_info, thy_level, overwrite, errors=(),
+        options_mat=(), retry_failed=True, update_guess=True, saddle=False, **kwargs):
+    """ run 2-dimensional scan with constrained optimization
+    """
+
+    npoints = len(grid_idxs)
+    assert len(grid_vals[0]) * len(grid_vals[1]) == len(run_prefixes) == npoints
+
+    idx = 0
+    for grid_val_i in grid_vals[0]:
+        for grid_val_j in grid_vals[1]:
+            grid_idx = grid_idxs[idx]
+            run_prefix = run_prefixes[idx]
+            print("Point {}/{}".format(grid_idx+1, npoints))
+            zma = automol.zmatrix.set_values(
+                guess_zma, {coo_names[0]: grid_val_i, coo_names[1]: grid_val_j})
+            run_fs = autofile.fs.run(run_prefix)
+            idx += 1
+
+            if not scn_save_fs.leaf.file.geometry.exists(
+                    [coo_names, [grid_val_i, grid_val_j]]) or overwrite:
+                moldr.driver.run_job(
+                    job=elstruct.Job.OPTIMIZATION,
+                    script_str=script_str,
+                    run_fs=run_fs,
+                    geom=zma,
+                    spc_info=spc_info,
+                    thy_level=thy_level,
+                    overwrite=overwrite,
+                    frozen_coordinates=coo_names,
+                    errors=errors,
+                    options_mat=options_mat,
+                    retry_failed=retry_failed,
+                    saddle=saddle,
+                    **kwargs
+                )
+
+                ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+                if update_guess and ret is not None:
+                    inf_obj, _, out_str = ret
+                    prog = inf_obj.prog
+                    guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+
+def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=True):
+    """ save the scans that have been run so far
+    """
+    if not scn_run_fs.branch.exists([coo_names]):
+        print("No scan to save. Skipping...")
+    else:
+        locs_lst = []
+        for locs in scn_run_fs.leaf.existing([coo_names]):
+            if not isinstance(locs[1][0], float):
+                continue
+            run_path = scn_run_fs.leaf.path(locs)
+            run_fs = autofile.fs.run(run_path)
+            print("Reading from scan run at {}".format(run_path))
+
+            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            if ret:
+                inf_obj, inp_str, out_str = ret
+                prog = inf_obj.prog
+                method = inf_obj.method
+                ene = elstruct.reader.energy(prog, method, out_str)
+                geo = elstruct.reader.opt_geometry(prog, out_str)
+                zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+                save_path = scn_save_fs.leaf.path(locs)
+                print(" - Saving...")
+                print(" - Save path: {}".format(save_path))
+
+                scn_save_fs.leaf.create(locs)
+                scn_save_fs.leaf.file.geometry_info.write(inf_obj, locs)
+                scn_save_fs.leaf.file.geometry_input.write(inp_str, locs)
+                scn_save_fs.leaf.file.energy.write(ene, locs)
+                scn_save_fs.leaf.file.geometry.write(geo, locs)
+                scn_save_fs.leaf.file.zmatrix.write(zma, locs)
+
+                locs_lst.append(locs)
+                if hessian:
+                    ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
+                    if ret:
+                        inf_obj, inp_str, out_str = ret
+                        prog = inf_obj.prog
+                        method = inf_obj.method
+                        hess = elstruct.reader.hessian(prog, out_str)
+                        scn_save_fs.leaf.file.hessian.write(hess, locs)
+
+        if locs_lst:
+            idxs_lst = [locs[-1] for locs in locs_lst]
+            enes = [scn_save_fs.leaf.file.energy.read(locs)
+                    for locs in locs_lst]
+            geos = [scn_save_fs.leaf.file.geometry.read(locs)
+                    for locs in locs_lst]
+
+            traj = []
+            for idxs, ene, geo in zip(idxs_lst, enes, geos):
+                comment = 'energy: {:>15.10f}, grid idxs: {}'.format(ene, idxs)
+                traj.append((comment, geo))
+
+            traj_path = scn_save_fs.branch.file.trajectory.path([coo_names])
+            print("Updating scan trajectory file at {}".format(traj_path))
+            scn_save_fs.branch.file.trajectory.write(traj, [coo_names])
+
+
 def infinite_separation_energy(
-    spc_1_info, spc_2_info, ts_info, high_mul, ref_zma, ini_thy_info, thy_info,
-    multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs):
-    """ Obtain the infinite separation energy from the multireference energy at a given 
-    reference point, the high-spin low-spin splitting at that reference point, and the 
+        spc_1_info, spc_2_info, ts_info, high_mul, ref_zma, ini_thy_info, thy_info,
+        multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs):
+    """ Obtain the infinite separation energy from the multireference energy at a given
+    reference point, the high-spin low-spin splitting at that reference point, and the
     high level energy for the high spin state at the reference geometry and for the fragments
     """
 
@@ -287,11 +543,11 @@ def infinite_separation_energy(
             sp_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
         else:
             print('ERROR: low spin multi reference energy job fails: ',
-                'Energy is needed to evaluate infinite separation energy')
+                  'Energy is needed to evaluate infinite separation energy')
             return
 
     else:
-        ls_mr_ene = sp_save_fs.leaf.file.energy.read(multi_lvl) 
+        ls_mr_ene = sp_save_fs.leaf.file.energy.read(multi_lvl)
 
     # get the multi reference energy for the high spin state for the reference point on the scan
 
@@ -531,277 +787,3 @@ def infinite_separation_energy(
         spc_ene.append(sp_sr_ene)
 
     inf_sep_ene = spc_ene[0] + spc_ene[1] - hs_sr_ene + hs_mr_ene - ls_mr_ene
-
-
-def run_multiref_rscan(
-        formula, high_mul, zma, spc_info, thy_level, dist_name, grid1, grid2,
-        scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True, hessian=False,
-        **kwargs):
-    """ run constrained optimization scan
-    """
-
-    #print('grid1:', grid1)
-    vma = automol.zmatrix.var_(zma)
-    if scn_save_fs.trunk.file.vmatrix.exists():
-        existing_vma = scn_save_fs.trunk.file.vmatrix.read()
-        assert vma == existing_vma
-
-    grid = numpy.append(grid1, grid2)
-    grid_dct = {dist_name: grid}
-    if len(grid_dct) > 1:
-        raise NotImplementedError
-
-    ((coo_name, grid_vals),) = grid_dct.items()
-    scn_save_fs.branch.create([[coo_name]])
-    print('scan_save_fs branch test:', scn_save_fs.trunk.path())
-    if scn_save_fs.branch.file.info.exists([[coo_name]]):
-        inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
-        existing_grid_dct = dict(inf_obj.grids)
-        existing_grid_vals = existing_grid_dct[coo_name]
-        assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
-                numpy.allclose(grid_vals, existing_grid_vals))
-
-    inf_obj = autofile.system.info.scan_branch({coo_name: grid_vals})
-    scn_save_fs.branch.file.info.write(inf_obj, [[coo_name]])
-    charge = spc_info[1]
-    mul = spc_info[2]
-    basis = thy_level[2]
-    prog = thy_level[0]
-    #orb_restr = moldr.util.orbital_restriction(spc_info, thy_level)
-    thy_level[0] = 'molpro2015'
-    #print('thy_level test:', thy_level)
-    thy_level[1] = 'caspt2'
-    prog = 'molpro2015'
-    method = 'caspt2'
-
-    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(prog, method)
-
-    num_act_elc = 2
-    num_act_orb = 2
-    ref_zma = automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]})
-    cas_opt, _ = moldr.ts.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = moldr.ts.multiref_wavefunction_guess( high_mul, ref_zma, spc_info, thy_level, cas_opt)
-    guess_lines = guess_str.splitlines()
-
-    #print('guess_str test:', guess_str)
-    opt_kwargs['casscf_options'] = cas_opt
-    opt_kwargs['mol_options'] = ['nosym']
-    opt_kwargs['gen_lines'] = guess_lines
-
-    grid1_dct = {dist_name: grid1}
-    ((_, grid1_vals),) = grid1_dct.items()
-    #print('grid1_vals test:', grid1_vals)
-    npoint1 = len(grid1_vals)
-    grid1_idxs = tuple(range(npoint1))
-
-    for grid_idx in grid1_idxs:
-        scn_run_fs.leaf.create([[coo_name], [grid_idx]])
-    prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
-                     for grid_idx in grid1_idxs)
-    #print('theory level:', thy_level)
-    _run_1d_scan(
-        script_str=opt_script_str,
-        prefixes=prefixes,
-        guess_zma=zma,
-        coo_name=coo_name,
-        grid_idxs=grid1_idxs,
-        grid_vals=grid1_vals,
-        spc_info=spc_info,
-        thy_level=thy_level,
-        overwrite=overwrite,
-        update_guess=update_guess,
-        hessian=hessian,
-        **opt_kwargs,
-    )
-
-    grid2_dct = {dist_name: grid2}
-    ((_, grid2_vals),) = grid2_dct.items()
-    npoint2 = len(grid2_vals)
-    grid2_idxs = tuple(range(npoint2))
-    grid2_idxs = tuple(x + npoint1 for x in grid2_idxs)
-
-    for grid_idx in grid2_idxs:
-        scn_run_fs.leaf.create([[coo_name], [grid_idx]])
-
-    prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
-                     for grid_idx in grid2_idxs)
-    _run_1d_scan(
-        script_str=opt_script_str,
-        prefixes=prefixes,
-        guess_zma=zma,
-        coo_name=coo_name,
-        grid_idxs=grid2_idxs,
-        grid_vals=grid2_vals,
-        spc_info=spc_info,
-        thy_level=thy_level,
-        overwrite=overwrite,
-        update_guess=update_guess,
-        hessian=hessian,
-        **opt_kwargs,
-    )
-
-
-def _run_1d_scan(
-        script_str, prefixes, guess_zma, coo_name, grid_idxs, grid_vals,
-        spc_info, thy_level, overwrite, errors=(), options_mat=(),
-        retry_failed=True, update_guess=True, saddle=False, hessian=False,
-        **kwargs):
-
-    npoints = len(grid_idxs)
-    assert len(grid_vals) == len(prefixes) == npoints
-    for grid_idx, grid_val, prefix in zip(grid_idxs, grid_vals, prefixes):
-        print("Point {}/{}".format(grid_idx+1, npoints))
-        zma = automol.zmatrix.set_values(guess_zma, {coo_name: grid_val})
-        run_fs = autofile.fs.run(prefix)
-
-        #print('kwargs test', kwargs)
-        moldr.driver.run_job(
-            job=elstruct.Job.OPTIMIZATION,
-            script_str=script_str,
-            run_fs=run_fs,
-            geom=zma,
-            spc_info=spc_info,
-            thy_level=thy_level,
-            overwrite=overwrite,
-            frozen_coordinates=[coo_name],
-            errors=errors,
-            options_mat=options_mat,
-            retry_failed=retry_failed,
-            saddle=saddle,
-            **kwargs
-        )
-
-        ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-        #print('update_guess and ret test:', update_guess, ret)
-        if ret is not None:
-            inf_obj, _, out_str = ret
-            prog = inf_obj.prog
-            opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
-            if update_guess:
-                guess_zma = opt_zma 
-
-        if hessian:
-            moldr.driver.run_job(
-                job=elstruct.Job.HESSIAN,
-                script_str=script_str,
-                run_fs=run_fs,
-                geom=opt_zma,
-                spc_info=spc_info,
-                thy_level=thy_level,
-                overwrite=overwrite,
-                frozen_coordinates=[coo_name],
-                errors=errors,
-                options_mat=options_mat,
-                retry_failed=retry_failed,
-                saddle=saddle,
-                **kwargs
-            )
-
-            ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
-
-
-def _run_2d_scan(
-        script_str, prefixes, guess_zma, coo_names, grid_idxs, grid_vals, 
-        spc_info, thy_level, overwrite, errors=(),
-        options_mat=(), retry_failed=True, update_guess=True, saddle=False, **kwargs):
-    """ run 2-dimensional scan with constrained optimization
-    """
-
-    npoints = len(grid_idxs)
-    assert len(grid_vals[0]) * len(grid_vals[1]) == len(prefixes) == npoints
-
-    idx = 0
-    for grid_val_i in grid_vals[0]:
-        for grid_val_j in grid_vals[1]:
-            grid_idx = grid_idxs[idx]
-            prefix = prefixes[idx]
-            print("Point {}/{}".format(grid_idx+1, npoints))
-            zma = automol.zmatrix.set_values(guess_zma, {coo_names[0]: grid_val_i, coo_names[1]: grid_val_j})
-            run_fs = autofile.fs.run(prefix)
-            idx += 1        
-
-            moldr.driver.run_job(
-                job=elstruct.Job.OPTIMIZATION,
-                script_str=script_str,
-                run_fs=run_fs,
-                geom=zma,
-                spc_info=spc_info,
-                thy_level=thy_level,
-                overwrite=overwrite,
-                frozen_coordinates=coo_names,
-                errors=errors,
-                options_mat=options_mat,
-                retry_failed=retry_failed,
-                saddle=saddle,
-                **kwargs
-            )
-    
-            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-            if update_guess and ret is not None:
-                inf_obj, _, out_str = ret
-                prog = inf_obj.prog
-                guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
-
-
-def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=True):
-    """ save the scans that have been run so far
-    """
-    if not scn_run_fs.branch.exists([coo_names]):
-        print("No scan to save. Skipping...")
-    else:
-        locs_lst = []
-        for locs in scn_run_fs.leaf.existing([coo_names]):
-            if '.' not in locs:
-                continue
-            print('locs test:', locs)
-            run_path = scn_run_fs.leaf.path(locs)
-            run_fs = autofile.fs.run(run_path)
-            print("Reading from scan run at {}".format(run_path))
-
-            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-            if ret:
-                inf_obj, inp_str, out_str = ret
-                prog = inf_obj.prog
-                method = inf_obj.method
-                ene = elstruct.reader.energy(prog, method, out_str)
-                geo = elstruct.reader.opt_geometry(prog, out_str)
-                zma = elstruct.reader.opt_zmatrix(prog, out_str)
-
-                save_path = scn_save_fs.leaf.path(locs)
-                print(" - Saving...")
-                print(" - Save path: {}".format(save_path))
-
-                scn_save_fs.leaf.create(locs)
-                scn_save_fs.leaf.file.geometry_info.write(inf_obj, locs)
-                scn_save_fs.leaf.file.geometry_input.write(inp_str, locs)
-                scn_save_fs.leaf.file.energy.write(ene, locs)
-                scn_save_fs.leaf.file.geometry.write(geo, locs)
-                scn_save_fs.leaf.file.zmatrix.write(zma, locs)
-
-                locs_lst.append(locs)
-                if hessian:
-                    ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
-                    if ret:
-                        inf_obj, inp_str, out_str = ret
-                        prog = inf_obj.prog
-                        method = inf_obj.method
-                        hess = elstruct.reader.hessian(prog, out_str)
-                        scn_save_fs.leaf.file.hessian.write(hess, locs)
-
-        if locs_lst:
-            idxs_lst = [locs[-1] for locs in locs_lst]
-            enes = [scn_save_fs.leaf.file.energy.read(locs)
-                    for locs in locs_lst]
-            geos = [scn_save_fs.leaf.file.geometry.read(locs)
-                    for locs in locs_lst]
-
-            traj = []
-            for idxs, ene, geo in zip(idxs_lst, enes, geos):
-                comment = 'energy: {:>15.10f}, grid idxs: {}'.format(ene, idxs)
-                traj.append((comment, geo))
-
-            traj_path = scn_save_fs.branch.file.trajectory.path([coo_names])
-            print("Updating scan trajectory file at {}".format(traj_path))
-            scn_save_fs.branch.file.trajectory.write(traj, [coo_names])
-
-

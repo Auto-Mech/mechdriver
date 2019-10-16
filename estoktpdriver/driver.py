@@ -32,7 +32,7 @@ if len(sys.argv) > 3:
     if len(sys.argv) > 4:
         CHANNELS = sys.argv[4]
 print('PESNUMS and CHANNELS:', PESNUMS, CHANNELS)
-RUN_THERMO = True
+RUN_THERMO = False
 RUN_RATES = True
 # 1. create run and save directories
 RUN_PREFIX = '/lcrc/project/PACC/run'
@@ -85,7 +85,7 @@ RAD_RAD_SORT = False
 
 # setting SORT_RXNS to False leads to missing channels
 # for now just leave them sorted
-SORT_RXNS = True
+SORT_RXNS = False
 
 if MECH_TYPE == 'CHEMKIN':
 
@@ -102,7 +102,7 @@ if MECH_TYPE == 'CHEMKIN':
         #print('smiles test:', name, SMI_DCT[name])
         #ICH_DCT[name] = automol.smiles.inchi(SMI_DCT[name])
 
-    CHECK_STEREO = True
+    CHECK_STEREO = False
 
     if CHECK_STEREO:
         SPC_STR = 'name,SMILES,InChI,mult,charge,sens \n'
@@ -583,11 +583,10 @@ for spc in SPC_DCT:
         SPC_DCT[spc]['elec_levs'] = ELC_DEG_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
     if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in SYMM_DCT:
         SPC_DCT[spc]['sym'] = SYMM_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
-
-for spc in SPC_DCT:
     ich = SPC_DCT[spc]['ich']
     if ich in GEOM_DCT:
         SPC_DCT[spc]['geo_obj'] = GEOM_DCT[ich]
+    SPC_DCT[spc]['hind_inc'] = 30. * qcc.conversion_factor('degree', 'radian')
 
 # 2. script control parameters
 
