@@ -242,17 +242,9 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                         if abs(conf_dist_len - dist_len) > 0.5:
                             print(" - Transition State conformer has diverged from original structure of dist {:.3f} with dist {:.3f}".format(dist_len, conf_dist_len))
                             continue
-                        unique = True
-                        for idx, geoi in enumerate(seen_geos):
-                            enei = seen_enes[idx]
-                            etol = 2.e-5
-                            if automol.geom.almost_equal_coulomb_spectrum(
-                                    geo, geoi, rtol=1e-2):
-                                if abs(ene-enei) < etol:
-                                    unique = False
                     else:
                         zma = automol.geom.zmatrix(geo)
-                        unique = is_unique_tors_dist_mat_energy(geo, ene, seen_geos, seen_enes)
+                    unique = is_unique_tors_dist_mat_energy(geo, ene, seen_geos, seen_enes, saddle)
 
                     if not unique:
                         print(" - Geometry is not unique. Skipping...")
@@ -446,7 +438,7 @@ def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
     return unique
 
 
-def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
+def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False):
     """ Determine the symmetry number for a given conformer geometry.
     First explore the saved conformers to find the list of similar conformers -
     i.e. those with a coulomb matrix and energy that are equivalent to those for the
@@ -455,6 +447,9 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
     distinct distance matrices there are in the fully expanded conformer list.
     """
 
+    # Note, for now we are ignoring for saddle points the possibility that two configurations
+    # differ only in their torsional values. As a result, the symmetry factor is a lower bound on the 
+    # true symmetry factor
     if automol.geom.is_atom(geo):
         int_sym_num = 1.
     else:
@@ -479,7 +474,7 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
 
             int_sym_num = 0
             for idx_i, geo_sim_i in enumerate(geo_sim):
-                new_geos = automol.geom.rot_permutated_geoms(geo_sim_i)
+                new_geos = automol.geom.rot_permutated_geoms(geo_sim_i, saddle)
                 new_geom = True
                 for new_geo in new_geos:
                     #geo_sim_exp.append(new_geo)
@@ -487,7 +482,10 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
                         if idx_j < idx_i:
                             if automol.geom.almost_equal_dist_mat(
                                     new_geo, geo_sim_j, thresh=1e-1):
-                                if are_torsions_same(new_geo, geo_sim_j):
+                                if saddle:
+                                    new_geom = False 
+                                    break
+                                elif are_torsions_same(new_geo, geo_sim_j):
                                     new_geom = False
                                     break
                         else:
@@ -496,7 +494,6 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs):
                         break
                 if new_geom:
                     int_sym_num += len(new_geos)
-    print('exiting int_sym_num:', int_sym_num)
     return int_sym_num
 
 
@@ -515,12 +512,15 @@ def external_symmetry_factor(geo):
     return ext_sym_fac
 
 
-def symmetry_factor(geo, ene, cnf_save_fs):
+def symmetry_factor(geo, ene, cnf_save_fs, saddle=False):
     """ obtain overall symmetry number for a geometry as a product
     of the external and internal symmetry numbers
     """
+    # Note, for now we are ignoring for saddle points the possibility that two configurations
+    # differ only in their torsional values. As a result, the symmetry factor is a lower bound on the 
+    # true symmetry factor
     ext_sym = external_symmetry_factor(geo)
-    int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs)
+    int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle)
     sym_fac = ext_sym * int_sym
     return sym_fac
 
@@ -564,7 +564,7 @@ def are_torsions_same(geo, geoi):
     return same_dihed
 
 
-def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list):
+def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list, saddle):
     """ compare given geo with list of geos all to see if any have the same
     coulomb spectrum and energy and stereo specific inchi
     """
@@ -578,6 +578,8 @@ def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list):
             if automol.geom.almost_equal_dist_mat(
                     geo, geoi, thresh=1e-1):
                 # check dihedrals
-                if are_torsions_same(geo, geoi):
+                if saddle:
+                    unique = False 
+                elif are_torsions_same(geo, geoi):
                     unique = False
     return unique

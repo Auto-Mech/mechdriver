@@ -266,27 +266,35 @@ def run_check_imaginary(
             **kwargs,
             )
         ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
+        # print('hessian test in check_imag:', ret)
         if ret:
             inf_obj, _, out_str = ret
             prog = inf_obj.prog
             hess = elstruct.reader.hessian(prog, out_str)
 
+            print('hess test', hess)
             if hess:
                 imag = False
-                if automol.geom.is_linear(geo):
-                    proj_freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
-                    freqs = elstruct.util.harmonic_frequencies(geo, hess, project=False)
-                    print('Freqs test in check_imag:', proj_freqs, freqs)
+                #if automol.geom.is_linear(geo):
+                    #print('entering projrot linear:')
+                    #proj_freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
+                    #freqs = elstruct.util.harmonic_frequencies(geo, hess, project=False)
+                    #print('Freqs test in check_imag:', proj_freqs, freqs)
                     # proj_freqs doesn't work correctly right now - replace with freqs
                     # if min(proj_freqs) < -100:
-                    if min(freqs) < -100:
-                        imag = True
-                else:
-                    freqs = projrot_frequencies(
-                        geo, hess, thy_level, thy_run_fs, projrot_script_str)
-                    print('Freqs test in check_imag:', freqs)
-                    if min(freqs) < -0:
-                        imag = True
+                    #if min(freqs) < -100:
+                    #    imag = True
+                #else:
+                print('entering projrot nonlinear:')
+                print('geo:', geo)
+                print('hess:', hess)
+                print('thy_level:', thy_level)
+                print('projrot_script_str:', projrot_script_str)
+                freqs, imag_freq = projrot_frequencies(
+                    geo, hess, thy_level, thy_run_fs, projrot_script_str)
+                print('Freqs test in check_imag:', freqs)
+                if imag_freq:
+                    imag = True
 
     # mode for now set the imaginary frequency check to -100:
     # Ultimately should decrease once frequency projector is functioning properly
@@ -365,16 +373,19 @@ def projrot_frequencies(geo, hess, thy_level, thy_run_fs, projrot_script_str='RP
     """ Get the projected frequencies from projrot code
     """
     # Write the string for the ProjRot input
+    print('inside projrot:')
     thy_run_fs.leaf.create(thy_level[1:4])
     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
 
     coord_proj = 'cartesian'
     grad = ''
     rotors_str = ''
+    print('before projrot_inp_str:')
     projrot_inp_str = projrot_io.writer.rpht_input(
         geo, grad, hess, rotors_str=rotors_str,
         coord_proj=coord_proj)
 
+    print('after projrot_inp_str:')
     bld_locs = ['PROJROT', 0]
     bld_run_fs = autofile.fs.build(thy_run_path)
     bld_run_fs.leaf.create(bld_locs)
@@ -386,13 +397,14 @@ def projrot_frequencies(geo, hess, thy_level, thy_run_fs, projrot_script_str='RP
 
     moldr.util.run_script(projrot_script_str, projrot_path)
 
+    imag_freq = ''
     if os.path.exists(projrot_path+'/hrproj_freq.dat'):
-        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
+        rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
             projrot_path+'/hrproj_freq.dat')
         proj_freqs = rthrproj_freqs
     else:
-        rtproj_freqs, _ = projrot_io.reader.rpht_output(
+        rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
             projrot_path+'/RTproj_freq.dat')
         proj_freqs = rtproj_freqs
     print(proj_freqs)
-    return proj_freqs
+    return proj_freqs, imag_freq
