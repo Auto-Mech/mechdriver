@@ -895,6 +895,23 @@ def find_ts(
         print('running ts scan:')
         if 'radical radical addition' in typ:
             # run mep scan
+            multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
+
+            orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
+            multi_level = multi_info[0:3]
+            multi_level.append(orb_restr)
+
+            thy_run_fs = autofile.fs.theory(rxn_run_path)
+            thy_run_fs.leaf.create(multi_level[1:4])
+            thy_run_path = thy_run_fs.leaf.path(multi_level[1:4])
+
+            thy_save_fs = autofile.fs.theory(rxn_save_path)
+            thy_save_fs.leaf.create(multi_level[1:4])
+            thy_save_path = thy_save_fs.leaf.path(multi_level[1:4])
+
+            scn_run_fs = autofile.fs.scan(thy_run_path)
+            scn_save_fs = autofile.fs.scan(thy_save_path)
+
             ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
             grid1 = grid[0]
             grid2 = grid[1]
@@ -909,7 +926,7 @@ def find_ts(
                 high_mul=high_mul,
                 zma=ts_zma,
                 spc_info=ts_info,
-                thy_level=ref_level,
+                thy_level=multi_level,
                 dist_name=dist_name,
                 grid1=grid1,
                 grid2=grid2,
@@ -935,11 +952,15 @@ def find_ts(
             rcts = ts_dct['reacts']
             spc_1_info = [spc_dct[rcts[0]]['ich'], spc_dct[rcts[0]]['chg'], spc_dct[rcts[0]]['mul']]
             spc_2_info = [spc_dct[rcts[1]]['ich'], spc_dct[rcts[1]]['chg'], spc_dct[rcts[1]]['mul']]
-            multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
 
             inf_sep_ene = moldr.scan.infinite_separation_energy(
                 spc_1_info, spc_2_info, ts_info, high_mul, ts_zma, ini_thy_info, thy_info,
                 multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs)
+
+            inf_locs = [[dist_name], [1000.]]
+            scn_save_fs.leaf.file.energy.write(inf_sep_ene, inf_locs)
+
+            if vrctst:
 
         # continue on to finish setting up the correction potential
 

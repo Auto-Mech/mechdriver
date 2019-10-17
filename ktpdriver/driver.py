@@ -227,6 +227,7 @@ def run(
         if sym_lvl_ref:
             sym_ref_thy_info = get_thy_info(es_dct, sym_lvl_ref)
         pf_levels = [harm_thy_info, tors_thy_info, anharm_thy_info, sym_thy_info]
+        multi_levels = []
         ref_levels = [
             harm_ref_thy_info, tors_ref_thy_info, anharm_ref_thy_info, sym_ref_thy_info]
 
@@ -283,6 +284,7 @@ def run(
         header_str, energy_trans_str = scripts.ktp.pf_headers(
             rct_ichs, TEMPS, PRESS, EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2,
             SIG1, SIG2, MASS1)
+        multi_info = ['molpro2015', 'caspt2', 'cc-pVDZ', 'RR']
 
         mess_strs = ['', '', '']
         idx_dct = {}
@@ -302,7 +304,7 @@ def run(
                     continue
                 mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
                     tsname, rxn, species, spc_dct, idx_dct, mess_strs,
-                    first_ground_ene, spc_save_fs, pf_levels, PROJROT_SCRIPT_STR)
+                    first_ground_ene, spc_save_fs, pf_levels, multi_info, PROJROT_SCRIPT_STR)
                 print(idx_dct)
         well_str, bim_str, ts_str = mess_strs
         ts_str += '\nEnd\n'
