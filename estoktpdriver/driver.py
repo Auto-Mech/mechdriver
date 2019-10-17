@@ -15,28 +15,36 @@ import moldr
 import thermodriver
 import ktpdriver
 from estoktpdriver import read_dat
-
+import read_dat
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
-#PES_NUMS= 'all'
-#PES_NUMS = [2, 3]
-PESNUMS= 'all'
-CHANNELS= 'all'
-HIND_INC = 30.
-#PESNUMS=  [16,17,18,19,20]
+
 # 0. choose which mechanism to run
 
+DATA_PATH = '/home/sjklipp/PACC/mech_test'
+#DATA_PATH = '/home/elliott/pacc-tests/'
+GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
+GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
+
+# Read the run parameters from a datafile
+
+# 3. Prepare species and reaction lists 
+
+# read in data from the mechanism directory
 MECHANISM_NAME = sys.argv[1]
 MECH_TYPE = sys.argv[2]
+MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
+MECH_FILE = 'mech.json'
+
+PARAMS = read_dat.params(os.path.join(MECH_PATH, 'params.dat'))
+
 if len(sys.argv) > 3:
-    PESNUMS = sys.argv[3]
+    PARAMS.PESNUMS = sys.argv[3]
     if len(sys.argv) > 4:
-        CHANNELS = sys.argv[4]
-print('PESNUMS and CHANNELS:', PESNUMS, CHANNELS)
-RUN_THERMO = True
-RUN_RATES = True
+        PARAMS.CHANNELS = sys.argv[4]
+print('PESNUMS and PARAMS.CHANNELS:', PARAMS.PESNUMS, PARAMS.CHANNELS)
 # 1. create run and save directories
 RUN_PREFIX = '/lcrc/project/PACC/run'
 if not os.path.exists(RUN_PREFIX):
@@ -67,39 +75,12 @@ SYMM_DCT = {
     ('InChI=1S/HO/h1H', 2): 1.
 }
 
-DATA_PATH = '/home/sjklipp/PACC/mech_test'
-#DATA_PATH = '/home/elliott/pacc-tests/'
-GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
-GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
-
-# 3. Prepare species and reaction lists 
-#SMILES_TEST = '[C]#C'
-#for smiles in SMILES_TEST:
-#    ICH_TEST = (automol.convert.smiles.inchi(SMILES_TEST))
-#    print(SMILES_TEST, ICH_TEST)
-
-# read in data from the mechanism directory
-MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
-MECH_FILE = 'mech.json'
-RAD_RAD_SORT = False
 
 # 4. process species data from the mechanism file
 # Also add in basis set species
 
 # setting SORT_RXNS to False leads to missing channels
 # for now just leave them sorted
-SORT_RXNS = True
-
-# Read the run parameters from a datafile
-RUN_PARAMS_LST = read_dat.run_params('params.dat')
-[RUN_THERMO,
- RUN_RATES,
- RUN_ES,
- RUN_SPECIES,
- RUN_MESS,
- RUN_RATES,
- ] = RUN_PARAMS_LST
-
 
 if MECH_TYPE == 'CHEMKIN':
 
@@ -111,23 +92,16 @@ if MECH_TYPE == 'CHEMKIN':
     MUL_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'mult')
     CHG_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'charge')
     SENS_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'sens')
-    #ICH_DCT = {}
-    #for name in SMI_DCT:
-        #print('smiles test:', name, SMI_DCT[name])
-        #ICH_DCT[name] = automol.smiles.inchi(SMI_DCT[name])
 
-    CHECK_STEREO = False
-
-    if CHECK_STEREO:
+    print('CHECK_STEREO TEST:', PARAMS.CHECK_STEREO, type(PARAMS.CHECK_STEREO))
+    if PARAMS.CHECK_STEREO:
         SPC_STR = 'name,SMILES,InChI,mult,charge,sens \n'
         for name in ICH_DCT:
             ich = ICH_DCT[name]
-            # print('ich test:', ich)
             smi = SMI_DCT[name]
             mul = MUL_DCT[name]
             chg = CHG_DCT[name]
             sens = SENS_DCT[name]
-            # print('dct test:', ich, smi, mul)
             if not automol.inchi.is_complete(ich):
                 print('adding stereochemistry for {0}, {1}, {2}'.format(name, smi, ich))
                 # note this returns a list of ich's with the different possible stereo values
@@ -135,53 +109,18 @@ if MECH_TYPE == 'CHEMKIN':
                 ich = automol.inchi.add_stereo(ich)
                 print('new ich possibilities:', ich)
                 ich = ich[-1]
-                #ich = ich[0]
                 print('new ich:', ich)
                 ICH_DCT[name] = ich
-                # print('new dct:', ICH_DCT[name])
             SPC_STR += '{0},\'{1}\',\'{2}\',{3},{4},{5} \n'.format(
                 name, smi, ich, mul, chg, sens)
 
         with open(os.path.join(MECH_PATH, 'species_stereo.csv'), 'w') as stereo_csv_file:
             stereo_csv_file.write(SPC_STR)
 
-    #SPC_TAB['charge'] = 0
-    #print('SPC_TAB:', SPC_TAB)
-    #print('SPC_TAB TEST', SPC_TAB['name'])
-    #SMI_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['smiles']))
-    #SMI_DCT['REF_H2'] = '[H][H]'
-    #SMI_DCT['REF_CH4'] = 'C'
-    #SMI_DCT['REF_H2O'] = 'O'
-    #SMI_DCT['REF_NH3'] = 'N'
-    #CHG_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['charge']))
-    #CHG_DCT['REF_H2'] = 0
-    #CHG_DCT['REF_CH4'] = 0
-    #CHG_DCT['REF_H2O'] = 0
-    #CHG_DCT['REF_NH3'] = 0
-    #MUL_DCT = dict(zip(SPC_TAB['name'], SPC_TAB['mult']))
-    #MUL_DCT['REF_H2'] = 1
-    #MUL_DCT['REF_CH4'] = 1
-    #MUL_DCT['REF_H2O'] = 1
-    #MUL_DCT['REF_NH3'] = 1
-    #SPC_BLK_STR = chemkin_io.mechparser.mechanism.species_block(MECH_STR)
-    #SPC_NAMES = chemkin_io.mechparser.species.names(SPC_BLK_STR)
-
-    # You need one species reference for each element in the set of references and species
-    #SPC_REF_NAMES = ('REF_H2', 'REF_CH4', 'REF_H2O', 'REF_NH3')
-    #SPC_REF_ICH = []
-    #for ref_name in SPC_REF_NAMES:
-    #    smi = SMI_DCT[ref_name]
-    #    SPC_REF_ICH.append(automol.smiles.inchi(smi))
-    #SPC_NAMES += SPC_REF_NAMES
-
-    #print('SPC_NAMES')
-    #print(SPC_NAMES)
-    # SPC_INFO = {}
     SPC_NAMES = []
     SPC_DCT = {}
     for name in MUL_DCT:
         SPC_DCT[name] = {}
-        # SPC_INFO[name] = [ICH_DCT[name], CHG_DCT[name], MUL_DCT[name]] 
         SPC_DCT[name]['smi'] = SMI_DCT[name]
         SPC_DCT[name]['ich'] = ICH_DCT[name]
         SPC_DCT[name]['chg'] = CHG_DCT[name]
@@ -216,16 +155,12 @@ if MECH_TYPE == 'CHEMKIN':
         FORMULA_STR_LST.append(FORMULA_STR)
 
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
-    if SORT_RXNS:
+    if PARAMS.SORT_RXNS:
         RXN_INFO_LST.sort()
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
-        #for rxn_name in RXN_NAME_LST:
-            #print("Reaction: {}".format(rxn_name))
-        #for formula in FORMULA_STR_LST:
-            #print("Reaction: {}".format(formula))
 
 elif MECH_TYPE == 'json':
-    CHECK_STEREO = False
+    #CHECK_STEREO = False
     with open(os.path.join(MECH_PATH, MECH_FILE)) as f:
         MECH_DATA_IN = json.load(f, object_pairs_hook=collections.OrderedDict)
         MECH_DATA = []
@@ -285,20 +220,12 @@ elif MECH_TYPE == 'json':
             for rct in reaction['Reactants']:
                 rct_names.append(rct['name'])
                 rct_smis.append(rct['SMILES'][0])
-                # rct_ichs_smi = automol.smiles.inchi(rct['SMILES'][0])
-                # rct_ichs_rmg = rct['InChI']
-                #if rct_ichs_smi != rct_ichs_rmg:
-                    # print('Warning: RMG inchi {} differs from conversion from
-                    # smiles {}{}:'.format(
-                        # rct_ichs_rmg, rct_ichs_smi, rct['name']))
                 ich = rct['InChi']
-                # print('{} , {} , {}'.format(rct['name'], rct['SMILES'][0], rct['multiplicity']))
-                if CHECK_STEREO:
+                if PARAMS.CHECK_STEREO:
                     if not automol.inchi.is_complete(ich):
                         print('adding stereochemsiry for {}'.format(ich))
                         ich = automol.inchi.add_stereo(rct['InChi'])[0]
                 rct_ichs.append(ich)
-                #rct_ichs.append(rct_ichs_smi)
                 rct_muls.append(rct['multiplicity'])
             rad_rad_reac = True
             if len(rct_ichs) == 1:
@@ -309,15 +236,7 @@ elif MECH_TYPE == 'json':
             for prd in reaction['Products']:
                 prd_names.append(prd['name'])
                 prd_smis.append(prd['SMILES'][0])
-                # prd_ichs_smi = automol.smiles.inchi(prd['SMILES'][0])
-                # prd_ichs_rmg = prd['InChi']
-                # if prd_ichs_smi != prd_ichs_rmg:
-                    # print('Warning: RMG inchi {} differs from conversion from
-                    # smiles {}{}:'.format(
-                        # prd_ichs_rmg, prd_ichs_smi, prd['name']))
-                # prd_ichs.append(prd_ichs_smi)
                 ich = prd['InChi']
-                # print('{} , {} , {}'.format(prd['name'], prd['SMILES'][0], prd['multiplicity']))
                 if CHECK_STEREO:
                     if not automol.inchi.is_complete(ich):
                         print('adding stereochemsiry for {}'.format(ich))
@@ -330,7 +249,7 @@ elif MECH_TYPE == 'json':
             else:
                 if min(prd_muls) == 1:
                     rad_rad_prod = False
-            if RAD_RAD_SORT and not rad_rad_reac and not rad_rad_prod:
+            if PARAMS.RAD_RAD_SORT and not rad_rad_reac and not rad_rad_prod:
                 continue
             RCT_SMIS_LST.append(rct_smis)
             RCT_ICHS_LST.append(rct_ichs)
@@ -358,16 +277,11 @@ elif MECH_TYPE == 'json':
         else:
             RXN_FAM.append('')
 
-        # formula = ''
         formula_dct = ''
         for rct_ich in rct_ichs:
             formula_i_dct = automol.inchi.formula_dct(rct_ich)
             formula_dct = automol.formula._formula.join(formula_dct, formula_i_dct)
         FORMULA_STR = automol.formula._formula.string(formula_dct)
-            # formula_i = automol.inchi.formula(rct_ich)
-            # formula = automol.formula._formula.join(formula, formula_i)
-        # formula = collections.OrderedDict(sorted(formula.items()))
-        # FORMULA_STR = ''.join(map(str, chain.from_iterable(formula.items())))
         FORMULA_STR_LST.append(FORMULA_STR)
 
     UNQ_ICH_LST = []
@@ -389,11 +303,6 @@ elif MECH_TYPE == 'json':
                 UNQ_ICH_LST.append(ich)
                 UNQ_MUL_LST.append(mul)
                 UNQ_SMI_LST.append(smi)
-                #formula = ''
-                #formula_i = automol.inchi.formula(ich)
-                #formula = automol.formula._formula.join(formula, formula_i)
-                #formula = collections.OrderedDict(sorted(formula.items()))
-                #lab = ''.join(map(str, chain.from_iterable(formula.items())))
 
                 formula_dct = automol.inchi.formula_dct(ich)
                 lab = automol.formula._formula.string(formula_dct)
@@ -422,11 +331,6 @@ elif MECH_TYPE == 'json':
                 UNQ_ICH_LST.append(ich)
                 UNQ_MUL_LST.append(mul)
                 UNQ_SMI_LST.append(smi)
-                #formula = ''
-                #formula_i = automol.inchi.formula(ich)
-                #formula = automol.formula._formula.join(formula, formula_i)
-                #formula = collections.OrderedDict(sorted(formula.items()))
-                #lab = ''.join(map(str, chain.from_iterable(formula.items())))
 
                 formula_dct = automol.inchi.formula_dct(ich)
                 lab = automol.formula._formula.string(formula_dct)
@@ -452,32 +356,6 @@ elif MECH_TYPE == 'json':
 
     with open(os.path.join(MECH_PATH, 'smiles_sort.csv'), 'w') as sorted_csv_file:
         sorted_csv_file.write(csv_str)
-
-    # UNQ_SMI_LST = []
-    # rsmi = 0
-    # psmi = 0
-    # spc_str = 'SPECIES'
-    # spc_str += '\n'
-    # for smis in RCT_SMIS_LST:
-        # for smi in smis:
-            # rsmi += 1
-            # print('rct_smi test:', smi)
-            # if smi not in UNQ_SMI_LST:
-                # UNQ_SMI_LST.append(smi)
-                # print('unq_smi test:', smi)
-                # spc_str += smi
-                # spc_str += '\n'
-    # for smis in PRD_SMIS_LST:
-        # for smi in smis:
-            # psmi += 1
-            # print('prd_smi test:', smi)
-            # if smi not in UNQ_SMI_LST:
-                # UNQ_SMI_LST.append(smi)
-                # print('unq_smi test:', smi)
-                # spc_str += smi
-                # spc_str += '\n'
-    # spc_str += 'END'
-    # spc_str += '\n'
         
     RXN_INFO_LST = list(zip(
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST, RXN_SENS,
@@ -548,7 +426,6 @@ elif MECH_TYPE == 'json':
 
     # set up species info
     SPC_NAMES = []
-    # SPC_INFO = {}
     CHG_DCT = {}
     MUL_DCT = {}
     SPC_DCT = {}
@@ -557,7 +434,6 @@ elif MECH_TYPE == 'json':
             chg = 0
             if spc_name not in SPC_NAMES:
                 SPC_NAMES.append(spc_name)
-                # SPC_INFO[spc_name] = [RCT_ICHS_LST[i][j], chg, RCT_MULS_LST[i][j]]
                 CHG_DCT[spc_name] = chg
                 MUL_DCT[spc_name] = RCT_MULS_LST[i][j]
                 SPC_DCT[spc_name] = {}
@@ -569,7 +445,6 @@ elif MECH_TYPE == 'json':
             chg = 0
             if spc_name not in SPC_NAMES:
                 SPC_NAMES.append(spc_name)
-                # SPC_INFO[spc_name] = [PRD_ICHS_LST[i][j], chg, PRD_MULS_LST[i][j]]
                 CHG_DCT[spc_name] = chg
                 MUL_DCT[spc_name] = PRD_MULS_LST[i][j]
                 SPC_DCT[spc_name] = {}
@@ -600,7 +475,7 @@ for spc in SPC_DCT:
     ich = SPC_DCT[spc]['ich']
     if ich in GEOM_DCT:
         SPC_DCT[spc]['geo_obj'] = GEOM_DCT[ich]
-    SPC_DCT[spc]['hind_inc'] = HIND_INC * qcc.conversion_factor('degree', 'radian')
+    SPC_DCT[spc]['hind_inc'] = PARAMS.HIND_INC * qcc.conversion_factor('degree', 'radian')
 
 # 2. script control parameters
 
@@ -631,177 +506,84 @@ MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
 
 # b. Electronic structure parameters; code, method, basis, convergence control
 
-MC_NSAMP0 = [True, 4, 1, 3, 100]
-
 ES_DCT = {
         'lvl_wbs': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31g*',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'lvl_wbm': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31+g*',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'lvl_wbt': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': 'cc-pvtz',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'lvl_b2d': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvdz',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'lvl_b2t': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'lvl_b2q': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvqz',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'lvl_b3s': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'lvl_b3t': {
             'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'cc_lvl_d': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvdz',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'cc_lvl_t': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvtz',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'cc_lvl_q': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvqz',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'cc_lvl_df': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
             'basis': 'cc-pvdz-f12',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'cc_lvl_tf': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
             'basis': 'cc-pvtz-f12',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         'cc_lvl_qf': {
             'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
             'basis': 'cc-pvqz-f12',
-            'mc_nsamp': MC_NSAMP0
+            'mc_nsamp': PARAMS.MC_NSAMP0
             },
         }
 
-OPT_LVL0 = 'lvl_wbs'
-OPT_LVL1 = 'lvl_wbm'
-OPT_LVL2 = 'lvl_b2t'
-SCAN_LVL1 = OPT_LVL0
-SP_LVL1 = 'cc_lvl_df'
-SP_LVL2 = 'cc_lvl_tf'
-SP_LVL3 = 'cc_lvl_qf'
-
 # The logic key in tsk_info_lst is for overwrite
-OVERWRITE = False
 
-if RUN_THERMO:
-    TSK_INFO_LST = [
-        ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_energy', OPT_LVL0, OPT_LVL0, OVERWRITE]
-        #['conf_energy', SP_LVL1, OPT_LVL0, OVERWRITE]
-        #['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        #['conf_samp', OPT_LVL1, OPT_LVL0, OVERWRITE],
-        #['conf_hess', OPT_LVL1, OPT_LVL1, OVERWRITE],
-        #['find_geom', OPT_LVL2, OPT_LVL1, OVERWRITE],
-        #['conf_hess', OPT_LVL2, OPT_LVL2, OVERWRITE],
-        #['hr_scan', SCAN_LVL1, OPT_LVL1, OVERWRITE],
-        #['conf_energy', SP_LVL1, OPT_LVL2, OVERWRITE],
-        #['conf_energy', SP_LVL2, OPT_LVL2, OVERWRITE],
-        #['conf_energy', SP_LVL3, OPT_LVL2, OVERWRITE],
-        #['sym_samp', OPT_LVL1, OPT_LVL1, OVERWRITE],
-        # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
-        ]
-
-    #ENE_COEFF = [0.0, -0.693, 1.693]
-    #ENE_COEFF = [-0.4, 1.4]
+if PARAMS.RUN_THERMO:
     ENE_COEFF = [1.]
 
-    OPT_ES = True
-    OPT_MESS = False
-    OPT_THERMO = False
-    OPT_ALLPF = False
-    OPTIONS_THERMO = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
-
     SPC_QUEUE = list(SPC_NAMES)
-    #SPC_QUEUE = ['H2O2(11)']
-    # SPC_QUEUE = ['CHOH']
-    # SPC_QUEUE = ['CH2OH']
-
-    REF_MOLS = 'cbh1'
-    #REF_MOLS = 'cbh1'
-    # REF_MOLS = [
-        # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('O')
-        # automol.smiles.inchi('C'),
-        # automol.smiles.inchi('O'), automol.smiles.inchi('N')]
-    # REF_MOLS = [
-        # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'),
-        # automol.smiles.inchi('O'), automol.smiles.inchi('N')]
-    # REF_MOLS = [
-        # automol.smiles.inchi('[H]'), automol.smiles.inchi('[C]'),
-        # automol.smiles.inchi('[O]'), automol.smiles.inchi('[N]')]
-    # REF_MOLS = [
-        # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('C'),
-        # automol.smiles.inchi('O=O'), automol.smiles.inchi('N#N')]
-        # ]
     #thermodriver.driver.run(
         #TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
         #SAVE_PREFIX, options=OPTIONS)
 
-    OPT_ES = False
-    OPT_MESS = True
-    OPT_THERMO = True
-    OPT_ALLPF = False
-    OPTIONS_THERMO = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
-
     thermodriver.driver.run(
-        TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
-        SAVE_PREFIX, ene_coeff=ENE_COEFF, options=OPTIONS_THERMO)
+        PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, PARAMS.REF_MOLS, RUN_PREFIX,
+        SAVE_PREFIX, ene_coeff=PARAMS.ENE_COEFF, options=PARAMS.OPTIONS_THERMO)
 
-if RUN_RATES:
+if PARAMS.RUN_RATES:
 
-    # RUN_ES = True
-    # RUN_SPECIES = True
-    # RUN_MESS = True
-    # RUN_RATES = True
-    RUN_ES = True
-    RUN_SPECIES = True
-    RUN_MESS = True
-    RUN_RATES = True
-    OPTIONS_RATE = [RUN_ES, RUN_SPECIES, RUN_MESS, RUN_RATES]
-
-    TSK_INFO_LST = [
-        ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        #['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        #['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        #['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
-        ['find_ts', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['conf_hess', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        ['hr_scan', SCAN_LVL1, OPT_LVL0, OVERWRITE],
-        ['conf_energy', SP_LVL1, OPT_LVL0, OVERWRITE],
-        # ['conf_energy', SP_LVL1, OPT_LVL1, OVERWRITE],
-        # ['conf_energy', SP_LVL2, OPT_LVL1, OVERWRITE],
-        # ['conf_energy', SP_LVL3, OPT_LVL1, OVERWRITE],
-        # ['sym_samp', OPT_LVL0, OPT_LVL0, OVERWRITE],
-        # ['conf_vpt2', OPT_LVL1, OPT_LVL1, OVERWRITE],
-        ]
 
     # print all the channels for all the PESs
     for pes_idx, PES in enumerate(PES_LST, start=1):
@@ -814,31 +596,31 @@ if RUN_RATES:
                 chn_idx, ' + '.join(PES_RCT_NAMES_LST[chn_idx]),
                 ' + '.join(PES_PRD_NAMES_LST[chn_idx])))
 
-    if isinstance(PESNUMS, str):
-        if PESNUMS == 'all':
-            PESNUMS = numpy.arange(len(PES_LST)+1)
-        elif '-' in PESNUMS:
-            start, end = PESNUMS.split('-')
-            PESNUMS = numpy.arange(int(start), int(end)+1)
-        elif '[' in PESNUMS:
-            nums = PESNUMS.replace('[', '').replace(']', '').split(',')
-            PESNUMS = [int(num) for num in nums]
+    if isinstance(PARAMS.PESNUMS, str):
+        if PARAMS.PESNUMS == 'all':
+            PARAMS.PESNUMS = numpy.arange(len(PES_LST)+1)
+        elif '-' in PARAMS.PESNUMS:
+            start, end = PARAMS.PESNUMS.split('-')
+            PARAMS.PESNUMS = numpy.arange(int(start), int(end)+1)
+        elif '[' in PARAMS.PESNUMS:
+            nums = PARAMS.PESNUMS.replace('[', '').replace(']', '').split(',')
+            PARAMS.PESNUMS = [int(num) for num in nums]
     # loop over PESs
-    print('PESNUMS and CHANNELS:', PESNUMS, CHANNELS)
+    print('PARAMS.PESNUMS and PARAMS.CHANNELS:', PARAMS.PESNUMS, PARAMS.CHANNELS)
     for pes_idx, PES in enumerate(PES_LST, start=1):
-        if pes_idx in PESNUMS:
+        if pes_idx in PARAMS.PESNUMS:
             PES_RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
             PES_PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
             PES_RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
-            if isinstance(CHANNELS, str):
-                if CHANNELS == 'all':
+            if isinstance(PARAMS.CHANNELS, str):
+                if PARAMS.CHANNELS == 'all':
                     print(len(PES_RXN_NAME_LST))
                     pes_chns = numpy.arange(len(PES_RXN_NAME_LST)+1)
-                elif '-' in CHANNELS:
-                    start, end = CHANNELS.split('-')
+                elif '-' in PARAMS.CHANNELS:
+                    start, end = PARAMS.CHANNELS.split('-')
                     pes_chns = numpy.arange(int(start), int(end)+1)
-                elif '[' in CHANNELS:
-                    nums = CHANNELS.replace('[', '').replace(']', '').split(',')
+                elif '[' in PARAMS.CHANNELS:
+                    nums = PARAMS.CHANNELS.replace('[', '').replace(']', '').split(',')
                     pes_chns = [int(num) for num in nums]
             print('for pes:', pes_idx)
             RCT_NAMES_LST = []
@@ -898,10 +680,6 @@ if RUN_RATES:
                             str(chn_idx+1),
                             ' + '.join(PES_RCT_NAMES_LST[chn_idx]),
                             ' + '.join(PES_PRD_NAMES_LST[chn_idx])))
-                # set up name lists and ts species dictionary for a given PES
-                        #RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
-                        #PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
-                        #RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
                 if run_pes:
                     RXN_LST = []
                     for rxn, _ in enumerate(RCT_NAMES_LST):
@@ -925,7 +703,7 @@ if RUN_RATES:
                             RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
                         SPC_DCT[tsname]['mul'] = ts_mul_low
                         SPC_DCT[tsname]['rad_rad'] = rad_rad
-                        SPC_DCT[tsname]['hind_inc'] = HIND_INC * qcc.conversion_factor('degree', 'radian')
+                        SPC_DCT[tsname]['hind_inc'] = PARAMS.HIND_INC * qcc.conversion_factor('degree', 'radian')
                         ts_idx += 1
                         if ts_mul_low != ts_mul_high and rad_rad:
                             spc_dct = SPC_DCT[tsname].copy()
@@ -937,8 +715,8 @@ if RUN_RATES:
                     print('RUNNING WITH MESS')
                     # run ktp for a given PES
                     ktpdriver.driver.run(
-                        TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
-                        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=OPTIONS_RATE)
+                        PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
+                        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=PARAMS.OPTIONS_RATE)
                         #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 
 # f. Partition function parameters determined internally
@@ -950,7 +728,6 @@ SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
 KICKOFF_SIZE = 0.1
 KICKOFF_BACKWARD = False
 RESTRICT_OPEN_SHELL = False
-OVERWRITE = False
 # Temperatue and pressure
 TEMP_STEP = 100.
 NTEMPS = 30
