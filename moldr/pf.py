@@ -178,6 +178,11 @@ def species_block(
 
                     # prepare axis, group, and projection info
                     scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
+                    ts_bnd = None
+                    if saddle:
+                        dist_name = spc_dct_i['dist_info'][0]
+                        ts_bnd = automol.zmatrix.bond_idxs(zma, dist_name)
+                        ts_bnd = frozenset(ts_bnd)
                     pot = []
                     if 'hind_inc' in spc_dct_i:
                         scan_increment = spc_dct_i['hind_inc']
@@ -208,7 +213,7 @@ def species_block(
                         print('pot test in species_block:', pot)
                         axis = coo_dct[tors_name][1:3]
                         group = list(
-                            automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=saddle) -
+                            automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=saddle, ts_bnd=ts_bnd) -
                             set(axis))
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
@@ -906,6 +911,11 @@ def get_zero_point_energy(
             coo_dct = automol.zmatrix.coordinates(zma, multi=False)
             # prepare axis, group, info
             scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
+            ts_bnd = None
+            if saddle:
+                dist_name = spc_dct_i['dist_info'][0]
+                ts_bnd =  automol.zmatrix.bond_idxs(zma, dist_name)
+                ts_bnd = frozenset(ts_bnd)
             pot = []
             if 'hind_inc' in spc_dct_i:
                 scan_increment = spc_dct_i['hind_inc']
@@ -934,7 +944,7 @@ def get_zero_point_energy(
                 print('pot test in zero point energy:', pot)
                 axis = coo_dct[tors_name][1:3]
                 group = list(
-                    automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=saddle) -
+                    automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=saddle, ts_bnd=ts_bnd) -
                     set(axis))
                 group = list(numpy.add(group, 1))
                 axis = list(numpy.add(axis, 1))
