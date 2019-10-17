@@ -336,43 +336,114 @@ def species_block(
 
 
 def vtst_with_saddle_block(
-        spc_dct_i, spc_dct_j, spc_model, pf_levels, projrot_script_str,
-        spc_save_fs, elec_levels=[[0., 1]], sym_factor=1.
+        ts_dct,  ts_label, rct_label, prd_label, spc_ene, rct_zpe, projrot_script_str,
+        multi_info, elec_levels=[[0., 1]], sym_factor=1.
         ):
-    """ prepare the mess input string for a variational TS that has 
-    a saddle point. Do it by calling the species block for each grid point 
+    """ prepare the mess input string for a variational TS that has
+    a saddle point. Do it by calling the species block for each grid point
     in the scan file system
     """
 
-    # read the scan save file system to get the energies, zero-point energies, symmetry numbers, 
-    # geometries, hessians, torsional potentials for each point on the MEP
-    #call species_block()
+    orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
+    multi_level = multi_info[0:3]
+    multi_level.append(orb_restr)
 
-    # Determine the the number of points along the irc
-    nirc = 21
+    rxn_save_path = ts_dct['rxn_fs'][3]
+    thy_save_fs = autofile.fs.theory(rxn_save_path)
+    thy_save_fs.leaf.create(multi_level[1:4])
+    thy_save_path = thy_save_fs.leaf.path(multi_level[1:4])
 
-    # Loop over all the points of the irc and build MESS strings
-    irc_pt_strings = []
-    for i in range(nirc):
+    scn_run_fs = autofile.fs.scan(thy_run_path)
+    scn_save_fs = autofile.fs.scan(thy_save_path)
+
+    # read the scan save file system to get the energies, zero-point energies,
+    # geometries, hessians,
+    # ultimately
+
+    sym_factor = 1.
+    irc_pt_strs = []
+    proj_rotors_str = ''
+    coord_proj = 'cartesian'
+    grad = ''
+    pot = []
+
+    elec_levels=[[0., ts_dct['mul']]]
+    grid = ts_dct['grid']
+    grid1 = grid[0]
+    grid2 = grid[1]
+    grid = numpy.append(grid[0], grid[1])
+    dist_name = ts_dct['dist_info'][0]
+
+    inf_locs = [[dist_name], [1000.]]
+    inf_sep_ene = scn_save_fs.leaf.file.energy.read(inf_locs)
+
+    for idx, grid_val in enumerate(grid):
+        locs = [[dist_name], [grid_val]]
+        if not scn_save_fs.leaf.file.geometry.exists(locs):
+            continue
+        else:
+            geom = scn_save_fs.leaf.file.geometry.read(locs)
+        if not scn_save_fs.leaf.file.energy.exists(locs):
+            continue
+        else:
+            ene = scn_save_fs.leaf.file.energy.read(locs)
+        if not scn_save_fs.leaf.file.hessian.exists(locs):
+            continue
+        else:
+            hess = scn_save_fs.leaf.file.hessian.read(locs)
+            projrot_inp_str = projrot_io.writer.rpht_input(
+                geom, grad, hess, rotors_str=proj_rotors_str,
+                coord_proj=coord_proj)
+
+            scn_save_path= scn_save_fs.leaf.path(locs)
+            bld_locs = ['PROJROT', 0]
+            bld_save_fs = autofile.fs.build(scn_save_path)
+            bld_save_fs.leaf.create(bld_locs)
+            path = bld_save_fs.leaf.path(bld_locs)
+            print('Build Path for Partition Functions')
+            print(path)
+            proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
+            with open(proj_file_path, 'w') as proj_file:
+                proj_file.write(projrot_inp_str)
+
+            moldr.util.run_script(projrot_script_str, path)
+
+            freqs = []
+            if len(pot) > 0:
+                rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                    path+'/hrproj_freq.dat')
+                freqs = rthrproj_freqs
+            if not freqs:
+                rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                    path+'/RTproj_freq.dat')
+                freqs = rtproj_freqs
+                if not imag_freq:
+                    freqs = freqs[:-1]
+
+        zpe = sum(freqs)*WAVEN2KCAL/2.
+        erel = (ene - inf_sep_ene)*EH2KCAL
+        erel_zpe_corr = erel + zpe - rct_zpe
+        eref = erel - spc_ene
 
         # Iniialize the header of the string
-        irc_pt_string = '!-----------------------------------------------'
-        irc_pt_string += '! IRC Point {0}\n'.format(str(i+1))
+        irc_pt_str = '!-----------------------------------------------'
+        irc_pt_str += '! IRC Point {0}\n'.format(str(idx+1))
 
         # Write the molecule section for each irc point
-        #core = mess_io.writer.mol_data.core_rigidrotor(geom1, sym_factor, interp_emax='')
-        #irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
-             #hind_rot='', xmat=None, rovib_coups='', rot_dists='')
+        core = mess_io.writer.mol_data.core_rigidrotor(geom, sym_factor, interp_emax='')
+        irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
+             hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
         # Append the zero point energy for the molecule
-        #irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}'.format(zero_energy)
+        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}'.format(eref)
 
         # Append string to list
-        irc_pt_strings.append(irc_pt_string)
+        irc_pt_strs.append(irc_pt_str)
 
     # Write the MESS string for the variational sections
     varational_str = mess_io.writer.rxnchan.ts_variational(
-        ts_label, reac_label, prod_label, irc_pt_strings)
+        ts_label, reac_label, prod_label, irc_pt_strs)
+    print('variational_str test:', variational_str)
 
     return variational_str
 

@@ -179,7 +179,7 @@ def run_scan(
 
 
 def run_multiref_rscan(
-        formula, high_mul, zma, spc_info, thy_level, dist_name, grid1, grid2,
+        formula, high_mul, zma, spc_info, multi_level, dist_name, grid1, grid2,
         scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True, hessian=False,
         **kwargs):
     """ run constrained optimization scan
@@ -206,14 +206,8 @@ def run_multiref_rscan(
 
     inf_obj = autofile.system.info.scan_branch({coo_name: grid_vals})
     scn_save_fs.branch.file.info.write(inf_obj, [[coo_name]])
-    charge = spc_info[1]
-    mul = spc_info[2]
-    basis = thy_level[2]
-    prog = thy_level[0]
-    thy_level[0] = 'molpro2015'
-    thy_level[1] = 'caspt2'
-    prog = 'molpro2015'
-    method = 'caspt2'
+    prog = multi_level[0]
+    method = multi_level[1]
 
     _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(prog, method)
 
@@ -222,7 +216,7 @@ def run_multiref_rscan(
     ref_zma = automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]})
     cas_opt, _ = moldr.ts.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
     guess_str = moldr.ts.multiref_wavefunction_guess(
-        high_mul, ref_zma, spc_info, thy_level, cas_opt)
+        high_mul, ref_zma, spc_info, multi_level, cas_opt)
     guess_lines = guess_str.splitlines()
 
     opt_kwargs['casscf_options'] = cas_opt
@@ -247,7 +241,7 @@ def run_multiref_rscan(
         grid_idxs=grid1_idxs,
         grid_vals=grid1_vals,
         spc_info=spc_info,
-        thy_level=thy_level,
+        thy_level=multi_level,
         overwrite=overwrite,
         update_guess=update_guess,
         hessian=hessian,
@@ -274,7 +268,7 @@ def run_multiref_rscan(
         grid_idxs=grid2_idxs,
         grid_vals=grid2_vals,
         spc_info=spc_info,
-        thy_level=thy_level,
+        thy_level=multi_level,
         overwrite=overwrite,
         update_guess=update_guess,
         hessian=hessian,
