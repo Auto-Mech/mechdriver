@@ -16,6 +16,7 @@ JOB_ERROR_DCT = {
     elstruct.Job.HESSIAN: elstruct.Error.SCF_NOCONV,
     elstruct.Job.VPT2: elstruct.Error.SCF_NOCONV,
     elstruct.Job.OPTIMIZATION: elstruct.Error.OPT_NOCONV,
+    elstruct.Job.IRC: elstruct.Error.IRC_NOCONV,
 }
 
 JOB_RUNNER_DCT = {
@@ -28,6 +29,8 @@ JOB_RUNNER_DCT = {
     elstruct.Job.VPT2: functools.partial(
         runner.options_matrix_run, elstruct.writer.vpt2),
     elstruct.Job.OPTIMIZATION: runner.options_matrix_optimization,
+    elstruct.Job.IRC: functools.partial(
+        runner.options_matrix_run, elstruct.writer.irc),
 }
 
 
@@ -36,6 +39,7 @@ def run_job(
         geom, spc_info, thy_level,
         errors=(), options_mat=(), retry_failed=True, feedback=False,
         frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
+        irc_direction=None,
         **kwargs):
     """ run an elstruct job by name
     """
@@ -80,12 +84,18 @@ def run_job(
             job=job, prog=prog, version='', method=method, basis=basis, status=status)
         inf_obj.utc_start_time = autofile.system.info.utc_time()
         run_fs.leaf.file.info.write(inf_obj, [job])
+
+        # Set the job runner based on requested by user; set special options as needed
         runner = JOB_RUNNER_DCT[job]
+
         if job == elstruct.Job.OPTIMIZATION:
             runner = functools.partial(
                 runner, feedback=feedback,
                 frozen_coordinates=frozen_coordinates,
                 freeze_dummy_atoms=freeze_dummy_atoms)
+        if job == elstruct.Job.IRC:
+            runner = functools.partial(
+                runner, irc_direction=irc_direction)
 
         inp_str, out_str = runner(
             script_str, run_path, geom=geom, chg=spc_info[1],
