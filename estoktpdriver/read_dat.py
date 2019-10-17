@@ -5,17 +5,22 @@ from types import SimpleNamespace
 
 # Set each keyword to their default values
 PARAMS = {
-    'SORT_RXN': True,
+    'DATA_PATH': '/home/sjklipp/PACC/mech_test',
     'HIND_INC': 30.,
+    'MC_NSAMP0': [True, 6, 1, 3, 100],
+    'REF_MOLS': 'basic',
+    'ENE_COEFF': [1.],
+    'PESNUMS': 'all',
+    'CHANNELS': 'all',
+    'CHECK_STEREO': False,
+    'SORT_RXNS': True,
+    'RAD_RAD_SORT': True,
     'RUN_THERMO': False,
     'RUN_RATES': True,
-    'CHECK_STEREO': False,
-    'MC_NSAMP0': [True, 6, 1, 3, 100],
     'OPT_ES': True,
     'OPT_MESS': False,
     'OPT_THERMO': False,
     'OPT_ALLPF': False,
-    'REF_MOLS': 'basic',
     'RUN_ES': True,
     'RUN_SPECIES': True,
     'RUN_MESS': True,
@@ -27,7 +32,6 @@ PARAMS = {
     'SP_LVL1': 'cc_lvl_df',
     'SP_LVL2': 'cc_lvl_tf',
     'SP_LVL3': 'cc_lvl_qf',
-    'OVERWRITE': False,
     'TSK_INFO_LST': [
         ['find_geom', 'lvl_wbs', 'lvl_wbs', False],
         ['conf_samp', 'lvl_wbs', 'lvl_wbs', False],
@@ -42,7 +46,8 @@ PARAMS = {
         ['conf_energy', 'cc_lvl_df', 'lvl_wbs', False],
         ['sym_samp', 'lvl_wbs', 'lvl_wbs', False],
         ['conf_vpt2', 'lvl_wbm', 'lvl_wbm', False],
-    ]
+    ],
+    'OVERWRITE': False,
 }
 
 
@@ -105,9 +110,9 @@ def _format_param_vals(pvals):
         # Set string in list to boolean or integer if needed
         for elm in value:
             elm = elm.strip()
-            if elm == 'true':
+            if elm == 'True':
                 elm = True
-            elif elm == 'false':
+            elif elm == 'False':
                 elm = False
             elif elm.isdigit():
                 elm = int(elm)
@@ -118,10 +123,14 @@ def _format_param_vals(pvals):
 
             frmtd_value.append(elm)
     # Format values if it is just a boolean
-    elif value == 'true':
+    elif value == 'True':
         frmtd_value = True
-    elif value == 'false':
+    elif value == 'False':
         frmtd_value = False
+    elif value.isdigit():
+        frmtd_value = int(value)
+    elif '.' in value and value.replace('.', '').isdigit():
+        frmtd_value = float(value)
     # Simply set if it is a string
     else:
         frmtd_value = value
