@@ -13,7 +13,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def hindered_rotor_scans(
         spc_info, thy_level, cnf_run_fs, cnf_save_fs, script_str, overwrite,
-        scan_increment=30., saddle=False, tors_names='', new_grid=False,
+        scan_increment=30., saddle=False, tors_names='',
         **opt_kwargs):
     """ Perform 1d scans over each of the torsional coordinates
     """
@@ -52,7 +52,6 @@ def hindered_rotor_scans(
                     script_str=script_str,
                     overwrite=overwrite,
                     saddle=saddle,
-                    new_grid=new_grid,
                     **opt_kwargs,
                 )
 
@@ -67,7 +66,7 @@ def run_scan(
         zma, spc_info, thy_level, grid_dct, scn_run_fs, scn_save_fs,
         script_str, overwrite, update_guess=True,
         reverse_sweep=True, fix_failures=True, saddle=False,
-        new_grid=True, **kwargs):
+        **kwargs):
     """ run constrained optimization scan
     """
 
@@ -195,17 +194,17 @@ def run_multiref_rscan(
     if len(grid_dct) > 1:
         raise NotImplementedError
 
-    ((coo_name, grid_vals),) = grid_dct.items()
-    scn_save_fs.branch.create([[coo_name]])
-    if scn_save_fs.branch.file.info.exists([[coo_name]]):
-        inf_obj = scn_save_fs.branch.file.info.read([[coo_name]])
-        existing_grid_dct = dict(inf_obj.grids)
-        existing_grid_vals = existing_grid_dct[coo_name]
-        assert (numpy.shape(grid_vals) == numpy.shape(existing_grid_vals) and
-                numpy.allclose(grid_vals, existing_grid_vals))
+    coo_names = []
+    grid_vals = []
+    for item in grid_dct.items():
+        (coo, coo_grid_vals) = item
+        coo_names.append(coo)
+        grid_vals.append(coo_grid_vals)
 
-    inf_obj = autofile.system.info.scan_branch({coo_name: grid_vals})
-    scn_save_fs.branch.file.info.write(inf_obj, [[coo_name]])
+    scn_save_fs.branch.create([coo_names])
+    inf_obj = autofile.system.info.scan_branch(grid_dct)
+    scn_save_fs.branch.file.info.write(inf_obj, [coo_names])
+
     prog = multi_level[0]
     method = multi_level[1]
 
@@ -213,7 +212,10 @@ def run_multiref_rscan(
 
     num_act_elc = 2
     num_act_orb = 2
-    ref_zma = automol.zmatrix.set_values(zma, {coo_name: grid_vals[0]})
+
+    ((tmp_coo_name, tmp_grid_vals),) = grid_dct.items()
+
+    ref_zma = automol.zmatrix.set_values(zma, {coo_names[0]: grid_vals[0][0]})
     cas_opt, _ = moldr.ts.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
     guess_str = moldr.ts.multiref_wavefunction_guess(
         high_mul, ref_zma, spc_info, multi_level, cas_opt)
@@ -223,23 +225,32 @@ def run_multiref_rscan(
     opt_kwargs['mol_options'] = ['nosym']
     opt_kwargs['gen_lines'] = guess_lines
 
+    coo_names = []
+    grid1_vals = []
     grid1_dct = {dist_name: grid1}
-    ((_, grid1_vals),) = grid1_dct.items()
-    npoint1 = len(grid1_vals)
-    grid1_idxs = tuple(range(npoint1))
+    for item in grid1_dct.items():
+        (coo, coo_grid1_vals) = item
+        coo_names.append(coo)
+        grid1_vals.append(coo_grid1_vals)
 
-    for grid_idx in grid1_idxs:
-        scn_run_fs.leaf.create([[coo_name], [grid_idx]])
-    run_prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
-                         for grid_idx in grid1_idxs)
+    npoint = 1
+    for coo_grid1_vals in grid1_vals:
+        npoint *= len(coo_grid1_vals)
+    grid1_idxs = tuple(range(npoint))
+    if len(grid1_vals) == 1:
+        for grid1_val in grid1_vals[0]:
+            scn_run_fs.leaf.create([coo_names, [grid1_val]])
+        run_prefixes = tuple(scn_run_fs.leaf.path([coo_names, [grid1_val]])
+                             for grid1_val in grid1_vals[0])
+
     _run_1d_scan(
         script_str=opt_script_str,
         run_prefixes=run_prefixes,
         scn_save_fs=scn_save_fs,
         guess_zma=zma,
-        coo_name=coo_name,
+        coo_name=coo_names[0],
         grid_idxs=grid1_idxs,
-        grid_vals=grid1_vals,
+        grid_vals=grid1_vals[0],
         spc_info=spc_info,
         thy_level=multi_level,
         overwrite=overwrite,
@@ -248,25 +259,31 @@ def run_multiref_rscan(
         **opt_kwargs,
     )
 
+    coo_names = []
+    grid2_vals = []
     grid2_dct = {dist_name: grid2}
-    ((_, grid2_vals),) = grid2_dct.items()
-    npoint2 = len(grid2_vals)
-    grid2_idxs = tuple(range(npoint2))
-    grid2_idxs = tuple(x + npoint1 for x in grid2_idxs)
+    for item in grid2_dct.items():
+        (coo, coo_grid2_vals) = item
+        coo_names.append(coo)
+        grid2_vals.append(coo_grid2_vals)
 
-    for grid_idx in grid2_idxs:
-        scn_run_fs.leaf.create([[coo_name], [grid_idx]])
-
-    run_prefixes = tuple(scn_run_fs.leaf.path([[coo_name], [grid_idx]])
-                         for grid_idx in grid2_idxs)
+    npoint = 1
+    for coo_grid2_vals in grid2_vals:
+        npoint *= len(coo_grid2_vals)
+    grid2_idxs = tuple(range(npoint))
+    if len(grid2_vals) == 1:
+        for grid2_val in grid2_vals[0]:
+            scn_run_fs.leaf.create([coo_names, [grid2_val]])
+        run_prefixes = tuple(scn_run_fs.leaf.path([coo_names, [grid2_val]])
+                             for grid2_val in grid2_vals[0])
     _run_1d_scan(
         script_str=opt_script_str,
         run_prefixes=run_prefixes,
         scn_save_fs=scn_save_fs,
         guess_zma=zma,
-        coo_name=coo_name,
+        coo_name=coo_names[0],
         grid_idxs=grid2_idxs,
-        grid_vals=grid2_vals,
+        grid_vals=grid2_vals[0],
         spc_info=spc_info,
         thy_level=multi_level,
         overwrite=overwrite,
@@ -329,7 +346,6 @@ def _run_1d_scan(
                     errors=errors,
                     options_mat=options_mat,
                     retry_failed=retry_failed,
-                    saddle=saddle,
                     **kwargs
                 )
 
@@ -445,7 +461,7 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=True):
 
 def infinite_separation_energy(
         spc_1_info, spc_2_info, ts_info, high_mul, ref_zma, ini_thy_info, thy_info,
-        multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs):
+        multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs, overwrite=False):
     """ Obtain the infinite separation energy from the multireference energy at a given
     reference point, the high-spin low-spin splitting at that reference point, and the
     high level energy for the high spin state at the reference geometry and for the fragments
@@ -510,13 +526,13 @@ def infinite_separation_energy(
         print(" - Running low spin multi reference energy ...")
         moldr.driver.run_job(
             job='energy',
-            script_str=sp_script_str,
+            script_str=mr_script_str,
             run_fs=run_mr_fs,
             geom=geo,
             spc_info=ts_info,
             thy_level=multi_lvl,
             overwrite=overwrite,
-            **kwargs,
+            **mr_kwargs,
         )
 
         ret = moldr.driver.read_job(
@@ -531,7 +547,7 @@ def infinite_separation_energy(
             ls_mr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
             print(" - Saving low spin multi reference energy...")
-            print(" - Save path: {}".format(sp_save_path))
+            print(" - Save path: {}".format(sp_mr_save_path))
             sp_save_fs.leaf.file.energy.write(ls_mr_ene, multi_lvl[1:4])
             sp_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
             sp_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
@@ -572,7 +588,7 @@ def infinite_separation_energy(
         run_fs=run_mr_fs,
     )
     if ret:
-        print(" - Reading low spin multi reference energy from output...")
+        print(" - Reading high spin multi reference energy from output...")
         inf_obj, inp_str, out_str = ret
         ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
         hs_save_fs.leaf.file.energy.write(ene, multi_lvl[1:4])
@@ -580,16 +596,16 @@ def infinite_separation_energy(
         hs_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
 
     if not hs_save_fs.leaf.file.energy.exists(multi_lvl) or overwrite:
-        print(" - Running low spin multi reference energy ...")
+        print(" - Running high spin multi reference energy ...")
         moldr.driver.run_job(
             job='energy',
-            script_str=sp_script_str,
+            script_str=mr_script_str,
             run_fs=run_mr_fs,
             geom=geo,
             spc_info=ts_info,
             thy_level=multi_lvl,
             overwrite=overwrite,
-            **kwargs,
+            **mr_kwargs,
         )
 
         ret = moldr.driver.read_job(
@@ -600,21 +616,21 @@ def infinite_separation_energy(
         if ret is not None:
             inf_obj, inp_str, out_str = ret
 
-            print(" - Reading low spin multi reference energy from output...")
+            print(" - Reading high spin multi reference energy from output...")
             hs_mr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
-            print(" - Saving low spin multi reference energy...")
-            print(" - Save path: {}".format(hs_save_path))
+            print(" - Saving high spin multi reference energy...")
+            print(" - Save path: {}".format(hs_mr_save_path))
             hs_save_fs.leaf.file.energy.write(hs_mr_ene, multi_lvl[1:4])
             hs_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
             hs_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
         else:
             print('ERROR: high spin multi reference energy job fails: ',
-                'Energy is needed to evaluate infinite separation energy')
+                  'Energy is needed to evaluate infinite separation energy')
             return
 
     else:
-        hs_mr_ene = hs_save_fs.leaf.file.energy.read(multi_lvl) 
+        hs_mr_ene = hs_save_fs.leaf.file.energy.read(multi_lvl)
 
 
     # get the single reference energy for the high spin state for the reference point on the scan
@@ -630,7 +646,7 @@ def infinite_separation_energy(
     hs_sr_save_path = hs_save_fs.leaf.path(thy_lvl[1:4])
     run_sr_fs = autofile.fs.run(hs_sr_run_path)
 
-    sp_script_str, _, kwargs, _ = run_qchem_par(*thy_lvl[0:2])
+    sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_lvl[0:2])
     ret = moldr.driver.read_job(
         job='energy',
         run_fs=run_sr_fs,
@@ -668,7 +684,7 @@ def infinite_separation_energy(
             hs_sr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
             print(" - Saving high spin single reference energy...")
-            print(" - Save path: {}".format(hs_save_path))
+            print(" - Save path: {}".format(hs_sr_save_path))
             hs_save_fs.leaf.file.energy.write(hs_sr_ene, thy_lvl[1:4])
             hs_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
             hs_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
@@ -678,7 +694,7 @@ def infinite_separation_energy(
             return
 
     else:
-        hs_sr_ene = hs_save_fs.leaf.file.energy.read(thy_lvl) 
+        hs_sr_ene = hs_save_fs.leaf.file.energy.read(thy_lvl)
 
     # get the single reference energy for each of the reactant configurations
     spc_ene = []
@@ -721,7 +737,7 @@ def infinite_separation_energy(
         geo = ini_cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         sp_run_fs = autofile.fs.single_point(min_cnf_run_path)
         sp_save_fs = autofile.fs.single_point(min_cnf_save_path)
-     
+
         sp_sr_run_path = sp_run_fs.leaf.path(thy_lvl[1:4])
         sp_sr_save_path = sp_save_fs.leaf.path(thy_lvl[1:4])
         run_sr_fs = autofile.fs.run(sp_sr_run_path)
@@ -765,7 +781,7 @@ def infinite_separation_energy(
                 sp_sr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
                 print(" - Saving single reference energy for {} from output...".format(spc_info[0]))
-                print(" - Save path: {}".format(sp_save_path))
+                print(" - Save path: {}".format(sp_sr_save_path))
                 sp_save_fs.leaf.file.energy.write(sp_sr_ene, thy_lvl[1:4])
                 sp_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
                 sp_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
@@ -776,8 +792,9 @@ def infinite_separation_energy(
                 return
 
         else:
-            sp_sr_ene = sp_save_fs.leaf.file.energy.read(thy_lvl) 
+            sp_sr_ene = sp_save_fs.leaf.file.energy.read(thy_lvl)
 
         spc_ene.append(sp_sr_ene)
 
     inf_sep_ene = spc_ene[0] + spc_ene[1] - hs_sr_ene + hs_mr_ene - ls_mr_ene
+    return inf_sep_ene

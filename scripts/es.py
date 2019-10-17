@@ -889,9 +889,6 @@ def find_ts(
               cnf_run_fs, cnf_save_fs, None, None,
               scn_run_fs, scn_save_fs, run_fs]
 
-        new_grid = False
-        if attempt > 1:
-            new_grid = True
         print('running ts scan:')
         if 'radical radical addition' in typ:
             # run mep scan
@@ -926,7 +923,7 @@ def find_ts(
                 high_mul=high_mul,
                 zma=ts_zma,
                 spc_info=ts_info,
-                thy_level=multi_level,
+                multi_level=multi_level,
                 dist_name=dist_name,
                 grid1=grid1,
                 grid2=grid2,
@@ -946,9 +943,8 @@ def find_ts(
             )
 
             locs = [[dist_name], [grid1[0]]]
+            # calculate and save the infinite seperation energy
             ts_zma = scn_save_fs.leaf.file.zmatrix.read(locs)
-        # calculate the infinite seperation energy
-            #first get the energy for the reference geometry and reference energy
             rcts = ts_dct['reacts']
             spc_1_info = [spc_dct[rcts[0]]['ich'], spc_dct[rcts[0]]['chg'], spc_dct[rcts[0]]['mul']]
             spc_2_info = [spc_dct[rcts[1]]['ich'], spc_dct[rcts[1]]['chg'], spc_dct[rcts[1]]['mul']]
@@ -960,60 +956,61 @@ def find_ts(
             inf_locs = [[dist_name], [1000.]]
             scn_save_fs.leaf.file.energy.write(inf_sep_ene, inf_locs)
 
+            vrctst = False
             if vrctst:
 
-        # continue on to finish setting up the correction potential
+                # continue on to finish setting up the correction potential
 
 
-        # now call vrctst which sets up all the vrctst files
-            input_strs = moldr.vrctst.input_prep(ts_zma, dist_name)
-            [struct_inp_str, lr_divsur_inp_str, sr_divsur_inp_str, tst_inp_str,
-             els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
+                # now call vrctst which sets up all the vrctst files
+                input_strs = moldr.vrctst.input_prep(ts_zma, dist_name)
+                [struct_inp_str, lr_divsur_inp_str, sr_divsur_inp_str, tst_inp_str,
+                 els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
 
-        # generate the molpro template file
-                  # Write the *.tml input string
-            memory = 4.0
-            basis = 'cc-pvdz'
-            num_act_elc = 2
-            num_act_orb = 2
+                # generate the molpro template file
+                      # Write the *.tml input string
+                memory = 4.0
+                basis = 'cc-pvdz'
+                num_act_elc = 2
+                num_act_orb = 2
 
-            ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
+                ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
 
-            _, wfn_str = moldr.ts.cas_options(
-                ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-            method = '{rs2c, shift=0.25}'
-            # inf_sep_energy = -78.137635
-            tml_inp_str = varecof_io.writer.input_file.tml(
-                memory, basis, wfn_str, method, inf_sep_ene)
-            print('\n\nmol.tml:')
-            print(tml_inp_str)
+                _, wfn_str = moldr.ts.cas_options(
+                    ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+                method = '{rs2c, shift=0.25}'
+                # inf_sep_energy = -78.137635
+                tml_inp_str = varecof_io.writer.input_file.tml(
+                    memory, basis, wfn_str, method, inf_sep_ene)
+                print('\n\nmol.tml:')
+                print(tml_inp_str)
 
-            vrc_path = os.path.join(os.getcwd(), 'vrc')
-            scr_path = os.path.join(vrc_path, 'scratch')
-            os.makedirs(vrc_path, exist_ok=True)
-            os.makedirs(scr_path, exist_ok=True)
-            machines = ['b450:8', 'b451:8', 'b452:8', 'b453:8']
+                vrc_path = os.path.join(os.getcwd(), 'vrc')
+                scr_path = os.path.join(vrc_path, 'scratch')
+                os.makedirs(vrc_path, exist_ok=True)
+                os.makedirs(scr_path, exist_ok=True)
+                machines = ['b450:8', 'b451:8', 'b452:8', 'b453:8']
 
-            print('vrc_path test:', vrc_path)
-            with open(os.path.join(vrc_path, 'machines'), 'w') as machine_file:
-                for machine in machines:
-                    machine_file.writelines(machine + '\n')
-            with open(os.path.join(vrc_path, 'structure.inp'), 'w') as inp_file:
-                inp_file.write(struct_inp_str)
-            with open(os.path.join(vrc_path, 'sr_divsur.inp'), 'w') as inp_file:
-                inp_file.write(sr_divsur_inp_str)
-            with open(os.path.join(vrc_path, 'lr_divsur.inp'), 'w') as inp_file:
-                inp_file.write(lr_divsur_inp_str)
-            with open(os.path.join(vrc_path, 'tst.inp'), 'w') as inp_file:
-                inp_file.write(tst_inp_str)
-            with open(os.path.join(vrc_path, 'molpro.inp'), 'w') as inp_file:
-                inp_file.write(els_inp_str)
-            with open(os.path.join(vrc_path, 'mc_flux.inp'), 'w') as inp_file:
-                inp_file.write(mc_flux_inp_str)
-            with open(os.path.join(vrc_path, 'convert.inp'), 'w') as inp_file:
-                inp_file.write(conv_inp_str)
-            with open(os.path.join(vrc_path, 'mol.tml'), 'w') as tml_file:
-                tml_file.write(tml_inp_str)
+                print('vrc_path test:', vrc_path)
+                with open(os.path.join(vrc_path, 'machines'), 'w') as machine_file:
+                    for machine in machines:
+                        machine_file.writelines(machine + '\n')
+                with open(os.path.join(vrc_path, 'structure.inp'), 'w') as inp_file:
+                    inp_file.write(struct_inp_str)
+                with open(os.path.join(vrc_path, 'sr_divsur.inp'), 'w') as inp_file:
+                    inp_file.write(sr_divsur_inp_str)
+                with open(os.path.join(vrc_path, 'lr_divsur.inp'), 'w') as inp_file:
+                    inp_file.write(lr_divsur_inp_str)
+                with open(os.path.join(vrc_path, 'tst.inp'), 'w') as inp_file:
+                    inp_file.write(tst_inp_str)
+                with open(os.path.join(vrc_path, 'molpro.inp'), 'w') as inp_file:
+                    inp_file.write(els_inp_str)
+                with open(os.path.join(vrc_path, 'mc_flux.inp'), 'w') as inp_file:
+                    inp_file.write(mc_flux_inp_str)
+                with open(os.path.join(vrc_path, 'convert.inp'), 'w') as inp_file:
+                    inp_file.write(conv_inp_str)
+                with open(os.path.join(vrc_path, 'mol.tml'), 'w') as tml_file:
+                    tml_file.write(tml_inp_str)
 
         else:
             if 'elimination' in typ:
@@ -1034,7 +1031,6 @@ def find_ts(
                 update_guess=update_guess,
                 reverse_sweep=False,
                 fix_failures=False,
-                new_grid=new_grid,
                 **opt_kwargs,
                 )
             if 'elimination' in typ:

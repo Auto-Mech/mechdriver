@@ -190,6 +190,7 @@ def species_block(
                         numpy.linspace(*linspace) + val_dct[name]
                         for name, linspace in zip(tors_names, tors_linspaces)]
                     tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(zma, tors_names))
+                    print('tors sym nums:', tors_sym_nums)
                     idx = 0
                     for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
                         locs_lst = []
@@ -204,9 +205,10 @@ def species_block(
                                 print('ERROR: missing grid value for torsional potential of {}'.format(spc_info[0]))
                         enes = numpy.subtract(enes, min_ene)
                         pot = list(enes*EH2KCAL)
+                        print('pot test in species_block:', pot)
                         axis = coo_dct[tors_name][1:3]
                         group = list(
-                            automol.graph.branch_atom_keys(gra, axis[1], axis) -
+                            automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=saddle) -
                             set(axis))
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
@@ -217,7 +219,7 @@ def species_block(
                         for atm_idx, atm in enumerate(atom_symbols):
                             if atm == 'X':
                                 dummy_idx.append(atm_idx)
-                        remdummy = numpy.zeros(len(zma[0]))     
+                        remdummy = numpy.zeros(len(zma[0]))
                         for dummy in dummy_idx:
                             for idx, _ in enumerate(remdummy):
                                 if dummy < idx:
@@ -808,10 +810,12 @@ def get_zero_point_energy(
     har_levelp.append(orb_restr)
 
     har_save_path = thy_save_fs.leaf.path(har_levelp[1:4])
+    saddle = False
     if 'ts_' in spc:
         har_save_fs = autofile.fs.ts(har_save_path)
         har_save_fs.trunk.create()
         har_save_path = har_save_fs.trunk.path()
+        saddle = True
 
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
@@ -903,13 +907,18 @@ def get_zero_point_energy(
             # prepare axis, group, info
             scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
             pot = []
-            scan_increment = 30.
+            if 'hind_inc' in spc_dct_i:
+                scan_increment = spc_dct_i['hind_inc']
+            else:
+                scan_increment = 30. * qcc.conversion_factor('degree', 'radian')
             val_dct = automol.zmatrix.values(zma)
             tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
                 zma, tors_names, scan_increment)
             tors_grids = [numpy.linspace(*linspace) + val_dct[name]
                           for name, linspace in zip(tors_names, tors_linspaces)]
-            for tors_name, tors_grid in zip(tors_names, tors_grids):
+            tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(zma, tors_names))
+            for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
+                print('tors test:', tors_name, tors_grid, sym_num)
                 locs_lst = []
                 enes = []
                 for grid_val in tors_grid:
@@ -922,9 +931,10 @@ def get_zero_point_energy(
                         print('ERROR: missing grid value for torionsal potential of {}'.format(spc_info[0]))
                 enes = numpy.subtract(enes, min_ene)
                 pot = list(enes*EH2KCAL)
+                print('pot test in zero point energy:', pot)
                 axis = coo_dct[tors_name][1:3]
                 group = list(
-                    automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=True) -
+                    automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=saddle) -
                     set(axis))
                 group = list(numpy.add(group, 1))
                 axis = list(numpy.add(axis, 1))
@@ -940,9 +950,9 @@ def get_zero_point_energy(
                     for idx, _ in enumerate(remdummy):
                         if dummy < idx:
                             remdummy[idx] += 1
-                sym = 1  #<<--------- This should be updated
+
                 hind_rot_str += mess_io.writer.rotor_hindered(
-                    group, axis, sym, pot, remdummy)
+                    group, axis, sym_num, pot, remdummy)
 
             dummy_freqs = [1000.]
             dummy_zpe = 0.0
