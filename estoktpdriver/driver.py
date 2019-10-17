@@ -24,6 +24,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 #PES_NUMS = [2, 3]
 PESNUMS= 'all'
 CHANNELS= 'all'
+HIND_INC = 30.
 #PESNUMS=  [16,17,18,19,20]
 # 0. choose which mechanism to run
 
@@ -34,7 +35,7 @@ if len(sys.argv) > 3:
     if len(sys.argv) > 4:
         CHANNELS = sys.argv[4]
 print('PESNUMS and CHANNELS:', PESNUMS, CHANNELS)
-RUN_THERMO = False
+RUN_THERMO = True
 RUN_RATES = True
 # 1. create run and save directories
 RUN_PREFIX = '/lcrc/project/PACC/run'
@@ -87,7 +88,7 @@ RAD_RAD_SORT = False
 
 # setting SORT_RXNS to False leads to missing channels
 # for now just leave them sorted
-SORT_RXNS = False
+SORT_RXNS = True
 
 # Read the run parameters from a datafile
 RUN_PARAMS_LST = read_dat.run_params('params.dat')
@@ -599,7 +600,7 @@ for spc in SPC_DCT:
     ich = SPC_DCT[spc]['ich']
     if ich in GEOM_DCT:
         SPC_DCT[spc]['geo_obj'] = GEOM_DCT[ich]
-    SPC_DCT[spc]['hind_inc'] = 30. * qcc.conversion_factor('degree', 'radian')
+    SPC_DCT[spc]['hind_inc'] = HIND_INC * qcc.conversion_factor('degree', 'radian')
 
 # 2. script control parameters
 
@@ -734,14 +735,14 @@ if RUN_THERMO:
     OPT_MESS = False
     OPT_THERMO = False
     OPT_ALLPF = False
-    OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
+    OPTIONS_THERMO = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
     SPC_QUEUE = list(SPC_NAMES)
     #SPC_QUEUE = ['H2O2(11)']
     # SPC_QUEUE = ['CHOH']
     # SPC_QUEUE = ['CH2OH']
 
-    REF_MOLS = 'basic'
+    REF_MOLS = 'cbh1'
     #REF_MOLS = 'cbh1'
     # REF_MOLS = [
         # automol.smiles.inchi('[H][H]'), automol.smiles.inchi('O')
@@ -765,11 +766,11 @@ if RUN_THERMO:
     OPT_MESS = True
     OPT_THERMO = True
     OPT_ALLPF = False
-    OPTIONS = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
+    OPTIONS_THERMO = [OPT_ES, OPT_MESS, OPT_THERMO, OPT_ALLPF]
 
     thermodriver.driver.run(
         TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
-        SAVE_PREFIX, ene_coeff=ENE_COEFF, options=OPTIONS)
+        SAVE_PREFIX, ene_coeff=ENE_COEFF, options=OPTIONS_THERMO)
 
 if RUN_RATES:
 
@@ -777,11 +778,11 @@ if RUN_RATES:
     # RUN_SPECIES = True
     # RUN_MESS = True
     # RUN_RATES = True
-    RUN_ES = False
-    RUN_SPECIES = False
-    RUN_MESS = False
-    RUN_RATES = False
-    OPTIONS = [RUN_ES, RUN_SPECIES, RUN_MESS, RUN_RATES]
+    RUN_ES = True
+    RUN_SPECIES = True
+    RUN_MESS = True
+    RUN_RATES = True
+    OPTIONS_RATE = [RUN_ES, RUN_SPECIES, RUN_MESS, RUN_RATES]
 
     TSK_INFO_LST = [
         ['find_geom', OPT_LVL0, OPT_LVL0, OVERWRITE],
@@ -882,13 +883,18 @@ if RUN_RATES:
 
             # Loop ktp runs over the sub-pes
             for cidx, cvals in enumerate(connchnls.values()):
-                print('running ktp on PES{}_{}: {} for the following channels...'.format(str(pes_idx), str(cidx+1), PES))
+                print('ktp on PES{}_{}: {} for the following channels...'.format(str(pes_idx), str(cidx+1), PES))
+                run_pes = False
+                RCT_NAMES_LST = []
+                PRD_NAMES_LST = []
+                RXN_NAME_LST = []
                 for chn_idx, _ in enumerate(PES_RXN_NAME_LST):
                     if chn_idx+1 in pes_chns and chn_idx in cvals:
+                        run_pes = True
                         RCT_NAMES_LST.append(PES_RCT_NAMES_LST[chn_idx])
                         PRD_NAMES_LST.append(PES_PRD_NAMES_LST[chn_idx])
                         RXN_NAME_LST.append(PES_RXN_NAME_LST[chn_idx])
-                        print('channel {}: {} = {}'.format(
+                        print('running channel {}: {} = {}'.format(
                             str(chn_idx+1),
                             ' + '.join(PES_RCT_NAMES_LST[chn_idx]),
                             ' + '.join(PES_PRD_NAMES_LST[chn_idx])))
@@ -896,42 +902,44 @@ if RUN_RATES:
                         #RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
                         #PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
                         #RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
-                RXN_LST = []
-                for rxn, _ in enumerate(RCT_NAMES_LST):
-                    RXN_LST.append(
-                        {'species': [], 'reacs': list(RCT_NAMES_LST[rxn]), 'prods':
-                         list(PRD_NAMES_LST[rxn])})
-                ts_idx = 0
-                for idx, rxn in enumerate(RXN_LST):
-                    reacs = rxn['reacs']
-                    prods = rxn['prods']
-                    tsname = 'ts_{:g}'.format(ts_idx)
-                    SPC_DCT[tsname] = {}
-                    if reacs and prods:
-                        SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
-                    SPC_DCT[tsname]['ich'] = ''
-                    ts_chg = 0
-                    for rct in RCT_NAMES_LST[idx]:
-                        ts_chg += SPC_DCT[rct]['chg']
-                    SPC_DCT[tsname]['chg'] = ts_chg
-                    ts_mul_low, ts_mul_high, rad_rad = moldr.util.ts_mul_from_reaction_muls(
-                        RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
-                    SPC_DCT[tsname]['mul'] = ts_mul_low
-                    SPC_DCT[tsname]['rad_rad'] = rad_rad
-                    ts_idx += 1
-                    if ts_mul_low != ts_mul_high and rad_rad:
-                        spc_dct = SPC_DCT[tsname].copy()
+                if run_pes:
+                    RXN_LST = []
+                    for rxn, _ in enumerate(RCT_NAMES_LST):
+                        RXN_LST.append(
+                            {'species': [], 'reacs': list(RCT_NAMES_LST[rxn]), 'prods':
+                             list(PRD_NAMES_LST[rxn])})
+                    ts_idx = 0
+                    for idx, rxn in enumerate(RXN_LST):
+                        reacs = rxn['reacs']
+                        prods = rxn['prods']
                         tsname = 'ts_{:g}'.format(ts_idx)
-                        SPC_DCT[tsname] = spc_dct
-                        SPC_DCT[tsname]['mul'] = ts_mul_high
+                        SPC_DCT[tsname] = {}
+                        if reacs and prods:
+                            SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
+                        SPC_DCT[tsname]['ich'] = ''
+                        ts_chg = 0
+                        for rct in RCT_NAMES_LST[idx]:
+                            ts_chg += SPC_DCT[rct]['chg']
+                        SPC_DCT[tsname]['chg'] = ts_chg
+                        ts_mul_low, ts_mul_high, rad_rad = moldr.util.ts_mul_from_reaction_muls(
+                            RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
+                        SPC_DCT[tsname]['mul'] = ts_mul_low
+                        SPC_DCT[tsname]['rad_rad'] = rad_rad
+                        SPC_DCT[tsname]['hind_inc'] = HIND_INC * qcc.conversion_factor('degree', 'radian')
                         ts_idx += 1
+                        if ts_mul_low != ts_mul_high and rad_rad:
+                            spc_dct = SPC_DCT[tsname].copy()
+                            tsname = 'ts_{:g}'.format(ts_idx)
+                            SPC_DCT[tsname] = spc_dct
+                            SPC_DCT[tsname]['mul'] = ts_mul_high
+                            ts_idx += 1
 
-                print('RUNNING WITH MESS')
-                # run ktp for a given PES
-                ktpdriver.driver.run(
-                    TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
-                    '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=OPTIONS)
-                    #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
+                    print('RUNNING WITH MESS')
+                    # run ktp for a given PES
+                    ktpdriver.driver.run(
+                        TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
+                        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=OPTIONS_RATE)
+                        #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 
 # f. Partition function parameters determined internally
 # TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'

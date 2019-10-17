@@ -211,7 +211,7 @@ def make_channel_pfs(
         prod_label = idx_dct[well_dct_key1]
 
     #Set up a new well connected to ts
-    if 'radical radical' in spc_dct[tsname]['clsss']:
+    if 'radical radical' in spc_dct[tsname]['class']:
         # for radical radical call vtst or vrctst
         ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
         if 'P' in reac_label:
@@ -321,13 +321,25 @@ def make_channel_pfs(
                 zero_energy, tunnel_str)
 
             zero_energy = ts_ene - first_ground_ene
+            ts_reac_barr = ts_ene - vdwr_ene
+            ts_prod_barr = ts_ene - vdwp_ene
+            if ts_reac_barr < 0.:
+                ts_reac_barr = 0.1
+            if ts_prod_barr < 0.:
+                ts_prod_barr = 0.1
             tunnel_str = mess_io.writer.tunnel_eckart(
-                imag_freq, ts_ene-vdwr_ene, ts_ene-vdwp_ene)
+                imag_freq, ts_reac_barr, ts_prod_barr)
             ts_str += '\n' + mess_io.writer.ts_sadpt(
                 ts_label, fake_wellr_label, fake_wellp_label, species_data[tsname], zero_energy, tunnel_str)
         else:
+            ts_reac_barr = ts_ene - reac_ene
+            ts_prod_barr = ts_ene - prod_ene
+            if ts_reac_barr < 0.:
+                ts_reac_barr = 0.1
+            if ts_prod_barr < 0.:
+                ts_prod_barr = 0.1
             tunnel_str = mess_io.writer.tunnel_eckart(
-                imag_freq, ts_ene-reac_ene, ts_ene-prod_ene)
+                imag_freq, ts_reac_barr, ts_prod_barr)
             ts_str += '\n' + mess_io.writer.ts_sadpt(
                 ts_label, reac_label, prod_label, species_data[tsname], zero_energy, tunnel_str)
 
