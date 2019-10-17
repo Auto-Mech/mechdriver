@@ -14,6 +14,8 @@ from automol import formula
 import moldr
 import thermodriver
 import ktpdriver
+from estoktpdriver import read_dat
+
 
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
 WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
@@ -86,6 +88,17 @@ RAD_RAD_SORT = False
 # setting SORT_RXNS to False leads to missing channels
 # for now just leave them sorted
 SORT_RXNS = False
+
+# Read the run parameters from a datafile
+RUN_PARAMS_LST = read_dat.run_params('params.dat')
+[RUN_THERMO,
+ RUN_RATES,
+ RUN_ES,
+ RUN_SPECIES,
+ RUN_MESS,
+ RUN_RATES,
+ ] = RUN_PARAMS_LST
+
 
 if MECH_TYPE == 'CHEMKIN':
 
