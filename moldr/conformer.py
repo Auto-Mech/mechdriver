@@ -239,7 +239,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                         dist_name = dist_info[0]
                         dist_len = dist_info[1]
                         conf_dist_len = automol.zmatrix.values(zma)[dist_name]
-                        if abs(conf_dist_len - dist_len) > 0.5:
+                        print('distance test:', dist_len, conf_dist_len)
+                        if abs(conf_dist_len - dist_len) > 0.3:
                             print(" - Transition State conformer has diverged from original structure of dist {:.3f} with dist {:.3f}".format(dist_len, conf_dist_len))
                             continue
                     else:
