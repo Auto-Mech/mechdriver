@@ -506,9 +506,11 @@ def external_symmetry_factor(geo):
     else:
         oriented_geom = _pyx2z.to_oriented_geometry(geo)
         ext_sym_fac = oriented_geom.sym_num()
+        print('initial ext_sym_fac:', ext_sym_fac)
         # Change symmetry number if geometry has enantiomers
         if oriented_geom.is_enantiomer():
             ext_sym_fac *= 0.5
+        print('final ext_sym_fac:', ext_sym_fac)
     return ext_sym_fac
 
 
@@ -522,6 +524,7 @@ def symmetry_factor(geo, ene, cnf_save_fs, saddle=False):
     ext_sym = external_symmetry_factor(geo)
     int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle)
     sym_fac = ext_sym * int_sym
+    print('sym test:', ext_sym, int_sym)
     return sym_fac
 
 
@@ -550,7 +553,7 @@ def is_unique_stereo_dist_mat_energy(geo, ene, geo_list, ene_list):
 def are_torsions_same(geo, geoi):
     """ compare all torsional angle values
     """
-    dtol = 0.01
+    dtol = 0.03
     same_dihed = True
     zma = automol.geom.zmatrix(geo)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)

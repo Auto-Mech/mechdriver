@@ -10,6 +10,7 @@ import mess_io
 import mess_io.writer
 import ratefit
 import scripts
+import copy
 
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
@@ -452,7 +453,7 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
 
         if rxn_is_pdependent:
             # Set dct to fit as copy of dct to do PLOG fits at all pressures
-            ktp_dct = valid_calc_tk_dct.deepcopy()
+            ktp_dct = copy.deepcopy(valid_calc_tk_dct)
         else:
             # Set dct to have single set of k(T, P) vals: P is desired pressure
             #ktp_dct[no_pdep_pval] = valid_calc_tk_dct[no_pdep_pval]

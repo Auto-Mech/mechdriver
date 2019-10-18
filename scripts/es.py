@@ -945,7 +945,7 @@ def find_ts(
             locs = [[dist_name], [grid1[0]]]
             # calculate and save the infinite seperation energy
             ts_zma = scn_save_fs.leaf.file.zmatrix.read(locs)
-            rcts = ts_dct['reacts']
+            rcts = ts_dct['reacs']
             spc_1_info = [spc_dct[rcts[0]]['ich'], spc_dct[rcts[0]]['chg'], spc_dct[rcts[0]]['mul']]
             spc_2_info = [spc_dct[rcts[1]]['ich'], spc_dct[rcts[1]]['chg'], spc_dct[rcts[1]]['mul']]
 
@@ -954,6 +954,7 @@ def find_ts(
                 multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs)
 
             inf_locs = [[dist_name], [1000.]]
+            scn_save_fs.leaf.create(inf_locs)
             scn_save_fs.leaf.file.energy.write(inf_sep_ene, inf_locs)
 
             vrctst = False
@@ -1046,6 +1047,7 @@ def find_ts(
                     coo_names=[dist_name],
                     )
 
+        print('typ test:', typ)
         if 'elimination' in typ:
             enes_lst = []
             locs_lst_lst = []
@@ -1090,6 +1092,7 @@ def find_ts(
         else:
             locs_list = []
             locs_lst = []
+            enes = []
             for grid_val_i in grid:
                 locs_list.append([[dist_name], [grid_val_i]])
             for locs in locs_list:
@@ -1099,6 +1102,7 @@ def find_ts(
             max_ene = max(enes)
             max_locs = locs_lst[enes.index(max(enes))]
             max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
+            print('enes test in vtst:', enes)
 
         print('geometry for maximum along scan:', max_zma)
         print('energy for maximum along scan:', max_ene)

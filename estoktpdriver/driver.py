@@ -153,11 +153,15 @@ if MECH_TYPE == 'CHEMKIN':
             formula_dct = automol.formula._formula.join(formula_dct, formula_i_dct)
         FORMULA_STR = automol.formula._formula.string(formula_dct)
         FORMULA_STR_LST.append(FORMULA_STR)
+        #print('formula test during append:', FORMULA_STR_LST)
 
+    #print('formula test before sort:', FORMULA_STR_LST)
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
     if PARAMS.SORT_RXNS:
         RXN_INFO_LST.sort()
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
+
+    #sys.exit()
 
 elif MECH_TYPE == 'json':
     #CHECK_STEREO = False

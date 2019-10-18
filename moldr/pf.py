@@ -98,6 +98,7 @@ def species_block(
     sym_factor = 1.
     if 'sym' in spc_dct_i:
         sym_factor = spc_dct_i['sym']
+        print('sym_factor from spc_dct_i:', sym_factor)
     else:
         if sym_model == 'SAMPLING':
             if not sym_min_cnf_locs:
@@ -107,11 +108,13 @@ def species_block(
             sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
             sym_factor = moldr.conformer.symmetry_factor(sym_geo, sym_ene, sym_cnf_save_fs, saddle)
             # xyzs = automol.geom.coordinates(sym_geo)
+            print('sym_factor from moldr sampling:', sym_factor)
         if sym_model == '1DHR':
             # Warning: the 1DHR based symmetry number has not yet been set up
             sym_factor = 1
 
     imag_freq = 0.
+    print('sym_factor calculated:', sym_factor)
 
     if vib_model == 'HARM' and tors_model == 'RIGID':
         if har_min_cnf_locs is not None:
@@ -234,6 +237,7 @@ def species_block(
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
+                        print('sym_factor renorm:', sym_factor)
                         idx += 1
 
                     # Write the string for the ProjRot input
