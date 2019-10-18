@@ -34,12 +34,15 @@ def species_block(
     # thy_save_fs.leaf.create(har_levelp[1:4])
     har_save_path = thy_save_fs.leaf.path(har_levelp[1:4])
     saddle = False
+    dist_names = []
     if 'ts_' in spc:
         har_save_fs = autofile.fs.ts(har_save_path)
         har_save_fs.trunk.create()
         har_save_path = har_save_fs.trunk.path()
         saddle = True
-
+        if 'migration' in spc_dct_i[spc]['class'] or 'elimination' in spc_dct_i[spc]['class']:
+            dist_names.append(spc_dct_i[spc]['dist_info'][0])
+            dist_names.append(spc_dct_i[spc]['dist_info'][3])
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
     if sym_level:
@@ -106,7 +109,11 @@ def species_block(
                 return '', 0.
             sym_geo = sym_cnf_save_fs.leaf.file.geometry.read(sym_min_cnf_locs)
             sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
-            sym_factor = moldr.conformer.symmetry_factor(sym_geo, sym_ene, sym_cnf_save_fs, saddle)
+            if dist_names:
+                zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
+                form_coords = list(automol.bond_idxs(zma, dist_names[0]))
+                form_coords.extend(list(automol.bond_idxs(zma, dist_names[1])))
+            sym_factor = moldr.conformer.symmetry_factor(sym_geo, sym_ene, sym_cnf_save_fs, saddle, form_coords)
             # xyzs = automol.geom.coordinates(sym_geo)
             print('sym_factor from moldr sampling:', sym_factor)
         if sym_model == '1DHR':

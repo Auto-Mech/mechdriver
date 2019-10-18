@@ -574,7 +574,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
             if ret:
                 typ = 'hydrogen migration'
-                ts_zma, dist_name, tors_names = ret
+                ts_zma, dist_name, brk_name, tors_names = ret
 
     # fix this later
     # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,

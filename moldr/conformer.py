@@ -439,7 +439,7 @@ def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
     return unique
 
 
-def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False):
+def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False, form_coords=[]):
     """ Determine the symmetry number for a given conformer geometry.
     First explore the saved conformers to find the list of similar conformers -
     i.e. those with a coulomb matrix and energy that are equivalent to those for the
@@ -475,7 +475,7 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False):
 
             int_sym_num = 0
             for idx_i, geo_sim_i in enumerate(geo_sim):
-                new_geos = automol.geom.rot_permutated_geoms(geo_sim_i, saddle)
+                new_geos = automol.geom.rot_permutated_geoms(geo_sim_i, saddle, form_coords)
                 new_geom = True
                 for new_geo in new_geos:
                     #geo_sim_exp.append(new_geo)
@@ -515,7 +515,7 @@ def external_symmetry_factor(geo):
     return ext_sym_fac
 
 
-def symmetry_factor(geo, ene, cnf_save_fs, saddle=False):
+def symmetry_factor(geo, ene, cnf_save_fs, saddle=False, form_coords=[]):
     """ obtain overall symmetry number for a geometry as a product
     of the external and internal symmetry numbers
     """
@@ -523,7 +523,7 @@ def symmetry_factor(geo, ene, cnf_save_fs, saddle=False):
     # differ only in their torsional values. As a result, the symmetry factor is a lower bound on the 
     # true symmetry factor
     ext_sym = external_symmetry_factor(geo)
-    int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle)
+    int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle, form_coords)
     sym_fac = ext_sym * int_sym
     print('sym test:', ext_sym, int_sym)
     return sym_fac
