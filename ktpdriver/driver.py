@@ -236,10 +236,10 @@ def run(
         ts_queue = []
         for spc in spc_dct:   #have to make sure you get them for the TS too
             if spc in ts_found:
-                ts_queue.append(spc)
-                if 'radical radical' in spc_dct[spc]['class']:
+                if 'radical radical addition' in spc_dct[spc]['class']:
                     print('skipping rate for radical radical reaction: {}'.format(spc))
                     continue
+                ts_queue.append(spc)
         for spc in spc_queue + ts_queue:
             spc_info = (spc_dct[spc]['ich'], spc_dct[spc]['chg'], spc_dct[spc]['mul'])
             if 'ts_' in spc:

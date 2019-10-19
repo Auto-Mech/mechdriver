@@ -709,12 +709,12 @@ if PARAMS.RUN_RATES:
                         SPC_DCT[tsname]['rad_rad'] = rad_rad
                         SPC_DCT[tsname]['hind_inc'] = PARAMS.HIND_INC * qcc.conversion_factor('degree', 'radian')
                         ts_idx += 1
-                        if ts_mul_low != ts_mul_high and rad_rad:
-                            spc_dct = SPC_DCT[tsname].copy()
-                            tsname = 'ts_{:g}'.format(ts_idx)
-                            SPC_DCT[tsname] = spc_dct
-                            SPC_DCT[tsname]['mul'] = ts_mul_high
-                            ts_idx += 1
+                        # if ts_mul_low != ts_mul_high and rad_rad:
+                            #spc_dct = SPC_DCT[tsname].copy()
+                            #tsname = 'ts_{:g}'.format(ts_idx)
+                            #SPC_DCT[tsname] = spc_dct
+                            #SPC_DCT[tsname]['mul'] = ts_mul_high
+                            #ts_idx += 1
 
                     print('RUNNING WITH MESS')
                     # run ktp for a given PES
