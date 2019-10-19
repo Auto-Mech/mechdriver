@@ -439,7 +439,7 @@ def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
     return unique
 
 
-def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False, form_coords=[]):
+def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False, form_coords=[], tors_names=[]):
     """ Determine the symmetry number for a given conformer geometry.
     First explore the saved conformers to find the list of similar conformers -
     i.e. those with a coulomb matrix and energy that are equivalent to those for the
@@ -454,47 +454,54 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False, form_coords=[
     if automol.geom.is_atom(geo):
         int_sym_num = 1.
     else:
-        ethrsh = 1.e-5
-        locs_lst = cnf_save_fs.leaf.existing()
-        geo_sim = [geo]
-        geo_sim_exp = [geo]
-        ene_sim = [ene]
-        int_sym_num = 1.
-        if locs_lst:
-            enes = [cnf_save_fs.leaf.file.energy.read(locs)
-                    for locs in locs_lst]
-            geos = [cnf_save_fs.leaf.file.geometry.read(locs)
-                    for locs in locs_lst]
-            for geoi, enei in zip(geos, enes):
-                if enei - enes[0] < ethrsh:
-                    geo_lst = [geoi]
-                    ene_lst = [enei]
-                    if not is_unique_coulomb_energy(geo, ene, geo_lst, ene_lst):
-                        geo_sim.append(geoi)
-                        ene_sim.append(enei)
+        if not saddle:
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+        else:
+            print('tors_names test:', tors_names, len(tors_names))
+        if len(tors_names) == 0:
+            int_sym_num = 1.
+        else:
+            ethrsh = 1.e-5
+            locs_lst = cnf_save_fs.leaf.existing()
+            geo_sim = [geo]
+            geo_sim_exp = [geo]
+            ene_sim = [ene]
+            int_sym_num = 1.
+            if locs_lst:
+                enes = [cnf_save_fs.leaf.file.energy.read(locs)
+                        for locs in locs_lst]
+                geos = [cnf_save_fs.leaf.file.geometry.read(locs)
+                        for locs in locs_lst]
+                for geoi, enei in zip(geos, enes):
+                    if enei - enes[0] < ethrsh:
+                        geo_lst = [geoi]
+                        ene_lst = [enei]
+                        if not is_unique_coulomb_energy(geo, ene, geo_lst, ene_lst):
+                            geo_sim.append(geoi)
+                            ene_sim.append(enei)
 
-            int_sym_num = 0
-            for idx_i, geo_sim_i in enumerate(geo_sim):
-                new_geos = automol.geom.rot_permutated_geoms(geo_sim_i, saddle, form_coords)
-                new_geom = True
-                for new_geo in new_geos:
-                    #geo_sim_exp.append(new_geo)
-                    for idx_j, geo_sim_j in enumerate(geo_sim):
-                        if idx_j < idx_i:
-                            if automol.geom.almost_equal_dist_mat(
-                                    new_geo, geo_sim_j, thresh=1e-1):
-                                if saddle:
-                                    new_geom = False 
-                                    break
-                                elif are_torsions_same(new_geo, geo_sim_j):
-                                    new_geom = False
-                                    break
-                        else:
+                int_sym_num = 0
+                for idx_i, geo_sim_i in enumerate(geo_sim):
+                    new_geos = automol.geom.rot_permutated_geoms(geo_sim_i, saddle, form_coords)
+                    new_geom = True
+                    for new_geo in new_geos:
+                        #geo_sim_exp.append(new_geo)
+                        for idx_j, geo_sim_j in enumerate(geo_sim):
+                            if idx_j < idx_i:
+                                if automol.geom.almost_equal_dist_mat(
+                                        new_geo, geo_sim_j, thresh=1e-1):
+                                    if saddle:
+                                        new_geom = False 
+                                        break
+                                    elif are_torsions_same(new_geo, geo_sim_j):
+                                        new_geom = False
+                                        break
+                            else:
+                                break
+                        if not new_geom:
                             break
-                    if not new_geom:
-                        break
-                if new_geom:
-                    int_sym_num += len(new_geos)
+                    if new_geom:
+                        int_sym_num += len(new_geos)
     return int_sym_num
 
 
@@ -507,15 +514,15 @@ def external_symmetry_factor(geo):
     else:
         oriented_geom = _pyx2z.to_oriented_geometry(geo)
         ext_sym_fac = oriented_geom.sym_num()
-        print('initial ext_sym_fac:', ext_sym_fac)
+        # print('initial ext_sym_fac:', ext_sym_fac)
         # Change symmetry number if geometry has enantiomers
         if oriented_geom.is_enantiomer():
             ext_sym_fac *= 0.5
-        print('final ext_sym_fac:', ext_sym_fac)
+        # print('final ext_sym_fac:', ext_sym_fac)
     return ext_sym_fac
 
 
-def symmetry_factor(geo, ene, cnf_save_fs, saddle=False, form_coords=[]):
+def symmetry_factor(geo, ene, cnf_save_fs, saddle=False, form_coords=[], tors_names=[]):
     """ obtain overall symmetry number for a geometry as a product
     of the external and internal symmetry numbers
     """
@@ -523,7 +530,14 @@ def symmetry_factor(geo, ene, cnf_save_fs, saddle=False, form_coords=[]):
     # differ only in their torsional values. As a result, the symmetry factor is a lower bound on the 
     # true symmetry factor
     ext_sym = external_symmetry_factor(geo)
-    int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle, form_coords)
+    if not saddle:
+        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    else:
+        print('tors_names test:', tors_names, len(tors_names))
+    if len(tors_names) > 0:
+        int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle, form_coords, tors_names)
+    else:
+        int_sym = 1
     sym_fac = ext_sym * int_sym
     print('sym test:', ext_sym, int_sym)
     return sym_fac

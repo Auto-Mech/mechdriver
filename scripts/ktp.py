@@ -57,8 +57,9 @@ def make_all_species_data(rxn_lst, spc_dct, save_prefix, model_info, pf_info, ts
                 if not name in species:
                     species[name], _ = make_species_data(
                         name, spc_dct[name], spc_save_fs, model_info, pf_info, projrot_script_str)
-            species[tsname], spc_dct[tsname]['imag_freq'] = make_species_data(
-                tsname, ts, save_prefix, model_info, pf_info, projrot_script_str)
+            if not 'radical radical addition' in spc_dct[tsname]['class']:
+                species[tsname], spc_dct[tsname]['imag_freq'] = make_species_data(
+                    tsname, ts, save_prefix, model_info, pf_info, projrot_script_str)
     return species
 
 
@@ -217,13 +218,13 @@ def make_channel_pfs(
         ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
         if 'P' in reac_label:
             spc_ene = reac_ene - first_ground_ene
-            spc_zpe = spc_dct[rxn['reacs'][0]]['zpe'] + spc_dct[rxn['reacs'][1]]['zpe'] 
+            spc_zpe = spc_dct[rxn['reacs'][0]]['zpe'] + spc_dct[rxn['reacs'][1]]['zpe']
         else:
             spc_ene = prod_ene - first_ground_ene
-            spc_zpe = spc_dct[rxn['prods'][0]]['zpe'] + spc_dct[rxn['prods'][1]]['zpe'] 
-        ts_str += '\n' + vtst_with_saddle_block(
-            spc_dct[tsname],  ts_label, reac_label, prod_lab, spc_ene, spc_zpe, projrot_script_str,
-            mult_level, elec_levels=[[0., 1]], sym_factor=1.
+            spc_zpe = spc_dct[rxn['prods'][0]]['zpe'] + spc_dct[rxn['prods'][1]]['zpe']
+        ts_str += '\n' + moldr.pf.vtst_with_no_saddle_block(
+            spc_dct[tsname], ts_label, reac_label, prod_label, spc_ene, spc_zpe, projrot_script_str,
+            multi_info, elec_levels=[[0., 1]], sym_factor=1.
             )
 
     else:
@@ -421,6 +422,7 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
             output_string)
         mess_pressures, punit = mess_io.reader.rates.get_pressures(
             output_string)
+                
         #mess_pressures, punit = mess_io.reader.rates.get_pressures_input(
             #input_string)
 
@@ -476,12 +478,13 @@ def mod_arr_fit(rct_lab, prd_lab, mess_path, assess_pdep_temps,
                 init_params = ratefit.fit.arrhenius.single(
                     temps, rate_constants, t_ref, fit_method,
                     dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
-                fit_params = ratefit.fit.arrhenius.double(
-                    temps, rate_constants, t_ref, fit_method,
-                    a_guess=init_params[0],
-                    n_guess=init_params[1],
-                    ea_guess=init_params[2],
-                    dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
+                if len(temps) < 6:
+                    print('Warning not enough temperatures for a double fit')
+                    fit_params = [init_params[0], init_params[1], init_params[2], 0, 0, 0]
+                else:
+                    fit_params = ratefit.fit.arrhenius.double(
+                        temps, rate_constants, t_ref, fit_method,
+                        dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
 
             # Store the fitting parameters in a dictionary
             fit_param_dct[pressure] = fit_params

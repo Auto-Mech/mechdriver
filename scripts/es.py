@@ -957,6 +957,10 @@ def find_ts(
             scn_save_fs.leaf.create(inf_locs)
             scn_save_fs.leaf.file.energy.write(inf_sep_ene, inf_locs)
 
+            geo = automol.zmatrix.geometry(ts_zma)
+            zma = ts_zma
+            final_dist = grid1[0]
+
             vrctst = False
             if vrctst:
 
@@ -1013,6 +1017,10 @@ def find_ts(
                 with open(os.path.join(vrc_path, 'mol.tml'), 'w') as tml_file:
                     tml_file.write(tml_inp_str)
 
+                geo = automol.zmatrix.geometry(ts_zma)
+                zma = ts_zma
+                final_dist = grid1[0]
+
         else:
             if 'elimination' in typ:
                 grid1, grid2 = grid
@@ -1047,150 +1055,150 @@ def find_ts(
                     coo_names=[dist_name],
                     )
 
-        print('typ test:', typ)
-        if 'elimination' in typ:
-            enes_lst = []
-            locs_lst_lst = []
-            for grid_val_j in grid2:
+            print('typ test:', typ)
+            if 'elimination' in typ:
+                enes_lst = []
+                locs_lst_lst = []
+                for grid_val_j in grid2:
+                    locs_list = []
+                    for grid_val_i in grid1:
+                        locs_list.append([[dist_name, break_name], [grid_val_i, grid_val_j]])
+                    print('locs_lst', locs_list)    
+                    enes = []
+                    locs_lst = []
+                    for locs in locs_list:
+                        if scn_save_fs.leaf.exists(locs):
+                            print(scn_save_fs.leaf.path(locs))
+                            enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                            locs_lst.append(locs)
+                    locs_lst_lst.append(locs_lst)
+                    enes_lst.append(enes)
+                    print('enes_lst', enes_lst)    
+                max_enes = []  
+                max_locs = []
+                for idx_j, enes in enumerate(enes_lst):
+                    max_ene = -10000.
+                    max_loc = ''
+                    for idx_i, ene in enumerate(enes):
+                        if ene > max_ene:
+                            max_ene = ene
+                            max_loc = locs_lst_lst[idx_j][idx_i]
+                            print('new max', max_ene, max_loc)    
+                    max_enes.append(max_ene)
+                    max_locs.append(max_loc)
+                min_ene = 10000.    
+                locs = []
+                for idx_j, ene in enumerate(max_enes):
+                    if ene < min_ene:
+                        min_ene = ene
+                        locs = max_locs[idx_j]
+                max_locs = locs
+                max_ene = min_ene
+                print('min max loc', max_ene, max_locs)    
+                print('min max loc', scn_save_fs.leaf.path(max_locs))    
+                max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
+            else:
                 locs_list = []
-                for grid_val_i in grid1:
-                    locs_list.append([[dist_name, break_name], [grid_val_i, grid_val_j]])
-                print('locs_lst', locs_list)    
-                enes = []
                 locs_lst = []
+                enes = []
+                for grid_val_i in grid:
+                    locs_list.append([[dist_name], [grid_val_i]])
                 for locs in locs_list:
                     if scn_save_fs.leaf.exists(locs):
-                        print(scn_save_fs.leaf.path(locs))
                         enes.append(scn_save_fs.leaf.file.energy.read(locs))
                         locs_lst.append(locs)
-                locs_lst_lst.append(locs_lst)
-                enes_lst.append(enes)
-                print('enes_lst', enes_lst)    
-            max_enes = []  
-            max_locs = []
-            for idx_j, enes in enumerate(enes_lst):
-                max_ene = -10000.
-                max_loc = ''
-                for idx_i, ene in enumerate(enes):
-                    if ene > max_ene:
-                        max_ene = ene
-                        max_loc = locs_lst_lst[idx_j][idx_i]
-                        print('new max', max_ene, max_loc)    
-                max_enes.append(max_ene)
-                max_locs.append(max_loc)
-            min_ene = 10000.    
-            locs = []
-            for idx_j, ene in enumerate(max_enes):
-                if ene < min_ene:
-                    min_ene = ene
-                    locs = max_locs[idx_j]
-            max_locs = locs
-            max_ene = min_ene
-            print('min max loc', max_ene, max_locs)    
-            print('min max loc', scn_save_fs.leaf.path(max_locs))    
-            max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
-        else:
-            locs_list = []
-            locs_lst = []
-            enes = []
-            for grid_val_i in grid:
-                locs_list.append([[dist_name], [grid_val_i]])
-            for locs in locs_list:
-                if scn_save_fs.leaf.exists(locs):
-                    enes.append(scn_save_fs.leaf.file.energy.read(locs))
-                    locs_lst.append(locs)
-            max_ene = max(enes)
-            max_locs = locs_lst[enes.index(max(enes))]
-            max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
-            print('enes test in vtst:', enes)
+                max_ene = max(enes)
+                max_locs = locs_lst[enes.index(max(enes))]
+                max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
+                print('enes test in vtst:', enes)
 
-        print('geometry for maximum along scan:', max_zma)
-        print('energy for maximum along scan:', max_ene)
-        print('optimizing ts')
-        # find saddlepoint from maximum on the grid opt scan
+            print('geometry for maximum along scan:', max_zma)
+            print('energy for maximum along scan:', max_ene)
+            print('optimizing ts')
+            # find saddlepoint from maximum on the grid opt scan
 
-        moldr.driver.run_job(
-            job='optimization',
-            script_str=opt_script_str,
-            run_fs=run_fs,
-            geom=max_zma,
-            spc_info=ts_info,
-            thy_level=ref_level,
-            saddle=True,
-            overwrite=overwrite,
-            **opt_kwargs,
+            moldr.driver.run_job(
+                job='optimization',
+                script_str=opt_script_str,
+                run_fs=run_fs,
+                geom=max_zma,
+                spc_info=ts_info,
+                thy_level=ref_level,
+                saddle=True,
+                overwrite=overwrite,
+                **opt_kwargs,
+                )
+
+            opt_ret = moldr.driver.read_job(
+                job='optimization',
+                run_fs=run_fs,
             )
+            if opt_ret is not None:
+                inf_obj, _, out_str = opt_ret
+                prog = inf_obj.prog
+                method = inf_obj.method
+                ene = elstruct.reader.energy(prog, method, out_str)
+                geo = elstruct.reader.opt_geometry(prog, out_str)
+                zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
-        opt_ret = moldr.driver.read_job(
-            job='optimization',
-            run_fs=run_fs,
-        )
-        if opt_ret is not None:
-            inf_obj, _, out_str = opt_ret
-            prog = inf_obj.prog
-            method = inf_obj.method
-            ene = elstruct.reader.energy(prog, method, out_str)
-            geo = elstruct.reader.opt_geometry(prog, out_str)
-            zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                print(" - Saving...")
+                print(" - Save path: {}".format(ts_save_path))
 
-            print(" - Saving...")
-            print(" - Save path: {}".format(ts_save_path))
+                ts_save_fs.trunk.file.energy.write(ene)
+                ts_save_fs.trunk.file.geometry.write(geo)
+                ts_save_fs.trunk.file.zmatrix.write(zma)
 
-            ts_save_fs.trunk.file.energy.write(ene)
-            ts_save_fs.trunk.file.geometry.write(geo)
-            ts_save_fs.trunk.file.zmatrix.write(zma)
+                vals = automol.zmatrix.values(zma)
+                final_dist = vals[dist_name]
+                dist_info[1] = final_dist
+                print('Test final distance for reactant coordinate', final_dist)
+                run_single_conformer(ts_info, ref_level, fs, overwrite, saddle=True, dist_info=dist_info)
 
-            vals = automol.zmatrix.values(zma)
-            final_dist = vals[dist_name]
-            dist_info[1] = final_dist
-            print('Test final distance for reactant coordinate', final_dist)
-            run_single_conformer(ts_info, ref_level, fs, overwrite, saddle=True, dist_info=dist_info)
-
-        elif 'addition' in typ and bkp_ts_class_data and attempt > 2:
-            bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data
-            print('TS find failed. Attempting to find with new reaction class: {}'.format(bkp_typ))
-            bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
-            ts_dct['class'] = bkp_typ
-            ts_dct['original_zma'] = bkp_ts_zma
-            ts_dct['dist_info'] = bkp_dist_info
-            ts_dct['tors_names'] = bkp_tors_names
-            attempt += 1
-            geo, zma, final_dist = find_ts(
-                spc_dct, ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info,
-                bkp_grid, None, ini_thy_info, thy_info, run_prefix,
-                save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
-                attempt=attempt)
-        elif ('addition ' in typ or 'abstraction' in typ) and attempt < 3:
-            babs1 = 180. * qcc.conversion_factor('degree', 'radian')
-            if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
-                babs1 = 90. * qcc.conversion_factor('degree', 'radian')
-            print('TS find failed. Attempting to find with new angle of attack: {:.1f}'.format(babs1))
-            ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
-            ts_dct['original_zma'] = ts_zma
-            attempt += 1
-            geo, zma, final_dist = find_ts(
-                spc_dct, ts_dct, ts_info, ts_zma, typ, dist_info, grid,
-                bkp_ts_class_data, ini_thy_info, thy_info, run_prefix,
-                save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
-                attempt=attempt)
-        elif 'beta scission' in typ and bkp_ts_class_data and attempt < 2:
-            [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess] = bkp_ts_class_data
-            print('TS find failed. Attempting to find with new reaction class: {}'.format(bkp_typ))
-            bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
-            ts_dct['class'] = bkp_typ
-            ts_dct['original_zma'] = bkp_ts_zma
-            ts_dct['dist_info'] = bkp_dist_info
-            ts_dct['tors_names'] = bkp_tors_names
-            attempt += 1
-            geo, zma, final_dist = find_ts(
-                spc_dct, ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info,
-                bkp_grid, None, ini_thy_info, thy_info, run_prefix,
-                save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
-                attempt=attempt)
-        else:
-            geo = 'failed'
-            zma = 'failed'
-            final_dist = 0.
+            elif 'addition' in typ and bkp_ts_class_data and attempt > 2:
+                bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess = bkp_ts_class_data
+                print('TS find failed. Attempting to find with new reaction class: {}'.format(bkp_typ))
+                bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
+                ts_dct['class'] = bkp_typ
+                ts_dct['original_zma'] = bkp_ts_zma
+                ts_dct['dist_info'] = bkp_dist_info
+                ts_dct['tors_names'] = bkp_tors_names
+                attempt += 1
+                geo, zma, final_dist = find_ts(
+                    spc_dct, ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info,
+                    bkp_grid, None, ini_thy_info, thy_info, run_prefix,
+                    save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
+                    attempt=attempt)
+            elif ('addition ' in typ or 'abstraction' in typ) and attempt < 3:
+                babs1 = 180. * qcc.conversion_factor('degree', 'radian')
+                if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
+                    babs1 = 90. * qcc.conversion_factor('degree', 'radian')
+                print('TS find failed. Attempting to find with new angle of attack: {:.1f}'.format(babs1))
+                ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
+                ts_dct['original_zma'] = ts_zma
+                attempt += 1
+                geo, zma, final_dist = find_ts(
+                    spc_dct, ts_dct, ts_info, ts_zma, typ, dist_info, grid,
+                    bkp_ts_class_data, ini_thy_info, thy_info, run_prefix,
+                    save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
+                    attempt=attempt)
+            elif 'beta scission' in typ and bkp_ts_class_data and attempt < 2:
+                [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names, bkp_update_guess] = bkp_ts_class_data
+                print('TS find failed. Attempting to find with new reaction class: {}'.format(bkp_typ))
+                bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
+                ts_dct['class'] = bkp_typ
+                ts_dct['original_zma'] = bkp_ts_zma
+                ts_dct['dist_info'] = bkp_dist_info
+                ts_dct['tors_names'] = bkp_tors_names
+                attempt += 1
+                geo, zma, final_dist = find_ts(
+                    spc_dct, ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info,
+                    bkp_grid, None, ini_thy_info, thy_info, run_prefix,
+                    save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
+                    attempt=attempt)
+            else:
+                geo = 'failed'
+                zma = 'failed'
+                final_dist = 0.
     return geo, zma, final_dist
 
 

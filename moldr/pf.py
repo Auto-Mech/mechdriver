@@ -35,14 +35,16 @@ def species_block(
     har_save_path = thy_save_fs.leaf.path(har_levelp[1:4])
     saddle = False
     dist_names = []
+    tors_names = []
     if 'ts_' in spc:
         har_save_fs = autofile.fs.ts(har_save_path)
         har_save_fs.trunk.create()
         har_save_path = har_save_fs.trunk.path()
         saddle = True
-        if 'migration' in spc_dct_i[spc]['class'] or 'elimination' in spc_dct_i[spc]['class']:
-            dist_names.append(spc_dct_i[spc]['dist_info'][0])
-            dist_names.append(spc_dct_i[spc]['dist_info'][3])
+        tors_names = spc_dct_i['tors_names']
+        if 'migration' in spc_dct_i['class'] or 'elimination' in spc_dct_i['class']:
+            dist_names.append(spc_dct_i['dist_info'][0])
+            dist_names.append(spc_dct_i['dist_info'][3])
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
     if sym_level:
@@ -99,6 +101,7 @@ def species_block(
         elec_levels = spc_dct_i['elec_levs']
 
     sym_factor = 1.
+    form_coords = []
     if 'sym' in spc_dct_i:
         sym_factor = spc_dct_i['sym']
         print('sym_factor from spc_dct_i:', sym_factor)
@@ -111,9 +114,11 @@ def species_block(
             sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
             if dist_names:
                 zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
-                form_coords = list(automol.bond_idxs(zma, dist_names[0]))
-                form_coords.extend(list(automol.bond_idxs(zma, dist_names[1])))
-            sym_factor = moldr.conformer.symmetry_factor(sym_geo, sym_ene, sym_cnf_save_fs, saddle, form_coords)
+                print('form_coords test:', zma, dist_names)
+                form_coords = list(automol.zmatrix.bond_idxs(zma, dist_names[0]))
+                form_coords.extend(list(dist_names[1]))
+            sym_factor = moldr.conformer.symmetry_factor(
+                sym_geo, sym_ene, sym_cnf_save_fs, saddle, form_coords, tors_names)
             # xyzs = automol.geom.coordinates(sym_geo)
             print('sym_factor from moldr sampling:', sym_factor)
         if sym_model == '1DHR':
@@ -353,18 +358,24 @@ def species_block(
     return spc_str, imag_freq
 
 
-def vtst_with_saddle_block(
-        ts_dct,  ts_label, rct_label, prd_label, spc_ene, rct_zpe, projrot_script_str,
+def vtst_with_no_saddle_block(
+        ts_dct,  ts_label, reac_label, prod_label, spc_ene, rct_zpe, projrot_script_str,
         multi_info, elec_levels=[[0., 1]], sym_factor=1.
         ):
-    """ prepare the mess input string for a variational TS that has
+    """ prepare the mess input string for a variational TS that does not have
     a saddle point. Do it by calling the species block for each grid point
     in the scan file system
     """
 
+    ts_info = ['', ts_dct['chg'], ts_dct['mul']]
     orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
     multi_level = multi_info[0:3]
     multi_level.append(orb_restr)
+
+    rxn_run_path = ts_dct['rxn_fs'][2]
+    thy_run_fs = autofile.fs.theory(rxn_run_path)
+    thy_run_fs.leaf.create(multi_level[1:4])
+    thy_run_path = thy_run_fs.leaf.path(multi_level[1:4])
 
     rxn_save_path = ts_dct['rxn_fs'][3]
     thy_save_fs = autofile.fs.theory(rxn_save_path)
@@ -444,7 +455,7 @@ def vtst_with_saddle_block(
         eref = erel - spc_ene
 
         # Iniialize the header of the string
-        irc_pt_str = '!-----------------------------------------------'
+        irc_pt_str = '!----------------------------------------------- \n'
         irc_pt_str += '! IRC Point {0}\n'.format(str(idx+1))
 
         # Write the molecule section for each irc point
@@ -452,22 +463,24 @@ def vtst_with_saddle_block(
         irc_pt_str += mess_io.writer.species.molecule(core, freqs, elec_levels,
              hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
-        # Append the zero point energy for the molecule
-        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}'.format(eref)
+        # Append the zero energy for the molecule
+        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}\n'.format(eref)
+        if grid_val != grid[-1]:
+            irc_pt_str += 'End \n'
 
         # Append string to list
         irc_pt_strs.append(irc_pt_str)
 
     # Write the MESS string for the variational sections
-    varational_str = mess_io.writer.rxnchan.ts_variational(
+    variational_str = mess_io.writer.rxnchan.ts_variational(
         ts_label, reac_label, prod_label, irc_pt_strs)
     print('variational_str test:', variational_str)
 
     return variational_str
 
 
-def vtst_no_saddle_block(scn_save_fs, geoms, frequencies, energies):
-    """ prepare the mess input string for a variational TS where there is not a 
+def vtst_saddle_block(scn_save_fs, geoms, frequencies, energies):
+    """ prepare the mess input string for a variational TS where there is a 
     saddle point on the MEP. In this case, there is limited torsional information.
     """
 
