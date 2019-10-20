@@ -16,8 +16,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def species_block(
         spc, spc_dct_i, spc_info, spc_model, pf_levels, projrot_script_str,
-        elec_levels=[[0., 1]], sym_factor=1.,
-        save_prefix='spc_save_path'):
+        elec_levels=[[0., 1]], sym_factor=1., save_prefix='spc_save_path'):
     """ prepare the species input for messpf
     """
 
@@ -102,6 +101,12 @@ def species_block(
 
     sym_factor = 1.
     form_coords = []
+    if saddle:
+        frm_bnd_key = spc_dct_i['frm_bnd_key']
+        brk_bnd_key = spc_dct_i['brk_bnd_key']
+    else:
+        frm_bnd_key = []
+        brk_bnd_key = []
     if 'sym' in spc_dct_i:
         sym_factor = spc_dct_i['sym']
         print('sym_factor from spc_dct_i:', sym_factor)
@@ -118,7 +123,7 @@ def species_block(
                 form_coords = list(automol.zmatrix.bond_idxs(zma, dist_names[0]))
                 form_coords.extend(list(dist_names[1]))
             sym_factor = moldr.conformer.symmetry_factor(
-                sym_geo, sym_ene, sym_cnf_save_fs, saddle, form_coords, tors_names)
+                sym_geo, sym_ene, sym_cnf_save_fs, saddle, frm_bnd_key, brk_bnd_key, form_coords, tors_names)
             # xyzs = automol.geom.coordinates(sym_geo)
             print('sym_factor from moldr sampling:', sym_factor)
         if sym_model == '1DHR':
@@ -186,7 +191,7 @@ def species_block(
                         print('No inf obj to identify torsional angles')
                         tors_names = []
                     zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
-                    
+
                     tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
                     gra = automol.zmatrix.graph(zma, remove_stereo=True)
                     coo_dct = automol.zmatrix.coordinates(zma, multi=False)
@@ -205,11 +210,13 @@ def species_block(
                         scan_increment = 30. * qcc.conversion_factor('degree', 'radian')
                     val_dct = automol.zmatrix.values(zma)
                     tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
-                        zma, tors_names, scan_increment)
+                        zma, tors_names, scan_increment,
+                        frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
                     tors_grids = [
                         numpy.linspace(*linspace) + val_dct[name]
                         for name, linspace in zip(tors_names, tors_linspaces)]
-                    tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(zma, tors_names))
+                    tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
+                        zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
                     print('tors sym nums:', tors_sym_nums)
                     idx = 0
                     for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
@@ -881,6 +888,12 @@ def get_zero_point_energy(
         anh_cnf_save_fs = autofile.fs.conformer(anh_save_path)
         anh_min_cnf_locs = moldr.util.min_energy_conformer_locators(anh_cnf_save_fs)
 
+    if saddle:
+        frm_bnd_key = spc_dct_i['frm_bnd_key']
+        brk_bnd_key = spc_dct_i['brk_bnd_key']
+    else:
+        frm_bnd_key = []
+        brk_bnd_key = []
     har_zpe = 0.0
     is_atom = False
     # get reference harmonic
@@ -947,10 +960,11 @@ def get_zero_point_energy(
                 scan_increment = 30. * qcc.conversion_factor('degree', 'radian')
             val_dct = automol.zmatrix.values(zma)
             tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
-                zma, tors_names, scan_increment)
+                zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
             tors_grids = [numpy.linspace(*linspace) + val_dct[name]
                           for name, linspace in zip(tors_names, tors_linspaces)]
-            tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(zma, tors_names))
+            tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
+                zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
             for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
                 print('tors test:', tors_name, tors_grid, sym_num)
                 locs_lst = []
