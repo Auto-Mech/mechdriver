@@ -123,13 +123,15 @@ def run(
                 ret1, ret2 = ret
                 print('ret:', ret)
                 if ret1:
-                    rxn_class, ts_zma, dist_name, break_name, grid, tors_names, update_guess = ret1
+                    rxn_class, ts_zma, dist_name, brk_name, grid, frm_bnd_key, brk_bnd_key, tors_names, update_guess = ret1
                     spc_dct[ts]['class'] = rxn_class
                     spc_dct[ts]['grid'] = grid
                     spc_dct[ts]['tors_names'] = tors_names
                     spc_dct[ts]['original_zma'] = ts_zma
-                    dist_info = [dist_name, 0., update_guess, break_name]
+                    dist_info = [dist_name, 0., update_guess, brk_name]
                     spc_dct[ts]['dist_info'] = dist_info
+                    spc_dct[ts]['frm_bnd_key'] = frm_bnd_key
+                    spc_dct[ts]['brk_bnd_key'] = brk_bnd_key
                     if ret2:
                         spc_dct[ts]['bkp_data'] = ret2
                     else:
@@ -137,6 +139,7 @@ def run(
                 else:
                     spc_dct[ts]['class'] = None
                     spc_dct[ts]['bkp_data'] = None
+                print('frm_bnd_key test in ktpdriver:', spc_dct[ts]['frm_bnd_key'])
 
         print('End transition state prep\n')
 

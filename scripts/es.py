@@ -52,7 +52,7 @@ def run_single_conformer(spc_info, thy_level, fs, overwrite, saddle=False, dist_
     thy_save_fs = fs[3]
     two_stage = False
     if saddle:
-        two_stage=True
+        two_stage = True
     # if saddle:
         # thy_save_fs=fs[11]
     moldr.conformer.conformer_sampling(
@@ -94,6 +94,7 @@ def run_hr_scan(fs, params, opt_kwargs):
     print('running task {}'.format('hr'))
     params['cnf_run_fs'] = fs[4]
     params['cnf_save_fs'] = fs[5]
+    #print('frm_bnd_key in run_hr_scan:', params['frm_bnd_key'])
     moldr.scan.hindered_rotor_scans(**params, **opt_kwargs)
 
 
@@ -118,7 +119,7 @@ def run_tau_sampling(fs, params, opt_kwargs):
 
 
 def geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
-        spc_info, overwrite):
+    spc_info, overwrite):
     """ run an electronic structure task
     for generating a list of conformer or tau sampling geometries
     """
@@ -169,13 +170,17 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs, spc_info, overwri
             params['scan_increment'] = spcdic['hind_inc']
         else:
             params['scan_increment'] = 30. * qcc.conversion_factor('degree', 'radian')
+        params['frm_bnd_key'] = spcdic['frm_bnd_key']
+        params['brk_bnd_key'] = spcdic['brk_bnd_key']
+        print('key test in ts_geom gen:', params['frm_bnd_key'], params['brk_bnd_key'])
+
+    print('choose function test:', tsk, fs, params, opt_kwargs)
 
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
 
 
-def geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info,
-        overwrite):
+def geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, overwrite):
     """ run the specified electronic structure task
     for a set of geometries
     """
@@ -245,12 +250,15 @@ def geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info,
                     spc_info[0], '/'.join(thy_level[1:3])))
 
 
-def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, overwrite):
+def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, spc_dic, overwrite):
     """ run the specified electronic structure task
     for a set of geometries
     """
 
-    print('Task in geometry_analysis:', tsk)
+    print('Task in ts geometry_analysis:', tsk)
+    params = {'spc_info': spc_info,
+              'thy_level': thy_level,
+              'overwrite': overwrite}
     # specify the fs for the runs
     if 'conf' in tsk:
         run_dir = ini_fs[2]
@@ -261,6 +269,9 @@ def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, overwrite)
     elif 'hr' in tsk:
         run_dir = ini_fs[6]
         save_dir = ini_fs[7]
+        params['frm_bnd_key'] = spc_dic['frm_bnd_key']
+        params['brk_bnd_key'] = spc_dic['brk_bnd_key']
+        print('key test in ts_geom anal:', params['frm_bnd_key'], params['brk_bnd_key'])
     else:
         return
     # still need to setup mep
@@ -277,10 +288,7 @@ def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, overwrite)
     else:
         locs_lst = selection
     sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_level[0:2])
-    params = {'spc_info': spc_info,
-              'thy_level': thy_level,
-              'script_str': sp_script_str,
-              'overwrite': overwrite}
+    params['script_str'] = sp_script_str
     choose_function = {'conf_energy': 'run_energy',
                        'tau_energy': 'run_energy',
                        'hr_energy': 'run_energy',
@@ -301,6 +309,7 @@ def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, overwrite)
                        'mep_reopt': 'run_reopt'}
 
     # cycle over the locations
+
     if tsk in choose_function:
         task_call = eval(choose_function[tsk])
         for locs in locs_lst:
@@ -519,8 +528,17 @@ def get_geos(
 
 
 def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_save_fs):
+    """ determine type of reaction and related ts info from the reactant and product z-matrices.
+    Returns the type, the transition state z-matrix, the name of the coordinate to optimize,
+    the grid of values for the initial grid search, the torsion names and symmetries, and
+    whether or not to update the guess on successive steps.
+    These parameters are set for both the initial and a backup evaluation for if the initial ts
+    search fails.
+    """
 
-# Stuff for forcing a trimolecular to behave like a bimolecular
+    # Force a trimolecular reaction to behave like a bimolecular.
+    # Termolecular species generally arise from the direct decomposition of some inital product.
+    # We need to be able to find the TS for the channel preceding that direct decomposition.
     rct_tors_names = []
     if len(rct_zmas) > 2:
         ret = automol.zmatrix.ts.addition(rct_zmas[1:-1], [prd_zmas[-1]])
@@ -541,8 +559,11 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
     typ = None
     bkp_typ = ''
-    brk_name = None
-    #rct_zmas, prd_zmas = prd_zmas, rct_zmas
+    brk_name = []
+    frm_bnd_key = []
+    brk_bnd_key = []
+    # cycle through each of the possible reaction types checking if the reaction is in that class
+    # Check for addition
     ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
     if ret:
         typ = 'addition'
@@ -557,6 +578,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             bkp_typ = 'beta scission'
             bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
 
+    # Check for beta-scission
     if typ is None:
         ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
         if ret:
@@ -567,6 +589,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                 bkp_typ = 'addition'
                 bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
 
+    # Check for hydrogen migration
     if typ is None:
         orig_dist = automol.zmatrix.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
         if orig_dist:
@@ -574,23 +597,27 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
             if ret:
                 typ = 'hydrogen migration'
-                ts_zma, dist_name, brk_name, tors_names = ret
+                ts_zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
 
-    # fix this later
-    # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
-    #                                               sigma=True)
+    # Check for hydrogen abstraction
     if typ is None:
-        ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas,
-                                                      sigma=False)
+        ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas, sigma=False)
         print('abstraction ret test in ts_class:', ret)
         if ret:
             typ = 'hydrogen abstraction'
-            ts_zma, dist_name, tors_names = ret
+            ts_zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
             if ts_mul == high_mul:
                 typ += ': high spin'
             elif ts_mul == low_mul:
                 typ += ': low spin'
+        print('key test in ts_class:', frm_bnd_key, brk_bnd_key)
                 
+    # Need special cases for (i) hydrogen abstraction where the radical is a sigma radical
+    # and (ii) for abstraction of a heavy atom rather than a hydrogen atom. 
+    # add these later
+    # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas, sigma=True)
+
+    # Check for insertion
     if typ is None:
         ret = automol.zmatrix.ts.insertion(rct_zmas, prd_zmas)
         if ret:
@@ -600,7 +627,8 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                 typ += ': high spin'
             elif ts_mul == low_mul:
                 typ += ': low spin'
-    
+
+    # Check for subsitution
     if typ is None:
         ret = automol.zmatrix.ts.substitution(rct_zmas, prd_zmas)
         if ret:
@@ -611,6 +639,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             elif ts_mul == low_mul:
                 typ += ': low spin'
 
+    # Check for elimination
     if typ is None:
         orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(rct_zmas, prd_zmas)
         if orig_dist:
@@ -618,16 +647,18 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             ret = automol.zmatrix.ts.concerted_unimolecular_elimination(rct_zmas, prd_zmas)
             if ret:
                 typ = 'elimination'
-                ts_zma, dist_name, brk_name, tors_names = ret
+                ts_zma, dist_name, brk_name, frm_bnd_key, tors_names = ret
                 if ts_mul == high_mul:
                     typ += ': high spin'
                 elif ts_mul == low_mul:
                     typ += ': low spin'
 
+    # Nothing was found
     if typ is None:
         print("Failed to classify reaction.")
         return [], []
 
+    # set up back up options for any radical radical case
     if rad_rad:
         typ = 'radical radical ' + typ
     print("Type: {}".format(typ))
@@ -635,7 +666,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         if rad_rad:
             bkp_typ = 'radical radical ' + bkp_typ
 
-    # determine the grid
+    # determine the grid for the preliminary grid search for all the different reaction types
     dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
     syms = automol.zmatrix.symbols(ts_zma)
     bnd_len_key = tuple(sorted(map(syms.__getitem__, dist_coo)))
@@ -777,7 +808,9 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         update_guess = False
 
     if typ:
-        ts_class_data = [typ, ts_zma, dist_name, brk_name, grid, tors_names, update_guess]
+        ts_class_data = [
+            typ, ts_zma, dist_name, brk_name, grid, frm_bnd_key, brk_bnd_key,
+            tors_names, update_guess]
     else:
         ts_class_data = []
     if bkp_typ:

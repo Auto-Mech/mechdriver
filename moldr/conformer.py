@@ -439,7 +439,9 @@ def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
     return unique
 
 
-def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False, form_coords=[], tors_names=[]):
+def int_sym_num_from_sampling(
+        geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=[],
+        brk_bnd_key=[], form_coords=[], tors_names=[]):
     """ Determine the symmetry number for a given conformer geometry.
     First explore the saved conformers to find the list of similar conformers -
     i.e. those with a coulomb matrix and energy that are equivalent to those for the
@@ -482,7 +484,8 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False, form_coords=[
 
                 int_sym_num = 0
                 for idx_i, geo_sim_i in enumerate(geo_sim):
-                    new_geos = automol.geom.rot_permutated_geoms(geo_sim_i, saddle, form_coords)
+                    new_geos = automol.geom.rot_permutated_geoms(
+                        geo_sim_i, saddle, frm_bnd_key, brk_bnd_key, form_coords)
                     new_geom = True
                     for new_geo in new_geos:
                         #geo_sim_exp.append(new_geo)
@@ -491,7 +494,7 @@ def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False, form_coords=[
                                 if automol.geom.almost_equal_dist_mat(
                                         new_geo, geo_sim_j, thresh=1e-1):
                                     if saddle:
-                                        new_geom = False 
+                                        new_geom = False
                                         break
                                     elif are_torsions_same(new_geo, geo_sim_j):
                                         new_geom = False
@@ -522,7 +525,9 @@ def external_symmetry_factor(geo):
     return ext_sym_fac
 
 
-def symmetry_factor(geo, ene, cnf_save_fs, saddle=False, form_coords=[], tors_names=[]):
+def symmetry_factor(
+        geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=[], brk_bnd_key=[],
+        form_coords=[], tors_names=[]):
     """ obtain overall symmetry number for a geometry as a product
     of the external and internal symmetry numbers
     """
@@ -535,7 +540,8 @@ def symmetry_factor(geo, ene, cnf_save_fs, saddle=False, form_coords=[], tors_na
     else:
         print('tors_names test:', tors_names, len(tors_names))
     if len(tors_names) > 0:
-        int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle, form_coords, tors_names)
+        int_sym = int_sym_num_from_sampling(
+                geo, ene, cnf_save_fs, saddle, frm_bnd_key, brk_bnd_key, form_coords, tors_names)
     else:
         int_sym = 1
     sym_fac = ext_sym * int_sym

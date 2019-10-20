@@ -247,7 +247,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                 else:
                     selection = 'min'
                     scripts.es.ts_geometry_analysis(
-                        tsk, thy_level, ini_fs, selection, spc_info, overwrite)
+                        tsk, thy_level, ini_fs, selection, spc_info, spc_dct[spc], overwrite)
             else:
                 if 'samp' in tsk or 'scan' in tsk or 'geom' in tsk:
                     geo = moldr.geom.reference_geometry(

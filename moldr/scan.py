@@ -13,8 +13,8 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def hindered_rotor_scans(
         spc_info, thy_level, cnf_run_fs, cnf_save_fs, script_str, overwrite,
-        scan_increment=30., saddle=False, tors_names='',
-        **opt_kwargs):
+        scan_increment=30., saddle=False, tors_names='', frm_bnd_key=[],
+        brk_bnd_key=[], **opt_kwargs):
     """ Perform 1d scans over each of the torsional coordinates
     """
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
@@ -26,11 +26,14 @@ def hindered_rotor_scans(
         geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
         val_dct = automol.zmatrix.values(zma)
+        if saddle:
+            print('frm_bnd_key test in hr scan:', frm_bnd_key)
         if not saddle:
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         if tors_names:
             tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
-                zma, tors_names, scan_increment)
+                zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,
+                brk_bnd_key=brk_bnd_key)
             tors_grids = [
                 numpy.linspace(*linspace) + val_dct[name]
                 for name, linspace in zip(tors_names, tors_linspaces)]
