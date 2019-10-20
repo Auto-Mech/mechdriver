@@ -2,88 +2,54 @@
 """
 import os
 import sys
-from itertools import chain
 import collections
 import json
 import numpy
-from qcelemental import constants as qcc
-import thermo
 import chemkin_io
 import automol
 from automol import formula
 import moldr
 import thermodriver
 import ktpdriver
-from estoktpdriver import read_dat
-import read_dat
+from datalibs import phycon, eleclvl, symm
+from submission import read_dat
 
-ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
-
-# 0. choose which mechanism to run
-
+# Set path to the mechanims data files
 DATA_PATH = '/home/sjklipp/PACC/mech_test'
-#DATA_PATH = '/home/elliott/pacc-tests/'
+
+# Obtain DCT containing geometries to use as input
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
-# Read the run parameters from a datafile
-
-# 3. Prepare species and reaction lists 
-
-# read in data from the mechanism directory
+# Set mechanism and type to be read based on user input
 MECHANISM_NAME = sys.argv[1]
 MECH_TYPE = sys.argv[2]
 MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
 MECH_FILE = 'mech.json'
 
+# Read parameters that dictate job running options
 PARAMS = read_dat.params(os.path.join(MECH_PATH, 'params.dat'))
 
+# Set further parameters for what reactions and PESs to be run
 if len(sys.argv) > 3:
     PARAMS.PESNUMS = sys.argv[3]
     if len(sys.argv) > 4:
         PARAMS.CHANNELS = sys.argv[4]
 print('PESNUMS and PARAMS.CHANNELS:', PARAMS.PESNUMS, PARAMS.CHANNELS)
-# 1. create run and save directories
+
+# Create the AutoMech run and save directory file systems
 RUN_PREFIX = '/lcrc/project/PACC/run'
 if not os.path.exists(RUN_PREFIX):
     os.mkdir(RUN_PREFIX)
-
 SAVE_PREFIX = '/lcrc/project/PACC/save'
 if not os.path.exists(SAVE_PREFIX):
     os.mkdir(SAVE_PREFIX)
 
-# 2. Prepare special species and reaction dictionaries
-
-ELC_SIG_LST = {'InChI=1S/CN/c1-2', 'InChI=1S/C2H/c1-2/h1H'}
-
-ELC_DEG_DCT = {
-    ('InChI=1S/B', 2): [[0., 2], [16., 4]],
-    ('InChI=1S/C', 3): [[0., 1], [16.4, 3], [43.5, 5]],
-    ('InChI=1S/N', 2): [[0., 6], [8., 4]],
-    ('InChI=1S/O', 3): [[0., 5], [158.5, 3], [226.5, 1]],
-    ('InChI=1S/F', 2): [[0., 4], [404.1, 2]],
-    ('InChI=1S/Cl', 2): [[0., 4], [883.4, 2]],
-    ('InChI=1S/Br', 2): [[0., 4], [685.2, 2]],
-    ('InChI=1S/HO/h1H', 2): [[0., 2], [138.9, 2]],
-    ('InChI=1S/NO/c1-2', 2): [[0., 2], [123.1, 2]],
-    ('InChI=1S/O2/c1-2', 1): [[0., 2]]
-}
-
-SYMM_DCT = {
-    ('InChI=1S/HO/h1H', 2): 1.
-}
-
-
-# 4. process species data from the mechanism file
-# Also add in basis set species
-
-# setting SORT_RXNS to False leads to missing channels
-# for now just leave them sorted
-
+# Run EStokTPDriver for ChemKin inputs
 if MECH_TYPE == 'CHEMKIN':
 
+    # Process species data from the mechanism file
+    # Also add in basis set species
     MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
     SPC_STR = open(os.path.join(MECH_PATH, 'species.csv')).read()
 
@@ -103,8 +69,9 @@ if MECH_TYPE == 'CHEMKIN':
             chg = CHG_DCT[name]
             sens = SENS_DCT[name]
             if not automol.inchi.is_complete(ich):
-                print('adding stereochemistry for {0}, {1}, {2}'.format(name, smi, ich))
-                # note this returns a list of ich's with the different possible stereo values
+                print('adding stereochemistry for {0}, {1}, {2}'.format(
+                    name, smi, ich))
+                # this returns a list of ichs w/ different possible stereo vals
                 # for now just taking the first of these
                 ich = automol.inchi.add_stereo(ich)
                 print('new ich possibilities:', ich)
@@ -114,7 +81,8 @@ if MECH_TYPE == 'CHEMKIN':
             SPC_STR += '{0},\'{1}\',\'{2}\',{3},{4},{5} \n'.format(
                 name, smi, ich, mul, chg, sens)
 
-        with open(os.path.join(MECH_PATH, 'species_stereo.csv'), 'w') as stereo_csv_file:
+        STEREO_PATH = os.path.join(MECH_PATH, 'species_stereo.csv')
+        with open(STEREO_PATH, 'w') as stereo_csv_file:
             stereo_csv_file.write(SPC_STR)
 
     SPC_NAMES = []
@@ -136,7 +104,6 @@ if MECH_TYPE == 'CHEMKIN':
 
     # Sort reactant and product name lists by formula to facilitate
     # multichannel, multiwell rate evaluations
-
     FORMULA_STR = ''
     RXN_NAME_LST = []
     FORMULA_STR_LST = []
@@ -153,18 +120,18 @@ if MECH_TYPE == 'CHEMKIN':
             formula_dct = automol.formula._formula.join(formula_dct, formula_i_dct)
         FORMULA_STR = automol.formula._formula.string(formula_dct)
         FORMULA_STR_LST.append(FORMULA_STR)
-        #print('formula test during append:', FORMULA_STR_LST)
+        # print('formula test during append:', FORMULA_STR_LST)
 
-    #print('formula test before sort:', FORMULA_STR_LST)
-    RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
+    # print('formula test before sort:', FORMULA_STR_LST)
+    RXN_INFO_LST = list(
+        zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
     if PARAMS.SORT_RXNS:
         RXN_INFO_LST.sort()
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
 
-    #sys.exit()
-
+# Run EStokTPDriver for JSON inputs
 elif MECH_TYPE == 'json':
-    #CHECK_STEREO = False
+
     with open(os.path.join(MECH_PATH, MECH_FILE)) as f:
         MECH_DATA_IN = json.load(f, object_pairs_hook=collections.OrderedDict)
         MECH_DATA = []
@@ -176,7 +143,7 @@ elif MECH_TYPE == 'json':
             for entry in MECH_DATA_IN[reaction]:
                 MECH_DATA.append(entry)
 
-    # first convert the essential pieces of the json file to chemkin formatted data so
+    # Convert essential pieces of json file to chemkin formatted data so
     # (i) can easily remove species that don't really exist
     # (ii) revise products of reactions for species that don't exist
     # (iii) do the stereochemistry generation only one
@@ -199,7 +166,7 @@ elif MECH_TYPE == 'json':
     RXN_FAM = []
     UNQ_RXN_LST = []
     FLL_RXN_LST = []
-    idxp = 0
+    # idxp = 0
     for idx, reaction in enumerate(MECH_DATA):
         if 'Reactants' in reaction and 'Products' in reaction:
             print(idx, reaction['name'])
@@ -241,7 +208,7 @@ elif MECH_TYPE == 'json':
                 prd_names.append(prd['name'])
                 prd_smis.append(prd['SMILES'][0])
                 ich = prd['InChi']
-                if CHECK_STEREO:
+                if PARAMS.CHECK_STEREO:
                     if not automol.inchi.is_complete(ich):
                         print('adding stereochemsiry for {}'.format(ich))
                         ich = automol.inchi.add_stereo(prd['InChi'])[0]
@@ -318,7 +285,7 @@ elif MECH_TYPE == 'json':
                         lab_idx += 1
                 UNQ_LAB_IDX_LST.append(lab_idx)
                 if lab_idx == 0:
-                    label = lab 
+                    label = lab
                 else:
                     label = lab + '(' + str(lab_idx) + ')'
                 csv_str += ','.join([label, smi, str(mul)])
@@ -346,7 +313,7 @@ elif MECH_TYPE == 'json':
                         lab_idx += 1
                 UNQ_LAB_IDX_LST.append(lab_idx)
                 if lab_idx == 0:
-                    label = lab 
+                    label = lab
                 else:
                     label = lab + '(' + str(lab_idx) + ')'
                 csv_str += ','.join([label, smi, str(mul)])
@@ -358,9 +325,10 @@ elif MECH_TYPE == 'json':
     spc_str += '\n'
     spc_str += '\n'
 
-    with open(os.path.join(MECH_PATH, 'smiles_sort.csv'), 'w') as sorted_csv_file:
+    SORT_SMILES_PATH = os.path.join(MECH_PATH, 'smiles_sort.csv')
+    with open(SORT_SMILES_PATH, 'w') as sorted_csv_file:
         sorted_csv_file.write(csv_str)
-        
+
     RXN_INFO_LST = list(zip(
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST, RXN_SENS,
         RXN_UNC, RXN_VAL, RXN_FAM, RCT_SMIS_LST, RCT_ICHS_LST, RCT_MULS_LST,
@@ -458,140 +426,121 @@ elif MECH_TYPE == 'json':
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
 
 PES_LST = {}
-current_formula = ''
+CURRENT_FORMULA = ''
 for fidx, formula in enumerate(FORMULA_STR_LST):
-    if current_formula == formula:
+    if CURRENT_FORMULA == formula:
         PES_LST[formula]['RCT_NAMES_LST'].append(RCT_NAMES_LST[fidx])
         PES_LST[formula]['PRD_NAMES_LST'].append(PRD_NAMES_LST[fidx])
         PES_LST[formula]['RXN_NAME_LST'].append(RXN_NAME_LST[fidx])
     else:
-        current_formula = formula
+        CURRENT_FORMULA = formula
         PES_LST[formula] = {}
         PES_LST[formula]['RCT_NAMES_LST'] = [RCT_NAMES_LST[fidx]]
         PES_LST[formula]['PRD_NAMES_LST'] = [PRD_NAMES_LST[fidx]]
         PES_LST[formula]['RXN_NAME_LST'] = [RXN_NAME_LST[fidx]]
 
 for spc in SPC_DCT:
-    if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in ELC_DEG_DCT:
-        SPC_DCT[spc]['elec_levs'] = ELC_DEG_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
-    if tuple([SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]) in SYMM_DCT:
-        SPC_DCT[spc]['sym'] = SYMM_DCT[SPC_DCT[spc]['ich'], SPC_DCT[spc]['mul']]
     ich = SPC_DCT[spc]['ich']
+    mul = SPC_DCT[spc]['mul']
+    if (ich, mul) in eleclvl.DCT:
+        SPC_DCT[spc]['elec_levs'] = eleclvl.DCT[(ich, mul)]
+    if (ich, mul) in symm.DCT:
+        SPC_DCT[spc]['sym'] = symm.DCT[(ich, mul)]
     if ich in GEOM_DCT:
         SPC_DCT[spc]['geo_obj'] = GEOM_DCT[ich]
-    SPC_DCT[spc]['hind_inc'] = PARAMS.HIND_INC * qcc.conversion_factor('degree', 'radian')
+    SPC_DCT[spc]['hind_inc'] = PARAMS.HIND_INC * phycon.DEG2RAD
 
-# 2. script control parameters
-
-# a. Strings to launch executable
-# script_strings for electronic structure are obtained from run_qchem_par since
-# they vary with method
-
-PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "RPHt.exe")
-PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                 "messpf pf.inp build.out >> stdout.log &> stderr.log")
-RATE_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                   "mess mess.inp build.out >> stdout.log &> stderr.log")
-VARECOF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "/home/ygeorgi/build/rotd/multi ")
-MCFLUX_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                     "/home/ygeorgi/build/rotd/mc_flux ")
-CONV_MULTI_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                         "/home/ygeorgi/build/rotd/mc_flux ")
-TST_CHECK_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                        "/home/ygeorgi/build/rotd/tst_check ")
-MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
-#NASA_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-#                   "cp ../PF/build.out pf.dat\n"
-#                   "cp /tcghome/sjklipp/PACC/nasa/new.groups .\n"
-#                   "python /tcghome/sjklipp/PACC/nasa/makepoly.py"
-#                   " >> stdout.log &> stderr.log")
-
-# b. Electronic structure parameters; code, method, basis, convergence control
-
+# Electronic structure parameters; code, method, basis, convergence control
 ES_DCT = {
-        'lvl_wbs': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31g*',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'lvl_wbm': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': '6-31+g*',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'lvl_wbt': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd', 'basis': 'cc-pvtz',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'lvl_b2d': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvdz',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'lvl_b2t': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'lvl_b2q': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvqz',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'lvl_b3s': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'lvl_b3t': {
-            'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'cc_lvl_d': {
-            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvdz',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'cc_lvl_t': {
-            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvtz',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'cc_lvl_q': {
-            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)', 'basis': 'cc-pvqz',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'cc_lvl_df': {
-            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
-            'basis': 'cc-pvdz-f12',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'cc_lvl_tf': {
-            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
-            'basis': 'cc-pvtz-f12',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        'cc_lvl_qf': {
-            'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
-            'basis': 'cc-pvqz-f12',
-            'mc_nsamp': PARAMS.MC_NSAMP0
-            },
-        }
+    'lvl_wbs': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd',
+        'basis': '6-31g*',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'lvl_wbm': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd',
+        'basis': '6-31+g*',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'lvl_wbt': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'wb97xd',
+        'basis': 'cc-pvtz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'lvl_b2d': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3',
+        'basis': 'cc-pvdz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'lvl_b2t': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3',
+        'basis': 'cc-pvtz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'lvl_b2q': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3',
+        'basis': 'cc-pvqz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'lvl_b3s': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp',
+        'basis': '6-31g*',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'lvl_b3t': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp',
+        'basis': '6-31g*',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'cc_lvl_d': {
+        'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)',
+        'basis': 'cc-pvdz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'cc_lvl_t': {
+        'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)',
+        'basis': 'cc-pvtz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'cc_lvl_q': {
+        'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)',
+        'basis': 'cc-pvqz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'cc_lvl_df': {
+        'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
+        'basis': 'cc-pvdz-f12',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'cc_lvl_tf': {
+        'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
+        'basis': 'cc-pvtz-f12',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'cc_lvl_qf': {
+        'orb_res': 'RR', 'program': 'molpro2015', 'method': 'ccsd(t)-f12',
+        'basis': 'cc-pvqz-f12',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+}
 
 # The logic key in tsk_info_lst is for overwrite
 
 if PARAMS.RUN_THERMO:
-    ENE_COEFF = [1.]
-
     SPC_QUEUE = list(SPC_NAMES)
-    #thermodriver.driver.run(
-        #TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
-        #SAVE_PREFIX, options=OPTIONS)
-
+    # thermodriver.driver.run(
+    #     TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, REF_MOLS, RUN_PREFIX,
+    #     SAVE_PREFIX, options=OPTIONS)
     thermodriver.driver.run(
-        PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, PARAMS.REF_MOLS, RUN_PREFIX,
-        SAVE_PREFIX, ene_coeff=PARAMS.ENE_COEFF, options=PARAMS.OPTIONS_THERMO)
+        PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, PARAMS.REF_MOLS,
+        RUN_PREFIX, SAVE_PREFIX,
+        ene_coeff=PARAMS.ENE_COEFF, options=PARAMS.OPTIONS_THERMO)
 
 if PARAMS.RUN_RATES:
 
-
     # print all the channels for all the PESs
     for pes_idx, PES in enumerate(PES_LST, start=1):
-        print ('PES test:', pes_idx, PES)
+        print('PES test:', pes_idx, PES)
         PES_RXN_NAME_LST = PES_LST[PES]['RXN_NAME_LST']
         PES_RCT_NAMES_LST = PES_LST[PES]['RCT_NAMES_LST']
         PES_PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
@@ -707,7 +656,7 @@ if PARAMS.RUN_RATES:
                             RCT_NAMES_LST[idx], PRD_NAMES_LST[idx], SPC_DCT)
                         SPC_DCT[tsname]['mul'] = ts_mul_low
                         SPC_DCT[tsname]['rad_rad'] = rad_rad
-                        SPC_DCT[tsname]['hind_inc'] = PARAMS.HIND_INC * qcc.conversion_factor('degree', 'radian')
+                        SPC_DCT[tsname]['hind_inc'] = PARAMS.HIND_INC * phycon.DEG2RAD
                         ts_idx += 1
                         # if ts_mul_low != ts_mul_high and rad_rad:
                             #spc_dct = SPC_DCT[tsname].copy()

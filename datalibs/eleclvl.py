@@ -3,6 +3,7 @@ Library of electronic levels for several common, small species.
 Dictionary formatted as:
     DCT[(InChI_Key, Multiplicity)] = [[energy, degeneracy], ...]
 """
+
 DCT = {
     ('InChI=1S/B', 2): [[0., 2], [16., 4]],
     ('InChI=1S/C', 3): [[0., 1], [16.4, 3], [43.5, 5]],

@@ -1,13 +1,14 @@
 """ drivers for thermochemistry evaluations
 """
 import os
-from qcelemental import constants as qcc
 import automol.inchi
 import automol.geom
 import scripts.es
 import thermo.heatform
 import esdriver.driver
 import autofile.fs
+from datalibs import phycon
+
 
 REF_CALLS = {"basic": "get_basic",
              "cbh0": "get_cbhzed",
@@ -320,7 +321,7 @@ def create_spec(val, charge=0, mc_nsamp=[True, 3, 1, 3, 100, 12], hind_inc=360.)
     spec['chg'] = charge
     spec['mul'] = mult
     spec['mc_nsamp'] = mc_nsamp
-    spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian')
+    spec['hind_inc'] = hind_inc * phycon.DEG2RAD
     return spec
 
 

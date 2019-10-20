@@ -7,9 +7,9 @@ PROJROT = ("#!/usr/bin/env bash\n"
 
 # MESS
 MESSPF = ("#!/usr/bin/env bash\n"
-          "messpf pf.inp build.out >> stdout.log &> stderr.log")
+          "messpf pf.inp pf.out >> stdout.log &> stderr.log")
 MESSRATE = ("#!/usr/bin/env bash\n"
-            "mess mess.inp build.out >> stdout.log &> stderr.log")
+            "mess rate.inp rate.out >> stdout.log &> stderr.log")
 
 # VaReCoF
 VARECOF = ("#!/usr/bin/env bash\n"
@@ -28,6 +28,14 @@ PAC99 = ("#!/usr/bin/env bash\n"
          "PACC << EOF\n"
          "FORMULA\n"
          "EOF")
+# NASAPOLY = ("#!/usr/bin/env bash\n"
+#             "cp ../PF/build.out pf.dat\n"
+#             "cp /tcghome/sjklipp/PACC/nasa/new.groups .\n"
+#             "python /tcghome/sjklipp/PACC/nasa/makepoly.py"
+#             " >> stdout.log &> stderr.log")
+
+# Electronic structure
+MOLPRO_PATH_STR = ('/home/sjklipp/bin/molpro')
 
 # dsarrfit (likely not needed, as calling external not done)
 DSARRFIT = ("#!/usr/bin/env bash\n"

@@ -3,16 +3,12 @@ for species, TSs, and vdw species
 """
 import os
 import numpy
-from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
 import varecof_io
 import moldr
-
-ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
+from datalibs import phycon
 
 
 def run_energy(params, kwargs):
@@ -139,7 +135,7 @@ def geometry_generation(tsk, spcdic, es_dct, thy_level, fs,
         if 'hind_inc' in spcdic:
             params['scan_increment'] = spcdic['hind_inc']
         else:
-            params['scan_increment'] = 30. * qcc.conversion_factor('degree', 'radian')
+            params['scan_increment'] = 30. * phycon.DEG2RAD
 
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
@@ -169,13 +165,12 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs, spc_info, overwri
         if 'hind_inc' in spcdic:
             params['scan_increment'] = spcdic['hind_inc']
         else:
-            params['scan_increment'] = 30. * qcc.conversion_factor('degree', 'radian')
+            params['scan_increment'] = 30. * phycon.DEG2RAD
         params['frm_bnd_key'] = spcdic['frm_bnd_key']
         params['brk_bnd_key'] = spcdic['brk_bnd_key']
         print('key test in ts_geom gen:', params['frm_bnd_key'], params['brk_bnd_key'])
 
     print('choose function test:', tsk, fs, params, opt_kwargs)
-
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
 
@@ -406,7 +401,7 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
     except:
         rxn_exo = moldr.util.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
-    print('reaction is {:.2f} endothermic'.format(rxn_exo*EH2KCAL))
+    print('reaction is {:.2f} endothermic'.format(rxn_exo*phycon.EH2KCAL))
     if rxn_exo > 0:
         rxn_ichs = rxn_ichs[::-1]
         rxn_chgs = rxn_chgs[::-1]
@@ -554,7 +549,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         babs1 = automol.zmatrix.get_babs1(new_zma, dist_name)
         aabs1 = babs1.replace('D', 'A')
         new_zma = automol.zmatrix.set_values(
-            new_zma, {dist_name: 2.2, aabs1: 180. * qcc.conversion_factor('degree', 'radian')})
+            new_zma, {dist_name: 2.2, aabs1: 180. * phycon.DEG2RAD})
         prd_zmas = [prd_zmas[0], new_zma]
 
     typ = None
@@ -672,52 +667,52 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
     bnd_len_key = tuple(sorted(map(syms.__getitem__, dist_coo)))
 
     bnd_len_dct = {
-        ('C', 'C'): 1.54 * ANG2BOHR,
-        ('C', 'H'): 1.09 * ANG2BOHR,
-        ('H', 'H'): 0.74 * ANG2BOHR,
-        ('N', 'N'): 1.45 * ANG2BOHR,
-        ('O', 'O'): 1.48 * ANG2BOHR,
-        ('C', 'N'): 1.47 * ANG2BOHR,
-        ('C', 'O'): 1.43 * ANG2BOHR,
-        ('H', 'O'): 1.20 * ANG2BOHR,
+        ('C', 'C'): 1.54 * phycon.ANG2BOHR,
+        ('C', 'H'): 1.09 * phycon.ANG2BOHR,
+        ('H', 'H'): 0.74 * phycon.ANG2BOHR,
+        ('N', 'N'): 1.45 * phycon.ANG2BOHR,
+        ('O', 'O'): 1.48 * phycon.ANG2BOHR,
+        ('C', 'N'): 1.47 * phycon.ANG2BOHR,
+        ('C', 'O'): 1.43 * phycon.ANG2BOHR,
+        ('H', 'O'): 1.20 * phycon.ANG2BOHR,
     }
 
     npoints = 8
     npoints1 = 4
     npoints2 = 4
     if 'beta scission' in bkp_typ:
-        rmin = 1.4 * ANG2BOHR
-        rmax = 2.0 * ANG2BOHR
+        rmin = 1.4 * phycon.ANG2BOHR
+        rmax = 2.0 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
-            rmin = bnd_len + 0.1 * ANG2BOHR
-            rmax = bnd_len + 0.5 * ANG2BOHR
+            rmin = bnd_len + 0.1 * phycon.ANG2BOHR
+            rmax = bnd_len + 0.5 * phycon.ANG2BOHR
         bkp_grid = numpy.linspace(rmin, rmax, npoints)
         bkp_update_guess = False
     elif 'addition' in bkp_typ:
-        rmin = 1.6 * ANG2BOHR
-        rmax = 2.8 * ANG2BOHR
+        rmin = 1.6 * phycon.ANG2BOHR
+        rmax = 2.8 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
-            rmin = bnd_len + 0.2 * ANG2BOHR
-            rmax = bnd_len + 1.4 * ANG2BOHR
+            rmin = bnd_len + 0.2 * phycon.ANG2BOHR
+            rmax = bnd_len + 1.4 * phycon.ANG2BOHR
         bkp_grid = numpy.linspace(rmin, rmax, npoints)
         bkp_update_guess = False
 
     if 'beta scission' in typ:
-        rmin = 1.4 * ANG2BOHR
-        rmax = 2.0 * ANG2BOHR
+        rmin = 1.4 * phycon.ANG2BOHR
+        rmax = 2.0 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
-            rmin = bnd_len + 0.1 * ANG2BOHR
-            rmax = bnd_len + 0.5 * ANG2BOHR
+            rmin = bnd_len + 0.1 * phycon.ANG2BOHR
+            rmax = bnd_len + 0.5 * phycon.ANG2BOHR
         grid = numpy.linspace(rmin, rmax, npoints)
         update_guess = False
 
     elif 'radical radical addition' in typ:
-        rstart = 2.4 * ANG2BOHR
-        rend1 = 3.0 * ANG2BOHR
-        rend2 = 1.8 * ANG2BOHR
+        rstart = 2.4 * phycon.ANG2BOHR
+        rend1 = 3.0 * phycon.ANG2BOHR
+        rend2 = 1.8 * phycon.ANG2BOHR
         grid1 = numpy.linspace(rstart, rend1, npoints1)
         grid2 = numpy.linspace(rstart, rend2, npoints2)
         grid2 = numpy.delete(grid2, 0)
@@ -725,24 +720,24 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         update_guess = True
 
     elif 'addition' in typ:
-        rmin = 1.6 * ANG2BOHR
-        rmax = 2.8 * ANG2BOHR
+        rmin = 1.6 * phycon.ANG2BOHR
+        rmax = 2.8 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
-            rmin = bnd_len + 0.2 * ANG2BOHR
-            rmax = bnd_len + 1.4 * ANG2BOHR
+            rmin = bnd_len + 0.2 * phycon.ANG2BOHR
+            rmax = bnd_len + 1.4 * phycon.ANG2BOHR
         grid = numpy.linspace(rmin, rmax, npoints)
         update_guess = False
 
     elif 'hydrogen migration' in typ:
 
-        interval = 0.2*ANG2BOHR
-        rmin = 1.4 * ANG2BOHR
-        rmax = 2.8 * ANG2BOHR
+        interval = 0.2*phycon.ANG2BOHR
+        rmin = 1.4 * phycon.ANG2BOHR
+        rmax = 2.8 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             rmax = bnd_len_dct[bnd_len_key]
-            rmin1 = 2.*ANG2BOHR
-            rmin2 = 1.1*ANG2BOHR
+            rmin1 = 2.*phycon.ANG2BOHR
+            rmin2 = 1.1*phycon.ANG2BOHR
             if rmax > rmin:
                 npoints = (rmax-rmin)/interval
                 grid1 = numpy.linspace(rmax, rmin, npoints)
@@ -757,16 +752,16 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
         brk_len_key = tuple(sorted(map(syms.__getitem__, brk_coo)))
 
-        interval = 0.2*ANG2BOHR
-        rmin = 1.4 * ANG2BOHR
-        rmax = 2.8 * ANG2BOHR
+        interval = 0.2*phycon.ANG2BOHR
+        rmin = 1.4 * phycon.ANG2BOHR
+        rmax = 2.8 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
             brk_len = bnd_len_dct[brk_len_key]
-            r1min = bnd_len + 0.2 * ANG2BOHR
-            r1max = bnd_len + 1.4 * ANG2BOHR
-            r2min = brk_len + 0.2 * ANG2BOHR
-            r2max = brk_len + 0.8 * ANG2BOHR
+            r1min = bnd_len + 0.2 * phycon.ANG2BOHR
+            r1max = bnd_len + 1.4 * phycon.ANG2BOHR
+            r2min = brk_len + 0.2 * phycon.ANG2BOHR
+            r2max = brk_len + 0.8 * phycon.ANG2BOHR
             grid1 = numpy.linspace(r1min, r1max, 8)
             grid2 = numpy.linspace(r2min, r2max, 4)
             grid = [grid1, grid2]
@@ -774,32 +769,32 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
     elif 'hydrogen abstraction' in typ:
         npoints = 16
-        rmin = 0.7 * ANG2BOHR
-        rmax = 2.2 * ANG2BOHR
+        rmin = 0.7 * phycon.ANG2BOHR
+        rmax = 2.2 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
             rmin = bnd_len
-            rmax = bnd_len + 1.0 * ANG2BOHR
+            rmax = bnd_len + 1.0 * phycon.ANG2BOHR
         grid = numpy.linspace(rmin, rmax, npoints)
         update_guess = False
 
     elif 'substitution' in typ:
-        rmin = 0.7 * ANG2BOHR
-        rmax = 2.4 * ANG2BOHR
+        rmin = 0.7 * phycon.ANG2BOHR
+        rmax = 2.4 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
             rmin = bnd_len
-            rmax = bnd_len + 1.4 * ANG2BOHR
+            rmax = bnd_len + 1.4 * phycon.ANG2BOHR
         grid = numpy.linspace(rmin, rmax, npoints)
         update_guess = False
 
     elif 'insertion' in typ:
-        rmin = 1.4 * ANG2BOHR
-        rmax = 2.4 * ANG2BOHR
+        rmin = 1.4 * phycon.ANG2BOHR
+        rmax = 2.4 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
             rmin = bnd_len
-            rmax = bnd_len + 1.4 * ANG2BOHR
+            rmax = bnd_len + 1.4 * phycon.ANG2BOHR
         grid = numpy.linspace(rmin, rmax, npoints)
         update_guess = False
 
@@ -864,7 +859,7 @@ def find_ts(
     update_guess = dist_info[2]
     break_name = dist_info[3]
 
-    #Check if TS already is found, and determine if it fits original guess
+    # Check if TS already is found, and determine if it fits original guess
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs and not overwrite:
         cnf_path = cnf_save_fs.trunk.path()
@@ -875,10 +870,11 @@ def find_ts(
         if automol.zmatrix.names(zma) == automol.zmatrix.names(ts_zma):
             if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1, True):
                 if 'babs1' in automol.zmatrix.names(ts_zma):
-                    babs1 = 180. * qcc.conversion_factor('degree', 'radian')
+                    babs1 = 180. * phycon.DEG2RAD
                     if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
-                        babs1 = 90. * qcc.conversion_factor('degree', 'radian')
-                    ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
+                        babs1 = 90. * phycon.DEG2RAD
+                    ts_zma = automol.zmatrix.set_value(
+                        ts_zma, {'babs1': babs1})
                     ts_dct['original_zma'] = ts_zma
                     if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1):
                         chk_bkp = True
@@ -895,9 +891,9 @@ def find_ts(
                 if automol.zmatrix.almost_equal(zma, bkp_ts_zma, 4e-1, True):
                     is_bkp = True
                 elif 'babs1' in automol.zmatrix.names(bkp_ts_zma):
-                    babs1 = 180. * qcc.conversion_factor('degree', 'radian')
+                    babs1 = 180. * phycon.DEG2RAD
                     if automol.zmatrix.values(bkp_ts_zma)['babs1'] == babs1:
-                        babs1 = 90. * qcc.conversion_factor('degree', 'radian')
+                        babs1 = 90. * phycon.DEG2RAD
                     bkp_ts_zma = automol.zmatrix.set_value(bkp_ts_zma, {'babs1': babs1})
                     if not automol.zmatrix.almost_equal(zma, bkp_ts_zma, 4e-1):
                         is_bkp = True
@@ -916,7 +912,7 @@ def find_ts(
         final_dist = vals[dist_name]
         dist_info[1] = final_dist
 
-    #Find TS
+    # Find TS
     else:
         fs = [None, None, ts_run_fs, ts_save_fs,
               cnf_run_fs, cnf_save_fs, None, None,
@@ -1202,9 +1198,9 @@ def find_ts(
                     save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
                     attempt=attempt)
             elif ('addition ' in typ or 'abstraction' in typ) and attempt < 3:
-                babs1 = 180. * qcc.conversion_factor('degree', 'radian')
+                babs1 = 180. * phycon.DEG2RAD
                 if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
-                    babs1 = 90. * qcc.conversion_factor('degree', 'radian')
+                    babs1 = 90. * phycon.DEG2RAD
                 print('TS find failed. Attempting to find with new angle of attack: {:.1f}'.format(babs1))
                 ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
                 ts_dct['original_zma'] = ts_zma
@@ -1322,7 +1318,7 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
                 numpy.random.rand(2), [1*numpy.pi, 2*numpy.pi])
             geo1 = automol.geom.euler_rotated(geo1, *angs1)
             geo2 = automol.geom.euler_rotated(geo2, *angs2)
-            dist_cutoff = 3.*qcc.conversion_factor('angstrom', 'bohr')
+            dist_cutoff = 3.0 * phycon.ANG2BOHR
 
             geo = automol.geom.join(geo1, geo2, dist_cutoff, *angs12)
             print("Species: {}".format('+'.join(names)))
@@ -1503,4 +1499,3 @@ def get_spc_info(spc_dct_i):
     if err_msg:
         print('ERROR: No {} found'.format(err_msg))
     return props
-

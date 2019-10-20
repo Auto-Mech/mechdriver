@@ -2,12 +2,14 @@
 """
 
 from datalibs import phycon
-# from datalibs import eleclvl
-# from datalibs import sigmarad
+from datalibs import eleclvl
+from datalibs import sigmarad
+from datalibs import symm
 
 
 __all__ = [
     'phycon',
-#     'eleclvl',
-#     'sigmarad'
+    'eleclvl',
+    'sigmarad',
+    'symm'
 ]

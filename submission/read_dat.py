@@ -3,6 +3,9 @@
 
 from types import SimpleNamespace
 
+# setting SORT_RXNS to False leads to missing channels
+# for now just leave them sorted
+
 # Set each keyword to their default values
 PARAMS = {
     'DATA_PATH': '/home/sjklipp/PACC/mech_test',

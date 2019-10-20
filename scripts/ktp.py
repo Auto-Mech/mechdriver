@@ -901,7 +901,7 @@ def reaction_rates(
                 # for prog, method, basis in run_opt_levels:
                 prog = run_opt_levels[opt_level_idx][0]
                 method = run_opt_levels[opt_level_idx][1]
-                substr.PROJROT, OPT_SCRIPT_STR, KWARGS, OPT_KWARGS = (
+                _, _, KWARGS, _ = (
                     moldr.util.run_qchem_par(prog, method))
 
                 ts_orb_restr = moldr.util.orbital_restriction(
