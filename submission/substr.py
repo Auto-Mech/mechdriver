@@ -3,13 +3,13 @@
 
 # ProjRot
 PROJROT = ("#!/usr/bin/env bash\n"
-           "RPHt.exe")
+           "RPHt.exe >& /dev/null")
 
 # MESS
-PF = ("#!/usr/bin/env bash\n"
-      "messpf pf.inp build.out >> stdout.log &> stderr.log")
-RATE = ("#!/usr/bin/env bash\n"
-        "mess mess.inp build.out >> stdout.log &> stderr.log")
+MESSPF = ("#!/usr/bin/env bash\n"
+          "messpf pf.inp build.out >> stdout.log &> stderr.log")
+MESSRATE = ("#!/usr/bin/env bash\n"
+            "mess mess.inp build.out >> stdout.log &> stderr.log")
 
 # VaReCoF
 VARECOF = ("#!/usr/bin/env bash\n"

@@ -1,15 +1,17 @@
 """ driver for rate constant evaluations
 """
 import os
-from qcelemental import constants as qcc
 import automol.inchi
 import automol.geom
 import chemkin_io
 import scripts.es
 import esdriver.driver
 import autofile.fs
+from datalibs import phycon
+from submission import substr
 
-#TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
+
+# TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
 TEMPS = [500., 750., 1000., 1250., 1500., 1750., 2000.]
 PRESS = [0.1, 1., 10., 100.]
 EXP_FACTOR = 150.0
@@ -24,32 +26,30 @@ MASS1 = 15.0
 KICKOFF_SIZE = 0.1
 KICKOFF_BACKWARD = False
 HIND_INC = 30.
-PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "RPHt.exe >& /dev/null")
 
-def run(
-        tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst, run_prefix,
-        save_prefix, ene_coeff=[1.], vdw_params=[False, False, True],
+def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
+        run_prefix, save_prefix, ene_coeff=[1.],
+        vdw_params=[False, False, True],
         options=[True, True, True, False]):
     """ main driver for generation of full set of rate constants on a single PES
     """
 
-#   prepare prefix filesystem
+    # Prepare prefix filesystem
     if not os.path.exists(save_prefix):
         os.makedirs(save_prefix)
     if not os.path.exists(run_prefix):
         os.makedirs(run_prefix)
 
-#   Determine options
-    runes = options[0]  #run electronic structure theory (True/False)
-    runspcfirst = options[1]
-    runmess = options[2]  #run mess (True) / just make the mess input file (False)
+    # Determine options
+    runes = options[0]  # run electronic structure theory (True/False)
+    # runspcfirst = options[1]
+    runmess = options[2]  # run mess (True) / only make mess input file (False)
     runrates = options[3]
     if not runmess:
         runrates = False
 
-#   First run ESDriver for the species on the PES so that information on exothermicity is available 
-#   in order to sort the reactions by exothermicity
+    # First run ESDriver for the species on the PES so that
+    # exothermicity info is available to sort reactions by exothermicity
     spc_queue = []
     for rxn, _ in enumerate(rct_names_lst):
         rxn_spc = list(rct_names_lst[rxn])
@@ -71,9 +71,11 @@ def run(
 
     if runes:
         runspecies = [{'species': spc_queue, 'reacs': [], 'prods': []}]
-        # spc_tsk_info = [['find_geom', tsk_info_lst[0][1], tsk_info_lst[0][2], tsk_info_lst[0][3]]]
+        # spc_tsk_info = [['find_geom', tsk_info_lst[0][1],
+        #                  tsk_info_lst[0][2], tsk_info_lst[0][3]]]
         esdriver.driver.run(
-            spc_tsk_lst, es_dct, runspecies, spc_dct, run_prefix, save_prefix, vdw_params)
+            spc_tsk_lst, es_dct, runspecies, spc_dct,
+            run_prefix, save_prefix, vdw_params)
 
     # Form the reaction list
     rxn_lst = []
@@ -83,16 +85,16 @@ def run(
              list(prd_names_lst[rxn])})
 
     # Add addtional dictionary items for all the TSs
-    # This presumes that es has been run previously for species list to produce energies in save
-    # file system
-    if len(ts_tsk_lst) > 0:
+    # This presumes that es has been run previously for species list
+    # to produce energies in save file system
+    if ts_tsk_lst:
         print('\nBegin transition state prep')
         for ts in spc_dct:
             if 'ts_' in ts:
-                spc_dct[ts]['hind_inc'] = HIND_INC * qcc.conversion_factor('degree', 'radian')
+                spc_dct[ts]['hind_inc'] = HIND_INC * phycon.DEG2RAD
                 # spc_dct[ts] = create_ts_spec(ts, ts_dct, spc_dct)
                 # have to figure out how to pass ts_info or have it recalculated in esdriver
-                ts_info = (spc_dct[ts]['ich'], spc_dct[ts]['chg'], spc_dct[ts]['mul'])
+                # ts_info = (spc_dct[ts]['ich'], spc_dct[ts]['chg'], spc_dct[ts]['mul'])
                 # Exothermicity reordering requires electronic energy which requires theory level and
                 # tsk_info
                 es_ini_key = ts_tsk_lst[0][2]
@@ -115,7 +117,7 @@ def run(
                 rct_zmas, prd_zmas, rct_cnf_save_fs = scripts.es.get_zmas(
                     spc_dct[ts]['reacs'], spc_dct[ts]['prods'], spc_dct,
                     ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
-                    KICKOFF_BACKWARD, PROJROT_SCRIPT_STR)
+                    KICKOFF_BACKWARD, substr.PROJROT)
                 ret = scripts.es.ts_class(
                     rct_zmas, prd_zmas, spc_dct[ts]['rad_rad'],
                     spc_dct[ts]['mul'], low_mul, high_mul,
@@ -293,7 +295,7 @@ def run(
         idx_dct = {}
         first_ground_ene = 0.
         species = scripts.ktp.make_all_species_data(
-            rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, ts_found, PROJROT_SCRIPT_STR)
+            rxn_lst, spc_dct, save_prefix, ts_model, pf_levels, ts_found, substr.PROJROT)
         for idx, rxn in enumerate(rxn_lst):
             tsname = 'ts_{:g}'.format(idx)
             if tsname in ts_found:
@@ -307,7 +309,7 @@ def run(
                     continue
                 mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
                     tsname, rxn, species, spc_dct, idx_dct, mess_strs,
-                    first_ground_ene, spc_save_fs, pf_levels, multi_info, PROJROT_SCRIPT_STR)
+                    first_ground_ene, spc_save_fs, pf_levels, multi_info, substr.PROJROT)
                 print(idx_dct)
         well_str, bim_str, ts_str = mess_strs
         ts_str += '\nEnd\n'
@@ -390,28 +392,30 @@ def get_thy_info(es_dct, key):
         ret = scripts.es.get_thy_info(es_dct[key])
     return ret
 
+
 if __name__ == "__main__":
 
     MSG = """
-           ================================================================
-           ==                        AUTOMECHANIC                        ==
-           ===         Andreas Copan, Sarah Elliott, Kevin Moore,       ===
-           ===     Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,   ===
-           ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
-           ================================================================
-           ==                         KTPDRIVER                          ==
-           ===         Sarah Elliott, Kevin Moore, Andreas Copan,       ===
-           ===      Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,  ===
-           ==            Ahren Jasper, Stephen Klippenstein              ==
-           ================================================================\n"""
+          ================================================================
+          ==                        AUTOMECHANIC                        ==
+          ===         Andreas Copan, Sarah Elliott, Kevin Moore,       ===
+          ===     Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,   ===
+          ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
+          ================================================================
+          ==                         KTPDRIVER                          ==
+          ===         Sarah Elliott, Kevin Moore, Andreas Copan,       ===
+          ===      Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,  ===
+          ==            Ahren Jasper, Stephen Klippenstein              ==
+          ================================================================\n"""
     print(MSG)
-    #tsk_info_lst, es_dct, spcs = load_params()
+    # tsk_info_lst, es_dct, spcs = load_params()
     REF = 'cbh0'
-    VDW_PARAMS = [True, True, False]  #[for reac (T/F), for reac (T/F), from reactants(T)/from TS (F)]
+    # VDWPARAMS [for reac (T/F), for reac (T/F), from reactants(T)/from TS (F)]
+    VDW_PARAMS = [True, True, False]
     TSK_INFO_LST = [
         ['conf_samp', 'mclev', 'mclev', False],
         ['find_ts', 'mclev', 'mclev', False],
-        #['find_vdw', 'mclev', 'mclev', False],
+        # ['find_vdw', 'mclev', 'mclev', False],
         ['conf_samp', 'mclev', 'mclev', False],
         ['find_geom', 'optlev', 'mclev', False],
         ['conf_hess', 'optlev', 'optlev', False],
@@ -425,66 +429,73 @@ if __name__ == "__main__":
         ]
 
     ES_DCT = {'mclev': {
-        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': '6-31g*',
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp',
+        'basis': '6-31g*',
         'ncycles': 60, 'mem': 32, 'nprocs': 8, 'econv': '1.e-8', 'gconv':
-        '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
+        '1.e-4', 'mc_nsamp': [True, 3, 1, 3, 100, 5]},
               'optlev': {
                   'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp',
                   'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
+                  'econv': '1.e-8', 'gconv': '1.e-4',
+                  'mc_nsamp': [True, 3, 1, 3, 100, 5]},
               'hrlev':  {
                   'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp',
                   'basis': '6-31g*', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
+                  'econv': '1.e-8', 'gconv': '1.e-4',
+                  'mc_nsamp': [True, 3, 1, 3, 100, 5]},
               'anlev':  {
                   'orb_res': 'RU', 'program': 'psi4', 'method': 'b3lyp',
                   'basis': 'cc-pvdz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
+                  'econv': '1.e-8', 'gconv': '1.e-4',
+                  'mc_nsamp': [True, 3, 1, 3, 100, 5]},
               '2':      {
                   'orb_res': 'RU', 'program': 'molpro', 'method': 'ccsd(t)',
                   'basis': 'cc-pvtz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
+                  'econv': '1.e-8', 'gconv': '1.e-4',
+                  'mc_nsamp': [True, 3, 1, 3, 100, 5]},
               'splev':  {
                   'orb_res': 'RU', 'program': 'molpro', 'method': 'b3lyp',
                   'basis': 'cc-pvtz', 'ncycles': 60, 'mem': 32, 'nprocs': 8,
-                  'econv': '1.e-8', 'gconv': '1.e-4', 'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
-              'cheap': {'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b3lyp', 'basis': 'sto-3g',  'mc_nsamp': [True, 3, 1, 3 , 100, 5]},
-              'b2tz': {'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3', 'basis': 'cc-pvtz',  'mc_nsamp': [True, 3, 1, 3 , 100, 5]}
+                  'econv': '1.e-8', 'gconv': '1.e-4',
+                  'mc_nsamp': [True, 3, 1, 3, 100, 5]},
+              'cheap': {'orb_res': 'RU', 'program': 'gaussian09',
+                        'method': 'b3lyp', 'basis': 'sto-3g',
+                        'mc_nsamp': [True, 3, 1, 3, 100, 5]},
+              'b2tz': {'orb_res': 'RU', 'program': 'gaussian09',
+                       'method': 'b2plypd3', 'basis': 'cc-pvtz',
+                       'mc_nsamp': [True, 3, 1, 3, 100, 5]}
               }
 
-
-    #RCT_NAME_LST = [['nh3', 'oh']]
-    #PRD_NAME_LST = [['nh2','water']]
-    #RCT_NAME_LST = [['ch3oh', 'h'], ['ch3oh', 'h']]
-    #PRD_NAME_LST = [['ch2oh', 'h2'], ['ch3o', 'h2']]
-    #RCT_NAME_LST = [['ch3oh', 'h']]
-    #PRD_NAME_LST = [['ch3o', 'h2']]
+    # RCT_NAME_LST = [['nh3', 'oh']]
+    # PRD_NAME_LST = [['nh2','water']]
+    # RCT_NAME_LST = [['ch3oh', 'h'], ['ch3oh', 'h']]
+    # PRD_NAME_LST = [['ch2oh', 'h2'], ['ch3o', 'h2']]
+    # RCT_NAME_LST = [['ch3oh', 'h']]
+    # PRD_NAME_LST = [['ch3o', 'h2']]
     RCT_NAME_LST = [['ch3oh', 'h']]
     PRD_NAME_LST = [['methane', 'oh']]
 
-    #RCT_NAME_LST = [['methane', 'h'], ['methane', 'oh']]
-    #PRD_NAME_LST = [['methyl','h2'], ['methyl','water']]
+    # RCT_NAME_LST = [['methane', 'h'], ['methane', 'oh']]
+    # PRD_NAME_LST = [['methyl','h2'], ['methyl','water']]
 
     SPC_DCT = {
-            'methane': {'smi': 'C', 'mul': 1, 'chg': 0},
-            'h': {'smi': '[H]', 'mul': 2, 'chg': 0},
-            'h2': {'smi': '[H][H]', 'mul': 1, 'chg': 0},
-            'oh': {'smi': '[OH]', 'mul': 2, 'chg': 0},
-            'methyl': {'smi': '[CH3]', 'mul': 2, 'chg': 0},
-            'nh3': {'smi': '[NH3]', 'mul': 1, 'chg': 0},
-            'nh2': {'smi': '[NH2]', 'mul': 2, 'chg': 0},
-            'water': {'smi': 'O', 'mul': 1, 'chg': 0},
-            'ch3oh': {'smi': 'CO', 'mul': 1, 'chg': 0},
-            'ch2oh': {'smi': '[CH2]O', 'mul': 2, 'chg': 0},
-            'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0},
-            'nh2oh': {'smi': 'C[O]', 'mul': 1, 'chg': 0},
-            'nh3': {'smi': 'C[O]', 'mul': 1, 'chg': 0}
-             }
+        'methane': {'smi': 'C', 'mul': 1, 'chg': 0},
+        'h': {'smi': '[H]', 'mul': 2, 'chg': 0},
+        'h2': {'smi': '[H][H]', 'mul': 1, 'chg': 0},
+        'oh': {'smi': '[OH]', 'mul': 2, 'chg': 0},
+        'methyl': {'smi': '[CH3]', 'mul': 2, 'chg': 0},
+        'nh3': {'smi': '[NH3]', 'mul': 1, 'chg': 0},
+        'nh2': {'smi': '[NH2]', 'mul': 2, 'chg': 0},
+        'water': {'smi': 'O', 'mul': 1, 'chg': 0},
+        'ch3oh': {'smi': 'CO', 'mul': 1, 'chg': 0},
+        'ch2oh': {'smi': '[CH2]O', 'mul': 2, 'chg': 0},
+        'ch3o': {'smi': 'C[O]', 'mul': 2, 'chg': 0},
+        'nh2oh': {'smi': 'C[O]', 'mul': 1, 'chg': 0},
+        # 'nh3': {'smi': 'C[O]', 'mul': 1, 'chg': 0}
+    }
     for SPC in SPC_DCT:
         SPC_DCT[SPC]["ich"] = automol.smiles.inchi(SPC_DCT[SPC]["smi"])
-    #run(TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST, '/lcrc/project/PACC/run', '/lcrc/project/PACC/save')
     run(
         TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAME_LST, PRD_NAME_LST,
         '/lcrc/project/PACC/run', '/lcrc/project/PACC/save',
         vdw_params=VDW_PARAMS)
-    #run(tsk_info_lst, es_dct, spc_dct, spcs, ref, 'runtest', 'savetest')
