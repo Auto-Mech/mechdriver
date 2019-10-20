@@ -1,15 +1,10 @@
-""" drivers
+""" Centralized job runners and readers for electronic structure calcualtions
 """
 import functools
-from qcelemental import constants as qcc
 import elstruct
 import autofile
 from moldr import runner
 
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
-
-# centralized job runners and readers
 JOB_ERROR_DCT = {
     elstruct.Job.ENERGY: elstruct.Error.SCF_NOCONV,
     elstruct.Job.GRADIENT: elstruct.Error.SCF_NOCONV,

@@ -2,7 +2,6 @@
 """
 import os
 import numpy
-from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
@@ -10,8 +9,6 @@ import moldr
 import scripts
 import projrot_io
 
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def reference_geometry(
         spc_dct_i, thy_level, ini_thy_level, fs, ini_fs, kickoff_size=0.1,

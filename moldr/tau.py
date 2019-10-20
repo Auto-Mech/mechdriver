@@ -2,14 +2,11 @@
 """
 import os
 import numpy
-from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
 import moldr
-
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
+from datalibs import phycon
 
 
 def tau_sampling(
@@ -17,13 +14,13 @@ def tau_sampling(
         script_str, overwrite, nsamp_par, **opt_kwargs):
     """ Sample over torsions optimizing all other coordinates
     """
-#    thy_run_fs.leaf.create(thy_level)
-#    thy_run_path = thy_run_fs.leaf.path(thy_level)
+    #    thy_run_fs.leaf.create(thy_level)
+    #    thy_run_path = thy_run_fs.leaf.path(thy_level)
 
-#    thy_save_fs.leaf.create(thy_level)
-#    thy_save_path = thy_save_fs.leaf.path(thy_level)
-#    tau_run_fs = autofile.fs.tau(run_prefix)
-#    tau_save_fs = autofile.fs.tau(save_prefix)
+    #    thy_save_fs.leaf.create(thy_level)
+    #    thy_save_path = thy_save_fs.leaf.path(thy_level)
+    #    tau_run_fs = autofile.fs.tau(run_prefix)
+    #    tau_save_fs = autofile.fs.tau(save_prefix)
 
     save_tau(
         tau_run_fs=tau_run_fs,
@@ -102,11 +99,11 @@ def run_tau(
             locs = [tid]
 
             tau_run_fs.leaf.create(locs)
-            run_path = tau_run_fs.leaf.path(locs)
+            # run_path = tau_run_fs.leaf.path(locs)
 
             idx += 1
             print("Run {}/{}".format(idx, nsamp0))
-            run_job(
+            moldr.driver.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=tau_run_fs,
@@ -140,7 +137,8 @@ def save_tau(tau_run_fs, tau_save_fs):
 
             print("Reading from tau run at {}".format(run_path))
 
-            ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            ret = moldr.driver.read_job(
+                job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret:
                 inf_obj, inp_str, out_str = ret
                 prog = inf_obj.prog
@@ -168,7 +166,7 @@ def save_tau(tau_run_fs, tau_save_fs):
 def tau_pf_write(
         name, save_prefix,
         run_grad=False, run_hess=False):
-    """ Print out data fle for partition function evaluation 
+    """ Print out data fle for partition function evaluation
     """
     cnf_save_fs = autofile.fs.conformer(save_prefix)
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
@@ -184,7 +182,7 @@ def tau_pf_write(
     for locs in tau_save_fs.leaf.existing():
         geo = tau_save_fs.leaf.file.geometry.read(locs)
         ene = tau_save_fs.leaf.file.energy.read(locs)
-        ene = (ene - ene_ref)*qcc.conversion_factor('hartree', 'kcal/mol')
+        ene = (ene - ene_ref) * phycon.EH2KCAL
         ene_str = autofile.file.write.energy(ene)
         geo_str = autofile.file.write.geometry(geo)
 
@@ -220,12 +218,10 @@ def tau_pf_write(
         for locs in tau_save_fs.leaf.existing():
             idx += 1
             ene = tau_save_fs.leaf.file.energy.read(locs)
-            ene = (ene - ene_ref)*qcc.conversion_factor('hartree', 'kcal/mol')
+            ene = (ene - ene_ref) * phycon.EH2KCAL
             tmp = numpy.exp(-ene*349.7/(0.695*temp))
             sumq = sumq + tmp
             sum2 = sum2 + tmp**2
             sigma = numpy.sqrt(
                 (abs(sum2/float(idx)-(sumq/float(idx))**2))/float(idx))
             print(sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
-
-

@@ -1,13 +1,10 @@
 """ drivers for single point calculations
 """
-from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
 import moldr
 
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def run_energy(
         spc_info, thy_level, geo_run_fs, geo_save_fs, locs,
@@ -15,7 +12,7 @@ def run_energy(
     """ Find the energy for the given structure
     """
 
-    # prepare special file system since there may be many energies under same directory
+    # Prepare unique filesystem since many energies may be under same directory
     geo_run_path = geo_run_fs.leaf.path(locs)
     geo_save_path = geo_save_fs.leaf.path(locs)
     geo = geo_save_fs.leaf.file.geometry.read(locs)
@@ -230,7 +227,7 @@ def run_vpt2(
         inf_obj, inp_str, out_str = ret
 
         if automol.geom.is_atom(geo):
-            anh = ()
+            pass
         else:
             print(" - Reading anharmonicities from output...")
             vpt2_dct = elstruct.reader.vpt2(inf_obj.prog, out_str)
@@ -239,11 +236,16 @@ def run_vpt2(
             print(" - Save path: {}".format(geo_save_path))
             # geo_save_fs.leaf.file.vpt2_info.write(inf_obj, locs)
             geo_save_fs.leaf.file.vpt2_input.write(inp_str, locs)
-            geo_save_fs.leaf.file.anharmonic_frequencies.write(vpt2_dct['freqs'], locs)
-            geo_save_fs.leaf.file.anharmonic_zpve.write(vpt2_dct['zpve'], locs)
-            geo_save_fs.leaf.file.anharmonicity_matrix.write(vpt2_dct['x_mat'], locs)
-            geo_save_fs.leaf.file.vibro_rot_alpha_matrix.write(vpt2_dct['vibrot_mat'], locs)
-            geo_save_fs.leaf.file.quartic_centrifugal_dist_consts.write(vpt2_dct['cent_dist_const'], locs)
+            geo_save_fs.leaf.file.anharmonic_frequencies.write(
+                vpt2_dct['freqs'], locs)
+            geo_save_fs.leaf.file.anharmonic_zpve.write(
+                vpt2_dct['zpve'], locs)
+            geo_save_fs.leaf.file.anharmonicity_matrix.write(
+                vpt2_dct['x_mat'], locs)
+            geo_save_fs.leaf.file.vibro_rot_alpha_matrix.write(
+                vpt2_dct['vibrot_mat'], locs)
+            geo_save_fs.leaf.file.quartic_centrifugal_dist_consts.write(
+                vpt2_dct['cent_dist_const'], locs)
 
     if not geo_save_fs.leaf.file.anharmnicity_matrix.exists(locs) or overwrite:
 
@@ -267,7 +269,7 @@ def run_vpt2(
             inf_obj, inp_str, out_str = ret
 
             if automol.geom.is_atom(geo):
-                anh = ()
+                pass
             else:
                 print(" - Reading anharmonicities from output...")
                 vpt2_dct = elstruct.reader.vpt2(inf_obj.prog, out_str)
@@ -276,9 +278,13 @@ def run_vpt2(
                 print(" - Save path: {}".format(geo_save_path))
                 # geo_save_fs.leaf.file.vpt2_info.write(inf_obj, locs)
                 geo_save_fs.leaf.file.vpt2_input.write(inp_str, locs)
-                geo_save_fs.leaf.file.anharmonic_frequencies.write(vpt2_dct['freqs'], locs)
-                geo_save_fs.leaf.file.anharmonic_zpve.write(vpt2_dct['zpve'], locs)
-                geo_save_fs.leaf.file.anharmonicity_matrix.write(vpt2_dct['x_mat'], locs)
-                geo_save_fs.leaf.file.vibro_rot_alpha_matrix.write(vpt2_dct['vibrot_mat'], locs)
-                geo_save_fs.leaf.file.quartic_centrifugal_dist_consts.write(vpt2_dct['cent_dist_const'], locs)
-
+                geo_save_fs.leaf.file.anharmonic_frequencies.write(
+                    vpt2_dct['freqs'], locs)
+                geo_save_fs.leaf.file.anharmonic_zpve.write(
+                    vpt2_dct['zpve'], locs)
+                geo_save_fs.leaf.file.anharmonicity_matrix.write(
+                    vpt2_dct['x_mat'], locs)
+                geo_save_fs.leaf.file.vibro_rot_alpha_matrix.write(
+                    vpt2_dct['vibrot_mat'], locs)
+                geo_save_fs.leaf.file.quartic_centrifugal_dist_consts.write(
+                    vpt2_dct['cent_dist_const'], locs)
