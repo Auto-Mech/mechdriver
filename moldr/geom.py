@@ -2,16 +2,14 @@
 """
 import os
 import numpy
-from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
 import moldr
 import scripts
 import projrot_io
+from datalibs import phycon
 
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def reference_geometry(
         spc_dct_i, thy_level, ini_thy_level, fs, ini_fs, kickoff_size=0.1,
@@ -318,7 +316,7 @@ def run_kickoff_saddle(
     thy_run_fs.leaf.create(thy_level[1:4])
     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
     run_fs = autofile.fs.run(thy_run_path)
-    disp_len = kickoff_size * qcc.conversion_factor('angstrom', 'bohr')
+    disp_len = kickoff_size * phycon.ANG2BOHR
     if kickoff_backward:
         disp_len *= -1
     disp_xyzs = numpy.multiply(disp_xyzs, disp_len)

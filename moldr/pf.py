@@ -2,7 +2,6 @@
 """
 import os
 import numpy
-from qcelemental import constants as qcc
 from qcelemental import periodictable as ptab
 import projrot_io
 import automol
@@ -10,9 +9,8 @@ import elstruct
 import autofile
 import moldr
 import mess_io
+from datalibs import phycon
 
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def species_block(
         spc, spc_dct_i, spc_info, spc_model, pf_levels, projrot_script_str,
@@ -207,7 +205,7 @@ def species_block(
                     if 'hind_inc' in spc_dct_i:
                         scan_increment = spc_dct_i['hind_inc']
                     else:
-                        scan_increment = 30. * qcc.conversion_factor('degree', 'radian')
+                        scan_increment = 30. * phycon.DEG2RAD
                     val_dct = automol.zmatrix.values(zma)
                     tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
                         zma, tors_names, scan_increment,
@@ -231,7 +229,7 @@ def species_block(
                                 enes.append(20.)
                                 print('ERROR: missing grid value for torsional potential of {}'.format(spc_info[0]))
                         enes = numpy.subtract(enes, min_ene)
-                        pot = list(enes*EH2KCAL)
+                        pot = list(enes*phycon.EH2KCAL)
                         print('pot test in species_block:', pot)
                         axis = coo_dct[tors_name][1:3]
                         group = list(
@@ -335,7 +333,7 @@ def species_block(
                 if automol.geom.is_linear(anh_geo):
                     mode_start = mode_start - 1
                 freqs = freqs[mode_start:]
-                zpe = sum(freqs)*WAVEN2KCAL/2.
+                zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
                 hind_rot_str = ""
 
                 core = mess_io.writer.core_rigidrotor(anh_geo, sym_factor)
@@ -456,8 +454,8 @@ def vtst_with_no_saddle_block(
                 if not imag_freq:
                     freqs = freqs[:-1]
 
-        zpe = sum(freqs)*WAVEN2KCAL/2.
-        erel = (ene - inf_sep_ene)*EH2KCAL
+        zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
+        erel = (ene - inf_sep_ene)*phycon.EH2KCAL
         erel_zpe_corr = erel + zpe - rct_zpe
         eref = erel - spc_ene
 
@@ -916,7 +914,7 @@ def get_zero_point_energy(
             mode_start = mode_start - 1
         proj_freqs = full_freqs[mode_start:]
 
-        har_zpe = sum(proj_freqs)*WAVEN2KCAL/2.
+        har_zpe = sum(proj_freqs)*phycon.WAVEN2KCAL/2.
 
     if vib_model == 'HARM' and tors_model == 'RIGID':
         ret = har_zpe
@@ -957,7 +955,7 @@ def get_zero_point_energy(
             if 'hind_inc' in spc_dct_i:
                 scan_increment = spc_dct_i['hind_inc']
             else:
-                scan_increment = 30. * qcc.conversion_factor('degree', 'radian')
+                scan_increment = 30. * phycon.DEG2RAD
             val_dct = automol.zmatrix.values(zma)
             tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
                 zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
@@ -978,7 +976,7 @@ def get_zero_point_energy(
                         enes.append(1000.)
                         print('ERROR: missing grid value for torionsal potential of {}'.format(spc_info[0]))
                 enes = numpy.subtract(enes, min_ene)
-                pot = list(enes*EH2KCAL)
+                pot = list(enes*phycon.EH2KCAL)
                 print('pot test in zero point energy:', pot)
                 axis = coo_dct[tors_name][1:3]
                 group = list(
@@ -1042,7 +1040,7 @@ def get_zero_point_energy(
             tors_zpes = mess_io.reader.tors.zpves(output_string)
             tors_zpe_cor = 0.0
             for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
-                tors_zpe_cor += tors_1dhr_zpe - tors_freq*WAVEN2KCAL/2
+                tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
 
             # read torsional harmonic zpe and actual zpe
 
@@ -1072,7 +1070,7 @@ def get_zero_point_energy(
                 else:
                     proj_freqs = freqs[6:]
 
-                zpe = sum(proj_freqs)*WAVEN2KCAL/2.
+                zpe = sum(proj_freqs)*phycon.WAVEN2KCAL/2.
                 hind_rot_str = ""
 
                 core = mess_io.writer.core_rigidrotor(anh_geo, sym_factor)
@@ -1110,7 +1108,7 @@ def tau_pf_write(
     for locs in tau_save_fs.leaf.existing():
         geo = tau_save_fs.leaf.file.geometry.read(locs)
         ene = tau_save_fs.leaf.file.energy.read(locs)
-        ene = (ene - ene_ref)*qcc.conversion_factor('hartree', 'kcal/mol')
+        ene = (ene - ene_ref) * phycon.EH2KCAL
         ene_str = autofile.file.write.energy(ene)
         geo_str = autofile.file.write.geometry(geo)
 
@@ -1146,7 +1144,7 @@ def tau_pf_write(
         for locs in tau_save_fs.leaf.existing():
             idx += 1
             ene = tau_save_fs.leaf.file.energy.read(locs)
-            ene = (ene - ene_ref)*qcc.conversion_factor('hartree', 'kcal/mol')
+            ene = (ene - ene_ref) * phycon.EH2KCAL
             tmp = numpy.exp(-ene*349.7/(0.695*temp))
             sumq = sumq + tmp
             sum2 = sum2 + tmp**2

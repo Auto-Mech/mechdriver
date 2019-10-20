@@ -7,11 +7,11 @@ import moldr
 import autofile.fs
 import scripts.es
 from esdriver.load import load_params
+from submission import substr
+
 
 KICKOFF_SIZE = 0.1
 KICKOFF_BACKWARD = False
-PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "RPHt.exe >& /dev/null")
 
 def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
         vdw_params=[False, False, True]):
@@ -89,7 +89,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                             ts, spc_dct, thy_info, ini_thy_info, ts_info, vdw_params,
                             es_dct[es_run_key]['mc_nsamp'], run_prefix,
                             save_prefix, KICKOFF_SIZE, KICKOFF_BACKWARD,
-                            PROJROT_SCRIPT_STR, overwrite)
+                            substr.PROJROT, overwrite)
                         spc_queue.extend(vdws)
             continue
 
@@ -254,7 +254,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                         spc_dct[spc], thy_level, ini_thy_level, fs, ini_fs,
                         kickoff_size=KICKOFF_SIZE,
                         kickoff_backward=KICKOFF_BACKWARD,
-                        projrot_script_str=PROJROT_SCRIPT_STR,
+                        projrot_script_str=substr.PROJROT,
                         overwrite=overwrite)
                     if geo:
                         if not 'vdw_' in spc:
@@ -319,7 +319,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
     # ts_chg = sum([spcs[spc]['chg'] for spc in ts_spec['reacs']])
     # ts_spec['chg'] = ts_chg
     # ts_spec['mul'] = ts_mul
-    # ts_spec['hind_inc'] = hind_inc * qcc.conversion_factor('degree', 'radian')
+    # ts_spec['hind_inc'] = hind_inc * phycon.DEG2RAD
     # return ts_spec
 
 

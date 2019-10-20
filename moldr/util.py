@@ -42,21 +42,30 @@ def run_qchem_par(prog, method):
         }
 
     if prog == 'psi4':
-        sp_script_str = ("#!/usr/bin/env bash\n"
-                         "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log")
+        sp_script_str = (
+            "#!/usr/bin/env bash\n"
+            "psi4 -i run.inp -o run.out >> stdout.log &> stderr.log"
+        )
         opt_script_str = sp_script_str
         kwargs = {}
         opt_kwargs = {}
 
     if prog == 'molpro2015':
-        sp_script_str = ("#!/usr/bin/env bash\n"
-                         "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
+        sp_script_str = (
+            "#!/usr/bin/env bash\n"
+            "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log"
+        )
         if method == 'caspt2':
-            opt_script_str = ("#!/usr/bin/env bash\n"
-                              "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log")
+            opt_script_str = (
+                "#!/usr/bin/env bash\n"
+                "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log"
+            )
         else:
-            opt_script_str = ("#!/usr/bin/env bash\n"
-                              "molpro --mppx -n 12 run.inp -o run.out >> stdout.log &> stderr.log")
+            opt_script_str = (
+                "#!/usr/bin/env bash\n"
+                "molpro --mppx -n 12 run.inp -o run.out >> "
+                "stdout.log &> stderr.log"
+            )
         if method in ('caspt2', 'caspt2c'):
             kwargs = {
                 'memory': 10,
@@ -115,32 +124,35 @@ def run_qchem_par(prog, method):
                 ],
             }
 
-    if prog == 'qchem':
-        sp_script_str = ("#!/usr/bin/env bash\n"
-                         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
-        opt_script_str = sp_script_str
-        kwargs = {
-            'memory': 20,
-        }
-        opt_kwargs = {}
+    # if prog == 'qchem':
+    #     sp_script_str = (
+    #         "#!/usr/bin/env bash\n"
+    #         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
+    #     opt_script_str = sp_script_str
+    #     kwargs = {
+    #         'memory': 20,
+    #     }
+    #     opt_kwargs = {}
 
-    if prog == 'cfour':
-        sp_script_str = ("#!/usr/bin/env bash\n"
-                         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
-        opt_script_str = sp_script_str
-        kwargs = {
-            'memory': 20,
-        }
-        opt_kwargs = {}
+    # if prog == 'cfour':
+    #     sp_script_str = (
+    #         "#!/usr/bin/env bash\n"
+    #         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
+    #     opt_script_str = sp_script_str
+    #     kwargs = {
+    #         'memory': 20,
+    #     }
+    #     opt_kwargs = {}
 
-    if prog == 'orca':
-        sp_script_str = ("#!/usr/bin/env bash\n"
-                         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
-        opt_script_str = sp_script_str
-        kwargs = {
-            'memory': 20,
-        }
-        opt_kwargs = {}
+    # if prog == 'orca':
+    #     sp_script_str = (
+    #         "#!/usr/bin/env bash\n"
+    #         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
+    #     opt_script_str = sp_script_str
+    #     kwargs = {
+    #         'memory': 20,
+    #     }
+    #     opt_kwargs = {}
 
     return sp_script_str, opt_script_str, kwargs, opt_kwargs
 
@@ -154,10 +166,7 @@ def orbital_restriction(spc_info, thy_level):
     elif thy_level[3] == 'UU':
         orb_restr = False
     elif thy_level[3] == 'RU':
-        if mul == 1:
-            orb_restr = True
-        else:
-            orb_restr = False
+        orb_restr = bool(mul == 1)
     return orb_restr
 
 
@@ -214,7 +223,7 @@ def min_dist_conformer_zma_geo(dist_coords, cnf_save_fs):
     min_dist = 100.
     min_zma = []
     for zma in cnf_zmas:
-        zmas, gras = automol.zmatrix.ts._shifted_standard_forms_with_gaphs([zma])
+        zmas, _ = automol.zmatrix.ts._shifted_standard_forms_with_gaphs([zma])
         zma = zmas[0]
         geo = automol.zmatrix.geometry(zma)
         dist = automol.geom.distance(geo, *list(dist_coords))
@@ -248,7 +257,8 @@ def traj_sort(save_fs):
         geos = [save_fs.leaf.file.geometry.read(locs)
                 for locs in locs_lst]
         traj = []
-        for ene, geo, locs in sorted(zip(enes, geos, locs_lst), key=lambda x: x[0]):
+        traj_sort_data = sorted(zip(enes, geos, locs_lst), key=lambda x: x[0])
+        for ene, geo, locs in traj_sort_data:
             comment = 'energy: {0:>15.10f} \t {1}'.format(ene, locs[0])
             traj.append((comment, geo))
         traj_path = save_fs.trunk.file.trajectory.path()
@@ -299,8 +309,8 @@ def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, thy_level):
 
 
 def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
-    """
-    evaluate the ts multiplicity from the multiplicities of the reactants and products
+    """ evaluate the ts multiplicity from the multiplicities
+        of the reactants and products
     """
     nrcts = len(rcts)
     nprds = len(prds)
@@ -311,7 +321,7 @@ def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
     prd_muls = []
     if nrcts == 1 and nprds == 1:
         ts_mul_low = max(spc_dct[rcts[0]]['mul'], spc_dct[prds[0]]['mul'])
-        ts_mul_high= ts_mul_low
+        ts_mul_high = ts_mul_low
         rad_rad = False
     else:
         for rct in rcts:
@@ -320,7 +330,7 @@ def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
         for prd in prds:
             prd_spin_sum += (spc_dct[prd]['mul'] - 1.)/2.
             prd_muls.append(spc_dct[prd]['mul'])
-        if (min(rct_muls) == 1 or nrcts == 1) and (min(prd_muls) == 1 or nprds == 1):
+        if min(rct_muls) == 1 or nrcts == 1 and min(prd_muls) == 1 or nprds == 1:
             rad_rad = False
         ts_mul_low = min(rct_spin_sum, prd_spin_sum)
         ts_mul_low = int(round(2*ts_mul_low + 1))

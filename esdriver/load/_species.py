@@ -16,8 +16,8 @@ from autoparse.pattern import SPACE
 from autoparse.pattern import WILDCARD
 from autoparse.pattern import INTEGER
 from autoparse.pattern import FLOAT
-from qcelemental import constants as qcc
-   
+from datalibs import phycon
+
 import logging
 log   = logging.getLogger(__name__)
 
@@ -233,10 +233,10 @@ def get_hind_inc(inp_str, species):
     # Set the geom as an integer
     if hind_tau_str is not None:
         hind_tau =   float(hind_tau_str)
-        hind_tau =  hind_tau * qcc.conversion_factor('degree', 'radian')
+        hind_tau =  hind_tau * phycon.DEG2RAD
 
     else:
-        hind_tau = 360. * qcc.conversion_factor('degree', 'radian')
+        hind_tau = 360. * phycon.DEG2RAD
 
     return hind_tau
 

@@ -1,14 +1,10 @@
 """ drivers for coordinate scans
 """
 import numpy
-from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
 import moldr
-
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 
 def hindered_rotor_scans(

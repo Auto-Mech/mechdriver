@@ -2,11 +2,15 @@
 """
 
 import numpy
+from qcelemental import constants as qcc
 import automol
 import elstruct
 import autofile
 import moldr
+from automol.convert import _pyx2z
 
+WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
+EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 def conformer_sampling(
         spc_info, thy_level, thy_save_fs, cnf_run_fs, cnf_save_fs, script_str,
@@ -25,6 +29,7 @@ def conformer_sampling(
         geo = thy_save_fs.trunk.file.geometry.read()
         zma = thy_save_fs.trunk.file.zmatrix.read()
         coo_names.append(tors_names)
+
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
@@ -227,7 +232,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                     gra = automol.geom.graph(geo)
 
                 conns = automol.graph.connected_components(gra)
-                if len(conns) > 1:
+                if len(conns) >  1:
                     print(" - Geometry is disconnected.. Skipping...")
                 else:
                     if saddle:
@@ -272,6 +277,139 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
         moldr.util.traj_sort(cnf_save_fs)
 
 
+def run_gradient(
+        spc_info, thy_level, geo_run_fs, geo_save_fs, locs,
+        script_str, overwrite, **kwargs):
+    """ Determine the gradient for the geometry in the given location
+    """
+
+    geo_run_path = geo_run_fs.leaf.path(locs)
+    geo_save_path = geo_save_fs.leaf.path(locs)
+    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    run_fs = autofile.fs.run(geo_run_path)
+
+    print('Running gradient')
+    moldr.driver.run_job(
+        job='gradient',
+        script_str=script_str,
+        run_fs=run_fs,
+        geom=geo,
+        spc_info=spc_info,
+        thy_level=thy_level,
+        overwrite=overwrite,
+        **kwargs,
+    )
+
+    ret = moldr.driver.read_job(
+        job='gradient',
+        run_fs=run_fs,
+    )
+
+    if ret is not None:
+        inf_obj, inp_str, out_str = ret
+
+        if automol.geom.is_atom(geo):
+            freqs = ()
+        else:
+            print(" - Reading gradient from output...")
+            grad = elstruct.reader.gradient(inf_obj.prog, out_str)
+
+            print(" - Saving gradient...")
+            print(" - Save path: {}".format(geo_save_path))
+            geo_save_fs.leaf.file.gradient_info.write(inf_obj, locs)
+            geo_save_fs.leaf.file.gradient_input.write(inp_str, locs)
+            geo_save_fs.leaf.file.gradient.write(grad, locs)
+
+
+def run_hessian(
+        spc_info, thy_level, geo_run_fs, geo_save_fs, locs,
+        script_str, overwrite, **kwargs):
+    """ Determine the hessian for the geometry in the given location
+    """
+
+    geo_run_path = geo_run_fs.leaf.path(locs)
+    geo_save_path = geo_save_fs.leaf.path(locs)
+    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    run_fs = autofile.fs.run(geo_run_path)
+
+    print('Running hessian')
+    moldr.driver.run_job(
+        job='hessian',
+        script_str=script_str,
+        run_fs=run_fs,
+        geom=geo,
+        spc_info=spc_info,
+        thy_level=thy_level,
+        overwrite=overwrite,
+        **kwargs,
+    )
+
+    ret = moldr.driver.read_job(
+        job='hessian',
+        run_fs=run_fs,
+    )
+
+    if ret is not None:
+        inf_obj, inp_str, out_str = ret
+
+        if automol.geom.is_atom(geo):
+            freqs = ()
+        else:
+            print(" - Reading hessian from output...")
+            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+            freqs = elstruct.util.harmonic_frequencies(
+                geo, hess, project=False)
+
+            print(" - Saving hessian...")
+            print(" - Save path: {}".format(geo_save_path))
+            geo_save_fs.leaf.file.hessian_info.write(inf_obj, locs)
+            geo_save_fs.leaf.file.hessian_input.write(inp_str, locs)
+            geo_save_fs.leaf.file.hessian.write(hess, locs)
+            geo_save_fs.leaf.file.harmonic_frequencies.write(freqs, locs)
+
+
+def run_vpt2(
+        spc_info, thy_level, geo_run_fs, geo_save_fs, locs,
+        script_str, overwrite, **kwargs):
+    """ Perform vpt2 analysis for the geometry in the given location
+    """
+
+    geo_run_path = geo_run_fs.leaf.path(locs)
+    geo_save_path = geo_save_fs.leaf.path(locs)
+    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    run_fs = autofile.fs.run(geo_run_path)
+
+    print('Running vpt2')
+    moldr.driver.run_job(
+        job='vpt2',
+        script_str=script_str,
+        run_fs=run_fs,
+        geom=geo,
+        spc_info=spc_info,
+        thy_level=thy_level,
+        overwrite=overwrite,
+        **kwargs,
+    )
+
+    ret = moldr.driver.read_job(
+        job='vpt2',
+        run_fs=run_fs,
+    )
+
+    if ret is not None:
+        inf_obj, inp_str, out_str = ret
+
+        if not automol.geom.is_atom(geo):
+            print(" - Reading vpt2 from output...")
+            vpt2 = elstruct.reader.vpt2(inf_obj.prog, out_str)
+
+            print(" - Saving vpt2...")
+            print(" - Save path: {}".format(geo_save_path))
+            geo_save_fs.leaf.file.vpt2.info.write(inf_obj, locs)
+            geo_save_fs.leaf.file.vpt2.input.write(inp_str, locs)
+            geo_save_fs.leaf.file.vpt2.write(vpt2, locs)
+
+
 def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):
     """ compare given geo with list of geos all to see if any have the same
     coulomb spectrum and energy
@@ -302,22 +440,18 @@ def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
     return unique
 
 
-def int_sym_num_from_sampling(
-        geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=(),
-        brk_bnd_key=(), form_coords=(), tors_names=()):
+def int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle=False, form_coords=[], tors_names=[]):
     """ Determine the symmetry number for a given conformer geometry.
-    (1) Explore the saved conformers to find the list of similar conformers -
-        i.e. those with a coulomb matrix and energy that are equivalent
-        to those for the reference geometry.
-    (2) Expand each of those similar conformers by applying
-        rotational permutations to each of the terminal groups.
-    (3) Count how many distinct distance matrices there are in
-        the fully expanded conformer list.
+    First explore the saved conformers to find the list of similar conformers -
+    i.e. those with a coulomb matrix and energy that are equivalent to those for the
+    reference geometry. Then expand each of those similar conformers by applying
+    rotational permutations to each of the terminal groups. Finally count how many
+    distinct distance matrices there are in the fully expanded conformer list.
     """
 
-    # Note: ignoring for saddle points the possibility that two configurations
-    # differ only in their torsional values.
-    # As a result, the symmetry factor is a lower bound of the true value
+    # Note, for now we are ignoring for saddle points the possibility that two configurations
+    # differ only in their torsional values. As a result, the symmetry factor is a lower bound on the 
+    # true symmetry factor
     if automol.geom.is_atom(geo):
         int_sym_num = 1.
     else:
@@ -331,7 +465,7 @@ def int_sym_num_from_sampling(
             ethrsh = 1.e-5
             locs_lst = cnf_save_fs.leaf.existing()
             geo_sim = [geo]
-            # geo_sim_exp = [geo]
+            geo_sim_exp = [geo]
             ene_sim = [ene]
             int_sym_num = 1.
             if locs_lst:
@@ -343,26 +477,22 @@ def int_sym_num_from_sampling(
                     if enei - enes[0] < ethrsh:
                         geo_lst = [geoi]
                         ene_lst = [enei]
-                        unique = is_unique_coulomb_energy(
-                            geo, ene, geo_lst, ene_lst)
-                        if not unique:
+                        if not is_unique_coulomb_energy(geo, ene, geo_lst, ene_lst):
                             geo_sim.append(geoi)
                             ene_sim.append(enei)
 
                 int_sym_num = 0
                 for idx_i, geo_sim_i in enumerate(geo_sim):
-                    new_geos = automol.geom.rot_permutated_geoms(
-                        geo_sim_i, saddle,
-                        frm_bnd_key, brk_bnd_key, form_coords)
+                    new_geos = automol.geom.rot_permutated_geoms(geo_sim_i, saddle, form_coords)
                     new_geom = True
                     for new_geo in new_geos:
-                        # geo_sim_exp.append(new_geo)
+                        #geo_sim_exp.append(new_geo)
                         for idx_j, geo_sim_j in enumerate(geo_sim):
                             if idx_j < idx_i:
                                 if automol.geom.almost_equal_dist_mat(
                                         new_geo, geo_sim_j, thresh=1e-1):
                                     if saddle:
-                                        new_geom = False
+                                        new_geom = False 
                                         break
                                     elif are_torsions_same(new_geo, geo_sim_j):
                                         new_geom = False
@@ -376,25 +506,37 @@ def int_sym_num_from_sampling(
     return int_sym_num
 
 
-def symmetry_factor(
-        geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=(), brk_bnd_key=(),
-        form_coords=(), tors_names=()):
-    """ obtain overall symmetry number for a geometry as a product
-        of the external and internal symmetry numbers
+def external_symmetry_factor(geo):
+    """ obtain external symmetry number for a geometry using x2z
     """
-    # Note: ignoring for saddle points the possibility that two configurations
-    # differ only in their torsional values.
-    # As a result, the symmetry factor is a lower bound of the true value
-    ext_sym = automol.geom.external_symmetry_factor(geo)
+    # Get initial external symmetry number
+    if automol.geom.is_atom(geo):
+        ext_sym_fac = 1.
+    else:
+        oriented_geom = _pyx2z.to_oriented_geometry(geo)
+        ext_sym_fac = oriented_geom.sym_num()
+        # print('initial ext_sym_fac:', ext_sym_fac)
+        # Change symmetry number if geometry has enantiomers
+        if oriented_geom.is_enantiomer():
+            ext_sym_fac *= 0.5
+        # print('final ext_sym_fac:', ext_sym_fac)
+    return ext_sym_fac
+
+
+def symmetry_factor(geo, ene, cnf_save_fs, saddle=False, form_coords=[], tors_names=[]):
+    """ obtain overall symmetry number for a geometry as a product
+    of the external and internal symmetry numbers
+    """
+    # Note, for now we are ignoring for saddle points the possibility that two configurations
+    # differ only in their torsional values. As a result, the symmetry factor is a lower bound on the 
+    # true symmetry factor
+    ext_sym = external_symmetry_factor(geo)
     if not saddle:
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
     else:
         print('tors_names test:', tors_names, len(tors_names))
-    if tors_names:
-        int_sym = int_sym_num_from_sampling(
-            geo, ene, cnf_save_fs, saddle,
-            frm_bnd_key, brk_bnd_key,
-            form_coords, tors_names)
+    if len(tors_names) > 0:
+        int_sym = int_sym_num_from_sampling(geo, ene, cnf_save_fs, saddle, form_coords, tors_names)
     else:
         int_sym = 1
     sym_fac = ext_sym * int_sym
@@ -456,7 +598,7 @@ def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list, saddle):
                     geo, geoi, thresh=1e-1):
                 # check dihedrals
                 if saddle:
-                    unique = False
+                    unique = False 
                 elif are_torsions_same(geo, geoi):
                     unique = False
     return unique

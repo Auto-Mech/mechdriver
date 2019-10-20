@@ -1,32 +1,13 @@
 """ reaction list test
 """
 import os
-from qcelemental import constants as qcc
 import automol
 import autofile
 import moldr
 import mess_io.writer
 import thermo
-
-ANG2BOHR = qcc.conversion_factor('angstrom', 'bohr')
-WAVEN2KCAL = qcc.conversion_factor('wavenumber', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
-PF_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                 "messpf pf.inp build.out >> stdout.log &> stderr.log")
-PROJROT_SCRIPT_STR = ("#!/usr/bin/env bash\n"
-                      "RPHt.exe >& /dev/null")
-ELC_DEG_DCT = {
-    ('InChI=1S/B', 2): [[0., 2], [16., 4]],
-    ('InChI=1S/C', 3): [[0., 1], [16.4, 3], [43.5, 5]],
-    ('InChI=1S/N', 2): [[0., 6], [8., 4]],
-    ('InChI=1S/O', 3): [[0., 5], [158.5, 3], [226.5, 1]],
-    ('InChI=1S/F', 2): [[0., 4], [404.1, 2]],
-    ('InChI=1S/Cl', 2): [[0., 4], [883.4, 2]],
-    ('InChI=1S/Br', 2): [[0., 4], [685.2, 2]],
-    ('InChI=1S/HO/h1H', 2): [[0., 2], [138.9, 2]],
-    ('InChI=1S/NO/c1-2', 2): [[0., 2], [123.1, 2]],
-    ('InChI=1S/O2/c1-2', 1): [[0., 2]]
-}
+from datalibs import phycon
+from submission import substr
 
 
 def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix, saddle=False):
@@ -44,7 +25,7 @@ def get_electronic_energy(spc_info, geo_theory, sp_theory, save_prefix, saddle=F
 def spc_energy(spc_ene, spc_zpe):
     """ return the sum of the electronic and zero point energies
     """
-    spc_ene = spc_ene + spc_zpe/EH2KCAL
+    spc_ene = spc_ene + spc_zpe/phycon.EH2KCAL
     return spc_ene
 
 
@@ -93,8 +74,9 @@ def get_zpe(spc, spc_info, spc_save_path, pf_levels, spc_model):
 
     spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
         spc, spc_info, pf_levels, spc_model,
-        pf_script_str=PF_SCRIPT_STR,
-        elec_levels=[[0., 1]], sym_factor=1.,
+        pf_script_str=substr.MESSPF,
+        elec_levels=[[0., 1]],
+        sym_factor=1.0,
         save_prefix=spc_save_path)
     zpe_str = '{0:<8.2f}\n'.format(spc_zpe)
     if is_atom:
@@ -122,7 +104,7 @@ def get_spc_input(spc, spc_dct_i, spc_info, spc_save_path, pf_levels, spc_model)
         spc_info=spc_info,
         spc_model=spc_model,
         pf_levels=pf_levels,
-        projrot_script_str=PROJROT_SCRIPT_STR,
+        projrot_script_str=substr.PROJROT,
         save_prefix=spc_save_path,
         )
     return spc_str[0]
@@ -187,7 +169,7 @@ def write_pf_input(pf_inp_str, pf_path):
         pf_file.write(pf_inp_str)
 
 
-def run_pf(pf_path, pf_script_str=PF_SCRIPT_STR):
+def run_pf(pf_path, pf_script_str=substr.MESSPF):
     """ run messpf
     """
     moldr.util.run_script(pf_script_str, pf_path)

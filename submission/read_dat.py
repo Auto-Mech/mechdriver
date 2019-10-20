@@ -3,6 +3,9 @@
 
 from types import SimpleNamespace
 
+# setting SORT_RXNS to False leads to missing channels
+# for now just leave them sorted
+
 # Set each keyword to their default values
 PARAMS = {
     'DATA_PATH': '/home/sjklipp/PACC/mech_test',
@@ -109,32 +112,10 @@ def _format_param_vals(pvals):
         frmtd_value = []
         # Set string in list to boolean or integer if needed
         for elm in value:
-            elm = elm.strip()
-            if elm == 'True':
-                elm = True
-            elif elm == 'False':
-                elm = False
-            elif elm.isdigit():
-                elm = int(elm)
-            elif '.' in value and elm.replace('.', '').isdigit():
-                elm = float(elm)
-            else:
-                elm = elm.replace("'", '')
-
-            frmtd_value.append(elm)
-    # Format values if it is just a boolean
-    elif value == 'True':
-        frmtd_value = True
-    elif value == 'False':
-        frmtd_value = False
-    elif value.isdigit():
-        frmtd_value = int(value)
-    elif '.' in value and value.replace('.', '').isdigit():
-        frmtd_value = float(value)
-    # Simply set if it is a string
-    else:
-        frmtd_value = value
-        frmtd_value = value.replace("'", '')
+            frmtd_value.append(_set_value_type(elm.strip()))
+    
+    # Format values if it has singular value
+    frmtd_value = _set_value_type(value)
 
     return frmtd_keyword, frmtd_value
 
@@ -149,3 +130,22 @@ def _format_task_lst(set_params, keyword, value_lst):
     tsk_lst = [frmtd_keyword, setvals[0], setvals[1], setvals[2]]
 
     return tsk_lst
+
+
+def _set_value_type(value):
+    """ set type of value
+        right now we handle True/False boolean, int, float, and string
+    """
+
+    if value == 'True':
+        frmtd_value = True
+    elif value == 'False':
+        frmtd_value = False
+    elif value.isdigit():
+        frmtd_value = int(value)
+    elif '.' in value and value.replace('.', '').isdigit():
+        frmtd_value = float(value)
+    else:
+        frmtd_value = value
+
+    return frmtd_value
