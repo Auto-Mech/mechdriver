@@ -1,5 +1,6 @@
-""" drivers for conformer sampling
+""" drivers for conformer
 """
+
 import numpy
 from qcelemental import constants as qcc
 import automol

@@ -726,24 +726,3 @@ if PARAMS.RUN_RATES:
 # f. Partition function parameters determined internally
 # TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
 # VIB_MODEL can take values: 'HARM', or 'VPT2' values.
-
-# Defaults and dictionaries
-SCAN_INCREMENT = 30. * qcc.conversion_factor('degree', 'radian')
-KICKOFF_SIZE = 0.1
-KICKOFF_BACKWARD = False
-RESTRICT_OPEN_SHELL = False
-# Temperatue and pressure
-TEMP_STEP = 100.
-NTEMPS = 30
-TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
-PRESS = [0.1, 1., 10., 100.]
-# Collisional parameters
-EXP_FACTOR = 150.0
-EXP_POWER = 0.85
-EXP_CUTOFF = 15.
-EPS1 = 100.0
-EPS2 = 200.0
-SIG1 = 6.
-SIG2 = 6.
-MASS1 = 15.0
-ETSFR_PAR = [EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2, SIG1, SIG2, MASS1]

@@ -316,8 +316,7 @@ def run(
         print(ts_str)
 
         # run mess to produce rate output
-
-        mess_path = scripts.ktp.run_rate(
+        mess_path = scripts.ktp.run_rates(
             header_str, energy_trans_str, well_str, bim_str, ts_str,
             spc_dct[tsname_0], geo_thy_info, spc_dct[tsname_0]['rxn_fs'][3])
 
@@ -345,15 +344,36 @@ def run(
                                 ene -= scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
                             if ene > 0.:
                                 reaction = name_i + '=' + name_j
-                                sing_rate_params, sing_errs, doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
-                                    lab_i, lab_j, mess_path, assess_pdep_temps,
-                                    pdep_tolerance=20, no_pdep_pval=1.0,
-                                    a_conv_factor=a_conv_factor)
-                                max_err = max([vals[1] for vals in sing_errs.values()])
-                                if max_err < err_thresh:
+
+                                # Read the rate constants out of the mess outputs
+                                ktp_dct = scripts.ktp.read_rates(lab_i, lab_j, mess_path, assess_pdep_temps,
+                                                                 pdep_tolerance=20, no_pdep_pval=1.0)
+
+                                # Fit rate constants to single Arrhenius expressions
+                                sing_rate_params, sing_errs = scripts.ktp.mod_arr_fit(
+                                    ktp_dct, fit_type='single', fit_method='dsarrfit',
+                                    t_ref=1.0, a_conv_factor=a_conv_factor)
+
+                                # Assess error from single fitting and num temps to decide if dbl fit to be done
+                                sgl_fit_good = max((vals[1] for vals in sing_errs.values())) < err_thresh
+                                dbl_fit_imposs = any(len(ktp_dct[p]) < 6 for p in ktp_dct) 
+
+                                if dbl_fit_imposs:
+                                    print('Warning not enough temperatures for a double fit')
+
+                                # Write chemkin string for single, or perform dbl fit and write string
+                                if sgl_fit_good:
+                                    if not dbl_fit_imposs:
+                                        print('Single fit errors acceptable: Using single fits')
+                                    if dbl_fit_imposs:
+                                        print('Not enough temperatures for a double fit: Using single fits')
                                     chemkin_str += chemkin_io.writer.reaction.plog(
                                         reaction, sing_rate_params, sing_errs)
                                 else:
+                                    print('Single fit errors too large and double fitting possible: Doing a double fit')
+                                    doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
+                                        ktp_dct, fit_type='double', fit_method='dsarrfit',
+                                        t_ref=1.0, a_conv_factor=a_conv_factor)
                                     chemkin_str += chemkin_io.writer.reaction.plog(
                                         reaction, doub_rate_params, doub_errs)
 
