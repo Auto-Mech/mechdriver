@@ -12,7 +12,8 @@ from submission import substr
 
 
 # TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
-TEMPS = [500., 750., 1000., 1250., 1500., 1750., 2000.]
+TEMPS = [500., 600., 700., 800., 900., 1000., 1100., 1200., 1300., 1400., 1500., 1600., 1700., 1800., 1900., 2000.]
+# TEMPS = [500., 750., 1000., 1250., 1500., 1750., 2000.]
 PRESS = [0.1, 1., 10., 100.]
 EXP_FACTOR = 150.0
 EXP_POWER = 0.85
@@ -353,7 +354,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
 
                                 # Fit rate constants to single Arrhenius expressions
                                 sing_rate_params, sing_errs = scripts.ktp.mod_arr_fit(
-                                    ktp_dct, fit_type='single', fit_method='dsarrfit',
+                                    ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
                                     t_ref=1.0, a_conv_factor=a_conv_factor)
 
                                 # Assess error from single fitting and num temps to decide if dbl fit to be done
@@ -374,7 +375,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                                 else:
                                     print('Single fit errors too large and double fitting possible: Doing a double fit')
                                     doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
-                                        ktp_dct, fit_type='double', fit_method='dsarrfit',
+                                        ktp_dct, mess_path, fit_type='double', fit_method='dsarrfit',
                                         t_ref=1.0, a_conv_factor=a_conv_factor)
                                     chemkin_str += chemkin_io.writer.reaction.plog(
                                         reaction, doub_rate_params, doub_errs)

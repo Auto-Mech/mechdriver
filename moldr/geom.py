@@ -270,27 +270,10 @@ def run_check_imaginary(
             prog = inf_obj.prog
             hess = elstruct.reader.hessian(prog, out_str)
 
-            print('hess test', hess)
             if hess:
                 imag = False
-                #if automol.geom.is_linear(geo):
-                    #print('entering projrot linear:')
-                    #proj_freqs = elstruct.util.harmonic_frequencies(geo, hess, project=True)
-                    #freqs = elstruct.util.harmonic_frequencies(geo, hess, project=False)
-                    #print('Freqs test in check_imag:', proj_freqs, freqs)
-                    # proj_freqs doesn't work correctly right now - replace with freqs
-                    # if min(proj_freqs) < -100:
-                    #if min(freqs) < -100:
-                    #    imag = True
-                #else:
-                print('entering projrot nonlinear:')
-                print('geo:', geo)
-                print('hess:', hess)
-                print('thy_level:', thy_level)
-                print('projrot_script_str:', projrot_script_str)
                 freqs, imag_freq = projrot_frequencies(
                     geo, hess, thy_level, thy_run_fs, projrot_script_str)
-                print('Freqs test in check_imag:', freqs)
                 if imag_freq:
                     imag = True
 
@@ -371,19 +354,16 @@ def projrot_frequencies(geo, hess, thy_level, thy_run_fs, projrot_script_str='RP
     """ Get the projected frequencies from projrot code
     """
     # Write the string for the ProjRot input
-    print('inside projrot:')
     thy_run_fs.leaf.create(thy_level[1:4])
     thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
 
     coord_proj = 'cartesian'
     grad = ''
     rotors_str = ''
-    print('before projrot_inp_str:')
     projrot_inp_str = projrot_io.writer.rpht_input(
         geo, grad, hess, rotors_str=rotors_str,
         coord_proj=coord_proj)
 
-    print('after projrot_inp_str:')
     bld_locs = ['PROJROT', 0]
     bld_run_fs = autofile.fs.build(thy_run_path)
     bld_run_fs.leaf.create(bld_locs)

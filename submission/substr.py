@@ -9,7 +9,7 @@ PROJROT = ("#!/usr/bin/env bash\n"
 MESSPF = ("#!/usr/bin/env bash\n"
           "messpf pf.inp pf.out >> stdout.log &> stderr.log")
 MESSRATE = ("#!/usr/bin/env bash\n"
-            "mess rate.inp rate.out >> stdout.log &> stderr.log")
+            "mess mess.inp rate.out >> stdout.log &> stderr.log")
 
 # VaReCoF
 VARECOF = ("#!/usr/bin/env bash\n"
