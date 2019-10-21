@@ -395,7 +395,7 @@ def _run_2d_scan(
                     guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
 
-def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=True):
+def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=False):
     """ save the scans that have been run so far
     """
     if not scn_run_fs.branch.exists([coo_names]):

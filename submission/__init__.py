@@ -1,8 +1,8 @@
 """ Library of submission strings
 """
 
-from submit import substr
-from submit import read_dat
+from submission import substr
+from submission import read_dat
 
 
 __all__ = [

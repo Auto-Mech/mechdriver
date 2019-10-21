@@ -360,7 +360,7 @@ def int_sym_num_from_sampling(
                         for idx_j, geo_sim_j in enumerate(geo_sim):
                             if idx_j < idx_i:
                                 if automol.geom.almost_equal_dist_mat(
-                                        new_geo, geo_sim_j, thresh=1e-1):
+                                        new_geo, geo_sim_j, thresh=3e-1):
                                     if saddle:
                                         new_geom = False
                                         break
@@ -379,8 +379,8 @@ def int_sym_num_from_sampling(
 def symmetry_factor(
         geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=(), brk_bnd_key=(),
         form_coords=(), tors_names=()):
-    """ obtain overall symmetry number for a geometry as a product
-        of the external and internal symmetry numbers
+    """ obtain overall symmetry factor for a geometry as a product
+        of the external symmetry factor and the internal symmetry number
     """
     # Note: ignoring for saddle points the possibility that two configurations
     # differ only in their torsional values.
@@ -427,7 +427,7 @@ def is_unique_stereo_dist_mat_energy(geo, ene, geo_list, ene_list):
 def are_torsions_same(geo, geoi):
     """ compare all torsional angle values
     """
-    dtol = 0.03
+    dtol = 0.09
     same_dihed = True
     zma = automol.geom.zmatrix(geo)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
@@ -436,6 +436,7 @@ def are_torsions_same(geo, geoi):
     for idx, tors_name in enumerate(tors_names):
         val = automol.zmatrix.values(zma)[tors_name]
         vali = automol.zmatrix.values(zmai)[tors_namesi[idx]]
+        print('tors test:', val, vali, val-vali)
         if abs(val - vali) > dtol:
             same_dihed = False
     return same_dihed
@@ -450,13 +451,16 @@ def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list, saddle):
     for idx, geoi in enumerate(geo_list):
         enei = ene_list[idx]
         # check energy
+        print('tors_dist_mat_energy test:', enei, ene, ene-enei)
         if abs(ene-enei) < etol:
             # check distance matrix
             if automol.geom.almost_equal_dist_mat(
-                    geo, geoi, thresh=1e-1):
+                    geo, geoi, thresh=3e-1):
+                print('unique dist_mat test:', 'False')
                 # check dihedrals
                 if saddle:
                     unique = False
                 elif are_torsions_same(geo, geoi):
+                    print('unique tors test:', 'False')
                     unique = False
     return unique

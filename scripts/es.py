@@ -147,6 +147,7 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs, spc_info, overwri
     """
     # fs[3] = fs[11]
     _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
+    print('tsk test in ts_geometry_generation:', tsk)
     params = {'spc_info': spc_info,
               'thy_level': thy_level,
               'script_str': opt_script_str,
@@ -549,7 +550,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         babs1 = automol.zmatrix.get_babs1(new_zma, dist_name)
         aabs1 = babs1.replace('D', 'A')
         new_zma = automol.zmatrix.set_values(
-            new_zma, {dist_name: 2.2, aabs1: 180. * phycon.DEG2RAD})
+            new_zma, {dist_name: 2.2, aabs1: 170. * phycon.DEG2RAD})
         prd_zmas = [prd_zmas[0], new_zma]
 
     typ = None
@@ -731,21 +732,22 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
     elif 'hydrogen migration' in typ:
 
-        interval = 0.2*phycon.ANG2BOHR
-        rmin = 1.4 * phycon.ANG2BOHR
-        rmax = 2.8 * phycon.ANG2BOHR
+        interval = 0.3*phycon.ANG2BOHR
+        # get rmax from ts_zma
+        rmax = automol.zmatrix.values(ts_zma)[dist_name]
+        rmin1 = 2.*phycon.ANG2BOHR
+        rmin2 = 1.3*phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
-            rmax = bnd_len_dct[bnd_len_key]
-            rmin1 = 2.*phycon.ANG2BOHR
-            rmin2 = 1.1*phycon.ANG2BOHR
-            if rmax > rmin:
-                npoints = (rmax-rmin)/interval
-                grid1 = numpy.linspace(rmax, rmin, npoints)
-            else:
-                grid1 = []
-            grid2 = numpy.linspace(rmin1, rmin2, 9)
-            grid = numpy.concatenate((grid1, grid2), axis=None)
-            update_guess = True
+            bnd_len = bnd_len_dct[bnd_len_key]
+            rmin2 = bnd_len + 0.1 * phycon.ANG2BOHR
+        if rmax > rmin1:
+            npoints = (rmax-rmin1)/interval
+            grid1 = numpy.linspace(rmax, rmin1, npoints)
+        else:
+            grid1 = []
+        grid2 = numpy.linspace(rmin1, rmin2, 9)
+        grid = numpy.concatenate((grid1, grid2), axis=None)
+        update_guess = True
 
     elif 'elimination' in typ:
 
@@ -857,7 +859,7 @@ def find_ts(
 
     dist_name = dist_info[0]
     update_guess = dist_info[2]
-    break_name = dist_info[3]
+    brk_name = dist_info[3]
 
     # Check if TS already is found, and determine if it fits original guess
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
@@ -870,9 +872,9 @@ def find_ts(
         if automol.zmatrix.names(zma) == automol.zmatrix.names(ts_zma):
             if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1, True):
                 if 'babs1' in automol.zmatrix.names(ts_zma):
-                    babs1 = 180. * phycon.DEG2RAD
+                    babs1 = 170. * phycon.DEG2RAD
                     if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
-                        babs1 = 90. * phycon.DEG2RAD
+                        babs1 = 85. * phycon.DEG2RAD
                     ts_zma = automol.zmatrix.set_value(
                         ts_zma, {'babs1': babs1})
                     ts_dct['original_zma'] = ts_zma
@@ -891,9 +893,9 @@ def find_ts(
                 if automol.zmatrix.almost_equal(zma, bkp_ts_zma, 4e-1, True):
                     is_bkp = True
                 elif 'babs1' in automol.zmatrix.names(bkp_ts_zma):
-                    babs1 = 180. * phycon.DEG2RAD
+                    babs1 = 170. * phycon.DEG2RAD
                     if automol.zmatrix.values(bkp_ts_zma)['babs1'] == babs1:
-                        babs1 = 90. * phycon.DEG2RAD
+                        babs1 = 85. * phycon.DEG2RAD
                     bkp_ts_zma = automol.zmatrix.set_value(bkp_ts_zma, {'babs1': babs1})
                     if not automol.zmatrix.almost_equal(zma, bkp_ts_zma, 4e-1):
                         is_bkp = True
@@ -1053,8 +1055,8 @@ def find_ts(
         else:
             if 'elimination' in typ:
                 grid1, grid2 = grid
-                grid_dct = {dist_name: grid1, break_name: grid2}
-            else:    
+                grid_dct = {dist_name: grid1, brk_name: grid2}
+            else:
                 grid_dct = {dist_name: grid}
             moldr.scan.run_scan(
                 zma=ts_zma,
@@ -1064,7 +1066,7 @@ def find_ts(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
                 script_str=opt_script_str,
-                saddle=True,
+                saddle=False,
                 overwrite=overwrite,
                 update_guess=update_guess,
                 reverse_sweep=False,
@@ -1075,7 +1077,7 @@ def find_ts(
                 moldr.scan.save_scan(
                     scn_run_fs=scn_run_fs,
                     scn_save_fs=scn_save_fs,
-                    coo_names=[dist_name, break_name],
+                    coo_names=[dist_name, brk_name],
                     )
             else:    
                 moldr.scan.save_scan(
@@ -1091,7 +1093,7 @@ def find_ts(
                 for grid_val_j in grid2:
                     locs_list = []
                     for grid_val_i in grid1:
-                        locs_list.append([[dist_name, break_name], [grid_val_i, grid_val_j]])
+                        locs_list.append([[dist_name, brk_name], [grid_val_i, grid_val_j]])
                     print('locs_lst', locs_list)    
                     enes = []
                     locs_lst = []
@@ -1123,8 +1125,8 @@ def find_ts(
                         locs = max_locs[idx_j]
                 max_locs = locs
                 max_ene = min_ene
-                print('min max loc', max_ene, max_locs)    
-                print('min max loc', scn_save_fs.leaf.path(max_locs))    
+                print('min max loc', max_ene, max_locs)
+                print('min max loc', scn_save_fs.leaf.path(max_locs))
                 max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
             else:
                 locs_list = []
@@ -1137,8 +1139,14 @@ def find_ts(
                         enes.append(scn_save_fs.leaf.file.energy.read(locs))
                         locs_lst.append(locs)
                 max_ene = max(enes)
-                max_locs = locs_lst[enes.index(max(enes))]
-                max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
+                max_idx = enes.index(max(enes))
+                if 'migration' in typ:
+                    max_grid_val = grid[max_idx]
+                    max_zma = automol.zmatrix.set_values(
+                        ts_zma, {dist_name: max_grid_val})
+                else:
+                    max_locs = locs_lst[max_idx]
+                    max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
                 print('enes test in vtst:', enes)
 
             print('geometry for maximum along scan:', max_zma)
@@ -1198,9 +1206,9 @@ def find_ts(
                     save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
                     attempt=attempt)
             elif ('addition ' in typ or 'abstraction' in typ) and attempt < 3:
-                babs1 = 180. * phycon.DEG2RAD
+                babs1 = 170. * phycon.DEG2RAD
                 if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
-                    babs1 = 90. * phycon.DEG2RAD
+                    babs1 = 85. * phycon.DEG2RAD
                 print('TS find failed. Attempting to find with new angle of attack: {:.1f}'.format(babs1))
                 ts_zma = automol.zmatrix.set_value(ts_zma, {'babs1': babs1})
                 ts_dct['original_zma'] = ts_zma
