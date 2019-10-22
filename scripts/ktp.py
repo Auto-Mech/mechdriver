@@ -420,7 +420,8 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
         filtered_temps, filtered_ks = ratefit.fit.util.get_valid_tk(
             mess_temps, calc_ks)
         if filtered_ks.size > 0:
-            valid_calc_tk_dct[pressure] = [filtered_temps, filtered_ks]
+            valid_calc_tk_dct[pressure] = numpy.concatenate(
+                (filtered_temps, filtered_ks))
 
     # Filter the ktp dictionary by assessing the presure dependence
     rxn_is_pdependent = ratefit.err.assess_pressure_dependence(
@@ -433,7 +434,6 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
     else:
         # Set dct to have single set of k(T, P) vals: P is desired pressure
         ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
-        # premap = no_pdep_pval
 
     return ktp_dct
 
@@ -450,17 +450,16 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
     assert fit_type in ('single', 'double')
     assert fit_method == 'dsarrfit'
 
+
     # Dictionaries to store info; indexed by pressure (given in fit_ps)
     fit_param_dct = {}
-    fit_k_dct = {}
-    fit_err_dct = {}
 
     # Calculate the fitting parameters from the filtered T,k lists
-    for pressure, tk_lsts in ktp_dct.items():
+    for pressure, tk_arr in ktp_dct.items():
 
         # Set the temperatures and rate constants
-        temps = numpy.array(tk_lsts[0])
-        rate_constants = numpy.array(tk_lsts[1])
+        temps = tk_arr[0]
+        rate_constants = tk_arr[1]
 
         # Fit rate constants using desired Arrhenius fit
         if fit_type == 'single':
@@ -475,12 +474,28 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
         # Store the fitting parameters in a dictionary
         fit_param_dct[pressure] = fit_params
 
+    # Check if the desired fits were successful at each pressure
+    fit_success = all(params for params in fit_param_dct.values())
+
+    return fit_param_dct, fit_success
+
+
+def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
+                       t_ref=1.0, a_conv_factor=1.0):
+    """ Determine the errors in the rate constants that arise
+        from the Arrhenius fitting procedure
+    """
+
+    fit_k_dct = {}
+    fit_err_dct = {}
+
+    assert fit_type in ('single', 'double')
+
     # Calculate fitted rate constants using the fitted parameters
     for pressure, params in fit_param_dct.items():
 
         # Set the temperatures
-        # temps = valid_calc_tk_dct[pressure][0]
-        temps = numpy.array(ktp_dct[pressure][0])
+        temps = ktp_dct[pressure][0]
 
         # Calculate fitted rate constants, based on fit type
         if fit_type == 'single':
@@ -509,14 +524,7 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
         # Store in a dictionary
         fit_err_dct[pressure] = [mean_avg_err, max_avg_err]
 
-    # If no high-pressure is found in dct, add fake fitting parameters
-    if 'high' not in fit_param_dct:
-        if fit_type == 'single':
-            fit_param_dct['high'] = [1.00, 0.00, 0.00]
-        elif fit_type == 'double':
-            fit_param_dct['high'] = [1.00, 0.00, 0.00, 1.00, 0.00, 0.00]
-
-    return fit_param_dct, fit_err_dct
+    return fit_err_dct
 
 
 def species_thermo(
@@ -1197,4 +1205,3 @@ def reaction_rates(
                             with open(os.path.join(mess_path, 'mess.inp'), 'w') as mess_file:
                                 mess_file.write(mess_inp_str)
                             moldr.util.run_script(rate_script_str, mess_path)
->>>>>>> update

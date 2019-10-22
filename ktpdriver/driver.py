@@ -336,7 +336,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         for lab_i, name_i in zip(labels, names):
             if 'W' not in lab_i:
                 a_conv_factor = 6.0221e23
-            if  'F' not in lab_i:
+            if 'F' not in lab_i:
                 for lab_j, name_j in zip(labels, names):
                     if 'F' not in lab_j:
                         ene = 0.
@@ -353,31 +353,56 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                                                                  pdep_tolerance=20, no_pdep_pval=1.0)
 
                                 # Fit rate constants to single Arrhenius expressions
-                                sing_rate_params, sing_errs = scripts.ktp.mod_arr_fit(
+                                sing_params_dct, sing_fit_success = scripts.ktp.mod_arr_fit(
                                     ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
                                     t_ref=1.0, a_conv_factor=a_conv_factor)
-
-                                # Assess error from single fitting and num temps to decide if dbl fit to be done
-                                sgl_fit_good = max((vals[1] for vals in sing_errs.values())) < err_thresh
-                                dbl_fit_imposs = any(len(ktp_dct[p][0]) < 6 for p in ktp_dct) 
-
+                                if sing_fit_success:
+                                    print('Successful fit to Single Arrhenius at all T, P')
+                                    print(sing_params_dct)
+                                
+                                # Assess the errors of the single Arrhenius Fit
+                                sing_fit_err_dct = scripts.ktp.assess_arr_fit_err(
+                                    sing_params_dct, ktp_dct, fit_type='single',
+                                    t_ref=1.0, a_conv_factor=a_conv_factor)
+                                
+                                # Assess if error from single fitting are within the threshold at each pressure
+                                sgl_fit_good = max((vals[1] for vals in sing_fit_err_dct.values())) < err_thresh
+                                # Assess if a double Arrhenius fit is possible
+                                dbl_fit_poss = any(len(ktp_dct[p][0]) >= 6 for p in ktp_dct)
+                                
                                 # Write chemkin string for single, or perform dbl fit and write string
+                                chemkin_str = ''
                                 if sgl_fit_good:
-                                    if not dbl_fit_imposs:
-                                        print('Single fit errors acceptable: Using single fits')
-                                    if dbl_fit_imposs:
-                                        print('Not enough temperatures for a double fit: Using single fits')
+                                    print('Single fit errors acceptable: Using single fits')
                                     chemkin_str += chemkin_io.writer.reaction.plog(
-                                        reaction, sing_rate_params, sing_errs)
-                                else:
-                                    print('Single fit errors too large and double fitting possible: Doing a double fit')
-                                    doub_rate_params, doub_errs = scripts.ktp.mod_arr_fit(
+                                        reaction, sing_params_dct, sing_fit_err_dct)
+                                elif not sgl_fit_good and dbl_fit_poss:
+                                    print('Single fit errs too large & double fit possible: Trying double fit')
+                                
+                                    # Fit rate constants to double Arrhenius expressions
+                                    doub_params_dct, doub_fit_success = scripts.ktp.mod_arr_fit(
                                         ktp_dct, mess_path, fit_type='double', fit_method='dsarrfit',
                                         t_ref=1.0, a_conv_factor=a_conv_factor)
-                                    chemkin_str += chemkin_io.writer.reaction.plog(
-                                        reaction, doub_rate_params, doub_errs)
+                                
+                                    if doub_fit_success:
+                                        print('Successful fit to Double Arrhenius at all T, P')
+                                        # Assess the errors of the single Arrhenius Fit
+                                        doub_fit_err_dct = scripts.ktp.assess_arr_fit_err(
+                                            doub_params_dct, ktp_dct, fit_type='double',
+                                            t_ref=1.0, a_conv_factor=a_conv_factor)
+                                        chemkin_str += chemkin_io.writer.reaction.plog(
+                                           reaction, doub_params_dct, doub_fit_err_dct)
+                                    else:
+                                        print('Double Arrhenius Fit failed for some reason: Using Single fits')
+                                        chemkin_str += chemkin_io.writer.reaction.plog(
+                                            reaction, sing_params_dct, sing_fit_err_dct)
+                                elif not sgl_fit_good and not dbl_fit_poss:
+                                        print('Not enough temperatures for a double fit: Using single fits')
+                                        chemkin_str += chemkin_io.writer.reaction.plog(
+                                            reaction, sing_params_dct, sing_fit_err_dct)
+                                
+                                print(chemkin_str)
 
-        print(chemkin_str)
         with open(starting_path+'/rates.ckin', 'w') as f:
             f.write(chemkin_str)
 
