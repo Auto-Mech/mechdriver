@@ -113,7 +113,6 @@ def _format_param_vals(pvals):
         # Set string in list to boolean or integer if needed
         for elm in value:
             frmtd_value.append(_set_value_type(elm.strip()))
-
     else:
         # Format values if it has singular value
         frmtd_value = _set_value_type(value)
