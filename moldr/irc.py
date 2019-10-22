@@ -2,33 +2,49 @@
 toy irc code
 """
 
+import moldr
+import autofile
+
+
 def _run_irc(
-        spc_info, thy_level, cnf_run_fs, cnf_save_fs,
-        irc_script_str, overwrite, new_grid=False, **opt_kwargs):
-    """ Run the IRC 
+        ts_info, thy_level, ts_run_fs, ts_save_fs, locs,
+        overwrite, new_grid=False, **opt_kwargs):
+    """ Run the IRC
     """
+
+    # Obtain saddle-point minimmum-energy conformer from filesystem
+    ts_run_path = ts_run_fs.leaf.path(locs)
+    # ts_save_path = ts_save_fs.leaf.path(locs)
+    geo = ts_save_fs.leaf.file.geometry.read(locs)
     
-    # Obtain saddle-point minimmum-energy conformer from filesystem or argument?
+    # Check if IRC run to desired specs
+    # If Not run the IRC calculation
+    for grid_idx, grid_val, run_prefix in zip(grid_idxs, grid_vals, run_prefixes):
+        if not scn_save_fs.leaf.file.geometry.exists([['RX'], [grid_val]]) or overwrite:
+            run_irc = True
 
-    # Set up the IRC run filesystem
-    run_fs = autofile.fs.run()
+    if run_irc:
+        # Set up the IRC run filesystem
+        run_fs = autofile.fs.run(ts_run_path)
 
-    # Run the IRC in the forward and reverse direction
+        # Run the IRC in the forward and reverse direction
+        for irc_direction in ('forward', 'reverse'):
+            moldr.driver.run_job(
+                job='irc',
+                script_str=irc_script_str,
+                run_fs=run_fs,
+                geom=zma,
+                spc_info=ts_info,
+                thy_level=ref_level,
+                overwrite=overwrite,
+                irc_direction=irc_direction,
+                **opt_kwargs,
+                )
+
+    # Read the IRC from the file system
     for irc_direction in ('forward', 'reverse'):
-        moldr.driver.run_job(
-            job='irc',
-            script_str=irc_script_str,
-            run_fs=run_fs,
-            geom=zma,
-            spc_info=ts_info,
-            thy_level=ref_level,
-            overwrite=overwrite,
-            irc_direction=irc_direction,
-            **opt_kwargs,
-            )
-
         opt_ret = moldr.driver.read_job(
-            job='irc',
+            job=elstruct.Job.IRC,
             run_fs=run_fs,
         )
 
@@ -42,7 +58,7 @@ def _run_irc(
             print(" - Saving...")
             print(" - Save path: {}".format())
 
-            dist_name = '??????'
+            dist_name = 'RX'
             for idx, coord in enumerate(coords):
                 locs = [[dist_name], [coord]]
                 # save_fs.leaf.file.energy.write(enes[idx], locs)

@@ -401,7 +401,8 @@ elif MECH_TYPE == 'json':
     CHG_DCT = {}
     MUL_DCT = {}
     SPC_DCT = {}
-    for i, spc_names_lst in enumerate(RCT_NAMES_LST):
+    TOT_LST = RCT_NAMES_LST + PRD_NAMES_LST
+    for i, spc_names_lst in enumerate(TOT_LST):
         for j, spc_name in enumerate(spc_names_lst):
             chg = 0
             if spc_name not in SPC_NAMES:
