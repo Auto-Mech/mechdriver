@@ -235,7 +235,6 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                         dist_name = dist_info[0]
                         dist_len = dist_info[1]
                         conf_dist_len = automol.zmatrix.values(zma)[dist_name]
-                        print('distance test:', dist_len, conf_dist_len)
                         if abs(conf_dist_len - dist_len) > 0.3:
                             print(" - Transition State conformer has diverged from original structure of dist {:.3f} with dist {:.3f}".format(dist_len, conf_dist_len))
                             continue
@@ -323,15 +322,12 @@ def int_sym_num_from_sampling(
     else:
         if not saddle:
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        else:
-            print('tors_names test:', tors_names, len(tors_names))
         if len(tors_names) == 0:
             int_sym_num = 1.
         else:
             ethrsh = 1.e-5
             locs_lst = cnf_save_fs.leaf.existing()
             geo_sim = [geo]
-            # geo_sim_exp = [geo]
             ene_sim = [ene]
             int_sym_num = 1.
             if locs_lst:
@@ -356,7 +352,6 @@ def int_sym_num_from_sampling(
                         frm_bnd_key, brk_bnd_key, form_coords)
                     new_geom = True
                     for new_geo in new_geos:
-                        # geo_sim_exp.append(new_geo)
                         for idx_j, geo_sim_j in enumerate(geo_sim):
                             if idx_j < idx_i:
                                 if automol.geom.almost_equal_dist_mat(
@@ -388,8 +383,6 @@ def symmetry_factor(
     ext_sym = automol.geom.external_symmetry_factor(geo)
     if not saddle:
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    else:
-        print('tors_names test:', tors_names, len(tors_names))
     if tors_names:
         int_sym = int_sym_num_from_sampling(
             geo, ene, cnf_save_fs, saddle,
@@ -398,7 +391,6 @@ def symmetry_factor(
     else:
         int_sym = 1
     sym_fac = ext_sym * int_sym
-    print('sym test:', ext_sym, int_sym)
     return sym_fac
 
 
@@ -436,8 +428,9 @@ def are_torsions_same(geo, geoi):
     for idx, tors_name in enumerate(tors_names):
         val = automol.zmatrix.values(zma)[tors_name]
         vali = automol.zmatrix.values(zmai)[tors_namesi[idx]]
-        print('tors test:', val, vali, val-vali)
-        if abs(val - vali) > dtol:
+        valip = vali+2.*numpy.pi
+        valim = vali-2.*numpy.pi
+        if abs(val - vali) > dtol and abs(val-valip) > dtol and abs(val-valim) > dtol:
             same_dihed = False
     return same_dihed
 
@@ -451,16 +444,13 @@ def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list, saddle):
     for idx, geoi in enumerate(geo_list):
         enei = ene_list[idx]
         # check energy
-        print('tors_dist_mat_energy test:', enei, ene, ene-enei)
         if abs(ene-enei) < etol:
             # check distance matrix
             if automol.geom.almost_equal_dist_mat(
                     geo, geoi, thresh=3e-1):
-                print('unique dist_mat test:', 'False')
                 # check dihedrals
                 if saddle:
                     unique = False
                 elif are_torsions_same(geo, geoi):
-                    print('unique tors test:', 'False')
                     unique = False
     return unique
