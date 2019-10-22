@@ -107,7 +107,6 @@ def species_block(
         brk_bnd_key = []
     if 'sym' in spc_dct_i:
         sym_factor = spc_dct_i['sym']
-        print('sym_factor from spc_dct_i:', sym_factor)
     else:
         if sym_model == 'SAMPLING':
             if not sym_min_cnf_locs:
@@ -117,19 +116,15 @@ def species_block(
             sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
             if dist_names:
                 zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
-                print('form_coords test:', zma, dist_names)
                 form_coords = list(automol.zmatrix.bond_idxs(zma, dist_names[0]))
                 form_coords.extend(list(dist_names[1]))
             sym_factor = moldr.conformer.symmetry_factor(
                 sym_geo, sym_ene, sym_cnf_save_fs, saddle, frm_bnd_key, brk_bnd_key, form_coords, tors_names)
-            # xyzs = automol.geom.coordinates(sym_geo)
-            print('sym_factor from moldr sampling:', sym_factor)
         if sym_model == '1DHR':
-            # Warning: the 1DHR based symmetry number has not yet been set up
+            print('Warning: the 1DHR based symmetry number has not yet been set up')
             sym_factor = 1
 
     imag_freq = 0.
-    print('sym_factor calculated:', sym_factor)
 
     if vib_model == 'HARM' and tors_model == 'RIGID':
         if har_min_cnf_locs is not None:
@@ -215,7 +210,6 @@ def species_block(
                         for name, linspace in zip(tors_names, tors_linspaces)]
                     tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
                         zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
-                    print('tors sym nums:', tors_sym_nums)
                     idx = 0
                     for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
                         locs_lst = []
@@ -230,7 +224,6 @@ def species_block(
                                 print('ERROR: missing grid value for torsional potential of {}'.format(spc_info[0]))
                         enes = numpy.subtract(enes, min_ene)
                         pot = list(enes*phycon.EH2KCAL)
-                        print('pot test in species_block:', pot)
                         axis = coo_dct[tors_name][1:3]
                         group = list(
                             automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=saddle, ts_bnd=ts_bnd) -
@@ -254,7 +247,6 @@ def species_block(
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
-                        print('sym_factor renorm:', sym_factor)
                         idx += 1
 
                     # Write the string for the ProjRot input

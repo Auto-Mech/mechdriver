@@ -22,8 +22,6 @@ def hindered_rotor_scans(
         geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
         val_dct = automol.zmatrix.values(zma)
-        if saddle:
-            print('frm_bnd_key test in hr scan:', frm_bnd_key)
         if not saddle:
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         if tors_names:
@@ -559,7 +557,6 @@ def infinite_separation_energy(
     print('low spin energy:', ls_mr_ene)
     # get the multi reference energy for the high spin state for the reference point on the scan
 
-    print('ts_info test:', ts_info)
     hs_info = (ts_info[0], ts_info[1], high_mul)
     orb_restr = moldr.util.orbital_restriction(hs_info, multi_info)
     multi_lvl = multi_info[0:3]
@@ -689,7 +686,7 @@ def infinite_separation_energy(
             hs_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
         else:
             print('ERROR: High spin single reference energy job fails: ',
-                'Energy is needed to evaluate infinite separation energy')
+                  'Energy is needed to evaluate infinite separation energy')
             return
 
     else:
@@ -701,7 +698,6 @@ def infinite_separation_energy(
     #for spc_info in zip(spc_1_info, spc_2_info):
     for spc_info in spc_infos:
         # set up the file systems for the reactants one by one
-        print('spc_info test', spc_info, ts_info)
         spc_run_fs = autofile.fs.species(run_prefix)
         spc_run_fs.leaf.create(spc_info)
         spc_run_path = spc_run_fs.leaf.path(spc_info)
@@ -731,10 +727,8 @@ def infinite_separation_energy(
 
         thy_run_fs = autofile.fs.theory(spc_run_path)
         thy_run_fs.leaf.create(thy_lvl[1:4])
-        thy_run_path = thy_run_fs.leaf.path(thy_lvl[1:4])
         thy_save_fs = autofile.fs.theory(spc_save_path)
         thy_save_fs.leaf.create(thy_lvl[1:4])
-        thy_save_path = thy_save_fs.leaf.path(thy_lvl[1:4])
 
         geo = ini_cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         sp_run_fs = autofile.fs.single_point(min_cnf_run_path)
@@ -790,7 +784,7 @@ def infinite_separation_energy(
 
             else:
                 print('ERROR: Single reference energy job fails for {}: '.format(spc_info[0]),
-                    'Energy is needed to evaluate infinite separation energy')
+                      'Energy is needed to evaluate infinite separation energy')
                 return
 
         else:

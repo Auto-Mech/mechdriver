@@ -50,7 +50,6 @@ def reference_geometry(
     geo = None
     try:
 #    Check to see if geometry should be obtained from dictionary
-        # print('inside try:')
         spc_info = [spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul']]
         if 'input_geom' in ini_thy_level:
             geom_obj = spc_dct_i['geo_obj']
@@ -60,40 +59,30 @@ def reference_geometry(
         else:
         # Check to see if geo already exists at running_theory
             if thy_save_fs.leaf.file.geometry.exists(thy_level[1:4]):
-                # print('geo exists in file system:')
                 thy_path = thy_save_fs.leaf.path(thy_level[1:4])
                 print('getting reference geometry from {}'.format(thy_path))
                 geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
             if not geo:
-                # print('no geo exists:')
                 if ini_thy_save_fs:
-                    # print('ini_thy_save_fs exists:')
                     if ini_thy_save_fs.leaf.file.geometry.exists(ini_thy_level[1:4]):
-                        # print('ini path test:', ini_thy_save_fs.leaf.path())
                         # If not, Compute geo at running_theory, using geo from
                         # initial_level as the starting point
                         # or from inchi is no initial level geometry
                         thy_path = ini_thy_save_fs.leaf.path(ini_thy_level[1:4])
-                        # print('getting reference geometry from {}'.format(thy_path))
                         geo_init = ini_thy_save_fs.leaf.file.geometry.read(ini_thy_level[1:4])
                     elif 'geo_obj' in spc_dct_i:
-                        # print('geo_obj test:', spc_dct_i, spc_dct_i[geo_obj]) 
                         geo_init = spc_dct_i['geo_obj']
                         print('getting geometry from geom dictionary')
                     else:
-                        # print('final else for ini_thy_save_fs')
                         print('getting reference geometry from inchi', spc_info[0])
                         geo_init = automol.inchi.geometry(spc_info[0])
                         print('got reference geometry from inchi', geo_init)
                         print('getting reference geometry from inchi')
                 elif 'geo_obj' in spc_dct_i:
-                    # print('geo_obj exists:')
                     geo_init = spc_dct_i['geo_obj']
                     print('getting geometry from geom dictionary')
                 else:
-                    # print('getting reference geometry from inchi', spc_info[0])
                     geo_init = automol.inchi.geometry(spc_info[0])
-                    # print('got reference geometry from inchi', geo_init)
                     print('getting reference geometry from inchi')
         # Optimize from initial geometry to get reference geometry
         if not geo:
@@ -264,7 +253,6 @@ def run_check_imaginary(
             **kwargs,
             )
         ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
-        # print('hessian test in check_imag:', ret)
         if ret:
             inf_obj, _, out_str = ret
             prog = inf_obj.prog
