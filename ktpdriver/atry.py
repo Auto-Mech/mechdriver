@@ -4,6 +4,14 @@
 import chemkin_io
 import scripts
 
+
+PAIRS2 = [
+    [700, 2287.02],
+    [900, 193348],
+    [1000, 955781],
+    [1100, 3.60E+06]
+]
+
 PAIRS = [
     [600, 93.5678],
     [700, 2287.02],
@@ -34,12 +42,12 @@ PAIRS = [
 
 MESS_PATH = '.'
 REACTION = 'CH3+H=CH4'
-ERR_THRESH = 2
+ERR_THRESH = 1e50
 
 KTP_DCT = {
-#     1:  [[pair[0] for pair in PAIRS], [pair[1] for pair in PAIRS]],
-#     10:  [[pair[0] for pair in PAIRS], [pair[1] for pair in PAIRS]],
-#     100:  [[pair[0] for pair in PAIRS], [pair[1] for pair in PAIRS]],
+     1:  [[pair[0] for pair in PAIRS], [pair[1] for pair in PAIRS]],
+     10:  [[pair[0] for pair in PAIRS2], [pair[1] for pair in PAIRS2]],
+     100:  [[pair[0] for pair in PAIRS], [pair[1] for pair in PAIRS]],
     'high':  [[pair[0] for pair in PAIRS], [pair[1] for pair in PAIRS]],
 }
 
