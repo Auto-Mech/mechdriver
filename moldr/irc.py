@@ -17,7 +17,7 @@ def _run_irc(
     # ts_save_path = ts_save_fs.leaf.path(locs)
     geo = ts_save_fs.leaf.file.geometry.read(locs)
     
-    # Check if IRC run to desired specs  
+    # Check if IRC run to desired specs
     # If Not run the IRC calculation
     for grid_idx, grid_val, run_prefix in zip(grid_idxs, grid_vals, run_prefixes):
         if not scn_save_fs.leaf.file.geometry.exists([['RX'], [grid_val]]) or overwrite:
