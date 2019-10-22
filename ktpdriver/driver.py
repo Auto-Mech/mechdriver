@@ -359,10 +359,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
 
                                 # Assess error from single fitting and num temps to decide if dbl fit to be done
                                 sgl_fit_good = max((vals[1] for vals in sing_errs.values())) < err_thresh
-                                dbl_fit_imposs = any(len(ktp_dct[p]) < 6 for p in ktp_dct) 
-
-                                if dbl_fit_imposs:
-                                    print('Warning not enough temperatures for a double fit')
+                                dbl_fit_imposs = any(len(ktp_dct[p][0]) < 6 for p in ktp_dct) 
 
                                 # Write chemkin string for single, or perform dbl fit and write string
                                 if sgl_fit_good:
