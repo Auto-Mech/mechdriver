@@ -19,12 +19,12 @@ def run_qchem_par(prog, method):
         kwargs = {
             'memory': 20,
             'machine_options': ['%NProcShared=10'],
-            'gen_lines': ['# int=ultrafine'],
+            'gen_lines': {1: '# int=ultrafine'},
         }
         opt_kwargs = {
             'memory': 20,
             'machine_options': ['%NProcShared=10'],
-            'gen_lines': ['# int=ultrafine'],
+            'gen_lines': {1: '# int=ultrafine'},
             'feedback': True,
             # 'job_options': ['verytight'],
             # 'job_options': ['verytight'],

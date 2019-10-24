@@ -218,7 +218,7 @@ def run_multiref_rscan(
 
     opt_kwargs['casscf_options'] = cas_opt
     opt_kwargs['mol_options'] = ['nosym']
-    opt_kwargs['gen_lines'] = guess_lines
+    opt_kwargs['gen_lines'] = {1: guess_lines}
 
     coo_names = []
     grid1_vals = []
@@ -503,7 +503,7 @@ def infinite_separation_energy(
 
     mr_kwargs['casscf_options'] = cas_opt
     mr_kwargs['mol_options'] = ['nosym']
-    mr_kwargs['gen_lines'] = guess_lines
+    mr_kwargs['gen_lines'] = {1: guess_lines}
 
     ret = moldr.driver.read_job(
         job='energy',
@@ -577,7 +577,7 @@ def infinite_separation_energy(
 
     mr_kwargs['casscf_options'] = cas_opt
     mr_kwargs['mol_options'] = ['nosym']
-    mr_kwargs['gen_lines'] = guess_lines
+    mr_kwargs['gen_lines'] = {1: guess_lines}
 
     ret = moldr.driver.read_job(
         job='energy',
