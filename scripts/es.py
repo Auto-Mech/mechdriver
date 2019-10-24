@@ -717,8 +717,8 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
     elif 'radical radical addition' in typ:
         rstart = 2.4 * phycon.ANG2BOHR
-        rend1 = 3.0 * phycon.ANG2BOHR
-        rend2 = 1.8 * phycon.ANG2BOHR
+        rend1 = 1.8 * phycon.ANG2BOHR
+        rend2 = 3.0 * phycon.ANG2BOHR
         grid1 = numpy.linspace(rstart, rend1, npoints1)
         grid2 = numpy.linspace(rstart, rend2, npoints2)
         grid2 = numpy.delete(grid2, 0)
@@ -807,7 +807,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
     elif 'radical radical' in typ:
         grid = None
-        update_guess = False
+        update_guess = True
 
     if typ:
         ts_class_data = [
@@ -1012,8 +1012,8 @@ def find_ts(
                       # Write the *.tml input string
                 memory = 4.0
                 basis = 'cc-pvdz'
-                num_act_elc = 2
-                num_act_orb = 2
+                num_act_elc = high_mul
+                num_act_orb = num_act_elc
 
                 ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
 

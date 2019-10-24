@@ -424,16 +424,18 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
                 (filtered_temps, filtered_ks))
 
     # Filter the ktp dictionary by assessing the presure dependence
-    rxn_is_pdependent = ratefit.err.assess_pressure_dependence(
-        valid_calc_tk_dct, assess_pdep_temps,
-        tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
-
-    if rxn_is_pdependent:
-        # Set dct to fit as copy of dct to do PLOG fits at all pressures
-        ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+    if list(valid_calc_tk_dct.keys()) == ['high']:
+        ktp_dct['high'] = valid_calc_tk_dct['high']
     else:
-        # Set dct to have single set of k(T, P) vals: P is desired pressure
-        ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
+        rxn_is_pdependent = ratefit.err.assess_pressure_dependence(
+            valid_calc_tk_dct, assess_pdep_temps,
+            tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
+        if rxn_is_pdependent:
+            # Set dct to fit as copy of dct to do PLOG fits at all pressures
+            ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+        else:
+            # Set dct to have single set of k(T, P) vals: P is desired pressure
+            ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
 
     return ktp_dct
 

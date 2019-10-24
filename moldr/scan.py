@@ -207,8 +207,8 @@ def run_multiref_rscan(
 
     _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(prog, method)
 
-    num_act_elc = 2
-    num_act_orb = 2
+    num_act_elc = high_mul - 1
+    num_act_orb = num_act_elc
 
     ref_zma = automol.zmatrix.set_values(zma, {coo_names[0]: grid_vals[0][0]})
     cas_opt, _ = moldr.ts.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
@@ -493,8 +493,8 @@ def infinite_separation_energy(
 
     mr_script_str, _, mr_kwargs, _ = moldr.util.run_qchem_par(prog, method)
 
-    num_act_elc = 2
-    num_act_orb = 2
+    num_act_elc = high_mul
+    num_act_orb = num_act_elc
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
 
     cas_opt, _ = moldr.ts.cas_options(ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
@@ -631,6 +631,7 @@ def infinite_separation_energy(
 
     # get the single reference energy for the high spin state for the reference point on the scan
     # file system for high spin single ireference calculation
+    thy_info = ['molpro2015', 'ccsd(t)-f12', 'cc-pvdz-f12', 'RR']
     orb_restr = moldr.util.orbital_restriction(hs_info, thy_info)
     thy_lvl = thy_info[0:3]
     thy_lvl.append(orb_restr)
