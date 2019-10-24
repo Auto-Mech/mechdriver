@@ -547,7 +547,7 @@ if PARAMS.RUN_RATES:
         PES_PRD_NAMES_LST = PES_LST[PES]['PRD_NAMES_LST']
         for chn_idx, _ in enumerate(PES_RXN_NAME_LST):
             print('channel {}: {} = {}'.format(
-                chn_idx, ' + '.join(PES_RCT_NAMES_LST[chn_idx]),
+                chn_idx+1, ' + '.join(PES_RCT_NAMES_LST[chn_idx]),
                 ' + '.join(PES_PRD_NAMES_LST[chn_idx])))
 
     if isinstance(PARAMS.PESNUMS, str):
@@ -670,7 +670,8 @@ if PARAMS.RUN_RATES:
                     # run ktp for a given PES
                     ktpdriver.driver.run(
                         PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
-                        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save', options=PARAMS.OPTIONS_RATE)
+                        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save',
+                        ene_coeff=PARAMS.ENE_COEFF, options=PARAMS.OPTIONS_RATE)
                         #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 
 # f. Partition function parameters determined internally

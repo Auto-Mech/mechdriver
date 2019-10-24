@@ -13,6 +13,7 @@ from submission import substr
 
 # TEMPS = [300., 500., 750., 1000., 1250., 1500., 1750., 2000.]
 TEMPS = [500., 600., 700., 800., 900., 1000., 1100., 1200., 1300., 1400., 1500., 1600., 1700., 1800., 1900., 2000.]
+ASSESS_PDEP_TEMPS = [500., 1000.0]
 # TEMPS = [500., 750., 1000., 1250., 1500., 1750., 2000.]
 PRESS = [0.1, 1., 10., 100.]
 EXP_FACTOR = 150.0
@@ -124,7 +125,6 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     spc_dct[ts]['mul'], low_mul, high_mul,
                     rct_cnf_save_fs)
                 ret1, ret2 = ret
-                print('ret:', ret)
                 if ret1:
                     rxn_class, ts_zma, dist_name, brk_name, grid, frm_bnd_key, brk_bnd_key, tors_names, update_guess = ret1
                     spc_dct[ts]['class'] = rxn_class
@@ -142,7 +142,6 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                 else:
                     spc_dct[ts]['class'] = None
                     spc_dct[ts]['bkp_data'] = None
-                print('frm_bnd_key test in ktpdriver:', spc_dct[ts]['frm_bnd_key'])
 
         print('End transition state prep\n')
 
@@ -246,6 +245,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     print('skipping rate for radical radical reaction: {}'.format(spc))
                     continue
                 ts_queue.append(spc)
+        print('getting ready for zpe:')
         for spc in spc_queue + ts_queue:
             spc_info = (spc_dct[spc]['ich'], spc_dct[spc]['chg'], spc_dct[spc]['mul'])
             if 'ts_' in spc:
@@ -331,7 +331,6 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         labels = idx_dct.values()
         names = idx_dct.keys()
         err_thresh = 15.
-        assess_pdep_temps = [1000.0]
         a_conv_factor = 1.
         for lab_i, name_i in zip(labels, names):
             if 'W' not in lab_i:
@@ -349,7 +348,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                                 reaction = name_i + '=' + name_j
 
                                 # Read the rate constants out of the mess outputs
-                                ktp_dct = scripts.ktp.read_rates(lab_i, lab_j, mess_path, assess_pdep_temps,
+                                ktp_dct = scripts.ktp.read_rates(lab_i, lab_j, mess_path, ASSESS_PDEP_TEMPS,
                                                                  pdep_tolerance=20, no_pdep_pval=1.0)
 
                                 # Fit rate constants to single Arrhenius expressions

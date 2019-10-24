@@ -225,9 +225,24 @@ def species_block(
                         enes = numpy.subtract(enes, min_ene)
                         pot = list(enes*phycon.EH2KCAL)
                         axis = coo_dct[tors_name][1:3]
+
+                        atm_key = axis[1]
+                        if ts_bnd:
+                            for atm in axis:
+                                if atm in ts_bnd:
+                                    atm_key = atm
+                                    break
                         group = list(
-                            automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=saddle, ts_bnd=ts_bnd) -
+                            automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
                             set(axis))
+                        if not group:
+                            for atm in axis:
+                                if atm != atm_key:
+                                    atm_key = atm
+                            group = list(
+                                automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
+                                set(axis))
+
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
 
@@ -956,7 +971,6 @@ def get_zero_point_energy(
             tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
                 zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
             for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
-                print('tors test:', tors_name, tors_grid, sym_num)
                 locs_lst = []
                 enes = []
                 for grid_val in tors_grid:
@@ -969,11 +983,23 @@ def get_zero_point_energy(
                         print('ERROR: missing grid value for torionsal potential of {}'.format(spc_info[0]))
                 enes = numpy.subtract(enes, min_ene)
                 pot = list(enes*phycon.EH2KCAL)
-                print('pot test in zero point energy:', pot)
                 axis = coo_dct[tors_name][1:3]
+                atm_key = axis[1]
+                if ts_bnd:
+                    for atm in axis:
+                        if atm in ts_bnd:
+                            atm_key = atm
+                            break
                 group = list(
-                    automol.graph.branch_atom_keys(gra, axis[1], axis, saddle=saddle, ts_bnd=ts_bnd) -
+                    automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
                     set(axis))
+                if not group:
+                    for atm in axis:
+                        if atm != atm_key:
+                            atm_key = atm
+                    group = list(
+                        automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
+                        set(axis))
                 group = list(numpy.add(group, 1))
                 axis = list(numpy.add(axis, 1))
 
