@@ -115,8 +115,6 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                 spc_save_fs.leaf.create(spc_info)
                 spc_save_path = spc_save_fs.leaf.path(spc_info)
 
-            #Get params
-
             orb_restr = moldr.util.orbital_restriction(
                 spc_info, thy_info)
             thy_level = thy_info[0:3]

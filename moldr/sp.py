@@ -42,6 +42,14 @@ def run_energy(
         sp_save_fs.leaf.file.info.write(inf_obj, thy_level[1:4])
 
     if not sp_save_fs.leaf.file.energy.exists(thy_level[1:4]) or overwrite:
+
+        # Add options matrix for energy runs for molpro
+        if thy_level[0] == 'molpro2015':
+            errors, options_mat = _set_molpro_options_mat(spc_info, geo)
+        else:
+            errors = ()
+            options_mat = ()
+
         moldr.driver.run_job(
             job='energy',
             script_str=script_str,
@@ -49,6 +57,8 @@ def run_energy(
             geom=geo,
             spc_info=spc_info,
             thy_level=thy_level,
+            errors=errors,
+            options_mat=options_mat,
             overwrite=overwrite,
             **kwargs,
         )
@@ -65,10 +75,43 @@ def run_energy(
             ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
             print(" - Saving energy...")
-            print(" - Save path: {}".format(sp_save_path))
-            sp_save_fs.leaf.file.energy.write(ene, thy_level[1:4])
             sp_save_fs.leaf.file.input.write(inp_str, thy_level[1:4])
             sp_save_fs.leaf.file.info.write(inf_obj, thy_level[1:4])
+
+
+def _set_molpro_options_mat(spc_info, geo):
+    """ prepare the errors and options mat to perform successive
+        single-point energy calculations in Molpro when the RHF fails to
+        converge. This currently only works for doublets.
+    """
+
+    # Get the nelectrons, spins, and orbitals for the wf card
+    formula = automol.geom.formula(geo)
+    elec_count = automol.formula.electron_count(formula)
+    num_act_elc = 1
+    num_act_orb = 1
+    closed_orb = (elec_count - num_act_elc) // 2
+    occ_orb = closed_orb + num_act_orb
+    two_spin = spc_info[2] - 1
+
+    # Build the strings UHF and CASSCF wf card and set the errors and options
+    uhf_str = (
+        "{{uhf,maxit=300;wf,{0},1,{2};orbprint,3}}"
+    ).format(elec_count, two_spin)
+    cas_str = (
+        "{{casscf,maxit=40;"
+        "closed,{0};occ,{1};wf,{2},1,{3};canonical;orbprint,3}}"
+    ).format(closed_orb, occ_orb, elec_count, two_spin)
+
+    errors = [elstruct.Error.SCF_NOCONV]
+    options_mat = [
+        [{'gen_lines': {2: [uhf_str, '{rhf}']}},
+         {'gen_lines': {2: [cas_str, '{rhf}']}},
+         {'gen_lines': {2: [cas_str]}}
+         ]
+    ]
+
+    return errors, options_mat
 
 
 def run_gradient(
