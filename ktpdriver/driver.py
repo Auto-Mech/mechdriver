@@ -207,6 +207,9 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     ts_model[2] = 'SAMPLING'
                 if '1DHR' in tsk[0]:
                     ts_model[2] = '1DHR'
+            # if 'irc' in tsk[0]:
+            #    ts_model[3] = 
+            
 
         geo_thy_info = get_thy_info(es_dct, geo_lvl)
         harm_thy_info = get_thy_info(es_dct, harm_lvl)

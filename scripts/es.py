@@ -40,6 +40,13 @@ def run_vpt2(params, kwargs):
     moldr.sp.run_vpt2(**params, **kwargs)
 
 
+def run_irc(params, kwargs):
+    """ irc for geometry in given fs directory
+    """
+    print('running task {}'.format('irc'))
+    moldr.ts.run_irc(**params, **kwargs)
+
+
 def run_single_conformer(spc_info, thy_level, fs, overwrite, saddle=False, dist_info=[]):
     """ generate single optimized geometry for randomly sampled initial torsional angles
     """
@@ -1235,6 +1242,21 @@ def find_ts(
                 zma = 'failed'
                 final_dist = 0.
     return geo, zma, final_dist
+
+
+def variational_data():
+    """ Perform the calculations to do variational calculations: VTST and VRCTST
+    """
+
+    if rxn_has_sadpt:
+        if method == 'vtst':
+            run_irc()
+    else:
+        if method = 'vtst':
+            do vtst stuff
+        elif method == 'vrctst':
+            run_vrctst()
+
 
 
 def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
