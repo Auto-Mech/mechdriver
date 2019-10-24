@@ -171,7 +171,6 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs, spc_info, overwri
         params['brk_bnd_key'] = spcdic['brk_bnd_key']
         print('key test in ts_geom gen:', params['frm_bnd_key'], params['brk_bnd_key'])
 
-    print('choose function test:', tsk, fs, params, opt_kwargs)
     if tsk in choose_function:
         eval(choose_function[tsk])(fs, params, opt_kwargs)
 
@@ -473,7 +472,6 @@ def get_zmas(
     prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
     for geo in prd_geos:
         xyzs = automol.geom.coordinates(geo)
-        print('xyzs for products:', xyzs)
     if len(rct_zmas) > 2:
         rct_zmas.append(ichzma)
     if len(prd_zmas) > 2:
