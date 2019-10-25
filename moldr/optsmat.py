@@ -61,11 +61,11 @@ def _update_kwargs(kwargs_dct, opts_dct):
 
     for key, opts in opts_dct.items():
         # sanity check: make sure the options are valid
-        assert key.endswith('_options')
-        assert _is_nonstring_sequence(opts)
+        #assert key.endswith('_options')
+        #assert _is_nonstring_sequence(opts)
 
         if key in kwargs_dct:
-            assert _is_nonstring_sequence(kwargs_dct[key])
+            #assert _is_nonstring_sequence(kwargs_dct[key])
             kwargs_dct[key] = tuple(itertools.chain(kwargs_dct[key], opts))
         else:
             kwargs_dct[key] = opts
