@@ -14,6 +14,15 @@ JOB_ERROR_DCT = {
     elstruct.Job.IRC: elstruct.Error.IRC_NOCONV,
 }
 
+JOB_SUCCESS_DCT = {
+    elstruct.Job.ENERGY: elstruct.Success.SCF_CONV,
+    elstruct.Job.GRADIENT: elstruct.Success.SCF_CONV,
+    elstruct.Job.HESSIAN: elstruct.Success.SCF_CONV,
+    elstruct.Job.VPT2: elstruct.Success.SCF_CONV,
+    elstruct.Job.OPTIMIZATION: elstruct.Success.OPT_CONV,
+    elstruct.Job.IRC: elstruct.Success.IRC_CONV,
+}
+
 JOB_RUNNER_DCT = {
     elstruct.Job.ENERGY: functools.partial(
         runner.options_matrix_run, elstruct.writer.energy),
@@ -40,6 +49,7 @@ def run_job(
     """
     assert job in JOB_RUNNER_DCT
     assert job in JOB_ERROR_DCT
+    assert job in JOB_SUCCESS_DCT
 
     run_fs.leaf.create([job])
     run_path = run_fs.leaf.path([job])
@@ -147,11 +157,14 @@ def is_successful_output(out_str, job, prog):
     """ is this a successful output string?
     """
     assert job in JOB_ERROR_DCT
+    assert job in JOB_SUCCESS_DCT
     error = JOB_ERROR_DCT[job]
+    success = JOB_ERROR_DCT[job]
 
     ret = False
     if elstruct.reader.has_normal_exit_message(prog, out_str):
-        if not elstruct.reader.has_error_message(prog, error, out_str):
+        if elstruct.reader.check_convergence_messages(prog, error,
+                                                      success, out_str):
             ret = True
 
     return ret
