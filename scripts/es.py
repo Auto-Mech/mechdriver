@@ -976,6 +976,7 @@ def find_ts(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
                 coo_names=[dist_name],
+                hessian=hessian,
             )
 
             locs = [[dist_name], [grid1[0]]]
@@ -1244,19 +1245,18 @@ def find_ts(
     return geo, zma, final_dist
 
 
-def variational_data():
-    """ Perform the calculations to do variational calculations: VTST and VRCTST
-    """
-
-    if rxn_has_sadpt:
-        if method == 'vtst':
-            run_irc()
-    else:
-        if method = 'vtst':
-            do vtst stuff
-        elif method == 'vrctst':
-            run_vrctst()
-
+#def variational_data():
+#    """ Perform the calculations to do variational calculations: VTST and VRCTST
+#    """
+#
+#    if rxn_has_sadpt:
+#        if method == 'vtst':
+#            run_irc()
+#    else:
+#        if method == 'vtst':
+#            #do vtst stuff
+#        elif method == 'vrctst':
+#            run_vrctst()
 
 
 def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,

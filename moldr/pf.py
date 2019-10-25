@@ -417,13 +417,20 @@ def vtst_with_no_saddle_block(
 
     inf_locs = [[dist_name], [1000.]]
     inf_sep_ene = scn_save_fs.leaf.file.energy.read(inf_locs)
+    print('inf sep ene in vtst with no saddle:', inf_sep_ene)
+    print('grid test in vtst with no saddle:', grid)
 
+    grid[::-1].sort()
     for idx, grid_val in enumerate(grid):
+        print('idx, grid_val test:', idx, grid_val)
         locs = [[dist_name], [grid_val]]
+        print('locs:', locs)
+        print('scn save fs:', scn_save_fs.leaf.path(locs))
         if not scn_save_fs.leaf.file.geometry.exists(locs):
             continue
         else:
             geom = scn_save_fs.leaf.file.geometry.read(locs)
+            print('geom in vtst: \n', automol.geom.string(geom))
         if not scn_save_fs.leaf.file.energy.exists(locs):
             continue
         else:

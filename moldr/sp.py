@@ -67,6 +67,7 @@ def run_energy(
             job='energy',
             run_fs=run_fs,
         )
+        print('ret in molpro options_mat:', ret)
 
         if ret is not None:
             inf_obj, inp_str, out_str = ret
@@ -77,6 +78,7 @@ def run_energy(
             print(" - Saving energy...")
             sp_save_fs.leaf.file.input.write(inp_str, thy_level[1:4])
             sp_save_fs.leaf.file.info.write(inf_obj, thy_level[1:4])
+            sp_save_fs.leaf.file.energy.write(ene, thy_level[1:4])
 
 
 def _set_molpro_options_mat(spc_info, geo):
@@ -96,7 +98,7 @@ def _set_molpro_options_mat(spc_info, geo):
 
     # Build the strings UHF and CASSCF wf card and set the errors and options
     uhf_str = (
-        "{{uhf,maxit=300;wf,{0},1,{2};orbprint,3}}"
+        "{{uhf,maxit=300;wf,{0},1,{1};orbprint,3}}"
     ).format(elec_count, two_spin)
     cas_str = (
         "{{casscf,maxit=40;"
@@ -105,8 +107,8 @@ def _set_molpro_options_mat(spc_info, geo):
 
     errors = [elstruct.Error.SCF_NOCONV]
     options_mat = [
-        [{'gen_lines': {2: [uhf_str, '{rhf}']}},
-         {'gen_lines': {2: [cas_str, '{rhf}']}},
+        [{'gen_lines': {2: [uhf_str]}},
+         {'gen_lines': {2: [cas_str]}},
          {'gen_lines': {2: [cas_str]}}
          ]
     ]

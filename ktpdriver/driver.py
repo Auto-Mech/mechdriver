@@ -366,7 +366,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                                     sing_params_dct, ktp_dct, fit_type='single',
                                     t_ref=1.0, a_conv_factor=a_conv_factor)
                                 print('\nFitting Parameters and Errors from Single Fit')
-                                for pressure, params in sing_param_dct.items():
+                                for pressure, params in sing_params_dct.items():
                                     print(pressure, params)
                                 for pressure, errs in sing_fit_err_dct.items():
                                     print(pressure, errs)

@@ -19,12 +19,12 @@ def run_qchem_par(prog, method):
         kwargs = {
             'memory': 20,
             'machine_options': ['%NProcShared=10'],
-            'gen_lines': {1: '# int=ultrafine'},
+            'gen_lines': {1: ['# int=ultrafine']},
         }
         opt_kwargs = {
             'memory': 20,
             'machine_options': ['%NProcShared=10'],
-            'gen_lines': {1: '# int=ultrafine'},
+            'gen_lines': {1: ['# int=ultrafine']},
             'feedback': True,
             # 'job_options': ['verytight'],
             # 'job_options': ['verytight'],
@@ -330,7 +330,7 @@ def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
         for prd in prds:
             prd_spin_sum += (spc_dct[prd]['mul'] - 1.)/2.
             prd_muls.append(spc_dct[prd]['mul'])
-        if min(rct_muls) == 1 or nrcts == 1 and min(prd_muls) == 1 or nprds == 1:
+        if (min(rct_muls) == 1 or nrcts == 1) and (min(prd_muls) == 1 or nprds == 1):
             rad_rad = False
         ts_mul_low = min(rct_spin_sum, prd_spin_sum)
         ts_mul_low = int(round(2*ts_mul_low + 1))
