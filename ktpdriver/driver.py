@@ -209,7 +209,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     ts_model[2] = '1DHR'
             # if 'irc' in tsk[0]:
             #    ts_model[3] = 
-            
+
 
         geo_thy_info = get_thy_info(es_dct, geo_lvl)
         harm_thy_info = get_thy_info(es_dct, harm_lvl)
@@ -329,8 +329,13 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         # fit rate output to modified Arrhenius forms and print in ChemKin format
         pf_levels.append(ene_str)
         chemkin_header_str = scripts.thermo.run_ckin_header(pf_levels, ref_levels, ts_model)
-        chemkin_str = chemkin_header_str
+        chemkin_header_str += '\n'
+        chemkin_poly_str = chemkin_header_str
         starting_path = os.getcwd()
+        ckin_path = ''.join([starting_path, '/ckin'])
+        if not os.path.exists(ckin_path):
+            os.mkdir(ckin_path)
+        pes_formula_str = automol.formula._formula.string(pes_formula)
         labels = idx_dct.values()
         names = idx_dct.keys()
         err_thresh = 15.
@@ -344,15 +349,18 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                         ene = 0.
                         if lab_i != lab_j:
                             for spc in name_i.split('+'):
-                                ene += scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
+                                ene += scripts.thermo.spc_energy(
+                                    spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
                             for spc in name_j.split('+'):
-                                ene -= scripts.thermo.spc_energy(spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
+                                ene -= scripts.thermo.spc_energy(
+                                    spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
                             if ene > 0.:
                                 reaction = name_i + '=' + name_j
 
                                 # Read the rate constants out of the mess outputs
-                                ktp_dct = scripts.ktp.read_rates(lab_i, lab_j, mess_path, ASSESS_PDEP_TEMPS,
-                                                                 pdep_tolerance=20, no_pdep_pval=1.0)
+                                ktp_dct = scripts.ktp.read_rates(
+                                    lab_i, lab_j, mess_path, ASSESS_PDEP_TEMPS,
+                                    pdep_tolerance=20, no_pdep_pval=1.0)
 
                                 # Fit rate constants to single Arrhenius expressions
                                 sing_params_dct, sing_fit_success = scripts.ktp.mod_arr_fit(
@@ -370,27 +378,32 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                                     print(pressure, params)
                                 for pressure, errs in sing_fit_err_dct.items():
                                     print(pressure, errs)
-                                
-                                # Assess if error from single fitting are within the threshold at each pressure
-                                sgl_fit_good = max((vals[1] for vals in sing_fit_err_dct.values())) < err_thresh
+
+                                # Assess single fitting errors:
+                                # are they within the threshold at each pressure
+                                sgl_fit_good = max((
+                                    vals[1] for vals in sing_fit_err_dct.values())) < err_thresh
 
                                 # Assess if a double Arrhenius fit is possible
                                 dbl_fit_poss = any(len(ktp_dct[p][0]) >= 6 for p in ktp_dct)
-                                
-                                # Write chemkin string for single, or perform dbl fit and write string
+
+                                # Write chemkin string for single, or perform dbl fit
+                                # and write string
                                 chemkin_str = ''
                                 if sgl_fit_good:
                                     print('\nSingle fit errors acceptable: Using single fits')
                                     chemkin_str += chemkin_io.writer.reaction.plog(
                                         reaction, sing_params_dct, sing_fit_err_dct)
                                 elif not sgl_fit_good and dbl_fit_poss:
-                                    print('\nSingle fit errs too large & double fit possible: Trying double fit')
-                                
+                                    print('\nSingle fit errs too large & double fit possible:',
+                                          ' Trying double fit')
+
                                     # Fit rate constants to double Arrhenius expressions
                                     doub_params_dct, doub_fit_success = scripts.ktp.mod_arr_fit(
-                                        ktp_dct, mess_path, fit_type='double', fit_method='dsarrfit',
-                                        t_ref=1.0, a_conv_factor=a_conv_factor)
-                                
+                                        ktp_dct, mess_path, fit_type='double',
+                                        fit_method='dsarrfit', t_ref=1.0,
+                                        a_conv_factor=a_conv_factor)
+
                                     if doub_fit_success:
                                         print('\nSuccessful fit to Double Arrhenius at all T, P')
                                         # Assess the errors of the single Arrhenius Fit
@@ -398,20 +411,31 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                                             doub_params_dct, ktp_dct, fit_type='double',
                                             t_ref=1.0, a_conv_factor=a_conv_factor)
                                         chemkin_str += chemkin_io.writer.reaction.plog(
-                                           reaction, doub_params_dct, doub_fit_err_dct)
+                                            reaction, doub_params_dct, doub_fit_err_dct)
                                     else:
-                                        print('\nDouble Arrhenius Fit failed for some reason: Using Single fits')
+                                        print('\nDouble Arrhenius Fit failed for some reason:',
+                                              ' Using Single fits')
                                         chemkin_str += chemkin_io.writer.reaction.plog(
                                             reaction, sing_params_dct, sing_fit_err_dct)
                                 elif not sgl_fit_good and not dbl_fit_poss:
-                                        print('\nNot enough temperatures for a double fit: Using single fits')
-                                        chemkin_str += chemkin_io.writer.reaction.plog(
-                                            reaction, sing_params_dct, sing_fit_err_dct)
-                                
-                                print(chemkin_str)
+                                    print('\nNot enough temperatures for a double fit:',
+                                          ' Using single fits')
+                                    chemkin_str += chemkin_io.writer.reaction.plog(
+                                        reaction, sing_params_dct, sing_fit_err_dct)
 
-        with open(starting_path+'/rates.ckin', 'w') as f:
-            f.write(chemkin_str)
+                                chemkin_poly_str += '\n'
+                                chemkin_poly_str += chemkin_str
+                                chemkin_str = chemkin_header_str + chemkin_str
+                                print(chemkin_str)
+                                # print the results for each channel to a file
+                                pes_chn_lab = str(pes_formula_str + '_' + name_i + '_' + name_j)
+                                with open(os.path.join(ckin_path, pes_chn_lab+'.ckin'), 'w') as f:
+                                    f.write(chemkin_str)
+        # print the results for the whole PES to a file
+        with open(os.path.join(ckin_path, pes_formula_str+'.ckin'), 'w') as f:
+            f.write(chemkin_poly_str)
+        #with open(starting_path+'/rates.ckin', 'w') as f:
+            #f.write(chemkin_str)
 
 
 def get_thy_info(es_dct, key):

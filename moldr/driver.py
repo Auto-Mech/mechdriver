@@ -159,10 +159,14 @@ def is_successful_output(out_str, job, prog):
     assert job in JOB_ERROR_DCT
     assert job in JOB_SUCCESS_DCT
     error = JOB_ERROR_DCT[job]
-    success = JOB_ERROR_DCT[job]
+    success = JOB_SUCCESS_DCT[job]
 
     ret = False
+    #print('job output test:', job, prog, error, success)
     if elstruct.reader.has_normal_exit_message(prog, out_str):
+        message = elstruct.reader.check_convergence_messages(prog, error,
+                                                      success, out_str)
+        #print('message in is_successful:', message)
         if elstruct.reader.check_convergence_messages(prog, error,
                                                       success, out_str):
             ret = True
