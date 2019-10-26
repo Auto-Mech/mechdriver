@@ -658,6 +658,9 @@ def infinite_separation_energy(
 
     if not hs_save_fs.leaf.file.energy.exists(thy_lvl[1:4]) or overwrite:
         print(" - Running high spin single reference energy ...")
+
+        errors, options_mat = moldr.util.set_molpro_options_mat(hs_info, geo)
+
         moldr.driver.run_job(
             job='energy',
             script_str=sp_script_str,
@@ -665,6 +668,8 @@ def infinite_separation_energy(
             geom=geo,
             spc_info=hs_info,
             thy_level=thy_lvl,
+            errors=errors,
+            options_mat=options_mat,
             overwrite=overwrite,
             **kwargs,
         )

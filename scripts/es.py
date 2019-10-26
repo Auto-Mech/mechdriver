@@ -680,7 +680,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         ('O', 'O'): 1.48 * phycon.ANG2BOHR,
         ('C', 'N'): 1.47 * phycon.ANG2BOHR,
         ('C', 'O'): 1.43 * phycon.ANG2BOHR,
-        ('H', 'O'): 1.20 * phycon.ANG2BOHR,
+        ('H', 'O'): 0.95 * phycon.ANG2BOHR,
     }
 
     npoints = 8
@@ -691,16 +691,18 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         rmax = 2.0 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
+            npoints = 14
             rmin = bnd_len + 0.1 * phycon.ANG2BOHR
-            rmax = bnd_len + 0.5 * phycon.ANG2BOHR
+            rmax = bnd_len + 0.8 * phycon.ANG2BOHR
         bkp_grid = numpy.linspace(rmin, rmax, npoints)
         bkp_update_guess = False
     elif 'addition' in bkp_typ:
         rmin = 1.6 * phycon.ANG2BOHR
         rmax = 2.8 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
+            npoints = 14
             bnd_len = bnd_len_dct[bnd_len_key]
-            rmin = bnd_len + 0.2 * phycon.ANG2BOHR
+            rmin = bnd_len + 0.1 * phycon.ANG2BOHR
             rmax = bnd_len + 1.4 * phycon.ANG2BOHR
         bkp_grid = numpy.linspace(rmin, rmax, npoints)
         bkp_update_guess = False
@@ -709,9 +711,10 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         rmin = 1.4 * phycon.ANG2BOHR
         rmax = 2.0 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
+            npoints = 14
             bnd_len = bnd_len_dct[bnd_len_key]
             rmin = bnd_len + 0.1 * phycon.ANG2BOHR
-            rmax = bnd_len + 0.5 * phycon.ANG2BOHR
+            rmax = bnd_len + 0.8 * phycon.ANG2BOHR
         grid = numpy.linspace(rmin, rmax, npoints)
         update_guess = False
 
@@ -726,13 +729,26 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         update_guess = True
 
     elif 'addition' in typ:
+        npoints = 14
         rmin = 1.6 * phycon.ANG2BOHR
         rmax = 2.8 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
-            rmin = bnd_len + 0.2 * phycon.ANG2BOHR
-            rmax = bnd_len + 1.4 * phycon.ANG2BOHR
-        grid = numpy.linspace(rmin, rmax, npoints)
+            rmin = bnd_len + 0.1 * phycon.ANG2BOHR
+            rmax = bnd_len + 1.2 * phycon.ANG2BOHR
+        #grid = numpy.linspace(rmin, rmax, npoints)
+        gfac = 1.1
+        grid = [rmin]
+        rstp = 0.05
+        rgrid = rmin
+        for idx in range(npoints):
+            rgrid += rstp
+            if rgrid == rmax:
+                break
+            grid.append(rgrid)
+            rstp = rstp * gfac
+        grid = numpy.array(grid)
+        print('grid test:', grid)
         update_guess = False
 
     elif 'hydrogen migration' in typ:
@@ -868,12 +884,47 @@ def find_ts(
 
     # Check if TS already is found, and determine if it fits original guess
     min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
+    # added a check for the presence ts in run directory but not in save directory,
+    # in case the save had to be removed for some reason
+    # once the code is working cleanly this should not be needed
+    #if not min_cnf_locs:
+        #opt_ret = moldr.driver.read_job(
+        #    job='optimization',
+        #    run_fs=run_fs,
+        #)
+        #if opt_ret is not None:
+        #    inf_obj, _, out_str = opt_ret
+        #    prog = inf_obj.prog
+        #    method = inf_obj.method
+        #    ene = elstruct.reader.energy(prog, method, out_str)
+        #    geo = elstruct.reader.opt_geometry(prog, out_str)
+        #    zma = elstruct.reader.opt_zmatrix(prog, out_str)
+#
+#            print(" - Saving...")
+#            print(" - Save path: {}".format(ts_save_path))
+#
+#            ts_save_fs.trunk.file.energy.write(ene)
+#            ts_save_fs.trunk.file.geometry.write(geo)
+#            ts_save_fs.trunk.file.zmatrix.write(zma)
+#
+#            vals = automol.zmatrix.values(zma)
+#            final_dist = vals[dist_name]
+#            dist_info[1] = final_dist
+#            # run_single_conformer(ts_info, ref_level, fs, overwrite, saddle=True, dist_info=dist_info)
+#            moldr.conformer.save_conformers(
+#                cnf_run_fs, cnf_save_fs, saddle=True, dist_info=dist_info)
+#            min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
+#            print('min_cnf_locs test in run_save:', min_cnf_locs)
+    # end of run path checking
     if min_cnf_locs and not overwrite:
         cnf_path = cnf_save_fs.trunk.path()
         print('Found TS at {}'.format(cnf_path))
         geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
         chk_bkp = False
+        print('z-matrix test:')
+        print(automol.zmatrix.string(zma))
+        print(automol.zmatrix.string(ts_zma))
         if automol.zmatrix.names(zma) == automol.zmatrix.names(ts_zma):
             if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1, True):
                 if 'babs1' in automol.zmatrix.names(ts_zma):
@@ -884,13 +935,17 @@ def find_ts(
                         ts_zma, {'babs1': babs1})
                     ts_dct['original_zma'] = ts_zma
                     if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1):
+                        print('check true in 3:')
                         chk_bkp = True
                 else:
+                    print('check true in 2:')
                     chk_bkp = True
         else:
+            print('check true in 1:')
             chk_bkp = True
 
         is_bkp = False
+        print('bkp test:', chk_bkp, bkp_ts_class_data, is_bkp)
         if chk_bkp and bkp_ts_class_data:
             [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names,
              bkp_update_guess] = bkp_ts_class_data
