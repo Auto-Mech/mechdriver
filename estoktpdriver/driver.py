@@ -15,9 +15,11 @@ from datalibs import phycon, eleclvl, symm
 from submission import read_dat
 
 # Set path to the mechanims data files
-DATA_PATH = '/home/sjklipp/PACC/mech_test'
+# DATA_PATH = '/home/sjklipp/PACC/mech_test'
+DATA_PATH = '/lcrc/project/CMRP/pacc/automech'
 
 # Obtain DCT containing geometries to use as input
+# GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
 GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
@@ -666,12 +668,25 @@ if PARAMS.RUN_RATES:
                             #SPC_DCT[tsname]['mul'] = ts_mul_high
                             #ts_idx += 1
 
+                    # Build the list for the energy transfer section to pass to ktpdriver
+                    etrans_lst = [
+                        PARAMS.EXP_FACTOR,
+                        PARAMS.EXP_POWER,
+                        PARAMS.EXP_CUTOFF,
+                        PARAMS.EPS1,
+                        PARAMS.EPS2,
+                        PARAMS.SIG1,
+                        PARAMS.SIG2,
+                        PARAMS.MASS1
+                    ]
+
+
                     print('RUNNING WITH MESS')
                     # run ktp for a given PES
                     ktpdriver.driver.run(
                         PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
                         '/lcrc/project/PACC/run', '/lcrc/project/PACC/save',
-                        ene_coeff=PARAMS.ENE_COEFF, options=PARAMS.OPTIONS_RATE)
+                        ene_coeff=PARAMS.ENE_COEFF, options=PARAMS.OPTIONS_RATE, etrans=etrans_lst)
                         #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 
 # f. Partition function parameters determined internally

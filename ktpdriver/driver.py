@@ -16,14 +16,6 @@ TEMPS = [500., 600., 700., 800., 900., 1000., 1100., 1200., 1300., 1400., 1500.,
 ASSESS_PDEP_TEMPS = [500., 1000.0]
 # TEMPS = [500., 750., 1000., 1250., 1500., 1750., 2000.]
 PRESS = [0.1, 1., 10., 100.]
-EXP_FACTOR = 150.0
-EXP_POWER = 0.85
-EXP_CUTOFF = 15.
-EPS1 = 100.0
-EPS2 = 200.0
-SIG1 = 6.
-SIG2 = 6.
-MASS1 = 15.0
 
 KICKOFF_SIZE = 0.1
 KICKOFF_BACKWARD = False
@@ -32,7 +24,8 @@ HIND_INC = 30.
 def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         run_prefix, save_prefix, ene_coeff=[1.],
         vdw_params=[False, False, True],
-        options=[True, True, True, False]):
+        options=[True, True, True, False]
+        etrans=[150.0, 0.85, 15.0, 100.0, 200.0, 6.0, 6.0, 15.0]):
     """ main driver for generation of full set of rate constants on a single PES
     """
 
@@ -291,8 +284,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         tsname_0 = 'ts_0'
         rct_ichs = spc_dct[tsname_0]['rxn_ichs'][0]
         header_str, energy_trans_str = scripts.ktp.pf_headers(
-            rct_ichs, TEMPS, PRESS, EXP_FACTOR, EXP_POWER, EXP_CUTOFF, EPS1, EPS2,
-            SIG1, SIG2, MASS1)
+            rct_ichs, TEMPS, PRESS, *etrans)
         multi_info = ['molpro2015', 'caspt2', 'cc-pVDZ', 'RR']
 
         mess_strs = ['', '', '']
