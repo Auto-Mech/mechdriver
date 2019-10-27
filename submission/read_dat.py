@@ -51,6 +51,14 @@ PARAMS = {
         ['conf_vpt2', 'lvl_wbm', 'lvl_wbm', False],
     ],
     'OVERWRITE': False,
+    'EXP_FACTOR': 150.0,
+    'EXP_POWER': 0.85,
+    'EXP_CUTOFF': 15.,
+    'EPS1': 100.0,
+    'EPS2': 200.0,
+    'SIG1': 6.,
+    'SIG2': 6.,
+    'MASS1': 15.0
 }
 
 
