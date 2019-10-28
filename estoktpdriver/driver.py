@@ -20,6 +20,9 @@ MECHANISM_NAME = sys.argv[2]
 MECH_TYPE = sys.argv[3]
 MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
 MECH_FILE = 'mech.json'
+# Set path to the mechanims data files
+#DATA_PATH = '/home/sjklipp/PACC/mech_test'
+#DATA_PATH = '/lcrc/project/CMRP/pacc/automech'
 
 # Obtain DCT containing geometries to use as input
 GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')

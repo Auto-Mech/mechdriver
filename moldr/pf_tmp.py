@@ -271,7 +271,7 @@ def species_block(
                                 if dummy < idx:
                                    remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
-                            group, axis, sym_num, pot, remdummy=remdummy)
+                            group, axis, sym_num, pot, remdummy)
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -297,7 +297,7 @@ def species_block(
                     moldr.util.run_script(projrot_script_str, path)
 
                     freqs = []
-                    if pot:
+                    if pot > 0:
                         rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         freqs = rthrproj_freqs
@@ -720,8 +720,6 @@ def pst_block(
                 har_geo_j = har_cnf_save_fs_j.leaf.file.geometry.read(har_min_cnf_locs_j)
                 min_ene_j = har_cnf_save_fs_j.leaf.file.energy.read(har_min_cnf_locs_j)
 
-                freqs_i = []
-                freqs_j = []
                 is_atom_i = automol.geom.is_atom(har_geo_i)
                 is_atom_j = automol.geom.is_atom(har_geo_j)
                 if not is_atom_i:
@@ -742,7 +740,7 @@ def pst_block(
                 hind_rot_str = ""
                 proj_rotors_str = ""
 
-                if tors_min_cnf_locs_i is not None and not is_atom_i:
+                if tors_min_cnf_locs_i is not None:
                     if har_cnf_save_fs_i.trunk.file.info.exists():
                         inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
                         tors_ranges = inf_obj_s.tors_ranges
@@ -826,7 +824,7 @@ def pst_block(
                                 if dummy < idx:
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
-                            group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_i)
+                            group, axis, sym_num, pot, remdummy, geo_har_geo_i)
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -855,12 +853,12 @@ def pst_block(
                         rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         freqs_i = rthrproj_freqs
-                    if not freqs_i:
+                    if not freqs:
                         rtproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/RTproj_freq.dat')
                         freqs_i = rtproj_freqs
 
-                if tors_min_cnf_locs_j is not None and not is_atom_j:
+                if tors_min_cnf_locs_j is not None:
                     if har_cnf_save_fs_j.trunk.file.info.exists():
                         inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
                         tors_ranges = inf_obj_s.tors_ranges
@@ -937,7 +935,7 @@ def pst_block(
                                 if dummy < idx:
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
-                            group, axis, sym_num, pot, remdummy, geom=har_geo_j)
+                            group, axis, sym_num, pot, remdummy, geo=har_geo_j)
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -966,19 +964,13 @@ def pst_block(
                         rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         freqs_j = rthrproj_freqs
-                    if not freqs_j:
+                    if not freqs:
                         rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
                             path+'/RTproj_freq.dat')
                         freqs_j = rtproj_freqs
 
-                freqs = list(freqs_i) + list(freqs_j)
+                freqs = freqs_i + freqs_j
 
-                form_i = automol.geom.formula(har_geo_i)
-                form_j = automol.geom.formula(har_geo_j)
-                form = automol.formula.join(form_i, form_j)
-                stoich = ''
-                for key, val in form.items():
-                    stoich += key + str(val)
                 core = mess_io.writer.core_phasespace(
                     har_geo_i, har_geo_j, sym_factor, stoich, pot_prefactor=10., pot_power_exp=6)
                 spc_str = mess_io.writer.molecule(
@@ -1094,7 +1086,7 @@ def fake_species_block(
             if har_min_cnf_locs_j is not None:
                 har_geo_j = har_cnf_save_fs_j.leaf.file.geometry.read(har_min_cnf_locs_j)
 
-                freqs = [30, 50, 70, 100, 200]
+                freqs = (30, 50, 70, 100, 200)
                 ntrans = 5
                 is_atom_i = automol.geom.is_atom(har_geo_i)
                 is_linear_i = automol.geom.is_linear(har_geo_i)
@@ -1126,9 +1118,8 @@ def fake_species_block(
                         mode_start = mode_start - 1
                     freqs += freqs_j[mode_start:]
 
-                max_z = max(atom[1][2] for atom in har_geo_i)
                 har_geo = har_geo_i
-                har_geo_j = automol.geom.translated(har_geo_j, [0., 0., max_z + 3.])
+                har_geo_j = automol.geom.translated(har_geo_j, [10., 10., 10.])
                 har_geo += har_geo_j
 
                 hind_rot_str = ""
@@ -1150,7 +1141,7 @@ def fake_species_block(
                 min_ene_j = har_cnf_save_fs_j.leaf.file.energy.read(har_min_cnf_locs_j)
                 har_geo_js = har_geo_j
 
-                freqs_trans = [30, 50, 70, 100, 200]
+                freqs_trans = (30, 50, 70, 100, 200)
                 ntrans = 5
                 is_atom_i = automol.geom.is_atom(har_geo_i)
                 is_linear_i = automol.geom.is_linear(har_geo_i)
@@ -1167,8 +1158,6 @@ def fake_species_block(
                 if is_atom_i and is_atom_j:
                     ntrans = 0
                 freqs_trans = freqs_trans[0:ntrans]
-                freqs_i = []
-                freqs_j = []
                 if not is_atom_i:
                     hess_i = har_cnf_save_fs_i.leaf.file.hessian.read(har_min_cnf_locs_i)
                     freqs_i = elstruct.util.harmonic_frequencies(har_geo_i, hess_i, project=False)
@@ -1192,7 +1181,7 @@ def fake_species_block(
                 hind_rot_str = ""
                 proj_rotors_str = ""
 
-                if tors_min_cnf_locs_i is not None and not is_atom_j:
+                if tors_min_cnf_locs_i is not None:
                     if har_cnf_save_fs_i.trunk.file.info.exists():
                         inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
                         tors_ranges = inf_obj_s.tors_ranges
@@ -1276,9 +1265,9 @@ def fake_species_block(
                                 if dummy < idx:
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
-                            group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_i)
+                            group, axis, sym_num, pot, remdummy)
                         proj_rotors_str += projrot_io.writer.rotors(
-                            axis, group, remdummy=remdummy)
+                            axis, group, remdummy=remdummy, geo=har_geo_i)
                         sym_factor /= sym_num
 
                     # Write the string for the ProjRot input
@@ -1305,14 +1294,14 @@ def fake_species_block(
                         rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         freqs_i = rthrproj_freqs
-                    if not freqs_i:
+                    if not freqs:
                         rtproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/RTproj_freq.dat')
                         freqs_i = rtproj_freqs
 
-                if tors_min_cnf_locs_j is not None and not is_atom_j:
+                if tors_min_cnf_locs_j is not None:
                     if har_cnf_save_fs_j.trunk.file.info.exists():
-                        inf_obj_s = har_cnf_save_fs_j.trunk.file.info.read()
+                        inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
                         tors_ranges = inf_obj_s.tors_ranges
                         tors_ranges = autofile.info.dict_(tors_ranges)
                         tors_names = list(tors_ranges.keys())
@@ -1387,9 +1376,9 @@ def fake_species_block(
                                 if dummy < idx:
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
-                            group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_js)
+                            group, axis, sym_num, pot, remdummy)
                         proj_rotors_str += projrot_io.writer.rotors(
-                            axis, group, remdummy=remdummy)
+                            axis, group, remdummy=remdummy, geo=har_geo_js)
                         sym_factor /= sym_num
 
                     # Write the string for the ProjRot input
@@ -1416,15 +1405,12 @@ def fake_species_block(
                         rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         freqs_j = rthrproj_freqs
-                    if not freqs_j:
+                    if not freqs:
                         rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
                             path+'/RTproj_freq.dat')
                         freqs_j = rtproj_freqs
 
-                print('freq_trans test:', freqs_trans)
-                print('freq_i test:', list(freqs_i))
-                print('freq_j test:', list(freqs_j))
-                freqs = freqs_trans + list(freqs_i) + list(freqs_j)
+                freqs = freqs_trans + freqs_i + freqs_j
 
                 core = mess_io.writer.core_rigidrotor(har_geo, sym_factor)
                 spc_str = mess_io.writer.molecule(
@@ -1680,7 +1666,7 @@ def get_zero_point_energy(
                             remdummy[idx] += 1
 
                 hind_rot_str += mess_io.writer.rotor_hindered(
-                    group, axis, sym_num, pot, remdummy=remdummy)
+                    group, axis, sym_num, pot, remdummy)
 
             dummy_freqs = [1000.]
             dummy_zpe = 0.0
