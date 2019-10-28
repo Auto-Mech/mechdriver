@@ -14,38 +14,32 @@ import ktpdriver
 from datalibs import phycon, eleclvl, symm
 from submission import read_dat
 
-# Set path to the mechanims data files
-# DATA_PATH = '/home/sjklipp/PACC/mech_test'
-DATA_PATH = '/lcrc/project/CMRP/pacc/automech'
-
-# Obtain DCT containing geometries to use as input
-# GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
-GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
-GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
-
 # Set mechanism and type to be read based on user input
-MECHANISM_NAME = sys.argv[1]
-MECH_TYPE = sys.argv[2]
+DATA_PATH = sys.argv[1]
+MECHANISM_NAME = sys.argv[2]
+MECH_TYPE = sys.argv[3]
 MECH_PATH = os.path.join(DATA_PATH, 'data', MECHANISM_NAME)
 MECH_FILE = 'mech.json'
+
+# Obtain DCT containing geometries to use as input
+GEOM_PATH = os.path.join(DATA_PATH, 'data', 'geoms')
+GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 
 # Read parameters that dictate job running options
 PARAMS = read_dat.params(os.path.join(MECH_PATH, 'params.dat'))
 
 # Set further parameters for what reactions and PESs to be run
 if len(sys.argv) > 3:
-    PARAMS.PESNUMS = sys.argv[3]
+    PARAMS.PESNUMS = sys.argv[4]
     if len(sys.argv) > 4:
-        PARAMS.CHANNELS = sys.argv[4]
+        PARAMS.CHANNELS = sys.argv[5]
 print('PESNUMS and PARAMS.CHANNELS:', PARAMS.PESNUMS, PARAMS.CHANNELS)
 
 # Create the AutoMech run and save directory file systems
-RUN_PREFIX = '/lcrc/project/PACC/run'
-if not os.path.exists(RUN_PREFIX):
-    os.mkdir(RUN_PREFIX)
-SAVE_PREFIX = '/lcrc/project/PACC/save'
-if not os.path.exists(SAVE_PREFIX):
-    os.mkdir(SAVE_PREFIX)
+if not os.path.exists(PARAMS.RUN_PREFIX):
+    os.mkdir(PARAMS.RUN_PREFIX)
+if not os.path.exists(PARAMS.SAVE_PREFIX):
+    os.mkdir(PARAMS.SAVE_PREFIX)
 
 # Run EStokTPDriver for ChemKin inputs
 if MECH_TYPE == 'CHEMKIN':
