@@ -245,6 +245,19 @@ def species_block(
 
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
+                        print('axis test:', axis)
+                        print('atm_key:', atm_key)
+                        print('group:', group)
+                        #for idx, atm in enumerate(axis):
+                        #    if atm == atm_key+1:
+                        #        if idx != 0:
+                        #            axis.reverse()
+                        #            print('axis reversed', axis)
+                        if (atm_key+1) != axis[1]:
+                            axis.reverse()
+                            print('axis reversed:', axis)
+                        #if atm_key != axis(0):
+                            #axis.reverse()
 
                         #check for dummy transformations
                         atom_symbols = automol.zmatrix.symbols(zma)
@@ -284,7 +297,7 @@ def species_block(
                     moldr.util.run_script(projrot_script_str, path)
 
                     freqs = []
-                    if len(pot) > 0:
+                    if pot > 0:
                         rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         freqs = rthrproj_freqs
@@ -294,7 +307,7 @@ def species_block(
                         freqs = rtproj_freqs
                     if 'ts_' in spc:
                         if imag_freq:
-                           imag_freq = imag_freq[0]
+                            imag_freq = imag_freq[0]
                         else:
                             imag_freq = freqs[-1]
                             freqs = freqs[:-1]
@@ -305,7 +318,8 @@ def species_block(
                         hind_rot=hind_rot_str
                         )
         else:
-            print('ERROR: Reference geometry is missing for harmonic frequencies for species {}'.format(spc_info[0]))
+            print('ERROR: Reference geometry is missing for harmonic frequencies for species {}'
+                  .format(spc_info[0]))
             spc_str = ''
             imag_freq = 0.
             return '', 0.
@@ -659,11 +673,10 @@ def pst_block(
             sym_factor_j = moldr.conformer.symmetry_factor(sym_geo_j, sym_ene_j, sym_cnf_save_fs_j)
         if sym_model == '1DHR':
             # Warning: the 1DHR based symmetry number has not yet been set up
-            sym_factor_ = 1
+            sym_factor_j = 1
     sym_factor = sym_factor_i * sym_factor_j
 
-    if vib_model:
-    # if vib_model == 'HARM' and tors_model == 'RIGID':
+    if vib_model == 'HARM' and tors_model == 'RIGID':
         if har_min_cnf_locs_i is not None:
             har_geo_i = har_cnf_save_fs_i.leaf.file.geometry.read(har_min_cnf_locs_i)
             if har_min_cnf_locs_j is not None:
@@ -677,7 +690,8 @@ def pst_block(
                     freqs = freqs_i[mode_start:]
                     if not automol.geom.is_atom(har_geo_j):
                         hess_j = har_cnf_save_fs_j.leaf.file.hessian.read(har_min_cnf_locs_j)
-                        freqs_j = elstruct.util.harmonic_frequencies(har_geo_j, hess_j, project=False)
+                        freqs_j = elstruct.util.harmonic_frequencies(
+                            har_geo_j, hess_j, project=False)
                         mode_start = 6
                         if automol.geom.is_linear(har_geo_j):
                             mode_start = mode_start - 1
@@ -695,6 +709,275 @@ def pst_block(
                     core, freqs, elec_levels,
                     hind_rot=hind_rot_str,
                     )
+        else:
+            spc_str = ''
+
+    if vib_model == 'HARM' and tors_model == '1DHR':
+        if har_min_cnf_locs_i is not None:
+            har_geo_i = har_cnf_save_fs_i.leaf.file.geometry.read(har_min_cnf_locs_i)
+            min_ene_i = har_cnf_save_fs_i.leaf.file.energy.read(har_min_cnf_locs_i)
+            if har_min_cnf_locs_j is not None:
+                har_geo_j = har_cnf_save_fs_j.leaf.file.geometry.read(har_min_cnf_locs_j)
+                min_ene_j = har_cnf_save_fs_j.leaf.file.energy.read(har_min_cnf_locs_j)
+
+                is_atom_i = automol.geom.is_atom(har_geo_i)
+                is_atom_j = automol.geom.is_atom(har_geo_j)
+                if not is_atom_i:
+                    hess_i = har_cnf_save_fs_i.leaf.file.hessian.read(har_min_cnf_locs_i)
+                    freqs_i = elstruct.util.harmonic_frequencies(har_geo_i, hess_i, project=False)
+                    mode_start = 6
+                    if automol.geom.is_linear(har_geo_i):
+                        mode_start = mode_start - 1
+                    freqs_i = freqs_i[mode_start:]
+                if not is_atom_j:
+                    hess_j = har_cnf_save_fs_j.leaf.file.hessian.read(har_min_cnf_locs_j)
+                    freqs_j = elstruct.util.harmonic_frequencies(har_geo_j, hess_j, project=False)
+                    mode_start = 6
+                    if automol.geom.is_linear(har_geo_j):
+                        mode_start = mode_start - 1
+                    freqs_j = freqs_j[mode_start:]
+
+                hind_rot_str = ""
+                proj_rotors_str = ""
+
+                if tors_min_cnf_locs_i is not None:
+                    if har_cnf_save_fs_i.trunk.file.info.exists():
+                        inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
+                        tors_ranges = inf_obj_s.tors_ranges
+                        tors_ranges = autofile.info.dict_(tors_ranges)
+                        tors_names = list(tors_ranges.keys())
+                    else:
+                        print('No inf obj to identify torsional angles')
+                        tors_names = []
+                    zma = tors_cnf_save_fs_i.leaf.file.zmatrix.read(tors_min_cnf_locs_i)
+
+                    tors_geo = tors_cnf_save_fs_i.leaf.file.geometry.read(tors_min_cnf_locs_i)
+                    gra = automol.zmatrix.graph(zma, remove_stereo=True)
+                    coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+
+                    # prepare axis, group, and projection info
+                    scn_save_fs = autofile.fs.scan(tors_cnf_save_path_i)
+                    pot = []
+                    if 'hind_inc' in spc_dct_i:
+                        scan_increment = spc_dct_i['hind_inc']
+                    else:
+                        scan_increment = 30. * phycon.DEG2RAD
+                    val_dct = automol.zmatrix.values(zma)
+                    tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                        zma, tors_names, scan_increment)
+                    tors_grids = [
+                        numpy.linspace(*linspace) + val_dct[name]
+                        for name, linspace in zip(tors_names, tors_linspaces)]
+                    tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
+                        zma, tors_names))
+                    for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
+                        locs_lst = []
+                        enes = []
+                        for grid_val in tors_grid:
+                            locs_lst.append([[tors_name], [grid_val]])
+                        for locs in locs_lst:
+                            if scn_save_fs.leaf.exists(locs):
+                                enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                            else:
+                                enes.append(20.)
+                                print('ERROR: missing grid value for torsional potential of {}'
+                                      .format(spc_info_i[0]))
+                        enes = numpy.subtract(enes, min_ene_i)
+                        pot = list(enes*phycon.EH2KCAL)
+                        axis = coo_dct[tors_name][1:3]
+
+                        atm_key = axis[1]
+                        group = list(
+                            automol.graph.branch_atom_keys(gra, atm_key, axis) - set(axis))
+                        if not group:
+                            for atm in axis:
+                                if atm != atm_key:
+                                    atm_key = atm
+                            group = list(
+                                automol.graph.branch_atom_keys(gra, atm_key, axis) - set(axis))
+
+                        group = list(numpy.add(group, 1))
+                        axis = list(numpy.add(axis, 1))
+                        print('axis test:', axis)
+                        print('atm_key:', atm_key)
+                        print('group:', group)
+                        #for idx, atm in enumerate(axis):
+                        #    if atm == atm_key+1:
+                        #        if idx != 0:
+                        #            axis.reverse()
+                        #            print('axis reversed', axis)
+                        if (atm_key+1) != axis[1]:
+                            axis.reverse()
+                            print('axis reversed:', axis)
+                        #if atm_key != axis(0):
+                            #axis.reverse()
+
+                        #check for dummy transformations
+                        atom_symbols = automol.zmatrix.symbols(zma)
+                        dummy_idx = []
+                        for atm_idx, atm in enumerate(atom_symbols):
+                            if atm == 'X':
+                                dummy_idx.append(atm_idx)
+                        remdummy = numpy.zeros(len(zma[0]))
+                        for dummy in dummy_idx:
+                            for idx, _ in enumerate(remdummy):
+                                if dummy < idx:
+                                    remdummy[idx] += 1
+                        hind_rot_str += mess_io.writer.rotor_hindered(
+                            group, axis, sym_num, pot, remdummy, geo_har_geo_i)
+                        proj_rotors_str += projrot_io.writer.rotors(
+                            axis, group, remdummy=remdummy)
+                        sym_factor /= sym_num
+
+                    # Write the string for the ProjRot input
+                    coord_proj = 'cartesian'
+                    grad = ''
+                    projrot_inp_str = projrot_io.writer.rpht_input(
+                        tors_geo, grad, hess_i, rotors_str=proj_rotors_str,
+                        coord_proj=coord_proj)
+
+                    bld_locs = ['PROJROT', 0]
+                    bld_save_fs = autofile.fs.build(tors_save_path_i)
+                    bld_save_fs.leaf.create(bld_locs)
+                    path = bld_save_fs.leaf.path(bld_locs)
+                    print('Build Path for Partition Functions')
+                    print(path)
+                    proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
+                    with open(proj_file_path, 'w') as proj_file:
+                        proj_file.write(projrot_inp_str)
+
+                    moldr.util.run_script(projrot_script_str, path)
+
+                    freqs_i = []
+                    if pot:
+                        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
+                            path+'/hrproj_freq.dat')
+                        freqs_i = rthrproj_freqs
+                    if not freqs:
+                        rtproj_freqs, _ = projrot_io.reader.rpht_output(
+                            path+'/RTproj_freq.dat')
+                        freqs_i = rtproj_freqs
+
+                if tors_min_cnf_locs_j is not None:
+                    if har_cnf_save_fs_j.trunk.file.info.exists():
+                        inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
+                        tors_ranges = inf_obj_s.tors_ranges
+                        tors_ranges = autofile.info.dict_(tors_ranges)
+                        tors_names = list(tors_ranges.keys())
+                    else:
+                        print('No inf obj to identify torsional angles')
+                        tors_names = []
+                    zma = tors_cnf_save_fs_j.leaf.file.zmatrix.read(tors_min_cnf_locs_j)
+
+                    tors_geo = tors_cnf_save_fs_j.leaf.file.geometry.read(tors_min_cnf_locs_j)
+                    gra = automol.zmatrix.graph(zma, remove_stereo=True)
+                    coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+
+                    # prepare axis, group, and projection info
+                    scn_save_fs = autofile.fs.scan(tors_cnf_save_path_j)
+                    pot = []
+                    if 'hind_inc' in spc_dct_j:
+                        scan_increment = spc_dct_j['hind_inc']
+                    else:
+                        scan_increment = 30. * phycon.DEG2RAD
+                    val_dct = automol.zmatrix.values(zma)
+                    tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                        zma, tors_names, scan_increment)
+                    tors_grids = [
+                        numpy.linspace(*linspace) + val_dct[name]
+                        for name, linspace in zip(tors_names, tors_linspaces)]
+                    tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
+                        zma, tors_names))
+                    for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
+                        locs_lst = []
+                        enes = []
+                        for grid_val in tors_grid:
+                            locs_lst.append([[tors_name], [grid_val]])
+                        for locs in locs_lst:
+                            if scn_save_fs.leaf.exists(locs):
+                                enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                            else:
+                                enes.append(20.)
+                                print('ERROR: missing grid value for torsional potential of {}'
+                                      .format(spc_info_j[0]))
+                        enes = numpy.subtract(enes, min_ene_j)
+                        pot = list(enes*phycon.EH2KCAL)
+                        axis = coo_dct[tors_name][1:3]
+
+                        atm_key = axis[1]
+                        group = list(
+                            automol.graph.branch_atom_keys(gra, atm_key, axis) - set(axis))
+                        if not group:
+                            for atm in axis:
+                                if atm != atm_key:
+                                    atm_key = atm
+                            group = list(
+                                automol.graph.branch_atom_keys(gra, atm_key, axis) - set(axis))
+
+                        group = list(numpy.add(group, 1))
+                        axis = list(numpy.add(axis, 1))
+                        print('axis test:', axis)
+                        print('atm_key:', atm_key)
+                        print('group:', group)
+                        if (atm_key+1) != axis[1]:
+                            axis.reverse()
+                            print('axis reversed:', axis)
+
+                        #check for dummy transformations
+                        atom_symbols = automol.zmatrix.symbols(zma)
+                        dummy_idx = []
+                        for atm_idx, atm in enumerate(atom_symbols):
+                            if atm == 'X':
+                                dummy_idx.append(atm_idx)
+                        remdummy = numpy.zeros(len(zma[0]))
+                        for dummy in dummy_idx:
+                            for idx, _ in enumerate(remdummy):
+                                if dummy < idx:
+                                    remdummy[idx] += 1
+                        hind_rot_str += mess_io.writer.rotor_hindered(
+                            group, axis, sym_num, pot, remdummy, geo=har_geo_j)
+                        proj_rotors_str += projrot_io.writer.rotors(
+                            axis, group, remdummy=remdummy)
+                        sym_factor /= sym_num
+
+                    # Write the string for the ProjRot input
+                    coord_proj = 'cartesian'
+                    grad = ''
+                    projrot_inp_str = projrot_io.writer.rpht_input(
+                        tors_geo, grad, hess_j, rotors_str=proj_rotors_str,
+                        coord_proj=coord_proj)
+
+                    bld_locs = ['PROJROT', 0]
+                    bld_save_fs = autofile.fs.build(tors_save_path_j)
+                    bld_save_fs.leaf.create(bld_locs)
+                    path = bld_save_fs.leaf.path(bld_locs)
+                    print('Build Path for Partition Functions')
+                    print(path)
+                    proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
+                    with open(proj_file_path, 'w') as proj_file:
+                        proj_file.write(projrot_inp_str)
+
+                    moldr.util.run_script(projrot_script_str, path)
+
+                    freqs_j = []
+                    if pot:
+                        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
+                            path+'/hrproj_freq.dat')
+                        freqs_j = rthrproj_freqs
+                    if not freqs:
+                        rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                            path+'/RTproj_freq.dat')
+                        freqs_j = rtproj_freqs
+
+                freqs = freqs_i + freqs_j
+
+                core = mess_io.writer.core_phasespace(
+                    har_geo_i, har_geo_j, sym_factor, stoich, pot_prefactor=10., pot_power_exp=6)
+                spc_str = mess_io.writer.molecule(
+                    core, freqs, elec_levels,
+                    hind_rot=hind_rot_str,
+                    )
+
         else:
             spc_str = ''
 
@@ -730,12 +1013,72 @@ def fake_species_block(
     har_min_cnf_locs_i = moldr.util.min_energy_conformer_locators(har_cnf_save_fs_i)
     har_min_cnf_locs_j = moldr.util.min_energy_conformer_locators(har_cnf_save_fs_j)
 
+    if sym_level:
+        orb_restr = moldr.util.orbital_restriction(
+            spc_info_i, sym_level)
+        sym_levelp_i = sym_level[0:3]
+        sym_levelp_i.append(orb_restr)
+        sym_save_path_i = thy_save_fs_i.leaf.path(sym_levelp_i[1:4])
+        sym_cnf_save_fs_i = autofile.fs.conformer(sym_save_path_i)
+        sym_min_cnf_locs_i = moldr.util.min_energy_conformer_locators(sym_cnf_save_fs_i)
+
+        orb_restr = moldr.util.orbital_restriction(
+            spc_info_j, sym_level)
+        sym_levelp_j = sym_level[0:3]
+        sym_levelp_j.append(orb_restr)
+        sym_save_path_j = thy_save_fs_j.leaf.path(sym_levelp_j[1:4])
+        sym_cnf_save_fs_j = autofile.fs.conformer(sym_save_path_j)
+        sym_min_cnf_locs_j = moldr.util.min_energy_conformer_locators(sym_cnf_save_fs_j)
+
+    tors_names = []
+    if tors_level:
+        orb_restr = moldr.util.orbital_restriction(
+            spc_info_i, tors_level)
+        tors_levelp_i = tors_level[0:3]
+        tors_levelp_i.append(orb_restr)
+        orb_restr = moldr.util.orbital_restriction(
+            spc_info_j, tors_level)
+        tors_levelp_j = tors_level[0:3]
+        tors_levelp_j.append(orb_restr)
+
+        tors_save_path_i = thy_save_fs_i.leaf.path(tors_levelp_i[1:4])
+        tors_cnf_save_fs_i = autofile.fs.conformer(tors_save_path_i)
+        tors_min_cnf_locs_i = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs_i)
+        tors_cnf_save_path_i = tors_cnf_save_fs_i.leaf.path(tors_min_cnf_locs_i)
+
+        tors_save_path_j = thy_save_fs_j.leaf.path(tors_levelp_j[1:4])
+        tors_cnf_save_fs_j = autofile.fs.conformer(tors_save_path_j)
+        tors_min_cnf_locs_j = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs_j)
+        tors_cnf_save_path_j = tors_cnf_save_fs_j.leaf.path(tors_min_cnf_locs_j)
 
     spc_str = ''
         # elec_levels_j = spc_dct_j['elec_levs']
 
     elec_levels = [[0., 2]]
     sym_factor = 1.
+    sym_factor_i = 1.
+    sym_factor_j = 1.
+    if 'sym' in spc_dct_i:
+        sym_factor_i = spc_dct_i['sym']
+    else:
+        if sym_model == 'SAMPLING':
+            sym_geo_i = sym_cnf_save_fs_i.leaf.file.geometry.read(sym_min_cnf_locs_i)
+            sym_ene_i = sym_cnf_save_fs_i.leaf.file.energy.read(sym_min_cnf_locs_i)
+            sym_factor_i = moldr.conformer.symmetry_factor(sym_geo_i, sym_ene_i, sym_cnf_save_fs_i)
+        if sym_model == '1DHR':
+            # Warning: the 1DHR based symmetry number has not yet been set up
+            sym_factor_i = 1
+    if 'sym' in spc_dct_j:
+        sym_factor_j = spc_dct_j['sym']
+    else:
+        if sym_model == 'SAMPLING':
+            sym_geo_j = sym_cnf_save_fs_j.leaf.file.geometry.read(sym_min_cnf_locs_j)
+            sym_ene_j = sym_cnf_save_fs_j.leaf.file.energy.read(sym_min_cnf_locs_j)
+            sym_factor_j = moldr.conformer.symmetry_factor(sym_geo_j, sym_ene_j, sym_cnf_save_fs_j)
+        if sym_model == '1DHR':
+            # Warning: the 1DHR based symmetry number has not yet been set up
+            sym_factor_j = 1
+    sym_factor = sym_factor_i * sym_factor_j
 
     if vib_model == 'HARM' and tors_model == 'RIGID':
         if har_min_cnf_locs_i is not None:
@@ -789,6 +1132,293 @@ def fake_species_block(
         else:
             spc_str = ''
 
+    if vib_model == 'HARM' and tors_model == '1DHR':
+        if har_min_cnf_locs_i is not None:
+            har_geo_i = har_cnf_save_fs_i.leaf.file.geometry.read(har_min_cnf_locs_i)
+            min_ene_i = har_cnf_save_fs_i.leaf.file.energy.read(har_min_cnf_locs_i)
+            if har_min_cnf_locs_j is not None:
+                har_geo_j = har_cnf_save_fs_j.leaf.file.geometry.read(har_min_cnf_locs_j)
+                min_ene_j = har_cnf_save_fs_j.leaf.file.energy.read(har_min_cnf_locs_j)
+                har_geo_js = har_geo_j
+
+                freqs_trans = (30, 50, 70, 100, 200)
+                ntrans = 5
+                is_atom_i = automol.geom.is_atom(har_geo_i)
+                is_linear_i = automol.geom.is_linear(har_geo_i)
+                is_atom_j = automol.geom.is_atom(har_geo_j)
+                is_linear_j = automol.geom.is_linear(har_geo_i)
+                if is_atom_i:
+                    ntrans = ntrans - 3
+                if is_atom_j:
+                    ntrans = ntrans - 3
+                if is_linear_i:
+                    ntrans = ntrans - 2
+                if is_linear_j:
+                    ntrans = ntrans - 2
+                if is_atom_i and is_atom_j:
+                    ntrans = 0
+                freqs_trans = freqs_trans[0:ntrans]
+                if not is_atom_i:
+                    hess_i = har_cnf_save_fs_i.leaf.file.hessian.read(har_min_cnf_locs_i)
+                    freqs_i = elstruct.util.harmonic_frequencies(har_geo_i, hess_i, project=False)
+                    mode_start = 6
+                    if automol.geom.is_linear(har_geo_i):
+                        mode_start = mode_start - 1
+                    freqs_i = freqs_i[mode_start:]
+                if not is_atom_j:
+                    hess_j = har_cnf_save_fs_j.leaf.file.hessian.read(har_min_cnf_locs_j)
+                    freqs_j = elstruct.util.harmonic_frequencies(har_geo_j, hess_j, project=False)
+                    mode_start = 6
+                    if automol.geom.is_linear(har_geo_j):
+                        mode_start = mode_start - 1
+                    freqs_j = freqs_j[mode_start:]
+
+                har_geo = har_geo_i
+                # this should be replaced with a maximum of z + 3 for each atom
+                har_geo_j = automol.geom.translated(har_geo_j, [10., 10., 10.])
+                har_geo += har_geo_j
+
+                hind_rot_str = ""
+                proj_rotors_str = ""
+
+                if tors_min_cnf_locs_i is not None:
+                    if har_cnf_save_fs_i.trunk.file.info.exists():
+                        inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
+                        tors_ranges = inf_obj_s.tors_ranges
+                        tors_ranges = autofile.info.dict_(tors_ranges)
+                        tors_names = list(tors_ranges.keys())
+                    else:
+                        print('No inf obj to identify torsional angles')
+                        tors_names = []
+                    zma = tors_cnf_save_fs_i.leaf.file.zmatrix.read(tors_min_cnf_locs_i)
+
+                    tors_geo = tors_cnf_save_fs_i.leaf.file.geometry.read(tors_min_cnf_locs_i)
+                    gra = automol.zmatrix.graph(zma, remove_stereo=True)
+                    coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+
+                    # prepare axis, group, and projection info
+                    scn_save_fs = autofile.fs.scan(tors_cnf_save_path_i)
+                    pot = []
+                    if 'hind_inc' in spc_dct_i:
+                        scan_increment = spc_dct_i['hind_inc']
+                    else:
+                        scan_increment = 30. * phycon.DEG2RAD
+                    val_dct = automol.zmatrix.values(zma)
+                    tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                        zma, tors_names, scan_increment)
+                    tors_grids = [
+                        numpy.linspace(*linspace) + val_dct[name]
+                        for name, linspace in zip(tors_names, tors_linspaces)]
+                    tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
+                        zma, tors_names))
+                    for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
+                        locs_lst = []
+                        enes = []
+                        for grid_val in tors_grid:
+                            locs_lst.append([[tors_name], [grid_val]])
+                        for locs in locs_lst:
+                            if scn_save_fs.leaf.exists(locs):
+                                enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                            else:
+                                enes.append(20.)
+                                print('ERROR: missing grid value for torsional potential of {}'
+                                      .format(spc_info_i[0]))
+                        enes = numpy.subtract(enes, min_ene_i)
+                        pot = list(enes*phycon.EH2KCAL)
+                        axis = coo_dct[tors_name][1:3]
+
+                        atm_key = axis[1]
+                        group = list(
+                            automol.graph.branch_atom_keys(gra, atm_key, axis) - set(axis))
+                        if not group:
+                            for atm in axis:
+                                if atm != atm_key:
+                                    atm_key = atm
+                            group = list(
+                                automol.graph.branch_atom_keys(gra, atm_key, axis) - set(axis))
+
+                        group = list(numpy.add(group, 1))
+                        axis = list(numpy.add(axis, 1))
+                        print('axis test:', axis)
+                        print('atm_key:', atm_key)
+                        print('group:', group)
+                        #for idx, atm in enumerate(axis):
+                        #    if atm == atm_key+1:
+                        #        if idx != 0:
+                        #            axis.reverse()
+                        #            print('axis reversed', axis)
+                        if (atm_key+1) != axis[1]:
+                            axis.reverse()
+                            print('axis reversed:', axis)
+                        #if atm_key != axis(0):
+                            #axis.reverse()
+
+                        #check for dummy transformations
+                        atom_symbols = automol.zmatrix.symbols(zma)
+                        dummy_idx = []
+                        for atm_idx, atm in enumerate(atom_symbols):
+                            if atm == 'X':
+                                dummy_idx.append(atm_idx)
+                        remdummy = numpy.zeros(len(zma[0]))
+                        for dummy in dummy_idx:
+                            for idx, _ in enumerate(remdummy):
+                                if dummy < idx:
+                                    remdummy[idx] += 1
+                        hind_rot_str += mess_io.writer.rotor_hindered(
+                            group, axis, sym_num, pot, remdummy)
+                        proj_rotors_str += projrot_io.writer.rotors(
+                            axis, group, remdummy=remdummy, geo=har_geo_i)
+                        sym_factor /= sym_num
+
+                    # Write the string for the ProjRot input
+                    coord_proj = 'cartesian'
+                    grad = ''
+                    projrot_inp_str = projrot_io.writer.rpht_input(
+                        tors_geo, grad, hess_i, rotors_str=proj_rotors_str,
+                        coord_proj=coord_proj)
+
+                    bld_locs = ['PROJROT', 0]
+                    bld_save_fs = autofile.fs.build(tors_save_path_i)
+                    bld_save_fs.leaf.create(bld_locs)
+                    path = bld_save_fs.leaf.path(bld_locs)
+                    print('Build Path for Partition Functions')
+                    print(path)
+                    proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
+                    with open(proj_file_path, 'w') as proj_file:
+                        proj_file.write(projrot_inp_str)
+
+                    moldr.util.run_script(projrot_script_str, path)
+
+                    freqs_i = []
+                    if pot:
+                        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
+                            path+'/hrproj_freq.dat')
+                        freqs_i = rthrproj_freqs
+                    if not freqs:
+                        rtproj_freqs, _ = projrot_io.reader.rpht_output(
+                            path+'/RTproj_freq.dat')
+                        freqs_i = rtproj_freqs
+
+                if tors_min_cnf_locs_j is not None:
+                    if har_cnf_save_fs_j.trunk.file.info.exists():
+                        inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
+                        tors_ranges = inf_obj_s.tors_ranges
+                        tors_ranges = autofile.info.dict_(tors_ranges)
+                        tors_names = list(tors_ranges.keys())
+                    else:
+                        print('No inf obj to identify torsional angles')
+                        tors_names = []
+                    zma = tors_cnf_save_fs_j.leaf.file.zmatrix.read(tors_min_cnf_locs_j)
+
+                    tors_geo = tors_cnf_save_fs_j.leaf.file.geometry.read(tors_min_cnf_locs_j)
+                    gra = automol.zmatrix.graph(zma, remove_stereo=True)
+                    coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+
+                    # prepare axis, group, and projection info
+                    scn_save_fs = autofile.fs.scan(tors_cnf_save_path_j)
+                    pot = []
+                    if 'hind_inc' in spc_dct_j:
+                        scan_increment = spc_dct_j['hind_inc']
+                    else:
+                        scan_increment = 30. * phycon.DEG2RAD
+                    val_dct = automol.zmatrix.values(zma)
+                    tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+                        zma, tors_names, scan_increment)
+                    tors_grids = [
+                        numpy.linspace(*linspace) + val_dct[name]
+                        for name, linspace in zip(tors_names, tors_linspaces)]
+                    tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
+                        zma, tors_names))
+                    for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
+                        locs_lst = []
+                        enes = []
+                        for grid_val in tors_grid:
+                            locs_lst.append([[tors_name], [grid_val]])
+                        for locs in locs_lst:
+                            if scn_save_fs.leaf.exists(locs):
+                                enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                            else:
+                                enes.append(20.)
+                                print('ERROR: missing grid value for torsional potential of {}'
+                                      .format(spc_info_j[0]))
+                        enes = numpy.subtract(enes, min_ene_j)
+                        pot = list(enes*phycon.EH2KCAL)
+                        axis = coo_dct[tors_name][1:3]
+
+                        atm_key = axis[1]
+                        group = list(
+                            automol.graph.branch_atom_keys(gra, atm_key, axis) - set(axis))
+                        if not group:
+                            for atm in axis:
+                                if atm != atm_key:
+                                    atm_key = atm
+                            group = list(
+                                automol.graph.branch_atom_keys(gra, atm_key, axis) - set(axis))
+
+                        group = list(numpy.add(group, 1))
+                        axis = list(numpy.add(axis, 1))
+                        print('axis test:', axis)
+                        print('atm_key:', atm_key)
+                        print('group:', group)
+                        if (atm_key+1) != axis[1]:
+                            axis.reverse()
+                            print('axis reversed:', axis)
+
+                        #check for dummy transformations
+                        atom_symbols = automol.zmatrix.symbols(zma)
+                        dummy_idx = []
+                        for atm_idx, atm in enumerate(atom_symbols):
+                            if atm == 'X':
+                                dummy_idx.append(atm_idx)
+                        remdummy = numpy.zeros(len(zma[0]))
+                        for dummy in dummy_idx:
+                            for idx, _ in enumerate(remdummy):
+                                if dummy < idx:
+                                    remdummy[idx] += 1
+                        hind_rot_str += mess_io.writer.rotor_hindered(
+                            group, axis, sym_num, pot, remdummy)
+                        proj_rotors_str += projrot_io.writer.rotors(
+                            axis, group, remdummy=remdummy, geo=har_geo_js)
+                        sym_factor /= sym_num
+
+                    # Write the string for the ProjRot input
+                    coord_proj = 'cartesian'
+                    grad = ''
+                    projrot_inp_str = projrot_io.writer.rpht_input(
+                        tors_geo, grad, hess_j, rotors_str=proj_rotors_str,
+                        coord_proj=coord_proj)
+
+                    bld_locs = ['PROJROT', 0]
+                    bld_save_fs = autofile.fs.build(tors_save_path_j)
+                    bld_save_fs.leaf.create(bld_locs)
+                    path = bld_save_fs.leaf.path(bld_locs)
+                    print('Build Path for Partition Functions')
+                    print(path)
+                    proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
+                    with open(proj_file_path, 'w') as proj_file:
+                        proj_file.write(projrot_inp_str)
+
+                    moldr.util.run_script(projrot_script_str, path)
+
+                    freqs_j = []
+                    if pot:
+                        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
+                            path+'/hrproj_freq.dat')
+                        freqs_j = rthrproj_freqs
+                    if not freqs:
+                        rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                            path+'/RTproj_freq.dat')
+                        freqs_j = rtproj_freqs
+
+                freqs = freqs_trans + freqs_i + freqs_j
+
+                core = mess_io.writer.core_rigidrotor(har_geo, sym_factor)
+                spc_str = mess_io.writer.molecule(
+                    core, freqs, elec_levels,
+                    hind_rot=hind_rot_str,
+                    )
+        else:
+            spc_str = ''
     return spc_str
 
 
@@ -1009,6 +1639,19 @@ def get_zero_point_energy(
                         set(axis))
                 group = list(numpy.add(group, 1))
                 axis = list(numpy.add(axis, 1))
+                print('axis test:', axis)
+                print('atm_key:', atm_key)
+                print('group:', group)
+                #for idx, atm in enumerate(axis):
+                #    if atm == atm_key+1:
+                #        if idx != 1:
+                #            axis.reverse()
+                #            print('axis reversed:', axis)
+                if (atm_key+1) != axis[1]:
+                    axis.reverse()
+                    print('axis reversed:', axis)
+                #if atm_key != axis(0):
+                    #axis.reverse()
 
                 #check for dummy transformations
                 atom_symbols = automol.zmatrix.symbols(zma)

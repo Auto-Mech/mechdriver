@@ -19,7 +19,6 @@ PRESS = [0.1, 1., 10., 100.]
 
 KICKOFF_SIZE = 0.1
 KICKOFF_BACKWARD = False
-HIND_INC = 30.
 
 def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         run_prefix, save_prefix, ene_coeff=[1.],
@@ -86,7 +85,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         print('\nBegin transition state prep')
         for ts in spc_dct:
             if 'ts_' in ts:
-                spc_dct[ts]['hind_inc'] = HIND_INC * phycon.DEG2RAD
+                #spc_dct[ts]['hind_inc'] = HIND_INC * phycon.DEG2RAD
                 # spc_dct[ts] = create_ts_spec(ts, ts_dct, spc_dct)
                 # have to figure out how to pass ts_info or have it recalculated in esdriver
                 # ts_info = (spc_dct[ts]['ich'], spc_dct[ts]['chg'], spc_dct[ts]['mul'])
@@ -276,6 +275,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                         ene_ref_thy_info[3], ene_ref_thy_info[1], ene_ref_thy_info[2]))
                     ene = scripts.thermo.get_electronic_energy(
                         spc_info, ene_ref_thy_info, ene_thy_info, save_path, saddle)
+                    print('ene test:', ene_idx, ene_coeff[ene_idx], ene)
                     spc_dct[spc]['ene'] += ene*ene_coeff[ene_idx]
                     ene_idx += 1
         ene_str += '!               '.join(ene_strl)
@@ -305,7 +305,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     continue
                 mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
                     tsname, rxn, species, spc_dct, idx_dct, mess_strs,
-                    first_ground_ene, spc_save_fs, pf_levels, multi_info, substr.PROJROT)
+                    first_ground_ene, spc_save_fs, ts_model, pf_levels, multi_info, substr.PROJROT)
                 print(idx_dct)
         well_str, bim_str, ts_str = mess_strs
         ts_str += '\nEnd\n'
@@ -335,6 +335,8 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         for lab_i, name_i in zip(labels, names):
             if 'W' not in lab_i:
                 a_conv_factor = 6.0221e23
+            else:
+                a_conv_factor = 1.
             if 'F' not in lab_i:
                 for lab_j, name_j in zip(labels, names):
                     if 'F' not in lab_j:
