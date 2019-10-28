@@ -58,12 +58,15 @@ def run_qchem_par(prog, method):
         if method == 'caspt2':
             opt_script_str = (
                 "#!/usr/bin/env bash\n"
-                "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log"
+                "molpro -n 8 run.inp -o run.out --nouse-logfile --nouse-xml >> "
+                "stdout.log &> stderr.log"
+                #"molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log"
             )
         else:
             opt_script_str = (
                 "#!/usr/bin/env bash\n"
-                "molpro --mppx -n 12 run.inp -o run.out >> "
+                "molpro --mppx -n 12 run.inp -o run.out --nouse-logfile --nouse-xml >> "
+                #"molpro --mppx -n 12 run.inp -o run.out >> "
                 "stdout.log &> stderr.log"
             )
         if method in ('caspt2', 'caspt2c'):
@@ -166,11 +169,11 @@ def set_molpro_options_mat(spc_info, geo):
     # Get the nelectrons, spins, and orbitals for the wf card
     formula = automol.geom.formula(geo)
     elec_count = automol.formula.electron_count(formula)
-    num_act_elc = 1
-    num_act_orb = 1
+    two_spin = spc_info[2] - 1
+    num_act_elc = two_spin 
+    num_act_orb = num_act_elc
     closed_orb = (elec_count - num_act_elc) // 2
     occ_orb = closed_orb + num_act_orb
-    two_spin = spc_info[2] - 1
 
     # Build the strings UHF and CASSCF wf card and set the errors and options
     uhf_str = (
