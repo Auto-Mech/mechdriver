@@ -32,9 +32,9 @@ GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 PARAMS = read_dat.params(os.path.join(MECH_PATH, 'params.dat'))
 
 # Set further parameters for what reactions and PESs to be run
-if len(sys.argv) > 3:
+if len(sys.argv) > 4:
     PARAMS.PESNUMS = sys.argv[4]
-    if len(sys.argv) > 4:
+    if len(sys.argv) > 5:
         PARAMS.CHANNELS = sys.argv[5]
 print('PESNUMS and PARAMS.CHANNELS:', PARAMS.PESNUMS, PARAMS.CHANNELS)
 
