@@ -58,14 +58,14 @@ def run_qchem_par(prog, method):
         if method == 'caspt2':
             opt_script_str = (
                 "#!/usr/bin/env bash\n"
-                "molpro -n 8 run.inp -o run.out --nouse-logfile --nouse-xml >> "
+                "molpro -n 8 run.inp -o run.out --nouse-logfile --no-xml-output >> "
                 "stdout.log &> stderr.log"
                 #"molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log"
             )
         else:
             opt_script_str = (
                 "#!/usr/bin/env bash\n"
-                "molpro --mppx -n 12 run.inp -o run.out --nouse-logfile --nouse-xml >> "
+                "molpro --mppx -n 12 run.inp -o run.out --nouse-logfile --no-xml-output >> "
                 #"molpro --mppx -n 12 run.inp -o run.out >> "
                 "stdout.log &> stderr.log"
             )
