@@ -5,10 +5,12 @@ import automol
 import elstruct
 import autofile
 import moldr.optsmat
+from autoparse import pattern as app
+from autoparse import find as apf
 
 
 def options_matrix_optimization(script_str, prefix,
-#                                geom, species_info, theory_level, 
+                                # geom, species_info, theory_level,
                                 geom, chg, mul, method, basis, prog,
                                 errors=(), options_mat=(), feedback=False,
                                 frozen_coordinates=(),
@@ -43,14 +45,21 @@ def options_matrix_optimization(script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 elstruct.writer.optimization, script_str, path,
-#                geom=geom, species_info, theory_level,
-#                basis=basis, frozen_coordinates=frozen_coordinates,
+                # geom=geom, species_info, theory_level,
+                # basis=basis, frozen_coordinates=frozen_coordinates,
                 geom=geom, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, frozen_coordinates=frozen_coordinates,
                 **kwargs_)
 
         error_vals = [elstruct.reader.has_error_message(prog, error, out_str)
                       for error in errors]
+
+        # Kill the while loop if we Molpro error signaling a hopeless point
+        # When an MCSCF WF calculation fails to converge at some step in opt
+        # it is not clear how to save the optimization, so we give up on opt
+        fail_pattern = app.escape('The problem occurs in Multi')
+        if apf.has_match(fail_pattern, out_str, case=False):
+            break
 
         if not any(error_vals):
             # success
@@ -74,7 +83,7 @@ def options_matrix_optimization(script_str, prefix,
 
 
 def options_matrix_run(input_writer, script_str, prefix,
-#                       geom, species_info, theory_level,
+                       # geom, species_info, theory_level,
                        geom, chg, mul, method, basis, prog,
                        errors=(), options_mat=(),
                        **kwargs):
@@ -99,8 +108,8 @@ def options_matrix_run(input_writer, script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 input_writer, script_str, path,
-#                geom=geom, species_info, theory_level,
-#                basis=basis, prog=prog, **kwargs_)
+                # geom=geom, species_info, theory_level,
+                # basis=basis, prog=prog, **kwargs_)
                 geom=geom, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, **kwargs_)
 
