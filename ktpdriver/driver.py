@@ -23,7 +23,7 @@ KICKOFF_BACKWARD = False
 def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         run_prefix, save_prefix, ene_coeff=[1.],
         vdw_params=[False, False, True],
-        options=[True, True, True, False]
+        options=[True, True, True, False],
         etrans=[150.0, 0.85, 15.0, 100.0, 200.0, 6.0, 6.0, 15.0]):
     """ main driver for generation of full set of rate constants on a single PES
     """

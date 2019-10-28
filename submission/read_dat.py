@@ -58,7 +58,9 @@ PARAMS = {
     'EPS2': 200.0,
     'SIG1': 6.,
     'SIG2': 6.,
-    'MASS1': 15.0
+    'MASS1': 15.0,
+    'RUN_PREFIX': '/lcrc/project/PACC/run',
+    'SAVE_PREFIX': '/lcrc/project/PACC/save'
 }
 
 
