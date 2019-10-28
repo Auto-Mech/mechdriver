@@ -151,7 +151,7 @@ def _set_value_type(value):
         frmtd_value = False
     elif value.isdigit():
         frmtd_value = int(value)
-    elif '.' in value and value.replace('.', '').isdigit():
+    elif '.' in value and value.replace('.', '').replace('-','').isdigit():
         frmtd_value = float(value)
     else:
         frmtd_value = value

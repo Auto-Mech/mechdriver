@@ -80,7 +80,7 @@ def make_species_data(spc, spc_dct_i, spc_save_fs, spc_model, pf_levels, projrot
     return species_data
 
 
-def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, pf_levels, projrot_script_str):
+def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, spc_model, pf_levels, projrot_script_str):
     """ make a fake MESS species block to represent the van der Waals well
     arising from the combination of two fragment species
     """
@@ -90,10 +90,11 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, pf_levels, projrot
     spc_save_fs.leaf.create(spc_info_j)
     save_path_i = spc_save_fs.leaf.path(spc_info_i)
     save_path_j = spc_save_fs.leaf.path(spc_info_j)
-    if pf_levels[3]:
-        spc_model = ['RIGID', 'HARM', 'SAMPLING']
-    else:
-        spc_model = ['RIGID', 'HARM', '']
+    #if pf_levels[3]:
+        #spc_model = ['RIGID', 'HARM', 'SAMPLING']
+    #else:
+    #    spc_model = ['1DHR', 'HARM', '']
+        #spc_model = ['RIGID', 'HARM', '']
     species_data = moldr.pf.fake_species_block(
         spc_dct_i=spc_dct_i,
         spc_dct_j=spc_dct_j,
@@ -111,7 +112,7 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, pf_levels, projrot
 
 def make_channel_pfs(
         tsname, rxn, species_data, spc_dct, idx_dct, strs, first_ground_ene,
-        spc_save_fs, pf_levels, multi_info, projrot_script_str):
+        spc_save_fs, spc_model, pf_levels, multi_info, projrot_script_str):
     """ make the partition function strings for each of the channels
     includes strings for each of the unimolecular wells, bimolecular fragments, and
     transition states connecting them.
@@ -241,6 +242,7 @@ def make_channel_pfs(
         #Make fake wells and PST TSs as needed
             well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
             well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
+            pst_r_ts_str = ''
             if not well_dct_key1 in idx_dct:
                 if well_dct_key2 in idx_dct:
                     well_dct_key1 = well_dct_key2
@@ -252,7 +254,7 @@ def make_channel_pfs(
                     well_str += ' \t ! Fake Well for {}\n'.format('+'.join(rxn['reacs']))
                     fake_wellr = make_fake_species_data(
                         spc_dct[rxn['reacs'][0]], spc_dct[rxn['reacs'][1]],
-                        spc_save_fs, pf_levels, projrot_script_str)
+                        spc_save_fs, spc_model, pf_levels, projrot_script_str)
                     well_str += mess_io.writer.well(fake_wellr_label, fake_wellr, zero_energy)
                     idx_dct[well_dct_key1] = fake_wellr_label
 
@@ -260,25 +262,28 @@ def make_channel_pfs(
                     idx_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
                     spc_dct_i = spc_dct[rxn['reacs'][0]]
                     spc_dct_j = spc_dct[rxn['reacs'][1]]
-                    if pf_levels[3]:
-                        spc_model = ['RIGID', 'HARM', 'SAMPLING']
-                    else:
-                        spc_model = ['RIGID', 'HARM', '']
+                    #if pf_levels[3]:
+                        #spc_model = ['RIGID', 'HARM', 'SAMPLING']
+                    #else:
+                        #spc_model = ['RIGID', 'HARM', '']
                     pst_r_ts_str = moldr.pf.pst_block(
                         spc_dct_i, spc_dct_j, spc_model=spc_model,
                         pf_levels=pf_levels, projrot_script_str=projrot_script_str,
                         spc_save_fs=spc_save_fs)
-            print('fake_wellr_label test:', fake_wellr_label)
-            if not fake_wellr_label:
-                print('well_dct_key1 test:', well_dct_key1)
+                print('fake_wellr_label test:', fake_wellr_label)
+                if not fake_wellr_label:
+                    print('well_dct_key1 test:', well_dct_key1)
+                    fake_wellr_label = idx_dct[well_dct_key1]
+                    pst_r_label = idx_dct[well_dct_key1.replace('F', 'FRB')]
+                zero_energy = reac_ene - first_ground_ene
+                tunnel_str = ''
+                print('ts_str input test:', pst_r_label, reac_label, fake_wellr_label, pst_r_ts_str, zero_energy, tunnel_str)
+                ts_str += '\n' + mess_io.writer.ts_sadpt(
+                    pst_r_label, reac_label, fake_wellr_label, pst_r_ts_str,
+                    zero_energy, tunnel_str)
+                print('ts_str test:', ts_str)
+            else:
                 fake_wellr_label = idx_dct[well_dct_key1]
-                pst_r_label = idx_dct[well_dct_key1.replace('F', 'FRB')]
-            zero_energy = reac_ene - first_ground_ene
-            tunnel_str = ''
-            ts_str += '\n' + mess_io.writer.ts_sadpt(
-                pst_r_label, reac_label, fake_wellr_label, pst_r_ts_str,
-                zero_energy, tunnel_str)
-
             well_dct_key1 = 'F' + '+'.join(rxn['prods'])
             well_dct_key2 = 'F' + '+'.join(rxn['prods'][::-1])
             if not well_dct_key1 in idx_dct:
@@ -292,7 +297,7 @@ def make_channel_pfs(
                     well_str += ' \t ! Fake Well for {}\n'.format('+'.join(rxn['prods']))
                     fake_wellp = make_fake_species_data(
                         spc_dct[rxn['prods'][0]], spc_dct[rxn['prods'][1]],
-                        spc_save_fs, pf_levels, projrot_script_str)
+                        spc_save_fs, spc_model, pf_levels, projrot_script_str)
                     well_str += mess_io.writer.well(fake_wellp_label, fake_wellp, zero_energy)
                     idx_dct[well_dct_key1] = fake_wellp_label
 
@@ -308,15 +313,18 @@ def make_channel_pfs(
                         spc_dct_i, spc_dct_j, spc_model=spc_model,
                         pf_levels=pf_levels, projrot_script_str=projrot_script_str,
                         spc_save_fs=spc_save_fs)
-            if not fake_wellp_label:
+                if not fake_wellp_label:
+                    fake_wellp_label = idx_dct[well_dct_key1]
+                    pst_p_label = idx_dct[well_dct_key1.replace('F', 'FPB')]
+                zero_energy = prod_ene - first_ground_ene
+                tunnel_str = ''
+                ts_str += '\n' + mess_io.writer.ts_sadpt(
+                    pst_p_label, prod_label, fake_wellp_label, pst_p_ts_str,
+                    zero_energy, tunnel_str)
+            else:
                 fake_wellp_label = idx_dct[well_dct_key1]
-                pst_p_label = idx_dct[well_dct_key1.replace('F', 'FPB')]
-            zero_energy = prod_ene - first_ground_ene
-            tunnel_str = ''
-            ts_str += '\n' + mess_io.writer.ts_sadpt(
-                pst_p_label, prod_label, fake_wellp_label, pst_p_ts_str,
-                zero_energy, tunnel_str)
-
+            vdwr_ene = reac_ene - 1.0
+            vdwp_ene = prod_ene - 1.0
             zero_energy = ts_ene - first_ground_ene
             ts_reac_barr = ts_ene - vdwr_ene
             ts_prod_barr = ts_ene - vdwp_ene
