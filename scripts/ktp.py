@@ -209,7 +209,7 @@ def make_channel_pfs(
         prod_label = idx_dct[well_dct_key1]
 
     #Set up a new well connected to ts
-    if 'radical radical' in spc_dct[tsname]['class']:
+    if 'radical radical' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class']:
         # for radical radical call vtst or vrctst
         ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
         if 'P' in reac_label:
@@ -305,10 +305,10 @@ def make_channel_pfs(
                     idx_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
                     spc_dct_i = spc_dct[rxn['prods'][0]]
                     spc_dct_j = spc_dct[rxn['prods'][1]]
-                    if pf_levels[3]:
-                        spc_model = ['RIGID', 'HARM', 'SAMPLING']
-                    else:
-                        spc_model = ['RIGID', 'HARM', '']
+                    #if pf_levels[3]:
+                        #spc_model = ['RIGID', 'HARM', 'SAMPLING']
+                    #else:
+                        #spc_model = ['RIGID', 'HARM', '']
                     pst_p_ts_str = moldr.pf.pst_block(
                         spc_dct_i, spc_dct_j, spc_model=spc_model,
                         pf_levels=pf_levels, projrot_script_str=projrot_script_str,

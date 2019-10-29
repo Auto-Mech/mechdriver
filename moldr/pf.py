@@ -272,6 +272,7 @@ def species_block(
                                    remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy=remdummy)
+                        print('projrot 1 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -280,6 +281,7 @@ def species_block(
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
+                    print('projrot 2 test:')
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -394,6 +396,8 @@ def vtst_with_no_saddle_block(
     """
 
     ts_info = ['', ts_dct['chg'], ts_dct['mul']]
+    print('ts_dct test:', ts_dct['mul'])
+    print('multi info test:', multi_info)
     orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
     multi_level = multi_info[0:3]
     multi_level.append(orb_restr)
@@ -438,21 +442,33 @@ def vtst_with_no_saddle_block(
     for idx, grid_val in enumerate(grid):
         print('idx, grid_val test:', idx, grid_val)
         locs = [[dist_name], [grid_val]]
-        print('locs:', locs)
         print('scn save fs:', scn_save_fs.leaf.path(locs))
+
+        # get geometry
         if not scn_save_fs.leaf.file.geometry.exists(locs):
             continue
         else:
             geom = scn_save_fs.leaf.file.geometry.read(locs)
-            print('geom in vtst: \n', automol.geom.string(geom))
+
+        # get energy
         if not scn_save_fs.leaf.file.energy.exists(locs):
             continue
         else:
             ene = scn_save_fs.leaf.file.energy.read(locs)
+
+        # get gradient
+        #if not scn_save_fs.leaf.file.gradient.exists(locs):
+            #continue
+        #else:
+            #grad = scn_save_fs.leaf.file.gradient.read(locs)
+            #print('grad in vtst: \n', grad)
+
+        # get hessian
         if not scn_save_fs.leaf.file.hessian.exists(locs):
             continue
         else:
             hess = scn_save_fs.leaf.file.hessian.read(locs)
+
             projrot_inp_str = projrot_io.writer.rpht_input(
                 geom, grad, hess, rotors_str=proj_rotors_str,
                 coord_proj=coord_proj)
@@ -482,10 +498,22 @@ def vtst_with_no_saddle_block(
                 if not imag_freq:
                     freqs = freqs[:-1]
 
+            freqs_test_0 = elstruct.util.harmonic_frequencies(geom, hess, project=False)
+            mode_start = 7
+            if automol.geom.is_linear(geom):
+                mode_start = mode_start - 1
+            freqs_test = freqs_test_0[mode_start:]
+            print('projrot freqs in vtst:', freqs)
+            #print('all unprojected freqs in vtst:', freqs_test_0)
+            #print('unprojected freqs in vtst:', freqs_test)
+
         zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
         erel = (ene - inf_sep_ene)*phycon.EH2KCAL
         erel_zpe_corr = erel + zpe - rct_zpe
-        eref = erel - spc_ene
+        #eref = erel
+        eref_abs = erel_zpe_corr + spc_ene
+        print('vtst inf test:', ene, inf_sep_ene)
+        print('vtst ene test:', eref_abs, erel_zpe_corr, erel, zpe, spc_ene, rct_zpe)
 
         # Iniialize the header of the string
         irc_pt_str = '!----------------------------------------------- \n'
@@ -497,7 +525,7 @@ def vtst_with_no_saddle_block(
              hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
         # Append the zero energy for the molecule
-        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}\n'.format(eref)
+        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}\n'.format(eref_abs)
         if grid_val != grid[-1]:
             irc_pt_str += 'End \n'
 
@@ -681,6 +709,9 @@ def pst_block(
             har_geo_i = har_cnf_save_fs_i.leaf.file.geometry.read(har_min_cnf_locs_i)
             if har_min_cnf_locs_j is not None:
                 har_geo_j = har_cnf_save_fs_j.leaf.file.geometry.read(har_min_cnf_locs_j)
+                freqs = []
+                freqs_i = []
+                freqs_j = []
                 if not automol.geom.is_atom(har_geo_i):
                     hess_i = har_cnf_save_fs_i.leaf.file.hessian.read(har_min_cnf_locs_i)
                     freqs_i = elstruct.util.harmonic_frequencies(har_geo_i, hess_i, project=False)
@@ -688,14 +719,14 @@ def pst_block(
                     if automol.geom.is_linear(har_geo_i):
                         mode_start = mode_start - 1
                     freqs = freqs_i[mode_start:]
-                    if not automol.geom.is_atom(har_geo_j):
-                        hess_j = har_cnf_save_fs_j.leaf.file.hessian.read(har_min_cnf_locs_j)
-                        freqs_j = elstruct.util.harmonic_frequencies(
-                            har_geo_j, hess_j, project=False)
-                        mode_start = 6
-                        if automol.geom.is_linear(har_geo_j):
-                            mode_start = mode_start - 1
-                        freqs += freqs_j[mode_start:]
+                if not automol.geom.is_atom(har_geo_j):
+                    hess_j = har_cnf_save_fs_j.leaf.file.hessian.read(har_min_cnf_locs_j)
+                    freqs_j = elstruct.util.harmonic_frequencies(
+                        har_geo_j, hess_j, project=False)
+                    mode_start = 6
+                    if automol.geom.is_linear(har_geo_j):
+                        mode_start = mode_start - 1
+                    freqs += freqs_j[mode_start:]
                 hind_rot_str = ""
                 form_i = automol.geom.formula(har_geo_i)
                 form_j = automol.geom.formula(har_geo_j)
@@ -739,8 +770,8 @@ def pst_block(
                         mode_start = mode_start - 1
                     freqs_j = freqs_j[mode_start:]
 
-                hind_rot_str = ""
                 proj_rotors_str = ""
+                hind_rot_str = ""
 
                 if tors_min_cnf_locs_i is not None and not is_atom_i:
                     if har_cnf_save_fs_i.trunk.file.info.exists():
@@ -827,6 +858,7 @@ def pst_block(
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_i)
+                        print('projrot 3 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -834,6 +866,7 @@ def pst_block(
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
+                    print('projrot 4 test:')
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess_i, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -860,9 +893,11 @@ def pst_block(
                             path+'/RTproj_freq.dat')
                         freqs_i = rtproj_freqs
 
+                proj_rotors_str = ""
+                hind_rot_str = ""
                 if tors_min_cnf_locs_j is not None and not is_atom_j:
                     if har_cnf_save_fs_j.trunk.file.info.exists():
-                        inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
+                        inf_obj_s = har_cnf_save_fs_j.trunk.file.info.read()
                         tors_ranges = inf_obj_s.tors_ranges
                         tors_ranges = autofile.info.dict_(tors_ranges)
                         tors_names = list(tors_ranges.keys())
@@ -938,6 +973,7 @@ def pst_block(
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy, geom=har_geo_j)
+                        print('projrot 5 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -945,6 +981,7 @@ def pst_block(
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
+                    print('projrot 6 test:')
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess_j, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -1189,10 +1226,10 @@ def fake_species_block(
                 har_geo_j = automol.geom.translated(har_geo_j, [10., 10., 10.])
                 har_geo += har_geo_j
 
-                hind_rot_str = ""
                 proj_rotors_str = ""
+                hind_rot_str = ""
 
-                if tors_min_cnf_locs_i is not None and not is_atom_j:
+                if tors_min_cnf_locs_i is not None and not is_atom_i:
                     if har_cnf_save_fs_i.trunk.file.info.exists():
                         inf_obj_s = har_cnf_save_fs_i.trunk.file.info.read()
                         tors_ranges = inf_obj_s.tors_ranges
@@ -1277,6 +1314,7 @@ def fake_species_block(
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_i)
+                        print('projrot 7 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -1284,6 +1322,7 @@ def fake_species_block(
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
+                    print('projrot 8 test:')
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess_i, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -1310,6 +1349,8 @@ def fake_species_block(
                             path+'/RTproj_freq.dat')
                         freqs_i = rtproj_freqs
 
+                proj_rotors_str = ""
+                hind_rot_str = ""
                 if tors_min_cnf_locs_j is not None and not is_atom_j:
                     if har_cnf_save_fs_j.trunk.file.info.exists():
                         inf_obj_s = har_cnf_save_fs_j.trunk.file.info.read()
@@ -1388,6 +1429,7 @@ def fake_species_block(
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_js)
+                        print('projrot 9 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -1395,6 +1437,7 @@ def fake_species_block(
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
+                    print('projrot 10 test:')
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess_j, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)

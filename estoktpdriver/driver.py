@@ -533,7 +533,7 @@ if PARAMS.RUN_THERMO:
     #     SAVE_PREFIX, options=OPTIONS)
     thermodriver.driver.run(
         PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, SPC_QUEUE, PARAMS.REF_MOLS,
-        RUN_PREFIX, SAVE_PREFIX,
+        PARAMS.RUN_PREFIX, PARAMS.SAVE_PREFIX,
         ene_coeff=PARAMS.ENE_COEFF, options=PARAMS.OPTIONS_THERMO)
 
 if PARAMS.RUN_RATES:
@@ -585,17 +585,18 @@ if PARAMS.RUN_RATES:
             conndct = {}
             connchnls = {}
             for chnl_idx, chnl_name in enumerate(PES_RXN_NAME_LST):
-                print('Channel name', chnl_name)
+                #print('Channel name', chnl_name)
                 connected_to = []
                 chnl_species = [list(PES_RCT_NAMES_LST[chnl_idx]), list(PES_PRD_NAMES_LST[chnl_idx])]
                 for conn_chnls_idx in conndct:
                     for spc_pair in chnl_species:
-                        if spc_pair in conndct[conn_chnls_idx]:
-                            if conn_chnls_idx not in connected_to:
-                                connected_to.append(conn_chnls_idx)
-                        elif spc_pair[::-1] in conndct[conn_chnls_idx]:
-                            if conn_chnls_idx not in connected_to:
-                                connected_to.append(conn_chnls_idx)
+                        if len(spc_pair) == 1:
+                            if spc_pair in conndct[conn_chnls_idx]:
+                                if conn_chnls_idx not in connected_to:
+                                    connected_to.append(conn_chnls_idx)
+                            elif spc_pair[::-1] in conndct[conn_chnls_idx]:
+                                if conn_chnls_idx not in connected_to:
+                                    connected_to.append(conn_chnls_idx)
                 if not connected_to:
                     conndct[subpes_idx] = chnl_species
                     connchnls[subpes_idx] = [chnl_idx]
@@ -615,6 +616,11 @@ if PARAMS.RUN_RATES:
                         conndct[cidx] = [conndct[cidx][i] for i in
                                          range(len(conndct[cidx])) if i == 0 or
                                          conndct[cidx][i] != conndct[cidx][i-1]]
+
+            for cidx, cvals in enumerate(connchnls.values()):
+                print('PES{}_{}: {} surface'.format(str(pes_idx), str(cidx+1), PES))
+                for cval in cvals:
+                    print(PES_RXN_NAME_LST[cval])
 
             # Loop ktp runs over the sub-pes
             for cidx, cvals in enumerate(connchnls.values()):

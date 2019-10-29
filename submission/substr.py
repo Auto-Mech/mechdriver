@@ -7,8 +7,10 @@ PROJROT = ("#!/usr/bin/env bash\n"
 
 # MESS
 MESSPF = ("#!/usr/bin/env bash\n"
+          "export OMP_NUM_THREADS=10\n"
           "messpf pf.inp pf.out >> stdout.log &> stderr.log")
 MESSRATE = ("#!/usr/bin/env bash\n"
+            "export OMP_NUM_THREADS=10\n"
             "mess mess.inp rate.out >> stdout.log &> stderr.log")
 
 # VaReCoF
