@@ -176,7 +176,7 @@ def run_scan(
 
 def run_multiref_rscan(
         formula, high_mul, zma, spc_info, multi_level, dist_name, grid1, grid2,
-        scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True, hessian=False,
+        scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True, gradient=False, hessian=False,
         **kwargs):
     """ run constrained optimization scan
     """
@@ -211,12 +211,14 @@ def run_multiref_rscan(
     num_act_orb = num_act_elc
 
     ref_zma = automol.zmatrix.set_values(zma, {coo_names[0]: grid_vals[0][0]})
-    cas_opt, _ = moldr.ts.cas_options(spc_info, formula, num_act_elc, num_act_orb, high_mul)
+    cas_opt = ['', '']
+    cas_opt[0], _ = moldr.ts.cas_options_1(spc_info, formula, num_act_elc, num_act_orb, high_mul)
+    cas_opt[1], _ = moldr.ts.cas_options_2(spc_info, formula, num_act_elc, num_act_orb, high_mul)
     guess_str = moldr.ts.multiref_wavefunction_guess(
         high_mul, ref_zma, spc_info, multi_level, cas_opt)
     guess_lines = guess_str.splitlines()
 
-    opt_kwargs['casscf_options'] = cas_opt
+    opt_kwargs['casscf_options'] = cas_opt[1]
     opt_kwargs['mol_options'] = ['nosym']
     opt_kwargs['gen_lines'] = {1: guess_lines}
 
@@ -250,6 +252,7 @@ def run_multiref_rscan(
         thy_level=multi_level,
         overwrite=overwrite,
         update_guess=update_guess,
+        gradient=gradient,
         hessian=hessian,
         **opt_kwargs,
     )
@@ -283,6 +286,7 @@ def run_multiref_rscan(
         thy_level=multi_level,
         overwrite=overwrite,
         update_guess=update_guess,
+        gradient=gradient,
         hessian=hessian,
         **opt_kwargs,
     )
@@ -291,7 +295,7 @@ def run_multiref_rscan(
 def _run_1d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_name, grid_idxs, grid_vals,
         spc_info, thy_level, overwrite, errors=(), options_mat=(),
-        retry_failed=True, update_guess=True, saddle=False, hessian=False,
+        retry_failed=True, update_guess=True, saddle=False, gradient=False, hessian=False,
         **kwargs):
     """ run 1 dimensional scan with constrained optimization
     """
@@ -328,23 +332,41 @@ def _run_1d_scan(
                 if update_guess:
                     guess_zma = opt_zma
 
-            if hessian:
-                moldr.driver.run_job(
-                    job=elstruct.Job.HESSIAN,
-                    script_str=script_str,
-                    run_fs=run_fs,
-                    geom=opt_zma,
-                    spc_info=spc_info,
-                    thy_level=thy_level,
-                    overwrite=overwrite,
-                    frozen_coordinates=[coo_name],
-                    errors=errors,
-                    options_mat=options_mat,
-                    retry_failed=retry_failed,
-                    **kwargs
-                )
+                if gradient:
+                    moldr.driver.run_job(
+                        job=elstruct.Job.GRADIENT,
+                        script_str=script_str,
+                        run_fs=run_fs,
+                        geom=opt_zma,
+                        spc_info=spc_info,
+                        thy_level=thy_level,
+                        overwrite=overwrite,
+                        frozen_coordinates=[coo_name],
+                        errors=errors,
+                        options_mat=options_mat,
+                        retry_failed=retry_failed,
+                        **kwargs
+                    )
 
-                ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
+                    ret = moldr.driver.read_job(job=elstruct.Job.GRADIENT, run_fs=run_fs)
+
+                if hessian:
+                    moldr.driver.run_job(
+                        job=elstruct.Job.HESSIAN,
+                        script_str=script_str,
+                        run_fs=run_fs,
+                        geom=opt_zma,
+                        spc_info=spc_info,
+                        thy_level=thy_level,
+                        overwrite=overwrite,
+                        frozen_coordinates=[coo_name],
+                        errors=errors,
+                        options_mat=options_mat,
+                        retry_failed=retry_failed,
+                        **kwargs
+                    )
+
+                    ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
 
 
 def _run_2d_scan(
@@ -393,7 +415,7 @@ def _run_2d_scan(
                     guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
 
-def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=False):
+def save_scan(scn_run_fs, scn_save_fs, coo_names, gradient=False, hessian=False):
     """ save the scans that have been run so far
     """
     if not scn_run_fs.branch.exists([coo_names]):
@@ -428,6 +450,16 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, hessian=False):
                 scn_save_fs.leaf.file.zmatrix.write(zma, locs)
 
                 locs_lst.append(locs)
+
+                if gradient:
+                    ret = moldr.driver.read_job(job=elstruct.Job.GRADIENT, run_fs=run_fs)
+                    if ret:
+                        inf_obj, inp_str, out_str = ret
+                        prog = inf_obj.prog
+                        method = inf_obj.method
+                        grad = elstruct.reader.gradient(prog, out_str)
+                        scn_save_fs.leaf.file.gradient.write(grad, locs)
+
                 if hessian:
                     ret = moldr.driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
                     if ret:
@@ -480,81 +512,81 @@ def infinite_separation_energy(
     prog = multi_info[0]
     method = multi_info[1]
 
-    orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
-    multi_lvl = multi_info[0:3]
-    multi_lvl.append(orb_restr)
+#    orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
+#    multi_lvl = multi_info[0:3]
+#    multi_lvl.append(orb_restr)
 
-    sp_run_fs.leaf.create(multi_lvl[1:4])
-    sp_save_fs.leaf.create(multi_lvl[1:4])
+#    sp_run_fs.leaf.create(multi_lvl[1:4])
+#    sp_save_fs.leaf.create(multi_lvl[1:4])
 
-    sp_mr_run_path = sp_run_fs.leaf.path(multi_lvl[1:4])
-    sp_mr_save_path = sp_save_fs.leaf.path(multi_lvl[1:4])
-    run_mr_fs = autofile.fs.run(sp_mr_run_path)
+#    sp_mr_run_path = sp_run_fs.leaf.path(multi_lvl[1:4])
+#    sp_mr_save_path = sp_save_fs.leaf.path(multi_lvl[1:4])
+#    run_mr_fs = autofile.fs.run(sp_mr_run_path)
 
-    mr_script_str, _, mr_kwargs, _ = moldr.util.run_qchem_par(prog, method)
+#    mr_script_str, _, mr_kwargs, _ = moldr.util.run_qchem_par(prog, method)
 
-    num_act_elc = high_mul
-    num_act_orb = num_act_elc
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
+#    num_act_elc = high_mul
+#    num_act_orb = num_act_elc
+#    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
 
-    cas_opt, _ = moldr.ts.cas_options(ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = moldr.ts.multiref_wavefunction_guess(high_mul, ref_zma, ts_info, multi_lvl, cas_opt)
-    guess_lines = guess_str.splitlines()
+#    cas_opt, _ = moldr.ts.cas_options_2(ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+#    guess_str = moldr.ts.multiref_wavefunction_guess(high_mul, ref_zma, ts_info, multi_lvl, cas_opt)
+#    guess_lines = guess_str.splitlines()
 
-    mr_kwargs['casscf_options'] = cas_opt
-    mr_kwargs['mol_options'] = ['nosym']
-    mr_kwargs['gen_lines'] = {1: guess_lines}
+#    mr_kwargs['casscf_options'] = cas_opt
+#    mr_kwargs['mol_options'] = ['nosym']
+#    mr_kwargs['gen_lines'] = {1: guess_lines}
 
-    ret = moldr.driver.read_job(
-        job='energy',
-        run_fs=run_mr_fs,
-    )
-    if ret:
-        print(" - Reading low spin multi reference energy from output...")
-        inf_obj, inp_str, out_str = ret
-        ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
-        sp_save_fs.leaf.file.energy.write(ene, multi_lvl[1:4])
-        sp_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
-        sp_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
+#    ret = moldr.driver.read_job(
+#        job='energy',
+#        run_fs=run_mr_fs,
+#    )
+#    if ret:
+#        print(" - Reading low spin multi reference energy from output...")
+#        inf_obj, inp_str, out_str = ret
+#        ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+#        sp_save_fs.leaf.file.energy.write(ene, multi_lvl[1:4])
+#        sp_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
+#        sp_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
+#
+#    if not sp_save_fs.leaf.file.energy.exists(multi_lvl[1:4]) or overwrite:
+#        print(" - Running low spin multi reference energy ...")
+#        moldr.driver.run_job(
+#            job='energy',
+#            script_str=mr_script_str,
+#            run_fs=run_mr_fs,
+#            geom=geo,
+#            spc_info=ts_info,
+#            thy_level=multi_lvl,
+#            overwrite=overwrite,
+#            **mr_kwargs,
+#        )
+#
+#        ret = moldr.driver.read_job(
+#            job='energy',
+#            run_fs=run_mr_fs,
+#        )
+#
+#        if ret is not None:
+#            inf_obj, inp_str, out_str = ret
+#
+#            print(" - Reading low spin multi reference energy from output...")
+#            ls_mr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
-    if not sp_save_fs.leaf.file.energy.exists(multi_lvl[1:4]) or overwrite:
-        print(" - Running low spin multi reference energy ...")
-        moldr.driver.run_job(
-            job='energy',
-            script_str=mr_script_str,
-            run_fs=run_mr_fs,
-            geom=geo,
-            spc_info=ts_info,
-            thy_level=multi_lvl,
-            overwrite=overwrite,
-            **mr_kwargs,
-        )
+#            print(" - Saving low spin multi reference energy...")
+#            print(" - Save path: {}".format(sp_mr_save_path))
+#            sp_save_fs.leaf.file.energy.write(ls_mr_ene, multi_lvl[1:4])
+#            sp_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
+#            sp_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
+#        else:
+#            print('ERROR: low spin multi reference energy job fails: ',
+#                  'Energy is needed to evaluate infinite separation energy')
+#            return
 
-        ret = moldr.driver.read_job(
-            job='energy',
-            run_fs=run_mr_fs,
-        )
+#    else:
+#        ls_mr_ene = sp_save_fs.leaf.file.energy.read(multi_lvl[1:4])
 
-        if ret is not None:
-            inf_obj, inp_str, out_str = ret
-
-            print(" - Reading low spin multi reference energy from output...")
-            ls_mr_ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
-
-            print(" - Saving low spin multi reference energy...")
-            print(" - Save path: {}".format(sp_mr_save_path))
-            sp_save_fs.leaf.file.energy.write(ls_mr_ene, multi_lvl[1:4])
-            sp_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
-            sp_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
-        else:
-            print('ERROR: low spin multi reference energy job fails: ',
-                  'Energy is needed to evaluate infinite separation energy')
-            return
-
-    else:
-        ls_mr_ene = sp_save_fs.leaf.file.energy.read(multi_lvl[1:4])
-
-    print('low spin energy:', ls_mr_ene)
+#    print('low spin energy:', ls_mr_ene)
     # get the multi reference energy for the high spin state for the reference point on the scan
 
     hs_info = (ts_info[0], ts_info[1], high_mul)
@@ -571,8 +603,14 @@ def infinite_separation_energy(
     hs_mr_save_path = hs_save_fs.leaf.path(multi_lvl[1:4])
     run_mr_fs = autofile.fs.run(hs_mr_run_path)
 
-    cas_opt, _ = moldr.ts.cas_options(hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = moldr.ts.multiref_wavefunction_guess(high_mul, ref_zma, hs_info, multi_lvl, cas_opt)
+    mr_script_str, _, mr_kwargs, _ = moldr.util.run_qchem_par(prog, method)
+
+    num_act_elc = high_mul
+    num_act_orb = num_act_elc
+    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
+
+    cas_opt, _ = moldr.ts.cas_options_2(hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+    guess_str = moldr.ts.multiref_wavefunction_guess(high_mul, ref_zma, hs_info, multi_lvl, [cas_opt])
     guess_lines = guess_str.splitlines()
 
     mr_kwargs['casscf_options'] = cas_opt
@@ -798,7 +836,8 @@ def infinite_separation_energy(
 
         spc_ene.append(sp_sr_ene)
 
-    inf_sep_ene = spc_ene[0] + spc_ene[1] - hs_sr_ene + hs_mr_ene - ls_mr_ene + ls_mr_ene
+    inf_sep_ene = spc_ene[0] + spc_ene[1] - hs_sr_ene + hs_mr_ene
+    #inf_sep_ene = spc_ene[0] + spc_ene[1] - hs_sr_ene + hs_mr_ene - ls_mr_ene + ls_mr_ene
     print('inf_sep_ene test:', inf_sep_ene)
 
     return inf_sep_ene

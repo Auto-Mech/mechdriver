@@ -15,7 +15,9 @@ from submission import substr
 TEMPS = [500., 600., 700., 800., 900., 1000., 1100., 1200., 1300., 1400., 1500., 1600., 1700., 1800., 1900., 2000.]
 ASSESS_PDEP_TEMPS = [500., 1000.0]
 # TEMPS = [500., 750., 1000., 1250., 1500., 1750., 2000.]
-PRESS = [0.1, 1., 10., 100.]
+PRESS = [0.03, 0.1, 0.3, 1., 3., 10., 30., 100.]
+PLOW = 0.3
+PHIGH = 3.
 
 KICKOFF_SIZE = 0.1
 KICKOFF_BACKWARD = False
@@ -353,7 +355,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
 
                                 # Read the rate constants out of the mess outputs
                                 ktp_dct = scripts.ktp.read_rates(
-                                    lab_i, lab_j, mess_path, ASSESS_PDEP_TEMPS,
+                                    lab_i, lab_j, mess_path, ASSESS_PDEP_TEMPS, pdep_low=PLOW, pdep_high=PHIGH,
                                     pdep_tolerance=20, no_pdep_pval=1.0)
 
                                 # Fit rate constants to single Arrhenius expressions

@@ -1008,6 +1008,7 @@ def find_ts(
             print('starting multiref scan:', scn_run_fs.trunk.path())
             vtst = True
             if vtst:
+                gradient = False
                 hessian = True
             moldr.scan.run_multiref_rscan(
                 formula=ts_formula,
@@ -1023,6 +1024,7 @@ def find_ts(
                 script_str=opt_script_str,
                 overwrite=overwrite,
                 update_guess=update_guess,
+                gradient=gradient,
                 hessian=hessian,
                 **opt_kwargs
             )
@@ -1031,6 +1033,7 @@ def find_ts(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
                 coo_names=[dist_name],
+                gradient=gradient,
                 hessian=hessian,
             )
 

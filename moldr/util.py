@@ -112,11 +112,13 @@ def run_qchem_par(prog, method):
         else:
             kwargs = {
                 'memory': 10,
+                'corr_options': ['maxit=100'],
                 'mol_options': ['nosym'],
             }
             opt_kwargs = {
                 'memory': 5,
                 'mol_options': ['nosym'],
+                'corr_options': ['maxit=100'],
                 'feedback': True,
                 'errors': [
                 ],
