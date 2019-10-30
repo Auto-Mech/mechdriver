@@ -31,6 +31,14 @@ GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 # Read parameters that dictate job running options
 PARAMS = read_dat.params(os.path.join(MECH_PATH, 'params.dat'))
 
+print(DATA_PATH)
+print(MECH_PATH)
+
+for attr in dir(PARAMS):
+    print(attr, getattr(PARAMS, attr))
+
+# sys.exit()
+
 # Set further parameters for what reactions and PESs to be run
 if len(sys.argv) > 4:
     PARAMS.PESNUMS = sys.argv[4]
@@ -688,7 +696,7 @@ if PARAMS.RUN_RATES:
                     # run ktp for a given PES
                     ktpdriver.driver.run(
                         PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
-                        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save',
+                        PARAMS.RUN_PREFIX, PARAMS.SAVE_PREFIX,
                         ene_coeff=PARAMS.ENE_COEFF, options=PARAMS.OPTIONS_RATE, etrans=etrans_lst)
                         #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 

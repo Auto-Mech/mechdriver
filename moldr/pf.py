@@ -525,7 +525,7 @@ def vtst_with_no_saddle_block(
              hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
         # Append the zero energy for the molecule
-        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}\n'.format(eref_abs)
+        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:<8.2f}\n'.format(eref)
         if grid_val != grid[-1]:
             irc_pt_str += 'End \n'
 
@@ -565,7 +565,7 @@ def vtst_saddle_block(scn_save_fs, geoms, frequencies, energies):
              hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
         # Append the zero point energy for the molecule
-        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:}'.format(zero_energy)
+        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:<8.2f}'.format(zero_energy)
 
         # Append string to list
         irc_pt_strings.append(irc_pt_string)
