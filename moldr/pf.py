@@ -593,7 +593,7 @@ def vtst_with_no_saddle_block(
              hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
         # Append the zero energy for the molecule
-        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:<8.2f}\n'.format(eref)
+        irc_pt_str += '    ZeroEnergy[kcal/mol]      {0:<8.2f}\n'.format(eref_abs)
         if grid_val != grid[-1]:
             irc_pt_str += 'End \n'
 
