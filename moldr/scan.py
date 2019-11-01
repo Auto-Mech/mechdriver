@@ -775,11 +775,16 @@ def infinite_separation_energy(
         thy_save_fs.leaf.create(thy_lvl[1:4])
 
         geo = ini_cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+
         sp_run_fs = autofile.fs.single_point(min_cnf_run_path)
+        sp_run_fs.leaf.create(thy_lvl[1:4])
         sp_save_fs = autofile.fs.single_point(min_cnf_save_path)
+        sp_save_fs.leaf.create(thy_lvl[1:4])
 
         sp_sr_run_path = sp_run_fs.leaf.path(thy_lvl[1:4])
         sp_sr_save_path = sp_save_fs.leaf.path(thy_lvl[1:4])
+        print('sp_sr_run_path')
+        print(sp_sr_run_path)
         run_sr_fs = autofile.fs.run(sp_sr_run_path)
 
         # get the single reference energy for the high spin state for the reference point on the scan
