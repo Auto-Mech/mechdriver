@@ -222,12 +222,16 @@ def make_channel_pfs(
 
     fake_wellr_label = ''
     fake_wellp_label = ''
-    if 'abstraction or addition' in spc_dct[tsname]['class']:
+    print('class test:', spc_dct[tsname]['class'])
+    if 'abstraction' in spc_dct[tsname]['class']:
     #Make fake wells and PST TSs as needed
         well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
         well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
         pst_r_ts_str = ''
-        if not well_dct_key1 in idx_dct:
+        print('well_dct_key1 test:', well_dct_key1)
+        print('well_dct_key2 test:', well_dct_key2)
+        print('idx_dct:', idx_dct)
+        if well_dct_key1 not in idx_dct:
             if well_dct_key2 in idx_dct:
                 well_dct_key1 = well_dct_key2
             else:
@@ -308,7 +312,7 @@ def make_channel_pfs(
         else:
             fake_wellp_label = idx_dct[well_dct_key1]
 
-        # no print the inner TS data
+        # print the inner TS data
         if 'radical radical' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class']:
             # for radical radical call vtst or vrctst
             ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
@@ -319,7 +323,7 @@ def make_channel_pfs(
                 spc_ene = prod_ene - first_ground_ene
                 spc_zpe = spc_dct[rxn['prods'][0]]['zpe'] + spc_dct[rxn['prods'][1]]['zpe']
             ts_str += '\n' + moldr.pf.vtst_with_no_saddle_block(
-                spc_dct[tsname], ts_label, reac_label, prod_label, spc_ene, spc_zpe, projrot_script_str,
+                spc_dct[tsname], ts_label, fake_wellr_label, fake_wellp_label, spc_ene, spc_zpe, projrot_script_str,
                 multi_info, elec_levels=[[0., 1]], sym_factor=1.
                 )
         else:
@@ -337,6 +341,19 @@ def make_channel_pfs(
             ts_str += '\n' + mess_io.writer.ts_sadpt(
                 ts_label, fake_wellr_label, fake_wellp_label, species_data[tsname], zero_energy, tunnel_str)
 
+    elif 'radical radical' in spc_dct[tsname]['class'] and 'addition' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class']:
+            # for radical radical addition call vtst or vrctst
+            ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
+            if 'P' in reac_label:
+                spc_ene = reac_ene - first_ground_ene
+                spc_zpe = spc_dct[rxn['reacs'][0]]['zpe'] + spc_dct[rxn['reacs'][1]]['zpe']
+            else:
+                spc_ene = prod_ene - first_ground_ene
+                spc_zpe = spc_dct[rxn['prods'][0]]['zpe'] + spc_dct[rxn['prods'][1]]['zpe']
+            ts_str += '\n' + moldr.pf.vtst_with_no_saddle_block(
+                spc_dct[tsname], ts_label, reac_label, prod_label, spc_ene, spc_zpe, projrot_script_str,
+                multi_info, elec_levels=[[0., 1]], sym_factor=1.
+                )
     else:
         ts_reac_barr = ts_ene - reac_ene
         ts_prod_barr = ts_ene - prod_ene

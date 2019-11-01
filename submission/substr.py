@@ -3,7 +3,8 @@
 
 # ProjRot
 PROJROT = ("#!/usr/bin/env bash\n"
-           "RPHt.exe >& /dev/null")
+           "/lcrc/project/CMRP/pacc/ProjRot/build/RPHt.exe >& /dev/null")
+#           "RPHt.exe >& /dev/null")
 
 # MESS
 MESSPF = ("#!/usr/bin/env bash\n"
