@@ -5,6 +5,7 @@ import automol
 import elstruct
 import autofile
 import moldr
+from elstruct.reader._molpro2015.molecule import hess_geometry
 
 
 def hindered_rotor_scans(
@@ -468,6 +469,9 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, gradient=False, hessian=False)
                         method = inf_obj.method
                         hess = elstruct.reader.hessian(prog, out_str)
                         scn_save_fs.leaf.file.hessian.write(hess, locs)
+                        if prog == 'molpro2015':
+                            geo = hess_geometry(out_str)
+                            scn_save_fs.leaf.file.geometry.write(geo, locs)
 
         if locs_lst:
             idxs_lst = [locs[-1] for locs in locs_lst]
