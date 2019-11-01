@@ -31,14 +31,6 @@ GEOM_DCT = moldr.util.geometry_dictionary(GEOM_PATH)
 # Read parameters that dictate job running options
 PARAMS = read_dat.params(os.path.join(MECH_PATH, 'params.dat'))
 
-print(DATA_PATH)
-print(MECH_PATH)
-
-for attr in dir(PARAMS):
-    print(attr, getattr(PARAMS, attr))
-
-# sys.exit()
-
 # Set further parameters for what reactions and PESs to be run
 if len(sys.argv) > 4:
     PARAMS.PESNUMS = sys.argv[4]
@@ -629,6 +621,7 @@ if PARAMS.RUN_RATES:
                 print('PES{}_{}: {} surface'.format(str(pes_idx), str(cidx+1), PES))
                 for cval in cvals:
                     print(PES_RXN_NAME_LST[cval])
+
 
             # Loop ktp runs over the sub-pes
             for cidx, cvals in enumerate(connchnls.values()):

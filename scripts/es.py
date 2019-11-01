@@ -165,6 +165,11 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs, spc_info, overwri
                        'tau_samp': 'run_tau_samp',
                        'hr_scan': 'run_hr_scan'}
 
+    # if 'insertion' and 'low' in spcdct['class']:
+    #     opt_kwargs['scf_options'] = [
+    #         elstruct.option.specify(
+    #             elstruct.Option.Scf.Guess.MIX)
+    #     ]
     if tsk in ['conf_samp', 'tau_samp']:
         params['nsamp_par'] = es_dct['mc_nsamp']
         params['dist_info'] = spcdic['dist_info']
@@ -469,10 +474,10 @@ def get_zmas(
         ichgeo = automol.inchi.geometry(ich)
         ichzma = automol.geom.zmatrix(ichgeo)
         prods = prods[:-1]
-    rct_geos, cnf_save_fs_lst = get_geos(
+    rct_geos, rct_cnf_save_fs_lst = get_geos(
         reacs, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
         kickoff_backward, projrot_script_str)
-    prd_geos, _ = get_geos(
+    prd_geos, prd_cnf_save_fs_lst = get_geos(
         prods, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
         kickoff_backward, projrot_script_str)
     rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
@@ -483,7 +488,7 @@ def get_zmas(
         rct_zmas.append(ichzma)
     if len(prd_zmas) > 2:
         prd_zmas.append(ichzma)
-    return rct_zmas, prd_zmas, cnf_save_fs_lst
+    return rct_zmas, prd_zmas, rct_cnf_save_fs_lst, prd_cnf_save_fs_lst
 
 
 def get_geos(
@@ -528,7 +533,7 @@ def get_geos(
     return spc_geos, cnf_save_fs_lst
 
 
-def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_save_fs):
+def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_save_fs_lst, prd_cnf_save_fs_lst):
     """ determine type of reaction and related ts info from the reactant and product z-matrices.
     Returns the type, the transition state z-matrix, the name of the coordinate to optimize,
     the grid of values for the initial grid search, the torsion names and symmetries, and
@@ -564,95 +569,119 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
     frm_bnd_key = []
     brk_bnd_key = []
     # cycle through each of the possible reaction types checking if the reaction is in that class
-    # Check for addition
-    ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
-    if ret:
-        typ = 'addition'
-        ts_zma, dist_name, tors_names = ret
-        if ts_mul == high_mul:
-            typ += ': high spin'
-        elif ts_mul == low_mul:
-            typ += ': low spin'
-        # set up beta scission as a fall back option for failed addition TS search
-        ret2 = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
-        if ret2:
-            bkp_typ = 'beta scission'
-            bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
+    # Check both orders of reactants and products
+    for direction in ('forward', 'reverse'):
 
-    # Check for beta-scission
-    if typ is None:
-        ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
+        print('direction')
+        print(direction)
+
+        # Set proper cnf filesystem and flip reactants and products for second check
+        if direction == 'forward':
+            cnf_save_fs_lst = rct_cnf_save_fs_lst
+        elif direction == 'reverse':
+            zmas = [rct_zmas, prd_zmas]
+            rct_zmas, prd_zmas = zmas[1], zmas[0]
+            cnf_save_fs_lst = prd_cnf_save_fs_lst
+        print('rct_zmas')
+        for x in rct_zmas:
+            print(x)
+        print('prd_zmas')
+        for x in prd_zmas:
+            print(x)
+
+        # Check for addition
+        ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
         if ret:
-            typ = 'beta scission'
+            typ = 'addition'
             ts_zma, dist_name, tors_names = ret
-            ret2 = automol.zmatrix.ts.addition(prd_zmas, rct_zmas, rct_tors_names)
+            if ts_mul == high_mul:
+                typ += ': high spin'
+            elif ts_mul == low_mul:
+                typ += ': low spin'
+            # set up beta scission as a fall back option for failed addition TS search
+            ret2 = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
             if ret2:
-                bkp_typ = 'addition'
+                bkp_typ = 'beta scission'
                 bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
 
-    # Check for hydrogen migration
-    if typ is None:
-        orig_dist = automol.zmatrix.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
-        if orig_dist:
-            rct_zmas = moldr.util.min_dist_conformer_zma_geo(orig_dist, rct_cnf_save_fs[0])
-            ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
+        # Check for beta-scission
+        if typ is None:
+            ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
             if ret:
-                typ = 'hydrogen migration'
+                typ = 'beta scission'
+                ts_zma, dist_name, tors_names = ret
+                ret2 = automol.zmatrix.ts.addition(prd_zmas, rct_zmas, rct_tors_names)
+                if ret2:
+                    bkp_typ = 'addition'
+                    bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
+
+        # Check for hydrogen migration
+        if typ is None:
+            orig_dist = automol.zmatrix.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
+            if orig_dist:
+                rct_zmas = moldr.util.min_dist_conformer_zma_geo(orig_dist, cnf_save_fs_lst[0])
+                ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
+                if ret:
+                    typ = 'hydrogen migration'
+                    ts_zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
+
+        # Check for hydrogen abstraction
+        if typ is None:
+            ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas, sigma=False)
+            print('abstraction ret test in ts_class:', ret)
+            if ret:
+                typ = 'hydrogen abstraction'
                 ts_zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
-
-    # Check for hydrogen abstraction
-    if typ is None:
-        ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas, sigma=False)
-        print('abstraction ret test in ts_class:', ret)
-        if ret:
-            typ = 'hydrogen abstraction'
-            ts_zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
-            if ts_mul == high_mul:
-                typ += ': high spin'
-            elif ts_mul == low_mul:
-                typ += ': low spin'
-        print('key test in ts_class:', frm_bnd_key, brk_bnd_key)
-                
-    # Need special cases for (i) hydrogen abstraction where the radical is a sigma radical
-    # and (ii) for abstraction of a heavy atom rather than a hydrogen atom. 
-    # add these later
-    # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas, sigma=True)
-
-    # Check for insertion
-    if typ is None:
-        ret = automol.zmatrix.ts.insertion(rct_zmas, prd_zmas)
-        if ret:
-            typ = 'insertion'
-            ts_zma, dist_name, tors_names = ret
-            if ts_mul == high_mul:
-                typ += ': high spin'
-            elif ts_mul == low_mul:
-                typ += ': low spin'
-
-    # Check for subsitution
-    if typ is None:
-        ret = automol.zmatrix.ts.substitution(rct_zmas, prd_zmas)
-        if ret:
-            typ = 'substitution'
-            ts_zma, dist_name, tors_names = ret
-            if ts_mul == high_mul:
-                typ += ': high spin'
-            elif ts_mul == low_mul:
-                typ += ': low spin'
-
-    # Check for elimination
-    if typ is None:
-        orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(rct_zmas, prd_zmas)
-        if orig_dist:
-            rct_zmas = moldr.util.min_dist_conformer_zma_geo(orig_dist, rct_cnf_save_fs[0])
-            ret = automol.zmatrix.ts.concerted_unimolecular_elimination(rct_zmas, prd_zmas)
-            if ret:
-                typ = 'elimination'
-                ts_zma, dist_name, brk_name, frm_bnd_key, tors_names = ret
                 if ts_mul == high_mul:
                     typ += ': high spin'
                 elif ts_mul == low_mul:
                     typ += ': low spin'
+            print('key test in ts_class:', frm_bnd_key, brk_bnd_key)
+                    
+        # Need special cases for (i) hydrogen abstraction where the radical is a sigma radical
+        # and (ii) for abstraction of a heavy atom rather than a hydrogen atom. 
+        # add these later
+        # ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas, sigma=True)
+
+        # Check for insertion
+        if typ is None:
+            ret = automol.zmatrix.ts.insertion(rct_zmas, prd_zmas)
+            if ret:
+                typ = 'insertion'
+                ts_zma, dist_name, tors_names = ret
+                if ts_mul == high_mul:
+                    typ += ': high spin'
+                elif ts_mul == low_mul:
+                    typ += ': low spin'
+
+        # Check for subsitution
+        if typ is None:
+            ret = automol.zmatrix.ts.substitution(rct_zmas, prd_zmas)
+            if ret:
+                typ = 'substitution'
+                ts_zma, dist_name, tors_names = ret
+                if ts_mul == high_mul:
+                    typ += ': high spin'
+                elif ts_mul == low_mul:
+                    typ += ': low spin'
+
+        # Check for elimination
+        if typ is None:
+            orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(rct_zmas, prd_zmas)
+            if orig_dist:
+                rct_zmas = moldr.util.min_dist_conformer_zma_geo(orig_dist, cnf_save_fs_lst[0])
+                ret = automol.zmatrix.ts.concerted_unimolecular_elimination(rct_zmas, prd_zmas)
+                if ret:
+                    typ = 'elimination'
+                    ts_zma, dist_name, brk_name, frm_bnd_key, tors_names = ret
+                    if ts_mul == high_mul:
+                        typ += ': high spin'
+                    elif ts_mul == low_mul:
+                        typ += ': low spin'
+
+        # Break if reaction found
+        if typ is not None:
+            break
 
     # Nothing was found
     if typ is None:
@@ -790,6 +819,16 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             grid = [grid1, grid2]
             update_guess = False
 
+    elif 'radical radical hydrogen abstraction' in typ:
+        rstart = 2.4 * phycon.ANG2BOHR
+        rend1 = 1.4 * phycon.ANG2BOHR
+        rend2 = 3.0 * phycon.ANG2BOHR
+        grid1 = numpy.linspace(rstart, rend1, npoints1)
+        grid2 = numpy.linspace(rstart, rend2, npoints2)
+        grid2 = numpy.delete(grid2, 0)
+        grid = [grid1, grid2]
+        update_guess = True
+
     elif 'hydrogen abstraction' in typ:
         npoints = 16
         rmin = 0.7 * phycon.ANG2BOHR
@@ -802,6 +841,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         update_guess = False
 
     elif 'substitution' in typ:
+        npoints = 14
         rmin = 0.7 * phycon.ANG2BOHR
         rmax = 2.4 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
@@ -812,6 +852,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         update_guess = False
 
     elif 'insertion' in typ:
+        npoints = 16
         rmin = 1.4 * phycon.ANG2BOHR
         rmax = 2.4 * phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
@@ -981,7 +1022,7 @@ def find_ts(
               scn_run_fs, scn_save_fs, run_fs]
 
         print('running ts scan:')
-        if 'radical radical addition' in typ:
+        if 'radical radical addition' in typ or 'radical radical hydrogen abstraction' in typ:
             # run mep scan
             multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
 

@@ -40,6 +40,13 @@ def run_qchem_par(prog, method):
                  {'job_options': ['calcall']}]
             ],
         }
+        # if spin:
+        #     kwargs['scf_options'] = [
+        #         elstruct.option.specify(
+        #             elstruct.Option.Scf.Guess.MIX)]
+        #     opt_kwargs['scf_options'] = [
+        #         elstruct.option.specify(
+        #             elstruct.Option.Scf.Guess.MIX)]
 
     if prog == 'psi4':
         sp_script_str = (
@@ -266,6 +273,8 @@ def min_dist_conformer_zma_geo(dist_coords, cnf_save_fs):
         zmas, _ = automol.zmatrix.ts._shifted_standard_forms_with_gaphs([zma])
         zma = zmas[0]
         geo = automol.zmatrix.geometry(zma)
+        print(automol.geom.string(geo))
+        print(*list(dist_coords))
         dist = automol.geom.distance(geo, *list(dist_coords))
         if dist < min_dist:
             min_dist = dist
