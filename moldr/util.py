@@ -9,7 +9,7 @@ import automol
 import elstruct
 
 
-def run_qchem_par(prog, method):
+def run_qchem_par(prog, method, saddle=False):
     """ dictionary of parameters for different electronic structure codes
     """
     if prog == 'gaussian09':
@@ -25,6 +25,7 @@ def run_qchem_par(prog, method):
             'memory': 20,
             'machine_options': ['%NProcShared=10'],
             'gen_lines': {1: ['# int=ultrafine']},
+            #'gen_lines': {1: ['# int=superfine']},
             'feedback': True,
             # 'job_options': ['verytight'],
             # 'job_options': ['verytight'],
@@ -48,6 +49,24 @@ def run_qchem_par(prog, method):
         #         elstruct.option.specify(
         #             elstruct.Option.Scf.Guess.MIX)]
 
+        # doesn't quite work for gen_lines case right now
+        #if saddle:
+        #    opt_kwargs = {
+        #        'memory': 20,
+        #        'machine_options': ['%NProcShared=10'],
+        #        'gen_lines': {1: ['# int=ultrafine']},
+        #        'feedback': True,
+        #        'errors': [
+        #            elstruct.Error.OPT_NOCONV
+        #        ],
+        #        'options_mat': [
+        #            [{'gen_lines': [{1: ['# int=superfine']}]},
+        #            {'gen_lines': [{1: ['# int=superfine']}]},
+        #            {'gen_lines': [{1: ['# int=superfine']}]},
+        #            {'gen_lines': [{1: ['# int=superfine']}]}]
+        #        ],
+        #    }
+
     if prog == 'psi4':
         sp_script_str = (
             "#!/usr/bin/env bash\n"
@@ -60,7 +79,7 @@ def run_qchem_par(prog, method):
     if prog == 'molpro2015':
         sp_script_str = (
             "#!/usr/bin/env bash\n"
-            "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log"
+            "molpro -n 4 run.inp -o run.out >> stdout.log &> stderr.log"
         )
         if method == 'caspt2':
             opt_script_str = (
@@ -78,7 +97,7 @@ def run_qchem_par(prog, method):
             )
         if method in ('caspt2', 'caspt2c'):
             kwargs = {
-                'memory': 10,
+                'memory': 15,
                 'corr_options': ['shift=0.2'],
                 'mol_options': ['nosym'],
             }
@@ -118,7 +137,7 @@ def run_qchem_par(prog, method):
             }
         else:
             kwargs = {
-                'memory': 10,
+                'memory': 16,
                 'corr_options': ['maxit=100'],
                 'mol_options': ['nosym'],
             }

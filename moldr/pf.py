@@ -2,6 +2,7 @@
 """
 import os
 import numpy
+from scipy.interpolate import interp1d
 from qcelemental import periodictable as ptab
 import projrot_io
 import automol
@@ -9,6 +10,7 @@ import elstruct
 import autofile
 import moldr
 import mess_io
+from submission import substr
 from datalibs import phycon
 
 
@@ -173,10 +175,12 @@ def species_block(
                 freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
                 hind_rot_str = ""
                 proj_rotors_str = ""
+                print('for species:', spc)
+                print('tors_min_cnf_locs test:', tors_min_cnf_locs)
 
                 if tors_min_cnf_locs is not None:
-                    if har_cnf_save_fs.trunk.file.info.exists():
-                        inf_obj_s = har_cnf_save_fs.trunk.file.info.read()
+                    if tors_cnf_save_fs.trunk.file.info.exists():
+                        inf_obj_s = tors_cnf_save_fs.trunk.file.info.read()
                         tors_ranges = inf_obj_s.tors_ranges
                         tors_ranges = autofile.info.dict_(tors_ranges)
                         tors_names = list(tors_ranges.keys())
@@ -194,6 +198,7 @@ def species_block(
                     ts_bnd = None
                     if saddle:
                         dist_name = spc_dct_i['dist_info'][0]
+                        tors_names = spc_dct_i['tors_names']
                         ts_bnd = automol.zmatrix.bond_idxs(zma, dist_name)
                         ts_bnd = frozenset(ts_bnd)
                     pot = []
@@ -220,10 +225,25 @@ def species_block(
                             if scn_save_fs.leaf.exists(locs):
                                 enes.append(scn_save_fs.leaf.file.energy.read(locs))
                             else:
-                                enes.append(20.)
+                                enes.append(10.)
                                 print('ERROR: missing grid value for torsional potential of {}'.format(spc_info[0]))
+
                         enes = numpy.subtract(enes, min_ene)
                         pot = list(enes*phycon.EH2KCAL)
+
+                        lpot = len(pot)
+                        idx_success = []
+                        pot_success = []
+                        for idx in range(lpot):
+                            if enes[idx] < 1.:
+                                idx_success.append(idx)
+                                pot_success.append(pot[idx])
+                        idx_success.append(lpot)
+                        pot_success.append(pot[0])
+                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
+                        for idx in range(lpot):
+                            pot[idx] = pot_spl(idx)
+
                         axis = coo_dct[tors_name][1:3]
 
                         atm_key = axis[1]
@@ -242,6 +262,51 @@ def species_block(
                             group = list(
                                 automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
                                 set(axis))
+                        print('sym_num before:', sym_num)
+                        if saddle:
+                            # check to see if fragment group was neglected
+                            n_atm = automol.zmatrix.count(zma)
+                            if 'addition' in spc_dct_i['class'] or 'abstraction' in spc_dct_i['class']:
+                                group2 = []
+                                ts_bnd1 = min(ts_bnd)
+                                ts_bnd2 = max(ts_bnd)
+                                for idx in range(ts_bnd2, n_atm):
+                                    group2.append(idx)
+                                print('group2 test:', group2)
+                                print('axis test:', axis)
+                                print('ts_bnds test:', ts_bnd2, ts_bnd1)
+
+                                if ts_bnd1 in group:
+                                    for atm in group2:
+                                        if atm not in group:
+                                            group.append(atm)
+                            # check to see if symmetry of XH3 rotor was missed
+                            if sym_num == 1:
+                                group2 = []
+                                for idx in range(n_atm):
+                                    if idx not in group and idx not in axis:
+                                        group2.append(idx)
+                                all_H = True
+                                symbols = automol.zmatrix.symbols(zma)
+                                print('symbols test:', symbols)
+                                print('second group2:', group2)
+                                H_count = 0
+                                for idx in group2:
+                                    if symbols[idx] != 'H' and symbols[idx] != 'X':
+                                        all_H = False
+                                        break
+                                    else:
+                                        if symbols[idx] == 'H':
+                                            H_count += 1
+                                if all_H and H_count == 3:
+                                    sym_num = 3
+                                    lpot = int(len(pot)/3)
+                                    potp = []
+                                    potp[0:lpot] = pot[0:lpot]
+                                    pot = potp
+                                print('all_h test=:', all_H, H_count)
+                                
+                        print('sym_num after:', sym_num)
 
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
@@ -290,22 +355,24 @@ def species_block(
                     bld_save_fs = autofile.fs.build(tors_save_path)
                     bld_save_fs.leaf.create(bld_locs)
                     path = bld_save_fs.leaf.path(bld_locs)
-                    print('Build Path for Partition Functions')
+                    print('Build Path for Partition Functions in species block')
                     print(path)
                     proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
                     with open(proj_file_path, 'w') as proj_file:
                         proj_file.write(projrot_inp_str)
+                    print('projrot_inp_str', projrot_inp_str)
+                    print('projrot_script_str', projrot_script_str)
 
                     moldr.util.run_script(projrot_script_str, path)
 
                     freqs = []
                     if pot:
-                        rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         freqs = rthrproj_freqs
+                    rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                        path+'/RTproj_freq.dat')
                     if not freqs:
-                        rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-                            path+'/RTproj_freq.dat')
                         freqs = rtproj_freqs
                     if 'ts_' in spc:
                         if imag_freq:
@@ -314,6 +381,7 @@ def species_block(
                             imag_freq = freqs[-1]
                             freqs = freqs[:-1]
                     # shutil.rmtree(path)
+                    print('freqs test in species block', freqs, imag_freq)
                     core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
                     spc_str = mess_io.writer.molecule(
                         core, freqs, elec_levels,
@@ -488,12 +556,12 @@ def vtst_with_no_saddle_block(
 
             freqs = []
             if len(pot) > 0:
-                rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                     path+'/hrproj_freq.dat')
                 freqs = rthrproj_freqs
+            rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                path+'/RTproj_freq.dat')
             if not freqs:
-                rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-                    path+'/RTproj_freq.dat')
                 freqs = rtproj_freqs
                 if not imag_freq:
                     freqs = freqs[:-1]
@@ -665,20 +733,20 @@ def pst_block(
 
     spc_str = ''
     if 'elec_levs' in spc_dct_i:
-        elec_levs_i = spc_dct_i['elec_levs']
+        elec_levels_i = spc_dct_i['elec_levs']
     else:
-        elec_levs_i = [[0., spc_dct_i['mul']]]
+        elec_levels_i = [[0., spc_dct_i['mul']]]
     if 'elec_levs' in spc_dct_j:
-        elec_levs_j = spc_dct_j['elec_levs']
+        elec_levels_j = spc_dct_j['elec_levs']
     else:
-        elec_levs_j = [[0., spc_dct_j['mul']]]
+        elec_levels_j = [[0., spc_dct_j['mul']]]
 
-    elec_levs = []
-    for _, elec_lev_i in enumerate(elec_levs_i):
-        for _, elec_lev_j in enumerate(elec_levs_j):
-            elec_levs.append(
-                [elec_lev_i[0]+elec_lev_j[0],
-                 elec_lev_i[1]*elec_lev_j[1]])
+    elec_levels = []
+    for _, elec_level_i in enumerate(elec_levels_i):
+        for _, elec_level_j in enumerate(elec_levels_j):
+            elec_levels.append(
+                [elec_level_i[0]+elec_level_j[0],
+                 elec_level_i[1]*elec_level_j[1]])
 
     sym_factor_i = 1.
     sym_factor_j = 1.
@@ -735,7 +803,7 @@ def pst_block(
                 for key, val in form.items():
                     stoich += key + str(val)
                 core = mess_io.writer.core_phasespace(
-                    har_geo_i, har_geo_j, sym_factor, stoich, pot_prefactor=10., pot_power_exp=6)
+                    har_geo_i, har_geo_j, sym_factor, stoich, pot_prefactor=1., pot_power_exp=6)
                 spc_str = mess_io.writer.molecule(
                     core, freqs, elec_levels,
                     hind_rot=hind_rot_str,
@@ -812,11 +880,25 @@ def pst_block(
                             if scn_save_fs.leaf.exists(locs):
                                 enes.append(scn_save_fs.leaf.file.energy.read(locs))
                             else:
-                                enes.append(20.)
+                                enes.append(10.)
                                 print('ERROR: missing grid value for torsional potential of {}'
                                       .format(spc_info_i[0]))
                         enes = numpy.subtract(enes, min_ene_i)
                         pot = list(enes*phycon.EH2KCAL)
+
+                        lpot = len(pot)
+                        idx_success = []
+                        pot_success = []
+                        for idx in range(lpot):
+                            if enes[idx] < 1.:
+                                idx_success.append(idx)
+                                pot_success.append(pot[idx])
+                        idx_success.append(lpot)
+                        pot_success.append(pot[0])
+                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
+                        for idx in range(lpot):
+                            pot[idx] = pot_spl(idx)
+
                         axis = coo_dct[tors_name][1:3]
 
                         atm_key = axis[1]
@@ -894,7 +976,6 @@ def pst_block(
                         freqs_i = rtproj_freqs
 
                 proj_rotors_str = ""
-                hind_rot_str = ""
                 if tors_min_cnf_locs_j is not None and not is_atom_j:
                     if har_cnf_save_fs_j.trunk.file.info.exists():
                         inf_obj_s = har_cnf_save_fs_j.trunk.file.info.read()
@@ -934,11 +1015,25 @@ def pst_block(
                             if scn_save_fs.leaf.exists(locs):
                                 enes.append(scn_save_fs.leaf.file.energy.read(locs))
                             else:
-                                enes.append(20.)
+                                enes.append(10.)
                                 print('ERROR: missing grid value for torsional potential of {}'
                                       .format(spc_info_j[0]))
                         enes = numpy.subtract(enes, min_ene_j)
                         pot = list(enes*phycon.EH2KCAL)
+
+                        lpot = len(pot)
+                        idx_success = []
+                        pot_success = []
+                        for idx in range(lpot):
+                            if enes[idx] < 1.:
+                                idx_success.append(idx)
+                                pot_success.append(pot[idx])
+                        idx_success.append(lpot)
+                        pot_success.append(pot[0])
+                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
+                        for idx in range(lpot):
+                            pot[idx] = pot_spl(idx)
+
                         axis = coo_dct[tors_name][1:3]
 
                         atm_key = axis[1]
@@ -1017,7 +1112,7 @@ def pst_block(
                 for key, val in form.items():
                     stoich += key + str(val)
                 core = mess_io.writer.core_phasespace(
-                    har_geo_i, har_geo_j, sym_factor, stoich, pot_prefactor=10., pot_power_exp=6)
+                    har_geo_i, har_geo_j, sym_factor, stoich, pot_prefactor=1., pot_power_exp=6)
                 spc_str = mess_io.writer.molecule(
                     core, freqs, elec_levels,
                     hind_rot=hind_rot_str,
@@ -1097,9 +1192,22 @@ def fake_species_block(
         tors_cnf_save_path_j = tors_cnf_save_fs_j.leaf.path(tors_min_cnf_locs_j)
 
     spc_str = ''
-        # elec_levels_j = spc_dct_j['elec_levs']
+    if 'elec_levs' in spc_dct_i:
+        elec_levels_i = spc_dct_i['elec_levs']
+    else:
+        elec_levels_i = [[0., spc_dct_i['mul']]]
+    if 'elec_levs' in spc_dct_j:
+        elec_levels_j = spc_dct_j['elec_levs']
+    else:
+        elec_levels_j = [[0., spc_dct_j['mul']]]
 
-    elec_levels = [[0., 2]]
+    elec_levels = []
+    for _, elec_level_i in enumerate(elec_levels_i):
+        for _, elec_level_j in enumerate(elec_levels_j):
+            elec_levels.append(
+                [elec_level_i[0]+elec_level_j[0],
+                 elec_level_i[1]*elec_level_j[1]])
+
     sym_factor = 1.
     sym_factor_i = 1.
     sym_factor_j = 1.
@@ -1221,13 +1329,14 @@ def fake_species_block(
                         mode_start = mode_start - 1
                     freqs_j = freqs_j[mode_start:]
 
+                max_z = max(atom[1][2] for atom in har_geo_i)
                 har_geo = har_geo_i
-                # this should be replaced with a maximum of z + 3 for each atom
-                har_geo_j = automol.geom.translated(har_geo_j, [10., 10., 10.])
+                har_geo_j = automol.geom.translated(har_geo_j, [0., 0., max_z + 3.])
                 har_geo += har_geo_j
 
-                proj_rotors_str = ""
                 hind_rot_str = ""
+                proj_rotors_str = ""
+                print('fb tors_min_cnf_locs_i test:', tors_min_cnf_locs_i)
 
                 if tors_min_cnf_locs_i is not None and not is_atom_i:
                     if har_cnf_save_fs_i.trunk.file.info.exists():
@@ -1259,6 +1368,7 @@ def fake_species_block(
                         for name, linspace in zip(tors_names, tors_linspaces)]
                     tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
                         zma, tors_names))
+                    print('fb tors_names test:', tors_names)
                     for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
                         locs_lst = []
                         enes = []
@@ -1268,11 +1378,26 @@ def fake_species_block(
                             if scn_save_fs.leaf.exists(locs):
                                 enes.append(scn_save_fs.leaf.file.energy.read(locs))
                             else:
-                                enes.append(20.)
+                                enes.append(10.)
                                 print('ERROR: missing grid value for torsional potential of {}'
                                       .format(spc_info_i[0]))
                         enes = numpy.subtract(enes, min_ene_i)
                         pot = list(enes*phycon.EH2KCAL)
+
+                        lpot = len(pot)
+                        idx_success = []
+                        pot_success = []
+                        for idx in range(lpot):
+                            if enes[idx] < 1.:
+                                idx_success.append(idx)
+                                pot_success.append(pot[idx])
+                        idx_success.append(lpot)
+                        pot_success.append(pot[0])
+                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
+                        for idx in range(lpot):
+                            pot[idx] = pot_spl(idx)
+                        print('fb pot test:', pot)
+
                         axis = coo_dct[tors_name][1:3]
 
                         atm_key = axis[1]
@@ -1287,9 +1412,9 @@ def fake_species_block(
 
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
-                        print('axis test:', axis)
-                        print('atm_key:', atm_key)
-                        print('group:', group)
+                        print('fb axis test:', axis)
+                        print('fb atm_key:', atm_key)
+                        print('fb group:', group)
                         #for idx, atm in enumerate(axis):
                         #    if atm == atm_key+1:
                         #        if idx != 0:
@@ -1297,7 +1422,7 @@ def fake_species_block(
                         #            print('axis reversed', axis)
                         if (atm_key+1) != axis[1]:
                             axis.reverse()
-                            print('axis reversed:', axis)
+                            print('fb axis reversed:', axis)
                         #if atm_key != axis(0):
                             #axis.reverse()
 
@@ -1314,15 +1439,15 @@ def fake_species_block(
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_i)
-                        print('projrot 7 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
+                        print('projrot 7 test:', proj_rotors_str)
                         sym_factor /= sym_num
 
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
-                    print('projrot 8 test:')
+                    print('projrot 8 test:', proj_rotors_str)
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess_i, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -1350,7 +1475,6 @@ def fake_species_block(
                         freqs_i = rtproj_freqs
 
                 proj_rotors_str = ""
-                hind_rot_str = ""
                 if tors_min_cnf_locs_j is not None and not is_atom_j:
                     if har_cnf_save_fs_j.trunk.file.info.exists():
                         inf_obj_s = har_cnf_save_fs_j.trunk.file.info.read()
@@ -1390,11 +1514,25 @@ def fake_species_block(
                             if scn_save_fs.leaf.exists(locs):
                                 enes.append(scn_save_fs.leaf.file.energy.read(locs))
                             else:
-                                enes.append(20.)
+                                enes.append(10.)
                                 print('ERROR: missing grid value for torsional potential of {}'
                                       .format(spc_info_j[0]))
                         enes = numpy.subtract(enes, min_ene_j)
                         pot = list(enes*phycon.EH2KCAL)
+
+                        lpot = len(pot)
+                        idx_success = []
+                        pot_success = []
+                        for idx in range(lpot):
+                            if enes[idx] < 1.:
+                                idx_success.append(idx)
+                                pot_success.append(pot[idx])
+                        idx_success.append(lpot)
+                        pot_success.append(pot[0])
+                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
+                        for idx in range(lpot):
+                            pot[idx] = pot_spl(idx)
+
                         axis = coo_dct[tors_name][1:3]
 
                         atm_key = axis[1]
@@ -1532,6 +1670,8 @@ def get_zero_point_energy(
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
+    projrot_script_str = substr.PROJROT
+
     spc_info = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
     # prepare the sets of file systems
     har_level, tors_level, vpt2_level, _ = pf_levels
@@ -1593,32 +1733,32 @@ def get_zero_point_energy(
     else:
         frm_bnd_key = []
         brk_bnd_key = []
-    har_zpe = 0.0
+    zpe = 0.0
     is_atom = False
     # get reference harmonic
     if not har_min_cnf_locs:
         print('ERROR: No harmonic reference geometry for this species {}'.format(spc_info[0]))
-        return har_zpe, is_atom
+        return zpe, is_atom
     har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
     if automol.geom.is_atom(har_geo):
-        har_zpe = 0.0
+        zpe = 0.0
         is_atom = True
 
     else:
         hess = har_cnf_save_fs.leaf.file.hessian.read(har_min_cnf_locs)
-        full_freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
+        freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
 
         mode_start = 6
         if 'ts_' in spc:
             mode_start = mode_start + 1
         if automol.geom.is_linear(har_geo):
             mode_start = mode_start - 1
-        proj_freqs = full_freqs[mode_start:]
+        freqs = freqs[mode_start:]
 
-        har_zpe = sum(proj_freqs)*phycon.WAVEN2KCAL/2.
+        zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
 
     if vib_model == 'HARM' and tors_model == 'RIGID':
-        ret = har_zpe
+        ret = zpe
 
     if vib_model == 'HARM' and tors_model == '1DHR':
         # make pf string for 1d rotor
@@ -1627,6 +1767,7 @@ def get_zero_point_energy(
         # modify har_zpe
 
         hind_rot_str = ""
+        proj_rotors_str = ""
         if tors_min_cnf_locs is not None:
             if har_cnf_save_fs.trunk.file.info.exists():
                 inf_obj_s = har_cnf_save_fs.trunk.file.info.read()
@@ -1652,6 +1793,7 @@ def get_zero_point_energy(
                 dist_name = spc_dct_i['dist_info'][0]
                 ts_bnd =  automol.zmatrix.bond_idxs(zma, dist_name)
                 ts_bnd = frozenset(ts_bnd)
+                tors_names = spc_dct_i['tors_names']
             pot = []
             if 'hind_inc' in spc_dct_i:
                 scan_increment = spc_dct_i['hind_inc']
@@ -1673,10 +1815,25 @@ def get_zero_point_energy(
                     if scn_save_fs.leaf.exists(locs):
                         enes.append(scn_save_fs.leaf.file.energy.read(locs))
                     else:
-                        enes.append(1000.)
-                        print('ERROR: missing grid value for torionsal potential of {}'.format(spc_info[0]))
+                        enes.append(10.)
+                        print('ERROR: missing grid value for torsional potential of {}'.
+                              format(spc_info[0]))
                 enes = numpy.subtract(enes, min_ene)
                 pot = list(enes*phycon.EH2KCAL)
+
+                lpot = len(pot)
+                idx_success = []
+                pot_success = []
+                for idx in range(lpot):
+                    if enes[idx] < 1.:
+                        idx_success.append(idx)
+                        pot_success.append(pot[idx])
+                idx_success.append(lpot)
+                pot_success.append(pot[0])
+                pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
+                for idx in range(lpot):
+                    pot[idx] = pot_spl(idx)
+
                 axis = coo_dct[tors_name][1:3]
                 atm_key = axis[1]
                 if ts_bnd:
@@ -1694,6 +1851,52 @@ def get_zero_point_energy(
                     group = list(
                         automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
                         set(axis))
+                if saddle:
+                    n_atm = automol.zmatrix.count(zma)
+                    if 'addition' in spc_dct_i['class'] or 'abstraction' in spc_dct_i['class']:
+                        group2 = []
+                        ts_bnd1 = min(ts_bnd)
+                        ts_bnd2 = max(ts_bnd)
+                        for idx in range(ts_bnd2, n_atm):
+                            group2.append(idx)
+                        if ts_bnd1 in group:
+                            for atm in group2:
+                                if atm not in group:
+                                    group.append(atm)
+                    # check to see if symmetry of XH3 rotor was missed
+                    if sym_num == 1:
+                        group2 = []
+                        for idx in range(n_atm):
+                            if idx not in group and idx not in axis:
+                                group2.append(idx)
+                        all_H = True
+                        symbols = automol.zmatrix.symbols(zma)
+                        print('symbols test:', symbols)
+                        print('second group2:', group2)
+                        print('len pot:', len(pot))
+                        H_count = 0
+                        for idx in group2:
+                            if symbols[idx] != 'H' and symbols[idx] != 'X':
+                                all_H = False
+                                break
+                            else:
+                                if symbols[idx] == 'H':
+                                    H_count += 1
+                        if all_H and H_count == 3:
+                            sym_num = 3
+                            lpot = int(len(pot)/3)
+                            potp = []
+                            potp[0:lpot] = pot[0:lpot]
+                            pot = potp
+                            #potp = []
+                            #for idx in range(lpot):
+                            #    potp.append(pot[idx])
+                            #print('potp test:', potp)
+                            #print('potp2 test:', potp)
+                            #pot = potp
+                        print('all_h test=:', all_H, H_count)
+                        print('pot test:', pot)
+                        print('len pot new:', len(pot))
                 group = list(numpy.add(group, 1))
                 axis = list(numpy.add(axis, 1))
                 print('axis test:', axis)
@@ -1724,6 +1927,37 @@ def get_zero_point_energy(
 
                 hind_rot_str += mess_io.writer.rotor_hindered(
                     group, axis, sym_num, pot, remdummy=remdummy)
+                print('projrot 1 test:')
+                proj_rotors_str += projrot_io.writer.rotors(
+                    axis, group, remdummy=remdummy)
+                sym_factor /= sym_num
+
+            # Write the string for the ProjRot input
+            coord_proj = 'cartesian'
+            grad = ''
+            print('projrot zpe test:')
+            projrot_inp_str = projrot_io.writer.rpht_input(
+                tors_geo, grad, hess, rotors_str=proj_rotors_str,
+                coord_proj=coord_proj)
+
+            bld_locs = ['PROJROT', 0]
+            bld_save_fs = autofile.fs.build(tors_save_path)
+            bld_save_fs.leaf.create(bld_locs)
+            path = bld_save_fs.leaf.path(bld_locs)
+            print('Build Path for Partition Functions')
+            print(path)
+            proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
+            with open(proj_file_path, 'w') as proj_file:
+                proj_file.write(projrot_inp_str)
+
+            moldr.util.run_script(projrot_script_str, path)
+
+            zpe_har_no_tors = 0.
+            if pot:
+                rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                    path+'/hrproj_freq.dat')
+                freqs = rthrproj_freqs
+            zpe_har_no_tors = sum(freqs)*phycon.WAVEN2KCAL/2.
 
             dummy_freqs = [1000.]
             dummy_zpe = 0.0
@@ -1764,12 +1998,18 @@ def get_zero_point_energy(
             tors_freqs = mess_io.reader.tors.freqs(output_string)
             tors_zpes = mess_io.reader.tors.zpves(output_string)
             tors_zpe_cor = 0.0
+            tors_zpe = 0.0
             for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
                 tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
+                tors_zpe += tors_1dhr_zpe
 
+            zpe = zpe_har_no_tors + tors_zpe
             # read torsional harmonic zpe and actual zpe
 
-        zpe = har_zpe + tors_zpe_cor
+        # used to take full harmonic zpe and add torsional hr vs harmonic diff
+        #zpe = har_zpe + tors_zpe_cor
+        # now take harmonic zpe for non-torsional and add tors_zpe
+            print('zpe test:', zpe_har_no_tors, tors_zpe, zpe)
         ret = zpe
 
     if vib_model == 'HARM' and tors_model == 'MDHR':
