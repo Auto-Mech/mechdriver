@@ -2,6 +2,7 @@
 """
 
 import numpy
+from datalibs import phycon
 import automol
 import elstruct
 import autofile
@@ -11,7 +12,7 @@ import moldr
 def conformer_sampling(
         spc_info, thy_level, thy_save_fs, cnf_run_fs, cnf_save_fs, script_str,
         overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
-        tors_names='', dist_info=[], two_stage=False, **kwargs):
+        tors_names='', dist_info=[], two_stage=False, rxn_class='', **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
     """
@@ -39,7 +40,8 @@ def conformer_sampling(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
         saddle=saddle,
-        dist_info=dist_info
+        dist_info=dist_info,
+        rxn_class=rxn_class
     )
 
     run_conformers(
@@ -60,7 +62,8 @@ def conformer_sampling(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
         saddle=saddle,
-        dist_info=dist_info
+        dist_info=dist_info,
+        rxn_class=rxn_class
     )
 
     # save information about the minimum energy conformer in top directory
@@ -196,7 +199,7 @@ def run_conformers(
             cnf_run_fs.trunk.file.info.write(inf_obj)
 
 
-def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
+def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_class=''):
     """ save the conformers that have been found so far
     """
 
@@ -221,23 +224,95 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
                 method = inf_obj.method
                 ene = elstruct.reader.energy(prog, method, out_str)
                 geo = elstruct.reader.opt_geometry(prog, out_str)
-                if saddle:
-                    gra = automol.geom.weakly_connected_graph(geo)
-                else:
+                #if saddle:
+                    #gra = automol.geom.weakly_connected_graph(geo)
+                #else:
+                if not saddle:
                     gra = automol.geom.graph(geo)
-
-                conns = automol.graph.connected_components(gra)
-                if len(conns) > 1:
+                    conns = automol.graph.connected_components(gra)
+                    lconns = len(conns)
+                else:
+                    lconns = 1
+                if lconns > 1:
                     print(" - Geometry is disconnected.. Skipping...")
                 else:
                     if saddle:
                         zma = elstruct.reader.opt_zmatrix(prog, out_str)
                         dist_name = dist_info[0]
                         dist_len = dist_info[1]
+                        ts_bnd = automol.zmatrix.bond_idxs(zma, dist_name)
+                        ts_bnd1 = min(ts_bnd)
+                        ts_bnd2 = max(ts_bnd)
                         conf_dist_len = automol.zmatrix.values(zma)[dist_name]
-                        if abs(conf_dist_len - dist_len) > 0.3:
-                            print(" - Transition State conformer has diverged from original structure of dist {:.3f} with dist {:.3f}".format(dist_len, conf_dist_len))
-                            continue
+
+                        print('rxn_class test:', rxn_class)
+                        # check if radical atom has moved to be closer to some atom other than the bonding atom
+                        if 'addition' in rxn_class or 'abstraction' in rxn_class:
+                            if not is_atom_closest_to_bond_atom(zma, ts_bnd2, conf_dist_len):
+                                print(" - Transition State conformer has diverged from original",
+                                      "structure of dist {:.3f} with dist {:.3f}".format(
+                                          dist_len, conf_dist_len))
+                                print("The radical atom now has a new nearest neighbor")
+                                continue
+                            if abs(conf_dist_len - dist_len) > 1.5:
+                                print(" - Transition State conformer has diverged from original",
+                                      "structure of dist {:.3f} with dist {:.3f}".format(
+                                          dist_len, conf_dist_len))
+                                continue
+                            # check if radical atom has collapsed to the equilibrium bond length
+                            # this presumes the radical is the second group
+                            symbols = automol.zmatrix.symbols(zma)
+                            equi_bnd = 0.
+                            if symbols[ts_bnd2] == 'H':
+                                if symbols[ts_bnd1] == 'C':
+                                    equi_bnd = 1.09 * phycon.ANG2BOHR
+                                elif symbols[ts_bnd1] == 'N':
+                                    equi_bnd = 1.01
+                                elif symbols[ts_bnd1] == 'O':
+                                    equi_bnd = 0.96 * phycon.ANG2BOHR
+                            if symbols[ts_bnd2] == 'C':
+                                if symbols[ts_bnd1] == 'H':
+                                    equi_bnd = 1.09 * phycon.ANG2BOHR
+                                if symbols[ts_bnd1] == 'C':
+                                    equi_bnd = 1.5 * phycon.ANG2BOHR
+                                elif symbols[ts_bnd1] == 'N':
+                                    equi_bnd = 1.45 * phycon.ANG2BOHR
+                                elif symbols[ts_bnd1] == 'O':
+                                    equi_bnd = 1.4 * phycon.ANG2BOHR
+                            if symbols[ts_bnd2] == 'N':
+                                if symbols[ts_bnd1] == 'H':
+                                    equi_bnd = 1.01 * phycon.ANG2BOHR
+                                if symbols[ts_bnd1] == 'C':
+                                    equi_bnd = 1.45 * phycon.ANG2BOHR
+                                elif symbols[ts_bnd1] == 'N':
+                                    equi_bnd = 1.4 * phycon.ANG2BOHR
+                                elif symbols[ts_bnd1] == 'O':
+                                    equi_bnd = 1.35 * phycon.ANG2BOHR
+                            if symbols[ts_bnd2] == 'O':
+                                if symbols[ts_bnd1] == 'H':
+                                    equi_bnd = 0.96 * phycon.ANG2BOHR
+                                if symbols[ts_bnd1] == 'C':
+                                    equi_bnd = 1.4 * phycon.ANG2BOHR
+                                elif symbols[ts_bnd1] == 'N':
+                                    equi_bnd = 1.35 * phycon.ANG2BOHR
+                                elif symbols[ts_bnd1] == 'O':
+                                    equi_bnd = 1.3 * phycon.ANG2BOHR
+                            displace_from_equi = conf_dist_len - equi_bnd
+                            print('distance_from_equi test:', conf_dist_len, equi_bnd, dist_len)
+                            print('bnd atoms:', ts_bnd1, ts_bnd2)
+                            print('symbols:', symbols[ts_bnd1], symbols[ts_bnd2])
+                            if abs(conf_dist_len - dist_len) > 0.2 and displace_from_equi < 0.2:
+                                print(" - Transition State conformer has converged to an",
+                                      "equilibrium structure with dist",
+                                      " {:.3f} compared with equilibriumt {:.3f}".format(
+                                          conf_dist_len, equi_bnd))
+                                continue
+                        else:
+                            if abs(conf_dist_len - dist_len) > 0.3:
+                                print(" - Transition State conformer has diverged from original",
+                                      "structure of dist {:.3f} with dist {:.3f}".format(
+                                          dist_len, conf_dist_len))
+                                continue
                     else:
                         zma = automol.geom.zmatrix(geo)
                     unique = is_unique_tors_dist_mat_energy(geo, ene, seen_geos, seen_enes, saddle)
@@ -270,6 +345,19 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[]):
         # update the conformer trajectory file
         moldr.util.traj_sort(cnf_save_fs)
 
+
+def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
+    """ Check to see whether the radical atom is still closest to the bond 
+    formation site.
+    """
+    geo = automol.zmatrix.geometry(zma)
+    atom_closest = True
+    for idx, _ in enumerate(geo):
+        if idx < idx_rad:
+            distance = automol.geom.distance(geo, idx, idx_rad)
+            if distance < bond_dist:
+                atom_closest = False
+    return atom_closest
 
 def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):
     """ compare given geo with list of geos all to see if any have the same

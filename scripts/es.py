@@ -153,7 +153,7 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs, spc_info, overwri
     for generating a list of conformer or tau sampling geometries
     """
     # fs[3] = fs[11]
-    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2])
+    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_level[0:2], saddle=True)
     print('tsk test in ts_geometry_generation:', tsk)
     params = {'spc_info': spc_info,
               'thy_level': thy_level,
@@ -174,6 +174,8 @@ def ts_geometry_generation(tsk, spcdic, es_dct, thy_level, fs, spc_info, overwri
         params['nsamp_par'] = es_dct['mc_nsamp']
         params['dist_info'] = spcdic['dist_info']
         params['two_stage'] = True
+    if tsk in ['conf_samp']:
+        params['rxn_class'] = spcdic['class']
     elif tsk in ['hr_scan']:
         if 'hind_inc' in spcdic:
             params['scan_increment'] = spcdic['hind_inc']
@@ -294,7 +296,7 @@ def ts_geometry_analysis(tsk, thy_level, ini_fs, selection, spc_info, spc_dic, o
         locs_lst = moldr.util.geom_sort(save_dir)[0:selection]
     else:
         locs_lst = selection
-    sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_level[0:2])
+    sp_script_str, _, kwargs, _ = moldr.util.run_qchem_par(*thy_level[0:2], saddle=True)
     params['script_str'] = sp_script_str
     choose_function = {'conf_energy': 'run_energy',
                        'tau_energy': 'run_energy',
@@ -789,13 +791,14 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         rmin2 = 1.3*phycon.ANG2BOHR
         if bnd_len_key in bnd_len_dct:
             bnd_len = bnd_len_dct[bnd_len_key]
-            rmin2 = bnd_len + 0.1 * phycon.ANG2BOHR
+            rmin2 = bnd_len + 0.05 * phycon.ANG2BOHR
+            #rmin2 = bnd_len + 0.1 * phycon.ANG2BOHR
         if rmax > rmin1:
             npoints = (rmax-rmin1)/interval
             grid1 = numpy.linspace(rmax, rmin1, npoints)
         else:
             grid1 = []
-        grid2 = numpy.linspace(rmin1, rmin2, 9)
+        grid2 = numpy.linspace(rmin1, rmin2, 18)
         grid = numpy.concatenate((grid1, grid2), axis=None)
         update_guess = True
 
@@ -889,7 +892,7 @@ def find_ts(
     """
     print('prepping ts scan for:', typ)
 
-    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_info[0:2])
+    _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_info[0:2], saddle=True)
 
     orb_restr = moldr.util.orbital_restriction(ts_info, thy_info)
     ref_level = thy_info[0:3]

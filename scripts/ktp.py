@@ -95,6 +95,7 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, spc_model, pf_leve
     #else:
     #    spc_model = ['1DHR', 'HARM', '']
         #spc_model = ['RIGID', 'HARM', '']
+    print('spc_model test:', spc_model)
     species_data = moldr.pf.fake_species_block(
         spc_dct_i=spc_dct_i,
         spc_dct_j=spc_dct_j,
