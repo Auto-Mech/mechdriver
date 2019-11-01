@@ -622,6 +622,7 @@ if PARAMS.RUN_RATES:
                 for cval in cvals:
                     print(PES_RXN_NAME_LST[cval])
 
+
             # Loop ktp runs over the sub-pes
             for cidx, cvals in enumerate(connchnls.values()):
                 print('ktp on PES{}_{}: {} for the following channels...'.format(str(pes_idx), str(cidx+1), PES))
@@ -688,7 +689,7 @@ if PARAMS.RUN_RATES:
                     # run ktp for a given PES
                     ktpdriver.driver.run(
                         PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
-                        '/lcrc/project/PACC/run', '/lcrc/project/PACC/save',
+                        PARAMS.RUN_PREFIX, PARAMS.SAVE_PREFIX,
                         ene_coeff=PARAMS.ENE_COEFF, options=PARAMS.OPTIONS_RATE, etrans=etrans_lst)
                         #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 

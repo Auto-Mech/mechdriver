@@ -110,14 +110,14 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     run_prefix, save_prefix, spc_dct[ts])
                 spc_dct[ts]['rxn_fs'] = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
 
-                rct_zmas, prd_zmas, rct_cnf_save_fs = scripts.es.get_zmas(
+                rct_zmas, prd_zmas, rct_cnf_save_fs, prd_cnf_save_fs = scripts.es.get_zmas(
                     spc_dct[ts]['reacs'], spc_dct[ts]['prods'], spc_dct,
                     ini_thy_info, save_prefix, run_prefix, KICKOFF_SIZE,
                     KICKOFF_BACKWARD, substr.PROJROT)
                 ret = scripts.es.ts_class(
                     rct_zmas, prd_zmas, spc_dct[ts]['rad_rad'],
                     spc_dct[ts]['mul'], low_mul, high_mul,
-                    rct_cnf_save_fs)
+                    rct_cnf_save_fs, prd_cnf_save_fs)
                 ret1, ret2 = ret
                 if ret1:
                     rxn_class, ts_zma, dist_name, brk_name, grid, frm_bnd_key, brk_bnd_key, tors_names, update_guess = ret1
@@ -359,7 +359,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                                     pdep_tolerance=20, no_pdep_pval=1.0)
 
                                 # Fit rate constants to single Arrhenius expressions
-                                sing_params_dct, sing_fit_success = scripts.ktp.mod_arr_fit(
+                                sing_params_dct, sing_fit_temp_dct, sing_fit_success = scripts.ktp.mod_arr_fit(
                                     ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
                                     t_ref=1.0, a_conv_factor=a_conv_factor)
                                 if sing_fit_success:
@@ -389,13 +389,14 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                                 if sgl_fit_good:
                                     print('\nSingle fit errors acceptable: Using single fits')
                                     chemkin_str += chemkin_io.writer.reaction.plog(
-                                        reaction, sing_params_dct, sing_fit_err_dct)
+                                        reaction, sing_params_dct,
+                                        err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
                                 elif not sgl_fit_good and dbl_fit_poss:
                                     print('\nSingle fit errs too large & double fit possible:',
                                           ' Trying double fit')
 
                                     # Fit rate constants to double Arrhenius expressions
-                                    doub_params_dct, doub_fit_success = scripts.ktp.mod_arr_fit(
+                                    doub_params_dct, doub_fit_temp_dct, doub_fit_success = scripts.ktp.mod_arr_fit(
                                         ktp_dct, mess_path, fit_type='double',
                                         fit_method='dsarrfit', t_ref=1.0,
                                         a_conv_factor=a_conv_factor)
@@ -407,17 +408,20 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                                             doub_params_dct, ktp_dct, fit_type='double',
                                             t_ref=1.0, a_conv_factor=a_conv_factor)
                                         chemkin_str += chemkin_io.writer.reaction.plog(
-                                            reaction, doub_params_dct, doub_fit_err_dct)
+                                            reaction, doub_params_dct,
+                                            err_dct=doub_fit_err_dct, temp_dct=doub_fit_temp_dct)
                                     else:
                                         print('\nDouble Arrhenius Fit failed for some reason:',
                                               ' Using Single fits')
                                         chemkin_str += chemkin_io.writer.reaction.plog(
-                                            reaction, sing_params_dct, sing_fit_err_dct)
+                                            reaction, sing_params_dct,
+                                            err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
                                 elif not sgl_fit_good and not dbl_fit_poss:
                                     print('\nNot enough temperatures for a double fit:',
                                           ' Using single fits')
                                     chemkin_str += chemkin_io.writer.reaction.plog(
-                                        reaction, sing_params_dct, sing_fit_err_dct)
+                                        reaction, sing_params_dct,
+                                        err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
 
                                 chemkin_poly_str += '\n'
                                 chemkin_poly_str += chemkin_str

@@ -463,6 +463,7 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
 
     # Dictionaries to store info; indexed by pressure (given in fit_ps)
     fit_param_dct = {}
+    fit_temp_dct = {}
 
     # Calculate the fitting parameters from the filtered T,k lists
     for pressure, tk_arr in ktp_dct.items():
@@ -484,10 +485,13 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
         # Store the fitting parameters in a dictionary
         fit_param_dct[pressure] = fit_params
 
+        # Store the temperatures used to fit in a dictionary
+        fit_temp_dct[pressure] = [min(temps), max(temps)]
+
     # Check if the desired fits were successful at each pressure
     fit_success = all(params for params in fit_param_dct.values())
 
-    return fit_param_dct, fit_success
+    return fit_param_dct, fit_temp_dct, fit_success
 
 
 def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
