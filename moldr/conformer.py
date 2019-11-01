@@ -254,7 +254,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                           dist_len, conf_dist_len))
                                 print("The radical atom now has a new nearest neighbor")
                                 continue
-                            if abs(conf_dist_len - dist_len) > 1.5:
+                            if abs(conf_dist_len - dist_len) > 1.4:
                                 print(" - Transition State conformer has diverged from original",
                                       "structure of dist {:.3f} with dist {:.3f}".format(
                                           dist_len, conf_dist_len))
