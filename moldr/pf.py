@@ -343,6 +343,57 @@ def species_block(
                         sym_factor /= sym_num
                         idx += 1
 
+                    # create a messpf input file and run messpf to get the tors_zpe
+                    if saddle and tors_names is not None:
+                        dummy_freqs = [1000.]
+                        dummy_zpe = 0.0
+                        core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
+                        spc_str = mess_io.writer.molecule(
+                            core, dummy_freqs, elec_levels,
+                            hind_rot=hind_rot_str,
+                            )
+                        temp_step = 100.
+                        ntemps = 5
+                        zpe_str = '{0:<8.2f}\n'.format(dummy_zpe)
+                        zpe_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
+                        zpe_str += 'End\n'
+                        global_pf_str = mess_io.writer.global_pf(
+                            [], temp_step, ntemps, rel_temp_inc=0.001,
+                            atom_dist_min=0.6)
+                        spc_head_str = 'Species ' + ' Tmp'
+                        pf_inp_str = '\n'.join(
+                            [global_pf_str, spc_head_str,
+                             spc_str, zpe_str])
+
+                        bld_locs = ['PF', 0]
+                        bld_save_fs = autofile.fs.build(tors_save_path)
+                        bld_save_fs.leaf.create(bld_locs)
+                        pf_path = bld_save_fs.leaf.path(bld_locs)
+
+                        # run messpf
+                        with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
+                            pf_file.write(pf_inp_str)
+                        pf_script_str = ("#!/usr/bin/env bash\n"
+                                         "export OMP_NUM_THREADS=10\n"
+                                         "messpf pf.inp pf.out >> stdout.log &> stderr.log")
+
+                        moldr.util.run_script(pf_script_str, pf_path)
+
+                        with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
+                            output_string = mess_file.read()
+
+                        # Read the freqs and zpes
+                        tors_freqs = mess_io.reader.tors.freqs(output_string)
+                        tors_zpes = mess_io.reader.tors.zpves(output_string)
+                    else:
+                        tors_freqs = []
+                        tors_zpes = 0.
+
+                    tors_zpe = 0.0
+                    for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
+                        tors_zpe += tors_1dhr_zpe
+
+                    # run one version of ProjRot to get the projected frequencies for that version
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
@@ -360,18 +411,20 @@ def species_block(
                     proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
                     with open(proj_file_path, 'w') as proj_file:
                         proj_file.write(projrot_inp_str)
-                    print('projrot_inp_str', projrot_inp_str)
-                    print('projrot_script_str', projrot_script_str)
 
                     moldr.util.run_script(projrot_script_str, path)
 
                     freqs = []
+                    zpe_har_no_tors = 0.
+                    har_zpe = 0.
                     if pot:
                         rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         freqs = rthrproj_freqs
+                        zpe_har_no_tors = sum(freqs)*phycon.WAVEN2KCAL/2.
                     rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
                         path+'/RTproj_freq.dat')
+                    har_zpe = sum(rtproj_freqs)*phycon.WAVEN2KCAL/2.
                     if not freqs:
                         freqs = rtproj_freqs
                     if 'ts_' in spc:
@@ -380,6 +433,41 @@ def species_block(
                         else:
                             imag_freq = freqs[-1]
                             freqs = freqs[:-1]
+
+                    # now run the other version of ProjRot
+                    projrot_script_str2 = ("#!/usr/bin/env bash\n"
+                    "RPHt.exe >& /dev/null")
+                    moldr.util.run_script(projrot_script_str2, path)
+                    zpe_har_no_tors_2 = 0.0
+                    freqs_2 = []
+                    if pot:
+                        rthrproj_freqs_2, _ = projrot_io.reader.rpht_output(
+                            path+'/hrproj_freq.dat')
+                        freqs_2 = rthrproj_freqs_2
+                        zpe_har_no_tors_2, imag_freq_2 = sum(freqs_2)*phycon.WAVEN2KCAL/2.
+                    rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                        path+'/RTproj_freq.dat')
+                    har_zpe = sum(rtproj_freqs)*phycon.WAVEN2KCAL/2.
+                    if not freqs:
+                        freqs = rtproj_freqs
+                    if 'ts_' in spc:
+                        if imag_freq:
+                            imag_freq_2 = imag_freq_2[0]
+                        else:
+                            imag_freq_2 = freqs_2[-1]
+                            freqs_2 = freqs_2[:-1]
+
+                    har_tors_zpe = har_zpe - zpe_har_no_tors
+                    har_tors_zpe_2 = har_zpe - zpe_har_no_tors_2
+                    del_tors_zpe = har_tors_zpe - tors_zpe
+                    del_tors_zpe_2 = har_tors_zpe_2 - tors_zpe
+                    print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
+                    if del_tors_zpe <= del_tors_zpe_2:
+                        zpe = zpe_har_no_tors + tors_zpe
+                    else:
+                        zpe = zpe_har_no_tors_2 + tors_zpe
+                        freqs = freqs_2
+                        imag_freq= imag_freq_2
                     # shutil.rmtree(path)
                     print('freqs test in species block', freqs, imag_freq)
                     core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
@@ -1271,9 +1359,10 @@ def fake_species_block(
                         mode_start = mode_start - 1
                     freqs += freqs_j[mode_start:]
 
-                max_z = max(atom[1][2] for atom in har_geo_i)
+                max_z_i = max(atom[1][2] for atom in har_geo_i)
+                min_z_j = max(atom[1][2] for atom in har_geo_j)
                 har_geo = har_geo_i
-                har_geo_j = automol.geom.translated(har_geo_j, [0., 0., max_z + 3.])
+                har_geo_j = automol.geom.translated(har_geo_j, [0., 0., max_z_i + 6. - min_z_j])
                 har_geo += har_geo_j
 
                 hind_rot_str = ""
@@ -1329,9 +1418,10 @@ def fake_species_block(
                         mode_start = mode_start - 1
                     freqs_j = freqs_j[mode_start:]
 
-                max_z = max(atom[1][2] for atom in har_geo_i)
+                max_z_i = max(atom[1][2] for atom in har_geo_i)
+                min_z_j = max(atom[1][2] for atom in har_geo_j)
                 har_geo = har_geo_i
-                har_geo_j = automol.geom.translated(har_geo_j, [0., 0., max_z + 3.])
+                har_geo_j = automol.geom.translated(har_geo_j, [0., 0., max_z_i + 6. - min_z_j])
                 har_geo += har_geo_j
 
                 hind_rot_str = ""
@@ -1733,15 +1823,15 @@ def get_zero_point_energy(
     else:
         frm_bnd_key = []
         brk_bnd_key = []
-    zpe = 0.0
+    har_zpe = 0.0
     is_atom = False
     # get reference harmonic
     if not har_min_cnf_locs:
         print('ERROR: No harmonic reference geometry for this species {}'.format(spc_info[0]))
-        return zpe, is_atom
+        return har_zpe, is_atom
     har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
     if automol.geom.is_atom(har_geo):
-        zpe = 0.0
+        har_zpe = 0.0
         is_atom = True
 
     else:
@@ -1755,10 +1845,10 @@ def get_zero_point_energy(
             mode_start = mode_start - 1
         freqs = freqs[mode_start:]
 
-        zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
+        har_zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
 
     if vib_model == 'HARM' and tors_model == 'RIGID':
-        ret = zpe
+        ret = har_zpe
 
     if vib_model == 'HARM' and tors_model == '1DHR':
         # make pf string for 1d rotor
@@ -1766,6 +1856,7 @@ def get_zero_point_energy(
         # read 1d harmonic and torsional ZPEs
         # modify har_zpe
 
+        zpe = har_zpe
         hind_rot_str = ""
         proj_rotors_str = ""
         if tors_min_cnf_locs is not None:
@@ -1927,6 +2018,7 @@ def get_zero_point_energy(
 
                 hind_rot_str += mess_io.writer.rotor_hindered(
                     group, axis, sym_num, pot, remdummy=remdummy)
+
                 print('projrot 1 test:')
                 proj_rotors_str += projrot_io.writer.rotors(
                     axis, group, remdummy=remdummy)
@@ -1952,12 +2044,24 @@ def get_zero_point_energy(
 
             moldr.util.run_script(projrot_script_str, path)
 
-            zpe_har_no_tors = 0.
+            zpe_har_no_tors = har_zpe
             if pot:
-                rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                rthrproj_freqs, _ = projrot_io.reader.rpht_output(
                     path+'/hrproj_freq.dat')
                 freqs = rthrproj_freqs
-            zpe_har_no_tors = sum(freqs)*phycon.WAVEN2KCAL/2.
+                zpe_har_no_tors = sum(freqs)*phycon.WAVEN2KCAL/2.
+
+            # now try again with the other projrot parameters
+            projrot_script_str2 = ("#!/usr/bin/env bash\n"
+            "RPHt.exe >& /dev/null")
+            moldr.util.run_script(projrot_script_str2, path)
+            zpe_har_no_tors_2 = har_zpe
+            freqs_2 = []
+            if pot:
+                rthrproj_freqs_2, _ = projrot_io.reader.rpht_output(
+                    path+'/hrproj_freq.dat')
+                freqs_2 = rthrproj_freqs_2
+                zpe_har_no_tors_2 = sum(freqs_2)*phycon.WAVEN2KCAL/2.
 
             dummy_freqs = [1000.]
             dummy_zpe = 0.0
@@ -2003,13 +2107,25 @@ def get_zero_point_energy(
                 tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
                 tors_zpe += tors_1dhr_zpe
 
-            zpe = zpe_har_no_tors + tors_zpe
+            har_tors_zpe = har_zpe - zpe_har_no_tors
+            har_tors_zpe_2 = har_zpe - zpe_har_no_tors_2
+            del_tors_zpe = har_tors_zpe - tors_zpe
+            del_tors_zpe_2 = har_tors_zpe_2 - tors_zpe
+            print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
+            if del_tors_zpe <= del_tors_zpe_2:
+                zpe = zpe_har_no_tors + tors_zpe
+            else:
+                zpe = zpe_har_no_tors_2 + tors_zpe
+            if abs(del_tors_zpe) > 0.2 and abs(del_tors_zpe_2) > 0.2:
+                print('Warning: There is a difference of {0:.2f} and {1:.2f} kcal/mol '.format(
+                    del_tors_zpe, del_tors_zpe_2),
+                    'between the harmonic and hindered torsional zero-point energies')
             # read torsional harmonic zpe and actual zpe
 
         # used to take full harmonic zpe and add torsional hr vs harmonic diff
         #zpe = har_zpe + tors_zpe_cor
         # now take harmonic zpe for non-torsional and add tors_zpe
-            print('zpe test:', zpe_har_no_tors, tors_zpe, zpe)
+            print('zpe test:', har_zpe, zpe_har_no_tors, tors_zpe, zpe)
         ret = zpe
 
     if vib_model == 'HARM' and tors_model == 'MDHR':
