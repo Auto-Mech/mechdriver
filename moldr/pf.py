@@ -176,7 +176,7 @@ def species_block(
                 hind_rot_str = ""
                 proj_rotors_str = ""
                 print('for species:', spc)
-                print('tors_min_cnf_locs test:', tors_min_cnf_locs)
+                #print('tors_min_cnf_locs test:', tors_min_cnf_locs)
 
                 if tors_min_cnf_locs is not None:
                     if tors_cnf_save_fs.trunk.file.info.exists():
@@ -262,7 +262,7 @@ def species_block(
                             group = list(
                                 automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
                                 set(axis))
-                        print('sym_num before:', sym_num)
+                        #print('sym_num before:', sym_num)
                         if saddle:
                             # check to see if fragment group was neglected
                             n_atm = automol.zmatrix.count(zma)
@@ -272,9 +272,9 @@ def species_block(
                                 ts_bnd2 = max(ts_bnd)
                                 for idx in range(ts_bnd2, n_atm):
                                     group2.append(idx)
-                                print('group2 test:', group2)
-                                print('axis test:', axis)
-                                print('ts_bnds test:', ts_bnd2, ts_bnd1)
+                                #print('group2 test:', group2)
+                                #print('axis test:', axis)
+                                #print('ts_bnds test:', ts_bnd2, ts_bnd1)
 
                                 if ts_bnd1 in group:
                                     for atm in group2:
@@ -288,8 +288,8 @@ def species_block(
                                         group2.append(idx)
                                 all_H = True
                                 symbols = automol.zmatrix.symbols(zma)
-                                print('symbols test:', symbols)
-                                print('second group2:', group2)
+                                #print('symbols test:', symbols)
+                                #print('second group2:', group2)
                                 H_count = 0
                                 for idx in group2:
                                     if symbols[idx] != 'H' and symbols[idx] != 'X':
@@ -304,15 +304,15 @@ def species_block(
                                     potp = []
                                     potp[0:lpot] = pot[0:lpot]
                                     pot = potp
-                                print('all_h test=:', all_H, H_count)
+                                #print('all_h test=:', all_H, H_count)
                                 
-                        print('sym_num after:', sym_num)
+                        #print('sym_num after:', sym_num)
 
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
-                        print('axis test:', axis)
-                        print('atm_key:', atm_key)
-                        print('group:', group)
+                        #print('axis test:', axis)
+                        #print('atm_key:', atm_key)
+                        #print('group:', group)
                         #for idx, atm in enumerate(axis):
                         #    if atm == atm_key+1:
                         #        if idx != 0:
@@ -320,7 +320,7 @@ def species_block(
                         #            print('axis reversed', axis)
                         if (atm_key+1) != axis[1]:
                             axis.reverse()
-                            print('axis reversed:', axis)
+                            #print('axis reversed:', axis)
                         #if atm_key != axis(0):
                             #axis.reverse()
 
@@ -337,13 +337,13 @@ def species_block(
                                    remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy=remdummy)
-                        print('projrot 1 test:')
+                        #print('projrot 1 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
                         idx += 1
 
-                    # create a messpf input file and run messpf to get the tors_zpe
+                    # create a messpf input file and run messpf to get tors_freqs and tors_zpes
                     if saddle and tors_names is not None:
                         dummy_freqs = [1000.]
                         dummy_zpe = 0.0
@@ -387,7 +387,7 @@ def species_block(
                         tors_zpes = mess_io.reader.tors.zpves(output_string)
                     else:
                         tors_freqs = []
-                        tors_zpes = 0.
+                        tors_zpes = []
 
                     tors_zpe = 0.0
                     for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
@@ -397,7 +397,7 @@ def species_block(
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
-                    print('projrot 2 test:')
+                    #print('projrot 2 test:')
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -444,14 +444,14 @@ def species_block(
                         rthrproj_freqs_2, _ = projrot_io.reader.rpht_output(
                             path+'/hrproj_freq.dat')
                         freqs_2 = rthrproj_freqs_2
-                        zpe_har_no_tors_2, imag_freq_2 = sum(freqs_2)*phycon.WAVEN2KCAL/2.
-                    rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
+                        zpe_har_no_tors_2 = sum(freqs_2)*phycon.WAVEN2KCAL/2.
+                    rtproj_freqs, imag_freq_2 = projrot_io.reader.rpht_output(
                         path+'/RTproj_freq.dat')
                     har_zpe = sum(rtproj_freqs)*phycon.WAVEN2KCAL/2.
-                    if not freqs:
-                        freqs = rtproj_freqs
+                    if not freqs_2:
+                        freqs_2 = rtproj_freqs
                     if 'ts_' in spc:
-                        if imag_freq:
+                        if imag_freq_2:
                             imag_freq_2 = imag_freq_2[0]
                         else:
                             imag_freq_2 = freqs_2[-1]
@@ -461,15 +461,17 @@ def species_block(
                     har_tors_zpe_2 = har_zpe - zpe_har_no_tors_2
                     del_tors_zpe = har_tors_zpe - tors_zpe
                     del_tors_zpe_2 = har_tors_zpe_2 - tors_zpe
-                    print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
+                    #print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
                     if del_tors_zpe <= del_tors_zpe_2:
                         zpe = zpe_har_no_tors + tors_zpe
                     else:
                         zpe = zpe_har_no_tors_2 + tors_zpe
                         freqs = freqs_2
-                        imag_freq= imag_freq_2
+                        imag_freq = imag_freq_2
                     # shutil.rmtree(path)
-                    print('freqs test in species block', freqs, imag_freq)
+                    #print('freqs test in species block', freqs, imag_freq)
+                    print('zpe test in species_block:',zpe_har_no_tors, zpe_har_no_tors_2, 
+                           tors_zpe, har_zpe, zpe)
                     core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
                     spc_str = mess_io.writer.molecule(
                         core, freqs, elec_levels,
@@ -1001,9 +1003,9 @@ def pst_block(
 
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
-                        print('axis test:', axis)
-                        print('atm_key:', atm_key)
-                        print('group:', group)
+                        #print('axis test:', axis)
+                        #print('atm_key:', atm_key)
+                        #print('group:', group)
                         #for idx, atm in enumerate(axis):
                         #    if atm == atm_key+1:
                         #        if idx != 0:
@@ -1011,7 +1013,7 @@ def pst_block(
                         #            print('axis reversed', axis)
                         if (atm_key+1) != axis[1]:
                             axis.reverse()
-                            print('axis reversed:', axis)
+                            #print('axis reversed:', axis)
                         #if atm_key != axis(0):
                             #axis.reverse()
 
@@ -1028,7 +1030,7 @@ def pst_block(
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_i)
-                        print('projrot 3 test:')
+                        #print('projrot 3 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -1036,7 +1038,7 @@ def pst_block(
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
-                    print('projrot 4 test:')
+                    #print('projrot 4 test:')
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess_i, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -1136,12 +1138,12 @@ def pst_block(
 
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
-                        print('axis test:', axis)
-                        print('atm_key:', atm_key)
-                        print('group:', group)
+                        #print('axis test:', axis)
+                        #print('atm_key:', atm_key)
+                        #print('group:', group)
                         if (atm_key+1) != axis[1]:
                             axis.reverse()
-                            print('axis reversed:', axis)
+                            #print('axis reversed:', axis)
 
                         #check for dummy transformations
                         atom_symbols = automol.zmatrix.symbols(zma)
@@ -1156,7 +1158,7 @@ def pst_block(
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy, geom=har_geo_j)
-                        print('projrot 5 test:')
+                        #print('projrot 5 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -1164,7 +1166,7 @@ def pst_block(
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
-                    print('projrot 6 test:')
+                    #print('projrot 6 test:')
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess_j, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -1360,7 +1362,7 @@ def fake_species_block(
                     freqs += freqs_j[mode_start:]
 
                 max_z_i = max(atom[1][2] for atom in har_geo_i)
-                min_z_j = max(atom[1][2] for atom in har_geo_j)
+                min_z_j = min(atom[1][2] for atom in har_geo_j)
                 har_geo = har_geo_i
                 har_geo_j = automol.geom.translated(har_geo_j, [0., 0., max_z_i + 6. - min_z_j])
                 har_geo += har_geo_j
@@ -1419,14 +1421,14 @@ def fake_species_block(
                     freqs_j = freqs_j[mode_start:]
 
                 max_z_i = max(atom[1][2] for atom in har_geo_i)
-                min_z_j = max(atom[1][2] for atom in har_geo_j)
+                min_z_j = min(atom[1][2] for atom in har_geo_j)
                 har_geo = har_geo_i
                 har_geo_j = automol.geom.translated(har_geo_j, [0., 0., max_z_i + 6. - min_z_j])
                 har_geo += har_geo_j
 
                 hind_rot_str = ""
                 proj_rotors_str = ""
-                print('fb tors_min_cnf_locs_i test:', tors_min_cnf_locs_i)
+                #print('fb tors_min_cnf_locs_i test:', tors_min_cnf_locs_i)
 
                 if tors_min_cnf_locs_i is not None and not is_atom_i:
                     if har_cnf_save_fs_i.trunk.file.info.exists():
@@ -1458,7 +1460,7 @@ def fake_species_block(
                         for name, linspace in zip(tors_names, tors_linspaces)]
                     tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
                         zma, tors_names))
-                    print('fb tors_names test:', tors_names)
+                    #print('fb tors_names test:', tors_names)
                     for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
                         locs_lst = []
                         enes = []
@@ -1486,7 +1488,7 @@ def fake_species_block(
                         pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
                         for idx in range(lpot):
                             pot[idx] = pot_spl(idx)
-                        print('fb pot test:', pot)
+                        #print('fb pot test:', pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -1502,9 +1504,9 @@ def fake_species_block(
 
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
-                        print('fb axis test:', axis)
-                        print('fb atm_key:', atm_key)
-                        print('fb group:', group)
+                        #print('fb axis test:', axis)
+                        #print('fb atm_key:', atm_key)
+                        #print('fb group:', group)
                         #for idx, atm in enumerate(axis):
                         #    if atm == atm_key+1:
                         #        if idx != 0:
@@ -1512,7 +1514,7 @@ def fake_species_block(
                         #            print('axis reversed', axis)
                         if (atm_key+1) != axis[1]:
                             axis.reverse()
-                            print('fb axis reversed:', axis)
+                            #print('fb axis reversed:', axis)
                         #if atm_key != axis(0):
                             #axis.reverse()
 
@@ -1531,13 +1533,13 @@ def fake_species_block(
                             group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_i)
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
-                        print('projrot 7 test:', proj_rotors_str)
+                        #print('projrot 7 test:', proj_rotors_str)
                         sym_factor /= sym_num
 
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
-                    print('projrot 8 test:', proj_rotors_str)
+                    #print('projrot 8 test:', proj_rotors_str)
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess_i, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -1637,12 +1639,12 @@ def fake_species_block(
 
                         group = list(numpy.add(group, 1))
                         axis = list(numpy.add(axis, 1))
-                        print('axis test:', axis)
-                        print('atm_key:', atm_key)
-                        print('group:', group)
+                        #print('axis test:', axis)
+                        #print('atm_key:', atm_key)
+                        #print('group:', group)
                         if (atm_key+1) != axis[1]:
                             axis.reverse()
-                            print('axis reversed:', axis)
+                            #print('axis reversed:', axis)
 
                         #check for dummy transformations
                         atom_symbols = automol.zmatrix.symbols(zma)
@@ -1657,7 +1659,7 @@ def fake_species_block(
                                     remdummy[idx] += 1
                         hind_rot_str += mess_io.writer.rotor_hindered(
                             group, axis, sym_num, pot, remdummy=remdummy, geom=har_geo_js)
-                        print('projrot 9 test:')
+                        #print('projrot 9 test:')
                         proj_rotors_str += projrot_io.writer.rotors(
                             axis, group, remdummy=remdummy)
                         sym_factor /= sym_num
@@ -1665,7 +1667,7 @@ def fake_species_block(
                     # Write the string for the ProjRot input
                     coord_proj = 'cartesian'
                     grad = ''
-                    print('projrot 10 test:')
+                    #print('projrot 10 test:')
                     projrot_inp_str = projrot_io.writer.rpht_input(
                         tors_geo, grad, hess_j, rotors_str=proj_rotors_str,
                         coord_proj=coord_proj)
@@ -1692,9 +1694,9 @@ def fake_species_block(
                             path+'/RTproj_freq.dat')
                         freqs_j = rtproj_freqs
 
-                print('freq_trans test:', freqs_trans)
-                print('freq_i test:', list(freqs_i))
-                print('freq_j test:', list(freqs_j))
+                #print('freq_trans test:', freqs_trans)
+                #print('freq_i test:', list(freqs_i))
+                #print('freq_j test:', list(freqs_j))
                 freqs = freqs_trans + list(freqs_i) + list(freqs_j)
 
                 core = mess_io.writer.core_rigidrotor(har_geo, sym_factor)
@@ -1800,6 +1802,7 @@ def get_zero_point_energy(
 
         tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
         tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs)
+        print('tors_min_cnf_locs test:', tors_min_cnf_locs)
         tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
 
     if vpt2_level:
@@ -1864,7 +1867,7 @@ def get_zero_point_energy(
                 inf_obj_s = har_cnf_save_fs.trunk.file.info.read()
                 tors_ranges = inf_obj_s.tors_ranges
                 tors_ranges = autofile.info.dict_(tors_ranges)
-                print(tors_ranges)
+                #print(tors_ranges)
                 tors_names = list(tors_ranges.keys())
             else:
                 print('No inf obj to identify torsional angles')
@@ -1962,9 +1965,9 @@ def get_zero_point_energy(
                                 group2.append(idx)
                         all_H = True
                         symbols = automol.zmatrix.symbols(zma)
-                        print('symbols test:', symbols)
-                        print('second group2:', group2)
-                        print('len pot:', len(pot))
+                        #print('symbols test:', symbols)
+                        #print('second group2:', group2)
+                        #print('len pot:', len(pot))
                         H_count = 0
                         for idx in group2:
                             if symbols[idx] != 'H' and symbols[idx] != 'X':
@@ -1985,14 +1988,14 @@ def get_zero_point_energy(
                             #print('potp test:', potp)
                             #print('potp2 test:', potp)
                             #pot = potp
-                        print('all_h test=:', all_H, H_count)
-                        print('pot test:', pot)
-                        print('len pot new:', len(pot))
+                        #print('all_h test=:', all_H, H_count)
+                        #print('pot test:', pot)
+                        #print('len pot new:', len(pot))
                 group = list(numpy.add(group, 1))
                 axis = list(numpy.add(axis, 1))
-                print('axis test:', axis)
-                print('atm_key:', atm_key)
-                print('group:', group)
+                #print('axis test:', axis)
+                #print('atm_key:', atm_key)
+                #print('group:', group)
                 #for idx, atm in enumerate(axis):
                 #    if atm == atm_key+1:
                 #        if idx != 1:
@@ -2000,7 +2003,7 @@ def get_zero_point_energy(
                 #            print('axis reversed:', axis)
                 if (atm_key+1) != axis[1]:
                     axis.reverse()
-                    print('axis reversed:', axis)
+                    #print('axis reversed:', axis)
                 #if atm_key != axis(0):
                     #axis.reverse()
 
@@ -2019,7 +2022,7 @@ def get_zero_point_energy(
                 hind_rot_str += mess_io.writer.rotor_hindered(
                     group, axis, sym_num, pot, remdummy=remdummy)
 
-                print('projrot 1 test:')
+                #print('projrot 1 test:')
                 proj_rotors_str += projrot_io.writer.rotors(
                     axis, group, remdummy=remdummy)
                 sym_factor /= sym_num
@@ -2027,7 +2030,7 @@ def get_zero_point_energy(
             # Write the string for the ProjRot input
             coord_proj = 'cartesian'
             grad = ''
-            print('projrot zpe test:')
+            #print('projrot zpe test:')
             projrot_inp_str = projrot_io.writer.rpht_input(
                 tors_geo, grad, hess, rotors_str=proj_rotors_str,
                 coord_proj=coord_proj)
@@ -2111,7 +2114,7 @@ def get_zero_point_energy(
             har_tors_zpe_2 = har_zpe - zpe_har_no_tors_2
             del_tors_zpe = har_tors_zpe - tors_zpe
             del_tors_zpe_2 = har_tors_zpe_2 - tors_zpe
-            print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
+            #print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
             if del_tors_zpe <= del_tors_zpe_2:
                 zpe = zpe_har_no_tors + tors_zpe
             else:
@@ -2121,11 +2124,13 @@ def get_zero_point_energy(
                     del_tors_zpe, del_tors_zpe_2),
                     'between the harmonic and hindered torsional zero-point energies')
             # read torsional harmonic zpe and actual zpe
+            print('zpe test in get_zpe:',zpe_har_no_tors, zpe_har_no_tors_2, 
+                   tors_zpe, har_zpe, zpe)
 
         # used to take full harmonic zpe and add torsional hr vs harmonic diff
         #zpe = har_zpe + tors_zpe_cor
         # now take harmonic zpe for non-torsional and add tors_zpe
-            print('zpe test:', har_zpe, zpe_har_no_tors, tors_zpe, zpe)
+            #print('zpe test:', har_zpe, zpe_har_no_tors, tors_zpe, zpe)
         ret = zpe
 
     if vib_model == 'HARM' and tors_model == 'MDHR':
