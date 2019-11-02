@@ -584,12 +584,6 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             zmas = [rct_zmas, prd_zmas]
             rct_zmas, prd_zmas = zmas[1], zmas[0]
             cnf_save_fs_lst = prd_cnf_save_fs_lst
-        print('rct_zmas')
-        for x in rct_zmas:
-            print(x)
-        print('prd_zmas')
-        for x in prd_zmas:
-            print(x)
 
         # Check for addition
         ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
@@ -630,7 +624,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         # Check for hydrogen abstraction
         if typ is None:
             ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas, sigma=False)
-            print('abstraction ret test in ts_class:', ret)
+            #print('abstraction ret test in ts_class:', ret)
             if ret:
                 typ = 'hydrogen abstraction'
                 ts_zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
@@ -638,7 +632,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                     typ += ': high spin'
                 elif ts_mul == low_mul:
                     typ += ': low spin'
-            print('key test in ts_class:', frm_bnd_key, brk_bnd_key)
+            #print('key test in ts_class:', frm_bnd_key, brk_bnd_key)
                     
         # Need special cases for (i) hydrogen abstraction where the radical is a sigma radical
         # and (ii) for abstraction of a heavy atom rather than a hydrogen atom. 
@@ -779,7 +773,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             grid.append(rgrid)
             rstp = rstp * gfac
         grid = numpy.array(grid)
-        print('grid test:', grid)
+        #print('grid test:', grid)
         update_guess = False
 
     elif 'hydrogen migration' in typ:
@@ -966,9 +960,9 @@ def find_ts(
         geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
         chk_bkp = False
-        print('z-matrix test:')
-        print(automol.zmatrix.string(zma))
-        print(automol.zmatrix.string(ts_zma))
+        #print('z-matrix test:')
+        #print(automol.zmatrix.string(zma))
+        #print(automol.zmatrix.string(ts_zma))
         if automol.zmatrix.names(zma) == automol.zmatrix.names(ts_zma):
             if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1, True):
                 if 'babs1' in automol.zmatrix.names(ts_zma):
@@ -979,17 +973,17 @@ def find_ts(
                         ts_zma, {'babs1': babs1})
                     ts_dct['original_zma'] = ts_zma
                     if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1):
-                        print('check true in 3:')
+                        #print('check true in 3:')
                         chk_bkp = True
                 else:
-                    print('check true in 2:')
+                    #print('check true in 2:')
                     chk_bkp = True
         else:
-            print('check true in 1:')
+            #print('check true in 1:')
             chk_bkp = True
 
         is_bkp = False
-        print('bkp test:', chk_bkp, bkp_ts_class_data, is_bkp)
+        #print('bkp test:', chk_bkp, bkp_ts_class_data, is_bkp)
         if chk_bkp and bkp_ts_class_data:
             [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names,
              bkp_update_guess] = bkp_ts_class_data
