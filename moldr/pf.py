@@ -1802,6 +1802,7 @@ def get_zero_point_energy(
 
         tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
         tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs)
+        print('tors_save_path test:', tors_save_path)
         print('tors_min_cnf_locs test:', tors_min_cnf_locs)
         tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
 

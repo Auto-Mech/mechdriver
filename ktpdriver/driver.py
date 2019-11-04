@@ -169,6 +169,8 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
             if 'samp' in tsk[0] or 'find' in tsk[0]:
                 geo_lvl = tsk[1]
                 geom = True
+                if 'find' in tsk[0]:
+                    geo_lvl_ref = geo_lvl
             if 'grad' in tsk[0] or 'hess' in tsk[0]:
                 harm_lvl = tsk[1]
                 harm_lvl_ref = tsk[2]
@@ -206,6 +208,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
 
 
         geo_thy_info = get_thy_info(es_dct, geo_lvl)
+        geo_thy_info_ref = get_thy_info(es_dct, geo_lvl_ref)
         harm_thy_info = get_thy_info(es_dct, harm_lvl)
         tors_thy_info = None
         anharm_thy_info = None
@@ -318,7 +321,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         # run mess to produce rate output
         mess_path = scripts.ktp.run_rates(
             header_str, energy_trans_str, well_str, bim_str, ts_str,
-            spc_dct[tsname_0], geo_thy_info, spc_dct[tsname_0]['rxn_fs'][3])
+            spc_dct[tsname_0], geo_thy_info_ref, spc_dct[tsname_0]['rxn_fs'][3])
 
         # fit rate output to modified Arrhenius forms and print in ChemKin format
         pf_levels.append(ene_str)
