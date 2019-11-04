@@ -953,7 +953,10 @@ def find_ts(
 #                cnf_run_fs, cnf_save_fs, saddle=True, dist_info=dist_info)
 #            min_cnf_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
 #            print('min_cnf_locs test in run_save:', min_cnf_locs)
-    # end of run path checking
+    # end of run path checkingA
+    #
+    # check to see if rxn class for already found ts is of expected class
+    # do this by comparing names
     if min_cnf_locs and not overwrite:
         cnf_path = cnf_save_fs.trunk.path()
         print('Found TS at {}'.format(cnf_path))
@@ -964,7 +967,9 @@ def find_ts(
         #print(automol.zmatrix.string(zma))
         #print(automol.zmatrix.string(ts_zma))
         if automol.zmatrix.names(zma) == automol.zmatrix.names(ts_zma):
+            # print('zmatrix and ts-zmatrix are not identical')
             if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1, True):
+                # print('zmatrix and ts-zmatrix are not nearly identical')
                 if 'babs1' in automol.zmatrix.names(ts_zma):
                     babs1 = 170. * phycon.DEG2RAD
                     if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
@@ -1003,11 +1008,14 @@ def find_ts(
             print('updating reaction class to {}'.format(bkp_typ))
             ts_dct['class'] = bkp_typ
             ts_dct['original_zma'] = bkp_ts_zma
+            bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
             ts_dct['dist_info'] = bkp_dist_info
             ts_dct['tors_names'] = bkp_tors_names
             print("TS is backup type {}".format(bkp_typ))
         else:
-            print("TS is not original type or backup type")
+            print("TS may not be original type or backup type")
+            print("Some part of the z-matrices have changed")
+        print('class test:', ts_dct['class'])
         vals = automol.zmatrix.values(zma)
         final_dist = vals[dist_name]
         dist_info[1] = final_dist

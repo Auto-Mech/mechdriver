@@ -18,6 +18,76 @@ def conformer_sampling(
     """
     ich = spc_info[0]
     coo_names = []
+    # if there are not yet any conformer locs then save the initial reference 
+    # geometry as the first conformer  
+    # this is important as it is the only way to get the minimum conformer 
+    # from the lower level of theory in as a saved conformer for the higher 
+    # level of theory
+    # to do this requires that the conformer save file system be set up.
+
+    locs_lst = cnf_save_fs.leaf.existing()
+    print('locs_lst in conformer_sampling:', locs_lst, ich)
+    if not locs_lst:
+        cnf_save_fs.trunk.create()
+
+        if not saddle:
+            geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
+            ene = thy_save_fs.leaf.file.energy.read(thy_level[1:4])
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+            zma = automol.geom.zmatrix(geo)
+        else:
+            geo = thy_save_fs.trunk.file.geometry.read()
+            ene = thy_save_fs.trunk.file.energy.read()
+            zma = thy_save_fs.trunk.file.zmatrix.read()
+
+        vma = automol.zmatrix.var_(zma)
+        if cnf_save_fs.trunk.file.vmatrix.exists():
+            existing_vma = cnf_save_fs.trunk.file.vmatrix.read()
+            assert vma == existing_vma
+        cnf_save_fs.trunk.file.vmatrix.write(vma)
+        #thy_run_path = thy_run_fs.leaf.path()
+        #print('thy_run_path test:')
+        #run_fs = autofile.fs.run(thy_run_path)
+        #ret = moldr.driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+        #if ret:
+        #    inf_obj, inp_str, out_str = ret
+        #    prog = inf_obj.prog
+        #    method = inf_obj.method
+        #    ene = elstruct.reader.energy(prog, method, out_str)
+        #    geo = elstruct.reader.opt_geometry(prog, out_str)
+        #    if saddle:
+        #        zma = elstruct.reader.opt_zmatrix(prog, out_str)
+        #    else:
+
+        tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
+        tors_range_dct = dict(zip(tors_names, tors_ranges))
+        inf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
+        #if cnf_save_fs.trunk.file.info.exists():
+        #    inf_obj_s = cnf_save_fs.trunk.file.info.read()
+        #    nsampd = inf_obj_s.nsamp
+        #elif cnf_run_fs.trunk.file.info.exists():
+        #    inf_obj_r = cnf_run_fs.trunk.file.info.read()
+        #    nsampd = inf_obj_r.nsamp
+        #else:
+        #    nsampd = 0
+        inf_obj.nsamp = 1
+
+        cid = autofile.system.generate_new_conformer_id()
+        locs = [cid]
+        cnf_save_fs.trunk.file.info.write(inf_obj)
+        cnf_save_fs.leaf.create(locs)
+        cnf_save_path = cnf_save_fs.leaf.path(locs)
+        print('cnf_save_path test:', cnf_save_path)
+        cnf_save_fs.leaf.file.geometry_info.write(inf_obj, locs)
+        #cnf_save_fs.leaf.file.geometry_input.write(
+        #    inp_str, locs)
+        cnf_save_fs.leaf.file.energy.write(ene, locs)
+        cnf_save_fs.leaf.file.geometry.write(geo, locs)
+        cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
+        moldr.util.traj_sort(cnf_save_fs)
+
+    ich = spc_info[0]
+    coo_names = []
     if not saddle:
         geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
@@ -36,6 +106,8 @@ def conformer_sampling(
     else:
         ntaudof = len(tors_names)
         nsamp = moldr.util.nsamp_init(nsamp_par, ntaudof)
+
+
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
@@ -81,6 +153,7 @@ def conformer_sampling(
             thy_save_fs.trunk.file.zmatrix.write(zma)
 
         ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
+
 
 def run_conformers(
         zma, spc_info, thy_level, nsamp, tors_range_dct,
@@ -245,9 +318,11 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                         ts_bnd2 = max(ts_bnd)
                         conf_dist_len = automol.zmatrix.values(zma)[dist_name]
 
-                        print('rxn_class test:', rxn_class)
+                        print('rxn_class test in conformer selection:', rxn_class)
+                        print('distance test in conformer selection:', dist_len, conf_dist_len)
                         # check if radical atom has moved to be closer to some atom other than the bonding atom
                         if 'addition' in rxn_class or 'abstraction' in rxn_class:
+                            print('it is an addition or an abstraction:')
                             if not is_atom_closest_to_bond_atom(zma, ts_bnd2, conf_dist_len):
                                 print(" - Transition State conformer has diverged from original",
                                       "structure of dist {:.3f} with dist {:.3f}".format(
@@ -308,7 +383,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                           conf_dist_len, equi_bnd))
                                 continue
                         else:
-                            if abs(conf_dist_len - dist_len) > 0.3:
+                            if abs(conf_dist_len - dist_len) > 0.4:
                                 print(" - Transition State conformer has diverged from original",
                                       "structure of dist {:.3f} with dist {:.3f}".format(
                                           dist_len, conf_dist_len))
@@ -338,6 +413,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                 cnf_save_fs.leaf.file.energy.write(ene, locs)
                                 cnf_save_fs.leaf.file.geometry.write(geo, locs)
                                 cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
+                                #cnf_save_fs.trunk.file.info.write(inf_obj)
 
                     seen_geos.append(geo)
                     seen_enes.append(ene)
