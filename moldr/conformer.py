@@ -251,7 +251,29 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                         ts_bnd1 = min(ts_bnd)
                         ts_bnd2 = max(ts_bnd)
                         conf_dist_len = automol.zmatrix.values(zma)[dist_name]
-
+                        brk_name = dist_info[3]
+                        angle = dist_info[4]
+                        cent_atm = None
+                        if dist_name and brk_name:
+                            brk_bnd = automol.zmatrix.bond_idxs(zma, brk_name)
+                            bnd_atms = []
+                            bnds = list(ts_bnd)
+                            bnds.extend(brk_bnd)
+                            for atm in bnds:
+                                if atm in bnd_atms:
+                                    cent_atm = atm
+                                else:
+                                    bnd_atms.append(atm)
+                            ang_atms = [0, 0, 0]
+                            for atm in bnd_atms:
+                                idx = 0
+                                if atm == cent_atm:
+                                    ang_atms[1] = atm
+                                else:
+                                    ang_atms[idx] = atm
+                                    idx += 1
+                            geom = automol.zmatrix.geometry(zma)
+                            conf_ang = automol.geom.central_angle(geom, *ang_atms)
                         print('rxn_class test in conformer selection:', rxn_class)
                         print('distance test in conformer selection:', dist_len, conf_dist_len)
                         # check if radical atom has moved to be closer to some atom other than the bonding atom
@@ -268,6 +290,13 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                       "structure of dist {:.3f} with dist {:.3f}".format(
                                           dist_len, conf_dist_len))
                                 continue
+                            if cent_atm:
+                                print('angle test in conformer selection:', angle, conf_ang)
+                                if abs(conf_ang - angle) > .44:
+                                    print(" - Transition State conformer has diverged from original",
+                                          "structure of angle {:.3f} with angle {:.3f}".format(
+                                              angle, conf_ang))
+                                    continue
                             # check if radical atom has collapsed to the equilibrium bond length
                             # this presumes the radical is the second group
                             symbols = automol.zmatrix.symbols(zma)
