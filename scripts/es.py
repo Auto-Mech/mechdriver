@@ -1030,8 +1030,8 @@ def find_ts(
         print('running ts scan:')
         if 'radical radical addition' in typ or 'radical radical hydrogen abstraction' in typ:
             # run mep scan
-            multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
-            # multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
+            # multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
+            multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
 
             orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
             multi_level = multi_info[0:3]
