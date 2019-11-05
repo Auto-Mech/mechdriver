@@ -231,18 +231,8 @@ def species_block(
                         enes = numpy.subtract(enes, min_ene)
                         pot = list(enes*phycon.EH2KCAL)
 
-                        lpot = len(pot)
-                        idx_success = []
-                        pot_success = []
-                        for idx in range(lpot):
-                            if enes[idx] < 1.:
-                                idx_success.append(idx)
-                                pot_success.append(pot[idx])
-                        idx_success.append(lpot)
-                        pot_success.append(pot[0])
-                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
-                        for idx in range(lpot):
-                            pot[idx] = pot_spl(idx)
+                        # Build a potential list from only successful calculations
+                        pot = _hrpot_spline_fitter(enes, pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -976,18 +966,8 @@ def pst_block(
                         enes = numpy.subtract(enes, min_ene_i)
                         pot = list(enes*phycon.EH2KCAL)
 
-                        lpot = len(pot)
-                        idx_success = []
-                        pot_success = []
-                        for idx in range(lpot):
-                            if enes[idx] < 1.:
-                                idx_success.append(idx)
-                                pot_success.append(pot[idx])
-                        idx_success.append(lpot)
-                        pot_success.append(pot[0])
-                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
-                        for idx in range(lpot):
-                            pot[idx] = pot_spl(idx)
+                        # Build a potential list from only successful calculations
+                        pot = _hrpot_spline_fitter(enes, pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -1111,18 +1091,8 @@ def pst_block(
                         enes = numpy.subtract(enes, min_ene_j)
                         pot = list(enes*phycon.EH2KCAL)
 
-                        lpot = len(pot)
-                        idx_success = []
-                        pot_success = []
-                        for idx in range(lpot):
-                            if enes[idx] < 1.:
-                                idx_success.append(idx)
-                                pot_success.append(pot[idx])
-                        idx_success.append(lpot)
-                        pot_success.append(pot[0])
-                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
-                        for idx in range(lpot):
-                            pot[idx] = pot_spl(idx)
+                        # Build a potential list from only successful calculations
+                        pot = _hrpot_spline_fitter(enes, pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -1476,19 +1446,9 @@ def fake_species_block(
                         enes = numpy.subtract(enes, min_ene_i)
                         pot = list(enes*phycon.EH2KCAL)
 
-                        lpot = len(pot)
-                        idx_success = []
-                        pot_success = []
-                        for idx in range(lpot):
-                            if enes[idx] < 1.:
-                                idx_success.append(idx)
-                                pot_success.append(pot[idx])
-                        idx_success.append(lpot)
-                        pot_success.append(pot[0])
-                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
-                        for idx in range(lpot):
-                            pot[idx] = pot_spl(idx)
-                        #print('fb pot test:', pot)
+                        # Build a potential list from only successful calculations
+                        pot = _hrpot_spline_fitter(enes, pot)
+                        print('fb pot test:', pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -1612,18 +1572,8 @@ def fake_species_block(
                         enes = numpy.subtract(enes, min_ene_j)
                         pot = list(enes*phycon.EH2KCAL)
 
-                        lpot = len(pot)
-                        idx_success = []
-                        pot_success = []
-                        for idx in range(lpot):
-                            if enes[idx] < 1.:
-                                idx_success.append(idx)
-                                pot_success.append(pot[idx])
-                        idx_success.append(lpot)
-                        pot_success.append(pot[0])
-                        pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
-                        for idx in range(lpot):
-                            pot[idx] = pot_spl(idx)
+                        # Build a potential list from only successful calculations
+                        pot = _hrpot_spline_fitter(enes, pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -1916,18 +1866,8 @@ def get_zero_point_energy(
                 enes = numpy.subtract(enes, min_ene)
                 pot = list(enes*phycon.EH2KCAL)
 
-                lpot = len(pot)
-                idx_success = []
-                pot_success = []
-                for idx in range(lpot):
-                    if enes[idx] < 1.:
-                        idx_success.append(idx)
-                        pot_success.append(pot[idx])
-                idx_success.append(lpot)
-                pot_success.append(pot[0])
-                pot_spl = interp1d(numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
-                for idx in range(lpot):
-                    pot[idx] = pot_spl(idx)
+                # Build a potential list from only successful calculations
+                pot = _hrpot_spline_fitter(enes, pot)
 
                 axis = coo_dct[tors_name][1:3]
                 atm_key = axis[1]
@@ -2238,3 +2178,66 @@ def tau_pf_write(
             sigma = numpy.sqrt(
                 (abs(sum2/float(idx)-(sumq/float(idx))**2))/float(idx))
             print(sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
+
+
+def _hrpot_spline_fitter(enes, pot, thresh=-0.05):
+    """ Get a physical hindered rotor potential via a series of spline fits
+    """
+
+    # Build a potential list from only successful calculations
+    lpot = len(pot)
+    idx_success = []
+    pot_success = []
+    for idx in range(lpot):
+        if enes[idx] < 1.:
+            idx_success.append(idx)
+            pot_success.append(pot[idx])
+    idx_success.append(lpot)
+    pot_success.append(pot[0])
+    pot_spl = interp1d(
+        numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
+    for idx in range(lpot):
+        pot[idx] = pot_spl(idx)
+
+    # Do second spline fit of only positive values if any negative values found
+    if any(val < thresh for val in pot):
+        print('Found pot vals below -0.05 kcal. Refit w/ positives'.format(thresh))
+        x_pos = numpy.array([i for i in range(pot.shape[0])
+                             if pot[i] >= thresh])
+        y_pos = numpy.array([pot[i] for i in range(pot.shape[0])
+                             if pot[i] >= thresh])
+        pos_pot_spl = interp1d(x_pos, y_pos, kind='cubic')
+        pot_pos_fit = []
+        for idx in range(lpot):
+            pot_pos_fit[idx] = pos_pot_spl(idx)
+
+        # Perform second check to see if negative potentials have been fixed
+        if any(val < thresh for val in pot_pos_fit):
+            print('Found values below {0} kcal again. Trying linear interp of positive vals'.format(thresh))
+            neg_idxs = [i for i in range(pot_pos_fit) if pot_pos_fit[i] < thresh]
+            clean_pot = []
+            for i in range(len(pot_pos_fit)):
+                if i in neg_idxs:
+                    # Find the indices for positive vals around negative value
+                    idx_0 = i - 1
+                    for j in range(i, len(pot_pos_fit)):
+                        if pot_pos_fit[j] >= thresh:
+                            idx_1 = j
+                    # Get a new value for this point on the potential by
+                    # doing a linear interp of positives
+                    interp_val = (
+                        pot_pos_fit[idx_0] * (1.0 - ((i - idx_0) / (idx_1 - idx_0))) +
+                        pot_pos_fit[idx_1] * ((i - idx_0) / (idx_1 - idx_0))
+                    )
+                    clean_pot.append(interp_val)
+                else:
+                    clean_pot.append(i)
+            final_potential = clean_pot.copy()
+
+        else:
+            final_potential = pot_pos_fit.copy()
+
+    else:
+        final_potential = pot.copy()
+
+    return final_potential
