@@ -43,7 +43,6 @@ if not os.path.exists(PARAMS.RUN_PREFIX):
     os.mkdir(PARAMS.RUN_PREFIX)
 if not os.path.exists(PARAMS.SAVE_PREFIX):
     os.mkdir(PARAMS.SAVE_PREFIX)
-
 # Run EStokTPDriver for ChemKin inputs
 if MECH_TYPE == 'CHEMKIN':
 

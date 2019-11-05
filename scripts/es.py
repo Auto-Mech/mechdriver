@@ -632,6 +632,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
                     typ += ': high spin'
                 elif ts_mul == low_mul:
                     typ += ': low spin'
+                brk_name = automol.zmatrix.bond_key_from_idxs(ts_zma, brk_bnd_key)
             #print('key test in ts_class:', frm_bnd_key, brk_bnd_key)
                     
         # Need special cases for (i) hydrogen abstraction where the radical is a sigma radical
