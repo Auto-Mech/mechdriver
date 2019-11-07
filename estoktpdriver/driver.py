@@ -50,7 +50,6 @@ if MECH_TYPE == 'CHEMKIN':
     # Also add in basis set species
     MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
     SPC_STR = open(os.path.join(MECH_PATH, 'species.csv')).read()
-
     SMI_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'smiles')
     ICH_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'inchi')
     MUL_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'mult')

@@ -252,9 +252,9 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                         ts_bnd2 = max(ts_bnd)
                         conf_dist_len = automol.zmatrix.values(zma)[dist_name]
                         brk_name = dist_info[3]
-                        angle = dist_info[4]
                         cent_atm = None
                         if dist_name and brk_name:
+                            angle = dist_info[4]
                             brk_bnd = automol.zmatrix.bond_idxs(zma, brk_name)
                             bnd_atms = []
                             bnds = list(ts_bnd)
