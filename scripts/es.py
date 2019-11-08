@@ -1009,7 +1009,7 @@ def find_ts(
             print('updating reaction class to {}'.format(bkp_typ))
             ts_dct['class'] = bkp_typ
             ts_dct['original_zma'] = bkp_ts_zma
-            bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
+            #bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
             ts_dct['dist_info'] = bkp_dist_info
             ts_dct['tors_names'] = bkp_tors_names
             print("TS is backup type {}".format(bkp_typ))
@@ -1020,6 +1020,7 @@ def find_ts(
         vals = automol.zmatrix.values(zma)
         final_dist = vals[dist_name]
         dist_info[1] = final_dist
+        print('dist_info is being set at end of backup checking', dist_info[1], final_dist)
 
     # Find TS
     else:

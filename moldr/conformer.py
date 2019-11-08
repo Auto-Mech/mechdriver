@@ -274,9 +274,22 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                     idx += 1
                             geom = automol.zmatrix.geometry(zma)
                             conf_ang = automol.geom.central_angle(geom, *ang_atms)
+                        max_disp = 0.6
+                        if 'addition' in rxn_class:
+                            max_disp = 0.8
+                        if 'abstraction' in rxn_class:
+                            max_disp = 1.4
+
                         print('rxn_class test in conformer selection:', rxn_class)
                         print('distance test in conformer selection:', dist_len, conf_dist_len)
                         # check if radical atom has moved to be closer to some atom other than the bonding atom
+                        if cent_atm:
+                            print('angle test in conformer selection:', angle, conf_ang)
+                            if abs(conf_ang - angle) > .44:
+                                print(" - Transition State conformer has diverged from original",
+                                      "structure of angle {:.3f} with angle {:.3f}".format(
+                                          angle, conf_ang))
+                                continue
                         if 'addition' in rxn_class or 'abstraction' in rxn_class:
                             print('it is an addition or an abstraction:')
                             if not is_atom_closest_to_bond_atom(zma, ts_bnd2, conf_dist_len):
@@ -285,23 +298,18 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                           dist_len, conf_dist_len))
                                 print("The radical atom now has a new nearest neighbor")
                                 continue
-                            if abs(conf_dist_len - dist_len) > 1.4:
+                            if abs(conf_dist_len - dist_len) > max_disp:
                                 print(" - Transition State conformer has diverged from original",
                                       "structure of dist {:.3f} with dist {:.3f}".format(
                                           dist_len, conf_dist_len))
                                 continue
-                            if cent_atm:
-                                print('angle test in conformer selection:', angle, conf_ang)
-                                if abs(conf_ang - angle) > .44:
-                                    print(" - Transition State conformer has diverged from original",
-                                          "structure of angle {:.3f} with angle {:.3f}".format(
-                                              angle, conf_ang))
-                                    continue
                             # check if radical atom has collapsed to the equilibrium bond length
                             # this presumes the radical is the second group
                             symbols = automol.zmatrix.symbols(zma)
                             equi_bnd = 0.
                             if symbols[ts_bnd2] == 'H':
+                                if symbols[ts_bnd1] == 'H':
+                                    equi_bnd = 0.75 * phycon.ANG2BOHR
                                 if symbols[ts_bnd1] == 'C':
                                     equi_bnd = 1.09 * phycon.ANG2BOHR
                                 elif symbols[ts_bnd1] == 'N':
@@ -337,7 +345,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                     equi_bnd = 1.3 * phycon.ANG2BOHR
                             displace_from_equi = conf_dist_len - equi_bnd
                             print('distance_from_equi test:', conf_dist_len, equi_bnd, dist_len)
-                            print('bnd atoms:', ts_bnd1, ts_bnd2)
+                            print('bnd atoms:', ts_bnd1, ts_bnd2, symbols[ts_bnd1], symbols[ts_bnd2])
                             print('symbols:', symbols[ts_bnd1], symbols[ts_bnd2])
                             if abs(conf_dist_len - dist_len) > 0.2 and displace_from_equi < 0.2:
                                 print(" - Transition State conformer has converged to an",

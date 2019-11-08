@@ -401,7 +401,7 @@ def run_rates(
 
 def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
                pdep_tolerance=20.0, no_pdep_pval=1.0,
-               pdep_low=None, pdep_high=None):
+               pdep_low=None, pdep_high=None, bimol=False):
     """ Read the rate constants from the MESS output and
         (1) filter out the invalid rates that are negative or undefined
         and obtain the pressure dependent values
@@ -444,7 +444,7 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
     # If ANY valid k(T,P) vals at given pressure, store in dct
     for pressure, calc_ks in calc_k_dct.items():
         filtered_temps, filtered_ks = ratefit.fit.util.get_valid_tk(
-            mess_temps, calc_ks)
+            mess_temps, calc_ks, bimol)
         if filtered_ks.size > 0:
             valid_calc_tk_dct[pressure] = numpy.concatenate(
                 (filtered_temps, filtered_ks))
@@ -461,7 +461,10 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
             ktp_dct = copy.deepcopy(valid_calc_tk_dct)
         else:
             # Set dct to have single set of k(T, P) vals: P is desired pressure
-            ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
+            if no_pdep_pval in valid_calc_tk_dct:
+                ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
+    if 'high' not in ktp_dct and 'high' in valid_calc_tk_dct.keys():
+        ktp_dct['high'] = valid_calc_tk_dct['high']
 
     return ktp_dct
 
@@ -476,8 +479,6 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
     """
 
     assert fit_type in ('single', 'double')
-    assert fit_method == 'dsarrfit'
-
 
     # Dictionaries to store info; indexed by pressure (given in fit_ps)
     fit_param_dct = {}
