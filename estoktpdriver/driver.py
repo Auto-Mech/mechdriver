@@ -465,6 +465,21 @@ ES_DCT = {
         'basis': 'cc-pvtz',
         'mc_nsamp': PARAMS.MC_NSAMP0
         },
+    'lvl_m06s': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'm062x',
+        'basis': '6-31g*',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'lvl_m06m': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'm062x',
+        'basis': '6-31+g*',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'lvl_m06t': {
+        'orb_res': 'RU', 'program': 'gaussian09', 'method': 'm062x',
+        'basis': 'cc-pvtz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
     'lvl_b2d': {
         'orb_res': 'RU', 'program': 'gaussian09', 'method': 'b2plypd3',
         'basis': 'cc-pvdz',

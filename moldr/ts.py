@@ -40,6 +40,7 @@ def reference_geometry(spcdct, thy_level, ini_thy_level,
                 'getting reference geometry from {}'.format(thy_path))
             geo = thy_save_fs.trunk.file.geometry.read()
             zma = thy_save_fs.trunk.file.zmatrix.read()
+            print('geo:',automol.geom.string(geo))
         if not geo:
             if ini_thy_save_fs:
                 if ini_thy_save_fs.trunk.file.geometry.exists():

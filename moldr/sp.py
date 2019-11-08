@@ -67,7 +67,6 @@ def run_energy(
             job='energy',
             run_fs=run_fs,
         )
-        print('ret in molpro options_mat:', ret)
 
         if ret is not None:
             inf_obj, inp_str, out_str = ret
