@@ -821,6 +821,8 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         rstart = 2.4 * phycon.ANG2BOHR
         rend1 = 1.4 * phycon.ANG2BOHR
         rend2 = 3.0 * phycon.ANG2BOHR
+        npoints1 = 8
+        npoints2 = 4
         grid1 = numpy.linspace(rstart, rend1, npoints1)
         grid2 = numpy.linspace(rstart, rend2, npoints2)
         grid2 = numpy.delete(grid2, 0)

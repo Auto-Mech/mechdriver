@@ -168,6 +168,9 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
 
         ts_model = ['RIGID', 'HARM', '']
         for tsk in ts_tsk_lst:
+            print('loop')
+            print(ts_model[0])
+            print(tsk)
             if 'samp' in tsk[0] or 'find' in tsk[0]:
                 geo_lvl = tsk[1]
                 geom = True
@@ -184,6 +187,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     ene_lvl = tsk[1]
                     geo_lvl = tsk[1]
             if 'hr' in tsk[0] or 'tau' in tsk[0]:
+                print('found')
                 tors_lvl = tsk[1]
                 tors_lvl_ref = tsk[2]
                 if 'md' in tsk[0]:
@@ -207,6 +211,15 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     ts_model[2] = '1DHR'
             # if 'irc' in tsk[0]:
             #    ts_model[3] = 
+
+        print('ts_tsk_lst')
+        print(ts_tsk_lst)
+        print('ts_model')
+        print(ts_model)
+        print('ts dct')
+        print(spc_dct[ts])
+        # import sys
+        # sys.exit()
 
 
         geo_thy_info = get_thy_info(es_dct, geo_lvl)
