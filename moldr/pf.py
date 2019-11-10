@@ -109,6 +109,7 @@ def species_block(
         brk_bnd_key = []
     if 'sym' in spc_dct_i:
         sym_factor = spc_dct_i['sym']
+        print('sym_factor from spc_dct_i:', sym_factor)
     else:
         if sym_model == 'SAMPLING':
             if not sym_min_cnf_locs:
@@ -122,6 +123,7 @@ def species_block(
                 form_coords.extend(list(dist_names[1]))
             sym_factor = moldr.conformer.symmetry_factor(
                 sym_geo, sym_ene, sym_cnf_save_fs, saddle, frm_bnd_key, brk_bnd_key, form_coords, tors_names)
+            print('sym_factor from conformer sampling:', sym_factor)
         if sym_model == '1DHR':
             print('Warning: the 1DHR based symmetry number has not yet been set up')
             sym_factor = 1
@@ -2201,10 +2203,10 @@ def _hrpot_spline_fitter(enes, pot, thresh=-0.05):
 
     # Do second spline fit of only positive values if any negative values found
     if any(val < thresh for val in pot):
-        print('Found pot vals below -0.05 kcal. Refit w/ positives'.format(thresh))
-        x_pos = numpy.array([i for i in range(pot.shape[0])
+        print('Found pot vals below {0} kcal. Refit w/ positives'.format(thresh))
+        x_pos = numpy.array([i for i in range(lpot)
                              if pot[i] >= thresh])
-        y_pos = numpy.array([pot[i] for i in range(pot.shape[0])
+        y_pos = numpy.array([pot[i] for i in range(lpot)
                              if pot[i] >= thresh])
         pos_pot_spl = interp1d(x_pos, y_pos, kind='cubic')
         pot_pos_fit = []
@@ -2213,7 +2215,8 @@ def _hrpot_spline_fitter(enes, pot, thresh=-0.05):
 
         # Perform second check to see if negative potentials have been fixed
         if any(val < thresh for val in pot_pos_fit):
-            print('Found values below {0} kcal again. Trying linear interp of positive vals'.format(thresh))
+            print('Found values below {0} kcal again. Trying linear interp of positive vals'
+                  .format(thresh))
             neg_idxs = [i for i in range(pot_pos_fit) if pot_pos_fit[i] < thresh]
             clean_pot = []
             for i in range(len(pot_pos_fit)):

@@ -253,7 +253,9 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                         conf_dist_len = automol.zmatrix.values(zma)[dist_name]
                         brk_name = dist_info[3]
                         cent_atm = None
-                        if dist_name and brk_name:
+                        ldist = len(dist_info)
+                        print('ldist test:', ldist, dist_info)
+                        if dist_name and brk_name and ldist > 4:
                             angle = dist_info[4]
                             brk_bnd = automol.zmatrix.bond_idxs(zma, brk_name)
                             bnd_atms = []
@@ -280,9 +282,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                         if 'abstraction' in rxn_class:
                             max_disp = 1.4
 
-                        print('rxn_class test in conformer selection:', rxn_class)
-                        print('distance test in conformer selection:', dist_len, conf_dist_len)
-                        # check if radical atom has moved to be closer to some atom other than the bonding atom
+                        # check if forming bond angle is similar to that in initil configuration
                         if cent_atm:
                             print('angle test in conformer selection:', angle, conf_ang)
                             if abs(conf_ang - angle) > .44:
@@ -290,6 +290,9 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                       "structure of angle {:.3f} with angle {:.3f}".format(
                                           angle, conf_ang))
                                 continue
+                        print('rxn_class test in conformer selection:', rxn_class)
+                        print('distance test in conformer selection:', dist_len, conf_dist_len)
+                        # check if radical atom is closer to some atom other than the bonding atom
                         if 'addition' in rxn_class or 'abstraction' in rxn_class:
                             print('it is an addition or an abstraction:')
                             if not is_atom_closest_to_bond_atom(zma, ts_bnd2, conf_dist_len):
@@ -452,24 +455,26 @@ def int_sym_num_from_sampling(
     # Note: ignoring for saddle points the possibility that two configurations
     # differ only in their torsional values.
     # As a result, the symmetry factor is a lower bound of the true value
+    # print('geom: \n', automol.geom.string(geo))
     if automol.geom.is_atom(geo):
         int_sym_num = 1.
     else:
         if not saddle:
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        if len(tors_names) == 0:
+        if tors_names is None:
             int_sym_num = 1.
         else:
             ethrsh = 1.e-5
             locs_lst = cnf_save_fs.leaf.existing()
-            geo_sim = [geo]
-            ene_sim = [ene]
             int_sym_num = 1.
             if locs_lst:
                 enes = [cnf_save_fs.leaf.file.energy.read(locs)
                         for locs in locs_lst]
                 geos = [cnf_save_fs.leaf.file.geometry.read(locs)
                         for locs in locs_lst]
+                geo_sim = []
+                geo_sim2 = []
+                ene_sim = []
                 for geoi, enei in zip(geos, enes):
                     if enei - enes[0] < ethrsh:
                         geo_lst = [geoi]
@@ -481,28 +486,28 @@ def int_sym_num_from_sampling(
                             ene_sim.append(enei)
 
                 int_sym_num = 0
-                for idx_i, geo_sim_i in enumerate(geo_sim):
+                #for geo_sim_i in geo_sim:
+                    #print('geo_conf: \n', automol.geom.string(geo_sim_i))
+                for geo_sim_i in geo_sim:
                     new_geos = automol.geom.rot_permutated_geoms(
                         geo_sim_i, saddle,
                         frm_bnd_key, brk_bnd_key, form_coords)
-                    new_geom = True
                     for new_geo in new_geos:
-                        for idx_j, geo_sim_j in enumerate(geo_sim):
-                            if idx_j < idx_i:
-                                if automol.geom.almost_equal_dist_mat(
-                                        new_geo, geo_sim_j, thresh=3e-1):
-                                    if saddle:
-                                        new_geom = False
-                                        break
-                                    elif are_torsions_same(new_geo, geo_sim_j):
-                                        new_geom = False
-                                        break
-                            else:
-                                break
-                        if not new_geom:
-                            break
-                    if new_geom:
-                        int_sym_num += len(new_geos)
+                        new_geom = True
+                        for geo_sim_j in geo_sim2:
+                            if automol.geom.almost_equal_dist_mat(
+                                    new_geo, geo_sim_j, thresh=3e-1):
+                                if saddle:
+                                    new_geom = False
+                                    break
+                                elif are_torsions_same(new_geo, geo_sim_j):
+                                    new_geom = False
+                                    break
+                        if new_geom:
+                            geo_sim2.append(new_geo)
+                            int_sym_num += 1
+                            #print('int_sym_num new:', int_sym_num)
+                            #print('new_geo: \n', automol.geom.string(new_geo))
     return int_sym_num
 
 
@@ -526,6 +531,7 @@ def symmetry_factor(
     else:
         int_sym = 1
     sym_fac = ext_sym * int_sym
+    print('external/internal test:', ext_sym, int_sym)
     return sym_fac
 
 
