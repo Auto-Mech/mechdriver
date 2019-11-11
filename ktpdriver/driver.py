@@ -131,6 +131,9 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     spc_dct[ts]['dist_info'] = dist_info
                     spc_dct[ts]['frm_bnd_key'] = frm_bnd_key
                     spc_dct[ts]['brk_bnd_key'] = brk_bnd_key
+                    # Adding in the rct and prd zmas for vrctst (check if theory is correct)
+                    spc_dct[ts]['rct_zmas'] = rct_zmas
+                    spc_dct[ts]['prd_zmas'] = prd_zmas
                     if ret2:
                         spc_dct[ts]['bkp_data'] = ret2
                     else:

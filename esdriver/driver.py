@@ -41,7 +41,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
     #Loop over Tasks
     ts_found = []
     for tsk_info in tsk_info_lst:
-
+    
         #Task information
         tsk = tsk_info[0]
         es_ini_key = tsk_info[2]
