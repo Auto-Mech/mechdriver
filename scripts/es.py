@@ -821,6 +821,8 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         rstart = 2.4 * phycon.ANG2BOHR
         rend1 = 1.4 * phycon.ANG2BOHR
         rend2 = 3.0 * phycon.ANG2BOHR
+        npoints1 = 8
+        npoints2 = 4
         grid1 = numpy.linspace(rstart, rend1, npoints1)
         grid2 = numpy.linspace(rstart, rend2, npoints2)
         grid2 = numpy.delete(grid2, 0)
@@ -887,6 +889,11 @@ def find_ts(
     """
     print('prepping ts scan for:', typ)
 
+    # print('ts_dct')
+    # print(ts_dct)
+    # import sys
+    # sys.exit()
+
     _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(*thy_info[0:2], saddle=True)
 
     orb_restr = moldr.util.orbital_restriction(ts_info, thy_info)
@@ -918,6 +925,8 @@ def find_ts(
     cnf_save_fs.trunk.create()
 
     dist_name = dist_info[0]
+    print('dist_name')
+    print(dist_name)
     update_guess = dist_info[2]
     brk_name = dist_info[3]
 
@@ -1055,9 +1064,10 @@ def find_ts(
             grid = numpy.append(grid[0], grid[1])
             high_mul = ts_dct['high_mul']
             print('starting multiref scan:', scn_run_fs.trunk.path())
-            vtst = True
+            vtst = False
+            gradient = False
+            hessian = False
             if vtst:
-                gradient = False
                 hessian = True
             moldr.scan.run_multiref_rscan(
                 formula=ts_formula,
@@ -1105,49 +1115,57 @@ def find_ts(
             zma = ts_zma
             final_dist = grid1[0]
 
-            vrctst = False
+            vrctst = True
             if vrctst:
 
-                # continue on to finish setting up the correction potential
-
-
-                # now call vrctst which sets up all the vrctst files
-                input_strs = moldr.vrctst.input_prep(ts_zma, dist_name)
-                [struct_inp_str, lr_divsur_inp_str, sr_divsur_inp_str, tst_inp_str,
-                 els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
-
-                # generate the molpro template file
-                      # Write the *.tml input string
-                memory = 4.0
-                basis = 'cc-pvdz'
-                num_act_elc = high_mul
-                num_act_orb = num_act_elc
-
-                ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
-
-                _, wfn_str = moldr.ts.cas_options(
-                    ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-                method = '{rs2c, shift=0.25}'
-                # inf_sep_energy = -78.137635
-                tml_inp_str = varecof_io.writer.input_file.tml(
-                    memory, basis, wfn_str, method, inf_sep_ene)
-                print('\n\nmol.tml:')
-                print(tml_inp_str)
-
+                # Set paths and build dirs for VRC-TST calculation is run
                 vrc_path = os.path.join(os.getcwd(), 'vrc')
                 scr_path = os.path.join(vrc_path, 'scratch')
                 os.makedirs(vrc_path, exist_ok=True)
                 os.makedirs(scr_path, exist_ok=True)
-                machines = ['b450:8', 'b451:8', 'b452:8', 'b453:8']
-
                 print('vrc_path test:', vrc_path)
+
+                # Correction potential
+                corr_pot = False
+                if corr_pot:
+                    # Read the values for the correction potential from filesystem
+                    potentials, pot_labels = moldr.vrctst.read_corrections()
+                    
+                    # Build correction potential .so file used by VaReCoF
+                    moldr.vrctst. build_correction_potential(
+                        mep_distances, potentials,
+                        bnd_frm_idxs, fortran_compiler, vrc_path,
+                        dist_restrict_idxs=(),
+                        pot_labels=pot_labels,
+                        pot_file_names=(),
+                        spc_name='mol')
+
+                # Write the electronic structure template file
+                memory = 4.0
+                basis = 'cc-pvdz'
+                method = '{rs2c, shift=0.25}'
+
+                num_act_elc = high_mul
+                num_act_orb = num_act_elc
+                ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
+                _, wfn_str = moldr.ts.cas_options_2(
+                    ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+                tml_inp_str = varecof_io.writer.input_file.tml(
+                    memory, basis, wfn_str, method, inf_sep_ene)
+
+                # Write machines file to set compute nodes
+                machines = ['b450:8', 'b451:8', 'b452:8', 'b453:8']
                 with open(os.path.join(vrc_path, 'machines'), 'w') as machine_file:
                     for machine in machines:
                         machine_file.writelines(machine + '\n')
+
+                # Write the remaining input file strings
+                input_strs = moldr.vrctst.input_prep(ts_zma, ts_dct['rct_zmas'], dist_name, vrc_path)
+                [struct_inp_str, lr_divsur_inp_str, tst_inp_str,
+                 els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
+                
                 with open(os.path.join(vrc_path, 'structure.inp'), 'w') as inp_file:
                     inp_file.write(struct_inp_str)
-                with open(os.path.join(vrc_path, 'sr_divsur.inp'), 'w') as inp_file:
-                    inp_file.write(sr_divsur_inp_str)
                 with open(os.path.join(vrc_path, 'lr_divsur.inp'), 'w') as inp_file:
                     inp_file.write(lr_divsur_inp_str)
                 with open(os.path.join(vrc_path, 'tst.inp'), 'w') as inp_file:
@@ -1161,9 +1179,13 @@ def find_ts(
                 with open(os.path.join(vrc_path, 'mol.tml'), 'w') as tml_file:
                     tml_file.write(tml_inp_str)
 
-                geo = automol.zmatrix.geometry(ts_zma)
-                zma = ts_zma
-                final_dist = grid1[0]
+                # don't know what the comment lines are for
+                # geo = automol.zmatrix.geometry(ts_zma)
+                # zma = ts_zma
+                # final_dist = grid1[0]
+                print('\n\nEXITING VRCTST AFTER WRITING INPUT')
+                import sys
+                sys.exit()
 
         else:
             if 'elimination' in typ:

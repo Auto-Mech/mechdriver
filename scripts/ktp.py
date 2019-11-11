@@ -90,11 +90,6 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, spc_model, pf_leve
     spc_save_fs.leaf.create(spc_info_j)
     save_path_i = spc_save_fs.leaf.path(spc_info_i)
     save_path_j = spc_save_fs.leaf.path(spc_info_j)
-    #if pf_levels[3]:
-        #spc_model = ['RIGID', 'HARM', 'SAMPLING']
-    #else:
-    #    spc_model = ['1DHR', 'HARM', '']
-        #spc_model = ['RIGID', 'HARM', '']
     print('spc_model test:', spc_model)
     species_data = moldr.pf.fake_species_block(
         spc_dct_i=spc_dct_i,
@@ -250,10 +245,6 @@ def make_channel_pfs(
                 idx_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
                 spc_dct_i = spc_dct[rxn['reacs'][0]]
                 spc_dct_j = spc_dct[rxn['reacs'][1]]
-                #if pf_levels[3]:
-                    #spc_model = ['RIGID', 'HARM', 'SAMPLING']
-                #else:
-                    #spc_model = ['RIGID', 'HARM', '']
                 pst_r_ts_str = moldr.pf.pst_block(
                     spc_dct_i, spc_dct_j, spc_model=spc_model,
                     pf_levels=pf_levels, projrot_script_str=projrot_script_str,
@@ -293,10 +284,6 @@ def make_channel_pfs(
                 idx_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
                 spc_dct_i = spc_dct[rxn['prods'][0]]
                 spc_dct_j = spc_dct[rxn['prods'][1]]
-                #if pf_levels[3]:
-                    #spc_model = ['RIGID', 'HARM', 'SAMPLING']
-                #else:
-                    #spc_model = ['RIGID', 'HARM', '']
                 pst_p_ts_str = moldr.pf.pst_block(
                     spc_dct_i, spc_dct_j, spc_model=spc_model,
                     pf_levels=pf_levels, projrot_script_str=projrot_script_str,

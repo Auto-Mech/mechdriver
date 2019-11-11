@@ -535,6 +535,16 @@ ES_DCT = {
         'basis': 'cc-pvqz-f12',
         'mc_nsamp': PARAMS.MC_NSAMP0
         },
+    'mlvl_cas_dz': {
+        'orb_res': 'RR', 'program': 'molpro2015', 'method': 'caspt2',
+        'basis': 'cc-pvdz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        },
+    'mlvl_cas_tz': {
+        'orb_res': 'RR', 'program': 'molpro2015', 'method': 'caspt2',
+        'basis': 'cc-pvtz',
+        'mc_nsamp': PARAMS.MC_NSAMP0
+        }
 }
 
 # The logic key in tsk_info_lst is for overwrite

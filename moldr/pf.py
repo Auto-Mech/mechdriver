@@ -61,7 +61,13 @@ def species_block(
         sym_cnf_save_fs = autofile.fs.conformer(sym_save_path)
         sym_min_cnf_locs = moldr.util.min_energy_conformer_locators(sym_cnf_save_fs)
 
-    if tors_level:
+    # Set boolean to account for a radical radical reaction (not supported by vtst)
+    rad_rad_ts = False
+    if 'ts_' in spc:
+        if spc_dct_i['rad_rad']:
+            rad_rad_ts = True
+
+    if tors_level and not rad_rad_ts:
         orb_restr = moldr.util.orbital_restriction(
             spc_info, tors_level)
         tors_levelp = tors_level[0:3]
@@ -130,7 +136,7 @@ def species_block(
 
     imag_freq = 0.
 
-    if vib_model == 'HARM' and tors_model == 'RIGID':
+    if (vib_model == 'HARM' and tors_model == 'RIGID') or rad_rad_ts:
         if har_min_cnf_locs is not None:
             har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
             min_ene = har_cnf_save_fs.leaf.file.energy.read(har_min_cnf_locs)
@@ -163,7 +169,7 @@ def species_block(
             imag_freq = 0.
             return '', 0.
 
-    if vib_model == 'HARM' and tors_model == '1DHR':
+    elif vib_model == 'HARM' and tors_model == '1DHR':
         if har_min_cnf_locs is not None:
             har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
             min_ene = har_cnf_save_fs.leaf.file.energy.read(har_min_cnf_locs)
@@ -476,10 +482,10 @@ def species_block(
             imag_freq = 0.
             return '', 0.
 
-    if vib_model == 'HARM' and tors_model == 'MDHR':
+    elif vib_model == 'HARM' and tors_model == 'MDHR':
         print('HARM and MDHR combination is not yet implemented')
 
-    if vib_model == 'HARM' and tors_model == 'TAU':
+    elif vib_model == 'HARM' and tors_model == 'TAU':
         print('HARM and TAU combination is not yet implemented')
         moldr.driver.tau_pf_write(
             name=name,
@@ -487,7 +493,7 @@ def species_block(
             run_grad=run_grad_pf,
             run_hess=run_hess_pf,
         )
-    if vib_model == 'VPT2' and tors_model == 'RIGID':
+    elif vib_model == 'VPT2' and tors_model == 'RIGID':
         if anh_min_cnf_locs is not None:
             anh_geo = anh_cnf_save_fs.leaf.file.geometry.read(anh_min_cnf_locs)
             min_ene = anh_cnf_save_fs.leaf.file.energy.read(anh_min_cnf_locs)
@@ -521,10 +527,10 @@ def species_block(
             return '', 0.
         print('VPT2 and RIGID combination is not yet properly implemented')
 
-    if vib_model == 'VPT2' and tors_model == '1DHR':
+    elif vib_model == 'VPT2' and tors_model == '1DHR':
         print('VPT2 and 1DHR combination is not yet implemented')
 
-    if vib_model == 'VPT2' and tors_model == 'TAU':
+    elif vib_model == 'VPT2' and tors_model == 'TAU':
         print('VPT2 and TAU combination is not yet implemented')
         moldr.driver.tau_pf_write(
             name=name,
@@ -537,7 +543,7 @@ def species_block(
 
 
 def vtst_with_no_saddle_block(
-        ts_dct,  ts_label, reac_label, prod_label, spc_ene, rct_zpe, projrot_script_str,
+        ts_dct, ts_label, reac_label, prod_label, spc_ene, rct_zpe, projrot_script_str,
         multi_info, elec_levels=[[0., 1]], sym_factor=1.
         ):
     """ prepare the mess input string for a variational TS that does not have
@@ -1738,8 +1744,14 @@ def get_zero_point_energy(
 
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
+    
+    # Set boolean to account for a radical radical reaction (not supported by vtst)
+    rad_rad_ts = False
+    if 'ts_' in spc:
+        if spc_dct_i['rad_rad']:
+            rad_rad_ts = True
 
-    if tors_level:
+    if tors_level and not rad_rad_ts:
         orb_restr = moldr.util.orbital_restriction(
             spc_info, tors_level)
         tors_levelp = tors_level[0:3]
@@ -1803,10 +1815,13 @@ def get_zero_point_energy(
 
         har_zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
 
-    if vib_model == 'HARM' and tors_model == 'RIGID':
+    # if 'radical radical' in spc['class']:
+    #    ret = har_zpe
+
+    if (vib_model == 'HARM' and tors_model == 'RIGID') or rad_rad_ts:
         ret = har_zpe
 
-    if vib_model == 'HARM' and tors_model == '1DHR':
+    elif vib_model == 'HARM' and tors_model == '1DHR':
         # make pf string for 1d rotor
         # run messpf
         # read 1d harmonic and torsional ZPEs
@@ -2076,13 +2091,13 @@ def get_zero_point_energy(
             #print('zpe test:', har_zpe, zpe_har_no_tors, tors_zpe, zpe)
         ret = zpe
 
-    if vib_model == 'HARM' and tors_model == 'MDHR':
+    elif vib_model == 'HARM' and tors_model == 'MDHR':
         print('HARM and MDHR combination is not yet implemented')
 
-    if vib_model == 'HARM' and tors_model == 'TAU':
+    elif vib_model == 'HARM' and tors_model == 'TAU':
         print('HARM and TAU combination is not yet implemented')
 
-    if vib_model == 'VPT2' and tors_model == 'RIGID':
+    elif vib_model == 'VPT2' and tors_model == 'RIGID':
         if anh_min_cnf_locs is not None:
             anh_geo = anh_cnf_save_fs.leaf.file.geometry.read(anh_min_cnf_locs)
             min_ene = anh_cnf_save_fs.leaf.file.energy.read(anh_min_cnf_locs)
@@ -2111,10 +2126,10 @@ def get_zero_point_energy(
             spc_str = ''
         print('VPT2 and RIGID combination is not yet properly implemented')
 
-    if vib_model == 'VPT2' and tors_model == '1DHR':
+    elif vib_model == 'VPT2' and tors_model == '1DHR':
         print('VPT2 and 1DHR combination is not yet implemented')
 
-    if vib_model == 'VPT2' and tors_model == 'TAU':
+    elif vib_model == 'VPT2' and tors_model == 'TAU':
         print('VPT2 and TAU combination is not yet implemented')
 
     return ret, is_atom
