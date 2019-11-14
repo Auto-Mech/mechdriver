@@ -231,6 +231,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                 method = inf_obj.method
                 ene = elstruct.reader.energy(prog, method, out_str)
                 geo = elstruct.reader.opt_geometry(prog, out_str)
+                #print('geo in conformer: \n', automol.geom.string(geo))
                 #if saddle:
                     #gra = automol.geom.weakly_connected_graph(geo)
                 #else:
@@ -245,6 +246,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                 else:
                     if saddle:
                         zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                        print('zma in conformer: \n', automol.zmatrix.string(zma))
                         dist_name = dist_info[0]
                         dist_len = dist_info[1]
                         ts_bnd = automol.zmatrix.bond_idxs(zma, dist_name)
@@ -258,24 +260,20 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                         if dist_name and brk_name and ldist > 4:
                             angle = dist_info[4]
                             brk_bnd = automol.zmatrix.bond_idxs(zma, brk_name)
-                            bnd_atms = []
-                            bnds = list(ts_bnd)
-                            bnds.extend(brk_bnd)
-                            for atm in bnds:
-                                if atm in bnd_atms:
-                                    cent_atm = atm
-                                else:
-                                    bnd_atms.append(atm)
                             ang_atms = [0, 0, 0]
-                            for atm in bnd_atms:
-                                idx = 0
-                                if atm == cent_atm:
-                                    ang_atms[1] = atm
-                                else:
-                                    ang_atms[idx] = atm
-                                    idx += 1
-                            geom = automol.zmatrix.geometry(zma)
-                            conf_ang = automol.geom.central_angle(geom, *ang_atms)
+                            cent_atm = list(set(brk_bnd) & set(ts_bnd))
+                            if cent_atm:
+                                ang_atms[1] = cent_atm[0] 
+                                for idx in brk_bnd:
+                                    if idx != ang_atms[1]:
+                                        ang_atms[0] = idx
+                                for idx in ts_bnd:
+                                    if idx != ang_atms[1]:
+                                        ang_atms[2] = idx
+                                geom = automol.zmatrix.geometry(zma)
+                                # print('geom in conformer: \n', automol.geom.string(geom))
+                                # print('ang_atms test:', ang_atms)
+                                conf_ang = automol.geom.central_angle(geom, *ang_atms)
                         max_disp = 0.6
                         if 'addition' in rxn_class:
                             max_disp = 0.8

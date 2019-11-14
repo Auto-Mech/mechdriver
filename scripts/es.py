@@ -1064,7 +1064,7 @@ def find_ts(
             grid = numpy.append(grid[0], grid[1])
             high_mul = ts_dct['high_mul']
             print('starting multiref scan:', scn_run_fs.trunk.path())
-            vtst = False
+            vtst = True
             gradient = False
             hessian = False
             if vtst:
@@ -1115,7 +1115,7 @@ def find_ts(
             zma = ts_zma
             final_dist = grid1[0]
 
-            vrctst = True
+            vrctst = False
             if vrctst:
 
                 # Set paths and build dirs for VRC-TST calculation is run
