@@ -84,31 +84,27 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                         dist_name = dist_info[0]
                         brk_name = dist_info[3]
                         print('bond info', dist_name, brk_name)
-                        if brk_name and dist_name:
+                        if dist_name and brk_name:
                             ts_bnd = automol.zmatrix.bond_idxs(ts_zma, dist_name)
                             brk_bnd = automol.zmatrix.bond_idxs(ts_zma, brk_name)
-                            bnd_atms = []
-                            cent_atm = None
-                            bnds = list(ts_bnd)
-                            bnds.extend(brk_bnd)
-                            print('bnding atoms', bnds)
-                            for atm in bnds:
-                                if atm in bnd_atms:
-                                    cent_atm = atm
-                                else:
-                                    bnd_atms.append(atm)
+                            print('ts_zma test:', ts_zma)
+                            print('brk_bnd test:', brk_bnd)
+                            print('ts_bnd test:', ts_bnd)
                             ang_atms = [0, 0, 0]
-                            for atm in bnd_atms:
-                                idx = 0
-                                if atm == cent_atm:
-                                    ang_atms[1] = atm
-                                else:
-                                    ang_atms[idx] = atm
-                                    idx += 1
+                            cent_atm = list(set(brk_bnd) & set(ts_bnd))
+                            if cent_atm:
+                                ang_atms[1] = cent_atm[0]
+                                for idx in brk_bnd:
+                                    if idx != ang_atms[1]:
+                                        ang_atms[0] = idx
+                                for idx in ts_bnd:
+                                    if idx != ang_atms[1]:
+                                        ang_atms[2] = idx
+
                             geom = automol.zmatrix.geometry(ts_zma)
-                            print(bnd_atms)
+                            print('ang_atms before calculation:', ang_atms)
                             angle = automol.geom.central_angle(geom, *ang_atms)
-                            print('calculated angle for ts is', angle)
+                            print('calculated angle for ts is:', angle)
                         spc_dct[ts]['dist_info'].append(angle)
                         if not isinstance(geo, str):
                             print('Success, transition state {} added to species queue'.format(ts))

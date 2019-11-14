@@ -259,9 +259,9 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         ts_queue = []
         for spc in spc_dct:   #have to make sure you get them for the TS too
             if spc in ts_found:
-                if 'radical radical addition' in spc_dct[spc]['class']:
-                    print('skipping rate for radical radical reaction: {}'.format(spc))
-                    continue
+                #if 'radical radical addition' in spc_dct[spc]['class']:
+                #    print('skipping rate for radical radical reaction: {}'.format(spc))
+                #    continue
                 ts_queue.append(spc)
         print('getting ready for zpe:')
         for spc in spc_queue + ts_queue:

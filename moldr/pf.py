@@ -80,7 +80,8 @@ def species_block(
             tors_save_path = tors_save_fs.trunk.path()
         tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
         tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs)
-        tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
+        if tors_min_cnf_locs:
+            tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
 
     if vpt2_level:
         orb_restr = moldr.util.orbital_restriction(
@@ -240,7 +241,8 @@ def species_block(
                         pot = list(enes*phycon.EH2KCAL)
 
                         # Build a potential list from only successful calculations
-                        pot = _hrpot_spline_fitter(enes, pot)
+                        print('pot in species block:', enes, pot)
+                        pot = _hrpot_spline_fitter(pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -664,6 +666,11 @@ def vtst_with_no_saddle_block(
             #print('unprojected freqs in vtst:', freqs_test)
 
         zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
+        # for now use the zpe calculated at the first grid point as an approximation to
+        # the zpe at infinite sepration
+        if idx == 0:
+            rct_zpe = zpe
+
         erel = (ene - inf_sep_ene)*phycon.EH2KCAL
         erel_zpe_corr = erel + zpe - rct_zpe
         #eref = erel
@@ -975,7 +982,7 @@ def pst_block(
                         pot = list(enes*phycon.EH2KCAL)
 
                         # Build a potential list from only successful calculations
-                        pot = _hrpot_spline_fitter(enes, pot)
+                        pot = _hrpot_spline_fitter(pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -1100,7 +1107,7 @@ def pst_block(
                         pot = list(enes*phycon.EH2KCAL)
 
                         # Build a potential list from only successful calculations
-                        pot = _hrpot_spline_fitter(enes, pot)
+                        pot = _hrpot_spline_fitter(pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -1455,7 +1462,7 @@ def fake_species_block(
                         pot = list(enes*phycon.EH2KCAL)
 
                         # Build a potential list from only successful calculations
-                        pot = _hrpot_spline_fitter(enes, pot)
+                        pot = _hrpot_spline_fitter(pot)
                         print('fb pot test:', pot)
 
                         axis = coo_dct[tors_name][1:3]
@@ -1581,7 +1588,7 @@ def fake_species_block(
                         pot = list(enes*phycon.EH2KCAL)
 
                         # Build a potential list from only successful calculations
-                        pot = _hrpot_spline_fitter(enes, pot)
+                        pot = _hrpot_spline_fitter(pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -1742,6 +1749,7 @@ def get_zero_point_energy(
         har_save_path = har_save_fs.trunk.path()
         saddle = True
 
+    print('inside zpe saddle is:', saddle)
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
     
@@ -1768,7 +1776,8 @@ def get_zero_point_energy(
         tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs)
         print('tors_save_path test:', tors_save_path)
         print('tors_min_cnf_locs test:', tors_min_cnf_locs)
-        tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
+        if tors_min_cnf_locs:
+            tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
 
     if vpt2_level:
         orb_restr = moldr.util.orbital_restriction(
@@ -1818,6 +1827,8 @@ def get_zero_point_energy(
     # if 'radical radical' in spc['class']:
     #    ret = har_zpe
 
+    print('vib_model in zpe:', vib_model)
+    print('tors_model in zpe:', tors_model)
     if (vib_model == 'HARM' and tors_model == 'RIGID') or rad_rad_ts:
         ret = har_zpe
 
@@ -1830,32 +1841,33 @@ def get_zero_point_energy(
         zpe = har_zpe
         hind_rot_str = ""
         proj_rotors_str = ""
+        print('tors_min_cnf_locs:', tors_min_cnf_locs)
+        tors_names = []
         if tors_min_cnf_locs is not None:
-            if har_cnf_save_fs.trunk.file.info.exists():
+            if tors_cnf_save_fs.trunk.file.info.exists():
                 inf_obj_s = har_cnf_save_fs.trunk.file.info.read()
                 tors_ranges = inf_obj_s.tors_ranges
                 tors_ranges = autofile.info.dict_(tors_ranges)
                 #print(tors_ranges)
                 tors_names = list(tors_ranges.keys())
+
             else:
                 print('No inf obj to identify torsional angles')
-                tors_names = []
 
-        min_ene = tors_cnf_save_fs.leaf.file.energy.read(tors_min_cnf_locs)
-        tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
-        zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
-        gra = automol.zmatrix.graph(zma, remove_stereo=True)
-        tors_zpe_cor = 0.0
-        if tors_names:
+            min_ene = tors_cnf_save_fs.leaf.file.energy.read(tors_min_cnf_locs)
+            tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(tors_min_cnf_locs)
+            zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
+            gra = automol.zmatrix.graph(zma, remove_stereo=True)
+            tors_zpe_cor = 0.0
             coo_dct = automol.zmatrix.coordinates(zma, multi=False)
             # prepare axis, group, info
             scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
             ts_bnd = None
             if saddle:
                 dist_name = spc_dct_i['dist_info'][0]
+                tors_names = spc_dct_i['tors_names']
                 ts_bnd =  automol.zmatrix.bond_idxs(zma, dist_name)
                 ts_bnd = frozenset(ts_bnd)
-                tors_names = spc_dct_i['tors_names']
             pot = []
             if 'hind_inc' in spc_dct_i:
                 scan_increment = spc_dct_i['hind_inc']
@@ -1868,222 +1880,225 @@ def get_zero_point_energy(
                           for name, linspace in zip(tors_names, tors_linspaces)]
             tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
                 zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
-            for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
-                locs_lst = []
-                enes = []
-                for grid_val in tors_grid:
-                    locs_lst.append([[tors_name], [grid_val]])
-                for locs in locs_lst:
-                    if scn_save_fs.leaf.exists(locs):
-                        enes.append(scn_save_fs.leaf.file.energy.read(locs))
-                    else:
-                        enes.append(10.)
-                        print('ERROR: missing grid value for torsional potential of {}'.
-                              format(spc_info[0]))
-                enes = numpy.subtract(enes, min_ene)
-                pot = list(enes*phycon.EH2KCAL)
+            print('tors_names:', tors_names)
+            if tors_names:
+                for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
+                    locs_lst = []
+                    enes = []
+                    for grid_val in tors_grid:
+                        locs_lst.append([[tors_name], [grid_val]])
+                    for locs in locs_lst:
+                        if scn_save_fs.leaf.exists(locs):
+                            enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                        else:
+                            enes.append(10.)
+                            print('ERROR: missing grid value for torsional potential of {}'.
+                                  format(spc_info[0]))
+                    enes = numpy.subtract(enes, min_ene)
+                    pot = list(enes*phycon.EH2KCAL)
 
-                # Build a potential list from only successful calculations
-                pot = _hrpot_spline_fitter(enes, pot)
+                    # Build a potential list from only successful calculations
+                    print('pot test in zpe:', pot)
+                    pot = _hrpot_spline_fitter(pot)
 
-                axis = coo_dct[tors_name][1:3]
-                atm_key = axis[1]
-                if ts_bnd:
-                    for atm in axis:
-                        if atm in ts_bnd:
-                            atm_key = atm
-                            break
-                group = list(
-                    automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
-                    set(axis))
-                if not group:
-                    for atm in axis:
-                        if atm != atm_key:
-                            atm_key = atm
+                    axis = coo_dct[tors_name][1:3]
+                    atm_key = axis[1]
+                    if ts_bnd:
+                        for atm in axis:
+                            if atm in ts_bnd:
+                                atm_key = atm
+                                break
                     group = list(
                         automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
                         set(axis))
-                if saddle:
-                    n_atm = automol.zmatrix.count(zma)
-                    if 'addition' in spc_dct_i['class'] or 'abstraction' in spc_dct_i['class']:
-                        group2 = []
-                        ts_bnd1 = min(ts_bnd)
-                        ts_bnd2 = max(ts_bnd)
-                        for idx in range(ts_bnd2, n_atm):
-                            group2.append(idx)
-                        if ts_bnd1 in group:
-                            for atm in group2:
-                                if atm not in group:
-                                    group.append(atm)
-                    # check to see if symmetry of XH3 rotor was missed
-                    if sym_num == 1:
-                        group2 = []
-                        for idx in range(n_atm):
-                            if idx not in group and idx not in axis:
+                    if not group:
+                        for atm in axis:
+                            if atm != atm_key:
+                                atm_key = atm
+                        group = list(
+                            automol.graph.branch_atom_keys(gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) -
+                            set(axis))
+                    if saddle:
+                        n_atm = automol.zmatrix.count(zma)
+                        if 'addition' in spc_dct_i['class'] or 'abstraction' in spc_dct_i['class']:
+                            group2 = []
+                            ts_bnd1 = min(ts_bnd)
+                            ts_bnd2 = max(ts_bnd)
+                            for idx in range(ts_bnd2, n_atm):
                                 group2.append(idx)
-                        all_H = True
-                        symbols = automol.zmatrix.symbols(zma)
-                        #print('symbols test:', symbols)
-                        #print('second group2:', group2)
-                        #print('len pot:', len(pot))
-                        H_count = 0
-                        for idx in group2:
-                            if symbols[idx] != 'H' and symbols[idx] != 'X':
-                                all_H = False
-                                break
-                            else:
-                                if symbols[idx] == 'H':
-                                    H_count += 1
-                        if all_H and H_count == 3:
-                            sym_num = 3
-                            lpot = int(len(pot)/3)
-                            potp = []
-                            potp[0:lpot] = pot[0:lpot]
-                            pot = potp
-                            #potp = []
-                            #for idx in range(lpot):
-                            #    potp.append(pot[idx])
-                            #print('potp test:', potp)
-                            #print('potp2 test:', potp)
-                            #pot = potp
-                        #print('all_h test=:', all_H, H_count)
-                        #print('pot test:', pot)
-                        #print('len pot new:', len(pot))
-                group = list(numpy.add(group, 1))
-                axis = list(numpy.add(axis, 1))
-                #print('axis test:', axis)
-                #print('atm_key:', atm_key)
-                #print('group:', group)
-                #for idx, atm in enumerate(axis):
-                #    if atm == atm_key+1:
-                #        if idx != 1:
-                #            axis.reverse()
-                #            print('axis reversed:', axis)
-                if (atm_key+1) != axis[1]:
-                    axis.reverse()
-                    #print('axis reversed:', axis)
-                #if atm_key != axis(0):
-                    #axis.reverse()
+                            if ts_bnd1 in group:
+                                for atm in group2:
+                                    if atm not in group:
+                                        group.append(atm)
+                        # check to see if symmetry of XH3 rotor was missed
+                        if sym_num == 1:
+                            group2 = []
+                            for idx in range(n_atm):
+                                if idx not in group and idx not in axis:
+                                    group2.append(idx)
+                            all_H = True
+                            symbols = automol.zmatrix.symbols(zma)
+                            #print('symbols test:', symbols)
+                            #print('second group2:', group2)
+                            #print('len pot:', len(pot))
+                            H_count = 0
+                            for idx in group2:
+                                if symbols[idx] != 'H' and symbols[idx] != 'X':
+                                    all_H = False
+                                    break
+                                else:
+                                    if symbols[idx] == 'H':
+                                        H_count += 1
+                            if all_H and H_count == 3:
+                                sym_num = 3
+                                lpot = int(len(pot)/3)
+                                potp = []
+                                potp[0:lpot] = pot[0:lpot]
+                                pot = potp
+                                #potp = []
+                                #for idx in range(lpot):
+                                #    potp.append(pot[idx])
+                                #print('potp test:', potp)
+                                #print('potp2 test:', potp)
+                                #pot = potp
+                            #print('all_h test=:', all_H, H_count)
+                            #print('pot test:', pot)
+                            #print('len pot new:', len(pot))
+                    group = list(numpy.add(group, 1))
+                    axis = list(numpy.add(axis, 1))
+                    #print('axis test:', axis)
+                    #print('atm_key:', atm_key)
+                    #print('group:', group)
+                    #for idx, atm in enumerate(axis):
+                    #    if atm == atm_key+1:
+                    #        if idx != 1:
+                    #            axis.reverse()
+                    #            print('axis reversed:', axis)
+                    if (atm_key+1) != axis[1]:
+                        axis.reverse()
+                        #print('axis reversed:', axis)
+                    #if atm_key != axis(0):
+                        #axis.reverse()
 
-                #check for dummy transformations
-                atom_symbols = automol.zmatrix.symbols(zma)
-                dummy_idx = []
-                for atm_idx, atm in enumerate(atom_symbols):
-                    if atm == 'X':
-                        dummy_idx.append(atm_idx)
-                remdummy = numpy.zeros(len(zma[0]))
-                for dummy in dummy_idx:
-                    for idx, _ in enumerate(remdummy):
-                        if dummy < idx:
-                            remdummy[idx] += 1
+                    #check for dummy transformations
+                    atom_symbols = automol.zmatrix.symbols(zma)
+                    dummy_idx = []
+                    for atm_idx, atm in enumerate(atom_symbols):
+                        if atm == 'X':
+                            dummy_idx.append(atm_idx)
+                    remdummy = numpy.zeros(len(zma[0]))
+                    for dummy in dummy_idx:
+                        for idx, _ in enumerate(remdummy):
+                            if dummy < idx:
+                                remdummy[idx] += 1
 
-                hind_rot_str += mess_io.writer.rotor_hindered(
-                    group, axis, sym_num, pot, remdummy=remdummy)
+                    hind_rot_str += mess_io.writer.rotor_hindered(
+                        group, axis, sym_num, pot, remdummy=remdummy)
 
-                #print('projrot 1 test:')
-                proj_rotors_str += projrot_io.writer.rotors(
-                    axis, group, remdummy=remdummy)
-                sym_factor /= sym_num
+                    #print('projrot 1 test:')
+                    proj_rotors_str += projrot_io.writer.rotors(
+                        axis, group, remdummy=remdummy)
+                    sym_factor /= sym_num
 
-            # Write the string for the ProjRot input
-            coord_proj = 'cartesian'
-            grad = ''
-            #print('projrot zpe test:')
-            projrot_inp_str = projrot_io.writer.rpht_input(
-                tors_geo, grad, hess, rotors_str=proj_rotors_str,
-                coord_proj=coord_proj)
+                # Write the string for the ProjRot input
+                coord_proj = 'cartesian'
+                grad = ''
+                #print('projrot zpe test:')
+                projrot_inp_str = projrot_io.writer.rpht_input(
+                    tors_geo, grad, hess, rotors_str=proj_rotors_str,
+                    coord_proj=coord_proj)
 
-            bld_locs = ['PROJROT', 0]
-            bld_save_fs = autofile.fs.build(tors_save_path)
-            bld_save_fs.leaf.create(bld_locs)
-            path = bld_save_fs.leaf.path(bld_locs)
-            print('Build Path for Partition Functions')
-            print(path)
-            proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
-            with open(proj_file_path, 'w') as proj_file:
-                proj_file.write(projrot_inp_str)
+                bld_locs = ['PROJROT', 0]
+                bld_save_fs = autofile.fs.build(tors_save_path)
+                bld_save_fs.leaf.create(bld_locs)
+                path = bld_save_fs.leaf.path(bld_locs)
+                print('Build Path for Partition Functions')
+                print(path)
+                proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
+                with open(proj_file_path, 'w') as proj_file:
+                    proj_file.write(projrot_inp_str)
 
-            moldr.util.run_script(projrot_script_str, path)
+                moldr.util.run_script(projrot_script_str, path)
 
-            zpe_har_no_tors = har_zpe
-            if pot:
-                rthrproj_freqs, _ = projrot_io.reader.rpht_output(
-                    path+'/hrproj_freq.dat')
-                freqs = rthrproj_freqs
-                zpe_har_no_tors = sum(freqs)*phycon.WAVEN2KCAL/2.
+                zpe_har_no_tors = har_zpe
+                if pot:
+                    rthrproj_freqs, _ = projrot_io.reader.rpht_output(
+                        path+'/hrproj_freq.dat')
+                    freqs = rthrproj_freqs
+                    zpe_har_no_tors = sum(freqs)*phycon.WAVEN2KCAL/2.
 
-            # now try again with the other projrot parameters
-            projrot_script_str2 = ("#!/usr/bin/env bash\n"
-            "RPHt.exe >& /dev/null")
-            moldr.util.run_script(projrot_script_str2, path)
-            zpe_har_no_tors_2 = har_zpe
-            freqs_2 = []
-            if pot:
-                rthrproj_freqs_2, _ = projrot_io.reader.rpht_output(
-                    path+'/hrproj_freq.dat')
-                freqs_2 = rthrproj_freqs_2
-                zpe_har_no_tors_2 = sum(freqs_2)*phycon.WAVEN2KCAL/2.
+                # now try again with the other projrot parameters
+                projrot_script_str2 = ("#!/usr/bin/env bash\n"
+                "RPHt.exe >& /dev/null")
+                moldr.util.run_script(projrot_script_str2, path)
+                zpe_har_no_tors_2 = har_zpe
+                freqs_2 = []
+                if pot:
+                    rthrproj_freqs_2, _ = projrot_io.reader.rpht_output(
+                        path+'/hrproj_freq.dat')
+                    freqs_2 = rthrproj_freqs_2
+                    zpe_har_no_tors_2 = sum(freqs_2)*phycon.WAVEN2KCAL/2.
 
-            dummy_freqs = [1000.]
-            dummy_zpe = 0.0
-            core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
-            spc_str = mess_io.writer.molecule(
-                core, dummy_freqs, elec_levels,
-                hind_rot=hind_rot_str,
-                )
+                dummy_freqs = [1000.]
+                dummy_zpe = 0.0
+                core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
+                spc_str = mess_io.writer.molecule(
+                    core, dummy_freqs, elec_levels,
+                    hind_rot=hind_rot_str,
+                    )
 
-            # create a messpf input file
-            temp_step = 100.
-            ntemps = 5
-            zpe_str = '{0:<8.2f}\n'.format(dummy_zpe)
-            zpe_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
-            zpe_str += 'End\n'
-            global_pf_str = mess_io.writer.global_pf(
-                [], temp_step, ntemps, rel_temp_inc=0.001,
-                atom_dist_min=0.6)
-            spc_head_str = 'Species ' + ' Tmp'
-            pf_inp_str = '\n'.join(
-                [global_pf_str, spc_head_str,
-                 spc_str, zpe_str])
+                # create a messpf input file
+                temp_step = 100.
+                ntemps = 5
+                zpe_str = '{0:<8.2f}\n'.format(dummy_zpe)
+                zpe_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
+                zpe_str += 'End\n'
+                global_pf_str = mess_io.writer.global_pf(
+                    [], temp_step, ntemps, rel_temp_inc=0.001,
+                    atom_dist_min=0.6)
+                spc_head_str = 'Species ' + ' Tmp'
+                pf_inp_str = '\n'.join(
+                    [global_pf_str, spc_head_str,
+                     spc_str, zpe_str])
 
-            bld_locs = ['PF', 0]
-            bld_save_fs = autofile.fs.build(tors_save_path)
-            bld_save_fs.leaf.create(bld_locs)
-            pf_path = bld_save_fs.leaf.path(bld_locs)
+                bld_locs = ['PF', 0]
+                bld_save_fs = autofile.fs.build(tors_save_path)
+                bld_save_fs.leaf.create(bld_locs)
+                pf_path = bld_save_fs.leaf.path(bld_locs)
 
-            # run messpf
-            with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
-                pf_file.write(pf_inp_str)
-            moldr.util.run_script(pf_script_str, pf_path)
+                # run messpf
+                with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
+                    pf_file.write(pf_inp_str)
+                moldr.util.run_script(pf_script_str, pf_path)
 
-            with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
-                output_string = mess_file.read()
+                with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
+                    output_string = mess_file.read()
 
-            # Read the freqs and zpes
-            tors_freqs = mess_io.reader.tors.freqs(output_string)
-            tors_zpes = mess_io.reader.tors.zpves(output_string)
-            tors_zpe_cor = 0.0
-            tors_zpe = 0.0
-            for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
-                tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
-                tors_zpe += tors_1dhr_zpe
+                # Read the freqs and zpes
+                tors_freqs = mess_io.reader.tors.freqs(output_string)
+                tors_zpes = mess_io.reader.tors.zpves(output_string)
+                tors_zpe_cor = 0.0
+                tors_zpe = 0.0
+                for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
+                    tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
+                    tors_zpe += tors_1dhr_zpe
 
-            har_tors_zpe = har_zpe - zpe_har_no_tors
-            har_tors_zpe_2 = har_zpe - zpe_har_no_tors_2
-            del_tors_zpe = har_tors_zpe - tors_zpe
-            del_tors_zpe_2 = har_tors_zpe_2 - tors_zpe
-            #print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
-            if del_tors_zpe <= del_tors_zpe_2:
-                zpe = zpe_har_no_tors + tors_zpe
-            else:
-                zpe = zpe_har_no_tors_2 + tors_zpe
-            if abs(del_tors_zpe) > 0.2 and abs(del_tors_zpe_2) > 0.2:
-                print('Warning: There is a difference of {0:.2f} and {1:.2f} kcal/mol '.format(
-                    del_tors_zpe, del_tors_zpe_2),
-                    'between the harmonic and hindered torsional zero-point energies')
-            # read torsional harmonic zpe and actual zpe
-            print('zpe test in get_zpe:',zpe_har_no_tors, zpe_har_no_tors_2, 
-                   tors_zpe, har_zpe, zpe)
+                har_tors_zpe = har_zpe - zpe_har_no_tors
+                har_tors_zpe_2 = har_zpe - zpe_har_no_tors_2
+                del_tors_zpe = har_tors_zpe - tors_zpe
+                del_tors_zpe_2 = har_tors_zpe_2 - tors_zpe
+                #print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
+                if del_tors_zpe <= del_tors_zpe_2:
+                    zpe = zpe_har_no_tors + tors_zpe
+                else:
+                    zpe = zpe_har_no_tors_2 + tors_zpe
+                if abs(del_tors_zpe) > 0.2 and abs(del_tors_zpe_2) > 0.2:
+                    print('Warning: There is a difference of {0:.2f} and {1:.2f} kcal/mol '.format(
+                        del_tors_zpe, del_tors_zpe_2),
+                        'between the harmonic and hindered torsional zero-point energies')
+                # read torsional harmonic zpe and actual zpe
+                print('zpe test in get_zpe:',zpe_har_no_tors, zpe_har_no_tors_2, 
+                       tors_zpe, har_zpe, zpe)
 
         # used to take full harmonic zpe and add torsional hr vs harmonic diff
         #zpe = har_zpe + tors_zpe_cor
@@ -2197,16 +2212,17 @@ def tau_pf_write(
             print(sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
 
 
-def _hrpot_spline_fitter(enes, pot, thresh=-0.05):
+def _hrpot_spline_fitter(pot, thresh=-0.05):
     """ Get a physical hindered rotor potential via a series of spline fits
     """
 
     # Build a potential list from only successful calculations
-    lpot = len(pot)
+    lpot = len(pot)+1
     idx_success = []
     pot_success = []
+    pot.append(0.)
     for idx in range(lpot):
-        if enes[idx] < 1.:
+        if pot[idx] < 600.:
             idx_success.append(idx)
             pot_success.append(pot[idx])
     idx_success.append(lpot)
@@ -2219,6 +2235,7 @@ def _hrpot_spline_fitter(enes, pot, thresh=-0.05):
     # Do second spline fit of only positive values if any negative values found
     if any(val < thresh for val in pot):
         print('Found pot vals below {0} kcal. Refit w/ positives'.format(thresh))
+        print('Potential before spline:', pot)
         x_pos = numpy.array([i for i in range(lpot)
                              if pot[i] >= thresh])
         y_pos = numpy.array([pot[i] for i in range(lpot)
@@ -2226,21 +2243,25 @@ def _hrpot_spline_fitter(enes, pot, thresh=-0.05):
         pos_pot_spl = interp1d(x_pos, y_pos, kind='cubic')
         pot_pos_fit = []
         for idx in range(lpot):
-            pot_pos_fit[idx] = pos_pot_spl(idx)
+            pot_pos_fit.append(pos_pot_spl(idx))
 
+        print('Potential after spline:', pot_pos_fit)
         # Perform second check to see if negative potentials have been fixed
         if any(val < thresh for val in pot_pos_fit):
             print('Found values below {0} kcal again. Trying linear interp of positive vals'
                   .format(thresh))
-            neg_idxs = [i for i in range(pot_pos_fit) if pot_pos_fit[i] < thresh]
+            neg_idxs = [i for i in range(lpot) if pot_pos_fit[i] < thresh]
             clean_pot = []
-            for i in range(len(pot_pos_fit)):
+            for i in range(lpot):
                 if i in neg_idxs:
                     # Find the indices for positive vals around negative value
                     idx_0 = i - 1
-                    for j in range(i, len(pot_pos_fit)):
+                    while idx_0 in neg_idxs:
+                        idx_0 = idx_0 - 1
+                    for j in range(i, lpot):
                         if pot_pos_fit[j] >= thresh:
                             idx_1 = j
+                            break
                     # Get a new value for this point on the potential by
                     # doing a linear interp of positives
                     interp_val = (
@@ -2249,7 +2270,7 @@ def _hrpot_spline_fitter(enes, pot, thresh=-0.05):
                     )
                     clean_pot.append(interp_val)
                 else:
-                    clean_pot.append(i)
+                    clean_pot.append(pot[i])
             final_potential = clean_pot.copy()
 
         else:
@@ -2257,5 +2278,8 @@ def _hrpot_spline_fitter(enes, pot, thresh=-0.05):
 
     else:
         final_potential = pot.copy()
+
+    print('Final potential in spline fittere:', final_potential)
+    final_potential = final_potential[:-1]
 
     return final_potential
