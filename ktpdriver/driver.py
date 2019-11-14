@@ -285,6 +285,9 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
             ene_idx = 0
             spc_dct[spc]['ene'] = 0.
             ene_str = '! energy level:'
+            print('looking at ts tasks')
+            print(spc)
+            print(ts_tsk_lst)
             for tsk in ts_tsk_lst:
                 if 'ene' in tsk[0]:
                     if ene_idx > len(ene_coeff)-1:
@@ -328,6 +331,8 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                           'surfaces: {} and {}'.format(tsform, pes_formula))
                     print('Will proceed to construct only {}'.format(pes_formula))
                     continue
+                print('channel spc dct')
+                print(spc_dct)
                 mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
                     tsname, rxn, species, spc_dct, idx_dct, mess_strs,
                     first_ground_ene, spc_save_fs, ts_model, pf_levels, multi_info, substr.PROJROT)

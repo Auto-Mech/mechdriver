@@ -737,6 +737,8 @@ if PARAMS.RUN_RATES:
                         PARAMS.MASS1
                     ]
 
+                    # import sys
+                    # sys.exit()
 
                     print('RUNNING WITH MESS')
                     # run ktp for a given PES

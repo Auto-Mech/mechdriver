@@ -560,10 +560,10 @@ def vtst_with_no_saddle_block(
     multi_level = multi_info[0:3]
     multi_level.append(orb_restr)
 
-    rxn_run_path = ts_dct['rxn_fs'][2]
-    thy_run_fs = autofile.fs.theory(rxn_run_path)
-    thy_run_fs.leaf.create(multi_level[1:4])
-    thy_run_path = thy_run_fs.leaf.path(multi_level[1:4])
+    # rxn_run_path = ts_dct['rxn_fs'][2]
+    # thy_run_fs = autofile.fs.theory(rxn_run_path)
+    # thy_run_fs.leaf.create(multi_level[1:4])
+    # thy_run_path = thy_run_fs.leaf.path(multi_level[1:4])
 
     rxn_save_path = ts_dct['rxn_fs'][3]
     thy_save_fs = autofile.fs.theory(rxn_save_path)
