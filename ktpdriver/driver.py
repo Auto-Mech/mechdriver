@@ -376,7 +376,8 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                             for spc in name_j.split('+'):
                                 ene -= scripts.thermo.spc_energy(
                                     spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
-                            if ene > 0.:
+                            if ene:
+                            #if ene > 0.:
                                 reaction = name_i + '=' + name_j
 
                                 # Read the rate constants out of the mess outputs

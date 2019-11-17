@@ -453,7 +453,7 @@ def int_sym_num_from_sampling(
     # Note: ignoring for saddle points the possibility that two configurations
     # differ only in their torsional values.
     # As a result, the symmetry factor is a lower bound of the true value
-    # print('geom: \n', automol.geom.string(geo))
+    print('geom: \n', automol.geom.string(geo))
     if automol.geom.is_atom(geo):
         int_sym_num = 1.
     else:
@@ -484,8 +484,8 @@ def int_sym_num_from_sampling(
                             ene_sim.append(enei)
 
                 int_sym_num = 0
-                #for geo_sim_i in geo_sim:
-                    #print('geo_conf: \n', automol.geom.string(geo_sim_i))
+                for geo_sim_i in geo_sim:
+                    print('geo_conf: \n', automol.geom.string(geo_sim_i))
                 for geo_sim_i in geo_sim:
                     new_geos = automol.geom.rot_permutated_geoms(
                         geo_sim_i, saddle,
@@ -504,8 +504,8 @@ def int_sym_num_from_sampling(
                         if new_geom:
                             geo_sim2.append(new_geo)
                             int_sym_num += 1
-                            #print('int_sym_num new:', int_sym_num)
-                            #print('new_geo: \n', automol.geom.string(new_geo))
+                            print('int_sym_num new:', int_sym_num)
+                            print('new_geo: \n', automol.geom.string(new_geo))
     return int_sym_num
 
 

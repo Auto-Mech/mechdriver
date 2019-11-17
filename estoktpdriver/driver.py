@@ -122,11 +122,15 @@ if MECH_TYPE == 'CHEMKIN':
     # print('formula test before sort:', FORMULA_STR_LST)
     RXN_INFO_LST = list(
         zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
+    #PARAMS.SORT_RXNS = False
+    print('SORT_RXNS test:', PARAMS.SORT_RXNS)
     if PARAMS.SORT_RXNS:
         RXN_INFO_LST.sort()
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
 
 # Run EStokTPDriver for JSON inputs
+    print('MECH_TYPE test:', MECH_TYPE)
+    #print('RXN_INFO_LST test:', RXN_INFO_LST)
 elif MECH_TYPE == 'json':
 
     with open(os.path.join(MECH_PATH, MECH_FILE)) as f:
@@ -217,6 +221,8 @@ elif MECH_TYPE == 'json':
             else:
                 if min(prd_muls) == 1:
                     rad_rad_prod = False
+
+            print('RAD_RAD_SORT test:', PARAMS.RAD_RAD_SORT)
             if PARAMS.RAD_RAD_SORT and not rad_rad_reac and not rad_rad_prod:
                 continue
             RCT_SMIS_LST.append(rct_smis)
@@ -252,6 +258,8 @@ elif MECH_TYPE == 'json':
         FORMULA_STR = automol.formula._formula.string(formula_dct)
         FORMULA_STR_LST.append(FORMULA_STR)
 
+    #print('FORMULA TEST:', FORMULA_STR_LST)
+    print('RCT_MULS_LST:', RCT_MULS_LST)
     UNQ_ICH_LST = []
     UNQ_MUL_LST = []
     UNQ_SMI_LST = []
@@ -405,6 +413,8 @@ elif MECH_TYPE == 'json':
             if spc_name not in SPC_NAMES:
                 SPC_NAMES.append(spc_name)
                 CHG_DCT[spc_name] = chg
+                print('RCT_MULS TEST1:', spc_name, i, j)
+                print('RCT_MULS TEST2:', RCT_MULS_LST[i])
                 MUL_DCT[spc_name] = RCT_MULS_LST[i][j]
                 SPC_DCT[spc_name] = {}
                 SPC_DCT[spc_name]['chg'] = chg
@@ -422,20 +432,26 @@ elif MECH_TYPE == 'json':
                 SPC_DCT[spc_name]['ich'] = PRD_ICHS_LST[i][j]
                 SPC_DCT[spc_name]['mul'] = PRD_MULS_LST[i][j]
     RXN_INFO_LST = list(zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
+    #print('RXN_INFO_LST TEST:', RXN_INFO_LST)
 
 PES_LST = {}
 CURRENT_FORMULA = ''
 for fidx, formula in enumerate(FORMULA_STR_LST):
+    #print('fidx test:', fidx, formula)
     if CURRENT_FORMULA == formula:
         PES_LST[formula]['RCT_NAMES_LST'].append(RCT_NAMES_LST[fidx])
         PES_LST[formula]['PRD_NAMES_LST'].append(PRD_NAMES_LST[fidx])
         PES_LST[formula]['RXN_NAME_LST'].append(RXN_NAME_LST[fidx])
+        #print('old formula:')
+        #print('NAMES_TST:', RCT_NAMES_LST[fidx], PRD_NAMES_LST[fidx], RXN_NAME_LST[fidx])
     else:
         CURRENT_FORMULA = formula
         PES_LST[formula] = {}
         PES_LST[formula]['RCT_NAMES_LST'] = [RCT_NAMES_LST[fidx]]
         PES_LST[formula]['PRD_NAMES_LST'] = [PRD_NAMES_LST[fidx]]
         PES_LST[formula]['RXN_NAME_LST'] = [RXN_NAME_LST[fidx]]
+        #print('new formula:')
+        #print('NAMES_TST:', RCT_NAMES_LST[fidx], PRD_NAMES_LST[fidx], RXN_NAME_LST[fidx])
 
 for spc in SPC_DCT:
     ich = SPC_DCT[spc]['ich']
