@@ -119,7 +119,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                 ret = scripts.es.ts_class(
                     rct_zmas, prd_zmas, spc_dct[ts]['rad_rad'],
                     spc_dct[ts]['mul'], low_mul, high_mul,
-                    rct_cnf_save_fs, prd_cnf_save_fs)
+                    rct_cnf_save_fs, prd_cnf_save_fs, spc_dct[ts]['given_class'])
                 ret1, ret2 = ret
                 if ret1:
                     rxn_class, ts_zma, dist_name, brk_name, grid, frm_bnd_key, brk_bnd_key, tors_names, update_guess = ret1

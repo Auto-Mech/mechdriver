@@ -400,6 +400,7 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
         ts, '+'.join(spc_dct[ts]['reacs']), '+'.join(spc_dct[ts]['prods'])))
     reacs = spc_dct[ts]['reacs']
     prods = spc_dct[ts]['prods']
+    print('ts dct', spc_dct[ts])
     for spc in reacs:
         rxn_ichs[0].append(spc_dct[spc]['ich'])
         rxn_chgs[0].append(spc_dct[spc]['chg'])
@@ -416,7 +417,7 @@ def rxn_info(run_prefix, save_prefix, ts, spc_dct, thy_info, ini_thy_info=None):
         rxn_exo = moldr.util.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
     print('reaction is {:.2f} endothermic'.format(rxn_exo*phycon.EH2KCAL))
-    if rxn_exo > 0:
+    if rxn_exo > 0 and not spc_dct[ts]['given_class']:
         rxn_ichs = rxn_ichs[::-1]
         rxn_chgs = rxn_chgs[::-1]
         rxn_muls = rxn_muls[::-1]
@@ -535,7 +536,7 @@ def get_geos(
     return spc_geos, cnf_save_fs_lst
 
 
-def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_save_fs_lst, prd_cnf_save_fs_lst):
+def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_save_fs_lst, prd_cnf_save_fs_lst, given_class):
     """ determine type of reaction and related ts info from the reactant and product z-matrices.
     Returns the type, the transition state z-matrix, the name of the coordinate to optimize,
     the grid of values for the initial grid search, the torsion names and symmetries, and
@@ -587,7 +588,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 
         # Check for addition
         ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
-        if ret:
+        if ret and (not given_class or given_class == 'addition'):
             typ = 'addition'
             ts_zma, dist_name, tors_names = ret
             if ts_mul == high_mul:
@@ -599,11 +600,10 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             if ret2:
                 bkp_typ = 'beta scission'
                 bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
-
         # Check for beta-scission
         if typ is None:
             ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
-            if ret:
+            if ret and (not given_class or given_class == 'betascission'):
                 typ = 'beta scission'
                 ts_zma, dist_name, tors_names = ret
                 ret2 = automol.zmatrix.ts.addition(prd_zmas, rct_zmas, rct_tors_names)
@@ -614,7 +614,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         # Check for hydrogen migration
         if typ is None:
             orig_dist = automol.zmatrix.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
-            if orig_dist:
+            if orig_dist and (not given_class or given_class == 'hydrogenmigration'):
                 rct_zmas = moldr.util.min_dist_conformer_zma_geo(orig_dist, cnf_save_fs_lst[0])
                 ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
                 if ret:
@@ -625,7 +625,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         if typ is None:
             ret = automol.zmatrix.ts.hydrogen_abstraction(rct_zmas, prd_zmas, sigma=False)
             #print('abstraction ret test in ts_class:', ret)
-            if ret:
+            if ret and (not given_class or given_class == 'hydrogenabstraction'):
                 typ = 'hydrogen abstraction'
                 ts_zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
                 if ts_mul == high_mul:
@@ -643,7 +643,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         # Check for insertion
         if typ is None:
             ret = automol.zmatrix.ts.insertion(rct_zmas, prd_zmas)
-            if ret:
+            if ret and (not given_class or given_class == 'insertion'):
                 typ = 'insertion'
                 ts_zma, dist_name, tors_names = ret
                 if ts_mul == high_mul:
@@ -654,7 +654,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         # Check for subsitution
         if typ is None:
             ret = automol.zmatrix.ts.substitution(rct_zmas, prd_zmas)
-            if ret:
+            if ret and (not given_class or given_class == 'substitution'):
                 typ = 'substitution'
                 ts_zma, dist_name, tors_names = ret
                 if ts_mul == high_mul:
@@ -668,7 +668,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             if orig_dist:
                 rct_zmas = moldr.util.min_dist_conformer_zma_geo(orig_dist, cnf_save_fs_lst[0])
                 ret = automol.zmatrix.ts.concerted_unimolecular_elimination(rct_zmas, prd_zmas)
-                if ret:
+                if ret and (not given_class or given_class == 'elimination'):
                     typ = 'elimination'
                     ts_zma, dist_name, brk_name, frm_bnd_key, tors_names = ret
                     if ts_mul == high_mul:
