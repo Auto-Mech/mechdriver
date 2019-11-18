@@ -50,10 +50,15 @@ if MECH_TYPE == 'CHEMKIN':
     # Also add in basis set species
     MECH_STR = open(os.path.join(MECH_PATH, 'mechanism.txt')).read()
     SPC_STR = open(os.path.join(MECH_PATH, 'species.csv')).read()
+    if os.path.exists(os.path.join(MECH_PATH, 'class.csv')):
+        CLA_STR = open(os.path.join(MECH_PATH, 'class.csv')).read().replace(' ','')
+    else:
+        CLA_STR = ''
     SMI_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'smiles')
     ICH_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'inchi')
     MUL_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'mult')
     CHG_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'charge')
+    CLA_DCT = chemkin_io.parser.mechanism.reac_class_dct(CLA_STR, 'class')
     SENS_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'sens')
 
     print('CHECK_STEREO TEST:', PARAMS.CHECK_STEREO, type(PARAMS.CHECK_STEREO))
@@ -691,8 +696,17 @@ if PARAMS.RUN_RATES:
                         prods = rxn['prods']
                         tsname = 'ts_{:g}'.format(ts_idx)
                         SPC_DCT[tsname] = {}
+                        if RXN_NAME_LST[idx] in CLA_DCT :
+                            SPC_DCT[tsname]['given_class'] = CLA_DCT[RXN_NAME_LST[idx]]
+                        elif  '='.join(RXN_NAME_LST[idx].split('=')[::-1]) in CLA_DCT:
+                            SPC_DCT[tsname]['given_class'] = CLA_DCT['='.join(RXN_NAME_LST[idx].split('=')[::-1])]
+                            reacs = rxn['prods']
+                            prods = rxn['reacs']
+                        else:    
+                            SPC_DCT[tsname]['given_class'] = None
                         if reacs and prods:
-                            SPC_DCT[tsname] = {'reacs': reacs, 'prods': prods}
+                            SPC_DCT[tsname]['reacs'] = reacs
+                            SPC_DCT[tsname]['prods'] = prods
                         SPC_DCT[tsname]['ich'] = ''
                         ts_chg = 0
                         for rct in RCT_NAMES_LST[idx]:
