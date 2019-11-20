@@ -164,6 +164,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         anharm_lvl = ''
         tors_lvl = ''
         sym_lvl = ''
+        geo_lvl_ref = ''
         harm_lvl_ref = ''
         anharm_lvl_ref = ''
         tors_lvl_ref = ''
