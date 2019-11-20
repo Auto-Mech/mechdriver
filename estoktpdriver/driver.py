@@ -53,7 +53,7 @@ if MECH_TYPE == 'CHEMKIN':
     if os.path.exists(os.path.join(MECH_PATH, 'class.csv')):
         CLA_STR = open(os.path.join(MECH_PATH, 'class.csv')).read().replace(' ','')
     else:
-        CLA_STR = ''
+        CLA_STR = 'REACTION,RCLASS\nEND'
     SMI_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'smiles')
     ICH_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'inchi')
     MUL_DCT = chemkin_io.parser.mechanism.spc_name_dct(SPC_STR, 'mult')
