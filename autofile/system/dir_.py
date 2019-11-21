@@ -138,11 +138,70 @@ def scan_leaf(prefix, root_ds=None):
     """
     loc_dfile = file_.locator(
         file_prefix=SPEC_FILE_PREFIX,
+        # this should actually say coo_vals, but leave for compatibility
         map_dct_={'grid_idxs': lambda locs: locs[0]},
         loc_keys=['grid_idxs'])
 
     _map = _pack_arguments(map_.scan_leaf)
     nlocs = _count_arguments(map_.scan_leaf)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def cscan_trunk(prefix, root_ds=None):
+    """ constrained scan trunk DataSeries
+    """
+    _map = _pack_arguments(map_.cscan_trunk)
+    nlocs = _count_arguments(map_.cscan_trunk)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            root_ds=root_ds)
+
+
+def cscan_branch1(prefix, root_ds=None):
+    """ constrained scan branch 1 DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'coo_names': lambda locs: locs[0]},
+        loc_keys=['coo_names'])
+
+    _map = _pack_arguments(map_.cscan_branch1)
+    nlocs = _count_arguments(map_.cscan_branch1)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def cscan_branch2(prefix, root_ds=None):
+    """ constrained scan branch 2 DataSeries
+    """
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'coo_vals': lambda locs: locs[0]},
+        loc_keys=['coo_vals'])
+
+    _map = _pack_arguments(map_.cscan_branch2)
+    nlocs = _count_arguments(map_.cscan_branch2)
+    return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
+                            loc_dfile=loc_dfile, root_ds=root_ds)
+
+
+def cscan_leaf(prefix, root_ds=None):
+    """ constrained scan branch 2 DataSeries
+    """
+
+    def _round_values(val_dct):
+        names = list(val_dct.keys())
+        vals = [float(round(val, 2)) for val in val_dct.values()]
+        val_dct = dict(zip(names, vals))
+        return val_dct
+
+    loc_dfile = file_.locator(
+        file_prefix=SPEC_FILE_PREFIX,
+        map_dct_={'cons_coo_vals': lambda locs: _round_values(locs[0])},
+        loc_keys=['cons_coo_vals'])
+
+    _map = _pack_arguments(map_.cscan_leaf)
+    nlocs = _count_arguments(map_.cscan_leaf)
     return model.DataSeries(prefix, map_=_map, nlocs=nlocs, depth=1,
                             loc_dfile=loc_dfile, root_ds=root_ds)
 

@@ -1,6 +1,7 @@
 """ helper functions
 """
 import os
+import pickle
 import base64
 import hashlib
 import numbers
@@ -18,11 +19,14 @@ def is_valid_inchi_multiplicity(ich, mul):
         automol.inchi.graph(ich, no_stereo=True))
 
 
-def short_hash(string):
+def short_hash(obj):
     """ determine a short (3-character) hash from a string
     """
-    string = string.lower().encode('utf-8')
-    dig = hashlib.md5(string).digest()
+    if isinstance(obj, str):
+        obj_str = obj.encode('utf-8')
+    else:
+        obj_str = pickle.dumps(obj)
+    dig = hashlib.md5(obj_str).digest()
     hsh = base64.urlsafe_b64encode(dig)[:3]
     return hsh.decode()
 
@@ -45,3 +49,7 @@ def utc_time():
     """ get the current UTC time
     """
     return datetime.datetime.utcnow()
+
+
+if __name__ == '__main__':
+    print(short_hash({1, 2, 3}))

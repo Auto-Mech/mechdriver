@@ -58,6 +58,8 @@ class SeriesAttributeName():
     """
     TRUNK = 'trunk'
     BRANCH = 'branch'
+    BRANCH1 = 'branch1'
+    BRANCH2 = 'branch2'
     LEAF = 'leaf'
 
 
@@ -235,7 +237,7 @@ def scan(prefix):
     layers:
      - trunk (specifiers: [])
      - branch (specifiers: [coo_names])
-     - leaf (specifiers: [coo_names, grid_idxs])
+     - leaf (specifiers: [coo_names, coo_vals])
 
     :param prefix: sets the path where this filesystem will sit
     :type prefix: str
@@ -282,6 +284,67 @@ def scan(prefix):
 
     dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
                                SeriesAttributeName.BRANCH: branch_ds,
+                               SeriesAttributeName.BRANCH1: branch_ds,
+                               SeriesAttributeName.LEAF: leaf_ds})
+    return dir_fs
+
+
+def cscan(prefix):
+    """ construct the constrained scan filesystem
+
+    layers:
+     - trunk (specifiers: [])
+     - branch1 (specifiers: [coo_names])
+     - branch2 (specifiers: [coo_names, coo_vals])
+     - leaf (specifiers: [coo_names, coo_vals, cons_coo_val_dct])
+
+    :param prefix: sets the path where this filesystem will sit
+    :type prefix: str
+    """
+    trunk_ds = dir_.cscan_trunk(prefix)
+    branch1_ds = dir_.cscan_branch1(prefix, root_ds=trunk_ds)
+    branch2_ds = dir_.cscan_branch2(prefix, root_ds=branch1_ds)
+    leaf_ds = dir_.cscan_leaf(prefix, root_ds=branch2_ds)
+
+    vma_dfile = file_.vmatrix(FilePrefix.SCAN)
+    trunk_ds.add_data_files({
+        FileAttributeName.VMATRIX: vma_dfile})
+
+    inf_dfile = file_.information(FilePrefix.SCAN, function=info.scan_branch)
+    traj_dfile = file_.trajectory(FilePrefix.SCAN)
+    branch1_ds.add_data_files({
+        FileAttributeName.INFO: inf_dfile,
+        FileAttributeName.TRAJ: traj_dfile})
+
+    geom_inf_dfile = file_.information(FilePrefix.GEOM, function=info.run)
+    grad_inf_dfile = file_.information(FilePrefix.GRAD, function=info.run)
+    hess_inf_dfile = file_.information(FilePrefix.HESS, function=info.run)
+    geom_inp_dfile = file_.input_file(FilePrefix.GEOM)
+    grad_inp_dfile = file_.input_file(FilePrefix.GRAD)
+    hess_inp_dfile = file_.input_file(FilePrefix.HESS)
+    ene_dfile = file_.energy(FilePrefix.GEOM)
+    geom_dfile = file_.geometry(FilePrefix.GEOM)
+    zmat_dfile = file_.zmatrix(FilePrefix.GEOM)
+    grad_dfile = file_.gradient(FilePrefix.GRAD)
+    hess_dfile = file_.hessian(FilePrefix.HESS)
+    hfreq_dfile = file_.harmonic_frequencies(FilePrefix.HESS)
+    leaf_ds.add_data_files({
+        FileAttributeName.GEOM_INFO: geom_inf_dfile,
+        FileAttributeName.GRAD_INFO: grad_inf_dfile,
+        FileAttributeName.HESS_INFO: hess_inf_dfile,
+        FileAttributeName.GEOM_INPUT: geom_inp_dfile,
+        FileAttributeName.GRAD_INPUT: grad_inp_dfile,
+        FileAttributeName.HESS_INPUT: hess_inp_dfile,
+        FileAttributeName.ENERGY: ene_dfile,
+        FileAttributeName.GEOM: geom_dfile,
+        FileAttributeName.ZMAT: zmat_dfile,
+        FileAttributeName.GRAD: grad_dfile,
+        FileAttributeName.HESS: hess_dfile,
+        FileAttributeName.HFREQ: hfreq_dfile})
+
+    dir_fs = model.FileSystem({SeriesAttributeName.TRUNK: trunk_ds,
+                               SeriesAttributeName.BRANCH1: branch1_ds,
+                               SeriesAttributeName.BRANCH2: branch2_ds,
                                SeriesAttributeName.LEAF: leaf_ds})
     return dir_fs
 
@@ -376,6 +439,7 @@ def energy_transfer(prefix):
     dir_fs = model.FileSystem({
         SeriesAttributeName.TRUNK: trunk_ds,
         SeriesAttributeName.BRANCH: branch_ds,
+        SeriesAttributeName.BRANCH1: branch_ds,
         SeriesAttributeName.LEAF: leaf_ds})
     return dir_fs
 

@@ -194,6 +194,24 @@ def test__scan():
     assert scn_fs.leaf.file.geometry_input.read(locs) == ref_inp_str
 
 
+def test__cscan():
+    """ test autofile.fs.cscan
+    """
+    prefix = os.path.join(PREFIX, 'cscan')
+    os.mkdir(prefix)
+
+    scn_fs = autofile.fs.cscan(prefix)
+    # the dictionary at the end specifies the constraint values
+    locs = [['d3', 'd4'], [1.2, 2.9], {'r1': 1., 'a2': 2.3}]
+    print(scn_fs.leaf.path(locs))
+
+    ref_inp_str = '<input string>'
+    print(scn_fs.leaf.file.geometry_input.path(locs))
+    scn_fs.leaf.create(locs)
+    scn_fs.leaf.file.geometry_input.write(ref_inp_str, locs)
+    assert scn_fs.leaf.file.geometry_input.read(locs) == ref_inp_str
+
+
 def test__run():
     """ test autofile.fs.run
     """
@@ -227,7 +245,7 @@ def test__build():
 
 
 if __name__ == '__main__':
-    test__direction()
+    # test__direction()
     # test__species()
     # test__reaction()
     # test__ts()
@@ -239,3 +257,4 @@ if __name__ == '__main__':
     # test__scan()
     # test__run()
     # test__build()
+    test__cscan()
