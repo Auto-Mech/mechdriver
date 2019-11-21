@@ -54,8 +54,8 @@ def theory_leaf(method, basis, orb_restricted):
     assert isinstance(orb_restricted, bool)
 
     ref_char = 'R' if orb_restricted else 'U'
-    dir_name = ''.join([_short_hash(method),
-                        _short_hash(basis),
+    dir_name = ''.join([_short_hash(method.lower()),
+                        _short_hash(basis.lower()),
                         ref_char])
     return dir_name
 
@@ -108,11 +108,42 @@ def scan_branch(coo_names):
     return '_'.join(sorted(coo_names))
 
 
-def scan_leaf(grid_idxs):
+def scan_leaf(coo_vals):
     """ scan leaf directory name
     """
-    #return '_'.join(map('{:0>2d}'.format, grid_idxs))
-    return '_'.join(map('{:.2f}'.format, grid_idxs))
+    return '_'.join(map('{:.2f}'.format, coo_vals))
+
+
+# constrained scan
+def cscan_trunk():
+    """ constrained scan trunk directory name
+    """
+    return 'CSCANS'
+
+
+def cscan_branch1(coo_names):
+    """ scan branch 1 directory name
+    """
+    return '_'.join(sorted(coo_names))
+
+
+def cscan_branch2(coo_vals):
+    """ scan branch 2 directory name
+    """
+    return '_'.join(map('{:.2f}'.format, coo_vals))
+
+
+def cscan_leaf(cons_coo_val_dct):
+    """ constrained scan leaf directory name
+
+    :param cons_coo_val_dct: a dictionary of the constraint values, keyed by
+        coordinate name
+    :type cons_coo_val_dct: dict
+    """
+    cons_coo_names = list(cons_coo_val_dct.keys())
+    cons_coo_vals = [float(round(val, 2)) for val in cons_coo_val_dct.values()]
+    cons_coo_val_dct = dict(zip(cons_coo_names, cons_coo_vals))
+    return _short_hash(cons_coo_val_dct)
 
 
 # tau
@@ -230,10 +261,6 @@ def _reactant_leaf(ichs, chgs, muls):
     assert all(_is_valid_inchi_multiplicity(ich, mul)
                for ich, mul in zip(ichs, muls))
 
-   # ich = []
-   # for ich_i in ichs:
-   #     ich.append(automol.inchi.standard_form(ich_i))
-   # ich = automol.inchi.join(ich)
     ich = automol.inchi.standard_form(automol.inchi.join(ichs))
     ick = automol.inchi.inchi_key(ich)
     chg_str = '_'.join(map(str, chgs))
