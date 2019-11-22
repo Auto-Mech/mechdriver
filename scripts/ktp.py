@@ -218,7 +218,7 @@ def make_channel_pfs(
     fake_wellr_label = ''
     fake_wellp_label = ''
     print('class test:', spc_dct[tsname]['class'])
-    if 'abstraction' in spc_dct[tsname]['class']:
+    if 'abstraction' in spc_dct[tsname]['class'] or 'substitution' in spc_dct[tsname]['class']:
     #Make fake wells and PST TSs as needed
         well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
         well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])

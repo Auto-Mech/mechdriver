@@ -127,7 +127,8 @@ if MECH_TYPE == 'CHEMKIN':
     # print('formula test before sort:', FORMULA_STR_LST)
     RXN_INFO_LST = list(
         zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
-    #PARAMS.SORT_RXNS = False
+    PARAMS.SORT_RXNS = False # for natgas
+    # PARAMS.SORT_RXNS = True  # for syngas
     print('SORT_RXNS test:', PARAMS.SORT_RXNS)
     if PARAMS.SORT_RXNS:
         RXN_INFO_LST.sort()
@@ -742,6 +743,8 @@ if PARAMS.RUN_RATES:
 
                     print('RUNNING WITH MESS')
                     # run ktp for a given PES
+                    # import sys
+                    # sys.exit()
                     ktpdriver.driver.run(
                         PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
                         PARAMS.RUN_PREFIX, PARAMS.SAVE_PREFIX,

@@ -292,8 +292,9 @@ def min_dist_conformer_zma_geo(dist_coords, cnf_save_fs):
         zmas, _ = automol.zmatrix.ts._shifted_standard_forms_with_gaphs([zma])
         zma = zmas[0]
         geo = automol.zmatrix.geometry(zma)
-        print(automol.geom.string(geo))
-        print(*list(dist_coords))
+        # print('min geo')
+        # print(automol.geom.string(geo))
+        # print(*list(dist_coords))
         dist = automol.geom.distance(geo, *list(dist_coords))
         if dist < min_dist:
             min_dist = dist
@@ -370,6 +371,8 @@ def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, thy_level):
         thy_save_fs = autofile.fs.theory(spc_save_path)
         thy_save_path = thy_save_fs.leaf.path(thy_lvl[1:4])
         cnf_save_fs = autofile.fs.conformer(thy_save_path)
+        # print('thy_save_path')
+        # print(thy_save_path)
         min_cnf_locs = min_energy_conformer_locators(cnf_save_fs)
         ene = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
         enes.append(ene)

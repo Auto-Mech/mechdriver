@@ -744,7 +744,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
         grid = numpy.linspace(rmin, rmax, npoints)
         update_guess = False
 
-    elif 'radical radical addition' in typ:
+    elif 'radical radical addition' in typ and 'low spin' in typ:
         rstart = 2.4 * phycon.ANG2BOHR
         rend1 = 1.8 * phycon.ANG2BOHR
         rend2 = 3.0 * phycon.ANG2BOHR
@@ -817,7 +817,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
             grid = [grid1, grid2]
             update_guess = False
 
-    elif 'radical radical hydrogen abstraction' in typ:
+    elif 'radical radical hydrogen abstraction' in typ and 'low spin' in typ:
         rstart = 2.4 * phycon.ANG2BOHR
         rend1 = 1.4 * phycon.ANG2BOHR
         rend2 = 3.0 * phycon.ANG2BOHR
@@ -1038,7 +1038,9 @@ def find_ts(
               scn_run_fs, scn_save_fs, run_fs]
 
         print('running ts scan:')
-        if 'radical radical addition' in typ or 'radical radical hydrogen abstraction' in typ:
+        rad_rad = ('radical radical' in typ)
+        low_spin = ('low spin' in typ)
+        if rad_rad and low_spin:
             # run mep scan
             # multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
             multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
@@ -1064,6 +1066,17 @@ def find_ts(
             grid = numpy.append(grid[0], grid[1])
             high_mul = ts_dct['high_mul']
             print('starting multiref scan:', scn_run_fs.trunk.path())
+            
+            # Set a special active space for O2 otherwise, handle it below
+            rcts = ts_dct['reacs']
+            if 'InChI=1S/O2/c1-2' in (spc_dct[rcts[0]]['ich'], spc_dct[rcts[1]]['ich']):
+                num_act_orb = 5
+                num_act_elc = 7
+            else:
+                num_act_orb = None
+                num_act_elc = None
+
+            # Set VTST for radical radical reactions
             vtst = True
             gradient = False
             hessian = False
@@ -1085,6 +1098,8 @@ def find_ts(
                 update_guess=update_guess,
                 gradient=gradient,
                 hessian=hessian,
+                num_act_elc=num_act_elc,
+                num_act_orb=num_act_orb,
                 **opt_kwargs
             )
 
@@ -1098,6 +1113,8 @@ def find_ts(
 
             locs = [[dist_name], [grid1[0]]]
             # calculate and save the infinite seperation energy
+            print('ts zma locs')
+            print(locs)
             ts_zma = scn_save_fs.leaf.file.zmatrix.read(locs)
             rcts = ts_dct['reacs']
             spc_1_info = [spc_dct[rcts[0]]['ich'], spc_dct[rcts[0]]['chg'], spc_dct[rcts[0]]['mul']]
@@ -1105,7 +1122,9 @@ def find_ts(
 
             inf_sep_ene = moldr.scan.infinite_separation_energy(
                 spc_1_info, spc_2_info, ts_info, high_mul, ts_zma, ini_thy_info, thy_info,
-                multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs)
+                multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs,
+                num_act_elc=num_act_elc,
+                num_act_orb=num_act_orb)
 
             inf_locs = [[dist_name], [1000.]]
             scn_save_fs.leaf.create(inf_locs)
@@ -1193,6 +1212,8 @@ def find_ts(
                 grid_dct = {dist_name: grid1, brk_name: grid2}
             else:
                 grid_dct = {dist_name: grid}
+            print('grid_dct')
+            print(grid_dct)
             moldr.scan.run_scan(
                 zma=ts_zma,
                 spc_info=ts_info,
