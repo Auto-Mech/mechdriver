@@ -101,6 +101,8 @@ def run_conformers(
     vma = automol.zmatrix.var_(zma)
     if cnf_save_fs.trunk.file.vmatrix.exists():
         existing_vma = cnf_save_fs.trunk.file.vmatrix.read()
+        print(existing_vma)
+        print(vma)
         assert vma == existing_vma
     cnf_save_fs.trunk.file.vmatrix.write(vma)
     idx = 0
@@ -281,7 +283,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                             max_disp = 1.4
 
                         # check if forming bond angle is similar to that in initil configuration
-                        if cent_atm:
+                        if cent_atm and 'elimination' not in rxn_class:
                             print('angle test in conformer selection:', angle, conf_ang)
                             if abs(conf_ang - angle) > .44:
                                 print(" - Transition State conformer has diverged from original",

@@ -177,7 +177,7 @@ def run_scan(
 
 def run_multiref_rscan(
         formula, high_mul, zma, spc_info, multi_level, dist_name, grid1, grid2,
-        scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True, gradient=False, hessian=False,
+        scn_run_fs, scn_save_fs, script_str, overwrite, update_guess=True, gradient=False, hessian=False, num_act_elc=None, num_act_orb=None,
         **kwargs):
     """ run constrained optimization scan
     """
@@ -208,8 +208,9 @@ def run_multiref_rscan(
 
     _, opt_script_str, _, opt_kwargs = moldr.util.run_qchem_par(prog, method)
 
-    num_act_elc = high_mul - 1
-    num_act_orb = num_act_elc
+    if num_act_elc is None and num_act_orb is None:
+        num_act_elc = high_mul - 1
+        num_act_orb = num_act_elc
 
     ref_zma = automol.zmatrix.set_values(zma, {coo_names[0]: grid_vals[0][0]})
     cas_opt = ['', '']
@@ -492,7 +493,8 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, gradient=False, hessian=False)
 
 def infinite_separation_energy(
         spc_1_info, spc_2_info, ts_info, high_mul, ref_zma, ini_thy_info, thy_info,
-        multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs, overwrite=False):
+        multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs, overwrite=False,
+        num_act_elc=None, num_act_orb=None):
     """ Obtain the infinite separation energy from the multireference energy at a given
     reference point, the high-spin low-spin splitting at that reference point, and the
     high level energy for the high spin state at the reference geometry and for the fragments
@@ -609,8 +611,11 @@ def infinite_separation_energy(
 
     mr_script_str, _, mr_kwargs, _ = moldr.util.run_qchem_par(prog, method)
 
-    num_act_elc = high_mul
-    num_act_orb = num_act_elc
+    if num_act_elc is None and num_act_orb is None:
+        num_act_elc = high_mul
+        num_act_orb = num_act_elc
+    # num_act_elc = high_mul
+    # num_act_orb = num_act_elc
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
 
     cas_opt, _ = moldr.ts.cas_options_2(hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
@@ -847,6 +852,6 @@ def infinite_separation_energy(
 
     inf_sep_ene = spc_ene[0] + spc_ene[1] - hs_sr_ene + hs_mr_ene
     #inf_sep_ene = spc_ene[0] + spc_ene[1] - hs_sr_ene + hs_mr_ene - ls_mr_ene + ls_mr_ene
-    print('inf_sep_ene test:', inf_sep_ene)
+    # print('inf_sep_ene test:', inf_sep_ene)
 
     return inf_sep_ene

@@ -175,7 +175,7 @@ def species_block(
             har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
             min_ene = har_cnf_save_fs.leaf.file.energy.read(har_min_cnf_locs)
             if automol.geom.is_atom(har_geo):
-                print('This is an atom')
+                # print('This is an atom')
                 mass = ptab.to_mass(har_geo[0][0])
                 spc_str = mess_io.writer.atom(
                     mass, elec_levels)
@@ -184,7 +184,7 @@ def species_block(
                 freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
                 hind_rot_str = ""
                 proj_rotors_str = ""
-                print('for species:', spc)
+                # print('for species:', spc)
                 #print('tors_min_cnf_locs test:', tors_min_cnf_locs)
 
                 if tors_min_cnf_locs is not None:
@@ -241,7 +241,7 @@ def species_block(
                         pot = list(enes*phycon.EH2KCAL)
 
                         # Build a potential list from only successful calculations
-                        print('pot in species block:', enes, pot)
+                        # print('pot in species block:', enes, pot)
                         pot = _hrpot_spline_fitter(pot)
 
                         axis = coo_dct[tors_name][1:3]
@@ -461,7 +461,7 @@ def species_block(
                     har_tors_zpe_2 = har_zpe - zpe_har_no_tors_2
                     del_tors_zpe = har_tors_zpe - tors_zpe
                     del_tors_zpe_2 = har_tors_zpe_2 - tors_zpe
-                    #print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
+                    # print('tors_zpe test:', del_tors_zpe, del_tors_zpe_2)
                     if del_tors_zpe <= del_tors_zpe_2:
                         zpe = zpe_har_no_tors + tors_zpe
                     else:
@@ -469,9 +469,9 @@ def species_block(
                         freqs = freqs_2
                         imag_freq = imag_freq_2
                     # shutil.rmtree(path)
-                    #print('freqs test in species block', freqs, imag_freq)
-                    print('zpe test in species_block:',zpe_har_no_tors, zpe_har_no_tors_2, 
-                           tors_zpe, har_zpe, zpe)
+                    # print('freqs test in species block', freqs, imag_freq)
+                    # print('zpe test in species_block:',zpe_har_no_tors, zpe_har_no_tors_2, 
+                    #        tors_zpe, har_zpe, zpe)
                     core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
                     spc_str = mess_io.writer.molecule(
                         core, freqs, elec_levels,
@@ -500,7 +500,7 @@ def species_block(
             anh_geo = anh_cnf_save_fs.leaf.file.geometry.read(anh_min_cnf_locs)
             min_ene = anh_cnf_save_fs.leaf.file.energy.read(anh_min_cnf_locs)
             if automol.geom.is_atom(anh_geo):
-                print('This is an atom')
+                # print('This is an atom')
                 mass = ptab.to_mass(anh_geo[0][0])
                 spc_str = mess_io.writer.atom(
                     mass, elec_levels)
@@ -593,14 +593,14 @@ def vtst_with_no_saddle_block(
 
     inf_locs = [[dist_name], [1000.]]
     inf_sep_ene = scn_save_fs.leaf.file.energy.read(inf_locs)
-    print('inf sep ene in vtst with no saddle:', inf_sep_ene)
-    print('grid test in vtst with no saddle:', grid)
+    # print('inf sep ene in vtst with no saddle:', inf_sep_ene)
+    # print('grid test in vtst with no saddle:', grid)
 
     grid[::-1].sort()
     for idx, grid_val in enumerate(grid):
-        print('idx, grid_val test:', idx, grid_val)
+        # print('idx, grid_val test:', idx, grid_val)
         locs = [[dist_name], [grid_val]]
-        print('scn save fs:', scn_save_fs.leaf.path(locs))
+        # print('scn save fs:', scn_save_fs.leaf.path(locs))
 
         # get geometry
         if not scn_save_fs.leaf.file.geometry.exists(locs):
@@ -675,8 +675,8 @@ def vtst_with_no_saddle_block(
         erel_zpe_corr = erel + zpe - rct_zpe
         #eref = erel
         eref_abs = erel_zpe_corr + spc_ene
-        print('vtst inf test:', ene, inf_sep_ene)
-        print('vtst ene test:', eref_abs, erel_zpe_corr, erel, zpe, spc_ene, rct_zpe)
+        # print('vtst inf test:', ene, inf_sep_ene)
+        # print('vtst ene test:', eref_abs, erel_zpe_corr, erel, zpe, spc_ene, rct_zpe)
 
         # Iniialize the header of the string
         irc_pt_str = '!----------------------------------------------- \n'
@@ -698,7 +698,7 @@ def vtst_with_no_saddle_block(
     # Write the MESS string for the variational sections
     variational_str = mess_io.writer.rxnchan.ts_variational(
         ts_label, reac_label, prod_label, irc_pt_strs)
-    print('variational_str test:', variational_str)
+    # print('variational_str test:', variational_str)
 
     return variational_str
 
@@ -836,12 +836,24 @@ def pst_block(
     else:
         elec_levels_j = [[0., spc_dct_j['mul']]]
 
-    elec_levels = []
+    # Combine the energy levels
+    init_elec_levels = []
     for _, elec_level_i in enumerate(elec_levels_i):
         for _, elec_level_j in enumerate(elec_levels_j):
-            elec_levels.append(
+            init_elec_levels.append(
                 [elec_level_i[0]+elec_level_j[0],
                  elec_level_i[1]*elec_level_j[1]])
+
+    # See if any levels repeat and thus need to be added together
+    elec_levels = []
+    for level in init_elec_levels:
+        # Put level in in final list
+        if level not in elec_levels:
+            elec_levels.append(level)
+        # Add the level to the one in the list
+        else:
+            idx = elec_levels.index(level)
+            elec_levels[idx][1] += level[1]
 
     sym_factor_i = 1.
     sym_factor_j = 1.
@@ -1276,12 +1288,27 @@ def fake_species_block(
     else:
         elec_levels_j = [[0., spc_dct_j['mul']]]
 
-    elec_levels = []
+    # Combine the energy levels
+    init_elec_levels = []
     for _, elec_level_i in enumerate(elec_levels_i):
         for _, elec_level_j in enumerate(elec_levels_j):
-            elec_levels.append(
+            init_elec_levels.append(
                 [elec_level_i[0]+elec_level_j[0],
                  elec_level_i[1]*elec_level_j[1]])
+
+    # See if any levels repeat and thus need to be added together
+    elec_levels = []
+    for level in init_elec_levels:
+        # Put level in in final list
+        if level not in elec_levels:
+            elec_levels.append(level)
+        # Add the level to the one in the list
+        else:
+            idx = elec_levels.index(level)
+            elec_levels[idx][1] += level[1]
+
+    # print('elec_levels final ')
+    # print(elec_levels)
 
     sym_factor = 1.
     sym_factor_i = 1.
@@ -1463,7 +1490,7 @@ def fake_species_block(
 
                         # Build a potential list from only successful calculations
                         pot = _hrpot_spline_fitter(pot)
-                        print('fb pot test:', pot)
+                        # print('fb pot test:', pot)
 
                         axis = coo_dct[tors_name][1:3]
 
@@ -1749,7 +1776,7 @@ def get_zero_point_energy(
         har_save_path = har_save_fs.trunk.path()
         saddle = True
 
-    print('inside zpe saddle is:', saddle)
+    # print('inside zpe saddle is:', saddle)
     har_cnf_save_fs = autofile.fs.conformer(har_save_path)
     har_min_cnf_locs = moldr.util.min_energy_conformer_locators(har_cnf_save_fs)
     
@@ -1774,8 +1801,8 @@ def get_zero_point_energy(
 
         tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
         tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs)
-        print('tors_save_path test:', tors_save_path)
-        print('tors_min_cnf_locs test:', tors_min_cnf_locs)
+        # print('tors_save_path test:', tors_save_path)
+        # print('tors_min_cnf_locs test:', tors_min_cnf_locs)
         if tors_min_cnf_locs:
             tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
 
@@ -1841,7 +1868,7 @@ def get_zero_point_energy(
         zpe = har_zpe
         hind_rot_str = ""
         proj_rotors_str = ""
-        print('tors_min_cnf_locs:', tors_min_cnf_locs)
+        # print('tors_min_cnf_locs:', tors_min_cnf_locs)
         tors_names = []
         if tors_min_cnf_locs is not None:
             if tors_cnf_save_fs.trunk.file.info.exists():
@@ -1880,7 +1907,7 @@ def get_zero_point_energy(
                           for name, linspace in zip(tors_names, tors_linspaces)]
             tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
                 zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
-            print('tors_names:', tors_names)
+            # print('tors_names:', tors_names)
             if tors_names:
                 for tors_name, tors_grid, sym_num in zip(tors_names, tors_grids, tors_sym_nums):
                     locs_lst = []
@@ -1898,7 +1925,7 @@ def get_zero_point_energy(
                     pot = list(enes*phycon.EH2KCAL)
 
                     # Build a potential list from only successful calculations
-                    print('pot test in zpe:', pot)
+                    # print('pot test in zpe:', pot)
                     pot = _hrpot_spline_fitter(pot)
 
                     axis = coo_dct[tors_name][1:3]
@@ -2117,7 +2144,7 @@ def get_zero_point_energy(
             anh_geo = anh_cnf_save_fs.leaf.file.geometry.read(anh_min_cnf_locs)
             min_ene = anh_cnf_save_fs.leaf.file.energy.read(anh_min_cnf_locs)
             if automol.geom.is_atom(anh_geo):
-                print('This is an atom')
+                # print('This is an atom')
                 mass = ptab.to_mass(anh_geo[0][0])
                 spc_str = mess_io.writer.atom(
                     mass, elec_levels)
@@ -2199,7 +2226,7 @@ def tau_pf_write(
         sumq = 0.
         sum2 = 0.
         idx = 0
-        print('integral convergence for T = ', temp)
+        # print('integral convergence for T = ', temp)
         for locs in tau_save_fs.leaf.existing():
             idx += 1
             ene = tau_save_fs.leaf.file.energy.read(locs)

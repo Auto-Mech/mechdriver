@@ -40,7 +40,7 @@ def reference_geometry(spcdct, thy_level, ini_thy_level,
                 'getting reference geometry from {}'.format(thy_path))
             geo = thy_save_fs.trunk.file.geometry.read()
             zma = thy_save_fs.trunk.file.zmatrix.read()
-            print('geo:',automol.geom.string(geo))
+            # print('geo:',automol.geom.string(geo))
         if not geo:
             if ini_thy_save_fs:
                 if ini_thy_save_fs.trunk.file.geometry.exists():
@@ -171,7 +171,7 @@ def multiref_wavefunction_guess(high_mul, zma,
         mol_options=['nosym'],
         )
     guess_str1 += '\n\n'
-    guess_str1 = '\n'.join(guess_str1.splitlines()[2:])
+    guess_str1 = '\n'.join(guess_str1.splitlines()[2:-6])
 
     guess_str2 = elstruct.writer.energy(
         geom=zma,
@@ -185,7 +185,7 @@ def multiref_wavefunction_guess(high_mul, zma,
         mol_options=['nosym'],
         )
     guess_str2 += '\n\n'
-    guess_str2 = '\n'.join(guess_str2.splitlines()[2:])
+    guess_str2 = '\n'.join(guess_str2.splitlines()[2:-6])
 
     guess_str = guess_str1 + guess_str2 
 

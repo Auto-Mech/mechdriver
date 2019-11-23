@@ -48,8 +48,8 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
         es_run_key = tsk_info[1]
         overwrite = tsk_info[3]
         #Theory information
-        ini_thy_info = scripts.es.get_thy_info(es_dct[es_ini_key])
-        thy_info = scripts.es.get_thy_info(es_dct[es_run_key])
+        # ini_thy_info = scripts.es.get_thy_info(es_dct[es_ini_key])
+        # thy_info = scripts.es.get_thy_info(es_dct[es_run_key])
         ini_thy_info = get_es_info(es_dct, es_ini_key)
         thy_info = get_es_info(es_dct, es_run_key)
 
@@ -82,29 +82,30 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                         spc_dct[ts]['dist_info'][1] = final_dist
                         angle = None
                         dist_name = dist_info[0]
-                        brk_name = dist_info[3]
-                        print('bond info', dist_name, brk_name)
-                        if dist_name and brk_name:
-                            ts_bnd = automol.zmatrix.bond_idxs(ts_zma, dist_name)
-                            brk_bnd = automol.zmatrix.bond_idxs(ts_zma, brk_name)
-                            print('ts_zma test:', ts_zma)
-                            print('brk_bnd test:', brk_bnd)
-                            print('ts_bnd test:', ts_bnd)
-                            ang_atms = [0, 0, 0]
-                            cent_atm = list(set(brk_bnd) & set(ts_bnd))
-                            if cent_atm:
-                                ang_atms[1] = cent_atm[0]
-                                for idx in brk_bnd:
-                                    if idx != ang_atms[1]:
-                                        ang_atms[0] = idx
-                                for idx in ts_bnd:
-                                    if idx != ang_atms[1]:
-                                        ang_atms[2] = idx
+                        if 'abstraction' in rxn_class or 'addition' in rxn_class:
+                            brk_name = dist_info[3]
+                            # print('bond info', dist_name, brk_name)
+                            if dist_name and brk_name:
+                                ts_bnd = automol.zmatrix.bond_idxs(ts_zma, dist_name)
+                                brk_bnd = automol.zmatrix.bond_idxs(ts_zma, brk_name)
+                                # print('ts_zma test:', ts_zma)
+                                # print('brk_bnd test:', brk_bnd)
+                                # print('ts_bnd test:', ts_bnd)
+                                ang_atms = [0, 0, 0]
+                                cent_atm = list(set(brk_bnd) & set(ts_bnd))
+                                if cent_atm:
+                                    ang_atms[1] = cent_atm[0]
+                                    for idx in brk_bnd:
+                                        if idx != ang_atms[1]:
+                                            ang_atms[0] = idx
+                                    for idx in ts_bnd:
+                                        if idx != ang_atms[1]:
+                                            ang_atms[2] = idx
 
-                            geom = automol.zmatrix.geometry(ts_zma)
-                            print('ang_atms before calculation:', ang_atms)
-                            angle = automol.geom.central_angle(geom, *ang_atms)
-                            print('calculated angle for ts is:', angle)
+                                geom = automol.zmatrix.geometry(ts_zma)
+                                # print('ang_atms before calculation:', ang_atms)
+                                angle = automol.geom.central_angle(geom, *ang_atms)
+                                # print('calculated angle for ts is:', angle)
                         spc_dct[ts]['dist_info'].append(angle)
                         if not isinstance(geo, str):
                             print('Success, transition state {} added to species queue'.format(ts))
@@ -178,6 +179,9 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                 if min_cnf_locs:
                     min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
                     min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+                    # print('min_cnf_paths test in esdriver')
+                    # print(min_cnf_run_path)
+                    # print(min_cnf_save_path)
                     scn_run_fs = autofile.fs.conformer(min_cnf_run_path)
                     scn_save_fs = autofile.fs.conformer(min_cnf_save_path)
                 else:

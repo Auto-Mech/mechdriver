@@ -104,10 +104,55 @@ def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
     return input_strs
 
 
-def read_potentials():
+def read_potentials(
+    rxn_save_fs, 
+    mep_opt_thy_level,
+    high_ene_thy_levels,
+    mep_r_constrained_coords,
+    mep_intramol_constrained_coords,
+    r_grid_vals):
     """ Read values form the filesystem to get the values to
         correct ht MEP
     """
+
+    # Hard part is the filesystem storage
+    # FS
+    # SCANS
+    # Rn
+    # 2.1, 2.4, 2.7, 3.0, 3.3, 3.6
+
+    # larger scans:
+    # scan over Rn
+    # one dir has JUST Rn constrained
+    # other has Rn constrained and others
+
+    # accept as args, filesystems and/or thy levels for:
+    # energies along MEP with full opts (except Rn rxn coord)
+    # energies along MEP with opts of intermolecular coords
+    # higher level energies along MEP 
+   
+    # calc relaxation correction
+    # calc energy corrections for each higher level energy
+    # calc combined relaxation-energy corrections
+    
+    # assume you have fs vars passed in 
+    rxn_save_path = 'save_fs_arg'
+
+    # Filesystem for all the optimizations (full, constrained) along MEP
+    mep_opt_thy_save_fs = autofile.fs.theory(rxn_save_path)
+    mep_opt_thy_save_fs.leaf.create(mep_opt_thy_level[1:4])
+    mep_opt_scn_save_fs = autofile.fs.scan(mep_opt_thy_save_fs)        
+    mep_opt_scn_save_fs_path = mep_opt_scn_save_fs.leaf.path() 
+
+    # Read the energies from the full and constrained opts along MEP
+    # for idx, 
+    # locs = [[], []] 
+    #     # get energy
+    #     if not scn_save_fs.leaf.file.energy.exists(locs):
+    #         continue
+    #     else:
+    #         ene = scn_save_fs.leaf.file.energy.read(locs)
+
     return potentials, potential_labels
 
 

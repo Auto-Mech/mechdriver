@@ -148,10 +148,14 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         if runes:
             ts_found = esdriver.driver.run(
                 ts_tsk_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix, vdw_params)
-            print('ts_found test:', ts_found)
+            # print('ts_found test:', ts_found)
 
     if runrates:
         for ts in spc_dct:
+            # print('spc_dct')
+            # print(spc_dct[ts])
+            # import sys
+            # sys.exit()
             if 'original_zma' in spc_dct[ts]:
                 pes_formula = automol.geom.formula(
                     automol.zmatrix.geometry(spc_dct[ts]['original_zma']))
@@ -172,9 +176,6 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
 
         ts_model = ['RIGID', 'HARM', '']
         for tsk in ts_tsk_lst:
-            print('loop')
-            print(ts_model[0])
-            print(tsk)
             if 'samp' in tsk[0] or 'find' in tsk[0]:
                 geo_lvl = tsk[1]
                 geom = True
@@ -191,7 +192,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     ene_lvl = tsk[1]
                     geo_lvl = tsk[1]
             if 'hr' in tsk[0] or 'tau' in tsk[0]:
-                print('found')
+                # print('found')
                 tors_lvl = tsk[1]
                 tors_lvl_ref = tsk[2]
                 if 'md' in tsk[0]:
@@ -215,16 +216,6 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     ts_model[2] = '1DHR'
             # if 'irc' in tsk[0]:
             #    ts_model[3] = 
-
-        print('ts_tsk_lst')
-        print(ts_tsk_lst)
-        print('ts_model')
-        print(ts_model)
-        print('ts dct')
-        print(spc_dct[ts])
-        # import sys
-        # sys.exit()
-
 
         geo_thy_info = get_thy_info(es_dct, geo_lvl)
         geo_thy_info_ref = get_thy_info(es_dct, geo_lvl_ref)
@@ -285,6 +276,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
             ene_idx = 0
             spc_dct[spc]['ene'] = 0.
             ene_str = '! energy level:'
+            # print('looking at ts tasks')
             for tsk in ts_tsk_lst:
                 if 'ene' in tsk[0]:
                     if ene_idx > len(ene_coeff)-1:
@@ -299,7 +291,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                         ene_ref_thy_info[3], ene_ref_thy_info[1], ene_ref_thy_info[2]))
                     ene = scripts.thermo.get_electronic_energy(
                         spc_info, ene_ref_thy_info, ene_thy_info, save_path, saddle)
-                    print('ene test:', ene_idx, ene_coeff[ene_idx], ene)
+                    # print('ene test:', ene_idx, ene_coeff[ene_idx], ene)
                     spc_dct[spc]['ene'] += ene*ene_coeff[ene_idx]
                     ene_idx += 1
         ene_str += '!               '.join(ene_strl)
@@ -331,7 +323,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                 mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
                     tsname, rxn, species, spc_dct, idx_dct, mess_strs,
                     first_ground_ene, spc_save_fs, ts_model, pf_levels, multi_info, substr.PROJROT)
-                print(idx_dct)
+                # print(idx_dct)
         well_str, bim_str, ts_str = mess_strs
         ts_str += '\nEnd\n'
         print(well_str)
@@ -343,8 +335,8 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
             header_str, energy_trans_str, well_str, bim_str, ts_str,
             spc_dct[tsname_0], geo_thy_info_ref, spc_dct[tsname_0]['rxn_fs'][3])
 
-        #run_fits = True
-        #if run_fits:
+        # run_fits = True
+        # if run_fits:
 
         # fit rate output to modified Arrhenius forms and print in ChemKin format
         pf_levels.append(ene_str)
