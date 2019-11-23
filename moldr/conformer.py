@@ -101,6 +101,8 @@ def run_conformers(
     vma = automol.zmatrix.var_(zma)
     if cnf_save_fs.trunk.file.vmatrix.exists():
         existing_vma = cnf_save_fs.trunk.file.vmatrix.read()
+        print(existing_vma)
+        print(vma)
         assert vma == existing_vma
     cnf_save_fs.trunk.file.vmatrix.write(vma)
     idx = 0

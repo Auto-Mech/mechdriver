@@ -57,7 +57,10 @@ def options_matrix_optimization(script_str, prefix,
         # Kill the while loop if we Molpro error signaling a hopeless point
         # When an MCSCF WF calculation fails to converge at some step in opt
         # it is not clear how to save the optimization, so we give up on opt
-        fail_pattern = app.escape('The problem occurs in Multi')
+        fail_pattern = app.one_of_these([
+            app.escape('The problem occurs in Multi'),
+            app.escape('The problem occurs in cipro')
+        ])
         if apf.has_match(fail_pattern, out_str, case=False):
             break
 
