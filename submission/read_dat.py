@@ -18,6 +18,8 @@ PARAMS = {
     'CHECK_STEREO': False,
     'SORT_RXNS': True,
     'RAD_RAD_SORT': True,
+    'RAD_RAD_TS': 'vtst',
+    'PST_PARAMS': [1.0, 6],
     'RUN_THERMO': False,
     'RUN_RATES': True,
     'OPT_ES': True,

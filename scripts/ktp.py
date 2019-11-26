@@ -108,7 +108,9 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs, spc_model, pf_leve
 
 def make_channel_pfs(
         tsname, rxn, species_data, spc_dct, idx_dct, strs, first_ground_ene,
-        spc_save_fs, spc_model, pf_levels, multi_info, projrot_script_str):
+        spc_save_fs, spc_model, pf_levels, multi_info, projrot_script_str,
+        pst_params=[1.0, 6],
+        rad_rad_ts='pst'):
     """ make the partition function strings for each of the channels
     includes strings for each of the unimolecular wells, bimolecular fragments, and
     transition states connecting them.
@@ -248,7 +250,8 @@ def make_channel_pfs(
                 pst_r_ts_str = moldr.pf.pst_block(
                     spc_dct_i, spc_dct_j, spc_model=spc_model,
                     pf_levels=pf_levels, projrot_script_str=projrot_script_str,
-                    spc_save_fs=spc_save_fs)
+                    spc_save_fs=spc_save_fs,
+                    pst_params=pst_params)
             print('fake_wellr_label test:', fake_wellr_label)
             if not fake_wellr_label:
                 print('well_dct_key1 test:', well_dct_key1)
@@ -287,7 +290,8 @@ def make_channel_pfs(
                 pst_p_ts_str = moldr.pf.pst_block(
                     spc_dct_i, spc_dct_j, spc_model=spc_model,
                     pf_levels=pf_levels, projrot_script_str=projrot_script_str,
-                    spc_save_fs=spc_save_fs)
+                    spc_save_fs=spc_save_fs,
+                    pst_params=pst_params)
             if not fake_wellp_label:
                 fake_wellp_label = idx_dct[well_dct_key1]
                 pst_p_label = idx_dct[well_dct_key1.replace('F', 'FPB')]
@@ -299,9 +303,18 @@ def make_channel_pfs(
         else:
             fake_wellp_label = idx_dct[well_dct_key1]
 
-        # print the inner TS data
-        if 'radical radical' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class']:
-            # for radical radical call vtst or vrctst
+        # print inner TS data for radical radical call vtst or vrctst
+        if 'radical radical' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class'] and rad_rad_ts == 'pst':
+            zero_energy = SOMETHING
+            pst_str = moldr.pf.pst_block(
+                spc_dct_i, spc_dct_j, spc_model=spc_model,
+                pf_levels=pf_levels, projrot_script_str=projrot_script_str,
+                spc_save_fs=spc_save_fs,
+                pst_params=pst_params)
+            ts_str += '\n' + mess_io.writer.ts_sadpt(
+                ts_label, reac_label, prod_label, pst_str, zero_energy)
+        
+        elif 'radical radical' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class']:
             ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
             if 'P' in reac_label:
                 spc_ene = reac_ene - first_ground_ene
@@ -341,6 +354,15 @@ def make_channel_pfs(
                 spc_dct[tsname], ts_label, reac_label, prod_label, spc_ene, spc_zpe, projrot_script_str,
                 multi_info, elec_levels=[[0., 1]], sym_factor=1.
                 )
+    elif 'radical radical' in spc_dct[tsname]['class'] and 'addition' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class'] and rad_rad_ts == 'pst':
+            zero_energy = SOMETHING
+            pst_str = moldr.pf.pst_block(
+                spc_dct_i, spc_dct_j, spc_model=spc_model,
+                pf_levels=pf_levels, projrot_script_str=projrot_script_str,
+                spc_save_fs=spc_save_fs,
+                pst_params=pst_params)
+            ts_str += '\n' + mess_io.writer.ts_sadpt(
+                ts_label, reac_label, prod_label, pst_str, zero_energy)
     else:
         ts_reac_barr = ts_ene - reac_ene
         ts_prod_barr = ts_ene - prod_ene

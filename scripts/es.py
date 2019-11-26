@@ -884,7 +884,9 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul, rct_cnf_sav
 def find_ts(
         spc_dct, ts_dct, ts_info, ts_zma, typ, dist_info, grid,
         bkp_ts_class_data, ini_thy_info, thy_info, run_prefix, save_prefix,
-        rxn_run_path, rxn_save_path, overwrite, attempt=1):
+        rxn_run_path, rxn_save_path, overwrite, attempt=1,
+        pst_params=[1.0, 6],
+        rad_rad_ts='vtst':
     """ find the ts geometry
     """
     print('prepping ts scan for:', typ)
@@ -1040,7 +1042,7 @@ def find_ts(
         print('running ts scan:')
         rad_rad = ('radical radical' in typ)
         low_spin = ('low spin' in typ)
-        if rad_rad and low_spin:
+        if rad_rad and low_spin and 'elimination' not in ts_dct['class']:
             # run mep scan
             # multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
             multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
@@ -1076,66 +1078,68 @@ def find_ts(
                 num_act_orb = None
                 num_act_elc = None
 
-            # Set VTST for radical radical reactions
-            vtst = True
-            gradient = False
-            hessian = False
-            if vtst:
+            # Using rad_rad_ts model, run PST, VTST, VRC-TST
+            if rad_rad_ts.lower() == 'pst':
+                continue 
+
+            elif rad_rad_ts.lower() == 'vtst':
+
+                gradient = False 
                 hessian = True
-            moldr.scan.run_multiref_rscan(
-                formula=ts_formula,
-                high_mul=high_mul,
-                zma=ts_zma,
-                spc_info=ts_info,
-                multi_level=multi_level,
-                dist_name=dist_name,
-                grid1=grid1,
-                grid2=grid2,
-                scn_run_fs=scn_run_fs,
-                scn_save_fs=scn_save_fs,
-                script_str=opt_script_str,
-                overwrite=overwrite,
-                update_guess=update_guess,
-                gradient=gradient,
-                hessian=hessian,
-                num_act_elc=num_act_elc,
-                num_act_orb=num_act_orb,
-                **opt_kwargs
-            )
 
-            moldr.scan.save_scan(
-                scn_run_fs=scn_run_fs,
-                scn_save_fs=scn_save_fs,
-                coo_names=[dist_name],
-                gradient=gradient,
-                hessian=hessian,
-            )
+                moldr.scan.run_multiref_rscan(
+                    formula=ts_formula,
+                    high_mul=high_mul,
+                    zma=ts_zma,
+                    spc_info=ts_info,
+                    multi_level=multi_level,
+                    dist_name=dist_name,
+                    grid1=grid1,
+                    grid2=grid2,
+                    scn_run_fs=scn_run_fs,
+                    scn_save_fs=scn_save_fs,
+                    script_str=opt_script_str,
+                    overwrite=overwrite,
+                    update_guess=update_guess,
+                    gradient=gradient,
+                    hessian=hessian,
+                    num_act_elc=num_act_elc,
+                    num_act_orb=num_act_orb,
+                    **opt_kwargs
+                )
 
-            locs = [[dist_name], [grid1[0]]]
-            # calculate and save the infinite seperation energy
-            print('ts zma locs')
-            print(locs)
-            ts_zma = scn_save_fs.leaf.file.zmatrix.read(locs)
-            rcts = ts_dct['reacs']
-            spc_1_info = [spc_dct[rcts[0]]['ich'], spc_dct[rcts[0]]['chg'], spc_dct[rcts[0]]['mul']]
-            spc_2_info = [spc_dct[rcts[1]]['ich'], spc_dct[rcts[1]]['chg'], spc_dct[rcts[1]]['mul']]
+                moldr.scan.save_scan(
+                    scn_run_fs=scn_run_fs,
+                    scn_save_fs=scn_save_fs,
+                    coo_names=[dist_name],
+                    gradient=gradient,
+                    hessian=hessian,
+                )
 
-            inf_sep_ene = moldr.scan.infinite_separation_energy(
-                spc_1_info, spc_2_info, ts_info, high_mul, ts_zma, ini_thy_info, thy_info,
-                multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs,
-                num_act_elc=num_act_elc,
-                num_act_orb=num_act_orb)
+                locs = [[dist_name], [grid1[0]]]
+                # calculate and save the infinite seperation energy
+                print('ts zma locs')
+                print(locs)
+                ts_zma = scn_save_fs.leaf.file.zmatrix.read(locs)
+                rcts = ts_dct['reacs']
+                spc_1_info = [spc_dct[rcts[0]]['ich'], spc_dct[rcts[0]]['chg'], spc_dct[rcts[0]]['mul']]
+                spc_2_info = [spc_dct[rcts[1]]['ich'], spc_dct[rcts[1]]['chg'], spc_dct[rcts[1]]['mul']]
 
-            inf_locs = [[dist_name], [1000.]]
-            scn_save_fs.leaf.create(inf_locs)
-            scn_save_fs.leaf.file.energy.write(inf_sep_ene, inf_locs)
+                inf_sep_ene = moldr.scan.infinite_separation_energy(
+                    spc_1_info, spc_2_info, ts_info, high_mul, ts_zma, ini_thy_info, thy_info,
+                    multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs,
+                    num_act_elc=num_act_elc,
+                    num_act_orb=num_act_orb)
 
-            geo = automol.zmatrix.geometry(ts_zma)
-            zma = ts_zma
-            final_dist = grid1[0]
+                inf_locs = [[dist_name], [1000.]]
+                scn_save_fs.leaf.create(inf_locs)
+                scn_save_fs.leaf.file.energy.write(inf_sep_ene, inf_locs)
 
-            vrctst = False
-            if vrctst:
+                geo = automol.zmatrix.geometry(ts_zma)
+                zma = ts_zma
+                final_dist = grid1[0]
+
+            elif rad_rad_ts.lower() == 'vrctst':
 
                 # Set paths and build dirs for VRC-TST calculation is run
                 vrc_path = os.path.join(os.getcwd(), 'vrc')
@@ -1393,20 +1397,6 @@ def find_ts(
                 zma = 'failed'
                 final_dist = 0.
     return geo, zma, final_dist
-
-
-#def variational_data():
-#    """ Perform the calculations to do variational calculations: VTST and VRCTST
-#    """
-#
-#    if rxn_has_sadpt:
-#        if method == 'vtst':
-#            run_irc()
-#    else:
-#        if method == 'vtst':
-#            #do vtst stuff
-#        elif method == 'vrctst':
-#            run_vrctst()
 
 
 def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,

@@ -742,7 +742,8 @@ def vtst_saddle_block(scn_save_fs, geoms, frequencies, energies):
 
 def pst_block(
         spc_dct_i, spc_dct_j, spc_model, pf_levels, projrot_script_str,
-        spc_save_fs, elec_levels=[[0., 1]], sym_factor=1.
+        spc_save_fs, elec_levels=[[0., 1]], sym_factor=1.,
+        pst_params=[1.0, 6]
         ):
     """ prepare a Phase Space Theory species block
     """
@@ -910,7 +911,8 @@ def pst_block(
                 for key, val in form.items():
                     stoich += key + str(val)
                 core = mess_io.writer.core_phasespace(
-                    har_geo_i, har_geo_j, sym_factor, stoich, pot_prefactor=1., pot_power_exp=6)
+                    har_geo_i, har_geo_j, sym_factor, stoich,
+                    pot_prefactor=pst_params[0], pot_power_exp=pst_params[1])
                 spc_str = mess_io.writer.molecule(
                     core, freqs, elec_levels,
                     hind_rot=hind_rot_str,
@@ -1199,7 +1201,8 @@ def pst_block(
                 for key, val in form.items():
                     stoich += key + str(val)
                 core = mess_io.writer.core_phasespace(
-                    har_geo_i, har_geo_j, sym_factor, stoich, pot_prefactor=1., pot_power_exp=6)
+                    har_geo_i, har_geo_j, sym_factor, stoich,
+                    pot_prefactor=pst_params[0], pot_power_exp=pst_params[1])
                 spc_str = mess_io.writer.molecule(
                     core, freqs, elec_levels,
                     hind_rot=hind_rot_str,
