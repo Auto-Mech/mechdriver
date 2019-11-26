@@ -1044,7 +1044,7 @@ def find_ts(
         low_spin = ('low spin' in typ)
         if rad_rad and low_spin and 'elimination' not in ts_dct['class']:
             # run mep scan
-            # multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
+            #multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
             multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
 
             orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)

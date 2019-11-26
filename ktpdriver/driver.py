@@ -306,7 +306,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         header_str, energy_trans_str = scripts.ktp.pf_headers(
             rct_ichs, TEMPS, PRESS, *etrans)
         multi_info = ['molpro2015', 'caspt2', 'cc-pVDZ', 'RR']
-        # multi_info = ['molpro2015', 'caspt2', 'cc-pVTZ', 'RR']
+        #multi_info = ['molpro2015', 'caspt2', 'cc-pVTZ', 'RR']
 
         mess_strs = ['', '', '']
         idx_dct = {}

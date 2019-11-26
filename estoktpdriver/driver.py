@@ -127,7 +127,6 @@ if MECH_TYPE == 'CHEMKIN':
     # print('formula test before sort:', FORMULA_STR_LST)
     RXN_INFO_LST = list(
         zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
-   print('SORT_RXNS test:', PARAMS.SORT_RXNS)
     if PARAMS.SORT_RXNS:
         RXN_INFO_LST.sort()
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
