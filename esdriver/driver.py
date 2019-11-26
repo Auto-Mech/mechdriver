@@ -14,7 +14,9 @@ KICKOFF_SIZE = 0.1
 KICKOFF_BACKWARD = False
 
 def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
-        vdw_params=[False, False, True]):
+        vdw_params=[False, False, True],
+        pst_params=[1.0, 6],
+        rad_rad_ts='vtst'):
     """ driver for all electronic structure tasks
     """
 
@@ -65,6 +67,9 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                     if not rxn_class:
                         print('skipping reaction because type =', rxn_class)
                         continue
+                    elif rad_rad_ts == 'pst':
+                        print('skipping reaction because we are using PST')
+                        continue
                     #elif 'radical radical' in rxn_class and not 'high spin' in rxn_class:
                         #print('skipping reaction because type =', rxn_class)
                        # continue
@@ -78,7 +83,9 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                             spc_dct, spc_dct[ts], ts_info, ts_zma, rxn_class,
                             dist_info, grid, bkp_data, ini_thy_info, thy_info,
                             run_prefix, save_prefix, rxn_run_path,
-                            rxn_save_path, overwrite)
+                            rxn_save_path, overwrite,
+                            pst_params=pst_params,
+                            rad_rad_ts=rad_rad)
                         spc_dct[ts]['dist_info'][1] = final_dist
                         angle = None
                         dist_name = dist_info[0]
@@ -123,7 +130,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
 
         #Loop over all species
         for spc in spc_queue:
-            if 'ts_' in spc:
+            if 'ts_' in spc and rad_rad_ts != 'pst':
                 print('\nTask {} \t {}//{} \t Species {}'.format(
                     tsk, '/'.join(thy_info), '/'.join(ini_thy_info), spc))
                 spc_run_fs, spc_save_fs, spc_run_path, spc_save_path = spc_dct[spc]['rxn_fs']
@@ -197,7 +204,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
 
             if ini_thy_info[0] != 'input_geom':
                 orb_restr = moldr.util.orbital_restriction(
-                    spc_info, ini_thy_info)
+                   spc_info, ini_thy_info)
                 ini_thy_level = ini_thy_info[0:3]
                 ini_thy_level.append(orb_restr)
 

@@ -28,7 +28,9 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         run_prefix, save_prefix, ene_coeff=[1.],
         vdw_params=[False, False, True],
         options=[True, True, True, False],
-        etrans=[200.0, 0.85, 15.0, 57.0, 200.0, 3.74, 5.5, 28.0]):
+        etrans=[200.0, 0.85, 15.0, 57.0, 200.0, 3.74, 5.5, 28.0],
+        pst_params=[1.0, 6],
+        rad_rad_ts='vtst'):
     """ main driver for generation of full set of rate constants on a single PES
     """
 
@@ -73,7 +75,9 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         #                  tsk_info_lst[0][2], tsk_info_lst[0][3]]]
         esdriver.driver.run(
             spc_tsk_lst, es_dct, runspecies, spc_dct,
-            run_prefix, save_prefix, vdw_params)
+            run_prefix, save_prefix, vdw_params,
+            pst_params=pst_params,
+            rad_rad_ts=rad_rad_ts)
 
     # Form the reaction list
     rxn_lst = []
@@ -322,7 +326,8 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                     continue
                 mess_strs, first_ground_ene = scripts.ktp.make_channel_pfs(
                     tsname, rxn, species, spc_dct, idx_dct, mess_strs,
-                    first_ground_ene, spc_save_fs, ts_model, pf_levels, multi_info, substr.PROJROT)
+                    first_ground_ene, spc_save_fs, ts_model, pf_levels, multi_info, substr.PROJROT,
+                    pst_params=pst_params)
                 # print(idx_dct)
         well_str, bim_str, ts_str = mess_strs
         ts_str += '\nEnd\n'
