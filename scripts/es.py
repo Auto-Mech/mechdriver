@@ -886,7 +886,7 @@ def find_ts(
         bkp_ts_class_data, ini_thy_info, thy_info, run_prefix, save_prefix,
         rxn_run_path, rxn_save_path, overwrite, attempt=1,
         pst_params=[1.0, 6],
-        rad_rad_ts='vtst':
+        rad_rad_ts='vtst'):
     """ find the ts geometry
     """
     print('prepping ts scan for:', typ)
@@ -1044,8 +1044,9 @@ def find_ts(
         low_spin = ('low spin' in typ)
         if rad_rad and low_spin and 'elimination' not in ts_dct['class']:
             # run mep scan
-            # multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
-            multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
+            multi_info = ['molpro2015', 'caspt2i', 'cc-pvtz', 'RR']
+            #multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
+            #multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
 
             orb_restr = moldr.util.orbital_restriction(ts_info, multi_info)
             multi_level = multi_info[0:3]
@@ -1079,10 +1080,12 @@ def find_ts(
                 num_act_elc = None
 
             # Using rad_rad_ts model, run PST, VTST, VRC-TST
+            print('rad_rad_ts before vtst call:', rad_rad_ts)
             if rad_rad_ts.lower() == 'pst':
-                continue 
-
-            elif rad_rad_ts.lower() == 'vtst':
+                geo = 0.
+                zma = 'failed'
+                final_dist = 0.
+            if rad_rad_ts.lower() == 'vtst':
 
                 gradient = False 
                 hessian = True
@@ -1344,6 +1347,7 @@ def find_ts(
                 ts_save_fs.trunk.file.energy.write(ene)
                 ts_save_fs.trunk.file.geometry.write(geo)
                 ts_save_fs.trunk.file.zmatrix.write(zma)
+                print('zma saved in ts_save_f:', zma)
 
                 vals = automol.zmatrix.values(zma)
                 final_dist = vals[dist_name]

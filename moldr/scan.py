@@ -242,11 +242,61 @@ def run_multiref_rscan(
         run_prefixes = tuple(scn_run_fs.leaf.path([coo_names, [grid1_val]])
                              for grid1_val in grid1_vals[0])
 
+    # first run a single point to get the reference wavefunction
+    sp_grid_idxs = tuple([grid1_idxs[0]])
+    sp_grid_vals = [grid1_vals[0][0]]
+    sp_run_prefixes = tuple(scn_run_fs.leaf.path([coo_names, [sp_grid_val]])
+                             for sp_grid_val in sp_grid_vals)
+
+    print('idxs:', sp_grid_idxs, grid1_idxs)
+    print('vals:', sp_grid_vals, grid1_vals)
+    print('prefixes:', sp_run_prefixes, run_prefixes)
+
+    _run_1d_scan(
+        script_str=opt_script_str,
+        run_prefixes=sp_run_prefixes,
+        scn_save_fs=scn_save_fs,
+        guess_zma=zma,
+        coo_name=coo_names[0],
+        grid_idxs=sp_grid_idxs,
+        grid_vals=sp_grid_vals,
+        spc_info=spc_info,
+        thy_level=multi_level,
+        overwrite=overwrite,
+        update_guess=update_guess,
+        gradient=gradient,
+        hessian=hessian,
+        **opt_kwargs,
+    )
+
+    moldr.scan.save_scan(
+      scn_run_fs=scn_run_fs,
+      scn_save_fs=scn_save_fs,
+      coo_names=[coo_names[0]],
+      gradient=gradient,
+      hessian=hessian,
+    )
+
+    # now run from the reference point in to short r
+    print('coo_names', coo_names[0])
+    print('sp_grid_vals', sp_grid_vals[0])
+    opt_ref_zma = scn_save_fs.leaf.file.zmatrix.read([[coo_names[0]], [sp_grid_vals[0]]])
+    cas_opt = ['', '']
+    cas_opt[0], _ = moldr.ts.cas_options_1(spc_info, formula, num_act_elc, num_act_orb, high_mul)
+    cas_opt[1], _ = moldr.ts.cas_options_2(spc_info, formula, num_act_elc, num_act_orb, high_mul)
+    guess_str = moldr.ts.multiref_wavefunction_guess(
+        high_mul, opt_ref_zma, spc_info, multi_level, cas_opt)
+    guess_lines = guess_str.splitlines()
+
+    opt_kwargs['casscf_options'] = cas_opt[1]
+    opt_kwargs['mol_options'] = ['nosym']
+    opt_kwargs['gen_lines'] = {1: guess_lines}
+
     _run_1d_scan(
         script_str=opt_script_str,
         run_prefixes=run_prefixes,
         scn_save_fs=scn_save_fs,
-        guess_zma=zma,
+        guess_zma=opt_ref_zma,
         coo_name=coo_names[0],
         grid_idxs=grid1_idxs,
         grid_vals=grid1_vals[0],
@@ -259,6 +309,15 @@ def run_multiref_rscan(
         **opt_kwargs,
     )
 
+    moldr.scan.save_scan(
+      scn_run_fs=scn_run_fs,
+      scn_save_fs=scn_save_fs,
+      coo_names=[coo_names[0]],
+      gradient=gradient,
+      hessian=hessian,
+    )
+
+    # finally run from the reference point in to large r
     coo_names = []
     grid2_vals = []
     grid2_dct = {dist_name: grid2}
@@ -280,7 +339,7 @@ def run_multiref_rscan(
         script_str=opt_script_str,
         run_prefixes=run_prefixes,
         scn_save_fs=scn_save_fs,
-        guess_zma=zma,
+        guess_zma=opt_ref_zma,
         coo_name=coo_names[0],
         grid_idxs=grid2_idxs,
         grid_vals=grid2_vals[0],
@@ -291,6 +350,14 @@ def run_multiref_rscan(
         gradient=gradient,
         hessian=hessian,
         **opt_kwargs,
+    )
+
+    moldr.scan.save_scan(
+      scn_run_fs=scn_run_fs,
+      scn_save_fs=scn_save_fs,
+      coo_names=[coo_names[0]],
+      gradient=gradient,
+      hessian=hessian,
     )
 
 
@@ -513,7 +580,8 @@ def infinite_separation_energy(
     # file system for low spin multireference calculation
 
     multi_info[0] = 'molpro2015'
-    multi_info[1] = 'caspt2'
+    #multi_info[1] = 'caspt2'
+    #multi_info[1] = 'caspt2i'
     # ultimately the above should be properly passed
     prog = multi_info[0]
     method = multi_info[1]

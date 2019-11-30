@@ -121,16 +121,18 @@ def species_block(
         if sym_model == 'SAMPLING':
             if not sym_min_cnf_locs:
                 print('ERROR: Reference geometry is missing for symmetry for species {}'.format(spc_info[0]))
-                return '', 0.
-            sym_geo = sym_cnf_save_fs.leaf.file.geometry.read(sym_min_cnf_locs)
-            sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
-            if dist_names:
-                zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
-                form_coords = list(automol.zmatrix.bond_idxs(zma, dist_names[0]))
-                form_coords.extend(list(dist_names[1]))
-            sym_factor = moldr.conformer.symmetry_factor(
-                sym_geo, sym_ene, sym_cnf_save_fs, saddle, frm_bnd_key, brk_bnd_key, form_coords, tors_names)
-            print('sym_factor from conformer sampling:', sym_factor)
+                sym_factor = 1
+                #return '', 0.
+            else:
+                sym_geo = sym_cnf_save_fs.leaf.file.geometry.read(sym_min_cnf_locs)
+                sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
+                if dist_names:
+                    zma = tors_cnf_save_fs.leaf.file.zmatrix.read(tors_min_cnf_locs)
+                    form_coords = list(automol.zmatrix.bond_idxs(zma, dist_names[0]))
+                    form_coords.extend(list(dist_names[1]))
+                sym_factor = moldr.conformer.symmetry_factor(
+                    sym_geo, sym_ene, sym_cnf_save_fs, saddle, frm_bnd_key, brk_bnd_key, form_coords, tors_names)
+                print('sym_factor from conformer sampling:', sym_factor)
         if sym_model == '1DHR':
             print('Warning: the 1DHR based symmetry number has not yet been set up')
             sym_factor = 1
@@ -545,7 +547,7 @@ def species_block(
 
 
 def vtst_with_no_saddle_block(
-        ts_dct, ts_label, reac_label, prod_label, spc_ene, rct_zpe, projrot_script_str,
+        ts_dct, ts_label, reac_label, prod_label, spc_ene, ncons, projrot_script_str,
         multi_info, elec_levels=[[0., 1]], sym_factor=1.
         ):
     """ prepare the mess input string for a variational TS that does not have
@@ -577,7 +579,8 @@ def vtst_with_no_saddle_block(
     # geometries, hessians,
     # ultimately
 
-    sym_factor = 1.
+    #sym_factor = 0.5
+    sym_factor = 1.0
     irc_pt_strs = []
     proj_rotors_str = ''
     coord_proj = 'cartesian'
@@ -656,20 +659,24 @@ def vtst_with_no_saddle_block(
                 if not imag_freq:
                     freqs = freqs[:-1]
 
-            freqs_test_0 = elstruct.util.harmonic_frequencies(geom, hess, project=False)
-            mode_start = 7
-            if automol.geom.is_linear(geom):
-                mode_start = mode_start - 1
-            freqs_test = freqs_test_0[mode_start:]
+            #freqs_test_0 = elstruct.util.harmonic_frequencies(geom, hess, project=False)
+            #mode_start = 7
+            #if automol.geom.is_linear(geom):
+            #    mode_start = mode_start - 1
+            #freqs_test = freqs_test_0[mode_start:]
             print('projrot freqs in vtst:', freqs)
             #print('all unprojected freqs in vtst:', freqs_test_0)
             #print('unprojected freqs in vtst:', freqs_test)
+            freqs_cons = freqs[0:ncons]
+            print('conserved mode freqs:', freqs_cons)
 
         zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
         # for now use the zpe calculated at the first grid point as an approximation to
-        # the zpe at infinite sepration
+        # the zpe at infinite seperation
         if idx == 0:
-            rct_zpe = zpe
+            zpe_cons = sum(freqs_cons)*phycon.WAVEN2KCAL/2.
+            rct_zpe = zpe_cons
+            #rct_zpe = zpe
 
         erel = (ene - inf_sep_ene)*phycon.EH2KCAL
         erel_zpe_corr = erel + zpe - rct_zpe
@@ -1349,7 +1356,7 @@ def fake_species_block(
                 is_atom_i = automol.geom.is_atom(har_geo_i)
                 is_linear_i = automol.geom.is_linear(har_geo_i)
                 is_atom_j = automol.geom.is_atom(har_geo_j)
-                is_linear_j = automol.geom.is_linear(har_geo_i)
+                is_linear_j = automol.geom.is_linear(har_geo_j)
                 if is_atom_i:
                     ntrans = ntrans - 3
                 if is_atom_j:
@@ -1406,7 +1413,7 @@ def fake_species_block(
                 is_atom_i = automol.geom.is_atom(har_geo_i)
                 is_linear_i = automol.geom.is_linear(har_geo_i)
                 is_atom_j = automol.geom.is_atom(har_geo_j)
-                is_linear_j = automol.geom.is_linear(har_geo_i)
+                is_linear_j = automol.geom.is_linear(har_geo_j)
                 if is_atom_i:
                     ntrans = ntrans - 3
                 if is_atom_j:
@@ -1832,14 +1839,16 @@ def get_zero_point_energy(
         brk_bnd_key = []
     har_zpe = 0.0
     is_atom = False
+    ncons = 0
     # get reference harmonic
     if not har_min_cnf_locs:
         print('ERROR: No harmonic reference geometry for this species {}'.format(spc_info[0]))
-        return har_zpe, is_atom
+        return har_zpe, is_atom, ncons
     har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
     if automol.geom.is_atom(har_geo):
         har_zpe = 0.0
         is_atom = True
+        ncons = 0
 
     else:
         hess = har_cnf_save_fs.leaf.file.hessian.read(har_min_cnf_locs)
@@ -1851,6 +1860,8 @@ def get_zero_point_energy(
         if automol.geom.is_linear(har_geo):
             mode_start = mode_start - 1
         freqs = freqs[mode_start:]
+        ncons = len(freqs)
+        print('ncons test:', ncons)
 
         har_zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
 
@@ -2177,7 +2188,7 @@ def get_zero_point_energy(
     elif vib_model == 'VPT2' and tors_model == 'TAU':
         print('VPT2 and TAU combination is not yet implemented')
 
-    return ret, is_atom
+    return ret, is_atom, ncons
 
 
 def tau_pf_write(

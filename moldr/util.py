@@ -79,22 +79,22 @@ def run_qchem_par(prog, method, saddle=False):
     if prog == 'molpro2015':
         sp_script_str = (
             "#!/usr/bin/env bash\n"
-            "molpro -n 4 run.inp -o run.out >> stdout.log &> stderr.log"
+            "molpro -n 4 -d /scratch/$USER -I /scratch/$USER -W $/scratch/$USER run.inp -o run.out >> stdout.log &> stderr.log"
         )
-        if method == 'caspt2':
-            opt_script_str = (
-                "#!/usr/bin/env bash\n"
-                "molpro -n 8 run.inp -o run.out --nouse-logfile --no-xml-output >> "
-                "stdout.log &> stderr.log"
-                #"molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log"
-            )
-        else:
-            opt_script_str = (
-                "#!/usr/bin/env bash\n"
-                "molpro --mppx -n 12 run.inp -o run.out --nouse-logfile --no-xml-output >> "
-                #"molpro --mppx -n 12 run.inp -o run.out >> "
-                "stdout.log &> stderr.log"
-            )
+        #if method == 'caspt2':
+        #    opt_script_str = (
+        #        "#!/usr/bin/env bash\n"
+        #        "molpro -n 8 run.inp -o run.out --nouse-logfile --no-xml-output >> "
+        #        "stdout.log &> stderr.log"
+        #        #"molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log"
+        #    )
+        #else:
+        opt_script_str = (
+            "#!/usr/bin/env bash\n"
+            "molpro --mppx -n 12 -d /scratch/$USER -I /scratch/$USER -W $/scratch/$USER run.inp -o run.out --nouse-logfile --no-xml-output >> "
+            #"molpro --mppx -n 12 run.inp -o run.out >> "
+            "stdout.log &> stderr.log"
+        )
         if method in ('caspt2', 'caspt2c'):
             kwargs = {
                 'memory': 15,
@@ -125,6 +125,7 @@ def run_qchem_par(prog, method, saddle=False):
                 'memory': 5,
                 'corr_options': ['shift=0.2', 'ipea=0.25'],
                 'mol_options': ['nosym'],
+                'job_options': ['numerical'],
                 'feedback': True,
                 'errors': [
                     elstruct.Error.OPT_NOCONV

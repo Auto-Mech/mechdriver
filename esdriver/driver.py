@@ -67,9 +67,6 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                     if not rxn_class:
                         print('skipping reaction because type =', rxn_class)
                         continue
-                    elif rad_rad_ts == 'pst':
-                        print('skipping reaction because we are using PST')
-                        continue
                     #elif 'radical radical' in rxn_class and not 'high spin' in rxn_class:
                         #print('skipping reaction because type =', rxn_class)
                        # continue
@@ -79,13 +76,13 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                     bkp_data = spc_dct[ts]['bkp_data']
                     _, _, rxn_run_path, rxn_save_path = spc_dct[ts]['rxn_fs']
                     if 'ts' in tsk:
-                        geo, _, final_dist = scripts.es.find_ts(
+                        geo, ts_zma_f, final_dist = scripts.es.find_ts(
                             spc_dct, spc_dct[ts], ts_info, ts_zma, rxn_class,
                             dist_info, grid, bkp_data, ini_thy_info, thy_info,
                             run_prefix, save_prefix, rxn_run_path,
                             rxn_save_path, overwrite,
                             pst_params=pst_params,
-                            rad_rad_ts=rad_rad)
+                            rad_rad_ts=rad_rad_ts)
                         spc_dct[ts]['dist_info'][1] = final_dist
                         angle = None
                         dist_name = dist_info[0]
@@ -109,10 +106,15 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                                         if idx != ang_atms[1]:
                                             ang_atms[2] = idx
 
-                                geom = automol.zmatrix.geometry(ts_zma)
-                                # print('ang_atms before calculation:', ang_atms)
+                                #geom = automol.zmatrix.geometry(ts_zma)
+                                # I don't know why ts_zma was not just obtained from the find_ts ret
+                                # if you use ts_zma then angle is not properly determined
+                                geom = automol.zmatrix.geometry(ts_zma_f)
+                                print('geo before conformer: \n', automol.geom.string(geo))
+                                print('geom before conformer: \n', automol.geom.string(geom))
+                                print('ang_atms before calculation:', ang_atms)
                                 angle = automol.geom.central_angle(geom, *ang_atms)
-                                # print('calculated angle for ts is:', angle)
+                                print('calculated angle for ts is:', angle)
                         spc_dct[ts]['dist_info'].append(angle)
                         if not isinstance(geo, str):
                             print('Success, transition state {} added to species queue'.format(ts))
@@ -130,7 +132,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
 
         #Loop over all species
         for spc in spc_queue:
-            if 'ts_' in spc and rad_rad_ts != 'pst':
+            if 'ts_' in spc: 
                 print('\nTask {} \t {}//{} \t Species {}'.format(
                     tsk, '/'.join(thy_info), '/'.join(ini_thy_info), spc))
                 spc_run_fs, spc_save_fs, spc_run_path, spc_save_path = spc_dct[spc]['rxn_fs']

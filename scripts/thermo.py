@@ -72,7 +72,7 @@ def get_zpe(spc, spc_info, spc_save_path, pf_levels, spc_model):
     is_atom = {}
     zero_energy_str = {}
 
-    spc_zpe, is_atom = moldr.pf.get_zero_point_energy(
+    spc_zpe, is_atom, ncons = moldr.pf.get_zero_point_energy(
         spc, spc_info, pf_levels, spc_model,
         pf_script_str=substr.MESSPF,
         elec_levels=[[0., 1]],
@@ -85,7 +85,7 @@ def get_zpe(spc, spc_info, spc_save_path, pf_levels, spc_model):
         zero_energy_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
         zero_energy_str += 'End'
 
-    return spc_zpe, zero_energy_str
+    return spc_zpe, zero_energy_str, ncons
 
 
 def get_spc_input(spc, spc_dct_i, spc_info, spc_save_path, pf_levels, spc_model):

@@ -127,7 +127,6 @@ if MECH_TYPE == 'CHEMKIN':
     # print('formula test before sort:', FORMULA_STR_LST)
     RXN_INFO_LST = list(
         zip(FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST))
-   print('SORT_RXNS test:', PARAMS.SORT_RXNS)
     if PARAMS.SORT_RXNS:
         RXN_INFO_LST.sort()
         FORMULA_STR_LST, RCT_NAMES_LST, PRD_NAMES_LST, RXN_NAME_LST = zip(*RXN_INFO_LST)
@@ -743,6 +742,7 @@ if PARAMS.RUN_RATES:
                     # run ktp for a given PES
                     # import sys
                     # sys.exit()
+                    print('RAD_RAD_TS test:', PARAMS.RAD_RAD_TS)
                     ktpdriver.driver.run(
                         PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
                         PARAMS.RUN_PREFIX, PARAMS.SAVE_PREFIX,
@@ -754,5 +754,5 @@ if PARAMS.RUN_RATES:
                         #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 
 # f. Partition function parameters determined internally
- TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
+# TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
 # VIB_MODEL can take values: 'HARM', or 'VPT2' values.

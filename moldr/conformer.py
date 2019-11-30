@@ -27,6 +27,8 @@ def conformer_sampling(
         geo = thy_save_fs.trunk.file.geometry.read()
         zma = thy_save_fs.trunk.file.zmatrix.read()
         coo_names.append(tors_names)
+        print('zma read:', zma)
+        print('thy_save_fs:', thy_save_fs.trunk.path)
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
@@ -127,8 +129,10 @@ def run_conformers(
             print("    New nsamp requested is {:d}.".format(nsamp))
 
             if nsampd > 0:
+                print('zma is newly sampled:')
                 samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
             else:
+                print('conf zma is original zma:',zma)
                 samp_zma = zma
 
             cid = autofile.system.generate_new_conformer_id()
@@ -221,6 +225,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
     if not cnf_run_fs.trunk.exists():
         print("No conformers to save. Skipping...")
     else:
+        #for loc_idx, locs in enumerate(cnf_run_fs.leaf.existing()):
         for locs in cnf_run_fs.leaf.existing():
             cnf_run_path = cnf_run_fs.leaf.path(locs)
             run_fs = autofile.fs.run(cnf_run_path)
@@ -276,6 +281,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                 # print('geom in conformer: \n', automol.geom.string(geom))
                                 # print('ang_atms test:', ang_atms)
                                 conf_ang = automol.geom.central_angle(geom, *ang_atms)
+                                #if loc_idx = 0:
+                                    #angle = conf_ang
                         max_disp = 0.6
                         if 'addition' in rxn_class:
                             max_disp = 0.8
@@ -283,9 +290,11 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                             max_disp = 1.4
 
                         # check if forming bond angle is similar to that in initil configuration
-                        if cent_atm and 'elimination' not in rxn_class:
+                        if cent_atm and angle and 'elimination' not in rxn_class:
+                            print('rxn_class test in conformer selection:', rxn_class)
                             print('angle test in conformer selection:', angle, conf_ang)
-                            if abs(conf_ang - angle) > .44:
+                            #if abs(conf_ang - angle) > 0.44:
+                            if abs(conf_ang - angle) > 0.2:
                                 print(" - Transition State conformer has diverged from original",
                                       "structure of angle {:.3f} with angle {:.3f}".format(
                                           angle, conf_ang))
@@ -300,6 +309,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                                       "structure of dist {:.3f} with dist {:.3f}".format(
                                           dist_len, conf_dist_len))
                                 print("The radical atom now has a new nearest neighbor")
+                                print('geom test:', automol.geom.string(automol.zmatrix.geometry(zma)))
+                                print('ts_bnd2 test:', ts_bnd2)
                                 continue
                             if abs(conf_dist_len - dist_len) > max_disp:
                                 print(" - Transition State conformer has diverged from original",
@@ -401,12 +412,14 @@ def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
     formation site.
     """
     geo = automol.zmatrix.geometry(zma)
+    symbols = automol.zmatrix.symbols(zma)
     atom_closest = True
     for idx, _ in enumerate(geo):
         if idx < idx_rad:
             distance = automol.geom.distance(geo, idx, idx_rad)
             if distance < bond_dist:
-                atom_closest = False
+                if symbols[idx] != 'X':
+                    atom_closest = False
     return atom_closest
 
 def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):
