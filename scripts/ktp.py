@@ -110,7 +110,7 @@ def make_channel_pfs(
         tsname, rxn, species_data, spc_dct, idx_dct, strs, first_ground_ene,
         spc_save_fs, spc_model, pf_levels, multi_info, projrot_script_str,
         pst_params=[1.0, 6],
-        rad_rad_ts='pst'):
+        rad_rad_ts='vtst'):
     """ make the partition function strings for each of the channels
     includes strings for each of the unimolecular wells, bimolecular fragments, and
     transition states connecting them.
@@ -304,28 +304,37 @@ def make_channel_pfs(
             fake_wellp_label = idx_dct[well_dct_key1]
 
         # print inner TS data for radical radical call vtst or vrctst
-        if 'radical radical' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class'] and rad_rad_ts == 'pst':
-            zero_energy = SOMETHING
-            pst_str = moldr.pf.pst_block(
-                spc_dct_i, spc_dct_j, spc_model=spc_model,
-                pf_levels=pf_levels, projrot_script_str=projrot_script_str,
-                spc_save_fs=spc_save_fs,
-                pst_params=pst_params)
-            ts_str += '\n' + mess_io.writer.ts_sadpt(
-                ts_label, reac_label, prod_label, pst_str, zero_energy)
         
-        elif 'radical radical' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class']:
+        if 'radical radical' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class']:
             ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
             if 'P' in reac_label:
                 spc_ene = reac_ene - first_ground_ene
                 spc_zpe = spc_dct[rxn['reacs'][0]]['zpe'] + spc_dct[rxn['reacs'][1]]['zpe']
+                ncons = spc_dct[rxn['reacs'][0]]['ncons'] + spc_dct[rxn['reacs'][1]]['ncons']
+                spc_dct_i = spc_dct[rxn['reacs'][0]]
+                spc_dct_j = spc_dct[rxn['reacs'][1]]
             else:
                 spc_ene = prod_ene - first_ground_ene
                 spc_zpe = spc_dct[rxn['prods'][0]]['zpe'] + spc_dct[rxn['prods'][1]]['zpe']
-            ts_str += '\n' + moldr.pf.vtst_with_no_saddle_block(
-                spc_dct[tsname], ts_label, fake_wellr_label, fake_wellp_label, spc_ene, spc_zpe, projrot_script_str,
-                multi_info, elec_levels=[[0., 1]], sym_factor=1.
-                )
+                ncons = spc_dct[rxn['prods'][0]]['ncons'] + spc_dct[rxn['prods'][1]]['ncons']
+                spc_dct_i = spc_dct[rxn['prods'][0]]
+                spc_dct_j = spc_dct[rxn['prods'][1]]
+            if rad_rad_ts == 'pst':
+                zero_energy = spc_ene
+                pst_str = moldr.pf.pst_block(
+                    spc_dct_i, spc_dct_j, spc_model=spc_model,
+                    pf_levels=pf_levels, projrot_script_str=projrot_script_str,
+                    spc_save_fs=spc_save_fs,
+                    pst_params=pst_params)
+                ts_str += '\n' + mess_io.writer.ts_sadpt(
+                    ts_label, reac_label, prod_label, pst_str, zero_energy)
+            elif rad_rad_ts == 'vtst':
+                ts_str += '\n' + moldr.pf.vtst_with_no_saddle_block(
+                    spc_dct[tsname], ts_label,
+                    fake_wellr_label, fake_wellp_label, spc_ene, ncons,
+                    projrot_script_str, multi_info, elec_levels=[[0., 1]],
+                    sym_factor=1.
+                    )
         else:
             vdwr_ene = reac_ene - 1.0
             vdwp_ene = prod_ene - 1.0
@@ -347,22 +356,29 @@ def make_channel_pfs(
             if 'P' in reac_label:
                 spc_ene = reac_ene - first_ground_ene
                 spc_zpe = spc_dct[rxn['reacs'][0]]['zpe'] + spc_dct[rxn['reacs'][1]]['zpe']
+                ncons = spc_dct[rxn['reacs'][0]]['ncons'] + spc_dct[rxn['reacs'][1]]['ncons']
+                spc_dct_i = spc_dct[rxn['reacs'][0]]
+                spc_dct_j = spc_dct[rxn['reacs'][1]]
             else:
                 spc_ene = prod_ene - first_ground_ene
                 spc_zpe = spc_dct[rxn['prods'][0]]['zpe'] + spc_dct[rxn['prods'][1]]['zpe']
-            ts_str += '\n' + moldr.pf.vtst_with_no_saddle_block(
-                spc_dct[tsname], ts_label, reac_label, prod_label, spc_ene, spc_zpe, projrot_script_str,
-                multi_info, elec_levels=[[0., 1]], sym_factor=1.
-                )
-    elif 'radical radical' in spc_dct[tsname]['class'] and 'addition' in spc_dct[tsname]['class'] and 'high spin' not in spc_dct[tsname]['class'] and rad_rad_ts == 'pst':
-            zero_energy = SOMETHING
-            pst_str = moldr.pf.pst_block(
-                spc_dct_i, spc_dct_j, spc_model=spc_model,
-                pf_levels=pf_levels, projrot_script_str=projrot_script_str,
-                spc_save_fs=spc_save_fs,
-                pst_params=pst_params)
-            ts_str += '\n' + mess_io.writer.ts_sadpt(
-                ts_label, reac_label, prod_label, pst_str, zero_energy)
+                ncons = spc_dct[rxn['prods'][0]]['ncons'] + spc_dct[rxn['prods'][1]]['ncons']
+                spc_dct_i = spc_dct[rxn['prods'][0]]
+                spc_dct_j = spc_dct[rxn['prods'][1]]
+            if rad_rad_ts == 'pst':
+                zero_energy = spc_ene
+                pst_str = moldr.pf.pst_block(
+                    spc_dct_i, spc_dct_j, spc_model=spc_model,
+                    pf_levels=pf_levels, projrot_script_str=projrot_script_str,
+                    spc_save_fs=spc_save_fs,
+                    pst_params=pst_params)
+                ts_str += '\n' + mess_io.writer.ts_sadpt(
+                    ts_label, reac_label, prod_label, pst_str, zero_energy)
+            elif rad_rad_ts == 'vtst':
+                ts_str += '\n' + moldr.pf.vtst_with_no_saddle_block(
+                    spc_dct[tsname], ts_label, reac_label, prod_label, spc_ene, ncons, projrot_script_str,
+                    multi_info, elec_levels=[[0., 1]], sym_factor=1.
+                    )
     else:
         ts_reac_barr = ts_ene - reac_ene
         ts_prod_barr = ts_ene - prod_ene

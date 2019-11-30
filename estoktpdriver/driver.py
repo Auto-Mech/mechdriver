@@ -742,6 +742,7 @@ if PARAMS.RUN_RATES:
                     # run ktp for a given PES
                     # import sys
                     # sys.exit()
+                    print('RAD_RAD_TS test:', PARAMS.RAD_RAD_TS)
                     ktpdriver.driver.run(
                         PARAMS.TSK_INFO_LST, ES_DCT, SPC_DCT, RCT_NAMES_LST, PRD_NAMES_LST,
                         PARAMS.RUN_PREFIX, PARAMS.SAVE_PREFIX,
@@ -753,5 +754,5 @@ if PARAMS.RUN_RATES:
                         #'/lcrc/project/PACC/elliott/runhr', '/lcrc/project/PACC/elliott/savehr', options=OPTIONS)
 
 # f. Partition function parameters determined internally
- TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
+# TORS_MODEL can take values: 'RIGID', '1DHR', or 'TAU' and eventually 'MDHR'
 # VIB_MODEL can take values: 'HARM', or 'VPT2' values.

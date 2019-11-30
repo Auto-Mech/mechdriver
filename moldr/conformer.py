@@ -27,6 +27,8 @@ def conformer_sampling(
         geo = thy_save_fs.trunk.file.geometry.read()
         zma = thy_save_fs.trunk.file.zmatrix.read()
         coo_names.append(tors_names)
+        print('zma read:', zma)
+        print('thy_save_fs:', thy_save_fs.trunk.path)
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
@@ -127,8 +129,10 @@ def run_conformers(
             print("    New nsamp requested is {:d}.".format(nsamp))
 
             if nsampd > 0:
+                print('zma is newly sampled:')
                 samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
             else:
+                print('conf zma is original zma:',zma)
                 samp_zma = zma
 
             cid = autofile.system.generate_new_conformer_id()
@@ -289,7 +293,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False, dist_info=[], rxn_cla
                         if cent_atm and angle and 'elimination' not in rxn_class:
                             print('rxn_class test in conformer selection:', rxn_class)
                             print('angle test in conformer selection:', angle, conf_ang)
-                            if abs(conf_ang - angle) > .44:
+                            #if abs(conf_ang - angle) > 0.44:
+                            if abs(conf_ang - angle) > 0.2:
                                 print(" - Transition State conformer has diverged from original",
                                       "structure of angle {:.3f} with angle {:.3f}".format(
                                           angle, conf_ang))

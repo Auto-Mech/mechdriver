@@ -131,7 +131,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
             spc_save_fs.leaf.create(spc_info)
             spc_save_path = spc_save_fs.leaf.path(spc_info)
 
-            zpe, zpe_str = scripts.thermo.get_zpe(
+            zpe, zpe_str, ncons = scripts.thermo.get_zpe(
                 spc, spcdct[spc], spc_save_path, pf_levels, spc_model)
             spc_str = scripts.thermo.get_spc_input(
                 spc, spcdct[spc], spc_info, spc_save_path, pf_levels, spc_model)
@@ -139,6 +139,7 @@ def run(tsk_info_lst, es_dct, spcdct, spc_queue, ref, run_prefix, save_prefix, e
             spcdct[spc]['spc_info'] = spc_info
             spcdct[spc]['spc_save_path'] = spc_save_path
             spcdct[spc]['zpe'] = zpe
+            spcdct[spc]['ncons'] = ncons
             spcdct[spc]['zpe_str'] = zpe_str
             spcdct[spc]['spc_str'] = spc_str
             spcdct[spc]['ene'] = 0

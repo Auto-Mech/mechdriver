@@ -125,6 +125,7 @@ def run_qchem_par(prog, method, saddle=False):
                 'memory': 5,
                 'corr_options': ['shift=0.2', 'ipea=0.25'],
                 'mol_options': ['nosym'],
+                'job_options': ['numerical'],
                 'feedback': True,
                 'errors': [
                     elstruct.Error.OPT_NOCONV

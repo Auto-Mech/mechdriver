@@ -67,9 +67,6 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                     if not rxn_class:
                         print('skipping reaction because type =', rxn_class)
                         continue
-                    elif rad_rad_ts == 'pst':
-                        print('skipping reaction because we are using PST')
-                        continue
                     #elif 'radical radical' in rxn_class and not 'high spin' in rxn_class:
                         #print('skipping reaction because type =', rxn_class)
                        # continue
@@ -85,7 +82,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
                             run_prefix, save_prefix, rxn_run_path,
                             rxn_save_path, overwrite,
                             pst_params=pst_params,
-                            rad_rad_ts=rad_rad)
+                            rad_rad_ts=rad_rad_ts)
                         spc_dct[ts]['dist_info'][1] = final_dist
                         angle = None
                         dist_name = dist_info[0]
@@ -135,7 +132,7 @@ def run(tsk_info_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix,
 
         #Loop over all species
         for spc in spc_queue:
-            if 'ts_' in spc and rad_rad_ts != 'pst':
+            if 'ts_' in spc: 
                 print('\nTask {} \t {}//{} \t Species {}'.format(
                     tsk, '/'.join(thy_info), '/'.join(ini_thy_info), spc))
                 spc_run_fs, spc_save_fs, spc_run_path, spc_save_path = spc_dct[spc]['rxn_fs']

@@ -580,7 +580,8 @@ def infinite_separation_energy(
     # file system for low spin multireference calculation
 
     multi_info[0] = 'molpro2015'
-    multi_info[1] = 'caspt2'
+    #multi_info[1] = 'caspt2'
+    #multi_info[1] = 'caspt2i'
     # ultimately the above should be properly passed
     prog = multi_info[0]
     method = multi_info[1]

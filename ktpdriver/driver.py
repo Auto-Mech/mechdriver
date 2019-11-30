@@ -151,7 +151,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         #Run ESDriver
         if runes:
             ts_found = esdriver.driver.run(
-                ts_tsk_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix, vdw_params)
+                ts_tsk_lst, es_dct, rxn_lst, spc_dct, run_prefix, save_prefix, vdw_params, rad_rad_ts=rad_rad_ts)
             # print('ts_found test:', ts_found)
 
     if runrates:
@@ -271,9 +271,10 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                 spc_save_path = spc_save_fs.leaf.path(spc_info)
                 saddle = False
                 save_path = save_prefix
-            zpe, _ = scripts.thermo.get_zpe(
+            zpe, _, ncons = scripts.thermo.get_zpe(
                 spc, spc_dct[spc], spc_save_path, pf_levels, ts_model)
             spc_dct[spc]['zpe'] = zpe
+            spc_dct[spc]['ncons'] = ncons
             ene_strl = []
             ene_lvl = ''
             ene_lvl_ref = ''
@@ -305,8 +306,9 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         rct_ichs = spc_dct[tsname_0]['rxn_ichs'][0]
         header_str, energy_trans_str = scripts.ktp.pf_headers(
             rct_ichs, TEMPS, PRESS, *etrans)
-        multi_info = ['molpro2015', 'caspt2', 'cc-pVDZ', 'RR']
+        #multi_info = ['molpro2015', 'caspt2', 'cc-pVDZ', 'RR']
         #multi_info = ['molpro2015', 'caspt2', 'cc-pVTZ', 'RR']
+        multi_info = ['molpro2015', 'caspt2i', 'cc-pVTZ', 'RR']
 
         mess_strs = ['', '', '']
         idx_dct = {}
@@ -374,8 +376,8 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
                             for spc in name_j.split('+'):
                                 ene -= scripts.thermo.spc_energy(
                                     spc_dct[spc]['ene'], spc_dct[spc]['zpe'])
-                            #if ene:
-                            if ene > 0.:
+                            if ene:
+                            #if ene > 0.:
                                 reaction = name_i + '=' + name_j
 
                                 # Read the rate constants out of the mess outputs
