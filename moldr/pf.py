@@ -20,6 +20,8 @@ def species_block(
     """ prepare the species input for messpf
     """
 
+    print('entering species block for species:', spc)
+    print('model test:', spc_model)
     har_level, tors_level, vpt2_level, sym_level = pf_levels
     tors_model, vib_model, sym_model = spc_model
 
@@ -63,25 +65,30 @@ def species_block(
 
     # Set boolean to account for a radical radical reaction (not supported by vtst)
     rad_rad_ts = False
+    rad_rad_ts_ls = False
     if 'ts_' in spc:
         if spc_dct_i['rad_rad']:
             rad_rad_ts = True
+            if 'high spin' not in spc_dct_i['class']:
+                rad_rad_ts_ls = True
+        print('spc_dct_i test:', spc_dct_i)
+        print(spc_dct_i['class'])
 
-    if tors_level and not rad_rad_ts:
-        orb_restr = moldr.util.orbital_restriction(
-            spc_info, tors_level)
-        tors_levelp = tors_level[0:3]
-        tors_levelp.append(orb_restr)
+    if tors_level and not rad_rad_ts_ls:
+            orb_restr = moldr.util.orbital_restriction(
+                spc_info, tors_level)
+            tors_levelp = tors_level[0:3]
+            tors_levelp.append(orb_restr)
 
-        tors_save_path = thy_save_fs.leaf.path(tors_levelp[1:4])
-        if 'ts_' in spc:
-            tors_save_fs = autofile.fs.ts(tors_save_path)
-            tors_save_fs.trunk.create()
-            tors_save_path = tors_save_fs.trunk.path()
-        tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
-        tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs)
-        if tors_min_cnf_locs:
-            tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
+            tors_save_path = thy_save_fs.leaf.path(tors_levelp[1:4])
+            if 'ts_' in spc:
+                tors_save_fs = autofile.fs.ts(tors_save_path)
+                tors_save_fs.trunk.create()
+                tors_save_path = tors_save_fs.trunk.path()
+            tors_cnf_save_fs = autofile.fs.conformer(tors_save_path)
+            tors_min_cnf_locs = moldr.util.min_energy_conformer_locators(tors_cnf_save_fs)
+            if tors_min_cnf_locs:
+                tors_cnf_save_path = tors_cnf_save_fs.leaf.path(tors_min_cnf_locs)
 
     if vpt2_level:
         orb_restr = moldr.util.orbital_restriction(
@@ -106,7 +113,7 @@ def species_block(
     if 'elec_levs' in spc_dct_i:
         elec_levels = spc_dct_i['elec_levs']
 
-    sym_factor = 1.
+    sym_factor = 0.5
     form_coords = []
     if saddle:
         frm_bnd_key = spc_dct_i['frm_bnd_key']
@@ -139,7 +146,7 @@ def species_block(
 
     imag_freq = 0.
 
-    if (vib_model == 'HARM' and tors_model == 'RIGID') or rad_rad_ts:
+    if (vib_model == 'HARM' and tors_model == 'RIGID') or rad_rad_ts_ls:
         if har_min_cnf_locs is not None:
             har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
             min_ene = har_cnf_save_fs.leaf.file.energy.read(har_min_cnf_locs)
@@ -186,8 +193,8 @@ def species_block(
                 freqs = elstruct.util.harmonic_frequencies(har_geo, hess, project=False)
                 hind_rot_str = ""
                 proj_rotors_str = ""
-                # print('for species:', spc)
-                #print('tors_min_cnf_locs test:', tors_min_cnf_locs)
+                print('for species:', spc)
+                print('tors_min_cnf_locs test:', tors_min_cnf_locs)
 
                 if tors_min_cnf_locs is not None:
                     if tors_cnf_save_fs.trunk.file.info.exists():
@@ -1792,11 +1799,14 @@ def get_zero_point_energy(
     
     # Set boolean to account for a radical radical reaction (not supported by vtst)
     rad_rad_ts = False
+    rad_rad_ts_ls = False
     if 'ts_' in spc:
         if spc_dct_i['rad_rad']:
             rad_rad_ts = True
+            if 'high spin' not in spc_dct_i['class']:
+                rad_rad_ts_ls = True
 
-    if tors_level and not rad_rad_ts:
+    if tors_level and not rad_rad_ts_ls:
         orb_restr = moldr.util.orbital_restriction(
             spc_info, tors_level)
         tors_levelp = tors_level[0:3]
@@ -1870,7 +1880,7 @@ def get_zero_point_energy(
 
     print('vib_model in zpe:', vib_model)
     print('tors_model in zpe:', tors_model)
-    if (vib_model == 'HARM' and tors_model == 'RIGID') or rad_rad_ts:
+    if (vib_model == 'HARM' and tors_model == 'RIGID') or rad_rad_ts_ls:
         ret = har_zpe
 
     elif vib_model == 'HARM' and tors_model == '1DHR':

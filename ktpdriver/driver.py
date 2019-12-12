@@ -309,6 +309,7 @@ def run(tsk_info_lst, es_dct, spc_dct, rct_names_lst, prd_names_lst,
         #multi_info = ['molpro2015', 'caspt2', 'cc-pVDZ', 'RR']
         #multi_info = ['molpro2015', 'caspt2', 'cc-pVTZ', 'RR']
         multi_info = ['molpro2015', 'caspt2i', 'cc-pVTZ', 'RR']
+        #multi_info = ['molpro2015', 'caspt2i', 'cc-pVDZ', 'RR']
 
         mess_strs = ['', '', '']
         idx_dct = {}
