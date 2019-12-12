@@ -1044,6 +1044,7 @@ def find_ts(
         low_spin = ('low spin' in typ)
         if rad_rad and low_spin and 'elimination' not in ts_dct['class']:
             # run mep scan
+            #multi_info = ['molpro2015', 'caspt2i', 'cc-pvdz', 'RR']
             multi_info = ['molpro2015', 'caspt2i', 'cc-pvtz', 'RR']
             #multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
             #multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
