@@ -1,9 +1,0 @@
-! tors model: RIGID
-! vib model: HARM
-! har level: RUb3lyp/cc-pvdz
-! ref level for energy: RUb3lyp/cc-pvdz
-! energy level: b3lyp/cc-pvdz
-methanol                H  4 C  1 O  1 N  0 G    200.0    3000.0   1000.0      1
- 1.78788718E+00 1.48520992E-02-6.95437090E-06 1.59410227E-09-1.44905308E-13    2
--2.79846237E+04 1.40606575E+01 4.95260106E+00-1.01319597E-02 5.58743856E-05    3
--6.31341741E-08 2.35739596E-11-2.81619308E+04 1.41564510E+00                   4

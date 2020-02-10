@@ -1,9 +1,0 @@
-! tors model: RIGID
-! vib model: HARM
-! har level: RUb3lyp/cc-pvdz
-! ref level for energy: RUb3lyp/cc-pvdz
-! energy level: b3lyp/cc-pvdz
-ethane                  H  6 C  2 O  0 N  0 G    200.0    3000.0   1000.0      1
- 2.56060511E-01 2.34911819E-02-1.12774370E-05 2.63397847E-09-2.42857922E-13    2
--1.11016591E+04 2.09467850E+01 4.69964709E+00-1.06787634E-02 7.42683881E-05    3
--8.57010110E-08 3.22726653E-11-1.13949053E+04 2.96472485E+00                   4

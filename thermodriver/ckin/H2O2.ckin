@@ -1,9 +1,0 @@
-! tors model: RIGID
-! vib model: HARM
-! har level: RUb3lyp/cc-pvdz
-! ref level for energy: RUb3lyp/cc-pvdz
-! energy level: b3lyp/cc-pvdz
-prod1                   H  2 C  0 O  2 N  0 G    200.0    3000.0   1000.0      1
- 4.28859570E+00 4.74939464E-03-1.74104830E-06 3.07078074E-10-2.10113633E-14    2
--2.47705613E+04 2.18089670E+00 4.06613365E+00 1.08809154E-03 1.34522243E-05    3
--1.87479566E-08 7.72451589E-12-2.45672186E+04 4.19757331E+00                   4
