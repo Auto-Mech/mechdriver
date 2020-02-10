@@ -4,7 +4,13 @@ disable=
     too-many-arguments,
     too-many-locals,
     too-many-statements,
+    too-many-branches,
+    too-many-nested-blocks,
     superfluous-parens,
     deprecated-method,
     duplicate-code,
-    no-member
+    no-member,
+    eval-used,
+    bare-except
+[FORMAT]
+    max-line-length=90
