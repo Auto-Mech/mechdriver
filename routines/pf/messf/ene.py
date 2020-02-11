@@ -26,7 +26,7 @@ def get_zpe_str(spc_dct, zpe):
         zero_energy_str = 'End'
     else:
         zero_energy_str = ' ZeroEnergy[kcal/mol] ' + str(zpe)
-        zero_energy_str += 'End'
+        zero_energy_str += '\nEnd'
 
     return zero_energy_str
 
@@ -171,6 +171,8 @@ def get_high_level_energy(
     thy_low_level.append(orb_restr)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
+    print('thy_low_level')
+    print(thy_low_level)
     ll_save_path = ll_save_fs.leaf.path(thy_low_level)
 
     if os.path.exists(ll_save_path):

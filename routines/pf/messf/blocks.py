@@ -98,6 +98,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
         # Write the MESS string for an atom
         spc_str = mess_io.writer.atom(
             mass, elec_levels)
+        dat_str_dct = {}
     else:
         if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts:
             geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
@@ -120,7 +121,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             for num in sym_nums:
                 symf /= num
         elif vib_model == 'harm' and tors_model == 'mdhr':
-            geo, freqs, imag, hr_str, _ = pfmodels.vib_harm_tors_mdhr(
+            geo, freqs, imag, core_hr_str, _, mdhr_dat_str = pfmodels.vib_harm_tors_mdhr(
                 harm_min_cnf_locs, harm_cnf_save_fs,
                 tors_min_cnf_locs, tors_cnf_save_fs,
                 tors_save_path, tors_cnf_save_path,
@@ -136,7 +137,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             for num in sym_nums:
                 symf /= num
             mdhr_str = mess_io.writer.mol_data.core_multirotor(
-                geo, sym_factor, mdhr_dat_file_name, hr_str,
+                geo, sym_factor, mdhr_dat_file_name, core_hr_str,
                 interp_emax=100, quant_lvl_emax=9)  # , forceq=False)
         elif vib_model == 'harm' and tors_model == 'tau':
             _, _, _, _, _, _, mc_str, tau_dat_str = pfmodels.vib_harm_tors_tau(
@@ -175,6 +176,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
         else:
             if tors_model == 'mdhr':
                 core = mdhr_str
+                hr_str = ''
             else:
                 core = mess_io.writer.core_rigidrotor(geo, symf)
             spc_str = mess_io.writer.molecule(

@@ -19,17 +19,17 @@ from routines.pf.messf import calc_channel_enes
 
 
 # Writer
-def rate_headers(
-        rct_ichs, temps, press, exp_factor, exp_power, exp_cutoff, eps1, eps2,
-        sig1, sig2, mass1):
+def rate_headers(spc_dct, rxn_lst,
+                 temps, press,
+                 exp_factor, exp_power, exp_cutoff,
+                 eps1, eps2, sig1, sig2, mass1):
     """ makes the standard header and energy transfer sections for MESS input file
     """
     # Header section
     header_str = mess_io.writer.global_reaction(temps, press)
-    print(header_str)
     tot_mass = 0.
-    for rct_ich in rct_ichs:
-        geo = automol.convert.inchi.geometry(rct_ich)
+    for rct in rxn_lst[0]['reacs']:
+        geo = automol.convert.inchi.geometry(spc_dct[rct]['ich'])
         masses = automol.geom.masses(geo)
         for mass in masses:
             tot_mass += mass
@@ -89,11 +89,8 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
             first_ground_ene, channel_enes,
             model_dct, thy_dct, multi_info,
             pst_params=pst_params)
-    well_str, bim_str, ts_str, dat_str_dct = mess_strs
+    well_str, bim_str, ts_str = mess_strs
     ts_str += '\nEnd\n'
-    print(well_str)
-    print(bim_str)
-    print(ts_str)
 
     return well_str, bim_str, ts_str, dat_str_lst
 
@@ -123,6 +120,8 @@ def make_all_species_data(rxn_lst, spc_dct, model_dct, thy_dct, save_prefix):
                     pf_model, pf_levels)
                 species[name] = species_data
                 dat_str_lst.append(dat_str_dct)
+        print(tsname)
+        print(spc_dct[tsname])
         if 'radical radical addition' not in spc_dct[tsname]['class']:
             ret1, ret2, ret3 = make_species_data(
                 tsname, spc_dct[tsname], save_prefix,

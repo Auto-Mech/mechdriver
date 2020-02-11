@@ -1,8 +1,8 @@
 """ driver for rate constant evaluations
 """
 
-from routines.pf.fit import fit_rates
-from routines.pf import rates as messrates
+from routines.pf.rates.fit import fit_rates
+from routines.pf.rates import rates as messrates
 from lib.runner import rates as raterunner
 from lib import printmsg
 
@@ -38,11 +38,11 @@ def run(pes_formula,
         ene_coeff = model_dct[test_model]['options']['ene_coeff']
 
         # Getting some other info to pass
-        rct_ichs = spc_dct['ts_0']['rxn_ichs'][0]
+        # rct_ichs = spc_dct['ts_0']['rxn_ichs'][0]
 
         # Write the strings for the MESS input file
         header_str, energy_trans_str = messrates.rate_headers(
-            rct_ichs, temps, pressures, **etrans)
+            spc_dct, rxn_lst, temps, pressures, **etrans)
 
         # Write the MESS strings for all the PES channels
         print('Starting mess file preparation.')
