@@ -174,10 +174,6 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
             # frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
 
             # Set torsional stuff
-            # tors_names = tors.get_tors_names(
-            #     spc_dct_i, tors_cnf_save_fs, saddle=saddle)
-            # tors_grids = tors.get_tors_grids(
-            #     spc_dct_i, zma, tors_names, frm_bnd_key, brk_bnd_key)
             tors_sym_nums = tors.get_tors_sym_nums(
                 spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
                 frm_bnd_key, brk_bnd_key, saddle=False)
@@ -189,7 +185,7 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 ts_bnd = automol.zmatrix.bond_idxs(zma, dist_name)
 
             # Write strings containing rotor info for MESS and ProjRot
-            hind_rot_str, proj_rotors_str = tors.write_mdhr_tors_mess_strings(
+            hind_rot_str, proj_rotors_str, mdhr_dat_str = tors.write_mdhr_tors_mess_strings(
                 harm_geo, spc_info, 1.0, spc_dct_i, ts_bnd, zma,
                 tors_name_grps, tors_grid_grps, tors_sym_nums,
                 tors_cnf_save_path, min_ene,
@@ -226,7 +222,7 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
         tors_geo, freqs, imag_freq, hind_rot_str = (), (), 0.0, ''
         raise ValueError
 
-    return tors_geo, freqs, imag_freq, hind_rot_str, zpe
+    return tors_geo, freqs, imag_freq, hind_rot_str, zpe, mdhr_dat_str
 
 
 def vib_harm_tors_tau(harm_min_cnf_locs, harm_cnf_save_fs,

@@ -23,8 +23,8 @@ def get_pf_input(spc, spc_str, global_pf_str, zpe_str):
     print('pf string test:', global_pf_str, spc_head_str, spc_str, zpe_str)
     pf_inp_str = '\n'.join(
         [global_pf_str, spc_head_str,
-         spc_str, '\n'])
-    #     spc_str, zpe_str, '\n'])
+    #     spc_str, '\n'])
+         spc_str, zpe_str, '\n'])
     return pf_inp_str
 
 

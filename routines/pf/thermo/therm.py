@@ -4,7 +4,7 @@
 
 import automol.inchi
 import automol.geom
-import thermo
+from routines.pf.thermo import heatform
 from lib.phydat import phycon
 
 
@@ -23,7 +23,7 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
 
     # Determine the function to be used to get the thermochemistry ref species
     if ref_scheme in REF_CALLS:
-        get_ref_fxn = getattr(thermo.heatform, REF_CALLS[ref_scheme])
+        get_ref_fxn = getattr(heatform, REF_CALLS[ref_scheme])
     else:
         raise NotImplementedError
 
@@ -37,18 +37,19 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
         # Determine basis set for each spc using the specified therm scheme
         spc_basis, coeff_basis = get_ref_fxn(spc_ich)
         print('spc_basis', spc_basis)
-        msg += 'Species {} with basis {}\n'.format(spc_ich, ', '.join(spc_basis))
-    
+        msg += 'Species {} with basis {}\n'.format(
+            spc_ich, ', '.join(spc_basis))
+
         # Add to the dct containing info on the species basis
         basis_dct[spc_name] = (spc_basis, coeff_basis)
-    
+
         # Add to the dct with reference dct if it is not in the spc dct
         cnt = 1
         for ref in spc_basis:
             print('ref', ref)
             if ref not in spc_ichs:
                 print('spc_ichs', spc_ichs)
-                msg += 'Adding reference species ref_{} to ref_dct\n'.format(ref)
+                msg += 'Adding reference species ref_{} to dct\n'.format(ref)
                 ref_name = 'REF_{}'.format(cnt)
                 unique_refs_dct[ref_name] = create_spec(ref)
 
@@ -105,6 +106,6 @@ def get_hf0k(spc, spc_dct, spc_bas, coeff, ref_set='ANL0'):
 
     # Get the 0 K heat of formation
     # ref_set should be a parameter for this routine
-    h0form = thermo.heatform.calc_hform_0k(
+    h0form = heatform.calc_hform_0k(
         spc_ene, h_basis, spc_bas, coeff, ref_set=ref_set)
     return h0form

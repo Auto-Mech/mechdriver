@@ -37,7 +37,7 @@ def run(spc_dct,
     spc_queue = loadmech.build_spc_queue(rxn_lst)
 
     # Determine information about the basis species used in thermochem calcs
-    basis_dct, unique_basis_dct, msg = routines.pf.therm.prepare_refs(
+    basis_dct, unique_basis_dct, msg = routines.pf.thermo.therm.prepare_refs(
         ref_scheme, spc_dct, spc_queue)
 
     # Print the info message
@@ -76,12 +76,14 @@ def run(spc_dct,
             print(spc_save_path)
 
             # Read the ZPVE from the filesystem
-            zpe = routines.pf.get_zero_point_energy(
+            zpe = routines.pf.messf.get_zero_point_energy(
                 spc, spc_dct[spc_name], pf_levels, pf_model,
                 save_prefix=spc_save_path)
-            print('therm ene test')
-            zpe_str = routines.pf.get_zpe_str(
+            zpe_str = routines.pf.messf.get_zpe_str(
                 spc_dct[spc_name], zpe)
+            print('therm ene test')
+            print(zpe)
+            print(zpe_str)
 
             # Generate the partition function
             spc_str, data_str_dct, _ = routines.pf.messf.blocks.species_block(
