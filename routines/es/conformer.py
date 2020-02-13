@@ -132,8 +132,6 @@ def run_conformers(
     vma = automol.zmatrix.var_(zma)
     if cnf_save_fs.trunk.file.vmatrix.exists():
         existing_vma = cnf_save_fs.trunk.file.vmatrix.read()
-        print(existing_vma)
-        print(vma)
         assert vma == existing_vma
     cnf_save_fs.trunk.file.vmatrix.write(vma)
     idx = 0
@@ -268,7 +266,6 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
                 else:
                     if saddle:
                         zma = elstruct.reader.opt_zmatrix(prog, out_str)
-                        print('zma conformer:\n', automol.zmatrix.string(zma))
                         dist_name = dist_info[0]
                         dist_len = dist_info[1]
                         ts_bnd = automol.zmatrix.bond_idxs(zma, dist_name)
@@ -278,7 +275,6 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
                         brk_name = dist_info[3]
                         cent_atm = None
                         ldist = len(dist_info)
-                        print('ldist test:', ldist, dist_info)
                         if dist_name and brk_name and ldist > 4:
                             angle = dist_info[4]
                             brk_bnd = automol.zmatrix.bond_idxs(zma, brk_name)
@@ -303,8 +299,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
 
                         # check forming bond angle similar to ini config
                         if cent_atm and 'elimination' not in rxn_class:
-                            print('angle test in conformer selection:',
-                                  angle, conf_ang)
+                            # print('angle test in conformer selection:',
+                            #       angle, conf_ang)
                             if abs(conf_ang - angle) > .44:
                                 print(" - Transition State conformer has",
                                       "diverged from original structure of",
@@ -369,12 +365,12 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
                                 elif symbols[ts_bnd1] == 'O':
                                     equi_bnd = 1.3 * phycon.ANG2BOHR
                             displace_from_equi = conf_dist_len - equi_bnd
-                            print('distance_from_equi test:',
-                                  conf_dist_len, equi_bnd, dist_len)
-                            print('bnd atoms:', ts_bnd1, ts_bnd2,
-                                  symbols[ts_bnd1], symbols[ts_bnd2])
-                            print('symbols:', symbols[ts_bnd1],
-                                  symbols[ts_bnd2])
+                            # print('distance_from_equi test:',
+                            #       conf_dist_len, equi_bnd, dist_len)
+                            # print('bnd atoms:', ts_bnd1, ts_bnd2,
+                            #       symbols[ts_bnd1], symbols[ts_bnd2])
+                            # print('symbols:', symbols[ts_bnd1],
+                            #       symbols[ts_bnd2])
                             dchk1 = abs(conf_dist_len - dist_len) > 0.2
                             dchk2 = displace_from_equi < 0.2
                             if dchk1 and dchk2:
@@ -486,7 +482,6 @@ def int_sym_num_from_sampling(
     # Note: ignoring for saddle points the possibility that two configurations
     # differ only in their torsional values.
     # As a result, the symmetry factor is a lower bound of the true value
-    print('geom: \n', automol.geom.string(geo))
     if automol.geom.is_atom(geo):
         int_sym_num = 1.
     else:
@@ -518,8 +513,6 @@ def int_sym_num_from_sampling(
 
                 int_sym_num = 0
                 for geo_sim_i in geo_sim:
-                    print('geo_conf: \n', automol.geom.string(geo_sim_i))
-                for geo_sim_i in geo_sim:
                     new_geos = automol.geom.rot_permutated_geoms(
                         geo_sim_i, saddle,
                         frm_bnd_key, brk_bnd_key, form_coords)
@@ -537,8 +530,6 @@ def int_sym_num_from_sampling(
                         if new_geom:
                             geo_sim2.append(new_geo)
                             int_sym_num += 1
-                            print('int_sym_num new:', int_sym_num)
-                            print('new_geo: \n', automol.geom.string(new_geo))
     return int_sym_num
 
 
@@ -562,7 +553,6 @@ def symmetry_factor(
     else:
         int_sym = 1
     sym_fac = ext_sym * int_sym
-    print('external/internal test:', ext_sym, int_sym)
     return sym_fac
 
 

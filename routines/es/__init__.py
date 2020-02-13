@@ -121,7 +121,7 @@ def run_tau_samp(filesys, params, opt_kwargs):
     # moldr.tau.run_tau_hessians(**params, **opt_kwargs)
 
 
-def geometry_generation(tsk, spc, mc_nsamp,
+def geometry_generation(tsk, spc_name, spc, mc_nsamp,
                         ini_thy_level, thy_level, ini_filesys, filesys,
                         overwrite, saddle=False, kickoff=(0.1, False),
                         tors_model=('1dhr', False)):
@@ -146,7 +146,7 @@ def geometry_generation(tsk, spc, mc_nsamp,
             spc['dist_info'], overwrite)
 
     if geo:
-        print('Task:', tsk)
+        print('Task:', tsk, spc_name)
         _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
             *thy_level[0:2])
         params = {'spc_info': spc_info,
@@ -181,7 +181,7 @@ def geometry_generation(tsk, spc, mc_nsamp,
             eval(ES_TSKS[tsk])(filesys, params, opt_kwargs)
 
 
-def geometry_analysis(tsk, thy_level, ini_filesys,
+def geometry_analysis(tsk, spc_name, thy_level, ini_filesys,
                       spc, overwrite,
                       saddle=False, selection='min'):
     """ run the specified electronic structure task
@@ -190,7 +190,7 @@ def geometry_analysis(tsk, thy_level, ini_filesys,
     params = {}
     spc_info = finf.get_spc_info(spc)
 
-    print('Task:', tsk)
+    print('Task:', tsk, spc_name)
     if 'conf' in tsk:
         run_dir = ini_filesys[2]
         save_dir = ini_filesys[3]

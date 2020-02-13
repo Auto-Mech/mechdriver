@@ -37,17 +37,14 @@ def run(rxn_lst,
     kickoff = run_options_dct['kickoff']
 
     # Do some extra work to prepare the info to pass to the drivers
-    print('Setting es tasks list...')
     es_tsk_lst = loadrun.build_run_es_tsks_lst(
         es_tsk_str, model_dct, thy_dct)
 
     # Species queue
-    print('rxn_lst\n', rxn_lst)
     spc_queue = loadmech.build_spc_queue(rxn_lst)
 
     # Loop over Tasks
     for tsk_info in es_tsk_lst:
-        print('a tsk info', tsk_info)
 
         # Task and theory information
         [tsk, thy_info, ini_thy_info, overwrite] = tsk_info
@@ -69,11 +66,11 @@ def run(rxn_lst,
                         continue
 
                     # Find the transition state
-                    print('es_dist_info\n', spc_dct[spc]['dist_info'])
                     if 'ts' in tsk:
                         geo, _, _ = routines.es.find.find_ts(
                             spc_dct, spc_dct[spc],
-                            spc_dct[spc]['original_zma'],
+                            spc_dct[spc]['zma'],
+                            # spc_dct[spc]['original_zma'],
                             ini_thy_info, thy_info,
                             run_prefix, save_prefix,
                             overwrite,
@@ -98,9 +95,7 @@ def run(rxn_lst,
         # Loop over all species
         for spc in spc_queue:
 
-            print('spc in es queue', spc)
             spc_name, _ = spc
-            printmsg.tsk_msg(tsk, thy_info, ini_thy_info, spc)
 
             # Build the input and main run filesystem objects
             filesys, thy_level = fpath.set_fs(
@@ -120,15 +115,13 @@ def run(rxn_lst,
             if any(string in tsk for string in ('samp', 'scan', 'geom')):
                 if not vdw:
                     routines.es.geometry_generation(
-                        tsk, spc_dct[spc_name], mc_nsamp,
+                        tsk, spc_name, spc_dct[spc_name], mc_nsamp,
                         ini_thy_level, thy_level, ini_filesys, filesys,
                         overwrite, saddle=saddle, kickoff=kickoff,
                         tors_model=(ndim_tors, freeze_all_tors))
                 else:
                     routines.es.wells.fake_geo_gen(tsk, thy_level, filesys)
             else:
-                print('ini_filesys\n')
-                print(len(ini_filesys))
                 if 'conf' in tsk and not saddle:
                     ini_cnf_save_fs = ini_filesys[3]
                     avail = fcheck.check_save(ini_cnf_save_fs, tsk, 'conf')
@@ -143,6 +136,6 @@ def run(rxn_lst,
                     selection = 'all'
                 if avail:
                     routines.es.geometry_analysis(
-                        tsk, thy_level, ini_filesys,
+                        tsk, spc_name, thy_level, ini_filesys,
                         spc_dct[spc_name], overwrite,
                         saddle=saddle, selection=selection)

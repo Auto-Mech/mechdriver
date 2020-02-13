@@ -171,8 +171,6 @@ def get_high_level_energy(
     thy_low_level.append(orb_restr)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
-    print('thy_low_level')
-    print(thy_low_level)
     ll_save_path = ll_save_fs.leaf.path(thy_low_level)
 
     if os.path.exists(ll_save_path):
@@ -368,7 +366,9 @@ def read_channel_energies(spc_dct, species,
 
 def get_fs_ene_zpe(spc_dct, spc,
                    thy_dct, model_dct, model,
-                   save_prefix, saddle=False):
+                   save_prefix, saddle=False,
+                   ene_coeff=[1.0],
+                   read_ene=True, read_zpe=True):
     """ Get the energy for a species on a channel
     """
 
@@ -396,29 +396,30 @@ def get_fs_ene_zpe(spc_dct, spc,
     # Read the electronic energy and ZPVE
     thy_low_level = finf.get_thy_info(model_dct[model]['es']['geo'], thy_dct)
     thy_high_level = finf.get_thy_info(model_dct[model]['es']['ene'], thy_dct)
-    e_elec = get_high_level_energy(
-        spc_info=spc_info,
-        thy_low_level=thy_low_level,
-        thy_high_level=thy_high_level,
-        save_prefix=save_path,
-        saddle=saddle)
-    if e_elec is not None:
+    e_elec = None
+    e_zpe = None
+    if read_ene:
+        e_elec = get_high_level_energy(
+            spc_info=spc_info,
+            thy_low_level=thy_low_level,
+            thy_high_level=thy_high_level,
+            save_prefix=save_path,
+            saddle=saddle)
+    # if e_elec is not None:
+    if read_zpe:
         e_zpe = get_zero_point_energy(
             spc, spc_dct[spc],
             pf_levels, pf_model,
             save_prefix=spc_save_path)
-    else:
-        e_zpe = None
 
-    # print('ENERGY READ TEST, NEED TO FIX')
-    print('')
-    print(spc)
-    print(model)
-    print(e_elec)
-    print(e_zpe)
-
+    # Return the total energy
     ene = None
-    if e_elec is not None and e_zpe is not None:
-        ene = e_elec + e_zpe
+    if read_ene and read_zpe:
+        if e_elec is not None and e_zpe is not None:
+            ene = e_elec + e_zpe
+    elif read_ene and not read_zpe:
+        ene = e_elec
+    elif read_ene and not read_zpe:
+        ene = e_zpe
 
     return ene

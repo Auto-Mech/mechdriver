@@ -9,12 +9,12 @@ import ratefit
 import chemkin_io
 
 # New libs
-from routines.pf import rates as messrates
+from routines.pf.rates import rates as messrates
 from lib.outpt import chemkin as cout
 from lib.phydat import phycon
 
 
-def fit_rates(spc_dct, pes_formula, idx_dct,
+def fit_rates(spc_dct, pes_formula_str, idx_dct,
               pf_levels, pf_model, ene_coeff,
               mess_path, assess_pdep):
     """ Parse the MESS output and fit the rates to
@@ -22,15 +22,18 @@ def fit_rates(spc_dct, pes_formula, idx_dct,
     """
 
     # pf_levels.append(ene_str)
-    chemkin_header_str = cout.run_ckin_header(pf_levels, pf_model)
-    chemkin_header_str += cout.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
-    chemkin_header_str += '\n'
+    # chemkin_header_str = cout.run_ckin_header(pf_levels, pf_model)
+    # chemkin_header_str += cout.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
+    # chemkin_header_str += '\n'
+    chemkin_header_str = 'HEADER\n'
     chemkin_poly_str = chemkin_header_str
     starting_path = os.getcwd()
     ckin_path = ''.join([starting_path, '/ckin'])
     if not os.path.exists(ckin_path):
         os.mkdir(ckin_path)
-    pes_formula_str = automol.formula.string(pes_formula)
+    # print('pes_formula')
+    # print(pes_formula)
+    # pes_formula_str = automol.formula.string(pes_formula)
     labels = idx_dct.values()
     names = idx_dct.keys()
     err_thresh = 15.
@@ -66,14 +69,15 @@ def perform_fits(spc_dct, name_i, name_j, lab_i, lab_j,
     assess_pdep_temps = [assess_tlow, assess_thigh]
 
     # Run
-    ene = 0.0
-    for spc in name_i.split('+'):
-        ene += (spc_dct[spc]['ene'] +
-                spc_dct[spc]['zpe'] / phycon.EH2KCAL)
-    for spc in name_j.split('+'):
-        ene -= (spc_dct[spc]['ene'] +
-                spc_dct[spc]['zpe'] / phycon.EH2KCAL)
-    if ene:
+    # ene = 0.0
+    # for spc in name_i.split('+'):
+    #     ene += (spc_dct[spc]['ene'] +
+    #             spc_dct[spc]['zpe'] / phycon.EH2KCAL)
+    # for spc in name_j.split('+'):
+    #     ene -= (spc_dct[spc]['ene'] +
+    #             spc_dct[spc]['zpe'] / phycon.EH2KCAL)
+    # if ene:
+    if True:
         reaction = name_i + '=' + name_j
 
         # Read the rate constants out of the mess outputs
@@ -231,11 +235,11 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
 
         # Calculate fitted rate constants, based on fit type
         if fit_type == 'single':
-            fit_ks = ratefit.fxns.single_arrhenius(
+            fit_ks = ratefit.calc.single_arrhenius(
                 params[0], params[1], params[2],
                 t_ref, temps)
         elif fit_type == 'double':
-            fit_ks = ratefit.fxns.double_arrhenius(
+            fit_ks = ratefit.calc.double_arrhenius(
                 params[0], params[1], params[2],
                 params[3], params[4], params[5],
                 t_ref, temps)
@@ -250,7 +254,7 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
         #     pressure = premap
         # calc_ks = valid_calc_tk_dct[pressure][1]
         calc_ks = ktp_dct[pressure][1]
-        mean_avg_err, max_avg_err = ratefit.err.calc_sse_and_mae(
+        mean_avg_err, max_avg_err = ratefit.calc.fitting_errors(
             calc_ks, fit_ks)
 
         # Store in a dictionary
