@@ -266,4 +266,10 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
 def troe_fit(ktp_dct, mess_path):
     """ Fit rate constants to Troe parameters
     """
+
+    # Invert the ktp dct to have temp be the idxs
+    inv_ktp_dct = ratefit.calc.util.flip_ktp_dct(ktp_dct)
+
+    # Calculate the fitting parameters from the filtered T,k lists
+    for pressure, tk_arr in ktp_dct.items():
     return troe_fits
