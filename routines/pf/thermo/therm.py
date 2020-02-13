@@ -4,6 +4,7 @@
 
 import automol.inchi
 import automol.geom
+from routines.pf.messf.ene import get_fs_ene_zpe
 from routines.pf.thermo import heatform
 from lib.phydat import phycon
 
@@ -77,30 +78,29 @@ def is_scheme(scheme):
 
 
 # FUNCTIONS TO CALCULATE ENERGIES FOR THERMOCHEMICAL PARAMETERS #
-def basis_energy(spc_bas, spc_dct):
+def basis_energy(spc_bas, spc_dct,
+                 thy_dct, model_dct, model, save_prefix,
+                 ene_coeff=(1.0)):
     """ Return the electronic + zero point energies for a set of species.
     """
     h_basis = []
     for ich in spc_bas:
-        for key in spc_dct:
-            if ich == spc_dct[key]['ich']:
-                ene = spc_dct[key]['ene'] + spc_dct[key]['zpe']/phycon.EH2KCAL
-                h_basis.append(ene)
+        for name in spc_dct:
+            print(ich, '\n', name, '\n', spc_dct[name]['ich'], '\n')
+            if ich == spc_dct[name]['ich']:
+                print('yay')
+                h_basis.append(
+                    get_fs_ene_zpe(
+                        spc_dct, name,
+                        thy_dct, model_dct, model,
+                        save_prefix, saddle=False,
+                        ene_coeff=ene_coeff,
+                        read_ene=True, read_zpe=True))
                 break
+    ene_cnt = 0
+    for x in h_basis:
+        if x is not None:
+            ene_cnt += 1
+    if ene_cnt != h_basis:
+        print('not all energies found for the basis species')
     return h_basis
-
-
-def get_hf0k(spc, spc_dct, spc_bas, coeff, ref_set='ANL0'):
-    """ Determine the 0 K heat of formation from the
-        species dictionary and a set of references species.
-    """
-    spc_ene = spc_dct[spc]['ene'] + spc_dct[spc]['zpe']/phycon.EH2KCAL
-    h_basis = basis_energy(spc_bas, spc_dct)
-    print('hf0k test:', spc, spc_dct[spc]['ene'], spc_dct[spc]['zpe'], spc_ene,
-          spc_bas, h_basis, coeff)
-
-    # Get the 0 K heat of formation
-    # ref_set should be a parameter for this routine
-    h0form = heatform.calc_hform_0k(
-        spc_ene, h_basis, spc_bas, coeff, ref_set=ref_set)
-    return h0form

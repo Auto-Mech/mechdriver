@@ -55,6 +55,9 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
     #     [vpt2_cnf_save_fs, vpt2_cnf_save_path,
     #      vpt2_min_cnf_locs, vpt2_save_path] = vpt2fs
 
+    # Check if any torsions to set the model
+    no_tors = bool(not tors_min_cnf_locs)
+
     # Set additional info for a saddle point
     saddle = False
     dist_names = []
@@ -97,7 +100,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             mass, elec_levels)
         dat_str_dct = {}
     else:
-        if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts:
+        if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts or no_tors:
             geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
                 spc_info, harm_min_cnf_locs, harm_cnf_save_fs, saddle=saddle)
             hr_str = ""
