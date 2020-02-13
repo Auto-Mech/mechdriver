@@ -142,7 +142,7 @@ if 'pf'in RUN_JOBS_LST or 'thermo' in RUN_JOBS_LST:
             run_thermo=bool('thermo' in RUN_JOBS_LST)
         )
 
-if 'rates' in RUN_JOBS_LST or 'params' in RUN_JOBS_LST:
+if 'rates' in RUN_JOBS_LST or 'fits' in RUN_JOBS_LST:
     if RUN_OBJ_DCT['pes']:
         # Call kTPDriver for spc in each PES
         for pes_formula, rxn_lst in RUN_PES_DCT.items():
@@ -151,8 +151,6 @@ if 'rates' in RUN_JOBS_LST or 'params' in RUN_JOBS_LST:
                 rxn_lst, MODEL_DCT, THY_DCT, ES_TSK_STR,
                 RUN_INP_DCT, RUN_OPTIONS_DCT, SPC_DCT, {})
             SPC_DCT.update(ts_dct)
-            for x in SPC_DCT:
-                print(x)
             # Run the driver
             ktpdriver.run(
                 pes_formula,
@@ -162,10 +160,10 @@ if 'rates' in RUN_JOBS_LST or 'params' in RUN_JOBS_LST:
                 MODEL_DCT,
                 RUN_INP_DCT,
                 run_rates=bool('rates' in RUN_JOBS_LST),
-                run_fits=bool('params' in RUN_JOBS_LST)
+                run_fits=bool('fits' in RUN_JOBS_LST)
             )
     else:
         print("Can't run kTPDriver without a PES being specified")
 
 # Print the program exist message
-print('AutoMech has completed. I hope you had fun!')
+print('\n\nAutoMech has completed.')

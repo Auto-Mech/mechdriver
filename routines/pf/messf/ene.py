@@ -171,8 +171,6 @@ def get_high_level_energy(
     thy_low_level.append(orb_restr)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
-    print('thy_low_level')
-    print(thy_low_level)
     ll_save_path = ll_save_fs.leaf.path(thy_low_level)
 
     if os.path.exists(ll_save_path):
@@ -409,13 +407,6 @@ def get_fs_ene_zpe(spc_dct, spc,
             save_prefix=spc_save_path)
     else:
         e_zpe = None
-
-    # print('ENERGY READ TEST, NEED TO FIX')
-    print('')
-    print(spc)
-    print(model)
-    print(e_elec)
-    print(e_zpe)
 
     ene = None
     if e_elec is not None and e_zpe is not None:

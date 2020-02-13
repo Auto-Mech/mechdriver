@@ -181,7 +181,6 @@ def run_initial_geometry_opt(
     else:
         geom = ini_geo
     run_fs = autofile.fs.run(thy_run_path)
-    print('thy_run_path')
     driver.run_job(
         job=elstruct.Job.OPTIMIZATION,
         script_str=script_str,

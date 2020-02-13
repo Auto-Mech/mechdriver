@@ -33,7 +33,6 @@ def run(spc_dct,
     ene_idx = 0
 
     # Build a list of the species to calculate thermochem for loops below
-    print(rxn_lst)
     spc_queue = loadmech.build_spc_queue(rxn_lst)
 
     # Determine information about the basis species used in thermochem calcs
@@ -52,13 +51,12 @@ def run(spc_dct,
             # Unpack spc to get name and model
             spc_name, spc_model = spc
 
-            print('spc:', spc)
             # Gather PF model and theory level info
             pf_levels = loadmodel.set_es_model_info(
                 model_dct[spc_model]['es'], thy_dct)
             pf_model = loadmodel.set_pf_model_info(
                 model_dct[spc_model]['pf'])
-            freeze_all_tors = model_dct[spc_model]['options']['freeze_all_tors']
+            freeze_all_tor = model_dct[spc_model]['options']['freeze_all_tors']
             ndim_tors = model_dct[spc_model]['pf']['tors']
 
             # Get PF input header
@@ -72,8 +70,6 @@ def run(spc_dct,
             spc_save_fs = autofile.fs.species(save_prefix)
             spc_save_fs.leaf.create(spc_info)
             spc_save_path = spc_save_fs.leaf.path(spc_info)
-            print('TEST: spc_save_path')
-            print(spc_save_path)
 
             # Read the ZPVE from the filesystem
             zpe = routines.pf.messf.get_zero_point_energy(
@@ -81,9 +77,6 @@ def run(spc_dct,
                 save_prefix=spc_save_path)
             zpe_str = routines.pf.messf.get_zpe_str(
                 spc_dct[spc_name], zpe)
-            print('therm ene test')
-            print(zpe)
-            print(zpe_str)
 
             # Generate the partition function
             spc_str, data_str_dct, _ = routines.pf.messf.blocks.species_block(
@@ -93,7 +86,7 @@ def run(spc_dct,
                 spc_model=pf_model,
                 pf_levels=pf_levels,
                 save_prefix=spc_save_path,
-                tors_mod=(ndim_tors, freeze_all_tors)
+                tors_mod=(ndim_tors, freeze_all_tor)
                 )
 
             # Write the MESSPF input file

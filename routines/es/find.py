@@ -31,7 +31,7 @@ def find_ts(
     typ = ts_dct['class']
     dist_info = ts_dct['dist_info']
     grid = ts_dct['grid']
-    bkp_ts_class_data = ts_dct['bkp_data']
+    # bkp_ts_class_data = ts_dct['bkp_data']
     rad_rad = ('radical radical' in typ)
     low_spin = ('low spin' in typ)
     print('prepping ts scan for:', typ)
@@ -79,14 +79,26 @@ def find_ts(
     # Get TS from filesys or get it from some procedure
     min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs and not overwrite:
-        geo, zma, final_dist = check_filesys_for_ts(
-            ts_dct, ts_zma, cnf_save_fs, overwrite,
-            typ, dist_info, dist_name, bkp_ts_class_data)
+        # ts_class, ts_original_zma, ts_tors_names, ts_dist_info
+        # geo, zma, final_dist = check_filesys_for_ts(
+        #     ts_dct, ts_zma, cnf_save_fs, overwrite,
+        #     typ, dist_info, dist_name, bkp_ts_class_data)
+        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
+        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+        # Add an angle check which is added to spc dct for TS (crap code...)
+        vals = automol.zmatrix.values(zma)
+        final_dist = vals[dist_name]
+        dist_info[1] = final_dist
+        angle = lts.check_angle(
+            ts_dct['zma'],
+            ts_dct['dist_info'],
+            ts_dct['class'])
+        ts_dct['dist_info'][1] = final_dist
+        ts_dct['dist_info'].append(angle)
     else:
         filesys = [None, None, ts_run_fs, ts_save_fs,
                    cnf_run_fs, cnf_save_fs, None, None,
                    scn_run_fs, scn_save_fs, run_fs]
-        print('running ts scan:')
         if rad_rad and low_spin and 'elimination' not in ts_dct['class']:
             print('Running Scan for Barrierless TS:')
             find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
@@ -124,51 +136,58 @@ def find_ts(
     return geo, zma, final_dist
 
 
-def check_filesys_for_ts(ts_dct, ts_zma, cnf_save_fs, overwrite,
-                         typ, dist_info, dist_name, bkp_ts_class_data):
-    """ Check if TS is in filesystem and matches original guess
-    """
-    min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
-    if min_cnf_locs and not overwrite:
-        cnf_path = cnf_save_fs.trunk.path()
-        print('Found TS at {}'.format(cnf_path))
-        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
-        chk_bkp = check_ts_zma(zma, ts_zma, ts_dct)
-
-        # Check if TS is in filesystem and matches original guess
-        is_bkp = False
-        if chk_bkp and bkp_ts_class_data:
-            [bkp_typ, bkp_ts_zma, _, _, bkp_tors_names, _] = bkp_ts_class_data
-            is_bkp = check_ts_zma(zma, bkp_ts_zma, ts_dct)
-
-        # Set information in ts_dct as needed
-        if not chk_bkp:
-            print("TS is type {}".format(typ))
-        elif is_bkp:
-            print('updating reaction class to {}'.format(bkp_typ))
-            ts_dct['class'] = bkp_typ
-            ts_dct['original_zma'] = bkp_ts_zma
-            ts_dct['tors_names'] = bkp_tors_names
-            print("TS is backup type {}".format(bkp_typ))
-        else:
-            print("TS may not be original type or backup type")
-            print("Some part of the z-matrices have changed")
-
-        print('class test:', ts_dct['class'])
-        vals = automol.zmatrix.values(zma)
-        final_dist = vals[dist_name]
-        dist_info[1] = final_dist
-        print('dist_info is being set at end of backup checking',
-              dist_info[1], final_dist)
-        # Add an angle check which is added to spc dct for TS
-        angle = lts.check_angle(
-            ts_dct['original_zma'],
-            ts_dct['dist_info'],
-            ts_dct['class'])
-        ts_dct['dist_info'][1] = final_dist
-        ts_dct['dist_info'].append(angle)
-
-    return ts_dct
+# def check_filesys_for_ts(ts_dct, ts_zma, cnf_save_fs, overwrite,
+#                          typ, dist_info, dist_name, bkp_ts_class_data):
+#     """ Check if TS is in filesystem and matches original guess
+#     """
+#     update_dct = {}
+#
+#     # Check if TS is in filesystem and check if there is a match
+#     min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
+#     if min_cnf_locs and not overwrite:
+#
+#         print('Found TS at {}'.format(cnf_save_fs.trunk.path()))
+#
+#         # Check if TS matches original guess
+#         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
+#         chk_bkp = check_ts_zma(zma, ts_zma)
+#
+#         # Check if TS matches original guess from back reaction
+#         if chk_bkp and bkp_ts_class_data:
+#            [bkp_typ, bkp_ts_zma, _, _, bkp_tors_names, _] = bkp_ts_class_data
+#             is_bkp = check_ts_zma(zma, bkp_ts_zma)
+#
+#         # Set information in ts_dct as needed
+#         update_dct['class'] = ts_dct['class'] if not is_bkp else bkp_typ
+#         update_dct['zma'] = ts_dct['zma'] if not is_bkp else bkp_ts_zma
+#        update_dct['tors_names'] = ts_dct['zma'] if not is_bkp else bkp_ts_zma
+#         # ts_dct['original_zma'] = ts_zma
+#         if is_bkp:
+#             print('updating reaction class to {}'.format(bkp_typ))
+#             update_dct['class'] = ts_dct['class'] if not is_bkp else bkp_typ
+#             update_dct['zma'] = ts_dct['zma'] if not is_bkp else bkp_ts_zma
+#             # ts_dct['class'] = bkp_typ
+#             # ts_dct['original_zma'] = bkp_ts_zma
+#             # ts_dct['tors_names'] = bkp_tors_names
+#             # if not is_typ or not is
+#         else:
+#             print("TS may not be original type or backup type")
+#             print("Some part of the z-matrices have changed")
+#
+#         print('class test:', ts_dct['class'])
+#         vals = automol.zmatrix.values(zma)
+#         final_dist = vals[dist_name]
+#         dist_info[1] = final_dist
+#
+#         # Add an angle check which is added to spc dct for TS
+#         angle = lts.check_angle(
+#             ts_dct['original_zma'],
+#             ts_dct['dist_info'],
+#             ts_dct['class'])
+#         ts_dct['dist_info'][1] = final_dist
+#         ts_dct['dist_info'].append(angle)
+#
+#     return ts_dct
 
 
 def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct, grid,
@@ -240,8 +259,6 @@ def run_sadpt_scan(typ, grid, dist_name, brk_name, ts_zma, ts_info, ref_level,
         grid_dct = {dist_name: grid1, brk_name: grid2}
     else:
         grid_dct = {dist_name: grid}
-    print('grid_dct')
-    print(grid_dct)
     scan.run_scan(
         zma=ts_zma,
         spc_info=ts_info,
@@ -359,7 +376,7 @@ def find_sadpt_transition_state(
 
 
 # HELPER FUNCTIONS FOR THE MAIN FINDER FUNCTIONS
-def check_ts_zma(zma, ts_zma, ts_dct):
+def check_ts_zma(zma, ts_zma):
     """ Check to see if zma in filesystem matches guess ts zma
         check to see if rxn class for already found ts is of expected class
         do this by comparing names
@@ -373,7 +390,6 @@ def check_ts_zma(zma, ts_zma, ts_dct):
                     babs1 = 85. * phycon.DEG2RAD
                 ts_zma = automol.zmatrix.set_valuess(
                     ts_zma, {'babs1': babs1})
-                ts_dct['original_zma'] = ts_zma
                 if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1):
                     chk_bkp = True
             else:

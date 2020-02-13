@@ -54,11 +54,13 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
     first_ground_model = rxn_lst[0]['model']
 
     # Get the elec+zpe energy for the reference species
-    first_spc = rxn_lst[0]['species'][0]
-    first_ground_ene = get_fs_ene_zpe(
-        spc_dct, first_spc,
-        thy_dct, model_dct, first_ground_model,
-        save_prefix, saddle=False)
+    first_ground_ene = 0.0
+    first_spc = rxn_lst[0]['reacs']
+    for rct in first_spc:
+        first_ground_ene += get_fs_ene_zpe(
+            spc_dct, rct,
+            thy_dct, model_dct, first_ground_model,
+            save_prefix, saddle=False)
 
     # Write the MESS data strings for all the species; no ene
     species, dat_str_lst = make_all_species_data(
@@ -70,7 +72,8 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
         tsform = automol.formula.string(
             automol.geom.formula(
                 automol.zmatrix.geometry(
-                    spc_dct[tsname]['original_zma'])))
+                    spc_dct[tsname]['zma'])))
+        # spc_dct[tsname]['original_zma'])))
         if tsform != pes_formula:
             print('Reaction ist contains reactions on different potential',
                   'energy surfaces: {} and {}'.format(tsform, pes_formula))
@@ -82,12 +85,12 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
             thy_dct, model_dct,
             chn_model, first_ground_model,
             save_prefix)
-        print('channel_enes')
-        print(channel_enes)
+        # print('channel_enes')
+        # print(channel_enes)
         mess_strs = make_channel_pfs(
             tsname, rxn, species, spc_dct, idx_dct, mess_strs,
             first_ground_ene, channel_enes,
-            model_dct, thy_dct, multi_info,
+            model_dct, thy_dct, multi_info, save_prefix,
             pst_params=pst_params)
     well_str, bim_str, ts_str = mess_strs
     ts_str += '\nEnd\n'
@@ -120,8 +123,6 @@ def make_all_species_data(rxn_lst, spc_dct, model_dct, thy_dct, save_prefix):
                     pf_model, pf_levels)
                 species[name] = species_data
                 dat_str_lst.append(dat_str_dct)
-        print(tsname)
-        print(spc_dct[tsname])
         if 'radical radical addition' not in spc_dct[tsname]['class']:
             ret1, ret2, ret3 = make_species_data(
                 tsname, spc_dct[tsname], save_prefix,
@@ -180,7 +181,7 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs,
 def make_channel_pfs(
         tsname, rxn, species_data, spc_dct, idx_dct, strs,
         first_ground_ene, channel_enes,
-        model_dct, thy_dct, multi_info,
+        model_dct, thy_dct, multi_info, save_prefix,
         pst_params=(1.0, 6),
         rad_rad_ts='pst'):
     """ make the partition function strings for each of the channels
@@ -209,6 +210,9 @@ def make_channel_pfs(
     print('prod_ene', prod_ene)
     print('ts_ene', ts_ene)
 
+    # Set filesys object
+    spc_save_fs = autofile.fs.species(save_prefix)
+
     # Find the number of uni and bimolecular wells already in the dictionary
     pidx = 1
     widx = 1
@@ -223,7 +227,6 @@ def make_channel_pfs(
 
     # Set up new well for the reactants if that combo isn't already in the dct
     reac_label = ''
-    reac_ene = 0.
     bimol = False
     if len(rxn['reacs']) > 1:
         bimol = True
@@ -243,7 +246,7 @@ def make_channel_pfs(
                 reac_label = 'P' + str(pidx)
                 pidx += 1
                 ground_energy = reac_ene - first_ground_ene
-                bim_str += ' \t ! {} + {} \n'.format(
+                bim_str += '\n! {} + {} \n'.format(
                     rxn['reacs'][0], rxn['reacs'][1])
                 bim_str += mess_io.writer.bimolecular(
                     reac_label, spc_label[0], well_data[0], spc_label[1],
@@ -253,7 +256,7 @@ def make_channel_pfs(
                 reac_label = 'W' + str(widx)
                 widx += 1
                 zero_energy = reac_ene - first_ground_ene
-                well_str += ' \t ! {} \n'.format(rxn['reacs'][0])
+                well_str += '\n! {} \n'.format(rxn['reacs'][0])
                 well_str += mess_io.writer.well(
                     reac_label, well_data[0], zero_energy)
                 idx_dct[well_dct_key1] = reac_label
@@ -262,7 +265,6 @@ def make_channel_pfs(
 
     # Set up a new well for the products if that combo isn't already in the dct
     prod_label = ''
-    prod_ene = 0.
     bimol = False
     if len(rxn['prods']) > 1:
         bimol = True
@@ -281,7 +283,7 @@ def make_channel_pfs(
             if bimol:
                 prod_label = 'P' + str(pidx)
                 ground_energy = prod_ene - first_ground_ene
-                bim_str += ' \t ! {} + {} \n'.format(
+                bim_str += '\n! {} + {} \n'.format(
                     rxn['prods'][0], rxn['prods'][1])
                 bim_str += mess_io.writer.bimolecular(
                     prod_label, spc_label[0], well_data[0],
@@ -291,7 +293,7 @@ def make_channel_pfs(
             else:
                 prod_label = 'W' + str(widx)
                 zero_energy = prod_ene - first_ground_ene
-                well_str += ' \t ! {} \n'.format(rxn['prods'][0])
+                well_str += '\n! {} \n'.format(rxn['prods'][0])
                 well_str += mess_io.writer.well(
                     prod_label, well_data[0], zero_energy)
                 idx_dct[well_dct_key1] = prod_label
@@ -310,7 +312,6 @@ def make_channel_pfs(
 
     fake_wellr_label = ''
     fake_wellp_label = ''
-    print('class test:', spc_dct[tsname]['class'])
     rad_rad = 'radical radical' in spc_dct[tsname]['class']
     low_spin = 'high spin' not in spc_dct[tsname]['class']
     abst_rxn = 'abstraction' in spc_dct[tsname]['class']
@@ -321,9 +322,6 @@ def make_channel_pfs(
         well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
         well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
         pst_r_ts_str = ''
-        print('well_dct_key1 test:', well_dct_key1)
-        print('well_dct_key2 test:', well_dct_key2)
-        print('idx_dct:', idx_dct)
         if well_dct_key1 not in idx_dct:
             if well_dct_key2 in idx_dct:
                 well_dct_key1 = well_dct_key2
@@ -332,7 +330,7 @@ def make_channel_pfs(
                 fidx += 1
                 vdwr_ene = reac_ene - 1.0
                 zero_energy = vdwr_ene - first_ground_ene
-                well_str += ' \t ! Fake Well for {}\n'.format(
+                well_str += '\n! Fake Well for {}\n'.format(
                     '+'.join(rxn['reacs']))
                 fake_wellr = make_fake_species_data(
                     spc_dct[rxn['reacs'][0]], spc_dct[rxn['reacs'][1]],
@@ -350,19 +348,14 @@ def make_channel_pfs(
                     pf_levels=pf_levels,
                     spc_save_fs=spc_save_fs,
                     pst_params=pst_params)
-            print('fake_wellr_label test:', fake_wellr_label)
             if not fake_wellr_label:
-                print('well_dct_key1 test:', well_dct_key1)
                 fake_wellr_label = idx_dct[well_dct_key1]
                 pst_r_label = idx_dct[well_dct_key1.replace('F', 'FRB')]
             zero_energy = reac_ene - first_ground_ene
             tunnel_str = ''
-            print('ts_str input test:', pst_r_label, reac_label,
-                  fake_wellr_label, pst_r_ts_str, zero_energy, tunnel_str)
             ts_str += '\n' + mess_io.writer.ts_sadpt(
                 pst_r_label, reac_label, fake_wellr_label, pst_r_ts_str,
                 zero_energy, tunnel_str)
-            print('ts_str test:', ts_str)
         else:
             fake_wellr_label = idx_dct[well_dct_key1]
         well_dct_key1 = 'F' + '+'.join(rxn['prods'])
@@ -375,7 +368,7 @@ def make_channel_pfs(
                 fidx += 1
                 vdwp_ene = prod_ene - 1.0
                 zero_energy = vdwp_ene - first_ground_ene
-                well_str += ' \t ! Fake Well for {}\n'.format(
+                well_str += '\n! Fake Well for {}\n'.format(
                     '+'.join(rxn['prods']))
                 fake_wellp = make_fake_species_data(
                     spc_dct[rxn['prods'][0]], spc_dct[rxn['prods'][1]],
@@ -531,7 +524,7 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
     # Remove k(T) vals at each P where where k is negative or undefined
     # If ANY valid k(T,P) vals at given pressure, store in dct
     for pressure, calc_ks in calc_k_dct.items():
-        filtered_temps, filtered_ks = ratefit.fit.util.get_valid_tk(
+        filtered_temps, filtered_ks = ratefit.fit.get_valid_tk(
             mess_temps, calc_ks, bimol)
         if filtered_ks.size > 0:
             valid_calc_tk_dct[pressure] = numpy.concatenate(
@@ -541,7 +534,7 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
     if list(valid_calc_tk_dct.keys()) == ['high']:
         ktp_dct['high'] = valid_calc_tk_dct['high']
     else:
-        rxn_is_pdependent = ratefit.err.assess_pressure_dependence(
+        rxn_is_pdependent = ratefit.calc.assess_pressure_dependence(
             valid_calc_tk_dct, assess_pdep_temps,
             tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
         if rxn_is_pdependent:

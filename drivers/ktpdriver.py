@@ -47,7 +47,7 @@ def run(pes_formula,
         # Write the MESS strings for all the PES channels
         print('Starting mess file preparation.')
         idx_dct = {}
-        well_str, bim_str, ts_str, dat_str_lst = messrates.write_channel_mess_strs(
+        well_str, bim_str, ts_str, dat_lst = messrates.write_channel_mess_strs(
             spc_dct, rxn_lst, pes_formula,
             multi_info, pst_params,
             save_prefix, idx_dct,
@@ -56,7 +56,7 @@ def run(pes_formula,
         # Run mess to produce rate output
         mess_path = raterunner.run_rates(
             header_str, energy_trans_str,
-            well_str, bim_str, ts_str, dat_str_lst,
+            well_str, bim_str, ts_str, dat_lst,
             spc_dct['ts_0'], spc_dct['ts_0']['rxn_fs'][3],
             model_dct, thy_dct, test_model)
 

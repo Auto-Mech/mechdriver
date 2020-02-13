@@ -2,6 +2,9 @@
  Handle stuff for fake species
 """
 
+import automol
+
+
 def set_fake_freqs(harm_min_cnf_locs_i, harm_min_cnf_locs_j,
                    harm_cnf_save_fs_i, harm_cnf_save_fs_j):
     """ Set fake frequencies
@@ -12,7 +15,7 @@ def set_fake_freqs(harm_min_cnf_locs_i, harm_min_cnf_locs_j,
         if harm_min_cnf_locs_j is not None:
             harm_geo_j = harm_cnf_save_fs_j.leaf.file.geometry.read(
                 harm_min_cnf_locs_j)
-    freqs = [30, 50, 70, 100, 200]
+    freqs = (30, 50, 70, 100, 200)
     ntrans = 5
     is_atom_i = automol.geom.is_atom(harm_geo_i)
     is_linear_i = automol.geom.is_linear(harm_geo_i)

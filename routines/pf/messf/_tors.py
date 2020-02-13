@@ -68,8 +68,6 @@ def write_mdhr_tors_mess_strings(geom, spc_info, sym_num, spc_dct_i,
                                  saddle=False, hind_rot_geo=None):
     """ Gather the MDHR torsional data and gather them into a MESS file
     """
-    print('tors_sym_nums')
-    print(tors_sym_nums)
 
     # Loop over the torsion groups and get the int rot strings and potentials
     rotor_internal_str = ''
@@ -82,7 +80,7 @@ def write_mdhr_tors_mess_strings(geom, spc_info, sym_num, spc_dct_i,
         hr_pot = read_hr_pot(
             spc_info, tors_names, tors_grids,
             tors_cnf_save_path, min_ene)
-        
+
         # Write the MDHR potential file for each rotor set
         mdhr_dat_str = write_mdhr_dat_file(hr_pot)
 
@@ -128,7 +126,6 @@ def write_mdhr_dat_file(potentials):
         Only writes the file for up to 4-dimensinal rotor
     """
 
-    print('\n\nin mdhr dat write')
     # Determine the dimensions of the rotor potential list
     dims = numpy.array(potentials).shape
     ndims = len(dims)
@@ -175,8 +172,6 @@ def write_mdhr_dat_file(potentials):
                             '{0:>6d}{1:>6d}{2:>6d}{3:>6d}{4:>15.8f}\n'.format(
                                 i+1, j+1, k+1, m+1, potentials[i][j][k][m])
                         )
-
-    print(mdhr_str)
 
     return mdhr_str
 
@@ -229,8 +224,6 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene):
     pot = [(ene - min_ene)*phycon.EH2KCAL for ene in enes]
 
     # Reshape the potential list into a list of lists if ndim > 1
-    print('in read hr pot')
-    print(len(tors_names))
     if len(tors_names) == 1:
         dims = (len(tors_grids[0]),)
     elif len(tors_names) == 2:
@@ -240,11 +233,8 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene):
     elif len(tors_names) == 4:
         dims = (len(tors_grids[0]), len(tors_grids[1]),
                 len(tors_grids[2]), len(tors_grids[3]))
-    # pot = numpy.array(pot).reshape(dims)
-    # print(pot)
-
     pot = numpy.array(pot).reshape(dims).tolist()
-    print(pot)
+
     return pot
 
 

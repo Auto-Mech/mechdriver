@@ -136,7 +136,6 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
     """
 
     # Set up some info with the torsions
-    print(tors_mod)
     ndim_tors, _ = tors_mod
     if 'hind_def' in spc_dct_i:
         run_tors_names = spc_dct_i['hind_def']

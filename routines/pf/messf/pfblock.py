@@ -19,11 +19,10 @@ def get_pf_input(spc, spc_str, global_pf_str, zpe_str):
     """
 
     # create a messpf input file
-    spc_head_str = 'Species ' + spc
-    print('pf string test:', global_pf_str, spc_head_str, spc_str, zpe_str)
+    spc_head_str = 'Species ' + '\n' + spc
+    print(global_pf_str, spc_head_str, spc_str, zpe_str)
     pf_inp_str = '\n'.join(
         [global_pf_str, spc_head_str,
-    #     spc_str, '\n'])
          spc_str, zpe_str, '\n'])
     return pf_inp_str
 
@@ -38,9 +37,6 @@ def write_pf_input(pf_inp_str, data_str_dct, pf_path):
             data_file_path = os.path.join(pf_path, name)
             with open(data_file_path, 'w') as data_file:
                 data_file.write(string)
-            print('data string test')
-            print(name)
-            print(string)
 
     # Write the MESSPF input file
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:

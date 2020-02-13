@@ -27,7 +27,7 @@ def projrot_freqs_1(tors_geo, hess,
     bld_save_fs = autofile.fs.build(save_path)
     bld_save_fs.leaf.create(bld_locs)
     path = bld_save_fs.leaf.path(bld_locs)
-    print('Build Path for Partition Functions in species block')
+    print('Build Path for ProjRot calls')
     print(path)
     proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
     with open(proj_file_path, 'w') as proj_file:

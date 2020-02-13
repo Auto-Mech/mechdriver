@@ -11,6 +11,7 @@ from lib.filesystem import minc as fsmin
 from routines.pf.messf import models as pfmodels
 from routines.pf.messf import _tors as tors
 from routines.pf.messf import _sym as sym
+from routines.pf.messf import _fake as fake
 from routines.pf.messf import _util as messfutil
 
 
@@ -20,11 +21,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
     """ prepare the species input for messpf
     """
 
-    print('spc')
-    print(spc)
     # Unpack the models and levels
-    print('\npf_levels')
-    print(pf_levels)
     [_, _, harm_level, _, sym_level, tors_level] = pf_levels
     tors_model, vib_model, sym_model = spc_model
 
@@ -413,6 +410,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
         saddle, frm_bnd_key, brk_bnd_key, tors_names,
         tors_cnf_save_fs_j, tors_min_cnf_locs_j,
         sym_cnf_save_fs_j, sym_min_cnf_locs_j)
+    sym_factor = sym_factor_i * sym_factor_j
 
     # Get the stoichiometry
     stoich = messfutil.get_stoich(
@@ -421,10 +419,24 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
 
     spc_str = ''
     if vib_model == 'harm' and tors_model == 'rigid':
-        geo_i, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
-            spc_info_i, harm_min_cnf_locs_i, harm_cnf_save_fs_i, saddle=False)
-        geo_j, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
-            spc_info_j, harm_min_cnf_locs_j, harm_cnf_save_fs_j, saddle=False)
+        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+            freqs_i = ()
+        else:
+            geo_i, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
+                spc_info_i, harm_min_cnf_locs_i,
+                harm_cnf_save_fs_i, saddle=False)
+        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+            freqs_j = ()
+        else:
+            geo_j, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
+                spc_info_j, harm_min_cnf_locs_j,
+                harm_cnf_save_fs_j, saddle=False)
+        if harm_min_cnf_locs_i is not None:
+            geo_i = harm_cnf_save_fs_i.leaf.file.geometry.read(
+                harm_min_cnf_locs_i)
+        if harm_min_cnf_locs_j is not None:
+            geo_j = harm_cnf_save_fs_j.leaf.file.geometry.read(
+                harm_min_cnf_locs_j)
         freqs = freqs_i + freqs_j
         hind_rot_str = ""
 
@@ -552,19 +564,27 @@ def fake_species_block(
     sym_factor = sym_factor_i * sym_factor_j
 
     # Get the freqs
-    freqs = pfmodels.set_fake_freqs(
+    freqs = fake.set_fake_freqs(
         harm_min_cnf_locs_i, harm_min_cnf_locs_j,
         harm_cnf_save_fs_i, harm_cnf_save_fs_j)
-    geo = pfmodels.combine_geos_in_fake_well(
+    geo = fake.combine_geos_in_fake_well(
         harm_min_cnf_locs_i, harm_min_cnf_locs_j,
         harm_cnf_save_fs_i, harm_cnf_save_fs_j)
 
     if vib_model == 'harm' and tors_model == 'rigid':
-        _, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
-            spc_info_i, harm_min_cnf_locs_i, harm_cnf_save_fs_i, saddle=saddle)
-        _, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
-            spc_info_j, harm_min_cnf_locs_j, harm_cnf_save_fs_j, saddle=saddle)
-        freqs += freqs_i + freqs_j
+        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+            freqs_i = ()
+        else:
+            _, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
+                spc_info_i, harm_min_cnf_locs_i,
+                harm_cnf_save_fs_i, saddle=saddle)
+        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+            freqs_j = ()
+        else:
+            _, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
+                spc_info_j, harm_min_cnf_locs_j,
+                harm_cnf_save_fs_j, saddle=saddle)
+        freqs = freqs + freqs_i + freqs_j
         hind_rot_str = ""
 
     if vib_model == 'harm' and tors_model == '1dhr':

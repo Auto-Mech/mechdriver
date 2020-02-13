@@ -20,11 +20,6 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
     """ set-up the hr for different rotor combinations
         tors_names = [ ['D1'], ['D2', 'D3'], ['D4'] ]
     """
-    # Convert scan_increment to radians (was broken before)
-    print('INCREMENT:')
-    print(scan_increment)
-    print(phycon.DEG2RAD)
-    # scan_increment *= phycon.DEG2RAD
 
     # Get the tors names if thery have not already been supplied
     val_dct = automol.zmatrix.values(zma)
@@ -45,13 +40,10 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
 
     # Build the grids corresponding to the torsions
     run_tors_grids = []
-    print('build linespace loop')
     for tors_names in run_tors_names:
-        print('tors names', tors_names)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,
             brk_bnd_key=brk_bnd_key)
-        print(tors_linspaces)
         run_tors_grids.append(
             [numpy.linspace(*linspace) + val_dct[name]
              for name, linspace in zip(tors_names, tors_linspaces)]
@@ -66,19 +58,15 @@ def mdhr_prep(zma, run_tors_names):
 
     # Figure out set of torsions are to be used: defined or AMech generated
     rotor_lst = run_tors_names
-    print('rotor_lst', rotor_lst)
 
     # Check the dimensionality of each rotor to see if they are greater than 4
     # Call a function to reduce large rotors
     final_rotor_lst = []
     for rotor in rotor_lst:
-        print('mdhr prep rotor', rotor)
         if len(rotor) > 4:
-            print('LEN BAD')
             for reduced_rotor in reduce_rotor_dimensionality(zma, rotor):
                 final_rotor_lst.append(reduced_rotor)
         else:
-            print('LEN GOOD')
             final_rotor_lst.append(rotor)
 
     return final_rotor_lst
@@ -145,31 +133,21 @@ def hindered_rotor_scans(
             scan_increment=scan_increment, ndim_tors=ndim_tors,
             saddle=saddle, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
 
-        print('TEST: run_tors_names')
-        print(run_tors_names)
-        print(run_tors_grids)
-
-        print('TEST: in loop')
         # for tors_name, tors_grid in zip(tors_names, tors_grids):
         for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
 
             # Get the dictionary for the torsional modes
-            print(tors_names)
-            print(tors_grids)
             if not tors_names:
                 continue
             grid_dct = dict(zip(tors_names, tors_grids))
 
             # Get a list of the other tors coords to freeze
-            print('freeze variable', freeze_all_tors)
             if freeze_all_tors:
                 alt_constraints = [name
                                    for name_lst in run_tors_names
                                    for name in name_lst]
             else:
                 alt_constraints = ()
-            print('alt_constraints')
-            print(alt_constraints)
 
             # Perform the scans
             save_scan(
@@ -219,11 +197,6 @@ def run_scan(
         (coo, coo_grid_vals) = item
         coo_names.append(coo)
         grid_vals.append(coo_grid_vals)
-
-    print('grid_dct test:', grid_dct)
-    print('grid_vals test:', grid_vals)
-    # import sys
-    # sys.exit()
 
     # for now, running only one-dimensional hindered rotor scans
     scn_save_fs.branch.create([coo_names])
@@ -730,8 +703,8 @@ def _run_3d_scan(
     """
 
     npoints = len(grid_idxs)
-    assert len(grid_vals[0])*len(grid_vals[1])*len(grid_vals[2]) == len(run_prefixes)
-    assert len(run_prefixes)== npoints
+    gmult = (len(grid_vals[0])*len(grid_vals[1])*len(grid_vals[2]))
+    assert gmult == len(run_prefixes) == npoints
 
     idx = 0
     for grid_val_i in grid_vals[0]:
@@ -748,7 +721,6 @@ def _run_3d_scan(
                 idx += 1
 
                 frozen_coordinates = coo_names + list(alt_constraints)
-                print('3d freeze test', coo_names, list(alt_constraints))
                 exists = scn_save_fs.leaf.file.geometry.exists(
                     [coo_names, [grid_val_i, grid_val_j, grid_val_k]])
                 if not exists or overwrite:
@@ -808,7 +780,6 @@ def _run_4d_scan(
                     idx += 1
 
                     frozen_coordinates = coo_names + list(alt_constraints)
-                    print('4d freeze test', coo_names, list(alt_constraints))
                     exists = scn_save_fs.leaf.file.geometry.exists(
                         [coo_names, [grid_val_i, grid_val_j, grid_val_k, grid_val_l]])
                     if not exists or overwrite:
@@ -1144,8 +1115,6 @@ def infinite_separation_energy(
 
         sp_sr_run_path = sp_run_fs.leaf.path(thy_lvl[1:4])
         sp_sr_save_path = sp_save_fs.leaf.path(thy_lvl[1:4])
-        print('sp_sr_run_path')
-        print(sp_sr_run_path)
         run_sr_fs = autofile.fs.run(sp_sr_run_path)
 
         ret = driver.read_job(
