@@ -49,7 +49,7 @@ def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
     # calculate and save the infinite seperation energy
     print('ts zma locs')
     print(locs)
-    ts_zma = scn_save_fs.leaf.file.zmatrix.read(locs)
+    ts_zma = scn_save_fs[-1].file.zmatrix.read(locs)
     rcts = ts_dct['reacs']
     spc_1_info = [spc_dct[rcts[0]]['ich'],
                   spc_dct[rcts[0]]['chg'],
@@ -65,8 +65,8 @@ def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
         num_act_orb=num_act_orb)
 
     inf_locs = [[dist_name], [1000.]]
-    scn_save_fs.leaf.create(inf_locs)
-    scn_save_fs.leaf.file.energy.write(inf_sep_ene, inf_locs)
+    scn_save_fs[-1].create(inf_locs)
+    scn_save_fs[-1].file.energy.write(inf_sep_ene, inf_locs)
 
     geo = automol.zmatrix.geometry(ts_zma)
     zma = ts_zma

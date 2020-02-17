@@ -43,24 +43,24 @@ def set_fs(spc_dct, spc, thy_info,
 
     if setfs_chk:
         if 'ts_' in spc:
-            thy_run_fs.leaf.create(thy_level[1:4])
-            thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
-            thy_save_fs.leaf.create(thy_level[1:4])
-            thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+            thy_run_fs[-1].create(thy_level[1:4])
+            thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+            thy_save_fs[-1].create(thy_level[1:4])
+            thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
 
             thy_run_fs = autofile.fs.ts(thy_run_path)
-            thy_run_fs.trunk.create()
-            thy_run_path = thy_run_fs.trunk.path()
+            thy_run_fs[0].create()
+            thy_run_path = thy_run_fs[0].path()
 
             thy_save_fs = autofile.fs.ts(thy_save_path)
-            thy_save_fs.trunk.create()
-            thy_save_path = thy_save_fs.trunk.path()
+            thy_save_fs[0].create()
+            thy_save_path = thy_save_fs[0].path()
 
         else:
-            thy_run_fs.leaf.create(thy_level[1:4])
-            thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
-            thy_save_fs.leaf.create(thy_level[1:4])
-            thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+            thy_run_fs[-1].create(thy_level[1:4])
+            thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+            thy_save_fs[-1].create(thy_level[1:4])
+            thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
 
         cnf_run_fs = autofile.fs.conformer(thy_run_path)
         cnf_save_fs = autofile.fs.conformer(thy_save_path)
@@ -69,8 +69,8 @@ def set_fs(spc_dct, spc, thy_info,
         min_cnf_locs = fsmin.min_energy_conformer_locators(
             cnf_save_fs)
         if min_cnf_locs:
-            min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
-            min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+            min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
+            min_cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
             scn_run_fs = autofile.fs.conformer(min_cnf_run_path)
             scn_save_fs = autofile.fs.conformer(min_cnf_save_path)
 
@@ -86,7 +86,7 @@ def set_fs(spc_dct, spc, thy_info,
                    tau_run_fs, tau_save_fs,
                    scn_run_fs, scn_save_fs]
         run_fs = autofile.fs.run(thy_run_path)
-        run_fs.trunk.create()
+        run_fs[0].create()
         filesys.append(run_fs)
     else:
         filesys = [thy_run_fs, thy_save_fs,
@@ -106,12 +106,12 @@ def set_spc_fs(spc_dct, spc, run_prefix, save_prefix):
     else:
         info = finf.get_spc_info(spc_dct[spc])
         run_fs = autofile.fs.species(run_prefix)
-        run_fs.leaf.create(info)
-        run_path = run_fs.leaf.path(info)
+        run_fs[-1].create(info)
+        run_path = run_fs[-1].path(info)
 
         save_fs = autofile.fs.species(save_prefix)
-        save_fs.leaf.create(info)
-        save_path = save_fs.leaf.path(info)
+        save_fs[-1].create(info)
+        save_path = save_fs[-1].path(info)
 
     return info, run_fs, save_fs, run_path, save_path
 
@@ -120,8 +120,8 @@ def get_spc_fs(prefix, spc_info):
     """ Create species filesystem object and path
     """
     spc_fs = autofile.fs.species(prefix)
-    spc_fs.leaf.create(spc_info)
-    spc_path = spc_run_fs.leaf.path(spc_info)
+    spc_fs[-1].create(spc_info)
+    spc_path = spc_run_fs[-1].path(spc_info)
 
     return spc_fs, spc_path
 
@@ -140,8 +140,8 @@ def get_thy_fs(prefix, spc_info, thy_info):
 
     # Build the theory filesystem
     thy_fs = autofile.fs.theory(spc_path)
-    thy_fs.leaf.create(thy_lvl)
-    thy_path = thy_run_fs.leaf.path(thy_lvl)
+    thy_fs[-1].create(thy_lvl)
+    thy_path = thy_run_fs[-1].path(thy_lvl)
 
     return thy_fs, thy_path
 
@@ -160,7 +160,7 @@ def get_min_cnf_fs(thy_prefix, spc_info, thy_info):
     min_cnf_locs = fsmin.min_energy_conformer_locators(
         cnf_save_fs)
     if min_cnf_locs:
-        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
+        min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
     return cnf_fs
 
 
@@ -172,7 +172,7 @@ def get_scn_fs(thy_prefix, spc_info, thy_info):
         cnf_save_fs)
     if min_cnf_locs:
         scn_run_fs = autofile.fs.conformer(min_cnf_run_path)
-        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
+        min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
     return cnf_fs
 
 
@@ -182,17 +182,17 @@ def get_rxn_fs(run_prefix, save_prefix,
     """ get filesystems for a reaction
     """
     rxn_run_fs = autofile.fs.reaction(run_prefix)
-    rxn_run_fs.leaf.create(
+    rxn_run_fs[-1].create(
         [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
-    rxn_run_path = rxn_run_fs.leaf.path(
+    rxn_run_path = rxn_run_fs[-1].path(
         [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
 
     rxn_ichs = tuple(map(tuple, rxn_ichs))
     rxn_chgs = tuple(map(tuple, rxn_chgs))
     rxn_muls = tuple(map(tuple, rxn_muls))
     rxn_save_fs = autofile.fs.reaction(save_prefix)
-    rxn_save_fs.leaf.create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
-    rxn_save_path = rxn_save_fs.leaf.path(
+    rxn_save_fs[-1].create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+    rxn_save_path = rxn_save_fs[-1].path(
         [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
 
     return rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path

@@ -53,17 +53,17 @@ def run_job(
     assert job in JOB_ERROR_DCT
     assert job in JOB_SUCCESS_DCT
 
-    run_fs.leaf.create([job])
-    run_path = run_fs.leaf.path([job])
+    run_fs[-1].create([job])
+    run_path = run_fs[-1].path([job])
     if overwrite:
         do_run = True
         print(" - Running {} job at {}".format(job, run_path))
     else:
-        if not run_fs.leaf.file.info.exists([job]):
+        if not run_fs[-1].file.info.exists([job]):
             do_run = True
             print(" - Running {} job at {}".format(job, run_path))
         else:
-            inf_obj = run_fs.leaf.file.info.read([job])
+            inf_obj = run_fs[-1].file.info.read([job])
             if inf_obj.status == autofile.system.RunStatus.FAILURE:
                 print(" - Found failed {} job at {}".format(job, run_path))
                 if retry_failed:
@@ -91,7 +91,7 @@ def run_job(
             job=job, prog=prog, version='',
             method=method, basis=basis, status=status)
         inf_obj.utc_start_time = autofile.system.info.utc_time()
-        run_fs.leaf.file.info.write(inf_obj, [job])
+        run_fs[-1].file.info.write(inf_obj, [job])
 
         # Set job runner based on user request; set special options as needed
         runner = JOB_RUNNER_DCT[job]
@@ -115,7 +115,7 @@ def run_job(
         inf_obj.utc_end_time = autofile.system.info.utc_time()
         prog = inf_obj.prog
         if is_successful_output(out_str, job, prog):
-            run_fs.leaf.file.output.write(out_str, [job])
+            run_fs[-1].file.output.write(out_str, [job])
             print(" - Run succeeded.")
             status = autofile.system.RunStatus.SUCCESS
         else:
@@ -124,8 +124,8 @@ def run_job(
         version = elstruct.reader.program_version(prog, out_str)
         inf_obj.version = version
         inf_obj.status = status
-        run_fs.leaf.file.info.write(inf_obj, [job])
-        run_fs.leaf.file.input.write(inp_str, [job])
+        run_fs[-1].file.info.write(inf_obj, [job])
+        run_fs[-1].file.input.write(inp_str, [job])
         print('finished run_job')
 
 
@@ -134,17 +134,17 @@ def read_job(job, run_fs):
     """
     ret = None
 
-    run_path = run_fs.leaf.path([job])
+    run_path = run_fs[-1].path([job])
 
     print(" - Reading from {} job at {}".format(job, run_path))
-    if not run_fs.leaf.file.output.exists([job]):
+    if not run_fs[-1].file.output.exists([job]):
         print(" - No output file found. Skipping...")
     else:
-        assert run_fs.leaf.file.info.exists([job])
-        assert run_fs.leaf.file.input.exists([job])
-        inf_obj = run_fs.leaf.file.info.read([job])
-        inp_str = run_fs.leaf.file.input.read([job])
-        out_str = run_fs.leaf.file.output.read([job])
+        assert run_fs[-1].file.info.exists([job])
+        assert run_fs[-1].file.input.exists([job])
+        inf_obj = run_fs[-1].file.info.read([job])
+        inp_str = run_fs[-1].file.input.read([job])
+        out_str = run_fs[-1].file.output.read([job])
         prog = inf_obj.prog
 
         if is_successful_output(out_str, job, prog):

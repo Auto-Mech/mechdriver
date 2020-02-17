@@ -56,22 +56,22 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
             thy_level = thy_info[0:3]
             thy_level.append(orb_restr)
             spc_run_fs = autofile.fs.species(run_prefix)
-            spc_run_fs.leaf.create(spc_info)
-            spc_run_path = spc_run_fs.leaf.path(spc_info)
+            spc_run_fs[-1].create(spc_info)
+            spc_run_path = spc_run_fs[-1].path(spc_info)
             spc_save_fs = autofile.fs.species(save_prefix)
-            spc_save_fs.leaf.create(spc_info)
-            spc_save_path = spc_save_fs.leaf.path(spc_info)
+            spc_save_fs[-1].create(spc_info)
+            spc_save_path = spc_save_fs[-1].path(spc_info)
 
             thy_run_fs = autofile.fs.theory(spc_run_path)
-            thy_run_fs.leaf.create(thy_level[1:4])
-            thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
+            thy_run_fs[-1].create(thy_level[1:4])
+            thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
             thy_save_fs = autofile.fs.theory(spc_save_path)
-            thy_save_fs.leaf.create(thy_level[1:4])
-            thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+            thy_save_fs[-1].create(thy_level[1:4])
+            thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
             run_fs = autofile.fs.run(thy_run_path)
 
             ini_thy_save_fs = autofile.fs.theory(spc_save_path)
-            ini_thy_save_fs.leaf.create(ini_thy_level[1:4])
+            ini_thy_save_fs[-1].create(ini_thy_level[1:4])
 
             cnf_run_fs = autofile.fs.conformer(thy_run_path)
             cnf_save_fs = autofile.fs.conformer(thy_save_path)
@@ -119,20 +119,20 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
             mul = ts_mul
             spc_info = (ich, chg, mul)
             spc_run_fs = autofile.fs.species(run_prefix)
-            spc_run_fs.leaf.create(spc_info)
-            spc_run_path = spc_run_fs.leaf.path(spc_info)
+            spc_run_fs[-1].create(spc_info)
+            spc_run_path = spc_run_fs[-1].path(spc_info)
             spc_save_fs = autofile.fs.species(save_prefix)
-            spc_save_fs.leaf.create(spc_info)
-            spc_save_path = spc_save_fs.leaf.path(spc_info)
+            spc_save_fs[-1].create(spc_info)
+            spc_save_path = spc_save_fs[-1].path(spc_info)
             orb_restr = fsorb.orbital_restriction(spc_info, thy_info)
             thy_level = thy_info[0:3]
             thy_level.append(orb_restr)
             thy_run_fs = autofile.fs.theory(spc_run_path)
-            thy_run_fs.leaf.create(thy_level[1:4])
-            thy_run_path = thy_run_fs.leaf.path(thy_level[1:4])
+            thy_run_fs[-1].create(thy_level[1:4])
+            thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
             thy_save_fs = autofile.fs.theory(spc_save_path)
-            thy_save_fs.leaf.create(thy_level[1:4])
-            thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
+            thy_save_fs[-1].create(thy_level[1:4])
+            thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
             run_fs = autofile.fs.run(thy_run_path)
 
             # Generate reference geometry
@@ -161,13 +161,13 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 print('vdw ending geometry')
                 print(automol.geom.xyz_string(geo))
-                thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
+                thy_save_fs[-1].file.geometry.write(geo, thy_level[1:4])
                 ene = elstruct.reader.energy(prog, method, out_str)
                 if ene < min_ene:
                     min_ene = ene
                     print('ene test in vdw')
                     print(ene)
-                    thy_save_fs.leaf.file.energy.write(ene, thy_level[1:4])
+                    thy_save_fs[-1].file.energy.write(ene, thy_level[1:4])
                     print('Saving reference geometry')
                     print(" - Save path: {}".format(thy_save_path))
                     vdw_name = label + ts_name.replace('ts', 'vdw')
@@ -180,27 +180,27 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
                     # Make a fake conformer
                     cnf_save_fs = autofile.fs.conformer(thy_save_path)
                     cnf_run_fs = autofile.fs.conformer(thy_run_path)
-                    cnf_save_fs.trunk.create()
-                    cnf_run_fs.trunk.create()
+                    cnf_save_fs[0].create()
+                    cnf_run_fs[0].create()
                     tors_range_dct = {}
-                    cinf_obj = autofile.system.info.conformer_trunk(
+                    cinf_obj = autofile.system.info.conformer[0](
                         0, tors_range_dct)
                     cinf_obj.nsamp = 1
-                    cnf_save_fs.trunk.file.info.write(cinf_obj)
-                    locs_lst = cnf_save_fs.leaf.existing()
+                    cnf_save_fs[0].file.info.write(cinf_obj)
+                    locs_lst = cnf_save_fs[-1].existing()
                     if not locs_lst:
                         cid = autofile.system.generate_new_conformer_id()
                         locs = [cid]
                     else:
                         locs = locs_lst[0]
-                    cnf_save_fs.leaf.create(locs)
-                    cnf_run_fs.leaf.create(locs)
-                    cnf_save_fs.leaf.file.geometry_info.write(
+                    cnf_save_fs[-1].create(locs)
+                    cnf_run_fs[-1].create(locs)
+                    cnf_save_fs[-1].file.geometry_info.write(
                         inf_obj, locs)
-                    cnf_save_fs.leaf.file.geometry_input.write(
+                    cnf_save_fs[-1].file.geometry_input.write(
                         inp_str, locs)
-                    cnf_save_fs.leaf.file.energy.write(ene, locs)
-                    cnf_save_fs.leaf.file.geometry.write(geo, locs)
+                    cnf_save_fs[-1].file.energy.write(ene, locs)
+                    cnf_save_fs[-1].file.geometry.write(geo, locs)
         if min_ene:
             new_vdws.append(vdw_name)
 
@@ -214,38 +214,38 @@ def fake_conf(thy_level, filesys, inf=()):
     cnf_run_fs = filesys[4]
     thy_save_fs = filesys[3]
     run_fs = filesys[-1]
-    thy_save_path = thy_save_fs.leaf.path(thy_level[1:4])
-    geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
+    thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
+    geo = thy_save_fs[-1].file.geometry.read(thy_level[1:4])
     if inf:
         inf_obj, ene = inf
     else:
-        ene = thy_save_fs.leaf.file.energy.read(thy_level[1:4])
-        inf_obj = run_fs.trunk.file.info.read()
+        ene = thy_save_fs[-1].file.energy.read(thy_level[1:4])
+        inf_obj = run_fs[0].file.info.read()
     tors_range_dct = {}
-    cinf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
+    cinf_obj = autofile.system.info.conformer[0](0, tors_range_dct)
     cinf_obj.nsamp = 1
     cnf_save_fs = autofile.fs.conformer(thy_save_path)
-    cnf_save_fs.trunk.create()
-    cnf_run_fs.trunk.create()
-    cnf_save_fs.trunk.file.info.write(cinf_obj)
-    cnf_run_fs.trunk.file.info.write(cinf_obj)
-    locs_lst = cnf_save_fs.leaf.existing()
+    cnf_save_fs[0].create()
+    cnf_run_fs[0].create()
+    cnf_save_fs[0].file.info.write(cinf_obj)
+    cnf_run_fs[0].file.info.write(cinf_obj)
+    locs_lst = cnf_save_fs[-1].existing()
     if not locs_lst:
         cid = autofile.system.generate_new_conformer_id()
         locs = [cid]
     else:
         locs = locs_lst[0]
-    cnf_save_fs.leaf.create(locs)
-    cnf_run_fs.leaf.create(locs)
-    cnf_save_fs.leaf.file.geometry_info.write(
+    cnf_save_fs[-1].create(locs)
+    cnf_run_fs[-1].create(locs)
+    cnf_save_fs[-1].file.geometry_info.write(
         inf_obj, locs)
-    cnf_run_fs.leaf.file.geometry_info.write(
+    cnf_run_fs[-1].file.geometry_info.write(
         inf_obj, locs)
     # method = inf_obj.method
-    cnf_save_fs.leaf.file.energy.write(ene, locs)
-    cnf_run_fs.leaf.file.energy.write(ene, locs)
-    cnf_save_fs.leaf.file.geometry.write(geo, locs)
-    cnf_run_fs.leaf.file.geometry.write(geo, locs)
+    cnf_save_fs[-1].file.energy.write(ene, locs)
+    cnf_run_fs[-1].file.energy.write(ene, locs)
+    cnf_save_fs[-1].file.geometry.write(geo, locs)
+    cnf_run_fs[-1].file.geometry.write(geo, locs)
 
 
 def fake_geo_gen(tsk, thy_level, filesys):

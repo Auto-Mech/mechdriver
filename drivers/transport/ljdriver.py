@@ -93,11 +93,11 @@ for target, target_info in TARGET_DCTS.items():
                           moldr.util.orbital_restriction(
                               target_info, THEORY_INFO)]
         tgt_run_fs = autofile.fs.species(RUN_PREFIX)
-        tgt_run_fs.leaf.create(target_info)
-        tgt_run_path = tgt_run_fs.leaf.path(target_info)
+        tgt_run_fs[-1].create(target_info)
+        tgt_run_path = tgt_run_fs[-1].path(target_info)
         etrans_run_fs = autofile.fs.energy_transfer(tgt_run_path)
-        etrans_run_path = etrans_run_fs.leaf.path(FS_THEORY_INFO)
-        etrans_run_fs.leaf.create(FS_THEORY_INFO)
+        etrans_run_path = etrans_run_fs[-1].path(FS_THEORY_INFO)
+        etrans_run_fs[-1].create(FS_THEORY_INFO)
 
         # Run an instancw of 1DMin for each processor
         for i in range(NJOBS):

@@ -22,13 +22,13 @@ def read_lj_from_save(target_save_prefix, target_info, theory_level):
 
     # Search save file system for LJ params
     tgt_save_fs = autofile.fs.species(target_save_prefix)
-    if tgt_save_fs.leaf.exists(target_info):
-        tgt_save_path = tgt_save_fs.leaf.path(target_info)
+    if tgt_save_fs[-1].exists(target_info):
+        tgt_save_path = tgt_save_fs[-1].path(target_info)
         etrans_save_fs = autofile.fs.energy_transfer(tgt_save_path)
-        if etrans_save_fs.leaf.exists(theory_level):
-            sigma = etrans_save_fs.leaf.file.lennard_jones_sigma.read(
+        if etrans_save_fs[-1].exists(theory_level):
+            sigma = etrans_save_fs[-1].file.lennard_jones_sigma.read(
                 theory_level)
-            epsilon = etrans_save_fs.leaf.file.lennard_jones_epsilon.read(
+            epsilon = etrans_save_fs[-1].file.lennard_jones_epsilon.read(
                 theory_level)
 
     return sigma, epsilon
@@ -48,15 +48,15 @@ def write_lj_to_save(sigma, epsilon,
 
     # Search save file system for LJ params
     tgt_save_fs = autofile.fs.species(target_save_prefix)
-    tgt_save_fs.leaf.create(target_info)
-    tgt_save_path = tgt_save_fs.leaf.path(target_info)
+    tgt_save_fs[-1].create(target_info)
+    tgt_save_path = tgt_save_fs[-1].path(target_info)
     etrans_save_fs = autofile.fs.energy_transfer(tgt_save_path)
-    etrans_save_fs.leaf.create(theory_level)
-    sigma = etrans_save_fs.leaf.file.lennard_jones_sigma.write(
+    etrans_save_fs[-1].create(theory_level)
+    sigma = etrans_save_fs[-1].file.lennard_jones_sigma.write(
         sigma, theory_level)
-    epsilon = etrans_save_fs.leaf.file.lennard_jones_epsilon.write(
+    epsilon = etrans_save_fs[-1].file.lennard_jones_epsilon.write(
         epsilon, theory_level)
 
-    etrans_save_path = etrans_save_fs.leaf.path(theory_level)
+    etrans_save_path = etrans_save_fs[-1].path(theory_level)
     print('\nWriting Lennard-Jones parameters to Save FileSystem at\n')
     print(etrans_save_path)

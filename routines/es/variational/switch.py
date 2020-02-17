@@ -12,8 +12,8 @@ def assess_mep_for_sadpt(typ, grid, ts_zma, dist_name, scn_save_fs):
     for grid_val_i in grid:
         locs_list.append([[dist_name], [grid_val_i]])
     for locs in locs_list:
-        if scn_save_fs.leaf.exists(locs):
-            enes.append(scn_save_fs.leaf.file.energy.read(locs))
+        if scn_save_fs[-1].exists(locs):
+            enes.append(scn_save_fs[-1].file.energy.read(locs))
             locs_lst.append(locs)
     max_ene = max(enes)
     max_idx = enes.index(max_ene)
@@ -24,7 +24,7 @@ def assess_mep_for_sadpt(typ, grid, ts_zma, dist_name, scn_save_fs):
     # If a true saddle point has been found return a max zma
     if saddle_found:
         max_locs = locs_lst[max_idx]
-        max_zma = scn_save_fs.leaf.file.zmatrix.read(max_locs)
+        max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
     else:
         max_zma = ((), {})
 

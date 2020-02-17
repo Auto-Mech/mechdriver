@@ -23,10 +23,10 @@ def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
                 print('ERROR: Reference geometry is missing for symmetry',
                       'for species {}'.format(spc_info[0]))
                 return '', 0.
-            sym_geo = sym_cnf_save_fs.leaf.file.geometry.read(sym_min_cnf_locs)
-            sym_ene = sym_cnf_save_fs.leaf.file.energy.read(sym_min_cnf_locs)
+            sym_geo = sym_cnf_save_fs[-1].file.geometry.read(sym_min_cnf_locs)
+            sym_ene = sym_cnf_save_fs[-1].file.energy.read(sym_min_cnf_locs)
             if dist_names:
-                zma = tors_cnf_save_fs.leaf.file.zmatrix.read(
+                zma = tors_cnf_save_fs[-1].file.zmatrix.read(
                     tors_min_cnf_locs)
                 form_coords = list(
                     automol.zmatrix.bond_idxs(zma, dist_names[0]))
@@ -54,7 +54,7 @@ def tors_mods_on_sym_factor(tors_min_cnf_locs, tors_cnf_save_fs, saddle=False):
     if tors_min_cnf_locs is not None:
 
         # Get geometry for the torsional minimum
-        zma = tors_cnf_save_fs.leaf.file.zmatrix.read(
+        zma = tors_cnf_save_fs[-1].file.zmatrix.read(
             tors_min_cnf_locs)
 
         # Set torsional stuff

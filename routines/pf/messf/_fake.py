@@ -10,10 +10,10 @@ def set_fake_freqs(harm_min_cnf_locs_i, harm_min_cnf_locs_j,
     """ Set fake frequencies
     """
     if harm_min_cnf_locs_i is not None:
-        harm_geo_i = harm_cnf_save_fs_i.leaf.file.geometry.read(
+        harm_geo_i = harm_cnf_save_fs_i[-1].file.geometry.read(
             harm_min_cnf_locs_i)
         if harm_min_cnf_locs_j is not None:
-            harm_geo_j = harm_cnf_save_fs_j.leaf.file.geometry.read(
+            harm_geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
     freqs = (30, 50, 70, 100, 200)
     ntrans = 5
@@ -41,10 +41,10 @@ def combine_geos_in_fake_well(harm_min_cnf_locs_i, harm_min_cnf_locs_j,
     """ put two geometries together in a fake well
     """
     if harm_min_cnf_locs_i is not None:
-        harm_geo_i = harm_cnf_save_fs_i.leaf.file.geometry.read(
+        harm_geo_i = harm_cnf_save_fs_i[-1].file.geometry.read(
             harm_min_cnf_locs_i)
         if harm_min_cnf_locs_j is not None:
-            harm_geo_j = harm_cnf_save_fs_j.leaf.file.geometry.read(
+            harm_geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
     max_z_i = max(atom[1][2] for atom in harm_geo_i)
     min_z_j = min(atom[1][2] for atom in harm_geo_j)

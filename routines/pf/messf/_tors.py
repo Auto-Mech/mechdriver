@@ -187,16 +187,16 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene):
     if len(tors_names) == 1:
         for grid_val_i in tors_grids[0]:
             locs = [tors_names, [grid_val_i]]
-            if scn_save_fs.leaf.exists(locs):
-                enes.append(scn_save_fs.leaf.file.energy.read(locs))
+            if scn_save_fs[-1].exists(locs):
+                enes.append(scn_save_fs[-1].file.energy.read(locs))
             else:
                 enes.append(10.)
     elif len(tors_names) == 2:
          for grid_val_i in tors_grids[0]:
             for grid_val_j in tors_grids[1]:
                 locs = [tors_names, [grid_val_i, grid_val_j]]
-                if scn_save_fs.leaf.exists(locs):
-                    enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                if scn_save_fs[-1].exists(locs):
+                    enes.append(scn_save_fs[-1].file.energy.read(locs))
                 else:
                     enes.append(10.)
     elif len(tors_names) == 3:
@@ -204,8 +204,8 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene):
             for grid_val_j in tors_grids[1]:
                 for grid_val_k in tors_grids[2]:
                     locs = [tors_names, [grid_val_i, grid_val_j, grid_val_k]]
-                    if scn_save_fs.leaf.exists(locs):
-                        enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                    if scn_save_fs[-1].exists(locs):
+                        enes.append(scn_save_fs[-1].file.energy.read(locs))
                     else:
                         enes.append(10.)
     elif len(tors_names) == 4:
@@ -215,8 +215,8 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene):
                     for grid_val_l in tors_grids[3]:
                         locs = [tors_names,
                                 [grid_val_i, grid_val_j, grid_val_k, grid_val_l]]
-                        if scn_save_fs.leaf.exists(locs):
-                            enes.append(scn_save_fs.leaf.file.energy.read(locs))
+                        if scn_save_fs[-1].exists(locs):
+                            enes.append(scn_save_fs[-1].file.energy.read(locs))
                         else:
                             enes.append(10.)
 
@@ -425,8 +425,8 @@ def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
 
     bld_locs = ['PF', 0]
     bld_save_fs = autofile.fs.build(tors_save_path)
-    bld_save_fs.leaf.create(bld_locs)
-    pf_path = bld_save_fs.leaf.path(bld_locs)
+    bld_save_fs[-1].create(bld_locs)
+    pf_path = bld_save_fs[-1].path(bld_locs)
 
     # run messpf
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
@@ -462,8 +462,8 @@ def get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=False):
     if saddle:
         tors_names = spc_dct_i['tors_names']
     else:
-        if tors_cnf_save_fs.trunk.file.info.exists():
-            inf_obj_s = tors_cnf_save_fs.trunk.file.info.read()
+        if tors_cnf_save_fs[0].file.info.exists():
+            inf_obj_s = tors_cnf_save_fs[0].file.info.read()
             tors_ranges = inf_obj_s.tors_ranges
             tors_ranges = autofile.info.dict_(tors_ranges)
             tors_names = list(tors_ranges.keys())
@@ -498,7 +498,7 @@ def get_tors_sym_nums(spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
                       frm_bnd_key, brk_bnd_key, saddle=False):
     """ get tors parameters
     """
-    zma = tors_cnf_save_fs.leaf.file.zmatrix.read(
+    zma = tors_cnf_save_fs[-1].file.zmatrix.read(
         tors_min_cnf_locs)
     tors_names = get_tors_names(
         spc_dct_i, tors_cnf_save_fs, saddle=saddle)

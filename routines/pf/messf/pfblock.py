@@ -20,10 +20,13 @@ def get_pf_input(spc, spc_str, global_pf_str, zpe_str):
 
     # create a messpf input file
     spc_head_str = 'Species ' + '\n' + spc
-    print(global_pf_str, spc_head_str, spc_str, zpe_str)
     pf_inp_str = '\n'.join(
-        [global_pf_str, spc_head_str,
-         spc_str, zpe_str, '\n'])
+        [global_pf_str,
+         spc_head_str,
+         spc_str,
+         zpe_str,
+         '\n'])
+    print(pf_inp_str)
     return pf_inp_str
 
 

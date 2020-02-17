@@ -77,15 +77,19 @@ def run(spc_dct,
             # Set up the species filesystem
             spc_info = finf.get_spc_info(spc_dct[spc_name])
             spc_save_fs = autofile.fs.species(save_prefix)
-            spc_save_fs.leaf.create(spc_info)
-            spc_save_path = spc_save_fs.leaf.path(spc_info)
+            spc_save_fs[-1].create(spc_info)
+            spc_save_path = spc_save_fs[-1].path(spc_info)
 
-            # Read the ZPVE from the filesystem
-            zpe = routines.pf.messf.get_zero_point_energy(
-                spc, spc_dct[spc_name], pf_levels, pf_model,
-                save_prefix=spc_save_path)
-            zpe_str = routines.pf.messf.get_zpe_str(
-                spc_dct[spc_name], zpe)
+            # Read the ZPVE from the filesystem if not doing tau
+            tau_mod = bool(model_dct[spc_model]['pf']['tors'] == 'tau')
+            if not tau_mod:
+                zpe = routines.pf.messf.get_zero_point_energy(
+                    spc, spc_dct[spc_name], pf_levels, pf_model,
+                    save_prefix=spc_save_path)
+                zpe_str = routines.pf.messf.get_zpe_str(
+                    spc_dct[spc_name], zpe)
+            else:
+                zpe_str = ''
 
             # Generate the partition function
             spc_str, data_str_dct, _ = routines.pf.messf.blocks.species_block(

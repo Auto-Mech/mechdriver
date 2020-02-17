@@ -107,17 +107,17 @@ def get_thermo_paths(spc_save_path, spc_info, har_level):
     har_levelp.append(orb_restr)
 
     thy_save_fs = autofile.fs.theory(spc_save_path)
-    thy_save_fs.leaf.create(har_levelp)
-    thy_save_path = thy_save_fs.leaf.path(har_levelp)
+    thy_save_fs[-1].create(har_levelp)
+    thy_save_path = thy_save_fs[-1].path(har_levelp)
     bld_locs = ['PF', 0]
     bld_save_fs = autofile.fs.build(thy_save_path)
-    bld_save_fs.leaf.create(bld_locs)
-    pf_path = bld_save_fs.leaf.path(bld_locs)
+    bld_save_fs[-1].create(bld_locs)
+    pf_path = bld_save_fs[-1].path(bld_locs)
 
     # prepare NASA polynomials
     bld_locs = ['NASA_POLY', 0]
-    bld_save_fs.leaf.create(bld_locs)
-    nasa_path = bld_save_fs.leaf.path(bld_locs)
+    bld_save_fs[-1].create(bld_locs)
+    nasa_path = bld_save_fs[-1].path(bld_locs)
 
     print('Build Path for Partition Functions')
     print(pf_path)

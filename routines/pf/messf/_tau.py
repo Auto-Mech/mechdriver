@@ -24,11 +24,11 @@ def write_monte_carlo_mess_strings(tors_min_cnf_locs, tors_cnf_save_fs,
     if tors_min_cnf_locs is not None:
 
         # Get geometry for the torsional minimum
-        zma = tors_cnf_save_fs.leaf.file.zmatrix.read(
+        zma = tors_cnf_save_fs[-1].file.zmatrix.read(
             tors_min_cnf_locs)
         name_matrix = automol.zmatrix.name_matrix(zma)
         key_matrix = automol.zmatrix.key_matrix(zma)
-        tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(
+        tors_geo = tors_cnf_save_fs[-1].file.geometry.read(
             tors_min_cnf_locs)
 
         # Set torsional stuff
@@ -79,15 +79,15 @@ def write_tau_data_str(
     cnf_save_fs = autofile.fs.conformer(save_prefix)
     min_cnf_locs = fmin.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
-        ene_ref = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
+        ene_ref = cnf_save_fs[-1].file.energy.read(min_cnf_locs)
 
     tau_save_fs = autofile.fs.tau(save_prefix)
     evr = name+'\n'
     # cycle through saved tau geometries
     idx = 0
-    for locs in tau_save_fs.leaf.existing():
-        geo = tau_save_fs.leaf.file.geometry.read(locs)
-        ene = tau_save_fs.leaf.file.energy.read(locs)
+    for locs in tau_save_fs[-1].existing():
+        geo = tau_save_fs[-1].file.geometry.read(locs)
+        ene = tau_save_fs[-1].file.energy.read(locs)
         ene = (ene - ene_ref) * phycon.EH2KCAL
         ene_str = autofile.file.write.energy(ene)
         geo_str = autofile.file.write.geometry(geo)
@@ -101,12 +101,12 @@ def write_tau_data_str(
         evr += 'Geometry'+'\n'
         evr += geo_str+'\n'
         if gradient:
-            grad = tau_save_fs.leaf.file.gradient.read(locs)
+            grad = tau_save_fs[-1].file.gradient.read(locs)
             grad_str = autofile.file.write.gradient(grad)
             evr += 'Gradient'+'\n'
             evr += grad_str
         if hessian:
-            hess = tau_save_fs.leaf.file.hessian.read(locs)
+            hess = tau_save_fs[-1].file.hessian.read(locs)
             hess_str = autofile.file.write.hessian(hess)
             evr += 'Hessian'+'\n'
             evr += hess_str+'\n'
