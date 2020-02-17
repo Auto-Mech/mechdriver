@@ -62,7 +62,7 @@ def parse_mechanism_file(job_path, mech_type, spc_dct, run_obj_dct,
 
     # Form the pes dct that has info formatted to run
     # Get the models in here
-    run_pes_dct = pes_dct_w_rxn_lsts(pes_dct, conn_chnls_dct, run_obj_dct)
+    run_pes_dct = pes_dct_w_rxn_lsts(reduced_pes_dct, conn_chnls_dct, run_obj_dct)
 
     return run_pes_dct
 
