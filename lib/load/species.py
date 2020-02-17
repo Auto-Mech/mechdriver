@@ -29,9 +29,9 @@ def build_run_spc_dct(spc_dct, run_obj_dct):
 
     run_spc_lst = []
     for idx, spc in enumerate(spc_dct):
-        if idx in spc_nums:
+        if idx+1 in spc_nums:
             # model = spcmods[idx]
-            run_spc_lst.append((spc, run_obj_dct['spc'][idx]))
+            run_spc_lst.append((spc, run_obj_dct['spc'][idx+1]))
 
     # Build the run dct
     run_dct = {}
