@@ -8,10 +8,10 @@ import autofile
 
 # New libs
 from routines.es import util
-from lib.phydat import phycon
 from lib.runner import driver
 from lib.runner import par as runpar
 from lib.filesystem import minc as fsmin
+from lib.phydat import bnd
 
 
 def conformer_sampling(
@@ -25,12 +25,12 @@ def conformer_sampling(
     ich = spc_info[0]
     coo_names = []
     if not saddle:
-        geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
+        geo = thy_save_fs[-1].file.geometry.read(thy_level[1:4])
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         zma = automol.geom.zmatrix(geo)
     else:
-        geo = thy_save_fs.trunk.file.geometry.read()
-        zma = thy_save_fs.trunk.file.zmatrix.read()
+        geo = thy_save_fs[0].file.geometry.read()
+        zma = thy_save_fs[0].file.zmatrix.read()
         coo_names.append(tors_names)
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
@@ -77,16 +77,16 @@ def conformer_sampling(
     # save information about the minimum energy conformer in top directory
     min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
-        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
+        geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
+        zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
         if not saddle:
             assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
-            thy_save_fs.leaf.file.geometry.write(geo, thy_level[1:4])
-            thy_save_fs.leaf.file.zmatrix.write(zma, thy_level[1:4])
+            thy_save_fs[-1].file.geometry.write(geo, thy_level[1:4])
+            thy_save_fs[-1].file.zmatrix.write(zma, thy_level[1:4])
 
         else:
-            thy_save_fs.trunk.file.geometry.write(geo)
-            thy_save_fs.trunk.file.zmatrix.write(zma)
+            thy_save_fs[0].file.geometry.write(geo)
+            thy_save_fs[0].file.zmatrix.write(zma)
 
 
 def single_conformer(spc_info, thy_level, filesys, overwrite,
@@ -128,83 +128,71 @@ def run_conformers(
 
     print('Number of samples requested:', nsamp)
 
-    cnf_save_fs.trunk.create()
+    cnf_save_fs[0].create()
     vma = automol.zmatrix.var_(zma)
-    if cnf_save_fs.trunk.file.vmatrix.exists():
-        existing_vma = cnf_save_fs.trunk.file.vmatrix.read()
+    if cnf_save_fs[0].file.vmatrix.exists():
+        existing_vma = cnf_save_fs[0].file.vmatrix.read()
         assert vma == existing_vma
-    cnf_save_fs.trunk.file.vmatrix.write(vma)
+    cnf_save_fs[0].file.vmatrix.write(vma)
     idx = 0
     nsamp0 = nsamp
-    inf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
-    if cnf_save_fs.trunk.file.info.exists():
-        inf_obj_s = cnf_save_fs.trunk.file.info.read()
+    inf_obj = autofile.system.info.conformer[0](0, tors_range_dct)
+    if cnf_save_fs[0].file.info.exists():
+        inf_obj_s = cnf_save_fs[0].file.info.read()
         nsampd = inf_obj_s.nsamp
-    elif cnf_run_fs.trunk.file.info.exists():
-        inf_obj_r = cnf_run_fs.trunk.file.info.read()
+    elif cnf_run_fs[0].file.info.exists():
+        inf_obj_r = cnf_run_fs[0].file.info.read()
         nsampd = inf_obj_r.nsamp
     else:
         nsampd = 0
 
     while True:
         nsamp = nsamp0 - nsampd
+        # Break the while loop if enough sampls completed
         if nsamp <= 0:
             print('Reached requested number of samples. '
                   'Conformer search complete.')
             break
+        # Run the conformer sampling
+        print("    New nsamp requested is {:d}.".format(nsamp))
+        if nsampd > 0:
+            samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
         else:
-            print("    New nsamp requested is {:d}.".format(nsamp))
+            samp_zma = zma
 
-            if nsampd > 0:
-                samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
-            else:
-                samp_zma = zma
+        cid = autofile.system.generate_new_conformer_id()
+        locs = [cid]
 
-            cid = autofile.system.generate_new_conformer_id()
-            locs = [cid]
+        cnf_run_fs[-1].create(locs)
+        cnf_run_path = cnf_run_fs[-1].path(locs)
+        run_fs = autofile.fs.run(cnf_run_path)
 
-            cnf_run_fs.leaf.create(locs)
-            cnf_run_path = cnf_run_fs.leaf.path(locs)
-            run_fs = autofile.fs.run(cnf_run_path)
-
-            idx += 1
-            print("Run {}/{}".format(nsampd+1, nsamp0))
-            tors_names = list(tors_range_dct.keys())
-            if two_stage and tors_names:
-                print('Stage one beginning, holding the coordinates constant',
-                      tors_names)
-                driver.run_job(
-                    job=elstruct.Job.OPTIMIZATION,
-                    script_str=script_str,
-                    run_fs=run_fs,
-                    geom=samp_zma,
-                    spc_info=spc_info,
-                    thy_level=thy_level,
-                    overwrite=overwrite,
-                    frozen_coordinates=[tors_names],
-                    saddle=saddle,
-                    **kwargs
-                )
-                print('Stage one success, reading for stage 2')
-                ret = driver.read_job(
-                    job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-                if ret:
-                    sinf_obj, _, out_str = ret
-                    prog = sinf_obj.prog
-                    samp_zma = elstruct.reader.opt_zmatrix(prog, out_str)
-                    print('Stage one success beginning stage two on', samp_zma)
-                    driver.run_job(
-                        job=elstruct.Job.OPTIMIZATION,
-                        script_str=script_str,
-                        run_fs=run_fs,
-                        geom=samp_zma,
-                        spc_info=spc_info,
-                        thy_level=thy_level,
-                        overwrite=overwrite,
-                        saddle=saddle,
-                        **kwargs
-                    )
-            else:
+        idx += 1
+        print("Run {}/{}".format(nsampd+1, nsamp0))
+        tors_names = list(tors_range_dct.keys())
+        if two_stage and tors_names:
+            print('Stage one beginning, holding the coordinates constant',
+                  tors_names)
+            driver.run_job(
+                job=elstruct.Job.OPTIMIZATION,
+                script_str=script_str,
+                run_fs=run_fs,
+                geom=samp_zma,
+                spc_info=spc_info,
+                thy_level=thy_level,
+                overwrite=overwrite,
+                frozen_coordinates=[tors_names],
+                saddle=saddle,
+                **kwargs
+            )
+            print('Stage one success, reading for stage 2')
+            ret = driver.read_job(
+                job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            if ret:
+                sinf_obj, _, out_str = ret
+                prog = sinf_obj.prog
+                samp_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                print('Stage one success beginning stage two on', samp_zma)
                 driver.run_job(
                     job=elstruct.Job.OPTIMIZATION,
                     script_str=script_str,
@@ -216,17 +204,29 @@ def run_conformers(
                     saddle=saddle,
                     **kwargs
                 )
+        else:
+            driver.run_job(
+                job=elstruct.Job.OPTIMIZATION,
+                script_str=script_str,
+                run_fs=run_fs,
+                geom=samp_zma,
+                spc_info=spc_info,
+                thy_level=thy_level,
+                overwrite=overwrite,
+                saddle=saddle,
+                **kwargs
+            )
 
-            if cnf_save_fs.trunk.file.info.exists():
-                inf_obj_s = cnf_save_fs.trunk.file.info.read()
-                nsampd = inf_obj_s.nsamp
-            elif cnf_run_fs.trunk.file.info.exists():
-                inf_obj_r = cnf_run_fs.trunk.file.info.read()
-                nsampd = inf_obj_r.nsamp
-            nsampd += 1
-            inf_obj.nsamp = nsampd
-            cnf_save_fs.trunk.file.info.write(inf_obj)
-            cnf_run_fs.trunk.file.info.write(inf_obj)
+        if cnf_save_fs[0].file.info.exists():
+            inf_obj_s = cnf_save_fs[0].file.info.read()
+            nsampd = inf_obj_s.nsamp
+        elif cnf_run_fs[0].file.info.exists():
+            inf_obj_r = cnf_run_fs[0].file.info.read()
+            nsampd = inf_obj_r.nsamp
+        nsampd += 1
+        inf_obj.nsamp = nsampd
+        cnf_save_fs[0].file.info.write(inf_obj)
+        cnf_run_fs[0].file.info.write(inf_obj)
 
 
 def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
@@ -234,17 +234,17 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
     """ save the conformers that have been found so far
     """
 
-    locs_lst = cnf_save_fs.leaf.existing()
-    seen_geos = [cnf_save_fs.leaf.file.geometry.read(locs)
+    locs_lst = cnf_save_fs[-1].existing()
+    seen_geos = [cnf_save_fs[-1].file.geometry.read(locs)
                  for locs in locs_lst]
-    seen_enes = [cnf_save_fs.leaf.file.energy.read(locs)
+    seen_enes = [cnf_save_fs[-1].file.energy.read(locs)
                  for locs in locs_lst]
 
-    if not cnf_run_fs.trunk.exists():
+    if not cnf_run_fs[0].exists():
         print("No conformers to save. Skipping...")
     else:
-        for locs in cnf_run_fs.leaf.existing():
-            cnf_run_path = cnf_run_fs.leaf.path(locs)
+        for locs in cnf_run_fs[-1].existing():
+            cnf_run_path = cnf_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(cnf_run_path)
             print("Reading from conformer run at {}".format(cnf_run_path))
 
@@ -327,43 +327,16 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
                                           dist_len, conf_dist_len))
                                 continue
                             symbols = automol.zmatrix.symbols(zma)
-                            equi_bnd = 0.
-                            if symbols[ts_bnd2] == 'H':
-                                if symbols[ts_bnd1] == 'H':
-                                    equi_bnd = 0.75 * phycon.ANG2BOHR
-                                if symbols[ts_bnd1] == 'C':
-                                    equi_bnd = 1.09 * phycon.ANG2BOHR
-                                elif symbols[ts_bnd1] == 'N':
-                                    equi_bnd = 1.01
-                                elif symbols[ts_bnd1] == 'O':
-                                    equi_bnd = 0.96 * phycon.ANG2BOHR
-                            if symbols[ts_bnd2] == 'C':
-                                if symbols[ts_bnd1] == 'H':
-                                    equi_bnd = 1.09 * phycon.ANG2BOHR
-                                if symbols[ts_bnd1] == 'C':
-                                    equi_bnd = 1.5 * phycon.ANG2BOHR
-                                elif symbols[ts_bnd1] == 'N':
-                                    equi_bnd = 1.45 * phycon.ANG2BOHR
-                                elif symbols[ts_bnd1] == 'O':
-                                    equi_bnd = 1.4 * phycon.ANG2BOHR
-                            if symbols[ts_bnd2] == 'N':
-                                if symbols[ts_bnd1] == 'H':
-                                    equi_bnd = 1.01 * phycon.ANG2BOHR
-                                if symbols[ts_bnd1] == 'C':
-                                    equi_bnd = 1.45 * phycon.ANG2BOHR
-                                elif symbols[ts_bnd1] == 'N':
-                                    equi_bnd = 1.4 * phycon.ANG2BOHR
-                                elif symbols[ts_bnd1] == 'O':
-                                    equi_bnd = 1.35 * phycon.ANG2BOHR
-                            if symbols[ts_bnd2] == 'O':
-                                if symbols[ts_bnd1] == 'H':
-                                    equi_bnd = 0.96 * phycon.ANG2BOHR
-                                if symbols[ts_bnd1] == 'C':
-                                    equi_bnd = 1.4 * phycon.ANG2BOHR
-                                elif symbols[ts_bnd1] == 'N':
-                                    equi_bnd = 1.35 * phycon.ANG2BOHR
-                                elif symbols[ts_bnd1] == 'O':
-                                    equi_bnd = 1.3 * phycon.ANG2BOHR
+
+                            # Set standard equivalent bond len for rxn coord
+                            symbols = automol.zmatrix.symbols(zma)
+                            symb1, symb2 = symbols[ts_bnd1], symbols[ts_bnd2]
+                            if (symb1, symb2) in bnd.LEN_DCT:
+                                equi_bnd = bnd.LEN_DCT[(symb1, symb2)]
+                            elif (symb2, symb1) in bnd.LEN_DCT:
+                                equi_bnd = bnd.LEN_DCT[(symb2, symb1)]
+                            else:
+                                equi_bnd = 0.0
                             displace_from_equi = conf_dist_len - equi_bnd
                             # print('distance_from_equi test:',
                             #       conf_dist_len, equi_bnd, dist_len)
@@ -396,24 +369,24 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
                         print(" - Geometry is not unique. Skipping...")
                     else:
                         vma = automol.zmatrix.var_(zma)
-                        if cnf_save_fs.trunk.file.vmatrix.exists():
-                            exist_vma = cnf_save_fs.trunk.file.vmatrix.read()
+                        if cnf_save_fs[0].file.vmatrix.exists():
+                            exist_vma = cnf_save_fs[0].file.vmatrix.read()
                             if vma != exist_vma:
                                 print(" - Isomer is not the same as starting",
                                       "isomer. Skipping...")
                             else:
-                                save_path = cnf_save_fs.leaf.path(locs)
+                                save_path = cnf_save_fs[-1].path(locs)
                                 print(" - Geometry is unique. Saving...")
                                 print(" - Save path: {}".format(save_path))
 
-                                cnf_save_fs.leaf.create(locs)
-                                cnf_save_fs.leaf.file.geometry_info.write(
+                                cnf_save_fs[-1].create(locs)
+                                cnf_save_fs[-1].file.geometry_info.write(
                                     inf_obj, locs)
-                                cnf_save_fs.leaf.file.geometry_input.write(
+                                cnf_save_fs[-1].file.geometry_input.write(
                                     inp_str, locs)
-                                cnf_save_fs.leaf.file.energy.write(ene, locs)
-                                cnf_save_fs.leaf.file.geometry.write(geo, locs)
-                                cnf_save_fs.leaf.file.zmatrix.write(zma, locs)
+                                cnf_save_fs[-1].file.energy.write(ene, locs)
+                                cnf_save_fs[-1].file.geometry.write(geo, locs)
+                                cnf_save_fs[-1].file.zmatrix.write(zma, locs)
 
                     seen_geos.append(geo)
                     seen_enes.append(ene)
@@ -491,12 +464,12 @@ def int_sym_num_from_sampling(
             int_sym_num = 1.
         else:
             ethrsh = 1.e-5
-            locs_lst = cnf_save_fs.leaf.existing()
+            locs_lst = cnf_save_fs[-1].existing()
             int_sym_num = 1.
             if locs_lst:
-                enes = [cnf_save_fs.leaf.file.energy.read(locs)
+                enes = [cnf_save_fs[-1].file.energy.read(locs)
                         for locs in locs_lst]
-                geos = [cnf_save_fs.leaf.file.geometry.read(locs)
+                geos = [cnf_save_fs[-1].file.geometry.read(locs)
                         for locs in locs_lst]
                 geo_sim = []
                 geo_sim2 = []
@@ -524,7 +497,7 @@ def int_sym_num_from_sampling(
                                 if saddle:
                                     new_geom = False
                                     break
-                                elif are_torsions_same(new_geo, geo_sim_j):
+                                if are_torsions_same(new_geo, geo_sim_j):
                                     new_geom = False
                                     break
                         if new_geom:

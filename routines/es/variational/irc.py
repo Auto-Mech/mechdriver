@@ -9,14 +9,14 @@ def _run_irc(
     """
 
     # Obtain saddle-point minimmum-energy conformer from filesystem
-    ts_run_path = ts_run_fs.leaf.path(locs)
-    # ts_save_path = ts_save_fs.leaf.path(locs)
-    geo = ts_save_fs.leaf.file.geometry.read(locs)
+    ts_run_path = ts_run_fs[-1].path(locs)
+    # ts_save_path = ts_save_fs[-1].path(locs)
+    geo = ts_save_fs[-1].file.geometry.read(locs)
     
     # Check if IRC run to desired specs
     # If Not run the IRC calculation
     for grid_idx, grid_val, run_prefix in zip(grid_idxs, grid_vals, run_prefixes):
-        if not scn_save_fs.leaf.file.geometry.exists([['RX'], [grid_val]]) or overwrite:
+        if not scn_save_fs[-1].file.geometry.exists([['RX'], [grid_val]]) or overwrite:
             run_irc = True
 
     if run_irc:
@@ -57,7 +57,7 @@ def _run_irc(
             dist_name = 'RX'
             for idx, coord in enumerate(coords):
                 locs = [[dist_name], [coord]]
-                # save_fs.leaf.file.energy.write(enes[idx], locs)
-                # save_fs.leaf.file.geometry.write(geos[idx], locs)
-                # save_fs.leaf.file.gradient.write(gras[idx], locs)
-                # save_fs.leaf.file.hessian.write(hessians[idx], locs)
+                # save_fs[-1].file.energy.write(enes[idx], locs)
+                # save_fs[-1].file.geometry.write(geos[idx], locs)
+                # save_fs[-1].file.gradient.write(gras[idx], locs)
+                # save_fs[-1].file.hessian.write(hessians[idx], locs)

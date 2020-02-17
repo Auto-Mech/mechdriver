@@ -46,7 +46,7 @@ def _grab_min_energy_conformer(cnf_save_fs):
 
     min_locs = moldr.util.min_energy_conformer_locators(cnf_save_fs)
     if min_locs:
-        min_conf = cnf_save_fs.leaf.file.geometry.read(min_locs)
+        min_conf = cnf_save_fs[-1].file.geometry.read(min_locs)
     else:
         min_conf = None
 
@@ -70,9 +70,9 @@ def _grab_all_conformers(cnf_save_fs):
     """ Reads all conformers from the Save FileSystem
     """
 
-    cnf_locs_lst = cnf_save_fs.leaf.existing()
+    cnf_locs_lst = cnf_save_fs[-1].existing()
     if cnf_locs_lst:
-        cnf_geoms = [cnf_save_fs.leaf.file.geometry.read(locs)
+        cnf_geoms = [cnf_save_fs[-1].file.geometry.read(locs)
                      for locs in cnf_locs_lst]
     else:
         cnf_geoms = None

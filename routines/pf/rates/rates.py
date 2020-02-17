@@ -141,8 +141,8 @@ def make_species_data(spc, spc_dct_i,
     if 'ts_' in spc:
         save_path = spc_dct_i['rxn_fs'][3]
     else:
-        spc_save_fs.leaf.create(spc_info)
-        save_path = spc_save_fs.leaf.path(spc_info)
+        spc_save_fs[-1].create(spc_info)
+        save_path = spc_save_fs[-1].path(spc_info)
     species_data = blocks.species_block(
         spc=spc,
         spc_dct_i=spc_dct_i,
@@ -161,10 +161,10 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs,
     """
     spc_info_i = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
     spc_info_j = (spc_dct_j['ich'], spc_dct_j['chg'], spc_dct_j['mul'])
-    spc_save_fs.leaf.create(spc_info_i)
-    spc_save_fs.leaf.create(spc_info_j)
-    save_path_i = spc_save_fs.leaf.path(spc_info_i)
-    save_path_j = spc_save_fs.leaf.path(spc_info_j)
+    spc_save_fs[-1].create(spc_info_i)
+    spc_save_fs[-1].create(spc_info_j)
+    save_path_i = spc_save_fs[-1].path(spc_info_i)
+    save_path_j = spc_save_fs[-1].path(spc_info_j)
     species_data = blocks.fake_species_block(
         spc_dct_i=spc_dct_i,
         spc_dct_j=spc_dct_j,

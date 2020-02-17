@@ -69,7 +69,7 @@ def is_atom(har_min_cnf_locs, har_cnf_save_fs):
     """ Check if species is an atom
     """
     if har_min_cnf_locs is not None:
-        har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
+        har_geo = har_cnf_save_fs[-1].file.geometry.read(har_min_cnf_locs)
         # print('This is an atom')
     return automol.geom.is_atom(har_geo)
 
@@ -77,7 +77,7 @@ def is_atom(har_min_cnf_locs, har_cnf_save_fs):
 def atom_mass(har_min_cnf_locs, har_cnf_save_fs):
     """ write the atom string
     """
-    har_geo = har_cnf_save_fs.leaf.file.geometry.read(har_min_cnf_locs)
+    har_geo = har_cnf_save_fs[-1].file.geometry.read(har_min_cnf_locs)
     return ptab.to_mass(har_geo[0][0])
 
 
@@ -86,10 +86,10 @@ def get_stoich(harm_min_cnf_locs_i, harm_min_cnf_locs_j,
     """ get the overall combined stoichiometry
     """
     if harm_min_cnf_locs_i is not None:
-        harm_geo_i = harm_cnf_save_fs_i.leaf.file.geometry.read(
+        harm_geo_i = harm_cnf_save_fs_i[-1].file.geometry.read(
             harm_min_cnf_locs_i)
         if harm_min_cnf_locs_j is not None:
-            harm_geo_j = harm_cnf_save_fs_j.leaf.file.geometry.read(
+            harm_geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
 
     form_i = automol.geom.formula(harm_geo_i)

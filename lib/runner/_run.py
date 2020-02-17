@@ -26,7 +26,7 @@ def options_matrix_optimization(script_str, prefix,
     assert len(errors) == len(options_mat)
 
     subrun_fs = autofile.fs.subrun(prefix)
-    max_macro_idx, _ = max(subrun_fs.leaf.existing(), default=(-1, -1))
+    max_macro_idx, _ = max(subrun_fs[-1].existing(), default=(-1, -1))
     macro_idx = max_macro_idx + 1
     micro_idx = 0
     read_geom_ = (elstruct.reader.opt_zmatrix_(prog)
@@ -39,8 +39,8 @@ def options_matrix_optimization(script_str, prefix,
 
     kwargs_ = dict(kwargs)
     while True:
-        subrun_fs.leaf.create([macro_idx, micro_idx])
-        path = subrun_fs.leaf.path([macro_idx, micro_idx])
+        subrun_fs[-1].create([macro_idx, micro_idx])
+        path = subrun_fs[-1].path([macro_idx, micro_idx])
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
@@ -99,14 +99,14 @@ def options_matrix_run(input_writer, script_str, prefix,
     assert len(errors) == len(options_mat)
 
     subrun_fs = autofile.fs.subrun(prefix)
-    max_macro_idx, _ = max(subrun_fs.leaf.existing(), default=(-1, -1))
+    max_macro_idx, _ = max(subrun_fs[-1].existing(), default=(-1, -1))
     macro_idx = max_macro_idx + 1
     micro_idx = 0
 
     kwargs_ = dict(kwargs)
     while True:
-        subrun_fs.leaf.create([macro_idx, micro_idx])
-        path = subrun_fs.leaf.path([macro_idx, micro_idx])
+        subrun_fs[-1].create([macro_idx, micro_idx])
+        path = subrun_fs[-1].path([macro_idx, micro_idx])
 
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')

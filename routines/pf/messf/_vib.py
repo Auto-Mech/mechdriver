@@ -25,8 +25,8 @@ def projrot_freqs_1(tors_geo, hess,
 
     bld_locs = ['PROJROT', 0]
     bld_save_fs = autofile.fs.build(save_path)
-    bld_save_fs.leaf.create(bld_locs)
-    path = bld_save_fs.leaf.path(bld_locs)
+    bld_save_fs[-1].create(bld_locs)
+    path = bld_save_fs[-1].path(bld_locs)
     print('Build Path for ProjRot calls')
     print(path)
     proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
@@ -64,8 +64,8 @@ def projrot_freqs_2(save_path, pot=False, saddle=False):
 
     bld_locs = ['PROJROT', 0]
     bld_save_fs = autofile.fs.build(save_path)
-    bld_save_fs.leaf.create(bld_locs)
-    path = bld_save_fs.leaf.path(bld_locs)
+    bld_save_fs[-1].create(bld_locs)
+    path = bld_save_fs[-1].path(bld_locs)
 
     projrot_script_str2 = (
         "#!/usr/bin/env bash\n"

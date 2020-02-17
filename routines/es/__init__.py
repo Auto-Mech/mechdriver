@@ -210,7 +210,7 @@ def geometry_analysis(tsk, spc_name, thy_level, ini_filesys,
         return
     if isinstance(selection, str):
         if selection == 'all':
-            locs_lst = save_dir.leaf.existing()
+            locs_lst = save_dir[-1].existing()
         elif selection == 'min':
             locs_lst = [fsmin.min_energy_conformer_locators(save_dir)]
     else:

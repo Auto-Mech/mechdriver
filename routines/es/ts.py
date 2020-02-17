@@ -36,21 +36,21 @@ def sadpt_reference_geometry(spcdct, thy_level, ini_thy_level,
         print('found initial geometry from geometry dictionary')
     else:
         # Check to see if geo already exists at running_theory
-        if thy_save_fs.trunk.file.geometry.exists():
-            thy_path = thy_save_fs.trunk.path()
+        if thy_save_fs[0].file.geometry.exists():
+            thy_path = thy_save_fs[0].path()
             print(
                 'getting reference geometry from {}'.format(thy_path))
-            geo = thy_save_fs.trunk.file.geometry.read()
-            zma = thy_save_fs.trunk.file.zmatrix.read()
+            geo = thy_save_fs[0].file.geometry.read()
+            zma = thy_save_fs[0].file.zmatrix.read()
             # print('geo:',automol.geom.string(geo))
         if not geo:
             if ini_thy_save_fs:
-                if ini_thy_save_fs.trunk.file.geometry.exists():
-                    thy_path = ini_thy_save_fs.trunk.path()
+                if ini_thy_save_fs[0].file.geometry.exists():
+                    thy_path = ini_thy_save_fs[0].path()
                     print(
                         'getting reference geometry from {}'.format(thy_path))
-                    zma_init = ini_thy_save_fs.trunk.file.zmatrix.read()
-                    geo_init = ini_thy_save_fs.trunk.file.geometry.read()
+                    zma_init = ini_thy_save_fs[0].file.zmatrix.read()
+                    geo_init = ini_thy_save_fs[0].file.geometry.read()
     if not geo and geo_init:
         _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
             *thy_level[0:2])
@@ -79,11 +79,11 @@ def sadpt_reference_geometry(spcdct, thy_level, ini_thy_level,
         if geo:
 
             print(" - Saving...")
-            print(" - Save path: {}".format(thy_save_fs.trunk.path()))
+            print(" - Save path: {}".format(thy_save_fs[0].path()))
 
-            thy_save_fs.trunk.file.energy.write(ene)
-            thy_save_fs.trunk.file.geometry.write(geo)
-            thy_save_fs.trunk.file.zmatrix.write(zma)
+            thy_save_fs[0].file.energy.write(ene)
+            thy_save_fs[0].file.geometry.write(geo)
+            thy_save_fs[0].file.zmatrix.write(zma)
 
             conformer.single_conformer(
                 spc_info, thy_level, geo_fs,
@@ -98,15 +98,15 @@ def sadpt_reference_geometry(spcdct, thy_level, ini_thy_level,
 #     """
 #
 #     # Obtain saddle-point minimmum-energy conformer from filesystem
-#     ts_run_path = ts_run_fs.leaf.path(locs)
-#     # ts_save_path = ts_save_fs.leaf.path(locs)
-#     geo = ts_save_fs.leaf.file.geometry.read(locs)
+#     ts_run_path = ts_run_fs[-1].path(locs)
+#     # ts_save_path = ts_save_fs[-1].path(locs)
+#     geo = ts_save_fs[-1].file.geometry.read(locs)
 #
 #     # Check if IRC run to desired specs
 #     # If Not run the IRC calculation
 # for grid_idx, grid_val, run_prefix
 #   in zip(grid_idxs, grid_vals, run_prefixes):
-# if not scn_save_fs.leaf.file.geometry.exists([['RX'], [grid_val]])
+# if not scn_save_fs[-1].file.geometry.exists([['RX'], [grid_val]])
 # or overwrite:
 #             run_irc = True
 #
@@ -148,7 +148,7 @@ def sadpt_reference_geometry(spcdct, thy_level, ini_thy_level,
 #             dist_name = 'RX'
 #             for idx, coord in enumerate(coords):
 #                 locs = [[dist_name], [coord]]
-#                 # save_fs.leaf.file.energy.write(enes[idx], locs)
-#                 # save_fs.leaf.file.geometry.write(geos[idx], locs)
-#                 # save_fs.leaf.file.gradient.write(gras[idx], locs)
-#                 # save_fs.leaf.file.hessian.write(hessians[idx], locs)
+#                 # save_fs[-1].file.energy.write(enes[idx], locs)
+#                 # save_fs[-1].file.geometry.write(geos[idx], locs)
+#                 # save_fs[-1].file.gradient.write(gras[idx], locs)
+#                 # save_fs[-1].file.hessian.write(hessians[idx], locs)

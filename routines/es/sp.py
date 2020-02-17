@@ -16,17 +16,17 @@ def run_energy(
     """
 
     # Prepare unique filesystem since many energies may be under same directory
-    geo_run_path = geo_run_fs.leaf.path(locs)
-    geo_save_path = geo_save_fs.leaf.path(locs)
-    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    geo_run_path = geo_run_fs[-1].path(locs)
+    geo_save_path = geo_save_fs[-1].path(locs)
+    geo = geo_save_fs[-1].file.geometry.read(locs)
     sp_run_fs = autofile.fs.single_point(geo_run_path)
     sp_save_fs = autofile.fs.single_point(geo_save_path)
-    sp_run_fs.leaf.create(thy_level[1:4])
-    sp_run_path = sp_run_fs.leaf.path(thy_level[1:4])
-    sp_save_fs.leaf.create(thy_level[1:4])
+    sp_run_fs[-1].create(thy_level[1:4])
+    sp_run_path = sp_run_fs[-1].path(thy_level[1:4])
+    sp_save_fs[-1].create(thy_level[1:4])
     run_fs = autofile.fs.run(sp_run_path)
 
-    if not sp_save_fs.leaf.file.energy.exists(thy_level[1:4]) or overwrite:
+    if not sp_save_fs[-1].file.energy.exists(thy_level[1:4]) or overwrite:
 
         # Add options matrix for energy runs for molpro
         if thy_level[0] == 'molpro2015':
@@ -60,9 +60,9 @@ def run_energy(
         ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
         print(" - Saving energy...")
-        sp_save_fs.leaf.file.input.write(inp_str, thy_level[1:4])
-        sp_save_fs.leaf.file.info.write(inf_obj, thy_level[1:4])
-        sp_save_fs.leaf.file.energy.write(ene, thy_level[1:4])
+        sp_save_fs[-1].file.input.write(inp_str, thy_level[1:4])
+        sp_save_fs[-1].file.info.write(inf_obj, thy_level[1:4])
+        sp_save_fs[-1].file.energy.write(ene, thy_level[1:4])
 
 
 def run_gradient(
@@ -71,12 +71,12 @@ def run_gradient(
     """ Determine the gradient for the geometry in the given location
     """
 
-    geo_run_path = geo_run_fs.leaf.path(locs)
-    geo_save_path = geo_save_fs.leaf.path(locs)
-    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    geo_run_path = geo_run_fs[-1].path(locs)
+    geo_save_path = geo_save_fs[-1].path(locs)
+    geo = geo_save_fs[-1].file.geometry.read(locs)
     run_fs = autofile.fs.run(geo_run_path)
 
-    if not geo_save_fs.leaf.file.gradient.exists(locs) or overwrite:
+    if not geo_save_fs[-1].file.gradient.exists(locs) or overwrite:
         print('Running gradient')
         driver.run_job(
             job='gradient',
@@ -105,9 +105,9 @@ def run_gradient(
 
             print(" - Saving gradient...")
             print(" - Save path: {}".format(geo_save_path))
-            geo_save_fs.leaf.file.gradient_info.write(inf_obj, locs)
-            geo_save_fs.leaf.file.gradient_input.write(inp_str, locs)
-            geo_save_fs.leaf.file.gradient.write(grad, locs)
+            geo_save_fs[-1].file.gradient_info.write(inf_obj, locs)
+            geo_save_fs[-1].file.gradient_input.write(inp_str, locs)
+            geo_save_fs[-1].file.gradient.write(grad, locs)
 
 
 def run_hessian(
@@ -116,12 +116,12 @@ def run_hessian(
     """ Determine the hessian for the geometry in the given location
     """
 
-    geo_run_path = geo_run_fs.leaf.path(locs)
-    geo_save_path = geo_save_fs.leaf.path(locs)
-    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    geo_run_path = geo_run_fs[-1].path(locs)
+    geo_save_path = geo_save_fs[-1].path(locs)
+    geo = geo_save_fs[-1].file.geometry.read(locs)
     run_fs = autofile.fs.run(geo_run_path)
 
-    if not geo_save_fs.leaf.file.hessian.exists(locs) or overwrite:
+    if not geo_save_fs[-1].file.hessian.exists(locs) or overwrite:
         print('Running hessian')
         driver.run_job(
             job='hessian',
@@ -152,10 +152,10 @@ def run_hessian(
 
             print(" - Saving hessian...")
             print(" - Save path: {}".format(geo_save_path))
-            geo_save_fs.leaf.file.hessian_info.write(inf_obj, locs)
-            geo_save_fs.leaf.file.hessian_input.write(inp_str, locs)
-            geo_save_fs.leaf.file.hessian.write(hess, locs)
-            geo_save_fs.leaf.file.harmonic_frequencies.write(freqs, locs)
+            geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
+            geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
+            geo_save_fs[-1].file.hessian.write(hess, locs)
+            geo_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
 
 
 def run_vpt2(
@@ -164,12 +164,12 @@ def run_vpt2(
     """ Perform vpt2 analysis for the geometry in the given location
     """
 
-    geo_run_path = geo_run_fs.leaf.path(locs)
-    geo_save_path = geo_save_fs.leaf.path(locs)
-    geo = geo_save_fs.leaf.file.geometry.read(locs)
+    geo_run_path = geo_run_fs[-1].path(locs)
+    geo_save_path = geo_save_fs[-1].path(locs)
+    geo = geo_save_fs[-1].file.geometry.read(locs)
     run_fs = autofile.fs.run(geo_run_path)
 
-    if not geo_save_fs.leaf.file.anharmnicity_matrix.exists(locs) or overwrite:
+    if not geo_save_fs[-1].file.anharmnicity_matrix.exists(locs) or overwrite:
 
         print('Running vpt2')
         driver.run_job(
@@ -199,15 +199,15 @@ def run_vpt2(
 
             print(" - Saving anharmonicities...")
             print(" - Save path: {}".format(geo_save_path))
-            # geo_save_fs.leaf.file.vpt2_info.write(inf_obj, locs)
-            geo_save_fs.leaf.file.vpt2_input.write(inp_str, locs)
-            geo_save_fs.leaf.file.anharmonic_frequencies.write(
+            # geo_save_fs[-1].file.vpt2_info.write(inf_obj, locs)
+            geo_save_fs[-1].file.vpt2_input.write(inp_str, locs)
+            geo_save_fs[-1].file.anharmonic_frequencies.write(
                 vpt2_dct['freqs'], locs)
-            geo_save_fs.leaf.file.anharmonic_zpve.write(
+            geo_save_fs[-1].file.anharmonic_zpve.write(
                 vpt2_dct['zpve'], locs)
-            geo_save_fs.leaf.file.anharmonicity_matrix.write(
+            geo_save_fs[-1].file.anharmonicity_matrix.write(
                 vpt2_dct['x_mat'], locs)
-            geo_save_fs.leaf.file.vibro_rot_alpha_matrix.write(
+            geo_save_fs[-1].file.vibro_rot_alpha_matrix.write(
                 vpt2_dct['vibrot_mat'], locs)
-            geo_save_fs.leaf.file.quartic_centrifugal_dist_consts.write(
+            geo_save_fs[-1].file.quartic_centrifugal_dist_consts.write(
                 vpt2_dct['cent_dist_const'], locs)

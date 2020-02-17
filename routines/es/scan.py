@@ -121,12 +121,12 @@ def hindered_rotor_scans(
     # Run with the old code
     min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
-        min_cnf_run_path = cnf_run_fs.leaf.path(min_cnf_locs)
-        min_cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+        min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
+        min_cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
         scn_run_fs = autofile.fs.scan(min_cnf_run_path)
         scn_save_fs = autofile.fs.scan(min_cnf_save_path)
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
-        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
+        geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
+        zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
 
         run_tors_names, run_tors_grids = hr_prep(
             zma, geo, run_tors_names=(),
@@ -187,8 +187,8 @@ def run_scan(
     """
 
     vma = automol.zmatrix.var_(zma)
-    if scn_save_fs.trunk.file.vmatrix.exists():
-        existing_vma = scn_save_fs.trunk.file.vmatrix.read()
+    if scn_save_fs[0].file.vmatrix.exists():
+        existing_vma = scn_save_fs[0].file.vmatrix.read()
         assert vma == existing_vma
 
     coo_names = []
@@ -199,17 +199,17 @@ def run_scan(
         grid_vals.append(coo_grid_vals)
 
     # for now, running only one-dimensional hindered rotor scans
-    scn_save_fs.branch.create([coo_names])
-    inf_obj = autofile.system.info.scan_branch(grid_dct)
-    scn_save_fs.branch.file.info.write(inf_obj, [coo_names])
+    scn_save_fs[1].create([coo_names])
+    inf_obj = autofile.system.info.scan[1](grid_dct)
+    scn_save_fs[1].file.info.write(inf_obj, [coo_names])
     npoint = 1
     for coo_grid_vals in grid_vals:
         npoint *= len(coo_grid_vals)
     grid_idxs = tuple(range(npoint))
     if len(grid_vals) == 1:
         for grid_val in grid_vals[0]:
-            scn_run_fs.leaf.create([coo_names, [grid_val]])
-        run_prefixes = tuple(scn_run_fs.leaf.path([coo_names, [grid_val]])
+            scn_run_fs[-1].create([coo_names, [grid_val]])
+        run_prefixes = tuple(scn_run_fs[-1].path([coo_names, [grid_val]])
                              for grid_val in grid_vals[0])
         _run_1d_scan(
             script_str=script_str,
@@ -251,8 +251,8 @@ def run_scan(
         run_prefixes = []
         for grid_val_i in grid_vals[0]:
             for grid_val_j in grid_vals[1]:
-                scn_run_fs.leaf.create([coo_names, [grid_val_i, grid_val_j]])
-                run_prefixes.append(scn_run_fs.leaf.path(
+                scn_run_fs[-1].create([coo_names, [grid_val_i, grid_val_j]])
+                run_prefixes.append(scn_run_fs[-1].path(
                     [coo_names, [grid_val_i, grid_val_j]]))
         run_prefixes = tuple(run_prefixes)
 
@@ -278,7 +278,7 @@ def run_scan(
             run_prefixes = []
             for grid_val_i in grid_vals[0][::-1]:
                 for grid_val_j in grid_vals[1][::-1]:
-                    run_prefixes.append(scn_run_fs.leaf.path(
+                    run_prefixes.append(scn_run_fs[-1].path(
                         [coo_names, [grid_val_i, grid_val_j]]))
             run_prefixes = tuple(run_prefixes)
             _run_2d_scan(
@@ -304,9 +304,9 @@ def run_scan(
         for grid_val_i in grid_vals[0]:
             for grid_val_j in grid_vals[1]:
                 for grid_val_k in grid_vals[2]:
-                    scn_run_fs.leaf.create(
+                    scn_run_fs[-1].create(
                         [coo_names, [grid_val_i, grid_val_j, grid_val_k]])
-                    run_prefixes.append(scn_run_fs.leaf.path(
+                    run_prefixes.append(scn_run_fs[-1].path(
                         [coo_names, [grid_val_i, grid_val_j, grid_val_k]]))
         run_prefixes = tuple(run_prefixes)
 
@@ -333,7 +333,7 @@ def run_scan(
             for grid_val_i in grid_vals[0][::-1]:
                 for grid_val_j in grid_vals[1][::-1]:
                     for grid_val_k in grid_vals[2][::-1]:
-                        run_prefixes.append(scn_run_fs.leaf.path(
+                        run_prefixes.append(scn_run_fs[-1].path(
                             [coo_names, [grid_val_i, grid_val_j, grid_val_k]]))
             run_prefixes = tuple(run_prefixes)
             _run_3d_scan(
@@ -361,11 +361,11 @@ def run_scan(
             for grid_val_j in grid_vals[1]:
                 for grid_val_k in grid_vals[2]:
                     for grid_val_l in grid_vals[3]:
-                        scn_run_fs.leaf.create(
+                        scn_run_fs[-1].create(
                             [coo_names,
                              [grid_val_i, grid_val_j,
                               grid_val_k, grid_val_l]])
-                        run_prefixes.append(scn_run_fs.leaf.path(
+                        run_prefixes.append(scn_run_fs[-1].path(
                             [coo_names,
                              [grid_val_i, grid_val_j,
                               grid_val_k, grid_val_l]]))
@@ -395,7 +395,7 @@ def run_scan(
                 for grid_val_j in grid_vals[1][::-1]:
                     for grid_val_k in grid_vals[2][::-1]:
                         for grid_val_l in grid_vals[3][::-1]:
-                            run_prefixes.append(scn_run_fs.leaf.path(
+                            run_prefixes.append(scn_run_fs[-1].path(
                                 [coo_names,
                                  [grid_val_i, grid_val_j,
                                   grid_val_k, grid_val_l]]))
@@ -430,8 +430,8 @@ def run_multiref_rscan(
     """
 
     vma = automol.zmatrix.var_(zma)
-    if scn_save_fs.trunk.file.vmatrix.exists():
-        existing_vma = scn_save_fs.trunk.file.vmatrix.read()
+    if scn_save_fs[0].file.vmatrix.exists():
+        existing_vma = scn_save_fs[0].file.vmatrix.read()
         assert vma == existing_vma
 
     grid = numpy.append(grid1, grid2)
@@ -446,9 +446,9 @@ def run_multiref_rscan(
         coo_names.append(coo)
         grid_vals.append(coo_grid_vals)
 
-    scn_save_fs.branch.create([coo_names])
-    inf_obj = autofile.system.info.scan_branch(grid_dct)
-    scn_save_fs.branch.file.info.write(inf_obj, [coo_names])
+    scn_save_fs[1].create([coo_names])
+    inf_obj = autofile.system.info.scan[1](grid_dct)
+    scn_save_fs[1].file.info.write(inf_obj, [coo_names])
 
     prog = multi_level[0]
     method = multi_level[1]
@@ -495,8 +495,8 @@ def run_multiref_rscan(
     grid1_idxs = tuple(range(npoint))
     if len(grid1_vals) == 1:
         for grid1_val in grid1_vals[0]:
-            scn_run_fs.leaf.create([coo_names, [grid1_val]])
-        run_prefixes = tuple(scn_run_fs.leaf.path([coo_names, [grid1_val]])
+            scn_run_fs[-1].create([coo_names, [grid1_val]])
+        run_prefixes = tuple(scn_run_fs[-1].path([coo_names, [grid1_val]])
                              for grid1_val in grid1_vals[0])
 
     _run_1d_scan(
@@ -532,8 +532,8 @@ def run_multiref_rscan(
     grid2_idxs = tuple(range(npoint))
     if len(grid2_vals) == 1:
         for grid2_val in grid2_vals[0]:
-            scn_run_fs.leaf.create([coo_names, [grid2_val]])
-        run_prefixes = tuple(scn_run_fs.leaf.path([coo_names, [grid2_val]])
+            scn_run_fs[-1].create([coo_names, [grid2_val]])
+        run_prefixes = tuple(scn_run_fs[-1].path([coo_names, [grid2_val]])
                              for grid2_val in grid2_vals[0])
     _run_1d_scan(
         script_str=opt_script_str,
@@ -574,7 +574,7 @@ def _run_1d_scan(
         run_fs = autofile.fs.run(run_prefix)
 
         frozen_coordinates = [coo_name] + list(alt_constraints)
-        geo_exists = scn_save_fs.leaf.file.geometry.exists(
+        geo_exists = scn_save_fs[-1].file.geometry.exists(
             [[coo_name], [grid_val]])
         if not geo_exists or overwrite:
             driver.run_job(
@@ -666,7 +666,7 @@ def _run_2d_scan(
             idx += 1
 
             frozen_coordinates = coo_names + list(alt_constraints)
-            if not scn_save_fs.leaf.file.geometry.exists(
+            if not scn_save_fs[-1].file.geometry.exists(
                     [coo_names, [grid_val_i, grid_val_j]]) or overwrite:
                 driver.run_job(
                     job=elstruct.Job.OPTIMIZATION,
@@ -721,7 +721,7 @@ def _run_3d_scan(
                 idx += 1
 
                 frozen_coordinates = coo_names + list(alt_constraints)
-                exists = scn_save_fs.leaf.file.geometry.exists(
+                exists = scn_save_fs[-1].file.geometry.exists(
                     [coo_names, [grid_val_i, grid_val_j, grid_val_k]])
                 if not exists or overwrite:
                     driver.run_job(
@@ -780,7 +780,7 @@ def _run_4d_scan(
                     idx += 1
 
                     frozen_coordinates = coo_names + list(alt_constraints)
-                    exists = scn_save_fs.leaf.file.geometry.exists(
+                    exists = scn_save_fs[-1].file.geometry.exists(
                         [coo_names, [grid_val_i, grid_val_j, grid_val_k, grid_val_l]])
                     if not exists or overwrite:
                         driver.run_job(
@@ -811,14 +811,14 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
               gradient=False, hessian=False):
     """ save the scans that have been run so far
     """
-    if not scn_run_fs.branch.exists([coo_names]):
+    if not scn_run_fs[1].exists([coo_names]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs in scn_run_fs.leaf.existing([coo_names]):
+        for locs in scn_run_fs[-1].existing([coo_names]):
             if not isinstance(locs[1][0], float):
                 continue
-            run_path = scn_run_fs.leaf.path(locs)
+            run_path = scn_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(run_path)
             print("Reading from scan run at {}".format(run_path))
 
@@ -831,16 +831,16 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
-                save_path = scn_save_fs.leaf.path(locs)
+                save_path = scn_save_fs[-1].path(locs)
                 print(" - Saving...")
                 print(" - Save path: {}".format(save_path))
 
-                scn_save_fs.leaf.create(locs)
-                scn_save_fs.leaf.file.geometry_info.write(inf_obj, locs)
-                scn_save_fs.leaf.file.geometry_input.write(inp_str, locs)
-                scn_save_fs.leaf.file.energy.write(ene, locs)
-                scn_save_fs.leaf.file.geometry.write(geo, locs)
-                scn_save_fs.leaf.file.zmatrix.write(zma, locs)
+                scn_save_fs[-1].create(locs)
+                scn_save_fs[-1].file.geometry_info.write(inf_obj, locs)
+                scn_save_fs[-1].file.geometry_input.write(inp_str, locs)
+                scn_save_fs[-1].file.energy.write(ene, locs)
+                scn_save_fs[-1].file.geometry.write(geo, locs)
+                scn_save_fs[-1].file.zmatrix.write(zma, locs)
 
                 locs_lst.append(locs)
 
@@ -852,7 +852,7 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
                         prog = inf_obj.prog
                         method = inf_obj.method
                         grad = elstruct.reader.gradient(prog, out_str)
-                        scn_save_fs.leaf.file.gradient.write(grad, locs)
+                        scn_save_fs[-1].file.gradient.write(grad, locs)
 
                 if hessian:
                     ret = driver.read_job(
@@ -862,16 +862,16 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
                         prog = inf_obj.prog
                         method = inf_obj.method
                         hess = elstruct.reader.hessian(prog, out_str)
-                        scn_save_fs.leaf.file.hessian.write(hess, locs)
+                        scn_save_fs[-1].file.hessian.write(hess, locs)
                         if prog == 'molpro2015':
                             geo = hess_geometry(out_str)
-                            scn_save_fs.leaf.file.geometry.write(geo, locs)
+                            scn_save_fs[-1].file.geometry.write(geo, locs)
 
         if locs_lst:
             idxs_lst = [locs[-1] for locs in locs_lst]
-            enes = [scn_save_fs.leaf.file.energy.read(locs)
+            enes = [scn_save_fs[-1].file.energy.read(locs)
                     for locs in locs_lst]
-            geos = [scn_save_fs.leaf.file.geometry.read(locs)
+            geos = [scn_save_fs[-1].file.geometry.read(locs)
                     for locs in locs_lst]
 
             traj = []
@@ -879,9 +879,9 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
                 comment = 'energy: {:>15.10f}, grid idxs: {}'.format(ene, idxs)
                 traj.append((comment, geo))
 
-            traj_path = scn_save_fs.branch.file.trajectory.path([coo_names])
+            traj_path = scn_save_fs[1].file.trajectory.path([coo_names])
             print("Updating scan trajectory file at {}".format(traj_path))
-            scn_save_fs.branch.file.trajectory.write(traj, [coo_names])
+            scn_save_fs[1].file.trajectory.write(traj, [coo_names])
 
 
 def infinite_separation_energy(
@@ -901,9 +901,9 @@ def infinite_separation_energy(
 
     # set up all the file systems for the TS
     # start with the geo and reference theory info
-    geo_run_path = scn_run_fs.leaf.path(locs)
-    geo_save_path = scn_save_fs.leaf.path(locs)
-    geo = scn_save_fs.leaf.file.geometry.read(locs)
+    geo_run_path = scn_run_fs[-1].path(locs)
+    geo_save_path = scn_save_fs[-1].path(locs)
+    geo = scn_save_fs[-1].file.geometry.read(locs)
     sp_run_fs = autofile.fs.single_point(geo_run_path)
     sp_save_fs = autofile.fs.single_point(geo_save_path)
 
@@ -925,11 +925,11 @@ def infinite_separation_energy(
 
     hs_run_fs = autofile.fs.high_spin(geo_run_path)
     hs_save_fs = autofile.fs.high_spin(geo_save_path)
-    hs_run_fs.leaf.create(multi_lvl[1:4])
-    hs_save_fs.leaf.create(multi_lvl[1:4])
+    hs_run_fs[-1].create(multi_lvl[1:4])
+    hs_save_fs[-1].create(multi_lvl[1:4])
 
-    hs_mr_run_path = hs_run_fs.leaf.path(multi_lvl[1:4])
-    hs_mr_save_path = hs_save_fs.leaf.path(multi_lvl[1:4])
+    hs_mr_run_path = hs_run_fs[-1].path(multi_lvl[1:4])
+    hs_mr_save_path = hs_save_fs[-1].path(multi_lvl[1:4])
     run_mr_fs = autofile.fs.run(hs_mr_run_path)
 
     mr_script_str, _, mr_kwargs, _ = runpar.run_qchem_par(prog, method)
@@ -957,11 +957,11 @@ def infinite_separation_energy(
         print(" - Reading high spin multi reference energy from output...")
         inf_obj, inp_str, out_str = ret
         ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
-        hs_save_fs.leaf.file.energy.write(ene, multi_lvl[1:4])
-        hs_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
-        hs_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
+        hs_save_fs[-1].file.energy.write(ene, multi_lvl[1:4])
+        hs_save_fs[-1].file.input.write(inp_str, multi_lvl[1:4])
+        hs_save_fs[-1].file.info.write(inf_obj, multi_lvl[1:4])
 
-    if not hs_save_fs.leaf.file.energy.exists(multi_lvl[1:4]) or overwrite:
+    if not hs_save_fs[-1].file.energy.exists(multi_lvl[1:4]) or overwrite:
         print(" - Running high spin multi reference energy ...")
         driver.run_job(
             job='energy',
@@ -988,16 +988,16 @@ def infinite_separation_energy(
 
             print(" - Saving high spin multi reference energy...")
             print(" - Save path: {}".format(hs_mr_save_path))
-            hs_save_fs.leaf.file.energy.write(hs_mr_ene, multi_lvl[1:4])
-            hs_save_fs.leaf.file.input.write(inp_str, multi_lvl[1:4])
-            hs_save_fs.leaf.file.info.write(inf_obj, multi_lvl[1:4])
+            hs_save_fs[-1].file.energy.write(hs_mr_ene, multi_lvl[1:4])
+            hs_save_fs[-1].file.input.write(inp_str, multi_lvl[1:4])
+            hs_save_fs[-1].file.info.write(inf_obj, multi_lvl[1:4])
         else:
             print('ERROR: high spin multi reference energy job fails: ',
                   'Energy is needed to evaluate infinite separation energy')
             return inf_sep_ene
 
     else:
-        hs_mr_ene = hs_save_fs.leaf.file.energy.read(multi_lvl[1:4])
+        hs_mr_ene = hs_save_fs[-1].file.energy.read(multi_lvl[1:4])
 
     # file system for high spin single ireference calculation
     thy_info = ['molpro2015', 'ccsd(t)-f12', 'cc-pvdz-f12', 'RR']
@@ -1005,11 +1005,11 @@ def infinite_separation_energy(
     thy_lvl = thy_info[0:3]
     thy_lvl.append(orb_restr)
 
-    hs_run_fs.leaf.create(thy_lvl[1:4])
-    hs_save_fs.leaf.create(thy_lvl[1:4])
+    hs_run_fs[-1].create(thy_lvl[1:4])
+    hs_save_fs[-1].create(thy_lvl[1:4])
 
-    hs_sr_run_path = hs_run_fs.leaf.path(thy_lvl[1:4])
-    hs_sr_save_path = hs_save_fs.leaf.path(thy_lvl[1:4])
+    hs_sr_run_path = hs_run_fs[-1].path(thy_lvl[1:4])
+    hs_sr_save_path = hs_save_fs[-1].path(thy_lvl[1:4])
     run_sr_fs = autofile.fs.run(hs_sr_run_path)
 
     sp_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_lvl[0:2])
@@ -1021,11 +1021,11 @@ def infinite_separation_energy(
         print(" - Reading high spin single reference energy from output...")
         inf_obj, inp_str, out_str = ret
         ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
-        hs_save_fs.leaf.file.energy.write(ene, thy_lvl[1:4])
-        hs_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
-        hs_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
+        hs_save_fs[-1].file.energy.write(ene, thy_lvl[1:4])
+        hs_save_fs[-1].file.input.write(inp_str, thy_lvl[1:4])
+        hs_save_fs[-1].file.info.write(inf_obj, thy_lvl[1:4])
 
-    if not hs_save_fs.leaf.file.energy.exists(thy_lvl[1:4]) or overwrite:
+    if not hs_save_fs[-1].file.energy.exists(thy_lvl[1:4]) or overwrite:
         print(" - Running high spin single reference energy ...")
 
         errors, options_mat = runpar.set_molpro_options_mat(hs_info, geo)
@@ -1057,16 +1057,16 @@ def infinite_separation_energy(
 
             print(" - Saving high spin single reference energy...")
             print(" - Save path: {}".format(hs_sr_save_path))
-            hs_save_fs.leaf.file.energy.write(hs_sr_ene, thy_lvl[1:4])
-            hs_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
-            hs_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
+            hs_save_fs[-1].file.energy.write(hs_sr_ene, thy_lvl[1:4])
+            hs_save_fs[-1].file.input.write(inp_str, thy_lvl[1:4])
+            hs_save_fs[-1].file.info.write(inf_obj, thy_lvl[1:4])
         else:
             print('ERROR: High spin single reference energy job fails: ',
                   'Energy is needed to evaluate infinite separation energy')
             return inf_sep_ene
 
     else:
-        hs_sr_ene = hs_save_fs.leaf.file.energy.read(thy_lvl[1:4])
+        hs_sr_ene = hs_save_fs[-1].file.energy.read(thy_lvl[1:4])
 
     # get the single reference energy for each of the reactant configurations
     spc_ene = []
@@ -1074,11 +1074,11 @@ def infinite_separation_energy(
     for spc_info in spc_infos:
         # set up the file systems for the reactants one by one
         spc_run_fs = autofile.fs.species(run_prefix)
-        spc_run_fs.leaf.create(spc_info)
-        spc_run_path = spc_run_fs.leaf.path(spc_info)
+        spc_run_fs[-1].create(spc_info)
+        spc_run_path = spc_run_fs[-1].path(spc_info)
         spc_save_fs = autofile.fs.species(save_prefix)
-        spc_save_fs.leaf.create(spc_info)
-        spc_save_path = spc_save_fs.leaf.path(spc_info)
+        spc_save_fs[-1].create(spc_info)
+        spc_save_path = spc_save_fs[-1].path(spc_info)
 
         orb_restr = fsorb.orbital_restriction(spc_info, ini_thy_info)
         ini_thy_lvl = ini_thy_info[0:3]
@@ -1089,32 +1089,32 @@ def infinite_separation_energy(
         thy_lvl.append(orb_restr)
 
         ini_thy_run_fs = autofile.fs.theory(spc_run_path)
-        ini_thy_run_fs.leaf.create(ini_thy_lvl[1:4])
-        ini_thy_run_path = ini_thy_run_fs.leaf.path(ini_thy_lvl[1:4])
+        ini_thy_run_fs[-1].create(ini_thy_lvl[1:4])
+        ini_thy_run_path = ini_thy_run_fs[-1].path(ini_thy_lvl[1:4])
         ini_thy_save_fs = autofile.fs.theory(spc_save_path)
-        ini_thy_save_fs.leaf.create(ini_thy_lvl[1:4])
-        ini_thy_save_path = ini_thy_save_fs.leaf.path(ini_thy_lvl[1:4])
+        ini_thy_save_fs[-1].create(ini_thy_lvl[1:4])
+        ini_thy_save_path = ini_thy_save_fs[-1].path(ini_thy_lvl[1:4])
         ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
         ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         min_cnf_locs = fsmin.min_energy_conformer_locators(
             ini_cnf_save_fs)
-        min_cnf_run_path = ini_cnf_run_fs.leaf.path(min_cnf_locs)
-        min_cnf_save_path = ini_cnf_save_fs.leaf.path(min_cnf_locs)
+        min_cnf_run_path = ini_cnf_run_fs[-1].path(min_cnf_locs)
+        min_cnf_save_path = ini_cnf_save_fs[-1].path(min_cnf_locs)
 
         thy_run_fs = autofile.fs.theory(spc_run_path)
-        thy_run_fs.leaf.create(thy_lvl[1:4])
+        thy_run_fs[-1].create(thy_lvl[1:4])
         thy_save_fs = autofile.fs.theory(spc_save_path)
-        thy_save_fs.leaf.create(thy_lvl[1:4])
+        thy_save_fs[-1].create(thy_lvl[1:4])
 
-        geo = ini_cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+        geo = ini_cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
 
         sp_run_fs = autofile.fs.single_point(min_cnf_run_path)
-        sp_run_fs.leaf.create(thy_lvl[1:4])
+        sp_run_fs[-1].create(thy_lvl[1:4])
         sp_save_fs = autofile.fs.single_point(min_cnf_save_path)
-        sp_save_fs.leaf.create(thy_lvl[1:4])
+        sp_save_fs[-1].create(thy_lvl[1:4])
 
-        sp_sr_run_path = sp_run_fs.leaf.path(thy_lvl[1:4])
-        sp_sr_save_path = sp_save_fs.leaf.path(thy_lvl[1:4])
+        sp_sr_run_path = sp_run_fs[-1].path(thy_lvl[1:4])
+        sp_sr_save_path = sp_save_fs[-1].path(thy_lvl[1:4])
         run_sr_fs = autofile.fs.run(sp_sr_run_path)
 
         ret = driver.read_job(
@@ -1126,11 +1126,11 @@ def infinite_separation_energy(
                   "{} from output...".format(spc_info[0]))
             inf_obj, inp_str, out_str = ret
             ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
-            sp_save_fs.leaf.file.energy.write(ene, thy_lvl[1:4])
-            sp_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
-            sp_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
+            sp_save_fs[-1].file.energy.write(ene, thy_lvl[1:4])
+            sp_save_fs[-1].file.input.write(inp_str, thy_lvl[1:4])
+            sp_save_fs[-1].file.info.write(inf_obj, thy_lvl[1:4])
 
-        if not sp_save_fs.leaf.file.energy.exists(thy_lvl[1:4]) or overwrite:
+        if not sp_save_fs[-1].file.energy.exists(thy_lvl[1:4]) or overwrite:
             print(" - Running single reference energy for",
                   "{} from output...".format(spc_info[0]))
             driver.run_job(
@@ -1160,9 +1160,9 @@ def infinite_separation_energy(
                 print(" - Saving single reference energy for ",
                       "{} from output...".format(spc_info[0]))
                 print(" - Save path: {}".format(sp_sr_save_path))
-                sp_save_fs.leaf.file.energy.write(sp_sr_ene, thy_lvl[1:4])
-                sp_save_fs.leaf.file.input.write(inp_str, thy_lvl[1:4])
-                sp_save_fs.leaf.file.info.write(inf_obj, thy_lvl[1:4])
+                sp_save_fs[-1].file.energy.write(sp_sr_ene, thy_lvl[1:4])
+                sp_save_fs[-1].file.input.write(inp_str, thy_lvl[1:4])
+                sp_save_fs[-1].file.info.write(inf_obj, thy_lvl[1:4])
 
             else:
                 print('ERROR: Single reference energy job fails',
@@ -1171,7 +1171,7 @@ def infinite_separation_energy(
                 return inf_sep_ene
 
         else:
-            sp_sr_ene = sp_save_fs.leaf.file.energy.read(thy_lvl[1:4])
+            sp_sr_ene = sp_save_fs[-1].file.energy.read(thy_lvl[1:4])
 
         spc_ene.append(sp_sr_ene)
 
