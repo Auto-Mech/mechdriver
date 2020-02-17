@@ -86,9 +86,7 @@ def basis_energy(spc_bas, spc_dct,
     h_basis = []
     for ich in spc_bas:
         for name in spc_dct:
-            print(ich, '\n', name, '\n', spc_dct[name]['ich'], '\n')
             if ich == spc_dct[name]['ich']:
-                print('yay')
                 h_basis.append(
                     get_fs_ene_zpe(
                         spc_dct, name,
@@ -98,8 +96,8 @@ def basis_energy(spc_bas, spc_dct,
                         read_ene=True, read_zpe=True))
                 break
     ene_cnt = 0
-    for x in h_basis:
-        if x is not None:
+    for basis_spc in h_basis:
+        if basis_spc is not None:
             ene_cnt += 1
     if ene_cnt != h_basis:
         print('not all energies found for the basis species')

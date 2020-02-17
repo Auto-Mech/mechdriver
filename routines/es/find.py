@@ -50,28 +50,28 @@ def find_ts(
     ref_level.append(orb_restr)
 
     thy_run_fs = autofile.fs.theory(rxn_run_path)
-    thy_run_fs.leaf.create(ref_level[1:4])
-    thy_run_path = thy_run_fs.leaf.path(ref_level[1:4])
+    thy_run_fs[-1].create(ref_level[1:4])
+    thy_run_path = thy_run_fs[-1].path(ref_level[1:4])
 
     thy_save_fs = autofile.fs.theory(rxn_save_path)
-    thy_save_fs.leaf.create(ref_level[1:4])
-    thy_save_path = thy_save_fs.leaf.path(ref_level[1:4])
+    thy_save_fs[-1].create(ref_level[1:4])
+    thy_save_path = thy_save_fs[-1].path(ref_level[1:4])
 
     scn_run_fs = autofile.fs.scan(thy_run_path)
     scn_save_fs = autofile.fs.scan(thy_save_path)
 
     ts_run_fs = autofile.fs.ts(thy_run_path)
-    ts_run_fs.trunk.create()
-    ts_run_path = ts_run_fs.trunk.path()
+    ts_run_fs[0].create()
+    ts_run_path = ts_run_fs[0].path()
     run_fs = autofile.fs.run(ts_run_path)
 
     ts_save_fs = autofile.fs.ts(thy_save_path)
-    ts_save_fs.trunk.create()
-    ts_save_path = ts_save_fs.trunk.path()
+    ts_save_fs[0].create()
+    ts_save_path = ts_save_fs[0].path()
 
     cnf_run_fs = autofile.fs.conformer(ts_run_path)
     cnf_save_fs = autofile.fs.conformer(ts_save_path)
-    cnf_save_fs.trunk.create()
+    cnf_save_fs[0].create()
 
     # Unpack the dist info
     dist_name, _, update_guess, brk_name = dist_info
@@ -83,8 +83,8 @@ def find_ts(
         # geo, zma, final_dist = check_filesys_for_ts(
         #     ts_dct, ts_zma, cnf_save_fs, overwrite,
         #     typ, dist_info, dist_name, bkp_ts_class_data)
-        zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
-        geo = cnf_save_fs.leaf.file.geometry.read(min_cnf_locs)
+        zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
+        geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         # Add an angle check which is added to spc dct for TS (crap code...)
         vals = automol.zmatrix.values(zma)
         final_dist = vals[dist_name]
@@ -146,10 +146,10 @@ def find_ts(
 #     min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
 #     if min_cnf_locs and not overwrite:
 #
-#         print('Found TS at {}'.format(cnf_save_fs.trunk.path()))
+#         print('Found TS at {}'.format(cnf_save_fs[0].path()))
 #
 #         # Check if TS matches original guess
-#         zma = cnf_save_fs.leaf.file.zmatrix.read(min_cnf_locs)
+#         zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
 #         chk_bkp = check_ts_zma(zma, ts_zma)
 #
 #         # Check if TS matches original guess from back reaction
@@ -210,12 +210,12 @@ def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct, grid,
     multi_level.append(orb_restr)
 
     thy_run_fs = autofile.fs.theory(rxn_run_path)
-    thy_run_fs.leaf.create(multi_level[1:4])
-    thy_run_path = thy_run_fs.leaf.path(multi_level[1:4])
+    thy_run_fs[-1].create(multi_level[1:4])
+    thy_run_path = thy_run_fs[-1].path(multi_level[1:4])
 
     thy_save_fs = autofile.fs.theory(rxn_save_path)
-    thy_save_fs.leaf.create(multi_level[1:4])
-    thy_save_path = thy_save_fs.leaf.path(multi_level[1:4])
+    thy_save_fs[-1].create(multi_level[1:4])
+    thy_save_path = thy_save_fs[-1].path(multi_level[1:4])
 
     scn_run_fs = autofile.fs.scan(thy_run_path)
     scn_save_fs = autofile.fs.scan(thy_save_path)
@@ -225,7 +225,7 @@ def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct, grid,
     grid2 = grid[1]
     grid = numpy.append(grid[0], grid[1])
     high_mul = ts_dct['high_mul']
-    print('starting multiref scan:', scn_run_fs.trunk.path())
+    print('starting multiref scan:', scn_run_fs[0].path())
 
     # Set the active space
     num_act_orb, num_act_elc = variational.wfn.active_space(
@@ -345,9 +345,9 @@ def find_sadpt_transition_state(
         print(" - Saving...")
         print(" - Save path: {}".format(ts_save_path))
 
-        ts_save_fs.trunk.file.energy.write(ene)
-        ts_save_fs.trunk.file.geometry.write(geo)
-        ts_save_fs.trunk.file.zmatrix.write(zma)
+        ts_save_fs[0].file.energy.write(ene)
+        ts_save_fs[0].file.geometry.write(geo)
+        ts_save_fs[0].file.zmatrix.write(zma)
 
         # Run single conformer to get intitial conformer in filesystem
         vals = automol.zmatrix.values(zma)

@@ -16,13 +16,13 @@ def check_save(save_fs, tsk, obj):
         save_locs = fsmin.min_energy_conformer_locators(save_fs)
     # Doesn't work well for tau since there are multipole tau we wish to comp
     elif obj == 'tau':
-        save_locs = save_fs.leaf.existing()[0]
+        save_locs = save_fs[-1].existing()[0]
     else:
-        save_locs = [save_fs.leaf.existing()[0]]
+        save_locs = [save_fs[-1].existing()[0]]
     if not save_locs:
         printmsg.ini_info_noavail_msg(tsk)
         avail = False
-    elif not save_fs.leaf.file.geometry.exists(save_locs):
+    elif not save_fs[-1].file.geometry.exists(save_locs):
         printmsg.ini_info_noavail_msg(tsk)
         avail = False
     return avail

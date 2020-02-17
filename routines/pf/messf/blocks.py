@@ -209,8 +209,8 @@ def vtst_with_no_saddle_block(
 
     rxn_save_path = ts_dct['rxn_fs'][3]
     thy_save_fs = autofile.fs.theory(rxn_save_path)
-    thy_save_fs.leaf.create(multi_level[1:4])
-    thy_save_path = thy_save_fs.leaf.path(multi_level[1:4])
+    thy_save_fs[-1].create(multi_level[1:4])
+    thy_save_path = thy_save_fs[-1].path(multi_level[1:4])
     scn_save_fs = autofile.fs.scan(thy_save_path)
 
     # Read the scan save filesystem to get the molecular info
@@ -226,7 +226,7 @@ def vtst_with_no_saddle_block(
 
     # Read the infinite separation energy
     inf_locs = [[dist_name], [1000.]]
-    inf_sep_ene = scn_save_fs.leaf.file.energy.read(inf_locs)
+    inf_sep_ene = scn_save_fs[-1].file.energy.read(inf_locs)
 
     grid[::-1].sort()
     for idx, grid_val in enumerate(grid):
@@ -234,19 +234,19 @@ def vtst_with_no_saddle_block(
         locs = [[dist_name], [grid_val]]
 
         # Get geometry, energy, and vibrational freqs
-        if not scn_save_fs.leaf.file.geometry.exists(locs):
+        if not scn_save_fs[-1].file.geometry.exists(locs):
             continue
         else:
-            geom = scn_save_fs.leaf.file.geometry.read(locs)
-        if not scn_save_fs.leaf.file.energy.exists(locs):
+            geom = scn_save_fs[-1].file.geometry.read(locs)
+        if not scn_save_fs[-1].file.energy.exists(locs):
             continue
         else:
-            ene = scn_save_fs.leaf.file.energy.read(locs)
-        if not scn_save_fs.leaf.file.hessian.exists(locs):
+            ene = scn_save_fs[-1].file.energy.read(locs)
+        if not scn_save_fs[-1].file.hessian.exists(locs):
             continue
         else:
-            hess = scn_save_fs.leaf.file.hessian.read(locs)
-            scn_save_path = scn_save_fs.leaf.path(locs)
+            hess = scn_save_fs[-1].file.hessian.read(locs)
+            scn_save_path = scn_save_fs[-1].path(locs)
             freqs, _, _ = pfmodels.projrot_freqs_1(
                 geom, hess, pot,
                 proj_rotors_str, projrot_script_str,
@@ -345,10 +345,10 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     # prepare the four sets of file systems
     spc_info_i = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
     spc_info_j = (spc_dct_j['ich'], spc_dct_j['chg'], spc_dct_j['mul'])
-    spc_save_fs.leaf.create(spc_info_i)
-    spc_save_fs.leaf.create(spc_info_j)
-    save_path_i = spc_save_fs.leaf.path(spc_info_i)
-    save_path_j = spc_save_fs.leaf.path(spc_info_j)
+    spc_save_fs[-1].create(spc_info_i)
+    spc_save_fs[-1].create(spc_info_j)
+    save_path_i = spc_save_fs[-1].path(spc_info_i)
+    save_path_j = spc_save_fs[-1].path(spc_info_j)
 
     # Set theory filesystem used throughout
     thy_save_fs_i = autofile.fs.theory(save_path_i)
@@ -435,17 +435,17 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
                 spc_info_j, harm_min_cnf_locs_j,
                 harm_cnf_save_fs_j, saddle=False)
         if harm_min_cnf_locs_i is not None:
-            geo_i = harm_cnf_save_fs_i.leaf.file.geometry.read(
+            geo_i = harm_cnf_save_fs_i[-1].file.geometry.read(
                 harm_min_cnf_locs_i)
         if harm_min_cnf_locs_j is not None:
-            geo_j = harm_cnf_save_fs_j.leaf.file.geometry.read(
+            geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
         freqs = freqs_i + freqs_j
         hind_rot_str = ""
 
     if vib_model == 'harm' and tors_model == '1dhr':
         if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
-            geo_i = harm_cnf_save_fs_i.leaf.file.geometry.read(
+            geo_i = harm_cnf_save_fs_i[-1].file.geometry.read(
                 harm_min_cnf_locs_i)
             freqs_i = []
             hr_str_i = ''
@@ -460,7 +460,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
                 sym_factor_i, elec_levels,
                 saddle=False)
         if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
-            geo_j = harm_cnf_save_fs_j.leaf.file.geometry.read(
+            geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
             freqs_j = []
             hr_str_j = ''
@@ -641,11 +641,11 @@ def set_model_filesys(thy_save_fs, spc_info, level, saddle=False):
     levelp.append(fsorb.orbital_restriction(spc_info, level))
 
     # Get the save fileystem path
-    save_path = thy_save_fs.leaf.path(levelp[1:4])
+    save_path = thy_save_fs[-1].path(levelp[1:4])
     if saddle:
         save_fs = autofile.fs.ts(save_path)
-        save_fs.trunk.create()
-        save_path = save_fs.trunk.path()
+        save_fs[0].create()
+        save_path = save_fs[0].path()
 
     # Get the fs object and the locs
     cnf_save_fs = autofile.fs.conformer(save_path)
@@ -653,7 +653,7 @@ def set_model_filesys(thy_save_fs, spc_info, level, saddle=False):
 
     # Get the save path for the conformers
     if min_cnf_locs:
-        cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+        cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
     else:
         cnf_save_path = ''
 

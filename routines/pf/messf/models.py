@@ -19,8 +19,8 @@ def vib_harm_tors_rigid(spc_info, harm_min_cnf_locs, harm_cnf_save_fs,
     # Do the freqs obtain for two species for fake and pst
     if harm_min_cnf_locs is not None:
         # Obtain geom and freqs from filesys
-        harm_geo = harm_cnf_save_fs.leaf.file.geometry.read(harm_min_cnf_locs)
-        hess = harm_cnf_save_fs.leaf.file.hessian.read(harm_min_cnf_locs)
+        harm_geo = harm_cnf_save_fs[-1].file.geometry.read(harm_min_cnf_locs)
+        hess = harm_cnf_save_fs[-1].file.hessian.read(harm_min_cnf_locs)
         freqs = elstruct.util.harmonic_frequencies(
             harm_geo, hess, project=False)
         # Modify freqs lst and get imaginary frequencies
@@ -51,11 +51,11 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
     """ Build the species string for a model: Harm, 1DHR
     """
     if harm_min_cnf_locs is not None:
-        harm_geo = harm_cnf_save_fs.leaf.file.geometry.read(
+        harm_geo = harm_cnf_save_fs[-1].file.geometry.read(
             harm_min_cnf_locs)
-        min_ene = harm_cnf_save_fs.leaf.file.energy.read(
+        min_ene = harm_cnf_save_fs[-1].file.energy.read(
             harm_min_cnf_locs)
-        hess = harm_cnf_save_fs.leaf.file.hessian.read(
+        hess = harm_cnf_save_fs[-1].file.hessian.read(
             harm_min_cnf_locs)
         freqs = elstruct.util.harmonic_frequencies(
             harm_geo, hess, project=False)
@@ -63,9 +63,9 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
         if tors_min_cnf_locs is not None:
 
             # Get geometry for the torsional minimum
-            zma = tors_cnf_save_fs.leaf.file.zmatrix.read(
+            zma = tors_cnf_save_fs[-1].file.zmatrix.read(
                 tors_min_cnf_locs)
-            tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(
+            tors_geo = tors_cnf_save_fs[-1].file.geometry.read(
                 tors_min_cnf_locs)
 
             # Set torsional stuff
@@ -147,11 +147,11 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
         scan_increment = 30. * phycon.DEG2RAD
 
     if harm_min_cnf_locs is not None:
-        harm_geo = harm_cnf_save_fs.leaf.file.geometry.read(
+        harm_geo = harm_cnf_save_fs[-1].file.geometry.read(
             harm_min_cnf_locs)
-        min_ene = harm_cnf_save_fs.leaf.file.energy.read(
+        min_ene = harm_cnf_save_fs[-1].file.energy.read(
             harm_min_cnf_locs)
-        hess = harm_cnf_save_fs.leaf.file.hessian.read(
+        hess = harm_cnf_save_fs[-1].file.hessian.read(
             harm_min_cnf_locs)
         freqs = elstruct.util.harmonic_frequencies(
             harm_geo, hess, project=False)
@@ -159,9 +159,9 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
         if tors_min_cnf_locs is not None:
 
             # Get geometry for the torsional minimum
-            zma = tors_cnf_save_fs.leaf.file.zmatrix.read(
+            zma = tors_cnf_save_fs[-1].file.zmatrix.read(
                 tors_min_cnf_locs)
-            tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(
+            tors_geo = tors_cnf_save_fs[-1].file.geometry.read(
                 tors_min_cnf_locs)
 
             # Get the hr prep stuff
@@ -235,11 +235,11 @@ def vib_harm_tors_tau(harm_min_cnf_locs, harm_cnf_save_fs,
     """ Build the species string for a model: Harm, 1DHR
     """
     if harm_min_cnf_locs is not None:
-        harm_geo = harm_cnf_save_fs.leaf.file.geometry.read(
+        harm_geo = harm_cnf_save_fs[-1].file.geometry.read(
             harm_min_cnf_locs)
-        min_ene = harm_cnf_save_fs.leaf.file.energy.read(
+        min_ene = harm_cnf_save_fs[-1].file.energy.read(
             harm_min_cnf_locs)
-        hess = harm_cnf_save_fs.leaf.file.hessian.read(
+        hess = harm_cnf_save_fs[-1].file.hessian.read(
             harm_min_cnf_locs)
         freqs = elstruct.util.harmonic_frequencies(
             harm_geo, hess, project=False)
@@ -247,9 +247,9 @@ def vib_harm_tors_tau(harm_min_cnf_locs, harm_cnf_save_fs,
         if tors_min_cnf_locs is not None:
 
             # Get geometry for the torsional minimum
-            zma = tors_cnf_save_fs.leaf.file.zmatrix.read(
+            zma = tors_cnf_save_fs[-1].file.zmatrix.read(
                 tors_min_cnf_locs)
-            tors_geo = tors_cnf_save_fs.leaf.file.geometry.read(
+            tors_geo = tors_cnf_save_fs[-1].file.geometry.read(
                 tors_min_cnf_locs)
 
             # Set torsional stuff

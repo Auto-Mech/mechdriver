@@ -102,12 +102,12 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
         print('ERROR: No harmonic reference geometry for this species ',
               '{}'.format(spc_info[0]))
         return harm_zpe, is_atom
-    harm_geo = harm_cnf_save_fs.leaf.file.geometry.read(harm_min_cnf_locs)
+    harm_geo = harm_cnf_save_fs[-1].file.geometry.read(harm_min_cnf_locs)
     if automol.geom.is_atom(harm_geo):
         zpe = 0.0
         is_atom = True
     else:
-        hess = harm_cnf_save_fs.leaf.file.hessian.read(harm_min_cnf_locs)
+        hess = harm_cnf_save_fs[-1].file.hessian.read(harm_min_cnf_locs)
         freqs = elstruct.util.harmonic_frequencies(
             harm_geo, hess, project=False)
 
@@ -162,8 +162,8 @@ def get_high_level_energy(
         spc_save_path = save_prefix
     else:
         spc_save_fs = autofile.fs.species(save_prefix)
-        spc_save_fs.leaf.create(spc_info)
-        spc_save_path = spc_save_fs.leaf.path(spc_info)
+        spc_save_fs[-1].create(spc_info)
+        spc_save_path = spc_save_fs[-1].path(spc_info)
 
     orb_restr = fsorb.orbital_restriction(
         spc_info, thy_low_level)
@@ -171,13 +171,13 @@ def get_high_level_energy(
     thy_low_level.append(orb_restr)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
-    ll_save_path = ll_save_fs.leaf.path(thy_low_level)
+    ll_save_path = ll_save_fs[-1].path(thy_low_level)
 
     if os.path.exists(ll_save_path):
         if saddle:
             ll_save_fs = autofile.fs.ts(ll_save_path)
-            ll_save_fs.trunk.create()
-            ll_save_path = ll_save_fs.trunk.path()
+            ll_save_fs[0].create()
+            ll_save_path = ll_save_fs[0].path()
 
         cnf_save_fs = autofile.fs.conformer(ll_save_path)
         min_cnf_locs = fsmin.min_energy_conformer_locators(
@@ -186,7 +186,7 @@ def get_high_level_energy(
             print('ERROR: No minimum conformer geometry for ',
                   'this species {}'.format(spc_info[0]))
             return 0.0
-        cnf_save_path = cnf_save_fs.leaf.path(min_cnf_locs)
+        cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
 
         orb_restr = fsorb.orbital_restriction(
             spc_info, thy_high_level)
@@ -194,10 +194,10 @@ def get_high_level_energy(
         thy_high_level.append(orb_restr)
 
         sp_save_fs = autofile.fs.single_point(cnf_save_path)
-        sp_save_fs.leaf.create(thy_high_level)
+        sp_save_fs[-1].create(thy_high_level)
 
-        if os.path.exists(sp_save_fs.leaf.path(thy_high_level)):
-            min_ene = sp_save_fs.leaf.file.energy.read(thy_high_level)
+        if os.path.exists(sp_save_fs[-1].path(thy_high_level)):
+            min_ene = sp_save_fs[-1].file.energy.read(thy_high_level)
         else:
             # print('No energy at path')
             min_ene = None
@@ -389,8 +389,8 @@ def get_fs_ene_zpe(spc_dct, spc,
         spc_save_path = spc_dct[spc]['rxn_fs'][3]
         save_path = spc_save_path
     else:
-        spc_save_fs.leaf.create(spc_info)
-        spc_save_path = spc_save_fs.leaf.path(spc_info)
+        spc_save_fs[-1].create(spc_info)
+        spc_save_path = spc_save_fs[-1].path(spc_info)
         save_path = save_prefix
 
     # Read the electronic energy and ZPVE

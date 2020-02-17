@@ -24,7 +24,7 @@ def tau_sampling(
         tau_save_fs=tau_save_fs,
     )
 
-    geo = thy_save_fs.leaf.file.geometry.read(thy_level[1:4])
+    geo = thy_save_fs[-1].file.geometry.read(thy_level[1:4])
     zma = automol.geom.zmatrix(geo)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
     tors_ranges = automol.zmatrix.torsional_sampling_ranges(
@@ -63,22 +63,22 @@ def run_tau(
         print("No torsional coordinates. Setting nsamp to 1.")
         nsamp = 1
 
-    tau_save_fs.trunk.create()
+    tau_save_fs[0].create()
 
     vma = automol.zmatrix.var_(zma)
-    if tau_save_fs.trunk.file.vmatrix.exists():
-        existing_vma = tau_save_fs.trunk.file.vmatrix.read()
+    if tau_save_fs[0].file.vmatrix.exists():
+        existing_vma = tau_save_fs[0].file.vmatrix.read()
         assert vma == existing_vma
-    tau_save_fs.trunk.file.vmatrix.write(vma)
+    tau_save_fs[0].file.vmatrix.write(vma)
     idx = 0
     nsamp0 = nsamp
-    inf_obj = autofile.system.info.tau_trunk(0, tors_range_dct)
+    inf_obj = autofile.system.info.tau[0](0, tors_range_dct)
     while True:
-        if tau_save_fs.trunk.file.info.exists():
-            inf_obj_s = tau_save_fs.trunk.file.info.read()
+        if tau_save_fs[0].file.info.exists():
+            inf_obj_s = tau_save_fs[0].file.info.read()
             nsampd = inf_obj_s.nsamp
-        elif tau_save_fs.trunk.file.info.exists():
-            inf_obj_r = tau_save_fs.trunk.file.info.read()
+        elif tau_save_fs[0].file.info.exists():
+            inf_obj_r = tau_save_fs[0].file.info.read()
             nsampd = inf_obj_r.nsamp
         else:
             nsampd = 0
@@ -95,8 +95,8 @@ def run_tau(
             tid = autofile.system.generate_new_tau_id()
             locs = [tid]
 
-            tau_run_fs.leaf.create(locs)
-            tau_run_prefix = tau_run_fs.leaf.path(locs)
+            tau_run_fs[-1].create(locs)
+            tau_run_prefix = tau_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(tau_run_prefix)
 
             idx += 1
@@ -115,22 +115,22 @@ def run_tau(
 
             nsampd += 1
             inf_obj.nsamp = nsampd
-            tau_save_fs.trunk.file.info.write(inf_obj)
-            tau_run_fs.trunk.file.info.write(inf_obj)
+            tau_save_fs[0].file.info.write(inf_obj)
+            tau_run_fs[0].file.info.write(inf_obj)
 
 
 def save_tau(tau_run_fs, tau_save_fs):
     """ save the tau dependent geometries that have been found so far
     """
 
-    saved_geos = [tau_save_fs.leaf.file.geometry.read(locs)
-                  for locs in tau_save_fs.leaf.existing()]
+    saved_geos = [tau_save_fs[-1].file.geometry.read(locs)
+                  for locs in tau_save_fs[-1].existing()]
 
-    if not tau_run_fs.trunk.exists():
+    if not tau_run_fs[0].exists():
         print("No tau geometries to save. Skipping...")
     else:
-        for locs in tau_run_fs.leaf.existing():
-            run_path = tau_run_fs.leaf.path(locs)
+        for locs in tau_run_fs[-1].existing():
+            run_path = tau_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(run_path)
 
             print("Reading from tau run at {}".format(run_path))
@@ -145,15 +145,15 @@ def save_tau(tau_run_fs, tau_save_fs):
 
                 geo = elstruct.reader.opt_geometry(prog, out_str)
 
-                save_path = tau_save_fs.leaf.path(locs)
+                save_path = tau_save_fs[-1].path(locs)
                 print(" - Saving...")
                 print(" - Save path: {}".format(save_path))
 
-                tau_save_fs.leaf.create(locs)
-                tau_save_fs.leaf.file.geometry_info.write(inf_obj, locs)
-                tau_save_fs.leaf.file.geometry_input.write(inp_str, locs)
-                tau_save_fs.leaf.file.energy.write(ene, locs)
-                tau_save_fs.leaf.file.geometry.write(geo, locs)
+                tau_save_fs[-1].create(locs)
+                tau_save_fs[-1].file.geometry_info.write(inf_obj, locs)
+                tau_save_fs[-1].file.geometry_input.write(inp_str, locs)
+                tau_save_fs[-1].file.energy.write(ene, locs)
+                tau_save_fs[-1].file.geometry.write(geo, locs)
 
                 saved_geos.append(geo)
 
@@ -168,7 +168,7 @@ def assess_pf_convergence(save_prefix, temps=(300., 500., 750., 1000., 1500.)):
     cnf_save_fs = autofile.fs.conformer(save_prefix)
     min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
-        ene_ref = cnf_save_fs.leaf.file.energy.read(min_cnf_locs)
+        ene_ref = cnf_save_fs[-1].file.energy.read(min_cnf_locs)
 
     # Calculate sigma values at various temperatures for the PF
     tau_save_fs = autofile.fs.tau(save_prefix)
@@ -177,9 +177,9 @@ def assess_pf_convergence(save_prefix, temps=(300., 500., 750., 1000., 1500.)):
         sum2 = 0.
         idx = 0
         print('integral convergence for T = ', temp)
-        for locs in tau_save_fs.leaf.existing():
+        for locs in tau_save_fs[-1].existing():
             idx += 1
-            ene = tau_save_fs.leaf.file.energy.read(locs)
+            ene = tau_save_fs[-1].file.energy.read(locs)
             ene = (ene - ene_ref) * phycon.EH2KCAL
             tmp = numpy.exp(-ene*349.7/(0.695*temp))
             sumq = sumq + tmp

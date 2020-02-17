@@ -210,18 +210,18 @@ def read_potentials(
 
     # Filesystem for all the optimizations (full, constrained) along MEP
     mep_opt_thy_save_fs = autofile.fs.theory(rxn_save_path)
-    mep_opt_thy_save_fs.leaf.create(mep_opt_thy_level[1:4])
+    mep_opt_thy_save_fs[-1].create(mep_opt_thy_level[1:4])
     mep_opt_scn_save_fs = autofile.fs.scan(mep_opt_thy_save_fs)        
-    mep_opt_scn_save_fs_path = mep_opt_scn_save_fs.leaf.path() 
+    mep_opt_scn_save_fs_path = mep_opt_scn_save_fs[-1].path() 
 
     # Read the energies from the full and constrained opts along MEP
     # for idx, 
     # locs = [[], []] 
     #     # get energy
-    #     if not scn_save_fs.leaf.file.energy.exists(locs):
+    #     if not scn_save_fs[-1].file.energy.exists(locs):
     #         continue
     #     else:
-    #         ene = scn_save_fs.leaf.file.energy.read(locs)
+    #         ene = scn_save_fs[-1].file.energy.read(locs)
 
     return potentials, potential_labels
 
