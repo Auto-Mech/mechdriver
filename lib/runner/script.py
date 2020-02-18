@@ -73,7 +73,7 @@ def read_inp_scripts(script_dir):
 
 # ProjRot
 PROJROT = ("#!/usr/bin/env bash\n"
-           "/lcrc/project/CMRP/pacc/ProjRot/build/RPHt.exe >& /dev/null")
+           "RPHt.exe >& /dev/null")
 
 # MESS
 MESSPF = ("#!/usr/bin/env bash\n"
