@@ -136,7 +136,7 @@ def run_conformers(
     cnf_save_fs[0].file.vmatrix.write(vma)
     idx = 0
     nsamp0 = nsamp
-    inf_obj = autofile.system.info.conformer[0](0, tors_range_dct)
+    inf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
     if cnf_save_fs[0].file.info.exists():
         inf_obj_s = cnf_save_fs[0].file.info.read()
         nsampd = inf_obj_s.nsamp

@@ -105,6 +105,17 @@ def run_hr_scan(filesys, params, opt_kwargs):
     scan.hindered_rotor_scans(**params, **opt_kwargs)
 
 
+def run_vpt2(filesys, params, opt_kwargs):
+    """ run a scan over the specified torsional coordinates
+    """
+    print('running task {}'.format('hr'))
+    for x in params:
+        print(x)
+    params['cnf_run_fs'] = filesys[4]
+    params['cnf_save_fs'] = filesys[5]
+    sp.run_vpt2(**params, **opt_kwargs)
+
+
 def run_tau_samp(filesys, params, opt_kwargs):
     """ energies, gradients, and hessians,
     for set of arbitrarily sampled torsional coordinates
