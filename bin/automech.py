@@ -42,7 +42,8 @@ MODEL_DCT = loadmodel.read_models_sections(JOB_PATH)
 
 # Parse the species input to get a dct with ALL species in mechanism
 print('\nReading species.csv...')
-SPC_DCT = loadspc.build_spc_dct(JOB_PATH, RUN_INP_DCT['spc'])
+SPC_DCT = loadspc.build_spc_dct(
+    JOB_PATH, RUN_INP_DCT['spc'], check_stereo=RUN_INP_DCT['check_stereo'])
 
 # Parse the mechanism input and get a dct with info on PESs user request to run
 if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:

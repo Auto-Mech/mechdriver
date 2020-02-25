@@ -199,13 +199,15 @@ def make_channel_pfs(
         model_dct[chn_model]['es'], thy_dct)
     spc_model = loadmodel.set_pf_model_info(
         model_dct[chn_model]['pf'])
+    ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
+    # tun_model = model_dct[chn_model]['pf']['tunnel']
 
     # Unpack the energy dictionary and put energies in kcal
     first_ground_ene *= phycon.EH2KCAL
     reac_ene = channel_enes['reacs'] * phycon.EH2KCAL
     prod_ene = channel_enes['prods'] * phycon.EH2KCAL
     ts_ene = channel_enes['ts'] * phycon.EH2KCAL
-    print('first_grouned_ene', first_ground_ene)
+    print('first_ground_ene', first_ground_ene)
     print('reac_ene', reac_ene)
     print('prod_ene', prod_ene)
     print('ts_ene', ts_ene)
@@ -432,6 +434,11 @@ def make_channel_pfs(
                 ts_reac_barr = 0.1
             if ts_prod_barr < 0.:
                 ts_prod_barr = 0.1
+            # if tunnel_model == 'eckart':
+            # elif tunnel_model == 'sct':
+            # elif tunnel_model == 'None':
+            # tunnel_str = mess_io.writer.tunnel_sct(
+            #   imag_freq, tunnel_file, cutoff_energy=2500)
             tunnel_str = mess_io.writer.tunnel_eckart(
                 imag_freq, ts_reac_barr, ts_prod_barr)
             ts_str += '\n' + mess_io.writer.ts_sadpt(
@@ -454,6 +461,11 @@ def make_channel_pfs(
             spc_dct[tsname], ts_label, reac_label, prod_label,
             spc_ene, spc_zpe, projrot_script_str,
             multi_info)
+    elif ts_sadpt == 'variational':
+        [ene_thy, geo_thy] = model_dct[chn_model]['es']['rpath']
+        ts_str += '\n' + blocks.vtst_saddle_block(
+            spc_dct[tsname], ene_thy, geo_thy,
+            ts_label, reac_label, prod_label, first_ground_ene)
     elif rad_rad and addn_rxn and low_spin and rad_rad_ts == 'pst':
         # zero_energy = SOMETHING
         pst_str = blocks.pst_block(

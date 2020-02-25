@@ -44,13 +44,13 @@ def build_run_spc_dct(spc_dct, run_obj_dct):
     return run_dct
 
 
-def build_spc_dct(job_path, spc_type):
+def build_spc_dct(job_path, spc_type, check_stereo=False):
     """ Get a dictionary of all the input species
         indexed by InChi string
     """
     spc_csv_str = ptt.read_inp_str(job_path, CSV_INP)
     if spc_type == 'csv':
-        spc_dct = csv_dct(spc_csv_str, check_stereo=False)
+        spc_dct = csv_dct(spc_csv_str, check_stereo=check_stereo)
     else:
         raise NotImplementedError
 

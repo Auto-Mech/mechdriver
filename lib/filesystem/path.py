@@ -14,6 +14,8 @@ def set_fs(spc_dct, spc, thy_info,
     """ set up filesystem """
 
     # Build the species filesys objs
+    print('spc info')
+    print(spc_dct[spc])
     [spc_info,
      spc_run_fs, spc_save_fs,
      spc_run_path, spc_save_path] = set_spc_fs(
@@ -175,6 +177,35 @@ def get_scn_fs(thy_prefix, spc_info, thy_info):
         min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
     return cnf_fs
 
+
+def get_ts_fs(rxn_run_path, rxn_save_path, ref_level):
+    """ Build a transition state filesystem
+    """
+    thy_run_fs = autofile.fs.theory(rxn_run_path)
+    thy_run_fs[-1].create(ref_level[1:4])
+    thy_run_path = thy_run_fs[-1].path(ref_level[1:4])
+
+    thy_save_fs = autofile.fs.theory(rxn_save_path)
+    thy_save_fs[-1].create(ref_level[1:4])
+    thy_save_path = thy_save_fs[-1].path(ref_level[1:4])
+
+    scn_run_fs = autofile.fs.scan(thy_run_path)
+    scn_save_fs = autofile.fs.scan(thy_save_path)
+
+    ts_run_fs = autofile.fs.ts(thy_run_path)
+    ts_run_fs[0].create()
+    ts_run_path = ts_run_fs[0].path()
+    run_fs = autofile.fs.run(ts_run_path)
+
+    ts_save_fs = autofile.fs.ts(thy_save_path)
+    ts_save_fs[0].create()
+    ts_save_path = ts_save_fs[0].path()
+
+    # cnf_run_fs = autofile.fs.conformer(ts_run_path)
+    # cnf_save_fs = autofile.fs.conformer(ts_save_path)
+    # cnf_save_fs[0].create()
+
+    return ts_run_fs, ts_save_fs, ts_run_path, ts_save_path
 
 
 def get_rxn_fs(run_prefix, save_prefix,

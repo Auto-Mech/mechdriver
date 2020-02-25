@@ -10,6 +10,7 @@ from routines.es import tau
 from routines.es import ts
 from routines.es import wells
 from routines.es import find
+from routines.es import variational
 from lib.phydat import phycon
 from lib.runner import par as runpar
 from lib.filesystem import minc as fsmin
@@ -24,7 +25,8 @@ __all__ = [
     'tau',
     'ts',
     'wells',
-    'find'
+    'find',
+    'variational'
 ]
 
 
@@ -105,14 +107,10 @@ def run_hr_scan(filesys, params, opt_kwargs):
     scan.hindered_rotor_scans(**params, **opt_kwargs)
 
 
-def run_vpt2(filesys, params, opt_kwargs):
+def run_vpt2(params, opt_kwargs):
     """ run a scan over the specified torsional coordinates
     """
-    print('running task {}'.format('hr'))
-    for x in params:
-        print(x)
-    params['cnf_run_fs'] = filesys[4]
-    params['cnf_save_fs'] = filesys[5]
+    print('running task {}'.format('vpt2'))
     sp.run_vpt2(**params, **opt_kwargs)
 
 
@@ -135,7 +133,7 @@ def run_tau_samp(filesys, params, opt_kwargs):
 def geometry_generation(tsk, spc_name, spc, mc_nsamp,
                         ini_thy_level, thy_level, ini_filesys, filesys,
                         overwrite, saddle=False, kickoff=(0.1, False),
-                        tors_model=('1dhr', False)):
+                        tors_model=('1dhr', False, False)):
     """ run an electronic structure task
     for generating a list of conformer or tau sampling geometries
     """

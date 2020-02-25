@@ -169,7 +169,7 @@ def run_vpt2(
     geo = geo_save_fs[-1].file.geometry.read(locs)
     run_fs = autofile.fs.run(geo_run_path)
 
-    if not geo_save_fs[-1].file.anharmnicity_matrix.exists(locs) or overwrite:
+    if not geo_save_fs[-1].file.anharmonicity_matrix.exists(locs) or overwrite:
 
         print('Running vpt2')
         driver.run_job(
@@ -205,9 +205,9 @@ def run_vpt2(
                 vpt2_dct['freqs'], locs)
             geo_save_fs[-1].file.anharmonic_zpve.write(
                 vpt2_dct['zpve'], locs)
-            geo_save_fs[-1].file.anharmonicity_matrix.write(
-                vpt2_dct['x_mat'], locs)
             geo_save_fs[-1].file.vibro_rot_alpha_matrix.write(
                 vpt2_dct['vibrot_mat'], locs)
             geo_save_fs[-1].file.quartic_centrifugal_dist_consts.write(
                 vpt2_dct['cent_dist_const'], locs)
+            geo_save_fs[-1].file.anharmonicity_matrix.write(
+                vpt2_dct['x_mat'], locs)

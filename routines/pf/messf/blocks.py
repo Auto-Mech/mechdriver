@@ -310,45 +310,96 @@ def vtst_with_no_saddle_block(
     return variational_str
 
 
-# def vtst_saddle_block(scn_save_fs, geoms, frequencies, energies):
-#     """ prepare the mess input string for a variational TS where there is a
-#         saddle point on the MEP.
-#         In this case, there is limited torsional information.
-#     """
-#
-#     # Read scn save filesys to get enes, zpves, symnums
-#     # Geometries, hessians, torsional potentials for each point on the MEP
-#
-#     # Determine the the number of points along the irc
-#     nirc = 21
-#
-#     # Loop over all the points of the irc and build MESS strings
-#     irc_pt_strings = []
-#     for i in range(nirc):
-#
-#         # Iniialize the header of the string
-#         irc_pt_string = '!-----------------------------------------------'
-#         irc_pt_string += '! IRC Point {0}\n'.format(str(i+1))
-#
-#         # Write the molecule section for each irc point
-#         core = mess_io.writer.mol_data.core_rigidrotor(
-#             geom1, sym_factor, interp_emax='')
-#         irc_pt_str += mess_io.writer.species.molecule(
-#             core, freqs, elec_levels,
-#             hind_rot='', xmat=None, rovib_coups='', rot_dists='')
-#
-#         # Append the zero point energy for the molecule
-#         irc_pt_str += ('    ZeroEnergy[kcal/mol]      ',
-#                        '{0:<8.2f}'.format(zero_energy))
-#
-#         # Append string to list
-#         irc_pt_strings.append(irc_pt_string)
-#
-#     # Write the MESS string for the variational sections
-#     variational_str = mess_io.writer.rxnchan.ts_variational(
-#         ts_label, reac_label, prod_label, irc_pt_strings)
-#
-#     return variational_str
+def vtst_saddle_block(ts_dct, ene_thy_level, geo_thy_level,
+                      ts_label, reac_label, prod_label, first_ground_ene):
+    """ prepare the mess input string for a variational TS where there is a
+        saddle point on the MEP.
+        In this case, there is limited torsional information.
+    """
+    irc_idxs = ts_dct['irc_idxs']
+    ts_info = ['', ts_dct['chg'], ts_dct['mul']]
+    orb_restr = fsorb.orbital_restriction(ts_info, geo_thy_level)
+    geo_level = geo_thy_level[0:3]
+    geo_level.append(orb_restr)
+
+    rxn_save_path = ts_dct['rxn_fs'][3]
+    thy_save_fs = autofile.fs.theory(rxn_save_path)
+    thy_save_fs[-1].create(geo_level[1:4])
+    thy_save_path = thy_save_fs[-1].path(geo_level[1:4])
+    scn_save_fs = autofile.fs.scan(thy_save_path)
+
+    # Set the distance name for the reaction coordinate
+    dist_name = 'RC'
+
+    # Loop over all the points of the irc and build MESS strings
+    full_irc_str = []
+    for idx in irc_idxs:
+
+        # Set the filesystem locators for each grid point
+        locs = [[dist_name], [idx]]
+
+        # Get geometry, energy, vibrational freqs, and zpe
+        if not scn_save_fs[-1].file.geometry.exists(locs):
+            continue
+        else:
+            geom = scn_save_fs[-1].file.geometry.read(locs)
+        if not scn_save_fs[-1].file.energy.exists(locs):
+            continue
+        else:
+            if ene_thy_level == geo_thy_level:
+                ene = scn_save_fs[-1].file.energy.read(locs)
+            else:
+                scn_save_path = scn_save_fs[-1].path(locs)
+                sp_save_fs = autofile.fs.single_point(scn_save_path)
+                orb_restr = fsorb.orbital_restriction(ts_info, ene_thy_level)
+                sp_level = ene_thy_level[0:3]
+                sp_level.append(orb_restr)
+                if not sp_save_fs[-1].file.energy.exists(sp_level[1:4]):
+                    print('no energy')
+                else:
+                    ene = sp_save_fs[-1].file.energy.read(sp_level[1:4])
+        if not scn_save_fs[-1].file.hessian.exists(locs):
+            continue
+        else:
+            pot = ()
+            hess = scn_save_fs[-1].file.hessian.read(locs)
+            scn_save_path = scn_save_fs[-1].path(locs)
+            freqs, _, _ = pfmodels.projrot_freqs_1(
+                geom, hess, pot,
+                proj_rotors_str, projrot_script_str,
+                scn_save_path, saddle=True)
+            zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
+
+        # Calculate the relative energy
+        erel = ((ene + zpe) - first_ground_ene) * phycon.EH2KCAL
+
+        # Set the symmetry factor and electronic levels
+        sym_factor = 1.0
+        elec_levels = [[0., ts_dct['mul']]]
+
+        # Iniialize the header of the string
+        irc_pt_str = '!-----------------------------------------------'
+        irc_pt_str += '! IRC Point {0}\n'.format(str(int(idx)+1))
+
+        # Write the molecule section for each irc point
+        core = mess_io.writer.mol_data.core_rigidrotor(
+            geom, sym_factor, interp_emax='')
+        irc_pt_str += mess_io.writer.species.molecule(
+            core, freqs, elec_levels,
+            hind_rot='', xmat=None, rovib_coups='', rot_dists='')
+
+        # Append the zero point energy string for the point
+        irc_pt_str += ('    ZeroEnergy[kcal/mol]      ',
+                       '{0:<8.2f}'.format(erel))
+
+        # Append string to list
+        full_irc_str.append(irc_pt_str)
+
+    # Write the MESS string for the variational sections
+    variational_str = mess_io.writer.rxnchan.ts_variational(
+        ts_label, reac_label, prod_label, irc_pt_strings)
+
+    return variational_str
 
 
 def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,

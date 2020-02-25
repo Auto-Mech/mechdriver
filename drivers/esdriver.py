@@ -7,6 +7,7 @@ from lib.load import species as loadspc
 from lib.load import mechanism as loadmech
 from lib.filesystem import check as fcheck
 from lib.filesystem import path as fpath
+from lib.filesystem import inf as finf
 from lib import printmsg
 
 
@@ -27,14 +28,18 @@ def run(rxn_lst,
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
     # vdw_params = model_dct['options']['vdw_params']
-    #freeze_all_tors = model_dct[model]['options']['freeze_all_tors']
-    #ndim_tors = model_dct[model]['pf']['tors']
+    # freeze_all_tors = model_dct[model]['options']['freeze_all_tors']
+    # ndim_tors = model_dct[model]['pf']['tors']
     # rad_rad_ts = model_dct[model]['pf']['ts_barrierless']
-    freeze_all_tors = True
+    freeze_all_tors = False
     ndim_tors = '1dhr'
+    adiab_tors = True
     rad_rad_ts = 'pst'
     mc_nsamp = run_options_dct['mc_nsamp']
     kickoff = run_options_dct['kickoff']
+    irc_idxs = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
+    run_irc = False
+    run_irc_sp = False
 
     # Do some extra work to prepare the info to pass to the drivers
     es_tsk_lst = loadrun.build_run_es_tsks_lst(
@@ -49,47 +54,67 @@ def run(rxn_lst,
         # Task and theory information
         [tsk, thy_info, ini_thy_info, overwrite] = tsk_info
 
-        # If task is to find the transition state, find all TSs for rxn lst
-        if tsk in ('find_ts', 'find_vdw'):
+        # Handle tasks that are related to the transition states or wells
+        if 'ts' in tsk or 'vdw' in tsk:
             # Get info for the transition states
             ts_dct = loadspc.build_sadpt_dct(
                 rxn_lst, model_dct, thy_dct, es_tsk_str,
                 run_inp_dct, run_options_dct, spc_dct, {})
-            spc_dct.update(ts_dct)
-            for spc in spc_dct:
-                if 'ts_' in spc:
-                    # printmsg.sadpt_tsk_printmsg(
-                    #     tsk, sadpt, spc_dct, thy_info, ini_thy_info)
-                    if not spc_dct[spc]['class']:
-                        print('skipping reaction because type =',
-                              spc_dct[spc]['class'])
-                        continue
+            for sadpt in ts_dct:
+                # printmsg.sadpt_tsk_printmsg(
+                #     tsk, sadpt, spc_dct, thy_info, ini_thy_info)
+                if not ts_dct[sadpt]['class']:
+                    print('skipping reaction because type =',
+                          ts_dct[sadpt]['class'])
+                    continue
 
-                    # Find the transition state
-                    if 'ts' in tsk:
-                        geo, _, _ = routines.es.find.find_ts(
-                            spc_dct, spc_dct[spc],
-                            spc_dct[spc]['zma'],
-                            # spc_dct[spc]['original_zma'],
-                            ini_thy_info, thy_info,
-                            run_prefix, save_prefix,
-                            overwrite,
-                            rad_rad_ts=rad_rad_ts)
+                # Find the transition state
+                if 'find_ts' in tsk:
+                    geo, _, _ = routines.es.find.find_ts(
+                        spc_dct, ts_dct[sadpt],
+                        ts_dct[sadpt]['zma'],
+                        # spc_dct[spc]['original_zma'],
+                        ini_thy_info, thy_info,
+                        run_prefix, save_prefix,
+                        overwrite,
+                        rad_rad_ts=rad_rad_ts)
 
-                        # Add TS to species queue if TS is found
-                        if not isinstance(geo, str):
-                            print('Success, transition state',
-                                  '{} added to species queue'.format(spc))
-                            spc_queue.append((spc, ''))
-                    elif 'vdw' in tsk:
-                        pass
-                        # vdws = routines.es.wells.find_vdw(
-                        #     spc, spc_dct, thy_info, ini_thy_info,
-                        #     vdw_params,
-                        #     thy_dct[es_run_key]['mc_nsamp'], run_prefix,
-                        #     save_prefix, 0.1, False,
-                        #     overwrite)
-                        # spc_queue.extend(vdws)
+                    # Add TS to species queue if TS is found
+                    if not isinstance(geo, str):
+                        print('Success, transition state',
+                              '{} added to species queue'.format(sadpt))
+                        spc_queue.append((sadpt, ''))
+                        spc_dct.update(ts_dct)
+
+                # Run conformer sampling, have to move stuff up I think
+
+                # Run the irc task
+                if run_irc:
+                    routines.es.variational.irc.irc_opt(
+                        ts_dct[sadpt],
+                        thy_info,
+                        irc_idxs,
+                        overwrite)
+
+                sp_thy_info = finf.get_thy_info('cc_lvl_d', thy_dct)
+                if run_irc_sp:
+                    routines.es.variational.irc.irc_sp(
+                        ts_dct[sadpt],
+                        thy_info,
+                        sp_thy_info,
+                        irc_idxs,
+                        overwrite)
+
+                # Handle taks with a vdW well
+                if 'vdw' in tsk:
+                    pass
+                    # vdws = routines.es.wells.find_vdw(
+                    #     spc, spc_dct, thy_info, ini_thy_info,
+                    #     vdw_params,
+                    #     thy_dct[es_run_key]['mc_nsamp'], run_prefix,
+                    #     save_prefix, 0.1, False,
+                    #     overwrite)
+                    # spc_queue.extend(vdws)
             continue
 
         # Loop over all species
@@ -118,7 +143,7 @@ def run(rxn_lst,
                         tsk, spc_name, spc_dct[spc_name], mc_nsamp,
                         ini_thy_level, thy_level, ini_filesys, filesys,
                         overwrite, saddle=saddle, kickoff=kickoff,
-                        tors_model=(ndim_tors, freeze_all_tors))
+                        tors_model=(ndim_tors, freeze_all_tors, adiab_tors))
                 else:
                     routines.es.wells.fake_geo_gen(tsk, thy_level, filesys)
             else:
