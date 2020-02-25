@@ -116,6 +116,7 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
         if 'ts_' in spc:
             mode_start = mode_start + 1
             saddle = True
+
         if automol.geom.is_linear(harm_geo):
             mode_start = mode_start - 1
         freqs = freqs[mode_start:]

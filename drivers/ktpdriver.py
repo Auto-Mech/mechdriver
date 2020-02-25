@@ -37,6 +37,12 @@ def run(pes_formula,
         assess_pdep = model_dct[test_model]['options']['assess_pdep']
         ene_coeff = model_dct[test_model]['options']['ene_coeff']
 
+        # Add the irc idxs for reading for temporary things
+        for spc in spc_dct:
+            if 'ts_' in spc:
+                spc_dct[spc]['irc_idxs'] = [
+                    -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
+
         # Getting some other info to pass
         # rct_ichs = spc_dct['ts_0']['rxn_ichs'][0]
 
@@ -52,6 +58,12 @@ def run(pes_formula,
             multi_info, pst_params,
             save_prefix, idx_dct,
             model_dct, thy_dct)
+
+        for a, b in idx_dct.items():
+            print(a)
+            print(b)
+        import sys
+        sys.exit()
 
         # Run mess to produce rate output
         mess_path = raterunner.run_rates(

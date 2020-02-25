@@ -13,7 +13,8 @@ JOB_ERROR_DCT = {
     elstruct.Job.HESSIAN: elstruct.Error.SCF_NOCONV,
     elstruct.Job.VPT2: elstruct.Error.SCF_NOCONV,
     elstruct.Job.OPTIMIZATION: elstruct.Error.OPT_NOCONV,
-    elstruct.Job.IRC: elstruct.Error.IRC_NOCONV,
+    elstruct.Job.IRCF: elstruct.Error.IRC_NOCONV,
+    elstruct.Job.IRCR: elstruct.Error.IRC_NOCONV,
 }
 
 JOB_SUCCESS_DCT = {
@@ -22,7 +23,8 @@ JOB_SUCCESS_DCT = {
     elstruct.Job.HESSIAN: elstruct.Success.SCF_CONV,
     elstruct.Job.VPT2: elstruct.Success.SCF_CONV,
     elstruct.Job.OPTIMIZATION: elstruct.Success.OPT_CONV,
-    elstruct.Job.IRC: elstruct.Success.IRC_CONV,
+    elstruct.Job.IRCF: elstruct.Success.IRC_CONV,
+    elstruct.Job.IRCR: elstruct.Success.IRC_CONV,
 }
 
 JOB_RUNNER_DCT = {
@@ -35,7 +37,9 @@ JOB_RUNNER_DCT = {
     elstruct.Job.VPT2: functools.partial(
         jobrunner.options_matrix_run, elstruct.writer.vpt2),
     elstruct.Job.OPTIMIZATION: jobrunner.options_matrix_optimization,
-    elstruct.Job.IRC: functools.partial(
+    elstruct.Job.IRCF: functools.partial(
+        jobrunner.options_matrix_run, elstruct.writer.irc),
+    elstruct.Job.IRCR: functools.partial(
         jobrunner.options_matrix_run, elstruct.writer.irc),
 }
 
@@ -53,6 +57,9 @@ def run_job(
     assert job in JOB_ERROR_DCT
     assert job in JOB_SUCCESS_DCT
 
+    run_path = run_fs[-1].path([job])
+    print('run_path')
+    print(run_path)
     run_fs[-1].create([job])
     run_path = run_fs[-1].path([job])
     if overwrite:
@@ -101,7 +108,11 @@ def run_job(
                 runner, feedback=feedback,
                 frozen_coordinates=frozen_coordinates,
                 freeze_dummy_atoms=freeze_dummy_atoms)
-        if job == elstruct.Job.IRC:
+        elif job in (elstruct.Job.IRCF, elstruct.Job.IRCR):
+            if job == elstruct.Job.IRCF:
+                irc_direction = 'forward'
+            else:
+                irc_direction = 'reverse'
             runner = functools.partial(
                 runner, irc_direction=irc_direction)
 

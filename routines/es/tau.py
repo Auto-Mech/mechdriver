@@ -72,7 +72,7 @@ def run_tau(
     tau_save_fs[0].file.vmatrix.write(vma)
     idx = 0
     nsamp0 = nsamp
-    inf_obj = autofile.system.info.tau[0](0, tors_range_dct)
+    inf_obj = autofile.system.info.tau_trunk(0, tors_range_dct)
     while True:
         if tau_save_fs[0].file.info.exists():
             inf_obj_s = tau_save_fs[0].file.info.read()

@@ -65,7 +65,8 @@ def write_mdhr_tors_mess_strings(geom, spc_info, sym_num, spc_dct_i,
                                  ts_bnd, zma,
                                  tors_name_grps, tors_grid_grps, tors_sym_nums,
                                  tors_cnf_save_path, min_ene,
-                                 saddle=False, hind_rot_geo=None):
+                                 saddle=False, hind_rot_geo=None,
+                                 vib_adiabatic=False):
     """ Gather the MDHR torsional data and gather them into a MESS file
     """
 
@@ -77,12 +78,14 @@ def write_mdhr_tors_mess_strings(geom, spc_info, sym_num, spc_dct_i,
     for tors_names, tors_grids in zip(tors_name_grps, tors_grid_grps):
 
         # Read the hindered rotor potential and add to master list
-        hr_pot = read_hr_pot(
+        vib_adiabatic=True
+        hr_pot, hr_freqs = read_hr_pot(
             spc_info, tors_names, tors_grids,
-            tors_cnf_save_path, min_ene)
+            tors_cnf_save_path, min_ene,
+            saddle=saddle, read_freqs=vib_adiabatic)
 
         # Write the MDHR potential file for each rotor set
-        mdhr_dat_str = write_mdhr_dat_file(hr_pot)
+        mdhr_dat_str = write_mdhr_dat_file(hr_pot, hr_freqs)
 
         # Check for dummy transformations
         remdummy = check_dummy_trans(zma)
@@ -121,7 +124,7 @@ def write_mdhr_tors_mess_strings(geom, spc_info, sym_num, spc_dct_i,
     return rotor_internal_str, proj_rotors_str, mdhr_dat_str
 
 
-def write_mdhr_dat_file(potentials):
+def write_mdhr_dat_file(potentials, freqs=()):
     """ Write a file containing the hindered rotor potentials
         Only writes the file for up to 4-dimensinal rotor
     """
@@ -131,99 +134,82 @@ def write_mdhr_dat_file(potentials):
     ndims = len(dims)
 
     # Write top line string with number of points in potential
-    mdhr_str = '{0:>6d}'.format(dims[0])
-    if ndims == 2:
-        mdhr_str += '{0:>6d}'.format(dims[1])
-    elif ndims > 3:
-        mdhr_str += '{0:>6d}'.format(dims[2])
-    elif ndims > 4:
-        mdhr_str += '{0:>6d}'.format(dims[3])
+    if ndims == 1:
+        mdhr_str = '{0:>6d}'.format(*dims)
+        nfreqs = len(freqs[0]) if freqs else None
+    elif ndims == 2:
+        mdhr_str = '{0:>6d}{1:>6d}'.format(*dims)
+        nfreqs = len(freqs[0][0]) if freqs else None
+    elif ndims == 3:
+        mdhr_str = '{0:>6d}{1:>6d}{2:>6d}'.format(*dims)
+        nfreqs = len(freqs[0][0][0]) if freqs else None
+    elif ndims == 4:
+        mdhr_str = '{0:>6d}{1:>6d}{2:>6d}{3:>6d}'.format(*dims)
+        nfreqs = len(freqs[0][0][0][0]) if freqs else None
 
-    # Add the nofreq line (need to know when to put the freqs)
-    mdhr_str += '\n nofreq\n\n'
+    # Add the nofreq line
+    if freqs:
+        mdhr_str += '\n '
+        mdhr_str += ' '.join('{0:d}'.format(idx+1) for idx in range(nfreqs))
+        mdhr_str += '\n\n'
+    else:
+        mdhr_str += '\n nofreq\n\n'
 
     # Write the strings with the potential values
     if ndims == 1:
         for i in range(dims[0]):
             mdhr_str += (
-                '{0:>6d}{1:>15.8f}\n'.format(
-                    i+1, potentials[i]))
+                '{0:>6d}{1:>15.8f}'.format(
+                    i+1, potentials[i])
+                )
+            if freqs:
+                ' {}'.join((freq for freq in freqs[i]))
+            mdhr_str += '\n'
     elif ndims == 2:
         for i in range(dims[0]):
             for j in range(dims[1]):
                 mdhr_str += (
-                    '{0:>6d}{1:>6d}{2:>15.8f}\n'.format(
+                    '{0:>6d}{1:>6d}{2:>15.8f}'.format(
                         i+1, j+1, potentials[i][j])
                 )
+                if freqs:
+                    strs = ('{0:d}'.format(int(val)) for val in freqs[i][j])
+                    mdhr_str += '  ' + ' '.join(strs)
+                mdhr_str += '\n'
     elif ndims == 3:
         for i in range(dims[0]):
             for j in range(dims[1]):
                 for k in range(dims[2]):
                     mdhr_str += (
-                        '{0:>6d}{1:>6d}{2:>6d}{3:>15.8f}\n'.format(
+                        '{0:>6d}{1:>6d}{2:>6d}{3:>15.8f}'.format(
                             i+1, j+1, k+1, potentials[i][j][k])
                     )
+                    if freqs:
+                        ' {}'.join((freq for freq in freqs[i][j][k]))
+                    mdhr_str += '\n'
     elif ndims == 4:
         for i in range(dims[0]):
             for j in range(dims[1]):
                 for k in range(dims[2]):
                     for m in range(dims[3]):
                         mdhr_str += (
-                            '{0:>6d}{1:>6d}{2:>6d}{3:>6d}{4:>15.8f}\n'.format(
+                            '{0:>6d}{1:>6d}{2:>6d}{3:>6d}{4:>15.8f}'.format(
                                 i+1, j+1, k+1, m+1, potentials[i][j][k][m])
                         )
+                        if freqs:
+                            ' {}'.join((freq for freq in freqs[i][j][k][m]))
+                        mdhr_str += '\n'
 
     return mdhr_str
 
 
 # Functions to handle setting up torsional defintion and potentials properly
-def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene):
+def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
+                saddle=False, read_freqs=False):
     """ Get the potential for a hindered rotor
     """
 
-    # Read the energies from the filesystem
-    scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
-    enes = []
-    if len(tors_names) == 1:
-        for grid_val_i in tors_grids[0]:
-            locs = [tors_names, [grid_val_i]]
-            if scn_save_fs[-1].exists(locs):
-                enes.append(scn_save_fs[-1].file.energy.read(locs))
-            else:
-                enes.append(10.)
-    elif len(tors_names) == 2:
-         for grid_val_i in tors_grids[0]:
-            for grid_val_j in tors_grids[1]:
-                locs = [tors_names, [grid_val_i, grid_val_j]]
-                if scn_save_fs[-1].exists(locs):
-                    enes.append(scn_save_fs[-1].file.energy.read(locs))
-                else:
-                    enes.append(10.)
-    elif len(tors_names) == 3:
-         for grid_val_i in tors_grids[0]:
-            for grid_val_j in tors_grids[1]:
-                for grid_val_k in tors_grids[2]:
-                    locs = [tors_names, [grid_val_i, grid_val_j, grid_val_k]]
-                    if scn_save_fs[-1].exists(locs):
-                        enes.append(scn_save_fs[-1].file.energy.read(locs))
-                    else:
-                        enes.append(10.)
-    elif len(tors_names) == 4:
-        for grid_val_i in tors_grids[0]:
-            for grid_val_j in tors_grids[1]:
-                for grid_val_k in tors_grids[2]:
-                    for grid_val_l in tors_grids[3]:
-                        locs = [tors_names,
-                                [grid_val_i, grid_val_j, grid_val_k, grid_val_l]]
-                        if scn_save_fs[-1].exists(locs):
-                            enes.append(scn_save_fs[-1].file.energy.read(locs))
-                        else:
-                            enes.append(10.)
-
-    # Scale the energies
-    pot = [(ene - min_ene)*phycon.EH2KCAL for ene in enes]
-
-    # Reshape the potential list into a list of lists if ndim > 1
+    # Build template potential list and freqs list into a list-of-lists if ndim > 1
     if len(tors_names) == 1:
         dims = (len(tors_grids[0]),)
     elif len(tors_names) == 2:
@@ -233,9 +219,64 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene):
     elif len(tors_names) == 4:
         dims = (len(tors_grids[0]), len(tors_grids[1]),
                 len(tors_grids[2]), len(tors_grids[3]))
-    pot = numpy.array(pot).reshape(dims).tolist()
+    pot = numpy.zeros(dims).tolist()
+    if read_freqs:
+        freqs = numpy.zeros(dims).tolist()
+    else:
+        freqs = []
 
-    return pot
+    # Read the energies from the filesystem
+    scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
+    enes = []
+    if len(tors_names) == 1:
+        for i, grid_val_i in enumerate(tors_grids[0]):
+            locs = [tors_names, [grid_val_i]]
+            if scn_save_fs[-1].exists(locs):
+                ene = scn_save_fs[-1].file.energy.read(locs)
+                pot[i] = (ene - min_ene) * phycon.EH2KCAL
+            else:
+                pot[i] = 10.0
+            if read_freqs:
+                freqs[i] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
+    elif len(tors_names) == 2:
+         for i, grid_val_i in enumerate(tors_grids[0]):
+            for j, grid_val_j in enumerate(tors_grids[1]):
+                locs = [tors_names, [grid_val_i, grid_val_j]]
+                if scn_save_fs[-1].exists(locs):
+                    ene = scn_save_fs[-1].file.energy.read(locs)
+                    pot[i][j] = (ene - min_ene) * phycon.EH2KCAL
+                else:
+                    pot[i][j] = 10.0
+                if read_freqs:
+                    freqs[i][j] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
+    elif len(tors_names) == 3:
+         for i, grid_val_i in enumerate(tors_grids[0]):
+            for j, grid_val_j in enumerate(tors_grids[1]):
+                for k, grid_val_k in enumerate(tors_grids[2]):
+                    locs = [tors_names, [grid_val_i, grid_val_j, grid_val_k]]
+                if scn_save_fs[-1].exists(locs):
+                    ene = scn_save_fs[-1].file.energy.read(locs)
+                    pot[i][j][k] = (ene - min_ene) * phycon.EH2KCAL
+                else:
+                    pot[i][j][k] = 10.0
+                if read_freqs:
+                    freqs[i][j][k] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
+    elif len(tors_names) == 4:
+        for i, grid_val_i in enumerate(tors_grids[0]):
+            for j, grid_val_j in enumerate(tors_grids[1]):
+                for k, grid_val_k in enumerate(tors_grids[2]):
+                    for l, grid_val_l in enumerate(tors_grids[3]):
+                        locs = [tors_names,
+                                [grid_val_i, grid_val_j, grid_val_k, grid_val_l]]
+                        if scn_save_fs[-1].exists(locs):
+                            ene = scn_save_fs[-1].file.energy.read(locs)
+                            pot[i][j][k][l] = (ene - min_ene) * phycon.EH2KCAL
+                        else:
+                            pot[i][j][k][l] = 10.0
+                        if read_freqs:
+                            freqs[i][j][k][l] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
+
+    return pot, freqs
 
 
 def hrpot_spline_fitter(pot, thresh=-0.05):
@@ -306,7 +347,7 @@ def hrpot_spline_fitter(pot, thresh=-0.05):
     else:
         final_potential = pot.copy()
 
-    print('Final potential in spline fitter:', final_potential)
+    # print('Final potential in spline fitter:', final_potential)
     final_potential = final_potential[:-1]
 
     return final_potential
