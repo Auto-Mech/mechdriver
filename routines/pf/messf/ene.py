@@ -40,7 +40,7 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
     spc_info = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
 
     # Prepare the sets of file systems
-    [_, _, harm_levels, _, sym_level, tors_levels] = pf_levels
+    [_, _, harm_levels, vpt2_level, sym_level, tors_levels] = pf_levels
     tors_model, vib_model, sym_model = spc_model
 
     # Set theory filesystem used throughout
@@ -69,6 +69,11 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
             thy_save_fs, spc_info, tors_levels[0], saddle=saddle)
         [tors_cnf_save_fs, tors_cnf_save_path,
          tors_min_cnf_locs, tors_save_path] = torsfs
+    if vpt2_level:
+        vpt2fs = set_model_filesys(
+            thy_save_fs, spc_info, vpt2_level, saddle=('ts_' in spc))
+        [vpt2_cnf_save_fs, vpt2_cnf_save_path,
+         vpt2_min_cnf_locs, vpt2_save_path] = vpt2fs
 
     # Set additional info for a saddle point
     saddle = False
@@ -151,7 +156,10 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
         elif vib_model == 'tau' and tors_model == 'tau':
             zpe = 0.0
         elif vib_model == 'vpt2' and tors_model == 'rigid':
-            print('VPT2 and RIGID combination is not yet implemented')
+            _, _, _, _, zpe = pfmodels.vib_vpt2_tors_rigid(
+                harm_min_cnf_locs, harm_cnf_save_fs,
+                vpt2_min_cnf_locs, vpt2_cnf_save_fs,
+                saddle=saddle)
         elif vib_model == 'vpt2' and tors_model == '1dhr':
             print('VPT2 and 1DHR combination is not yet implemented')
         elif vib_model == 'vpt2' and tors_model == 'tau':

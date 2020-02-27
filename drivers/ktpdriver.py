@@ -45,25 +45,25 @@ def run(pes_formula,
 
         # Getting some other info to pass
         # rct_ichs = spc_dct['ts_0']['rxn_ichs'][0]
+        print('Starting mess file preparation.')
 
         # Write the strings for the MESS input file
         header_str, energy_trans_str = messrates.rate_headers(
             spc_dct, rxn_lst, temps, pressures, **etrans)
 
+        # Build the MESS label idx dictionary for the PES
+        idx_dct = messrates.make_pes_idx_dct(rxn_lst, spc_dct)
+        print('idx dct test')
+        for key, val in idx_dct.items():
+            print(key, val)
+
         # Write the MESS strings for all the PES channels
-        print('Starting mess file preparation.')
-        idx_dct = {}
+        # idx_dct = {}
         well_str, bim_str, ts_str, dat_lst = messrates.write_channel_mess_strs(
             spc_dct, rxn_lst, pes_formula,
             multi_info, pst_params,
             save_prefix, idx_dct,
             model_dct, thy_dct)
-
-        for a, b in idx_dct.items():
-            print(a)
-            print(b)
-        import sys
-        sys.exit()
 
         # Run mess to produce rate output
         mess_path = raterunner.run_rates(

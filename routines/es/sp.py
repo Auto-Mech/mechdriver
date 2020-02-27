@@ -7,7 +7,7 @@ import autofile
 # New libs
 from lib.runner import par as runpar
 from lib.runner import driver
-
+from lib.phydat import symm, phycon
 
 def run_energy(
         spc_info, thy_level, geo_run_fs, geo_save_fs, locs,
@@ -164,10 +164,19 @@ def run_vpt2(
     """ Perform vpt2 analysis for the geometry in the given location
     """
 
+    # Set the filesystem information
     geo_run_path = geo_run_fs[-1].path(locs)
     geo_save_path = geo_save_fs[-1].path(locs)
     geo = geo_save_fs[-1].file.geometry.read(locs)
+    zma = geo_save_fs[-1].file.zmatrix.read(locs)
     run_fs = autofile.fs.run(geo_run_path)
+
+    # Assess if symmetry needs to be broken for the calculation
+    # Add porgram check because might only be issue for gaussian
+    if spc_info[0] in symm.HIGH:
+        disp = symm.HIGH[spc_info[0]] * phycon.ANG2BOHR
+        vals = automol.zmatrix.values(zma)
+        zma = automol.zmatrix.set_values(zma, {'R1': vals['R1'] + disp})
 
     if not geo_save_fs[-1].file.anharmonicity_matrix.exists(locs) or overwrite:
 
@@ -176,7 +185,7 @@ def run_vpt2(
             job='vpt2',
             script_str=script_str,
             run_fs=run_fs,
-            geom=geo,
+            geom=zma,
             spc_info=spc_info,
             thy_level=thy_level,
             overwrite=overwrite,
@@ -194,8 +203,19 @@ def run_vpt2(
         if automol.geom.is_atom(geo):
             pass
         else:
+
+            if not geo_save_fs[-1].file.hessian.exists(locs):
+                print(" - No Hessian in filesys. Reading it from output...")
+                hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+                print(" - Saving Hessian...")
+                print(" - Save path: {}".format(geo_save_path))
+                geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
+                geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
+                geo_save_fs[-1].file.hessian.write(hess, locs)
+
             print(" - Reading anharmonicities from output...")
             vpt2_dct = elstruct.reader.vpt2(inf_obj.prog, out_str)
+            hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
             print(" - Saving anharmonicities...")
             print(" - Save path: {}".format(geo_save_path))

@@ -28,42 +28,33 @@ PRD_DISTS = [
     1.34701, 1.36265, 1.37782, 1.39250, 1.40671]
 
 
-def write_rpht_sct_input(coord_proj='cartesian'):
-    """ Read the struct info for each point alon
+def build_trans_coeff_file():
+    """ Collate the IRC data and build 
+        the transmission coefficient file with ProjRot
     """
 
-    # Write the string for the ProjRot input
+    # Loop over the IRC filesys and read the info
+
+
+    # Write the input and coord-energy string for the ProjRot input
     inp_str = projrot_io.writer.rpht_input(
-        GEOMS, GRADS, HESSES,
-        saddle_idx=11, rotors_str='', coord_proj=CART_PROJ)
-      
-    # Print the string
-
-    return inp_str
-
-
-def write_rpht_sct_coord_en():
-    """ test projrot_io.writer.rpht_path_coord_en
-    """
-    # Write the string withoutp bnd1 and bnd2 vals
+        geoms, grads, hesses,
+        saddle_idx=11, rotors_str='', coord_proj=cart_proj)
     en_str = projrot_io.writer.rpht_path_coord_en(
-        RXN_PATH_COORDS, RXN_PATH_ENERGIES,
-        bnd1=None, bnd2=None)
+        rxn_path_coords, rxn_path_energies,
+        bnd1=none, bnd2=none)
 
+    # Write the ProjRot input files and run the code 
+    bld_locs = ['PROJROT', 0]
+    bld_save_fs = autofile.fs.build(save_path)
+    bld_save_fs[-1].create(bld_locs)
+    path = bld_save_fs[-1].path(bld_locs)
+    print('Build Path for ProjRot calls')
+    print(path)
+    proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
+    with open(proj_file_path, 'w') as proj_file:
+        proj_file.write(projrot_inp_str)
+    script.run_script(script.PROJROT, path)
 
     return en_str
-
-    # Print the string
-    print(en_str)
-
-    # Write the string with bnd1 and bnd2 vals
-    en_str = projrot_io.writer.rpht_path_coord_en(
-        RXN_PATH_COORDS, RXN_PATH_ENERGIES,
-        bnd1=RCT_DISTS, bnd2=PRD_DISTS)
-
-    # Print the string
-    print(en_str)
-
-
-
 

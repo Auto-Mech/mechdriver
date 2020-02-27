@@ -29,7 +29,7 @@ def rate_headers(spc_dct, rxn_lst,
     header_str = mess_io.writer.global_reaction(temps, press)
     tot_mass = 0.
     for rct in rxn_lst[0]['reacs']:
-        geo = automol.convert.inchi.geometry(spc_dct[rct]['ich'])
+        geo = automol.inchi.geometry(spc_dct[rct]['ich'])
         masses = automol.geom.masses(geo)
         for mass in masses:
             tot_mass += mass
@@ -85,8 +85,6 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
             thy_dct, model_dct,
             chn_model, first_ground_model,
             save_prefix)
-        # print('channel_enes')
-        # print(channel_enes)
         mess_strs = make_channel_pfs(
             tsname, rxn, species, spc_dct, idx_dct, mess_strs,
             first_ground_ene, channel_enes,
@@ -182,8 +180,7 @@ def make_channel_pfs(
         tsname, rxn, species_data, spc_dct, idx_dct, strs,
         first_ground_ene, channel_enes,
         model_dct, thy_dct, multi_info, save_prefix,
-        pst_params=(1.0, 6),
-        rad_rad_ts='pst'):
+        pst_params=(1.0, 6)):
     """ make the partition function strings for each of the channels
     includes strings for each of the unimolecular wells, bimolecular fragments,
     and transition states connecting them.
@@ -200,6 +197,7 @@ def make_channel_pfs(
     spc_model = loadmodel.set_pf_model_info(
         model_dct[chn_model]['pf'])
     ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
+    ts_barrierless = None
     # tun_model = model_dct[chn_model]['pf']['tunnel']
 
     # Unpack the energy dictionary and put energies in kcal
@@ -215,95 +213,32 @@ def make_channel_pfs(
     # Set filesys object
     spc_save_fs = autofile.fs.species(save_prefix)
 
-    # Find the number of uni and bimolecular wells already in the dictionary
-    pidx = 1
-    widx = 1
-    fidx = 1
-    for val in idx_dct.values():
-        if 'P' in val:
-            pidx += 1
-        elif 'W' in val:
-            widx += 1
-        elif 'F' in val:
-            fidx += 1
-
-    # Set up new well for the reactants if that combo isn't already in the dct
-    reac_label = ''
-    bimol = False
-    if len(rxn['reacs']) > 1:
-        bimol = True
-    well_data = []
-    spc_label = []
-    for reac in rxn['reacs']:
-        spc_label.append(automol.inchi.smiles(spc_dct[reac]['ich']))
-        well_data.append(species_data[reac])
-    # Wells and bimol stuff
-    well_dct_key1 = '+'.join(rxn['reacs'])
-    well_dct_key2 = '+'.join(rxn['reacs'][::-1])
-    if well_dct_key1 not in idx_dct:
-        if well_dct_key2 in idx_dct:
-            well_dct_key1 = well_dct_key2
+    # Write the MESS string for the channel reactant(s) and product(s)
+    for rct in (rxn['reacs'], rxn['prods']):
+        spc_label = [automol.inchi.smiles(spc_dct[spc]['ich']) for spc in rct]
+        spc_data = [species_data[spc] for spc in rct]
+        chn_label = idx_dct[make_rxn_string(rct)]
+        if len(rct) > 1:
+            ground_energy = reac_ene - first_ground_ene
+            bim_str += '\n! {} + {}\n'.format(rct[0], rct[1])
+            bim_str += mess_io.writer.bimolecular(
+                chn_label, spc_label[0], spc_data[0],
+                spc_label[1], spc_data[1], ground_energy)
         else:
-            if bimol:
-                reac_label = 'P' + str(pidx)
-                pidx += 1
-                ground_energy = reac_ene - first_ground_ene
-                bim_str += '\n! {} + {} \n'.format(
-                    rxn['reacs'][0], rxn['reacs'][1])
-                bim_str += mess_io.writer.bimolecular(
-                    reac_label, spc_label[0], well_data[0], spc_label[1],
-                    well_data[1], ground_energy)
-                idx_dct[well_dct_key1] = reac_label
-            else:
-                reac_label = 'W' + str(widx)
-                widx += 1
-                zero_energy = reac_ene - first_ground_ene
-                well_str += '\n! {} \n'.format(rxn['reacs'][0])
-                well_str += mess_io.writer.well(
-                    reac_label, well_data[0], zero_energy)
-                idx_dct[well_dct_key1] = reac_label
-    if not reac_label:
-        reac_label = idx_dct[well_dct_key1]
+            zero_energy = reac_ene - first_ground_ene
+            well_str += '\n! {}\n'.format(rct)
+            well_str += mess_io.writer.well(
+                chn_label, spc_data[0], zero_energy)
 
-    # Set up a new well for the products if that combo isn't already in the dct
-    prod_label = ''
-    bimol = False
-    if len(rxn['prods']) > 1:
-        bimol = True
-    well_data = []
-    spc_label = []
-    for prod in rxn['prods']:
-        spc_label.append(automol.inchi.smiles(spc_dct[prod]['ich']))
-        well_data.append(species_data[prod])
-    zero_energy = prod_ene - reac_ene
-    well_dct_key1 = '+'.join(rxn['prods'])
-    well_dct_key2 = '+'.join(rxn['prods'][::-1])
-    if well_dct_key1 not in idx_dct:
-        if well_dct_key2 in idx_dct:
-            well_dct_key1 = well_dct_key2
+        # Initialize the reactant and product MESS label
+        if rct == rxn['reacs']:
+            reac_label = chn_label
+            inner_reac_label = chn_label
         else:
-            if bimol:
-                prod_label = 'P' + str(pidx)
-                ground_energy = prod_ene - first_ground_ene
-                bim_str += '\n! {} + {} \n'.format(
-                    rxn['prods'][0], rxn['prods'][1])
-                bim_str += mess_io.writer.bimolecular(
-                    prod_label, spc_label[0], well_data[0],
-                    spc_label[1], well_data[1],
-                    ground_energy)
-                idx_dct[well_dct_key1] = prod_label
-            else:
-                prod_label = 'W' + str(widx)
-                zero_energy = prod_ene - first_ground_ene
-                well_str += '\n! {} \n'.format(rxn['prods'][0])
-                well_str += mess_io.writer.well(
-                    prod_label, well_data[0], zero_energy)
-                idx_dct[well_dct_key1] = prod_label
-    if not prod_label:
-        prod_label = idx_dct[well_dct_key1]
+            prod_label = chn_label
+            inner_prod_label = chn_label
 
     # For abstraction first make fake wells and PST TSs
-    # Then for tight TS's make ts_str
     zero_energy = ts_ene - first_ground_ene
     ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
     imag_freq = 0
@@ -312,141 +247,72 @@ def make_channel_pfs(
     if not imag_freq:
         print('No imaginary freq for ts: {}'.format(tsname))
 
-    fake_wellr_label = ''
-    fake_wellp_label = ''
-    rad_rad = 'radical radical' in spc_dct[tsname]['class']
-    low_spin = 'high spin' not in spc_dct[tsname]['class']
-    abst_rxn = 'abstraction' in spc_dct[tsname]['class']
-    addn_rxn = 'addition' in spc_dct[tsname]['class']
-    subs_rxn = 'substitution' in spc_dct[tsname]['class']
-    if abst_rxn or subs_rxn:
-        # Make fake wells and PST TSs as needed
-        well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
-        well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
-        pst_r_ts_str = ''
-        if well_dct_key1 not in idx_dct:
-            if well_dct_key2 in idx_dct:
-                well_dct_key1 = well_dct_key2
-            else:
-                fake_wellr_label = 'F' + str(fidx)
-                fidx += 1
-                vdwr_ene = reac_ene - 1.0
-                zero_energy = vdwr_ene - first_ground_ene
-                well_str += '\n! Fake Well for {}\n'.format(
-                    '+'.join(rxn['reacs']))
-                fake_wellr = make_fake_species_data(
-                    spc_dct[rxn['reacs'][0]], spc_dct[rxn['reacs'][1]],
-                    spc_save_fs, spc_model, pf_levels)
-                well_str += mess_io.writer.well(
-                    fake_wellr_label, fake_wellr, zero_energy)
-                idx_dct[well_dct_key1] = fake_wellr_label
+    # Set up for fake wells from reacs -> reac well and prod well -> prods
+    if need_fake_wells(spc_dct[tsname]['class']):
+        # MESS string for the fake reactant side well
+        spc_dct_i = spc_dct[rxn['reacs'][0]]
+        spc_dct_j = spc_dct[rxn['reacs'][1]]
+        well_dct_key = make_rxn_string(rxn['reacs'], prepend='F')
+        fake_wellr_label = idx_dct[well_dct_key]
+        vdwr_ene = reac_ene - 1.0
+        zero_energy = vdwr_ene - first_ground_ene
+        well_str += '\n! Fake Well for {}\n'.format(
+            '+'.join(rxn['reacs']))
+        fake_wellr = make_fake_species_data(
+            spc_dct_i, spc_dct_j,
+            spc_save_fs, spc_model, pf_levels)
+        well_str += mess_io.writer.well(
+            fake_wellr_label, fake_wellr, zero_energy)
 
-                pst_r_label = 'FRB' + str(int(tsname.replace('ts_', ''))+1)
-                idx_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
-                spc_dct_i = spc_dct[rxn['reacs'][0]]
-                spc_dct_j = spc_dct[rxn['reacs'][1]]
-                pst_r_ts_str = blocks.pst_block(
-                    spc_dct_i, spc_dct_j, spc_model=spc_model,
-                    pf_levels=pf_levels,
-                    spc_save_fs=spc_save_fs,
-                    pst_params=pst_params)
-            if not fake_wellr_label:
-                fake_wellr_label = idx_dct[well_dct_key1]
-                pst_r_label = idx_dct[well_dct_key1.replace('F', 'FRB')]
-            zero_energy = reac_ene - first_ground_ene
-            tunnel_str = ''
-            ts_str += '\n' + mess_io.writer.ts_sadpt(
-                pst_r_label, reac_label, fake_wellr_label, pst_r_ts_str,
-                zero_energy, tunnel_str)
-        else:
-            fake_wellr_label = idx_dct[well_dct_key1]
-        well_dct_key1 = 'F' + '+'.join(rxn['prods'])
-        well_dct_key2 = 'F' + '+'.join(rxn['prods'][::-1])
-        if well_dct_key1 not in idx_dct:
-            if well_dct_key2 in idx_dct:
-                well_dct_key1 = well_dct_key2
-            else:
-                fake_wellp_label = 'F' + str(fidx)
-                fidx += 1
-                vdwp_ene = prod_ene - 1.0
-                zero_energy = vdwp_ene - first_ground_ene
-                well_str += '\n! Fake Well for {}\n'.format(
-                    '+'.join(rxn['prods']))
-                fake_wellp = make_fake_species_data(
-                    spc_dct[rxn['prods'][0]], spc_dct[rxn['prods'][1]],
-                    spc_save_fs, spc_model, pf_levels)
-                well_str += mess_io.writer.well(
-                    fake_wellp_label, fake_wellp, zero_energy)
-                idx_dct[well_dct_key1] = fake_wellp_label
+        # MESS PST TS string for fake product side well -> prods
+        well_dct_key = make_rxn_string(rxn['reacs'], prepend='FRB')
+        pst_r_label = idx_dct[well_dct_key]
+        pst_r_ts_str = blocks.pst_block(
+            spc_dct_i, spc_dct_j, spc_model=spc_model,
+            pf_levels=pf_levels,
+            spc_save_fs=spc_save_fs,
+            pst_params=pst_params)
+        zero_energy = reac_ene - first_ground_ene
+        ts_str += '\n' + mess_io.writer.ts_sadpt(
+            pst_r_label, reac_label, fake_wellr_label, pst_r_ts_str,
+            zero_energy, tunnel='')
 
-                pst_p_label = 'FPB' + str(int(tsname.replace('ts_', ''))+1)
-                idx_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
-                spc_dct_i = spc_dct[rxn['prods'][0]]
-                spc_dct_j = spc_dct[rxn['prods'][1]]
-                pst_p_ts_str = blocks.pst_block(
-                    spc_dct_i, spc_dct_j, spc_model=spc_model,
-                    pf_levels=pf_levels,
-                    spc_save_fs=spc_save_fs,
-                    pst_params=pst_params)
-            if not fake_wellp_label:
-                fake_wellp_label = idx_dct[well_dct_key1]
-                pst_p_label = idx_dct[well_dct_key1.replace('F', 'FPB')]
-            zero_energy = prod_ene - first_ground_ene
-            tunnel_str = ''
-            ts_str += '\n' + mess_io.writer.ts_sadpt(
-                pst_p_label, prod_label, fake_wellp_label, pst_p_ts_str,
-                zero_energy, tunnel_str)
-        else:
-            fake_wellp_label = idx_dct[well_dct_key1]
+        # MESS string for the fake product side well
+        spc_dct_i = spc_dct[rxn['prods'][0]]
+        spc_dct_j = spc_dct[rxn['prods'][1]]
+        well_dct_key = make_rxn_string(rxn['prods'], prepend='F')
+        fake_wellp_label = idx_dct[well_dct_key]
+        vdwp_ene = prod_ene - 1.0
+        zero_energy = vdwp_ene - first_ground_ene
+        well_str += '\n! Fake Well for {}\n'.format(
+            '+'.join(rxn['prods']))
+        fake_wellp = make_fake_species_data(
+            spc_dct_i, spc_dct_j,
+            spc_save_fs, spc_model, pf_levels)
+        well_str += mess_io.writer.well(
+            fake_wellp_label, fake_wellp, zero_energy)
 
-        # Print inner TS data for radical radical call vtst or vrctst
-        if rad_rad and low_spin and rad_rad_ts == 'pst':
-            # zero_energy = SOMETHING
-            pst_str = blocks.pst_block(
-                spc_dct_i, spc_dct_j, spc_model=spc_model,
-                pf_levels=pf_levels,
-                spc_save_fs=spc_save_fs,
-                pst_params=pst_params)
-            ts_str += '\n' + mess_io.writer.ts_sadpt(
-                ts_label, reac_label, prod_label, pst_str, zero_energy)
-        elif rad_rad and low_spin:
-            ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
-            if 'P' in reac_label:
-                spc_ene = reac_ene - first_ground_ene
-                spc_zpe = (
-                    spc_dct[rxn['reacs'][0]]['zpe'] +
-                    spc_dct[rxn['reacs'][1]]['zpe'])
-            else:
-                spc_ene = prod_ene - first_ground_ene
-                spc_zpe = (
-                    spc_dct[rxn['prods'][0]]['zpe'] +
-                    spc_dct[rxn['prods'][1]]['zpe'])
-            ts_str += '\n' + blocks.vtst_with_no_saddle_block(
-                spc_dct[tsname], ts_label, fake_wellr_label, fake_wellp_label,
-                spc_ene, spc_zpe, projrot_script_str, multi_info)
-        else:
-            vdwr_ene = reac_ene - 1.0
-            vdwp_ene = prod_ene - 1.0
-            zero_energy = ts_ene - first_ground_ene
-            ts_reac_barr = ts_ene - vdwr_ene
-            ts_prod_barr = ts_ene - vdwp_ene
-            if ts_reac_barr < 0.:
-                ts_reac_barr = 0.1
-            if ts_prod_barr < 0.:
-                ts_prod_barr = 0.1
-            # if tunnel_model == 'eckart':
-            # elif tunnel_model == 'sct':
-            # elif tunnel_model == 'None':
-            # tunnel_str = mess_io.writer.tunnel_sct(
-            #   imag_freq, tunnel_file, cutoff_energy=2500)
-            tunnel_str = mess_io.writer.tunnel_eckart(
-                imag_freq, ts_reac_barr, ts_prod_barr)
-            ts_str += '\n' + mess_io.writer.ts_sadpt(
-                ts_label, fake_wellr_label, fake_wellp_label,
-                species_data[tsname], zero_energy, tunnel_str)
-    elif rad_rad and addn_rxn and low_spin:
-        # For radical radical addition call vtst or vrctst
-        ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
+        # MESS PST TS string for fake product side well -> prods
+        well_dct_key = make_rxn_string(rxn['prods'], prepend='FPB')
+        pst_p_label = idx_dct[well_dct_key]
+        pst_p_ts_str = blocks.pst_block(
+            spc_dct_i, spc_dct_j, spc_model=spc_model,
+            pf_levels=pf_levels,
+            spc_save_fs=spc_save_fs,
+            pst_params=pst_params)
+        zero_energy = prod_ene - first_ground_ene
+        ts_str += '\n' + mess_io.writer.ts_sadpt(
+            pst_p_label, prod_label, fake_wellp_label, pst_p_ts_str,
+            zero_energy, tunnel='')
+
+        # Reset the reactant and product labels for the inner transition state
+        inner_reac_label = fake_wellr_label
+        inner_prod_label = fake_wellp_label
+
+    # Set up the inner transition state
+    ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
+    if var_radrad(spc_dct[tsname]['class']) and ts_barrierless == 'vtst':
+        # Variational TST for a barrierless reaction
         if 'P' in reac_label:
             spc_ene = reac_ene - first_ground_ene
             spc_zpe = (
@@ -458,24 +324,19 @@ def make_channel_pfs(
                 spc_dct[rxn['prods'][0]]['zpe'] +
                 spc_dct[rxn['prods'][1]]['zpe'])
         ts_str += '\n' + blocks.vtst_with_no_saddle_block(
-            spc_dct[tsname], ts_label, reac_label, prod_label,
+            spc_dct[tsname], ts_label, inner_reac_label, inner_prod_label,
             spc_ene, spc_zpe, projrot_script_str,
             multi_info)
-    elif ts_sadpt == 'variational':
-        [ene_thy, geo_thy] = model_dct[chn_model]['es']['rpath']
+    elif var_radrad(spc_dct[tsname]['class']) and ts_barrierless == 'vrctst':
+        # Variational Rxn Coord TST for a barrierless reaction
+        pass
+    elif ts_sadpt == 'vtst':
+        # Variational TST for a saddle point
         ts_str += '\n' + blocks.vtst_saddle_block(
-            spc_dct[tsname], ene_thy, geo_thy,
-            ts_label, reac_label, prod_label, first_ground_ene)
-    elif rad_rad and addn_rxn and low_spin and rad_rad_ts == 'pst':
-        # zero_energy = SOMETHING
-        pst_str = blocks.pst_block(
-            spc_dct_i, spc_dct_j, spc_model=spc_model,
-            pf_levels=pf_levels,
-            spc_save_fs=spc_save_fs,
-            pst_params=pst_params)
-        ts_str += '\n' + mess_io.writer.ts_sadpt(
-            ts_label, reac_label, prod_label, pst_str, zero_energy)
+            spc_dct[tsname], pf_levels,
+            ts_label, inner_reac_label, inner_prod_label, first_ground_ene)
     else:
+        # Fixed TST for a saddle point
         ts_reac_barr = ts_ene - reac_ene
         ts_prod_barr = ts_ene - prod_ene
         if ts_reac_barr < 0.:
@@ -485,10 +346,147 @@ def make_channel_pfs(
         tunnel_str = mess_io.writer.tunnel_eckart(
             imag_freq, ts_reac_barr, ts_prod_barr)
         ts_str += '\n' + mess_io.writer.ts_sadpt(
-            ts_label, reac_label, prod_label,
+            ts_label, inner_reac_label, inner_prod_label,
             species_data[tsname], zero_energy, tunnel_str)
 
     return [well_str, bim_str, ts_str]
+
+
+def make_pes_idx_dct(rxn_lst, spc_dct):
+    """ Builds a dictionary that matches the mechanism name to the labels used
+        in the MESS input and output files for the whole PES
+    """
+    pes_idx_dct = {}
+    for idx, rxn in enumerate(rxn_lst):
+        tsname = 'ts_{:g}'.format(idx)
+        pes_idx_dct.update(make_channel_idx_dct(tsname, rxn, spc_dct))
+
+    return pes_idx_dct
+
+
+def make_channel_idx_dct(tsname, rxn, spc_dct):
+    """ Builds a dictionary that matches the mechanism name to the labels used
+        in the MESS input and output files
+    """
+
+    # Initialize the channel idx dictionary
+    idx_dct = {}
+
+    # Find the number of wells, bimol spc, and fake spc already in the dct
+    pidx = 1
+    widx = 1
+    fidx = 1
+    for val in idx_dct.values():
+        if 'P' in val:
+            pidx += 1
+        elif 'W' in val:
+            widx += 1
+        elif 'F' in val:
+            fidx += 1
+
+    # Determine the idxs for the channel reactants
+    reac_label = ''
+    bimol = bool(len(rxn['reacs']) > 1)
+    well_dct_key1 = '+'.join(rxn['reacs'])
+    well_dct_key2 = '+'.join(rxn['reacs'][::-1])
+    if well_dct_key1 not in idx_dct:
+        if well_dct_key2 in idx_dct:
+            well_dct_key1 = well_dct_key2
+        else:
+            if bimol:
+                reac_label = 'P' + str(pidx)
+                pidx += 1
+                idx_dct[well_dct_key1] = reac_label
+            else:
+                reac_label = 'W' + str(widx)
+                widx += 1
+                idx_dct[well_dct_key1] = reac_label
+    if not reac_label:
+        reac_label = idx_dct[well_dct_key1]
+
+    # Determine the idxs for the channel products
+    prod_label = ''
+    bimol = bool(len(rxn['prods']) > 1)
+    well_dct_key1 = '+'.join(rxn['prods'])
+    well_dct_key2 = '+'.join(rxn['prods'][::-1])
+    if well_dct_key1 not in idx_dct:
+        if well_dct_key2 in idx_dct:
+            well_dct_key1 = well_dct_key2
+        else:
+            if bimol:
+                prod_label = 'P' + str(pidx)
+                idx_dct[well_dct_key1] = prod_label
+            else:
+                prod_label = 'W' + str(widx)
+                idx_dct[well_dct_key1] = prod_label
+    if not prod_label:
+        prod_label = idx_dct[well_dct_key1]
+
+    # Determine idxs for any fake wells if they are needed
+    fake_wellr_label = ''
+    fake_wellp_label = ''
+    if need_fake_wells(spc_dct[tsname]['class']):
+        well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
+        well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
+        if well_dct_key1 not in idx_dct:
+            if well_dct_key2 in idx_dct:
+                well_dct_key1 = well_dct_key2
+            else:
+                fake_wellr_label = 'F' + str(fidx)
+                fidx += 1
+                idx_dct[well_dct_key1] = fake_wellr_label
+
+                pst_r_label = 'FRB' + str(int(tsname.replace('ts_', ''))+1)
+                idx_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
+            if not fake_wellr_label:
+                fake_wellr_label = idx_dct[well_dct_key1]
+                pst_r_label = idx_dct[well_dct_key1.replace('F', 'FRB')]
+        else:
+            fake_wellr_label = idx_dct[well_dct_key1]
+        well_dct_key1 = 'F' + '+'.join(rxn['prods'])
+        well_dct_key2 = 'F' + '+'.join(rxn['prods'][::-1])
+        if well_dct_key1 not in idx_dct:
+            if well_dct_key2 in idx_dct:
+                well_dct_key1 = well_dct_key2
+            else:
+                fake_wellp_label = 'F' + str(fidx)
+                fidx += 1
+                idx_dct[well_dct_key1] = fake_wellp_label
+
+                pst_p_label = 'FPB' + str(int(tsname.replace('ts_', ''))+1)
+                idx_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
+            if not fake_wellp_label:
+                fake_wellp_label = idx_dct[well_dct_key1]
+                pst_p_label = idx_dct[well_dct_key1.replace('F', 'FPB')]
+        else:
+            fake_wellp_label = idx_dct[well_dct_key1]
+
+    return idx_dct
+
+
+def need_fake_wells(tsclass):
+    """ Return boolean to see if fake wells are needed
+    """
+    abst_rxn = bool('abstraction' in tsclass)
+    # addn_rxn = bool('addition' in tsclass)
+    subs_rxn = bool('substitution' in tsclass)
+    return bool(abst_rxn or subs_rxn)
+    # return bool(abst_rxn or addn_rxn or subs_rxn)
+
+
+def var_radrad(tsclass):
+    """ Return boolean to see if fake wells are needed
+    """
+    rad_rad = 'radical radical' in tsclass
+    low_spin = 'high spin' not in tsclass
+    addn_rxn = 'addition' in tsclass
+    return bool(rad_rad and low_spin and addn_rxn)
+
+
+def make_rxn_string(rlst, prepend=''):
+    """ convert list to string
+    """
+    return prepend + '+'.join(rlst)
 
 
 # Readers

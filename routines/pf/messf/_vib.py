@@ -32,7 +32,6 @@ def projrot_freqs_1(tors_geo, hess,
     proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
     with open(proj_file_path, 'w') as proj_file:
         proj_file.write(projrot_inp_str)
-
     script.run_script(script.PROJROT, path)
 
     freqs = []

@@ -38,8 +38,8 @@ def run(rxn_lst,
     mc_nsamp = run_options_dct['mc_nsamp']
     kickoff = run_options_dct['kickoff']
     irc_idxs = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
-    run_irc = False
-    run_irc_sp = False
+    run_irc = True
+    run_irc_sp = True
 
     # Do some extra work to prepare the info to pass to the drivers
     es_tsk_lst = loadrun.build_run_es_tsks_lst(

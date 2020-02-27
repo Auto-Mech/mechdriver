@@ -93,7 +93,7 @@ def set_es_model_info(es_model, thy_dct):
     geo_lvl = es_model['geo'] if es_model['geo'] else None
     ene_lvl = es_model['ene'] if es_model['ene'] else None
     harm_lvl = es_model['harm'] if es_model['harm'] else None
-    anharm_lvl = es_model['anharm'] if es_model['anharm'] else None
+    vpt2_lvl = es_model['vpt2'] if es_model['vpt2'] else None
     sym_lvl = es_model['sym'] if es_model['sym'] else None
 
     # Torsional Scan which needs a reference for itself
@@ -104,8 +104,8 @@ def set_es_model_info(es_model, thy_dct):
     geo_thy_info = finf.get_thy_info(geo_lvl, thy_dct)
     ene_thy_info = finf.get_thy_info(ene_lvl, thy_dct)
     harm_thy_info = finf.get_thy_info(harm_lvl, thy_dct)
-    anharm_thy_info = (finf.get_thy_info(anharm_lvl, thy_dct)
-                       if anharm_lvl else None)
+    vpt2_thy_info = (finf.get_thy_info(vpt2_lvl, thy_dct)
+                       if vpt2_lvl else None)
     sym_thy_info = (finf.get_thy_info(sym_lvl, thy_dct)
                     if sym_lvl else None)
     tors_sp_thy_info = (finf.get_thy_info(tors_lvl_sp, thy_dct)
@@ -118,7 +118,7 @@ def set_es_model_info(es_model, thy_dct):
         geo_thy_info,
         ene_thy_info,
         harm_thy_info,
-        anharm_thy_info,
+        vpt2_thy_info,
         sym_thy_info,
         [tors_sp_thy_info, tors_scn_thy_info]
     ]

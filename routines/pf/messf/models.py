@@ -349,4 +349,35 @@ def vib_tau_tors_tau(tors_min_cnf_locs, tors_cnf_save_fs,
     tau_dat_str = tau.write_tau_data_str(
         spc_formula, save_prefix, gradient=True, hessian=True)
 
-    return monte_carlo_str, tau_dat_str
+
+def vib_vpt2_tors_rigid(harm_min_cnf_locs, harm_cnf_save_fs,
+                        vpt2_min_cnf_locs, vpt2_cnf_save_fs,
+                        saddle=False):
+    """ Build the species info for a model: VPT2, Rigid
+    """
+    if harm_min_cnf_locs is not None:
+        harm_geo = harm_cnf_save_fs[-1].file.geometry.read(
+            harm_min_cnf_locs)
+        hess = harm_cnf_save_fs[-1].file.hessian.read(
+            harm_min_cnf_locs)
+        freqs = elstruct.util.harmonic_frequencies(
+            harm_geo, hess, project=False)
+        # Modify freqs lst and get imaginary frequencies
+        mode_start = 6
+        if saddle:
+            mode_start = mode_start + 1
+            imag_freq = freqs[0]
+        else:
+            imag_freq = ''
+        if automol.geom.is_linear(harm_geo):
+            mode_start = mode_start - 1
+        freqs = freqs[mode_start:]
+
+    if vpt2_min_cnf_locs is not None:
+        xmat = vpt2_cnf_save_fs[-1].file.anharmonicity_matrix.read(
+            vpt2_min_cnf_locs)
+        zpve = vpt2_cnf_save_fs[-1].file.anharmonic_zpve.read(
+            vpt2_min_cnf_locs)
+        
+    return harm_geo, freqs, imag_freq, xmat, zpve
+
