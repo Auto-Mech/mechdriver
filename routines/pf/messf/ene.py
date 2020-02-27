@@ -16,6 +16,7 @@ import routines.pf.messf.models as pfmodels
 from routines.pf.messf.blocks import set_model_filesys
 from routines.pf.messf import _sym as sym
 from routines.pf.messf import _util as messfutil
+from routines.pf.messf import _tors as tors
 
 
 def get_zpe_str(spc_dct, zpe):
@@ -116,26 +117,32 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
         if 'ts_' in spc:
             mode_start = mode_start + 1
             saddle = True
-        if automol.geom.is_linear(harm_geo):
+
+        no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
+        #if automol.geom.is_linear(harm_geo):
+        if no_tors:
             mode_start = mode_start - 1
         freqs = freqs[mode_start:]
 
-        harm_zpe = sum(freqs)*phycon.WAVEN2EH/2.
+        harm_zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
 
         # Determine the ZPVE based on the model
         if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts:
             # print('HARM_RIGID')
             zpe = harm_zpe
         elif vib_model == 'harm' and tors_model == '1dhr':
-            print('HARM_1DHR')
-            _, _, _, _, zpe = pfmodels.vib_harm_tors_1dhr(
-                harm_min_cnf_locs, harm_cnf_save_fs,
-                tors_min_cnf_locs, tors_cnf_save_fs,
-                tors_save_path, tors_cnf_save_path,
-                spc_dct_i, spc_info,
-                frm_bnd_key, brk_bnd_key,
-                sym_factor, elec_levels,
-                saddle=saddle)
+            if no_tors:
+                zpe = harm_zpe
+            else:
+                print('HARM_1DHR')
+                _, _, _, _, zpe = pfmodels.vib_harm_tors_1dhr(
+                    harm_min_cnf_locs, harm_cnf_save_fs,
+                    tors_min_cnf_locs, tors_cnf_save_fs,
+                    tors_save_path, tors_cnf_save_path,
+                    spc_dct_i, spc_info,
+                    frm_bnd_key, brk_bnd_key,
+                    sym_factor, elec_levels,
+                    saddle=saddle)
         elif vib_model == 'harm' and tors_model == 'mdhr':
             print('HARM and MDHR combination is not yet implemented')
             zpe = harm_zpe
@@ -411,7 +418,9 @@ def get_fs_ene_zpe(spc_dct, spc,
             spc, spc_dct[spc],
             pf_levels, pf_model,
             save_prefix=spc_save_path)
+        e_zpe/=phycon.EH2KCAL
 
+    print ('e_zpe test:', e_zpe)
     # Return the total energy
     ene = None
     if read_ene and read_zpe:

@@ -121,7 +121,7 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
         tors_geo, freqs, imag_freq, hind_rot_str = (), (), 0.0, ''
         raise ValueError
 
-    return tors_geo, freqs, imag_freq, hind_rot_str, zpe
+    return tors_geo, tuple(freqs), imag_freq, hind_rot_str, zpe
 
 
 def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,

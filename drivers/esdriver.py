@@ -27,11 +27,11 @@ def run(rxn_lst,
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
     # vdw_params = model_dct['options']['vdw_params']
-    # freeze_all_tors = model_dct[model]['options']['freeze_all_tors']
-    # ndim_tors = model_dct[model]['pf']['tors']
+    #freeze_all_tors = model_dct[model]['options']['freeze_all_tors']
+    #ndim_tors = model_dct[model]['pf']['tors']
     # rad_rad_ts = model_dct[model]['pf']['ts_barrierless']
-    freeze_all_tors = False
-    ndim_tors = 1
+    freeze_all_tors = True
+    ndim_tors = '1dhr'
     rad_rad_ts = 'pst'
     mc_nsamp = run_options_dct['mc_nsamp']
     kickoff = run_options_dct['kickoff']

@@ -56,7 +56,6 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
     #      vpt2_min_cnf_locs, vpt2_save_path] = vpt2fs
 
     # Check if any torsions to set the model
-    no_tors = bool(not tors_min_cnf_locs)
 
     # Set additional info for a saddle point
     saddle = False
@@ -71,6 +70,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             dist_names.append(spc_dct_i['dist_info'][0])
             dist_names.append(spc_dct_i['dist_info'][3])
 
+    no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
     # Set TS information
     frm_bnd_key, brk_bnd_key = messfutil.get_bnd_keys(spc_dct_i, saddle)
 
@@ -100,57 +100,75 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             mass, elec_levels)
         dat_str_dct = {}
     else:
-        if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts or no_tors:
+        if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts:
             geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
                 spc_info, harm_min_cnf_locs, harm_cnf_save_fs, saddle=saddle)
             hr_str = ""
             symf = sym_factor
         elif vib_model == 'harm' and tors_model == '1dhr':
-            geo, freqs, imag, hr_str, _ = pfmodels.vib_harm_tors_1dhr(
-                harm_min_cnf_locs, harm_cnf_save_fs,
-                tors_min_cnf_locs, tors_cnf_save_fs,
-                tors_save_path, tors_cnf_save_path,
-                spc_dct_i, spc_info,
-                frm_bnd_key, brk_bnd_key,
-                sym_factor, elec_levels,
-                saddle=saddle)
-            sym_nums = tors.get_tors_sym_nums(
-                spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                frm_bnd_key, brk_bnd_key, saddle=False)
-            symf = sym_factor
-            for num in sym_nums:
-                symf /= num
+            if no_tors:
+                geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
+                    spc_info, harm_min_cnf_locs, harm_cnf_save_fs, saddle=saddle)
+                hr_str = ""
+                symf = sym_factor
+            else:
+                geo, freqs, imag, hr_str, _ = pfmodels.vib_harm_tors_1dhr(
+                    harm_min_cnf_locs, harm_cnf_save_fs,
+                    tors_min_cnf_locs, tors_cnf_save_fs,
+                    tors_save_path, tors_cnf_save_path,
+                    spc_dct_i, spc_info,
+                    frm_bnd_key, brk_bnd_key,
+                    sym_factor, elec_levels,
+                    saddle=saddle)
+                sym_nums = tors.get_tors_sym_nums(
+                    spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
+                    frm_bnd_key, brk_bnd_key, saddle=False)
+                symf = sym_factor
+                for num in sym_nums:
+                    symf /= num
         elif vib_model == 'harm' and tors_model == 'mdhr':
-            geo, freqs, imag, core_hr_str, _, mdhr_dat_str = pfmodels.vib_harm_tors_mdhr(
-                harm_min_cnf_locs, harm_cnf_save_fs,
-                tors_min_cnf_locs, tors_cnf_save_fs,
-                tors_save_path, tors_cnf_save_path,
-                spc_dct_i, spc_info,
-                frm_bnd_key, brk_bnd_key,
-                sym_factor, elec_levels,
-                tors_mod=tors_mod,
-                saddle=False)
-            sym_nums = tors.get_tors_sym_nums(
-                spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                frm_bnd_key, brk_bnd_key, saddle=False)
-            symf = sym_factor
-            for num in sym_nums:
-                symf /= num
-            mdhr_str = mess_io.writer.mol_data.core_multirotor(
-                geo, sym_factor, mdhr_dat_file_name, core_hr_str,
-                interp_emax=100, quant_lvl_emax=9)  # , forceq=False)
+            if no_tors:
+                geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
+                    spc_info, harm_min_cnf_locs, harm_cnf_save_fs, saddle=saddle)
+                hr_str = ""
+                symf = sym_factor
+            else:
+                geo, freqs, imag, core_hr_str, _, mdhr_dat_str = pfmodels.vib_harm_tors_mdhr(
+                    harm_min_cnf_locs, harm_cnf_save_fs,
+                    tors_min_cnf_locs, tors_cnf_save_fs,
+                    tors_save_path, tors_cnf_save_path,
+                    spc_dct_i, spc_info,
+                    frm_bnd_key, brk_bnd_key,
+                    sym_factor, elec_levels,
+                    tors_mod=tors_mod,
+                    saddle=False)
+                sym_nums = tors.get_tors_sym_nums(
+                    spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
+                    frm_bnd_key, brk_bnd_key, saddle=False)
+                symf = sym_factor
+                for num in sym_nums:
+                    symf /= num
+                mdhr_str = mess_io.writer.mol_data.core_multirotor(
+                    geo, sym_factor, mdhr_dat_file_name, core_hr_str,
+                    interp_emax=100, quant_lvl_emax=9)  # , forceq=False)
         elif vib_model == 'harm' and tors_model == 'tau':
-            _, _, _, _, _, _, mc_str, tau_dat_str = pfmodels.vib_harm_tors_tau(
-                harm_min_cnf_locs, harm_cnf_save_fs,
-                tors_min_cnf_locs, tors_cnf_save_fs,
-                tors_save_path, tors_cnf_save_path,
-                spc_dct_i, spc_info,
-                frm_bnd_key, brk_bnd_key,
-                sym_factor, elec_levels,
-                tau_dat_file_name,
-                hind_rot_geo=False,
-                saddle=False)
-            print('HARM and TAU combination is not yet implemented')
+            if no_tors:
+                geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
+                    spc_info, harm_min_cnf_locs, harm_cnf_save_fs, saddle=saddle)
+                hr_str = ""
+                symf = sym_factor
+            else:
+                _, _, _, _, _, _, mc_str, tau_dat_str = pfmodels.vib_harm_tors_tau(
+                    harm_min_cnf_locs, harm_cnf_save_fs,
+                    tors_min_cnf_locs, tors_cnf_save_fs,
+                    tors_save_path, tors_cnf_save_path,
+                    spc_dct_i, spc_info,
+                    frm_bnd_key, brk_bnd_key,
+                    sym_factor, elec_levels,
+                    tau_dat_file_name,
+                    hind_rot_geo=False,
+                    saddle=False)
+                print('HARM and TAU combination is not yet implemented')
         elif vib_model == 'tau' and tors_model == 'tau':
             mc_str, tau_dat_str = pfmodels.vib_tau_tors_tau(
                 tors_min_cnf_locs, tors_cnf_save_fs,
@@ -394,15 +412,19 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     #     [vpt2_cnf_save_fs_j, vpt2_cnf_save_path_j,
     #      vpt2_min_cnf_locs_j, vpt2_save_path_j] = vpt2fs_j
 
+    # are there any torsions
+    no_tors_i = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs_i, saddle=False))
+    no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
+
     # Get the combined electronic energy levels
     elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
 
     # Determine the species symmetry factor using the given model
-    saddle = False
     dist_names = []
     tors_names = []
     frm_bnd_key = []
     brk_bnd_key = []
+    saddle=False
     sym_factor_i = sym.symmetry_factor(
         sym_model, spc_dct_i, spc_info_i, dist_names,
         saddle, frm_bnd_key, brk_bnd_key, tors_names,
@@ -450,6 +472,14 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
             freqs_i = []
             hr_str_i = ''
             symf_i = sym_factor_i
+        elif no_tors_i:
+            geo_i = harm_cnf_save_fs_i[-1].file.geometry.read(
+                harm_min_cnf_locs_i)
+            _, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
+                spc_info_i, harm_min_cnf_locs_i,
+                harm_cnf_save_fs_i, saddle=False)
+            hr_str_i = ''
+            symf_i = sym_factor_i
         else:
             geo_i, freqs_i, _, hr_str_i, _ = pfmodels.vib_harm_tors_1dhr(
                 harm_min_cnf_locs_i, harm_cnf_save_fs_i,
@@ -459,12 +489,26 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
                 frm_bnd_key, brk_bnd_key,
                 sym_factor_i, elec_levels,
                 saddle=False)
+            sym_nums_i = tors.get_tors_sym_nums(
+                spc_dct_i, tors_min_cnf_locs_i, tors_cnf_save_fs_i,
+                frm_bnd_key, brk_bnd_key, saddle=False)
+            symf_i = sym_factor_i
+            for num in sym_nums_i:
+                symf_i /= num_i
         if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
             freqs_j = []
             hr_str_j = ''
             symf_j = sym_factor_j
+        elif no_tors_j:
+            geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
+                harm_min_cnf_locs_j)
+            hr_str_j = ''
+            symf_j = sym_factor_j
+            _, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
+                spc_info_j, harm_min_cnf_locs_j,
+                harm_cnf_save_fs_j, saddle=False)
         else:
             geo_j, freqs_j, _, hr_str_j, _ = pfmodels.vib_harm_tors_1dhr(
                 harm_min_cnf_locs_j, harm_cnf_save_fs_j,
@@ -474,6 +518,12 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
                 frm_bnd_key, brk_bnd_key,
                 sym_factor_j, elec_levels,
                 saddle=False)
+            sym_nums_j = tors.get_tors_sym_nums(
+                spc_dct_j, tors_min_cnf_locs_j, tors_cnf_save_fs_j,
+                frm_bnd_key, brk_bnd_key, saddle=False)
+            symf_j = sym_factor_j
+            for num in sym_nums_j:
+                symf_j /= num_j
         freqs = list(freqs_i) + list(freqs_j)
         hind_rot_str = hr_str_i + hr_str_j
         sym_factor = symf_i * symf_j
@@ -545,15 +595,19 @@ def fake_species_block(
 
     spc_str = ''
 
+    # are there any torsion
+    no_tors_i = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs_i, saddle=False))
+    no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
+
     # Get the combined electronic energy levels
     elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
 
     # Determine the species symmetry factor using the given model
-    saddle = False
     dist_names = []
     tors_names = []
     frm_bnd_key = []
     brk_bnd_key = []
+    saddle=False
     sym_factor_i = sym.symmetry_factor(
         sym_model, spc_dct_i, spc_info_i, dist_names,
         saddle, frm_bnd_key, brk_bnd_key, tors_names,
@@ -580,21 +634,27 @@ def fake_species_block(
         else:
             _, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
                 spc_info_i, harm_min_cnf_locs_i,
-                harm_cnf_save_fs_i, saddle=saddle)
+                harm_cnf_save_fs_i, saddle=False)
         if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             freqs_j = ()
         else:
             _, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
                 spc_info_j, harm_min_cnf_locs_j,
-                harm_cnf_save_fs_j, saddle=saddle)
+                harm_cnf_save_fs_j, saddle=False)
         freqs = freqs + freqs_i + freqs_j
         hind_rot_str = ""
 
     if vib_model == 'harm' and tors_model == '1dhr':
         if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
-            freqs_i = []
+            freqs_i = ()
             hr_str_i = ''
             symf_i = sym_factor_i
+        elif no_tors_i:
+            hr_str_i = ''
+            symf_i = sym_factor_i
+            _, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
+                spc_info_i, harm_min_cnf_locs_i,
+                harm_cnf_save_fs_i, saddle=False)
         else:
             _, freqs_i, _, hr_str_i, _ = pfmodels.vib_harm_tors_1dhr(
                 harm_min_cnf_locs_i, harm_cnf_save_fs_i,
@@ -604,10 +664,23 @@ def fake_species_block(
                 frm_bnd_key, brk_bnd_key,
                 sym_factor_i, elec_levels,
                 saddle=False)
+            sym_nums_i = tors.get_tors_sym_nums(
+                spc_dct_i, tors_min_cnf_locs_i, tors_cnf_save_fs_i,
+                frm_bnd_key, brk_bnd_key, saddle=False)
+            symf_i = sym_factor_i
+            for num_i in sym_nums_i:
+                symf_i /= num_i
+
         if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
-            freqs_j = []
+            freqs_j = ()
             hr_str_j = ''
             symf_j = sym_factor_j
+        elif no_tors_j:
+            hr_str_j = ''
+            symf_j = sym_factor_j
+            _, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
+                spc_info_j, harm_min_cnf_locs_j,
+                harm_cnf_save_fs_j, saddle=False)
         else:
             _, freqs_j, _, hr_str_j, _ = pfmodels.vib_harm_tors_1dhr(
                 harm_min_cnf_locs_j, harm_cnf_save_fs_j,
@@ -617,7 +690,14 @@ def fake_species_block(
                 frm_bnd_key, brk_bnd_key,
                 sym_factor_j, elec_levels,
                 saddle=False)
-        freqs += list(freqs_i) + list(freqs_j)
+            sym_nums_j = tors.get_tors_sym_nums(
+                spc_dct_j, tors_min_cnf_locs_j, tors_cnf_save_fs_j,
+                frm_bnd_key, brk_bnd_key, saddle=False)
+            symf_j = sym_factor_j
+            for num_j in sym_nums_j:
+                symf_j /= num_j
+        print('freqs test:', freqs_i, freqs_j)
+        freqs = freqs + freqs_i + freqs_j
         hind_rot_str = hr_str_i + hr_str_j
         sym_factor = symf_i * symf_j
 
