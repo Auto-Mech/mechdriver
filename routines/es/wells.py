@@ -222,7 +222,7 @@ def fake_conf(thy_level, filesys, inf=()):
         ene = thy_save_fs[-1].file.energy.read(thy_level[1:4])
         inf_obj = run_fs[0].file.info.read()
     tors_range_dct = {}
-    cinf_obj = autofile.system.info.conformer[0](0, tors_range_dct)
+    cinf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
     cinf_obj.nsamp = 1
     cnf_save_fs = autofile.fs.conformer(thy_save_path)
     cnf_save_fs[0].create()

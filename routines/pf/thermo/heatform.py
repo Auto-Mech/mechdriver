@@ -40,13 +40,16 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
 
     # Calculate the heat of formation
     dhzero = hzero_mol * EH2KCAL
+    print('hzero test:', hzero_mol, dhzero, EH2KCAL, KJ2KCAL)
     for i, spc in enumerate(basis):
         h_basis = get_ref_h(spc, ref_set, 0)
         if h_basis is None:
             h_basis = 0.0
         dhzero += coeff[i] * h_basis * KJ2KCAL
         dhzero -= coeff[i] * hzero_basis[i] * EH2KCAL
+        print('hform 0K test:', i, spc, h_basis, coeff[i], hzero_basis[i])
 
+    print('h0k test:', dhzero)
     return dhzero
 
 
@@ -105,6 +108,10 @@ def select_basis(atom_dct, att=0):
     # H2O
     if 'O' in atoms:
         basis.append('InChI=1S/H2O/h1H2')
+    # Cl2
+    if 'Cl' in atoms:
+        basis.append('InChI=1S/ClH/h1H')
+        # basis.append('InChI=1S/Cl2/c1-2')
     # SO2
     if 'S' in atoms:
         basis.append('InChI=1S/O2S/c1-3-2')

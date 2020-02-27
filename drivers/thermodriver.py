@@ -20,7 +20,8 @@ def run(spc_dct,
         rxn_lst,
         run_inp_dct,
         ref_scheme='basic',
-        run_pf=True,
+        write_messpf=True,
+        run_messpf=True,
         run_thermo=True):
     """ main driver for thermo run
     """
@@ -52,13 +53,14 @@ def run(spc_dct,
     print(msg)
 
     # Write and Run MESSPF inputs to generate the partition functions
-    if run_pf:
+    if write_messpf:
 
         # Write and Run the MESSPF file to get the partition function
         for spc in spc_queue:
 
             # Unpack spc to get name and model
             spc_name, spc_model = spc
+            print("Preparing messpf input for ", spc_name)
 
             # Gather PF model and theory level info
             pf_levels = loadmodel.set_es_model_info(
@@ -111,7 +113,43 @@ def run(spc_dct,
             routines.pf.messf.pfblock.write_pf_input(
                 pf_input, data_str_dct, pf_path)
 
+
+    # Use MESS partition functions to compute thermo quantities
+    if run_messpf:
+
+        # Setup the CHEMKIN level comment string
+        # ene_str = cout.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
+
+        # Read the high-level energy
+        for spc in spc_queue:
+
+            # Unpack spc to get name and model
+            spc_name, spc_model = spc
+            print("Starting messpf calculation for ", spc_name)
+
             # Run the MESSPF File
+            # Set up the species filesystem
+            spc_info = finf.get_spc_info(spc_dct[spc_name])
+            spc_save_fs = autofile.fs.species(save_prefix)
+            spc_save_fs[-1].create(spc_info)
+            spc_save_path = spc_save_fs[-1].path(spc_info)
+
+            # Read the ZPVE from the filesystem if not doing tau
+            tau_mod = bool(model_dct[spc_model]['pf']['tors'] == 'tau')
+            if not tau_mod:
+                zpe = routines.pf.messf.get_zero_point_energy(
+                    spc, spc_dct[spc_name], pf_levels, pf_model,
+                    save_prefix=spc_save_path)
+                zpe_str = routines.pf.messf.get_zpe_str(
+                    spc_dct[spc_name], zpe)
+            else:
+                zpe_str = ''
+
+            # Write the MESSPF input file
+            harm_thy_info = pf_levels[2]
+            pf_path, nasa_path = thmrunner.get_thermo_paths(
+                spc_save_path, spc_info, harm_thy_info)
+
             thmrunner.run_pf(pf_path)
 
     # Use MESS partition functions to compute thermo quantities
@@ -125,7 +163,7 @@ def run(spc_dct,
 
             # Unpack spc to get name and model
             spc_name, spc_model = spc
-
+            print("Starting thermo calculation for ", spc_name)
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc]
 
@@ -142,6 +180,8 @@ def run(spc_dct,
                 ene_coeff=[1.0])
 
             # Calculate and store the 0 K Enthalpy
+            ref_set = model_dct[spc_model]['options']['bases']
+            print('ref_set test:', ref_set)
             hf0k = routines.pf.thermo.heatform.calc_hform_0k(
                 ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_set)
             spc_dct[spc_name]['Hfs'] = [hf0k]
@@ -154,6 +194,7 @@ def run(spc_dct,
 
             # Unpack spc to get name and model
             spc_name, spc_model = spc
+            print("Starting NASA polynomials calculation for ", spc_name)
 
             # Set up the paths for running jobs
             harm_thy_info = pf_levels[2]

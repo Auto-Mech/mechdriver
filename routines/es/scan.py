@@ -115,7 +115,7 @@ def hindered_rotor_scans(
     """
 
     # Unpack tors model
-    tors_model = ('mdhr', False)
+    # tors_model = ('mdhr', False)
     ndim_tors, freeze_all_tors = tors_model
 
     # Run with the old code
@@ -200,7 +200,7 @@ def run_scan(
 
     # for now, running only one-dimensional hindered rotor scans
     scn_save_fs[1].create([coo_names])
-    inf_obj = autofile.system.info.scan[1](grid_dct)
+    inf_obj = autofile.system.info.scan_branch(grid_dct)
     scn_save_fs[1].file.info.write(inf_obj, [coo_names])
     npoint = 1
     for coo_grid_vals in grid_vals:

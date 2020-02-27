@@ -115,7 +115,24 @@ if 'es' in RUN_JOBS_LST:
             RUN_INP_DCT
         )
 
-if 'pf'in RUN_JOBS_LST or 'thermo' in RUN_JOBS_LST:
+write_messpf=False
+run_messpf=False
+run_thermo=False
+if 'thermochem' in RUN_JOBS_LST:
+    write_messpf=True
+    run_messpf=True
+    run_thermo=True
+else:
+    if 'write_messpf' in RUN_JOBS_LST:
+        write_messpf=True
+    if 'run_messpf' in RUN_JOBS_LST:
+        run_messpf=True
+    if 'run_thermo' in RUN_JOBS_LST:
+        run_thermo=True
+if write_messpf or run_messpf or run_thermo:
+#    if bool('no_write_messpf' in RUN_JOBS_LST) write_messpf=False
+#    if bool('no_run_messpf' in RUN_JOBS_LST) run_messpf=False
+#    if bool('no_run_thermo' in RUN_JOBS_LST) run_thermo=False
     if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:
         # Call ThermoDriver for spc in each PES
         for pes, rxn_lst in RUN_PES_DCT.items():
@@ -126,8 +143,9 @@ if 'pf'in RUN_JOBS_LST or 'thermo' in RUN_JOBS_LST:
                 rxn_lst,
                 RUN_INP_DCT,
                 ref_scheme='basic',
-                run_pf=bool('pf' in RUN_JOBS_LST),
-                run_thermo=bool('thermo' in RUN_JOBS_LST)
+                write_messpf=write_messpf,
+                run_messpf=run_messpf,
+                run_thermo=run_thermo,
             )
     else:
         # Call ThermoDriver for all of the species
@@ -138,8 +156,9 @@ if 'pf'in RUN_JOBS_LST or 'thermo' in RUN_JOBS_LST:
             RUN_SPC_LST_DCT,
             RUN_INP_DCT,
             ref_scheme='basic',
-            run_pf=bool('pf' in RUN_JOBS_LST),
-            run_thermo=bool('thermo' in RUN_JOBS_LST)
+            write_messpf=write_messpf,
+            run_messpf=run_messpf,
+            run_thermo=run_thermo,
         )
 
 if 'rates' in RUN_JOBS_LST or 'fits' in RUN_JOBS_LST:

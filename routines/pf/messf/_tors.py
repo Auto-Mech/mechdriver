@@ -185,7 +185,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene):
     scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
     enes = []
     if len(tors_names) == 1:
-        for grid_val_i in tors_grids[0]:
+        for grid_val_i in tors_grids:
             locs = [tors_names, [grid_val_i]]
             if scn_save_fs[-1].exists(locs):
                 enes.append(scn_save_fs[-1].file.energy.read(locs))
@@ -225,7 +225,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene):
 
     # Reshape the potential list into a list of lists if ndim > 1
     if len(tors_names) == 1:
-        dims = (len(tors_grids[0]),)
+        dims = (len(tors_grids),)
     elif len(tors_names) == 2:
         dims = (len(tors_grids[0]), len(tors_grids[1]))
     elif len(tors_names) == 3:
@@ -452,6 +452,7 @@ def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
     #     tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
     #     tors_zpe += tors_1dhr_zpe
 
+    print ('tors_zpe test:', tors_zpe)
     return tors_zpe
 
 

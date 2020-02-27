@@ -116,4 +116,5 @@ def determine_freqs_zpe(freqs1, freqs2, imag_freq1, imag_freq2,
               '{0:.2f} and {1:.2f}'.format(del_tors_zpe, del_tors_zpe_2),
               'kcal/mol between harmonic and hindered torsional ZPVEs')
 
+    print('zpe sum test:', zpe_harm_no_tors, zpe_harm_no_tors_2, tors_zpe, zpe)
     return freqs, imag_freq, zpe
