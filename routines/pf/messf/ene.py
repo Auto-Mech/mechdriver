@@ -123,12 +123,8 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
             mode_start = mode_start + 1
             saddle = True
 
-<<<<<<< HEAD
         no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
         if no_tors:
-=======
-        if automol.geom.is_linear(harm_geo):
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
             mode_start = mode_start - 1
         freqs = freqs[mode_start:]
 

@@ -2,10 +2,7 @@
 IRC calcs
 """
 
-<<<<<<< HEAD
 import automol
-=======
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
 import elstruct
 import autofile
 from lib.filesystem import path as fpath
@@ -111,8 +108,6 @@ def save_irc(irc_direction, job,
         prog = inf_obj.prog
         geos, gras, hessians = elstruct.reader.irc_points(prog, out_str)
         enes = elstruct.reader.irc_energies(prog, out_str)
-<<<<<<< HEAD
-
         print(irc_direction)
         print('enes')
         for x in enes:
@@ -122,8 +117,6 @@ def save_irc(irc_direction, job,
         for x in geos:
             print(automol.geom.string(x))
             print('\n')
-=======
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
         # coords = elstruct.reader.irc_coordinates(prog, out_str)
 
         # Write the IRC inf file and input file string
@@ -140,7 +133,6 @@ def save_irc(irc_direction, job,
         # print(" - Save path: {}".format(save_path))
         for idx, _ in enumerate(geos):
 
-<<<<<<< HEAD
             # Set locs idx; for reverse, ignore SadPt and flip idx to negative
             locs_idx = idx
             if irc_direction == 'reverse':
@@ -148,14 +140,6 @@ def save_irc(irc_direction, job,
                     continue
                 locs_idx *= -1
             locs = [[coo_name], [locs_idx]]
-=======
-            # For reverse direction, ignore TS and flip idx to negative
-            if irc_direction == 'reverse':
-                if idx == 0:
-                    continue
-                idx *= -1
-            locs = [[coo_name], [idx]]
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
             scn_save_fs[-1].create(locs)
             scn_save_fs[-1].file.energy.write(enes[idx], locs)
             scn_save_fs[-1].file.energy.write(enes[idx], locs)

@@ -31,25 +31,15 @@ def run(rxn_lst,
     # freeze_all_tors = model_dct[model]['options']['freeze_all_tors']
     # ndim_tors = model_dct[model]['pf']['tors']
     # rad_rad_ts = model_dct[model]['pf']['ts_barrierless']
-<<<<<<< HEAD
     freeze_all_tors = True
-=======
-    freeze_all_tors = False
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
     ndim_tors = '1dhr'
     adiab_tors = True
     rad_rad_ts = 'pst'
     mc_nsamp = run_options_dct['mc_nsamp']
     kickoff = run_options_dct['kickoff']
-<<<<<<< HEAD
     irc_idxs = [-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]
     run_irc = True
     run_irc_sp = True
-=======
-    irc_idxs = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
-    run_irc = False
-    run_irc_sp = False
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
 
     # Do some extra work to prepare the info to pass to the drivers
     es_tsk_lst = loadrun.build_run_es_tsks_lst(
@@ -106,12 +96,8 @@ def run(rxn_lst,
                         irc_idxs,
                         overwrite)
 
-<<<<<<< HEAD
                 sp_thy_info = finf.get_thy_info('lvl_wbs', thy_dct)
                 # sp_thy_info = finf.get_thy_info('cc_lvl_d', thy_dct)
-=======
-                sp_thy_info = finf.get_thy_info('cc_lvl_d', thy_dct)
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
                 if run_irc_sp:
                     routines.es.variational.irc.irc_sp(
                         ts_dct[sadpt],

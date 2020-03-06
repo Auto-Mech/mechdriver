@@ -59,14 +59,7 @@ def run(pes_formula,
         for spc in spc_dct:
             if 'ts_' in spc:
                 spc_dct[spc]['irc_idxs'] = [
-<<<<<<< HEAD
                     -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]
-=======
-                    -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
-
-        # Getting some other info to pass
-        # rct_ichs = spc_dct['ts_0']['rxn_ichs'][0]
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
 
         print('Starting mess file preparation.')
         # Write the strings for the MESS input file
@@ -81,7 +74,6 @@ def run(pes_formula,
             save_prefix, idx_dct,
             model_dct, thy_dct)
 
-<<<<<<< HEAD
         # Combine strings together
         mess_inp_str = '\n'.join(
             [header_str, energy_trans_str, well_str, bim_str, ts_str])
@@ -100,20 +92,6 @@ def run(pes_formula,
     # Run mess to produce rate output
     if run_messrate:
         raterunner.run_rates(mess_path)
-=======
-        for a, b in idx_dct.items():
-            print(a)
-            print(b)
-        import sys
-        sys.exit()
-
-        # Run mess to produce rate output
-        mess_path = raterunner.run_rates(
-            header_str, energy_trans_str,
-            well_str, bim_str, ts_str, dat_lst,
-            spc_dct['ts_0'], spc_dct['ts_0']['rxn_fs'][3],
-            model_dct, thy_dct, test_model)
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
 
     # Fit rate output to modified Arrhenius forms, print in ChemKin format
     if run_fits:

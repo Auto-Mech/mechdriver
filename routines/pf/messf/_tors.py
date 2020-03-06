@@ -209,11 +209,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
     """ Get the potential for a hindered rotor
     """
 
-<<<<<<< HEAD
     # Build template pot lst and freqs list into a list-of-lists if ndim > 1
-=======
-    # Build template potential list and freqs list into a list-of-lists if ndim > 1
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
     if len(tors_names) == 1:
         dims = (len(tors_grids[0]),)
     elif len(tors_names) == 2:
@@ -257,7 +253,6 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
             for j, grid_val_j in enumerate(tors_grids[1]):
                 for k, grid_val_k in enumerate(tors_grids[2]):
                     locs = [tors_names, [grid_val_i, grid_val_j, grid_val_k]]
-<<<<<<< HEAD
                     if scn_save_fs[-1].exists(locs):
                         ene = scn_save_fs[-1].file.energy.read(locs)
                         pot[i][j][k] = (ene - min_ene) * phycon.EH2KCAL
@@ -265,15 +260,6 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
                         pot[i][j][k] = 10.0
                     if read_freqs:
                         freqs[i][j][k] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
-=======
-                if scn_save_fs[-1].exists(locs):
-                    ene = scn_save_fs[-1].file.energy.read(locs)
-                    pot[i][j][k] = (ene - min_ene) * phycon.EH2KCAL
-                else:
-                    pot[i][j][k] = 10.0
-                if read_freqs:
-                    freqs[i][j][k] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
     elif len(tors_names) == 4:
         for i, grid_val_i in enumerate(tors_grids[0]):
             for j, grid_val_j in enumerate(tors_grids[1]):

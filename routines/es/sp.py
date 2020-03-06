@@ -171,7 +171,6 @@ def run_vpt2(
     zma = geo_save_fs[-1].file.zmatrix.read(locs)
     run_fs = autofile.fs.run(geo_run_path)
 
-<<<<<<< HEAD
     # Assess if symmetry needs to be broken for the calculation
     # Add porgram check because might only be issue for gaussian
     if spc_info[0] in symm.HIGH:
@@ -179,8 +178,6 @@ def run_vpt2(
         vals = automol.zmatrix.values(zma)
         zma = automol.zmatrix.set_values(zma, {'R1': vals['R1'] + disp})
 
-=======
->>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
     if not geo_save_fs[-1].file.anharmonicity_matrix.exists(locs) or overwrite:
 
         print('Running vpt2')
