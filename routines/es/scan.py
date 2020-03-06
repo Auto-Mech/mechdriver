@@ -160,6 +160,7 @@ def hindered_rotor_scans(
             grid_dct = dict(zip(tors_names, tors_grids))
 
             # Perform the scans
+<<<<<<< HEAD
             gradient=False
             hessian=False
             save_cscan(scn_run_fs, scn_save_fs, tors_names,
@@ -202,6 +203,39 @@ def hindered_rotor_scans(
             #     hessian=hessian,
             #     constraint_dct=constraint_dct
             # )
+=======
+            save_scan(
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                coo_names=tors_names,
+                gradient=gradient,
+                hessian=hessian
+            )
+
+            run_scan(
+                zma=zma,
+                spc_info=spc_info,
+                thy_level=thy_level,
+                grid_dct=grid_dct,
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                script_str=script_str,
+                overwrite=overwrite,
+                saddle=saddle,
+                gradient=gradient,
+                hessian=hessian,
+                alt_constraints=alt_constraints,
+                **opt_kwargs,
+            )
+
+            save_scan(
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                coo_names=tors_names,
+                gradient=gradient,
+                hessian=hessian
+            )
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
 
 
 def run_scan(
@@ -209,7 +243,11 @@ def run_scan(
         script_str, overwrite, update_guess=True,
         reverse_sweep=True, fix_failures=True, saddle=False,
         gradient=False, hessian=False,
+<<<<<<< HEAD
         constraint_dct=None,
+=======
+        alt_constraints=(),
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
         **kwargs):
     """ run constrained optimization scan
     """
@@ -263,7 +301,11 @@ def run_scan(
             retry_failed=fix_failures,
             gradient=gradient,
             hessian=hessian,
+<<<<<<< HEAD
             constraint_dct=constraint_dct,
+=======
+            alt_constraints=alt_constraints,
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
             **kwargs
         )
 
@@ -283,7 +325,11 @@ def run_scan(
                 saddle=saddle,
                 gradient=gradient,
                 hessian=hessian,
+<<<<<<< HEAD
                 constraint_dct=constraint_dct,
+=======
+                alt_constraints=alt_constraints,
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
                 **kwargs
             )
 
@@ -319,7 +365,11 @@ def run_scan(
             retry_failed=fix_failures,
             gradient=gradient,
             hessian=hessian,
+<<<<<<< HEAD
             constraint_dct=constraint_dct,
+=======
+            alt_constraints=alt_constraints,
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
             **kwargs
         )
 
@@ -353,7 +403,11 @@ def run_scan(
                 saddle=saddle,
                 gradient=gradient,
                 hessian=hessian,
+<<<<<<< HEAD
                 constraint_dct=constraint_dct,
+=======
+                alt_constraints=alt_constraints,
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
                 **kwargs
             )
 
@@ -392,7 +446,11 @@ def run_scan(
             retry_failed=fix_failures,
             gradient=gradient,
             hessian=hessian,
+<<<<<<< HEAD
             constraint_dct=constraint_dct,
+=======
+            alt_constraints=alt_constraints,
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
             **kwargs
         )
 
@@ -428,7 +486,11 @@ def run_scan(
                 saddle=saddle,
                 gradient=gradient,
                 hessian=hessian,
+<<<<<<< HEAD
                 constraint_dct=constraint_dct,
+=======
+                alt_constraints=alt_constraints,
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
                 **kwargs
             )
 
@@ -476,7 +538,11 @@ def run_scan(
             retry_failed=fix_failures,
             gradient=gradient,
             hessian=hessian,
+<<<<<<< HEAD
             constraint_dct=constraint_dct,
+=======
+            alt_constraints=alt_constraints,
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
             **kwargs
         )
 
@@ -516,7 +582,11 @@ def run_scan(
                 saddle=saddle,
                 gradient=gradient,
                 hessian=hessian,
+<<<<<<< HEAD
                 constraint_dct=constraint_dct,
+=======
+                alt_constraints=alt_constraints,
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
                 **kwargs
             )
 
@@ -773,7 +843,11 @@ def _run_2d_scan(
         spc_info, thy_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
         gradient=False, hessian=False,
+<<<<<<< HEAD
         constraint_dct=None,
+=======
+        alt_constraints=(),
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
      """
@@ -873,7 +947,11 @@ def _run_3d_scan(
         spc_info, thy_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
         gradient=False, hessian=False,
+<<<<<<< HEAD
         constraint_dct=None,
+=======
+        alt_constraints=(),
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
     """
@@ -968,6 +1046,10 @@ def _run_3d_scan(
 
                             ret = driver.read_job(
                                 job=elstruct.Job.HESSIAN, run_fs=run_fs)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
 
 
 def _run_4d_scan(
@@ -976,7 +1058,11 @@ def _run_4d_scan(
         spc_info, thy_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
         gradient=False, hessian=False,
+<<<<<<< HEAD
         constraint_dct=None,
+=======
+        alt_constraints=(),
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
     """
@@ -1035,8 +1121,12 @@ def _run_4d_scan(
                         if ret is not None:
                             inf_obj, _, out_str = ret
                             prog = inf_obj.prog
+<<<<<<< HEAD
                             opt_zma = elstruct.reader.opt_zmatrix(
                                 prog, out_str)
+=======
+                            opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
                             if update_guess:
                                 guess_zma = opt_zma
 
@@ -1139,10 +1229,15 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
                         hess = elstruct.reader.hessian(prog, out_str)
                         scn_save_fs[-1].file.hessian.write(hess, locs)
                         # read out the frequencies for now
+<<<<<<< HEAD
                         freqs = elstruct.reader.harmonic_frequencies(
                             prog, out_str)
                         scn_save_fs[-1].file.harmonic_frequencies.write(
                             freqs, locs)
+=======
+                        freqs = elstruct.reader.harmonic_frequencies(prog, out_str)
+                        scn_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
+>>>>>>> 9bf6c45022eda7c7b6875f3290b6564dd75cf7b9
                         # fix hard coding of molpro reading...
                         if prog == 'molpro2015':
                             geo = hess_geometry(out_str)
