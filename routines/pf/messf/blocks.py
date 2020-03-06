@@ -218,8 +218,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
 
 def vtst_with_no_saddle_block(
         ts_dct, ts_label, reac_label, prod_label,
-        spc_ene, rct_zpe, projrot_script_str,
-        multi_info):
+        spc_ene, projrot_script_str, multi_info):
     """ prepare the mess input string for a variational TS that does not have
     a saddle point. Do it by calling the species block for each grid point
     in the scan file system
@@ -284,9 +283,9 @@ def vtst_with_no_saddle_block(
             rct_zpe = zpe
 
         # Calculate the reference energies
-        erel = (ene - inf_sep_ene)*phycon.EH2KCAL
-        erel_zpe_corr = erel + zpe - rct_zpe
-        eref_abs = erel_zpe_corr + spc_ene
+        ene_rel = (ene - inf_sep_ene) * phycon.EH2KCAL
+        zpe_rel = zpe - rct_zpe
+        eref_abs = ene_rel + zpe_rel + spc_ene
 
         # Iniialize the header of the string
         irc_pt_str = '!----------------------------------------------- \n'
@@ -408,11 +407,6 @@ def vtst_saddle_block(ts_dct, pf_levels,
     # Write the MESS string for the variational sections
     variational_str = mess_io.writer.rxnchan.ts_variational(
         ts_label, reac_label, prod_label, full_irc_str)
-
-    print('\n')
-    print(variational_str)
-    import sys
-    sys.exit()
 
     return variational_str
 

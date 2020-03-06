@@ -15,12 +15,33 @@ from lib.filesystem import orb as fsorb
 from lib.phydat import phycon
 
 
+
+def kick_from_saddle():
+    """ Find the wells from kicking off the saddle point by changing the 
+        reaction coordinate some amount
+        might have to be reaction class specific
+    """
+    pass
+
+
+def find_with_irc():
+    """ Try and use the wells by reading a computed irc, or computing an irc
+        first and then reading it
+    """
+    pass
+
+
 def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
              nsamp_par, run_prefix, save_prefix,
              kickoff_size, kickoff_backward,
              overwrite):
     """ Find van der Waals structures for all the pairs of
         species in a reaction list
+        
+        Fxn takes two species, performs a (random?) rotation, sticks them together
+        and optimizes the combined geometry
+
+        Supposed to use the wells filesystem?
     """
     projrot_script_str = script.PROJROT
     new_vdws = []

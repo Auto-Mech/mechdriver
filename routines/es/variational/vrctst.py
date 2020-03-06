@@ -2,30 +2,76 @@
 """
 
 import os
-import subprocess
+import autofile
 import automol
 import varecof_io
+from routines.es import scan
+from lib.runner import script
+from lib.phydat import phycon
 
 
-def calc_vrctst_rates():
-    """ From scripts.es
+# CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM
+def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
+                     high_mul, grid1, grid2, dist_name,
+                     multi_level, num_act_orb, num_act_elc,
+                     multi_info,
+                     thy_run_path, thy_save_path,
+                     opt_script_str, overwrite, update_guess, **opt_kwargs):
+    """ Set up and run VRC-TST calculations to get the flux file
     """
 
-    # Set paths and build dirs for VRC-TST calculation is run
-    vrc_path = os.path.join(os.getcwd(), 'vrc')
-    scr_path = os.path.join(vrc_path, 'scratch')
-    os.makedirs(vrc_path, exist_ok=True)
-    os.makedirs(scr_path, exist_ok=True)
-    print('vrc_path test:', vrc_path)
+    print('TS DCT')
+    print(ts_dct.keys())
+
+    # Set the run directory
+    ts_run_fs = autofile.fs.ts(thy_run_path)
+    ts_run_fs[0].create()
+    ts_run_path = ts_run_fs[0].path()
+    # run_fs = autofile.fs.run(ts_run_path)
+
+    # Set the scan directories
+    scn_run_fs = autofile.fs.scan(thy_run_path)
+    scn_save_fs = autofile.fs.scan(thy_save_path)
+    cscn_run_fs = autofile.fs.cscan(thy_run_path)
+    cscn_save_fs = autofile.fs.cscan(thy_save_path)
+
+    # Build the VRC-TST run directory, including the needed scr dir
+    bld_locs = ['VARECOF', 0]
+    bld_save_fs = autofile.fs.build(ts_run_path)
+    bld_save_fs[-1].create(bld_locs)
+    vrc_path = bld_save_fs[-1].path(bld_locs)
+    os.makedirs(os.path.join(vrc_path, 'scratch'), exist_ok=True)
+    print('Build Path for VaReCoF calculations')
+    print(vrc_path)
 
     # Correction potential
-    corr_pot = False
+    corr_pot = True
     if corr_pot:
+        # Build the constraint dictionary
+        constraint_dct = set_alt_constraints(ts_zma, ts_dct['rct_zmas'])
+
+        # Run the potentials
+        run_potentials(ts_zma,
+                       ts_formula, ts_info, high_mul,
+                       multi_level,
+                       dist_name, grid1, grid2,
+                       scn_run_fs, scn_save_fs,
+                       cscn_run_fs, cscn_save_fs,
+                       overwrite, update_guess,
+                       num_act_elc, num_act_orb,
+                       constraint_dct,
+                       **opt_kwargs)
+
         # Read the values for the correction potential from filesystem
-        potentials, pot_labels = moldr.vrctst.read_corrections()
-        
+        potentials, pot_labels = read_potentials(
+            scn_save_fs, cscn_save_fs,
+            multi_level, '',
+            dist_name, grid1, grid2,
+            constraint_dct
+        )
+
         # Build correction potential .so file used by VaReCoF
-        moldr.vrctst. build_correction_potential(
+        build_correction_potential(
             mep_distances, potentials,
             bnd_frm_idxs, fortran_compiler, vrc_path,
             dist_restrict_idxs=(),
@@ -34,29 +80,17 @@ def calc_vrctst_rates():
             spc_name='mol')
 
     # Write the electronic structure template file
-    memory = 4.0
-    basis = 'cc-pvdz'
-    method = '{rs2c, shift=0.25}'
+    tml_inp_str = write_molpro_template_str()
 
-    num_act_elc = high_mul
-    num_act_orb = num_act_elc
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
-    _, wfn_str = moldr.ts.cas_options_2(
-        ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-    tml_inp_str = varecof_io.writer.input_file.tml(
-        memory, basis, wfn_str, method, inf_sep_ene)
-
-    # Write machines file to set compute nodes
-    machines = ['b450:8', 'b451:8', 'b452:8', 'b453:8']
-    with open(os.path.join(vrc_path, 'machines'), 'w') as machine_file:
-        for machine in machines:
-            machine_file.writelines(machine + '\n')
-
-    # Write the remaining input file strings
-    input_strs = moldr.vrctst.input_prep(ts_zma, ts_dct['rct_zmas'], dist_name, vrc_path)
+    # Write the remaining VaReCoF input file strings
+    input_strs = input_prep(ts_zma, ts_dct['rct_zmas'], dist_name, vrc_path)
     [struct_inp_str, lr_divsur_inp_str, tst_inp_str,
      els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
-    
+
+    # Write machines file to set compute nodes
+    machine_file_str = write_machinefile_str()
+
+    # Write the files for VaReCoF in the build directory
     with open(os.path.join(vrc_path, 'structure.inp'), 'w') as inp_file:
         inp_file.write(struct_inp_str)
     with open(os.path.join(vrc_path, 'lr_divsur.inp'), 'w') as inp_file:
@@ -69,14 +103,16 @@ def calc_vrctst_rates():
         inp_file.write(mc_flux_inp_str)
     with open(os.path.join(vrc_path, 'convert.inp'), 'w') as inp_file:
         inp_file.write(conv_inp_str)
-    with open(os.path.join(vrc_path, 'mol.tml'), 'w') as tml_file:
-        tml_file.write(tml_inp_str)
+    with open(os.path.join(vrc_path, 'mol.tml'), 'w') as inp_file:
+        inp_file.write(tml_inp_str)
+    with open(os.path.join(vrc_path, 'machines'), 'w') as inp_file:
+        inp_file.write(machine_file_str)
 
-    print('\n\nEXITING VRCTST AFTER WRITING INPUT')
+    # Run VaReCoF
+    script.run_script(script.VARECOF, path)
 
 
-
-
+# FUNCTIONS TO WRITE THE STRINGS FOR ALL OF THE VARECOF INPUT FILE
 def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
     """ prepare all the input files for a vrc-tst calculation
     """
@@ -174,58 +210,36 @@ def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
     return input_strs
 
 
-def read_potentials(
-    rxn_save_fs, 
-    mep_opt_thy_level,
-    high_ene_thy_levels,
-    mep_r_constrained_coords,
-    mep_intramol_constrained_coords,
-    r_grid_vals):
-    """ Read values form the filesystem to get the values to
-        correct ht MEP
+def write_molpro_template_str():
+    """ Write the electronic structure template file
     """
+    memory = 4.0
+    basis = 'cc-pvdz'
+    method = '{rs2c, shift=0.25}'
 
-    # Hard part is the filesystem storage
-    # FS
-    # SCANS
-    # Rn
-    # 2.1, 2.4, 2.7, 3.0, 3.3, 3.6
+    num_act_elc = high_mul
+    num_act_orb = num_act_elc
+    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
+    _, wfn_str = moldr.ts.cas_options_2(
+        ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+    tml_inp_str = varecof_io.writer.input_file.tml(
+        memory, basis, wfn_str, method, inf_sep_ene)
 
-    # larger scans:
-    # scan over Rn
-    # one dir has JUST Rn constrained
-    # other has Rn constrained and others
-
-    # accept as args, filesystems and/or thy levels for:
-    # energies along MEP with full opts (except Rn rxn coord)
-    # energies along MEP with opts of intermolecular coords
-    # higher level energies along MEP 
-   
-    # calc relaxation correction
-    # calc energy corrections for each higher level energy
-    # calc combined relaxation-energy corrections
-    
-    # assume you have fs vars passed in 
-    rxn_save_path = 'save_fs_arg'
-
-    # Filesystem for all the optimizations (full, constrained) along MEP
-    mep_opt_thy_save_fs = autofile.fs.theory(rxn_save_path)
-    mep_opt_thy_save_fs[-1].create(mep_opt_thy_level[1:4])
-    mep_opt_scn_save_fs = autofile.fs.scan(mep_opt_thy_save_fs)        
-    mep_opt_scn_save_fs_path = mep_opt_scn_save_fs[-1].path() 
-
-    # Read the energies from the full and constrained opts along MEP
-    # for idx, 
-    # locs = [[], []] 
-    #     # get energy
-    #     if not scn_save_fs[-1].file.energy.exists(locs):
-    #         continue
-    #     else:
-    #         ene = scn_save_fs[-1].file.energy.read(locs)
-
-    return potentials, potential_labels
+    return tml_inp_str
 
 
+def write_machinefile_str():
+    """ Take machine list and write the string for the machine file
+    """
+    machines = ['b450:8', 'b451:8', 'b452:8', 'b453:8']
+    machine_file_str = ''
+    for machine in machines:
+        machine_file_str += machine + '\n'
+
+    return machine_file_str
+
+
+# FUNCTIONS TO SET UP THE libcorrpot.so FILE USED BY VARECOF
 def build_correction_potential(mep_distances, potentials,
                                bnd_frm_idxs, fortran_compiler, vrc_path,
                                dist_restrict_idxs=(),
@@ -248,7 +262,7 @@ def build_correction_potential(mep_distances, potentials,
 
     # Build string dummy corr file where no correction used
     dummy_corr_str = varecof_io.writer.corr_potentials.dummy()
-    
+
     # Build string for auxiliary file needed for spline fitting
     pot_aux_str = varecof_io.writer.corr_potentials.auxiliary()
 
@@ -271,6 +285,166 @@ def build_correction_potential(mep_distances, potentials,
     varecof_io.writer.corr_potentials.compile_corr_pot(vrc_path)
 
 
+def run_potentials(inf_sep_zma,
+                   ts_formula, ts_info, high_mul,
+                   multi_level,
+                   dist_name, grid1, grid2,
+                   scn_run_fs, scn_save_fs,
+                   cscn_run_fs, cscn_save_fs,
+                   overwrite, update_guess,
+                   num_act_elc, num_act_orb,
+                   constraint_dct):
+    """ Run all of the scans
+    """
+
+    print('vrctst grids')
+    print(grid1, '\n', grid2)
+
+    # Initial scan over reaction coordinate
+    scan.run_multiref_rscan(
+        formula=ts_formula,
+        high_mul=high_mul,
+        zma=inf_sep_zma,
+        spc_info=ts_info,
+        multi_level=multi_level,
+        dist_name=dist_name,
+        grid1=grid1,
+        grid2=grid2,
+        scn_run_fs=scn_run_fs,
+        scn_save_fs=scn_save_fs,
+        overwrite=overwrite,
+        update_guess=update_guess,
+        gradient=False,
+        hessian=False,
+        num_act_elc=num_act_elc,
+        num_act_orb=num_act_orb,
+        constraint_dct=None
+    )
+
+    # Initial scan, optimizing the intermolecular coords
+    scan.run_multiref_rscan(
+        formula=ts_formula,
+        high_mul=high_mul,
+        zma=inf_sep_zma,
+        spc_info=ts_info,
+        multi_level=multi_level,
+        dist_name=dist_name,
+        grid1=grid1,
+        grid2=grid2,
+        scn_run_fs=cscn_run_fs,
+        scn_save_fs=cscn_save_fs,
+        overwrite=overwrite,
+        update_guess=update_guess,
+        gradient=False,
+        hessian=False,
+        num_act_elc=num_act_elc,
+        num_act_orb=num_act_orb,
+        constraint_dct=constraint_dct
+    )
+
+    # Save the scan
+    # scan.save_scan(
+    #     scn_run_fs=scn_run_fs,
+    #     scn_save_fs=scn_save_fs,
+    #     coo_names=tors_names,
+    #     gradient=gradient,
+    #     hessian=hessian
+    # )
+
+    # Run the single points on top of the initial scan
+    # for thy_level in scn_thy_level:
+    #     scan.irc_sp(ts_dct, scn_thy_level, sp_thy_level,
+    #                 irc_idxs, overwrite)
+
+
+def set_alt_constraints(inf_sep_zma, rct_zmas):
+    """ Set the additional constraints for the constrained MEP
+    """
+    frag1_natom = automol.zmatrix.count(rct_zmas[0])
+    frag2_natom = automol.zmatrix.count(rct_zmas[1])
+
+    # Build pairs for intermolecular coords to optimize:
+    # (zma_atom_idx, coord_idx in row) (uses 0-indexing)
+    # frag1_natom, 0 is the scan coord already accounted for
+    # just go ahead and add the other coords
+    no_frz_idxs = []
+    no_frz_idxs.append([frag1_natom, 0], [frag1_natom, 1], [frag1_natom, 2])
+    if frag2_natom == 2:
+        no_frz_idxs.append([frag1_natom+1, 1])
+        no_frz_idxs.append([frag1_natom+1, 2])
+    elif frag2_natom > 2:
+        no_frz_idxs.append([frag1_natom+1, 1])
+        no_frz_idxs.append([frag1_natom+1, 2])
+        no_frz_idxs.append([frag1_natom+2, 1])
+
+    # Now grab the coordinates NOT in the opt coord idxs
+    alt_froz_coords = []
+    name_matrix = automol.zmatrix.name_matrix(inf_sep_zma)
+    for row_idx, row in enumerate(name_matrix):
+        for coord_idx, coord in enumerate(row):
+            if [row_idx, coord_idx] not in no_frz_idxs:
+                alt_froz_coords.append(coord)
+
+    # Now build the constraint dictionary
+    zma_vals = automol.zmatrix.values(inf_sep_zma)
+    constraint_dct = dict(zip(
+        alt_froz_coords, (zma_vals[name] for name in alt_froz_coords)))
+
+    return constraint_dct
+
+
+def read_potentials(scn_save_fs, cscn_save_fs,
+                    sp_thy_level,
+                    dist_name, grid1, grid2,
+                    constraint_dct):
+    """ Read values form the filesystem to get the values to
+        correct ht MEP
+    """
+
+    # Read the energies from the full and constrained opts along MEP
+    smp_pot = []
+    const_pot = []
+    sp_pot = []
+    for grid_val in grid1+grid2:
+        # Set the locs for the full scan and constrained scan
+        locs = [[dist_name], [grid_val]]
+        const_locs = [[dist_name], [grid_val], constraint_dct]
+
+        # Read the energies from the scan and constrained scan
+        if scn_save_fs[-1].file.energy.exists(locs):
+            smp_pot.append(scn_save_fs[-1].file.energy.read(locs))
+        if cscn_save_fs[-1].file.energy.exists(const_locs):
+            const_pot.append(cscn_save_fs[-1].file.energy.read(const_locs))
+
+        # Read the single point energy from the potential
+        scn_save_path = scn_save_fs[-1].path(locs)
+        sp_save_fs = autofile.fs.single_point(scn_save_path)
+        sp_save_fs[-1].create(sp_thy_level[1:4])
+        if sp_save_fs[-1].file.energy.read(sp_thy_level[1:4]):
+            sp_pot.append(sp_save_fs[-1].file.energy.read(sp_thy_level[1:4]))
+
+    # Calculate each of the correction potentials
+    relax_corr_pot = []
+    sp_corr_pot = []
+    full_corr_pot = []
+    for i, _ in smp_pot:
+        relax_corr = (smp_pot[i] - const_pot[i]) * phycon.EH2KCAL
+        sp_corr = (sp_pot[i] - smp_pot[i]) * phycon.EH2KCAL
+        relax_corr_pot.append(relax_corr)
+        sp_corr_pot.append(sp_corr)
+        full_corr_pot.append(relax_corr + sp_corr)
+
+    # Collate the potentials together in a list
+    potentials = [
+        relax_corr_pot,
+        sp_corr_pot,
+        full_corr_pot,
+    ]
+
+    return potentials, potential_labels
+
+
+# FUNCTION TO SET UP THE FRAGMENT GEOMETRIES FOR THE STRUCTURE.INP FILE
 def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
     """ Generate the fragment geometries from the ts Z-matrix and the
         indices involved in the forming bond
@@ -284,7 +458,8 @@ def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
     iso_fgeos = [automol.zmatrix.geometry(zma) for zma in rct_zmas]
 
     # displace geoms to avoid having 0.0s
-    # iso_fgeos = [automol.geom.translated(geo, (10.0, 10.0, 10.0)) for geo in iso_fgeos]
+    # iso_fgeos = [automol.geom.translated(geo, (10.0, 10.0, 10.0))
+    #              for geo in iso_fgeos]
 
     # Hack to get my rct_zmas in right order for one example. Need better fix
     iso_fgeos[0], iso_fgeos[1] = iso_fgeos[1], iso_fgeos[0]
@@ -310,15 +485,15 @@ def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
                 x_idx = 0
                 a1_idx = 1
 
-            # Set a2_idx to a1_idx + 1 as I don't think there are any restrictions
+            # Set a2_idx to a1_idx + 1; should not be any restrictions
             a2_idx = a1_idx + 1
 
-            # Set a3_idx. 
+            # Set a3_idx.
             # Need to ensure idx does NOT correspond to atom where x = 0.0
             # The internal xyzp routine dies in this case
-            for idx in range(a2_idx+1, len(iso_fgeo)):
-                if not iso_fgeo[idx][1][0] == 0.0:
-                    a3_idx = idx
+            for idx2 in range(a2_idx+1, len(iso_fgeo)):
+                if not iso_fgeo[idx2][1][0] == 0.0:
+                    a3_idx = idx2
                     break
 
             # Calculate coords to define X position in IsoFragGeom structure
@@ -372,10 +547,11 @@ def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
     return mep_total_geo, iso_fgeos, iso_fgeos_wdummy
 
 
+# FUNCTIONS TO SET UP THE SYMMETRY FOR THE TST.INP FILE
 def build_divsur_out_file(vrc_path, work_path):
     """ get the divsur.out string containing divsur-frame geoms
     """
-    
+
     # Have to to path with divsur.inp to run script (maybe can fix)
     os.chdir(vrc_path)
 
@@ -405,9 +581,8 @@ def assess_face_symmetries(divsur_out_string):
     ]
 
     # Check facial symmetry if fragments are molecules
-    symms = []
+    symms = [False, False]
     for i, fgeo in enumerate(fgeos):
-
         if not automol.geom.is_atom(fgeo):
             # Reflect the dummy atom (pivot position) about the xy plane
             if i == 0:
@@ -417,12 +592,8 @@ def assess_face_symmetries(divsur_out_string):
             fgeo_reflect = automol.geom.reflect_coordinates(
                 fgeo, [dummy_idx], ['x', 'y'])
             # Compute Coloumb spectrum for each geom to its reflected version
-            symm = automol.geom.almost_equal_coulomb_spectrum(
+            symms[i] = automol.geom.almost_equal_coulomb_spectrum(
                 fgeo, fgeo_reflect, rtol=5e-2)
-        else:
-            symm = False
-
-        symms.append(symm)
 
     # Set the face and face_sym keywords based on the above tests
     [symm1, symm2] = symms
@@ -442,6 +613,7 @@ def assess_face_symmetries(divsur_out_string):
     return faces, face_symm
 
 
+# FUNCTIONS TO SET UP THE DIVIDING SURFACE FRAMES
 def build_pivot_frames(min_idx, max_idx,
                        total_geom, frag_geoms, frag_geoms_wdummy):
     """ use geometries to get pivot info
@@ -450,7 +622,7 @@ def build_pivot_frames(min_idx, max_idx,
 
     frames, npivots, = [], []
     geom_data = zip([min_idx, max_idx], frag_geoms, frag_geoms_wdummy)
-    for i, (rxn_idx, geom, geom_wdummy) in enumerate(geom_data):
+    for i, (rxn_idx, geom, _) in enumerate(geom_data):
 
         # Single pivot point centered on atom
         print('geom test in build_pivot:', geom)
@@ -483,7 +655,7 @@ def build_pivot_frames(min_idx, max_idx,
                 if geom[idx][0] != 'H':
                     bond_neighbor_idx = idx
                     break
-                elif geom[idx][0] == 'H' and j == (len(bond_neighbors) - 1):
+                if geom[idx][0] == 'H' and j == (len(bond_neighbors) - 1):
                     bond_neighbor_idx = idx
 
             # Set up the frame indices for the divsur file

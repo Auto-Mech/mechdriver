@@ -116,24 +116,21 @@ if 'es' in RUN_JOBS_LST:
             RUN_INP_DCT
         )
 
-write_messpf=False
-run_messpf=False
-run_thermo=False
+WRITE_MESSPF = False
+RUN_MESSPF = False
+RUN_NASA = False
 if 'thermochem' in RUN_JOBS_LST:
-    write_messpf=True
-    run_messpf=True
-    run_thermo=True
+    WRITE_MESSPF = True
+    RUN_MESSPF = True
+    RUN_NASA = True
 else:
     if 'write_messpf' in RUN_JOBS_LST:
-        write_messpf=True
+        WRITE_MESSPF = True
     if 'run_messpf' in RUN_JOBS_LST:
-        run_messpf=True
-    if 'run_thermo' in RUN_JOBS_LST:
-        run_thermo=True
-if write_messpf or run_messpf or run_thermo:
-#    if bool('no_write_messpf' in RUN_JOBS_LST) write_messpf=False
-#    if bool('no_run_messpf' in RUN_JOBS_LST) run_messpf=False
-#    if bool('no_run_thermo' in RUN_JOBS_LST) run_thermo=False
+        RUN_MESSPF = True
+    if 'run_nasa' in RUN_JOBS_LST:
+        RUN_NASA = True
+if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
     if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:
         # Call ThermoDriver for spc in each PES
         for pes, rxn_lst in RUN_PES_DCT.items():
@@ -144,9 +141,9 @@ if write_messpf or run_messpf or run_thermo:
                 rxn_lst,
                 RUN_INP_DCT,
                 ref_scheme='basic',
-                write_messpf=write_messpf,
-                run_messpf=run_messpf,
-                run_thermo=run_thermo,
+                write_messpf=WRITE_MESSPF,
+                run_messpf=RUN_MESSPF,
+                run_nasa=RUN_NASA,
             )
     else:
         # Call ThermoDriver for all of the species
@@ -157,16 +154,30 @@ if write_messpf or run_messpf or run_thermo:
             RUN_SPC_LST_DCT,
             RUN_INP_DCT,
             ref_scheme='basic',
-            write_messpf=write_messpf,
-            run_messpf=run_messpf,
-            run_thermo=run_thermo,
+            write_messpf=WRITE_MESSPF,
+            run_messpf=RUN_MESSPF,
+            run_nasa=RUN_NASA,
         )
 
-if 'rates' in RUN_JOBS_LST or 'fits' in RUN_JOBS_LST:
+WRITE_MESSRATE = False
+RUN_MESSRATE = False
+RUN_FITS = False
+if 'kinetics' in RUN_JOBS_LST:
+    WRITE_MESSRATE = True
+    RUN_MESSRATE = True
+    RUN_FITS = True
+else:
+    if 'write_messrate' in RUN_JOBS_LST:
+        WRITE_MESSRATE = True
+    if 'run_messrate' in RUN_JOBS_LST:
+        RUN_MESSRATE = True
+    if 'run_fits' in RUN_JOBS_LST:
+        RUN_FITS = True
+if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
     if RUN_OBJ_DCT['pes']:
         # Call kTPDriver for spc in each PES
         for pes_formula, rxn_lst in RUN_PES_DCT.items():
-            # Get info for the transition states
+            # # Get info for the transition states
             ts_dct = loadspc.build_sadpt_dct(
                 rxn_lst, MODEL_DCT, THY_DCT, ES_TSK_STR,
                 RUN_INP_DCT, RUN_OPTIONS_DCT, SPC_DCT, {})
@@ -179,8 +190,9 @@ if 'rates' in RUN_JOBS_LST or 'fits' in RUN_JOBS_LST:
                 rxn_lst,
                 MODEL_DCT,
                 RUN_INP_DCT,
-                run_rates=bool('rates' in RUN_JOBS_LST),
-                run_fits=bool('fits' in RUN_JOBS_LST)
+                write_messrate=WRITE_MESSRATE,
+                run_messrate=RUN_MESSRATE,
+                run_fits=RUN_FITS
             )
     else:
         print("Can't run kTPDriver without a PES being specified")

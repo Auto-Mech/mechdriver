@@ -16,10 +16,14 @@ RUN_INP_REQUIRED_KEYWORDS = [
 RUN_SUPPORTED_KEYWORDS = [
     'sort',
     'es',
-    'thermo',
-    'rates',
-    'fits',
-    'poly'
+    'thermochem',
+    'kinetics',
+    'write_messpf',
+    'run_messpf',
+    'run_nasa',
+    'write_messrate',
+    'run_messrate',
+    'run_fits'
 ]
 OPTIONS_SUPPORTED_KEYWORDS = [
     'check_stereo',

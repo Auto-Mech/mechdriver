@@ -22,7 +22,7 @@ def run(spc_dct,
         ref_scheme='basic',
         write_messpf=True,
         run_messpf=True,
-        run_thermo=True):
+        run_nasa=True):
     """ main driver for thermo run
     """
 
@@ -113,7 +113,6 @@ def run(spc_dct,
             routines.pf.messf.pfblock.write_pf_input(
                 pf_input, data_str_dct, pf_path)
 
-
     # Use MESS partition functions to compute thermo quantities
     if run_messpf:
 
@@ -153,7 +152,7 @@ def run(spc_dct,
             thmrunner.run_pf(pf_path)
 
     # Use MESS partition functions to compute thermo quantities
-    if run_thermo:
+    if run_nasa:
 
         # Setup the CHEMKIN level comment string
         # ene_str = cout.get_ckin_ene_lvl_str(pf_levels, ene_coeff)

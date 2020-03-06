@@ -39,6 +39,7 @@ def build_model_keyword_dct(model_str):
     es_str = apf.first_capture(ptt.paren_section('es'), model_str)
     etrans_str = apf.first_capture(ptt.paren_section('etransfer'), model_str)
     options_str = apf.first_capture(ptt.paren_section('options'), model_str)
+    vrctst_str = apf.first_capture(ptt.paren_section('vrctst'), model_str)
     assert pf_str is not None
     assert es_str is not None
     assert options_str is not None
@@ -48,6 +49,7 @@ def build_model_keyword_dct(model_str):
     es_dct = ptt.build_keyword_dct(es_str)
     etransfer_dct = ptt.build_keyword_dct(etrans_str)
     options_dct = ptt.build_keyword_dct(options_str)
+    # vrctst_dct = ptt.build_keyword_dct(vrctst_str)
     # assert check_model_dct(keyword_dct)
 
     # Combine dcts into single model dct

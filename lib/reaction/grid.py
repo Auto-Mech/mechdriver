@@ -94,11 +94,13 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma, dist_name, npoints=None):
 
     # Set the main type
     # if spin == 'high':
+    print('rtype')
+    print(rtype)
     if 'beta scission' in rtype:
         grid, update_guess = beta_scission_grid(npoints, ts_bnd_len)
-    elif 'addition' in rtype:
+    elif 'addition' in rtype and 'rad' not in rtype:
         grid, update_guess = addition_grid(npoints, ts_bnd_len)
-    elif 'hydrogen migration' in rtype:
+    elif 'hydrogen migration' in rtype and 'rad' not in rtype:
         grid, update_guess = hydrogen_migration_grid(npoints, ts_bnd_len,
                                                      ts_zma, dist_name)
     elif 'unimolecular elimination' in rtype:
@@ -111,9 +113,9 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma, dist_name, npoints=None):
     elif 'insertion' in rtype:
         grid, update_guess = insertion(npoints, ts_bnd_len)
     # elif spin == 'low':
-    elif 'radrad addition' in rtype:
+    elif 'radical radical' in rtype and 'addition' in rtype:
         grid, update_guess = radrad_addition_grid(npoints, ts_bnd_len)
-    elif 'radrad hydrogen abstraction' in rtype:
+    elif 'radical radical' in rtype and 'hydrogen abstraction' in rtype:
         grid, update_guess = radrad_hydrogen_abstraction(npoints, ts_bnd_len)
     else:
         raise NotImplementedError
@@ -259,6 +261,8 @@ def radrad_addition_grid(npoints, ts_bnd_len):
     """ Build forward 1D grid for a beta scission reaction
     """
 
+    npoints1 = 4
+    npoints2 = 4
     rstart = 2.4 * phycon.ANG2BOHR
     rend1 = 1.8 * phycon.ANG2BOHR
     rend2 = 3.0 * phycon.ANG2BOHR

@@ -31,9 +31,11 @@ def find_ts(
     typ = ts_dct['class']
     dist_info = ts_dct['dist_info']
     grid = ts_dct['grid']
+    print('grid in find')
+    print(grid)
     # bkp_ts_class_data = ts_dct['bkp_data']
     rad_rad = ('radical radical' in typ)
-    low_spin = ('low spin' in typ)
+    low_spin = ('low' in typ)
     print('prepping ts scan for:', typ)
 
     [_, _,
@@ -190,11 +192,12 @@ def find_ts(
 #     return ts_dct
 
 
-def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct, grid,
+def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
+                                      grid,
                                       dist_name,
                                       rxn_run_path, rxn_save_path,
                                       rad_rad_ts,
-                                      multi_info, ini_thy_info, thy_info,
+                                      ini_thy_info, thy_info,
                                       run_prefix, save_prefix,
                                       scn_run_fs, scn_save_fs,
                                       opt_script_str, overwrite,
@@ -232,6 +235,9 @@ def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct, grid,
         ts_dct, spc_dct, high_mul)
 
     # Run PST, VTST, VRC-TST based on RAD_RAD_TS model
+    print('rad_rad_ts')
+    print(rad_rad_ts.lower())
+    rad_rad_ts = 'vrctst'
     if rad_rad_ts.lower() == 'pst':
         pass
     elif rad_rad_ts.lower() == 'vtst':
@@ -243,8 +249,13 @@ def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct, grid,
             run_prefix, save_prefix, scn_run_fs, scn_save_fs,
             opt_script_str, overwrite, update_guess, **opt_kwargs)
     elif rad_rad_ts.lower() == 'vrctst':
-        # vrctst.calc_vrctst_rates()
-        pass
+        geo, zma, final_dist = variational.vrctst.calc_vrctst_flux(
+            ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
+            high_mul, grid1, grid2, dist_name,
+            multi_level, num_act_orb, num_act_elc,
+            multi_info,
+            thy_run_path, thy_save_path,
+            opt_script_str, overwrite, update_guess, **opt_kwargs)
 
     return geo, zma, final_dist
 

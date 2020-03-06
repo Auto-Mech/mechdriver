@@ -31,13 +31,13 @@ def run(rxn_lst,
     # freeze_all_tors = model_dct[model]['options']['freeze_all_tors']
     # ndim_tors = model_dct[model]['pf']['tors']
     # rad_rad_ts = model_dct[model]['pf']['ts_barrierless']
-    freeze_all_tors = False
+    freeze_all_tors = True
     ndim_tors = '1dhr'
     adiab_tors = True
     rad_rad_ts = 'pst'
     mc_nsamp = run_options_dct['mc_nsamp']
     kickoff = run_options_dct['kickoff']
-    irc_idxs = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
+    irc_idxs = [-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]
     run_irc = True
     run_irc_sp = True
 
@@ -96,7 +96,8 @@ def run(rxn_lst,
                         irc_idxs,
                         overwrite)
 
-                sp_thy_info = finf.get_thy_info('cc_lvl_d', thy_dct)
+                sp_thy_info = finf.get_thy_info('lvl_wbs', thy_dct)
+                # sp_thy_info = finf.get_thy_info('cc_lvl_d', thy_dct)
                 if run_irc_sp:
                     routines.es.variational.irc.irc_sp(
                         ts_dct[sadpt],

@@ -13,7 +13,7 @@ from lib.phydat import phycon
 def write_monte_carlo_mess_strings(tors_min_cnf_locs, tors_cnf_save_fs,
                                    spc_dct_i,
                                    frm_bnd_key, brk_bnd_key,
-                                   sym_factor, elec_levels,
+                                   elec_levels,
                                    tau_dat_file_name,
                                    freqs=(),
                                    saddle=False):
@@ -59,7 +59,6 @@ def write_monte_carlo_mess_strings(tors_min_cnf_locs, tors_cnf_save_fs,
                 mode_idxs, span=mode_span)
 
     # Write the core string (seperate energies?)
-    spc_formula = automol.inchi.formula(spc_dct_i['ich'])
     ground_ene = -0.02
     reference_ene = 0.00
     monte_carlo_str = mess_io.writer.monte_carlo(

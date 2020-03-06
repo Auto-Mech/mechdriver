@@ -16,6 +16,7 @@ from lib.load import model as loadmodel
 from routines.pf.messf import blocks
 from routines.pf.messf import get_fs_ene_zpe
 from routines.pf.messf import calc_channel_enes
+from routines.pf.messf import _tunnel as tunnel
 
 
 # Writer
@@ -197,8 +198,8 @@ def make_channel_pfs(
     spc_model = loadmodel.set_pf_model_info(
         model_dct[chn_model]['pf'])
     ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
-    ts_barrierless = None
-    # tun_model = model_dct[chn_model]['pf']['tunnel']
+    ts_barrierless = model_dct[chn_model]['pf']['ts_barrierless']
+    tunnel_model = model_dct[chn_model]['pf']['tunnel']
 
     # Unpack the energy dictionary and put energies in kcal
     first_ground_ene *= phycon.EH2KCAL
@@ -248,7 +249,8 @@ def make_channel_pfs(
         print('No imaginary freq for ts: {}'.format(tsname))
 
     # Set up for fake wells from reacs -> reac well and prod well -> prods
-    if need_fake_wells(spc_dct[tsname]['class']):
+    if False:
+    # if need_fake_wells(spc_dct[tsname]['class']):
         # MESS string for the fake reactant side well
         spc_dct_i = spc_dct[rxn['reacs'][0]]
         spc_dct_j = spc_dct[rxn['reacs'][1]]
@@ -310,23 +312,33 @@ def make_channel_pfs(
         inner_prod_label = fake_wellp_label
 
     # Set up the inner transition state
+
+    # Set label using ts name in dct
     ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
+
+    # Write the appropriate string for the tunneling model
+    if tunnel_model == 'none':
+        tunnel_str = ''
+    elif tunnel_model == 'eckart':
+        tunnel_str = tunnel.write_mess_eckart_str(
+            ts_ene, reac_ene, prod_ene, imag_freq)
+    elif tunnel_model == 'sct':
+        tunnel_file = tsname + '_sct.dat'
+        path = 'cat'
+        tunnel_str, tc_str = tunnel.write_mess_sct_str(
+            spc_dct[tsname], pf_levels, path,
+            imag_freq, tunnel_file,
+            cutoff_energy=2500, coord_proj='cartesian')
+
     if var_radrad(spc_dct[tsname]['class']) and ts_barrierless == 'vtst':
         # Variational TST for a barrierless reaction
         if 'P' in reac_label:
             spc_ene = reac_ene - first_ground_ene
-            spc_zpe = (
-                spc_dct[rxn['reacs'][0]]['zpe'] +
-                spc_dct[rxn['reacs'][1]]['zpe'])
         else:
             spc_ene = prod_ene - first_ground_ene
-            spc_zpe = (
-                spc_dct[rxn['prods'][0]]['zpe'] +
-                spc_dct[rxn['prods'][1]]['zpe'])
         ts_str += '\n' + blocks.vtst_with_no_saddle_block(
             spc_dct[tsname], ts_label, inner_reac_label, inner_prod_label,
-            spc_ene, spc_zpe, projrot_script_str,
-            multi_info)
+            spc_ene, projrot_script_str, multi_info)
     elif var_radrad(spc_dct[tsname]['class']) and ts_barrierless == 'vrctst':
         # Variational Rxn Coord TST for a barrierless reaction
         pass
@@ -337,14 +349,6 @@ def make_channel_pfs(
             ts_label, inner_reac_label, inner_prod_label, first_ground_ene)
     else:
         # Fixed TST for a saddle point
-        ts_reac_barr = ts_ene - reac_ene
-        ts_prod_barr = ts_ene - prod_ene
-        if ts_reac_barr < 0.:
-            ts_reac_barr = 0.1
-        if ts_prod_barr < 0.:
-            ts_prod_barr = 0.1
-        tunnel_str = mess_io.writer.tunnel_eckart(
-            imag_freq, ts_reac_barr, ts_prod_barr)
         ts_str += '\n' + mess_io.writer.ts_sadpt(
             ts_label, inner_reac_label, inner_prod_label,
             species_data[tsname], zero_energy, tunnel_str)
@@ -425,7 +429,8 @@ def make_channel_idx_dct(tsname, rxn, spc_dct):
     # Determine idxs for any fake wells if they are needed
     fake_wellr_label = ''
     fake_wellp_label = ''
-    if need_fake_wells(spc_dct[tsname]['class']):
+    if False:
+    # if need_fake_wells(spc_dct[tsname]['class']):
         well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
         well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
         if well_dct_key1 not in idx_dct:

@@ -2,13 +2,20 @@
 """
 
 
-def min_energy_conformer_locators(cnf_save_fs):
+def min_energy_conformer_locators(cnf_save_fs, zpe_corrd=False):
     """ locators for minimum energy conformer """
     cnf_locs_lst = cnf_save_fs[-1].existing()
     if cnf_locs_lst:
         cnf_enes = [cnf_save_fs[-1].file.energy.read(locs)
                     for locs in cnf_locs_lst]
-        min_cnf_locs = cnf_locs_lst[cnf_enes.index(min(cnf_enes))]
+        if zpe_corrd:
+            # How to calculate the ZPE (just use harm zpe?A
+            # Ignore confs without zpe? or break the run
+            cnf_hessians = [cnf_save_fs[-1].file.hessian.read(locs)
+                        for locs in cnf_locs_lst]
+            cnf_corrs = [ene+zpe for ene, zpe in zip(cnf_enes, cnf_zpes)]
+        else:
+            min_cnf_locs = cnf_locs_lst[cnf_enes.index(min(cnf_enes))]
     else:
         min_cnf_locs = None
     return min_cnf_locs
