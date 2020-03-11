@@ -139,10 +139,11 @@ def hindered_rotor_scans(
             constraint_names = [name
                                 for name_lst in run_tors_names
                                 for name in name_lst]
+            constraint_names.sort(key=lambda x: int(x.split('D')[1]))
             zma_vals = automol.zmatrix.values(zma)
             constraint_dct = dict(zip(
                 constraint_names,
-                (zma_vals[name] for name in constraint_names)
+                (round(zma_vals[name], 2) for name in constraint_names)
             ))
             scn_run_fs = autofile.fs.cscan(min_cnf_run_path)
             scn_save_fs = autofile.fs.cscan(min_cnf_save_path)
@@ -160,48 +161,54 @@ def hindered_rotor_scans(
             grid_dct = dict(zip(tors_names, tors_grids))
 
             # Perform the scans
-            gradient=False
-            hessian=False
-            save_cscan(scn_run_fs, scn_save_fs, tors_names,
-               gradient=gradient, hessian=hessian)
+            gradient = False
+            hessian = False
+
+            if constraint_dct is None:
+                save_scan(
+                    scn_run_fs=scn_run_fs,
+                    scn_save_fs=scn_save_fs,
+                    coo_names=tors_names,
+                    gradient=gradient,
+                    hessian=hessian,
+                    constraint_dct=constraint_dct
+                )
+            else:
+                save_cscan(scn_run_fs, scn_save_fs, tors_names,
+                           gradient=gradient, hessian=hessian)
+
+            run_scan(
+                zma=zma,
+                spc_info=spc_info,
+                thy_level=thy_level,
+                grid_dct=grid_dct,
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                script_str=script_str,
+                overwrite=overwrite,
+                saddle=saddle,
+                gradient=gradient,
+                hessian=hessian,
+                constraint_dct=constraint_dct,
+                **opt_kwargs,
+            )
+
+            if constraint_dct is None:
+                save_scan(
+                    scn_run_fs=scn_run_fs,
+                    scn_save_fs=scn_save_fs,
+                    coo_names=tors_names,
+                    gradient=gradient,
+                    hessian=hessian,
+                    constraint_dct=constraint_dct
+                )
+            else:
+                save_cscan(scn_run_fs, scn_save_fs, tors_names,
+                           gradient=gradient, hessian=hessian)
+
             print('ending')
             import sys
             sys.exit()
-            # save_scan(
-            #     scn_run_fs=scn_run_fs,
-            #     scn_save_fs=scn_save_fs,
-            #     coo_names=tors_names,
-            #     gradient=gradient,
-            #     hessian=hessian,
-            #     constraint_dct=constraint_dct
-            # )
-
-            # run_scan(
-            #     zma=zma,
-            #     spc_info=spc_info,
-            #     thy_level=thy_level,
-            #     grid_dct=grid_dct,
-            #     scn_run_fs=scn_run_fs,
-            #     scn_save_fs=scn_save_fs,
-            #     script_str=script_str,
-            #     overwrite=overwrite,
-            #     saddle=saddle,
-            #     gradient=gradient,
-            #     hessian=hessian,
-            #     constraint_dct=constraint_dct,
-            #     **opt_kwargs,
-            # )
-            # save_cscan(scn_run_fs, scn_save_fs, tors_names,
-            #    gradient=gradient, hessian=hessian)
-
-            # save_scan(
-            #     scn_run_fs=scn_run_fs,
-            #     scn_save_fs=scn_save_fs,
-            #     coo_names=tors_names,
-            #     gradient=gradient,
-            #     hessian=hessian,
-            #     constraint_dct=constraint_dct
-            # )
 
 
 def run_scan(
@@ -235,18 +242,22 @@ def run_scan(
         npoint *= len(coo_grid_vals)
     grid_idxs = tuple(range(npoint))
     if len(grid_vals) == 1:
+        run_prefixes = []
         for grid_val in grid_vals[0]:
             if constraint_dct is not None:
-                scn_run_fs[-1].create([coo_names, [grid_val], constraint_dct])
-                run_prefixes = tuple(
+                scn_run_fs[-1].create(
+                    [coo_names, [grid_val], constraint_dct])
+                run_prefixes.append(
                     scn_run_fs[-1].path(
-                        [coo_names, [grid_val], constraint_dct])
-                         for grid_val in grid_vals[0])
+                        [coo_names, [grid_val], constraint_dct]))
+                print('locs in run')
+                print([coo_names, [grid_val], constraint_dct])
+                print('run_prefixes')
+                print(run_prefixes)
             else:
                 scn_run_fs[-1].create([coo_names, [grid_val]])
-                run_prefixes = tuple(
-                    scn_run_fs[-1].path([coo_names, [grid_val]])
-                                         for grid_val in grid_vals[0])
+                run_prefixes.append(
+                    scn_run_fs[-1].path([coo_names, [grid_val]]))
         _run_1d_scan(
             script_str=script_str,
             run_prefixes=run_prefixes,
@@ -292,10 +303,10 @@ def run_scan(
         for grid_val_i in grid_vals[0]:
             for grid_val_j in grid_vals[1]:
                 if constraint_dct is not None:
-                    scn_run_fs[-1].create(
-                        [coo_names, [grid_val_i, grid_val_j], constraint_dct])
                     run_prefixes.append(scn_run_fs[-1].path(
-                        [coo_names, [grid_val_i, grid_val_j], constraint_dct]))
+                        [coo_names,
+                         [grid_val_i, grid_val_j],
+                         constraint_dct]))
                 else:
                     scn_run_fs[-1].create(
                         [coo_names, [grid_val_i, grid_val_j]])
@@ -330,7 +341,7 @@ def run_scan(
                     if constraint_dct is not None:
                         run_prefixes.append(scn_run_fs[-1].path(
                             [coo_names,
-                             [grid_val_i, grid_val_j],
+                             [grid_val_i, 2, grid_val_j, 2],
                              constraint_dct]))
                     else:
                         run_prefixes.append(scn_run_fs[-1].path(
@@ -364,10 +375,12 @@ def run_scan(
                 for grid_val_k in grid_vals[2]:
                     if constraint_dct is not None:
                         scn_run_fs[-1].create(
-                            [coo_names, [grid_val_i, grid_val_j, grid_val_k],
+                            [coo_names,
+                             [grid_val_i, grid_val_j, grid_val_k],
                              constraint_dct])
                         run_prefixes.append(scn_run_fs[-1].path(
-                            [coo_names, [grid_val_i, grid_val_j, grid_val_k],
+                            [coo_names,
+                             [grid_val_i, grid_val_j, grid_val_k],
                              constraint_dct]))
                     else:
                         scn_run_fs[-1].create(
@@ -409,7 +422,8 @@ def run_scan(
                         else:
                             run_prefixes.append(scn_run_fs[-1].path(
                                 [coo_names,
-                                 [grid_val_i, grid_val_j, grid_val_k]]))
+                                 [grid_val_i, grid_val_j, grid_val_k],
+                                 constraint_dct]))
             run_prefixes = tuple(run_prefixes)
             _run_3d_scan(
                 script_str=script_str,
@@ -491,7 +505,7 @@ def run_scan(
                                     [coo_names,
                                      [grid_val_i, grid_val_j,
                                       grid_val_k, grid_val_l],
-                                      constraint_dct]))
+                                     constraint_dct]))
                             else:
                                 run_prefixes.append(scn_run_fs[-1].path(
                                     [coo_names,
@@ -1080,11 +1094,12 @@ def _run_4d_scan(
 
 
 def save_scan(scn_run_fs, scn_save_fs, coo_names,
-              gradient=False, hessian=False,
-              constraint_dct=None):
+              gradient=False, hessian=False):
     """ save the scans that have been run so far
     """
-    if scn_run_fs[1].exists([coo_names]):
+    print(scn_run_fs[1].path([coo_names]))
+    print(scn_run_fs[1].exists([coo_names]))
+    if not scn_run_fs[1].exists([coo_names]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
@@ -1170,35 +1185,20 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names,
     """ save the scans that have been run so far
     """
 
-    exists1 = cscn_run_fs[1].exists([coo_names])
-    print('cscn path')
-    print(coo_names)
     print(cscn_run_fs[1].path([coo_names]))
-    print('exists1')
-    print(exists1)
+    exists1 = cscn_run_fs[1].exists([coo_names])
     if exists1:
         scn_locs1 = cscn_run_fs[2].existing([coo_names])
-        print('scn_locs1')
-        print(scn_locs1)
         for locs1 in scn_locs1:
-            print('locs1')
-            print(locs1)
             exists2 = cscn_run_fs[2].exists(locs1)
-            print('exists2')
-            print(exists2)
             if exists2:
                 scn_locs2 = cscn_run_fs[3].existing(locs1)
-                print('scn_locs2')
-                print(scn_locs2)
                 for locs2 in scn_locs2:
-                    print('locs2')
-                    print(locs2)
                     run_path = cscn_run_fs[-1].path(locs2)
-                    print('run_path\n', run_path)
                     run_fs = autofile.fs.run(run_path)
                     print("Reading from scan run at {}".format(run_path))
-
-                    ret = driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+                    ret = driver.read_job(
+                        job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                     if ret:
                         inf_obj, inp_str, out_str = ret
                         prog = inf_obj.prog
@@ -1207,16 +1207,18 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names,
                         geo = elstruct.reader.opt_geometry(prog, out_str)
                         zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
-                        save_path = cscn_save_fs[-1].path(locs)
+                        save_path = cscn_save_fs[-1].path(locs2)
                         print(" - Saving...")
                         print(" - Save path: {}".format(save_path))
 
-                        cscn_save_fs[-1].create(locs)
-                        cscn_save_fs[-1].file.geometry_info.write(inf_obj, locs)
-                        cscn_save_fs[-1].file.geometry_input.write(inp_str, locs)
-                        cscn_save_fs[-1].file.energy.write(ene, locs)
-                        cscn_save_fs[-1].file.geometry.write(geo, locs)
-                        cscn_save_fs[-1].file.zmatrix.write(zma, locs)
+                        cscn_save_fs[-1].create(locs2)
+                        cscn_save_fs[-1].file.geometry_info.write(
+                            inf_obj, locs2)
+                        cscn_save_fs[-1].file.geometry_input.write(
+                            inp_str, locs2)
+                        cscn_save_fs[-1].file.energy.write(ene, locs2)
+                        cscn_save_fs[-1].file.geometry.write(geo, locs2)
+                        cscn_save_fs[-1].file.zmatrix.write(zma, locs2)
 
                         if gradient:
                             ret = driver.read_job(
@@ -1226,7 +1228,7 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names,
                                 prog = inf_obj.prog
                                 method = inf_obj.method
                                 grad = elstruct.reader.gradient(prog, out_str)
-                                scn_save_fs[-1].file.gradient.write(grad, locs)
+                                cscn_save_fs[-1].file.gradient.write(grad, locs2)
 
                         if hessian:
                             ret = driver.read_job(
@@ -1236,21 +1238,21 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names,
                                 prog = inf_obj.prog
                                 method = inf_obj.method
                                 hess = elstruct.reader.hessian(prog, out_str)
-                                cscn_save_fs[-1].file.hessian.write(hess, locs)
+                                cscn_save_fs[-1].file.hessian.write(hess, locs2)
                                 # read out the frequencies for now
                                 freqs = elstruct.reader.harmonic_frequencies(
                                     prog, out_str)
                                 cscn_save_fs[-1].file.harmonic_frequencies.write(
-                                    freqs, locs)
+                                    freqs, locs2)
                                 # fix hard coding of molpro reading...
                                 if prog == 'molpro2015':
                                     geo = hess_geometry(out_str)
-                                    cscn_save_fs[-1].file.geometry.write(geo, locs)
+                                    cscn_save_fs[-1].file.geometry.write(geo, locs2)
             else:
-                print("No scan to save. (2) Skipping...")
+                print("No cscan to save. (2) Skipping...")
 
     else:
-        print("No scan to save. (1) Skipping...")
+        print("No cscan to save. (1) Skipping...")
 
 
 def infinite_separation_energy(

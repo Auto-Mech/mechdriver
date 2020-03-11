@@ -5,9 +5,14 @@ import os
 import autofile
 import automol
 import varecof_io
+import elstruct
 from routines.es import scan
+from routines.es.variational import wfn
 from lib.runner import script
+from lib.runner import driver as rundriver
+from lib.runner import par as runpar
 from lib.phydat import phycon
+from lib.filesystem import orb as fsorb
 
 
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM
@@ -16,18 +21,42 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
                      multi_level, num_act_orb, num_act_elc,
                      multi_info,
                      thy_run_path, thy_save_path,
-                     opt_script_str, overwrite, update_guess, **opt_kwargs):
+                     opt_script_str, overwrite, update_guess,
+                     corr_pot=True, **opt_kwargs):
     """ Set up and run VRC-TST calculations to get the flux file
     """
 
     print('TS DCT')
     print(ts_dct.keys())
 
+    # Input stuff
+    sp_thy_level = ['molpro2015', 'caspt2c', 'cc-pvdz', 'RR']
+    mep_distances = list(grid1)+list(grid2)
+    fortran_compiler = 'gfortran'
+    idx1, idx2 = automol.zmatrix.bond_idxs(ts_zma, dist_name)
+    bnd_frm_idxs = (idx1+1, idx2+1)
+    spc_name = 'mol'
+    memory = 4.0
+    basis = 'cc-pvdz'
+    method = '{rs2c, shift=0.25}'
+    inf_sep_ene = -100.0
+    r1dists_lr = [8., 6., 5., 4.5, 4.]
+    r1dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
+    r2dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
+    d1dists = [0.01, 0.5, 1.]
+    d2dists = [0.01, 0.5, 1.]
+    conditions = {}
+    nsamp_max = 2000
+    nsamp_min = 50
+    flux_err = 10
+    pes_size = 2
+    exe_path = '/blues/gpfs/home/sjklipp/bin/molpro'
+    base_name = 'mol'
+
     # Set the run directory
     ts_run_fs = autofile.fs.ts(thy_run_path)
     ts_run_fs[0].create()
     ts_run_path = ts_run_fs[0].path()
-    # run_fs = autofile.fs.run(ts_run_path)
 
     # Set the scan directories
     scn_run_fs = autofile.fs.scan(thy_run_path)
@@ -43,32 +72,48 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
     os.makedirs(os.path.join(vrc_path, 'scratch'), exist_ok=True)
     print('Build Path for VaReCoF calculations')
     print(vrc_path)
+    
+    # Set info on the form indices
+    bnd_frm_idxs = automol.zmatrix.bond_idxs(ts_zma, dist_name)
+    min_idx, max_idx = min(bnd_frm_idxs), max(bnd_frm_idxs)
+    
+    # Set the orb type
+    if sp_thy_level is not None:
+        orb_restr = fsorb.orbital_restriction(ts_info, sp_thy_level)
+        sp_level = sp_thy_level[0:3]
+        sp_level.append(orb_restr)
+    
+    # Calculate the infinite separation energy
+    scan.infinite_separation_energy(
+        spc_1_info, spc_2_info, ts_info, high_mul, ref_zma, 
+        ini_thy_info, thy_info, multi_info,
+        run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs,
+        overwrite=False, num_act_elc=None, num_act_orb=None)
 
-    # Correction potential
-    corr_pot = True
+    # Calculate the correction potential
     if corr_pot:
+
         # Build the constraint dictionary
         constraint_dct = set_alt_constraints(ts_zma, ts_dct['rct_zmas'])
 
         # Run the potentials
-        run_potentials(ts_zma,
-                       ts_formula, ts_info, high_mul,
-                       multi_level,
-                       dist_name, grid1, grid2,
-                       scn_run_fs, scn_save_fs,
-                       cscn_run_fs, cscn_save_fs,
-                       overwrite, update_guess,
-                       num_act_elc, num_act_orb,
-                       constraint_dct,
-                       **opt_kwargs)
+        run_potentials(
+            ts_zma, ts_dct,
+            ts_formula, ts_info, high_mul,
+            multi_level,
+            dist_name, grid1, grid2,
+            scn_run_fs, scn_save_fs,
+            cscn_run_fs, cscn_save_fs,
+            overwrite, update_guess,
+            num_act_elc, num_act_orb,
+            constraint_dct,
+            sp_thy_level=sp_thy_level)
 
         # Read the values for the correction potential from filesystem
         potentials, pot_labels = read_potentials(
-            scn_save_fs, cscn_save_fs,
-            multi_level, '',
-            dist_name, grid1, grid2,
-            constraint_dct
-        )
+            ts_info, scn_save_fs, cscn_save_fs,
+            sp_thy_level, dist_name, grid1, grid2,
+            constraint_dct)
 
         # Build correction potential .so file used by VaReCoF
         build_correction_potential(
@@ -77,10 +122,12 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
             dist_restrict_idxs=(),
             pot_labels=pot_labels,
             pot_file_names=(),
-            spc_name='mol')
+            spc_name=spc_name)
 
     # Write the electronic structure template file
-    tml_inp_str = write_molpro_template_str()
+    tml_inp_str = write_molpro_template_str(
+        ts_zma, ts_info, ts_dct['high_mul'],
+        memory, basis, method, inf_sep_ene)
 
     # Write the remaining VaReCoF input file strings
     input_strs = input_prep(ts_zma, ts_dct['rct_zmas'], dist_name, vrc_path)
@@ -109,17 +156,16 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
         inp_file.write(machine_file_str)
 
     # Run VaReCoF
-    script.run_script(script.VARECOF, path)
+    script.run_script(script.VARECOF, vrc_path)
+
+    # Calculate the flux file from the output
+    script.run_script(script.MCFLUX, vrc_path)
 
 
 # FUNCTIONS TO WRITE THE STRINGS FOR ALL OF THE VARECOF INPUT FILE
 def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
     """ prepare all the input files for a vrc-tst calculation
     """
-
-    # Set info on the form indices
-    bnd_frm_idxs = automol.zmatrix.bond_idxs(ts_zma, dist_name)
-    min_idx, max_idx = min(bnd_frm_idxs), max(bnd_frm_idxs)
 
     # Build geometries needed for the varecof run
     total_geom, frag_geoms, frag_geoms_wdummy = fragment_geometries(
@@ -132,17 +178,12 @@ def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
     pivot_xyzs = calc_pivot_xyzs(min_idx, max_idx, total_geom, frag_geoms)
 
     # Write the long- and short-range divsur input files
-    r1dists_lr = [8., 6., 5., 4.5, 4.]
     lr_divsur_inp_str = varecof_io.writer.input_file.divsur(
         r1dists_lr, 1, 1, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
 
     # Write the short-range divsur files
-    r1dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
-    r2dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
-    d1dists = [0.01, 0.5, 1.]
-    d2dists = [0.01, 0.5, 1.]
     t1angs = [pivot_angles[0]] if pivot_angles[0] is not None else []
-    t2angs = [pivot_angles[1]] if pivot_angles[0] is not None else []
+    t2angs = [pivot_angles[1]] if pivot_angles[1] is not None else []
     if automol.geom.is_atom(frag_geoms[0]):
         d1dists = []
         t1angs = []
@@ -155,16 +196,11 @@ def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
     if automol.geom.is_linear(frag_geoms[1]):
         d2dists = [0.]
         t2angs = []
-    conditions = {}
-    # conditions = {'delta_r': 0}
     sr_divsur_inp_str = varecof_io.writer.input_file.divsur(
         r1dists_sr, npivots[0], npivots[1], pivot_xyzs[0], pivot_xyzs[1],
-        frame1=frames[0],
-        frame2=frames[1],
-        d1dists=d1dists,
-        d2dists=d2dists,
-        t1angs=t1angs,
-        t2angs=t2angs,
+        frame1=frames[0], frame2=frames[1],
+        d1dists=d1dists, d2dists=d2dists,
+        t1angs=t1angs, t2angs=t2angs,
         r2dists=r2dists_sr,
         **conditions)
 
@@ -182,18 +218,12 @@ def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
     divsur_out_str = build_divsur_out_file(vrc_path, os.getcwd())
 
     # Write the tst.inp file
-    nsamp_max = 2000
-    nsamp_min = 50
-    flux_err = 10
-    pes_size = 2
     faces, faces_symm = assess_face_symmetries(divsur_out_str)
     tst_inp_str = varecof_io.writer.input_file.tst(
         nsamp_max, nsamp_min, flux_err, pes_size,
         faces=faces, faces_symm=faces_symm)
 
     # Write the potential energy surface input string
-    exe_path = '/blues/gpfs/home/sjklipp/bin/molpro'
-    base_name = 'mol'
     els_inp_str = varecof_io.writer.input_file.elec_struct(
         exe_path, base_name)
 
@@ -203,6 +233,7 @@ def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
     # Write the convert.inp input string
     conv_inp_str = varecof_io.writer.input_file.convert()
 
+    # Collate the input strings together
     input_strs = [
         struct_inp_str, lr_divsur_inp_str, tst_inp_str,
         els_inp_str, mc_flux_inp_str, conv_inp_str]
@@ -210,18 +241,16 @@ def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
     return input_strs
 
 
-def write_molpro_template_str():
+def write_molpro_template_str(ts_zma, ts_info, high_mul,
+                              memory, basis, method, inf_sep_ene):
     """ Write the electronic structure template file
     """
-    memory = 4.0
-    basis = 'cc-pvdz'
-    method = '{rs2c, shift=0.25}'
-
     num_act_elc = high_mul
     num_act_orb = num_act_elc
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
-    _, wfn_str = moldr.ts.cas_options_2(
-        ts_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+    wfn_str = wfn.wfn_string(
+        ts_info, ts_formula, num_act_elc, num_act_orb,
+        high_mul, add_two_closed=False)
     tml_inp_str = varecof_io.writer.input_file.tml(
         memory, basis, wfn_str, method, inf_sep_ene)
 
@@ -249,8 +278,6 @@ def build_correction_potential(mep_distances, potentials,
     """  use the MEP potentials to compile the correction potential .so file
     """
 
-    # Read the potentials needed for corrections
-
     # Build string Fortan src file containing correction potentials
     species_corr_str = varecof_io.writer.corr_potentials.species(
         mep_distances,
@@ -268,8 +295,7 @@ def build_correction_potential(mep_distances, potentials,
 
     # Build string for makefile to compile corr pot file into .so file
     makefile_str = varecof_io.writer.corr_potentials.makefile(
-        fortran_compiler,
-        pot_file_names=pot_file_names)
+        fortran_compiler, pot_file_names=pot_file_names)
 
     # Write all of the files needed to build the correction potential
     with open(os.path.join(vrc_path, spc_name+'_corr.f'), 'w') as corr_file:
@@ -285,7 +311,7 @@ def build_correction_potential(mep_distances, potentials,
     varecof_io.writer.corr_potentials.compile_corr_pot(vrc_path)
 
 
-def run_potentials(inf_sep_zma,
+def run_potentials(inf_sep_zma, ts_dct,
                    ts_formula, ts_info, high_mul,
                    multi_level,
                    dist_name, grid1, grid2,
@@ -293,14 +319,12 @@ def run_potentials(inf_sep_zma,
                    cscn_run_fs, cscn_save_fs,
                    overwrite, update_guess,
                    num_act_elc, num_act_orb,
-                   constraint_dct):
+                   constraint_dct,
+                   sp_thy_level=None):
     """ Run all of the scans
     """
 
-    print('vrctst grids')
-    print(grid1, '\n', grid2)
-
-    # Initial scan over reaction coordinate
+    # Run and save the scan while constraining only reaction coordinate
     scan.run_multiref_rscan(
         formula=ts_formula,
         high_mul=high_mul,
@@ -321,7 +345,15 @@ def run_potentials(inf_sep_zma,
         constraint_dct=None
     )
 
-    # Initial scan, optimizing the intermolecular coords
+    scan.save_scan(
+        scn_run_fs=scn_run_fs,
+        scn_save_fs=scn_save_fs,
+        coo_names=[dist_name],
+        gradient=False,
+        hessian=False
+    )
+
+    # Run and save the scan while constraining all intermolecular coordinates
     scan.run_multiref_rscan(
         formula=ts_formula,
         high_mul=high_mul,
@@ -342,33 +374,116 @@ def run_potentials(inf_sep_zma,
         constraint_dct=constraint_dct
     )
 
-    # Save the scan
-    # scan.save_scan(
-    #     scn_run_fs=scn_run_fs,
-    #     scn_save_fs=scn_save_fs,
-    #     coo_names=tors_names,
-    #     gradient=gradient,
-    #     hessian=hessian
-    # )
+    scan.save_cscan(
+        cscn_run_fs=cscn_run_fs,
+        cscn_save_fs=cscn_save_fs,
+        coo_names=[dist_name],
+        gradient=False,
+        hessian=False)
 
     # Run the single points on top of the initial scan
-    # for thy_level in scn_thy_level:
-    #     scan.irc_sp(ts_dct, scn_thy_level, sp_thy_level,
-    #                 irc_idxs, overwrite)
+    if sp_thy_level is not None:
+        scan_sp(inf_sep_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
+                multi_level, sp_thy_level, [dist_name], overwrite,
+                num_act_elc, num_act_orb, high_mul)
+
+
+def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
+            multi_level, sp_thy_level, dist_name, overwrite,
+            num_act_elc, num_act_orb, high_mul):
+    """ get sps for the scan
+    """
+
+    # Set up script and kwargs for the irc run
+    script_str, _, kwargs, _ = runpar.run_qchem_par(*sp_thy_level[0:2])
+
+    # Build the elstruct CASSCF options list for multiref calcs
+    cas_opt = []
+    cas_opt.append(
+        wfn.cas_options(
+            ts_info, ts_formula, num_act_elc, num_act_orb,
+            high_mul, add_two_closed=False))
+    cas_opt.append(
+        wfn.cas_options(
+            ts_info, ts_formula, num_act_elc, num_act_orb,
+            high_mul, add_two_closed=True))
+
+    # Write the lines containing all the calcs for a guess wfn
+    guess_str = wfn.multiref_wavefunction_guess(
+        high_mul, ts_zma, ts_info, multi_level, cas_opt)
+    guess_lines = guess_str.splitlines()
+
+    # Add the above-built objects to the elstruct opt_kwargs dct
+    kwargs['casscf_options'] = cas_opt[1]
+    kwargs['gen_lines'] = {1: guess_lines}
+
+    # Add option to opt_kwargs dct to turn off symmetry
+    kwargs['mol_options'] = ['nosym']
+
+    # Compute the single-point energies along the scan
+    for locs in scn_run_fs[-1].existing([dist_name]):
+
+        # Set up single point filesys
+        scn_run_fs[-1].create(locs)
+        scn_run_path = scn_run_fs[-1].path(locs)
+        scn_save_path = scn_save_fs[-1].path(locs)
+        print('scn_run_path')
+        print(scn_run_path)
+
+        # Set up the run filesys for the job
+        sp_run_fs = autofile.fs.single_point(scn_run_path)
+        sp_save_fs = autofile.fs.single_point(scn_save_path)
+        sp_run_fs[-1].create(sp_level[1:4])
+        sp_run_path = sp_run_fs[-1].path(sp_level[1:4])
+        run_fs = autofile.fs.run(sp_run_path)
+
+        # Read the geometry from the save filesys
+        exists = sp_save_fs[-1].file.energy.exists(sp_level[1:4])
+        if not exists or overwrite:
+            geo = scn_save_fs[-1].file.geometry.read(locs)
+            rundriver.run_job(
+                job='energy',
+                script_str=script_str,
+                run_fs=run_fs,
+                geom=geo,
+                spc_info=ts_info,
+                thy_level=sp_level,
+                overwrite=overwrite,
+                **kwargs,
+            )
+
+        ret = rundriver.read_job(
+            job='energy',
+            run_fs=run_fs,
+        )
+
+        if ret is not None:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading energy from output...")
+            ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
+
+            print(" - Saving energy...")
+            sp_save_fs[-1].create(sp_level[1:4])
+            sp_save_fs[-1].file.input.write(inp_str, sp_level[1:4])
+            sp_save_fs[-1].file.info.write(inf_obj, sp_level[1:4])
+            sp_save_fs[-1].file.energy.write(ene, sp_level[1:4])
 
 
 def set_alt_constraints(inf_sep_zma, rct_zmas):
     """ Set the additional constraints for the constrained MEP
     """
+
     frag1_natom = automol.zmatrix.count(rct_zmas[0])
     frag2_natom = automol.zmatrix.count(rct_zmas[1])
 
     # Build pairs for intermolecular coords to optimize:
-    # (zma_atom_idx, coord_idx in row) (uses 0-indexing)
+    #   (zma_atom_idx, coord_idx in row) (uses 0-indexing)
     # frag1_natom, 0 is the scan coord already accounted for
-    # just go ahead and add the other coords
     no_frz_idxs = []
-    no_frz_idxs.append([frag1_natom, 0], [frag1_natom, 1], [frag1_natom, 2])
+    no_frz_idxs.append([frag1_natom, 0])
+    no_frz_idxs.append([frag1_natom, 1])
+    no_frz_idxs.append([frag1_natom, 2])
     if frag2_natom == 2:
         no_frz_idxs.append([frag1_natom+1, 1])
         no_frz_idxs.append([frag1_natom+1, 2])
@@ -383,7 +498,8 @@ def set_alt_constraints(inf_sep_zma, rct_zmas):
     for row_idx, row in enumerate(name_matrix):
         for coord_idx, coord in enumerate(row):
             if [row_idx, coord_idx] not in no_frz_idxs:
-                alt_froz_coords.append(coord)
+                if coord is not None:
+                    alt_froz_coords.append(coord)
 
     # Now build the constraint dictionary
     zma_vals = automol.zmatrix.values(inf_sep_zma)
@@ -393,9 +509,8 @@ def set_alt_constraints(inf_sep_zma, rct_zmas):
     return constraint_dct
 
 
-def read_potentials(scn_save_fs, cscn_save_fs,
-                    sp_thy_level,
-                    dist_name, grid1, grid2,
+def read_potentials(ts_info, scn_save_fs, cscn_save_fs,
+                    sp_thy_level, dist_name, grid1, grid2,
                     constraint_dct):
     """ Read values form the filesystem to get the values to
         correct ht MEP
@@ -405,7 +520,8 @@ def read_potentials(scn_save_fs, cscn_save_fs,
     smp_pot = []
     const_pot = []
     sp_pot = []
-    for grid_val in grid1+grid2:
+    for grid_val in list(grid1)+list(grid2):
+
         # Set the locs for the full scan and constrained scan
         locs = [[dist_name], [grid_val]]
         const_locs = [[dist_name], [grid_val], constraint_dct]
@@ -413,33 +529,43 @@ def read_potentials(scn_save_fs, cscn_save_fs,
         # Read the energies from the scan and constrained scan
         if scn_save_fs[-1].file.energy.exists(locs):
             smp_pot.append(scn_save_fs[-1].file.energy.read(locs))
+        else:
+            print('No scan energy')
         if cscn_save_fs[-1].file.energy.exists(const_locs):
             const_pot.append(cscn_save_fs[-1].file.energy.read(const_locs))
+        else:
+            print('No constrained scan energy')
 
         # Read the single point energy from the potential
-        scn_save_path = scn_save_fs[-1].path(locs)
-        sp_save_fs = autofile.fs.single_point(scn_save_path)
-        sp_save_fs[-1].create(sp_thy_level[1:4])
-        if sp_save_fs[-1].file.energy.read(sp_thy_level[1:4]):
-            sp_pot.append(sp_save_fs[-1].file.energy.read(sp_thy_level[1:4]))
+        if sp_thy_level is not None:
+            scn_save_path = scn_save_fs[-1].path(locs)
+            sp_save_fs = autofile.fs.single_point(scn_save_path)
+            sp_save_fs[-1].create(sp_level[1:4])
+            if sp_save_fs[-1].file.energy.read(sp_level[1:4]):
+                sp_pot.append(
+                    sp_save_fs[-1].file.energy.read(sp_level[1:4]))
 
     # Calculate each of the correction potentials
     relax_corr_pot = []
     sp_corr_pot = []
     full_corr_pot = []
-    for i, _ in smp_pot:
+    for i, _ in enumerate(smp_pot):
         relax_corr = (smp_pot[i] - const_pot[i]) * phycon.EH2KCAL
-        sp_corr = (sp_pot[i] - smp_pot[i]) * phycon.EH2KCAL
         relax_corr_pot.append(relax_corr)
-        sp_corr_pot.append(sp_corr)
+        if sp_thy_level is not None:
+            sp_corr = (sp_pot[i] - smp_pot[i]) * phycon.EH2KCAL
+            sp_corr_pot.append(sp_corr)
+        else:
+            sp_corr = 0.0
         full_corr_pot.append(relax_corr + sp_corr)
 
     # Collate the potentials together in a list
-    potentials = [
-        relax_corr_pot,
-        sp_corr_pot,
-        full_corr_pot,
-    ]
+    if sp_thy_level is not None:
+        potentials = [relax_corr_pot, sp_corr_pot, full_corr_pot]
+        potential_labels = ['relax', 'sp', 'full']
+    else:
+        potentials = [relax_corr_pot, full_corr_pot]
+        potential_labels = ['relax', 'full']
 
     return potentials, potential_labels
 
@@ -457,12 +583,11 @@ def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
     # Get geometries of isolated fragments at infinite sepearation
     iso_fgeos = [automol.zmatrix.geometry(zma) for zma in rct_zmas]
 
-    # displace geoms to avoid having 0.0s
-    # iso_fgeos = [automol.geom.translated(geo, (10.0, 10.0, 10.0))
-    #              for geo in iso_fgeos]
-
-    # Hack to get my rct_zmas in right order for one example. Need better fix
-    iso_fgeos[0], iso_fgeos[1] = iso_fgeos[1], iso_fgeos[0]
+    # Reorder the iso_fgeos to line up with the mep_frag_geos
+    (iso1_symbs, iso2_symbs) = (automol.geom.symbols(geo) for geo in iso_fgeos)
+    (mep1_symbs, mep2_symbs) = (automol.geom.symbols(geo) for geo in mep_fgeos)
+    if iso1_symbs != mep1_symbs or iso2_symbs != mep2_symbs:
+        iso_fgeos[0], iso_fgeos[1] = iso_fgeos[1], iso_fgeos[0]
 
     # Get the geometries for the structure.inp file
     iso_fgeos_wdummy = []
@@ -497,15 +622,6 @@ def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
                     break
 
             # Calculate coords to define X position in IsoFragGeom structure
-            print('iso_fgeo')
-            print(iso_fgeo)
-            print('mep_geo')
-            print(automol.geom.string(mep_geo_wdummy))
-            print('idxs')
-            print(x_idx)
-            print(a1_idx)
-            print(a2_idx)
-            print(a3_idx)
             xyz1 = iso_fgeo[a1_idx][1]
             xyz2 = iso_fgeo[a2_idx][1]
             xdistance = automol.geom.distance(
@@ -521,13 +637,6 @@ def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
                 xdihedral = 0.0
 
             # Calculate the X Position for the IsoFrag structure
-            print('\n\ninternals info')
-            print(xyz1)
-            print(xyz2)
-            print(xyz3)
-            print(xdistance)
-            print(xangle)
-            print(xdihedral)
             xyzp = automol.geom.find_xyzp_using_internals(
                 xyz1, xyz2, xyz3, xdistance, xangle, xdihedral)
 
@@ -575,10 +684,7 @@ def assess_face_symmetries(divsur_out_string):
     # Read fragment geoms from divsur.out with coordinates in the divsur frame
     fgeo1, fgeo2 = varecof_io.reader.divsur.frag_geoms_divsur_frame(
         divsur_out_string)
-    fgeos = [
-        automol.geom.from_string(fgeo1),
-        automol.geom.from_string(fgeo2)
-    ]
+    fgeos = [automol.geom.from_string(fgeo1), automol.geom.from_string(fgeo2)]
 
     # Check facial symmetry if fragments are molecules
     symms = [False, False]
@@ -616,8 +722,7 @@ def assess_face_symmetries(divsur_out_string):
 # FUNCTIONS TO SET UP THE DIVIDING SURFACE FRAMES
 def build_pivot_frames(min_idx, max_idx,
                        total_geom, frag_geoms, frag_geoms_wdummy):
-    """ use geometries to get pivot info
-        only set up for 1 or 2 pivot points
+    """ Use geometries to get pivot info only set up for 1 or 2 pivot points
     """
 
     frames, npivots, = [], []
@@ -681,17 +786,12 @@ def calc_pivot_angles(frag_geoms, frag_geoms_wdummy, frames):
     """
     angles = []
     for geom, geom_wdummy, frame in zip(frag_geoms, frag_geoms_wdummy, frames):
-        print('pivot angles info')
-        print(geom)
-        print(geom_wdummy)
-        print(frame)
         if automol.geom.is_atom(geom) or automol.geom.is_linear(geom):
             angle = None
         else:
             frame = [val-1 for val in frame]
             angle = automol.geom.central_angle(
                 geom_wdummy, frame[2], frame[0], frame[1])
-
         angles.append(angle)
 
     return angles
