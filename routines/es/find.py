@@ -18,12 +18,12 @@ from routines.es import variational
 from routines.es import scan
 
 
-def find_ts(
-        spc_dct, ts_dct, ts_zma,
-        ini_thy_info, thy_info,
-        run_prefix, save_prefix,
-        overwrite,
-        rad_rad_ts='vtst'):
+def find_ts(spc_dct, ts_dct, ts_zma,
+            ini_thy_info, thy_info,
+            multi_opt_info, multi_sp_info,
+            run_prefix, save_prefix,
+            overwrite, vrc_dct,
+            rad_rad_ts='vtst'):
     """ find the ts geometry
     """
 
@@ -103,16 +103,18 @@ def find_ts(
                    scn_run_fs, scn_save_fs, run_fs]
         if rad_rad and low_spin and 'elimination' not in ts_dct['class']:
             print('Running Scan for Barrierless TS:')
-            find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
-                                              grid,
-                                              dist_name,
-                                              rxn_run_path, rxn_save_path,
-                                              rad_rad_ts,
-                                              ini_thy_info, thy_info,
-                                              run_prefix, save_prefix,
-                                              scn_run_fs, scn_save_fs,
-                                              opt_script_str, overwrite,
-                                              update_guess, **opt_kwargs)
+            ts_found = find_barrierless_transition_state(
+                ts_info, ts_zma, ts_dct, spc_dct,
+                grid,
+                dist_name,
+                rxn_run_path, rxn_save_path,
+                rad_rad_ts,
+                ini_thy_info, thy_info,
+                multi_opt_info, multi_sp_info,
+                run_prefix, save_prefix,
+                scn_run_fs, scn_save_fs,
+                overwrite, vrc_dct,
+                update_guess, **opt_kwargs)
             # Have code analyze the path and switch to a sadpt finder if needed
         else:
             print('Running Scan for Fixed TS:')
@@ -121,7 +123,7 @@ def find_ts(
                 ref_level,
                 scn_run_fs, scn_save_fs, opt_script_str,
                 overwrite, update_guess, **opt_kwargs)
-            geo, zma, final_dist = find_sadpt_transition_state(
+            ts_found = find_sadpt_transition_state(
                 opt_script_str,
                 run_fs,
                 max_zma,
@@ -135,7 +137,7 @@ def find_ts(
                 filesys,
                 **opt_kwargs)
 
-    return geo, zma, final_dist
+    return ts_found
 
 
 # def check_filesys_for_ts(ts_dct, ts_zma, cnf_save_fs, overwrite,
@@ -198,18 +200,16 @@ def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
                                       rxn_run_path, rxn_save_path,
                                       rad_rad_ts,
                                       ini_thy_info, thy_info,
+                                      multi_opt_info, multi_sp_info,
                                       run_prefix, save_prefix,
                                       scn_run_fs, scn_save_fs,
-                                      opt_script_str, overwrite,
+                                      overwrite, vrc_dct,
                                       update_guess, **opt_kwargs):
     """ Run TS finder for barrierless reactions
     """
-    # run mep scan
-    # multi_info = ['molpro2015', 'caspt2', 'cc-pvtz', 'RR']
-    multi_info = ['molpro2015', 'caspt2', 'cc-pvdz', 'RR']
 
-    orb_restr = fsorb.orbital_restriction(ts_info, multi_info)
-    multi_level = multi_info[0:3]
+    orb_restr = fsorb.orbital_restriction(ts_info, multi_opt_info)
+    multi_level = multi_opt_info[0:3]
     multi_level.append(orb_restr)
 
     thy_run_fs = autofile.fs.theory(rxn_run_path)
@@ -224,40 +224,43 @@ def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
     scn_save_fs = autofile.fs.scan(thy_save_path)
 
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
-    grid1 = grid[0]
-    grid2 = grid[1]
-    grid = numpy.append(grid[0], grid[1])
-    high_mul = ts_dct['high_mul']
-    print('starting multiref scan:', scn_run_fs[0].path())
-
-    # Set the active space
-    num_act_orb, num_act_elc = variational.wfn.active_space(
-        ts_dct, spc_dct, high_mul)
+    [grid1, grid2] = grid
 
     # Run PST, VTST, VRC-TST based on RAD_RAD_TS model
-    print('rad_rad_ts')
-    print(rad_rad_ts.lower())
-    rad_rad_ts = 'vrctst'
     if rad_rad_ts.lower() == 'pst':
-        pass
+        ts_found = True
+        print('Phase Space Theory Used, No ES calculations are needed')
     elif rad_rad_ts.lower() == 'vtst':
-        geo, zma, final_dist = variational.vtst.run_vtst_scan(
+        print('Beginning Calculations for VTST Treatments')
+        ts_found = variational.vtst.run_vtst_scan(
             ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
             high_mul, grid1, grid2, dist_name,
-            multi_level, num_act_orb, num_act_elc,
+            multi_level, multi_sp_info,
             multi_info, ini_thy_info, thy_info,
             run_prefix, save_prefix, scn_run_fs, scn_save_fs,
-            opt_script_str, overwrite, update_guess, **opt_kwargs)
+            overwrite, update_guess, **opt_kwargs)
+        if ts_found:
+            print('Scans for VTST succeeded')
+        else:
+            print('Scans for VTST failed')
     elif rad_rad_ts.lower() == 'vrctst':
-        geo, zma, final_dist = variational.vrctst.calc_vrctst_flux(
+        print('Beginning Calculations for VRC-TST Treatments')
+        ts_found = variational.vrctst.calc_vrctst_flux(
             ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
-            high_mul, grid1, grid2, dist_name,
-            multi_level, num_act_orb, num_act_elc,
-            multi_info,
+            ts_dct['high_mul'], grid1, grid2, dist_name,
+            multi_level, multi_opt_info, multi_sp_info,
+            ini_thy_info, thy_info,
             thy_run_path, thy_save_path,
-            opt_script_str, overwrite, update_guess, **opt_kwargs)
+            overwrite, update_guess,
+            run_prefix, save_prefix,
+            vrc_dct,
+            corr_pot=True)
+        if ts_found:
+            print('VaReCoF run successful and flux file was obtained')
+        else:
+            print('VaReCoF run failed')
 
-    return geo, zma, final_dist
+    return ts_found
 
 
 def run_sadpt_scan(typ, grid, dist_name, brk_name, ts_zma, ts_info, ref_level,
@@ -342,7 +345,11 @@ def find_sadpt_transition_state(
         job='optimization',
         run_fs=run_fs,
     )
+
     if opt_ret is not None:
+
+        # Set ts found
+        ts_found = True
 
         # If successful, Read the geom and energy from the optimization
         inf_obj, _, out_str = opt_ret
@@ -379,11 +386,9 @@ def find_sadpt_transition_state(
             **opt_kwargs
         )
     else:
-        # Give up and return failed information
-        geo = 'failed'
-        zma = 'failed'
-        final_dist = 0.
-    return geo, zma, final_dist
+        ts_found = False
+
+    return ts_found
 
 
 # HELPER FUNCTIONS FOR THE MAIN FINDER FUNCTIONS

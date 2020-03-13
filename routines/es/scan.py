@@ -206,10 +206,6 @@ def hindered_rotor_scans(
                 save_cscan(scn_run_fs, scn_save_fs, tors_names,
                            gradient=gradient, hessian=hessian)
 
-            print('ending')
-            import sys
-            sys.exit()
-
 
 def run_scan(
         zma, spc_info, thy_level, grid_dct, scn_run_fs, scn_save_fs,
@@ -250,10 +246,6 @@ def run_scan(
                 run_prefixes.append(
                     scn_run_fs[-1].path(
                         [coo_names, [grid_val], constraint_dct]))
-                print('locs in run')
-                print([coo_names, [grid_val], constraint_dct])
-                print('run_prefixes')
-                print(run_prefixes)
             else:
                 scn_run_fs[-1].create([coo_names, [grid_val]])
                 run_prefixes.append(
@@ -602,11 +594,6 @@ def run_multiref_rscan(
         (coo, coo_grid1_vals) = item
         coo_names.append(coo)
         grid1_vals.append(coo_grid1_vals)
-
-    print('grid test')
-    print(dist_name)
-    print(grid1)
-    print(grid1_vals)
 
     npoint = 1
     for coo_grid1_vals in grid1_vals:
@@ -1097,18 +1084,14 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
               gradient=False, hessian=False):
     """ save the scans that have been run so far
     """
-    print(scn_run_fs[1].path([coo_names]))
-    print(scn_run_fs[1].exists([coo_names]))
     if not scn_run_fs[1].exists([coo_names]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
         for locs in scn_run_fs[-1].existing([coo_names]):
-            print('locs\n', locs)
             if not isinstance(locs[1][0], float):
                 continue
             run_path = scn_run_fs[-1].path(locs)
-            print('run_path\n', run_path)
             run_fs = autofile.fs.run(run_path)
             print("Reading from scan run at {}".format(run_path))
 
@@ -1185,7 +1168,6 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names,
     """ save the scans that have been run so far
     """
 
-    print(cscn_run_fs[1].path([coo_names]))
     exists1 = cscn_run_fs[1].exists([coo_names])
     if exists1:
         scn_locs1 = cscn_run_fs[2].existing([coo_names])
@@ -1278,16 +1260,6 @@ def infinite_separation_energy(
     sp_run_fs = autofile.fs.single_point(geo_run_path)
     sp_save_fs = autofile.fs.single_point(geo_save_path)
 
-    # get the multi reference ene for low spin state for the ref point on scan
-
-    # file system for low spin multireference calculation
-
-    multi_info[0] = 'molpro2015'
-    multi_info[1] = 'caspt2'
-    # ultimately the above should be properly passed
-    prog = multi_info[0]
-    method = multi_info[1]
-
     # get the multi reference energy for high spin state for ref point on scan
     hs_info = (ts_info[0], ts_info[1], high_mul)
     orb_restr = fsorb.orbital_restriction(hs_info, multi_info)
@@ -1303,16 +1275,17 @@ def infinite_separation_energy(
     hs_mr_save_path = hs_save_fs[-1].path(multi_lvl[1:4])
     run_mr_fs = autofile.fs.run(hs_mr_run_path)
 
-    mr_script_str, _, mr_kwargs, _ = runpar.run_qchem_par(prog, method)
+    mr_script_str, _, mr_kwargs, _ = runpar.run_qchem_par(
+        multi_info[0], multi_info[1])
 
     if num_act_elc is None and num_act_orb is None:
         num_act_elc = high_mul
         num_act_orb = num_act_elc
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
 
-    cas_opt, _ = ts.cas_options_2(
+    cas_opt = variational.wfn.cas_options(
         hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = ts.multiref_wavefunction_guess(
+    guess_str = variational.wfn.multiref_wavefunction_guess(
         high_mul, ref_zma, hs_info, multi_lvl, [cas_opt])
     guess_lines = guess_str.splitlines()
 

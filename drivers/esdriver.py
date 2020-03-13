@@ -34,12 +34,22 @@ def run(rxn_lst,
     freeze_all_tors = True
     ndim_tors = '1dhr'
     adiab_tors = True
-    rad_rad_ts = 'pst'
+    rad_rad_ts = 'vrctst'
     mc_nsamp = run_options_dct['mc_nsamp']
     kickoff = run_options_dct['kickoff']
     irc_idxs = [-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]
     run_irc = True
     run_irc_sp = True
+
+    print(rxn_lst)
+    model = rxn_lst[0]['model']
+    multi_opt_info = finf.get_thy_info(
+        model_dct[model]['es']['mr_scan'], thy_dct)
+    multi_sp_info = finf.get_thy_info(
+        model_dct[model]['es']['mr_sp'], thy_dct)
+    print(model_dct[model])
+    vrc_dct = model_dct[model]['vrctst']
+    sp_thy_info = finf.get_thy_info('lvl_wbs', thy_dct)
 
     # Do some extra work to prepare the info to pass to the drivers
     es_tsk_lst = loadrun.build_run_es_tsks_lst(
@@ -70,23 +80,21 @@ def run(rxn_lst,
 
                 # Find the transition state
                 if 'find_ts' in tsk:
-                    geo, _, _ = routines.es.find.find_ts(
+                    ts_found = routines.es.find.find_ts(
                         spc_dct, ts_dct[sadpt],
                         ts_dct[sadpt]['zma'],
-                        # spc_dct[spc]['original_zma'],
                         ini_thy_info, thy_info,
+                        multi_opt_info, multi_sp_info,
                         run_prefix, save_prefix,
-                        overwrite,
+                        overwrite, vrc_dct,
                         rad_rad_ts=rad_rad_ts)
 
                     # Add TS to species queue if TS is found
-                    if not isinstance(geo, str):
+                    if ts_found:
                         print('Success, transition state',
                               '{} added to species queue'.format(sadpt))
                         spc_queue.append((sadpt, ''))
                         spc_dct.update(ts_dct)
-
-                # Run conformer sampling, have to move stuff up I think
 
                 # Run the irc task
                 if run_irc:
@@ -96,8 +104,6 @@ def run(rxn_lst,
                         irc_idxs,
                         overwrite)
 
-                sp_thy_info = finf.get_thy_info('lvl_wbs', thy_dct)
-                # sp_thy_info = finf.get_thy_info('cc_lvl_d', thy_dct)
                 if run_irc_sp:
                     routines.es.variational.irc.irc_sp(
                         ts_dct[sadpt],

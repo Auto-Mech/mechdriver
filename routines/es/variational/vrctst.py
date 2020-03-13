@@ -18,40 +18,45 @@ from lib.filesystem import orb as fsorb
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM
 def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
                      high_mul, grid1, grid2, dist_name,
-                     multi_level, num_act_orb, num_act_elc,
-                     multi_info,
+                     multi_level, multi_info, multi_sp_info,
+                     ini_thy_info, thy_info,
                      thy_run_path, thy_save_path,
-                     opt_script_str, overwrite, update_guess,
-                     corr_pot=True, **opt_kwargs):
-    """ Set up and run VRC-TST calculations to get the flux file
+                     overwrite, update_guess,
+                     run_prefix, save_prefix,
+                     vrc_dct,
+                     corr_pot=True):
+    """ Set up n VRC-TST calculations to get the flux file
     """
 
     print('TS DCT')
     print(ts_dct.keys())
+    
+    # Set the active space
+    num_act_orb, num_act_elc = wfn.active_space(
+        ts_dct, spc_dct, ts_dct['high_mul'])
 
     # Input stuff
-    sp_thy_level = ['molpro2015', 'caspt2c', 'cc-pvdz', 'RR']
-    mep_distances = list(grid1)+list(grid2)
-    fortran_compiler = 'gfortran'
-    idx1, idx2 = automol.zmatrix.bond_idxs(ts_zma, dist_name)
-    bnd_frm_idxs = (idx1+1, idx2+1)
-    spc_name = 'mol'
-    memory = 4.0
-    basis = 'cc-pvdz'
-    method = '{rs2c, shift=0.25}'
-    inf_sep_ene = -100.0
-    r1dists_lr = [8., 6., 5., 4.5, 4.]
-    r1dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
-    r2dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
-    d1dists = [0.01, 0.5, 1.]
-    d2dists = [0.01, 0.5, 1.]
-    conditions = {}
-    nsamp_max = 2000
-    nsamp_min = 50
-    flux_err = 10
-    pes_size = 2
-    exe_path = '/blues/gpfs/home/sjklipp/bin/molpro'
-    base_name = 'mol'
+    # sp_thy_level = ['molpro2015', 'caspt2c', 'cc-pvdz', 'RR']
+    # fortran_compiler = 'gfortran'
+    bnd_frm_idxs = automol.zmatrix.bond_idxs(ts_zma, dist_name)
+    min_idx, max_idx = min(bnd_frm_idxs), max(bnd_frm_idxs)
+    bnd_frm_idxs = (bnd_frm_idxs[0]+1, bnd_frm_idxs[1]+1)
+    # spc_name = 'mol'
+    # memory = 4.0
+    # basis = 'cc-pvdz'
+    # method = '{rs2c, shift=0.25}'
+    # r1dists_lr = [8., 6., 5., 4.5, 4.]
+    # r1dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
+    # r2dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
+    # d1dists = [0.01, 0.5, 1.]
+    # d2dists = [0.01, 0.5, 1.]
+    # conditions = {}
+    # nsamp_max = 2000
+    # nsamp_min = 50
+    # flux_err = 10
+    # pes_size = 2
+    # exe_path = '/blues/gpfs/home/sjklipp/bin/molpro'
+    # base_name = 'mol'
 
     # Set the run directory
     ts_run_fs = autofile.fs.ts(thy_run_path)
@@ -72,20 +77,26 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
     os.makedirs(os.path.join(vrc_path, 'scratch'), exist_ok=True)
     print('Build Path for VaReCoF calculations')
     print(vrc_path)
-    
-    # Set info on the form indices
-    bnd_frm_idxs = automol.zmatrix.bond_idxs(ts_zma, dist_name)
-    min_idx, max_idx = min(bnd_frm_idxs), max(bnd_frm_idxs)
-    
+
     # Set the orb type
-    if sp_thy_level is not None:
-        orb_restr = fsorb.orbital_restriction(ts_info, sp_thy_level)
-        sp_level = sp_thy_level[0:3]
+    if multi_sp_info is not None:
+        orb_restr = fsorb.orbital_restriction(ts_info, multi_sp_info)
+        sp_level = multi_sp_info[0:3]
         sp_level.append(orb_restr)
-    
-    # Calculate the infinite separation energy
-    scan.infinite_separation_energy(
-        spc_1_info, spc_2_info, ts_info, high_mul, ref_zma, 
+
+    # Set up the spc infor for the reactants
+    rcts = ts_dct['reacs']
+    spc_1_info = [spc_dct[rcts[0]]['ich'],
+                  spc_dct[rcts[0]]['chg'],
+                  spc_dct[rcts[0]]['mul']]
+    spc_2_info = [spc_dct[rcts[1]]['ich'],
+                  spc_dct[rcts[1]]['chg'],
+                  spc_dct[rcts[1]]['mul']]
+
+    max_grid = max([max(grid1), max(grid2)])
+    locs = [[dist_name], [max_grid]]
+    inf_sep_ene = scan.infinite_separation_energy(
+        spc_1_info, spc_2_info, ts_info, high_mul, ts_zma,
         ini_thy_info, thy_info, multi_info,
         run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs,
         overwrite=False, num_act_elc=None, num_act_orb=None)
@@ -98,7 +109,7 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
 
         # Run the potentials
         run_potentials(
-            ts_zma, ts_dct,
+            ts_zma,
             ts_formula, ts_info, high_mul,
             multi_level,
             dist_name, grid1, grid2,
@@ -107,22 +118,26 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
             overwrite, update_guess,
             num_act_elc, num_act_orb,
             constraint_dct,
-            sp_thy_level=sp_thy_level)
+            sp_thy_level=sp_level)
+
+        # Combine and sort the grids for organization
+        full_grid = list(grid1) + list(grid2)
+        full_grid.sort()
 
         # Read the values for the correction potential from filesystem
         potentials, pot_labels = read_potentials(
-            ts_info, scn_save_fs, cscn_save_fs,
-            sp_thy_level, dist_name, grid1, grid2,
+            scn_save_fs, cscn_save_fs,
+            sp_level, dist_name, full_grid,
             constraint_dct)
 
         # Build correction potential .so file used by VaReCoF
         build_correction_potential(
-            mep_distances, potentials,
-            bnd_frm_idxs, fortran_compiler, vrc_path,
+            full_grid, potentials,
+            bnd_frm_idxs, vrc_dct['fortran_compiler'], vrc_path,
             dist_restrict_idxs=(),
             pot_labels=pot_labels,
-            pot_file_names=(),
-            spc_name=spc_name)
+            pot_file_names=[vrc_dct['spc_name']],
+            spc_name=vrc_dct['spc_name'])
 
     # Write the electronic structure template file
     tml_inp_str = write_molpro_template_str(
@@ -130,7 +145,15 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
         memory, basis, method, inf_sep_ene)
 
     # Write the remaining VaReCoF input file strings
-    input_strs = input_prep(ts_zma, ts_dct['rct_zmas'], dist_name, vrc_path)
+    input_strs = input_prep(
+        ts_zma, ts_dct['rct_zmas'], len(potentials),
+        min_idx, max_idx,
+        vrc_dct['r1dists_lr'], vrc_dct['r1dists_sr'], vrc_dct['r2dists_sr'],
+        vrc_dct['d1dists'], vrc_dct['d2dists'],
+        vrc_dct['conditions'],
+        vrc_dct['nsamp_max'], vrc_dct['nsamp_min'], 
+        vrc_dct['flux_err'], vrc_dct['pes_size'],
+        vrc_dct['base_name'], vrc_dct['exe_path'], vrc_path)
     [struct_inp_str, lr_divsur_inp_str, tst_inp_str,
      els_inp_str, mc_flux_inp_str, conv_inp_str] = input_strs
 
@@ -159,11 +182,27 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
     script.run_script(script.VARECOF, vrc_path)
 
     # Calculate the flux file from the output
+    print('Generating flux file with TS N(E) from VaReCoF output...')
     script.run_script(script.MCFLUX, vrc_path)
+
+    # Check for success of the VaReCoF run and flux file generation
+    mcflux_file = os.path.join(vrc_path, 'mc_flux.out')
+    if os.path.exists(mcflux_file):
+        with open(mcflux_file, 'r') as fluxfile:
+            flux_str = mcflux_file.read()
+        if flux_str != '':
+            ts_found = True
+
+    return ts_found
 
 
 # FUNCTIONS TO WRITE THE STRINGS FOR ALL OF THE VARECOF INPUT FILE
-def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
+def input_prep(ts_zma, rct_zmas, npot, min_idx, max_idx,
+               r1dists_lr, r1dists_sr, r2dists_sr,
+               d1dists, d2dists,
+               conditions,
+               nsamp_max, nsamp_min, flux_err, pes_size,
+               base_name, exe_path, vrc_path):
     """ prepare all the input files for a vrc-tst calculation
     """
 
@@ -225,7 +264,9 @@ def input_prep(ts_zma, rct_zmas, dist_name, vrc_path):
 
     # Write the potential energy surface input string
     els_inp_str = varecof_io.writer.input_file.elec_struct(
-        exe_path, base_name)
+        exe_path, vrc_path, base_name, npot,
+        dummy_name='dummy_corr_', lib_name='libcorrpot.so',
+        geom_ptt='GEOMETRY_HERE', ene_ptt='molpro_energy')
 
     # Write the mc_flux.inp input string
     mc_flux_inp_str = varecof_io.writer.input_file.mc_flux()
@@ -278,6 +319,9 @@ def build_correction_potential(mep_distances, potentials,
     """  use the MEP potentials to compile the correction potential .so file
     """
 
+    # Change the coordinates of the MEP distances
+    mep_distances = [dist * phycon.BOHR2ANG for dist in mep_distances]
+
     # Build string Fortan src file containing correction potentials
     species_corr_str = varecof_io.writer.corr_potentials.species(
         mep_distances,
@@ -311,7 +355,7 @@ def build_correction_potential(mep_distances, potentials,
     varecof_io.writer.corr_potentials.compile_corr_pot(vrc_path)
 
 
-def run_potentials(inf_sep_zma, ts_dct,
+def run_potentials(inf_sep_zma,
                    ts_formula, ts_info, high_mul,
                    multi_level,
                    dist_name, grid1, grid2,
@@ -433,12 +477,12 @@ def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
         # Set up the run filesys for the job
         sp_run_fs = autofile.fs.single_point(scn_run_path)
         sp_save_fs = autofile.fs.single_point(scn_save_path)
-        sp_run_fs[-1].create(sp_level[1:4])
-        sp_run_path = sp_run_fs[-1].path(sp_level[1:4])
+        sp_run_fs[-1].create(sp_thy_level[1:4])
+        sp_run_path = sp_run_fs[-1].path(sp_thy_level[1:4])
         run_fs = autofile.fs.run(sp_run_path)
 
         # Read the geometry from the save filesys
-        exists = sp_save_fs[-1].file.energy.exists(sp_level[1:4])
+        exists = sp_save_fs[-1].file.energy.exists(sp_thy_level[1:4])
         if not exists or overwrite:
             geo = scn_save_fs[-1].file.geometry.read(locs)
             rundriver.run_job(
@@ -447,7 +491,7 @@ def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
                 run_fs=run_fs,
                 geom=geo,
                 spc_info=ts_info,
-                thy_level=sp_level,
+                thy_level=sp_thy_level,
                 overwrite=overwrite,
                 **kwargs,
             )
@@ -464,10 +508,10 @@ def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
             ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
             print(" - Saving energy...")
-            sp_save_fs[-1].create(sp_level[1:4])
-            sp_save_fs[-1].file.input.write(inp_str, sp_level[1:4])
-            sp_save_fs[-1].file.info.write(inf_obj, sp_level[1:4])
-            sp_save_fs[-1].file.energy.write(ene, sp_level[1:4])
+            sp_save_fs[-1].create(sp_thy_level[1:4])
+            sp_save_fs[-1].file.input.write(inp_str, sp_thy_level[1:4])
+            sp_save_fs[-1].file.info.write(inf_obj, sp_thy_level[1:4])
+            sp_save_fs[-1].file.energy.write(ene, sp_thy_level[1:4])
 
 
 def set_alt_constraints(inf_sep_zma, rct_zmas):
@@ -509,8 +553,8 @@ def set_alt_constraints(inf_sep_zma, rct_zmas):
     return constraint_dct
 
 
-def read_potentials(ts_info, scn_save_fs, cscn_save_fs,
-                    sp_thy_level, dist_name, grid1, grid2,
+def read_potentials(scn_save_fs, cscn_save_fs,
+                    sp_thy_level, dist_name, full_grid,
                     constraint_dct):
     """ Read values form the filesystem to get the values to
         correct ht MEP
@@ -520,7 +564,7 @@ def read_potentials(ts_info, scn_save_fs, cscn_save_fs,
     smp_pot = []
     const_pot = []
     sp_pot = []
-    for grid_val in list(grid1)+list(grid2):
+    for grid_val in full_grid:
 
         # Set the locs for the full scan and constrained scan
         locs = [[dist_name], [grid_val]]
@@ -540,10 +584,10 @@ def read_potentials(ts_info, scn_save_fs, cscn_save_fs,
         if sp_thy_level is not None:
             scn_save_path = scn_save_fs[-1].path(locs)
             sp_save_fs = autofile.fs.single_point(scn_save_path)
-            sp_save_fs[-1].create(sp_level[1:4])
-            if sp_save_fs[-1].file.energy.read(sp_level[1:4]):
+            sp_save_fs[-1].create(sp_thy_level[1:4])
+            if sp_save_fs[-1].file.energy.read(sp_thy_level[1:4]):
                 sp_pot.append(
-                    sp_save_fs[-1].file.energy.read(sp_level[1:4]))
+                    sp_save_fs[-1].file.energy.read(sp_thy_level[1:4]))
 
     # Calculate each of the correction potentials
     relax_corr_pot = []

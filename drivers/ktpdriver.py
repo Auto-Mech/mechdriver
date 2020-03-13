@@ -25,16 +25,16 @@ def run(pes_formula,
     # Pull stuff from dcts for now
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
+    err_thresh = 15.
+    fit_method = 'arrhenius'
+    troe_param_fit_lst = ['ts1', 'ts2', 'ts3', 'alpha']
 
     # Build the MESS label idx dictionary for the PES
     idx_dct = messrates.make_pes_idx_dct(rxn_lst, spc_dct)
-    print('idx dct test')
-    for key, val in idx_dct.items():
-        print(key, val)
-    
+
     # Set path where MESS files will be written and read
     mess_path = raterunner.get_mess_path(run_prefix, pes_formula)
-    
+
     # Try and read the MESS file from the filesystem first
     mess_inp_str, dat_str_lst = raterunner.read_mess_file(mess_path)
     if mess_inp_str:
@@ -67,7 +67,6 @@ def run(pes_formula,
             spc_dct, rxn_lst, temps, pressures, **etrans)
 
         # Write the MESS strings for all the PES channels
-        # idx_dct = {}
         well_str, bim_str, ts_str, dat_lst = messrates.write_channel_mess_strs(
             spc_dct, rxn_lst, pes_formula,
             multi_info, pst_params,
@@ -97,4 +96,5 @@ def run(pes_formula,
     if run_fits:
         fit_rates(spc_dct, pes_formula, idx_dct,
                   model_dct, thy_dct, ene_coeff,
-                  mess_path, assess_pdep)
+                  mess_path, assess_pdep, err_thresh,
+                  fit_method, troe_param_fit_lst)

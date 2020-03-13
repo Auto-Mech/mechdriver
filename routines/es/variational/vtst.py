@@ -7,16 +7,21 @@ from routines.es import scan
 
 def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
                   high_mul, grid1, grid2, dist_name,
-                  multi_level, num_act_orb, num_act_elc,
+                  multi_level,
                   multi_info, ini_thy_info, thy_info,
                   run_prefix, save_prefix, scn_run_fs, scn_save_fs,
-                  opt_script_str, overwrite, update_guess, **opt_kwargs):
+                  overwrite, update_guess, **opt_kwargs):
     """ Run the scan for VTST calculations
     """
+    # Set the active space
+    num_act_orb, num_act_elc = variational.wfn.active_space(
+        ts_dct, spc_dct, ts_dct['high_mul'])
+    
+    # Set the gradients and Hessians
     gradient = False
     hessian = True
 
-    moldr.scan.run_multiref_rscan(
+    scan.run_multiref_rscan(
         formula=ts_formula,
         high_mul=high_mul,
         zma=ts_zma,
@@ -27,7 +32,6 @@ def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
         grid2=grid2,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
-        script_str=opt_script_str,
         overwrite=overwrite,
         update_guess=update_guess,
         gradient=gradient,
@@ -37,7 +41,7 @@ def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
         **opt_kwargs
     )
 
-    moldr.scan.save_scan(
+    scan.save_scan(
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
         coo_names=[dist_name],
@@ -58,9 +62,10 @@ def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
                   spc_dct[rcts[1]]['chg'],
                   spc_dct[rcts[1]]['mul']]
 
-    inf_sep_ene = moldr.scan.infinite_separation_energy(
-        spc_1_info, spc_2_info, ts_info, high_mul, ts_zma, ini_thy_info, thy_info,
-        multi_info, run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs,
+    inf_sep_ene = scan.infinite_separation_energy(
+        spc_1_info, spc_2_info, ts_info, high_mul, ts_zma,
+        ini_thy_info, thy_info, multi_info,
+        run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs,
         num_act_elc=num_act_elc,
         num_act_orb=num_act_orb)
 

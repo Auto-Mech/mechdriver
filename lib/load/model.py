@@ -49,7 +49,7 @@ def build_model_keyword_dct(model_str):
     es_dct = ptt.build_keyword_dct(es_str)
     etransfer_dct = ptt.build_keyword_dct(etrans_str)
     options_dct = ptt.build_keyword_dct(options_str)
-    # vrctst_dct = ptt.build_keyword_dct(vrctst_str)
+    vrctst_dct = ptt.build_keyword_dct(vrctst_str)
     # assert check_model_dct(keyword_dct)
 
     # Combine dcts into single model dct
@@ -58,6 +58,7 @@ def build_model_keyword_dct(model_str):
     model_dct['es'] = es_dct
     model_dct['etransfer'] = etransfer_dct
     model_dct['options'] = options_dct
+    model_dct['vrctst'] = vrctst_dct
 
     return model_dct
 
