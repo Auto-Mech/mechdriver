@@ -84,7 +84,7 @@ def parse_idx_inp(idx_str):
     idx_str = idx_str.strip()
     if idx_str.isdigit():
         idxs = [int(idx_str)]
-        #idxs = [int(idx_str), int(idx_str)]
+        # idxs = [int(idx_str), int(idx_str)]
     if '-' in idx_str:
         [idx_begin, idx_end] = idx_str.split('-')
         idxs = list(range(int(idx_begin), int(idx_end)+1))
@@ -116,6 +116,19 @@ def build_keyword_lst(section_str):
         if tmp != '':
             keyword_lst.append(tmp)
     return keyword_lst
+
+
+def build_vals_lst(section_str):
+    """ build lst
+    """
+    val_lst = []
+    for line in section_str.splitlines():
+        # Put a cleaner somehwere to get rid of blank lines
+        tmp = line.strip()
+        if tmp != '':
+            val_lst.extend(tmp.split(','))
+
+    return val_lst
 
 
 # Helper functions

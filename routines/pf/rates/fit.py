@@ -54,8 +54,6 @@ def fit_rates(spc_dct, pes_formula_str, idx_dct,
                         bimol=numpy.isclose(a_conv_factor, 6.0221e23))
 
                     # Get the desired fits in the form of CHEMKIN strs
-                    fit_method = 'arrhenius'
-                    troe_param_fit_lst = ['ts1', 'ts2', 'ts3', 'alpha']
                     if fit_method == 'arrhenius':
                         chemkin_str += perform_arrhenius_fits(
                            ktp_dct, reaction, mess_path,
@@ -254,7 +252,11 @@ def perform_troe_fits(ktp_dct, reaction, mess_path,
     fit_temp_dct = {}
 
     # Calculate the fitting parameters from the filtered T,k lists
-    inv_ktp_dct = ratefit.calc.util.flip_ktp_dct(ktp_dct)
+    new_dct = {}
+    for key, val in ktp_dct.items():
+        if key != 'high':
+            new_dct[key] = val
+    inv_ktp_dct = ratefit.fit.flip_ktp_dct(new_dct)
     fit_params = ratefit.fit.troe.std_form(
         inv_ktp_dct, troe_param_fit_lst, mess_path,
         highp_a=8.1e-11, highp_n=-0.01, highp_ea=1000.0,

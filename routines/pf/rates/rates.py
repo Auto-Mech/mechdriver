@@ -44,7 +44,6 @@ def rate_headers(spc_dct, rxn_lst,
 
 
 def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
-                            multi_info, pst_params,
                             save_prefix, idx_dct,
                             model_dct, thy_dct):
     """ Write all the MESS input file strings for the reaction channels
@@ -89,8 +88,7 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
         mess_strs = make_channel_pfs(
             tsname, rxn, species, spc_dct, idx_dct, mess_strs,
             first_ground_ene, channel_enes,
-            model_dct, thy_dct, multi_info, save_prefix,
-            pst_params=pst_params)
+            model_dct, thy_dct, save_prefix) 
     well_str, bim_str, ts_str = mess_strs
     ts_str += '\nEnd\n'
 
@@ -180,8 +178,7 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs,
 def make_channel_pfs(
         tsname, rxn, species_data, spc_dct, idx_dct, strs,
         first_ground_ene, channel_enes,
-        model_dct, thy_dct, multi_info, save_prefix,
-        pst_params=(1.0, 6)):
+        model_dct, thy_dct, save_prefix):
     """ make the partition function strings for each of the channels
     includes strings for each of the unimolecular wells, bimolecular fragments,
     and transition states connecting them.
@@ -200,6 +197,8 @@ def make_channel_pfs(
     ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
     ts_barrierless = model_dct[chn_model]['pf']['ts_barrierless']
     tunnel_model = model_dct[chn_model]['pf']['tunnel']
+    multi_info = []
+    pst_params = [1.0, 6]
 
     # Unpack the energy dictionary and put energies in kcal
     first_ground_ene *= phycon.EH2KCAL
@@ -249,8 +248,7 @@ def make_channel_pfs(
         print('No imaginary freq for ts: {}'.format(tsname))
 
     # Set up for fake wells from reacs -> reac well and prod well -> prods
-    if False:
-    # if need_fake_wells(spc_dct[tsname]['class']):
+    if need_fake_wells(spc_dct[tsname]['class']):
         # MESS string for the fake reactant side well
         spc_dct_i = spc_dct[rxn['reacs'][0]]
         spc_dct_j = spc_dct[rxn['reacs'][1]]
@@ -429,8 +427,7 @@ def make_channel_idx_dct(tsname, rxn, spc_dct):
     # Determine idxs for any fake wells if they are needed
     fake_wellr_label = ''
     fake_wellp_label = ''
-    if False:
-    # if need_fake_wells(spc_dct[tsname]['class']):
+    if need_fake_wells(spc_dct[tsname]['class']):
         well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
         well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
         if well_dct_key1 not in idx_dct:

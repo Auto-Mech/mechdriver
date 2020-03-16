@@ -26,8 +26,13 @@ def run(pes_formula,
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
     err_thresh = 15.
-    fit_method = 'arrhenius'
+    fit_method = 'troe'
     troe_param_fit_lst = ['ts1', 'ts2', 'ts3', 'alpha']
+    ene_coeff = [1.0]
+    assess_pdep = [0.3, 3.0, 500., 1000.0]
+
+
+
 
     # Build the MESS label idx dictionary for the PES
     idx_dct = messrates.make_pes_idx_dct(rxn_lst, spc_dct)
@@ -50,8 +55,6 @@ def run(pes_formula,
         temps = model_dct[test_model]['options']['temps']
         pressures = model_dct[test_model]['options']['pressures']
         etrans = model_dct[test_model]['etransfer']
-        pst_params = model_dct[test_model]['options']['pst_params']
-        multi_info = model_dct[test_model]['options']['multi_info']
         assess_pdep = model_dct[test_model]['options']['assess_pdep']
         ene_coeff = model_dct[test_model]['options']['ene_coeff']
 
@@ -60,6 +63,7 @@ def run(pes_formula,
             if 'ts_' in spc:
                 spc_dct[spc]['irc_idxs'] = [
                     -4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]
+                spc_dct[spc]['pst_params'] = [1.0, 6]
 
         print('Starting mess file preparation.')
         # Write the strings for the MESS input file
@@ -69,7 +73,6 @@ def run(pes_formula,
         # Write the MESS strings for all the PES channels
         well_str, bim_str, ts_str, dat_lst = messrates.write_channel_mess_strs(
             spc_dct, rxn_lst, pes_formula,
-            multi_info, pst_params,
             save_prefix, idx_dct,
             model_dct, thy_dct)
 

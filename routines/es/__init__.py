@@ -132,13 +132,13 @@ def run_tau_samp(filesys, params, opt_kwargs):
 
 def geometry_generation(tsk, spc_name, spc, mc_nsamp,
                         ini_thy_level, thy_level, ini_filesys, filesys,
-                        overwrite, saddle=False, kickoff=(0.1, False),
-                        tors_model=('1dhr', False, False)):
+                        saddle=False, es_options=None):
     """ run an electronic structure task
     for generating a list of conformer or tau sampling geometries
     """
     # Separate the kickoff keyword for now
-    [kickoff_size, kickoff_backward] = kickoff
+    [kickoff_size, kickoff_backward] = spc['kickoff']
+    overwrite = True if 'overwrite' in es_options else False
 
     spc_info = finf.get_spc_info(spc)
 
@@ -172,6 +172,10 @@ def geometry_generation(tsk, spc_name, spc, mc_nsamp,
                 params['two_stage'] = True
                 params['rxn_class'] = spc['class']
         elif tsk in ['hr_scan']:
+            ndims = 'mdhr' if 'mdhr' in es_options else '1dhr'
+            frz_tors = True if 'frz_tors' in es_options else False
+            adiab_tors = False
+            tors_model=(ndims, frz_tors, adiab_tors)
             params['tors_model'] = tors_model
             if 'hind_def' in spc:
                 params['run_tors_names'] = spc['hind_def']

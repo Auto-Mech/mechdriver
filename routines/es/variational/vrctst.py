@@ -192,6 +192,15 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
             flux_str = mcflux_file.read()
         if flux_str != '':
             ts_found = True
+            
+            # Set the run directory
+            ts_save_fs = autofile.fs.ts(thy_save_path)
+            ts_save_fs[0].create()
+            ts_save_path = ts_save_fs[0].path()
+
+            # Write the VRC-Flux and info files 
+            ts_save_fs[0].file.vrc_flux.write(flux_str)
+            ts_save_fs[0].file.vrc_flux_info.write(flux_str)
 
     return ts_found
 

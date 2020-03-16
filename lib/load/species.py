@@ -1,4 +1,4 @@
-""" read species
+""" read spcies
 """
 
 import os
@@ -115,19 +115,30 @@ def read_spc_amech(job_path):
     """ Read an amech style input file for the species
     """
 
+    # Read the AMech species string
     spc_amech_str = ptt.read_inp_str(job_path, DAT_INP)
 
+    # Build the keyword dcts
+    glob_spc_dct = {}
     spc_dct = {}
     if spc_amech_str:
+        # Read each of the species sections and build the dcts
         spc_sections = apf.all_captures(
             ptt.end_section_wname2('spc'), spc_amech_str)
         if spc_sections:
+            # Get the global species section
             for section in spc_sections:
-                name = section[0]
-                keyword_dct = ptt.build_keyword_dct(section[1])
-                spc_dct[name] = keyword_dct
+                if section[0] == 'global':
+                    # Build the global species section
+                    keyword_dct = ptt.build_keyword_dct(section[1])
+                    glob_spc_dct = keyword_dct
+                else:
+                    # Build each species dct to overwrite global dct
+                    name = section[0]
+                    keyword_dct = ptt.build_keyword_dct(section[1])
+                    spc_dct[name] = keyword_dct
 
-    return spc_dct
+    return glob_spc_dct, spc_dct
 
 
 def modify_spc_dct(job_path, spc_dct):
@@ -135,7 +146,7 @@ def modify_spc_dct(job_path, spc_dct):
     """
 
     # Read in other dcts
-    amech_dct = read_spc_amech(job_path)
+    glob_dct, amech_dct = read_spc_amech(job_path)
     geom_dct = geometry_dictionary(job_path)
 
     mod_spc_dct = {}
@@ -149,7 +160,20 @@ def modify_spc_dct(job_path, spc_dct):
         mod_spc_dct[spc]['mul'] = mul
         mod_spc_dct[spc]['chg'] = chg
 
-        # Add the parameters from amech file
+        # Add the parameters from the global species specific dct
+        if glob_dct:
+            if 'hind_inc' in glob_dct:
+                mod_spc_dct['hind_inc'] = glob_dct['hind_inc']
+            if 'hind_def' in glob_dct:
+                mod_spc_dct['hind_def'] = glob_dct['hind_def']
+            if 'elec_levs' in glob_dct:
+                mod_spc_dct['elec_levs'] = glob_dct['elec_levs']
+            if 'sym' in glob_dct:
+                mod_spc_dct['sym'] = glob_dct['sym']
+            if 'mc_nsamp' in glob_dct:
+                mod_spc_dct['mc_nsamp'] = glob_dct['mc_nsamp']
+
+        # Add/Reset the parameters from the species specific dct
         if spc in amech_dct:
             if 'hind_inc' in amech_dct[spc]:
                 mod_spc_dct[spc]['hind_inc'] = amech_dct[spc]['hind_inc']

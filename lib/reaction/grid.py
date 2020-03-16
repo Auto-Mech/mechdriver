@@ -166,14 +166,17 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
     interval = 0.3*phycon.ANG2BOHR
     # get rmax from ts_zma
     rmax = automol.zmatrix.values(ts_zma)[dist_name]
-    rmin1 = 2.*phycon.ANG2BOHR
+    rmin1 = 2.0*phycon.ANG2BOHR
     rmin2 = 1.3*phycon.ANG2BOHR
     if ts_bnd_len in bnd.LEN_DCT:
         bnd_len = bnd.LEN_DCT[ts_bnd_len]
         rmin2 = bnd_len + 0.05 * phycon.ANG2BOHR
     if rmax > rmin1:
         npoints = (rmax-rmin1)/interval
-        grid1 = numpy.linspace(rmax, rmin1, npoints)
+        if npoints < 1:
+            grid1 = []
+        else:
+            grid1 = numpy.linspace(rmax, rmin1, npoints)
     else:
         grid1 = []
     grid2 = numpy.linspace(rmin1, rmin2, 18)
