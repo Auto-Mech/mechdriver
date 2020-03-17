@@ -118,27 +118,38 @@ def set_spc_fs(spc_dct, spc, run_prefix, save_prefix):
     return info, run_fs, save_fs, run_path, save_path
 
 
-def get_spc_fs(prefix, spc_info):
+def spc_fs_from_root(root_prefix, spc_info):
     """ Create species filesystem object and path
     """
-    spc_fs = autofile.fs.species(prefix)
+    spc_fs = autofile.fs.species(root_prefix)
     spc_fs[-1].create(spc_info)
     spc_path = spc_run_fs[-1].path(spc_info)
 
     return spc_fs, spc_path
 
 
-def get_thy_fs(prefix, spc_info, thy_info):
+def rxn_fs_from_root(root_prefix, rxn_info):
+    """ get filesystems for a reaction
+        rxn_info = [rxn_ichs, rxn_chgs, rxn_muls, rxn_mul]
+    """
+    rxn_fs = autofile.fs.reaction(root_prefix)
+    rxn_fs[-1].create(rxn_info)
+    rxn_path = rxn_run_fs[-1].path(rxn_info)
+
+    return rxn_fs, rxn_path
+
+
+def thy_fs_from_root(root_prefix, spc_info, thy_info):
     """ create theory run path
     """
+    # Build the species filesystem
+    _, spc_path = spc_fs_from_root(root_prefix, spc_info)
+    
     # Set the thy level needed for the filesys
     orb_restr = fsorb.orbital_restriction(
         spc_info, thy_info)
     thy_lvl = thy_info[0:3]
     thy_lvl.append(orb_restr)
-
-    # Build the species filesystem
-    _, spc_path = get_spc_run_path(prefix, spc_info)
 
     # Build the theory filesystem
     thy_fs = autofile.fs.theory(spc_path)
@@ -148,34 +159,194 @@ def get_thy_fs(prefix, spc_info, thy_info):
     return thy_fs, thy_path
 
 
-def get_cnf_fs(thy_prefix, spc_info, thy_info):
+def thy_fs_from_spc(spc_prefix, thy_info):
     """ create theory run path
     """
-    cnf_fs = autofile.fs.conformer(thy_run_path)
-    return cnf_fs
+    # Set the thy level needed for the filesys
+    orb_restr = fsorb.orbital_restriction(
+        spc_info, thy_info)
+    thy_lvl = thy_info[0:3]
+    thy_lvl.append(orb_restr)
+
+    # Build the theory filesystem
+    thy_fs = autofile.fs.theory(spc_prefix)
+    thy_fs[-1].create(thy_lvl)
+    thy_path = thy_run_fs[-1].path(thy_lvl)
+
+    return thy_fs, thy_path
 
 
-def get_min_cnf_fs(thy_prefix, spc_info, thy_info):
+def cnf_fs_from_root(root_prefix, spc_info, thy_info, cnf='min'):
     """ create theory run path
     """
-    cnf_fs = autofile.fs.conformer(thy_run_path)
-    min_cnf_locs = fsmin.min_energy_conformer_locators(
-        cnf_save_fs)
-    if min_cnf_locs:
-        min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
-    return cnf_fs
+    assert cnf in ('min', 'all')
+
+    # Build the theory filesystem
+    _, thy_path = thy_fs_from_root(root_prefix, spc_info, thy_info)
+
+    # Conformer filesys using theory
+    cnf_fs = autofile.fs.conformer(thy_path)
+    
+    # Set the locs and the path
+    if cnf == 'min':
+        cnf_locs = fsmin.min_energy_conformer_locators(cnf_fs)
+    elif cnf == 'all':
+        cnf_locs = thy_fs.leaf.existing()
+    cnf_paths = []
+    if cnf_locs:
+        for locs in cnf_locs:
+            cnf_paths.append(cnf_run_fs[-1].path(cnf_locs))
+
+    return cnf_fs, cnf_locs
 
 
-def get_scn_fs(thy_prefix, spc_info, thy_info):
+def cnf_fs_from_thy(thy_prefix, spc_info, thy_info):
     """ create theory run path
     """
-    cnf_fs = autofile.fs.conformer(thy_run_path)
-    min_cnf_locs = fsmin.min_energy_conformer_locators(
-        cnf_save_fs)
-    if min_cnf_locs:
-        scn_run_fs = autofile.fs.conformer(min_cnf_run_path)
-        min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
-    return cnf_fs
+
+    # Conformer filesys using theory
+    cnf_fs = autofile.fs.conformer(thy_prefix)
+
+    # Set the locs and the path
+    if cnf == 'min':
+        cnf_locs = fsmin.min_energy_conformer_locators(cnf_fs)
+    elif cnf == 'all':
+        cnf_locs = thy_fs.leaf.existing()
+    cnf_paths = []
+    if cnf_locs:
+        for locs in cnf_locs:
+            cnf_paths.append(cnf_fs[-1].path(cnf_locs))
+
+    return cnf_fs, cnf_locs, cnf_paths
+
+
+def tau_fs_from_root(root_prefix, spc_info, thy_info, tau='all'):
+    """ create theory run path
+    """
+    assert tau in ('all')
+
+    # Build the theory filesystem
+    _, thy_path = thy_fs_from_root(root_prefix, spc_info, thy_info)
+
+    # Conformer filesys
+    tau_fs = autofile.fs.tau(thy_path)
+    
+    # Set the locs and the path
+    if tau == 'all':
+        tau_locs = thy_fs.leaf.existing()
+    tau_paths = []
+    if tau_locs:
+        for locs in tau_locs:
+            tau_paths.append(tau_fs[-1].path(tau_locs))
+
+    return tau_fs, tau_locs
+
+
+def tau_fs_from_thy(thy_prefix, tau='all'):
+    """ create theory run path
+    """
+    assert tau in ('all')
+
+    # Conformer filesys
+    tau_fs = autofile.fs.tau(thy_prefix)
+    
+    # Set the locs and the path
+    if tau == 'all':
+        tau_locs = thy_fs.leaf.existing()
+    tau_paths = []
+    if tau_locs:
+        for locs in tau_locs:
+            tau_paths.append(tau_fs[-1].path(tau_locs))
+
+    return tau_fs, tau_locs
+
+
+def scn_fs_from_root(root_prefix, spc_info, thy_info, cnf='min'):
+    """ create theory run path
+    """
+
+    # Build the conformer filesystem
+    _, _, cnf_paths = cnf_fs_from_root(root_prefix, spc_info, thy_info, cnf=cnf)
+    
+    # Set scan filesys
+    scn_fs = autofile.fs.scan(cnf_paths[0])
+    scn_locs = scn_fs[-1].existing([coo_names]):
+
+    return scn_fs, scn_locs
+
+
+def scn_fs_from_cnf(cnf_prefix, spc_info, thy_info, cnf='min'):
+    """ create theory run path
+    """
+
+    # Set scan filesys
+    scn_fs = autofile.fs.scan(cnf_prefix)
+    scn_locs = scn_fs[-1].existing([coo_names]):
+
+    return scn_fs, scn_locs
+
+
+def cscn_fs_from_root(root_prefix, spc_info, thy_info, cnf='min'):
+    """ create theory run path
+    """
+
+    # Build the conformer filesystem
+    _, _, cnf_paths = cnf_fs_from_root(root_prefix, spc_info, thy_info, cnf=cnf)
+    
+    # Set scan filesys
+    cscn_fs = autofile.fs.cscan(cnf_paths[0])
+    cscn_locs = cscn_fs[-1].existing([coo_names]):
+
+    return cscn_fs, cscn_locs
+
+
+def cscn_fs_from_cnf(cnf_prefix):
+    """ create theory run path
+    """
+
+    # Set scan filesys
+    cscn_fs = autofile.fs.cscan(cnf_prefix)
+    cscn_locs, cscn_paths = [], []
+    if cscn_run_fs[1].exists([coo_names]):
+        scn_locs1 = cscn_run_fs[2].existing([coo_names])
+        for locs1 in scn_locs1:
+            if cscn_run_fs[2].exists(locs1):
+                scn_locs2 = cscn_run_fs[3].existing(locs1)
+                for locs2 in scn_locs2:
+                    cscn_path = cscn_run_fs[-1].path(locs2)
+
+    return cscn_fs, cscn_locs
+
+
+def cscn_fs_from_ts(ts_prefix):
+    """ create theory run path
+    """
+    return cscn_fs, cscn_locs
+
+
+def ts_fs_from_root(root_prefix, spc_info, thy_info):
+    """ Create species filesystem object and path
+    """
+    # Build the theory filesystem
+    _, thy_path = thy_fs_from_root(root_prefix, spc_info, thy_info)
+    
+    ts_fs = autofile.fs.ts(thy_path)
+    ts_fs[0].create()
+    ts_path = thy_fs[0].path()
+
+    return ts_fs, ts_path
+
+
+def ts_fs_from_thy(thy_prefix, spc_info, thy_info):
+    """ Create species filesystem object and path
+    """
+    
+    ts_fs = autofile.fs.ts(thy_prefix)
+    ts_fs[0].create()
+    ts_path = thy_fs[0].path()
+
+    return ts_fs, ts_path
+
 
 
 def get_ts_fs(rxn_run_path, rxn_save_path, ref_level):

@@ -27,8 +27,6 @@ def run(rxn_lst,
     # Pull stuff from dcts for now
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
-    irc_idxs = [-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]
-    vrc_dct = {}
 
     print('rxn_lst')
     print(rxn_lst)
@@ -37,23 +35,20 @@ def run(rxn_lst,
     es_tsk_lst = loadrun.build_run_es_tsks_lst(
         es_tsk_str, spc_model_dct, thy_dct)
 
-    # Species queue
-    spc_queue = loadmech.build_spc_queue(rxn_lst)
-
     # Loop over Tasks
     for tsk_lst in es_tsk_lst:
 
         # Unpack the options
         [obj, tsk, es_run_key, es_ini_key, es_options] = tsk_lst
 
-        print('es_ini_key')
-        print(es_ini_key)
-        # Task and theory information
+        # Set Task and theory information
         ini_thy_info = finf.get_es_info(es_ini_key, thy_dct)
         thy_info = finf.get_es_info(es_run_key, thy_dct)
 
-        # Handle tasks that are related to the transition states or wells
-        if 'ts' in obj or 'vdw' in obj:
+        # Build the queue of species based on the requested obj
+        if obj == 'spc':
+            spc_queue = loadmech.build_spc_queue(rxn_lst)
+        elif obj == 'ts':
             # Get info for the transition states
             ts_dct = loadspc.build_sadpt_dct(
                 rxn_lst, spc_model_dct, thy_dct, es_tsk_str,
@@ -65,98 +60,23 @@ def run(rxn_lst,
                     print('skipping reaction because type =',
                           ts_dct[sadpt]['class'])
                     continue
+             # Add TS to species queue if TS is found
+             ts_found = False
+             if ts_found:
+                 print('Success, transition state',
+                       '{} added to species queue'.format(sadpt))
+                 spc_queue.append((sadpt, ''))
+                 spc_dct.update(ts_dct)
+        elif obj == 'vdw':
+            spc_queue = []
 
-                # Add a generic TS searcher here before going into tasks
-                # Find the transition state
-                if 'find' in tsk:
-                    ts_found = routines.es.find.find_ts(
-                        spc_dct, ts_dct[sadpt],
-                        ts_dct[sadpt]['zma'],
-                        ini_thy_info, thy_info,
-                        multi_opt_info, multi_sp_info,
-                        run_prefix, save_prefix,
-                        overwrite, vrc_dct,
-                        rad_rad_ts=rad_rad_ts,
-                        es_options=es_options)
-
-                    # Add TS to species queue if TS is found
-                    if ts_found:
-                        print('Success, transition state',
-                              '{} added to species queue'.format(sadpt))
-                        spc_queue.append((sadpt, ''))
-                        spc_dct.update(ts_dct)
-
-                # Run the irc stuff here for now
-                if 'irc_scan' in tsk:
-                    routines.es.variational.irc.irc_opt(
-                        ts_dct[sadpt],
-                        thy_info,
-                        irc_idxs,
-                        es_options=es_options)
-
-                if 'irc_energy' in tsk:
-                    routines.es.variational.irc.irc_sp(
-                        ts_dct[sadpt],
-                        thy_info,
-                        sp_thy_info,
-                        irc_idxs,
-                        es_options=es_options)
-
-                # Handle taks with a vdW well
-                if 'vdw' in tsk:
-                    pass
-                    # vdws = routines.es.wells.find_vdw(
-                    #     spc, spc_dct, thy_info, ini_thy_info,
-                    #     vdw_params,
-                    #     thy_dct[es_run_key]['mc_nsamp'], run_prefix,
-                    #     save_prefix, 0.1, False,
-                    #     overwrite)
-                    # spc_queue.extend(vdws)
-            continue
-
-        # Loop over all species
+        # Loop over all requested species and run the task
         for spc in spc_queue:
-
             spc_name, _ = spc
-
-            # Build the input and main run filesystem objects
-            filesys, thy_level = fpath.set_fs(
-                spc_dct, spc_name, thy_info,
-                run_prefix, save_prefix,
-                setfs_chk=True, ini_fs=False)
-            ini_filesys, ini_thy_level = fpath.set_fs(
-                spc_dct, spc_name, ini_thy_info,
-                run_prefix, save_prefix,
-                setfs_chk=bool(ini_thy_info[0] != 'input_geom'),
-                ini_fs=True)
-
-            # Run tasks
-            saddle = bool('ts_' in spc_name)
-            vdw = bool('vdw' in spc_name)
-            avail = True
-            if any(string in tsk for string in ('samp', 'scan', 'init', 'conf')):
-                if not vdw:
-                    routines.es.geometry_generation(
-                        tsk, spc_name, spc_dct[spc_name],
-                        ini_thy_level, thy_level, ini_filesys, filesys,
-                        saddle=saddle, es_options=es_options)
-                else:
-                    routines.es.wells.fake_geo_gen(tsk, thy_level, filesys)
-            else:
-                if 'conf' in tsk and not saddle:
-                    ini_cnf_save_fs = ini_filesys[3]
-                    avail = fcheck.check_save(ini_cnf_save_fs, tsk, 'conf')
-                    selection = 'min'
-                elif 'tau' in tsk and not saddle:
-                    ini_tau_save_fs = ini_filesys[5]
-                    avail = fcheck.check_save(ini_tau_save_fs, tsk, 'tau')
-                    selection = 'all'
-                elif 'scan' in tsk and not saddle:
-                    ini_scn_save_fs = ini_filesys[7]
-                    avail = fcheck.check_save(ini_scn_save_fs, tsk, 'scan')
-                    selection = 'all'
-                if avail:
-                    routines.es.geometry_analysis(
-                        tsk, spc_name, thy_level, ini_filesys,
-                        spc_dct[spc_name], selection,
-                        saddle=saddle, es_options=es_options)
+            routines.es.run_routine(
+                tsk,
+                spc_name,
+                spc_dct[spc_name],
+                ini_thy_level,
+                thy_level,
+                es_options=es_options)

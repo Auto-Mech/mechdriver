@@ -60,89 +60,47 @@ ES_TSKS = {
 }
 
 
-def run_ene(params, kwargs):
-    """ energy for geometry in fiven fs directory
-    """
-    print('running task {}'.format('energy'))
-    sp.run_energy(**params, **kwargs)
-
-
-def run_grad(params, kwargs):
-    """ gradient for geometry in given fs directory
-    """
-    print('running task {}'.format('gradient'))
-    sp.run_gradient(**params, **kwargs)
-
-
-def run_hess(params, kwargs):
-    """ hessian for geometry in given fs directory
-    """
-    print('running task {}'.format('hessian'))
-    sp.run_hessian(**params, **kwargs)
-
-
-def run_conf_samp(filesys, params, opt_kwargs):
-    """ generate a set of conformer geometries and energies via
-    random sampling over torsional coordinates following by optimization
-    """
-    if params['nsamp_par'][0]:
-        print('running task {} with abcd of {}'.format(
-            'conformer sampling', ' '.join(
-                [str(x) for x in params['nsamp_par'][1:]])))
-    else:
-        print('running task {} for {:g} points'.format(
-            'conformer sampling', params['nsamp_par'][5]))
-    params['thy_save_fs'] = filesys[3]
-    params['cnf_run_fs'] = filesys[4]
-    params['cnf_save_fs'] = filesys[5]
-    conformer.conformer_sampling(**params, **opt_kwargs)
-
-
-def run_hr_scan(filesys, params, opt_kwargs):
-    """ run a scan over the specified torsional coordinates
-    """
-    print('running task {}'.format('hr'))
-    params['cnf_run_fs'] = filesys[4]
-    params['cnf_save_fs'] = filesys[5]
-    scan.hindered_rotor_scans(**params, **opt_kwargs)
-
-
-def run_vpt2(params, opt_kwargs):
-    """ run a scan over the specified torsional coordinates
-    """
-    print('running task {}'.format('vpt2'))
-    sp.run_vpt2(**params, **opt_kwargs)
-
-
-def run_tau_samp(filesys, params, opt_kwargs):
-    """ energies, gradients, and hessians,
-    for set of arbitrarily sampled torsional coordinates
-    with all other coordinates optimized
-    """
-
-    params['tau_run_fs'] = filesys[6]
-    params['tau_save_fs'] = filesys[7]
-    params['thy_save_fs'] = filesys[3]
-    tau.tau_sampling(**params, **opt_kwargs)
-    # del params['thy_save_fs']
-    # del params['nsamp_par']
-    # moldr.tau.run_tau_gradients(**params, **opt_kwargs)
-    # moldr.tau.run_tau_hessians(**params, **opt_kwargs)
-
-
-def geometry_generation(tsk, spc_name, spc, mc_nsamp,
-                        ini_thy_level, thy_level, ini_filesys, filesys,
-                        saddle=False, es_options=None):
+def run_tsk(tsk, spc_name, spc
+            ini_thy_level, thy_level,
+            es_options=None):
     """ run an electronic structure task
     for generating a list of conformer or tau sampling geometries
     """
-    # Separate the kickoff keyword for now
+    
+    print('Task:', tsk, spc_name)
+
+    # Set keys
+    # saddle = bool('ts_' in spc_name)
+    # vdw = bool('vdw' in spc_name)
+
+    # Get stuff from task
+    [calc, job] = tsk.split('_')
+
+    # Get an initial reference geom for the caluclations
+    geom = run_geom_init(spc, es_options)
+
+    # Run the task if an initial geom exists
+    if geom:
+        if 'init' in tsk:
+            pass
+        elif 'find' in tsk:
+            run_ts()
+        elif 'conf' in tsk:
+            run_conformer_tsk(job, spc, thy_info, es_options)
+        elif 'tau' in tsk:
+            run_tau_tsk(job, spc, thy_info, es_options)
+        elif 'hr' in tsk:
+            run_hr_tsk(job, spc, thy_info, es_options)
+        elif 'irc' in tsk:
+            run_irc_tsk(job, spc, thy_info, es_options)
+
+
+# FUNCTIONS FOR SAMPLING AND SCANS #
+def run_geom_init(spc, es_options):
+    """ Find the initial geometry
+    """
     [kickoff_size, kickoff_backward] = spc['kickoff']
-    overwrite = True if 'overwrite' in es_options else False
-
-    spc_info = finf.get_spc_info(spc)
-
-    # Get a reference geometry
+    # Get a reference geometry if one not found
     if not saddle:
         geo = geom.reference_geometry(
             spc, thy_level, ini_thy_level, filesys, ini_filesys,
@@ -154,97 +112,226 @@ def geometry_generation(tsk, spc_name, spc, mc_nsamp,
             spc, thy_level, ini_thy_level, filesys, ini_filesys,
             spc['dist_info'], overwrite)
 
-    if geo:
-        print('Task:', tsk, spc_name)
-        _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
-            *thy_level[0:2])
-        params = {'spc_info': spc_info,
-                  'thy_level': thy_level,
-                  'script_str': opt_script_str,
-                  'overwrite': overwrite}
-        if saddle:
-            params['saddle'] = True
-            params['tors_names'] = spc['tors_names']
-        if tsk in ['conf_samp', 'tau_samp']:
-            params['nsamp_par'] = mc_nsamp
-            if saddle:
-                params['dist_info'] = spc['dist_info']
-                params['two_stage'] = True
-                params['rxn_class'] = spc['class']
-        elif tsk in ['hr_scan']:
-            ndims = 'mdhr' if 'mdhr' in es_options else '1dhr'
-            frz_tors = True if 'frz_tors' in es_options else False
-            adiab_tors = False
-            tors_model=(ndims, frz_tors, adiab_tors)
-            params['tors_model'] = tors_model
-            if 'hind_def' in spc:
-                params['run_tors_names'] = spc['hind_def']
-            if 'hind_inc' in spc:
-                params['scan_increment'] = spc['hind_inc'] * phycon.DEG2RAD
-            else:
-                params['scan_increment'] = 30. * phycon.DEG2RAD
-            if saddle:
-                params['frm_bnd_key'] = spc['frm_bnd_key']
-                params['brk_bnd_key'] = spc['brk_bnd_key']
-                print('key test in ts_geom gen:',
-                      params['frm_bnd_key'],
-                      params['brk_bnd_key'])
 
-        if tsk in ES_TSKS:
-            eval(ES_TSKS[tsk])(filesys, params, opt_kwargs)
-
-
-def geometry_analysis(tsk, spc_name, thy_level, ini_filesys,
-                      spc, overwrite,
-                      saddle=False, selection='min'):
-    """ run the specified electronic structure task
-    for a set of geometries
+def run_conformer_tsk(job, spc, thy_info, es_options):
+    """ Launch tasks associated with conformers. 
+        Scan: Generate a set of conformer geometries and energies via
+              random sampling over torsional coordinates following by optimization
+        SP: Calculate ene, grad, ..
     """
-    params = {}
+
+    # Set the spc_info
     spc_info = finf.get_spc_info(spc)
 
-    print('Task:', tsk, spc_name)
-    if 'conf' in tsk:
-        run_dir = ini_filesys[2]
-        save_dir = ini_filesys[3]
-    elif 'tau' in tsk:
-        run_dir = ini_filesys[4]
-        save_dir = ini_filesys[5]
-    elif 'hr' in tsk:
-        run_dir = ini_filesys[6]
-        save_dir = ini_filesys[7]
-        if saddle:
-            params['frm_bnd_key'] = spc['frm_bnd_key']
-            params['brk_bnd_key'] = spc['brk_bnd_key']
-            print('key test in ts_geom anal:',
-                  params['frm_bnd_key'],
-                  params['brk_bnd_key'])
-    else:
-        return
-    if isinstance(selection, str):
-        if selection == 'all':
-            locs_lst = save_dir[-1].existing()
-        elif selection == 'min':
-            locs_lst = [fsmin.min_energy_conformer_locators(save_dir)]
-    else:
-        locs_lst = selection
-
-    sp_script_str, _, kwargs, _ = runpar.run_qchem_par(
+    # Set up the run scripts
+    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
         *thy_level[0:2])
-    params['spc_info'] = spc_info
-    params['thy_level'] = thy_level
-    params['script_str'] = sp_script_str
-    params['overwrite'] = overwrite
 
-    # cycle over the locations
-    if tsk in ES_TSKS:
-        task_call = eval(ES_TSKS[tsk])
-        for locs in locs_lst:
-            if locs:
-                params['geo_run_fs'] = run_dir
-                params['geo_save_fs'] = save_dir
-                params['locs'] = locs
-                task_call(params, kwargs)
-            else:
-                print('No initial geometry available for {} on {}'.format(
-                    spc_info[0], '/'.join(thy_level[1:3])))
+    # Set the filesystem objects
+    thy_save_fs, thy_save_path = fbuild.thy_fs_from_root(
+        save_prefix, spc_info, thy_info)
+    _, thy_run_path = fbuild.thy_fs_from_root(
+        run_prefix, spc_info, thy_info)
+    cnf_run_fs, _ = cnf_fs_from_thy(thy_run_path, spc_info, thy_info, cnf='min')
+    cnf_save_fs, _ = cnf_fs_from_thy(thy_save_path, spc_info, thy_info, cnf='min')
+
+    if job == 'samp': 
+
+        # Set variables if it is a saddle 
+        tors_names = spc['tors_names'] if saddle else ''
+        dist_info = spc['dist_info'] if saddle else ()
+        two_stage = True if saddle else False
+        rxn_class = spc['rxn_class'] if saddle else ''
+
+        # Run the sampling
+        conformer.conformer_sampling(
+            spc_info, thy_level, thy_save_fs, cnf_run_fs, cnf_save_fs, script_str,
+            overwrite, saddle=saddle, nsamp_par=mc_nsamp,
+            tors_names=tors_names, dist_info=dist_info,
+             two_stage=two_stage, rxn_class=rxn_class, **kwargs)
+
+    elif job in ('energy', 'gradient', 'hessian', 'vpt2'):
+        
+        print('running task {}'.format('gradient'))
+        # Run the job over all the conformers requested by the user 
+        for locs in cnf_locs:
+            eval(ES_TSKS[tsk])(
+                spc_info, thy_level, cnf_run_fs, cnf_save_fs, locs,
+                script_str, overwrite, **kwargs)
+
+
+def run_tau_tsk(filesys, params, opt_kwargs):
+    """ energies, gradients, and hessians,
+    for set of arbitrarily sampled torsional coordinates
+    with all other coordinates optimized
+    """
+    print('running task {}'.format('tau'))
+
+    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+        *thy_level[0:2])
+
+    # Set the filesystem objects
+    thy_save_fs, thy_save_path = fbuild.thy_fs_from_root(
+        save_prefix, spc_info, thy_info)
+    _, thy_run_path = fbuild.thy_fs_from_root(
+        run_prefix, spc_info, thy_info)
+    tau_run_fs, _ = tau_fs_from_thy(thy_run_path, spc_info, thy_info, tau='min')
+    tau_save_fs, _ = tau_fs_from_thy(thy_save_path, spc_info, thy_info, tau='min')
+
+    if job == 'samp': 
+
+        # Set variables if it is a saddle 
+        tors_names = spc['tors_names'] if saddle else ''
+        dist_info = spc['dist_info'] if saddle else ()
+        two_stage = True if saddle else False
+        rxn_class = spc['rxn_class'] if saddle else ''
+
+        tau.tau_sampling(
+            spc_info, thy_level, thy_save_fs, tau_run_fs, tau_save_fs,
+            script_str, overwrite, nsamp_par, **opt_kwargs):
+    
+    elif job in ('energy', 'gradient', 'hessian', 'vpt2'):
+
+        print('running task {}'.format('gradient'))
+        # Run the job over all the conformers requested by the user 
+        for locs in cnf_locs:
+            eval(ES_TSKS[tsk])(
+                spc_info, thy_level, cnf_run_fs, cnf_save_fs, locs,
+                script_str, overwrite, **kwargs)
+
+
+def run_hr_tsk(filesys, params, opt_kwargs):
+    """ run a scan over the specified torsional coordinates
+    """
+    print('running task {}'.format('hr'))
+
+
+    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+        *thy_level[0:2])
+
+    # Set the filesystem objects
+    thy_save_fs, thy_save_path = fbuild.thy_fs_from_root(
+        save_prefix, spc_info, thy_info)
+    _, thy_run_path = fbuild.thy_fs_from_root(
+        run_prefix, spc_info, thy_info)
+    tau_run_fs, _ = tau_fs_from_thy(thy_run_path, spc_info, thy_info, tau='min')
+    tau_save_fs, _ = tau_fs_from_thy(thy_save_path, spc_info, thy_info, tau='min')
+
+    # Get options from the dct or es options lst
+    params['tors_model'] = tors_model
+    # if 'hind_def' in spc:
+    #     params['run_tors_names'] = spc['hind_def']
+    # if 'hind_inc' in spc:
+    #     params['scan_increment'] = spc['hind_inc'] * phycon.DEG2RAD
+    # else:
+    #     params['scan_increment'] = 30. * phycon.DEG2RAD
+    if saddle:
+        frm_bnd_key = spc['frm_bnd_key']
+        brk_bnd_key = spc['brk_bnd_key']
+    overwrite = True if 'overwrite' in es_options else False
+    ndims = 'mdhr' if 'mdhr' in es_options else '1dhr'
+    frz_tors = True if 'frz_tors' in es_options else False
+    adiab_tors = False
+    tors_model=(ndims, frz_tors, adiab_tors)
+
+    if job == 'scan':
+        scan.hindered_rotor_scans(
+            spc_info, thy_level, cnf_run_fs, cnf_save_fs, script_str, overwrite,
+            scan_increment=30.0, saddle=False,
+            run_tors_names=(), frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key,
+            gradient=False, hessian=False,
+            tors_model=('1dhr', False, False), **opt_kwargs)
+
+
+def run_irc_tsk(filesys, params, opt_kwargs):
+    """ run a scan over the specified torsional coordinates
+    """
+    print('running task {}'.format('irc'))
+    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+        *scn_thy_info[0:2])
+
+    if job == 'scan':
+        variational.irc.irc_opt(
+            ts_dct,
+            thy_info,
+            irc_idxs,
+            overwrite)
+    elif:
+        routines.es.variational.irc.irc_sp(
+            ts_dct[sadpt],
+            thy_info,
+            sp_thy_info,
+            irc_idxs,
+            es_options=es_options)
+
+
+def run_ts():
+    """ find a transition state
+    """
+    routines.es.find.find_ts(
+        spc_dct, ts_dct[sadpt],
+        ts_dct[sadpt]['zma'],
+        ini_thy_info, thy_info,
+        multi_opt_info, multi_sp_info,
+        run_prefix, save_prefix,
+        overwrite, vrc_dct,
+        rad_rad_ts=rad_rad_ts,
+        es_options=es_options)
+
+
+def run_vdw():
+    """ find a van der waals well
+    """
+    routines.es.wells.find_vdw(
+        spc, spc_dct, thy_info, ini_thy_info,
+        vdw_params,
+        thy_dct[es_run_key]['mc_nsamp'], run_prefix,
+        save_prefix, 0.1, False,
+        overwrite)
+
+
+def cnf_set():
+    """ a """
+    # Set the filesystem locs
+    if selection == 'all':
+        locs_lst = save_dir[-1].existing()
+    elif selection == 'min':
+        locs_lst = [fsmin.min_energy_conformer_locators(save_dir)]
+    elif selection == 'subset':
+        min_locs = fsmin.min_energy_conformer_locators(save_dir)
+        min_ene = energy.read(min_lcs)  
+        ini_locs_lst = save_dir[-1].existing()
+        locs_lst = []
+        for locs in ini_locs_lst:
+            ene = energy.read(locs) - min_ene
+            if ene <= ene_cut_off:
+                locs_lst.append(locs)
+
+
+
+def set_geom_analysis(tsk, ini_filesys, saddle):
+    """ set geometry analysis things
+    """
+    avail, selection, avail = False, None
+    if 'conf' in tsk and not saddle:
+        ini_save_fs = ini_filesys[3]
+        avail = fcheck.check_save(ini_save_fs, tsk, 'conf')
+        selection = 'min'
+    elif 'tau' in tsk and not saddle:
+        ini_save_fs = ini_filesys[5]
+        avail = fcheck.check_save(ini_save_fs, tsk, 'tau')
+        selection = 'all'
+    elif 'scan' in tsk and not saddle:
+        ini_save_fs = ini_filesys[7]
+        avail = fcheck.check_save(ini_save_fs, tsk, 'scan')
+        selection = 'all'
+
+    return avail, selection
+
+
+if any(string in tsk for string in ('samp', 'scan', 'geom')):
+    if not vdw:
+        pass
+    else:
+        routines.es.wells.fake_geo_gen(tsk, thy_level, filesys)
+
