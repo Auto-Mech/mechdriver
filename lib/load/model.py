@@ -197,6 +197,14 @@ def set_es_model_info(es_model, thy_dct):
     tors_scn_thy_info = (finf.get_thy_info(tors_lvl_scn, thy_dct)
                          if tors_lvl_scn else None)
 
+    # Set the ene thy info as a list of methods with coefficients
+    ene_thy_info = ()
+    if isinstance(ene_lvl, str):
+        ene_thy_info += (1.00, finf.get_thy_info(ene_lvl, thy_dct))
+    else:
+        for lvl in ene_lvl:
+            ene_thy_info += (lvl[0], finf.get_thy_info(lvl[1], thy_dct))
+
     # Combine levels into a list
     es_levels = [
         geo_thy_info,

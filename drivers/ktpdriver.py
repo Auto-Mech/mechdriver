@@ -31,9 +31,6 @@ def run(pes_formula,
     ene_coeff = [1.0]
     assess_pdep = [0.3, 3.0, 500., 1000.0]
 
-
-
-
     # Build the MESS label idx dictionary for the PES
     idx_dct = messrates.make_pes_idx_dct(rxn_lst, spc_dct)
 
@@ -49,6 +46,13 @@ def run(pes_formula,
     # Write the MESS file
     if write_messrate and not mess_inp_str:
         print('Gathering elstruct data to write MESS input at {}'.format(mess_path))
+
+        # # Get info for the transition states
+        ts_dct = lspc.build_sadpt_dct(
+            rxn_lst, test_model, THY_DCT,
+            RUN_INP_DCT, RUN_OPTIONS_DCT, SPC_DCT, {})
+        spc_dct.update(ts_dct)
+
         # Setting some arbitrary model to fix ene trans param passing
         # Need a better system for specifying this
         test_model = rxn_lst[0]['model']  # model for ts_0

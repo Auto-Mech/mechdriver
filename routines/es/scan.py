@@ -15,6 +15,22 @@ from lib.filesystem import orb as fsorb
 from routines.es import variational
 
 
+def build_constraint_dct(zma, tors_names):
+    """ Build a dictionary of constraints
+    """
+    constraint_names = [name
+                        for name_lst in tors_names
+                        for name in name_lst]
+    constraint_names.sort(key=lambda x: int(x.split('D')[1]))
+    zma_vals = automol.zmatrix.values(zma)
+    constraint_dct = dict(zip(
+        constraint_names,
+        (round(zma_vals[name], 2) for name in constraint_names)
+    ))
+
+    return constraint_dct
+
+
 def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
             saddle=False, frm_bnd_key=(), brk_bnd_key=()):
     """ set-up the hr for different rotor combinations
@@ -108,110 +124,64 @@ def is_methyl_rotor():
 
 
 def hindered_rotor_scans(
-        spc_info, thy_level, cnf_run_fs, cnf_save_fs, script_str, overwrite,
-        scan_increment=30.0, saddle=False,
-        run_tors_names=(), frm_bnd_key=(), brk_bnd_key=(),
-        gradient=False, hessian=False,
-        tors_model=('1dhr', False, False), **opt_kwargs):
-    """ Perform 1d scans over each of the torsional coordinates
+        zma, spc_info, thy_level, scn_run_fs, scn_save_fs,
+        run_tors_names, run_tors_grids,
+        script_str, overwrite,
+        saddle=False, constraint_dct=None, **opt_kwargs):
+    """ Perform scans over each of the torsional coordinates
     """
 
-    # Unpack tors model
-    ndim_tors, freeze_all_tors, adiab_tors = tors_model
-    if adiab_tors:
-        hessian = True
+    # for tors_name, tors_grid in zip(tors_names, tors_grids):
+    for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
 
-    # Run with the old code
-    min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
-    if min_cnf_locs:
-        min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
-        min_cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
-        geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
-        zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
+        # Get the dictionary for the torsional modes
+        if not tors_names:
+            continue
+        grid_dct = dict(zip(tors_names, tors_grids))
 
-        run_tors_names, run_tors_grids = hr_prep(
-            zma, geo, run_tors_names=(),
-            scan_increment=scan_increment, ndim_tors=ndim_tors,
-            saddle=saddle, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
-
-        # Get a list of the other tors coords to freeze and set the filesystem
-        if freeze_all_tors:
-            constraint_names = [name
-                                for name_lst in run_tors_names
-                                for name in name_lst]
-            constraint_names.sort(key=lambda x: int(x.split('D')[1]))
-            zma_vals = automol.zmatrix.values(zma)
-            constraint_dct = dict(zip(
-                constraint_names,
-                (round(zma_vals[name], 2) for name in constraint_names)
-            ))
-            scn_run_fs = autofile.fs.cscan(min_cnf_run_path)
-            scn_save_fs = autofile.fs.cscan(min_cnf_save_path)
-        else:
-            constraint_dct = None
-            scn_run_fs = autofile.fs.scan(min_cnf_run_path)
-            scn_save_fs = autofile.fs.scan(min_cnf_save_path)
-
-        # for tors_name, tors_grid in zip(tors_names, tors_grids):
-        for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
-
-            # Get the dictionary for the torsional modes
-            if not tors_names:
-                continue
-            grid_dct = dict(zip(tors_names, tors_grids))
-
-            # Perform the scans
-            gradient = False
-            hessian = False
-
-            if constraint_dct is None:
-                save_scan(
-                    scn_run_fs=scn_run_fs,
-                    scn_save_fs=scn_save_fs,
-                    coo_names=tors_names,
-                    gradient=gradient,
-                    hessian=hessian,
-                    constraint_dct=constraint_dct
-                )
-            else:
-                save_cscan(scn_run_fs, scn_save_fs, tors_names,
-                           gradient=gradient, hessian=hessian)
-
-            run_scan(
-                zma=zma,
-                spc_info=spc_info,
-                thy_level=thy_level,
-                grid_dct=grid_dct,
+        if constraint_dct is None:
+            save_scan(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
-                script_str=script_str,
-                overwrite=overwrite,
-                saddle=saddle,
-                gradient=gradient,
-                hessian=hessian,
-                constraint_dct=constraint_dct,
-                **opt_kwargs,
-            )
+                coo_names=tors_names)
+        else:
+            save_cscan(
+                cscn_run_fs=scn_run_fs,
+                cscn_save_fs=scn_save_fs,
+                coo_names=tors_names)
 
-            if constraint_dct is None:
-                save_scan(
-                    scn_run_fs=scn_run_fs,
-                    scn_save_fs=scn_save_fs,
-                    coo_names=tors_names,
-                    gradient=gradient,
-                    hessian=hessian,
-                    constraint_dct=constraint_dct
-                )
-            else:
-                save_cscan(scn_run_fs, scn_save_fs, tors_names,
-                           gradient=gradient, hessian=hessian)
+        run_scan(
+            zma=zma,
+            spc_info=spc_info,
+            thy_level=thy_level,
+            grid_dct=grid_dct,
+            scn_run_fs=scn_run_fs,
+            scn_save_fs=scn_save_fs,
+            script_str=script_str,
+            overwrite=overwrite,
+            saddle=saddle,
+            constraint_dct=constraint_dct,
+            **opt_kwargs,
+        )
+
+        if constraint_dct is None:
+            save_scan(
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                coo_names=tors_names
+            )
+        else:
+            save_cscan(
+                cscn_run_fs=scn_run_fs,
+                cscn_save_fs=scn_save_fs,
+                coo_names=tors_names
+            )
 
 
 def run_scan(
         zma, spc_info, thy_level, grid_dct, scn_run_fs, scn_save_fs,
         script_str, overwrite, update_guess=True,
         reverse_sweep=True, fix_failures=True, saddle=False,
-        gradient=False, hessian=False,
         constraint_dct=None,
         **kwargs):
     """ run constrained optimization scan
@@ -264,8 +234,6 @@ def run_scan(
             update_guess=update_guess,
             saddle=saddle,
             retry_failed=fix_failures,
-            gradient=gradient,
-            hessian=hessian,
             constraint_dct=constraint_dct,
             **kwargs
         )
@@ -284,8 +252,6 @@ def run_scan(
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
-                gradient=gradient,
-                hessian=hessian,
                 constraint_dct=constraint_dct,
                 **kwargs
             )
@@ -320,8 +286,6 @@ def run_scan(
             update_guess=update_guess,
             saddle=saddle,
             retry_failed=fix_failures,
-            gradient=gradient,
-            hessian=hessian,
             constraint_dct=constraint_dct,
             **kwargs
         )
@@ -354,8 +318,6 @@ def run_scan(
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
-                gradient=gradient,
-                hessian=hessian,
                 constraint_dct=constraint_dct,
                 **kwargs
             )
@@ -395,8 +357,6 @@ def run_scan(
             update_guess=update_guess,
             saddle=saddle,
             retry_failed=fix_failures,
-            gradient=gradient,
-            hessian=hessian,
             constraint_dct=constraint_dct,
             **kwargs
         )
@@ -432,8 +392,6 @@ def run_scan(
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
-                gradient=gradient,
-                hessian=hessian,
                 constraint_dct=constraint_dct,
                 **kwargs
             )
@@ -480,8 +438,6 @@ def run_scan(
             update_guess=update_guess,
             saddle=saddle,
             retry_failed=fix_failures,
-            gradient=gradient,
-            hessian=hessian,
             constraint_dct=constraint_dct,
             **kwargs
         )
@@ -520,8 +476,6 @@ def run_scan(
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
-                gradient=gradient,
-                hessian=hessian,
                 constraint_dct=constraint_dct,
                 **kwargs
             )
@@ -530,7 +484,7 @@ def run_scan(
 def run_multiref_rscan(
         formula, high_mul, zma, spc_info, multi_level, dist_name, grid1, grid2,
         scn_run_fs, scn_save_fs, overwrite, update_guess=True,
-        gradient=False, hessian=False, num_act_elc=None, num_act_orb=None,
+        num_act_elc=None, num_act_orb=None,
         constraint_dct=None):
     """ run constrained optimization scan
     """
@@ -624,8 +578,6 @@ def run_multiref_rscan(
         thy_level=multi_level,
         overwrite=overwrite,
         update_guess=update_guess,
-        gradient=gradient,
-        hessian=hessian,
         constraint_dct=constraint_dct,
         **opt_kwargs,
     )
@@ -670,8 +622,6 @@ def run_multiref_rscan(
         thy_level=multi_level,
         overwrite=overwrite,
         update_guess=update_guess,
-        gradient=gradient,
-        hessian=hessian,
         constraint_dct=constraint_dct,
         **opt_kwargs,
     )
@@ -682,7 +632,6 @@ def _run_1d_scan(
         grid_idxs, grid_vals,
         spc_info, thy_level, overwrite, errors=(), options_mat=(),
         retry_failed=True, update_guess=True, saddle=False,
-        gradient=False, hessian=False,
         constraint_dct=None,
         **kwargs):
     """ run 1 dimensional scan with constrained optimization
@@ -729,51 +678,12 @@ def _run_1d_scan(
                 if update_guess:
                     guess_zma = opt_zma
 
-                if gradient:
-                    driver.run_job(
-                        job=elstruct.Job.GRADIENT,
-                        script_str=script_str,
-                        run_fs=run_fs,
-                        geom=opt_zma,
-                        spc_info=spc_info,
-                        thy_level=thy_level,
-                        overwrite=overwrite,
-                        frozen_coordinates=[coo_name],
-                        errors=errors,
-                        options_mat=options_mat,
-                        retry_failed=retry_failed,
-                        **kwargs
-                    )
-
-                    ret = driver.read_job(
-                        job=elstruct.Job.GRADIENT, run_fs=run_fs)
-
-                if hessian:
-                    driver.run_job(
-                        job=elstruct.Job.HESSIAN,
-                        script_str=script_str,
-                        run_fs=run_fs,
-                        geom=opt_zma,
-                        spc_info=spc_info,
-                        thy_level=thy_level,
-                        overwrite=overwrite,
-                        frozen_coordinates=[coo_name],
-                        errors=errors,
-                        options_mat=options_mat,
-                        retry_failed=retry_failed,
-                        **kwargs
-                    )
-
-                    ret = driver.read_job(
-                        job=elstruct.Job.HESSIAN, run_fs=run_fs)
-
 
 def _run_2d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_names,
         grid_idxs, grid_vals,
         spc_info, thy_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
-        gradient=False, hessian=False,
         constraint_dct=None,
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
@@ -828,44 +738,6 @@ def _run_2d_scan(
                     opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
                     if update_guess:
                         guess_zma = opt_zma
-
-                    if gradient:
-                        driver.run_job(
-                            job=elstruct.Job.GRADIENT,
-                            script_str=script_str,
-                            run_fs=run_fs,
-                            geom=opt_zma,
-                            spc_info=spc_info,
-                            thy_level=thy_level,
-                            overwrite=overwrite,
-                            frozen_coordinates=frozen_coordinates,
-                            errors=errors,
-                            options_mat=options_mat,
-                            retry_failed=retry_failed,
-                            **kwargs
-                        )
-
-                        ret = driver.read_job(
-                            job=elstruct.Job.GRADIENT, run_fs=run_fs)
-
-                    if hessian:
-                        driver.run_job(
-                            job=elstruct.Job.HESSIAN,
-                            script_str=script_str,
-                            run_fs=run_fs,
-                            geom=opt_zma,
-                            spc_info=spc_info,
-                            thy_level=thy_level,
-                            overwrite=overwrite,
-                            frozen_coordinates=frozen_coordinates,
-                            errors=errors,
-                            options_mat=options_mat,
-                            retry_failed=retry_failed,
-                            **kwargs
-                        )
-
-                        ret = driver.read_job(
-                            job=elstruct.Job.HESSIAN, run_fs=run_fs)
 
 
 def _run_3d_scan(
@@ -931,44 +803,6 @@ def _run_3d_scan(
                         opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
                         if update_guess:
                             guess_zma = opt_zma
-
-                        if gradient:
-                            driver.run_job(
-                                job=elstruct.Job.GRADIENT,
-                                script_str=script_str,
-                                run_fs=run_fs,
-                                geom=opt_zma,
-                                spc_info=spc_info,
-                                thy_level=thy_level,
-                                overwrite=overwrite,
-                                frozen_coordinates=frozen_coordinates,
-                                errors=errors,
-                                options_mat=options_mat,
-                                retry_failed=retry_failed,
-                                **kwargs
-                            )
-
-                            ret = driver.read_job(
-                                job=elstruct.Job.GRADIENT, run_fs=run_fs)
-
-                        if hessian:
-                            driver.run_job(
-                                job=elstruct.Job.HESSIAN,
-                                script_str=script_str,
-                                run_fs=run_fs,
-                                geom=opt_zma,
-                                spc_info=spc_info,
-                                thy_level=thy_level,
-                                overwrite=overwrite,
-                                frozen_coordinates=frozen_coordinates,
-                                errors=errors,
-                                options_mat=options_mat,
-                                retry_failed=retry_failed,
-                                **kwargs
-                            )
-
-                            ret = driver.read_job(
-                                job=elstruct.Job.HESSIAN, run_fs=run_fs)
 
 
 def _run_4d_scan(
@@ -1041,49 +875,12 @@ def _run_4d_scan(
                             if update_guess:
                                 guess_zma = opt_zma
 
-                            if gradient:
-                                driver.run_job(
-                                    job=elstruct.Job.GRADIENT,
-                                    script_str=script_str,
-                                    run_fs=run_fs,
-                                    geom=opt_zma,
-                                    spc_info=spc_info,
-                                    thy_level=thy_level,
-                                    overwrite=overwrite,
-                                    frozen_coordinates=frozen_coordinates,
-                                    errors=errors,
-                                    options_mat=options_mat,
-                                    retry_failed=retry_failed,
-                                    **kwargs
-                                )
 
-                                ret = driver.read_job(
-                                    job=elstruct.Job.GRADIENT, run_fs=run_fs)
-
-                            if hessian:
-                                driver.run_job(
-                                    job=elstruct.Job.HESSIAN,
-                                    script_str=script_str,
-                                    run_fs=run_fs,
-                                    geom=opt_zma,
-                                    spc_info=spc_info,
-                                    thy_level=thy_level,
-                                    overwrite=overwrite,
-                                    frozen_coordinates=frozen_coordinates,
-                                    errors=errors,
-                                    options_mat=options_mat,
-                                    retry_failed=retry_failed,
-                                    **kwargs
-                                )
-
-                                ret = driver.read_job(
-                                    job=elstruct.Job.HESSIAN, run_fs=run_fs)
-
-
-def save_scan(scn_run_fs, scn_save_fs, coo_names,
-              gradient=False, hessian=False):
+def save_scan(scn_run_fs, scn_save_fs, coo_names):
     """ save the scans that have been run so far
     """
+    print('names\n', [coo_names])
+    print('path\n', scn_run_fs[1].exists([coo_names]))
     if not scn_run_fs[1].exists([coo_names]):
         print("No scan to save. Skipping...")
     else:
@@ -1117,35 +914,6 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
 
                 locs_lst.append(locs)
 
-                if gradient:
-                    ret = driver.read_job(
-                        job=elstruct.Job.GRADIENT, run_fs=run_fs)
-                    if ret:
-                        inf_obj, inp_str, out_str = ret
-                        prog = inf_obj.prog
-                        method = inf_obj.method
-                        grad = elstruct.reader.gradient(prog, out_str)
-                        scn_save_fs[-1].file.gradient.write(grad, locs)
-
-                if hessian:
-                    ret = driver.read_job(
-                        job=elstruct.Job.HESSIAN, run_fs=run_fs)
-                    if ret:
-                        inf_obj, inp_str, out_str = ret
-                        prog = inf_obj.prog
-                        method = inf_obj.method
-                        hess = elstruct.reader.hessian(prog, out_str)
-                        scn_save_fs[-1].file.hessian.write(hess, locs)
-                        # read out the frequencies for now
-                        freqs = elstruct.reader.harmonic_frequencies(
-                            prog, out_str)
-                        scn_save_fs[-1].file.harmonic_frequencies.write(
-                            freqs, locs)
-                        # fix hard coding of molpro reading...
-                        if prog == 'molpro2015':
-                            geo = hess_geometry(out_str)
-                            scn_save_fs[-1].file.geometry.write(geo, locs)
-
         if locs_lst:
             idxs_lst = [locs[-1] for locs in locs_lst]
             enes = [scn_save_fs[-1].file.energy.read(locs)
@@ -1163,8 +931,7 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
             scn_save_fs[1].file.trajectory.write(traj, [coo_names])
 
 
-def save_cscan(cscn_run_fs, cscn_save_fs, coo_names,
-               gradient=False, hessian=False):
+def save_cscan(cscn_run_fs, cscn_save_fs, coo_names):
     """ save the scans that have been run so far
     """
 
@@ -1202,34 +969,6 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names,
                         cscn_save_fs[-1].file.geometry.write(geo, locs2)
                         cscn_save_fs[-1].file.zmatrix.write(zma, locs2)
 
-                        if gradient:
-                            ret = driver.read_job(
-                                job=elstruct.Job.GRADIENT, run_fs=run_fs)
-                            if ret:
-                                inf_obj, inp_str, out_str = ret
-                                prog = inf_obj.prog
-                                method = inf_obj.method
-                                grad = elstruct.reader.gradient(prog, out_str)
-                                cscn_save_fs[-1].file.gradient.write(grad, locs2)
-
-                        if hessian:
-                            ret = driver.read_job(
-                                job=elstruct.Job.HESSIAN, run_fs=run_fs)
-                            if ret:
-                                inf_obj, inp_str, out_str = ret
-                                prog = inf_obj.prog
-                                method = inf_obj.method
-                                hess = elstruct.reader.hessian(prog, out_str)
-                                cscn_save_fs[-1].file.hessian.write(hess, locs2)
-                                # read out the frequencies for now
-                                freqs = elstruct.reader.harmonic_frequencies(
-                                    prog, out_str)
-                                cscn_save_fs[-1].file.harmonic_frequencies.write(
-                                    freqs, locs2)
-                                # fix hard coding of molpro reading...
-                                if prog == 'molpro2015':
-                                    geo = hess_geometry(out_str)
-                                    cscn_save_fs[-1].file.geometry.write(geo, locs2)
             else:
                 print("No cscan to save. (2) Skipping...")
 

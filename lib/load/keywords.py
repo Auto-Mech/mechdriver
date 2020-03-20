@@ -50,18 +50,18 @@ MODEL_PF_DEFAULT_DCT = {
 
 # Electronic Structure Tasks
 ES_TSK_OBJ_SUPPORTED_LST = [
-    'min',
+    'spc',
     'ts',
     'vdw'
 ]
 ES_TSK_SUPPORTED_DCT = {
-    'min': [
-        'init',
+    'spc': [
+        'init_geom',
         'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess', 'conf_vpt2',
         'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess',
         'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess'],
     'ts': [
-        'find',
+        'find_ts',
         'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess', 'conf_vpt2',
         'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess',
         'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess',
@@ -72,7 +72,8 @@ ES_TSK_SUPPORTED_DCT = {
         'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess']
 }
 ES_TSK_OPTIONS_SUPPORTED_DCT = {
-    'find': ['overwrite'],
+    'init_geom': ['overwrite'],
+    'find_ts': ['overwrite'],
     'conf_samp': ['overwrite'],
     'conf_energy': ['zpve_min', 'overwrite'],
     'conf_grad': ['zpve_min', 'overwrite'],

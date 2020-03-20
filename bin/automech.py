@@ -83,11 +83,9 @@ else:
 
 # Initialize the filesystem
 print('\nBuilding the base Run-Save filesystems at')
-fbuild.prefix_filesystem(
-    RUN_INP_DCT['run_prefix'],
-    RUN_INP_DCT['save_prefix']
-)
+fbuild.prefix_fs(RUN_INP_DCT['run_prefix'])
 print('{}'.format(RUN_INP_DCT['run_prefix']))
+fbuild.prefix_fs(RUN_INP_DCT['save_prefix'])
 print('{}'.format(RUN_INP_DCT['save_prefix']))
 
 # Run the requested drivers: es, thermo, ktp
@@ -117,7 +115,7 @@ if 'es' in RUN_JOBS_LST:
             RUN_INP_DCT
         )
 
-WRITE_MESSPF, RUN_MESSPF, RUN_NASA = lrun.set_thermodriver_run(run_jobs_lst)
+WRITE_MESSPF, RUN_MESSPF, RUN_NASA = lrun.set_thermodriver_run(RUN_JOBS_LST)
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
     if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:
         # Call ThermoDriver for spc in each PES
@@ -147,17 +145,11 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
             run_nasa=RUN_NASA,
         )
 
-WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = lrun.set_ktpdriver_run(run_jobs_lst)
+WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = lrun.set_ktpdriver_run(RUN_JOBS_LST)
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
     if RUN_OBJ_DCT['pes']:
         # Call kTPDriver for spc in each PES
         for pes_formula, rxn_lst in RUN_PES_DCT.items():
-            # # Get info for the transition states
-            ts_dct = lspc.build_sadpt_dct(
-                rxn_lst, MODEL_DCT, THY_DCT, ES_TSK_STR,
-                RUN_INP_DCT, RUN_OPTIONS_DCT, SPC_DCT, {})
-            SPC_DCT.update(ts_dct)
-            # Run the driver
             ktpdriver.run(
                 pes_formula,
                 SPC_DCT,

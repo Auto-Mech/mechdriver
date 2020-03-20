@@ -22,14 +22,6 @@ def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
     # Ensure that all the tasks are in the supported tasks
     assert check_es_tsks_supported(tsk_lst)
 
-    # Now convert things to a task where method turned to inf objects
-    # mod_tsk_lst = []
-    # for lst in tsk_lst:
-    #     [obj, tsk, es_run_key, es_ini_key, options] = lst
-    #     ini_thy_info = finf.get_es_info(es_ini_key, thy_dct)
-    #     thy_info = finf.get_es_info(es_run_key, thy_dct)
-    #     mod_tsk_lst.append([obj, tsk, thy_info, ini_thy_info, options])
-
     return tsk_lst
 
 
@@ -105,9 +97,12 @@ def check_es_tsks_supported(es_tsks):
     obj_good, tsk_good, opt_good = True, True, True
     for tsk_lst in es_tsks:
         [obj, tsk, _, _, options] = tsk_lst
+        print(tsk_lst)
         if obj in ES_TSK_SUPPORTED_DCT:
             if tsk in ES_TSK_SUPPORTED_DCT[obj]:
-                chk = all(options in ES_TSK_OPTIONS_SUPPORTED_DCT[obj]
+                print(ES_TSK_OPTIONS_SUPPORTED_DCT[tsk])
+                print(options)
+                chk = all(option in ES_TSK_OPTIONS_SUPPORTED_DCT[tsk]
                           for option in options)
                 if not chk:
                     print('opt not good')

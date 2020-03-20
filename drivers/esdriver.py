@@ -49,34 +49,38 @@ def run(rxn_lst,
         if obj == 'spc':
             spc_queue = loadmech.build_spc_queue(rxn_lst)
         elif obj == 'ts':
+            spc_queue = []
             # Get info for the transition states
             ts_dct = loadspc.build_sadpt_dct(
-                rxn_lst, spc_model_dct, thy_dct, es_tsk_str,
-                run_inp_dct, run_options_dct, spc_dct, {})
+                rxn_lst, thy_info, ini_thy_info,
+                run_inp_dct, spc_dct, {})
             for sadpt in ts_dct:
-                # printmsg.sadpt_tsk_printmsg(
-                #     tsk, sadpt, spc_dct, thy_info, ini_thy_info)
                 if not ts_dct[sadpt]['class']:
                     print('skipping reaction because type =',
                           ts_dct[sadpt]['class'])
                     continue
-             # Add TS to species queue if TS is found
-             ts_found = False
-             if ts_found:
-                 print('Success, transition state',
-                       '{} added to species queue'.format(sadpt))
-                 spc_queue.append((sadpt, ''))
-                 spc_dct.update(ts_dct)
+                spc_queue.append((sadpt, ''))
+                spc_dct.update({sadpt: ts_dct[sadpt]})
+            # Add TS to species queue if TS is found
+            # ts_found = False
+            # if ts_found:
+            #     print('Success, transition state',
+            #           '{} added to species queue'.format(sadpt))
+            #     spc_queue.append((sadpt, ''))
+            #     spc_dct.update(ts_dct)
         elif obj == 'vdw':
             spc_queue = []
 
         # Loop over all requested species and run the task
         for spc in spc_queue:
+            print('spc', spc)
             spc_name, _ = spc
-            routines.es.run_routine(
+            routines.es.run_tsk(
                 tsk,
+                spc_dct, 
                 spc_name,
-                spc_dct[spc_name],
-                ini_thy_level,
-                thy_level,
+                thy_info,
+                ini_thy_info,
+                run_prefix,
+                save_prefix,
                 es_options=es_options)

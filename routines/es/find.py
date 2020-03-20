@@ -21,6 +21,7 @@ from routines.es import scan
 def find_ts(spc_dct, ts_dct, ts_zma,
             ini_thy_info, thy_info,
             multi_opt_info, multi_sp_info,
+            rxn_run_path, rxn_save_path,
             run_prefix, save_prefix,
             overwrite, vrc_dct,
             rad_rad_ts='vtst'):
@@ -37,43 +38,6 @@ def find_ts(spc_dct, ts_dct, ts_zma,
     rad_rad = ('radical radical' in typ)
     low_spin = ('low' in typ)
     print('prepping ts scan for:', typ)
-
-    [_, _,
-     rxn_run_path, rxn_save_path] = ts_dct['rxn_fs']
-    ts_info = (ts_dct['ich'],
-               ts_dct['chg'],
-               ts_dct['mul'])
-
-    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
-        *thy_info[0:2])
-
-    orb_restr = fsorb.orbital_restriction(ts_info, thy_info)
-    ref_level = thy_info[0:3]
-    ref_level.append(orb_restr)
-
-    thy_run_fs = autofile.fs.theory(rxn_run_path)
-    thy_run_fs[-1].create(ref_level[1:4])
-    thy_run_path = thy_run_fs[-1].path(ref_level[1:4])
-
-    thy_save_fs = autofile.fs.theory(rxn_save_path)
-    thy_save_fs[-1].create(ref_level[1:4])
-    thy_save_path = thy_save_fs[-1].path(ref_level[1:4])
-
-    scn_run_fs = autofile.fs.scan(thy_run_path)
-    scn_save_fs = autofile.fs.scan(thy_save_path)
-
-    ts_run_fs = autofile.fs.ts(thy_run_path)
-    ts_run_fs[0].create()
-    ts_run_path = ts_run_fs[0].path()
-    run_fs = autofile.fs.run(ts_run_path)
-
-    ts_save_fs = autofile.fs.ts(thy_save_path)
-    ts_save_fs[0].create()
-    ts_save_path = ts_save_fs[0].path()
-
-    cnf_run_fs = autofile.fs.conformer(ts_run_path)
-    cnf_save_fs = autofile.fs.conformer(ts_save_path)
-    cnf_save_fs[0].create()
 
     # Unpack the dist info
     dist_name, _, update_guess, brk_name = dist_info

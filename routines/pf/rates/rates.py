@@ -508,16 +508,17 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
     # Read the MESS output file into a string
     with open(mess_path+'/rate.out', 'r') as mess_file:
         output_string = mess_file.read()
-    # with open(mess_path+'/mess.inp', 'r') as mess_file:
-    #     input_string = mess_file.read()
 
     # Read the temperatures and pressures out of the MESS output
     mess_temps, _ = mess_io.reader.rates.get_temperatures(
         output_string)
     mess_pressures, punit = mess_io.reader.rates.get_pressures(
         output_string)
-    # mess_pressures, punit = mess_io.reader.rates.get_pressures_input(
-    #     input_string)
+
+    assert inp_temps <= mess_temps
+    assert inp_pressures <= mess_pressures
+    assert inp_tunit == tunit
+    assert inp_punit == punit
 
     # Loop over the pressures obtained from the MESS output
     for pressure in mess_pressures:
@@ -546,16 +547,22 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
     if list(valid_calc_tk_dct.keys()) == ['high']:
         ktp_dct['high'] = valid_calc_tk_dct['high']
     else:
-        rxn_is_pdependent = ratefit.calc.assess_pressure_dependence(
-            valid_calc_tk_dct, assess_pdep_temps,
-            tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
-        if rxn_is_pdependent:
-            # Set dct to fit as copy of dct to do PLOG fits at all pressures
-            ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+        if assess_pdep:
+            rxn_is_pdependent = ratefit.calc.assess_pressure_dependence(
+                valid_calc_tk_dct, assess_pdep_temps,
+                tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
+            if rxn_is_pdependent:
+                # Set dct fit as copy of dct to do PLOG fits at all pressures
+                ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+            else:
+                # Set dct w/ single set of k(T, P) vals: P is desired pressure
+                if no_pdep_pval in valid_calc_tk_dct:
+                    ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
         else:
-            # Set dct to have single set of k(T, P) vals: P is desired pressure
-            if no_pdep_pval in valid_calc_tk_dct:
-                ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
+            # Set dct fit as copy of dct to do PLOG fits at all pressures
+            ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+
+    # Do something with high pressure rates
     if 'high' not in ktp_dct and 'high' in valid_calc_tk_dct.keys():
         ktp_dct['high'] = valid_calc_tk_dct['high']
 

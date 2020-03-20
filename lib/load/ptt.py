@@ -164,7 +164,13 @@ def format_param_vals(pvals):
         frmtd_value = []
         # Set string in list to boolean or integer if needed
         for elm in value:
-            frmtd_value.append(_set_value_type(elm.strip()))
+            elm = elm.strip()
+            if ':' in elm:
+                elm_lst = elm.split()
+                frmtd_value.append(
+                    _set_value_type((float(elm_lst[0]), elm_lst[1])))
+            else:
+                frmtd_value.append(_set_value_type(elm))
     else:
         # Format values if it has singular value
         frmtd_value = _set_value_type(value)

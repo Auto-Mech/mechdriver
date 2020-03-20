@@ -15,7 +15,7 @@ from lib.phydat import bnd
 
 
 def conformer_sampling(
-        spc_info, thy_level, thy_save_fs, cnf_run_fs, cnf_save_fs, script_str,
+        spc_info, thy_info, thy_save_fs, cnf_run_fs, cnf_save_fs, script_str,
         overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
         tors_names='', dist_info=(), two_stage=False, rxn_class='', **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
@@ -25,7 +25,7 @@ def conformer_sampling(
     ich = spc_info[0]
     coo_names = []
     if not saddle:
-        geo = thy_save_fs[-1].file.geometry.read(thy_level[1:4])
+        geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         zma = automol.geom.zmatrix(geo)
     else:
@@ -55,7 +55,7 @@ def conformer_sampling(
     run_conformers(
         zma=zma,
         spc_info=spc_info,
-        thy_level=thy_level,
+        thy_info=thy_info,
         nsamp=nsamp,
         tors_range_dct=tors_range_dct,
         cnf_run_fs=cnf_run_fs,
@@ -81,43 +81,39 @@ def conformer_sampling(
         zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
         if not saddle:
             assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
-            thy_save_fs[-1].file.geometry.write(geo, thy_level[1:4])
-            thy_save_fs[-1].file.zmatrix.write(zma, thy_level[1:4])
+            thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
+            thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
 
         else:
             thy_save_fs[0].file.geometry.write(geo)
             thy_save_fs[0].file.zmatrix.write(zma)
 
 
-def single_conformer(spc_info, thy_level, filesys, overwrite,
-                     saddle=False, dist_info=()):
+def single_conformer(spc_info, thy_info,
+                     thy_save_fs, cnf_run_fs, cnf_save_fs,
+                     overwrite, saddle=False, dist_info=()):
     """ generate single optimized geometry for
         randomly sampled initial torsional angles
     """
-    mc_nsamp = [False, 0, 0, 0, 0, 1]
-    sp_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_level[0:2])
-    thy_save_fs = filesys[3]
-    two_stage = False
-    if saddle:
-        two_stage = True
+    sp_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_info[0:2])
     conformer_sampling(
         spc_info=spc_info,
-        thy_level=thy_level,
+        thy_info=thy_info,
         thy_save_fs=thy_save_fs,
-        cnf_run_fs=filesys[4],
-        cnf_save_fs=filesys[5],
+        cnf_run_fs=cnf_run_fs,
+        cnf_save_fs=cnf_save_fs,
         script_str=sp_script_str,
         overwrite=overwrite,
-        nsamp_par=mc_nsamp,
+        nsamp_par=[False, 0, 0, 0, 0, 1],
         saddle=saddle,
         dist_info=dist_info,
-        two_stage=two_stage,
+        two_stage=saddle,
         **kwargs,
     )
 
 
 def run_conformers(
-        zma, spc_info, thy_level, nsamp, tors_range_dct,
+        zma, spc_info, thy_info, nsamp, tors_range_dct,
         cnf_run_fs, cnf_save_fs, script_str, overwrite, saddle, two_stage,
         **kwargs):
     """ run sampling algorithm to find conformers
@@ -179,7 +175,7 @@ def run_conformers(
                 run_fs=run_fs,
                 geom=samp_zma,
                 spc_info=spc_info,
-                thy_level=thy_level,
+                thy_level=thy_info,
                 overwrite=overwrite,
                 frozen_coordinates=[tors_names],
                 saddle=saddle,
@@ -199,7 +195,7 @@ def run_conformers(
                     run_fs=run_fs,
                     geom=samp_zma,
                     spc_info=spc_info,
-                    thy_level=thy_level,
+                    thy_level=thy_info,
                     overwrite=overwrite,
                     saddle=saddle,
                     **kwargs
@@ -211,7 +207,7 @@ def run_conformers(
                 run_fs=run_fs,
                 geom=samp_zma,
                 spc_info=spc_info,
-                thy_level=thy_level,
+                thy_level=thy_info,
                 overwrite=overwrite,
                 saddle=saddle,
                 **kwargs
@@ -338,12 +334,6 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
                             else:
                                 equi_bnd = 0.0
                             displace_from_equi = conf_dist_len - equi_bnd
-                            # print('distance_from_equi test:',
-                            #       conf_dist_len, equi_bnd, dist_len)
-                            # print('bnd atoms:', ts_bnd1, ts_bnd2,
-                            #       symbols[ts_bnd1], symbols[ts_bnd2])
-                            # print('symbols:', symbols[ts_bnd1],
-                            #       symbols[ts_bnd2])
                             dchk1 = abs(conf_dist_len - dist_len) > 0.2
                             dchk2 = displace_from_equi < 0.2
                             if dchk1 and dchk2:

@@ -10,9 +10,10 @@ from lib.runner import driver
 from lib.runner import par as runpar
 
 
-def sadpt_reference_geometry(spcdct, thy_level, ini_thy_level,
-                             geo_fs, ini_fs,
-                             dist_info=(), overwrite=False):
+def sadpt_reference_geometry(spcdct, thy_info, ini_thy_info,
+                             thy_save_fs, ini_save_fs,
+                             cnf_run_fs, cnf_save_fs,
+                             run_fs, dist_info=(), overwrite=False):
     """ determine what to use as the reference geometry for all future runs
     If ini_thy_info refers to geometry dictionary then use that,
     otherwise values are from a hierarchy of:
@@ -60,7 +61,7 @@ def sadpt_reference_geometry(spcdct, thy_level, ini_thy_level,
             run_fs=run_fs,
             geom=zma_init,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_level=thy_info,
             saddle=True,
             overwrite=overwrite,
             **opt_kwargs,
@@ -86,6 +87,7 @@ def sadpt_reference_geometry(spcdct, thy_level, ini_thy_level,
             thy_save_fs[0].file.zmatrix.write(zma)
 
             conformer.single_conformer(
-                spc_info, thy_level, geo_fs,
-                overwrite, True, dist_info)
+                spc_info, thy_info, 
+                thy_save_fs, cnf_run_fs, cnf_save_fs,
+                overwrite, saddle=saddle, dist_info=dist_info)
     return geo

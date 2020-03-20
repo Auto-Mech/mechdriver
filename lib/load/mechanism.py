@@ -47,6 +47,9 @@ def parse_mechanism_file(job_path, mech_type, spc_dct, run_obj_dct,
     # Build the total PES dct
     pes_dct = build_pes_dct(formulas, rct_names, prd_names, rxn_names)
 
+    # Build an index dct relating idx to formula
+    idx_dct, form_dct = build_pes_idx_dct(pes_dct)
+
     # Print the channels
     print_pes_channels(pes_dct)
 
@@ -62,7 +65,8 @@ def parse_mechanism_file(job_path, mech_type, spc_dct, run_obj_dct,
 
     # Form the pes dct that has info formatted to run
     # Get the models in here
-    run_pes_dct = pes_dct_w_rxn_lsts(reduced_pes_dct, conn_chnls_dct, run_obj_dct)
+    run_pes_dct = pes_dct_w_rxn_lsts(
+        reduced_pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct)
 
     return run_pes_dct
 
@@ -82,6 +86,8 @@ def _parse_chemkin(mech_str, spc_dct, sort_rxns):
     # Build the inchi dct
     ich_dct = {}
     for key in spc_dct.keys():
+        print(key)
+        print(spc_dct[key])
         ich_dct[key] = spc_dct[key]['ich']
 
     # Sort reactant and product name lists by formula to facilitate
@@ -132,6 +138,18 @@ def build_pes_dct(formula_str_lst, rct_names_lst,
             pes_dct[formula]['rxn_name_lst'] = [rxn_name_lst[fidx]]
 
     return pes_dct
+
+
+def build_pes_idx_dct(pes_dct):
+    """ build a dct relating index to formulat 
+    """
+    idx_dct = {}
+    form_dct = {}
+    for pes_idx, formula in enumerate(pes_dct):
+        idx_dct[pes_idx+1] = formula
+        form_dct[formula] = pes_idx+1
+
+    return idx_dct, form_dct
 
 
 def reduce_pes_dct_to_user_inp(pes_dct, pesnums):
@@ -220,7 +238,7 @@ def determine_connected_pes_channels(pes_dct):
     return conn_chn_dct
 
 
-def pes_dct_w_rxn_lsts(pes_dct, conn_chnls_dct, run_obj_dct):
+def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
     """ Form a new PES dictionary with the rxn_lst formatted to work
         with the drivers currently
     """
@@ -236,7 +254,10 @@ def pes_dct_w_rxn_lsts(pes_dct, conn_chnls_dct, run_obj_dct):
         run_chnls = []
         for pes_chn_pair in run_obj_dct:
             pes_num, chn_num = pes_chn_pair
-            if pes_num == pes_idx+1:
+            print('num chk', pes_num, chn_num)
+            print(pes_idx)
+            print(idx_dct[pes_num])
+            if idx_dct[pes_num] == formula:
                 run_chnls.append(chn_num)
 
         # Select names from the names list corresponding to chnls to run
@@ -249,10 +270,11 @@ def pes_dct_w_rxn_lsts(pes_dct, conn_chnls_dct, run_obj_dct):
             for chn_idx in run_chnls:
                 # if chn_idx in cvals:
                 # Need to fix idxs at some point....
+                pes_idx = form_dct[formula]
                 rct_names_lst.append(pes_rct_names_lst[chn_idx-1])
                 prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
                 rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
-                rxn_model_lst.append(run_obj_dct[(pes_idx+1, chn_idx)])
+                rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])
                 # print('running channel {}: {} = {}'.format(
                 #     str(chn_idx),
                 #     ' + '.join(pes_rct_names_lst[chn_idx-1]),
@@ -271,6 +293,11 @@ def pes_dct_w_rxn_lsts(pes_dct, conn_chnls_dct, run_obj_dct):
 def format_run_rxn_lst(rct_names_lst, prd_names_lst, rxn_model_lst):
     """ Get the lst of reactions to be run
     """
+    print('in rxn lst')
+    print(rct_names_lst)
+    print(prd_names_lst)
+    print(rxn_model_lst)
+
     # spc_queue
     spc_queue = []
     for rxn, _ in enumerate(rct_names_lst):

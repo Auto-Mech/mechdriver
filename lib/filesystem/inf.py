@@ -52,19 +52,13 @@ def get_spc_info(spc_dct):
     return props
 
 
-def rxn_info(save_prefix, sadpt, ts_dct, spc_dct, thy_info):
+def rxn_info(reacs, prods, spc_dct, ts_mul='low'):
     """ prepare rxn info and reverse the reactants and products
         if reaction is endothermic
     """
     rxn_ichs = [[], []]
     rxn_chgs = [[], []]
     rxn_muls = [[], []]
-    print('\n TS for {}: {} = {}'.format(
-        sadpt,
-        '+'.join(ts_dct[sadpt]['reacs']),
-        '+'.join(ts_dct[sadpt]['prods'])))
-    reacs = ts_dct[sadpt]['reacs']
-    prods = ts_dct[sadpt]['prods']
     for spc in reacs:
         rxn_ichs[0].append(spc_dct[spc]['ich'])
         rxn_chgs[0].append(spc_dct[spc]['chg'])
@@ -73,30 +67,42 @@ def rxn_info(save_prefix, sadpt, ts_dct, spc_dct, thy_info):
         rxn_ichs[1].append(spc_dct[spc]['ich'])
         rxn_chgs[1].append(spc_dct[spc]['chg'])
         rxn_muls[1].append(spc_dct[spc]['mul'])
+    rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
+        rxn_ichs, rxn_chgs, rxn_muls)
+    low_mul, high_mul, mul, chg = rxn_chg_mult(
+        rxn_muls, rxn_chgs, ts_mul=ts_mul)
 
-    # Check direction of reaction
-    # try:
+    return [rxn_ichs, rxn_chgs, rxn_muls, mul]
+
+
+def assess_rxn_exo(reacs, prods, spc_dct, thy_info, save_prefix):
+    """ Check the directionality of the reaction
+    """
+    [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info(reacs, prods, spc_dct)
     rxn_exo = fsread.reaction_energy(
         save_prefix, rxn_ichs, rxn_chgs, rxn_muls, thy_info)
-    # except IOError:
-    #     rxn_exo = fsread.reaction_energy(
-    #         save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
     print('reaction is {:.2f} endothermic'.format(rxn_exo*phycon.EH2KCAL))
-    if rxn_exo > 0 and not ts_dct[sadpt]['given_class']:
+    if rxn_exo > 0:
         rxn_ichs = rxn_ichs[::-1]
         rxn_chgs = rxn_chgs[::-1]
         rxn_muls = rxn_muls[::-1]
-        ts_dct[sadpt]['reacs'] = prods
-        ts_dct[sadpt]['prods'] = reacs
-        print('Reaction will proceed as {}: {} = {}'.format(
-            sadpt,
-            '+'.join(ts_dct[sadpt]['reacs']),
-            '+'.join(ts_dct[sadpt]['prods'])))
+        reacs, prods = prods, reacs
 
-    # set up the filesystem
-    rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
-        rxn_ichs, rxn_chgs, rxn_muls)
+    return reacs, prods
+
+
+def rxn_chg_mult(rxn_muls, rxn_chgs, ts_mul='low'):
+    """ prepare rxn info and reverse the reactants and products
+        if reaction is endothermic
+    """
+    assert ts_mul in ('low', 'high')
     low_mul = min(tslow(rxn_muls[0]), tslow(rxn_muls[1]))
     high_mul = max(tshigh(rxn_muls[0]), tshigh(rxn_muls[1]))
+    mul = low_mul if ts_mul == 'low' else high_mul
 
-    return rxn_ichs, rxn_chgs, rxn_muls, low_mul, high_mul
+    print('aa', rxn_chgs)
+    chg = 0
+    for rchg in rxn_chgs[0]:
+        chg += rchg
+
+    return low_mul, high_mul, mul, chg
