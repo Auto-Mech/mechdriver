@@ -7,10 +7,8 @@ import automol
 import autoparse.find as apf
 import autofile
 from lib.load import ptt
-from lib.load import run as loadrun
 from lib.phydat import symm, eleclvl
 from lib.reaction import rxnid
-from lib.filesystem import path as fpath
 from lib.filesystem import read as fread
 from lib.filesystem import inf as finf
 from lib.phydat import phycon
@@ -24,14 +22,12 @@ CLA_INP = 'inp/class.csv'
 def build_run_spc_dct(spc_dct, run_obj_dct):
     """ Get a dictionary of requested species matching the PES_DCT format
     """
-    # Fix stuff, this function does not work right now
 
-    spc_nums = [idx for idx in run_obj_dct['spc']]
+    spc_nums = run_obj_dct['spc']
 
     run_spc_lst = []
     for idx, spc in enumerate(spc_dct):
         if idx+1 in spc_nums:
-            # model = spcmods[idx]
             run_spc_lst.append((spc, run_obj_dct['spc'][idx+1]))
 
     # Build the run dct
@@ -301,10 +297,10 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
                 reacs, prods, spc_dct, thy_info, save_prefix)
         print('\n TS for {}: {} = {}'.format(
             tsname, '+'.join(reacs), '+'.join(prods)))
-       
+
         # Set the info
         rxn_info = finf.rxn_info(reacs, prods, spc_dct)
-        [rxn_ichs, rxn_chgs, rxn_muls, mul] = rxn_info
+        [_, rxn_chgs, rxn_muls, _] = rxn_info
         low_mul, high_mul, _, chg = finf.rxn_chg_mult(
             rxn_muls, rxn_chgs, ts_mul='low')
         rad_rad = rxnid.determine_rad_rad(rxn_muls)
@@ -332,10 +328,8 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
         ret1, ret2 = ret
 
         if ret1:
-            [_, zma, dist_name, brk_name, grid, 
-            frm_bnd_key, brk_bnd_key,
-            tors_names, update_guess] = ret1
-            dct_keys = ['class', 'zma', 'dist_name', 'brk_name', 'grid', 
+            [_, _, dist_name, brk_name, _, _, _, _, update_guess] = ret1
+            dct_keys = ['class', 'zma', 'dist_name', 'brk_name', 'grid',
                         'frm_bnd_key', 'brk_bnd_key',
                         'tors_names', 'update_guess']
             ts_dct[tsname].update(dict(zip(dct_keys, ret1)))

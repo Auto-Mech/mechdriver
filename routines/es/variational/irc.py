@@ -12,7 +12,7 @@ from lib.runner import driver as rundriver
 
 def irc_scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
              scn_save_fs, scn_run_fs, run_fs,
-             overwrite):
+             overwrite, opt_script_str, **opt_kwargs):
     """ Run the IRC
     """
 
@@ -24,7 +24,9 @@ def irc_scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
             run_fs,
             ts_info,
             mod_thy_info,
-            overwrite
+            overwrite,
+            opt_script_str,
+            **opt_kwargs)
         )
         save_irc(
             irc_job,
@@ -36,13 +38,10 @@ def irc_scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
         )
 
 
-def run_irc(zma, irc_job, run_fs, ts_info, scn_thy_info, overwrite):
+def run_irc(zma, irc_job, run_fs, ts_info, scn_thy_info, overwrite,
+            opt_script_str, **opt_kwargs):
     """ Run the irc job
     """
-
-    # Set up script and kwargs for the irc run
-    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
-        *scn_thy_info[0:2])
 
     # set irc options here for now
     opt_kwargs['job_options'] = ['calcall', 'stepsize=3', 'maxpoints=4']

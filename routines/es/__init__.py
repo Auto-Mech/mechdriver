@@ -12,9 +12,7 @@ from routines.es import ts
 from routines.es import wells
 from routines.es import find
 from routines.es import variational
-# from lib.phydat import phycon
 from lib.runner import par as runpar
-# from lib.filesystem import minc as fsmin
 from lib.filesystem import orb as fsorb
 from lib.filesystem import build as fbuild
 from lib.filesystem import inf as finf
@@ -58,32 +56,31 @@ def run_tsk(tsk, spc_dct, spc_name,
     spc = spc_dct[spc_name]
 
     # Get stuff from task
-    print(tsk)
     [_, job] = tsk.split('_')
 
     # Run the task if an initial geom exists
     if 'init' in tsk:
-        geo = run_geom_init(
+        _ = run_geom_init(
             spc, thy_info, ini_thy_info,
             run_prefix, save_prefix, saddle, es_options)
     elif 'find' in tsk:
         run_ts(spc_dct, spc_name, thy_info, ini_thy_info,
                run_prefix, save_prefix, es_options)
     elif 'conf' in tsk:
-        run_conformer_tsk(spc_name, spc_dct,
-                          thy_info, init_thy_info,
+        run_conformer_tsk(job, spc_dct, spc_name, thy_info,
                           run_prefix, save_prefix,
                           saddle, es_options)
     elif 'tau' in tsk:
         run_tau_tsk(job, spc, thy_info,
                     run_prefix, save_prefix,
-                    saddle, es_options)
+                    es_options)
     elif 'hr' in tsk:
-        run_hr_tsk(job, spc, thy_info,
+        run_hr_tsk(job, spc_dct, spc_name, thy_info,
                    run_prefix, save_prefix,
                    saddle, es_options)
     elif 'irc' in tsk:
-        run_irc_tsk(job, spc, thy_info, es_options)
+        pass
+        # run_irc_tsk(job, spc, thy_info, es_options)
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
@@ -93,8 +90,6 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     """
     # Set the spc_info
     spc_info = finf.get_spc_info(spc)
-
-    print('dct\n', spc)
 
     # Get es options
     [kickoff_size, kickoff_backward] = spc['kickoff']
@@ -144,7 +139,8 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     return geo
 
 
-def run_conformer_tsk(job, spc, thy_info, run_prefix, save_prefix,
+def run_conformer_tsk(job, spc_dct, spc_name, thy_info,
+                      run_prefix, save_prefix,
                       saddle, es_options):
     """ Launch tasks associated with conformers.
         Scan: Generate a set of conformer geometries and energies via
@@ -152,6 +148,7 @@ def run_conformer_tsk(job, spc, thy_info, run_prefix, save_prefix,
               following by optimization
         SP: Calculate ene, grad, ..
     """
+    spc = spc_dct[spc_name]
 
     # Set the spc_info
     spc_info = finf.get_spc_info(spc)
@@ -169,6 +166,8 @@ def run_conformer_tsk(job, spc, thy_info, run_prefix, save_prefix,
         thy_save_fs, thy_save_path = fbuild.spc_thy_fs_from_root(
             save_prefix, spc_info, mod_thy_info)
     else:
+        rxn_info = finf.rxn_info(
+            spc['reacs'], spc['prods'], spc_dct)
         _, thy_run_path = fbuild.rxn_thy_fs_from_root(
             run_prefix, rxn_info, mod_thy_info)
         thy_save_fs, thy_save_path = fbuild.rxn_thy_fs_from_root(
@@ -226,7 +225,7 @@ def run_conformer_tsk(job, spc, thy_info, run_prefix, save_prefix,
 
 
 def run_tau_tsk(job, spc, thy_info, run_prefix, save_prefix,
-                saddle, es_options):
+                es_options):
     """ Energies, gradients, and hessians,
         for set of arbitrarily sampled torsional coordinates
         with all other coordinates optimized
@@ -248,16 +247,10 @@ def run_tau_tsk(job, spc, thy_info, run_prefix, save_prefix,
     mod_thy_info = fsorb.mod_orb_restrict(spc_info, thy_info)
 
     # Set the filesystem objects
-    if not saddle:
-        _, thy_run_path = fbuild.spc_thy_fs_from_root(
-            run_prefix, spc_info, mod_thy_info)
-        thy_save_fs, thy_save_path = fbuild.spc_thy_fs_from_root(
-            save_prefix, spc_info, mod_thy_info)
-    else:
-        _, thy_run_path = fbuild.rxn_thy_fs_from_root(
-            run_prefix, rxn_info, mod_thy_info)
-        thy_save_fs, thy_save_path = fbuild.rxn_thy_fs_from_root(
-            save_prefix, rxn_info, mod_thy_info)
+    _, thy_run_path = fbuild.spc_thy_fs_from_root(
+        run_prefix, spc_info, mod_thy_info)
+    thy_save_fs, thy_save_path = fbuild.spc_thy_fs_from_root(
+        save_prefix, spc_info, mod_thy_info)
     tau_run_fs, _ = fbuild.tau_fs_from_thy(thy_run_path, tau='all')
     tau_save_fs, _ = fbuild.tau_fs_from_thy(thy_save_path, tau='all')
 
@@ -273,10 +266,10 @@ def run_tau_tsk(job, spc, thy_info, run_prefix, save_prefix,
             *thy_info[0:2])
         print('running task {}'.format(job))
         tau_run_fs, _ = fbuild.tau_fs_from_thy(thy_run_path, tau='all')
-        tau_save_fs, tau_locs = fbuild.tau_fs_from_thy(thy_save_path, tau='all')
+        tau_save_fs, tau_locs = fbuild.tau_fs_from_thy(
+            thy_save_path, tau='all')
         # Run the job over all the conformers requested by the user
         for locs in tau_locs:
-            print(locs)
             geo_run_path = tau_run_fs[-1].path(locs)
             geo_save_path = tau_save_fs[-1].path(locs)
             if tau_save_fs[-1].file.zmatrix.exists(locs):
@@ -289,11 +282,14 @@ def run_tau_tsk(job, spc, thy_info, run_prefix, save_prefix,
                 script_str, overwrite, **kwargs)
 
 
-def run_hr_tsk(job, spc, thy_info, run_prefix, save_prefix,
+def run_hr_tsk(job, spc_dct, spc_name, thy_info,
+               run_prefix, save_prefix,
                saddle, es_options):
     """ run a scan over the specified torsional coordinates
     """
     print('running task {}'.format('hr'))
+
+    spc = spc_dct[spc_name]
 
     # Set the spc_info
     spc_info = finf.get_spc_info(spc)
@@ -351,8 +347,6 @@ def run_hr_tsk(job, spc, thy_info, run_prefix, save_prefix,
         scn_run_fs = autofile.fs.scan(cnf_run_paths[0])
         scn_save_fs = autofile.fs.scan(cnf_save_paths[0])
 
-    print('job', job)
-    # Run the task
     if job == 'scan':
         scan.hindered_rotor_scans(
             zma, spc_info, thy_info, scn_run_fs, scn_save_fs,
@@ -361,10 +355,8 @@ def run_hr_tsk(job, spc, thy_info, run_prefix, save_prefix,
             saddle=saddle, constraint_dct=constraint_dct, **opt_kwargs)
     elif job in ('energy', 'grad', 'hess', 'vpt2'):
         if run_tors_names:
-            print('here')
             script_str, _, kwargs, _ = runpar.run_qchem_par(
                 *thy_info[0:2])
-            print('tors', run_tors_names)
             for tors_names in run_tors_names:
                 if not frz_all_tors:
                     scn_locs = fbuild.scn_locs_from_fs(
@@ -382,7 +374,7 @@ def run_hr_tsk(job, spc, thy_info, run_prefix, save_prefix,
                         script_str, overwrite, **kwargs)
 
 
-def run_irc_tsk(job, spc, scn_thy_info, ene_thy_info,
+def run_irc_tsk(job, spc, thy_info,
                 run_prefix, save_prefix,
                 saddle, es_options):
     """ run a scan over the specified torsional coordinates
@@ -397,23 +389,20 @@ def run_irc_tsk(job, spc, scn_thy_info, ene_thy_info,
 
     # Script
     _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
-        *scn_thy_info[0:2])
-    script_str, _, kwargs, _ = runpar.run_qchem_par(
-        *ene_thy_info[0:2])
+        *thy_info[0:2])
 
     # Modify the theory
-    mod_scn_thy_info = fsorb.mod_orb_restrict(spc_info, scn_thy_info)
-    mod_ene_thy_info = fsorb.mod_orb_restrict(spc_info, ene_thy_info)
+    mod_thy_info = fsorb.mod_orb_restrict(spc_info, thy_info)
 
     # Get options from the dct or es options lst
     overwrite = bool('overwrite' in es_options)
     irc_idxs = spc['irc_idxs']
-    
+
     # Set the filesystem objects
     _, thy_run_path = fbuild.thy_fs_from_root(
-        run_prefix, spc_info, mod_scn_thy_info)
+        run_prefix, spc_info, mod_thy_info)
     _, thy_save_path = fbuild.thy_fs_from_root(
-        save_prefix, spc_info, mod_scn_thy_info)
+        save_prefix, spc_info, mod_thy_info)
     cnf_run_fs = fbuild.cnf_fs_from_thy(
         thy_run_path, saddle=saddle)
     cnf_save_fs = fbuild.cnf_fs_from_thy(
@@ -422,36 +411,32 @@ def run_irc_tsk(job, spc, scn_thy_info, ene_thy_info,
         cnf_save_fs, cnf='min')
     _, cnf_run_paths = fbuild.cnf_locs_from_fs(
         cnf_run_fs, cnf='min')
-
-    # Build the conformer filesytems Get the file system
-    # [_, _, rxn_run_path, rxn_save_path] = ts_dct['rxn_fs']
-    # _, _, ts_run_path, ts_save_path = fpath.get_ts_fs(
-    #     rxn_run_path, rxn_save_path, ref_level)
-    # cnf_run_fs = autofile.fs.conformer(ts_run_path)
-    # cnf_save_fs = autofile.fs.conformer(ts_save_path)
-
-    # # Set up the scan filesys for the minimum-ene conformer of the TS
-    # min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
-    # cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
-    # cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
-    # scn_save_fs = autofile.fs.scan(cnf_save_path)
-    # scn_run_fs = autofile.fs.scan(cnf_run_path)
-
-    # # Set up the IRC run filesystem
-    # run_fs = autofile.fs.run(cnf_run_path)
+    run_fs = autofile.fs.run(cnf_run_paths[0])
+    scn_run_fs = autofile.fs.scan(cnf_run_paths[0])
+    scn_save_fs = autofile.fs.scan(cnf_save_paths[0])
 
     if job == 'scan':
+        if cnf_save_fs[-1].file.zmatrix.exists(cnf_locs):
+            geo = cnf_save_fs[-1].file.zmatrix.read(cnf_locs)
+        else:
+            geo = cnf_save_fs[-1].file.geometry.read(cnf_locs)
         variational.irc.irc_scan(
-            zma, ts_info, mod_thy_info, coo_name, irc_idxs,
+            geo, spc_info, mod_thy_info, coo_name, irc_idxs,
             scn_save_fs, scn_run_fs, run_fs,
-            overwrite)
+            overwrite, opt_script_str, **opt_kwargs)
     elif job in ('energy'):
-        routines.es.variational.irc.irc_sp(
-            ts_dct[sadpt],
-            thy_info,
-            sp_thy_info,
-            irc_idxs,
-            es_options=es_options)
+        script_str, _, kwargs, _ = runpar.run_qchem_par(
+            *mod_thy_info[0:2])
+        scn_locs = fbuild.cscn_locs_from_fs(
+            scn_save_fs, [coo_name])
+        for locs in scn_locs:
+            geo_run_path = scn_run_fs[-1].path(locs)
+            geo_save_path = scn_save_fs[-1].path(locs)
+            geo = scn_save_fs[-1].file.geometry.read(locs)
+            eval(ES_TSKS[job])(
+                geo, spc_info, mod_thy_info,
+                scn_save_fs, geo_run_path, geo_save_path, locs,
+                script_str, overwrite, **kwargs)
 
 
 def run_ts(spc_dct, spc_name,
@@ -460,46 +445,55 @@ def run_ts(spc_dct, spc_name,
            es_options):
     """ find a transition state
     """
+    #        for sadpt in ts_dct:
+    #            if not ts_dct[sadpt]['class']:
+    #                print('skipping reaction because type =',
+    #                      ts_dct[sadpt]['class'])
+    mod_multi_opt_info, mod_multi_sp_info = [], []
+    vrc_dct = {}
+    overwrite = bool('overwrite' in es_options)
 
     # Filesystem
     rxn_info = finf.rxn_info(
         spc_dct[spc_name]['reacs'], spc_dct[spc_name]['prods'], spc_dct)
     ts_info = ('', spc_dct[spc_name]['chg'], spc_dct[spc_name]['mul'])
     mod_thy_info = fsorb.mod_orb_restrict(ts_info, thy_info)
+    mod_ini_thy_info = fsorb.mod_orb_restrict(ts_info, ini_thy_info)
     _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
         *thy_info[0:2])
 
-    print(rxn_info)
-    # rxn_info.append(spc_dct[spc_name]['mul'])
-    # print(rxn_info)
-    rxn_run_fs, rxn_run_path = fbuild.rxn_fs_from_root(
-        run_prefix, rxn_info)
-    rxn_save_fs, rxn_save_path = fbuild.rxn_fs_from_root(
-        save_prefix, rxn_info)
-
     # set up fs
-    run_thy_fs, run_thy_path = fbuild.rxn_thy_fs_from_root(
+    if mod_multi_opt_info:
+        _, thy_run_path = fbuild.rxn_thy_fs_from_root(
+            run_prefix, rxn_info, mod_multi_opt_info)
+        thy_save_fs, thy_save_path = fbuild.rxn_thy_fs_from_root(
+            save_prefix, rxn_info, mod_multi_opt_info)
+    else:
+        _, thy_run_path = fbuild.rxn_thy_fs_from_root(
             run_prefix, rxn_info, mod_thy_info)
-    save_thy_fs, save_thy_path = fbuild.rxn_thy_fs_from_root(
+        thy_save_fs, thy_save_path = fbuild.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_thy_info)
     cnf_run_fs, _ = fbuild.cnf_fs_from_thy(
         thy_run_path, cnf=None, saddle=True)
-    cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_thy(
+    cnf_save_fs, _ = fbuild.cnf_fs_from_thy(
         thy_save_path, cnf=None, saddle=True)
-    scn_run_fs = autofile.fs.scan(cnf_run_paths[0])
-    scn_save_fs = autofile.fs.scan(cnf_save_paths[0])
+    scn_run_fs = autofile.fs.scan(thy_run_path)
+    scn_save_fs = autofile.fs.scan(thy_save_path)
 
-    multi_opt_info, multi_sp_info = [], []
-    vrc_dct = {}
-    overwrite = False
+    # Run
     find.find_ts(
         spc_dct, spc_dct[spc_name],
-        spc_dct[spc_name]['zma'],
-        ini_thy_info, thy_info,
-        multi_opt_info, multi_sp_info,
-        rxn_run_path, rxn_save_path,
+        spc_dct[spc_name]['zma'], ts_info,
+        mod_ini_thy_info, mod_thy_info,
+        mod_multi_opt_info, mod_multi_sp_info,
+        thy_save_fs,
+        cnf_run_fs, cnf_save_fs,
+        scn_run_fs, scn_save_fs,
         run_prefix, save_prefix,
-        overwrite, vrc_dct)
+        opt_script_str,
+        overwrite, vrc_dct,
+        rad_rad_ts='ptst',
+        **opt_kwargs)
 #
 #
 # def run_vdw():
