@@ -247,15 +247,30 @@ def set_ts_spin(ts_mul, high_mul, low_mul):
     return spin
 
 
-def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
+def determine_rad_rad(rxn_muls):
+    """ determine if reaction is radical-radical
+    """
+    rct_muls = rxn_muls[0]
+    mul1, mul2 = rct_muls
+    rad_rad = bool(mul1 > 1 and mul2 > 1)
+    return rad_rad
+
+
+def reaction_chg_and_mul(rcts, prds, spc_dct):
     """ evaluate the ts multiplicity from the multiplicities
         of the reactants and products
     """
     nrcts = len(rcts)
     nprds = len(prds)
+
+    # Set the charges
+    ts_chg = 0
+    for rct in rcts:
+        ts_chg += spc_dct[rct]['chg']
+
+    # Set the multiplicities
     rct_spin_sum = 0
     prd_spin_sum = 0
-    rad_rad = True
     rct_muls = []
     prd_muls = []
     if nrcts == 1 and nprds == 1:
@@ -277,4 +292,5 @@ def ts_mul_from_reaction_muls(rcts, prds, spc_dct):
         ts_mul_low = int(round(2*ts_mul_low + 1))
         ts_mul_high = max(rct_spin_sum, prd_spin_sum)
         ts_mul_high = int(round(2*ts_mul_high + 1))
-    return ts_mul_low, ts_mul_high, rad_rad
+
+    return ts_chg, ts_mul_low, ts_mul_high, rad_rad

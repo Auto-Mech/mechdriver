@@ -40,7 +40,7 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
     spc_info = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
 
     # Prepare the sets of file systems
-    [_, _, harm_levels, _, sym_level, tors_levels] = pf_levels
+    [_, _, harm_levels, vpt2_level, sym_level, tors_levels] = pf_levels
     tors_model, vib_model, sym_model = spc_model
 
     # Set theory filesystem used throughout
@@ -69,6 +69,11 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
             thy_save_fs, spc_info, tors_levels[0], saddle=saddle)
         [tors_cnf_save_fs, tors_cnf_save_path,
          tors_min_cnf_locs, tors_save_path] = torsfs
+    if vpt2_level:
+        vpt2fs = set_model_filesys(
+            thy_save_fs, spc_info, vpt2_level, saddle=('ts_' in spc))
+        [vpt2_cnf_save_fs, vpt2_cnf_save_path,
+         vpt2_min_cnf_locs, vpt2_save_path] = vpt2fs
 
     # Set additional info for a saddle point
     saddle = False
@@ -119,7 +124,6 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
             saddle = True
 
         no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
-        #if automol.geom.is_linear(harm_geo):
         if no_tors:
             mode_start = mode_start - 1
         freqs = freqs[mode_start:]
@@ -152,7 +156,10 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
         elif vib_model == 'tau' and tors_model == 'tau':
             zpe = 0.0
         elif vib_model == 'vpt2' and tors_model == 'rigid':
-            print('VPT2 and RIGID combination is not yet implemented')
+            _, _, _, _, zpe = pfmodels.vib_vpt2_tors_rigid(
+                harm_min_cnf_locs, harm_cnf_save_fs,
+                vpt2_min_cnf_locs, vpt2_cnf_save_fs,
+                saddle=saddle)
         elif vib_model == 'vpt2' and tors_model == '1dhr':
             print('VPT2 and 1DHR combination is not yet implemented')
         elif vib_model == 'vpt2' and tors_model == 'tau':
@@ -172,13 +179,11 @@ def get_high_level_energy(
         spc_save_fs[-1].create(spc_info)
         spc_save_path = spc_save_fs[-1].path(spc_info)
 
-    orb_restr = fsorb.orbital_restriction(
+    thy_low_level = fsorb.mod_orb_restrict(
         spc_info, thy_low_level)
-    thy_low_level = thy_low_level[1:3]
-    thy_low_level.append(orb_restr)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
-    ll_save_path = ll_save_fs[-1].path(thy_low_level)
+    ll_save_path = ll_save_fs[-1].path(thy_low_level[1:4])
 
     if os.path.exists(ll_save_path):
         if saddle:
@@ -195,16 +200,14 @@ def get_high_level_energy(
             return 0.0
         cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
 
-        orb_restr = fsorb.orbital_restriction(
+        thy_high_level = fsorb.mod_orb_restrict(
             spc_info, thy_high_level)
-        thy_high_level = thy_high_level[1:3]
-        thy_high_level.append(orb_restr)
 
         sp_save_fs = autofile.fs.single_point(cnf_save_path)
-        sp_save_fs[-1].create(thy_high_level)
+        sp_save_fs[-1].create(thy_high_level[1:4])
 
-        if os.path.exists(sp_save_fs[-1].path(thy_high_level)):
-            min_ene = sp_save_fs[-1].file.energy.read(thy_high_level)
+        if os.path.exists(sp_save_fs[-1].path(thy_high_level[1:4])):
+            min_ene = sp_save_fs[-1].file.energy.read(thy_high_level[1:4])
         else:
             # print('No energy at path')
             min_ene = None

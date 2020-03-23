@@ -1,4 +1,4 @@
-""" read species
+""" read spcies
 """
 
 import os
@@ -7,12 +7,12 @@ import automol
 import autoparse.find as apf
 import autofile
 from lib.load import ptt
-from lib.load import run as loadrun
 from lib.phydat import symm, eleclvl
 from lib.reaction import rxnid
-from lib.filesystem import path as fpath
 from lib.filesystem import read as fread
 from lib.filesystem import inf as finf
+from lib.filesystem import path as fpath
+from lib.phydat import phycon
 
 
 CSV_INP = 'inp/species.csv'
@@ -23,14 +23,12 @@ CLA_INP = 'inp/class.csv'
 def build_run_spc_dct(spc_dct, run_obj_dct):
     """ Get a dictionary of requested species matching the PES_DCT format
     """
-    # Fix stuff, this function does not work right now
 
-    spc_nums = [idx for idx in run_obj_dct['spc']]
+    spc_nums = run_obj_dct['spc']
 
     run_spc_lst = []
     for idx, spc in enumerate(spc_dct):
         if idx+1 in spc_nums:
-            # model = spcmods[idx]
             run_spc_lst.append((spc, run_obj_dct['spc'][idx+1]))
 
     # Build the run dct
@@ -44,13 +42,13 @@ def build_run_spc_dct(spc_dct, run_obj_dct):
     return run_dct
 
 
-def build_spc_dct(job_path, spc_type):
+def build_spc_dct(job_path, spc_type, check_stereo=False):
     """ Get a dictionary of all the input species
         indexed by InChi string
     """
     spc_csv_str = ptt.read_inp_str(job_path, CSV_INP)
     if spc_type == 'csv':
-        spc_dct = csv_dct(spc_csv_str, check_stereo=False)
+        spc_dct = csv_dct(spc_csv_str, check_stereo=check_stereo)
     else:
         raise NotImplementedError
 
@@ -115,19 +113,30 @@ def read_spc_amech(job_path):
     """ Read an amech style input file for the species
     """
 
+    # Read the AMech species string
     spc_amech_str = ptt.read_inp_str(job_path, DAT_INP)
 
+    # Build the keyword dcts
+    glob_spc_dct = {}
     spc_dct = {}
     if spc_amech_str:
+        # Read each of the species sections and build the dcts
         spc_sections = apf.all_captures(
             ptt.end_section_wname2('spc'), spc_amech_str)
         if spc_sections:
+            # Get the global species section
             for section in spc_sections:
-                name = section[0]
-                keyword_dct = ptt.build_keyword_dct(section[1])
-                spc_dct[name] = keyword_dct
+                if section[0] == 'global':
+                    # Build the global species section
+                    keyword_dct = ptt.build_keyword_dct(section[1])
+                    glob_spc_dct = keyword_dct
+                else:
+                    # Build each species dct to overwrite global dct
+                    name = section[0]
+                    keyword_dct = ptt.build_keyword_dct(section[1])
+                    spc_dct[name] = keyword_dct
 
-    return spc_dct
+    return glob_spc_dct, spc_dct
 
 
 def modify_spc_dct(job_path, spc_dct):
@@ -135,7 +144,7 @@ def modify_spc_dct(job_path, spc_dct):
     """
 
     # Read in other dcts
-    amech_dct = read_spc_amech(job_path)
+    glob_dct, amech_dct = read_spc_amech(job_path)
     geom_dct = geometry_dictionary(job_path)
 
     mod_spc_dct = {}
@@ -149,10 +158,29 @@ def modify_spc_dct(job_path, spc_dct):
         mod_spc_dct[spc]['mul'] = mul
         mod_spc_dct[spc]['chg'] = chg
 
-        # Add the parameters from amech file
+        # Add the parameters from the global species specific dct
+        if glob_dct:
+            if 'hind_inc' in glob_dct:
+                mod_spc_dct[spc]['hind_inc'] = (
+                    glob_dct['hind_inc'] * phycon.DEG2RAD)
+            if 'hind_def' in glob_dct:
+                mod_spc_dct[spc]['hind_def'] = glob_dct['hind_def']
+            if 'elec_levs' in glob_dct:
+                mod_spc_dct[spc]['elec_levs'] = glob_dct['elec_levs']
+            if 'sym' in glob_dct:
+                mod_spc_dct[spc]['sym'] = glob_dct['sym']
+            if 'mc_nsamp' in glob_dct:
+                mod_spc_dct[spc]['mc_nsamp'] = glob_dct['mc_nsamp']
+            if 'kickoff' in glob_dct:
+                mod_spc_dct[spc]['kickoff'] = glob_dct['kickoff']
+            if 'pst_params' in glob_dct:
+                mod_spc_dct[spc]['pst_params'] = glob_dct['pst_params']
+
+        # Add/Reset the parameters from the species specific dct
         if spc in amech_dct:
             if 'hind_inc' in amech_dct[spc]:
-                mod_spc_dct[spc]['hind_inc'] = amech_dct[spc]['hind_inc']
+                mod_spc_dct[spc]['hind_inc'] = (
+                    amech_dct[spc]['hind_inc'] * phycon.DEG2RAD)
             if 'hind_def' in amech_dct[spc]:
                 mod_spc_dct[spc]['hind_def'] = amech_dct[spc]['hind_def']
             if 'elec_levs' in amech_dct[spc]:
@@ -161,6 +189,10 @@ def modify_spc_dct(job_path, spc_dct):
                 mod_spc_dct[spc]['sym'] = amech_dct[spc]['sym']
             if 'mc_nsamp' in amech_dct[spc]:
                 mod_spc_dct[spc]['mc_nsamp'] = amech_dct[spc]['mc_nsamp']
+            if 'kickoff' in amech_dct[spc]:
+                mod_spc_dct[spc]['kickoff'] = amech_dct[spc]['kickoff']
+            if 'pst_params' in amech_dct[spc]:
+                mod_spc_dct[spc]['pst_params'] = amech_dct[spc]['pst_params']
 
         # Add the parameters from std lib if needed
         if 'elec_levs' not in mod_spc_dct[spc]:
@@ -171,6 +203,16 @@ def modify_spc_dct(job_path, spc_dct):
         if 'sym' not in mod_spc_dct[spc]:
             if (ich, mul) in symm.DCT:
                 mod_spc_dct[spc]['sym'] = symm.DCT[(ich, mul)]
+
+        # Add defaults here for now
+        if 'hind_increment' not in mod_spc_dct[spc]:
+            mod_spc_dct[spc]['hind_increment'] = 30 * phycon.DEG2RAD
+        if 'kickoff' not in mod_spc_dct[spc]:
+            mod_spc_dct[spc]['kickoff'] = [0.1, False]
+        if 'mc_nsamp' not in mod_spc_dct[spc]:
+            mod_spc_dct[spc]['mc_nsamp'] = [1, 0, 0, 0, 0, False]
+        if 'pst_params' not in mod_spc_dct[spc]:
+            mod_spc_dct[spc]['pst_params'] = [1.0, 6]
 
         # Add geoms from geo dct (prob switch to amech file)
         if ich in geom_dct:
@@ -187,6 +229,24 @@ def read_class_dct(job_path):
     cla_dct = chemkin_io.parser.mechanism.reac_class_dct(cla_str, 'class')
 
     return cla_dct
+
+
+def set_class_with_dct(cla_dct, rxn_name):
+    """ set the class using the class dictionary
+    """
+    rxn_name = rxn_name_lst[idx]
+    rxn_name_rev = '='.join(rname.split('=')[::-1])
+    if rname in cla_dct:
+        inp_class = cla_dct[rname]
+        flip_rxn = False
+    elif rname_rev in cla_dct:
+        inp_class = cla_dct[rxn_name_rev]
+        flip_rxn = True
+    else:
+        inp_class = None
+        flip_rxn = False
+
+    return inp_class, flip_rxn
 
 
 def geometry_dictionary(job_path):
@@ -207,116 +267,97 @@ def geometry_dictionary(job_path):
     return geom_dct
 
 
-def build_sadpt_dct(rxn_lst, model_dct, thy_dct, es_tsk_str,
-                    run_inp_dct, run_options_dct, spc_dct, cla_dct):
+def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
+                    run_inp_dct, spc_dct, cla_dct):
     """ build dct
     """
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
-    kickoff = run_options_dct['kickoff']
+    kickoff = [0.1, False]
 
-    print('\nBegin transition state prep')
+    print('\nTransition state prep')
     ts_dct = {}
-    ts_idx = 0
-    for _, rxn in enumerate(rxn_lst):
-        es_tsk_lst = loadrun.build_run_es_tsks_lst(
-            es_tsk_str, model_dct[rxn['model']]['es'], thy_dct, saddle=True)
+    for idx, rxn in enumerate(rxn_lst):
+
+        # Initialize dictionary
+        tsname = 'ts_{:g}'.format(idx)
+        ts_dct[tsname] = {}
+
+        # Grab the reactants and products
         reacs = rxn['reacs']
         prods = rxn['prods']
-        tsname = 'ts_{:g}'.format(ts_idx)
-        ts_dct[tsname] = {}
-        # Fix this rname build and class dct stuff
-        # rname = rxn_name_lst[idx]
-        # rname_eq = '='.join(rname.split('=')[::-1])
-        # if rname in cla_dct:
-        #     ts_dct[tsname]['given_class'] = cla_dct[rname]
-        # elif rname_eq in cla_dct:
-        #     ts_dct[tsname]['given_class'] = cla_dct[rname_eq]
-        #     reacs = rxn['prods']
-        #     prods = rxn['reacs']
-        # else:
-        #    ts_dct[tsname]['given_class'] = None
-        ts_dct[tsname]['given_class'] = None
-        if reacs and prods:
-            ts_dct[tsname]['reacs'] = reacs
-            ts_dct[tsname]['prods'] = prods
-        ts_dct[tsname]['ich'] = ''
-        ts_chg = 0
-        for rct in reacs:  # rct_names_lst[idx]:
-            ts_chg += spc_dct[rct]['chg']
-        ts_dct[tsname]['chg'] = ts_chg
-        mul_low, _, rad_rad = rxnid.ts_mul_from_reaction_muls(
-            reacs, prods, spc_dct)
-        ts_dct[tsname]['mul'] = mul_low
-        ts_dct[tsname]['rad_rad'] = rad_rad
-        ts_dct[tsname] = set_sadpt_info(
-             es_tsk_lst, ts_dct, spc_dct, tsname,
-             run_prefix, save_prefix, kickoff)
-        ts_idx += 1
 
-    return ts_dct
+        # Check the class dct to see if we can set class
+        # given_class, flip_rxn = set_class_with_dct(cla_dct, rxn_name)
+        given_class = ''
 
+        # Get the reaction info flipping if needed
+        check_exo = True
+        if check_exo and not given_class:
+            reacs, prods = finf.assess_rxn_exo(
+                reacs, prods, spc_dct, thy_info, save_prefix)
+        print('\n TS for {}: {} = {}'.format(
+            tsname, '+'.join(reacs), '+'.join(prods)))
 
-def set_sadpt_info(es_tsk_lst, ts_dct, spc_dct, sadpt,
-                   run_prefix, save_prefix, kickoff):
-    """ set the saddle point dct with info
-    """
-    for tsk in es_tsk_lst:
-        if 'find_ts' in tsk:
-            ini_thy_info = es_tsk_lst[0][2]
-            thy_info = es_tsk_lst[0][1]
-            break
+        # Set the info
+        rxn_info = finf.rxn_info(reacs, prods, spc_dct)
+        [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
+        low_mul, high_mul, _, chg = finf.rxn_chg_mult(
+            rxn_muls, rxn_chgs, ts_mul='low')
+        rad_rad = rxnid.determine_rad_rad(rxn_muls)
+        ts_mul = low_mul
+        ts_dct[tsname].update(
+            {'low_mul': low_mul,
+             'high_mul': high_mul,
+             'mul': ts_mul,
+             'chg': chg,
+             'rad_rad': rad_rad})
+        ts_dct[tsname]['kickoff'] = [0.1, False]
+        ts_dct[tsname]['reacs'] = reacs
+        ts_dct[tsname]['prods'] = prods
 
-    # Generate rxn data, reorder if necessary, and put in spc_dct for given ts
-    rxn_ichs, rxn_chgs, rxn_muls, low_mul, high_mul = finf.rxn_info(
-        save_prefix, sadpt, ts_dct, spc_dct, thy_info)
-    ts_dct[sadpt]['low_mul'] = low_mul
-    ts_dct[sadpt]['high_mul'] = high_mul
+        # Generate rxn_fs from rxn_info stored in spc_dct
+        [kickoff_size, kickoff_backward] = kickoff
+        rct_zmas, prd_zmas, rct_cnf_save_fs, prd_cnf_save_fs = fread.get_zmas(
+            reacs, prods, spc_dct,
+            ini_thy_info, save_prefix, run_prefix, kickoff_size,
+            kickoff_backward)
+        ret = rxnid.ts_class(
+            rct_zmas, prd_zmas, rad_rad,
+            ts_mul, low_mul, high_mul,
+            rct_cnf_save_fs, prd_cnf_save_fs, given_class)
+        ret1, ret2 = ret
 
-    # Generate rxn_fs from rxn_info stored in spc_dct
-    [kickoff_size, kickoff_backward] = kickoff
+        if ret1:
+            [_, _, dist_name, brk_name, _, _, _, _, update_guess] = ret1
+            dct_keys = ['class', 'zma', 'dist_name', 'brk_name', 'grid',
+                        'frm_bnd_key', 'brk_bnd_key',
+                        'tors_names', 'update_guess']
+            ts_dct[tsname].update(dict(zip(dct_keys, ret1)))
+        else:
+            ts_dct[tsname]['class'] = None
+            ts_dct[tsname]['bkp_data'] = None
+        ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
+        ts_dct[tsname]['dist_info'] = [dist_name, 0., update_guess, brk_name]
+
+    ts_dct[tsname]['mc_nsamp'] = [False, 0, 0, 0, 0, 4]
+    ts_dct[tsname]['hind_inc'] = 30.0 * phycon.DEG2RAD
+    ts_dct[tsname]['irc_idxs'] = [
+        -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0, -2.0, -1.0, 0.0,
+        1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+    ts_dct[tsname]['pst_params'] = [1.0, 6]
+    ts_dct[tsname]['ich'] = ''
+
+    # Reaction fs for now
     rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = fpath.get_rxn_fs(
-        run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_dct[sadpt]['mul'])
-    ts_dct[sadpt]['rxn_fs'] = [
+        run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
+    ts_dct[tsname]['rxn_fs'] = [
         rxn_run_fs,
         rxn_save_fs,
         rxn_run_path,
         rxn_save_path]
-    rct_zmas, prd_zmas, rct_cnf_save_fs, prd_cnf_save_fs = fread.get_zmas(
-        ts_dct[sadpt]['reacs'], ts_dct[sadpt]['prods'], spc_dct,
-        ini_thy_info, save_prefix, run_prefix, kickoff_size,
-        kickoff_backward)
-    ret = rxnid.ts_class(
-        rct_zmas, prd_zmas, ts_dct[sadpt]['rad_rad'],
-        ts_dct[sadpt]['mul'], low_mul, high_mul,
-        rct_cnf_save_fs, prd_cnf_save_fs, ts_dct[sadpt]['given_class'])
-    ret1, ret2 = ret
-    if ret1:
-        [rxn_class, spc_zma,
-         dist_name, brk_name, grid,
-         frm_bnd_key, brk_bnd_key,
-         tors_names, update_guess] = ret1
-        ts_dct[sadpt]['class'] = rxn_class
-        ts_dct[sadpt]['grid'] = grid
-        ts_dct[sadpt]['tors_names'] = tors_names
-        ts_dct[sadpt]['zma'] = spc_zma
-        # ts_dct[sadpt]['original_zma'] = spc_zma
-        dist_info = [dist_name, 0., update_guess, brk_name]
-        ts_dct[sadpt]['dist_info'] = dist_info
-        ts_dct[sadpt]['frm_bnd_key'] = frm_bnd_key
-        ts_dct[sadpt]['brk_bnd_key'] = brk_bnd_key
-        # Adding in the rct and prd zmas for vrctst
-        ts_dct[sadpt]['rct_zmas'] = rct_zmas
-        ts_dct[sadpt]['prd_zmas'] = prd_zmas
-        if ret2:
-            ts_dct[sadpt]['bkp_data'] = ret2
-        else:
-            ts_dct[sadpt]['bkp_data'] = None
-    else:
-        ts_dct[sadpt]['class'] = None
-        ts_dct[sadpt]['bkp_data'] = None
 
-    return ts_dct[sadpt]
+    return ts_dct
 
 
 # Print messages

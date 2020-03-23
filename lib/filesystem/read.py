@@ -30,9 +30,7 @@ def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, thy_level):
         rgt_info = [rgt_ich, rgt_chg, rgt_mul]
         spc_save_path = spc_save_fs[-1].path(rgt_info)
 
-        orb_restr = fsorb.orbital_restriction(rgt_info, thy_level)
-        thy_lvl = thy_level[0:3]
-        thy_lvl.append(orb_restr)
+        thy_lvl = fsorb.mod_orb_restrict(rgt_info, thy_level)
         thy_save_fs = autofile.fs.theory(spc_save_path)
         thy_save_path = thy_save_fs[-1].path(thy_lvl[1:4])
         cnf_save_fs = autofile.fs.conformer(thy_save_path)
@@ -84,9 +82,7 @@ def get_geos(
         spc_info = [spc_dct[spc]['ich'],
                     spc_dct[spc]['chg'],
                     spc_dct[spc]['mul']]
-        orb_restr = fsorb.orbital_restriction(spc_info, ini_thy_info)
-        ini_thy_level = ini_thy_info[0:3]
-        ini_thy_level.append(orb_restr)
+        ini_thy_lvl = fsorb.mod_orb_restrict(spc_info, ini_thy_info)
         spc_save_fs = autofile.fs.species(save_prefix)
         spc_save_fs[-1].create(spc_info)
         spc_save_path = spc_save_fs[-1].path(spc_info)
@@ -94,9 +90,9 @@ def get_geos(
         spc_run_fs[-1].create(spc_info)
         spc_run_path = spc_run_fs[-1].path(spc_info)
         ini_thy_save_fs = autofile.fs.theory(spc_save_path)
-        ini_thy_save_path = ini_thy_save_fs[-1].path(ini_thy_level[1:4])
+        ini_thy_save_path = ini_thy_save_fs[-1].path(ini_thy_lvl[1:4])
         ini_thy_run_fs = autofile.fs.theory(spc_run_path)
-        ini_thy_run_path = ini_thy_run_fs[-1].path(ini_thy_level[1:4])
+        ini_thy_run_path = ini_thy_run_fs[-1].path(ini_thy_lvl[1:4])
         cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         cnf_save_fs_lst.append(cnf_save_fs)
         cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
@@ -110,7 +106,7 @@ def get_geos(
             tmp_fs = [spc_save_fs, spc_run_fs, ini_thy_save_fs, ini_thy_run_fs,
                       cnf_save_fs, cnf_run_fs, run_fs]
             geo = geom.reference_geometry(
-                spc_dct[spc], ini_thy_level, ini_thy_level, tmp_fs, tmp_ini_fs,
+                spc_dct[spc], ini_thy_lvl, ini_thy_lvl, tmp_fs, tmp_ini_fs,
                 kickoff_size, kickoff_backward, projrot_script_str,
                 overwrite=False)
         spc_geos.append(geo)

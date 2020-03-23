@@ -4,7 +4,8 @@
 
 from lib.filesystem import inf as finf
 from lib.load import ptt
-from lib.load.keywords import ES_TSK_SUPPORTED_LST
+from lib.load.keywords import ES_TSK_SUPPORTED_DCT
+from lib.load.keywords import ES_TSK_OPTIONS_SUPPORTED_DCT
 
 
 def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
@@ -19,15 +20,9 @@ def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
         tsk_lst = es_tsks_from_lst(es_tsk_str)
 
     # Ensure that all the tasks are in the supported tasks
-    # :assert check_es_tsks_supported(tsk_lst)
-    mod_tsk_lst = []
-    for tsk_info in tsk_lst:
-        [tsk, es_run_key, es_ini_key, overwrite] = tsk_info
-        ini_thy_info = finf.get_es_info(es_ini_key, thy_dct)
-        thy_info = finf.get_es_info(es_run_key, thy_dct)
-        mod_tsk_lst.append([tsk, thy_info, ini_thy_info, overwrite])
+    assert check_es_tsks_supported(tsk_lst)
 
-    return mod_tsk_lst
+    return tsk_lst
 
 
 def es_tsks_from_lst(es_tsks_str):
@@ -38,26 +33,26 @@ def es_tsks_from_lst(es_tsks_str):
     tsk_lst = []
     for line in es_tsks_str.splitlines():
         # Put a cleaner somehwere to get rid of blank lines
-        tmp = line.strip()
-        if tmp:
-            pvals = [string.strip() for string in tmp.split('=')]
-            keyword, value_lst = ptt.format_param_vals(pvals)
-            tsk_lst.append(format_tsk_lst(keyword, value_lst))
-
-    # Hard to get the full tsk_lst for both function
-    # tsk inp_geo out_info overwrite
-    # Take the overwrite opt keyword plus el method from model
+        tsk_line = line.strip().split()
+        if len(tsk_line) == 4:
+            [obj, tsk, run_lvl, in_lvl] = tsk_line
+            formtd_options = []
+        elif len(tsk_line) == 5:
+            [obj, tsk, run_lvl, in_lvl, options] = tsk_line
+            formtd_options = format_tsk_options(options)
+        else:
+            print('BAAD')
+        tsk_lst.append([obj, tsk, run_lvl, in_lvl, formtd_options])
 
     return tsk_lst
 
 
-def format_tsk_lst(keyword, value_lst):
-    """ format keyword = [vals] string to the tsk_lst keywords
+def format_tsk_options(options_str):
+    """ format options string
     """
-    frmtd_keyword = keyword.split('tsk_')[1].lower()
-    # setvals = [value.strip() for value in value_lst]
-    tsk_lst = [frmtd_keyword, value_lst[0], value_lst[1], value_lst[2]]
-    return tsk_lst
+    options_str = options_str.replace('[', '').replace(']', '')
+    options_lst = [option.strip() for option in options_str.split(',')]
+    return options_lst
 
 
 def es_tsks_from_models(rxn_model_dct,
@@ -99,4 +94,24 @@ def es_tsks_from_models(rxn_model_dct,
 def check_es_tsks_supported(es_tsks):
     """ Check to see if the list of es tasks are supported by the code
     """
-    return all(tsk in ES_TSK_SUPPORTED_LST for tsk in es_tsks)
+    obj_good, tsk_good, opt_good = True, True, True
+    for tsk_lst in es_tsks:
+        [obj, tsk, _, _, options] = tsk_lst
+        print(tsk_lst)
+        if obj in ES_TSK_SUPPORTED_DCT:
+            if tsk in ES_TSK_SUPPORTED_DCT[obj]:
+                print(ES_TSK_OPTIONS_SUPPORTED_DCT[tsk])
+                print(options)
+                chk = all(option in ES_TSK_OPTIONS_SUPPORTED_DCT[tsk]
+                          for option in options)
+                if not chk:
+                    print('opt not good')
+                    opt_good = False
+            else:
+                print('tsk not good')
+                tsk_good = False
+        else:
+            print('obj not good')
+            obj_good = False
+
+    return bool(obj_good and tsk_good and opt_good)

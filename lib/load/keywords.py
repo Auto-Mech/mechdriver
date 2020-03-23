@@ -4,54 +4,99 @@
 
 # Run Keywords
 RUN_INP_REQUIRED_KEYWORDS = [
-    'ids',
-    'spc',
     'mech',
     'run_prefix',
     'save_prefix',
-    'sort_rxns',
-    'check_stereo',
-    'rad_rad_sort'
 ]
 RUN_SUPPORTED_KEYWORDS = [
     'sort',
     'es',
-    'thermo',
-    'rates',
-    'fits',
-    'poly'
-]
-OPTIONS_SUPPORTED_KEYWORDS = [
-    'check_stereo',
-    'overwrite',
-    'ref_mols',
-    'es_job_set',
-    'hind_inc',
-    'mc_nsamp'
+    'thermochem',
+    'kinetics',
+    'write_messpf',
+    'run_messpf',
+    'run_nasa',
+    'write_messrate',
+    'run_messrate',
+    'run_fits'
 ]
 
+# ES Task keywords
+
+
 # Model keywords
-MODEL_SUPPORTED_DCT = {
+MODEL_PF_SUPPORTED_DCT = {
     'ene': ['sp', 'composite'],
-    'vib': ['harm'],
+    'rot': ['rigid', 'vpt2'],
+    'vib': ['harm', 'vpt2', 'tau'],
     'tors': ['rigid', '1dhr', 'mdhr', 'tau'],
-    'sym': ['sampling', '1dhr'],
-    'ts_barrierless': ['pst', 'vtst', 'vrctst'],
-    'ts_sadpt': ['fixed', 'variational'],
+    'sym': ['none', 'sampling', '1dhr'],
+    'ts_barrierless': ['pst', 'rpvtst', 'vrctst'],
+    'ts_sadpt': ['fixed', 'rpvtst'],
     'wells': ['fake', 'find'],
-    'tunneling': ['none', 'eckart', 'sct']
+    'tunnel': ['none', 'eckart', 'sct']
 }
-ES_TSK_SUPPORTED_LST = [
-    'find_ts',
-    'find_geom',
-    'conf_samp',
-    'conf_hess',
-    'sym_samp',
-    'hr_scan',
-    'conf_vpt2',
-    'conf_energy',
-    'run_irc'
+MODEL_PF_DEFAULT_DCT = {
+    'ene': 'sp',
+    'rot': 'rigid',
+    'vib': 'harm',
+    'tors': 'rigid',
+    'sym': 'none',
+    'ts_nobar': 'pst',
+    'ts_sadpt': 'fixed',
+    'wells': 'fake',
+    'tunneling': 'none'
+}
+
+# Electronic Structure Tasks
+ES_TSK_OBJ_SUPPORTED_LST = [
+    'spc',
+    'ts',
+    'vdw'
 ]
+ES_TSK_SUPPORTED_DCT = {
+    'spc': [
+        'init_geom',
+        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess', 'conf_vpt2',
+        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess',
+        'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess'],
+    'ts': [
+        'find_ts',
+        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess', 'conf_vpt2',
+        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess',
+        'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess',
+        'irc_scan', 'irc_energy', 'irc_grad', 'irc_hess',
+        'drp_samp', 'drp_energy', 'drp_grad', 'drp_hess'],
+    'vdw': [
+        'find',
+        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess']
+}
+ES_TSK_OPTIONS_SUPPORTED_DCT = {
+    'init_geom': ['overwrite'],
+    'find_ts': ['overwrite'],
+    'conf_samp': ['overwrite'],
+    'conf_energy': ['zpve_min', 'overwrite'],
+    'conf_grad': ['zpve_min', 'overwrite'],
+    'conf_hess': ['zpve_min', 'overwrite'],
+    'conf_vpt2': ['zpve_min', 'overwrite'],
+    'hr_scan': ['frz_all_tors', 'mdhr', 'overwrite'],
+    'hr_grad': ['frz_all_tors', 'mdhr', 'overwrite'],
+    'hr_hess': ['frz_all_tors', 'mdhr', 'overwrite'],
+    'hr_energy': ['frz_all_tors', 'mdhr', 'overwrite'],
+    'tau_samp': ['overwrite'],
+    'tau_energy': ['overwrite'],
+    'tau_grad': ['overwrite'],
+    'tau_hess': ['overwrite'],
+    'irc_scan': ['overwrite'],
+    'irc_energy': ['overwrite'],
+    'irc_grad': ['overwrite'],
+    'irc_hess': ['overwrite'],
+    'drp_scan': ['overwrite'],
+    'drp_energy': ['overwrite'],
+    'drp_grad': ['overwrite'],
+    'drp_hess': ['overwrite'],
+}
+
 
 # Species keywords
 SPC_REQUIRED_KEYWORDS = [
@@ -69,8 +114,15 @@ SPC_SUPPORTED_KEYWORDS = [
     'sym_factor',
     'inchi',
     'smiles',
-    'geom'
+    'geom',
+    'kickoff'
 ]
+SPC_DEFAULT_DCT = {
+    'kickoff': [0.1, False],
+    'pst_params': [1.0, 6],
+    'hind_inc': 30.0,
+    'mc_nsamp': [True, 10, 1, 3, 50, 10]
+}
 
 # Theory Keywords
 THY_REQUIRED_KEYWORDS = [

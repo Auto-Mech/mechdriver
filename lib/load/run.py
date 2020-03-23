@@ -4,7 +4,6 @@
 import autoparse.find as apf
 from lib.load import ptt
 from lib.load import tsks
-from lib.load import mechanism as loadmech
 from lib.load.keywords import RUN_INP_REQUIRED_KEYWORDS
 
 
@@ -46,7 +45,7 @@ def objects_dct(job_path):
     obj_str = object_block(run_str)
     # Read one of a set of objects to run calcs on (only one supported)
     pes_block_str = apf.first_capture(ptt.paren_section('pes'), obj_str)
-    pspc_block_str = apf.first_capture(ptt.paren_section('pspc'), obj_str)
+    # pspc_block_str = apf.first_capture(ptt.paren_section('pspc'), obj_str)
     spc_block_str = apf.first_capture(ptt.paren_section('spc'), obj_str)
     # ts_block_str = apf.first_capture(paren_section('ts'), section_str)
     # wells_block_str = apf.first_capture(paren_section('wells'), section_str)
@@ -57,10 +56,10 @@ def objects_dct(job_path):
         run_dct['pes'] = get_pes_idxs(ptt.remove_empty_lines(pes_block_str))
     else:
         run_dct['pes'] = []
-    if pspc_block_str is not None:
-        run_dct['pspc'] = get_pspc_idxs(ptt.remove_empty_lines(pspc_block_str))
-    else:
-        run_dct['pspc'] = []
+    # if pspc_block_str is not None:
+    #     run_dct['pspc']=get_pspc_idxs(ptt.remove_empty_lines(pspc_block_str))
+    # else:
+    #     run_dct['pspc'] = []
     if spc_block_str is not None:
         run_dct['spc'] = get_spc_idxs(ptt.remove_empty_lines(spc_block_str))
     else:
@@ -89,16 +88,25 @@ def get_pes_idxs(pes_str):
     """ Determine the indices corresponding to what PES and channels to run
     """
     run_pes = {}
-    # run_pes = []
     for line in pes_str.splitlines():
-        [pes_idxs, chn_idxs, proc] = line.strip().split(';')
-        pes_lst = ptt.parse_idx_inp(pes_idxs)
-        chn_lst = ptt.parse_idx_inp(chn_idxs)
-        proc = proc.strip()
+        [pes, chns] = line.strip().split(';')
+        [pes_idx_str, pes_mod_str] = pes.strip().split()
+        [chns_idx_str, chns_mod_str] = chns.strip().split()
+        pes_lst = ptt.parse_idx_inp(pes_idx_str)
+        chn_lst = ptt.parse_idx_inp(chns_idx_str)
+        pes_mod = pes_mod_str.strip()
+        chns_mod = chns_mod_str.strip()
         for pes in pes_lst:
             for chn in chn_lst:
-                run_pes[(pes, chn)] = proc
-                # run_pes.append([pes, chn, proc])
+                run_pes[(pes, chn)] = (pes_mod, chns_mod)
+        # [pes_idxs, chn_idxs, proc] = line.strip().split(';')
+        # pes_lst = ptt.parse_idx_inp(pes_idxs)
+        # chn_lst = ptt.parse_idx_inp(chn_idxs)
+        # proc = proc.strip()
+        # for pes in pes_lst:
+        #     for chn in chn_lst:
+        #         run_pes[(pes, chn)] = proc
+        #         # run_pes.append([pes, chn, proc])
 
     return run_pes
 
@@ -161,7 +169,8 @@ def jobs_block(inp_str):
 def build_run_es_tsks_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
     """ Build the list of ES tasks, potentially w/ models
     """
-    tsk_lst = tsks.es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=saddle)
+    tsk_lst = tsks.es_tsk_lst(
+        es_tsk_str, rxn_model_dct, thy_dct, saddle=saddle)
     assert tsk_lst
     # assert check_run_keyword_dct(keyword_dct)
 
@@ -183,6 +192,50 @@ def es_tsks_block(inp_str):
     """
     return ptt.remove_empty_lines(
         apf.first_capture(ptt.end_section('es_tsks'), inp_str))
+
+
+# FORM THE RUNTIME OPTIONS FOR THE DRIVERS #
+def set_thermodriver_run(run_jobs_lst):
+    """ Set vars for the thermodriver run using the run_jobs_lst
+    """
+    write_messpf = False
+    run_messpf = False
+    run_nasa = False
+    if 'thermochem' in run_jobs_lst:
+        write_messpf = True
+        run_messpf = True
+        run_nasa = True
+    else:
+        if 'write_messpf' in run_jobs_lst:
+            write_messpf = True
+        if 'run_messpf' in run_jobs_lst:
+            run_messpf = True
+        if 'run_nasa' in run_jobs_lst:
+            run_nasa = True
+
+    return write_messpf, run_messpf, run_nasa
+
+
+def set_ktpdriver_run(run_jobs_lst):
+    """ Set vars for the ktpdriver run using the run_jobs_lst
+    """
+    write_messrate = False
+    run_messrate = False
+    run_fits = False
+    if 'kinetics' in run_jobs_lst:
+        write_messrate = True
+        run_messrate = True
+        run_fits = True
+    else:
+        if 'write_messrate' in run_jobs_lst:
+            write_messrate = True
+        if 'run_messrate' in run_jobs_lst:
+            run_messrate = True
+        if 'run_fits' in run_jobs_lst:
+            run_fits = True
+
+    return write_messrate, run_messrate, run_fits
+
 
 # PARSE THE PROC SECTION OF THE FILE #
 # def read_proc_sections(run_inp_str):

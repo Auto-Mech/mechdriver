@@ -18,7 +18,11 @@ from lib.filesystem import inf as finf
 
 
 def reference_geometry(
-        spc_dct_i, thy_level, ini_thy_level, filesys, ini_filesys,
+        spc_dct_i, thy_info, ini_thy_info, 
+        thy_run_fs, thy_save_fs,
+        ini_thy_save_fs,
+        cnf_run_fs, cnf_save_fs,
+        run_fs,
         kickoff_size=0.1, kickoff_backward=False, overwrite=False):
     """ determine what to use as the reference geometry for all future runs
     If ini_thy_info refers to geometry dictionary then use that,
@@ -30,21 +34,13 @@ def reference_geometry(
     # projrot_script_str = script.PROJROT
     ret = None
 
-    thy_run_fs = filesys[2]
-    thy_save_fs = filesys[3]
-    ini_thy_save_fs = ini_filesys[1]
-    cnf_run_fs = filesys[4]
-    cnf_save_fs = filesys[5]
-    run_fs = filesys[-1]
     if run_fs[0].file.info.exists([]):
         inf_obj = run_fs[0].file.info.read([])
         if inf_obj.status == autofile.system.RunStatus.RUNNING:
             print('reference geometry already running')
             return ret
     else:
-        prog = thy_level[0]
-        method = thy_level[1]
-        basis = thy_level[2]
+        [prog, method, basis, _] = thy_info
         status = autofile.system.RunStatus.RUNNING
         inf_obj = autofile.system.info.run(
             job='', prog=prog, version='version', method=method, basis=basis,
@@ -56,29 +52,29 @@ def reference_geometry(
     try:
         # Check to see if geometry should be obtained from dictionary
         spc_info = [spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul']]
-        if 'input_geom' in ini_thy_level:
+        if 'input_geom' in ini_thy_info:
             geom_obj = spc_dct_i['geo_obj']
             geo_init = geom_obj
             overwrite = True
             print('found initial geometry from geometry dictionary')
         else:
             # Check to see if geo already exists at running_theory
-            if thy_save_fs[-1].file.geometry.exists(thy_level[1:4]):
-                thy_path = thy_save_fs[-1].path(thy_level[1:4])
+            if thy_save_fs[-1].file.geometry.exists(thy_info[1:4]):
+                thy_path = thy_save_fs[-1].path(thy_info[1:4])
                 print('getting reference geometry from {}'.format(thy_path))
-                geo = thy_save_fs[-1].file.geometry.read(thy_level[1:4])
+                geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
             if not geo:
                 if ini_thy_save_fs:
                     geo_exists = ini_thy_save_fs[-1].file.geometry.exists(
-                        ini_thy_level[1:4])
+                        ini_thy_info[1:4])
                     if geo_exists:
                         # If not, Compute geo at running_theory, using geo from
                         # initial_level as the starting point
                         # or from inchi is no initial level geometry
                         thy_path = ini_thy_save_fs[-1].path(
-                            ini_thy_level[1:4])
+                            ini_thy_info[1:4])
                         geo_init = ini_thy_save_fs[-1].file.geometry.read(
-                            ini_thy_level[1:4])
+                            ini_thy_info[1:4])
                     elif 'geo_obj' in spc_dct_i:
                         geo_init = spc_dct_i['geo_obj']
                         print('getting geometry from geom dictionary')
@@ -97,24 +93,24 @@ def reference_geometry(
         # Optimize from initial geometry to get reference geometry
         if not geo:
             _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
-                *thy_level[0:2])
+                *thy_info[0:2])
             params = {
                 'spc_info': spc_info,
                 'run_fs': run_fs,
                 'thy_run_fs': thy_run_fs,
                 'script_str': opt_script_str,
                 'overwrite': overwrite,
-                'thy_level': thy_level,
+                'thy_info': thy_info,
                 'ini_geo': geo_init}
             geo, inf = run_initial_geometry_opt(**params, **opt_kwargs)
-            thy_save_fs[-1].create(thy_level[1:4])
-            thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
+            thy_save_fs[-1].create(thy_info[1:4])
+            thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
             ncp = len(
                 automol.graph.connected_components(
                     automol.geom.graph(geo)))
             if not automol.geom.is_atom(geo) and ncp < 2:
                 geo, hess = remove_imag(
-                    spc_dct_i, geo, thy_level, thy_run_fs,
+                    spc_dct_i, geo, thy_info, thy_run_fs,
                     run_fs, kickoff_size,
                     kickoff_backward,
                     overwrite=overwrite)
@@ -135,20 +131,22 @@ def reference_geometry(
 
                 print('Saving reference geometry')
                 print(" - Save path: {}".format(thy_save_path))
-                thy_save_fs[-1].file.hessian.write(hess, thy_level[1:4])
+                thy_save_fs[-1].file.hessian.write(hess, thy_info[1:4])
 
-            thy_save_fs[-1].file.geometry.write(geo, thy_level[1:4])
+            thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
             ncp = len(
                 automol.graph.connected_components(
                     automol.geom.graph(geo)))
             if ncp < 2:
                 zma = automol.geom.zmatrix(geo)
-                thy_save_fs[-1].file.zmatrix.write(zma, thy_level[1:4])
+                thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
                 conformer.single_conformer(
-                    spc_info, thy_level, filesys, overwrite)
+                    spc_info, thy_info, 
+                    thy_save_fs, cnf_run_fs, cnf_save_fs,
+                    overwrite, saddle=False, dist_info=())
             else:
                 print("Cannot create zmatrix for disconnected species")
-                wells.fake_conf(thy_level, filesys, inf)
+                wells.fake_conf(thy_info, filesys, inf)
 
         if geo:
             inf_obj.status = autofile.system.RunStatus.SUCCESS
@@ -165,14 +163,15 @@ def reference_geometry(
 
 
 def run_initial_geometry_opt(
-        spc_info, thy_level, run_fs, thy_run_fs,
+        spc_info, thy_info, run_fs, thy_run_fs,
         script_str, overwrite, ini_geo, **kwargs):
     """ generate initial geometry via optimization from either reference
     geometries or from inchi
     """
+
     # set up the filesystem
-    thy_run_fs[-1].create(thy_level[1:4])
-    thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+    thy_run_fs[-1].create(thy_info[1:4])
+    thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
     # check if geometry has already been saved
     # if not call the electronic structure optimizer
     ncp1 = len(automol.graph.connected_components(automol.geom.graph(ini_geo)))
@@ -187,7 +186,7 @@ def run_initial_geometry_opt(
         run_fs=run_fs,
         geom=geom,
         spc_info=spc_info,
-        thy_level=thy_level,
+        thy_level=thy_info,
         overwrite=overwrite,
         **kwargs,
     )
@@ -208,22 +207,20 @@ def run_initial_geometry_opt(
 
 
 def remove_imag(
-        spc_dct_i, geo, thy_level, thy_run_fs, run_fs, kickoff_size=0.1,
+        spc_dct_i, geo, thy_info, thy_run_fs, run_fs, kickoff_size=0.1,
         kickoff_backward=False,
         overwrite=False):
     """ if there is an imaginary frequency displace geometry along the imaginary
     mode and then reoptimize
     """
 
-    # projrot_script_str = script.PROJROT
-
     print('the initial geometries will be checked for imaginary frequencies')
     spc_info = finf.get_spc_info(spc_dct_i)
     script_str, opt_script_str, kwargs, opt_kwargs = runpar.run_qchem_par(
-        *thy_level[0:2])
+        *thy_info[0:2])
 
     imag, geo, disp_xyzs, hess = run_check_imaginary(
-        spc_info, geo, thy_level, thy_run_fs, script_str,
+        spc_info, geo, thy_info, thy_run_fs, script_str,
         overwrite, **kwargs)
     chk_idx = 0
     while imag and chk_idx < 5:
@@ -231,29 +228,29 @@ def remove_imag(
         print('imaginary frequency detected, attempting to kick off')
 
         geo = run_kickoff_saddle(
-            geo, disp_xyzs, spc_info, thy_level, run_fs, thy_run_fs,
+            geo, disp_xyzs, spc_info, thy_info, run_fs, thy_run_fs,
             opt_script_str, kickoff_size, kickoff_backward,
             opt_cart=True, **opt_kwargs)
         print('removing saddlepoint hessian')
 
-        thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+        thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
         run_fs = autofile.fs.run(thy_run_path)
         run_fs[-1].remove([elstruct.Job.HESSIAN])
         imag, geo, disp_xyzs, hess = run_check_imaginary(
-            spc_info, geo, thy_level, thy_run_fs, script_str,
+            spc_info, geo, thy_info, thy_run_fs, script_str,
             overwrite, **kwargs)
     return geo, hess
 
 
 def run_check_imaginary(
-        spc_info, geo, thy_level, thy_run_fs, script_str,
+        spc_info, geo, thy_info, thy_run_fs, script_str,
         overwrite=False, **kwargs):
     """ check if species has an imaginary frequency
     """
     # projrot_script_str = script.PROJROT
 
-    thy_run_fs[-1].create(thy_level[1:4])
-    thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+    thy_run_fs[-1].create(thy_info[1:4])
+    thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
 
     run_fs = autofile.fs.run(thy_run_path)
     imag = False
@@ -265,7 +262,7 @@ def run_check_imaginary(
         driver.run_job(
             job=elstruct.Job.HESSIAN,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_level=thy_info,
             geom=geo,
             run_fs=run_fs,
             script_str=script_str,
@@ -281,7 +278,7 @@ def run_check_imaginary(
             if hess:
                 imag = False
                 _, imag_freq = projrot_frequencies(
-                    geo, hess, thy_level, thy_run_fs)
+                    geo, hess, thy_info, thy_run_fs)
                 if imag_freq:
                     imag = True
 
@@ -298,14 +295,14 @@ def run_check_imaginary(
 
 
 def run_kickoff_saddle(
-        geo, disp_xyzs, spc_info, thy_level, run_fs, thy_run_fs,
+        geo, disp_xyzs, spc_info, thy_info, run_fs, thy_run_fs,
         opt_script_str, kickoff_size=0.1, kickoff_backward=False,
         opt_cart=True, **kwargs):
     """ kickoff from saddle to find connected minima
     """
     print('kickoff from saddle')
-    thy_run_fs[-1].create(thy_level[1:4])
-    thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+    thy_run_fs[-1].create(thy_info[1:4])
+    thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
     run_fs = autofile.fs.run(thy_run_path)
     disp_len = kickoff_size * phycon.ANG2BOHR
     if kickoff_backward:
@@ -322,7 +319,7 @@ def run_kickoff_saddle(
         run_fs=run_fs,
         geom=geom,
         spc_info=spc_info,
-        thy_level=thy_level,
+        thy_level=thy_info,
         overwrite=True,
         **kwargs,
     )
@@ -335,15 +332,15 @@ def run_kickoff_saddle(
 
 
 def save_initial_geometry(
-        thy_level, run_fs, thy_run_fs, thy_save_fs):
+        thy_info, run_fs, thy_run_fs, thy_save_fs):
     """ save the geometry from the initial optimization as a reference geometry
     """
-    thy_run_fs[-1].create(thy_level[1:4])
-    thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+    thy_run_fs[-1].create(thy_info[1:4])
+    thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
     run_fs = autofile.fs.run(thy_run_path)
 
-    thy_save_fs[-1].create(thy_level[1:4])
-    thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
+    thy_save_fs[-1].create(thy_info[1:4])
+    thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
 
     ret = driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
     if ret:
@@ -354,18 +351,18 @@ def save_initial_geometry(
         prog = inf_obj.prog
         geo = elstruct.reader.opt_geometry(prog, out_str)
         zma = automol.geom.zmatrix(geo)
-        thy_save_fs[-1].file.geometry.write(geo, thy_level[1:4])
-        thy_save_fs[-1].file.zmatrix.write(zma, thy_level[1:4])
+        thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
+        thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
 
 
-def projrot_frequencies(geo, hess, thy_level, thy_run_fs):
+def projrot_frequencies(geo, hess, thy_info, thy_run_fs):
     """ Get the projected frequencies from projrot code
     """
     projrot_script_str = script.PROJROT
 
     # Write the string for the ProjRot input
-    thy_run_fs[-1].create(thy_level[1:4])
-    thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+    thy_run_fs[-1].create(thy_info[1:4])
+    thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
 
     coord_proj = 'cartesian'
     grad = ''

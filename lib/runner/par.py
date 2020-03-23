@@ -80,7 +80,7 @@ def run_qchem_par(prog, method):  # , saddle=False):
         if method == 'caspt2':
             opt_script_str = (
                 "#!/usr/bin/env bash\n"
-                "molpro -n 8 run.inp -o run.out",
+                "molpro -n 8 run.inp -o run.out "
                 "--nouse-logfile --no-xml-output >> "
                 "stdout.log &> stderr.log"
                 # "molpro -n 8 run.inp -o run.out >> stdout.log &> stderr.log"
@@ -88,7 +88,7 @@ def run_qchem_par(prog, method):  # , saddle=False):
         else:
             opt_script_str = (
                 "#!/usr/bin/env bash\n"
-                "molpro --mppx -n 12 run.inp -o run.out",
+                "molpro --mppx -n 12 run.inp -o run.out "
                 "--nouse-logfile --no-xml-output >> "
                 # "molpro --mppx -n 12 run.inp -o run.out >> "
                 "stdout.log &> stderr.log"

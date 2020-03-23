@@ -14,6 +14,8 @@ def set_fs(spc_dct, spc, thy_info,
     """ set up filesystem """
 
     # Build the species filesys objs
+    print('spc info')
+    print(spc_dct[spc])
     [spc_info,
      spc_run_fs, spc_save_fs,
      spc_run_path, spc_save_path] = set_spc_fs(
@@ -116,67 +118,6 @@ def set_spc_fs(spc_dct, spc, run_prefix, save_prefix):
     return info, run_fs, save_fs, run_path, save_path
 
 
-def get_spc_fs(prefix, spc_info):
-    """ Create species filesystem object and path
-    """
-    spc_fs = autofile.fs.species(prefix)
-    spc_fs[-1].create(spc_info)
-    spc_path = spc_run_fs[-1].path(spc_info)
-
-    return spc_fs, spc_path
-
-
-def get_thy_fs(prefix, spc_info, thy_info):
-    """ create theory run path
-    """
-    # Set the thy level needed for the filesys
-    orb_restr = fsorb.orbital_restriction(
-        spc_info, thy_info)
-    thy_lvl = thy_info[0:3]
-    thy_lvl.append(orb_restr)
-
-    # Build the species filesystem
-    _, spc_path = get_spc_run_path(prefix, spc_info)
-
-    # Build the theory filesystem
-    thy_fs = autofile.fs.theory(spc_path)
-    thy_fs[-1].create(thy_lvl)
-    thy_path = thy_run_fs[-1].path(thy_lvl)
-
-    return thy_fs, thy_path
-
-
-def get_cnf_fs(thy_prefix, spc_info, thy_info):
-    """ create theory run path
-    """
-    cnf_fs = autofile.fs.conformer(thy_run_path)
-    return cnf_fs
-
-
-def get_min_cnf_fs(thy_prefix, spc_info, thy_info):
-    """ create theory run path
-    """
-    cnf_fs = autofile.fs.conformer(thy_run_path)
-    min_cnf_locs = fsmin.min_energy_conformer_locators(
-        cnf_save_fs)
-    if min_cnf_locs:
-        min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
-    return cnf_fs
-
-
-def get_scn_fs(thy_prefix, spc_info, thy_info):
-    """ create theory run path
-    """
-    cnf_fs = autofile.fs.conformer(thy_run_path)
-    min_cnf_locs = fsmin.min_energy_conformer_locators(
-        cnf_save_fs)
-    if min_cnf_locs:
-        scn_run_fs = autofile.fs.conformer(min_cnf_run_path)
-        min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
-    return cnf_fs
-
-
-
 def get_rxn_fs(run_prefix, save_prefix,
                rxn_ichs, rxn_chgs, rxn_muls, ts_mul):
     """ get filesystems for a reaction
@@ -196,3 +137,4 @@ def get_rxn_fs(run_prefix, save_prefix,
         [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
 
     return rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path
+

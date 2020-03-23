@@ -94,11 +94,13 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma, dist_name, npoints=None):
 
     # Set the main type
     # if spin == 'high':
+    print('rtype')
+    print(rtype)
     if 'beta scission' in rtype:
         grid, update_guess = beta_scission_grid(npoints, ts_bnd_len)
-    elif 'addition' in rtype:
+    elif 'addition' in rtype and 'rad' not in rtype:
         grid, update_guess = addition_grid(npoints, ts_bnd_len)
-    elif 'hydrogen migration' in rtype:
+    elif 'hydrogen migration' in rtype and 'rad' not in rtype:
         grid, update_guess = hydrogen_migration_grid(npoints, ts_bnd_len,
                                                      ts_zma, dist_name)
     elif 'unimolecular elimination' in rtype:
@@ -111,9 +113,9 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma, dist_name, npoints=None):
     elif 'insertion' in rtype:
         grid, update_guess = insertion(npoints, ts_bnd_len)
     # elif spin == 'low':
-    elif 'radrad addition' in rtype:
+    elif 'radical radical' in rtype and 'addition' in rtype:
         grid, update_guess = radrad_addition_grid(npoints, ts_bnd_len)
-    elif 'radrad hydrogen abstraction' in rtype:
+    elif 'radical radical' in rtype and 'hydrogen abstraction' in rtype:
         grid, update_guess = radrad_hydrogen_abstraction(npoints, ts_bnd_len)
     else:
         raise NotImplementedError
@@ -164,14 +166,17 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
     interval = 0.3*phycon.ANG2BOHR
     # get rmax from ts_zma
     rmax = automol.zmatrix.values(ts_zma)[dist_name]
-    rmin1 = 2.*phycon.ANG2BOHR
+    rmin1 = 2.0*phycon.ANG2BOHR
     rmin2 = 1.3*phycon.ANG2BOHR
     if ts_bnd_len in bnd.LEN_DCT:
         bnd_len = bnd.LEN_DCT[ts_bnd_len]
         rmin2 = bnd_len + 0.05 * phycon.ANG2BOHR
     if rmax > rmin1:
         npoints = (rmax-rmin1)/interval
-        grid1 = numpy.linspace(rmax, rmin1, npoints)
+        if npoints < 1:
+            grid1 = []
+        else:
+            grid1 = numpy.linspace(rmax, rmin1, npoints)
     else:
         grid1 = []
     grid2 = numpy.linspace(rmin1, rmin2, 18)
@@ -259,6 +264,8 @@ def radrad_addition_grid(npoints, ts_bnd_len):
     """ Build forward 1D grid for a beta scission reaction
     """
 
+    npoints1 = 4
+    npoints2 = 4
     rstart = 2.4 * phycon.ANG2BOHR
     rend1 = 1.8 * phycon.ANG2BOHR
     rend2 = 3.0 * phycon.ANG2BOHR

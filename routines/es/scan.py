@@ -15,12 +15,28 @@ from lib.filesystem import orb as fsorb
 from routines.es import variational
 
 
+def build_constraint_dct(zma, tors_names):
+    """ Build a dictionary of constraints
+    """
+    constraint_names = [name
+                        for name_lst in tors_names
+                        for name in name_lst]
+    constraint_names.sort(key=lambda x: int(x.split('D')[1]))
+    zma_vals = automol.zmatrix.values(zma)
+    constraint_dct = dict(zip(
+        constraint_names,
+        (round(zma_vals[name], 2) for name in constraint_names)
+    ))
+
+    return constraint_dct
+
+
 def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
             saddle=False, frm_bnd_key=(), brk_bnd_key=()):
     """ set-up the hr for different rotor combinations
         tors_names = [ ['D1'], ['D2', 'D3'], ['D4'] ]
     """
-
+    print('run_tors_infxn', run_tors_names)
     # Get the tors names if thery have not already been supplied
     val_dct = automol.zmatrix.values(zma)
     if not run_tors_names:
@@ -39,6 +55,7 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
         run_tors_names = mdhr_prep(zma, run_tors_names)
 
     # Build the grids corresponding to the torsions
+    print('run_tors_infxn', run_tors_names)
     run_tors_grids = []
     for tors_names in run_tors_names:
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
@@ -108,72 +125,57 @@ def is_methyl_rotor():
 
 
 def hindered_rotor_scans(
-        spc_info, thy_level, cnf_run_fs, cnf_save_fs, script_str, overwrite,
-        scan_increment=30.0, saddle=False, run_tors_names=(), frm_bnd_key=(),
-        brk_bnd_key=(), tors_model=('1dhr', False), **opt_kwargs):
-    """ Perform 1d scans over each of the torsional coordinates
+        zma, spc_info, thy_level, scn_run_fs, scn_save_fs,
+        run_tors_names, run_tors_grids,
+        script_str, overwrite,
+        saddle=False, constraint_dct=None, **opt_kwargs):
+    """ Perform scans over each of the torsional coordinates
     """
 
-    # Unpack tors model
-    # tors_model = ('mdhr', False)
-    ndim_tors, freeze_all_tors = tors_model
+    # for tors_name, tors_grid in zip(tors_names, tors_grids):
+    for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
 
-    # Run with the old code
-    min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
-    if min_cnf_locs:
-        min_cnf_run_path = cnf_run_fs[-1].path(min_cnf_locs)
-        min_cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
-        scn_run_fs = autofile.fs.scan(min_cnf_run_path)
-        scn_save_fs = autofile.fs.scan(min_cnf_save_path)
-        geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
-        zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
+        # Get the dictionary for the torsional modes
+        if not tors_names:
+            continue
+        grid_dct = dict(zip(tors_names, tors_grids))
 
-        run_tors_names, run_tors_grids = hr_prep(
-            zma, geo, run_tors_names=(),
-            scan_increment=scan_increment, ndim_tors=ndim_tors,
-            saddle=saddle, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
-
-        # for tors_name, tors_grid in zip(tors_names, tors_grids):
-        for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
-
-            # Get the dictionary for the torsional modes
-            if not tors_names:
-                continue
-            grid_dct = dict(zip(tors_names, tors_grids))
-
-            # Get a list of the other tors coords to freeze
-            if freeze_all_tors:
-                alt_constraints = [name
-                                   for name_lst in run_tors_names
-                                   for name in name_lst]
-            else:
-                alt_constraints = ()
-
-            # Perform the scans
+        if constraint_dct is None:
             save_scan(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
-                coo_names=tors_names,
-            )
+                coo_names=tors_names)
+        else:
+            save_cscan(
+                cscn_run_fs=scn_run_fs,
+                cscn_save_fs=scn_save_fs,
+                coo_names=tors_names)
 
-            run_scan(
-                zma=zma,
-                spc_info=spc_info,
-                thy_level=thy_level,
-                grid_dct=grid_dct,
-                scn_run_fs=scn_run_fs,
-                scn_save_fs=scn_save_fs,
-                script_str=script_str,
-                overwrite=overwrite,
-                saddle=saddle,
-                alt_constraints=alt_constraints,
-                **opt_kwargs,
-            )
+        run_scan(
+            zma=zma,
+            spc_info=spc_info,
+            thy_level=thy_level,
+            grid_dct=grid_dct,
+            scn_run_fs=scn_run_fs,
+            scn_save_fs=scn_save_fs,
+            script_str=script_str,
+            overwrite=overwrite,
+            saddle=saddle,
+            constraint_dct=constraint_dct,
+            **opt_kwargs,
+        )
 
+        if constraint_dct is None:
             save_scan(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
-                coo_names=tors_names,
+                coo_names=tors_names
+            )
+        else:
+            save_cscan(
+                cscn_run_fs=scn_run_fs,
+                cscn_save_fs=scn_save_fs,
+                coo_names=tors_names
             )
 
 
@@ -181,7 +183,7 @@ def run_scan(
         zma, spc_info, thy_level, grid_dct, scn_run_fs, scn_save_fs,
         script_str, overwrite, update_guess=True,
         reverse_sweep=True, fix_failures=True, saddle=False,
-        alt_constraints=(),
+        constraint_dct=None,
         **kwargs):
     """ run constrained optimization scan
     """
@@ -207,10 +209,18 @@ def run_scan(
         npoint *= len(coo_grid_vals)
     grid_idxs = tuple(range(npoint))
     if len(grid_vals) == 1:
+        run_prefixes = []
         for grid_val in grid_vals[0]:
-            scn_run_fs[-1].create([coo_names, [grid_val]])
-        run_prefixes = tuple(scn_run_fs[-1].path([coo_names, [grid_val]])
-                             for grid_val in grid_vals[0])
+            if constraint_dct is not None:
+                scn_run_fs[-1].create(
+                    [coo_names, [grid_val], constraint_dct])
+                run_prefixes.append(
+                    scn_run_fs[-1].path(
+                        [coo_names, [grid_val], constraint_dct]))
+            else:
+                scn_run_fs[-1].create([coo_names, [grid_val]])
+                run_prefixes.append(
+                    scn_run_fs[-1].path([coo_names, [grid_val]]))
         _run_1d_scan(
             script_str=script_str,
             run_prefixes=run_prefixes,
@@ -225,7 +235,7 @@ def run_scan(
             update_guess=update_guess,
             saddle=saddle,
             retry_failed=fix_failures,
-            alt_constraints=alt_constraints,
+            constraint_dct=constraint_dct,
             **kwargs
         )
 
@@ -243,7 +253,7 @@ def run_scan(
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
-                alt_constraints=alt_constraints,
+                constraint_dct=constraint_dct,
                 **kwargs
             )
 
@@ -251,9 +261,16 @@ def run_scan(
         run_prefixes = []
         for grid_val_i in grid_vals[0]:
             for grid_val_j in grid_vals[1]:
-                scn_run_fs[-1].create([coo_names, [grid_val_i, grid_val_j]])
-                run_prefixes.append(scn_run_fs[-1].path(
-                    [coo_names, [grid_val_i, grid_val_j]]))
+                if constraint_dct is not None:
+                    run_prefixes.append(scn_run_fs[-1].path(
+                        [coo_names,
+                         [grid_val_i, grid_val_j],
+                         constraint_dct]))
+                else:
+                    scn_run_fs[-1].create(
+                        [coo_names, [grid_val_i, grid_val_j]])
+                    run_prefixes.append(scn_run_fs[-1].path(
+                        [coo_names, [grid_val_i, grid_val_j]]))
         run_prefixes = tuple(run_prefixes)
 
         _run_2d_scan(
@@ -270,7 +287,7 @@ def run_scan(
             update_guess=update_guess,
             saddle=saddle,
             retry_failed=fix_failures,
-            alt_constraints=alt_constraints,
+            constraint_dct=constraint_dct,
             **kwargs
         )
 
@@ -278,8 +295,15 @@ def run_scan(
             run_prefixes = []
             for grid_val_i in grid_vals[0][::-1]:
                 for grid_val_j in grid_vals[1][::-1]:
-                    run_prefixes.append(scn_run_fs[-1].path(
-                        [coo_names, [grid_val_i, grid_val_j]]))
+                    if constraint_dct is not None:
+                        run_prefixes.append(scn_run_fs[-1].path(
+                            [coo_names,
+                             [grid_val_i, 2, grid_val_j, 2],
+                             constraint_dct]))
+                    else:
+                        run_prefixes.append(scn_run_fs[-1].path(
+                            [coo_names,
+                             [grid_val_i, grid_val_j]]))
             run_prefixes = tuple(run_prefixes)
             _run_2d_scan(
                 script_str=script_str,
@@ -295,7 +319,7 @@ def run_scan(
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
-                alt_constraints=alt_constraints,
+                constraint_dct=constraint_dct,
                 **kwargs
             )
 
@@ -304,10 +328,20 @@ def run_scan(
         for grid_val_i in grid_vals[0]:
             for grid_val_j in grid_vals[1]:
                 for grid_val_k in grid_vals[2]:
-                    scn_run_fs[-1].create(
-                        [coo_names, [grid_val_i, grid_val_j, grid_val_k]])
-                    run_prefixes.append(scn_run_fs[-1].path(
-                        [coo_names, [grid_val_i, grid_val_j, grid_val_k]]))
+                    if constraint_dct is not None:
+                        scn_run_fs[-1].create(
+                            [coo_names,
+                             [grid_val_i, grid_val_j, grid_val_k],
+                             constraint_dct])
+                        run_prefixes.append(scn_run_fs[-1].path(
+                            [coo_names,
+                             [grid_val_i, grid_val_j, grid_val_k],
+                             constraint_dct]))
+                    else:
+                        scn_run_fs[-1].create(
+                            [coo_names, [grid_val_i, grid_val_j, grid_val_k]])
+                        run_prefixes.append(scn_run_fs[-1].path(
+                            [coo_names, [grid_val_i, grid_val_j, grid_val_k]]))
         run_prefixes = tuple(run_prefixes)
 
         _run_3d_scan(
@@ -324,7 +358,7 @@ def run_scan(
             update_guess=update_guess,
             saddle=saddle,
             retry_failed=fix_failures,
-            alt_constraints=alt_constraints,
+            constraint_dct=constraint_dct,
             **kwargs
         )
 
@@ -333,8 +367,16 @@ def run_scan(
             for grid_val_i in grid_vals[0][::-1]:
                 for grid_val_j in grid_vals[1][::-1]:
                     for grid_val_k in grid_vals[2][::-1]:
-                        run_prefixes.append(scn_run_fs[-1].path(
-                            [coo_names, [grid_val_i, grid_val_j, grid_val_k]]))
+                        if constraint_dct is not None:
+                            run_prefixes.append(scn_run_fs[-1].path(
+                                [coo_names,
+                                 [grid_val_i, grid_val_j, grid_val_k],
+                                 constraint_dct]))
+                        else:
+                            run_prefixes.append(scn_run_fs[-1].path(
+                                [coo_names,
+                                 [grid_val_i, grid_val_j, grid_val_k],
+                                 constraint_dct]))
             run_prefixes = tuple(run_prefixes)
             _run_3d_scan(
                 script_str=script_str,
@@ -351,7 +393,7 @@ def run_scan(
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
-                alt_constraints=alt_constraints,
+                constraint_dct=constraint_dct,
                 **kwargs
             )
 
@@ -361,14 +403,26 @@ def run_scan(
             for grid_val_j in grid_vals[1]:
                 for grid_val_k in grid_vals[2]:
                     for grid_val_l in grid_vals[3]:
-                        scn_run_fs[-1].create(
-                            [coo_names,
-                             [grid_val_i, grid_val_j,
-                              grid_val_k, grid_val_l]])
-                        run_prefixes.append(scn_run_fs[-1].path(
-                            [coo_names,
-                             [grid_val_i, grid_val_j,
-                              grid_val_k, grid_val_l]]))
+                        if constraint_dct is not None:
+                            scn_run_fs[-1].create(
+                                [coo_names,
+                                 [grid_val_i, grid_val_j,
+                                  grid_val_k, grid_val_l],
+                                 constraint_dct])
+                            run_prefixes.append(scn_run_fs[-1].path(
+                                [coo_names,
+                                 [grid_val_i, grid_val_j,
+                                  grid_val_k, grid_val_l],
+                                 constraint_dct]))
+                        else:
+                            scn_run_fs[-1].create(
+                                [coo_names,
+                                 [grid_val_i, grid_val_j,
+                                  grid_val_k, grid_val_l]])
+                            run_prefixes.append(scn_run_fs[-1].path(
+                                [coo_names,
+                                 [grid_val_i, grid_val_j,
+                                  grid_val_k, grid_val_l]]))
         run_prefixes = tuple(run_prefixes)
 
         _run_4d_scan(
@@ -385,7 +439,7 @@ def run_scan(
             update_guess=update_guess,
             saddle=saddle,
             retry_failed=fix_failures,
-            alt_constraints=alt_constraints,
+            constraint_dct=constraint_dct,
             **kwargs
         )
 
@@ -395,10 +449,17 @@ def run_scan(
                 for grid_val_j in grid_vals[1][::-1]:
                     for grid_val_k in grid_vals[2][::-1]:
                         for grid_val_l in grid_vals[3][::-1]:
-                            run_prefixes.append(scn_run_fs[-1].path(
-                                [coo_names,
-                                 [grid_val_i, grid_val_j,
-                                  grid_val_k, grid_val_l]]))
+                            if constraint_dct is not None:
+                                run_prefixes.append(scn_run_fs[-1].path(
+                                    [coo_names,
+                                     [grid_val_i, grid_val_j,
+                                      grid_val_k, grid_val_l],
+                                     constraint_dct]))
+                            else:
+                                run_prefixes.append(scn_run_fs[-1].path(
+                                    [coo_names,
+                                     [grid_val_i, grid_val_j,
+                                      grid_val_k, grid_val_l]]))
             run_prefixes = tuple(run_prefixes)
             _run_4d_scan(
                 script_str=script_str,
@@ -416,7 +477,7 @@ def run_scan(
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
-                alt_constraints=alt_constraints,
+                constraint_dct=constraint_dct,
                 **kwargs
             )
 
@@ -424,8 +485,8 @@ def run_scan(
 def run_multiref_rscan(
         formula, high_mul, zma, spc_info, multi_level, dist_name, grid1, grid2,
         scn_run_fs, scn_save_fs, overwrite, update_guess=True,
-        gradient=False, hessian=False, num_act_elc=None, num_act_orb=None,
-        alt_constraints=()):
+        num_act_elc=None, num_act_orb=None,
+        constraint_dct=None):
     """ run constrained optimization scan
     """
 
@@ -447,7 +508,7 @@ def run_multiref_rscan(
         grid_vals.append(coo_grid_vals)
 
     scn_save_fs[1].create([coo_names])
-    inf_obj = autofile.system.info.scan[1](grid_dct)
+    inf_obj = autofile.system.info.scan_branch(grid_dct)
     scn_save_fs[1].file.info.write(inf_obj, [coo_names])
 
     prog = multi_level[0]
@@ -494,11 +555,18 @@ def run_multiref_rscan(
         npoint *= len(coo_grid1_vals)
     grid1_idxs = tuple(range(npoint))
     if len(grid1_vals) == 1:
-        for grid1_val in grid1_vals[0]:
-            scn_run_fs[-1].create([coo_names, [grid1_val]])
-        run_prefixes = tuple(scn_run_fs[-1].path([coo_names, [grid1_val]])
-                             for grid1_val in grid1_vals[0])
-
+        if constraint_dct is not None:
+            for grid1_val in grid1_vals[0]:
+                scn_run_fs[-1].create([coo_names, [grid1_val], constraint_dct])
+            run_prefixes = tuple(
+                scn_run_fs[-1].path([coo_names, [grid1_val], constraint_dct])
+                for grid1_val in grid1_vals[0])
+        else:
+            for grid1_val in grid1_vals[0]:
+                scn_run_fs[-1].create([coo_names, [grid1_val]])
+            run_prefixes = tuple(
+                scn_run_fs[-1].path([coo_names, [grid1_val]])
+                for grid1_val in grid1_vals[0])
     _run_1d_scan(
         script_str=opt_script_str,
         run_prefixes=run_prefixes,
@@ -511,9 +579,7 @@ def run_multiref_rscan(
         thy_level=multi_level,
         overwrite=overwrite,
         update_guess=update_guess,
-        gradient=gradient,
-        hessian=hessian,
-        alt_constraints=alt_constraints,
+        constraint_dct=constraint_dct,
         **opt_kwargs,
     )
 
@@ -531,10 +597,20 @@ def run_multiref_rscan(
         npoint *= len(coo_grid2_vals)
     grid2_idxs = tuple(range(npoint))
     if len(grid2_vals) == 1:
-        for grid2_val in grid2_vals[0]:
-            scn_run_fs[-1].create([coo_names, [grid2_val]])
-        run_prefixes = tuple(scn_run_fs[-1].path([coo_names, [grid2_val]])
-                             for grid2_val in grid2_vals[0])
+        if constraint_dct is not None:
+            for grid2_val in grid2_vals[0]:
+                scn_run_fs[-1].create(
+                    [coo_names, [grid2_val], constraint_dct])
+            run_prefixes = tuple(
+                scn_run_fs[-1].path([coo_names, [grid2_val], constraint_dct])
+                for grid2_val in grid2_vals[0])
+        else:
+            for grid2_val in grid2_vals[0]:
+                scn_run_fs[-1].create(
+                    [coo_names, [grid2_val]])
+            run_prefixes = tuple(
+                scn_run_fs[-1].path([coo_names, [grid2_val]])
+                for grid2_val in grid2_vals[0])
     _run_1d_scan(
         script_str=opt_script_str,
         run_prefixes=run_prefixes,
@@ -547,9 +623,7 @@ def run_multiref_rscan(
         thy_level=multi_level,
         overwrite=overwrite,
         update_guess=update_guess,
-        gradient=gradient,
-        hessian=hessian,
-        alt_constraints=alt_constraints,
+        constraint_dct=constraint_dct,
         **opt_kwargs,
     )
 
@@ -559,8 +633,7 @@ def _run_1d_scan(
         grid_idxs, grid_vals,
         spc_info, thy_level, overwrite, errors=(), options_mat=(),
         retry_failed=True, update_guess=True, saddle=False,
-        gradient=False, hessian=False,
-        alt_constraints=(),
+        constraint_dct=None,
         **kwargs):
     """ run 1 dimensional scan with constrained optimization
     """
@@ -573,9 +646,14 @@ def _run_1d_scan(
         zma = automol.zmatrix.set_values(guess_zma, {coo_name: grid_val})
         run_fs = autofile.fs.run(run_prefix)
 
-        frozen_coordinates = [coo_name] + list(alt_constraints)
-        geo_exists = scn_save_fs[-1].file.geometry.exists(
-            [[coo_name], [grid_val]])
+        if constraint_dct is not None:
+            geo_exists = scn_save_fs[-1].file.geometry.exists(
+                [[coo_name], [grid_val], constraint_dct])
+            frozen_coordinates = [coo_name] + list(constraint_dct)
+        else:
+            geo_exists = scn_save_fs[-1].file.geometry.exists(
+                [[coo_name], [grid_val]])
+            frozen_coordinates = [coo_name]
         if not geo_exists or overwrite:
             driver.run_job(
                 job=elstruct.Job.OPTIMIZATION,
@@ -601,51 +679,13 @@ def _run_1d_scan(
                 if update_guess:
                     guess_zma = opt_zma
 
-                if gradient:
-                    driver.run_job(
-                        job=elstruct.Job.GRADIENT,
-                        script_str=script_str,
-                        run_fs=run_fs,
-                        geom=opt_zma,
-                        spc_info=spc_info,
-                        thy_level=thy_level,
-                        overwrite=overwrite,
-                        frozen_coordinates=[coo_name],
-                        errors=errors,
-                        options_mat=options_mat,
-                        retry_failed=retry_failed,
-                        **kwargs
-                    )
-
-                    ret = driver.read_job(
-                        job=elstruct.Job.GRADIENT, run_fs=run_fs)
-
-                if hessian:
-                    driver.run_job(
-                        job=elstruct.Job.HESSIAN,
-                        script_str=script_str,
-                        run_fs=run_fs,
-                        geom=opt_zma,
-                        spc_info=spc_info,
-                        thy_level=thy_level,
-                        overwrite=overwrite,
-                        frozen_coordinates=[coo_name],
-                        errors=errors,
-                        options_mat=options_mat,
-                        retry_failed=retry_failed,
-                        **kwargs
-                    )
-
-                    ret = driver.read_job(
-                        job=elstruct.Job.HESSIAN, run_fs=run_fs)
-
 
 def _run_2d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_names,
         grid_idxs, grid_vals,
         spc_info, thy_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
-        alt_constraints=(),
+        constraint_dct=None,
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
      """
@@ -665,9 +705,16 @@ def _run_2d_scan(
             run_fs = autofile.fs.run(run_prefix)
             idx += 1
 
-            frozen_coordinates = coo_names + list(alt_constraints)
-            if not scn_save_fs[-1].file.geometry.exists(
-                    [coo_names, [grid_val_i, grid_val_j]]) or overwrite:
+            frozen_coordinates = coo_names + list(constraint_dct)
+            if constraint_dct is not None:
+                geo_exists = scn_save_fs[-1].file.geometry.exists(
+                    [coo_names, [grid_val_i, grid_val_j], constraint_dct])
+                frozen_coordinates = coo_names + list(constraint_dct)
+            else:
+                geo_exists = scn_save_fs[-1].file.geometry.exists(
+                    [coo_names, [grid_val_i, grid_val_j]])
+                frozen_coordinates = coo_names
+            if not geo_exists or overwrite:
                 driver.run_job(
                     job=elstruct.Job.OPTIMIZATION,
                     script_str=script_str,
@@ -686,10 +733,12 @@ def _run_2d_scan(
 
                 ret = driver.read_job(
                     job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-                if update_guess and ret is not None:
+                if ret is not None:
                     inf_obj, _, out_str = ret
                     prog = inf_obj.prog
-                    guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                    opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                    if update_guess:
+                        guess_zma = opt_zma
 
 
 def _run_3d_scan(
@@ -697,7 +746,8 @@ def _run_3d_scan(
         grid_idxs, grid_vals,
         spc_info, thy_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
-        alt_constraints=(),
+        gradient=False, hessian=False,
+        constraint_dct=None,
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
     """
@@ -720,10 +770,16 @@ def _run_3d_scan(
                 run_fs = autofile.fs.run(run_prefix)
                 idx += 1
 
-                frozen_coordinates = coo_names + list(alt_constraints)
-                exists = scn_save_fs[-1].file.geometry.exists(
-                    [coo_names, [grid_val_i, grid_val_j, grid_val_k]])
-                if not exists or overwrite:
+                if constraint_dct is not None:
+                    geo_exists = scn_save_fs[-1].file.geometry.exists(
+                        [coo_names, [grid_val_i, grid_val_j, grid_val_k],
+                         constraint_dct])
+                    frozen_coordinates = coo_names + list(constraint_dct)
+                else:
+                    geo_exists = scn_save_fs[-1].file.geometry.exists(
+                        [coo_names, [grid_val_i, grid_val_j, grid_val_k]])
+                    frozen_coordinates = coo_names
+                if not geo_exists or overwrite:
                     driver.run_job(
                         job=elstruct.Job.OPTIMIZATION,
                         script_str=script_str,
@@ -742,10 +798,12 @@ def _run_3d_scan(
 
                     ret = driver.read_job(
                         job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-                    if update_guess and ret is not None:
+                    if ret is not None:
                         inf_obj, _, out_str = ret
                         prog = inf_obj.prog
-                        guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                        opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                        if update_guess:
+                            guess_zma = opt_zma
 
 
 def _run_4d_scan(
@@ -753,7 +811,8 @@ def _run_4d_scan(
         grid_idxs, grid_vals,
         spc_info, thy_level, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
-        alt_constraints=(),
+        gradient=False, hessian=False,
+        constraint_dct=None,
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
     """
@@ -779,10 +838,18 @@ def _run_4d_scan(
                     run_fs = autofile.fs.run(run_prefix)
                     idx += 1
 
-                    frozen_coordinates = coo_names + list(alt_constraints)
-                    exists = scn_save_fs[-1].file.geometry.exists(
-                        [coo_names, [grid_val_i, grid_val_j, grid_val_k, grid_val_l]])
-                    if not exists or overwrite:
+                    if constraint_dct is not None:
+                        geo_exists = scn_save_fs[-1].file.geometry.exists(
+                            [coo_names,
+                             [grid_val_i, grid_val_j, grid_val_k, grid_val_l],
+                             constraint_dct])
+                        frozen_coordinates = coo_names + list(constraint_dct)
+                    else:
+                        geo_exists = scn_save_fs[-1].file.geometry.exists(
+                            [coo_names,
+                             [grid_val_i, grid_val_j, grid_val_k, grid_val_l]])
+                        frozen_coordinates = coo_names
+                    if not geo_exists or overwrite:
                         driver.run_job(
                             job=elstruct.Job.OPTIMIZATION,
                             script_str=script_str,
@@ -801,16 +868,20 @@ def _run_4d_scan(
 
                         ret = driver.read_job(
                             job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-                        if update_guess and ret is not None:
+                        if ret is not None:
                             inf_obj, _, out_str = ret
                             prog = inf_obj.prog
-                            guess_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                            opt_zma = elstruct.reader.opt_zmatrix(
+                                prog, out_str)
+                            if update_guess:
+                                guess_zma = opt_zma
 
 
-def save_scan(scn_run_fs, scn_save_fs, coo_names,
-              gradient=False, hessian=False):
+def save_scan(scn_run_fs, scn_save_fs, coo_names):
     """ save the scans that have been run so far
     """
+    print('names\n', [coo_names])
+    print('path\n', scn_run_fs[1].exists([coo_names]))
     if not scn_run_fs[1].exists([coo_names]):
         print("No scan to save. Skipping...")
     else:
@@ -844,29 +915,6 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
 
                 locs_lst.append(locs)
 
-                if gradient:
-                    ret = driver.read_job(
-                        job=elstruct.Job.GRADIENT, run_fs=run_fs)
-                    if ret:
-                        inf_obj, inp_str, out_str = ret
-                        prog = inf_obj.prog
-                        method = inf_obj.method
-                        grad = elstruct.reader.gradient(prog, out_str)
-                        scn_save_fs[-1].file.gradient.write(grad, locs)
-
-                if hessian:
-                    ret = driver.read_job(
-                        job=elstruct.Job.HESSIAN, run_fs=run_fs)
-                    if ret:
-                        inf_obj, inp_str, out_str = ret
-                        prog = inf_obj.prog
-                        method = inf_obj.method
-                        hess = elstruct.reader.hessian(prog, out_str)
-                        scn_save_fs[-1].file.hessian.write(hess, locs)
-                        if prog == 'molpro2015':
-                            geo = hess_geometry(out_str)
-                            scn_save_fs[-1].file.geometry.write(geo, locs)
-
         if locs_lst:
             idxs_lst = [locs[-1] for locs in locs_lst]
             enes = [scn_save_fs[-1].file.energy.read(locs)
@@ -882,6 +930,51 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names,
             traj_path = scn_save_fs[1].file.trajectory.path([coo_names])
             print("Updating scan trajectory file at {}".format(traj_path))
             scn_save_fs[1].file.trajectory.write(traj, [coo_names])
+
+
+def save_cscan(cscn_run_fs, cscn_save_fs, coo_names):
+    """ save the scans that have been run so far
+    """
+
+    exists1 = cscn_run_fs[1].exists([coo_names])
+    if exists1:
+        scn_locs1 = cscn_run_fs[2].existing([coo_names])
+        for locs1 in scn_locs1:
+            exists2 = cscn_run_fs[2].exists(locs1)
+            if exists2:
+                scn_locs2 = cscn_run_fs[3].existing(locs1)
+                for locs2 in scn_locs2:
+                    run_path = cscn_run_fs[-1].path(locs2)
+                    run_fs = autofile.fs.run(run_path)
+                    print("Reading from scan run at {}".format(run_path))
+                    ret = driver.read_job(
+                        job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+                    if ret:
+                        inf_obj, inp_str, out_str = ret
+                        prog = inf_obj.prog
+                        method = inf_obj.method
+                        ene = elstruct.reader.energy(prog, method, out_str)
+                        geo = elstruct.reader.opt_geometry(prog, out_str)
+                        zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+                        save_path = cscn_save_fs[-1].path(locs2)
+                        print(" - Saving...")
+                        print(" - Save path: {}".format(save_path))
+
+                        cscn_save_fs[-1].create(locs2)
+                        cscn_save_fs[-1].file.geometry_info.write(
+                            inf_obj, locs2)
+                        cscn_save_fs[-1].file.geometry_input.write(
+                            inp_str, locs2)
+                        cscn_save_fs[-1].file.energy.write(ene, locs2)
+                        cscn_save_fs[-1].file.geometry.write(geo, locs2)
+                        cscn_save_fs[-1].file.zmatrix.write(zma, locs2)
+
+            else:
+                print("No cscan to save. (2) Skipping...")
+
+    else:
+        print("No cscan to save. (1) Skipping...")
 
 
 def infinite_separation_energy(
@@ -907,16 +1000,6 @@ def infinite_separation_energy(
     sp_run_fs = autofile.fs.single_point(geo_run_path)
     sp_save_fs = autofile.fs.single_point(geo_save_path)
 
-    # get the multi reference ene for low spin state for the ref point on scan
-
-    # file system for low spin multireference calculation
-
-    multi_info[0] = 'molpro2015'
-    multi_info[1] = 'caspt2'
-    # ultimately the above should be properly passed
-    prog = multi_info[0]
-    method = multi_info[1]
-
     # get the multi reference energy for high spin state for ref point on scan
     hs_info = (ts_info[0], ts_info[1], high_mul)
     orb_restr = fsorb.orbital_restriction(hs_info, multi_info)
@@ -932,16 +1015,17 @@ def infinite_separation_energy(
     hs_mr_save_path = hs_save_fs[-1].path(multi_lvl[1:4])
     run_mr_fs = autofile.fs.run(hs_mr_run_path)
 
-    mr_script_str, _, mr_kwargs, _ = runpar.run_qchem_par(prog, method)
+    mr_script_str, _, mr_kwargs, _ = runpar.run_qchem_par(
+        multi_info[0], multi_info[1])
 
     if num_act_elc is None and num_act_orb is None:
         num_act_elc = high_mul
         num_act_orb = num_act_elc
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
 
-    cas_opt, _ = ts.cas_options_2(
+    cas_opt = variational.wfn.cas_options(
         hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = ts.multiref_wavefunction_guess(
+    guess_str = variational.wfn.multiref_wavefunction_guess(
         high_mul, ref_zma, hs_info, multi_lvl, [cas_opt])
     guess_lines = guess_str.splitlines()
 

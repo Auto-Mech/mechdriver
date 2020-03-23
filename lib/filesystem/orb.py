@@ -2,7 +2,17 @@
 """
 
 
-def orbital_restriction(spc_info, thy_level):
+def mod_orb_restrict(spc_info, thy_info):
+    """ append to the theory level the orb restricted stuff
+    """
+    orb_restr = set_orbital_restriction_label(spc_info, thy_info)
+    thy_level = thy_info[0:3]
+    thy_level.append(orb_restr)
+
+    return thy_level
+
+
+def set_orbital_restriction_label(spc_info, thy_level):
     """ orbital restriction logical
     """
     mul = spc_info[2]
@@ -18,7 +28,7 @@ def orbital_restriction(spc_info, thy_level):
     return orb_restr
 
 
-def orb_rest(spc_info, thy_info):
+def mod_orbital_restrict(spc_info, thy_info):
     """ append to the theory level the orb restricted stuff
     """
     orb_restr = orbital_restriction(
