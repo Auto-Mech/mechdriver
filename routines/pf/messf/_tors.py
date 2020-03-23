@@ -227,6 +227,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
 
     # Read the energies from the filesystem
     scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
+    # print('species directory test:', spc_info, tors_cnf_save_path, min_ene, tors_names)
     if len(tors_names) == 1:
         for i, grid_val_i in enumerate(tors_grids):
             locs = [tors_names, [grid_val_i]]
@@ -288,11 +289,14 @@ def hrpot_spline_fitter(pot, thresh=-0.05):
     pot_success = []
     pot.append(0.)
     for idx in range(lpot):
+        print('pot test:', pot[idx])
         if pot[idx] < 600.:
             idx_success.append(idx)
             pot_success.append(pot[idx])
     idx_success.append(lpot)
     pot_success.append(pot[0])
+    print('idx_success test', idx_success)
+    print('pot_success test', pot_success)
     pot_spl = interp1d(
         numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
     for idx in range(lpot):
