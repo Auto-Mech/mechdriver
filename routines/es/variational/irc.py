@@ -26,7 +26,7 @@ def irc_scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
             mod_thy_info,
             overwrite,
             opt_script_str,
-            **opt_kwargs)
+            **opt_kwargs
         )
         save_irc(
             irc_job,

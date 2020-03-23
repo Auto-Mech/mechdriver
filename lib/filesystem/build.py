@@ -134,7 +134,7 @@ def spc_cnf_fs_from_root(root_prefix, spc_info, mod_thy_info, saddle=False):
     return cnf_fs
 
 
-def spc_cnf_fs_from_root(root_prefix, spc_info, mod_thy_info, saddle=False):
+def rxn_cnf_fs_from_root(root_prefix, spc_info, mod_thy_info, saddle=False):
     """ create theory run path
     """
     # Build the theory filesystem
@@ -165,7 +165,7 @@ def cnf_fs_from_thy(thy_prefix, cnf=None, saddle=False):
 
     # Conformer filesys using theory
     cnf_fs = autofile.fs.conformer(cnf_prefix)
-    
+
     # Set the locs and the path
     cnf_locs = []
     if cnf is not None:
@@ -183,6 +183,24 @@ def cnf_fs_from_thy(thy_prefix, cnf=None, saddle=False):
     #         ene = energy.read(locs) - min_ene
     #         if ene <= ene_cut_off:
     #             locs_lst.append(locs)
+
+    return cnf_fs, cnf_locs
+
+
+def cnf_fs_from_prefix(cnf_prefix, cnf=None):
+    """ create theory run path
+    """
+    # Conformer filesys using theory
+    cnf_fs = autofile.fs.conformer(cnf_prefix)
+
+    # Set the locs and the path
+    cnf_locs = []
+    if cnf is not None:
+        if cnf == 'min':
+            cnf_locs = fsmin.min_energy_conformer_locators(cnf_fs)
+        elif cnf == 'all':
+            cnf_locs = cnf_fs[1].existing()
+    print('locsinf', cnf_locs)
 
     return cnf_fs, cnf_locs
 
@@ -334,7 +352,7 @@ def ts_fs_from_root(root_prefix, spc_info, thy_info):
     """ Create species filesystem object and path
     """
     # Build the theory filesystem
-    _, thy_path = thy_fs_from_root(root_prefix, spc_info, thy_info)
+    _, thy_path = rxn_thy_fs_from_root(root_prefix, spc_info, thy_info)
 
     ts_fs = autofile.fs.ts(thy_path)
     ts_fs[0].create()
@@ -361,53 +379,3 @@ def run_fs_from_prefix(prefix):
     run_fs[0].create()
 
     return run_fs
-
-def get_ts_fs(rxn_run_path, rxn_save_path, ref_level):
-    """ Build a transition state filesystem
-    """
-    thy_run_fs = autofile.fs.theory(rxn_run_path)
-    thy_run_fs[-1].create(ref_level[1:4])
-    thy_run_path = thy_run_fs[-1].path(ref_level[1:4])
-
-    thy_save_fs = autofile.fs.theory(rxn_save_path)
-    thy_save_fs[-1].create(ref_level[1:4])
-    thy_save_path = thy_save_fs[-1].path(ref_level[1:4])
-
-    scn_run_fs = autofile.fs.scan(thy_run_path)
-    scn_save_fs = autofile.fs.scan(thy_save_path)
-
-    ts_run_fs = autofile.fs.ts(thy_run_path)
-    ts_run_fs[0].create()
-    ts_run_path = ts_run_fs[0].path()
-    run_fs = autofile.fs.run(ts_run_path)
-
-    ts_save_fs = autofile.fs.ts(thy_save_path)
-    ts_save_fs[0].create()
-    ts_save_path = ts_save_fs[0].path()
-
-    # cnf_run_fs = autofile.fs.conformer(ts_run_path)
-    # cnf_save_fs = autofile.fs.conformer(ts_save_path)
-    # cnf_save_fs[0].create()
-
-    return ts_run_fs, ts_save_fs, ts_run_path, ts_save_path
-
-
-def get_rxn_fs(run_prefix, save_prefix,
-               rxn_ichs, rxn_chgs, rxn_muls, ts_mul):
-    """ get filesystems for a reaction
-    """
-    rxn_run_fs = autofile.fs.reaction(run_prefix)
-    rxn_run_fs[-1].create(
-        [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
-    rxn_run_path = rxn_run_fs[-1].path(
-        [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
-
-    rxn_ichs = tuple(map(tuple, rxn_ichs))
-    rxn_chgs = tuple(map(tuple, rxn_chgs))
-    rxn_muls = tuple(map(tuple, rxn_muls))
-    rxn_save_fs = autofile.fs.reaction(save_prefix)
-    rxn_save_fs[-1].create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
-    rxn_save_path = rxn_save_fs[-1].path(
-        [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
-
-    return rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path

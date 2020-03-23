@@ -86,8 +86,6 @@ def _parse_chemkin(mech_str, spc_dct, sort_rxns):
     # Build the inchi dct
     ich_dct = {}
     for key in spc_dct.keys():
-        print(key)
-        print(spc_dct[key])
         ich_dct[key] = spc_dct[key]['ich']
 
     # Sort reactant and product name lists by formula to facilitate
@@ -254,9 +252,6 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
         run_chnls = []
         for pes_chn_pair in run_obj_dct:
             pes_num, chn_num = pes_chn_pair
-            print('num chk', pes_num, chn_num)
-            print(pes_idx)
-            print(idx_dct[pes_num])
             if idx_dct[pes_num] == formula:
                 run_chnls.append(chn_num)
 
@@ -293,12 +288,8 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
 def format_run_rxn_lst(rct_names_lst, prd_names_lst, rxn_model_lst):
     """ Get the lst of reactions to be run
     """
-    print('in rxn lst')
-    print(rct_names_lst)
-    print(prd_names_lst)
-    print(rxn_model_lst)
 
-    # spc_queue
+    # Get a list of all the species in the pes
     spc_queue = []
     for rxn, _ in enumerate(rct_names_lst):
         rxn_spc = list(rct_names_lst[rxn])
@@ -306,6 +297,8 @@ def format_run_rxn_lst(rct_names_lst, prd_names_lst, rxn_model_lst):
         for spc in rxn_spc:
             if spc not in spc_queue:
                 spc_queue.append(spc)
+
+    # Now loop over all the reactions to build rxn_lst
     run_lst = []
     for rxn, _ in enumerate(rct_names_lst):
         spc_queue = []

@@ -36,7 +36,7 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
     """ set-up the hr for different rotor combinations
         tors_names = [ ['D1'], ['D2', 'D3'], ['D4'] ]
     """
-
+    print('run_tors_infxn', run_tors_names)
     # Get the tors names if thery have not already been supplied
     val_dct = automol.zmatrix.values(zma)
     if not run_tors_names:
@@ -55,6 +55,7 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
         run_tors_names = mdhr_prep(zma, run_tors_names)
 
     # Build the grids corresponding to the torsions
+    print('run_tors_infxn', run_tors_names)
     run_tors_grids = []
     for tors_names in run_tors_names:
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(

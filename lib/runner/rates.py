@@ -76,7 +76,8 @@ def read_mess_file(mess_path):
     mess_file = os.path.join(mess_path, 'mess.inp')
     if os.path.exists(mess_file):
         print('Found MESS Rates input file at {}'.format(mess_path))
-        print('No additional MESS input file will be written...')
+        print('Gonna overwrite....')
+        # print('No additional MESS input file will be written...')
         with open(mess_file, 'r') as mfile:
             mess_inp_str = mfile.read()
     else:

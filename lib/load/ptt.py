@@ -74,7 +74,7 @@ def keyword_pattern(string):
              '=' +
              app.zero_or_more(app.SPACE) +
              app.capturing(app.one_or_more(app.NONSPACE)))
-    return _set_value_type(value)
+    return set_value_type(value)
 
 
 def parse_idx_inp(idx_str):
@@ -126,7 +126,7 @@ def build_vals_lst(section_str):
         # Put a cleaner somehwere to get rid of blank lines
         tmp = line.strip()
         if tmp != '':
-            val_lst.extend(tmp.split(','))
+            val_lst.extend((float(val) for val in tmp.split()))
 
     return val_lst
 
@@ -135,8 +135,13 @@ def build_vals_lst(section_str):
 def remove_empty_lines(string):
     """ Remove any empty lines from a string
     """
-    return '\n'.join([line for line in string.splitlines()
-                      if line.strip()])
+    if string:
+        empty_lines = '\n'.join([line for line in string.splitlines()
+                                 if line.strip()])
+    else:
+        empty_lines = string
+
+    return empty_lines
 
 
 def remove_comment_lines(section_str):
@@ -168,17 +173,17 @@ def format_param_vals(pvals):
             if ':' in elm:
                 elm_lst = elm.split()
                 frmtd_value.append(
-                    _set_value_type((float(elm_lst[0]), elm_lst[1])))
+                    set_value_type((float(elm_lst[0]), elm_lst[1])))
             else:
-                frmtd_value.append(_set_value_type(elm))
+                frmtd_value.append(set_value_type(elm))
     else:
         # Format values if it has singular value
-        frmtd_value = _set_value_type(value)
+        frmtd_value = set_value_type(value)
 
     return frmtd_keyword, frmtd_value
 
 
-def _set_value_type(value):
+def set_value_type(value):
     """ set type of value
         right now we handle True/False boolean, int, float, and string
     """
@@ -186,6 +191,8 @@ def _set_value_type(value):
         frmtd_value = True
     elif value == 'False':
         frmtd_value = False
+    elif value == 'None':
+        frmtd_value = None
     elif value.isdigit():
         frmtd_value = int(value)
     elif '.' in value:

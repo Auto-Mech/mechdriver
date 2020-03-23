@@ -29,7 +29,7 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
     for tors_name, tors_grid, tors_sym in tors_info:
 
         # Read the hindered rotor potential
-        pot = read_hr_pot(
+        pot, _ = read_hr_pot(
             spc_info, [tors_name], tors_grid,
             tors_cnf_save_path, min_ene)
 
@@ -211,7 +211,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
 
     # Build template pot lst and freqs list into a list-of-lists if ndim > 1
     if len(tors_names) == 1:
-        dims = (len(tors_grids[0]),)
+        dims = (len(tors_grids),)
     elif len(tors_names) == 2:
         dims = (len(tors_grids[0]), len(tors_grids[1]))
     elif len(tors_names) == 3:
@@ -228,7 +228,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
     # Read the energies from the filesystem
     scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
     if len(tors_names) == 1:
-        for i, grid_val_i in enumerate(tors_grids[0]):
+        for i, grid_val_i in enumerate(tors_grids):
             locs = [tors_names, [grid_val_i]]
             if scn_save_fs[-1].exists(locs):
                 ene = scn_save_fs[-1].file.energy.read(locs)
@@ -238,8 +238,8 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
             if read_freqs:
                 freqs[i] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
     elif len(tors_names) == 2:
-         for i, grid_val_i in enumerate(tors_grids[0]):
-            for j, grid_val_j in enumerate(tors_grids[1]):
+        for i, grid_val_i in enumerate(tors_grids[0]):
+           for j, grid_val_j in enumerate(tors_grids[1]):
                 locs = [tors_names, [grid_val_i, grid_val_j]]
                 if scn_save_fs[-1].exists(locs):
                     ene = scn_save_fs[-1].file.energy.read(locs)
@@ -249,7 +249,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
                 if read_freqs:
                     freqs[i][j] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
     elif len(tors_names) == 3:
-         for i, grid_val_i in enumerate(tors_grids[0]):
+        for i, grid_val_i in enumerate(tors_grids[0]):
             for j, grid_val_j in enumerate(tors_grids[1]):
                 for k, grid_val_k in enumerate(tors_grids[2]):
                     locs = [tors_names, [grid_val_i, grid_val_j, grid_val_k]]
@@ -266,7 +266,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
                 for k, grid_val_k in enumerate(tors_grids[2]):
                     for l, grid_val_l in enumerate(tors_grids[3]):
                         locs = [tors_names,
-                                [grid_val_i, grid_val_j, grid_val_k, grid_val_l]]
+                            [grid_val_i, grid_val_j, grid_val_k, grid_val_l]]
                         if scn_save_fs[-1].exists(locs):
                             ene = scn_save_fs[-1].file.energy.read(locs)
                             pot[i][j][k][l] = (ene - min_ene) * phycon.EH2KCAL

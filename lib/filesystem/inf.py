@@ -100,7 +100,6 @@ def rxn_chg_mult(rxn_muls, rxn_chgs, ts_mul='low'):
     high_mul = max(tshigh(rxn_muls[0]), tshigh(rxn_muls[1]))
     mul = low_mul if ts_mul == 'low' else high_mul
 
-    print('aa', rxn_chgs)
     chg = 0
     for rchg in rxn_chgs[0]:
         chg += rchg

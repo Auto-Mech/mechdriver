@@ -20,6 +20,8 @@ def find_ts(spc_dct, ts_dct, ts_zma, ts_info,
             thy_save_fs,
             cnf_run_fs, cnf_save_fs,
             scn_run_fs, scn_save_fs,
+            run_fs,
+            ts_save_fs, ts_save_path,
             run_prefix, save_prefix,
             opt_script_str,
             overwrite, vrc_dct,
@@ -57,6 +59,9 @@ def find_ts(spc_dct, ts_dct, ts_zma, ts_info,
             ts_dct['class'])
         ts_dct['dist_info'][1] = final_dist
         ts_dct['dist_info'].append(angle)
+
+        # Setting to true for now
+        ts_found = True
     else:
         if rad_rad and low_spin and 'elimination' not in ts_dct['class']:
             print('Running Scan for Barrierless TS:')
@@ -265,7 +270,7 @@ def find_sadpt_transition_state(
         conformer.conformer_sampling(
             spc_info=ts_info,
             thy_info=ref_level,
-            thy_save_fs=thy_save_fs,
+            thy_save_fs=ts_save_fs,
             cnf_run_fs=cnf_run_fs,
             cnf_save_fs=cnf_save_fs,
             script_str=opt_script_str,

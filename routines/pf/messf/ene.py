@@ -179,13 +179,11 @@ def get_high_level_energy(
         spc_save_fs[-1].create(spc_info)
         spc_save_path = spc_save_fs[-1].path(spc_info)
 
-    orb_restr = fsorb.orbital_restriction(
+    thy_low_level = fsorb.mod_orb_restrict(
         spc_info, thy_low_level)
-    thy_low_level = thy_low_level[1:3]
-    thy_low_level.append(orb_restr)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
-    ll_save_path = ll_save_fs[-1].path(thy_low_level)
+    ll_save_path = ll_save_fs[-1].path(thy_low_level[1:4])
 
     if os.path.exists(ll_save_path):
         if saddle:
@@ -202,16 +200,14 @@ def get_high_level_energy(
             return 0.0
         cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
 
-        orb_restr = fsorb.orbital_restriction(
+        thy_high_level = fsorb.mod_orb_restrict(
             spc_info, thy_high_level)
-        thy_high_level = thy_high_level[1:3]
-        thy_high_level.append(orb_restr)
 
         sp_save_fs = autofile.fs.single_point(cnf_save_path)
-        sp_save_fs[-1].create(thy_high_level)
+        sp_save_fs[-1].create(thy_high_level[1:4])
 
-        if os.path.exists(sp_save_fs[-1].path(thy_high_level)):
-            min_ene = sp_save_fs[-1].file.energy.read(thy_high_level)
+        if os.path.exists(sp_save_fs[-1].path(thy_high_level[1:4])):
+            min_ene = sp_save_fs[-1].file.energy.read(thy_high_level[1:4])
         else:
             # print('No energy at path')
             min_ene = None

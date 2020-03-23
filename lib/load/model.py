@@ -32,6 +32,7 @@ def read_models_sections(job_path):
             keyword_dct = build_pes_model_keyword_dct(section[1])
             glob_pes_model_methods = keyword_dct
             break
+    pes_model_methods['global'] = glob_pes_model_methods
     for section in pes_model_sections:
         if section[0] != 'global':
             name = section[0]
@@ -52,6 +53,7 @@ def read_models_sections(job_path):
             keyword_dct = build_spc_model_keyword_dct(section[1])
             glob_spc_model_methods = keyword_dct
             break
+    spc_model_methods['global'] = glob_spc_model_methods
     for section in spc_model_sections:
         if section[0] != 'global':
             name = section[0]
@@ -81,20 +83,37 @@ def build_pes_model_keyword_dct(model_str):
     pressures_str = apf.first_capture(
         ptt.paren_section('pressures'), model_str)
     etrans_str = apf.first_capture(ptt.paren_section('etransfer'), model_str)
+    pdep_str = apf.first_capture(ptt.paren_section('pdep_fit'), model_str)
+    tunit = apf.first_capture(ptt.keyword_pattern('tunit'), model_str)
+    punit = apf.first_capture(ptt.keyword_pattern('punit'), model_str)
+    fitm = apf.first_capture(ptt.keyword_pattern('fit_method'), model_str)
+    ethr = apf.first_capture(
+        ptt.keyword_pattern('dbl_arrfit_thresh'), model_str)
     assert temps_str is not None
     assert pressures_str is not None
     assert etrans_str is not None
 
-    # Get the dictionary for each section and check them
+    # Get the dictionary/values for each section and check them
+    # Setting defaults
     temps_dct = ptt.build_vals_lst(temps_str)
     pressures_dct = ptt.build_vals_lst(pressures_str)
     etransfer_dct = ptt.build_keyword_dct(etrans_str)
+    pdep_dct = ptt.build_keyword_dct(pdep_str) if pdep_str is not None else {}
+    tunit = ptt.set_value_type(tunit) if tunit is not None else 'K'
+    punit = ptt.set_value_type(punit) if punit is not None else 'atm'
+    fitm = ptt.set_value_type(fitm) if fitm is not None else 'arrhenius'
+    ethr = ptt.set_value_type(ethr) if ethr is not None else 15.0
 
     # Combine dcts into single model dct
     model_dct = {}
     model_dct['temps'] = temps_dct
     model_dct['pressures'] = pressures_dct
     model_dct['etransfer'] = etransfer_dct
+    model_dct['pdep_fit'] = pdep_dct
+    model_dct['tunit'] = tunit
+    model_dct['punit'] = punit
+    model_dct['fit_method'] = fitm
+    model_dct['dbl_arrfit_thresh'] = ethr
 
     return model_dct
 

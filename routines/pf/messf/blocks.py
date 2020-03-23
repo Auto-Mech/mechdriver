@@ -225,9 +225,7 @@ def vtst_with_no_saddle_block(
     """
 
     ts_info = ['', ts_dct['chg'], ts_dct['mul']]
-    orb_restr = fsorb.orbital_restriction(ts_info, multi_info)
-    multi_level = multi_info[0:3]
-    multi_level.append(orb_restr)
+    multi_level = fsorb.mod_orb_restrict(ts_info, multi_info)
 
     rxn_save_path = ts_dct['rxn_fs'][3]
     thy_save_fs = autofile.fs.theory(rxn_save_path)
@@ -353,9 +351,7 @@ def vtst_saddle_block(ts_dct, ene_thy_level, geo_thy_level,
             else:
                 scn_save_path = scn_save_fs[-1].path(locs)
                 sp_save_fs = autofile.fs.single_point(scn_save_path)
-                orb_restr = fsorb.orbital_restriction(ts_info, ene_thy_level)
-                sp_level = ene_thy_level[0:3]
-                sp_level.append(orb_restr)
+                sp_level = fsorb.mod_orb_restrict(ts_info, ene_thy_level)
                 if sp_save_fs[-1].file.energy.exists(sp_level[1:4]):
                     ene = sp_save_fs[-1].file.energy.read(sp_level[1:4])
                     print('ene-high', ene)
@@ -553,7 +549,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
                 frm_bnd_key, brk_bnd_key, saddle=False)
             symf_i = sym_factor_i
             for num in sym_nums_i:
-                symf_i /= num_i
+                symf_i /= num
         if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
@@ -582,7 +578,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
                 frm_bnd_key, brk_bnd_key, saddle=False)
             symf_j = sym_factor_j
             for num in sym_nums_j:
-                symf_j /= num_j
+                symf_j /= num
         freqs = list(freqs_i) + list(freqs_j)
         hind_rot_str = hr_str_i + hr_str_j
         sym_factor = symf_i * symf_j
@@ -609,14 +605,10 @@ def fake_species_block(
     tors_model, vib_model, sym_model = spc_model
 
     # prepare the four sets of file systems
-    orb_restr = fsorb.orbital_restriction(
+    har_levelp_i = fsorb.mod_orb_restrict(
         spc_info_i, harm_level)
-    har_levelp_i = harm_level[0:3]
-    har_levelp_i.append(orb_restr)
-    orb_restr = fsorb.orbital_restriction(
+    har_levelp_j = fsorb.mod_orb_restrict(
         spc_info_j, harm_level)
-    har_levelp_j = harm_level[0:3]
-    har_levelp_j.append(orb_restr)
 
     # Set theory filesystem used throughout
     thy_save_fs_i = autofile.fs.theory(save_prefix_i)
@@ -776,8 +768,7 @@ def set_model_filesys(thy_save_fs, spc_info, level, saddle=False):
     """ Gets filesystem objects for torsional calculations
     """
     # Set the level for the model
-    levelp = level[0:3]
-    levelp.append(fsorb.orbital_restriction(spc_info, level))
+    levelp = fsorb.mod_orb_restrict(spc_info, level)
 
     # Get the save fileystem path
     save_path = thy_save_fs[-1].path(levelp[1:4])

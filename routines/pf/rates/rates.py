@@ -51,7 +51,7 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
     mess_strs = ['', '', '']
 
     # Get the model for the first reference species
-    first_ground_model = rxn_lst[0]['model']
+    first_ground_model = rxn_lst[0]['model'][1]
 
     # Get the elec+zpe energy for the reference species
     first_ground_ene = 0.0
@@ -79,7 +79,7 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
                   'energy surfaces: {} and {}'.format(tsform, pes_formula))
             print('Will proceed to construct only {}'.format(pes_formula))
             continue
-        chn_model = rxn['model']
+        chn_model = rxn['model'][1]
         channel_enes = calc_channel_enes(
             spc_dct, rxn, tsname,
             thy_dct, model_dct,
@@ -88,7 +88,7 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
         mess_strs = make_channel_pfs(
             tsname, rxn, species, spc_dct, idx_dct, mess_strs,
             first_ground_ene, channel_enes,
-            model_dct, thy_dct, save_prefix) 
+            model_dct, thy_dct, save_prefix)
     well_str, bim_str, ts_str = mess_strs
     ts_str += '\nEnd\n'
 
@@ -105,7 +105,7 @@ def make_all_species_data(rxn_lst, spc_dct, model_dct, thy_dct, save_prefix):
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}'.format(idx)
         specieslist = rxn['reacs'] + rxn['prods']
-        rxn_model = rxn['model']
+        rxn_model = rxn['model'][1]
         # Gather PF model and theory level info
         pf_levels = loadmodel.set_es_model_info(
             model_dct[rxn_model]['es'], thy_dct)
@@ -189,7 +189,7 @@ def make_channel_pfs(
     bim_str, well_str, ts_str = strs
 
     # Set the model and info for the reaction
-    chn_model = rxn['model']
+    chn_model = rxn['model'][1]
     pf_levels = loadmodel.set_es_model_info(
         model_dct[chn_model]['es'], thy_dct)
     spc_model = loadmodel.set_pf_model_info(
@@ -214,18 +214,18 @@ def make_channel_pfs(
     spc_save_fs = autofile.fs.species(save_prefix)
 
     # Write the MESS string for the channel reactant(s) and product(s)
-    for rct in (rxn['reacs'], rxn['prods']):
+    for rct, rct_ene in zip((rxn['reacs'], rxn['prods']), (reac_ene, prod_ene)):
         spc_label = [automol.inchi.smiles(spc_dct[spc]['ich']) for spc in rct]
         spc_data = [species_data[spc] for spc in rct]
         chn_label = idx_dct[make_rxn_string(rct)]
         if len(rct) > 1:
-            ground_energy = reac_ene - first_ground_ene
+            ground_energy = rct_ene - first_ground_ene
             bim_str += '\n! {} + {}\n'.format(rct[0], rct[1])
             bim_str += mess_io.writer.bimolecular(
                 chn_label, spc_label[0], spc_data[0],
                 spc_label[1], spc_data[1], ground_energy)
         else:
-            zero_energy = reac_ene - first_ground_ene
+            zero_energy = rct_ene - first_ground_ene
             well_str += '\n! {}\n'.format(rct)
             well_str += mess_io.writer.well(
                 chn_label, spc_data[0], zero_energy)
@@ -264,7 +264,7 @@ def make_channel_pfs(
         well_str += mess_io.writer.well(
             fake_wellr_label, fake_wellr, zero_energy)
 
-        # MESS PST TS string for fake product side well -> prods
+        # MESS PST TS string for fake reactant side well -> reacs
         well_dct_key = make_rxn_string(rxn['reacs'], prepend='FRB')
         pst_r_label = idx_dct[well_dct_key]
         pst_r_ts_str = blocks.pst_block(
@@ -492,9 +492,8 @@ def make_rxn_string(rlst, prepend=''):
 
 
 # Readers
-def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
-               pdep_tolerance=20.0, no_pdep_pval=1.0,
-               pdep_low=None, pdep_high=None, bimol=False):
+def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
+               rct_lab, prd_lab, mess_path, pdep_fit, bimol=False):
     """ Read the rate constants from the MESS output and
         (1) filter out the invalid rates that are negative or undefined
         and obtain the pressure dependent values
@@ -510,7 +509,7 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
         output_string = mess_file.read()
 
     # Read the temperatures and pressures out of the MESS output
-    mess_temps, _ = mess_io.reader.rates.get_temperatures(
+    mess_temps, tunit = mess_io.reader.rates.get_temperatures(
         output_string)
     mess_pressures, punit = mess_io.reader.rates.get_pressures(
         output_string)
@@ -547,7 +546,12 @@ def read_rates(rct_lab, prd_lab, mess_path, assess_pdep_temps,
     if list(valid_calc_tk_dct.keys()) == ['high']:
         ktp_dct['high'] = valid_calc_tk_dct['high']
     else:
-        if assess_pdep:
+        if pdep_fit:
+            assess_pdep_temps = pdep_fit['assess_pdep_temps']
+            pdep_tolerance = pdep_fit['pdep_tolerance']
+            no_pdep_pval = pdep_fit['no_pdep_pval']
+            pdep_low = pdep_fit['pdep_low']
+            pdep_high = pdep_fit['pdep_high']
             rxn_is_pdependent = ratefit.calc.assess_pressure_dependence(
                 valid_calc_tk_dct, assess_pdep_temps,
                 tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)

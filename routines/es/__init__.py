@@ -172,10 +172,12 @@ def run_conformer_tsk(job, spc_dct, spc_name, thy_info,
             run_prefix, rxn_info, mod_thy_info)
         thy_save_fs, thy_save_path = fbuild.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_thy_info)
-    cnf_run_fs, _ = fbuild.cnf_fs_from_thy(
-        thy_run_path, cnf=None, saddle=saddle)
-    cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_thy(
-        thy_save_path, cnf=None, saddle=saddle)
+        thy_save_fs, thy_save_path = fbuild.ts_fs_from_thy(thy_save_path)
+        thy_run_fs, thy_run_path = fbuild.ts_fs_from_thy(thy_run_path)
+    cnf_run_fs, _ = fbuild.cnf_fs_from_prefix(
+        thy_run_path, cnf=None)
+    cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_prefix(
+        thy_save_path, cnf=None)
 
     if job == 'samp':
 
@@ -187,7 +189,7 @@ def run_conformer_tsk(job, spc_dct, spc_name, thy_info,
         tors_names = spc['tors_names'] if saddle else ''
         dist_info = spc['dist_info'] if saddle else ()
         two_stage = saddle
-        rxn_class = spc['rxn_class'] if saddle else ''
+        rxn_class = spc['class'] if saddle else ''
         mc_nsamp = spc['mc_nsamp']
 
         # Run the sampling
@@ -200,10 +202,10 @@ def run_conformer_tsk(job, spc_dct, spc_name, thy_info,
             two_stage=two_stage, rxn_class=rxn_class, **opt_kwargs)
 
     elif job in ('energy', 'grad', 'hess', 'vpt2'):
-        cnf_run_fs, _ = fbuild.cnf_fs_from_thy(
-            thy_run_path, cnf=None, saddle=saddle)
-        cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_thy(
-            thy_save_path, cnf='min', saddle=saddle)
+        cnf_run_fs, _ = fbuild.cnf_fs_from_prefix(
+            thy_run_path, cnf=None)
+        cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_prefix(
+            thy_save_path, cnf='min')
 
         # Set up the run scripts
         script_str, _, kwargs, _ = runpar.run_qchem_par(
@@ -214,7 +216,8 @@ def run_conformer_tsk(job, spc_dct, spc_name, thy_info,
         for locs in cnf_save_locs:
             geo_run_path = cnf_run_fs[-1].path([locs])
             geo_save_path = cnf_save_fs[-1].path([locs])
-            if cnf_save_fs[-1].file.zmatrix.exists([locs]):
+            # if cnf_save_fs[-1].file.zmatrix.exists([locs]):
+            if False:
                 geo = cnf_save_fs[-1].file.zmatrix.read([locs])
             else:
                 geo = cnf_save_fs[-1].file.geometry.read([locs])
@@ -302,18 +305,42 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info,
     mod_thy_info = fsorb.mod_orb_restrict(spc_info, thy_info)
 
     # Set the filesystem objects
-    _, thy_run_path = fbuild.spc_thy_fs_from_root(
-        run_prefix, spc_info, mod_thy_info)
-    _, thy_save_path = fbuild.spc_thy_fs_from_root(
-        save_prefix, spc_info, mod_thy_info)
-    cnf_run_fs, _ = fbuild.cnf_fs_from_thy(
-        thy_run_path, cnf=None, saddle=saddle)
-    cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_thy(
-        thy_save_path, cnf='min', saddle=saddle)
+    if not saddle:
+        _, thy_run_path = fbuild.spc_thy_fs_from_root(
+            run_prefix, spc_info, mod_thy_info)
+        _, thy_save_path = fbuild.spc_thy_fs_from_root(
+            save_prefix, spc_info, mod_thy_info)
+    else:
+        rxn_info = finf.rxn_info(
+            spc['reacs'], spc['prods'], spc_dct)
+        _, thy_run_path = fbuild.rxn_thy_fs_from_root(
+            run_prefix, rxn_info, mod_thy_info)
+        thy_save_fs, thy_save_path = fbuild.rxn_thy_fs_from_root(
+            save_prefix, rxn_info, mod_thy_info)
+        thy_save_fs, thy_save_path = fbuild.ts_fs_from_thy(thy_save_path)
+        _, thy_run_path = fbuild.ts_fs_from_thy(thy_run_path)
+    cnf_run_fs, _ = fbuild.cnf_fs_from_prefix(
+        thy_run_path, cnf=None)
+    cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_prefix(
+        thy_save_path, cnf='min')
     cnf_save_paths = fbuild.cnf_paths_from_locs(
         cnf_save_fs, cnf_save_locs)
     cnf_run_paths = fbuild.cnf_paths_from_locs(
         cnf_run_fs, cnf_save_locs)
+
+    # Set the filesystem objects
+    # _, thy_run_path = fbuild.spc_thy_fs_from_root(
+    #     run_prefix, spc_info, mod_thy_info)
+    # _, thy_save_path = fbuild.spc_thy_fs_from_root(
+    #     save_prefix, spc_info, mod_thy_info)
+    # cnf_run_fs, _ = fbuild.cnf_fs_from_thy(
+    #     thy_run_path, cnf=None, saddle=saddle)
+    # cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_thy(
+    #     thy_save_path, cnf='min', saddle=saddle)
+    # cnf_save_paths = fbuild.cnf_paths_from_locs(
+    #     cnf_save_fs, cnf_save_locs)
+    # cnf_run_paths = fbuild.cnf_paths_from_locs(
+    #     cnf_run_fs, cnf_save_locs)
 
     # Get options from the dct or es options lst
     if saddle:
@@ -325,8 +352,10 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info,
     overwrite = bool('overwrite' in es_options)
     ndim_tors = 'mdhr' if 'mdhr' in es_options else '1dhr'
     frz_all_tors = bool('frz_all_tors' in es_options)
-    scan_increment = spc['hind_increment']
-    run_tors_names = spc['hind_def'] if 'hind_def' in spc else ()
+    scan_increment = spc['hind_inc']
+    run_tors_names = spc['tors_names'] if 'tors_names' in spc else ()
+    run_tors_names = [[name] for name in run_tors_names]
+    print('tors', run_tors_names)
 
     geo = cnf_save_fs[-1].file.geometry.read(cnf_save_locs)
     zma = cnf_save_fs[-1].file.zmatrix.read(cnf_save_locs)
@@ -336,6 +365,10 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info,
         zma, geo, run_tors_names=run_tors_names,
         scan_increment=scan_increment, ndim_tors=ndim_tors,
         saddle=saddle, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+
+    print('tors', run_tors_names)
+    print('run paths', cnf_run_paths[0])
+    print('save paths', cnf_save_paths[0])
 
     # Get a list of the other tors coords to freeze and set the filesystem
     if frz_all_tors:
@@ -473,12 +506,15 @@ def run_ts(spc_dct, spc_name,
             run_prefix, rxn_info, mod_thy_info)
         thy_save_fs, thy_save_path = fbuild.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_thy_info)
+    ts_save_fs, ts_save_path = fbuild.ts_fs_from_thy(thy_save_path)
+    ts_run_fs, ts_run_path = fbuild.ts_fs_from_thy(thy_run_path)
     cnf_run_fs, _ = fbuild.cnf_fs_from_thy(
         thy_run_path, cnf=None, saddle=True)
     cnf_save_fs, _ = fbuild.cnf_fs_from_thy(
         thy_save_path, cnf=None, saddle=True)
     scn_run_fs = autofile.fs.scan(thy_run_path)
     scn_save_fs = autofile.fs.scan(thy_save_path)
+    run_fs = autofile.fs.run(ts_run_path)
 
     # Run
     find.find_ts(
@@ -489,6 +525,8 @@ def run_ts(spc_dct, spc_name,
         thy_save_fs,
         cnf_run_fs, cnf_save_fs,
         scn_run_fs, scn_save_fs,
+        run_fs,
+        ts_save_fs, ts_save_path,
         run_prefix, save_prefix,
         opt_script_str,
         overwrite, vrc_dct,

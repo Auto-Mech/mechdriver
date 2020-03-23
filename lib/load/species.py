@@ -11,6 +11,7 @@ from lib.phydat import symm, eleclvl
 from lib.reaction import rxnid
 from lib.filesystem import read as fread
 from lib.filesystem import inf as finf
+from lib.filesystem import path as fpath
 from lib.phydat import phycon
 
 
@@ -274,7 +275,7 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
     save_prefix = run_inp_dct['save_prefix']
     kickoff = [0.1, False]
 
-    print('\nBegin transition state prep')
+    print('\nTransition state prep')
     ts_dct = {}
     for idx, rxn in enumerate(rxn_lst):
 
@@ -300,7 +301,7 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
 
         # Set the info
         rxn_info = finf.rxn_info(reacs, prods, spc_dct)
-        [_, rxn_chgs, rxn_muls, _] = rxn_info
+        [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
         low_mul, high_mul, _, chg = finf.rxn_chg_mult(
             rxn_muls, rxn_chgs, ts_mul='low')
         rad_rad = rxnid.determine_rad_rad(rxn_muls)
@@ -338,6 +339,23 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
             ts_dct[tsname]['bkp_data'] = None
         ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
         ts_dct[tsname]['dist_info'] = [dist_name, 0., update_guess, brk_name]
+
+    ts_dct[tsname]['mc_nsamp'] = [False, 0, 0, 0, 0, 4]
+    ts_dct[tsname]['hind_inc'] = 30.0 * phycon.DEG2RAD
+    ts_dct[tsname]['irc_idxs'] = [
+        -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0, -2.0, -1.0, 0.0,
+        1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+    ts_dct[tsname]['pst_params'] = [1.0, 6]
+    ts_dct[tsname]['ich'] = ''
+
+    # Reaction fs for now
+    rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = fpath.get_rxn_fs(
+        run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
+    ts_dct[tsname]['rxn_fs'] = [
+        rxn_run_fs,
+        rxn_save_fs,
+        rxn_run_path,
+        rxn_save_path]
 
     return ts_dct
 

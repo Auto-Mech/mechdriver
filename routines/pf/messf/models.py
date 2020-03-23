@@ -89,7 +89,7 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
                 tors_names, tors_grids, tors_sym_nums,
                 tors_cnf_save_path, min_ene,
-                saddle=False, hind_rot_geo=None)
+                saddle=False, hind_rot_geo=tors_geo)
 
             # Calculate ZPVES of the hindered rotors
             if saddle and tors_names is not None:
@@ -189,7 +189,7 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 harm_geo, spc_info, 1.0, spc_dct_i, ts_bnd, zma,
                 tors_name_grps, tors_grid_grps, tors_sym_nums,
                 tors_cnf_save_path, min_ene,
-                saddle=False, hind_rot_geo=None)
+                saddle=False, hind_rot_geo=tors_geo)
 
             # Calculate ZPVES of the hindered rotors
             if saddle:  # and tors_names is not None:
@@ -274,7 +274,7 @@ def vib_harm_tors_tau(harm_min_cnf_locs, harm_cnf_save_fs,
                 harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
                 tors_names, tors_grids, tors_sym_nums,
                 tors_cnf_save_path, min_ene,
-                saddle=False, hind_rot_geo=None)
+                saddle=False, hind_rot_geo=tors_geo)
 
             # Calculate ZPVES of the hindered rotors
             if saddle and tors_names is not None:

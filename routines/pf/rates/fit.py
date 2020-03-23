@@ -10,14 +10,14 @@ import chemkin_io
 
 # New libs
 from routines.pf.rates import rates as messrates
-from lib.outpt import chemkin as cout
+# from lib.outpt import chemkin as cout
 from lib.phydat import phycon
 
 
-def fit_rates(spc_dct, pes_formula_str, idx_dct,
-              pf_levels, pf_model, ene_coeff,
-              mess_path, assess_pdep, err_thresh,
-              fit_method, troe_param_fit_lst):
+def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
+              pes_formula_str, idx_dct,
+              mess_path, fit_method, pdep_fit,
+              arrfit_thresh):
     """ Parse the MESS output and fit the rates to
         Arrhenius expressions written as CHEMKIN strings
     """
@@ -41,28 +41,26 @@ def fit_rates(spc_dct, pes_formula_str, idx_dct,
             for lab_j, name_j in zip(labels, names):
                 if 'F' not in lab_j and lab_i != lab_j:
 
-                    # Unpack assess pdep
-                    [plow, phigh, assess_tlow, assess_thigh] = assess_pdep
-                    assess_pdep_temps = [assess_tlow, assess_thigh]
+                    # Set name
                     reaction = name_i + '=' + name_j
 
                     # Read the rate constants out of the mess outputs
                     ktp_dct = messrates.read_rates(
-                        lab_i, lab_j, mess_path, assess_pdep_temps,
-                        pdep_low=plow, pdep_high=phigh,
-                        pdep_tolerance=20, no_pdep_pval=1.0,
+                        inp_temps, inp_pressures, inp_tunit, inp_punit,
+                        lab_i, lab_j, mess_path, pdep_fit,
                         bimol=numpy.isclose(a_conv_factor, 6.0221e23))
 
                     # Get the desired fits in the form of CHEMKIN strs
                     if fit_method == 'arrhenius':
                         chemkin_str += perform_arrhenius_fits(
-                           ktp_dct, reaction, mess_path,
-                           a_conv_factor, err_thresh)
-                    elif fit_method == 'troe':
-                        chemkin_str += perform_troe_fits(
                             ktp_dct, reaction, mess_path,
-                            troe_param_fit_lst,
-                            a_conv_factor, err_thresh)
+                            a_conv_factor, arrfit_thresh)
+                    elif fit_method == 'troe':
+                        pass
+                        # chemkin_str += perform_troe_fits(
+                        #     ktp_dct, reaction, mess_path,
+                        #     troe_param_fit_lst,
+                        #     a_conv_factor, err_thresh)
 
                     # Write the CHEMKIN strings
                     chemkin_poly_str += '\n'
