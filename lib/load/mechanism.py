@@ -252,6 +252,9 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
         run_chnls = []
         for pes_chn_pair in run_obj_dct:
             pes_num, chn_num = pes_chn_pair
+            # print('num chk', pes_num, chn_num)
+            # print(pes_idx)
+            # print(idx_dct[pes_num])
             if idx_dct[pes_num] == formula:
                 run_chnls.append(chn_num)
 

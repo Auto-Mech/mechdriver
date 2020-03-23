@@ -124,6 +124,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
         if ret and (not given_class or given_class == 'addition'):
             typ = 'addition'
             ts_zma, dist_name, tors_names = ret
+            typ += ' '
             typ += set_ts_spin(ts_mul, high_mul, low_mul)
             # Set up beta sci as fall back option for failed addn TS search
             ret2 = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
@@ -164,6 +165,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             if ret and hmcls:
                 typ = 'hydrogen abstraction'
                 ts_zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
+                typ += ' '
                 typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
         # Need cases for
@@ -176,6 +178,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             if ret and (not given_class or given_class == 'insertion'):
                 typ = 'insertion'
                 ts_zma, dist_name, tors_names = ret
+                typ += ' '
                 typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
         # Check for subsitution
@@ -184,6 +187,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             if ret and (not given_class or given_class == 'substitution'):
                 typ = 'substitution'
                 ts_zma, dist_name, tors_names = ret
+                typ += ' '
                 typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
         # Check for elimination
@@ -198,6 +202,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
                 if ret and (not given_class or given_class == 'elimination'):
                     typ = 'elimination'
                     ts_zma, dist_name, brk_name, frm_bnd_key, tors_names = ret
+                    typ += ' '
                     typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
         # Break if reaction found
