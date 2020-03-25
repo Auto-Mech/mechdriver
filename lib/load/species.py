@@ -295,7 +295,7 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
         check_exo = True
         if check_exo and not given_class:
             reacs, prods = finf.assess_rxn_exo(
-                reacs, prods, spc_dct, thy_info, save_prefix)
+                reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
         print('\n TS for {}: {} = {}'.format(
             tsname, '+'.join(reacs), '+'.join(prods)))
 

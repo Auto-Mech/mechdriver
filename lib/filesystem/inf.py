@@ -69,18 +69,25 @@ def rxn_info(reacs, prods, spc_dct, ts_mul='low'):
         rxn_muls[1].append(spc_dct[spc]['mul'])
     rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
         rxn_ichs, rxn_chgs, rxn_muls)
-    low_mul, high_mul, mul, chg = rxn_chg_mult(
+    _, _, mul, _ = rxn_chg_mult(
         rxn_muls, rxn_chgs, ts_mul=ts_mul)
 
     return [rxn_ichs, rxn_chgs, rxn_muls, mul]
 
 
-def assess_rxn_exo(reacs, prods, spc_dct, thy_info, save_prefix):
+def assess_rxn_exo(reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix):
     """ Check the directionality of the reaction
     """
     [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info(reacs, prods, spc_dct)
-    rxn_exo = fsread.reaction_energy(
-        save_prefix, rxn_ichs, rxn_chgs, rxn_muls, thy_info)
+    try:
+        rxn_exo = fsread.reaction_energy(
+            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, thy_info)
+    except TypeError:
+        rxn_exo = fsread.reaction_energy(
+            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
+    except IOError:
+        rxn_exo = fsread.reaction_energy(
+            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
     print('reaction is {:.2f} endothermic'.format(rxn_exo*phycon.EH2KCAL))
     if rxn_exo > 0:
         rxn_ichs = rxn_ichs[::-1]
