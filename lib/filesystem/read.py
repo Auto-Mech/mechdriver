@@ -5,6 +5,7 @@
 import automol
 from automol.zmatrix.ts import _shifted_standard_forms_with_gaphs as shift_gra
 import autofile
+from routines.es import geom
 from lib.filesystem import orb as fsorb
 from lib.filesystem import minc as fsmin
 from lib.runner import script
