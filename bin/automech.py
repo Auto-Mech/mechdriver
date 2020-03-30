@@ -47,7 +47,7 @@ SPC_DCT = lspc.build_spc_dct(
     JOB_PATH, 'csv', check_stereo=False)
 
 # Parse the mechanism input and get a dct with info on PESs user request to run
-if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:
+if RUN_OBJ_DCT['pes']:
     print('\nReaction Channels Needed. Reading mechanism.dat...')
     # Prob move this into the fxn below cuz I need the model
     RUN_PES_DCT = lmech.parse_mechanism_file(
@@ -91,7 +91,7 @@ print('{}'.format(RUN_INP_DCT['save_prefix']))
 # Run the requested drivers: es, thermo, ktp
 print('\n\nRunning the requested drivers...')
 if 'es' in RUN_JOBS_LST:
-    if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:
+    if RUN_OBJ_DCT['pes']:
         # Call ESDriver for spc in each PES
         for pes, rxn_lst in RUN_PES_DCT.items():
             esdriver.run(
@@ -117,7 +117,7 @@ if 'es' in RUN_JOBS_LST:
 
 WRITE_MESSPF, RUN_MESSPF, RUN_NASA = lrun.set_thermodriver_run(RUN_JOBS_LST)
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
-    if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:
+    if RUN_OBJ_DCT['pes']:
         # Call ThermoDriver for spc in each PES
         for pes, rxn_lst in RUN_PES_DCT.items():
             thermodriver.run(
