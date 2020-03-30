@@ -256,8 +256,11 @@ def determine_rad_rad(rxn_muls):
     """ determine if reaction is radical-radical
     """
     rct_muls = rxn_muls[0]
-    mul1, mul2 = rct_muls
-    rad_rad = bool(mul1 > 1 and mul2 > 1)
+    if len(rct_muls) > 1:
+        mul1, mul2 = rct_muls
+        rad_rad = bool(mul1 > 1 and mul2 > 1)
+    else:
+        rad_rad = False
     return rad_rad
 
 
