@@ -45,7 +45,7 @@ MODEL_PF_DEFAULT_DCT = {
     'ts_nobar': 'pst',
     'ts_sadpt': 'fixed',
     'wells': 'fake',
-    'tunneling': 'none'
+    'tunnel': 'none'
 }
 
 # Electronic Structure Tasks
