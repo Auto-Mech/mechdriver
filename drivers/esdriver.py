@@ -54,6 +54,7 @@ def run(rxn_lst,
                 rxn_lst, thy_info, ini_thy_info,
                 run_inp_dct, spc_dct, {})
             for sadpt in ts_dct:
+                ts_dct[sadpt]['mc_nsamp'] = [True, 10, 1, 1, 1, 50]
                 spc_queue.append((sadpt, ''))
                 spc_dct.update({sadpt: ts_dct[sadpt]})
         elif obj == 'vdw':
