@@ -10,7 +10,7 @@ from lib.load import species as loadspc
 from lib import printmsg
 
 
-def run(pes_formula,
+def run(pes_formula, pes_idx,
         spc_dct,
         thy_dct,
         rxn_lst,
@@ -49,9 +49,10 @@ def run(pes_formula,
         thy_info = finf.get_es_info(ene_model, thy_dct)
         ini_thy_info = finf.get_es_info(geo_model, thy_dct)
         ts_dct = loadspc.build_sadpt_dct(
-            rxn_lst, thy_info, ini_thy_info,
+            pes_idx, rxn_lst, thy_info, ini_thy_info,
             run_inp_dct, spc_dct, {})
-        spc_dct.update(ts_dct)
+        spc_dct = loadspc.combine_sadpt_spc_dcts(
+            ts_dct, spc_dct)
 
     # Build the MESS label idx dictionary for the PES
     idx_dct = messrates.make_pes_idx_dct(rxn_lst, spc_dct)

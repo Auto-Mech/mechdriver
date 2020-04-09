@@ -114,7 +114,10 @@ def read_spc_amech(job_path):
     """
 
     # Read the AMech species string
-    spc_amech_str = ptt.read_inp_str(job_path, DAT_INP)
+    if os.path.exists(os.path.join(job_path, DAT_INP)):
+        spc_amech_str = ptt.read_inp_str(job_path, DAT_INP)
+    else:
+        spc_amech_str = ''
 
     # Build the keyword dcts
     glob_spc_dct = {}
@@ -205,8 +208,8 @@ def modify_spc_dct(job_path, spc_dct):
                 mod_spc_dct[spc]['sym'] = symm.DCT[(ich, mul)]
 
         # Add defaults here for now
-        if 'hind_increment' not in mod_spc_dct[spc]:
-            mod_spc_dct[spc]['hind_increment'] = 30 * phycon.DEG2RAD
+        if 'hind_inc' not in mod_spc_dct[spc]:
+            mod_spc_dct[spc]['hind_inc'] = 30 * phycon.DEG2RAD
         if 'kickoff' not in mod_spc_dct[spc]:
             mod_spc_dct[spc]['kickoff'] = [0.1, False]
         if 'mc_nsamp' not in mod_spc_dct[spc]:
@@ -267,7 +270,7 @@ def geometry_dictionary(job_path):
     return geom_dct
 
 
-def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
+def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
                     run_inp_dct, spc_dct, cla_dct):
     """ build dct
     """
@@ -277,10 +280,10 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
 
     print('\nTransition state prep')
     ts_dct = {}
-    for idx, rxn in enumerate(rxn_lst):
+    for chn_idx, rxn in enumerate(rxn_lst):
 
         # Initialize dictionary
-        tsname = 'ts_{:g}'.format(idx)
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx+1)
         ts_dct[tsname] = {}
 
         # Grab the reactants and products
@@ -296,7 +299,7 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
         if check_exo and not given_class:
             reacs, prods = finf.assess_rxn_exo(
                 reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
-        print('\n TS for {}: {} = {}'.format(
+        print('\n {} for {} = {}'.format(
             tsname, '+'.join(reacs), '+'.join(prods)))
 
         # Set the info
@@ -312,7 +315,6 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
              'mul': ts_mul,
              'chg': chg,
              'rad_rad': rad_rad})
-        ts_dct[tsname]['kickoff'] = [0.1, False]
         ts_dct[tsname]['reacs'] = reacs
         ts_dct[tsname]['prods'] = prods
 
@@ -340,12 +342,6 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
         ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
         ts_dct[tsname]['dist_info'] = [dist_name, 0., update_guess, brk_name]
 
-        ts_dct[tsname]['mc_nsamp'] = [True, 10, 1, 3, 50, 25]
-        ts_dct[tsname]['hind_inc'] = 30.0 * phycon.DEG2RAD
-        ts_dct[tsname]['irc_idxs'] = [
-            -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0, -2.0, -1.0, 0.0,
-            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
-        ts_dct[tsname]['pst_params'] = [1.0, 6]
         ts_dct[tsname]['ich'] = ''
 
         # Reaction fs for now
@@ -359,6 +355,45 @@ def build_sadpt_dct(rxn_lst, thy_info, ini_thy_info,
 
     return ts_dct
 
+
+def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
+    """ Create a new dictionary that combines init spc_dct and sadpt dct
+    """
+
+    combined_dct = {}
+
+    # Put all elements of spc_dct in combined dct that are NOT TSs
+    for spc in spd_dct:
+        if 'ts' not in spc:
+            combined_dct[spc] = spc_dct[spc]
+
+    # Now put in the TSs pulling info from everywhere
+    for sadpt in sadpt_dct:
+        if sadpt in spc_dct:
+
+            # Put in whatever sits in the spc_dct already
+            combined_dct[sadpt] = spc_dct[sadpt]
+
+            # Put in stuff from the sadpt_dct build
+            for key, val in sadpt_dct[sadpt].items():
+                if key not in combined_dct[sadpt]:
+                    combined_dct[sadpt][key] = val
+
+            # Put in defaults if they were not defined
+            if 'kickoff' not in combined_dct[sadpt]:
+                combined_dct[sadpt]['kickoff'] = [0.1, False]
+            if 'mc_nsamp' not in combined_dct[sadpt]:
+                combined_dct[sadpt]['mc_nsamp'] = [True, 10, 1, 3, 50, 25]
+            if 'irc_idxs' not in combined_dct[sadpt]:
+                combined_dct[sadpt]['irc_idxs'] = [
+                    -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0,
+                    -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,
+                    8.0, 9.0, 10.0]
+            if 'pst_params' not in combined_dct[sadpt]:
+                combined_dct[sadpt]['pst_params'] = [1.0, 6]
+
+    return combined_dct
+    
 
 # Print messages
 def print_check_stero_msg(check_stereo):

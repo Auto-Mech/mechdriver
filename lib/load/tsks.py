@@ -2,8 +2,10 @@
     an outlined procedure
 """
 
+import sys
 from lib.filesystem import inf as finf
 from lib.load import ptt
+from lib.load.keywords import ES_TSK_OBJ_SUPPORTED_LST
 from lib.load.keywords import ES_TSK_SUPPORTED_DCT
 from lib.load.keywords import ES_TSK_OPTIONS_SUPPORTED_DCT
 
@@ -20,7 +22,7 @@ def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
         tsk_lst = es_tsks_from_lst(es_tsk_str)
 
     # Ensure that all the tasks are in the supported tasks
-    assert check_es_tsks_supported(tsk_lst)
+    check_es_tsks_supported(tsk_lst, thy_dct)
 
     return tsk_lst
 
@@ -91,27 +93,49 @@ def es_tsks_from_models(rxn_model_dct,
     return tsk_lst
 
 
-def check_es_tsks_supported(es_tsks):
+def check_es_tsks_supported(es_tsks, thy_dct):
     """ Check to see if the list of es tasks are supported by the code
     """
-    obj_good, tsk_good, opt_good = True, True, True
     for tsk_lst in es_tsks:
-        [obj, tsk, _, _, options] = tsk_lst
-        print(tsk_lst)
-        if obj in ES_TSK_SUPPORTED_DCT:
-            if tsk in ES_TSK_SUPPORTED_DCT[obj]:
-                print(ES_TSK_OPTIONS_SUPPORTED_DCT[tsk])
-                print(options)
-                chk = all(option in ES_TSK_OPTIONS_SUPPORTED_DCT[tsk]
-                          for option in options)
-                if not chk:
-                    print('opt not good')
-                    opt_good = False
-            else:
-                print('tsk not good')
-                tsk_good = False
-        else:
-            print('obj not good')
-            obj_good = False
+        try:
+            # Unpack the list
+            [obj, tsk, es_run_key, es_ini_key, es_options] = tsk_lst
 
-    return bool(obj_good and tsk_good and opt_good)
+            # Check the object
+            if obj not in ES_TSK_OBJ_SUPPORTED_LST:
+                print('*ERROR: object requested that is not allowed')
+                print('Allowed objs')
+                for supp_obj in ES_TSK_OBJ_SUPPORTED_LST:
+                    print(supp_obj)
+                sys.exit()
+            
+            # Check the task
+            if tsk not in ES_TSK_SUPPORTED_DCT[obj]:
+                print('*ERROR: task requested not allowed for object')
+                print('Allowed objs')
+                for key, val in ES_TSK_SUPPORTED_DCT:
+                    print(key)
+                    print(val)
+                sys.exit()
+            
+            # Check the requested es level
+            if es_run_key not in thy_dct:
+                print('*ERROR: tsk theory level not given in theory.dat')
+                sys.exit()
+            if es_ini_key not in thy_dct:
+                print('*ERROR: ini theory level not given in theory.dat')
+                sys.exit()
+
+            # Check the es options
+            chk = all(option in ES_TSK_OPTIONS_SUPPORTED_DCT[tsk]
+                      for option in es_options)
+            if not chk:
+                print('*ERROR: option not allowed for given task')
+                print('Allowed objs')
+                for option in ES_TSK_OPTIONS_SUPPORTED_DCT[tsk]:
+                    print(tsk, option)
+                sys.exit()
+        except:
+            print('*ERROR: es_tsk not formatted correctly')
+            print(tsk_lst)
+            sys.exit()

@@ -9,7 +9,6 @@ RUN_INP_REQUIRED_KEYWORDS = [
     'save_prefix',
 ]
 RUN_SUPPORTED_KEYWORDS = [
-    'sort',
     'es',
     'thermochem',
     'kinetics',

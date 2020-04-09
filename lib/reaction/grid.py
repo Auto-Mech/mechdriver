@@ -94,8 +94,6 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma, dist_name, npoints=None):
 
     # Set the main type
     # if spin == 'high':
-    print('rtype')
-    print(rtype)
     if 'beta scission' in rtype:
         grid, update_guess = beta_scission_grid(npoints, ts_bnd_len)
     elif 'addition' in rtype and 'rad' not in rtype:

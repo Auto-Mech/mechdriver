@@ -28,8 +28,6 @@ print('Parsing the input files...')
 print('\nReading run.dat...')
 RUN_INP_DCT = lrun.build_run_inp_dct(JOB_PATH)
 RUN_OBJ_DCT = lrun.objects_dct(JOB_PATH)
-# RUN_OPTIONS_DCT = lrun.build_run_glob_opts_dct(JOB_PATH)
-RUN_OPTIONS_DCT = {}
 RUN_JOBS_LST = lrun.build_run_jobs_lst(JOB_PATH)
 ES_TSK_STR = lrun.read_es_tsks(JOB_PATH)
 
@@ -47,9 +45,8 @@ SPC_DCT = lspc.build_spc_dct(
     JOB_PATH, 'csv', check_stereo=False)
 
 # Parse the mechanism input and get a dct with info on PESs user request to run
-if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:
+if RUN_OBJ_DCT['pes']:
     print('\nReaction Channels Needed. Reading mechanism.dat...')
-    # Prob move this into the fxn below cuz I need the model
     RUN_PES_DCT = lmech.parse_mechanism_file(
         JOB_PATH,
         RUN_INP_DCT['mech'],
@@ -64,23 +61,6 @@ else:
     print('No Proper Run object specified')
     sys.exit()
 
-# Print stuff for test
-# print('\n\nEchoing the user input:\n\n')
-# print('\nrun inp dct')
-# print(RUN_INP_DCT)
-# print('\nrun options dct')
-# print(RUN_OPTIONS_DCT)
-# print('\nrun jobs lst')
-# print(RUN_JOBS_LST)
-# print('\ntheory dct')
-# print(THY_DCT)
-# print('\nmodel dct')
-# print(MODEL_DCT)
-# print('\nspc dct')
-# print(SPC_DCT)
-# print('\npes dct')
-# print(PES_DCT)
-
 # Initialize the filesystem
 print('\nBuilding the base Run-Save filesystems at')
 fbuild.prefix_fs(RUN_INP_DCT['run_prefix'])
@@ -91,16 +71,18 @@ print('{}'.format(RUN_INP_DCT['save_prefix']))
 # Run the requested drivers: es, thermo, ktp
 print('\n\nRunning the requested drivers...')
 if 'es' in RUN_JOBS_LST:
-    if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:
+    if RUN_OBJ_DCT['pes']:
         # Call ESDriver for spc in each PES
-        for pes, rxn_lst in RUN_PES_DCT.items():
+        for (_, pes_idx), rxn_lst in RUN_PES_DCT.items():
+            # Do some extra work to prepare the info to pass to the drivers
+            ES_TSK_LST = lrun.build_run_es_tsks_lst(
+                ES_TSK_STR, SPC_MODEL_DCT, THY_DCT)
             esdriver.run(
+                pes_idx,
                 rxn_lst,
                 SPC_DCT,
-                ES_TSK_STR,
-                PES_MODEL_DCT, SPC_MODEL_DCT,
+                ES_TSK_LST,
                 THY_DCT,
-                RUN_OPTIONS_DCT,
                 RUN_INP_DCT
             )
     else:
@@ -108,18 +90,16 @@ if 'es' in RUN_JOBS_LST:
         esdriver.run(
             RUN_SPC_LST_DCT,
             SPC_DCT,
-            ES_TSK_STR,
-            PES_MODEL_DCT, SPC_MODEL_DCT,
+            ES_TSK_LST,
             THY_DCT,
-            RUN_OPTIONS_DCT,
             RUN_INP_DCT
         )
 
 WRITE_MESSPF, RUN_MESSPF, RUN_NASA = lrun.set_thermodriver_run(RUN_JOBS_LST)
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
-    if RUN_OBJ_DCT['pes'] or RUN_OBJ_DCT['pspc']:
+    if RUN_OBJ_DCT['pes']:
         # Call ThermoDriver for spc in each PES
-        for pes, rxn_lst in RUN_PES_DCT.items():
+        for _, rxn_lst in RUN_PES_DCT.items():
             thermodriver.run(
                 SPC_DCT,
                 PES_MODEL_DCT, SPC_MODEL_DCT,
@@ -149,9 +129,9 @@ WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = lrun.set_ktpdriver_run(RUN_JOBS_LST)
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
     if RUN_OBJ_DCT['pes']:
         # Call kTPDriver for spc in each PES
-        for pes_formula, rxn_lst in RUN_PES_DCT.items():
+        for (pes_formula, pes_idx), rxn_lst in RUN_PES_DCT.items():
             ktpdriver.run(
-                pes_formula,
+                pes_formula, pes_idx,
                 SPC_DCT,
                 THY_DCT,
                 rxn_lst,

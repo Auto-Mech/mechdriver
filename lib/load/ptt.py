@@ -1,6 +1,7 @@
 """ Library of patterns to simplify the parsing of input files
 """
 
+import sys
 import os
 import autoparse.find as apf
 import autoparse.pattern as app
@@ -20,14 +21,16 @@ def read_inp_str(filepath, filename):
     """ read the run parameters from a file
     """
     input_file = os.path.join(filepath, filename)
-    if os.path.exists(input_file):
+    try:
         with open(input_file, 'r') as inp_file:
             inp_lines = inp_file.readlines()
         inp_str = ''.join(
             (line for line in inp_lines
              if '#' not in line and line.strip() != ''))
-    else:
-        inp_str = ''
+    except:
+        print('*ERROR: Input file does not exist: ', input_file)
+        sys.exit()
+
     return inp_str
 
 
@@ -202,50 +205,3 @@ def set_value_type(value):
         frmtd_value = value
 
     return frmtd_value
-# def get_key_str(inp_str, lvl, key):
-#     """ Find the value for a given key
-#     """
-#     key_str = apf.first_capture(
-#         keyword_pattern(key), get_lvl_str(inp_str, lvl))
-#     assert key_str is not None
-#     return key_str
-#
-#
-# def get_key_int(inp_str, lvl, key):
-#     """ Find the value for a given key; make integer
-#     """
-#     key_str = apf.first_capture(
-#         keyword_pattern(key), get_lvl_str(inp_str, lvl))
-#     assert key_str is not None
-#     return int(key_str)
-#
-#
-# Parsing lines within the various section strings
-# def channel_block(inp_str):
-#     """ get the channels
-#     """
-#     # Various Patterns for entering the Channel indices
-#     cidx_ptt = one_of_these([
-#         INTEGER,
-#         INTEGER + '-' + INTEGER,
-#         series(INTEGER, ',')
-#     ])
-#     model_pattern = ('channels' + app.one_or_more(app.SPACE) +
-#                      app.capturing(cidx_ptt) +
-#                      app.zero_or_more(app.SPACE) + NEWLINE +
-#                 app.capturing(app.one_or_more(app.WILDCARD, greedy=False)) +
-#                      'end')
-#     channel_str = apf.first_capture(model_pattern, inp_str)
-#
-#     # Parse the channel indices into a list of integers for all channels
-#     cidx_str = channel_str[0]
-#     if ',' in cidx_str:
-#         cidxs = cidx_str.strip().split(',')
-#     if '-' in cidx_str:
-#         [idx_begin, idx_end] = cidx_str.strip().split('-')
-#         cidxs = list(range(int(idx_begin), int(idx_end)+1))
-#
-#     # Get the block of text containing the keyword
-#     channel_keys = channel_str[1]
-#
-#     return cidxs, channel_keys

@@ -47,6 +47,7 @@ def conformer_sampling(
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
+        thy_info=thy_info,
         saddle=saddle,
         dist_info=dist_info,
         rxn_class=rxn_class
@@ -69,6 +70,7 @@ def conformer_sampling(
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
+        thy_info=thy_info,
         saddle=saddle,
         dist_info=dist_info,
         rxn_class=rxn_class
@@ -225,7 +227,7 @@ def run_conformers(
         cnf_run_fs[0].file.info.write(inf_obj)
 
 
-def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
+def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                     dist_info=(), rxn_class=''):
     """ save the conformers that have been found so far
     """
@@ -377,6 +379,18 @@ def save_conformers(cnf_run_fs, cnf_save_fs, saddle=False,
                                 cnf_save_fs[-1].file.energy.write(ene, locs)
                                 cnf_save_fs[-1].file.geometry.write(geo, locs)
                                 cnf_save_fs[-1].file.zmatrix.write(zma, locs)
+
+                                # Saving the energy to am SP filesys
+                                print(" - Saving energy...")
+                                sp_save_fs = autofile.fs.single_point(
+                                    save_path)
+                                sp_save_fs[-1].create(thy_info[1:4])
+                                sp_save_fs[-1].file.input.write(
+                                    inp_str, thy_info[1:4])
+                                sp_save_fs[-1].file.info.write(
+                                    inf_obj, thy_info[1:4])
+                                sp_save_fs[-1].file.energy.write(
+                                    ene, thy_info[1:4])
 
                     seen_geos.append(geo)
                     seen_enes.append(ene)

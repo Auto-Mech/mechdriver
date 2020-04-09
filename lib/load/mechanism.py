@@ -241,7 +241,10 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
         with the drivers currently
     """
     run_pes_dct = {}
-    for pes_idx, formula in enumerate(pes_dct):
+    for formula in pes_dct:
+        
+        # Set correct pes index based on the formula
+        pes_idx = form_dct[formula]
 
         # Build the names list
         pes_rct_names_lst = pes_dct[formula]['rct_names_lst']
@@ -263,9 +266,6 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
             rxn_name_lst = []
             rxn_model_lst = []
             for chn_idx in run_chnls:
-                # if chn_idx in cvals:
-                # Need to fix idxs at some point....
-                pes_idx = form_dct[formula]
                 rct_names_lst.append(pes_rct_names_lst[chn_idx-1])
                 prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
                 rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
@@ -280,7 +280,7 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
                 rct_names_lst, prd_names_lst, rxn_model_lst)
 
         # Add the rxn lst to the pes dictionary
-        run_pes_dct[formula] = rxn_lst
+        run_pes_dct[(formula, pes_idx)] = rxn_lst
 
     return run_pes_dct
 
