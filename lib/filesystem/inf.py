@@ -85,6 +85,9 @@ def assess_rxn_exo(reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix):
     except TypeError:
         rxn_exo = fsread.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
+    except AssertionError:
+        rxn_exo = fsread.reaction_energy(
+            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
     except IOError:
         rxn_exo = fsread.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)

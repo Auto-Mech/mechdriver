@@ -251,6 +251,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
         for locs in cnf_save_locs:
             geo_run_path = cnf_run_fs[-1].path([locs])
             geo_save_path = cnf_save_fs[-1].path([locs])
+            cnf_run_fs[-1].create([locs])
             zma, geo = get_zma_geo(cnf_save_fs, [locs])
             eval(ES_TSKS[job])(
                 zma, geo, spc_info, mod_thy_info,
@@ -307,6 +308,7 @@ def run_tau_tsk(job, spc, thy_info, run_prefix, save_prefix,
             geo_run_path = tau_run_fs[-1].path(locs)
             geo_save_path = tau_save_fs[-1].path(locs)
             zma, geo = get_zma_geo(tau_save_fs, locs)
+            tau_run_fs[-1].create(locs)
             eval(ES_TSKS[job])(
                 zma, geo, spc_info, mod_thy_info,
                 tau_save_fs, geo_run_path, geo_save_path, locs,
@@ -375,6 +377,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         ini_cnf_save_fs, ini_cnf_save_locs)
     ini_cnf_run_paths = fbuild.cnf_paths_from_locs(
         ini_cnf_run_fs, ini_cnf_save_locs)
+    ini_cnf_run_fs[-1].create(ini_cnf_save_locs)
 
     # Get options from the dct or es options lst
     if saddle:
@@ -436,6 +439,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                         geo_run_path = ini_scn_run_fs[-1].path(locs)
                         geo_save_path = ini_scn_save_fs[-1].path(locs)
                         zma, geo = get_zma_geo(ini_scn_save_fs, locs)
+                        ini_scn_run_fs[-1].create(locs)
                         eval(ES_TSKS[job])(
                             zma, geo, spc_info, mod_thy_info,
                             ini_scn_save_fs, geo_run_path, geo_save_path, locs,
@@ -503,6 +507,7 @@ def run_irc_tsk(job, spc_dct, spc_name,
         ini_cnf_save_fs, ini_cnf_save_locs)
     ini_cnf_run_paths = fbuild.cnf_paths_from_locs(
         ini_cnf_run_fs, ini_cnf_save_locs)
+    ini_cnf_run_fs[-1].create(ini_cnf_save_locs)
 
     ini_scn_run_fs = autofile.fs.scan(ini_cnf_run_paths[0])
     ini_scn_save_fs = autofile.fs.scan(ini_cnf_save_paths[0])
@@ -526,14 +531,12 @@ def run_irc_tsk(job, spc_dct, spc_name,
             *mod_thy_info[0:2])
 
         # Need to put in something with the IRC idxs
-        # ini_scn_locs = fbuild.cscn_locs_from_fs(
-        #    ini_scn_save_fs, [coo_name])
         for idx in irc_idxs:
             locs = [[coo_name], [idx]]
             geo_run_path = ini_scn_run_fs[-1].path(locs)
-            print('path\n', geo_run_path)
             geo_save_path = ini_scn_save_fs[-1].path(locs)
             zma, geo = get_zma_geo(ini_scn_save_fs, locs)
+            ini_scn_run_fs[-1].create(locs)
             eval(ES_TSKS[job])(
                 zma, geo, spc_info, mod_thy_info,
                 ini_scn_save_fs, geo_run_path, geo_save_path, locs,
@@ -601,7 +604,6 @@ def run_ts(spc_dct, spc_name,
 def get_zma_geo(filesys, locs):
     """ Get the geometry and zmatrix from a filesystem
     """
-    print('locs', locs)
     if filesys[-1].file.zmatrix.exists(locs):
         zma = filesys[-1].file.zmatrix.read(locs)
     else:

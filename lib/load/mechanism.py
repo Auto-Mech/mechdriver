@@ -86,7 +86,8 @@ def _parse_chemkin(mech_str, spc_dct, sort_rxns):
     # Build the inchi dct
     ich_dct = {}
     for key in spc_dct.keys():
-        ich_dct[key] = spc_dct[key]['ich']
+        if 'ts' not in key and 'global' not in key:
+            ich_dct[key] = spc_dct[key]['ich']
 
     # Sort reactant and product name lists by formula to facilitate
     # multichannel, multiwell rate evaluations

@@ -120,8 +120,7 @@ def read_spc_amech(job_path):
         spc_amech_str = ''
 
     # Build the keyword dcts
-    glob_spc_dct = {}
-    spc_dct = {}
+    amech_dct = {}
     if spc_amech_str:
         # Read each of the species sections and build the dcts
         spc_sections = apf.all_captures(
@@ -132,14 +131,33 @@ def read_spc_amech(job_path):
                 if section[0] == 'global':
                     # Build the global species section
                     keyword_dct = ptt.build_keyword_dct(section[1])
-                    glob_spc_dct = keyword_dct
+                    amech_dct['global'] = keyword_dct
                 else:
                     # Build each species dct to overwrite global dct
                     name = section[0]
                     keyword_dct = ptt.build_keyword_dct(section[1])
-                    spc_dct[name] = keyword_dct
+                    amech_dct[name] = keyword_dct
 
-    return glob_spc_dct, spc_dct
+    # print('glob_dct', glob_spc_dct)
+    # print('\nspc_dct', spc_dct)
+
+    # # Combine the two together
+    # amech_dct = {}
+    # for spc in spc_dct:
+    #     amech_dct[spc] = {}
+    #     # Set parameters from the global dictionary
+    #     if glob_spc_dct:
+    #         for key, val in glob_spc_dct.items():
+    #             amech_dct[spc][key] = val
+    #     # Reset parameters if they were specified for the species themselves
+    #     for key, val in spc_dct[spc].items():
+    #         amech_dct[spc][key] = val
+    # 
+    # print('\namech_dct', amech_dct)
+    # import sys 
+    # sys.exit()
+
+    return amech_dct
 
 
 def modify_spc_dct(job_path, spc_dct):
@@ -147,9 +165,10 @@ def modify_spc_dct(job_path, spc_dct):
     """
 
     # Read in other dcts
-    glob_dct, amech_dct = read_spc_amech(job_path)
+    amech_dct = read_spc_amech(job_path)
     geom_dct = geometry_dictionary(job_path)
 
+    # First loop for species defined in the csv file
     mod_spc_dct = {}
     for spc in spc_dct:
         # Set the ich and mult
@@ -161,43 +180,33 @@ def modify_spc_dct(job_path, spc_dct):
         mod_spc_dct[spc]['mul'] = mul
         mod_spc_dct[spc]['chg'] = chg
 
-        # Add the parameters from the global species specific dct
-        if glob_dct:
-            if 'hind_inc' in glob_dct:
-                mod_spc_dct[spc]['hind_inc'] = (
-                    glob_dct['hind_inc'] * phycon.DEG2RAD)
-            if 'hind_def' in glob_dct:
-                mod_spc_dct[spc]['hind_def'] = glob_dct['hind_def']
-            if 'elec_levs' in glob_dct:
-                mod_spc_dct[spc]['elec_levs'] = glob_dct['elec_levs']
-            if 'sym' in glob_dct:
-                mod_spc_dct[spc]['sym'] = glob_dct['sym']
-            if 'mc_nsamp' in glob_dct:
-                mod_spc_dct[spc]['mc_nsamp'] = glob_dct['mc_nsamp']
-            if 'kickoff' in glob_dct:
-                mod_spc_dct[spc]['kickoff'] = glob_dct['kickoff']
-            if 'pst_params' in glob_dct:
-                mod_spc_dct[spc]['pst_params'] = glob_dct['pst_params']
+        # Add params from global dct in amech dct
+        if 'global' in amech_dct:
+            for key, val in amech_dct['global'].items():
+                mod_spc_dct[spc][key] = val
 
         # Add/Reset the parameters from the species specific dct
         if spc in amech_dct:
-            if 'hind_inc' in amech_dct[spc]:
-                mod_spc_dct[spc]['hind_inc'] = (
-                    amech_dct[spc]['hind_inc'] * phycon.DEG2RAD)
-            if 'hind_def' in amech_dct[spc]:
-                mod_spc_dct[spc]['hind_def'] = amech_dct[spc]['hind_def']
-            if 'elec_levs' in amech_dct[spc]:
-                mod_spc_dct[spc]['elec_levs'] = amech_dct[spc]['elec_levs']
-            if 'sym' in amech_dct[spc]:
-                mod_spc_dct[spc]['sym'] = amech_dct[spc]['sym']
-            if 'mc_nsamp' in amech_dct[spc]:
-                mod_spc_dct[spc]['mc_nsamp'] = amech_dct[spc]['mc_nsamp']
-            if 'kickoff' in amech_dct[spc]:
-                mod_spc_dct[spc]['kickoff'] = amech_dct[spc]['kickoff']
-            if 'pst_params' in amech_dct[spc]:
-                mod_spc_dct[spc]['pst_params'] = amech_dct[spc]['pst_params']
+            for key, val in amech_dct[spc].items():
+                mod_spc_dct[spc][key] = val
 
-        # Add the parameters from std lib if needed
+    # Second loop for transtion states defined in species.dat
+    for spc in amech_dct:
+        if 'ts' in spc:
+            mod_spc_dct[spc] = {}
+            # Add params from global dct in amech dct
+            if 'global' in amech_dct:
+                for key, val in amech_dct['global'].items():
+                    mod_spc_dct[spc][key] = val
+            # Add the ts stuff
+            mod_spc_dct[spc] = amech_dct[spc]
+
+    # Add global to mod_spc_dct for other TS stuff later
+    if 'global' in amech_dct:
+        mod_spc_dct['global'] = amech_dct['global']
+
+    # Final loop to add in things that are needed but could be missing
+    for spc in mod_spc_dct:
         if 'elec_levs' not in mod_spc_dct[spc]:
             if (ich, mul) in eleclvl.DCT:
                 mod_spc_dct[spc]['elec_levs'] = eleclvl.DCT[(ich, mul)]
@@ -209,13 +218,16 @@ def modify_spc_dct(job_path, spc_dct):
 
         # Add defaults here for now
         if 'hind_inc' not in mod_spc_dct[spc]:
-            mod_spc_dct[spc]['hind_inc'] = 30 * phycon.DEG2RAD
+            mod_spc_dct[spc]['hind_inc'] = 30.0
         if 'kickoff' not in mod_spc_dct[spc]:
             mod_spc_dct[spc]['kickoff'] = [0.1, False]
         if 'mc_nsamp' not in mod_spc_dct[spc]:
             mod_spc_dct[spc]['mc_nsamp'] = [1, 0, 0, 0, 0, False]
         if 'pst_params' not in mod_spc_dct[spc]:
             mod_spc_dct[spc]['pst_params'] = [1.0, 6]
+
+        # Perform conversions as needed
+        mod_spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
 
         # Add geoms from geo dct (prob switch to amech file)
         if ich in geom_dct:
@@ -363,35 +375,41 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
     combined_dct = {}
 
     # Put all elements of spc_dct in combined dct that are NOT TSs
-    for spc in spd_dct:
+    for spc in spc_dct:
         if 'ts' not in spc:
             combined_dct[spc] = spc_dct[spc]
 
     # Now put in the TSs pulling info from everywhere
     for sadpt in sadpt_dct:
+
+        # Put in stuff from the global dct
+        combined_dct[sadpt] = {}
+        if 'global' in spc_dct:
+            for key, val in spc_dct['global'].items():
+                combined_dct[sadpt][key] = val
+
+        # Update any sadpt keywords if they are in the spc_dct from .dat file
         if sadpt in spc_dct:
+            combined_dct[sadpt].update(spc_dct[sadpt])
 
-            # Put in whatever sits in the spc_dct already
-            combined_dct[sadpt] = spc_dct[sadpt]
+        # Put in stuff from the sadpt_dct build
+        for key, val in sadpt_dct[sadpt].items():
+            if key not in combined_dct[sadpt]:
+                combined_dct[sadpt][key] = val
 
-            # Put in stuff from the sadpt_dct build
-            for key, val in sadpt_dct[sadpt].items():
-                if key not in combined_dct[sadpt]:
-                    combined_dct[sadpt][key] = val
-
-            # Put in defaults if they were not defined
-            if 'kickoff' not in combined_dct[sadpt]:
-                combined_dct[sadpt]['kickoff'] = [0.1, False]
-            if 'mc_nsamp' not in combined_dct[sadpt]:
-                combined_dct[sadpt]['mc_nsamp'] = [True, 10, 1, 3, 50, 25]
-            if 'irc_idxs' not in combined_dct[sadpt]:
-                combined_dct[sadpt]['irc_idxs'] = [
-                    -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0,
-                    -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,
-                    8.0, 9.0, 10.0]
-            if 'pst_params' not in combined_dct[sadpt]:
-                combined_dct[sadpt]['pst_params'] = [1.0, 6]
-
+        # Put in defaults if they were not defined
+        if 'kickoff' not in combined_dct[sadpt]:
+            combined_dct[sadpt]['kickoff'] = [0.1, False]
+        if 'mc_nsamp' not in combined_dct[sadpt]:
+            combined_dct[sadpt]['mc_nsamp'] = [True, 10, 1, 3, 50, 25]
+        if 'irc_idxs' not in combined_dct[sadpt]:
+            combined_dct[sadpt]['irc_idxs'] = [
+                -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0,
+                -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,
+                8.0, 9.0, 10.0]
+        if 'pst_params' not in combined_dct[sadpt]:
+            combined_dct[sadpt]['pst_params'] = [1.0, 6]
+   
     return combined_dct
     
 

@@ -24,8 +24,10 @@ def irc_scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
         run_irc(
             zma,
             irc_job,
+            coo_name,
             irc_idxs,
             run_fs,
+            scn_save_fs,
             ts_info,
             mod_thy_info,
             overwrite,
@@ -42,19 +44,20 @@ def irc_scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
         )
 
 
-def run_irc(zma, irc_job, irc_idxs, run_fs, ts_info, scn_thy_info, overwrite,
+def run_irc(zma, irc_job, coo_name, irc_idxs, run_fs, scn_save_fs,
+            ts_info, scn_thy_info, overwrite,
             opt_script_str, **opt_kwargs):
     """ Run the irc job
     """
 
     irc_ran = True
     for idx in irc_idxs: 
-        locs = [[coo_name], [locs_idx]]
+        locs = [[coo_name], [idx]]
         if not scn_save_fs[-1].file.geometry.exists(locs):
             irc_ran = False
     
     if not irc_ran:
-        print("No IRC t. Skipping...")
+        print("No IRC ran...")
         # set irc options here for now
         opt_kwargs['job_options'] = ['calcall', 'stepsize=3', 'maxpoints=4']
 
@@ -90,15 +93,15 @@ def save_irc(irc_job, run_fs, scn_run_fs, scn_save_fs,
         coords = elstruct.reader.irc_coordinates(prog, out_str)
 
         # Write the IRC inf file and input file string
-        scn_save_fs[1].file.irc_info.write(inf_obj, [coo_name])
-        scn_save_fs[1].file.irc_input.write(inp_str, [coo_name])
+        # scn_save_fs[1].file.irc_info.write(inf_obj, [coo_name])
+        # scn_save_fs[1].file.irc_input.write(inp_str, [coo_name])
 
         # Write the IRC coords and enes to a yaml file
-        irc_inf_obj = autofile.system.info.irc(idxs=irc_idxs, coords=coords)
-        scn_save_fs[1].file.info.write(irc_inf_obj, [coo_name])
+        # irc_inf_obj = autofile.system.info.irc(idxs=irc_idxs, coords=coords)
+        # scn_save_fs[1].file.info.write(irc_inf_obj, [coo_name])
 
         # Write the data for each geom along IRC to the filesystem
-        save_path = scn_save_fs[1].path([coo_name])
+        save_path = scn_save_fs[1].path([[coo_name]])
         print(" - Saving...")
         print(" - Save path: {}".format(save_path))
         for idx, _ in enumerate(geos):
@@ -110,18 +113,9 @@ def save_irc(irc_job, run_fs, scn_run_fs, scn_save_fs,
                     continue
                 locs_idx *= -1
             locs = [[coo_name], [locs_idx]]
-            # Write to save, as per usual
             scn_save_fs[-1].create(locs)
             scn_save_fs[-1].file.energy.write(enes[idx], locs)
             scn_save_fs[-1].file.energy.write(enes[idx], locs)
             scn_save_fs[-1].file.geometry.write(geos[idx], locs)
             scn_save_fs[-1].file.gradient.write(gras[idx], locs)
             scn_save_fs[-1].file.hessian.write(hessians[idx], locs)
-
-            # Also writing to scn_run_fs for running sps, gras, hess, etc
-            scn_run_fs[-1].create(locs)
-            scn_run_fs[-1].file.energy.write(enes[idx], locs)
-            scn_run_fs[-1].file.energy.write(enes[idx], locs)
-            scn_run_fs[-1].file.geometry.write(geos[idx], locs)
-            scn_run_fs[-1].file.gradient.write(gras[idx], locs)
-            scn_run_fs[-1].file.hessian.write(hessians[idx], locs)

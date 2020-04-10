@@ -205,7 +205,6 @@ def set_es_model_info(es_model, thy_dct):
 
     # Set the theory info objects
     geo_thy_info = finf.get_thy_info(geo_lvl, thy_dct)
-    ene_thy_info = finf.get_thy_info(ene_lvl, thy_dct)
     harm_thy_info = finf.get_thy_info(harm_lvl, thy_dct)
     vpt2_thy_info = (finf.get_thy_info(vpt2_lvl, thy_dct)
                      if vpt2_lvl else None)
@@ -217,12 +216,12 @@ def set_es_model_info(es_model, thy_dct):
                          if tors_lvl_scn else None)
 
     # Set the ene thy info as a list of methods with coefficients
-    ene_thy_info = ()
+    ene_thy_info = []
     if isinstance(ene_lvl, str):
-        ene_thy_info += (1.00, finf.get_thy_info(ene_lvl, thy_dct))
+        ene_thy_info.append([1.00, finf.get_thy_info(ene_lvl, thy_dct)])
     else:
         for lvl in ene_lvl:
-            ene_thy_info += (lvl[0], finf.get_thy_info(lvl[1], thy_dct))
+            ene_thy_info.append([lvl[0], finf.get_thy_info(lvl[1], thy_dct)])
 
     # Combine levels into a list
     es_levels = [
