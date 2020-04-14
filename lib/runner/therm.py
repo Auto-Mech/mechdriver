@@ -113,12 +113,17 @@ def run_pac(spc_dct_i, nasa_path):
 
 
 # PATH CONTROL
+def get_starting_path():
+    """ get original working directory
+    """
+    starting_path = os.getcwd()
+    return starting_path
+
+
 def go_to_path(path):
     """ change directory to path and return the original working directory
     """
-    starting_path = os.getcwd()
     os.chdir(path)
-    return starting_path
 
 
 def return_to_path(path):

@@ -1,8 +1,8 @@
 """ rate stuff
 """
 
-from routines.pf.rates import fit
-from routines.pf.rates import rates
+from routines.pf.ktp import fit
+from routines.pf.ktp import rates
 
 __all__ = [
     'fit',

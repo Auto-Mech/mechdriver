@@ -117,11 +117,17 @@ def get_spc_idxs(pes_str):
     run_spc = {}
     for line in pes_str.splitlines():
         try:
-            [spc_idxs, proc] = line.strip().split(';')
+            [spc_idxs, proc1, proc2] = line.strip().split()
             spc_lst = ptt.parse_idx_inp(spc_idxs)
-            proc = proc.strip()
+            proc1 = proc1.strip()
+            proc2 = proc2.strip()
             for spc in spc_lst:
-                run_spc[spc] = proc
+                run_spc[spc] = (proc1, proc2)
+            # [spc_idxs, proc] = line.strip().split(';')
+            # spc_lst = ptt.parse_idx_inp(spc_idxs)
+            # proc = proc.strip()
+            # for spc in spc_lst:
+            #     run_spc[spc] = proc
         except:
             print('*ERROR: spc line formatted incorrectly, cannot be parsed')
             print('Line:   ', line)

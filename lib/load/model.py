@@ -128,6 +128,7 @@ def build_spc_model_keyword_dct(model_str):
     pf_str = apf.first_capture(ptt.paren_section('pf'), model_str)
     es_str = apf.first_capture(ptt.paren_section('es'), model_str)
     vrctst_str = apf.first_capture(ptt.paren_section('vrctst'), model_str)
+    opts_str = apf.first_capture(ptt.paren_section('options'), model_str)
     if pf_str is None:
         print('*ERROR: pf section is not defined')
         sys.exit()
@@ -138,6 +139,7 @@ def build_spc_model_keyword_dct(model_str):
     # Get the dictionary for each section and check them
     pf_dct = ptt.build_keyword_dct(pf_str)
     es_dct = ptt.build_keyword_dct(es_str)
+    opts_dct = ptt.build_keyword_dct(opts_str)
     if vrctst_str is not None:
         vrctst_dct = ptt.build_keyword_dct(vrctst_str)
 
@@ -146,6 +148,7 @@ def build_spc_model_keyword_dct(model_str):
     model_dct['pf'] = pf_dct
     model_dct['es'] = es_dct
     model_dct['vrctst'] = vrctst_dct if vrctst_dct is not None else {}
+    model_dct['options'] = opts_dct
 
     # Check the dct
     check_spc_model_dct(model_dct)

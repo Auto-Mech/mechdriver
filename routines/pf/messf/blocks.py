@@ -760,12 +760,11 @@ def fake_species_block(
 
 
 # Write blocks for MESSPF
-def get_pf_header(temp_step, ntemps):
+def get_pf_header(temps):
     """ prepare partition function header string
     """
     global_pf_str = mess_io.writer.global_pf(
-        [], temp_step, ntemps, rel_temp_inc=0.001,
-        atom_dist_min=0.6)
+        temps, rel_temp_inc=0.001, atom_dist_min=0.6)
     return global_pf_str
 
 

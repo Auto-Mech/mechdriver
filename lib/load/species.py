@@ -23,9 +23,7 @@ CLA_INP = 'inp/class.csv'
 def build_run_spc_dct(spc_dct, run_obj_dct):
     """ Get a dictionary of requested species matching the PES_DCT format
     """
-
     spc_nums = run_obj_dct['spc']
-
     run_spc_lst = []
     for idx, spc in enumerate(spc_dct):
         if idx+1 in spc_nums:

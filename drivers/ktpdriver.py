@@ -2,8 +2,8 @@
 """
 
 import os
-from routines.pf.rates.fit import fit_rates
-from routines.pf.rates import rates as messrates
+from routines.pf.ktp.fit import fit_rates
+from routines.pf.ktp import rates as messrates
 from lib.runner import rates as raterunner
 from lib.filesystem import inf as finf
 from lib.load import species as loadspc

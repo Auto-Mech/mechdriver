@@ -1,7 +1,7 @@
 input
     mech = chemkin
-    run_prefix = /lcrc/project/CMRP/runs/data/abst2/run
-    save_prefix = /lcrc/project/CMRP/runs/data/abst2/save
+    run_prefix = /lcrc/project/CMRP/test/data/abst2/run
+    save_prefix = /lcrc/project/CMRP/test/data/abst2/save
 end
 
 obj 
