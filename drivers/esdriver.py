@@ -50,6 +50,7 @@ def run(pes_idx,
                 pes_idx, rxn_lst, thy_info, ini_thy_info,
                 run_inp_dct, spc_dct, cla_dct)
             for sadpt in ts_dct:
+                # fixed hard wiring
                 if ts_dct[sadpt]['class'] != '':
                     spc_queue.append((sadpt, ''))
                     spc_dct = loadspc.combine_sadpt_spc_dcts(
