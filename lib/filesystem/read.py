@@ -2,6 +2,7 @@
   Functions to read the filesystem and pull objects from it
 """
 
+import sys
 import automol
 from automol.zmatrix.ts import _shifted_standard_forms_with_gaphs as shift_gra
 import autofile
@@ -112,6 +113,27 @@ def get_geos(
                 overwrite=False)
         spc_geos.append(geo)
     return spc_geos, cnf_save_fs_lst
+
+
+def get_zma_geo(filesys, locs):
+    """ Get the geometry and zmatrix from a filesystem
+    """
+    if filesys[-1].file.zmatrix.exists(locs):
+        zma = filesys[-1].file.zmatrix.read(locs)
+    else:
+        zma = None
+
+    if filesys[-1].file.geometry.read(locs):
+        geo = filesys[-1].file.geometry.read(locs)
+    else:
+        geo = None
+
+    # Check
+    if zma is None and geo is None:
+        print('*ERROR: Neither a Z-Matrix or a Cartesian Geom exists level')
+        sys.exit()
+
+    return zma, geo
 
 
 def min_dist_conformer_zma(dist_name, cnf_save_fs):

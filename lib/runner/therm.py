@@ -3,13 +3,17 @@
 """
 
 import os
+import subprocess
+import shutil
 import automol
-from routines.pf import thermo
 import autofile
-
-# New Libs
+import thermp_io
 from lib.runner import script
 from lib.filesystem import orb as fsorb
+
+
+# OBTAIN THE PATH TO THE DIRECTORY CONTAINING THE TEMPLATES #
+CUR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 # MESSPF
@@ -20,7 +24,7 @@ def run_pf(pf_path, pf_script_str=script.MESSPF):
 
 
 # THERMP
-def write_thermp_inp(spc_dct_i):
+def write_thermp_inp(spc_dct_i, thermp_file_name='thermp.dat'):
     """ write the thermp input file
     """
     ich = spc_dct_i['ich']
@@ -30,24 +34,42 @@ def write_thermp_inp(spc_dct_i):
     # Write thermp input file
     enthalpyt = 0.
     breakt = 1000.
-    thermo.runner.write_thermp_input(
+    thermp_str = thermp_io.writer.thermp_input(
         formula=formula,
         delta_h=h0form,
         enthalpy_temp=enthalpyt,
         break_temp=breakt,
-        thermp_file_name='thermp.dat')
+        thermp_file_name=thermp_file_name)
+
+    # Write the file
+    with open(thermp_file_name, 'w') as thermp_file:
+        thermp_file.write(thermp_str)
 
 
-def run_thermp(pf_path, nasa_path):
-    """ run thermp to convert partition functions to thermochemical data
+def run_thermp(pf_path, thermp_path,
+               thermp_file_name='thermp.dat', pf_file_name='pf.dat'):
     """
+    Runs thermp.exe
+    Requires thermp input file to be present
+    partition function (pf) output file and
+    """
+
+    # Set full paths to files
+    thermp_file = os.path.join(thermp_path, thermp_file_name)
+    pf_outfile = os.path.join(pf_path, pf_file_name)
+
+    # Copy MESSPF output file to THERMP run dir and rename to pf.dat
+    pf_datfile = os.path.join(thermp_path, 'pf.dat')
+    shutil.copyfile(pf_outfile, pf_datfile)
+
+    # Check for the existance of ThermP input and PF output
+    assert os.path.exists(thermp_file)
+    assert os.path.exists(pf_outfile)
+
     # Run thermp
-    thermo.runner.run_thermp(
-        pf_path=pf_path,
-        thermp_path=nasa_path,
-        thermp_file_name='thermp.dat',
-        pf_file_name='pf.dat'
-        )
+    subprocess.check_call(['thermp', thermp_file])
+
+    # Read ene from file
     with open('thermp.out', 'r') as thermfile:
         lines = thermfile.readlines()
     line = lines[-1]
@@ -57,13 +79,30 @@ def run_thermp(pf_path, nasa_path):
 
 # PAC99
 def run_pac(spc_dct_i, nasa_path):
-    """ run pac99 to convert thermochemical data to nasa polynomials
+    """ 
+    Run pac99 for a given species name (formula)
+    https://www.grc.nasa.gov/WWW/CEAWeb/readme_pac99.htm
+    requires formula+'i97' and new.groups files
     """
     ich = spc_dct_i['ich']
     formula = automol.inchi.formula(ich)
 
     # Run pac99
-    thermo.runner.run_pac99(nasa_path, formula)
+    # Set file names for pac99
+    i97_file = os.path.join(nasa_path, formula + '.i97')
+    newgroups_file = os.path.join(nasa_path, 'new.groups')
+    newgroups_ref = os.path.join(CUR_PATH, 'new.groups')
+
+    # Copy new.groups file from thermo src dir to run dir
+    shutil.copyfile(newgroups_ref, newgroups_file)
+
+    # Check for the existance of pac99 files
+    assert os.path.exists(i97_file)
+    assert os.path.exists(newgroups_file)
+
+    # Run pac99
+    proc = subprocess.Popen('pac99', stdin=subprocess.PIPE)
+    proc.communicate(bytes(formula, 'utf-8'))
 
     # Read the pac99 polynomial
     with open(os.path.join(nasa_path, formula+'.c97'), 'r') as pac99_file:

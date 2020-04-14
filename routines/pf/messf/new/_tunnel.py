@@ -8,6 +8,7 @@ import projrot_io
 import autofile
 from lib.runner import script
 from lib.filesystem import orb as fsorb
+from routines.es.variational import irc
 
 # rxn path coords from g09 outpt
 # rxn path enes from g09 outpt

@@ -3,7 +3,6 @@
 """
 
 import os
-import autofile
 
 # New Libs
 from lib.load import model as loadmodel
@@ -15,7 +14,7 @@ def get_mess_path(run_prefix, pes_formula):
     """ Build a simple mess path using the run prefix
     """
     print(os.path.join(run_prefix, 'MESSRATE', pes_formula))
-    return os.path.join(run_prefix, 'MESSRATE', pes_formula) 
+    return os.path.join(run_prefix, 'MESSRATE', pes_formula)
 
 
 def get_mess_path2(
@@ -85,7 +84,7 @@ def read_mess_file(mess_path):
         mess_inp_str = ''
         dat_str_lst = []
 
-    return mess_inp_str , dat_str_lst
+    return mess_inp_str, dat_str_lst
 
 
 def run_rates(mess_path):

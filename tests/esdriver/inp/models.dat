@@ -1,0 +1,83 @@
+pes_model global
+    temps = (
+        500. 550. 600. 650. 700. 750. 800.
+        850. 900. 950. 1000. 1050. 1100. 1150.
+        1200. 1250. 1300. 1350. 1400. 1450. 1500.
+        1550. 1600. 1650. 1700. 1750. 1800. 1850. 1900. 1950. 2000.
+    )
+    pressures = (
+        0.03  0.1  0.3  1.  3. 10. 30. 100.
+    )
+    tunit = K
+    punit = atm
+    fit_method = arrhenius
+    dbl_arrfit_thresh = 15.0
+    pdep_fit = (
+        assess_pdep_temps = [500, 100]
+        pdep_tolerance = 20.0
+        no_pdep_pval = 1.0
+        pdep_low = None
+        pdep_high = None
+        troe_param_fit_list = [ts1, ts2, ts3, alpha]
+    )
+    etransfer = (
+        exp_factor = 150.0
+        exp_power = 0.85
+        exp_cutoff = 15.0
+        sig1 = 6.0
+        sig2 = 6.0
+        eps1 = 100.0
+        eps2 = 200.0
+        mass1 = 15.0
+    ) 
+end
+
+spc_model global
+     pf = (
+        vib = harm
+        tors = 1dhr
+        sym = none
+        ts_sadpt = fixed
+        ts_barrierless = vrctst
+        tunnel = eckart
+    )
+    es = (
+        geo = lvl_wbs
+        harm = lvl_wbs
+        ene = lvl_wbs
+        sym = lvl_wbs 
+        tors = [lvl_wbs, lvl_wbs]
+        vpt2 = lvl_wbs
+        mr_geo = mlvl_casc_dz
+        mr_ene = mlvl_casc_tz
+    )
+    vrctst = (
+        fortran_compiler = gfortran
+        spc_name = mol
+        memory = 4.0
+        basis = cc-pvdz
+        # method = {rs2c, shift=0.25}
+        r1dists_lr = [8., 6., 5., 4.5, 4.]
+        r1dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
+        r2dists_sr = [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2]
+        d1dists = [0.01, 0.5, 1.]
+        d2dists = [0.01, 0.5, 1.]
+        # conditions = {}
+        nsamp_max = 2000
+        nsamp_min = 50
+        flux_err = 10
+        pes_size = 2
+        exe_path = /blues/gpfs/home/sjklipp/bin/molpro
+        samp_lvl = rs2c_dz
+        sp_lvl = rs2c_tz
+    )
+    options = (
+        assess_pdep = [0.3, 3.0, 500., 1000.0]
+        ref_scheme = basic
+        ene_coeff = [1.0]
+        vdw_params = [False, False, True]
+        err_thresh = 15.
+        fit_method = 'troe'
+        troe_param_fit_lst = ['ts1', 'ts2', 'ts3', 'alpha']
+    )
+end

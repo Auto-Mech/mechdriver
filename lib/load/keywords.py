@@ -44,7 +44,7 @@ MODEL_PF_DEFAULT_DCT = {
     'ts_nobar': 'pst',
     'ts_sadpt': 'fixed',
     'wells': 'fake',
-    'tunneling': 'none'
+    'tunnel': 'none'
 }
 
 # Electronic Structure Tasks
@@ -70,32 +70,48 @@ ES_TSK_SUPPORTED_DCT = {
         'find',
         'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess']
 }
-ES_TSK_OPTIONS_SUPPORTED_DCT = {
-    'init_geom': ['overwrite'],
-    'find_ts': ['overwrite'],
-    'conf_samp': ['overwrite'],
-    'conf_energy': ['zpve_min', 'overwrite'],
-    'conf_grad': ['zpve_min', 'overwrite'],
-    'conf_hess': ['zpve_min', 'overwrite'],
-    'conf_vpt2': ['zpve_min', 'overwrite'],
-    'hr_scan': ['frz_all_tors', 'mdhr', 'overwrite'],
-    'hr_grad': ['frz_all_tors', 'mdhr', 'overwrite'],
-    'hr_hess': ['frz_all_tors', 'mdhr', 'overwrite'],
-    'hr_energy': ['frz_all_tors', 'mdhr', 'overwrite'],
-    'tau_samp': ['overwrite'],
-    'tau_energy': ['overwrite'],
-    'tau_grad': ['overwrite'],
-    'tau_hess': ['overwrite'],
-    'irc_scan': ['overwrite'],
-    'irc_energy': ['overwrite'],
-    'irc_grad': ['overwrite'],
-    'irc_hess': ['overwrite'],
-    'drp_scan': ['overwrite'],
-    'drp_energy': ['overwrite'],
-    'drp_grad': ['overwrite'],
-    'drp_hess': ['overwrite'],
+ES_TSK_KEYWORDS_SUPPORTED_DCT = {
+    'init_geom': ['runlvl', 'inplvl', 'overwrite'],
+    'find_ts': ['runlvl', 'inplvl', 'mr_splvl', 'mr_scnlvl', 'nobarrier', 'overwrite'],
+    'conf_samp': ['runlvl', 'inplvl', 'overwrite'],
+    'conf_energy': ['runlvl', 'inplvl', 'zpve_min', 'overwrite'],
+    'conf_grad': ['runlvl', 'inplvl', 'zpve_min', 'overwrite'],
+    'conf_hess': ['runlvl', 'inplvl', 'zpve_min', 'overwrite'],
+    'conf_vpt2': ['runlvl', 'inplvl', 'zpve_min', 'overwrite'],
+    'hr_scan': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 'overwrite'],
+    'hr_grad': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 'overwrite'],
+    'hr_hess': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 'overwrite'],
+    'hr_energy': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 'overwrite'],
+    'tau_samp': ['runlvl', 'inplvl', 'overwrite'],
+    'tau_energy': ['runlvl', 'inplvl', 'overwrite'],
+    'tau_grad': ['runlvl', 'inplvl', 'overwrite'],
+    'tau_hess': ['runlvl', 'inplvl', 'overwrite'],
+    'irc_scan': ['runlvl', 'inplvl', 'overwrite'],
+    'irc_energy': ['runlvl', 'inplvl', 'overwrite'],
+    'irc_grad': ['runlvl', 'inplvl', 'overwrite'],
+    'irc_hess': ['runlvl', 'inplvl', 'overwrite'],
+    'drp_scan': ['runlvl', 'inplvl', 'overwrite'],
+    'drp_energy': ['runlvl', 'inplvl', 'overwrite'],
+    'drp_grad': ['runlvl', 'inplvl', 'overwrite'],
+    'drp_hess': ['runlvl', 'inplvl', 'overwrite'],
 }
-
+ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
+    'frz_all_tors': [True, False],
+    'ndim_tors': ['1dhr', 'mdhr'],
+    'zpve_min': [True, False],
+    'nobarrier': ['pst', 'vtst', 'vrctst']
+}
+ES_TSK_KEYWORDS_DEFAULT_DCT = {
+    'runlvl': None,
+    'inplvl': None,
+    'mr_splvl': None,
+    'mr_scnlvl': None, 
+    'frz_all_tors': False,
+    'ndim_tors': '1dhr',
+    'zpve_min': False,
+    'nobarrier': 'pst',
+    'overwrite': False
+}
 
 # Species keywords
 SPC_REQUIRED_KEYWORDS = [

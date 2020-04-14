@@ -41,8 +41,7 @@ PES_MODEL_DCT, SPC_MODEL_DCT = lmodel.read_models_sections(JOB_PATH)
 
 # Parse the species input to get a dct with ALL species in mechanism
 print('\nReading species.csv...')
-SPC_DCT = lspc.build_spc_dct(
-    JOB_PATH, 'csv', check_stereo=False)
+SPC_DCT = lspc.build_spc_dct(JOB_PATH, 'csv', check_stereo=False)
 
 # Parse the mechanism input and get a dct with info on PESs user request to run
 if RUN_OBJ_DCT['pes']:
@@ -54,6 +53,7 @@ if RUN_OBJ_DCT['pes']:
         RUN_OBJ_DCT['pes'],
         sort_rxns=True
     )
+    CLA_DCT = lspc.parse_rxn_class_file(JOB_PATH)
 elif RUN_OBJ_DCT['spc']:
     RUN_PES_DCT = {}
     RUN_SPC_LST_DCT = lspc.build_run_spc_dct(SPC_DCT, RUN_OBJ_DCT)
@@ -81,15 +81,19 @@ if 'es' in RUN_JOBS_LST:
                 pes_idx,
                 rxn_lst,
                 SPC_DCT,
+                CLA_DCT,
                 ES_TSK_LST,
                 THY_DCT,
                 RUN_INP_DCT
             )
     else:
         # Call ESDriver for all of the species
+        pes_idx = 0
         esdriver.run(
+            pes_idx,
             RUN_SPC_LST_DCT,
             SPC_DCT,
+            CLA_DCT,
             ES_TSK_LST,
             THY_DCT,
             RUN_INP_DCT
@@ -106,7 +110,6 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
                 THY_DCT,
                 rxn_lst,
                 RUN_INP_DCT,
-                ref_scheme='basic',
                 write_messpf=WRITE_MESSPF,
                 run_messpf=RUN_MESSPF,
                 run_nasa=RUN_NASA,
@@ -115,11 +118,10 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
         # Call ThermoDriver for all of the species
         thermodriver.run(
             SPC_DCT,
-            {}, PES_MODEL_DCT,
+            PES_MODEL_DCT, SPC_MODEL_DCT,
             THY_DCT,
             RUN_SPC_LST_DCT,
             RUN_INP_DCT,
-            ref_scheme='basic',
             write_messpf=WRITE_MESSPF,
             run_messpf=RUN_MESSPF,
             run_nasa=RUN_NASA,
@@ -133,6 +135,7 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
             ktpdriver.run(
                 pes_formula, pes_idx,
                 SPC_DCT,
+                CLA_DCT,
                 THY_DCT,
                 rxn_lst,
                 PES_MODEL_DCT, SPC_MODEL_DCT,

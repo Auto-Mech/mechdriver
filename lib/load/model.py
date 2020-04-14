@@ -1,6 +1,7 @@
 """ Library of reader functions for the model file
 """
 
+import sys
 import copy
 import autoparse.find as apf
 from lib.load import ptt
@@ -115,6 +116,8 @@ def build_pes_model_keyword_dct(model_str):
     model_dct['fit_method'] = fitm
     model_dct['dbl_arrfit_thresh'] = ethr
 
+    # Check the dct
+
     return model_dct
 
 
@@ -124,46 +127,71 @@ def build_spc_model_keyword_dct(model_str):
     # Grab the various sections required for each model
     pf_str = apf.first_capture(ptt.paren_section('pf'), model_str)
     es_str = apf.first_capture(ptt.paren_section('es'), model_str)
-    options_str = apf.first_capture(ptt.paren_section('options'), model_str)
     vrctst_str = apf.first_capture(ptt.paren_section('vrctst'), model_str)
-    assert pf_str is not None
-    assert es_str is not None
-    assert options_str is not None
+    if pf_str is None:
+        print('*ERROR: pf section is not defined')
+        sys.exit()
+    if es_str is None:
+        print('*ERROR: es section is not defined')
+        sys.exit()
 
     # Get the dictionary for each section and check them
     pf_dct = ptt.build_keyword_dct(pf_str)
     es_dct = ptt.build_keyword_dct(es_str)
-    options_dct = ptt.build_keyword_dct(options_str)
     if vrctst_str is not None:
         vrctst_dct = ptt.build_keyword_dct(vrctst_str)
-
-    # Check the PF dct and set defaults
-    assert check_model_dct(pf_dct)
-    pf_dct = set_default_pf(pf_dct)
 
     # Combine dcts into single model dct
     model_dct = {}
     model_dct['pf'] = pf_dct
     model_dct['es'] = es_dct
-    model_dct['options'] = options_dct
-    if vrctst_str is not None:
-        model_dct['vrctst'] = vrctst_dct
+    model_dct['vrctst'] = vrctst_dct if vrctst_dct is not None else {}
+
+    # Check the dct
+    check_spc_model_dct(model_dct)
 
     return model_dct
 
 
-def check_model_dct(dct):
+def check_pes_model_dct(model_dct):
     """ Make sure the models dictionary keywords are all correct
     """
-    proper_def = True
-    for key, val in dct.items():
+    pass
+
+
+def check_spc_model_dct(model_dct):
+    """ Make sure the models dictionary keywords are all correct
+    """
+    vrctst_dct = model_dct['vrctst']
+    # Check the pf dct
+    pf_dct = model_dct['pf']
+    for key, val in pf_dct.items():
         if key in MODEL_PF_SUPPORTED_DCT:
             if val not in MODEL_PF_SUPPORTED_DCT[key]:
-                proper_def = False
+                print('*ERROR: Value for Keyword not supported')
+                sys.exit()
         else:
-            proper_def = False
+            print('*ERROR: Keyword not supported')
+            sys.exit()
+    # See if any pf model combinations were specified that are not supported
+    check_model_combinations(pf_dct)
 
-    return proper_def
+    # Check the es dct
+    es_dct = model_dct['es']
+
+    # Check the vrctst dct
+    vrctst_dct = model_dct['vrctst']
+
+
+def check_model_combinations(pf_dct):
+    """ Check if a model combination is not implemented for PF routines
+    """
+    if pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == '1dhr':
+        print('*ERROR: VPT2 and 1DHR combination is not yet implemented')
+        sys.exit()
+    elif pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == 'tau':
+        print('*ERROR: VPT2 and TAU combination is not yet implemented')
+        sys.exit()
 
 
 def set_default_pf(dct):
@@ -234,3 +262,6 @@ def set_es_model_info(es_model, thy_dct):
     ]
 
     return es_levels
+
+
+

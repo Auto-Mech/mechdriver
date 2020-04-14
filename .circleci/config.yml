@@ -1,3 +1,4 @@
+version: 2
 jobs:
     build-debian:
         docker:
@@ -8,17 +9,39 @@ jobs:
                 name: Create conda environment
                 command: |
                     apt-get update --yes
-                    apt-get install --yes libxrender-dev  # needed for rdkit
+                    apt-get install --yes libxrender-dev build-essential
                     conda env create -f environment.yml
             - run:
-                name: Test autofile
+                name: Build/install autochem
                 command: |
-                    source activate moldr-env
+                    source activate autochem-env
                     python setup.py install
-                    cd autofile
-                    pytest -v --cov=autofile --pyargs autofile
-                    flake8 --exit-zero autofile
-                    pylint --rcfile=../.pylintrc autofile
+            - run:
+                name: Test automol
+                command: |
+                    source activate autochem-env
+                    cd automol
+                    pytest -v --disable-pytest-warnings --cov=automol --pyargs automol
+                    flake8 --exit-zero autommol
+                    pylint --rcfile=../.pylintrc automol
+            - run:
+                name: Test autoread
+                command: |
+                    source activate autochem-env
+                    cd autoread
+                    pytest -v --cov=autoread --pyargs autoread
+                    flake8 --exit-zero autoread
+                    pylint --rcfile=../.pylintrc autoread
+            - run:
+                name: Build/install/test x2z
+                command: |
+                    source activate autochem-env
+                    cd external/x2z
+                    bash debug/build.sh
+                    . debug/fake-install.sh
+                    x2z examples/ch4.xyz
+                    x2z examples/allene.xyz
+                    pytest -v tests/
 workflows:
     version: 2
     build-all:

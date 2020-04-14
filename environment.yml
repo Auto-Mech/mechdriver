@@ -1,7 +1,7 @@
 name: moldr-env
 
 channels:
-    - pacchem
+    - auto-mech
     - psi4
     - rdkit
     - openbabel
@@ -19,6 +19,18 @@ dependencies:
     - rdkit::rdkit
     - openbabel::openbabel
     - psi4::psi4
-    - pacchem::autoparse
-    - pacchem::autochem
-    - pacchem::elstruct
+    # Python
+    - auto-mech::autofile
+    - auto-mech::automol
+    - auto-mech::autoparse
+    - auto-mech::elstruct
+    - auto-mech::interfaces
+    - auto-mech::RateFit
+    # Installable
+    - auto-mech::MESS
+    - auto-mech::SLATEC
+    - auto-mech::MPACK
+    - auto-mech::PAC99
+    - auto-mech::ThermP
+    - auto-mech::ProjRot  
+    - auto-mech::x2z

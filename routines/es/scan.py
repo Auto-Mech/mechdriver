@@ -12,7 +12,7 @@ from lib.runner import driver
 from lib.runner import par as runpar
 from lib.filesystem import minc as fsmin
 from lib.filesystem import orb as fsorb
-from routines.es import variational
+from routines.es import ts
 
 
 def build_constraint_dct(zma, tors_names):
@@ -520,16 +520,16 @@ def run_multiref_rscan(
     # Build the elstruct CASSCF options list for multiref calcs
     cas_opt = []
     cas_opt.append(
-        variational.wfn.cas_options(
+        ts.wfn.cas_options(
             spc_info, formula, num_act_elc, num_act_orb,
             high_mul, add_two_closed=False))
     cas_opt.append(
-        variational.wfn.cas_options(
+        ts.wfn.cas_options(
             spc_info, formula, num_act_elc, num_act_orb,
             high_mul, add_two_closed=True))
 
     # Write the lines containing all the calcs for a guess wfn
-    guess_str = variational.wfn.multiref_wavefunction_guess(
+    guess_str = ts.wfn.multiref_wavefunction_guess(
         high_mul, ref_zma, spc_info, multi_level, cas_opt)
     guess_lines = guess_str.splitlines()
 
@@ -1022,9 +1022,9 @@ def infinite_separation_energy(
         num_act_orb = num_act_elc
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
 
-    cas_opt = variational.wfn.cas_options(
+    cas_opt = ts.wfn.cas_options(
         hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = variational.wfn.multiref_wavefunction_guess(
+    guess_str = ts.wfn.multiref_wavefunction_guess(
         high_mul, ref_zma, hs_info, multi_lvl, [cas_opt])
     guess_lines = guess_str.splitlines()
 

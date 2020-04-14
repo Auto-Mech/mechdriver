@@ -174,9 +174,9 @@ def format_param_vals(pvals):
         for elm in value:
             elm = elm.strip()
             if ':' in elm:
-                elm_lst = elm.split()
-                frmtd_value.append(
-                    set_value_type((float(elm_lst[0]), elm_lst[1])))
+                elm_lst = elm.split(':')
+                print('lst', elm_lst)
+                frmtd_value.append([float(elm_lst[0]), elm_lst[1]])
             else:
                 frmtd_value.append(set_value_type(elm))
     else:

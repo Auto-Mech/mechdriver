@@ -4,7 +4,6 @@
 """
 
 import os
-import autofile.fs
 import routines
 from lib.load import model as loadmodel
 from lib.load import mechanism as loadmech
@@ -15,11 +14,10 @@ from lib import printmsg
 
 
 def run(spc_dct,
-        model_dct,
+        pes_model_dct, spc_model_dct,
         thy_dct,
         rxn_lst,
         run_inp_dct,
-        ref_scheme='basic',
         write_messpf=True,
         run_messpf=True,
         run_nasa=True):
@@ -31,26 +29,9 @@ def run(spc_dct,
 
     # Pull stuff from dcts for now
     save_prefix = run_inp_dct['save_prefix']
-    ref_set = 'ANL0'
-    # ene_idx = 0
 
     # Build a list of the species to calculate thermochem for loops below
     spc_queue = loadmech.build_spc_queue(rxn_lst)
-
-    # Determine information about the basis species used in thermochem calcs
-    basis_dct, unique_basis_dct, msg = routines.pf.thermo.therm.prepare_refs(
-        ref_scheme, spc_dct, spc_queue)
-
-    # Add the references to the spc_dct
-    spc_dct.update(unique_basis_dct)
-
-    print('basis dct')
-    for key, val in basis_dct.items():
-        print(key)
-        print(val)
-
-    # Print the info message
-    print(msg)
 
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
@@ -59,6 +40,7 @@ def run(spc_dct,
         for spc in spc_queue:
 
             # Unpack spc to get name and model
+            print(spc)
             spc_name, spc_model = spc
             print("Preparing messpf input for ", spc_name)
 
@@ -163,6 +145,16 @@ def run(spc_dct,
             # Unpack spc to get name and model
             spc_name, spc_model = spc
             print("Starting thermo calculation for ", spc_name)
+
+            # Get the reference scheme and energies
+            ref_scheme = spc_model[spc_model]['options']['ref_scheme']
+            ref_enes = spc_model[spc_model]['options']['ref_enes']
+
+            # Determine info about the basis species used in thermochem calcs
+            basis_dct, _, msg = routines.pf.thermo.basis.prepare_refs(
+                ref_scheme, spc_dct, spc_queue)
+            print(msg)
+
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc]
 
@@ -173,16 +165,14 @@ def run(spc_dct,
                 save_prefix, saddle=False,
                 ene_coeff=[1.0],
                 read_ene=True, read_zpe=True)
-            ene_basis = routines.pf.thermo.therm.basis_energy(
+            ene_basis = routines.pf.thermo.basis.basis_energy(
                 spc_basis, spc_dct,
                 thy_dct, model_dct, spc_model, save_prefix,
                 ene_coeff=[1.0])
 
             # Calculate and store the 0 K Enthalpy
-            ref_set = model_dct[spc_model]['options']['bases']
-            print('ref_set test:', ref_set)
             hf0k = routines.pf.thermo.heatform.calc_hform_0k(
-                ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_set)
+                ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
             spc_dct[spc_name]['Hfs'] = [hf0k]
 
         # Write the NASA polynomials in CHEMKIN format

@@ -138,25 +138,6 @@ def read_spc_amech(job_path):
                     keyword_dct = ptt.build_keyword_dct(section[1])
                     amech_dct[name] = keyword_dct
 
-    # print('glob_dct', glob_spc_dct)
-    # print('\nspc_dct', spc_dct)
-
-    # # Combine the two together
-    # amech_dct = {}
-    # for spc in spc_dct:
-    #     amech_dct[spc] = {}
-    #     # Set parameters from the global dictionary
-    #     if glob_spc_dct:
-    #         for key, val in glob_spc_dct.items():
-    #             amech_dct[spc][key] = val
-    #     # Reset parameters if they were specified for the species themselves
-    #     for key, val in spc_dct[spc].items():
-    #         amech_dct[spc][key] = val
-    # 
-    # print('\namech_dct', amech_dct)
-    # import sys 
-    # sys.exit()
-
     return amech_dct
 
 
@@ -236,12 +217,19 @@ def modify_spc_dct(job_path, spc_dct):
     return mod_spc_dct
 
 
-def read_class_dct(job_path):
+def parse_rxn_class_file(job_path):
     """ Read the class dictionary
     """
-    cla_str = ptt.read_inp_str(job_path, CLA_INP)
-    cla_str = cla_str if cla_str else 'REACTION,RCLASS\nEND'
-    cla_dct = chemkin_io.parser.mechanism.reac_class_dct(cla_str, 'class')
+ 
+    print('\nChecking if class.dat has been provided...')
+    if os.path.exists(os.path.join(job_path, CLA_INP)):
+        print('\nclass.dat found. Reading contents...')
+        cla_str = ptt.read_inp_str(job_path, CLA_INP)
+        cla_str = cla_str if cla_str else 'REACTION,RCLASS\nEND'
+        cla_dct = chemkin_io.parser.mechanism.reac_class_dct(cla_str, 'class')
+    else:
+        print('\nNo class.dat found...')
+        cla_dct = {}
 
     return cla_dct
 

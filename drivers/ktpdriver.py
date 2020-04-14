@@ -12,6 +12,7 @@ from lib import printmsg
 
 def run(pes_formula, pes_idx,
         spc_dct,
+        cla_dct,
         thy_dct,
         rxn_lst,
         pes_model_dct, spc_model_dct,
@@ -46,16 +47,18 @@ def run(pes_formula, pes_idx,
         spc_model = rxn['model'][1]
         ene_model = spc_model_dct[spc_model]['es']['ene']
         geo_model = spc_model_dct[spc_model]['es']['geo']
-        thy_info = finf.get_es_info(ene_model, thy_dct)
+        # Need to fix
+        # thy_info = finf.get_es_info(ene_model, thy_dct)
+        thy_info = finf.get_es_info(geo_model, thy_dct)
         ini_thy_info = finf.get_es_info(geo_model, thy_dct)
         ts_dct = loadspc.build_sadpt_dct(
             pes_idx, rxn_lst, thy_info, ini_thy_info,
-            run_inp_dct, spc_dct, {})
+            run_inp_dct, spc_dct, cla_dct)
         spc_dct = loadspc.combine_sadpt_spc_dcts(
             ts_dct, spc_dct)
 
     # Build the MESS label idx dictionary for the PES
-    idx_dct = messrates.make_pes_idx_dct(rxn_lst, spc_dct)
+    idx_dct = messrates.make_pes_idx_dct(rxn_lst, pes_idx, spc_dct)
 
     # Set path where MESS files will be written and read
     mess_path = raterunner.get_mess_path(run_prefix, pes_formula)
@@ -78,7 +81,7 @@ def run(pes_formula, pes_idx,
 
         # Write the MESS strings for all the PES channels
         well_str, bim_str, ts_str, dat_lst = messrates.write_channel_mess_strs(
-            spc_dct, rxn_lst, pes_formula,
+            spc_dct, rxn_lst, pes_formula, pes_idx, 
             save_prefix, idx_dct,
             spc_model_dct, thy_dct)
 
