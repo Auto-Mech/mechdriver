@@ -10,7 +10,8 @@ from lib.runner import par as runpar
 from lib.runner import driver
 from lib.phydat import symm, phycon
 
-def run_energy(geo, spc_info, thy_level,
+
+def run_energy(zma, geo, spc_info, thy_level,
                geo_save_fs, geo_run_path, geo_save_path, locs,
                script_str, overwrite, **kwargs):
     """ Find the energy for the given structure
@@ -23,6 +24,12 @@ def run_energy(geo, spc_info, thy_level,
     sp_run_path = sp_run_fs[-1].path(thy_level[1:4])
     sp_save_fs[-1].create(thy_level[1:4])
     run_fs = autofile.fs.run(sp_run_path)
+
+    # Set input geom
+    if zma is not None:
+        job_geo = zma
+    else:
+        job_geo = geo
 
     if not sp_save_fs[-1].file.energy.exists(thy_level[1:4]) or overwrite:
 
@@ -37,7 +44,7 @@ def run_energy(geo, spc_info, thy_level,
             job='energy',
             script_str=script_str,
             run_fs=run_fs,
-            geom=geo,
+            geom=job_geo,
             spc_info=spc_info,
             thy_level=thy_level,
             errors=errors,
@@ -63,12 +70,20 @@ def run_energy(geo, spc_info, thy_level,
         sp_save_fs[-1].file.energy.write(ene, thy_level[1:4])
 
 
-def run_gradient(geo, spc_info, thy_level,
+def run_gradient(zma, geo, spc_info, thy_level,
                  geo_save_fs, geo_run_path, geo_save_path, locs,
                  script_str, overwrite, **kwargs):
     """ Determine the gradient for the geometry in the given location
     """
 
+    # Set input geom
+    if zma is not None:
+        job_geo = zma
+        is_atom = automol.geom.is_atom(automol.zmatrix.geometry(zma))
+    else:
+        job_geo = geo
+        is_atom = automol.geom.is_atom(geo)
+    
     run_fs = autofile.fs.run(geo_run_path)
     if not geo_save_fs[-1].file.gradient.exists(locs) or overwrite:
         print('Running gradient')
@@ -76,7 +91,7 @@ def run_gradient(geo, spc_info, thy_level,
             job='gradient',
             script_str=script_str,
             run_fs=run_fs,
-            geom=geo,
+            geom=job_geo,
             spc_info=spc_info,
             thy_level=thy_level,
             overwrite=overwrite,
@@ -91,7 +106,7 @@ def run_gradient(geo, spc_info, thy_level,
     if ret is not None:
         inf_obj, inp_str, out_str = ret
 
-        if automol.geom.is_atom(geo):
+        if is_atom:
             grad = ()
         else:
             print(" - Reading gradient from output...")
@@ -104,14 +119,23 @@ def run_gradient(geo, spc_info, thy_level,
             geo_save_fs[-1].file.gradient.write(grad, locs)
 
 
-def run_hessian(geo, spc_info, thy_level,
+def run_hessian(zma, geo, spc_info, thy_level,
                 geo_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite, **kwargs):
     """ Determine the hessian for the geometry in the given location
     """
+
     # if prog == 'molpro2015':
     #     geo = hess_geometry(out_str)
     #     scn_save_fs[-1].file.geometry.write(geo, locs)
+    
+    # Set input geom
+    if zma is not None:
+        job_geo = zma
+        is_atom = automol.geom.is_atom(automol.zmatrix.geometry(zma))
+    else:
+        job_geo = geo
+        is_atom = automol.geom.is_atom(geo)
 
     run_fs = autofile.fs.run(geo_run_path)
     if not geo_save_fs[-1].file.hessian.exists(locs) or overwrite:
@@ -135,7 +159,7 @@ def run_hessian(geo, spc_info, thy_level,
     if ret is not None:
         inf_obj, inp_str, out_str = ret
 
-        if automol.geom.is_atom(geo):
+        if is_atom:
             freqs = ()
         else:
             print(" - Reading hessian from output...")
@@ -151,7 +175,7 @@ def run_hessian(geo, spc_info, thy_level,
             geo_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
 
 
-def run_vpt2(zma, spc_info, thy_level,
+def run_vpt2(zma, geo, spc_info, thy_level,
              geo_save_fs, geo_run_path, geo_save_path, locs,
              script_str, overwrite, **kwargs):
     """ Perform vpt2 analysis for the geometry in the given location
@@ -163,13 +187,24 @@ def run_vpt2(zma, spc_info, thy_level,
     # Assess if symmetry needs to be broken for the calculation
     # Add porgram check because might only be issue for gaussian
     if spc_info[0] in symm.HIGH:
-        disp = symm.HIGH[spc_info[0]] * phycon.ANG2BOHR
-        vals = automol.zmatrix.values(zma)
-        zma = automol.zmatrix.set_values(zma, {'R1': vals['R1'] + disp})
+        if zma is None:
+            print('Need a zma for high-symmetry of ', spc_info[0])
+            sys.exit()
+        else:
+            disp = symm.HIGH[spc_info[0]] * phycon.ANG2BOHR
+            vals = automol.zmatrix.values(zma)
+            zma = automol.zmatrix.set_values(zma, {'R1': vals['R1'] + disp})
+    else:
+        if zma is not None:
+            job_geo = zma
+            is_atom = automol.geom.is_atom(automol.zmatrix.geometry(zma))
+        else:
+            job_geo = geo
+            is_atom = automol.geom.is_atom(geo)
 
     run_vpt2 = bool(
         not geo_save_fs[-1].file.anharmonicity_matrix.exists(locs) or 
-        not automol.geom.is_atom(geo) or
+        not is_atom or
         overwrite)
     if run_vpt2:
         print('Running vpt2')
@@ -177,7 +212,7 @@ def run_vpt2(zma, spc_info, thy_level,
             job='vpt2',
             script_str=script_str,
             run_fs=run_fs,
-            geom=zma,
+            geom=job_geo,
             spc_info=spc_info,
             thy_level=thy_level,
             overwrite=overwrite,
@@ -192,7 +227,7 @@ def run_vpt2(zma, spc_info, thy_level,
     if ret is not None:
         inf_obj, inp_str, out_str = ret
 
-        if automol.geom.is_atom(geo):
+        if is_atom:
             pass
         else:
 

@@ -9,5 +9,5 @@ DCT = {
 # Dictionary of high symmetry species w/ displacments to break sym
 # displacements are for the bonds and are in angstrom
 HIGH = {
-    'InChI=1S/CH4/h1H4': 0.001
+    'InChI=1S/CH4/h1H4': 0.0005
 }

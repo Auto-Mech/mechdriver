@@ -2,12 +2,12 @@
 """
 
 from routines.pf import thermo
-from routines.pf import rates
-from routines.pf import messf 
+from routines.pf import ktp
+from routines.pf import messf
 
 
 __all__ = [
-    'therm',
-    'rates',
+    'thermo',
+    'ktp',
     'messf',
 ]

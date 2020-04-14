@@ -43,7 +43,7 @@ def rate_headers(spc_dct, rxn_lst,
     return header_str, energy_trans_str
 
 
-def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
+def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula, pes_idx,
                             save_prefix, idx_dct,
                             model_dct, thy_dct):
     """ Write all the MESS input file strings for the reaction channels
@@ -64,11 +64,11 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
 
     # Write the MESS data strings for all the species; no ene
     species, dat_str_lst = make_all_species_data(
-        rxn_lst, spc_dct, model_dct, thy_dct, save_prefix)
+        rxn_lst, pes_idx, spc_dct, model_dct, thy_dct, save_prefix)
 
     # Loop over all the channels and write the MESS strings
     for idx, rxn in enumerate(rxn_lst):
-        tsname = 'ts_{:g}'.format(idx)
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
         tsform = automol.formula.string(
             automol.geom.formula(
                 automol.zmatrix.geometry(
@@ -95,7 +95,8 @@ def write_channel_mess_strs(spc_dct, rxn_lst, pes_formula,
     return well_str, bim_str, ts_str, dat_str_lst
 
 
-def make_all_species_data(rxn_lst, spc_dct, model_dct, thy_dct, save_prefix):
+def make_all_species_data(rxn_lst, pes_idx, spc_dct,
+                          model_dct, thy_dct, save_prefix):
     """ generate the MESS species blocks for all the species
     """
     species = {}
@@ -103,7 +104,7 @@ def make_all_species_data(rxn_lst, spc_dct, model_dct, thy_dct, save_prefix):
 
     spc_save_fs = autofile.fs.species(save_prefix)
     for idx, rxn in enumerate(rxn_lst):
-        tsname = 'ts_{:g}'.format(idx)
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
         specieslist = rxn['reacs'] + rxn['prods']
         rxn_model = rxn['model'][1]
         # Gather PF model and theory level info
@@ -354,13 +355,13 @@ def make_channel_pfs(
     return [well_str, bim_str, ts_str]
 
 
-def make_pes_idx_dct(rxn_lst, spc_dct):
+def make_pes_idx_dct(rxn_lst, pes_idx, spc_dct):
     """ Builds a dictionary that matches the mechanism name to the labels used
         in the MESS input and output files for the whole PES
     """
     pes_idx_dct = {}
     for idx, rxn in enumerate(rxn_lst):
-        tsname = 'ts_{:g}'.format(idx)
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
         pes_idx_dct.update(make_channel_idx_dct(tsname, rxn, spc_dct))
 
     return pes_idx_dct

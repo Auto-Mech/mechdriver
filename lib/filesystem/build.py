@@ -216,6 +216,13 @@ def cnf_paths_from_locs(cnf_fs, cnf_locs):
     return cnf_paths
 
 
+def cnf_create(cnf_fs, cids):
+    """ create a new cnf filesys using list of cids
+    """
+    for cid in cids:
+        cnf_fs[-1].create([cid])
+
+
 def tau_fs_from_root(root_prefix, spc_info, mod_thy_info, tau='all'):
     """ create theory run path
     """

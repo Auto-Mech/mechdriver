@@ -7,7 +7,7 @@ import automol
 import varecof_io
 import elstruct
 from routines.es import scan
-from routines.es.variational import wfn
+from routines.es.ts import wfn
 from lib.runner import script
 from lib.runner import driver as rundriver
 from lib.runner import par as runpar

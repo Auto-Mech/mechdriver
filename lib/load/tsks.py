@@ -2,10 +2,14 @@
     an outlined procedure
 """
 
+import sys
 from lib.filesystem import inf as finf
 from lib.load import ptt
+from lib.load.keywords import ES_TSK_OBJ_SUPPORTED_LST
 from lib.load.keywords import ES_TSK_SUPPORTED_DCT
-from lib.load.keywords import ES_TSK_OPTIONS_SUPPORTED_DCT
+from lib.load.keywords import ES_TSK_KEYWORDS_SUPPORTED_DCT
+from lib.load.keywords import ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT
+from lib.load.keywords import ES_TSK_KEYWORDS_DEFAULT_DCT
 
 
 def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
@@ -20,9 +24,12 @@ def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
         tsk_lst = es_tsks_from_lst(es_tsk_str)
 
     # Ensure that all the tasks are in the supported tasks
-    assert check_es_tsks_supported(tsk_lst)
+    check_es_tsks_supported(tsk_lst, thy_dct)
 
-    return tsk_lst
+    # Add defaults if they are missing
+    mod_tsk_lst = add_defaults_to_tsk_keyword_dct(tsk_lst)
+
+    return mod_tsk_lst
 
 
 def es_tsks_from_lst(es_tsks_str):
@@ -34,25 +41,54 @@ def es_tsks_from_lst(es_tsks_str):
     for line in es_tsks_str.splitlines():
         # Put a cleaner somehwere to get rid of blank lines
         tsk_line = line.strip().split()
-        if len(tsk_line) == 4:
-            [obj, tsk, run_lvl, in_lvl] = tsk_line
-            formtd_options = []
-        elif len(tsk_line) == 5:
-            [obj, tsk, run_lvl, in_lvl, options] = tsk_line
-            formtd_options = format_tsk_options(options)
+        if len(tsk_line) > 2:
+            obj, tsk, keyword_lst = tsk_line[0], tsk_line[1], tsk_line[2:]
+            keyword_dct = format_tsk_keywords(keyword_lst)
         else:
             print('BAAD')
-        tsk_lst.append([obj, tsk, run_lvl, in_lvl, formtd_options])
+        tsk_lst.append([obj, tsk, keyword_dct])
 
     return tsk_lst
 
 
-def format_tsk_options(options_str):
-    """ format options string
+def format_tsk_keywords(keyword_lst):
+    """ format keywords string
     """
-    options_str = options_str.replace('[', '').replace(']', '')
-    options_lst = [option.strip() for option in options_str.split(',')]
-    return options_lst
+    # Build initial keyword dct
+    keyword_dct = {}
+    for keyword in keyword_lst:
+        [key, val] = keyword.split('=')
+        keyword_dct[key] = format_val(val)
+
+    return keyword_dct
+
+
+def format_val(val):
+    """ format val (probably switch to one in ptt later)
+    """
+    if val == 'True':
+        formtd_val = True
+    elif val == 'False':
+        formtd_val = False
+    else:
+        formtd_val = val
+
+    return formtd_val
+
+
+def add_defaults_to_tsk_keyword_dct(tsk_lsts):
+    """ Add default values to a checked keyword dct
+    """
+    mod_tsk_lst = []
+    for tsk_lst in tsk_lsts:
+        [obj, tsk, keyword_dct] = tsk_lst
+        for dkey, dval in ES_TSK_KEYWORDS_DEFAULT_DCT.items():
+            if dkey not in keyword_dct:
+                if dkey in ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                    keyword_dct[dkey] = dval
+        mod_tsk_lst.append([obj, tsk, keyword_dct])
+
+    return mod_tsk_lst
 
 
 def es_tsks_from_models(rxn_model_dct,
@@ -91,27 +127,54 @@ def es_tsks_from_models(rxn_model_dct,
     return tsk_lst
 
 
-def check_es_tsks_supported(es_tsks):
+def check_es_tsks_supported(es_tsks, thy_dct):
     """ Check to see if the list of es tasks are supported by the code
     """
-    obj_good, tsk_good, opt_good = True, True, True
     for tsk_lst in es_tsks:
-        [obj, tsk, _, _, options] = tsk_lst
-        print(tsk_lst)
-        if obj in ES_TSK_SUPPORTED_DCT:
-            if tsk in ES_TSK_SUPPORTED_DCT[obj]:
-                print(ES_TSK_OPTIONS_SUPPORTED_DCT[tsk])
-                print(options)
-                chk = all(option in ES_TSK_OPTIONS_SUPPORTED_DCT[tsk]
-                          for option in options)
-                if not chk:
-                    print('opt not good')
-                    opt_good = False
-            else:
-                print('tsk not good')
-                tsk_good = False
-        else:
-            print('obj not good')
-            obj_good = False
+        try:
+            # Unpack the list
+            [obj, tsk, keyword_dct] = tsk_lst
 
-    return bool(obj_good and tsk_good and opt_good)
+            # Check the object
+            if obj not in ES_TSK_OBJ_SUPPORTED_LST:
+                print('*ERROR: object requested that is not allowed')
+                print('Allowed objs')
+                for supp_obj in ES_TSK_OBJ_SUPPORTED_LST:
+                    print(supp_obj)
+                sys.exit()
+            
+            # Check the task
+            if tsk not in ES_TSK_SUPPORTED_DCT[obj]:
+                print('*ERROR: task requested not allowed for object')
+                print('Allowed objs')
+                for key, val in ES_TSK_SUPPORTED_DCT:
+                    print(key)
+                    print(val)
+                sys.exit()
+            
+            # Check the requested es level
+            for key, val in keyword_dct.items():
+                if key not in ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                    print('*ERROR: option not allowed for given task')
+                    print('Allowed objs')
+                    for option in ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                        print(tsk, option)
+                    sys.exit()
+                else:
+                    if key in ('runlvl', 'inplvl', 'mr_splvl', 'mr_scnlvl'):
+                        if val not in thy_dct:
+                            print('*ERROR: tsk theory level',
+                                  '{} not given in theory.dat'.format(val))
+                            sys.exit()
+                    else:
+                        if val not in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
+                            print('*ERROR: key {}'.format(key),
+                                  'not set to allowed value.')
+                            print('Allowed values:')
+                            for kval in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
+                                print(kval)
+                            sys.exit()
+        except:
+            print('*ERROR: es_tsk not formatted correctly')
+            print(tsk_lst)
+            sys.exit()

@@ -2,6 +2,7 @@
   Functions to read the filesystem and pull objects from it
 """
 
+import sys
 import automol
 from automol.zmatrix.ts import _shifted_standard_forms_with_gaphs as shift_gra
 import autofile
@@ -87,20 +88,20 @@ def get_geos(
         spc_save_fs = autofile.fs.species(save_prefix)
         spc_save_fs[-1].create(spc_info)
         spc_save_path = spc_save_fs[-1].path(spc_info)
-        spc_run_fs = autofile.fs.species(run_prefix)
-        spc_run_fs[-1].create(spc_info)
-        spc_run_path = spc_run_fs[-1].path(spc_info)
         ini_thy_save_fs = autofile.fs.theory(spc_save_path)
         ini_thy_save_path = ini_thy_save_fs[-1].path(ini_thy_lvl[1:4])
-        ini_thy_run_fs = autofile.fs.theory(spc_run_path)
-        ini_thy_run_path = ini_thy_run_fs[-1].path(ini_thy_lvl[1:4])
         cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         cnf_save_fs_lst.append(cnf_save_fs)
-        cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
         min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
         if min_cnf_locs:
             geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         else:
+            spc_run_fs = autofile.fs.species(run_prefix)
+            spc_run_fs[-1].create(spc_info)
+            spc_run_path = spc_run_fs[-1].path(spc_info)
+            ini_thy_run_fs = autofile.fs.theory(spc_run_path)
+            ini_thy_run_path = ini_thy_run_fs[-1].path(ini_thy_lvl[1:4])
+            cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
             run_fs = autofile.fs.run(ini_thy_run_path)
             run_fs[0].create()
             tmp_ini_fs = [None, ini_thy_save_fs]
@@ -112,6 +113,27 @@ def get_geos(
                 overwrite=False)
         spc_geos.append(geo)
     return spc_geos, cnf_save_fs_lst
+
+
+def get_zma_geo(filesys, locs):
+    """ Get the geometry and zmatrix from a filesystem
+    """
+    if filesys[-1].file.zmatrix.exists(locs):
+        zma = filesys[-1].file.zmatrix.read(locs)
+    else:
+        zma = None
+
+    if filesys[-1].file.geometry.read(locs):
+        geo = filesys[-1].file.geometry.read(locs)
+    else:
+        geo = None
+
+    # Check
+    if zma is None and geo is None:
+        print('*ERROR: Neither a Z-Matrix or a Cartesian Geom exists level')
+        sys.exit()
+
+    return zma, geo
 
 
 def min_dist_conformer_zma(dist_name, cnf_save_fs):

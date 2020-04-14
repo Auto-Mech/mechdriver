@@ -9,7 +9,7 @@ import ratefit
 import chemkin_io
 
 # New libs
-from routines.pf.rates import rates as messrates
+from routines.pf.ktp import rates as messrates
 # from lib.outpt import chemkin as cout
 from lib.phydat import phycon
 

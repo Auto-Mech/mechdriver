@@ -54,13 +54,13 @@ def read_inp_scripts(script_dir):
 
     # Build a dct for the scripts string
     script_dct = {}
-    script_names = [name for name in os.listdir(script_dir)]
+    script_names = os.listdir(script_dir)
     for name in script_names:
-        with open(os.path.join(scripts_dir, name), 'r') as script_file:
+        with open(os.path.join(script_dir, name), 'r') as script_file:
             script_dct[name.replace('.sh', '')] = script_file.read()
 
     # Check the submission strings for viability
-    # assert check_script_dct 
+    # assert check_script_dct
     return script_dct
 
 

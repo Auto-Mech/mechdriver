@@ -2,8 +2,6 @@
  Generates NASA Polynomial from MESS+THERMP+PAC99 outputs
 """
 
-from . import util
-
 
 def get_pac99_polynomial(output_string):
     """ read in the polyn
@@ -22,10 +20,10 @@ def convert_pac_to_chemkin(name, atom_dict, comment_str, pac_poly_str):
     # Parse the lines of the pac string containing the desired coefficients
     las = [0.0 for i in range(7)]
     has = [0.0 for i in range(7)]
-    las[0:5] = util.parse_line16(pac_poly_str.splitlines()[6][0:80])
-    las[5:7] = util.parse_line16(pac_poly_str.splitlines()[7][48:80])
-    has[0:5] = util.parse_line16(pac_poly_str.splitlines()[9][0:80])
-    has[5:7] = util.parse_line16(pac_poly_str.splitlines()[10][48:80])
+    las[0:5] = parse_line16(pac_poly_str.splitlines()[6][0:80])
+    las[5:7] = parse_line16(pac_poly_str.splitlines()[7][48:80])
+    has[0:5] = parse_line16(pac_poly_str.splitlines()[9][0:80])
+    has[5:7] = parse_line16(pac_poly_str.splitlines()[10][48:80])
 
     if 'H' in atom_dict:
         num_h = atom_dict['H']
@@ -57,3 +55,23 @@ def convert_pac_to_chemkin(name, atom_dict, comment_str, pac_poly_str):
     poly_str = comment_str + line1 + line2 + line3 + line4
 
     return poly_str
+
+
+def parse_line16(string):
+    """
+    Parse string containing exponental numbers of length 16 chars.
+    Note: Numbers may not have a space in between.
+    """
+
+    assert len(string) % 16 == 0, 'Given string should have 16n chararacters'
+
+    # Replace the exponent D with E
+    string2 = string.replace('D', 'E')
+
+    # Build a list of values from the string
+    nchunks = len(string2) // 16
+    vals = [0.0 for i in range(nchunks)]
+    for i in range(nchunks):
+        vals[i] = float(string2[i*16: (i+1)*16])
+
+    return vals

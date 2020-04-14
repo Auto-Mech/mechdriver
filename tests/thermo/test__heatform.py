@@ -5,13 +5,10 @@ Tests calculating the 0 K heat-of-formation
 import os
 from thermo import heatform
 from thermo import util
-import automol.inchi
-import automol.smiles
+
 
 # Inchi string for methyl nitrate (CH3ONO2)
-ICH = 'InChI=1S/CH3NO3/c1-5-2(3)4/h1H3'
-SMI = 'C=CC(=O)O'
-ICH2 = automol.smiles.inchi(SMI)
+ICH = 'InCHI=1S/CH3NO3/c1-5-2(3)4/h1H3'
 
 # Thermp output file name
 THERMP_OUTFILE_NAME = os.path.join(os.getcwd(), 'run', 'thermp.out')
@@ -22,14 +19,12 @@ def test__calc_hform_0k():
     """
 
     # Get the molecular formula from the inchi string
-    #formula = util.inchi_formula(ICH)
-    formula = automol.inchi.formula(ICH)
+    formula = util.inchi_formula(ICH)
     print('\nformula:')
     print(formula)
 
     # Get atom count dictionary
-    #atom_dict = util.get_atom_counts_dict(formula)
-    atom_dict = automol.inchi.formula_dct(ICH)
+    atom_dict = util.get_atom_counts_dict(formula)
     print('\natom dict:')
     print(atom_dict)
 
@@ -82,27 +77,6 @@ def test__read_hform_298k():
     print(hform)
 
 
-def test__cbhzed():
-    """ Fragments molecule in a way that conserves each heavy-atom/heavy-atom bond
-    """
-    frags = heatform.cbhzed(ICH2)
-    print('\nCBH0 formula: ', heatform._print_lhs_rhs(ICH2, frags))
-
-def test__cbhone():
-    """ Fragments molecule in a way that conserves each heavy-atom/heavy-atom bond
-    """
-    frags = heatform.cbhone(ICH2)
-    print('\nCBH1 formula: ', heatform._print_lhs_rhs(ICH2, frags))
-
-def test__cbhtwo():
-    """ Fragments molecule in a way that conserves each heavy-atom/heavy-atom bond
-    """
-    frags = heatform.cbhtwo(ICH2)
-    print('\nCBH2 formula: ', heatform._print_lhs_rhs(ICH2, frags))
-
 if __name__ == '__main__':
     test__calc_hform_0k()
     test__read_hform_298k()
-    test__cbhzed()
-    test__cbhone()
-    test__cbhtwo()

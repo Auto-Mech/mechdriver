@@ -5,103 +5,12 @@ Find a TS from the grid as well as associated vdW wells
 import automol
 import elstruct
 from lib.reaction import grid as rxngrid
-from lib.reaction import ts as lts
 from lib.phydat import phycon
 from lib.runner import driver
-from lib.filesystem import minc as fsmin
 from routines.es import conformer
-from routines.es import variational
 from routines.es import scan
-
-
-def find_ts(spc_dct, ts_dct, ts_zma, ts_info,
-            mod_ini_thy_info, mod_thy_info,
-            multi_opt_info, multi_sp_info,
-            thy_save_fs,
-            cnf_run_fs, cnf_save_fs,
-            scn_run_fs, scn_save_fs,
-            run_fs,
-            ts_save_fs, ts_save_path,
-            run_prefix, save_prefix,
-            opt_script_str,
-            overwrite, vrc_dct,
-            rad_rad_ts='vtst',
-            **opt_kwargs):
-    """ find the ts geometry
-    """
-
-    # Set various TS information using the dictionary
-    typ = ts_dct['class']
-    dist_info = ts_dct['dist_info']
-    grid = ts_dct['grid']
-    rad_rad = bool('radical radical' in typ)
-    low_spin = bool('low' in typ)
-
-    # Unpack the dist info
-    dist_name, _, update_guess, brk_name = dist_info
-
-    # Get TS from filesys or get it from some procedure
-    min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
-    if min_cnf_locs and not overwrite:
-        # ts_class, ts_original_zma, ts_tors_names, ts_dist_info
-        # geo, zma, final_dist = check_filesys_for_ts(
-        #     ts_dct, ts_zma, cnf_save_fs, overwrite,
-        #     typ, dist_info, dist_name, bkp_ts_class_data)
-        zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
-
-        # Add an angle check which is added to spc dct for TS (crap code...)
-        vals = automol.zmatrix.values(zma)
-        final_dist = vals[dist_name]
-        dist_info[1] = final_dist
-        angle = lts.check_angle(
-            ts_dct['zma'],
-            ts_dct['dist_info'],
-            ts_dct['class'])
-        ts_dct['dist_info'][1] = final_dist
-        ts_dct['dist_info'].append(angle)
-
-        # Setting to true for now
-        ts_found = True
-    else:
-        if rad_rad and low_spin and 'elimination' not in ts_dct['class']:
-            print('Running Scan for Barrierless TS:')
-            ts_found = find_barrierless_transition_state(
-                ts_info, ts_zma, ts_dct, spc_dct,
-                grid,
-                dist_name,
-                rxn_run_path, rxn_save_path,
-                rad_rad_ts,
-                mod_ini_thy_info, mod_thy_info,
-                multi_opt_info, multi_sp_info,
-                run_prefix, save_prefix,
-                scn_run_fs, scn_save_fs,
-                overwrite, vrc_dct,
-                update_guess, **opt_kwargs)
-            # Have code analyze the path and switch to a sadpt finder if needed
-        else:
-            print('Running Scan for Fixed TS:')
-            max_zma = run_sadpt_scan(
-                typ, grid, dist_name, brk_name, ts_zma, ts_info,
-                mod_thy_info,
-                scn_run_fs, scn_save_fs, opt_script_str,
-                overwrite, update_guess, **opt_kwargs)
-            ts_found = find_sadpt_transition_state(
-                opt_script_str,
-                run_fs,
-                max_zma,
-                ts_info,
-                mod_thy_info,
-                overwrite,
-                ts_save_path,
-                ts_save_fs,
-                dist_name,
-                dist_info,
-                thy_save_fs,
-                cnf_run_fs,
-                cnf_save_fs,
-                **opt_kwargs)
-
-    return ts_found
+from routines.es.ts import vtst
+from routines.es.ts import vrctst
 
 
 def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
@@ -126,7 +35,7 @@ def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
         print('Phase Space Theory Used, No ES calculations are needed')
     elif rad_rad_ts.lower() == 'vtst':
         print('Beginning Calculations for VTST Treatments')
-        ts_found = variational.vtst.run_vtst_scan(
+        ts_found = vtst.run_vtst_scan(
             ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
             high_mul, grid1, grid2, dist_name,
             multi_level, multi_sp_info,
@@ -139,7 +48,7 @@ def find_barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
             print('Scans for VTST failed')
     elif rad_rad_ts.lower() == 'vrctst':
         print('Beginning Calculations for VRC-TST Treatments')
-        ts_found = variational.vrctst.calc_vrctst_flux(
+        ts_found = vrctst.calc_vrctst_flux(
             ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
             ts_dct['high_mul'], grid1, grid2, dist_name,
             multi_level, mod_multi_opt_info, mod_multi_sp_info,
