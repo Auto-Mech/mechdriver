@@ -99,7 +99,13 @@ def csv_dct(spc_str, check_stereo):
     for name in mul_dct:
         spc_dct[name] = {}
         spc_dct[name]['smi'] = smi_dct[name]
-        spc_dct[name]['ich'] = ich_dct[name]
+        if isinstance(ich_dct[name], str):
+            spc_dct[name]['ich'] = ich_dct[name]
+        elif isinstance(smi_dct[name], str):
+            spc_dct[name]['ich'] = automol.smiles.inchi(smi_dct[name])
+        else:
+            print('No Inchi string for {}'.format(name))
+            spc_dct[name]['ich'] = ''
         spc_dct[name]['chg'] = chg_dct[name]
         spc_dct[name]['mul'] = mul_dct[name]
         spc_names.append(name)

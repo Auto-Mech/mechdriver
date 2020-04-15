@@ -57,6 +57,7 @@ if RUN_OBJ_DCT['pes']:
 elif RUN_OBJ_DCT['spc']:
     RUN_PES_DCT = {}
     RUN_SPC_LST_DCT = lspc.build_run_spc_dct(SPC_DCT, RUN_OBJ_DCT)
+    CLA_DCT = {}
 else:
     print('No Proper Run object specified')
     sys.exit()
@@ -71,12 +72,14 @@ print('{}'.format(RUN_INP_DCT['save_prefix']))
 # Run the requested drivers: es, thermo, ktp
 print('\n\nRunning the requested drivers...')
 if 'es' in RUN_JOBS_LST:
+    ES_TSK_LST = lrun.build_run_es_tsks_lst(
+        ES_TSK_STR, SPC_MODEL_DCT, THY_DCT)
     if RUN_OBJ_DCT['pes']:
         # Call ESDriver for spc in each PES
         for (_, pes_idx), rxn_lst in RUN_PES_DCT.items():
             # Do some extra work to prepare the info to pass to the drivers
-            ES_TSK_LST = lrun.build_run_es_tsks_lst(
-                ES_TSK_STR, SPC_MODEL_DCT, THY_DCT)
+            # ES_TSK_LST = lrun.build_run_es_tsks_lst(
+            #     ES_TSK_STR, SPC_MODEL_DCT, THY_DCT)
             esdriver.run(
                 pes_idx,
                 rxn_lst,

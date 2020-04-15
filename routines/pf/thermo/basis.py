@@ -62,6 +62,8 @@ def create_spec(ich, charge=0,
     spec = {}
     rad = automol.formula.electron_count(automol.inchi.formula_dct(ich)) % 2
     mult = 1 if not rad else 2
+    print('ich', ich)
+    print(automol.inchi.geometry(ich))
     spec['zmatrix'] = automol.geom.zmatrix(automol.inchi.geometry(ich))
     spec['ich'] = ich
     spec['chg'] = charge

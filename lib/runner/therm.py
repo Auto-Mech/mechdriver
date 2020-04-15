@@ -79,7 +79,7 @@ def run_thermp(pf_path, thermp_path,
 
 # PAC99
 def run_pac(spc_dct_i, nasa_path):
-    """ 
+    """
     Run pac99 for a given species name (formula)
     https://www.grc.nasa.gov/WWW/CEAWeb/readme_pac99.htm
     requires formula+'i97' and new.groups files
@@ -107,9 +107,8 @@ def run_pac(spc_dct_i, nasa_path):
     # Read the pac99 polynomial
     with open(os.path.join(nasa_path, formula+'.c97'), 'r') as pac99_file:
         pac99_str = pac99_file.read()
-    pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
 
-    return pac99_poly_str
+    return pac99_str
 
 
 # PATH CONTROL
@@ -145,14 +144,12 @@ def get_thermo_paths(spc_save_path, spc_info, har_level):
     there is no obvious place to save this information for a random
     assortment of har_level, tors_level, vpt2_level
     """
-    orb_restr = fsorb.orbital_restriction(
+    har_levelp = fsorb.mod_orb_restrict(
         spc_info, har_level)
-    har_levelp = har_level[1:3]
-    har_levelp.append(orb_restr)
 
     thy_save_fs = autofile.fs.theory(spc_save_path)
-    thy_save_fs[-1].create(har_levelp)
-    thy_save_path = thy_save_fs[-1].path(har_levelp)
+    thy_save_fs[-1].create(har_levelp[1:4])
+    thy_save_path = thy_save_fs[-1].path(har_levelp[1:4])
     bld_locs = ['PF', 0]
     bld_save_fs = autofile.fs.build(thy_save_path)
     bld_save_fs[-1].create(bld_locs)
