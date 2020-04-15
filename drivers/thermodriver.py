@@ -6,6 +6,7 @@
 import os
 import routines
 import autofile
+from routines.pf import thermo
 from lib.load import model as loadmodel
 from lib.load import mechanism as loadmech
 from lib.filesystem import inf as finf
@@ -81,7 +82,6 @@ def run(spc_dct,
                 spc_model=pf_model,
                 pf_levels=pf_levels,
                 save_prefix=spc_save_path,
-                tors_mod=(ndim_tors, freeze_all_tor)
                 )
 
             # Write the MESSPF input file
@@ -187,13 +187,13 @@ def run(spc_dct,
             # Unpack spc to get name and model
             spc_name, spc_model = spc
             print("Starting NASA polynomials calculation for ", spc_name)
-            
+
             # Gather PF model and theory level info
             pf_levels = loadmodel.set_es_model_info(
                 spc_model_dct[spc_model]['es'], thy_dct)
             pf_model = loadmodel.set_pf_model_info(
                 spc_model_dct[spc_model]['pf'])
-        
+
             # Begin chemkin string
             chemkin_header_str = cout.run_ckin_header(
                 pf_levels, pf_model)
@@ -217,7 +217,8 @@ def run(spc_dct,
             spc_dct[spc_name]['Hfs'].append(hf298k)
 
             # Run PAC99 to get a NASA polynomial string in its format
-            pac99_poly_str = thmrunner.run_pac(spc_dct[spc_name], nasa_path)
+            pac99_str = thmrunner.run_pac(spc_dct[spc_name], nasa_path)
+            pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
 
             # Convert the polynomial from PAC99 to CHEMKIN
             chemkin_poly_str = cout.run_ckin_poly(

@@ -580,7 +580,6 @@ def run_ts(spc_dct, spc_name,
     rad_rad = bool('radical radical' in typ)
     low_spin = bool('low' in typ)
     # combine above and check dct
-    
 
     # Unpack the dist info
     dist_name, _, update_guess, brk_name = dist_info

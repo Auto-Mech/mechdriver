@@ -134,7 +134,8 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
         if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts:
             # print('HARM_RIGID')
             zpe = harm_zpe
-        elif vib_model == 'harm' and tors_model == '1dhr':
+        elif vib_model == 'harm' and (tors_model == '1dhr' or tors_model == '1dhrf'):
+            frz_tors = True if tors_model == '1dhrf' else False
             if no_tors:
                 zpe = harm_zpe
             else:
@@ -146,7 +147,8 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
                     spc_dct_i, spc_info,
                     frm_bnd_key, brk_bnd_key,
                     sym_factor, elec_levels,
-                    saddle=saddle)
+                    saddle=saddle,
+                    frz_tors=frz_tors)
         elif vib_model == 'harm' and tors_model == 'mdhr':
             print('HARM and MDHR combination is not yet implemented')
             zpe = harm_zpe

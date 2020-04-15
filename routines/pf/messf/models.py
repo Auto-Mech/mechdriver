@@ -48,9 +48,20 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                        spc_dct_i, spc_info,
                        frm_bnd_key, brk_bnd_key,
                        sym_factor, elec_levels,
-                       saddle=False):
+                       saddle=False,
+                       frz_tors=False):
     """ Build the species string for a model: Harm, 1DHR
     """
+    # Set up some info with the torsions
+    if 'hind_def' in spc_dct_i:
+        run_tors_names = spc_dct_i['hind_def']
+    else:
+        run_tors_names = ()
+    if 'hind_inc' in spc_dct_i:
+        scan_increment = spc_dct_i['hind_inc']
+    else:
+        scan_increment = 30.0
+
     if harm_min_cnf_locs is not None:
         harm_geo = harm_cnf_save_fs[-1].file.geometry.read(
             harm_min_cnf_locs)
@@ -69,14 +80,27 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
             tors_geo = tors_cnf_save_fs[-1].file.geometry.read(
                 tors_min_cnf_locs)
 
+            # Get the hr prep stuff
+            tors_names, tors_grids = hr_prep(
+                zma, tors_geo, run_tors_names=run_tors_names,
+                scan_increment=scan_increment, ndim_tors='1dhr',
+                saddle=saddle,
+                frm_bnd_key=(), brk_bnd_key=())
+            # frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+
             # Set torsional stuff
-            tors_names = tors.get_tors_names(
-                spc_dct_i, tors_cnf_save_fs, saddle=saddle)
-            tors_grids = tors.get_tors_grids(
-                spc_dct_i, zma, tors_names, frm_bnd_key, brk_bnd_key)
             tors_sym_nums = tors.get_tors_sym_nums(
                 spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
                 frm_bnd_key, brk_bnd_key, saddle=False)
+
+            # Set torsional stuff
+            # tors_names = tors.get_tors_names(
+            #     spc_dct_i, tors_cnf_save_fs, saddle=saddle)
+            # tors_grids = tors.get_tors_grids(
+            #     spc_dct_i, zma, tors_names, frm_bnd_key, brk_bnd_key)
+            # tors_sym_nums = tors.get_tors_sym_nums(
+            #     spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
+            #     frm_bnd_key, brk_bnd_key, saddle=False)
 
             # Set ts bond
             ts_bnd = None
@@ -89,7 +113,7 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
                 tors_names, tors_grids, tors_sym_nums,
                 tors_cnf_save_path, min_ene,
-                saddle=False, hind_rot_geo=tors_geo)
+                saddle=saddle, hind_rot_geo=tors_geo, frz_tors=frz_tors)
 
             # Calculate ZPVES of the hindered rotors
             if saddle and tors_names is not None:
