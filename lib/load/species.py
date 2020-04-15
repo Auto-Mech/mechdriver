@@ -26,8 +26,9 @@ def build_run_spc_dct(spc_dct, run_obj_dct):
     spc_nums = run_obj_dct['spc']
     run_spc_lst = []
     for idx, spc in enumerate(spc_dct):
-        if idx+1 in spc_nums:
-            run_spc_lst.append((spc, run_obj_dct['spc'][idx+1]))
+        if spc != 'global':
+            if idx+1 in spc_nums:
+                run_spc_lst.append((spc, run_obj_dct['spc'][idx+1]))
 
     # Build the run dct
     run_dct = {}

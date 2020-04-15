@@ -37,7 +37,8 @@ def get_hform_298k_thermp(output_string):
 def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
     """ calculates the heat-of-formation at 0 K
     """
-
+    print('coeff', coeff)
+    print('hbasis', hzero_basis)
     # Calculate the heat of formation
     dhzero = hzero_mol * EH2KCAL
     print('hzero test:', hzero_mol, dhzero, EH2KCAL, KJ2KCAL)

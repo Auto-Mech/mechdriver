@@ -379,7 +379,6 @@ def read_channel_energies(spc_dct, species,
 def get_fs_ene_zpe(spc_dct, spc,
                    thy_dct, model_dct, model,
                    save_prefix, saddle=False,
-                   ene_coeff=[1.0],
                    read_ene=True, read_zpe=True):
     """ Get the energy for a species on a channel
     """
