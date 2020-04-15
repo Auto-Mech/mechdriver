@@ -101,6 +101,7 @@ def run_pac(spc_dct_i, nasa_path):
     assert os.path.exists(newgroups_file)
 
     # Run pac99
+    print(formula)
     proc = subprocess.Popen('pac99', stdin=subprocess.PIPE)
     proc.communicate(bytes(formula, 'utf-8'))
 
