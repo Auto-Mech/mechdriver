@@ -35,8 +35,9 @@ def read_messpf_temps(pf_path):
     with open(messpf_file, 'r') as pffile:
         output_string = pffile.read()
 
-    # Obtain the temperatures
+    # Obtain the temperatures, remove the 298.2 value
     temps, _, _, _ = mess_io.reader.pfs.partition_fxn(output_string)
+    temps = [temp for temp in temps if not numpy.isclose(temp, 298.2)]
 
     return temps
 
@@ -49,14 +50,11 @@ def write_thermp_inp(spc_dct_i, temps, thermp_file_name='thermp.dat'):
     h0form = spc_dct_i['Hfs'][0]
     formula = automol.inchi.formula(ich)
 
-    # Get the number of temps without the 298.2 K temp in the pf.dat file
-    ntemps = len([temp for temp in temps if not numpy.isclose(temp, 298.2)])
-
     # Write thermp input file
     enthalpyt = 0.
     breakt = 1000.
     thermp_str = thermp_io.writer.thermp_input(
-        ntemps=ntemps,
+        ntemps=len(temps),
         formula=formula,
         delta_h=h0form,
         enthalpy_temp=enthalpyt,

@@ -202,16 +202,17 @@ def run(spc_dct,
             harm_thy_info = pf_levels[2]
             pf_path, nasa_path = thmrunner.get_thermo_paths(
                 spc_save_path, spc_info, harm_thy_info)
-            
+
             # Read the temperatures from the pf.dat file, check if viable
             temps = thmrunner.read_messpf_temps(pf_path)
+            print('temps', temps)
             print('Attempting to fit NASA polynomials from',
-                    '200-1000 and 1000-3000 K ranges using\n',
-                    'Temps from MESSPF file = {}.'.format(
-                        (temp for temp in temps
-                         if not numpy.isclose(temp, 298.2)))
+                  '200-1000 and 1000-3000 K ranges using\n',
+                  'Temps from MESSPF file = {}.'.format(
+                      ' '.join(('{:.2f}'.format(x) for x in temps))))
 
             # Write and run the thermp file to get Hf0k and ...
+            print('therm path', nasa_path)
             thmrunner.go_to_path(nasa_path)
             thmrunner.write_thermp_inp(spc_dct[spc_name], temps)
             # not getting spc str, so this isnt working, fix this
