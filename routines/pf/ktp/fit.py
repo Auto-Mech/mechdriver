@@ -37,9 +37,9 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     names = idx_dct.keys()
     for lab_i, name_i in zip(labels, names):
         a_conv_factor = phycon.NAVO if 'W' not in lab_i else 1.00
-        if 'F' not in lab_i:
+        if 'F' not in lab_i and 'B' not in lab_i:
             for lab_j, name_j in zip(labels, names):
-                if 'F' not in lab_j and lab_i != lab_j:
+                if 'F' not in lab_j and 'B' not in lab_j and lab_i != lab_j:
 
                     # Set name
                     reaction = name_i + '=' + name_j

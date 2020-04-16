@@ -36,6 +36,7 @@ def projrot_freqs_1(tors_geo, hess,
 
     freqs = []
     zpe_har_no_tors = 0.
+    imag_freq_1 = 0.
     # har_zpe = 0.
     if pot:
         rthrproj_freqs, _ = projrot_io.reader.rpht_output(
@@ -44,17 +45,22 @@ def projrot_freqs_1(tors_geo, hess,
         zpe_har_no_tors = sum(freqs)*phycon.WAVEN2KCAL/2.
     rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
         path+'/RTproj_freq.dat')
+    print('imag_freq_1 after rtproj:', imag_freq)
+    print('saddle test:', saddle)
     # har_zpe = sum(rtproj_freqs)*phycon.WAVEN2KCAL/2.
     if not freqs:
         freqs = rtproj_freqs
     if saddle:
         if imag_freq:
-            imag_freq = imag_freq[0]
+            imag_freq_1 = imag_freq[0]
+            print('imag_freq_1 after assignment:', imag_freq_1)
         else:
-            imag_freq = freqs[-1]
+            imag_freq_1 = freqs[-1]
             freqs = freqs[:-1]
 
-    return freqs, imag_freq, zpe_har_no_tors
+        print('imag_freq in projrot_1:', imag_freq_1)
+
+    return freqs, imag_freq_1, zpe_har_no_tors
 
 
 def projrot_freqs_2(save_path, pot=False, saddle=False):
@@ -71,24 +77,29 @@ def projrot_freqs_2(save_path, pot=False, saddle=False):
         "RPHt.exe >& /dev/null")
     script.run_script(projrot_script_str2, path)
 
-    zpe_har_no_tors_2 = 0.0
     freqs_2 = []
+    zpe_har_no_tors_2 = 0.0
+    imag_freq_2 = 0.
     if pot:
         rthrproj_freqs_2, _ = projrot_io.reader.rpht_output(
             path+'/hrproj_freq.dat')
         freqs_2 = rthrproj_freqs_2
         zpe_har_no_tors_2 = sum(freqs_2)*phycon.WAVEN2KCAL/2.
-    rtproj_freqs, imag_freq_2 = projrot_io.reader.rpht_output(
+    rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
         path+'/RTproj_freq.dat')
+    print('imag_freq_2 after rtproj:', imag_freq)
     har_zpe = sum(rtproj_freqs)*phycon.WAVEN2KCAL/2.
     if not freqs_2:
         freqs_2 = rtproj_freqs
     if saddle:
-        if imag_freq_2:
-            imag_freq_2 = imag_freq_2[0]
+        if imag_freq:
+            imag_freq_2 = imag_freq[0]
+            print('imag_freq_2 after assignment:', imag_freq_2)
         else:
             imag_freq_2 = freqs_2[-1]
             freqs_2 = freqs_2[:-1]
+
+        print('imag_freq in projrot_2:', imag_freq_2)
 
     return freqs_2, imag_freq_2, har_zpe, zpe_har_no_tors_2
 
