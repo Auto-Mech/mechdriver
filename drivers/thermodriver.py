@@ -4,8 +4,10 @@
 """
 
 import os
+import numpy
 import routines
 import autofile
+from routines.pf import thermo
 from lib.load import model as loadmodel
 from lib.load import mechanism as loadmech
 from lib.filesystem import inf as finf
@@ -33,6 +35,7 @@ def run(spc_dct,
 
     # Build a list of the species to calculate thermochem for loops below
     spc_queue = loadmech.build_spc_queue(rxn_lst)
+
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
 
@@ -49,8 +52,6 @@ def run(spc_dct,
                 spc_model_dct[spc_model]['es'], thy_dct)
             pf_model = loadmodel.set_pf_model_info(
                 spc_model_dct[spc_model]['pf'])
-            freeze_all_tor = spc_model_dct[spc_model]['options']['freeze_all_tors']
-            ndim_tors = spc_model_dct[spc_model]['pf']['tors']
 
             # Get PF input header
             temps = pes_model_dct[pes_model]['temps']
@@ -81,7 +82,6 @@ def run(spc_dct,
                 spc_model=pf_model,
                 pf_levels=pf_levels,
                 save_prefix=spc_save_path,
-                tors_mod=(ndim_tors, freeze_all_tor)
                 )
 
             # Write the MESSPF input file
@@ -107,7 +107,6 @@ def run(spc_dct,
             pes_model, spc_model = models
             print("Starting messpf calculation for ", spc_name)
 
-            # Run the MESSPF File
             # Set up the species filesystem
             spc_info = finf.get_spc_info(spc_dct[spc_name])
             spc_save_fs = autofile.fs.species(save_prefix)
@@ -152,7 +151,7 @@ def run(spc_dct,
             ref_enes = spc_model_dct[spc_model]['options']['ref_enes']
 
             # Determine info about the basis species used in thermochem calcs
-            basis_dct, _, msg = routines.pf.thermo.basis.prepare_refs(
+            basis_dct, uniref_dct, msg = routines.pf.thermo.basis.prepare_refs(
                 ref_scheme, spc_dct, spc_queue)
             print(msg)
 
@@ -162,14 +161,12 @@ def run(spc_dct,
             # Get the energies for the spc and its basis
             ene_spc = routines.pf.messf.ene.get_fs_ene_zpe(
                 spc_dct, spc_name,
-                thy_dct, model_dct, spc_model,
+                thy_dct, spc_model_dct, spc_model,
                 save_prefix, saddle=False,
-                ene_coeff=[1.0],
                 read_ene=True, read_zpe=True)
             ene_basis = routines.pf.thermo.basis.basis_energy(
-                spc_basis, spc_dct,
-                thy_dct, spc_model_dct, spc_model, save_prefix,
-                ene_coeff=[1.0])
+                spc_basis, uniref_dct, spc_dct,
+                thy_dct, spc_model_dct, spc_model, save_prefix)
 
             # Calculate and store the 0 K Enthalpy
             hf0k = routines.pf.thermo.heatform.calc_hform_0k(
@@ -185,28 +182,39 @@ def run(spc_dct,
         for spc in spc_queue:
 
             # Unpack spc to get name and model
-            spc_name, spc_model = spc
+            spc_name, models = spc
+            pes_model, spc_model = models
             print("Starting NASA polynomials calculation for ", spc_name)
-            
+
             # Gather PF model and theory level info
             pf_levels = loadmodel.set_es_model_info(
                 spc_model_dct[spc_model]['es'], thy_dct)
             pf_model = loadmodel.set_pf_model_info(
                 spc_model_dct[spc_model]['pf'])
-        
+
             # Begin chemkin string
-            chemkin_header_str = cout.run_ckin_header(
-                pf_levels, pf_model)
+            # chemkin_header_str = cout.run_ckin_header(
+            #     pf_levels, pf_model)
+            chemkin_header_str = ''
             chemkin_set_str += chemkin_header_str
 
             # Set up the paths for running jobs
             harm_thy_info = pf_levels[2]
             pf_path, nasa_path = thmrunner.get_thermo_paths(
                 spc_save_path, spc_info, harm_thy_info)
-            thmrunner.go_to_path(nasa_path)
+
+            # Read the temperatures from the pf.dat file, check if viable
+            temps = thmrunner.read_messpf_temps(pf_path)
+            print('temps', temps)
+            print('Attempting to fit NASA polynomials from',
+                  '200-1000 and 1000-3000 K ranges using\n',
+                  'Temps from MESSPF file = {}.'.format(
+                      ' '.join(('{:.2f}'.format(x) for x in temps))))
 
             # Write and run the thermp file to get Hf0k and ...
-            thmrunner.write_thermp_inp(spc_dct[spc_name])
+            print('therm path', nasa_path)
+            thmrunner.go_to_path(nasa_path)
+            thmrunner.write_thermp_inp(spc_dct[spc_name], temps)
             # not getting spc str, so this isnt working, fix this
             # if spc_dct[spc]['ene'] == 0.0 or spc_dct[spc]['spc_str'] == '':
             #     print('Cannot generate thermo for species',
@@ -217,7 +225,9 @@ def run(spc_dct,
             spc_dct[spc_name]['Hfs'].append(hf298k)
 
             # Run PAC99 to get a NASA polynomial string in its format
-            pac99_poly_str = thmrunner.run_pac(spc_dct[spc_name], nasa_path)
+            pac99_str = thmrunner.run_pac(spc_dct[spc_name], nasa_path)
+            print('str\n', pac99_str)
+            pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
 
             # Convert the polynomial from PAC99 to CHEMKIN
             chemkin_poly_str = cout.run_ckin_poly(

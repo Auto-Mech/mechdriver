@@ -3,10 +3,13 @@
 """
 
 import os
+import sys
 import subprocess
 import shutil
+import numpy
 import automol
 import autofile
+import mess_io
 import thermp_io
 from lib.runner import script
 from lib.filesystem import orb as fsorb
@@ -23,8 +26,24 @@ def run_pf(pf_path, pf_script_str=script.MESSPF):
     script.run_script(pf_script_str, pf_path)
 
 
+def read_messpf_temps(pf_path):
+    """ Obtain the temperatures from the MESSPF file 
+    """
+
+    # Read MESSPF file
+    messpf_file = os.path.join(pf_path, 'pf.dat')
+    with open(messpf_file, 'r') as pffile:
+        output_string = pffile.read()
+
+    # Obtain the temperatures, remove the 298.2 value
+    temps, _, _, _ = mess_io.reader.pfs.partition_fxn(output_string)
+    temps = [temp for temp in temps if not numpy.isclose(temp, 298.2)]
+
+    return temps
+
+
 # THERMP
-def write_thermp_inp(spc_dct_i, thermp_file_name='thermp.dat'):
+def write_thermp_inp(spc_dct_i, temps, thermp_file_name='thermp.dat'):
     """ write the thermp input file
     """
     ich = spc_dct_i['ich']
@@ -35,6 +54,7 @@ def write_thermp_inp(spc_dct_i, thermp_file_name='thermp.dat'):
     enthalpyt = 0.
     breakt = 1000.
     thermp_str = thermp_io.writer.thermp_input(
+        ntemps=len(temps),
         formula=formula,
         delta_h=h0form,
         enthalpy_temp=enthalpyt,
@@ -79,7 +99,7 @@ def run_thermp(pf_path, thermp_path,
 
 # PAC99
 def run_pac(spc_dct_i, nasa_path):
-    """ 
+    """
     Run pac99 for a given species name (formula)
     https://www.grc.nasa.gov/WWW/CEAWeb/readme_pac99.htm
     requires formula+'i97' and new.groups files
@@ -101,15 +121,25 @@ def run_pac(spc_dct_i, nasa_path):
     assert os.path.exists(newgroups_file)
 
     # Run pac99
+    print('formula', formula)
     proc = subprocess.Popen('pac99', stdin=subprocess.PIPE)
     proc.communicate(bytes(formula, 'utf-8'))
 
-    # Read the pac99 polynomial
-    with open(os.path.join(nasa_path, formula+'.c97'), 'r') as pac99_file:
-        pac99_str = pac99_file.read()
-    pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
+    # Check to see if pac99 does not have error message
+    with open(os.path.join(nasa_path, formula+'.o97'), 'r') as pac99_file:
+        pac99_out_str = pac99_file.read()
+    if 'INSUFFICIENT DATA' in pac99_out_str:
+        print('*ERROR: PAC99 fit failed, maybe increase temperature ranges?')
+        sys.exit()
+    else:
+        # Read the pac99 polynomial
+        with open(os.path.join(nasa_path, formula+'.c97'), 'r') as pac99_file:
+            pac99_str = pac99_file.read()
+        if not pac99_str:
+            print('No polynomial produced from PAC99 fits, check for errors')
+            sys.exit()
 
-    return pac99_poly_str
+    return pac99_str
 
 
 # PATH CONTROL
@@ -145,14 +175,12 @@ def get_thermo_paths(spc_save_path, spc_info, har_level):
     there is no obvious place to save this information for a random
     assortment of har_level, tors_level, vpt2_level
     """
-    orb_restr = fsorb.orbital_restriction(
+    har_levelp = fsorb.mod_orb_restrict(
         spc_info, har_level)
-    har_levelp = har_level[1:3]
-    har_levelp.append(orb_restr)
 
     thy_save_fs = autofile.fs.theory(spc_save_path)
-    thy_save_fs[-1].create(har_levelp)
-    thy_save_path = thy_save_fs[-1].path(har_levelp)
+    thy_save_fs[-1].create(har_levelp[1:4])
+    thy_save_path = thy_save_fs[-1].path(har_levelp[1:4])
     bld_locs = ['PF', 0]
     bld_save_fs = autofile.fs.build(thy_save_path)
     bld_save_fs[-1].create(bld_locs)

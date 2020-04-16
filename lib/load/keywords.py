@@ -28,7 +28,7 @@ MODEL_PF_SUPPORTED_DCT = {
     'ene': ['sp', 'composite'],
     'rot': ['rigid', 'vpt2'],
     'vib': ['harm', 'vpt2', 'tau'],
-    'tors': ['rigid', '1dhr', 'mdhr', 'tau'],
+    'tors': ['rigid', '1dhr', '1dhrf', 'mdhr', 'tau'],
     'sym': ['none', 'sampling', '1dhr'],
     'ts_barrierless': ['pst', 'rpvtst', 'vrctst'],
     'ts_sadpt': ['fixed', 'rpvtst'],
@@ -46,6 +46,7 @@ MODEL_PF_DEFAULT_DCT = {
     'wells': 'fake',
     'tunnel': 'none'
 }
+
 
 # Electronic Structure Tasks
 ES_TSK_OBJ_SUPPORTED_LST = [
@@ -99,7 +100,7 @@ ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'frz_all_tors': [True, False],
     'ndim_tors': ['1dhr', 'mdhr'],
     'zpve_min': [True, False],
-    'nobarrier': ['pst', 'vtst', 'vrctst']
+    'nobarrier': ['pst', 'rpvtst', 'vrctst']
 }
 ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'runlvl': None,

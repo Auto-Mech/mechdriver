@@ -134,7 +134,8 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
         if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts:
             # print('HARM_RIGID')
             zpe = harm_zpe
-        elif vib_model == 'harm' and tors_model == '1dhr':
+        elif vib_model == 'harm' and (tors_model == '1dhr' or tors_model == '1dhrf'):
+            frz_tors = True if tors_model == '1dhrf' else False
             if no_tors:
                 zpe = harm_zpe
             else:
@@ -146,7 +147,8 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
                     spc_dct_i, spc_info,
                     frm_bnd_key, brk_bnd_key,
                     sym_factor, elec_levels,
-                    saddle=saddle)
+                    saddle=saddle,
+                    frz_tors=frz_tors)
         elif vib_model == 'harm' and tors_model == 'mdhr':
             print('HARM and MDHR combination is not yet implemented')
             zpe = harm_zpe
@@ -377,7 +379,6 @@ def read_channel_energies(spc_dct, species,
 def get_fs_ene_zpe(spc_dct, spc,
                    thy_dct, model_dct, model,
                    save_prefix, saddle=False,
-                   ene_coeff=[1.0],
                    read_ene=True, read_zpe=True):
     """ Get the energy for a species on a channel
     """
@@ -406,10 +407,7 @@ def get_fs_ene_zpe(spc_dct, spc,
     # Read the electronic energy and ZPVE
     thy_low_level = pf_levels[0]
     thy_high_levels = pf_levels[1]
-    # thy_low_level = finf.get_thy_info(model_dct[model]['es']['geo'], thy_dct)
-    # thy_high_levels = finf.get_thy_info(model_dct[model]['es']['ene'], thy_dct)
-    e_elec = None
-    e_zpe = None
+    e_elec, e_zpe = None, None
     if read_ene:
         e_elec = 0.0
         for (coeff, level) in thy_high_levels:
@@ -420,7 +418,6 @@ def get_fs_ene_zpe(spc_dct, spc,
                 save_prefix=save_path,
                 saddle=saddle)
             e_elec += coeff * high_ene
-    # if e_elec is not None:
     if read_zpe:
         e_zpe = get_zero_point_energy(
             spc, spc_dct[spc],

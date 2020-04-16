@@ -1,10 +1,10 @@
 """ drivers
 """
+
+import os
 import numpy
 import autofile
 import mess_io
-
-# New Libs
 from lib.phydat import phycon
 from lib.filesystem import orb as fsorb
 from lib.filesystem import minc as fsmin
@@ -17,14 +17,17 @@ from routines.pf.messf import _util as messfutil
 
 
 def species_block(spc, spc_dct_i, spc_info, spc_model,
-                  pf_levels, save_prefix,
-                  tors_mod=('1dhr', False)):
+                  pf_levels, save_prefix):
     """ prepare the species input for messpf
     """
 
     # Unpack the models and levels
     [_, _, harm_level, vpt2_level, sym_level, tors_level] = pf_levels
     tors_model, vib_model, sym_model = spc_model
+
+    # Lazy set for tors mod
+    if tors_model == '1dhrf':
+        tors_mod = ('1dhr', False)
 
     # Set theory filesystem used throughout
     thy_save_fs = autofile.fs.theory(save_prefix)
@@ -110,7 +113,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
                 spc_info, harm_min_cnf_locs, harm_cnf_save_fs, saddle=saddle)
             symf = sym_factor
-        elif vib_model == 'harm' and tors_model == '1dhr':
+        elif vib_model == 'harm' and (tors_model == '1dhr' or tors_model == '1dhrf'):
+            frz_tors = True if tors_model == '1dhrf' else False
             if no_tors:
                 geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
                     spc_info, harm_min_cnf_locs, harm_cnf_save_fs, saddle=saddle)
@@ -124,7 +128,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                     spc_dct_i, spc_info,
                     frm_bnd_key, brk_bnd_key,
                     sym_factor, elec_levels,
-                    saddle=saddle)
+                    saddle=saddle,
+                    frz_tors=frz_tors)
                 sym_nums = tors.get_tors_sym_nums(
                     spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
                     frm_bnd_key, brk_bnd_key, saddle=False)

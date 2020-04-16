@@ -13,25 +13,39 @@ import autofile
 # New libs
 from lib.phydat import phycon
 from lib.runner import script
+from routines.es import scan
 
 
 # MESS strings
 def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
                                  tors_names, tors_grids, tors_sym_nums,
                                  tors_cnf_save_path, min_ene,
-                                 saddle=False, hind_rot_geo=None):
+                                 saddle=False, hind_rot_geo=None, frz_tors=False):
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
+
+    # Build constraint dct
+    if frz_tors:
+        constraint_dct = scan.build_constraint_dct(zma, tors_names)
+    else:
+        constraint_dct = None
+
     # Loop over the torsions
     hind_rot_str = ""
     proj_rotors_str = ""
     tors_info = zip(tors_names, tors_grids, tors_sym_nums)
-    for tors_name, tors_grid, tors_sym in tors_info:
+    for tors_name_lst, tors_grid_lst, tors_sym in tors_info:
+
+        # Grab zero elment because of formatting
+        tors_name = tors_name_lst[0]
+        tors_grid = tors_grid_lst[0]
 
         # Read the hindered rotor potential
         pot, _ = read_hr_pot(
             spc_info, [tors_name], tors_grid,
-            tors_cnf_save_path, min_ene)
+            tors_cnf_save_path, min_ene,
+            saddle=saddle, read_freqs=False,
+            frz_tors=frz_tors, constraint_dct=constraint_dct)
 
         # Build potential lst from only successful calculations
         pot = hrpot_spline_fitter(pot)
@@ -54,7 +68,8 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
         # Write the MESS and ProjRot strings for the rotor
         hrgeo = harm_geo if hind_rot_geo else None
         hind_rot_str += mess_io.writer.rotor_hindered(
-            group, axis, tors_sym, pot, remdummy=remdummy, geom=hrgeo)
+            group, axis, tors_sym, pot,
+            remdummy=remdummy, geom=hrgeo, use_quantum_weight=True)
         proj_rotors_str += projrot_io.writer.rotors(
             axis, group, remdummy=remdummy)
 
@@ -205,7 +220,8 @@ def write_mdhr_dat_file(potentials, freqs=()):
 
 # Functions to handle setting up torsional defintion and potentials properly
 def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
-                saddle=False, read_freqs=False):
+                saddle=False, read_freqs=False,
+                frz_tors=False, constraint_dct=None):
     """ Get the potential for a hindered rotor
     """
 
@@ -226,11 +242,16 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
         freqs = []
 
     # Read the energies from the filesystem
-    scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
-    # print('species directory test:', spc_info, tors_cnf_save_path, min_ene, tors_names)
+    if not frz_tors:
+        scn_save_fs = autofile.fs.scan(tors_cnf_save_path)
+    else:
+        scn_save_fs = autofile.fs.cscan(tors_cnf_save_path)
     if len(tors_names) == 1:
         for i, grid_val_i in enumerate(tors_grids):
-            locs = [tors_names, [grid_val_i]]
+            if not frz_tors:
+                locs = [tors_names, [grid_val_i]]
+            else:
+                locs = [tors_names, [grid_val_i], constraint_dct]
             if scn_save_fs[-1].exists(locs):
                 ene = scn_save_fs[-1].file.energy.read(locs)
                 pot[i] = (ene - min_ene) * phycon.EH2KCAL
@@ -241,7 +262,11 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
     elif len(tors_names) == 2:
         for i, grid_val_i in enumerate(tors_grids[0]):
            for j, grid_val_j in enumerate(tors_grids[1]):
-                locs = [tors_names, [grid_val_i, grid_val_j]]
+                if not frz_tors:
+                    locs = [tors_names, [grid_val_i, grid_val_j]]
+                else:
+                    locs = [tors_names, [grid_val_i, grid_val_j],
+                            constraint_dct]
                 if scn_save_fs[-1].exists(locs):
                     ene = scn_save_fs[-1].file.energy.read(locs)
                     pot[i][j] = (ene - min_ene) * phycon.EH2KCAL
@@ -253,7 +278,11 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
         for i, grid_val_i in enumerate(tors_grids[0]):
             for j, grid_val_j in enumerate(tors_grids[1]):
                 for k, grid_val_k in enumerate(tors_grids[2]):
-                    locs = [tors_names, [grid_val_i, grid_val_j, grid_val_k]]
+                    if not frz_tors:
+                        locs = [tors_names, [grid_val_i, grid_val_j, grid_val_k]]
+                    else:
+                        locs = [tors_names, [grid_val_i, grid_val_j, grid_val_k],
+                                constraint_dct]
                     if scn_save_fs[-1].exists(locs):
                         ene = scn_save_fs[-1].file.energy.read(locs)
                         pot[i][j][k] = (ene - min_ene) * phycon.EH2KCAL
@@ -266,8 +295,13 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
             for j, grid_val_j in enumerate(tors_grids[1]):
                 for k, grid_val_k in enumerate(tors_grids[2]):
                     for l, grid_val_l in enumerate(tors_grids[3]):
-                        locs = [tors_names,
-                            [grid_val_i, grid_val_j, grid_val_k, grid_val_l]]
+                        if not frz_tors:
+                            locs = [tors_names,
+                                [grid_val_i, grid_val_j, grid_val_k, grid_val_l]]
+                        else:
+                            locs = [tors_names,
+                                [grid_val_i, grid_val_j, grid_val_k, grid_val_l],
+                                constraint_dct]
                         if scn_save_fs[-1].exists(locs):
                             ene = scn_save_fs[-1].file.energy.read(locs)
                             pot[i][j][k][l] = (ene - min_ene) * phycon.EH2KCAL
@@ -496,7 +530,7 @@ def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
     #     tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
     #     tors_zpe += tors_1dhr_zpe
 
-    print ('tors_zpe test:', tors_zpe)
+    print('tors_zpe test:', tors_zpe)
     return tors_zpe
 
 

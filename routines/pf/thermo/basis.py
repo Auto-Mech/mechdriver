@@ -2,6 +2,7 @@
   Therm Calculations
 """
 
+import sys
 import automol.inchi
 import automol.geom
 from routines.pf.messf.ene import get_fs_ene_zpe
@@ -21,6 +22,8 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
     """
     # Get a lst of ichs corresponding to the spc queue
     spc_ichs = [spc_dct[spc[0]]['ich'] for spc in spc_queue]
+    dct_ichs = [spc_dct[spc]['ich'] for spc in spc_dct.keys()
+                if spc != 'global']
 
     # Determine the function to be used to get the thermochemistry ref species
     if ref_scheme in REF_CALLS:
@@ -44,12 +47,17 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
         basis_dct[spc_name] = (spc_basis, coeff_basis)
 
         # Add to the dct with reference dct if it is not in the spc dct
+        print('basis', spc_basis)
+        print('ichs', spc_ichs)
+        print('dct ichs', dct_ichs)
         cnt = 1
         for ref in spc_basis:
-            if ref not in spc_ichs:
-                msg += 'Adding reference species ref_{} to dct\n'.format(ref)
+            if ref not in spc_ichs and ref not in dct_ichs:
                 ref_name = 'REF_{}'.format(cnt)
+                msg += 'Adding reference species {}, InChI string:{}\n'.format(
+                    ref, ref_name)
                 unique_refs_dct[ref_name] = create_spec(ref)
+                cnt += 1
 
     return basis_dct, unique_refs_dct, msg
 
@@ -62,6 +70,8 @@ def create_spec(ich, charge=0,
     spec = {}
     rad = automol.formula.electron_count(automol.inchi.formula_dct(ich)) % 2
     mult = 1 if not rad else 2
+    print('ich', ich)
+    print(automol.inchi.geometry(ich))
     spec['zmatrix'] = automol.geom.zmatrix(automol.inchi.geometry(ich))
     spec['ich'] = ich
     spec['chg'] = charge
@@ -78,27 +88,57 @@ def is_scheme(scheme):
 
 
 # FUNCTIONS TO CALCULATE ENERGIES FOR THERMOCHEMICAL PARAMETERS #
-def basis_energy(spc_bas, spc_dct,
-                 thy_dct, model_dct, model, save_prefix,
-                 ene_coeff=(1.0)):
+def basis_energy(spc_bas, uni_refs_dct, spc_dct,
+                 thy_dct, model_dct, model, save_prefix):
     """ Return the electronic + zero point energies for a set of species.
     """
-    h_basis = []
+
+    # Initialize ich name dct to noe
+    ich_name_dct = {}
+    for ich in spc_bas:
+        ich_name_dct[ich] = None
+
+    # Get names from the respective spc dcts
     for ich in spc_bas:
         for name in spc_dct:
-            if ich == spc_dct[name]['ich']:
-                h_basis.append(
-                    get_fs_ene_zpe(
-                        spc_dct, name,
-                        thy_dct, model_dct, model,
-                        save_prefix, saddle=False,
-                        ene_coeff=ene_coeff,
-                        read_ene=True, read_zpe=True))
-                break
-    ene_cnt = 0
-    for basis_spc in h_basis:
-        if basis_spc is not None:
-            ene_cnt += 1
-    if ene_cnt != h_basis:
-        print('not all energies found for the basis species')
+            if name != 'global':
+                if ich == spc_dct[name]['ich']:
+                    ich_name_dct[ich] = name
+        for name in uni_refs_dct:
+            if ich == uni_refs_dct[name]['ich']:
+                ich_name_dct[ich] = name
+
+    # Check the ich_name_dct
+    dct_incomplete = False
+    for ich, name in ich_name_dct.items():
+        if name is None:
+            print('{} not given in species.csv file'.format(ich))
+            dct_incomplete = True
+    if dct_incomplete:
+        print('*ERROR Job ending since basis species not specified')
+        sys.exit()
+
+    # Combine the two spc dcts together
+    full_spc_dct = {**spc_dct, **uni_refs_dct}
+
+    # Get the energies
+    h_basis = []
+    for ich, name in ich_name_dct.items():
+        h_basis.append(
+            get_fs_ene_zpe(
+                full_spc_dct, name,
+                thy_dct, model_dct, model,
+                save_prefix, saddle=False,
+                read_ene=True, read_zpe=True))
+
+    # Check if all the energies found
+    no_ene_cnt = 0
+    for basis_ene, basis_name in zip(h_basis, ich_name_dct.values()):
+        if basis_ene is None:
+            print('No energy found for {}'.format(basis_name))
+            no_ene_cnt += 1
+    if no_ene_cnt > 1:
+        print('*ERROR: Not all energies found for the basis species')
+        sys.exit()
+
     return h_basis
