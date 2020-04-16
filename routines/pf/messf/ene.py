@@ -407,10 +407,7 @@ def get_fs_ene_zpe(spc_dct, spc,
     # Read the electronic energy and ZPVE
     thy_low_level = pf_levels[0]
     thy_high_levels = pf_levels[1]
-    # thy_low_level = finf.get_thy_info(model_dct[model]['es']['geo'], thy_dct)
-    # thy_high_levels = finf.get_thy_info(model_dct[model]['es']['ene'], thy_dct)
-    e_elec = None
-    e_zpe = None
+    e_elec, e_zpe = None, None
     if read_ene:
         e_elec = 0.0
         for (coeff, level) in thy_high_levels:
@@ -421,7 +418,6 @@ def get_fs_ene_zpe(spc_dct, spc,
                 save_prefix=save_path,
                 saddle=saddle)
             e_elec += coeff * high_ene
-    # if e_elec is not None:
     if read_zpe:
         e_zpe = get_zero_point_energy(
             spc, spc_dct[spc],

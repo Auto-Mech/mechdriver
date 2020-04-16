@@ -47,6 +47,7 @@ MODEL_PF_DEFAULT_DCT = {
     'tunnel': 'none'
 }
 
+
 # Electronic Structure Tasks
 ES_TSK_OBJ_SUPPORTED_LST = [
     'spc',
