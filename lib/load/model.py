@@ -216,7 +216,7 @@ def set_pf_model_info(pf_model):
     """
     tors_model = pf_model['tors'] if 'tors' in pf_model else 'rigid'
     vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
-    sym_model = pf_model['sym'] if 'sym' in pf_modelelse ''
+    sym_model = pf_model['sym'] if 'sym' in pf_model else ''
 
     pf_models = [tors_model, vib_model, sym_model]
 
