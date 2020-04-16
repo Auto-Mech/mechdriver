@@ -313,7 +313,8 @@ def make_channel_pfs(
     # Set up the inner transition state
 
     # Set label using ts name in dct
-    ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
+    # ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
+    ts_label = idx_dct[tsname]
 
     # Write the appropriate string for the tunneling model
     if tunnel_model == 'none':
@@ -362,12 +363,12 @@ def make_pes_idx_dct(rxn_lst, pes_idx, spc_dct):
     pes_idx_dct = {}
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
-        pes_idx_dct.update(make_channel_idx_dct(tsname, rxn, spc_dct))
+        pes_idx_dct.update(make_channel_idx_dct(tsname, idx+1, rxn, spc_dct))
 
     return pes_idx_dct
 
 
-def make_channel_idx_dct(tsname, rxn, spc_dct):
+def make_channel_idx_dct(tsname, chn_idx, rxn, spc_dct):
     """ Builds a dictionary that matches the mechanism name to the labels used
         in the MESS input and output files
     """
@@ -439,7 +440,8 @@ def make_channel_idx_dct(tsname, rxn, spc_dct):
                 fidx += 1
                 idx_dct[well_dct_key1] = fake_wellr_label
 
-                pst_r_label = 'FRB' + str(int(tsname.replace('ts_', ''))+1)
+                #pst_r_label = 'FRB' + str(int(tsname.replace('ts_', ''))+1)
+                pst_r_label = 'FRB' + str(chn_idx)
                 idx_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
             if not fake_wellr_label:
                 fake_wellr_label = idx_dct[well_dct_key1]
@@ -456,13 +458,16 @@ def make_channel_idx_dct(tsname, rxn, spc_dct):
                 fidx += 1
                 idx_dct[well_dct_key1] = fake_wellp_label
 
-                pst_p_label = 'FPB' + str(int(tsname.replace('ts_', ''))+1)
+                #pst_p_label = 'FPB' + str(int(tsname.replace('ts_', ''))+1)
+                pst_p_label = 'FPB' + str(chn_idx)
                 idx_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
             if not fake_wellp_label:
                 fake_wellp_label = idx_dct[well_dct_key1]
                 pst_p_label = idx_dct[well_dct_key1.replace('F', 'FPB')]
         else:
             fake_wellp_label = idx_dct[well_dct_key1]
+
+    idx_dct[tsname] = 'B' + str(chn_idx)
 
     return idx_dct
 

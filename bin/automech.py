@@ -73,7 +73,7 @@ print('\n\nRunning the requested drivers...')
 if 'es' in RUN_JOBS_LST:
     if RUN_OBJ_DCT['pes']:
         # Call ESDriver for spc in each PES
-        for (_, pes_idx), rxn_lst in RUN_PES_DCT.items():
+        for (_, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
             # Do some extra work to prepare the info to pass to the drivers
             ES_TSK_LST = lrun.build_run_es_tsks_lst(
                 ES_TSK_STR, SPC_MODEL_DCT, THY_DCT)
@@ -131,7 +131,7 @@ WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = lrun.set_ktpdriver_run(RUN_JOBS_LST)
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
     if RUN_OBJ_DCT['pes']:
         # Call kTPDriver for spc in each PES
-        for (pes_formula, pes_idx), rxn_lst in RUN_PES_DCT.items():
+        for (pes_formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
             ktpdriver.run(
                 pes_formula, pes_idx,
                 SPC_DCT,
