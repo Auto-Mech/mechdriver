@@ -176,7 +176,7 @@ def print_pes_channels(pes_dct):
                 ' + '.join(pes_prd_names_lst[chn_idx])))
 
 
-# FUNTIONS FOR THE CHANNELS DICT OBJECTS
+# FUNCTIONS FOR THE CHANNELS DICT OBJECTS
 def determine_connected_pes_channels(pes_dct):
     """ Determine all the connected reaction channels for each PES
         Build a dictionary for each PES with lists of connected channels:
@@ -234,6 +234,9 @@ def determine_connected_pes_channels(pes_dct):
         # Add connected channels list to the dictionary
         conn_chn_dct[formula] = connchnls
 
+        print('formula test:', formula)
+        print('conn_chn_dct:', conn_chn_dct)
+
     return conn_chn_dct
 
 
@@ -264,27 +267,31 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
 
         # Select names from the names list corresponding to chnls to run
         # conn_chnls_dct[formula] = {sub_pes_idx: [channel_idxs]}
-        for cvals in conn_chnls_dct[formula].values():
+        for sub_pes_idx, sub_chnl_idxs in conn_chnls_dct[formula].items():
             rct_names_lst = []
             prd_names_lst = []
             rxn_name_lst = []
             rxn_model_lst = []
             for chn_idx in run_chnls:
-                rct_names_lst.append(pes_rct_names_lst[chn_idx-1])
-                prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
-                rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
-                rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])
-                # print('running channel {}: {} = {}'.format(
-                #     str(chn_idx),
-                #     ' + '.join(pes_rct_names_lst[chn_idx-1]),
-                #     ' + '.join(pes_prd_names_lst[chn_idx-1])))
+                if chn_idx-1 in sub_chnl_idxs:
+                    rct_names_lst.append(pes_rct_names_lst[chn_idx-1])
+                    prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
+                    rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
+                    rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])
+                    # print('running channel {}: {} = {}'.format(
+                    #     str(chn_idx),
+                    #     ' + '.join(pes_rct_names_lst[chn_idx-1]),
+                    #     ' + '.join(pes_prd_names_lst[chn_idx-1])))
 
             # Form the reaction list
             rxn_lst = format_run_rxn_lst(
                 rct_names_lst, prd_names_lst, rxn_model_lst)
 
         # Add the rxn lst to the pes dictionary
-        run_pes_dct[(formula, pes_idx)] = rxn_lst
+            run_pes_dct[(formula, pes_idx, sub_pes_idx+1)] = rxn_lst
+            print('rct_names_lst test:', rct_names_lst)
+
+        print('run_pes_dct test:', run_pes_dct)
 
     return run_pes_dct
 

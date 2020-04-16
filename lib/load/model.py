@@ -142,12 +142,14 @@ def build_spc_model_keyword_dct(model_str):
     opts_dct = ptt.build_keyword_dct(opts_str)
     if vrctst_str is not None:
         vrctst_dct = ptt.build_keyword_dct(vrctst_str)
+    else:
+        vrctst_dct = {}
 
     # Combine dcts into single model dct
     model_dct = {}
     model_dct['pf'] = pf_dct
     model_dct['es'] = es_dct
-    model_dct['vrctst'] = vrctst_dct if vrctst_dct is not None else {}
+    model_dct['vrctst'] = vrctst_dct
     model_dct['options'] = opts_dct
 
     # Check the dct
