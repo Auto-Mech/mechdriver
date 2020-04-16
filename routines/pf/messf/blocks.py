@@ -132,7 +132,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                     frz_tors=frz_tors)
                 sym_nums = tors.get_tors_sym_nums(
                     spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                    frm_bnd_key, brk_bnd_key, saddle=False)
+                    frm_bnd_key, brk_bnd_key, saddle=saddle)
+                    # frm_bnd_key, brk_bnd_key, saddle=False)
                 symf = sym_factor
                 for num in sym_nums:
                     symf /= num
@@ -154,7 +155,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                     saddle=False)
                 sym_nums = tors.get_tors_sym_nums(
                     spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                    frm_bnd_key, brk_bnd_key, saddle=False)
+                    frm_bnd_key, brk_bnd_key, saddle=saddle)
+                    #frm_bnd_key, brk_bnd_key, saddle=False)
                 symf = sym_factor
                 for num in sym_nums:
                     symf /= num
@@ -177,7 +179,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                     sym_factor, elec_levels,
                     tau_dat_file_name,
                     hind_rot_geo=False,
-                    saddle=False)
+                    saddle=saddle)
+                    #saddle=False)
                 print('HARM and TAU combination is not yet implemented')
         elif vib_model == 'tau' and tors_model == 'tau':
             mc_str, tau_dat_str = pfmodels.vib_tau_tors_tau(
@@ -187,7 +190,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                 sym_factor, elec_levels,
                 tors_save_path,  # save_prefix,
                 tau_dat_file_name,
-                saddle=False)
+                saddle=saddle)
+                #saddle=False)
         elif vib_model == 'vpt2' and tors_model == 'rigid':
             geo, freqs, imag, xmat, _ = pfmodels.vib_vpt2_tors_rigid(
                 harm_min_cnf_locs, harm_cnf_save_fs,
@@ -217,6 +221,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             'sct': (sct_dat_str, sct_dat_file_name)
         }
 
+    print('final imag test in block:', imag, no_tors, vib_model, tors_model, spc)
     return spc_str, dat_str_dct, imag
 
 

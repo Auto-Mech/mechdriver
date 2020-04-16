@@ -57,6 +57,10 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
         run_tors_names = spc_dct_i['hind_def']
     else:
         run_tors_names = ()
+    if 'tors_names' in spc_dct_i:
+        run_tors_names = spc_dct_i['tors_names']
+    else:
+        run_tors_names = ()
     if 'hind_inc' in spc_dct_i:
         scan_increment = spc_dct_i['hind_inc']
     else:
@@ -72,6 +76,7 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
         freqs = elstruct.util.harmonic_frequencies(
             harm_geo, hess, project=False)
 
+        print('tors_min_cnf_locs test:', tors_min_cnf_locs)
         if tors_min_cnf_locs is not None:
 
             # Get geometry for the torsional minimum
@@ -85,13 +90,16 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 zma, tors_geo, run_tors_names=run_tors_names,
                 scan_increment=scan_increment, ndim_tors='1dhr',
                 saddle=saddle,
-                frm_bnd_key=(), brk_bnd_key=())
-            # frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+                frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+                # frm_bnd_key=(), brk_bnd_key=())
+
+            print('tors_names test:', tors_names)
 
             # Set torsional stuff
             tors_sym_nums = tors.get_tors_sym_nums(
                 spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                frm_bnd_key, brk_bnd_key, saddle=False)
+                frm_bnd_key, brk_bnd_key, saddle=saddle)
+                #frm_bnd_key, brk_bnd_key, saddle=False)
 
             # Set torsional stuff
             # tors_names = tors.get_tors_names(
@@ -127,7 +135,8 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
             freqs1, imag_freq1, zpe_harm_no_tors = vib.projrot_freqs_1(
                 tors_geo, hess,
                 proj_rotors_str,
-                tors_save_path, pot=True, saddle=False)
+                tors_save_path, pot=True, saddle=saddle)
+                #tors_save_path, pot=True, saddle=False)
 
             # Now run the other version of ProjRot
             pfreqs2 = vib.projrot_freqs_2(
@@ -200,7 +209,8 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
             # Set torsional stuff
             tors_sym_nums = tors.get_tors_sym_nums(
                 spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                frm_bnd_key, brk_bnd_key, saddle=False)
+                frm_bnd_key, brk_bnd_key, saddle=saddle)
+                #frm_bnd_key, brk_bnd_key, saddle=False)
 
             # Set ts bond
             ts_bnd = None
@@ -213,7 +223,8 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 harm_geo, spc_info, 1.0, spc_dct_i, ts_bnd, zma,
                 tors_name_grps, tors_grid_grps, tors_sym_nums,
                 tors_cnf_save_path, min_ene,
-                saddle=False, hind_rot_geo=tors_geo)
+                saddle=saddle, hind_rot_geo=tors_geo)
+                #saddle=False, hind_rot_geo=tors_geo)
 
             # Calculate ZPVES of the hindered rotors
             if saddle:  # and tors_names is not None:
@@ -227,7 +238,8 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
             freqs1, imag_freq1, zpe_harm_no_tors = vib.projrot_freqs_1(
                 tors_geo, hess,
                 proj_rotors_str,
-                tors_save_path, pot=True, saddle=False)
+                tors_save_path, pot=True, saddle=saddle)
+                #tors_save_path, pot=True, saddle=False)
 
             # Now run the other version of ProjRot
             pfreqs2 = vib.projrot_freqs_2(
@@ -285,7 +297,8 @@ def vib_harm_tors_tau(harm_min_cnf_locs, harm_cnf_save_fs,
                 spc_dct_i, zma, tors_names, frm_bnd_key, brk_bnd_key)
             tors_sym_nums = tors.get_tors_sym_nums(
                 spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                frm_bnd_key, brk_bnd_key, saddle=False)
+                frm_bnd_key, brk_bnd_key, saddle=saddle)
+                #frm_bnd_key, brk_bnd_key, saddle=False)
 
             # Set ts bond
             ts_bnd = None
@@ -298,7 +311,8 @@ def vib_harm_tors_tau(harm_min_cnf_locs, harm_cnf_save_fs,
                 harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
                 tors_names, tors_grids, tors_sym_nums,
                 tors_cnf_save_path, min_ene,
-                saddle=False, hind_rot_geo=tors_geo)
+                saddle=saddle, hind_rot_geo=tors_geo)
+                #saddle=False, hind_rot_geo=tors_geo)
 
             # Calculate ZPVES of the hindered rotors
             if saddle and tors_names is not None:
@@ -312,7 +326,8 @@ def vib_harm_tors_tau(harm_min_cnf_locs, harm_cnf_save_fs,
             freqs1, imag_freq1, zpe_harm_no_tors = vib.projrot_freqs_1(
                 tors_geo, hess,
                 proj_rotors_str,
-                tors_save_path, pot=True, saddle=False)
+                tors_save_path, pot=True, saddle=saddle)
+                #tors_save_path, pot=True, saddle=False)
 
             # Now run the other version of ProjRot
             pfreqs2 = vib.projrot_freqs_2(

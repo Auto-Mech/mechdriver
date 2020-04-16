@@ -128,6 +128,7 @@ def make_all_species_data(rxn_lst, pes_idx, spc_dct,
             species[tsname] = ret1
             dat_str_lst.append(ret2)
             spc_dct[tsname]['imag_freq'] = ret3
+            print('ret3 test:', ret3, spc_dct[tsname]['imag_freq'])
     return species, dat_str_lst
 
 
@@ -241,8 +242,11 @@ def make_channel_pfs(
 
     # For abstraction first make fake wells and PST TSs
     zero_energy = ts_ene - first_ground_ene
-    ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
+    # ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
+    ts_label = idx_dct[tsname]
     imag_freq = 0
+    print('imag_freq test 1:', tsname, spc_dct[tsname])
+    print('imag_freq test 2:', spc_dct[tsname]['imag_freq'])
     if 'imag_freq' in spc_dct[tsname]:
         imag_freq = abs(spc_dct[tsname]['imag_freq'])
     if not imag_freq:

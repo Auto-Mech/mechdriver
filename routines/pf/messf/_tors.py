@@ -319,6 +319,7 @@ def hrpot_spline_fitter(pot, thresh=-0.05):
 
     # Build a potential list from only successful calculations
     lpot = len(pot)+1
+    #lpot = len(pot)
     idx_success = []
     pot_success = []
     pot.append(0.)
@@ -327,8 +328,8 @@ def hrpot_spline_fitter(pot, thresh=-0.05):
         if pot[idx] < 600.:
             idx_success.append(idx)
             pot_success.append(pot[idx])
-    idx_success.append(lpot)
-    pot_success.append(pot[0])
+    #idx_success.append(lpot)
+    #pot_success.append(pot[0])
     print('idx_success test', idx_success)
     print('pot_success test', pot_success)
     pot_spl = interp1d(
@@ -539,7 +540,9 @@ def get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=False):
     """ get the tors names
     """
     if saddle:
+        print('spc_dct_i_tors_names test', spc_dct_i['tors_names'])
         tors_names = spc_dct_i['tors_names']
+        print('tors_names test', tors_names)
     else:
         if tors_cnf_save_fs[0].file.info.exists():
             inf_obj_s = tors_cnf_save_fs[0].file.info.read()
