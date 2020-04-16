@@ -68,7 +68,8 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
         # Write the MESS and ProjRot strings for the rotor
         hrgeo = harm_geo if hind_rot_geo else None
         hind_rot_str += mess_io.writer.rotor_hindered(
-            group, axis, tors_sym, pot, remdummy=remdummy, geom=hrgeo)
+            group, axis, tors_sym, pot,
+            remdummy=remdummy, geom=hrgeo, use_quantum_weight=True)
         proj_rotors_str += projrot_io.writer.rotors(
             axis, group, remdummy=remdummy)
 

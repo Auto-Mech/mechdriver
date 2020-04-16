@@ -287,7 +287,7 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
             rxn_lst = format_run_rxn_lst(
                 rct_names_lst, prd_names_lst, rxn_model_lst)
 
-        # Add the rxn lst to the pes dictionary
+            # Add the rxn lst to the pes dictionary
             run_pes_dct[(formula, pes_idx, sub_pes_idx+1)] = rxn_lst
             print('rct_names_lst test:', rct_names_lst)
 

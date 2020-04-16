@@ -3,10 +3,13 @@
 """
 
 import os
+import sys
 import subprocess
 import shutil
+import numpy
 import automol
 import autofile
+import mess_io
 import thermp_io
 from lib.runner import script
 from lib.filesystem import orb as fsorb
@@ -23,18 +26,37 @@ def run_pf(pf_path, pf_script_str=script.MESSPF):
     script.run_script(pf_script_str, pf_path)
 
 
+def read_messpf_temps(pf_path):
+    """ Obtain the temperatures from the MESSPF file 
+    """
+
+    # Read MESSPF file
+    messpf_file = os.path.join(pf_path, 'pf.dat')
+    with open(messpf_file, 'r') as pffile:
+        output_string = pffile.read()
+
+    # Obtain the temperatures
+    temps, _, _, _ = mess_io.reader.pfs.partition_fxn(output_string)
+
+    return temps
+
+
 # THERMP
-def write_thermp_inp(spc_dct_i, thermp_file_name='thermp.dat'):
+def write_thermp_inp(spc_dct_i, temps, thermp_file_name='thermp.dat'):
     """ write the thermp input file
     """
     ich = spc_dct_i['ich']
     h0form = spc_dct_i['Hfs'][0]
     formula = automol.inchi.formula(ich)
 
+    # Get the number of temps without the 298.2 K temp in the pf.dat file
+    ntemps = len([temp for temp in temps if not numpy.isclose(temp, 298.2)])
+
     # Write thermp input file
     enthalpyt = 0.
     breakt = 1000.
     thermp_str = thermp_io.writer.thermp_input(
+        ntemps=ntemps,
         formula=formula,
         delta_h=h0form,
         enthalpy_temp=enthalpyt,
@@ -101,13 +123,23 @@ def run_pac(spc_dct_i, nasa_path):
     assert os.path.exists(newgroups_file)
 
     # Run pac99
-    print(formula)
+    print('formula', formula)
     proc = subprocess.Popen('pac99', stdin=subprocess.PIPE)
     proc.communicate(bytes(formula, 'utf-8'))
 
-    # Read the pac99 polynomial
-    with open(os.path.join(nasa_path, formula+'.c97'), 'r') as pac99_file:
-        pac99_str = pac99_file.read()
+    # Check to see if pac99 does not have error message
+    with open(os.path.join(nasa_path, formula+'.o97'), 'r') as pac99_file:
+        pac99_out_str = pac99_file.read()
+    if 'INSUFFICIENT DATA' in pac99_out_str:
+        print('*ERROR: PAC99 fit failed, maybe increase temperature ranges?')
+        sys.exit()
+    else:
+        # Read the pac99 polynomial
+        with open(os.path.join(nasa_path, formula+'.c97'), 'r') as pac99_file:
+            pac99_str = pac99_file.read()
+        if not pac99_str:
+            print('No polynomial produced from PAC99 fits, check for errors')
+            sys.exit()
 
     return pac99_str
 

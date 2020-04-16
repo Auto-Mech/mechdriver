@@ -4,6 +4,7 @@
 """
 
 import os
+import numpy
 import routines
 import autofile
 from routines.pf import thermo
@@ -201,10 +202,18 @@ def run(spc_dct,
             harm_thy_info = pf_levels[2]
             pf_path, nasa_path = thmrunner.get_thermo_paths(
                 spc_save_path, spc_info, harm_thy_info)
-            thmrunner.go_to_path(nasa_path)
+            
+            # Read the temperatures from the pf.dat file, check if viable
+            temps = thmrunner.read_messpf_temps(pf_path)
+            print('Attempting to fit NASA polynomials from',
+                    '200-1000 and 1000-3000 K ranges using\n',
+                    'Temps from MESSPF file = {}.'.format(
+                        (temp for temp in temps
+                         if not numpy.isclose(temp, 298.2)))
 
             # Write and run the thermp file to get Hf0k and ...
-            thmrunner.write_thermp_inp(spc_dct[spc_name])
+            thmrunner.go_to_path(nasa_path)
+            thmrunner.write_thermp_inp(spc_dct[spc_name], temps)
             # not getting spc str, so this isnt working, fix this
             # if spc_dct[spc]['ene'] == 0.0 or spc_dct[spc]['spc_str'] == '':
             #     print('Cannot generate thermo for species',

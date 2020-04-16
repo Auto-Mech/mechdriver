@@ -115,6 +115,7 @@ def build_pes_model_keyword_dct(model_str):
     model_dct['punit'] = punit
     model_dct['fit_method'] = fitm
     model_dct['dbl_arrfit_thresh'] = ethr
+    # model_dct['nasa_temp_ranges'] = [200, 1000, 3000]
 
     # Check the dct
 
@@ -213,9 +214,9 @@ def set_default_pf(dct):
 def set_pf_model_info(pf_model):
     """ Set the PF model list based on the input
     """
-    tors_model = pf_model['tors'] if pf_model['tors'] else 'RIGID'
-    vib_model = pf_model['vib'] if pf_model['vib'] else 'HARM'
-    sym_model = pf_model['sym'] if pf_model['sym'] else ''
+    tors_model = pf_model['tors'] if 'tors' in pf_model else 'rigid'
+    vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
+    sym_model = pf_model['sym'] if 'sym' in pf_modelelse ''
 
     pf_models = [tors_model, vib_model, sym_model]
 
@@ -226,15 +227,15 @@ def set_es_model_info(es_model, thy_dct):
     """ Set the model info
     """
     # Read the ES models from the model dictionary
-    geo_lvl = es_model['geo'] if es_model['geo'] else None
-    ene_lvl = es_model['ene'] if es_model['ene'] else None
-    harm_lvl = es_model['harm'] if es_model['harm'] else None
-    vpt2_lvl = es_model['vpt2'] if es_model['vpt2'] else None
-    sym_lvl = es_model['sym'] if es_model['sym'] else None
+    geo_lvl = es_model['geo'] if 'geo' in es_model else None
+    ene_lvl = es_model['ene'] if 'ene' in es_model else None
+    harm_lvl = es_model['harm'] if 'harm' in es_model else None
+    vpt2_lvl = es_model['vpt2'] if 'vpt2' in es_model else None
+    sym_lvl = es_model['sym'] if 'sym' in es_model else None
 
     # Torsional Scan which needs a reference for itself
-    tors_lvl_sp = es_model['tors'][0] if es_model['tors'] else None
-    tors_lvl_scn = es_model['tors'][1] if es_model['tors'] else None
+    tors_lvl_sp = es_model['tors'][0] if 'tors' in es_model else None
+    tors_lvl_scn = es_model['tors'][1] if 'tors' in es_model else None
 
     # Set the theory info objects
     geo_thy_info = finf.get_thy_info(geo_lvl, thy_dct)
