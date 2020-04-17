@@ -88,8 +88,6 @@ def run(pes_formula, pes_idx,
         # Combine strings together
         mess_inp_str = '\n'.join(
             [header_str, energy_trans_str, well_str, bim_str, ts_str])
-        print('mess str')
-        print(mess_inp_str)
 
         # Build the filesystem
         if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):

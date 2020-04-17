@@ -60,7 +60,6 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
             group, axis, pot = check_saddle_groups(
                 zma, spc_dct_i, group, axis,
                 pot, ts_bnd, tors_sym)
-        print('pot3', pot)
         group = list(numpy.add(group, 1))
         axis = list(numpy.add(axis, 1))
         if (atm_key+1) != axis[1]:
