@@ -193,14 +193,16 @@ def modify_spc_dct(job_path, spc_dct):
 
     # Final loop to add in things that are needed but could be missing
     for spc in mod_spc_dct:
-        if 'elec_levs' not in mod_spc_dct[spc]:
-            if (ich, mul) in eleclvl.DCT:
-                mod_spc_dct[spc]['elec_levs'] = eleclvl.DCT[(ich, mul)]
-            else:
-                mod_spc_dct[spc]['elec_levs'] = [[0.0, mul]]
-        if 'sym' not in mod_spc_dct[spc]:
-            if (ich, mul) in symm.DCT:
-                mod_spc_dct[spc]['sym'] = symm.DCT[(ich, mul)]
+        if spc != 'global':
+            ich, mul = mod_spc_dct[spc]['ich'], mod_spc_dct[spc]['mul']
+            if 'elec_levs' not in mod_spc_dct[spc]:
+                if (ich, mul) in eleclvl.DCT:
+                    mod_spc_dct[spc]['elec_levs'] = eleclvl.DCT[(ich, mul)]
+                else:
+                    mod_spc_dct[spc]['elec_levs'] = [[0.0, mul]]
+            if 'sym' not in mod_spc_dct[spc]:
+                if (ich, mul) in symm.DCT:
+                    mod_spc_dct[spc]['sym'] = symm.DCT[(ich, mul)]
 
         # Add defaults here for now
         if 'hind_inc' not in mod_spc_dct[spc]:
@@ -214,6 +216,8 @@ def modify_spc_dct(job_path, spc_dct):
 
         # Perform conversions as needed
         mod_spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
+        # if 'ts' in spc:
+        #     print(mod_spc_dct[spc]['hind_inc'])
 
         # Add geoms from geo dct (prob switch to amech file)
         if ich in geom_dct:
@@ -364,6 +368,14 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
 def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
     """ Create a new dictionary that combines init spc_dct and sadpt dct
     """
+    print('spc dct')
+    for key in spc_dct:
+        if 'ts' in key:
+            print(spc_dct[key])
+    print('sadpt dct')
+    for key in sadpt_dct:
+        if 'ts' in key:
+            print(sadpt_dct[key])
 
     combined_dct = {}
 
@@ -380,9 +392,13 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
         if 'global' in spc_dct:
             for key, val in spc_dct['global'].items():
                 combined_dct[sadpt][key] = val
+            print('global')
+            print(spc_dct['global']['hind_inc'])
+            print(combined_dct['global']['hind_inc'])
 
         # Update any sadpt keywords if they are in the spc_dct from .dat file
         if sadpt in spc_dct:
+            print('BOOOOOOOOOO')
             combined_dct[sadpt].update(spc_dct[sadpt])
 
         # Put in stuff from the sadpt_dct build
@@ -402,6 +418,9 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
                 8.0, 9.0, 10.0]
         if 'pst_params' not in combined_dct[sadpt]:
             combined_dct[sadpt]['pst_params'] = [1.0, 6]
+
+        # Perform conversions as needed
+        # combined_dct[spc]['hind_inc'] *= phycon.DEG2RAD
    
     return combined_dct
     
