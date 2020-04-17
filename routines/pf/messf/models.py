@@ -120,7 +120,6 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 tors_names, tors_grids, tors_sym_nums,
                 tors_cnf_save_path, min_ene,
                 saddle=saddle, hind_rot_geo=tors_geo, frz_tors=frz_tors)
-            print('hr_str', hind_rot_str)
 
             # Calculate ZPVES of the hindered rotors
             if saddle and tors_names is not None:
