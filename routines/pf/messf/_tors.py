@@ -34,8 +34,6 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
     hind_rot_str = ""
     proj_rotors_str = ""
     tors_info = zip(tors_names, tors_grids, tors_sym_nums)
-    print('tors_names_intors', tors_names)
-    print('tors_grids_intors', tors_grids)
     for tors_name_lst, tors_grid_lst, tors_sym in tors_info:
 
         # Grab zero elment because of formatting
@@ -48,19 +46,18 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
             tors_cnf_save_path, min_ene,
             saddle=saddle, read_freqs=False,
             frz_tors=frz_tors, constraint_dct=constraint_dct)
-        print('pot1', pot)
 
         # Build potential lst from only successful calculations
         pot = hrpot_spline_fitter(pot)
-        print('pot2', pot)
         # Get the HR groups and axis for the rotor
         group, axis, atm_key = set_groups_ini(
             zma, tors_name, ts_bnd, saddle)
         if saddle:
-            group, axis, pot = check_saddle_groups(
+            group, axis, pot, sym_num = check_saddle_groups(
                 zma, spc_dct_i, group, axis,
                 pot, ts_bnd, tors_sym)
-        print('pot3', pot)
+        else:
+            sym_num = tors_sym
         group = list(numpy.add(group, 1))
         axis = list(numpy.add(axis, 1))
         if (atm_key+1) != axis[1]:
@@ -72,7 +69,7 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
         # Write the MESS and ProjRot strings for the rotor
         hrgeo = harm_geo if hind_rot_geo else None
         hind_rot_str += mess_io.writer.rotor_hindered(
-            group, axis, tors_sym, pot,
+            group, axis, sym_num, pot,
             remdummy=remdummy, geom=hrgeo, use_quantum_weight=True)
         proj_rotors_str += projrot_io.writer.rotors(
             axis, group, remdummy=remdummy)
@@ -119,9 +116,11 @@ def write_mdhr_tors_mess_strings(geom, spc_info, sym_num, spc_dct_i,
             group, axis, atm_key = set_groups_ini(
                 zma, tors_name, ts_bnd, saddle)
             if saddle:
-                group, axis, pot = check_saddle_groups(
+                group, axis, pot, sym_num = check_saddle_groups(
                     zma, spc_dct_i, group, axis,
                     pot, ts_bnd, tors_sym_nums[tors_idx])
+            else:
+                sym_num = tors_sym
             group = list(numpy.add(group, 1))
             axis = list(numpy.add(axis, 1))
             if (atm_key+1) != axis[1]:
@@ -459,7 +458,7 @@ def check_saddle_groups(zma, spc_dct_i, group, axis,
             potp[0:lpot] = pot[0:lpot]
             pot = potp
 
-    return group, axis, pot
+    return group, axis, pot, sym_num
 
 
 def check_dummy_trans(zma):

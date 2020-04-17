@@ -40,7 +40,6 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
     # Get the tors names if thery have not already been supplied
     val_dct = automol.zmatrix.values(zma)
     if not run_tors_names:
-        print('no prep')
         if not saddle:
             run_tors_names = [
                 [name]
@@ -58,13 +57,9 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
     # Build the grids corresponding to the torsions
     run_tors_grids = []
     for tors_names in run_tors_names:
-        print('name', tors_names)
-        print('inc', scan_increment)
-        print('keys', frm_bnd_key, brk_bnd_key)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,
             brk_bnd_key=brk_bnd_key)
-        print('linspace', tors_linspaces)
         run_tors_grids.append(
             [numpy.linspace(*linspace) + val_dct[name]
              for name, linspace in zip(tors_names, tors_linspaces)]

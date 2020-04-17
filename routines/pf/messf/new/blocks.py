@@ -86,6 +86,13 @@ def fake_species_block(
     return spc_str
 
 
+def tau_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
+    """ write  MESS string when using the Tau MonteCarlo
+    """
+
+    return tau_str
+
+
 def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
               spc_save_fs, pst_params=(1.0, 6)):
     """ prepare a Phase Space Theory species block
