@@ -309,6 +309,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                         # other than the bonding atom
                         if 'add' in rxn_class or 'abst' in rxn_class:
                             print('it is an addition or an abstraction:')
+                            print('ts_bnd2 test:', ts_bnd2, zma)
                             cls = is_atom_closest_to_bond_atom(
                                 zma, ts_bnd2, conf_dist_len)
                             if not cls:
@@ -316,7 +317,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                                       "diverged from original structure of",
                                       "dist {:.3f} with dist {:.3f}".format(
                                           dist_len, conf_dist_len))
-                                print("Radical atom now new nearest neighbor")
+                                print("Radical atom now has a new nearest neighbor")
                                 continue
                             if abs(conf_dist_len - dist_len) > max_disp:
                                 print(" - Transition State conformer has",
@@ -405,11 +406,15 @@ def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
     """
     geo = automol.zmatrix.geometry(zma)
     atom_closest = True
+    print('idx_rad test:', idx_rad)
+    print('geo test:', geo)
     for idx, _ in enumerate(geo):
         if idx < idx_rad:
             distance = automol.geom.distance(geo, idx, idx_rad)
-            if distance < bond_dist:
+            if distance < bond_dist-0.01:
                 atom_closest = False
+                print('idx test:', idx, distance, bond_dist)
+    print('atom_closest test:', atom_closest)
     return atom_closest
 
 

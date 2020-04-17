@@ -241,7 +241,6 @@ def make_channel_pfs(
             inner_prod_label = chn_label
 
     # For abstraction first make fake wells and PST TSs
-    zero_energy = ts_ene - first_ground_ene
     # ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
     ts_label = idx_dct[tsname]
     imag_freq = 0
@@ -353,6 +352,7 @@ def make_channel_pfs(
             ts_label, inner_reac_label, inner_prod_label, first_ground_ene)
     else:
         # Fixed TST for a saddle point
+        zero_energy = ts_ene - first_ground_ene
         ts_str += '\n' + mess_io.writer.ts_sadpt(
             ts_label, inner_reac_label, inner_prod_label,
             species_data[tsname], zero_energy, tunnel_str)
