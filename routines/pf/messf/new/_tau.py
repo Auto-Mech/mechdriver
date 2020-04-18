@@ -10,37 +10,6 @@ from lib.filesystem import minc as fmin
 from lib.phydat import phycon
 
 
-def proc_tau(tors_min_cnf_locs, tors_cnf_save_fs,
-             spc_dct_i,
-             frm_bnd_key, brk_bnd_key,
-             sym_factor, elec_levels,
-             save_prefix,
-             tau_dat_file_name,
-             freqs=(),
-             saddle=False
-             gradient=False,
-             hessian=False):
-    """ Build the species string for a model: Harm, 1DHR
-    """
-
-    # Write the Monte Carlo Core section
-    monte_carlo_str = tau.write_monte_carlo_mess_strings(
-        tors_min_cnf_locs, tors_cnf_save_fs,
-        spc_dct_i,
-        frm_bnd_key, brk_bnd_key,
-        elec_levels,
-        tau_dat_file_name,
-        freqs=freqs,
-        saddle=saddle)
-
-    # Write the file containing the tau enes, geos, grads, hess
-    spc_formula = automol.inchi.formula(spc_dct_i['ich'])
-    tau_dat_str = tau.write_tau_data_str(
-        spc_formula, save_prefix, gradient=gradient, hessian=hessian)
-
-    return monte_carlo_str, tau_dat_str
-
-
 def write_monte_carlo_mess_strings(tors_min_cnf_locs, tors_cnf_save_fs,
                                    spc_dct_i,
                                    frm_bnd_key, brk_bnd_key,
