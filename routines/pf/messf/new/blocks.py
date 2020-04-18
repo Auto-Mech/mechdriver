@@ -1,6 +1,8 @@
 """ New blocks python
 """
 
+from routines.pf.messf import _models as models
+
 
 # SINGLE SPECIES BLOCKS
 def species_block(spc, spc_dct_i, spc_info, spc_model,
@@ -9,8 +11,9 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
     """
 
     # Build a dct combinining various information from the filesys and MESS
-    inf_dct = read_species_filesys(spc, spc_dct_i, spc_info, spc_model,
-                                   pf_levels, save_prefix)
+    inf_dct = models.read_filesys_for_spc(
+        spc, spc_dct, spc_info, spc_model,
+        pf_levels, save_prefix)
 
     # Write the MESS string for the molecule
     if tors_model == 'tau':
@@ -46,10 +49,12 @@ def fake_species_block(
     """
 
     # Build a dct combinining various information from the filesys and MESS
-    inf_dct_i = read_species_filesys(spc, spc_dct_i, spc_info_i, spc_model,
-                                     pf_levels, save_prefix)
-    inf_dct_j = read_species_filesys(spc, spc_dct_j, spc_info_j, spc_model,
-                                     pf_levels, save_prefix)
+    inf_dct_i = models.read_filesys_for_spc(
+        spc, spc_dct_i, spc_info_i, spc_model,
+        pf_levels, save_prefix)
+    inf_dct_j = models.read_filesys_for_spc(
+        spc, spc_dct_j, spc_info_j, spc_model,
+        pf_levels, save_prefix)
 
     # Combine the electronic structure information for the two species together
     geom = fake.combine_geos_in_fake_well(
@@ -86,23 +91,18 @@ def fake_species_block(
     return spc_str
 
 
-def tau_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
-    """ write  MESS string when using the Tau MonteCarlo
-    """
-
-    return tau_str
-
-
 def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
               spc_save_fs, pst_params=(1.0, 6)):
     """ prepare a Phase Space Theory species block
     """
 
     # Build a dct combinining various information from the filesys and MESS
-    inf_dct_i = read_species_filesys(spc, spc_dct_i, spc_info_i, spc_model,
-                                     pf_levels, save_prefix)
-    inf_dct_j = read_species_filesys(spc, spc_dct_j, spc_info_j, spc_model,
-                                     pf_levels, save_prefix)
+    inf_dct_i = models.read_filesys_for_spc(
+        spc, spc_dct_i, spc_info_i, spc_model,
+        pf_levels, save_prefix)
+    inf_dct_j = models.read_filesys_for_spc(
+        spc, spc_dct_j, spc_info_j, spc_model,
+        pf_levels, save_prefix)
 
     # Combine the electronic structure information for the two species together
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
@@ -138,6 +138,40 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     )
 
     return spc_str
+
+
+def tau_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
+    """ write  MESS string when using the Tau MonteCarlo
+    """
+    
+    # Build a dct combinining various information from the filesys and MESS
+    inf_dct = models.read_filesys_for_tau(
+        spc, spc_dct_i, spc_info_i, spc_model,
+        pf_levels, save_prefix)
+
+    # Write the data string
+    dat_str = mess_io.writer.monte_carlo.mc_data(
+        geos=inf_dct['samp_geoms'],
+        enes=inf_dct['samp_enes'],
+        grads=inf_dct['samp_grads'],
+        hessians=inf_dct['samp_hessians']:
+
+    # Write the core string (seperate energies?)
+    ground_ene = -0.02
+    reference_ene = 0.00
+    spc_str = mess_io.writer.monte_carlo.mc_species(
+        geom=tors_geo,
+        elec_levels=elec_levels,
+        flux_mode_str=flux_mode_str,
+        tau_dat_file_name=tau_dat_file_name,
+        ground_energy=ground_ene,
+        reference_energy=reference_ene,
+        freqs=freqs,
+        no_qc_corr=True,
+        use_cm_shift=True)
+
+    return spc_str, dat_str
+
 
 
 # TS BLOCKS FOR VARIATIONAL TREATMENTS
@@ -211,6 +245,9 @@ def rpath_vtst_nosadpt_block(ts_dct, ts_label, reac_label, prod_label,
     # Read the infinite separation energy
     inf_locs = [[dist_name], [1000.]]
     inf_sep_ene = scn_save_fs[-1].file.energy.read(inf_locs)
+    
+    # Build dct of vtst info
+    inf_dct = models.read_filesys_for_rpvtst()
 
     # Write the string
     variational_str = _write_mess_variational_str()
@@ -235,6 +272,9 @@ def rpath_vtst_wsadpt_block(ts_dct, ene_thy_level, geo_thy_level,
 
     # Set the distance name for the reaction coordinate
     dist_name = 'RC'
+
+    # Build dct of vtst info
+    inf_dct = models.read_filesys_for_rpvtst()
 
     # Write the string
     variational_str = _write_mess_variational_str()

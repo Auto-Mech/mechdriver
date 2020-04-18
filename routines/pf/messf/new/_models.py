@@ -12,59 +12,22 @@ from routines.pf.messf import _tau as tau
 from lib.phydat import phycon
 
 
-def read_file_sys_info():
+def read_filesys_for_spc(spc_dct, spc_info, spc_model,
+                         pf_levels, save_prefix, saddle=False):
     """ Pull all of the neccessary information from the filesystem for a species
     """
 
     # Unpack the models and levels
-    [_, _, harm_level, vpt2_level, sym_level, tors_level] = pf_levels
     tors_model, vib_model, sym_model = spc_model
 
-    # Lazy set for tors mod
-    if tors_model == '1dhrf':
-        tors_mod = ('1dhr', False)
-
-    # Set theory filesystem used throughout
-    thy_save_fs = autofile.fs.theory(save_prefix)
-
-    # Set boolean to account for rad-rad reaction (not supported by vtst)
-    rad_rad_ts = False
-    if 'ts_' in spc:
-        if spc_dct_i['rad_rad']:
-            rad_rad_ts = True
-
-    # Set the filesystem objects for various species models
-    harmfs = set_model_filesys(
-        thy_save_fs, spc_info, harm_level, saddle=('ts_' in spc))
-    [harm_cnf_save_fs, _,
-     harm_min_cnf_locs, harm_save_path] = harmfs
-    if sym_level:
-        symfs = set_model_filesys(
-            thy_save_fs, spc_info, sym_level, saddle=('ts_' in spc))
-        [sym_cnf_save_fs, _,
-         sym_min_cnf_locs, _] = symfs
-    if tors_level and not rad_rad_ts:
-        torsfs = set_model_filesys(
-            thy_save_fs, spc_info, tors_level[0], saddle=('ts_' in spc))
-        [tors_cnf_save_fs, tors_cnf_save_path,
-         tors_min_cnf_locs, tors_save_path] = torsfs
-    if vpt2_level:
-        vpt2fs = set_model_filesys(
-            thy_save_fs, spc_info, vpt2_level, saddle=('ts_' in spc))
-        [vpt2_cnf_save_fs, vpt2_cnf_save_path,
-         vpt2_min_cnf_locs, vpt2_save_path] = vpt2fs
-
-    # Check if any torsions to set the model
+    # Set filesys
+    cnf_save_fs, cnf_save_path, cnf_save_locs, thy_save_path = _cnf_filesys(
+        spc_dct, pf_levels, level='harm')
 
     # Build the species string and get the imaginary frequency
     # Initialize various auxiliary MESS data strings and names
-    dat_str_dct = {}
-    tau_dat_str = ''
     mdhr_dat_str = ''
-    sct_dat_str = ''
-    tau_dat_file_name = '{}_tau.dat'.format(spc[0])
     mdhr_dat_file_name = '{}_mdhr.dat'.format(spc[0])
-    sct_dat_file_name = '{}_sct.dat'.format(spc[0])
     # Initialize various variables and strings
     symf = sym_factor
     imag = 0.0
@@ -115,37 +78,11 @@ def read_file_sys_info():
         else:
             xmat = ()
 
-        # Set Tau if needed
-        if need_tau:
-            # Determine if hessians and grasdients are needed
-            tau_freqs = () if vib_tau else freqs
-            tau_gradient = vib_tau
-            tau_hessian = vib_tau
-            monte_carlo_str, tau_dat_str = tau.proc_tau(
-                tors_min_cnf_locs, tors_cnf_save_fs,
-                spc_dct_i,
-                frm_bnd_key, brk_bnd_key,
-                sym_factor, elec_levels,
-                save_prefix,
-                tau_dat_file_name,
-                freqs=tau_freqs,
-                saddle=False,
-                gradient=tau_gradient,
-                hessian=tau_hessian)
-        else:
-            monte_carlo_str, tau_dat_str = '', ''
-
-        # Combine various data strings into a dct
-        dat_str_dct = {
-            'tau': (tau_dat_str, tau_dat_file_name),
-            'mdhr': (mdhr_dat_str, mdhr_dat_file_name),
-        }
-
     return spc_str, dat_str_dct, imag
 
 
 # VTST
-def vtst_read_file_sys_info():
+def read_filesys_for_rpvtst():
     """ Pull all of the neccessary information from the filesystem for a species
     """
     for idx in irc_idxs:
@@ -190,6 +127,79 @@ def vtst_read_file_sys_info():
             print('no hessian')
             continue
 
+# TAU
+def read_filesys_for_tau():
+    """ Read the filesystem to get information for TAU
+    """
+
+    # Read the filesystem for data string
+    cnf_save_fs = autofile.fs.conformer(save_prefix)
+    min_cnf_locs = fmin.min_energy_conformer_locators(cnf_save_fs)
+    if min_cnf_locs:
+        ene_ref = cnf_save_fs[-1].file.energy.read(min_cnf_locs)
+    tau_save_fs = autofile.fs.tau(save_prefix)
+
+    # Read the geom, ene, grad, and hessian for each sample
+    samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
+    for locs in tau_save_fs[-1].existing():
+
+        geo = tau_save_fs[-1].file.geometry.read(locs)
+        geo_str = autofile.file.write.geometry(geo)
+        samp_geoms.append(geo_str)
+
+        ene = tau_save_fs[-1].file.energy.read(locs)
+        ene = (ene - ene_ref) * phycon.EH2KCAL
+        ene_str = autofile.file.write.energy(ene)
+        samp_enes.append(ene_str)
+
+        if read_gradient:
+            grad = tau_save_fs[-1].file.gradient.read(locs)
+            grad_str = autofile.file.write.gradient(grad)
+            samp_grads.append(grad_str)
+
+        if read_hessian:
+            hess = tau_save_fs[-1].file.hessian.read(locs)
+            hess_str = autofile.file.write.hessian(hess)
+            samp_hessians.append(hess_str)
+
+    # Add the values to the dictionary
+    inf_dct['samp_geoms'] = samp_geoms
+    inf_dct['samp_enes'] = samp_enes         
+    inf_dct['samp_grads'] = samp_grads       
+    inf_dct['samp_hessians'] = samp_hessians          
+              
+    return inf_dct
+
+
+# Filesystem object setters
+def _cnf_filesys(spc_dct, pf_levels, level='harm'):
+    """ """
+    if level == 'harm':
+        thy_info = pf_levels[2]
+    elif level == 'vpt2':
+        thy_info = pf_levels[2]
+
+    # Set the filesystem objects
+    spc_info = (spc_dct['ich'], spc_dct['chg'], spc_dct['mul'])
+    mod_thy_info = fsorb.mod_orb_restrict(spc_info, thy_info)
+    if not saddle:
+        _, thy_save_path = fbuild.spc_thy_fs_from_root(
+            save_prefix, spc_info, mod_thy_info)
+    else:
+        rxn_info = finf.rxn_info(
+            spc['reacs'], spc['prods'], spc_dct)
+        _, thy_save_path = fbuild.rxn_thy_fs_from_root(
+            save_prefix, rxn_info, mod_thy_info)
+        _, thy_save_path = fbuild.ts_fs_from_thy(thy_save_path)
+
+    # Get the cnf filesys needed everything based off geo+freq (also vpt2)
+    cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_prefix(
+        thy_save_path, cnf='min')
+    cnf_save_paths = fbuild.cnf_paths_from_locs(
+        cnf_save_fs, cnf_save_locs)
+
+    return cnf_save_fs, cnf_save_paths[0], cnf_save_locs, thy_save_path
+
 
 # Series of checks to determine what information is needed to be obtained
 def nonrigid_rotations(rot_model):
@@ -204,8 +214,9 @@ def nonrigid_tors(vib_model, tors_model, tors_names):
         information is needed from the filesystem
     """
     has_tors = bool(tors_names)
-    tors_hr_model = bool(tors_model in ('1dhr', 'mdhr', 'mdhrv'))
+    tors_hr_model = bool(tors_model in ('1dhr', '1dhrf', 'mdhr', 'mdhrv'))
     tau_hr_model = bool(tors_model == 'tau' and vib_model != 'vib')
+    # diatomic model
     return has_tors and (tors_hr_model or tau_hr_model)
 
 
@@ -225,4 +236,3 @@ def vib_tau(vib_model):
     """ determine if vibrations are treated via tau sampling
     """
     return bool(vib_model == 'tau')
-
