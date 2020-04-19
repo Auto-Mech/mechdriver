@@ -40,13 +40,17 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
     return spc_str
 
 
-def fake_species_block(
-        spc_dct_i, spc_dct_j, spc_info_i, spc_info_j,
-        spc_model, pf_levels,
-        save_prefix_i, save_prefix_j):
+def fake_species_block(spc_dct_i, spc_dct_j, spc_model, pf_levels):
     """ prepare a fake species block corresponding to the
         van der Waals well between two fragments
     """
+    # From rates file
+    spc_info_i = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
+    spc_info_j = (spc_dct_j['ich'], spc_dct_j['chg'], spc_dct_j['mul'])
+    spc_save_fs[-1].create(spc_info_i)
+    spc_save_fs[-1].create(spc_info_j)
+    save_path_i = spc_save_fs[-1].path(spc_info_i)
+    save_path_j = spc_save_fs[-1].path(spc_info_j)
 
     # Build a dct combinining various information from the filesys and MESS
     inf_dct_i = models.read_filesys_for_spc(
@@ -92,7 +96,7 @@ def fake_species_block(
 
 
 def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
-              spc_save_fs, pst_params=(1.0, 6)):
+              save_prefix, pst_params=(1.0, 6)):
     """ prepare a Phase Space Theory species block
     """
 
