@@ -204,68 +204,91 @@ def _make_spc_mess_str(spc_dct, spc_save_fs, spc_model, pf_levels):
     return species_data
 
 
-def _make_ts_mess_str(spc_dct, spc_save_fs, spc_model, pf_levels,
+def _make_ts_mess_str(spc_dct, tsname, ts_class, save_prefix,
+                      model_dct, chn_model, spc_model, pf_levels,
                       first_ground_ene, reac_ene, prod_ene, ts_ene,
-                      ts_label, inner_reac_label, inner_prod_label):
+                      ts_label, inner_reac_label, inner_prod_label,
+                      pst_params=(1.0, 6)):
     """ makes the main part of the MESS species block for a given species
     """
+
+    # Set the models for how we are treating the transition state
     ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
     ts_barrierless = model_dct[chn_model]['pf']['ts_barrierless']
     tunnel_model = model_dct[chn_model]['pf']['tunnel']
-    if not var_rad_rad:
-        if ts_sadpt == 'vtst':
-            species_data = blocks.vtst_saddle_block(
+
+    # Unpack models
+    tors_model, vib_model, sym_model = spc_model
+
+    # Initialize empty data string
+    flux_str, mdhr_str, sct_str = '', '', ''
+
+    # Get all of the information for the filesystem
+    if not _var_radrad(ts_class):
+        # Build MESS string for TS at a saddle point
+        if ts_sadpt == 'pst':
+            spc_dct_i = spc_dct[rxn['reacs'][0]]
+            spc_dct_j = spc_dct[rxn['reacs'][1]]
+            spc_str = blocks.pst_block(
+                spc_dct_i, spc_dct_j, spc_model=spc_model,
+                pf_levels=pf_levels,
+                save_prefix=save_prefix,
+                pst_params=pst_params)
+        elif ts_sadpt == 'vtst':
+            rpath_str_lst = blocks.vtst_saddle_block(
                 spc_dct[tsname], pf_levels,
                 ts_label, inner_reac_label, inner_prod_label, first_ground_ene)
         else:
-            if vib_model == 'tau' or tors_model == 'tau':
-                species_data = blocks.tau_block()
-            else:
-                species_data = blocks.species_block(
-                    spc_dct_i=spc_dct_i,
-                    spc_model=spc_model,
-                    pf_levels=pf_levels,
-                    save_prefix=save_path,
-                )
-            zero_energy = ts_ene - first_ground_ene
-            ts_str += '\n' + mess_io.writer.ts_sadpt(
-                ts_label, inner_reac_label, inner_prod_label,
-                species_data[tsname], zero_energy, tunnel_str)
+            spc_str, mdhr_str, imag = blocks.species_block(
+                spc_dct_i=spc_dct[tsname],
+                spc_model=spc_model,
+                pf_levels=pf_levels,
+                save_prefix=save_prefix,
+            )
     else:
+        # Build MESS string for TS with no saddle point
         if ts_barrierless == 'vtst':
-            species_data = blocks.vtst_with_no_saddle_block(
+            if 'P' in inner_reac_label:
+                spc_ene = reac_ene - first_ground_ene
+            else:
+                spc_ene = prod_ene - first_ground_ene
+            rpath_str_lst = blocks.vtst_with_no_saddle_block(
                 spc_dct[tsname], ts_label, inner_reac_label, inner_prod_label,
                 spc_ene, multi_info)
         else:
-            species_data = blocks.vrctst_block()
+            spc_str, flux_str = blocks.vrctst_block()
 
     # Write the appropriate string for the tunneling model
-    if tunnel_model == 'none':
-        tunnel_str = ''
-        tc_str = ''
-    elif tunnel_model == 'eckart':
-        tunnel_str = tunnel.write_mess_eckart_str(
-            ts_ene, reac_ene, prod_ene, imag_freq)
-        tc_str = ''
-    elif tunnel_model == 'sct':
-        tunnel_file = tsname + '_sct.dat'
-        path = 'cat'
-        tunnel_str, tc_str = tunnel.write_mess_sct_str(
-            spc_dct[tsname], pf_levels, path,
-            imag_freq, tunnel_file,
-            cutoff_energy=2500, coord_proj='cartesian')
+    tunnel_str, sct_str = '', ''
+    if _need_to_treat_tunnel(tunnel_model, ts_sadpt, ts_barrierless, _var_radrad(ts_class)):
+        if tunnel_model == 'eckart':
+            tunnel_str = tunnel.write_mess_eckart_str(
+                ts_ene, reac_ene, prod_ene, imag)
+        elif tunnel_model == 'sct':
+            tunnel_file = tsname + '_sct.dat'
+            path = 'cat'
+            tunnel_str, sct_str = tunnel.write_mess_sct_str(
+                spc_dct[tsname], pf_levels, path,
+                imag, tunnel_file,
+                cutoff_energy=2500, coord_proj='cartesian')
+    else:
+        pass
 
-    # Write the MESS string
+    # Write the MESS string for the TS
+    # First if statement logic is bad
     if ts_sadpt == 'vtst' or ts_barrierless in ('vtst', 'vrctst'):
-        ts_str = mess_io.writer.rxnchan.ts_variational(
-            ts_label, reac_label, prod_label, irc_pt_strs)
+        mess_str = mess_io.writer.rxnchan.ts_variational(
+            ts_label, inner_reac_label, inner_prod_label, rpath_str_lst)
     else:
         zero_energy = ts_ene - first_ground_ene
-        ts_str = '\n' + mess_io.writer.ts_sadpt(
+        mess_str = '\n' + mess_io.writer.ts_sadpt(
             ts_label, inner_reac_label, inner_prod_label,
-            species_data[tsname], zero_energy, tunnel_str)
+            spc_str, zero_energy, tunnel_str)
 
-    return ts_str
+    # Combine dat strings together
+    dat_str_lst = [flux_str, mdhr_str, sct_str]
+
+    return mess_str, dat_str_lst
 
 
 def _make_fake_mess_strs(spc_dct, rxn, label_dct, spc_model, pf_levels,
@@ -464,6 +487,22 @@ def _var_radrad(tsclass):
     return bool(rad_rad and low_spin and addn_rxn)
 
 
+def _need_to_treat_tunnel(tunnel_model, ts_sadpt, ts_barrierless, var_radrad):
+    """ Discern if tunneling will be treated
+    """
+    treat = False
+    if tunnel_model == 'none':
+        pass
+    else:
+        if var_radrad and ts_barrierless != 'pst':
+            treat = True
+        elif ts_sadpt != 'pst':
+            treat = True
+
+    return treat
+
+
+# Formatting functions
 def _make_rxn_str(rlst, prepend=''):
     """ convert list to string
     """
