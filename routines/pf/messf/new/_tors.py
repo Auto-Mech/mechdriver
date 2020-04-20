@@ -296,6 +296,57 @@ def write_mdhr_dat_file(potentials, freqs=()):
     return mdhr_str
 
 
+def write_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
+                   spc_dct_i,
+                   frm_bnd_key, brk_bnd_key,
+                   elec_levels,
+                   tau_dat_file_name,
+                   freqs=(),
+                   saddle=False):
+    """ Write out the input string for tau samling
+    """
+    # Loop over the torsions to get the flux strings
+    flux_mode_str = ''
+    if tors_min_cnf_locs is not None:
+
+        # Get geometry for the torsional minimum
+        zma = tors_cnf_save_fs[-1].file.zmatrix.read(
+            tors_min_cnf_locs)
+        name_matrix = automol.zmatrix.name_matrix(zma)
+        key_matrix = automol.zmatrix.key_matrix(zma)
+        tors_geo = tors_cnf_save_fs[-1].file.geometry.read(
+            tors_min_cnf_locs)
+
+        # Set torsional stuff
+        tors_names = tors.get_tors_names(
+            spc_dct_i, tors_cnf_save_fs, saddle=saddle)
+        tors_sym_nums = tors.get_tors_sym_nums(
+            spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
+            frm_bnd_key, brk_bnd_key, saddle=False)
+
+        # Write the MESS flux strings for each of the modes
+        for tors_name, tors_sym in zip(tors_names, tors_sym_nums):
+
+            # Get the idxs for the atoms used to define the dihedrals
+            # Move code at some point to automol
+            mode_idxs = [0, 0, 0, 0]
+            for i, name_row in enumerate(name_matrix):
+                if tors_name in name_row:
+                    mode_idxs[0] = i
+                    mode_idxs[1], mode_idxs[2], mode_idxs[3] = key_matrix[i]
+                    break
+            mode_idxs = [idx+1 for idx in mode_idxs]
+
+            # Determine the flux span using the symmetry number
+            mode_span = 360.0 / tors_sym
+
+            # Write flux string for mode_ to overall flux string
+            flux_mode_str += mess_io.writer.fluxional_mode(
+                mode_idxs, span=mode_span)
+
+    return flux_mode_str
+
+
 # Functions to handle setting up torsional defintion and potentials properly
 def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
                 saddle=False, read_freqs=False):
@@ -628,7 +679,7 @@ def get_tors_grids(spc_dct_i, zma, tors_names, frm_bnd_key, brk_bnd_key):
     return tors_grids
 
 
-def get_tors_info(spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
+def get_tors_syms(spc_dct_i, min_cnf_locs, cnf_save_fs,
                   frm_bnd_key, brk_bnd_key, saddle=False):
     """ get tors parameters
     """
@@ -636,11 +687,9 @@ def get_tors_info(spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
     tors_name_grps, tors_grid_grps = hr_prep(
         zma, tors_geo, run_tors_names=run_tors_names,
         scan_increment=scan_increment, ndim_tors=ndim_tors,
-        saddle=saddle,
-    zma = tors_cnf_save_fs[-1].file.zmatrix.read(
-        tors_min_cnf_locs)
-    tors_names = get_tors_names(
-        spc_dct_i, tors_cnf_save_fs, saddle=saddle)
+        saddle=saddle)
+    zma = tors_cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
+    tors_names = get_tors_names(spc_dct_i, cnf_save_fs, saddle=saddle)
     tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
         zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
 

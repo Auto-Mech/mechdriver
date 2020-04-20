@@ -4,154 +4,106 @@
 
 import elstruct
 import automol
+import autofile
 from routines.es.scan import hr_prep
 from routines.pf.messf import _tors as tors
 from routines.pf.messf import _vib as vib
 from routines.pf.messf import _tau as tau
 # from routines.pf.messf import _vpt2 as vpt2
 from lib.phydat import phycon
+from lib.filesystem import orb as fsorb
+from lib.filesystem import minc as fsmin
+from lib.filesystem import build as fbuild
+from lib.filesystem import inf as finf
 
 
-def read_file_sys_info():
+def read_filesys_for_spc(spc_dct_i, rxn, spc_model, pf_levels,
+                         save_prefix, saddle=False):
     """ Pull all of the neccessary information from the filesystem for a species
     """
 
     # Unpack the models and levels
-    [_, _, harm_level, vpt2_level, sym_level, tors_level] = pf_levels
     tors_model, vib_model, sym_model = spc_model
 
-    # Lazy set for tors mod
-    if tors_model == '1dhrf':
-        tors_mod = ('1dhr', False)
+    # Set filesys
+    cnf_save_fs, cnf_save_path, cnf_save_locs, thy_save_path = _cnf_filesys(
+        spc_dct_i, rxn, pf_levels, save_prefix, saddle=saddle, level='harm')
 
-    # Set theory filesystem used throughout
-    thy_save_fs = autofile.fs.theory(save_prefix)
-
-    # Set boolean to account for rad-rad reaction (not supported by vtst)
-    rad_rad_ts = False
-    if 'ts_' in spc:
-        if spc_dct_i['rad_rad']:
-            rad_rad_ts = True
-
-    # Set the filesystem objects for various species models
-    harmfs = set_model_filesys(
-        thy_save_fs, spc_info, harm_level, saddle=('ts_' in spc))
-    [harm_cnf_save_fs, _,
-     harm_min_cnf_locs, harm_save_path] = harmfs
-    if sym_level:
-        symfs = set_model_filesys(
-            thy_save_fs, spc_info, sym_level, saddle=('ts_' in spc))
-        [sym_cnf_save_fs, _,
-         sym_min_cnf_locs, _] = symfs
-    if tors_level and not rad_rad_ts:
-        torsfs = set_model_filesys(
-            thy_save_fs, spc_info, tors_level[0], saddle=('ts_' in spc))
-        [tors_cnf_save_fs, tors_cnf_save_path,
-         tors_min_cnf_locs, tors_save_path] = torsfs
-    if vpt2_level:
-        vpt2fs = set_model_filesys(
-            thy_save_fs, spc_info, vpt2_level, saddle=('ts_' in spc))
-        [vpt2_cnf_save_fs, vpt2_cnf_save_path,
-         vpt2_min_cnf_locs, vpt2_save_path] = vpt2fs
-
-    # Check if any torsions to set the model
-
-    # Build the species string and get the imaginary frequency
-    # Initialize various auxiliary MESS data strings and names
-    dat_str_dct = {}
-    tau_dat_str = ''
-    mdhr_dat_str = ''
-    sct_dat_str = ''
-    tau_dat_file_name = '{}_tau.dat'.format(spc[0])
-    mdhr_dat_file_name = '{}_mdhr.dat'.format(spc[0])
-    sct_dat_file_name = '{}_sct.dat'.format(spc[0])
-    # Initialize various variables and strings
-    symf = sym_factor
-    imag = 0.0
-    freqs = []
-    hr_str = ""
-    xmat = ()
-
-    # Default strings
-    hind_ot_str, proj_rot_str = '', ''
+    # Initialize all of the elemetnts of the inf dct
+    geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
+    has_tors, hr_str, mdhr_mess_str, mdhr_dat_str = False, '', '', ''
+    xmat, rovib_coups, rot_dists = None, None, None
 
     # Pull all information from the filesys and write the MESS species block
-    if messfutil.is_atom(harm_min_cnf_locs, harm_cnf_save_fs):
-        mass = messfutil.atom_mass(harm_min_cnf_locs, harm_cnf_save_fs)
-        spc_str = mess_io.writer.atom(
-            mass, elec_levels)
+    # Geo (Rotational)
+    geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
+    if nonrigid_rotations(rot_model):
+        rovib_coup, rot_dists = rot.read_rotational_values(
+            vpt2_save_fs, vpt2_min_cnf_locs)
+
+    # Torsions
+    if nonrigid_tors(vib_model, tors_model, tors_names):
+        mess_hr_str, proj_hr_str, mdhr_dat_str = tors.proc_mess_strings()
+        # mdhr_dat_file_name = '{}_mdhr.dat'.format(spc[0])
+
+    # Symmetry
+    sym_factor = sym.symmetry_factor(
+        sym_model, spc_dct_i, spc_info, dist_names,
+        saddle, frm_bnd_key, brk_bnd_key, tors_names,
+        tors_cnf_save_fs, tors_min_cnf_locs,
+        sym_cnf_save_fs, sym_min_cnf_locs)
+    if nonrigid_tors(vib_model, tors_model, tors_names):
+        sym_factor = sym.tors_reduced_sym_factor(
+            min_cnf_locs, cnf_save_fs, saddle=False)
+
+    # Vibrations
+    harm_geo, freqs, imag_freq = harm_freqs()
+    freqs, imag_freq, zpe = tors.tors_freqs_zpve()  # Could maybe split up
+    if anharm_vib:
+        xmat = vib.anharmonicity()
     else:
-        # Geo (Rotational)
-        if nonrigid_rotations(rot_model):
-            rovib_coup, rot_dists = rot.read_rotational_values(
-                vpt2_save_fs, vpt2_min_cnf_locs)
-        else:
-            rovib_coup, rot_dists = (), ()
+        xmat = ()
 
-        # Torsions
-        if nonrigid_tors(vib_model, tors_model, tors_names):
-            mess_hr_str, proj_hr_str, mdhr_dat_str = tors.proc_mess_strings()
-        else:
-            hind_rot_str, proj_rotors_str, mdhr_dat_str = '', '', ''
+    # Elec levels
+    elec_levels = spc_dct_i['elec_levels']
 
-        # Symmetry
-        sym_factor = sym.symmetry_factor(
-            sym_model, spc_dct_i, spc_info, dist_names,
-            saddle, frm_bnd_key, brk_bnd_key, tors_names,
-            tors_cnf_save_fs, tors_min_cnf_locs,
-            sym_cnf_save_fs, sym_min_cnf_locs)
-        if nonrigid_tors(vib_model, tors_model, tors_names):
-            sym_nums = tors.get_tors_sym_nums(
-                spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                frm_bnd_key, brk_bnd_key, saddle=False)
-            for num in sym_nums:
-                sym_factor /= num
+    # Create info dictionary
+    keys = ['geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
+            'has_tors', 'hr_str', 'mdhr_mess_str', 'mdhr_dat_str',
+            'xmat', 'rovib_coups', 'rot_dists']
+    vals = [geom, sym_factor, freqs, imag, elec_levels,
+            has_tors, hr_str, mdhr_mess_str, mdhr_dat_str,
+            xmat, rovib_coups, rot_dists]
+    inf_dct = dict(zip(keys, vals))
 
-        # Vibrations
-        harm_geo, freqs, imag_freq = harm_freqs()
-        freqs, imag_freq, zpe = tors.tors_freqs_zpve()  # Could maybe split up
-        if anharm_vib:
-            xmat = vib.anharmonicity()
-        else:
-            xmat = ()
+    return inf_dct
 
-        # Set Tau if needed
-        if need_tau:
-            # Determine if hessians and grasdients are needed
-            tau_freqs = () if vib_tau else freqs
-            tau_gradient = vib_tau
-            tau_hessian = vib_tau
-            monte_carlo_str, tau_dat_str = tau.proc_tau(
-                tors_min_cnf_locs, tors_cnf_save_fs,
-                spc_dct_i,
-                frm_bnd_key, brk_bnd_key,
-                sym_factor, elec_levels,
-                save_prefix,
-                tau_dat_file_name,
-                freqs=tau_freqs,
-                saddle=False,
-                gradient=tau_gradient,
-                hessian=tau_hessian)
-        else:
-            monte_carlo_str, tau_dat_str = '', ''
 
-        # Combine various data strings into a dct
-        dat_str_dct = {
-            'tau': (tau_dat_str, tau_dat_file_name),
-            'mdhr': (mdhr_dat_str, mdhr_dat_file_name),
-        }
+# VRCTST
+def read_filesys_for_flux(ts_dct, rxn, pf_levels, save_prefix):
+    """ Grab the flux file from the filesystem
+    """
 
-    return spc_str, dat_str_dct, imag
+    # Set filesys
+    cnf_save_fs, cnf_save_path, cnf_save_locs, thy_save_path = _cnf_filesys(
+        ts_dct, rxn, pf_levels, save_prefix, saddle=True, level='harm')
+
+    # Read the flux file string
+    flux_str = ''
+
+    return flux_str
 
 
 # VTST
-def vtst_read_file_sys_info():
+def read_filesys_for_rpvtst(rpath_vals):
     """ Pull all of the neccessary information from the filesystem for a species
     """
-    for idx in irc_idxs:
+
+    # Loop over scan filesystem and pull out the values
+    for rpath_val in rpath_vals:
 
         # Set the filesystem locators for each grid point
-        locs = [[dist_name], [idx]]
+        locs = [[dist_name], [rpath_val]]
         print(scn_save_fs[-1].path(locs))
 
         # Get geometry, energy, vibrational freqs, and zpe
@@ -190,6 +142,106 @@ def vtst_read_file_sys_info():
             print('no hessian')
             continue
 
+    return
+
+
+# TAU
+def read_filesys_for_tau(spc_dct_i, spc_model, pf_levels,
+                         save_prefix, rxn=(), saddle=False):
+    """ Read the filesystem to get information for TAU
+    """
+
+    # Use model to determine whether to read grads and hessians
+    _, vib_model, _ = spc_model
+    if vib_model != 'tau':
+        read_gradient, read_hessian = False, False
+        freqs = ()
+    else:
+        read_gradient, read_hessian = True, True
+        freqs = ()
+
+    # Set the filesystem
+    cnf_save_fs, _, cnf_save_locs, _ = _cnf_filesys(
+        spc_dct_i, rxn, pf_levels, save_prefix, saddle=saddle, level='harm')
+    tau_save_fs = autofile.fs.tau(save_prefix)
+
+    # Read the reference geometry and energy
+    if cnf_save_locs:
+        ref_geom = cnf_save_fs[-1].file.geometry.read(cnf_save_locs)
+        min_ene = cnf_save_fs[-1].file.energy.read(cnf_save_locs)
+
+    # Set the ground and reference energy to set values for now
+    ground_ene = -0.02
+    reference_ene = 0.00
+
+    # Write the flux mode str
+    flux_mode_str = tors.write_flux_str()
+
+    # Read the geom, ene, grad, and hessian for each sample
+    samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
+    for locs in tau_save_fs[-1].existing():
+
+        geo = tau_save_fs[-1].file.geometry.read(locs)
+        geo_str = autofile.file.write.geometry(geo)
+        samp_geoms.append(geo_str)
+
+        ene = tau_save_fs[-1].file.energy.read(locs)
+        rel_ene = (ene - min_ene) * phycon.EH2KCAL
+        ene_str = autofile.file.write.energy(rel_ene)
+        samp_enes.append(ene_str)
+
+        if read_gradient:
+            grad = tau_save_fs[-1].file.gradient.read(locs)
+            grad_str = autofile.file.write.gradient(grad)
+            samp_grads.append(grad_str)
+
+        if read_hessian:
+            hess = tau_save_fs[-1].file.hessian.read(locs)
+            hess_str = autofile.file.write.hessian(hess)
+            samp_hessians.append(hess_str)
+
+    # Create info dictionary
+    keys = ['ref_geom', 'elec_levels', 'freqs', 'flux_mode_str',
+            'ground_ene', 'reference_ene',
+            'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians']
+    vals = [ref_geom, spc_dct_i['elec_levels'], freqs, flux_mode_str,
+            ground_ene, reference_ene,
+            samp_geoms, samp_enes, samp_grads, samp_hessians]
+    inf_dct = dict(zip(keys, vals))
+
+    return inf_dct
+
+
+# Filesystem object setters
+def _cnf_filesys(spc_dct, rxn, pf_levels, save_prefix,
+                 saddle=False, level='harm'):
+    """ """
+    if level == 'harm':
+        thy_info = pf_levels[2]
+    elif level == 'vpt2':
+        thy_info = pf_levels[2]
+
+    # Set the filesystem objects
+    spc_info = (spc_dct['ich'], spc_dct['chg'], spc_dct['mul'])
+    mod_thy_info = fsorb.mod_orb_restrict(spc_info, thy_info)
+    if not saddle:
+        _, thy_save_path = fbuild.spc_thy_fs_from_root(
+            save_prefix, spc_info, mod_thy_info)
+    else:
+        rxn_info = finf.rxn_info(
+            rxn['reacs'], rxn['prods'], spc_dct)
+        _, thy_save_path = fbuild.rxn_thy_fs_from_root(
+            save_prefix, rxn_info, mod_thy_info)
+        _, thy_save_path = fbuild.ts_fs_from_thy(thy_save_path)
+
+    # Get the cnf filesys needed everything based off geo+freq (also vpt2)
+    cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_prefix(
+        thy_save_path, cnf='min')
+    cnf_save_paths = fbuild.cnf_paths_from_locs(
+        cnf_save_fs, cnf_save_locs)
+
+    return cnf_save_fs, cnf_save_paths[0], cnf_save_locs, thy_save_path
+
 
 # Series of checks to determine what information is needed to be obtained
 def nonrigid_rotations(rot_model):
@@ -204,8 +256,9 @@ def nonrigid_tors(vib_model, tors_model, tors_names):
         information is needed from the filesystem
     """
     has_tors = bool(tors_names)
-    tors_hr_model = bool(tors_model in ('1dhr', 'mdhr', 'mdhrv'))
+    tors_hr_model = bool(tors_model in ('1dhr', '1dhrf', 'mdhr', 'mdhrv'))
     tau_hr_model = bool(tors_model == 'tau' and vib_model != 'vib')
+    # diatomic model
     return has_tors and (tors_hr_model or tau_hr_model)
 
 
@@ -225,4 +278,3 @@ def vib_tau(vib_model):
     """ determine if vibrations are treated via tau sampling
     """
     return bool(vib_model == 'tau')
-

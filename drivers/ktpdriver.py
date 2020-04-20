@@ -10,7 +10,7 @@ from lib.load import species as loadspc
 from lib import printmsg
 
 
-def run(pes_formula, pes_idx,
+def run(pes_formula, pes_idx, sub_pes_idx,
         spc_dct,
         cla_dct,
         thy_dct,
@@ -58,7 +58,7 @@ def run(pes_formula, pes_idx,
             ts_dct, spc_dct)
 
     # Build the MESS label idx dictionary for the PES
-    idx_dct = messrates.make_pes_idx_dct(rxn_lst, pes_idx, spc_dct)
+    label_dct = messrates.make_pes_label_dct(rxn_lst, pes_idx, spc_dct)
 
     # Set path where MESS files will be written and read
     mess_path = raterunner.get_mess_path(run_prefix, pes_formula)
@@ -76,18 +76,18 @@ def run(pes_formula, pes_idx,
 
         print('Starting mess file preparation.')
         # Write the strings for the MESS input file
-        header_str, energy_trans_str = messrates.rate_headers(
+        globkey_str, energy_trans_str = messrates.make_header_str(
             spc_dct, rxn_lst, temps, pressures, **etransfer)
 
         # Write the MESS strings for all the PES channels
-        well_str, bim_str, ts_str, dat_lst = messrates.write_channel_mess_strs(
+        well_str, bim_str, ts_str, dat_lst = messrates.make_pes_mess_str(
             spc_dct, rxn_lst, pes_formula, pes_idx, 
-            save_prefix, idx_dct,
+            save_prefix, label_dct,
             spc_model_dct, thy_dct)
 
         # Combine strings together
         mess_inp_str = '\n'.join(
-            [header_str, energy_trans_str, well_str, bim_str, ts_str])
+            [globkey_str, energy_trans_str, well_str, bim_str, ts_str])
 
         # Build the filesystem
         if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):
@@ -105,6 +105,6 @@ def run(pes_formula, pes_idx,
     # Fit rate output to modified Arrhenius forms, print in ChemKin format
     if run_fits:
         fit_rates(temps, pressures, tunit, punit,
-                  pes_formula, idx_dct,
+                  pes_formula, label_dct,
                   mess_path, fit_method, pdep_fit,
                   arrfit_thresh)

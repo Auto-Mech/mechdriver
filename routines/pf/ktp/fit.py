@@ -7,6 +7,7 @@ import os
 import numpy
 import ratefit
 import chemkin_io
+import mess_io
 
 # New libs
 from routines.pf.ktp import rates as messrates
@@ -45,7 +46,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                     reaction = name_i + '=' + name_j
 
                     # Read the rate constants out of the mess outputs
-                    ktp_dct = messrates.read_rates(
+                    ktp_dct = read_rates(
                         inp_temps, inp_pressures, inp_tunit, inp_punit,
                         lab_i, lab_j, mess_path, pdep_fit,
                         bimol=numpy.isclose(a_conv_factor, 6.0221e23))
@@ -336,3 +337,85 @@ def assess_troe_fit_err(fit_param_dct, ktp_dct, t_ref=1.0, a_conv_factor=1.0):
         fit_err_dct[pressure] = [mean_avg_err, max_avg_err]
 
     return fit_err_dct
+
+
+# Readers
+def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
+               rct_lab, prd_lab, mess_path, pdep_fit, bimol=False):
+    """ Read the rate constants from the MESS output and
+        (1) filter out the invalid rates that are negative or undefined
+        and obtain the pressure dependent values
+    """
+
+    # Dictionaries to store info; indexed by pressure (given in fit_ps)
+    calc_k_dct = {}
+    valid_calc_tk_dct = {}
+    ktp_dct = {}
+
+    # Read the MESS output file into a string
+    with open(mess_path+'/rate.out', 'r') as mess_file:
+        output_string = mess_file.read()
+
+    # Read the temperatures and pressures out of the MESS output
+    mess_temps, tunit = mess_io.reader.rates.get_temperatures(
+        output_string)
+    mess_pressures, punit = mess_io.reader.rates.get_pressures(
+        output_string)
+
+    assert inp_temps <= mess_temps
+    assert inp_pressures <= mess_pressures
+    assert inp_tunit == tunit
+    assert inp_punit == punit
+
+    # Loop over the pressures obtained from the MESS output
+    for pressure in mess_pressures:
+
+        # Read the rate constants
+        if pressure == 'high':
+            rate_ks = mess_io.reader.highp_ks(
+                output_string, rct_lab, prd_lab)
+        else:
+            rate_ks = mess_io.reader.pdep_ks(
+                output_string, rct_lab, prd_lab, pressure, punit)
+
+        # Store in a dictionary
+        calc_k_dct[pressure] = rate_ks
+
+    # Remove k(T) vals at each P where where k is negative or undefined
+    # If ANY valid k(T,P) vals at given pressure, store in dct
+    for pressure, calc_ks in calc_k_dct.items():
+        filtered_temps, filtered_ks = ratefit.fit.get_valid_tk(
+            mess_temps, calc_ks, bimol)
+        if filtered_ks.size > 0:
+            valid_calc_tk_dct[pressure] = numpy.concatenate(
+                (filtered_temps, filtered_ks))
+
+    # Filter the ktp dictionary by assessing the presure dependence
+    if list(valid_calc_tk_dct.keys()) == ['high']:
+        ktp_dct['high'] = valid_calc_tk_dct['high']
+    else:
+        if pdep_fit:
+            assess_pdep_temps = pdep_fit['assess_pdep_temps']
+            pdep_tolerance = pdep_fit['pdep_tolerance']
+            no_pdep_pval = pdep_fit['no_pdep_pval']
+            pdep_low = pdep_fit['pdep_low']
+            pdep_high = pdep_fit['pdep_high']
+            rxn_is_pdependent = ratefit.calc.assess_pressure_dependence(
+                valid_calc_tk_dct, assess_pdep_temps,
+                tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
+            if rxn_is_pdependent:
+                # Set dct fit as copy of dct to do PLOG fits at all pressures
+                ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+            else:
+                # Set dct w/ single set of k(T, P) vals: P is desired pressure
+                if no_pdep_pval in valid_calc_tk_dct:
+                    ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
+        else:
+            # Set dct fit as copy of dct to do PLOG fits at all pressures
+            ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+
+    # Do something with high pressure rates
+    if 'high' not in ktp_dct and 'high' in valid_calc_tk_dct.keys():
+        ktp_dct['high'] = valid_calc_tk_dct['high']
+
+    return ktp_dct

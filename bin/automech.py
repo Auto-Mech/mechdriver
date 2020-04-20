@@ -136,7 +136,7 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
         # Call kTPDriver for spc in each PES
         for (pes_formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
             ktpdriver.run(
-                pes_formula, pes_idx,
+                pes_formula, pes_idx, sub_pes_idx,
                 SPC_DCT,
                 CLA_DCT,
                 THY_DCT,
