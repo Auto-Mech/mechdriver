@@ -7,6 +7,7 @@ import os
 import numpy
 import ratefit
 import chemkin_io
+import mess_io
 
 # New libs
 from routines.pf.ktp import rates as messrates
