@@ -1,25 +1,31 @@
 """ New blocks python
 """
 
+import mess_io
 from routines.pf.messf import _models as models
+from routines.pf.messf import _util as util
 
 
 # SINGLE SPECIES BLOCKS
-def species_block(spc, spc_dct_i, spc_info, spc_model,
-                  pf_levels, save_prefix):
+def species_block(spc_dct_i, rxn, spc_model, pf_levels,
+                  save_prefix, saddle=False):
     """ prepare the species input for messpf
     """
 
-    # Build a dct combinining various information from the filesys and MESS
-    inf_dct = models.read_filesys_for_spc(
-        spc, spc_dct, spc_info, spc_model,
-        pf_levels, save_prefix)
-
-    # Write the MESS string for the molecule
-    if tors_model == 'tau':
-        spc_str = inf_dct['mc_str']
+    # Write the MESS string for the atom or molecule molecule
+    if util.is_atom(spc_dct_i):
+        # Get info and build the appropriate MESS string
+        mass = util.atom_mass(spc_dct_i)
+        elec_levels = spc_dct_i['elec_levels']
+        spc_str = mess_io.writer.atom(mass, elec_levels)
     else:
-        if tors_model == 'mdhr':
+        # Build dct combinining various information from the filesys and MESS
+        inf_dct = models.read_filesys_for_spc(
+            spc_dct_i, rxn, spc_model, pf_levels, save_prefix, saddle=saddle)
+
+        # Build the appropriate core string
+        tors_model, _, _ = spc_model
+        if inf_dct['has_tors'] and tors_model == 'mdhr':
             core_str = inf_dct['mdhr_str']
         else:
             core_str = mess_io.writer.core_rigidrotor(
@@ -27,6 +33,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                 sym_factor=inf_dct['sym_factor'],
                 interp_emax=None
             )
+
+        # Build the appropriate MESS string
         spc_str = mess_io.writer.molecule(
             core=core_str,
             freqs=inf_dct['freqs'],
@@ -126,7 +134,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     core_str = mess_io.writer.core_phasespace(
         geom1=geo_i,
         geom2=geo_j,
-        sym_factor=sym_factor, 
+        sym_factor=sym_factor,
         stoich=stoich,
         pot_prefactor=pst_params[0],
         pot_power_exp=pst_params[1]
@@ -144,38 +152,38 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     return spc_str
 
 
-def tau_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
+def tau_block(spc_dct_i, spc_model, pf_levels, save_prefix,
+              rxn=(), saddle=False):
     """ write  MESS string when using the Tau MonteCarlo
     """
-    
+
     # Build a dct combinining various information from the filesys and MESS
     inf_dct = models.read_filesys_for_tau(
-        spc, spc_dct_i, spc_info_i, spc_model,
-        pf_levels, save_prefix)
+        spc_dct_i, spc_model, pf_levels,
+        save_prefix, rxn=rxn, saddle=saddle)
 
-    # Write the data string
+    # Write the data string and set its name
     dat_str = mess_io.writer.monte_carlo.mc_data(
         geos=inf_dct['samp_geoms'],
         enes=inf_dct['samp_enes'],
         grads=inf_dct['samp_grads'],
-        hessians=inf_dct['samp_hessians']:
+        hessians=inf_dct['samp_hessians']
+    )
+    tau_dat_file_name = None
 
     # Write the core string (seperate energies?)
-    ground_ene = -0.02
-    reference_ene = 0.00
     spc_str = mess_io.writer.monte_carlo.mc_species(
-        geom=tors_geo,
-        elec_levels=elec_levels,
-        flux_mode_str=flux_mode_str,
-        tau_dat_file_name=tau_dat_file_name,
-        ground_energy=ground_ene,
-        reference_energy=reference_ene,
-        freqs=freqs,
+        geom=inf_dct['ref_geo'],
+        elec_levels=inf_dct['elec_levels'],
+        flux_mode_str=inf_dct['flux_mode_str'],
+        data_file_name=tau_dat_file_name,
+        ground_energy=inf_dct['ground_ene'],
+        reference_energy=inf_dct['reference_ene'],
+        freqs=inf_dct['freqs'],
         no_qc_corr=True,
         use_cm_shift=True)
 
     return spc_str, dat_str
-
 
 
 # TS BLOCKS FOR VARIATIONAL TREATMENTS
@@ -189,7 +197,7 @@ def vrctst_block():
     # inf_dct_j = read_species_filesys(spc, spc_dct_j, spc_info_j, spc_model,
     #                                  pf_levels, save_prefix)
 
-    # # Combine the electronic structure information for the two species together
+    # # Combine electronic structure information for the two species together
     # sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
 
     # elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
@@ -218,6 +226,7 @@ def vrctst_block():
         rovib_coups=(),
         rot_dists=()
     )
+
 
 def rpath_vtst_nosadpt_block(ts_dct, ts_label, reac_label, prod_label,
                              spc_ene, projrot_script_str, multi_info):
@@ -249,7 +258,7 @@ def rpath_vtst_nosadpt_block(ts_dct, ts_label, reac_label, prod_label,
     # Read the infinite separation energy
     inf_locs = [[dist_name], [1000.]]
     inf_sep_ene = scn_save_fs[-1].file.energy.read(inf_locs)
-    
+
     # Build dct of vtst info
     inf_dct = models.read_filesys_for_rpvtst()
 
@@ -259,8 +268,8 @@ def rpath_vtst_nosadpt_block(ts_dct, ts_label, reac_label, prod_label,
     return variational_str
 
 
-def rpath_vtst_wsadpt_block(ts_dct, ene_thy_level, geo_thy_level,
-                            ts_label, reac_label, prod_label, first_ground_ene):
+def rpath_vtst_sadpt_block(ts_dct, ene_thy_level, geo_thy_level,
+                           ts_label, reac_label, prod_label, first_ground_ene):
     """ prepare the mess input string for a variational TS where there is a
         saddle point on the MEP.
         In this case, there is limited torsional information.
@@ -289,8 +298,8 @@ def rpath_vtst_wsadpt_block(ts_dct, ene_thy_level, geo_thy_level,
 def _write_mess_variational_str():
     """ write the variational string
     """
-
-    for x:
+    a = []
+    for x in a:
         # Iniialize the header of the rxn path pt string
         rpath_pt_str = '!-----------------------------------------------\n'
         rpath_pt_str += '! RXN Path Point {0}\n'.format(str(int(idx)))
@@ -311,7 +320,7 @@ def _write_mess_variational_str():
             rot_dists=()
         )
 
-        # Add the ZPVE string for the rxn path point 
+        # Add the ZPVE string for the rxn path point
         rpat_pt_str += (
             '  ZeroEnergy[kcal/mol]      {0:<8.2f}'.format(erel)
         )
@@ -334,7 +343,7 @@ def _write_mess_variational_str():
 def vtst_energy():
     """  Get the VTST energy
     """
-    if no saddle:
+    if not saddle:
         # Calcuate infinite separation ZPVE
         # Assumes the ZPVE = ZPVE(1st grid pt) as an approximation
         if idx == 0:

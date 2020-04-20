@@ -116,6 +116,8 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct,
         model_dct[chn_model]['es'], thy_dct)
     spc_model = loadmodel.set_pf_model_info(
         model_dct[chn_model]['pf'])
+    # pst_params = (1.0, 6)
+    ts_class = spc_dct[tsname]['class']
 
     # Unpack the energy dictionary and put energies in kcal
     first_ground_ene *= phycon.EH2KCAL
@@ -133,9 +135,9 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct,
 
         # Build the species data
         spc_data = []
-        for a in rct:
-            spc_data.append(
-                _make_spc_mess_str(spc_dct, spc_save_fs, spc_model, pf_levels))
+        for spc in rct:
+            spc_data.append(_make_spc_mess_str(
+                spc_dct[spc], rxn, save_prefix, spc_model, pf_levels))
 
         # Write the MESS strings
         spc_label = [automol.inchi.smiles(spc_dct[spc]['ich']) for spc in rct]
@@ -166,8 +168,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct,
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fwellr_lbl, fwellp_lbl = _make_fake_mess_strs(
             spc_dct, rxn, label_dct, spc_model, pf_levels,
-            save_prefix, pst_params,
-            first_ground_ene, reac_ene, prod_ene,
+            save_prefix, first_ground_ene, reac_ene, prod_ene,
             reac_label, prod_label)
 
         # Append the fake strings to overall strings
@@ -178,33 +179,39 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct,
         inner_reac_label = fwellr_lbl
         inner_prod_label = fwellp_lbl
 
-    # Write MESS string for the inner transition state
+    # Write MESS string for the inner transition state; append full
     ts_label = label_dct[tsname]
-    ts_str += _make_ts_mess_str(
-        spc_dct, spc_save_fs, spc_model, pf_levels,
+    sts_str, dat_str_lst = _make_ts_mess_str(
+        spc_dct, tsname, ts_class, rxn, save_prefix,
+        model_dct, chn_model, spc_model, pf_levels,
         first_ground_ene, reac_ene, prod_ene, ts_ene,
         ts_label, inner_reac_label, inner_prod_label)
+    ts_str += sts_str
 
     return well_str, bim_str, ts_str, dat_str_lst
 
 
-def _make_spc_mess_str(spc_dct, spc_save_fs, spc_model, pf_levels):
+def _make_spc_mess_str(spc_dct_i, rxn, save_prefix, spc_model, pf_levels):
     """ makes the main part of the MESS species block for a given species
     """
+    tors_model, vib_model, _ = spc_model
+
     if vib_model == 'tau' or tors_model == 'tau':
         species_data = blocks.tau_block()
     else:
         species_data = blocks.species_block(
             spc_dct_i=spc_dct_i,
+            rxn=rxn,
             spc_model=spc_model,
             pf_levels=pf_levels,
-            save_prefix=save_path,
+            save_prefix=save_prefix,
+            saddle=False
         )
 
     return species_data
 
 
-def _make_ts_mess_str(spc_dct, tsname, ts_class, save_prefix,
+def _make_ts_mess_str(spc_dct, tsname, ts_class, rxn, save_prefix,
                       model_dct, chn_model, spc_model, pf_levels,
                       first_ground_ene, reac_ene, prod_ene, ts_ene,
                       ts_label, inner_reac_label, inner_prod_label,
@@ -214,11 +221,12 @@ def _make_ts_mess_str(spc_dct, tsname, ts_class, save_prefix,
 
     # Set the models for how we are treating the transition state
     ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
-    ts_barrierless = model_dct[chn_model]['pf']['ts_barrierless']
-    tunnel_model = model_dct[chn_model]['pf']['tunnel']
+    ts_nobarrier = model_dct[chn_model]['pf']['ts_barrierless']
+    tun_model = model_dct[chn_model]['pf']['tunnel']
 
     # Unpack models
-    tors_model, vib_model, sym_model = spc_model
+    # tors_model, vib_model, sym_model = spc_model
+    multi_info = []
 
     # Initialize empty data string
     flux_str, mdhr_str, sct_str = '', '', ''
@@ -244,10 +252,11 @@ def _make_ts_mess_str(spc_dct, tsname, ts_class, save_prefix,
                 spc_model=spc_model,
                 pf_levels=pf_levels,
                 save_prefix=save_prefix,
+                saddle=True
             )
     else:
         # Build MESS string for TS with no saddle point
-        if ts_barrierless == 'vtst':
+        if ts_nobarrier == 'vtst':
             if 'P' in inner_reac_label:
                 spc_ene = reac_ene - first_ground_ene
             else:
@@ -260,11 +269,11 @@ def _make_ts_mess_str(spc_dct, tsname, ts_class, save_prefix,
 
     # Write the appropriate string for the tunneling model
     tunnel_str, sct_str = '', ''
-    if _need_to_treat_tunnel(tunnel_model, ts_sadpt, ts_barrierless, _var_radrad(ts_class)):
-        if tunnel_model == 'eckart':
+    if _treat_tunnel(tun_model, ts_sadpt, ts_nobarrier, _var_radrad(ts_class)):
+        if tun_model == 'eckart':
             tunnel_str = tunnel.write_mess_eckart_str(
                 ts_ene, reac_ene, prod_ene, imag)
-        elif tunnel_model == 'sct':
+        elif tun_model == 'sct':
             tunnel_file = tsname + '_sct.dat'
             path = 'cat'
             tunnel_str, sct_str = tunnel.write_mess_sct_str(
@@ -276,7 +285,7 @@ def _make_ts_mess_str(spc_dct, tsname, ts_class, save_prefix,
 
     # Write the MESS string for the TS
     # First if statement logic is bad
-    if ts_sadpt == 'vtst' or ts_barrierless in ('vtst', 'vrctst'):
+    if ts_sadpt == 'vtst' or ts_nobarrier in ('vtst', 'vrctst'):
         mess_str = mess_io.writer.rxnchan.ts_variational(
             ts_label, inner_reac_label, inner_prod_label, rpath_str_lst)
     else:
@@ -487,7 +496,7 @@ def _var_radrad(tsclass):
     return bool(rad_rad and low_spin and addn_rxn)
 
 
-def _need_to_treat_tunnel(tunnel_model, ts_sadpt, ts_barrierless, var_radrad):
+def _treat_tunnel(tunnel_model, ts_sadpt, ts_barrierless, var_radrad):
     """ Discern if tunneling will be treated
     """
     treat = False

@@ -4,16 +4,21 @@
 
 import elstruct
 import automol
+import autofile
 from routines.es.scan import hr_prep
 from routines.pf.messf import _tors as tors
 from routines.pf.messf import _vib as vib
 from routines.pf.messf import _tau as tau
 # from routines.pf.messf import _vpt2 as vpt2
 from lib.phydat import phycon
+from lib.filesystem import orb as fsorb
+from lib.filesystem import minc as fsmin
+from lib.filesystem import build as fbuild
+from lib.filesystem import inf as finf
 
 
-def read_filesys_for_spc(spc_dct, spc_info, spc_model,
-                         pf_levels, save_prefix, saddle=False):
+def read_filesys_for_spc(spc_dct_i, rxn, spc_model, pf_levels,
+                         save_prefix, saddle=False):
     """ Pull all of the neccessary information from the filesystem for a species
     """
 
@@ -22,73 +27,68 @@ def read_filesys_for_spc(spc_dct, spc_info, spc_model,
 
     # Set filesys
     cnf_save_fs, cnf_save_path, cnf_save_locs, thy_save_path = _cnf_filesys(
-        spc_dct, pf_levels, level='harm')
+        spc_dct_i, rxn, pf_levels, saddle=saddle, level='harm')
 
-    # Build the species string and get the imaginary frequency
-    # Initialize various auxiliary MESS data strings and names
-    mdhr_dat_str = ''
-    mdhr_dat_file_name = '{}_mdhr.dat'.format(spc[0])
-    # Initialize various variables and strings
-    symf = sym_factor
-    imag = 0.0
-    freqs = []
-    hr_str = ""
-    xmat = ()
-
-    # Default strings
-    hind_ot_str, proj_rot_str = '', ''
+    # Initialize all of the elemetnts of the inf dct
+    geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
+    has_tors, hr_str, mdhr_mess_str, mdhr_dat_str = False, '', '', ''
+    xmat, rovib_coups, rot_dists = None, None, None
 
     # Pull all information from the filesys and write the MESS species block
-    if messfutil.is_atom(harm_min_cnf_locs, harm_cnf_save_fs):
-        mass = messfutil.atom_mass(harm_min_cnf_locs, harm_cnf_save_fs)
-        spc_str = mess_io.writer.atom(
-            mass, elec_levels)
+    # Geo (Rotational)
+    geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
+    if nonrigid_rotations(rot_model):
+        rovib_coup, rot_dists = rot.read_rotational_values(
+            vpt2_save_fs, vpt2_min_cnf_locs)
+
+    # Torsions
+    if nonrigid_tors(vib_model, tors_model, tors_names):
+        mess_hr_str, proj_hr_str, mdhr_dat_str = tors.proc_mess_strings()
+        # mdhr_dat_file_name = '{}_mdhr.dat'.format(spc[0])
+
+    # Symmetry
+    sym_factor = sym.symmetry_factor(
+        sym_model, spc_dct_i, spc_info, dist_names,
+        saddle, frm_bnd_key, brk_bnd_key, tors_names,
+        tors_cnf_save_fs, tors_min_cnf_locs,
+        sym_cnf_save_fs, sym_min_cnf_locs)
+    if nonrigid_tors(vib_model, tors_model, tors_names):
+        sym_factor = sym.tors_reduced_sym_factor(
+            min_cnf_locs, cnf_save_fs, saddle=False)
+
+    # Vibrations
+    harm_geo, freqs, imag_freq = harm_freqs()
+    freqs, imag_freq, zpe = tors.tors_freqs_zpve()  # Could maybe split up
+    if anharm_vib:
+        xmat = vib.anharmonicity()
     else:
-        # Geo (Rotational)
-        if nonrigid_rotations(rot_model):
-            rovib_coup, rot_dists = rot.read_rotational_values(
-                vpt2_save_fs, vpt2_min_cnf_locs)
-        else:
-            rovib_coup, rot_dists = (), ()
+        xmat = ()
 
-        # Torsions
-        if nonrigid_tors(vib_model, tors_model, tors_names):
-            mess_hr_str, proj_hr_str, mdhr_dat_str = tors.proc_mess_strings()
-        else:
-            hind_rot_str, proj_rotors_str, mdhr_dat_str = '', '', ''
+    # Elec levels
+    elec_levels = spc_dct_i['elec_levels']
 
-        # Symmetry
-        sym_factor = sym.symmetry_factor(
-            sym_model, spc_dct_i, spc_info, dist_names,
-            saddle, frm_bnd_key, brk_bnd_key, tors_names,
-            tors_cnf_save_fs, tors_min_cnf_locs,
-            sym_cnf_save_fs, sym_min_cnf_locs)
-        if nonrigid_tors(vib_model, tors_model, tors_names):
-            sym_nums = tors.get_tors_sym_nums(
-                spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                frm_bnd_key, brk_bnd_key, saddle=False)
-            for num in sym_nums:
-                sym_factor /= num
+    # Create info dictionary
+    keys = ['geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
+            'has_tors', 'hr_str', 'mdhr_mess_str', 'mdhr_dat_str',
+            'xmat', 'rovib_coups', 'rot_dists']
+    vals = [geom, sym_factor, freqs, imag, elec_levels,
+            has_tors, hr_str, mdhr_mess_str, mdhr_dat_str,
+            xmat, rovib_coups, rot_dists]
+    inf_dct = dict(zip(keys, vals))
 
-        # Vibrations
-        harm_geo, freqs, imag_freq = harm_freqs()
-        freqs, imag_freq, zpe = tors.tors_freqs_zpve()  # Could maybe split up
-        if anharm_vib:
-            xmat = vib.anharmonicity()
-        else:
-            xmat = ()
-
-    return spc_str, dat_str_dct, imag
+    return inf_dct
 
 
 # VTST
-def read_filesys_for_rpvtst():
+def read_filesys_for_rpvtst(rpath_vals):
     """ Pull all of the neccessary information from the filesystem for a species
     """
-    for idx in irc_idxs:
+
+    # Loop over scan filesystem and pull out the values
+    for rpath_val in rpath_vals:
 
         # Set the filesystem locators for each grid point
-        locs = [[dist_name], [idx]]
+        locs = [[dist_name], [rpath_val]]
         print(scn_save_fs[-1].path(locs))
 
         # Get geometry, energy, vibrational freqs, and zpe
@@ -127,17 +127,40 @@ def read_filesys_for_rpvtst():
             print('no hessian')
             continue
 
+    return
+
+
 # TAU
-def read_filesys_for_tau():
+def read_filesys_for_tau(spc_dct_i, spc_model, pf_levels,
+                         save_prefix, rxn=(), saddle=False):
     """ Read the filesystem to get information for TAU
     """
 
-    # Read the filesystem for data string
-    cnf_save_fs = autofile.fs.conformer(save_prefix)
-    min_cnf_locs = fmin.min_energy_conformer_locators(cnf_save_fs)
-    if min_cnf_locs:
-        ene_ref = cnf_save_fs[-1].file.energy.read(min_cnf_locs)
+    # Use model to determine whether to read grads and hessians
+    _, vib_model, _ = spc_model
+    if vib_model != 'tau':
+        read_gradient, read_hessian = False, False
+        freqs = ()
+    else:
+        read_gradient, read_hessian = True, True
+        freqs = ()
+
+    # Set the filesystem
+    cnf_save_fs, _, cnf_save_locs, _ = _cnf_filesys(
+        spc_dct_i, rxn, pf_levels, save_prefix, saddle=saddle, level='harm')
     tau_save_fs = autofile.fs.tau(save_prefix)
+
+    # Read the reference geometry and energy
+    if cnf_save_locs:
+        ref_geom = cnf_save_fs[-1].file.geometry.read(cnf_save_locs)
+        min_ene = cnf_save_fs[-1].file.energy.read(cnf_save_locs)
+
+    # Set the ground and reference energy to set values for now
+    ground_ene = -0.02
+    reference_ene = 0.00
+
+    # Write the flux mode str
+    flux_mode_str = tors.write_flux_str()
 
     # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
@@ -148,8 +171,8 @@ def read_filesys_for_tau():
         samp_geoms.append(geo_str)
 
         ene = tau_save_fs[-1].file.energy.read(locs)
-        ene = (ene - ene_ref) * phycon.EH2KCAL
-        ene_str = autofile.file.write.energy(ene)
+        rel_ene = (ene - min_ene) * phycon.EH2KCAL
+        ene_str = autofile.file.write.energy(rel_ene)
         samp_enes.append(ene_str)
 
         if read_gradient:
@@ -162,17 +185,21 @@ def read_filesys_for_tau():
             hess_str = autofile.file.write.hessian(hess)
             samp_hessians.append(hess_str)
 
-    # Add the values to the dictionary
-    inf_dct['samp_geoms'] = samp_geoms
-    inf_dct['samp_enes'] = samp_enes         
-    inf_dct['samp_grads'] = samp_grads       
-    inf_dct['samp_hessians'] = samp_hessians          
-              
+    # Create info dictionary
+    keys = ['ref_geom', 'elec_levels', 'freqs', 'flux_mode_str',
+            'ground_ene', 'reference_ene',
+            'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians']
+    vals = [ref_geom, spc_dct_i['elec_levels'], freqs, flux_mode_str,
+            ground_ene, reference_ene,
+            samp_geoms, samp_enes, samp_grads, samp_hessians]
+    inf_dct = dict(zip(keys, vals))
+
     return inf_dct
 
 
 # Filesystem object setters
-def _cnf_filesys(spc_dct, pf_levels, level='harm'):
+def _cnf_filesys(spc_dct, rxn, pf_levels, save_prefix,
+                 saddle=False, level='harm'):
     """ """
     if level == 'harm':
         thy_info = pf_levels[2]
@@ -187,7 +214,7 @@ def _cnf_filesys(spc_dct, pf_levels, level='harm'):
             save_prefix, spc_info, mod_thy_info)
     else:
         rxn_info = finf.rxn_info(
-            spc['reacs'], spc['prods'], spc_dct)
+            rxn['reacs'], rxn['prods'], spc_dct)
         _, thy_save_path = fbuild.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_thy_info)
         _, thy_save_path = fbuild.ts_fs_from_thy(thy_save_path)

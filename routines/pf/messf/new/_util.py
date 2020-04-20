@@ -65,20 +65,18 @@ def get_bnd_keys(spc_dct, saddle):
     return frm_bnd_key, brk_bnd_key
 
 
-def is_atom(har_min_cnf_locs, har_cnf_save_fs):
+def is_atom(spc_dct_i):
     """ Check if species is an atom
     """
-    if har_min_cnf_locs is not None:
-        har_geo = har_cnf_save_fs[-1].file.geometry.read(har_min_cnf_locs)
-        # print('This is an atom')
-    return automol.geom.is_atom(har_geo)
+    geo = automol.inchi.geom(spc_dct_i['ich'])
+    return automol.geom.is_atom(geo)
 
 
-def atom_mass(har_min_cnf_locs, har_cnf_save_fs):
+def atom_mass(spc_dct_i):
     """ write the atom string
     """
-    har_geo = har_cnf_save_fs[-1].file.geometry.read(har_min_cnf_locs)
-    return ptab.to_mass(har_geo[0][0])
+    geo = automol.inchi.geom(spc_dct_i['ich'])
+    return automol.geom.total_mass(geo)
 
 
 def get_stoich(harm_min_cnf_locs_i, harm_min_cnf_locs_j,
