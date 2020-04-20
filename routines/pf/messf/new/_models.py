@@ -27,7 +27,7 @@ def read_filesys_for_spc(spc_dct_i, rxn, spc_model, pf_levels,
 
     # Set filesys
     cnf_save_fs, cnf_save_path, cnf_save_locs, thy_save_path = _cnf_filesys(
-        spc_dct_i, rxn, pf_levels, saddle=saddle, level='harm')
+        spc_dct_i, rxn, pf_levels, save_prefix, saddle=saddle, level='harm')
 
     # Initialize all of the elemetnts of the inf dct
     geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
@@ -77,6 +77,21 @@ def read_filesys_for_spc(spc_dct_i, rxn, spc_model, pf_levels,
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct
+
+
+# VRCTST
+def read_filesys_for_flux(ts_dct, rxn, pf_levels, save_prefix):
+    """ Grab the flux file from the filesystem
+    """
+
+    # Set filesys
+    cnf_save_fs, cnf_save_path, cnf_save_locs, thy_save_path = _cnf_filesys(
+        ts_dct, rxn, pf_levels, save_prefix, saddle=True, level='harm')
+
+    # Read the flux file string
+    flux_str = ''
+
+    return flux_str
 
 
 # VTST

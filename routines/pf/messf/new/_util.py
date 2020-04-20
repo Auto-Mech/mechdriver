@@ -79,19 +79,12 @@ def atom_mass(spc_dct_i):
     return automol.geom.total_mass(geo)
 
 
-def get_stoich(harm_min_cnf_locs_i, harm_min_cnf_locs_j,
-               harm_cnf_save_fs_i, harm_cnf_save_fs_j):
+def get_stoich(geom_i, geom_j):
     """ get the overall combined stoichiometry
     """
-    if harm_min_cnf_locs_i is not None:
-        harm_geo_i = harm_cnf_save_fs_i[-1].file.geometry.read(
-            harm_min_cnf_locs_i)
-        if harm_min_cnf_locs_j is not None:
-            harm_geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
-                harm_min_cnf_locs_j)
 
-    form_i = automol.geom.formula(harm_geo_i)
-    form_j = automol.geom.formula(harm_geo_j)
+    form_i = automol.geom.formula(geom_i)
+    form_j = automol.geom.formula(geom_j)
     form = automol.formula.join(form_i, form_j)
     stoich = ''
     for key, val in form.items():

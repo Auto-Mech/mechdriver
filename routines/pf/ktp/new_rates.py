@@ -286,7 +286,7 @@ def _make_ts_mess_str(spc_dct, tsname, ts_class, rxn, save_prefix,
     # Write the MESS string for the TS
     # First if statement logic is bad
     if ts_sadpt == 'vtst' or ts_nobarrier in ('vtst', 'vrctst'):
-        mess_str = mess_io.writer.rxnchan.ts_variational(
+        mess_str = mess_io.writer.ts_variational(
             ts_label, inner_reac_label, inner_prod_label, rpath_str_lst)
     else:
         zero_energy = ts_ene - first_ground_ene

@@ -3,6 +3,7 @@
 
 import mess_io
 from routines.pf.messf import _models as models
+from routines.pf.messf import _fake as fake
 from routines.pf.messf import _util as util
 
 
@@ -48,41 +49,31 @@ def species_block(spc_dct_i, rxn, spc_model, pf_levels,
     return spc_str
 
 
-def fake_species_block(spc_dct_i, spc_dct_j, spc_model, pf_levels):
+def fake_species_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
+                       save_prefix, rxn=()):
     """ prepare a fake species block corresponding to the
         van der Waals well between two fragments
     """
-    # From rates file
-    spc_info_i = (spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul'])
-    spc_info_j = (spc_dct_j['ich'], spc_dct_j['chg'], spc_dct_j['mul'])
-    spc_save_fs[-1].create(spc_info_i)
-    spc_save_fs[-1].create(spc_info_j)
-    save_path_i = spc_save_fs[-1].path(spc_info_i)
-    save_path_j = spc_save_fs[-1].path(spc_info_j)
 
     # Build a dct combinining various information from the filesys and MESS
     inf_dct_i = models.read_filesys_for_spc(
-        spc, spc_dct_i, spc_info_i, spc_model,
-        pf_levels, save_prefix)
+        spc_dct_i, rxn, spc_model, pf_levels, save_prefix, saddle=False)
     inf_dct_j = models.read_filesys_for_spc(
-        spc, spc_dct_j, spc_info_j, spc_model,
-        pf_levels, save_prefix)
+        spc_dct_j, rxn, spc_model, pf_levels, save_prefix, saddle=False)
 
     # Combine the electronic structure information for the two species together
-    geom = fake.combine_geos_in_fake_well(
-        harm_min_cnf_locs_i, harm_min_cnf_locs_j,
-        harm_cnf_save_fs_i, harm_cnf_save_fs_j)
+    geom = fake.combine_geos_in_fake_well(inf_dct_i['geom'], inf_dct_j['geom'])
 
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
 
-    elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
+    elec_levels = util.combine_elec_levels(
+        inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
-    fake_freqs = fake.set_fake_freqs(
-        harm_min_cnf_locs_i, harm_min_cnf_locs_j,
-        harm_cnf_save_fs_i, harm_cnf_save_fs_j)
-    freqs = fake_freqs + inf_dct_i['freqs'] * inf_dct_j['freqs']
+    fake_freqs = fake.set_fake_freqs(inf_dct_i['geom'], inf_dct_j['geom'])
 
-    hind_rot_str = inf_dct_i['hind_rot_str'] * inf_dct_j['hind_rot_str']
+    freqs = fake_freqs + inf_dct_i['freqs'] + inf_dct_j['freqs']
+
+    hind_rot_str = inf_dct_i['hind_rot_str'] + inf_dct_j['hind_rot_str']
 
     # Write the MESS string for the fake molecule
     core_str = mess_io.writer.core_rigidrotor(
@@ -104,36 +95,33 @@ def fake_species_block(spc_dct_i, spc_dct_j, spc_model, pf_levels):
 
 
 def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
-              save_prefix, pst_params=(1.0, 6)):
+              save_prefix, rxn=(), pst_params=(1.0, 6)):
     """ prepare a Phase Space Theory species block
     """
 
     # Build a dct combinining various information from the filesys and MESS
     inf_dct_i = models.read_filesys_for_spc(
-        spc, spc_dct_i, spc_info_i, spc_model,
-        pf_levels, save_prefix)
+        spc_dct_i, rxn, spc_model, pf_levels, save_prefix, saddle=False)
     inf_dct_j = models.read_filesys_for_spc(
-        spc, spc_dct_j, spc_info_j, spc_model,
-        pf_levels, save_prefix)
+        spc_dct_j, rxn, spc_model, pf_levels, save_prefix, saddle=False)
 
     # Combine the electronic structure information for the two species together
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
 
-    elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
+    elec_levels = util.combine_elec_levels(
+        inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
-    freqs = inf_dct_i['freqs'] * inf_dct_j['freqs']
+    freqs = inf_dct_i['freqs'] + inf_dct_j['freqs']
 
-    hind_rot_str = inf_dct_i['hind_rot_str'] * inf_dct_j['hind_rot_str']
+    hind_rot_str = inf_dct_i['hind_rot_str'] + inf_dct_j['hind_rot_str']
 
     # Get the total stoichiometry of the two species
-    stoich = messfutil.get_stoich(
-        harm_min_cnf_locs_i, harm_min_cnf_locs_j,
-        harm_cnf_save_fs_i, harm_cnf_save_fs_j)
+    stoich = util.get_stoich(inf_dct_i['geom'], inf_dct_j['geom'])
 
     # Write the MESS string for the Phase Space Theory TS
     core_str = mess_io.writer.core_phasespace(
-        geom1=geo_i,
-        geom2=geo_j,
+        geom1=inf_dct_i['geom'],
+        geom2=inf_dct_j['geom'],
         sym_factor=sym_factor,
         stoich=stoich,
         pot_prefactor=pst_params[0],
@@ -187,34 +175,38 @@ def tau_block(spc_dct_i, spc_model, pf_levels, save_prefix,
 
 
 # TS BLOCKS FOR VARIATIONAL TREATMENTS
-def vrctst_block():
+def vrctst_block(spc_dct_i, spc_dct_j, rxn, spc_model, pf_levels,
+                 save_prefix):
     """ write a VRCTST block
     """
 
     # Build a dct combinining various information from the filesys and MESS
-    # inf_dct_i = read_species_filesys(spc, spc_dct_i, spc_info_i, spc_model,
-    #                                  pf_levels, save_prefix)
-    # inf_dct_j = read_species_filesys(spc, spc_dct_j, spc_info_j, spc_model,
-    #                                  pf_levels, save_prefix)
+    inf_dct_i = models.read_filesys_for_spc(
+        spc_dct_i, rxn, spc_model, pf_levels, save_prefix, saddle=False)
+    inf_dct_j = models.read_filesys_for_spc(
+        spc_dct_j, rxn, spc_model, pf_levels, save_prefix, saddle=False)
 
-    # # Combine electronic structure information for the two species together
-    # sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
+    # Get the flux file
+    flux_file_name = '{}_flux.dat'.format('ts')  # fix
+    flux_str = models.read_filesys_for_flux(rxn, spc_model)
 
-    # elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
+    # Combine electronic structure information for the two species together
+    sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
 
-    # freqs = inf_dct_i['freqs'] * inf_dct_j['freqs']
+    elec_levels = util.combine_elec_levels(
+        inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
-    # hind_rot_str = inf_dct_i['hind_rot_str'] * inf_dct_j['hind_rot_str']
+    freqs = inf_dct_i['freqs'] + inf_dct_j['freqs']
+
+    hind_rot_str = inf_dct_i['hind_rot_str'] + inf_dct_j['hind_rot_str']
 
     # Get the total stoichiometry of the two species
-    stoich = messfutil.get_stoich(
-        harm_min_cnf_locs_i, harm_min_cnf_locs_j,
-        harm_cnf_save_fs_i, harm_cnf_save_fs_j)
+    stoich = util.get_stoich(inf_dct_i['geom'], inf_dct_j['geom'])
 
     # Write the MESS string for the VRCTST TS
     core_str = mess_io.writer.core_rotd(
         sym_factor=sym_factor,
-        flux_file=flux_file,
+        flux_file_name=flux_file_name,
         stoich=stoich
     )
     spc_str = mess_io.writer.molecule(
@@ -226,6 +218,8 @@ def vrctst_block():
         rovib_coups=(),
         rot_dists=()
     )
+
+    return spc_str, flux_str
 
 
 def rpath_vtst_nosadpt_block(ts_dct, ts_label, reac_label, prod_label,
@@ -327,15 +321,6 @@ def _write_mess_variational_str():
 
         # Append rxn path pt string to full list of rpath strings
         rpath_pt_strs.append(rpath_pt_str)
-
-    # Write the MESS string for the variational section
-    variational_str = mess_io.writer.rxnchan.ts_variational(
-        ts_label=ts_label,
-        reac_label=reac_label,
-        prod_label=prod_label,
-        rpath_pt_strs=rpath_pt_strs,
-        tunnel=''
-    )
 
     return variational_str
 
