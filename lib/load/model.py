@@ -81,6 +81,8 @@ def build_pes_model_keyword_dct(model_str):
     """
     # Grab the various sections required for each model
     temps_str = apf.first_capture(ptt.paren_section('temps'), model_str)
+    therm_temps_str = apf.first_capture(ptt.paren_section('therm_temps'), model_str)
+    rate_temps_str = apf.first_capture(ptt.paren_section('rate_temps'), model_str)
     pressures_str = apf.first_capture(
         ptt.paren_section('pressures'), model_str)
     etrans_str = apf.first_capture(ptt.paren_section('etransfer'), model_str)
@@ -90,13 +92,21 @@ def build_pes_model_keyword_dct(model_str):
     fitm = apf.first_capture(ptt.keyword_pattern('fit_method'), model_str)
     ethr = apf.first_capture(
         ptt.keyword_pattern('dbl_arrfit_thresh'), model_str)
-    assert temps_str is not None
+    # assert temps_str is not None
     assert pressures_str is not None
     assert etrans_str is not None
 
     # Get the dictionary/values for each section and check them
     # Setting defaults
-    temps_dct = ptt.build_vals_lst(temps_str)
+    therm_temps_dct, rate_temps_dct = {}, {}
+    if temps_str is not None:
+        therm_temps_dct = ptt.build_vals_lst(temps_str)
+        rate_temps_dct = ptt.build_vals_lst(temps_str)
+    if therm_temps_str is not None:
+        therm_temps_dct = ptt.build_vals_lst(therm_temps_str)
+    if rate_temps_str is not None:
+        rate_temps_dct = ptt.build_vals_lst(rate_temps_str)
+
     pressures_dct = ptt.build_vals_lst(pressures_str)
     etransfer_dct = ptt.build_keyword_dct(etrans_str)
     pdep_dct = ptt.build_keyword_dct(pdep_str) if pdep_str is not None else {}
@@ -107,7 +117,8 @@ def build_pes_model_keyword_dct(model_str):
 
     # Combine dcts into single model dct
     model_dct = {}
-    model_dct['temps'] = temps_dct
+    model_dct['rate_temps'] = rate_temps_dct
+    model_dct['therm_temps'] = therm_temps_dct
     model_dct['pressures'] = pressures_dct
     model_dct['etransfer'] = etransfer_dct
     model_dct['pdep_fit'] = pdep_dct

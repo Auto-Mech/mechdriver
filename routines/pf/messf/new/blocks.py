@@ -281,33 +281,41 @@ def rpath_vtst_sadpt_block(ts_dct, ene_thy_level, geo_thy_level,
     dist_name = 'RC'
 
     # Build dct of vtst info
-    inf_dct = models.read_filesys_for_rpvtst()
+    inf_dct_lst = models.read_filesys_for_rpvtst()
+
+    # Get the saddle point
 
     # Write the string
-    variational_str = _write_mess_variational_str()
+    variational_str = _write_mess_variational_str(
+        inf_dct_lst, irc_idxs, ts_idx=None)
 
     return variational_str
 
 
-def _write_mess_variational_str():
+def _write_mess_variational_str(inf_dct_lst, rpath_idxs, ts_idx=None):
     """ write the variational string
     """
-    a = []
-    for x in a:
+
+    rpath_pt_strs = []
+    for idx, inf_dct in zip(rpath_idxs, inf_dct_lst):
+
         # Iniialize the header of the rxn path pt string
         rpath_pt_str = '!-----------------------------------------------\n'
-        rpath_pt_str += '! RXN Path Point {0}\n'.format(str(int(idx)))
+        rpath_pt_str += '! RXN Path Point {0}'.format(str(int(idx+1)))
+        if ts_idx is not None and ts_idx == idx:
+            rpath_pt_str += '  (Saddle Point)'
+        rpath_pt_str += '\n'
 
         # Write MESS string for the rxn path pt; add to rxn path pt string
         core_str = mess_io.writer.mol_data.core_rigidrotor(
-            geom=geom,
-            sym_factor=sym_factor,
+            geom=inf_dct['geom'],
+            sym_factor=inf_dct['sym_factor'],
             interp_emax=None
         )
-        irc_pt_str += mess_io.writer.species.molecule(
+        rpath_pt_str += mess_io.writer.species.molecule(
             core=core_str,
-            freqs=freqs,
-            elec_levels=elec_levels,
+            freqs=inf_dct['freqs'],
+            elec_levels=inf_dct['elec_levels'],
             hind_rot='',
             xmat=(),
             rovib_coups=(),
@@ -315,14 +323,15 @@ def _write_mess_variational_str():
         )
 
         # Add the ZPVE string for the rxn path point
-        rpat_pt_str += (
-            '  ZeroEnergy[kcal/mol]      {0:<8.2f}'.format(erel)
+        rpath_pt_str += (
+            '  ZeroEnergy[kcal/mol]' +
+            '      {0:<8.2f}'.format(inf_dct['zero_ene'])
         )
 
         # Append rxn path pt string to full list of rpath strings
         rpath_pt_strs.append(rpath_pt_str)
 
-    return variational_str
+    return rpath_pt_strs
 
 
 def vtst_energy():

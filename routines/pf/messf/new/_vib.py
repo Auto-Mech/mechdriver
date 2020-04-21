@@ -3,58 +3,56 @@
 """
 
 import os
-import projrot_io
+import automol
 import autofile
-
-# New libs
+import elstruct
+import projrot_io
 from lib.phydat import phycon
 from lib.runner import script
 
 
-def harm_freqs():
+def read_harmonic_freqs(geom, cnf_save_fs, cnf_save_locs, saddle=False):
     """ Read the harmonic frequencies
     """
+
+    # Probably just read the freqs from the filesys
+
     # Do the freqs obtain for two species for fake and pst
-    if harm_min_cnf_locs is not None:
+    if cnf_save_locs is not None:
+
         # Obtain geom and freqs from filesys
-        harm_geo = harm_cnf_save_fs[-1].file.geometry.read(harm_min_cnf_locs)
-        hess = harm_cnf_save_fs[-1].file.hessian.read(harm_min_cnf_locs)
+        hess = cnf_save_fs[-1].file.hessian.read(cnf_save_locs)
         freqs = elstruct.util.harmonic_frequencies(
-            harm_geo, hess, project=False)
+            geom, hess, project=False)
+
         # Modify freqs lst and get imaginary frequencies
         mode_start = 6
         if saddle:
             mode_start = mode_start + 1
             imag_freq = freqs[0]
         else:
-            imag_freq = ''
-        if automol.geom.is_linear(harm_geo):
+            imag_freq = None
+
+        # Grab the freqs from the lst, for cases of linear and nonlinear mol
+        if automol.geom.is_linear(geom):
             mode_start = mode_start - 1
         freqs = freqs[mode_start:]
     else:
-        print('ERROR: Reference geometry is missing for harmonic frequencies ',
-              'for species {}'.format(spc_info[0]))
-        raise ValueError
+        print('ERROR: Reference geometry is missing for harmonic frequencies')
 
-    return harm_geo, freqs, imag_freq
+    return freqs, imag_freq
 
 
-def anharm_zpve():
-    """ dd """
-    if vpt2_min_cnf_locs is not None:
-        vpt2_anharm_zpve = vpt2_cnf_save_fs[-1].file.anharmonic_zpve.read(
-            vpt2_min_cnf_locs)
-
-    return 
-
-
-def anharmonicity():
-    """ dd """
-    if vpt2_min_cnf_locs is not None:
-        xmat = vpt2_cnf_save_fs[-1].file.anharmonicity_matrix.read(
-            vpt2_min_cnf_locs)
+def read_anharmon_matrix(cnf_save_fs, cnf_save_locs):
+    """ Read the anharmonicity matrix """
+    if cnf_save_locs is not None:
+        xmat = cnf_save_fs[-1].file.anharmonicity_matrix.read(
+            cnf_save_locs)
+    else:
+        print('No anharm matrix')
 
     return xmat
+
 
 def projrot_freqs_1(tors_geo, hess,
                     proj_rotors_str,
@@ -160,5 +158,4 @@ def determine_freqs_zpe(freqs1, freqs2, imag_freq1, imag_freq2,
               '{0:.2f} and {1:.2f}'.format(del_tors_zpe, del_tors_zpe_2),
               'kcal/mol between harmonic and hindered torsional ZPVEs')
 
-    # print('zpe sum test:', zpe_harm_no_tors, zpe_harm_no_tors_2, tors_zpe, zpe)
     return freqs, imag_freq, zpe
