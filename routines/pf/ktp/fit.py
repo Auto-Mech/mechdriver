@@ -4,6 +4,7 @@
 """
 
 import os
+import copy
 import numpy
 import ratefit
 import chemkin_io

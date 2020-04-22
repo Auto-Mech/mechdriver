@@ -1,6 +1,7 @@
 """ Build the grid for a transition state search
 """
 
+import math
 import numpy
 import automol
 from lib.phydat import phycon
@@ -170,7 +171,8 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
         bnd_len = bnd.LEN_DCT[ts_bnd_len]
         rmin2 = bnd_len + 0.05 * phycon.ANG2BOHR
     if rmax > rmin1:
-        npoints = (rmax-rmin1)/interval
+        npoints = math.ceil((rmax-rmin1)/interval)
+        print('grid test:', rmax, rmin1, npoints, interval)
         if npoints < 1:
             grid1 = []
         else:
@@ -184,7 +186,7 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
     return grid, update_guess
 
 
-def unimolecular_elimination_grid(npoints, ts_bnd_len, ts_zma, brk_name):
+def unimolecular_elimination_grid(npoints, ts_bnd_len, ts_zma, syms, brk_name):
     """ Build forward 2D grid for elimination reaction
     """
     brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
@@ -315,6 +317,7 @@ def addition_bkp_grid(npoints, ts_bnd_len):
     """
     rmin = 1.6 * phycon.ANG2BOHR
     rmax = 2.8 * phycon.ANG2BOHR
+    print('ts_bnd_len test:', ts_bnd_len)
     if ts_bnd_len in bnd.LEN_DCT:
         npoints = 14
         bnd_len = bnd.LEN_DCT[ts_bnd_len]

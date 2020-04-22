@@ -59,6 +59,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
 
     # Build the MESS label idx dictionary for the PES
     label_dct = messrates.make_pes_label_dct(rxn_lst, pes_idx, spc_dct)
+    print('label_dct test:', label_dct)
 
     # Set path where MESS files will be written and read
     mess_path = raterunner.get_mess_path(run_prefix, pes_formula)
