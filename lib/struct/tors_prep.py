@@ -99,3 +99,87 @@ def is_methyl_rotor():
     """ Check if methyl rotor
     """
     return False
+
+
+# Functions to handle setting up torsional defintion and potentials properly
+def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
+    """ Set the initial set of groups
+    """
+    gra = automol.zmatrix.graph(zma, remove_stereo=True)
+    coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+    axis = coo_dct[tors_name][1:3]
+    atm_key = axis[1]
+    if ts_bnd:
+        for atm in axis:
+            if atm in ts_bnd:
+                atm_key = atm
+                break
+    group = list(
+        automol.graph.branch_atom_keys(
+            gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) - set(axis))
+    if not group:
+        for atm in axis:
+            if atm != atm_key:
+                atm_key = atm
+        group = list(
+            automol.graph.branch_atom_keys(
+                gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) - set(axis))
+
+    return group, axis, atm_key
+
+
+def _check_saddle_groups(zma, spc_dct_i, group, axis, pot, ts_bnd, sym_num):
+    """ Assess that hindered rotor groups and axes
+    """
+    n_atm = automol.zmatrix.count(zma)
+    if 'addition' in spc_dct_i['class'] or 'abstraction' in spc_dct_i['class']:
+        group2 = []
+        ts_bnd1 = min(ts_bnd)
+        ts_bnd2 = max(ts_bnd)
+        for idx in range(ts_bnd2, n_atm):
+            group2.append(idx)
+        if ts_bnd1 in group:
+            for atm in group2:
+                if atm not in group:
+                    group.append(atm)
+
+    # Check to see if symmetry of XH3 rotor was missed
+    if sym_num == 1:
+        group2 = []
+        for idx in range(n_atm):
+            if idx not in group and idx not in axis:
+                group2.append(idx)
+        all_hyd = True
+        symbols = automol.zmatrix.symbols(zma)
+        hyd_count = 0
+        for idx in group2:
+            if symbols[idx] != 'H' and symbols[idx] != 'X':
+                all_hyd = False
+                break
+            if symbols[idx] == 'H':
+                hyd_count += 1
+        if all_hyd and hyd_count == 3:
+            sym_num = 3
+            lpot = int(len(pot)/3)
+            potp = []
+            potp[0:lpot] = pot[0:lpot]
+            pot = potp
+
+    return group, axis, pot
+
+
+def _check_dummy_trans(zma):
+    """ check trans
+    """
+    atom_symbols = automol.zmatrix.symbols(zma)
+    dummy_idx = []
+    for atm_idx, atm in enumerate(atom_symbols):
+        if atm == 'X':
+            dummy_idx.append(atm_idx)
+    remdummy = numpy.zeros(len(zma[0]))
+    for dummy in dummy_idx:
+        for idx, _ in enumerate(remdummy):
+            if dummy < idx:
+                remdummy[idx] += 1
+
+    return remdummy

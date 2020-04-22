@@ -27,9 +27,6 @@ def run(spc_dct,
     """ main driver for thermo run
     """
 
-    # Print the header message for the driver
-    printmsg.program_header('thermo')
-
     # Pull stuff from dcts for now
     save_prefix = run_inp_dct['save_prefix']
 

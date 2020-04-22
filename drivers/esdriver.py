@@ -22,9 +22,6 @@ def run(pes_idx,
     print('rxn_lst')
     print(rxn_lst)
 
-    # Print the header message for the driver
-    printmsg.program_header('es')
-
     # Pull stuff from dcts for now
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
