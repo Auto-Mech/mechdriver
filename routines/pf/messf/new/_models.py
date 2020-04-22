@@ -6,19 +6,14 @@
   and calculate electronic and zero-point vibrational energies.
 """
 
-import elstruct
-import automol
 import autofile
-from routines.es.scan import hr_prep
 from routines.pf.messf import _rot as rot
 from routines.pf.messf import _tors as tors
 from routines.pf.messf import _sym as sym
 from routines.pf.messf import _vib as vib
-from routines.pf.messf import _tau as tau
 # from routines.pf.messf import _vpt2 as vpt2
 from lib.phydat import phycon
 from lib.filesystem import orb as fsorb
-from lib.filesystem import minc as fsmin
 from lib.filesystem import build as fbuild
 from lib.filesystem import inf as finf
 
@@ -30,6 +25,9 @@ def read_filesys_for_spc(spc_dct_i, rxn, spc_model, pf_levels,
 
     # Unpack the models and levels
     rot_model, tors_model, vib_model, sym_model = spc_model
+
+    # Set species information
+    dist_names = set_dist_names(spc_dct_i)
 
     # Set filesys
     cnf_save_fs, cnf_save_path, cnf_save_locs, thy_save_path = _cnf_filesys(
@@ -54,7 +52,10 @@ def read_filesys_for_spc(spc_dct_i, rxn, spc_model, pf_levels,
             vpt2_save_fs, vpt2_save_locs)
 
     # Torsion Info: Needed for Proper symmetry and vibration determination
-    if nonrigid_tors(vib_model, tors_model, tors_names):
+    tors_name_grps, tors_grid_grps, tors_sym_grps = tors.make_tors_info(
+        spc_dct_i, cnf_save_fs, cnf_save_locs, tors_model,
+        saddle=False, frm_bnd_key=(), brk_bnd_key=())
+    if nonrigid_tors(vib_model, tors_model, tors_names_grps):
         mess_hr_str, proj_hr_str, mdhr_dat_str = tors.proc_mess_strings()
         # mdhr_dat_file_name = '{}_mdhr.dat'.format(spc[0])
 
@@ -316,6 +317,19 @@ def _ts_filesys(spc_dct, rxn, pf_levels, save_prefix, level='harm'):
 
 
 # Series of checks to determine what information is needed to be obtained
+def set_dist_names(spc_dct_i):
+    """ Set various things needed for TSs
+    """
+    dist_names = []
+    mig = 'migration' in spc_dct_i['class']
+    elm = 'elimination' in spc_dct_i['class']
+    if mig or elm:
+        dist_names.append(spc_dct_i['dist_info'][0])
+        dist_names.append(spc_dct_i['dist_info'][3])
+
+    return dist_names
+
+
 def nonrigid_rotations(rot_model):
     """ dtermine if a nonrigid rotation model is specified and further
         information is needed from the filesystem

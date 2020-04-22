@@ -46,7 +46,7 @@ def make_tors_info(spc_dct_i, cnf_save_fs, cnf_save_locs, tors_model, saddle=Fal
         # Get the hr prep stuff
         tors_name_grps, tors_grid_grps, tors_sym_grps = torsprep.hr_prep(
             zma, geom, run_tors_names=run_tors_names,
-            scan_increment=scan_increment, tors_model=tors_model,,
+            scan_increment=scan_increment, tors_model=tors_model,
             saddle=saddle,
             frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
         # Get sym from hr_prep
@@ -112,10 +112,10 @@ def _make_1dhr_tors_strs(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
         pot = _hrpot_spline_fitter(pot)
 
         # Get the HR groups and axis for the rotor
-        group, axis, atm_key = _set_groups_ini(
+        group, axis, atm_key = torsprep.set_groups_ini(
             zma, tors_name, ts_bnd, saddle)
         if saddle:
-            group, axis, pot = _check_saddle_groups(
+            group, axis, pot = torscheck_saddle_groups(
                 zma, spc_dct_i, group, axis,
                 pot, ts_bnd, tors_sym)
         group = list(numpy.add(group, 1))
@@ -171,10 +171,10 @@ def _make_mdhr_tors_strs(geom, spc_info, sym_num, spc_dct_i,
             pot = ()
 
             # Get the HR groups and axis for the rotor
-            group, axis, atm_key = _set_groups_ini(
+            group, axis, atm_key = torsprep.set_groups_ini(
                 zma, tors_name, ts_bnd, saddle)
             if saddle:
-                group, axis, pot = _check_saddle_groups(
+                group, axis, pot = torsprep.check_saddle_groups(
                     zma, spc_dct_i, group, axis,
                     pot, ts_bnd, tors_sym_nums[tors_idx])
             group = list(numpy.add(group, 1))
@@ -200,6 +200,7 @@ def _make_mdhr_tors_strs(geom, spc_info, sym_num, spc_dct_i,
 
 def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
                   spc_dct_i,
+                  tors_names, tors_sym_nums,
                   frm_bnd_key, brk_bnd_key,
                   elec_levels,
                   tau_dat_file_name,
@@ -216,15 +217,6 @@ def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
             tors_min_cnf_locs)
         name_matrix = automol.zmatrix.name_matrix(zma)
         key_matrix = automol.zmatrix.key_matrix(zma)
-        tors_geo = tors_cnf_save_fs[-1].file.geometry.read(
-            tors_min_cnf_locs)
-
-        # Set torsional stuff
-        tors_names = tors.get_tors_names(
-            spc_dct_i, tors_cnf_save_fs, saddle=saddle)
-        tors_sym_nums = tors.get_tors_sym_nums(
-            spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-            frm_bnd_key, brk_bnd_key, saddle=False)
 
         # Write the MESS flux strings for each of the modes
         for tors_name, tors_sym in zip(tors_names, tors_sym_nums):
