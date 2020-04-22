@@ -45,13 +45,13 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
                 [name]
                 for name in automol.geom.zmatrix_torsion_coordinate_names(geo)
             ]
-            if ndim_tors == 'mdhr':
+            if ndim_tors in ('mdhr', 'mdhrv'):
                 run_tors_names = [[tors
                                    for rotor in run_tors_names
                                    for tors in rotor]]
 
     # Deal with the dimensionality of the rotors
-    if ndim_tors == 'mdhr':
+    if ndim_tors in ('mdhr', 'mdhrv'):
         run_tors_names = mdhr_prep(zma, run_tors_names)
 
     # Build the grids corresponding to the torsions
@@ -64,8 +64,11 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
             [numpy.linspace(*linspace) + val_dct[name]
              for name, linspace in zip(tors_names, tors_linspaces)]
         )
+        # tors_sym_nums = tors.get_tors_sym_nums(
+        #     spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
+        #     frm_bnd_key, brk_bnd_key, saddle=False)
 
-    return run_tors_names, run_tors_grids
+    return run_tors_names, run_tors_grids  # run_tors_syms
 
 
 def mdhr_prep(zma, run_tors_names):

@@ -32,23 +32,7 @@ def get_zpe_str(spc_dct, zpe):
     return zero_energy_str
 
 
-def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model,
-                          save_prefix, saddle=False):
-    """ compute the ZPE including torsional and anharmonic corrections
-    """
-    
-    # Calculate ZPVE
-    if util.is_atom(spc_dct_i):
-        zpve = 0.0
-    else:
-        # Build dct combinining various information from the filesys and MESS
-        inf_dct = models.read_filesys_for_spc(
-            spc_dct_i, rxn, spc_model, pf_levels, save_prefix, saddle=saddle)
-
-    return zpve
-
-
-def old_get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
+def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 

@@ -66,6 +66,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
             save_prefix, saddle=False)
 
     # Loop over all the channels and write the MESS strings
+    written_labels = []
     for idx, rxn in enumerate(rxn_lst):
 
         # Set the TS name and channel model
@@ -80,12 +81,13 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
             save_prefix)
 
         # Write the mess strings for all spc on the channel
-        well_str, bim_str, ts_str, dat_str_lst = _make_channel_mess_strs(
-            tsname, rxn, spc_dct, label_dct,
+        mess_strs, dat_str_lst, written_labels = _make_channel_mess_strs(
+            tsname, rxn, spc_dct, label_dct, written_labels,
             first_ground_ene, channel_enes,
             model_dct, thy_dct, save_prefix)
 
         # Append to full MESS strings
+        [well_str, bim_str, ts_str] = mess_strs
         full_well_str += well_str
         full_bim_str += bim_str
         full_ts_str += ts_str
@@ -97,7 +99,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
     return full_well_str, full_bim_str, full_ts_str, full_dat_str_lst
 
 
-def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct,
+def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
                             first_ground_ene, channel_enes,
                             model_dct, thy_dct, save_prefix):
     """ make the partition function strings for each of the channels
@@ -142,17 +144,19 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct,
         # Write the MESS strings
         spc_label = [automol.inchi.smiles(spc_dct[spc]['ich']) for spc in rct]
         chn_label = label_dct[_make_rxn_str(rct)]
-        if len(rct) > 1:
-            ground_energy = rct_ene - first_ground_ene
-            bim_str += '\n! {} + {}\n'.format(rct[0], rct[1])
-            bim_str += mess_io.writer.bimolecular(
-                chn_label, spc_label[0], spc_data[0],
-                spc_label[1], spc_data[1], ground_energy)
-        else:
-            zero_energy = rct_ene - first_ground_ene
-            well_str += '\n! {}\n'.format(rct)
-            well_str += mess_io.writer.well(
-                chn_label, spc_data[0], zero_energy)
+        if chn_label not in written_labels:
+            written_labels.append(chn_label)
+            if len(rct) > 1:
+                ground_energy = rct_ene - first_ground_ene
+                bim_str += '\n! {} + {}\n'.format(rct[0], rct[1])
+                bim_str += mess_io.writer.bimolecular(
+                    chn_label, spc_label[0], spc_data[0],
+                    spc_label[1], spc_data[1], ground_energy)
+            else:
+                zero_energy = rct_ene - first_ground_ene
+                well_str += '\n! {}\n'.format(rct)
+                well_str += mess_io.writer.well(
+                    chn_label, spc_data[0], zero_energy)
 
         # Initialize the reactant and product MESS label
         if rct == rxn['reacs']:
@@ -188,7 +192,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct,
         ts_label, inner_reac_label, inner_prod_label)
     ts_str += sts_str
 
-    return well_str, bim_str, ts_str, dat_str_lst
+    return [well_str, bim_str, ts_str], dat_str_lst, written_labels
 
 
 def _make_spc_mess_str(spc_dct_i, rxn, save_prefix, spc_model, pf_levels):
@@ -377,21 +381,25 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct):
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
         pes_label_dct.update(
-            _make_channel_label_dct(tsname, idx+1, rxn, spc_dct))
+            _make_channel_label_dct(tsname, idx+1, pes_idx_dct, rxn, spc_dct))
 
     return pes_label_dct
 
 
-def _make_channel_label_dct(tsname, chn_idx, rxn, spc_dct):
+def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct):
     """ Builds a dictionary that matches the mechanism name to the labels used
         in the MESS input and output files
     """
 
-    # Initialize the channel idx dictionary
-    label_dct = {}
-
     # Initialize idxs for bimol, well, and fake species
     pidx, widx, fidx = 1, 1, 1
+    for val in label_dct.values():
+        if 'P' in val:
+            pidx += 1
+        elif 'W' in val:
+            widx += 1
+        elif 'F' in val:
+            fidx += 1
 
     # Determine the idxs for the channel reactants
     reac_label = ''

@@ -24,16 +24,13 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     """
     print('rxn lst', rxn_lst)
 
-    # Print the header message for the driver
-    printmsg.program_header('ktp')
-
     # Pull stuff from dcts for now
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
 
     # Pull PES model and pieces
     pes_model = rxn_lst[0]['model'][0]
-    temps = pes_model_dct[pes_model]['temps']
+    temps = pes_model_dct[pes_model]['rate_temps']
     pressures = pes_model_dct[pes_model]['pressures']
     etransfer = pes_model_dct[pes_model]['etransfer']
     pdep_fit = pes_model_dct[pes_model]['pdep_fit']

@@ -27,9 +27,6 @@ def run(spc_dct,
     """ main driver for thermo run
     """
 
-    # Print the header message for the driver
-    printmsg.program_header('thermo')
-
     # Pull stuff from dcts for now
     save_prefix = run_inp_dct['save_prefix']
 
@@ -54,7 +51,7 @@ def run(spc_dct,
                 spc_model_dct[spc_model]['pf'])
 
             # Get PF input header
-            temps = pes_model_dct[pes_model]['temps']
+            temps = pes_model_dct[pes_model]['therm_temps']
             global_pf_str = routines.pf.messf.blocks.get_pf_header(temps)
 
             # Set up the species filesystem

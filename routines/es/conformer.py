@@ -81,6 +81,8 @@ def conformer_sampling(
     if min_cnf_locs:
         geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
+        print(automol.geom.string(geo))
+        print(automol.zmatrix.string(zma))
         if not saddle:
             assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
             thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
