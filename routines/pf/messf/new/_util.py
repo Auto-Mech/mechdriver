@@ -52,6 +52,19 @@ def combine_elec_levels(spc_dct_i, spc_dct_j):
     return elec_levels
 
 
+def set_dist_names(spc_dct_i):
+    """ Set various things needed for TSs
+    """
+    dist_names = []
+    mig = 'migration' in spc_dct_i['class']
+    elm = 'elimination' in spc_dct_i['class']
+    if mig or elm:
+        dist_names.append(spc_dct_i['dist_info'][0])
+        dist_names.append(spc_dct_i['dist_info'][3])
+
+    return dist_names
+
+
 def get_bnd_keys(spc_dct, saddle):
     """ get bond broken and formed keys for a transition state
     """

@@ -17,7 +17,8 @@ from lib.struct import torsprep
 
 
 # Function to deal with setting up all of the torsion info since it is a pain
-def make_tors_info(spc_dct_i, cnf_save_fs, cnf_save_locs, tors_model, saddle=False, frm_bnd_key=(), brk_bnd_key=()):
+def make_tors_info(spc_dct_i, cnf_save_fs, cnf_save_locs, tors_model,
+                   saddle=False, frm_bnd_key=(), brk_bnd_key=()):
     """ get tors stuff
     """
 
@@ -49,14 +50,13 @@ def make_tors_info(spc_dct_i, cnf_save_fs, cnf_save_locs, tors_model, saddle=Fal
             scan_increment=scan_increment, tors_model=tors_model,
             saddle=saddle,
             frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
-        # Get sym from hr_prep
 
     return tors_name_grps, tors_grid_grps, tors_sym_grps
 
 
 # Functions to write MESS strings
-def make_hr_strings(spc_dct_i, tors_name_grps, tors_grid_grps, tors_sym_grps, tors_model, cnf_save_path,
-                    saddle=False):
+def make_hr_strings(spc_dct_i, tors_name_grps, tors_grid_grps, tors_sym_grps,
+                    tors_model, cnf_save_path, saddle=False):
     """ Procedure for building the MESS strings
     """
 
@@ -91,22 +91,24 @@ def make_hr_strings(spc_dct_i, tors_name_grps, tors_grid_grps, tors_sym_grps, to
     return hind_rot_str, proj_rotors_str, mdhr_dat_str_lst
 
 
-def _make_1dhr_tors_strs(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
+def _make_1dhr_tors_strs(harm_geo, spc_info, rxn_class, ts_bnd, zma,
                          tors_names, tors_grids, tors_sym_nums,
-                         tors_cnf_save_path, min_ene,
+                         cnf_save_path, min_ene,
                          saddle=False, hind_rot_geo=None):
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
+
+    # Initialize empty strings
+    mess_hr_str, projrot_hr_str = '', ''
+
     # Loop over the torsions
-    hind_rot_str = ""
-    proj_rotors_str = ""
     tors_info = zip(tors_names, tors_grids, tors_sym_nums)
     for tors_name, tors_grid, tors_sym in tors_info:
 
         # Read the hindered rotor potential
         pot, _ = _read_hr_pot(
             spc_info, [tors_name], tors_grid,
-            tors_cnf_save_path, min_ene)
+            cnf_save_path, min_ene)
 
         # Build potential lst from only successful calculations
         pot = _hrpot_spline_fitter(pot)
@@ -115,8 +117,8 @@ def _make_1dhr_tors_strs(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
         group, axis, atm_key = torsprep.set_groups_ini(
             zma, tors_name, ts_bnd, saddle)
         if saddle:
-            group, axis, pot = torscheck_saddle_groups(
-                zma, spc_dct_i, group, axis,
+            group, axis, pot = torsprep.check_saddle_groups(
+                zma, rxn_class, group, axis,
                 pot, ts_bnd, tors_sym)
         group = list(numpy.add(group, 1))
         axis = list(numpy.add(axis, 1))
@@ -124,16 +126,16 @@ def _make_1dhr_tors_strs(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
             axis.reverse()
 
         # Check for dummy transformations
-        remdummy = _check_dummy_trans(zma)
+        remdummy = torsprep.check_dummy_trans(zma)
 
         # Write the MESS and ProjRot strings for the rotor
         hrgeo = harm_geo if hind_rot_geo else None
-        hind_rot_str += mess_io.writer.rotor_hindered(
+        mess_hr_str += mess_io.writer.rotor_hindered(
             group, axis, tors_sym, pot, remdummy=remdummy, geom=hrgeo)
-        proj_rotors_str += projrot_io.writer.rotors(
+        projrot_hr_str += projrot_io.writer.rotors(
             axis, group, remdummy=remdummy)
 
-    return hind_rot_str, proj_rotors_str
+    return mess_hr_str, projrot_hr_str
 
 
 def _make_mdhr_tors_strs(geom, spc_info, sym_num, spc_dct_i,
@@ -146,26 +148,27 @@ def _make_mdhr_tors_strs(geom, spc_info, sym_num, spc_dct_i,
     """
 
     # Loop over the torsion groups and get the int rot strings and potentials
-    rotor_internal_str = ''
-    proj_rotors_str = ''
+    mess_hr_str, projrot_hr_str = '', ''
     mdhr_dat_str_lst = []
-    tors_idx = 0
-    for tors_names, tors_grids in zip(tors_name_grps, tors_grid_grps):
+
+    # Loop over the torsions
+    tors_info = zip(tors_name_grps, tors_grid_grps)
+    for idx, (tors_names, tors_grids) in enumerate(tors_info):
 
         # Read the hindered rotor potential and add to master list
         hr_pot, hr_freqs = _read_hr_pot(
             spc_info, tors_names, tors_grids,
             tors_cnf_save_path, min_ene,
-            saddle=saddle, read_freqs=vib_adiabatic)
+            read_freqs=vib_adiabatic)
 
-        # Write the MDHR potential file for each rotor set
-        mdhr_dat_str = _make_mdhr_dat_file_str(hr_pot, hr_freqs)
+        # Write the MDHR potential file for each rotor set; append to lst
+        mdhr_dat_str_lst.append(mess_io.mdhr_data(hr_pot, hr_freqs))
 
         # Check for dummy transformations
-        remdummy = _check_dummy_trans(zma)
+        remdummy = torsprep.check_dummy_trans(zma)
 
         # Loop over the rotors in the group and write the internal rotor strs
-        for tors_name, tors_grid in zip(tors_names, tors_grids):
+        for tors_name, _ in zip(tors_names, tors_grids):
 
             # Set pot to empty list (may need fix)
             pot = ()
@@ -176,36 +179,27 @@ def _make_mdhr_tors_strs(geom, spc_info, sym_num, spc_dct_i,
             if saddle:
                 group, axis, pot = torsprep.check_saddle_groups(
                     zma, spc_dct_i, group, axis,
-                    pot, ts_bnd, tors_sym_nums[tors_idx])
+                    pot, ts_bnd, tors_sym_nums[idx])
             group = list(numpy.add(group, 1))
             axis = list(numpy.add(axis, 1))
             if (atm_key+1) != axis[1]:
                 axis.reverse()
 
             # Write the MESS and ProjRot strings for the rotor
-            rotor_internal_str += mess_io.writer.mol_data.rotor_internal(
-                group, axis, tors_sym_nums[tors_idx],
+            mess_hr_str += mess_io.writer.mol_data.rotor_internal(
+                group, axis, tors_sym_nums[idx],
                 rotor_id='', remdummy=remdummy,
                 mass_exp_size=5, pot_exp_size=5,
                 hmin=13, hmax=101,
                 grid_size=100)
-            proj_rotors_str += projrot_io.writer.rotors(
+            projrot_hr_str += projrot_io.writer.rotors(
                 axis, group, remdummy=remdummy)
 
-            # Increment tors idx to keep track of the sym number
-            tors_idx += 1
-
-    return rotor_internal_str, proj_rotors_str, mdhr_dat_str
+    return mess_hr_str, projrot_hr_str, mdhr_dat_str_lst
 
 
 def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
-                  spc_dct_i,
-                  tors_names, tors_sym_nums,
-                  frm_bnd_key, brk_bnd_key,
-                  elec_levels,
-                  tau_dat_file_name,
-                  freqs=(),
-                  saddle=False):
+                  tors_names, tors_sym_nums):
     """ Write out the input string for tau samling
     """
     # Loop over the torsions to get the flux strings
@@ -242,26 +236,27 @@ def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
 
 
 # Use the torsions and vibrational frequenices to calculate the zpve
-def tors_freqs_zpve():
+def calc_tors_zpves(geom, sym_factor, elec_levels, hess,
+                    mess_hr_str, projrot_hr_str,
+                    cnf_save_path, pot=True, saddle=False):
     """ proc to calculate freqs and zpves
     """
     # Calculate ZPVES of the hindered rotors
     if saddle:  # and tors_names is not None:
-        tors_zpe = tors.calc_tors_freqs_zpe(
-            tors_geo, sym_factor, elec_levels,
-            hind_rot_str, tors_save_path)
+        tors_zpe = calc_tors_freqs_zpe(
+            geom, sym_factor, elec_levels,
+            mess_hr_str, cnf_save_path)
     else:
         tors_zpe = 0.0
 
     # Run one vers ProjRot to proj freqs for that version
     freqs1, imag_freq1, zpe_harm_no_tors = vib.projrot_freqs_1(
-        tors_geo, hess,
-        proj_rotors_str,
-        tors_save_path, pot=True, saddle=False)
+        geom, hess, projrot_hr_str,
+        cnf_save_path, pot=True, saddle=False)
 
     # Now run the other version of ProjRot
     pfreqs2 = vib.projrot_freqs_2(
-        tors_save_path, pot=True, saddle=saddle)
+        cnf_save_path, pot=True, saddle=saddle)
     [freqs2, imag_freq2,
      zpe_harm_no_tors_2, harm_zpe] = pfreqs2
 
@@ -270,8 +265,65 @@ def tors_freqs_zpve():
         freqs1, freqs2, imag_freq1, imag_freq2,
         zpe_harm_no_tors, zpe_harm_no_tors_2,
         harm_zpe, tors_zpe)
-    
+
     return freqs, imag_freq, zpe
+
+
+def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
+                        hind_rot_str, tors_save_path):
+    """ Calculate the frequencies and ZPVES of the hindered rotors
+        create a messpf input and run messpf to get tors_freqs and tors_zpes
+    """
+    dummy_freqs = [1000.]
+    dummy_zpe = 0.0
+    core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
+    spc_str = mess_io.writer.molecule(
+        core, dummy_freqs, elec_levels,
+        hind_rot=hind_rot_str,
+        )
+    temp_step = 100.
+    ntemps = 5
+    zpe_str = '{0:<8.2f}\n'.format(dummy_zpe)
+    zpe_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
+    zpe_str += 'End\n'
+    global_pf_str = mess_io.writer.global_pf(
+        [], temp_step, ntemps, rel_temp_inc=0.001,
+        atom_dist_min=0.6)
+    spc_head_str = 'Species ' + ' Tmp'
+    pf_inp_str = '\n'.join(
+        [global_pf_str, spc_head_str,
+         spc_str, zpe_str])
+
+    bld_locs = ['PF', 0]
+    bld_save_fs = autofile.fs.build(tors_save_path)
+    bld_save_fs[-1].create(bld_locs)
+    pf_path = bld_save_fs[-1].path(bld_locs)
+
+    # run messpf
+    with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
+        pf_file.write(pf_inp_str)
+    pf_script_str = ("#!/usr/bin/env bash\n"
+                     "export OMP_NUM_THREADS=10\n"
+                     "messpf pf.inp pf.out >> stdout.log &> stderr.log")
+
+    script.run_script(pf_script_str, pf_path)
+
+    with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
+        output_string = mess_file.read()
+
+    # Read the freqs and zpes
+    # tors_freqs = mess_io.reader.tors.freqs(output_string)
+    tors_zpes = mess_io.reader.tors.zpves(output_string)
+
+    # Calculate the torsional zpe
+    tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
+    # tors_zpe_cor = 0.0
+    # tors_zpe = 0.0
+    # for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
+    #     tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
+    #     tors_zpe += tors_1dhr_zpe
+
+    return tors_zpe
 
 
 # Functions to obtain values of the HR potentials from the filesystem
@@ -337,19 +389,19 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, min_ene,
         for i, grid_val_i in enumerate(tors_grids[0]):
             for j, grid_val_j in enumerate(tors_grids[1]):
                 for k, grid_val_k in enumerate(tors_grids[2]):
-                    for la, grid_val_l in enumerate(tors_grids[3]):
+                    for lm, grid_val_l in enumerate(tors_grids[3]):
                         locs = [tors_names,
                                 [grid_val_i, grid_val_j,
                                  grid_val_k, grid_val_l]]
                         if scn_fs[-1].exists(locs):
                             ene = scn_fs[-1].file.energy.read(locs)
-                            pot[i][j][k][l] = (ene - min_ene) * phycon.EH2KCAL
+                            pot[i][j][k][lm] = (ene - min_ene) * phycon.EH2KCAL
                         else:
-                            pot[i][j][k][l] = 10.0
+                            pot[i][j][k][lm] = 10.0
                         if read_freqs:
                             freqs = scn_fs[-1].file.harmonic_frequencies.read(
                                 locs)
-                            freqs[i][j][k][l] = freqs
+                            freqs[i][j][k][lm] = freqs
 
     return pot, freqs
 
@@ -358,17 +410,20 @@ def _hrpot_spline_fitter(pot, thresh=-0.05):
     """ Get a physical hindered rotor potential via a series of spline fits
     """
 
-    # Build a potential list from only successful calculations
+    # Initialize a variable for the size of the potential
     lpot = len(pot)+1
+
+    # Build a potential list from only successful calculations
     idx_success = []
-    pot_success = []
-    pot.append(0.)
+    pot_success = [0.0]
     for idx in range(lpot):
         if pot[idx] < 600.:
             idx_success.append(idx)
             pot_success.append(pot[idx])
     idx_success.append(lpot)
     pot_success.append(pot[0])
+
+    # Build a new potential list using a spline fit of the HR potential
     pot_spl = interp1d(
         numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
     for idx in range(lpot):
@@ -422,66 +477,6 @@ def _hrpot_spline_fitter(pot, thresh=-0.05):
     else:
         final_potential = pot.copy()
 
-    # print('Final potential in spline fitter:', final_potential)
     final_potential = final_potential[:-1]
 
     return final_potential
-
-
-# Calculating certain quantities on the torsions
-def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
-                        hind_rot_str, tors_save_path):
-    """ Calculate the frequencies and ZPVES of the hindered rotors
-        create a messpf input and run messpf to get tors_freqs and tors_zpes
-    """
-    dummy_freqs = [1000.]
-    dummy_zpe = 0.0
-    core = mess_io.writer.core_rigidrotor(tors_geo, sym_factor)
-    spc_str = mess_io.writer.molecule(
-        core, dummy_freqs, elec_levels,
-        hind_rot=hind_rot_str,
-        )
-    temp_step = 100.
-    ntemps = 5
-    zpe_str = '{0:<8.2f}\n'.format(dummy_zpe)
-    zpe_str = ' ZeroEnergy[kcal/mol] ' + zpe_str
-    zpe_str += 'End\n'
-    global_pf_str = mess_io.writer.global_pf(
-        [], temp_step, ntemps, rel_temp_inc=0.001,
-        atom_dist_min=0.6)
-    spc_head_str = 'Species ' + ' Tmp'
-    pf_inp_str = '\n'.join(
-        [global_pf_str, spc_head_str,
-         spc_str, zpe_str])
-
-    bld_locs = ['PF', 0]
-    bld_save_fs = autofile.fs.build(tors_save_path)
-    bld_save_fs[-1].create(bld_locs)
-    pf_path = bld_save_fs[-1].path(bld_locs)
-
-    # run messpf
-    with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
-        pf_file.write(pf_inp_str)
-    pf_script_str = ("#!/usr/bin/env bash\n"
-                     "export OMP_NUM_THREADS=10\n"
-                     "messpf pf.inp pf.out >> stdout.log &> stderr.log")
-
-    script.run_script(pf_script_str, pf_path)
-
-    with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
-        output_string = mess_file.read()
-
-    # Read the freqs and zpes
-    # tors_freqs = mess_io.reader.tors.freqs(output_string)
-    tors_zpes = mess_io.reader.tors.zpves(output_string)
-
-    # Calculate the torsional zpe
-    tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
-    # tors_zpe_cor = 0.0
-    # tors_zpe = 0.0
-    # for (tors_freq, tors_1dhr_zpe) in zip(tors_freqs, tors_zpes):
-    #     tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
-    #     tors_zpe += tors_1dhr_zpe
-
-    print ('tors_zpe test:', tors_zpe)
-    return tors_zpe

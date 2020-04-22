@@ -7,8 +7,7 @@ from routines.es import conformer
 
 def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
                     saddle, frm_bnd_key, brk_bnd_key, tors_names,
-                    tors_cnf_save_fs, tors_min_cnf_locs,
-                    sym_cnf_save_fs, sym_min_cnf_locs):
+                    cnf_save_fs, cnf_save_locs):
     """ Get the overall factor for a species
     """
 
@@ -18,21 +17,20 @@ def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
         print('sym_factor from spc_dct_i:', sym_factor)
     else:
         if sym_model == 'sampling':
-            if not sym_min_cnf_locs:
+            if not cnf_save_locs:
                 # Fix the return statement here
                 print('ERROR: Reference geometry is missing for symmetry',
                       'for species {}'.format(spc_info[0]))
                 return '', 0.
-            sym_geo = sym_cnf_save_fs[-1].file.geometry.read(sym_min_cnf_locs)
-            sym_ene = sym_cnf_save_fs[-1].file.energy.read(sym_min_cnf_locs)
+            sym_geo = cnf_save_fs[-1].file.geometry.read(cnf_save_locs)
+            sym_ene = cnf_save_fs[-1].file.energy.read(cnf_save_locs)
             if dist_names:
-                zma = tors_cnf_save_fs[-1].file.zmatrix.read(
-                    tors_min_cnf_locs)
+                zma = cnf_save_fs[-1].file.zmatrix.read(cnf_save_locs)
                 form_coords = list(
                     automol.zmatrix.bond_idxs(zma, dist_names[0]))
                 form_coords.extend(list(dist_names[1]))
             sym_factor = conformer.symmetry_factor(
-                sym_geo, sym_ene, sym_cnf_save_fs, saddle,
+                sym_geo, sym_ene, cnf_save_fs, saddle,
                 frm_bnd_key, brk_bnd_key, form_coords, tors_names)
             print('sym_factor from conformer sampling:', sym_factor)
         elif sym_model == '1dhr':
@@ -47,17 +45,11 @@ def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
     return sym_factor
 
 
-def tors_reduced_sym_factor(min_cnf_locs, cnf_save_fs, saddle=False):
+def tors_reduced_sym_factor(sym_factor, tors_syms):
     """ Decrease the overall molecular symmetry factor by the
         torsional mode symmetry numbers
     """
-    # Set torsional stuff
-    tors_sym_nums = tors.get_tors_sym_nums(
-        spc_dct_i, zma, tors_cnf_save_fs,
-        frm_bnd_key, brk_bnd_key, saddle=saddle)
-
-    # Divide total sym_factor by rotor sym number
-    for sym_num in tors_sym_nums:
+    for sym_num in tors_syms:
         sym_factor /= sym_num
 
     return sym_factor
