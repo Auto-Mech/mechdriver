@@ -1,5 +1,9 @@
 """
-  Build the species string based on the model
+  Read the save filesystem for all of the required information specified by
+    (1) the models specified for partition function and
+    (2) the electronic structure levels
+  in order to write portions of MESS strings for species and reaction paths
+  and calculate electronic and zero-point vibrational energies.
 """
 
 import elstruct

@@ -1,6 +1,7 @@
 """ Build the grid for a transition state search
 """
 
+import math
 import numpy
 import automol
 from lib.phydat import phycon
@@ -170,7 +171,8 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
         bnd_len = bnd.LEN_DCT[ts_bnd_len]
         rmin2 = bnd_len + 0.05 * phycon.ANG2BOHR
     if rmax > rmin1:
-        npoints = (rmax-rmin1)/interval
+        npoints = math.ceil((rmax-rmin1)/interval)
+        print('grid test:', rmax, rmin1, npoints, interval)
         if npoints < 1:
             grid1 = []
         else:

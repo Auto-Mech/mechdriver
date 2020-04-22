@@ -72,6 +72,9 @@ print('{}'.format(RUN_INP_DCT['save_prefix']))
 # Run the requested drivers: es, thermo, ktp
 print('\n\nRunning the requested drivers...')
 if 'es' in RUN_JOBS_LST:
+    # Print the header message for the driver
+    printmsg.program_header('es')
+    # Build the elec struct tsk lst
     ES_TSK_LST = lrun.build_run_es_tsks_lst(
         ES_TSK_STR, SPC_MODEL_DCT, THY_DCT)
     if RUN_OBJ_DCT['pes']:
@@ -104,6 +107,8 @@ if 'es' in RUN_JOBS_LST:
 
 WRITE_MESSPF, RUN_MESSPF, RUN_NASA = lrun.set_thermodriver_run(RUN_JOBS_LST)
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
+    # Print the header message for the driver
+    printmsg.program_header('thermo')
     if RUN_OBJ_DCT['pes']:
         # Call ThermoDriver for spc in each PES
         for _, rxn_lst in RUN_PES_DCT.items():
@@ -132,6 +137,8 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
 
 WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = lrun.set_ktpdriver_run(RUN_JOBS_LST)
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
+    # Print the header message for the driver
+    printmsg.program_header('ktp')
     if RUN_OBJ_DCT['pes']:
         # Call kTPDriver for spc in each PES
         for (pes_formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
