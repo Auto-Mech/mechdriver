@@ -67,6 +67,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_formula, pes_idx,
         rxn_lst, pes_idx, spc_dct, model_dct, thy_dct, save_prefix)
 
     # Loop over all the channels and write the MESS strings
+    chn_label_written = []
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
         tsform = automol.formula.string(
@@ -75,7 +76,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_formula, pes_idx,
                     spc_dct[tsname]['zma'])))
         # spc_dct[tsname]['original_zma'])))
         if tsform != pes_formula:
-            print('Reaction ist contains reactions on different potential',
+            print('Reaction list contains reactions on different potential',
                   'energy surfaces: {} and {}'.format(tsform, pes_formula))
             print('Will proceed to construct only {}'.format(pes_formula))
             continue
@@ -85,8 +86,8 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_formula, pes_idx,
             thy_dct, model_dct,
             chn_model, first_ground_model,
             save_prefix)
-        mess_strs = make_channel_pfs(
-            tsname, rxn, species, spc_dct, idx_dct, mess_strs,
+        mess_strs, chn_label_written = make_channel_pfs(
+            tsname, rxn, species, spc_dct, idx_dct, chn_label_written, mess_strs,
             first_ground_ene, channel_enes,
             model_dct, thy_dct, save_prefix)
     well_str, bim_str, ts_str = mess_strs
@@ -178,7 +179,7 @@ def make_fake_species_data(spc_dct_i, spc_dct_j, spc_save_fs,
 
 
 def make_channel_pfs(
-        tsname, rxn, species_data, spc_dct, idx_dct, strs,
+        tsname, rxn, species_data, spc_dct, idx_dct, chn_label_written, strs,
         first_ground_ene, channel_enes,
         model_dct, thy_dct, save_prefix):
     """ make the partition function strings for each of the channels
@@ -220,17 +221,19 @@ def make_channel_pfs(
         spc_label = [automol.inchi.smiles(spc_dct[spc]['ich']) for spc in rct]
         spc_data = [species_data[spc] for spc in rct]
         chn_label = idx_dct[make_rxn_string(rct)]
-        if len(rct) > 1:
-            ground_energy = rct_ene - first_ground_ene
-            bim_str += '\n! {} + {}\n'.format(rct[0], rct[1])
-            bim_str += mess_io.writer.bimolecular(
-                chn_label, spc_label[0], spc_data[0],
-                spc_label[1], spc_data[1], ground_energy)
-        else:
-            zero_energy = rct_ene - first_ground_ene
-            well_str += '\n! {}\n'.format(rct)
-            well_str += mess_io.writer.well(
-                chn_label, spc_data[0], zero_energy)
+        if chn_label not in chn_label_written:
+            chn_label_written.append(chn_label)
+            if len(rct) > 1:
+                ground_energy = rct_ene - first_ground_ene
+                bim_str += '\n! {} + {}\n'.format(rct[0], rct[1])
+                bim_str += mess_io.writer.bimolecular(
+                    chn_label, spc_label[0], spc_data[0],
+                    spc_label[1], spc_data[1], ground_energy)
+            else:
+                zero_energy = rct_ene - first_ground_ene
+                well_str += '\n! {}\n'.format(rct)
+                well_str += mess_io.writer.well(
+                    chn_label, spc_data[0], zero_energy)
 
         # Initialize the reactant and product MESS label
         if rct == rxn['reacs']:
@@ -357,28 +360,26 @@ def make_channel_pfs(
             ts_label, inner_reac_label, inner_prod_label,
             species_data[tsname], zero_energy, tunnel_str)
 
-    return [well_str, bim_str, ts_str]
+    return [well_str, bim_str, ts_str], chn_label_written
 
 
 def make_pes_label_dct(rxn_lst, pes_idx, spc_dct):
     """ Builds a dictionary that matches the mechanism name to the labels used
         in the MESS input and output files for the whole PES
     """
+
     pes_idx_dct = {}
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
-        pes_idx_dct.update(make_channel_label_dct(tsname, idx+1, rxn, spc_dct))
+        pes_idx_dct.update(make_channel_label_dct(tsname, idx+1, pes_idx_dct, rxn, spc_dct))
 
     return pes_idx_dct
 
 
-def make_channel_label_dct(tsname, chn_idx, rxn, spc_dct):
+def make_channel_label_dct(tsname, chn_idx, idx_dct, rxn, spc_dct):
     """ Builds a dictionary that matches the mechanism name to the labels used
         in the MESS input and output files
     """
-
-    # Initialize the channel idx dictionary
-    idx_dct = {}
 
     # Find the number of wells, bimol spc, and fake spc already in the dct
     pidx = 1
