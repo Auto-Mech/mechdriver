@@ -14,18 +14,24 @@ from lib.filesystem import minc as fsmin
 from lib.phydat import bnd
 
 
-def conformer_sampling(
-        spc_info, thy_info, thy_save_fs, cnf_run_fs, cnf_save_fs, script_str,
-        overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
-        tors_names='', dist_info=(), two_stage=False, rxn_class='', **kwargs):
+def conformer_sampling(spc_info,
+                       mod_thy_info, mod_ini_thy_info,
+                       thy_save_fs, ini_thy_save_fs,
+                       cnf_run_fs, cnf_save_fs,
+                       script_str, overwrite,
+                       saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
+                       tors_names='', dist_info=(),
+                       two_stage=False, rxn_class='', **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
     """
 
     ich = spc_info[0]
     coo_names = []
+
+    # Read the geometry and zma from the ini file system
     if not saddle:
-        geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
+        geo = thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
         zma = automol.geom.zmatrix(geo)
     else:
@@ -47,7 +53,7 @@ def conformer_sampling(
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
-        thy_info=thy_info,
+        thy_info=mod_thy_info,
         saddle=saddle,
         dist_info=dist_info,
         rxn_class=rxn_class
@@ -56,7 +62,7 @@ def conformer_sampling(
     run_conformers(
         zma=zma,
         spc_info=spc_info,
-        thy_info=thy_info,
+        thy_info=mod_thy_info,
         nsamp=nsamp,
         tors_range_dct=tors_range_dct,
         cnf_run_fs=cnf_run_fs,
@@ -70,21 +76,21 @@ def conformer_sampling(
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
-        thy_info=thy_info,
+        thy_info=mod_thy_info,
         saddle=saddle,
         dist_info=dist_info,
         rxn_class=rxn_class
     )
 
-    # save information about the minimum energy conformer in top directory
+    # Save information about the minimum energy conformer in top directory
     min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
         geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
         if not saddle:
             assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
-            thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
-            thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
+            thy_save_fs[-1].file.geometry.write(geo, mod_thy_info[1:4])
+            thy_save_fs[-1].file.zmatrix.write(zma, mod_thy_info[1:4])
 
         else:
             thy_save_fs[0].file.geometry.write(geo)

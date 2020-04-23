@@ -142,16 +142,16 @@ def check_es_tsks_supported(es_tsks, thy_dct):
                 for supp_obj in ES_TSK_OBJ_SUPPORTED_LST:
                     print(supp_obj)
                 sys.exit()
-            
+
             # Check the task
             if tsk not in ES_TSK_SUPPORTED_DCT[obj]:
                 print('*ERROR: task requested not allowed for object')
                 print('Allowed objs')
-                for key, val in ES_TSK_SUPPORTED_DCT:
+                for key, val in ES_TSK_SUPPORTED_DCT.items():
                     print(key)
                     print(val)
                 sys.exit()
-            
+
             # Check the requested es level
             for key, val in keyword_dct.items():
                 if key not in ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
@@ -174,6 +174,13 @@ def check_es_tsks_supported(es_tsks, thy_dct):
                             for kval in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
                                 print(kval)
                             sys.exit()
+
+            # Check  if inplvl and runlvl match for HR and IRC scans
+            if tsk in ('hr_scan', 'irc_scan'):
+                if keyword_dct['runlvl'] != keyword_dct['inplvl']:
+                    print('runlvl and inplvl MUST MATCH for',
+                          'hr_scan and irc_scan tasks')
+                    sys.exit()
         except:
             print('*ERROR: es_tsk not formatted correctly')
             print(tsk_lst)

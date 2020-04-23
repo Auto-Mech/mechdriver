@@ -183,7 +183,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             run_prefix, rxn_info, mod_ini_thy_info)
         _, ini_thy_save_path = fbuild.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_ini_thy_info)
-        _, ini_thy_save_path = fbuild.ts_fs_from_thy(
+        ini_thy_save_fs, ini_thy_save_path = fbuild.ts_fs_from_thy(
             ini_thy_save_path)
         _, ini_thy_run_path = fbuild.ts_fs_from_thy(
             ini_thy_run_path)
@@ -207,13 +207,13 @@ def run_conformer_tsk(job, spc_dct, spc_name,
         two_stage = saddle
         rxn_class = spc['class'] if saddle else ''
         mc_nsamp = spc['mc_nsamp']
-        
-        print('thy_path', thy_save_fs[0].path())
 
         # Run the sampling
         conformer.conformer_sampling(
-            spc_info, mod_thy_info,
-            thy_save_fs, cnf_run_fs, cnf_save_fs,
+            spc_info,
+            mod_thy_info, mod_ini_thy_info,
+            thy_save_fs, ini_thy_save_fs,
+            cnf_run_fs, cnf_save_fs,
             opt_script_str, overwrite,
             saddle=saddle, nsamp_par=mc_nsamp,
             tors_names=tors_names, dist_info=dist_info,
@@ -249,13 +249,16 @@ def run_conformer_tsk(job, spc_dct, spc_name,
                 script_str, overwrite, **kwargs)
 
 
-def run_tau_tsk(job, spc, thy_info, run_prefix, save_prefix,
+def run_tau_tsk(job, spc_dct, spc_name,
+                thy_info, ini_thy_info,
+                run_prefix, save_prefix,
                 es_keyword_dct):
     """ Energies, gradients, and hessians,
         for set of arbitrarily sampled torsional coordinates
         with all other coordinates optimized
     """
     print('running task {}'.format('tau'))
+    spc = spc_dct[spc_name]
 
     # Set the spc_info
     spc_info = finf.get_spc_info(spc)
@@ -270,12 +273,19 @@ def run_tau_tsk(job, spc, thy_info, run_prefix, save_prefix,
 
     # Modify the theory
     mod_thy_info = fsorb.mod_orb_restrict(spc_info, thy_info)
+    mod_ini_thy_info = fsorb.mod_orb_restrict(spc_info, ini_thy_info)
 
-    # Set the filesystem objects
+    # Set the filesystem objects for thy info
     _, thy_run_path = fbuild.spc_thy_fs_from_root(
         run_prefix, spc_info, mod_thy_info)
-    thy_save_fs, thy_save_path = fbuild.spc_thy_fs_from_root(
+    _, thy_save_path = fbuild.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_thy_info)
+
+    # Set the filesystem objects for ini thy_info
+    ini_thy_save_fs, _ = fbuild.spc_thy_fs_from_root(
+        save_prefix, spc_info, mod_ini_thy_info)
+
+    # Set up tau filesystem objects
     tau_run_fs, _ = fbuild.tau_fs_from_thy(thy_run_path, tau='all')
     tau_save_fs, _ = fbuild.tau_fs_from_thy(thy_save_path, tau='all')
 
@@ -284,7 +294,9 @@ def run_tau_tsk(job, spc, thy_info, run_prefix, save_prefix,
         _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
             *thy_info[0:2])
         tau.tau_sampling(
-            spc_info, mod_thy_info, thy_save_fs, tau_run_fs, tau_save_fs,
+            spc_info,
+            mod_thy_info, mod_ini_thy_info, ini_thy_save_fs,
+            tau_run_fs, tau_save_fs,
             opt_script_str, overwrite, nsamp_par, **opt_kwargs)
     elif job in ('energy', 'grad', 'hess'):
         # Set up the run scripts
@@ -357,10 +369,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         _, ini_thy_run_path = fbuild.ts_fs_from_thy(
             ini_thy_run_path)
 
-    # cnf_run_fs, _ = fbuild.cnf_fs_from_prefix(
-    #     thy_run_path, cnf=None)
-    # cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_prefix(
-    #     thy_save_path, cnf='min')
+    # Build cnf filesys using the ini thy filesys (needed for all HR jobs)
     ini_cnf_run_fs, _ = fbuild.cnf_fs_from_prefix(
         ini_thy_run_path, cnf=None)
     ini_cnf_save_fs, ini_cnf_save_locs = fbuild.cnf_fs_from_prefix(
@@ -369,15 +378,13 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         ini_cnf_save_fs, ini_cnf_save_locs)
     ini_cnf_run_paths = fbuild.cnf_paths_from_locs(
         ini_cnf_run_fs, ini_cnf_save_locs)
+
+    # Create run fs if that directory has been deleted to run the jobs
     ini_cnf_run_fs[-1].create(ini_cnf_save_locs)
 
     # Get options from the dct or es options lst
-    if saddle:
-        frm_bnd_key = spc['frm_bnd_key']
-        brk_bnd_key = spc['brk_bnd_key']
-    else:
-        frm_bnd_key = ()
-        brk_bnd_key = ()
+    frm_bnd_key = spc['frm_bnd_key'] if saddle else ()
+    brk_bnd_key = spc['brk_bnd_key'] if saddle else ()
     overwrite = es_keyword_dct['overwrite']
     ndim_tors = es_keyword_dct['ndim_tors']
     frz_all_tors = es_keyword_dct['frz_all_tors']
@@ -385,7 +392,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     run_tors_names = spc['tors_names'] if 'tors_names' in spc else ()
     run_tors_names = [[name] for name in run_tors_names]
 
-    # Set up the hind rot names
+    # Set up the hind rot names by reading zma, geo from ini filesystem
     zma, geo = fread.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
     run_tors_names, run_tors_grids = scan.hr_prep(
         zma, geo, run_tors_names=run_tors_names,
@@ -395,21 +402,23 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     # Run the task if any torsions exist
     if run_tors_names:
 
-        # Get a list of the other tors coords to freeze and set the filesystem
-        if frz_all_tors:
-            constraint_dct = scan.build_constraint_dct(zma, run_tors_names)
-            ini_scn_run_fs = autofile.fs.cscan(ini_cnf_run_paths[0])
-            ini_scn_save_fs = autofile.fs.cscan(ini_cnf_save_paths[0])
-        else:
+        # Set constraint dct
+        if not frz_all_tors:
             constraint_dct = None
-            ini_scn_run_fs = autofile.fs.scan(ini_cnf_run_paths[0])
-            ini_scn_save_fs = autofile.fs.scan(ini_cnf_save_paths[0])
+        else:
+            constraint_dct = scan.build_constraint_dct(zma, run_tors_names)
+
+        # Set up ini filesystem  for scans
+        ini_scn_run_fs = fbuild.scn_fs_from_cnf(
+            ini_cnf_run_paths[0], constraint_dct=constraint_dct)
+        ini_scn_save_fs = fbuild.scn_fs_from_cnf(
+            ini_cnf_save_paths[0], constraint_dct=constraint_dct)
 
         print('running task {}'.format(job))
         if job == 'scan':
 
             scan.hindered_rotor_scans(
-                zma, spc_info, mod_ini_thy_info,
+                zma, spc_info, mod_thy_info,
                 ini_scn_run_fs, ini_scn_save_fs,
                 run_tors_names, run_tors_grids,
                 opt_script_str, overwrite,
@@ -420,12 +429,8 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
             script_str, _, kwargs, _ = runpar.run_qchem_par(
                 *thy_info[0:2])
             for tors_names in run_tors_names:
-                if not frz_all_tors:
-                    scn_locs = fbuild.scn_locs_from_fs(
-                        ini_scn_save_fs, tors_names)
-                else:
-                    scn_locs = fbuild.cscn_locs_from_fs(
-                        ini_scn_save_fs, tors_names)
+                scn_locs = fbuild.scn_locs_from_fs(
+                    ini_scn_save_fs, tors_names, constraint_dct=constraint_dct)
                 if scn_locs:
                     for locs in scn_locs:
                         geo_run_path = ini_scn_run_fs[-1].path(locs)

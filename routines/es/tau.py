@@ -13,18 +13,15 @@ from lib.runner import driver
 from lib.filesystem import minc as fsmin
 
 
-def tau_sampling(
-        spc_info, thy_level, thy_save_fs, tau_run_fs, tau_save_fs,
-        script_str, overwrite, nsamp_par, **opt_kwargs):
+def tau_sampling(spc_info,
+                 mod_thy_info, mod_ini_thy_info, ini_thy_save_fs,
+                 tau_run_fs, tau_save_fs,
+                 script_str, overwrite, nsamp_par, **opt_kwargs):
     """ Sample over torsions optimizing all other coordinates
     """
 
-    save_tau(
-        tau_run_fs=tau_run_fs,
-        tau_save_fs=tau_save_fs,
-    )
-
-    geo = thy_save_fs[-1].file.geometry.read(thy_level[1:4])
+    # Read the geometry from the initial filesystem and set sampling
+    geo = ini_thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
     zma = automol.geom.zmatrix(geo)
     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
     tors_ranges = automol.zmatrix.torsional_sampling_ranges(
@@ -35,10 +32,16 @@ def tau_sampling(
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
     nsamp = util.nsamp_init(nsamp_par, ntaudof)
 
+    # Run through tau sampling process
+    save_tau(
+        tau_run_fs=tau_run_fs,
+        tau_save_fs=tau_save_fs,
+    )
+
     run_tau(
         zma=zma,
         spc_info=spc_info,
-        thy_level=thy_level,
+        thy_info=mod_thy_info,
         nsamp=nsamp,
         tors_range_dct=tors_range_dct,
         tau_run_fs=tau_run_fs,
@@ -55,7 +58,7 @@ def tau_sampling(
 
 
 def run_tau(
-        zma, spc_info, thy_level, nsamp, tors_range_dct,
+        zma, spc_info, thy_info, nsamp, tors_range_dct,
         tau_run_fs, tau_save_fs, script_str, overwrite, **kwargs):
     """ run sampling algorithm to find tau dependent geometries
     """
@@ -88,35 +91,35 @@ def run_tau(
             print('Reached requested number of samples. '
                   'Tau sampling complete.')
             break
-        else:
-            print("    New nsamp is {:d}.".format(nsamp))
 
-            samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
-            tid = autofile.system.generate_new_tau_id()
-            locs = [tid]
+        print("    New nsamp is {:d}.".format(nsamp))
 
-            tau_run_fs[-1].create(locs)
-            tau_run_prefix = tau_run_fs[-1].path(locs)
-            run_fs = autofile.fs.run(tau_run_prefix)
+        samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+        tid = autofile.system.generate_new_tau_id()
+        locs = [tid]
 
-            idx += 1
-            print("Run {}/{}".format(idx, nsamp0))
-            driver.run_job(
-                job=elstruct.Job.OPTIMIZATION,
-                script_str=script_str,
-                run_fs=run_fs,
-                geom=samp_zma,
-                spc_info=spc_info,
-                thy_level=thy_level,
-                overwrite=overwrite,
-                frozen_coordinates=tors_range_dct.keys(),
-                **kwargs
-            )
+        tau_run_fs[-1].create(locs)
+        tau_run_prefix = tau_run_fs[-1].path(locs)
+        run_fs = autofile.fs.run(tau_run_prefix)
 
-            nsampd += 1
-            inf_obj.nsamp = nsampd
-            tau_save_fs[0].file.info.write(inf_obj)
-            tau_run_fs[0].file.info.write(inf_obj)
+        idx += 1
+        print("Run {}/{}".format(idx, nsamp0))
+        driver.run_job(
+            job=elstruct.Job.OPTIMIZATION,
+            script_str=script_str,
+            run_fs=run_fs,
+            geom=samp_zma,
+            spc_info=spc_info,
+            thy_level=thy_info,
+            overwrite=overwrite,
+            frozen_coordinates=tors_range_dct.keys(),
+            **kwargs
+        )
+
+        nsampd += 1
+        inf_obj.nsamp = nsampd
+        tau_save_fs[0].file.info.write(inf_obj)
+        tau_run_fs[0].file.info.write(inf_obj)
 
 
 def save_tau(tau_run_fs, tau_save_fs):
