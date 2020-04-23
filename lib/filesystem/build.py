@@ -200,7 +200,6 @@ def cnf_fs_from_prefix(cnf_prefix, cnf=None):
             cnf_locs = fsmin.min_energy_conformer_locators(cnf_fs)
         elif cnf == 'all':
             cnf_locs = cnf_fs[1].existing()
-    print('locsinf', cnf_locs, cnf)
 
     return cnf_fs, cnf_locs
 

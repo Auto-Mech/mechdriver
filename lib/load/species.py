@@ -368,14 +368,6 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
 def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
     """ Create a new dictionary that combines init spc_dct and sadpt dct
     """
-    print('spc dct')
-    for key in spc_dct:
-        if 'ts' in key:
-            print(spc_dct[key])
-    print('sadpt dct')
-    for key in sadpt_dct:
-        if 'ts' in key:
-            print(sadpt_dct[key])
 
     combined_dct = {}
 
@@ -392,13 +384,9 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
         if 'global' in spc_dct:
             for key, val in spc_dct['global'].items():
                 combined_dct[sadpt][key] = val
-            print('global')
-            print(spc_dct['global']['hind_inc'])
-            print(combined_dct['global']['hind_inc'])
 
         # Update any sadpt keywords if they are in the spc_dct from .dat file
         if sadpt in spc_dct:
-            print('BOOOOOOOOOO')
             combined_dct[sadpt].update(spc_dct[sadpt])
 
         # Put in stuff from the sadpt_dct build

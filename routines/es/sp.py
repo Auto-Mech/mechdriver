@@ -244,6 +244,11 @@ def run_vpt2(zma, geo, spc_info, thy_level,
             vpt2_dct = elstruct.reader.vpt2(inf_obj.prog, out_str)
             hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
+            # Write the VPT2 file specifying the Fermi Treatments
+            # fermi_treatment = '{} Defaults'.format(inf_obj.prog)
+            # vpt2_inf_obj = autofile.system.info.vpt2(
+            #     fermi_treatment=fermi_treatment)
+
             print(" - Saving anharmonicities...")
             print(" - Save path: {}".format(geo_save_path))
             # geo_save_fs[-1].file.vpt2_info.write(inf_obj, locs)
