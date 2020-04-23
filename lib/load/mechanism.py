@@ -234,9 +234,6 @@ def determine_connected_pes_channels(pes_dct):
         # Add connected channels list to the dictionary
         conn_chn_dct[formula] = connchnls
 
-        print('formula test:', formula)
-        print('conn_chn_dct:', conn_chn_dct)
-
     return conn_chn_dct
 
 
@@ -259,9 +256,6 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
         run_chnls = []
         for pes_chn_pair in run_obj_dct:
             pes_num, chn_num = pes_chn_pair
-            # print('num chk', pes_num, chn_num)
-            # print(pes_idx)
-            # print(idx_dct[pes_num])
             if idx_dct[pes_num] == formula:
                 run_chnls.append(chn_num)
 
@@ -278,10 +272,6 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
                     prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
                     rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
                     rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])
-                    # print('running channel {}: {} = {}'.format(
-                    #     str(chn_idx),
-                    #     ' + '.join(pes_rct_names_lst[chn_idx-1]),
-                    #     ' + '.join(pes_prd_names_lst[chn_idx-1])))
 
             # Form reaction list (is empty if no chnls requested on sub pes)
             rxn_lst = format_run_rxn_lst(
@@ -290,9 +280,8 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
             # Add the rxn lst to the pes dictionary if there is anythin
             if rxn_lst:
                 run_pes_dct[(formula, pes_idx, sub_pes_idx+1)] = rxn_lst
-                print('rct_names_lst test:', rct_names_lst)
 
-        print('run_pes_dct test:', run_pes_dct)
+        # print('run_pes_dct test:', run_pes_dct)
 
     return run_pes_dct
 

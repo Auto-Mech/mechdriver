@@ -19,8 +19,8 @@ def run(pes_idx,
     """
 
     # Debug print statements
-    print('rxn_lst')
-    print(rxn_lst)
+    # print('rxn_lst')
+    # print(rxn_lst)
 
     # Pull stuff from dcts for now
     run_prefix = run_inp_dct['run_prefix']
