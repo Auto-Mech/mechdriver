@@ -949,11 +949,9 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names):
             if exists2:
                 scn_locs2 = cscn_run_fs[3].existing(locs1)
                 for locs2 in scn_locs2:
-                    print('cscn locs', locs2)
-                    run_path = cscn_run_fs[3].path(locs2)
-                    # run_path = cscn_run_fs[-1].path(locs2)
-                    run_fs = autofile.fs.run(run_path)
+                    run_path = cscn_run_fs[-1].path(locs2)
                     print("Reading from scan run at {}".format(run_path))
+                    run_fs = autofile.fs.run(run_path)
                     ret = driver.read_job(
                         job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                     if ret:
