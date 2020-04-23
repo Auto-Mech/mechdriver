@@ -148,6 +148,7 @@ def hindered_rotor_scans(
                 scn_save_fs=scn_save_fs,
                 coo_names=tors_names)
         else:
+            print('constraint_dct', constraint_dct)
             save_cscan(
                 cscn_run_fs=scn_run_fs,
                 cscn_save_fs=scn_save_fs,
@@ -938,15 +939,19 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names):
     """ save the scans that have been run so far
     """
 
+    print('cscn_path', cscn_run_fs[1].path([coo_names]))
     exists1 = cscn_run_fs[1].exists([coo_names])
     if exists1:
         scn_locs1 = cscn_run_fs[2].existing([coo_names])
         for locs1 in scn_locs1:
             exists2 = cscn_run_fs[2].exists(locs1)
+            print('cscn2_path', cscn_run_fs[2].path(locs1))
             if exists2:
                 scn_locs2 = cscn_run_fs[3].existing(locs1)
                 for locs2 in scn_locs2:
-                    run_path = cscn_run_fs[-1].path(locs2)
+                    print('cscn locs', locs2)
+                    run_path = cscn_run_fs[3].path(locs2)
+                    # run_path = cscn_run_fs[-1].path(locs2)
                     run_fs = autofile.fs.run(run_path)
                     print("Reading from scan run at {}".format(run_path))
                     ret = driver.read_job(

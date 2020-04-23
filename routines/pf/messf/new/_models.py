@@ -12,6 +12,7 @@ from routines.pf.messf import _tors as tors
 from routines.pf.messf import _sym as sym
 from routines.pf.messf import _vib as vib
 # from routines.pf.messf import _vpt2 as vpt2
+from routines.pf.messf import _util as util
 from lib.phydat import phycon
 from lib.filesystem import orb as fsorb
 from lib.filesystem import build as fbuild
@@ -19,18 +20,19 @@ from lib.filesystem import inf as finf
 
 
 def read_filesys_for_spc(spc_dct_i, rxn, spc_model, pf_levels,
-                         save_prefix, saddle=False):
+                         save_prefix, saddle=False, tors_wgeo=False):
     """ Pull all of the neccessary information from the filesystem for a species
     """
 
     # Unpack the models and levels
     rot_model, tors_model, vib_model, sym_model = spc_model
 
-    # Set species information
-    dist_names = set_dist_names(spc_dct_i)
+    # Set information for transition states
+    dist_names = util.set_dist_names(spc_dct_i)
+    frm_bnd_key, brk_bnd_key = util.get_bnd_keys(spc_dct_i, saddle)
 
     # Set filesys
-    cnf_save_fs, cnf_save_path, cnf_save_locs, thy_save_path = _cnf_filesys(
+    cnf_save_fs, cnf_save_path, cnf_save_locs, _ = _cnf_filesys(
         spc_dct_i, rxn, pf_levels, save_prefix, saddle=saddle, level='harm')
 
     # Initialize all of the elemetnts of the inf dct
@@ -55,19 +57,20 @@ def read_filesys_for_spc(spc_dct_i, rxn, spc_model, pf_levels,
     tors_name_grps, tors_grid_grps, tors_sym_grps = tors.make_tors_info(
         spc_dct_i, cnf_save_fs, cnf_save_locs, tors_model,
         saddle=False, frm_bnd_key=(), brk_bnd_key=())
-    if nonrigid_tors(vib_model, tors_model, tors_names_grps):
-        mess_hr_str, proj_hr_str, mdhr_dat_str = tors.proc_mess_strings()
+    if nonrigid_tors(vib_model, tors_model, tors_name_grps):
+        mess_hr_str, projrot_hr_str, mdhr_dat_str = tors.make_hr_strings(
+            spc_dct_i, tors_name_grps, tors_grid_grps, tors_sym_grps,
+            tors_model, cnf_save_path, saddle=saddle, tors_wgeo=tors_wgeo)
         # mdhr_dat_file_name = '{}_mdhr.dat'.format(spc[0])
 
     # Symmetry Factor
     sym_factor = sym.symmetry_factor(
         sym_model, spc_dct_i, spc_info, dist_names,
         saddle, frm_bnd_key, brk_bnd_key, tors_names,
-        tors_cnf_save_fs, tors_cnf_save_locs,
-        sym_cnf_save_fs, sym_cnf_save_locs)
+        cnf_save_fs, cnf_save_locs, saddle)
     if nonrigid_tors(vib_model, tors_model, tors_names):
         sym_factor = sym.tors_reduced_sym_factor(
-            cnf_save_locs, cnf_save_fs, saddle=False)
+            sym_factor, tors_sym_grps)
 
     # Vibrations: Frequencies
     if nonrigid_tors(vib_model, tors_model, tors_names):
@@ -75,7 +78,7 @@ def read_filesys_for_spc(spc_dct_i, rxn, spc_model, pf_levels,
     else:
         freqs, imag = vib.read_harmonic_freqs(
             geom, cnf_save_fs, cnf_save_locs, saddle=saddle)
-    
+
     # Vibrations: Anharmonicity
     if anharm_vib:
         xmat = vib.anharmonicity()
@@ -317,19 +320,6 @@ def _ts_filesys(spc_dct, rxn, pf_levels, save_prefix, level='harm'):
 
 
 # Series of checks to determine what information is needed to be obtained
-def set_dist_names(spc_dct_i):
-    """ Set various things needed for TSs
-    """
-    dist_names = []
-    mig = 'migration' in spc_dct_i['class']
-    elm = 'elimination' in spc_dct_i['class']
-    if mig or elm:
-        dist_names.append(spc_dct_i['dist_info'][0])
-        dist_names.append(spc_dct_i['dist_info'][3])
-
-    return dist_names
-
-
 def nonrigid_rotations(rot_model):
     """ dtermine if a nonrigid rotation model is specified and further
         information is needed from the filesystem

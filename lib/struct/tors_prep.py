@@ -30,7 +30,7 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
         run_tors_names = mdhr_prep(zma, run_tors_names)
 
     # Build the grids corresponding to the torsions
-    run_tors_grids = []
+    run_tors_grids, run_tors_syms = [], []
     for tors_names in run_tors_names:
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,
@@ -39,9 +39,8 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
             [numpy.linspace(*linspace) + val_dct[name]
              for name, linspace in zip(tors_names, tors_linspaces)]
         )
-        # tors_sym_nums = tors.get_tors_sym_nums(
-        #     spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-        #     frm_bnd_key, brk_bnd_key, saddle=False)
+        tors_sym_nums.append(list(automol.zmatrix.torsional_symmetry_numbers(
+            zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
 
     return run_tors_names, run_tors_grids  # run_tors_syms
 
@@ -102,7 +101,7 @@ def is_methyl_rotor():
 
 
 # Functions to handle setting up torsional defintion and potentials properly
-def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
+def set_groups_ini(zma, tors_name, ts_bnd, saddle):
     """ Set the initial set of groups
     """
     gra = automol.zmatrix.graph(zma, remove_stereo=True)
@@ -128,11 +127,11 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
     return group, axis, atm_key
 
 
-def _check_saddle_groups(zma, spc_dct_i, group, axis, pot, ts_bnd, sym_num):
+def check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
     """ Assess that hindered rotor groups and axes
     """
     n_atm = automol.zmatrix.count(zma)
-    if 'addition' in spc_dct_i['class'] or 'abstraction' in spc_dct_i['class']:
+    if 'addition' in rxn_class or 'abstraction' in rxn_class:
         group2 = []
         ts_bnd1 = min(ts_bnd)
         ts_bnd2 = max(ts_bnd)
@@ -168,7 +167,7 @@ def _check_saddle_groups(zma, spc_dct_i, group, axis, pot, ts_bnd, sym_num):
     return group, axis, pot
 
 
-def _check_dummy_trans(zma):
+def check_dummy_trans(zma):
     """ check trans
     """
     atom_symbols = automol.zmatrix.symbols(zma)

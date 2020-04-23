@@ -81,8 +81,6 @@ def conformer_sampling(
     if min_cnf_locs:
         geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
-        print(automol.geom.string(geo))
-        print(automol.zmatrix.string(zma))
         if not saddle:
             assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
             thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
@@ -241,9 +239,15 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                  for locs in locs_lst]
 
     if not cnf_run_fs[0].exists():
-        print("No conformers to save. Skipping...")
+        print("No conformers to save...")
     else:
         for locs in cnf_run_fs[-1].existing():
+            # # Only go through save procedure if conf not in save
+            # # may need to get geo, ene, etc; maybe make function
+            # if cnf_save_fs[-1].exists(locs):
+            #     continue
+            # else:
+            #     print('New conformer to save...')
             cnf_run_path = cnf_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(cnf_run_path)
             print("Reading from conformer run at {}".format(cnf_run_path))
