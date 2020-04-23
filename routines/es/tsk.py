@@ -590,6 +590,7 @@ def run_ts(spc_dct, spc_name,
     cnf_save_fs, cnf_save_locs = fbuild.cnf_fs_from_prefix(
         thy_save_path, cnf='min')
     if cnf_save_locs and not overwrite:
+        print('TS found and saved previously in ', cnf_save_fs[-1].path(cnf_save_locs))
         # ts_class, ts_original_zma, ts_tors_names, ts_dist_info
         # geo, zma, final_dist = check_filesys_for_ts(
         #     ts_dct, ts_zma, cnf_save_fs, overwrite,
