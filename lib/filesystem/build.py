@@ -263,79 +263,35 @@ def tau_fs_from_thy(thy_prefix, tau='all'):
     return tau_fs, tau_locs
 
 
-def scn_fs_from_root(root_prefix, spc_info, mod_thy_info, coo_names,
-                     saddle=False, cnf='min'):
-    """ create theory run path
+def scn_fs_from_cnf(cnf_prefix, constraint_dct=None):
+    """ build either a SCAN or CSCAN FS
     """
+    if constraint_dct is not None:
+        scn_fs = autofile.fs.scan(cnf_prefix)
+    else:
+        scn_fs = autofile.fs.cscan(cnf_prefix)
 
-    # Build the conformer filesystem
-    _, _, cnf_paths = cnf_fs_from_root(
-        root_prefix, spc_info, mod_thy_info, saddle=saddle, cnf=cnf)
-
-    # Set scan filesys
-    scn_fs = autofile.fs.scan(cnf_paths[0])
-    scn_locs = scn_fs[-1].existing([coo_names])
-
-    return scn_fs, scn_locs
+    return scn_fs
 
 
-def scn_locs_from_fs(scn_fs, coo_names):
-    """ create theory run path
+def scn_locs_from_fs(scn_fs, coo_names, constraint_dct=None):
+    """ get locs for a SCAN or CSCAN fs
     """
-    scn_locs = scn_fs[-1].existing([coo_names])
+    if constraint_dct is not None:
+        scn_locs = scn_fs[-1].existing([coo_names])
+    else:
+        # scn_locs, scn_paths = [], []
+        scn_locs = []
+        if scn_fs[1].exists([coo_names]):
+            scn_locs1 = scn_fs[2].existing([coo_names])
+            for locs1 in scn_locs1:
+                if scn_fs[2].exists(locs1):
+                    scn_locs2 = scn_fs[3].existing(locs1)
+                    for locs2 in scn_locs2:
+                        scn_locs.append(locs2)
+                        # scn_paths.append(scn_fs[-1].path(locs2))
+
     return scn_locs
-
-
-def cscn_fs_from_root(root_prefix, spc_info, mod_thy_info, coo_names,
-                      saddle=False, cnf='min'):
-    """ create theory run path
-    """
-
-    # Build the conformer filesystem
-    _, _, cnf_paths = cnf_fs_from_root(
-        root_prefix, spc_info, mod_thy_info, saddle=saddle, cnf=cnf)
-
-    # Set scan filesys
-    cscn_fs = autofile.fs.cscan(cnf_paths[0])
-    cscn_locs = cscn_fs[-1].existing([coo_names])
-
-    return cscn_fs, cscn_locs
-
-
-def cscn_fs_from_cnf(cnf_prefix, coo_names):
-    """ create theory run path
-    """
-
-    # Set scan filesys
-    cscn_fs = autofile.fs.cscan(cnf_prefix)
-    cscn_locs, cscn_paths = [], []
-    if cscn_fs[1].exists([coo_names]):
-        scn_locs1 = cscn_fs[2].existing([coo_names])
-        for locs1 in scn_locs1:
-            if cscn_fs[2].exists(locs1):
-                scn_locs2 = cscn_fs[3].existing(locs1)
-                for locs2 in scn_locs2:
-                    cscn_paths.append(cscn_fs[-1].path(locs2))
-
-    return cscn_fs, cscn_locs
-
-
-def cscn_locs_from_fs(cscn_fs, coo_names):
-    """ create theory run path
-    """
-
-    # Set scan filesys
-    cscn_locs, cscn_paths = [], []
-    if cscn_fs[1].exists([coo_names]):
-        scn_locs1 = cscn_fs[2].existing([coo_names])
-        for locs1 in scn_locs1:
-            if cscn_fs[2].exists(locs1):
-                scn_locs2 = cscn_fs[3].existing(locs1)
-                for locs2 in scn_locs2:
-                    cscn_locs.append(locs2)
-                    cscn_paths.append(cscn_fs[-1].path(locs2))
-
-    return cscn_locs
 
 
 def cscn_fs_from_ts(ts_prefix, coo_names):
