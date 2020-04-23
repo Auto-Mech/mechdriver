@@ -207,6 +207,8 @@ def run_conformer_tsk(job, spc_dct, spc_name,
         two_stage = saddle
         rxn_class = spc['class'] if saddle else ''
         mc_nsamp = spc['mc_nsamp']
+        
+        print('thy_path', thy_save_fs[0].path())
 
         # Run the sampling
         conformer.conformer_sampling(
