@@ -46,8 +46,6 @@ def options_matrix_optimization(script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 elstruct.writer.optimization, script_str, path,
-                # geom=geom, species_info, theory_level,
-                # basis=basis, frozen_coordinates=frozen_coordinates,
                 geom=geom, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, frozen_coordinates=frozen_coordinates,
                 **kwargs_)

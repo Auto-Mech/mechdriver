@@ -83,8 +83,16 @@ if 'es' in RUN_JOBS_LST:
     # Call ESDriver for spc in each PES or SPC
     if RUN_OBJ_DCT['pes']:
         for (formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
+
+            # Print PES form and SUB PES Channels
             print('\n\nRunning PES {}: {}, SUB PES {}'.format(
                 pes_idx, formula, sub_pes_idx))
+            for chn_idx, rxn in enumerate(rxn_lst):
+                print('\n Channel {} for {} = {}'.format(
+                    chn_idx+1,
+                    '+'.join(rxn['reacs']),
+                    '+'.join(rxn['prods'])))
+
             esdriver.run(
                 pes_idx,
                 rxn_lst,
@@ -146,6 +154,16 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
     # Call kTPDriver for spc in each PES
     if RUN_OBJ_DCT['pes']:
         for (formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
+
+            # Print PES form and SUB PES Channels
+            print('\n\nRunning PES {}: {}, SUB PES {}'.format(
+                pes_idx, formula, sub_pes_idx))
+            for chn_idx, rxn in enumerate(rxn_lst):
+                print('\n Channel {} for {} = {}'.format(
+                    chn_idx+1,
+                    '+'.join(rxn['reacs']),
+                    '+'.join(rxn['prods'])))
+
             ktpdriver.run(
                 formula, pes_idx, sub_pes_idx,
                 SPC_DCT,

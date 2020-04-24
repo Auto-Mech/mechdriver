@@ -27,17 +27,26 @@ def run(pes_idx,
     save_prefix = run_inp_dct['save_prefix']
 
     # Loop over Tasks
+    print('\nRunning tasks...')
     for tsk_lst in es_tsk_lst:
 
         # Unpack the options
         [obj, tsk, es_keyword_dct] = tsk_lst
 
         # Set Task and theory information
-        es_ini_key = es_keyword_dct['inplvl']
-        es_run_key = es_keyword_dct['runlvl']
-        ini_thy_info = finf.get_es_info(es_ini_key, thy_dct)
-        thy_info = finf.get_es_info(es_run_key, thy_dct)
-
+        ini_thy_info = finf.get_es_info(es_keyword_dct['inplvl'], thy_dct)
+        thy_info = finf.get_es_info(es_keyword_dct['runlvl'], thy_dct)
+        if 'mr_scnlvl' in es_keyword_dct:
+            mr_scn_thy_info = finf.get_es_info(
+                es_keyword_dct['mr_scnlvl'], thy_dct)
+        else:
+            mr_scn_thy_info = None
+        if 'mr_splvl' in es_keyword_dct:
+            mr_sp_thy_info = finf.get_es_info(
+                es_keyword_dct['mr_splvl'], thy_dct)
+        else:
+            mr_sp_thy_info = None
+    
         # Build the queue of species based on user request
         if obj == 'spc':
             spc_queue = loadmech.build_spc_queue(rxn_lst)
@@ -61,11 +70,8 @@ def run(pes_idx,
         # Run the electronic structure task for all spc in queue
         for spc_name, _ in spc_queue:
             routines.es.tsk.run(
-                tsk,
-                spc_dct,
-                spc_name,
-                thy_info,
-                ini_thy_info,
-                run_prefix,
-                save_prefix,
+                tsk, spc_dct, spc_name,
+                thy_info, ini_thy_info,
+                mr_sp_thy_info, mr_scn_thy_info,
+                run_prefix, save_prefix,
                 es_keyword_dct=es_keyword_dct)
