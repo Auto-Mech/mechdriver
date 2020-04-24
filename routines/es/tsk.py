@@ -635,7 +635,7 @@ def run_ts(spc_dct, spc_name,
             ts_dct['dist_info'],
             ts_dct['class'])
         ts_dct['dist_info'][1] = final_dist
-        ts_dct['dist_info'].append(angle)
+        ts_dct['dist_info'][4] = angle
 
     else:
         switch = False
