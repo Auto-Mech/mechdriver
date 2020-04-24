@@ -219,14 +219,15 @@ def run_conformer_tsk(job, spc_dct, spc_name,
         # Read the geometry and zma from the ini file system
         if not saddle:
             geo = thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
-            zma = automol.geom.zmatrix(geo)
+            geo = thy_save_fs[-1].file.zmatrix.read(mod_ini_thy_info[1:4])
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+            geo_path = thy_save_fs[-1].path(mod_ini_thy_info[1:4])
         else:
             geo = thy_save_fs[0].file.geometry.read()
             zma = thy_save_fs[0].file.zmatrix.read()
             tors_names = spc['tors_names']
+            geo_path = thy_save_fs[0].path()
 
-        geo_path = thy_save_fs[0].path(mod_ini_thy_info[1:4])
         print('Sampling done using geom from {}'.format(geo_path))
 
         # Run the sampling
@@ -683,18 +684,35 @@ def run_ts(spc_dct, spc_name,
             ini_cnf_save_fs, ini_cnf_save_locs = fbuild.cnf_fs_from_prefix(
                 ini_thy_save_path, cnf='min')
             if ini_cnf_save_locs:
-                guess_zma, _ = fread.get_zma_geo(
-                    ini_cnf_save_fs, ini_cnf_save_locs)
-                print('Guess ZMA found from inp thy')
+                if ini_cnf_save_fs[-1].file.zmatrix.exists(ini_cnf_save_locs):
+                    guess_zma = ini_cnf_save_fs[-1].file.zmatrix.read(
+                        ini_cnf_save_locs)
+                    print('Z-Matrix calculated at {} found'.format(
+                        es_keyword_dct['inplvl']))
+                    geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
+                    print('Reading Z-Matrix from path {}'.format(geo_path))
+                else:
+                    guess_zma = None
             else:
                 guess_zma = None
+            
+            # # Check and see if a zma is found from the filesystem
+            # if thy_save_fs[0].file.zmatrix.exists(mod_ini_thy_info[1:4]):
+            #     guess_zma = thy_save_fs[0].file.zmatrix.read()
+            #     print('Z-Matrix calculated at {} found'.format(
+            #         es_keyword_dct['inplvl']))
+            #     geo_path = thy_save_fs[0].path(mod_ini_thy_info[1:4])
+            #     print('Reading Z-Matrix from path {}'.format(geo_path))
+            # else:
+            #     guess_zma = None
 
             # If no guess zma, run a TS searching algorithm
             if guess_zma is None:
-                print('No Guess ZMA from inp thy. Running Scan for Fixed TS...')
+                print('No Z-Matrix in filesys for {} level'.format(
+                    es_keyword_dct['inplvl']))
                 scn_run_fs = autofile.fs.scan(thy_run_path)
                 scn_save_fs = autofile.fs.scan(thy_save_path)
-                print('Running Scan for Fixed TS:')
+                print('Running scan to generate guess Z-Matrix for opt...')
                 guess_zma = ts.find.run_sadpt_scan(
                     typ, grid, dist_name, brk_name, ts_dct['zma'], ts_info,
                     mod_thy_info,
@@ -702,7 +720,7 @@ def run_ts(spc_dct, spc_name,
                     overwrite, update_guess, **opt_kwargs)
 
             # Optimize the saddle point
-            print('Running Scan for Fixed TS:')
+            print('Optimiziing Guess Z-Matrix from scan or filesys...')
             ts.find.find_sadpt_transition_state(
                 opt_script_str,
                 run_fs,
