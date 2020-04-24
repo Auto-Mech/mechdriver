@@ -39,6 +39,9 @@ def conformer_sampling(spc_info,
         zma = thy_save_fs[0].file.zmatrix.read()
         coo_names.append(tors_names)
 
+    geo_path = thy_save_fs[0].path(mod_ini_thy_info[1:4])
+    print('Sampling done using geom from {}'.format(geo_path))
+
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
     if not saddle:
@@ -50,6 +53,7 @@ def conformer_sampling(spc_info,
         ntaudof = len(tors_names)
         nsamp = util.nsamp_init(nsamp_par, ntaudof)
 
+    print('\nSaving any conformers in run filesys...')
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
@@ -59,6 +63,7 @@ def conformer_sampling(spc_info,
         rxn_class=rxn_class
     )
 
+    print('\nSampling for more conformers if needed...')
     run_conformers(
         zma=zma,
         spc_info=spc_info,
@@ -73,6 +78,8 @@ def conformer_sampling(spc_info,
         two_stage=two_stage,
         **kwargs,
     )
+
+    print('\nSaving any newly found conformers in run filesys...')
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
@@ -97,20 +104,23 @@ def conformer_sampling(spc_info,
             thy_save_fs[0].file.zmatrix.write(zma)
 
 
-def single_conformer(spc_info, thy_info,
-                     thy_save_fs, cnf_run_fs, cnf_save_fs,
+def single_conformer(spc_info, thy_info, ini_thy_info,
+                     thy_save_fs, ini_thy_save_fs,
+                     cnf_run_fs, cnf_save_fs,
                      overwrite, saddle=False, dist_info=()):
     """ generate single optimized geometry for
         randomly sampled initial torsional angles
     """
-    sp_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_info[0:2])
+    opt_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_info[0:2])
     conformer_sampling(
         spc_info=spc_info,
-        thy_info=thy_info,
+        mod_thy_info=thy_info,
+        mod_ini_thy_info=ini_thy_info,
         thy_save_fs=thy_save_fs,
+        ini_thy_save_fs=ini_thy_save_fs,
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
-        script_str=sp_script_str,
+        script_str=opt_script_str,
         overwrite=overwrite,
         nsamp_par=[False, 0, 0, 0, 0, 1],
         saddle=saddle,
@@ -130,8 +140,6 @@ def run_conformers(
         print("No torsional coordinates. Setting nsamp to 1.")
         nsamp = 1
 
-    print('Number of samples requested:', nsamp)
-
     cnf_save_fs[0].create()
     vma = automol.zmatrix.var_(zma)
     if cnf_save_fs[0].file.vmatrix.exists():
@@ -149,6 +157,10 @@ def run_conformers(
         nsampd = inf_obj_r.nsamp
     else:
         nsampd = 0
+   
+    tot_samp = nsamp - nsampd
+    print('Number of samples requested:', nsamp)
+    print('Number of samples that have been currently run:', nsampd, '\n')
 
     while True:
         nsamp = nsamp0 - nsampd
@@ -157,8 +169,8 @@ def run_conformers(
             print('Reached requested number of samples. '
                   'Conformer search complete.')
             break
+
         # Run the conformer sampling
-        print("    New nsamp requested is {:d}.".format(nsamp))
         if nsampd > 0:
             samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
         else:
@@ -171,8 +183,7 @@ def run_conformers(
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
 
-        idx += 1
-        print("Run {}/{}".format(nsampd+1, nsamp0))
+        print("Run {}/{}".format(nsampd+1, tot_samp))
         tors_names = list(tors_range_dct.keys())
         if two_stage and tors_names:
             print('Stage one beginning, holding the coordinates constant',
@@ -245,8 +256,9 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                  for locs in locs_lst]
 
     if not cnf_run_fs[0].exists():
-        print("No conformers to save...")
+        print("No conformers in run filesys to save.")
     else:
+        print("Found conformers in run filesys at level of theory to save.")
         for locs in cnf_run_fs[-1].existing():
             # # Only go through save procedure if conf not in save
             # # may need to get geo, ene, etc; maybe make function
@@ -408,7 +420,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                     seen_geos.append(geo)
                     seen_enes.append(ene)
 
-        # update the conformer trajectory file
+        # Update the conformer trajectory file
+        print('')
         fsmin.traj_sort(cnf_save_fs)
 
 

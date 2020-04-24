@@ -266,7 +266,7 @@ def tau_fs_from_thy(thy_prefix, tau='all'):
 def scn_fs_from_cnf(cnf_prefix, constraint_dct=None):
     """ build either a SCAN or CSCAN FS
     """
-    if constraint_dct is not None:
+    if constraint_dct is None:
         scn_fs = autofile.fs.scan(cnf_prefix)
     else:
         scn_fs = autofile.fs.cscan(cnf_prefix)
