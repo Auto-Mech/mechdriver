@@ -14,9 +14,8 @@ from lib.filesystem import minc as fsmin
 from lib.phydat import bnd
 
 
-def conformer_sampling(spc_info,
-                       mod_thy_info, mod_ini_thy_info,
-                       thy_save_fs, ini_thy_save_fs,
+def conformer_sampling(zma, spc_info,
+                       mod_thy_info, thy_save_fs,
                        cnf_run_fs, cnf_save_fs,
                        script_str, overwrite,
                        saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
@@ -30,17 +29,16 @@ def conformer_sampling(spc_info,
     coo_names = []
 
     # Read the geometry and zma from the ini file system
-    if not saddle:
-        geo = thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
-        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        zma = automol.geom.zmatrix(geo)
-    else:
-        geo = thy_save_fs[0].file.geometry.read()
-        zma = thy_save_fs[0].file.zmatrix.read()
+    # if not saddle:
+    #     geo = thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
+    #     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    #     zma = automol.geom.zmatrix(geo)
+    # else:
+    #     geo = thy_save_fs[0].file.geometry.read()
+    #     zma = thy_save_fs[0].file.zmatrix.read()
+    #     coo_names.append(tors_names)
+    if saddle:
         coo_names.append(tors_names)
-
-    geo_path = thy_save_fs[0].path(mod_ini_thy_info[1:4])
-    print('Sampling done using geom from {}'.format(geo_path))
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
@@ -104,20 +102,18 @@ def conformer_sampling(spc_info,
             thy_save_fs[0].file.zmatrix.write(zma)
 
 
-def single_conformer(spc_info, thy_info, ini_thy_info,
-                     thy_save_fs, ini_thy_save_fs,
-                     cnf_run_fs, cnf_save_fs,
+def single_conformer(zma, spc_info, thy_info,
+                     thy_save_fs, cnf_run_fs, cnf_save_fs,
                      overwrite, saddle=False, dist_info=()):
     """ generate single optimized geometry for
         randomly sampled initial torsional angles
     """
     opt_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_info[0:2])
     conformer_sampling(
+        zma=zma,
         spc_info=spc_info,
         mod_thy_info=thy_info,
-        mod_ini_thy_info=ini_thy_info,
         thy_save_fs=thy_save_fs,
-        ini_thy_save_fs=ini_thy_save_fs,
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
         script_str=opt_script_str,
@@ -162,6 +158,7 @@ def run_conformers(
     print('Number of samples requested:', nsamp)
     print('Number of samples that have been currently run:', nsampd, '\n')
 
+    samp_idx = 1
     while True:
         nsamp = nsamp0 - nsampd
         # Break the while loop if enough sampls completed
@@ -183,7 +180,7 @@ def run_conformers(
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
 
-        print("Run {}/{}".format(nsampd+1, tot_samp))
+        print("Run {}/{}".format(samp_idx, tot_samp))
         tors_names = list(tors_range_dct.keys())
         if two_stage and tors_names:
             print('Stage one beginning, holding the coordinates constant',
@@ -239,6 +236,7 @@ def run_conformers(
             inf_obj_r = cnf_run_fs[0].file.info.read()
             nsampd = inf_obj_r.nsamp
         nsampd += 1
+        samp_idx += 1
         inf_obj.nsamp = nsampd
         cnf_save_fs[0].file.info.write(inf_obj)
         cnf_run_fs[0].file.info.write(inf_obj)

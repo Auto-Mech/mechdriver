@@ -141,10 +141,11 @@ def reference_geometry(
                 thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
                 print('\nObtaining a single conformer using',
                       'the MonteCarlo conformer sampling routine')
+                geo_path = thy_save_fs[0].path(thy_info[1:4])
+                print('Sampling done using geom from {}'.format(geo_path))
                 conformer.single_conformer(
-                    spc_info, thy_info, ini_thy_info,
-                    thy_save_fs, ini_thy_save_fs, 
-                    cnf_run_fs, cnf_save_fs,
+                    zma, spc_info, thy_info,
+                    thy_save_fs, cnf_run_fs, cnf_save_fs,
                     overwrite, saddle=False, dist_info=())
             else:
                 print("Cannot create zmatrix for disconnected species")
