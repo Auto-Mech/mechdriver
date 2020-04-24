@@ -58,8 +58,6 @@ def run_job(
     assert job in JOB_SUCCESS_DCT
 
     run_path = run_fs[-1].path([job])
-    print('run_path')
-    print(run_path)
     run_fs[-1].create([job])
     run_path = run_fs[-1].path([job])
     if overwrite:
@@ -137,7 +135,6 @@ def run_job(
         inf_obj.status = status
         run_fs[-1].file.info.write(inf_obj, [job])
         run_fs[-1].file.input.write(inp_str, [job])
-        print('finished run_job')
 
 
 def read_job(job, run_fs):

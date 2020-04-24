@@ -8,6 +8,7 @@ from lib import outpt
 from lib import runner
 from lib import reaction
 from lib import load
+from lib import struct
 from lib import printmsg
 
 
@@ -18,5 +19,6 @@ __all__ = [
     'runner',
     'reaction',
     'load',
+    'struct',
     'printmsg'
 ]

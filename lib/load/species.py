@@ -349,7 +349,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
             ts_dct[tsname]['class'] = None
             ts_dct[tsname]['bkp_data'] = None
         ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
-        ts_dct[tsname]['dist_info'] = [dist_name, 0., update_guess, brk_name]
+        ts_dct[tsname]['dist_info'] = [dist_name, 0., update_guess, brk_name, 0.]
 
         ts_dct[tsname]['ich'] = ''
 

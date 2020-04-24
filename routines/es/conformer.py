@@ -14,23 +14,30 @@ from lib.filesystem import minc as fsmin
 from lib.phydat import bnd
 
 
-def conformer_sampling(
-        spc_info, thy_info, thy_save_fs, cnf_run_fs, cnf_save_fs, script_str,
-        overwrite, saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
-        tors_names='', dist_info=(), two_stage=False, rxn_class='', **kwargs):
+def conformer_sampling(zma, spc_info,
+                       mod_thy_info, thy_save_fs,
+                       cnf_run_fs, cnf_save_fs,
+                       script_str, overwrite,
+                       saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
+                       tors_names='', dist_info=(),
+                       two_stage=False, rxn_class='', **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
     """
 
     ich = spc_info[0]
     coo_names = []
-    if not saddle:
-        geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
-        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        zma = automol.geom.zmatrix(geo)
-    else:
-        geo = thy_save_fs[0].file.geometry.read()
-        zma = thy_save_fs[0].file.zmatrix.read()
+
+    # Read the geometry and zma from the ini file system
+    # if not saddle:
+    #     geo = thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
+    #     tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    #     zma = automol.geom.zmatrix(geo)
+    # else:
+    #     geo = thy_save_fs[0].file.geometry.read()
+    #     zma = thy_save_fs[0].file.zmatrix.read()
+    #     coo_names.append(tors_names)
+    if saddle:
         coo_names.append(tors_names)
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
@@ -44,19 +51,21 @@ def conformer_sampling(
         ntaudof = len(tors_names)
         nsamp = util.nsamp_init(nsamp_par, ntaudof)
 
+    print('\nSaving any conformers in run filesys...')
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
-        thy_info=thy_info,
+        thy_info=mod_thy_info,
         saddle=saddle,
         dist_info=dist_info,
         rxn_class=rxn_class
     )
 
+    print('\nSampling for more conformers if needed...')
     run_conformers(
         zma=zma,
         spc_info=spc_info,
-        thy_info=thy_info,
+        thy_info=mod_thy_info,
         nsamp=nsamp,
         tors_range_dct=tors_range_dct,
         cnf_run_fs=cnf_run_fs,
@@ -67,44 +76,47 @@ def conformer_sampling(
         two_stage=two_stage,
         **kwargs,
     )
+
+    print('\nSaving any newly found conformers in run filesys...')
     save_conformers(
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
-        thy_info=thy_info,
+        thy_info=mod_thy_info,
         saddle=saddle,
         dist_info=dist_info,
         rxn_class=rxn_class
     )
 
-    # save information about the minimum energy conformer in top directory
+    # Save information about the minimum energy conformer in top directory
     min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
         geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
         if not saddle:
             assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
-            thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
-            thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
+            thy_save_fs[-1].file.geometry.write(geo, mod_thy_info[1:4])
+            thy_save_fs[-1].file.zmatrix.write(zma, mod_thy_info[1:4])
 
         else:
             thy_save_fs[0].file.geometry.write(geo)
             thy_save_fs[0].file.zmatrix.write(zma)
 
 
-def single_conformer(spc_info, thy_info,
+def single_conformer(zma, spc_info, thy_info,
                      thy_save_fs, cnf_run_fs, cnf_save_fs,
                      overwrite, saddle=False, dist_info=()):
     """ generate single optimized geometry for
         randomly sampled initial torsional angles
     """
-    sp_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_info[0:2])
+    opt_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_info[0:2])
     conformer_sampling(
+        zma=zma,
         spc_info=spc_info,
-        thy_info=thy_info,
+        mod_thy_info=thy_info,
         thy_save_fs=thy_save_fs,
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
-        script_str=sp_script_str,
+        script_str=opt_script_str,
         overwrite=overwrite,
         nsamp_par=[False, 0, 0, 0, 0, 1],
         saddle=saddle,
@@ -124,8 +136,6 @@ def run_conformers(
         print("No torsional coordinates. Setting nsamp to 1.")
         nsamp = 1
 
-    print('Number of samples requested:', nsamp)
-
     cnf_save_fs[0].create()
     vma = automol.zmatrix.var_(zma)
     if cnf_save_fs[0].file.vmatrix.exists():
@@ -143,7 +153,12 @@ def run_conformers(
         nsampd = inf_obj_r.nsamp
     else:
         nsampd = 0
+   
+    tot_samp = nsamp - nsampd
+    print('Number of samples requested:', nsamp)
+    print('Number of samples that have been currently run:', nsampd, '\n')
 
+    samp_idx = 1
     while True:
         nsamp = nsamp0 - nsampd
         # Break the while loop if enough sampls completed
@@ -151,8 +166,8 @@ def run_conformers(
             print('Reached requested number of samples. '
                   'Conformer search complete.')
             break
+
         # Run the conformer sampling
-        print("    New nsamp requested is {:d}.".format(nsamp))
         if nsampd > 0:
             samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
         else:
@@ -165,8 +180,7 @@ def run_conformers(
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
 
-        idx += 1
-        print("Run {}/{}".format(nsampd+1, nsamp0))
+        print("Run {}/{}".format(samp_idx, tot_samp))
         tors_names = list(tors_range_dct.keys())
         if two_stage and tors_names:
             print('Stage one beginning, holding the coordinates constant',
@@ -222,6 +236,7 @@ def run_conformers(
             inf_obj_r = cnf_run_fs[0].file.info.read()
             nsampd = inf_obj_r.nsamp
         nsampd += 1
+        samp_idx += 1
         inf_obj.nsamp = nsampd
         cnf_save_fs[0].file.info.write(inf_obj)
         cnf_run_fs[0].file.info.write(inf_obj)
@@ -239,8 +254,9 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                  for locs in locs_lst]
 
     if not cnf_run_fs[0].exists():
-        print("No conformers to save...")
+        print("No conformers in run filesys to save.")
     else:
+        print("Found conformers in run filesys at level of theory to save.")
         for locs in cnf_run_fs[-1].existing():
             # # Only go through save procedure if conf not in save
             # # may need to get geo, ene, etc; maybe make function
@@ -402,7 +418,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                     seen_geos.append(geo)
                     seen_enes.append(ene)
 
-        # update the conformer trajectory file
+        # Update the conformer trajectory file
+        print('')
         fsmin.traj_sort(cnf_save_fs)
 
 
@@ -412,15 +429,12 @@ def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
     """
     geo = automol.zmatrix.geometry(zma)
     atom_closest = True
-    print('idx_rad test:', idx_rad)
-    print('geo test:', geo)
     for idx, _ in enumerate(geo):
         if idx < idx_rad:
             distance = automol.geom.distance(geo, idx, idx_rad)
             if distance < bond_dist-0.01:
                 atom_closest = False
                 print('idx test:', idx, distance, bond_dist)
-    print('atom_closest test:', atom_closest)
     return atom_closest
 
 

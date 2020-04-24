@@ -19,7 +19,7 @@ def min_energy_conformer_locators(cnf_save_fs, zpe_corrd=False):
         else:
             min_cnf_locs = cnf_locs_lst[cnf_enes.index(min(cnf_enes))]
     else:
-        min_cnf_locs = None
+        min_cnf_locs = []
     return min_cnf_locs
 
 

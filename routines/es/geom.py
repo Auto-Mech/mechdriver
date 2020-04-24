@@ -37,7 +37,7 @@ def reference_geometry(
     if run_fs[0].file.info.exists([]):
         inf_obj = run_fs[0].file.info.read([])
         if inf_obj.status == autofile.system.RunStatus.RUNNING:
-            print('reference geometry already running')
+            print('Reference geometry already running')
             return ret
     else:
         [prog, method, basis, _] = thy_info
@@ -47,7 +47,7 @@ def reference_geometry(
             status=status)
         run_fs[0].file.info.write(inf_obj, [])
 
-    print('initializing geometry in reference_geometry')
+    # print('initializing geometry in reference_geometry')
     geo = None
     try:
         # Check to see if geometry should be obtained from dictionary
@@ -56,12 +56,12 @@ def reference_geometry(
             geom_obj = spc_dct_i['geo_obj']
             geo_init = geom_obj
             overwrite = True
-            print('found initial geometry from geometry dictionary')
+            print('Found initial geometry from geometry dictionary')
         else:
             # Check to see if geo already exists at running_theory
             if thy_save_fs[-1].file.geometry.exists(thy_info[1:4]):
                 thy_path = thy_save_fs[-1].path(thy_info[1:4])
-                print('getting reference geometry from {}'.format(thy_path))
+                print('Getting reference geometry from {}'.format(thy_path))
                 geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
             if not geo:
                 if ini_thy_save_fs:
@@ -77,19 +77,18 @@ def reference_geometry(
                             ini_thy_info[1:4])
                     elif 'geo_obj' in spc_dct_i:
                         geo_init = spc_dct_i['geo_obj']
-                        print('getting geometry from geom dictionary')
+                        print('Getting geometry from geom dictionary')
                     else:
-                        print('getting reference geometry from inchi',
-                              spc_info[0])
+                        # print('Getting reference geometry from inchi',
+                        #       spc_info[0])
                         geo_init = automol.inchi.geometry(spc_info[0])
-                        print('got reference geometry from inchi', geo_init)
-                        print('getting reference geometry from inchi')
+                        print('Got reference geometry from inchi', spc_info[0])
                 elif 'geo_obj' in spc_dct_i:
                     geo_init = spc_dct_i['geo_obj']
-                    print('getting geometry from geom dictionary')
+                    print('Getting geometry from geom dictionary')
                 else:
                     geo_init = automol.inchi.geometry(spc_info[0])
-                    print('getting reference geometry from inchi')
+                    print('Getting reference geometry from inchi')
         # Optimize from initial geometry to get reference geometry
         if not geo:
             _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
@@ -123,9 +122,9 @@ def reference_geometry(
                     saved_tors = automol.geom.zmatrix_torsion_coordinate_names(
                         saved_geo)
                     if tors_names != saved_tors:
-                        print("new reference geometry doesn't match original",
+                        print("New reference geometry doesn't match original",
                               " reference geometry")
-                        print('removing original conformer save data')
+                        print('Removing original conformer save data')
                         cnf_run_fs.remove()
                         cnf_save_fs.remove()
 
@@ -140,8 +139,12 @@ def reference_geometry(
             if ncp < 2:
                 zma = automol.geom.zmatrix(geo)
                 thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
+                print('\nObtaining a single conformer using',
+                      'the MonteCarlo conformer sampling routine')
+                geo_path = thy_save_fs[0].path(thy_info[1:4])
+                print('Sampling done using geom from {}'.format(geo_path))
                 conformer.single_conformer(
-                    spc_info, thy_info, 
+                    zma, spc_info, thy_info,
                     thy_save_fs, cnf_run_fs, cnf_save_fs,
                     overwrite, saddle=False, dist_info=())
             else:
@@ -214,7 +217,7 @@ def remove_imag(
     mode and then reoptimize
     """
 
-    print('the initial geometries will be checked for imaginary frequencies')
+    print('The initial geometries will be checked for imaginary frequencies')
     spc_info = finf.get_spc_info(spc_dct_i)
     script_str, opt_script_str, kwargs, opt_kwargs = runpar.run_qchem_par(
         *thy_info[0:2])
@@ -225,13 +228,13 @@ def remove_imag(
     chk_idx = 0
     while imag and chk_idx < 5:
         chk_idx += 1
-        print('imaginary frequency detected, attempting to kick off')
+        print('Imaginary frequency detected, attempting to kick off')
 
         geo = run_kickoff_saddle(
             geo, disp_xyzs, spc_info, thy_info, run_fs, thy_run_fs,
             opt_script_str, kickoff_size, kickoff_backward,
             opt_cart=True, **opt_kwargs)
-        print('removing saddlepoint hessian')
+        print('Removing faulty geometry Hessian from filesystem')
 
         thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
         run_fs = autofile.fs.run(thy_run_path)
@@ -300,7 +303,6 @@ def run_kickoff_saddle(
         opt_cart=True, **kwargs):
     """ kickoff from saddle to find connected minima
     """
-    print('kickoff from saddle')
     thy_run_fs[-1].create(thy_info[1:4])
     thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
     run_fs = autofile.fs.run(thy_run_path)

@@ -39,8 +39,8 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
             [numpy.linspace(*linspace) + val_dct[name]
              for name, linspace in zip(tors_names, tors_linspaces)]
         )
-        tors_sym_nums.append(list(automol.zmatrix.torsional_symmetry_numbers(
-            zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
+        # tors_sym_nums.append(list(automol.zmatrix.torsional_symmetry_numbers(
+        #    zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
 
     return run_tors_names, run_tors_grids  # run_tors_syms
 
@@ -98,6 +98,23 @@ def is_methyl_rotor():
     """ Check if methyl rotor
     """
     return False
+
+
+# Building constraints
+def build_constraint_dct(zma, tors_names):
+    """ Build a dictionary of constraints
+    """
+    constraint_names = [name
+                        for name_lst in tors_names
+                        for name in name_lst]
+    constraint_names.sort(key=lambda x: int(x.split('D')[1]))
+    zma_vals = automol.zmatrix.values(zma)
+    constraint_dct = dict(zip(
+        constraint_names,
+        (round(zma_vals[name], 2) for name in constraint_names)
+    ))
+
+    return constraint_dct
 
 
 # Functions to handle setting up torsional defintion and potentials properly
