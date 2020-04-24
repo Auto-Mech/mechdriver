@@ -176,19 +176,16 @@ def find_sadpt_transition_state(
         vals = automol.zmatrix.values(zma)
         final_dist = vals[dist_name]
         dist_info[1] = final_dist
-        conformer.conformer_sampling(
+        conformer.single_conformer(
+            zma=zma,
             spc_info=ts_info,
             thy_info=ref_level,
             thy_save_fs=ts_save_fs,
             cnf_run_fs=cnf_run_fs,
             cnf_save_fs=cnf_save_fs,
-            script_str=opt_script_str,
             overwrite=overwrite,
-            nsamp_par=[False, 0, 0, 0, 0, 1],
             saddle=True,
-            dist_info=dist_info,
-            two_stage=True,
-            **opt_kwargs
+            dist_info=dist_info
         )
     else:
         ts_found = False

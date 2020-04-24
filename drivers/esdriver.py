@@ -36,16 +36,18 @@ def run(pes_idx,
         # Set Task and theory information
         ini_thy_info = finf.get_es_info(es_keyword_dct['inplvl'], thy_dct)
         thy_info = finf.get_es_info(es_keyword_dct['runlvl'], thy_dct)
-        if 'mr_scnlvl' in es_keyword_dct:
-            mr_scn_thy_info = finf.get_es_info(
-                es_keyword_dct['mr_scnlvl'], thy_dct)
-        else:
-            mr_scn_thy_info = None
-        if 'mr_splvl' in es_keyword_dct:
-            mr_sp_thy_info = finf.get_es_info(
-                es_keyword_dct['mr_splvl'], thy_dct)
-        else:
-            mr_sp_thy_info = None
+        mr_scn_thy_info = None
+        mr_sp_thy_info = None
+        # if es_keyword_dct['mr_scnlvl'] is not None:
+        #     mr_scn_thy_info = finf.get_es_info(
+        #         es_keyword_dct['mr_scnlvl'], thy_dct)
+        # else:
+        #     mr_scn_thy_info = None
+        # if es_keyword_dct['mr_splvl'] is not None:
+        #     mr_sp_thy_info = finf.get_es_info(
+        #         es_keyword_dct['mr_splvl'], thy_dct)
+        # else:
+        #     mr_sp_thy_info = None
     
         # Build the queue of species based on user request
         if obj == 'spc':

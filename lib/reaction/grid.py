@@ -317,7 +317,6 @@ def addition_bkp_grid(npoints, ts_bnd_len):
     """
     rmin = 1.6 * phycon.ANG2BOHR
     rmax = 2.8 * phycon.ANG2BOHR
-    print('ts_bnd_len test:', ts_bnd_len)
     if ts_bnd_len in bnd.LEN_DCT:
         npoints = 14
         bnd_len = bnd.LEN_DCT[ts_bnd_len]

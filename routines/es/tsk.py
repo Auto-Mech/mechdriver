@@ -61,7 +61,7 @@ def run(tsk, spc_dct, spc_name,
     elif 'find' in tsk:
         run_ts(spc_dct, spc_name,
                thy_info, ini_thy_info,
-               mr_sp_thy_info, mref_scn_thy_info,
+               mr_sp_thy_info, mr_scn_thy_info,
                run_prefix, save_prefix, es_keyword_dct)
     elif 'conf' in tsk:
         run_conformer_tsk(job, spc_dct, spc_name,
@@ -211,17 +211,28 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             *thy_info[0:2])
 
         # Set variables if it is a saddle
-        tors_names = spc['tors_names'] if saddle else ''
         dist_info = spc['dist_info'] if saddle else ()
         two_stage = saddle
         rxn_class = spc['class'] if saddle else ''
         mc_nsamp = spc['mc_nsamp']
 
+        # Read the geometry and zma from the ini file system
+        if not saddle:
+            geo = thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
+            zma = automol.geom.zmatrix(geo)
+            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+        else:
+            geo = thy_save_fs[0].file.geometry.read()
+            zma = thy_save_fs[0].file.zmatrix.read()
+            tors_names = spc['tors_names']
+
+        geo_path = thy_save_fs[0].path(mod_ini_thy_info[1:4])
+        print('Sampling done using geom from {}'.format(geo_path))
+
         # Run the sampling
         conformer.conformer_sampling(
-            spc_info,
-            mod_thy_info, mod_ini_thy_info,
-            thy_save_fs, ini_thy_save_fs,
+            zma, spc_info,
+            mod_thy_info, thy_save_fs,
             cnf_run_fs, cnf_save_fs,
             opt_script_str, overwrite,
             saddle=saddle, nsamp_par=mc_nsamp,
@@ -561,7 +572,8 @@ def run_ts(spc_dct, spc_name,
     # Set various TS information using the dictionary
     typ = ts_dct['class']
     grid = ts_dct['grid']
-    dist_name, _, update_guess, brk_name, _ = ts_dct['dist_info']
+    dist_info = ts_dct['dist_info']
+    dist_name, _, update_guess, brk_name, _ = dist_info
 
     # Get es options
     vrc_dct = {}
@@ -625,6 +637,7 @@ def run_ts(spc_dct, spc_name,
         ts_dct['dist_info'].append(angle)
 
     else:
+        switch = False
         if nobarrier(ts_dct):
             print('Running Scan for Barrierless TS:')
 
@@ -670,13 +683,19 @@ def run_ts(spc_dct, spc_name,
             # Check and see if a zma is found from the filesystem
             ini_cnf_save_fs, ini_cnf_save_locs = fbuild.cnf_fs_from_prefix(
                 ini_thy_save_path, cnf='min')
-            guess_zma, _ = fread.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
+            if ini_cnf_save_locs:
+                guess_zma, _ = fread.get_zma_geo(
+                    ini_cnf_save_fs, ini_cnf_save_locs)
+                print('Guess ZMA found from inp thy')
+            else:
+                guess_zma = None
 
             # If no guess zma, run a TS searching algorithm
             if guess_zma is None:
                 print('No Guess ZMA from inp thy. Running Scan for Fixed TS...')
                 scn_run_fs = autofile.fs.scan(thy_run_path)
                 scn_save_fs = autofile.fs.scan(thy_save_path)
+                print('Running Scan for Fixed TS:')
                 guess_zma = ts.find.run_sadpt_scan(
                     typ, grid, dist_name, brk_name, ts_dct['zma'], ts_info,
                     mod_thy_info,
@@ -703,7 +722,7 @@ def run_ts(spc_dct, spc_name,
 
 
 def nobarrier(ts_dct):
-    rad_rad = bool('radical radical' in typ)
-    low_spin = bool('low' in typ)
+    rad_rad = bool('radical radical' in ts_dct['class'])
+    low_spin = bool('low' in ts_dct['class'])
     no_elim = bool('elimination' not in ts_dct['class'])
     return rad_rad and low_sping and no_elim
