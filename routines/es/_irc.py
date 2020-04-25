@@ -10,9 +10,9 @@ from lib.runner import par as runpar
 from lib.runner import driver as rundriver
 
 
-def irc_scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
-             scn_save_fs, scn_run_fs, geo_run_path,
-             overwrite, opt_script_str, **opt_kwargs):
+def scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
+         scn_save_fs, scn_run_fs, geo_run_path,
+         overwrite, opt_script_str, **opt_kwargs):
     """ Run the IRC
     """
 

@@ -71,7 +71,7 @@ def run(pes_idx,
 
         # Run the electronic structure task for all spc in queue
         for spc_name, _ in spc_queue:
-            routines.es.tsk.run(
+            routines.es.run_tsk(
                 tsk, spc_dct, spc_name,
                 thy_info, ini_thy_info,
                 mr_sp_thy_info, mr_scn_thy_info,

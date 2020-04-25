@@ -5,12 +5,13 @@
 import sys
 import autofile
 import automol
-from routines.es import conformer
-from routines.es import geom
-from routines.es import scan
-from routines.es import sp
-from routines.es import tau
-from routines.es import ts
+from routines.es import _conformer as conformer
+from routines.es import _geom as geom
+from routines.es import _scan as scan
+from routines.es import _sp as sp
+from routines.es import _tau as tau
+from routines.es import _irc as irc
+from routines.es. import _ts as ts
 from lib.runner import par as runpar
 from lib.filesystem import orb as fsorb
 from lib.filesystem import build as fbuild
@@ -219,7 +220,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
         # Read the geometry and zma from the ini file system
         if not saddle:
             geo = thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
-            geo = thy_save_fs[-1].file.zmatrix.read(mod_ini_thy_info[1:4])
+            zma = thy_save_fs[-1].file.zmatrix.read(mod_ini_thy_info[1:4])
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
             geo_path = thy_save_fs[-1].path(mod_ini_thy_info[1:4])
         else:
@@ -469,7 +470,6 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 run_prefix, save_prefix, es_keyword_dct):
     """ run a scan over the specified torsional coordinates
     """
-    print('running task {}'.format('irc'))
 
     # Get dct for specific species task is run for
     spc = spc_dct[spc_name]
@@ -530,7 +530,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
             *thy_info[0:2])
 
         zma, geo = fread.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
-        ts.irc.irc_scan(
+        irc.scan(
             geo, spc_info, mod_thy_info, coo_name, irc_idxs,
             ini_scn_save_fs, ini_scn_run_fs, ini_cnf_run_paths[0],
             overwrite, opt_script_str, **opt_kwargs)
@@ -618,6 +618,8 @@ def run_ts(spc_dct, spc_name,
     cnf_run_fs, _ = fbuild.cnf_fs_from_thy(
         thy_run_path, cnf=None, saddle=True)
 
+    # Get the transition state
+    ts_found = False
     if cnf_save_locs and not overwrite:
         print('TS found and saved previously in ', cnf_save_fs[-1].path(cnf_save_locs))
         # ts_class, ts_original_zma, ts_tors_names, ts_dist_info
@@ -637,8 +639,13 @@ def run_ts(spc_dct, spc_name,
         ts_dct['dist_info'][1] = final_dist
         ts_dct['dist_info'][4] = angle
 
+        print('TS found and saved previously in ',
+                cnf_save_fs[-1].path(cnf_save_locs))
     else:
+        # Initialize switch var to go nobarrier routine to sadpt routine
         switch = False
+
+        # Find transition state through correct routine
         if nobarrier(ts_dct):
             print('Running Scan for Barrierless TS:')
 
@@ -665,7 +672,7 @@ def run_ts(spc_dct, spc_name,
             scn_save_fs = autofile.fs.scan(thy_save_path)
 
             # Run the barrierless transition state
-            tsk_status, switch = ts.find.find_barrierless_transition_state(
+            tsk_status, switch = ts.find.barrierless_transition_state(
                 ts_info, ts_zma, ts_dct, spc_dct,
                 grid,
                 dist_name,
@@ -678,54 +685,12 @@ def run_ts(spc_dct, spc_name,
                 overwrite, vrc_dct,
                 update_guess, **opt_kwargs)
 
-        # Run SadPt search 
         if not nobarrier(ts_dct) or (nobarrier(ts_dct) and switch):
-
-            # Check and see if a zma is found from the filesystem
-            ini_cnf_save_fs, ini_cnf_save_locs = fbuild.cnf_fs_from_prefix(
-                ini_thy_save_path, cnf='min')
-            if ini_cnf_save_locs:
-                if ini_cnf_save_fs[-1].file.zmatrix.exists(ini_cnf_save_locs):
-                    guess_zma = ini_cnf_save_fs[-1].file.zmatrix.read(
-                        ini_cnf_save_locs)
-                    print('Z-Matrix calculated at {} found'.format(
-                        es_keyword_dct['inplvl']))
-                    geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
-                    print('Reading Z-Matrix from path {}'.format(geo_path))
-                else:
-                    guess_zma = None
-            else:
-                guess_zma = None
-            
-            # # Check and see if a zma is found from the filesystem
-            # if thy_save_fs[0].file.zmatrix.exists(mod_ini_thy_info[1:4]):
-            #     guess_zma = thy_save_fs[0].file.zmatrix.read()
-            #     print('Z-Matrix calculated at {} found'.format(
-            #         es_keyword_dct['inplvl']))
-            #     geo_path = thy_save_fs[0].path(mod_ini_thy_info[1:4])
-            #     print('Reading Z-Matrix from path {}'.format(geo_path))
-            # else:
-            #     guess_zma = None
-
-            # If no guess zma, run a TS searching algorithm
-            if guess_zma is None:
-                print('No Z-Matrix in filesys for {} level'.format(
-                    es_keyword_dct['inplvl']))
-                scn_run_fs = autofile.fs.scan(thy_run_path)
-                scn_save_fs = autofile.fs.scan(thy_save_path)
-                print('Running scan to generate guess Z-Matrix for opt...')
-                guess_zma = ts.find.run_sadpt_scan(
-                    typ, grid, dist_name, brk_name, ts_dct['zma'], ts_info,
-                    mod_thy_info,
-                    scn_run_fs, scn_save_fs, opt_script_str,
-                    overwrite, update_guess, **opt_kwargs)
-
-            # Optimize the saddle point
             print('Optimiziing Guess Z-Matrix from scan or filesys...')
-            ts.find.find_sadpt_transition_state(
+            ts.find.sadpt_transition_state(
                 opt_script_str,
                 run_fs,
-                guess_zma,
+                guess_zmas,
                 ts_info,
                 mod_thy_info,
                 overwrite,

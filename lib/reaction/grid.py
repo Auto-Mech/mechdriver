@@ -11,6 +11,8 @@ from lib.phydat import bnd
 def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs):
     """ Find the maxmimum of the grid along one dimension
     """
+
+    # Find the maximum along the scan
     locs_list = []
     locs_lst = []
     enes = []
@@ -22,13 +24,21 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs):
             locs_lst.append(locs)
     max_ene = max(enes)
     max_idx = enes.index(max_ene)
+
+    # Build lst of guess zmas
+    guess_zmas = []
+
+    # Get zma at maximum
+    max_locs = locs_lst[max_idx]
+    max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
+    guess_zmas.append(max_zma)
+
+    # Add second guess zma for migrations
     if 'migration' in typ:
         max_grid_val = grid[max_idx]
-        max_zma = automol.zmatrix.set_values(
+        mig_zma = automol.zmatrix.set_values(
             ts_zma, {dist_name: max_grid_val})
-    else:
-        max_locs = locs_lst[max_idx]
-        max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
+        guess_zmas.append(mig_zma)
 
     return max_zma, max_ene
 

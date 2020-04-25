@@ -285,6 +285,22 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                     print(" - Geometry is disconnected.. Skipping...")
                 else:
                     if saddle:
+                        # ts_class, ts_original_zma, ts_tors_names, ts_dist_info
+                        # geo, zma, final_dist = check_filesys_for_ts(
+                        #     ts_dct, ts_zma, cnf_save_fs, overwrite,
+                        #     typ, dist_info, dist_name, bkp_ts_class_data)
+                        # zma = cnf_save_fs[-1].file.zmatrix.read(cnf_save_locs)
+
+                        # # Add an angle check which is added to spc dct for TS (crap code...)
+                        # vals = automol.zmatrix.values(zma)
+                        # final_dist = vals[dist_name]
+                        # dist_info[1] = final_dist
+                        # angle = ts.chk.check_angle(
+                        #     ts_dct['zma'],
+                        #     ts_dct['dist_info'],
+                        #     ts_dct['class'])
+                        # ts_dct['dist_info'][1] = final_dist
+                        # ts_dct['dist_info'].append(angle)
                         zma = elstruct.reader.opt_zmatrix(prog, out_str)
                         dist_name = dist_info[0]
                         dist_len = dist_info[1]
@@ -436,6 +452,36 @@ def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
                 atom_closest = False
                 print('idx test:', idx, distance, bond_dist)
     return atom_closest
+
+
+def check_angle(ts_zma, dist_info, rxn_class):
+    """ Check the angle to amend the dct
+    """
+    angle = None
+    dist_name = dist_info[0]
+    if 'abstraction' in rxn_class or 'addition' in rxn_class:
+        brk_name = dist_info[3]
+        if dist_name and brk_name:
+            ts_bnd = automol.zmatrix.bond_idxs(
+                ts_zma, dist_name)
+            brk_bnd = automol.zmatrix.bond_idxs(
+                ts_zma, brk_name)
+            ang_atms = [0, 0, 0]
+            cent_atm = list(set(brk_bnd) & set(ts_bnd))
+            if cent_atm:
+                ang_atms[1] = cent_atm[0]
+                for idx in brk_bnd:
+                    if idx != ang_atms[1]:
+                        ang_atms[0] = idx
+                for idx in ts_bnd:
+                    if idx != ang_atms[1]:
+                        ang_atms[2] = idx
+
+            geom = automol.zmatrix.geometry(ts_zma)
+            angle = automol.geom.central_angle(
+                geom, *ang_atms)
+
+    return angle
 
 
 def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):
