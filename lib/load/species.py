@@ -405,8 +405,6 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
 
     print('')
 
-    return ts_dct
-
 
 def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
     """ Create a new dictionary that combines init spc_dct and sadpt dct

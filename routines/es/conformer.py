@@ -351,7 +351,6 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                         # other than the bonding atom
                         if 'add' in rxn_class or 'abst' in rxn_class:
                             print('it is an addition or an abstraction:')
-                            print('ts_bnd2 test:', ts_bnd2, zma)
                             cls = is_atom_closest_to_bond_atom(
                                 zma, ts_bnd2, conf_dist_len)
                             if not cls:
