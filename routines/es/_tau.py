@@ -5,9 +5,7 @@ import numpy
 import automol
 import elstruct
 import autofile
-
-# New Libs
-from routines.es import util
+from routines.es import _util as util
 from lib.phydat import phycon
 from lib.runner import driver
 from lib.filesystem import minc as fsmin

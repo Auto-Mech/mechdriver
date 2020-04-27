@@ -75,28 +75,35 @@ def rxn_info(reacs, prods, spc_dct, ts_mul='low'):
     return [rxn_ichs, rxn_chgs, rxn_muls, mul]
 
 
-def assess_rxn_exo(reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix):
+def assess_rxn_ene(reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix):
     """ Check the directionality of the reaction
     """
     [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info(reacs, prods, spc_dct)
     try:
-        rxn_exo = fsread.reaction_energy(
+        rxn_ene = fsread.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, thy_info)
+        method = thy_info
     except TypeError:
-        rxn_exo = fsread.reaction_energy(
+        rxn_ene = fsread.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
+        method = ini_thy_info
     except AssertionError:
-        rxn_exo = fsread.reaction_energy(
+        rxn_ene = fsread.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
+        method = ini_thy_info
     except IOError:
-        rxn_exo = fsread.reaction_energy(
+        rxn_ene = fsread.reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
-    print('reaction is {:.2f} endothermic'.format(rxn_exo*phycon.EH2KCAL))
-    if rxn_exo > 0:
+        method = ini_thy_info
+    print('    Reaction energy is {:.2f} at {} level'.format(
+        rxn_ene*phycon.EH2KCAL, method[1]))
+    if rxn_ene > 0:
         rxn_ichs = rxn_ichs[::-1]
         rxn_chgs = rxn_chgs[::-1]
         rxn_muls = rxn_muls[::-1]
         reacs, prods = prods, reacs
+        print('    Since reaction is endothermic, flipping reaction to')
+        print('      {} = {}'.format('+'.join(reacs), '+'.join(prods)))
 
     return reacs, prods
 
