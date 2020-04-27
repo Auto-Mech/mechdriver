@@ -33,7 +33,7 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs):
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
     guess_zmas.append(max_zma)
 
-    # Add second guess zma for migrations
+    # # Add second guess zma for migrations
     if 'migration' in typ:
         max_grid_val = grid[max_idx]
         mig_zma = automol.zmatrix.set_values(

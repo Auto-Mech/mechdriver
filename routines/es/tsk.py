@@ -636,8 +636,8 @@ def run_ts(spc_dct, spc_name,
         vals = automol.zmatrix.values(zma)
         final_dist = vals[dist_name]
         dist_info[1] = final_dist
-        angle = ts.chk.check_angle(
-            ts_dct['zma'],
+        angle = conformer.check_angle(
+            zma,
             ts_dct['dist_info'],
             ts_dct['class'])
         ts_dct['dist_info'][1] = final_dist
