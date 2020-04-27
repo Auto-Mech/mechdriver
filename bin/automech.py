@@ -1,5 +1,5 @@
 """
-   Driver to parse and sort the mechanism input files and
+   Main Driver to parse and sort the mechanism input files and
    launch the desired drivers
 """
 
@@ -7,56 +7,53 @@ import sys
 from drivers import esdriver
 from drivers import thermodriver
 from drivers import ktpdriver
-from lib.load import run as lrun
-from lib.load import theory as lthy
-from lib.load import model as lmodel
-from lib.load import mechanism as lmech
-from lib.load import species as lspc
-from lib.filesystem import build as fbuild
-from lib import printmsg
+from lib.amech_io import reader
+from lib.amech_io import printer
+from lib.filesys.build import prefix_fs
 
 
 # Set runtime options based on user input
 JOB_PATH = sys.argv[1]
 
 # Print the header message for the driver
-printmsg.program_header('amech')
-printmsg.random_cute_animal()
-printmsg.program_header('inp')
+printer.program_header('amech')
+printer.random_cute_animal()
+printer.program_header('inp')
 
 # Parse the run input
 print('\nReading run.dat...')
-RUN_INP_DCT = lrun.build_run_inp_dct(JOB_PATH)
-RUN_OBJ_DCT = lrun.objects_dct(JOB_PATH)
-RUN_JOBS_LST = lrun.build_run_jobs_lst(JOB_PATH)
-ES_TSK_STR = lrun.read_es_tsks(JOB_PATH)
+RUN_INP_DCT = reader.run.build_run_inp_dct(JOB_PATH)
+RUN_OBJ_DCT = reader.run.objects_dct(JOB_PATH)
+RUN_JOBS_LST = reader.run.build_run_jobs_lst(JOB_PATH)
+ES_TSK_STR = reader.run.read_es_tsks(JOB_PATH)
 
 # Parse the theory input
 print('\nReading theory.dat...')
-THY_DCT = lthy.build_thy_dct(JOB_PATH)
+THY_DCT = reader.theory.build_thy_dct(JOB_PATH)
 
 # Parse the model input
 print('\nReading model.dat...')
-PES_MODEL_DCT, SPC_MODEL_DCT = lmodel.read_models_sections(JOB_PATH)
+PES_MODEL_DCT, SPC_MODEL_DCT = reader.model.read_models_sections(JOB_PATH)
 
 # Parse the species input to get a dct with ALL species in mechanism
 print('\nReading species.csv...')
-SPC_DCT = lspc.build_spc_dct(JOB_PATH, 'csv', check_stereo=False)
+SPC_DCT = reader.species.build_spc_dct(JOB_PATH, 'csv', check_stereo=False)
 
 # Parse mechanism input and get a dct with info on PESs user request to run
 if RUN_OBJ_DCT['pes']:
-    print('\nReaction Channels Needed. Reading mechanism.dat...')
-    RUN_PES_DCT = lmech.parse_mechanism_file(
+    print('\nRunning Calculations for PESs. Need input for mechanism.')
+    CLA_DCT = reader.rclass.parse_rxn_class_file(JOB_PATH)
+    print('  Reading mechanism.dat...')
+    RUN_PES_DCT = reader.mechanism.parse_mechanism_file(
         JOB_PATH,
         RUN_INP_DCT['mech'],
         SPC_DCT,
         RUN_OBJ_DCT['pes'],
         sort_rxns=True
     )
-    CLA_DCT = lspc.parse_rxn_class_file(JOB_PATH)
 elif RUN_OBJ_DCT['spc']:
     RUN_PES_DCT = {}
-    RUN_SPC_LST_DCT = lspc.build_run_spc_dct(SPC_DCT, RUN_OBJ_DCT)
+    RUN_SPC_LST_DCT = reader.species.build_run_spc_dct(SPC_DCT, RUN_OBJ_DCT)
     CLA_DCT = {}
 else:
     print('No Proper Run object specified')
@@ -64,20 +61,19 @@ else:
 
 # Initialize the filesystem
 print('\nBuilding the base Run-Save filesystems at')
-fbuild.prefix_fs(RUN_INP_DCT['run_prefix'])
+prefix_fs(RUN_INP_DCT['run_prefix'])
 print('{}'.format(RUN_INP_DCT['run_prefix']))
-fbuild.prefix_fs(RUN_INP_DCT['save_prefix'])
+prefix_fs(RUN_INP_DCT['save_prefix'])
 print('{}'.format(RUN_INP_DCT['save_prefix']))
 
 # Run the requested drivers: es, thermo, ktp
 print('\n\nRunning the requested drivers...')
 if 'es' in RUN_JOBS_LST:
 
-    # Print the header message for the driver
-    printmsg.program_header('es')
+    printer.program_header('es')
 
     # Build the elec struct tsk lst
-    ES_TSK_LST = lrun.build_run_es_tsks_lst(
+    ES_TSK_LST = reader.run.build_run_es_tsks_lst(
         ES_TSK_STR, SPC_MODEL_DCT, THY_DCT)
 
     # Call ESDriver for spc in each PES or SPC
@@ -114,11 +110,10 @@ if 'es' in RUN_JOBS_LST:
             RUN_INP_DCT
         )
 
-WRITE_MESSPF, RUN_MESSPF, RUN_NASA = lrun.set_thermodriver_run(RUN_JOBS_LST)
+WRITE_MESSPF, RUN_MESSPF, RUN_NASA = reader.run.set_thermodriver(RUN_JOBS_LST)
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
 
-    # Print the header message for the driver
-    printmsg.program_header('thermo')
+    printer.program_header('thermo')
 
     # Call ThermoDriver for spc in PES
     if RUN_OBJ_DCT['pes']:
@@ -145,22 +140,20 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
             run_nasa=RUN_NASA,
         )
 
-WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = lrun.set_ktpdriver_run(RUN_JOBS_LST)
+WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = reader.run.set_ktpdriver(RUN_JOBS_LST)
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
 
-    # Print the header message for the driver
-    printmsg.program_header('ktp')
+    printer.program_header('ktp')
 
-    # Call kTPDriver for spc in each PES
+    # Call kTPDriver for each SUB PES
     if RUN_OBJ_DCT['pes']:
         for (formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
 
             # Print PES form and SUB PES Channels
-            print('\nRunning PES {}: {}, SUB PES {}'.format(
+            print('\nCalculating Rates for PES {}: {}, SUB PES {}'.format(
                 pes_idx, formula, sub_pes_idx))
-            print('  Channels to be run for SUB PES:')
             for chn_idx, rxn in enumerate(rxn_lst):
-                print('   Channel {}: {} = {}'.format(
+                print('  Including Channel {}: {} = {}'.format(
                     chn_idx+1,
                     '+'.join(rxn['reacs']),
                     '+'.join(rxn['prods'])))

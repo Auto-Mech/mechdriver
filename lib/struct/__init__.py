@@ -1,5 +1,5 @@
 """
-New, Refactored Moldriver libs
+Handle construction of structural info
 """
 
 from lib.struct import tors

@@ -9,9 +9,9 @@ import automol
 import mess_io
 import projrot_io
 import autofile
+from lib import struct
 from lib.phydat import phycon
 from lib.runner import script
-from lib.struct import tors as ptors
 
 
 # MESS strings
@@ -25,7 +25,7 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
 
     # Build constraint dct
     if frz_tors:
-        constraint_dct = ptors.build_constraint_dct(zma, tors_names)
+        constraint_dct = struct.tors.build_constraint_dct(zma, tors_names)
     else:
         constraint_dct = None
 

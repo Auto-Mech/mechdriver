@@ -4,21 +4,21 @@
 import os
 import numpy
 import autofile
-import mess_io
+import pf_io
+from lib import filesys
+from lib.amech_io import cleaner
 from lib.phydat import phycon
-from lib.filesystem import orb as fsorb
-from lib.filesystem import minc as fsmin
-from routines.pf.messf import models as pfmodels
-from routines.pf.messf import _vib as vib
-from routines.pf.messf import _tors as tors
-from routines.pf.messf import _sym as sym
-from routines.pf.messf import _fake as fake
-from routines.pf.messf import _util as messfutil
+from routines.pf.pff import models as pfmodels
+from routines.pf.pff import _vib as vib
+from routines.pf.pff import _tors as tors
+from routines.pf.pff import _sym as sym
+from routines.pf.pff import _fake as fake
+from routines.pf.pff import _util as pffutil
 
 
 def species_block(spc, spc_dct_i, spc_info, spc_model,
                   pf_levels, save_prefix):
-    """ prepare the species input for messpf
+    """ prepare the species input for pfpf
     """
     print('spc name in block', spc)
     print('path', save_prefix)
@@ -77,10 +77,10 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
 
     no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
     # Set TS information
-    frm_bnd_key, brk_bnd_key = messfutil.get_bnd_keys(spc_dct_i, saddle)
+    frm_bnd_key, brk_bnd_key = pffutil.get_bnd_keys(spc_dct_i, saddle)
 
     # Initialize electronic energy levels
-    elec_levels = messfutil.ini_elec_levels(spc_dct_i, spc_info)
+    elec_levels = pffutil.ini_elec_levels(spc_dct_i, spc_info)
 
     # Determine the species symmetry factor using the given model
     sym_factor = sym.symmetry_factor(
@@ -105,9 +105,9 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
     hr_str = ""
     xmat = ()
 
-    if messfutil.is_atom(harm_min_cnf_locs, harm_cnf_save_fs):
-        mass = messfutil.atom_mass(harm_min_cnf_locs, harm_cnf_save_fs)
-        spc_str = mess_io.writer.atom(
+    if pffutil.is_atom(harm_min_cnf_locs, harm_cnf_save_fs):
+        mass = pffutil.atom_mass(harm_min_cnf_locs, harm_cnf_save_fs)
+        spc_str = pf_io.writer.atom(
             mass, elec_levels)
     else:
         if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts:
@@ -161,7 +161,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                 symf = sym_factor
                 for num in sym_nums:
                     symf /= num
-                mdhr_str = mess_io.writer.mol_data.core_multirotor(
+                mdhr_str = pf_io.writer.mol_data.core_multirotor(
                     geo, sym_factor, mdhr_dat_file_name, core_hr_str,
                     interp_emax=100, quant_lvl_emax=9)  # , forceq=False)
         elif vib_model == 'harm' and tors_model == 'tau':
@@ -210,8 +210,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             if tors_model == 'mdhr':
                 core = mdhr_str
             else:
-                core = mess_io.writer.core_rigidrotor(geo, symf)
-            spc_str = mess_io.writer.molecule(
+                core = pf_io.writer.core_rigidrotor(geo, symf)
+            spc_str = pf_io.writer.molecule(
                 core, freqs, elec_levels,
                 hind_rot=hr_str, xmat=xmat)
 
@@ -228,13 +228,13 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
 def vtst_with_no_saddle_block(
         ts_dct, ts_label, reac_label, prod_label,
         spc_ene, projrot_script_str, multi_info):
-    """ prepare the mess input string for a variational TS that does not have
+    """ prepare the pf input string for a variational TS that does not have
     a saddle point. Do it by calling the species block for each grid point
     in the scan file system
     """
 
     ts_info = ['', ts_dct['chg'], ts_dct['mul']]
-    multi_level = fsorb.mod_orb_restrict(ts_info, multi_info)
+    multi_level = filesys.inf.mod_orb_restrict(ts_info, multi_info)
 
     rxn_save_path = ts_dct['rxn_fs'][3]
     thy_save_fs = autofile.fs.theory(rxn_save_path)
@@ -299,9 +299,9 @@ def vtst_with_no_saddle_block(
         irc_pt_str += '! IRC Point {0}\n'.format(str(idx+1))
 
         # Write the MESS string for the molecule section for each irc point
-        core = mess_io.writer.mol_data.core_rigidrotor(
+        core = pf_io.writer.mol_data.core_rigidrotor(
             geom, sym_factor, interp_emax='')
-        irc_pt_str += mess_io.writer.species.molecule(
+        irc_pt_str += pf_io.writer.species.molecule(
             core, freqs, elec_levels,
             hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
@@ -315,7 +315,7 @@ def vtst_with_no_saddle_block(
         irc_pt_strs.append(irc_pt_str)
 
     # Write the MESS string for the entire variational section
-    variational_str = mess_io.writer.rxnchan.ts_variational(
+    variational_str = pf_io.writer.rxnchan.ts_variational(
         ts_label, reac_label, prod_label, irc_pt_strs)
 
     return variational_str
@@ -323,7 +323,7 @@ def vtst_with_no_saddle_block(
 
 def vtst_saddle_block(ts_dct, ene_thy_level, geo_thy_level,
                       ts_label, reac_label, prod_label, first_ground_ene):
-    """ prepare the mess input string for a variational TS where there is a
+    """ prepare the pf input string for a variational TS where there is a
         saddle point on the MEP.
         In this case, there is limited torsional information.
     """
@@ -360,7 +360,7 @@ def vtst_saddle_block(ts_dct, ene_thy_level, geo_thy_level,
             else:
                 scn_save_path = scn_save_fs[-1].path(locs)
                 sp_save_fs = autofile.fs.single_point(scn_save_path)
-                sp_level = fsorb.mod_orb_restrict(ts_info, ene_thy_level)
+                sp_level = filesys.inf.mod_orb_restrict(ts_info, ene_thy_level)
                 if sp_save_fs[-1].file.energy.exists(sp_level[1:4]):
                     ene = sp_save_fs[-1].file.energy.read(sp_level[1:4])
                     print('ene-high', ene)
@@ -395,9 +395,9 @@ def vtst_saddle_block(ts_dct, ene_thy_level, geo_thy_level,
         irc_pt_str += '! IRC Point {0}\n'.format(str(int(idx)))
 
         # Write the molecule section for each irc point
-        core = mess_io.writer.mol_data.core_rigidrotor(
+        core = pf_io.writer.mol_data.core_rigidrotor(
             geom, sym_factor, interp_emax='')
-        irc_pt_str += mess_io.writer.species.molecule(
+        irc_pt_str += pf_io.writer.species.molecule(
             core, freqs, elec_levels,
             hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
@@ -409,7 +409,7 @@ def vtst_saddle_block(ts_dct, ene_thy_level, geo_thy_level,
         full_irc_str.append(irc_pt_str)
 
     # Write the MESS string for the variational sections
-    variational_str = mess_io.writer.rxnchan.ts_variational(
+    variational_str = pf_io.writer.rxnchan.ts_variational(
         ts_label, reac_label, prod_label, full_irc_str)
 
     return variational_str
@@ -481,7 +481,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
 
     # Get the combined electronic energy levels
-    elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
+    elec_levels = pffutil.combine_elec_levels(spc_dct_i, spc_dct_j)
 
     # Determine the species symmetry factor using the given model
     dist_names = []
@@ -502,19 +502,19 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     sym_factor = sym_factor_i * sym_factor_j
 
     # Get the stoichiometry
-    stoich = messfutil.get_stoich(
+    stoich = pffutil.get_stoich(
         harm_min_cnf_locs_i, harm_min_cnf_locs_j,
         harm_cnf_save_fs_i, harm_cnf_save_fs_j)
 
     spc_str = ''
     if vib_model == 'harm' and tors_model == 'rigid':
-        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+        if pffutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
             freqs_i = ()
         else:
             geo_i, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
                 spc_info_i, harm_min_cnf_locs_i,
                 harm_cnf_save_fs_i, saddle=False)
-        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+        if pffutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             freqs_j = ()
         else:
             geo_j, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
@@ -530,7 +530,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
         hind_rot_str = ""
 
     if vib_model == 'harm' and tors_model == '1dhr':
-        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+        if pffutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
             geo_i = harm_cnf_save_fs_i[-1].file.geometry.read(
                 harm_min_cnf_locs_i)
             freqs_i = []
@@ -559,7 +559,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
             symf_i = sym_factor_i
             for num in sym_nums_i:
                 symf_i /= num
-        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+        if pffutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
             freqs_j = []
@@ -593,10 +593,10 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
         sym_factor = symf_i * symf_j
 
     # Write the MESS input strings
-    core = mess_io.writer.core_phasespace(
+    core = pf_io.writer.core_phasespace(
         geo_i, geo_j, sym_factor, stoich,
         pot_prefactor=pst_params[0], pot_power_exp=pst_params[1])
-    spc_str = mess_io.writer.molecule(
+    spc_str = pf_io.writer.molecule(
         core, freqs, elec_levels,
         hind_rot=hind_rot_str)
 
@@ -614,9 +614,9 @@ def fake_species_block(
     tors_model, vib_model, sym_model = spc_model
 
     # prepare the four sets of file systems
-    har_levelp_i = fsorb.mod_orb_restrict(
+    har_levelp_i = filesys.inf.mod_orb_restrict(
         spc_info_i, harm_level)
-    har_levelp_j = fsorb.mod_orb_restrict(
+    har_levelp_j = filesys.inf.mod_orb_restrict(
         spc_info_j, harm_level)
 
     # Set theory filesystem used throughout
@@ -660,7 +660,7 @@ def fake_species_block(
     no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
 
     # Get the combined electronic energy levels
-    elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
+    elec_levels = pffutil.combine_elec_levels(spc_dct_i, spc_dct_j)
 
     # Determine the species symmetry factor using the given model
     dist_names = []
@@ -689,13 +689,13 @@ def fake_species_block(
         harm_cnf_save_fs_i, harm_cnf_save_fs_j)
 
     if vib_model == 'harm' and tors_model == 'rigid':
-        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+        if pffutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
             freqs_i = ()
         else:
             _, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
                 spc_info_i, harm_min_cnf_locs_i,
                 harm_cnf_save_fs_i, saddle=False)
-        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+        if pffutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             freqs_j = ()
         else:
             _, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
@@ -705,7 +705,7 @@ def fake_species_block(
         hind_rot_str = ""
 
     if vib_model == 'harm' and tors_model == '1dhr':
-        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+        if pffutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
             freqs_i = ()
             hr_str_i = ''
             symf_i = sym_factor_i
@@ -731,7 +731,7 @@ def fake_species_block(
             for num_i in sym_nums_i:
                 symf_i /= num_i
 
-        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+        if pffutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             freqs_j = ()
             hr_str_j = ''
             symf_j = sym_factor_j
@@ -760,8 +760,8 @@ def fake_species_block(
         hind_rot_str = hr_str_i + hr_str_j
         sym_factor = symf_i * symf_j
 
-    core = mess_io.writer.core_rigidrotor(geo, sym_factor)
-    spc_str = mess_io.writer.molecule(
+    core = pf_io.writer.core_rigidrotor(geo, sym_factor)
+    spc_str = pf_io.writer.molecule(
         core, freqs, elec_levels,
         hind_rot=hind_rot_str)
 
@@ -772,16 +772,16 @@ def fake_species_block(
 def get_pf_header(temps):
     """ prepare partition function header string
     """
-    global_pf_str = mess_io.writer.global_pf(
+    global_pf_str = pf_io.writer.global_pf(
         temps, rel_temp_inc=0.001, atom_dist_min=0.6)
     return global_pf_str
 
 
 def get_pf_input(spc, spc_str, global_pf_str, zpe_str):
-    """ prepare the full pf input string for running messpf
+    """ prepare the full pf input string for running pfpf
     """
 
-    # create a messpf input file
+    # create a pfpf input file
     spc_head_str = 'Species ' + '\n' + spc
     pf_inp_str = '\n'.join(
         [global_pf_str,
@@ -805,6 +805,7 @@ def write_pf_input(pf_inp_str, data_str_dct, pf_path):
                 data_file.write(string)
 
     # Write the MESSPF input file
+    pf_inp_str = cleaner.remove_whitepsace(pf_inp_str)
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
         pf_file.write(pf_inp_str)
 
@@ -818,7 +819,7 @@ def set_model_filesys(thy_save_fs, spc_info, level, saddle=False):
     """ Gets filesystem objects for torsional calculations
     """
     # Set the level for the model
-    levelp = fsorb.mod_orb_restrict(spc_info, level)
+    levelp = filesys.inf.mod_orb_restrict(spc_info, level)
 
     # Get the save fileystem path
     save_path = thy_save_fs[-1].path(levelp[1:4])
@@ -829,7 +830,7 @@ def set_model_filesys(thy_save_fs, spc_info, level, saddle=False):
 
     # Get the fs object and the locs
     cnf_save_fs = autofile.fs.conformer(save_path)
-    min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
+    min_cnf_locs = filesys.minc.min_energy_conformer_locators(cnf_save_fs)
 
     # Get the save path for the conformers
     if min_cnf_locs:

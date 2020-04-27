@@ -5,8 +5,6 @@
 import os
 import projrot_io
 import autofile
-
-# New libs
 from lib.phydat import phycon
 from lib.runner import script
 

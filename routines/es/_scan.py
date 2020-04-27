@@ -1,20 +1,13 @@
-""" drivers for coordinate scans
+""" es_runners for coordinate scans
 """
-import numpy
 import automol
 import elstruct
 import autofile
-
-# New libs
-from lib.runner import driver
-from lib.runner import par as runpar
-from lib.filesystem import minc as fsmin
-from lib.filesystem import orb as fsorb
-from routines.es import _ts as ts
+from runners import es as es_runner
 
 
 def hindered_rotor_scans(
-        zma, spc_info, thy_level, scn_run_fs, scn_save_fs,
+        zma, spc_info, thy_info, scn_run_fs, scn_save_fs,
         run_tors_names, run_tors_grids,
         script_str, overwrite,
         saddle=False, constraint_dct=None, **opt_kwargs):
@@ -45,7 +38,7 @@ def hindered_rotor_scans(
         run_scan(
             zma=zma,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_info=thy_info,
             grid_dct=grid_dct,
             scn_run_fs=scn_run_fs,
             scn_save_fs=scn_save_fs,
@@ -72,7 +65,7 @@ def hindered_rotor_scans(
 
 
 def run_scan(
-        zma, spc_info, thy_level, grid_dct, scn_run_fs, scn_save_fs,
+        zma, spc_info, thy_info, grid_dct, scn_run_fs, scn_save_fs,
         script_str, overwrite, update_guess=True,
         reverse_sweep=True, fix_failures=True, saddle=False,
         constraint_dct=None,
@@ -122,7 +115,7 @@ def run_scan(
             grid_idxs=grid_idxs,
             grid_vals=grid_vals[0],
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_info=thy_info,
             overwrite=overwrite,
             update_guess=update_guess,
             saddle=saddle,
@@ -142,7 +135,7 @@ def run_scan(
                 grid_idxs=list(reversed(grid_idxs)),
                 grid_vals=list(reversed(grid_vals[0])),
                 spc_info=spc_info,
-                thy_level=thy_level,
+                thy_info=thy_info,
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
@@ -175,7 +168,7 @@ def run_scan(
             grid_idxs=grid_idxs,
             grid_vals=grid_vals,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_info=thy_info,
             overwrite=overwrite,
             update_guess=update_guess,
             saddle=saddle,
@@ -209,7 +202,7 @@ def run_scan(
                 grid_vals=[list(reversed(grid_vals[0])),
                            list(reversed(grid_vals[1]))],
                 spc_info=spc_info,
-                thy_level=thy_level,
+                thy_info=thy_info,
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
@@ -247,7 +240,7 @@ def run_scan(
             grid_idxs=grid_idxs,
             grid_vals=grid_vals,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_info=thy_info,
             overwrite=overwrite,
             update_guess=update_guess,
             saddle=saddle,
@@ -284,7 +277,7 @@ def run_scan(
                            list(reversed(grid_vals[1])),
                            list(reversed(grid_vals[2]))],
                 spc_info=spc_info,
-                thy_level=thy_level,
+                thy_info=thy_info,
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
@@ -329,7 +322,7 @@ def run_scan(
             grid_idxs=grid_idxs,
             grid_vals=grid_vals,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_info=thy_info,
             overwrite=overwrite,
             update_guess=update_guess,
             saddle=saddle,
@@ -369,7 +362,7 @@ def run_scan(
                            list(reversed(grid_vals[2])),
                            list(reversed(grid_vals[3]))],
                 spc_info=spc_info,
-                thy_level=thy_level,
+                thy_info=thy_info,
                 overwrite=overwrite,
                 update_guess=update_guess,
                 saddle=saddle,
@@ -381,7 +374,7 @@ def run_scan(
 def _run_1d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_name,
         grid_idxs, grid_vals,
-        spc_info, thy_level, overwrite, errors=(), options_mat=(),
+        spc_info, thy_info, overwrite, errors=(), options_mat=(),
         retry_failed=True, update_guess=True, saddle=False,
         constraint_dct=None,
         **kwargs):
@@ -405,13 +398,13 @@ def _run_1d_scan(
                 [[coo_name], [grid_val]])
             frozen_coordinates = [coo_name]
         if not geo_exists or overwrite:
-            driver.run_job(
+            es_runner.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=run_fs,
                 geom=zma,
                 spc_info=spc_info,
-                thy_level=thy_level,
+                thy_info=thy_info,
                 overwrite=overwrite,
                 frozen_coordinates=frozen_coordinates,
                 errors=errors,
@@ -421,7 +414,7 @@ def _run_1d_scan(
                 **kwargs
             )
 
-            ret = driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret is not None:
                 inf_obj, _, out_str = ret
                 prog = inf_obj.prog
@@ -433,7 +426,7 @@ def _run_1d_scan(
 def _run_2d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_names,
         grid_idxs, grid_vals,
-        spc_info, thy_level, overwrite, errors=(),
+        spc_info, thy_info, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
         constraint_dct=None,
         **kwargs):
@@ -465,13 +458,13 @@ def _run_2d_scan(
                     [coo_names, [grid_val_i, grid_val_j]])
                 frozen_coordinates = coo_names
             if not geo_exists or overwrite:
-                driver.run_job(
+                es_runner.run_job(
                     job=elstruct.Job.OPTIMIZATION,
                     script_str=script_str,
                     run_fs=run_fs,
                     geom=zma,
                     spc_info=spc_info,
-                    thy_level=thy_level,
+                    thy_info=thy_info,
                     overwrite=overwrite,
                     frozen_coordinates=frozen_coordinates,
                     errors=errors,
@@ -481,7 +474,7 @@ def _run_2d_scan(
                     **kwargs
                 )
 
-                ret = driver.read_job(
+                ret = es_runner.read_job(
                     job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                 if ret is not None:
                     inf_obj, _, out_str = ret
@@ -494,7 +487,7 @@ def _run_2d_scan(
 def _run_3d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_names,
         grid_idxs, grid_vals,
-        spc_info, thy_level, overwrite, errors=(),
+        spc_info, thy_info, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
         constraint_dct=None,
         **kwargs):
@@ -529,13 +522,13 @@ def _run_3d_scan(
                         [coo_names, [grid_val_i, grid_val_j, grid_val_k]])
                     frozen_coordinates = coo_names
                 if not geo_exists or overwrite:
-                    driver.run_job(
+                    es_runner.run_job(
                         job=elstruct.Job.OPTIMIZATION,
                         script_str=script_str,
                         run_fs=run_fs,
                         geom=zma,
                         spc_info=spc_info,
-                        thy_level=thy_level,
+                        thy_info=thy_info,
                         overwrite=overwrite,
                         frozen_coordinates=frozen_coordinates,
                         errors=errors,
@@ -545,7 +538,7 @@ def _run_3d_scan(
                         **kwargs
                     )
 
-                    ret = driver.read_job(
+                    ret = es_runner.read_job(
                         job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                     if ret is not None:
                         inf_obj, _, out_str = ret
@@ -558,7 +551,7 @@ def _run_3d_scan(
 def _run_4d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_names,
         grid_idxs, grid_vals,
-        spc_info, thy_level, overwrite, errors=(),
+        spc_info, thy_info, overwrite, errors=(),
         options_mat=(), retry_failed=True, update_guess=True, saddle=False,
         constraint_dct=None,
         **kwargs):
@@ -598,13 +591,13 @@ def _run_4d_scan(
                              [grid_val_i, grid_val_j, grid_val_k, grid_val_l]])
                         frozen_coordinates = coo_names
                     if not geo_exists or overwrite:
-                        driver.run_job(
+                        es_runner.run_job(
                             job=elstruct.Job.OPTIMIZATION,
                             script_str=script_str,
                             run_fs=run_fs,
                             geom=zma,
                             spc_info=spc_info,
-                            thy_level=thy_level,
+                            thy_info=thy_info,
                             overwrite=overwrite,
                             frozen_coordinates=frozen_coordinates,
                             errors=errors,
@@ -614,7 +607,7 @@ def _run_4d_scan(
                             **kwargs
                         )
 
-                        ret = driver.read_job(
+                        ret = es_runner.read_job(
                             job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                         if ret is not None:
                             inf_obj, _, out_str = ret
@@ -639,7 +632,7 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names):
             run_fs = autofile.fs.run(run_path)
             print("Reading from scan run at {}".format(run_path))
 
-            ret = driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret:
                 inf_obj, inp_str, out_str = ret
                 prog = inf_obj.prog
@@ -695,7 +688,7 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names):
                     run_path = cscn_run_fs[-1].path(locs2)
                     print("Reading from scan run at {}".format(run_path))
                     run_fs = autofile.fs.run(run_path)
-                    ret = driver.read_job(
+                    ret = es_runner.read_job(
                         job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                     if ret:
                         inf_obj, inp_str, out_str = ret

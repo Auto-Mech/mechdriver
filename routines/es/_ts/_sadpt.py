@@ -5,9 +5,9 @@ import automol
 import elstruct
 from routines.es import conformer
 from routines.es import _scan as scan
-from lib.runner import driver
+from runners import es as es_runner
+from lib import filesys
 from lib.reaction import grid as rxngrid
-from lib.filesystem import build as fbuild
 
 
 def check_filesys_for_guess(ini_thy_save_path, es_keyword_dct):
@@ -17,7 +17,7 @@ def check_filesys_for_guess(ini_thy_save_path, es_keyword_dct):
     guess_zmas = []
 
     # Check and see if a zma is found from the filesystem
-    ini_cnf_save_fs, ini_cnf_save_locs = fbuild.cnf_fs_from_prefix(
+    ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
         ini_thy_save_path, cnf='min')
     if ini_cnf_save_locs:
         if ini_cnf_save_fs[-1].file.zmatrix.exists(ini_cnf_save_locs):
@@ -102,7 +102,7 @@ def optimize_transition_state(
               'guess Z-Matrix {}...'.format(idx+1))
 
         # Run the transition state optimization
-        driver.run_job(
+        es_runner.run_job(
             job='optimization',
             script_str=opt_script_str,
             run_fs=run_fs,
@@ -115,7 +115,7 @@ def optimize_transition_state(
             )
 
         # Read the contents of the optimization
-        opt_ret = driver.read_job(
+        opt_ret = es_runner.read_job(
             job='optimization',
             run_fs=run_fs,
         )

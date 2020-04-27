@@ -1,4 +1,4 @@
-""" drivers
+""" es_runners
 """
 
 import numpy
@@ -6,9 +6,9 @@ import automol
 import elstruct
 import autofile
 from routines.es import _util as util
+from runners import es as es_runner
+from lib import filesys
 from lib.phydat import phycon
-from lib.runner import driver
-from lib.filesystem import minc as fsmin
 
 
 def tau_sampling(spc_info,
@@ -102,7 +102,7 @@ def run_tau(
 
         idx += 1
         print("Run {}/{}".format(idx, nsamp0))
-        driver.run_job(
+        es_runner.run_job(
             job=elstruct.Job.OPTIMIZATION,
             script_str=script_str,
             run_fs=run_fs,
@@ -136,7 +136,7 @@ def save_tau(tau_run_fs, tau_save_fs):
 
             print("Reading from tau run at {}".format(run_path))
 
-            ret = driver.read_job(
+            ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret:
                 inf_obj, inp_str, out_str = ret
@@ -159,7 +159,7 @@ def save_tau(tau_run_fs, tau_save_fs):
                 saved_geos.append(geo)
 
         # update the tau trajectory file
-        fsmin.traj_sort(tau_save_fs)
+        filesys.minc.traj_sort(tau_save_fs)
 
 
 def assess_pf_convergence(save_prefix, temps=(300., 500., 750., 1000., 1500.)):
@@ -167,7 +167,7 @@ def assess_pf_convergence(save_prefix, temps=(300., 500., 750., 1000., 1500.)):
     """
     # Get the energy of the mininimum-energy conformer
     cnf_save_fs = autofile.fs.conformer(save_prefix)
-    min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
+    min_cnf_locs = filesys.minc.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
         ene_ref = cnf_save_fs[-1].file.energy.read(min_cnf_locs)
 

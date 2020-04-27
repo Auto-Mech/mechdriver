@@ -4,15 +4,14 @@
 import os
 import autofile
 import automol
-import varecof_io
 import elstruct
+import varecof_io
 from routines.es import _scan as scan
 from routines.es._ts import _wfn as wfn
+from runners import es as es_runner
+from lib import filesys
 from lib.runner import script
-from lib.runner import driver as rundriver
-from lib.runner import par as runpar
 from lib.phydat import phycon
-from lib.filesystem import orb as fsorb
 
 
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM
@@ -80,7 +79,7 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
 
     # Set the orb type
     if multi_sp_info is not None:
-        orb_restr = fsorb.orbital_restriction(ts_info, multi_sp_info)
+        orb_restr = filesys.inf.orbital_restriction(ts_info, multi_sp_info)
         sp_level = multi_sp_info[0:3]
         sp_level.append(orb_restr)
 
@@ -448,7 +447,7 @@ def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
     """
 
     # Set up script and kwargs for the irc run
-    script_str, _, kwargs, _ = runpar.run_qchem_par(*sp_thy_level[0:2])
+    script_str, _, kwargs, _ = es_runner.par.run_qchem_par(*sp_thy_level[0:2])
 
     # Build the elstruct CASSCF options list for multiref calcs
     cas_opt = []
@@ -494,7 +493,7 @@ def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
         exists = sp_save_fs[-1].file.energy.exists(sp_thy_level[1:4])
         if not exists or overwrite:
             geo = scn_save_fs[-1].file.geometry.read(locs)
-            rundriver.run_job(
+            es_runner.run_job(
                 job='energy',
                 script_str=script_str,
                 run_fs=run_fs,
@@ -505,7 +504,7 @@ def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
                 **kwargs,
             )
 
-        ret = rundriver.read_job(
+        ret = es_runner.read_job(
             job='energy',
             run_fs=run_fs,
         )

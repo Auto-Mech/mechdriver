@@ -9,10 +9,7 @@ import numpy
 import ratefit
 import chemkin_io
 import mess_io
-
-# New libs
-from routines.pf.ktp import rates as messrates
-# from lib.outpt import chemkin as cout
+# from lib.amech_io import writer
 from lib.phydat import phycon
 
 
@@ -25,8 +22,8 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     """
 
     # pf_levels.append(ene_str)
-    # chemkin_header_str = cout.run_ckin_header(pf_levels, pf_model)
-    # chemkin_header_str += cout.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
+    # chemkin_header_str = writer.chemkin.run_ckin_header(pf_levels, pf_model)
+    # chemkin_header_str += writer.chemkin.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
     # chemkin_header_str += '\n'
     chemkin_header_str = 'HEADER\n'
     chemkin_poly_str = chemkin_header_str

@@ -8,10 +8,9 @@ import elstruct
 import autofile
 from routines.es import _util as util
 from routines.es import geom
-from lib.runner import runpar
-from lib.runner import driver
+from runners import es as es_runner
+from lib import filesys
 from lib.runner import script
-from lib.filesystem import orb as fsorb
 from lib.phydat import phycon
 
 
@@ -38,9 +37,8 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
         sticks them together and optimizes the combined geometry.
         Supposed to use the wells filesystem?
     """
-    projrot_script_str = script.PROJROT
     new_vdws = []
-    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(*thy_info[:2])
+    _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(*thy_info[:2])
     mul = spc_dct[ts_name]['low_mul']
     vdw_names_lst = []
     if vdw_params[0]:
@@ -59,18 +57,18 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
         # theory
         prog = thy_info[0]
         method = thy_info[1]
-        _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(prog, method)
+        _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(prog, method)
 
         geos = [(), ()]
         ntaudof = 0.
         for i, (nam, ich, chg, mul) in enumerate(zip(names, ichs, chgs, muls)):
             spc_info = [ich, chg, mul]
-            orb_restr = fsorb.orbital_restriction(spc_info, ini_thy_info)
-            ini_thy_level = ini_thy_info[0:3]
-            ini_thy_level.append(orb_restr)
-            orb_restr = fsorb.orbital_restriction(spc_info, thy_info)
-            thy_level = thy_info[0:3]
-            thy_level.append(orb_restr)
+            orb_restr = filesys.inf.orbital_restriction(spc_info, ini_thy_info)
+            ini_g = ini_thy_info[0:3]
+            ini_g.append(orb_restr)
+            orb_restr = filesys.inf.orbital_restriction(spc_info, thy_info)
+            thy_info = thy_info[0:3]
+            thy_info.append(orb_restr)
             spc_run_fs = autofile.fs.species(run_prefix)
             spc_run_fs[-1].create(spc_info)
             spc_run_path = spc_run_fs[-1].path(spc_info)
@@ -79,28 +77,27 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
             spc_save_path = spc_save_fs[-1].path(spc_info)
 
             thy_run_fs = autofile.fs.theory(spc_run_path)
-            thy_run_fs[-1].create(thy_level[1:4])
-            thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+            thy_run_fs[-1].create(thy_info[1:4])
+            thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
             thy_save_fs = autofile.fs.theory(spc_save_path)
-            thy_save_fs[-1].create(thy_level[1:4])
-            thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
+            thy_save_fs[-1].create(thy_info[1:4])
+            thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
             run_fs = autofile.fs.run(thy_run_path)
 
             ini_thy_save_fs = autofile.fs.theory(spc_save_path)
-            ini_thy_save_fs[-1].create(ini_thy_level[1:4])
+            ini_thy_save_fs[-1].create(ini_thy_info[1:4])
 
             cnf_run_fs = autofile.fs.conformer(thy_run_path)
             cnf_save_fs = autofile.fs.conformer(thy_save_path)
 
             geo = geom.reference_geometry(
-                spc_dct[nam], thy_level, ini_thy_level,
+                spc_dct[nam], thy_info, ini_thy_info,
                 thy_run_fs, thy_save_fs,
                 ini_thy_save_fs,
                 cnf_run_fs, cnf_save_fs,
                 run_fs,
                 kickoff_size=kickoff_size,
                 kickoff_backward=kickoff_backward,
-                projrot_script_str=projrot_script_str,
                 overwrite=overwrite)
             geos[i] = geo
             gra = automol.geom.graph(geo)
@@ -139,24 +136,24 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
             spc_save_fs = autofile.fs.species(save_prefix)
             spc_save_fs[-1].create(spc_info)
             spc_save_path = spc_save_fs[-1].path(spc_info)
-            orb_restr = fsorb.orbital_restriction(spc_info, thy_info)
-            thy_level = thy_info[0:3]
-            thy_level.append(orb_restr)
+            orb_restr = filesys.inf.orbital_restriction(spc_info, thy_info)
+            g = thy_info[0:3]
+            g.append(orb_restr)
             thy_run_fs = autofile.fs.theory(spc_run_path)
-            thy_run_fs[-1].create(thy_level[1:4])
-            thy_run_path = thy_run_fs[-1].path(thy_level[1:4])
+            thy_run_fs[-1].create(g[1:4])
+            thy_run_path = thy_run_fs[-1].path(g[1:4])
             thy_save_fs = autofile.fs.theory(spc_save_path)
-            thy_save_fs[-1].create(thy_level[1:4])
-            thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
+            thy_save_fs[-1].create(g[1:4])
+            thy_save_path = thy_save_fs[-1].path(g[1:4])
             run_fs = autofile.fs.run(thy_run_path)
 
             # Generate reference geometry
             # Generate the z-matrix and sampling ranges
-            driver.run_job(
+            es_runner.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 geom=geo,
                 spc_info=spc_info,
-                thy_level=thy_level,
+                th_info=thy_info,
                 run_fs=run_fs,
                 script_str=opt_script_str,
                 overwrite=overwrite,
@@ -164,7 +161,7 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
             )
 
             # Save info for the initial geometry (from ichi or fsave dir)
-            ret = driver.read_job(
+            ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret:
                 print('Saving reference geometry')
@@ -176,13 +173,13 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
                 geo = elstruct.reader.opt_geometry(prog, out_str)
                 print('vdw ending geometry')
                 print(automol.geom.xyz_string(geo))
-                thy_save_fs[-1].file.geometry.write(geo, thy_level[1:4])
+                thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
                 ene = elstruct.reader.energy(prog, method, out_str)
                 if ene < min_ene:
                     min_ene = ene
                     print('ene test in vdw')
                     print(ene)
-                    thy_save_fs[-1].file.energy.write(ene, thy_level[1:4])
+                    thy_save_fs[-1].file.energy.write(ene, thy_info[1:4])
                     print('Saving reference geometry')
                     print(" - Save path: {}".format(thy_save_path))
                     vdw_name = label + ts_name.replace('ts', 'vdw')
@@ -222,19 +219,19 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
     return new_vdws
 
 
-def fake_conf(thy_level, filesys, inf=()):
+def fake_conf(thy_info, filesys, inf=()):
     """ generate data to be used for a fake well I think?
     """
     cnf_save_fs = filesys[5]
     cnf_run_fs = filesys[4]
     thy_save_fs = filesys[3]
     run_fs = filesys[-1]
-    thy_save_path = thy_save_fs[-1].path(thy_level[1:4])
-    geo = thy_save_fs[-1].file.geometry.read(thy_level[1:4])
+    thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
+    geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
     if inf:
         inf_obj, ene = inf
     else:
-        ene = thy_save_fs[-1].file.energy.read(thy_level[1:4])
+        ene = thy_save_fs[-1].file.energy.read(thy_info[1:4])
         inf_obj = run_fs[0].file.info.read()
     tors_range_dct = {}
     cinf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
@@ -263,11 +260,11 @@ def fake_conf(thy_level, filesys, inf=()):
     cnf_run_fs[-1].file.geometry.write(geo, locs)
 
 
-def fake_geo_gen(tsk, thy_level, filesys):
+def fake_geo_gen(tsk, thy_info, filesys):
     """ generate data to be used for a fake well I think?
     """
     if 'conf' in tsk:
-        fake_conf(thy_level, filesys)
+        fake_conf(thy_info, filesys)
     if 'scan' in tsk:
         pass
     if 'tau' in tsk:

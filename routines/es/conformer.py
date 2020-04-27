@@ -1,16 +1,13 @@
-""" drivers for conformer
+""" es_runners for conformer
 """
 
 import numpy
 import automol
 import elstruct
 import autofile
-
-# New libs
 from routines.es import _util as util
-from lib.runner import driver
-from lib.runner import par as runpar
-from lib.filesystem import minc as fsmin
+from runners import es as es_runner
+from lib import filesys
 from lib.phydat import bnd
 
 
@@ -88,7 +85,7 @@ def conformer_sampling(zma, spc_info,
     )
 
     # Save information about the minimum energy conformer in top directory
-    min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
+    min_cnf_locs = filesys.minc.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
         geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
@@ -108,7 +105,7 @@ def single_conformer(zma, spc_info, thy_info,
     """ generate single optimized geometry for
         randomly sampled initial torsional angles
     """
-    opt_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_info[0:2])
+    opt_script_str, _, kwargs, _ = es_runner.par.run_qchem_par(*thy_info[0:2])
     conformer_sampling(
         zma=zma,
         spc_info=spc_info,
@@ -186,45 +183,45 @@ def run_conformers(
         if two_stage and tors_names:
             print('Stage one beginning, holding the coordinates constant',
                   tors_names)
-            driver.run_job(
+            es_runner.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=run_fs,
                 geom=samp_zma,
                 spc_info=spc_info,
-                thy_level=thy_info,
+                thy_info=thy_info,
                 overwrite=overwrite,
                 frozen_coordinates=[tors_names],
                 saddle=saddle,
                 **kwargs
             )
             print('Stage one success, reading for stage 2')
-            ret = driver.read_job(
+            ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret:
                 sinf_obj, _, out_str = ret
                 prog = sinf_obj.prog
                 samp_zma = elstruct.reader.opt_zmatrix(prog, out_str)
                 print('Stage one success beginning stage two on', samp_zma)
-                driver.run_job(
+                es_runner.run_job(
                     job=elstruct.Job.OPTIMIZATION,
                     script_str=script_str,
                     run_fs=run_fs,
                     geom=samp_zma,
                     spc_info=spc_info,
-                    thy_level=thy_info,
+                    thy_info=thy_info,
                     overwrite=overwrite,
                     saddle=saddle,
                     **kwargs
                 )
         else:
-            driver.run_job(
+            es_runner.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=run_fs,
                 geom=samp_zma,
                 spc_info=spc_info,
-                thy_level=thy_info,
+                thy_info=thy_info,
                 overwrite=overwrite,
                 saddle=saddle,
                 **kwargs
@@ -269,7 +266,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
             run_fs = autofile.fs.run(cnf_run_path)
             print("Reading from conformer run at {}".format(cnf_run_path))
 
-            ret = driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret:
                 inf_obj, inp_str, out_str = ret
                 prog = inf_obj.prog
@@ -442,7 +439,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
 
         # Update the conformer trajectory file
         print('')
-        fsmin.traj_sort(cnf_save_fs)
+        filesys.minc.traj_sort(cnf_save_fs)
 
 
 def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):

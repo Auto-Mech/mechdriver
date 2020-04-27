@@ -8,8 +8,8 @@ from routines.pf.messf import _tors as tors
 from routines.pf.messf import _vib as vib
 from routines.pf.messf import _tau as tau
 # from routines.pf.messf import _vpt2 as vpt2
+from lib import struct
 from lib.phydat import phycon
-from lib.struct import tors as ptors
 
 
 def vib_harm_tors_rigid(spc_info, harm_min_cnf_locs, harm_cnf_save_fs,
@@ -86,7 +86,7 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 tors_min_cnf_locs)
 
             # Get the hr prep stuff
-            tors_names, tors_grids = ptors.hr_prep(
+            tors_names, tors_grids = struct.tors.hr_prep(
                 zma, tors_geo, run_tors_names=run_tors_names,
                 scan_increment=scan_increment, ndim_tors='1dhr',
                 saddle=saddle,
@@ -197,7 +197,7 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 tors_min_cnf_locs)
 
             # Get the hr prep stuff
-            tors_name_grps, tors_grid_grps = ptors.hr_prep(
+            tors_name_grps, tors_grid_grps = struct.tors.hr_prep(
                 zma, tors_geo, run_tors_names=run_tors_names,
                 scan_increment=scan_increment, ndim_tors=ndim_tors,
                 saddle=saddle,

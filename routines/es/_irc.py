@@ -2,12 +2,10 @@
 IRC calcs
 """
 
-import automol
 import elstruct
 import autofile
-from lib.filesystem import orb as fsorb
-from lib.runner import par as runpar
-from lib.runner import driver as rundriver
+from runners import es as es_runner
+from lib import filesys
 
 
 def scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
@@ -51,24 +49,24 @@ def run_irc(zma, irc_job, coo_name, irc_idxs, run_fs, scn_save_fs,
     """
 
     irc_ran = True
-    for idx in irc_idxs: 
+    for idx in irc_idxs:
         locs = [[coo_name], [idx]]
         if not scn_save_fs[-1].file.geometry.exists(locs):
             irc_ran = False
-    
+
     if not irc_ran:
         print("No IRC ran...")
         # set irc options here for now
         opt_kwargs['job_options'] = ['calcall', 'stepsize=3', 'maxpoints=4']
 
         # Run the calculations
-        rundriver.run_job(
+        es_runner.run_job(
             job=irc_job,
             script_str=opt_script_str,
             run_fs=run_fs,
             geom=zma,
             spc_info=ts_info,
-            thy_level=scn_thy_info,
+            thy_info=scn_thy_info,
             overwrite=overwrite,
             **opt_kwargs,
             )
@@ -81,7 +79,7 @@ def save_irc(irc_job, run_fs, scn_run_fs, scn_save_fs,
     """ Read IRC output and store data in filesystem
     """
 
-    opt_ret = rundriver.read_job(
+    opt_ret = es_runner.read_job(
         job=irc_job,
         run_fs=run_fs,
     )

@@ -1,4 +1,4 @@
-""" drivers for initial geometry optimization
+""" es_runners for initial geometry optimization
 """
 import os
 import numpy
@@ -6,15 +6,12 @@ import automol
 import elstruct
 import autofile
 import projrot_io
-
-# New Libs
 from routines.es import conformer
 from routines.es import _wells as wells
+from runners import es as es_runner
+from runners import run_script
+from lib import filesys
 from lib.phydat import phycon
-from lib.runner import driver
-from lib.runner import par as runpar
-from lib.runner import script
-from lib.filesystem import inf as finf
 
 
 def reference_geometry(
@@ -31,7 +28,6 @@ def reference_geometry(
     From the hierarchy an optimization is performed followed by a check for
     an imaginary frequency and then a conformer file system is set up.
     """
-    # projrot_script_str = script.PROJROT
     ret = None
 
     if run_fs[0].file.info.exists([]):
@@ -91,7 +87,7 @@ def reference_geometry(
                     print('Getting reference geometry from inchi')
         # Optimize from initial geometry to get reference geometry
         if not geo:
-            _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+            _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
                 *thy_info[0:2])
             params = {
                 'spc_info': spc_info,
@@ -183,17 +179,17 @@ def run_initial_geometry_opt(
     else:
         geom = ini_geo
     run_fs = autofile.fs.run(thy_run_path)
-    driver.run_job(
+    es_runner.run_job(
         job=elstruct.Job.OPTIMIZATION,
         script_str=script_str,
         run_fs=run_fs,
         geom=geom,
         spc_info=spc_info,
-        thy_level=thy_info,
+        thy_info=thy_info,
         overwrite=overwrite,
         **kwargs,
     )
-    ret = driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+    ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
     geo = None
     inf = None
     if ret:
@@ -218,8 +214,8 @@ def remove_imag(
     """
 
     print('The initial geometries will be checked for imaginary frequencies')
-    spc_info = finf.get_spc_info(spc_dct_i)
-    script_str, opt_script_str, kwargs, opt_kwargs = runpar.run_qchem_par(
+    spc_info = filesys.inf.get_spc_info(spc_dct_i)
+    script_str, opt_script_str, kwargs, opt_kwargs = es_runner.par.run_qchem_par(
         *thy_info[0:2])
 
     imag, geo, disp_xyzs, hess = run_check_imaginary(
@@ -262,17 +258,17 @@ def run_check_imaginary(
     if automol.geom.is_atom(geo):
         hess = ((), ())
     else:
-        driver.run_job(
+        es_runner.run_job(
             job=elstruct.Job.HESSIAN,
             spc_info=spc_info,
-            thy_level=thy_info,
+            thy_info=thy_info,
             geom=geo,
             run_fs=run_fs,
             script_str=script_str,
             overwrite=overwrite,
             **kwargs,
             )
-        ret = driver.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
+        ret = es_runner.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
         if ret:
             inf_obj, _, out_str = ret
             prog = inf_obj.prog
@@ -315,17 +311,17 @@ def run_kickoff_saddle(
         geom = geo
     else:
         geom = automol.geom.zmatrix(geo)
-    driver.run_job(
+    es_runner.run_job(
         job=elstruct.Job.OPTIMIZATION,
         script_str=opt_script_str,
         run_fs=run_fs,
         geom=geom,
         spc_info=spc_info,
-        thy_level=thy_info,
+        thy_info=thy_info,
         overwrite=True,
         **kwargs,
     )
-    ret = driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+    ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
     if ret:
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
@@ -344,7 +340,7 @@ def save_initial_geometry(
     thy_save_fs[-1].create(thy_info[1:4])
     thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
 
-    ret = driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+    ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
     if ret:
         print('Saving reference geometry...')
         print(" - Save path: {}".format(thy_save_path))
@@ -382,7 +378,7 @@ def projrot_frequencies(geo, hess, thy_info, thy_run_fs):
     with open(proj_file_path, 'w') as proj_file:
         proj_file.write(projrot_inp_str)
 
-    script.run_script(projrot_script_str, projrot_path)
+    run_script(projrot_script_str, projrot_path)
 
     imag_freq = ''
     if os.path.exists(projrot_path+'/hrproj_freq.dat'):

@@ -1,16 +1,16 @@
-""" drivers for single point calculations
+""" es_runners for single point calculations
 """
 
 import sys
 import automol
 import elstruct
 import autofile
-from lib.runner import par as runpar
-from lib.runner import driver
-from lib.phydat import symm, phycon
+from runners import es as es_runner
+from lib.phydat import phycon
+from lib.phydat import symm
 
 
-def run_energy(zma, geo, spc_info, thy_level,
+def run_energy(zma, geo, spc_info, thy_info,
                geo_save_fs, geo_run_path, geo_save_path, locs,
                script_str, overwrite, **kwargs):
     """ Find the energy for the given structure
@@ -22,9 +22,9 @@ def run_energy(zma, geo, spc_info, thy_level,
     # Prepare unique filesystem since many energies may be under same directory
     sp_run_fs = autofile.fs.single_point(geo_run_path)
     sp_save_fs = autofile.fs.single_point(geo_save_path)
-    sp_run_fs[-1].create(thy_level[1:4])
-    sp_run_path = sp_run_fs[-1].path(thy_level[1:4])
-    sp_save_fs[-1].create(thy_level[1:4])
+    sp_run_fs[-1].create(thy_info[1:4])
+    sp_run_path = sp_run_fs[-1].path(thy_info[1:4])
+    sp_save_fs[-1].create(thy_info[1:4])
     run_fs = autofile.fs.run(sp_run_path)
 
     # Set input geom
@@ -33,30 +33,30 @@ def run_energy(zma, geo, spc_info, thy_level,
     else:
         job_geo = geo
 
-    if not sp_save_fs[-1].file.energy.exists(thy_level[1:4]) or overwrite:
+    if not sp_save_fs[-1].file.energy.exists(thy_info[1:4]) or overwrite:
 
         print('No energy found in save filesys. Running energy...')
         # Add options matrix for energy runs for molpro
-        if thy_level[0] == 'molpro2015':
-            errors, options_mat = runpar.set_molpro_options_mat(spc_info, geo)
+        if thy_info[0] == 'molpro2015':
+            errors, options_mat = es_runner.par.set_molpro_options_mat(spc_info, geo)
         else:
             errors = ()
             options_mat = ()
 
-        driver.run_job(
+        es_runner.run_job(
             job='energy',
             script_str=script_str,
             run_fs=run_fs,
             geom=job_geo,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_info=thy_info,
             errors=errors,
             options_mat=options_mat,
             overwrite=overwrite,
             **kwargs,
         )
 
-        ret = driver.read_job(
+        ret = es_runner.read_job(
             job='energy',
             run_fs=run_fs,
         )
@@ -68,16 +68,16 @@ def run_energy(zma, geo, spc_info, thy_level,
             ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
             print(" - Saving energy...")
-            sp_save_fs[-1].file.input.write(inp_str, thy_level[1:4])
-            sp_save_fs[-1].file.info.write(inf_obj, thy_level[1:4])
-            sp_save_fs[-1].file.energy.write(ene, thy_level[1:4])
+            sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
+            sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
+            sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
 
     else:
         print('Energy found and saved previously at {}'.format(
-            sp_save_fs[-1].file.energy.path(thy_level[1:4])))
+            sp_save_fs[-1].file.energy.path(thy_info[1:4])))
 
 
-def run_gradient(zma, geo, spc_info, thy_level,
+def run_gradient(zma, geo, spc_info, thy_info,
                  geo_save_fs, geo_run_path, geo_save_path, locs,
                  script_str, overwrite, **kwargs):
     """ Determine the gradient for the geometry in the given location
@@ -98,18 +98,18 @@ def run_gradient(zma, geo, spc_info, thy_level,
     if not geo_save_fs[-1].file.gradient.exists(locs) or overwrite:
 
         print('No gradient found in save filesys. Running gradient...')
-        driver.run_job(
+        es_runner.run_job(
             job='gradient',
             script_str=script_str,
             run_fs=run_fs,
             geom=job_geo,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_info=thy_info,
             overwrite=overwrite,
             **kwargs,
         )
 
-        ret = driver.read_job(
+        ret = es_runner.read_job(
             job='gradient',
             run_fs=run_fs,
         )
@@ -134,7 +134,7 @@ def run_gradient(zma, geo, spc_info, thy_level,
             geo_save_fs[-1].file.gradient.path(locs)))
 
 
-def run_hessian(zma, geo, spc_info, thy_level,
+def run_hessian(zma, geo, spc_info, thy_info,
                 geo_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite, **kwargs):
     """ Determine the hessian for the geometry in the given location
@@ -158,18 +158,18 @@ def run_hessian(zma, geo, spc_info, thy_level,
     if not geo_save_fs[-1].file.hessian.exists(locs) or overwrite:
 
         print('No Hessian found in save filesys. Running Hessian...')
-        driver.run_job(
+        es_runner.run_job(
             job='hessian',
             script_str=script_str,
             run_fs=run_fs,
             geom=job_geo,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_info=thy_info,
             overwrite=overwrite,
             **kwargs,
         )
 
-        ret = driver.read_job(
+        ret = es_runner.read_job(
             job='hessian',
             run_fs=run_fs,
         )
@@ -197,7 +197,7 @@ def run_hessian(zma, geo, spc_info, thy_level,
             geo_save_fs[-1].file.hessian.path(locs)))
 
 
-def run_vpt2(zma, geo, spc_info, thy_level,
+def run_vpt2(zma, geo, spc_info, thy_info,
              geo_save_fs, geo_run_path, geo_save_path, locs,
              script_str, overwrite, **kwargs):
     """ Perform vpt2 analysis for the geometry in the given location
@@ -230,18 +230,18 @@ def run_vpt2(zma, geo, spc_info, thy_level,
         overwrite)
     if run_vpt2_job:
         print('Running vpt2')
-        driver.run_job(
+        es_runner.run_job(
             job='vpt2',
             script_str=script_str,
             run_fs=run_fs,
             geom=job_geo,
             spc_info=spc_info,
-            thy_level=thy_level,
+            thy_info=thy_info,
             overwrite=overwrite,
             **kwargs,
         )
 
-        ret = driver.read_job(
+        ret = es_runner.read_job(
             job='vpt2',
             run_fs=run_fs,
         )

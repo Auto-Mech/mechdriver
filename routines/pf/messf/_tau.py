@@ -6,7 +6,7 @@ import mess_io
 import automol
 import autofile
 from routines.pf.messf import _tors as tors
-from lib.filesystem import minc as fmin
+from lib import filesys
 from lib.phydat import phycon
 
 
@@ -76,7 +76,7 @@ def write_tau_data_str(
     """ Write out data fle for partition function evaluation
     """
     cnf_save_fs = autofile.fs.conformer(save_prefix)
-    min_cnf_locs = fmin.min_energy_conformer_locators(cnf_save_fs)
+    min_cnf_locs = filesys.minc.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
         ene_ref = cnf_save_fs[-1].file.energy.read(min_cnf_locs)
 

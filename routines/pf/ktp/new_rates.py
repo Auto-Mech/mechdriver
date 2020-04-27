@@ -2,17 +2,12 @@
 Write and Read MESS files for Rates
 """
 
-import copy
-import numpy
 import automol
 import mess_io
-import ratefit
 import autofile
-
-# New libs
 from lib.phydat import phycon
 from lib.runner import script
-from lib.load import model as loadmodel
+from lib.amech_io import reader
 from routines.pf.messf import blocks
 from routines.pf.messf import get_fs_ene_zpe
 from routines.pf.messf import calc_channel_enes

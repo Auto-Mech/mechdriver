@@ -1,16 +1,13 @@
-""" drivers for coordinate scans
+""" es_runners for coordinate scans
 """
+
 # import numpy
 # import automol
 # import elstruct
 # import autofile
-# 
-# # New libs
-# from lib.runner import driver
-# from lib.runner import par as runpar
-# from lib.filesystem import minc as fsmin
-# from lib.filesystem import orb as fsorb
 # from routines.es import _ts as ts
+# from runners import es as es_runner
+# from lib import filesys
 
 
 def run_multiref_rscan(
@@ -45,7 +42,7 @@ def run_multiref_rscan(
     prog = multi_level[0]
     method = multi_level[1]
 
-    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(prog, method)
+    _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(prog, method)
 
     ref_zma = automol.zmatrix.set_values(zma, {coo_names[0]: grid_vals[0][0]})
 
@@ -184,7 +181,7 @@ def infinite_separation_energy(
 
     # get the multi reference energy for high spin state for ref point on scan
     hs_info = (ts_info[0], ts_info[1], high_mul)
-    orb_restr = fsorb.orbital_restriction(hs_info, multi_info)
+    orb_restr = filesys.inf.orbital_restriction(hs_info, multi_info)
     multi_lvl = multi_info[0:3]
     multi_lvl.append(orb_restr)
 
@@ -197,7 +194,7 @@ def infinite_separation_energy(
     hs_mr_save_path = hs_save_fs[-1].path(multi_lvl[1:4])
     run_mr_fs = autofile.fs.run(hs_mr_run_path)
 
-    mr_script_str, _, mr_kwargs, _ = runpar.run_qchem_par(
+    mr_script_str, _, mr_kwargs, _ = es_runner.par.run_qchem_par(
         multi_info[0], multi_info[1])
 
     if num_act_elc is None and num_act_orb is None:
@@ -215,7 +212,7 @@ def infinite_separation_energy(
     mr_kwargs['mol_options'] = ['nosym']
     mr_kwargs['gen_lines'] = {1: guess_lines}
 
-    ret = driver.read_job(
+    ret = es_runner.read_job(
         job='energy',
         run_fs=run_mr_fs,
     )
@@ -229,7 +226,7 @@ def infinite_separation_energy(
 
     if not hs_save_fs[-1].file.energy.exists(multi_lvl[1:4]) or overwrite:
         print(" - Running high spin multi reference energy ...")
-        driver.run_job(
+        es_runner.run_job(
             job='energy',
             script_str=mr_script_str,
             run_fs=run_mr_fs,
@@ -240,7 +237,7 @@ def infinite_separation_energy(
             **mr_kwargs,
         )
 
-        ret = driver.read_job(
+        ret = es_runner.read_job(
             job='energy',
             run_fs=run_mr_fs,
         )
@@ -267,7 +264,7 @@ def infinite_separation_energy(
 
     # file system for high spin single ireference calculation
     thy_info = ['molpro2015', 'ccsd(t)-f12', 'cc-pvdz-f12', 'RR']
-    orb_restr = fsorb.orbital_restriction(hs_info, thy_info)
+    orb_restr = filesys.inf.orbital_restriction(hs_info, thy_info)
     thy_lvl = thy_info[0:3]
     thy_lvl.append(orb_restr)
 
@@ -278,8 +275,8 @@ def infinite_separation_energy(
     hs_sr_save_path = hs_save_fs[-1].path(thy_lvl[1:4])
     run_sr_fs = autofile.fs.run(hs_sr_run_path)
 
-    sp_script_str, _, kwargs, _ = runpar.run_qchem_par(*thy_lvl[0:2])
-    ret = driver.read_job(
+    sp_script_str, _, kwargs, _ = es_runner.par.run_qchem_par(*thy_lvl[0:2])
+    ret = es_runner.read_job(
         job='energy',
         run_fs=run_sr_fs,
     )
@@ -294,9 +291,9 @@ def infinite_separation_energy(
     if not hs_save_fs[-1].file.energy.exists(thy_lvl[1:4]) or overwrite:
         print(" - Running high spin single reference energy ...")
 
-        errors, options_mat = runpar.set_molpro_options_mat(hs_info, geo)
+        errors, options_mat = es_runner.par.set_molpro_options_mat(hs_info, geo)
 
-        driver.run_job(
+        es_runner.run_job(
             job='energy',
             script_str=sp_script_str,
             run_fs=run_sr_fs,
@@ -309,7 +306,7 @@ def infinite_separation_energy(
             **kwargs,
         )
 
-        ret = driver.read_job(
+        ret = es_runner.read_job(
             job='energy',
             run_fs=run_sr_fs,
         )
@@ -346,11 +343,11 @@ def infinite_separation_energy(
         spc_save_fs[-1].create(spc_info)
         spc_save_path = spc_save_fs[-1].path(spc_info)
 
-        orb_restr = fsorb.orbital_restriction(spc_info, ini_thy_info)
+        orb_restr = filesys.inf.orbital_restriction(spc_info, ini_thy_info)
         ini_thy_lvl = ini_thy_info[0:3]
         ini_thy_lvl.append(orb_restr)
 
-        orb_restr = fsorb.orbital_restriction(spc_info, thy_info)
+        orb_restr = filesys.inf.orbital_restriction(spc_info, thy_info)
         thy_lvl = thy_info[0:3]
         thy_lvl.append(orb_restr)
 
@@ -362,7 +359,7 @@ def infinite_separation_energy(
         ini_thy_save_path = ini_thy_save_fs[-1].path(ini_thy_lvl[1:4])
         ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
         ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
-        min_cnf_locs = fsmin.min_energy_conformer_locators(
+        min_cnf_locs = filesys.minc.min_energy_conformer_locators(
             ini_cnf_save_fs)
         min_cnf_run_path = ini_cnf_run_fs[-1].path(min_cnf_locs)
         min_cnf_save_path = ini_cnf_save_fs[-1].path(min_cnf_locs)
@@ -383,7 +380,7 @@ def infinite_separation_energy(
         sp_sr_save_path = sp_save_fs[-1].path(thy_lvl[1:4])
         run_sr_fs = autofile.fs.run(sp_sr_run_path)
 
-        ret = driver.read_job(
+        ret = es_runner.read_job(
             job='energy',
             run_fs=run_sr_fs,
         )
@@ -399,7 +396,7 @@ def infinite_separation_energy(
         if not sp_save_fs[-1].file.energy.exists(thy_lvl[1:4]) or overwrite:
             print(" - Running single reference energy for",
                   "{} from output...".format(spc_info[0]))
-            driver.run_job(
+            es_runner.run_job(
                 job='energy',
                 script_str=sp_script_str,
                 run_fs=run_sr_fs,
@@ -410,7 +407,7 @@ def infinite_separation_energy(
                 **kwargs,
             )
 
-            ret = driver.read_job(
+            ret = es_runner.read_job(
                 job='energy',
                 run_fs=run_sr_fs,
             )
