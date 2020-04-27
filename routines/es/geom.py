@@ -9,7 +9,7 @@ import projrot_io
 
 # New Libs
 from routines.es import conformer
-from routines.es import wells
+from routines.es import _wells as wells
 from lib.phydat import phycon
 from lib.runner import driver
 from lib.runner import par as runpar
@@ -18,7 +18,7 @@ from lib.filesystem import inf as finf
 
 
 def reference_geometry(
-        spc_dct_i, thy_info, ini_thy_info, 
+        spc_dct_i, thy_info, ini_thy_info,
         thy_run_fs, thy_save_fs,
         ini_thy_save_fs,
         cnf_run_fs, cnf_save_fs,
@@ -228,13 +228,13 @@ def remove_imag(
     chk_idx = 0
     while imag and chk_idx < 5:
         chk_idx += 1
-        print('Imaginary frequency detected, attempting to kick off')
+        print('Attemptin gkick off along mode, attempt {}...'.format(chk_idx))
 
         geo = run_kickoff_saddle(
             geo, disp_xyzs, spc_info, thy_info, run_fs, thy_run_fs,
             opt_script_str, kickoff_size, kickoff_backward,
             opt_cart=True, **opt_kwargs)
-        print('Removing faulty geometry Hessian from filesystem')
+        print('Removing faulty geometry from filesystem. Rerunning Hessian...')
 
         thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
         run_fs = autofile.fs.run(thy_run_path)
@@ -346,7 +346,7 @@ def save_initial_geometry(
 
     ret = driver.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
     if ret:
-        print('Saving reference geometry')
+        print('Saving reference geometry...')
         print(" - Save path: {}".format(thy_save_path))
 
         inf_obj, _, out_str = ret

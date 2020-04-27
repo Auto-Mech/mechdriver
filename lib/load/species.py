@@ -232,12 +232,12 @@ def parse_rxn_class_file(job_path):
  
     print('\nChecking if class.dat has been provided...')
     if os.path.exists(os.path.join(job_path, CLA_INP)):
-        print('\nclass.dat found. Reading contents...')
+        print('class.dat found. Reading contents...')
         cla_str = ptt.read_inp_str(job_path, CLA_INP)
         cla_str = cla_str if cla_str else 'REACTION,RCLASS\nEND'
         cla_dct = chemkin_io.parser.mechanism.reac_class_dct(cla_str, 'class')
     else:
-        print('\nNo class.dat found...')
+        print('No class.dat found...')
         cla_dct = {}
 
     return cla_dct
@@ -279,6 +279,35 @@ def geometry_dictionary(job_path):
     return geom_dct
 
 
+def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
+                  run_inp_dct, spc_dct, cla_dct):
+    """ build a ts queue
+    """
+
+    print('\nTasks for transition states requested...')
+    print('Identifying reaction classes for transition states...')
+
+    # Build the ts_dct
+    ts_dct = {}
+    for tsk_lst in es_tsk_lst:
+        [obj, _, es_keyword_dct] = tsk_lst
+        if 'ts' in obj:
+            ini_thy_info = finf.get_es_info(es_keyword_dct['inplvl'], thy_dct)
+            thy_info = finf.get_es_info(es_keyword_dct['runlvl'], thy_dct)
+            ts_dct = build_sadpt_dct(
+                pes_idx, rxn_lst, thy_info, ini_thy_info,
+                run_inp_dct, spc_dct, cla_dct)
+            break
+
+    # Build the queue
+    if ts_dct:
+        ts_queue = [(sadpt, '') for sadpt in ts_dct]
+    else:
+        ts_queue = []
+
+    return ts_dct, ts_queue
+
+
 def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
                     run_inp_dct, spc_dct, cla_dct):
     """ build dct
@@ -287,17 +316,16 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     save_prefix = run_inp_dct['save_prefix']
     kickoff = [0.1, False]
 
-    print('\nTransition state prep')
     ts_dct = {}
     for chn_idx, rxn in enumerate(rxn_lst):
 
-        # Initialize dictionary
+        # Get reac and prod
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx+1)
-        ts_dct[tsname] = {}
-
-        # Grab the reactants and products
         reacs = rxn['reacs']
         prods = rxn['prods']
+
+        print('  Preparing for {} for reaction {} = {}'.format(
+            tsname, '+'.join(reacs), '+'.join(prods)))
 
         # Check the class dct to see if we can set class
         # given_class, flip_rxn = set_class_with_dct(cla_dct, rxn_name)
@@ -306,26 +334,16 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
         # Get the reaction info flipping if needed
         check_exo = True
         if check_exo and not given_class:
-            reacs, prods = finf.assess_rxn_exo(
+            reacs, prods = finf.assess_rxn_ene(
                 reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
-        print('\n {} for {} = {}'.format(
-            tsname, '+'.join(reacs), '+'.join(prods)))
 
-        # Set the info
+        # Set the info regarding mults and chgs
         rxn_info = finf.rxn_info(reacs, prods, spc_dct)
         [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
         low_mul, high_mul, _, chg = finf.rxn_chg_mult(
             rxn_muls, rxn_chgs, ts_mul='low')
         rad_rad = rxnid.determine_rad_rad(rxn_muls)
         ts_mul = low_mul
-        ts_dct[tsname].update(
-            {'low_mul': low_mul,
-             'high_mul': high_mul,
-             'mul': ts_mul,
-             'chg': chg,
-             'rad_rad': rad_rad})
-        ts_dct[tsname]['reacs'] = reacs
-        ts_dct[tsname]['prods'] = prods
 
         # Generate rxn_fs from rxn_info stored in spc_dct
         [kickoff_size, kickoff_backward] = kickoff
@@ -337,30 +355,55 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
             rct_zmas, prd_zmas, rad_rad,
             ts_mul, low_mul, high_mul,
             rct_cnf_save_fs, prd_cnf_save_fs, given_class)
-        ret1, ret2 = ret
+        ts_class, ret1, ret2 = ret
 
         if ret1:
-            [_, _, dist_name, brk_name, _, _, _, _, update_guess] = ret1
-            dct_keys = ['class', 'zma', 'dist_name', 'brk_name', 'grid',
+            [_, dist_name, brk_name, _, _, _, _, update_guess] = ret1
+        else:
+            dist_name, brk_name, update_guess = None, None, None
+            # bkp_data = None
+
+        # Put everything in a dictionary if class identified
+        if ret1 and ts_class:
+            print('    Reaction class identified as: {}'.format(ts_class))
+
+            ts_dct[tsname] = {}
+            ts_dct[tsname]['ich'] = ''
+
+            # Reacs and prods
+            ts_dct[tsname]['class'] = ts_class
+            ts_dct[tsname]['reacs'] = reacs
+            ts_dct[tsname]['prods'] = prods
+
+            # Put chg and mult stuff
+            ts_dct[tsname].update(
+                {'low_mul': low_mul,
+                 'high_mul': high_mul,
+                 'mul': ts_mul,
+                 'chg': chg,
+                 'rad_rad': rad_rad})
+
+            # Put class stuff in the dct
+            dct_keys = ['zma', 'dist_name', 'brk_name', 'grid',
                         'frm_bnd_key', 'brk_bnd_key',
                         'tors_names', 'update_guess']
             ts_dct[tsname].update(dict(zip(dct_keys, ret1)))
+            ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
+            ts_dct[tsname]['dist_info'] = [
+                dist_name, 0., update_guess, brk_name, None]
+
+            # Reaction fs for now
+            rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = fpath.get_rxn_fs(
+                run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
+            ts_dct[tsname]['rxn_fs'] = [
+                rxn_run_fs,
+                rxn_save_fs,
+                rxn_run_path,
+                rxn_save_path]
         else:
-            ts_dct[tsname]['class'] = None
-            ts_dct[tsname]['bkp_data'] = None
-        ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
-        ts_dct[tsname]['dist_info'] = [dist_name, 0., update_guess, brk_name, 0.]
+            print('Skipping reaction as class not given/identified')
 
-        ts_dct[tsname]['ich'] = ''
-
-        # Reaction fs for now
-        rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path = fpath.get_rxn_fs(
-            run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
-        ts_dct[tsname]['rxn_fs'] = [
-            rxn_run_fs,
-            rxn_save_fs,
-            rxn_run_path,
-            rxn_save_path]
+    print('')
 
     return ts_dct
 
@@ -409,9 +452,9 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
 
         # Perform conversions as needed
         # combined_dct[spc]['hind_inc'] *= phycon.DEG2RAD
-   
+
     return combined_dct
-    
+
 
 # Print messages
 def print_check_stero_msg(check_stereo):

@@ -5,7 +5,6 @@ import routines
 from lib.load import species as loadspc
 from lib.load import mechanism as loadmech
 from lib.filesystem import inf as finf
-from lib import printmsg
 
 
 def run(pes_idx,
@@ -18,16 +17,15 @@ def run(pes_idx,
     """ driver for all electronic structure tasks
     """
 
-    # Debug print statements
-    # print('rxn_lst')
-    # print(rxn_lst)
-
     # Pull stuff from dcts for now
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
 
+    # Initialize variable for building a dct for ts
+    built_dct = False
+
     # Loop over Tasks
-    print('\nRunning tasks...')
+    print('\nRunning electronic structure tasks given in the input...')
     for tsk_lst in es_tsk_lst:
 
         # Unpack the options
@@ -48,24 +46,18 @@ def run(pes_idx,
         #         es_keyword_dct['mr_splvl'], thy_dct)
         # else:
         #     mr_sp_thy_info = None
-    
+
         # Build the queue of species based on user request
         if obj == 'spc':
             spc_queue = loadmech.build_spc_queue(rxn_lst)
         elif obj == 'ts':
-            spc_queue = []
-            ts_dct = loadspc.build_sadpt_dct(
-                pes_idx, rxn_lst, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, cla_dct)
-            for sadpt in ts_dct:
-                # fixed hard wiring
-                if ts_dct[sadpt]['class'] != '':
-                    spc_queue.append((sadpt, ''))
-                    spc_dct = loadspc.combine_sadpt_spc_dcts(
-                        ts_dct, spc_dct)
-                else:
-                    print('Skipping task for {} since no'.format(sadpt),
-                          'class given/identified')
+            if not built_dct:
+                ts_dct, ts_queue = loadspc.get_sadpt_dct(
+                    pes_idx, es_tsk_lst, rxn_lst,
+                    thy_dct, run_inp_dct, spc_dct, cla_dct)
+                spc_dct = loadspc.combine_sadpt_spc_dcts(ts_dct, spc_dct)
+                built_dct = True
+            spc_queue = ts_queue
         elif obj == 'vdw':
             spc_queue = []
 

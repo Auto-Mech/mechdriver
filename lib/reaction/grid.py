@@ -40,7 +40,7 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs):
             ts_zma, {dist_name: max_grid_val})
         guess_zmas.append(mig_zma)
 
-    return max_zma, max_ene
+    return guess_zmas
 
 
 def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs):
@@ -81,11 +81,14 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs):
             locs = max_locs[idx_j]
     max_locs = locs
     max_ene = min_ene
-    print('min max loc', max_ene, max_locs)
-    print('min max loc', scn_save_fs[-1].path(max_locs))
+    # print('min max loc', max_ene, max_locs)
+    # print('min max loc', scn_save_fs[-1].path(max_locs))
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
 
-    return max_zma, max_ene
+    # print('geometry for maximum along scan:', max_zma)
+    # print('energy for maximum along scan:', max_ene)
+
+    return max_zma
 
 
 def build_grid(rtype, rbktype, ts_bnd_len, ts_zma, dist_name, npoints=None):
@@ -182,7 +185,6 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
         rmin2 = bnd_len + 0.05 * phycon.ANG2BOHR
     if rmax > rmin1:
         npoints = math.ceil((rmax-rmin1)/interval)
-        print('grid test:', rmax, rmin1, npoints, interval)
         if npoints < 1:
             grid1 = []
         else:

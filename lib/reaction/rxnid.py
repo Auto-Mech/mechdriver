@@ -48,7 +48,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     # Build class data lists to return from the function
     if typ:
         ts_class_data = [
-            typ, ts_zma, dist_name, brk_name,
+            ts_zma, dist_name, brk_name,
             grid, frm_bnd_key, brk_bnd_key,
             tors_names, update_guess]
     else:
@@ -60,7 +60,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     else:
         bkp_ts_class_data = []
 
-    return ts_class_data, bkp_ts_class_data
+    return typ, ts_class_data, bkp_ts_class_data
 
 
 def conv_termol_to_bimol(rct_zmas, prd_zmas):
@@ -217,7 +217,6 @@ def determine_reaction_type(rct_zmas, prd_zmas,
     # set up back up options for any radical radical case
     if rad_rad:
         typ = 'radical radical ' + typ
-    print("Type: {}".format(typ))
     if bkp_typ:
         if rad_rad:
             bkp_typ = 'radical radical ' + bkp_typ

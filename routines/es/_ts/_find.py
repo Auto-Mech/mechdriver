@@ -3,98 +3,69 @@ Find a TS from the grid as well as associated vdW wells
 """
 
 import automol
-import elstruct
-from lib.reaction import grid as rxngrid
-from lib.phydat import phycon
-from lib.runner import driver
-from routines.es import conformer
-from routines.es import scan
-from routines.es.ts import _sadpt as sadpt
-from routines.es.ts import _vtst as vtst
-from routines.es.ts import _vrctst as vrctst
+import autofile
+from routines.es._ts import _sadpt as sadpt
+from routines.es._ts import _vtst as vtst
+from routines.es._ts import _vrctst as vrctst
 
 
 # Main TS finder functions
 def sadpt_transition_state(
-    opt_script_str,
-    run_fs,
-    guess_zmas,
-    ts_info,
-    mod_thy_info,
-    overwrite,
-    ts_save_path,
-    ts_save_fs,
-    dist_name,
-    dist_info,
-    thy_save_fs,
-    cnf_run_fs,
-    cnf_save_fs,
-    **opt_kwargs):
-    """ aaa """
+        ini_zma, ts_info, mod_thy_info, mod_ini_thy_info,
+        thy_save_fs, thy_run_path, thy_save_path,
+        ini_thy_save_fs, ini_thy_save_path,
+        cnf_run_fs, cnf_save_fs,
+        ts_save_fs, ts_save_path, run_fs,
+        typ, grid, update_guess,
+        dist_name, dist_info, brk_name,
+        opt_script_str, overwrite,
+        es_keyword_dct, **opt_kwargs):
+    """ Find a sadddle point
+    """
 
-    # Initialize empty list of guess zmas
-    guess_zmas = []
+    # Check filesystem for input level of theory
+    print('\nSearching save filesys for guess Z-Matrix calculated',
+            'at {} level...'.format(es_keyword_dct['inplvl']))
+    guess_zmas = sadpt.check_filesys_for_guess(
+        ini_thy_save_path, es_keyword_dct)
 
-    # Check and see if a zma is found from the filesystem
-    ini_cnf_save_fs, ini_cnf_save_locs = fbuild.cnf_fs_from_prefix(
-        ini_thy_save_path, cnf='min')
-    if ini_cnf_save_locs:
-        if ini_cnf_save_fs[-1].file.zmatrix.exists(ini_cnf_save_locs):
-            print('Z-Matrix calculated at {} found'.format(
-                es_keyword_dct['inplvl']))
-            geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
-            print('Reading Z-Matrix from path {}'.format(geo_path))
-            guess_zma = ini_cnf_save_fs[-1].file.zmatrix.read(
-                ini_cnf_save_locs)
-            guess_zmas.append(guess_zma)
-    
     # If no guess zma, run a TS searching algorithm
     if not guess_zmas:
-        print('No Z-Matrix in filesys for {} level'.format(
-            es_keyword_dct['inplvl']))
+
+        print(' - No Z-Matrix in found in save filesys.')
+        print('\nRunning scan to generate guess Z-Matrix for opt...')
         scn_run_fs = autofile.fs.scan(thy_run_path)
         scn_save_fs = autofile.fs.scan(thy_save_path)
-        print('Running scan to generate guess Z-Matrix for opt...')
-        guess_zma = ts.find.run_sadpt_scan(
-            typ, grid, dist_name, brk_name, ts_dct['zma'], ts_info,
+        guess_zmas = sadpt.scan_for_guess(
+            typ, grid, dist_name, brk_name, ini_zma, ts_info,
             mod_thy_info,
             scn_run_fs, scn_save_fs, opt_script_str,
             overwrite, update_guess, **opt_kwargs)
-        guess_zmas.append(guess_zma)
 
     # Optimize the saddle point
-    print('Optimiziing Guess Z-Matrix from scan or filesys...')
-    ts.find.find_sadpt_transition_state(
-        opt_script_str,
-        run_fs,
-        guess_zmas,
-        ts_info,
-        mod_thy_info,
-        overwrite,
-        ts_save_path,
-        ts_save_fs,
+    print('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
+    sadpt.optimize_transition_state(
+        guess_zmas, ts_info, mod_thy_info,
+        cnf_run_fs, cnf_save_fs,
+        ts_save_fs, ts_save_path, run_fs,
+        dist_name, dist_info,
+        opt_script_str, overwrite, **opt_kwargs)
+
+
+def barrierless_transition_state(
+        ts_info, ts_zma, ts_dct, spc_dct,
+        grid,
         dist_name,
-        dist_info,
-        thy_save_fs,
-        cnf_run_fs,
-        cnf_save_fs,
-        **opt_kwargs)
-
-    return ts_found
-
-
-def barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
-                                 grid,
-                                 dist_name,
-                                 rad_rad_ts,
-                                 ini_thy_info, thy_info,
-                                 mod_multi_opt_info, mod_multi_sp_info,
-                                 run_prefix, save_prefix,
-                                 scn_run_fs, scn_save_fs,
-                                 overwrite, vrc_dct,
-                                 update_guess, **opt_kwargs):
+        rad_rad_ts,
+        ini_thy_info, thy_info,
+        mod_multi_opt_info, mod_multi_sp_info,
+        run_prefix, save_prefix,
+        scn_run_fs, scn_save_fs,
+        overwrite, vrc_dct,
+        update_guess, **opt_kwargs):
     """ Run TS finder for barrierless reactions
     """
+    switch = False
 
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
     [grid1, grid2] = grid
@@ -133,4 +104,4 @@ def barrierless_transition_state(ts_info, ts_zma, ts_dct, spc_dct,
         else:
             print('VaReCoF run failed')
 
-    return ts_found
+    return ts_found, switch
