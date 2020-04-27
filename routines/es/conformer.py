@@ -7,7 +7,7 @@ import elstruct
 import autofile
 
 # New libs
-from routines.es import util
+from routines.es import _util as util
 from lib.runner import driver
 from lib.runner import par as runpar
 from lib.filesystem import minc as fsmin
@@ -133,7 +133,7 @@ def run_conformers(
     """ run sampling algorithm to find conformers
     """
     if not tors_range_dct:
-        print("No torsional coordinates. Setting nsamp to 1.")
+        print(" - No torsional coordinates. Setting nsamp to 1.")
         nsamp = 1
 
     cnf_save_fs[0].create()
@@ -142,7 +142,6 @@ def run_conformers(
         existing_vma = cnf_save_fs[0].file.vmatrix.read()
         assert vma == existing_vma
     cnf_save_fs[0].file.vmatrix.write(vma)
-    idx = 0
     nsamp0 = nsamp
     inf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
     if cnf_save_fs[0].file.info.exists():
@@ -153,17 +152,19 @@ def run_conformers(
         nsampd = inf_obj_r.nsamp
     else:
         nsampd = 0
-   
-    tot_samp = nsamp - nsampd
-    print('Number of samples requested:', nsamp)
-    print('Number of samples that have been currently run:', nsampd, '\n')
 
+    tot_samp = nsamp - nsampd
+    print(' - Number of samples that have been currently run:', nsampd)
+    print(' - Number of samples requested:', nsamp)
+
+    if nsamp-nsampd > 0:
+        print('\nRunning {} samples...'.format(nsamp-nsampd))
     samp_idx = 1
     while True:
         nsamp = nsamp0 - nsampd
         # Break the while loop if enough sampls completed
         if nsamp <= 0:
-            print('Reached requested number of samples. '
+            print('Requested number of samples have been completed. '
                   'Conformer search complete.')
             break
 
@@ -254,9 +255,9 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                  for locs in locs_lst]
 
     if not cnf_run_fs[0].exists():
-        print("No conformers in run filesys to save.")
+        print(" - No conformers in run filesys to save.")
     else:
-        print("Found conformers in run filesys at level of theory to save.")
+        print(" - Found conformers in run filesys at level of theory to save.\n")
         for locs in cnf_run_fs[-1].existing():
             # # Only go through save procedure if conf not in save
             # # may need to get geo, ene, etc; maybe make function
@@ -282,9 +283,28 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                 else:
                     lconns = 1
                 if lconns > 1:
-                    print(" - Geometry is disconnected.. Skipping...")
+                    print(" - Geometry is disconnected.. Conformer will not be saved.")
                 else:
                     if saddle:
+                        # ts_class, ts_original_zma, ts_tors_names,
+                        # ts_dist_info
+                        # geo, zma, final_dist = check_filesys_for_ts(
+                        #     ts_dct, ts_zma, cnf_save_fs, overwrite,
+                        #     typ, dist_info, dist_name, bkp_ts_class_data)
+                        # zma = cnf_save_fs[-1].file.zmatrix.read(
+                        # cnf_save_locs)
+
+                        # # Add an angle check which is added
+                        # to spc dct for TS (crap code...)
+                        # vals = automol.zmatrix.values(zma)
+                        # final_dist = vals[dist_name]
+                        # dist_info[1] = final_dist
+                        # angle = ts.chk.check_angle(
+                        #     ts_dct['zma'],
+                        #     ts_dct['dist_info'],
+                        #     ts_dct['class'])
+                        # ts_dct['dist_info'][1] = final_dist
+                        # ts_dct['dist_info'].append(angle)
                         zma = elstruct.reader.opt_zmatrix(prog, out_str)
                         dist_name = dist_info[0]
                         dist_len = dist_info[1]
@@ -339,7 +359,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                                       "diverged from original structure of",
                                       "dist {:.3f} with dist {:.3f}".format(
                                           dist_len, conf_dist_len))
-                                print("Radical atom now has a new nearest neighbor")
+                                print('Radical atom now has a new',
+                                      'nearest neighbor')
                                 continue
                             if abs(conf_dist_len - dist_len) > max_disp:
                                 print(" - Transition State conformer has",
@@ -381,7 +402,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                         geo, ene, seen_geos, seen_enes, saddle)
 
                     if not unique:
-                        print(" - Geometry is not unique. Skipping...")
+                        print(" - Geometry is not unique."
+                              "Conformer will not be saved.")
                     else:
                         vma = automol.zmatrix.var_(zma)
                         if cnf_save_fs[0].file.vmatrix.exists():
@@ -436,6 +458,36 @@ def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
                 atom_closest = False
                 print('idx test:', idx, distance, bond_dist)
     return atom_closest
+
+
+def check_angle(ts_zma, dist_info, rxn_class):
+    """ Check the angle to amend the dct
+    """
+    angle = None
+    dist_name = dist_info[0]
+    if 'abstraction' in rxn_class or 'addition' in rxn_class:
+        brk_name = dist_info[3]
+        if dist_name and brk_name:
+            ts_bnd = automol.zmatrix.bond_idxs(
+                ts_zma, dist_name)
+            brk_bnd = automol.zmatrix.bond_idxs(
+                ts_zma, brk_name)
+            ang_atms = [0, 0, 0]
+            cent_atm = list(set(brk_bnd) & set(ts_bnd))
+            if cent_atm:
+                ang_atms[1] = cent_atm[0]
+                for idx in brk_bnd:
+                    if idx != ang_atms[1]:
+                        ang_atms[0] = idx
+                for idx in ts_bnd:
+                    if idx != ang_atms[1]:
+                        ang_atms[2] = idx
+
+            geom = automol.zmatrix.geometry(ts_zma)
+            angle = automol.geom.central_angle(
+                geom, *ang_atms)
+
+    return angle
 
 
 def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):

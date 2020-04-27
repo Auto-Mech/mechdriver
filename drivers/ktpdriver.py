@@ -48,6 +48,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         # thy_info = finf.get_es_info(ene_model, thy_dct)
         thy_info = finf.get_es_info(geo_model, thy_dct)
         ini_thy_info = finf.get_es_info(geo_model, thy_dct)
+        print('\nIdentifying reaction classes for transition states...')
         ts_dct = loadspc.build_sadpt_dct(
             pes_idx, rxn_lst, thy_info, ini_thy_info,
             run_inp_dct, spc_dct, cla_dct)

@@ -16,15 +16,15 @@ from lib.filesystem import build as fbuild
 from lib import printmsg
 
 
-# Print the header message for the driver
-printmsg.program_header('amech')
-printmsg.random_cute_animal()
-
 # Set runtime options based on user input
 JOB_PATH = sys.argv[1]
 
+# Print the header message for the driver
+printmsg.program_header('amech')
+printmsg.random_cute_animal()
+printmsg.program_header('inp')
+
 # Parse the run input
-print('Parsing the input files...')
 print('\nReading run.dat...')
 RUN_INP_DCT = lrun.build_run_inp_dct(JOB_PATH)
 RUN_OBJ_DCT = lrun.objects_dct(JOB_PATH)
@@ -85,10 +85,10 @@ if 'es' in RUN_JOBS_LST:
         for (formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
 
             # Print PES form and SUB PES Channels
-            print('\n\nRunning PES {}: {}, SUB PES {}'.format(
+            print('\nRunning PES {}: {}, SUB PES {}'.format(
                 pes_idx, formula, sub_pes_idx))
             for chn_idx, rxn in enumerate(rxn_lst):
-                print('\n Channel {} for {} = {}'.format(
+                print('  Running Channel {} for {} = {}'.format(
                     chn_idx+1,
                     '+'.join(rxn['reacs']),
                     '+'.join(rxn['prods'])))
@@ -156,10 +156,11 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
         for (formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
 
             # Print PES form and SUB PES Channels
-            print('\n\nRunning PES {}: {}, SUB PES {}'.format(
+            print('\nRunning PES {}: {}, SUB PES {}'.format(
                 pes_idx, formula, sub_pes_idx))
+            print('  Channels to be run for SUB PES:')
             for chn_idx, rxn in enumerate(rxn_lst):
-                print('\n Channel {} for {} = {}'.format(
+                print('   Channel {}: {} = {}'.format(
                     chn_idx+1,
                     '+'.join(rxn['reacs']),
                     '+'.join(rxn['prods'])))

@@ -6,8 +6,8 @@ import autofile
 import automol
 import varecof_io
 import elstruct
-from routines.es import scan
-from routines.es.ts import wfn
+from routines.es import _scan as scan
+from routines.es._ts import _wfn as wfn
 from lib.runner import script
 from lib.runner import driver as rundriver
 from lib.runner import par as runpar
@@ -30,7 +30,7 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
 
     print('TS DCT')
     print(ts_dct.keys())
-    
+
     # Set the active space
     num_act_orb, num_act_elc = wfn.active_space(
         ts_dct, spc_dct, ts_dct['high_mul'])

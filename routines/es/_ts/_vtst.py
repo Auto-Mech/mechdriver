@@ -2,7 +2,8 @@
 """
 
 import automol
-from routines.es import scan
+from routines.es import _scan as scan
+from routines.es._ts import _wfn as wfn
 
 
 def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
@@ -14,9 +15,9 @@ def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
     """ Run the scan for VTST calculations
     """
     # Set the active space
-    num_act_orb, num_act_elc = variational.wfn.active_space(
+    num_act_orb, num_act_elc = wfn.active_space(
         ts_dct, spc_dct, ts_dct['high_mul'])
-    
+
     # Set the gradients and Hessians
     gradient = False
     hessian = True

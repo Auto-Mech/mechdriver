@@ -9,24 +9,23 @@ import automol
 import mess_io
 import projrot_io
 import autofile
-
-# New libs
 from lib.phydat import phycon
 from lib.runner import script
-from routines.es import scan
+from lib.struct import tors as ptors
 
 
 # MESS strings
 def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
                                  tors_names, tors_grids, tors_sym_nums,
                                  tors_cnf_save_path, min_ene,
-                                 saddle=False, hind_rot_geo=None, frz_tors=False):
+                                 saddle=False, hind_rot_geo=None,
+                                 frz_tors=False):
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
 
     # Build constraint dct
     if frz_tors:
-        constraint_dct = scan.build_constraint_dct(zma, tors_names)
+        constraint_dct = ptors.build_constraint_dct(zma, tors_names)
     else:
         constraint_dct = None
 
