@@ -11,9 +11,9 @@ from routines.es import _scan as scan
 from routines.es import _tau as tau
 from routines.es import _irc as irc
 from routines.es import _ts as ts
-from runners import es as es_runner
+from routines.es.runner import par as runpar
 from lib import filesys
-from lib import struct
+from lib import structure
 
 
 # Dictionary of Electronic Structure Calculations
@@ -207,7 +207,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             thy_save_path, cnf=None)
 
         # Set up the run scripts
-        _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+        _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
             *thy_info[0:2])
 
         # Set variables if it is a saddle
@@ -255,7 +255,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             sys.exit()
 
         # Set up the run scripts
-        script_str, _, kwargs, _ = es_runner.par.run_qchem_par(
+        script_str, _, kwargs, _ = runpar.run_qchem_par(
             *thy_info[0:2])
 
         # Run the job over all the conformers requested by the user
@@ -288,7 +288,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
     nsamp_par = spc['mc_nsamp']
 
     # Script
-    _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
         *thy_info[0:2])
 
     # Modify the theory
@@ -310,7 +310,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
     tau_save_fs, _ = filesys.build.tau_fs_from_thy(thy_save_path, tau='all')
 
     if job == 'samp':
-        _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+        _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
             *thy_info[0:2])
         tau.tau_sampling(
             spc_info,
@@ -319,7 +319,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
             opt_script_str, overwrite, nsamp_par, **opt_kwargs)
     elif job in ('energy', 'grad', 'hess'):
         # Set up the run scripts
-        script_str, _, kwargs, _ = es_runner.par.run_qchem_par(
+        script_str, _, kwargs, _ = runpar.run_qchem_par(
             *thy_info[0:2])
         tau_run_fs, _ = filesys.build.tau_fs_from_thy(thy_run_path, tau='all')
         tau_save_fs, tau_locs = filesys.build.tau_fs_from_thy(
@@ -348,7 +348,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     spc_info = filesys.inf.get_spc_info(spc)
 
     # Script
-    _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
         *thy_info[0:2])
 
     # Modify the theory
@@ -412,7 +412,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
     # Set up the hind rot names by reading zma, geo from ini filesystem
     zma, geo = filesys.read.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
-    run_tors_names, run_tors_grids = struct.tors.hr_prep(
+    run_tors_names, run_tors_grids = structure.tors.hr_prep(
         zma, geo, run_tors_names=run_tors_names,
         scan_increment=scan_increment, ndim_tors=ndim_tors,
         saddle=saddle, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
@@ -424,7 +424,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         if not frz_all_tors:
             constraint_dct = None
         else:
-            constraint_dct = struct.tors.build_constraint_dct(
+            constraint_dct = structure.tors.build_constraint_dct(
                 zma, run_tors_names)
 
         # Set up ini filesystem for scans
@@ -444,7 +444,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 
-            script_str, _, kwargs, _ = es_runner.par.run_qchem_par(
+            script_str, _, kwargs, _ = runpar.run_qchem_par(
                 *thy_info[0:2])
             for tors_names in run_tors_names:
                 scn_locs = filesys.build.scn_locs_from_fs(
@@ -482,7 +482,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     spc_info = filesys.inf.get_spc_info(spc)
 
     # Script
-    _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
         *thy_info[0:2])
 
     # Modify the theory
@@ -527,7 +527,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     if job == 'scan':
 
         # Script
-        _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+        _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
             *thy_info[0:2])
 
         zma, geo = filesys.read.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
@@ -539,7 +539,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     elif job in ('energy'):
 
         # Script
-        script_str, _, kwargs, _ = es_runner.par.run_qchem_par(
+        script_str, _, kwargs, _ = runpar.run_qchem_par(
             *mod_thy_info[0:2])
 
         # Need to put in something with the IRC idxs
@@ -597,7 +597,7 @@ def run_ts(spc_dct, spc_name,
     else:
         mod_mr_scn_thy_info = None
 
-    _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
         *thy_info[0:2])
 
     # Build filesys for thy info for single reference
