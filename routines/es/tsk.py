@@ -618,8 +618,8 @@ def run_ts(spc_dct, spc_name,
     run_fs = autofile.fs.run(ts_run_path)
 
     # Build the ts fs 
-    ini_ts_save_fs, ini_ts_save_path = fbuild.ts_fs_from_thy(ini_thy_save_path)
-    _, ini_ts_run_path = fbuild.ts_fs_from_thy(ini_thy_run_path)
+    ini_ts_save_fs, ini_ts_save_path = filesys.build.ts_fs_from_thy(ini_thy_save_path)
+    _, ini_ts_run_path = filesys.build.ts_fs_from_thy(ini_thy_run_path)
 
     # Set the cnf fs to see if TS is available or for searching
     cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(
