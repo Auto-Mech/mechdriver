@@ -10,7 +10,6 @@ from routines.es import _util as util
 from routines.es import geom
 from runners import es as es_runner
 from lib import filesys
-from lib.runner import script
 from lib.phydat import phycon
 
 
@@ -137,14 +136,14 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
             spc_save_fs[-1].create(spc_info)
             spc_save_path = spc_save_fs[-1].path(spc_info)
             orb_restr = filesys.inf.orbital_restriction(spc_info, thy_info)
-            g = thy_info[0:3]
-            g.append(orb_restr)
+            thy_info = thy_info[0:3]
+            thy_info.append(orb_restr)
             thy_run_fs = autofile.fs.theory(spc_run_path)
-            thy_run_fs[-1].create(g[1:4])
-            thy_run_path = thy_run_fs[-1].path(g[1:4])
+            thy_run_fs[-1].create(thy_info[1:4])
+            thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
             thy_save_fs = autofile.fs.theory(spc_save_path)
-            thy_save_fs[-1].create(g[1:4])
-            thy_save_path = thy_save_fs[-1].path(g[1:4])
+            thy_save_fs[-1].create(thy_info[1:4])
+            thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
             run_fs = autofile.fs.run(thy_run_path)
 
             # Generate reference geometry
@@ -219,13 +218,13 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
     return new_vdws
 
 
-def fake_conf(thy_info, filesys, inf=()):
+def fake_conf(thy_info, filesystem, inf=()):
     """ generate data to be used for a fake well I think?
     """
-    cnf_save_fs = filesys[5]
-    cnf_run_fs = filesys[4]
-    thy_save_fs = filesys[3]
-    run_fs = filesys[-1]
+    cnf_save_fs = filesystem[5]
+    cnf_run_fs = filesystem[4]
+    thy_save_fs = filesystem[3]
+    run_fs = filesystem[-1]
     thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
     geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
     if inf:
@@ -260,11 +259,11 @@ def fake_conf(thy_info, filesys, inf=()):
     cnf_run_fs[-1].file.geometry.write(geo, locs)
 
 
-def fake_geo_gen(tsk, thy_info, filesys):
+def fake_geo_gen(tsk, thy_info, filesystem):
     """ generate data to be used for a fake well I think?
     """
     if 'conf' in tsk:
-        fake_conf(thy_info, filesys)
+        fake_conf(thy_info, filesystem)
     if 'scan' in tsk:
         pass
     if 'tau' in tsk:

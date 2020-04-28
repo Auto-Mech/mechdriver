@@ -7,7 +7,7 @@ from lib.phydat import act_space
 
 
 def cas_options(spc_info, formula, num_act_elc, num_act_orb,
-                high_mul, add_two_closed=False):
+                add_two_closed=False):
     """ Prepare values prepare cas options for multireference wavefunctions
     """
 

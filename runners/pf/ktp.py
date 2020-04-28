@@ -6,7 +6,8 @@ import os
 import autofile
 from lib import filesys
 from lib.amech_io import reader
-from lib.runner import script
+from runners import run_script
+from runners import DEFAULT_SCRIPT_DCT
 
 
 def get_mess_path(run_prefix, pes_formula):
@@ -89,4 +90,4 @@ def read_mess_file(mess_path):
 def run_rates(mess_path):
     """ Run the mess file that was wriiten
     """
-    script.run_script(script.MESSRATE, mess_path)
+    run_script(DEFAULT_SCRIPT_DCT['messrate'], mess_path)

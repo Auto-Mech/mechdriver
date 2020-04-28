@@ -12,7 +12,8 @@ import autofile
 import mess_io
 import thermp_io
 from lib import filesys
-from lib.runner import script
+from runners import run_script
+from runners import DEFAULT_SCRIPT_DCT
 
 
 # OBTAIN THE PATH TO THE DIRECTORY CONTAINING THE TEMPLATES #
@@ -20,10 +21,10 @@ CUR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 # MESSPF
-def run_pf(pf_path, pf_script_str=script.MESSPF):
+def run_pf(pf_path, pf_script_str=DEFAULT_SCRIPT_DCT['messpf']):
     """ run messpf
     """
-    script.run_script(pf_script_str, pf_path)
+    run_script(pf_script_str, pf_path)
 
 
 def read_messpf_temps(pf_path):

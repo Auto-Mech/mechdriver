@@ -2,7 +2,7 @@
 """
 
 import os
-import sys
+# import sys
 import subprocess
 import warnings
 import stat
@@ -53,18 +53,18 @@ class _EnterDirectory():
 # def read_inp_scripts(job_path):
 #     """ Read in the scripts the user submits as a strings
 #     """
-#   
+#
 #     # Initialize dct with that from standard defined below
 #     sub_dct = DEFAULT_SCRIPT_DCT
-# 
+#
 #     # Obtain a list of any submission script files from input dir
 #     sub_path = os.path.join(job_path, SUB_DIR)
 #     if os.path.exists(sub_path):
 #         sub_files = os.listdir(sub_path)
-# 
+#
 #     # Build dct if any sub files found
 #     if sub_files:
-#         print('Found directory with submission scripts.')  
+#         print('Found directory with submission scripts.')
 #         for sub_file in sub_files:
 #             name = sfile.replace('.sh', '')
 #             if name in sub_dct:
@@ -82,28 +82,11 @@ class _EnterDirectory():
 #                 sys.exit()
 #     else:
 #         print('No submmission script directory provided by the user')
-# 
+#
 #     return script_dct
 
 
 # DCT OF DEFAULT SUBMISSION STRINGS
-DEFAULT_SCRIPT_DCT = {
-    'projrot': PROJROT,
-    'messpf': MESSPF,
-    'messrate': MESSRATE,
-    'varecof': VARECOF,
-    'mcflux': MCFLUX,
-    'tstchk': TSTCHECK,
-    'thermp': THERMP,
-    'pac99': PAC99,
-    'dsarrfit': DSARRFIT,
-    'gaussian09': G09,
-    'molpro2015': MOLPRO,
-    'molpro2015_mppx': MOLPRO_MPPX,
-    'molpro2015_mr': MOLPRO_MREF,
-    'molpro2015_mr_mppx':MOLPRO_MREF_MPPX
-}
-
 PROJROT = (
     "#!/usr/bin/env bash\n"
     "RPHt.exe >& /dev/null"
@@ -160,19 +143,36 @@ MOLPRO = (
 )
 MOLPRO_MPPX = (
     "#!/usr/bin/env bash\n"
-     "molpro --mppx -n 4 run.inp -o run.out "
-     "--nouse-logfile --no-xml-output >> "
-     "stdout.log &> stderr.log"
+    "molpro --mppx -n 4 run.inp -o run.out "
+    "--nouse-logfile --no-xml-output >> "
+    "stdout.log &> stderr.log"
 )
 MOLPRO_MREF = (
-     "#!/usr/bin/env bash\n"
-     "molpro -n 8 run.inp -o run.out "
-     "--nouse-logfile --no-xml-output >> "
-     "stdout.log &> stderr.log"
+    "#!/usr/bin/env bash\n"
+    "molpro -n 8 run.inp -o run.out "
+    "--nouse-logfile --no-xml-output >> "
+    "stdout.log &> stderr.log"
 )
-MOLPRO_MREF_MPPX
-     "#!/usr/bin/env bash\n"
-     "molpro --mppx -n 12 run.inp -o run.out "
-     "--nouse-logfile --no-xml-output >> "
-     "stdout.log &> stderr.log"
+MOLPRO_MREF_MPPX = (
+    "#!/usr/bin/env bash\n"
+    "molpro --mppx -n 12 run.inp -o run.out "
+    "--nouse-logfile --no-xml-output >> "
+    "stdout.log &> stderr.log"
 )
+
+DEFAULT_SCRIPT_DCT = {
+    'projrot': PROJROT,
+    'messpf': MESSPF,
+    'messrate': MESSRATE,
+    'varecof': VARECOF,
+    'mcflux': MCFLUX,
+    'tstchk': TSTCHECK,
+    'thermp': THERMP,
+    'pac99': PAC99,
+    'dsarrfit': DSARRFIT,
+    'gaussian09': G09,
+    'molpro2015': MOLPRO,
+    'molpro2015_mppx': MOLPRO_MPPX,
+    'molpro2015_mr': MOLPRO_MREF,
+    'molpro2015_mr_mppx': MOLPRO_MREF_MPPX
+}

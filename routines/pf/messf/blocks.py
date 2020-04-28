@@ -4,7 +4,7 @@
 import os
 import numpy
 import autofile
-import pf_io
+import mess_io
 from lib import filesys
 from lib.amech_io import cleaner
 from lib.phydat import phycon
@@ -107,7 +107,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
 
     if pffutil.is_atom(harm_min_cnf_locs, harm_cnf_save_fs):
         mass = pffutil.atom_mass(harm_min_cnf_locs, harm_cnf_save_fs)
-        spc_str = pf_io.writer.atom(
+        spc_str = mess_io.writer.atom(
             mass, elec_levels)
     else:
         if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts:
@@ -161,7 +161,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                 symf = sym_factor
                 for num in sym_nums:
                     symf /= num
-                mdhr_str = pf_io.writer.mol_data.core_multirotor(
+                mdhr_str = mess_io.writer.mol_data.core_multirotor(
                     geo, sym_factor, mdhr_dat_file_name, core_hr_str,
                     interp_emax=100, quant_lvl_emax=9)  # , forceq=False)
         elif vib_model == 'harm' and tors_model == 'tau':
@@ -210,8 +210,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             if tors_model == 'mdhr':
                 core = mdhr_str
             else:
-                core = pf_io.writer.core_rigidrotor(geo, symf)
-            spc_str = pf_io.writer.molecule(
+                core = mess_io.writer.core_rigidrotor(geo, symf)
+            spc_str = mess_io.writer.molecule(
                 core, freqs, elec_levels,
                 hind_rot=hr_str, xmat=xmat)
 
@@ -299,9 +299,9 @@ def vtst_with_no_saddle_block(
         irc_pt_str += '! IRC Point {0}\n'.format(str(idx+1))
 
         # Write the MESS string for the molecule section for each irc point
-        core = pf_io.writer.mol_data.core_rigidrotor(
+        core = mess_io.writer.mol_data.core_rigidrotor(
             geom, sym_factor, interp_emax='')
-        irc_pt_str += pf_io.writer.species.molecule(
+        irc_pt_str += mess_io.writer.species.molecule(
             core, freqs, elec_levels,
             hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
@@ -315,7 +315,7 @@ def vtst_with_no_saddle_block(
         irc_pt_strs.append(irc_pt_str)
 
     # Write the MESS string for the entire variational section
-    variational_str = pf_io.writer.rxnchan.ts_variational(
+    variational_str = mess_io.writer.rxnchan.ts_variational(
         ts_label, reac_label, prod_label, irc_pt_strs)
 
     return variational_str
@@ -395,9 +395,9 @@ def vtst_saddle_block(ts_dct, ene_thy_level, geo_thy_level,
         irc_pt_str += '! IRC Point {0}\n'.format(str(int(idx)))
 
         # Write the molecule section for each irc point
-        core = pf_io.writer.mol_data.core_rigidrotor(
+        core = mess_io.writer.mol_data.core_rigidrotor(
             geom, sym_factor, interp_emax='')
-        irc_pt_str += pf_io.writer.species.molecule(
+        irc_pt_str += mess_io.writer.species.molecule(
             core, freqs, elec_levels,
             hind_rot='', xmat=None, rovib_coups='', rot_dists='')
 
@@ -409,7 +409,7 @@ def vtst_saddle_block(ts_dct, ene_thy_level, geo_thy_level,
         full_irc_str.append(irc_pt_str)
 
     # Write the MESS string for the variational sections
-    variational_str = pf_io.writer.rxnchan.ts_variational(
+    variational_str = mess_io.writer.rxnchan.ts_variational(
         ts_label, reac_label, prod_label, full_irc_str)
 
     return variational_str
@@ -593,10 +593,10 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
         sym_factor = symf_i * symf_j
 
     # Write the MESS input strings
-    core = pf_io.writer.core_phasespace(
+    core = mess_io.writer.core_phasespace(
         geo_i, geo_j, sym_factor, stoich,
         pot_prefactor=pst_params[0], pot_power_exp=pst_params[1])
-    spc_str = pf_io.writer.molecule(
+    spc_str = mess_io.writer.molecule(
         core, freqs, elec_levels,
         hind_rot=hind_rot_str)
 
@@ -760,8 +760,8 @@ def fake_species_block(
         hind_rot_str = hr_str_i + hr_str_j
         sym_factor = symf_i * symf_j
 
-    core = pf_io.writer.core_rigidrotor(geo, sym_factor)
-    spc_str = pf_io.writer.molecule(
+    core = mess_io.writer.core_rigidrotor(geo, sym_factor)
+    spc_str = mess_io.writer.molecule(
         core, freqs, elec_levels,
         hind_rot=hind_rot_str)
 
@@ -772,7 +772,7 @@ def fake_species_block(
 def get_pf_header(temps):
     """ prepare partition function header string
     """
-    global_pf_str = pf_io.writer.global_pf(
+    global_pf_str = mess_io.writer.global_pf(
         temps, rel_temp_inc=0.001, atom_dist_min=0.6)
     return global_pf_str
 

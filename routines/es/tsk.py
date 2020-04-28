@@ -8,7 +8,6 @@ import automol
 from routines.es import conformer
 from routines.es import geom
 from routines.es import _scan as scan
-from routines.es import _sp as sp
 from routines.es import _tau as tau
 from routines.es import _irc as irc
 from routines.es import _ts as ts
@@ -19,10 +18,10 @@ from lib import struct
 
 # Dictionary of Electronic Structure Calculations
 ES_TSKS = {
-    'energy': 'sp.run_energy',
-    'grad': 'sp.run_gradient',
-    'hess': 'sp.run_hessian',
-    'vpt2': 'sp.run_vpt2'
+    'energy': 'routines.es._sp.run_energy',
+    'grad': 'routines.es._sp.run_gradient',
+    'hess': 'routines.es._sp.run_hessian',
+    'vpt2': 'routines.es._sp.run_vpt2'
 }
 
 
@@ -185,7 +184,8 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             run_prefix, rxn_info, mod_thy_info)
         thy_save_fs, thy_save_path = filesys.build.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_thy_info)
-        thy_save_fs, thy_save_path = filesys.build.ts_fs_from_thy(thy_save_path)
+        thy_save_fs, thy_save_path = filesys.build.ts_fs_from_thy(
+            thy_save_path)
         _, thy_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
 
         # Build filesys for ini thy info
@@ -424,7 +424,8 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         if not frz_all_tors:
             constraint_dct = None
         else:
-            constraint_dct = struct.tors.build_constraint_dct(zma, run_tors_names)
+            constraint_dct = struct.tors.build_constraint_dct(
+                zma, run_tors_names)
 
         # Set up ini filesystem for scans
         ini_scn_run_fs = filesys.build.scn_fs_from_cnf(
@@ -452,7 +453,8 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                     for locs in scn_locs:
                         geo_run_path = ini_scn_run_fs[-1].path(locs)
                         geo_save_path = ini_scn_save_fs[-1].path(locs)
-                        zma, geo = filesys.read.get_zma_geo(ini_scn_save_fs, locs)
+                        zma, geo = filesys.read.get_zma_geo(
+                            ini_scn_save_fs, locs)
                         ini_scn_run_fs[-1].create(locs)
                         eval(ES_TSKS[job])(
                             zma, geo, spc_info, mod_thy_info,
@@ -579,16 +581,19 @@ def run_ts(spc_dct, spc_name,
     # Get es options
     vrc_dct = {}
     overwrite = es_keyword_dct['overwrite']
+    nobar_mod = es_keyword_dct['nobarrier']
 
     # Modify the theory
     mod_thy_info = filesys.inf.mod_orb_restrict(ts_info, thy_info)
     mod_ini_thy_info = filesys.inf.mod_orb_restrict(ts_info, ini_thy_info)
     if mr_sp_thy_info is not None:
-        mod_mr_sp_thy_info = filesys.inf.mod_orb_restrict(ts_info, mr_sp_thy_info)
+        mod_mr_sp_thy_info = filesys.inf.mod_orb_restrict(
+            ts_info, mr_sp_thy_info)
     else:
         mod_mr_sp_thy_info = None
     if mr_scn_thy_info is not None:
-        mod_mr_scn_thy_info = filesys.inf.mod_orb_restrict(ts_info, mr_scn_thy_info)
+        mod_mr_scn_thy_info = filesys.inf.mod_orb_restrict(
+            ts_info, mr_scn_thy_info)
     else:
         mod_mr_scn_thy_info = None
 
@@ -598,13 +603,13 @@ def run_ts(spc_dct, spc_name,
     # Build filesys for thy info for single reference
     _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
         run_prefix, rxn_info, mod_thy_info)
-    thy_save_fs, thy_save_path = filesys.build.rxn_thy_fs_from_root(
+    _, thy_save_path = filesys.build.rxn_thy_fs_from_root(
         save_prefix, rxn_info, mod_thy_info)
 
     # Build filesys for ini thy info for single reference
     # _, ini_thy_run_path = filesys.build.rxn_thy_fs_from_root(
     #     run_prefix, rxn_info, mod_ini_thy_info)
-    ini_thy_save_fs, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
+    _, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
         save_prefix, rxn_info, mod_ini_thy_info)
 
     # Build the ts fs
@@ -621,7 +626,8 @@ def run_ts(spc_dct, spc_name,
     # Get the transition state
     # ts_found = False
     if cnf_save_locs and not overwrite:
-        print('TS found and saved previously in ', cnf_save_fs[-1].path(cnf_save_locs))
+        print('TS found and saved previously in ',
+              cnf_save_fs[-1].path(cnf_save_locs))
         # ts_class, ts_original_zma, ts_tors_names, ts_dist_info
         # geo, zma, final_dist = check_filesys_for_ts(
         #     ts_dct, ts_zma, cnf_save_fs, overwrite,
@@ -655,7 +661,7 @@ def run_ts(spc_dct, spc_name,
             if mod_mr_scn_thy_info:
                 _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
                     run_prefix, rxn_info, mod_mr_scn_thy_info)
-                thy_save_fs, thy_save_path = filesys.build.rxn_thy_fs_from_root(
+                _, thy_save_path = filesys.build.rxn_thy_fs_from_root(
                     save_prefix, rxn_info, mod_mr_scn_thy_info)
                 scn_run_fs = autofile.fs.scan(thy_run_path)
                 scn_save_fs = autofile.fs.scan(thy_save_path)
@@ -664,7 +670,7 @@ def run_ts(spc_dct, spc_name,
             if mod_mr_sp_thy_info:
                 _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
                     run_prefix, rxn_info, mod_mr_sp_thy_info)
-                thy_save_fs, thy_save_path = filesys.build.rxn_thy_fs_from_root(
+                _, thy_save_path = filesys.build.rxn_thy_fs_from_root(
                     save_prefix, rxn_info, mod_mr_sp_thy_info)
             else:
                 print('Need mlvl specified')
@@ -674,14 +680,13 @@ def run_ts(spc_dct, spc_name,
             scn_save_fs = autofile.fs.scan(thy_save_path)
 
             # Run the barrierless transition state
-            ts_found, switch = ts.find.barrierless_transition_state(
+            ts.find.barrierless_transition_state(
                 ts_info, ini_zma, ts_dct, spc_dct,
                 grid,
                 dist_name,
-                rxn_run_path, rxn_save_path,
-                rad_rad_ts,
+                nobar_mod,
                 mod_ini_thy_info, mod_thy_info,
-                multi_opt_info, multi_sp_info,
+                mod_mr_scn_thy_info, mod_mr_sp_thy_info,
                 run_prefix, save_prefix,
                 scn_run_fs, scn_save_fs,
                 overwrite, vrc_dct,
@@ -694,10 +699,10 @@ def run_ts(spc_dct, spc_name,
 
         if not _nobarrier(ts_dct) or (_nobarrier(ts_dct) and switch):
 
-            ts_found = ts.find.sadpt_transition_state(
-                ini_zma, ts_info, mod_thy_info, mod_ini_thy_info,
-                thy_save_fs, thy_run_path, thy_save_path,
-                ini_thy_save_fs, ini_thy_save_path,
+            ts.find.sadpt_transition_state(
+                ini_zma, ts_info, mod_thy_info,
+                thy_run_path, thy_save_path,
+                ini_thy_save_path,
                 cnf_run_fs, cnf_save_fs,
                 ts_save_fs, ts_save_path, run_fs,
                 typ, grid, update_guess,
@@ -723,12 +728,12 @@ def _print_ts_method(ts_dct, nobarrier_mod):
     """ Print a message
     """
     if _nobarrier(ts_dct):
-        print('Reaction is a low-spin, radical-radical addition or abstraction')
+        print('Reaction is low-spin, radical-radical addition or abstraction')
         print('Assuming reaction is barrierless...')
         print('Finding a transition state according to the requested',
               '{} model...'.format(nobarrier_mod.upper()))
     else:
         print('Reaction is either (1) unimolecular, (2) molecule-radical, or',
               '(3) high-spin, radical-radical addition or abstraction')
-        print('Assuming reaction has a saddle point on the potential surface...')
+        print('Assuming reaction has a saddle point on potential surface...')
         print('Finding the geometry of the saddle point...')

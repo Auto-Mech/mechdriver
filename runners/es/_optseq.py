@@ -7,7 +7,7 @@ import elstruct
 import autofile
 from autoparse import pattern as app
 from autoparse import find as apf
-from lib.runner import _optmat as optmat
+from . import _optmat as optmat
 
 
 def options_matrix_optimization(script_str, prefix,

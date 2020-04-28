@@ -10,7 +10,7 @@ from lib import filesys
 from lib.reaction import grid as rxngrid
 
 
-def check_filesys_for_guess(ini_thy_save_path, es_keyword_dct):
+def check_filesys_for_guess(ini_thy_save_path):
     """ Check if the filesystem for any TS structures at the input
         level of theory
     """
@@ -93,7 +93,7 @@ def optimize_transition_state(
               'to attempt to find saddle point.')
     else:
         print('\nThere are {} guess Z-Matrices'.format(len(guess_zmas)),
-             'to attempt to find saddle point.')
+              'to attempt to find saddle point.')
 
     # Loop over all the guess zmas to find a TS
     ts_found = False

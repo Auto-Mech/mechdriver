@@ -10,6 +10,7 @@ from routines.es import conformer
 from routines.es import _wells as wells
 from runners import es as es_runner
 from runners import run_script
+from runners import DEFAULT_SCRIPT_DCT
 from lib import filesys
 from lib.phydat import phycon
 
@@ -356,7 +357,7 @@ def save_initial_geometry(
 def projrot_frequencies(geo, hess, thy_info, thy_run_fs):
     """ Get the projected frequencies from projrot code
     """
-    projrot_script_str = script.PROJROT
+    projrot_script_str = DEFAULT_SCRIPT_DCT['projrot']
 
     # Write the string for the ProjRot input
     thy_run_fs[-1].create(thy_info[1:4])

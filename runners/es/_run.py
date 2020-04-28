@@ -4,7 +4,7 @@
 import functools
 import elstruct
 import autofile
-from lib.runner import _optseq as optseq
+from . import _optseq as optseq
 
 
 JOB_ERROR_DCT = {

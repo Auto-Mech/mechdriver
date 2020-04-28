@@ -11,9 +11,9 @@ from routines.es._ts import _vrctst as vrctst
 
 # Main TS finder functions
 def sadpt_transition_state(
-        ini_zma, ts_info, mod_thy_info, mod_ini_thy_info,
-        thy_save_fs, thy_run_path, thy_save_path,
-        ini_thy_save_fs, ini_thy_save_path,
+        ini_zma, ts_info, mod_thy_info,
+        thy_run_path, thy_save_path,
+        ini_thy_save_path,
         cnf_run_fs, cnf_save_fs,
         ts_save_fs, ts_save_path, run_fs,
         typ, grid, update_guess,
@@ -25,9 +25,8 @@ def sadpt_transition_state(
 
     # Check filesystem for input level of theory
     print('\nSearching save filesys for guess Z-Matrix calculated',
-            'at {} level...'.format(es_keyword_dct['inplvl']))
-    guess_zmas = sadpt.check_filesys_for_guess(
-        ini_thy_save_path, es_keyword_dct)
+          'at {} level...'.format(es_keyword_dct['inplvl']))
+    guess_zmas = sadpt.check_filesys_for_guess(ini_thy_save_path)
 
     # If no guess zma, run a TS searching algorithm
     if not guess_zmas:
