@@ -30,7 +30,7 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
         run_tors_names = mdhr_prep(zma, run_tors_names)
 
     # Build the grids corresponding to the torsions
-    run_tors_grids, run_tors_syms = [], []
+    run_tors_grids = []  # run_tors_syms = []
     for tors_names in run_tors_names:
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,
@@ -40,7 +40,7 @@ def hr_prep(zma, geo, run_tors_names=(), scan_increment=30.0, ndim_tors='1dhr',
              for name, linspace in zip(tors_names, tors_linspaces)]
         )
         # tors_sym_nums.append(list(automol.zmatrix.torsional_symmetry_numbers(
-        #    zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
+        #   zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
 
     return run_tors_names, run_tors_grids  # run_tors_syms
 
@@ -74,8 +74,8 @@ def reduce_rotor_dimensionality(zma, rotor):
     methyl_rotors = []
     for tors in rotor:
         # If a methyl rotor add to methyl rotor list
-        if is_methyl_rotor():   # Add arguments when ID methyls
-            methyl_rotors.append(tors)
+        if is_methyl_rotor(zma, rotor):   # Add arguments when ID methyls
+            methyl_rotors.append(zma, tors)
         # Add to reduced rotor list
         else:
             reduced_rotor_lst.append(tors)
@@ -94,10 +94,10 @@ def reduce_rotor_dimensionality(zma, rotor):
     return reduced_rotor_lst
 
 
-def is_methyl_rotor():
+def is_methyl_rotor(zma, rotor):
     """ Check if methyl rotor
     """
-    return False
+    raise NotImplementedError(zma, rotor)
 
 
 # Building constraints

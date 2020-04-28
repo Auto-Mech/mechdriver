@@ -9,10 +9,10 @@ import automol
 import mess_io
 import projrot_io
 import autofile
-from lib import struct
+from lib import structure
 from lib.phydat import phycon
-from runners import run_script
-from runners import DEFAULT_SCRIPT_DCT
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 # MESS strings
@@ -26,7 +26,7 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
 
     # Build constraint dct
     if frz_tors:
-        constraint_dct = struct.tors.build_constraint_dct(zma, tors_names)
+        constraint_dct = structure.tors.build_constraint_dct(zma, tors_names)
     else:
         constraint_dct = None
 

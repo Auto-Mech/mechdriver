@@ -43,7 +43,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     syms = automol.zmatrix.symbols(ts_zma)
     ts_bnd_len = tuple(sorted(map(syms.__getitem__, dist_coo)))
     grid, update_guess, bkp_grid, bkp_update_guess = rxngrid.build_grid(
-        typ, bkp_typ, ts_bnd_len, ts_zma, dist_name, npoints=None)
+        typ, bkp_typ, ts_bnd_len, ts_zma, dist_name, brk_name, npoints=None)
 
     # Build class data lists to return from the function
     if typ:

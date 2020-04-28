@@ -7,8 +7,8 @@ import mess_io
 import projrot_io
 import autofile
 from lib import filesys
-from runners import run_script
-from runners import DEFAULT_SCRIPT_DCT
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 def write_mess_eckart_str(ts_ene, reac_ene, prod_ene, imag_freq):

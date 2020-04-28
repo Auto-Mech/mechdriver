@@ -3,13 +3,11 @@
 """
 
 import sys
-from lib import filesys
-from lib.amech_io.reader import ptt
-from lib.amech_io.reader.keywords import ES_TSK_OBJ_SUPPORTED_LST
-from lib.amech_io.reader.keywords import ES_TSK_SUPPORTED_DCT
-from lib.amech_io.reader.keywords import ES_TSK_KEYWORDS_SUPPORTED_DCT
-from lib.amech_io.reader.keywords import ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT
-from lib.amech_io.reader.keywords import ES_TSK_KEYWORDS_DEFAULT_DCT
+from lib.amech_io.parser.keywords import ES_TSK_OBJ_SUPPORTED_LST
+from lib.amech_io.parser.keywords import ES_TSK_SUPPORTED_DCT
+from lib.amech_io.parser.keywords import ES_TSK_KEYWORDS_SUPPORTED_DCT
+from lib.amech_io.parser.keywords import ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT
+from lib.amech_io.parser.keywords import ES_TSK_KEYWORDS_DEFAULT_DCT
 from lib.amech_io.cleaner import remove_whitespace
 
 
@@ -39,7 +37,7 @@ def es_tsks_from_lst(es_tsks_str):
     """
     # Split the string into different strings of keywords
     tsk_lst = []
-    es_tsks_str = remove_whitespace(section_str)
+    es_tsks_str = remove_whitespace(es_tsks_str)
     for line in es_tsks_str.splitlines():
         tsk_line = line.split()
         if len(tsk_line) > 2:
@@ -93,7 +91,7 @@ def add_defaults_to_tsk_keyword_dct(tsk_lsts):
 
 
 def es_tsks_from_models(rxn_model_dct,
-                        saddle=False, wells=False, barrierless=False):
+                        saddle=False, wells=False):
     """ Set a list of tasks using the model dictionary for
         setting up the electronic structure calculations
     """

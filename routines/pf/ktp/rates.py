@@ -5,14 +5,13 @@ Write and Read MESS files for Rates
 import automol
 import mess_io
 import autofile
-from lib.phydat import phycon
-from lib.runner import script
-from lib.amech_io import reader
 from routines.pf.messf import blocks
 from routines.pf.messf import get_fs_ene_zpe
 from routines.pf.messf import calc_channel_enes
 from routines.pf.messf import _tunnel as tunnel
-from runners import DEFAULT_SCRIPT_DCT
+from lib.phydat import phycon
+from lib.amech_io import reader
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 # Writer
@@ -83,7 +82,8 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_formula, pes_idx,
             chn_model, first_ground_model,
             save_prefix)
         mess_strs, chn_label_written = make_channel_pfs(
-            tsname, rxn, species, spc_dct, idx_dct, chn_label_written, mess_strs,
+            tsname, rxn, species, spc_dct,
+            idx_dct, chn_label_written, mess_strs,
             first_ground_ene, channel_enes,
             model_dct, thy_dct, save_prefix)
     well_str, bim_str, ts_str = mess_strs
@@ -213,7 +213,8 @@ def make_channel_pfs(
     spc_save_fs = autofile.fs.species(save_prefix)
 
     # Write the MESS string for the channel reactant(s) and product(s)
-    for rct, rct_ene in zip((rxn['reacs'], rxn['prods']), (reac_ene, prod_ene)):
+    rct_inf = zip((rxn['reacs'], rxn['prods']), (reac_ene, prod_ene))
+    for rct, rct_ene in rct_inf:
         spc_label = [automol.inchi.smiles(spc_dct[spc]['ich']) for spc in rct]
         spc_data = [species_data[spc] for spc in rct]
         chn_label = idx_dct[make_rxn_string(rct)]
@@ -327,7 +328,7 @@ def make_channel_pfs(
     elif tunnel_model == 'sct':
         tunnel_file = tsname + '_sct.dat'
         path = 'cat'
-        tunnel_str, tc_str = tunnel.write_mess_sct_str(
+        tunnel_str, _ = tunnel.write_mess_sct_str(
             spc_dct[tsname], pf_levels, path,
             imag_freq, tunnel_file,
             cutoff_energy=2500, coord_proj='cartesian')
@@ -346,9 +347,10 @@ def make_channel_pfs(
         pass
     elif ts_sadpt == 'vtst':
         # Variational TST for a saddle point
-        ts_str += '\n' + blocks.vtst_saddle_block(
-            spc_dct[tsname], pf_levels,
-            ts_label, inner_reac_label, inner_prod_label, first_ground_ene)
+        pass
+        # ts_str += '\n' + blocks.vtst_saddle_block(
+        #     spc_dct[tsname], pf_levels,
+        #     ts_label, inner_reac_label, inner_prod_label, first_ground_ene)
     else:
         # Fixed TST for a saddle point
         zero_energy = ts_ene - first_ground_ene
@@ -367,7 +369,8 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct):
     pes_idx_dct = {}
     for idx, rxn in enumerate(rxn_lst):
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
-        pes_idx_dct.update(make_channel_label_dct(tsname, idx+1, pes_idx_dct, rxn, spc_dct))
+        pes_idx_dct.update(
+            make_channel_label_dct(tsname, idx+1, pes_idx_dct, rxn, spc_dct))
 
     return pes_idx_dct
 
@@ -441,7 +444,7 @@ def make_channel_label_dct(tsname, chn_idx, idx_dct, rxn, spc_dct):
                 fidx += 1
                 idx_dct[well_dct_key1] = fake_wellr_label
 
-                #pst_r_label = 'FRB' + str(int(tsname.replace('ts_', ''))+1)
+                # pst_r_label = 'FRB' + str(int(tsname.replace('ts_', ''))+1)
                 pst_r_label = 'FRB' + str(chn_idx)
                 idx_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
             if not fake_wellr_label:
@@ -459,7 +462,7 @@ def make_channel_label_dct(tsname, chn_idx, idx_dct, rxn, spc_dct):
                 fidx += 1
                 idx_dct[well_dct_key1] = fake_wellp_label
 
-                #pst_p_label = 'FPB' + str(int(tsname.replace('ts_', ''))+1)
+                # pst_p_label = 'FPB' + str(int(tsname.replace('ts_', ''))+1)
                 pst_p_label = 'FPB' + str(chn_idx)
                 idx_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
             if not fake_wellp_label:

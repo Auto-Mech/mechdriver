@@ -4,7 +4,7 @@ Read the mechanism file
 
 import automol
 import chemkin_io
-from lib.amech_io.reader import ptt
+from lib.amech_io.parser import ptt
 
 
 MECH_INP = 'inp/mechanism.dat'
@@ -320,7 +320,7 @@ def format_run_rxn_lst(rct_names_lst, prd_names_lst, rxn_model_lst):
 #     """
 #
 #     with open(os.path.join(mech_path, mech_file)) as mechfile:
-#         inp_data = json.amech_io.reader(
+#         inp_data = json.amech_io.parser(
 #             mechfile, object_pairs_hook=collections.OrderedDict)
 #         mech_data = []
 #     for reaction in inp_data:

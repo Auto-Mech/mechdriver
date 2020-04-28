@@ -6,8 +6,8 @@ import os
 import autofile
 from lib import filesys
 from lib.amech_io import reader
-from runners import run_script
-from runners import DEFAULT_SCRIPT_DCT
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 def get_mess_path(run_prefix, pes_formula):

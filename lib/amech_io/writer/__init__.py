@@ -2,9 +2,9 @@
  Libraries for writing output
 """
 
-from lib.amech_io.writer import chemkin
+from lib.amech_io.writer import ckin
 
 
 __all__ = [
-    'chemkin'
+    'ckin'
 ]

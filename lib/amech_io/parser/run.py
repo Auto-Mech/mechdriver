@@ -1,12 +1,12 @@
-""" library of reader functions for the run.dat file
+""" library of parser functions for the run.dat file
 """
 
 import sys
 import autoparse.find as apf
-from lib.amech_io.reader import ptt
-from lib.amech_io.reader import tsks
-from lib.amech_io.reader.keywords import RUN_INP_REQUIRED_KEYWORDS
-from lib.amech_io.reader.keywords import RUN_SUPPORTED_KEYWORDS
+from lib.amech_io.parser import ptt
+from lib.amech_io.parser import tsks
+from lib.amech_io.parser.keywords import RUN_INP_REQUIRED_KEYWORDS
+from lib.amech_io.parser.keywords import RUN_SUPPORTED_KEYWORDS
 from lib.amech_io.cleaner import remove_whitespace
 
 

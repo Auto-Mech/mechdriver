@@ -1,11 +1,11 @@
-""" library of reader functions for the theory file
+""" library of parser functions for the theory file
 """
 
 import sys
 import autoparse.find as apf
-from lib.amech_io.reader import ptt
-from lib.amech_io.reader.keywords import THY_REQUIRED_KEYWORDS
-from lib.amech_io.reader.keywords import THY_SUPPORTED_KEYWORDS
+from lib.amech_io.parser import ptt
+from lib.amech_io.parser.keywords import THY_REQUIRED_KEYWORDS
+from lib.amech_io.parser.keywords import THY_SUPPORTED_KEYWORDS
 
 
 THY_INP = 'inp/theory.dat'
@@ -16,7 +16,7 @@ def build_thy_dct(job_path):
     """
     # Obtain the species string
     thy_str = ptt.read_inp_str(job_path, THY_INP)
-    
+
     # Obtain any thy_sections
     thy_sections = apf.all_captures(
         ptt.end_section_wname2('level'), thy_str)
@@ -61,8 +61,8 @@ def check_thy_dct(name, dct):
             print(key)
         sys.exit()
     sup_keys_def = all(key in THY_SUPPORTED_KEYWORDS for key in dct.keys())
-    if not req_keys_def:
-        print('*ERROR: Non-supported Required keywords missing from thy section')
+    if not sup_keys_def:
+        print('*ERROR: unsupported required keywords missing from thy section')
         print('level with issue: ', name)
         print('Supported keys:')
         for key in THY_SUPPORTED_KEYWORDS:

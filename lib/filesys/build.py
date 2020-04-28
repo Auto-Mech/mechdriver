@@ -4,7 +4,7 @@ Library of functions to interact with the filesystem
 
 import os
 import autofile
-from lib.filesys.minc import min_energy_conformer_locators
+from lib.filesys.mincnf import min_energy_conformer_locators
 
 
 # BUILD HIGH LEVEL SPC AND RXN FILESYS #
@@ -228,7 +228,7 @@ def tau_fs_from_root(root_prefix, spc_info, mod_thy_info, tau='all'):
     assert tau == 'all'
 
     # Build the theory filesystem
-    thy_fs, thy_path = thy_fs_from_root(root_prefix, spc_info, mod_thy_info)
+    _, thy_path = spc_thy_fs_from_root(root_prefix, spc_info, mod_thy_info)
 
     # Conformer filesys
     tau_fs = autofile.fs.tau(thy_path)

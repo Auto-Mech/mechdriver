@@ -37,7 +37,7 @@ kTPDRIVER
 
 Sarah Elliott, Kevin Moore, Andreas Copan,
 Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,
-Ahren Jasper, Stephen Klippenstein 
+Ahren Jasper, Stephen Klippenstein
 ========================================================="""
 
 THM_MSG = """
@@ -57,7 +57,10 @@ Carlo Cavolotti, Stephen Klippenstein
 
 
 def random_cute_animal():
-    msg = random.choice(["""
+    """ Print a picture of a fun, cute animal at random
+    """
+    msg = random.choice([
+        r"""
                                         _,--._
                                       ,'      `.
                               |\     /          \     /|
@@ -72,7 +75,7 @@ def random_cute_animal():
                             \o`---'  ,'        `.  `---'o/
                              `.____,'           `.____,'  """,
 
-     """
+        r"""
                                  ,,,         ,,,
                                ;"   ^;     ;'   ",
                               ;    s$$$$$$$s      ;
@@ -85,7 +88,7 @@ def random_cute_animal():
                                $$$$$$$$$$$$$$$$$
                                 "Y$$$"'*'"$$$Y"
                                    "$$b.d$$"        """,
-    """
+        r"""
                                    _.---~-~-~~-..
                ..       __.    .-~               ~-.
                ((\     /   `}.~                     `.
@@ -97,28 +100,6 @@ def random_cute_animal():
                      ~~----~~  \ \| ~~--~~~(  + /     ~-.   '--~.
                                /  /         \  \         `~-..__ `~__
                             __/  /          _\  )               `~~---'
-                          .<___.'         .<___/
-    """])
+                          .<___.'         .<___/  """])
     print(msg)
     print('\n\n')
-# _KTP_MSG = """
-#           ================================================================
-#           ==                          KTPDRIVER                         ==
-#           ===         Sarah Elliott, Kevin Moore, Andreas Copan,       ===
-#           ===      Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,  ===
-#           ==            Ahren Jasper, Stephen Klippenstein              ==
-#           ================================================================"""
-# 
-# _THM_MSG = """
-#           ================================================================
-#           ==                        THERMODRIVER                        ==
-#           ===         Sarah Elliott, Kevin Moore, Andreas Copan,       ===
-#           ===    Murat Keceli, Yuri Georgievski, Stephen Klippenstein   ==
-#           ================================================================"""
-# 
-# _ES_MSG = """
-#           ================================================================
-#           ==                          ESDRIVER                          ==
-#           ====        Sarah Elliott, Andreas Copan, Kevin Moore,      ====
-#           ==            Carlo Cavolotti, Stephen Klippenstein           ==
-#           ================================================================"""

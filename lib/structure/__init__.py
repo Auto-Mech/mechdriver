@@ -2,7 +2,7 @@
 Handle construction of structural info
 """
 
-from lib.struct import tors
+from lib.structure import tors
 
 
 __all__ = [

@@ -1,5 +1,31 @@
-""" Dealing withe the minimum-energy conf and trajectories
 """
+  Functions to read the filesystem and pull objects from it
+"""
+
+import sys
+import automol
+from automol.zmatrix.ts import _shifted_standard_forms_with_gaphs as shift_gra
+
+
+def get_zma_geo(filesys, locs):
+    """ Get the geometry and zmatrix from a filesystem
+    """
+    if filesys[-1].file.zmatrix.exists(locs):
+        zma = filesys[-1].file.zmatrix.read(locs)
+    else:
+        zma = None
+
+    if filesys[-1].file.geometry.read(locs):
+        geo = filesys[-1].file.geometry.read(locs)
+    else:
+        geo = None
+
+    # Check
+    if zma is None and geo is None:
+        print('*ERROR: Neither a Z-Matrix or a Cartesian Geom exists level')
+        sys.exit()
+
+    return zma, geo
 
 
 def min_energy_conformer_locators(cnf_save_fs, zpe_corrd=False):
@@ -21,6 +47,41 @@ def min_energy_conformer_locators(cnf_save_fs, zpe_corrd=False):
     else:
         min_cnf_locs = []
     return min_cnf_locs
+
+
+def min_dist_conformer_zma(dist_name, cnf_save_fs):
+    """ locators for minimum energy conformer """
+    cnf_locs_lst = cnf_save_fs[-1].existing()
+    cnf_zmas = [cnf_save_fs[-1].file.zmatrix.read(locs)
+                for locs in cnf_locs_lst]
+    min_dist = 100.
+    min_zma = []
+    for zma in cnf_zmas:
+        dist = automol.zmatrix.values(zma)[dist_name]
+        if dist < min_dist:
+            min_dist = dist
+            min_zma = zma
+    min_zma = [min_zma]
+    return min_zma
+
+
+def min_dist_conformer_zma_geo(dist_coords, cnf_save_fs):
+    """ locators for minimum energy conformer """
+    cnf_locs_lst = cnf_save_fs[-1].existing()
+    cnf_zmas = [cnf_save_fs[-1].file.zmatrix.read(locs)
+                for locs in cnf_locs_lst]
+    min_dist = 100.
+    min_zma = []
+    for zma in cnf_zmas:
+        zmas, _ = shift_gra([zma])
+        zma = zmas[0]
+        geo = automol.zmatrix.geometry(zma)
+        dist = automol.geom.distance(geo, *list(dist_coords))
+        if dist < min_dist:
+            min_dist = dist
+            min_zma = zma
+    min_zma = [min_zma]
+    return min_zma
 
 
 def locs_sort(save_fs):

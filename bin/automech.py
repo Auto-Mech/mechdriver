@@ -7,7 +7,7 @@ import sys
 from drivers import esdriver
 from drivers import thermodriver
 from drivers import ktpdriver
-from runners import build_sub_script_dct
+# from lib.submission import build_sub_script_dct
 from lib.amech_io import reader
 from lib.amech_io import printer
 from lib.filesys.build import prefix_fs
@@ -163,7 +163,7 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
                     '+'.join(rxn['prods'])))
 
             ktpdriver.run(
-                formula, pes_idx, sub_pes_idx,
+                formula, pes_idx,
                 SPC_DCT,
                 CLA_DCT,
                 THY_DCT,

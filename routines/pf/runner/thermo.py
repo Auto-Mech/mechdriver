@@ -12,8 +12,8 @@ import autofile
 import mess_io
 import thermp_io
 from lib import filesys
-from runners import run_script
-from runners import DEFAULT_SCRIPT_DCT
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 # OBTAIN THE PATH TO THE DIRECTORY CONTAINING THE TEMPLATES #

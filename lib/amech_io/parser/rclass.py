@@ -5,7 +5,7 @@
 import os
 import sys
 import chemkin_io
-from lib.amech_io.reader import ptt
+from lib.amech_io.parser import ptt
 from lib.amech_io.cleaner import remove_whitespace
 
 

@@ -2,14 +2,14 @@
 """
 
 from lib.amech_io import writer
-from lib.amech_io import reader
+from lib.amech_io import parser
 from lib.amech_io import printer
 from lib.amech_io import cleaner
 
 
 __all__ = [
-    'reader',
     'writer',
+    'parser',
     'printer',
     'cleaner'
 ]

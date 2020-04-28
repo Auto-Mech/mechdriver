@@ -3,13 +3,13 @@
 
 import os
 from routines.pf import ktp as ktp_routines
-from runners.pf import ktp as ktp_runner
+from routines.pf.runner import ktp as ktp_runner
 from lib import filesys
-from lib.amech_io import reader
+from lib.amech_io import parser
 from lib.amech_io import cleaner
 
 
-def run(pes_formula, pes_idx, sub_pes_idx,
+def run(pes_formula, pes_idx,
         spc_dct,
         cla_dct,
         thy_dct,
@@ -49,10 +49,10 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
         ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
         print('\nIdentifying reaction classes for transition states...')
-        ts_dct = reader.species.build_sadpt_dct(
+        ts_dct = parser.species.build_sadpt_dct(
             pes_idx, rxn_lst, thy_info, ini_thy_info,
             run_inp_dct, spc_dct, cla_dct)
-        spc_dct = reader.species.combine_sadpt_spc_dcts(
+        spc_dct = parser.species.combine_sadpt_spc_dcts(
             ts_dct, spc_dct)
 
     # Build the MESS label idx dictionary for the PES

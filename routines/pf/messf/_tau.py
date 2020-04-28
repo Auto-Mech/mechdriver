@@ -76,7 +76,7 @@ def write_tau_data_str(
     """ Write out data fle for partition function evaluation
     """
     cnf_save_fs = autofile.fs.conformer(save_prefix)
-    min_cnf_locs = filesys.minc.min_energy_conformer_locators(cnf_save_fs)
+    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
         ene_ref = cnf_save_fs[-1].file.energy.read(min_cnf_locs)
 

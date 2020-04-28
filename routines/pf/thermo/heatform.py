@@ -12,6 +12,7 @@ import automol.inchi
 import automol.graph
 from . import util
 
+
 # Conversion factors
 KJ2KCAL = qcc.conversion_factor('kJ/mol', 'kcal/mol')
 EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
@@ -76,7 +77,7 @@ def get_ref_h(species, ref, temp):
     return h_species
 
 
-def select_basis(atom_dct, att=0):
+def select_basis(atom_dct):
     """
     Given a list of atoms, generates a list of molecules
     that is best suited to serve as a basis for those atoms
@@ -89,9 +90,6 @@ def select_basis(atom_dct, att=0):
     OUPUT:
     basis    - recommended basis as a list of stoichiometries
     """
-
-    # Determine number of basis species required
-    nbasis = len(atom_dct)
 
     # Get a list of all the atom types in the molecule
     atoms = list(atom_dct.keys())
@@ -116,7 +114,7 @@ def select_basis(atom_dct, att=0):
     # SO2
     if 'S' in atoms:
         basis.append('InChI=1S/O2S/c1-3-2')
-        if not 'O' in atoms:
+        if 'O' not in atoms:
             basis.append('InChI=1S/H2O/h1H2')
 
     return basis
@@ -163,20 +161,21 @@ def calc_coefficients(basis, mol_atom_dict):
                 (square if done right)
     """
 
-        
+
     # Initialize an natoms x natoms matrix
     nbasis = len(basis)
-    print('basis test:', basis) 
+    print('basis test:', basis)
     basis_mat = np.zeros((nbasis, nbasis))
 
     # Get the basis formulae list
     basis_formulae = [automol.inchi.formula(spc) for spc in basis]
     print('basis formulae:', basis_formulae)
-    #basis_atom_dict = [automol.geom.formula(automol.inchi.geom(spc) for spc in basis]
+    # basis_atom_dict = [
+    # automol.geom.formula(automol.inchi.geom(spc) for spc in basis]
     for spc in basis_formulae:
         basis_atom_dict = util.get_atom_counts_dict(spc)
         for atom in basis_atom_dict:
-            if not atom in mol_atom_dict:
+            if atom not in mol_atom_dict:
                 mol_atom_dict[atom] = 0
     # Set the elements of the matrix
     for i, spc in enumerate(basis_formulae):
@@ -214,16 +213,16 @@ def stoich(ich):
                 val = INT number of atomsymbol in molecule
     """
 
-    stoich = {'H': 0}
+    stoich_dct = {'H': 0}
     gra = automol.inchi.graph(ich)
     atms = automol.graph.atoms(gra)
     for atm in atms:
-        stoich['H'] += atms[atm][1]
-        if atms[atm][0] in stoich:
-            stoich[atms[atm][0]] += 1
+        stoich_dct['H'] += atms[atm][1]
+        if atms[atm][0] in stoich_dct:
+            stoich_dct[atms[atm][0]] += 1
         else:
-            stoich[atms[atm][0]] = 1
-    return stoich
+            stoich_dct[atms[atm][0]] = 1
+    return stoich_dct
 
 
 def cbhzed(ich):
@@ -308,8 +307,8 @@ def cbhone(ich):
         for frag in frags:
             newfrags[frag] = frags[frag]
             new = cbhzed(frag)
-            for n in new:
-                _add2dic(newfrags, n, - new[n] * frags[frag])
+            for i in new:
+                _add2dic(newfrags, i, - new[i] * frags[frag])
         if not frags:
             frags = cbhzed(ich)
         for frag in zedfrags:
@@ -385,8 +384,8 @@ def cbhtwo(ich):
         for frag in frags:
             newfrags[frag] = frags[frag]
             new = cbhone(frag)
-            for n in new:
-                _add2dic(newfrags, n, - new[n] * frags[frag])
+            for i in new:
+                _add2dic(newfrags, i, - new[i] * frags[frag])
         if not frags:
             frags = cbhone(ich)
         for frag in onefrags:
@@ -404,8 +403,8 @@ def cbhtwo(ich):
             for frag in frags:
                 newfrags[frag] = frags[frag]
                 new = cbhzed(frag)
-                for n in new:
-                    _add2dic(newfrags, n, - new[n] * frags[frag])
+                for i in new:
+                    _add2dic(newfrags, i, - new[i] * frags[frag])
             if not frags:
                 frags = cbhzed(ich)
             for frag in zedfrags:
@@ -423,13 +422,18 @@ def cbhtwo(ich):
 
 
 def get_basis(ich):
-    formula  = automol.inchi.formula(ich)
+    """ get a basis
+    """
+
+    formula = automol.inchi.formula(ich)
     atm_dict = util.get_atom_counts_dict(formula)
     return select_basis(atm_dict)
 
 
 def get_basic(ich):
-    formula_dct  = automol.inchi.formula_dct(ich)
+    """ get basis for basic scheme
+    """
+    formula_dct = automol.inchi.formula_dct(ich)
     spc_bas = select_basis(formula_dct)
     if len(spc_bas) == 1 and ich == spc_bas[0]:
         clist = [1]
@@ -439,6 +443,8 @@ def get_basic(ich):
 
 
 def get_cbhzed(ich):
+    """ get basis for CBH0
+    """
     frags = cbhzed(ich)
     fraglist = []
     clist = []
@@ -446,10 +452,12 @@ def get_cbhzed(ich):
         fraglist.append(frag)
         clist.append(frags[frag])
     return fraglist, clist
-    #return list(cbhzed(ich).keys())
+    # return list(cbhzed(ich).keys())
 
 
 def get_cbhone(ich):
+    """ get basis for CBH1
+    """
     frags = cbhone(ich)
     fraglist = []
     clist = []
@@ -457,10 +465,12 @@ def get_cbhone(ich):
         fraglist.append(frag)
         clist.append(frags[frag])
     return fraglist, clist
-    #return list(cbhone(ich).keys())
+    # return list(cbhone(ich).keys())
 
 
 def get_cbhtwo(ich):
+    """ get basis for CBH2
+    """
     frags = cbhtwo(ich)
     fraglist = []
     clist = []
@@ -468,10 +478,12 @@ def get_cbhtwo(ich):
         fraglist.append(frag)
         clist.append(frags[frag])
     return fraglist, clist
-    #return list(cbhtwo(ich).keys())
+    # return list(cbhtwo(ich).keys())
 
 
 def _add2dic(dic, key, val=1):
+    """ helper function to add a key to dct
+    """
     if key in dic:
         dic[key] += val
     else:
@@ -479,6 +491,8 @@ def _add2dic(dic, key, val=1):
 
 
 def _lhs_rhs(frags):
+    """ Determine the left-hand side and right-hand side of reaction
+    """
     rhs = {}
     lhs = {}
     for frag in frags:
@@ -490,6 +504,8 @@ def _lhs_rhs(frags):
 
 
 def _print_lhs_rhs(ich, frags):
+    """ print the fragments from each side of the reaction
+    """
     lhs, rhs = _lhs_rhs(frags)
     lhsprint = automol.inchi.smiles(ich)
     rhsprint = ''
@@ -507,6 +523,8 @@ def _print_lhs_rhs(ich, frags):
 
 
 def _balance(ich, frags):
+    """ balance the equation?
+    """
     stoichs = {}
     for frag in frags:
         _stoich = stoich(frag)
@@ -527,6 +545,8 @@ def _balance(ich, frags):
 
 
 def _balance_frags(ich, frags):
+    """ balance the equation?
+    """
     balance_ = _balance(ich, frags)
     methane = automol.smiles.inchi('C')
     water = automol.smiles.inchi('O')

@@ -8,12 +8,12 @@ import mess_io
 from lib import filesys
 from lib.amech_io import cleaner
 from lib.phydat import phycon
-from routines.pf.pff import models as pfmodels
-from routines.pf.pff import _vib as vib
-from routines.pf.pff import _tors as tors
-from routines.pf.pff import _sym as sym
-from routines.pf.pff import _fake as fake
-from routines.pf.pff import _util as pffutil
+from routines.pf.messf import models as pfmodels
+from routines.pf.messf import _vib as vib
+from routines.pf.messf import _tors as tors
+from routines.pf.messf import _sym as sym
+from routines.pf.messf import _fake as fake
+from routines.pf.messf import _util as messfutil
 
 
 def species_block(spc, spc_dct_i, spc_info, spc_model,
@@ -77,10 +77,10 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
 
     no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
     # Set TS information
-    frm_bnd_key, brk_bnd_key = pffutil.get_bnd_keys(spc_dct_i, saddle)
+    frm_bnd_key, brk_bnd_key = messfutil.get_bnd_keys(spc_dct_i, saddle)
 
     # Initialize electronic energy levels
-    elec_levels = pffutil.ini_elec_levels(spc_dct_i, spc_info)
+    elec_levels = messfutil.ini_elec_levels(spc_dct_i, spc_info)
 
     # Determine the species symmetry factor using the given model
     sym_factor = sym.symmetry_factor(
@@ -105,8 +105,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
     hr_str = ""
     xmat = ()
 
-    if pffutil.is_atom(harm_min_cnf_locs, harm_cnf_save_fs):
-        mass = pffutil.atom_mass(harm_min_cnf_locs, harm_cnf_save_fs)
+    if messfutil.is_atom(harm_min_cnf_locs, harm_cnf_save_fs):
+        mass = messfutil.atom_mass(harm_min_cnf_locs, harm_cnf_save_fs)
         spc_str = mess_io.writer.atom(
             mass, elec_levels)
     else:
@@ -481,7 +481,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
 
     # Get the combined electronic energy levels
-    elec_levels = pffutil.combine_elec_levels(spc_dct_i, spc_dct_j)
+    elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
 
     # Determine the species symmetry factor using the given model
     dist_names = []
@@ -502,19 +502,19 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     sym_factor = sym_factor_i * sym_factor_j
 
     # Get the stoichiometry
-    stoich = pffutil.get_stoich(
+    stoich = messfutil.get_stoich(
         harm_min_cnf_locs_i, harm_min_cnf_locs_j,
         harm_cnf_save_fs_i, harm_cnf_save_fs_j)
 
     spc_str = ''
     if vib_model == 'harm' and tors_model == 'rigid':
-        if pffutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
             freqs_i = ()
         else:
             geo_i, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
                 spc_info_i, harm_min_cnf_locs_i,
                 harm_cnf_save_fs_i, saddle=False)
-        if pffutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             freqs_j = ()
         else:
             geo_j, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
@@ -530,7 +530,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
         hind_rot_str = ""
 
     if vib_model == 'harm' and tors_model == '1dhr':
-        if pffutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
             geo_i = harm_cnf_save_fs_i[-1].file.geometry.read(
                 harm_min_cnf_locs_i)
             freqs_i = []
@@ -559,7 +559,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
             symf_i = sym_factor_i
             for num in sym_nums_i:
                 symf_i /= num
-        if pffutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
             freqs_j = []
@@ -660,7 +660,7 @@ def fake_species_block(
     no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
 
     # Get the combined electronic energy levels
-    elec_levels = pffutil.combine_elec_levels(spc_dct_i, spc_dct_j)
+    elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
 
     # Determine the species symmetry factor using the given model
     dist_names = []
@@ -689,13 +689,13 @@ def fake_species_block(
         harm_cnf_save_fs_i, harm_cnf_save_fs_j)
 
     if vib_model == 'harm' and tors_model == 'rigid':
-        if pffutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
             freqs_i = ()
         else:
             _, freqs_i, _ = pfmodels.vib_harm_tors_rigid(
                 spc_info_i, harm_min_cnf_locs_i,
                 harm_cnf_save_fs_i, saddle=False)
-        if pffutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             freqs_j = ()
         else:
             _, freqs_j, _ = pfmodels.vib_harm_tors_rigid(
@@ -705,7 +705,7 @@ def fake_species_block(
         hind_rot_str = ""
 
     if vib_model == 'harm' and tors_model == '1dhr':
-        if pffutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
+        if messfutil.is_atom(harm_min_cnf_locs_i, harm_cnf_save_fs_i):
             freqs_i = ()
             hr_str_i = ''
             symf_i = sym_factor_i
@@ -731,7 +731,7 @@ def fake_species_block(
             for num_i in sym_nums_i:
                 symf_i /= num_i
 
-        if pffutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
+        if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             freqs_j = ()
             hr_str_j = ''
             symf_j = sym_factor_j

@@ -91,9 +91,12 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs):
     return max_zma
 
 
-def build_grid(rtype, rbktype, ts_bnd_len, ts_zma, dist_name, npoints=None):
+def build_grid(rtype, rbktype, ts_bnd_len, ts_zma,
+               dist_name, brk_name, npoints=None):
     """ Set the grid for a transition state search
     """
+
+    # Pass npoints as a 2-element list
 
     # Set up the backup type
     if 'beta_scission' in rbktype:
@@ -113,11 +116,11 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma, dist_name, npoints=None):
     elif 'addition' in rtype and 'rad' not in rtype:
         grid, update_guess = addition_grid(npoints, ts_bnd_len)
     elif 'hydrogen migration' in rtype and 'rad' not in rtype:
-        grid, update_guess = hydrogen_migration_grid(npoints, ts_bnd_len,
-                                                     ts_zma, dist_name)
+        grid, update_guess = hydrogen_migration_grid(
+            npoints, ts_bnd_len, ts_zma, dist_name)
     elif 'unimolecular elimination' in rtype:
-        grid, update_guess = unimolecular_elimination_grid(npoints, ts_bnd_len,
-                                                           ts_zma, dist_name)
+        grid, update_guess = unimolecular_elimination_grid(
+            ts_bnd_len, ts_zma, dist_name, brk_name)
     elif 'hydrogen abstraction' in rtype:
         grid, update_guess = hydrogen_abstraction(npoints, ts_bnd_len)
     elif 'substitution' in rtype:
@@ -126,9 +129,9 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma, dist_name, npoints=None):
         grid, update_guess = insertion(npoints, ts_bnd_len)
     # elif spin == 'low':
     elif 'radical radical' in rtype and 'addition' in rtype:
-        grid, update_guess = radrad_addition_grid(npoints, ts_bnd_len)
+        grid, update_guess = radrad_addition_grid()
     elif 'radical radical' in rtype and 'hydrogen abstraction' in rtype:
-        grid, update_guess = radrad_hydrogen_abstraction(npoints, ts_bnd_len)
+        grid, update_guess = radrad_hydrogen_abstraction()
     else:
         raise NotImplementedError
 
@@ -198,15 +201,17 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
     return grid, update_guess
 
 
-def unimolecular_elimination_grid(npoints, ts_bnd_len, ts_zma, syms, brk_name):
+def unimolecular_elimination_grid(ts_bnd_len, ts_zma, syms, brk_name):
     """ Build forward 2D grid for elimination reaction
     """
     brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
     brk_len_key = tuple(sorted(map(syms.__getitem__, brk_coo)))
 
-    interval = 0.2 * phycon.ANG2BOHR
-    rmin = 1.4 * phycon.ANG2BOHR
-    rmax = 2.8 * phycon.ANG2BOHR
+    # interval = 0.2 * phycon.ANG2BOHR
+    # rmin = 1.4 * phycon.ANG2BOHR
+    # rmax = 2.8 * phycon.ANG2BOHR
+    npoints1 = 8
+    npoints2 = 4
     if ts_bnd_len in bnd.LEN_DCT:
         bnd_len = bnd.LEN_DCT[ts_bnd_len]
         brk_len = bnd.LEN_DCT[brk_len_key]
@@ -214,8 +219,8 @@ def unimolecular_elimination_grid(npoints, ts_bnd_len, ts_zma, syms, brk_name):
         r1max = bnd_len + 1.4 * phycon.ANG2BOHR
         r2min = brk_len + 0.2 * phycon.ANG2BOHR
         r2max = brk_len + 0.8 * phycon.ANG2BOHR
-        grid1 = numpy.linspace(r1min, r1max, 8)
-        grid2 = numpy.linspace(r2min, r2max, 4)
+        grid1 = numpy.linspace(r1min, r1max, npoints1)
+        grid2 = numpy.linspace(r2min, r2max, npoints2)
         grid = [grid1, grid2]
         update_guess = False
 
@@ -272,7 +277,7 @@ def insertion(npoints, ts_bnd_len):
 
 # Barrierless TS grid
 
-def radrad_addition_grid(npoints, ts_bnd_len):
+def radrad_addition_grid():
     """ Build forward 1D grid for a beta scission reaction
     """
 
@@ -290,7 +295,7 @@ def radrad_addition_grid(npoints, ts_bnd_len):
     return grid, update_guess
 
 
-def radrad_hydrogen_abstraction(npoints, ts_bnd_len):
+def radrad_hydrogen_abstraction():
     """ Build forward 1D grid for elimination reaction
     """
     rstart = 2.4 * phycon.ANG2BOHR

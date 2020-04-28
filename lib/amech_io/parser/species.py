@@ -11,8 +11,8 @@ from lib.phydat import symm
 from lib.phydat import eleclvl
 from lib.phydat import phycon
 from lib.reaction import rxnid
-from lib.amech_io.reader import ptt
-from lib.amech_io.reader import rclass
+from lib.amech_io.parser import ptt
+from lib.amech_io.parser import rclass
 
 
 CSV_INP = 'inp/species.csv'
@@ -316,7 +316,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
 
         # Generate rxn_fs from rxn_info stored in spc_dct
         [kickoff_size, kickoff_backward] = kickoff
-        zma_inf = filesys.read.get_zmas(
+        zma_inf = filesys.inf.get_zmas(
             reacs, prods, spc_dct,
             ini_thy_info, save_prefix, run_prefix, kickoff_size,
             kickoff_backward)

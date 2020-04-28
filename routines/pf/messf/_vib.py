@@ -6,8 +6,8 @@ import os
 import projrot_io
 import autofile
 from lib.phydat import phycon
-from runners import run_script
-from runners import DEFAULT_SCRIPT_DCT
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 def projrot_freqs_1(tors_geo, hess,

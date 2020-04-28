@@ -8,8 +8,7 @@ import autofile
 import routines
 from routines.pf import thermo as thermo_routines
 from routines.pf import messf
-from runners.pf import thermo as thermo_runner
-from lib import runner
+from routines.pf.runner import thermo as thermo_runner
 from lib import filesys
 from lib.amech_io import reader
 from lib.amech_io import writer
@@ -126,7 +125,7 @@ def run(spc_dct,
                 spc_save_path, spc_info, harm_thy_info)
 
             # Run MESSPF
-            runner.therm.run_pf(pf_path)
+            thermo_runner.run_pf(pf_path)
 
     # Use MESS partition functions to compute thermo quantities
     if run_nasa:
@@ -171,8 +170,8 @@ def run(spc_dct,
 
         # Write the NASA polynomials in CHEMKIN format
         chemkin_set_str = ''
-        starting_path = runner.therm.get_starting_path()
-        ckin_path = runner.therm.prepare_path(starting_path, 'ckin')
+        starting_path = thermo_runner.get_starting_path()
+        ckin_path = thermo_runner.prepare_path(starting_path, 'ckin')
         if not os.path.exists(ckin_path):
             os.makedirs(ckin_path)
         for spc in spc_queue:
@@ -200,7 +199,7 @@ def run(spc_dct,
                 spc_save_path, spc_info, harm_thy_info)
 
             # Read the temperatures from the pf.dat file, check if viable
-            temps = runner.therm.read_messpf_temps(pf_path)
+            temps = thermo_runner.read_messpf_temps(pf_path)
             print('temps', temps)
             print('Attempting to fit NASA polynomials from',
                   '200-1000 and 1000-3000 K ranges using\n',
@@ -209,19 +208,19 @@ def run(spc_dct,
 
             # Write and run the thermp file to get Hf0k and ...
             print('therm path', nasa_path)
-            runner.therm.go_to_path(nasa_path)
-            runner.therm.write_thermp_inp(spc_dct[spc_name], temps)
+            thermo_runner.go_to_path(nasa_path)
+            thermo_runner.write_thermp_inp(spc_dct[spc_name], temps)
             # not getting spc str, so this isnt working, fix this
             # if spc_dct[spc]['ene'] == 0.0 or spc_dct[spc]['spc_str'] == '':
             #     print('Cannot generate thermo for species',
             #           '{} '.format(spc_dct[spc]['ich']),
             #           'because information is still missing:')
             #     continue
-            hf298k = runner.therm.run_thermp(pf_path, nasa_path)
+            hf298k = thermo_runner.run_thermp(pf_path, nasa_path)
             spc_dct[spc_name]['Hfs'].append(hf298k)
 
             # Run PAC99 to get a NASA polynomial string in its format
-            pac99_str = runner.therm.run_pac(spc_dct[spc_name], nasa_path)
+            pac99_str = thermo_runner.run_pac(spc_dct[spc_name], nasa_path)
             print('str\n', pac99_str)
             poly_str = thermo_routines.nasapoly.get_pac99_polynomial(pac99_str)
 
@@ -234,7 +233,7 @@ def run(spc_dct,
             chemkin_set_str += chemkin_poly_str
 
             # Write the CHEMKIN string to a file
-            runner.therm.go_to_path(starting_path)
+            thermo_runner.go_to_path(starting_path)
             writer.chemkin.write_nasa_file(
                 spc_dct[spc_name], ckin_path, nasa_path, chemkin_spc_str)
 
