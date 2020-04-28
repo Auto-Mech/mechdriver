@@ -6,7 +6,7 @@ import automol
 import elstruct
 import autofile
 from routines.es import _util as util
-from runners import es as es_runner
+from routines.es import runner as es_runner
 from lib import filesys
 from lib.phydat import phycon
 

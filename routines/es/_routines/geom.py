@@ -1,5 +1,6 @@
 """ es_runners for initial geometry optimization
 """
+
 import os
 import numpy
 import automol
@@ -8,9 +9,9 @@ import autofile
 import projrot_io
 from routines.es import conformer
 from routines.es import _wells as wells
-from runners import es as es_runner
-from runners import run_script
-from runners import DEFAULT_SCRIPT_DCT
+from routines.es import runner as es_runner
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 from lib import filesys
 from lib.phydat import phycon
 
@@ -216,8 +217,9 @@ def remove_imag(
 
     print('The initial geometries will be checked for imaginary frequencies')
     spc_info = filesys.inf.get_spc_info(spc_dct_i)
-    script_str, opt_script_str, kwargs, opt_kwargs = es_runner.par.run_qchem_par(
+    runinf = es_runner.par.run_qchem_par(
         *thy_info[0:2])
+    [script_str, opt_script_str, kwargs, opt_kwargs] = runinf
 
     imag, geo, disp_xyzs, hess = run_check_imaginary(
         spc_info, geo, thy_info, thy_run_fs, script_str,

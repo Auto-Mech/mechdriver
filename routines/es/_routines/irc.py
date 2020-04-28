@@ -4,8 +4,7 @@ IRC calcs
 
 import elstruct
 import autofile
-from runners import es as es_runner
-from lib import filesys
+from routines.es import runner as es_runner
 
 
 def scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
@@ -84,11 +83,11 @@ def save_irc(irc_job, run_fs, scn_run_fs, scn_save_fs,
         run_fs=run_fs,
     )
     if opt_ret is not None:
-        inf_obj, inp_str, out_str = opt_ret
+        inf_obj, _, out_str = opt_ret
         prog = inf_obj.prog
         geos, gras, hessians = elstruct.reader.irc_points(prog, out_str)
         enes = elstruct.reader.irc_energies(prog, out_str)
-        coords = elstruct.reader.irc_coordinates(prog, out_str)
+        # coords = elstruct.reader.irc_coordinates(prog, out_str)
 
         # Write the IRC inf file and input file string
         # scn_save_fs[1].file.irc_info.write(inf_obj, [coo_name])

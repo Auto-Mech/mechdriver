@@ -6,7 +6,7 @@ import automol
 import elstruct
 import autofile
 from routines.es import _util as util
-from runners import es as es_runner
+from routines.es import runner as es_runner
 from lib import filesys
 from lib.phydat import bnd
 
@@ -254,7 +254,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
     if not cnf_run_fs[0].exists():
         print(" - No conformers in run filesys to save.")
     else:
-        print(" - Found conformers in run filesys at level of theory to save.\n")
+        print(" - Found conformers in run filesys to save.\n")
         for locs in cnf_run_fs[-1].existing():
             # # Only go through save procedure if conf not in save
             # # may need to get geo, ene, etc; maybe make function
@@ -266,7 +266,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
             run_fs = autofile.fs.run(cnf_run_path)
             print("Reading from conformer run at {}".format(cnf_run_path))
 
-            ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            ret = es_runner.read_job(
+                job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret:
                 inf_obj, inp_str, out_str = ret
                 prog = inf_obj.prog
@@ -280,7 +281,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                 else:
                     lconns = 1
                 if lconns > 1:
-                    print(" - Geometry is disconnected.. Conformer will not be saved.")
+                    print(" - Geometry is disconnected.",
+                          "Conformer will not be saved.")
                 else:
                     if saddle:
                         # ts_class, ts_original_zma, ts_tors_names,

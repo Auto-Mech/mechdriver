@@ -1,67 +1,10 @@
 """ es_runners for coordinate scans
 """
+
 import automol
 import elstruct
 import autofile
-from runners import es as es_runner
-
-
-def hindered_rotor_scans(
-        zma, spc_info, thy_info, scn_run_fs, scn_save_fs,
-        run_tors_names, run_tors_grids,
-        script_str, overwrite,
-        saddle=False, constraint_dct=None, **opt_kwargs):
-    """ Perform scans over each of the torsional coordinates
-    """
-
-    # for tors_name, tors_grid in zip(tors_names, tors_grids):
-    for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
-
-        # Get the dictionary for the torsional modes
-        if not tors_names:
-            continue
-        grid_dct = dict(zip(tors_names, tors_grids))
-
-        print('\nSaving any HR in run filesys...')
-        if constraint_dct is None:
-            save_scan(
-                scn_run_fs=scn_run_fs,
-                scn_save_fs=scn_save_fs,
-                coo_names=tors_names)
-        else:
-            save_cscan(
-                cscn_run_fs=scn_run_fs,
-                cscn_save_fs=scn_save_fs,
-                coo_names=tors_names)
-
-        print('\nRunning any HR Scans if needed...')
-        run_scan(
-            zma=zma,
-            spc_info=spc_info,
-            thy_info=thy_info,
-            grid_dct=grid_dct,
-            scn_run_fs=scn_run_fs,
-            scn_save_fs=scn_save_fs,
-            script_str=script_str,
-            overwrite=overwrite,
-            saddle=saddle,
-            constraint_dct=constraint_dct,
-            **opt_kwargs,
-        )
-
-        print('\nSaving any newly run HR scans in run filesys...')
-        if constraint_dct is None:
-            save_scan(
-                scn_run_fs=scn_run_fs,
-                scn_save_fs=scn_save_fs,
-                coo_names=tors_names
-            )
-        else:
-            save_cscan(
-                cscn_run_fs=scn_run_fs,
-                cscn_save_fs=scn_save_fs,
-                coo_names=tors_names
-            )
+from routines.es import runner as es_runner
 
 
 def run_scan(
@@ -414,7 +357,8 @@ def _run_1d_scan(
                 **kwargs
             )
 
-            ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            ret = es_runner.read_job(
+                job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret is not None:
                 inf_obj, _, out_str = ret
                 prog = inf_obj.prog
@@ -632,7 +576,8 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names):
             run_fs = autofile.fs.run(run_path)
             print("Reading from scan run at {}".format(run_path))
 
-            ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+            ret = es_runner.read_job(
+                job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if ret:
                 inf_obj, inp_str, out_str = ret
                 prog = inf_obj.prog

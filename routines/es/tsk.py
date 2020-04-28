@@ -7,10 +7,10 @@ import autofile
 import automol
 from routines.es import conformer
 from routines.es import geom
-from routines.es import _scan as scan
-from routines.es import _tau as tau
-from routines.es import _irc as irc
-from routines.es import _ts as ts
+from routines.es import hr
+from routines.es import tau
+from routines.es import irc
+from routines.es import tsfind
 from routines.es.runner import par as runpar
 from lib import filesys
 from lib import structure
@@ -95,7 +95,7 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     # Get es options
     [kickoff_size, kickoff_backward] = spc['kickoff']
     overwrite = es_keyword_dct['overwrite']
-    dist_info = spc['dist_info'] if saddle else ()
+    # dist_info = spc['dist_info'] if saddle else ()
 
     # Modify the theory
     mod_thy_info = filesys.inf.mod_orb_restrict(spc_info, thy_info)
@@ -130,12 +130,12 @@ def run_geom_init(spc, thy_info, ini_thy_info,
             kickoff_size=kickoff_size,
             kickoff_backward=kickoff_backward,
             overwrite=overwrite)
-    else:
-        geo = ts.sadpt_reference_geometry(
-            spc, mod_thy_info, mod_ini_thy_info,
-            thy_save_fs, ini_thy_save_fs,
-            cnf_run_fs, cnf_save_fs, run_fs,
-            dist_info=dist_info, overwrite=overwrite)
+    # else:
+    #     geo = ts.sadpt_reference_geometry(
+    #         spc, mod_thy_info, mod_ini_thy_info,
+    #         thy_save_fs, ini_thy_save_fs,
+    #         cnf_run_fs, cnf_save_fs, run_fs,
+    #         dist_info=dist_info, overwrite=overwrite)
 
     return geo
 
@@ -435,7 +435,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
         if job == 'scan':
 
-            scan.hindered_rotor_scans(
+            hr.hindered_rotor_scans(
                 zma, spc_info, mod_thy_info,
                 ini_scn_run_fs, ini_scn_save_fs,
                 run_tors_names, run_tors_grids,
@@ -680,7 +680,7 @@ def run_ts(spc_dct, spc_name,
             scn_save_fs = autofile.fs.scan(thy_save_path)
 
             # Run the barrierless transition state
-            ts.find.barrierless_transition_state(
+            tsfind.barrierless_transition_state(
                 ts_info, ini_zma, ts_dct, spc_dct,
                 grid,
                 dist_name,
@@ -699,7 +699,7 @@ def run_ts(spc_dct, spc_name,
 
         if not _nobarrier(ts_dct) or (_nobarrier(ts_dct) and switch):
 
-            ts.find.sadpt_transition_state(
+            tsfind.sadpt_transition_state(
                 ini_zma, ts_info, mod_thy_info,
                 thy_run_path, thy_save_path,
                 ini_thy_save_path,

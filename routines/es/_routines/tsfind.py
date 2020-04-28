@@ -4,9 +4,9 @@ Find a TS from the grid as well as associated vdW wells
 
 import automol
 import autofile
-from routines.es._ts import _sadpt as sadpt
-from routines.es._ts import _vtst as vtst
-from routines.es._ts import _vrctst as vrctst
+from routines.es import _sadpt as sadpt
+from routines.es import _vtst as vtst
+from routines.es import _vrctst as vrctst
 
 
 # Main TS finder functions

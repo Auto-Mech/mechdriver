@@ -5,7 +5,7 @@ import sys
 import automol
 import elstruct
 import autofile
-from runners import es as es_runner
+from routines.es import runner as es_runner
 from lib.phydat import phycon
 from lib.phydat import symm
 
@@ -38,10 +38,10 @@ def run_energy(zma, geo, spc_info, thy_info,
         print('No energy found in save filesys. Running energy...')
         # Add options matrix for energy runs for molpro
         if thy_info[0] == 'molpro2015':
-            errors, options_mat = es_runner.par.set_molpro_options_mat(spc_info, geo)
+            errs, optmat = es_runner.par.set_molpro_options_mat(spc_info, geo)
         else:
-            errors = ()
-            options_mat = ()
+            errs = ()
+            optmat = ()
 
         es_runner.run_job(
             job='energy',
@@ -50,8 +50,8 @@ def run_energy(zma, geo, spc_info, thy_info,
             geom=job_geo,
             spc_info=spc_info,
             thy_info=thy_info,
-            errors=errors,
-            options_mat=options_mat,
+            errors=errs,
+            options_mat=optmat,
             overwrite=overwrite,
             **kwargs,
         )

@@ -5,7 +5,7 @@ import automol
 import elstruct
 from routines.es import conformer
 from routines.es import _scan as scan
-from runners import es as es_runner
+from routines.es import runner as es_runner
 from lib import filesys
 from lib.reaction import grid as rxngrid
 
