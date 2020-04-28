@@ -12,6 +12,7 @@ from routines.pf.messf import blocks
 from routines.pf.messf import get_fs_ene_zpe
 from routines.pf.messf import calc_channel_enes
 from routines.pf.messf import _tunnel as tunnel
+from runners import DEFAULT_SCRIPT_DCT
 
 
 # Writer
@@ -183,7 +184,7 @@ def make_channel_pfs(
     It also includes a special treatment for abstraction to include phase space
     blocks and coupling bimolecular fragments to fake van der Waals wells
     """
-    projrot_script_str = script.PROJROT
+    projrot_script_str = DEFAULT_SCRIPT_DCT['projrot']
     bim_str, well_str, ts_str = strs
 
     # Set the model and info for the reaction

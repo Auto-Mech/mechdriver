@@ -7,6 +7,7 @@ import sys
 from drivers import esdriver
 from drivers import thermodriver
 from drivers import ktpdriver
+from runners import build_sub_script_dct
 from lib.amech_io import reader
 from lib.amech_io import printer
 from lib.filesys.build import prefix_fs
@@ -58,6 +59,9 @@ elif RUN_OBJ_DCT['spc']:
 else:
     print('No Proper Run object specified')
     sys.exit()
+
+# Build a dictionary of submission scripts (to finish)
+# SUB_SCRIPT_DCT = build_sub_script_dct(JOB_PATH)
 
 # Initialize the filesystem
 print('\nBuilding the base Run-Save filesystems at')

@@ -37,31 +37,6 @@ def run_qchem_par(prog, method):  # , saddle=False):
                  {'job_options': ['calcall']}]
             ],
         }
-        # if spin:
-        #     kwargs['scf_options'] = [
-        #         elstruct.option.specify(
-        #             elstruct.Option.Scf.Guess.MIX)]
-        #     opt_kwargs['scf_options'] = [
-        #         elstruct.option.specify(
-        #             elstruct.Option.Scf.Guess.MIX)]
-
-        # doesn't quite work for gen_lines case right now
-        # if saddle:
-        #    opt_kwargs = {
-        #        'memory': 20,
-        #        'machine_options': ['%NProcShared=10'],
-        #        'gen_lines': {1: ['# int=ultrafine']},
-        #        'feedback': True,
-        #        'errors': [
-        #            elstruct.Error.OPT_NOCONV
-        #        ],
-        #        'options_mat': [
-        #            [{'gen_lines': [{1: ['# int=superfine']}]},
-        #            {'gen_lines': [{1: ['# int=superfine']}]},
-        #            {'gen_lines': [{1: ['# int=superfine']}]},
-        #            {'gen_lines': [{1: ['# int=superfine']}]}]
-        #        ],
-        #    }
 
     if prog == 'psi4':
         sp_script_str = (
@@ -152,36 +127,6 @@ def run_qchem_par(prog, method):  # , saddle=False):
                      {'job_options': ['numhess=1']}]
                 ],
             }
-
-    # if prog == 'qchem':
-    #     sp_script_str = (
-    #         "#!/usr/bin/env bash\n"
-    #         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
-    #     opt_script_str = sp_script_str
-    #     kwargs = {
-    #         'memory': 20,
-    #     }
-    #     opt_kwargs = {}
-
-    # if prog == 'cfour':
-    #     sp_script_str = (
-    #         "#!/usr/bin/env bash\n"
-    #         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
-    #     opt_script_str = sp_script_str
-    #     kwargs = {
-    #         'memory': 20,
-    #     }
-    #     opt_kwargs = {}
-
-    # if prog == 'orca':
-    #     sp_script_str = (
-    #         "#!/usr/bin/env bash\n"
-    #         "molpro -i run.inp -o run.out >> stdout.log &> stderr.log")
-    #     opt_script_str = sp_script_str
-    #     kwargs = {
-    #         'memory': 20,
-    #     }
-    #     opt_kwargs = {}
 
     return sp_script_str, opt_script_str, kwargs, opt_kwargs
 

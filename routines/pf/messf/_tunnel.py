@@ -7,7 +7,8 @@ import mess_io
 import projrot_io
 import autofile
 from lib import filesys
-from lib.runner import script
+from runners import run_script
+from runners import DEFAULT_SCRIPT_DCT
 
 
 def write_mess_eckart_str(ts_ene, reac_ene, prod_ene, imag_freq):
@@ -143,7 +144,7 @@ def build_trans_coeff_file(ts_dct, pf_levels,
         proj_file.write(projrot_inp_str)
     with open(proj_file_path, 'w') as proj_file:
         proj_file.write(projrot_en_str)
-    script.run_script(script.PROJROT, path)
+    run_script(DEFAULT_SCRIPT_DCT['projrot'], path)
 
     # Read the transmission coefficient file
     with open(os.path.join(path, 'imactint.txt')) as tc_file:

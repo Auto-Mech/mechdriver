@@ -11,7 +11,8 @@ import projrot_io
 import autofile
 from lib import struct
 from lib.phydat import phycon
-from lib.runner import script
+from runners import run_script
+from runners import DEFAULT_SCRIPT_DCT
 
 
 # MESS strings
@@ -512,11 +513,9 @@ def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
     # run messpf
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
         pf_file.write(pf_inp_str)
-    pf_script_str = ("#!/usr/bin/env bash\n"
-                     "export OMP_NUM_THREADS=10\n"
-                     "messpf pf.inp pf.out >> stdout.log &> stderr.log")
+    pf_script_str = DEFAULT_SCRIPT_DCT['messpf']
 
-    script.run_script(pf_script_str, pf_path)
+    run_script(pf_script_str, pf_path)
 
     with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
         output_string = mess_file.read()
