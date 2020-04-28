@@ -398,6 +398,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         ini_cnf_run_fs, ini_cnf_save_locs)
 
     # Create run fs if that directory has been deleted to run the jobs
+    print('inf_cnf_save_locs test:', ini_cnf_save_locs)
     ini_cnf_run_fs[-1].create(ini_cnf_save_locs)
 
     # Get options from the dct or es options lst
@@ -617,15 +618,15 @@ def run_ts(spc_dct, spc_name,
     _, ts_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
     run_fs = autofile.fs.run(ts_run_path)
 
-    # Build the ts fs 
+    # Build the ts fs
     ini_ts_save_fs, ini_ts_save_path = filesys.build.ts_fs_from_thy(ini_thy_save_path)
     _, ini_ts_run_path = filesys.build.ts_fs_from_thy(ini_thy_run_path)
 
     # Set the cnf fs to see if TS is available or for searching
     cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-        thy_save_path, cnf='min')
-    cnf_run_fs, _ = filesys.build.cnf_fs_from_thy(
-        thy_run_path, cnf=None, saddle=True)
+        ts_save_path, cnf='min')
+    cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
+        ts_run_path, cnf=None)
 
     # Get the transition state
     # ts_found = False
@@ -717,7 +718,6 @@ def run_ts(spc_dct, spc_name,
     # _ = ts_found
     # if not ts_found:
     #    print('No TS was found...')
-
 
 def _nobarrier(ts_dct):
     """ Determine if reaction is barrierless

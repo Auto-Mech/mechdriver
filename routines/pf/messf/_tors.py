@@ -405,7 +405,6 @@ def set_groups_ini(zma, tors_name, ts_bnd, saddle):
             if atm in ts_bnd:
                 atm_key = atm
                 break
-    print('ts_bnd test:', gra, atm_key, saddle, ts_bnd, axis)
     group = list(
         automol.graph.branch_atom_keys(
             gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) - set(axis))

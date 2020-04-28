@@ -183,9 +183,12 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
     rmax = automol.zmatrix.values(ts_zma)[dist_name]
     rmin1 = 2.0*phycon.ANG2BOHR
     rmin2 = 1.3*phycon.ANG2BOHR
+    # print('ts_zma:', automol.zmatrix.string(ts_zma))
+    # print('rmin1, rmin2, rmax:', rmin1, rmin2, rmax)
     if ts_bnd_len in bnd.LEN_DCT:
         bnd_len = bnd.LEN_DCT[ts_bnd_len]
         rmin2 = bnd_len + 0.05 * phycon.ANG2BOHR
+        # print('revised rmin2:', rmin2, bnd_len, ts_bnd_len)
     if rmax > rmin1:
         npoints = math.ceil((rmax-rmin1)/interval)
         if npoints < 1:
@@ -197,6 +200,8 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
     grid2 = numpy.linspace(rmin1, rmin2, 18)
     grid = numpy.concatenate((grid1, grid2), axis=None)
     update_guess = True
+
+    # print('grids:', grid, grid1, grid2)
 
     return grid, update_guess
 
