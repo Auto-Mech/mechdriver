@@ -1,7 +1,7 @@
 """ es_runners for coordinate scans
 """
 
-from routines.es import _scan as scan
+from routines.es._routines import _scan as scan
 
 
 def hindered_rotor_scans(

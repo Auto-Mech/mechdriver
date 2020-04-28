@@ -175,7 +175,7 @@ def get_thermo_paths(spc_save_path, spc_info, har_level):
     there is no obvious place to save this information for a random
     assortment of har_level, tors_level, vpt2_level
     """
-    har_levelp = filesys.inf.mod_orb_restrict(
+    har_levelp = filesys.inf.modify_orb_restrict(
         spc_info, har_level)
 
     thy_save_fs = autofile.fs.theory(spc_save_path)

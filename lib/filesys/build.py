@@ -341,3 +341,24 @@ def run_fs_from_prefix(prefix):
     run_fs[0].create()
 
     return run_fs
+
+# Old function that I need to get rid of
+def get_rxn_fs(run_prefix, save_prefix,
+               rxn_ichs, rxn_chgs, rxn_muls, ts_mul):
+    """ get filesystems for a reaction
+    """
+    rxn_run_fs = autofile.fs.reaction(run_prefix)
+    rxn_run_fs[-1].create(
+        [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+    rxn_run_path = rxn_run_fs[-1].path(
+        [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+
+    rxn_ichs = tuple(map(tuple, rxn_ichs))
+    rxn_chgs = tuple(map(tuple, rxn_chgs))
+    rxn_muls = tuple(map(tuple, rxn_muls))
+    rxn_save_fs = autofile.fs.reaction(save_prefix)
+    rxn_save_fs[-1].create([rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+    rxn_save_path = rxn_save_fs[-1].path(
+        [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
+
+    return rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path

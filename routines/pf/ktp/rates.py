@@ -10,7 +10,7 @@ from routines.pf.messf import get_fs_ene_zpe
 from routines.pf.messf import calc_channel_enes
 from routines.pf.messf import _tunnel as tunnel
 from lib.phydat import phycon
-from lib.amech_io import reader
+from lib.amech_io import parser
 from lib.submission import DEFAULT_SCRIPT_DCT
 
 
@@ -105,9 +105,9 @@ def make_all_species_data(rxn_lst, pes_idx, spc_dct,
         specieslist = rxn['reacs'] + rxn['prods']
         rxn_model = rxn['model'][1]
         # Gather PF model and theory level info
-        pf_levels = reader.model.set_es_model_info(
+        pf_levels = parser.model.set_es_model_info(
             model_dct[rxn_model]['es'], thy_dct)
-        pf_model = reader.model.set_pf_model_info(
+        pf_model = parser.model.set_pf_model_info(
             model_dct[rxn_model]['pf'])
 
         # Get PF input header
@@ -189,9 +189,9 @@ def make_channel_pfs(
 
     # Set the model and info for the reaction
     chn_model = rxn['model'][1]
-    pf_levels = reader.model.set_es_model_info(
+    pf_levels = parser.model.set_es_model_info(
         model_dct[chn_model]['es'], thy_dct)
-    spc_model = reader.model.set_pf_model_info(
+    spc_model = parser.model.set_pf_model_info(
         model_dct[chn_model]['pf'])
     ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
     ts_barrierless = model_dct[chn_model]['pf']['ts_barrierless']

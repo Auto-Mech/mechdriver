@@ -3,8 +3,8 @@
 
 import automol
 import elstruct
-from routines.es import conformer
-from routines.es import _scan as scan
+from routines.es._routines import conformer
+from routines.es._routines import _scan as scan
 from routines.es import runner as es_runner
 from lib import filesys
 from lib.reaction import grid as rxngrid

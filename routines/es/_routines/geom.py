@@ -7,8 +7,8 @@ import automol
 import elstruct
 import autofile
 import projrot_io
-from routines.es import conformer
-from routines.es import _wells as wells
+from routines.es._routines import conformer
+from routines.es._routines import wells
 from routines.es import runner as es_runner
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT

@@ -9,7 +9,7 @@ import automol
 from automol.mult.ts import _low as tslow
 from automol.mult.ts import _high as tshigh
 from automol.zmatrix.ts import _shifted_standard_forms_with_gaphs as shift_gra
-from routines.es import geom
+from routines.es._routines import geom
 from lib.phydat import phycon
 from lib.submission import DEFAULT_SCRIPT_DCT
 from lib.filesys.mincnf import min_energy_conformer_locators

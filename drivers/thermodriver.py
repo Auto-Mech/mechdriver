@@ -10,7 +10,7 @@ from routines.pf import thermo as thermo_routines
 from routines.pf import messf
 from routines.pf.runner import thermo as thermo_runner
 from lib import filesys
-from lib.amech_io import reader
+from lib.amech_io import parser
 from lib.amech_io import writer
 
 
@@ -29,7 +29,7 @@ def run(spc_dct,
     save_prefix = run_inp_dct['save_prefix']
 
     # Build a list of the species to calculate thermochem for loops below
-    spc_queue = reader.mechanism.build_spc_queue(rxn_lst)
+    spc_queue = parser.mechanism.build_spc_queue(rxn_lst)
 
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
@@ -43,9 +43,9 @@ def run(spc_dct,
             print("Preparing messpf input for ", spc_name)
 
             # Gather PF model and theory level info
-            pf_levels = reader.model.set_es_model_info(
+            pf_levels = parser.model.set_es_model_info(
                 spc_model_dct[spc_model]['es'], thy_dct)
-            pf_model = reader.model.set_pf_model_info(
+            pf_model = parser.model.set_pf_model_info(
                 spc_model_dct[spc_model]['pf'])
 
             # Get PF input header
@@ -182,9 +182,9 @@ def run(spc_dct,
             print("Starting NASA polynomials calculation for ", spc_name)
 
             # Gather PF model and theory level info
-            pf_levels = reader.model.set_es_model_info(
+            pf_levels = parser.model.set_es_model_info(
                 spc_model_dct[spc_model]['es'], thy_dct)
-            pf_model = reader.model.set_pf_model_info(
+            pf_model = parser.model.set_pf_model_info(
                 spc_model_dct[spc_model]['pf'])
 
             # Begin chemkin string

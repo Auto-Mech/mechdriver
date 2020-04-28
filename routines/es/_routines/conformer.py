@@ -5,7 +5,7 @@ import numpy
 import automol
 import elstruct
 import autofile
-from routines.es import _util as util
+from routines.es._routines import _util as util
 from routines.es import runner as es_runner
 from lib import filesys
 from lib.phydat import bnd
@@ -85,7 +85,7 @@ def conformer_sampling(zma, spc_info,
     )
 
     # Save information about the minimum energy conformer in top directory
-    min_cnf_locs = filesys.minc.min_energy_conformer_locators(cnf_save_fs)
+    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(cnf_save_fs)
     if min_cnf_locs:
         geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
@@ -441,7 +441,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
 
         # Update the conformer trajectory file
         print('')
-        filesys.minc.traj_sort(cnf_save_fs)
+        filesys.mincnf.traj_sort(cnf_save_fs)
 
 
 def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):

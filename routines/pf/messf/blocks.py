@@ -234,7 +234,7 @@ def vtst_with_no_saddle_block(
     """
 
     ts_info = ['', ts_dct['chg'], ts_dct['mul']]
-    multi_level = filesys.inf.mod_orb_restrict(ts_info, multi_info)
+    multi_level = filesys.inf.modify_orb_restrict(ts_info, multi_info)
 
     rxn_save_path = ts_dct['rxn_fs'][3]
     thy_save_fs = autofile.fs.theory(rxn_save_path)
@@ -360,7 +360,7 @@ def vtst_saddle_block(ts_dct, ene_thy_level, geo_thy_level,
             else:
                 scn_save_path = scn_save_fs[-1].path(locs)
                 sp_save_fs = autofile.fs.single_point(scn_save_path)
-                sp_level = filesys.inf.mod_orb_restrict(ts_info, ene_thy_level)
+                sp_level = filesys.inf.modify_orb_restrict(ts_info, ene_thy_level)
                 if sp_save_fs[-1].file.energy.exists(sp_level[1:4]):
                     ene = sp_save_fs[-1].file.energy.read(sp_level[1:4])
                     print('ene-high', ene)
@@ -614,9 +614,9 @@ def fake_species_block(
     tors_model, vib_model, sym_model = spc_model
 
     # prepare the four sets of file systems
-    har_levelp_i = filesys.inf.mod_orb_restrict(
+    har_levelp_i = filesys.inf.modify_orb_restrict(
         spc_info_i, harm_level)
-    har_levelp_j = filesys.inf.mod_orb_restrict(
+    har_levelp_j = filesys.inf.modify_orb_restrict(
         spc_info_j, harm_level)
 
     # Set theory filesystem used throughout
@@ -819,7 +819,7 @@ def set_model_filesys(thy_save_fs, spc_info, level, saddle=False):
     """ Gets filesystem objects for torsional calculations
     """
     # Set the level for the model
-    levelp = filesys.inf.mod_orb_restrict(spc_info, level)
+    levelp = filesys.inf.modify_orb_restrict(spc_info, level)
 
     # Get the save fileystem path
     save_path = thy_save_fs[-1].path(levelp[1:4])
@@ -830,7 +830,7 @@ def set_model_filesys(thy_save_fs, spc_info, level, saddle=False):
 
     # Get the fs object and the locs
     cnf_save_fs = autofile.fs.conformer(save_path)
-    min_cnf_locs = filesys.minc.min_energy_conformer_locators(cnf_save_fs)
+    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(cnf_save_fs)
 
     # Get the save path for the conformers
     if min_cnf_locs:

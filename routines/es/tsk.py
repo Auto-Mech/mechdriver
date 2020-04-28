@@ -5,12 +5,12 @@
 import sys
 import autofile
 import automol
-from routines.es import conformer
-from routines.es import geom
-from routines.es import hr
-from routines.es import tau
-from routines.es import irc
-from routines.es import tsfind
+from routines.es._routines import conformer
+from routines.es._routines import geom
+from routines.es._routines import hr
+from routines.es._routines import tau
+from routines.es._routines import irc
+from routines.es._routines import tsfind
 from routines.es.runner import par as runpar
 from lib import filesys
 from lib import structure
@@ -98,8 +98,8 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     # dist_info = spc['dist_info'] if saddle else ()
 
     # Modify the theory
-    mod_thy_info = filesys.inf.mod_orb_restrict(spc_info, thy_info)
-    mod_ini_thy_info = filesys.inf.mod_orb_restrict(spc_info, ini_thy_info)
+    mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+    mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
     # Set the filesystem objects
     thy_run_fs, thy_run_path = filesys.build.spc_thy_fs_from_root(
@@ -159,8 +159,8 @@ def run_conformer_tsk(job, spc_dct, spc_name,
     overwrite = es_keyword_dct['overwrite']
 
     # Modify the theory
-    mod_thy_info = filesys.inf.mod_orb_restrict(spc_info, thy_info)
-    mod_ini_thy_info = filesys.inf.mod_orb_restrict(spc_info, ini_thy_info)
+    mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+    mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
     # Set the filesystem objects
     if not saddle:
@@ -292,8 +292,8 @@ def run_tau_tsk(job, spc_dct, spc_name,
         *thy_info[0:2])
 
     # Modify the theory
-    mod_thy_info = filesys.inf.mod_orb_restrict(spc_info, thy_info)
-    mod_ini_thy_info = filesys.inf.mod_orb_restrict(spc_info, ini_thy_info)
+    mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+    mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
     # Set the filesystem objects for thy info
     _, thy_run_path = filesys.build.spc_thy_fs_from_root(
@@ -352,8 +352,8 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         *thy_info[0:2])
 
     # Modify the theory
-    mod_thy_info = filesys.inf.mod_orb_restrict(spc_info, thy_info)
-    mod_ini_thy_info = filesys.inf.mod_orb_restrict(spc_info, ini_thy_info)
+    mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+    mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
     # Set the filesystem objects
     if not saddle:
@@ -486,8 +486,8 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         *thy_info[0:2])
 
     # Modify the theory
-    mod_thy_info = filesys.inf.mod_orb_restrict(spc_info, thy_info)
-    mod_ini_thy_info = filesys.inf.mod_orb_restrict(spc_info, ini_thy_info)
+    mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+    mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
@@ -584,15 +584,15 @@ def run_ts(spc_dct, spc_name,
     nobar_mod = es_keyword_dct['nobarrier']
 
     # Modify the theory
-    mod_thy_info = filesys.inf.mod_orb_restrict(ts_info, thy_info)
-    mod_ini_thy_info = filesys.inf.mod_orb_restrict(ts_info, ini_thy_info)
+    mod_thy_info = filesys.inf.modify_orb_restrict(ts_info, thy_info)
+    mod_ini_thy_info = filesys.inf.modify_orb_restrict(ts_info, ini_thy_info)
     if mr_sp_thy_info is not None:
-        mod_mr_sp_thy_info = filesys.inf.mod_orb_restrict(
+        mod_mr_sp_thy_info = filesys.inf.modify_orb_restrict(
             ts_info, mr_sp_thy_info)
     else:
         mod_mr_sp_thy_info = None
     if mr_scn_thy_info is not None:
-        mod_mr_scn_thy_info = filesys.inf.mod_orb_restrict(
+        mod_mr_scn_thy_info = filesys.inf.modify_orb_restrict(
             ts_info, mr_scn_thy_info)
     else:
         mod_mr_scn_thy_info = None
@@ -607,8 +607,8 @@ def run_ts(spc_dct, spc_name,
         save_prefix, rxn_info, mod_thy_info)
 
     # Build filesys for ini thy info for single reference
-    # _, ini_thy_run_path = filesys.build.rxn_thy_fs_from_root(
-    #     run_prefix, rxn_info, mod_ini_thy_info)
+    _, ini_thy_run_path = filesys.build.rxn_thy_fs_from_root(
+        run_prefix, rxn_info, mod_ini_thy_info)
     _, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
         save_prefix, rxn_info, mod_ini_thy_info)
 
@@ -616,6 +616,10 @@ def run_ts(spc_dct, spc_name,
     ts_save_fs, ts_save_path = filesys.build.ts_fs_from_thy(thy_save_path)
     _, ts_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
     run_fs = autofile.fs.run(ts_run_path)
+
+    # Build the ts fs 
+    ini_ts_save_fs, ini_ts_save_path = fbuild.ts_fs_from_thy(ini_thy_save_path)
+    _, ini_ts_run_path = fbuild.ts_fs_from_thy(ini_thy_run_path)
 
     # Set the cnf fs to see if TS is available or for searching
     cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(

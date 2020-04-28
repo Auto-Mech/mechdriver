@@ -5,7 +5,7 @@
 import os
 import autofile
 from lib import filesys
-from lib.amech_io import reader
+from lib.amech_io import parser
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
@@ -25,7 +25,7 @@ def get_mess_path2(
 
     # Set information about the TS and theory methods
     ts_info = (tsdct['ich'], tsdct['chg'], tsdct['mul'])
-    thy_info = reader.model.set_es_model_info(
+    thy_info = parser.model.set_es_model_info(
         model_dct[run_model]['es'], thy_dct)[0]
 
     orb_restr = filesys.inf.orbital_restriction(ts_info, thy_info)

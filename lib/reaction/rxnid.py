@@ -149,7 +149,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             orig_dist = automol.zmatrix.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
             hmcls = not given_class or given_class == 'hydrogenmigration'
             if orig_dist and hmcls:
-                rct_zmas = filesys.read.min_dist_conformer_zma_geo(
+                rct_zmas = filesys.inf.min_dist_conformer_zma_geo(
                     orig_dist, cnf_save_fs_lst[0])
                 ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
                 if ret:

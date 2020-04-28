@@ -6,11 +6,12 @@ import autofile
 import automol
 import elstruct
 import varecof_io
-from routines.es import _scan as scan
-from routines.es._ts import _wfn as wfn
-from runners import es as es_runner
+from routines.es._routines import _scan as scan
+from routines.es._routines import _wfn as wfn
 from lib import filesys
-from lib.runner import script
+from routines.es import runner as es_runner
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 from lib.phydat import phycon
 
 
@@ -178,11 +179,11 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
         inp_file.write(machine_file_str)
 
     # Run VaReCoF
-    script.run_script(script.VARECOF, vrc_path)
+    run_script(DEFAULT_SCRIPT_DCT['varecof'], vrc_path)
 
     # Calculate the flux file from the output
     print('Generating flux file with TS N(E) from VaReCoF output...')
-    script.run_script(script.MCFLUX, vrc_path)
+    run_script(DEFAULT_SCRIPT_DCT['mcflux'], vrc_path)
 
     # Check for success of the VaReCoF run and flux file generation
     mcflux_file = os.path.join(vrc_path, 'mc_flux.out')

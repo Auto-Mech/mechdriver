@@ -8,7 +8,7 @@ from drivers import esdriver
 from drivers import thermodriver
 from drivers import ktpdriver
 # from lib.submission import build_sub_script_dct
-from lib.amech_io import reader
+from lib.amech_io import parser
 from lib.amech_io import printer
 from lib.filesys.build import prefix_fs
 
@@ -23,29 +23,29 @@ printer.program_header('inp')
 
 # Parse the run input
 print('\nReading run.dat...')
-RUN_INP_DCT = reader.run.build_run_inp_dct(JOB_PATH)
-RUN_OBJ_DCT = reader.run.objects_dct(JOB_PATH)
-RUN_JOBS_LST = reader.run.build_run_jobs_lst(JOB_PATH)
-ES_TSK_STR = reader.run.read_es_tsks(JOB_PATH)
+RUN_INP_DCT = parser.run.build_run_inp_dct(JOB_PATH)
+RUN_OBJ_DCT = parser.run.objects_dct(JOB_PATH)
+RUN_JOBS_LST = parser.run.build_run_jobs_lst(JOB_PATH)
+ES_TSK_STR = parser.run.read_es_tsks(JOB_PATH)
 
 # Parse the theory input
 print('\nReading theory.dat...')
-THY_DCT = reader.theory.build_thy_dct(JOB_PATH)
+THY_DCT = parser.theory.build_thy_dct(JOB_PATH)
 
 # Parse the model input
 print('\nReading model.dat...')
-PES_MODEL_DCT, SPC_MODEL_DCT = reader.model.read_models_sections(JOB_PATH)
+PES_MODEL_DCT, SPC_MODEL_DCT = parser.model.read_models_sections(JOB_PATH)
 
 # Parse the species input to get a dct with ALL species in mechanism
 print('\nReading species.csv...')
-SPC_DCT = reader.species.build_spc_dct(JOB_PATH, 'csv', check_stereo=False)
+SPC_DCT = parser.species.build_spc_dct(JOB_PATH, 'csv', check_stereo=False)
 
 # Parse mechanism input and get a dct with info on PESs user request to run
 if RUN_OBJ_DCT['pes']:
     print('\nRunning Calculations for PESs. Need input for mechanism.')
-    CLA_DCT = reader.rclass.parse_rxn_class_file(JOB_PATH)
+    CLA_DCT = parser.rclass.parse_rxn_class_file(JOB_PATH)
     print('  Reading mechanism.dat...')
-    RUN_PES_DCT = reader.mechanism.parse_mechanism_file(
+    RUN_PES_DCT = parser.mechanism.parse_mechanism_file(
         JOB_PATH,
         RUN_INP_DCT['mech'],
         SPC_DCT,
@@ -54,7 +54,7 @@ if RUN_OBJ_DCT['pes']:
     )
 elif RUN_OBJ_DCT['spc']:
     RUN_PES_DCT = {}
-    RUN_SPC_LST_DCT = reader.species.build_run_spc_dct(SPC_DCT, RUN_OBJ_DCT)
+    RUN_SPC_LST_DCT = parser.species.build_run_spc_dct(SPC_DCT, RUN_OBJ_DCT)
     CLA_DCT = {}
 else:
     print('No Proper Run object specified')
@@ -77,7 +77,7 @@ if 'es' in RUN_JOBS_LST:
     printer.program_header('es')
 
     # Build the elec struct tsk lst
-    ES_TSK_LST = reader.run.build_run_es_tsks_lst(
+    ES_TSK_LST = parser.run.build_run_es_tsks_lst(
         ES_TSK_STR, SPC_MODEL_DCT, THY_DCT)
 
     # Call ESDriver for spc in each PES or SPC
@@ -114,7 +114,7 @@ if 'es' in RUN_JOBS_LST:
             RUN_INP_DCT
         )
 
-WRITE_MESSPF, RUN_MESSPF, RUN_NASA = reader.run.set_thermodriver(RUN_JOBS_LST)
+WRITE_MESSPF, RUN_MESSPF, RUN_NASA = parser.run.set_thermodriver(RUN_JOBS_LST)
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
 
     printer.program_header('thermo')
@@ -144,7 +144,7 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
             run_nasa=RUN_NASA,
         )
 
-WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = reader.run.set_ktpdriver(RUN_JOBS_LST)
+WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = parser.run.set_ktpdriver(RUN_JOBS_LST)
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
 
     printer.program_header('ktp')

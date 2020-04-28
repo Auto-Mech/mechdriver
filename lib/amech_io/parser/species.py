@@ -299,6 +299,8 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
                 cla_dct, reacs, prods)
             if flip_rxn:
                 reacs, prods = prods, reacs
+        else:
+            given_class = None
 
         # Get the reaction info flipping if needed
         check_exo = True
@@ -363,7 +365,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
                 dist_name, 0., update_guess, brk_name, None]
 
             # Reaction fs for now
-            rinf = filesys.path.get_rxn_fs(
+            rinf = filesys.build.get_rxn_fs(
                 run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
             [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path] = rinf
             ts_dct[tsname]['rxn_fs'] = [

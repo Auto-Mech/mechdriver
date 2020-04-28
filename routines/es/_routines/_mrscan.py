@@ -362,7 +362,7 @@
 #         ini_thy_save_path = ini_thy_save_fs[-1].path(ini_thy_lvl[1:4])
 #         ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
 #         ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
-#         min_cnf_locs = filesys.minc.min_energy_conformer_locators(
+#         min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
 #             ini_cnf_save_fs)
 #         min_cnf_run_path = ini_cnf_run_fs[-1].path(min_cnf_locs)
 #         min_cnf_save_path = ini_cnf_save_fs[-1].path(min_cnf_locs)

@@ -179,7 +179,7 @@ def get_high_level_energy(
         spc_save_fs[-1].create(spc_info)
         spc_save_path = spc_save_fs[-1].path(spc_info)
 
-    thy_low_level = filesys.inf.mod_orb_restrict(
+    thy_low_level = filesys.inf.modify_orb_restrict(
         spc_info, thy_low_level)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
@@ -200,7 +200,7 @@ def get_high_level_energy(
             return 0.0
         cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
 
-        thy_high_level = filesys.inf.mod_orb_restrict(
+        thy_high_level = filesys.inf.modify_orb_restrict(
             spc_info, thy_high_level)
 
         sp_save_fs = autofile.fs.single_point(cnf_save_path)

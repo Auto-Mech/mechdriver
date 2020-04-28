@@ -2,8 +2,8 @@
 """
 
 import automol
-from routines.es import _scan as scan
-from routines.es._ts import _wfn as wfn
+from routines.es._routines import _scan as scan
+from routines.es._routines import _wfn as wfn
 
 
 def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
