@@ -11,9 +11,17 @@ def hindered_rotor_scans(
         saddle=False, constraint_dct=None, **opt_kwargs):
     """ Perform scans over each of the torsional coordinates
     """
+    
+    print('\nRunning hindered rotor scans for the following rotors...')
+    for names in run_tors_names:
+        print(names)
+    if constraint_dct is not None:
+        print('\nUser requested that all torsions of system will be fixed.')
 
     # for tors_name, tors_grid in zip(tors_names, tors_grids):
     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
+
+        print('\nRunning Rotor: {}...'.format(tors_names))
 
         # Get the dictionary for the torsional modes
         if not tors_names:

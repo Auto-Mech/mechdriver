@@ -3,6 +3,7 @@ Library of functions to interact with the filesystem
 """
 
 import os
+import sys
 import autofile
 from lib.filesys.mincnf import min_energy_conformer_locators
 
@@ -13,7 +14,12 @@ def prefix_fs(prefix):
         :param str prefix: file path - /path/to/root/run
     """
     if not os.path.exists(prefix):
-        os.mkdir(prefix)
+        try:
+            os.mkdir(prefix)
+        except FileNotFoundError:
+            print('Cannot make directory at path specified in run.dat.')
+            print('Path: {}'.format(prefix))
+            sys.exit()
 
 
 # BUILD HIGH LEVEL SPC AND RXN FILESYS #

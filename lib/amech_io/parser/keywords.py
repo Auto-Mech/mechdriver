@@ -126,6 +126,7 @@ SPC_SUPPORTED_KEYWORDS = [
     'mc_nsamp',
     'mc_tau',
     'hind_inc',
+    'tors_names',
     'elec_levels',
     'sym_factor',
     'inchi',

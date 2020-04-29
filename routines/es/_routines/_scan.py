@@ -608,7 +608,10 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names):
 
             traj = []
             for idxs, ene, geo in zip(idxs_lst, enes, geos):
-                comment = 'energy: {:>15.10f}, grid idxs: {}'.format(ene, idxs)
+                comment = (
+                    'energy: {:>15.10f}, '.format(ene) +
+                    'grid idxs: {}'.format(idxs)
+                )
                 traj.append((comment, geo))
 
             traj_path = scn_save_fs[1].file.trajectory.path([coo_names])
@@ -623,6 +626,7 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names):
     print('cscn_path', cscn_run_fs[1].path([coo_names]))
     exists1 = cscn_run_fs[1].exists([coo_names])
     if exists1:
+        locs_lst = []
         scn_locs1 = cscn_run_fs[2].existing([coo_names])
         for locs1 in scn_locs1:
             exists2 = cscn_run_fs[2].exists(locs1)
@@ -656,8 +660,26 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names):
                         cscn_save_fs[-1].file.geometry.write(geo, locs2)
                         cscn_save_fs[-1].file.zmatrix.write(zma, locs2)
 
-            else:
-                print("No cscan to save. (2) Skipping...")
+                        locs_lst.append(locs2)
+
+        if locs_lst:
+            idxs_lst = [locs[-1] for locs in locs_lst]
+            enes = [cscn_save_fs[-1].file.energy.read(locs)
+                    for locs in locs_lst]
+            geos = [cscn_save_fs[-1].file.geometry.read(locs)
+                    for locs in locs_lst]
+
+            traj = []
+            for idxs, ene, geo in zip(idxs_lst, enes, geos):
+                comment = (
+                    'energy: {:>15.10f}, '.format(ene) +
+                    'grid idxs: {}'.format(idxs)
+                )
+                traj.append((comment, geo))
+
+            traj_path = cscn_save_fs[1].file.trajectory.path([coo_names])
+            print("Updating scan trajectory file at {}".format(traj_path))
+            cscn_save_fs[1].file.trajectory.write(traj, [coo_names])
 
     else:
         print("No cscan to save. (1) Skipping...")

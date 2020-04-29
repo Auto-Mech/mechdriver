@@ -120,8 +120,10 @@ def read_spc_amech(job_path):
     # Read the AMech species string
     if os.path.exists(os.path.join(job_path, DAT_INP)):
         spc_amech_str = ptt.read_inp_str(job_path, DAT_INP)
+        print('Found species.dat. Reading file...')
     else:
         spc_amech_str = ''
+        print('No species.dat file...')
 
     # Build the keyword dcts
     amech_dct = {}
@@ -358,7 +360,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
             # Put class stuff in the dct
             dct_keys = ['zma', 'dist_name', 'brk_name', 'grid',
                         'frm_bnd_key', 'brk_bnd_key',
-                        'tors_names', 'update_guess']
+                        'auto_tors_names', 'update_guess']
             ts_dct[tsname].update(dict(zip(dct_keys, ret1)))
             ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
             ts_dct[tsname]['dist_info'] = [

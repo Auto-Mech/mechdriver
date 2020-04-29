@@ -263,7 +263,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             geo_run_path = cnf_run_fs[-1].path([locs])
             geo_save_path = cnf_save_fs[-1].path([locs])
             cnf_run_fs[-1].create([locs])
-            zma, geo = filesys.read.get_zma_geo(cnf_save_fs, [locs])
+            zma, geo = filesys.inf.get_zma_geo(cnf_save_fs, [locs])
             eval(ES_TSKS[job])(
                 zma, geo, spc_info, mod_thy_info,
                 cnf_save_fs, geo_run_path, geo_save_path, [locs],
@@ -328,7 +328,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
         for locs in tau_locs:
             geo_run_path = tau_run_fs[-1].path(locs)
             geo_save_path = tau_save_fs[-1].path(locs)
-            zma, geo = filesys.read.get_zma_geo(tau_save_fs, locs)
+            zma, geo = filesys.inf.get_zma_geo(tau_save_fs, locs)
             tau_run_fs[-1].create(locs)
             eval(ES_TSKS[job])(
                 zma, geo, spc_info, mod_thy_info,
@@ -408,13 +408,13 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     ndim_tors = es_keyword_dct['ndim_tors']
     frz_all_tors = es_keyword_dct['frz_all_tors']
     scan_increment = spc['hind_inc']
-    run_tors_names = spc['tors_names'] if 'tors_names' in spc else ()
-    run_tors_names = [[name] for name in run_tors_names]
 
-    # Set up the hind rot names by reading zma, geo from ini filesystem
-    zma, geo = filesys.read.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
+    # Get tors names from spc dct, if any given
+    dct_tors_names = structure.tors.get_names_from_dct(spc, ndim_tors)
+
+    zma, geo = filesys.inf.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
     run_tors_names, run_tors_grids = structure.tors.hr_prep(
-        zma, geo, run_tors_names=run_tors_names,
+        zma, geo, run_tors_names=dct_tors_names,
         scan_increment=scan_increment, ndim_tors=ndim_tors,
         saddle=saddle, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
 
@@ -454,7 +454,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                     for locs in scn_locs:
                         geo_run_path = ini_scn_run_fs[-1].path(locs)
                         geo_save_path = ini_scn_save_fs[-1].path(locs)
-                        zma, geo = filesys.read.get_zma_geo(
+                        zma, geo = filesys.inf.get_zma_geo(
                             ini_scn_save_fs, locs)
                         ini_scn_run_fs[-1].create(locs)
                         eval(ES_TSKS[job])(
@@ -531,7 +531,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
             *thy_info[0:2])
 
-        zma, geo = filesys.read.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
+        zma, geo = filesys.inf.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
         irc.scan(
             geo, spc_info, mod_thy_info, coo_name, irc_idxs,
             ini_scn_save_fs, ini_scn_run_fs, ini_cnf_run_paths[0],
@@ -548,7 +548,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
             locs = [[coo_name], [idx]]
             geo_run_path = ini_scn_run_fs[-1].path(locs)
             geo_save_path = ini_scn_save_fs[-1].path(locs)
-            zma, geo = filesys.read.get_zma_geo(ini_scn_save_fs, locs)
+            zma, geo = filesys.inf.get_zma_geo(ini_scn_save_fs, locs)
             ini_scn_run_fs[-1].create(locs)
             eval(ES_TSKS[job])(
                 zma, geo, spc_info, mod_thy_info,
@@ -637,7 +637,7 @@ def run_ts(spc_dct, spc_name,
         # geo, zma, final_dist = check_filesys_for_ts(
         #     ts_dct, ts_zma, cnf_save_fs, overwrite,
         #     typ, dist_info, dist_name, bkp_ts_class_data)
-        zma = cnf_save_fs[-1].file.zmatrix.read(cnf_save_locs)
+        zma = cnf_save_fs[-1].file.zmatrix.inf(cnf_save_locs)
 
         # Add an angle check which is added to spc dct for TS (crap code...)
         vals = automol.zmatrix.values(zma)

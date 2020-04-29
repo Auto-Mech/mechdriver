@@ -3,6 +3,7 @@
 
 import sys
 import os
+import ast
 import autoparse.find as apf
 import autoparse.pattern as app
 from lib.amech_io.cleaner import remove_whitespace
@@ -140,7 +141,14 @@ def format_param_vals(pvals):
 
     value = value.strip()
     # Format values if it is a list (of string(s), boolean(s), int(s))
-    if all(sym in value for sym in ('[', ']')):
+    if all(sym in value for sym in ('[[', ']]')):
+        value = value.replace('D', '').replace('d', '') 
+        value = ast.literal_eval(value)
+        frmtd_value = []
+        for sub_lst in value:
+            assert all(isinstance(val, int) for val in sub_lst)
+            frmtd_value.append(['D{}'.format(val) for val in sub_lst])
+    elif all(sym in value for sym in ('[', ']')):
         value = value.replace('[', '').replace(']', '')
         value = value.split(',')
         frmtd_value = []
