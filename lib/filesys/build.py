@@ -316,6 +316,28 @@ def cscn_fs_from_ts(ts_prefix, coo_names):
     return cscn_fs, cscn_locs
 
 
+def sp_from_prefix(prefix, thy_info):
+    """ Build single point fs from prefix
+    """
+
+    sp_fs = autofile.fs.single_point(prefix)
+    sp_fs[-1].create(thy_info[1:4])
+    sp_fs_path = sp_fs[-1].path(thy_info[1:4])
+
+    return sp_fs, sp_fs_path
+
+
+def high_spin_from_prefix(prefix, thy_info):
+    """
+    """
+
+    hs_fs = autofile.fs.high_spin(prefix)
+    hs_fs[-1].create(thy_info[1:4])
+    hs_fs_path = hs_fs[-1].path(thy_info[1:4])
+
+    return hs_fs, hs_fs_path
+
+
 def ts_fs_from_root(root_prefix, spc_info, thy_info):
     """ Create species filesystem object and path
     """

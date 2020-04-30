@@ -194,7 +194,7 @@ def modify_spc_dct(job_path, spc_dct):
 
     # Final loop to add in things that are needed but could be missing
     for spc in mod_spc_dct:
-        if spc != 'global':
+        if spc != 'global' and 'ts_' not in spc:
             ich, mul = mod_spc_dct[spc]['ich'], mod_spc_dct[spc]['mul']
             if 'elec_levs' not in mod_spc_dct[spc]:
                 if (ich, mul) in eleclvl.DCT:
@@ -287,6 +287,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     ts_dct = {}
     for chn_idx, rxn in enumerate(rxn_lst):
 
+        print(rxn_lst)
         # Get reac and prod
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx+1)
         reacs = rxn['reacs']
@@ -360,7 +361,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
             # Put class stuff in the dct
             dct_keys = ['zma', 'dist_name', 'brk_name', 'grid',
                         'frm_bnd_key', 'brk_bnd_key',
-                        'auto_tors_names', 'update_guess']
+                        'amech_ts_tors_names', 'update_guess']
             ts_dct[tsname].update(dict(zip(dct_keys, ret1)))
             ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
             ts_dct[tsname]['dist_info'] = [

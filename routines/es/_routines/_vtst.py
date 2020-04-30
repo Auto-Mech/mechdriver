@@ -1,44 +1,42 @@
 """ Run and Read the scans from VTST calculations
 """
 
-import automol
+from routines.es._routines import _mrscan as mrscan
 from routines.es._routines import _scan as scan
-from routines.es._routines import _wfn as wfn
 
 
-def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
-                  high_mul, grid1, grid2, dist_name,
-                  multi_level,
-                  multi_info, ini_thy_info, thy_info,
-                  run_prefix, save_prefix, scn_run_fs, scn_save_fs,
-                  overwrite, update_guess, **opt_kwargs):
+def run_scan(ts_zma, ts_info, ts_formula, high_mul,
+             spc_1_info, spc_2_info,
+             grid1, grid2, dist_name,
+             num_act_orb, num_act_elc,
+             mod_var_scn_thy_info,
+             mod_var_sp1_thy_info, mod_var_sp2_thy_info,
+            hs_var_scn_thy_info,
+            hs_var_sp1_thy_info,
+            hs_var_sp2_thy_info,
+             mod_ini_thy_info, mod_thy_info,
+             scn_run_fs, scn_save_fs,
+             run_prefix, save_prefix,
+             overwrite, update_guess,
+             **opt_kwargs):
     """ Run the scan for VTST calculations
     """
-    # Set the active space
-    num_act_orb, num_act_elc = wfn.active_space(
-        ts_dct, spc_dct, ts_dct['high_mul'])
 
-    # Set the gradients and Hessians
-    gradient = False
-    hessian = True
-
-    scan.run_multiref_rscan(
-        formula=ts_formula,
+    mrscan.run_multiref_rscan(
+        ts_zma=ts_zma,
+        ts_info=ts_info,
+        ts_formula=ts_formula,
         high_mul=high_mul,
-        zma=ts_zma,
-        spc_info=ts_info,
-        multi_level=multi_level,
-        dist_name=dist_name,
         grid1=grid1,
         grid2=grid2,
+        dist_name=dist_name,
+        num_act_orb=num_act_orb,
+        num_act_elc=num_act_elc,
+        multi_level=mod_var_scn_thy_info,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
         overwrite=overwrite,
         update_guess=update_guess,
-        gradient=gradient,
-        hessian=hessian,
-        num_act_elc=num_act_elc,
-        num_act_orb=num_act_orb,
         **opt_kwargs
     )
 
@@ -46,36 +44,33 @@ def run_vtst_scan(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
         coo_names=[dist_name],
-        gradient=gradient,
-        hessian=hessian,
     )
 
+    # Calculate and store the infinite separation energy
     locs = [[dist_name], [grid1[0]]]
-    # calculate and save the infinite seperation energy
-    print('ts zma locs')
-    print(locs)
+    print('ts zma locs', locs)
     ts_zma = scn_save_fs[-1].file.zmatrix.read(locs)
-    rcts = ts_dct['reacs']
-    spc_1_info = [spc_dct[rcts[0]]['ich'],
-                  spc_dct[rcts[0]]['chg'],
-                  spc_dct[rcts[0]]['mul']]
-    spc_2_info = [spc_dct[rcts[1]]['ich'],
-                  spc_dct[rcts[1]]['chg'],
-                  spc_dct[rcts[1]]['mul']]
 
-    inf_sep_ene = scan.infinite_separation_energy(
+    # set up all the file systems for the TS
+    # start with the geo and reference theory info
+    geo_run_path = scn_run_fs[-1].path(locs)
+    geo_save_path = scn_save_fs[-1].path(locs)
+    geo = scn_save_fs[-1].file.geometry.read(locs)
+
+    inf_sep_ene = mrscan.infinite_separation_energy(
         spc_1_info, spc_2_info, ts_info, high_mul, ts_zma,
-        ini_thy_info, thy_info, multi_info,
-        run_prefix, save_prefix, scn_run_fs, scn_save_fs, locs,
-        num_act_elc=num_act_elc,
-        num_act_orb=num_act_orb)
-
+        mod_var_scn_thy_info,
+        mod_var_sp1_thy_info, mod_var_sp2_thy_info,
+        hs_var_scn_thy_info,
+        hs_var_sp1_thy_info,
+        hs_var_sp2_thy_info,
+        mod_ini_thy_info,
+        geo, geo_run_path, geo_save_path,
+        run_prefix, save_prefix,
+        num_act_orb, num_act_elc)
     inf_locs = [[dist_name], [1000.]]
     scn_save_fs[-1].create(inf_locs)
     scn_save_fs[-1].file.energy.write(inf_sep_ene, inf_locs)
-
-    geo = automol.zmatrix.geometry(ts_zma)
-    zma = ts_zma
-    final_dist = grid1[0]
-
-    return geo, zma, final_dist
+    # geo = automol.zmatrix.geometry(ts_zma)
+    # zma = ts_zma
+    # final_dist = grid1[0]

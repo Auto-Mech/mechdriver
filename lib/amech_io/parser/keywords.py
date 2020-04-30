@@ -73,7 +73,8 @@ ES_TSK_SUPPORTED_DCT = {
 }
 ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'init_geom': ['runlvl', 'inplvl', 'overwrite'],
-    'find_ts': ['runlvl', 'inplvl', 'mr_splvl', 'mr_scnlvl', 'nobarrier', 'overwrite'],
+    'find_ts': ['runlvl', 'inplvl', 'var_splvl1', 'var_splvl2', 'var_scnlvl',
+                'nobarrier', 'overwrite'],
     'conf_samp': ['runlvl', 'inplvl', 'overwrite'],
     'conf_energy': ['runlvl', 'inplvl', 'zpve_min', 'overwrite'],
     'conf_grad': ['runlvl', 'inplvl', 'zpve_min', 'overwrite'],
@@ -82,7 +83,8 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'hr_scan': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 'overwrite'],
     'hr_grad': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 'overwrite'],
     'hr_hess': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 'overwrite'],
-    'hr_energy': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 'overwrite'],
+    'hr_energy': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors',
+                  'overwrite'],
     'tau_samp': ['runlvl', 'inplvl', 'overwrite'],
     'tau_energy': ['runlvl', 'inplvl', 'overwrite'],
     'tau_grad': ['runlvl', 'inplvl', 'overwrite'],
@@ -105,8 +107,9 @@ ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
 ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'runlvl': None,
     'inplvl': None,
-    'mr_splvl': None,
-    'mr_scnlvl': None,
+    'var_splvl1': None,
+    'var_splvl2': None,
+    'var_scnlvl': None,
     'frz_all_tors': False,
     'ndim_tors': '1dhr',
     'zpve_min': False,

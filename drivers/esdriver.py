@@ -35,18 +35,24 @@ def run(pes_idx,
             es_keyword_dct['inplvl'], thy_dct)
         thy_info = filesys.inf.get_es_info(
             es_keyword_dct['runlvl'], thy_dct)
-        mr_scn_thy_info = None
-        mr_sp_thy_info = None
-        # if es_keyword_dct['mr_scnlvl'] is not None:
-        #     mr_scn_thy_info = filesys.inf.get_es_info(
-        #         es_keyword_dct['mr_scnlvl'], thy_dct)
+        var_scn_thy_info = None
+        var_sp1_thy_info = None
+        var_sp2_thy_info = None
+        # if es_keyword_dct['var_scnlvl'] is not None:
+        #     var_scn_thy_info = filesys.inf.get_es_info(
+        #         es_keyword_dct['var_scnlvl'], thy_dct)
         # else:
-        #     mr_scn_thy_info = None
-        # if es_keyword_dct['mr_splvl'] is not None:
-        #     mr_sp_thy_info = filesys.inf.get_es_info(
-        #         es_keyword_dct['mr_splvl'], thy_dct)
+        #     var_scn_thy_info = None
+        # if es_keyword_dct['var_splvl1'] is not None:
+        #     var_sp1_thy_info = filesys.inf.get_es_info(
+        #         es_keyword_dct['var_splvl1'], thy_dct)
         # else:
-        #     mr_sp_thy_info = None
+        #     var_sp1_thy_info = None
+        # if es_keyword_dct['var_splvl2'] is not None:
+        #     var_sp2_thy_info = filesys.inf.get_es_info(
+        #         es_keyword_dct['var_splvl2'], thy_dct)
+        # else:
+        #     var_sp2_thy_info = None
 
         # Build the queue of species based on user request
         if obj == 'spc':
@@ -68,6 +74,6 @@ def run(pes_idx,
             run_tsk(
                 tsk, spc_dct, spc_name,
                 thy_info, ini_thy_info,
-                mr_sp_thy_info, mr_scn_thy_info,
+                var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info,
                 run_prefix, save_prefix,
                 es_keyword_dct=es_keyword_dct)

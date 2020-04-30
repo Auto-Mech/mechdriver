@@ -11,7 +11,7 @@ def hindered_rotor_scans(
         saddle=False, constraint_dct=None, **opt_kwargs):
     """ Perform scans over each of the torsional coordinates
     """
-    
+
     print('\nRunning hindered rotor scans for the following rotors...')
     for names in run_tors_names:
         print(names)

@@ -165,6 +165,11 @@ def check_es_tsks_supported(es_tsks, thy_dct):
                             print('*ERROR: tsk theory level',
                                   '{} not given in theory.dat'.format(val))
                             sys.exit()
+                    elif key in ('mr_splvl', 'mr_scnlvl'):
+                        if val not in 'molpro2015':
+                            print('*ERROR: mr theory level only avail',
+                                  'for molpro')
+                            sys.exit()
                     else:
                         if val not in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
                             print('*ERROR: key {}'.format(key),

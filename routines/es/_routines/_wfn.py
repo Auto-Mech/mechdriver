@@ -63,17 +63,14 @@ def wfn_string(spc_info, formula, num_act_elc, num_act_orb,
 
 
 def multiref_wavefunction_guess(high_mul, zma,
-                                spc_info, thy_level,
+                                spc_info, mod_thy_info,
                                 casscf_options):
     """ Prepare wavefunction template for multireference electronic structure calcs
     """
 
     # Set variables for the programs
-    charge = spc_info[1]
-    mul = spc_info[2]
-    basis = thy_level[2]
-    prog = thy_level[0]
-    prog = 'molpro2015'
+    [_, charge, mul] = spc_info
+    [prog, _, basis, _] = mod_thy_info
 
     # Write a string to for high-spin UHF wfn calculation
     guess_str1 = elstruct.writer.energy(
