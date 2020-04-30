@@ -2,7 +2,7 @@
 """
 
 import automol
-from routines.es import conformer
+from routines.es._routines import conformer
 
 
 def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,

@@ -9,9 +9,10 @@ import automol
 import mess_io
 import projrot_io
 import autofile
+from lib import structure
 from lib.phydat import phycon
-from lib.runner import script
-from lib.struct import tors as ptors
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 # MESS strings
@@ -25,7 +26,7 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
 
     # Build constraint dct
     if frz_tors:
-        constraint_dct = ptors.build_constraint_dct(zma, tors_names)
+        constraint_dct = structure.tors.build_constraint_dct(zma, tors_names)
     else:
         constraint_dct = None
 
@@ -511,11 +512,9 @@ def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
     # run messpf
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
         pf_file.write(pf_inp_str)
-    pf_script_str = ("#!/usr/bin/env bash\n"
-                     "export OMP_NUM_THREADS=10\n"
-                     "messpf pf.inp pf.out >> stdout.log &> stderr.log")
+    pf_script_str = DEFAULT_SCRIPT_DCT['messpf']
 
-    script.run_script(pf_script_str, pf_path)
+    run_script(pf_script_str, pf_path)
 
     with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
         output_string = mess_file.read()

@@ -2,6 +2,7 @@
   Handle rotational data info
 """
 
+
 def read_rotational_values(vpt2_save_fs, vpt2_min_cnf_locs):
     """ Read the rotational info from filesys
     """

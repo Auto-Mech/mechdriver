@@ -4,16 +4,14 @@
 """
 
 import os
-import numpy
-import routines
 import autofile
-from routines.pf import thermo
-from lib.load import model as loadmodel
-from lib.load import mechanism as loadmech
-from lib.filesystem import inf as finf
-from lib.runner import therm as thmrunner
-from lib.outpt import chemkin as cout
-from lib import printmsg
+import routines
+from routines.pf import thermo as thermo_routines
+from routines.pf import messf
+from routines.pf.runner import thermo as thermo_runner
+from lib import filesys
+from lib.amech_io import parser
+from lib.amech_io import writer
 
 
 def run(spc_dct,
@@ -31,7 +29,7 @@ def run(spc_dct,
     save_prefix = run_inp_dct['save_prefix']
 
     # Build a list of the species to calculate thermochem for loops below
-    spc_queue = loadmech.build_spc_queue(rxn_lst)
+    spc_queue = parser.mechanism.build_spc_queue(rxn_lst)
 
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
@@ -45,17 +43,17 @@ def run(spc_dct,
             print("Preparing messpf input for ", spc_name)
 
             # Gather PF model and theory level info
-            pf_levels = loadmodel.set_es_model_info(
+            pf_levels = parser.model.set_es_model_info(
                 spc_model_dct[spc_model]['es'], thy_dct)
-            pf_model = loadmodel.set_pf_model_info(
+            pf_model = parser.model.set_pf_model_info(
                 spc_model_dct[spc_model]['pf'])
 
             # Get PF input header
             temps = pes_model_dct[pes_model]['therm_temps']
-            global_pf_str = routines.pf.messf.blocks.get_pf_header(temps)
+            global_pf_str = messf.blocks.get_pf_header(temps)
 
             # Set up the species filesystem
-            spc_info = finf.get_spc_info(spc_dct[spc_name])
+            spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
             spc_save_fs = autofile.fs.species(save_prefix)
             spc_save_fs[-1].create(spc_info)
             spc_save_path = spc_save_fs[-1].path(spc_info)
@@ -63,16 +61,16 @@ def run(spc_dct,
             # Read the ZPVE from the filesystem if not doing tau
             tau_mod = bool(spc_model_dct[spc_model]['pf']['tors'] == 'tau')
             if not tau_mod:
-                zpe = routines.pf.messf.get_zero_point_energy(
+                zpe = messf.get_zero_point_energy(
                     spc, spc_dct[spc_name], pf_levels, pf_model,
                     save_prefix=spc_save_path)
-                zpe_str = routines.pf.messf.get_zpe_str(
+                zpe_str = messf.get_zpe_str(
                     spc_dct[spc_name], zpe)
             else:
                 zpe_str = ''
 
             # Generate the partition function
-            spc_str, data_str_dct, _ = routines.pf.messf.blocks.species_block(
+            spc_str, data_str_dct, _ = messf.blocks.species_block(
                 spc=spc,
                 spc_dct_i=spc_dct[spc_name],
                 spc_info=spc_info,
@@ -83,18 +81,18 @@ def run(spc_dct,
 
             # Write the MESSPF input file
             harm_thy_info = pf_levels[2]
-            pf_input = routines.pf.messf.blocks.get_pf_input(
+            pf_input = messf.blocks.get_pf_input(
                 spc_name, spc_str, global_pf_str, zpe_str)
-            pf_path, nasa_path = thmrunner.get_thermo_paths(
+            pf_path, nasa_path = thermo_runner.get_thermo_paths(
                 spc_save_path, spc_info, harm_thy_info)
-            routines.pf.messf.blocks.write_pf_input(
+            messf.blocks.write_pf_input(
                 pf_input, data_str_dct, pf_path)
 
     # Use MESS partition functions to compute thermo quantities
     if run_messpf:
 
         # Setup the CHEMKIN level comment string
-        # ene_str = cout.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
+        # ene_str = writer.chemkin.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
 
         # Read the high-level energy
         for spc in spc_queue:
@@ -105,7 +103,7 @@ def run(spc_dct,
             print("Starting messpf calculation for ", spc_name)
 
             # Set up the species filesystem
-            spc_info = finf.get_spc_info(spc_dct[spc_name])
+            spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
             spc_save_fs = autofile.fs.species(save_prefix)
             spc_save_fs[-1].create(spc_info)
             spc_save_path = spc_save_fs[-1].path(spc_info)
@@ -113,27 +111,27 @@ def run(spc_dct,
             # Read the ZPVE from the filesystem if not doing tau
             tau_mod = bool(spc_model_dct[spc_model]['pf']['tors'] == 'tau')
             if not tau_mod:
-                zpe = routines.pf.messf.get_zero_point_energy(
+                zpe = messf.get_zero_point_energy(
                     spc, spc_dct[spc_name], pf_levels, pf_model,
                     save_prefix=spc_save_path)
-                zpe_str = routines.pf.messf.get_zpe_str(
+                zpe_str = messf.get_zpe_str(
                     spc_dct[spc_name], zpe)
             else:
                 zpe_str = ''
 
             # Write the MESSPF input file
             harm_thy_info = pf_levels[2]
-            pf_path, nasa_path = thmrunner.get_thermo_paths(
+            pf_path, nasa_path = thermo_runner.get_thermo_paths(
                 spc_save_path, spc_info, harm_thy_info)
 
             # Run MESSPF
-            thmrunner.run_pf(pf_path)
+            thermo_runner.run_pf(pf_path)
 
     # Use MESS partition functions to compute thermo quantities
     if run_nasa:
 
         # Setup the CHEMKIN level comment string
-        # ene_str = cout.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
+        # ene_str = writer.chemkin.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
 
         # Read the high-level energy
         for spc in spc_queue:
@@ -148,7 +146,7 @@ def run(spc_dct,
             ref_enes = spc_model_dct[spc_model]['options']['ref_enes']
 
             # Determine info about the basis species used in thermochem calcs
-            basis_dct, uniref_dct, msg = routines.pf.thermo.basis.prepare_refs(
+            basis_dct, uniref_dct, msg = thermo_routines.basis.prepare_refs(
                 ref_scheme, spc_dct, spc_queue)
             print(msg)
 
@@ -156,7 +154,7 @@ def run(spc_dct,
             spc_basis, coeff_basis = basis_dct[spc]
 
             # Get the energies for the spc and its basis
-            ene_spc = routines.pf.messf.ene.get_fs_ene_zpe(
+            ene_spc = messf.ene.get_fs_ene_zpe(
                 spc_dct, spc_name,
                 thy_dct, spc_model_dct, spc_model,
                 save_prefix, saddle=False,
@@ -172,8 +170,8 @@ def run(spc_dct,
 
         # Write the NASA polynomials in CHEMKIN format
         chemkin_set_str = ''
-        starting_path = thmrunner.get_starting_path()
-        ckin_path = thmrunner.prepare_path(starting_path, 'ckin')
+        starting_path = thermo_runner.get_starting_path()
+        ckin_path = thermo_runner.prepare_path(starting_path, 'ckin')
         if not os.path.exists(ckin_path):
             os.makedirs(ckin_path)
         for spc in spc_queue:
@@ -184,24 +182,24 @@ def run(spc_dct,
             print("Starting NASA polynomials calculation for ", spc_name)
 
             # Gather PF model and theory level info
-            pf_levels = loadmodel.set_es_model_info(
+            pf_levels = parser.model.set_es_model_info(
                 spc_model_dct[spc_model]['es'], thy_dct)
-            pf_model = loadmodel.set_pf_model_info(
+            pf_model = parser.model.set_pf_model_info(
                 spc_model_dct[spc_model]['pf'])
 
             # Begin chemkin string
-            # chemkin_header_str = cout.run_ckin_header(
+            # chemkin_header_str = writer.chemkin.run_ckin_header(
             #     pf_levels, pf_model)
             chemkin_header_str = ''
             chemkin_set_str += chemkin_header_str
 
             # Set up the paths for running jobs
             harm_thy_info = pf_levels[2]
-            pf_path, nasa_path = thmrunner.get_thermo_paths(
+            pf_path, nasa_path = thermo_runner.get_thermo_paths(
                 spc_save_path, spc_info, harm_thy_info)
 
             # Read the temperatures from the pf.dat file, check if viable
-            temps = thmrunner.read_messpf_temps(pf_path)
+            temps = thermo_runner.read_messpf_temps(pf_path)
             print('temps', temps)
             print('Attempting to fit NASA polynomials from',
                   '200-1000 and 1000-3000 K ranges using\n',
@@ -210,33 +208,33 @@ def run(spc_dct,
 
             # Write and run the thermp file to get Hf0k and ...
             print('therm path', nasa_path)
-            thmrunner.go_to_path(nasa_path)
-            thmrunner.write_thermp_inp(spc_dct[spc_name], temps)
+            thermo_runner.go_to_path(nasa_path)
+            thermo_runner.write_thermp_inp(spc_dct[spc_name], temps)
             # not getting spc str, so this isnt working, fix this
             # if spc_dct[spc]['ene'] == 0.0 or spc_dct[spc]['spc_str'] == '':
             #     print('Cannot generate thermo for species',
             #           '{} '.format(spc_dct[spc]['ich']),
             #           'because information is still missing:')
             #     continue
-            hf298k = thmrunner.run_thermp(pf_path, nasa_path)
+            hf298k = thermo_runner.run_thermp(pf_path, nasa_path)
             spc_dct[spc_name]['Hfs'].append(hf298k)
 
             # Run PAC99 to get a NASA polynomial string in its format
-            pac99_str = thmrunner.run_pac(spc_dct[spc_name], nasa_path)
+            pac99_str = thermo_runner.run_pac(spc_dct[spc_name], nasa_path)
             print('str\n', pac99_str)
-            pac99_poly_str = thermo.nasapoly.get_pac99_polynomial(pac99_str)
+            poly_str = thermo_routines.nasapoly.get_pac99_polynomial(pac99_str)
 
             # Convert the polynomial from PAC99 to CHEMKIN
-            chemkin_poly_str = cout.run_ckin_poly(
-                spc_name, spc_dct[spc_name], pac99_poly_str)
+            chemkin_poly_str = writer.chemkin.run_ckin_poly(
+                spc_name, spc_dct[spc_name], poly_str)
 
             # Write a string for a single spc file to a set
             chemkin_spc_str = chemkin_header_str + chemkin_poly_str
             chemkin_set_str += chemkin_poly_str
 
             # Write the CHEMKIN string to a file
-            thmrunner.go_to_path(starting_path)
-            cout.write_nasa_file(
+            thermo_runner.go_to_path(starting_path)
+            writer.chemkin.write_nasa_file(
                 spc_dct[spc_name], ckin_path, nasa_path, chemkin_spc_str)
 
         # Write the NASA polynomial strings to a CHEMKIN-formatted file

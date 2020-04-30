@@ -6,11 +6,9 @@ import os
 import mess_io
 import projrot_io
 import autofile
-from lib.runner import script
-from lib.filesystem import orb as fsorb
-
-# rxn path coords from g09 outpt
-# rxn path enes from g09 outpt
+from lib import filesys
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 def write_mess_eckart_str(ts_ene, reac_ene, prod_ene, imag_freq):
@@ -88,7 +86,7 @@ def build_trans_coeff_file(ts_dct, pf_levels,
             else:
                 scn_save_path = scn_save_fs[-1].path(locs)
                 sp_save_fs = autofile.fs.single_point(scn_save_path)
-                orb_restr = fsorb.orbital_restriction(ts_info, ene_thy_level)
+                orb_restr = filesys.inf.orbital_restriction(ts_info, ene_thy_level)
                 sp_level = ene_thy_level[0:3]
                 sp_level.append(orb_restr)
                 if sp_save_fs[-1].file.energy.exists(sp_level[1:4]):
@@ -146,7 +144,7 @@ def build_trans_coeff_file(ts_dct, pf_levels,
         proj_file.write(projrot_inp_str)
     with open(proj_file_path, 'w') as proj_file:
         proj_file.write(projrot_en_str)
-    script.run_script(script.PROJROT, path)
+    run_script(DEFAULT_SCRIPT_DCT['projrot'], path)
 
     # Read the transmission coefficient file
     with open(os.path.join(path, 'imactint.txt')) as tc_file:

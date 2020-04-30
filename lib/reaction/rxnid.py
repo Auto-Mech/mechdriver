@@ -2,9 +2,9 @@
 """
 
 import automol
+from lib import filesys
 from lib.phydat import phycon
 from lib.reaction import grid as rxngrid
-from lib.filesystem import read as fsread
 
 
 def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
@@ -43,7 +43,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     syms = automol.zmatrix.symbols(ts_zma)
     ts_bnd_len = tuple(sorted(map(syms.__getitem__, dist_coo)))
     grid, update_guess, bkp_grid, bkp_update_guess = rxngrid.build_grid(
-        typ, bkp_typ, ts_bnd_len, ts_zma, dist_name, npoints=None)
+        typ, bkp_typ, ts_bnd_len, ts_zma, dist_name, brk_name, npoints=None)
 
     # Build class data lists to return from the function
     if typ:
@@ -149,7 +149,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             orig_dist = automol.zmatrix.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
             hmcls = not given_class or given_class == 'hydrogenmigration'
             if orig_dist and hmcls:
-                rct_zmas = fsread.min_dist_conformer_zma_geo(
+                rct_zmas = filesys.inf.min_dist_conformer_zma_geo(
                     orig_dist, cnf_save_fs_lst[0])
                 ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
                 if ret:
@@ -195,7 +195,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(
                 rct_zmas, prd_zmas)
             if orig_dist:
-                rct_zmas = fsread.min_dist_conformer_zma_geo(
+                rct_zmas = filesys.read.min_dist_conformer_zma_geo(
                     orig_dist, cnf_save_fs_lst[0])
                 ret = automol.zmatrix.ts.concerted_unimolecular_elimination(
                     rct_zmas, prd_zmas)

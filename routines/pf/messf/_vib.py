@@ -5,10 +5,9 @@
 import os
 import projrot_io
 import autofile
-
-# New libs
 from lib.phydat import phycon
-from lib.runner import script
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 def projrot_freqs_1(tors_geo, hess,
@@ -32,7 +31,7 @@ def projrot_freqs_1(tors_geo, hess,
     proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
     with open(proj_file_path, 'w') as proj_file:
         proj_file.write(projrot_inp_str)
-    script.run_script(script.PROJROT, path)
+    run_script(DEFAULT_SCRIPT_DCT['projrot'], path)
 
     freqs = []
     zpe_har_no_tors = 0.
@@ -70,7 +69,7 @@ def projrot_freqs_2(save_path, pot=False, saddle=False):
     projrot_script_str2 = (
         "#!/usr/bin/env bash\n"
         "RPHt.exe >& /dev/null")
-    script.run_script(projrot_script_str2, path)
+    run_script(projrot_script_str2, path)
 
     freqs_2 = []
     zpe_har_no_tors_2 = 0.0

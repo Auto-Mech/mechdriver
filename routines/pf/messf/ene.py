@@ -8,10 +8,8 @@ import autofile
 
 # New Libs
 from lib.phydat import phycon
-from lib.filesystem import minc as fsmin
-from lib.filesystem import orb as fsorb
-from lib.filesystem import inf as finf
-from lib.load import model as loadmodel
+from lib import filesys
+from lib.amech_io import parser
 import routines.pf.messf.models as pfmodels
 from routines.pf.messf.blocks import set_model_filesys
 from routines.pf.messf import _sym as sym
@@ -181,7 +179,7 @@ def get_high_level_energy(
         spc_save_fs[-1].create(spc_info)
         spc_save_path = spc_save_fs[-1].path(spc_info)
 
-    thy_low_level = fsorb.mod_orb_restrict(
+    thy_low_level = filesys.inf.modify_orb_restrict(
         spc_info, thy_low_level)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
@@ -194,7 +192,7 @@ def get_high_level_energy(
             ll_save_path = ll_save_fs[0].path()
 
         cnf_save_fs = autofile.fs.conformer(ll_save_path)
-        min_cnf_locs = fsmin.min_energy_conformer_locators(
+        min_cnf_locs = filesys.mnfcnf.min_energy_conformer_locators(
             cnf_save_fs)
         if not min_cnf_locs:
             print('ERROR: No minimum conformer geometry for ',
@@ -202,7 +200,7 @@ def get_high_level_energy(
             return 0.0
         cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
 
-        thy_high_level = fsorb.mod_orb_restrict(
+        thy_high_level = filesys.inf.modify_orb_restrict(
             spc_info, thy_high_level)
 
         sp_save_fs = autofile.fs.single_point(cnf_save_path)
@@ -392,8 +390,8 @@ def get_fs_ene_zpe(spc_dct, spc,
                 spc_dct[spc]['mul'])
 
     # Set the model and info for the reaction
-    pf_levels = loadmodel.set_es_model_info(model_dct[model]['es'], thy_dct)
-    pf_model = loadmodel.set_pf_model_info(model_dct[model]['pf'])
+    pf_levels = parser.model.set_es_model_info(model_dct[model]['es'], thy_dct)
+    pf_model = parser.model.set_pf_model_info(model_dct[model]['pf'])
 
     # Set paths
     if saddle:
