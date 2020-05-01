@@ -613,7 +613,7 @@ def run_ts(spc_dct, spc_name,
         save_prefix, rxn_info, mod_thy_info)
 
     # Build filesys for ini thy info for single reference
-    # _, ini_thy_run_path = filesys.build.rxn_thy_fs_from_root(
+    # _, ini_thy_run_path = fbuild.rxn_thy_fs_from_root(
     #     run_prefix, rxn_info, mod_ini_thy_info)
     _, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
         save_prefix, rxn_info, mod_ini_thy_info)

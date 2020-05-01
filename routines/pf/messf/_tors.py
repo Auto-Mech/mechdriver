@@ -540,7 +540,7 @@ def get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=False):
     """ get the tors names
     """
     if saddle:
-        tors_names = spc_dct_i['tors_names']
+        tors_names = spc_dct_i['amech_ts_tors_names']
     else:
         if tors_cnf_save_fs[0].file.info.exists():
             inf_obj_s = tors_cnf_save_fs[0].file.info.read()
