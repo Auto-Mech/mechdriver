@@ -57,8 +57,8 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
         run_tors_names = spc_dct_i['hind_def']
     else:
         run_tors_names = ()
-    if 'tors_names' in spc_dct_i:
-        dct_tors_names = spc_dct_i['tors_names']
+    if 'amech_ts_tors_names' in spc_dct_i:
+        dct_tors_names = spc_dct_i['amech_ts_tors_names']
         run_tors_names = [[name] for name in dct_tors_names]
     else:
         run_tors_names = ()
@@ -87,9 +87,8 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
 
             # Get the hr prep stuff
             tors_names, tors_grids = structure.tors.hr_prep(
-                zma, tors_geo, run_tors_names=run_tors_names,
+                zma, tors_name_grps=run_tors_names,
                 scan_increment=scan_increment, ndim_tors='1dhr',
-                saddle=saddle,
                 frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
                 # frm_bnd_key=(), brk_bnd_key=())
 

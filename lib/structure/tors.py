@@ -32,7 +32,7 @@ def names_from_dct(spc_dct_i, ndim_tors):
     inp_tors_names, amech_ts_tors_names = [], []
     if 'tors_names' in spc_dct_i:
         inp_tors_names = spc_dct_i['tors_names']
-    elif 'amech_ts_tors_names' in spc_dct_i:
+    if 'amech_ts_tors_names' in spc_dct_i:
         amech_ts_tors_names = spc_dct_i['amech_ts_tors_names']
         if ndim_tors == '1dhr':
             amech_ts_tors_names = [[name] for name in amech_ts_tors_names]

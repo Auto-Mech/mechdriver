@@ -79,7 +79,7 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
     tors_names = []
     if 'ts_' in spc:
         saddle = True
-        tors_names = spc_dct_i['tors_names']
+        tors_names = spc_dct_i['amech_ts_tors_names']
         mig = 'migration' in spc_dct_i['class']
         elm = 'elimination' in spc_dct_i['class']
         if mig or elm:
@@ -192,7 +192,7 @@ def get_high_level_energy(
             ll_save_path = ll_save_fs[0].path()
 
         cnf_save_fs = autofile.fs.conformer(ll_save_path)
-        min_cnf_locs = filesys.mnfcnf.min_energy_conformer_locators(
+        min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
             cnf_save_fs)
         if not min_cnf_locs:
             print('ERROR: No minimum conformer geometry for ',

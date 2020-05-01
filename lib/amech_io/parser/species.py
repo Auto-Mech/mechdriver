@@ -307,7 +307,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
 
         # Get the reaction info flipping if needed
         check_exo = True
-        if check_exo and given_class is not None:
+        if check_exo and given_class is None:
             reacs, prods = filesys.inf.assess_rxn_ene(
                 reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
 

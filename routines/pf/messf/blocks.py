@@ -68,7 +68,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
     tors_names = []
     if 'ts_' in spc:
         saddle = True
-        tors_names = spc_dct_i['tors_names']
+        tors_names = spc_dct_i['amech_ts_tors_names']
         mig = 'migration' in spc_dct_i['class']
         elm = 'elimination' in spc_dct_i['class']
         if mig or elm:
