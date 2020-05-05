@@ -97,7 +97,7 @@ def barrierless_transition_state(
     elif rad_rad_ts.lower() == 'vtst':
         ts_found = True
         print('Beginning Calculations for VTST Treatments')
-        vtst.run_scan(
+        vtst.radrad_scan(
             ts_zma, ts_info, ts_formula, high_mul,
             spc_1_info, spc_2_info,
             grid1, grid2, dist_name,

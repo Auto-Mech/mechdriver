@@ -300,7 +300,7 @@ def radrad_addition_grid():
     return grid, update_guess
 
 
-def radrad_hydrogen_abstraction():
+def radrad_hydrogen_abstraction_grid():
     """ Build forward 1D grid for elimination reaction
     """
     rstart = 2.4 * phycon.ANG2BOHR

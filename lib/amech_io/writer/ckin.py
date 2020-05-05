@@ -7,54 +7,44 @@ import automol
 import routines.pf.thermo
 
 
-def get_ckin_ene_lvl_str(pf_levels, ene_coeff):
-    """ Write the comment lines for the enrgy lvls for ckin
-    """
-    ene_thy_info = pf_levels[1]
-    ene_ref_thy_info = pf_levels[0]
-    ene_strl = []
-    ene_str = '! energy level:'
-    ene_strl.append(' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
-        ene_coeff[0],
-        ene_thy_info[3],
-        ene_thy_info[1],
-        ene_thy_info[2],
-        ene_ref_thy_info[3],
-        ene_ref_thy_info[1],
-        ene_ref_thy_info[2]))
-    ene_str += '!               '.join(ene_strl)
-
-    return ene_str
-
-
-def run_ckin_header(pf_info, spc_model):
+def run_ckin_header(es_info, spc_model):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
-    tors_model, vib_model, _ = spc_model
-    [geo_info, ene_info, har_info,
-     vpt2_info, _, tors_info] = pf_info
-    sp_str = False
-    # [geo_info, ene_info, har_info,
-    #  vpt2_info, _, tors_info, sp_str] = pf_info
+    tors_model, vib_model, sym_model = spc_model
+    [geo_info, ene_info, har_info, vpt2_info, _, tors_info] = es_info
 
     # Convert the pac99 polynomial to chemkin polynomial
     chemkin_header_str = '! vib model: {0}\n'.format(vib_model)
     chemkin_header_str += '! tors model: {0}\n'.format(tors_model)
-    if har_info:
-        chemkin_header_str += '! ene//geo level: {}{}/{}//{}{}/{}\n'.format(
-            ene_info[3], ene_info[1], ene_info[2],
-            geo_info[3], geo_info[1], geo_info[2])
+    # chemkin_header_str += '! vpt2 model: {0}\n'.format(vpt2_model)
+    chemkin_header_str += '! sym model: {0}\n'.format(sym_model)
+    if har_info and ene_info:
+        chemkin_header_str += _ckin_ene_lvl_str(ene_info, geo_info)
     if tors_info:
         chemkin_header_str += '! tors level: {}{}/{}//{}{}/{}\n'.format(
             tors_info[1][3], tors_info[1][1], tors_info[1][2],
             tors_info[0][3], tors_info[0][1], tors_info[0][2])
-    if vpt2_info:
-        chemkin_header_str += '! vpt2 level: {}{}/{}\n'.format(
-            vpt2_info[3], vpt2_info[1], vpt2_info[2])
-    if sp_str:
-        chemkin_header_str += sp_str
+    # if vpt2_info:
+    #     chemkin_header_str += '! vpt2 level: {}{}/{}\n'.format(
+    #         vpt2_info[3], vpt2_info[1], vpt2_info[2])
 
     return chemkin_header_str
+
+
+def _ckin_ene_lvl_str(ene_info, geo_info):
+    """ Write the comment lines for the enrgy lvls for ckin
+    """
+    ene_str = '! energy level:'
+    for i, ene_lvl in enumerate(ene_info):
+        ene_str += ' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
+            ene_lvl[0],
+            ene_lvl[1][3], ene_lvl[1][1], ene_lvl[1][2],
+            geo_info[3], geo_info[1], geo_info[2])
+        if i+1 != len(ene_info): 
+            ene_str += ' +'
+
+    return ene_str
+
 
 
 def run_ckin_poly(spc, spc_dct_i, pac99_poly_str):

@@ -8,7 +8,7 @@ import autofile
 import automol
 from automol.mult.ts import _low as tslow
 from automol.mult.ts import _high as tshigh
-from automol.zmatrix.ts import _shifted_standard_forms_with_gaphs as shift_gra
+from automol.zmatrix import shifted_standard_zmas_graphs as shift_gra
 from routines.es._routines import geom
 from lib.phydat import phycon
 from lib.submission import DEFAULT_SCRIPT_DCT
@@ -269,7 +269,7 @@ def get_zma_geo(filesys, locs):
     else:
         zma = None
 
-    if filesys[-1].file.geometry.read(locs):
+    if filesys[-1].file.geometry.exists(locs):
         geo = filesys[-1].file.geometry.read(locs)
     else:
         geo = None

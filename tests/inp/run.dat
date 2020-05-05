@@ -17,12 +17,28 @@ end
 es_tsks
   spc  init_geom    runlvl=lvl_wbs  inplvl=lvl_wbs       
   spc  conf_samp    runlvl=lvl_wbs  inplvl=lvl_wbs       
-  ts   find_ts      runlvl=lvl_wbs  inplvl=lvl_wbs       
-  ts   conf_samp    runlvl=lvl_wbs  inplvl=lvl_wbs             
-  spc  hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True
-  ts   hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True
+  spc  conf_grad    runlvl=lvl_wbs  inplvl=lvl_wbs       
+  spc  conf_hess    runlvl=lvl_wbs  inplvl=lvl_wbs       
   spc  conf_energy  runlvl=cc_lvl_d inplvl=lvl_wbs             
+  spc  hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs
+  spc  hr_grad      runlvl=lvl_wbs  inplvl=lvl_wbs       
+  spc  hr_hess      runlvl=lvl_wbs  inplvl=lvl_wbs       
+  spc  hr_energy    runlvl=cc_lvl_d inplvl=lvl_wbs             
+  spc  hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True
+  spc  hr_grad      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True 
+  spc  hr_hess      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True     
+  spc  hr_energy    runlvl=cc_lvl_d inplvl=lvl_wbs  frz_all_tors=True           
+  ts   find_ts      runlvl=lvl_wbs  inplvl=lvl_wbs       
+  ts   conf_samp    runlvl=lvl_wbs  inplvl=lvl_wbs       
+  ts   conf_grad    runlvl=lvl_wbs  inplvl=lvl_wbs       
+  ts   conf_hess    runlvl=lvl_wbs  inplvl=lvl_wbs       
   ts   conf_energy  runlvl=cc_lvl_d inplvl=lvl_wbs             
-  spc  hr_energy    runlvl=cc_lvl_d inplvl=lvl_wbs  frz_all_tors=True
-  spc  tau_samp     runlvl=lvl_wbs  inplvl=lvl_wbs       
+  ts   hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs
+  ts   hr_grad      runlvl=lvl_wbs  inplvl=lvl_wbs       
+  ts   hr_hess      runlvl=lvl_wbs  inplvl=lvl_wbs       
+  ts   hr_energy    runlvl=cc_lvl_d inplvl=lvl_wbs             
+  ts   hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True
+  ts   hr_grad      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True 
+  ts   hr_hess      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True     
+  ts   hr_energy    runlvl=cc_lvl_d inplvl=lvl_wbs  frz_all_tors=True           
 end

@@ -53,29 +53,7 @@ def run_multiref_rscan(ts_zma, ts_info, ts_formula, high_mul,
     inf_obj = autofile.system.info.scan_branch(grid_dct)
     scn_save_fs[1].file.info.write(inf_obj, [coo_names])
 
-    # Setup and run the first part of the scan to shorter distances
-    grid1_dct = {dist_name: grid1}
-    if len(grid1_dct) > 1:
-        raise NotImplementedError
-
-    scan.run_scan(
-        ts_zma, ts_info, mod_var_scn_thy_info,
-        grid1_dct, scn_run_fs, scn_save_fs,
-        opt_script_str, overwrite,
-        update_guess=True,
-        reverse_sweep=True,
-        fix_failures=True,
-        saddle=False,
-        constraint_dct=None,
-        **opt_kwargs
-    )
-
-    # Setup and run the sectiond part of the scan to farther distances
-    grid2_dct = {dist_name: grid2}
-    if len(grid2_dct) > 1:
-        raise NotImplementedError
-
-    scan.run_scan(
+    scan.run_twoway_scan(
         ts_zma, ts_info, mod_var_scn_thy_info,
         grid1_dct, scn_run_fs, scn_save_fs,
         opt_script_str, overwrite,

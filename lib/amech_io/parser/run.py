@@ -223,8 +223,8 @@ def check_run_jobs_section(job_str, keyword_lst):
 
     chk = all(key in RUN_SUPPORTED_KEYWORDS for key in keyword_lst)
     if not chk:
-        print('*ERROR: Not all required keywords specified',
-              'in run.dat "jobs" section')
+        print('*ERROR: Not all keywords specified',
+              'in run.dat "jobs" section are supported')
         print('*Allowed keys:')
         for key in RUN_SUPPORTED_KEYWORDS:
             print(key)

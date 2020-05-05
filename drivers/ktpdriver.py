@@ -42,12 +42,16 @@ def run(pes_formula, pes_idx,
     # Fix this to read ene model
     for rxn in rxn_lst:
         spc_model = rxn['model'][1]
-        # ene_model = spc_model_dct[spc_model]['es']['ene']
+        ene_model = spc_model_dct[spc_model]['es']['ene']
         geo_model = spc_model_dct[spc_model]['es']['geo']
+        es_info = parser.model.set_es_model_info(
+            spc_model_dct[spc_model]['es'], thy_dct)
         # Need to fix
-        # thy_info = filesys.inf.get_es_info(ene_model, thy_dct)
-        thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
+        thy_info = filesys.inf.get_es_info(ene_model, thy_dct)
+        # thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
         ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
+        pf_model = parser.model.set_pf_model_info(
+            spc_model_dct[spc_model]['pf'])
         print('\nIdentifying reaction classes for transition states...')
         ts_dct = parser.species.build_sadpt_dct(
             pes_idx, rxn_lst, thy_info, ini_thy_info,
@@ -87,7 +91,7 @@ def run(pes_formula, pes_idx,
         # Combine strings together
         mess_inp_str = '\n'.join(
             [globkey_str, energy_trans_str, well_str, bim_str, ts_str])
-        mess_inp_str = cleaner.remove_whitespace(mess_inp_str)
+        mess_inp_str = cleaner.remove_trail_whitespace(mess_inp_str)
 
         # Build the filesystem
         if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):
@@ -106,5 +110,6 @@ def run(pes_formula, pes_idx,
     if run_fits:
         ktp_routines.fit.fit_rates(temps, pressures, tunit, punit,
                                    pes_formula, label_dct,
+                                   es_info, pf_model,
                                    mess_path, fit_method, pdep_fit,
                                    arrfit_thresh)

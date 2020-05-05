@@ -36,18 +36,17 @@ def run(pes_idx,
         thy_info = filesys.inf.get_es_info(
             es_keyword_dct['runlvl'], thy_dct)
         var_scn_thy_info = None
-        var_sp1_thy_info = None
         var_sp2_thy_info = None
         # if es_keyword_dct['var_scnlvl'] is not None:
         #     var_scn_thy_info = filesys.inf.get_es_info(
         #         es_keyword_dct['var_scnlvl'], thy_dct)
         # else:
         #     var_scn_thy_info = None
-        # if es_keyword_dct['var_splvl1'] is not None:
-        #     var_sp1_thy_info = filesys.inf.get_es_info(
-        #         es_keyword_dct['var_splvl1'], thy_dct)
-        # else:
-        #     var_sp1_thy_info = None
+        var_sp1_thy_info = None
+        if 'var_splvl1' in es_keyword_dct:
+            if es_keyword_dct['var_splvl1'] is not None:
+                var_sp1_thy_info = filesys.inf.get_es_info(
+                    es_keyword_dct['var_splvl1'], thy_dct)
         # if es_keyword_dct['var_splvl2'] is not None:
         #     var_sp2_thy_info = filesys.inf.get_es_info(
         #         es_keyword_dct['var_splvl2'], thy_dct)

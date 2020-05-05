@@ -4,7 +4,7 @@
 
 import sys
 import automol
-from automol.zmatrix.ts import _shifted_standard_forms_with_gaphs as shift_gra
+from automol.zmatrix import shifted_standard_zmas_graphs as shift_gra
 
 
 def get_zma_geo(filesys, locs):

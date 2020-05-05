@@ -59,8 +59,7 @@ def write_thermp_inp(spc_dct_i, temps, thermp_file_name='thermp.dat'):
         formula=formula,
         delta_h=h0form,
         enthalpy_temp=enthalpyt,
-        break_temp=breakt,
-        thermp_file_name=thermp_file_name)
+        break_temp=breakt)
 
     # Write the file
     with open(thermp_file_name, 'w') as thermp_file:

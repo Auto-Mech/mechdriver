@@ -1,18 +1,15 @@
 """ es_runners for initial geometry optimization
 """
 
-import os
 import numpy
 import automol
 import elstruct
 import autofile
-import projrot_io
 from routines.es._routines import conformer
 from routines.es._routines import wells
 from routines.es import runner as es_runner
-from lib.submission import run_script
-from lib.submission import DEFAULT_SCRIPT_DCT
 from lib import filesys
+from lib import structure
 from lib.phydat import phycon
 
 
@@ -249,7 +246,6 @@ def run_check_imaginary(
         overwrite=False, **kwargs):
     """ check if species has an imaginary frequency
     """
-    # projrot_script_str = script.PROJROT
 
     thy_run_fs[-1].create(thy_info[1:4])
     thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
@@ -279,7 +275,7 @@ def run_check_imaginary(
 
             if hess:
                 imag = False
-                _, imag_freq = projrot_frequencies(
+                _, imag_freq = structure.vib.projrot_frequencies(
                     geo, hess, thy_info, thy_run_fs)
                 if imag_freq:
                     imag = True
@@ -354,42 +350,3 @@ def save_initial_geometry(
         zma = automol.geom.zmatrix(geo)
         thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
         thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
-
-
-def projrot_frequencies(geo, hess, thy_info, thy_run_fs):
-    """ Get the projected frequencies from projrot code
-    """
-    projrot_script_str = DEFAULT_SCRIPT_DCT['projrot']
-
-    # Write the string for the ProjRot input
-    thy_run_fs[-1].create(thy_info[1:4])
-    thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
-
-    coord_proj = 'cartesian'
-    grad = ''
-    rotors_str = ''
-    projrot_inp_str = projrot_io.writer.rpht_input(
-        geo, grad, hess, rotors_str=rotors_str,
-        coord_proj=coord_proj)
-
-    bld_locs = ['PROJROT', 0]
-    bld_run_fs = autofile.fs.build(thy_run_path)
-    bld_run_fs[-1].create(bld_locs)
-    projrot_path = bld_run_fs[-1].path(bld_locs)
-
-    proj_file_path = os.path.join(projrot_path, 'RPHt_input_data.dat')
-    with open(proj_file_path, 'w') as proj_file:
-        proj_file.write(projrot_inp_str)
-
-    run_script(projrot_script_str, projrot_path)
-
-    imag_freq = ''
-    if os.path.exists(projrot_path+'/hrproj_freq.dat'):
-        rthrproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-            projrot_path+'/hrproj_freq.dat')
-        proj_freqs = rthrproj_freqs
-    else:
-        rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-            projrot_path+'/RTproj_freq.dat')
-        proj_freqs = rtproj_freqs
-    return proj_freqs, imag_freq

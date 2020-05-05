@@ -67,8 +67,8 @@ def run_scan(
             **kwargs
         )
 
-        print('\nDoing a reverse sweep of the HR scan to catch errors...')
         if reverse_sweep:
+            print('\nDoing a reverse sweep of the HR scan to catch errors...')
             _run_1d_scan(
                 script_str=script_str,
                 run_prefixes=list(reversed(run_prefixes)),
@@ -120,8 +120,8 @@ def run_scan(
             **kwargs
         )
 
-        print('\nDoing a reverse sweep of the HR scans to catch errors...')
         if reverse_sweep:
+            print('\nDoing a reverse sweep of the HR scans to catch errors...')
             run_prefixes = []
             for grid_val_i in grid_vals[0][::-1]:
                 for grid_val_j in grid_vals[1][::-1]:
@@ -192,8 +192,8 @@ def run_scan(
             **kwargs
         )
 
-        print('\nDoing a reverse sweep of the HRs scan to catch errors...')
         if reverse_sweep:
+            print('\nDoing a reverse sweep of the HRs scan to catch errors...')
             run_prefixes = []
             for grid_val_i in grid_vals[0][::-1]:
                 for grid_val_j in grid_vals[1][::-1]:
@@ -274,8 +274,8 @@ def run_scan(
             **kwargs
         )
 
-        print('\nDoing a reverse sweep of the HRs scan to catch errors...')
         if reverse_sweep:
+            print('\nDoing a reverse sweep of the HRs scan to catch errors...')
             run_prefixes = []
             for grid_val_i in grid_vals[0][::-1]:
                 for grid_val_j in grid_vals[1][::-1]:
@@ -562,7 +562,7 @@ def _run_4d_scan(
                                 guess_zma = opt_zma
 
 
-def save_scan(scn_run_fs, scn_save_fs, coo_names):
+def save_scan(scn_run_fs, scn_save_fs, coo_names, thy_info):
     """ save the scans that have been run so far
     """
     if not scn_run_fs[1].exists([coo_names]):
@@ -596,6 +596,14 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names):
                 scn_save_fs[-1].file.energy.write(ene, locs)
                 scn_save_fs[-1].file.geometry.write(geo, locs)
                 scn_save_fs[-1].file.zmatrix.write(zma, locs)
+
+                # Saving the energy to am SP filesys
+                print(" - Saving energy...")
+                sp_save_fs = autofile.fs.single_point(save_path)
+                sp_save_fs[-1].create(thy_info[1:4])
+                sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
+                sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
+                sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
 
                 locs_lst.append(locs)
 

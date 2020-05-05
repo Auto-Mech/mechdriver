@@ -287,7 +287,6 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     ts_dct = {}
     for chn_idx, rxn in enumerate(rxn_lst):
 
-        print(rxn_lst)
         # Get reac and prod
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx+1)
         reacs = rxn['reacs']
@@ -333,7 +332,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
         ts_class, ret1, ret2 = ret
 
         if ret1:
-            [_, dist_name, brk_name, _, _, _, _, update_guess] = ret1
+            [_, dist_name, brk_name, _, _, _, _, update_guess, _] = ret1
         else:
             dist_name, brk_name, update_guess = None, None, None
             # bkp_data = None
@@ -361,7 +360,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
             # Put class stuff in the dct
             dct_keys = ['zma', 'dist_name', 'brk_name', 'grid',
                         'frm_bnd_key', 'brk_bnd_key',
-                        'amech_ts_tors_names', 'update_guess']
+                        'amech_ts_tors_names', 'update_guess', 'var_grid']
             ts_dct[tsname].update(dict(zip(dct_keys, ret1)))
             ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
             ts_dct[tsname]['dist_info'] = [
