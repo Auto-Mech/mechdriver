@@ -135,7 +135,8 @@ SPC_SUPPORTED_KEYWORDS = [
     'inchi',
     'smiles',
     'geom',
-    'kickoff'
+    'kickoff',
+    'ts_search'
 ]
 SPC_DEFAULT_DCT = {
     'kickoff': [0.1, False],

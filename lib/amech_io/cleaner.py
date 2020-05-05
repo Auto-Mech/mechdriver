@@ -16,6 +16,14 @@ def remove_whitespace(string):
     return apf.remove(pattern, string)
 
 
+def remove_trail_whitespace(string):
+    """ remove trailing spaces, and empty lines from a string
+    """
+    empty_line = app.LINE_START + app.maybe(app.LINESPACES) + app.NEWLINE
+    trailing_spaces = app.LINESPACES + app.LINE_END
+    pattern = app.one_of_these([empty_line, trailing_spaces])
+    return apf.remove(pattern, string)
+
 def remove_line_comments(string, delim_pattern):
     """ remove line comments marked by a delimiter pattern
     """

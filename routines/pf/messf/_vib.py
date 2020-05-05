@@ -33,17 +33,22 @@ def projrot_freqs_1(tors_geo, hess,
         proj_file.write(projrot_inp_str)
     run_script(DEFAULT_SCRIPT_DCT['projrot'], path)
 
+    with open(path+'/hrproj_freq.dat', 'r') as projfile:
+        hrproj_str = projfile.read()
+    with open(path+'/RTproj_freq.dat', 'r') as projfile:
+        rtproj_str = projfile.read()
+
     freqs = []
     zpe_har_no_tors = 0.
     imag_freq_1 = 0.
     # har_zpe = 0.
     if pot:
         rthrproj_freqs, _ = projrot_io.reader.rpht_output(
-            path+'/hrproj_freq.dat')
+            hrproj_str)
         freqs = rthrproj_freqs
         zpe_har_no_tors = sum(freqs)*phycon.WAVEN2KCAL/2.
     rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-        path+'/RTproj_freq.dat')
+        rtproj_str)
     # har_zpe = sum(rtproj_freqs)*phycon.WAVEN2KCAL/2.
     if not freqs:
         freqs = rtproj_freqs
@@ -71,16 +76,21 @@ def projrot_freqs_2(save_path, pot=False, saddle=False):
         "RPHt.exe >& /dev/null")
     run_script(projrot_script_str2, path)
 
+    with open(path+'/hrproj_freq.dat', 'r') as projfile:
+        hrproj_str = projfile.read()
+    with open(path+'/RTproj_freq.dat', 'r') as projfile:
+        rtproj_str = projfile.read()
+
     freqs_2 = []
     zpe_har_no_tors_2 = 0.0
     imag_freq_2 = 0.
     if pot:
         rthrproj_freqs_2, _ = projrot_io.reader.rpht_output(
-            path+'/hrproj_freq.dat')
+            hrproj_str)
         freqs_2 = rthrproj_freqs_2
         zpe_har_no_tors_2 = sum(freqs_2)*phycon.WAVEN2KCAL/2.
     rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-        path+'/RTproj_freq.dat')
+        rtproj_str)
     har_zpe = sum(rtproj_freqs)*phycon.WAVEN2KCAL/2.
     if not freqs_2:
         freqs_2 = rtproj_freqs

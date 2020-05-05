@@ -45,12 +45,20 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     grid, update_guess, bkp_grid, bkp_update_guess = rxngrid.build_grid(
         typ, bkp_typ, ts_bnd_len, ts_zma, dist_name, brk_name, npoints=None)
 
+    # Hack in variational grids for addition and abstraction
+    if 'addition' in typ and 'rad' not in typ:
+        var_grid, _ = rxngrid.radrad_addition_grid()
+    elif 'hydrogen abstraction' in typ and 'rad' not in typ:
+        var_grid, _ = rxngrid.radrad_hydrogen_abstraction_grid()
+    else:
+        var_grid = []
+
     # Build class data lists to return from the function
     if typ:
         ts_class_data = [
             ts_zma, dist_name, brk_name,
             grid, frm_bnd_key, brk_bnd_key,
-            tors_names, update_guess]
+            tors_names, update_guess, var_grid]
     else:
         ts_class_data = []
     if bkp_typ:

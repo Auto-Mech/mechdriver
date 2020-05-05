@@ -33,12 +33,14 @@ def hindered_rotor_scans(
             scan.save_scan(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
-                coo_names=tors_names)
+                coo_names=tors_names,
+                thy_info=thy_info)
         else:
             scan.save_cscan(
                 cscn_run_fs=scn_run_fs,
                 cscn_save_fs=scn_save_fs,
-                coo_names=tors_names)
+                coo_names=tors_names,
+                thy_info=thy_info)
 
         print('\nRunning any HR Scans if needed...')
         scan.run_scan(
@@ -60,11 +62,13 @@ def hindered_rotor_scans(
             scan.save_scan(
                 scn_run_fs=scn_run_fs,
                 scn_save_fs=scn_save_fs,
-                coo_names=tors_names
+                coo_names=tors_names,
+                thy_info=thy_info
             )
         else:
             scan.save_cscan(
                 cscn_run_fs=scn_run_fs,
                 cscn_save_fs=scn_save_fs,
-                coo_names=tors_names
+                coo_names=tors_names,
+                thy_info=thy_info
             )

@@ -65,6 +65,7 @@ def scan_for_guess(typ, grid, dist_name, brk_name,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
         coo_names=coo_names,
+        thy_info=ref_level
         )
 
     # Find the structure at the maximum on the grid opt scan

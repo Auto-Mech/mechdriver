@@ -9,29 +9,35 @@ import numpy
 import ratefit
 import chemkin_io
 import mess_io
-# from lib.amech_io import writer
+from lib.amech_io import writer
 from lib.phydat import phycon
 
 
 def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
               pes_formula_str, idx_dct,
+              es_info, pf_model,
               mess_path, fit_method, pdep_fit,
               arrfit_thresh):
     """ Parse the MESS output and fit the rates to
         Arrhenius expressions written as CHEMKIN strings
     """
+    
+    # Write header string containing thy information
+    chemkin_header_str = writer.ckin.run_ckin_header(es_info, pf_model)
+    chemkin_header_str += '\n'
 
-    # pf_levels.append(ene_str)
-    # chemkin_header_str = writer.chemkin.run_ckin_header(pf_levels, pf_model)
-    # chemkin_header_str += writer.chemkin.get_ckin_ene_lvl_str(pf_levels, ene_coeff)
-    # chemkin_header_str += '\n'
-    chemkin_header_str = 'HEADER\n'
-    chemkin_poly_str = chemkin_header_str
-    chemkin_str = ''
+    # Initialize full chemkin string and paths
+    # chemkin_full_str = chemkin_header_str
+    chemkin_full_str = ''
     starting_path = os.getcwd()
     ckin_path = ''.join([starting_path, '/ckin'])
     if not os.path.exists(ckin_path):
         os.mkdir(ckin_path)
+    full_ckin_path = os.path.join(ckin_path, pes_formula_str+'.ckin')
+    if os.path.exists(full_ckin_path):
+        os.remove(full_ckin_path)
+
+    # Loop through reactions, fit rates, and write ckin strings
     labels = idx_dct.values()
     names = idx_dct.keys()
     for lab_i, name_i in zip(labels, names):
@@ -42,6 +48,9 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
 
                     # Set name
                     reaction = name_i + '=' + name_j
+
+                    # Initialize new chemkin str for reaction
+                    chemkin_str = chemkin_header_str
 
                     # Read the rate constants out of the mess outputs
                     ktp_dct = read_rates(
@@ -62,9 +71,9 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                         #     a_conv_factor, err_thresh)
 
                     # Write the CHEMKIN strings
-                    chemkin_poly_str += '\n'
-                    chemkin_poly_str += chemkin_str
-                    chemkin_str = chemkin_header_str + chemkin_str
+                    chemkin_full_str += chemkin_str
+                    chemkin_full_str += '\n\n'
+                    # chemkin_str = chemkin_header_str + chemkin_str
                     print(chemkin_str)
 
                     # Print the results for each channel to a file
@@ -74,8 +83,8 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                         cfile.write(chemkin_str)
 
     # Print the results for the whole PES to a file
-    with open(os.path.join(ckin_path, pes_formula_str+'.ckin'), 'a') as cfile:
-        cfile.write(chemkin_poly_str)
+    with open(full_ckin_path, 'a') as cfile:
+        cfile.write(chemkin_full_str)
 
 
 def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
@@ -374,7 +383,7 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                 output_string, rct_lab, prd_lab)
         else:
             rate_ks = mess_io.reader.pdep_ks(
-                output_string, rct_lab, prd_lab, pressure, punit)
+                output_string, rct_lab, prd_lab, pressure)
 
         # Store in a dictionary
         calc_k_dct[pressure] = rate_ks

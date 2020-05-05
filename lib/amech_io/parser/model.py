@@ -187,10 +187,11 @@ def check_spc_model_dct(model_dct):
     for key, val in pf_dct.items():
         if key in MODEL_PF_SUPPORTED_DCT:
             if val not in MODEL_PF_SUPPORTED_DCT[key]:
-                print('*ERROR: Value for Keyword not supported')
+                print('*ERROR: Value {}'.format(val),
+                      'for Keyword {} not supported'.format(key))
                 sys.exit()
         else:
-            print('*ERROR: Keyword not supported')
+            print('*ERROR: Keyword {} not supported'.format(key))
             sys.exit()
 
     # See if any pf model combinations were specified that are not supported
@@ -230,7 +231,7 @@ def set_pf_model_info(pf_model):
     """
     tors_model = pf_model['tors'] if 'tors' in pf_model else 'rigid'
     vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
-    sym_model = pf_model['sym'] if 'sym' in pf_model else ''
+    sym_model = pf_model['sym'] if 'sym' in pf_model else 'none'
 
     pf_models = [tors_model, vib_model, sym_model]
 

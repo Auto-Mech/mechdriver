@@ -283,7 +283,7 @@ def scn_fs_from_cnf(cnf_prefix, constraint_dct=None):
 def scn_locs_from_fs(scn_fs, coo_names, constraint_dct=None):
     """ get locs for a SCAN or CSCAN fs
     """
-    if constraint_dct is not None:
+    if constraint_dct is None:
         scn_locs = scn_fs[-1].existing([coo_names])
     else:
         # scn_locs, scn_paths = [], []

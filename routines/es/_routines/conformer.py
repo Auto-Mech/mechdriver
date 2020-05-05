@@ -566,8 +566,7 @@ def int_sym_num_from_sampling(
                 int_sym_num = 0
                 for geo_sim_i in geo_sim:
                     new_geos = automol.geom.rot_permutated_geoms(
-                        geo_sim_i, saddle,
-                        frm_bnd_key, brk_bnd_key, form_coords)
+                        geo_sim_i, saddle, frm_bnd_key, brk_bnd_key)
                     for new_geo in new_geos:
                         new_geom = True
                         for geo_sim_j in geo_sim2:

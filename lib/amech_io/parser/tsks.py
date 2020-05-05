@@ -130,62 +130,62 @@ def check_es_tsks_supported(es_tsks, thy_dct):
     """ Check to see if the list of es tasks are supported by the code
     """
     for tsk_lst in es_tsks:
-        try:
-            # Unpack the list
-            [obj, tsk, keyword_dct] = tsk_lst
+        # try:
+        # Unpack the list
+        [obj, tsk, keyword_dct] = tsk_lst
 
-            # Check the object
-            if obj not in ES_TSK_OBJ_SUPPORTED_LST:
-                print('*ERROR: object requested that is not allowed')
-                print('Allowed objs')
-                for supp_obj in ES_TSK_OBJ_SUPPORTED_LST:
-                    print(supp_obj)
-                sys.exit()
-
-            # Check the task
-            if tsk not in ES_TSK_SUPPORTED_DCT[obj]:
-                print('*ERROR: task requested not allowed for object')
-                print('Allowed objs')
-                for key, val in ES_TSK_SUPPORTED_DCT.items():
-                    print(key)
-                    print(val)
-                sys.exit()
-
-            # Check the requested es level
-            for key, val in keyword_dct.items():
-                if key not in ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
-                    print('*ERROR: option not allowed for given task')
-                    print('Allowed objs')
-                    for option in ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
-                        print(tsk, option)
-                    sys.exit()
-                else:
-                    if key in ('runlvl', 'inplvl', 'mr_splvl', 'mr_scnlvl'):
-                        if val not in thy_dct:
-                            print('*ERROR: tsk theory level',
-                                  '{} not given in theory.dat'.format(val))
-                            sys.exit()
-                    elif key in ('mr_splvl', 'mr_scnlvl'):
-                        if val not in 'molpro2015':
-                            print('*ERROR: mr theory level only avail',
-                                  'for molpro')
-                            sys.exit()
-                    else:
-                        if val not in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
-                            print('*ERROR: key {}'.format(key),
-                                  'not set to allowed value.')
-                            print('Allowed values:')
-                            for kval in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
-                                print(kval)
-                            sys.exit()
-
-            # Check  if inplvl and runlvl match for HR and IRC scans
-            if tsk in ('hr_scan', 'irc_scan'):
-                if keyword_dct['runlvl'] != keyword_dct['inplvl']:
-                    print('runlvl and inplvl MUST MATCH for',
-                          'hr_scan and irc_scan tasks')
-                    sys.exit()
-        except:
-            print('*ERROR: es_tsk not formatted correctly')
-            print(tsk_lst)
+        # Check the object
+        if obj not in ES_TSK_OBJ_SUPPORTED_LST:
+            print('*ERROR: object requested that is not allowed')
+            print('Allowed objs')
+            for supp_obj in ES_TSK_OBJ_SUPPORTED_LST:
+                print(supp_obj)
             sys.exit()
+
+        # Check the task
+        if tsk not in ES_TSK_SUPPORTED_DCT[obj]:
+            print('*ERROR: task requested not allowed for object')
+            print('Allowed objs')
+            for key, val in ES_TSK_SUPPORTED_DCT.items():
+                print(key)
+                print(val)
+            sys.exit()
+
+        # Check the requested es level
+        for key, val in keyword_dct.items():
+            if key not in ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                print('*ERROR: option not allowed for given task')
+                print('Allowed objs')
+                for option in ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                    print(tsk, option)
+                sys.exit()
+            else:
+                if key in ('runlvl', 'inplvl', 'var_splvl1', 'var_splvl2, var_scn_lvl'):
+                    if val not in thy_dct:
+                        print('*ERROR: tsk theory level',
+                              '{} not given in theory.dat'.format(val))
+                        sys.exit()
+                        # elif key in ('mr_splvl', 'mr_scnlvl'):
+                        #     if val not in 'molpro2015':
+                        #         print('*ERROR: mr theory level only avail',
+                        #               'for molpro')
+                        #         sys.exit()
+                else:
+                    if val not in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
+                        print('*ERROR: key {}'.format(key),
+                              'not set to allowed value.')
+                        print('Allowed values:')
+                        for kval in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
+                            print(kval)
+                        sys.exit()
+
+        # Check  if inplvl and runlvl match for HR and IRC scans
+        if tsk in ('hr_scan', 'irc_scan'):
+            if keyword_dct['runlvl'] != keyword_dct['inplvl']:
+                print('runlvl and inplvl MUST MATCH for',
+                      'hr_scan and irc_scan tasks')
+                sys.exit()
+        # except:
+        #     print('*ERROR: es_tsk not formatted correctly')
+        #     print(tsk_lst)
+        #     sys.exit()
