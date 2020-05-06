@@ -86,6 +86,10 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 tors_min_cnf_locs)
 
             # Get the hr prep stuff
+            if not run_tors_names:
+                run_tors_names = structure.tors.names_from_geo(
+                    harm_geo, '1dhr', saddle=False)
+
             tors_names, tors_grids = structure.tors.hr_prep(
                 zma, tors_name_grps=run_tors_names,
                 scan_increment=scan_increment, ndim_tors='1dhr',

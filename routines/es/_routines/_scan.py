@@ -597,7 +597,7 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, thy_info):
                 scn_save_fs[-1].file.geometry.write(geo, locs)
                 scn_save_fs[-1].file.zmatrix.write(zma, locs)
 
-                # Saving the energy to am SP filesys
+                # Saving the energy to an SP filesys
                 print(" - Saving energy...")
                 sp_save_fs = autofile.fs.single_point(save_path)
                 sp_save_fs[-1].create(thy_info[1:4])
@@ -627,7 +627,7 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, thy_info):
             scn_save_fs[1].file.trajectory.write(traj, [coo_names])
 
 
-def save_cscan(cscn_run_fs, cscn_save_fs, coo_names):
+def save_cscan(cscn_run_fs, cscn_save_fs, coo_names, thy_info):
     """ save the scans that have been run so far
     """
 
@@ -667,6 +667,14 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names):
                         cscn_save_fs[-1].file.energy.write(ene, locs2)
                         cscn_save_fs[-1].file.geometry.write(geo, locs2)
                         cscn_save_fs[-1].file.zmatrix.write(zma, locs2)
+
+                        # Saving the energy to an SP filesys
+                        print(" - Saving energy...")
+                        sp_save_fs = autofile.fs.single_point(save_path)
+                        sp_save_fs[-1].create(thy_info[1:4])
+                        sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
+                        sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
+                        sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
 
                         locs_lst.append(locs2)
 

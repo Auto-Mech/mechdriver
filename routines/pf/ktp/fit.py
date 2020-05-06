@@ -34,8 +34,8 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     if not os.path.exists(ckin_path):
         os.mkdir(ckin_path)
     full_ckin_path = os.path.join(ckin_path, pes_formula_str+'.ckin')
-    if os.path.exists(full_ckin_path):
-        os.remove(full_ckin_path)
+    # if os.path.exists(full_ckin_path):
+        # os.remove(full_ckin_path)
 
     # Loop through reactions, fit rates, and write ckin strings
     labels = idx_dct.values()
