@@ -120,7 +120,7 @@ def write_mdhr_tors_mess_strings(geom, spc_info, sym_num, spc_dct_i,
                     zma, spc_dct_i, group, axis,
                     pot, ts_bnd, tors_sym_nums[tors_idx])
             else:
-                sym_num = tors_sym
+                sym_num = tors_sym_nums[tors_idx]
             group = list(numpy.add(group, 1))
             axis = list(numpy.add(axis, 1))
             if (atm_key+1) != axis[1]:
@@ -258,7 +258,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
                 ene = scn_save_fs[-1].file.energy.read(locs)
                 pot[i] = (ene - min_ene) * phycon.EH2KCAL
             else:
-                pot[i] = 10.0
+                pot[i] = -10.0
             if read_freqs:
                 freqs[i] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
     elif len(tors_names) == 2:
@@ -273,7 +273,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
                     ene = scn_save_fs[-1].file.energy.read(locs)
                     pot[i][j] = (ene - min_ene) * phycon.EH2KCAL
                 else:
-                    pot[i][j] = 10.0
+                    pot[i][j] = -10.0
                 if read_freqs:
                     freqs[i][j] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
     elif len(tors_names) == 3:
@@ -289,7 +289,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
                         ene = scn_save_fs[-1].file.energy.read(locs)
                         pot[i][j][k] = (ene - min_ene) * phycon.EH2KCAL
                     else:
-                        pot[i][j][k] = 10.0
+                        pot[i][j][k] = -10.0
                     if read_freqs:
                         freqs[i][j][k] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
     elif len(tors_names) == 4:
@@ -308,7 +308,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
                             ene = scn_save_fs[-1].file.energy.read(locs)
                             pot[i][j][k][l] = (ene - min_ene) * phycon.EH2KCAL
                         else:
-                            pot[i][j][k][l] = 10.0
+                            pot[i][j][k][l] = -10.0
                         if read_freqs:
                             freqs[i][j][k][l] = scn_save_fs[-1].file.harmonic_frequencies.read(locs)
 

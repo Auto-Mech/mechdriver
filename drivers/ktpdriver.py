@@ -46,9 +46,11 @@ def run(pes_formula, pes_idx,
         geo_model = spc_model_dct[spc_model]['es']['geo']
         es_info = parser.model.set_es_model_info(
             spc_model_dct[spc_model]['es'], thy_dct)
-        # Need to fix
-        thy_info = filesys.inf.get_es_info(ene_model, thy_dct)
-        # thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
+        if not isinstance(ene_model, str):
+            ene_method = ene_model[1][1]
+        else:
+            ene_method = ene_model
+        thy_info = filesys.inf.get_es_info(ene_method, thy_dct)
         ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
         pf_model = parser.model.set_pf_model_info(
             spc_model_dct[spc_model]['pf'])
