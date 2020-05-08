@@ -70,6 +70,8 @@ print('{}'.format(RUN_INP_DCT['run_prefix']))
 prefix_fs(RUN_INP_DCT['save_prefix'])
 print('{}'.format(RUN_INP_DCT['save_prefix']))
 
+printer.program_exit('inp')
+
 # Run the requested drivers: es, thermo, ktp
 print('\n\nRunning the requested drivers...')
 if 'es' in RUN_JOBS_LST:
@@ -113,6 +115,9 @@ if 'es' in RUN_JOBS_LST:
             THY_DCT,
             RUN_INP_DCT
         )
+    
+    printer.program_exit('es')
+
 
 WRITE_MESSPF, RUN_MESSPF, RUN_NASA = parser.run.set_thermodriver(RUN_JOBS_LST)
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
@@ -143,6 +148,8 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
             run_messpf=RUN_MESSPF,
             run_nasa=RUN_NASA,
         )
+
+    printer.program_exit('thermo')
 
 WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = parser.run.set_ktpdriver(RUN_JOBS_LST)
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
@@ -176,5 +183,9 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
             )
     else:
         print("Can't run kTPDriver without a PES being specified")
+    
+    printer.program_exit('ktp')
 
-print('\n\nAutoMech has completed.')
+# Exit Program 
+print('\n\n')
+printer.program_exit('amech')

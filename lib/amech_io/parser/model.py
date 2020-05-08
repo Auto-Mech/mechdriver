@@ -189,9 +189,15 @@ def check_spc_model_dct(model_dct):
             if val not in MODEL_PF_SUPPORTED_DCT[key]:
                 print('*ERROR: Value {}'.format(val),
                       'for Keyword {} not supported'.format(key))
+                print('\nSupported keys for {}:'.format(key))
+                for supp_val in MODEL_PF_SUPPORTED_DCT[key]:
+                    print(supp_val)
                 sys.exit()
         else:
             print('*ERROR: Keyword {} not supported'.format(key))
+            print('\nSupported keys:')
+            for supp_key in MODEL_PF_SUPPORTED_DCT:
+                print(supp_key)
             sys.exit()
 
     # See if any pf model combinations were specified that are not supported
