@@ -122,7 +122,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                 hr_str = ""
                 symf = sym_factor
             else:
-                geo, freqs, imag, hr_str, _ = pfmodels.vib_harm_tors_1dhr(
+                geo, freqs, imag, hr_str, _, symf = pfmodels.vib_harm_tors_1dhr(
                     harm_min_cnf_locs, harm_cnf_save_fs,
                     tors_min_cnf_locs, tors_cnf_save_fs,
                     tors_save_path, tors_cnf_save_path,
@@ -131,13 +131,6 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
                     sym_factor, elec_levels,
                     saddle=saddle,
                     frz_tors=frz_tors)
-                sym_nums = tors.get_tors_sym_nums(
-                    spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                    frm_bnd_key, brk_bnd_key, saddle=saddle)
-                    # frm_bnd_key, brk_bnd_key, saddle=False)
-                symf = sym_factor
-                for num in sym_nums:
-                    symf /= num
         elif vib_model == 'harm' and tors_model == 'mdhr':
             if no_tors:
                 geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
@@ -546,7 +539,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
             symf_i = sym_factor_i
         else:
             frz_tors = True if tors_model == '1dhrf' else False
-            geo_i, freqs_i, _, hr_str_i, _ = pfmodels.vib_harm_tors_1dhr(
+            geo_i, freqs_i, _, hr_str_i, _, symf_i = pfmodels.vib_harm_tors_1dhr(
                 harm_min_cnf_locs_i, harm_cnf_save_fs_i,
                 tors_min_cnf_locs_i, tors_cnf_save_fs_i,
                 tors_save_path_i, tors_cnf_save_path_i,
@@ -555,12 +548,6 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
                 sym_factor_i, elec_levels,
                 saddle=False,
                 frz_tors = frz_tors)
-            sym_nums_i = tors.get_tors_sym_nums(
-                spc_dct_i, tors_min_cnf_locs_i, tors_cnf_save_fs_i,
-                frm_bnd_key, brk_bnd_key, saddle=False)
-            symf_i = sym_factor_i
-            for num in sym_nums_i:
-                symf_i /= num
         if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             geo_j = harm_cnf_save_fs_j[-1].file.geometry.read(
                 harm_min_cnf_locs_j)
@@ -577,7 +564,7 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
                 harm_cnf_save_fs_j, saddle=False)
         else:
             frz_tors = True if tors_model == '1dhrf' else False
-            geo_j, freqs_j, _, hr_str_j, _ = pfmodels.vib_harm_tors_1dhr(
+            geo_j, freqs_j, _, hr_str_j, _, symf_j = pfmodels.vib_harm_tors_1dhr(
                 harm_min_cnf_locs_j, harm_cnf_save_fs_j,
                 tors_min_cnf_locs_j, tors_cnf_save_fs_j,
                 tors_save_path_j, tors_cnf_save_path_j,
@@ -586,12 +573,6 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
                 sym_factor_j, elec_levels,
                 saddle=False,
                 frz_tors = frz_tors)
-            sym_nums_j = tors.get_tors_sym_nums(
-                spc_dct_j, tors_min_cnf_locs_j, tors_cnf_save_fs_j,
-                frm_bnd_key, brk_bnd_key, saddle=False)
-            symf_j = sym_factor_j
-            for num in sym_nums_j:
-                symf_j /= num
         freqs = list(freqs_i) + list(freqs_j)
         hind_rot_str = hr_str_i + hr_str_j
         sym_factor = symf_i * symf_j
@@ -721,7 +702,7 @@ def fake_species_block(
                 harm_cnf_save_fs_i, saddle=False)
         else:
             frz_tors = True if tors_model == '1dhrf' else False
-            _, freqs_i, _, hr_str_i, _ = pfmodels.vib_harm_tors_1dhr(
+            _, freqs_i, _, hr_str_i, _, symf_i = pfmodels.vib_harm_tors_1dhr(
                 harm_min_cnf_locs_i, harm_cnf_save_fs_i,
                 tors_min_cnf_locs_i, tors_cnf_save_fs_i,
                 tors_save_path_i, tors_cnf_save_path_i,
@@ -730,12 +711,6 @@ def fake_species_block(
                 sym_factor_i, elec_levels,
                 saddle=False,
                 frz_tors=frz_tors)
-            sym_nums_i = tors.get_tors_sym_nums(
-                spc_dct_i, tors_min_cnf_locs_i, tors_cnf_save_fs_i,
-                frm_bnd_key, brk_bnd_key, saddle=False)
-            symf_i = sym_factor_i
-            for num_i in sym_nums_i:
-                symf_i /= num_i
 
         if messfutil.is_atom(harm_min_cnf_locs_j, harm_cnf_save_fs_j):
             freqs_j = ()
@@ -749,7 +724,7 @@ def fake_species_block(
                 harm_cnf_save_fs_j, saddle=False)
         else:
             frz_tors = True if tors_model == '1dhrf' else False
-            _, freqs_j, _, hr_str_j, _ = pfmodels.vib_harm_tors_1dhr(
+            _, freqs_j, _, hr_str_j, _, symf_j = pfmodels.vib_harm_tors_1dhr(
                 harm_min_cnf_locs_j, harm_cnf_save_fs_j,
                 tors_min_cnf_locs_j, tors_cnf_save_fs_j,
                 tors_save_path_j, tors_cnf_save_path_j,
@@ -758,12 +733,6 @@ def fake_species_block(
                 sym_factor_j, elec_levels,
                 saddle=False,
                 frz_tors=frz_tors)
-            sym_nums_j = tors.get_tors_sym_nums(
-                spc_dct_j, tors_min_cnf_locs_j, tors_cnf_save_fs_j,
-                frm_bnd_key, brk_bnd_key, saddle=False)
-            symf_j = sym_factor_j
-            for num_j in sym_nums_j:
-                symf_j /= num_j
         freqs = freqs + freqs_i + freqs_j
         hind_rot_str = hr_str_i + hr_str_j
         sym_factor = symf_i * symf_j
@@ -832,7 +801,7 @@ def set_model_filesys(thy_save_fs, spc_info, level, saddle=False):
     # Get the save fileystem path
     save_path = thy_save_fs[-1].path(levelp[1:4])
     if saddle:
-        save_fs = autofile.fs.ts(save_path)
+        save_fs = autofile.fs.transition_state(save_path)
         save_fs[0].create()
         save_path = save_fs[0].path()
 

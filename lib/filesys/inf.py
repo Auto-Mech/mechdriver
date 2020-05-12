@@ -193,7 +193,6 @@ def get_zmas(
         kickoff_size, kickoff_backward):
     """get the zmats for reactants and products using the initial level of theory
     """
-    projrot_script_str = DEFAULT_SCRIPT_DCT['projrot']
     if len(reacs) > 2:
         ich = spc_dct[reacs[-1]]['ich']
         ichgeo = automol.inchi.geometry(ich)
@@ -206,10 +205,10 @@ def get_zmas(
         prods = prods[:-1]
     rct_geos, rct_cnf_save_fs_lst = get_geos(
         reacs, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
-        kickoff_backward, projrot_script_str)
+        kickoff_backward)
     prd_geos, prd_cnf_save_fs_lst = get_geos(
         prods, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
-        kickoff_backward, projrot_script_str)
+        kickoff_backward)
     rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
     prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
     if len(rct_zmas) > 2:
@@ -221,7 +220,7 @@ def get_zmas(
 
 def get_geos(
         spcs, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
-        kickoff_backward, projrot_script_str):
+        kickoff_backward):
     """get geos for reactants and products using the initial level of theory
     """
     spc_geos = []
@@ -250,12 +249,14 @@ def get_geos(
             cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
             run_fs = autofile.fs.run(ini_thy_run_path)
             run_fs[0].create()
-            tmp_ini_fs = [None, ini_thy_save_fs]
-            tmp_fs = [spc_save_fs, spc_run_fs, ini_thy_save_fs, ini_thy_run_fs,
-                      cnf_save_fs, cnf_run_fs, run_fs]
             geo = geom.reference_geometry(
-                spc_dct[spc], ini_thy_lvl, ini_thy_lvl, tmp_fs, tmp_ini_fs,
-                kickoff_size, kickoff_backward, projrot_script_str,
+                spc_dct[spc], ini_thy_lvl, ini_thy_lvl,
+                ini_thy_run_fs, ini_thy_save_fs,
+                ini_thy_save_fs,
+                cnf_run_fs, cnf_save_fs,
+                run_fs,
+                kickoff_size=kickoff_size,
+                kickoff_backward=kickoff_backward,
                 overwrite=False)
         spc_geos.append(geo)
     return spc_geos, cnf_save_fs_lst

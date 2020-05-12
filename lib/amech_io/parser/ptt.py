@@ -142,7 +142,7 @@ def format_param_vals(pvals):
     value = value.strip()
     # Format values if it is a list (of string(s), boolean(s), int(s))
     if all(sym in value for sym in ('[[', ']]')):
-        value = value.replace('D', '').replace('d', '') 
+        value = value.replace('D', '').replace('d', '')
         value = ast.literal_eval(value)
         frmtd_value = []
         for sub_lst in value:

@@ -37,7 +37,7 @@ def names_from_dct(spc_dct_i, ndim_tors):
         if ndim_tors == '1dhr':
             amech_ts_tors_names = [[name] for name in amech_ts_tors_names]
         else:
-            amech_ts_tors_names = [[name for name in amech_ts_tors_names]]
+            amech_ts_tors_names = [amech_ts_tors_names]
 
     # Set the run tors names
     if inp_tors_names:
@@ -67,7 +67,7 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, ndim_tors='1dhr',
         tors_name_grps = mdhr_prep(zma, tors_name_grps)
 
     # Build the grids corresponding to the torsions
-    tors_grids = []  # tors_syms = []
+    tors_grids, tors_sym_nums = [], []
     for tors_names in tors_name_grps:
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,
@@ -76,10 +76,16 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, ndim_tors='1dhr',
             [numpy.linspace(*linspace) + val_dct[name]
              for name, linspace in zip(tors_names, tors_linspaces)]
         )
-        # tors_sym_nums.append(list(automol.zmatrix.torsional_symmetry_numbers(
-        #   zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
+        # Don't need symmetries for mult-dim rotors
+        if len(tors_names) < 1:
+            tors_sym_nums.append(list(
+                automol.zmatrix.torsional_symmetry_numbers(
+                zma, tors_names,
+                frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)))
+        else:
+            tors_sym_nums.append(None)
 
-    return tors_name_grps, tors_grids  # tors_syms
+    return tors_name_grps, tors_grids, tors_sym_nums
 
 
 def mdhr_prep(zma, run_tors_names):
