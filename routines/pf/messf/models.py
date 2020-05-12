@@ -125,12 +125,9 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 saddle=saddle, hind_rot_geo=tors_geo, frz_tors=frz_tors)
 
             # Calculate ZPVES of the hindered rotors
-            if saddle and tors_names is not None:
-                tors_zpe = tors.calc_tors_freqs_zpe(
-                    tors_geo, sym_factor, elec_levels,
-                    hind_rot_str, tors_save_path)
-            else:
-                tors_zpe = 0.0
+            tors_zpe = tors.calc_tors_freqs_zpe(
+                tors_geo, sym_factor, elec_levels,
+                hind_rot_str, tors_save_path)
 
             # Run one vers ProjRot to proj freqs for that version
             freqs1, imag_freq1, zpe_harm_no_tors = vib.projrot_freqs_1(
@@ -143,7 +140,7 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
             pfreqs2 = vib.projrot_freqs_2(
                 tors_save_path, pot=True, saddle=saddle)
             [freqs2, imag_freq2,
-             zpe_harm_no_tors_2, harm_zpe] = pfreqs2
+             harm_zpe, zpe_harm_no_tors_2] = pfreqs2
 
             # Determine freqs and imag_freqs
             freqs, imag_freq, zpe = vib.determine_freqs_zpe(
@@ -246,7 +243,7 @@ def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,
             pfreqs2 = vib.projrot_freqs_2(
                 tors_save_path, pot=True, saddle=saddle)
             [freqs2, imag_freq2,
-             zpe_harm_no_tors_2, harm_zpe] = pfreqs2
+             harm_zpe, zpe_harm_no_tors_2] = pfreqs2
 
             # Determine freqs and imag_freqs
             freqs, imag_freq, zpe = vib.determine_freqs_zpe(
@@ -334,7 +331,7 @@ def vib_harm_tors_tau(harm_min_cnf_locs, harm_cnf_save_fs,
             pfreqs2 = vib.projrot_freqs_2(
                 tors_save_path, pot=True, saddle=saddle)
             [freqs2, imag_freq2,
-             zpe_harm_no_tors_2, harm_zpe] = pfreqs2
+             harm_zpe, zpe_harm_no_tors_2] = pfreqs2
 
             # Determine freqs and imag_freqs
             freqs, imag_freq, zpe = vib.determine_freqs_zpe(

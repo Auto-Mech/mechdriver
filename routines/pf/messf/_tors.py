@@ -315,7 +315,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
     return pot, freqs
 
 
-def hrpot_spline_fitter(pot, thresh=-0.05):
+def hrpot_spline_fitter(pot, thresh=-0.05, max_thresh=15.):
     """ Get a physical hindered rotor potential via a series of spline fits
     """
 
@@ -334,6 +334,16 @@ def hrpot_spline_fitter(pot, thresh=-0.05):
     # pot_success.append(pot[0])
     # print('idx_success test', idx_success)
     # print('pot_success test', pot_success)
+    if any(val > max_thresh for val in pot):
+        max_pot = max(pot)
+        print('Warning: Found pot val of {0:.2f}'.format(max_pot),' which is larger than', 
+              'the typical maximum for a torsional potential')
+        print('Potential before spline:', pot)
+    if any(val < thresh for val in pot):
+        min_pot = min(pot)
+        print('Warning: Found pot val of {0:.2f}'.format(min_pot),' which is below',
+              '{0} kcal. Refit w/ positives'.format(thresh))
+        print('Potential before spline:', pot)
     pot_spl = interp1d(
         numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
     for idx in range(lpot):
@@ -341,9 +351,8 @@ def hrpot_spline_fitter(pot, thresh=-0.05):
 
     # Do second spline fit of only positive values if any negative values found
     if any(val < thresh for val in pot):
-        print('Found pot vals below',
-              ' {0} kcal. Refit w/ positives'.format(thresh))
-        print('Potential before spline:', pot)
+        print('Still found negative potential values after first spline')
+        print('Potential after spline:', pot)
         x_pos = numpy.array([i for i in range(lpot)
                              if pot[i] >= thresh])
         y_pos = numpy.array([pot[i] for i in range(lpot)
@@ -355,9 +364,10 @@ def hrpot_spline_fitter(pot, thresh=-0.05):
 
         print('Potential after spline:', pot_pos_fit)
         # Perform second check to see if negative potentials have been fixed
+        # If not, use linear interpolation of positive values
         if any(val < thresh for val in pot_pos_fit):
-            print('Found values below {0} kcal again.'.format(thresh),
-                  ' Trying linear interp of positive vals')
+            print('Still found negative potential values after second spline')
+            print('Replace with linear interpolation of positive values')
             neg_idxs = [i for i in range(lpot) if pot_pos_fit[i] < thresh]
             clean_pot = []
             for i in range(lpot):
@@ -377,9 +387,12 @@ def hrpot_spline_fitter(pot, thresh=-0.05):
                         pot_pos_fit[idx_1] * ((i-idx_0)/(idx_1-idx_0))
                     )
                     clean_pot.append(interp_val)
+                    # print('linear interp test:', i, j, interp_val, pot[i])
                 else:
-                    clean_pot.append(pot[i])
+                    clean_pot.append(pot_pos_fit[i])
             final_potential = clean_pot.copy()
+            # print('clean_pot test:', clean_pot)
+            # print('initial final pot test:', final_potential)
 
         else:
             final_potential = pot_pos_fit.copy()
@@ -389,6 +402,7 @@ def hrpot_spline_fitter(pot, thresh=-0.05):
 
     # print('Final potential in spline fitter:', final_potential)
     final_potential = final_potential[:-1]
+    # print('2nd Final potential in spline fitter:', final_potential)
 
     return final_potential
 
