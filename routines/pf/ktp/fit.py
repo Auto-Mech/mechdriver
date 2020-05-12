@@ -354,18 +354,18 @@ def assess_troe_fit_err(fit_param_dct, ktp_dct, t_ref=1.0, a_conv_factor=1.0):
     return fit_err_dct
 
 
-def check_single_fit_errors(sing_fit_err_dct, err_thresh):
-    """ Determine if fit errors
-    """
-    pass
-
-
-def print_fit_info(params_dct, err_dct):
-    """ print fitting infor
-    """
-    # inf_str = '{} {} {} {}'.format(
-    # for pressure, params in sing_params_dct.items():
-    #     inf_str += '{} {8.5} {} {}'.format(
+# def check_single_fit_errors(sing_fit_err_dct, err_thresh):
+#     """ Determine if fit errors
+#     """
+#     pass
+#
+#
+# def print_fit_info(params_dct, err_dct):
+#     """ print fitting infor
+#     """
+#     # inf_str = '{} {} {} {}'.format(
+#     # for pressure, params in sing_params_dct.items():
+#     #     inf_str += '{} {8.5} {} {}'.format(
 
 # Readers
 def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
@@ -414,8 +414,6 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     for pressure, calc_ks in calc_k_dct.items():
         filtered_temps, filtered_ks = ratefit.fit.get_valid_tk(
             mess_temps, calc_ks, bimol)
-        print('test')
-        print(filtered_temps)
         if filtered_ks.size > 0:
             valid_calc_tk_dct[pressure] = [filtered_temps, filtered_ks]
 

@@ -12,36 +12,39 @@ jobs:
                     apt-get install --yes libxrender-dev build-essential
                     conda env create -f environment.yml
             - run:
-                name: Build/install autochem
+                name: Build/install moldriver
                 command: |
-                    source activate autochem-env
+                    source activate moldriver-env
                     python setup.py install
             - run:
-                name: Test automol
+                name: Test moldriver
                 command: |
-                    source activate autochem-env
-                    cd automol
-                    pytest -v --disable-pytest-warnings --cov=automol --pyargs automol
-                    flake8 --exit-zero autommol
-                    pylint --rcfile=../.pylintrc automol
+                    source activate moldriver-env
+                    pytest -v --cov=moldriver --pyargs moldriver
             - run:
-                name: Test autoread
+                name: Pylint bin
                 command: |
-                    source activate autochem-env
-                    cd autoread
-                    pytest -v --cov=autoread --pyargs autoread
-                    flake8 --exit-zero autoread
-                    pylint --rcfile=../.pylintrc autoread
+                    source activate moldriver-env
+                    flake8 --exit-zero bin
+                    pylint --rcfile=../.pylintrc bin
             - run:
-                name: Build/install/test x2z
+                name: Pylint drivers
                 command: |
-                    source activate autochem-env
-                    cd external/x2z
-                    bash debug/build.sh
-                    . debug/fake-install.sh
-                    x2z examples/ch4.xyz
-                    x2z examples/allene.xyz
-                    pytest -v tests/
+                    source activate moldriver-env
+                    flake8 --exit-zero drivers
+                    pylint --rcfile=../.pylintrc drivers
+            - run:
+                name: Pylint routines
+                command: |
+                    source activate moldriver-env
+                    flake8 --exit-zero routines
+                    pylint --rcfile=../.pylintrc routines
+            - run:
+                name: Pylint lib
+                command: |
+                    source activate moldriver-env
+                    flake8 --exit-zero lib
+                    pylint --rcfile=../.pylintrc lib
 workflows:
     version: 2
     build-all:

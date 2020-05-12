@@ -163,7 +163,7 @@ def cnf_fs_from_thy(thy_prefix, cnf=None, saddle=False):
     """
     # Build an intermediate TS filesystem if needed
     if saddle:
-        ts_fs = autofile.fs.ts(thy_prefix)
+        ts_fs = autofile.fs.transition_state(thy_prefix)
         ts_fs[0].create()
         cnf_prefix = ts_fs[0].path()
     else:
@@ -328,7 +328,7 @@ def sp_from_prefix(prefix, thy_info):
 
 
 def high_spin_from_prefix(prefix, thy_info):
-    """
+    """ Build high-spin filesystem from prefix
     """
 
     hs_fs = autofile.fs.high_spin(prefix)
@@ -344,7 +344,7 @@ def ts_fs_from_root(root_prefix, spc_info, thy_info):
     # Build the theory filesystem
     _, thy_path = rxn_thy_fs_from_root(root_prefix, spc_info, thy_info)
 
-    ts_fs = autofile.fs.ts(thy_path)
+    ts_fs = autofile.fs.transition_state(thy_path)
     ts_fs[0].create()
     ts_path = ts_fs[0].path()
 
@@ -355,7 +355,7 @@ def ts_fs_from_thy(thy_prefix):
     """ Create species filesystem object and path
     """
 
-    ts_fs = autofile.fs.ts(thy_prefix)
+    ts_fs = autofile.fs.transition_state(thy_prefix)
     ts_fs[0].create()
     ts_path = ts_fs[0].path()
 

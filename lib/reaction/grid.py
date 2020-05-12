@@ -131,7 +131,7 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma,
     elif 'radical radical' in rtype and 'addition' in rtype:
         grid, update_guess = radrad_addition_grid()
     elif 'radical radical' in rtype and 'hydrogen abstraction' in rtype:
-        grid, update_guess = radrad_hydrogen_abstraction()
+        grid, update_guess = radrad_hydrogen_abstraction_grid()
     else:
         raise NotImplementedError
 

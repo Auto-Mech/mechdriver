@@ -37,7 +37,7 @@ def names_from_dct(spc_dct_i, ndim_tors):
         if ndim_tors == '1dhr':
             amech_ts_tors_names = [[name] for name in amech_ts_tors_names]
         else:
-            amech_ts_tors_names = [[name for name in amech_ts_tors_names]]
+            amech_ts_tors_names = [amech_ts_tors_names]
 
     # Set the run tors names
     if inp_tors_names:

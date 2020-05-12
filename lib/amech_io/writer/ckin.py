@@ -11,7 +11,7 @@ def run_ckin_header(es_info, spc_model):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
     tors_model, vib_model, sym_model = spc_model
-    [geo_info, ene_info, har_info, vpt2_info, _, tors_info] = es_info
+    [geo_info, ene_info, har_info, _, _, tors_info] = es_info
 
     # Convert the pac99 polynomial to chemkin polynomial
     chemkin_header_str = '! vib model: {0}\n'.format(vib_model)
@@ -40,11 +40,10 @@ def _ckin_ene_lvl_str(ene_info, geo_info):
             ene_lvl[0],
             ene_lvl[1][3], ene_lvl[1][1], ene_lvl[1][2],
             geo_info[3], geo_info[1], geo_info[2])
-        if i+1 != len(ene_info): 
+        if i+1 != len(ene_info):
             ene_str += ' +'
 
     return ene_str
-
 
 
 def run_ckin_poly(spc, spc_dct_i, pac99_poly_str):

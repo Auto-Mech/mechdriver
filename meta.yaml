@@ -1,7 +1,7 @@
-# cmd: conda build . -c pacchem -c psi4 -c rdkit -c openbabel
+# cmd: conda build . -c kevinmooreiii -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
 package:
-    name: moldr
-    version: "0.1.1"
+    name: moldriver
+    version: "0.1.0"
 
 source:
     path: .
@@ -11,8 +11,12 @@ requirements:
         - python
     run:
         - python
+        - {{ compiler('fortran') }}
         - numpy
+        - scipy
         - pyyaml
+        - mako
+        - matplotlib
         - pytest
         - pytest-cov
         - future
@@ -20,7 +24,18 @@ requirements:
         - pylint
         - rdkit::rdkit
         - openbabel::openbabel
+        - conda-forge::qcelemental
         - psi4::psi4
-        - pacchem::autoparse
-        - pacchem::autochem
-        - pacchem::elstruct
+        - kevinmooreiii::autofile
+        - kevinmooreiii::automol
+        - kevinmooreiii::autoparse
+        - kevinmooreiii::elstruct
+        - kevinmooreiii::interfaces
+        - kevinmooreiii::ratefit
+        - auto-mech::mess
+        - auto-mech::pac99
+        - auto-mech::projrot
+        - auto-mech::thermp
+        - auto-mech::x2z
+        - auto-mech::slatec
+        - auto-mech::mpack
