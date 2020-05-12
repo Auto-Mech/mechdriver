@@ -70,9 +70,34 @@ print('{}'.format(RUN_INP_DCT['run_prefix']))
 prefix_fs(RUN_INP_DCT['save_prefix'])
 print('{}'.format(RUN_INP_DCT['save_prefix']))
 
-# Run the requested drivers: es, thermo, ktp
-print('\n\nRunning the requested drivers...')
-if 'es' in RUN_JOBS_LST:
+# Print messages describing drivers and tasks running
+print('\nDrivers and tasks user has requested to be run...')
+RUN_ES = bool('es' in RUN_JOBS_LST)
+WRITE_MESSPF, RUN_MESSPF, RUN_NASA = parser.run.set_thermodriver(RUN_JOBS_LST)
+WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = parser.run.set_ktpdriver(RUN_JOBS_LST)
+if RUN_ES:
+    print('  - ESDriver')
+if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
+    print('  - ThermoDriver')
+    if WRITE_MESSPF:
+        print('    - write_messpf')
+    if RUN_MESSPF:
+        print('    - run_messpf')
+    if RUN_MESSPF:
+        print('    - run_nasa')
+if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
+    print('  - kTPDriver')
+    if WRITE_MESSRATE:
+        print('    - write_messrate')
+    if RUN_MESSRATE:
+        print('    - run_messrate')
+    if RUN_MESSPF:
+        print('    - run_fits')
+
+printer.program_exit('inp')
+
+# ESDriver
+if RUN_ES:
 
     printer.program_header('es')
 
@@ -113,8 +138,13 @@ if 'es' in RUN_JOBS_LST:
             THY_DCT,
             RUN_INP_DCT
         )
+    
+    printer.program_exit('es')
 
-WRITE_MESSPF, RUN_MESSPF, RUN_NASA = parser.run.set_thermodriver(RUN_JOBS_LST)
+
+    printer.program_exit('es')
+
+# ThermoDriver
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
 
     printer.program_header('thermo')
@@ -144,7 +174,9 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
             run_nasa=RUN_NASA,
         )
 
-WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = parser.run.set_ktpdriver(RUN_JOBS_LST)
+    printer.program_exit('thermo')
+
+# kTPDriver
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
 
     printer.program_header('ktp')
@@ -176,5 +208,9 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
             )
     else:
         print("Can't run kTPDriver without a PES being specified")
+    
+    printer.program_exit('ktp')
 
-print('\n\nAutoMech has completed.')
+# Exit Program 
+print('\n\n')
+printer.program_exit('amech')

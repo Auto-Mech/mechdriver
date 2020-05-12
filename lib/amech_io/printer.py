@@ -18,6 +18,19 @@ def program_header(driver):
     print(header_dct[driver])
 
 
+def program_exit(driver):
+    """ print the header for a program
+    """
+    header_dct = {
+        'amech': AMECH_EXIT_MSG,
+        'inp': INP_EXIT_MSG,
+        'ktp': KTP_EXIT_MSG,
+        'thermo': THM_EXIT_MSG,
+        'es': ES_EXIT_MSG
+    }
+    print(header_dct[driver]+'\n')
+
+
 AMECH_MSG = """
           ================================================================
           ==                        AUTOMECHANIC                        ==
@@ -26,9 +39,19 @@ AMECH_MSG = """
           ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
           ================================================================"""
 
+AMECH_EXIT_MSG = """
+          ================================================================
+          ==                    EXITING AUTOMECHANIC                    ==
+          ================================================================"""
+
 INP_MSG = """
 =========================================================
-INPUT PARSER
+PARSING INPUT
+========================================================="""
+
+INP_EXIT_MSG = """
+=========================================================
+FINISHED INPUT PARSING
 ========================================================="""
 
 KTP_MSG = """
@@ -40,6 +63,11 @@ Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,
 Ahren Jasper, Stephen Klippenstein
 ========================================================="""
 
+KTP_EXIT_MSG = """
+=========================================================
+EXITING kTPDRIVER
+========================================================="""
+
 THM_MSG = """
 =========================================================
 THERMODRIVER
@@ -48,11 +76,21 @@ Sarah Elliott, Kevin Moore, Andreas Copan,
 Murat Keceli, Yuri Georgievski, Stephen Klippenstein
 ========================================================="""
 
+THM_EXIT_MSG = """
+=========================================================
+EXITING THERMODRIVER
+========================================================="""
+
 ES_MSG = """
 =========================================================
 ESDRIVER
 Sarah Elliott, Andreas Copan, Kevin Moore,
 Carlo Cavolotti, Stephen Klippenstein
+========================================================="""
+
+ES_EXIT_MSG = """
+=========================================================
+EXITING ESDRIVER
 ========================================================="""
 
 

@@ -164,13 +164,15 @@ def reduce_pes_dct_to_user_inp(pes_dct, pesnums):
 def print_pes_channels(pes_dct):
     """ Print the PES
     """
+
+    print('\n  Sorted Mechanism read from file:')
     for pes_idx, formula in enumerate(pes_dct):
-        print('PES:', pes_idx+1, formula)
+        print('    PES:', pes_idx+1, formula)
         pes_rxn_name_lst = pes_dct[formula]['rxn_name_lst']
         pes_rct_names_lst = pes_dct[formula]['rct_names_lst']
         pes_prd_names_lst = pes_dct[formula]['prd_names_lst']
         for chn_idx, _ in enumerate(pes_rxn_name_lst):
-            print('channel {}: {} = {}'.format(
+            print('      Channel {}: {} = {}'.format(
                 chn_idx+1,
                 ' + '.join(pes_rct_names_lst[chn_idx]),
                 ' + '.join(pes_prd_names_lst[chn_idx])))

@@ -292,7 +292,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
         reacs = rxn['reacs']
         prods = rxn['prods']
 
-        print('  Preparing for {} for reaction {} = {}'.format(
+        print('  Preparing {} for reaction {} = {}'.format(
             tsname, '+'.join(reacs), '+'.join(prods)))
 
         # Check the class dct to see if we can set class

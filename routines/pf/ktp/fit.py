@@ -21,7 +21,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     """ Parse the MESS output and fit the rates to
         Arrhenius expressions written as CHEMKIN strings
     """
-    
+
     # Write header string containing thy information
     chemkin_header_str = writer.ckin.run_ckin_header(es_info, pf_model)
     chemkin_header_str += '\n'
@@ -35,7 +35,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
         os.mkdir(ckin_path)
     full_ckin_path = os.path.join(ckin_path, pes_formula_str+'.ckin')
     # if os.path.exists(full_ckin_path):
-        # os.remove(full_ckin_path)
+    #     os.remove(full_ckin_path)
 
     # Loop through reactions, fit rates, and write ckin strings
     labels = idx_dct.values()
@@ -48,11 +48,14 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
 
                     # Set name
                     reaction = name_i + '=' + name_j
+                    print('\nGetting Rates for {}'.format(
+                        reaction))
 
                     # Initialize new chemkin str for reaction
                     chemkin_str = chemkin_header_str
 
                     # Read the rate constants out of the mess outputs
+                    print('\nReading k(T,P)s from MESS output...')
                     ktp_dct = read_rates(
                         inp_temps, inp_pressures, inp_tunit, inp_punit,
                         lab_i, lab_j, mess_path, pdep_fit,
@@ -60,11 +63,13 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
 
                     # Get the desired fits in the form of CHEMKIN strs
                     if fit_method == 'arrhenius':
+                        print('\nFitting k(T,P)s to PLOG/Arrhenius Form....')
                         chemkin_str += perform_arrhenius_fits(
                             ktp_dct, reaction, mess_path,
                             a_conv_factor, arrfit_thresh)
                     elif fit_method == 'troe':
-                        pass
+                        print('\nFitting k(T,P)s to Troe Form...')
+                        # pass
                         # chemkin_str += perform_troe_fits(
                         #     ktp_dct, reaction, mess_path,
                         #     troe_param_fit_lst,
@@ -74,6 +79,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                     chemkin_full_str += chemkin_str
                     chemkin_full_str += '\n\n'
                     # chemkin_str = chemkin_header_str + chemkin_str
+                    print('\nFitting Parameters in CHEMKIN Format:')
                     print(chemkin_str)
 
                     # Print the results for each channel to a file
@@ -87,6 +93,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
         cfile.write(chemkin_full_str)
 
 
+# Functions to fit rates to Arrhenius/PLOG function
 def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
                            a_conv_factor, err_thresh):
     """ Read the rates for each channel and perform the fits
@@ -103,11 +110,6 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
         sing_params_dct, ktp_dct,
         fit_type='single',
         t_ref=1.0, a_conv_factor=a_conv_factor)
-    print('\nFitting Parameters and Errors from Single Arrhenius Fit')
-    for pressure, params in sing_params_dct.items():
-        print(pressure, params)
-    for pressure, errs in sing_fit_err_dct.items():
-        print(pressure, errs)
 
     # Assess single fitting errors:
     # are they within threshold at each pressure
@@ -125,9 +127,20 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
         chemkin_str += chemkin_io.writer.reaction.plog(
             reaction, sing_params_dct,
             err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
+    elif not sgl_fit_good and not dbl_fit_poss:
+        print('\nNot enough temperatures for a double fit:',
+              ' Using single fits')
+        chemkin_str += chemkin_io.writer.reaction.plog(
+            reaction, sing_params_dct,
+            err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
     elif not sgl_fit_good and dbl_fit_poss:
         print('\nSingle fit errs too large & double fit possible:',
               ' Trying double fit')
+        print('\nFitting Parameters and Errors from Single Arrhenius Fit')
+        for pressure, params in sing_params_dct.items():
+            print(pressure, params)
+        for pressure, errs in sing_fit_err_dct.items():
+            print(pressure, errs)
 
         # Fit rate constants to double Arrhenius expressions
         doub_params_dct, doub_fit_temp_dct, doub_fit_suc = mod_arr_fit(
@@ -150,12 +163,6 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
             chemkin_str += chemkin_io.writer.reaction.plog(
                 reaction, sing_params_dct,
                 err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
-    elif not sgl_fit_good and not dbl_fit_poss:
-        print('\nNot enough temperatures for a double fit:',
-              ' Using single fits')
-        chemkin_str += chemkin_io.writer.reaction.plog(
-            reaction, sing_params_dct,
-            err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
 
     return chemkin_str
 
@@ -248,6 +255,7 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
     return fit_err_dct
 
 
+# Functions to fit rates to Troe function
 def perform_troe_fits(ktp_dct, reaction, mess_path,
                       troe_param_fit_lst, a_conv_factor, err_thresh):
     """ Fit rate constants to Troe parameters
@@ -346,6 +354,19 @@ def assess_troe_fit_err(fit_param_dct, ktp_dct, t_ref=1.0, a_conv_factor=1.0):
     return fit_err_dct
 
 
+def check_single_fit_errors(sing_fit_err_dct, err_thresh):
+    """ Determine if fit errors
+    """
+    pass
+
+
+def print_fit_info(params_dct, err_dct):
+    """ print fitting infor
+    """
+    # inf_str = '{} {} {} {}'.format(
+    # for pressure, params in sing_params_dct.items():
+    #     inf_str += '{} {8.5} {} {}'.format(
+
 # Readers
 def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                rct_lab, prd_lab, mess_path, pdep_fit, bimol=False):
@@ -393,15 +414,18 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     for pressure, calc_ks in calc_k_dct.items():
         filtered_temps, filtered_ks = ratefit.fit.get_valid_tk(
             mess_temps, calc_ks, bimol)
+        print('test')
+        print(filtered_temps)
         if filtered_ks.size > 0:
-            valid_calc_tk_dct[pressure] = numpy.concatenate(
-                (filtered_temps, filtered_ks))
+            valid_calc_tk_dct[pressure] = [filtered_temps, filtered_ks]
 
     # Filter the ktp dictionary by assessing the presure dependence
     if list(valid_calc_tk_dct.keys()) == ['high']:
+        print('Valid k(T)s only found at High Pressure...')
         ktp_dct['high'] = valid_calc_tk_dct['high']
     else:
         if pdep_fit:
+            print('User requested to assess pressure dependence of reaction.')
             assess_pdep_temps = pdep_fit['assess_pdep_temps']
             pdep_tolerance = pdep_fit['pdep_tolerance']
             no_pdep_pval = pdep_fit['no_pdep_pval']
@@ -411,17 +435,19 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                 valid_calc_tk_dct, assess_pdep_temps,
                 tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
             if rxn_is_pdependent:
+                print('Reaction found to be pressure dependent.')
                 # Set dct fit as copy of dct to do PLOG fits at all pressures
                 ktp_dct = copy.deepcopy(valid_calc_tk_dct)
             else:
                 # Set dct w/ single set of k(T, P) vals: P is desired pressure
+                print('No Pressure Dependence Detected.')
                 if no_pdep_pval in valid_calc_tk_dct:
                     ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
         else:
             # Set dct fit as copy of dct to do PLOG fits at all pressures
             ktp_dct = copy.deepcopy(valid_calc_tk_dct)
 
-    # Do something with high pressure rates
+    # Patchy way to get high-pressure rates in dct if needed
     if 'high' not in ktp_dct and 'high' in valid_calc_tk_dct.keys():
         ktp_dct['high'] = valid_calc_tk_dct['high']
 

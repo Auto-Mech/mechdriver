@@ -2,6 +2,7 @@
 """
 
 import os
+from mess_io.writer import rxnchan_header_str
 from routines.pf import ktp as ktp_routines
 from routines.pf.runner import ktp as ktp_runner
 from lib import filesys
@@ -21,7 +22,6 @@ def run(pes_formula, pes_idx,
         run_fits=True):
     """ main driver for generation of full set of rate constants on a single PES
     """
-    print('rxn lst', rxn_lst)
 
     # Pull stuff from dcts for now
     run_prefix = run_inp_dct['run_prefix']
@@ -62,8 +62,8 @@ def run(pes_formula, pes_idx,
             ts_dct, spc_dct)
 
     # Build the MESS label idx dictionary for the PES
-    label_dct = ktp_routines.rates.make_pes_label_dct(rxn_lst, pes_idx, spc_dct)
-    print('label_dct test:', label_dct)
+    label_dct = ktp_routines.rates.make_pes_label_dct(
+        rxn_lst, pes_idx, spc_dct)
 
     # Set path where MESS files will be written and read
     mess_path = ktp_runner.get_mess_path(run_prefix, pes_formula)
@@ -76,10 +76,11 @@ def run(pes_formula, pes_idx,
 
     # Write the MESS file
     if write_messrate:  # and not mess_inp_str:
-        print('Gathering ElStruct data to write MESS',
+        print(('\n\n------------------------------------------------' +
+               '--------------------------------------'))
+        print('\nGathering ElStruct data to write MESS',
               'input at {}'.format(mess_path))
 
-        print('Starting mess file preparation.')
         # Write the strings for the MESS input file
         globkey_str, energy_trans_str = ktp_routines.rates.make_header_str(
             spc_dct, rxn_lst, temps, pressures, **etransfer)
@@ -91,8 +92,15 @@ def run(pes_formula, pes_idx,
             spc_model_dct, thy_dct)
 
         # Combine strings together
+        rchan_header_str = rxnchan_header_str()
         mess_inp_str = '\n'.join(
-            [globkey_str, energy_trans_str, well_str, bim_str, ts_str])
+            [globkey_str,
+             energy_trans_str,
+             rchan_header_str,
+             well_str,
+             bim_str,
+             ts_str]
+        )
         mess_inp_str = cleaner.remove_trail_whitespace(mess_inp_str)
 
         # Build the filesystem
@@ -106,10 +114,18 @@ def run(pes_formula, pes_idx,
 
     # Run mess to produce rate output
     if run_messrate:
+        print(('\n\n------------------------------------------------' +
+               '--------------------------------------'))
+        print('\nRunning MESS for the input file at {}'.format(mess_path))
         ktp_runner.run_rates(mess_path)
+        # Include the PES number
 
     # Fit rate output to modified Arrhenius forms, print in ChemKin format
     if run_fits:
+        print(('\n\n------------------------------------------------' +
+               '--------------------------------------'))
+        print('\nFitting Rate Constants for PES to Functional Forms')
+        # Include the PES number
         ktp_routines.fit.fit_rates(temps, pressures, tunit, punit,
                                    pes_formula, label_dct,
                                    es_info, pf_model,

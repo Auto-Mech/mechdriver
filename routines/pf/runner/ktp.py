@@ -13,7 +13,7 @@ from lib.submission import DEFAULT_SCRIPT_DCT
 def get_mess_path(run_prefix, pes_formula):
     """ Build a simple mess path using the run prefix
     """
-    print(os.path.join(run_prefix, 'MESSRATE', pes_formula))
+    # print(os.path.join(run_prefix, 'MESSRATE', pes_formula))
     return os.path.join(run_prefix, 'MESSRATE', pes_formula)
 
 
@@ -73,14 +73,15 @@ def read_mess_file(mess_path):
     """
     dat_str_lst = []
     mess_file = os.path.join(mess_path, 'mess.inp')
+    print('Searching for MESS input file at {}'.format(mess_path))
     if os.path.exists(mess_file):
-        print('Found MESS Rates input file at {}'.format(mess_path))
-        print('Gonna overwrite....')
+        print(' - Found mess.inp at path.')
+        print(' - WARNING: File will be overwriten.')
         # print('No additional MESS input file will be written...')
         with open(mess_file, 'r') as mfile:
             mess_inp_str = mfile.read()
     else:
-        print('No MESS Rates file at {}'.format(mess_path))
+        print(' - No mess.inp file found at path.')
         mess_inp_str = ''
         dat_str_lst = []
 

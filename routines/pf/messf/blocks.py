@@ -76,7 +76,6 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             dist_names.append(spc_dct_i['dist_info'][3])
 
     no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
-    print('no_tors test:', no_tors, spc_dct_i)
     # Set TS information
     frm_bnd_key, brk_bnd_key = messfutil.get_bnd_keys(spc_dct_i, saddle)
 
