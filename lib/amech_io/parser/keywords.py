@@ -102,7 +102,8 @@ ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'frz_all_tors': [True, False],
     'ndim_tors': ['1dhr', 'mdhr'],
     'zpve_min': [True, False],
-    'nobarrier': ['pst', 'rpvtst', 'vrctst']
+    'nobarrier': ['pst', 'rpvtst', 'vrctst'],
+    'overwrite': [True, False]
 }
 ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'runlvl': None,

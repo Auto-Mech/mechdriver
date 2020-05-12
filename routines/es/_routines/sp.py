@@ -150,12 +150,14 @@ def run_hessian(zma, geo, spc_info, thy_info,
     #     scn_save_fs[-1].file.geometry.write(geo, locs)
 
     # Set input geom
-    if zma is not None:
-        job_geo = zma
-        is_atom = automol.geom.is_atom(automol.zmatrix.geometry(zma))
-    else:
-        job_geo = geo
-        is_atom = automol.geom.is_atom(geo)
+    # Warning using internal coordinates leads to inconsistencies with Gaussian
+    # For this reason we only use Cartesians to generate the Hessian
+    # if zma is not None:
+        # job_geo = zma
+        # is_atom = automol.geom.is_atom(automol.zmatrix.geometry(zma))
+    # else:
+    job_geo = geo
+    is_atom = automol.geom.is_atom(geo)
 
     if not geo_save_fs[-1].file.hessian.exists(locs) or overwrite:
 

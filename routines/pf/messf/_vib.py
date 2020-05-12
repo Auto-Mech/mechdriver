@@ -73,7 +73,7 @@ def projrot_freqs_2(save_path, pot=False, saddle=False):
 
     projrot_script_str2 = (
         "#!/usr/bin/env bash\n"
-        "RPHt.exe >& /dev/null")
+        "RPHt2.exe >& /dev/null")
     run_script(projrot_script_str2, path)
 
     with open(path+'/hrproj_freq.dat', 'r') as projfile:
