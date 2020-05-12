@@ -90,17 +90,17 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 run_tors_names = structure.tors.names_from_geo(
                     harm_geo, '1dhr', saddle=False)
 
-            tors_names, tors_grids = structure.tors.hr_prep(
+            tors_names, tors_grids, tors_sym_nums = structure.tors.hr_prep(
                 zma, tors_name_grps=run_tors_names,
                 scan_increment=scan_increment, ndim_tors='1dhr',
                 frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
                 # frm_bnd_key=(), brk_bnd_key=())
 
             # Set torsional stuff
-            tors_sym_nums = tors.get_tors_sym_nums(
-                spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
-                frm_bnd_key, brk_bnd_key, saddle=saddle)
-                #frm_bnd_key, brk_bnd_key, saddle=False)
+            # tors_sym_nums = tors.get_tors_sym_nums(
+            #     spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
+            #     frm_bnd_key, brk_bnd_key, saddle=saddle)
+            #     #frm_bnd_key, brk_bnd_key, saddle=False)
 
             # Set torsional stuff
             # tors_names = tors.get_tors_names(
@@ -147,13 +147,16 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 freqs1, freqs2, imag_freq1, imag_freq2,
                 zpe_harm_no_tors, zpe_harm_no_tors_2,
                 harm_zpe, tors_zpe)
+            
+            for num in tors_sym_nums:
+                sym_factor /= num
     else:
         print('ERROR: Reference geometry is missing for harmonic frequencies',
               ' for species {}'.format(spc_info[0]))
         tors_geo, freqs, imag_freq, hind_rot_str = (), (), 0.0, ''
         raise ValueError
 
-    return tors_geo, tuple(freqs), imag_freq, hind_rot_str, zpe
+    return tors_geo, tuple(freqs), imag_freq, hind_rot_str, zpe, sym_factor
 
 
 def vib_harm_tors_mdhr(harm_min_cnf_locs, harm_cnf_save_fs,

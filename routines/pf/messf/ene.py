@@ -138,7 +138,7 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
                 zpe = harm_zpe
             else:
                 print('HARM_1DHR')
-                _, _, _, _, zpe = pfmodels.vib_harm_tors_1dhr(
+                _, _, _, _, zpe, _ = pfmodels.vib_harm_tors_1dhr(
                     harm_min_cnf_locs, harm_cnf_save_fs,
                     tors_min_cnf_locs, tors_cnf_save_fs,
                     tors_save_path, tors_cnf_save_path,
@@ -187,7 +187,7 @@ def get_high_level_energy(
 
     if os.path.exists(ll_save_path):
         if saddle:
-            ll_save_fs = autofile.fs.ts(ll_save_path)
+            ll_save_fs = autofile.fs.transition_state(ll_save_path)
             ll_save_fs[0].create()
             ll_save_path = ll_save_fs[0].path()
 
