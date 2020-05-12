@@ -414,6 +414,8 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     for pressure, calc_ks in calc_k_dct.items():
         filtered_temps, filtered_ks = ratefit.fit.get_valid_tk(
             mess_temps, calc_ks, bimol)
+        print('test')
+        print(filtered_temps)
         if filtered_ks.size > 0:
             valid_calc_tk_dct[pressure] = [filtered_temps, filtered_ks]
 

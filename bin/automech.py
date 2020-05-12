@@ -138,6 +138,9 @@ if RUN_ES:
             THY_DCT,
             RUN_INP_DCT
         )
+    
+    printer.program_exit('es')
+
 
     printer.program_exit('es')
 
@@ -205,9 +208,9 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
             )
     else:
         print("Can't run kTPDriver without a PES being specified")
-
+    
     printer.program_exit('ktp')
 
-# Exit Program
+# Exit Program 
 print('\n\n')
 printer.program_exit('amech')
