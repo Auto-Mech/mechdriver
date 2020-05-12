@@ -28,7 +28,7 @@ def program_exit(driver):
         'thermo': THM_EXIT_MSG,
         'es': ES_EXIT_MSG
     }
-    print(header_dct[driver])
+    print(header_dct[driver]+'\n')
 
 
 AMECH_MSG = """
