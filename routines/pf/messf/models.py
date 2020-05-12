@@ -353,7 +353,7 @@ def vib_harm_tors_tau(harm_min_cnf_locs, harm_cnf_save_fs,
                 saddle=saddle)
 
             # Write the file containing the tau enes, geos, grads, hess
-            spc_formula = automol.inchi.formula(spc_dct_i['ich'])
+            spc_formula = automol.inchi.formula_string(spc_dct_i['ich'])
             tau_dat_str = tau.write_tau_data_str(
                 spc_formula, save_prefix, gradient=False, hessian=False)
 
@@ -387,7 +387,7 @@ def vib_tau_tors_tau(tors_min_cnf_locs, tors_cnf_save_fs,
         saddle=saddle)
 
     # Write the file containing the tau enes, geos, grads, hess
-    spc_formula = automol.inchi.formula(spc_dct_i['ich'])
+    spc_formula = automol.inchi.formula_string(spc_dct_i['ich'])
     tau_dat_str = tau.write_tau_data_str(
         spc_formula, save_prefix, gradient=True, hessian=True)
 

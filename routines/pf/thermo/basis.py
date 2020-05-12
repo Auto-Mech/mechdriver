@@ -68,7 +68,7 @@ def create_spec(ich, charge=0,
     """ add a species to the species dictionary
     """
     spec = {}
-    rad = automol.formula.electron_count(automol.inchi.formula_dct(ich)) % 2
+    rad = automol.formula.electron_count(automol.inchi.formula(ich)) % 2
     mult = 1 if not rad else 2
     print('ich', ich)
     print(automol.inchi.geometry(ich))
