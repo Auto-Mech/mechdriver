@@ -49,7 +49,7 @@ def write_thermp_inp(spc_dct_i, temps, thermp_file_name='thermp.dat'):
     """
     ich = spc_dct_i['ich']
     h0form = spc_dct_i['Hfs'][0]
-    formula = automol.inchi.formula(ich)
+    formula = automol.inchi.formula_string(ich)
 
     # Write thermp input file
     enthalpyt = 0.
@@ -105,7 +105,7 @@ def run_pac(spc_dct_i, nasa_path):
     requires formula+'i97' and new.groups files
     """
     ich = spc_dct_i['ich']
-    formula = automol.inchi.formula(ich)
+    formula = automol.inchi.formula_string(ich)
 
     # Run pac99
     # Set file names for pac99

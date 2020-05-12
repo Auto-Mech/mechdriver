@@ -133,7 +133,7 @@ def get_reduced_basis(basis_ich, species_formula):
     """
 
     # Get the basis formulae list
-    basis_formulae = [automol.inchi.formula(spc) for spc in basis_ich]
+    basis_formulae = [automol.inchi.formula_string(spc) for spc in basis_ich]
 
     reduced_basis = []
     for i, basis_formula in enumerate(basis_formulae):
@@ -168,7 +168,7 @@ def calc_coefficients(basis, mol_atom_dict):
     basis_mat = np.zeros((nbasis, nbasis))
 
     # Get the basis formulae list
-    basis_formulae = [automol.inchi.formula(spc) for spc in basis]
+    basis_formulae = [automol.inchi.formula_string(spc) for spc in basis]
     print('basis formulae:', basis_formulae)
     # basis_atom_dict = [
     # automol.geom.formula(automol.inchi.geom(spc) for spc in basis]
@@ -425,7 +425,7 @@ def get_basis(ich):
     """ get a basis
     """
 
-    formula = automol.inchi.formula(ich)
+    formula = automol.inchi.formula_string(ich)
     atm_dict = util.get_atom_counts_dict(formula)
     return select_basis(atm_dict)
 
@@ -433,7 +433,7 @@ def get_basis(ich):
 def get_basic(ich):
     """ get basis for basic scheme
     """
-    formula_dct = automol.inchi.formula_dct(ich)
+    formula_dct = automol.inchi.formula(ich)
     spc_bas = select_basis(formula_dct)
     if len(spc_bas) == 1 and ich == spc_bas[0]:
         clist = [1]

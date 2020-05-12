@@ -53,7 +53,7 @@ def run_ckin_poly(spc, spc_dct_i, pac99_poly_str):
     hf_str = '! Hf(0 K) = {:.2f}, Hf(298 K) = {:.2f} kcal/mol\n'.format(
         float(spc_dct_i['Hfs'][0]), float(spc_dct_i['Hfs'][1]))
     ich = spc_dct_i['ich']
-    formula_dct = automol.inchi.formula_dct(ich)
+    formula_dct = automol.inchi.formula(ich)
     chemkin_poly_str = routines.pf.thermo.nasapoly.convert_pac_to_chemkin(
         spc, formula_dct, hf_str, pac99_poly_str)
     print('\nCHEMKIN Polynomial:')
@@ -65,7 +65,7 @@ def write_nasa_file(spc_dct_i, ckin_path, nasa_path, chemkin_poly_str):
     """ write out the nasa polynomials
     """
     ich = spc_dct_i['ich']
-    formula = automol.inchi.formula(ich)
+    formula = automol.inchi.formula_string(ich)
     with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)
     with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:

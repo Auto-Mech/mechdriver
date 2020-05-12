@@ -100,9 +100,9 @@ def _parse_chemkin(mech_str, spc_dct, sort_rxns):
         rct_ichs = list(map(ich_dct.__getitem__, rct_names))
         formula_dct = ''
         for rct_ich in rct_ichs:
-            formula_i_dct = automol.inchi.formula_dct(rct_ich)
+            formula_i_dct = automol.inchi.formula(rct_ich)
             formula_dct = automol.formula.join(formula_dct, formula_i_dct)
-        formula_str = automol.formula.string(formula_dct)
+        formula_str = automol.formula.string2(formula_dct)
         formula_str_lst.append(formula_str)
 
     rxn_info_lst = list(
@@ -442,10 +442,10 @@ def format_run_rxn_lst(rct_names_lst, prd_names_lst, rxn_model_lst):
 #
 #         formula_dct = ''
 #         for rct_ich in rct_ichs:
-#             formula_i_dct = automol.inchi.formula_dct(rct_ich)
+#             formula_i_dct = automol.inchi.formula(rct_ich)
 #             formula_dct = automol.formula.join(
 #                 formula_dct, formula_i_dct)
-#         formula_str = automol.formula.string(formula_dct)
+#         formula_str = automol.formula.string2(formula_dct)
 #         formula_str_lst.append(formula_str)
 #
 #     print('rct_muls_lst:', rct_muls_lst)
@@ -469,8 +469,8 @@ def format_run_rxn_lst(rct_names_lst, prd_names_lst, rxn_model_lst):
 #                 unq_mul_lst.append(mul)
 #                 unq_smi_lst.append(smi)
 #
-#                 formula_dct = automol.inchi.formula_dct(ich)
-#                 lab = automol.formula.string(formula_dct)
+#                 formula_dct = automol.inchi.formula(ich)
+#                 lab = automol.formula.string2(formula_dct)
 #
 #                 unq_lab_lst.append(lab)
 #                 lab_idx = -1
@@ -497,8 +497,8 @@ def format_run_rxn_lst(rct_names_lst, prd_names_lst, rxn_model_lst):
 #                 unq_mul_lst.append(mul)
 #                 unq_smi_lst.append(smi)
 #
-#                 formula_dct = automol.inchi.formula_dct(ich)
-#                 lab = automol.formula.string(formula_dct)
+#                 formula_dct = automol.inchi.formula(ich)
+#                 lab = automol.formula.string2(formula_dct)
 #
 #                 unq_lab_lst.append(lab)
 #                 lab_idx = -1

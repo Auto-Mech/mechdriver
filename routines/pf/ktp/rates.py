@@ -221,14 +221,14 @@ def make_channel_pfs(
             chn_label_written.append(chn_label)
             if len(rct) > 1:
                 ground_energy = rct_ene - first_ground_ene
-                bim_str += mess_io.writer.species_separation_str()
+                # bim_str += mess_io.writer.species_separation_str()
                 bim_str += '\n! {} + {}\n'.format(rct[0], rct[1])
                 bim_str += mess_io.writer.bimolecular(
                     chn_label, spc_label[0], spc_data[0],
                     spc_label[1], spc_data[1], ground_energy)
             else:
                 zero_energy = rct_ene - first_ground_ene
-                well_str += mess_io.writer.species_separation_str()
+                # well_str += mess_io.writer.species_separation_str()
                 well_str += '\n! {}\n'.format(rct[0])
                 well_str += mess_io.writer.well(
                     chn_label, spc_data[0], zero_energy)
@@ -259,7 +259,7 @@ def make_channel_pfs(
         fake_wellr_label = idx_dct[well_dct_key]
         vdwr_ene = reac_ene - 1.0
         zero_energy = vdwr_ene - first_ground_ene
-        well_str += mess_io.writer.species_separation_str()
+        # well_str += mess_io.writer.species_separation_str()
         well_str += '\n! Fake Well for {}\n'.format(
             '+'.join(rxn['reacs']))
         fake_wellr = make_fake_species_data(
@@ -305,7 +305,7 @@ def make_channel_pfs(
             spc_save_fs=spc_save_fs,
             pst_params=pst_params)
         zero_energy = prod_ene - first_ground_ene
-        ts_str += mess_io.writer.species_separation_str()
+        # ts_str += mess_io.writer.species_separation_str()
         ts_str += '\n' + mess_io.writer.ts_sadpt(
             pst_p_label, prod_label, fake_wellp_label, pst_p_ts_str,
             zero_energy, tunnel='')
@@ -355,7 +355,7 @@ def make_channel_pfs(
     else:
         # Fixed TST for a saddle point
         zero_energy = ts_ene - first_ground_ene
-        ts_str += mess_io.writer.species_separation_str()
+        # ts_str += mess_io.writer.species_separation_str()
         ts_str += '\n' + mess_io.writer.ts_sadpt(
             ts_label, inner_reac_label, inner_prod_label,
             species_data[tsname], zero_energy, tunnel_str)
