@@ -545,7 +545,7 @@ def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
     #     tors_zpe_cor += tors_1dhr_zpe - tors_freq*phycon.WAVEN2KCAL/2
     #     tors_zpe += tors_1dhr_zpe
 
-    print('tors_zpe test:', tors_zpe)
+    # print('tors_zpe test:', tors_zpe)
     return tors_zpe
 
 
