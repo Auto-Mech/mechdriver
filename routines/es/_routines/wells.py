@@ -57,7 +57,8 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
         # theory
         prog = thy_info[0]
         method = thy_info[1]
-        _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(prog, method)
+        _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+            prog, method)
 
         geos = [(), ()]
         ntaudof = 0.
@@ -217,55 +218,3 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
             new_vdws.append(vdw_name)
 
     return new_vdws
-
-
-def fake_conf(thy_info, filesystem, inf=()):
-    """ generate data to be used for a fake well I think?
-    """
-    cnf_save_fs = filesystem[5]
-    cnf_run_fs = filesystem[4]
-    thy_save_fs = filesystem[3]
-    run_fs = filesystem[-1]
-    thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
-    geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
-    if inf:
-        inf_obj, ene = inf
-    else:
-        ene = thy_save_fs[-1].file.energy.read(thy_info[1:4])
-        inf_obj = run_fs[0].file.info.read()
-    tors_range_dct = {}
-    cinf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
-    cinf_obj.nsamp = 1
-    cnf_save_fs = autofile.fs.conformer(thy_save_path)
-    cnf_save_fs[0].create()
-    cnf_run_fs[0].create()
-    cnf_save_fs[0].file.info.write(cinf_obj)
-    cnf_run_fs[0].file.info.write(cinf_obj)
-    locs_lst = cnf_save_fs[-1].existing()
-    if not locs_lst:
-        cid = autofile.system.generate_new_conformer_id()
-        locs = [cid]
-    else:
-        locs = locs_lst[0]
-    cnf_save_fs[-1].create(locs)
-    cnf_run_fs[-1].create(locs)
-    cnf_save_fs[-1].file.geometry_info.write(
-        inf_obj, locs)
-    cnf_run_fs[-1].file.geometry_info.write(
-        inf_obj, locs)
-    # method = inf_obj.method
-    cnf_save_fs[-1].file.energy.write(ene, locs)
-    cnf_run_fs[-1].file.energy.write(ene, locs)
-    cnf_save_fs[-1].file.geometry.write(geo, locs)
-    cnf_run_fs[-1].file.geometry.write(geo, locs)
-
-
-def fake_geo_gen(tsk, thy_info, filesystem):
-    """ generate data to be used for a fake well I think?
-    """
-    if 'conf' in tsk:
-        fake_conf(thy_info, filesystem)
-    if 'scan' in tsk:
-        pass
-    if 'tau' in tsk:
-        pass

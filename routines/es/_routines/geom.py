@@ -6,7 +6,6 @@ import automol
 import elstruct
 import autofile
 from routines.es._routines import conformer
-from routines.es._routines import wells
 from routines.es import runner as es_runner
 from lib import filesys
 from lib import structure
@@ -144,7 +143,7 @@ def reference_geometry(
                     overwrite, saddle=False, dist_info=())
             else:
                 print("Cannot create zmatrix for disconnected species")
-                wells.fake_conf(thy_info, filesys, inf)
+                fake_conf(thy_info, filesys, inf)
 
         if geo:
             inf_obj.status = autofile.system.RunStatus.SUCCESS
@@ -350,3 +349,55 @@ def save_initial_geometry(
         zma = automol.geom.zmatrix(geo)
         thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
         thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
+
+
+def fake_conf(thy_info, filesystem, inf=()):
+    """ generate data to be used for a fake well I think?
+    """
+    cnf_save_fs = filesystem[5]
+    cnf_run_fs = filesystem[4]
+    thy_save_fs = filesystem[3]
+    run_fs = filesystem[-1]
+    thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
+    geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
+    if inf:
+        inf_obj, ene = inf
+    else:
+        ene = thy_save_fs[-1].file.energy.read(thy_info[1:4])
+        inf_obj = run_fs[0].file.info.read()
+    tors_range_dct = {}
+    cinf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
+    cinf_obj.nsamp = 1
+    cnf_save_fs = autofile.fs.conformer(thy_save_path)
+    cnf_save_fs[0].create()
+    cnf_run_fs[0].create()
+    cnf_save_fs[0].file.info.write(cinf_obj)
+    cnf_run_fs[0].file.info.write(cinf_obj)
+    locs_lst = cnf_save_fs[-1].existing()
+    if not locs_lst:
+        cid = autofile.system.generate_new_conformer_id()
+        locs = [cid]
+    else:
+        locs = locs_lst[0]
+    cnf_save_fs[-1].create(locs)
+    cnf_run_fs[-1].create(locs)
+    cnf_save_fs[-1].file.geometry_info.write(
+        inf_obj, locs)
+    cnf_run_fs[-1].file.geometry_info.write(
+        inf_obj, locs)
+    # method = inf_obj.method
+    cnf_save_fs[-1].file.energy.write(ene, locs)
+    cnf_run_fs[-1].file.energy.write(ene, locs)
+    cnf_save_fs[-1].file.geometry.write(geo, locs)
+    cnf_run_fs[-1].file.geometry.write(geo, locs)
+
+
+def fake_geo_gen(tsk, thy_info, filesystem):
+    """ generate data to be used for a fake well I think?
+    """
+    if 'conf' in tsk:
+        fake_conf(thy_info, filesystem)
+    if 'scan' in tsk:
+        pass
+    if 'tau' in tsk:
+        pass

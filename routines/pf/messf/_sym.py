@@ -25,15 +25,15 @@ def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
                 return '', 0.
             sym_geo = sym_cnf_save_fs[-1].file.geometry.read(sym_min_cnf_locs)
             sym_ene = sym_cnf_save_fs[-1].file.energy.read(sym_min_cnf_locs)
-            if dist_names:
-                zma = tors_cnf_save_fs[-1].file.zmatrix.read(
-                    tors_min_cnf_locs)
-                form_coords = list(
-                    automol.zmatrix.bond_idxs(zma, dist_names[0]))
-                form_coords.extend(list(dist_names[1]))
+            # if dist_names:
+            #     zma = tors_cnf_save_fs[-1].file.zmatrix.read(
+            #         tors_min_cnf_locs)
+            #     form_coords = list(
+            #         automol.zmatrix.bond_idxs(zma, dist_names[0]))
+            #     form_coords.extend(list(dist_names[1]))
             sym_factor = conformer.symmetry_factor(
                 sym_geo, sym_ene, sym_cnf_save_fs, saddle,
-                frm_bnd_key, brk_bnd_key, form_coords, tors_names)
+                frm_bnd_key, brk_bnd_key, tors_names)
             print('sym_factor from conformer sampling:', sym_factor)
         elif sym_model == '1dhr':
             print('Warning: the 1DHR based symmetry number',
@@ -47,7 +47,8 @@ def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
     return sym_factor
 
 
-def tors_mods_on_sym_factor(tors_min_cnf_locs, tors_cnf_save_fs, saddle=False):
+def tors_mods_on_sym_factor(tors_min_cnf_locs, tors_cnf_save_fs,
+                            saddle=False):
     """ Decrease the overall molecular symmetry factor by the
         torsional mode symmetry numbers
     """

@@ -7,7 +7,7 @@ source:
     path: .
 
 requirements:
-    build:
+    host:
         - python
     run:
         - python

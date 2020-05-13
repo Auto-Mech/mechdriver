@@ -169,7 +169,7 @@ def optimize_transition_state(
             ts_found = True
             break
 
-    # Run a Hessian and only save in the filesys if there is 
+    # Run a Hessian and only save in the filesys if there is
     # if opt_ret is not None or hess not exists:
     # # If successful, Read the geom and energy from the optimization
     # inf_obj, _, out_str = opt_ret

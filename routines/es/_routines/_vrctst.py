@@ -8,8 +8,8 @@ import elstruct
 import varecof_io
 from routines.es._routines import _scan as scan
 from routines.es._routines import _wfn as wfn
-from lib import filesys
 from routines.es import runner as es_runner
+from lib import filesys
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 from lib.phydat import phycon
@@ -140,6 +140,7 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
             spc_name=vrc_dct['spc_name'])
 
     # Write the electronic structure template file
+    memory, basis, method = '', '', ''
     tml_inp_str = write_molpro_template_str(
         ts_zma, ts_info, ts_dct['high_mul'],
         memory, basis, method, inf_sep_ene)
@@ -151,7 +152,7 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
         vrc_dct['r1dists_lr'], vrc_dct['r1dists_sr'], vrc_dct['r2dists_sr'],
         vrc_dct['d1dists'], vrc_dct['d2dists'],
         vrc_dct['conditions'],
-        vrc_dct['nsamp_max'], vrc_dct['nsamp_min'], 
+        vrc_dct['nsamp_max'], vrc_dct['nsamp_min'],
         vrc_dct['flux_err'], vrc_dct['pes_size'],
         vrc_dct['base_name'], vrc_dct['exe_path'], vrc_path)
     [struct_inp_str, lr_divsur_inp_str, tst_inp_str,
@@ -186,23 +187,23 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
     run_script(DEFAULT_SCRIPT_DCT['mcflux'], vrc_path)
 
     # Check for success of the VaReCoF run and flux file generation
-    mcflux_file = os.path.join(vrc_path, 'mc_flux.out')
-    if os.path.exists(mcflux_file):
-        with open(mcflux_file, 'r') as fluxfile:
-            flux_str = mcflux_file.read()
-        if flux_str != '':
-            ts_found = True
-            
-            # Set the run directory
-            ts_save_fs = autofile.fs.ts(thy_save_path)
-            ts_save_fs[0].create()
-            ts_save_path = ts_save_fs[0].path()
+    # mcflux_file = os.path.join(vrc_path, 'mc_flux.out')
+    # if os.path.exists(mcflux_file):
+    #     with open(mcflux_file, 'r') as fluxfile:
+    #         flux_str = mcflux_file.read()
+    #     if flux_str != '':
+    #         ts_found = True
 
-            # Write the VRC-Flux and info files 
-            ts_save_fs[0].file.vrc_flux.write(flux_str)
-            ts_save_fs[0].file.vrc_flux_info.write(flux_str)
+    #         # Set the run directory
+    #         ts_save_fs = autofile.fs.ts(thy_save_path)
+    #         ts_save_fs[0].create()
+    #         ts_save_path = ts_save_fs[0].path()
 
-    return ts_found
+    #         # Write the VRC-Flux and info files
+    #         ts_save_fs[0].file.vrc_flux.write(flux_str)
+    #         ts_save_fs[0].file.vrc_flux_info.write(flux_str)
+
+    # return ts_found
 
 
 # FUNCTIONS TO WRITE THE STRINGS FOR ALL OF THE VARECOF INPUT FILE
@@ -402,8 +403,7 @@ def run_potentials(inf_sep_zma,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
         coo_names=[dist_name],
-        gradient=False,
-        hessian=False
+        thy_info=multi_level
     )
 
     # Run and save the scan while constraining all intermolecular coordinates
@@ -431,8 +431,7 @@ def run_potentials(inf_sep_zma,
         cscn_run_fs=cscn_run_fs,
         cscn_save_fs=cscn_save_fs,
         coo_names=[dist_name],
-        gradient=False,
-        hessian=False)
+        thy_info=multi_level)
 
     # Run the single points on top of the initial scan
     if sp_thy_level is not None:
@@ -455,11 +454,11 @@ def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
     cas_opt.append(
         wfn.cas_options(
             ts_info, ts_formula, num_act_elc, num_act_orb,
-            high_mul, add_two_closed=False))
+            add_two_closed=False))
     cas_opt.append(
         wfn.cas_options(
             ts_info, ts_formula, num_act_elc, num_act_orb,
-            high_mul, add_two_closed=True))
+            add_two_closed=True))
 
     # Write the lines containing all the calcs for a guess wfn
     guess_str = wfn.multiref_wavefunction_guess(
