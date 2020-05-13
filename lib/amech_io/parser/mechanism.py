@@ -50,9 +50,6 @@ def parse_mechanism_file(job_path, mech_type, spc_dct, run_obj_dct,
     # Build an index dct relating idx to formula
     idx_dct, form_dct = build_pes_idx_dct(pes_dct)
 
-    # Print the channels
-    print_pes_channels(pes_dct)
-
     # Reduce the PES dct to only what the user requests
     if run_obj_dct:
         pesnums = [idx_pair[0] for idx_pair in run_obj_dct]
@@ -67,6 +64,9 @@ def parse_mechanism_file(job_path, mech_type, spc_dct, run_obj_dct,
     # Get the models in here
     run_pes_dct = pes_dct_w_rxn_lsts(
         reduced_pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct)
+    
+    # Print the channels for the whole mechanism file
+    print_pes_channels(pes_dct)
 
     return run_pes_dct
 
@@ -268,53 +268,55 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct):
             prd_names_lst = []
             rxn_name_lst = []
             rxn_model_lst = []
+            rxn_chn_idxs = []
             for chn_idx in run_chnls:
                 if chn_idx-1 in sub_chnl_idxs:
                     rct_names_lst.append(pes_rct_names_lst[chn_idx-1])
                     prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
                     rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
                     rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])
+                    rxn_chn_idxs.append(chn_idx)
 
             # Form reaction list (is empty if no chnls requested on sub pes)
             rxn_lst = format_run_rxn_lst(
-                rct_names_lst, prd_names_lst, rxn_model_lst)
+                rct_names_lst, prd_names_lst, rxn_model_lst, rxn_chn_idxs)
 
             # Add the rxn lst to the pes dictionary if there is anythin
             if rxn_lst:
                 run_pes_dct[(formula, pes_idx, sub_pes_idx+1)] = rxn_lst
 
-        # print('run_pes_dct test:', run_pes_dct)
-
     return run_pes_dct
 
 
-def format_run_rxn_lst(rct_names_lst, prd_names_lst, rxn_model_lst):
+def format_run_rxn_lst(rct_names_lst, prd_names_lst,
+                       rxn_model_lst, rxn_chn_idxs):
     """ Get the lst of reactions to be run
     """
 
     # Get a list of all the species in the pes
     spc_queue = []
-    for rxn, _ in enumerate(rct_names_lst):
-        rxn_spc = list(rct_names_lst[rxn])
-        rxn_spc.extend(list(prd_names_lst[rxn]))
+    for idx, _ in enumerate(rct_names_lst):
+        rxn_spc = list(rct_names_lst[idx])
+        rxn_spc.extend(list(prd_names_lst[idx]))
         for spc in rxn_spc:
             if spc not in spc_queue:
                 spc_queue.append(spc)
 
     # Now loop over all the reactions to build rxn_lst
     run_lst = []
-    for rxn, _ in enumerate(rct_names_lst):
+    for idx, _ in enumerate(rct_names_lst):
         spc_queue = []
-        rxn_spc = list(rct_names_lst[rxn])
-        rxn_spc.extend(list(prd_names_lst[rxn]))
+        rxn_spc = list(rct_names_lst[idx])
+        rxn_spc.extend(list(prd_names_lst[idx]))
         for spc in rxn_spc:
             if spc not in spc_queue:
                 spc_queue.append(spc)
         run_lst.append(
             {'species': spc_queue,
-             'reacs': list(rct_names_lst[rxn]),
-             'prods': list(prd_names_lst[rxn]),
-             'model': rxn_model_lst[rxn]})
+             'reacs': list(rct_names_lst[idx]),
+             'prods': list(prd_names_lst[idx]),
+             'model': rxn_model_lst[idx],
+             'chn_idx': rxn_chn_idxs[idx]})
 
     return run_lst
 # def parse_json():

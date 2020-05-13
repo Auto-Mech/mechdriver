@@ -282,29 +282,26 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     """
     
     ts_dct = {}
-    for chn_idx, rxn in enumerate(rxn_lst):
-        ts_dct.update(
-            build_single_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
-                                   run_inp_dct, spc_dct, cla_dct))
+    for rxn in rxn_lst:
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
+        ts_dct[tsname] = build_sing_chn_sadpt_dct(
+           pes_idx, tsname, rxn, thy_info, ini_thy_info,
+           run_inp_dct, spc_dct, cla_dct)
+
     return ts_dct
 
     
-def build_single_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
-                           run_inp_dct, spc_dct, cla_dct):
+def build_sing_chn_sadpt_dct(pes_idx, tsname, rxn, thy_info, ini_thy_info,
+                             run_inp_dct, spc_dct, cla_dct):
     """ build dct for single reaction
     """
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
     kickoff = [0.1, False]
 
-    # Initialize dictionary
-    ts_dct = {}
-
     # Get reac and prod
-    tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx+1)
     reacs = rxn['reacs']
     prods = rxn['prods']
-
     print('  Preparing {} for reaction {} = {}'.format(
         tsname, '+'.join(reacs), '+'.join(prods)))
 
@@ -354,16 +351,16 @@ def build_single_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     if ret1 and ts_class:
         print('    Reaction class identified as: {}'.format(ts_class))
 
-        ts_dct[tsname] = {}
-        ts_dct[tsname]['ich'] = ''
+        ts_dct = {}
+        ts_dct['ich'] = ''
 
         # Reacs and prods
-        ts_dct[tsname]['class'] = ts_class
-        ts_dct[tsname]['reacs'] = reacs
-        ts_dct[tsname]['prods'] = prods
+        ts_dct['class'] = ts_class
+        ts_dct['reacs'] = reacs
+        ts_dct['prods'] = prods
 
         # Put chg and mult stuff
-        ts_dct[tsname].update(
+        ts_dct.update(
             {'low_mul': low_mul,
              'high_mul': high_mul,
              'mul': ts_mul,
@@ -374,16 +371,16 @@ def build_single_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
         dct_keys = ['zma', 'dist_name', 'brk_name', 'grid',
                     'frm_bnd_key', 'brk_bnd_key',
                     'amech_ts_tors_names', 'update_guess', 'var_grid']
-        ts_dct[tsname].update(dict(zip(dct_keys, ret1)))
-        ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
-        ts_dct[tsname]['dist_info'] = [
+        ts_dct.update(dict(zip(dct_keys, ret1)))
+        ts_dct['bkp_data'] = ret2 if ret2 else None
+        ts_dct['dist_info'] = [
             dist_name, 0., update_guess, brk_name, None]
 
         # Reaction fs for now
         rinf = filesys.build.get_rxn_fs(
             run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
         [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path] = rinf
-        ts_dct[tsname]['rxn_fs'] = [
+        ts_dct['rxn_fs'] = [
             rxn_run_fs,
             rxn_save_fs,
             rxn_run_path,
