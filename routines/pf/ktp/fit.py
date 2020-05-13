@@ -46,6 +46,8 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
             for lab_j, name_j in zip(labels, names):
                 if 'F' not in lab_j and 'B' not in lab_j and lab_i != lab_j:
 
+                    print(('\n--------------------------------------------' +
+                           '------------------------------------------'))
                     # Set name
                     reaction = name_i + '=' + name_j
                     print('\nGetting Rates for {}'.format(
@@ -136,11 +138,6 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
     elif not sgl_fit_good and dbl_fit_poss:
         print('\nSingle fit errs too large & double fit possible:',
               ' Trying double fit')
-        print('\nFitting Parameters and Errors from Single Arrhenius Fit')
-        for pressure, params in sing_params_dct.items():
-            print(pressure, params)
-        for pressure, errs in sing_fit_err_dct.items():
-            print(pressure, errs)
 
         # Fit rate constants to double Arrhenius expressions
         doub_params_dct, doub_fit_temp_dct, doub_fit_suc = mod_arr_fit(
@@ -150,6 +147,29 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
 
         if doub_fit_suc:
             print('\nSuccessful fit to Double Arrhenius at all T, P')
+
+            print('\nWriting fitting parameters and errors from', 
+                  'single arrhenius fit for comparison')
+            singfit_str = '{0:10s}{1:>10s}{2:>9s}{3:>9s}\n'.format(
+                    '', 'A', 'n', 'Ea')
+            for pressure, params in sing_params_dct.items():
+                if pressure == 'high':
+                    pstr = '{:<10s}'.format('High') 
+                else:
+                    pstr = '{:<10.3f}'.format(pressure)
+                singfit_str += '{0}{1:>10.3E}{2:>9.3f}{3:9.0f}\n'.format(
+                        pstr, params[0], params[1], 1000*params[2])
+            singfit_str += '{0:10s}{1:>10s}{2:>10s}\n'.format(
+                    'Pressure', 'MeanAbsErr', 'MaxErr')
+            for pressure, errs in sing_fit_err_dct.items():
+                if pressure == 'high':
+                    pstr = '{:<10s}'.format('High') 
+                else:
+                    pstr = '{:<10.3f}'.format(pressure)
+                singfit_str += '{0:10s}{1:>10.3f}{2:>10.3f}\n'.format(
+                    pstr, *errs)
+            print(singfit_str)
+
             # Assess the errors of the single Arrhenius Fit
             doub_fit_err_dct = assess_arr_fit_err(
                 doub_params_dct, ktp_dct, fit_type='double',

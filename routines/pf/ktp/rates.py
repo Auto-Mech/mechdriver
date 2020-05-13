@@ -63,18 +63,19 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_formula, pes_idx,
 
     # Loop over all the channels and write the MESS strings
     chn_label_written = []
-    for idx, rxn in enumerate(rxn_lst):
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
+    for rxn in rxn_lst:
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         tsform = automol.formula.string(
             automol.geom.formula(
                 automol.zmatrix.geometry(
                     spc_dct[tsname]['zma'])))
         # spc_dct[tsname]['original_zma'])))
-        if tsform != pes_formula:
-            print('Reaction list contains reactions on different potential',
-                  'energy surfaces: {} and {}'.format(tsform, pes_formula))
-            print('Will proceed to construct only {}'.format(pes_formula))
-            continue
+        _ = pes_formula
+        # if tsform != pes_formula:
+        #     print('Reaction list contains reactions on different potential',
+        #           'energy surfaces: {} and {}'.format(tsform, pes_formula))
+        #     print('Will proceed to construct only {}'.format(pes_formula))
+        #     continue
         chn_model = rxn['model'][1]
         channel_enes = calc_channel_enes(
             spc_dct, rxn, tsname,
@@ -100,8 +101,8 @@ def make_all_species_data(rxn_lst, pes_idx, spc_dct,
     dat_str_lst = []
 
     spc_save_fs = autofile.fs.species(save_prefix)
-    for idx, rxn in enumerate(rxn_lst):
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
+    for rxn in rxn_lst:
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         specieslist = rxn['reacs'] + rxn['prods']
         rxn_model = rxn['model'][1]
         # Gather PF model and theory level info
@@ -369,10 +370,12 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct):
     """
 
     pes_idx_dct = {}
-    for idx, rxn in enumerate(rxn_lst):
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx, idx+1)
+    for rxn in rxn_lst:
+        chn_idx = rxn['chn_idx']
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx)
         pes_idx_dct.update(
-            make_channel_label_dct(tsname, idx+1, pes_idx_dct, rxn, spc_dct))
+            make_channel_label_dct(
+                tsname, chn_idx, pes_idx_dct, rxn, spc_dct))
 
     return pes_idx_dct
 

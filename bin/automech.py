@@ -91,7 +91,7 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
         print('    - write_messrate')
     if RUN_MESSRATE:
         print('    - run_messrate')
-    if RUN_MESSPF:
+    if RUN_FITS:
         print('    - run_fits')
 
 printer.program_exit('inp')
@@ -112,9 +112,9 @@ if RUN_ES:
             # Print PES form and SUB PES Channels
             print('\nRunning PES {}: {}, SUB PES {}'.format(
                 pes_idx, formula, sub_pes_idx))
-            for chn_idx, rxn in enumerate(rxn_lst):
-                print('  Running Channel {} for {} = {}'.format(
-                    chn_idx+1,
+            for rxn in rxn_lst:
+                print('  Running Channel {}: {} = {}'.format(
+                    rxn['chn_idx'],
                     '+'.join(rxn['reacs']),
                     '+'.join(rxn['prods'])))
 
@@ -188,7 +188,7 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
                 pes_idx, formula, sub_pes_idx))
             for chn_idx, rxn in enumerate(rxn_lst):
                 print('  Including Channel {}: {} = {}'.format(
-                    chn_idx+1,
+                    rxn['chn_idx'],
                     '+'.join(rxn['reacs']),
                     '+'.join(rxn['prods'])))
 

@@ -40,7 +40,10 @@ def run(pes_formula, pes_idx,
 
     # Get info for the transition states (want under write..)
     # Fix this to read ene model
+    print('\nIdentifying reaction classes for transition states...')
+    ts_dct = {}
     for rxn in rxn_lst:
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         spc_model = rxn['model'][1]
         ene_model = spc_model_dct[spc_model]['es']['ene']
         geo_model = spc_model_dct[spc_model]['es']['geo']
@@ -54,12 +57,11 @@ def run(pes_formula, pes_idx,
         ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
         pf_model = parser.model.set_pf_model_info(
             spc_model_dct[spc_model]['pf'])
-        print('\nIdentifying reaction classes for transition states...')
-        ts_dct = parser.species.build_sadpt_dct(
-            pes_idx, rxn_lst, thy_info, ini_thy_info,
+        ts_dct[tsname] = parser.species.build_sing_chn_sadpt_dct(
+            pes_idx, tsname, rxn, thy_info, ini_thy_info,
             run_inp_dct, spc_dct, cla_dct)
-        spc_dct = parser.species.combine_sadpt_spc_dcts(
-            ts_dct, spc_dct)
+    spc_dct = parser.species.combine_sadpt_spc_dcts(
+        ts_dct, spc_dct)
 
     # Build the MESS label idx dictionary for the PES
     label_dct = ktp_routines.rates.make_pes_label_dct(
