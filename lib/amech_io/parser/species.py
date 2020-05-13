@@ -278,105 +278,118 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
 def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
                     run_inp_dct, spc_dct, cla_dct):
-    """ build dct
+    """ build a dct for saddle points for all reactions in rxn_lst
+    """
+    
+    ts_dct = {}
+    for chn_idx, rxn in enumerate(rxn_lst):
+        ts_dct.update(
+            build_single_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
+                                   run_inp_dct, spc_dct, cla_dct))
+    return ts_dct
+
+    
+def build_single_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
+                           run_inp_dct, spc_dct, cla_dct):
+    """ build dct for single reaction
     """
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
     kickoff = [0.1, False]
 
+    # Initialize dictionary
     ts_dct = {}
-    for chn_idx, rxn in enumerate(rxn_lst):
 
-        # Get reac and prod
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx+1)
-        reacs = rxn['reacs']
-        prods = rxn['prods']
+    # Get reac and prod
+    tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx+1)
+    reacs = rxn['reacs']
+    prods = rxn['prods']
 
-        print('  Preparing {} for reaction {} = {}'.format(
-            tsname, '+'.join(reacs), '+'.join(prods)))
+    print('  Preparing {} for reaction {} = {}'.format(
+        tsname, '+'.join(reacs), '+'.join(prods)))
 
-        # Check the class dct to see if we can set class
-        if cla_dct:
-            given_class, flip_rxn = rclass.set_class_with_dct(
-                cla_dct, reacs, prods)
-            if flip_rxn:
-                reacs, prods = prods, reacs
-        else:
-            given_class = None
+    # Check the class dct to see if we can set class
+    if cla_dct:
+        given_class, flip_rxn = rclass.set_class_with_dct(
+            cla_dct, reacs, prods)
+        if flip_rxn:
+            reacs, prods = prods, reacs
+    else:
+        given_class = None
 
-        # Get the reaction info flipping if needed
-        check_exo = True
-        if check_exo and given_class is None:
-            reacs, prods = filesys.inf.assess_rxn_ene(
-                reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
+    # Get the reaction info flipping if needed
+    check_exo = True
+    if check_exo and given_class is None:
+        reacs, prods = filesys.inf.assess_rxn_ene(
+            reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
 
-        # Set the info regarding mults and chgs
-        rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
-        [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
-        low_mul, high_mul, _, chg = filesys.inf.rxn_chg_mult(
-            rxn_muls, rxn_chgs, ts_mul='low')
-        rad_rad = rxnid.determine_rad_rad(rxn_muls)
-        ts_mul = low_mul
+    # Set the info regarding mults and chgs
+    rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
+    [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
+    low_mul, high_mul, _, chg = filesys.inf.rxn_chg_mult(
+        rxn_muls, rxn_chgs, ts_mul='low')
+    rad_rad = rxnid.determine_rad_rad(rxn_muls)
+    ts_mul = low_mul
 
-        # Generate rxn_fs from rxn_info stored in spc_dct
-        [kickoff_size, kickoff_backward] = kickoff
-        zma_inf = filesys.inf.get_zmas(
-            reacs, prods, spc_dct,
-            ini_thy_info, save_prefix, run_prefix, kickoff_size,
-            kickoff_backward)
-        [rct_zmas, prd_zmas, rct_cnf_save_fs, prd_cnf_save_fs] = zma_inf
-        ret = rxnid.ts_class(
-            rct_zmas, prd_zmas, rad_rad,
-            ts_mul, low_mul, high_mul,
-            rct_cnf_save_fs, prd_cnf_save_fs, given_class)
-        ts_class, ret1, ret2 = ret
+    # Generate rxn_fs from rxn_info stored in spc_dct
+    [kickoff_size, kickoff_backward] = kickoff
+    zma_inf = filesys.inf.get_zmas(
+        reacs, prods, spc_dct,
+        ini_thy_info, save_prefix, run_prefix, kickoff_size,
+        kickoff_backward)
+    [rct_zmas, prd_zmas, rct_cnf_save_fs, prd_cnf_save_fs] = zma_inf
+    ret = rxnid.ts_class(
+        rct_zmas, prd_zmas, rad_rad,
+        ts_mul, low_mul, high_mul,
+        rct_cnf_save_fs, prd_cnf_save_fs, given_class)
+    ts_class, ret1, ret2 = ret
 
-        if ret1:
-            [_, dist_name, brk_name, _, _, _, _, update_guess, _] = ret1
-        else:
-            dist_name, brk_name, update_guess = None, None, None
-            # bkp_data = None
+    if ret1:
+        [_, dist_name, brk_name, _, _, _, _, update_guess, _] = ret1
+    else:
+        dist_name, brk_name, update_guess = None, None, None
+        # bkp_data = None
 
-        # Put everything in a dictionary if class identified
-        if ret1 and ts_class:
-            print('    Reaction class identified as: {}'.format(ts_class))
+    # Put everything in a dictionary if class identified
+    if ret1 and ts_class:
+        print('    Reaction class identified as: {}'.format(ts_class))
 
-            ts_dct[tsname] = {}
-            ts_dct[tsname]['ich'] = ''
+        ts_dct[tsname] = {}
+        ts_dct[tsname]['ich'] = ''
 
-            # Reacs and prods
-            ts_dct[tsname]['class'] = ts_class
-            ts_dct[tsname]['reacs'] = reacs
-            ts_dct[tsname]['prods'] = prods
+        # Reacs and prods
+        ts_dct[tsname]['class'] = ts_class
+        ts_dct[tsname]['reacs'] = reacs
+        ts_dct[tsname]['prods'] = prods
 
-            # Put chg and mult stuff
-            ts_dct[tsname].update(
-                {'low_mul': low_mul,
-                 'high_mul': high_mul,
-                 'mul': ts_mul,
-                 'chg': chg,
-                 'rad_rad': rad_rad})
+        # Put chg and mult stuff
+        ts_dct[tsname].update(
+            {'low_mul': low_mul,
+             'high_mul': high_mul,
+             'mul': ts_mul,
+             'chg': chg,
+             'rad_rad': rad_rad})
 
-            # Put class stuff in the dct
-            dct_keys = ['zma', 'dist_name', 'brk_name', 'grid',
-                        'frm_bnd_key', 'brk_bnd_key',
-                        'amech_ts_tors_names', 'update_guess', 'var_grid']
-            ts_dct[tsname].update(dict(zip(dct_keys, ret1)))
-            ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
-            ts_dct[tsname]['dist_info'] = [
-                dist_name, 0., update_guess, brk_name, None]
+        # Put class stuff in the dct
+        dct_keys = ['zma', 'dist_name', 'brk_name', 'grid',
+                    'frm_bnd_key', 'brk_bnd_key',
+                    'amech_ts_tors_names', 'update_guess', 'var_grid']
+        ts_dct[tsname].update(dict(zip(dct_keys, ret1)))
+        ts_dct[tsname]['bkp_data'] = ret2 if ret2 else None
+        ts_dct[tsname]['dist_info'] = [
+            dist_name, 0., update_guess, brk_name, None]
 
-            # Reaction fs for now
-            rinf = filesys.build.get_rxn_fs(
-                run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
-            [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path] = rinf
-            ts_dct[tsname]['rxn_fs'] = [
-                rxn_run_fs,
-                rxn_save_fs,
-                rxn_run_path,
-                rxn_save_path]
-        else:
-            print('Skipping reaction as class not given/identified')
+        # Reaction fs for now
+        rinf = filesys.build.get_rxn_fs(
+            run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
+        [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path] = rinf
+        ts_dct[tsname]['rxn_fs'] = [
+            rxn_run_fs,
+            rxn_save_fs,
+            rxn_run_path,
+            rxn_save_path]
+    else:
+        print('Skipping reaction as class not given/identified')
 
     print('')
 
