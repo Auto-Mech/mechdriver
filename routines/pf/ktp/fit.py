@@ -148,22 +148,22 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
         if doub_fit_suc:
             print('\nSuccessful fit to Double Arrhenius at all T, P')
 
-            print('\nWriting fitting parameters and errors from', 
+            print('\nWriting fitting parameters and errors from',
                   'single arrhenius fit for comparison')
             singfit_str = '{0:10s}{1:>10s}{2:>9s}{3:>9s}\n'.format(
-                    '', 'A', 'n', 'Ea')
+                '', 'A', 'n', 'Ea')
             for pressure, params in sing_params_dct.items():
                 if pressure == 'high':
-                    pstr = '{:<10s}'.format('High') 
+                    pstr = '{:<10s}'.format('High')
                 else:
                     pstr = '{:<10.3f}'.format(pressure)
                 singfit_str += '{0}{1:>10.3E}{2:>9.3f}{3:9.0f}\n'.format(
-                        pstr, params[0], params[1], 1000*params[2])
+                    pstr, params[0], params[1], 1000*params[2])
             singfit_str += '{0:10s}{1:>10s}{2:>10s}\n'.format(
-                    'Pressure', 'MeanAbsErr', 'MaxErr')
+                'Pressure', 'MeanAbsErr', 'MaxErr')
             for pressure, errs in sing_fit_err_dct.items():
                 if pressure == 'high':
-                    pstr = '{:<10s}'.format('High') 
+                    pstr = '{:<10s}'.format('High')
                 else:
                     pstr = '{:<10.3f}'.format(pressure)
                 singfit_str += '{0:10s}{1:>10.3f}{2:>10.3f}\n'.format(

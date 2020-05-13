@@ -11,7 +11,6 @@ from automol.mult.ts import _high as tshigh
 from automol.zmatrix import shifted_standard_zmas_graphs as shift_gra
 from routines.es._routines import geom
 from lib.phydat import phycon
-from lib.submission import DEFAULT_SCRIPT_DCT
 from lib.filesys.mincnf import min_energy_conformer_locators
 
 

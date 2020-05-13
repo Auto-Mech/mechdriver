@@ -69,6 +69,9 @@ def barrierless_transition_state(
         update_guess, **opt_kwargs):
     """ Run TS finder for barrierless reactions
     """
+    # fix pylint
+    _ = vrc_dct
+
     switch = False
 
     # Set information from the transition state

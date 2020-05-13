@@ -520,7 +520,7 @@ def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
 
 def int_sym_num_from_sampling(
         geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=(),
-        brk_bnd_key=(), form_coords=(), tors_names=()):
+        brk_bnd_key=(), tors_names=()):
     """ Determine the symmetry number for a given conformer geometry.
     (1) Explore the saved conformers to find the list of similar conformers -
         i.e. those with a coulomb matrix and energy that are equivalent
@@ -586,7 +586,7 @@ def int_sym_num_from_sampling(
 
 def symmetry_factor(
         geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=(), brk_bnd_key=(),
-        form_coords=(), tors_names=()):
+        tors_names=()):
     """ obtain overall symmetry factor for a geometry as a product
         of the external symmetry factor and the internal symmetry number
     """
@@ -599,8 +599,7 @@ def symmetry_factor(
     if tors_names:
         int_sym = int_sym_num_from_sampling(
             geo, ene, cnf_save_fs, saddle,
-            frm_bnd_key, brk_bnd_key,
-            form_coords, tors_names)
+            frm_bnd_key, brk_bnd_key, tors_names)
     else:
         int_sym = 1
     sym_fac = ext_sym * int_sym

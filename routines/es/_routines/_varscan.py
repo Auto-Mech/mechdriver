@@ -147,104 +147,104 @@ def molrad_inf_sep_ene(spc1_info, spc2_info,
     return inf_sep_ene
 
 
-def radrad_inf_sep_ene(
-        spc1_info, spc2_info, ts_info, high_mul, ref_zma,
-        mod_var_scn_thy_info,
-        mod_var_sp1_thy_info, mod_var_sp2_thy_info,
-        hs_var_scn_thy_info,
-        hs_var_sp1_thy_info,
-        hs_var_sp2_thy_info,
-        mod_ini_thy_info,
-        geo, geo_run_path, geo_save_path,
-        run_prefix, save_prefix,
-        overwrite=False,
-        num_act_orb=None, num_act_elc=None):
-    """ Obtain the infinite separation energy from the multireference energy
-        at a given reference point, the high-spin low-spin splitting at that
-        reference point, and the high level energy for the high spin state
-        at the reference geometry and for the fragments
-        scn = thy for optimizations
-        sp1 = low-spin single points
-        sp2 = high-spin single points for inf sep
-    """
-
-    # Initialize infinite sep energy
-    inf_sep_ene = -1.0e12
-
-    # Prepare filesys and guesses for the multi reference calc
-    hs_run_fs, hs_var_run_path = filesys.build.high_spin_from_prefix(
-        geo_run_path, hs_var_sp1_thy_info)
-    hs_save_fs, hs_var_save_path = filesys.build.high_spin_from_prefix(
-        geo_save_path, hs_var_sp1_thy_info)
-
-    opt_script_str, _, opt_kwargs, _ = es_runner.par.run_qchem_par(
-        multi_info[0], multi_info[1])
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
-    cas_opt = wfn.cas_options(
-        hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = wfn.multiref_wavefunction_guess(
-        high_mul, ref_zma, hs_info, multi_lvl, [cas_opt])
-    guess_lines = guess_str.splitlines()
-    opt_kwargs['casscf_options'] = cas_opt
-    opt_kwargs['mol_options'] = ['nosym']
-    opt_kwargs['gen_lines'] = {1: guess_lines}
-
-    opt_script_str, _, opt_kwargs, _ = es_runner.par.run_qchem_par(
-        multi_info[0], multi_info[1])
-
-    # Prepare filesys and guesses for the single reference calc
-    hs_run_fs, hs_sr_run_path = filesys.build.high_spin_from_prefix(
-        geo_run_path, hs_var_sp2_thy_info)
-    hs_save_fs, hs_sr_save_path = filesys.build.high_spin_from_prefix(
-        geo_save_path, hs_var_sp2_thy_info)
-    run_sr_fs = autofile.fs.run(hs_sr_run_path)
-
-    sp_script_str, _, kwargs, _ = es_runner.par.run_qchem_par(
-        *mod_var_sp2_thy_info[0:2])
-    errors, options_mat = es_runner.par.set_molpro_options_mat(
-        hs_info, geo)
-
-    # Calculate the energies for the two cases
-    for x in s:
-        if not hs_save_fs[-1].file.energy.exists(multi_lvl[1:4]) or overwrite:
-            print(" - Running high spin multi reference energy ...")
-            opt_script_str, _, opt_kwargs, _ = es_runner.par.run_qchem_par(
-                multi_info[0], multi_info[1])
-
-            # Calculate the single point energy
-            if not sp_save_fs[-1].file.energy.exists(thy_lvl[1:4]) or overwrite:
-                sp.run_energy(zma, geo, spc_info, thy_info,
-                              geo_save_fs, geo_run_path, geo_save_path, locs,
-                              script_str, overwrite, **kwargs)
-                if not sp_save_fs[-1].file.energy.exists(thy_lvl[1:4]):
-                    print('ERROR: High spin single reference energy job fails: ',
-                          'Energy is needed to evaluate infinite separation energy')
-                    hs_sr_ene = None
-                else:
-                    print(" - Reading high spin single ref energy from output...")
-                    hs_sr_ene = sp_save_fs[-1].file.energy.read(thy_lvl[1:4])
-            else:
-                hs_sr_ene = sp_save_fs[-1].file.energy.read(thy_lvl[1:4])
-
-        else:
-            hs_var_ene = hs_save_fs[-1].file.energy.read(multi_lvl[1:4])
-
-    # get the single reference energy for each of the reactant configurations
-    reac1_ene, reac2_ene = reac_sep_ene(
-        spc1_info, spc2_info,
-        run_prefix, save_prefix,
-        mod_var_sp2_thy_info, mod_ini_thy_info,
-        overwrite, sp_script_str,
-        **kwargs)
-
-    # Calculate the infinite seperation energy
-    all_enes = (reac1_ene, reac2_ene, hs_sr_ene, hs_var_ene)
-    if all(ene is not None for ene in all_enes):
-        inf_sep_ene = reac1_ene + reac2_ene - hs_sr_ene + hs_var_ene
-    else:
-        inf_sep_ene = None
-
-    return inf_sep_ene
+# def radrad_inf_sep_ene(
+#         spc1_info, spc2_info, ts_info, high_mul, ref_zma,
+#         mod_var_scn_thy_info,
+#         mod_var_sp1_thy_info, mod_var_sp2_thy_info,
+#         hs_var_scn_thy_info,
+#         hs_var_sp1_thy_info,
+#         hs_var_sp2_thy_info,
+#         mod_ini_thy_info,
+#         geo, geo_run_path, geo_save_path,
+#         run_prefix, save_prefix,
+#         overwrite=False,
+#         num_act_orb=None, num_act_elc=None):
+#     """ Obtain the infinite separation energy from the multireference energy
+#         at a given reference point, the high-spin low-spin splitting at that
+#         reference point, and the high level energy for the high spin state
+#         at the reference geometry and for the fragments
+#         scn = thy for optimizations
+#         sp1 = low-spin single points
+#         sp2 = high-spin single points for inf sep
+#     """
+#
+#     # Initialize infinite sep energy
+#     inf_sep_ene = -1.0e12
+#
+#     # Prepare filesys and guesses for the multi reference calc
+#     hs_run_fs, hs_var_run_path = filesys.build.high_spin_from_prefix(
+#         geo_run_path, hs_var_sp1_thy_info)
+#     hs_save_fs, hs_var_save_path = filesys.build.high_spin_from_prefix(
+#         geo_save_path, hs_var_sp1_thy_info)
+#
+#     opt_script_str, _, opt_kwargs, _ = es_runner.par.run_qchem_par(
+#         multi_info[0], multi_info[1])
+#     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
+#     cas_opt = wfn.cas_options(
+#         hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+#     guess_str = wfn.multiref_wavefunction_guess(
+#         high_mul, ref_zma, hs_info, multi_lvl, [cas_opt])
+#     guess_lines = guess_str.splitlines()
+#     opt_kwargs['casscf_options'] = cas_opt
+#     opt_kwargs['mol_options'] = ['nosym']
+#     opt_kwargs['gen_lines'] = {1: guess_lines}
+#
+#     opt_script_str, _, opt_kwargs, _ = es_runner.par.run_qchem_par(
+#         multi_info[0], multi_info[1])
+#
+#     # Prepare filesys and guesses for the single reference calc
+#     hs_run_fs, hs_sr_run_path = filesys.build.high_spin_from_prefix(
+#         geo_run_path, hs_var_sp2_thy_info)
+#     hs_save_fs, hs_sr_save_path = filesys.build.high_spin_from_prefix(
+#         geo_save_path, hs_var_sp2_thy_info)
+#     run_sr_fs = autofile.fs.run(hs_sr_run_path)
+#
+#     sp_script_str, _, kwargs, _ = es_runner.par.run_qchem_par(
+#         *mod_var_sp2_thy_info[0:2])
+#     errors, options_mat = es_runner.par.set_molpro_options_mat(
+#         hs_info, geo)
+#
+#     # Calculate the energies for the two cases
+#     for x in s:
+#        if not hs_save_fs[-1].file.energy.exists(multi_lvl[1:4]) or overwrite:
+#             print(" - Running high spin multi reference energy ...")
+#             opt_script_str, _, opt_kwargs, _ = es_runner.par.run_qchem_par(
+#                 multi_info[0], multi_info[1])
+#
+#             # Calculate the single point energy
+#          if not sp_save_fs[-1].file.energy.exists(thy_lvl[1:4]) or overwrite:
+#                 sp.run_energy(zma, geo, spc_info, thy_info,
+#                               geo_save_fs, geo_run_path, geo_save_path, locs,
+#                               script_str, overwrite, **kwargs)
+#                 if not sp_save_fs[-1].file.energy.exists(thy_lvl[1:4]):
+#               print('ERROR: High spin single reference energy job fails: ',
+#                   'Energy is needed to evaluate infinite separation energy')
+#                     hs_sr_ene = None
+#                 else:
+#               print(" - Reading high spin single ref energy from output...")
+#                     hs_sr_ene = sp_save_fs[-1].file.energy.read(thy_lvl[1:4])
+#             else:
+#                 hs_sr_ene = sp_save_fs[-1].file.energy.read(thy_lvl[1:4])
+#
+#         else:
+#             hs_var_ene = hs_save_fs[-1].file.energy.read(multi_lvl[1:4])
+#
+#     # get the single reference energy for each of the reactant configurations
+#     reac1_ene, reac2_ene = reac_sep_ene(
+#         spc1_info, spc2_info,
+#         run_prefix, save_prefix,
+#         mod_var_sp2_thy_info, mod_ini_thy_info,
+#         overwrite, sp_script_str,
+#         **kwargs)
+#
+#     # Calculate the infinite seperation energy
+#     all_enes = (reac1_ene, reac2_ene, hs_sr_ene, hs_var_ene)
+#     if all(ene is not None for ene in all_enes):
+#         inf_sep_ene = reac1_ene + reac2_ene - hs_sr_ene + hs_var_ene
+#     else:
+#         inf_sep_ene = None
+#
+#     return inf_sep_ene
 
 
 def reac_sep_ene(spc1_info, spc2_info,

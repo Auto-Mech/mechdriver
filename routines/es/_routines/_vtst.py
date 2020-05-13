@@ -95,7 +95,8 @@ def molrad_scan(ts_zma, ts_info,
 
     # Modify the theory
     mod_ts_thy_info = filesys.inf.modify_orb_restrict(ts_info, thy_info)
-    mod_ts_ini_thy_info = filesys.inf.modify_orb_restrict(ts_info, ini_thy_info)
+    # mod_ts_ini_thy_info = filesys.inf.modify_orb_restrict(
+    #     ts_info, ini_thy_info)
     if var_sp1_thy_info is not None:
         mod_ts_sp_thy_info = filesys.inf.modify_orb_restrict(
             ts_info, var_sp1_thy_info)
@@ -149,8 +150,8 @@ def molrad_scan(ts_zma, ts_info,
             scn_run_fs[-1].create(locs)
             zma, geo = filesys.inf.get_zma_geo(scn_save_fs, locs)
             sp.run_hessian(zma, geo, ts_info, mod_ts_thy_info,
-                          scn_save_fs, geo_run_path, geo_save_path, locs,
-                          script_str, overwrite, **kwargs)
+                           scn_save_fs, geo_run_path, geo_save_path, locs,
+                           script_str, overwrite, **kwargs)
     print('\n Running Energies...')
     script_str, _, kwargs, _ = runpar.run_qchem_par(*mod_ts_sp_thy_info[0:2])
     for locs in scn_locs:
@@ -163,5 +164,3 @@ def molrad_scan(ts_zma, ts_info,
             sp.run_energy(zma, geo, ts_info, mod_ts_sp_thy_info,
                           scn_save_fs, geo_run_path, geo_save_path, locs,
                           script_str, overwrite, **kwargs)
-
-

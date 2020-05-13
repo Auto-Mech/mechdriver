@@ -13,6 +13,8 @@ def scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
     """ Run the IRC
     """
 
+    _ = scn_run_fs
+
     # Set up run filesys
     run_fs = autofile.fs.run(geo_run_path)
 
@@ -34,7 +36,6 @@ def scan(zma, ts_info, mod_thy_info, coo_name, irc_idxs,
         save_irc(
             irc_job,
             run_fs,
-            scn_run_fs,
             scn_save_fs,
             coo_name,
             irc_idxs
@@ -73,11 +74,10 @@ def run_irc(zma, irc_job, coo_name, irc_idxs, run_fs, scn_save_fs,
         print("IRC ran with all points requested")
 
 
-def save_irc(irc_job, run_fs, scn_run_fs, scn_save_fs,
-             coo_name, irc_idxs):
+def save_irc(irc_job, run_fs, scn_save_fs, coo_name, irc_idxs):
     """ Read IRC output and store data in filesystem
     """
-
+    _ = irc_idxs
     opt_ret = es_runner.read_job(
         job=irc_job,
         run_fs=run_fs,

@@ -58,7 +58,7 @@ def run(pes_formula, pes_idx,
         pf_model = parser.model.set_pf_model_info(
             spc_model_dct[spc_model]['pf'])
         ts_dct[tsname] = parser.species.build_sing_chn_sadpt_dct(
-            pes_idx, tsname, rxn, thy_info, ini_thy_info,
+            tsname, rxn, thy_info, ini_thy_info,
             run_inp_dct, spc_dct, cla_dct)
     spc_dct = parser.species.combine_sadpt_spc_dcts(
         ts_dct, spc_dct)

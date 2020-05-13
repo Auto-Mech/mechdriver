@@ -1,7 +1,6 @@
 """ es_runners for single point calculations
 """
 
-import sys
 import automol
 import elstruct
 import autofile
@@ -28,10 +27,10 @@ def run_energy(zma, geo, spc_info, thy_info,
     run_fs = autofile.fs.run(sp_run_path)
 
     # Set input geom
-    if zma is not None:
-        job_geo = zma
-    else:
+    if geo is not None:
         job_geo = geo
+    else:
+        job_geo = zma
 
     if not sp_save_fs[-1].file.energy.exists(thy_info[1:4]) or overwrite:
 
@@ -84,14 +83,13 @@ def run_gradient(zma, geo, spc_info, thy_info,
     """
 
     # Set input geom
-    if zma is not None:
-        job_geo = zma
-        is_atom = automol.geom.is_atom(automol.zmatrix.geometry(zma))
-    else:
+    if geo is not None:
         job_geo = geo
-        is_atom = automol.geom.is_atom(geo)
+    else:
+        job_geo = automol.zmatrix.geometry(zma)
+    is_atom = automol.geom.is_atom(job_geo)
 
-    if is_atom:
+    if not is_atom:
 
         if not geo_save_fs[-1].file.gradient.exists(locs) or overwrite:
 
@@ -153,12 +151,11 @@ def run_hessian(zma, geo, spc_info, thy_info,
     # Set input geom
     # Warning using internal coordinates leads to inconsistencies with Gaussian
     # For this reason we only use Cartesians to generate the Hessian
-    # if zma is not None:
-        # job_geo = zma
-        # is_atom = automol.geom.is_atom(automol.zmatrix.geometry(zma))
-    # else:
-    job_geo = geo
-    is_atom = automol.geom.is_atom(geo)
+    if geo is not None:
+        job_geo = geo
+    else:
+        job_geo = automol.zmatrix.geometry(zma)
+    is_atom = automol.geom.is_atom(job_geo)
 
     if not is_atom:
 
@@ -218,22 +215,30 @@ def run_vpt2(zma, geo, spc_info, thy_info,
     # Assess if symmetry needs to be broken for the calculation
     # Add porgram check because might only be issue for gaussian
     if spc_info[0] in symm.HIGH:
-        if zma is None:
-            print('Need a zma for high-symmetry of ', spc_info[0])
-            sys.exit()
-        else:
+        if zma is not None:
             disp = symm.HIGH[spc_info[0]] * phycon.ANG2BOHR
             vals = automol.zmatrix.values(zma)
-            zma = automol.zmatrix.set_values(zma, {'R1': vals['R1'] + disp})
+            job_geo = automol.zmatrix.set_values(
+                zma, {'R1': vals['R1'] + disp})
+            is_atom = automol.geom.is_atom(
+                automol.zmatrix.geometry(job_geo))
+        else:
+            print('Need a zma for high-symmetry of {}.'.format(spc_info[0]),
+                  'Skipping task')
+            job_geo = None
+            is_atom = False
     else:
         if zma is not None:
             job_geo = zma
-            is_atom = automol.geom.is_atom(automol.zmatrix.geometry(zma))
+            is_atom = automol.geom.is_atom(automol.zmatrix.geometry(job_geo))
         else:
             job_geo = geo
-            is_atom = automol.geom.is_atom(geo)
+            is_atom = automol.geom.is_atom(job_geo)
 
-    if not is_atom:
+    if is_atom:
+        print('Species is an atom, Skipping VPT2 task.')
+
+    if job_geo is not None and not is_atom:
 
         run_vpt2_job = bool(
             not geo_save_fs[-1].file.anharmonicity_matrix.exists(locs) or
@@ -259,19 +264,19 @@ def run_vpt2(zma, geo, spc_info, thy_info,
             if ret is not None:
                 inf_obj, inp_str, out_str = ret
 
-                if not geo_save_fs[-1].file.hessian.exists(locs):
-                    print(" - No Hessian in filesys.",
-                          "Reading it from output...")
-                    hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-                    print(" - Saving Hessian...")
-                    print(" - Save path: {}".format(geo_save_path))
-                    geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
-                    geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
-                    geo_save_fs[-1].file.hessian.write(hess, locs)
+                # if not geo_save_fs[-1].file.hessian.exists(locs):
+                #     print(" - No Hessian in filesys.",
+                #           "Reading it from output...")
+                #     hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+                #     print(" - Saving Hessian...")
+                #     print(" - Save path: {}".format(geo_save_path))
+                #     geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
+                #     geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
+                #     geo_save_fs[-1].file.hessian.write(hess, locs)
 
                 print(" - Reading anharmonicities from output...")
                 vpt2_dct = elstruct.reader.vpt2(inf_obj.prog, out_str)
-                hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+                # hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
                 # Write the VPT2 file specifying the Fermi Treatments
                 # fermi_treatment = '{} Defaults'.format(inf_obj.prog)
@@ -296,6 +301,3 @@ def run_vpt2(zma, geo, spc_info, thy_info,
         else:
             print('VPT2 information found and saved previously at {}'.format(
                 geo_save_fs[-1].file.anharmonicity_matrix.exists(locs)))
-
-    else:
-        print('Species is an atom, Skipping VPT2 task.')
