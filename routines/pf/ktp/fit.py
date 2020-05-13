@@ -63,6 +63,12 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                         lab_i, lab_j, mess_path, pdep_fit,
                         bimol=numpy.isclose(a_conv_factor, 6.0221e23))
 
+                    # Move ahead in loop if no rates found
+                    if not ktp_dct:
+                        print('\nNo valid k(T,Ps)s from MESS output.')
+                        print('\nSkipping to next reaction...')
+                        continue
+
                     # Get the desired fits in the form of CHEMKIN strs
                     if fit_method == 'arrhenius':
                         print('\nFitting k(T,P)s to PLOG/Arrhenius Form....')
@@ -431,42 +437,54 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
 
     # Remove k(T) vals at each P where where k is negative or undefined
     # If ANY valid k(T,P) vals at given pressure, store in dct
+    print('\nRemoving invalid k(T,P)s from MESS output that are either:\n',
+          '  (1) negative, (2) undefined [***], or (3) below 10**(-21) if',
+          'reaction is bimolecular')
     for pressure, calc_ks in calc_k_dct.items():
         filtered_temps, filtered_ks = ratefit.fit.get_valid_tk(
             mess_temps, calc_ks, bimol)
+        # print(pressure)
+        # print(filtered_temps)
         if filtered_ks.size > 0:
             valid_calc_tk_dct[pressure] = [filtered_temps, filtered_ks]
+            # print('size check passed')
 
     # Filter the ktp dictionary by assessing the presure dependence
-    if list(valid_calc_tk_dct.keys()) == ['high']:
-        print('Valid k(T)s only found at High Pressure...')
-        ktp_dct['high'] = valid_calc_tk_dct['high']
-    else:
-        if pdep_fit:
-            print('User requested to assess pressure dependence of reaction.')
-            assess_pdep_temps = pdep_fit['assess_pdep_temps']
-            pdep_tolerance = pdep_fit['pdep_tolerance']
-            no_pdep_pval = pdep_fit['no_pdep_pval']
-            pdep_low = pdep_fit['pdep_low']
-            pdep_high = pdep_fit['pdep_high']
-            rxn_is_pdependent = ratefit.calc.assess_pressure_dependence(
-                valid_calc_tk_dct, assess_pdep_temps,
-                tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
-            if rxn_is_pdependent:
-                print('Reaction found to be pressure dependent.')
+    if valid_calc_tk_dct:
+        if list(valid_calc_tk_dct.keys()) == ['high']:
+            print('\nValid k(T)s only found at High Pressure...')
+            ktp_dct['high'] = valid_calc_tk_dct['high']
+        else:
+            if pdep_fit:
+                print('\nUser requested to assess pressure dependence',
+                      'of reaction.')
+                assess_pdep_temps = pdep_fit['assess_pdep_temps']
+                pdep_tolerance = pdep_fit['pdep_tolerance']
+                no_pdep_pval = pdep_fit['no_pdep_pval']
+                pdep_low = pdep_fit['pdep_low']
+                pdep_high = pdep_fit['pdep_high']
+                rxn_is_pdependent = ratefit.calc.assess_pressure_dependence(
+                    valid_calc_tk_dct, assess_pdep_temps,
+                    tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
+                if rxn_is_pdependent:
+                    print('  Reaction found to be pressure dependent.',
+                          'Fitting all k(T)s from all pressures',
+                          'found in MESS.')
+                    # Set dct as copy of dct to do PLOG fits at all pressures
+                    ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+                else:
+                    # Set dct w/ single set of k(T, P) at desired pressure
+                    print('  No pressure dependence detected.',
+                          'Grabbing k(T)s at {} {}'.format(
+                              no_pdep_pval, punit))
+                    if no_pdep_pval in valid_calc_tk_dct:
+                        ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
+            else:
                 # Set dct fit as copy of dct to do PLOG fits at all pressures
                 ktp_dct = copy.deepcopy(valid_calc_tk_dct)
-            else:
-                # Set dct w/ single set of k(T, P) vals: P is desired pressure
-                print('No Pressure Dependence Detected.')
-                if no_pdep_pval in valid_calc_tk_dct:
-                    ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
-        else:
-            # Set dct fit as copy of dct to do PLOG fits at all pressures
-            ktp_dct = copy.deepcopy(valid_calc_tk_dct)
 
-    # Patchy way to get high-pressure rates in dct if needed
-    if 'high' not in ktp_dct and 'high' in valid_calc_tk_dct.keys():
-        ktp_dct['high'] = valid_calc_tk_dct['high']
+        # Patchy way to get high-pressure rates in dct if needed
+        if 'high' not in ktp_dct and 'high' in valid_calc_tk_dct.keys():
+            ktp_dct['high'] = valid_calc_tk_dct['high']
 
     return ktp_dct
