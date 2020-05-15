@@ -1,7 +1,7 @@
 input
     mech = chemkin
-    run_prefix = /lcrc/project/CMRP/test/data/abst2/run
-    save_prefix = /lcrc/project/CMRP/test/data/abst2/save
+    run_prefix = {0}/run
+    save_prefix = {0}/save
 end
 
 obj 
@@ -15,30 +15,30 @@ jobs
 end
 
 es_tsks
-  spc  init_geom    runlvl=lvl_wbs  inplvl=lvl_wbs       
-  spc  conf_samp    runlvl=lvl_wbs  inplvl=lvl_wbs       
-  spc  conf_grad    runlvl=lvl_wbs  inplvl=lvl_wbs       
-  spc  conf_hess    runlvl=lvl_wbs  inplvl=lvl_wbs       
-  spc  conf_energy  runlvl=cc_lvl_d inplvl=lvl_wbs             
-  spc  hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs
-  spc  hr_grad      runlvl=lvl_wbs  inplvl=lvl_wbs       
-  spc  hr_hess      runlvl=lvl_wbs  inplvl=lvl_wbs       
-  spc  hr_energy    runlvl=cc_lvl_d inplvl=lvl_wbs             
-  spc  hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True
-  spc  hr_grad      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True 
-  spc  hr_hess      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True     
-  spc  hr_energy    runlvl=cc_lvl_d inplvl=lvl_wbs  frz_all_tors=True           
-  ts   find_ts      runlvl=lvl_wbs  inplvl=lvl_wbs       
-  ts   conf_samp    runlvl=lvl_wbs  inplvl=lvl_wbs       
-  ts   conf_grad    runlvl=lvl_wbs  inplvl=lvl_wbs       
-  ts   conf_hess    runlvl=lvl_wbs  inplvl=lvl_wbs       
-  ts   conf_energy  runlvl=cc_lvl_d inplvl=lvl_wbs             
-  ts   hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs
-  ts   hr_grad      runlvl=lvl_wbs  inplvl=lvl_wbs       
-  ts   hr_hess      runlvl=lvl_wbs  inplvl=lvl_wbs       
-  ts   hr_energy    runlvl=cc_lvl_d inplvl=lvl_wbs             
-  ts   hr_scan      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True
-  ts   hr_grad      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True 
-  ts   hr_hess      runlvl=lvl_wbs  inplvl=lvl_wbs  frz_all_tors=True     
-  ts   hr_energy    runlvl=cc_lvl_d inplvl=lvl_wbs  frz_all_tors=True           
+  spc  init_geom    runlvl=lvl_scf  inplvl=lvl_scf       
+  spc  conf_samp    runlvl=lvl_scf  inplvl=lvl_scf       
+  spc  conf_grad    runlvl=lvl_scf  inplvl=lvl_scf       
+  spc  conf_hess    runlvl=lvl_scf  inplvl=lvl_scf       
+  spc  conf_energy  runlvl=lvl_mp2  inplvl=lvl_scf             
+  spc  hr_scan      runlvl=lvl_scf  inplvl=lvl_scf
+  spc  hr_grad      runlvl=lvl_scf  inplvl=lvl_scf       
+  spc  hr_hess      runlvl=lvl_scf  inplvl=lvl_scf       
+  spc  hr_energy    runlvl=lvl_mp2  inplvl=lvl_scf             
+  spc  hr_scan      runlvl=lvl_scf  inplvl=lvl_scf  frz_all_tors=True
+  spc  hr_grad      runlvl=lvl_scf  inplvl=lvl_scf  frz_all_tors=True 
+  spc  hr_hess      runlvl=lvl_scf  inplvl=lvl_scf  frz_all_tors=True     
+  spc  hr_energy    runlvl=lvl_mp2  inplvl=lvl_scf  frz_all_tors=True           
+  ts   find_ts      runlvl=lvl_scf  inplvl=lvl_scf       
+  ts   conf_samp    runlvl=lvl_scf  inplvl=lvl_scf       
+  ts   conf_grad    runlvl=lvl_scf  inplvl=lvl_scf       
+  ts   conf_hess    runlvl=lvl_scf  inplvl=lvl_scf       
+  ts   conf_energy  runlvl=lvl_mp2  inplvl=lvl_scf             
+  ts   hr_scan      runlvl=lvl_scf  inplvl=lvl_scf
+  ts   hr_grad      runlvl=lvl_scf  inplvl=lvl_scf       
+  ts   hr_hess      runlvl=lvl_scf  inplvl=lvl_scf       
+  ts   hr_energy    runlvl=lvl_mp2  inplvl=lvl_scf             
+  ts   hr_scan      runlvl=lvl_scf  inplvl=lvl_scf  frz_all_tors=True
+  ts   hr_grad      runlvl=lvl_scf  inplvl=lvl_scf  frz_all_tors=True 
+  ts   hr_hess      runlvl=lvl_scf  inplvl=lvl_scf  frz_all_tors=True     
+  ts   hr_energy    runlvl=lvl_mp2  inplvl=lvl_scf  frz_all_tors=True           
 end

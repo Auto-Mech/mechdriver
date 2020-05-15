@@ -1,7 +1,5 @@
 name,SMILES,mult
 C2H6,CC,1
-H,[H],2
+OH,[OH],2
 C2H5,C[CH2],2
-H2,[HH],1
-C2H5OH,CCO,1
-C2H4OH,C[CH]O,2 
+H2O,O,1
