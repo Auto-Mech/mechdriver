@@ -314,10 +314,13 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                         brk_name = dist_info[3]
                         cent_atm = None
                         ldist = len(dist_info)
+                        print('zma test:/n', automol.zmatrix.string(zma))
+                        print('ldist test:', ldist, dist_name, brk_name)
                         if dist_name and brk_name and ldist > 4:
                             angle = dist_info[4]
                             brk_bnd = automol.zmatrix.bond_idxs(zma, brk_name)
                             ang_atms = [0, 0, 0]
+                            print('brk_bnd tests:', brk_bnd, ts_bnd)
                             cent_atm = list(set(brk_bnd) & set(ts_bnd))
                             if cent_atm:
                                 ang_atms[1] = cent_atm[0]
@@ -337,7 +340,9 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                             max_disp = 1.4
 
                         # check forming bond angle similar to ini config
+                        print('angle check test:', cent_atm, rxn_class)
                         if cent_atm and 'elimination' not in rxn_class:
+                            print('angle check test:', conf_ang, angle)
                             # print('angle test in conformer selection:',
                             #       angle, conf_ang)
                             if abs(conf_ang - angle) > .44:
@@ -360,6 +365,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                                 print('Radical atom now has a new',
                                       'nearest neighbor')
                                 continue
+                            print('distance test:', conf_dist_len, dist_len, max_disp)
                             if abs(conf_dist_len - dist_len) > max_disp:
                                 print(" - Transition State conformer has",
                                       "diverged from original structure of",

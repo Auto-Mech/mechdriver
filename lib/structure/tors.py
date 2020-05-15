@@ -78,7 +78,6 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, ndim_tors='1dhr',
         )
         # Don't need symmetries for mult-dim rotors
         if len(tors_names) == 1:
-            print('entering len block for:', tors_names)
             tors_sym_nums.append(
                 automol.zmatrix.torsional_symmetry_numbers(
                     zma, tors_names,
@@ -86,7 +85,6 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, ndim_tors='1dhr',
         else:
             tors_sym_nums.append(None)
 
-        print('tors_names test:', tors_names, tors_sym_nums)
 
     return tors_name_grps, tors_grids, tors_sym_nums
 
