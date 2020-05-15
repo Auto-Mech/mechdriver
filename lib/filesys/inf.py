@@ -1,6 +1,6 @@
 """
-Handle construction and manipulation various info objects
-used through out moldriver
+Handle construction and manipulation of various info objects
+used throughout moldriver
 """
 
 import sys
@@ -17,7 +17,7 @@ from lib.filesys.mincnf import min_energy_conformer_locators
 # Handle info objects for theory
 def get_es_info(method, thy_dct):
     """
-    Turn es dictionary in theory info array
+    Turn es dictionary into theory info array
     """
     if method == 'input':
         ret = ['input_geom', None, None, None]
@@ -127,7 +127,18 @@ def rxn_chg_mult(rxn_muls, rxn_chgs, ts_mul='low'):
 def assess_rxn_ene(reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix):
     """ Check the directionality of the reaction
     """
-    [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info(reacs, prods, spc_dct)
+    #[rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info(reacs, prods, spc_dct)
+    rxn_ichs = [[], []]
+    rxn_chgs = [[], []]
+    rxn_muls = [[], []]
+    for spc in reacs:
+        rxn_ichs[0].append(spc_dct[spc]['ich'])
+        rxn_chgs[0].append(spc_dct[spc]['chg'])
+        rxn_muls[0].append(spc_dct[spc]['mul'])
+    for spc in prods:
+        rxn_ichs[1].append(spc_dct[spc]['ich'])
+        rxn_chgs[1].append(spc_dct[spc]['chg'])
+        rxn_muls[1].append(spc_dct[spc]['mul'])
     try:
         rxn_ene = reaction_energy(
             save_prefix, rxn_ichs, rxn_chgs, rxn_muls, thy_info)
@@ -166,6 +177,7 @@ def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul, thy_level):
         save_prefix, rct_ichs, rct_chgs, rct_muls, thy_level)
     prd_enes = reagent_energies(
         save_prefix, prd_ichs, prd_chgs, prd_muls, thy_level)
+    # print('reaction energy test:', rct_enes, prd_enes)
     return sum(prd_enes) - sum(rct_enes)
 
 

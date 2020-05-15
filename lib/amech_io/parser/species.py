@@ -285,7 +285,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     for rxn in rxn_lst:
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         ts_dct[tsname] = build_sing_chn_sadpt_dct(
-            pes_idx, tsname, rxn, thy_info, ini_thy_info,
+            tsname, rxn, thy_info, ini_thy_info,
             run_inp_dct, spc_dct, cla_dct)
 
     return ts_dct
