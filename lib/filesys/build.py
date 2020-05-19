@@ -370,6 +370,14 @@ def run_fs_from_prefix(prefix):
 
     return run_fs
 
+
+# tors
+def tors_from_scn_yaml(scn_fs):
+    """ read the torsions from the yaml file
+    """
+    # read.information(inf_obj)
+
+
 # Old function that I need to get rid of
 def get_rxn_fs(run_prefix, save_prefix,
                rxn_ichs, rxn_chgs, rxn_muls, ts_mul):
@@ -390,3 +398,5 @@ def get_rxn_fs(run_prefix, save_prefix,
         [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
 
     return rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path
+
+

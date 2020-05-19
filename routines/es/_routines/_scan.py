@@ -565,11 +565,13 @@ def _run_4d_scan(
 def save_scan(scn_run_fs, scn_save_fs, coo_names, thy_info):
     """ save the scans that have been run so far
     """
+    print('scn path', scn_run_fs[1].path([coo_names]))
     if not scn_run_fs[1].exists([coo_names]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
         for locs in scn_run_fs[-1].existing([coo_names]):
+            print('locs', locs)
             if not isinstance(locs[1][0], float):
                 continue
             run_path = scn_run_fs[-1].path(locs)

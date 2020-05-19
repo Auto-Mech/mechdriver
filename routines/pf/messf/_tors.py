@@ -550,6 +550,19 @@ def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
 
 
 # Handle strucutral information about torsions
+def get_tors_names2(tors_min_cnf_locs, tors_cnf_save_path):
+    """
+    """
+    if tors_min_cnf_locs is not None:
+        print('No tors in save filesys')
+        tors_names = []
+    else:
+        scan_names = os.listdir(tors_cnf_save_path)
+        tors_names = [name for name in scan_names
+                      if 'D' in name]
+    return tors_names
+
+
 def get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=False):
     """ get the tors names
     """
