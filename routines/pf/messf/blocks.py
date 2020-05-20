@@ -75,7 +75,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             dist_names.append(spc_dct_i['dist_info'][0])
             dist_names.append(spc_dct_i['dist_info'][3])
 
-    no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
+    no_tors = not bool(tors.get_tors_names2(tors_min_cnf_locs, tors_cnf_save_path))
+    # no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
     # Set TS information
     frm_bnd_key, brk_bnd_key = messfutil.get_bnd_keys(spc_dct_i, saddle)
 
@@ -470,8 +471,10 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
     #      vpt2_min_cnf_locs_j, vpt2_save_path_j] = vpt2fs_j
 
     # are there any torsions
-    no_tors_i = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs_i, saddle=False))
-    no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
+    no_tors_i = not bool(tors.get_tors_names2(tors_min_cnf_locs_i, tors_cnf_save_path_i))
+    no_tors_j = not bool(tors.get_tors_names2(tors_min_cnf_locs_j, tors_cnf_save_path_j))
+    # no_tors_i = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs_i, saddle=False))
+    # no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
 
     # Get the combined electronic energy levels
     elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
@@ -641,8 +644,10 @@ def fake_species_block(
     spc_str = ''
 
     # are there any torsion
-    no_tors_i = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs_i, saddle=False))
-    no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
+    no_tors_i = not bool(tors.get_tors_names2(tors_min_cnf_locs_i, tors_cnf_save_path_i))
+    no_tors_j = not bool(tors.get_tors_names2(tors_min_cnf_locs_j, tors_cnf_save_path_j))
+    # no_tors_i = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs_i, saddle=False))
+    # no_tors_j = not bool(tors.get_tors_names(spc_dct_j, tors_cnf_save_fs_j, saddle=False))
 
     # Get the combined electronic energy levels
     elec_levels = messfutil.combine_elec_levels(spc_dct_i, spc_dct_j)
