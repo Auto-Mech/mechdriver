@@ -229,8 +229,8 @@ def determine_reaction_type(rct_zmas, prd_zmas,
         if rad_rad:
             bkp_typ = 'radical radical ' + bkp_typ
 
-    print('brk_bnd_key test:', brk_bnd_key)
-    print('ts_zma test:\n',automol.zmatrix.string(ts_zma))
+    # print('brk_bnd_key test:', brk_bnd_key)
+    # print('ts_zma test:\n',automol.zmatrix.string(ts_zma))
     if brk_bnd_key:
         brk_name = automol.zmatrix.bond_key_from_idxs(ts_zma, brk_bnd_key)
     else:
