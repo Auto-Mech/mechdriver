@@ -17,7 +17,8 @@ def conformer_sampling(zma, spc_info,
                        script_str, overwrite,
                        saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
                        tors_names='', dist_info=(),
-                       two_stage=False, rxn_class='', **kwargs):
+                       two_stage=False, retryfail=True,
+                       rxn_class='', **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
     """
@@ -71,6 +72,7 @@ def conformer_sampling(zma, spc_info,
         overwrite=overwrite,
         saddle=saddle,
         two_stage=two_stage,
+        retryfail=retryfail,
         **kwargs,
     )
 
@@ -119,13 +121,15 @@ def single_conformer(zma, spc_info, thy_info,
         saddle=saddle,
         dist_info=dist_info,
         two_stage=saddle,
+        retryfail=False,
         **kwargs,
     )
 
 
 def run_conformers(
         zma, spc_info, thy_info, nsamp, tors_range_dct,
-        cnf_run_fs, cnf_save_fs, script_str, overwrite, saddle, two_stage,
+        cnf_run_fs, cnf_save_fs, script_str, overwrite,
+        saddle, two_stage, retryfail,
         **kwargs):
     """ run sampling algorithm to find conformers
     """
@@ -193,6 +197,7 @@ def run_conformers(
                 overwrite=overwrite,
                 frozen_coordinates=[tors_names],
                 saddle=saddle,
+                retryfail=retryfail,
                 **kwargs
             )
             print('Stage one success, reading for stage 2')
@@ -212,6 +217,7 @@ def run_conformers(
                     thy_info=thy_info,
                     overwrite=overwrite,
                     saddle=saddle,
+                    retryfail=False,
                     **kwargs
                 )
         else:
@@ -224,6 +230,7 @@ def run_conformers(
                 thy_info=thy_info,
                 overwrite=overwrite,
                 saddle=saddle,
+                retryfail=retryfail,
                 **kwargs
             )
 

@@ -47,7 +47,7 @@ JOB_RUNNER_DCT = {
 def run_job(
         job, script_str, run_fs,
         geom, spc_info, thy_info,
-        errors=(), options_mat=(), retry_failed=True, feedback=False,
+        errors=(), options_mat=(), retryfail=True, feedback=False,
         frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
         irc_direction=None,
         **kwargs):
@@ -71,10 +71,11 @@ def run_job(
             inf_obj = run_fs[-1].file.info.read([job])
             if inf_obj.status == autofile.system.RunStatus.FAILURE:
                 print(" - Found failed {} job at {}".format(job, run_path))
-                if retry_failed:
+                if retryfail:
                     print(" - Retrying...")
                     do_run = True
                 else:
+                    print(" - Skipping failed job, per user request...")
                     do_run = False
             else:
                 do_run = False

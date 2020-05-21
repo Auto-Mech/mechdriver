@@ -17,7 +17,7 @@ from lib import filesys
 from lib import structure
 
 
-# Dictionary of Electronic Structure Calculations
+# Dictionary of Electronic Structure Calculators
 SP_MODULE = importlib.import_module('routines.es._routines.sp')
 ES_TSKS = {
     'energy': SP_MODULE.run_energy,
@@ -59,30 +59,36 @@ def run_tsk(tsk, spc_dct, spc_name,
             spc, thy_info, ini_thy_info,
             run_prefix, save_prefix, saddle, es_keyword_dct)
     elif 'conf' in tsk:
-        run_conformer_tsk(job, spc_dct, spc_name,
-                          thy_info, ini_thy_info,
-                          run_prefix, save_prefix,
-                          saddle, es_keyword_dct)
+        run_conformer_tsk(
+            job, spc_dct, spc_name,
+            thy_info, ini_thy_info,
+            run_prefix, save_prefix,
+            saddle, es_keyword_dct)
     elif 'tau' in tsk:
-        run_tau_tsk(job, spc_dct, spc_name,
-                    thy_info, ini_thy_info,
-                    run_prefix, save_prefix,
-                    es_keyword_dct)
+        run_tau_tsk(
+            job, spc_dct, spc_name,
+            thy_info, ini_thy_info,
+            run_prefix, save_prefix,
+            es_keyword_dct)
     elif 'hr' in tsk:
-        run_hr_tsk(job, spc_dct, spc_name,
-                   thy_info, ini_thy_info,
-                   run_prefix, save_prefix,
-                   saddle, es_keyword_dct)
+        run_hr_tsk(
+            job, spc_dct, spc_name,
+            thy_info, ini_thy_info,
+            run_prefix, save_prefix,
+            saddle, es_keyword_dct)
     elif 'irc' in tsk:
-        run_irc_tsk(job, spc_dct, spc_name,
-                    thy_info, ini_thy_info,
-                    run_prefix, save_prefix,
-                    es_keyword_dct)
+        run_irc_tsk(
+            job, spc_dct, spc_name,
+            thy_info, ini_thy_info,
+            run_prefix, save_prefix,
+            es_keyword_dct)
     elif 'find' in tsk:
-        findts.run(spc_dct, spc_name,
-                   thy_info, ini_thy_info,
-                   var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info,
-                   run_prefix, save_prefix, es_keyword_dct)
+        findts.run(
+            spc_dct, spc_name,
+            thy_info, ini_thy_info,
+            var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info,
+            run_prefix, save_prefix,
+            es_keyword_dct)
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
@@ -97,6 +103,7 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     # Get es options
     [kickoff_size, kickoff_backward] = spc['kickoff']
     overwrite = es_keyword_dct['overwrite']
+    retryfail = es_keyword_dct['retryfail']
     # dist_info = spc['dist_info'] if saddle else ()
 
     # Modify the theory
@@ -159,6 +166,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
+    retryfail = es_keyword_dct['retryfail']
 
     # Modify the theory
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
@@ -240,7 +248,8 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             opt_script_str, overwrite,
             saddle=saddle, nsamp_par=mc_nsamp,
             tors_names=tors_names, dist_info=dist_info,
-            two_stage=two_stage, rxn_class=rxn_class, **opt_kwargs)
+            two_stage=two_stage, retryfail=retryfail, 
+            rxn_class=rxn_class, **opt_kwargs)
 
     elif job in ('energy', 'grad', 'hess', 'vpt2'):
 
@@ -269,7 +278,8 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,
                 cnf_save_fs, geo_run_path, geo_save_path, [locs],
-                script_str, overwrite, **kwargs)
+                script_str, overwrite,
+                retryfail=retryfail, **kwargs)
 
 
 def run_tau_tsk(job, spc_dct, spc_name,
@@ -287,6 +297,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
+    retryfail = es_keyword_dct['retryfail']
     nsamp_par = spc['mc_nsamp']
 
     # Script
@@ -335,7 +346,8 @@ def run_tau_tsk(job, spc_dct, spc_name,
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,
                 tau_save_fs, geo_run_path, geo_save_path, locs,
-                script_str, overwrite, **kwargs)
+                script_str, overwrite,
+                retryfail=retryfail, **kwargs)
 
 
 def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
@@ -406,6 +418,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     frm_bnd_key = spc['frm_bnd_key'] if saddle else ()
     brk_bnd_key = spc['brk_bnd_key'] if saddle else ()
     overwrite = es_keyword_dct['overwrite']
+    retryfail = es_keyword_dct['retryfail']
     ndim_tors = es_keyword_dct['ndim_tors']
     frz_all_tors = es_keyword_dct['frz_all_tors']
     scan_increment = spc['hind_inc']
@@ -456,7 +469,8 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 ini_scn_run_fs, ini_scn_save_fs,
                 run_tors_names, run_tors_grids,
                 opt_script_str, overwrite,
-                saddle=saddle, constraint_dct=constraint_dct, **opt_kwargs)
+                saddle=saddle, constraint_dct=constraint_dct,
+                retryfail=retryfail, **opt_kwargs)
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 
@@ -475,7 +489,8 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                         ES_TSKS[job](
                             zma, geo, spc_info, mod_thy_info,
                             ini_scn_save_fs, geo_run_path, geo_save_path, locs,
-                            script_str, overwrite, **kwargs)
+                            script_str, overwrite,
+                            retryfail=retryfail, **kwargs)
                 else:
                     print('*WARNING: NO SCAN INFORMATION EXISTS.',
                           'Doing scan vs cscan?')
@@ -507,6 +522,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
+    retryfail = es_keyword_dct['retryfail']
     irc_idxs = spc['irc_idxs']
 
     # Set the filesystem objects
