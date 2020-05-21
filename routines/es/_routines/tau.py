@@ -73,7 +73,7 @@ def run_tau(
     tau_save_fs[0].file.vmatrix.write(vma)
     idx = 0
     nsamp0 = nsamp
-    inf_obj = autofile.system.info.tau_trunk(0, tors_range_dct)
+    inf_obj = autofile.schema.info_objects.tau_trunk(0, tors_range_dct)
     while True:
         if tau_save_fs[0].file.info.exists():
             inf_obj_s = tau_save_fs[0].file.info.read()
@@ -93,7 +93,7 @@ def run_tau(
         print("    New nsamp is {:d}.".format(nsamp))
 
         samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
-        tid = autofile.system.generate_new_tau_id()
+        tid = autofile.schema.generate_new_tau_id()
         locs = [tid]
 
         tau_run_fs[-1].create(locs)

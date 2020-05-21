@@ -88,8 +88,8 @@ def write_tau_data_str(
         geo = tau_save_fs[-1].file.geometry.read(locs)
         ene = tau_save_fs[-1].file.energy.read(locs)
         ene = (ene - ene_ref) * phycon.EH2KCAL
-        ene_str = autofile.file.swrite.energy(ene)
-        geo_str = autofile.file.swrite.geometry(geo)
+        ene_str = autofile.data_types.swrite.energy(ene)
+        geo_str = autofile.data_types.swrite.geometry(geo)
 
         idx += 1
         idx_str = str(idx)
@@ -101,12 +101,12 @@ def write_tau_data_str(
         evr += geo_str+'\n'
         if gradient:
             grad = tau_save_fs[-1].file.gradient.read(locs)
-            grad_str = autofile.file.swrite.gradient(grad)
+            grad_str = autofile.data_types.swrite.gradient(grad)
             evr += 'Gradient'+'\n'
             evr += grad_str
         if hessian:
             hess = tau_save_fs[-1].file.hessian.read(locs)
-            hess_str = autofile.file.swrite.hessian(hess)
+            hess_str = autofile.data_types.swrite.hessian(hess)
             evr += 'Hessian'+'\n'
             evr += hess_str+'\n'
 

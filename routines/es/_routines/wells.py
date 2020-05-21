@@ -196,13 +196,13 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
                     cnf_save_fs[0].create()
                     cnf_run_fs[0].create()
                     tors_range_dct = {}
-                    cinf_obj = autofile.system.info.conformer[0](
+                    cinf_obj = autofile.schema.info_objects.conformer[0](
                         0, tors_range_dct)
                     cinf_obj.nsamp = 1
                     cnf_save_fs[0].file.info.write(cinf_obj)
                     locs_lst = cnf_save_fs[-1].existing()
                     if not locs_lst:
-                        cid = autofile.system.generate_new_conformer_id()
+                        cid = autofile.schema.generate_new_conformer_id()
                         locs = [cid]
                     else:
                         locs = locs_lst[0]

@@ -236,7 +236,7 @@ def geometry_dictionary(job_path):
         for file_name in file_names:
             file_path = os.path.join(dir_path, file_name)
             if file_path.endswith('.xyz'):
-                xyz_str = autofile.file.read_file(file_path)
+                xyz_str = autofile.io_.read_file(file_path)
                 geo = automol.geom.from_xyz_string(xyz_str)
                 ich = automol.geom.inchi(geo)
                 if ich in geom_dct:

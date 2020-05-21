@@ -141,7 +141,7 @@ def optimize_transition_state(
             ts_save_fs[0].file.zmatrix.write(zma)
 
             # Save this structure as first conformer
-            # cid = autofile.system.generate_new_conformer_id()
+            # cid = autofile.schema.generate_new_conformer_id()
             # locs = [cid]
             # cnf_save_fs[-1].create(locs)
             # cnf_save_fs[-1].file.geometry_info.write(inf_obj, locs)
@@ -216,7 +216,7 @@ def optimize_transition_state(
     # ts_save_fs[0].file.zmatrix.write(zma)
 
     # # Save this structure as first conformer
-    # # cid = autofile.system.generate_new_conformer_id()
+    # # cid = autofile.schema.generate_new_conformer_id()
     # # locs = [cid]
     # # cnf_save_fs[-1].create(locs)
     # # cnf_save_fs[-1].file.geometry_info.write(inf_obj, locs)
