@@ -254,6 +254,7 @@ def read_hr_pot(spc_info, tors_names, tors_grids, tors_cnf_save_path, min_ene,
                 locs = [tors_names, [grid_val_i]]
             else:
                 locs = [tors_names, [grid_val_i], constraint_dct]
+            # print('tors pote file system:', scn_save_fs[-1].path(locs))
             if scn_save_fs[-1].exists(locs):
                 ene = scn_save_fs[-1].file.energy.read(locs)
                 pot[i] = (ene - min_ene) * phycon.EH2KCAL
@@ -582,9 +583,13 @@ def get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=False):
             tors_ranges = inf_obj_s.tors_ranges
             tors_ranges = autofile.info.dict_(tors_ranges)
             tors_names = list(tors_ranges.keys())
+
+            print('inf_obj test:', tors_cnf_save_fs[0].path(), inf_obj_s, tors_ranges)
         else:
+            tors_names = None
             print('No inf obj to identify torsional angles')
 
+    print ('get_tors_names test:', tors_names)
     return tors_names
 
 

@@ -85,7 +85,7 @@ def optimize_transition_state(
         guess_zmas, ts_info, mod_thy_info,
         cnf_run_fs, cnf_save_fs,
         ts_save_fs, ts_save_path, run_fs,
-        dist_name, dist_info,
+        dist_name, dist_info, rxn_class,
         opt_script_str, overwrite, **opt_kwargs):
     """ Optimize the transition state structure obtained from the grid search
     """
@@ -154,6 +154,11 @@ def optimize_transition_state(
             vals = automol.zmatrix.values(zma)
             final_dist = vals[dist_name]
             dist_info[1] = final_dist
+            angle = conformer.check_angle(
+                zma, dist_info, rxn_class)
+            dist_info[4] = angle
+            # ts_dct['dist_info'][1] = final_dist
+            # ts_dct['dist_info'][4] = angle
             conformer.single_conformer(
                 zma=zma,
                 spc_info=ts_info,

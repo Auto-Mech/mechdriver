@@ -110,7 +110,7 @@ def run_qchem_par(prog, method):  # , saddle=False):
             }
         else:
             kwargs = {
-                'memory': 16,
+                'memory': 32,
                 'corr_options': ['maxit=100'],
                 'mol_options': ['nosym'],
             }

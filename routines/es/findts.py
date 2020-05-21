@@ -268,7 +268,7 @@ def sadpt_transition_state(
         guess_zmas, ts_info, mod_thy_info,
         cnf_run_fs, cnf_save_fs,
         ts_save_fs, ts_save_path, run_fs,
-        dist_name, dist_info,
+        dist_name, dist_info, typ,
         opt_script_str, overwrite, **opt_kwargs)
 
 

@@ -106,6 +106,8 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
     hr_str = ""
     xmat = ()
 
+    print('species test:',spc)
+    print('model test:', vib_model, tors_model)
     if messfutil.is_atom(harm_min_cnf_locs, harm_cnf_save_fs):
         mass = messfutil.atom_mass(harm_min_cnf_locs, harm_cnf_save_fs)
         spc_str = mess_io.writer.atom(
@@ -117,6 +119,7 @@ def species_block(spc, spc_dct_i, spc_info, spc_model,
             symf = sym_factor
         elif vib_model == 'harm' and (tors_model == '1dhr' or tors_model == '1dhrf'):
             frz_tors = True if tors_model == '1dhrf' else False
+            print('no_tors test:', no_tors)
             if no_tors:
                 geo, freqs, imag = pfmodels.vib_harm_tors_rigid(
                     spc_info, harm_min_cnf_locs, harm_cnf_save_fs, saddle=saddle)
