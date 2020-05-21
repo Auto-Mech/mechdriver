@@ -52,7 +52,7 @@ def multiref_rscan(ts_zma, ts_info, ts_formula, high_mul,
     # Build the filesystem for the scan
     full_grid = grid1 + grid2  # wrong
     scn_save_fs[1].create([dist_name])
-    inf_obj = autofile.system.info.scan_branch({dist_name: full_grid})
+    inf_obj = autofile.schema.info_objects.scan_branch({dist_name: full_grid})
     scn_save_fs[1].file.info.write(inf_obj, [dist_name])
 
     # Run the scans

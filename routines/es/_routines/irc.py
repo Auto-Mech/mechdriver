@@ -94,7 +94,7 @@ def save_irc(irc_job, run_fs, scn_save_fs, coo_name, irc_idxs):
         # scn_save_fs[1].file.irc_input.write(inp_str, [coo_name])
 
         # Write the IRC coords and enes to a yaml file
-        # irc_inf_obj = autofile.system.info.irc(idxs=irc_idxs, coords=coords)
+        # irc_inf_obj = autofile.schema.info_objects.irc(idxs=irc_idxs, coords=coords)
         # scn_save_fs[1].file.info.write(irc_inf_obj, [coo_name])
 
         # Write the data for each geom along IRC to the filesystem

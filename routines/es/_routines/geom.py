@@ -30,13 +30,13 @@ def reference_geometry(
 
     if run_fs[0].file.info.exists([]):
         inf_obj = run_fs[0].file.info.read([])
-        if inf_obj.status == autofile.system.RunStatus.RUNNING:
+        if inf_obj.status == autofile.schema.RunStatus.RUNNING:
             print('Reference geometry already running')
             return ret
     else:
         [prog, method, basis, _] = thy_info
-        status = autofile.system.RunStatus.RUNNING
-        inf_obj = autofile.system.info.run(
+        status = autofile.schema.RunStatus.RUNNING
+        inf_obj = autofile.schema.info_objects.run(
             job='', prog=prog, version='version', method=method, basis=basis,
             status=status)
         run_fs[0].file.info.write(inf_obj, [])
@@ -146,14 +146,14 @@ def reference_geometry(
                 fake_conf(thy_info, filesys, inf)
 
         if geo:
-            inf_obj.status = autofile.system.RunStatus.SUCCESS
+            inf_obj.status = autofile.schema.RunStatus.SUCCESS
             run_fs[0].file.info.write(inf_obj, [])
         else:
-            inf_obj.status = autofile.system.RunStatus.FAILURE
+            inf_obj.status = autofile.schema.RunStatus.FAILURE
             run_fs[0].file.info.write(inf_obj, [])
 
     except IOError:
-        inf_obj.status = autofile.system.RunStatus.FAILURE
+        inf_obj.status = autofile.schema.RunStatus.FAILURE
         run_fs[0].file.info.write(inf_obj, [])
 
     return geo
@@ -366,7 +366,7 @@ def fake_conf(thy_info, filesystem, inf=()):
         ene = thy_save_fs[-1].file.energy.read(thy_info[1:4])
         inf_obj = run_fs[0].file.info.read()
     tors_range_dct = {}
-    cinf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
+    cinf_obj = autofile.schema.info_objects.conformer_trunk(0, tors_range_dct)
     cinf_obj.nsamp = 1
     cnf_save_fs = autofile.fs.conformer(thy_save_path)
     cnf_save_fs[0].create()
@@ -375,7 +375,7 @@ def fake_conf(thy_info, filesystem, inf=()):
     cnf_run_fs[0].file.info.write(cinf_obj)
     locs_lst = cnf_save_fs[-1].existing()
     if not locs_lst:
-        cid = autofile.system.generate_new_conformer_id()
+        cid = autofile.schema.generate_new_conformer_id()
         locs = [cid]
     else:
         locs = locs_lst[0]

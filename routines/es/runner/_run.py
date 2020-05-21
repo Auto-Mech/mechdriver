@@ -69,7 +69,7 @@ def run_job(
             print(" - Running {} job at {}".format(job, run_path))
         else:
             inf_obj = run_fs[-1].file.info.read([job])
-            if inf_obj.status == autofile.system.RunStatus.FAILURE:
+            if inf_obj.status == autofile.schema.RunStatus.FAILURE:
                 print(" - Found failed {} job at {}".format(job, run_path))
                 if retryfail:
                     print(" - Retrying...")
@@ -79,7 +79,7 @@ def run_job(
                     do_run = False
             else:
                 do_run = False
-                if inf_obj.status == autofile.system.RunStatus.SUCCESS:
+                if inf_obj.status == autofile.schema.RunStatus.SUCCESS:
                     print(" - Found completed {} job at {}"
                           .format(job, run_path))
                 else:
@@ -89,14 +89,14 @@ def run_job(
 
     if do_run:
         # create the run directory
-        status = autofile.system.RunStatus.RUNNING
+        status = autofile.schema.RunStatus.RUNNING
         prog = thy_info[0]
         method = thy_info[1]
         basis = thy_info[2]
-        inf_obj = autofile.system.info.run(
+        inf_obj = autofile.schema.info_objects.run(
             job=job, prog=prog, version='',
             method=method, basis=basis, status=status)
-        inf_obj.utc_start_time = autofile.system.info.utc_time()
+        inf_obj.utc_start_time = autofile.schema.utc_time()
         run_fs[-1].file.info.write(inf_obj, [job])
 
         # Set job runner based on user request; set special options as needed
@@ -122,15 +122,15 @@ def run_job(
             errors=errors, options_mat=options_mat, **kwargs
         )
 
-        inf_obj.utc_end_time = autofile.system.info.utc_time()
+        inf_obj.utc_end_time = autofile.schema.utc_time()
         prog = inf_obj.prog
         if is_successful_output(out_str, job, prog):
             run_fs[-1].file.output.write(out_str, [job])
             print(" - Run succeeded.")
-            status = autofile.system.RunStatus.SUCCESS
+            status = autofile.schema.RunStatus.SUCCESS
         else:
             print(" - Run failed.")
-            status = autofile.system.RunStatus.FAILURE
+            status = autofile.schema.RunStatus.FAILURE
         version = elstruct.reader.program_version(prog, out_str)
         inf_obj.version = version
         inf_obj.status = status

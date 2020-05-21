@@ -144,7 +144,7 @@ def run_conformers(
         assert vma == existing_vma
     cnf_save_fs[0].file.vmatrix.write(vma)
     nsamp0 = nsamp
-    inf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
+    inf_obj = autofile.schema.info_objects.conformer_trunk(0, tors_range_dct)
     if cnf_save_fs[0].file.info.exists():
         inf_obj_s = cnf_save_fs[0].file.info.read()
         nsampd = inf_obj_s.nsamp
@@ -175,7 +175,7 @@ def run_conformers(
         else:
             samp_zma = zma
 
-        cid = autofile.system.generate_new_conformer_id()
+        cid = autofile.schema.generate_new_conformer_id()
         locs = [cid]
 
         cnf_run_fs[-1].create(locs)

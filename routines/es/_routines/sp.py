@@ -289,7 +289,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 
                 # Write the VPT2 file specifying the Fermi Treatments
                 # fermi_treatment = '{} Defaults'.format(inf_obj.prog)
-                # vpt2_inf_obj = autofile.system.info.vpt2(
+                # vpt2_inf_obj = autofile.schema.info_objects.vpt2(
                 #     fermi_treatment=fermi_treatment)
 
                 print(" - Saving anharmonicities...")
