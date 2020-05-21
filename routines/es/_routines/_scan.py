@@ -10,8 +10,8 @@ from routines.es import runner as es_runner
 def run_scan(
         zma, spc_info, thy_info, grid_dct, scn_run_fs, scn_save_fs,
         script_str, overwrite, update_guess=True,
-        reverse_sweep=True, fix_failures=True, saddle=False,
-        constraint_dct=None,
+        reverse_sweep=True, saddle=False,
+        constraint_dct=None, retryfail=True,
         **kwargs):
     """ run constrained optimization scan
     """
@@ -62,7 +62,7 @@ def run_scan(
             overwrite=overwrite,
             update_guess=update_guess,
             saddle=saddle,
-            retry_failed=fix_failures,
+            retryfail=retryfail,
             constraint_dct=constraint_dct,
             **kwargs
         )
@@ -115,7 +115,7 @@ def run_scan(
             overwrite=overwrite,
             update_guess=update_guess,
             saddle=saddle,
-            retry_failed=fix_failures,
+            retryfail=retryfail,
             constraint_dct=constraint_dct,
             **kwargs
         )
@@ -187,7 +187,7 @@ def run_scan(
             overwrite=overwrite,
             update_guess=update_guess,
             saddle=saddle,
-            retry_failed=fix_failures,
+            retryfail=retryfail,
             constraint_dct=constraint_dct,
             **kwargs
         )
@@ -269,7 +269,7 @@ def run_scan(
             overwrite=overwrite,
             update_guess=update_guess,
             saddle=saddle,
-            retry_failed=fix_failures,
+            retryfail=retryfail,
             constraint_dct=constraint_dct,
             **kwargs
         )
@@ -318,7 +318,7 @@ def _run_1d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_name,
         grid_idxs, grid_vals,
         spc_info, thy_info, overwrite, errors=(), options_mat=(),
-        retry_failed=True, update_guess=True, saddle=False,
+        retryfail=True, update_guess=True, saddle=False,
         constraint_dct=None,
         **kwargs):
     """ run 1 dimensional scan with constrained optimization
@@ -352,7 +352,7 @@ def _run_1d_scan(
                 frozen_coordinates=frozen_coordinates,
                 errors=errors,
                 options_mat=options_mat,
-                retry_failed=retry_failed,
+                retryfail=retryfail,
                 saddle=saddle,
                 **kwargs
             )
@@ -371,7 +371,7 @@ def _run_2d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_names,
         grid_idxs, grid_vals,
         spc_info, thy_info, overwrite, errors=(),
-        options_mat=(), retry_failed=True, update_guess=True, saddle=False,
+        options_mat=(), retryfail=True, update_guess=True, saddle=False,
         constraint_dct=None,
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
@@ -413,7 +413,7 @@ def _run_2d_scan(
                     frozen_coordinates=frozen_coordinates,
                     errors=errors,
                     options_mat=options_mat,
-                    retry_failed=retry_failed,
+                    retryfail=retryfail,
                     saddle=saddle,
                     **kwargs
                 )
@@ -432,7 +432,7 @@ def _run_3d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_names,
         grid_idxs, grid_vals,
         spc_info, thy_info, overwrite, errors=(),
-        options_mat=(), retry_failed=True, update_guess=True, saddle=False,
+        options_mat=(), retryfail=True, update_guess=True, saddle=False,
         constraint_dct=None,
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
@@ -477,7 +477,7 @@ def _run_3d_scan(
                         frozen_coordinates=frozen_coordinates,
                         errors=errors,
                         options_mat=options_mat,
-                        retry_failed=retry_failed,
+                        retryfail=retryfail,
                         saddle=saddle,
                         **kwargs
                     )
@@ -496,7 +496,7 @@ def _run_4d_scan(
         script_str, run_prefixes, scn_save_fs, guess_zma, coo_names,
         grid_idxs, grid_vals,
         spc_info, thy_info, overwrite, errors=(),
-        options_mat=(), retry_failed=True, update_guess=True, saddle=False,
+        options_mat=(), retryfail=True, update_guess=True, saddle=False,
         constraint_dct=None,
         **kwargs):
     """ run 2-dimensional scan with constrained optimization
@@ -546,7 +546,7 @@ def _run_4d_scan(
                             frozen_coordinates=frozen_coordinates,
                             errors=errors,
                             options_mat=options_mat,
-                            retry_failed=retry_failed,
+                            retryfail=retryfail,
                             saddle=saddle,
                             **kwargs
                         )
@@ -565,11 +565,13 @@ def _run_4d_scan(
 def save_scan(scn_run_fs, scn_save_fs, coo_names, thy_info):
     """ save the scans that have been run so far
     """
+    print('scn path', scn_run_fs[1].path([coo_names]))
     if not scn_run_fs[1].exists([coo_names]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
         for locs in scn_run_fs[-1].existing([coo_names]):
+            print('locs', locs)
             if not isinstance(locs[1][0], float):
                 continue
             run_path = scn_run_fs[-1].path(locs)

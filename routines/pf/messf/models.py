@@ -56,12 +56,14 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
     if 'hind_def' in spc_dct_i:
         run_tors_names = spc_dct_i['hind_def']
     else:
-        run_tors_names = ()
-    if 'amech_ts_tors_names' in spc_dct_i:
-        dct_tors_names = spc_dct_i['amech_ts_tors_names']
-        run_tors_names = [[name] for name in dct_tors_names]
-    else:
-        run_tors_names = ()
+        # run_tors_names = ()
+        run_tors_names = tors.get_tors_names2(
+            tors_min_cnf_locs, tors_cnf_save_path)
+    # if 'amech_ts_tors_names' in spc_dct_i:
+    #     dct_tors_names = spc_dct_i['amech_ts_tors_names']
+    #     run_tors_names = [[name] for name in dct_tors_names]
+    # else:
+    #     run_tors_names = ()
     if 'hind_inc' in spc_dct_i:
         scan_increment = spc_dct_i['hind_inc']
     else:

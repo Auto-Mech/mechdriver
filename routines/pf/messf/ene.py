@@ -121,7 +121,8 @@ def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
             mode_start = mode_start + 1
             saddle = True
 
-        no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
+        no_tors = not bool(tors.get_tors_names2(tors_min_cnf_locs, tors_cnf_save_path))
+        # no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
         if no_tors:
             mode_start = mode_start - 1
         freqs = freqs[mode_start:]

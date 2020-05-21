@@ -550,6 +550,27 @@ def calc_tors_freqs_zpe(tors_geo, sym_factor, elec_levels,
 
 
 # Handle strucutral information about torsions
+def get_tors_names2(tors_min_cnf_locs, tors_cnf_save_path):
+    """
+    """
+    if tors_min_cnf_locs is not None:
+        scans_dir = os.path.join(tors_cnf_save_path, 'SCANS')
+        print('scans dir', scans_dir)
+        if os.path.exists(scans_dir):
+            scan_names = os.listdir(scans_dir)
+            tors_names = [name for name in scan_names
+                          if 'D' in name]
+            tors_names = [[name] for name in tors_names]
+        else:
+            print('No tors in save filesys')
+            tors_names = []
+    else:
+        print('No min cnf for tors filesys')
+        tors_names = []
+
+    return tors_names
+
+
 def get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=False):
     """ get the tors names
     """
@@ -594,8 +615,10 @@ def get_tors_sym_nums(spc_dct_i, tors_min_cnf_locs, tors_cnf_save_fs,
     """
     zma = tors_cnf_save_fs[-1].file.zmatrix.read(
         tors_min_cnf_locs)
-    tors_names = get_tors_names(
-        spc_dct_i, tors_cnf_save_fs, saddle=saddle)
+    tors_cnf_save_path = tors_cnf_save_fs[-1].path(tors_min_cnf_locs)
+    # tors_names = get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle)
+    tors_names = get_tors_names2(
+        tors_min_cnf_locs, tors_cnf_save_path)
     tors_sym_nums = list(automol.zmatrix.torsional_symmetry_numbers(
         zma, tors_names, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key))
 

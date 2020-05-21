@@ -13,7 +13,22 @@ def run(pes_idx,
         es_tsk_lst,
         thy_dct,
         run_inp_dct):
-    """ driver for all electronic structure tasks
+    """ Central driver for all electronic structure tasks.
+
+        :param pes_idx: index for the PES where the channel/spc belong to
+        :type pes_idx: int
+        :param rxn_lst: species and models for all reactions being run
+        :type rxn_lst: list[dict[species, reacs, prods, model]]
+        :param spc_dct: species information
+        :type spc_dct: dict[spc_name: spc_information] 
+        :param cla_dct: input to change class dict
+        :type cla_dct: dict[]
+        :param es_tsk_lst: list of the electronic structure tasks 
+        :type es_tsk_lst: list[[obj, tsk, keyword_dict]]
+        :param thy_dct: all of the theory information
+        :type thy_dct: dict[]
+        :param run_inp_dct: information from input section of run.dat
+        :type run_inp_dct: dict[]
     """
 
     # Pull stuff from dcts for now

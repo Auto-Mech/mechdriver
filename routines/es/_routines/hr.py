@@ -8,7 +8,8 @@ def hindered_rotor_scans(
         zma, spc_info, thy_info, scn_run_fs, scn_save_fs,
         run_tors_names, run_tors_grids,
         script_str, overwrite,
-        saddle=False, constraint_dct=None, **opt_kwargs):
+        saddle=False, constraint_dct=None,
+        retryfail=True, **opt_kwargs):
     """ Perform scans over each of the torsional coordinates
     """
 

@@ -11,7 +11,8 @@ from lib.phydat import symm
 
 def run_energy(zma, geo, spc_info, thy_info,
                geo_save_fs, geo_run_path, geo_save_path, locs,
-               script_str, overwrite, **kwargs):
+               script_str, overwrite,
+               retryfail=True, **kwargs):
     """ Find the energy for the given structure
     """
 
@@ -52,6 +53,7 @@ def run_energy(zma, geo, spc_info, thy_info,
             errors=errs,
             options_mat=optmat,
             overwrite=overwrite,
+            retryfail=retryfail,
             **kwargs,
         )
 
@@ -78,7 +80,8 @@ def run_energy(zma, geo, spc_info, thy_info,
 
 def run_gradient(zma, geo, spc_info, thy_info,
                  geo_save_fs, geo_run_path, geo_save_path, locs,
-                 script_str, overwrite, **kwargs):
+                 script_str, overwrite,
+                 retryfail=True, **kwargs):
     """ Determine the gradient for the geometry in the given location
     """
 
@@ -104,6 +107,7 @@ def run_gradient(zma, geo, spc_info, thy_info,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
+                retryfail=retryfail,
                 **kwargs,
             )
 
@@ -137,7 +141,8 @@ def run_gradient(zma, geo, spc_info, thy_info,
 
 def run_hessian(zma, geo, spc_info, thy_info,
                 geo_save_fs, geo_run_path, geo_save_path, locs,
-                script_str, overwrite, **kwargs):
+                script_str, overwrite,
+                retryfail=True, **kwargs):
     """ Determine the hessian for the geometry in the given location
     """
 
@@ -172,6 +177,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
+                retryfail=retryfail,
                 **kwargs,
             )
 
@@ -205,7 +211,9 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
 def run_vpt2(zma, geo, spc_info, thy_info,
              geo_save_fs, geo_run_path, geo_save_path, locs,
-             script_str, overwrite, **kwargs):
+             script_str, overwrite,
+             retryfail=True, **kwargs):
+    
     """ Perform vpt2 analysis for the geometry in the given location
     """
 
@@ -253,6 +261,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
+                retryfail=retryfail,
                 **kwargs,
             )
 

@@ -12,7 +12,8 @@ MECH_INP = 'inp/mechanism.dat'
 
 def build_spc_queue(rxn_lst):
     """ Build spc queue from the reaction lst for the drivers
-        Should return a list of format: [(spc, model), ...]
+        :return spc_queue: all the species and corresponding models in rxn
+        :rtype: list[(species, model),...]
     """
 
     if 'all' in rxn_lst:
