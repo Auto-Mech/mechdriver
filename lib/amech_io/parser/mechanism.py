@@ -65,7 +65,7 @@ def parse_mechanism_file(job_path, mech_type, spc_dct, run_obj_dct,
     # Get the models in here
     run_pes_dct = pes_dct_w_rxn_lsts(
         reduced_pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct)
-    
+
     # Print the channels for the whole mechanism file
     print_pes_channels(pes_dct)
 

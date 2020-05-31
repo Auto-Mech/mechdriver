@@ -44,7 +44,7 @@ def build_spc_dct(job_path, spc_type, check_stereo=False):
     """ Get a dictionary of all the input species
         indexed by InChi string
     """
-    spc_csv_str = ptt.read_inp_str(job_path, CSV_INP)
+    spc_csv_str = ptt.read_inp_str(job_path, CSV_INP, remove_comments=False)
     if spc_type == 'csv':
         spc_dct = csv_dct(spc_csv_str, check_stereo=check_stereo)
     else:
@@ -315,10 +315,10 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         given_class = None
 
     # Get the reaction info flipping if needed
-    check_exo = True
-    if check_exo and given_class is None:
-        reacs, prods = filesys.inf.assess_rxn_ene(
-            reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
+    # check_exo = True
+    # if check_exo and given_class is None:
+    #     reacs, prods = filesys.inf.assess_rxn_ene(
+    #         reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
 
     # Set the info regarding mults and chgs
     rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
