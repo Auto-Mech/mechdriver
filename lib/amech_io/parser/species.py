@@ -201,9 +201,9 @@ def modify_spc_dct(job_path, spc_dct):
                     mod_spc_dct[spc]['elec_levs'] = eleclvl.DCT[(ich, mul)]
                 else:
                     mod_spc_dct[spc]['elec_levs'] = [[0.0, mul]]
-            if 'sym' not in mod_spc_dct[spc]:
+            if 'sym_factor' not in mod_spc_dct[spc]:
                 if (ich, mul) in symm.DCT:
-                    mod_spc_dct[spc]['sym'] = symm.DCT[(ich, mul)]
+                    mod_spc_dct[spc]['sym_factor'] = symm.DCT[(ich, mul)]
 
         # Add defaults here for now
         if 'hind_inc' not in mod_spc_dct[spc]:

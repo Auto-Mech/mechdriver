@@ -34,6 +34,7 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
     hind_rot_str = ""
     proj_rotors_str = ""
     tors_info = zip(tors_names, tors_grids, tors_sym_nums)
+    new_tors_sym_nums = []
     for tors_name_lst, tors_grid_lst, tors_sym in tors_info:
 
         # Grab zero elment because of formatting
@@ -73,8 +74,9 @@ def write_1dhr_tors_mess_strings(harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
             remdummy=remdummy, geom=hrgeo, use_quantum_weight=True)
         proj_rotors_str += projrot_io.writer.rotors(
             axis, group, remdummy=remdummy)
+        new_tors_sym_nums.append(sym_num)
 
-    return hind_rot_str, proj_rotors_str
+    return hind_rot_str, proj_rotors_str, new_tors_sym_nums
 
 
 def write_mdhr_tors_mess_strings(geom, spc_info, sym_num, spc_dct_i,

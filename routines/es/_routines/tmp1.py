@@ -144,7 +144,7 @@ def run_conformers(
         assert vma == existing_vma
     cnf_save_fs[0].file.vmatrix.write(vma)
     nsamp0 = nsamp
-    inf_obj = autofile.schema.info_objects.conformer_trunk(0, tors_range_dct)
+    inf_obj = autofile.system.info.conformer_trunk(0, tors_range_dct)
     if cnf_save_fs[0].file.info.exists():
         inf_obj_s = cnf_save_fs[0].file.info.read()
         nsampd = inf_obj_s.nsamp
@@ -175,7 +175,7 @@ def run_conformers(
         else:
             samp_zma = zma
 
-        cid = autofile.schema.generate_new_conformer_id()
+        cid = autofile.system.generate_new_conformer_id()
         locs = [cid]
 
         cnf_run_fs[-1].create(locs)
@@ -614,10 +614,6 @@ def symmetry_factor(
     if not saddle:
         tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
     if tors_names:
-        int_sym = int_sym_num_from_sampling(
-            geo, ene, cnf_save_fs, saddle,
-            frm_bnd_key, brk_bnd_key, tors_names)
-    else:
         int_sym = 1
     sym_fac = ext_sym * int_sym
     return sym_fac
@@ -681,12 +677,8 @@ def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list, saddle):
             if automol.geom.almost_equal_dist_mat(
                     geo, geoi, thresh=3e-1):
                 # check dihedrals
-                # for now only do this for minima 
-                # but this can create problems for TSs as well - e.g., CH2OH = CH2O + H
                 if saddle:
                     unique = False
                 elif are_torsions_same(geo, geoi):
                     unique = False
-                # if are_torsions_same(geo, geoi):
-                    # unique = False
     return unique
