@@ -72,8 +72,6 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
     if harm_min_cnf_locs is not None:
         harm_geo = harm_cnf_save_fs[-1].file.geometry.read(
             harm_min_cnf_locs)
-        min_ene = harm_cnf_save_fs[-1].file.energy.read(
-            harm_min_cnf_locs)
         hess = harm_cnf_save_fs[-1].file.hessian.read(
             harm_min_cnf_locs)
         freqs = elstruct.util.harmonic_frequencies(
@@ -83,6 +81,8 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
 
             # Get geometry for the torsional minimum
             zma = tors_cnf_save_fs[-1].file.zmatrix.read(
+                tors_min_cnf_locs)
+            min_ene = tors_cnf_save_fs[-1].file.energy.read(
                 tors_min_cnf_locs)
             tors_geo = tors_cnf_save_fs[-1].file.geometry.read(
                 tors_min_cnf_locs)
@@ -120,7 +120,7 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 ts_bnd = automol.zmatrix.bond_idxs(zma, dist_name)
 
             # Write strings containing rotor info for MESS and ProjRot
-            hind_rot_str, proj_rotors_str = tors.write_1dhr_tors_mess_strings(
+            hind_rot_str, proj_rotors_str, tors_sym_nums = tors.write_1dhr_tors_mess_strings(
                 harm_geo, spc_info, spc_dct_i, ts_bnd, zma,
                 tors_names, tors_grids, tors_sym_nums,
                 tors_cnf_save_path, min_ene,
@@ -150,8 +150,10 @@ def vib_harm_tors_1dhr(harm_min_cnf_locs, harm_cnf_save_fs,
                 zpe_harm_no_tors, zpe_harm_no_tors_2,
                 harm_zpe, tors_zpe)
             
+            print('tors_sym_nums test:',tors_sym_nums, spc_info[0])
             for num in tors_sym_nums:
                 sym_factor /= num
+                print('sym division test:', sym_factor, num)
     else:
         print('ERROR: Reference geometry is missing for harmonic frequencies',
               ' for species {}'.format(spc_info[0]))

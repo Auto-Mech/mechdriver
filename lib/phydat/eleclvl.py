@@ -1,7 +1,7 @@
 """
 Library of electronic levels for several common, small species.
 Dictionary formatted as:
-    DCT[(InChI_Key, Multiplicity)] = [[energy, degeneracy], ...]
+    DCT[(InChI_Key, Multiplicity)] = [[energy(cm-1), degeneracy], ...]
 """
 
 DCT = {
@@ -14,5 +14,6 @@ DCT = {
     ('InChI=1S/Br', 2): [[0., 4], [685.2, 2]],
     ('InChI=1S/HO/h1H', 2): [[0., 2], [138.9, 2]],
     ('InChI=1S/NO/c1-2', 2): [[0., 2], [123.1, 2]],
-    ('InChI=1S/O2/c1-2', 1): [[0., 2]]
+    ('InChI=1S/O2/c1-2', 1): [[0., 2]],
+    ('InChI=1S/CH3O/c1-2/h1H3', 2): [[0., 3], [69.1, 1]]
 }

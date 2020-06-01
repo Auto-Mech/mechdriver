@@ -13,8 +13,8 @@ def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
     """
 
     form_coords = []
-    if 'sym' in spc_dct_i:
-        sym_factor = spc_dct_i['sym']
+    if 'sym_factor' in spc_dct_i:
+        sym_factor = spc_dct_i['sym_factor']
         print('sym_factor from spc_dct_i:', sym_factor)
     else:
         if sym_model == 'sampling':
