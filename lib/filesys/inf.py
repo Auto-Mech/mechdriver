@@ -100,7 +100,7 @@ def rxn_info(reacs, prods, spc_dct, ts_mul='low'):
         rxn_ichs[1].append(spc_dct[spc]['ich'])
         rxn_chgs[1].append(spc_dct[spc]['chg'])
         rxn_muls[1].append(spc_dct[spc]['mul'])
-    rxn_ichs, rxn_chgs, rxn_muls = autofile.schema.sort_together(
+    rxn_ichs, rxn_chgs, rxn_muls = autofile.system.sort_together(
         rxn_ichs, rxn_chgs, rxn_muls)
     _, _, mul, _ = rxn_chg_mult(
         rxn_muls, rxn_chgs, ts_mul=ts_mul)

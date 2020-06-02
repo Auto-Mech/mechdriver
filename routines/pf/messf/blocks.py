@@ -585,8 +585,8 @@ def pst_block(spc_dct_i, spc_dct_j, spc_model, pf_levels,
 
     # Write the MESS input strings
     core = mess_io.writer.core_phasespace(
-        geo_i, geo_j, sym_factor, stoich,
-        pot_prefactor=pst_params[0], pot_power_exp=pst_params[1])
+        geo_i, geo_j, sym_factor, stoich)
+        # pot_prefactor=pst_params[0], pot_power_exp=pst_params[1])
     spc_str = mess_io.writer.molecule(
         core, freqs, elec_levels,
         hind_rot=hind_rot_str)
