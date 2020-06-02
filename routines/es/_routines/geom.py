@@ -36,7 +36,7 @@ def reference_geometry(
     else:
         [prog, method, basis, _] = thy_info
         status = autofile.schema.RunStatus.RUNNING
-        inf_obj = autofile.schema.info_objects.run(
+        inf_obj = autofile.schema.info.run(
             job='', prog=prog, version='version', method=method, basis=basis,
             status=status)
         run_fs[0].file.info.write(inf_obj, [])
@@ -366,7 +366,7 @@ def fake_conf(thy_info, filesystem, inf=()):
         ene = thy_save_fs[-1].file.energy.read(thy_info[1:4])
         inf_obj = run_fs[0].file.info.read()
     tors_range_dct = {}
-    cinf_obj = autofile.schema.info_objects.conformer_trunk(0, tors_range_dct)
+    cinf_obj = autofile.schema.info.conformer_trunk(0, tors_range_dct)
     cinf_obj.nsamp = 1
     cnf_save_fs = autofile.fs.conformer(thy_save_path)
     cnf_save_fs[0].create()
