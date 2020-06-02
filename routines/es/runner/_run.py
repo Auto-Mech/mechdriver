@@ -93,7 +93,7 @@ def run_job(
         prog = thy_info[0]
         method = thy_info[1]
         basis = thy_info[2]
-        inf_obj = autofile.schema.info_objects.run(
+        inf_obj = autofile.schema.info.run(
             job=job, prog=prog, version='',
             method=method, basis=basis, status=status)
         inf_obj.utc_start_time = autofile.schema.utc_time()

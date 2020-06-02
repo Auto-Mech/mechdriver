@@ -315,10 +315,10 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         given_class = None
 
     # Get the reaction info flipping if needed
-    # check_exo = True
-    # if check_exo and given_class is None:
-    #     reacs, prods = filesys.inf.assess_rxn_ene(
-    #         reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
+    check_exo = True
+    if check_exo and given_class is None:
+        reacs, prods = filesys.inf.assess_rxn_ene(
+            reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
 
     # Set the info regarding mults and chgs
     rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
