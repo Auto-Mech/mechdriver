@@ -51,6 +51,19 @@ def combine_elec_levels(spc_dct_i, spc_dct_j):
 
     return elec_levels
 
+def set_dist_names(spc_dct_i):
+    """ Set various things needed for TSs
+    """
+    dist_names = []
+    mig = 'migration' in spc_dct_i['class']
+    elm = 'elimination' in spc_dct_i['class']
+    if mig or elm:
+        dist_names.append(spc_dct_i['dist_info'][0])
+        dist_names.append(spc_dct_i['dist_info'][3])
+
+    return dist_names
+
+
 
 def get_bnd_keys(spc_dct, saddle):
     """ get bond broken and formed keys for a transition state
@@ -65,6 +78,36 @@ def get_bnd_keys(spc_dct, saddle):
     return frm_bnd_key, brk_bnd_key
 
 
+# NEW
+def is_atom(spc_dct_i):
+    """ Check if species is an atom
+    """
+    geo = automol.inchi.geom(spc_dct_i['ich'])
+    return automol.geom.is_atom(geo)
+
+
+def atom_mass(spc_dct_i):
+    """ write the atom string
+    """
+    geo = automol.inchi.geom(spc_dct_i['ich'])
+    return automol.geom.total_mass(geo)
+
+
+def get_stoich(geom_i, geom_j):
+    """ get the overall combined stoichiometry
+    """
+
+    form_i = automol.geom.formula(geom_i)
+    form_j = automol.geom.formula(geom_j)
+    form = automol.formula.join(form_i, form_j)
+    stoich = ''
+    for key, val in form.items():
+        stoich += key + str(val)
+
+    return stoich
+
+
+# OLD
 def is_atom(har_min_cnf_locs, har_cnf_save_fs):
     """ Check if species is an atom
     """

@@ -1,8 +1,13 @@
 """ drivers for coordinate scans
 """
 
+import os
 import numpy
 import automol
+import autofile
+import mess_io
+from lib.submission import run_script
+from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 # FUNCTIONS TO SET UP TORSION NAME LISTS
@@ -52,6 +57,41 @@ def names_from_dct(spc_dct_i, ndim_tors):
     return tors_names, amech_ts_tors_names
 
 
+def names_from_filesys(tors_min_cnf_locs, tors_cnf_save_path):
+    """ Read out the torsional names from the filesystem
+    """
+
+    if tors_min_cnf_locs is not None:
+        scans_dir = os.path.join(tors_cnf_save_path, 'SCANS')
+        print('scans dir', scans_dir)
+        if os.path.exists(scans_dir):
+            scan_names = os.listdir(scans_dir)
+            tors_names = [name for name in scan_names
+                          if 'D' in name]
+            tors_names = [[name] for name in tors_names]
+        else:
+            print('No tors in save filesys')
+            tors_names = []
+    else:
+        print('No min cnf for tors filesys')
+        tors_names = []
+
+    # if saddle:
+    #     tors_names = spc_dct_i['amech_ts_tors_names']
+    # else:
+    #     if tors_cnf_save_fs[0].file.info.exists():
+    #         inf_obj_s = tors_cnf_save_fs[0].file.info.read()
+    #         tors_ranges = inf_obj_s.tors_ranges
+    #         tors_ranges = autofile.info.dict_(tors_ranges)
+    #         tors_names = list(tors_ranges.keys())
+
+    #     else:
+    #         tors_names = None
+    #         print('No inf obj to identify torsional angles')
+
+    return tors_names
+
+
 # FUNCTIONS USED TO BUILD LSTS OF TORSIONS OF ANY DIMENSIONALITY
 def hr_prep(zma, tors_name_grps, scan_increment=30.0, ndim_tors='1dhr',
             frm_bnd_key=(), brk_bnd_key=()):
@@ -76,7 +116,7 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, ndim_tors='1dhr',
             [numpy.linspace(*linspace) + val_dct[name]
              for name, linspace in zip(tors_names, tors_linspaces)]
         )
-        # Don't need symmetries for mult-dim rotors
+        # Don't need symmetries for mult-dim rotors, make structure similar
         if len(tors_names) == 1:
             tors_sym_nums.append(
                 automol.zmatrix.torsional_symmetry_numbers(
@@ -84,7 +124,6 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, ndim_tors='1dhr',
                     frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)[0])
         else:
             tors_sym_nums.append(None)
-
 
     return tors_name_grps, tors_grids, tors_sym_nums
 
@@ -160,8 +199,26 @@ def build_constraint_dct(zma, tors_names):
     return constraint_dct
 
 
-# Functions to handle setting up torsional defintion and potentials properly
-def set_groups_ini(zma, tors_name, ts_bnd, saddle):
+# Functions to handle setting up groups and axes used to define torstions
+def set_tors_def_info(zma, tors_name, tors_sym, pot,
+                      ts_bnd, rxn_class, saddle=False):
+    """ set stuff
+    """
+    group, axis, atm_key = _set_groups_ini(
+        zma, tors_name, ts_bnd, saddle)
+    if saddle:
+        group, axis, pot, chkd_sym_num = _check_saddle_groups(
+            zma, rxn_class, group, axis,
+            pot, ts_bnd, tors_sym)
+    group = list(numpy.add(group, 1))
+    axis = list(numpy.add(axis, 1))
+    if (atm_key+1) != axis[1]:
+        axis.reverse()
+
+    return group, axis, chkd_sym_num
+
+
+def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
     """ Set the initial set of groups
     """
     gra = automol.zmatrix.graph(zma, remove_stereo=True)
@@ -187,7 +244,7 @@ def set_groups_ini(zma, tors_name, ts_bnd, saddle):
     return group, axis, atm_key
 
 
-def check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
+def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
     """ Assess that hindered rotor groups and axes
     """
     n_atm = automol.zmatrix.count(zma)
@@ -224,7 +281,7 @@ def check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
             potp[0:lpot] = pot[0:lpot]
             pot = potp
 
-    return group, axis, pot
+    return group, axis, pot, sym_num
 
 
 def check_dummy_trans(zma):
@@ -242,3 +299,50 @@ def check_dummy_trans(zma):
                 remdummy[idx] += 1
 
     return remdummy
+
+
+# CALCULATE THE ZPES OF EACH TORSION USING MESS
+def mess_tors_zpes(tors_geo, sym_factor, elec_levels,
+                   hind_rot_str, tors_save_path,
+                   script_str=DEFAULT_SCRIPT_DCT['messpf']):
+    """ Calculate the frequencies and ZPVES of the hindered rotors
+        create a messpf input and run messpf to get tors_freqs and tors_zpes
+    """
+
+    # Set up the filesys
+    bld_locs = ['PF', 0]
+    bld_save_fs = autofile.fs.build(tors_save_path)
+    bld_save_fs[-1].create(bld_locs)
+    pf_path = bld_save_fs[-1].path(bld_locs)
+
+    # Write the MESSPF input file
+    global_pf_str = mess_io.writer.global_pf(
+        temperatures=[100.0, 200.0, 300.0, 400.0, 500],
+        rel_temp_inc=0.001,
+        atom_dist_min=0.6)
+    dat_str = mess_io.writer.molecule(
+        core=mess_io.writer.core_rigidrotor(tors_geo, sym_factor),
+        freqs=[1000.0],
+        elec_levels=elec_levels,
+        hind_rot=hind_rot_str,
+    )
+    spc_str = mess_io.writer.species(
+        spc_label='Tmp',
+        spc_data=dat_str,
+        zero_energy=0.0
+    )
+    pf_inp_str = '\n'.join([global_pf_str, spc_str, 'End'])
+
+    with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
+        pf_file.write(pf_inp_str)
+
+    # Run MESSPF
+    run_script(script_str, pf_path)
+
+    # Obtain the torsional zpes from the MESS output
+    with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
+        output_string = mess_file.read()
+    tors_zpes = mess_io.reader.tors.zpves(output_string)
+    tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
+
+    return tors_zpe

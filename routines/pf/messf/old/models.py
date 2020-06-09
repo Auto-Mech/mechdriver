@@ -6,7 +6,7 @@ import elstruct
 import automol
 from routines.pf.messf import _tors as tors
 from routines.pf.messf import _vib as vib
-from routines.pf.messf import _tau as tau
+# from routines.pf.messf import _tau as tau
 # from routines.pf.messf import _vpt2 as vpt2
 from lib import structure
 from lib.phydat import phycon

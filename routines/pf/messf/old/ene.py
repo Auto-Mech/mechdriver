@@ -8,10 +8,8 @@ import autofile
 
 # New Libs
 from lib.phydat import phycon
-from lib.filesystem import minc as fsmin
-from lib.filesystem import orb as fsorb
-from lib.filesystem import inf as finf
-from lib.load import model as loadmodel
+from lib import filesys
+from lib.amech_io import parser
 import routines.pf.messf.models as pfmodels
 from routines.pf.messf.blocks import set_model_filesys
 from routines.pf.messf import _sym as sym
@@ -32,23 +30,7 @@ def get_zpe_str(spc_dct, zpe):
     return zero_energy_str
 
 
-def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model,
-                          save_prefix, saddle=False):
-    """ compute the ZPE including torsional and anharmonic corrections
-    """
-    
-    # Calculate ZPVE
-    if util.is_atom(spc_dct_i):
-        zpve = 0.0
-    else:
-        # Build dct combinining various information from the filesys and MESS
-        inf_dct = models.read_filesys_for_spc(
-            spc_dct_i, rxn, spc_model, pf_levels, save_prefix, saddle=saddle)
-
-    return zpve
-
-
-def old_get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
+def get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
@@ -97,7 +79,7 @@ def old_get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix)
     tors_names = []
     if 'ts_' in spc:
         saddle = True
-        tors_names = spc_dct_i['tors_names']
+        tors_names = spc_dct_i['amech_ts_tors_names']
         mig = 'migration' in spc_dct_i['class']
         elm = 'elimination' in spc_dct_i['class']
         if mig or elm:
@@ -139,7 +121,8 @@ def old_get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix)
             mode_start = mode_start + 1
             saddle = True
 
-        no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
+        no_tors = not bool(tors.get_tors_names2(tors_min_cnf_locs, tors_cnf_save_path))
+        # no_tors = not bool(tors.get_tors_names(spc_dct_i, tors_cnf_save_fs, saddle=saddle))
         if no_tors:
             mode_start = mode_start - 1
         freqs = freqs[mode_start:]
@@ -150,19 +133,21 @@ def old_get_zero_point_energy(spc, spc_dct_i, pf_levels, spc_model, save_prefix)
         if (vib_model == 'harm' and tors_model == 'rigid') or rad_rad_ts:
             # print('HARM_RIGID')
             zpe = harm_zpe
-        elif vib_model == 'harm' and tors_model == '1dhr':
+        elif vib_model == 'harm' and (tors_model == '1dhr' or tors_model == '1dhrf'):
+            frz_tors = True if tors_model == '1dhrf' else False
             if no_tors:
                 zpe = harm_zpe
             else:
                 print('HARM_1DHR')
-                _, _, _, _, zpe = pfmodels.vib_harm_tors_1dhr(
+                _, _, _, _, zpe, _ = pfmodels.vib_harm_tors_1dhr(
                     harm_min_cnf_locs, harm_cnf_save_fs,
                     tors_min_cnf_locs, tors_cnf_save_fs,
                     tors_save_path, tors_cnf_save_path,
                     spc_dct_i, spc_info,
                     frm_bnd_key, brk_bnd_key,
                     sym_factor, elec_levels,
-                    saddle=saddle)
+                    saddle=saddle,
+                    frz_tors=frz_tors)
         elif vib_model == 'harm' and tors_model == 'mdhr':
             print('HARM and MDHR combination is not yet implemented')
             zpe = harm_zpe
@@ -195,7 +180,7 @@ def get_high_level_energy(
         spc_save_fs[-1].create(spc_info)
         spc_save_path = spc_save_fs[-1].path(spc_info)
 
-    thy_low_level = fsorb.mod_orb_restrict(
+    thy_low_level = filesys.inf.modify_orb_restrict(
         spc_info, thy_low_level)
 
     ll_save_fs = autofile.fs.theory(spc_save_path)
@@ -203,12 +188,12 @@ def get_high_level_energy(
 
     if os.path.exists(ll_save_path):
         if saddle:
-            ll_save_fs = autofile.fs.ts(ll_save_path)
+            ll_save_fs = autofile.fs.transition_state(ll_save_path)
             ll_save_fs[0].create()
             ll_save_path = ll_save_fs[0].path()
 
         cnf_save_fs = autofile.fs.conformer(ll_save_path)
-        min_cnf_locs = fsmin.min_energy_conformer_locators(
+        min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
             cnf_save_fs)
         if not min_cnf_locs:
             print('ERROR: No minimum conformer geometry for ',
@@ -216,7 +201,7 @@ def get_high_level_energy(
             return 0.0
         cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
 
-        thy_high_level = fsorb.mod_orb_restrict(
+        thy_high_level = filesys.inf.modify_orb_restrict(
             spc_info, thy_high_level)
 
         sp_save_fs = autofile.fs.single_point(cnf_save_path)
@@ -232,25 +217,6 @@ def get_high_level_energy(
         min_ene = None
 
     return min_ene
-
-
-def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct, save_prefix):
-    """ Sets the reference species for the PES for which all energies
-        are scaled relative to.
-    """
-    # Get the model for the first reference species
-    ref_model = rxn_lst[0]['model'][1]
-
-    # Get the elec+zpe energy for the reference species
-    ref_ene = 0.0
-    first_spc = rxn_lst[0]['reacs']
-    for rct in first_spc:
-        ref_ene += get_fs_ene_zpe(
-            spc_dct, rct,
-            thy_dct, model_dct, ref_model,
-            save_prefix, saddle=False)
-
-    return ref_ene, ref_model
 
 
 def calc_channel_enes(spc_dct, rxn, tsname,
@@ -425,8 +391,8 @@ def get_fs_ene_zpe(spc_dct, spc,
                 spc_dct[spc]['mul'])
 
     # Set the model and info for the reaction
-    pf_levels = loadmodel.set_es_model_info(model_dct[model]['es'], thy_dct)
-    pf_model = loadmodel.set_pf_model_info(model_dct[model]['pf'])
+    pf_levels = parser.model.set_es_model_info(model_dct[model]['es'], thy_dct)
+    pf_model = parser.model.set_pf_model_info(model_dct[model]['pf'])
 
     # Set paths
     if saddle:
@@ -440,10 +406,7 @@ def get_fs_ene_zpe(spc_dct, spc,
     # Read the electronic energy and ZPVE
     thy_low_level = pf_levels[0]
     thy_high_levels = pf_levels[1]
-    # thy_low_level = finf.get_thy_info(model_dct[model]['es']['geo'], thy_dct)
-    # thy_high_levels = finf.get_thy_info(model_dct[model]['es']['ene'], thy_dct)
-    e_elec = None
-    e_zpe = None
+    e_elec, e_zpe = None, None
     if read_ene:
         e_elec = 0.0
         for (coeff, level) in thy_high_levels:
@@ -454,7 +417,6 @@ def get_fs_ene_zpe(spc_dct, spc,
                 save_prefix=save_path,
                 saddle=saddle)
             e_elec += coeff * high_ene
-    # if e_elec is not None:
     if read_zpe:
         e_zpe = get_zero_point_energy(
             spc, spc_dct[spc],
@@ -462,7 +424,7 @@ def get_fs_ene_zpe(spc_dct, spc,
             save_prefix=spc_save_path)
         e_zpe /= phycon.EH2KCAL
 
-    # Return the total energy requested
+    # Return the total energy
     ene = None
     if read_ene and read_zpe:
         if e_elec is not None and e_zpe is not None:
