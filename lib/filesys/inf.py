@@ -5,6 +5,7 @@ used throughout moldriver
 
 import sys
 import autofile
+from autofile import fs
 import automol
 from automol.mult.ts import _low as tslow
 from automol.mult.ts import _high as tshigh
@@ -297,8 +298,12 @@ def get_zma_geo(filesys, locs):
 def min_dist_conformer_zma(dist_name, cnf_save_fs):
     """ locators for minimum energy conformer """
     cnf_locs_lst = cnf_save_fs[-1].existing()
-    cnf_zmas = [cnf_save_fs[-1].file.zmatrix.read(locs)
-                for locs in cnf_locs_lst]
+    cnf_zmas = []
+    for locs in cnf_locs_lst:
+        zma_fs = fs.manager(cnf_save_fs[-1].path(locs), 'ZMATRIX')
+        cnf_zmas.append(zma_fs[-1].file.zmatrix.read([0]))
+    # cnf_zmas = [cnf_save_fs[-1].file.zmatrix.read(locs)
+    #             for locs in cnf_locs_lst]
     min_dist = 100.
     min_zma = []
     for zma in cnf_zmas:
@@ -313,8 +318,12 @@ def min_dist_conformer_zma(dist_name, cnf_save_fs):
 def min_dist_conformer_zma_geo(dist_coords, cnf_save_fs):
     """ locators for minimum energy conformer """
     cnf_locs_lst = cnf_save_fs[-1].existing()
-    cnf_zmas = [cnf_save_fs[-1].file.zmatrix.read(locs)
-                for locs in cnf_locs_lst]
+    cnf_zmas = []
+    for locs in cnf_locs_lst:
+        zma_fs = fs.manager(cnf_save_fs[-1].path(locs), 'ZMATRIX')
+        cnf_zmas.append(zma_fs[-1].file.zmatrix.read([0]))
+    # cnf_zmas = [cnf_save_fs[-1].file.zmatrix.read(locs)
+    #             for locs in cnf_locs_lst]
     min_dist = 100.
     min_zma = []
     for zma in cnf_zmas:

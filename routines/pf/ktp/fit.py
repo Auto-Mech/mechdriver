@@ -119,6 +119,11 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
         fit_type='single',
         t_ref=1.0, a_conv_factor=a_conv_factor)
 
+    # Write a chemkin string for the single fit
+    sing_chemkin_str = chemkin_io.writer.reaction.plog(
+        reaction, sing_params_dct,
+        err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
+
     # Assess single fitting errors:
     # are they within threshold at each pressure
     sgl_fit_good = max((
@@ -132,15 +137,11 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
     chemkin_str = ''
     if sgl_fit_good:
         print('\nSingle fit errors acceptable: Using single fits')
-        chemkin_str += chemkin_io.writer.reaction.plog(
-            reaction, sing_params_dct,
-            err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
+        chemkin_str += sing_chemkin_str
     elif not sgl_fit_good and not dbl_fit_poss:
         print('\nNot enough temperatures for a double fit:',
               ' Using single fits')
-        chemkin_str += chemkin_io.writer.reaction.plog(
-            reaction, sing_params_dct,
-            err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
+        chemkin_str += sing_chemkin_str
     elif not sgl_fit_good and dbl_fit_poss:
         print('\nSingle fit errs too large & double fit possible:',
               ' Trying double fit')
@@ -156,25 +157,7 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
 
             print('\nWriting fitting parameters and errors from',
                   'single arrhenius fit for comparison')
-            singfit_str = '{0:10s}{1:>10s}{2:>9s}{3:>9s}\n'.format(
-                '', 'A', 'n', 'Ea')
-            for pressure, params in sing_params_dct.items():
-                if pressure == 'high':
-                    pstr = '{:<10s}'.format('High')
-                else:
-                    pstr = '{:<10.3f}'.format(pressure)
-                singfit_str += '{0}{1:>10.3E}{2:>9.3f}{3:9.0f}\n'.format(
-                    pstr, params[0], params[1], 1000*params[2])
-            singfit_str += '{0:10s}{1:>10s}{2:>10s}\n'.format(
-                'Pressure', 'MeanAbsErr', 'MaxErr')
-            for pressure, errs in sing_fit_err_dct.items():
-                if pressure == 'high':
-                    pstr = '{:<10s}'.format('High')
-                else:
-                    pstr = '{:<10.3f}'.format(pressure)
-                singfit_str += '{0:10s}{1:>10.3f}{2:>10.3f}\n'.format(
-                    pstr, *errs)
-            print(singfit_str)
+            print(sing_chemkin_str)
 
             # Assess the errors of the single Arrhenius Fit
             doub_fit_err_dct = assess_arr_fit_err(
@@ -186,9 +169,7 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
         else:
             print('\nDouble Arrhenius Fit failed for some reason:',
                   ' Using Single fits')
-            chemkin_str += chemkin_io.writer.reaction.plog(
-                reaction, sing_params_dct,
-                err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
+            chemkin_str += sing_chemkin_str
 
     return chemkin_str
 

@@ -2,14 +2,23 @@
 Write and Read MESS files for Rates
 """
 
+import importlib
+import copy
 import automol
 import mess_io
 from routines.pf.messf import blocks
+from routines.pf.messf import models
 from routines.pf.messf import set_reference_ene
 from routines.pf.messf import calc_channel_enes
 from routines.pf.messf import _tunnel as tunnel
-from lib.phydat import phycon
-from lib.amech_io import parser
+from routines.pf.messf import is_atom
+from routines.pf.ktp._util import set_pf_info
+from routines.pf.ktp._util import set_ts_cls_info
+from routines.pf.ktp._util import make_rxn_str
+from routines.pf.ktp._util import treat_tunnel
+from routines.pf.ktp._util import pst_ts
+from routines.pf.ktp._util import need_fake_wells
+from routines.pf.ktp._util import var_radrad
 
 
 # Writer
@@ -37,13 +46,13 @@ def make_header_str(spc_dct, rxn_lst,
 
 
 def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
-                      save_prefix, label_dct,
+                      run_prefix, save_prefix, label_dct,
                       model_dct, thy_dct):
     """ Write all the MESS input file strings for the reaction channels
     """
 
     # Initialize empty MESS strings
-    full_well_str, full_bim_str, full_ts_str = '', '', ''
+    full_well_str, full_bi_str, full_ts_str = '', '', ''
     full_dat_str_lst = []
 
     # Set the energy and model for the first reference species
@@ -54,39 +63,45 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
     written_labels = []
     for rxn in rxn_lst:
 
+        print('Gathering data for MESS string for {}'.format(rxn))
+
         # Set the TS name and channel model
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         chn_model = rxn['model'][1]
 
+        # Obtain useful info objects
+        pf_info = set_pf_info(model_dct, thy_dct, chn_model, ref_model)
+        ts_cls_info = set_ts_cls_info(spc_dct, model_dct, tsname, chn_model)
+
+        # Obtain all of the species data
+        chnl_infs = get_channel_data(rxn, tsname, spc_dct,
+                                     pf_info, ts_cls_info,
+                                     run_prefix, save_prefix)
+
         # Calculate the energies of all spc on the channel
-        channel_enes = calc_channel_enes(
-            spc_dct, rxn, tsname,
-            thy_dct, model_dct,
-            chn_model, ref_model,
-            save_prefix)
+        chnl_enes = calc_channel_enes(chnl_infs, ref_ene,
+                                      chn_model, ref_model)
 
         # Write the mess strings for all spc on the channel
         mess_strs, dat_str_lst, written_labels = _make_channel_mess_strs(
             tsname, rxn, spc_dct, label_dct, written_labels,
-            ref_ene, channel_enes,
-            model_dct, thy_dct, save_prefix)
+            chnl_infs, chnl_enes, ts_cls_info)
 
         # Append to full MESS strings
-        [well_str, bim_str, ts_str] = mess_strs
+        [well_str, bi_str, ts_str] = mess_strs
         full_well_str += well_str
-        full_bim_str += bim_str
+        full_bi_str += bi_str
         full_ts_str += ts_str
         full_dat_str_lst.extend(dat_str_lst)
 
     # Add final End statement for the end of the MESS file
     full_ts_str += '\nEnd\n'
 
-    return full_well_str, full_bim_str, full_ts_str, full_dat_str_lst
+    return full_well_str, full_bi_str, full_ts_str, full_dat_str_lst
 
 
 def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
-                            ref_ene, channel_enes,
-                            model_dct, thy_dct, save_prefix):
+                            chnl_infs, chnl_enes, ts_cls_info):
     """ make the partition function strings for each of the channels
     includes strings for each of the unimolecular wells, bimolecular fragments,
     and transition states connecting them.
@@ -95,80 +110,54 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
     """
 
     # Initialize empty strings
-    bim_str, well_str, ts_str = '', '', ''
-
-    # Set the model and info for the reaction
-    chn_model = rxn['model'][1]
-    pf_levels = parser.model.set_es_model_info(
-        model_dct[chn_model]['es'], thy_dct)
-    spc_model = parser.model.set_pf_model_info(
-        model_dct[chn_model]['pf'])
-    ts_class = spc_dct[tsname]['class']
-
-    # Unpack the energy dictionary and put energies in kcal
-    ref_ene *= phycon.EH2KCAL
-    reac_ene = channel_enes['reacs'] * phycon.EH2KCAL
-    prod_ene = channel_enes['prods'] * phycon.EH2KCAL
-    ts_ene = channel_enes['ts'] * phycon.EH2KCAL
-    print('ref_ene', ref_ene)
-    print('reac_ene', reac_ene)
-    print('prod_ene', prod_ene)
-    print('ts_ene', ts_ene)
+    bi_str, well_str, ts_str = '', '', ''
 
     # Write the MESS string for the channel reactant(s) and product(s)
-    rct_inf = zip((rxn['reacs'], rxn['prods']), (reac_ene, prod_ene))
-    for rct, rct_ene in rct_inf:
+    for side in ('reacs', 'prods'):
 
-        # Build the species data
-        spc_data = []
-        for spc in rct:
-            spc_data.append(_make_spc_mess_str(
-                spc_dct[spc], rxn, save_prefix, spc_model, pf_levels))
+        # Get information from relevant dictionaries
+        rgt_names = rxn[side]
+        rgt_infs = chnl_infs[side]
+        rgt_ene = chnl_enes[side]
 
-        spc_label = [automol.inchi.smiles(spc_dct[spc]['ich']) for spc in rct]
-        spc_data = [spc_data[spc] for spc in rct]
-        chn_label = label_dct[_make_rxn_str(rct)]
+        # Build the species string for reactant(s)/product(s)
+        spc_str = [_make_spc_mess_str(inf) for inf in rgt_infs]
+
+        # Set the labels to put into the file
+        spc_label = [automol.inchi.smiles(spc_dct[name]['ich'])
+                     for name in rgt_names]
+        chn_label = label_dct[make_rxn_str(rgt_names)]
+
+        # Write the strings
         if chn_label not in written_labels:
             written_labels.append(chn_label)
-            if len(rct) > 1:
-                ground_energy = rct_ene - ref_ene
-                # bim_str += mess_io.writer.species_separation_str()
-                bim_str += '\n! {} + {}\n'.format(rct[0], rct[1])
-                bim_str += mess_io.writer.bimolecular(
-                    chn_label, spc_label[0], spc_data[0],
-                    spc_label[1], spc_data[1], ground_energy)
+            if len(rgt_names) > 1:
+                # bi_str += mess_io.writer.species_separation_str()
+                bi_str += '\n! {} + {}\n'.format(rgt_names[0], rgt_names[1])
+                bi_str += mess_io.writer.bimolecular(
+                    chn_label, spc_label[0], spc_str[0],
+                    spc_label[1], spc_str[1], rgt_ene)
             else:
-                zero_energy = rct_ene - ref_ene
                 # well_str += mess_io.writer.species_separation_str()
-                well_str += '\n! {}\n'.format(rct[0])
+                well_str += '\n! {}\n'.format(rgt_names[0])
                 well_str += mess_io.writer.well(
-                    chn_label, spc_data[0], zero_energy)
+                    chn_label, spc_str[0], rgt_ene)
 
         # Initialize the reactant and product MESS label
-        if rct == rxn['reacs']:
+        if side == 'reacs':
             reac_label = chn_label
             inner_reac_label = chn_label
         else:
             prod_label = chn_label
             inner_prod_label = chn_label
 
-    # For abstraction first make fake wells and PST TSs
-    # ts_label = 'B' + str(int(tsname.replace('ts_', ''))+1)
-    ts_label = label_dct[tsname]
-    imag_freq = 0
-    if 'imag_freq' in spc_dct[tsname]:
-        imag_freq = abs(spc_dct[tsname]['imag_freq'])
-    if not imag_freq:
-        print('No imaginary freq for ts: {}'.format(tsname))
-
     # For abstractions: Write MESS strings for fake reac and prod wells and TS
-    if _need_fake_wells(ts_class):
+    if 'fake_wellr' in chnl_infs or 'fake_wellp' in chnl_infs:
 
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fwellr_lbl, fwellp_lbl = _make_fake_mess_strs(
-            spc_dct, rxn, label_dct, spc_model, pf_levels,
-            save_prefix, ref_ene, reac_ene, prod_ene,
-            reac_label, prod_label)
+            rxn, chnl_infs['fake_wellr'], chnl_infs['fake_wellp'],
+            chnl_enes, label_dct, reac_label, prod_label)
 
         # Append the fake strings to overall strings
         well_str += fwell_str
@@ -181,143 +170,70 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
     # Write MESS string for the inner transition state; append full
     ts_label = label_dct[tsname]
     sts_str, dat_str_lst = _make_ts_mess_str(
-        spc_dct, tsname, ts_class, rxn, save_prefix,
-        model_dct, chn_model, spc_model, pf_levels,
-        ref_ene, reac_ene, prod_ene, ts_ene,
+        chnl_infs, chnl_enes, ts_cls_info,
         ts_label, inner_reac_label, inner_prod_label)
     ts_str += sts_str
 
-    return [well_str, bim_str, ts_str], dat_str_lst, written_labels
+    return [well_str, bi_str, ts_str], dat_str_lst, written_labels
 
 
-def _make_spc_mess_str(spc_dct_i, rxn, save_prefix, spc_model, pf_levels):
+def _make_spc_mess_str(inf_dct):
     """ makes the main part of the MESS species block for a given species
     """
-    tors_model, vib_model, _ = spc_model
-
-    if vib_model == 'tau' or tors_model == 'tau':
-        pass
-        # species_data = blocks.tau_block()
-    else:
-        species_data = blocks.species_block(
-            spc_dct_i=spc_dct_i,
-            rxn=rxn,
-            spc_model=spc_model,
-            pf_levels=pf_levels,
-            save_prefix=save_prefix,
-            saddle=False
-        )
-    # if model == 'multiconfig' call the union block
-    # blocks.multi_block (just have this call species block over a loop)
-    return species_data
+    mess_writer = importlib.import_module(inf_dct['writer'])
+    return mess_writer(inf_dct)
 
 
-def _make_ts_mess_str(spc_dct, tsname, ts_class, rxn, save_prefix,
-                      model_dct, chn_model, spc_model, pf_levels,
-                      ref_ene, reac_ene, prod_ene, ts_ene,
-                      ts_label, inner_reac_label, inner_prod_label,
-                      pst_params=(1.0, 6)):
+def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
+                      ts_label, inner_reac_label, inner_prod_label):
     """ makes the main part of the MESS species block for a given species
     """
 
-    # Set the models for how we are treating the transition state
-    ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
-    ts_nobarrier = model_dct[chn_model]['pf']['ts_barrierless']
-    tun_model = model_dct[chn_model]['pf']['tunnel']
-
-    # Unpack models
-    # tors_model, vib_model, sym_model = spc_model
-    multi_info = []
+    # Unpack info objects
+    [_, ts_sadpt, ts_nobarrier, tunnel_model] = ts_cls_info
 
     # Initialize empty data string
     flux_str, mdhr_str, sct_str = '', '', ''
 
-    # Get all of the information for the filesystem
-    if not _var_radrad(ts_class):
-        # Build MESS string for TS at a saddle point
-        if ts_sadpt == 'pst':
-            spc_dct_i = spc_dct[rxn['reacs'][0]]
-            spc_dct_j = spc_dct[rxn['reacs'][1]]
-            spc_str = blocks.pst_block(
-                spc_dct_i, spc_dct_j, spc_model=spc_model,
-                pf_levels=pf_levels,
-                save_prefix=save_prefix,
-                pst_params=pst_params)
-        elif ts_sadpt == 'vtst':
-            rpath_str_lst = blocks.vtst_saddle_block(
-                spc_dct[tsname], pf_levels,
-                ts_label, inner_reac_label, inner_prod_label, ref_ene)
-        else:
-            spc_str, mdhr_str, imag = blocks.species_block(
-                spc_dct_i=spc_dct[tsname],
-                rxn=rxn,
-                spc_model=spc_model,
-                pf_levels=pf_levels,
-                save_prefix=save_prefix,
-                saddle=True
-            )
-    else:
-        # Build MESS string for TS with no saddle point
-        if ts_sadpt == 'pst':
-            spc_dct_i = spc_dct[rxn['reacs'][0]]
-            spc_dct_j = spc_dct[rxn['reacs'][1]]
-            spc_str = blocks.pst_block(
-                spc_dct_i, spc_dct_j, spc_model=spc_model,
-                pf_levels=pf_levels,
-                save_prefix=save_prefix,
-                pst_params=pst_params)
-        elif ts_nobarrier == 'vtst':
-            if 'P' in inner_reac_label:
-                spc_ene = reac_ene - ref_ene
-            else:
-                spc_ene = prod_ene - ref_ene
-            rpath_str_lst = blocks.vtst_with_no_saddle_block(
-                spc_dct[tsname], ts_label, inner_reac_label, inner_prod_label,
-                spc_ene, multi_info)
-        elif ts_nobarrier == 'vrctst':
-            pass
-            # spc_str, flux_str = blocks.vrctst_block()
+    # Write the initial data string
+    mess_writer = importlib.import_module(chnl_infs['ts']['writer'])
+    mess_str = mess_writer(*chnl_infs['ts'])
 
     # Write the appropriate string for the tunneling model
     tunnel_str, sct_str = '', ''
-    # if _treat_tunnel(tun_model, ts_sadpt,
-    # ts_nobarrier, _var_radrad(ts_class)):
-    if _treat_tunnel():
-        if tun_model == 'eckart':
+    if treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier):
+        if tunnel_model == 'eckart':
             tunnel_str = tunnel.write_mess_eckart_str(
-                ts_ene, reac_ene, prod_ene, imag)
-        elif tun_model == 'sct':
-            tunnel_file = tsname + '_sct.dat'
-            path = 'cat'
-            tunnel_str, sct_str = tunnel.write_mess_sct_str(
-                spc_dct[tsname], pf_levels, path,
-                imag, tunnel_file,
-                cutoff_energy=2500, coord_proj='cartesian')
+                chnl_enes['ts'], chnl_enes['reacs'], chnl_enes['prods'],
+                chnl_infs['ts']['imag'])
+        # elif tun_model == 'sct':
+        #     tunnel_file = tsname + '_sct.dat'
+        #     path = 'cat'
+        #     tunnel_str, sct_str = tunnel.write_mess_sct_str(
+        #         spc_dct[tsname], pf_levels, path,
+        #         imag, tunnel_file,
+        #         cutoff_energy=2500, coord_proj='cartesian')
     else:
         pass
 
     # Write the MESS string for the TS
-    # First if statement logic is bad
     if ts_sadpt == 'vtst' or ts_nobarrier in ('vtst', 'vrctst'):
-        mess_str = mess_io.writer.ts_variational(
-            ts_label, inner_reac_label, inner_prod_label, rpath_str_lst)
-    else:
-        zero_energy = ts_ene - ref_ene
-        mess_str = '\n' + mess_io.writer.ts_sadpt(
+        ts_str = mess_io.writer.ts_variational(
             ts_label, inner_reac_label, inner_prod_label,
-            spc_str, zero_energy, tunnel_str)
+            mess_str, tunnel_str)
+    else:
+        ts_str = '\n' + mess_io.writer.ts_sadpt(
+            ts_label, inner_reac_label, inner_prod_label,
+            mess_str, chnl_enes['ts'], tunnel_str)
 
     # Combine dat strings together
     dat_str_lst = [flux_str, mdhr_str, sct_str]
 
-    return mess_str, dat_str_lst
+    return ts_str, dat_str_lst
 
 
-def _make_fake_mess_strs(spc_dct, rxn, label_dct, spc_model, pf_levels,
-                         save_prefix,
-                         ref_ene, reac_ene, prod_ene,
-                         reac_label, prod_label,
-                         pst_params=(1.0, 6)):
+def _make_fake_mess_strs(rxn, fake_wellr_inf_dcts, fake_wellp_inf_dcts,
+                         chnl_enes, label_dct, reac_label, prod_label):
     """ write the MESS strings for the fake wells and TSs
     """
 
@@ -325,208 +241,153 @@ def _make_fake_mess_strs(spc_dct, rxn, label_dct, spc_model, pf_levels,
     well_str, ts_str = '', ''
 
     # MESS string for the fake reactant side well
-    spc_dct_i = spc_dct[rxn['reacs'][0]]
-    spc_dct_j = spc_dct[rxn['reacs'][1]]
-    well_dct_key = _make_rxn_str(rxn['reacs'], prepend='F')
+    well_dct_key = make_rxn_str(rxn['reacs'], prepend='F')
     fake_wellr_label = label_dct[well_dct_key]
-    vdwr_ene = reac_ene - 1.0
-    zero_energy = vdwr_ene - ref_ene
     # well_str += mess_io.writer.species_separation_str()
     well_str += '\n! Fake Well for {}\n'.format(
         '+'.join(rxn['reacs']))
-    fake_wellr = blocks.fake_species_block(
-        spc_dct_i, spc_dct_j, spc_model, pf_levels, save_prefix)
+    fake_wellr = blocks.fake_species_block(*fake_wellr_inf_dcts)
     well_str += mess_io.writer.well(
-        fake_wellr_label, fake_wellr, zero_energy)
+        fake_wellr_label, fake_wellr, chnl_enes['fake_vdwr'])
 
     # MESS PST TS string for fake reactant side well -> reacs
-    well_dct_key = _make_rxn_str(rxn['reacs'], prepend='FRB')
+    well_dct_key = make_rxn_str(rxn['reacs'], prepend='FRB')
     pst_r_label = label_dct[well_dct_key]
-    pst_r_ts_str = blocks.pst_block(
-        spc_dct_i, spc_dct_j, spc_model=spc_model,
-        pf_levels=pf_levels,
-        save_prefix=save_prefix,
-        pst_params=pst_params)
-    zero_energy = reac_ene - ref_ene
+    pst_r_ts_str = blocks.pst_block(*fake_wellr_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_r_label, reac_label, fake_wellr_label, pst_r_ts_str,
-        zero_energy, tunnel='')
+        chnl_enes['fake_vdwr_ts'], tunnel='')
 
     # MESS string for the fake product side well
-    spc_dct_i = spc_dct[rxn['prods'][0]]
-    spc_dct_j = spc_dct[rxn['prods'][1]]
-    well_dct_key = _make_rxn_str(rxn['prods'], prepend='F')
+    well_dct_key = make_rxn_str(rxn['prods'], prepend='F')
     fake_wellp_label = label_dct[well_dct_key]
-    vdwp_ene = prod_ene - 1.0
-    zero_energy = vdwp_ene - ref_ene
     well_str += '\n! Fake Well for {}\n'.format(
         '+'.join(rxn['prods']))
-    fake_wellp = blocks.fake_species_block(
-        spc_dct_i, spc_dct_j, spc_model, pf_levels, save_prefix)
+    fake_wellp = blocks.fake_species_block(*fake_wellp_inf_dcts)
     well_str += mess_io.writer.well(
-        fake_wellp_label, fake_wellp, zero_energy)
+        fake_wellp_label, fake_wellp, chnl_enes['fake_vdwp'])
 
     # MESS PST TS string for fake product side well -> prods
-    well_dct_key = _make_rxn_str(rxn['prods'], prepend='FPB')
+    well_dct_key = make_rxn_str(rxn['prods'], prepend='FPB')
     pst_p_label = label_dct[well_dct_key]
-    pst_p_ts_str = blocks.pst_block(
-        spc_dct_i, spc_dct_j,
-        spc_model=spc_model,
-        pf_levels=pf_levels,
-        save_prefix=save_prefix,
-        pst_params=pst_params)
-    zero_energy = prod_ene - ref_ene
+    pst_p_ts_str = blocks.pst_block(*fake_wellp_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_p_label, prod_label, fake_wellp_label, pst_p_ts_str,
-        zero_energy, tunnel='')
+        chnl_enes['fake_vdwp_ts'], tunnel='')
 
     return well_str, ts_str, fake_wellr_label, fake_wellp_label
 
 
-# Build dictionary relating species name to MESS label
-def make_pes_label_dct(rxn_lst, pes_idx, spc_dct):
-    """ Builds a dictionary that matches the mechanism name to the labels used
-        in the MESS input and output files for the whole PES
+# Data Retriever Functions
+def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
+                     run_prefix, save_prefix):
+    """ generate dcts with the models
     """
 
-    pes_label_dct = {}
-    for rxn in rxn_lst:
-        chn_idx = rxn['chn_idx']
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx)
-        pes_label_dct.update(
-            _make_channel_label_dct(
-                tsname, chn_idx, pes_label_dct, rxn, spc_dct))
+    # Unpack info objects
+    [chn_pf_levels, chn_pf_models, ref_pf_levels, ref_pf_models] = pf_info
+    [ts_class, ts_sadpt, ts_nobarrier, _] = ts_cls_info
 
-    return pes_label_dct
+    # Determine the MESS data for the channel
+    chnl_infs = {}
+    chnl_infs['reacs'] = []
+    chnl_infs['prods'] = []
+    chnl_infs['ts'] = []
+    for rct in rxn['reacs']:
+        inf_dct = read_spc_data(spc_dct[rct], rct,
+                                chn_pf_models, chn_pf_levels,
+                                ref_pf_models, ref_pf_levels,
+                                run_prefix, save_prefix)
+        chnl_infs['reacs'].append(inf_dct)
+    for prd in rxn['prods']:
+        inf_dct = read_spc_data(spc_dct[prd], prd,
+                                chn_pf_models, chn_pf_levels,
+                                ref_pf_models, ref_pf_levels,
+                                run_prefix, save_prefix)
+        chnl_infs['prods'].append(inf_dct)
+
+    # Set up data for TS
+    if pst_ts(ts_class, ts_sadpt, ts_nobarrier):
+        chnl_infs['ts'] = {'writer': 'blocks.pst_block'}
+    else:
+        inf_dct = read_ts_data(spc_dct[tsname], tsname,
+                               chn_pf_models, chn_pf_levels,
+                               ref_pf_models, ref_pf_levels,
+                               run_prefix, save_prefix,
+                               ts_class, ts_sadpt, ts_nobarrier)
+        chnl_infs['ts'] = inf_dct
+
+    # Set up the info for the wells
+    if need_fake_wells(ts_class):
+        chnl_infs['fake_vwdr'] = copy.deepcopy(chnl_infs['reacs'])
+        chnl_infs['fake_vwdp'] = copy.deepcopy(chnl_infs['prods'])
+
+    return chnl_infs
 
 
-def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct):
-    """ Builds a dictionary that matches the mechanism name to the labels used
-        in the MESS input and output files
+def read_spc_data(spc_dct_i, spc_name,
+                  chn_pf_models, chn_pf_levels,
+                  ref_pf_models, ref_pf_levels,
+                  run_prefix, save_prefix):
+    """ Determines which block writer to use tau
     """
-
-    # Initialize idxs for bimol, well, and fake species
-    pidx, widx, fidx = 1, 1, 1
-    for val in label_dct.values():
-        if 'P' in val:
-            pidx += 1
-        elif 'W' in val:
-            widx += 1
-        elif 'F' in val:
-            fidx += 1
-
-    # Determine the idxs for the channel reactants
-    reac_label = ''
-    bimol = bool(len(rxn['reacs']) > 1)
-    well_dct_key1 = '+'.join(rxn['reacs'])
-    well_dct_key2 = '+'.join(rxn['reacs'][::-1])
-    if well_dct_key1 not in label_dct:
-        if well_dct_key2 in label_dct:
-            well_dct_key1 = well_dct_key2
+    vib_model, tors_model = chn_pf_models['vib'], chn_pf_models['tors']
+    if is_atom(spc_dct_i):
+        inf_dct = models.atm_data(spc_dct_i)
+        writer = 'blocks.species_block'
+    else:
+        if vib_model == 'tau' or tors_model == 'tau':
+            inf_dct = models.tau_data(
+                spc_dct_i,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix, rxn=(), saddle=False)
+            writer = 'blocks.tau_block'
         else:
-            if bimol:
-                reac_label = 'P' + str(pidx)
-                pidx += 1
-                label_dct[well_dct_key1] = reac_label
-            else:
-                reac_label = 'W' + str(widx)
-                widx += 1
-                label_dct[well_dct_key1] = reac_label
-    if not reac_label:
-        reac_label = label_dct[well_dct_key1]
+            inf_dct = models.mol_data(
+                spc_dct_i, spc_name,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix, saddle=False, tors_wgeo=True)
+            writer = 'blocks.species_block'
 
-    # Determine the idxs for the channel products
-    prod_label = ''
-    bimol = bool(len(rxn['prods']) > 1)
-    well_dct_key1 = '+'.join(rxn['prods'])
-    well_dct_key2 = '+'.join(rxn['prods'][::-1])
-    if well_dct_key1 not in label_dct:
-        if well_dct_key2 in label_dct:
-            well_dct_key1 = well_dct_key2
+    # Add writer to inf dct
+    inf_dct['writer'] = writer
+
+    return inf_dct
+
+
+def read_ts_data(spc_dct_i, tsname,
+                 chn_pf_models, chn_pf_levels,
+                 ref_pf_models, ref_pf_levels,
+                 run_prefix, save_prefix,
+                 ts_class, ts_sadpt, ts_nobarrier):
+    """ Determine which block function to useset block functions
+    """
+
+    # Get all of the information for the filesystem
+    if not var_radrad(ts_class):
+        # Build MESS string for TS at a saddle point
+        if ts_sadpt == 'vtst':
+            inf_dct = 'rpvtst_data'
+            writer = 'blocks.vtst_saddle_block'
         else:
-            if bimol:
-                prod_label = 'P' + str(pidx)
-                label_dct[well_dct_key1] = prod_label
-            else:
-                prod_label = 'W' + str(widx)
-                label_dct[well_dct_key1] = prod_label
-    if not prod_label:
-        prod_label = label_dct[well_dct_key1]
+            inf_dct = models.mol_data(
+                spc_dct_i, tsname,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix, saddle=True, tors_wgeo=True)
+            writer = 'blocks.species_block'
+    else:
+        # Build MESS string for TS with no saddle point
+        if ts_nobarrier == 'vtst':
+            inf_dct = 'rpvtst_data'
+            writer = 'blocks.vtst_no_saddle_block'
+        elif ts_nobarrier == 'vrctst':
+            inf_dct = 'vrctst_data'
+            writer = 'blocks.vrctst_block'
 
-    # Determine idxs for any fake wells if they are needed
-    fake_wellr_label = ''
-    fake_wellp_label = ''
-    if _need_fake_wells(spc_dct[tsname]['class']):
-        well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
-        well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
-        if well_dct_key1 not in label_dct:
-            if well_dct_key2 in label_dct:
-                well_dct_key1 = well_dct_key2
-            else:
-                fake_wellr_label = 'F' + str(fidx)
-                fidx += 1
-                label_dct[well_dct_key1] = fake_wellr_label
+    # Add writer to inf dct
+    inf_dct['writer'] = writer
 
-                # pst_r_label = 'FRB' + str(int(tsname.replace('ts_', ''))+1)
-                pst_r_label = 'FRB' + str(chn_idx)
-                label_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
-            if not fake_wellr_label:
-                fake_wellr_label = label_dct[well_dct_key1]
-                pst_r_label = label_dct[well_dct_key1.replace('F', 'FRB')]
-        else:
-            fake_wellr_label = label_dct[well_dct_key1]
-        well_dct_key1 = 'F' + '+'.join(rxn['prods'])
-        well_dct_key2 = 'F' + '+'.join(rxn['prods'][::-1])
-        if well_dct_key1 not in label_dct:
-            if well_dct_key2 in label_dct:
-                well_dct_key1 = well_dct_key2
-            else:
-                fake_wellp_label = 'F' + str(fidx)
-                fidx += 1
-                label_dct[well_dct_key1] = fake_wellp_label
-
-                # pst_p_label = 'FPB' + str(int(tsname.replace('ts_', ''))+1)
-                pst_p_label = 'FPB' + str(chn_idx)
-                label_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
-            if not fake_wellp_label:
-                fake_wellp_label = label_dct[well_dct_key1]
-                pst_p_label = label_dct[well_dct_key1.replace('F', 'FPB')]
-        else:
-            fake_wellp_label = label_dct[well_dct_key1]
-
-    label_dct[tsname] = 'B' + str(chn_idx)
-
-    return label_dct
-
-
-# Various checkers to decide what kinds of MESS strings to write
-def _need_fake_wells(tsclass):
-    """ Return boolean to see if fake wells are needed
-    """
-    abst_rxn = bool('abstraction' in tsclass)
-    # addn_rxn = bool('addition' in tsclass)
-    subs_rxn = bool('substitution' in tsclass)
-    return bool(abst_rxn or subs_rxn)
-    # return bool(abst_rxn or addn_rxn or subs_rxn)
-
-
-def _var_radrad(tsclass):
-    """ Return boolean to see if fake wells are needed
-    """
-    rad_rad = 'radical radical' in tsclass
-    low_spin = 'high spin' not in tsclass
-    addn_rxn = 'addition' in tsclass
-    return bool(rad_rad and low_spin and addn_rxn)
-
-
-def _make_rxn_str(rlst, prepend=''):
-    """ convert list to string
-    """
-    return prepend + '+'.join(rlst)
-
-
-# def _treat_tunnel(tun_model, ts_sadpt, ts_nobarrier, _var_radrad(ts_class)):
-def _treat_tunnel():
-    """ decide to treat tunneling
-    """
-    return True
+    return inf_dct

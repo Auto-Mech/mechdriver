@@ -145,7 +145,7 @@ def int_sym_num_from_sampling(
     return int_sym_num
 
 
-def tors_modified_sym_factor(sym_factor, tors_sym_nums):
+def tors_reduced_sym_factor(sym_factor, tors_sym_nums):
     """ Decrease the overall molecular symmetry factor by the
         torsional mode symmetry numbers
     """

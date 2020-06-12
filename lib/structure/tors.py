@@ -302,8 +302,7 @@ def check_dummy_trans(zma):
 
 
 # CALCULATE THE ZPES OF EACH TORSION USING MESS
-def mess_tors_zpes(tors_geo, sym_factor, elec_levels,
-                   hind_rot_str, tors_save_path,
+def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
                    script_str=DEFAULT_SCRIPT_DCT['messpf']):
     """ Calculate the frequencies and ZPVES of the hindered rotors
         create a messpf input and run messpf to get tors_freqs and tors_zpes
@@ -321,9 +320,9 @@ def mess_tors_zpes(tors_geo, sym_factor, elec_levels,
         rel_temp_inc=0.001,
         atom_dist_min=0.6)
     dat_str = mess_io.writer.molecule(
-        core=mess_io.writer.core_rigidrotor(tors_geo, sym_factor),
+        core=mess_io.writer.core_rigidrotor(tors_geo, 1.0),
         freqs=[1000.0],
-        elec_levels=elec_levels,
+        elec_levels=[[0.0, 1.0]],
         hind_rot=hind_rot_str,
     )
     spc_str = mess_io.writer.species(

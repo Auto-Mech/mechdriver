@@ -274,8 +274,8 @@ def run_check_imaginary(
 
             if hess:
                 imag = False
-                _, imag_freq = structure.vib.projrot_frequencies(
-                    geo, hess, thy_info, thy_run_fs)
+                _, _, imag_freq, _ = structure.vib.projrot_freqs(
+                    geo, hess, thy_run_path)
                 if imag_freq:
                     imag = True
 

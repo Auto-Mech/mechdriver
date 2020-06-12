@@ -9,18 +9,15 @@ from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
 
-def projrot_freqs(geo, hess, thy_info, thy_run_fs,
+def projrot_freqs(geo, hess, run_path,
                   grad=(), rotors_str='', coord_proj='cartesian',
                   script_str=DEFAULT_SCRIPT_DCT['projrot']):
     """ Get the projected frequencies from projrot code
+        run path at thy later
     """
 
-    # Build the filesystem objects needed for running ProjRot
-    thy_run_fs[-1].create(thy_info[1:4])
-    thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
-
     bld_locs = ['PROJROT', 0]
-    bld_run_fs = autofile.fs.build(thy_run_path)
+    bld_run_fs = autofile.fs.build(run_path)
     bld_run_fs[-1].create(bld_locs)
     projrot_path = bld_run_fs[-1].path(bld_locs)
     print('Build Path for ProjRot calls')

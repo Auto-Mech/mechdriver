@@ -10,11 +10,11 @@ from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
 
-def get_mess_path(run_prefix, pes_formula):
+def get_mess_path(prefix, pes_formula, sub_pes_idx):
     """ Build a simple mess path using the run prefix
     """
-    # print(os.path.join(run_prefix, 'MESSRATE', pes_formula))
-    return os.path.join(run_prefix, 'MESSRATE', pes_formula)
+    pes_str = '{}_{}'.format(pes_formula, sub_pes_idx)
+    return os.path.join(prefix, 'MESSRATE', pes_str)
 
 
 def get_mess_path2(

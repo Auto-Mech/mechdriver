@@ -248,7 +248,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             opt_script_str, overwrite,
             saddle=saddle, nsamp_par=mc_nsamp,
             tors_names=tors_names, dist_info=dist_info,
-            two_stage=two_stage, retryfail=retryfail, 
+            two_stage=two_stage, retryfail=retryfail,
             rxn_class=rxn_class, **opt_kwargs)
 
     elif job in ('energy', 'grad', 'hess', 'vpt2'):

@@ -235,11 +235,18 @@ def set_default_pf(dct):
 def set_pf_model_info(pf_model):
     """ Set the PF model list based on the input
     """
+
+    rot_model = pf_model['rot'] if 'rot' in pf_model else 'rigid'
     tors_model = pf_model['tors'] if 'tors' in pf_model else 'rigid'
     vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
     sym_model = pf_model['sym'] if 'sym' in pf_model else 'none'
 
-    pf_models = [tors_model, vib_model, sym_model]
+    pf_models = {
+        'rot': rot_model,
+        'tors': tors_model,
+        'vib': vib_model,
+        'sym': sym_model
+    }
 
     return pf_models
 
@@ -279,13 +286,13 @@ def set_es_model_info(es_model, thy_dct):
             ene_thy_info.append([lvl[0], filesys.inf.get_thy_info(lvl[1], thy_dct)])
 
     # Combine levels into a list
-    es_levels = [
-        geo_thy_info,
-        ene_thy_info,
-        harm_thy_info,
-        vpt2_thy_info,
-        sym_thy_info,
-        [tors_sp_thy_info, tors_scn_thy_info]
-    ]
+    es_levels = {
+        'geo': geo_thy_info,
+        'ene': ene_thy_info,
+        'vib': harm_thy_info,
+        'vpt': vpt2_thy_info,
+        'sym': sym_thy_info,
+        'tors': [tors_sp_thy_info, tors_scn_thy_info]
+    }
 
     return es_levels

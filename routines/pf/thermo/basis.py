@@ -5,7 +5,7 @@
 import sys
 import automol.inchi
 import automol.geom
-from routines.pf.messf.ene import get_fs_ene_zpe
+# from routines.pf.messf.ene import get_fs_ene_zpe
 from routines.pf.thermo import heatform
 from lib.phydat import phycon
 

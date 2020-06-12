@@ -2,25 +2,32 @@
 """
 
 import mess_io
-from routines.pf.messf import models
+from routines.pf.messf import _models as models
 from routines.pf.messf import _fake as fake
 from routines.pf.messf import _util as util
 
 
 # SINGLE SPECIES BLOCKS
-def species_block(inf_dct):
+def species_block(spc_dct_i, rxn, pf_models, pf_levels,
+                  run_prefix, save_prefix, saddle=False):
     """ prepare the species input for messpf
     """
 
     # Write the MESS string for the atom or molecule molecule
-    if inf_dct['is_atom']:
-        spc_str = mess_io.writer.atom(
-            mass=inf_dct['mass'],
-            elec_levels=inf_dct['elec_levels'])
+    if util.is_atom(spc_dct_i):
+        # Get info and build the appropriate MESS string
+        mass = util.atom_mass(spc_dct_i)
+        elec_levels = spc_dct_i['elec_levels']
+        spc_str = mess_io.writer.atom(mass, elec_levels)
     else:
+        # Build dct combinining various information from the filesys and MESS
+        inf_dct = models.spc_data(
+            spc_dct_i, rxn, pf_models, pf_levels,
+            run_prefix, save_prefix, saddle=saddle)
 
         # Build the appropriate core string
-        if inf_dct['mdhr_dat_str']:
+        tors_model, _, _ = pf_models
+        if inf_dct['has_tors'] and tors_model == 'mdhr':
             core_str = mess_io.writer.core_multirotor(
                 geom=inf_dct['geom'],
                 sym_factor=inf_dct['sym_factor'],
@@ -48,13 +55,20 @@ def species_block(inf_dct):
             rot_dists=inf_dct['rot_dists']
         )
 
-    return spc_str
+    return spc_str, mdhr_dat_str, inf_dct['imag']
 
 
-def fake_species_block(inf_dct_i, inf_dct_j):
+def fake_species_block(spc_dct_i, spc_dct_j, pf_models, pf_levels,
+                       save_prefix, rxn=()):
     """ prepare a fake species block corresponding to the
         van der Waals well between two fragments
     """
+
+    # Build a dct combinining various information from the filesys and MESS
+    inf_dct_i = models.spc_data(
+        spc_dct_i, rxn, pf_models, pf_levels, save_prefix, saddle=False)
+    inf_dct_j = models.spc_data(
+        spc_dct_j, rxn, pf_models, pf_levels, save_prefix, saddle=False)
 
     # Combine the electronic structure information for the two species together
     geom = fake.combine_geos_in_fake_well(inf_dct_i['geom'], inf_dct_j['geom'])
@@ -88,9 +102,16 @@ def fake_species_block(inf_dct_i, inf_dct_j):
     return spc_str
 
 
-def pst_block(inf_dct_i, inf_dct_j):
+def pst_block(spc_dct_i, spc_dct_j, pf_models, pf_levels,
+              save_prefix, rxn=(), pst_params=(1.0, 6)):
     """ prepare a Phase Space Theory species block
     """
+
+    # Build a dct combinining various information from the filesys and MESS
+    inf_dct_i = models.spc_data(
+        spc_dct_i, rxn, pf_models, pf_levels, save_prefix, saddle=False)
+    inf_dct_j = models.spc_data(
+        spc_dct_j, rxn, pf_models, pf_levels, save_prefix, saddle=False)
 
     # Combine the electronic structure information for the two species together
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
@@ -110,7 +131,9 @@ def pst_block(inf_dct_i, inf_dct_j):
         geom1=inf_dct_i['geom'],
         geom2=inf_dct_j['geom'],
         sym_factor=sym_factor,
-        stoich=stoich
+        stoich=stoich,
+        pot_prefactor=pst_params[0],
+        pot_exp=pst_params[1]
     )
     spc_str = mess_io.writer.molecule(
         core=core_str,
@@ -125,9 +148,15 @@ def pst_block(inf_dct_i, inf_dct_j):
     return spc_str
 
 
-def tau_block(inf_dct):
+def tau_block(spc_dct_i, pf_models, pf_levels, save_prefix,
+              rxn=(), saddle=False):
     """ write  MESS string when using the Tau MonteCarlo
     """
+
+    # Build a dct combinining various information from the filesys and MESS
+    inf_dct = models.read_filesys_for_tau(
+        spc_dct_i, pf_models, pf_levels,
+        save_prefix, rxn=rxn, saddle=saddle)
 
     # Write the data string and set its name
     dat_str = mess_io.writer.monte_carlo.mc_data(

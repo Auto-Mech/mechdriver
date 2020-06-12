@@ -4,6 +4,7 @@
 import automol
 import elstruct
 from routines.es._routines import conformer
+from routines.es._routines import sp
 from routines.es._routines import _scan as scan
 from routines.es import runner as es_runner
 from lib import filesys
@@ -140,15 +141,28 @@ def optimize_transition_state(
             ts_save_fs[0].file.geometry.write(geo)
             ts_save_fs[0].file.zmatrix.write(zma)
 
+            # Call the Hessian calculator
+            # sp.run_hessian(zma, geo, ts_info, mod_thy_info,
+            #                geo_save_fs, geo_run_path, geo_save_path, locs,
+            #                script_str, overwrite,
+            #                retryfail=True, **kwargs)
+
             # Save this structure as first conformer
-            # cid = autofile.schema.generate_new_conformer_id()
-            # locs = [cid]
-            # cnf_save_fs[-1].create(locs)
-            # cnf_save_fs[-1].file.geometry_info.write(inf_obj, locs)
-            # cnf_save_fs[-1].file.geometry_input.write(inp_str, locs)
-            # cnf_save_fs[-1].file.energy.write(ene, locs)
-            # cnf_save_fs[-1].file.geometry.write(geo, locs)
-            # cnf_save_fs[-1].file.zmatrix.write(zma, locs)
+            locs = [autofile.schema.generate_new_conformer_id()]
+            cnf_save_fs[-1].create(locs)
+            cnf_save_fs[-1].file.geometry_info.write(inf_obj, locs)
+            cnf_save_fs[-1].file.geometry_input.write(inp_str, locs)
+            cnf_save_fs[-1].file.energy.write(ene, locs)
+            cnf_save_fs[-1].file.geometry.write(geo, locs)
+            cnf_save_fs[-1].file.zmatrix.write(zma, locs)
+
+            # Save the energy in a single-point filesystem
+            print(" - Saving energy...")
+            sp_save_fs = autofile.fs.single_point(ts_save_path)
+            sp_save_fs[-1].create(thy_info[1:4])
+            sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
+            sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
+            sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
 
             # Run single conformer to get intitial conformer in filesystem
             vals = automol.zmatrix.values(zma)
@@ -159,17 +173,17 @@ def optimize_transition_state(
             dist_info[4] = angle
             # ts_dct['dist_info'][1] = final_dist
             # ts_dct['dist_info'][4] = angle
-            conformer.single_conformer(
-                zma=zma,
-                spc_info=ts_info,
-                thy_info=mod_thy_info,
-                thy_save_fs=ts_save_fs,
-                cnf_run_fs=cnf_run_fs,
-                cnf_save_fs=cnf_save_fs,
-                overwrite=overwrite,
-                saddle=True,
-                dist_info=dist_info
-            )
+            # conformer.single_conformer(
+            #     zma=zma,
+            #     spc_info=ts_info,
+            #     thy_info=mod_thy_info,
+            #     thy_save_fs=ts_save_fs,
+            #     cnf_run_fs=cnf_run_fs,
+            #     cnf_save_fs=cnf_save_fs,
+            #     overwrite=overwrite,
+            #     saddle=True,
+            #     dist_info=dist_info
+            # )
 
             # Exit the for loop if a TS has been found
             ts_found = True
@@ -224,26 +238,6 @@ def optimize_transition_state(
     # # cnf_save_fs[-1].file.energy.write(ene, locs)
     # # cnf_save_fs[-1].file.geometry.write(geo, locs)
     # # cnf_save_fs[-1].file.zmatrix.write(zma, locs)
-
-    # # Run single conformer to get intitial conformer in filesystem
-    # vals = automol.zmatrix.values(zma)
-    # final_dist = vals[dist_name]
-    # dist_info[1] = final_dist
-    # conformer.single_conformer(
-    #     zma=zma,
-    #     spc_info=ts_info,
-    #     thy_info=mod_thy_info,
-    #     thy_save_fs=ts_save_fs,
-    #     cnf_run_fs=cnf_run_fs,
-    #     cnf_save_fs=cnf_save_fs,
-    #     overwrite=overwrite,
-    #     saddle=True,
-    #     dist_info=dist_info
-    # )
-
-    # # Exit the for loop if a TS has been found
-    # ts_found = True
-    # break
 
     return ts_found
 

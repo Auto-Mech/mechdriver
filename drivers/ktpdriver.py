@@ -10,7 +10,7 @@ from lib.amech_io import parser
 from lib.amech_io import cleaner
 
 
-def run(pes_formula, pes_idx,
+def run(pes_formula, pes_idx, sub_pes_idx,
         spc_dct,
         cla_dct,
         thy_dct,
@@ -64,11 +64,12 @@ def run(pes_formula, pes_idx,
         ts_dct, spc_dct)
 
     # Build the MESS label idx dictionary for the PES
-    label_dct = ktp_routines.rates.make_pes_label_dct(
+    label_dct = ktp_routines.label.make_pes_label_dct(
         rxn_lst, pes_idx, spc_dct)
 
     # Set path where MESS files will be written and read
-    mess_path = ktp_runner.get_mess_path(run_prefix, pes_formula)
+    mess_path = ktp_runner.get_mess_path(
+        run_prefix, pes_formula, sub_pes_idx)
 
     # Try and read the MESS file from the filesystem first
     mess_inp_str, dat_lst = ktp_runner.read_mess_file(mess_path)
@@ -88,9 +89,9 @@ def run(pes_formula, pes_idx,
             spc_dct, rxn_lst, temps, pressures, **etransfer)
 
         # Write the MESS strings for all the PES channels
-        well_str, bim_str, ts_str, dat_lst = ktp_routines.rates.make_pes_mess_str(
-            spc_dct, rxn_lst, pes_formula, pes_idx,
-            save_prefix, label_dct,
+        well_str, bi_str, ts_str, dats = ktp_routines.rates.make_pes_mess_str(
+            spc_dct, rxn_lst, pes_idx,
+            run_prefix, save_prefix, label_dct,
             spc_model_dct, thy_dct)
 
         # Combine strings together
@@ -100,7 +101,7 @@ def run(pes_formula, pes_idx,
              energy_trans_str,
              rchan_header_str,
              well_str,
-             bim_str,
+             bi_str,
              ts_str]
         )
         mess_inp_str = cleaner.remove_trail_whitespace(mess_inp_str)
@@ -112,7 +113,18 @@ def run(pes_formula, pes_idx,
             os.mkdir(mess_path)
 
         # Write the MESS file into the filesystem
-        ktp_runner.write_mess_file(mess_inp_str, dat_lst, mess_path)
+        ktp_runner.write_mess_file(mess_inp_str, dats, mess_path)
+
+        # Write MESS file into job directory
+        starting_path = os.getcwd()
+        jobdir_mess_path = ''.join([starting_path, '/mess'])
+        if not os.path.exists(jobdir_mess_path):
+            os.mkdir(jobdir_mess_path)
+        jobdir_mess_file_path = ktp_runner.get_mess_path(
+            jobdir_mess_path, pes_formula, sub_pes_idx)
+        with open(jobdir_mess_file_path, 'a') as file_obj:
+            file_obj.write('\n\n! NEW MESS FILE\n')
+            file_obj.write(mess_inp_str)
 
     # Run mess to produce rate output
     if run_messrate:
