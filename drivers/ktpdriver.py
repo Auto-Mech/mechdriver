@@ -47,7 +47,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         spc_model = rxn['model'][1]
         ene_model = spc_model_dct[spc_model]['es']['ene']
         geo_model = spc_model_dct[spc_model]['es']['geo']
-        es_info = parser.model.set_es_model_info(
+        es_info = parser.model.set_pf_level_info(
             spc_model_dct[spc_model]['es'], thy_dct)
         if not isinstance(ene_model, str):
             ene_method = ene_model[1][1]
@@ -81,12 +81,15 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     if write_messrate:  # and not mess_inp_str:
         print(('\n\n------------------------------------------------' +
                '--------------------------------------'))
-        print('\nGathering ElStruct data to write MESS',
-              'input at {}'.format(mess_path))
+        print('\nBuilding the MESS input file...')
 
         # Write the strings for the MESS input file
-        globkey_str, energy_trans_str = ktp_routines.rates.make_header_str(
-            spc_dct, rxn_lst, temps, pressures, **etransfer)
+        globkey_str = ktp_routines.rates.make_header_str(
+            temps, pressures)
+
+        # Write the energy transfer section strings for MESS file
+        energy_trans_str = ktp_routines.rates.make_etrans_str(
+            spc_dct, rxn_lst, **etransfer)
 
         # Write the MESS strings for all the PES channels
         well_str, bi_str, ts_str, dats = ktp_routines.rates.make_pes_mess_str(
@@ -113,6 +116,10 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             os.mkdir(mess_path)
 
         # Write the MESS file into the filesystem
+        print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
+               '++++++++++++++++++++++++++++++++++++++'))
+        print('\nWriting the MESS input file at {}'.format(mess_path))
+        print(mess_inp_str)
         ktp_runner.write_mess_file(mess_inp_str, dats, mess_path)
 
         # Write MESS file into job directory
@@ -124,7 +131,6 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             jobdir_mess_path, pes_formula, sub_pes_idx)
         with open(jobdir_mess_file_path, 'a') as file_obj:
             file_obj.write('\n\n! NEW MESS FILE\n')
-            file_obj.write(mess_inp_str)
 
     # Run mess to produce rate output
     if run_messrate:

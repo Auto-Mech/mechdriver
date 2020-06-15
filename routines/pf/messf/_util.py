@@ -5,11 +5,11 @@ utility functions
 import automol
 
 
-def ini_elec_levels(spc_dct, spc_info):
+def ini_elec_levels(spc_dct_i, spc_info):
     """ get initial elec levels
     """
-    if 'elec_levs' in spc_dct:
-        elec_levels = spc_dct['elec_levs']
+    if 'elec_levels' in spc_dct_i:
+        elec_levels = spc_dct_i['elec_levels']
     else:
         elec_levels = [[0., spc_info[2]]]
 
@@ -105,14 +105,14 @@ def set_rxn_class(spc_dct_i, saddle):
 def is_atom(spc_dct_i):
     """ Check if species is an atom
     """
-    geo = automol.inchi.geom(spc_dct_i['ich'])
+    geo = automol.inchi.geometry(spc_dct_i['ich'])
     return automol.geom.is_atom(geo)
 
 
 def atom_mass(spc_dct_i):
     """ write the atom string
     """
-    geo = automol.inchi.geom(spc_dct_i['ich'])
+    geo = automol.inchi.geometry(spc_dct_i['ich'])
     return automol.geom.total_mass(geo)
 
 

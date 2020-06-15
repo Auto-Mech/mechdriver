@@ -7,6 +7,7 @@
 """
 
 import autofile
+from routines.pf.messf import ene
 from routines.pf.messf import _rot as rot
 from routines.pf.messf import _tors as tors
 from routines.pf.messf import _sym as sym
@@ -27,15 +28,15 @@ def atm_data(spc_dct_i):
     return inf_dct
 
 
-def mol_data(spc_dct_i, spc_name, pf_models, pf_levels,
+def mol_data(spc_dct_i, spc_name,
+             chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
              run_prefix, save_prefix, saddle=False, tors_wgeo=False):
     """ Pull all of the neccessary information from the filesystem for a species
     """
 
-    print('Getting stuff for {}'.format(spc_name))
-
-    # Set the spc_info
-    spc_info = finf.get_spc_info(spc_dct_i)
+    print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
+           '++++++++++++++++++++++++++++++++++++++'))
+    print('\nReading filesystem info for {}'.format(spc_name))
 
     # Initialize all of the elements of the inf dct
     geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
@@ -44,51 +45,53 @@ def mol_data(spc_dct_i, spc_name, pf_models, pf_levels,
 
     # Set up all the filesystem objects using models and levels
     pf_filesystems = build_pf_filesystems(
-        spc_info, pf_levels, run_prefix, save_prefix, saddle)
+        spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
 
     # Set information for transition states
-    dist_names = util.set_dist_names(spc_dct_i, saddle)
     frm_bnd_key, brk_bnd_key = util.get_bnd_keys(spc_dct_i, saddle)
     ts_bnd = util.set_ts_bnd(spc_dct_i, saddle)
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Obtain rotor information used to determine new information
+    print('\nPreparing internal rotor info building partition functions...')
     rotor_names, rotor_grids, rotor_syms, const_dct, ref_ene = tors.rotor_info(
-        spc_dct_i, pf_filesystems, pf_models,
-        saddle=saddle, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+        spc_dct_i, pf_filesystems, chn_pf_models,
+        frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
 
-    if nonrigid_tors(pf_models, rotor_names):
+    if nonrigid_tors(chn_pf_models, rotor_names):
         mess_hr_str, prot_hr_str, mdhr_dats, rotor_syms = tors.make_hr_strings(
             rotor_names, rotor_grids, rotor_syms, const_dct,
-            ref_ene, pf_filesystems, pf_models,
+            ref_ene, pf_filesystems, chn_pf_models,
             rxn_class, ts_bnd,
             saddle=saddle, tors_wgeo=tors_wgeo)
 
     # Obtain rotation partition function information
+    print('\nObtaining info for rotation partition function...')
     geom = rot.read_geom(pf_filesystems)
 
-    if nonrigid_rotations(pf_models):
+    if nonrigid_rotations(chn_pf_models):
         rovib_coups, rot_dists = rot.read_rotational_values(pf_filesystems)
 
     # Obtain vibration partition function information
-    if nonrigid_tors(pf_models, rotor_names):
+    print('\nObtaining the vibrational frequencies and zpves...')
+    if nonrigid_tors(chn_pf_models, rotor_names):
         freqs, imag, zpe = vib.tors_projected_freqs_zpe(
-            pf_filesystems, mess_hr_str, prot_hr_str, save_path,
-            saddle=saddle)
+            pf_filesystems, mess_hr_str, prot_hr_str, saddle=saddle)
     else:
         freqs, imag, zpe = vib.read_harmonic_freqs(
-            pf_filesystems, pf_levels)
+            pf_filesystems, saddle=saddle)
 
-    if anharm_vib(pf_models):
+    if anharm_vib(chn_pf_models):
         xmat = vib.read_anharmon_matrix(pf_filesystems)
 
     # Obtain symmetry factor
-    sym_factor = sym.symmetry_factor(
-        sym_model, spc_dct_i, spc_info, dist_names,
-        saddle, frm_bnd_key, brk_bnd_key, rotor_names,
-        cnf_save_fs, cnf_save_locs, saddle)
+    print('\nDetermining the symmetry factor...')
+    sym_factor = sym.symmetry_factor()
+    #     sym_model, spc_dct_i, spc_info, dist_names,
+    #     saddle, frm_bnd_key, brk_bnd_key, rotor_names,
+    #     cnf_save_fs, cnf_save_locs, saddle)
 
-    if nonrigid_tors(pf_models):
+    if nonrigid_tors(chn_pf_models, rotor_names):
         sym_factor = sym.tors_reduced_sym_factor(
             sym_factor, rotor_syms)
 
@@ -96,8 +99,12 @@ def mol_data(spc_dct_i, spc_name, pf_models, pf_levels,
     elec_levels = spc_dct_i['elec_levels']
 
     # Obtain energy levels
-    ene = read_energy()
-    ene_chnlvl = ene + zpe
+    print('\nObtaining the electronic energy...')
+    chn_ene = ene.read_energy(
+        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
+        read_ene=True, read_zpe=False)
+    # print('mod ene', chn_ene, zpe)
+    ene_chnlvl = chn_ene + zpe
 
     ene_reflvl = None
     # if chn_model == ref_model:
@@ -110,7 +117,7 @@ def mol_data(spc_dct_i, spc_name, pf_models, pf_levels,
 
     # Create info dictionary
     keys = ['geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
-            'has_tors', 'mess_hr_str', 'mdhr_dats',
+            'mess_hr_str', 'mdhr_dats',
             'xmat', 'rovib_coups', 'rot_dists',
             'ene_chnlvl', 'ene_reflvl']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
@@ -274,34 +281,51 @@ def tau_data(spc_dct_i, pf_models, pf_levels,
 
 
 # Filesystem object creators
-def build_pf_filesystems(spc_info, pf_levels,
+def build_pf_filesystems(spc_dct_i, pf_levels,
                          run_prefix, save_prefix, saddle):
     """ Create various filesystems needed
     """
 
     pf_filesystems = {}
+    # print('pf_levels', pf_levels)
     pf_filesystems['harm'] = set_model_filesys(
-        spc_info, pf_levels['harm'], run_prefix, save_prefix, saddle)
+        spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle)
     if pf_levels['sym']:
         pf_filesystems['sym'] = set_model_filesys(
-            spc_info, pf_levels['sym'], run_prefix, save_prefix, saddle)
+            spc_dct_i, pf_levels['sym'][1], run_prefix, save_prefix, saddle)
     if pf_levels['tors']:
         pf_filesystems['tors'] = set_model_filesys(
-            spc_info, pf_levels['tors'][0], run_prefix, save_prefix, saddle)
+            spc_dct_i, pf_levels['tors'][1][0],
+            run_prefix, save_prefix, saddle)
     if pf_levels['vpt2']:
         pf_filesystems['vpt2'] = set_model_filesys(
-            spc_info, pf_levels['vpt2'], run_prefix, save_prefix, saddle)
+            spc_dct_i, pf_levels['vpt2'][1], run_prefix, save_prefix, saddle)
 
     return pf_filesystems
 
 
-def set_model_filesys(spc_info, level, run_prefix, save_prefix, saddle):
+def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
     """ Gets filesystem objects for torsional calculations
     """
 
+    # Set the spc_info
+    spc_info = finf.get_spc_info(spc_dct_i)
+
+    # Set some path stuff
+    if saddle:
+        save_path = spc_dct_i['rxn_fs'][3]
+        run_path = spc_dct_i['rxn_fs'][2]
+    else:
+        spc_save_fs = autofile.fs.species(save_prefix)
+        spc_save_fs[-1].create(spc_info)
+        save_path = spc_save_fs[-1].path(spc_info)
+        spc_run_fs = autofile.fs.species(run_prefix)
+        spc_run_fs[-1].create(spc_info)
+        run_path = spc_run_fs[-1].path(spc_info)
+
     # Set theory filesystem used throughout
-    thy_save_fs = autofile.fs.theory(save_prefix)
-    thy_run_fs = autofile.fs.theory(run_prefix)
+    thy_save_fs = autofile.fs.theory(save_path)
+    thy_run_fs = autofile.fs.theory(run_path)
 
     # Set the level for the model
     levelp = finf.modify_orb_restrict(spc_info, level)
@@ -318,6 +342,7 @@ def set_model_filesys(spc_info, level, run_prefix, save_prefix, saddle):
         run_path = run_fs[0].path()
 
     # Get the fs object and the locs
+    # print('save path', save_path)
     cnf_save_fs = autofile.fs.conformer(save_path)
     min_cnf_locs = mincnf.min_energy_conformer_locators(cnf_save_fs)
 

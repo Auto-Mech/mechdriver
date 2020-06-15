@@ -19,17 +19,47 @@ from routines.pf.ktp._util import treat_tunnel
 from routines.pf.ktp._util import pst_ts
 from routines.pf.ktp._util import need_fake_wells
 from routines.pf.ktp._util import var_radrad
+from routines.pf.ktp._util import print_pf_info
+
+
+BLOCK_MODULE = importlib.import_module('routines.pf.messf.blocks')
 
 
 # Writer
-def make_header_str(spc_dct, rxn_lst,
-                    temps, press,
+def make_header_str(temps, press):
+    """ makes the standard header and energy transfer sections for MESS input file
+    """
+
+    print('\nPreparing global keywords section for MESS input...')
+
+    print(' - Using temperatures and pressures defined by user')
+    print(' - Using internal AutoMech defaults for other MESS keywords:')
+    keystr1 = (
+        'EnergyStepOverTemperature, ExcessEnergyOverTemperature, ' +
+        'ModelEnergyLimit'
+    )
+    keystr2 = (
+        'CalculationMethod, WellCutoff, ChemicalEigenvalueMax, ' +
+        'ReductionMethod, AtomDistanceMin'
+    )
+    print('     {}'.format(keystr1))
+    print('     {}'.format(keystr2))
+
+    header_str = mess_io.writer.global_reaction(temps, press)
+
+    return header_str
+
+
+def make_etrans_str(spc_dct, rxn_lst,
                     exp_factor, exp_power, exp_cutoff,
                     eps1, eps2, sig1, sig2, mass1):
     """ makes the standard header and energy transfer sections for MESS input file
     """
-    # Header section
-    header_str = mess_io.writer.global_reaction(temps, press)
+
+    print('\nPreparing energy transfer section for MESS input...')
+
+    # Get masses for energy transfer section
+    print(' - Using masses of reactants of first channel')
     tot_mass = 0.
     for rct in rxn_lst[0]['reacs']:
         geo = automol.inchi.geometry(spc_dct[rct]['ich'])
@@ -37,12 +67,17 @@ def make_header_str(spc_dct, rxn_lst,
         for mass in masses:
             tot_mass += mass
 
+    # Write MESS-format energy transfer section string
+    print(' - Using Lennard-Jones sigma and epsilon parameters',
+          'defined by the user.')
+    print(' - Using exponential-down energy-transfer model parameters',
+          'defined by the user.')
     # Energy transfer section
     energy_trans_str = mess_io.writer.energy_transfer(
         exp_factor, exp_power, exp_cutoff,
         eps1, eps2, sig1, sig2, mass1, tot_mass)
 
-    return header_str, energy_trans_str
+    return energy_trans_str
 
 
 def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
@@ -51,19 +86,28 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
     """ Write all the MESS input file strings for the reaction channels
     """
 
+    print('\nPreparing reaction channel section for MESS input... ')
+
     # Initialize empty MESS strings
     full_well_str, full_bi_str, full_ts_str = '', '', ''
     full_dat_str_lst = []
 
     # Set the energy and model for the first reference species
+    # print('\nCalculating reference energy for PES')
     ref_ene, ref_model = set_reference_ene(
-        rxn_lst, spc_dct, thy_dct, model_dct, save_prefix)
+        rxn_lst, spc_dct, thy_dct, model_dct,
+        run_prefix, save_prefix, ref_idx=0)
 
     # Loop over all the channels and write the MESS strings
     written_labels = []
     for rxn in rxn_lst:
 
-        print('Gathering data for MESS string for {}'.format(rxn))
+        print('Reading PES electronic structure data ' +
+              'from save filesystem for')
+        print('Channel {}: {} = {}...'.format(
+               rxn['chn_idx'],
+               '+'.join(rxn['reacs']),
+               '+'.join(rxn['prods'])))
 
         # Set the TS name and channel model
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
@@ -72,6 +116,10 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         # Obtain useful info objects
         pf_info = set_pf_info(model_dct, thy_dct, chn_model, ref_model)
         ts_cls_info = set_ts_cls_info(spc_dct, model_dct, tsname, chn_model)
+
+        # Print models
+        ref_ene_lvl = model_dct[ref_model]['es']['ene']
+        print_pf_info(pf_info[1], pf_info[0], chn_model, ref_ene_lvl)
 
         # Obtain all of the species data
         chnl_infs = get_channel_data(rxn, tsname, spc_dct,
@@ -180,7 +228,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
 def _make_spc_mess_str(inf_dct):
     """ makes the main part of the MESS species block for a given species
     """
-    mess_writer = importlib.import_module(inf_dct['writer'])
+    mess_writer = getattr(BLOCK_MODULE, inf_dct['writer'])
     return mess_writer(inf_dct)
 
 
@@ -196,8 +244,9 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
     flux_str, mdhr_str, sct_str = '', '', ''
 
     # Write the initial data string
-    mess_writer = importlib.import_module(chnl_infs['ts']['writer'])
-    mess_str = mess_writer(*chnl_infs['ts'])
+    mess_writer = getattr(BLOCK_MODULE, chnl_infs['ts']['writer'])
+    mess_str = mess_writer(chnl_infs['ts'])
+    # mess_str = mess_writer(*chnl_infs['ts'])
 
     # Write the appropriate string for the tunneling model
     tunnel_str, sct_str = '', ''
@@ -334,7 +383,7 @@ def read_spc_data(spc_dct_i, spc_name,
     vib_model, tors_model = chn_pf_models['vib'], chn_pf_models['tors']
     if is_atom(spc_dct_i):
         inf_dct = models.atm_data(spc_dct_i)
-        writer = 'blocks.species_block'
+        writer = 'atom_block'
     else:
         if vib_model == 'tau' or tors_model == 'tau':
             inf_dct = models.tau_data(
@@ -342,14 +391,14 @@ def read_spc_data(spc_dct_i, spc_name,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, rxn=(), saddle=False)
-            writer = 'blocks.tau_block'
+            writer = 'tau_block'
         else:
             inf_dct = models.mol_data(
                 spc_dct_i, spc_name,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, saddle=False, tors_wgeo=True)
-            writer = 'blocks.species_block'
+            writer = 'species_block'
 
     # Add writer to inf dct
     inf_dct['writer'] = writer
@@ -370,22 +419,22 @@ def read_ts_data(spc_dct_i, tsname,
         # Build MESS string for TS at a saddle point
         if ts_sadpt == 'vtst':
             inf_dct = 'rpvtst_data'
-            writer = 'blocks.vtst_saddle_block'
+            writer = 'vtst_saddle_block'
         else:
             inf_dct = models.mol_data(
                 spc_dct_i, tsname,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, saddle=True, tors_wgeo=True)
-            writer = 'blocks.species_block'
+            writer = 'species_block'
     else:
         # Build MESS string for TS with no saddle point
         if ts_nobarrier == 'vtst':
             inf_dct = 'rpvtst_data'
-            writer = 'blocks.vtst_no_saddle_block'
+            writer = 'vtst_no_saddle_block'
         elif ts_nobarrier == 'vrctst':
             inf_dct = 'vrctst_data'
-            writer = 'blocks.vrctst_block'
+            writer = 'vrctst_block'
 
     # Add writer to inf dct
     inf_dct['writer'] = writer

@@ -14,7 +14,7 @@ from lib.amech_io import parser
 
 
 # Functions to hand reading and formatting energies of single species
-def read_energy(spc_info, pf_filesystems, pf_levels,
+def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
                 read_ene=True, read_zpe=True):
     """ Get the energy for a species on a channel
     """
@@ -22,14 +22,13 @@ def read_energy(spc_info, pf_filesystems, pf_levels,
     # Read the electronic energy and ZPVE
     e_elec = None
     if read_ene:
-        e_elec = electronic_energy(spc_info, pf_filesystems, pf_levels)
+        e_elec = electronic_energy(
+            spc_dct_i, pf_filesystems, pf_levels)
 
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
-            spc, spc_dct[spc],
-            pf_levels, pf_model,
-            save_prefix=spc_save_path)
+            spc_dct_i, pf_filesystems, pf_models, saddle=False)
 
     # Return the total energy requested
     ene = None
@@ -44,15 +43,20 @@ def read_energy(spc_info, pf_filesystems, pf_levels,
     return ene
 
 
-def electronic_energy(spc_info, pf_filesystems, pf_levels):
+def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
     """ get high level energy at low level optimized geometry
     """
 
+    print('- Calculating electronic energy')
+
+    # spc_dct_i = spc_dct[spc_name]
+    spc_info = finf.get_spc_info(spc_dct_i)
+
     # Get the harmonic filesys information
-    [_, cnf_path, _, _] = pf_filesystems['harm']
+    [_, cnf_path, _, _, _] = pf_filesystems['harm']
 
     # Get the electronic energy levels
-    ene_levels = pf_levels['ene']
+    ene_levels = pf_levels['ene'][1]
 
     # Read the energies from the filesystem
     e_elec = None
@@ -65,7 +69,9 @@ def electronic_energy(spc_info, pf_filesystems, pf_levels):
             sp_save_fs = autofile.fs.single_point(cnf_path)
             sp_save_fs[-1].create(mod_thy_info[1:4])
             # Read the energy
-            if os.path.exists(sp_save_fs[-1].path(mod_thy_info[1:4])):
+            sp_path = sp_save_fs[-1].path(mod_thy_info[1:4])
+            if os.path.exists(sp_path):
+                print('Energy read from path {}'.format(sp_path))
                 ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
                 e_elec += (coeff * ene)
             else:
@@ -78,13 +84,14 @@ def electronic_energy(spc_info, pf_filesystems, pf_levels):
     return e_elec
 
 
-def zero_point_energy(spc_dct, spc_name,
-                      pf_filesystems, pf_models, pf_levels,
-                      save_prefix, saddle=False):
+def zero_point_energy(spc_dct_i,
+                      pf_filesystems, pf_models, saddle=False):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
-    spc_dct_i = spc_dct[spc_name]
+    print('- Calculating zero-point energy')
+
+    # spc_dct_i = spc_dct[spc_name]
     frm_bnd_key, brk_bnd_key = util.get_bnd_keys(spc_dct_i, saddle)
     ts_bnd = util.set_ts_bnd(spc_dct_i, saddle)
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
@@ -95,7 +102,7 @@ def zero_point_energy(spc_dct, spc_name,
     else:
         rtr_names, rtr_grids, rtr_syms, const_dct, ref_ene = tors.rotor_info(
             spc_dct_i, pf_filesystems, pf_models,
-            saddle=saddle, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+            frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
 
         if models.nonrigid_tors(pf_models, rtr_names):
             mess_hr_str, prot_hr_str, _, _ = tors.make_hr_strings(
@@ -107,11 +114,9 @@ def zero_point_energy(spc_dct, spc_name,
         # Obtain vibration partition function information
         if models.nonrigid_tors(pf_models, rtr_names):
             _, _, zpe = vib.tors_projected_freqs_zpe(
-                pf_filesystems, mess_hr_str, prot_hr_str, save_path,
-                saddle=saddle)
+                pf_filesystems, mess_hr_str, prot_hr_str)
         else:
-            _, _, zpe = vib.read_harmonic_freqs(
-                pf_filesystems, pf_levels)
+            _, _, zpe = vib.read_harmonic_freqs(pf_filesystems)
 
     return zpe
 
@@ -124,27 +129,36 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
     """
 
     # Set the index for the reference species, right now defualt to 1st spc
-    ref_rgt = rxn_lst[ref_idx]['reacs']
+    ref_rgts = rxn_lst[ref_idx]['reacs']
     ref_model = rxn_lst[ref_idx]['model'][1]
+    print('\nDetermining the reference energy for PES...')
+    print(' - Reference species assumed to be the',
+          ' first set of reactants on PES: {}'.format('+'.join(ref_rgts)))
+    print(' - Model for Reference Species: {}'.format(ref_model))
 
     # Get the model for the first reference species
-    pf_levels = parser.model.set_es_model_info(
+    pf_levels = parser.model.set_pf_level_info(
         model_dct[ref_model]['es'], thy_dct)
+    pf_models = parser.model.set_pf_model_info(
+        model_dct[ref_model]['pf'])
+    ref_ene_level = pf_levels['ene'][0]
+    print(' - Energy Level for Reference Species: {}'.format(ref_ene_level))
 
     # Get the elec+zpe energy for the reference species
+    print('')
     ref_ene = 0.0
-    for rgt in ref_rgt:
+    for rgt in ref_rgts:
 
-        # Set the spc_info
-        spc_info = finf.get_spc_info(spc_dct[rgt])
+        print(' - Calculating energy for {}...'.format(rgt))
 
         # Build filesystem
         pf_filesystems = models.build_pf_filesystems(
-            spc_info, pf_levels, run_prefix, save_prefix, saddle=False)
+            spc_dct[rgt], pf_levels, run_prefix, save_prefix, saddle=False)
 
         # Calcualte the total energy
-        ref_ene += read_energy(pf_filesystems, pf_models,
-                               read_ene=True, read_zpe=True)
+        ref_ene += read_energy(
+            spc_dct[rgt], pf_filesystems, pf_models, pf_levels,
+            read_ene=True, read_zpe=True)
 
     return ref_ene, ref_model
 
@@ -170,14 +184,13 @@ def calc_channel_enes(channel_infs, ref_ene,
 def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
     """ sum the energies
     """
-
     # Calculate energies for species
     reac_ene = 0.0
     for rct in channel_infs['reacs']:
         reac_ene += rct[ene_lvl]
     prod_ene = 0.0
     for prd in channel_infs['prods']:
-        reac_ene += prd[ene_lvl]
+        prod_ene += prd[ene_lvl]
 
     # Set energy for inner transition state
     ts_ene = channel_infs['ts'][ene_lvl]

@@ -7,7 +7,7 @@ def read_geom(pf_filesystems):
     """
 
     # Get the harmonic filesys information
-    [cnf_fs, cnf_path, min_cnf_locs, save_path] = pf_filesystems['harm']
+    [cnf_fs, cnf_path, min_cnf_locs, save_path, _] = pf_filesystems['harm']
 
     # Read the filesys for the geometry
     if min_cnf_locs:

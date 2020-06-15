@@ -251,7 +251,7 @@ def set_pf_model_info(pf_model):
     return pf_models
 
 
-def set_es_model_info(es_model, thy_dct):
+def set_pf_level_info(es_model, thy_dct):
     """ Set the model info
     """
     # Read the ES models from the model dictionary
@@ -287,12 +287,13 @@ def set_es_model_info(es_model, thy_dct):
 
     # Combine levels into a list
     es_levels = {
-        'geo': geo_thy_info,
-        'ene': ene_thy_info,
-        'vib': harm_thy_info,
-        'vpt': vpt2_thy_info,
-        'sym': sym_thy_info,
-        'tors': [tors_sp_thy_info, tors_scn_thy_info]
+        'geo': (geo_lvl, geo_thy_info),
+        'ene': (ene_lvl, ene_thy_info),
+        'harm': (harm_lvl, harm_thy_info),
+        'vpt2': (vpt2_lvl, vpt2_thy_info),
+        'sym': (sym_lvl, sym_thy_info),
+        'tors': ([tors_lvl_sp, tors_lvl_scn],
+                 [tors_sp_thy_info, tors_scn_thy_info])
     }
 
     return es_levels

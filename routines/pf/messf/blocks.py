@@ -8,45 +8,49 @@ from routines.pf.messf import _util as util
 
 
 # SINGLE SPECIES BLOCKS
+def atom_block(inf_dct):
+    """ prepare the species input for messpf
+    """
+
+    spc_str = mess_io.writer.atom(
+        mass=inf_dct['mass'],
+        elec_levels=inf_dct['elec_levels'])
+
+    return spc_str
+
+
 def species_block(inf_dct):
     """ prepare the species input for messpf
     """
 
-    # Write the MESS string for the atom or molecule molecule
-    if inf_dct['is_atom']:
-        spc_str = mess_io.writer.atom(
-            mass=inf_dct['mass'],
-            elec_levels=inf_dct['elec_levels'])
-    else:
-
-        # Build the appropriate core string
-        if inf_dct['mdhr_dat_str']:
-            core_str = mess_io.writer.core_multirotor(
-                geom=inf_dct['geom'],
-                sym_factor=inf_dct['sym_factor'],
-                pot_surf_file='sas',
-                int_rot_str=inf_dct['mess_hr_str'],
-                interp_emax=100,
-                quant_lvl_emax=9
-            )
-            mdhr_dat_str = inf_dct['mdhr_dat_str']
-        else:
-            core_str = mess_io.writer.core_rigidrotor(
-                geom=inf_dct['geom'],
-                sym_factor=inf_dct['sym_factor'],
-                interp_emax=None
-            )
-
-        # Build the appropriate MESS string
-        spc_str = mess_io.writer.molecule(
-            core=core_str,
-            freqs=inf_dct['freqs'],
-            elec_levels=inf_dct['elec_levels'],
-            hind_rot=inf_dct['mess_hr_str'],
-            xmat=inf_dct['xmat'],
-            rovib_coups=inf_dct['rovib_coups'],
-            rot_dists=inf_dct['rot_dists']
+    # Build the appropriate core string
+    if inf_dct['mdhr_dats']:
+        core_str = mess_io.writer.core_multirotor(
+            geom=inf_dct['geom'],
+            sym_factor=inf_dct['sym_factor'],
+            pot_surf_file='sas',
+            int_rot_str=inf_dct['mess_hr_str'],
+            interp_emax=100,
+            quant_lvl_emax=9
         )
+        mdhr_dat_str = inf_dct['mdhr_dat_str']
+    else:
+        core_str = mess_io.writer.core_rigidrotor(
+            geom=inf_dct['geom'],
+            sym_factor=inf_dct['sym_factor'],
+            interp_emax=None
+        )
+
+    # Build the appropriate MESS string
+    spc_str = mess_io.writer.molecule(
+        core=core_str,
+        freqs=inf_dct['freqs'],
+        elec_levels=inf_dct['elec_levels'],
+        hind_rot=inf_dct['mess_hr_str'],
+        xmat=inf_dct['xmat'],
+        rovib_coups=inf_dct['rovib_coups'],
+        rot_dists=inf_dct['rot_dists']
+    )
 
     return spc_str
 

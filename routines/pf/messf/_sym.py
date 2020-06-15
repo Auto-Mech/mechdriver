@@ -5,56 +5,62 @@ import automol
 from routines.es._routines import conformer
 
 
-def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
-                    saddle, frm_bnd_key, brk_bnd_key, tors_names,
-                    tors_cnf_save_fs, tors_min_cnf_locs,
-                    sym_cnf_save_fs, sym_min_cnf_locs):
-    """ Get the overall factor for a species
-    """
+# def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
+#                     saddle, frm_bnd_key, brk_bnd_key, tors_names,
+#                     tors_cnf_save_fs, tors_min_cnf_locs,
+#                     sym_cnf_save_fs, sym_min_cnf_locs):
+#     """ Get the overall factor for a species
+#     """
 
-    form_coords = []
-    if 'sym_factor' in spc_dct_i:
-        sym_factor = spc_dct_i['sym_factor']
-        print('sym_factor from spc_dct_i:', sym_factor)
-    else:
+def symmetry_factor():
+    sym_factor = 1.0
+    # form_coords = []
+    # if 'sym_factor' in spc_dct_i:
+    #     sym_factor = spc_dct_i['sym_factor']
+    #     print('sym_factor from spc_dct_i:', sym_factor)
+    # else:
 
-        # Obtain the external symmetry number
-        ext_sym = automol.geom.external_symmetry_factor(geo)
+    #     # Set up the filesystem
+    #     [cnf_fs, cnf_path, min_cnf_locs, save_path, _] = pf_filesystems['sym']
+    #     geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
 
-        # Obtain the internal symmetry number using some routine
-        if sym_model == 'sampling':
+    #     # Obtain the external symmetry number
+    #     ext_sym = automol.geom.external_symmetry_factor(geo)
 
-            if tors_names:
-                int_sym = int_sym_num_from_sampling(
-                geo, ene, cnf_save_fs, saddle,
-                frm_bnd_key, brk_bnd_key, tors_names)
-            else:
-                int_sym = 1.0
+    #     # Obtain the internal symmetry number using some routine
+    #     if sym_model == 'sampling':
 
-            if not sym_min_cnf_locs:
-                # Fix the return statement here
-                print('ERROR: Reference geometry is missing for symmetry',
-                      'for species {}'.format(spc_info[0]))
-                return '', 0.
-            sym_geo = sym_cnf_save_fs[-1].file.geometry.read(sym_min_cnf_locs)
-            sym_ene = sym_cnf_save_fs[-1].file.energy.read(sym_min_cnf_locs)
-            sym_factor = conformer.symmetry_factor(
-                sym_geo, sym_ene, sym_cnf_save_fs, saddle,
-                frm_bnd_key, brk_bnd_key, tors_names)
-            print('sym_factor from conformer sampling:', sym_factor)
+    #         if tors_names:
+    #             int_sym = int_sym_num_from_sampling(
+    #             geo, ene, cnf_save_fs, saddle,
+    #             frm_bnd_key, brk_bnd_key, tors_names)
+    #         else:
+    #             int_sym = 1.0
 
-        elif sym_model == 'none':
-            # print('Warning: no symmetry model requested,',
-            #       'setting symmetry factor to 1.0')
-            int_sym = 1.0
+    #         if not sym_min_cnf_locs:
+    #             # Fix the return statement here
+    #             print('ERROR: Reference geometry is missing for symmetry',
+    #                   'for species {}'.format(spc_info[0]))
+    #             return '', 0.
+    #         sym_geo = sym_cnf_save_fs[-1].file.geometry.read(sym_min_cnf_locs)
+    #         sym_ene = sym_cnf_save_fs[-1].file.energy.read(sym_min_cnf_locs)
+    #         sym_factor = conformer.symmetry_factor(
+    #             sym_geo, sym_ene, sym_cnf_save_fs, saddle,
+    #             frm_bnd_key, brk_bnd_key, tors_names)
+    #         print('sym_factor from conformer sampling:', sym_factor)
 
-        # Obtain overall number
-        sym_factor = ext_sym * int_sym
+    #     elif sym_model == 'none':
+    #         # print('Warning: no symmetry model requested,',
+    #         #       'setting symmetry factor to 1.0')
+    #         int_sym = 1.0
+
+    #     # Obtain overall number
+    #     sym_factor = ext_sym * int_sym
 
     return sym_factor
 
 
-def symmetry_factor(
+def _symmetry_factor(
         geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=(), brk_bnd_key=(),
         tors_names=()):
     """ obtain overall symmetry factor for a geometry as a product

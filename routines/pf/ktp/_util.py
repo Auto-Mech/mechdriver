@@ -8,11 +8,11 @@ from lib.amech_io import parser
 def set_pf_info(model_dct, thy_dct, chn_model, ref_model):
     """ set pf information
     """
-    chn_pf_levels = parser.model.set_es_model_info(
+    chn_pf_levels = parser.model.set_pf_level_info(
         model_dct[chn_model]['es'], thy_dct)
     chn_pf_models = parser.model.set_pf_model_info(
         model_dct[chn_model]['pf'])
-    ref_pf_levels = parser.model.set_es_model_info(
+    ref_pf_levels = parser.model.set_pf_level_info(
         model_dct[ref_model]['es'], thy_dct)
     ref_pf_models = parser.model.set_pf_model_info(
         model_dct[ref_model]['pf'])
@@ -72,7 +72,34 @@ def make_rxn_str(rlst, prepend=''):
 
 
 # def treat_tunnel(tun_model, ts_sadpt, ts_nobarrier, _var_radrad(ts_class)):
-def treat_tunnel():
+def treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier):
     """ decide to treat tunneling
     """
     return True
+
+
+# Printing functions
+def print_pf_info(pf_models, pf_levels, chn_model, ref_ene_lvl):
+    """ printing stuff
+    """
+
+    print('\nModel name for Channel: {}'.format(chn_model))
+
+    print('Partition Functions Treatments:')
+    for key, val in pf_models.items():
+        model_str = '  {} = {}'.format(key, val)
+        print(model_str)
+
+    print('Electronic Structure Levels for all Required Data:')
+    level_str = ''
+    for key, val in pf_levels.items():
+        if key == 'ene':
+            if val[0] != ref_ene_lvl:
+                level_str = '  {} = {}'.format(key, val[0])
+                level_str += '  * differs from reference; will calc shifts'
+        if key == 'tors':
+            level_str = '  tors_sp = {}'.format(val[0][0])
+            level_str += ' tors_scn = {}'.format(val[0][1])
+        else:
+            level_str = '  {} = {}'.format(key, val[0])
+        print(level_str)

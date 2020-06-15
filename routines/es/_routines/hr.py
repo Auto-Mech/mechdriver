@@ -54,6 +54,7 @@ def hindered_rotor_scans(
             script_str=script_str,
             overwrite=overwrite,
             saddle=saddle,
+            retryfail=retryfail,
             constraint_dct=constraint_dct,
             **opt_kwargs,
         )

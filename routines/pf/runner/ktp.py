@@ -25,8 +25,8 @@ def get_mess_path2(
 
     # Set information about the TS and theory methods
     ts_info = (tsdct['ich'], tsdct['chg'], tsdct['mul'])
-    thy_info = parser.model.set_es_model_info(
-        model_dct[run_model]['es'], thy_dct)[0]
+    # thy_info = parser.model.set_es_model_info(
+    #    model_dct[run_model]['es'], thy_dct)[1]
 
     orb_restr = filesys.inf.orbital_restriction(ts_info, thy_info)
     ref_level = thy_info[1:3]
@@ -49,23 +49,20 @@ def get_mess_path2(
 def write_mess_file(mess_inp_str, dat_str_lst, mess_path, fname='mess.inp'):
     """ Write MESS file
     """
-    # Write total MESS input string
-    print('Writing the MESS input file at {}'.format(mess_path))
-    print(mess_inp_str)
 
     # Write the MESS file
     with open(os.path.join(mess_path, fname), 'w') as mess_file:
         mess_file.write(mess_inp_str)
 
     # Write all of the data files needed
-    for dct in dat_str_lst:
-        for data in dct.values():
-            string, name = data
-            # print('dat test', string, name)
-            if string:
-                data_file_path = os.path.join(mess_path, name)
-                with open(data_file_path, 'w') as data_file:
-                    data_file.write(string)
+    # for dct in dat_str_lst:
+    #     for data in dct.values():
+    #         string, name = data
+    #         # print('dat test', string, name)
+    #         if string:
+    #             data_file_path = os.path.join(mess_path, name)
+    #             with open(data_file_path, 'w') as data_file:
+    #                 data_file.write(string)
 
 
 def read_mess_file(mess_path):

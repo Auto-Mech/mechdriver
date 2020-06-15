@@ -8,6 +8,7 @@ import autofile
 from routines.es._routines import _util as util
 from routines.es import runner as es_runner
 from lib import filesys
+from lib.structure import geom as geomprep
 from lib.phydat import bnd
 
 
@@ -327,7 +328,6 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                             angle = dist_info[4]
                             brk_bnd = automol.zmatrix.bond_idxs(zma, brk_name)
                             ang_atms = [0, 0, 0]
-                            # print('brk_bnd tests:', brk_bnd, ts_bnd)
                             cent_atm = list(set(brk_bnd) & set(ts_bnd))
                             if cent_atm:
                                 ang_atms[1] = cent_atm[0]
@@ -338,10 +338,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                                     if idx != ang_atms[1]:
                                         ang_atms[2] = idx
                                 geom = automol.zmatrix.geometry(zma)
-                                # print('ang atms test in conf save:', ang_atms)
                                 conf_ang = automol.geom.central_angle(
                                     geom, *ang_atms)
-                                # print('angle test in conf save:', conf_ang, angle)
                         max_disp = 0.6
                         if 'addition' in rxn_class:
                             max_disp = 0.8
@@ -364,7 +362,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                         # other than the bonding atom
                         if 'add' in rxn_class or 'abst' in rxn_class:
                             print('it is an addition or an abstraction:')
-                            cls = is_atom_closest_to_bond_atom(
+                            cls = geomprep.is_atom_closest_to_bond_atom(
                                 zma, ts_bnd2, conf_dist_len)
                             if not cls:
                                 print(" - Transition State conformer has",
@@ -374,7 +372,6 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                                 print('Radical atom now has a new',
                                       'nearest neighbor')
                                 continue
-                            # print('distance test:', conf_dist_len, dist_len, max_disp)
                             if abs(conf_dist_len - dist_len) > max_disp:
                                 print(" - Transition State conformer has",
                                       "diverged from original structure of",
@@ -411,7 +408,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                                 continue
                     else:
                         zma = automol.geom.zmatrix(geo)
-                    unique = is_unique_tors_dist_mat_energy(
+                    unique = geomprep.is_unique_tors_dist_mat_energy(
                         geo, ene, seen_geos, seen_enes, saddle)
 
                     if not unique:

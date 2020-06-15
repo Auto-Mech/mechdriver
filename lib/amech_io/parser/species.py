@@ -196,11 +196,11 @@ def modify_spc_dct(job_path, spc_dct):
     for spc in mod_spc_dct:
         if spc != 'global' and 'ts_' not in spc:
             ich, mul = mod_spc_dct[spc]['ich'], mod_spc_dct[spc]['mul']
-            if 'elec_levs' not in mod_spc_dct[spc]:
+            if 'elec_levels' not in mod_spc_dct[spc]:
                 if (ich, mul) in eleclvl.DCT:
-                    mod_spc_dct[spc]['elec_levs'] = eleclvl.DCT[(ich, mul)]
+                    mod_spc_dct[spc]['elec_levels'] = eleclvl.DCT[(ich, mul)]
                 else:
-                    mod_spc_dct[spc]['elec_levs'] = [[0.0, mul]]
+                    mod_spc_dct[spc]['elec_levels'] = [[0.0, mul]]
             if 'sym_factor' not in mod_spc_dct[spc]:
                 if (ich, mul) in symm.DCT:
                     mod_spc_dct[spc]['sym_factor'] = symm.DCT[(ich, mul)]
@@ -365,13 +365,18 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
              'high_mul': high_mul,
              'mul': ts_mul,
              'chg': chg,
-             'rad_rad': rad_rad})
+             'rad_rad': rad_rad,
+             'elec_levels': [[0.0, ts_mul]]})
+
+        # Set the ts_bnd using the zma and distname
+        ts_bnd = automol.zmatrix.bond_idxs(ret1[0] , ret1[1])
 
         # Put class stuff in the dct
         dct_keys = ['zma', 'dist_name', 'brk_name', 'grid',
                     'frm_bnd_key', 'brk_bnd_key',
                     'amech_ts_tors_names', 'update_guess', 'var_grid']
         ts_dct.update(dict(zip(dct_keys, ret1)))
+        ts_dct['ts_bnd'] = ts_bnd
         ts_dct['bkp_data'] = ret2 if ret2 else None
         ts_dct['dist_info'] = [
             dist_name, 0., update_guess, brk_name, None]

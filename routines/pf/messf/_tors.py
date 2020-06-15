@@ -8,59 +8,69 @@ import automol
 import mess_io
 import projrot_io
 import autofile
+from autofile import fs
 from lib.phydat import phycon
 from lib.structure import tors as torsprep
 
 
 # Function to deal with setting up all of the torsion info since it is a pain
 def rotor_info(spc_dct_i, pf_filesystems, pf_models,
-               saddle=False, frm_bnd_key=(), brk_bnd_key=()):
+               frm_bnd_key=(), brk_bnd_key=()):
     """ get tors stuff
     """
 
     # Set up tors level filesystem and model
     tors_model = pf_models['tors']
-    [cnf_fs, cnf_path, min_cnf_locs, _] = pf_filesystems['tors']
+    [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['tors']
 
     # Read the increments from the filesystem
     if 'hind_inc' in spc_dct_i:
-        scan_increment = spc_dct_i['hind_inc'] * phycon.DEG2RAD
+        scan_increment = spc_dct_i['hind_inc']
     else:
         scan_increment = 30. * phycon.DEG2RAD
 
     # Set up ndim tors
-    ndim_tors = '1dhr' if '1dhr' in tors_model else 'mdhr'
+    tors_model = '1dhr' if '1dhr' in tors_model else 'mdhr'
 
     # Set up the names of all the torsions in the rotors through hierarchy
     run_tors_names = ()
     if 'tors_names' in spc_dct_i:
-        run_tors_names = torsprep.names_from_dct(spc_dct_i, ndim_tors)
-        print('Reading tors names from user input')
-        print(run_tors_names)
+        run_tors_names = torsprep.names_from_dct(spc_dct_i, tors_model)
+        tloc = 'dct'
     if not run_tors_names:
-        run_tors_names = torsprep.names_from_filesys(min_cnf_locs, cnf_path)
-        print('Reading tors names from the filesystem')
-        print(run_tors_names)
+        run_tors_names = torsprep.names_from_filesys(
+            cnf_fs, min_cnf_locs, cnf_path)
+        tloc = 'fs'
+    if not run_tors_names:
+        tloc = 'none'
+
+    if tloc == 'dct':
+        print(' - Reading tors names from user input...')
+    elif tloc == 'fs':
+        print(' - Reading tors names from the filesystem...')
+    for idx, tors_names in enumerate(run_tors_names):
+        print(' - Rotor {}: {}'.format(str(idx+1), '-'.join(tors_names)))
 
     # Obtain the info for each of the rotors
     rotor_names, rotor_grids, rotor_syms = (), (), ()
     if min_cnf_locs is not None:
 
-        print('tors stuff')
-
         # Get geometry and reference energy for the torsional minimum
-        zma = cnf_fs[-1].file.zmatrix.read(min_cnf_locs)
-        geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
+        zma_fs = fs.manager(cnf_fs[-1].path(min_cnf_locs), 'ZMATRIX')
+        zma = zma_fs[-1].file.zmatrix.read([0])
         ref_ene = cnf_fs[-1].file.energy.read(min_cnf_locs)
 
         # Get the hr prep stuff
         rotor_names, rotor_grids, rotor_syms = torsprep.hr_prep(
-            zma, geo, run_tors_names=run_tors_names,
-            scan_increment=scan_increment, tors_model=tors_model,
-            saddle=saddle, frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+            zma=zma,
+            tors_name_grps=run_tors_names,
+            scan_increment=scan_increment,
+            tors_model=tors_model,
+            frm_bnd_key=frm_bnd_key,
+            brk_bnd_key=brk_bnd_key)
 
         # Build constraint dct
-        if tors_model in ('1dhrf'):
+        if tors_model in ['1dhrf']:
             constraint_dct = torsprep.build_constraint_dct(
                 zma, rotor_names)
         else:
@@ -81,7 +91,7 @@ def make_hr_strings(rotor_names, rotor_grids, rotor_syms, constraint_dct,
 
     # Set up tors level filesystem and model
     tors_model = pf_models['tors']
-    [cnf_fs, cnf_path, min_cnf_locs, _] = pf_filesystems['tors']
+    [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['tors']
 
     # Grab the torsional geometry if needed
     if tors_wgeo:
@@ -90,7 +100,9 @@ def make_hr_strings(rotor_names, rotor_grids, rotor_syms, constraint_dct,
         hind_rot_geo = None
 
     # Grab the zmatrix
-    zma = cnf_fs[-1].file.zmatrix.read(min_cnf_locs)
+    zma_fs = fs.manager(cnf_fs[-1].path(min_cnf_locs), 'ZMATRIX')
+    zma = zma_fs[-1].file.zmatrix.read([0])
+    # zma = cnf_fs[-1].file.zmatrix.read(min_cnf_locs)
 
     # Write strings containing rotor info for MESS and ProjRot
     if tors_model in ('1dhr', '1dhrf', '1dhrv', '1dhrfv'):
@@ -133,6 +145,9 @@ def _make_1dhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
         tors_name = tors_names[0]
         tors_grid = tors_grids[0]
 
+        # print('tors name', tors_name)
+        # print('tors grid', tors_grid)
+
         # Read the hindered rotor potential
         pot, _ = _read_hr_pot(
             [tors_name], tors_grid,
@@ -158,8 +173,9 @@ def _make_1dhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
             potential=pot,
             remdummy=remdummy,
             geom=hind_rot_geo,
-            use_quantum_weight=True)
-        projrot_hr_str += projrot_io.writer.rotors(
+            use_quantum_weight=True,
+            rotor_id=tors_name)
+        projrot_hr_str += '\n' + projrot_io.writer.rotors(
             axis=axis,
             group=group,
             remdummy=remdummy)
@@ -193,7 +209,8 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
             constraint_dct, read_freqs=read_freqs)
 
         # Write the MDHR potential file for each rotor set; append to lst
-        mdhr_dat_str_lst.append(mess_io.mdhr_data(hr_pot, hr_freqs))
+        mdhr_dat_str_lst.append(
+            mess_io.writer.mdhr_data(hr_pot, freqs=hr_freqs))
 
         # Check for dummy transformations
         remdummy = torsprep.check_dummy_trans(zma)
@@ -222,7 +239,7 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
                 remdummy=remdummy,
                 geom=hind_rot_geo,
                 rotor_id=tors_name)
-            projrot_hr_str += projrot_io.writer.rotors(
+            projrot_hr_str += '\n' + projrot_io.writer.rotors(
                 axis=axis,
                 group=group,
                 remdummy=remdummy)
@@ -239,8 +256,11 @@ def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
     if tors_min_cnf_locs is not None:
 
         # Get geometry for the torsional minimum
-        zma = tors_cnf_save_fs[-1].file.zmatrix.read(
-            tors_min_cnf_locs)
+        zma_fs = fs.manager(
+            tors_cnf_save_fs[-1].path(tors_min_cnf_locs), 'ZMATRIX')
+        zma = zma_fs[-1].file.zmatrix.read([0])
+        # zma = tors_cnf_save_fs[-1].file.zmatrix.read(
+        #     tors_min_cnf_locs)
         name_matrix = automol.zmatrix.name_matrix(zma)
         key_matrix = automol.zmatrix.key_matrix(zma)
 
@@ -284,16 +304,17 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
         dims = (len(tors_grids[0]), len(tors_grids[1]),
                 len(tors_grids[2]), len(tors_grids[3]))
     pot = numpy.zeros(dims).tolist()
-    if read_freqs:
-        freqs = numpy.zeros(dims).tolist()
-    else:
-        freqs = []
+
+    # Initialize freqs list
+    freqs = numpy.zeros(dims).tolist() if read_freqs else []
 
     # Read the energies from the filesystem
+    zma_fs = fs.manager(cnf_save_path, 'ZMATRIX')
+    zma_path = zma_fs[-1].path([0])
     if constraint_dct is None:
-        scn_fs = autofile.fs.scan(cnf_save_path)
+        scn_fs = autofile.fs.scan(zma_path)
     else:
-        scn_fs = autofile.fs.cscan(cnf_save_path)
+        scn_fs = autofile.fs.cscan(zma_path)
     if len(tors_names) == 1:
         for i, grid_val_i in enumerate(tors_grids):
             # Set locs
@@ -301,11 +322,12 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
             if constraint_dct is not None:
                 locs.append(constraint_dct)
             # Read filesys
+            # print(scn_fs[-1].path(locs))
             if scn_fs[-1].exists(locs):
                 ene = scn_fs[-1].file.energy.read(locs)
                 pot[i] = (ene - ref_ene) * phycon.EH2KCAL
             else:
-                pot[i] = 10.0
+                pot[i] = -10.0
             if read_freqs:
                 freqs[i] = scn_fs[-1].file.harmonic_frequencies.read(locs)
     elif len(tors_names) == 2:
@@ -320,7 +342,7 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
                     ene = scn_fs[-1].file.energy.read(locs)
                     pot[i][j] = (ene - ref_ene) * phycon.EH2KCAL
                 else:
-                    pot[i][j] = 10.0
+                    pot[i][j] = -10.0
                 if read_freqs:
                     freqs = scn_fs[-1].file.harmonic_frequencies.read(locs)
                     freqs[i][j] = freqs
@@ -337,7 +359,7 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
                         ene = scn_fs[-1].file.energy.read(locs)
                         pot[i][j][k] = (ene - ref_ene) * phycon.EH2KCAL
                     else:
-                        pot[i][j][k] = 10.0
+                        pot[i][j][k] = -10.0
                     if read_freqs:
                         freqs = scn_fs[-1].file.harmonic_frequencies.read(locs)
                         freqs[i][j][k] = freqs
@@ -358,7 +380,7 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
                             pot[i][j][k][lma] = (
                                 (ene - ref_ene) * phycon.EH2KCAL)
                         else:
-                            pot[i][j][k][lma] = 10.0
+                            pot[i][j][k][lma] = -10.0
                         if read_freqs:
                             freqs = scn_fs[-1].file.harmonic_frequencies.read(
                                 locs)
@@ -373,10 +395,11 @@ def _hrpot_spline_fitter(pot, min_thresh=-0.05, max_thresh=15.0):
 
     # Initialize a variable for the size of the potential
     lpot = len(pot)+1
+    pot.append(0.0)
 
     # Build a potential list from only successful calculations
     idx_success = []
-    pot_success = [0.0]
+    pot_success = []
     for idx in range(lpot):
         if pot[idx] < 600.:
             idx_success.append(idx)

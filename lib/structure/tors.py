@@ -5,7 +5,9 @@ import os
 import numpy
 import automol
 import autofile
+from autofile import fs
 import mess_io
+from lib.amech_io import cleaner
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
@@ -57,13 +59,17 @@ def names_from_dct(spc_dct_i, ndim_tors):
     return tors_names, amech_ts_tors_names
 
 
-def names_from_filesys(tors_min_cnf_locs, tors_cnf_save_path):
+def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_cnf_save_path):
     """ Read out the torsional names from the filesystem
     """
 
     if tors_min_cnf_locs is not None:
-        scans_dir = os.path.join(tors_cnf_save_path, 'SCANS')
-        print('scans dir', scans_dir)
+
+        # Set zma filesys
+        zma_fs = fs.manager(tors_cnf_fs[-1].path(tors_min_cnf_locs), 'ZMATRIX')
+        zma_path = zma_fs[-1].path([0])
+
+        scans_dir = os.path.join(zma_path, 'SCANS')
         if os.path.exists(scans_dir):
             scan_names = os.listdir(scans_dir)
             tors_names = [name for name in scan_names
@@ -93,7 +99,7 @@ def names_from_filesys(tors_min_cnf_locs, tors_cnf_save_path):
 
 
 # FUNCTIONS USED TO BUILD LSTS OF TORSIONS OF ANY DIMENSIONALITY
-def hr_prep(zma, tors_name_grps, scan_increment=30.0, ndim_tors='1dhr',
+def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
             frm_bnd_key=(), brk_bnd_key=()):
     """ set-up the hr for different rotor combinations
         tors_names = [ ['D1'], ['D2', 'D3'], ['D4'] ]
@@ -103,12 +109,17 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, ndim_tors='1dhr',
     val_dct = automol.zmatrix.values(zma)
 
     # Deal with the dimensionality of the rotors
-    if ndim_tors in ('mdhr', 'mdhrv'):
+    if tors_model in ('mdhr', 'mdhrv'):
         tors_name_grps = mdhr_prep(zma, tors_name_grps)
 
     # Build the grids corresponding to the torsions
     tors_grids, tors_sym_nums = [], []
+    # print('in prep')
     for tors_names in tors_name_grps:
+        # print('name\n', tors_names)
+        # print(scan_increment)
+        # print(frm_bnd_key)
+        # print(brk_bnd_key)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,
             brk_bnd_key=brk_bnd_key)
@@ -210,6 +221,8 @@ def set_tors_def_info(zma, tors_name, tors_sym, pot,
         group, axis, pot, chkd_sym_num = _check_saddle_groups(
             zma, rxn_class, group, axis,
             pot, ts_bnd, tors_sym)
+    else:
+        chkd_sym_num = tors_sym
     group = list(numpy.add(group, 1))
     axis = list(numpy.add(axis, 1))
     if (atm_key+1) != axis[1]:
@@ -330,7 +343,8 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
         spc_data=dat_str,
         zero_energy=0.0
     )
-    pf_inp_str = '\n'.join([global_pf_str, spc_str, 'End'])
+    pf_inp_str = '\n'.join([global_pf_str, spc_str]) + '\n'
+    # pf_inp_str += '\n'
 
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
         pf_file.write(pf_inp_str)
