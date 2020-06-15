@@ -3,9 +3,6 @@
 """
 
 import os
-import autofile
-from lib import filesys
-from lib.amech_io import parser
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
@@ -15,35 +12,6 @@ def get_mess_path(prefix, pes_formula, sub_pes_idx):
     """
     pes_str = '{}_{}'.format(pes_formula, sub_pes_idx)
     return os.path.join(prefix, 'MESSRATE', pes_str)
-
-
-def get_mess_path2(
-        tsdct, rxn_save_path,
-        model_dct, thy_dct, run_model):
-    """ Set the path ot the MESS job
-    """
-
-    # Set information about the TS and theory methods
-    ts_info = (tsdct['ich'], tsdct['chg'], tsdct['mul'])
-    # thy_info = parser.model.set_es_model_info(
-    #    model_dct[run_model]['es'], thy_dct)[1]
-
-    orb_restr = filesys.inf.orbital_restriction(ts_info, thy_info)
-    ref_level = thy_info[1:3]
-    ref_level.append(orb_restr)
-    thy_save_fs = autofile.fs.theory(rxn_save_path)
-    thy_save_fs[-1].create(ref_level)
-    thy_save_path = thy_save_fs[-1].path(ref_level)
-
-    # Set paths to the MESS file
-    bld_locs = ['MESS', 0]
-    bld_save_fs = autofile.fs.build(thy_save_path)
-    bld_save_fs[-1].create(bld_locs)
-    mess_path = bld_save_fs[-1].path(bld_locs)
-    print('Build Path for MESS rate files:')
-    print(mess_path)
-
-    return mess_path
 
 
 def write_mess_file(mess_inp_str, dat_str_lst, mess_path, fname='mess.inp'):

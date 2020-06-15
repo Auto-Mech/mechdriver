@@ -2,9 +2,9 @@
 """
 
 import automol
+import autofile
 import elstruct
 from routines.es._routines import conformer
-from routines.es._routines import sp
 from routines.es._routines import _scan as scan
 from routines.es import runner as es_runner
 from lib import filesys
@@ -82,9 +82,9 @@ def scan_for_guess(typ, grid, dist_name, brk_name,
     return guess_zmas
 
 
-def optimize_transition_state(
+def optimize_saddle_point(
         guess_zmas, ts_info, mod_thy_info,
-        cnf_run_fs, cnf_save_fs,
+        cnf_save_fs,
         ts_save_fs, ts_save_path, run_fs,
         dist_name, dist_info, rxn_class,
         opt_script_str, overwrite, **opt_kwargs):
@@ -124,110 +124,38 @@ def optimize_transition_state(
         )
 
         if opt_ret is not None:
-
-            # If successful, Read the geom and energy from the optimization
-            inf_obj, _, out_str = opt_ret
-            prog = inf_obj.prog
-            method = inf_obj.method
-            ene = elstruct.reader.energy(prog, method, out_str)
-            geo = elstruct.reader.opt_geometry(prog, out_str)
-            zma = elstruct.reader.opt_zmatrix(prog, out_str)
-
-            # Save the information into the filesystem
-            print(" - Saving...")
-            print(" - Save path: {}".format(ts_save_path))
-
-            ts_save_fs[0].file.energy.write(ene)
-            ts_save_fs[0].file.geometry.write(geo)
-            ts_save_fs[0].file.zmatrix.write(zma)
-
-            # Call the Hessian calculator
-            # sp.run_hessian(zma, geo, ts_info, mod_thy_info,
-            #                geo_save_fs, geo_run_path, geo_save_path, locs,
-            #                script_str, overwrite,
-            #                retryfail=True, **kwargs)
-
-            # Save this structure as first conformer
-            locs = [autofile.schema.generate_new_conformer_id()]
-            cnf_save_fs[-1].create(locs)
-            cnf_save_fs[-1].file.geometry_info.write(inf_obj, locs)
-            cnf_save_fs[-1].file.geometry_input.write(inp_str, locs)
-            cnf_save_fs[-1].file.energy.write(ene, locs)
-            cnf_save_fs[-1].file.geometry.write(geo, locs)
-            cnf_save_fs[-1].file.zmatrix.write(zma, locs)
-
-            # Save the energy in a single-point filesystem
-            print(" - Saving energy...")
-            sp_save_fs = autofile.fs.single_point(ts_save_path)
-            sp_save_fs[-1].create(thy_info[1:4])
-            sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
-            sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
-            sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
-
-            # Run single conformer to get intitial conformer in filesystem
-            vals = automol.zmatrix.values(zma)
-            final_dist = vals[dist_name]
-            dist_info[1] = final_dist
-            angle = conformer.check_angle(
-                zma, dist_info, rxn_class)
-            dist_info[4] = angle
-            # ts_dct['dist_info'][1] = final_dist
-            # ts_dct['dist_info'][4] = angle
-            # conformer.single_conformer(
-            #     zma=zma,
-            #     spc_info=ts_info,
-            #     thy_info=mod_thy_info,
-            #     thy_save_fs=ts_save_fs,
-            #     cnf_run_fs=cnf_run_fs,
-            #     cnf_save_fs=cnf_save_fs,
-            #     overwrite=overwrite,
-            #     saddle=True,
-            #     dist_info=dist_info
-            # )
-
-            # Exit the for loop if a TS has been found
-            ts_found = True
             break
 
-    # Run a Hessian and only save in the filesys if there is
-    # if opt_ret is not None or hess not exists:
-    # # If successful, Read the geom and energy from the optimization
-    # inf_obj, _, out_str = opt_ret
-    # prog = inf_obj.prog
-    # method = inf_obj.method
-    # zma = elstruct.reader.opt_zmatrix(prog, out_str)
-    # es_runner.run_job(
-    #     job='hessian',
-    #     script_str=opt_script_str,
-    #     run_fs=run_fs,
-    #     geom=zma,
-    #     spc_info=ts_info,
-    #     thy_info=mod_thy_info,
-    #     saddle=True,
-    #     overwrite=overwrite,
-    #     **opt_kwargs,
-    #     )
+    return opt_ret
 
-    # # Read the contents of the optimization
-    # hess_ret = es_runner.read_job(
-    #     job='hessian',
-    #     run_fs=run_fs,
-    # )
-    # # If successful, Read the geom and energy from the optimization
-    # inf_obj, _, out_str = opt_ret
-    # prog = inf_obj.prog
-    # method = inf_obj.method
-    # ene = elstruct.reader.energy(prog, method, out_str)
-    # geo = elstruct.reader.opt_geometry(prog, out_str)
-    # zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
-    # # Save the information into the filesystem
-    # print(" - Saving...")
-    # print(" - Save path: {}".format(ts_save_path))
+def saddle_point_hessian():
+    """ run things for checking Hessian
+    """
 
-    # ts_save_fs[0].file.energy.write(ene)
-    # ts_save_fs[0].file.geometry.write(geo)
-    # ts_save_fs[0].file.zmatrix.write(zma)
+    # Run a Hessian
+    es_runner.run_job(
+        job='hessian',
+        script_str=opt_script_str,
+        run_fs=run_fs,
+        geom=zma,
+        spc_info=ts_info,
+        thy_info=mod_thy_info,
+        saddle=True,
+        overwrite=overwrite,
+        **opt_kwargs,
+        )
+
+    # Read the contents of the optimization
+    hess_ret = es_runner.read_job(
+        job='hessian',
+        run_fs=run_fs,
+    )
+
+    # If successful, Read the geom and energy from the optimization
+    inf_obj, _, out_str = hess_ret
+    prog = inf_obj.prog
+    method = inf_obj.method
 
     # # Save this structure as first conformer
     # # cid = autofile.schema.generate_new_conformer_id()
@@ -240,6 +168,76 @@ def optimize_transition_state(
     # # cnf_save_fs[-1].file.zmatrix.write(zma, locs)
 
     return ts_found
+
+
+def saddle_point_checker():
+    """ run things for checking Hessian
+    """
+    saddle_point_good = True
+    return saddle_point_good
+
+
+def save_saddle_point(
+        opt_ret, hess_ret,
+        mod_thy_info,
+        cnf_save_fs,
+        ts_save_fs, ts_save_path,
+        dist_name, dist_info, rxn_class):
+    """ Optimize the transition state structure obtained from the grid search
+    """
+
+    # Read the geom, energy, and Hessian from output
+    opt_inf_obj, opt_inp_str, opt_out_str = opt_ret
+    opt_prog = opt_inf_obj.prog
+    opt_method = opt_inf_obj.method
+    ene = elstruct.reader.energy(opt_prog, opt_method, opt_out_str)
+    geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
+    zma = elstruct.reader.opt_zmatrix(opt_prog, opt_out_str)
+
+    print(" - Reading hessian from output...")
+    hess_inf_obj, hess_inp_str, hess_out_str = hess_ret
+    hess_prog = hess_inf_obj.prog
+    hess = elstruct.reader.hessian(hess_prog, hess_out_str)
+    rt_freqs, _, rt_imags, _ = structure.vib.projrot_freqs(
+        geo, hess, geo_run_path)
+    freqs = rt_imags + rt_freqs
+
+    # Save the information into the filesystem
+    print(" - Saving...")
+    print(" - Save path: {}".format(ts_save_path))
+
+    ts_save_fs[0].file.energy.write(ene)
+    ts_save_fs[0].file.geometry.write(geo)
+    ts_save_fs[0].file.zmatrix.write(zma)
+
+    # Save this structure as first conformer
+    locs = [autofile.schema.generate_new_conformer_id()]
+    cnf_save_fs[-1].create(locs)
+    cnf_save_fs[-1].file.geometry_info.write(opt_inf_obj, locs)
+    cnf_save_fs[-1].file.geometry_input.write(opt_inp_str, locs)
+    cnf_save_fs[-1].file.hessian_info.write(hess_inf_obj, locs)
+    cnf_save_fs[-1].file.hessian_input.write(hess_inp_str, locs)
+    cnf_save_fs[-1].file.energy.write(ene, locs)
+    cnf_save_fs[-1].file.geometry.write(geo, locs)
+    cnf_save_fs[-1].file.zmatrix.write(zma, locs)
+    cnf_save_fs[-1].file.hessian.write(hess, locs)
+    cnf_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
+
+    # Save the energy in a single-point filesystem
+    print(" - Saving energy...")
+    sp_save_fs = autofile.fs.single_point(ts_save_path)
+    sp_save_fs[-1].create(mod_thy_info[1:4])
+    sp_save_fs[-1].file.input.write(opt_inp_str, mod_thy_info[1:4])
+    sp_save_fs[-1].file.info.write(opt_inf_obj, mod_thy_info[1:4])
+    sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
+
+    # Run single conformer to get intitial conformer in filesystem
+    vals = automol.zmatrix.values(zma)
+    final_dist = vals[dist_name]
+    dist_info[1] = final_dist
+    angle = conformer.check_angle(
+        zma, dist_info, rxn_class)
+    dist_info[4] = angle
 
 
 # HELPER FUNCTIONS FOR THE MAIN FINDER FUNCTIONS

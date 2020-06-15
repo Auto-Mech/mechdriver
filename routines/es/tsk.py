@@ -183,8 +183,9 @@ def run_conformer_tsk(job, spc_dct, spc_name,
         # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
             run_prefix, spc_info, mod_ini_thy_info)
-        _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
+        ini_thy_save_fs, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
             save_prefix, spc_info, mod_ini_thy_info)
+
     else:
         rxn_info = filesys.inf.rxn_info(
             spc['reacs'], spc['prods'], spc_dct)
@@ -207,7 +208,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             ini_thy_save_path)
         _, ini_thy_run_path = filesys.build.ts_fs_from_thy(
             ini_thy_run_path)
-
+        
     if job == 'samp':
 
         # Build conformer filesys
@@ -215,6 +216,14 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             thy_run_path, cnf=None)
         cnf_save_fs, _ = filesys.build.cnf_fs_from_prefix(
             thy_save_path, cnf=None)
+
+        # Build the ini zma filesys
+        ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
+            ini_thy_save_path, cnf='min')
+        ini_cnf_save_paths = filesys.build.cnf_paths_from_locs(
+            ini_cnf_save_fs, ini_cnf_save_locs)
+        ini_zma_save_fs, ini_zma_save_path = filesys.build.zma_fs_from_prefix(
+            ini_cnf_save_paths[0], zma_idxs=[0])
 
         # Set up the run scripts
         _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
@@ -228,13 +237,14 @@ def run_conformer_tsk(job, spc_dct, spc_name,
 
         # Read the geometry and zma from the ini file system
         if not saddle:
-            geo = thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
-            zma = thy_save_fs[-1].file.zmatrix.read(mod_ini_thy_info[1:4])
+            geo = ini_thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
+            zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
             geo_path = thy_save_fs[-1].path(mod_ini_thy_info[1:4])
         else:
-            geo = thy_save_fs[0].file.geometry.read()
-            zma = thy_save_fs[0].file.zmatrix.read()
+            geo = ini_thy_save_fs[0].file.geometry.read()
+            zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
+            # zma = thy_save_fs[0].file.zmatrix.read()
             tors_names = spc['amech_ts_tors_names']
             geo_path = thy_save_fs[0].path()
 
@@ -439,7 +449,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
     run_tors_names, run_tors_grids, _ = structure.tors.hr_prep(
         zma, tors_name_grps=run_tors_names,
-        scan_increment=scan_increment, ndim_tors=ndim_tors,
+        scan_increment=scan_increment, tors_model=ndim_tors,
         frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
 
     # Run the task if any torsions exist
@@ -457,10 +467,14 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 zma, const_tors_names)
 
         # Set up ini filesystem for scans
+        ini_zma_run_fs, ini_zma_run_path = filesys.build.zma_fs_from_prefix(
+            ini_cnf_run_paths[0], zma_idxs=[0])
+        ini_zma_save_fs, ini_zma_save_path = filesys.build.zma_fs_from_prefix(
+            ini_cnf_save_paths[0], zma_idxs=[0])
         ini_scn_run_fs = filesys.build.scn_fs_from_cnf(
-            ini_cnf_run_paths[0], constraint_dct=constraint_dct)
+            ini_zma_run_path, constraint_dct=constraint_dct)
         ini_scn_save_fs = filesys.build.scn_fs_from_cnf(
-            ini_cnf_save_paths[0], constraint_dct=constraint_dct)
+            ini_zma_save_path, constraint_dct=constraint_dct)
 
         if job == 'scan':
 

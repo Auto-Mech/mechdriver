@@ -105,9 +105,9 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         print('Reading PES electronic structure data ' +
               'from save filesystem for')
         print('Channel {}: {} = {}...'.format(
-               rxn['chn_idx'],
-               '+'.join(rxn['reacs']),
-               '+'.join(rxn['prods'])))
+            rxn['chn_idx'],
+            '+'.join(rxn['reacs']),
+            '+'.join(rxn['prods'])))
 
         # Set the TS name and channel model
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
@@ -200,11 +200,12 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
             inner_prod_label = chn_label
 
     # For abstractions: Write MESS strings for fake reac and prod wells and TS
-    if 'fake_wellr' in chnl_infs or 'fake_wellp' in chnl_infs:
-
+    print(list(chnl_infs.keys()))
+    if 'fake_vdwr' in chnl_infs:
+        print('after if')
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fwellr_lbl, fwellp_lbl = _make_fake_mess_strs(
-            rxn, chnl_infs['fake_wellr'], chnl_infs['fake_wellp'],
+            rxn, chnl_infs['fake_vdwr'], chnl_infs['fake_vdwp'],
             chnl_enes, label_dct, reac_label, prod_label)
 
         # Append the fake strings to overall strings
@@ -285,6 +286,7 @@ def _make_fake_mess_strs(rxn, fake_wellr_inf_dcts, fake_wellp_inf_dcts,
                          chnl_enes, label_dct, reac_label, prod_label):
     """ write the MESS strings for the fake wells and TSs
     """
+    print('HERE')
 
     # Initialize well and ts strs
     well_str, ts_str = '', ''
@@ -368,8 +370,8 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
 
     # Set up the info for the wells
     if need_fake_wells(ts_class):
-        chnl_infs['fake_vwdr'] = copy.deepcopy(chnl_infs['reacs'])
-        chnl_infs['fake_vwdp'] = copy.deepcopy(chnl_infs['prods'])
+        chnl_infs['fake_vdwr'] = copy.deepcopy(chnl_infs['reacs'])
+        chnl_infs['fake_vdwp'] = copy.deepcopy(chnl_infs['prods'])
 
     return chnl_infs
 
@@ -380,21 +382,30 @@ def read_spc_data(spc_dct_i, spc_name,
                   run_prefix, save_prefix):
     """ Determines which block writer to use tau
     """
+    print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
+           '++++++++++++++++++++++++++++++++++++++'))
+    print('\nReading filesystem info for {}'.format(spc_name))
+
     vib_model, tors_model = chn_pf_models['vib'], chn_pf_models['tors']
     if is_atom(spc_dct_i):
-        inf_dct = models.atm_data(spc_dct_i)
+        inf_dct = models.atm_data(
+            spc_dct_i,
+            chn_pf_models, chn_pf_levels,
+            ref_pf_models, ref_pf_levels,
+            run_prefix, save_prefix)
         writer = 'atom_block'
     else:
         if vib_model == 'tau' or tors_model == 'tau':
-            inf_dct = models.tau_data(
-                spc_dct_i,
-                chn_pf_models, chn_pf_levels,
-                ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix, rxn=(), saddle=False)
-            writer = 'tau_block'
+            pass
+            # inf_dct = models.tau_data(
+            #     spc_dct_i,
+            #     chn_pf_models, chn_pf_levels,
+            #     ref_pf_models, ref_pf_levels,
+            #     run_prefix, save_prefix, saddle=False)
+            # writer = 'tau_block'
         else:
             inf_dct = models.mol_data(
-                spc_dct_i, spc_name,
+                spc_dct_i,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, saddle=False, tors_wgeo=True)
@@ -414,6 +425,10 @@ def read_ts_data(spc_dct_i, tsname,
     """ Determine which block function to useset block functions
     """
 
+    print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
+           '++++++++++++++++++++++++++++++++++++++'))
+    print('\nReading filesystem info for {}'.format(tsname))
+
     # Get all of the information for the filesystem
     if not var_radrad(ts_class):
         # Build MESS string for TS at a saddle point
@@ -422,7 +437,7 @@ def read_ts_data(spc_dct_i, tsname,
             writer = 'vtst_saddle_block'
         else:
             inf_dct = models.mol_data(
-                spc_dct_i, tsname,
+                spc_dct_i,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, saddle=True, tors_wgeo=True)

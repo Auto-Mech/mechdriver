@@ -2,12 +2,13 @@
   NEW: Handle rotational data info
 """
 
+
 def read_geom(pf_filesystems):
     """ Read the geometry from the filesys
     """
 
     # Get the harmonic filesys information
-    [cnf_fs, cnf_path, min_cnf_locs, save_path, _] = pf_filesystems['harm']
+    [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['harm']
 
     # Read the filesys for the geometry
     if min_cnf_locs:
@@ -17,6 +18,7 @@ def read_geom(pf_filesystems):
     else:
         print('No geometry found at path:')
         print(cnf_path)
+
     return geom
 
 
@@ -25,7 +27,7 @@ def read_rotational_values(pf_filesystems):
     """
 
     # Set up vpt2 level filesystem for rotational values
-    [cnf_fs, cnf_path, min_cnf_locs, save_path] = pf_filesystems['vpt2']
+    [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['vpt2']
 
     # Read the filesys for rotational anharmonicity information
     if min_cnf_locs:

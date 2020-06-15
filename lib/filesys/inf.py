@@ -277,11 +277,16 @@ def get_geos(
 def get_zma_geo(filesys, locs):
     """ Get the geometry and zmatrix from a filesystem
     """
-    if filesys[-1].file.zmatrix.exists(locs):
-        zma = filesys[-1].file.zmatrix.read(locs)
+
+    # Read the zma
+    zma_fs, zma_path = filesys.build.zma_fs_from_prefix(
+        filesys[-1].path(),  zma_idxs=[0])
+    if zma_fs[-1].file.zmatrix.exists([0]):
+        zma = zma_fs[-1].file.zmatrix.read([0])
     else:
         zma = None
 
+    # Read the geom
     if filesys[-1].file.geometry.exists(locs):
         geo = filesys[-1].file.geometry.read(locs)
     else:

@@ -71,11 +71,19 @@ def make_rxn_str(rlst, prepend=''):
     return prepend + '+'.join(rlst)
 
 
-# def treat_tunnel(tun_model, ts_sadpt, ts_nobarrier, _var_radrad(ts_class)):
-def treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier):
+def treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad=False):
     """ decide to treat tunneling
     """
-    return True
+    treat = True
+    if tunnel_model != 'none':
+        if radrad:
+            if ts_nobarrier in ('pst', 'vrctst'):
+                treat = False
+        else:
+            if ts_sadpt != 'pst':
+                treat = False
+
+    return treat
 
 
 # Printing functions

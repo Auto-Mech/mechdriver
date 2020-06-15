@@ -5,6 +5,7 @@ import automol
 import elstruct
 import autofile
 from routines.es import runner as es_runner
+from lib import structure
 from lib.phydat import phycon
 from lib.phydat import symm
 
@@ -191,8 +192,10 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
                 print(" - Reading hessian from output...")
                 hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-                freqs = elstruct.util.harmonic_frequencies(
-                    geo, hess, project=False)
+                print(" - Calculating harmonic frequencies from Hessian...")
+                rt_freqs, _, rt_imags, _ = structure.vib.projrot_freqs(
+                    geo, hess, geo_run_path)
+                freqs = rt_imags + rt_freqs
 
                 print(" - Saving Hessian...")
                 print(" - Save path: {}".format(geo_save_path))

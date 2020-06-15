@@ -36,7 +36,7 @@ def reference_geometry(
     else:
         [prog, method, basis, _] = thy_info
         status = autofile.schema.RunStatus.RUNNING
-        inf_obj = autofile.schema.info.run(
+        inf_obj = autofile.schema.info_objects.run(
             job='', prog=prog, version='version', method=method, basis=basis,
             status=status)
         run_fs[0].file.info.write(inf_obj, [])
@@ -350,6 +350,31 @@ def save_initial_geometry(
         thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
         thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
 
+        # cnf_save_fs[-1].create(locs)
+        # cnf_save_fs[-1].file.geometry_info.write(
+        #     inf_obj, locs)
+        # cnf_save_fs[-1].file.geometry_input.write(
+        #     inp_str, locs)
+        # cnf_save_fs[-1].file.energy.write(ene, locs)
+        # cnf_save_fs[-1].file.geometry.write(geo, locs)
+
+        # # Set up zma filesys and save zma
+        # zma_save_fs = fs.manager(save_path, 'ZMATRIX')
+        # zma_save_fs[-1].create([0])
+        # # zma_path = zma_save_fs[-1].path([0])
+        # zma_save_fs[-1].file.zmatrix.write(zma, [0])
+
+        # # Saving the energy to am SP filesys
+        # print(" - Saving energy...")
+        # sp_save_fs = autofile.fs.single_point(
+        #     save_path)
+        # sp_save_fs[-1].create(thy_info[1:4])
+        # sp_save_fs[-1].file.input.write(
+        #     inp_str, thy_info[1:4])
+        # sp_save_fs[-1].file.info.write(
+        #     inf_obj, thy_info[1:4])
+        # sp_save_fs[-1].file.energy.write(
+        #     ene, thy_info[1:4])
 
 def fake_conf(thy_info, filesystem, inf=()):
     """ generate data to be used for a fake well I think?
