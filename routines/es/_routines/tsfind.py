@@ -44,12 +44,14 @@ def sadpt_transition_state(
 
     # Optimize the saddle point
     print('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
-    sadpt.optimize_transition_state(
+    sadpt.optimize_saddle_point(
         guess_zmas, ts_info, mod_thy_info,
         cnf_run_fs, cnf_save_fs,
         ts_save_fs, ts_save_path, run_fs,
         dist_name, dist_info,
         opt_script_str, overwrite, **opt_kwargs)
+
+    sadpt.save_saddle_point
 
 
 def barrierless_transition_state(

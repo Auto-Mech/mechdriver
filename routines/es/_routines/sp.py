@@ -5,6 +5,7 @@ import automol
 import elstruct
 import autofile
 from routines.es import runner as es_runner
+from lib import structure
 from lib.phydat import phycon
 from lib.phydat import symm
 
@@ -191,15 +192,23 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
                 print(" - Reading hessian from output...")
                 hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-                freqs = elstruct.util.harmonic_frequencies(
-                    geo, hess, project=False)
 
                 print(" - Saving Hessian...")
                 print(" - Save path: {}".format(geo_save_path))
                 geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
                 geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
                 geo_save_fs[-1].file.hessian.write(hess, locs)
-                geo_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
+
+                # Calculate and save the harmonic freqs if needed
+                freqs_not_exist = bool(
+                    not geo_save_fs[-1].file.harmonic_frequencies.exists(locs))
+                if freqs_not_exist or overwrite:
+                    print(" - Calculating harmonic frequencies from Hessian...")
+                    rt_freqs, _, rt_imags, _ = structure.vib.projrot_freqs(
+                        [geo], [hess], geo_run_path)
+                    freqs = rt_imags + rt_freqs
+                    print(" - Saving harmonic frequencies...")
+                    geo_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
 
         else:
             print('Hessian found and saved previously at {}'.format(
@@ -213,7 +222,6 @@ def run_vpt2(zma, geo, spc_info, thy_info,
              geo_save_fs, geo_run_path, geo_save_path, locs,
              script_str, overwrite,
              retryfail=True, **kwargs):
-    
     """ Perform vpt2 analysis for the geometry in the given location
     """
 

@@ -2,129 +2,160 @@
   Handle vibrational data info
 """
 
-import os
-import projrot_io
 import autofile
+from lib.structure import tors as torsprep
+from lib.structure import vib as vibprep
 from lib.phydat import phycon
-from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
 
-def projrot_freqs_1(tors_geo, hess,
-                    proj_rotors_str,
-                    save_path, pot=False, saddle=False):
+def read_harmonic_freqs(pf_filesystems, saddle=False):
+    """ Read the harmonic frequencies
+    """
+
+    # Get the harmonic filesys information
+    [cnf_fs, harm_path, min_cnf_locs, _, run_path] = pf_filesystems['harm']
+
+    # probably should read freqs
+    # Do the freqs obtain for two species for fake and pst
+    if min_cnf_locs is not None:
+
+        # Obtain geom and freqs from filesys
+        geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
+        hess = cnf_fs[-1].file.hessian.read(min_cnf_locs)
+        hess_path = cnf_fs[-1].path(min_cnf_locs)
+        print(' - Reading Hessian from path {}'.format(hess_path))
+
+        # Build the run filesystem using locs
+        run_fs = autofile.fs.conformer(harm_path)
+        run_fs[-1].create(min_cnf_locs)
+        run_path = run_fs[-1].path(min_cnf_locs)
+
+        # Obtain the frequencies
+        print('Calling ProjRot to diagonalize Hessian and get freqs...')
+        freqs, _, imag_freqs, _ = vibprep.projrot_freqs(
+            [geo], [hess], run_path,
+            grads=[[]], rotors_str='', coord_proj='cartesian',
+            script_str=DEFAULT_SCRIPT_DCT['projrot'])
+
+        # Calculate the zpve
+        print('Calculating ZPVE using harmonic frequencies...')
+        zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
+
+        # Check imaginary frequencies and set freqs
+        if saddle:
+            if len(imag_freqs) > 1:
+                print('WARNING: Saddle Point has more than',
+                      'one imaginary frequency')
+            imag = imag_freqs[0]
+        else:
+            imag = None
+
+    else:
+        print('ERROR: Reference geometry is missing for harmonic frequencies')
+
+    return freqs, imag, zpe
+
+
+def read_anharmon_matrix(pf_filesystems):
+    """ Read the anharmonicity matrix """
+
+    # Set up vpt2 level filesystem for rotational values
+    [cnf_fs, cnf_path, min_cnf_locs, _h] = pf_filesystems['vpt2']
+
+    if min_cnf_locs is not None:
+        xmat = cnf_fs[-1].file.anharmonicity_matrix.read(
+            min_cnf_locs)
+        print('Anharm matrix at path')
+        print(cnf_path)
+    else:
+        print('No anharm matrix at path')
+        print(cnf_path)
+
+    return xmat
+
+
+def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
+                             saddle=False):
     """ Get frequencies from one version of ProjRot
     """
-    coord_proj = 'cartesian'
-    grad = ''
-    # Write the string for the ProjRot input
-    projrot_inp_str = projrot_io.writer.rpht_input(
-        tors_geo, grad, hess, rotors_str=proj_rotors_str,
-        coord_proj=coord_proj)
 
-    bld_locs = ['PROJROT', 0]
-    bld_save_fs = autofile.fs.build(save_path)
-    bld_save_fs[-1].create(bld_locs)
-    path = bld_save_fs[-1].path(bld_locs)
-    print('Build Path for ProjRot calls')
-    print(path)
-    proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
-    with open(proj_file_path, 'w') as proj_file:
-        proj_file.write(projrot_inp_str)
-    run_script(DEFAULT_SCRIPT_DCT['projrot'], path)
+    # Build the filesystems
+    [harm_cnf_fs, harm_path, harm_min_cnf_locs, _, _] = pf_filesystems['harm']
+    [tors_cnf_fs, tors_path, tors_min_cnf_locs, _, _] = pf_filesystems['tors']
 
-    with open(path+'/hrproj_freq.dat', 'r') as projfile:
-        hrproj_str = projfile.read()
-    with open(path+'/RTproj_freq.dat', 'r') as projfile:
-        rtproj_str = projfile.read()
+    # Build the run filesystem using locs
+    run_fs = autofile.fs.conformer(harm_path)
+    run_fs[-1].create(harm_min_cnf_locs)
+    run_path = run_fs[-1].path(harm_min_cnf_locs)
 
-    freqs = []
-    zpe_har_no_tors = 0.
-    imag_freq_1 = 0.
-    # har_zpe = 0.
-    if pot:
-        rthrproj_freqs, _ = projrot_io.reader.rpht_output(
-            hrproj_str)
-        freqs = rthrproj_freqs
-        zpe_har_no_tors = sum(freqs)*phycon.WAVEN2KCAL/2.
-    rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-        rtproj_str)
-    # har_zpe = sum(rtproj_freqs)*phycon.WAVEN2KCAL/2.
-    if not freqs:
-        freqs = rtproj_freqs
-    if saddle:
-        if imag_freq:
-            imag_freq_1 = imag_freq[0]
-        else:
-            imag_freq_1 = freqs[-1]
-            freqs = freqs[:-1]
+    # Read info from the filesystem that is needed
+    harm_geo = harm_cnf_fs[-1].file.geometry.read(harm_min_cnf_locs)
+    hess = harm_cnf_fs[-1].file.hessian.read(harm_min_cnf_locs)
+    tors_geo = tors_cnf_fs[-1].file.geometry.read(tors_min_cnf_locs)
+    hess_path = harm_cnf_fs[-1].path(harm_min_cnf_locs)
+    print(' - Reading Hessian from path {}'.format(hess_path))
 
-    return freqs, imag_freq_1, zpe_har_no_tors
+    # Calculate ZPVES of the hindered rotors
+    print(' - Calculating the torsional ZPVES using MESS') 
+    tors_zpe = torsprep.mess_tors_zpes(tors_geo, mess_hr_str, tors_path)
+    tors_zpe *= phycon.KCAL2EH
 
+    # Run ProjRot to get the frequencies v1
+    rt_freqs1, rth_freqs1, _, rth_imag1 = vibprep.projrot_freqs(
+        [harm_geo], [hess], run_path,
+        grads=[[]], rotors_str=projrot_hr_str, coord_proj='cartesian',
+        script_str=DEFAULT_SCRIPT_DCT['projrot'])
 
-def projrot_freqs_2(save_path, pot=False, saddle=False):
-    """ Get ProjRot frequencies via ProjRot 2
-    """
-
-    bld_locs = ['PROJROT', 0]
-    bld_save_fs = autofile.fs.build(save_path)
-    bld_save_fs[-1].create(bld_locs)
-    path = bld_save_fs[-1].path(bld_locs)
-
+    # Run ProjRot to get the frequencies v2
     projrot_script_str2 = (
         "#!/usr/bin/env bash\n"
-        "RPHt2.exe >& /dev/null")
-    run_script(projrot_script_str2, path)
+        "RPHt2.exe >& /dev/null"
+    )
+    _, rth_freqs2, _, rth_imag2 = vibprep.projrot_freqs(
+        [harm_geo], [hess], run_path,
+        grads=[[]], rotors_str=projrot_hr_str, coord_proj='cartesian',
+        script_str=projrot_script_str2)
 
-    with open(path+'/hrproj_freq.dat', 'r') as projfile:
-        hrproj_str = projfile.read()
-    with open(path+'/RTproj_freq.dat', 'r') as projfile:
-        rtproj_str = projfile.read()
+    # Calculate harmonic ZPVE from all harmonic freqs, including torsionals
+    harm_zpe = (sum(rt_freqs1) / 2.0) * phycon.WAVEN2EH
 
-    freqs_2 = []
-    zpe_har_no_tors_2 = 0.0
-    imag_freq_2 = 0.
-    if pot:
-        rthrproj_freqs_2, _ = projrot_io.reader.rpht_output(
-            hrproj_str)
-        freqs_2 = rthrproj_freqs_2
-        zpe_har_no_tors_2 = sum(freqs_2)*phycon.WAVEN2KCAL/2.
-    rtproj_freqs, imag_freq = projrot_io.reader.rpht_output(
-        rtproj_str)
-    har_zpe = sum(rtproj_freqs)*phycon.WAVEN2KCAL/2.
-    if not freqs_2:
-        freqs_2 = rtproj_freqs
-    if saddle:
-        if imag_freq:
-            imag_freq_2 = imag_freq[0]
-        else:
-            imag_freq_2 = freqs_2[-1]
-            freqs_2 = freqs_2[:-1]
+    # Calculate harmonic ZPVE from freqs where torsions have been projected out
+    # Value from both projrot versions, which use different projection schemes
+    harm_zpe_notors_1 = (sum(rth_freqs1) / 2.0) * phycon.WAVEN2EH
+    harm_zpe_notors_2 = (sum(rth_freqs2) / 2.0) * phycon.WAVEN2EH
 
-    return freqs_2, imag_freq_2, har_zpe, zpe_har_no_tors_2
+    # Calcuate the difference in the harmonic ZPVE from projecting out torsions
+    harm_tors_zpe = harm_zpe - harm_zpe_notors_1
+    harm_tors_zpe_2 = harm_zpe - harm_zpe_notors_2
 
-
-def determine_freqs_zpe(freqs1, freqs2, imag_freq1, imag_freq2,
-                        zpe_harm_no_tors, zpe_harm_no_tors_2,
-                        harm_zpe, tors_zpe):
-    """ get the freqs ftom two methods
-    """
-    harm_tors_zpe = harm_zpe - zpe_harm_no_tors
-    harm_tors_zpe_2 = harm_zpe - zpe_harm_no_tors_2
-    del_tors_zpe = harm_tors_zpe - tors_zpe
-    del_tors_zpe_2 = harm_tors_zpe_2 - tors_zpe
-    if del_tors_zpe <= del_tors_zpe_2:
-        zpe = zpe_harm_no_tors + tors_zpe
-        freqs = freqs1
-        imag_freq = imag_freq1
+    # Check to see which of the above ZPVEs match more closely with tors ZPVE
+    # calculated directly by treating the torsions in MESS
+    diff_tors_zpe = harm_tors_zpe - tors_zpe
+    diff_tors_zpe_2 = harm_tors_zpe_2 - tors_zpe
+    if diff_tors_zpe <= diff_tors_zpe_2:
+        freqs = rth_freqs1
+        imag_freqs = rth_imag1
+        zpe = harm_zpe_notors_1 + tors_zpe
     else:
-        zpe = zpe_harm_no_tors_2 + tors_zpe
-        freqs = freqs2
-        imag_freq = imag_freq2
-    if abs(del_tors_zpe) > 0.2 and abs(del_tors_zpe_2) > 0.2:
+        freqs = rth_freqs2
+        imag_freqs = rth_imag2
+        zpe = harm_zpe_notors_2 + tors_zpe
+
+    # Check imaginary frequencies and set freqs
+    if saddle:
+        if len(imag_freqs) > 1:
+            print('There is more than one imaginary frequency')
+        imag = imag_freqs[0]
+    else:
+        imag = None
+
+    # Check if there are significant differences caused by the rotor projection
+    diff_tors_zpe *= phycon.EH2KCAL
+    diff_tors_zpe_2 *= phycon.EH2KCAL
+    if abs(diff_tors_zpe) > 0.2 and abs(diff_tors_zpe_2) > 0.2:
         print('Warning: There is a difference of ',
-              '{0:.2f} and {1:.2f}'.format(del_tors_zpe, del_tors_zpe_2),
+              '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
               'kcal/mol between harmonic and hindered torsional ZPVEs')
 
-    # print('zpe sum test:', zpe_harm_no_tors, zpe_harm_no_tors_2, tors_zpe, zpe)
-    return freqs, imag_freq, zpe
+    return freqs, imag, zpe

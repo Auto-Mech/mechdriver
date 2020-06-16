@@ -36,7 +36,7 @@ def reference_geometry(
     else:
         [prog, method, basis, _] = thy_info
         status = autofile.schema.RunStatus.RUNNING
-        inf_obj = autofile.schema.info.run(
+        inf_obj = autofile.schema.info_objects.run(
             job='', prog=prog, version='version', method=method, basis=basis,
             status=status)
         run_fs[0].file.info.write(inf_obj, [])
@@ -132,7 +132,7 @@ def reference_geometry(
                     automol.geom.graph(geo)))
             if ncp < 2:
                 zma = automol.geom.zmatrix(geo)
-                thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
+                # thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
                 print('\nObtaining a single conformer using',
                       'the MonteCarlo conformer sampling routine')
                 geo_path = thy_save_fs[0].path(thy_info[1:4])
@@ -159,17 +159,17 @@ def reference_geometry(
     return geo
 
 
-def run_initial_geometry_opt(
-        spc_info, thy_info, run_fs, thy_run_fs,
-        script_str, overwrite, ini_geo, **kwargs):
-    """ generate initial geometry via optimization from either reference
+def run_initial_geometry_opt(spc_info, thy_info, run_fs, thy_run_fs,
+                            script_str, overwrite, ini_geo, **kwargs):
+    """ Generate initial geometry via optimization from either reference
     geometries or from inchi
     """
 
-    # set up the filesystem
+    # Set up the filesystem
     thy_run_fs[-1].create(thy_info[1:4])
     thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
-    # check if geometry has already been saved
+
+    # Check if geometry has already been saved
     # if not call the electronic structure optimizer
     ncp1 = len(automol.graph.connected_components(automol.geom.graph(ini_geo)))
     if ncp1 < 2:
@@ -274,8 +274,8 @@ def run_check_imaginary(
 
             if hess:
                 imag = False
-                _, imag_freq = structure.vib.projrot_frequencies(
-                    geo, hess, thy_info, thy_run_fs)
+                _, _, imag_freq, _ = structure.vib.projrot_freqs(
+                    geo, hess, thy_run_path)
                 if imag_freq:
                     imag = True
 
@@ -327,30 +327,6 @@ def run_kickoff_saddle(
     return geo
 
 
-def save_initial_geometry(
-        thy_info, run_fs, thy_run_fs, thy_save_fs):
-    """ save the geometry from the initial optimization as a reference geometry
-    """
-    thy_run_fs[-1].create(thy_info[1:4])
-    thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
-    run_fs = autofile.fs.run(thy_run_path)
-
-    thy_save_fs[-1].create(thy_info[1:4])
-    thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
-
-    ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-    if ret:
-        print('Saving reference geometry...')
-        print(" - Save path: {}".format(thy_save_path))
-
-        inf_obj, _, out_str = ret
-        prog = inf_obj.prog
-        geo = elstruct.reader.opt_geometry(prog, out_str)
-        zma = automol.geom.zmatrix(geo)
-        thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
-        thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
-
-
 def fake_conf(thy_info, filesystem, inf=()):
     """ generate data to be used for a fake well I think?
     """
@@ -390,14 +366,3 @@ def fake_conf(thy_info, filesystem, inf=()):
     cnf_run_fs[-1].file.energy.write(ene, locs)
     cnf_save_fs[-1].file.geometry.write(geo, locs)
     cnf_run_fs[-1].file.geometry.write(geo, locs)
-
-
-def fake_geo_gen(tsk, thy_info, filesystem):
-    """ generate data to be used for a fake well I think?
-    """
-    if 'conf' in tsk:
-        fake_conf(thy_info, filesystem)
-    if 'scan' in tsk:
-        pass
-    if 'tau' in tsk:
-        pass

@@ -193,7 +193,7 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
                     '+'.join(rxn['prods'])))
 
             ktpdriver.run(
-                formula, pes_idx,
+                formula, pes_idx, sub_pes_idx,
                 SPC_DCT,
                 CLA_DCT,
                 THY_DCT,

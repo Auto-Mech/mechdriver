@@ -5,7 +5,7 @@
 import sys
 import automol.inchi
 import automol.geom
-from routines.pf.messf.ene import get_fs_ene_zpe
+# from routines.pf.messf.ene import get_fs_ene_zpe
 from routines.pf.thermo import heatform
 from lib.phydat import phycon
 
@@ -125,10 +125,8 @@ def basis_energy(spc_bas, uni_refs_dct, spc_dct,
     h_basis = []
     for ich, name in ich_name_dct.items():
         h_basis.append(
-            get_fs_ene_zpe(
-                full_spc_dct, name,
-                thy_dct, model_dct, model,
-                save_prefix, saddle=False,
+            read_energy(
+                spc_dct_i, pf_filesystems, pf_models, pf_levels,
                 read_ene=True, read_zpe=True))
 
     # Check if all the energies found

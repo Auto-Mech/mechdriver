@@ -5,6 +5,7 @@ Library of functions to interact with the filesystem
 import os
 import sys
 import autofile
+from autofile import fs
 from lib.filesys.mincnf import min_energy_conformer_locators
 
 
@@ -371,6 +372,23 @@ def run_fs_from_prefix(prefix):
     return run_fs
 
 
+def zma_fs_from_prefix(prefix, zma_idxs=(0)):
+    """ Build a zma filesys object
+    """
+
+    zma_fs = fs.manager(prefix, 'ZMATRIX')
+    zma_fs[-1].create(zma_idxs)
+    zma_path = zma_fs[-1].path(zma_idxs)
+
+    return zma_fs, zma_path
+
+
+# def sym_fs_from_prefix(prefix):
+#     """ Build a sym filesys object
+#     """
+#     prrint(prefix)
+
+
 # tors
 def tors_from_scn_yaml(scn_fs):
     """ read the torsions from the yaml file
@@ -398,5 +416,3 @@ def get_rxn_fs(run_prefix, save_prefix,
         [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
 
     return rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path
-
-
