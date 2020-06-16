@@ -522,7 +522,7 @@ def _save_sym_indistinct_conformer(geo, cnf_save_fs,
     cnf_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
 
     # Build the sym file sys
-    sym_save_fs = fs.manager(cnf_save_path, 'SYMMETRIC')
+    sym_save_fs = fs.manager(cnf_save_path, 'SYMMETRY')
     sym_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
     print(" - Saving structure in a sym directory at path {}".format(
         sym_save_path))

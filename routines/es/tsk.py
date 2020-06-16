@@ -174,11 +174,11 @@ def run_conformer_tsk(job, spc_dct, spc_name,
 
     # Set the filesystem objects
     if not saddle:
-        # Build filesys for thy info
-        _, thy_run_path = filesys.build.spc_thy_fs_from_root(
-            run_prefix, spc_info, mod_thy_info)
-        thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
-            save_prefix, spc_info, mod_thy_info)
+        # # Build filesys for thy info
+        # _, thy_run_path = filesys.build.spc_thy_fs_from_root(
+        #     run_prefix, spc_info, mod_thy_info)
+        # thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
+        #     save_prefix, spc_info, mod_thy_info)
 
         # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
@@ -191,13 +191,13 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             spc['reacs'], spc['prods'], spc_dct)
 
         # Build filesys for thy info
-        _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
-            run_prefix, rxn_info, mod_thy_info)
-        thy_save_fs, thy_save_path = filesys.build.rxn_thy_fs_from_root(
-            save_prefix, rxn_info, mod_thy_info)
-        thy_save_fs, thy_save_path = filesys.build.ts_fs_from_thy(
-            thy_save_path)
-        _, thy_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
+        # _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
+        #     run_prefix, rxn_info, mod_thy_info)
+        # thy_save_fs, thy_save_path = filesys.build.rxn_thy_fs_from_root(
+        #     save_prefix, rxn_info, mod_thy_info)
+        # thy_save_fs, thy_save_path = filesys.build.ts_fs_from_thy(
+        #     thy_save_path)
+        # _, thy_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
 
         # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.rxn_thy_fs_from_root(
@@ -210,6 +210,21 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             ini_thy_run_path)
         
     if job == 'samp':
+
+        # Build the thy filesyste
+        if not saddle:
+            _, thy_run_path = filesys.build.spc_thy_fs_from_root(
+                run_prefix, spc_info, mod_thy_info)
+            thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
+                save_prefix, spc_info, mod_thy_info)
+        else:
+            _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
+                run_prefix, rxn_info, mod_thy_info)
+            thy_save_fs, thy_save_path = filesys.build.rxn_thy_fs_from_root(
+                save_prefix, rxn_info, mod_thy_info)
+            thy_save_fs, thy_save_path = filesys.build.ts_fs_from_thy(
+                thy_save_path)
+            _, thy_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
 
         # Build conformer filesys
         cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
@@ -381,10 +396,10 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
     # Set the filesystem objects
     if not saddle:
-        _, thy_run_path = filesys.build.spc_thy_fs_from_root(
-            run_prefix, spc_info, mod_thy_info)
-        _, thy_save_path = filesys.build.spc_thy_fs_from_root(
-            save_prefix, spc_info, mod_thy_info)
+        # _, thy_run_path = filesys.build.spc_thy_fs_from_root(
+        #     run_prefix, spc_info, mod_thy_info)
+        # _, thy_save_path = filesys.build.spc_thy_fs_from_root(
+        #     save_prefix, spc_info, mod_thy_info)
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
             run_prefix, spc_info, mod_ini_thy_info)
         _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
@@ -394,12 +409,12 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
             spc['reacs'], spc['prods'], spc_dct)
 
         # Build filesys for thy info
-        _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
-            run_prefix, rxn_info, mod_thy_info)
-        _, thy_save_path = filesys.build.rxn_thy_fs_from_root(
-            save_prefix, rxn_info, mod_thy_info)
-        _, thy_save_path = filesys.build.ts_fs_from_thy(thy_save_path)
-        _, thy_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
+        # _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
+        #     run_prefix, rxn_info, mod_thy_info)
+        # _, thy_save_path = filesys.build.rxn_thy_fs_from_root(
+        #     save_prefix, rxn_info, mod_thy_info)
+        # _, thy_save_path = filesys.build.ts_fs_from_thy(thy_save_path)
+        # _, thy_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
 
         # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.rxn_thy_fs_from_root(
@@ -467,9 +482,9 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 zma, const_tors_names)
 
         # Set up ini filesystem for scans
-        ini_zma_run_fs, ini_zma_run_path = filesys.build.zma_fs_from_prefix(
+        _, ini_zma_run_path = filesys.build.zma_fs_from_prefix(
             ini_cnf_run_paths[0], zma_idxs=[0])
-        ini_zma_save_fs, ini_zma_save_path = filesys.build.zma_fs_from_prefix(
+        _, ini_zma_save_path = filesys.build.zma_fs_from_prefix(
             ini_cnf_save_paths[0], zma_idxs=[0])
         print('zma run', ini_zma_run_path)
         print('zma save', ini_zma_save_path)
