@@ -42,7 +42,7 @@ def projrot_freqs(geoms, hessians, run_path,
         rtproj_freqs, rt_imag_freq = projrot_io.reader.rpht_output(
             rtproj_str)
     else:
-        rtproj_freqs, rt_imag_freq = [], None
+        rtproj_freqs, rt_imag_freq = [], []
 
     hrproj_file = os.path.join(projrot_path, 'hrproj_freq.dat')
     if os.path.exists(hrproj_file):
@@ -51,6 +51,6 @@ def projrot_freqs(geoms, hessians, run_path,
         hrproj_freqs, hr_imag_freq = projrot_io.reader.rpht_output(
             hrproj_str)
     else:
-        hrproj_freqs, hr_imag_freq = [], None
+        hrproj_freqs, hr_imag_freq = [], []
 
     return rtproj_freqs, hrproj_freqs, rt_imag_freq, hr_imag_freq

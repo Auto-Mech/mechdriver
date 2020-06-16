@@ -12,6 +12,7 @@ from automol.mult.ts import _high as tshigh
 from automol.zmatrix import shifted_standard_zmas_graphs as shift_gra
 from routines.es._routines import geom
 from lib.phydat import phycon
+from lib.filesys.build import zma_fs_from_prefix
 from lib.filesys.mincnf import min_energy_conformer_locators
 
 
@@ -279,8 +280,8 @@ def get_zma_geo(filesys, locs):
     """
 
     # Read the zma
-    zma_fs, zma_path = filesys.build.zma_fs_from_prefix(
-        filesys[-1].path(),  zma_idxs=[0])
+    zma_fs, zma_path = zma_fs_from_prefix(
+        filesys[-1].path(locs),  zma_idxs=[0])
     if zma_fs[-1].file.zmatrix.exists([0]):
         zma = zma_fs[-1].file.zmatrix.read([0])
     else:

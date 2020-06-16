@@ -471,6 +471,8 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
             ini_cnf_run_paths[0], zma_idxs=[0])
         ini_zma_save_fs, ini_zma_save_path = filesys.build.zma_fs_from_prefix(
             ini_cnf_save_paths[0], zma_idxs=[0])
+        print('zma run', ini_zma_run_path)
+        print('zma save', ini_zma_save_path)
         ini_scn_run_fs = filesys.build.scn_fs_from_cnf(
             ini_zma_run_path, constraint_dct=constraint_dct)
         ini_scn_save_fs = filesys.build.scn_fs_from_cnf(

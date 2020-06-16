@@ -377,6 +377,7 @@ def zma_fs_from_prefix(prefix, zma_idxs=(0)):
     """
 
     zma_fs = fs.manager(prefix, 'ZMATRIX')
+    zma_fs[-1].create(zma_idxs)
     zma_path = zma_fs[-1].path(zma_idxs)
 
     return zma_fs, zma_path
