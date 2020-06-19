@@ -200,9 +200,8 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
             inner_prod_label = chn_label
 
     # For abstractions: Write MESS strings for fake reac and prod wells and TS
-    print(list(chnl_infs.keys()))
     if 'fake_vdwr' in chnl_infs:
-        print('after if')
+
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fwellr_lbl, fwellp_lbl = _make_fake_mess_strs(
             rxn, chnl_infs['fake_vdwr'], chnl_infs['fake_vdwp'],
@@ -286,7 +285,6 @@ def _make_fake_mess_strs(rxn, fake_wellr_inf_dcts, fake_wellp_inf_dcts,
                          chnl_enes, label_dct, reac_label, prod_label):
     """ write the MESS strings for the fake wells and TSs
     """
-    print('HERE')
 
     # Initialize well and ts strs
     well_str, ts_str = '', ''

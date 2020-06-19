@@ -10,7 +10,7 @@ from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 def projrot_freqs(geoms, hessians, run_path,
-                  grads=(), rotors_str='', coord_proj='cartesian',
+                  grads=((),), rotors_str='', coord_proj='cartesian',
                   script_str=DEFAULT_SCRIPT_DCT['projrot']):
     """ Get the projected frequencies from projrot code
         run path at thy later

@@ -43,6 +43,7 @@ def atm_data(spc_dct_i,
         'geom': geom,
         'sym_factor': 1.0,
         'freqs': [],
+        'mess_hr_str': '',
         'mass': util.atom_mass(spc_dct_i),
         'elec_levels': spc_dct_i['elec_levels'],
         'ene_chnlvl': ene_chnlvl,
@@ -68,21 +69,20 @@ def mol_data(spc_dct_i,
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
 
     # Set information for transition states
-    frm_bnd_key, brk_bnd_key = util.get_bnd_keys(spc_dct_i, saddle)
-    ts_bnd = util.set_ts_bnd(spc_dct_i, saddle)
+    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(pf_filesystems, saddle)
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Obtain rotor information used to determine new information
     print('\nPreparing internal rotor info building partition functions...')
     rotor_names, rotor_grids, rotor_syms, const_dct, ref_ene = tors.rotor_info(
         spc_dct_i, pf_filesystems, chn_pf_models,
-        frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+        frm_bnd_key=frm_bnd_keys, brk_bnd_key=brk_bnd_keys)
 
     if nonrigid_tors(chn_pf_models, rotor_names):
         mess_hr_str, prot_hr_str, mdhr_dats, rotor_syms = tors.make_hr_strings(
             rotor_names, rotor_grids, rotor_syms, const_dct,
             ref_ene, pf_filesystems, chn_pf_models,
-            rxn_class, ts_bnd,
+            rxn_class, frm_bnd_keys,
             saddle=saddle, tors_wgeo=tors_wgeo)
 
     # Obtain rotation partition function information
@@ -123,7 +123,6 @@ def mol_data(spc_dct_i,
     chn_ene = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
         read_ene=True, read_zpe=False)
-    # print('mod ene', chn_ene, zpe)
     ene_chnlvl = chn_ene + zpe
 
     ene_reflvl = None
@@ -310,7 +309,6 @@ def build_pf_filesystems(spc_dct_i, pf_levels,
     """
 
     pf_filesystems = {}
-    # print('pf_levels', pf_levels)
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle)
     if pf_levels['sym']:
@@ -365,7 +363,6 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
         run_path = run_fs[0].path()
 
     # Get the fs object and the locs
-    # print('save path', save_path)
     cnf_save_fs = autofile.fs.conformer(save_path)
     min_cnf_locs = mincnf.min_energy_conformer_locators(cnf_save_fs)
 

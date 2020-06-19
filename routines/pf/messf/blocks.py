@@ -59,10 +59,6 @@ def fake_species_block(inf_dct_i, inf_dct_j):
         van der Waals well between two fragments
     """
 
-    print('inf_dct_i', inf_dct_i)
-    print('\n\n')
-    print('inf_dct_j', inf_dct_j)
-
     # Combine the electronic structure information for the two species together
     geom = fake.combine_geos_in_fake_well(inf_dct_i['geom'], inf_dct_j['geom'])
 

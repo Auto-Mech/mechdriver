@@ -6,6 +6,51 @@ import numpy
 import automol
 
 
+# Handle idx lists for zmas with dummys
+def build_remdummy_shift_lst(zma):
+    """ Assess the zma for dummys and build a list to shift values
+        derived from zma
+    """
+
+    atom_symbols = automol.zmatrix.symbols(zma)
+    dummy_idx = []
+    for atm_idx, atm in enumerate(atom_symbols):
+        if atm == 'X':
+            dummy_idx.append(atm_idx)
+    remdummy = numpy.zeros(len(zma[0]))
+    for dummy in dummy_idx:
+        for idx, _ in enumerate(remdummy):
+            if dummy < idx:
+                remdummy[idx] += 1
+
+    return remdummy
+
+
+def shift_vals_from_dummy(vals, zma):
+    """ Shift a set of values using remdummy
+        Shift requires indices be 1-indexed
+    """ 
+    
+    dummy_idxs = automol.zmatrix.dummy_atom_indices(zma)
+    # atom_symbols = automol.zmatrix.symbols(zma)
+    # dummy_idxs = []
+    # for atm_idx, atm in enumerate(atom_symbols):
+    #     if atm == 'X':
+    #         dummy_idxs.append(atm_idx)
+
+    shift_vals = []
+    for val in vals:
+        shift = 0
+        for dummy in dummy_idxs:
+            if val >= dummy:
+                shift += 1
+        shift_vals.append(val+shift)
+
+
+    return shift_vals
+
+
+# Various checks and assessments for geometries
 def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
     """ Check to see whether the radical atom is still closest to the bond
         formation site.
@@ -21,36 +66,62 @@ def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
     return atom_closest
 
 
-def check_angle(ts_zma, dist_info, rxn_class):
-    """ Check the angle to amend the dct
+def calc_rxn_angle(ts_zma, frm_bnd_keys, brk_bnd_keys, rxn_class):
+    """ Calculate the angle over a forming-and-breaking bond
     """
+
     angle = None
-    dist_name = dist_info[0]
     if 'abstraction' in rxn_class or 'addition' in rxn_class:
-        brk_name = dist_info[3]
-        if dist_name and brk_name:
-            ts_bnd = automol.zmatrix.bond_idxs(
-                ts_zma, dist_name)
-            brk_bnd = automol.zmatrix.bond_idxs(
-                ts_zma, brk_name)
+        if frm_bnd_keys and brk_bnd_keys:
+
             ang_atms = [0, 0, 0]
-            cent_atm = list(set(brk_bnd) & set(ts_bnd))
+            cent_atm = list(set(brk_bnd_keys) & set(frm_bnd_keys))
             if cent_atm:
                 ang_atms[1] = cent_atm[0]
-                for idx in brk_bnd:
+                for idx in brk_bnd_keys:
                     if idx != ang_atms[1]:
                         ang_atms[0] = idx
-                for idx in ts_bnd:
+                for idx in frm_bnd_keys:
                     if idx != ang_atms[1]:
                         ang_atms[2] = idx
 
                 geom = automol.zmatrix.geometry(ts_zma)
-                # print('geom in check_angle:',automol.geom.string(geom))
-                # print('ang_atms:', *ang_atms)
                 angle = automol.geom.central_angle(
                     geom, *ang_atms)
 
     return angle
+
+
+# def check_angle(ts_zma, dist_info, rxn_class):
+#     """ Check the angle to amend the dct
+#     """
+#     angle = None
+#     dist_name = dist_info[0]
+#     if 'abstraction' in rxn_class or 'addition' in rxn_class:
+#         brk_name = dist_info[3]
+#         if dist_name and brk_name:
+#             ts_bnd = automol.zmatrix.bond_idxs(
+#                 ts_zma, dist_name)
+#             brk_bnd = automol.zmatrix.bond_idxs(
+#                 ts_zma, brk_name)
+#             ang_atms = [0, 0, 0]
+#             cent_atm = list(set(brk_bnd) & set(ts_bnd))
+#             if cent_atm:
+#                 ang_atms[1] = cent_atm[0]
+#                 for idx in brk_bnd:
+#                     if idx != ang_atms[1]:
+#                         ang_atms[0] = idx
+#                 for idx in ts_bnd:
+#                     if idx != ang_atms[1]:
+#                         ang_atms[2] = idx
+# 
+#                 geom = automol.zmatrix.geometry(ts_zma)
+#                 # print('geom in check_angle:',automol.geom.string(geom))
+#                 # print('ang_atms:', *ang_atms)
+#                 angle = automol.geom.central_angle(
+#                     geom, *ang_atms)
+# 
+#     return angle
 
 
 def is_unique_coulomb_energy(geo, ene, geo_list, ene_list):

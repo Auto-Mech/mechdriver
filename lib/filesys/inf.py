@@ -275,7 +275,7 @@ def get_geos(
     return spc_geos, cnf_save_fs_lst
 
 
-def get_zma_geo(filesys, locs):
+def cnf_fs_zma_geo(filesys, locs):
     """ Get the geometry and zmatrix from a filesystem
     """
 

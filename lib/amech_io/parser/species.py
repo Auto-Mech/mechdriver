@@ -372,8 +372,8 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         ts_bnd = automol.zmatrix.bond_idxs(ret1[0] , ret1[1])
 
         # Put class stuff in the dct
-        dct_keys = ['zma', 'dist_name', 'brk_name', 'grid',
-                    'frm_bnd_key', 'brk_bnd_key',
+        dct_keys = ['zma', 'dist_name', 'brk_name',
+                    'grid', 'frm_bnd_keys', 'brk_bnd_keys',
                     'amech_ts_tors_names', 'update_guess', 'var_grid']
         ts_dct.update(dict(zip(dct_keys, ret1)))
         ts_dct['ts_bnd'] = ts_bnd

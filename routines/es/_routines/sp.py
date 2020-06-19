@@ -26,6 +26,7 @@ def run_energy(zma, geo, spc_info, thy_info,
     sp_run_fs[-1].create(thy_info[1:4])
     sp_run_path = sp_run_fs[-1].path(thy_info[1:4])
     sp_save_fs[-1].create(thy_info[1:4])
+    sp_save_path = sp_save_fs[-1].path(thy_info[1:4])
     run_fs = autofile.fs.run(sp_run_path)
 
     # Set input geom
@@ -34,9 +35,18 @@ def run_energy(zma, geo, spc_info, thy_info,
     else:
         job_geo = zma
 
-    if not sp_save_fs[-1].file.energy.exists(thy_info[1:4]) or overwrite:
-
+    exists = sp_save_fs[-1].file.energy.exists(thy_info[1:4])
+    if not exists:
         print('No energy found in save filesys. Running energy...')
+        _run = True
+    elif overwrite:
+        print('User specified to overwrite energy with new run...')
+        _run = True
+    else:
+        _run = False
+
+    if _run:
+
         # Add options matrix for energy runs for molpro
         if thy_info[0] == 'molpro2015':
             errs, optmat = es_runner.par.set_molpro_options_mat(spc_info, geo)
@@ -73,10 +83,11 @@ def run_energy(zma, geo, spc_info, thy_info,
             sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
             sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
             sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
+            print(" - Save path: {}".format(sp_save_path))
 
     else:
         print('Energy found and saved previously at {}'.format(
-            sp_save_fs[-1].file.energy.path(thy_info[1:4])))
+            sp_save_path))
 
 
 def run_gradient(zma, geo, spc_info, thy_info,
@@ -95,11 +106,20 @@ def run_gradient(zma, geo, spc_info, thy_info,
 
     if not is_atom:
 
-        if not geo_save_fs[-1].file.gradient.exists(locs) or overwrite:
+        exists = geo_save_fs[-1].file.gradient.exists(locs)
+        if not exists:
+            print('No gradient found in save filesys. Running gradient...')
+            _run = True
+        elif overwrite:
+            print('User specified to overwrite gradient with new run...')
+            _run = True
+        else:
+            _run = False
+
+        if _run:
 
             run_fs = autofile.fs.run(geo_run_path)
 
-            print('No gradient found in save filesys. Running gradient...')
             es_runner.run_job(
                 job='gradient',
                 script_str=script_str,
@@ -127,17 +147,17 @@ def run_gradient(zma, geo, spc_info, thy_info,
                     grad = elstruct.reader.gradient(inf_obj.prog, out_str)
 
                     print(" - Saving gradient...")
-                    print(" - Save path: {}".format(geo_save_path))
                     geo_save_fs[-1].file.gradient_info.write(inf_obj, locs)
                     geo_save_fs[-1].file.gradient_input.write(inp_str, locs)
                     geo_save_fs[-1].file.gradient.write(grad, locs)
+                    print(" - Save path: {}".format(geo_save_path))
 
         else:
             print('Gradient found and saved previously at {}'.format(
-                geo_save_fs[-1].file.gradient.path(locs)))
+                geo_save_path))
 
     else:
-        print('Species is an atom, Skipping Gradient task.')
+        print('Species is an atom. Skipping gradient task.')
 
 
 def run_hessian(zma, geo, spc_info, thy_info,
@@ -165,11 +185,20 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
     if not is_atom:
 
-        if not geo_save_fs[-1].file.hessian.exists(locs) or overwrite:
+        exists = geo_save_fs[-1].file.hessian.exists(locs)
+        if not exists:
+            print('No Hessian found in save filesys. Running Hessian...')
+            _run = True
+        elif overwrite:
+            print('User specified to overwrite Hessian with new run...')
+            _run = True
+        else:
+            _run = False
+
+        if _run:
 
             run_fs = autofile.fs.run(geo_run_path)
 
-            print('No Hessian found in save filesys. Running Hessian...')
             es_runner.run_job(
                 job='hessian',
                 script_str=script_str,
@@ -194,28 +223,23 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
                 print(" - Saving Hessian...")
-                print(" - Save path: {}".format(geo_save_path))
                 geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
                 geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
                 geo_save_fs[-1].file.hessian.write(hess, locs)
-
-                # Calculate and save the harmonic freqs if needed
-                freqs_not_exist = bool(
-                    not geo_save_fs[-1].file.harmonic_frequencies.exists(locs))
-                if freqs_not_exist or overwrite:
-                    print(" - Calculating harmonic frequencies from Hessian...")
-                    rt_freqs, _, rt_imags, _ = structure.vib.projrot_freqs(
-                        [geo], [hess], geo_run_path)
-                    freqs = rt_imags + rt_freqs
-                    print(" - Saving harmonic frequencies...")
-                    geo_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
+                print(" - Save path: {}".format(geo_save_path))
+    
+                _harm_freqs(geo, geo_save_fs, 
+                            geo_run_path, geo_save_path, locs, overwrite)
 
         else:
             print('Hessian found and saved previously at {}'.format(
-                geo_save_fs[-1].file.hessian.path(locs)))
+                geo_save_path))
+
+            _harm_freqs(geo, geo_save_fs,
+                        geo_run_path, geo_save_path, locs, overwrite)
 
     else:
-        print('Species is an atom, Skipping Hessian task.')
+        print('Species is an atom. Skipping Hessian task.')
 
 
 def run_vpt2(zma, geo, spc_info, thy_info,
@@ -256,11 +280,18 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 
     if job_geo is not None and not is_atom:
 
-        run_vpt2_job = bool(
-            not geo_save_fs[-1].file.anharmonicity_matrix.exists(locs) or
-            overwrite)
-        if run_vpt2_job:
-            print('Running vpt2')
+        exists = geo_save_fs[-1].file.anharmonicity_matrix.exists(locs)
+        if not exists:
+            print('No X-Matrix found in save filesys. Running VPT2...')
+            _run = True
+        elif overwrite:
+            print('User specified to overwrite VPT2 info with new run...')
+            _run = True
+        else:
+            _run = False
+
+        if _run:
+
             es_runner.run_job(
                 job='vpt2',
                 script_str=script_str,
@@ -317,4 +348,37 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 
         else:
             print('VPT2 information found and saved previously at {}'.format(
-                geo_save_fs[-1].file.anharmonicity_matrix.exists(locs)))
+                geo_save_path))
+
+
+def _harm_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
+    """ Calculate harmonic frequencies using Hessian
+    """
+
+    exists = geo_save_fs[-1].file.harmonic_frequencies.exists(locs)
+    if not exists:
+        print('No harmonic frequencies found in save filesys...')
+        _run = True
+    elif overwrite:
+        print('User specified to overwrite frequencies with new run...')
+        _run = True
+    else:
+        _run = False
+
+    if _run:
+        
+        # Read the Hessian from the filesystem
+        hess = geo_save_fs[-1].file.hessian.read(locs)
+
+        # Calculate and save the harmonic frequencies
+        print(" - Calculating harmonic frequencies from Hessian...")
+        rt_freqs, _, rt_imags, _ = structure.vib.projrot_freqs(
+            [geo], [hess], run_path)
+        freqs = sorted(rt_imags + rt_freqs)
+        print(" - Saving harmonic frequencies...")
+        geo_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
+        print(" - Save path: {}".format(save_path))
+
+    else:
+        print('Harmonic frequencies found and saved previously at {}'.format(
+            save_path))

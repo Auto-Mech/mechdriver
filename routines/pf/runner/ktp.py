@@ -11,7 +11,7 @@ def get_mess_path(prefix, pes_formula, sub_pes_idx):
     """ Build a simple mess path using the run prefix
     """
     pes_str = '{}_{}'.format(pes_formula, sub_pes_idx)
-    return os.path.join(prefix, 'MESSRATE', pes_str)
+    return os.path.join(prefix, pes_str)
 
 
 def write_mess_file(mess_inp_str, dat_str_lst, mess_path, fname='mess.inp'):

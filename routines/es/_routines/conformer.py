@@ -10,6 +10,7 @@ from routines.es._routines import _util as util
 from routines.es import runner as es_runner
 from lib import filesys
 from lib.structure import geom as geomprep
+from lib.structure import ts as tsprep
 from lib.phydat import bnd
 
 
@@ -130,11 +131,14 @@ def run_conformers(
         nsamp = 1
 
     cnf_save_fs[0].create()
-    vma = automol.zmatrix.var_(zma)
-    if cnf_save_fs[0].file.vmatrix.exists():
-        existing_vma = cnf_save_fs[0].file.vmatrix.read()
-        assert vma == existing_vma
-    cnf_save_fs[0].file.vmatrix.write(vma)
+    # following check breaks; prob add checks to zmas in idv confs
+    # kind of pain
+    # ignoring the idea of storing multiple zmas right now
+    # vma = automol.zmatrix.var_(zma)
+    # if cnf_save_fs[0].file.vmatrix.exists():
+    #     existing_vma = cnf_save_fs[0].file.vmatrix.read()
+    #     assert vma == existing_vma
+    # cnf_save_fs[0].file.vmatrix.write(vma)
     nsamp0 = nsamp
     inf_obj = autofile.schema.info_objects.conformer_trunk(0, tors_range_dct)
     if cnf_save_fs[0].file.info.exists():
@@ -280,24 +284,25 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
 
                     # Assess viability of transition state conformer
                     if saddle:
-                        if not _ts_geo_viable(zma, dist_info, rxn_class):
+                        if not _ts_geo_viable(zma, cnf_save_fs, rxn_class):
                             continue
 
                     # Determine uniqueness of conformer, save if needed
                     if _geo_unique(geo, ene, saved_geos, saved_enes, saddle):
-                        if _is_proper_isomer(cnf_save_fs, zma):
-                            sym_id = _sym_unique(
-                                geo, ene, saved_geos, saved_enes)
-                            if sym_id is None:
-                                _save_unique_conformer(
-                                    ret, thy_info, cnf_save_fs, locs)
-                                saved_geos.append(geo)
-                                saved_enes.append(ene)
-                                saved_locs.append(locs)
-                            else:
-                                sym_locs = saved_locs[sym_id]
-                                _save_sym_indistinct_conformer(
-                                    geo, cnf_save_fs, locs, sym_locs)
+                        # iso check breaks because of zma location
+                        # if _is_proper_isomer(cnf_save_fs, zma):
+                        sym_id = _sym_unique(
+                            geo, ene, saved_geos, saved_enes)
+                        if sym_id is None:
+                            _save_unique_conformer(
+                                ret, thy_info, cnf_save_fs, locs)
+                            saved_geos.append(geo)
+                            saved_enes.append(ene)
+                            saved_locs.append(locs)
+                        else:
+                            sym_locs = saved_locs[sym_id]
+                            _save_sym_indistinct_conformer(
+                                geo, cnf_save_fs, locs, sym_locs)
 
 
         # Update the conformer trajectory file
@@ -354,7 +359,7 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
                 sym_idx = idx
 
     if sym_idx is not None:
-        print(' - Structure is not symmetricall unique.')    
+        print(' - Structure is not symmetrically unique.')    
 
     return sym_idx
 
@@ -376,36 +381,57 @@ def _is_proper_isomer(cnf_save_fs, zma):
     return proper_isomer
 
 
-def _ts_geo_viable(zma, dist_info, rxn_class):
+def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=[0]):
     """ Perform a series of checks to assess the viability
         of a transition state geometry prior to saving
     """
+   
+    # Initialize viable
+    viable = True
 
-    # Set angles and distances needed for checks
-    [dist_name, dist_len, _, brk_name, angle] = dist_info
-    ts_bnd = automol.zmatrix.bond_idxs(zma, dist_name)
-    ts_bnd1 = min(ts_bnd)
-    ts_bnd2 = max(ts_bnd)
-    conf_dist_len = automol.zmatrix.values(zma)[dist_name]
+    # Obtain the min-ene zma and bond keys 
+    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(cnf_save_fs)
+    cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
+    zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
+    ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
-    # Find the central atom in the reacting moiety
-    cent_atm = None
-    if dist_name and brk_name and len(dist_info) > 4:
-        brk_bnd = automol.zmatrix.bond_idxs(zma, brk_name)
-        ang_atms = [0, 0, 0]
-        cent_atm = list(set(brk_bnd) & set(ts_bnd))
-        if cent_atm:
-            ang_atms[1] = cent_atm[0]
-            for idx in brk_bnd:
-                if idx != ang_atms[1]:
-                    ang_atms[0] = idx
-            for idx in ts_bnd:
-                if idx != ang_atms[1]:
-                    ang_atms[2] = idx
-            geom = automol.zmatrix.geometry(zma)
-            conf_ang = automol.geom.central_angle(
-                geom, *ang_atms)
+    # Read the form and broken keys from the min conf
+    frm_bnd_keys, brk_bnd_keys = tsprep.rxn_bnd_keys(
+        cnf_save_fs, min_cnf_locs, zma_locs=zma_locs)
+    ts_bnd1, ts_bnd2 = min(frm_bnd_keys), max(frm_bnd_keys)
+    print('ts_bnd1', ts_bnd1)
+    print('ts_bnd2', ts_bnd2)
 
+    # Use the idxs to set the forming and breaking bond names
+    if frm_bnd_keys:
+        frm_name = automol.zmatrix.bond_key_from_idxs(
+            zma, frm_bnd_keys)
+    else:
+        frm_name = ''
+    if brk_bnd_keys:
+        brk_name = automol.zmatrix.bond_key_from_idxs(
+            zma, brk_bnd_keys)
+    else:
+        brk_name = ''
+    print('frm_name', frm_name)
+    print('brk_name', brk_name)
+
+    # OLD: Set angles and distances needed for checks
+
+    # Calculate the distance of bond being formed
+    cnf_dist = automol.zmatrix.values(zma)[frm_name]
+    ref_dist = automol.zmatrix.values(ref_zma)[frm_name]
+    print('conf_dist', cnf_dist)
+    print('ref_dist', ref_dist)
+
+    # Calculate the central angle of reacting moiety of zma
+    cnf_angle = geomprep.calc_rxn_angle(
+        zma, next(iter(frm_bnd_keys)), next(iter(brk_bnd_keys)), rxn_class)
+    ref_angle = geomprep.calc_rxn_angle(
+        ref_zma, next(iter(frm_bnd_keys)), next(iter(brk_bnd_keys)), rxn_class)
+    print('conf_angle', cnf_angle)
+    print('ref_angle', ref_angle)
+    
     # Set the maximum allowed displacement for a TS conformer
     max_disp = 0.6
     if 'addition' in rxn_class:
@@ -414,30 +440,30 @@ def _ts_geo_viable(zma, dist_info, rxn_class):
         max_disp = 1.4
 
     # Check forming bond angle similar to ini config
-    if cent_atm and 'elimination' not in rxn_class:
-        if abs(conf_ang - angle) > .44:
+    if ref_angle is not None and 'elimination' not in rxn_class:
+        if abs(cnf_angle - ref_angle) > .44:
             print(" - Transition State conformer has",
                   "diverged from original structure of",
                   "angle {:.3f} with angle {:.3f}".format(
-                      angle, conf_ang))
+                      ref_angle, cnf_angle))
             viable = False
 
     # Check if radical atom is closer to some atom other than the bonding atom
     if 'add' in rxn_class or 'abst' in rxn_class:
         cls = geomprep.is_atom_closest_to_bond_atom(
-            zma, ts_bnd2, conf_dist_len)
+            zma, ts_bnd2, cnf_dist)
         if not cls:
             print(" - Transition State conformer has",
                   "diverged from original structure of",
                   "dist {:.3f} with dist {:.3f}".format(
-                      dist_len, conf_dist_len))
+                      ref_dist_len, cnf_dist))
             print(' - Radical atom now has a new nearest neighbor')
             viable = False
-        if abs(conf_dist_len - dist_len) > max_disp:
+        if abs(cnf_dist - ref_dist) > max_disp:
             print(" - Transition State conformer has",
                   "diverged from original structure of",
                   "dist {:.3f} with dist {:.3f}".format(
-                      dist_len, conf_dist_len))
+                      ref_dist, cnf_dist))
             viable = False
 
         # Check distances
@@ -449,22 +475,22 @@ def _ts_geo_viable(zma, dist_info, rxn_class):
             equi_bnd = bnd.LEN_DCT[(symb2, symb1)]
         else:
             equi_bnd = 0.0
-        displace_from_equi = conf_dist_len - equi_bnd
-        dchk1 = abs(conf_dist_len - dist_len) > 0.2
+        displace_from_equi = cnf_dist - equi_bnd
+        dchk1 = abs(cnf_dist - ref_dist) > 0.2
         dchk2 = displace_from_equi < 0.2
         if dchk1 and dchk2:
             print(" - Transition State conformer has",
                   "converged to an",
                   "equilibrium structure with dist",
                   " {:.3f} comp with equil {:.3f}".format(
-                      conf_dist_len, equi_bnd))
+                      cnf_dist, equi_bnd))
             viable = False
     else:
-        if abs(conf_dist_len - dist_len) > 0.4:
+        if abs(cnf_dist - ref_dist) > 0.4:
             print(" - Transition State conformer has",
                   "diverged from original structure of",
                   "dist {:.3f} with dist {:.3f}".format(
-                      dist_len, conf_dist_len))
+                      ref_dist, cnf_dist))
             viable = False
 
     return viable

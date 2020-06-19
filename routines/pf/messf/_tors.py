@@ -11,6 +11,7 @@ import autofile
 from autofile import fs
 from lib.phydat import phycon
 from lib.structure import tors as torsprep
+from lib.structure import geom as geomprep
 
 
 # Function to deal with setting up all of the torsion info since it is a pain
@@ -163,7 +164,7 @@ def _make_1dhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
             ts_bnd, rxn_class, saddle=saddle)
 
         # Check for dummy atoms
-        remdummy = torsprep.check_dummy_trans(zma)
+        remdummy = geomprep.build_remdummy_shift_lst(zma)
 
         # Write the MESS and ProjRot strings for the rotor
         mess_hr_str += mess_io.writer.rotor_hindered(
@@ -213,7 +214,7 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
             mess_io.writer.mdhr_data(hr_pot, freqs=hr_freqs))
 
         # Check for dummy transformations
-        remdummy = torsprep.check_dummy_trans(zma)
+        remdummy = geomprep.build_remdummy_shift_lst(zma)
 
         # Loop over the rotors in the group and write the internal rotor strs
         for tors_name, tors_sym in zip(tors_names, tors_syms):

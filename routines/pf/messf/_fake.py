@@ -9,7 +9,7 @@ def set_fake_freqs(geom_i, geom_j):
     """ Set fake frequencies
     """
 
-    freqs = (30, 50, 70, 100, 200)
+    freqs = [30, 50, 70, 100, 200]
     ntrans = 5
     is_atom_i = automol.geom.is_atom(geom_i)
     is_linear_i = automol.geom.is_linear(geom_i)
