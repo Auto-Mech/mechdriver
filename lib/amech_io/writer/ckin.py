@@ -14,10 +14,10 @@ def run_ckin_header(pf_levels, pf_models):
     tors_model = pf_models['tors']
     vib_model = pf_models['vib']
     sym_model = pf_models['sym']
-    geo_info = pf_levels['geo']
-    ene_info = pf_levels['ene']
-    har_info = pf_levels['harm']
-    tors_info = pf_levels['tors']
+    geo_info = pf_levels['geo'][1]
+    ene_info = pf_levels['ene'][1]
+    har_info = pf_levels['harm'][1]
+    tors_info = pf_levels['tors'][1]
 
     # Convert the pac99 polynomial to chemkin polynomial
     chemkin_header_str = '! vib model: {0}\n'.format(vib_model)

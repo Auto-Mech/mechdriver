@@ -123,7 +123,6 @@ def mol_data(spc_dct_i,
     chn_ene = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
         read_ene=True, read_zpe=False)
-    # print('mod ene', chn_ene, zpe)
     ene_chnlvl = chn_ene + zpe
 
     ene_reflvl = None
@@ -310,7 +309,6 @@ def build_pf_filesystems(spc_dct_i, pf_levels,
     """
 
     pf_filesystems = {}
-    # print('pf_levels', pf_levels)
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle)
     if pf_levels['sym']:
@@ -365,7 +363,6 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
         run_path = run_fs[0].path()
 
     # Get the fs object and the locs
-    # print('save path', save_path)
     cnf_save_fs = autofile.fs.conformer(save_path)
     min_cnf_locs = mincnf.min_energy_conformer_locators(cnf_save_fs)
 

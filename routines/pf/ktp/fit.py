@@ -253,7 +253,7 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
     for pressure, fit_ks in fit_k_dct.items():
 
         calc_ks = ktp_dct[pressure][1]
-        mean_avg_err, max_avg_err = ratefit.calc.fitting_errors(
+        mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
             calc_ks, fit_ks)
 
         # Store in a dictionary
@@ -424,11 +424,8 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     for pressure, calc_ks in calc_k_dct.items():
         filtered_temps, filtered_ks = ratefit.fit.get_valid_tk(
             mess_temps, calc_ks, bimol)
-        # print(pressure)
-        # print(filtered_temps)
         if filtered_ks.size > 0:
             valid_calc_tk_dct[pressure] = [filtered_temps, filtered_ks]
-            # print('size check passed')
 
     # Filter the ktp dictionary by assessing the presure dependence
     if valid_calc_tk_dct:
@@ -444,7 +441,7 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                 no_pdep_pval = pdep_fit['no_pdep_pval']
                 pdep_low = pdep_fit['pdep_low']
                 pdep_high = pdep_fit['pdep_high']
-                rxn_is_pdependent = ratefit.calc.assess_pressure_dependence(
+                rxn_is_pdependent = ratefit.fit.assess_pressure_dependence(
                     valid_calc_tk_dct, assess_pdep_temps,
                     tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
                 if rxn_is_pdependent:
