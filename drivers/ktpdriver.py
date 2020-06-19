@@ -68,8 +68,9 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         rxn_lst, pes_idx, spc_dct)
 
     # Set path where MESS files will be written and read
+    messrate_path = os.path.join(run_prefix, 'MESSRATE')
     mess_path = ktp_runner.get_mess_path(
-        run_prefix, pes_formula, sub_pes_idx)
+        messrate_path, pes_formula, sub_pes_idx)
 
     # Try and read the MESS file from the filesystem first
     mess_inp_str, dat_lst = ktp_runner.read_mess_file(mess_path)

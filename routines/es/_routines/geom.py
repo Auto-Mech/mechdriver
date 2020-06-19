@@ -124,7 +124,7 @@ def reference_geometry(
 
                 print('Saving reference geometry')
                 print(" - Save path: {}".format(thy_save_path))
-                thy_save_fs[-1].file.hessian.write(hess, thy_info[1:4])
+                # thy_save_fs[-1].file.hessian.write(hess, thy_info[1:4])
 
             thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
             ncp = len(
@@ -275,7 +275,7 @@ def run_check_imaginary(
             if hess:
                 imag = False
                 _, _, imag_freq, _ = structure.vib.projrot_freqs(
-                    geo, hess, thy_run_path)
+                    [geo], [hess], thy_run_path)
                 if imag_freq:
                     imag = True
 

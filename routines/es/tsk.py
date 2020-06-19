@@ -204,7 +204,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             run_prefix, rxn_info, mod_ini_thy_info)
         _, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_ini_thy_info)
-        _, ini_thy_save_path = filesys.build.ts_fs_from_thy(
+        ini_thy_save_fs, ini_thy_save_path = filesys.build.ts_fs_from_thy(
             ini_thy_save_path)
         _, ini_thy_run_path = filesys.build.ts_fs_from_thy(
             ini_thy_run_path)
@@ -257,6 +257,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
             geo_path = thy_save_fs[-1].path(mod_ini_thy_info[1:4])
         else:
+            print('ini path', ini_thy_save_path)
             geo = ini_thy_save_fs[0].file.geometry.read()
             zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
             # zma = thy_save_fs[0].file.zmatrix.read()
@@ -299,7 +300,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             geo_run_path = cnf_run_fs[-1].path([locs])
             geo_save_path = cnf_save_fs[-1].path([locs])
             cnf_run_fs[-1].create([locs])
-            zma, geo = filesys.inf.get_zma_geo(cnf_save_fs, [locs])
+            zma, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, [locs])
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,
                 cnf_save_fs, geo_run_path, geo_save_path, [locs],
@@ -440,16 +441,21 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     ini_cnf_run_fs[-1].create(ini_cnf_save_locs)
 
     # Get options from the dct or es options lst
-    frm_bnd_key = spc['frm_bnd_key'] if saddle else ()
-    brk_bnd_key = spc['brk_bnd_key'] if saddle else ()
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
     ndim_tors = es_keyword_dct['ndim_tors']
     frz_all_tors = es_keyword_dct['frz_all_tors']
     scan_increment = spc['hind_inc']
 
+    # Bond key stuff
+    if saddle:
+        frm_bnd_key, brk_bnd_key = structure.ts.rxn_bnd_keys(
+            ini_cnf_save_fs, ini_cnf_save_locs, zma_locs=[0])
+    else:
+        frm_bnd_key, brk_bnd_key = (), ()
+
     # Read fs for zma and geo
-    zma, geo = filesys.inf.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
+    zma, geo = filesys.inf.cnf_fs_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
 
     # Set up the torsion info
     dct_tors_names, amech_sadpt_tors_names = structure.tors.names_from_dct(
@@ -514,8 +520,9 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                     for locs in scn_locs:
                         geo_run_path = ini_scn_run_fs[-1].path(locs)
                         geo_save_path = ini_scn_save_fs[-1].path(locs)
-                        zma, geo = filesys.inf.get_zma_geo(
-                            ini_scn_save_fs, locs)
+                        # Read zma and convert it 
+                        geo = ini_scn_save_fs[-1].file.geometry.read(locs)
+                        zma = ini_scn_save_fs[-1].file.zmatrix.read(locs)
                         ini_scn_run_fs[-1].create(locs)
                         ES_TSKS[job](
                             zma, geo, spc_info, mod_thy_info,

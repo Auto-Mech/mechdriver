@@ -33,6 +33,10 @@ def run(spc_dct, spc_name,
     typ = ts_dct['class']
     dist_info = ts_dct['dist_info']
     dist_name, _, update_guess, brk_name, _ = dist_info
+    frm_bnd_keys = ts_dct['frm_bnd_keys']
+    brk_bnd_keys = ts_dct['brk_bnd_keys']
+    print('frm1', frm_bnd_keys)
+    print('brk1', brk_bnd_keys)
 
     # set ts searching algorithm and grid info
     typ = ts_dct['class']
@@ -196,24 +200,12 @@ def run(spc_dct, spc_name,
 
         # ts_found = False
         if cnf_save_locs and not overwrite:
-            zma = cnf_save_fs[-1].file.zmatrix.read(cnf_save_locs)
-
-            # Add an angle check which is added to spc dct for TS (crap...)
-            vals = automol.zmatrix.values(zma)
-            final_dist = vals[dist_name]
-            dist_info[1] = final_dist
-            angle = conformer.check_angle(
-                zma,
-                ts_dct['dist_info'],
-                ts_dct['class'])
-            ts_dct['dist_info'][1] = final_dist
-            ts_dct['dist_info'][4] = angle
 
             print('TS found and saved previously in ',
                   cnf_save_fs[-1].path(cnf_save_locs))
         else:
 
-            _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+            script_str, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
                 *mod_thy_info[0:2])
             sadpt_transition_state(
                 ini_zma, ts_info, mod_thy_info,
@@ -222,8 +214,9 @@ def run(spc_dct, spc_name,
                 cnf_run_fs, cnf_save_fs,
                 ts_save_fs, ts_save_path, run_fs,
                 typ, grid, update_guess,
-                dist_name, dist_info, brk_name,
-                opt_script_str, overwrite,
+                dist_name, brk_name,
+                frm_bnd_keys, brk_bnd_keys,
+                opt_script_str, script_str, overwrite,
                 es_keyword_dct, **opt_kwargs)
 
     # if not ts_found:
@@ -238,8 +231,9 @@ def sadpt_transition_state(
         cnf_run_fs, cnf_save_fs,
         ts_save_fs, ts_save_path, run_fs,
         typ, grid, update_guess,
-        dist_name, dist_info, brk_name,
-        opt_script_str, overwrite,
+        dist_name, brk_name,
+        frm_bnd_keys, brk_bnd_keys,
+        opt_script_str, script_str, overwrite,
         es_keyword_dct, **opt_kwargs):
     """ Find a sadddle point
     """
@@ -264,12 +258,27 @@ def sadpt_transition_state(
 
     # Optimize the saddle point
     print('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
-    sadpt.optimize_transition_state(
+    opt_ret = sadpt.optimize_saddle_point(
         guess_zmas, ts_info, mod_thy_info,
-        cnf_run_fs, cnf_save_fs,
-        ts_save_fs, ts_save_path, run_fs,
-        dist_name, dist_info, typ,
-        opt_script_str, overwrite, **opt_kwargs)
+        run_fs, opt_script_str, overwrite, **opt_kwargs)
+
+    # Calculate the Hessian for the optimized structure
+    print('\nCalculating Hessian for the optimized geometry...')
+    hess_ret, freqs, imags = sadpt.saddle_point_hessian(
+        opt_ret, ts_info, mod_thy_info,
+        run_fs, script_str, overwrite, **opt_kwargs)
+
+    # Assess saddle point, save it if viable
+    print('Assessing the saddle point...')
+    saddle = sadpt.saddle_point_checker(imags)
+    if saddle:
+        sadpt.save_saddle_point(
+            opt_ret, hess_ret, freqs, imags,
+            mod_thy_info,
+            cnf_save_fs,
+            ts_save_fs, ts_save_path,
+            frm_bnd_keys, brk_bnd_keys,
+            zma_locs=[0])
 
 
 # Barrierless finder functions

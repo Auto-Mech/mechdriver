@@ -7,11 +7,17 @@ import automol
 import routines.pf.thermo
 
 
-def run_ckin_header(es_info, spc_model):
+def run_ckin_header(pf_levels, pf_models):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
-    tors_model, vib_model, sym_model = spc_model
-    [geo_info, ene_info, har_info, _, _, tors_info] = es_info
+
+    tors_model = pf_models['tors']
+    vib_model = pf_models['vib']
+    sym_model = pf_models['sym']
+    geo_info = pf_levels['geo']
+    ene_info = pf_levels['ene']
+    har_info = pf_levels['harm']
+    tors_info = pf_levels['tors']
 
     # Convert the pac99 polynomial to chemkin polynomial
     chemkin_header_str = '! vib model: {0}\n'.format(vib_model)

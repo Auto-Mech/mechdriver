@@ -286,7 +286,6 @@ def _make_fake_mess_strs(rxn, fake_wellr_inf_dcts, fake_wellp_inf_dcts,
                          chnl_enes, label_dct, reac_label, prod_label):
     """ write the MESS strings for the fake wells and TSs
     """
-    print('HERE')
 
     # Initialize well and ts strs
     well_str, ts_str = '', ''

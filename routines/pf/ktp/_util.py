@@ -106,7 +106,7 @@ def print_pf_info(pf_models, pf_levels, chn_model, ref_ene_lvl):
                 level_str = '  {} = {}'.format(key, val[0])
                 level_str += '  * differs from reference; will calc shifts'
         if key == 'tors':
-            level_str = '  tors_sp = {}'.format(val[0][0])
+            level_str = '  tors_sp = {}\n'.format(val[0][0])
             level_str += ' tors_scn = {}'.format(val[0][1])
         else:
             level_str = '  {} = {}'.format(key, val[0])

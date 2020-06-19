@@ -297,23 +297,6 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
     return group, axis, pot, sym_num
 
 
-def check_dummy_trans(zma):
-    """ check trans
-    """
-    atom_symbols = automol.zmatrix.symbols(zma)
-    dummy_idx = []
-    for atm_idx, atm in enumerate(atom_symbols):
-        if atm == 'X':
-            dummy_idx.append(atm_idx)
-    remdummy = numpy.zeros(len(zma[0]))
-    for dummy in dummy_idx:
-        for idx, _ in enumerate(remdummy):
-            if dummy < idx:
-                remdummy[idx] += 1
-
-    return remdummy
-
-
 # CALCULATE THE ZPES OF EACH TORSION USING MESS
 def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
                    script_str=DEFAULT_SCRIPT_DCT['messpf']):
