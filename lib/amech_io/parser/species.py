@@ -322,10 +322,10 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
 
     # Set the info regarding mults and chgs
     rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
-    [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
-    low_mul, high_mul, _, chg = filesys.inf.rxn_chg_mult(
-        rxn_muls, rxn_chgs, ts_mul='low')
+    [rxn_ichs, rxn_chgs, rxn_muls] = rxn_info
+    chg, low_mul, high_mul, = filesys.inf.rxn_chg_mult(rxn_muls, rxn_chgs)
     rad_rad = rxnid.determine_rad_rad(rxn_muls)
+    # Set the multiplcity of the TS to the low-spin mult by default
     ts_mul = low_mul
 
     # Generate rxn_fs from rxn_info stored in spc_dct
@@ -384,8 +384,8 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         # put in increment, make sure it can still be overwritten from .dat
         # ts_dct['hind_inc'] = 30.0 * phycon.DEG2RAD
 
-        print('Torsional Names for TS:')
-        print(ret1[6])
+        # print('Torsional Names for TS:')
+        # print(ret1[6])
 
         # Reaction fs for now
         rinf = filesys.build.get_rxn_fs(
