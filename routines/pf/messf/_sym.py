@@ -2,92 +2,65 @@
 """
 
 import automol
-from routines.es._routines import conformer
+from autofile import fs
+from lib import structure
 
 
-# def symmetry_factor(sym_model, spc_dct_i, spc_info, dist_names,
-#                     saddle, frm_bnd_key, brk_bnd_key, tors_names,
-#                     tors_cnf_save_fs, tors_min_cnf_locs,
-#                     sym_cnf_save_fs, sym_min_cnf_locs):
-#     """ Get the overall factor for a species
-#     """
-
-def symmetry_factor():
-    sym_factor = 1.0
-    # form_coords = []
-    # if 'sym_factor' in spc_dct_i:
-    #     sym_factor = spc_dct_i['sym_factor']
-    #     print('sym_factor from spc_dct_i:', sym_factor)
-    # else:
-
-    #     # Set up the filesystem
-    #     [cnf_fs, cnf_path, min_cnf_locs, save_path, _] = pf_filesystems['sym']
-    #     geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
-
-    #     # Obtain the external symmetry number
-    #     ext_sym = automol.geom.external_symmetry_factor(geo)
-
-    #     # Obtain the internal symmetry number using some routine
-    #     if sym_model == 'sampling':
-
-    #         if tors_names:
-    #             int_sym = int_sym_num_from_sampling(
-    #             geo, ene, cnf_save_fs, saddle,
-    #             frm_bnd_key, brk_bnd_key, tors_names)
-    #         else:
-    #             int_sym = 1.0
-
-    #         if not sym_min_cnf_locs:
-    #             # Fix the return statement here
-    #             print('ERROR: Reference geometry is missing for symmetry',
-    #                   'for species {}'.format(spc_info[0]))
-    #             return '', 0.
-    #         sym_geo = sym_cnf_save_fs[-1].file.geometry.read(sym_min_cnf_locs)
-    #         sym_ene = sym_cnf_save_fs[-1].file.energy.read(sym_min_cnf_locs)
-    #         sym_factor = conformer.symmetry_factor(
-    #             sym_geo, sym_ene, sym_cnf_save_fs, saddle,
-    #             frm_bnd_key, brk_bnd_key, tors_names)
-    #         print('sym_factor from conformer sampling:', sym_factor)
-
-    #     elif sym_model == 'none':
-    #         # print('Warning: no symmetry model requested,',
-    #         #       'setting symmetry factor to 1.0')
-    #         int_sym = 1.0
-
-    #     # Obtain overall number
-    #     sym_factor = ext_sym * int_sym
-
-    return sym_factor
-
-
-def _symmetry_factor(
-        geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=(), brk_bnd_key=(),
-        tors_names=()):
-    """ obtain overall symmetry factor for a geometry as a product
-        of the external symmetry factor and the internal symmetry number
+def symmetry_factor(pf_filesystems, pf_models, spc_dct_i,
+                    frm_bnd_keys=(), brk_bnd_keys=(), rotor_names=()):
+    """ Calculate the symmetry factor for a species
         Note: ignoring for saddle pts the possibility that two configurations
         differ only in their torsional values.
         As a result, the symmetry factor is a lower bound of the true value
     """
-    # Note: ignoring for saddle points the possibility that two configurations
-    # differ only in their torsional values.
-    # As a result, the symmetry factor is a lower bound of the true value
-    ext_sym = automol.geom.external_symmetry_factor(geo)
-    if not saddle:
-        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    if tors_names:
-        int_sym = int_sym_num_from_sampling(
-            geo, ene, cnf_save_fs, saddle,
-            frm_bnd_key, brk_bnd_key, tors_names)
+
+    if 'sym_factor' in spc_dct_i:
+        sym_factor = spc_dct_i['sym_factor']
+        print(' - Reading symmetry number input by user:', sym_factor)
     else:
-        int_sym = 1
-    sym_fac = ext_sym * int_sym
-    return sym_fac
+
+        # if automol.geom.is_atom(geo):
+        sym_model = pf_models['sym']
+
+        # Obtain geometry, energy, and symmetry filesystem
+        [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['sym']
+        geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
+
+        # Obtain the external symssetry number
+        ext_sym = automol.geom.external_symmetry_factor(geo)
+
+        # Obtain the internal symmetry number using some routine
+        if sym_model == 'sampling':
+
+            # Set up the symmetry filesystem
+            sym_fs = fs.manager(cnf_path, 'SYMMETRY')
+            sym_geos = [sym_fs[-1].file.geometry.read(min_cnf_locs)
+                        for locs in sym_fs[-1].existing()]
+
+            # Obtain the internal
+            if tors_names:
+                print(' - Determining internal sym number ',
+                      'using sampling routine.')
+                int_sym = int_sym_num_from_sampling(
+                    sym_geos,
+                    frm_bnd_keys=frm_bnd_keys,
+                    brk_bnd_keys=brk_bnd_keys)
+            else:
+                print(' - No torsions, internal sym is 1.0')
+                int_sym = 1.0
+
+        else:
+            print('No symmetry model requested, ',
+                  'setting internal sym factor to 1.0')
+            int_sym = 1.0
+
+        # Obtain overall number
+        sym_factor = ext_sym * int_sym
+
+    return sym_factor
 
 
-def int_sym_num_from_sampling(
-        geo, ene, cnf_save_fs, saddle=False, frm_bnd_key=(),
-        brk_bnd_key=(), tors_names=()):
+def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
     """ Determine the symmetry number for a given conformer geometry.
     (1) Explore the saved conformers to find the list of similar conformers -
         i.e. those with a coulomb matrix and energy that are equivalent
@@ -98,56 +71,29 @@ def int_sym_num_from_sampling(
         the fully expanded conformer list.
     """
 
-    # Note: ignoring for saddle points the possibility that two configurations
-    # differ only in their torsional values.
-    # As a result, the symmetry factor is a lower bound of the true value
-    if automol.geom.is_atom(geo):
-        int_sym_num = 1.
-    else:
-        if not saddle:
-            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        if tors_names is None:
-            int_sym_num = 1.
-        else:
-            ethrsh = 1.e-5
-            locs_lst = cnf_save_fs[-1].existing()
-            int_sym_num = 1.
-            if locs_lst:
-                enes = [cnf_save_fs[-1].file.energy.read(locs)
-                        for locs in locs_lst]
-                geos = [cnf_save_fs[-1].file.geometry.read(locs)
-                        for locs in locs_lst]
-                geo_sim = []
-                geo_sim2 = []
-                ene_sim = []
-                for geoi, enei in zip(geos, enes):
-                    if enei - enes[0] < ethrsh:
-                        geo_lst = [geoi]
-                        ene_lst = [enei]
-                        unique = is_unique_coulomb_energy(
-                            geo, ene, geo_lst, ene_lst)
-                        if not unique:
-                            geo_sim.append(geoi)
-                            ene_sim.append(enei)
+    # Set saddle
+    saddle = bool(frm_bnd_keys or brk_bnd_keys)
 
-                int_sym_num = 0
-                for geo_sim_i in geo_sim:
-                    new_geos = automol.geom.rot_permutated_geoms(
-                        geo_sim_i, saddle, frm_bnd_key, brk_bnd_key)
-                    for new_geo in new_geos:
-                        new_geom = True
-                        for geo_sim_j in geo_sim2:
-                            if automol.geom.almost_equal_dist_mat(
-                                    new_geo, geo_sim_j, thresh=3e-1):
-                                if saddle:
-                                    new_geom = False
-                                    break
-                                if are_torsions_same(new_geo, geo_sim_j):
-                                    new_geom = False
-                                    break
-                        if new_geom:
-                            geo_sim2.append(new_geo)
-                            int_sym_num += 1
+    int_sym_num = 0
+    sym_geos2 = []
+    for geo_sym_i in sym_geos:
+        new_geos = automol.geom.rot_permutated_geoms(
+            geo_sym_i, frm_bnd_keys, brk_bnd_keys)
+        for new_geo in new_geos:
+            new_geom = True
+            for geo_sym_j in sym_geos2:
+                if automol.geom.almost_equal_dist_mat(
+                        new_geo, geo_sym_j, thresh=3e-1):
+                    if saddle:
+                        new_geom = False
+                        break
+                    if structure.geom.are_torsions_same(new_geo, geo_sym_j):
+                        new_geom = False
+                        break
+            if new_geom:
+                sym_geos2.append(new_geo)
+            int_sym_num += 1
+
     return int_sym_num
 
 
