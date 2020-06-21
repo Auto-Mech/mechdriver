@@ -322,8 +322,8 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
 
     # Set the info regarding mults and chgs
     rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
-    [rxn_ichs, rxn_chgs, rxn_muls] = rxn_info
-    chg, low_mul, high_mul, = filesys.inf.rxn_chg_mult(rxn_muls, rxn_chgs)
+    [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
+    chg, low_mul, high_mul = filesys.inf.rxn_chg_mult(rxn_muls, rxn_chgs)
     rad_rad = rxnid.determine_rad_rad(rxn_muls)
     # Set the multiplcity of the TS to the low-spin mult by default
     ts_mul = low_mul
