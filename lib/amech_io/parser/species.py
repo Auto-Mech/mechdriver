@@ -371,6 +371,10 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         # Set the ts_bnd using the zma and distname
         ts_bnd = automol.zmatrix.bond_idxs(ret1[0] , ret1[1])
 
+        print('BOND KEYS')
+        print('frm', ret1[4])
+        print('brk', ret1[5])
+
         # Put class stuff in the dct
         dct_keys = ['zma', 'dist_name', 'brk_name',
                     'grid', 'frm_bnd_keys', 'brk_bnd_keys',
@@ -400,6 +404,9 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         print('Skipping reaction as class not given/identified')
 
     print('')
+
+    import sys
+    sys.exit()
 
     return ts_dct
 
