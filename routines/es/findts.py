@@ -43,12 +43,13 @@ def run(spc_dct, spc_name,
     if 'ts_search' in ts_dct:
         ts_search = ts_dct['ts_search']
         usr_choice = True
-    elif 'ts_search' not in ts_dct and 'rad' not in typ:
-        ts_search = 'sadpt'
-        usr_choice = False
-    elif 'ts_search' not in ts_dct and 'rad' in typ:
+    elif 'ts_search' not in ts_dct and 'rad' in typ and 'low' in typ:
         ts_search = 'vtst'
         usr_choice = False
+    else:
+        ts_search = 'sadpt'
+        usr_choice = False
+    # elif 'ts_search' not in ts_dct and 'rad' not in typ:
 
     if ts_search in ('vtst', 'vrctst'):
         if 'rad' in typ:
@@ -197,6 +198,10 @@ def run(spc_dct, spc_name,
 
     # Run single/multi reference mol-rad Saddle Point Search
     if _sadpt_search(ts_dct, ts_search, switch):
+
+        print('here')
+        import sys
+        sys.exit()
 
         # ts_found = False
         if cnf_save_locs and not overwrite:

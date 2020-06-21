@@ -131,26 +131,26 @@ def determine_reaction_type(rct_zmas, prd_zmas,
         ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
         if ret and (not given_class or given_class == 'addition'):
             typ = 'addition'
-            ts_zma, dist_name, tors_names = ret
+            ts_zma, dist_name, frm_bnd_key, tors_names = ret
             typ += ' '
             typ += set_ts_spin(ts_mul, high_mul, low_mul)
             # Set up beta sci as fall back option for failed addn TS search
             ret2 = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
             if ret2:
                 bkp_typ = 'beta scission'
-                bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
+                bkp_ts_zma, bkp_dist_name, bkp_brk_key, bkp_tors_names = ret2
 
         # Check for beta-scission
         if typ is None:
             ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
             if ret and (not given_class or given_class == 'betascission'):
                 typ = 'beta scission'
-                ts_zma, dist_name, tors_names = ret
+                ts_zma, dist_name, brk_bnd_key, tors_names = ret
                 ret2 = automol.zmatrix.ts.addition(
                     prd_zmas, rct_zmas, rct_tors_names)
                 if ret2:
                     bkp_typ = 'addition'
-                    bkp_ts_zma, bkp_dist_name, bkp_tors_names = ret2
+                    bkp_ts_zma, bkp_dist_name, bkp_frm_key, bkp_tors_names = ret2
 
         # Check for hydrogen migration
         if typ is None:
