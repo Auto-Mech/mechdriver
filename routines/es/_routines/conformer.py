@@ -551,5 +551,5 @@ def _save_sym_indistinct_conformer(geo, ene, cnf_save_fs,
         sym_save_path))
     sym_save_fs[-1].create(cnf_tosave_locs)
     sym_save_fs[-1].file.geometry.write(geo, cnf_tosave_locs)
-    sym_save_fs[-1].file.energy.write(ene, cnf_tosave_locs)
+    # sym_save_fs[-1].file.energy.write(ene, cnf_tosave_locs)
     # sym_save_fs[-1].file.zmatrix.write(zma, cnf_tosave_locs)
