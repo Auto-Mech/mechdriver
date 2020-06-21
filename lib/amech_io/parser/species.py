@@ -386,7 +386,7 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
             dist_name, 0., update_guess, brk_name, None]
 
         # put in increment, make sure it can still be overwritten from .dat
-        # ts_dct['hind_inc'] = 30.0 * phycon.DEG2RAD
+        ts_dct['hind_inc'] = 30.0 * phycon.DEG2RAD
 
         # print('Torsional Names for TS:')
         # print(ret1[6])
@@ -405,8 +405,8 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
 
     print('')
 
-    import sys
-    sys.exit()
+    # import sys
+    # sys.exit()
 
     return ts_dct
 
