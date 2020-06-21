@@ -81,29 +81,31 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     """
 
     # Build the filesystems
-    [harm_cnf_fs, harm_path, harm_min_cnf_locs, _, _] = pf_filesystems['harm']
-    [tors_cnf_fs, tors_path, tors_min_cnf_locs, _, _] = pf_filesystems['tors']
+    [harm_cnf_fs, _, harm_min_locs, _, harm_run_fs] = pf_filesystems['harm']
+    [tors_cnf_fs, _, tors_min_locs, _, tors_run_fs] = pf_filesystems['tors']
 
     # Build the run filesystem using locs
-    run_fs = autofile.fs.conformer(harm_path)
-    run_fs[-1].create(harm_min_cnf_locs)
-    run_path = run_fs[-1].path(harm_min_cnf_locs)
+    harm_run_fs[-1].create(harm_min_locs)
+    harm_run_path = harm_run_fs[-1].path(harm_min_locs)
+    tors_run_fs[-1].create(tors_min_locs)
+    tors_run_path = tors_run_fs[-1].path(tors_min_locs)
 
     # Read info from the filesystem that is needed
-    harm_geo = harm_cnf_fs[-1].file.geometry.read(harm_min_cnf_locs)
-    hess = harm_cnf_fs[-1].file.hessian.read(harm_min_cnf_locs)
-    tors_geo = tors_cnf_fs[-1].file.geometry.read(tors_min_cnf_locs)
-    hess_path = harm_cnf_fs[-1].path(harm_min_cnf_locs)
+    harm_geo = harm_cnf_fs[-1].file.geometry.read(harm_min_locs)
+    hess = harm_cnf_fs[-1].file.hessian.read(harm_min_locs)
+    tors_geo = tors_cnf_fs[-1].file.geometry.read(tors_min_locs)
+    hess_path = harm_cnf_fs[-1].path(harm_min_locs)
     print(' - Reading Hessian from path {}'.format(hess_path))
 
     # Calculate ZPVES of the hindered rotors
-    print(' - Calculating the torsional ZPVES using MESS') 
-    tors_zpe = torsprep.mess_tors_zpes(tors_geo, mess_hr_str, tors_path)
+    print(' - Calculating the torsional ZPVES using MESS...')
+    tors_zpe = torsprep.mess_tors_zpes(tors_geo, mess_hr_str, tors_run_path)
     tors_zpe *= phycon.KCAL2EH
 
+    print(' - Calculating the RT and RT-rotor projected frequencies ProjRot')
     # Run ProjRot to get the frequencies v1
     rt_freqs1, rth_freqs1, _, rth_imag1 = vibprep.projrot_freqs(
-        [harm_geo], [hess], run_path,
+        [harm_geo], [hess], harm_run_path,
         grads=[[]], rotors_str=projrot_hr_str, coord_proj='cartesian',
         script_str=DEFAULT_SCRIPT_DCT['projrot'])
 
@@ -113,7 +115,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
         "RPHt2.exe >& /dev/null"
     )
     _, rth_freqs2, _, rth_imag2 = vibprep.projrot_freqs(
-        [harm_geo], [hess], run_path,
+        [harm_geo], [hess], harm_run_path,
         grads=[[]], rotors_str=projrot_hr_str, coord_proj='cartesian',
         script_str=projrot_script_str2)
 
