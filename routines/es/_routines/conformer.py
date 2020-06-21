@@ -50,7 +50,6 @@ def conformer_sampling(zma, spc_info,
         cnf_save_fs=cnf_save_fs,
         thy_info=mod_thy_info,
         saddle=saddle,
-        dist_info=dist_info,
         rxn_class=rxn_class
     )
 
@@ -77,7 +76,6 @@ def conformer_sampling(zma, spc_info,
         cnf_save_fs=cnf_save_fs,
         thy_info=mod_thy_info,
         saddle=saddle,
-        dist_info=dist_info,
         rxn_class=rxn_class
     )
 
@@ -244,7 +242,7 @@ def run_conformers(
 
 
 def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
-                    dist_info=(), rxn_class=''):
+                    rxn_class=''):
     """ save the conformers that have been found so far
         # Only go through save procedure if conf not in save
         # may need to get geo, ene, etc; maybe make function
@@ -302,8 +300,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                         else:
                             sym_locs = saved_locs[sym_id]
                             _save_sym_indistinct_conformer(
-                                geo, cnf_save_fs, locs, sym_locs)
-
+                                geo, ene, cnf_save_fs, locs, sym_locs)
 
         # Update the conformer trajectory file
         print('')
@@ -359,7 +356,7 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
                 sym_idx = idx
 
     if sym_idx is not None:
-        print(' - Structure is not symmetrically unique.')    
+        print(' - Structure is not symmetrically unique.')
 
     return sym_idx
 
@@ -385,11 +382,11 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=[0]):
     """ Perform a series of checks to assess the viability
         of a transition state geometry prior to saving
     """
-   
+
     # Initialize viable
     viable = True
 
-    # Obtain the min-ene zma and bond keys 
+    # Obtain the min-ene zma and bond keys
     min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(cnf_save_fs)
     cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
     zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
@@ -431,7 +428,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=[0]):
         ref_zma, next(iter(frm_bnd_keys)), next(iter(brk_bnd_keys)), rxn_class)
     print('conf_angle', cnf_angle)
     print('ref_angle', ref_angle)
-    
+
     # Set the maximum allowed displacement for a TS conformer
     max_disp = 0.6
     if 'addition' in rxn_class:
@@ -456,7 +453,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=[0]):
             print(" - Transition State conformer has",
                   "diverged from original structure of",
                   "dist {:.3f} with dist {:.3f}".format(
-                      ref_dist_len, cnf_dist))
+                      ref_dist, cnf_dist))
             print(' - Radical atom now has a new nearest neighbor')
             viable = False
         if abs(cnf_dist - ref_dist) > max_disp:
@@ -538,12 +535,12 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs):
     sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
 
 
-def _save_sym_indistinct_conformer(geo, cnf_save_fs,
+def _save_sym_indistinct_conformer(geo, ene, cnf_save_fs,
                                    cnf_tosave_locs, cnf_saved_locs):
     """ Save a structure into the SYM directory of a conformer
     """
 
-    # Set the path to the previously saved conformer under which 
+    # Set the path to the previously saved conformer under which
     # we will save the new conformer that shares a structure
     cnf_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
 
@@ -554,4 +551,5 @@ def _save_sym_indistinct_conformer(geo, cnf_save_fs,
         sym_save_path))
     sym_save_fs[-1].create(cnf_tosave_locs)
     sym_save_fs[-1].file.geometry.write(geo, cnf_tosave_locs)
+    sym_save_fs[-1].file.energy.write(ene, cnf_tosave_locs)
     # sym_save_fs[-1].file.zmatrix.write(zma, cnf_tosave_locs)

@@ -29,7 +29,7 @@ def atm_data(spc_dct_i,
 
     print('\nObtaining the geometry...')
     geom = rot.read_geom(pf_filesystems)
-    
+
     print('\nObtaining the electronic energy...')
     ene_chnlvl = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
@@ -106,10 +106,10 @@ def mol_data(spc_dct_i,
 
     # Obtain symmetry factor
     print('\nDetermining the symmetry factor...')
-    sym_factor = sym.symmetry_factor()
-    #     sym_model, spc_dct_i, spc_info, dist_names,
-    #     saddle, frm_bnd_key, brk_bnd_key, rotor_names,
-    #     cnf_save_fs, cnf_save_locs, saddle)
+    sym_factor = sym.symmetry_factor(
+        pf_filesystems, chn_pf_models, spc_dct_i,
+        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
+        rotor_names=rotor_names)
 
     if nonrigid_tors(chn_pf_models, rotor_names):
         sym_factor = sym.tors_reduced_sym_factor(

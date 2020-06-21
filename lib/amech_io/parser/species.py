@@ -322,10 +322,10 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
 
     # Set the info regarding mults and chgs
     rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
-    [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
-    low_mul, high_mul, _, chg = filesys.inf.rxn_chg_mult(
-        rxn_muls, rxn_chgs, ts_mul='low')
+    [rxn_ichs, rxn_chgs, rxn_muls] = rxn_info
+    chg, low_mul, high_mul, = filesys.inf.rxn_chg_mult(rxn_muls, rxn_chgs)
     rad_rad = rxnid.determine_rad_rad(rxn_muls)
+    # Set the multiplcity of the TS to the low-spin mult by default
     ts_mul = low_mul
 
     # Generate rxn_fs from rxn_info stored in spc_dct
@@ -371,6 +371,10 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         # Set the ts_bnd using the zma and distname
         ts_bnd = automol.zmatrix.bond_idxs(ret1[0] , ret1[1])
 
+        print('BOND KEYS')
+        print('frm', ret1[4])
+        print('brk', ret1[5])
+
         # Put class stuff in the dct
         dct_keys = ['zma', 'dist_name', 'brk_name',
                     'grid', 'frm_bnd_keys', 'brk_bnd_keys',
@@ -381,8 +385,11 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         ts_dct['dist_info'] = [
             dist_name, 0., update_guess, brk_name, None]
 
-        print('Torsional Names for TS:')
-        print(ret1[6])
+        # put in increment, make sure it can still be overwritten from .dat
+        # ts_dct['hind_inc'] = 30.0 * phycon.DEG2RAD
+
+        # print('Torsional Names for TS:')
+        # print(ret1[6])
 
         # Reaction fs for now
         rinf = filesys.build.get_rxn_fs(
@@ -397,6 +404,9 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         print('Skipping reaction as class not given/identified')
 
     print('')
+
+    import sys
+    sys.exit()
 
     return ts_dct
 
