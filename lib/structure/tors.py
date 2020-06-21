@@ -309,6 +309,8 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
     bld_save_fs = autofile.fs.build(tors_save_path)
     bld_save_fs[-1].create(bld_locs)
     pf_path = bld_save_fs[-1].path(bld_locs)
+    print('Run path for MESSPF:')
+    print(pf_path)
 
     # Write the MESSPF input file
     global_pf_str = mess_io.writer.global_pf(

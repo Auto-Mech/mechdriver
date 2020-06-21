@@ -20,7 +20,7 @@ def projrot_freqs(geoms, hessians, run_path,
     bld_run_fs = autofile.fs.build(run_path)
     bld_run_fs[-1].create(bld_locs)
     projrot_path = bld_run_fs[-1].path(bld_locs)
-    print('Build Path for ProjRot calls')
+    print('Run path for ProjRot:')
     print(projrot_path)
 
     # Write the ProjRot input file
