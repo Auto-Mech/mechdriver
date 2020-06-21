@@ -38,7 +38,7 @@ PES_MODEL_DCT, SPC_MODEL_DCT = parser.model.read_models_sections(JOB_PATH)
 
 # Parse the species input to get a dct with ALL species in mechanism
 print('\nReading species.csv...')
-SPC_DCT = parser.species.build_spc_dct(JOB_PATH, 'csv', check_stereo=False)
+SPC_DCT = parser.species.build_spc_dct(JOB_PATH, 'csv', check_stereo=RUN_INP_DCT['check_stereo'])
 
 # Parse mechanism input and get a dct with info on PESs user request to run
 if RUN_OBJ_DCT['pes']:
