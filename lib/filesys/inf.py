@@ -87,7 +87,7 @@ def get_spc_info(spc_dct):
 
 
 # Handle info objects for reactions
-def rxn_info(reacs, prods, spc_dct, ts_mul='low'):
+def rxn_info(reacs, prods, spc_dct, rxn_mul='low'):
     """ prepare rxn info and reverse the reactants and products
         if reaction is endothermic
     """
@@ -104,10 +104,13 @@ def rxn_info(reacs, prods, spc_dct, ts_mul='low'):
         rxn_muls[1].append(spc_dct[spc]['mul'])
     rxn_ichs, rxn_chgs, rxn_muls = autofile.schema.sort_together(
         rxn_ichs, rxn_chgs, rxn_muls)
-    # _, _, mul, _ = rxn_chg_mult(
-    #     rxn_muls, rxn_chgs, ts_mul=ts_mul)
+    _, ts_mul_low, ts_mul_high = rxn_chg_mult(rxn_muls, rxn_chgs)
+    if rxn_mul == 'low':
+        mul = ts_mul_low
+    else:
+        mul = ts_mul_high
 
-    return [rxn_ichs, rxn_chgs, rxn_muls]
+    return [rxn_ichs, rxn_chgs, rxn_muls, mul]
 
 
 def rxn_chg_mult(rxn_muls, rxn_chgs):
@@ -122,7 +125,7 @@ def rxn_chg_mult(rxn_muls, rxn_chgs):
     if nrcts == 1 and nprds == 1:
         ts_mul_low = max(rxn_muls[0][0], rxn_muls[1][0])
         ts_mul_high = ts_mul_low
-        rad_rad = False
+        # rad_rad = False
     else:
         for rct_mul in rxn_muls[0]:
             rct_spin_sum += (rct_mul - 1.)/2.
@@ -130,15 +133,15 @@ def rxn_chg_mult(rxn_muls, rxn_chgs):
         for prd_mul in rxn_muls[1]:
             prd_spin_sum += (prd_mul - 1.)/2.
             prd_muls.append(prd_mul)
-        rct_chk = bool(min(rct_muls) == 1 or nrcts == 1)
-        prd_chk = bool(min(prd_muls) == 1 or nprds == 1)
-        if rct_chk and prd_chk:
-            rad_rad = False
+        # rct_chk = bool(min(rct_muls) == 1 or nrcts == 1)
+        # prd_chk = bool(min(prd_muls) == 1 or nprds == 1)
+        # if rct_chk and prd_chk:
+        #     rad_rad = False
         ts_mul_low = min(rct_spin_sum, prd_spin_sum)
         ts_mul_low = int(round(2*ts_mul_low + 1))
         ts_mul_high = max(rct_spin_sum, prd_spin_sum)
         ts_mul_high = int(round(2*ts_mul_high + 1))
-    
+
     # Set the charges
     ts_chg = 0
     for rct_chg in rxn_chgs[0]:
