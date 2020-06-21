@@ -34,17 +34,18 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i,
 
             # Set up the symmetry filesystem
             sym_fs = fs.manager(cnf_path, 'SYMMETRY')
-            sym_geos = [sym_fs[-1].file.geometry.read(min_cnf_locs)
+            sym_geos = [sym_fs[-1].file.geometry.read(locs)
                         for locs in sym_fs[-1].existing()]
 
             # Obtain the internal
-            if tors_names:
+            if rotor_names:
                 print(' - Determining internal sym number ',
                       'using sampling routine.')
                 int_sym = int_sym_num_from_sampling(
                     sym_geos,
                     frm_bnd_keys=frm_bnd_keys,
                     brk_bnd_keys=brk_bnd_keys)
+                print('int', int_sym)
             else:
                 print(' - No torsions, internal sym is 1.0')
                 int_sym = 1.0
