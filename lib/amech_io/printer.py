@@ -2,7 +2,19 @@
   Library of Runtime Messages
 """
 
+import subprocess
 import random
+
+
+def host_name():
+    """ print the host the calculation is running on
+    """
+    proc = subprocess.Popen(['hostname'], stdout=subprocess.PIPE)
+    host_node = proc.stdout.read()
+    print(type(host_node))
+    host_node.decode('ascii')
+    host_node.strip()
+    print(HOST_MSG.format(host_node))
 
 
 def program_header(driver):
@@ -30,6 +42,11 @@ def program_exit(driver):
     }
     print(header_dct[driver]+'\n')
 
+
+HOST_MSG = """
+=========================================================
+HOST: {} 
+========================================================="""
 
 AMECH_MSG = """
           ================================================================
