@@ -126,9 +126,18 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
 
     # Assess single fitting errors:
     # are they within threshold at each pressure
-    sgl_fit_good = max((
-        vals[1] for vals in sing_fit_err_dct.values())) < err_thresh
+    thresh, choice = arrfir_thresh
+    if choice == 'max':
+        test_val = max((
+            vals[1] for vals in sing_fit_err_dct.values()))
+    elif choice == 'mean':
+        test_val = max((
+            vals[0] for vals in sing_fit_err_dct.values()))
+    sgl_fit_good = bool(test_val < thresh)
 
+    # Put a double fit assess function
+    # Skip first and last points in estimating maximum errors – or better yet, skip first or last data point, and try fit again.
+    
     # Assess if a double Arrhenius fit is possible
     dbl_fit_poss = all(
         len(ktp_dct[p][0]) >= 6 for p in ktp_dct)
@@ -150,7 +159,8 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
         doub_params_dct, doub_fit_temp_dct, doub_fit_suc = mod_arr_fit(
             ktp_dct, mess_path, fit_type='double',
             fit_method='dsarrfit', t_ref=1.0,
-            a_conv_factor=a_conv_factor)
+            a_conv_factor=a_conv_factor,
+            inp_params_dct=sing_params_dct)
 
         if doub_fit_suc:
             print('\nSuccessful fit to Double Arrhenius at all T, P')
@@ -175,7 +185,7 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
 
 
 def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
-                t_ref=1.0, a_conv_factor=1.0):
+                t_ref=1.0, a_conv_factor=1.0, inp_params_dct=None):
     """
     Routine for a single reaction:
         (1) Grab high-pressure and pressure-dependent rate constants
@@ -183,7 +193,10 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
         (2) Fit rate constants to an Arrhenius expression
     """
 
-    assert fit_type in ('single', 'double')
+    assert fit_type in ('single', 'double'), 'Only single/double fits'
+    if inp_param_dct is not None:
+        assert set(list(ktp_dct.keys())) == set(list(inp_param_dct.keys())), (
+                'Pressures for ktp and guess dcts must be the same')
 
     # Dictionaries to store info; indexed by pressure (given in fit_ps)
     fit_param_dct = {}
@@ -196,6 +209,11 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
         temps = tk_arr[0]
         rate_constants = tk_arr[1]
 
+        # Build guess params for a double fit
+        if inp_param_dct is not None and fit_type == 'double':
+            arr1_guess, arr2_guess = _generate_guess(
+                inp_param_dct[pressure]) 
+
         # Fit rate constants using desired Arrhenius fit
         if fit_type == 'single':
             fit_params = ratefit.fit.arrhenius.single(
@@ -204,6 +222,7 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
         elif fit_type == 'double':
             fit_params = ratefit.fit.arrhenius.double(
                 temps, rate_constants, t_ref, fit_method,
+                arr1_guess=arr1_guess, arr2_guess=arr2_guess,
                 dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
 
         # Store the fitting parameters in a dictionary
@@ -216,6 +235,57 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
     fit_success = all(params for params in fit_param_dct.values())
 
     return fit_param_dct, fit_temp_dct, fit_success
+
+
+def _generate_guess(params):
+    """ Generate a set of double fit guess params based on input.
+        Right now it is just a set of single params.
+    """
+
+    # Unpack input single params
+    [a_inp, n_inp, ea_inp] = params
+
+    # Generate new guesses
+    a1_guess = a_inp * 0.5
+    a2_guess = a_inp * 1.5
+    n1_guess = n_inp * 0.9
+    n2_guess = n_inp * 1.1
+    ea1_guess = ea_inp
+    ea2_guess = ea_inp
+
+    arr1_guess = (a1_guess, n1_guess, ea1_guess)
+    arr2_guess = (a2_guess, n2_guess, ea2_guess)
+
+    return arr1_guess, arr2_guess
+
+
+def _check_double_fit(sing_fit_dct, dbl_fit_dct,
+                      temps=[2000.0], t_ref=1.0):
+    """ Check if the double fit is bad
+    """
+
+    bad_dbl = False
+    for sarr, darr in zip(sing_fit_dct.values(), dbl_fit_dct.values()):
+
+        # Set the temperatures
+        # temps = ktp_dct[pressure][0]
+        sparams = sarr[1]
+        dparams = darr[1]
+
+        # Calculate fitted rate constants, based on fit type
+        sgl_ks = ratefit.calc.single_arrhenius(
+            sparams[0], sparams[1], sparams[2],
+            t_ref, temps)
+        dbl_ks = ratefit.calc.double_arrhenius(
+            dparams[0], dparams[1], dparams[2],
+            dparams[3], dparams[4], dparams[5],
+            t_ref, temps)
+
+        for sk, dk in zip(sgl_ks, dbl_ks):
+            if dk >= sk * 10.0:
+                bad_dbl = True
+
+    return bad_dbl
 
 
 def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',

@@ -16,10 +16,14 @@ from lib.filesys.build import prefix_fs
 # Set runtime options based on user input
 JOB_PATH = sys.argv[1]
 
-# Print the header message for the driver
+# Print the header message and host name
 printer.program_header('amech')
 printer.random_cute_animal()
+printer.host_name()
 printer.program_header('inp')
+
+import sys
+sys.exit()
 
 # Parse the run input
 print('\nReading run.dat...')
