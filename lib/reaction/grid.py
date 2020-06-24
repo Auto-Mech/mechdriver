@@ -235,12 +235,12 @@ def unimolecular_elimination_grid(ts_bnd_len, ts_zma, syms, brk_name):
 def hydrogen_abstraction(npoints, ts_bnd_len):
     """ Build forward 1D grid for hydrogen abstraction reaction
     """
-    npoints = 16
+    npoints = 8
     rmin = 0.7 * phycon.ANG2BOHR
     rmax = 2.2 * phycon.ANG2BOHR
     if ts_bnd_len in bnd.LEN_DCT:
         bnd_len = bnd.LEN_DCT[ts_bnd_len]
-        rmin = bnd_len
+        rmin = bnd_len + 0.2
         rmax = bnd_len + 1.0 * phycon.ANG2BOHR
     grid = numpy.linspace(rmin, rmax, npoints)
     update_guess = False
