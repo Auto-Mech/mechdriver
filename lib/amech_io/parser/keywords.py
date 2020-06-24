@@ -5,9 +5,18 @@
 # Run Keywords
 RUN_INP_REQUIRED_KEYWORDS = [
     'mech',
-    'run_prefix',
-    'save_prefix',
+    'spc'
 ]
+RUN_INP_SUPPORTED_KEYWORDS = [
+    'mech',
+    'spc',
+    'run_prefix',
+    'save_prefix'
+]
+RUN_INP_KEY_DCT = {
+    'mech': ['chemkin'],
+    'spc': ['csv']
+}
 RUN_SUPPORTED_KEYWORDS = [
     'es',
     'thermochem',
@@ -19,9 +28,6 @@ RUN_SUPPORTED_KEYWORDS = [
     'run_messrate',
     'run_fits'
 ]
-
-# ES Task keywords
-
 
 # Model keywords
 MODEL_PF_SUPPORTED_DCT = {
@@ -46,7 +52,6 @@ MODEL_PF_DEFAULT_DCT = {
     'wells': 'fake',
     'tunnel': 'none'
 }
-
 
 # Electronic Structure Tasks
 ES_TSK_OBJ_SUPPORTED_LST = [
@@ -73,16 +78,17 @@ ES_TSK_SUPPORTED_DCT = {
 }
 ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'init_geom': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'find_ts': ['runlvl', 'inplvl', 'var_splvl1', 'var_splvl2', 'var_scnlvl',
+    'find_ts': ['runlvl', 'inplvl', 'rxndirn',
+                'var_splvl1', 'var_splvl2', 'var_scnlvl',
                 'nobarrier', 'retryfail', 'overwrite'],
     'conf_samp': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'conf_energy': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
     'conf_grad': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
     'conf_hess': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
     'conf_vpt2': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
-    'hr_scan': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 
+    'hr_scan': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors',
                 'retryfail', 'overwrite'],
-    'hr_grad': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors', 
+    'hr_grad': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors',
                 'retryfail', 'overwrite'],
     'hr_hess': ['runlvl', 'inplvl', 'frz_all_tors', 'ndim_tors',
                 'retryfail', 'overwrite'],
@@ -107,7 +113,8 @@ ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'zpve_min': [True, False],
     'nobarrier': ['pst', 'rpvtst', 'vrctst'],
     'retryfail': [True, False],
-    'overwrite': [True, False]
+    'overwrite': [True, False],
+    'rxndirn': ['forw', 'back', 'exo']
 }
 ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'runlvl': None,
@@ -120,7 +127,8 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'zpve_min': False,
     'nobarrier': 'pst',
     'retryfail': True,
-    'overwrite': False
+    'overwrite': False,
+    'rxndirn': 'forw'
 }
 
 # Species keywords

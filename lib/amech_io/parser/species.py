@@ -4,19 +4,54 @@
 import os
 import automol
 import autofile
-import chemkin_io
+import mechanalyzer
 import autoparse.find as apf
 from lib import filesys
 from lib.phydat import symm
 from lib.phydat import eleclvl
 from lib.phydat import phycon
 from lib.reaction import rxnid
+from lib.reaction import direction as rxndirn
 from lib.amech_io.parser import ptt
-from lib.amech_io.parser import rclass
 
 
 CSV_INP = 'inp/species.csv'
 DAT_INP = 'inp/species.dat'
+
+
+# Build main dcts
+def build_queue(rxn_lst):
+    """ Build spc queue from the reaction lst for the drivers
+        :return spc_queue: all the species and corresponding models in rxn
+        :rtype: list[(species, model),...]
+    """
+
+    if 'all' in rxn_lst:
+        # First check if rxn_lst is a bunch of species
+        spc_queue = rxn_lst['all']['species']
+    else:
+        # Build the list from expanding the reacs and prods
+        spc_queue = []
+        for rxn in rxn_lst:
+            model = rxn['model']
+            spc_queue.extend(((reac, model) for reac in rxn['reacs']))
+            spc_queue.extend(((prod, model) for prod in rxn['prods']))
+
+    return spc_queue
+
+
+def build_spc_dct(job_path, spc_type):
+    """ Build the species dct
+    """
+
+    spc_str = ptt.read_inp_str(
+        job_path, CSV_INP, remove_comments=False)
+    spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
+
+    # Modify spc dct with params from the AMech file
+    mod_spc_dct = modify_spc_dct(job_path, spc_dct)
+
+    return mod_spc_dct
 
 
 def build_run_spc_dct(spc_dct, run_obj_dct):
@@ -40,15 +75,14 @@ def build_run_spc_dct(spc_dct, run_obj_dct):
     return run_dct
 
 
-def build_spc_dct(job_path, spc_type, check_stereo=False):
-    """ Get a dictionary of all the input species
-        indexed by InChi string
+def modfy_spc_wdat():
+    """ fefe
     """
-    spc_csv_str = ptt.read_inp_str(job_path, CSV_INP, remove_comments=False)
-    if spc_type == 'csv':
-        spc_dct = csv_dct(spc_csv_str, check_stereo=check_stereo)
-    else:
-        raise NotImplementedError
+    # Modify spc dct with params from the AMech file
+    mod_spc_dct = modify_spc_dct(job_path, spc_dct)
+
+    return mod_spc_dct
+
 
     # Modify spc dct with params from the AMech file
     mod_spc_dct = modify_spc_dct(job_path, spc_dct)
@@ -56,61 +90,24 @@ def build_spc_dct(job_path, spc_type, check_stereo=False):
     return mod_spc_dct
 
 
-def csv_dct(spc_str, check_stereo):
-    """ read the species file in a .csv format
+def build_spc_queue(rxn_lst):
+    """ Build spc queue from the reaction lst for the drivers
+        :return spc_queue: all the species and corresponding models in rxn
+        :rtype: list[(species, model),...]
     """
-    # Read in the initial CSV information
-    smi_dct = chemkin_io.parser.mechanism.spc_name_dct(spc_str, 'smiles')
-    ich_dct = chemkin_io.parser.mechanism.spc_name_dct(spc_str, 'inchi')
-    mul_dct = chemkin_io.parser.mechanism.spc_name_dct(spc_str, 'mult')
-    chg_dct = chemkin_io.parser.mechanism.spc_name_dct(spc_str, 'charge')
-    sens_dct = chemkin_io.parser.mechanism.spc_name_dct(spc_str, 'sens')
 
-    # Print message detailing if stereochemistry is used
-    print_check_stero_msg(check_stereo)
+    if 'all' in rxn_lst:
+        # First check if rxn_lst is a bunch of species
+        spc_queue = rxn_lst['all']['species']
+    else:
+        # Build the list from expanding the reacs and prods
+        spc_queue = []
+        for rxn in rxn_lst:
+            model = rxn['model']
+            spc_queue.extend(((reac, model) for reac in rxn['reacs']))
+            spc_queue.extend(((prod, model) for prod in rxn['prods']))
 
-    # Rebuild with stereochemistry if possible
-    if check_stereo:
-        spc_str = 'name,SMILES,InChI,mult,charge,sens \n'
-        for name in ich_dct:
-            ich = ich_dct[name]
-            smi = smi_dct[name]
-            mul = mul_dct[name]
-            chg = chg_dct[name]
-            sens = sens_dct[name]
-            if not automol.inchi.is_complete(ich):
-                print('adding stereochemistry for {0}, {1}, {2}'.format(
-                    name, smi, ich))
-                # this returns a list of ichs w/ different possible stereo vals
-                # for now just taking the first of these
-                ich = automol.inchi.add_stereo(ich)
-                ich = ich[-1]
-                ich_dct[name] = ich
-            spc_str += '{0},\'{1}\',\'{2}\',{3},{4},{5} \n'.format(
-                name, smi, ich, mul, chg, sens)
-
-        stereo_path = 'species_stereo.csv'
-        with open(stereo_path, 'w') as stereo_csv_file:
-            stereo_csv_file.write(spc_str)
-
-    # Build the final dictionary
-    spc_names = []
-    spc_dct = {}
-    for name in mul_dct:
-        spc_dct[name] = {}
-        spc_dct[name]['smi'] = smi_dct[name]
-        if isinstance(ich_dct[name], str):
-            spc_dct[name]['ich'] = ich_dct[name]
-        elif isinstance(smi_dct[name], str):
-            spc_dct[name]['ich'] = automol.smiles.inchi(smi_dct[name])
-        else:
-            print('No Inchi string for {}'.format(name))
-            spc_dct[name]['ich'] = ''
-        spc_dct[name]['chg'] = chg_dct[name]
-        spc_dct[name]['mul'] = mul_dct[name]
-        spc_names.append(name)
-
-    return spc_dct
+    return spc_queue
 
 
 def read_spc_amech(job_path):
@@ -155,17 +152,16 @@ def modify_spc_dct(job_path, spc_dct):
     amech_dct = read_spc_amech(job_path)
     geom_dct = geometry_dictionary(job_path)
 
-    # First loop for species defined in the csv file
     mod_spc_dct = {}
     for spc in spc_dct:
         # Set the ich and mult
-        ich = spc_dct[spc]['ich']
-        mul = spc_dct[spc]['mul']
-        chg = spc_dct[spc]['chg']
+        ich = spc_dct[spc]['inchi']
+        mul = spc_dct[spc]['mult']
+        chg = spc_dct[spc]['charge']
         mod_spc_dct[spc] = {}
-        mod_spc_dct[spc]['ich'] = ich
-        mod_spc_dct[spc]['mul'] = mul
-        mod_spc_dct[spc]['chg'] = chg
+        mod_spc_dct[spc]['inchi'] = ich
+        mod_spc_dct[spc]['mult'] = mul
+        mod_spc_dct[spc]['charge'] = chg
 
         # Add params from global dct in amech dct
         if 'global' in amech_dct:
@@ -195,7 +191,7 @@ def modify_spc_dct(job_path, spc_dct):
     # Final loop to add in things that are needed but could be missing
     for spc in mod_spc_dct:
         if spc != 'global' and 'ts_' not in spc:
-            ich, mul = mod_spc_dct[spc]['ich'], mod_spc_dct[spc]['mul']
+            ich, mul = mod_spc_dct[spc]['inchi'], mod_spc_dct[spc]['mult']
             if 'elec_levels' not in mod_spc_dct[spc]:
                 if (ich, mul) in eleclvl.DCT:
                     mod_spc_dct[spc]['elec_levels'] = eleclvl.DCT[(ich, mul)]
@@ -246,7 +242,8 @@ def geometry_dictionary(job_path):
 
 
 def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
-                  run_inp_dct, spc_dct, cla_dct):
+                  run_inp_dct, spc_dct, cla_dct,
+                  direction='forw'):
     """ build a ts queue
     """
 
@@ -264,7 +261,8 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
                 es_keyword_dct['runlvl'], thy_dct)
             ts_dct = build_sadpt_dct(
                 pes_idx, rxn_lst, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, cla_dct)
+                run_inp_dct, spc_dct, cla_dct,
+                direction=direction)
             break
 
     # Build the queue
@@ -277,7 +275,8 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
 
 def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
-                    run_inp_dct, spc_dct, cla_dct):
+                    run_inp_dct, spc_dct, cla_dct,
+                    direction='forw'):
     """ build a dct for saddle points for all reactions in rxn_lst
     """
 
@@ -286,13 +285,14 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         ts_dct[tsname] = build_sing_chn_sadpt_dct(
             tsname, rxn, thy_info, ini_thy_info,
-            run_inp_dct, spc_dct, cla_dct)
+            run_inp_dct, spc_dct, cla_dct, direction=direction)
 
     return ts_dct
 
 
 def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
-                             run_inp_dct, spc_dct, cla_dct):
+                             run_inp_dct, spc_dct, cla_dct,
+                             direction='forw'):
     """ build dct for single reaction
     """
     run_prefix = run_inp_dct['run_prefix']
@@ -305,20 +305,10 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
     print('  Preparing {} for reaction {} = {}'.format(
         tsname, '+'.join(reacs), '+'.join(prods)))
 
-    # Check the class dct to see if we can set class
-    if cla_dct:
-        given_class, flip_rxn = rclass.set_class_with_dct(
-            cla_dct, reacs, prods)
-        if flip_rxn:
-            reacs, prods = prods, reacs
-    else:
-        given_class = None
-
-    # Get the reaction info flipping if needed
-    check_exo = True
-    if check_exo and given_class is None:
-        reacs, prods = filesys.inf.assess_rxn_ene(
-            reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix)
+    # Set the reacs and prods for the desired direction
+    reacs, prods, given_class = rxndirn.set_reaction_direction(
+        reacs, prods, spc_dct, cla_dct,
+        thy_info, ini_thy_info, save_prefix, direction=direction)
 
     # Set the info regarding mults and chgs
     rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
@@ -330,7 +320,7 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
 
     # Generate rxn_fs from rxn_info stored in spc_dct
     [kickoff_size, kickoff_backward] = kickoff
-    zma_inf = filesys.inf.get_zmas(
+    zma_inf = rxndirn.get_zmas(
         reacs, prods, spc_dct,
         ini_thy_info, save_prefix, run_prefix, kickoff_size,
         kickoff_backward)
@@ -352,7 +342,7 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         print('    Reaction class identified as: {}'.format(ts_class))
 
         ts_dct = {}
-        ts_dct['ich'] = ''
+        ts_dct['inchi'] = ''
 
         # Reacs and prods
         ts_dct['class'] = ts_class
@@ -361,15 +351,15 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
 
         # Put chg and mult stuff
         ts_dct.update(
-            {'low_mul': low_mul,
-             'high_mul': high_mul,
-             'mul': ts_mul,
-             'chg': chg,
+            {'low_mult': low_mul,
+             'high_mult': high_mul,
+             'mult': ts_mul,
+             'charge': chg,
              'rad_rad': rad_rad,
              'elec_levels': [[0.0, ts_mul]]})
 
         # Set the ts_bnd using the zma and distname
-        ts_bnd = automol.zmatrix.bond_idxs(ret1[0] , ret1[1])
+        ts_bnd = automol.zmatrix.bond_idxs(ret1[0], ret1[1])
 
         print('BOND KEYS')
         print('frm', ret1[4])
