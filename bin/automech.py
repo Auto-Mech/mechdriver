@@ -10,6 +10,7 @@ from drivers import ktpdriver
 # from lib.submission import build_sub_script_dct
 from lib.amech_io import parser
 from lib.amech_io import printer
+from lib.reaction import direction as rxndirn
 from lib.filesys.build import prefix_fs
 
 
@@ -21,9 +22,6 @@ printer.program_header('amech')
 printer.random_cute_animal()
 printer.host_name()
 printer.program_header('inp')
-
-import sys
-sys.exit()
 
 # Parse the run input
 print('\nReading run.dat...')
@@ -42,14 +40,14 @@ PES_MODEL_DCT, SPC_MODEL_DCT = parser.model.read_models_sections(JOB_PATH)
 
 # Parse the species input to get a dct with ALL species in mechanism
 print('\nReading species.csv...')
-SPC_DCT = parser.species.build_spc_dct(JOB_PATH, 'csv', check_stereo=False)
+SPC_DCT = parser.species.build_spc_dct(JOB_PATH, 'csv')
 
 # Parse mechanism input and get a dct with info on PESs user request to run
 if RUN_OBJ_DCT['pes']:
     print('\nRunning Calculations for PESs. Need input for mechanism.')
-    CLA_DCT = parser.rclass.parse_rxn_class_file(JOB_PATH)
+    CLA_DCT = rxndirn.parse_rxn_class_file(JOB_PATH)
     print('  Reading mechanism.dat...')
-    RUN_PES_DCT = parser.mechanism.parse_mechanism_file(
+    RUN_PES_DCT = parser.mechanism.build_pes_dct(
         JOB_PATH,
         RUN_INP_DCT['mech'],
         SPC_DCT,

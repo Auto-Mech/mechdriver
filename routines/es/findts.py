@@ -24,7 +24,7 @@ def run(spc_dct, spc_name,
     ts_dct = spc_dct[spc_name]
 
     # Build inf objects for the rxn and ts
-    ts_info = ('', spc_dct[spc_name]['chg'], spc_dct[spc_name]['mul'])
+    ts_info = ('', spc_dct[spc_name]['charge'], spc_dct[spc_name]['mult'])
     rxn_info = filesys.inf.rxn_info(
         spc_dct[spc_name]['reacs'], spc_dct[spc_name]['prods'], spc_dct)
 
@@ -95,9 +95,6 @@ def run(spc_dct, spc_name,
 
     # Find the transition state using the appropriate algorithm
     switch = False
-    print('No transition state found in filesys',
-          'at {} level...'.format(es_keyword_dct['runlvl']),
-          'Proceeding to find it...')
     _print_ts_method(
         ts_dct, ts_search, usr_choice, es_keyword_dct['nobarrier'])
 
@@ -177,11 +174,11 @@ def run(spc_dct, spc_name,
     if _molrad_barrierless_search(ts_dct, ts_search):
         rcts = ts_dct['reacs']
         spc_1_info = [spc_dct[rcts[0]]['ich'],
-                      spc_dct[rcts[0]]['chg'],
-                      spc_dct[rcts[0]]['mul']]
+                      spc_dct[rcts[0]]['charge'],
+                      spc_dct[rcts[0]]['mult']]
         spc_2_info = [spc_dct[rcts[1]]['ich'],
-                      spc_dct[rcts[1]]['chg'],
-                      spc_dct[rcts[1]]['mul']]
+                      spc_dct[rcts[1]]['charge'],
+                      spc_dct[rcts[1]]['mult']]
         [grid1, grid2] = grid
         # Set up the scan filesys (need scan and cscan for rc
         scn_run_fs = autofile.fs.scan(thy_run_path)
@@ -199,10 +196,6 @@ def run(spc_dct, spc_name,
     # Run single/multi reference mol-rad Saddle Point Search
     if _sadpt_search(ts_dct, ts_search, switch):
 
-        print('here')
-        import sys
-        sys.exit()
-
         # ts_found = False
         if cnf_save_locs and not overwrite:
 
@@ -210,6 +203,9 @@ def run(spc_dct, spc_name,
                   cnf_save_fs[-1].path(cnf_save_locs))
         else:
 
+            print('No transition state found in filesys',
+                  'at {} level...'.format(es_keyword_dct['runlvl']),
+                   'Proceeding to find it...')
             script_str, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
                 *mod_thy_info[0:2])
             sadpt_transition_state(
@@ -316,11 +312,11 @@ def barrierless_transition_state(
     rcts = ts_dct['reacs']
     high_mul = ts_dct['high_mul']
     spc_1_info = [spc_dct[rcts[0]]['ich'],
-                  spc_dct[rcts[0]]['chg'],
-                  spc_dct[rcts[0]]['mul']]
+                  spc_dct[rcts[0]]['charge'],
+                  spc_dct[rcts[0]]['mult']]
     spc_2_info = [spc_dct[rcts[1]]['ich'],
-                  spc_dct[rcts[1]]['chg'],
-                  spc_dct[rcts[1]]['mul']]
+                  spc_dct[rcts[1]]['charge'],
+                  spc_dct[rcts[1]]['mult']]
 
     # Set the active space
     num_act_orb, num_act_elc = wfn.active_space(
