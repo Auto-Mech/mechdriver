@@ -11,9 +11,8 @@ def host_name():
     """
     proc = subprocess.Popen(['hostname'], stdout=subprocess.PIPE)
     host_node = proc.stdout.read()
-    print(type(host_node))
-    host_node.decode('ascii')
-    host_node.strip()
+    host_node = host_node.decode('ascii')
+    host_node = host_node.strip()
     print(HOST_MSG.format(host_node))
 
 
@@ -45,7 +44,7 @@ def program_exit(driver):
 
 HOST_MSG = """
 =========================================================
-HOST: {} 
+HOST: {}
 ========================================================="""
 
 AMECH_MSG = """

@@ -20,10 +20,10 @@ def run(pes_idx,
         :param rxn_lst: species and models for all reactions being run
         :type rxn_lst: list[dict[species, reacs, prods, model]]
         :param spc_dct: species information
-        :type spc_dct: dict[spc_name: spc_information] 
+        :type spc_dct: dict[spc_name: spc_information]
         :param cla_dct: input to change class dict
         :type cla_dct: dict[]
-        :param es_tsk_lst: list of the electronic structure tasks 
+        :param es_tsk_lst: list of the electronic structure tasks
         :type es_tsk_lst: list[[obj, tsk, keyword_dict]]
         :param thy_dct: all of the theory information
         :type thy_dct: dict[]
@@ -70,12 +70,14 @@ def run(pes_idx,
 
         # Build the queue of species based on user request
         if obj == 'spc':
-            spc_queue = parser.mechanism.build_spc_queue(rxn_lst)
+            spc_queue = parser.species.build_spc_queue(rxn_lst)
         elif obj == 'ts':
             if not built_dct:
+                rxndirn = es_keyword_dct['rxndirn']
                 ts_dct, ts_queue = parser.species.get_sadpt_dct(
                     pes_idx, es_tsk_lst, rxn_lst,
-                    thy_dct, run_inp_dct, spc_dct, cla_dct)
+                    thy_dct, run_inp_dct, spc_dct, cla_dct,
+                    direction=rxndirn)
                 spc_dct = parser.species.combine_sadpt_spc_dcts(
                     ts_dct, spc_dct)
                 built_dct = True

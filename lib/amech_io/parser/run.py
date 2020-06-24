@@ -5,7 +5,9 @@ import sys
 import autoparse.find as apf
 from lib.amech_io.parser import ptt
 from lib.amech_io.parser import tsks
+from lib.amech_io.parser.keywords import RUN_INP_SUPPORTED_KEYWORDS
 from lib.amech_io.parser.keywords import RUN_INP_REQUIRED_KEYWORDS
+from lib.amech_io.parser.keywords import RUN_INP_KEY_DCT
 from lib.amech_io.parser.keywords import RUN_SUPPORTED_KEYWORDS
 from lib.amech_io.cleaner import remove_whitespace
 
@@ -21,6 +23,12 @@ def build_run_inp_dct(job_path):
     # Read the input section
     run_str = ptt.read_inp_str(job_path, RUN_INP)
     keyword_dct = ptt.build_keyword_dct(inp_block(run_str))
+
+    # Add defaults
+    if 'mech' not in keyword_dct:
+        keyword_dct['mech'] = 'chemkin'
+    if 'spc' not in keyword_dct:
+        keyword_dct['spc'] = 'csv'
 
     # Check if section specified fully and supported
     check_run_keyword_dct(keyword_dct)
@@ -49,6 +57,22 @@ def check_run_keyword_dct(dct):
         print('*Required keys:')
         for key in RUN_INP_REQUIRED_KEYWORDS:
             print(key)
+        sys.exit()
+
+    ksup = all(key in RUN_INP_SUPPORTED_KEYWORDS for key in dct.keys())
+    if not ksup:
+        print('*ERROR: Using unsupported ketwords',
+              'in run.dat "input" section')
+        print('*Supported keys:')
+        for key in RUN_INP_SUPPORTED_KEYWORDS:
+            print(key)
+        sys.exit()
+
+    if dct['mech'] not in RUN_INP_KEY_DCT['mech']:
+        print('*ERROR: Unallowed value for mech keyword')
+        sys.exit()
+    if dct['spc'] not in RUN_INP_KEY_DCT['spc']:
+        print('*ERROR: Unallowed value for spc keyword')
         sys.exit()
 
 

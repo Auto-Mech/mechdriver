@@ -1,0 +1,15 @@
+run 1
+    host = b460
+    pes = 1
+    channels = 1
+    files = (
+        run.dat
+        mechanism.dat
+        species.dat 
+        species.csv
+        theory.dat
+        models.dat    
+    )
+end
+
+

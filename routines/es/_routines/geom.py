@@ -45,7 +45,7 @@ def reference_geometry(
     geo = None
     try:
         # Check to see if geometry should be obtained from dictionary
-        spc_info = [spc_dct_i['ich'], spc_dct_i['chg'], spc_dct_i['mul']]
+        spc_info = [spc_dct_i['inchi'], spc_dct_i['charge'], spc_dct_i['mult']]
         if 'input_geom' in ini_thy_info:
             geom_obj = spc_dct_i['geo_obj']
             geo_init = geom_obj
