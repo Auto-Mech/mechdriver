@@ -206,8 +206,10 @@ def modify_spc_dct(job_path, spc_dct):
             mod_spc_dct[spc]['hind_inc'] = 30.0
         if 'kickoff' not in mod_spc_dct[spc]:
             mod_spc_dct[spc]['kickoff'] = [0.1, False]
+        if 'tau_nsamp' not in mod_spc_dct[spc]:
+            mod_spc_dct[spc]['tau_nsamp'] = [True, 12, 1, 3, 100, 25]
         if 'mc_nsamp' not in mod_spc_dct[spc]:
-            mod_spc_dct[spc]['mc_nsamp'] = [1, 0, 0, 0, 0, False]
+            mod_spc_dct[spc]['mc_nsamp'] = [True, 12, 1, 3, 100, 25]
         if 'pst_params' not in mod_spc_dct[spc]:
             mod_spc_dct[spc]['pst_params'] = [1.0, 6]
 
@@ -434,7 +436,9 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
         if 'kickoff' not in combined_dct[sadpt]:
             combined_dct[sadpt]['kickoff'] = [0.1, False]
         if 'mc_nsamp' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['mc_nsamp'] = [True, 10, 1, 3, 50, 25]
+            combined_dct[sadpt]['mc_nsamp'] = [True, 12, 1, 3, 100, 25]
+        if 'tau_nsamp' not in combined_dct[sadpt]:
+            combined_dct[sadpt]['tau_nsamp'] = [True, 12, 1, 3, 100, 25]
         if 'irc_idxs' not in combined_dct[sadpt]:
             combined_dct[sadpt]['irc_idxs'] = [
                 -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0,

@@ -11,21 +11,23 @@ from lib import filesys
 from lib.phydat import phycon
 
 
-def tau_sampling(zma, geo,
-                 mod_thy_info, mod_ini_thy_info, ini_thy_save_fs,
+def tau_sampling(zma, spc_info, tors_name_grps, mod_thy_info,
                  tau_run_fs, tau_save_fs,
                  script_str, overwrite, nsamp_par, **opt_kwargs):
     """ Sample over torsions optimizing all other coordinates
     """
 
     # Read the geometry from the initial filesystem and set sampling
-    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    tors_ranges = automol.zmatrix.torsional_sampling_ranges(
-        zma, tors_names)
-    tors_range_dct = dict(zip(tors_names, tors_ranges))
-    gra = automol.geom.graph(geo)
+    tors_ranges = automol.zmatrix.torsional_sampling_ranges(tors_name_grps)
+    tors_range_dct = dict(zip(
+        tuple(grp[0] for grp in tors_name_grps) , tors_ranges))
+    gra = automol.zmatrix.graph(zma)
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+    print('nsamps')
+    print(ntaudof)
+    print(nsamp_par)
     nsamp = util.nsamp_init(nsamp_par, ntaudof)
+    print(nsamp)
 
     # Run through tau sampling process
     save_tau(
@@ -82,6 +84,7 @@ def run_tau(
             nsampd = 0
 
         nsamp = nsamp0 - nsampd
+        nsamp = 100
         if nsamp <= 0:
             print('Reached requested number of samples. '
                   'Tau sampling complete.')
@@ -109,13 +112,24 @@ def run_tau(
                 run_fs=run_fs,
                 geom=samp_zma,
                 spc_info=spc_info,
-                thy_level=thy_info,
+                thy_info=thy_info,
                 overwrite=overwrite,
                 frozen_coordinates=tors_range_dct.keys(),
                 **kwargs
             )
         else:
             print('ZMA bad.')
+            inp_str = elstruct.writer.optimization(
+                geom=samp_zma,
+                charge=spc_info[1],
+                mult=spc_info[2],
+                method=thy_info[1],
+                basis=thy_info[2],
+                prog=thy_info[0],
+                orb_type=thy_info[3],
+                mol_options=['nosym'],
+            )
+            tau_run_fs[-1].file.geometry_input.write(inp_str, locs)
 
         nsampd += 1
         inf_obj.nsamp = nsampd
@@ -238,7 +252,17 @@ def _generate_pairs(geo):
     neigh_dct = automol.graph.atom_neighbor_keys(gra)
 
     # Loop over neighbor dict to build pairs
+    print(geo)
+    print(heavy_idxs)
+    print(neigh_dct)
 
+    for idx in heavy_idxs:
+         
+    pairs = tuple()
+    for idx in heavy_idxs:
+
+    import sys
+    sys.exit()
     return pairs
 
 

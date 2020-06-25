@@ -141,7 +141,7 @@ SPC_SUPPORTED_KEYWORDS = [
     'mult',
     'geom',
     'mc_nsamp',
-    'mc_tau',
+    'tau_nsamp',
     'hind_inc',
     'tors_names',
     'elec_levels',
@@ -156,7 +156,8 @@ SPC_DEFAULT_DCT = {
     'kickoff': [0.1, False],
     'pst_params': [1.0, 6],
     'hind_inc': 30.0,
-    'mc_nsamp': [True, 10, 1, 3, 50, 10],
+    'mc_nsamp': [True, 12, 1, 3, 100, 25],
+    'tau_nsamp': [True, 12, 1, 3, 100, 25],
     'sym_factor': 1.0
 }
 

@@ -4,7 +4,6 @@
 
 import automol
 import autofile
-from routines.es._routines import conformer
 from routines.es._routines import _sadpt as sadpt
 from routines.es._routines import _vtst as vtst
 from routines.es._routines import _wfn as wfn
