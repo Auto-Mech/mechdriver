@@ -1,6 +1,7 @@
 """ es_runners
 """
 
+import itertools
 import numpy
 import automol
 import elstruct
@@ -11,9 +12,11 @@ from lib import filesys
 from lib.phydat import phycon
 
 
-def tau_sampling(zma, spc_info, tors_name_grps, mod_thy_info,
+def tau_sampling(zma, spc_info, tors_name_grps, nsamp_par,
+                 mod_thy_info,
                  tau_run_fs, tau_save_fs,
-                 script_str, overwrite, nsamp_par, **opt_kwargs):
+                 script_str, overwrite,
+                 saddle=False, **opt_kwargs):
     """ Sample over torsions optimizing all other coordinates
     """
 
@@ -113,6 +116,7 @@ def run_tau(
                 geom=samp_zma,
                 spc_info=spc_info,
                 thy_info=thy_info,
+                saddle=saddle,
                 overwrite=overwrite,
                 frozen_coordinates=tors_range_dct.keys(),
                 **kwargs
@@ -218,20 +222,25 @@ LJ_DCT = {
 }
 
 
-def _low_repulsion_struct(zma, zma_samp, thresh=10.0):
+def _low_repulsion_struct(zma_ref, zma_samp, thresh=10.0):
     """ Check if the coloumb sum
     """
 
     # # Convert to geoms
-    # geo = automol.zmatrix.geometry(zma)
-    # geo_samp = automol.zmatrix.geometry(zma_samp)
+    geo_ref = automol.zmatrix.geometry(zma_ref)
 
-    # # Generate the pairs for the potentials
-    # pairs = _generate_pairs(geo)
+    # Calculate the pairwise potentials
+    pot_mat = _pairwise_potential_matrix(geo_ref)
 
-    # # Calculate the pairwise potentials
-    # pot = sum(_pairwise_potentials(geo, pairs))
-    # pot_samp = sum(_pairwise_potentials(geo_samp, pairs))
+    # Generate the pairs for the potentials
+    pairs = _generate_pairs(geo_ref)
+
+    # Calculate sum of potentials
+    sum_ref = 0.0
+    for (v1, v2) in pairs:
+        sum_ref += pot_mat[v1, v2]
+
+    print('sum_ref', sum_ref)
 
     # # Check if the potentials are within threshold
     # low_repulsion = bool(abs(pot - pot_samp) <= thresh)
@@ -245,50 +254,88 @@ def _generate_pairs(geo):
     """
 
     # Grab the indices of the heavy atoms for the zmas
-    heavy_idxs = automol.geom.atom_indices(geo, 'H', match=False)
+    # heavy_idxs = automol.geom.atom_indices(geo, 'H', match=False)
 
-    # Convert geom to graph and build the neighbor dict
-    gra = automol.geom.graph(geo)
-    neigh_dct = automol.graph.atom_neighbor_keys(gra)
+    # Get the h atom idxs as list of list for each heavy atom
+    # gra = automol.geom.graph(geo)
+    # neigh_dct = automol.graph.atom_neighbor_keys(gra)
+    # h_idxs = ()
+    # for idx in heavy_idxs:
+    #     neighs = neigh_dct[idx]
+    #     h_idxs += (tuple(x for x in neighs if x not in heavy_idxs),)
+
+    # Get heavy atom pairs
+    # heavy_pairs = tuple(itertools.combinations(heavy_idxs, 2))
+    # h_pairs = tuple()
+    # for comb in itertools.combinations(h_idxs, 2):
+    #     h_pairs += tuple(itertools.product(*comb))
 
     # Loop over neighbor dict to build pairs
-    print(geo)
-    print(heavy_idxs)
-    print(neigh_dct)
+    # print('geo', geo)
+    # print('heavy idxs', heavy_idxs)
+    # print('heacy pairs', heavy_pairs)
+    # print('h idxs', h_idxs)
+    # print('h pairs', h_pairs)
+    # print(neigh_dct)
 
-    for idx in heavy_idxs:
-         
     pairs = tuple()
-    for idx in heavy_idxs:
+    for i in range(len(geo)):
+        for j in range(len(geo)):
+            if i != j:
+                pairs += ((i, j),)
 
-    import sys
-    sys.exit()
     return pairs
 
 
-def _pairwise_potentials(geo, pairs):
+def _pairwise_potential_matrix(geo):
+    """ Generate a matrix of pairwise potentials
+    """
+
+    # Initialize matrix
+    natoms = len(geo)
+    pot_mat = numpy.zeros((natoms, natoms))
+
+    for i in range(natoms):
+        for j in range(natoms):
+            pot_mat[i, j] = _pairwise_potentials(geo, (i, j))
+
+    return pot_mat
+
+
+def _pairwise_potentials(geo, idx_pair):
     """ Calculate the sum of the pairwise potential for a
         given set of atom pairs
     """
 
-    pair_pots = tuple()
-    for (atom1, atom2) in pairs:
+    # Get the indexes and symbols
+    idx1, idx2 = idx_pair
+    if idx1 != idx2:
+        symbols = automol.geom.symbols(geo)
+        symb1, symb2 = symbols[idx1], symbols[idx2]
 
         # Calculate interatomic distance
-        rdist = automol.geom.distance(geo, atom1, atom2) * phycon.BOHR2ANG
+        rdist = automol.geom.distance(geo, idx1, idx2) * phycon.BOHR2ANG
 
         # Set epsilon and sigma for the atoms
-        ljparams = LJ_DCT.get((atom1, atom2), None)
+        ljparams = LJ_DCT.get((symb1, symb2), None)
         if ljparams is None:
-            ljparams = LJ_DCT.get((atom2, atom1), None)
+            ljparams = LJ_DCT.get((symb2, symb1), None)
 
         # Calculate the potential
-        pair_pots += (_lj_potential(rdist, *ljparams),)
+        pot_val = _lj_potential(rdist, *ljparams)
+    else:
+        pot_val = 1e10
 
-    return pair_pots
+    return pot_val
 
 
 def _lj_potential(rdist, eps, sig):
     """ Calculate Lennard-Jones Potential
     """
-    return (4 * eps) * [(sig / rdist)**12 - (sig / rdist)**6]
+    return (4.0 * eps) * ((sig / rdist)**12 - (sig / rdist)**6)
+
+
+if __name__ == '__main__':
+    zma = automol.geom.zmatrix(
+            automol.inchi.geometry(automol.smiles.inchi('CCO')))
+    _low_repulsion_struct(zma, zma)
