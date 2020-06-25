@@ -11,24 +11,23 @@ from lib import filesys
 from lib.phydat import phycon
 
 
-def tau_sampling(spc_info,
-                 mod_thy_info, mod_ini_thy_info, ini_thy_save_fs,
+def tau_sampling(zma, spc_info, tors_name_grps, mod_thy_info,
                  tau_run_fs, tau_save_fs,
                  script_str, overwrite, nsamp_par, **opt_kwargs):
     """ Sample over torsions optimizing all other coordinates
     """
 
     # Read the geometry from the initial filesystem and set sampling
-    geo = ini_thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
-    zma = automol.geom.zmatrix(geo)
-    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-    tors_ranges = automol.zmatrix.torsional_sampling_ranges(
-        zma, tors_names)
-    tors_range_dct = dict(zip(tors_names, tors_ranges))
-    ich = spc_info[0]
-    gra = automol.inchi.graph(ich)
+    tors_ranges = automol.zmatrix.torsional_sampling_ranges(tors_name_grps)
+    tors_range_dct = dict(zip(
+        tuple(grp[0] for grp in tors_name_grps) , tors_ranges))
+    gra = automol.zmatrix.graph(zma)
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+    print('nsamps')
+    print(ntaudof)
+    print(nsamp_par)
     nsamp = util.nsamp_init(nsamp_par, ntaudof)
+    print(nsamp)
 
     # Run through tau sampling process
     save_tau(
@@ -85,6 +84,7 @@ def run_tau(
             nsampd = 0
 
         nsamp = nsamp0 - nsampd
+        nsamp = 100
         if nsamp <= 0:
             print('Reached requested number of samples. '
                   'Tau sampling complete.')
@@ -102,17 +102,34 @@ def run_tau(
 
         idx += 1
         print("Run {}/{}".format(idx, nsamp0))
-        es_runner.run_job(
-            job=elstruct.Job.OPTIMIZATION,
-            script_str=script_str,
-            run_fs=run_fs,
-            geom=samp_zma,
-            spc_info=spc_info,
-            thy_level=thy_info,
-            overwrite=overwrite,
-            frozen_coordinates=tors_range_dct.keys(),
-            **kwargs
-        )
+
+        print('\nChecking if ZMA has high repulsion...')
+        if _low_repulsion_struct(samp_zma, zma):
+            print('ZMA fine.')
+            es_runner.run_job(
+                job=elstruct.Job.OPTIMIZATION,
+                script_str=script_str,
+                run_fs=run_fs,
+                geom=samp_zma,
+                spc_info=spc_info,
+                thy_info=thy_info,
+                overwrite=overwrite,
+                frozen_coordinates=tors_range_dct.keys(),
+                **kwargs
+            )
+        else:
+            print('ZMA bad.')
+            inp_str = elstruct.writer.optimization(
+                geom=samp_zma,
+                charge=spc_info[1],
+                mult=spc_info[2],
+                method=thy_info[1],
+                basis=thy_info[2],
+                prog=thy_info[0],
+                orb_type=thy_info[3],
+                mol_options=['nosym'],
+            )
+            tau_run_fs[-1].file.geometry_input.write(inp_str, locs)
 
         nsampd += 1
         inf_obj.nsamp = nsampd
@@ -188,3 +205,90 @@ def assess_pf_convergence(save_prefix, temps=(300., 500., 750., 1000., 1500.)):
             sigma = numpy.sqrt(
                 (abs(sum2/float(idx)-(sumq/float(idx))**2))/float(idx))
             print(sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
+
+
+# eps[whatever], sig[ang] params
+LJ_DCT = {
+    ('H', 'H'): [0.25, 1.0],
+    ('H', 'C'): [0.25, 1.0],
+    ('H', 'O'): [0.25, 1.0],
+    ('C', 'C'): [0.25, 1.0],
+    ('C', 'O'): [0.25, 1.0],
+    ('O', 'O'): [0.25, 1.0],
+}
+
+
+def _low_repulsion_struct(zma, zma_samp, thresh=10.0):
+    """ Check if the coloumb sum
+    """
+
+    # # Convert to geoms
+    # geo = automol.zmatrix.geometry(zma)
+    # geo_samp = automol.zmatrix.geometry(zma_samp)
+
+    # # Generate the pairs for the potentials
+    # pairs = _generate_pairs(geo)
+
+    # # Calculate the pairwise potentials
+    # pot = sum(_pairwise_potentials(geo, pairs))
+    # pot_samp = sum(_pairwise_potentials(geo_samp, pairs))
+
+    # # Check if the potentials are within threshold
+    # low_repulsion = bool(abs(pot - pot_samp) <= thresh)
+    low_repulsion = True
+
+    return low_repulsion
+
+
+def _generate_pairs(geo):
+    """ Generate a list of pairs to calculate potentials
+    """
+
+    # Grab the indices of the heavy atoms for the zmas
+    heavy_idxs = automol.geom.atom_indices(geo, 'H', match=False)
+
+    # Convert geom to graph and build the neighbor dict
+    gra = automol.geom.graph(geo)
+    neigh_dct = automol.graph.atom_neighbor_keys(gra)
+
+    # Loop over neighbor dict to build pairs
+    print(geo)
+    print(heavy_idxs)
+    print(neigh_dct)
+
+    for idx in heavy_idxs:
+         
+    pairs = tuple()
+    for idx in heavy_idxs:
+
+    import sys
+    sys.exit()
+    return pairs
+
+
+def _pairwise_potentials(geo, pairs):
+    """ Calculate the sum of the pairwise potential for a
+        given set of atom pairs
+    """
+
+    pair_pots = tuple()
+    for (atom1, atom2) in pairs:
+
+        # Calculate interatomic distance
+        rdist = automol.geom.distance(geo, atom1, atom2) * phycon.BOHR2ANG
+
+        # Set epsilon and sigma for the atoms
+        ljparams = LJ_DCT.get((atom1, atom2), None)
+        if ljparams is None:
+            ljparams = LJ_DCT.get((atom2, atom1), None)
+
+        # Calculate the potential
+        pair_pots += (_lj_potential(rdist, *ljparams),)
+
+    return pair_pots
+
+
+def _lj_potential(rdist, eps, sig):
+    """ Calculate Lennard-Jones Potential
+    """
+    return (4 * eps) * [(sig / rdist)**12 - (sig / rdist)**6]

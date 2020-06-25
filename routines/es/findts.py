@@ -4,7 +4,6 @@
 
 import automol
 import autofile
-from routines.es._routines import conformer
 from routines.es._routines import _sadpt as sadpt
 from routines.es._routines import _vtst as vtst
 from routines.es._routines import _wfn as wfn
@@ -205,7 +204,7 @@ def run(spc_dct, spc_name,
 
             print('No transition state found in filesys',
                   'at {} level...'.format(es_keyword_dct['runlvl']),
-                   'Proceeding to find it...')
+                  'Proceeding to find it...')
             script_str, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
                 *mod_thy_info[0:2])
             sadpt_transition_state(
@@ -264,22 +263,25 @@ def sadpt_transition_state(
         run_fs, opt_script_str, overwrite, **opt_kwargs)
 
     # Calculate the Hessian for the optimized structure
-    print('\nCalculating Hessian for the optimized geometry...')
-    hess_ret, freqs, imags = sadpt.saddle_point_hessian(
-        opt_ret, ts_info, mod_thy_info,
-        run_fs, script_str, overwrite, **opt_kwargs)
+    if opt_ret is not None:
+        print('\nCalculating Hessian for the optimized geometry...')
+        hess_ret, freqs, imags = sadpt.saddle_point_hessian(
+            opt_ret, ts_info, mod_thy_info,
+            run_fs, script_str, overwrite, **opt_kwargs)
 
-    # Assess saddle point, save it if viable
-    print('Assessing the saddle point...')
-    saddle = sadpt.saddle_point_checker(imags)
-    if saddle:
-        sadpt.save_saddle_point(
-            opt_ret, hess_ret, freqs, imags,
-            mod_thy_info,
-            cnf_save_fs,
-            ts_save_fs, ts_save_path,
-            frm_bnd_keys, brk_bnd_keys,
-            zma_locs=[0])
+        # Assess saddle point, save it if viable
+        print('Assessing the saddle point...')
+        saddle = sadpt.saddle_point_checker(imags)
+        if saddle:
+            sadpt.save_saddle_point(
+                opt_ret, hess_ret, freqs, imags,
+                mod_thy_info,
+                cnf_save_fs,
+                ts_save_fs, ts_save_path,
+                frm_bnd_keys, brk_bnd_keys,
+                zma_locs=[0])
+    else:
+        print('\n TS optimization failed. No geom to check and save.')
 
 
 # Barrierless finder functions
