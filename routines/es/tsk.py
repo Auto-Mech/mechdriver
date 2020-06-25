@@ -103,7 +103,7 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     # Get es options
     [kickoff_size, kickoff_backward] = spc['kickoff']
     overwrite = es_keyword_dct['overwrite']
-    retryfail = es_keyword_dct['retryfail']
+    # retryfail = es_keyword_dct['retryfail']
     # dist_info = spc['dist_info'] if saddle else ()
 
     # Modify the theory
@@ -208,7 +208,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             ini_thy_save_path)
         _, ini_thy_run_path = filesys.build.ts_fs_from_thy(
             ini_thy_run_path)
-        
+
     if job == 'samp':
 
         # Build the thy filesyste
@@ -341,7 +341,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
         save_prefix, spc_info, mod_thy_info)
 
     # Set the filesystem objects for ini thy_info
-    ini_thy_save_fs, _ = filesys.build.spc_thy_fs_from_root(
+    ini_thy_save_fs, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_ini_thy_info)
 
     # Set up tau filesystem objects
@@ -349,13 +349,24 @@ def run_tau_tsk(job, spc_dct, spc_name,
     tau_save_fs, _ = filesys.build.tau_fs_from_thy(thy_save_path, tau='all')
 
     if job == 'samp':
+
+        # Get the geom
+        ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
+            ini_thy_save_path, cnf='min')
+        zma, geo = filesys.inf.cnf_fs_zma_geo(
+            ini_cnf_save_fs, [ini_cnf_save_locs])
+
+        # Set up the script
         _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
             *thy_info[0:2])
+
+        # Run sampling
         tau.tau_sampling(
             spc_info,
             mod_thy_info, mod_ini_thy_info, ini_thy_save_fs,
             tau_run_fs, tau_save_fs,
             opt_script_str, overwrite, nsamp_par, **opt_kwargs)
+
     elif job in ('energy', 'grad', 'hess'):
         # Set up the run scripts
         script_str, _, kwargs, _ = runpar.run_qchem_par(

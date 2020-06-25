@@ -31,12 +31,7 @@ def shift_vals_from_dummy(vals, zma):
         Shift requires indices be 1-indexed
     """ 
     
-    dummy_idxs = automol.zmatrix.dummy_atom_indices(zma)
-    # atom_symbols = automol.zmatrix.symbols(zma)
-    # dummy_idxs = []
-    # for atm_idx, atm in enumerate(atom_symbols):
-    #     if atm == 'X':
-    #         dummy_idxs.append(atm_idx)
+    dummy_idxs = automol.zmatrix.atom_indices(zma, 'X', match=True)
 
     shift_vals = []
     for val in vals:
