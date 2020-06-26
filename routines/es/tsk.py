@@ -392,9 +392,11 @@ def run_tau_tsk(job, spc_dct, spc_name,
 
             # Run sampling
             tau.tau_sampling(
-                zma, spc_info, run_tors_names, mod_ini_thy_info,
+                zma, spc_info, run_tors_names, nsamp_par,
+                mod_ini_thy_info,
                 tau_run_fs, tau_save_fs,
-                opt_script_str, overwrite, nsamp_par, **opt_kwargs)
+                opt_script_str, overwrite,
+                saddle=saddle, **opt_kwargs)
 
         elif job in ('energy', 'grad', 'hess'):
             # Set up the run scripts
