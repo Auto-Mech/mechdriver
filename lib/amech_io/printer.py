@@ -2,6 +2,7 @@
   Library of Runtime Messages
 """
 
+import os
 import subprocess
 import random
 
@@ -13,7 +14,8 @@ def host_name():
     host_node = proc.stdout.read()
     host_node = host_node.decode('ascii')
     host_node = host_node.strip()
-    print(HOST_MSG.format(host_node))
+    pid = os.getpid()
+    print(HOST_MSG.format(host_node, pid))
 
 
 def program_header(driver):
@@ -44,7 +46,7 @@ def program_exit(driver):
 
 HOST_MSG = """
 =========================================================
-HOST: {}
+HOST: {} {}
 ========================================================="""
 
 AMECH_MSG = """

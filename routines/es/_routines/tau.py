@@ -82,14 +82,13 @@ def run_tau(
         if tau_save_fs[0].file.info.exists():
             inf_obj_s = tau_save_fs[0].file.info.read()
             nsampd = inf_obj_s.nsamp
-        elif tau_save_fs[0].file.info.exists():
-            inf_obj_r = tau_save_fs[0].file.info.read()
+        elif tau_run_fs[0].file.info.exists():
+            inf_obj_r = tau_run_fs[0].file.info.read()
             nsampd = inf_obj_r.nsamp
         else:
             nsampd = 0
 
         nsamp = nsamp0 - nsampd
-        nsamp = 100
         if nsamp <= 0:
             print('Reached requested number of samples. '
                   'Tau sampling complete.')
@@ -109,22 +108,22 @@ def run_tau(
         print("Run {}/{}".format(idx, nsamp0))
 
         print('\nChecking if ZMA has high repulsion...')
-        if _low_repulsion_struct(samp_zma, zma):
+        if _low_repulsion_struct(zma, samp_zma):
             print('ZMA fine.')
-            es_runner.run_job(
-                job=elstruct.Job.OPTIMIZATION,
-                script_str=script_str,
-                run_fs=run_fs,
-                geom=samp_zma,
-                spc_info=spc_info,
-                thy_info=thy_info,
-                saddle=saddle,
-                overwrite=overwrite,
-                frozen_coordinates=tors_range_dct.keys(),
-                **kwargs
-            )
+            # es_runner.run_job(
+                # job=elstruct.Job.OPTIMIZATION,
+                # script_str=script_str,
+                # run_fs=run_fs,
+                # geom=samp_zma,
+                # spc_info=spc_info,
+                # thy_info=thy_info,
+                # saddle=saddle,
+                # overwrite=overwrite,
+                # frozen_coordinates=tors_range_dct.keys(),
+                # **kwargs
+            # )
         else:
-            print('ZMA bad.')
+            print('repulsive ZMA:')
             inp_str = elstruct.writer.optimization(
                 geom=samp_zma,
                 charge=spc_info[1],
@@ -134,8 +133,10 @@ def run_tau(
                 prog=thy_info[0],
                 orb_type=thy_info[3],
                 mol_options=['nosym'],
+                frozen_coordinates=tors_range_dct.keys(),
             )
             tau_run_fs[-1].file.geometry_input.write(inp_str, locs)
+            print('geometry for bad ZMA at',tau_run_fs[-1].path(locs))
 
         nsampd += 1
         inf_obj.nsamp = nsampd
@@ -234,7 +235,7 @@ EXP6_DCT = {
 }
 
 
-def _low_repulsion_struct(zma_ref, zma_samp, thresh=10.0):
+def _low_repulsion_struct(zma_ref, zma_samp, thresh=20.0):
     """ Check if the coloumb sum
     """
 
@@ -255,11 +256,10 @@ def _low_repulsion_struct(zma_ref, zma_samp, thresh=10.0):
         sum_ref += pot_mat[idx1, idx2]
         sum_samp += pot_mat_samp[idx1, idx2]
 
-    print('sum_ref', sum_ref)
-    print('sum_samp', sum_samp)
+    print('long_range_pots {:.2f} {:.2f} {:.2f}'.format(sum_ref, sum_samp, sum_samp-sum_ref))
 
     # # Check if the potentials are within threshold
-    low_repulsion = bool(abs(sum_ref - sum_samp) <= thresh)
+    low_repulsion = bool((sum_samp - sum_ref) <= thresh)
     # low_repulsion = True
 
     return low_repulsion
@@ -357,7 +357,7 @@ def _pairwise_exp6_potential(rdist, symb1, symb2):
     if exp6_params is None:
         exp6_params = EXP6_DCT.get((symb2, symb1), None)
 
-    pot_val = _lj_potential(rdist, *exp6_params)
+    pot_val = _exp6_potential(rdist, *exp6_params)
 
     return pot_val
 
