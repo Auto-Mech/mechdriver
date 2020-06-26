@@ -293,6 +293,7 @@ def _generate_pairs(geo):
     # print('h idxs', h_idxs)
     # print('h pairs', h_pairs)
     # print(neigh_dct)
+    #
 
     pairs = tuple()
     for i in range(len(geo)):
