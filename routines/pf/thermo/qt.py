@@ -31,7 +31,9 @@ def get_pf_header(temps):
     return global_pf_str
 
 
-def make_spc_mess_str():
+def make_spc_mess_str(spc_dct_i, spc_name,
+                      chn_pf_models, chn_pf_levels,
+                      run_prefix, save_prefix):
     """ Write the MESS input file strings
     """
 

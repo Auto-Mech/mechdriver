@@ -83,8 +83,8 @@ def run_thermp(pf_path, thermp_path,
     shutil.copyfile(pf_outfile, pf_datfile)
 
     # Check for the existance of ThermP input and PF output
-    assert os.path.exists(thermp_file)
-    assert os.path.exists(pf_outfile)
+    assert os.path.exists(thermp_file), 'ThermP file does not exist'
+    assert os.path.exists(pf_outfile), 'PF file does not exist'
 
     # Run thermp
     subprocess.check_call(['thermp', thermp_file])
@@ -141,54 +141,22 @@ def run_pac(spc_dct_i, nasa_path):
     return pac99_str
 
 
-# PATH CONTROL
-def get_starting_path():
-    """ get original working directory
+def get_thermo_paths(run_prefix, spc_info):
+    """ Set up the path for saving the pf input and output.
+        Placed in a MESSPF, NASA dirs high in run filesys.
     """
-    starting_path = os.getcwd()
-    return starting_path
 
+    # PF
+    pf_locs = ['PF', 0]
+    pf_save_fs = autofile.fs.build(thy_save_path)
+    pf_save_fs[-1].create(pf_locs)
+    pf_path = pf_save_fs[-1].path(pf_locs)
 
-def go_to_path(path):
-    """ change directory to path and return the original working directory
-    """
-    os.chdir(path)
-
-
-def return_to_path(path):
-    """ change directory to starting path
-    """
-    os.chdir(path)
-
-
-def prepare_path(path, loc):
-    """ change directory to starting path, return chemkin path
-    """
-    new_path = os.path.join(path, loc)
-    return new_path
-
-
-def get_thermo_paths(spc_save_path, spc_info, har_level):
-    """ set up the path for saving the pf input and output
-    currently using the harmonic theory directory for this because
-    there is no obvious place to save this information for a random
-    assortment of har_level, tors_level, vpt2_level
-    """
-    har_levelp = filesys.inf.modify_orb_restrict(
-        spc_info, har_level)
-
-    thy_save_fs = autofile.fs.theory(spc_save_path)
-    thy_save_fs[-1].create(har_levelp[1:4])
-    thy_save_path = thy_save_fs[-1].path(har_levelp[1:4])
-    bld_locs = ['PF', 0]
-    bld_save_fs = autofile.fs.build(thy_save_path)
-    bld_save_fs[-1].create(bld_locs)
-    pf_path = bld_save_fs[-1].path(bld_locs)
-
-    # prepare NASA polynomials
-    bld_locs = ['NASA_POLY', 0]
-    bld_save_fs[-1].create(bld_locs)
-    nasa_path = bld_save_fs[-1].path(bld_locs)
+    # NASA polynomials
+    nasa_locs = ['NASA_POLY', 0]
+    nasa_save_fs = autofile.fs.build(thy_save_path)
+    nasa_save_fs[-1].create(nasa_locs)
+    nasa_path = nasa_save_fs[-1].path(nasa_locs)
 
     print('Build Path for Partition Functions')
     print(pf_path)
