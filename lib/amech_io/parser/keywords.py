@@ -69,7 +69,7 @@ ES_TSK_SUPPORTED_DCT = {
         'find_ts',
         'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess', 'conf_vpt2',
         'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess',
-        'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess',
+        # 'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess',
         'irc_scan', 'irc_energy', 'irc_grad', 'irc_hess',
         'drp_samp', 'drp_energy', 'drp_grad', 'drp_hess'],
     'vdw': [

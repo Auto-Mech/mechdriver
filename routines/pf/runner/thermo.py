@@ -11,7 +11,6 @@ import automol
 import autofile
 import mess_io
 import thermp_io
-from lib import filesys
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
@@ -21,7 +20,7 @@ CUR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 # MESSPF
-def run_pf(pf_path, pf_script_str=DEFAULT_SCRIPT_DCT['messpf']):
+def run_messpf(pf_path, pf_script_str=DEFAULT_SCRIPT_DCT['messpf']):
     """ run messpf
     """
     run_script(pf_script_str, pf_path)
@@ -141,24 +140,31 @@ def run_pac(spc_dct_i, nasa_path):
     return pac99_str
 
 
-def get_thermo_paths(run_prefix, spc_info):
+def get_thermo_paths(spc_info, run_prefix):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """
 
+    # Get the formula and inchi key
+    spc_formula = automol.inchi.formula_string(spc_info[0])
+    ich_key = automol.inchi.inchi_key(spc_info[0])
+
     # PF
-    pf_locs = ['PF', 0]
-    pf_save_fs = autofile.fs.build(thy_save_path)
-    pf_save_fs[-1].create(pf_locs)
-    pf_path = pf_save_fs[-1].path(pf_locs)
+    bld_locs = ['PF', 0]
+    bld_save_fs = autofile.fs.build(run_prefix)
+    bld_save_fs[-1].create(bld_locs)
+    bld_path = bld_save_fs[-1].path(bld_locs)
+    spc_pf_path = os.path.join(bld_path, spc_formula, ich_key)
 
     # NASA polynomials
-    nasa_locs = ['NASA_POLY', 0]
-    nasa_save_fs = autofile.fs.build(thy_save_path)
-    nasa_save_fs[-1].create(nasa_locs)
-    nasa_path = nasa_save_fs[-1].path(nasa_locs)
+    bld_locs = ['NASA', 0]
+    bld_save_fs = autofile.fs.build(run_prefix)
+    bld_save_fs[-1].create(bld_locs)
+    spc_nasa_path = os.path.join(bld_path, spc_formula, ich_key)
 
-    print('Build Path for Partition Functions')
-    print(pf_path)
+    print('Path for MESSPF Calculation:')
+    print(spc_pf_path)
+    print('Path for NASA Polynomial Generation:')
+    print(spc_nasa_path)
 
-    return pf_path, nasa_path
+    return spc_pf_path, spc_nasa_path

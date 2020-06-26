@@ -2,7 +2,7 @@
   Handle labels
 """
 
-from routines.pf.ktp._util import need_fake_wells
+from routines.pf.models.typ import need_fake_wells
 
 
 def make_pes_label_dct(rxn_lst, pes_idx, spc_dct):

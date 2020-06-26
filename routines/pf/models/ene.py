@@ -4,10 +4,11 @@
 import os
 import automol
 import autofile
-from routines.pf.messf import models
-from routines.pf.messf import _tors as tors
-from routines.pf.messf import _vib as vib
-from routines.pf.messf import _util as util
+from routines.pf.models import typ
+from routines.pf.models import _tors as tors
+from routines.pf.models import _vib as vib
+from routines.pf.models import _fs as fs
+from routines.pf.models import _util as util
 from lib.phydat import phycon
 from lib.filesys import inf as finf
 from lib.amech_io import parser
@@ -104,7 +105,7 @@ def zero_point_energy(spc_dct_i,
             spc_dct_i, pf_filesystems, pf_models,
             frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
 
-        if models.nonrigid_tors(pf_models, rtr_names):
+        if typ.nonrigid_tors(pf_models, rtr_names):
             mess_hr_str, prot_hr_str, _, _ = tors.make_hr_strings(
                 rtr_names, rtr_grids, rtr_syms, const_dct,
                 ref_ene, pf_filesystems, pf_models,
@@ -112,7 +113,7 @@ def zero_point_energy(spc_dct_i,
                 saddle=saddle, tors_wgeo=True)
 
         # Obtain vibration partition function information
-        if models.nonrigid_tors(pf_models, rtr_names):
+        if typ.nonrigid_tors(pf_models, rtr_names):
             _, _, zpe = vib.tors_projected_freqs_zpe(
                 pf_filesystems, mess_hr_str, prot_hr_str)
         else:
@@ -152,7 +153,7 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
         print(' - Calculating energy for {}...'.format(rgt))
 
         # Build filesystem
-        pf_filesystems = models.build_pf_filesystems(
+        pf_filesystems = fs.pf_filesys(
             spc_dct[rgt], pf_levels, run_prefix, save_prefix, saddle=False)
 
         # Calcualte the total energy

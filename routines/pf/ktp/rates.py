@@ -7,22 +7,22 @@ import copy
 import automol
 import mess_io
 from mess_io.writer import rxnchan_header_str
-from routines.pf.messf import blocks
-from routines.pf.messf import models
-from routines.pf.messf import set_reference_ene
-from routines.pf.messf import calc_channel_enes
-from routines.pf.messf import _tunnel as tunnel
-from routines.pf.ktp._util import set_pf_info
-from routines.pf.ktp._util import set_ts_cls_info
-from routines.pf.ktp._util import make_rxn_str
-from routines.pf.ktp._util import treat_tunnel
-from routines.pf.ktp._util import pst_ts
-from routines.pf.ktp._util import need_fake_wells
-from routines.pf.ktp._util import print_pf_info
+from routines.pf.models import blocks
+from routines.pf.models import models
+from routines.pf.models import set_reference_ene
+from routines.pf.models import calc_channel_enes
+from routines.pf.models import _tunnel as tunnel
+from routines.pf.models.inf import set_pf_info
+from routines.pf.models.inf import set_ts_cls_info
+from routines.pf.models.inf import make_rxn_str
+from routines.pf.models.inf import print_pf_info
+from routines.pf.models.typ import treat_tunnel
+from routines.pf.models.typ import pst_ts
+from routines.pf.models.typ import need_fake_wells
 from lib.amech_io import cleaner
 
 
-BLOCK_MODULE = importlib.import_module('routines.pf.messf.blocks')
+BLOCK_MODULE = importlib.import_module('routines.pf.models.blocks')
 
 
 # Input string writer

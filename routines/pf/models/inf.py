@@ -1,5 +1,5 @@
 """
-  Utilitiy functions
+Random functions that are needed in drivers and routines
 """
 
 from lib.amech_io import parser
@@ -31,59 +31,10 @@ def set_ts_cls_info(spc_dct, model_dct, tsname, chn_model):
     return ts_class, ts_sadpt, ts_nobarrier, tunnel_model
 
 
-def pst_ts(tsclass, ts_sadpt, ts_nobarrier):
-    """ Return boolean to see if fake wells are needed
-    """
-
-    pst = False
-    if not var_radrad(tsclass):
-        if ts_sadpt == 'pst':
-            pst = True
-    else:
-        if ts_nobarrier == 'pst':
-            pst = True
-
-    return pst
-
-
-def need_fake_wells(tsclass):
-    """ Return boolean to see if fake wells are needed
-    """
-    abst_rxn = bool('abstraction' in tsclass)
-    # addn_rxn = bool('addition' in tsclass)
-    subs_rxn = bool('substitution' in tsclass)
-    return bool(abst_rxn or subs_rxn)
-    # return bool(abst_rxn or addn_rxn or subs_rxn)
-
-
-def var_radrad(tsclass):
-    """ Return boolean to see if fake wells are needed
-    """
-    rad_rad = 'radical radical' in tsclass
-    low_spin = 'high spin' not in tsclass
-    addn_rxn = 'addition' in tsclass
-    return bool(rad_rad and low_spin and addn_rxn)
-
-
 def make_rxn_str(rlst, prepend=''):
     """ convert list to string
     """
     return prepend + '+'.join(rlst)
-
-
-def treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad=False):
-    """ decide to treat tunneling
-    """
-    treat = True
-    if tunnel_model != 'none':
-        if radrad:
-            if ts_nobarrier in ('pst', 'vrctst'):
-                treat = False
-        else:
-            if ts_sadpt != 'pst':
-                treat = False
-
-    return treat
 
 
 # Printing functions
