@@ -1,10 +1,10 @@
-""" New blocks python
+""" Writes the MESS strings for various species and treatments
+    using data read from the save filesystem.
 """
 
 import mess_io
-# from routines.pf.messf import models
-from routines.pf.messf import _fake as fake
-from routines.pf.messf import _util as util
+from routines.pf.models import _fake as fake
+from routines.pf.models import _util as util
 
 
 # SINGLE SPECIES BLOCKS
@@ -163,14 +163,14 @@ def tau_block(inf_dct):
 #     """
 #
 #     # Build a dct combinining various information from the filesys and MESS
-#     inf_dct_i = models.read_filesys_for_spc(
+#     inf_dct_i = read_filesys_for_spc(
 #         spc_dct_i, rxn, pf_models, pf_levels, save_prefix, saddle=False)
-#     inf_dct_j = models.read_filesys_for_spc(
+#     inf_dct_j = read_filesys_for_spc(
 #         spc_dct_j, rxn, pf_models, pf_levels, save_prefix, saddle=False)
 #
 #     # Get the flux file
 #     flux_file_name = '{}_flux.dat'.format('ts')  # fix
-#     flux_str = models.read_filesys_for_flux(rxn, pf_models)
+#     flux_str = read_filesys_for_flux(rxn, pf_models)
 #
 #     # Combine electronic structure information for the two species together
 #     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
@@ -236,7 +236,7 @@ def tau_block(inf_dct):
 #     inf_sep_ene = scn_save_fs[-1].file.energy.read(inf_locs)
 #
 #     # Build dct of vtst info
-#     inf_dct = models.read_filesys_for_rpvtst()
+#     inf_dct = read_filesys_for_rpvtst()
 #
 #     # Write the string
 #     variational_str = _write_mess_variational_str()
@@ -264,7 +264,7 @@ def tau_block(inf_dct):
 #     dist_name = 'RC'
 #
 #     # Build dct of vtst info
-#     inf_dct_lst = models.read_filesys_for_rpvtst()
+#     inf_dct_lst = read_filesys_for_rpvtst()
 #
 #     # Get the saddle point
 #

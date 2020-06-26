@@ -59,7 +59,7 @@ def run(spc_dct,
             pf_inp_str = thermo_routines.qt.make_messpf_str(
                 global_pf_str, spc_str)
             pf_path, _ = thermo_runner.get_thermo_paths(
-                spc_save_path, spc_info, harm_thy_info)
+                spc_info, run_prefix)
             messf.blocks.write_pf_input(
                 pf_inp_str, data_str_dct, pf_path)
 
