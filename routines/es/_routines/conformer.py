@@ -44,6 +44,9 @@ def conformer_sampling(zma, spc_info,
         ntaudof = len(tors_names)
         nsamp = util.nsamp_init(nsamp_par, ntaudof)
 
+    # Check samples and if nsamp met and no resave
+
+
     print('\nSaving any conformers in run filesys...')
     save_conformers(
         cnf_run_fs=cnf_run_fs,

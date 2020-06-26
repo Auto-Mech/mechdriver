@@ -2,12 +2,10 @@
 """
 
 import os
-from mess_io.writer import rxnchan_header_str
 from routines.pf import ktp as ktp_routines
 from routines.pf.runner import ktp as ktp_runner
 from lib import filesys
 from lib.amech_io import parser
-from lib.amech_io import cleaner
 
 
 def run(pes_formula, pes_idx, sub_pes_idx,
@@ -103,16 +101,9 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             spc_model_dct, thy_dct)
 
         # Combine strings together
-        rchan_header_str = rxnchan_header_str()
-        mess_inp_str = '\n'.join(
-            [globkey_str,
-             energy_trans_str,
-             rchan_header_str,
-             well_str,
-             bi_str,
-             ts_str]
-        )
-        mess_inp_str = cleaner.remove_trail_whitespace(mess_inp_str)
+        mess_inp_str = ktp_routines.rates.make_messrate_str(
+            globkey_str, energy_trans_str,
+            well_str, bi_str, ts_str)
 
         # Build the filesystem
         if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):

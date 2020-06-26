@@ -29,7 +29,7 @@ def run(spc_dct,
     save_prefix = run_inp_dct['save_prefix']
 
     # Build a list of the species to calculate thermochem for loops below
-    spc_queue = parser.mechanism.build_spc_queue(rxn_lst)
+    spc_queue = parser.species.build_queue(rxn_lst)
 
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
@@ -53,40 +53,15 @@ def run(spc_dct,
             global_pf_str = messf.blocks.get_pf_header(temps)
 
             # Set up the species filesystem
-            spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
-            spc_save_fs = autofile.fs.species(save_prefix)
-            spc_save_fs[-1].create(spc_info)
-            spc_save_path = spc_save_fs[-1].path(spc_info)
-
-            # Read the ZPVE from the filesystem if not doing tau
-            tau_mod = bool(spc_model_dct[spc_model]['pf']['tors'] == 'tau')
-            if not tau_mod:
-                zpe = messf.get_zero_point_energy(
-                    spc, spc_dct[spc_name], pf_levels, pf_model,
-                    save_prefix=spc_save_path)
-                zpe_str = messf.get_zpe_str(
-                    spc_dct[spc_name], zpe)
-            else:
-                zpe_str = ''
-
-            # Generate the partition function
-            spc_str, data_str_dct, _ = messf.blocks.species_block(
-                spc=spc,
-                spc_dct_i=spc_dct[spc_name],
-                spc_info=spc_info,
-                spc_model=pf_model,
-                pf_levels=pf_levels,
-                save_prefix=spc_save_path,
-                )
+            spc_str, dat_str_dct = thermo_routines.qt.make_messpf_str()
 
             # Write the MESSPF input file
-            harm_thy_info = pf_levels[2]
-            pf_input = messf.blocks.get_pf_input(
-                spc_name, spc_str, global_pf_str, zpe_str)
-            pf_path, nasa_path = thermo_runner.get_thermo_paths(
+            pf_inp_str = thermo_routines.qt.make_messpf_str(
+                globkey_str, spc_str)
+            pf_path, _ = thermo_runner.get_thermo_paths(
                 spc_save_path, spc_info, harm_thy_info)
             messf.blocks.write_pf_input(
-                pf_input, data_str_dct, pf_path)
+                pf_inp_str, data_str_dct, pf_path)
 
     # Use MESS partition functions to compute thermo quantities
     if run_messpf:
