@@ -1,7 +1,7 @@
 """ es_runners
 """
 
-import itertools
+# import itertools
 import numpy
 import automol
 import elstruct
@@ -23,7 +23,7 @@ def tau_sampling(zma, spc_info, tors_name_grps, nsamp_par,
     # Read the geometry from the initial filesystem and set sampling
     tors_ranges = automol.zmatrix.torsional_sampling_ranges(tors_name_grps)
     tors_range_dct = dict(zip(
-        tuple(grp[0] for grp in tors_name_grps) , tors_ranges))
+        tuple(grp[0] for grp in tors_name_grps), tors_ranges))
     gra = automol.zmatrix.graph(zma)
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
     print('nsamps')
@@ -48,6 +48,7 @@ def tau_sampling(zma, spc_info, tors_name_grps, nsamp_par,
         tau_save_fs=tau_save_fs,
         script_str=script_str,
         overwrite=overwrite,
+        saddle=saddle,
         **opt_kwargs,
     )
 
@@ -59,7 +60,8 @@ def tau_sampling(zma, spc_info, tors_name_grps, nsamp_par,
 
 def run_tau(
         zma, spc_info, thy_info, nsamp, tors_range_dct,
-        tau_run_fs, tau_save_fs, script_str, overwrite, **kwargs):
+        tau_run_fs, tau_save_fs, script_str, overwrite,
+        saddle, **kwargs):
     """ run sampling algorithm to find tau dependent geometries
     """
     if not tors_range_dct:
@@ -221,6 +223,16 @@ LJ_DCT = {
     ('O', 'O'): [0.25, 1.0],
 }
 
+# A, B, C params E[kcal] R[Ang]
+EXP6_DCT = {
+    ('H', 'H'): [2.442e3, 3.74, 48.8],
+    ('H', 'C'): [6.45e3, 3.67, 116.0],
+    ('H', 'O'): [6.45e3, 3.67, 116.0],
+    ('C', 'C'): [7.69e4, 3.6, 460.0],
+    ('C', 'O'): [7.69e4, 3.6, 460.0],
+    ('O', 'O'): [7.69e4, 3.6, 460.0]
+}
+
 
 def _low_repulsion_struct(zma_ref, zma_samp, thresh=10.0):
     """ Check if the coloumb sum
@@ -228,23 +240,27 @@ def _low_repulsion_struct(zma_ref, zma_samp, thresh=10.0):
 
     # # Convert to geoms
     geo_ref = automol.zmatrix.geometry(zma_ref)
+    geo_samp = automol.zmatrix.geometry(zma_samp)
 
     # Calculate the pairwise potentials
     pot_mat = _pairwise_potential_matrix(geo_ref)
+    pot_mat_samp = _pairwise_potential_matrix(geo_samp)
 
     # Generate the pairs for the potentials
     pairs = _generate_pairs(geo_ref)
 
     # Calculate sum of potentials
-    sum_ref = 0.0
-    for (v1, v2) in pairs:
-        sum_ref += pot_mat[v1, v2]
+    sum_ref, sum_samp = 0.0, 0.0
+    for (idx1, idx2) in pairs:
+        sum_ref += pot_mat[idx1, idx2]
+        sum_samp += pot_mat_samp[idx1, idx2]
 
     print('sum_ref', sum_ref)
+    print('sum_samp', sum_samp)
 
     # # Check if the potentials are within threshold
-    # low_repulsion = bool(abs(pot - pot_samp) <= thresh)
-    low_repulsion = True
+    low_repulsion = bool(abs(sum_ref - sum_samp) <= thresh)
+    # low_repulsion = True
 
     return low_repulsion
 
@@ -302,7 +318,7 @@ def _pairwise_potential_matrix(geo):
     return pot_mat
 
 
-def _pairwise_potentials(geo, idx_pair):
+def _pairwise_potentials(geo, idx_pair, potential='exp6'):
     """ Calculate the sum of the pairwise potential for a
         given set of atom pairs
     """
@@ -310,21 +326,56 @@ def _pairwise_potentials(geo, idx_pair):
     # Get the indexes and symbols
     idx1, idx2 = idx_pair
     if idx1 != idx2:
+
+        # Get the symbols of the atoms
         symbols = automol.geom.symbols(geo)
         symb1, symb2 = symbols[idx1], symbols[idx2]
 
         # Calculate interatomic distance
         rdist = automol.geom.distance(geo, idx1, idx2) * phycon.BOHR2ANG
 
-        # Set epsilon and sigma for the atoms
-        ljparams = LJ_DCT.get((symb1, symb2), None)
-        if ljparams is None:
-            ljparams = LJ_DCT.get((symb2, symb1), None)
+        # Calculate the interaction potential value
+        if potential == 'exp6':
+            pot_val = _pairwise_exp6_potential(rdist, symb1, symb2)
+        elif potential == 'lj_12_6':
+            pot_val = _pairwise_lj_potential(rdist, symb1, symb2)
+        else:
+            pot_val = None
 
-        # Calculate the potential
-        pot_val = _lj_potential(rdist, *ljparams)
     else:
         pot_val = 1e10
+
+    return pot_val
+
+
+def _pairwise_exp6_potential(rdist, symb1, symb2):
+    """ Calcualte pot
+    """
+
+    exp6_params = EXP6_DCT.get((symb1, symb2), None)
+    if exp6_params is None:
+        exp6_params = EXP6_DCT.get((symb2, symb1), None)
+
+    pot_val = _lj_potential(rdist, *exp6_params)
+
+    return pot_val
+
+
+def _exp6_potential(rdist, apar, bpar, cpar):
+    """ Calculate modified Buckhingham potential
+    """
+    return apar * numpy.exp(-1.0*bpar*rdist) - (cpar / rdist**6)
+
+
+def _pairwise_lj_potential(rdist, symb1, symb2):
+    """ Calcualte pot
+    """
+
+    ljparams = LJ_DCT.get((symb1, symb2), None)
+    if ljparams is None:
+        ljparams = LJ_DCT.get((symb2, symb1), None)
+
+    pot_val = _lj_potential(rdist, *ljparams)
 
     return pot_val
 
@@ -333,9 +384,7 @@ def _lj_potential(rdist, eps, sig):
     """ Calculate Lennard-Jones Potential
     """
     return (4.0 * eps) * ((sig / rdist)**12 - (sig / rdist)**6)
-
-
-if __name__ == '__main__':
-    zma = automol.geom.zmatrix(
-            automol.inchi.geometry(automol.smiles.inchi('CCO')))
-    _low_repulsion_struct(zma, zma)
+# if __name__ == '__main__':
+#     zma = automol.geom.zmatrix(
+#             automol.inchi.geometry(automol.smiles.inchi('CCO')))
+#     _low_repulsion_struct(zma, zma)
