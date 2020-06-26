@@ -14,7 +14,7 @@ def get_mess_path(prefix, pes_formula, sub_pes_idx):
     return os.path.join(prefix, pes_str)
 
 
-def write_mess_file(mess_inp_str, dat_str_lst, mess_path, fname='mess.inp'):
+def write_mess_file(mess_inp_str, dat_str_dct, mess_path, fname='mess.inp'):
     """ Write MESS file
     """
 
