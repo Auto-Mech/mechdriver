@@ -6,26 +6,46 @@ import importlib
 import copy
 import automol
 import mess_io
+from mess_io.writer import rxnchan_header_str
 from routines.pf.messf import blocks
 from routines.pf.messf import models
 from routines.pf.messf import set_reference_ene
 from routines.pf.messf import calc_channel_enes
 from routines.pf.messf import _tunnel as tunnel
-from routines.pf.messf import is_atom
 from routines.pf.ktp._util import set_pf_info
 from routines.pf.ktp._util import set_ts_cls_info
 from routines.pf.ktp._util import make_rxn_str
 from routines.pf.ktp._util import treat_tunnel
 from routines.pf.ktp._util import pst_ts
 from routines.pf.ktp._util import need_fake_wells
-from routines.pf.ktp._util import var_radrad
 from routines.pf.ktp._util import print_pf_info
+from lib.amech_io import cleaner
 
 
 BLOCK_MODULE = importlib.import_module('routines.pf.messf.blocks')
 
 
-# Writer
+# Input string writer
+def make_messrate_str(globkey_str, energy_trans_str,
+                      well_str, bi_str, ts_str):
+    """ Combine various MESS strings together to combined MESS rates
+    """
+
+    rchan_header_str = rxnchan_header_str()
+    mess_inp_str = '\n'.join(
+        [globkey_str,
+         energy_trans_str,
+         rchan_header_str,
+         well_str,
+         bi_str,
+         ts_str]
+    )
+    mess_inp_str = cleaner.remove_trail_whitespace(mess_inp_str)
+
+    return mess_inp_str
+
+
+# Headers
 def make_header_str(temps, press):
     """ makes the standard header and energy transfer sections for MESS input file
     """
@@ -80,6 +100,7 @@ def make_etrans_str(spc_dct, rxn_lst,
     return energy_trans_str
 
 
+# Reaction Channel Writers for the PES
 def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
                       run_prefix, save_prefix, label_dct,
                       model_dct, thy_dct):
@@ -343,27 +364,30 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     chnl_infs['prods'] = []
     chnl_infs['ts'] = []
     for rct in rxn['reacs']:
-        inf_dct = read_spc_data(spc_dct[rct], rct,
-                                chn_pf_models, chn_pf_levels,
-                                ref_pf_models, ref_pf_levels,
-                                run_prefix, save_prefix)
+        inf_dct = models.read_spc_data(
+            spc_dct[rct], rct,
+            chn_pf_models, chn_pf_levels,
+            run_prefix, save_prefix,
+            ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
         chnl_infs['reacs'].append(inf_dct)
     for prd in rxn['prods']:
-        inf_dct = read_spc_data(spc_dct[prd], prd,
-                                chn_pf_models, chn_pf_levels,
-                                ref_pf_models, ref_pf_levels,
-                                run_prefix, save_prefix)
+        inf_dct = models.read_spc_data(
+            spc_dct[prd], prd,
+            chn_pf_models, chn_pf_levels,
+            run_prefix, save_prefix,
+            ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
         chnl_infs['prods'].append(inf_dct)
 
     # Set up data for TS
     if pst_ts(ts_class, ts_sadpt, ts_nobarrier):
         chnl_infs['ts'] = {'writer': 'blocks.pst_block'}
     else:
-        inf_dct = read_ts_data(spc_dct[tsname], tsname,
-                               chn_pf_models, chn_pf_levels,
-                               ref_pf_models, ref_pf_levels,
-                               run_prefix, save_prefix,
-                               ts_class, ts_sadpt, ts_nobarrier)
+        inf_dct = models.read_ts_data(
+            spc_dct[tsname], tsname,
+            chn_pf_models, chn_pf_levels,
+            run_prefix, save_prefix,
+            ts_class, ts_sadpt, ts_nobarrier,
+            ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
         chnl_infs['ts'] = inf_dct
 
     # Set up the info for the wells
@@ -372,84 +396,3 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
         chnl_infs['fake_vdwp'] = copy.deepcopy(chnl_infs['prods'])
 
     return chnl_infs
-
-
-def read_spc_data(spc_dct_i, spc_name,
-                  chn_pf_models, chn_pf_levels,
-                  ref_pf_models, ref_pf_levels,
-                  run_prefix, save_prefix):
-    """ Determines which block writer to use tau
-    """
-    print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
-           '++++++++++++++++++++++++++++++++++++++'))
-    print('\nReading filesystem info for {}'.format(spc_name))
-
-    vib_model, tors_model = chn_pf_models['vib'], chn_pf_models['tors']
-    if is_atom(spc_dct_i):
-        inf_dct = models.atm_data(
-            spc_dct_i,
-            chn_pf_models, chn_pf_levels,
-            ref_pf_models, ref_pf_levels,
-            run_prefix, save_prefix)
-        writer = 'atom_block'
-    else:
-        if vib_model == 'tau' or tors_model == 'tau':
-            pass
-            # inf_dct = models.tau_data(
-            #     spc_dct_i,
-            #     chn_pf_models, chn_pf_levels,
-            #     ref_pf_models, ref_pf_levels,
-            #     run_prefix, save_prefix, saddle=False)
-            # writer = 'tau_block'
-        else:
-            inf_dct = models.mol_data(
-                spc_dct_i,
-                chn_pf_models, chn_pf_levels,
-                ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix, saddle=False, tors_wgeo=True)
-            writer = 'species_block'
-
-    # Add writer to inf dct
-    inf_dct['writer'] = writer
-
-    return inf_dct
-
-
-def read_ts_data(spc_dct_i, tsname,
-                 chn_pf_models, chn_pf_levels,
-                 ref_pf_models, ref_pf_levels,
-                 run_prefix, save_prefix,
-                 ts_class, ts_sadpt, ts_nobarrier):
-    """ Determine which block function to useset block functions
-    """
-
-    print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
-           '++++++++++++++++++++++++++++++++++++++'))
-    print('\nReading filesystem info for {}'.format(tsname))
-
-    # Get all of the information for the filesystem
-    if not var_radrad(ts_class):
-        # Build MESS string for TS at a saddle point
-        if ts_sadpt == 'vtst':
-            inf_dct = 'rpvtst_data'
-            writer = 'vtst_saddle_block'
-        else:
-            inf_dct = models.mol_data(
-                spc_dct_i,
-                chn_pf_models, chn_pf_levels,
-                ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix, saddle=True, tors_wgeo=True)
-            writer = 'species_block'
-    else:
-        # Build MESS string for TS with no saddle point
-        if ts_nobarrier == 'vtst':
-            inf_dct = 'rpvtst_data'
-            writer = 'vtst_no_saddle_block'
-        elif ts_nobarrier == 'vrctst':
-            inf_dct = 'vrctst_data'
-            writer = 'vrctst_block'
-
-    # Add writer to inf dct
-    inf_dct['writer'] = writer
-
-    return inf_dct

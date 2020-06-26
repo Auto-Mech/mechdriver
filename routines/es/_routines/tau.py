@@ -12,7 +12,7 @@ from lib import filesys
 from lib.phydat import phycon
 
 
-def tau_sampling(zma, spc_info, tors_name_grps, nsamp_par,
+def tau_sampling(zma, ref_ene, spc_info, tors_name_grps, nsamp_par,
                  mod_thy_info,
                  tau_run_fs, tau_save_fs,
                  script_str, overwrite,
@@ -26,16 +26,13 @@ def tau_sampling(zma, spc_info, tors_name_grps, nsamp_par,
         tuple(grp[0] for grp in tors_name_grps), tors_ranges))
     gra = automol.zmatrix.graph(zma)
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
-    print('nsamps')
-    print(ntaudof)
-    print(nsamp_par)
     nsamp = util.nsamp_init(nsamp_par, ntaudof)
-    print(nsamp)
 
     # Run through tau sampling process
     save_tau(
         tau_run_fs=tau_run_fs,
         tau_save_fs=tau_save_fs,
+        mod_thy_info=mod_thy_info
     )
 
     run_tau(
@@ -55,13 +52,16 @@ def tau_sampling(zma, spc_info, tors_name_grps, nsamp_par,
     save_tau(
         tau_run_fs=tau_run_fs,
         tau_save_fs=tau_save_fs,
+        mod_thy_info=mod_thy_info
     )
 
+    print('Assessing the convergence of the Monte Carlo Partition Function...')
+    assess_pf_convergence(tau_save_fs, ref_ene)
 
-def run_tau(
-        zma, spc_info, thy_info, nsamp, tors_range_dct,
-        tau_run_fs, tau_save_fs, script_str, overwrite,
-        saddle, **kwargs):
+
+def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
+            tau_run_fs, tau_save_fs, script_str, overwrite,
+            saddle, **kwargs):
     """ run sampling algorithm to find tau dependent geometries
     """
     if not tors_range_dct:
@@ -144,7 +144,7 @@ def run_tau(
         tau_run_fs[0].file.info.write(inf_obj)
 
 
-def save_tau(tau_run_fs, tau_save_fs):
+def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
     """ save the tau dependent geometries that have been found so far
     """
 
@@ -180,23 +180,26 @@ def save_tau(tau_run_fs, tau_save_fs):
                 tau_save_fs[-1].file.energy.write(ene, locs)
                 tau_save_fs[-1].file.geometry.write(geo, locs)
 
+                # Saving the energy to a SP filesystem
+                print(" - Saving energy of unique geometry...")
+                sp_save_fs = autofile.fs.single_point(save_path)
+                sp_save_fs[-1].create(mod_thy_info[1:4])
+                sp_save_fs[-1].file.input.write(inp_str, mod_thy_info[1:4])
+                sp_save_fs[-1].file.info.write(inf_obj, mod_thy_info[1:4])
+                sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
+
                 saved_geos.append(geo)
 
         # update the tau trajectory file
         filesys.mincnf.traj_sort(tau_save_fs)
 
 
-def assess_pf_convergence(save_prefix, temps=(300., 500., 750., 1000., 1500.)):
+def assess_pf_convergence(tau_save_fs, ref_ene,
+                          temps=(300., 500., 750., 1000., 1500.)):
     """ Determine how much the partition function has converged
     """
-    # Get the energy of the mininimum-energy conformer
-    cnf_save_fs = autofile.fs.conformer(save_prefix)
-    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(cnf_save_fs)
-    if min_cnf_locs:
-        ene_ref = cnf_save_fs[-1].file.energy.read(min_cnf_locs)
 
     # Calculate sigma values at various temperatures for the PF
-    tau_save_fs = autofile.fs.tau(save_prefix)
     for temp in temps:
         sumq = 0.
         sum2 = 0.
@@ -205,7 +208,7 @@ def assess_pf_convergence(save_prefix, temps=(300., 500., 750., 1000., 1500.)):
         for locs in tau_save_fs[-1].existing():
             idx += 1
             ene = tau_save_fs[-1].file.energy.read(locs)
-            ene = (ene - ene_ref) * phycon.EH2KCAL
+            ene = (ene - ref_ene) * phycon.EH2KCAL
             tmp = numpy.exp(-ene*349.7/(0.695*temp))
             sumq = sumq + tmp
             sum2 = sum2 + tmp**2
@@ -389,7 +392,3 @@ def _lj_potential(rdist, eps, sig):
     """ Calculate Lennard-Jones Potential
     """
     return (4.0 * eps) * ((sig / rdist)**12 - (sig / rdist)**6)
-# if __name__ == '__main__':
-#     zma = automol.geom.zmatrix(
-#             automol.inchi.geometry(automol.smiles.inchi('CCO')))
-#     _low_repulsion_struct(zma, zma)

@@ -343,14 +343,15 @@ def run_tau_tsk(job, spc_dct, spc_name,
         save_prefix, spc_info, mod_thy_info)
 
     # Set the filesystem objects for ini thy_info
-    ini_thy_save_fs, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
+    _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_ini_thy_info)
 
-    # Get the geom
+    # Get the geom and energy of reference species
     ini_cnf_save_fs, ini_cnf_locs = filesys.build.cnf_fs_from_prefix(
         ini_thy_save_path, cnf='min')
     zma, geo = filesys.inf.cnf_fs_zma_geo(
         ini_cnf_save_fs, ini_cnf_locs)
+    ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_cnf_locs)
 
     # Bond key stuff
     if saddle:
@@ -392,7 +393,8 @@ def run_tau_tsk(job, spc_dct, spc_name,
 
             # Run sampling
             tau.tau_sampling(
-                zma, spc_info, run_tors_names, nsamp_par,
+                zma, ref_ene,
+                spc_info, run_tors_names, nsamp_par,
                 mod_ini_thy_info,
                 tau_run_fs, tau_save_fs,
                 opt_script_str, overwrite,
