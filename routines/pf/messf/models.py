@@ -17,6 +17,88 @@ from lib.filesys import inf as finf
 from lib.filesys import mincnf
 
 
+# General readers
+def read_spc_data(spc_dct_i, spc_name,
+                  chn_pf_models, chn_pf_levels,
+                  run_prefix, save_prefix,
+                  ref_pf_models=(), ref_pf_levels=()):
+    """ Determines which block writer to use tau
+    """
+    print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
+           '++++++++++++++++++++++++++++++++++++++'))
+    print('\nReading filesystem info for {}'.format(spc_name))
+
+    vib_model, tors_model = chn_pf_models['vib'], chn_pf_models['tors']
+    if is_atom(spc_dct_i):
+        inf_dct = atm_data(
+            spc_dct_i,
+            chn_pf_models, chn_pf_levels,
+            ref_pf_models, ref_pf_levels,
+            run_prefix, save_prefix)
+        writer = 'atom_block'
+    else:
+        if vib_model == 'tau' or tors_model == 'tau':
+            inf_dct = tau_data(
+                spc_dct_i,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix, saddle=False)
+            writer = 'tau_block'
+        else:
+            inf_dct = mol_data(
+                spc_dct_i,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix, saddle=False, tors_wgeo=True)
+            writer = 'species_block'
+
+    # Add writer to inf dct
+    inf_dct['writer'] = writer
+
+    return inf_dct
+
+
+def read_ts_data(spc_dct_i, tsname,
+                 chn_pf_models, chn_pf_levels,
+                 run_prefix, save_prefix,
+                 ts_class, ts_sadpt, ts_nobarrier,
+                 ref_pf_models=(), ref_pf_levels=()):
+    """ Determine which block function to useset block functions
+    """
+
+    print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
+           '++++++++++++++++++++++++++++++++++++++'))
+    print('\nReading filesystem info for {}'.format(tsname))
+
+    # Get all of the information for the filesystem
+    if not var_radrad(ts_class):
+        # Build MESS string for TS at a saddle point
+        if ts_sadpt == 'vtst':
+            inf_dct = 'rpvtst_data'
+            writer = 'vtst_saddle_block'
+        else:
+            inf_dct = mol_data(
+                spc_dct_i,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix, saddle=True, tors_wgeo=True)
+            writer = 'species_block'
+    else:
+        # Build MESS string for TS with no saddle point
+        if ts_nobarrier == 'vtst':
+            inf_dct = 'rpvtst_data'
+            writer = 'vtst_no_saddle_block'
+        elif ts_nobarrier == 'vrctst':
+            inf_dct = 'vrctst_data'
+            writer = 'vrctst_block'
+
+    # Add writer to inf dct
+    inf_dct['writer'] = writer
+
+    return inf_dct
+
+
+# Data Readers
 def atm_data(spc_dct_i,
              chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
              run_prefix, save_prefix):
@@ -139,11 +221,11 @@ def mol_data(spc_dct_i,
     keys = ['geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
             'mess_hr_str', 'mdhr_dats',
             'xmat', 'rovib_coups', 'rot_dists',
-            'ene_chnlvl', 'ene_reflvl']
+            'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
             mess_hr_str, mdhr_dats,
             xmat, rovib_coups, rot_dists,
-            ene_chnlvl, ene_reflvl]
+            ene_chnlvl, ene_reflvl, zpe]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct
