@@ -224,18 +224,18 @@ LJ_DCT = {
     ('O', 'O'): [0.25, 1.0],
 }
 
-# A, B, C params E[kcal] R[Ang]
+# A, B, C params E[kcal] R[Ang]; R cutoff
 EXP6_DCT = {
-    ('H', 'H'): [2.442e3, 3.74, 48.8],
-    ('H', 'C'): [6.45e3, 3.67, 116.0],
-    ('H', 'O'): [6.45e3, 3.67, 116.0],
-    ('C', 'C'): [7.69e4, 3.6, 460.0],
-    ('C', 'O'): [7.69e4, 3.6, 460.0],
-    ('O', 'O'): [7.69e4, 3.6, 460.0]
+    ('H', 'H'): [2.442e3, 3.74, 48.8, 1.0],
+    ('H', 'C'): [6.45e3, 3.67, 116.0, 1.0],
+    ('H', 'O'): [6.45e3, 3.67, 116.0, 1.0],
+    ('C', 'C'): [7.69e4, 3.6, 460.0, 0.8],
+    ('C', 'O'): [7.69e4, 3.6, 460.0, 0.8],
+    ('O', 'O'): [7.69e4, 3.6, 460.0, 0.8]
 }
 
 
-def _low_repulsion_struct(zma_ref, zma_samp, thresh=20.0):
+def _low_repulsion_struct(zma_ref, zma_samp, thresh=10.0):
     """ Check if the coloumb sum
     """
 
@@ -362,10 +362,14 @@ def _pairwise_exp6_potential(rdist, symb1, symb2):
     return pot_val
 
 
-def _exp6_potential(rdist, apar, bpar, cpar):
+def _exp6_potential(rdist, apar, bpar, cpar, rcut):
     """ Calculate modified Buckhingham potential
     """
-    return apar * numpy.exp(-1.0*bpar*rdist) - (cpar / rdist**6)
+    if rdist < rcut:
+        pot_val = apar * numpy.exp(-1.0*bpar*rcut) - (cpar / rcut**6)
+    else:
+        pot_val = apar * numpy.exp(-1.0*bpar*rdist) - (cpar / rdist**6)
+    return pot_val
 
 
 def _pairwise_lj_potential(rdist, symb1, symb2):
