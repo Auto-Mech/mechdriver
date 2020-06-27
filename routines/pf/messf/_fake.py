@@ -37,7 +37,7 @@ def combine_geos_in_fake_well(geom_i, geom_j):
     max_z_i = max(atom[1][2] for atom in geom_i)
     min_z_j = min(atom[1][2] for atom in geom_j)
     geom = geom_i
-    geom_j = automol.geom.translated(
+    geom_j = automol.geom.translate(
         geom_j, [0., 0., max_z_i + 6. - min_z_j])
     geom += geom_j
 

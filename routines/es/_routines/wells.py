@@ -117,8 +117,8 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
                 numpy.random.rand(3), [1*numpy.pi, 2*numpy.pi, 2*numpy.pi])
             angs12 = numpy.multiply(
                 numpy.random.rand(2), [1*numpy.pi, 2*numpy.pi])
-            geo1 = automol.geom.euler_rotated(geo1, *angs1)
-            geo2 = automol.geom.euler_rotated(geo2, *angs2)
+            geo1 = automol.geom.euler_rotate(geo1, *angs1)
+            geo2 = automol.geom.euler_rotate(geo2, *angs2)
             dist_cutoff = 3.0 * phycon.ANG2BOHR
 
             geo = automol.geom.join(geo1, geo2, dist_cutoff, *angs12)
