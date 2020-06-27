@@ -304,7 +304,7 @@ def run_kickoff_saddle(
     if kickoff_backward:
         disp_len *= -1
     disp_xyzs = numpy.multiply(disp_xyzs, disp_len)
-    geo = automol.geom.displaced(geo, disp_xyzs)
+    geo = automol.geom.displace(geo, disp_xyzs)
     if opt_cart:
         geom = geo
     else:
