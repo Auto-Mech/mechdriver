@@ -143,7 +143,7 @@ def is_unique_dist_mat_energy(geo, ene, geo_list, ene_list):
         enei = ene_list[idx]
         etol = 2.e-5
         if abs(ene-enei) < etol:
-            if automol.geom.almost_equal_dist_mat(
+            if automol.geom.almost_equal_distance_matrix(
                     geo, geoi, thresh=1e-1):
                 unique = False
     return unique
@@ -162,7 +162,7 @@ def is_unique_stereo_dist_mat_energy(geo, ene, geo_list, ene_list):
         # check energy
         if abs(ene-enei) < etol:
             # check distance matrix
-            if automol.geom.almost_equal_dist_mat(
+            if automol.geom.almost_equal_distance_matrix(
                     geo, geoi, thresh=1e-1):
                 # check stereo by generates stero label
                 ichi = automol.convert.geom.inchi(geoi)
@@ -204,7 +204,7 @@ def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list, saddle):
         # check energy
         if abs(ene-enei) < etol:
             # check distance matrix
-            if automol.geom.almost_equal_dist_mat(
+            if automol.geom.almost_equal_distance_matrix(
                     geo, geoi, thresh=3e-1):
                 # check dihedrals
                 # for now only do this for minima

@@ -83,7 +83,7 @@ def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
         for new_geo in new_geos:
             new_geom = True
             for geo_sym_j in sym_geos2:
-                if automol.geom.almost_equal_dist_mat(
+                if automol.geom.almost_equal_distance_matrix(
                         new_geo, geo_sym_j, thresh=3e-1):
                     if saddle:
                         new_geom = False
