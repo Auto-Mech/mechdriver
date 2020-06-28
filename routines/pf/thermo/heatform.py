@@ -20,7 +20,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 # Path  the database files (stored in the thermo src directory)
 SRC_PATH = os.path.dirname(os.path.realpath(__file__))
 
-
+## move to autio 
 def get_hform_298k_thermp(output_string):
     """
     Obtains deltaHf from thermp output
@@ -33,7 +33,7 @@ def get_hform_298k_thermp(output_string):
     dhf298 = float(apf.last_capture(dhf298_pattern, output_string))
 
     return dhf298
-
+##
 
 def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
     """ calculates the heat-of-formation at 0 K

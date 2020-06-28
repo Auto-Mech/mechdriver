@@ -17,25 +17,11 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
               pes_formula_str, idx_dct,
               es_info, pf_model,
               mess_path, fit_method, pdep_fit,
-              arrfit_thresh):
+              arrfit_thresh,
+              rxn_header_str=''):
     """ Parse the MESS output and fit the rates to
         Arrhenius expressions written as CHEMKIN strings
     """
-
-    # Write header string containing thy information
-    chemkin_header_str = writer.ckin.run_ckin_header(es_info, pf_model)
-    chemkin_header_str += '\n'
-
-    # Initialize full chemkin string and paths
-    # chemkin_full_str = chemkin_header_str
-    chemkin_full_str = ''
-    starting_path = os.getcwd()
-    ckin_path = ''.join([starting_path, '/ckin'])
-    if not os.path.exists(ckin_path):
-        os.mkdir(ckin_path)
-    full_ckin_path = os.path.join(ckin_path, pes_formula_str+'.ckin')
-    # if os.path.exists(full_ckin_path):
-    #     os.remove(full_ckin_path)
 
     # Loop through reactions, fit rates, and write ckin strings
     labels = idx_dct.values()
@@ -54,7 +40,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                         reaction))
 
                     # Initialize new chemkin str for reaction
-                    chemkin_str = chemkin_header_str
+                    chemkin_str = rxn_header_str
 
                     # Read the rate constants out of the mess outputs
                     print('\nReading k(T,P)s from MESS output...')
@@ -84,21 +70,13 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                         #     a_conv_factor, err_thresh)
 
                     # Write the CHEMKIN strings
-                    chemkin_full_str += chemkin_str
-                    chemkin_full_str += '\n\n'
                     # chemkin_str = chemkin_header_str + chemkin_str
                     print('\nFitting Parameters in CHEMKIN Format:')
                     print(chemkin_str)
+                    chemkin_str_lst.append(chemkin_str)
 
-                    # Print the results for each channel to a file
-                    pes_chn_lab = pes_formula_str + '_' + name_i + '_' + name_j
-                    ckin_name = os.path.join(ckin_path, pes_chn_lab+'.ckin')
-                    with open(ckin_name, 'w') as cfile:
-                        cfile.write(chemkin_str)
 
-    # Print the results for the whole PES to a file
-    with open(full_ckin_path, 'a') as cfile:
-        cfile.write(chemkin_full_str)
+    return chemkin_str_lst
 
 
 # Functions to fit rates to Arrhenius/PLOG function

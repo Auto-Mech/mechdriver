@@ -2,8 +2,8 @@
 """
 
 import os
-from routines.pf import ktp as ktp_routines
-from routines.pf.runner import ktp as ktp_runner
+from routines.pf import ktp as ktproutines
+from routines.pf import runner as pfrunner
 from lib import filesys
 from lib.amech_io import parser
 
@@ -31,7 +31,6 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     pressures = pes_model_dct[pes_model]['pressures']
     etransfer = pes_model_dct[pes_model]['etransfer']
     pdep_fit = pes_model_dct[pes_model]['pdep_fit']
-    tunit = pes_model_dct[pes_model]['tunit']
     punit = pes_model_dct[pes_model]['punit']
     fit_method = pes_model_dct[pes_model]['fit_method']
     arrfit_thresh = (
@@ -39,7 +38,6 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         pes_model_dct[pes_model]['dbl_arrfit_val?']
     )
 
-    # Get info for the transition states (want under write..)
     # Fix this to read ene model
     print('\nIdentifying reaction classes for transition states...')
     ts_dct = {}
@@ -66,19 +64,15 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ts_dct, spc_dct)
 
     # Build the MESS label idx dictionary for the PES
-    label_dct = ktp_routines.label.make_pes_label_dct(
+    label_dct = ktproutines.label.make_pes_label_dct(
         rxn_lst, pes_idx, spc_dct)
 
     # Set path where MESS files will be written and read
-    messrate_path = os.path.join(run_prefix, 'MESSRATE')
-    mess_path = ktp_runner.get_mess_path(
-        messrate_path, pes_formula, sub_pes_idx)
+    mess_path = pfrunner.get_mess_path(
+        run_prefix, pes_formula, sub_pes_idx)
 
     # Try and read the MESS file from the filesystem first
-    mess_inp_str, dat_lst = ktp_runner.read_mess_file(mess_path)
-    # if mess_inp_str:
-    #     print('mess_inp_str')
-    #     print(mess_inp_str)
+    _, _ = pfrunner.read_mess_file(mess_path)
 
     # Write the MESS file
     if write_messrate:  # and not mess_inp_str:
@@ -87,63 +81,50 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         print('\nBuilding the MESS input file...')
 
         # Write the strings for the MESS input file
-        globkey_str = ktp_routines.rates.make_header_str(
+        globkey_str = ktproutines.rates.make_header_str(
             temps, pressures)
 
         # Write the energy transfer section strings for MESS file
-        energy_trans_str = ktp_routines.rates.make_etrans_str(
+        energy_trans_str = ktproutines.rates.make_etrans_str(
             spc_dct, rxn_lst, **etransfer)
 
         # Write the MESS strings for all the PES channels
-        well_str, bi_str, ts_str, dats = ktp_routines.rates.make_pes_mess_str(
+        well_str, bi_str, ts_str, dats = ktproutines.rates.make_pes_mess_str(
             spc_dct, rxn_lst, pes_idx,
             run_prefix, save_prefix, label_dct,
             spc_model_dct, thy_dct)
 
         # Combine strings together
-        mess_inp_str = ktp_routines.rates.make_messrate_str(
+        mess_inp_str = ktproutines.rates.make_messrate_str(
             globkey_str, energy_trans_str,
             well_str, bi_str, ts_str)
-
-        # Build the filesystem
-        if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):
-            os.mkdir(os.path.join(run_prefix, 'MESSRATE'))
-        if not os.path.exists(mess_path):
-            os.mkdir(mess_path)
 
         # Write the MESS file into the filesystem
         print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
                '++++++++++++++++++++++++++++++++++++++'))
         print('\nWriting the MESS input file at {}'.format(mess_path))
         print(mess_inp_str)
-        ktp_runner.write_mess_file(mess_inp_str, dats, mess_path)
+        pfrunner.write_mess_file(mess_inp_str, dats, mess_path)
 
         # Write MESS file into job directory
-        starting_path = os.getcwd()
-        jobdir_mess_path = ''.join([starting_path, '/mess'])
-        if not os.path.exists(jobdir_mess_path):
-            os.mkdir(jobdir_mess_path)
-        jobdir_mess_file_path = ktp_runner.get_mess_path(
-            jobdir_mess_path, pes_formula, sub_pes_idx)
-        with open(jobdir_mess_file_path, 'a') as file_obj:
-            file_obj.write('\n\n! NEW MESS FILE\n')
+        write_cwd_mess_file()
 
     # Run mess to produce rate output
     if run_messrate:
         print(('\n\n------------------------------------------------' +
                '--------------------------------------'))
         print('\nRunning MESS for the input file at {}'.format(mess_path))
-        ktp_runner.run_rates(mess_path)
-        # Include the PES number
+        pfrunner.run_rates(mess_path)
 
     # Fit rate output to modified Arrhenius forms, print in ChemKin format
     if run_fits:
         print(('\n\n------------------------------------------------' +
                '--------------------------------------'))
         print('\nFitting Rate Constants for PES to Functional Forms')
-        # Include the PES number
-        ktp_routines.fit.fit_rates(temps, pressures, tunit, punit,
-                                   pes_formula, label_dct,
-                                   es_info, pf_model,
-                                   mess_path, fit_method, pdep_fit,
-                                   arrfit_thresh)
+        ckin_str_lst = ktproutines.fit.fit_rates(
+            temps, pressures, tunit, punit,
+            pes_formula, label_dct,
+            es_info, pf_model,
+            mess_path, fit_method, pdep_fit,
+            arrfit_thresh)
+        writer.ckin.write_rates_file(ckin_rate_str_lst)

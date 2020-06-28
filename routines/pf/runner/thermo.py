@@ -15,35 +15,10 @@ from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
 
-# OBTAIN THE PATH TO THE DIRECTORY CONTAINING THE TEMPLATES #
-CUR_PATH = os.path.dirname(os.path.realpath(__file__))
-
-
-# MESSPF
-def run_messpf(pf_path, pf_script_str=DEFAULT_SCRIPT_DCT['messpf']):
-    """ run messpf
-    """
-    run_script(pf_script_str, pf_path)
-
-
-def read_messpf_temps(pf_path):
-    """ Obtain the temperatures from the MESSPF file
-    """
-
-    # Read MESSPF file
-    messpf_file = os.path.join(pf_path, 'pf.dat')
-    with open(messpf_file, 'r') as pffile:
-        output_string = pffile.read()
-
-    # Obtain the temperatures, remove the 298.2 value
-    temps, _, _, _ = mess_io.reader.pfs.partition_fxn(output_string)
-    temps = [temp for temp in temps if not numpy.isclose(temp, 298.2)]
-
-    return temps
-
-
 # THERMP
-def write_thermp_inp(spc_dct_i, temps, thermp_file_name='thermp.dat'):
+def write_thermp_inp(spc_dct_i, temps,
+                     enthalpyt=0.0, breakt=1000.0
+                     thermp_file_name='thermp.dat'):
     """ write the thermp input file
     """
     ich = spc_dct_i['ich']
@@ -51,8 +26,6 @@ def write_thermp_inp(spc_dct_i, temps, thermp_file_name='thermp.dat'):
     formula = automol.inchi.formula_string(ich)
 
     # Write thermp input file
-    enthalpyt = 0.
-    breakt = 1000.
     thermp_str = thermp_io.writer.thermp_input(
         ntemps=len(temps),
         formula=formula,
@@ -87,13 +60,6 @@ def run_thermp(pf_path, thermp_path,
 
     # Run thermp
     subprocess.check_call(['thermp', thermp_file])
-
-    # Read ene from file
-    with open('thermp.out', 'r') as thermfile:
-        lines = thermfile.readlines()
-    line = lines[-1]
-    hf298k = line.split()[-1]
-    return hf298k
 
 
 # PAC99
