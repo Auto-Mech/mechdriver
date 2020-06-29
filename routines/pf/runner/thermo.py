@@ -106,7 +106,7 @@ def run_pac(spc_dct_i, nasa_path):
     return pac99_str
 
 
-def get_thermo_paths(spc_info, run_prefix):
+def thermo_paths(spc_info, run_prefix):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """

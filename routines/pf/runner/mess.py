@@ -12,14 +12,14 @@ CUR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 # Set paths to MESS jobs
-def get_messrate_path(prefix, pes_formula, sub_pes_idx):
+def messrate_path(prefix, pes_formula, sub_pes_idx):
     """ Build a simple mess path using the run prefix
     """
     pes_str = '{}_{}'.format(pes_formula, sub_pes_idx)
     return os.path.join(prefix, 'MESSRATE', pes_str)
 
 
-def get_messpf_path(prefix, spc_info):
+def messpf_path(prefix, spc_info):
     """ Build a simple mess path using the run prefix
     """
     spc_formula = automol.inchi.formula_string(spc_info[0])

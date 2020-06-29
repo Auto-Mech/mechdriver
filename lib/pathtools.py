@@ -5,21 +5,15 @@
 import os
 
 
-def get_starting_path():
+def starting_path():
     """ get original working directory
     """
     starting_path = os.getcwd()
     return starting_path
 
 
-def go_to_path(path):
+def go_to(path):
     """ change directory to path and return the original working directory
-    """
-    os.chdir(path)
-
-
-def return_to_path(path):
-    """ change directory to starting path
     """
     os.chdir(path)
 

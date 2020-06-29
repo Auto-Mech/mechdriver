@@ -7,7 +7,7 @@ import automol
 import routines.pf.thermo
 
 
-def run_ckin_header(pf_levels, pf_models):
+def model_header(pf_levels, pf_models):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
 
@@ -72,7 +72,7 @@ def write_rates_file(ckin_rate_str_lst):
     """
 
     # Write header string containing thy information
-    chemkin_header_str = writer.ckin.run_ckin_header(es_info, pf_model)
+    chemkin_header_str = writer.ckin.model_header(es_info, pf_model)
     chemkin_header_str += '\n'
 
     # Initialize full chemkin string and paths
@@ -100,14 +100,8 @@ def write_rates_file(ckin_rate_str_lst):
         cfile.write(chemkin_full_str)
 
 
-
-
-def write_nasa_file(spc_dct_i, ckin_path, nasa_path, chemkin_poly_str):
+def write_nasa_file(ckin_path, chemkin_poly_str):
     """ write out the nasa polynomials
     """
-    ich = spc_dct_i['ich']
-    formula = automol.inchi.formula_string(ich)
-    with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
-        nasa_file.write(chemkin_poly_str)
     with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)
