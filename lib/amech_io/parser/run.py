@@ -2,6 +2,7 @@
 """
 
 import sys
+import ioformat
 import autoparse.find as apf
 from lib.amech_io.parser import ptt
 from lib.amech_io.parser import tsks
@@ -9,7 +10,6 @@ from lib.amech_io.parser.keywords import RUN_INP_SUPPORTED_KEYWORDS
 from lib.amech_io.parser.keywords import RUN_INP_REQUIRED_KEYWORDS
 from lib.amech_io.parser.keywords import RUN_INP_KEY_DCT
 from lib.amech_io.parser.keywords import RUN_SUPPORTED_KEYWORDS
-from lib.amech_io.cleaner import remove_whitespace
 
 
 RUN_INP = 'inp/run.dat'
@@ -39,7 +39,7 @@ def build_run_inp_dct(job_path):
 def inp_block(inp_str):
     """ Read the string that has the global model information
     """
-    return remove_whitespace(
+    return ioformat.remove_whitespace(
         apf.first_capture(ptt.end_section('input'), inp_str))
 
 
@@ -95,11 +95,11 @@ def objects_dct(job_path):
     # Build the run dictionary
     run_dct = {}
     if pes_block_str is not None:
-        run_dct['pes'] = get_pes_idxs(remove_whitespace(pes_block_str))
+        run_dct['pes'] = get_pes_idxs(ioformat.remove_whitespace(pes_block_str))
     else:
         run_dct['pes'] = []
     if spc_block_str is not None:
-        run_dct['spc'] = get_spc_idxs(remove_whitespace(spc_block_str))
+        run_dct['spc'] = get_spc_idxs(ioformat.remove_whitespace(spc_block_str))
     else:
         run_dct['spc'] = []
 
@@ -109,7 +109,7 @@ def objects_dct(job_path):
 def object_block(inp_str):
     """ Read the string that has the global model information
     """
-    return remove_whitespace(
+    return ioformat.remove_whitespace(
         apf.first_capture(ptt.end_section('obj'), inp_str))
 
 
@@ -188,7 +188,7 @@ def build_run_jobs_lst(job_path):
 def jobs_block(inp_str):
     """ Read the string that has the global model information
     """
-    return remove_whitespace(
+    return ioformat.remove_whitespace(
         apf.first_capture(ptt.end_section('jobs'), inp_str))
 
 
@@ -275,7 +275,7 @@ def read_es_tsks(job_path):
 def es_tsks_block(inp_str):
     """ Read the string that has the global model information
     """
-    return remove_whitespace(
+    return ioformat.remove_whitespace(
         apf.first_capture(ptt.end_section('es_tsks'), inp_str))
 
 

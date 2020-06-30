@@ -6,6 +6,7 @@ import automol
 from lib import structure
 
 
+# Functions used by build to set pieces of information
 def ini_elec_levels(spc_dct_i, spc_info):
     """ get initial elec levels
     """
@@ -20,15 +21,6 @@ def ini_elec_levels(spc_dct_i, spc_info):
 def combine_elec_levels(elec_levels_i, elec_levels_j):
     """ Put two elec levels together for two species
     """
-
-    # if 'elec_levs' in spc_dct_i:
-    #     elec_levels_i = spc_dct_i['elec_levs']
-    # else:
-    #     elec_levels_i = [[0., spc_dct_i['mul']]]
-    # if 'elec_levs' in spc_dct_j:
-    #     elec_levels_j = spc_dct_j['elec_levs']
-    # else:
-    #     elec_levels_j = [[0., spc_dct_j['mul']]]
 
     # Combine the energy levels
     init_elec_levels = []
@@ -68,14 +60,14 @@ def set_dist_names(spc_dct_i, saddle):
     return dist_names
 
 
-def get_bnd_keys(pf_filesystems, saddle, zma_locs=[0]):
+def get_bnd_keys(pf_filesystems, saddle, zma_locs=(0)):
     """ get bond broken and formed keys for a transition state
     """
     if not saddle:
         frm_bnd_keys = []
         brk_bnd_keys = []
     else:
-        [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['harm']
+        [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
         frm_bnd_keys, brk_bnd_keys = structure.ts.rxn_bnd_keys(
             cnf_fs, min_cnf_locs, zma_locs=zma_locs)
 
@@ -102,13 +94,6 @@ def set_rxn_class(spc_dct_i, saddle):
         rxn_class = None
 
     return rxn_class
-
-
-def is_atom(spc_dct_i):
-    """ Check if species is an atom
-    """
-    geo = automol.inchi.geometry(spc_dct_i['ich'])
-    return automol.geom.is_atom(geo)
 
 
 def atom_mass(spc_dct_i):

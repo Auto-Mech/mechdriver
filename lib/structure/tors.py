@@ -7,7 +7,6 @@ import automol
 import autofile
 from autofile import fs
 import mess_io
-from lib.amech_io import cleaner
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
@@ -62,7 +61,7 @@ def names_from_dct(spc_dct_i, ndim_tors):
     return tors_names, amech_ts_tors_names
 
 
-def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_cnf_save_path):
+def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_model):
     """ Read out the torsional names from the filesystem
     """
 
@@ -77,6 +76,12 @@ def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_cnf_save_path):
             scan_names = os.listdir(scans_dir)
             tors_names = [name for name in scan_names
                           if 'D' in name]
+            if tors_model == '1dhr': 
+                tors_names = [name for name in scan_names
+                              if '_' not in name]
+            else:
+                tors_names = [name for name in scan_names
+                              if '_' in name]
             tors_names = [[name] for name in tors_names]
             tors_names = tuple(tuple(x) for x in tors_names)
         else:
@@ -122,7 +127,7 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
     for tors_names in tors_name_grps:
         # print('name\n', tors_names)
         # print(scan_increment)
-         # print(frm_bnd_key)
+        # print(frm_bnd_key)
         # print(brk_bnd_key)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,
@@ -333,7 +338,6 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
         zero_energy=0.0
     )
     pf_inp_str = '\n'.join([global_pf_str, spc_str]) + '\n'
-    # pf_inp_str += '\n'
 
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
         pf_file.write(pf_inp_str)

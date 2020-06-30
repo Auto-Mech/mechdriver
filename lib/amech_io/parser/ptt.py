@@ -4,10 +4,9 @@
 import sys
 import os
 import ast
+import ioformat
 import autoparse.find as apf
 import autoparse.pattern as app
-from lib.amech_io.cleaner import remove_whitespace
-from lib.amech_io.cleaner import remove_line_comments
 
 
 # General Patterns that will be helpful
@@ -28,7 +27,7 @@ def read_inp_str(filepath, filename, remove_comments=True):
         with open(input_file, 'r') as inp_file:
             inp_str = inp_file.read()
         if remove_comments:
-            inp_str = remove_line_comments(inp_str, '#')
+            inp_str = ioformat.remove_comment_lines(inp_str, '#')
     except FileNotFoundError:
         print('*ERROR: Input file does not exist: ', input_file)
         sys.exit()
@@ -102,7 +101,7 @@ def build_keyword_dct(section_str):
     """
 
     keyword_dct = {}
-    section_str = remove_whitespace(section_str)
+    section_str = ioformat.remove_whitespace(section_str)
     for line in section_str.splitlines():
         key_val = apf.first_capture(KEYWORD_KEYVALUE_PATTERN, line)
         formtd_key, formtd_val = format_param_vals(key_val)
@@ -115,7 +114,7 @@ def build_keyword_lst(section_str):
     """
 
     keyword_lst = []
-    section_str = remove_whitespace(section_str)
+    section_str = ioformat.remove_whitespace(section_str)
     for line in section_str.splitlines():
         keyword_lst.append(line)
     return keyword_lst
@@ -125,7 +124,7 @@ def build_vals_lst(section_str):
     """ build lst
     """
     val_lst = []
-    section_str = remove_whitespace(section_str)
+    section_str = ioformat.remove_whitespace(section_str)
     for line in section_str.splitlines():
         val_lst.extend((float(val) for val in line.split()))
 

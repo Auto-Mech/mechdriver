@@ -383,19 +383,6 @@ def zma_fs_from_prefix(prefix, zma_idxs=(0)):
     return zma_fs, zma_path
 
 
-# def sym_fs_from_prefix(prefix):
-#     """ Build a sym filesys object
-#     """
-#     prrint(prefix)
-
-
-# tors
-def tors_from_scn_yaml(scn_fs):
-    """ read the torsions from the yaml file
-    """
-    # read.information(inf_obj)
-
-
 # Old function that I need to get rid of
 def get_rxn_fs(run_prefix, save_prefix,
                rxn_ichs, rxn_chgs, rxn_muls, ts_mul):

@@ -75,21 +75,6 @@ def build_run_spc_dct(spc_dct, run_obj_dct):
     return run_dct
 
 
-def modfy_spc_wdat():
-    """ fefe
-    """
-    # Modify spc dct with params from the AMech file
-    mod_spc_dct = modify_spc_dct(job_path, spc_dct)
-
-    return mod_spc_dct
-
-
-    # Modify spc dct with params from the AMech file
-    mod_spc_dct = modify_spc_dct(job_path, spc_dct)
-
-    return mod_spc_dct
-
-
 def build_spc_queue(rxn_lst):
     """ Build spc queue from the reaction lst for the drivers
         :return spc_queue: all the species and corresponding models in rxn

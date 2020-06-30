@@ -4,7 +4,7 @@
 
 import sys
 import automol
-from automol.zmatrix import shifted_standard_zmas_graphs as shift_gra
+import autofile
 
 
 def get_zma_geo(filesys, locs):
@@ -52,8 +52,10 @@ def min_energy_conformer_locators(cnf_save_fs, zpe_corrd=False):
 def min_dist_conformer_zma(dist_name, cnf_save_fs):
     """ locators for minimum energy conformer """
     cnf_locs_lst = cnf_save_fs[-1].existing()
-    cnf_zmas = [cnf_save_fs[-1].file.zmatrix.read(locs)
-                for locs in cnf_locs_lst]
+    cnf_zmas = []
+    for locs in cnf_locs_lst:
+        zma_fs = autofile.fs.manager(cnf_save_fs[-1].path(locs), 'ZMATRIX')
+        cnf_zmas.append(zma_fs[-1].file.zmatrix.read([0]))
     min_dist = 100.
     min_zma = []
     for zma in cnf_zmas:
@@ -68,12 +70,14 @@ def min_dist_conformer_zma(dist_name, cnf_save_fs):
 def min_dist_conformer_zma_geo(dist_coords, cnf_save_fs):
     """ locators for minimum energy conformer """
     cnf_locs_lst = cnf_save_fs[-1].existing()
-    cnf_zmas = [cnf_save_fs[-1].file.zmatrix.read(locs)
-                for locs in cnf_locs_lst]
+    cnf_zmas = []
+    for locs in cnf_locs_lst:
+        zma_fs = autofile.fs.manager(cnf_save_fs[-1].path(locs), 'ZMATRIX')
+        cnf_zmas.append(zma_fs[-1].file.zmatrix.read([0]))
     min_dist = 100.
     min_zma = []
     for zma in cnf_zmas:
-        zmas, _ = shift_gra([zma])
+        zmas, _ = automol.zmatrix.shifted_standard_zmas_graphs([zma])
         zma = zmas[0]
         geo = automol.zmatrix.geometry(zma)
         dist = automol.geom.distance(geo, *list(dist_coords))

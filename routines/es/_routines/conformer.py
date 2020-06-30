@@ -19,7 +19,7 @@ def conformer_sampling(zma, spc_info,
                        cnf_run_fs, cnf_save_fs,
                        script_str, overwrite,
                        saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
-                       tors_names='', dist_info=(),
+                       tors_names='',
                        two_stage=False, retryfail=True,
                        rxn_class='', **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
@@ -43,6 +43,9 @@ def conformer_sampling(zma, spc_info,
     else:
         ntaudof = len(tors_names)
         nsamp = util.nsamp_init(nsamp_par, ntaudof)
+
+    # Check samples and if nsamp met and no resave
+
 
     print('\nSaving any conformers in run filesys...')
     save_conformers(
@@ -94,7 +97,7 @@ def conformer_sampling(zma, spc_info,
 
 def single_conformer(zma, spc_info, thy_info,
                      thy_save_fs, cnf_run_fs, cnf_save_fs,
-                     overwrite, saddle=False, dist_info=()):
+                     overwrite, saddle=False):
     """ generate single optimized geometry for
         randomly sampled initial torsional angles
     """
@@ -110,7 +113,6 @@ def single_conformer(zma, spc_info, thy_info,
         overwrite=overwrite,
         nsamp_par=[False, 0, 0, 0, 0, 1],
         saddle=saddle,
-        dist_info=dist_info,
         two_stage=saddle,
         retryfail=False,
         **kwargs,
@@ -300,7 +302,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                         else:
                             sym_locs = saved_locs[sym_id]
                             _save_sym_indistinct_conformer(
-                                geo, ene, cnf_save_fs, locs, sym_locs)
+                                geo, cnf_save_fs, locs, sym_locs)
 
         # Update the conformer trajectory file
         print('')
@@ -378,7 +380,7 @@ def _is_proper_isomer(cnf_save_fs, zma):
     return proper_isomer
 
 
-def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=[0]):
+def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=(0)):
     """ Perform a series of checks to assess the viability
         of a transition state geometry prior to saving
     """
@@ -535,7 +537,7 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs):
     sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
 
 
-def _save_sym_indistinct_conformer(geo, ene, cnf_save_fs,
+def _save_sym_indistinct_conformer(geo, cnf_save_fs,
                                    cnf_tosave_locs, cnf_saved_locs):
     """ Save a structure into the SYM directory of a conformer
     """

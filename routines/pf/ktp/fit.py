@@ -17,25 +17,11 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
               pes_formula_str, idx_dct,
               es_info, pf_model,
               mess_path, fit_method, pdep_fit,
-              arrfit_thresh):
+              arrfit_thresh,
+              rxn_header_str=''):
     """ Parse the MESS output and fit the rates to
         Arrhenius expressions written as CHEMKIN strings
     """
-
-    # Write header string containing thy information
-    chemkin_header_str = writer.ckin.run_ckin_header(es_info, pf_model)
-    chemkin_header_str += '\n'
-
-    # Initialize full chemkin string and paths
-    # chemkin_full_str = chemkin_header_str
-    chemkin_full_str = ''
-    starting_path = os.getcwd()
-    ckin_path = ''.join([starting_path, '/ckin'])
-    if not os.path.exists(ckin_path):
-        os.mkdir(ckin_path)
-    full_ckin_path = os.path.join(ckin_path, pes_formula_str+'.ckin')
-    # if os.path.exists(full_ckin_path):
-    #     os.remove(full_ckin_path)
 
     # Loop through reactions, fit rates, and write ckin strings
     labels = idx_dct.values()
@@ -54,7 +40,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                         reaction))
 
                     # Initialize new chemkin str for reaction
-                    chemkin_str = chemkin_header_str
+                    chemkin_str = rxn_header_str
 
                     # Read the rate constants out of the mess outputs
                     print('\nReading k(T,P)s from MESS output...')
@@ -84,26 +70,18 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                         #     a_conv_factor, err_thresh)
 
                     # Write the CHEMKIN strings
-                    chemkin_full_str += chemkin_str
-                    chemkin_full_str += '\n\n'
                     # chemkin_str = chemkin_header_str + chemkin_str
                     print('\nFitting Parameters in CHEMKIN Format:')
                     print(chemkin_str)
+                    chemkin_str_lst.append(chemkin_str)
 
-                    # Print the results for each channel to a file
-                    pes_chn_lab = pes_formula_str + '_' + name_i + '_' + name_j
-                    ckin_name = os.path.join(ckin_path, pes_chn_lab+'.ckin')
-                    with open(ckin_name, 'w') as cfile:
-                        cfile.write(chemkin_str)
 
-    # Print the results for the whole PES to a file
-    with open(full_ckin_path, 'a') as cfile:
-        cfile.write(chemkin_full_str)
+    return chemkin_str_lst
 
 
 # Functions to fit rates to Arrhenius/PLOG function
 def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
-                           a_conv_factor, err_thresh):
+                           a_conv_factor, arrfit_thresh):
     """ Read the rates for each channel and perform the fits
     """
     # Fit rate constants to single Arrhenius expressions
@@ -126,7 +104,7 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
 
     # Assess single fitting errors:
     # are they within threshold at each pressure
-    thresh, choice = arrfir_thresh
+    thresh, choice = arrfit_thresh
     if choice == 'max':
         test_val = max((
             vals[1] for vals in sing_fit_err_dct.values()))
@@ -136,8 +114,9 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
     sgl_fit_good = bool(test_val < thresh)
 
     # Put a double fit assess function
-    # Skip first and last points in estimating maximum errors – or better yet, skip first or last data point, and try fit again.
-    
+    # Skip first and last points in estimating maximum errors –
+    # or better yet, skip first or last data point, and try fit again.
+
     # Assess if a double Arrhenius fit is possible
     dbl_fit_poss = all(
         len(ktp_dct[p][0]) >= 6 for p in ktp_dct)
@@ -160,7 +139,7 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
             ktp_dct, mess_path, fit_type='double',
             fit_method='dsarrfit', t_ref=1.0,
             a_conv_factor=a_conv_factor,
-            inp_params_dct=sing_params_dct)
+            inp_param_dct=sing_params_dct)
 
         if doub_fit_suc:
             print('\nSuccessful fit to Double Arrhenius at all T, P')
@@ -185,7 +164,7 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
 
 
 def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
-                t_ref=1.0, a_conv_factor=1.0, inp_params_dct=None):
+                t_ref=1.0, a_conv_factor=1.0, inp_param_dct=None):
     """
     Routine for a single reaction:
         (1) Grab high-pressure and pressure-dependent rate constants
@@ -196,7 +175,7 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
     assert fit_type in ('single', 'double'), 'Only single/double fits'
     if inp_param_dct is not None:
         assert set(list(ktp_dct.keys())) == set(list(inp_param_dct.keys())), (
-                'Pressures for ktp and guess dcts must be the same')
+            'Pressures for ktp and guess dcts must be the same')
 
     # Dictionaries to store info; indexed by pressure (given in fit_ps)
     fit_param_dct = {}
@@ -212,7 +191,7 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
         # Build guess params for a double fit
         if inp_param_dct is not None and fit_type == 'double':
             arr1_guess, arr2_guess = _generate_guess(
-                inp_param_dct[pressure]) 
+                inp_param_dct[pressure])
 
         # Fit rate constants using desired Arrhenius fit
         if fit_type == 'single':
@@ -260,7 +239,7 @@ def _generate_guess(params):
 
 
 def _check_double_fit(sing_fit_dct, dbl_fit_dct,
-                      temps=[2000.0], t_ref=1.0):
+                      temps=(2000.0), t_ref=1.0):
     """ Check if the double fit is bad
     """
 
@@ -281,8 +260,8 @@ def _check_double_fit(sing_fit_dct, dbl_fit_dct,
             dparams[3], dparams[4], dparams[5],
             t_ref, temps)
 
-        for sk, dk in zip(sgl_ks, dbl_ks):
-            if dk >= sk * 10.0:
+        for sk_val, dk_val in zip(sgl_ks, dbl_ks):
+            if dk_val >= sk_val * 10.0:
                 bad_dbl = True
 
     return bad_dbl
@@ -430,19 +409,6 @@ def assess_troe_fit_err(fit_param_dct, ktp_dct, t_ref=1.0, a_conv_factor=1.0):
 
     return fit_err_dct
 
-
-# def check_single_fit_errors(sing_fit_err_dct, err_thresh):
-#     """ Determine if fit errors
-#     """
-#     pass
-#
-#
-# def print_fit_info(params_dct, err_dct):
-#     """ print fitting infor
-#     """
-#     # inf_str = '{} {} {} {}'.format(
-#     # for pressure, params in sing_params_dct.items():
-#     #     inf_str += '{} {8.5} {} {}'.format(
 
 # Readers
 def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,

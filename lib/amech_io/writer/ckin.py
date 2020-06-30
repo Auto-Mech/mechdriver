@@ -7,7 +7,7 @@ import automol
 import routines.pf.thermo
 
 
-def run_ckin_header(pf_levels, pf_models):
+def model_header(pf_levels, pf_models):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
 
@@ -52,27 +52,50 @@ def _ckin_ene_lvl_str(ene_info, geo_info):
     return ene_str
 
 
-def run_ckin_poly(spc, spc_dct_i, pac99_poly_str):
-    """ prepare chemkin header info and convert pac 99 format to chemkin format
+def write_rates_file(ckin_rate_str_lst):
+    """ write out the rates
     """
 
-    hf_str = '! Hf(0 K) = {:.2f}, Hf(298 K) = {:.2f} kcal/mol\n'.format(
-        float(spc_dct_i['Hfs'][0]), float(spc_dct_i['Hfs'][1]))
-    ich = spc_dct_i['ich']
-    formula_dct = automol.inchi.formula(ich)
-    chemkin_poly_str = routines.pf.thermo.nasapoly.convert_pac_to_chemkin(
-        spc, formula_dct, hf_str, pac99_poly_str)
-    print('\nCHEMKIN Polynomial:')
-    print(chemkin_poly_str)
-    return chemkin_poly_str
+    # Write header string containing thy information
+    chemkin_header_str = writer.ckin.model_header(es_info, pf_model)
+    chemkin_header_str += '\n'
+
+    # Initialize full chemkin string and paths
+    # chemkin_full_str = chemkin_header_str
+    chemkin_full_str = ''
+    starting_path = os.getcwd()
+    ckin_path = ''.join([starting_path, '/ckin'])
+    if not os.path.exists(ckin_path):
+        os.mkdir(ckin_path)
+    full_ckin_path = os.path.join(ckin_path, pes_formula_str+'.ckin')
+    # if os.path.exists(full_ckin_path):
+    #     os.remove(full_ckin_path)
+
+    # fix this code
+    # Print the results for each channel to a file
+    chemkin_full_str += '\n\n'
+    pes_chn_lab = pes_formula_str + '_' + name_i + '_' + name_j
+    ckin_name = os.path.join(ckin_path, pes_chn_lab+'.ckin')
+    with open(ckin_name, 'w') as cfile:
+        cfile.write(chemkin_str)
+
+    # Print the results for the whole PES to a file
+    with open(full_ckin_path, 'a') as cfile:
+        cfile.write(chemkin_full_str)
 
 
-def write_nasa_file(spc_dct_i, ckin_path, nasa_path, chemkin_poly_str):
+def nasa_polynomial(hform0K, hform298K, ckin_poly_str):
+    """ write the nasa polynomial str
+    """
+    hf_str = (
+        '! Hf(0 K) = {:.2f},'.format(hform0K) +
+        'Hf(298 K) = {:.2f} kcal/mol\n'.format(hform298K)
+    )
+    return hf_str + ckin_poly_str
+
+
+def write_nasa_file(ckin_path, chemkin_poly_str):
     """ write out the nasa polynomials
     """
-    ich = spc_dct_i['ich']
-    formula = automol.inchi.formula_string(ich)
-    with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
-        nasa_file.write(chemkin_poly_str)
     with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)

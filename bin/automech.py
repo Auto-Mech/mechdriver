@@ -7,7 +7,6 @@ import sys
 from drivers import esdriver
 from drivers import thermodriver
 from drivers import ktpdriver
-# from lib.submission import build_sub_script_dct
 from lib.amech_io import parser
 from lib.amech_io import printer
 from lib.reaction import direction as rxndirn

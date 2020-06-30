@@ -3,16 +3,15 @@
 """
 
 import os
-import sys
 import automol
 import autofile
 import chemkin_io
+from ioformat import remove_whitespace
 from routines.es._routines import geom
 from lib.phydat import phycon
 from lib.filesys.mincnf import min_energy_conformer_locators
 from lib.filesys.inf import modify_orb_restrict
 from lib.amech_io.parser import ptt
-from lib.amech_io.cleaner import remove_whitespace
 
 
 CLA_INP = 'inp/class.csv'
@@ -95,15 +94,15 @@ def _build_cla_dct(cla_str):
     cla_dct = {}
     cla_str = remove_whitespace(cla_str)
     for line in cla_str.splitlines():
-        try:
-            [rxn_line, rclass] = line.split('||')
-            reacs = chemkin_io.parser.reacion.reactant_names(rxn_line)
-            prods = chemkin_io.parser.reacion.product_names(rxn_line)
-            cla_dct[(reacs, prods)] = rclass
-        except:
-            print('*ERROR: Error in formatting line')
-            print(line)
-            sys.exit()
+        # try:
+        [rxn_line, rclass] = line.split('||')
+        reacs = chemkin_io.parser.reacion.reactant_names(rxn_line)
+        prods = chemkin_io.parser.reacion.product_names(rxn_line)
+        cla_dct[(reacs, prods)] = rclass
+        # except:
+        #     print('*ERROR: Error in formatting line')
+        #     print(line)
+        #     sys.exit()
 
     return cla_dct
 

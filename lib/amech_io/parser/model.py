@@ -154,6 +154,10 @@ def build_spc_model_keyword_dct(model_str):
     pf_dct = ptt.build_keyword_dct(pf_str)
     es_dct = ptt.build_keyword_dct(es_str)
     opts_dct = ptt.build_keyword_dct(opts_str)
+    if 'ref_enes' not in opts_dct:
+        opts_dct['ref_enes'] = 'ATcT'
+    if 'ref_scheme' not in opts_dct:
+        opts_dct['ref_enes'] = 'basic'
     if vrctst_str is not None:
         vrctst_dct = ptt.build_keyword_dct(vrctst_str)
     else:
@@ -232,7 +236,7 @@ def set_default_pf(dct):
     return new_dct
 
 
-def set_pf_model_info(pf_model):
+def pf_model_info(pf_model):
     """ Set the PF model list based on the input
     """
 
@@ -251,7 +255,7 @@ def set_pf_model_info(pf_model):
     return pf_models
 
 
-def set_pf_level_info(es_model, thy_dct):
+def pf_level_info(es_model, thy_dct):
     """ Set the model info
     """
     # Read the ES models from the model dictionary

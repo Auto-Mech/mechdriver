@@ -6,17 +6,98 @@
   and calculate electronic and zero-point vibrational energies.
 """
 
-import autofile
-from routines.pf.messf import ene
-from routines.pf.messf import _rot as rot
-from routines.pf.messf import _tors as tors
-from routines.pf.messf import _sym as sym
-from routines.pf.messf import _vib as vib
-from routines.pf.messf import _util as util
-from lib.filesys import inf as finf
-from lib.filesys import mincnf
+from routines.pf.models import ene
+from routines.pf.models import typ
+from routines.pf.models import _rot as rot
+from routines.pf.models import _tors as tors
+from routines.pf.models import _sym as sym
+from routines.pf.models import _vib as vib
+from routines.pf.models import _fs as fs
+from routines.pf.models import _util as util
 
 
+# General readers
+def read_spc_data(spc_dct_i, spc_name,
+                  chn_pf_models, chn_pf_levels,
+                  run_prefix, save_prefix,
+                  ref_pf_models=(), ref_pf_levels=()):
+    """ Determines which block writer to use tau
+    """
+    print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
+           '++++++++++++++++++++++++++++++++++++++'))
+    print('\nReading filesystem info for {}'.format(spc_name))
+
+    vib_model, tors_model = chn_pf_models['vib'], chn_pf_models['tors']
+    if typ.is_atom(spc_dct_i):
+        inf_dct = atm_data(
+            spc_dct_i,
+            chn_pf_models, chn_pf_levels,
+            ref_pf_models, ref_pf_levels,
+            run_prefix, save_prefix)
+        writer = 'atom_block'
+    else:
+        if vib_model == 'tau' or tors_model == 'tau':
+            # inf_dct = tau_data(
+            #     spc_dct_i,
+            #     chn_pf_models, chn_pf_levels,
+            #     ref_pf_models, ref_pf_levels,
+            #     run_prefix, save_prefix, saddle=False)
+            writer = 'tau_block'
+        else:
+            inf_dct = mol_data(
+                spc_dct_i,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix, saddle=False, tors_wgeo=True)
+            writer = 'species_block'
+
+    # Add writer to inf dct
+    inf_dct['writer'] = writer
+
+    return inf_dct
+
+
+def read_ts_data(spc_dct_i, tsname,
+                 chn_pf_models, chn_pf_levels,
+                 run_prefix, save_prefix,
+                 ts_class, ts_sadpt, ts_nobarrier,
+                 ref_pf_models=(), ref_pf_levels=()):
+    """ Determine which block function to useset block functions
+    """
+
+    print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
+           '++++++++++++++++++++++++++++++++++++++'))
+    print('\nReading filesystem info for {}'.format(tsname))
+
+    # Get all of the information for the filesystem
+    if not typ.var_radrad(ts_class):
+        # Build MESS string for TS at a saddle point
+        if ts_sadpt == 'vtst':
+            inf_dct = 'rpvtst_data'
+            writer = 'vtst_saddle_block'
+        else:
+            inf_dct = mol_data(
+                spc_dct_i,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix, saddle=True, tors_wgeo=True)
+            writer = 'species_block'
+    else:
+        # Build MESS string for TS with no saddle point
+        if ts_nobarrier == 'vtst':
+            inf_dct = 'rpvtst_data'
+            writer = 'vtst_no_saddle_block'
+        elif ts_nobarrier == 'vrctst':
+            inf_dct = 'vrctst_data'
+            writer = 'vrctst_block'
+
+    # Add writer to inf dct
+    inf_dct['writer'] = writer
+
+    return inf_dct
+
+
+# Data Readers
 def atm_data(spc_dct_i,
              chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
              run_prefix, save_prefix):
@@ -24,7 +105,7 @@ def atm_data(spc_dct_i,
     """
 
     # Set up all the filesystem objects using models and levels
-    pf_filesystems = build_pf_filesystems(
+    pf_filesystems = fs.pf_filesys(
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, False)
 
     print('\nObtaining the geometry...')
@@ -65,7 +146,7 @@ def mol_data(spc_dct_i,
     xmat, rovib_coups, rot_dists = None, None, None
 
     # Set up all the filesystem objects using models and levels
-    pf_filesystems = build_pf_filesystems(
+    pf_filesystems = fs.pf_filesys(
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
 
     # Set information for transition states
@@ -78,7 +159,7 @@ def mol_data(spc_dct_i,
         spc_dct_i, pf_filesystems, chn_pf_models,
         frm_bnd_key=frm_bnd_keys, brk_bnd_key=brk_bnd_keys)
 
-    if nonrigid_tors(chn_pf_models, rotor_names):
+    if typ.nonrigid_tors(chn_pf_models, rotor_names):
         mess_hr_str, prot_hr_str, mdhr_dats, rotor_syms = tors.make_hr_strings(
             rotor_names, rotor_grids, rotor_syms, const_dct,
             ref_ene, pf_filesystems, chn_pf_models,
@@ -89,19 +170,19 @@ def mol_data(spc_dct_i,
     print('\nObtaining info for rotation partition function...')
     geom = rot.read_geom(pf_filesystems)
 
-    if nonrigid_rotations(chn_pf_models):
+    if typ.nonrigid_rotations(chn_pf_models):
         rovib_coups, rot_dists = rot.read_rotational_values(pf_filesystems)
 
     # Obtain vibration partition function information
     print('\nObtaining the vibrational frequencies and zpves...')
-    if nonrigid_tors(chn_pf_models, rotor_names):
+    if typ.nonrigid_tors(chn_pf_models, rotor_names):
         freqs, imag, zpe = vib.tors_projected_freqs_zpe(
             pf_filesystems, mess_hr_str, prot_hr_str, saddle=saddle)
     else:
         freqs, imag, zpe = vib.read_harmonic_freqs(
             pf_filesystems, saddle=saddle)
 
-    if anharm_vib(chn_pf_models):
+    if typ.anharm_vib(chn_pf_models):
         xmat = vib.read_anharmon_matrix(pf_filesystems)
 
     # Obtain symmetry factor
@@ -111,7 +192,7 @@ def mol_data(spc_dct_i,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
         rotor_names=rotor_names)
 
-    if nonrigid_tors(chn_pf_models, rotor_names):
+    if typ.nonrigid_tors(chn_pf_models, rotor_names):
         sym_factor = sym.tors_reduced_sym_factor(
             sym_factor, rotor_syms)
 
@@ -139,11 +220,11 @@ def mol_data(spc_dct_i,
     keys = ['geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
             'mess_hr_str', 'mdhr_dats',
             'xmat', 'rovib_coups', 'rot_dists',
-            'ene_chnlvl', 'ene_reflvl']
+            'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
             mess_hr_str, mdhr_dats,
             xmat, rovib_coups, rot_dists,
-            ene_chnlvl, ene_reflvl]
+            ene_chnlvl, ene_reflvl, zpe]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct
@@ -300,119 +381,3 @@ def mol_data(spc_dct_i,
 #     inf_dct = dict(zip(keys, vals))
 #
 #     return inf_dct
-
-
-# Filesystem object creators
-def build_pf_filesystems(spc_dct_i, pf_levels,
-                         run_prefix, save_prefix, saddle):
-    """ Create various filesystems needed
-    """
-
-    pf_filesystems = {}
-    pf_filesystems['harm'] = set_model_filesys(
-        spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle)
-    if pf_levels['sym']:
-        pf_filesystems['sym'] = set_model_filesys(
-            spc_dct_i, pf_levels['sym'][1], run_prefix, save_prefix, saddle)
-    if pf_levels['tors']:
-        pf_filesystems['tors'] = set_model_filesys(
-            spc_dct_i, pf_levels['tors'][1][0],
-            run_prefix, save_prefix, saddle)
-    if pf_levels['vpt2']:
-        pf_filesystems['vpt2'] = set_model_filesys(
-            spc_dct_i, pf_levels['vpt2'][1], run_prefix, save_prefix, saddle)
-
-    return pf_filesystems
-
-
-def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
-    """ Gets filesystem objects for torsional calculations
-    """
-
-    # Set the spc_info
-    spc_info = finf.get_spc_info(spc_dct_i)
-
-    # Set some path stuff
-    if saddle:
-        save_path = spc_dct_i['rxn_fs'][3]
-        run_path = spc_dct_i['rxn_fs'][2]
-    else:
-        spc_save_fs = autofile.fs.species(save_prefix)
-        spc_save_fs[-1].create(spc_info)
-        save_path = spc_save_fs[-1].path(spc_info)
-        spc_run_fs = autofile.fs.species(run_prefix)
-        spc_run_fs[-1].create(spc_info)
-        run_path = spc_run_fs[-1].path(spc_info)
-
-    # Set theory filesystem used throughout
-    thy_save_fs = autofile.fs.theory(save_path)
-    thy_run_fs = autofile.fs.theory(run_path)
-
-    # Set the level for the model
-    levelp = finf.modify_orb_restrict(spc_info, level)
-
-    # Get the save fileystem path
-    save_path = thy_save_fs[-1].path(levelp[1:4])
-    run_path = thy_run_fs[-1].path(levelp[1:4])
-    if saddle:
-        save_fs = autofile.fs.transition_state(save_path)
-        save_fs[0].create()
-        save_path = save_fs[0].path()
-        run_fs = autofile.fs.transition_state(run_path)
-        run_fs[0].create()
-        run_path = run_fs[0].path()
-
-    # Get the fs object and the locs
-    cnf_run_fs = autofile.fs.conformer(run_path)
-    cnf_save_fs = autofile.fs.conformer(save_path)
-    min_cnf_locs = mincnf.min_energy_conformer_locators(cnf_save_fs)
-
-    # Get the save path for the conformers
-    if min_cnf_locs:
-        cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
-    else:
-        cnf_save_path = ''
-
-    return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]
-
-
-# Series of checks to determine what information is needed to be obtained
-def nonrigid_rotations(pf_models):
-    """ dtermine if a nonrigid rotation model is specified and further
-        information is needed from the filesystem
-    """
-    rot_model = pf_models['rot']
-    return bool(rot_model in ('vpt2'))
-
-
-def nonrigid_tors(pf_models, tors_names):
-    """ dtermine if a nonrigid torsional model is specified and further
-        information is needed from the filesystem
-    """
-    vib_model, tors_model = pf_models['vib'], pf_models['tors']
-    has_tors = bool(any(tors_names))
-    tors_hr_model = bool(tors_model in ('1dhr', '1dhrf', 'mdhr', 'mdhrv'))
-    tau_hr_model = bool(tors_model == 'tau' and vib_model != 'vib')
-    # diatomic model
-    return has_tors and (tors_hr_model or tau_hr_model)
-
-
-def anharm_vib(pf_models):
-    """ a
-    """
-    vib_model = pf_models['vib']
-    return bool(vib_model == 'vpt2')
-
-
-def tau_pf(pf_models):
-    """ determine if pf is done with tau
-    """
-    tors_model = pf_models['tors']
-    return bool(tors_model == 'tau')
-
-
-def vib_tau(pf_models):
-    """ determine if vibrations are treated via tau sampling
-    """
-    vib_model = pf_models['vib']
-    return bool(vib_model == 'tau')

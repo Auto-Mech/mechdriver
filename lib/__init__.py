@@ -7,6 +7,7 @@ from lib import filesys
 from lib import phydat
 from lib import reaction
 from lib import structure
+from lib import pathtools
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
@@ -17,6 +18,7 @@ __all__ = [
     'phydat',
     'reaction',
     'structure',
+    'pathtools',
     'run_script',
     'DEFAULT_SCRIPT_DCT'
 ]
