@@ -6,8 +6,9 @@
 import os
 from routines.pf import thermo as thmroutines
 from routines.pf import runner as pfrunner
-from lib.amech_io import parser
 from lib.amech_io import writer
+from lib.amech_io import parser
+from lib.amech_io.parser.model import pf_level_info, pf_model_info
 
 
 def run(spc_dct,
@@ -32,9 +33,9 @@ def run(spc_dct,
     starting_path = os.getcwd()
     thm_paths = [pfrunner.thermo_paths(spc_dct[name], run_prefix)
                  for name, _ in spc_queue]
-    pf_levels = [parser.pf_level_info(spc_model_dct[spc_model]['es'], thy_dct)
+    pf_levels = [pf_level_info(spc_model_dct[spc_model]['es'], thy_dct)
                  for _, (_, spc_model) in spc_queue]
-    pf_models = [parser.pf_model_info(spc_model_dct[spc_model]['pf'])
+    pf_models = [pf_model_info(spc_model_dct[spc_model]['pf'])
                  for _, (_, spc_model) in spc_queue]
 
     # Write and Run MESSPF inputs to generate the partition functions
@@ -44,7 +45,7 @@ def run(spc_dct,
 
             print("Preparing MESSPF input for ", spc_name)
 
-            global_pf_str = thmroutines.qt.pf_header(
+            global_pf_str = thmroutines.qt.make_pf_header(
                 pes_model_dct[pes_model]['therm_temps'])
             spc_str, dat_str_dct = thmroutines.qt.make_spc_mess_str(
                 spc_dct[spc_name], spc_name,
@@ -54,7 +55,7 @@ def run(spc_dct,
                 global_pf_str, spc_str)
             pfrunner.mess.write_mess_file(
                 messpf_inp_str, dat_str_dct, thm_paths[idx][0],
-                fname='mess.inp', overwrite=True)
+                fname='pf.inp', overwrite=True)
 
     # Run the MESSPF files that have been written
     if run_messpf:
@@ -77,6 +78,7 @@ def run(spc_dct,
             ref_enes = spc_model_dct[spc_model]['options']['ref_enes']
 
             # Determine info about the basis species used in thermochem calcs
+            # maybe move above for loop
             basis_dct, uniref_dct, msg = thmroutines.basis.prepare_refs(
                 ref_scheme, spc_dct, spc_queue)
             print(msg)

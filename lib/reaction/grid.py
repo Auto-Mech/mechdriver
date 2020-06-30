@@ -1,6 +1,7 @@
 """ Build the grid for a transition state search
 """
 
+import sys
 import math
 import numpy
 import automol
@@ -91,7 +92,7 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs):
     return max_zma
 
 
-def build_grid(rtype, rbktype, ts_bnd_len, ts_zma,
+def build_grid(rtype, rbktype, bnd_atoms, ts_zma,
                dist_name, brk_name, npoints=None):
     """ Set the grid for a transition state search
     """
@@ -101,10 +102,10 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma,
     # Set up the backup type
     if 'beta_scission' in rbktype:
         bkp_grid, bkp_update_guess = beta_scission_bkp_grid(
-            npoints, ts_bnd_len)
+            npoints, bnd_atoms)
     elif 'addition' in rtype:
         bkp_grid, bkp_update_guess = addition_bkp_grid(
-            npoints, ts_bnd_len)
+            npoints, bnd_atoms)
     else:
         bkp_grid = []
         bkp_update_guess = False
@@ -112,21 +113,21 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma,
     # Set the main type
     # if spin == 'high':
     if 'beta scission' in rtype:
-        grid, update_guess = beta_scission_grid(npoints, ts_bnd_len)
+        grid, update_guess = beta_scission_grid(npoints, bnd_atoms)
     elif 'addition' in rtype and 'rad' not in rtype:
-        grid, update_guess = addition_grid(npoints, ts_bnd_len)
+        grid, update_guess = addition_grid(npoints, bnd_atoms)
     elif 'hydrogen migration' in rtype and 'rad' not in rtype:
         grid, update_guess = hydrogen_migration_grid(
-            npoints, ts_bnd_len, ts_zma, dist_name)
+            npoints, bnd_atoms, ts_zma, dist_name)
     elif 'unimolecular elimination' in rtype:
         grid, update_guess = unimolecular_elimination_grid(
-            ts_bnd_len, ts_zma, dist_name, brk_name)
+            bnd_atoms, ts_zma, dist_name, brk_name)
     elif 'hydrogen abstraction' in rtype:
-        grid, update_guess = hydrogen_abstraction(npoints, ts_bnd_len)
+        grid, update_guess = hydrogen_abstraction(npoints, bnd_atoms)
     elif 'substitution' in rtype:
-        grid, update_guess = substitution(npoints, ts_bnd_len)
+        grid, update_guess = substitution(npoints, bnd_atoms)
     elif 'insertion' in rtype:
-        grid, update_guess = insertion(npoints, ts_bnd_len)
+        grid, update_guess = insertion(npoints, bnd_atoms)
     # elif spin == 'low':
     elif 'radical radical' in rtype and 'addition' in rtype:
         grid, update_guess = radrad_addition_grid()
@@ -140,15 +141,15 @@ def build_grid(rtype, rbktype, ts_bnd_len, ts_zma,
 
 # Tight TS grid
 
-def beta_scission_grid(npoints, ts_bnd_len):
+def beta_scission_grid(npoints, bnd_atoms):
     """ Build forward 1D grid for a beta scission reaction
     """
     npoints = 8 if npoints is not None else npoints
     rmin = 1.4 * phycon.ANG2BOHR
     rmax = 2.0 * phycon.ANG2BOHR
-    if ts_bnd_len in bnd.LEN_DCT:
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
         npoints = 14
-        bnd_len = bnd.LEN_DCT[ts_bnd_len]
         rmin = bnd_len + 0.1 * phycon.ANG2BOHR
         rmax = bnd_len + 0.8 * phycon.ANG2BOHR
     grid = numpy.linspace(rmin, rmax, npoints)
@@ -157,15 +158,15 @@ def beta_scission_grid(npoints, ts_bnd_len):
     return grid, update_guess
 
 
-def addition_grid(npoints, ts_bnd_len):
+def addition_grid(npoints, bnd_atoms):
     """ Build forward 1D grid for addition reaction
     """
 
     npoints = 14
     rmin = 1.6 * phycon.ANG2BOHR
     rmax = 2.8 * phycon.ANG2BOHR
-    if ts_bnd_len in bnd.LEN_DCT:
-        bnd_len = bnd.LEN_DCT[ts_bnd_len]
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
         rmin = bnd_len + 0.1 * phycon.ANG2BOHR
         rmax = bnd_len + 1.2 * phycon.ANG2BOHR
     grid = _geometric_progression(
@@ -175,7 +176,7 @@ def addition_grid(npoints, ts_bnd_len):
     return grid, update_guess
 
 
-def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
+def hydrogen_migration_grid(npoints, bnd_atoms, ts_zma, dist_name):
     """ Build forward 1D grid for addition reaction
     """
     interval = 0.3*phycon.ANG2BOHR
@@ -185,10 +186,9 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
     rmin2 = 1.3*phycon.ANG2BOHR
     # print('ts_zma:', automol.zmatrix.string(ts_zma))
     # print('rmin1, rmin2, rmax:', rmin1, rmin2, rmax)
-    if ts_bnd_len in bnd.LEN_DCT:
-        bnd_len = bnd.LEN_DCT[ts_bnd_len]
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
         rmin2 = bnd_len + 0.05 * phycon.ANG2BOHR
-        # print('revised rmin2:', rmin2, bnd_len, ts_bnd_len)
     if rmax > rmin1:
         npoints = math.ceil((rmax-rmin1)/interval)
         if npoints < 1:
@@ -206,7 +206,7 @@ def hydrogen_migration_grid(npoints, ts_bnd_len, ts_zma, dist_name):
     return grid, update_guess
 
 
-def unimolecular_elimination_grid(ts_bnd_len, ts_zma, syms, brk_name):
+def unimolecular_elimination_grid(bnd_atoms, ts_zma, syms, brk_name):
     """ Build forward 2D grid for elimination reaction
     """
     brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
@@ -215,10 +215,12 @@ def unimolecular_elimination_grid(ts_bnd_len, ts_zma, syms, brk_name):
     # interval = 0.2 * phycon.ANG2BOHR
     # rmin = 1.4 * phycon.ANG2BOHR
     # rmax = 2.8 * phycon.ANG2BOHR
+    print('Check bad grid')
+    sys.exit()
     npoints1 = 8
     npoints2 = 4
-    if ts_bnd_len in bnd.LEN_DCT:
-        bnd_len = bnd.LEN_DCT[ts_bnd_len]
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
         brk_len = bnd.LEN_DCT[brk_len_key]
         r1min = bnd_len + 0.2 * phycon.ANG2BOHR
         r1max = bnd_len + 1.4 * phycon.ANG2BOHR
@@ -232,14 +234,14 @@ def unimolecular_elimination_grid(ts_bnd_len, ts_zma, syms, brk_name):
     return grid, update_guess
 
 
-def hydrogen_abstraction(npoints, ts_bnd_len):
+def hydrogen_abstraction(npoints, bnd_atoms):
     """ Build forward 1D grid for hydrogen abstraction reaction
     """
     npoints = 8
     rmin = 0.7 * phycon.ANG2BOHR
     rmax = 2.2 * phycon.ANG2BOHR
-    if ts_bnd_len in bnd.LEN_DCT:
-        bnd_len = bnd.LEN_DCT[ts_bnd_len]
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
         rmin = bnd_len + 0.2
         rmax = bnd_len + 1.0 * phycon.ANG2BOHR
     grid = numpy.linspace(rmin, rmax, npoints)
@@ -248,14 +250,14 @@ def hydrogen_abstraction(npoints, ts_bnd_len):
     return grid, update_guess
 
 
-def substitution(npoints, ts_bnd_len):
+def substitution(npoints, bnd_atoms):
     """ Build forward 1D grid for substitution reaction
     """
     npoints = 14
     rmin = 0.7 * phycon.ANG2BOHR
     rmax = 2.4 * phycon.ANG2BOHR
-    if ts_bnd_len in bnd.LEN_DCT:
-        bnd_len = bnd.LEN_DCT[ts_bnd_len]
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
         rmin = bnd_len
         rmax = bnd_len + 1.4 * phycon.ANG2BOHR
     grid = numpy.linspace(rmin, rmax, npoints)
@@ -264,14 +266,14 @@ def substitution(npoints, ts_bnd_len):
     return grid, update_guess
 
 
-def insertion(npoints, ts_bnd_len):
+def insertion(npoints, bnd_atoms):
     """ Build forward 1D grid for insertion reaction
     """
     npoints = 16
     rmin = 1.4 * phycon.ANG2BOHR
     rmax = 2.4 * phycon.ANG2BOHR
-    if ts_bnd_len in bnd.LEN_DCT:
-        bnd_len = bnd.LEN_DCT[ts_bnd_len]
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
         rmin = bnd_len
         rmax = bnd_len + 1.4 * phycon.ANG2BOHR
     grid = numpy.linspace(rmin, rmax, npoints)
@@ -318,13 +320,13 @@ def radrad_hydrogen_abstraction_grid():
 
 
 # Backup Grid
-def beta_scission_bkp_grid(npoints, ts_bnd_len):
+def beta_scission_bkp_grid(npoints, bnd_atoms):
     """ Build backward 1D grid for a beta scission reaction
     """
     rmin = 1.4 * phycon.ANG2BOHR
     rmax = 2.0 * phycon.ANG2BOHR
-    if ts_bnd_len in bnd.LEN_DCT:
-        bnd_len = bnd.LEN_DCT[ts_bnd_len]
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
         npoints = 14
         rmin = bnd_len + 0.1 * phycon.ANG2BOHR
         rmax = bnd_len + 0.8 * phycon.ANG2BOHR
@@ -334,14 +336,14 @@ def beta_scission_bkp_grid(npoints, ts_bnd_len):
     return bkp_grid, bkp_update_guess
 
 
-def addition_bkp_grid(npoints, ts_bnd_len):
+def addition_bkp_grid(npoints, bnd_atoms):
     """ Build backward 1D grid for a beta scission reaction
     """
     rmin = 1.6 * phycon.ANG2BOHR
     rmax = 2.8 * phycon.ANG2BOHR
-    if ts_bnd_len in bnd.LEN_DCT:
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
         npoints = 14
-        bnd_len = bnd.LEN_DCT[ts_bnd_len]
         rmin = bnd_len + 0.1 * phycon.ANG2BOHR
         rmax = bnd_len + 1.4 * phycon.ANG2BOHR
     bkp_grid = numpy.linspace(rmin, rmax, npoints)

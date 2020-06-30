@@ -4,21 +4,20 @@ Collates information for, and writes MESS files for rate calculations
 
 import importlib
 import mess_io
-from routines.pf.messf import blocks
-from routines.pf.messf import models
+from routines.pf.models import blocks
+from routines.pf.models import build
 
-
-BLOCK_MODULE = importlib.import_module('routines.pf.messf.blocks')
+BLOCK_MODULE = importlib.import_module('routines.pf.models.blocks')
 
 
 # Input string writer
 def make_messpf_str(globkey_str, spc_str):
     """ Combine various MESS strings together to combined MESSPF
     """
-    return '\n'.join([globkey_str, spc_str])
+    return '\n'.join([globkey_str, spc_str]) + '\n'
 
 
-def get_pf_header(temps):
+def make_pf_header(temps):
     """ prepare partition function header string
     """
 
@@ -38,7 +37,7 @@ def make_spc_mess_str(spc_dct_i, spc_name,
     """
 
     # Read the filesystem for the information
-    inf_dct = models.read_spc_data(
+    inf_dct = build.read_spc_data(
         spc_dct_i, spc_name,
         chn_pf_models, chn_pf_levels,
         run_prefix, save_prefix)
@@ -49,7 +48,7 @@ def make_spc_mess_str(spc_dct_i, spc_name,
 
     # Write the mess string
     spc_str = mess_io.writer.species(
-        spc_label='TMP',
+        spc_label=spc_name,
         spc_data=mess_block,
         zero_energy=inf_dct['zpe_chnlvl']
     )

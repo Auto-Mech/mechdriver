@@ -531,6 +531,9 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
             constraint_dct = structure.tors.build_constraint_dct(
                 zma, const_tors_names)
 
+        # print('const dct', constraint_dct)
+        # print('names', const_tors_names)
+
         # Set up ini filesystem for scans
         _, ini_zma_run_path = filesys.build.zma_fs_from_prefix(
             ini_cnf_run_paths[0], zma_idxs=[0])

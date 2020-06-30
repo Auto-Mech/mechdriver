@@ -392,7 +392,6 @@ def _run_2d_scan(
             run_fs = autofile.fs.run(run_prefix)
             idx += 1
 
-            frozen_coordinates = coo_names + list(constraint_dct)
             if constraint_dct is not None:
                 geo_exists = scn_save_fs[-1].file.geometry.exists(
                     [coo_names, [grid_val_i, grid_val_j], constraint_dct])

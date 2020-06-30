@@ -98,5 +98,5 @@ def treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad=False):
 def is_atom(spc_dct_i):
     """ Check if species is an atom
     """
-    geo = automol.inchi.geometry(spc_dct_i['ich'])
+    geo = automol.inchi.geometry(spc_dct_i['inchi'])
     return automol.geom.is_atom(geo)

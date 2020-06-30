@@ -61,7 +61,7 @@ def names_from_dct(spc_dct_i, ndim_tors):
     return tors_names, amech_ts_tors_names
 
 
-def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs):
+def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_model):
     """ Read out the torsional names from the filesystem
     """
 
@@ -76,6 +76,12 @@ def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs):
             scan_names = os.listdir(scans_dir)
             tors_names = [name for name in scan_names
                           if 'D' in name]
+            if tors_model == '1dhr': 
+                tors_names = [name for name in scan_names
+                              if '_' not in name]
+            else:
+                tors_names = [name for name in scan_names
+                              if '_' in name]
             tors_names = [[name] for name in tors_names]
             tors_names = tuple(tuple(x) for x in tors_names)
         else:

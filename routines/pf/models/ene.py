@@ -98,7 +98,7 @@ def zero_point_energy(spc_dct_i,
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Calculate ZPVE
-    if util.is_atom(spc_dct_i):
+    if typ.is_atom(spc_dct_i):
         zpe = 0.0
     else:
         rtr_names, rtr_grids, rtr_syms, const_dct, ref_ene = tors.rotor_info(

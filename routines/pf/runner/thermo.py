@@ -8,6 +8,7 @@ import subprocess
 import shutil
 import automol
 import autofile
+from lib.filesys import inf
 
 
 # OBTAIN THE PATH TO THE DIRECTORY CONTAINING THE TEMPLATES #
@@ -77,12 +78,13 @@ def run_pac(formula, nasa_path):
             sys.exit()
 
 
-def thermo_paths(spc_info, run_prefix):
+def thermo_paths(spc_dct_i, run_prefix):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """
 
     # Get the formula and inchi key
+    spc_info = inf.get_spc_info(spc_dct_i)
     spc_formula = automol.inchi.formula_string(spc_info[0])
     ich_key = automol.inchi.inchi_key(spc_info[0])
 

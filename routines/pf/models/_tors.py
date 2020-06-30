@@ -40,7 +40,7 @@ def rotor_info(spc_dct_i, pf_filesystems, pf_models,
         tloc = 'dct'
     if not run_tors_names:
         run_tors_names = torsprep.names_from_filesys(
-            cnf_fs, min_cnf_locs, cnf_path)
+            cnf_fs, min_cnf_locs, tors_model)
         tloc = 'fs'
     if not run_tors_names:
         tloc = 'none'
