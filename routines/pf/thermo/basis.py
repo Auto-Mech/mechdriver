@@ -127,7 +127,9 @@ def basis_energy(spc_bas, uni_refs_dct, spc_dct,
         h_basis.append(
             read_energy(
                 spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                read_ene=True, read_zpe=True))
+                read_ene=True, read_zpe=True
+            )
+        )
 
     # Check if all the energies found
     no_ene_cnt = 0

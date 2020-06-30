@@ -43,7 +43,9 @@ def read_messpf_temps(pf_path):
 
 
 # THERMP
-def write_thermp_inp(spc_dct_i, temps, thermp_file_name='thermp.dat'):
+def write_thermp_inp(spc_dct_i, temps,
+                     enthalpyt=0.0, breakt=1000.0
+                     thermp_file_name='thermp.dat'):
     """ write the thermp input file
     """
     ich = spc_dct_i['ich']
@@ -51,8 +53,6 @@ def write_thermp_inp(spc_dct_i, temps, thermp_file_name='thermp.dat'):
     formula = automol.inchi.formula_string(ich)
 
     # Write thermp input file
-    enthalpyt = 0.
-    breakt = 1000.
     thermp_str = thermp_io.writer.thermp_input(
         ntemps=len(temps),
         formula=formula,
@@ -87,13 +87,6 @@ def run_thermp(pf_path, thermp_path,
 
     # Run thermp
     subprocess.check_call(['thermp', thermp_file])
-
-    # Read ene from file
-    with open('thermp.out', 'r') as thermfile:
-        lines = thermfile.readlines()
-    line = lines[-1]
-    hf298k = line.split()[-1]
-    return hf298k
 
 
 # PAC99
@@ -140,7 +133,7 @@ def run_pac(spc_dct_i, nasa_path):
     return pac99_str
 
 
-def get_thermo_paths(spc_info, run_prefix):
+def thermo_paths(spc_info, run_prefix):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """

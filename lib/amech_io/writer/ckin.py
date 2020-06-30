@@ -7,7 +7,7 @@ import automol
 import routines.pf.thermo
 
 
-def run_ckin_header(pf_levels, pf_models):
+def model_header(pf_levels, pf_models):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
 
@@ -67,12 +67,41 @@ def run_ckin_poly(spc, spc_dct_i, pac99_poly_str):
     return chemkin_poly_str
 
 
-def write_nasa_file(spc_dct_i, ckin_path, nasa_path, chemkin_poly_str):
+def write_rates_file(ckin_rate_str_lst):
+    """ write out the rates
+    """
+
+    # Write header string containing thy information
+    chemkin_header_str = writer.ckin.model_header(es_info, pf_model)
+    chemkin_header_str += '\n'
+
+    # Initialize full chemkin string and paths
+    # chemkin_full_str = chemkin_header_str
+    chemkin_full_str = ''
+    starting_path = os.getcwd()
+    ckin_path = ''.join([starting_path, '/ckin'])
+    if not os.path.exists(ckin_path):
+        os.mkdir(ckin_path)
+    full_ckin_path = os.path.join(ckin_path, pes_formula_str+'.ckin')
+    # if os.path.exists(full_ckin_path):
+    #     os.remove(full_ckin_path)
+
+
+    ####
+                    # Print the results for each channel to a file
+                    chemkin_full_str += '\n\n'
+                    pes_chn_lab = pes_formula_str + '_' + name_i + '_' + name_j
+                    ckin_name = os.path.join(ckin_path, pes_chn_lab+'.ckin')
+                    with open(ckin_name, 'w') as cfile:
+                        cfile.write(chemkin_str)
+
+    # Print the results for the whole PES to a file
+    with open(full_ckin_path, 'a') as cfile:
+        cfile.write(chemkin_full_str)
+
+
+def write_nasa_file(ckin_path, chemkin_poly_str):
     """ write out the nasa polynomials
     """
-    ich = spc_dct_i['ich']
-    formula = automol.inchi.formula_string(ich)
-    with open(os.path.join(nasa_path, formula+'.ckin'), 'w') as nasa_file:
-        nasa_file.write(chemkin_poly_str)
     with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)
