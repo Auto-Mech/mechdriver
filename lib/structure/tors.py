@@ -338,7 +338,6 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
         zero_energy=0.0
     )
     pf_inp_str = '\n'.join([global_pf_str, spc_str]) + '\n'
-    # pf_inp_str += '\n'
 
     with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
         pf_file.write(pf_inp_str)

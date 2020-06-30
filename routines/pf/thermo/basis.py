@@ -139,7 +139,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
         if name in spc_dct:
             spc_dct_i = spc_dct[name]
         else:
-            spc_dct_i = uni_refs_dct[name]
+            spc_dct_i = uni_refs_dct[ich]
         print(name)
         print(spc_dct_i)
         pf_filesystems = fs.pf_filesys(

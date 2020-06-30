@@ -31,30 +31,38 @@ def rotor_info(spc_dct_i, pf_filesystems, pf_models,
         scan_increment = 30. * phycon.DEG2RAD
 
     # Set up ndim tors
-    tors_model = '1dhr' if '1dhr' in tors_model else 'mdhr'
+    if '1dhr' in tors_model:
+        tors_model = '1dhr'
+    elif 'mdhr' in tors_model:
+        tors_model = 'mdhr'
 
     # Set up the names of all the torsions in the rotors through hierarchy
-    run_tors_names = ()
-    if 'tors_names' in spc_dct_i:
-        run_tors_names = torsprep.names_from_dct(spc_dct_i, tors_model)
-        tloc = 'dct'
-    if not run_tors_names:
-        run_tors_names = torsprep.names_from_filesys(
-            cnf_fs, min_cnf_locs, tors_model)
-        tloc = 'fs'
-    if not run_tors_names:
-        tloc = 'none'
-
-    if tloc == 'dct':
-        print(' - Reading tors names from user input...')
-    elif tloc == 'fs':
-        print(' - Reading tors names from the filesystem...')
-    for idx, tors_names in enumerate(run_tors_names):
-        print(' - Rotor {}: {}'.format(str(idx+1), '-'.join(tors_names)))
+    if tors_model != 'rigid':
+        run_tors_names = ()
+        if 'tors_names' in spc_dct_i:
+            run_tors_names = torsprep.names_from_dct(spc_dct_i, tors_model)
+            tloc = 'dct'
+        if not run_tors_names:
+            run_tors_names = torsprep.names_from_filesys(
+                cnf_fs, min_cnf_locs, tors_model)
+            tloc = 'fs'
+        if not run_tors_names:
+            tloc = None
+    else:
+        tloc = None
 
     # Obtain the info for each of the rotors
     rotor_names, rotor_grids, rotor_syms = (), (), ()
-    if min_cnf_locs is not None:
+    constraint_dct = None
+    ref_ene = None
+    if tloc is not None and min_cnf_locs is not None:
+    
+        if tloc == 'dct':
+            print(' - Reading tors names from user input...')
+        elif tloc == 'fs':
+            print(' - Reading tors names from the filesystem...')
+        for idx, tors_names in enumerate(run_tors_names):
+            print(' - Rotor {}: {}'.format(str(idx+1), '-'.join(tors_names)))
 
         # Get geometry and reference energy for the torsional minimum
         zma_fs = fs.manager(cnf_fs[-1].path(min_cnf_locs), 'ZMATRIX')
@@ -74,8 +82,6 @@ def rotor_info(spc_dct_i, pf_filesystems, pf_models,
         if tors_model in ['1dhrf']:
             constraint_dct = torsprep.build_constraint_dct(
                 zma, rotor_names)
-        else:
-            constraint_dct = None
     else:
         print('No tors info at path')
 
