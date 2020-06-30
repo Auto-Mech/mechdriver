@@ -1,11 +1,9 @@
 """ Functions for sadpt
 """
 
-import automol
 import autofile
 from autofile import fs
 import elstruct
-from routines.es._routines import conformer
 from routines.es._routines import _scan as scan
 from routines.es import runner as es_runner
 from lib import structure
@@ -165,7 +163,7 @@ def saddle_point_hessian(opt_ret, ts_info, mod_thy_info,
         run_fs[-1].create(['hessian'])
         freqs, _, imags, _ = structure.vib.projrot_freqs(
             [geo], [hess], freq_run_path)
-    else: 
+    else:
         freqs, imags = [], []
 
     return hess_ret, freqs, imags
@@ -196,7 +194,7 @@ def save_saddle_point(
         cnf_save_fs,
         ts_save_fs, ts_save_path,
         frm_bnd_keys, brk_bnd_keys,
-        zma_locs=[0]):
+        zma_locs=(0)):
     """ Optimize the transition state structure obtained from the grid search
     """
 
@@ -241,7 +239,7 @@ def save_saddle_point(
     zma_save_fs[-1].file.geometry_info.write(opt_inf_obj, zma_locs)
     zma_save_fs[-1].file.geometry_input.write(opt_inp_str, zma_locs)
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-  
+
     # Save the form and break keys in the filesystem
     shift_frm_bnd_keys = structure.geom.shift_vals_from_dummy(
         frm_bnd_keys, zma)

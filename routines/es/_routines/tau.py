@@ -101,8 +101,8 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
         locs = [tid]
 
         tau_run_fs[-1].create(locs)
-        tau_run_prefix = tau_run_fs[-1].path(locs)
-        run_fs = autofile.fs.run(tau_run_prefix)
+        # tau_run_prefix = tau_run_fs[-1].path(locs)
+        # run_fs = autofile.fs.run(tau_run_prefix)
 
         idx += 1
         print("Run {}/{}".format(idx, nsamp0))
@@ -111,16 +111,16 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
         if _low_repulsion_struct(zma, samp_zma):
             print('ZMA fine.')
             # es_runner.run_job(
-                # job=elstruct.Job.OPTIMIZATION,
-                # script_str=script_str,
-                # run_fs=run_fs,
-                # geom=samp_zma,
-                # spc_info=spc_info,
-                # thy_info=thy_info,
-                # saddle=saddle,
-                # overwrite=overwrite,
-                # frozen_coordinates=tors_range_dct.keys(),
-                # **kwargs
+            # job=elstruct.Job.OPTIMIZATION,
+            # script_str=script_str,
+            # run_fs=run_fs,
+            # geom=samp_zma,
+            # spc_info=spc_info,
+            # thy_info=thy_info,
+            # saddle=saddle,
+            # overwrite=overwrite,
+            # frozen_coordinates=tors_range_dct.keys(),
+            # **kwargs
             # )
         else:
             print('repulsive ZMA:')
@@ -136,7 +136,7 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
                 frozen_coordinates=tors_range_dct.keys(),
             )
             tau_run_fs[-1].file.geometry_input.write(inp_str, locs)
-            print('geometry for bad ZMA at',tau_run_fs[-1].path(locs))
+            print('geometry for bad ZMA at', tau_run_fs[-1].path(locs))
 
         nsampd += 1
         inf_obj.nsamp = nsampd
@@ -259,7 +259,8 @@ def _low_repulsion_struct(zma_ref, zma_samp, thresh=10.0):
         sum_ref += pot_mat[idx1, idx2]
         sum_samp += pot_mat_samp[idx1, idx2]
 
-    print('long_range_pots {:.2f} {:.2f} {:.2f}'.format(sum_ref, sum_samp, sum_samp-sum_ref))
+    print('long_range_pots {:.2f} {:.2f} {:.2f}'.format(
+        sum_ref, sum_samp, sum_samp-sum_ref))
 
     # # Check if the potentials are within threshold
     low_repulsion = bool((sum_samp - sum_ref) <= thresh)

@@ -7,7 +7,6 @@ import automol
 import autofile
 from autofile import fs
 import mess_io
-from lib.amech_io import cleaner
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
@@ -62,7 +61,7 @@ def names_from_dct(spc_dct_i, ndim_tors):
     return tors_names, amech_ts_tors_names
 
 
-def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_cnf_save_path):
+def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs):
     """ Read out the torsional names from the filesystem
     """
 
@@ -122,7 +121,7 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
     for tors_names in tors_name_grps:
         # print('name\n', tors_names)
         # print(scan_increment)
-         # print(frm_bnd_key)
+        # print(frm_bnd_key)
         # print(brk_bnd_key)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,

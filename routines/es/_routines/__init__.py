@@ -4,7 +4,6 @@
 from routines.es._routines import conformer
 from routines.es._routines import geom
 from routines.es._routines import hr
-from routines.es._routines import tsfind
 from routines.es._routines import irc
 from routines.es._routines import wells
 from routines.es._routines import sp
@@ -15,7 +14,6 @@ __all__ = [
     'conformer',
     'geom',
     'hr',
-    'tsfind',
     'irc',
     'wells',
     'sp',

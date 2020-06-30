@@ -89,8 +89,8 @@ def run(spc_dct, spc_name,
     # Set the cnf fs to see if TS is available or for searching
     cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(
         ts_save_path, cnf='min')
-    cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-        ts_run_path, cnf=None)
+    # cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
+    #     ts_run_path, cnf=None)
 
     # Find the transition state using the appropriate algorithm
     switch = False
@@ -211,7 +211,7 @@ def run(spc_dct, spc_name,
                 ini_zma, ts_info, mod_thy_info,
                 thy_run_path, thy_save_path,
                 ini_ts_save_path,
-                cnf_run_fs, cnf_save_fs,
+                cnf_save_fs,
                 ts_save_fs, ts_save_path, run_fs,
                 typ, grid, update_guess,
                 dist_name, brk_name,
@@ -228,7 +228,7 @@ def sadpt_transition_state(
         ini_zma, ts_info, mod_thy_info,
         thy_run_path, thy_save_path,
         ini_ts_save_path,
-        cnf_run_fs, cnf_save_fs,
+        cnf_save_fs,
         ts_save_fs, ts_save_path, run_fs,
         typ, grid, update_guess,
         dist_name, brk_name,

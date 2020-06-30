@@ -138,7 +138,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             ret2 = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
             if ret2:
                 bkp_typ = 'beta scission'
-                bkp_ts_zma, bkp_dist_name, bkp_brk_key, bkp_tors_names = ret2
+                bkp_ts_zma, bkp_dist_name, _, bkp_tors_names = ret2
 
         # Check for beta-scission
         if typ is None:
@@ -150,7 +150,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
                     prd_zmas, rct_zmas, rct_tors_names)
                 if ret2:
                     bkp_typ = 'addition'
-                    bkp_ts_zma, bkp_dist_name, bkp_frm_key, bkp_tors_names = ret2
+                    bkp_ts_zma, bkp_dist_name, _, bkp_tors_names = ret2
 
         # Check for hydrogen migration
         if typ is None:

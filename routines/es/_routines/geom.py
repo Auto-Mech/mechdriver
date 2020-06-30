@@ -102,7 +102,7 @@ def reference_geometry(
                 automol.graph.connected_components(
                     automol.geom.graph(geo)))
             if not automol.geom.is_atom(geo) and ncp < 2:
-                geo, hess = remove_imag(
+                geo, _ = remove_imag(
                     spc_dct_i, geo, thy_info, thy_run_fs,
                     run_fs, kickoff_size,
                     kickoff_backward,
@@ -160,7 +160,7 @@ def reference_geometry(
 
 
 def run_initial_geometry_opt(spc_info, thy_info, run_fs, thy_run_fs,
-                            script_str, overwrite, ini_geo, **kwargs):
+                             script_str, overwrite, ini_geo, **kwargs):
     """ Generate initial geometry via optimization from either reference
     geometries or from inchi
     """

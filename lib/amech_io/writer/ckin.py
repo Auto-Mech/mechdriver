@@ -86,14 +86,13 @@ def write_rates_file(ckin_rate_str_lst):
     # if os.path.exists(full_ckin_path):
     #     os.remove(full_ckin_path)
 
-
-    ####
-                    # Print the results for each channel to a file
-                    chemkin_full_str += '\n\n'
-                    pes_chn_lab = pes_formula_str + '_' + name_i + '_' + name_j
-                    ckin_name = os.path.join(ckin_path, pes_chn_lab+'.ckin')
-                    with open(ckin_name, 'w') as cfile:
-                        cfile.write(chemkin_str)
+    # fix this code
+    # Print the results for each channel to a file
+    chemkin_full_str += '\n\n'
+    pes_chn_lab = pes_formula_str + '_' + name_i + '_' + name_j
+    ckin_name = os.path.join(ckin_path, pes_chn_lab+'.ckin')
+    with open(ckin_name, 'w') as cfile:
+        cfile.write(chemkin_str)
 
     # Print the results for the whole PES to a file
     with open(full_ckin_path, 'a') as cfile:
