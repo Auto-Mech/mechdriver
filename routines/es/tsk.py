@@ -274,7 +274,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             cnf_run_fs, cnf_save_fs,
             opt_script_str, overwrite,
             saddle=saddle, nsamp_par=mc_nsamp,
-            tors_names=tors_names, dist_info=dist_info,
+            tors_names=tors_names,
             two_stage=two_stage, retryfail=retryfail,
             rxn_class=rxn_class, **opt_kwargs)
 

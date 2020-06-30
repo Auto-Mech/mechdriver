@@ -8,13 +8,13 @@ from lib.amech_io import parser
 def set_pf_info(model_dct, thy_dct, chn_model, ref_model):
     """ set pf information
     """
-    chn_pf_levels = parser.model.set_pf_level_info(
+    chn_pf_levels = parser.model.pf_level_info(
         model_dct[chn_model]['es'], thy_dct)
-    chn_pf_models = parser.model.set_pf_model_info(
+    chn_pf_models = parser.model.pf_model_info(
         model_dct[chn_model]['pf'])
-    ref_pf_levels = parser.model.set_pf_level_info(
+    ref_pf_levels = parser.model.pf_level_info(
         model_dct[ref_model]['es'], thy_dct)
-    ref_pf_models = parser.model.set_pf_model_info(
+    ref_pf_models = parser.model.pf_model_info(
         model_dct[ref_model]['pf'])
 
     return chn_pf_levels, chn_pf_models, ref_pf_levels, ref_pf_models

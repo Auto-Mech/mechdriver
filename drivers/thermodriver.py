@@ -4,14 +4,10 @@
 """
 
 import os
-import autofile
-import routines
 from routines.pf import thermo as thmroutines
 from routines.pf import runner as pfrunner
-from lib import filesys
 from lib.amech_io import parser
 from lib.amech_io import writer
-from lib.amech_io.parser import set_es_model_info, set_pf_model_info
 
 
 def run(spc_dct,
@@ -33,12 +29,13 @@ def run(spc_dct,
     spc_queue = parser.species.build_queue(rxn_lst)
 
     # Build the paths [(messpf, nasa)], models and levels for each spc
+    starting_path = os.getcwd()
     thm_paths = [pfrunner.thermo_paths(spc_dct[name], run_prefix)
-                 for name, _ in spc_que]
-    pf_levels = [set_es_model_info(spc_model_dct[spc_model]['es'], thy_dct)
-                 for _, (_, spc_model) in spc_que]
-    pf_models = [set_pf_model_info(spc_model_dct[spc_model]['pf'])
-                 for _, (_, spc_model) in spc_que]
+                 for name, _ in spc_queue]
+    pf_levels = [parser.pf_level_info(spc_model_dct[spc_model]['es'], thy_dct)
+                 for _, (_, spc_model) in spc_queue]
+    pf_models = [parser.pf_model_info(spc_model_dct[spc_model]['pf'])
+                 for _, (_, spc_model) in spc_queue]
 
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
@@ -53,10 +50,10 @@ def run(spc_dct,
                 spc_dct[spc_name], spc_name,
                 pf_models[idx], pf_levels[idx],
                 run_prefix, save_prefix)
-            pf_inp_str = thmroutines.qt.make_messpf_str(
+            messpf_inp_str = thmroutines.qt.make_messpf_str(
                 global_pf_str, spc_str)
             pfrunner.mess.write_mess_file(
-                mess_inp_str, dat_str_dct, mess_path,
+                messpf_inp_str, dat_str_dct, thm_paths[idx][0],
                 fname='mess.inp', overwrite=True)
 
     # Run the MESSPF files that have been written
@@ -65,7 +62,8 @@ def run(spc_dct,
         for idx, (spc_name, _) in enumerate(spc_queue):
 
             print("Starting MESSPF calculation for ", spc_name)
-            pfrunner.run_pf(thmpaths[i][0])
+
+            pfrunner.run_pf(thm_paths[idx][0])
 
     # Use MESS partition functions to compute thermo quantities
     if run_nasa:
@@ -84,12 +82,13 @@ def run(spc_dct,
             print(msg)
 
             # Get the basis info for the spc of interest
-            spc_basis, coeff_basis = basis_dct[spc]
+            spc_basis, coeff_basis = basis_dct[spc_name]
 
             # Get the energies for the spc and its basis
             ene_spc, ene_basis = thmroutines.basis.basis_energy(
-                spc_name, spc_basis, uniref_dct, spc_model,
-                spc_dct, thy_dct, run_prefix, save_prefix)
+                spc_name, spc_basis, uniref_dct, spc_dct,
+                pf_levels[idx], pf_models[idx],
+                run_prefix, save_prefix)
 
             # Calculate and store the 0 K Enthalpy
             hf0k = thmroutines.heatform.calc_hform_0k(
@@ -99,23 +98,22 @@ def run(spc_dct,
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str = ''
         ckin_path = pfrunner.ckin.path()
-        for (spc_name, (pes_model, spc_model)) in spc_queue:
+        for idx, (spc_name, (pes_model, spc_model)) in enumerate(spc_queue):
 
             print("Starting NASA polynomials calculation for ", spc_name)
 
-            # Set up the paths for running jobs
-            pf_path, nasa_path = pfrunner.thermo_paths(
-                spc_info, run_prefix)
-
             # Read the temperatures from the pf.dat file, check if viable
-            temps = pfrunner.read_messpf_temps(pf_path)
+            temps = pfrunner.read_messpf_temps(thm_paths[idx][0])
             thmroutines.print_nasa_temps(temps)
 
-            # Build POLY
-            a =
-
             # Write the NASA polynomial in CHEMKIN-format string
-            ckin_nasa_str += writer.ckin.model_header(pf_levels, pf_model)
+            ckin_nasa_str += writer.ckin.model_header(
+                pf_levels[idx], pf_models[idx])
+
+            # Build POLY
+            ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
+                spc_name, spc_dct, temps,
+                thm_paths[idx][0], thm_paths[idx][1], starting_path)
 
         # Write all of the NASA polynomial strings
         writer.chemkin.write_nasa_file(ckin_path, ckin_nasa_str)

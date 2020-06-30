@@ -4,14 +4,15 @@ Write and Read MESS files for Rates
 
 import importlib
 import copy
+import ioformat
 import automol
 import mess_io
 from mess_io.writer import rxnchan_header_str
 from routines.pf.models import blocks
-from routines.pf.models import models
-from routines.pf.models import set_reference_ene
-from routines.pf.models import calc_channel_enes
-from routines.pf.models import _tunnel as tunnel
+from routines.pf.models import build
+from routines.pf.models.ene import set_reference_ene
+from routines.pf.models.ene import calc_channel_enes
+from routines.pf.models import tunnel
 from routines.pf.models.inf import set_pf_info
 from routines.pf.models.inf import set_ts_cls_info
 from routines.pf.models.inf import make_rxn_str
@@ -19,7 +20,6 @@ from routines.pf.models.inf import print_pf_info
 from routines.pf.models.typ import treat_tunnel
 from routines.pf.models.typ import pst_ts
 from routines.pf.models.typ import need_fake_wells
-from lib.amech_io import cleaner
 
 
 BLOCK_MODULE = importlib.import_module('routines.pf.models.blocks')
@@ -40,7 +40,7 @@ def make_messrate_str(globkey_str, energy_trans_str,
          bi_str,
          ts_str]
     )
-    mess_inp_str = cleaner.remove_trail_whitespace(mess_inp_str)
+    mess_inp_str = ioformat.remove_trail_whitespace(mess_inp_str)
 
     return mess_inp_str
 
@@ -364,14 +364,14 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     chnl_infs['prods'] = []
     chnl_infs['ts'] = []
     for rct in rxn['reacs']:
-        inf_dct = models.read_spc_data(
+        inf_dct = build.read_spc_data(
             spc_dct[rct], rct,
             chn_pf_models, chn_pf_levels,
             run_prefix, save_prefix,
             ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
         chnl_infs['reacs'].append(inf_dct)
     for prd in rxn['prods']:
-        inf_dct = models.read_spc_data(
+        inf_dct = build.read_spc_data(
             spc_dct[prd], prd,
             chn_pf_models, chn_pf_levels,
             run_prefix, save_prefix,
@@ -382,7 +382,7 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     if pst_ts(ts_class, ts_sadpt, ts_nobarrier):
         chnl_infs['ts'] = {'writer': 'blocks.pst_block'}
     else:
-        inf_dct = models.read_ts_data(
+        inf_dct = build.read_ts_data(
             spc_dct[tsname], tsname,
             chn_pf_models, chn_pf_levels,
             run_prefix, save_prefix,

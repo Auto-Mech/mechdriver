@@ -171,7 +171,7 @@ def is_unique_tors_dist_mat_energy(geo, ene, geo_list, ene_list, saddle):
         # check energy
         if abs(ene-enei) < etol:
             # check distance matrix
-            if automol.geom.almost_equal_distance_matrix(
+            if automol.geom.almost_equal_dist_matrix(
                     geo, geoi, thresh=3e-1):
                 # check dihedrals
                 # for now only do this for minima

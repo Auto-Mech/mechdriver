@@ -138,9 +138,9 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
     print(' - Model for Reference Species: {}'.format(ref_model))
 
     # Get the model for the first reference species
-    pf_levels = parser.model.set_pf_level_info(
+    pf_levels = parser.model.pf_level_info(
         model_dct[ref_model]['es'], thy_dct)
-    pf_models = parser.model.set_pf_model_info(
+    pf_models = parser.model.pf_model_info(
         model_dct[ref_model]['pf'])
     ref_ene_level = pf_levels['ene'][0]
     print(' - Energy Level for Reference Species: {}'.format(ref_ene_level))

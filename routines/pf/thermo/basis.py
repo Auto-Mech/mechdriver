@@ -5,7 +5,8 @@
 import sys
 import automol.inchi
 import automol.geom
-# from routines.pf.messf.ene import get_fs_ene_zpe
+from routines.pf.models.ene import read_energy
+from routines.pf.models import _fs as fs
 from routines.pf.thermo import heatform
 from lib.phydat import phycon
 
@@ -88,18 +89,21 @@ def is_scheme(scheme):
 
 
 # FUNCTIONS TO CALCULATE ENERGIES FOR THERMOCHEMICAL PARAMETERS #
-def basis_energy(spc_bas, uni_refs_dct, spc_dct,
-                 thy_dct, model_dct, model, save_prefix):
+def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
+                 pf_levels, pf_models, run_prefix, save_prefix):
     """ Return the electronic + zero point energies for a set of species.
     """
 
     # Initialize ich name dct to noe
     ich_name_dct = {}
-    for ich in spc_bas:
+    for ich in spc_basis:
         ich_name_dct[ich] = None
 
-    # Get names from the respective spc dcts
-    for ich in spc_bas:
+    # Add the name of the species of interest
+    ich_name_dct[spc_name] = spc_dct[spc_name]['ich']
+
+    # Get names of the basis species from the respective spc dcts
+    for ich in spc_basis:
         for name in spc_dct:
             if name != 'global':
                 if ich == spc_dct[name]['ich']:
@@ -119,14 +123,30 @@ def basis_energy(spc_bas, uni_refs_dct, spc_dct,
         sys.exit()
 
     # Combine the two spc dcts together
-    full_spc_dct = {**spc_dct, **uni_refs_dct}
+    # full_spc_dct = {**spc_dct, **uni_refs_dct}
 
-    # Get the energies
+    # Get the species energy
+    pf_filesystems = fs.pf_filesys(
+        spc_dct[spc_name], pf_levels,
+        run_prefix, save_prefix, False)
+    h_spc = read_energy(
+            spc_dct[spc_name], pf_filesystems,
+            pf_models, pf_levels,
+            read_ene=True, read_zpe=True)
+    if h_spc is not None:
+        print('*ERROR: No energy found for {}'.format(spc_name))
+        sys.exit()
+
+    # Get the energies of the bases
     h_basis = []
     for ich, name in ich_name_dct.items():
+        pf_filesystems = fs.pf_filesys(
+            spc_dct[name], pf_levels,
+            run_prefix, save_prefix, False)
         h_basis.append(
             read_energy(
-                spc_dct_i, pf_filesystems, pf_models, pf_levels,
+                spc_dct[name], pf_filesystems,
+                pf_models, pf_levels,
                 read_ene=True, read_zpe=True
             )
         )
@@ -141,4 +161,4 @@ def basis_energy(spc_bas, uni_refs_dct, spc_dct,
         print('*ERROR: Not all energies found for the basis species')
         sys.exit()
 
-    return h_basis
+    return h_spc, h_basis

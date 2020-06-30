@@ -52,21 +52,6 @@ def _ckin_ene_lvl_str(ene_info, geo_info):
     return ene_str
 
 
-def run_ckin_poly(spc, spc_dct_i, pac99_poly_str):
-    """ prepare chemkin header info and convert pac 99 format to chemkin format
-    """
-
-    hf_str = '! Hf(0 K) = {:.2f}, Hf(298 K) = {:.2f} kcal/mol\n'.format(
-        float(spc_dct_i['Hfs'][0]), float(spc_dct_i['Hfs'][1]))
-    ich = spc_dct_i['ich']
-    formula_dct = automol.inchi.formula(ich)
-    chemkin_poly_str = routines.pf.thermo.nasapoly.convert_pac_to_chemkin(
-        spc, formula_dct, hf_str, pac99_poly_str)
-    print('\nCHEMKIN Polynomial:')
-    print(chemkin_poly_str)
-    return chemkin_poly_str
-
-
 def write_rates_file(ckin_rate_str_lst):
     """ write out the rates
     """
@@ -97,6 +82,16 @@ def write_rates_file(ckin_rate_str_lst):
     # Print the results for the whole PES to a file
     with open(full_ckin_path, 'a') as cfile:
         cfile.write(chemkin_full_str)
+
+
+def nasa_polynomial(hform0K, hform298K, ckin_poly_str):
+    """ write the nasa polynomial str
+    """
+    hf_str = (
+        '! Hf(0 K) = {:.2f},'.format(hform0K) +
+        'Hf(298 K) = {:.2f} kcal/mol\n'.format(hform298K)
+    )
+    return hf_str + ckin_poly_str
 
 
 def write_nasa_file(ckin_path, chemkin_poly_str):

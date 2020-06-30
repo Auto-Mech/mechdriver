@@ -140,7 +140,7 @@ def reference_geometry(
                 conformer.single_conformer(
                     zma, spc_info, thy_info,
                     thy_save_fs, cnf_run_fs, cnf_save_fs,
-                    overwrite, saddle=False, dist_info=())
+                    overwrite, saddle=False)
             else:
                 print("Cannot create zmatrix for disconnected species")
                 fake_conf(thy_info, filesys, inf)

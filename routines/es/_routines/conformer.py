@@ -97,7 +97,7 @@ def conformer_sampling(zma, spc_info,
 
 def single_conformer(zma, spc_info, thy_info,
                      thy_save_fs, cnf_run_fs, cnf_save_fs,
-                     overwrite, saddle=False, dist_info=()):
+                     overwrite, saddle=False):
     """ generate single optimized geometry for
         randomly sampled initial torsional angles
     """
@@ -113,7 +113,6 @@ def single_conformer(zma, spc_info, thy_info,
         overwrite=overwrite,
         nsamp_par=[False, 0, 0, 0, 0, 1],
         saddle=saddle,
-        dist_info=dist_info,
         two_stage=saddle,
         retryfail=False,
         **kwargs,

@@ -232,7 +232,7 @@ def set_default_pf(dct):
     return new_dct
 
 
-def set_pf_model_info(pf_model):
+def pf_model_info(pf_model):
     """ Set the PF model list based on the input
     """
 
@@ -251,7 +251,7 @@ def set_pf_model_info(pf_model):
     return pf_models
 
 
-def set_pf_level_info(es_model, thy_dct):
+def pf_level_info(es_model, thy_dct):
     """ Set the model info
     """
     # Read the ES models from the model dictionary

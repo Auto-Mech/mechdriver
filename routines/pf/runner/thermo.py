@@ -6,63 +6,12 @@ import os
 import sys
 import subprocess
 import shutil
-import numpy
 import automol
 import autofile
-import mess_io
-import thermp_io
-from lib.submission import run_script
-from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 # OBTAIN THE PATH TO THE DIRECTORY CONTAINING THE TEMPLATES #
 CUR_PATH = os.path.dirname(os.path.realpath(__file__))
-
-
-# MESSPF
-def run_messpf(pf_path, pf_script_str=DEFAULT_SCRIPT_DCT['messpf']):
-    """ run messpf
-    """
-    run_script(pf_script_str, pf_path)
-
-
-def read_messpf_temps(pf_path):
-    """ Obtain the temperatures from the MESSPF file
-    """
-
-    # Read MESSPF file
-    messpf_file = os.path.join(pf_path, 'pf.dat')
-    with open(messpf_file, 'r') as pffile:
-        output_string = pffile.read()
-
-    # Obtain the temperatures, remove the 298.2 value
-    temps, _, _, _ = mess_io.reader.pfs.partition_fxn(output_string)
-    temps = [temp for temp in temps if not numpy.isclose(temp, 298.2)]
-
-    return temps
-
-
-# THERMP
-def write_thermp_inp(spc_dct_i, temps,
-                     enthalpyt=0.0, breakt=1000.0
-                     thermp_file_name='thermp.dat'):
-    """ write the thermp input file
-    """
-    ich = spc_dct_i['ich']
-    h0form = spc_dct_i['Hfs'][0]
-    formula = automol.inchi.formula_string(ich)
-
-    # Write thermp input file
-    thermp_str = thermp_io.writer.thermp_input(
-        ntemps=len(temps),
-        formula=formula,
-        delta_h=h0form,
-        enthalpy_temp=enthalpyt,
-        break_temp=breakt)
-
-    # Write the file
-    with open(thermp_file_name, 'w') as thermp_file:
-        thermp_file.write(thermp_str)
 
 
 def run_thermp(pf_path, thermp_path,
@@ -89,15 +38,12 @@ def run_thermp(pf_path, thermp_path,
     subprocess.check_call(['thermp', thermp_file])
 
 
-# PAC99
-def run_pac(spc_dct_i, nasa_path):
+def run_pac(formula, nasa_path):
     """
     Run pac99 for a given species name (formula)
     https://www.grc.nasa.gov/WWW/CEAWeb/readme_pac99.htm
     requires formula+'i97' and new.groups files
     """
-    ich = spc_dct_i['ich']
-    formula = automol.inchi.formula_string(ich)
 
     # Run pac99
     # Set file names for pac99
@@ -129,8 +75,6 @@ def run_pac(spc_dct_i, nasa_path):
         if not pac99_str:
             print('No polynomial produced from PAC99 fits, check for errors')
             sys.exit()
-
-    return pac99_str
 
 
 def thermo_paths(spc_info, run_prefix):

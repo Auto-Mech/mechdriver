@@ -8,8 +8,7 @@ import os
 def starting_path():
     """ get original working directory
     """
-    starting_path = os.getcwd()
-    return starting_path
+    return os.getcwd()
 
 
 def go_to(path):
@@ -21,5 +20,13 @@ def go_to(path):
 def prepare_path(path, loc):
     """ change directory to starting path, return chemkin path
     """
-    new_path = os.path.join(path, loc)
-    return new_path
+    return os.path.join(path, loc)
+
+
+def read_file(path, file_name=''):
+    """ Open a file and read it as a string
+    """
+    fname = os.path.join(path, file_name)
+    with open(fname, errors='ignore') as file_obj:
+        file_str = file_obj.read()
+    return file_str

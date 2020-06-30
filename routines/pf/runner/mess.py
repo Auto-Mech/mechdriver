@@ -51,7 +51,7 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
         print('Writing the MESS data files...')
     for fname, fstring in dat_str_dct.items():
         dat_path = os.path.join(mess_path, fname)
-        print('Writing file: {}'.format(dat_path)
+        print('Writing file: {}'.format(dat_path))
         if string:
             data_file_path = os.path.join(mess_path, name)
             with open(data_file_path, 'w') as data_file:

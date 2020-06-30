@@ -46,7 +46,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         spc_model = rxn['model'][1]
         ene_model = spc_model_dct[spc_model]['es']['ene']
         geo_model = spc_model_dct[spc_model]['es']['geo']
-        es_info = parser.model.set_pf_level_info(
+        es_info = parser.model.pf_level_info(
             spc_model_dct[spc_model]['es'], thy_dct)
         if not isinstance(ene_model, str):
             ene_method = ene_model[1][1]
@@ -54,7 +54,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             ene_method = ene_model
         thy_info = filesys.inf.get_es_info(ene_method, thy_dct)
         ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
-        pf_model = parser.model.set_pf_model_info(
+        pf_model = parser.model.pf_model_info(
             spc_model_dct[spc_model]['pf'])
         ts_dct[tsname] = parser.species.build_sing_chn_sadpt_dct(
             tsname, rxn, thy_info, ini_thy_info,
