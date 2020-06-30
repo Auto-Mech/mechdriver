@@ -37,7 +37,7 @@ def rotor_info(spc_dct_i, pf_filesystems, pf_models,
         tors_model = 'mdhr'
 
     # Set up the names of all the torsions in the rotors through hierarchy
-    if tors_model != 'rigid':
+    if tors_model in ('1dhr', 'mdhr', 'tau'):
         run_tors_names = ()
         if 'tors_names' in spc_dct_i:
             run_tors_names = torsprep.names_from_dct(spc_dct_i, tors_model)
@@ -46,6 +46,10 @@ def rotor_info(spc_dct_i, pf_filesystems, pf_models,
             run_tors_names = torsprep.names_from_filesys(
                 cnf_fs, min_cnf_locs, tors_model)
             tloc = 'fs'
+        if not run_tors_names and tors_model == 'tau':
+            geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
+            run_tors_names = torsprep.names_from_geo(geo, tors_model, saddle=False)
+            tloc = 'geo'
         if not run_tors_names:
             tloc = None
     else:
@@ -56,11 +60,13 @@ def rotor_info(spc_dct_i, pf_filesystems, pf_models,
     constraint_dct = None
     ref_ene = None
     if tloc is not None and min_cnf_locs is not None:
-    
+
         if tloc == 'dct':
             print(' - Reading tors names from user input...')
         elif tloc == 'fs':
             print(' - Reading tors names from the filesystem...')
+        elif tloc == 'geo':
+            print(' - Obtaining tors names from the geometry...')
         for idx, tors_names in enumerate(run_tors_names):
             print(' - Rotor {}: {}'.format(str(idx+1), '-'.join(tors_names)))
 
@@ -255,7 +261,7 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
 
 
 def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
-                  tors_names, rotor_syms):
+                  rotor_names, rotor_syms):
     """ Write out the input string for tau samling
     """
     # Loop over the torsions to get the flux strings
@@ -270,9 +276,11 @@ def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
         #     tors_min_cnf_locs)
         name_matrix = automol.zmatrix.name_matrix(zma)
         key_matrix = automol.zmatrix.key_matrix(zma)
-
+    
         # Write the MESS flux strings for each of the modes
-        for tors_name, tors_sym in zip(tors_names, rotor_syms):
+        for tors_names, tors_sym in zip(rotor_names, rotor_syms):
+
+            tors_name = tors_names[0]
 
             # Get the idxs for the atoms used to define the dihedrals
             # Move code at some point to automol

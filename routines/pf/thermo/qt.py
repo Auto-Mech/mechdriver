@@ -4,7 +4,6 @@ Collates information for, and writes MESS files for rate calculations
 
 import importlib
 import mess_io
-from routines.pf.models import blocks
 from routines.pf.models import build
 
 BLOCK_MODULE = importlib.import_module('routines.pf.models.blocks')
@@ -44,7 +43,7 @@ def make_spc_mess_str(spc_dct_i, spc_name,
 
     # Write the mol block
     mess_writer = getattr(BLOCK_MODULE, inf_dct['writer'])
-    mess_block = mess_writer(inf_dct)
+    mess_block, dat_str_dct = mess_writer(inf_dct)
 
     # Write the mess string
     spc_str = mess_io.writer.species(
@@ -52,8 +51,5 @@ def make_spc_mess_str(spc_dct_i, spc_name,
         spc_data=mess_block,
         zero_energy=inf_dct['zpe_chnlvl']
     )
-
-    # dat string stuff
-    dat_str_dct = {}
 
     return spc_str, dat_str_dct

@@ -19,15 +19,15 @@ def build_polynomial(spc_name, spc_dct, temps,
 
     # Generate forumula
     spc_dct_i = spc_dct[spc_name]
-    formula = automol.inchi.formula_string(spc_dct_i['ich'])
-    formula_dct = automol.inchi.formula(spc_dct_i['ich'])
+    formula = automol.inchi.formula_string(spc_dct_i['inchi'])
+    formula_dct = automol.inchi.formula(spc_dct_i['inchi'])
     hform0 = spc_dct_i['Hfs'][0]
 
     # Go to NASA path
-    pfrunner.go_to_path(nasa_path)
+    pathtools.go_to(nasa_path)
 
     # Write and run ThermP to get the Hf298K and coefficients
-    pfrunner.write_thermp_inp(formula, hform0, temps)
+    write_thermp_inp(formula, hform0, temps)
     pfrunner.run_thermp(pf_path, nasa_path)
     thermp_out_str = pathtools.read_file(nasa_path, 'thermp.out')
     hform298 = thermp_io.reader.hf298k(thermp_out_str)
@@ -63,7 +63,7 @@ def write_thermp_inp(formula, hform0, temps,
     """
 
     # Write thermp input file
-    thermp_str = thermp_io.writer.thermp_input(
+    thermp_str = thermp_io.writer.input_file(
         ntemps=len(temps),
         formula=formula,
         delta_h=hform0,

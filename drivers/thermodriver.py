@@ -99,14 +99,14 @@ def run(spc_dct,
 
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str = ''
-        ckin_path = pfrunner.ckin.path()
+        # ckin_path = pfrunner.ckin.path()
         for idx, (spc_name, (pes_model, spc_model)) in enumerate(spc_queue):
 
             print("Starting NASA polynomials calculation for ", spc_name)
 
             # Read the temperatures from the pf.dat file, check if viable
             temps = pfrunner.read_messpf_temps(thm_paths[idx][0])
-            thmroutines.print_nasa_temps(temps)
+            thmroutines.nasapoly.print_nasa_temps(temps)
 
             # Write the NASA polynomial in CHEMKIN-format string
             ckin_nasa_str += writer.ckin.model_header(

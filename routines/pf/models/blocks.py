@@ -16,7 +16,9 @@ def atom_block(inf_dct):
         mass=inf_dct['mass'],
         elec_levels=inf_dct['elec_levels'])
 
-    return spc_str
+    dat_dct = {}
+
+    return spc_str, dat_dct
 
 
 def species_block(inf_dct):
@@ -51,7 +53,10 @@ def species_block(inf_dct):
         rot_dists=inf_dct['rot_dists']
     )
 
-    return spc_str
+    # Build the multidim files
+    dat_dct = {}
+
+    return spc_str, dat_dct
 
 
 def fake_species_block(inf_dct_i, inf_dct_j):
@@ -88,7 +93,9 @@ def fake_species_block(inf_dct_i, inf_dct_j):
         rot_dists=()
     )
 
-    return spc_str
+    dat_dct = {}
+
+    return spc_str, dat_dct
 
 
 def pst_block(inf_dct_i, inf_dct_j):
@@ -125,7 +132,7 @@ def pst_block(inf_dct_i, inf_dct_j):
         rot_dists=()
     )
 
-    return spc_str
+    return spc_str, dat_dct
 
 
 def tau_block(inf_dct):
@@ -139,11 +146,12 @@ def tau_block(inf_dct):
         grads=inf_dct['samp_grads'],
         hessians=inf_dct['samp_hessians']
     )
-    tau_dat_file_name = None
+
+    tau_dat_file_name = 'tau.dat'
 
     # Write the core string (seperate energies?)
     spc_str = mess_io.writer.monte_carlo.mc_species(
-        geom=inf_dct['ref_geo'],
+        geom=inf_dct['ref_geom'],
         elec_levels=inf_dct['elec_levels'],
         flux_mode_str=inf_dct['flux_mode_str'],
         data_file_name=tau_dat_file_name,
@@ -153,7 +161,9 @@ def tau_block(inf_dct):
         no_qc_corr=True,
         use_cm_shift=True)
 
-    return spc_str, dat_str
+    dat_dct = {tau_dat_file_name: dat_str}
+
+    return spc_str, dat_dct
 
 
 # TS BLOCKS FOR VARIATIONAL TREATMENTS
