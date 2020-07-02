@@ -89,14 +89,18 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                  pf_levels, pf_models, run_prefix, save_prefix):
     """ Return the electronic + zero point energies for a set of species.
     """
-
+    print('unirefs')
+    for x,y in uni_refs_dct.items():
+        print(x)
+        print(y)
+    
     # Initialize ich name dct to noe
     ich_name_dct = {}
     for ich in spc_basis:
         ich_name_dct[ich] = None
 
     # Add the name of the species of interest
-    ich_name_dct[spc_name] = spc_dct[spc_name]['inchi']
+    # ich_name_dct[spc_name] = spc_dct[spc_name]['inchi']
 
     # Get names of the basis species from the respective spc dcts
     for ich in spc_basis:
@@ -136,12 +140,12 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
     # Get the energies of the bases
     h_basis = []
     for ich, name in ich_name_dct.items():
+        print(ich)
+        print(name)
         if name in spc_dct:
             spc_dct_i = spc_dct[name]
         else:
             spc_dct_i = uni_refs_dct[ich]
-        print(name)
-        print(spc_dct_i)
         pf_filesystems = fs.pf_filesys(
             spc_dct_i, pf_levels,
             run_prefix, save_prefix, False)

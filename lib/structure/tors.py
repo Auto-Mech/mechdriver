@@ -76,7 +76,7 @@ def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_model):
             scan_names = os.listdir(scans_dir)
             tors_names = [name for name in scan_names
                           if 'D' in name]
-            if tors_model == '1dhr': 
+            if tors_model == '1dhr' or tors_model == 'tau': 
                 tors_names = [name for name in scan_names
                               if '_' not in name]
             else:

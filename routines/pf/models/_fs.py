@@ -58,6 +58,7 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
     # Get the save fileystem path
     save_path = thy_save_fs[-1].path(levelp[1:4])
     run_path = thy_run_fs[-1].path(levelp[1:4])
+    thy_run_fs[-1].create(levelp[1:4])
     if saddle:
         save_fs = autofile.fs.transition_state(save_path)
         save_fs[0].create()

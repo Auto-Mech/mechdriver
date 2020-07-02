@@ -3,6 +3,8 @@
 """
 
 import os
+import numpy
+import mess_io
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
@@ -25,19 +27,19 @@ def messpf_path(prefix, spc_info):
     spc_formula = automol.inchi.formula_string(spc_info[0])
     ich_key = automol.inchi.inchi_key(spc_info[0])
     path = os.path.join(prefix, 'MESSPF', spc_formula, ich_key)
-        
+
     # Build the filesystem
-    if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):
-        os.mkdir(os.path.join(run_prefix, 'MESSRATE'))
-    if not os.path.exists(mess_path):
-        os.mkdir(mess_path)
+    # if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):
+    #     os.mkdir(os.path.join(run_prefix, 'MESSRATE'))
+    # if not os.path.exists(mess_path):
+    #     os.mkdir(mess_path)
 
     return path
 
 
 # Write MESS files
 def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
-                    fname='mess.inp', overwrite=True):
+                    filename='mess.inp', overwrite=True):
     """ Write MESS file
     """
 
@@ -45,7 +47,7 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
     print('Writing MESS input file...')
     if not os.path.exists(mess_path):
         os.makedirs(mess_path)
-    with open(os.path.join(mess_path, fname), 'w') as mess_file:
+    with open(os.path.join(mess_path, filename), 'w') as mess_file:
         mess_file.write(mess_inp_str)
 
     # Write all of the data files needed
@@ -53,11 +55,11 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
         print('Writing the MESS data files...')
     for fname, fstring in dat_str_dct.items():
         dat_path = os.path.join(mess_path, fname)
-        print('Writing file: {}'.format(dat_path))
-        if string:
-            data_file_path = os.path.join(mess_path, name)
-            with open(data_file_path, 'w') as data_file:
-                data_file.write(string)
+        if fstring:
+            data_file_path = os.path.join(mess_path, fname)
+            print(' - Writing file: {}'.format(data_file_path))
+            with open(data_file_path, 'w') as file_obj:
+                file_obj.write(fstring)
     # print(' - WARNING: File will be overwriten.')
     # print('No additional MESS input file will be written.')
 

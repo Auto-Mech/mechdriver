@@ -29,7 +29,10 @@ def run_thermp(pf_path, thermp_path,
 
     # Copy MESSPF output file to THERMP run dir and rename to pf.dat
     pf_datfile = os.path.join(thermp_path, 'pf.dat')
-    shutil.copyfile(pf_outfile, pf_datfile)
+    try:
+        shutil.copyfile(pf_outfile, pf_datfile)
+    except shutil.SameFileError:
+        pass
 
     # Check for the existance of ThermP input and PF output
     assert os.path.exists(thermp_file), 'ThermP file does not exist'
@@ -99,6 +102,7 @@ def thermo_paths(spc_dct_i, run_prefix):
     bld_locs = ['NASA', 0]
     bld_save_fs = autofile.fs.build(run_prefix)
     bld_save_fs[-1].create(bld_locs)
+    bld_path = bld_save_fs[-1].path(bld_locs)
     spc_nasa_path = os.path.join(bld_path, spc_formula, ich_key)
 
     print('Path for MESSPF Calculation:')
