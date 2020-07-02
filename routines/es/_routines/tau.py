@@ -101,8 +101,8 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
         locs = [tid]
 
         tau_run_fs[-1].create(locs)
-        # tau_run_prefix = tau_run_fs[-1].path(locs)
-        # run_fs = autofile.fs.run(tau_run_prefix)
+        tau_run_prefix = tau_run_fs[-1].path(locs)
+        run_fs = autofile.fs.run(tau_run_prefix)
 
         idx += 1
         print("Run {}/{}".format(idx, nsamp0))
@@ -138,6 +138,17 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
             tau_run_fs[-1].file.geometry_input.write(inp_str, locs)
             print('geometry for bad ZMA at', tau_run_fs[-1].path(locs))
 
+        # nsampd += 1
+        # inf_obj.nsamp = nsampd
+        # tau_save_fs[0].file.info.write(inf_obj)
+        # tau_run_fs[0].file.info.write(inf_obj)
+
+        if tau_save_fs[0].file.info.exists():
+            inf_obj_s = tau_save_fs[0].file.info.read()
+            nsampd = inf_obj_s.nsamp
+        elif tau_run_fs[0].file.info.exists():
+            inf_obj_r = tau_run_fs[0].file.info.read()
+            nsampd = inf_obj_r.nsamp
         nsampd += 1
         inf_obj.nsamp = nsampd
         tau_save_fs[0].file.info.write(inf_obj)

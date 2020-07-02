@@ -380,7 +380,7 @@ def _is_proper_isomer(cnf_save_fs, zma):
     return proper_isomer
 
 
-def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=(0)):
+def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=(0,)):
     """ Perform a series of checks to assess the viability
         of a transition state geometry prior to saving
     """
