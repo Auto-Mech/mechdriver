@@ -2,6 +2,7 @@
  Generates NASA Polynomial from MESS+THERMP+PAC99 outputs
 """
 
+import os
 import automol
 import thermp_io
 import pac99_io
@@ -15,7 +16,7 @@ def build_polynomial(spc_name, spc_dct, temps,
     """ Build a nasa polynomial
     """
 
-    print('Generating NASA polynomials at path: {}', nasa_path)
+    print('Generating NASA polynomials at path: {}'.format(nasa_path))
 
     # Generate forumula
     spc_dct_i = spc_dct[spc_name]
@@ -24,6 +25,8 @@ def build_polynomial(spc_name, spc_dct, temps,
     hform0 = spc_dct_i['Hfs'][0]
 
     # Go to NASA path
+    if not os.path.exists(nasa_path):
+        os.makedirs(nasa_path)
     pathtools.go_to(nasa_path)
 
     # Write and run ThermP to get the Hf298K and coefficients
@@ -34,8 +37,10 @@ def build_polynomial(spc_name, spc_dct, temps,
 
     # Run PAC99 to get a NASA polynomial string in its format
     pfrunner.run_pac(formula, nasa_path)
-    o97_file = pathtools.prepare_path(nasa_path, formula + '.i97')
-    pac99_out_str = pathtools.read_file(o97_file)
+    c97_file = pathtools.prepare_path(nasa_path, formula + '.c97')
+    with open(c97_file, 'r') as file_obj:
+        pac99_out_str = file_obj.read()
+    # pac99_out_str = pathtools.read_file(o97_file)
     pac99_poly_str = pac99_io.reader.nasa_polynomial(pac99_out_str)
 
     # Obtain CHEMKIN string using PAC99 polynomial
@@ -43,7 +48,7 @@ def build_polynomial(spc_name, spc_dct, temps,
         spc_name, formula_dct, pac99_poly_str)
 
     # Write the full CHEMKIN strings
-    header_str = 'HEAD\n'
+    header_str = '\n'
     nasa_str = writer.ckin.nasa_polynomial(hform0, hform298, ckin_poly_str)
     full_ckin_str = header_str + nasa_str
 

@@ -329,7 +329,7 @@ def tau_data(spc_dct_i,
     # Set up all the filesystem objects using models and levels
     pf_filesystems = fs.pf_filesys(
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
-    [harm_cnf_fs, harm_cnf_path,
+    [harm_cnf_fs, _,
      harm_min_locs, harm_save, _] = pf_filesystems['harm']
     [tors_cnf_fs, _, tors_min_locs, _, _] = pf_filesystems['tors']
 
@@ -348,14 +348,15 @@ def tau_data(spc_dct_i,
     rxn_class = None
 
     # Get the rotor info
-    rotor_names, rotor_grids, rotor_syms, const_dct, _ = tors.rotor_info(
+    rotor_names, rotor_grids, rotor_syms, const_dct, ref_ene = tors.rotor_info(
         spc_dct_i, pf_filesystems, chn_pf_models,
         frm_bnd_key=frm_bnd_keys, brk_bnd_key=brk_bnd_keys)
-    mess_hr_str, prot_hr_str, mdhr_dats, rotor_syms = tors.make_hr_strings(
+    mess_hr_str, prot_hr_str, _, rotor_syms = tors.make_hr_strings(
         rotor_names, rotor_grids, rotor_syms, const_dct,
         ref_ene, pf_filesystems, chn_pf_models,
         rxn_class, frm_bnd_keys,
-        saddle=saddle, tors_wgeo=True)
+        saddle=saddle, tors_wgeo=True,
+        build_mess=False, build_projrot=True)
 
     # Write the flux mode str
     flux_mode_str = tors.make_flux_str(tors_min_locs, tors_cnf_fs,

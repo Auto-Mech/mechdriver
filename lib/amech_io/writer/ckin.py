@@ -97,5 +97,9 @@ def nasa_polynomial(hform0K, hform298K, ckin_poly_str):
 def write_nasa_file(ckin_path, chemkin_poly_str):
     """ write out the nasa polynomials
     """
-    with open(os.path.join(ckin_path, formula+'.ckin'), 'w') as nasa_file:
+
+    if not os.path.exists(ckin_path):
+        os.makedirs(ckin_path)
+    fpath = os.path.join(ckin_path, 'all.ckin')
+    with open(fpath, 'w') as nasa_file:
         nasa_file.write(chemkin_poly_str)

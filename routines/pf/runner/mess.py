@@ -27,19 +27,19 @@ def messpf_path(prefix, spc_info):
     spc_formula = automol.inchi.formula_string(spc_info[0])
     ich_key = automol.inchi.inchi_key(spc_info[0])
     path = os.path.join(prefix, 'MESSPF', spc_formula, ich_key)
-        
+
     # Build the filesystem
-    if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):
-        os.mkdir(os.path.join(run_prefix, 'MESSRATE'))
-    if not os.path.exists(mess_path):
-        os.mkdir(mess_path)
+    # if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):
+    #     os.mkdir(os.path.join(run_prefix, 'MESSRATE'))
+    # if not os.path.exists(mess_path):
+    #     os.mkdir(mess_path)
 
     return path
 
 
 # Write MESS files
 def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
-                    fname='mess.inp', overwrite=True):
+                    filename='mess.inp', overwrite=True):
     """ Write MESS file
     """
 
@@ -47,7 +47,7 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
     print('Writing MESS input file...')
     if not os.path.exists(mess_path):
         os.makedirs(mess_path)
-    with open(os.path.join(mess_path, fname), 'w') as mess_file:
+    with open(os.path.join(mess_path, filename), 'w') as mess_file:
         mess_file.write(mess_inp_str)
 
     # Write all of the data files needed
