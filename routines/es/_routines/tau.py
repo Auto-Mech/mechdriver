@@ -101,8 +101,8 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
         locs = [tid]
 
         tau_run_fs[-1].create(locs)
-        # tau_run_prefix = tau_run_fs[-1].path(locs)
-        # run_fs = autofile.fs.run(tau_run_prefix)
+        tau_run_prefix = tau_run_fs[-1].path(locs)
+        run_fs = autofile.fs.run(tau_run_prefix)
 
         idx += 1
         print("Run {}/{}".format(idx, nsamp0))
@@ -110,18 +110,18 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
         print('\nChecking if ZMA has high repulsion...')
         if _low_repulsion_struct(zma, samp_zma):
             print('ZMA fine.')
-            # es_runner.run_job(
-            # job=elstruct.Job.OPTIMIZATION,
-            # script_str=script_str,
-            # run_fs=run_fs,
-            # geom=samp_zma,
-            # spc_info=spc_info,
-            # thy_info=thy_info,
-            # saddle=saddle,
-            # overwrite=overwrite,
-            # frozen_coordinates=tors_range_dct.keys(),
-            # **kwargs
-            # )
+            es_runner.run_job(
+                job=elstruct.Job.OPTIMIZATION,
+                script_str=script_str,
+                run_fs=run_fs,
+                geom=samp_zma,
+                spc_info=spc_info,
+                thy_info=thy_info,
+                saddle=saddle,
+                overwrite=overwrite,
+                frozen_coordinates=tors_range_dct.keys(),
+                **kwargs
+            )
         else:
             print('repulsive ZMA:')
             inp_str = elstruct.writer.optimization(
@@ -138,6 +138,17 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
             tau_run_fs[-1].file.geometry_input.write(inp_str, locs)
             print('geometry for bad ZMA at', tau_run_fs[-1].path(locs))
 
+        # nsampd += 1
+        # inf_obj.nsamp = nsampd
+        # tau_save_fs[0].file.info.write(inf_obj)
+        # tau_run_fs[0].file.info.write(inf_obj)
+
+        if tau_save_fs[0].file.info.exists():
+            inf_obj_s = tau_save_fs[0].file.info.read()
+            nsampd = inf_obj_s.nsamp
+        elif tau_run_fs[0].file.info.exists():
+            inf_obj_r = tau_run_fs[0].file.info.read()
+            nsampd = inf_obj_r.nsamp
         nsampd += 1
         inf_obj.nsamp = nsampd
         tau_save_fs[0].file.info.write(inf_obj)
@@ -238,8 +249,9 @@ EXP6_DCT = {
 }
 
 
-def _low_repulsion_struct(zma_ref, zma_samp, thresh=10.0):
-    """ Check if the coloumb sum
+def _low_repulsion_struct(zma_ref, zma_samp, thresh=40.0):
+    """ Check if the long-range energy for the sample structure 
+    exceeds that for the reference structure by more than the thresh
     """
 
     # # Convert to geoms
@@ -354,7 +366,7 @@ def _pairwise_potentials(geo, idx_pair, potential='exp6'):
 
 
 def _pairwise_exp6_potential(rdist, symb1, symb2):
-    """ Calcualte pot
+    """ Calculate pot
     """
 
     exp6_params = EXP6_DCT.get((symb1, symb2), None)
@@ -377,7 +389,7 @@ def _exp6_potential(rdist, apar, bpar, cpar, rcut):
 
 
 def _pairwise_lj_potential(rdist, symb1, symb2):
-    """ Calcualte pot
+    """ Calculate pot
     """
 
     ljparams = LJ_DCT.get((symb1, symb2), None)
