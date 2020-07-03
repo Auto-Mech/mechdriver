@@ -119,6 +119,7 @@ def atm_data(spc_dct_i,
 
     ene_reflvl = None
     _, _ = ref_pf_models, ref_pf_levels
+    zpe_chnlvl = None
 
     # Create info dictionary
     inf_dct = {
@@ -129,7 +130,8 @@ def atm_data(spc_dct_i,
         'mass': util.atom_mass(spc_dct_i),
         'elec_levels': spc_dct_i['elec_levels'],
         'ene_chnlvl': ene_chnlvl,
-        'ene_reflvl': ene_reflvl
+        'ene_reflvl': ene_reflvl,
+        'zpe_chnlvl': zpe_chnlvl
     }
 
     return inf_dct
@@ -223,7 +225,7 @@ def mol_data(spc_dct_i,
             'xmat', 'rovib_coups', 'rot_dists',
             'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
-            mess_hr_str, mdhr_dats,
+            mess_hr_str, mdhr_dats[0],  # assuming single mdhr rotor
             xmat, rovib_coups, rot_dists,
             ene_chnlvl, ene_reflvl, zpe]
     inf_dct = dict(zip(keys, vals))

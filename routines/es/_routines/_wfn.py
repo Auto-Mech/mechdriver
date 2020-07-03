@@ -130,7 +130,7 @@ def active_space(ts_dct, spc_dct, ts_high_mul):
     rcts = ts_dct['reacs']
     num_act_orb, num_act_elc = 0, 0
     for rct in rcts:
-        rct_ich = spc_dct[rct]['ich']
+        rct_ich = spc_dct[rct]['inchi']
         if rct_ich in act_space.DCT:
             num_act_orb += act_space.DCT[rct_ich][0]
             num_act_elc += act_space.DCT[rct_ich][1]

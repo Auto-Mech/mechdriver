@@ -237,8 +237,13 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
         # Check for dummy transformations
         remdummy = geomprep.build_remdummy_shift_lst(zma)
 
+        if not isinstance(tors_syms, list):
+            tors_sym_list = [tors_syms]
+        else:
+            tors_sym_list = tors_syms
+
         # Loop over the rotors in the group and write the internal rotor strs
-        for tors_name, tors_sym in zip(tors_names, tors_syms):
+        for tors_name, tors_sym in zip(tors_names, tors_sym_list):
 
             # Set pot to empty list (may need fix)
             pot = ()  # Change hpw set_tors_def_info works?
@@ -323,7 +328,7 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
 
     # Build template pot lst and freqs list into a list-of-lists if ndim > 1
     if len(tors_names) == 1:
-        dims = (len(tors_grids),)
+        dims = (len(tors_grids[0]),)
     elif len(tors_names) == 2:
         dims = (len(tors_grids[0]), len(tors_grids[1]))
     elif len(tors_names) == 3:
@@ -344,13 +349,14 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
     else:
         scn_fs = autofile.fs.cscan(zma_path)
     if len(tors_names) == 1:
-        for i, grid_val_i in enumerate(tors_grids):
+        for i, grid_val_i in enumerate(tors_grids[0]):
             # Set locs
             locs = [tors_names, [grid_val_i]]
             if constraint_dct is not None:
                 locs.append(constraint_dct)
             # Read filesys
-            # print(scn_fs[-1].path(locs))
+            # print('locs test:', locs)
+            # print('scn fs test:', scn_fs[-1].path(locs))
             if scn_fs[-1].exists(locs):
                 ene = scn_fs[-1].file.energy.read(locs)
                 pot[i] = (ene - ref_ene) * phycon.EH2KCAL

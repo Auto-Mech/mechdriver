@@ -252,7 +252,7 @@ def zpe_str(spc_dct, zpe):
     """ return the zpe for a given species according a specified set of
     partition function levels
     """
-    if automol.geom.is_atom(automol.inchi.geometry(spc_dct['ich'])):
+    if automol.geom.is_atom(automol.inchi.geometry(spc_dct['inchi'])):
         zero_energy_str = 'End'
     else:
         zero_energy_str = ' ZeroEnergy[kcal/mol] ' + str(zpe)

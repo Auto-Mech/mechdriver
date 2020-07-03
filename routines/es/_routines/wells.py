@@ -50,7 +50,7 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
         if len(names) < 2:
             print('Cannot find van der Waals well for unimolecular',
                   'reactant or product')
-        ichs = list(map(lambda name: spc_dct[name]['ich'], names))
+        ichs = list(map(lambda name: spc_dct[name]['inchi'], names))
         chgs = list(map(lambda name: spc_dct[name]['chg'], names))
         muls = list(map(lambda name: spc_dct[name]['mul'], names))
 
@@ -185,7 +185,7 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
                     print(" - Save path: {}".format(thy_save_path))
                     vdw_name = label + ts_name.replace('ts', 'vdw')
                     spc_dct[vdw_name] = spc_dct[ts_name].copy()
-                    spc_dct[vdw_name]['ich'] = ich
+                    spc_dct[vdw_name]['inchi'] = ich
                     spc_dct[vdw_name]['mul'] = mul
                     spc_dct[vdw_name]['chg'] = chg
                     spc_dct[vdw_name]['dist_info'][1] = dist_cutoff
