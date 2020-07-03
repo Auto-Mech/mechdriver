@@ -147,7 +147,9 @@ def tau_block(inf_dct):
         hessians=inf_dct['samp_hessians']
     )
 
+    # Set the name of the tau dat file and add to dct
     tau_dat_file_name = 'tau.dat'
+    dat_dct = {tau_dat_file_name: dat_str}
 
     # Write the core string (seperate energies?)
     spc_str = mess_io.writer.monte_carlo.mc_species(
@@ -155,13 +157,9 @@ def tau_block(inf_dct):
         elec_levels=inf_dct['elec_levels'],
         flux_mode_str=inf_dct['flux_mode_str'],
         data_file_name=tau_dat_file_name,
-        ground_energy=inf_dct['ground_ene'],
-        reference_energy=inf_dct['reference_ene'],
+        ground_energy=inf_dct['zpe_chnlvl'],
         freqs=inf_dct['freqs'],
-        no_qc_corr=True,
         use_cm_shift=True)
-
-    dat_dct = {tau_dat_file_name: dat_str}
 
     return spc_str, dat_dct
 

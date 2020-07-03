@@ -342,9 +342,6 @@ def tau_data(spc_dct_i,
     tau_save_fs = autofile.fs.tau(harm_save)
 
     # Set the ground and reference energy to set values for now
-    ground_ene = -0.02
-    reference_ene = 0.00
-    zpe_chnlvl = None
     rxn_class = None
 
     # Get the rotor info
@@ -366,7 +363,7 @@ def tau_data(spc_dct_i,
     vib_model = chn_pf_models['vib']
     if vib_model != 'tau':
         read_gradient, read_hessian = False, False
-        freqs, _, _ = vib.tors_projected_freqs_zpe(
+        freqs, _, zpve = vib.tors_projected_freqs_zpe(
             pf_filesystems, mess_hr_str, prot_hr_str, saddle=False)
     else:
         read_gradient, read_hessian = True, True
@@ -400,11 +397,9 @@ def tau_data(spc_dct_i,
 
     # Create info dictionary
     keys = ['ref_geom', 'elec_levels', 'freqs', 'flux_mode_str',
-            'ground_ene', 'reference_ene',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
             'zpe_chnlvl']
     vals = [ref_geom, spc_dct_i['elec_levels'], freqs, flux_mode_str,
-            ground_ene, reference_ene,
             samp_geoms, samp_enes, samp_grads, samp_hessians,
             zpe_chnlvl]
     inf_dct = dict(zip(keys, vals))
