@@ -269,6 +269,12 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
     return mess_hr_str, projrot_hr_str, mdhr_dat_str_lst, chkd_sym_nums
 
 
+def _make_1dhrv_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
+    """ Write the strings for the 1DHRV 
+    """
+    pass
+
+
 def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
                   rotor_names, rotor_syms):
     """ Write out the input string for tau samling
@@ -281,8 +287,6 @@ def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
         zma_fs = fs.manager(
             tors_cnf_save_fs[-1].path(tors_min_cnf_locs), 'ZMATRIX')
         zma = zma_fs[-1].file.zmatrix.read([0])
-        # zma = tors_cnf_save_fs[-1].file.zmatrix.read(
-        #     tors_min_cnf_locs)
         name_matrix = automol.zmatrix.name_matrix(zma)
         key_matrix = automol.zmatrix.key_matrix(zma)
     
