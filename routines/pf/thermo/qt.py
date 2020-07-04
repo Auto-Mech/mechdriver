@@ -46,6 +46,7 @@ def make_spc_mess_str(spc_dct_i, spc_name,
     mess_block, dat_str_dct = mess_writer(inf_dct)
 
     # Write the mess string
+    print('inf_dct test:', inf_dct)
     spc_str = mess_io.writer.species(
         spc_label=spc_name,
         spc_data=mess_block,

@@ -99,7 +99,8 @@ def set_rxn_class(spc_dct_i, saddle):
 def atom_mass(spc_dct_i):
     """ write the atom string
     """
-    geo = automol.inchi.geometry(spc_dct_i['ich'])
+    print('spc_dct_i test', spc_dct_i)
+    geo = automol.inchi.geometry(spc_dct_i['inchi'])
     return automol.geom.total_mass(geo)
 
 

@@ -25,36 +25,40 @@ def species_block(inf_dct):
     """ prepare the species input for messpf
     """
 
+    # Build the multidim files
+    dat_dct = {}
+
     # Build the appropriate core string
     if inf_dct['mdhr_dats']:
         core_str = mess_io.writer.core_multirotor(
             geom=inf_dct['geom'],
             sym_factor=inf_dct['sym_factor'],
-            pot_surf_file='sas',
+            pot_surf_file='mdhr_pot.dat',
             int_rot_str=inf_dct['mess_hr_str'],
             interp_emax=100,
             quant_lvl_emax=9
         )
+        hind_rot_str = ''
+        dat_dct['mdhr_pot.dat'] = inf_dct['mdhr_dats']
     else:
         core_str = mess_io.writer.core_rigidrotor(
             geom=inf_dct['geom'],
             sym_factor=inf_dct['sym_factor'],
             interp_emax=None
         )
+        hind_rot_str = inf_dct['mess_hr_str']
 
     # Build the appropriate MESS string
     spc_str = mess_io.writer.molecule(
         core=core_str,
         freqs=inf_dct['freqs'],
         elec_levels=inf_dct['elec_levels'],
-        hind_rot=inf_dct['mess_hr_str'],
+        hind_rot=hind_rot_str,
         xmat=inf_dct['xmat'],
         rovib_coups=inf_dct['rovib_coups'],
         rot_dists=inf_dct['rot_dists']
     )
 
-    # Build the multidim files
-    dat_dct = {}
 
     return spc_str, dat_dct
 
@@ -157,8 +161,9 @@ def tau_block(inf_dct):
         elec_levels=inf_dct['elec_levels'],
         flux_mode_str=inf_dct['flux_mode_str'],
         data_file_name=tau_dat_file_name,
-        ground_energy=inf_dct['zpe_chnlvl'],
+        ground_energy=inf_dct['ground_energy'],
         freqs=inf_dct['freqs'],
+        reference_energy=None,
         use_cm_shift=True)
 
     return spc_str, dat_dct

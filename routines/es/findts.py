@@ -172,10 +172,10 @@ def run(spc_dct, spc_name,
     # Run single reference mol-rad VTST Search
     if _molrad_barrierless_search(ts_dct, ts_search):
         rcts = ts_dct['reacs']
-        spc_1_info = [spc_dct[rcts[0]]['ich'],
+        spc_1_info = [spc_dct[rcts[0]]['inchi'],
                       spc_dct[rcts[0]]['charge'],
                       spc_dct[rcts[0]]['mult']]
-        spc_2_info = [spc_dct[rcts[1]]['ich'],
+        spc_2_info = [spc_dct[rcts[1]]['inchi'],
                       spc_dct[rcts[1]]['charge'],
                       spc_dct[rcts[1]]['mult']]
         [grid1, grid2] = grid
@@ -313,10 +313,10 @@ def barrierless_transition_state(
     # rct_zmas = ts_dct['rct_zmas']
     rcts = ts_dct['reacs']
     high_mul = ts_dct['high_mul']
-    spc_1_info = [spc_dct[rcts[0]]['ich'],
+    spc_1_info = [spc_dct[rcts[0]]['inchi'],
                   spc_dct[rcts[0]]['charge'],
                   spc_dct[rcts[0]]['mult']]
-    spc_2_info = [spc_dct[rcts[1]]['ich'],
+    spc_2_info = [spc_dct[rcts[1]]['inchi'],
                   spc_dct[rcts[1]]['charge'],
                   spc_dct[rcts[1]]['mult']]
 

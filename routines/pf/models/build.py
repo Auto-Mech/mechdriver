@@ -119,6 +119,7 @@ def atm_data(spc_dct_i,
 
     ene_reflvl = None
     _, _ = ref_pf_models, ref_pf_levels
+    zpe_chnlvl = None
 
     # Create info dictionary
     inf_dct = {
@@ -129,7 +130,8 @@ def atm_data(spc_dct_i,
         'mass': util.atom_mass(spc_dct_i),
         'elec_levels': spc_dct_i['elec_levels'],
         'ene_chnlvl': ene_chnlvl,
-        'ene_reflvl': ene_reflvl
+        'ene_reflvl': ene_reflvl,
+        'zpe_chnlvl': zpe_chnlvl
     }
 
     return inf_dct
@@ -223,7 +225,7 @@ def mol_data(spc_dct_i,
             'xmat', 'rovib_coups', 'rot_dists',
             'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
-            mess_hr_str, mdhr_dats,
+            mess_hr_str, mdhr_dats[0],  # assuming single mdhr rotor
             xmat, rovib_coups, rot_dists,
             ene_chnlvl, ene_reflvl, zpe]
     inf_dct = dict(zip(keys, vals))
@@ -361,10 +363,15 @@ def tau_data(spc_dct_i,
 
     # Use model to determine whether to read grads and hessians
     vib_model = chn_pf_models['vib']
+    print('mess_hr_str test in tau_data:', mess_hr_str)
     if vib_model != 'tau':
         read_gradient, read_hessian = False, False
-        freqs, _, zpve = vib.tors_projected_freqs_zpe(
+        freqs, _, proj_zpe, harm_zpe = vib.tors_projected_freqs_zpe(
             pf_filesystems, mess_hr_str, prot_hr_str, saddle=False)
+        if mess_hr_str:
+            ground_energy = proj_zpe
+        else:
+            ground_energy = harm_zpe
     else:
         read_gradient, read_hessian = True, True
         freqs = ()
@@ -395,13 +402,16 @@ def tau_data(spc_dct_i,
             hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess_str)
 
+    zpe_chnlvl = None
+    ground_energy *= phycon.EH2KCAL
+
     # Create info dictionary
     keys = ['ref_geom', 'elec_levels', 'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
-            'zpe_chnlvl']
+            'zpe_chnlvl', 'ground_energy']
     vals = [ref_geom, spc_dct_i['elec_levels'], freqs, flux_mode_str,
             samp_geoms, samp_enes, samp_grads, samp_hessians,
-            zpe_chnlvl]
+            zpe_chnlvl, ground_energy]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct

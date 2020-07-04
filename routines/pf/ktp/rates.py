@@ -82,7 +82,7 @@ def make_etrans_str(spc_dct, rxn_lst,
     print(' - Using masses of reactants of first channel')
     tot_mass = 0.
     for rct in rxn_lst[0]['reacs']:
-        geo = automol.inchi.geometry(spc_dct[rct]['ich'])
+        geo = automol.inchi.geometry(spc_dct[rct]['inchi'])
         masses = automol.geom.masses(geo)
         for mass in masses:
             tot_mass += mass
@@ -193,7 +193,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
         spc_str = [_make_spc_mess_str(inf) for inf in rgt_infs]
 
         # Set the labels to put into the file
-        spc_label = [automol.inchi.smiles(spc_dct[name]['ich'])
+        spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
                      for name in rgt_names]
         chn_label = label_dct[make_rxn_str(rgt_names)]
 

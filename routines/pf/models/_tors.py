@@ -158,14 +158,14 @@ def _make_1dhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
     for tors_names, tors_grids, tors_sym in tors_info:
 
         # Grab zero elment because of formatting (each list has one tors)
-        tors_name = tors_names[0]
-        tors_grid = tors_grids[0]
+        # tors_name = tors_names[0]
+        # tors_grid = tors_grids[0]
 
         # Read potential if building MESS string
         if build_mess:
             # Read the hindered rotor potential
             pot, _ = _read_hr_pot(
-                [tors_name], tors_grid,
+                tors_names, tors_grids,
                 cnf_save_path, ref_ene,
                 constraint_dct, read_freqs=read_freqs)
 
@@ -176,7 +176,7 @@ def _make_1dhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
 
         # Get the HR groups and axis for the rotor
         group, axis, chkd_sym_num = torsprep.set_tors_def_info(
-            zma, tors_name, tors_sym, pot,
+            zma, tors_names[0], tors_sym, pot,
             ts_bnd, rxn_class, saddle=saddle)
 
         # Check for dummy atoms
@@ -193,7 +193,7 @@ def _make_1dhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
                 remdummy=remdummy,
                 geom=hind_rot_geo,
                 use_quantum_weight=True,
-                rotor_id=tors_name)
+                rotor_id=tors_names[0])
 
         # Write the ProjRot string for the rotor
         if build_projrot:
@@ -237,8 +237,13 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
         # Check for dummy transformations
         remdummy = geomprep.build_remdummy_shift_lst(zma)
 
+        if not isinstance(tors_syms, list):
+            tors_sym_list = [tors_syms]
+        else:
+            tors_sym_list = tors_syms
+
         # Loop over the rotors in the group and write the internal rotor strs
-        for tors_name, tors_sym in zip(tors_names, tors_syms):
+        for tors_name, tors_sym in zip(tors_names, tors_sym_list):
 
             # Set pot to empty list (may need fix)
             pot = ()  # Change hpw set_tors_def_info works?
@@ -269,7 +274,7 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
     return mess_hr_str, projrot_hr_str, mdhr_dat_str_lst, chkd_sym_nums
 
 
-def _make_1dhrv_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
+def _make_1dhrv_tors_strs(zma, rxn_class, ts_bnd, ref_ene):
     """ Write the strings for the 1DHRV 
     """
     pass
@@ -277,7 +282,7 @@ def _make_1dhrv_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
 
 def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
                   rotor_names, rotor_syms):
-    """ Write out the input string for tau samling
+    """ Write out the input string for tau sampling
     """
     # Loop over the torsions to get the flux strings
     flux_mode_str = ''
@@ -323,7 +328,7 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
 
     # Build template pot lst and freqs list into a list-of-lists if ndim > 1
     if len(tors_names) == 1:
-        dims = (len(tors_grids),)
+        dims = (len(tors_grids[0]),)
     elif len(tors_names) == 2:
         dims = (len(tors_grids[0]), len(tors_grids[1]))
     elif len(tors_names) == 3:
@@ -344,13 +349,14 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
     else:
         scn_fs = autofile.fs.cscan(zma_path)
     if len(tors_names) == 1:
-        for i, grid_val_i in enumerate(tors_grids):
+        for i, grid_val_i in enumerate(tors_grids[0]):
             # Set locs
             locs = [tors_names, [grid_val_i]]
             if constraint_dct is not None:
                 locs.append(constraint_dct)
             # Read filesys
-            # print(scn_fs[-1].path(locs))
+            # print('locs test:', locs)
+            # print('scn fs test:', scn_fs[-1].path(locs))
             if scn_fs[-1].exists(locs):
                 ene = scn_fs[-1].file.energy.read(locs)
                 pot[i] = (ene - ref_ene) * phycon.EH2KCAL

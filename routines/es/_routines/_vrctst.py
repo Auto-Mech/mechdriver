@@ -86,10 +86,10 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
 
     # Set up the spc infor for the reactants
     rcts = ts_dct['reacs']
-    spc_1_info = [spc_dct[rcts[0]]['ich'],
+    spc_1_info = [spc_dct[rcts[0]]['inchi'],
                   spc_dct[rcts[0]]['chg'],
                   spc_dct[rcts[0]]['mul']]
-    spc_2_info = [spc_dct[rcts[1]]['ich'],
+    spc_2_info = [spc_dct[rcts[1]]['inchi'],
                   spc_dct[rcts[1]]['chg'],
                   spc_dct[rcts[1]]['mul']]
 
