@@ -375,6 +375,12 @@ def tau_data(spc_dct_i,
     else:
         read_gradient, read_hessian = True, True
         freqs = ()
+        _, _, proj_zpe, harm_zpe = vib.tors_projected_freqs_zpe(
+            pf_filesystems, mess_hr_str, prot_hr_str, saddle=False)
+        if mess_hr_str:
+            ground_energy = proj_zpe
+        else:
+            ground_energy = harm_zpe
 
     # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
