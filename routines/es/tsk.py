@@ -408,7 +408,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
             for locs in tau_save_locs:
                 geo_run_path = tau_run_fs[-1].path(locs)
                 geo_save_path = tau_save_fs[-1].path(locs)
-                geo = tau_save_fs[-1].file.read.geometry(locs)
+                geo = tau_save_fs[-1].file.geometry.read(locs)
                 zma = None
                 tau_run_fs[-1].create(locs)
                 ES_TSKS[job](
