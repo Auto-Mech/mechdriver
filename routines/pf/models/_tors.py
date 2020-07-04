@@ -326,6 +326,8 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
     """ Get the potential for a hindered rotor
     """
 
+    # print('cscn_path', scn_run_fs[1].path([coo_names]))
+
     # Build template pot lst and freqs list into a list-of-lists if ndim > 1
     if len(tors_names) == 1:
         dims = (len(tors_grids[0]),)

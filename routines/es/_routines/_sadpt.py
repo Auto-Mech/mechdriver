@@ -241,15 +241,19 @@ def save_saddle_point(
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
 
     # Save the form and break keys in the filesystem
-    shift_frm_bnd_keys = structure.geom.shift_vals_from_dummy(
-        frm_bnd_keys, zma)
-    shift_brk_bnd_keys = structure.geom.shift_vals_from_dummy(
-        brk_bnd_keys, zma)
+    # shift_frm_bnd_keys = structure.geom.shift_vals_from_dummy(
+    #     frm_bnd_keys, zma)
+    # shift_brk_bnd_keys = structure.geom.shift_vals_from_dummy(
+    #     brk_bnd_keys, zma)
 
-    tra = (frozenset({frozenset(set(shift_frm_bnd_keys))}),
-           frozenset({frozenset(set(shift_brk_bnd_keys))}))
-    print('tra', tra)
+    tra = (frozenset(frm_bnd_keys),
+           frozenset(brk_bnd_keys))
     zma_save_fs[-1].file.transformation.write(tra, zma_locs)
+
+
+    zma_fs[-1].file.reactant_graph.write(ref_gra, locs)
+
+    print('tra', tra)
 
     # Save the energy in a single-point filesystem
     print(" - Saving energy...")
