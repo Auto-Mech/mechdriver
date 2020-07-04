@@ -22,7 +22,7 @@ def rotor_info(spc_dct_i, pf_filesystems, pf_models,
 
     # Set up tors level filesystem and model
     tors_model = pf_models['tors']
-    [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['tors']
 
     # Read the increments from the filesystem
     if 'hind_inc' in spc_dct_i:
@@ -48,7 +48,8 @@ def rotor_info(spc_dct_i, pf_filesystems, pf_models,
             tloc = 'fs'
         if not run_tors_names and tors_model == 'tau':
             geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
-            run_tors_names = torsprep.names_from_geo(geo, tors_model, saddle=False)
+            run_tors_names = torsprep.names_from_geo(
+                geo, tors_model, saddle=False)
             tloc = 'geo'
         if not run_tors_names:
             tloc = None
@@ -224,6 +225,9 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
     tors_info = zip(rotor_names, rotor_grids, rotor_syms)
     for tors_names, tors_grids, tors_syms in tors_info:
 
+        print('tors_names', tors_names)
+        print('tors_names', tors_syms)
+
         # Read the hindered rotor potential and add to master list
         hr_pot, hr_freqs = _read_hr_pot(
             tors_names, tors_grids,
@@ -237,14 +241,16 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
         # Check for dummy transformations
         remdummy = geomprep.build_remdummy_shift_lst(zma)
 
-        if not isinstance(tors_syms, list):
-            tors_sym_list = [tors_syms]
-        else:
-            tors_sym_list = tors_syms
+        # if not isinstance(tors_syms, list):
+        #     tors_sym_list = [tors_syms]
+        # else:
+        #     tors_sym_list = tors_syms
+        # print(tors_sym_list)
 
         # Loop over the rotors in the group and write the internal rotor strs
-        for tors_name, tors_sym in zip(tors_names, tors_sym_list):
+        for tors_name, tors_sym in zip(tors_names, tors_syms):
 
+            print('tors_name', tors_name)
             # Set pot to empty list (may need fix)
             pot = ()  # Change hpw set_tors_def_info works?
 
@@ -274,10 +280,10 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
     return mess_hr_str, projrot_hr_str, mdhr_dat_str_lst, chkd_sym_nums
 
 
-def _make_1dhrv_tors_strs(zma, rxn_class, ts_bnd, ref_ene):
-    """ Write the strings for the 1DHRV 
-    """
-    pass
+# def _make_1dhrv_tors_strs(zma, rxn_class, ts_bnd, ref_ene):
+#     """ Write the strings for the 1DHRV 
+#     """
+#     pass
 
 
 def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
@@ -294,7 +300,7 @@ def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
         zma = zma_fs[-1].file.zmatrix.read([0])
         name_matrix = automol.zmatrix.name_matrix(zma)
         key_matrix = automol.zmatrix.key_matrix(zma)
-    
+
         # Write the MESS flux strings for each of the modes
         for tors_names, tors_sym in zip(rotor_names, rotor_syms):
 

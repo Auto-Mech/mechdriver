@@ -114,7 +114,7 @@ def zero_point_energy(spc_dct_i,
 
         # Obtain vibration partition function information
         if typ.nonrigid_tors(pf_models, rtr_names):
-            _, _, zpe = vib.tors_projected_freqs_zpe(
+            _, _, zpe, _ = vib.tors_projected_freqs_zpe(
                 pf_filesystems, mess_hr_str, prot_hr_str)
         else:
             _, _, zpe = vib.read_harmonic_freqs(pf_filesystems)

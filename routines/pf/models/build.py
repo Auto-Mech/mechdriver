@@ -179,7 +179,7 @@ def mol_data(spc_dct_i,
     # Obtain vibration partition function information
     print('\nObtaining the vibrational frequencies and zpves...')
     if typ.nonrigid_tors(chn_pf_models, rotor_names):
-        freqs, imag, zpe = vib.tors_projected_freqs_zpe(
+        freqs, imag, zpe, _ = vib.tors_projected_freqs_zpe(
             pf_filesystems, mess_hr_str, prot_hr_str, saddle=saddle)
     else:
         freqs, imag, zpe = vib.read_harmonic_freqs(
@@ -363,7 +363,6 @@ def tau_data(spc_dct_i,
 
     # Use model to determine whether to read grads and hessians
     vib_model = chn_pf_models['vib']
-    print('mess_hr_str test in tau_data:', mess_hr_str)
     if vib_model != 'tau':
         read_gradient, read_hessian = False, False
         freqs, _, proj_zpe, harm_zpe = vib.tors_projected_freqs_zpe(
