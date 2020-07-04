@@ -228,14 +228,16 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 geo_save_fs[-1].file.hessian.write(hess, locs)
                 print(" - Save path: {}".format(geo_save_path))
 
-                _harm_freqs(geo, geo_save_fs,
+                _hess_grad(geo, inf_obj.prog, out_str, geo_save_fs,
+                           geo_run_path, geo_save_path, locs, overwrite)
+                _hess_freqs(geo, geo_save_fs,
                             geo_run_path, geo_save_path, locs, overwrite)
 
         else:
             print('Hessian found and saved previously at {}'.format(
                 geo_save_path))
 
-            _harm_freqs(geo, geo_save_fs,
+            _hess_freqs(geo, geo_save_fs,
                         geo_run_path, geo_save_path, locs, overwrite)
 
     else:
@@ -351,7 +353,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 geo_save_path))
 
 
-def _harm_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
+def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
     """ Calculate harmonic frequencies using Hessian
     """
 
@@ -381,4 +383,42 @@ def _harm_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
 
     else:
         print('Harmonic frequencies found and saved previously at {}'.format(
+            save_path))
+
+
+def _hess_grad(geo, prog, out_str, geo_save_fs,
+               run_path, save_path, locs, overwrite):
+    """ Grab and save the gradient from a Hessian job if possible.
+    """
+
+    exists = geo_save_fs[-1].file.gradient.exists(locs)
+    if not exists:
+        print('No gradient found in save filesys...')
+        _read = True
+    elif overwrite:
+        print('User specified to overwrite gradient with new run...')
+        _read = True
+    else:
+        _read = False
+
+    if _read:
+
+        # Read the Gradient from the electronic structure output
+        print(" - Attempting to read gradient from Hessian from output...")
+        grad = elstruct.reader.gradient(prog, out_str)
+
+        if grad is not None:
+
+            # Calculate and save the harmonic frequencies
+            print(' - Gradient found in Hessian job output.')
+            print(" - Saving gradient...")
+            geo_save_fs[-1].file.gradient.write(grad, locs)
+            print(" - Save path: {}".format(save_path))
+
+        else:
+
+            print('No gradient found in Hessian job output to save.')
+
+    else:
+        print('Gradient found and saved previously at {}'.format(
             save_path))
