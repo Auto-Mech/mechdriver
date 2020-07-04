@@ -161,8 +161,9 @@ def tau_block(inf_dct):
         elec_levels=inf_dct['elec_levels'],
         flux_mode_str=inf_dct['flux_mode_str'],
         data_file_name=tau_dat_file_name,
-        ground_energy=inf_dct['zpe_chnlvl'],
+        ground_energy=inf_dct['ground_energy'],
         freqs=inf_dct['freqs'],
+        reference_energy=None,
         use_cm_shift=True)
 
     return spc_str, dat_dct

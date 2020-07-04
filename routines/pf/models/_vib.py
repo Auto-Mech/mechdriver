@@ -160,4 +160,4 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
               '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
               'kcal/mol between harmonic and hindered torsional ZPVEs')
 
-    return freqs, imag, zpe
+    return freqs, imag, zpe, harm_zpe
