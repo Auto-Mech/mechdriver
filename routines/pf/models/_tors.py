@@ -264,7 +264,7 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
                 hmin=13,
                 hmax=101,
                 remdummy=remdummy,
-                geom=hind_rot_geo,
+                geom=None,
                 rotor_id=tors_name)
             projrot_hr_str += '\n' + projrot_io.writer.rotors(
                 axis=axis,
@@ -325,6 +325,8 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
                  constraint_dct, read_freqs=False):
     """ Get the potential for a hindered rotor
     """
+
+    # print('cscn_path', scn_run_fs[1].path([coo_names]))
 
     # Build template pot lst and freqs list into a list-of-lists if ndim > 1
     if len(tors_names) == 1:
