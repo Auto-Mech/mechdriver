@@ -264,7 +264,7 @@ def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
                 hmin=13,
                 hmax=101,
                 remdummy=remdummy,
-                geom=hind_rot_geo,
+                geom=None,
                 rotor_id=tors_name)
             projrot_hr_str += '\n' + projrot_io.writer.rotors(
                 axis=axis,
