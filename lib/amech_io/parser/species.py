@@ -346,7 +346,7 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
              'elec_levels': [[0.0, ts_mul]]})
 
         # Set the ts_bnd using the zma and distname
-        ts_bnd = automol.zmatrix.bond_idxs(ret1[0], ret1[1])
+        ts_bnd = automol.zmatrix.coord_idxs(ret1[0], ret1[1])
 
         print('BOND KEYS')
         print('frm', ret1[4])

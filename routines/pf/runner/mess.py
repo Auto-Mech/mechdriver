@@ -44,9 +44,10 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
     """
 
     # Write the MESS file
-    print('Writing MESS input file...')
     if not os.path.exists(mess_path):
         os.makedirs(mess_path)
+    print('Writing MESS input file...')
+    print(' - Path: {}'.format(mess_path))
     with open(os.path.join(mess_path, filename), 'w') as mess_file:
         mess_file.write(mess_inp_str)
 
@@ -54,7 +55,7 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
     if dat_str_dct:
         print('Writing the MESS data files...')
     for fname, fstring in dat_str_dct.items():
-        dat_path = os.path.join(mess_path, fname)
+        # dat_path = os.path.join(mess_path, fname)
         if fstring:
             data_file_path = os.path.join(mess_path, fname)
             print(' - Writing file: {}'.format(data_file_path))

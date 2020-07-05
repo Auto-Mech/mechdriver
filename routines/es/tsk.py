@@ -355,10 +355,10 @@ def run_tau_tsk(job, spc_dct, spc_name,
 
     # Bond key stuff
     if saddle:
-        frm_bnd_key, brk_bnd_key = structure.ts.rxn_bnd_keys(
+        frm_bnd_keys, brk_bnd_keys = structure.ts.rxn_bnd_keys(
             ini_cnf_save_fs, ini_cnf_locs, zma_locs=[0])
     else:
-        frm_bnd_key, brk_bnd_key = (), ()
+        frm_bnd_keys, brk_bnd_keys = (), ()
 
     # Set up the torsion info
     dct_tors_names, _ = structure.tors.names_from_dct(
@@ -374,7 +374,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
     run_tors_names, _, _ = structure.tors.hr_prep(
         zma, tors_name_grps=run_tors_names,
         scan_increment=scan_increment, tors_model='1dhr',
-        frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
     # Run the task if any torsions exist
     if run_tors_names:
@@ -494,10 +494,10 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
     # Bond key stuff
     if saddle:
-        frm_bnd_key, brk_bnd_key = structure.ts.rxn_bnd_keys(
+        frm_bnd_keys, brk_bnd_keys = structure.ts.rxn_bnd_keys(
             ini_cnf_save_fs, ini_cnf_save_locs, zma_locs=[0])
     else:
-        frm_bnd_key, brk_bnd_key = (), ()
+        frm_bnd_keys, brk_bnd_keys = (), ()
 
     # Read fs for zma and geo
     zma, geo = filesys.inf.cnf_fs_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
@@ -516,7 +516,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     run_tors_names, run_tors_grids, _ = structure.tors.hr_prep(
         zma, tors_name_grps=run_tors_names,
         scan_increment=scan_increment, tors_model=ndim_tors,
-        frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
     # Run the task if any torsions exist
     if run_tors_names:

@@ -38,7 +38,7 @@ def calc_vrctst_flux(ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
     # Input stuff
     # sp_thy_level = ['molpro2015', 'caspt2c', 'cc-pvdz', 'RR']
     # fortran_compiler = 'gfortran'
-    bnd_frm_idxs = automol.zmatrix.bond_idxs(ts_zma, dist_name)
+    bnd_frm_idxs = automol.zmatrix.coord_idxs(ts_zma, dist_name)
     min_idx, max_idx = min(bnd_frm_idxs), max(bnd_frm_idxs)
     bnd_frm_idxs = (bnd_frm_idxs[0]+1, bnd_frm_idxs[1]+1)
     # spc_name = 'mol'
@@ -798,14 +798,14 @@ def build_pivot_frames(min_idx, max_idx,
             # Find the idx in each fragment bonded to the atom at the pivot pt
             for j, coords in enumerate(geom):
                 if coords == total_geom[rxn_idx]:
-                    bond_idx = j
+                    coord_idx = j
                     break
 
             # For each fragment, get indices for a
             # chain (up to three atoms, that terminates at the dummy atom)
             gra = automol.geom.graph(geom)
             gra_neighbor_dct = automol.graph.atom_neighbor_keys(gra)
-            bond_neighbors = gra_neighbor_dct[bond_idx]
+            bond_neighbors = gra_neighbor_dct[coord_idx]
 
             # Find idx in each fragment geom that corresponds to the bond index
             for j, idx in enumerate(bond_neighbors):
@@ -818,12 +818,12 @@ def build_pivot_frames(min_idx, max_idx,
             # Set up the frame indices for the divsur file
             if i == 0:
                 pivot_idx = len(geom)
-                frame = [bond_idx, bond_neighbor_idx, pivot_idx, bond_idx]
+                frame = [coord_idx, bond_neighbor_idx, pivot_idx, coord_idx]
             else:
                 pivot_idx = 0
-                bond_idx += 1
+                coord_idx += 1
                 bond_neighbor_idx += 1
-                frame = [bond_idx, bond_neighbor_idx, pivot_idx, bond_idx]
+                frame = [coord_idx, bond_neighbor_idx, pivot_idx, coord_idx]
             frame = [val+1 for val in frame]
 
         # Append to lists

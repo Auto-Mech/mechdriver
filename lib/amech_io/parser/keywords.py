@@ -34,7 +34,7 @@ MODEL_PF_SUPPORTED_DCT = {
     'ene': ['sp', 'composite'],
     'rot': ['rigid', 'vpt2'],
     'vib': ['harm', 'vpt2', 'tau'],
-    'tors': ['rigid', '1dhr', '1dhrf', 'mdhr', 'tau'],
+    'tors': ['rigid', '1dhr', '1dhrf', 'mdhr', 'mdhrv', 'tau'],
     'sym': ['none', 'sampling', '1dhr'],
     'ts_barrierless': ['pst', 'rpvtst', 'vrctst'],
     'ts_sadpt': ['fixed', 'rpvtst'],

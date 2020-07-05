@@ -6,8 +6,8 @@ from autofile import fs
 from lib import structure
 
 
-def symmetry_factor(pf_filesystems, pf_models, spc_dct_i,
-                    frm_bnd_keys=(), brk_bnd_keys=(), rotor_names=()):
+def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
+                    frm_bnd_keys=(), brk_bnd_keys=()):
     """ Calculate the symmetry factor for a species
         Note: ignoring for saddle pts the possibility that two configurations
         differ only in their torsional values.
@@ -38,7 +38,7 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i,
                         for locs in sym_fs[-1].existing()]
 
             # Obtain the internal
-            if rotor_names:
+            if rotors:
                 print(' - Determining internal sym number ',
                       'using sampling routine.')
                 int_sym = int_sym_num_from_sampling(
@@ -57,6 +57,9 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i,
 
         # Obtain overall number
         sym_factor = ext_sym * int_sym
+
+        # Reduce sym factor using rotor symmetries
+        sym_factor = tors_reduced_sym_factor(sym_factor, rotors)
 
     return sym_factor
 
@@ -98,11 +101,14 @@ def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
     return int_sym_num
 
 
-def tors_reduced_sym_factor(sym_factor, tors_sym_nums):
+def tors_reduced_sym_factor(sym_factor, rotors):
     """ Decrease the overall molecular symmetry factor by the
         torsional mode symmetry numbers
     """
-    for sym_num in tors_sym_nums:
-        sym_factor /= sym_num
+    for rotor in rotors:
+        for tors_name, tors_dct in rotor.items():
+            if 'D' in tors_name:
+                print(tors_dct)
+                sym_factor /= tors_dct['sym_num']
 
     return sym_factor

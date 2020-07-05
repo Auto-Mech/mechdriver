@@ -13,12 +13,12 @@ def nonrigid_rotations(pf_models):
     return bool(rot_model in ('vpt2'))
 
 
-def nonrigid_tors(pf_models, tors_names):
+def nonrigid_tors(pf_models, rotors):
     """ dtermine if a nonrigid torsional model is specified and further
         information is needed from the filesystem
     """
     vib_model, tors_model = pf_models['vib'], pf_models['tors']
-    has_tors = bool(any(tors_names))
+    has_tors = bool(any(rotors))
     tors_hr_model = bool(tors_model in ('1dhr', '1dhrf', 'mdhr', 'mdhrv'))
     tau_hr_model = bool(tors_model == 'tau' and vib_model != 'vib')
     # diatomic model?
