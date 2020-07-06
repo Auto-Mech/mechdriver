@@ -31,6 +31,7 @@ def run(spc_dct,
 
     # Build the paths [(messpf, nasa)], models and levels for each spc
     starting_path = os.getcwd()
+    ckin_path = os.path.join(starting_path, 'ckin')
     thm_paths = [pfrunner.thermo_paths(spc_dct[name], run_prefix)
                  for name, _ in spc_queue]
     pf_levels = [pf_level_info(spc_model_dct[spc_model]['es'], thy_dct)
@@ -132,4 +133,4 @@ def run(spc_dct,
             ckin_nasa_str += '\n\n'
 
         # Write all of the NASA polynomial strings
-        writer.ckin.write_nasa_file(ckin_path, ckin_nasa_str)
+        writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)

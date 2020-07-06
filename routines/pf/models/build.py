@@ -139,7 +139,7 @@ def atm_data(spc_dct_i,
 
 def mol_data(spc_dct_i,
              chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
-             run_prefix, save_prefix, saddle=False, tors_wgeo=False):
+             run_prefix, save_prefix, saddle=False, tors_wgeo=True):
     """ Pull all of the neccessary information from the filesystem for a species
     """
 
@@ -162,7 +162,7 @@ def mol_data(spc_dct_i,
         spc_dct_i, pf_filesystems, chn_pf_models,
         rxn_class=rxn_class,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
-        tors_geo=True)
+        tors_geo=tors_wgeo)
 
     if typ.nonrigid_tors(chn_pf_models, rotors):
         run_path = fs.make_run_path(pf_filesystems, 'tors')
@@ -329,7 +329,7 @@ def tau_data(spc_dct_i,
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
     [harm_cnf_fs, _,
      harm_min_locs, harm_save, _] = pf_filesystems['harm']
-    [tors_cnf_fs, _, tors_min_locs, _, _] = pf_filesystems['tors']
+    # [tors_cnf_fs, _, tors_min_locs, _, _] = pf_filesystems['tors']
 
     # Get the conformer filesys for the reference geom and energy
     if harm_min_locs:
@@ -374,6 +374,9 @@ def tau_data(spc_dct_i,
         else:
             ground_energy = harm_zpe
 
+    ground_energy *= phycon.EH2KCAL
+    zpe_chnlvl = None
+
     # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
     for locs in tau_save_fs[-1].existing():
@@ -400,14 +403,17 @@ def tau_data(spc_dct_i,
             hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess_str)
 
-    zpe_chnlvl = None
-    ground_energy *= phycon.EH2KCAL
+    # Obtain symmetry factor
+    print('\nDetermining the symmetry factor...')
+    sym_factor = sym.symmetry_factor(
+        pf_filesystems, chn_pf_models, spc_dct_i, rotors,
+        frm_bnd_keys=(), brk_bnd_keys=())
 
     # Create info dictionary
-    keys = ['ref_geom', 'elec_levels', 'freqs', 'flux_mode_str',
+    keys = ['ref_geom', 'sym_factor', 'elec_levels', 'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
             'zpe_chnlvl', 'ground_energy']
-    vals = [ref_geom, spc_dct_i['elec_levels'], freqs, flux_str,
+    vals = [ref_geom, sym_factor, spc_dct_i['elec_levels'], freqs, flux_str,
             samp_geoms, samp_enes, samp_grads, samp_hessians,
             zpe_chnlvl, ground_energy]
     inf_dct = dict(zip(keys, vals))

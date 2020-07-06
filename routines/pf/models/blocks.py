@@ -161,6 +161,7 @@ def tau_block(inf_dct):
     # Write the core string (seperate energies?)
     spc_str = mess_io.writer.monte_carlo.mc_species(
         geom=inf_dct['ref_geom'],
+        sym_factor=inf_dct['sym_factor'],
         elec_levels=inf_dct['elec_levels'],
         flux_mode_str=inf_dct['flux_mode_str'],
         data_file_name=tau_dat_file_name,

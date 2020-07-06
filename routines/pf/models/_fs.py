@@ -89,4 +89,3 @@ def make_run_path(pf_filesystems, choice):
     run_path = run_fs[-1].path(min_locs)
 
     return run_path
-

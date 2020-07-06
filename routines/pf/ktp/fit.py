@@ -3,7 +3,6 @@
   Arrhenius, Plog, or Troe expressions
 """
 
-import os
 import copy
 import numpy
 import ratefit
@@ -14,69 +13,79 @@ from lib.phydat import phycon
 
 
 def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
-              pes_formula_str, idx_dct,
-              es_info, pf_model,
+              pes_formula, label_dct, es_info, pf_model,
               mess_path, fit_method, pdep_fit,
-              arrfit_thresh,
-              rxn_header_str=''):
+              arrfit_thresh):
     """ Parse the MESS output and fit the rates to
         Arrhenius expressions written as CHEMKIN strings
     """
 
+    # Initialize chemkin dct with header
+    chemkin_str_dct = {
+        'header': writer.ckin.model_header(es_info, pf_model)
+    }
+
     # Loop through reactions, fit rates, and write ckin strings
-    labels = idx_dct.values()
-    names = idx_dct.keys()
-    for lab_i, name_i in zip(labels, names):
+    rxn_pairs = gen_reaction_pairs(label_dct)
+    print(rxn_pairs)
+    for (name_i, lab_i), (name_j, lab_j) in rxn_pairs:
+
+        # Set the name and A conversion factor
+        reaction = name_i + '=' + name_j
         a_conv_factor = phycon.NAVO if 'W' not in lab_i else 1.00
+
+        print(('\n--------------------------------------------' +
+               '------------------------------------------'))
+        print('\nGetting Rates for {}'.format(
+            reaction))
+
+        # Read the rate constants out of the mess outputs
+        print('\nReading k(T,P)s from MESS output...')
+        ktp_dct = read_rates(
+            inp_temps, inp_pressures, inp_tunit, inp_punit,
+            lab_i, lab_j, mess_path, pdep_fit,
+            bimol=numpy.isclose(a_conv_factor, 6.0221e23))
+
+        # Move ahead in loop if no rates found
+        if not ktp_dct:
+            print('\nNo valid k(T,Ps)s from MESS output.')
+            print('\nSkipping to next reaction...')
+            continue
+
+        # Get the desired fits in the form of CHEMKIN strs
+        if fit_method == 'arrhenius':
+            print('\nFitting k(T,P)s to PLOG/Arrhenius Form....')
+            chemkin_str = perform_arrhenius_fits(
+                ktp_dct, reaction, mess_path,
+                a_conv_factor, arrfit_thresh)
+        elif fit_method == 'troe':
+            print('\nFitting k(T,P)s to Troe Form...')
+            # pass
+            # chemkin_str += perform_troe_fits(
+            #     ktp_dct, reaction, mess_path,
+            #     troe_param_fit_lst,
+            #     a_conv_factor, err_thresh)
+
+        # Update the chemkin string dct
+        print('\nFitting Parameters in CHEMKIN Format:')
+        print(chemkin_str)
+        ridx = pes_formula + '_' + reaction.replace('=', '_')
+        chemkin_str_dct.update({ridx: chemkin_str})
+
+    return chemkin_str_dct
+
+
+def gen_reaction_pairs(label_dct):
+    """ Generate pairs of reactions
+    """
+    rxn_pairs = ()
+    for name_i, lab_i in label_dct.items():
         if 'F' not in lab_i and 'B' not in lab_i:
-            for lab_j, name_j in zip(labels, names):
+            for name_j, lab_j in label_dct.items():
                 if 'F' not in lab_j and 'B' not in lab_j and lab_i != lab_j:
+                    rxn_pairs += (((name_i, lab_i), (name_j, lab_j)),)
 
-                    print(('\n--------------------------------------------' +
-                           '------------------------------------------'))
-                    # Set name
-                    reaction = name_i + '=' + name_j
-                    print('\nGetting Rates for {}'.format(
-                        reaction))
-
-                    # Initialize new chemkin str for reaction
-                    chemkin_str = rxn_header_str
-
-                    # Read the rate constants out of the mess outputs
-                    print('\nReading k(T,P)s from MESS output...')
-                    ktp_dct = read_rates(
-                        inp_temps, inp_pressures, inp_tunit, inp_punit,
-                        lab_i, lab_j, mess_path, pdep_fit,
-                        bimol=numpy.isclose(a_conv_factor, 6.0221e23))
-
-                    # Move ahead in loop if no rates found
-                    if not ktp_dct:
-                        print('\nNo valid k(T,Ps)s from MESS output.')
-                        print('\nSkipping to next reaction...')
-                        continue
-
-                    # Get the desired fits in the form of CHEMKIN strs
-                    if fit_method == 'arrhenius':
-                        print('\nFitting k(T,P)s to PLOG/Arrhenius Form....')
-                        chemkin_str += perform_arrhenius_fits(
-                            ktp_dct, reaction, mess_path,
-                            a_conv_factor, arrfit_thresh)
-                    elif fit_method == 'troe':
-                        print('\nFitting k(T,P)s to Troe Form...')
-                        # pass
-                        # chemkin_str += perform_troe_fits(
-                        #     ktp_dct, reaction, mess_path,
-                        #     troe_param_fit_lst,
-                        #     a_conv_factor, err_thresh)
-
-                    # Write the CHEMKIN strings
-                    # chemkin_str = chemkin_header_str + chemkin_str
-                    print('\nFitting Parameters in CHEMKIN Format:')
-                    print(chemkin_str)
-                    chemkin_str_lst.append(chemkin_str)
-
-
-    return chemkin_str_lst
+    return rxn_pairs
 
 
 # Functions to fit rates to Arrhenius/PLOG function

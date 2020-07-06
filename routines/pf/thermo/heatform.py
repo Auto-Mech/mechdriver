@@ -6,8 +6,6 @@ import os
 import csv
 import numpy as np
 from qcelemental import constants as qcc
-import autoparse.pattern as app
-import autoparse.find as apf
 import automol.inchi
 import automol.graph
 from . import util
@@ -142,10 +140,8 @@ def calc_coefficients(basis, mol_atom_dict):
                 (square if done right)
     """
 
-
     # Initialize an natoms x natoms matrix
     nbasis = len(basis)
-    # print('basis test:', basis)
     basis_mat = np.zeros((nbasis, nbasis))
 
     # Get the basis formulae list
