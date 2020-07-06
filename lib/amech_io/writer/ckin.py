@@ -3,8 +3,6 @@
 """
 
 import os
-import automol
-import routines.pf.thermo
 
 
 def model_header(pf_levels, pf_models):
@@ -52,54 +50,52 @@ def _ckin_ene_lvl_str(ene_info, geo_info):
     return ene_str
 
 
-def write_rates_file(ckin_rate_str_lst):
+def write_rxn_file(ckin_rxn_dct, pes_formula, ckin_path):
     """ write out the rates
     """
 
-    # Write header string containing thy information
-    chemkin_header_str = writer.ckin.model_header(es_info, pf_model)
-    chemkin_header_str += '\n'
-
-    # Initialize full chemkin string and paths
-    # chemkin_full_str = chemkin_header_str
-    chemkin_full_str = ''
-    starting_path = os.getcwd()
-    ckin_path = ''.join([starting_path, '/ckin'])
+    # Ensure the ckin directory path exists
     if not os.path.exists(ckin_path):
-        os.mkdir(ckin_path)
-    full_ckin_path = os.path.join(ckin_path, pes_formula_str+'.ckin')
-    # if os.path.exists(full_ckin_path):
-    #     os.remove(full_ckin_path)
+        os.makedirs(ckin_path)
 
-    # fix this code
-    # Print the results for each channel to a file
-    chemkin_full_str += '\n\n'
-    pes_chn_lab = pes_formula_str + '_' + name_i + '_' + name_j
-    ckin_name = os.path.join(ckin_path, pes_chn_lab+'.ckin')
-    with open(ckin_name, 'w') as cfile:
-        cfile.write(chemkin_str)
+    # Set the header string
+    header_str = ckin_rxn_dct['header'] + '\n\n\n'
 
-    # Print the results for the whole PES to a file
-    with open(full_ckin_path, 'a') as cfile:
-        cfile.write(chemkin_full_str)
+    # Write the header to the new, full PES ckin file
+    # This also causes old file to be overwritten
+    pes_ckin_name = os.path.join(ckin_path, pes_formula+'.ckin')
+    with open(pes_ckin_name, 'w') as cfile:
+        cfile.write(header_str)
+
+    # Write the files by looping over the string
+    for rxn, rstring in ckin_rxn_dct.items():
+        if rxn != 'header':
+
+            # Append to PES file
+            with open(pes_ckin_name, 'a') as cfile:
+                cfile.write(rstring+'\n\n')
+
+            # Write to individual ckin file
+            rxn_ckin_name = os.path.join(ckin_path, rxn+'.ckin')
+            with open(rxn_ckin_name, 'w') as cfile:
+                cfile.write(header_str + rstring)
 
 
-def nasa_polynomial(hform0K, hform298K, ckin_poly_str):
+def nasa_polynomial(hform0, hform298, ckin_poly_str):
     """ write the nasa polynomial str
     """
     hf_str = (
-        '! Hf(0 K) = {:.2f},'.format(hform0K) +
-        'Hf(298 K) = {:.2f} kcal/mol\n'.format(hform298K)
+        '! Hf(0 K) = {:.2f},'.format(hform0) +
+        'Hf(298 K) = {:.2f} kcal/mol\n'.format(hform298)
     )
     return hf_str + ckin_poly_str
 
 
-def write_nasa_file(ckin_path, chemkin_poly_str):
+def write_nasa_file(ckin_nasa_str, ckin_path):
     """ write out the nasa polynomials
     """
-
     if not os.path.exists(ckin_path):
         os.makedirs(ckin_path)
     fpath = os.path.join(ckin_path, 'all.ckin')
     with open(fpath, 'w') as nasa_file:
-        nasa_file.write(chemkin_poly_str)
+        nasa_file.write(ckin_nasa_str)

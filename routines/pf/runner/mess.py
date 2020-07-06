@@ -27,21 +27,14 @@ def messpf_path(prefix, inchi):
     """
     spc_formula = automol.inchi.formula_string(inchi)
     ich_key = automol.inchi.inchi_key(inchi)
-    path = os.path.join(prefix, 'MESSPF', spc_formula, ich_key)
-
-    # Build the filesystem
-    # if not os.path.exists(os.path.join(run_prefix, 'MESSRATE')):
-    #     os.mkdir(os.path.join(run_prefix, 'MESSRATE'))
-    # if not os.path.exists(mess_path):
-    #     os.mkdir(mess_path)
-
-    return path
+    return os.path.join(prefix, 'MESSPF', spc_formula, ich_key)
 
 
 # Write MESS files
 def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
-                    filename='mess.inp', overwrite=True):
+                    filename='mess.inp'):
     """ Write MESS file
+        add overwrite keyword to handle overwrite MESS input
     """
 
     # Write the MESS file
@@ -74,9 +67,7 @@ def write_cwd_pf_file(mess_str, inchi, fname='pf.inp'):
     starting_path = os.getcwd()
 
     # Set the MESS paths and build dirs if needed
-    jobdir_mess_path = messpf_path(
-        starting_path, inchi)
-        # os.path.join(starting_path, 'mess'), pes_formula, sub_pes_idx)
+    jobdir_mess_path = messpf_path(starting_path, inchi)
     if not os.path.exists(jobdir_mess_path):
         os.makedirs(jobdir_mess_path)
 
@@ -105,7 +96,6 @@ def write_cwd_rate_file(mess_str, pes_formula, sub_pes_idx, fname='mess.inp'):
     # Set the MESS paths and build dirs if needed
     jobdir_mess_path = messrate_path(
         starting_path, pes_formula, sub_pes_idx)
-        # os.path.join(starting_path, 'mess'), pes_formula, sub_pes_idx)
     if not os.path.exists(jobdir_mess_path):
         os.makedirs(jobdir_mess_path)
 

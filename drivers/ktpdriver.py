@@ -5,6 +5,7 @@ import os
 from routines.pf import ktp as ktproutines
 from routines.pf import runner as pfrunner
 from lib import filesys
+from lib.amech_io import writer
 from lib.amech_io import parser
 
 
@@ -69,9 +70,11 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     label_dct = ktproutines.label.make_pes_label_dct(
         rxn_lst, pes_idx, spc_dct)
 
-    # Set path where MESS files will be written and read
+    # Set paths where files will be written and read
     mess_path = pfrunner.messrate_path(
         run_prefix, pes_formula, sub_pes_idx)
+    starting_path = os.getcwd()
+    ckin_path = os.path.join(starting_path, 'ckin')
 
     # Try and read the MESS file from the filesystem first
     # _, _ = pfrunner.read_mess_file(mess_path)
@@ -123,10 +126,10 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         print(('\n\n------------------------------------------------' +
                '--------------------------------------'))
         print('\nFitting Rate Constants for PES to Functional Forms')
-        ckin_str_lst = ktproutines.fit.fit_rates(
+        ckin_str_dct = ktproutines.fit.fit_rates(
             temps, pressures, tunit, punit,
             pes_formula, label_dct,
             es_info, pf_model,
             mess_path, fit_method, pdep_fit,
             arrfit_thresh)
-        writer.ckin.write_rates_file(ckin_rate_str_lst)
+        writer.ckin.write_rxn_file(ckin_str_dct, pes_formula, ckin_path)
