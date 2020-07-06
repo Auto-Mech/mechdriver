@@ -5,7 +5,7 @@
 from autofile import fs
 
 
-def rxn_bnd_keys(cnf_fs, cnf_locs, zma_locs=(0)):
+def rxn_bnd_keys(cnf_fs, cnf_locs, zma_locs=(0,)):
     """ get bond broken and formed keys for a transition state
     """
 

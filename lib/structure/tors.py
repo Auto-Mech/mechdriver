@@ -12,6 +12,40 @@ from lib.submission import DEFAULT_SCRIPT_DCT
 
 
 # FUNCTIONS TO SET UP TORSION NAME LISTS
+def tors_name_prep(spc_dct_i, cnf_fs, min_cnf_locs, tors_model):
+    """ Obtain torsion names through various means
+    """
+
+    if tors_model in ('1dhr', 'mdhr', 'tau'):
+        run_tors_names = ()
+        if 'tors_names' in spc_dct_i:
+            run_tors_names = names_from_dct(spc_dct_i, tors_model)
+            tloc = 'dct'
+        if not run_tors_names:
+            run_tors_names = names_from_filesys(
+                cnf_fs, min_cnf_locs, tors_model)
+            tloc = 'fs'
+        if not run_tors_names and tors_model == 'tau':
+            geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
+            run_tors_names = names_from_geo(
+                geo, tors_model, saddle=False)
+            tloc = 'geo'
+        if not run_tors_names:
+            tloc = None
+    else:
+        tloc = None
+
+    if tloc is not None:
+        if tloc == 'dct':
+            print(' - Reading tors names from user input...')
+        elif tloc == 'fs':
+            print(' - Reading tors names from the filesystem...')
+        elif tloc == 'geo':
+            print(' - Obtaining tors names from the geometry...')
+
+    return run_tors_names
+
+
 def names_from_geo(geo, ndim_tors, saddle=False):
     """ Build the tors name list from a geom
     """
@@ -76,13 +110,18 @@ def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_model):
             scan_names = os.listdir(scans_dir)
             tors_names = [name for name in scan_names
                           if 'D' in name]
-            if tors_model == '1dhr' or tors_model == 'tau' or tors_model == 'mdhr': 
+            if tors_model in ('1dhr', 'tau'):
                 tors_names = [name for name in tors_names
+                              if '_' not in name]
+                tors_names = [[name] for name in tors_names]
+            elif tors_model == 'mdhr':
+                tors_names = [name for name in tors_names
+                              if '_' in name]
+                tors_names = [names.split('_') for names in tors_names]
+                if not tors_names:
+                    tors_names = [name for name in scan_names
                                   if '_' not in name]
-            if not tors_names:
-                tors_names = [name for name in tors_names
-                                  if '_' in name]
-            tors_names = [[name] for name in tors_names]
+                    tors_names = [[name] for name in tors_names]
             tors_names = tuple(tuple(x) for x in tors_names)
         else:
             print('No tors in save filesys')
@@ -109,7 +148,7 @@ def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_model):
 
 # FUNCTIONS USED TO BUILD LSTS OF TORSIONS OF ANY DIMENSIONALITY
 def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
-            frm_bnd_key=(), brk_bnd_key=()):
+            frm_bnd_keys=(), brk_bnd_keys=()):
     """ set-up the hr for different rotor combinations
         tors_names = [ ['D1'], ['D2', 'D3'], ['D4'] ]
     """
@@ -123,27 +162,19 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
 
     # Build the grids corresponding to the torsions
     tors_grids, tors_sym_nums = [], []
-    # print('in prep')
     for tors_names in tors_name_grps:
-        # print('name\n', tors_names)
-        # print(scan_increment)
-        # print(frm_bnd_key)
-        # print(brk_bnd_key)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
-            zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_key,
-            brk_bnd_key=brk_bnd_key)
+            zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_keys,
+            brk_bnd_key=brk_bnd_keys)
         tors_grids.append(
             [numpy.linspace(*linspace) + val_dct[name]
              for name, linspace in zip(tors_names, tors_linspaces)]
         )
-        # Don't need symmetries for mult-dim rotors, make structure similar
-        if len(tors_names) == 1:
-            tors_sym_nums.append(
-                automol.zmatrix.torsional_symmetry_numbers(
-                    zma, tors_names,
-                    frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)[0])
-        else:
-            tors_sym_nums.append(None)
+        tors_sym_nums.append(
+            automol.zmatrix.torsional_symmetry_numbers(
+                zma, tors_names,
+                frm_bnd_key=frm_bnd_keys, brk_bnd_key=brk_bnd_keys)
+        )
 
     return tors_name_grps, tors_grids, tors_sym_nums
 
@@ -320,7 +351,6 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
     pf_path = bld_save_fs[-1].path(bld_locs)
     print('Run path for MESSPF:')
     print(pf_path)
-    print('hind rot str test:', hind_rot_str)
 
     # Write the MESSPF input file
     global_pf_str = mess_io.writer.global_pf(
@@ -350,10 +380,10 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
     with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
         output_string = mess_file.read()
     tors_zpes = mess_io.reader.tors.zpves(output_string)
-    print('tors_zpes from mess reader', tors_zpes)
-    print('output_string from mess reader', output_string)
+    # print('tors_zpes from mess reader', tors_zpes)
+    # print('output_string from mess reader', output_string)
     tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
 
-    print('tors_zpe from messpf test:', tors_zpe)
+    # print('tors_zpe from messpf test:', tors_zpe)
 
     return tors_zpe

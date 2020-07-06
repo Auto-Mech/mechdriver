@@ -4,6 +4,7 @@
 
 import os
 import numpy
+import automol
 import mess_io
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
@@ -21,11 +22,11 @@ def messrate_path(prefix, pes_formula, sub_pes_idx):
     return os.path.join(prefix, 'MESSRATE', pes_str)
 
 
-def messpf_path(prefix, spc_info):
+def messpf_path(prefix, inchi):
     """ Build a simple mess path using the run prefix
     """
-    spc_formula = automol.inchi.formula_string(spc_info[0])
-    ich_key = automol.inchi.inchi_key(spc_info[0])
+    spc_formula = automol.inchi.formula_string(inchi)
+    ich_key = automol.inchi.inchi_key(inchi)
     path = os.path.join(prefix, 'MESSPF', spc_formula, ich_key)
 
     # Build the filesystem
@@ -44,9 +45,10 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
     """
 
     # Write the MESS file
-    print('Writing MESS input file...')
     if not os.path.exists(mess_path):
         os.makedirs(mess_path)
+    print('\n\nWriting MESS input file...')
+    print(' - Path: {}'.format(mess_path))
     with open(os.path.join(mess_path, filename), 'w') as mess_file:
         mess_file.write(mess_inp_str)
 
@@ -54,7 +56,7 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
     if dat_str_dct:
         print('Writing the MESS data files...')
     for fname, fstring in dat_str_dct.items():
-        dat_path = os.path.join(mess_path, fname)
+        # dat_path = os.path.join(mess_path, fname)
         if fstring:
             data_file_path = os.path.join(mess_path, fname)
             print(' - Writing file: {}'.format(data_file_path))
@@ -64,17 +66,62 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
     # print('No additional MESS input file will be written.')
 
 
-def write_cwd_mess_file():
+def write_cwd_pf_file(mess_str, inchi, fname='pf.inp'):
     """ Write a copy of the MESS file in the current working directory
     """
+
+    # Set starting path
     starting_path = os.getcwd()
-    jobdir_mess_path = ''.join([starting_path, '/mess'])
+
+    # Set the MESS paths and build dirs if needed
+    jobdir_mess_path = messpf_path(
+        starting_path, inchi)
+        # os.path.join(starting_path, 'mess'), pes_formula, sub_pes_idx)
     if not os.path.exists(jobdir_mess_path):
-        os.mkdir(jobdir_mess_path)
-    jobdir_mess_file_path = ktp_runner.get_mess_path(
-        jobdir_mess_path, pes_formula, sub_pes_idx)
-    with open(jobdir_mess_file_path, 'a') as file_obj:
-        file_obj.write('\n\n! NEW MESS FILE\n')
+        os.makedirs(jobdir_mess_path)
+
+    # Write the files
+    file_path = os.path.join(jobdir_mess_path, fname)
+    if os.path.exists(file_path):
+        for i in range(1, 51):
+            if not os.path.exists(file_path+str(i+1)):
+                fin_path = file_path+str(i+1)
+                break
+    else:
+        fin_path = file_path
+    with open(fin_path, 'w') as file_obj:
+        file_obj.write(mess_str)
+
+    print('Saving MESS input copy at {}'.format(fin_path))
+
+
+def write_cwd_rate_file(mess_str, pes_formula, sub_pes_idx, fname='mess.inp'):
+    """ Write a copy of the MESS file in the current working directory
+    """
+
+    # Set starting path
+    starting_path = os.getcwd()
+
+    # Set the MESS paths and build dirs if needed
+    jobdir_mess_path = messrate_path(
+        starting_path, pes_formula, sub_pes_idx)
+        # os.path.join(starting_path, 'mess'), pes_formula, sub_pes_idx)
+    if not os.path.exists(jobdir_mess_path):
+        os.makedirs(jobdir_mess_path)
+
+    # Write the files
+    file_path = os.path.join(jobdir_mess_path, fname)
+    if os.path.exists(file_path):
+        for i in range(1, 51):
+            if not os.path.exists(file_path+str(i+1)):
+                fin_path = file_path+str(i+1)
+                break
+    else:
+        fin_path = file_path
+    with open(fin_path, 'w') as file_obj:
+        file_obj.write(mess_str)
+
+    print('Saving MESS input copy at {}'.format(fin_path))
 
 
 # Read MESS files
@@ -123,4 +170,9 @@ def run_rates(mess_path, script_str=DEFAULT_SCRIPT_DCT['messrate']):
 def run_pf(mess_path, script_str=DEFAULT_SCRIPT_DCT['messpf']):
     """ Run the mess file that was wriiten
     """
-    run_script(script_str, mess_path)
+    if os.path.exists(os.path.join(mess_path, 'pf.inp')):
+        print('Running MESS input file...')
+        print(' - Path: {}'.format(mess_path))
+        run_script(script_str, mess_path)
+    else:
+        print('No MESS input file at path: {}'.format(mess_path))

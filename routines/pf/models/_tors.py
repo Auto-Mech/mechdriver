@@ -2,6 +2,7 @@
   Functions handling hindered rotor model calculations
 """
 
+import itertools
 import numpy
 from scipy.interpolate import interp1d
 import automol
@@ -11,18 +12,108 @@ import autofile
 from autofile import fs
 from lib.phydat import phycon
 from lib.structure import tors as torsprep
+from lib.structure import vib as vibprep
 from lib.structure import geom as geomprep
 
 
-# Function to deal with setting up all of the torsion info since it is a pain
-def rotor_info(spc_dct_i, pf_filesystems, pf_models,
-               frm_bnd_key=(), brk_bnd_key=()):
-    """ get tors stuff
+# FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
+def build_rotors(spc_dct_i, pf_filesystems, pf_models,
+                 rxn_class='', frm_bnd_keys=(), brk_bnd_keys=(),
+                 tors_geo=True):
+    """ Add more rotor info
     """
+
+    saddle = bool(rxn_class and (frm_bnd_keys or brk_bnd_keys))
 
     # Set up tors level filesystem and model
     tors_model = pf_models['tors']
-    [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+    [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+
+    # Grab the zmatrix
+    if min_cnf_locs is not None:
+        zma_fs = fs.manager(cnf_fs[-1].path(min_cnf_locs), 'ZMATRIX')
+        zma = zma_fs[-1].file.zmatrix.read([0])
+        remdummy = geomprep.build_remdummy_shift_lst(zma)
+        ref_ene = cnf_fs[-1].file.energy.read(min_cnf_locs)
+        geo = cnf_fs[-1].file.geometry.read(min_cnf_locs) if tors_geo else None
+
+    # Set the tors names
+    rotor_inf = _rotor_info(
+        zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
+        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+
+    # Build constraint dct
+    if tors_model in ['1dhrf']:
+        constraint_dct = torsprep.build_constraint_dct(
+            zma, rotor_inf[0])
+    else:
+        constraint_dct = None
+
+    # Read the potential energy surface for the rotors
+    num_rotors = len(rotor_inf[0])
+    rotors = []
+    for tors_names, tors_grids, tors_syms in zip(*rotor_inf):
+
+        # Initialize dct to hold info for each torsion of rotor
+        rotor_dct = {}
+
+        # Read the potential along the rotors
+        if tors_model == 'mdhr':
+
+            # Set to read additional info for vibrational adiabaticity
+            if tors_model == 'mdhrv':
+                read_geom, read_grad, read_hess = True, True, True
+            else:
+                read_geom, read_grad, read_hess = False, False, False
+
+            # Read and MDHR potential for single MDHR rotor
+            # Could be MDHR mod for sys w/ 1 Rotor
+            if ((num_rotors > 1 and len(tors_names) > 1) or num_rotors == 1):
+                rotor_dct['mdhr_pot_data'] = _read_hr_pot(
+                    tors_names, tors_grids,
+                    cnf_save_path, ref_ene,
+                    constraint_dct,
+                    read_geom=read_geom,
+                    read_grad=read_grad,
+                    read_hess=read_hess)
+
+        for tname, tgrid, tsym in zip(tors_names, tors_grids, tors_syms):
+            # Call read pot for 1DHR
+            pot, _, _, _ = _read_hr_pot(
+                [tname], [tgrid],
+                cnf_save_path, ref_ene,
+                constraint_dct)
+
+            # Get the HR groups and axis for the rotor
+            group, axis, sym_num = torsprep.set_tors_def_info(
+                zma, tname, tsym, pot,
+                frm_bnd_keys, rxn_class, saddle=saddle)
+            remdummy = geomprep.build_remdummy_shift_lst(zma)
+
+            # Get the indices for the torsion
+            mode_idxs = automol.zmatrix.coord_idxs(zma, tname)
+            mode_idxs = tuple((idx+1 for idx in mode_idxs))
+
+            # Determine the flux span using the symmetry number
+            mode_span = 360.0 / tsym
+
+            # Build dictionary for the torsion
+            keys = ['group', 'axis', 'sym_num', 'remdummy', 'pot',
+                    'atm_idxs', 'span', 'hrgeo']
+            vals = [group, axis, sym_num, remdummy, pot,
+                    mode_idxs, mode_span, geo]
+            rotor_dct[tname] = dict(zip(keys, vals))
+
+        # Append to lst
+        rotors.append(rotor_dct)
+
+    return rotors
+
+
+def _rotor_info(zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
+                frm_bnd_keys=(), brk_bnd_keys=()):
+    """ get tors stuff
+    """
 
     # Read the increments from the filesystem
     if 'hind_inc' in spc_dct_i:
@@ -36,393 +127,203 @@ def rotor_info(spc_dct_i, pf_filesystems, pf_models,
     elif 'mdhr' in tors_model:
         tors_model = 'mdhr'
 
-    # Set up the names of all the torsions in the rotors through hierarchy
-    if tors_model in ('1dhr', 'mdhr', 'tau'):
-        run_tors_names = ()
-        if 'tors_names' in spc_dct_i:
-            run_tors_names = torsprep.names_from_dct(spc_dct_i, tors_model)
-            tloc = 'dct'
-        if not run_tors_names:
-            run_tors_names = torsprep.names_from_filesys(
-                cnf_fs, min_cnf_locs, tors_model)
-            tloc = 'fs'
-        if not run_tors_names and tors_model == 'tau':
-            geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
-            run_tors_names = torsprep.names_from_geo(geo, tors_model, saddle=False)
-            tloc = 'geo'
-        if not run_tors_names:
-            tloc = None
-    else:
-        tloc = None
-
     # Obtain the info for each of the rotors
-    rotor_names, rotor_grids, rotor_syms = (), (), ()
-    constraint_dct = None
-    ref_ene = None
-    if tloc is not None and min_cnf_locs is not None:
-
-        if tloc == 'dct':
-            print(' - Reading tors names from user input...')
-        elif tloc == 'fs':
-            print(' - Reading tors names from the filesystem...')
-        elif tloc == 'geo':
-            print(' - Obtaining tors names from the geometry...')
-        for idx, tors_names in enumerate(run_tors_names):
-            print(' - Rotor {}: {}'.format(str(idx+1), '-'.join(tors_names)))
-
-        # Get geometry and reference energy for the torsional minimum
-        zma_fs = fs.manager(cnf_fs[-1].path(min_cnf_locs), 'ZMATRIX')
-        zma = zma_fs[-1].file.zmatrix.read([0])
-        ref_ene = cnf_fs[-1].file.energy.read(min_cnf_locs)
-
-        # Get the hr prep stuff
+    run_tors_names = torsprep.tors_name_prep(
+        spc_dct_i, cnf_fs, min_cnf_locs, tors_model)
+    if run_tors_names:
         rotor_names, rotor_grids, rotor_syms = torsprep.hr_prep(
             zma=zma,
             tors_name_grps=run_tors_names,
             scan_increment=scan_increment,
             tors_model=tors_model,
-            frm_bnd_key=frm_bnd_key,
-            brk_bnd_key=brk_bnd_key)
+            frm_bnd_keys=frm_bnd_keys,
+            brk_bnd_keys=brk_bnd_keys)
 
-        # Build constraint dct
-        if tors_model in ['1dhrf']:
-            constraint_dct = torsprep.build_constraint_dct(
-                zma, rotor_names)
     else:
-        print('No tors info at path')
+        rotor_names, rotor_grids, rotor_syms = (), (), ()
+        print('No tors info could be found from spcdct, filesys, or geom.')
 
-    return rotor_names, rotor_grids, rotor_syms, constraint_dct, ref_ene
+    return rotor_names, rotor_grids, rotor_syms
 
 
-# Functions to write MESS strings
-def make_hr_strings(rotor_names, rotor_grids, rotor_syms, constraint_dct,
-                    ref_ene, pf_filesystems, pf_models,
-                    rxn_class, ts_bnd,
-                    saddle=False, tors_wgeo=False,
-                    build_mess=True, build_projrot=True):
+# FUNCTIONS TO WRITE STRINGS FOR THE ROTORS FOR VARIOUS SITUATION
+def make_hr_strings(rotors, run_path, tors_model,
+                    mess_hr=True, mess_ir=True,
+                    mess_flux=True, projrot=True):
     """ Procedure for building the MESS strings
+        :return mess_allrot_str: combination of intl and hr strs
+        :return mess_hr_str: hr strs
     """
 
-    # Set up tors level filesystem and model
-    tors_model = pf_models['tors']
-    [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+    mess_allr_str, mess_hr_str, mess_flux_str, projrot_str = '', '', '', ''
+    mdhr_dat = ''
+    numrotors = len(rotors)
+    for rotor in rotors:
 
-    # Grab the torsional geometry if needed
-    if tors_wgeo:
-        hind_rot_geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
-    else:
-        hind_rot_geo = None
+        # Set some options for writing
+        # if len(rotor) == 1:
 
-    # Grab the zmatrix
-    zma_fs = fs.manager(cnf_fs[-1].path(min_cnf_locs), 'ZMATRIX')
-    zma = zma_fs[-1].file.zmatrix.read([0])
-    # zma = cnf_fs[-1].file.zmatrix.read(min_cnf_locs)
+        # Write the strings for each torsion of the rotor
+        for tors_name, tors_dct in rotor.items():
+            if 'D' in tors_name:
+                tors_strs = _rotor_tors_strs(
+                    tors_name, tors_dct['group'], tors_dct['axis'],
+                    tors_dct['sym_num'], tors_dct['pot'],
+                    tors_dct['remdummy'], tors_dct['hrgeo'],
+                    tors_dct['atm_idxs'], tors_dct['span'],
+                    mess_hr=mess_hr, mess_ir=mess_ir,
+                    mess_flux=mess_flux, projrot=projrot)
+                mess_hr_str += tors_strs[0]
+                mess_flux_str += tors_strs[2]
+                projrot_str += tors_strs[3]
 
-    # Write strings containing rotor info for MESS and ProjRot
-    if tors_model in ('1dhr', '1dhrf', '1dhrv', '1dhrfv', 'tau'):
-        mess_str, projrot_str, chkd_sym_nums = _make_1dhr_tors_strs(
-            zma, rxn_class, ts_bnd, ref_ene,
-            rotor_names, rotor_grids, rotor_syms,
-            constraint_dct, cnf_path,
-            saddle=saddle,
-            read_freqs=bool('v' in tors_model),
-            hind_rot_geo=hind_rot_geo,
-            build_mess=build_mess, build_projrot=build_projrot)
-        mdhr_dats = []
-    elif tors_model in ('mdhr', 'mdhrv'):
-        mess_str, projrot_str, mdhr_dats, chkd_sym_nums = _make_mdhr_tors_strs(
-            zma, rxn_class, ts_bnd, ref_ene,
-            rotor_names, rotor_grids, rotor_syms,
-            constraint_dct, cnf_path,
-            saddle=saddle,
-            read_freqs=bool('v' in tors_model),
-            hind_rot_geo=hind_rot_geo)
+                # For MDHR, add the appropriate string
+                if 'mdhr' in tors_model:
+                    if ((numrotors > 1 and len(rotor) > 1) or numrotors == 1):
+                        mess_allr_str += tors_strs[1]
+                    else:
+                        mess_allr_str += tors_strs[0]
+                else:
+                    mess_allr_str += tors_strs[0]
 
-    return mess_str, projrot_str, mdhr_dats, chkd_sym_nums
+        # Write the MDHR potential file string for the one MDHR
+        # if len(rotor) > 1 and 'mdhr_pot_data' in rotor:
+        if 'mdhr_pot_data' in rotor:
+            pot, geoms, grads, hessians = rotor['mdhr_pot_data']
+            hr_freqs = _calc_hr_frequenices(geoms, grads, hessians, run_path)
+            mdhr_dat = mess_io.writer.mdhr_data(pot, freqs=hr_freqs)
+
+    return mess_allr_str, mess_hr_str, mess_flux_str, projrot_str, mdhr_dat
 
 
-def _make_1dhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
-                         rotor_names, rotor_grids, rotor_syms,
-                         constraint_dct, cnf_save_path,
-                         saddle=False, read_freqs=False, hind_rot_geo=None,
-                         build_mess=True, build_projrot=True):
+def _rotor_tors_strs(tors_name, group, axis,
+                     sym_num, pot, remdummy,
+                     hr_geo, mode_idxs, mode_span,
+                     mess_hr=True, mess_ir=True,
+                     mess_flux=True, projrot=True):
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
 
-    # Initialize empty strings and torsional sym num lsts
-    mess_hr_str, projrot_hr_str = '', ''
-    chkd_sym_nums = []
+    mess_hr_str = ''
+    if mess_hr:
+        mess_hr_str = mess_io.writer.rotor_hindered(
+            group=group,
+            axis=axis,
+            symmetry=sym_num,
+            potential=pot,
+            remdummy=remdummy,
+            geom=hr_geo,
+            use_quantum_weight=True,
+            rotor_id=tors_name)
 
-    # Loop over the torsions
-    tors_info = zip(rotor_names, rotor_grids, rotor_syms)
-    for tors_names, tors_grids, tors_sym in tors_info:
+    mess_ir_str = ''
+    if mess_ir:
+        mess_ir_str = mess_io.writer.mol_data.rotor_internal(
+            group=group,
+            axis=axis,
+            symmetry=sym_num,
+            grid_size=100,
+            mass_exp_size=5,
+            pot_exp_size=5,
+            hmin=13,
+            hmax=101,
+            remdummy=remdummy,
+            geom=None,
+            rotor_id=tors_name)
 
-        # Grab zero elment because of formatting (each list has one tors)
-        # tors_name = tors_names[0]
-        # tors_grid = tors_grids[0]
+    mess_flux_str = ''
+    if mess_flux:
+        mess_flux_str = mess_io.writer.fluxional_mode(
+            mode_idxs, span=mode_span)
 
-        # Read potential if building MESS string
-        if build_mess:
-            # Read the hindered rotor potential
-            pot, _ = _read_hr_pot(
-                tors_names, tors_grids,
-                cnf_save_path, ref_ene,
-                constraint_dct, read_freqs=read_freqs)
+    projrot_str = ''
+    if projrot:
+        projrot_str = projrot_io.writer.rotors(
+            axis=axis,
+            group=group,
+            remdummy=remdummy)
 
-            # Use a spline fitter to deal with failures in the potential
-            pot = _hrpot_spline_fitter(pot)
-        else:
-            pot = ()
-
-        # Get the HR groups and axis for the rotor
-        group, axis, chkd_sym_num = torsprep.set_tors_def_info(
-            zma, tors_names[0], tors_sym, pot,
-            ts_bnd, rxn_class, saddle=saddle)
-
-        # Check for dummy atoms
-        remdummy = geomprep.build_remdummy_shift_lst(zma)
-
-        # Write the MESS string for the rotor
-        if build_mess:
-            # Write string
-            mess_hr_str += mess_io.writer.rotor_hindered(
-                group=group,
-                axis=axis,
-                symmetry=chkd_sym_num,
-                potential=pot,
-                remdummy=remdummy,
-                geom=hind_rot_geo,
-                use_quantum_weight=True,
-                rotor_id=tors_names[0])
-
-        # Write the ProjRot string for the rotor
-        if build_projrot:
-            projrot_hr_str += '\n' + projrot_io.writer.rotors(
-                axis=axis,
-                group=group,
-                remdummy=remdummy)
-
-        # Append the sym number to lst
-        chkd_sym_nums.append(chkd_sym_num)
-
-    return mess_hr_str, projrot_hr_str, chkd_sym_nums
-
-
-def _make_mdhr_tors_strs(zma, rxn_class, ts_bnd, ref_ene,
-                         rotor_names, rotor_grids, rotor_syms,
-                         constraint_dct, cnf_save_path,
-                         saddle=False, read_freqs=False, hind_rot_geo=None):
-    """ Gather the MDHR torsional data and gather them into a MESS file
-    """
-
-    # Initialize empty strings and torsional sym num lsts
-    mess_hr_str, projrot_hr_str = '', ''
-    mdhr_dat_str_lst = []
-    chkd_sym_nums = []
-
-    # Loop over the torsions
-    tors_info = zip(rotor_names, rotor_grids, rotor_syms)
-    for tors_names, tors_grids, tors_syms in tors_info:
-
-        # Read the hindered rotor potential and add to master list
-        hr_pot, hr_freqs = _read_hr_pot(
-            tors_names, tors_grids,
-            cnf_save_path, ref_ene,
-            constraint_dct, read_freqs=read_freqs)
-
-        # Write the MDHR potential file for each rotor set; append to lst
-        mdhr_dat_str_lst.append(
-            mess_io.writer.mdhr_data(hr_pot, freqs=hr_freqs))
-
-        # Check for dummy transformations
-        remdummy = geomprep.build_remdummy_shift_lst(zma)
-
-        if not isinstance(tors_syms, list):
-            tors_sym_list = [tors_syms]
-        else:
-            tors_sym_list = tors_syms
-
-        # Loop over the rotors in the group and write the internal rotor strs
-        for tors_name, tors_sym in zip(tors_names, tors_sym_list):
-
-            # Set pot to empty list (may need fix)
-            pot = ()  # Change hpw set_tors_def_info works?
-
-            # Get the HR groups and axis for the rotor (new check?)
-            group, axis, chkd_sym_num = torsprep.set_tors_def_info(
-                zma, tors_name, tors_sym, pot,
-                ts_bnd, rxn_class, saddle=saddle)
-
-            # Write the MESS and ProjRot strings for the rotor
-            mess_hr_str += mess_io.writer.mol_data.rotor_internal(
-                group=group,
-                axis=axis,
-                symmetry=chkd_sym_num,
-                grid_size=100,
-                mass_exp_size=5,
-                pot_exp_size=5,
-                hmin=13,
-                hmax=101,
-                remdummy=remdummy,
-                geom=None,
-                rotor_id=tors_name)
-            projrot_hr_str += '\n' + projrot_io.writer.rotors(
-                axis=axis,
-                group=group,
-                remdummy=remdummy)
-
-    return mess_hr_str, projrot_hr_str, mdhr_dat_str_lst, chkd_sym_nums
-
-
-def _make_1dhrv_tors_strs(zma, rxn_class, ts_bnd, ref_ene):
-    """ Write the strings for the 1DHRV 
-    """
-    pass
-
-
-def make_flux_str(tors_min_cnf_locs, tors_cnf_save_fs,
-                  rotor_names, rotor_syms):
-    """ Write out the input string for tau sampling
-    """
-    # Loop over the torsions to get the flux strings
-    flux_mode_str = ''
-    if tors_min_cnf_locs is not None:
-
-        # Get geometry for the torsional minimum
-        zma_fs = fs.manager(
-            tors_cnf_save_fs[-1].path(tors_min_cnf_locs), 'ZMATRIX')
-        zma = zma_fs[-1].file.zmatrix.read([0])
-        name_matrix = automol.zmatrix.name_matrix(zma)
-        key_matrix = automol.zmatrix.key_matrix(zma)
-    
-        # Write the MESS flux strings for each of the modes
-        for tors_names, tors_sym in zip(rotor_names, rotor_syms):
-
-            tors_name = tors_names[0]
-
-            # Get the idxs for the atoms used to define the dihedrals
-            # Move code at some point to automol
-            mode_idxs = [0, 0, 0, 0]
-            for i, name_row in enumerate(name_matrix):
-                if tors_name in name_row:
-                    mode_idxs[0] = i
-                    mode_idxs[1], mode_idxs[2], mode_idxs[3] = key_matrix[i]
-                    break
-            mode_idxs = [idx+1 for idx in mode_idxs]
-
-            # Determine the flux span using the symmetry number
-            mode_span = 360.0 / tors_sym
-
-            # Write flux string for mode_ to overall flux string
-            flux_mode_str += mess_io.writer.fluxional_mode(
-                mode_idxs, span=mode_span)
-
-    return flux_mode_str
+    return mess_hr_str, mess_ir_str, mess_flux_str, projrot_str
 
 
 # Functions to obtain values of the HR potentials from the filesystem
 def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
-                 constraint_dct, read_freqs=False):
+                 constraint_dct,
+                 read_geom=False, read_grad=False, read_hess=False):
     """ Get the potential for a hindered rotor
     """
 
     # print('cscn_path', scn_run_fs[1].path([coo_names]))
 
-    # Build template pot lst and freqs list into a list-of-lists if ndim > 1
-    if len(tors_names) == 1:
-        dims = (len(tors_grids[0]),)
-    elif len(tors_names) == 2:
-        dims = (len(tors_grids[0]), len(tors_grids[1]))
-    elif len(tors_names) == 3:
-        dims = (len(tors_grids[0]), len(tors_grids[1]), len(tors_grids[2]))
-    elif len(tors_names) == 4:
-        dims = (len(tors_grids[0]), len(tors_grids[1]),
-                len(tors_grids[2]), len(tors_grids[3]))
-    pot = numpy.zeros(dims).tolist()
+    # Build initial lists for storing potential energies and Hessians
+    grid_points, grid_vals = _set_hr_dims(tors_grids)
+    pot, geoms, grads, hessians = {}, {}, {}, {}
 
-    # Initialize freqs list
-    freqs = numpy.zeros(dims).tolist() if read_freqs else []
-
-    # Read the energies from the filesystem
+    # Set up filesystem information
     zma_fs = fs.manager(cnf_save_path, 'ZMATRIX')
     zma_path = zma_fs[-1].path([0])
     if constraint_dct is None:
         scn_fs = autofile.fs.scan(zma_path)
     else:
         scn_fs = autofile.fs.cscan(zma_path)
-    if len(tors_names) == 1:
-        for i, grid_val_i in enumerate(tors_grids[0]):
-            # Set locs
-            locs = [tors_names, [grid_val_i]]
-            if constraint_dct is not None:
-                locs.append(constraint_dct)
-            # Read filesys
-            # print('locs test:', locs)
-            # print('scn fs test:', scn_fs[-1].path(locs))
-            if scn_fs[-1].exists(locs):
-                ene = scn_fs[-1].file.energy.read(locs)
-                pot[i] = (ene - ref_ene) * phycon.EH2KCAL
-            else:
-                pot[i] = -10.0
-            if read_freqs:
-                freqs[i] = scn_fs[-1].file.harmonic_frequencies.read(locs)
-    elif len(tors_names) == 2:
-        for i, grid_val_i in enumerate(tors_grids[0]):
-            for j, grid_val_j in enumerate(tors_grids[1]):
-                # Set locs
-                locs = [tors_names, [grid_val_i, grid_val_j]]
-                if constraint_dct is not None:
-                    locs.append(constraint_dct)
-                # Read filesys
-                if scn_fs[-1].exists(locs):
-                    ene = scn_fs[-1].file.energy.read(locs)
-                    pot[i][j] = (ene - ref_ene) * phycon.EH2KCAL
-                else:
-                    pot[i][j] = -10.0
-                if read_freqs:
-                    freqs = scn_fs[-1].file.harmonic_frequencies.read(locs)
-                    freqs[i][j] = freqs
-    elif len(tors_names) == 3:
-        for i, grid_val_i in enumerate(tors_grids[0]):
-            for j, grid_val_j in enumerate(tors_grids[1]):
-                for k, grid_val_k in enumerate(tors_grids[2]):
-                    # Set locs
-                    locs = [tors_names, [grid_val_i, grid_val_j, grid_val_k]]
-                    if constraint_dct is not None:
-                        locs.append(constraint_dct)
-                    # Read filesys
-                    if scn_fs[-1].exists(locs):
-                        ene = scn_fs[-1].file.energy.read(locs)
-                        pot[i][j][k] = (ene - ref_ene) * phycon.EH2KCAL
-                    else:
-                        pot[i][j][k] = -10.0
-                    if read_freqs:
-                        freqs = scn_fs[-1].file.harmonic_frequencies.read(locs)
-                        freqs[i][j][k] = freqs
-    elif len(tors_names) == 4:
-        for i, grid_val_i in enumerate(tors_grids[0]):
-            for j, grid_val_j in enumerate(tors_grids[1]):
-                for k, grid_val_k in enumerate(tors_grids[2]):
-                    for lma, grid_val_l in enumerate(tors_grids[3]):
-                        # Set locs
-                        locs = [tors_names,
-                                [grid_val_i, grid_val_j,
-                                 grid_val_k, grid_val_l]]
-                        if constraint_dct is not None:
-                            locs.append(constraint_dct)
-                        # Read filesys
-                        if scn_fs[-1].exists(locs):
-                            ene = scn_fs[-1].file.energy.read(locs)
-                            pot[i][j][k][lma] = (
-                                (ene - ref_ene) * phycon.EH2KCAL)
-                        else:
-                            pot[i][j][k][lma] = -10.0
-                        if read_freqs:
-                            freqs = scn_fs[-1].file.harmonic_frequencies.read(
-                                locs)
-                            freqs[i][j][k][lma] = freqs
 
-    return pot, freqs
+    # Read the energies and Hessians from the filesystem
+    for point, vals in zip(grid_points, grid_vals):
+
+        locs = [tors_names, vals]
+        if constraint_dct is not None:
+            locs.append(constraint_dct)
+
+        # print('path', scn_fs[-1].path(locs))
+
+        if scn_fs[-1].exists(locs):
+            ene = scn_fs[-1].file.energy.read(locs)
+            pot[point] = (ene - ref_ene) * phycon.EH2KCAL
+        else:
+            pot[point] = -10.0
+
+        if read_geom:
+            geoms[point] = scn_fs[-1].file.geometry.read(locs)
+
+        if read_grad:
+            grads[point] = scn_fs[-1].file.gradient.read(locs)
+
+        if read_hess:
+            hessians[point] = scn_fs[-1].file.hessian.read(locs)
+
+    return pot, geoms, grads, hessians
+
+
+def _calc_hr_frequenices(geoms, grads, hessians, run_path):
+    """ Calculate the frequencies
+    """
+
+    # Initialize hr freqs list
+    hr_freqs = {}
+    for point in geoms.keys():
+        _, proj_freqs, _, _ = vibprep.projrot_freqs(
+            [geoms[point]],
+            [hessians[point]],
+            run_path,
+            grads=[grads[point]])
+        hr_freqs[point] = proj_freqs
+
+    return hr_freqs
+
+
+def _set_hr_dims(tors_grids):
+    """ Determine the dimensions of the grid
+    """
+    assert len(tors_grids) in (1, 2, 3, 4), 'Rotor must be 1-4 dimensions'
+
+    grid_points = ((i for i in range(len(grid)))
+                   for grid in tors_grids)
+    grid_vals = ((x for x in grid)
+                 for grid in tors_grids)
+    grid_points = itertools.product(*grid_points)
+    grid_vals = itertools.product(*grid_vals)
+
+    return grid_points, grid_vals
 
 
 def _hrpot_spline_fitter(pot, min_thresh=-0.05, max_thresh=15.0):

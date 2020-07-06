@@ -41,9 +41,11 @@ def run(spc_dct,
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
 
-        for idx, (spc_name, (pes_model, spc_model)) in enumerate(spc_queue):
+        print(('\n\n------------------------------------------------' +
+               '--------------------------------------'))
+        print('\nPreparing MESSPF input files for all species')
 
-            print("Preparing MESSPF input for ", spc_name)
+        for idx, (spc_name, (pes_model, spc_model)) in enumerate(spc_queue):
 
             global_pf_str = thmroutines.qt.make_pf_header(
                 pes_model_dct[pes_model]['therm_temps'])
@@ -53,25 +55,37 @@ def run(spc_dct,
                 run_prefix, save_prefix)
             messpf_inp_str = thmroutines.qt.make_messpf_str(
                 global_pf_str, spc_str)
+            print('\n\n')
             pfrunner.mess.write_mess_file(
                 messpf_inp_str, dat_str_dct, thm_paths[idx][0],
                 filename='pf.inp', overwrite=True)
 
+            # Write MESS file into job directory
+            pfrunner.write_cwd_pf_file(
+                messpf_inp_str, spc_dct[spc_name]['inchi'])
+
     # Run the MESSPF files that have been written
     if run_messpf:
 
+        print(('\n\n------------------------------------------------' +
+               '--------------------------------------'))
+        print('\nRunning MESSPF calculations for all species')
+
         for idx, (spc_name, _) in enumerate(spc_queue):
 
-            print("Starting MESSPF calculation for ", spc_name)
-
+            print('\n{}'.format(spc_name))
             pfrunner.run_pf(thm_paths[idx][0])
 
     # Use MESS partition functions to compute thermo quantities
     if run_nasa:
 
+        print(('\n\n------------------------------------------------' +
+               '--------------------------------------'))
+        print('\nRunning Thermochemistry calculations for all species')
+
         for idx, (spc_name, (pes_model, spc_model)) in enumerate(spc_queue):
 
-            print("Starting thermo calculation for ", spc_name)
+            print('\n{}'.format(spc_name))
 
             # Get the reference scheme and energies
             ref_scheme = spc_model_dct[spc_model]['options']['ref_scheme']
@@ -79,9 +93,8 @@ def run(spc_dct,
 
             # Determine info about the basis species used in thermochem calcs
             # maybe move above for loop
-            basis_dct, uniref_dct, msg = thmroutines.basis.prepare_refs(
+            basis_dct, uniref_dct = thmroutines.basis.prepare_refs(
                 ref_scheme, spc_dct, spc_queue)
-            print(msg)
 
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc_name]
@@ -102,7 +115,7 @@ def run(spc_dct,
         ckin_path = os.path.join(starting_path, 'ckin')
         for idx, (spc_name, (pes_model, spc_model)) in enumerate(spc_queue):
 
-            print("Starting NASA polynomials calculation for ", spc_name)
+            print("\n\nStarting NASA polynomials calculation for ", spc_name)
 
             # Read the temperatures from the pf.dat file, check if viable
             temps = pfrunner.read_messpf_temps(thm_paths[idx][0])

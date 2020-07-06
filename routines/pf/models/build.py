@@ -145,7 +145,7 @@ def mol_data(spc_dct_i,
 
     # Initialize all of the elements of the inf dct
     geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
-    mess_hr_str, mdhr_dats = '', []
+    allr_str, mdhr_dat = '', ''
     xmat, rovib_coups, rot_dists = None, None, None
 
     # Set up all the filesystem objects using models and levels
@@ -158,16 +158,17 @@ def mol_data(spc_dct_i,
 
     # Obtain rotor information used to determine new information
     print('\nPreparing internal rotor info building partition functions...')
-    rotor_names, rotor_grids, rotor_syms, const_dct, ref_ene = tors.rotor_info(
+    rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, chn_pf_models,
-        frm_bnd_key=frm_bnd_keys, brk_bnd_key=brk_bnd_keys)
+        rxn_class=rxn_class,
+        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
+        tors_geo=True)
 
-    if typ.nonrigid_tors(chn_pf_models, rotor_names):
-        mess_hr_str, prot_hr_str, mdhr_dats, rotor_syms = tors.make_hr_strings(
-            rotor_names, rotor_grids, rotor_syms, const_dct,
-            ref_ene, pf_filesystems, chn_pf_models,
-            rxn_class, frm_bnd_keys,
-            saddle=saddle, tors_wgeo=tors_wgeo)
+    if typ.nonrigid_tors(chn_pf_models, rotors):
+        run_path = fs.make_run_path(pf_filesystems, 'tors')
+        tors_strs = tors.make_hr_strings(
+            rotors, run_path, chn_pf_models['tors'])
+        [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
 
     # Obtain rotation partition function information
     print('\nObtaining info for rotation partition function...')
@@ -178,9 +179,9 @@ def mol_data(spc_dct_i,
 
     # Obtain vibration partition function information
     print('\nObtaining the vibrational frequencies and zpves...')
-    if typ.nonrigid_tors(chn_pf_models, rotor_names):
-        freqs, imag, zpe = vib.tors_projected_freqs_zpe(
-            pf_filesystems, mess_hr_str, prot_hr_str, saddle=saddle)
+    if typ.nonrigid_tors(chn_pf_models, rotors):
+        freqs, imag, zpe, _ = vib.tors_projected_freqs_zpe(
+            pf_filesystems, hr_str, prot_str, saddle=saddle)
     else:
         freqs, imag, zpe = vib.read_harmonic_freqs(
             pf_filesystems, saddle=saddle)
@@ -191,13 +192,8 @@ def mol_data(spc_dct_i,
     # Obtain symmetry factor
     print('\nDetermining the symmetry factor...')
     sym_factor = sym.symmetry_factor(
-        pf_filesystems, chn_pf_models, spc_dct_i,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
-        rotor_names=rotor_names)
-
-    if typ.nonrigid_tors(chn_pf_models, rotor_names):
-        sym_factor = sym.tors_reduced_sym_factor(
-            sym_factor, rotor_syms)
+        pf_filesystems, chn_pf_models, spc_dct_i, rotors,
+        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
     # Obtain electronic energy levels
     elec_levels = spc_dct_i['elec_levels']
@@ -221,11 +217,11 @@ def mol_data(spc_dct_i,
 
     # Create info dictionary
     keys = ['geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
-            'mess_hr_str', 'mdhr_dats',
+            'mess_hr_str', 'mdhr_dat',
             'xmat', 'rovib_coups', 'rot_dists',
             'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
-            mess_hr_str, mdhr_dats[0],  # assuming single mdhr rotor
+            allr_str, mdhr_dat,
             xmat, rovib_coups, rot_dists,
             ene_chnlvl, ene_reflvl, zpe]
     inf_dct = dict(zip(keys, vals))
@@ -347,28 +343,24 @@ def tau_data(spc_dct_i,
     rxn_class = None
 
     # Get the rotor info
-    rotor_names, rotor_grids, rotor_syms, const_dct, ref_ene = tors.rotor_info(
+    rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, chn_pf_models,
-        frm_bnd_key=frm_bnd_keys, brk_bnd_key=brk_bnd_keys)
-    mess_hr_str, prot_hr_str, _, rotor_syms = tors.make_hr_strings(
-        rotor_names, rotor_grids, rotor_syms, const_dct,
-        ref_ene, pf_filesystems, chn_pf_models,
-        rxn_class, frm_bnd_keys,
-        saddle=saddle, tors_wgeo=True,
-        build_mess=False, build_projrot=True)
+        rxn_class=rxn_class,
+        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
+        tors_geo=True)
 
-    # Write the flux mode str
-    flux_mode_str = tors.make_flux_str(tors_min_locs, tors_cnf_fs,
-                                       rotor_names, rotor_syms)
+    run_path = fs.make_run_path(pf_filesystems, 'tors')
+    tors_strs = tors.make_hr_strings(
+        rotors, run_path, chn_pf_models['tors'])
+    [_, hr_str, flux_str, prot_str, _] = tors_strs
 
     # Use model to determine whether to read grads and hessians
     vib_model = chn_pf_models['vib']
-    print('mess_hr_str test in tau_data:', mess_hr_str)
     if vib_model != 'tau':
         read_gradient, read_hessian = False, False
         freqs, _, proj_zpe, harm_zpe = vib.tors_projected_freqs_zpe(
-            pf_filesystems, mess_hr_str, prot_hr_str, saddle=False)
-        if mess_hr_str:
+            pf_filesystems, hr_str, prot_str, saddle=False)
+        if hr_str:
             ground_energy = proj_zpe
         else:
             ground_energy = harm_zpe
@@ -376,8 +368,8 @@ def tau_data(spc_dct_i,
         read_gradient, read_hessian = True, True
         freqs = ()
         _, _, proj_zpe, harm_zpe = vib.tors_projected_freqs_zpe(
-            pf_filesystems, mess_hr_str, prot_hr_str, saddle=False)
-        if mess_hr_str:
+            pf_filesystems, hr_str, prot_str, saddle=False)
+        if hr_str:
             ground_energy = proj_zpe
         else:
             ground_energy = harm_zpe
@@ -386,8 +378,8 @@ def tau_data(spc_dct_i,
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
     for locs in tau_save_fs[-1].existing():
 
-        print('Reading tau info for {}'.format(locs))
-        print('Path: {}'.format(tau_save_fs[-1].path(locs)))
+        print('Reading tau info at path {}'.format(
+            tau_save_fs[-1].path(locs)))
 
         geo = tau_save_fs[-1].file.geometry.read(locs)
         geo_str = autofile.data_types.swrite.geometry(geo)
@@ -415,7 +407,7 @@ def tau_data(spc_dct_i,
     keys = ['ref_geom', 'elec_levels', 'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
             'zpe_chnlvl', 'ground_energy']
-    vals = [ref_geom, spc_dct_i['elec_levels'], freqs, flux_mode_str,
+    vals = [ref_geom, spc_dct_i['elec_levels'], freqs, flux_str,
             samp_geoms, samp_enes, samp_grads, samp_hessians,
             zpe_chnlvl, ground_energy]
     inf_dct = dict(zip(keys, vals))

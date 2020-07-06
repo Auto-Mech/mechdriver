@@ -29,7 +29,7 @@ def species_block(inf_dct):
     dat_dct = {}
 
     # Build the appropriate core string
-    if inf_dct['mdhr_dats']:
+    if inf_dct['mdhr_dat']:
         core_str = mess_io.writer.core_multirotor(
             geom=inf_dct['geom'],
             sym_factor=inf_dct['sym_factor'],
@@ -39,7 +39,7 @@ def species_block(inf_dct):
             quant_lvl_emax=9
         )
         hind_rot_str = ''
-        dat_dct['mdhr_pot.dat'] = inf_dct['mdhr_dats']
+        dat_dct['mdhr_pot.dat'] = inf_dct['mdhr_dat']
     else:
         core_str = mess_io.writer.core_rigidrotor(
             geom=inf_dct['geom'],
@@ -58,7 +58,6 @@ def species_block(inf_dct):
         rovib_coups=inf_dct['rovib_coups'],
         rot_dists=inf_dct['rot_dists']
     )
-
 
     return spc_str, dat_dct
 
@@ -97,6 +96,7 @@ def fake_species_block(inf_dct_i, inf_dct_j):
         rot_dists=()
     )
 
+    # Need to fix
     dat_dct = {}
 
     return spc_str, dat_dct
@@ -135,6 +135,9 @@ def pst_block(inf_dct_i, inf_dct_j):
         rovib_coups=(),
         rot_dists=()
     )
+
+    # Need to fix
+    dat_dct = {}
 
     return spc_str, dat_dct
 

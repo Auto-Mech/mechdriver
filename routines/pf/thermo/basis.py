@@ -34,16 +34,20 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
         raise NotImplementedError
 
     # Print the message
-    msg = 'Determining {} reference molecules for: \n'.format(ref_scheme)
+    msg = '\nDetermining reference molecules for scheme: {}'.format(ref_scheme)
+    msg += '\n'
 
     # Determine the reference species, list of inchis
     basis_dct = {}
     unique_refs_dct = {}
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
-        # Determine basis set for each spc using the specified therm scheme
+
+        msg += '\nDetermining basis for species: {}'.format(spc_name)
         spc_basis, coeff_basis = get_ref_fxn(spc_ich)
-        msg += 'Species {} with basis {}\n'.format(
-            spc_ich, ', '.join(spc_basis))
+
+        msg += '\nInCHIs for basis set:'
+        for base in spc_basis:
+            msg += '\n  {}'.format(base)
 
         # Add to the dct containing info on the species basis
         basis_dct[spc_name] = (spc_basis, coeff_basis)
@@ -58,7 +62,9 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
                 unique_refs_dct[ref_name] = create_spec(ref)
                 cnt += 1
 
-    return basis_dct, unique_refs_dct, msg
+    print(msg)
+
+    return basis_dct, unique_refs_dct
 
 
 def create_spec(ich, charge=0,
@@ -89,11 +95,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                  pf_levels, pf_models, run_prefix, save_prefix):
     """ Return the electronic + zero point energies for a set of species.
     """
-    print('unirefs')
-    for x,y in uni_refs_dct.items():
-        print(x)
-        print(y)
-    
+
     # Initialize ich name dct to noe
     ich_name_dct = {}
     for ich in spc_basis:
@@ -126,13 +128,14 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
     # full_spc_dct = {**spc_dct, **uni_refs_dct}
 
     # Get the species energy
+    print('\n Calculating energy for species...')
     pf_filesystems = fs.pf_filesys(
         spc_dct[spc_name], pf_levels,
         run_prefix, save_prefix, False)
     h_spc = read_energy(
-            spc_dct[spc_name], pf_filesystems,
-            pf_models, pf_levels,
-            read_ene=True, read_zpe=True)
+        spc_dct[spc_name], pf_filesystems,
+        pf_models, pf_levels,
+        read_ene=True, read_zpe=True)
     if h_spc is None:
         print('*ERROR: No energy found for {}'.format(spc_name))
         sys.exit()
@@ -140,15 +143,16 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
     # Get the energies of the bases
     h_basis = []
     for ich, name in ich_name_dct.items():
-        print(ich)
-        print(name)
         if name in spc_dct:
             spc_dct_i = spc_dct[name]
+            prname = name
         else:
             spc_dct_i = uni_refs_dct[ich]
+            prname = ich
         pf_filesystems = fs.pf_filesys(
             spc_dct_i, pf_levels,
             run_prefix, save_prefix, False)
+        print('\n Calculating energy for basis {}...'.format(prname))
         h_basis.append(
             read_energy(
                 spc_dct_i, pf_filesystems,

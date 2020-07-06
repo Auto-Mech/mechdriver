@@ -162,6 +162,8 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
                 run_nasa=RUN_NASA,
             )
     else:
+        for spc in RUN_SPC_LST_DCT:
+            print('\nCalculating Thermochem for species: {}'.format(spc))
         thermodriver.run(
             SPC_DCT,
             PES_MODEL_DCT, SPC_MODEL_DCT,

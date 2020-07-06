@@ -79,3 +79,14 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
         cnf_save_path = ''
 
     return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]
+
+
+def make_run_path(pf_filesystems, choice):
+    """ Make a run path from pf filesystems
+    """
+    [_, _, min_locs, _, run_fs] = pf_filesystems[choice]
+    run_fs[-1].create(min_locs)
+    run_path = run_fs[-1].path(min_locs)
+
+    return run_path
+

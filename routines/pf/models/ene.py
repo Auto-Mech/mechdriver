@@ -93,29 +93,29 @@ def zero_point_energy(spc_dct_i,
     print('- Calculating zero-point energy')
 
     # spc_dct_i = spc_dct[spc_name]
-    frm_bnd_key, brk_bnd_key = util.get_bnd_keys(spc_dct_i, saddle)
-    ts_bnd = util.set_ts_bnd(spc_dct_i, saddle)
+    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(spc_dct_i, saddle)
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Calculate ZPVE
     if typ.is_atom(spc_dct_i):
         zpe = 0.0
     else:
-        rtr_names, rtr_grids, rtr_syms, const_dct, ref_ene = tors.rotor_info(
+        rotors = tors.build_rotors(
             spc_dct_i, pf_filesystems, pf_models,
-            frm_bnd_key=frm_bnd_key, brk_bnd_key=brk_bnd_key)
+            rxn_class=rxn_class,
+            frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
+            tors_geo=True)
 
-        if typ.nonrigid_tors(pf_models, rtr_names):
-            mess_hr_str, prot_hr_str, _, _ = tors.make_hr_strings(
-                rtr_names, rtr_grids, rtr_syms, const_dct,
-                ref_ene, pf_filesystems, pf_models,
-                rxn_class, ts_bnd,
-                saddle=saddle, tors_wgeo=True)
+        if typ.nonrigid_tors(pf_models, rotors):
+            run_path = fs.make_run_path(pf_filesystems, 'tors')
+            tors_strs = tors.make_hr_strings(
+                rotors, run_path, pf_models['tors'])
+            [_, hr_str, _, prot_str, _] = tors_strs
 
         # Obtain vibration partition function information
-        if typ.nonrigid_tors(pf_models, rtr_names):
-            _, _, zpe = vib.tors_projected_freqs_zpe(
-                pf_filesystems, mess_hr_str, prot_hr_str)
+        if typ.nonrigid_tors(pf_models, rotors):
+            _, _, zpe, _ = vib.tors_projected_freqs_zpe(
+                pf_filesystems, hr_str, prot_str)
         else:
             _, _, zpe = vib.read_harmonic_freqs(pf_filesystems)
 
