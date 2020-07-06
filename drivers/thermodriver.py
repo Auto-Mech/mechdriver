@@ -60,6 +60,10 @@ def run(spc_dct,
                 messpf_inp_str, dat_str_dct, thm_paths[idx][0],
                 filename='pf.inp', overwrite=True)
 
+            # Write MESS file into job directory
+            pfrunner.write_cwd_pf_file(
+                messpf_inp_str, spc_dct[spc_name]['inchi'])
+
     # Run the MESSPF files that have been written
     if run_messpf:
 

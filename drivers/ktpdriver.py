@@ -109,7 +109,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         pfrunner.write_mess_file(mess_inp_str, dats, mess_path)
 
         # Write MESS file into job directory
-        pfrunner.write_cwd_mess_file(pes_formula, sub_pes_idx)
+        pfrunner.write_cwd_rate_file(mess_inp_str, pes_formula, sub_pes_idx)
 
     # Run mess to produce rate output
     if run_messrate:

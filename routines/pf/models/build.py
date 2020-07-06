@@ -379,7 +379,7 @@ def tau_data(spc_dct_i,
     for locs in tau_save_fs[-1].existing():
 
         print('Reading tau info at path {}'.format(
-            tau_save_fs[-1].path(locs))
+            tau_save_fs[-1].path(locs)))
 
         geo = tau_save_fs[-1].file.geometry.read(locs)
         geo_str = autofile.data_types.swrite.geometry(geo)
