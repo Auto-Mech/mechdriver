@@ -85,5 +85,5 @@ def print_nasa_temps(temps):
     """
     print('Attempting to fit NASA polynomials from',
           '200-1000 and 1000-3000 K ranges using\n',
-          'Temps from MESSPF file = {}.'.format(
+          'temps from MESSPF file = {}.'.format(
               ' '.join(('{:.2f}'.format(x) for x in temps))))

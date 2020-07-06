@@ -54,10 +54,6 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models,
     rotors = []
     for tors_names, tors_grids, tors_syms in zip(*rotor_inf):
 
-        print(tors_names)
-        print(tors_grids)
-        print(tors_syms)
-
         # Initialize dct to hold info for each torsion of rotor
         rotor_dct = {}
 
@@ -168,8 +164,6 @@ def make_hr_strings(rotors, run_path, tors_model,
         # if len(rotor) == 1:
 
         # Write the strings for each torsion of the rotor
-        print('rotor')
-        print(rotor.keys())
         for tors_name, tors_dct in rotor.items():
             if 'D' in tors_name:
                 tors_strs = _rotor_tors_strs(
@@ -192,7 +186,7 @@ def make_hr_strings(rotors, run_path, tors_model,
                 else:
                     mess_allr_str += tors_strs[0]
 
-        # Write the MDHR potential file string for the one MDHR (change len rotor requirement)
+        # Write the MDHR potential file string for the one MDHR
         # if len(rotor) > 1 and 'mdhr_pot_data' in rotor:
         if 'mdhr_pot_data' in rotor:
             pot, geoms, grads, hessians = rotor['mdhr_pot_data']

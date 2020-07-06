@@ -105,9 +105,4 @@ def thermo_paths(spc_dct_i, run_prefix):
     bld_path = bld_save_fs[-1].path(bld_locs)
     spc_nasa_path = os.path.join(bld_path, spc_formula, ich_key)
 
-    print('Path for MESSPF Calculation:')
-    print(spc_pf_path)
-    print('Path for NASA Polynomial Generation:')
-    print(spc_nasa_path)
-
     return spc_pf_path, spc_nasa_path

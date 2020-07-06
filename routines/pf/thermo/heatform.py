@@ -20,38 +20,19 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 # Path  the database files (stored in the thermo src directory)
 SRC_PATH = os.path.dirname(os.path.realpath(__file__))
 
-## move to autio 
-def get_hform_298k_thermp(output_string):
-    """
-    Obtains deltaHf from thermp output
-    """
-
-    # Line pattern containing the DeltaHf value at 298 K
-    dhf298_pattern = ('h298 final' +
-                      app.one_or_more(app.SPACE) +
-                      app.capturing(app.FLOAT))
-    dhf298 = float(apf.last_capture(dhf298_pattern, output_string))
-
-    return dhf298
-##
 
 def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
     """ calculates the heat-of-formation at 0 K
     """
-    print('coeff', coeff)
-    print('hbasis', hzero_basis)
-    # Calculate the heat of formation
+
     dhzero = hzero_mol * EH2KCAL
-    print('hzero test:', hzero_mol, dhzero, EH2KCAL, KJ2KCAL)
     for i, spc in enumerate(basis):
         h_basis = get_ref_h(spc, ref_set, 0)
         if h_basis is None:
             h_basis = 0.0
         dhzero += coeff[i] * h_basis * KJ2KCAL
         dhzero -= coeff[i] * hzero_basis[i] * EH2KCAL
-        print('hform 0K test:', i, spc, h_basis, coeff[i], hzero_basis[i])
 
-    print('h0k test:', dhzero)
     return dhzero
 
 
@@ -164,12 +145,12 @@ def calc_coefficients(basis, mol_atom_dict):
 
     # Initialize an natoms x natoms matrix
     nbasis = len(basis)
-    print('basis test:', basis)
+    # print('basis test:', basis)
     basis_mat = np.zeros((nbasis, nbasis))
 
     # Get the basis formulae list
     basis_formulae = [automol.inchi.formula_string(spc) for spc in basis]
-    print('basis formulae:', basis_formulae)
+    # print('basis formulae:', basis_formulae)
     # basis_atom_dict = [
     # automol.geom.formula(automol.inchi.geom(spc) for spc in basis]
     for spc in basis_formulae:
@@ -250,8 +231,8 @@ def cbhzed(ich):
         gra = (atm_dic, {})
         frag = automol.graph.inchi(gra)
         _add2dic(frags, frag)
-    print('cbhzed frags', frags)
-    print(_balance_frags(ich, frags))
+    # print('cbhzed frags', frags)
+    # print(_balance_frags(ich, frags))
     return _balance_frags(ich, frags)
 
 

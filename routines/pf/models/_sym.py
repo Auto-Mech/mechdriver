@@ -108,7 +108,6 @@ def tors_reduced_sym_factor(sym_factor, rotors):
     for rotor in rotors:
         for tors_name, tors_dct in rotor.items():
             if 'D' in tors_name:
-                print(tors_dct)
                 sym_factor /= tors_dct['sym_num']
 
     return sym_factor

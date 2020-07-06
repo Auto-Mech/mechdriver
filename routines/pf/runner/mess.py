@@ -46,7 +46,7 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
     # Write the MESS file
     if not os.path.exists(mess_path):
         os.makedirs(mess_path)
-    print('Writing MESS input file...')
+    print('\n\nWriting MESS input file...')
     print(' - Path: {}'.format(mess_path))
     with open(os.path.join(mess_path, filename), 'w') as mess_file:
         mess_file.write(mess_inp_str)
@@ -124,4 +124,9 @@ def run_rates(mess_path, script_str=DEFAULT_SCRIPT_DCT['messrate']):
 def run_pf(mess_path, script_str=DEFAULT_SCRIPT_DCT['messpf']):
     """ Run the mess file that was wriiten
     """
-    run_script(script_str, mess_path)
+    if os.path.exists(os.path.join(mess_path, 'pf.inp')):
+        print('Running MESS input file...')
+        print(' - Path: {}'.format(mess_path))
+        run_script(script_str, mess_path)
+    else:
+        print('No MESS input file at path: {}'.format(mess_path))
