@@ -60,7 +60,7 @@ def set_dist_names(spc_dct_i, saddle):
     return dist_names
 
 
-def get_bnd_keys(pf_filesystems, saddle, zma_locs=(0)):
+def get_bnd_keys(pf_filesystems, saddle, zma_locs=(0,)):
     """ get bond broken and formed keys for a transition state
     """
     if not saddle:
@@ -99,7 +99,6 @@ def set_rxn_class(spc_dct_i, saddle):
 def atom_mass(spc_dct_i):
     """ write the atom string
     """
-    print('spc_dct_i test', spc_dct_i)
     geo = automol.inchi.geometry(spc_dct_i['inchi'])
     return automol.geom.total_mass(geo)
 

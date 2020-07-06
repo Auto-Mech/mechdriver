@@ -65,14 +65,14 @@ def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
     # print('No additional MESS input file will be written.')
 
 
-def write_cwd_mess_file():
+def write_cwd_mess_file(pes_formula, sub_pes_idx):
     """ Write a copy of the MESS file in the current working directory
     """
     starting_path = os.getcwd()
     jobdir_mess_path = ''.join([starting_path, '/mess'])
     if not os.path.exists(jobdir_mess_path):
         os.mkdir(jobdir_mess_path)
-    jobdir_mess_file_path = ktp_runner.get_mess_path(
+    jobdir_mess_file_path = messrate_path(
         jobdir_mess_path, pes_formula, sub_pes_idx)
     with open(jobdir_mess_file_path, 'a') as file_obj:
         file_obj.write('\n\n! NEW MESS FILE\n')

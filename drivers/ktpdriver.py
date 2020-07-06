@@ -31,11 +31,13 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     pressures = pes_model_dct[pes_model]['pressures']
     etransfer = pes_model_dct[pes_model]['etransfer']
     pdep_fit = pes_model_dct[pes_model]['pdep_fit']
+    tunit = pes_model_dct[pes_model]['tunit']
     punit = pes_model_dct[pes_model]['punit']
     fit_method = pes_model_dct[pes_model]['fit_method']
     arrfit_thresh = (
         pes_model_dct[pes_model]['dbl_arrfit_thresh'],
-        pes_model_dct[pes_model]['dbl_arrfit_val?']
+        'max'
+        # pes_model_dct[pes_model]['dbl_arrfit_val?']
     )
 
     # Fix this to read ene model
@@ -68,11 +70,11 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         rxn_lst, pes_idx, spc_dct)
 
     # Set path where MESS files will be written and read
-    mess_path = pfrunner.get_mess_path(
+    mess_path = pfrunner.messrate_path(
         run_prefix, pes_formula, sub_pes_idx)
 
     # Try and read the MESS file from the filesystem first
-    _, _ = pfrunner.read_mess_file(mess_path)
+    # _, _ = pfrunner.read_mess_file(mess_path)
 
     # Write the MESS file
     if write_messrate:  # and not mess_inp_str:
@@ -107,7 +109,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         pfrunner.write_mess_file(mess_inp_str, dats, mess_path)
 
         # Write MESS file into job directory
-        write_cwd_mess_file()
+        pfrunner.write_cwd_mess_file(pes_formula, sub_pes_idx)
 
     # Run mess to produce rate output
     if run_messrate:

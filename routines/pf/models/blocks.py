@@ -96,6 +96,7 @@ def fake_species_block(inf_dct_i, inf_dct_j):
         rot_dists=()
     )
 
+    # Need to fix
     dat_dct = {}
 
     return spc_str, dat_dct
@@ -104,8 +105,6 @@ def fake_species_block(inf_dct_i, inf_dct_j):
 def pst_block(inf_dct_i, inf_dct_j):
     """ prepare a Phase Space Theory species block
     """
-
-    dat_dct = {}
 
     # Combine the electronic structure information for the two species together
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
@@ -136,6 +135,9 @@ def pst_block(inf_dct_i, inf_dct_j):
         rovib_coups=(),
         rot_dists=()
     )
+
+    # Need to fix
+    dat_dct = {}
 
     return spc_str, dat_dct
 

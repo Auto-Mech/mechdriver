@@ -194,7 +194,7 @@ def save_saddle_point(
         cnf_save_fs,
         ts_save_fs, ts_save_path,
         frm_bnd_keys, brk_bnd_keys,
-        zma_locs=(0)):
+        zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
     """
 
@@ -245,15 +245,13 @@ def save_saddle_point(
     #     frm_bnd_keys, zma)
     # shift_brk_bnd_keys = structure.geom.shift_vals_from_dummy(
     #     brk_bnd_keys, zma)
-
-    tra = (frozenset(frm_bnd_keys),
-           frozenset(brk_bnd_keys))
-    zma_save_fs[-1].file.transformation.write(tra, zma_locs)
-
-
-    zma_fs[-1].file.reactant_graph.write(ref_gra, locs)
-
+    
+    print(frm_bnd_keys)
+    tra = (frozenset({frm_bnd_keys}),
+           frozenset({brk_bnd_keys}))
     print('tra', tra)
+    zma_save_fs[-1].file.transformation.write(tra, zma_locs)
+    # zma_save_fs[-1].file.reactant_graph.write(ref_gra, locs)
 
     # Save the energy in a single-point filesystem
     print(" - Saving energy...")
