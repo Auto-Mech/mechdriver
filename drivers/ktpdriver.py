@@ -37,8 +37,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     fit_method = pes_model_dct[pes_model]['fit_method']
     arrfit_thresh = (
         pes_model_dct[pes_model]['dbl_arrfit_thresh'],
-        'max'
-        # pes_model_dct[pes_model]['dbl_arrfit_val?']
+        pes_model_dct[pes_model]['dbl_arrfit_check']
     )
 
     # Fix this to read ene model

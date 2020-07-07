@@ -45,7 +45,6 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
                     sym_geos,
                     frm_bnd_keys=frm_bnd_keys,
                     brk_bnd_keys=brk_bnd_keys)
-                print('int', int_sym)
             else:
                 print(' - No torsions, internal sym is 1.0')
                 int_sym = 1.0
@@ -86,17 +85,17 @@ def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
         for new_geo in new_geos:
             new_geom = True
             for geo_sym_j in sym_geos2:
-                if automol.geom.almost_equal_distance_matrix(
+                if automol.geom.almost_equal_dist_matrix(
                         new_geo, geo_sym_j, thresh=3e-1):
                     if saddle:
                         new_geom = False
                         break
-                    if structure.geom.are_torsions_same(new_geo, geo_sym_j):
+                    if structure.geom.are_torsions_same(new_geo, geo_sym_j, ts_bnds=()):
                         new_geom = False
                         break
             if new_geom:
                 sym_geos2.append(new_geo)
-            int_sym_num += 1
+                int_sym_num += 1
 
     return int_sym_num
 

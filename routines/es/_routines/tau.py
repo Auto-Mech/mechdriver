@@ -250,7 +250,7 @@ EXP6_DCT = {
 
 
 def _low_repulsion_struct(zma_ref, zma_samp, thresh=40.0):
-    """ Check if the long-range energy for the sample structure 
+    """ Check if the long-range energy for the sample structure
     exceeds that for the reference structure by more than the thresh
     """
 
@@ -281,9 +281,13 @@ def _low_repulsion_struct(zma_ref, zma_samp, thresh=40.0):
     return low_repulsion
 
 
-def _generate_pairs(geo):
+def _generate_pairs(geo, pairs='offdiag'):
     """ Generate a list of pairs to calculate potentials
     """
+
+    assert pairs == 'offdiag', (
+        'Can only generate list of off-diagonal pairs'
+    )
 
     # Grab the indices of the heavy atoms for the zmas
     # heavy_idxs = automol.geom.atom_indices(geo, 'H', match=False)
