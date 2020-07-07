@@ -143,6 +143,10 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
         print('\nSingle fit errs too large & double fit possible:',
               ' Trying double fit')
 
+        # Generate guess parameters
+        # print('Generating Double Fit Guess from Single Fit Parameters')
+        # make_dbl_fit_guess(sing_params_dct)
+
         # Fit rate constants to double Arrhenius expressions
         doub_params_dct, doub_fit_temp_dct, doub_fit_suc = mod_arr_fit(
             ktp_dct, mess_path, fit_type='double',
@@ -225,6 +229,17 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
     return fit_param_dct, fit_temp_dct, fit_success
 
 
+def make_dbl_fit_guess(params_dct):
+    """ Make dbl fit term
+    """
+
+    dbl_guess_dct = {}
+    for pressure, params in params_dct.items():
+        dbl_guess_dct[pressure] = _generate_guess(params)
+
+    return dbl_guess_dct
+
+
 def _generate_guess(params):
     """ Generate a set of double fit guess params based on input.
         Right now it is just a set of single params.
@@ -277,7 +292,8 @@ def _check_double_fit(sing_fit_dct, dbl_fit_dct,
 
 
 def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
-                       t_ref=1.0, a_conv_factor=1.0):
+                       t_ref=1.0, a_conv_factor=1.0,
+                       err_set='all'):
     """ Determine the errors in the rate constants that arise
         from the Arrhenius fitting procedure
     """
@@ -309,15 +325,34 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
 
     # Calculute the error between the calc and fit ks
     for pressure, fit_ks in fit_k_dct.items():
-
+        
         calc_ks = ktp_dct[pressure][1]
+
+        # Put a function in to handle the ranges?
+        test_calc_ks, test_fit_ks = _gen_err_set(
+            calc_ks, fit_ks, err_set=err_set)
+
         mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
-            calc_ks, fit_ks)
+            test_calc_ks, test_fit_ks)
 
         # Store in a dictionary
         fit_err_dct[pressure] = [mean_avg_err, max_avg_err]
 
     return fit_err_dct
+
+
+def _gen_err_set(calc_ks, fit_ks, err_set='all'):
+    """ look at err ranges
+    """
+
+    if err_set == 'skip':
+        test_calc_ks = calc_ks[1:-2]   
+        test_fit_ks = fit_ks[1:-2]   
+    else:
+        test_calc_ks = calc_ks
+        test_fit_ks = fit_ks   
+
+    return test_calc_ks, test_fit_ks
 
 
 # Functions to fit rates to Troe function

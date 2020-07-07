@@ -94,6 +94,8 @@ def build_pes_model_keyword_dct(model_str):
     fitm = apf.first_capture(ptt.keyword_pattern('fit_method'), model_str)
     ethr = apf.first_capture(
         ptt.keyword_pattern('dbl_arrfit_thresh'), model_str)
+    echk = apf.first_capture(
+        ptt.keyword_pattern('dbl_arrfit_check'), model_str)
     # assert temps_str is not None
     assert pressures_str is not None
     assert etrans_str is not None
@@ -116,6 +118,7 @@ def build_pes_model_keyword_dct(model_str):
     punit = ptt.set_value_type(punit) if punit is not None else 'atm'
     fitm = ptt.set_value_type(fitm) if fitm is not None else 'arrhenius'
     ethr = ptt.set_value_type(ethr) if ethr is not None else 15.0
+    echk = ptt.set_value_type(echk) if echk is not None else 'max'
 
     # Combine dcts into single model dct
     model_dct = {}

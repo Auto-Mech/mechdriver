@@ -138,15 +138,15 @@ def is_unique_stereo_dist_mat_energy(geo, ene, geo_list, ene_list):
     return unique
 
 
-def are_torsions_same(geo, geoi):
+def are_torsions_same(geo, geoi, ts_bnds=()):
     """ compare all torsional angle values
     """
     dtol = 0.09
     same_dihed = True
-    zma = automol.geom.zmatrix(geo)
-    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+    zma = automol.geom.zmatrix(geo, ts_bnds=ts_bnds)
+    tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo, ts_bnds=ts_bnds)
     zmai = automol.geom.zmatrix(geoi)
-    tors_namesi = automol.geom.zmatrix_torsion_coordinate_names(geoi)
+    tors_namesi = automol.geom.zmatrix_torsion_coordinate_names(geoi, ts_bnds=ts_bnds)
     for idx, tors_name in enumerate(tors_names):
         val = automol.zmatrix.values(zma)[tors_name]
         vali = automol.zmatrix.values(zmai)[tors_namesi[idx]]

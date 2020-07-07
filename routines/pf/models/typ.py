@@ -89,7 +89,7 @@ def treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad=False):
             if ts_nobarrier in ('pst', 'vrctst'):
                 treat = False
         else:
-            if ts_sadpt != 'pst':
+            if ts_sadpt == 'pst':
                 treat = False
 
     return treat
