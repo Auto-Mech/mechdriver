@@ -245,7 +245,7 @@ def save_saddle_point(
     #     frm_bnd_keys, zma)
     # shift_brk_bnd_keys = structure.geom.shift_vals_from_dummy(
     #     brk_bnd_keys, zma)
-    
+
     print(frm_bnd_keys)
     tra = (frozenset({frm_bnd_keys}),
            frozenset({brk_bnd_keys}))

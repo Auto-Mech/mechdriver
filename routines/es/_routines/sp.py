@@ -228,8 +228,8 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 geo_save_fs[-1].file.hessian.write(hess, locs)
                 print(" - Save path: {}".format(geo_save_path))
 
-                _hess_grad(geo, inf_obj.prog, out_str, geo_save_fs,
-                           geo_run_path, geo_save_path, locs, overwrite)
+                _hess_grad(inf_obj.prog, out_str, geo_save_fs,
+                           geo_save_path, locs, overwrite)
                 _hess_freqs(geo, geo_save_fs,
                             geo_run_path, geo_save_path, locs, overwrite)
 
@@ -386,8 +386,8 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
             save_path))
 
 
-def _hess_grad(geo, prog, out_str, geo_save_fs,
-               run_path, save_path, locs, overwrite):
+def _hess_grad(prog, out_str, geo_save_fs,
+               save_path, locs, overwrite):
     """ Grab and save the gradient from a Hessian job if possible.
     """
 

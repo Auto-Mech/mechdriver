@@ -5,7 +5,6 @@ used throughout moldriver
 
 import sys
 import autofile
-import automol
 from lib.filesys.build import zma_fs_from_prefix
 
 
