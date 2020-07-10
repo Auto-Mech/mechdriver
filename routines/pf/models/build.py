@@ -381,8 +381,8 @@ def tau_data(spc_dct_i,
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
     for locs in tau_save_fs[-1].existing():
 
-        print('Reading tau info at path {}'.format(
-            tau_save_fs[-1].path(locs)))
+        # print('Reading tau info at path {}'.format(
+            # tau_save_fs[-1].path(locs)))
 
         geo = tau_save_fs[-1].file.geometry.read(locs)
         geo_str = autofile.data_types.swrite.geometry(geo)
