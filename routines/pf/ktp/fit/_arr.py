@@ -1,96 +1,17 @@
 """
   Fit the rate constants read from the MESS output to
-  Arrhenius, Plog, or Troe expressions
+  Arrhenius expressions
 """
 
 import copy
-import numpy
 import ratefit
 import chemkin_io
 import mess_io
-from lib.amech_io import writer
-from lib.phydat import phycon
-
-
-def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
-              pes_formula, label_dct, es_info, pf_model,
-              mess_path, fit_method, pdep_fit,
-              arrfit_thresh):
-    """ Parse the MESS output and fit the rates to
-        Arrhenius expressions written as CHEMKIN strings
-    """
-
-    # Initialize chemkin dct with header
-    chemkin_str_dct = {
-        'header': writer.ckin.model_header(es_info, pf_model)
-    }
-
-    # Loop through reactions, fit rates, and write ckin strings
-    rxn_pairs = gen_reaction_pairs(label_dct)
-    print(rxn_pairs)
-    for (name_i, lab_i), (name_j, lab_j) in rxn_pairs:
-
-        # Set the name and A conversion factor
-        reaction = name_i + '=' + name_j
-        a_conv_factor = phycon.NAVO if 'W' not in lab_i else 1.00
-
-        print(('\n--------------------------------------------' +
-               '------------------------------------------'))
-        print('\nGetting Rates for {}'.format(
-            reaction))
-
-        # Read the rate constants out of the mess outputs
-        print('\nReading k(T,P)s from MESS output...')
-        ktp_dct = read_rates(
-            inp_temps, inp_pressures, inp_tunit, inp_punit,
-            lab_i, lab_j, mess_path, pdep_fit,
-            bimol=numpy.isclose(a_conv_factor, 6.0221e23))
-
-        # Move ahead in loop if no rates found
-        if not ktp_dct:
-            print('\nNo valid k(T,Ps)s from MESS output.')
-            print('\nSkipping to next reaction...')
-            continue
-
-        # Get the desired fits in the form of CHEMKIN strs
-        if fit_method == 'arrhenius':
-            print('\nFitting k(T,P)s to PLOG/Arrhenius Form....')
-            chemkin_str = perform_arrhenius_fits(
-                ktp_dct, reaction, mess_path,
-                a_conv_factor, arrfit_thresh)
-        elif fit_method == 'troe':
-            print('\nFitting k(T,P)s to Troe Form...')
-            # pass
-            # chemkin_str += perform_troe_fits(
-            #     ktp_dct, reaction, mess_path,
-            #     troe_param_fit_lst,
-            #     a_conv_factor, err_thresh)
-
-        # Update the chemkin string dct
-        print('\nFitting Parameters in CHEMKIN Format:')
-        print(chemkin_str)
-        ridx = pes_formula + '_' + reaction.replace('=', '_')
-        chemkin_str_dct.update({ridx: chemkin_str})
-
-    return chemkin_str_dct
-
-
-def gen_reaction_pairs(label_dct):
-    """ Generate pairs of reactions
-    """
-    rxn_pairs = ()
-    for name_i, lab_i in label_dct.items():
-        if 'F' not in lab_i and 'B' not in lab_i:
-            for name_j, lab_j in label_dct.items():
-                if 'F' not in lab_j and 'B' not in lab_j and lab_i != lab_j:
-                    rxn_pairs += (((name_i, lab_i), (name_j, lab_j)),)
-
-    return rxn_pairs
 
 
 # Functions to fit rates to Arrhenius/PLOG function
-def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
-                           a_conv_factor, arrfit_thresh):
+def perform_fits(ktp_dct, reaction, mess_path,
+                 a_conv_factor, arrfit_thresh):
     """ Read the rates for each channel and perform the fits
     """
     # Fit rate constants to single Arrhenius expressions
@@ -144,15 +65,15 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
               ' Trying double fit')
 
         # Generate guess parameters
-        # print('Generating Double Fit Guess from Single Fit Parameters')
-        # make_dbl_fit_guess(sing_params_dct)
+        print('Generating Double Fit Guess from Single Fit Parameters')
+        guess_params_dct = make_dbl_fit_guess(sing_params_dct)
 
         # Fit rate constants to double Arrhenius expressions
         doub_params_dct, doub_fit_temp_dct, doub_fit_suc = mod_arr_fit(
             ktp_dct, mess_path, fit_type='double',
             fit_method='dsarrfit', t_ref=1.0,
             a_conv_factor=a_conv_factor,
-            inp_param_dct=sing_params_dct)
+            inp_param_dct=guess_params_dct)
 
         if doub_fit_suc:
             print('\nSuccessful fit to Double Arrhenius at all T, P')
@@ -176,7 +97,8 @@ def perform_arrhenius_fits(ktp_dct, reaction, mess_path,
     return chemkin_str
 
 
-def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
+def mod_arr_fit(ktp_dct, mess_path,
+                fit_type='single', fit_method='dsarrfit',
                 t_ref=1.0, a_conv_factor=1.0, inp_param_dct=None):
     """
     Routine for a single reaction:
@@ -201,17 +123,20 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
         temps = tk_arr[0]
         rate_constants = tk_arr[1]
 
-        # Build guess params for a double fit
-        if inp_param_dct is not None and fit_type == 'double':
-            arr1_guess, arr2_guess = _generate_guess(
-                inp_param_dct[pressure])
-
         # Fit rate constants using desired Arrhenius fit
         if fit_type == 'single':
             fit_params = ratefit.fit.arrhenius.single(
                 temps, rate_constants, t_ref, fit_method,
                 dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
         elif fit_type == 'double':
+
+            # Generate guess parameters
+            if inp_param_dct is not None:
+                arr_guess = inp_param_dct[pressure]
+                arr1_guess, arr2_guess = arr_guess[:3], arr_guess[3:]
+            else:
+                arr1_guess, arr2_guess = (8.1e-11, -0.01, 2000.0), ()
+
             fit_params = ratefit.fit.arrhenius.double(
                 temps, rate_constants, t_ref, fit_method,
                 arr1_guess=arr1_guess, arr2_guess=arr2_guess,
@@ -259,9 +184,10 @@ def _generate_guess(params):
     arr1_guess = (a1_guess, n1_guess, ea1_guess)
     arr2_guess = (a2_guess, n2_guess, ea2_guess)
 
-    return arr1_guess, arr2_guess
+    return arr1_guess + arr2_guess
 
 
+# Fit Assessments
 def _check_double_fit(sing_fit_dct, dbl_fit_dct,
                       temps=(2000.0), t_ref=1.0):
     """ Check if the double fit is bad
@@ -325,13 +251,12 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
 
     # Calculute the error between the calc and fit ks
     for pressure, fit_ks in fit_k_dct.items():
-        
+
         calc_ks = ktp_dct[pressure][1]
 
-        # Put a function in to handle the ranges?
+        # Assess the errors using some subset of the rate constants
         test_calc_ks, test_fit_ks = _gen_err_set(
             calc_ks, fit_ks, err_set=err_set)
-
         mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
             test_calc_ks, test_fit_ks)
 
@@ -346,112 +271,13 @@ def _gen_err_set(calc_ks, fit_ks, err_set='all'):
     """
 
     if err_set == 'skip':
-        test_calc_ks = calc_ks[1:-2]   
-        test_fit_ks = fit_ks[1:-2]   
+        test_calc_ks = calc_ks[1:-2]
+        test_fit_ks = fit_ks[1:-2]
     else:
         test_calc_ks = calc_ks
-        test_fit_ks = fit_ks   
+        test_fit_ks = fit_ks
 
     return test_calc_ks, test_fit_ks
-
-
-# Functions to fit rates to Troe function
-def perform_troe_fits(ktp_dct, reaction, mess_path,
-                      troe_param_fit_lst, a_conv_factor, err_thresh):
-    """ Fit rate constants to Troe parameters
-    """
-
-    # Dictionaries to store info; indexed by pressure (given in fit_ps)
-    fit_param_dct = {}
-    fit_temp_dct = {}
-
-    # Calculate the fitting parameters from the filtered T,k lists
-    new_dct = {}
-    for key, val in ktp_dct.items():
-        if key != 'high':
-            new_dct[key] = val
-    inv_ktp_dct = ratefit.fit.flip_ktp_dct(new_dct)
-    fit_params = ratefit.fit.troe.std_form(
-        inv_ktp_dct, troe_param_fit_lst, mess_path,
-        highp_a=8.1e-11, highp_n=-0.01, highp_ea=1000.0,
-        lowp_a=8.1e-11, lowp_n=-0.01, lowp_ea=1000.0,
-        alpha=0.19, ts1=590, ts2=1.e6, ts3=6.e4,
-        fit_tol1=1.0e-8, fit_tol2=1.0e-8,
-        a_conv_factor=1.0)
-
-    # Store the parameters in the fit dct
-    for pressure, tk_arr in ktp_dct.items():
-
-        # Store the fitting parameters in a dictionary
-        fit_param_dct[pressure] = fit_params
-
-        # Store the temperatures used to fit in a dictionary
-        temps = tk_arr[0]
-        fit_temp_dct[pressure] = [min(temps), max(temps)]
-
-    # Check if the desired fits were successful at each pressure
-    fit_success = all(params for params in fit_param_dct.values())
-
-    # Calculate the errors from the Troe fits
-    if fit_success:
-        fit_err_dct = assess_troe_fit_err(
-            fit_param_dct, ktp_dct, t_ref=1.0, a_conv_factor=a_conv_factor)
-        fit_good = max((vals[1] for vals in fit_err_dct.values())) < err_thresh
-        if fit_good:
-            chemkin_str = chemkin_io.writer.reaction.troe(
-                reaction,
-                [fit_params[0], fit_params[1], fit_params[2]],
-                [fit_params[3], fit_params[4], fit_params[5]],
-                [fit_params[6], fit_params[8], fit_params[7], fit_params[9]],
-                colliders=())
-
-        # Store the fitting parameters in a dictionary
-    else:
-        chemkin_str = ''
-
-    return chemkin_str
-
-
-def assess_troe_fit_err(fit_param_dct, ktp_dct, t_ref=1.0, a_conv_factor=1.0):
-    """ Determine the errors in the rate constants that arise
-        from the Arrhenius fitting procedure
-    """
-
-    fit_k_dct = {}
-    fit_err_dct = {}
-
-    # Calculate fitted rate constants using the fitted parameters
-    fit_pressures = fit_param_dct.keys()
-    for pressure, params in fit_param_dct.items():
-
-        # Set the temperatures
-        temps = ktp_dct[pressure][0]
-
-        # Calculate fitted rate constants, based on fit type
-        highp_arrfit_ks = ratefit.calc.single_arrhenius(
-            params[0], params[1], params[2],
-            t_ref, temps)
-        lowp_arrfit_ks = ratefit.calc.single_arrhenius(
-            params[3], params[4], params[5],
-            t_ref, temps)
-        fit_ks = ratefit.calc.troe(
-            highp_arrfit_ks, lowp_arrfit_ks, fit_pressures, temps,
-            params[6], params[8], params[7], ts2=params[9])
-
-        # Store the fitting parameters in a dictionary
-        fit_k_dct[pressure] = fit_ks / a_conv_factor
-
-    # Calculute the error between the calc and fit ks
-    for pressure, fit_ks in fit_k_dct.items():
-
-        calc_ks = ktp_dct[pressure][1]
-        mean_avg_err, max_avg_err = ratefit.calc.fitting_errors(
-            calc_ks, fit_ks)
-
-        # Store in a dictionary
-        fit_err_dct[pressure] = [mean_avg_err, max_avg_err]
-
-    return fit_err_dct
 
 
 # Readers
@@ -516,29 +342,22 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
             if pdep_fit:
                 print('\nUser requested to assess pressure dependence',
                       'of reaction.')
-                assess_pdep_temps = pdep_fit['assess_pdep_temps']
-                pdep_tolerance = pdep_fit['pdep_tolerance']
-                no_pdep_pval = pdep_fit['no_pdep_pval']
-                pdep_low = pdep_fit['pdep_low']
-                pdep_high = pdep_fit['pdep_high']
+                dct = {k: pdep_fit[k] for k in pdep_fit if k != 'no_pdep_pval'}
                 rxn_is_pdependent = ratefit.fit.assess_pressure_dependence(
-                    valid_calc_tk_dct, assess_pdep_temps,
-                    tolerance=pdep_tolerance, plow=pdep_low, phigh=pdep_high)
+                    valid_calc_tk_dct, **dct)
                 if rxn_is_pdependent:
                     print('  Reaction found to be pressure dependent.',
                           'Fitting all k(T)s from all pressures',
                           'found in MESS.')
-                    # Set dct as copy of dct to do PLOG fits at all pressures
                     ktp_dct = copy.deepcopy(valid_calc_tk_dct)
                 else:
-                    # Set dct w/ single set of k(T, P) at desired pressure
+                    no_pdep_pval = pdep_fit['no_pdep_pval']
                     print('  No pressure dependence detected.',
                           'Grabbing k(T)s at {} {}'.format(
                               no_pdep_pval, punit))
                     if no_pdep_pval in valid_calc_tk_dct:
                         ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
             else:
-                # Set dct fit as copy of dct to do PLOG fits at all pressures
                 ktp_dct = copy.deepcopy(valid_calc_tk_dct)
 
         # Patchy way to get high-pressure rates in dct if needed

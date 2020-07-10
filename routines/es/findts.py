@@ -30,12 +30,12 @@ def run(spc_dct, spc_name,
     # Set various TS information using the dictionary
     ini_zma = ts_dct['zma']
     typ = ts_dct['class']
+
     dist_info = ts_dct['dist_info']
     dist_name, _, update_guess, brk_name, _ = dist_info
     frm_bnd_keys = ts_dct['frm_bnd_keys']
     brk_bnd_keys = ts_dct['brk_bnd_keys']
-    print('frm1', frm_bnd_keys)
-    print('brk1', brk_bnd_keys)
+    rcts_gra = ts_dct['rcts_gra']
 
     # set ts searching algorithm and grid info
     typ = ts_dct['class']
@@ -215,7 +215,7 @@ def run(spc_dct, spc_name,
                 ts_save_fs, ts_save_path, run_fs,
                 typ, grid, update_guess,
                 dist_name, brk_name,
-                frm_bnd_keys, brk_bnd_keys,
+                frm_bnd_keys, brk_bnd_keys, rcts_gra,
                 opt_script_str, script_str, overwrite,
                 es_keyword_dct, **opt_kwargs)
 
@@ -232,7 +232,7 @@ def sadpt_transition_state(
         ts_save_fs, ts_save_path, run_fs,
         typ, grid, update_guess,
         dist_name, brk_name,
-        frm_bnd_keys, brk_bnd_keys,
+        frm_bnd_keys, brk_bnd_keys, rcts_gra,
         opt_script_str, script_str, overwrite,
         es_keyword_dct, **opt_kwargs):
     """ Find a sadddle point
@@ -278,7 +278,7 @@ def sadpt_transition_state(
                 mod_thy_info,
                 cnf_save_fs,
                 ts_save_fs, ts_save_path,
-                frm_bnd_keys, brk_bnd_keys,
+                frm_bnd_keys, brk_bnd_keys, rcts_gra,
                 zma_locs=[0])
     else:
         print('\n TS optimization failed. No geom to check and save.')

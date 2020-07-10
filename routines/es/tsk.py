@@ -246,7 +246,6 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             *thy_info[0:2])
 
         # Set variables if it is a saddle
-        dist_info = spc['dist_info'] if saddle else ()
         two_stage = saddle
         rxn_class = spc['class'] if saddle else ''
         mc_nsamp = spc['mc_nsamp']

@@ -397,16 +397,16 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=(0,)):
     # Read the form and broken keys from the min conf
     frm_bnd_keys, brk_bnd_keys = tsprep.rxn_bnd_keys(
         cnf_save_fs, min_cnf_locs, zma_locs=zma_locs)
-    ts_bnd1, ts_bnd2 = min(frm_bnd_keys), max(frm_bnd_keys)
-    print('ts_bnd1', ts_bnd1)
-    print('ts_bnd2', ts_bnd2)
 
     # Use the idxs to set the forming and breaking bond names
     if frm_bnd_keys:
         frm_name = automol.zmatrix.bond_key_from_idxs(
             zma, frm_bnd_keys)
+        ts_bnd1, ts_bnd2 = min(frm_bnd_keys), max(frm_bnd_keys)
     else:
         frm_name = ''
+        ts_bnd1, ts_bnd2 = None, None
+
     if brk_bnd_keys:
         brk_name = automol.zmatrix.bond_key_from_idxs(
             zma, brk_bnd_keys)
@@ -415,19 +415,23 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=(0,)):
     print('frm_name', frm_name)
     print('brk_name', brk_name)
 
-    # OLD: Set angles and distances needed for checks
-
     # Calculate the distance of bond being formed
-    cnf_dist = automol.zmatrix.values(zma)[frm_name]
-    ref_dist = automol.zmatrix.values(ref_zma)[frm_name]
+    cnf_dct = automol.zmatrix.values(zma)
+    ref_dct = automol.zmatrix.values(ref_zma)
+    cnf_dist = cnf_dct.get(frm_name, None)
+    ref_dist = ref_dct.get(frm_name, None)
+    if cnf_dist is None:
+        cnf_dist = cnf_dct.get(brk_name, None)
+    if ref_dist is None:
+        ref_dist = ref_dct.get(brk_name, None)
     print('conf_dist', cnf_dist)
     print('ref_dist', ref_dist)
 
     # Calculate the central angle of reacting moiety of zma
     cnf_angle = geomprep.calc_rxn_angle(
-        zma, next(iter(frm_bnd_keys)), next(iter(brk_bnd_keys)), rxn_class)
+        zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
     ref_angle = geomprep.calc_rxn_angle(
-        ref_zma, next(iter(frm_bnd_keys)), next(iter(brk_bnd_keys)), rxn_class)
+        ref_zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
     print('conf_angle', cnf_angle)
     print('ref_angle', ref_angle)
 

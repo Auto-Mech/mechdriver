@@ -73,6 +73,7 @@ def run(pes_idx,
             spc_queue = parser.species.build_spc_queue(rxn_lst)
         elif obj == 'ts':
             if not built_dct:
+                print(es_keyword_dct)
                 rxndirn = es_keyword_dct['rxndirn']
                 ts_dct, ts_queue = parser.species.get_sadpt_dct(
                     pes_idx, es_tsk_lst, rxn_lst,
