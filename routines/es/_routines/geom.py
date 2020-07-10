@@ -220,10 +220,12 @@ def remove_imag(
     imag, geo, disp_xyzs, hess = run_check_imaginary(
         spc_info, geo, thy_info, thy_run_fs, script_str,
         overwrite, **kwargs)
+    print('geo test in remove_imag:') 
+    print(automol.geom.string(geo), disp_xyzs)
     chk_idx = 0
     while imag and chk_idx < 5:
         chk_idx += 1
-        print('Attemptin gkick off along mode, attempt {}...'.format(chk_idx))
+        print('Attempting kick off along mode, attempt {}...'.format(chk_idx))
 
         geo = run_kickoff_saddle(
             geo, disp_xyzs, spc_info, thy_info, run_fs, thy_run_fs,
@@ -237,6 +239,7 @@ def remove_imag(
         imag, geo, disp_xyzs, hess = run_check_imaginary(
             spc_info, geo, thy_info, thy_run_fs, script_str,
             overwrite, **kwargs)
+        kickoff_size *= 2
     return geo, hess
 
 
@@ -304,6 +307,8 @@ def run_kickoff_saddle(
     if kickoff_backward:
         disp_len *= -1
     disp_xyzs = numpy.multiply(disp_xyzs, disp_len)
+    print('geo test in kickoff_saddle:') 
+    print(automol.geom.string(geo), disp_xyzs)
     geo = automol.geom.displace(geo, disp_xyzs)
     if opt_cart:
         geom = geo

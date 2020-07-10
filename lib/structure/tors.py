@@ -380,10 +380,6 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
     with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
         output_string = mess_file.read()
     tors_zpes = mess_io.reader.tors.zpves(output_string)
-    # print('tors_zpes from mess reader', tors_zpes)
-    # print('output_string from mess reader', output_string)
     tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
-
-    # print('tors_zpe from messpf test:', tors_zpe)
 
     return tors_zpe
