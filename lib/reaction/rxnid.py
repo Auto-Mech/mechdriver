@@ -36,7 +36,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
      ts_zma, bkp_ts_zma,
      tors_names, bkp_tors_names,
      dist_name, bkp_dist_name, brk_name,
-     frm_bnd_key, brk_bnd_key] = ret
+     frm_bnd_keys, brk_bnd_key, rcts_gra] = ret
 
     # Determine grid for preliminary search for all different reaction types
     dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
@@ -57,8 +57,8 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     if typ:
         ts_class_data = [
             ts_zma, dist_name, brk_name,
-            grid, frm_bnd_key, brk_bnd_key,
-            tors_names, update_guess, var_grid]
+            grid, frm_bnd_keys, brk_bnd_key,
+            tors_names, update_guess, var_grid, rcts_gra]
     else:
         ts_class_data = []
     if bkp_typ:
@@ -112,8 +112,9 @@ def determine_reaction_type(rct_zmas, prd_zmas,
     bkp_tors_names = []
     bkp_dist_name = []
     brk_name = []
-    frm_bnd_key = []
-    brk_bnd_key = []
+    frm_bnd_keys = frozenset({})
+    brk_bnd_key = frozenset({})
+    rcts_gra = ()
 
     # Cycle through each possible reaction type checking if it is in the class
     # Check both orders of reactants and products
@@ -131,38 +132,38 @@ def determine_reaction_type(rct_zmas, prd_zmas,
         ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
         if ret and (not given_class or given_class == 'addition'):
             typ = 'addition'
-            ts_zma, dist_name, frm_bnd_key, tors_names = ret
+            ts_zma, dist_name, frm_bnd_keys, tors_names, rcts_gra = ret
             typ += ' '
             typ += set_ts_spin(ts_mul, high_mul, low_mul)
             # Set up beta sci as fall back option for failed addn TS search
             ret2 = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
             if ret2:
                 bkp_typ = 'beta scission'
-                bkp_ts_zma, bkp_dist_name, _, bkp_tors_names = ret2
+                bkp_ts_zma, bkp_dist_name, _, bkp_tors_names, _ = ret2
 
         # Check for beta-scission
         if typ is None:
             ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
             if ret and (not given_class or given_class == 'betascission'):
                 typ = 'beta scission'
-                ts_zma, dist_name, brk_bnd_key, tors_names = ret
+                ts_zma, dist_name, brk_bnd_key, tors_names, rcts_gra = ret
                 ret2 = automol.zmatrix.ts.addition(
                     prd_zmas, rct_zmas, rct_tors_names)
                 if ret2:
                     bkp_typ = 'addition'
-                    bkp_ts_zma, bkp_dist_name, _, bkp_tors_names = ret2
+                    bkp_ts_zma, bkp_dist_name, _, bkp_tors_names, _ = ret2
 
         # Check for hydrogen migration
         if typ is None:
             orig_dist = automol.zmatrix.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
             hmcls = not given_class or given_class == 'hydrogenmigration'
             if orig_dist and hmcls:
-                rct_zmas = filesys.inf.min_dist_conformer_zma_geo(
+                rct_zmas = filesys.mincnf.min_dist_conformer_zma_geo(
                     orig_dist, cnf_save_fs_lst[0])
                 ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
                 if ret:
                     typ = 'hydrogen migration'
-                    zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
+                    zma, dist_name, frm_bnd_keys, brk_bnd_key, tors_names, rcts_gra = ret
                     ts_zma = zma
 
         # Check for hydrogen abstraction
@@ -172,7 +173,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             hmcls = not given_class or given_class == 'hydrogenmigration'
             if ret and hmcls:
                 typ = 'hydrogen abstraction'
-                ts_zma, dist_name, frm_bnd_key, brk_bnd_key, tors_names = ret
+                ts_zma, dist_name, frm_bnd_keys, brk_bnd_key, tors_names, rcts_gra = ret
                 typ += ' '
                 typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
@@ -190,28 +191,28 @@ def determine_reaction_type(rct_zmas, prd_zmas,
                 typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
         # Check for subsitution
-        if typ is None:
-            ret = automol.zmatrix.ts.substitution(rct_zmas, prd_zmas)
-            if ret and (not given_class or given_class == 'substitution'):
-                typ = 'substitution'
-                ts_zma, dist_name, tors_names = ret
-                typ += ' '
-                typ += set_ts_spin(ts_mul, high_mul, low_mul)
+        # if typ is None:
+        #     ret = automol.zmatrix.ts.substitution(rct_zmas, prd_zmas)
+        #     if ret and (not given_class or given_class == 'substitution'):
+        #         typ = 'substitution'
+        #         ts_zma, dist_name, tors_names = ret
+        #         typ += ' '
+        #         typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
         # Check for elimination
-        if typ is None:
-            orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(
-                rct_zmas, prd_zmas)
-            if orig_dist:
-                rct_zmas = filesys.read.min_dist_conformer_zma_geo(
-                    orig_dist, cnf_save_fs_lst[0])
-                ret = automol.zmatrix.ts.concerted_unimolecular_elimination(
-                    rct_zmas, prd_zmas)
-                if ret and (not given_class or given_class == 'elimination'):
-                    typ = 'elimination'
-                    ts_zma, dist_name, brk_name, frm_bnd_key, tors_names = ret
-                    typ += ' '
-                    typ += set_ts_spin(ts_mul, high_mul, low_mul)
+        # if typ is None:
+        #     orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(
+        #         rct_zmas, prd_zmas)
+        #     if orig_dist:
+        #         rct_zmas = filesys.read.min_dist_conformer_zma_geo(
+        #             orig_dist, cnf_save_fs_lst[0])
+        #         ret = automol.zmatrix.ts.concerted_unimolecular_elimination(
+        #             rct_zmas, prd_zmas)
+        #         if ret and (not given_class or given_class == 'elimination'):
+        #             typ = 'elimination'
+        #             ts_zma, dist_name, brk_name, frm_bnd_keys, tors_names = ret
+        #             typ += ' '
+        #             typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
         # Break if reaction found
         if typ is not None:
@@ -242,7 +243,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
         ts_zma, bkp_ts_zma,
         tors_names, bkp_tors_names,
         dist_name, bkp_dist_name, brk_name,
-        frm_bnd_key, brk_bnd_key]
+        frm_bnd_keys, brk_bnd_key, rcts_gra]
 
     return ret
 

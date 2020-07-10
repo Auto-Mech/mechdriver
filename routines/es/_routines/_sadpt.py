@@ -1,6 +1,7 @@
 """ Functions for sadpt
 """
 
+import automol
 import autofile
 from autofile import fs
 import elstruct
@@ -193,7 +194,7 @@ def save_saddle_point(
         mod_thy_info,
         cnf_save_fs,
         ts_save_fs, ts_save_path,
-        frm_bnd_keys, brk_bnd_keys,
+        frm_bnd_keys, brk_bnd_keys, rcts_gra,
         zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
     """
@@ -246,12 +247,15 @@ def save_saddle_point(
     # shift_brk_bnd_keys = structure.geom.shift_vals_from_dummy(
     #     brk_bnd_keys, zma)
 
-    print(frm_bnd_keys)
+    print('frm', frm_bnd_keys)
+    print('brk', brk_bnd_keys)
     tra = (frozenset({frm_bnd_keys}),
            frozenset({brk_bnd_keys}))
     print('tra', tra)
+    print('rcts gra\n')
+    print(automol.graph.string(rcts_gra))
     zma_save_fs[-1].file.transformation.write(tra, zma_locs)
-    # zma_save_fs[-1].file.reactant_graph.write(ref_gra, locs)
+    zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
 
     # Save the energy in a single-point filesystem
     print(" - Saving energy...")

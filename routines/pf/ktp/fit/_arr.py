@@ -65,15 +65,15 @@ def perform_fits(ktp_dct, reaction, mess_path,
               ' Trying double fit')
 
         # Generate guess parameters
-        # print('Generating Double Fit Guess from Single Fit Parameters')
-        # make_dbl_fit_guess(sing_params_dct)
+        print('Generating Double Fit Guess from Single Fit Parameters')
+        guess_params_dct = make_dbl_fit_guess(sing_params_dct)
 
         # Fit rate constants to double Arrhenius expressions
         doub_params_dct, doub_fit_temp_dct, doub_fit_suc = mod_arr_fit(
             ktp_dct, mess_path, fit_type='double',
             fit_method='dsarrfit', t_ref=1.0,
             a_conv_factor=a_conv_factor,
-            inp_param_dct=sing_params_dct)
+            inp_param_dct=guess_params_dct)
 
         if doub_fit_suc:
             print('\nSuccessful fit to Double Arrhenius at all T, P')
@@ -97,7 +97,8 @@ def perform_fits(ktp_dct, reaction, mess_path,
     return chemkin_str
 
 
-def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
+def mod_arr_fit(ktp_dct, mess_path,
+                fit_type='single', fit_method='dsarrfit',
                 t_ref=1.0, a_conv_factor=1.0, inp_param_dct=None):
     """
     Routine for a single reaction:
@@ -122,17 +123,20 @@ def mod_arr_fit(ktp_dct, mess_path, fit_type='single', fit_method='dsarrfit',
         temps = tk_arr[0]
         rate_constants = tk_arr[1]
 
-        # Build guess params for a double fit
-        if inp_param_dct is not None and fit_type == 'double':
-            arr1_guess, arr2_guess = _generate_guess(
-                inp_param_dct[pressure])
-
         # Fit rate constants using desired Arrhenius fit
         if fit_type == 'single':
             fit_params = ratefit.fit.arrhenius.single(
                 temps, rate_constants, t_ref, fit_method,
                 dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
         elif fit_type == 'double':
+
+            # Generate guess parameters
+            if inp_param_dct is not None:
+                arr_guess = inp_param_dct[pressure]
+                arr1_guess, arr2_guess = arr_guess[:3], arr_guess[3:]
+            else:
+                arr1_guess, arr2_guess = (8.1e-11, -0.01, 2000.0), ()
+
             fit_params = ratefit.fit.arrhenius.double(
                 temps, rate_constants, t_ref, fit_method,
                 arr1_guess=arr1_guess, arr2_guess=arr2_guess,
@@ -180,9 +184,10 @@ def _generate_guess(params):
     arr1_guess = (a1_guess, n1_guess, ea1_guess)
     arr2_guess = (a2_guess, n2_guess, ea2_guess)
 
-    return arr1_guess, arr2_guess
+    return arr1_guess + arr2_guess
 
 
+# Fit Assessments
 def _check_double_fit(sing_fit_dct, dbl_fit_dct,
                       temps=(2000.0), t_ref=1.0):
     """ Check if the double fit is bad
@@ -249,10 +254,9 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
 
         calc_ks = ktp_dct[pressure][1]
 
-        # Put a function in to handle the ranges?
+        # Assess the errors using some subset of the rate constants
         test_calc_ks, test_fit_ks = _gen_err_set(
             calc_ks, fit_ks, err_set=err_set)
-
         mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
             test_calc_ks, test_fit_ks)
 
