@@ -2,7 +2,6 @@
   Functions handling hindered rotor model calculations
 """
 
-import itertools
 import numpy
 from scipy.interpolate import interp1d
 import automol
@@ -256,7 +255,7 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
     # print('cscn_path', scn_run_fs[1].path([coo_names]))
 
     # Build initial lists for storing potential energies and Hessians
-    grid_points, grid_vals = _set_hr_dims(tors_grids)
+    grid_points, grid_vals = torsprep.set_hr_dims(tors_grids)
     pot, geoms, grads, hessians = {}, {}, {}, {}
 
     # Set up filesystem information
@@ -309,21 +308,6 @@ def _calc_hr_frequenices(geoms, grads, hessians, run_path):
         hr_freqs[point] = proj_freqs
 
     return hr_freqs
-
-
-def _set_hr_dims(tors_grids):
-    """ Determine the dimensions of the grid
-    """
-    assert len(tors_grids) in (1, 2, 3, 4), 'Rotor must be 1-4 dimensions'
-
-    grid_points = ((i for i in range(len(grid)))
-                   for grid in tors_grids)
-    grid_vals = ((x for x in grid)
-                 for grid in tors_grids)
-    grid_points = itertools.product(*grid_points)
-    grid_vals = itertools.product(*grid_vals)
-
-    return grid_points, grid_vals
 
 
 def _hrpot_spline_fitter(pot, min_thresh=-0.05, max_thresh=15.0):
