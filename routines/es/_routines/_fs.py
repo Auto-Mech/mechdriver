@@ -9,7 +9,7 @@ from routines.es import runner as es_runner
 
 
 def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
-                inzma, zma_locs=(0,), in_zma_fs=False):
+                zma_locs=(0,), in_zma_fs=False):
     """ Save a geometry and associated information from some
         electronic structure routine into the filesystem.
     """
@@ -19,7 +19,7 @@ def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
     if ret:
 
         # Get the geo, zma, and ene based on job type
-        ene, geo, zma = _read(run_fs, job, inzma)
+        ene, geo, zma = _read(run_fs, job)
 
         # Obtain inf obj and inp str to write in filesys
         inf_obj, inp_str, _ = ret
@@ -61,7 +61,7 @@ def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
     return saved
 
 
-def _read(run_fs, job, inzma):
+def _read(run_fs, job):
     """ Read the output
     """
 
@@ -76,11 +76,13 @@ def _read(run_fs, job, inzma):
         method = inf_obj.method
         ene = elstruct.reader.energy(prog, method, out_str)
         if job == elstruct.Job.OPTIMIZATION:
+            # Read the optimized structs from the output file
             geo = elstruct.reader.opt_geometry(prog, out_str)
             zma = elstruct.reader.opt_zmatrix(prog, out_str)
         elif job == elstruct.Job.ENERGY:
-            zma = inzma
-            geo = automol.zmatrix.geometry(zma)
+            # Read the initial structs stored in the run filesys
+            zma = run_fs[-1].file.zmatrix.read([job])
+            geo = run_fs[-1].file.geometry.read([job])
     else:
         ene, zma, geo = None, None, None
 

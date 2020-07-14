@@ -236,34 +236,37 @@ def is_methyl_rotor(zma, rotor):
 
 
 # Building constraints
-def build_constraint_dct(zma, coord_names):
+def build_constraint_dct(zma, const_names, scan_names=()):
     """ Build a dictionary of constraints
     """
     # Get the list names sorted for dictionary
-    rnames = (name for name in coord_names if 'R' in name)
-    anames = (name for name in coord_names if 'A' in name)
-    dnames = (name for name in coord_names if 'D' in name)
+    rnames = (name for name in const_names if 'R' in name)
+    anames = (name for name in const_names if 'A' in name)
+    dnames = (name for name in const_names if 'D' in name)
     rnames = tuple(sorted(rnames, key=lambda x: int(x.split('R')[1])))
     anames = tuple(sorted(anames, key=lambda x: int(x.split('A')[1])))
     dnames = tuple(sorted(dnames, key=lambda x: int(x.split('D')[1])))
     constraint_names = rnames + anames + dnames
 
-    zma_vals = automol.zmatrix.values(zma)
-    zma_coords = automol.zmatrix.coordinates(zma)
-    assert set(constraint_names) <= zma_coords, (
-        'Attempting to constrain coordinates not in zma:\n{}\n{}'.format(
-            constraint_names, zma_coords)
-    )
-
-    # constraint_names = [name
-    #                     for name_lst in tors_names
-    #                     for name in name_lst]
+    # Remove the scan coordinates so they are not placed in the dict
+    constraint_names = (name for name in constraint_names
+                        if name not in scan_names)
 
     # Build dictionary
-    constraint_dct = dict(zip(
-        constraint_names,
-        (round(zma_vals[name], 2) for name in constraint_names)
-    ))
+    if constraint_names:
+        zma_vals = automol.zmatrix.values(zma)
+        zma_coords = automol.zmatrix.coordinates(zma)
+        assert set(constraint_names) <= zma_coords, (
+            'Attempting to constrain coordinates not in zma:\n{}\n{}'.format(
+                constraint_names, zma_coords)
+        )
+
+        constraint_dct = dict(zip(
+            constraint_names,
+            (round(zma_vals[name], 2) for name in constraint_names)
+        ))
+    else:
+        constraint_dct = None
 
     return constraint_dct
 
