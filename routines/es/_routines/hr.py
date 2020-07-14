@@ -24,10 +24,8 @@ def hindered_rotor_scans(
 
         print('\nRunning Rotor: {}...'.format(tors_names))
 
-        # Get the dictionary for the torsional modes
-        if not tors_names:
-            continue
-        grid_dct = dict(zip(tors_names, tors_grids))
+        # Build the grid
+        grid_points, grid_vals = torsprep.set_hr_dims(tors_grids)
 
         print('\nSaving any HR in run filesys...')
         if constraint_dct is None:

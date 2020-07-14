@@ -353,6 +353,14 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 geo_save_path))
 
 
+# def run_prop(zma, geo, spc_info, thy_info,
+#              geo_save_fs, geo_run_path, geo_save_path, locs,
+#              script_str, overwrite,
+#              retryfail=True, **kwargs):
+#     """ Determine the properties, hessian for the geometry in the given location
+#     """
+
+
 def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
     """ Calculate harmonic frequencies using Hessian
     """
