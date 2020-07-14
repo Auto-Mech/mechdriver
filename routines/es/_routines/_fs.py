@@ -87,29 +87,7 @@ def _read(run_fs, job, inzma):
     return ene, zma, geo
 
 
-def _hr_traj(coord_names, scn_save_fs, locs_lst):
-    """
-    """
-    idxs_lst = [locs[-1] for locs in locs_lst]
-    enes = [scn_save_fs[-1].file.energy.read(locs)
-            for locs in locs_lst]
-    geos = [scn_save_fs[-1].file.geometry.read(locs)
-            for locs in locs_lst]
-
-    traj = []
-    for idxs, ene, geo in zip(idxs_lst, enes, geos):
-        comment = (
-            'energy: {:>15.10f}, '.format(ene) +
-            'grid idxs: {}'.format(idxs)
-        )
-        traj.append((comment, geo))
-
-    traj_path = scn_save_fs[1].file.trajectory.path([coord_names])
-    print("Updating scan trajectory file at {}".format(traj_path))
-    scn_save_fs[1].file.trajectory.write(traj, [coord_names])
-
-
-def _check_vma(zma, save_fs):
+def check_isomer(zma, save_fs):
     """ Ensure that the ZMA is being used
     """
     vma = automol.zmatrix.var_(zma)
