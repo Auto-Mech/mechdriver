@@ -521,39 +521,42 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     if run_tors_names:
 
         # Set constraint dct
-        if not frz_all_tors:
-            constraint_dct = None
+        if mod in ('1dhr', 'mdhr', 'mdhrv'):
+            const_names = None
         else:
-            if saddle:
-                const_tors_names = amech_sadpt_tors_names
-            else:
-                const_tors_names = amech_spc_tors_names
-            constraint_dct = structure.tors.build_constraint_dct(
-                zma, const_tors_names)
+            if mod == '1dhrf':
+                if saddle:
+                    const_tors_names = amech_sadpt_tors_names
+                else:
+                    const_tors_names = amech_spc_tors_names
+            elif mod == '1dhrfa':
+                coords = list(automol.zmatrix.coordinates(zma))
+                const_names = (x for x in coords if x not in const_tors_names)
 
-        # print('const dct', constraint_dct)
-        # print('names', const_tors_names)
-
+        # Set if scan is rigid or relaxed
+        scn_typ = 'relaxed' if mod != '1dhrfa' else 'rigid'
+    
         # Set up ini filesystem for scans
         _, ini_zma_run_path = filesys.build.zma_fs_from_prefix(
             ini_cnf_run_paths[0], zma_idxs=[0])
         _, ini_zma_save_path = filesys.build.zma_fs_from_prefix(
             ini_cnf_save_paths[0], zma_idxs=[0])
-        print('zma run', ini_zma_run_path)
-        print('zma save', ini_zma_save_path)
-        ini_scn_run_fs = filesys.build.scn_fs_from_cnf(
-            ini_zma_run_path, constraint_dct=constraint_dct)
-        ini_scn_save_fs = filesys.build.scn_fs_from_cnf(
-            ini_zma_save_path, constraint_dct=constraint_dct)
+        # print('zma run', ini_zma_run_path)
+        # print('zma save', ini_zma_save_path)
+        # ini_scn_run_fs = filesys.build.scn_fs_from_cnf(
+        #     ini_zma_run_path, constraint_dct=constraint_dct)
+        # ini_scn_save_fs = filesys.build.scn_fs_from_cnf(
+        #     ini_zma_save_path, constraint_dct=constraint_dct)
 
         if job == 'scan':
 
             hr.hindered_rotor_scans(
                 zma, spc_info, mod_thy_info,
-                ini_scn_run_fs, ini_scn_save_fs,
+                ini_zma_run_path, ini_zma_save_path,
                 run_tors_names, run_tors_grids,
                 opt_script_str, overwrite,
-                saddle=saddle, constraint_dct=constraint_dct,
+                scn_typ=scn_typ,
+                saddle=saddle, const_names=const_names,
                 retryfail=retryfail, **opt_kwargs)
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):

@@ -12,7 +12,7 @@ from lib.structure import tors as torsprep
 
 def run_scan(zma, spc_info, mod_thy_info,
              coord_names, coord_grids,
-             scn_run_fs, scn_save_fs,
+             scn_run_fs, scn_save_fs, scn_typ,
              script_str, overwrite,
              update_guess=True, reverse_sweep=True, saddle=False,
              constraint_dct=None, retryfail=True,
@@ -38,6 +38,7 @@ def run_scan(zma, spc_info, mod_thy_info,
         coord_grids=coord_grids,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
+        scn_typ=scn_typ,
         script_str=script_str,
         overwrite=overwrite,
         errors=(),
@@ -51,26 +52,28 @@ def run_scan(zma, spc_info, mod_thy_info,
     if reverse_sweep:
         print('\nDoing a reverse sweep of the HR scan to catch errors...')
         _run_scan(
-            script_str=script_str,
-            run_prefixes=list(reversed(run_prefixes)),
-            scn_save_fs=scn_save_fs,
             guess_zma=zma,
-            coo_name=coo_names[0],
-            grid_idxs=list(reversed(grid_idxs)),
-            grid_vals=list(reversed(grid_vals[0])),
             spc_info=spc_info,
-            thy_info=thy_info,
+            mod_thy_info=mod_thy_info,
+            coord_names=coord_names,
+            coord_grids=tuple(reversed(coord_grids)),
+            scn_run_fs=scn_run_fs,
+            scn_save_fs=scn_save_fs,
+            scn_typ=scn_typ,
+            script_str=script_str,
             overwrite=overwrite,
+            errors=(),
+            options_mat=(),
+            retryfail=retryfail,
             update_guess=update_guess,
             saddle=saddle,
-            constraint_dct=constraint_dct,
-            **kwargs
+            constraint_dct=constraint_dct
         )
 
 
 def _run_scan(guess_zma, spc_info, mod_thy_info,
               coord_names, coord_grids,
-              scn_run_fs, scn_save_fs,
+              scn_run_fs, scn_save_fs, scn_typ,
               script_str, overwrite,
               errors=(), options_mat=(),
               retryfail=True, update_guess=True, saddle=False,
@@ -84,12 +87,6 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
         frozen_coordinates = coord_names + list(constraint_dct)
     else:
         frozen_coordinates = coord_names
-
-    # Set the appropriate job based on the frozen_coordinates
-    if set(frozen_coordinates) != set(automol.zmatrix.coordinates(guess_zma)):
-        job = elstruct.Job.OPTIMIZATION
-    else:
-        job = elstruct.Job.ENERGY
 
     # Read the energies and Hessians from the filesystem
     _, grid_vals = torsprep.set_hr_dims(coord_grids)
@@ -106,6 +103,9 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
 
         # Build the zma
         zma = automol.zmatrix.set_values(guess_zma, dict(coord_names, vals))
+
+        # Set the job
+        job = _set_job(scn_typ)
 
         # Run an optimization or energy job, as needed.
         geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
@@ -154,8 +154,14 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
 
                 ret = es_runner.read_job(job=job, run_fs=run_fs)
 
+                # Write initial mat as they are needed later
+                run_fs[-1].file.zmatrix.write(zma, [job])
+                run_fs[-1].file.geometry.write(
+                    automol.zmatrix.geometry(zma), [job])
 
-def save_scan(scn_run_fs, scn_save_fs, coo_names, mod_thy_info, job):
+
+def save_scan(scn_run_fs, scn_save_fs, scn_typ,
+              coo_names, mod_thy_info):
     """ save the scans that have been run so far
     """
 
@@ -173,8 +179,9 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, mod_thy_info, job):
 
             # Build run fs and save the structure
             run_fs = autofile.fs.run(run_path)
-            saved = save_struct(run_fs, scn_save_fs, locs, job,
-                                mod_thy_info, inzma, in_zma_fs=True)
+            saved = save_struct(
+                run_fs, scn_save_fs, locs, _set_job(scn_typ),
+                mod_thy_info, in_zma_fs=True)
 
             # Add to locs lst if the structure is saved
             if saved:
@@ -185,11 +192,13 @@ def save_scan(scn_run_fs, scn_save_fs, coo_names, mod_thy_info, job):
             _hr_traj(coo_names, scn_save_fs, locs_lst)
 
 
-def save_cscan(cscn_run_fs, cscn_save_fs, coo_names, mod_thy_info, job):
+def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
+               coo_names, mod_thy_info):
     """ save the scans that have been run so far
     """
 
-    if cscn_run_fs[1].exists([coo_names]):
+    if not cscn_run_fs[1].exists([coo_names]):
+        print("No scan to save. Skipping...")
 
         locs_lst = []
         for locs1 in cscn_run_fs[2].existing([coo_names]):
@@ -202,8 +211,9 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names, mod_thy_info, job):
 
                     # Build run fs and save the structure
                     run_fs = autofile.fs.run(run_path)
-                    saved = save_struct(run_fs, cscn_save_fs, locs2, job,
-                                        mod_thy_info, inzma, in_zma_fs=True)
+                    saved = save_struct(
+                        run_fs, cscn_save_fs, locs2, _set_job(scn_typ),
+                        mod_thy_info, in_zma_fs=True)
 
                     # Add to locs lst if the structure is saved
                     if saved:
@@ -213,8 +223,23 @@ def save_cscan(cscn_run_fs, cscn_save_fs, coo_names, mod_thy_info, job):
         if locs_lst:
             _hr_traj(coo_names, cscn_save_fs, locs_lst)
 
+
+def _set_job(scn_typ):
+    """ Determine if scan is rigid or relaxed and set the appropriate
+        electronic structure job.
+    """
+
+    assert scn_typ in ('relaxed', 'rigid'), (
+        '{} is not relaxed or rigid'.format(scn_typ)
+    )
+
+    if scn_typ == 'relaxed':
+        job = elstruct.Job.OPTIMIZATION
     else:
-        print("No cscan to save. (1) Skipping...")
+        job = elstruct.Job.ENERGY
+
+    return job
+
 
 
 def _hr_traj(coord_names, scn_save_fs, locs_lst):
