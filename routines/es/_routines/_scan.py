@@ -26,7 +26,7 @@ def run_scan(zma, spc_info, mod_thy_info,
     # for now, running only one-dimensional hindered rotor scans
     scn_save_fs[1].create([coord_names])
     inf_obj = autofile.schema.info_objects.scan_branch(
-        {coord_names: coord_grids})  # WRONG
+        {coord_names[0]: coord_grids[0]})  # WRONG, might have to fix for mdhr
     scn_save_fs[1].file.info.write(inf_obj, [coord_names])
 
     # Build run prefixses?
@@ -49,26 +49,26 @@ def run_scan(zma, spc_info, mod_thy_info,
         constraint_dct=constraint_dct
     )
 
-    if reverse_sweep:
-        print('\nDoing a reverse sweep of the HR scan to catch errors...')
-        _run_scan(
-            guess_zma=zma,
-            spc_info=spc_info,
-            mod_thy_info=mod_thy_info,
-            coord_names=coord_names,
-            coord_grids=tuple(reversed(coord_grids)),
-            scn_run_fs=scn_run_fs,
-            scn_save_fs=scn_save_fs,
-            scn_typ=scn_typ,
-            script_str=script_str,
-            overwrite=overwrite,
-            errors=(),
-            options_mat=(),
-            retryfail=retryfail,
-            update_guess=update_guess,
-            saddle=saddle,
-            constraint_dct=constraint_dct
-        )
+    # if reverse_sweep:
+    #     print('\nDoing a reverse sweep of the HR scan to catch errors...')
+    #     _run_scan(
+    #         guess_zma=zma,
+    #         spc_info=spc_info,
+    #         mod_thy_info=mod_thy_info,
+    #         coord_names=coord_names,
+    #         coord_grids=tuple(reversed(coord_grids)),
+    #         scn_run_fs=scn_run_fs,
+    #         scn_save_fs=scn_save_fs,
+    #         scn_typ=scn_typ,
+    #         script_str=script_str,
+    #         overwrite=overwrite,
+    #         errors=(),
+    #         options_mat=(),
+    #         retryfail=retryfail,
+    #         update_guess=update_guess,
+    #         saddle=saddle,
+    #         constraint_dct=constraint_dct
+    #     )
 
 
 def _run_scan(guess_zma, spc_info, mod_thy_info,
@@ -84,13 +84,13 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
 
     # Set the frozen coordinates (set job at this point?)
     if constraint_dct is not None:
-        frozen_coordinates = coord_names + list(constraint_dct)
+        frozen_coordinates = coord_names + tuple(constraint_dct)
     else:
         frozen_coordinates = coord_names
 
     # Read the energies and Hessians from the filesystem
     _, grid_vals = torsprep.set_hr_dims(coord_grids)
-    for vals in zip(grid_vals):
+    for vals in grid_vals:
 
         # Set the locs for the scan point
         locs = [coord_names, vals]
@@ -102,7 +102,8 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
         run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
 
         # Build the zma
-        zma = automol.zmatrix.set_values(guess_zma, dict(coord_names, vals))
+        zma = automol.zmatrix.set_values(
+            guess_zma, dict(zip(coord_names, vals)))
 
         # Set the job
         job = _set_job(scn_typ)
@@ -135,6 +136,10 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
                     if update_guess:
                         guess_zma = opt_zma
 
+                # Check the instability
+                # if not connected():
+                #     write_instab() 
+
             elif job == elstruct.Job.ENERGY:
                 es_runner.run_job(
                     job=job,
@@ -144,11 +149,9 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
                     spc_info=spc_info,
                     thy_info=mod_thy_info,
                     overwrite=overwrite,
-                    frozen_coordinates=frozen_coordinates,
                     errors=errors,
                     options_mat=options_mat,
                     retryfail=retryfail,
-                    saddle=saddle,
                     **kwargs
                 )
 
@@ -169,7 +172,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs in scn_run_fs[-1].existing([coo_names]):
+        for locs in scn_run_fs[-1].existing():
             if not isinstance(locs[1][0], float):
                 continue
 
@@ -189,7 +192,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            _hr_traj(coo_names, scn_save_fs, locs_lst)
+            _hr_traj(coo_names, scn_save_fs, mod_thy_info, locs_lst)
 
 
 def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
@@ -199,12 +202,11 @@ def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
 
     if not cscn_run_fs[1].exists([coo_names]):
         print("No scan to save. Skipping...")
-
+    else:
         locs_lst = []
-        for locs1 in cscn_run_fs[2].existing([coo_names]):
+        for locs1 in cscn_run_fs[2].existing():
             if cscn_run_fs[2].exists(locs1):
-                for locs2 in cscn_run_fs[3].existing(locs1):
-
+                for locs2 in cscn_run_fs[3].existing():
                     # Set and print the path
                     run_path = cscn_run_fs[-1].path(locs2)
                     print("Reading from scan run at {}".format(run_path))
@@ -218,10 +220,12 @@ def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
                     # Add to locs lst if the structure is saved
                     if saved:
                         locs_lst.append(locs2)
+            else:
+                print("No scan to save. Skipping...")
 
         # Build the trajectory file
         if locs_lst:
-            _hr_traj(coo_names, cscn_save_fs, locs_lst)
+            _hr_traj(coo_names, cscn_save_fs, mod_thy_info, locs_lst)
 
 
 def _set_job(scn_typ):
@@ -241,14 +245,16 @@ def _set_job(scn_typ):
     return job
 
 
-
-def _hr_traj(coord_names, scn_save_fs, locs_lst):
+def _hr_traj(coord_names, scn_save_fs, mod_thy_info, locs_lst):
     """ Save a hindered rotor trajectory
     """
 
     idxs_lst = [locs[-1] for locs in locs_lst]
-    enes = [scn_save_fs[-1].file.energy.read(locs)
-            for locs in locs_lst]
+    enes = []
+    for locs in locs_lst:
+        path = scn_save_fs[-1].path(locs)
+        sp_save_fs = autofile.fs.single_point(path)
+        enes.append(sp_save_fs[-1].file.energy.read(mod_thy_info[1:4]))
     geos = [scn_save_fs[-1].file.geometry.read(locs)
             for locs in locs_lst]
 

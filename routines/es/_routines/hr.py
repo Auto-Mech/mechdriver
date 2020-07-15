@@ -21,8 +21,12 @@ def hindered_rotor_scans(
     print('\nRunning hindered rotor scans for the following rotors...')
     for names in run_tors_names:
         print(names)
-    if set(list(itertools.chain(*run_tors_names))) == set(const_names):
-        print('\nUser requested that all torsions of system will be fixed.')
+    print(*run_tors_names)
+    print(list(itertools.chain(*run_tors_names)))
+    print(const_names)
+    if const_names is not None:
+        if set(list(itertools.chain(*run_tors_names))) == set(const_names):
+            print('\nUser requested that all torsions of system will be fixed.')
 
     # for tors_name, tors_grid in zip(tors_names, tors_grids):
     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
@@ -34,6 +38,7 @@ def hindered_rotor_scans(
             zma, const_names, tors_names)
 
         # Setting the filesystem
+        print('hr constraint dct', constraint_dct)
         scn_run_fs = filesys.build.scn_fs_from_cnf(
             zma_run_path, constraint_dct=constraint_dct)
         scn_save_fs = filesys.build.scn_fs_from_cnf(
