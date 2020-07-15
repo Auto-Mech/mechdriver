@@ -51,12 +51,15 @@ def species_block(inf_dct):
     # Build the appropriate MESS string
     spc_str = mess_io.writer.molecule(
         core=core_str,
-        freqs=inf_dct['freqs'],
         elec_levels=inf_dct['elec_levels'],
+        freqs=inf_dct['freqs'],
         hind_rot=hind_rot_str,
         xmat=inf_dct['xmat'],
         rovib_coups=inf_dct['rovib_coups'],
-        rot_dists=inf_dct['rot_dists']
+        rot_dists=inf_dct['rot_dists'],
+        inf_intens=(),
+        freq_scale_factor=None,
+        use_harmfreqs_key=False
     )
 
     return spc_str, dat_dct

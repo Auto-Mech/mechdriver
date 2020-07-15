@@ -19,7 +19,7 @@ def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
     if ret:
 
         # Get the geo, zma, and ene based on job type
-        ene, geo, zma = _read(run_fs, job)
+        ene, zma, geo = _read(run_fs, job)
 
         # Obtain inf obj and inp str to write in filesys
         inf_obj, inp_str, _ = ret

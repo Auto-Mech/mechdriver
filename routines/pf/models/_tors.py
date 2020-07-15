@@ -213,6 +213,7 @@ def _rotor_tors_strs(tors_name, group, axis,
             remdummy=remdummy,
             geom=hr_geo,
             use_quantum_weight=True,
+            therm_pow_max=50,
             rotor_id=tors_name)
 
     mess_ir_str = ''
@@ -226,6 +227,7 @@ def _rotor_tors_strs(tors_name, group, axis,
             pot_exp_size=5,
             hmin=13,
             hmax=101,
+            therm_pow_max=50,
             remdummy=remdummy,
             geom=None,
             rotor_id=tors_name)

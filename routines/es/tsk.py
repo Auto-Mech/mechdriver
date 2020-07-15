@@ -3,6 +3,7 @@
 
 # electronic structure routines
 import sys
+import itertools
 import importlib
 import autofile
 import automol
@@ -487,8 +488,9 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
-    ndim_tors = es_keyword_dct['ndim_tors']
-    frz_all_tors = es_keyword_dct['frz_all_tors']
+    tors_model = es_keyword_dct['tors_model']
+    # ndim_tors = es_keyword_dct['ndim_tors']
+    # frz_all_tors = es_keyword_dct['frz_all_tors']
     scan_increment = spc['hind_inc']
 
     # Bond key stuff
@@ -503,9 +505,9 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
     # Set up the torsion info
     dct_tors_names, amech_sadpt_tors_names = structure.tors.names_from_dct(
-        spc, ndim_tors)
+        spc, tors_model)
     amech_spc_tors_names = structure.tors.names_from_geo(
-        geo, ndim_tors, saddle=saddle)
+        geo, tors_model, saddle=saddle)
     if dct_tors_names:
         run_tors_names = dct_tors_names
     else:
@@ -514,27 +516,30 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
     run_tors_names, run_tors_grids, _ = structure.tors.hr_prep(
         zma, tors_name_grps=run_tors_names,
-        scan_increment=scan_increment, tors_model=ndim_tors,
+        scan_increment=scan_increment, tors_model=tors_model,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
     # Run the task if any torsions exist
     if run_tors_names:
 
-        # Set constraint dct
-        if mod in ('1dhr', 'mdhr', 'mdhrv'):
-            const_names = None
+        # Set constraints
+        if tors_model in ('1dhr', 'mdhr', 'mdhrv'):
+            const_names = ()
         else:
-            if mod == '1dhrf':
+            if tors_model == '1dhrf':
                 if saddle:
-                    const_tors_names = amech_sadpt_tors_names
+                    const_names = tuple(itertools.chain(*amech_sadpt_tors_names))
                 else:
-                    const_tors_names = amech_spc_tors_names
-            elif mod == '1dhrfa':
+                    const_names = tuple(itertools.chain(*amech_spc_tors_names))
+            elif tors_model == '1dhrfa':
                 coords = list(automol.zmatrix.coordinates(zma))
-                const_names = (x for x in coords if x not in const_tors_names)
+                const_names = tuple(coord for coord in coords)
+
+        print('const_names')
+        print(const_names)
 
         # Set if scan is rigid or relaxed
-        scn_typ = 'relaxed' if mod != '1dhrfa' else 'rigid'
+        scn_typ = 'relaxed' if tors_model != '1dhrfa' else 'rigid'
     
         # Set up ini filesystem for scans
         _, ini_zma_run_path = filesys.build.zma_fs_from_prefix(

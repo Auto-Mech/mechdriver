@@ -239,6 +239,10 @@ def is_methyl_rotor(zma, rotor):
 def build_constraint_dct(zma, const_names, scan_names=()):
     """ Build a dictionary of constraints
     """
+
+    print('const_names', const_names)
+    print('scan_names', scan_names)
+
     # Get the list names sorted for dictionary
     rnames = (name for name in const_names if 'R' in name)
     anames = (name for name in const_names if 'A' in name)
@@ -249,14 +253,19 @@ def build_constraint_dct(zma, const_names, scan_names=()):
     constraint_names = rnames + anames + dnames
 
     # Remove the scan coordinates so they are not placed in the dict
-    constraint_names = (name for name in constraint_names
-                        if name not in scan_names)
+    print('rnames', rnames)
+    print('anames', anames)
+    print('dnames', dnames)
+    print('constraint_names', constraint_names)
+    constraint_names = tuple(name for name in constraint_names
+                             if name not in scan_names)
+    print('constraint_names', constraint_names)
 
     # Build dictionary
     if constraint_names:
         zma_vals = automol.zmatrix.values(zma)
         zma_coords = automol.zmatrix.coordinates(zma)
-        assert set(constraint_names) <= zma_coords, (
+        assert set(constraint_names) <= set(zma_coords.keys()), (
             'Attempting to constrain coordinates not in zma:\n{}\n{}'.format(
                 constraint_names, zma_coords)
         )
@@ -267,6 +276,11 @@ def build_constraint_dct(zma, const_names, scan_names=()):
         ))
     else:
         constraint_dct = None
+
+    # print('dct')
+    # print(constraint_dct)
+    # import sys
+    # sys.exit()
 
     return constraint_dct
 
