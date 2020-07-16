@@ -287,10 +287,13 @@ def run_check_imaginary(
                 if imag:
                     imag = True
                     print('Imaginary mode found:')
-                    norm_coos = elstruct.util.normal_coordinates(
-                        geo, hess, project=True)
-                    im_norm_coo = numpy.array(norm_coos)[:, 0]
-                    disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3))
+                    #norm_coos = elstruct.util.normal_coordinates(
+                    #    geo, hess, project=True)
+                    #im_norm_coo = numpy.array(norm_coos)[:, 0]
+                    #disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3))
+                    norm_coos = elstruc.reader.normal_coords(prog, out_str)
+                    im_norm_coo = norm_coos[0]
+                    disp_xyz = im_norm_coo
     return imag, geo, disp_xyzs, hess
 
 
