@@ -61,7 +61,7 @@ def read_anharmon_matrix(pf_filesystems):
     """ Read the anharmonicity matrix """
 
     # Set up vpt2 level filesystem for rotational values
-    [cnf_fs, cnf_path, min_cnf_locs, _h] = pf_filesystems['vpt2']
+    [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['vpt2']
 
     if min_cnf_locs is not None:
         xmat = cnf_fs[-1].file.anharmonicity_matrix.read(

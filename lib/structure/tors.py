@@ -34,6 +34,7 @@ def tors_name_prep(spc_dct_i, cnf_fs, min_cnf_locs, tors_model):
             tloc = None
     else:
         tloc = None
+        run_tors_names = ()
 
     if tloc is not None:
         if tloc == 'dct':
