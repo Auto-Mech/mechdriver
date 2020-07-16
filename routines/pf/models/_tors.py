@@ -58,7 +58,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models,
         rotor_dct = {}
 
         # Read the potential along the rotors
-        if tors_model == 'mdhr':
+        if tors_model == 'mdhr' or tors_model == 'mdhrv':
 
             # Set to read additional info for vibrational adiabaticity
             if tors_model == 'mdhrv':
@@ -191,7 +191,7 @@ def make_hr_strings(rotors, run_path, tors_model,
         if 'mdhr_pot_data' in rotor:
             pot, geoms, grads, hessians = rotor['mdhr_pot_data']
             hr_freqs = _calc_hr_frequenices(geoms, grads, hessians, run_path)
-            mdhr_dat = mess_io.writer.mdhr_data(pot, freqs=hr_freqs)
+            mdhr_dat = mess_io.writer.mdhr_data(pot, freqs=hr_freqs, nrot=numrotors)
 
     return mess_allr_str, mess_hr_str, mess_flux_str, projrot_str, mdhr_dat
 

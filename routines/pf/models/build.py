@@ -182,6 +182,8 @@ def mol_data(spc_dct_i,
     if typ.nonrigid_tors(chn_pf_models, rotors):
         freqs, imag, zpe, _ = vib.tors_projected_freqs_zpe(
             pf_filesystems, hr_str, prot_str, saddle=saddle)
+        if 'mdhrv' in chn_pf_models['tors']:
+            freqs = ()
     else:
         freqs, imag, zpe = vib.read_harmonic_freqs(
             pf_filesystems, saddle=saddle)
