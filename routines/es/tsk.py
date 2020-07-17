@@ -415,7 +415,8 @@ def run_tau_tsk(job, spc_dct, spc_name,
                 opt_script_str, overwrite,
                 saddle=saddle, **opt_kwargs)
 
-        elif job in ('energy', 'grad', 'hess'):
+        elif job in ('energy', 'grad'):
+
             # Set up the run scripts
             script_str, _, kwargs, _ = runpar.run_qchem_par(
                 *thy_info[0:2])
@@ -431,6 +432,31 @@ def run_tau_tsk(job, spc_dct, spc_name,
                     tau_save_fs, geo_run_path, geo_save_path, locs,
                     script_str, overwrite,
                     retryfail=retryfail, **kwargs)
+
+        elif job == 'hess':
+
+            # Set up the run scripts
+            script_str, _, kwargs, _ = runpar.run_qchem_par(
+                *thy_info[0:2])
+            # Run the job over all the conformers requested by the user
+            hess_cnt = 0
+            for locs in tau_save_locs:
+                if not tau_save_fs[-1].file.hessian.exists(locs):
+                    geo_run_path = tau_run_fs[-1].path(locs)
+                    geo_save_path = tau_save_fs[-1].path(locs)
+                    geo = tau_save_fs[-1].file.geometry.read(locs)
+                    zma = None
+                    tau_run_fs[-1].create(locs)
+                    ES_TSKS[job](
+                        zma, geo, spc_info, mod_thy_info,
+                        tau_save_fs, geo_run_path, geo_save_path, locs,
+                        script_str, overwrite,
+                        retryfail=retryfail, **kwargs)
+                    hess_cnt += 1
+                else:
+                    hess_cnt += 1
+                if hess_cnt == 1000:
+                    break
 
     else:
         print('No torsional modes in the species')
