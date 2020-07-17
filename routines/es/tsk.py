@@ -340,7 +340,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
     # Get es options
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
-    hesscount = es_keyword_dct['hesscount']
+    hessmax = es_keyword_dct['hessmax']
     scan_increment = spc['hind_inc']
     nsamp_par = spc['tau_nsamp']
 
@@ -456,7 +456,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
                     hess_cnt += 1
                 else:
                     hess_cnt += 1
-                if hess_cnt == hesscount:
+                if hess_cnt == hessmax:
                     break
 
     else:
