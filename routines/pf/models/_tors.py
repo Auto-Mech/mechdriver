@@ -2,7 +2,6 @@
   Functions handling hindered rotor model calculations
 """
 
-import itertools
 import numpy
 from scipy.interpolate import interp1d
 import automol
@@ -42,12 +41,6 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models,
         zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
-    # Build constraint dct
-    if tors_model in ['1dhrf']:
-        constraint_dct = torsprep.build_constraint_dct(
-            zma, rotor_inf[0])
-    else:
-        constraint_dct = None
 
     # Read the potential energy surface for the rotors
     num_rotors = len(rotor_inf[0])
@@ -72,12 +65,25 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models,
                 rotor_dct['mdhr_pot_data'] = _read_hr_pot(
                     tors_names, tors_grids,
                     cnf_save_path, ref_ene,
-                    constraint_dct,
+                    constraint_dct=None,   # No extra frozen treatments
                     read_geom=read_geom,
                     read_grad=read_grad,
                     read_hess=read_hess)
 
         for tname, tgrid, tsym in zip(tors_names, tors_grids, tors_syms):
+
+            # Build constraint dct
+            if tors_model == '1dhrf':
+                constraint_dct = torsprep.build_constraint_dct(
+                    zma, rotor_inf[0], tname)
+            elif tors_model == '1dhrfa':
+                coords = list(automol.zmatrix.coordinates(zma))
+                const_names = tuple(coord for coord in coords)
+                constraint_dct = torsprep.build_constraint_dct(
+                    zma, const_names, tname)
+            else:
+                constraint_dct = None
+
             # Call read pot for 1DHR
             pot, _, _, _ = _read_hr_pot(
                 [tname], [tgrid],
@@ -214,6 +220,7 @@ def _rotor_tors_strs(tors_name, group, axis,
             remdummy=remdummy,
             geom=hr_geo,
             use_quantum_weight=True,
+            therm_pow_max=50,
             rotor_id=tors_name)
 
     mess_ir_str = ''
@@ -256,7 +263,7 @@ def _read_hr_pot(tors_names, tors_grids, cnf_save_path, ref_ene,
     # print('cscn_path', scn_run_fs[1].path([coo_names]))
 
     # Build initial lists for storing potential energies and Hessians
-    grid_points, grid_vals = _set_hr_dims(tors_grids)
+    grid_points, grid_vals = torsprep.set_hr_dims(tors_grids)
     pot, geoms, grads, hessians = {}, {}, {}, {}
 
     # Set up filesystem information
@@ -309,21 +316,6 @@ def _calc_hr_frequenices(geoms, grads, hessians, run_path):
         hr_freqs[point] = proj_freqs
 
     return hr_freqs
-
-
-def _set_hr_dims(tors_grids):
-    """ Determine the dimensions of the grid
-    """
-    assert len(tors_grids) in (1, 2, 3, 4), 'Rotor must be 1-4 dimensions'
-
-    grid_points = ((i for i in range(len(grid)))
-                   for grid in tors_grids)
-    grid_vals = ((x for x in grid)
-                 for grid in tors_grids)
-    grid_points = itertools.product(*grid_points)
-    grid_vals = itertools.product(*grid_vals)
-
-    return grid_points, grid_vals
 
 
 def _hrpot_spline_fitter(pot, min_thresh=-0.05, max_thresh=15.0):

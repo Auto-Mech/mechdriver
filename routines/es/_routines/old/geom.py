@@ -44,176 +44,125 @@ def reference_geometry(spc_dct_i, thy_info, ini_thy_info,
             status=status)
         run_fs[0].file.info.write(inf_obj, [])
 
-    if not thy_save_fs[-1].file.geometry.exists(thy_info[1:4]):
-        print('No geometry in filesys. Attempting to initialize new geometry.')
-        geo_init = _obtain_ini_geom(spc_dct_i)
-        if geo_init is not None:
-            if not automol.geom.is_atom(geo_init):
-                geo_found = _optimize_molecule(
-                    spc_dct_i, geo_init,
-                    thy_info, thy_run_fs, thy_save_fs,
-                    cnf_run_fs, cnf_save_fs,
-                    run_fs,
-                    opt_script_str, overwrite,
-                    kickoff_size=0.1, kickoff_backward=False,
-                    **opt_kwargs)
-            else:
-                geo_found = _optimize_atom(
-                    spc_dct_i, geo_init,
-                    thy_info, thy_run_fs, thy_save_fs,
-                    cnf_run_fs, cnf_save_fs)
+    geo = None
+    try:
+        # Check to see if geometry should be obtained from dictionary
+        spc_info = [spc_dct_i['inchi'], spc_dct_i['charge'], spc_dct_i['mult']]
+        if 'input_geom' in ini_thy_info:
+            geom_obj = spc_dct_i['geo_obj']
+            geo_init = geom_obj
+            overwrite = True
+            print('Found initial geometry from geometry dictionary')
         else:
-            geo_found = False
-            print('Unable to obtain an initial guess geometry')
-    else:
-        geo_found = True
-        thy_path = thy_save_fs[-1].path(thy_info[1:4])
-        print('Initial geometry found and saved previously at {}'.format(
-            thy_path))
+            # Check to see if geo already exists at running_theory
+            if thy_save_fs[-1].file.geometry.exists(thy_info[1:4]):
+                thy_path = thy_save_fs[-1].path(thy_info[1:4])
+                print('Getting reference geometry from {}'.format(thy_path))
+                geo = thy_save_fs[-1].file.geometry.read(thy_info[1:4])
+            if not geo:
+                if ini_thy_save_fs:
+                    geo_exists = ini_thy_save_fs[-1].file.geometry.exists(
+                        ini_thy_info[1:4])
+                    if geo_exists:
+                        # If not, Compute geo at running_theory, using geo from
+                        # initial_level as the starting point
+                        # or from inchi is no initial level geometry
+                        thy_path = ini_thy_save_fs[-1].path(
+                            ini_thy_info[1:4])
+                        geo_init = ini_thy_save_fs[-1].file.geometry.read(
+                            ini_thy_info[1:4])
+                    elif 'geo_obj' in spc_dct_i:
+                        geo_init = spc_dct_i['geo_obj']
+                        print('Getting geometry from geom dictionary')
+                    else:
+                        # print('Getting reference geometry from inchi',
+                        #       spc_info[0])
+                        geo_init = automol.inchi.geometry(spc_info[0])
+                        print('Got reference geometry from inchi', spc_info[0])
+                elif 'geo_obj' in spc_dct_i:
+                    geo_init = spc_dct_i['geo_obj']
+                    print('Getting geometry from geom dictionary')
+                else:
+                    geo_init = automol.inchi.geometry(spc_info[0])
+                    print('Getting reference geometry from inchi')
+        # Optimize from initial geometry to get reference geometry
+        if not geo:
+            _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+                *thy_info[0:2])
+            params = {
+                'spc_info': spc_info,
+                'run_fs': run_fs,
+                'thy_run_fs': thy_run_fs,
+                'script_str': opt_script_str,
+                'overwrite': overwrite,
+                'thy_info': thy_info,
+                'ini_geo': geo_init}
+            geo, inf = run_initial_geometry_opt(**params, **opt_kwargs)
+            thy_save_fs[-1].create(thy_info[1:4])
+            thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
+            ncp = len(
+                automol.graph.connected_components(
+                    automol.geom.graph(geo)))
+            if not automol.geom.is_atom(geo) and ncp < 2:
+                geo, _ = remove_imag(
+                    spc_dct_i, geo, thy_info, thy_run_fs,
+                    run_fs, kickoff_size,
+                    kickoff_backward,
+                    overwrite=overwrite)
 
-    # Write the job status into the run filesystem
-    if geo_found:
-        inf_obj.status = autofile.schema.RunStatus.SUCCESS
-        run_fs[0].file.info.write(inf_obj, [])
-    else:
+                tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
+                locs_lst = cnf_save_fs[-1].existing()
+                if locs_lst:
+                    saved_geo = cnf_save_fs[-1].file.geometry.read(
+                        locs_lst[0])
+                    saved_tors = automol.geom.zmatrix_torsion_coordinate_names(
+                        saved_geo)
+                    if tors_names != saved_tors:
+                        print("New reference geometry doesn't match original",
+                              " reference geometry")
+                        print('Removing original conformer save data')
+                        cnf_run_fs.remove()
+                        cnf_save_fs.remove()
+
+                print('Saving reference geometry')
+                print(" - Save path: {}".format(thy_save_path))
+                # thy_save_fs[-1].file.hessian.write(hess, thy_info[1:4])
+
+            thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
+            ncp = len(
+                automol.graph.connected_components(
+                    automol.geom.graph(geo)))
+            if ncp < 2:
+                zma = automol.geom.zmatrix(geo)
+                # thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
+                print('\nObtaining a single conformer using',
+                      'the MonteCarlo conformer sampling routine')
+                geo_path = thy_save_fs[0].path(thy_info[1:4])
+                print('Sampling done using geom from {}'.format(geo_path))
+                _ = conformer.single_conformer(
+                    zma, spc_info, thy_info,
+                    thy_save_fs, cnf_run_fs, cnf_save_fs,
+                    overwrite, saddle=False)
+            else:
+                print("Cannot create zmatrix for disconnected species")
+                fake_conf(thy_info, filesys, inf)
+
+        if geo:
+            inf_obj.status = autofile.schema.RunStatus.SUCCESS
+            run_fs[0].file.info.write(inf_obj, [])
+        else:
+            inf_obj.status = autofile.schema.RunStatus.FAILURE
+            run_fs[0].file.info.write(inf_obj, [])
+
+    except IOError:
         inf_obj.status = autofile.schema.RunStatus.FAILURE
         run_fs[0].file.info.write(inf_obj, [])
 
-    return geo_found
-
-
-def _obtain_ini_geom(spc_dct_i):
-    """ Obtain an initial geometry to be optimized. Checks a hieratchy
-        of places to obtain the initial geom.
-            (1) Geom dict which is the input from the user
-            (2) Geom from inchi
-    """
-
-    geo_init = None
-
-    if 'geo_obj' in spc_dct_i:
-        geo_init = spc_dct_i['geo_obj']
-        print('Getting geometry from geom dictionary')
-
-    # if geo_init is None:
-    #     geo_exists = ini_thy_save_fs[-1].file.geometry.exists(
-    #         ini_thy_info[1:4])
-    #     if geo_exists:
-    #         thy_path = ini_thy_save_fs[-1].path(
-    #             ini_thy_info[1:4])
-    #         geo_init = ini_thy_save_fs[-1].file.geometry.read(
-    #             ini_thy_info[1:4])
-
-    if geo_init is None:
-        geo_init = automol.inchi.geometry(spc_dct_i['inchi'])
-        print('Getting reference geometry from inchi')
-
-    return geo_init
-
-
-def _optimize_atom(spc_dct_i, geo, thy_info, thy_run_fs, thy_save_fs,
-                   cnf_run_fs, cnf_save_fs):
-    """ Deal with an atom separately
-    """
-
-    # Set the spc_info
-    spc_info = filesys.inf.get_spc_info(spc_dct_i)
-
-    # Get the zma
-    zma = automol.geom.zmatrix(geo)
-
-    # Build the filesystems
-    thy_run_fs[-1].create(thy_info[1:4])
-    thy_run_path = thy_run_fs[-1].path(thy_info[1:4])
-    thy_save_fs[-1].create(thy_info[1:4])
-    thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
-    cnf_run_fs, _ = filesys.build.cnf_fs_from_thy(thy_run_path, saddle=False)
-    cnf_save_fs, _ = filesys.build.cnf_fs_from_thy(thy_save_path, saddle=False)
-
-    # Create the atom conformer
-    conf_found = conformer.single_conformer(
-        zma, spc_info, thy_info,
-        thy_save_fs, cnf_run_fs, cnf_save_fs,
-        overwrite=False, saddle=False)
-
-    return conf_found
-
-
-def _optimize_molecule(spc_dct_i, geo_init,
-                       thy_info, thy_run_fs, thy_save_fs,
-                       cnf_run_fs, cnf_save_fs,
-                       run_fs,
-                       opt_script_str, overwrite,
-                       kickoff_size=0.1, kickoff_backward=False,
-                       **opt_kwargs):
-    """ Optimize a proper geometry
-    """
-
-    # Set the spc_info
-    spc_info = filesys.inf.get_spc_info(spc_dct_i)
-
-    # Optimize the initial geometry
-    geo, inf = run_initial_geometry_opt(
-        spc_info, thy_info, run_fs, thy_run_fs,
-        opt_script_str, overwrite, geo_init, **opt_kwargs)
-    
-    # Check the connectivity, save instability files if needed
-    connected = save_instab(
-        conn_geo, run_fs, thy_save_fs, mod_thy_info[1:4])
-
-    # If connected, check for imaginary modes and fix them if possible
-    if connected:
-        geo, _ = remove_imag(
-            spc_dct_i, geo, thy_info, thy_run_fs,
-            run_fs, kickoff_size,
-            kickoff_backward,
-            overwrite=overwrite)
-
-        tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-        locs_lst = cnf_save_fs[-1].existing()
-        if locs_lst:
-            saved_geo = cnf_save_fs[-1].file.geometry.read(
-                locs_lst[0])
-            saved_tors = automol.geom.zmatrix_torsion_coordinate_names(
-                saved_geo)
-            if tors_names != saved_tors:
-                print("New reference geometry doesn't match original",
-                      " reference geometry")
-                print('Removing original conformer save data')
-                cnf_run_fs.remove()
-                cnf_save_fs.remove()
-
-    thy_save_fs[-1].create(thy_info[1:4])
-    thy_save_path = thy_save_fs[-1].path(thy_info[1:4])
-    thy_save_fs[-1].file.geometry.write(geo, thy_info[1:4])
-
-    print('Saving reference geometry')
-    print(" - Save path: {}".format(thy_save_path))
-    # thy_save_fs[-1].file.hessian.write(hess, thy_info[1:4])
-
-    # Recheck connectivity, for imag-checked geometry
-    # If connected and no imags, then run conf samp to save geom
-    if automol.geom.connected(geo):
-        zma = automol.geom.zmatrix(geo)
-        # thy_save_fs[-1].file.zmatrix.write(zma, thy_info[1:4])
-        print('\nObtaining a single conformer using',
-              'the MonteCarlo conformer sampling routine')
-        geo_path = thy_save_fs[0].path(thy_info[1:4])
-        print('Sampling done using geom from {}'.format(geo_path))
-        conf_found = conformer.single_conformer(
-            zma, spc_info, thy_info,
-            thy_save_fs, cnf_run_fs, cnf_save_fs,
-            overwrite, saddle=False)
-    else:
-        print("Cannot create zmatrix for disconnected species")
-        # fake_conf(thy_info, filesys, inf)
-        conf_found = False
-
-    return conf_found
+    return geo
 
 
 def run_initial_geometry_opt(spc_info, thy_info, run_fs, thy_run_fs,
-                             opt_script_str, overwrite, ini_geo, **opt_kwargs):
+                             script_str, overwrite, ini_geo, **opt_kwargs):
     """ Generate initial geometry via optimization from either reference
     geometries or from inchi
     """
@@ -224,14 +173,15 @@ def run_initial_geometry_opt(spc_info, thy_info, run_fs, thy_run_fs,
 
     # Check if geometry has already been saved
     # if not call the electronic structure optimizer
-    if automol.geom.connected(ini_geo):
+    ncp1 = len(automol.graph.connected_components(automol.geom.graph(ini_geo)))
+    if ncp1 < 2:
         geom = automol.geom.zmatrix(ini_geo)
     else:
         geom = ini_geo
     run_fs = autofile.fs.run(thy_run_path)
     es_runner.run_job(
         job=elstruct.Job.OPTIMIZATION,
-        script_str=opt_script_str,
+        script_str=script_str,
         run_fs=run_fs,
         geom=geom,
         spc_info=spc_info,
@@ -239,16 +189,16 @@ def run_initial_geometry_opt(spc_info, thy_info, run_fs, thy_run_fs,
         overwrite=overwrite,
         **opt_kwargs,
     )
-    success, ret = es_runner.read_job(
-        job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+    ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
     geo = None
     inf = None
-    if success:
+    if ret:
         print('Succesful reference geometry optimization')
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
         geo = elstruct.reader.opt_geometry(prog, out_str)
-        if not automol.geom.connected(geo):
+        ncp2 = len(automol.graph.connected_components(automol.geom.graph(geo)))
+        if ncp2 >= 2:
             method = inf_obj.method
             ene = elstruct.reader.energy(prog, method, out_str)
             inf = [inf_obj, ene]
@@ -272,12 +222,10 @@ def remove_imag(
     imag, geo, disp_xyzs, hess = run_check_imaginary(
         spc_info, geo, thy_info, thy_run_fs, script_str,
         overwrite, **kwargs)
-    print('geo test in remove_imag:') 
-    print(automol.geom.string(geo), disp_xyzs)
     chk_idx = 0
     while imag and chk_idx < 5:
         chk_idx += 1
-        print('Attempting kick off along mode, attempt {}...'.format(chk_idx))
+        print('Attemptin gkick off along mode, attempt {}...'.format(chk_idx))
 
         geo = run_kickoff_saddle(
             geo, disp_xyzs, spc_info, thy_info, run_fs, thy_run_fs,
@@ -291,7 +239,6 @@ def remove_imag(
         imag, geo, disp_xyzs, hess = run_check_imaginary(
             spc_info, geo, thy_info, thy_run_fs, script_str,
             overwrite, **kwargs)
-        kickoff_size *= 2
     return geo, hess
 
 
@@ -339,14 +286,10 @@ def run_check_imaginary(
                 if imag:
                     imag = True
                     print('Imaginary mode found:')
-                    #norm_coos = elstruct.util.normal_coordinates(
-                    #    geo, hess, project=True)
-                    #im_norm_coo = numpy.array(norm_coos)[:, 0]
-                    #disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3))
-                    norm_coos = elstruct.reader.normal_coords(prog, out_str)
-                    im_norm_coo = norm_coos[0]
-                    disp_xyz = im_norm_coo
-
+                    norm_coos = elstruct.util.normal_coordinates(
+                        geo, hess, project=True)
+                    im_norm_coo = numpy.array(norm_coos)[:, 0]
+                    disp_xyzs = numpy.reshape(im_norm_coo, (-1, 3))
     return imag, geo, disp_xyzs, hess
 
 
@@ -363,8 +306,6 @@ def run_kickoff_saddle(
     if kickoff_backward:
         disp_len *= -1
     disp_xyzs = numpy.multiply(disp_xyzs, disp_len)
-    print('geo test in kickoff_saddle:') 
-    print(automol.geom.string(geo), disp_xyzs)
     geo = automol.geom.displace(geo, disp_xyzs)
     if opt_cart:
         geom = geo
@@ -380,9 +321,8 @@ def run_kickoff_saddle(
         overwrite=True,
         **kwargs,
     )
-    success, ret = es_runner.read_job(
-        job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-    if success:
+    ret = es_runner.read_job(job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+    if ret:
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
         geo = elstruct.reader.opt_geometry(prog, out_str)

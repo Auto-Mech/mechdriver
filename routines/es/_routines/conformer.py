@@ -46,7 +46,6 @@ def conformer_sampling(zma, spc_info,
 
     # Check samples and if nsamp met and no resave
 
-
     print('\nSaving any conformers in run filesys...')
     save_conformers(
         cnf_run_fs=cnf_run_fs,
@@ -94,6 +93,8 @@ def conformer_sampling(zma, spc_info,
         else:
             thy_save_fs[0].file.geometry.write(geo)
 
+    return bool(min_cnf_locs)
+
 
 def single_conformer(zma, spc_info, thy_info,
                      thy_save_fs, cnf_run_fs, cnf_save_fs,
@@ -102,7 +103,7 @@ def single_conformer(zma, spc_info, thy_info,
         randomly sampled initial torsional angles
     """
     opt_script_str, _, kwargs, _ = es_runner.par.run_qchem_par(*thy_info[0:2])
-    conformer_sampling(
+    conf_found = conformer_sampling(
         zma=zma,
         spc_info=spc_info,
         mod_thy_info=thy_info,
@@ -117,6 +118,8 @@ def single_conformer(zma, spc_info, thy_info,
         retryfail=False,
         **kwargs,
     )
+
+    return conf_found
 
 
 def run_conformers(
@@ -197,9 +200,9 @@ def run_conformers(
                 **kwargs
             )
             print('Stage one success, reading for stage 2')
-            ret = es_runner.read_job(
+            success, ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-            if ret:
+            if success:
                 sinf_obj, _, out_str = ret
                 prog = sinf_obj.prog
                 samp_zma = elstruct.reader.opt_zmatrix(prog, out_str)
@@ -266,11 +269,11 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
             print("\nReading from conformer run at {}".format(cnf_run_path))
 
             # Read the electronic structure optimization job
-            ret = es_runner.read_job(
+            success, ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
 
             # Assess the geometry and save it if so
-            if ret:
+            if success:
                 inf_obj, _, out_str = ret
                 prog = inf_obj.prog
                 method = inf_obj.method

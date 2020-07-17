@@ -51,12 +51,15 @@ def species_block(inf_dct):
     # Build the appropriate MESS string
     spc_str = mess_io.writer.molecule(
         core=core_str,
-        freqs=inf_dct['freqs'],
         elec_levels=inf_dct['elec_levels'],
+        freqs=inf_dct['freqs'],
         hind_rot=hind_rot_str,
         xmat=inf_dct['xmat'],
         rovib_coups=inf_dct['rovib_coups'],
-        rot_dists=inf_dct['rot_dists']
+        rot_dists=inf_dct['rot_dists'],
+        inf_intens=(),
+        freq_scale_factor=None,
+        use_harmfreqs_key=False
     )
 
     return spc_str, dat_dct
@@ -158,6 +161,19 @@ def tau_block(inf_dct):
     tau_dat_file_name = 'tau.dat'
     dat_dct = {tau_dat_file_name: dat_str}
 
+    # Write additional reference configuration file if needed
+    if inf_dct['ref_geom'] and inf_dct['ref_grad'] and inf_dct['ref_hessian']:
+        ref_config_file_name = 'reftau.dat'
+        dat_str = mess_io.writer.monte_carlo.mc_data(
+            geos=inf_dct['ref_geom'],
+            enes=[0.00],
+            grads=inf_dct['ref_grad'],
+            hessians=inf_dct['ref_hessian']
+        )
+        dat_dct.update({ref_config_file_name: ref_dat_str})
+    else:
+        ref_config_file_name = ''
+
     # Write the core string (seperate energies?)
     spc_str = mess_io.writer.monte_carlo.mc_species(
         geom=inf_dct['ref_geom'],
@@ -165,10 +181,11 @@ def tau_block(inf_dct):
         elec_levels=inf_dct['elec_levels'],
         flux_mode_str=inf_dct['flux_mode_str'],
         data_file_name=tau_dat_file_name,
-        ground_energy=inf_dct['ground_energy'],
+        ground_energy=None,
+        reference_energy=inf_dct['reference_energy'],
         freqs=inf_dct['freqs'],
-        reference_energy=None,
-        use_cm_shift=True)
+        use_cm_shift=True
+    )
 
     return spc_str, dat_dct
 

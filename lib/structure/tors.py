@@ -2,6 +2,7 @@
 """
 
 import os
+import itertools
 import numpy
 import automol
 import autofile
@@ -154,6 +155,8 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
         tors_names = [ ['D1'], ['D2', 'D3'], ['D4'] ]
     """
 
+    print(automol.zmatrix.string(zma))
+
     # Get the tors names if thery have not already been supplied
     val_dct = automol.zmatrix.values(zma)
 
@@ -164,6 +167,7 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
     # Build the grids corresponding to the torsions
     tors_grids, tors_sym_nums = [], []
     for tors_names in tors_name_grps:
+        print(tors_names)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_keys,
             brk_bnd_key=brk_bnd_keys)
@@ -235,20 +239,68 @@ def is_methyl_rotor(zma, rotor):
 
 
 # Building constraints
-def build_constraint_dct(zma, tors_names):
+def build_constraint_dct(zma, const_names, scan_names=()):
     """ Build a dictionary of constraints
     """
-    constraint_names = [name
-                        for name_lst in tors_names
-                        for name in name_lst]
-    constraint_names.sort(key=lambda x: int(x.split('D')[1]))
-    zma_vals = automol.zmatrix.values(zma)
-    constraint_dct = dict(zip(
-        constraint_names,
-        (round(zma_vals[name], 2) for name in constraint_names)
-    ))
+
+    print('const_names', const_names)
+    print('scan_names', scan_names)
+
+    # Get the list names sorted for dictionary
+    rnames = (name for name in const_names if 'R' in name)
+    anames = (name for name in const_names if 'A' in name)
+    dnames = (name for name in const_names if 'D' in name)
+    rnames = tuple(sorted(rnames, key=lambda x: int(x.split('R')[1])))
+    anames = tuple(sorted(anames, key=lambda x: int(x.split('A')[1])))
+    dnames = tuple(sorted(dnames, key=lambda x: int(x.split('D')[1])))
+    constraint_names = rnames + anames + dnames
+
+    # Remove the scan coordinates so they are not placed in the dict
+    print('rnames', rnames)
+    print('anames', anames)
+    print('dnames', dnames)
+    print('constraint_names', constraint_names)
+    constraint_names = tuple(name for name in constraint_names
+                             if name not in scan_names)
+    print('constraint_names', constraint_names)
+
+    # Build dictionary
+    if constraint_names:
+        zma_vals = automol.zmatrix.values(zma)
+        zma_coords = automol.zmatrix.coordinates(zma)
+        assert set(constraint_names) <= set(zma_coords.keys()), (
+            'Attempting to constrain coordinates not in zma:\n{}\n{}'.format(
+                constraint_names, zma_coords)
+        )
+
+        constraint_dct = dict(zip(
+            constraint_names,
+            (round(zma_vals[name], 2) for name in constraint_names)
+        ))
+    else:
+        constraint_dct = None
+
+    # print('dct')
+    # print(constraint_dct)
+    # import sys
+    # sys.exit()
 
     return constraint_dct
+
+
+def set_hr_dims(tors_grids):
+    """ Determine the dimensions of the grid
+    """
+    assert len(tors_grids) in (1, 2, 3, 4), 'Rotor must be 1-4 dimensions'
+
+    grid_points = ((i for i in range(len(grid)))
+                   for grid in tors_grids)
+    grid_vals = ((x for x in grid)
+                 for grid in tors_grids)
+    grid_points = tuple(itertools.product(*grid_points))
+    grid_vals = tuple(itertools.product(*grid_vals))
+
+    return grid_points, grid_vals
 
 
 # Functions to handle setting up groups and axes used to define torstions
