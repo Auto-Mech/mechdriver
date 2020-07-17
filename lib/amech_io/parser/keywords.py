@@ -97,7 +97,7 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'tau_samp': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'tau_energy': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'tau_grad': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'tau_hess': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
+    'tau_hess': ['runlvl', 'inplvl', 'hesscount', 'retryfail', 'overwrite'],
     'irc_scan': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'irc_energy': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'irc_grad': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
@@ -126,7 +126,8 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'nobarrier': 'pst',
     'retryfail': True,
     'overwrite': False,
-    'rxndirn': 'forw'
+    'rxndirn': 'forw',
+    'hesscount': 1000
 }
 
 # Species keywords
