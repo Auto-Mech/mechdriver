@@ -78,11 +78,11 @@ def save_irc(irc_job, run_fs, scn_save_fs, coo_name, irc_idxs):
     """ Read IRC output and store data in filesystem
     """
     _ = irc_idxs
-    opt_ret = es_runner.read_job(
+    opt_success, opt_ret = es_runner.read_job(
         job=irc_job,
         run_fs=run_fs,
     )
-    if opt_ret is not None:
+    if opt_success is not None:
         inf_obj, _, out_str = opt_ret
         prog = inf_obj.prog
         geos, gras, hessians = elstruct.reader.irc_points(prog, out_str)

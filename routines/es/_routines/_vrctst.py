@@ -504,12 +504,12 @@ def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
                 **kwargs,
             )
 
-        ret = es_runner.read_job(
+        success, ret = es_runner.read_job(
             job='energy',
             run_fs=run_fs,
         )
 
-        if ret is not None:
+        if success:
             inf_obj, inp_str, out_str = ret
 
             print(" - Reading energy from output...")

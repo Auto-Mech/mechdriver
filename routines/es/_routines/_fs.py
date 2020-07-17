@@ -6,6 +6,7 @@ import automol
 import elstruct
 import autofile
 from routines.es import runner as es_runner
+from lib.structure import instab
 
 
 def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
@@ -14,9 +15,9 @@ def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
         electronic structure routine into the filesystem.
     """
 
-    ret = es_runner.read_job(job=job, run_fs=run_fs)
+    success, ret = es_runner.read_job(job=job, run_fs=run_fs)
 
-    if ret:
+    if success:
 
         # Get the geo, zma, and ene based on job type
         ene, zma, geo = _read(run_fs, job)
@@ -61,6 +62,30 @@ def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
     return saved
 
 
+def save_instab(conn_geo, run_fs, thy_save_fs, mod_thy_info,
+                job=elstruct.Job.OPTIMIZATION):
+    """ Assess the instability
+    """
+
+    _, ret = es_runner.read_job(job=job, run_fs=run_fs)
+
+    if ret:
+
+        # Get the geo, zma, and ene based on job type
+        _, _, samp_geo = _read(run_fs, job)
+
+        # Check connectivity of the sampled geometry
+        if automol.geom.connected(samp_geo):
+            geo_connected = True
+        else:
+            geo_connected = False
+            conn_gra, disconn_gras = instab.get_gras(conn_geo, samp_geo)
+            instab.write_instab(
+                conn_gra, disconn_gras, thy_save_fs, mod_thy_info)
+
+    return geo_connected
+
+
 def _read(run_fs, job):
     """ Read the output
     """
@@ -68,7 +93,7 @@ def _read(run_fs, job):
     assert job in (elstruct.Job.OPTIMIZATION, elstruct.Job.ENERGY), (
         'Job not opt or energy'
     )
-    ret = es_runner.read_job(
+    _, ret = es_runner.read_job(
         job=job, run_fs=run_fs)
     if ret:
         inf_obj, _, out_str = ret

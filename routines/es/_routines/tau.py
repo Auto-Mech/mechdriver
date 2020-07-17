@@ -171,9 +171,9 @@ def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
 
             print("Reading from tau run at {}".format(run_path))
 
-            ret = es_runner.read_job(
+            success, ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-            if ret:
+            if success:
                 inf_obj, inp_str, out_str = ret
                 prog = inf_obj.prog
                 method = inf_obj.method

@@ -8,7 +8,7 @@ from lib.structure import tors as torsprep
 
 
 def hindered_rotor_scans(
-        zma, spc_info, mod_thy_info,
+        zma, spc_info, mod_thy_info, thy_save_fs,
         zma_run_path, zma_save_path,
         run_tors_names, run_tors_grids,
         script_str, overwrite,
@@ -21,12 +21,12 @@ def hindered_rotor_scans(
     print('\nRunning hindered rotor scans for the following rotors...')
     for names in run_tors_names:
         print(names)
-    print(*run_tors_names)
-    print(list(itertools.chain(*run_tors_names)))
-    print(const_names)
+    # print(*run_tors_names)
+    # print(list(itertools.chain(*run_tors_names)))
+    # print(const_names)
     if const_names is not None:
         if set(list(itertools.chain(*run_tors_names))) == set(const_names):
-            print('\nUser requested that all torsions of system will be fixed.')
+            print('\nUser requested all torsions of system will be fixed.')
 
     # for tors_name, tors_grid in zip(tors_names, tors_grids):
     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
@@ -65,6 +65,7 @@ def hindered_rotor_scans(
             zma=zma,
             spc_info=spc_info,
             mod_thy_info=mod_thy_info,
+            thy_save_fs=thy_save_fs,
             coord_names=tors_names,
             coord_grids=tors_grids,
             scn_typ=scn_typ,

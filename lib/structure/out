@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "instab.py", line 80, in <module>
+    _instab_info(CONN_GRA, DISCONN_GRA)
+  File "instab.py", line 43, in _instab_info
+    rct_zmas = [automol.geom.zmatrix(automol.graph.geometry(conn_gra))]
+  File "/lcrc/project/CMRP/amech/automol/automol/graph/__init__.py", line 186, in geometry
+    return automol.convert.graph.geometry(gra)
+  File "/lcrc/project/CMRP/amech/automol/automol/convert/graph.py", line 84, in geometry
+    gra = automol.graph.explicit(gra)
+  File "/lcrc/project/CMRP/amech/automol/automol/graph/_graph.py", line 632, in explicit
+    atm_keys = backbone_keys(gra) if atm_keys is None else atm_keys
+  File "/lcrc/project/CMRP/amech/automol/automol/graph/_graph.py", line 577, in backbone_keys
+    bbn_keys = atom_keys(gra) - explicit_hydrogen_keys(gra)
+  File "/lcrc/project/CMRP/amech/automol/automol/graph/_graph_base.py", line 37, in atom_keys
+    return frozenset(atoms(gra).keys())
+  File "/lcrc/project/CMRP/amech/automol/automol/graph/_graph_base.py", line 23, in atoms
+    atm_dct, _ = gra
+ValueError: not enough values to unpack (expected 2, got 1)

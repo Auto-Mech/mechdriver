@@ -6,11 +6,12 @@ import elstruct
 import autofile
 from routines.es import runner as es_runner
 from routines.es._routines._fs import save_struct
+from routines.es._routines._fs import save_instab
 from routines.es._routines._fs import check_isomer
 from lib.structure import tors as torsprep
 
 
-def run_scan(zma, spc_info, mod_thy_info,
+def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
              coord_names, coord_grids,
              scn_run_fs, scn_save_fs, scn_typ,
              script_str, overwrite,
@@ -26,16 +27,20 @@ def run_scan(zma, spc_info, mod_thy_info,
     # for now, running only one-dimensional hindered rotor scans
     scn_save_fs[1].create([coord_names])
     inf_obj = autofile.schema.info_objects.scan_branch(
-        {coord_names[0]: coord_grids[0]})  # WRONG, might have to fix for mdhr
+        dict(zip(coord_names, coord_grids)))
     scn_save_fs[1].file.info.write(inf_obj, [coord_names])
+
+    # Build the grid of values
+    _, grid_vals = torsprep.set_hr_dims(coord_grids)
 
     # Build run prefixses?
     _run_scan(
         guess_zma=zma,
         spc_info=spc_info,
         mod_thy_info=mod_thy_info,
+        thy_save_fs=thy_save_fs,
         coord_names=coord_names,
-        coord_grids=coord_grids,
+        grid_vals=grid_vals,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
         scn_typ=scn_typ,
@@ -49,30 +54,31 @@ def run_scan(zma, spc_info, mod_thy_info,
         constraint_dct=constraint_dct
     )
 
-    # if reverse_sweep:
-    #     print('\nDoing a reverse sweep of the HR scan to catch errors...')
-    #     _run_scan(
-    #         guess_zma=zma,
-    #         spc_info=spc_info,
-    #         mod_thy_info=mod_thy_info,
-    #         coord_names=coord_names,
-    #         coord_grids=tuple(reversed(coord_grids)),
-    #         scn_run_fs=scn_run_fs,
-    #         scn_save_fs=scn_save_fs,
-    #         scn_typ=scn_typ,
-    #         script_str=script_str,
-    #         overwrite=overwrite,
-    #         errors=(),
-    #         options_mat=(),
-    #         retryfail=retryfail,
-    #         update_guess=update_guess,
-    #         saddle=saddle,
-    #         constraint_dct=constraint_dct
-    #     )
+    if reverse_sweep:
+        print('\nDoing a reverse sweep of the HR scan to catch errors...')
+        _run_scan(
+            guess_zma=zma,
+            spc_info=spc_info,
+            mod_thy_info=mod_thy_info,
+            thy_save_fs=thy_save_fs,
+            coord_names=coord_names,
+            grid_vals=tuple(reversed(grid_vals)),
+            scn_run_fs=scn_run_fs,
+            scn_save_fs=scn_save_fs,
+            scn_typ=scn_typ,
+            script_str=script_str,
+            overwrite=overwrite,
+            errors=(),
+            options_mat=(),
+            retryfail=retryfail,
+            update_guess=update_guess,
+            saddle=saddle,
+            constraint_dct=constraint_dct
+        )
 
 
-def _run_scan(guess_zma, spc_info, mod_thy_info,
-              coord_names, coord_grids,
+def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
+              coord_names, grid_vals,
               scn_run_fs, scn_save_fs, scn_typ,
               script_str, overwrite,
               errors=(), options_mat=(),
@@ -82,6 +88,9 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
     """ new run function
     """
 
+    # Get a connected geometry from the init guess_zma for instability checks
+    conn_geo = automol.zmatrix.geometry(guess_zma)
+
     # Set the frozen coordinates (set job at this point?)
     if constraint_dct is not None:
         frozen_coordinates = coord_names + tuple(constraint_dct)
@@ -89,7 +98,6 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
         frozen_coordinates = coord_names
 
     # Read the energies and Hessians from the filesystem
-    _, grid_vals = torsprep.set_hr_dims(coord_grids)
     for vals in grid_vals:
 
         # Set the locs for the scan point
@@ -128,17 +136,22 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
                     **kwargs
                 )
 
-                ret = es_runner.read_job(job=job, run_fs=run_fs)
-                if ret is not None:
-                    inf_obj, _, out_str = ret
-                    prog = inf_obj.prog
-                    opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
-                    if update_guess:
-                        guess_zma = opt_zma
+                # Check connectivity, save instability files if needed
+                connected = save_instab(
+                        conn_geo, run_fs, thy_save_fs, mod_thy_info[1:4])
 
-                # Check the instability
-                # if not connected():
-                #     write_instab() 
+                # If connected and update requested: update geom
+                # If disconnected: break loop
+                if connected:
+                    ret = es_runner.read_job(job=job, run_fs=run_fs)
+                    if ret is not None:
+                        inf_obj, _, out_str = ret
+                        prog = inf_obj.prog
+                        opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                        if update_guess:
+                            guess_zma = opt_zma
+                else:
+                    break
 
             elif job == elstruct.Job.ENERGY:
                 es_runner.run_job(
@@ -155,9 +168,10 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
                     **kwargs
                 )
 
-                ret = es_runner.read_job(job=job, run_fs=run_fs)
+                # Run read_job to print status message
+                _, _ = es_runner.read_job(job=job, run_fs=run_fs)
 
-                # Write initial mat as they are needed later
+                # Write initial geos in run fs as they are needed later
                 run_fs[-1].file.zmatrix.write(zma, [job])
                 run_fs[-1].file.geometry.write(
                     automol.zmatrix.geometry(zma), [job])
@@ -172,16 +186,14 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs in scn_run_fs[-1].existing():
-            if not isinstance(locs[1][0], float):
-                continue
+        for locs in scn_run_fs[-1].existing([coo_names]):
 
-            # Set and print the path
+            # Set run filesys
             run_path = scn_run_fs[-1].path(locs)
+            run_fs = autofile.fs.run(run_path)
             print("Reading from scan run at {}".format(run_path))
 
-            # Build run fs and save the structure
-            run_fs = autofile.fs.run(run_path)
+            # Save the structure
             saved = save_struct(
                 run_fs, scn_save_fs, locs, _set_job(scn_typ),
                 mod_thy_info, in_zma_fs=True)
@@ -204,15 +216,16 @@ def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs1 in cscn_run_fs[2].existing():
+        for locs1 in cscn_run_fs[2].existing([coo_names]):
             if cscn_run_fs[2].exists(locs1):
-                for locs2 in cscn_run_fs[3].existing():
-                    # Set and print the path
+                for locs2 in cscn_run_fs[3].existing(locs1):
+                    
+                    # Set run filesys
                     run_path = cscn_run_fs[-1].path(locs2)
+                    run_fs = autofile.fs.run(run_path)
                     print("Reading from scan run at {}".format(run_path))
 
-                    # Build run fs and save the structure
-                    run_fs = autofile.fs.run(run_path)
+                    # Save the structure
                     saved = save_struct(
                         run_fs, cscn_save_fs, locs2, _set_job(scn_typ),
                         mod_thy_info, in_zma_fs=True)

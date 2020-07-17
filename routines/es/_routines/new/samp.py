@@ -79,9 +79,9 @@ def run_sampling(
                 **kwargs
             )
             print('Stage one success, reading for stage 2')
-            ret = es_runner.read_job(
+            success, ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-            if ret:
+            if success:
                 sinf_obj, _, out_str = ret
                 prog = sinf_obj.prog
                 samp_zma = elstruct.reader.opt_zmatrix(prog, out_str)

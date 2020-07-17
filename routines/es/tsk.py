@@ -46,50 +46,60 @@ def run_tsk(tsk, spc_dct, spc_name,
         print('{} = {}'.format(key, val))
     print('')
 
-    # Set keys
-    saddle = bool('ts_' in spc_name)
-    # vdw = bool('vdw' in spc_name)
-    spc = spc_dct[spc_name]
+    # If species is unstable, set task to 'none'
+    stable = check_unstable_species(
+        tsk, spc_dct, spc_name,
+        thy_info, ini_thy_info, save_prefix)
 
-    # Get stuff from task
-    [_, job] = tsk.split('_')
+    if stable:
 
-    # Run the task if an initial geom exists
-    if 'init' in tsk:
-        _ = run_geom_init(
-            spc, thy_info, ini_thy_info,
-            run_prefix, save_prefix, saddle, es_keyword_dct)
-    elif 'conf' in tsk:
-        run_conformer_tsk(
-            job, spc_dct, spc_name,
-            thy_info, ini_thy_info,
-            run_prefix, save_prefix,
-            saddle, es_keyword_dct)
-    elif 'tau' in tsk:
-        run_tau_tsk(
-            job, spc_dct, spc_name,
-            thy_info, ini_thy_info,
-            run_prefix, save_prefix,
-            saddle, es_keyword_dct)
-    elif 'hr' in tsk:
-        run_hr_tsk(
-            job, spc_dct, spc_name,
-            thy_info, ini_thy_info,
-            run_prefix, save_prefix,
-            saddle, es_keyword_dct)
-    elif 'irc' in tsk:
-        run_irc_tsk(
-            job, spc_dct, spc_name,
-            thy_info, ini_thy_info,
-            run_prefix, save_prefix,
-            es_keyword_dct)
-    elif 'find' in tsk:
-        findts.run(
-            spc_dct, spc_name,
-            thy_info, ini_thy_info,
-            var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info,
-            run_prefix, save_prefix,
-            es_keyword_dct)
+        # Set keys
+        saddle = bool('ts_' in spc_name)
+        # vdw = bool('vdw' in spc_name)
+        spc = spc_dct[spc_name]
+
+        # Get stuff from task
+        [_, job] = tsk.split('_')
+
+        # Run the task if an initial geom exists
+        if 'init' in tsk:
+            _ = run_geom_init(
+                spc, thy_info, ini_thy_info,
+                run_prefix, save_prefix, saddle, es_keyword_dct)
+        elif 'conf' in tsk:
+            run_conformer_tsk(
+                job, spc_dct, spc_name,
+                thy_info, ini_thy_info,
+                run_prefix, save_prefix,
+                saddle, es_keyword_dct)
+        elif 'tau' in tsk:
+            run_tau_tsk(
+                job, spc_dct, spc_name,
+                thy_info, ini_thy_info,
+                run_prefix, save_prefix,
+                saddle, es_keyword_dct)
+        elif 'hr' in tsk:
+            run_hr_tsk(
+                job, spc_dct, spc_name,
+                thy_info, ini_thy_info,
+                run_prefix, save_prefix,
+                saddle, es_keyword_dct)
+        elif 'irc' in tsk:
+            run_irc_tsk(
+                job, spc_dct, spc_name,
+                thy_info, ini_thy_info,
+                run_prefix, save_prefix,
+                es_keyword_dct)
+        elif 'find' in tsk:
+            findts.run(
+                spc_dct, spc_name,
+                thy_info, ini_thy_info,
+                var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info,
+                run_prefix, save_prefix,
+                es_keyword_dct)
+
+    else:
+        print('\nSkipping task for unstable species...')
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
@@ -130,6 +140,10 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     else:
         run_fs = filesys.build.run_fs_from_prefix(thy_run_path)
 
+    # Set up the script
+    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+        *thy_info[0:2])
+
     # Get a reference geometry if one not found
     if not saddle:
         geo = geom.reference_geometry(
@@ -137,9 +151,10 @@ def run_geom_init(spc, thy_info, ini_thy_info,
             thy_run_fs, thy_save_fs,
             ini_thy_save_fs,
             cnf_run_fs, cnf_save_fs, run_fs,
+            opt_script_str, overwrite,
             kickoff_size=kickoff_size,
             kickoff_backward=kickoff_backward,
-            overwrite=overwrite)
+            **opt_kwargs)
     # else:
     #     geo = ts.sadpt_reference_geometry(
     #         spc, mod_thy_info, mod_ini_thy_info,
@@ -268,7 +283,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
         print('Sampling done using geom from {}'.format(geo_path))
 
         # Run the sampling
-        conformer.conformer_sampling(
+        _ = conformer.conformer_sampling(
             zma, spc_info,
             mod_thy_info, thy_save_fs,
             cnf_run_fs, cnf_save_fs,
@@ -448,8 +463,9 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         #     save_prefix, spc_info, mod_thy_info)
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
             run_prefix, spc_info, mod_ini_thy_info)
-        _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
+        inifs = filesys.build.spc_thy_fs_from_root(
             save_prefix, spc_info, mod_ini_thy_info)
+        [ini_thy_save_fs, ini_thy_save_path] = inifs
     else:
         rxn_info = filesys.inf.rxn_info(
             spc['reacs'], spc['prods'], spc_dct)
@@ -467,8 +483,9 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
             run_prefix, rxn_info, mod_ini_thy_info)
         _, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_ini_thy_info)
-        _, ini_thy_save_path = filesys.build.ts_fs_from_thy(
+        inifs = filesys.build.ts_fs_from_thy(
             ini_thy_save_path)
+        [ini_thy_save_fs, ini_thy_save_path] = inifs
         _, ini_thy_run_path = filesys.build.ts_fs_from_thy(
             ini_thy_run_path)
 
@@ -528,9 +545,11 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         else:
             if tors_model == '1dhrf':
                 if saddle:
-                    const_names = tuple(itertools.chain(*amech_sadpt_tors_names))
+                    const_names = tuple(
+                        itertools.chain(*amech_sadpt_tors_names))
                 else:
-                    const_names = tuple(itertools.chain(*amech_spc_tors_names))
+                    const_names = tuple(
+                        itertools.chain(*amech_spc_tors_names))
             elif tors_model == '1dhrfa':
                 coords = list(automol.zmatrix.coordinates(zma))
                 const_names = tuple(coord for coord in coords)
@@ -540,7 +559,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
         # Set if scan is rigid or relaxed
         scn_typ = 'relaxed' if tors_model != '1dhrfa' else 'rigid'
-    
+
         # Set up ini filesystem for scans
         _, ini_zma_run_path = filesys.build.zma_fs_from_prefix(
             ini_cnf_run_paths[0], zma_idxs=[0])
@@ -556,7 +575,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         if job == 'scan':
 
             hr.hindered_rotor_scans(
-                zma, spc_info, mod_thy_info,
+                zma, spc_info, mod_thy_info, ini_thy_save_fs,
                 ini_zma_run_path, ini_zma_save_path,
                 run_tors_names, run_tors_grids,
                 opt_script_str, overwrite,
@@ -678,3 +697,35 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 zma, geo, spc_info, mod_thy_info,
                 ini_scn_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite, **kwargs)
+
+
+def check_unstable_species(tsk, spc_dct, spc_name,
+                           thy_info, ini_thy_info, save_prefix):
+    """ see if a species and unstable and handle task management
+    """
+
+    if 'ts' not in spc_name:
+
+        # Build filesystem
+        spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
+        # mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+        mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
+        ini_thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
+            save_prefix, spc_info, mod_ini_thy_info)
+
+        # Check if the instability files exist
+        thy_locs = mod_ini_thy_info[1:4]
+        if (ini_thy_save_fs[-1].file.transformation.exists(thy_locs) and
+            ini_thy_save_fs[-1].file.reactant_graph.exists(thy_locs)):
+            stable = False
+            thy_path = ini_thy_save_fs[-1].path(thy_locs)
+            print('\nFound instability files for species {}'.format(spc_name), 
+                  'at path:\n{}'.format(thy_path)
+            )
+        else:
+            stable = True
+
+    else:
+        stable = True
+
+    return stable

@@ -358,24 +358,18 @@ def tau_data(spc_dct_i,
     vib_model = chn_pf_models['vib']
     if vib_model != 'tau':
         read_gradient, read_hessian = False, False
-        freqs, _, proj_zpe, harm_zpe = vib.tors_projected_freqs_zpe(
+        freqs, _, proj_zpve, harm_zpe = vib.tors_projected_freqs_zpe(
             pf_filesystems, hr_str, prot_str, saddle=False)
-        if hr_str:
-            ground_energy = proj_zpe
-        else:
-            ground_energy = harm_zpe
+        zpe_chnlvl = proj_zpve * phycon.EH2KCAL
     else:
         read_gradient, read_hessian = True, True
         freqs = ()
         _, _, proj_zpe, harm_zpe = vib.tors_projected_freqs_zpe(
             pf_filesystems, hr_str, prot_str, saddle=False)
-        if hr_str:
-            ground_energy = proj_zpe
-        else:
-            ground_energy = harm_zpe
+        zpe_chnlvl = proj_zpve * phycon.EH2KCAL
 
-    ground_energy *= phycon.EH2KCAL
-    zpe_chnlvl = None
+    # Set reference energy to harmonic zpve
+    reference_energy = harm_zpve * phycon.EH2KCAL
 
     # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
@@ -403,6 +397,26 @@ def tau_data(spc_dct_i,
             hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess_str)
 
+    # Read a geometry, grad, and hessian for a reference geom if needed
+    ref_geom, ref_grad, ref_hessian = [], [], []
+    if vib_mode != 'tau':
+
+        # Get harmonic filesystem information
+        [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
+
+        # Read the geometr, gradient, and Hessian
+        geo = harm_save_fs[-1].file.geometry.read(harm_min_locs)
+        geo_str = autofile.data_types.swrite.geometry(geo)
+        ref_geom.append(geo_str)
+
+        grad = harm_save_fs[-1].file.gradient.read(harm_min_locs)
+        grad_str = autofile.data_types.swrite.gradient(grad)
+        ref_grad.append(grad_str)
+
+        hess = harm_save_fs[-1].file.hessian.read(harm_min_locs)
+        hess_str = autofile.data_types.swrite.hessian(hess)
+        ref_hessian.append(hess_str)
+
     # Obtain symmetry factor
     print('\nDetermining the symmetry factor...')
     sym_factor = sym.symmetry_factor(
@@ -412,10 +426,12 @@ def tau_data(spc_dct_i,
     # Create info dictionary
     keys = ['ref_geom', 'sym_factor', 'elec_levels', 'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
-            'zpe_chnlvl', 'ground_energy']
+            'ref_geom', 'ref_grad', 'ref_hessian',
+            'zpe_chnlvl', 'reference_energy']
     vals = [ref_geom, sym_factor, spc_dct_i['elec_levels'], freqs, flux_str,
             samp_geoms, samp_enes, samp_grads, samp_hessians,
-            zpe_chnlvl, ground_energy]
+            ref_geom, ref_grad, ref_hessian,
+            zpe_chnlvl, reference_energy]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct

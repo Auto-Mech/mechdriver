@@ -155,6 +155,8 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
         tors_names = [ ['D1'], ['D2', 'D3'], ['D4'] ]
     """
 
+    print(automol.zmatrix.string(zma))
+
     # Get the tors names if thery have not already been supplied
     val_dct = automol.zmatrix.values(zma)
 
@@ -165,6 +167,7 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
     # Build the grids corresponding to the torsions
     tors_grids, tors_sym_nums = [], []
     for tors_names in tors_name_grps:
+        print(tors_names)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_keys,
             brk_bnd_key=brk_bnd_keys)
@@ -294,8 +297,8 @@ def set_hr_dims(tors_grids):
                    for grid in tors_grids)
     grid_vals = ((x for x in grid)
                  for grid in tors_grids)
-    grid_points = itertools.product(*grid_points)
-    grid_vals = itertools.product(*grid_vals)
+    grid_points = tuple(itertools.product(*grid_points))
+    grid_vals = tuple(itertools.product(*grid_vals))
 
     return grid_points, grid_vals
 
