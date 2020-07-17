@@ -160,7 +160,7 @@ def build_spc_model_keyword_dct(model_str):
     if 'ref_enes' not in opts_dct:
         opts_dct['ref_enes'] = 'ATcT'
     if 'ref_scheme' not in opts_dct:
-        opts_dct['ref_enes'] = 'basic'
+        opts_dct['ref_scheme'] = 'basic'
     if vrctst_str is not None:
         vrctst_dct = ptt.build_keyword_dct(vrctst_str)
     else:
