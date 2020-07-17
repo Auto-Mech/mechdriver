@@ -68,12 +68,12 @@ def run_energy(zma, geo, spc_info, thy_info,
             **kwargs,
         )
 
-        ret = es_runner.read_job(
+        success, ret = es_runner.read_job(
             job='energy',
             run_fs=run_fs,
         )
 
-        if ret is not None:
+        if success:
             inf_obj, inp_str, out_str = ret
 
             print(" - Reading energy from output...")
@@ -132,12 +132,12 @@ def run_gradient(zma, geo, spc_info, thy_info,
                 **kwargs,
             )
 
-            ret = es_runner.read_job(
+            success, ret = es_runner.read_job(
                 job='gradient',
                 run_fs=run_fs,
             )
 
-            if ret is not None:
+            if success:
                 inf_obj, inp_str, out_str = ret
 
                 if is_atom:
@@ -211,12 +211,12 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 **kwargs,
             )
 
-            ret = es_runner.read_job(
+            success, ret = es_runner.read_job(
                 job='hessian',
                 run_fs=run_fs,
             )
 
-            if ret is not None:
+            if success:
                 inf_obj, inp_str, out_str = ret
 
                 print(" - Reading hessian from output...")
@@ -306,12 +306,12 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 **kwargs,
             )
 
-            ret = es_runner.read_job(
+            success, ret = es_runner.read_job(
                 job='vpt2',
                 run_fs=run_fs,
             )
 
-            if ret is not None:
+            if success:
                 inf_obj, inp_str, out_str = ret
 
                 # if not geo_save_fs[-1].file.hessian.exists(locs):
@@ -357,7 +357,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 #              geo_save_fs, geo_run_path, geo_save_path, locs,
 #              script_str, overwrite,
 #              retryfail=True, **kwargs):
-#     """ Determine the properties, hessian for the geometry in the given location
+#     """ Determine the properties in the given location
 #     """
 
 

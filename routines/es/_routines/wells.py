@@ -162,9 +162,9 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
             )
 
             # Save info for the initial geometry (from ichi or fsave dir)
-            ret = es_runner.read_job(
+            success, ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-            if ret:
+            if success:
                 print('Saving reference geometry')
                 print(" - Save path: {}".format(thy_save_path))
 

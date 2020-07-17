@@ -129,6 +129,10 @@ def run_job(
             print(" - Run succeeded.")
             status = autofile.schema.RunStatus.SUCCESS
         else:
+            # Added writing output at point even for fail
+            # Need to check if this is bad. But read_job changes
+            # should address this hopefully
+            run_fs[-1].file.output.write(out_str, [job])
             print(" - Run failed.")
             status = autofile.schema.RunStatus.FAILURE
         version = elstruct.reader.program_version(prog, out_str)
@@ -141,13 +145,14 @@ def run_job(
 def read_job(job, run_fs):
     """ read from an elstruct job by name
     """
-    ret = None
 
     run_path = run_fs[-1].path([job])
 
     print(" - Reading from {} job at {}".format(job, run_path))
     if not run_fs[-1].file.output.exists([job]):
         print(" - No output file found. Skipping...")
+        success = False
+        ret = None
     else:
         assert run_fs[-1].file.info.exists([job])
         assert run_fs[-1].file.input.exists([job])
@@ -155,14 +160,16 @@ def read_job(job, run_fs):
         inp_str = run_fs[-1].file.input.read([job])
         out_str = run_fs[-1].file.output.read([job])
         prog = inf_obj.prog
+        ret = (inf_obj, inp_str, out_str)
 
         if is_successful_output(out_str, job, prog):
             print(" - Found successful output. Reading...")
-            ret = (inf_obj, inp_str, out_str)
+            success = True
         else:
             print(" - Output has an error message. Skipping...")
+            success = False
 
-    return ret
+    return success, ret
 
 
 def is_successful_output(out_str, job, prog):

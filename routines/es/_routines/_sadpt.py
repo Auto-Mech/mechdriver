@@ -34,7 +34,7 @@ def check_filesys_for_guess(ini_ts_save_path):
 
 
 def scan_for_guess(typ, grid, dist_name, brk_name,
-                   ts_zma, ts_info, ref_level,
+                   ts_zma, ts_info, mod_thy_info,
                    scn_run_fs, scn_save_fs, opt_script_str,
                    overwrite, update_guess, **opt_kwargs):
     """ saddle point scan code
@@ -47,7 +47,7 @@ def scan_for_guess(typ, grid, dist_name, brk_name,
     scan.run_scan(
         zma=ts_zma,
         spc_info=ts_info,
-        thy_info=ref_level,
+        thy_info=mod_thy_info,
         grid_dct=grid_dct,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
@@ -67,8 +67,9 @@ def scan_for_guess(typ, grid, dist_name, brk_name,
     scan.save_scan(
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
+        scn_typ='relaxed',
         coo_names=coo_names,
-        thy_info=ref_level
+        mod_thy_info=mod_thy_info
         )
 
     # Find the structure at the maximum on the grid opt scan
@@ -116,12 +117,12 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
             )
 
         # Read the contents of the optimization
-        opt_ret = es_runner.read_job(
+        opt_success, opt_ret = es_runner.read_job(
             job='optimization',
             run_fs=run_fs,
         )
 
-        if opt_ret is not None:
+        if opt_success:
             break
 
     return opt_ret
@@ -151,13 +152,13 @@ def saddle_point_hessian(opt_ret, ts_info, mod_thy_info,
         )
 
     # Read the contents of the optimization
-    hess_ret = es_runner.read_job(
+    hess_success, hess_ret = es_runner.read_job(
         job='hessian',
         run_fs=run_fs,
     )
 
     # If successful, Read the geom and energy from the optimization
-    if hess_ret:
+    if hess_success:
         hess_inf_obj, _, hess_out_str = hess_ret
         hess = elstruct.reader.hessian(hess_inf_obj.prog, hess_out_str)
         freq_run_path = run_fs[-1].path(['hessian'])

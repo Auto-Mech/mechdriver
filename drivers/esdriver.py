@@ -4,6 +4,7 @@
 from routines.es import run_tsk
 from lib import filesys
 from lib.amech_io import parser
+from lib.structure import instab
 
 
 def run(pes_idx,
