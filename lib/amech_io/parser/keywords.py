@@ -113,7 +113,7 @@ ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'nobarrier': ['pst', 'rpvtst', 'vrctst'],
     'retryfail': [True, False],
     'overwrite': [True, False],
-    'rxndirn': ['forw', 'back', 'exo']
+    'rxndirn': ['forw', 'back', 'exo'],
 }
 ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'runlvl': None,

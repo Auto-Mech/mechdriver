@@ -5,7 +5,7 @@ import automol
 import elstruct
 
 
-def qchem_par(prog, method):  # , saddle=False):
+def qchem_params(prog, method):  # , saddle=False):
     """ dictionary of parameters for different electronic structure codes
     """
     if prog == 'gaussian09':

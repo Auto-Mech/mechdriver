@@ -194,6 +194,14 @@ def _optimize_molecule(spc_dct_i, geo_init,
             zma, spc_info, mod_thy_info,
             thy_save_fs, cnf_run_fs, cnf_save_fs,
             overwrite, saddle=False)
+
+        # Write a vmatrix file to handle connectivity checks
+        if conf_found:
+            min_locs = filesys.mincnf.min_energy_conformer_locators(cnf_save_fs)
+            # opt_zma = cnf_save_fs[-1].file.zmatrix.read(min_locs)
+            # opt_zma = cnf_save_fs[0].file.vmatrix.write(
+            #     automol.zmatrix.var_(opt_zma))
+
     else:
         print("Cannot create zmatrix for disconnected species")
         conf_found = False
@@ -243,7 +251,7 @@ def run_initial_geometry_opt(spc_info, mod_thy_info, run_fs, thy_run_fs,
             # ene = elstruct.reader.energy(prog, method, out_str)
             # inf = [inf_obj, ene]
 
-    return geo, inf
+    return geo
 
 
 def remove_imag(

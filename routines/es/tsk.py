@@ -313,7 +313,6 @@ def run_tau_tsk(job, spc_dct, spc_name,
     # Get es options
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
-    hessmax = es_keyword_dct['hessmax']
     scan_increment = spc['hind_inc']
     nsamp_par = spc['tau_nsamp']
 
@@ -406,18 +405,23 @@ def run_tau_tsk(job, spc_dct, spc_name,
                     tau_save_fs, geo_run_path, geo_save_path, locs,
                     script_str, overwrite,
                     retryfail=retryfail, **kwargs)
+                print('\n')
 
         elif job == 'hess':
 
+            # Add the hessian max
+            hessmax = es_keyword_dct['hessmax']
+            
             # Set up the run scripts
             script_str, _, kwargs, _ = es_runner.qchem_params(
                 *thy_info[0:2])
             # Run the job over all the conformers requested by the user
             hess_cnt = 0
             for locs in tau_save_locs:
+                print('\nHESS Number {}'.format(hess_cnt+1))
+                geo_run_path = tau_run_fs[-1].path(locs)
+                geo_save_path = tau_save_fs[-1].path(locs)
                 if not tau_save_fs[-1].file.hessian.exists(locs):
-                    geo_run_path = tau_run_fs[-1].path(locs)
-                    geo_save_path = tau_save_fs[-1].path(locs)
                     geo = tau_save_fs[-1].file.geometry.read(locs)
                     zma = None
                     tau_run_fs[-1].create(locs)
@@ -428,6 +432,9 @@ def run_tau_tsk(job, spc_dct, spc_name,
                         retryfail=retryfail, **kwargs)
                     hess_cnt += 1
                 else:
+                    print('Hessian found and saved previously at {}'.format(
+                        geo_save_path))
+
                     hess_cnt += 1
                 if hess_cnt == hessmax:
                     break
@@ -587,6 +594,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                             ini_scn_save_fs, geo_run_path, geo_save_path, locs,
                             script_str, overwrite,
                             retryfail=retryfail, **kwargs)
+                        print('\n')
                 else:
                     print('*WARNING: NO SCAN INFORMATION EXISTS.',
                           'Doing scan vs cscan?')
@@ -681,6 +689,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 zma, geo, spc_info, mod_thy_info,
                 ini_scn_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite, **kwargs)
+            print('\n')
 
 
 def check_unstable_species(tsk, spc_dct, spc_name,
