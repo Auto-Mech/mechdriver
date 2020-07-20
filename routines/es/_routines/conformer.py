@@ -176,6 +176,16 @@ def run_conformers(
         else:
             samp_zma = zma
 
+        print('\nChecking if ZMA has high repulsion...')
+        if not automol.intmol.low_repulsion_struct(zma, samp_zma):
+            print('  ZMA has high repulsion.')
+            print('  Bad geometry:')
+            print(automol.geom.string(automol.zmatrix.geometry(samp_zma))
+            print('\n  Generating new sample ZMA')
+            samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+        else:
+            print('  ZMA is fine...')
+
         cid = autofile.schema.generate_new_conformer_id()
         locs = [cid]
 
