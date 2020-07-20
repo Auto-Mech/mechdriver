@@ -1,13 +1,12 @@
 """ eletronic structure routines modules
 """
 
-# electronic structure routines
 import sys
 import itertools
 import importlib
 import autofile
 import automol
-from routines.es.runner import par as runpar
+from routines.es import runner as es_runner
 from routines.es import findts
 from routines.es._routines import conformer
 from routines.es._routines import geom
@@ -115,7 +114,6 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     [kickoff_size, kickoff_backward] = spc['kickoff']
     overwrite = es_keyword_dct['overwrite']
     # retryfail = es_keyword_dct['retryfail']
-    # dist_info = spc['dist_info'] if saddle else ()
 
     # Modify the theory
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
@@ -141,26 +139,19 @@ def run_geom_init(spc, thy_info, ini_thy_info,
         run_fs = filesys.build.run_fs_from_prefix(thy_run_path)
 
     # Set up the script
-    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         *thy_info[0:2])
 
     # Get a reference geometry if one not found
-    if not saddle:
-        geo = geom.reference_geometry(
-            spc, mod_thy_info, mod_ini_thy_info,
-            thy_run_fs, thy_save_fs,
-            ini_thy_save_fs,
-            cnf_run_fs, cnf_save_fs, run_fs,
-            opt_script_str, overwrite,
-            kickoff_size=kickoff_size,
-            kickoff_backward=kickoff_backward,
-            **opt_kwargs)
-    # else:
-    #     geo = ts.sadpt_reference_geometry(
-    #         spc, mod_thy_info, mod_ini_thy_info,
-    #         thy_save_fs, ini_thy_save_fs,
-    #         cnf_run_fs, cnf_save_fs, run_fs,
-    #         dist_info=dist_info, overwrite=overwrite)
+    geo = geom.reference_geometry(
+        spc, mod_thy_info, mod_ini_thy_info,
+        thy_run_fs, thy_save_fs,
+        ini_thy_save_fs,
+        cnf_run_fs, cnf_save_fs, run_fs,
+        opt_script_str, overwrite,
+        kickoff_size=kickoff_size,
+        kickoff_backward=kickoff_backward,
+        **opt_kwargs)
 
     return geo
 
@@ -190,13 +181,6 @@ def run_conformer_tsk(job, spc_dct, spc_name,
 
     # Set the filesystem objects
     if not saddle:
-        # # Build filesys for thy info
-        # _, thy_run_path = filesys.build.spc_thy_fs_from_root(
-        #     run_prefix, spc_info, mod_thy_info)
-        # thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
-        #     save_prefix, spc_info, mod_thy_info)
-
-        # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
             run_prefix, spc_info, mod_ini_thy_info)
         ini_thy_fs = filesys.build.spc_thy_fs_from_root(
@@ -207,16 +191,6 @@ def run_conformer_tsk(job, spc_dct, spc_name,
         rxn_info = filesys.inf.rxn_info(
             spc['reacs'], spc['prods'], spc_dct)
 
-        # Build filesys for thy info
-        # _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
-        #     run_prefix, rxn_info, mod_thy_info)
-        # thy_save_fs, thy_save_path = filesys.build.rxn_thy_fs_from_root(
-        #     save_prefix, rxn_info, mod_thy_info)
-        # thy_save_fs, thy_save_path = filesys.build.ts_fs_from_thy(
-        #     thy_save_path)
-        # _, thy_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
-
-        # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.rxn_thy_fs_from_root(
             run_prefix, rxn_info, mod_ini_thy_info)
         _, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
@@ -258,7 +232,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             ini_cnf_save_paths[0], zma_idxs=[0])
 
         # Set up the run scripts
-        _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+        _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
             *thy_info[0:2])
 
         # Set variables if it is a saddle
@@ -276,7 +250,6 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             print('ini path', ini_thy_save_path)
             geo = ini_thy_save_fs[0].file.geometry.read()
             zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
-            # zma = thy_save_fs[0].file.zmatrix.read()
             tors_names = spc['amech_ts_tors_names']
             geo_path = thy_save_fs[0].path()
 
@@ -308,7 +281,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             sys.exit()
 
         # Set up the run scripts
-        script_str, _, kwargs, _ = runpar.run_qchem_par(
+        script_str, _, kwargs, _ = es_runner.qchem_params(
             *thy_info[0:2])
 
         # Run the job over all the conformers requested by the user
@@ -345,7 +318,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
     nsamp_par = spc['tau_nsamp']
 
     # Script
-    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         *thy_info[0:2])
 
     # Modify the theory
@@ -404,7 +377,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
         if job == 'samp':
 
             # Set up the script
-            _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+            _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
                 *thy_info[0:2])
 
             # Run sampling
@@ -419,7 +392,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
         elif job in ('energy', 'grad'):
 
             # Set up the run scripts
-            script_str, _, kwargs, _ = runpar.run_qchem_par(
+            script_str, _, kwargs, _ = es_runner.qchem_params(
                 *thy_info[0:2])
             # Run the job over all the conformers requested by the user
             for locs in tau_save_locs:
@@ -437,7 +410,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
         elif job == 'hess':
 
             # Set up the run scripts
-            script_str, _, kwargs, _ = runpar.run_qchem_par(
+            script_str, _, kwargs, _ = es_runner.qchem_params(
                 *thy_info[0:2])
             # Run the job over all the conformers requested by the user
             hess_cnt = 0
@@ -475,7 +448,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     spc_info = filesys.inf.get_spc_info(spc)
 
     # Script
-    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         *thy_info[0:2])
 
     # Modify the theory
@@ -484,10 +457,6 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
     # Set the filesystem objects
     if not saddle:
-        # _, thy_run_path = filesys.build.spc_thy_fs_from_root(
-        #     run_prefix, spc_info, mod_thy_info)
-        # _, thy_save_path = filesys.build.spc_thy_fs_from_root(
-        #     save_prefix, spc_info, mod_thy_info)
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
             run_prefix, spc_info, mod_ini_thy_info)
         inifs = filesys.build.spc_thy_fs_from_root(
@@ -497,15 +466,6 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         rxn_info = filesys.inf.rxn_info(
             spc['reacs'], spc['prods'], spc_dct)
 
-        # Build filesys for thy info
-        # _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
-        #     run_prefix, rxn_info, mod_thy_info)
-        # _, thy_save_path = filesys.build.rxn_thy_fs_from_root(
-        #     save_prefix, rxn_info, mod_thy_info)
-        # _, thy_save_path = filesys.build.ts_fs_from_thy(thy_save_path)
-        # _, thy_run_path = filesys.build.ts_fs_from_thy(thy_run_path)
-
-        # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.rxn_thy_fs_from_root(
             run_prefix, rxn_info, mod_ini_thy_info)
         _, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
@@ -533,8 +493,6 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
     tors_model = es_keyword_dct['tors_model']
-    # ndim_tors = es_keyword_dct['ndim_tors']
-    # frz_all_tors = es_keyword_dct['frz_all_tors']
     scan_increment = spc['hind_inc']
 
     # Bond key stuff
@@ -581,9 +539,6 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 coords = list(automol.zmatrix.coordinates(zma))
                 const_names = tuple(coord for coord in coords)
 
-        print('const_names')
-        print(const_names)
-
         # Set if scan is rigid or relaxed
         scn_typ = 'relaxed' if tors_model != '1dhrfa' else 'rigid'
 
@@ -592,12 +547,6 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
             ini_cnf_run_paths[0], zma_idxs=[0])
         _, ini_zma_save_path = filesys.build.zma_fs_from_prefix(
             ini_cnf_save_paths[0], zma_idxs=[0])
-        # print('zma run', ini_zma_run_path)
-        # print('zma save', ini_zma_save_path)
-        # ini_scn_run_fs = filesys.build.scn_fs_from_cnf(
-        #     ini_zma_run_path, constraint_dct=constraint_dct)
-        # ini_scn_save_fs = filesys.build.scn_fs_from_cnf(
-        #     ini_zma_save_path, constraint_dct=constraint_dct)
 
         if job == 'scan':
 
@@ -612,16 +561,24 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 
-            script_str, _, kwargs, _ = runpar.run_qchem_par(
+            script_str, _, kwargs, _ = es_runner.qchem_params(
                 *thy_info[0:2])
             for tors_names in run_tors_names:
+
+                # Set the constraint dct and filesys for the scan
+                constraint_dct = structure.tors.build_constraint_dct(
+                    zma, const_names, tors_names)
+                ini_scn_run_fs = filesys.build.scn_fs_from_cnf(
+                    ini_zma_run_path, constraint_dct=constraint_dct)
+                ini_scn_save_fs = filesys.build.scn_fs_from_cnf(
+                    ini_zma_save_path, constraint_dct=constraint_dct)
+
                 scn_locs = filesys.build.scn_locs_from_fs(
                     ini_scn_save_fs, tors_names, constraint_dct=constraint_dct)
                 if scn_locs:
                     for locs in scn_locs:
                         geo_run_path = ini_scn_run_fs[-1].path(locs)
                         geo_save_path = ini_scn_save_fs[-1].path(locs)
-                        # Read zma and convert it
                         geo = ini_scn_save_fs[-1].file.geometry.read(locs)
                         zma = ini_scn_save_fs[-1].file.zmatrix.read(locs)
                         ini_scn_run_fs[-1].create(locs)
@@ -652,7 +609,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     spc_info = filesys.inf.get_spc_info(spc)
 
     # Script
-    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         *thy_info[0:2])
 
     # Modify the theory
@@ -698,7 +655,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     if job == 'scan':
 
         # Script
-        _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+        _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
             *thy_info[0:2])
 
         zma, geo = filesys.inf.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
@@ -710,7 +667,7 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     elif job in ('energy', 'grad', 'hess'):
 
         # Script
-        script_str, _, kwargs, _ = runpar.run_qchem_par(
+        script_str, _, kwargs, _ = es_runner.qchem_params(
             *mod_thy_info[0:2])
 
         # Need to put in something with the IRC idxs
@@ -731,24 +688,24 @@ def check_unstable_species(tsk, spc_dct, spc_name,
     """ see if a species and unstable and handle task management
     """
 
-    if 'ts' not in spc_name:
+    if 'ts' not in spc_name or 'find_ts' not in tsk:
 
         # Build filesystem
         spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
-        # mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
-        mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
-        ini_thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
+        _ = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+        mod_ini_thy_info = filesys.inf.modify_orb_restrict(
+            spc_info, ini_thy_info)
+        ini_thy_save_fs, _ = filesys.build.spc_thy_fs_from_root(
             save_prefix, spc_info, mod_ini_thy_info)
 
         # Check if the instability files exist
         thy_locs = mod_ini_thy_info[1:4]
         if (ini_thy_save_fs[-1].file.transformation.exists(thy_locs) and
-            ini_thy_save_fs[-1].file.reactant_graph.exists(thy_locs)):
+                ini_thy_save_fs[-1].file.reactant_graph.exists(thy_locs)):
             stable = False
             thy_path = ini_thy_save_fs[-1].path(thy_locs)
-            print('\nFound instability files for species {}'.format(spc_name), 
-                  'at path:\n{}'.format(thy_path)
-            )
+            print('\nFound instability files for species {}'.format(spc_name),
+                  'at path:\n{}'.format(thy_path))
         else:
             stable = True
 

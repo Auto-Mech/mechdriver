@@ -5,7 +5,7 @@ import automol
 import elstruct
 
 
-def run_qchem_par(prog, method):  # , saddle=False):
+def qchem_par(prog, method):  # , saddle=False):
     """ dictionary of parameters for different electronic structure codes
     """
     if prog == 'gaussian09':
@@ -131,7 +131,7 @@ def run_qchem_par(prog, method):  # , saddle=False):
     return sp_script_str, opt_script_str, kwargs, opt_kwargs
 
 
-def set_molpro_options_mat(spc_info, geo):
+def molpro_opts_mat(spc_info, geo):
     """ prepare the errors and options mat to perform successive
         single-point energy calculations in Molpro when the RHF fails to
         converge. This currently only works for doublets.

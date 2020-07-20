@@ -7,7 +7,7 @@ import autofile
 from routines.es._routines import sp
 from routines.es._routines import _scan as scan
 from routines.es._routines import _wfn as wfn
-from routines.es import runner as es_runner
+from routines.es.runner import qchem_params
 from lib import filesys
 
 
@@ -43,7 +43,7 @@ def multiref_rscan(ts_zma, ts_info, ts_formula, high_mul,
 
     # Set the opt script string and build the opt_kwargs
     [prog, method, _, _] = mod_var_scn_thy_info
-    _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = qchem_params(
         prog, method)
     opt_kwargs['casscf_options'] = cas_opt[1]
     opt_kwargs['gen_lines'] = {1: guess_lines}
@@ -135,7 +135,7 @@ def molrad_inf_sep_ene(spc1_info, spc2_info,
                        overwrite):
     """ Calculate the inf spe ene for a mol-rad ene
     """
-    sp_script_str, _, kwargs, _ = es_runner.par.run_qchem_par(
+    sp_script_str, _, kwargs, _ = qchem_params(
         *mod_thy_info[0:2])
     inf_sep_ene = reac_sep_ene(
         spc1_info, spc2_info,
@@ -177,7 +177,7 @@ def molrad_inf_sep_ene(spc1_info, spc2_info,
 #     hs_save_fs, hs_var_save_path = filesys.build.high_spin_from_prefix(
 #         geo_save_path, hs_var_sp1_thy_info)
 #
-#     opt_script_str, _, opt_kwargs, _ = es_runner.par.run_qchem_par(
+#     opt_script_str, _, opt_kwargs, _ = qchem_params(
 #         multi_info[0], multi_info[1])
 #     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
 #     cas_opt = wfn.cas_options(
@@ -189,7 +189,7 @@ def molrad_inf_sep_ene(spc1_info, spc2_info,
 #     opt_kwargs['mol_options'] = ['nosym']
 #     opt_kwargs['gen_lines'] = {1: guess_lines}
 #
-#     opt_script_str, _, opt_kwargs, _ = es_runner.par.run_qchem_par(
+#     opt_script_str, _, opt_kwargs, _ = qchem_params(
 #         multi_info[0], multi_info[1])
 #
 #     # Prepare filesys and guesses for the single reference calc
@@ -199,7 +199,7 @@ def molrad_inf_sep_ene(spc1_info, spc2_info,
 #         geo_save_path, hs_var_sp2_thy_info)
 #     run_sr_fs = autofile.fs.run(hs_sr_run_path)
 #
-#     sp_script_str, _, kwargs, _ = es_runner.par.run_qchem_par(
+#     sp_script_str, _, kwargs, _ = qchem_params(
 #         *mod_var_sp2_thy_info[0:2])
 #     errors, options_mat = es_runner.par.set_molpro_options_mat(
 #         hs_info, geo)
@@ -208,7 +208,7 @@ def molrad_inf_sep_ene(spc1_info, spc2_info,
 #     for x in s:
 #        if not hs_save_fs[-1].file.energy.exists(multi_lvl[1:4]) or overwrite:
 #             print(" - Running high spin multi reference energy ...")
-#             opt_script_str, _, opt_kwargs, _ = es_runner.par.run_qchem_par(
+#             opt_script_str, _, opt_kwargs, _ = qchem_params(
 #                 multi_info[0], multi_info[1])
 #
 #             # Calculate the single point energy

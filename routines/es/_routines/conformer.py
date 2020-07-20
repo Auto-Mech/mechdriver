@@ -102,7 +102,7 @@ def single_conformer(zma, spc_info, thy_info,
     """ generate single optimized geometry for
         randomly sampled initial torsional angles
     """
-    opt_script_str, _, kwargs, _ = es_runner.par.run_qchem_par(*thy_info[0:2])
+    opt_script_str, _, kwargs, _ = es_runner.qchem_params(*thy_info[0:2])
     conf_found = conformer_sampling(
         zma=zma,
         spc_info=spc_info,

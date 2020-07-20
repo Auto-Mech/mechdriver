@@ -37,7 +37,7 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
         Supposed to use the wells filesystem?
     """
     new_vdws = []
-    _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         *thy_info[:2])
     mul = spc_dct[ts_name]['low_mul']
     vdw_names_lst = []
@@ -57,7 +57,7 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
         # theory
         prog = thy_info[0]
         method = thy_info[1]
-        _, opt_script_str, _, opt_kwargs = es_runner.par.run_qchem_par(
+        _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
             prog, method)
 
         geos = [(), ()]

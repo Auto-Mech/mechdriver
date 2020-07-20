@@ -138,12 +138,12 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
 
                 # Check connectivity, save instability files if needed
                 connected = save_instab(
-                        conn_geo, run_fs, thy_save_fs, mod_thy_info[1:4])
+                    conn_geo, run_fs, thy_save_fs, mod_thy_info[1:4])
 
                 # If connected and update requested: update geom
                 # If disconnected: break loop
                 if connected:
-                    ret = es_runner.read_job(job=job, run_fs=run_fs)
+                    _, ret = es_runner.read_job(job=job, run_fs=run_fs)
                     if ret is not None:
                         inf_obj, _, out_str = ret
                         prog = inf_obj.prog
