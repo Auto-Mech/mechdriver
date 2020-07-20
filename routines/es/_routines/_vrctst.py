@@ -447,7 +447,7 @@ def scan_sp(ts_zma, ts_info, ts_formula, scn_run_fs, scn_save_fs,
     """
 
     # Set up script and kwargs for the irc run
-    script_str, _, kwargs, _ = es_runner.par.run_qchem_par(*sp_thy_level[0:2])
+    script_str, _, kwargs, _ = es_runner.qchem_params(*sp_thy_level[0:2])
 
     # Build the elstruct CASSCF options list for multiref calcs
     cas_opt = []

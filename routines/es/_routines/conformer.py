@@ -90,8 +90,10 @@ def conformer_sampling(zma, spc_info,
             # print(automol.zmatrix.string(automol.geom.zmatrix(geo)))
             # assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
             thy_save_fs[-1].file.geometry.write(geo, mod_thy_info[1:4])
+            # thy_save_fs[-1].file.zmatrix.write(zma, mod_thy_info[1:4])
         else:
-            thy_save_fs[0].file.geometry.write(geo)
+            # thy_save_fs[0].file.zmatrix.write(geo)
+            thy_save_fs[0].file.geometry.write(zma)
 
     return bool(min_cnf_locs)
 
@@ -102,7 +104,7 @@ def single_conformer(zma, spc_info, thy_info,
     """ generate single optimized geometry for
         randomly sampled initial torsional angles
     """
-    opt_script_str, _, kwargs, _ = es_runner.par.run_qchem_par(*thy_info[0:2])
+    opt_script_str, _, kwargs, _ = es_runner.qchem_params(*thy_info[0:2])
     conf_found = conformer_sampling(
         zma=zma,
         spc_info=spc_info,
@@ -173,6 +175,16 @@ def run_conformers(
             samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
         else:
             samp_zma = zma
+
+        print('\nChecking if ZMA has high repulsion...')
+        if not automol.intmol.low_repulsion_struct(zma, samp_zma):
+            print('  ZMA has high repulsion.')
+            print('  Bad geometry:')
+            print(automol.geom.string(automol.zmatrix.geometry(samp_zma)))
+            print('\n  Generating new sample ZMA')
+            samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+        else:
+            print('  ZMA is fine...')
 
         cid = autofile.schema.generate_new_conformer_id()
         locs = [cid]
@@ -502,7 +514,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=(0,)):
     return viable
 
 
-def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs):
+def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs, zma_locs=(0,)):
     """ Save the conformer in the filesystem
     """
 
@@ -530,10 +542,10 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs):
 
     # Build the zma filesystem and save the z-matrix
     zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
-    zma_save_fs[-1].create([0])
-    zma_save_fs[-1].file.geometry_info.write(inf_obj, [0])
-    zma_save_fs[-1].file.geometry_input.write(inp_str, [0])
-    zma_save_fs[-1].file.zmatrix.write(zma, [0])
+    zma_save_fs[-1].create(zma_locs)
+    zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
+    zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
+    zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
 
     # Saving the energy to a SP filesystem
     print(" - Saving energy of unique geometry...")

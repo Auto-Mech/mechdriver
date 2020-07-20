@@ -155,8 +155,6 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
         tors_names = [ ['D1'], ['D2', 'D3'], ['D4'] ]
     """
 
-    print(automol.zmatrix.string(zma))
-
     # Get the tors names if thery have not already been supplied
     val_dct = automol.zmatrix.values(zma)
 

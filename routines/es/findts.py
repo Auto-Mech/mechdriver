@@ -7,7 +7,7 @@ import autofile
 from routines.es._routines import _sadpt as sadpt
 from routines.es._routines import _vtst as vtst
 from routines.es._routines import _wfn as wfn
-from routines.es.runner import par as runpar
+from routines.es import runner as es_runner
 from lib import filesys
 
 
@@ -205,7 +205,7 @@ def run(spc_dct, spc_name,
             print('No transition state found in filesys',
                   'at {} level...'.format(es_keyword_dct['runlvl']),
                   'Proceeding to find it...')
-            script_str, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+            script_str, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
                 *mod_thy_info[0:2])
             sadpt_transition_state(
                 ini_zma, ts_info, mod_thy_info,

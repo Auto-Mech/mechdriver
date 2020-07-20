@@ -69,6 +69,8 @@ def format_val(val):
         formtd_val = True
     elif val == 'False':
         formtd_val = False
+    elif val.isdigit():
+        formtd_val = int(val)
     else:
         formtd_val = val
 
@@ -170,6 +172,10 @@ def check_es_tsks_supported(es_tsks, thy_dct):
                         #         print('*ERROR: mr theory level only avail',
                         #               'for molpro')
                         #         sys.exit()
+                elif key == 'hessmax':
+                    print('check', key, val)
+                    if not isinstance(val, int):
+                        print('{} must be set to an integer'.format(key))
                 else:
                     if val not in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
                         print('*ERROR: key {}'.format(key),

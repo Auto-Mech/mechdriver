@@ -2,7 +2,7 @@
 """
 
 from lib import filesys
-from routines.es.runner import par as runpar
+from routines.es import runner as es_runner
 from routines.es._routines import sp
 from routines.es._routines import _varscan as varscan
 from routines.es._routines import _scan as scan
@@ -106,7 +106,7 @@ def molrad_scan(ts_zma, ts_info,
         inf_thy_info = thy_info
 
     # Set script
-    _, opt_script_str, _, opt_kwargs = runpar.run_qchem_par(
+    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         *mod_ts_thy_info[0:2])
 
     # Setup and run the first part of the scan to shorte
@@ -137,11 +137,11 @@ def molrad_scan(ts_zma, ts_info,
 
     # Run the hessians
     print('\nRunning Hessians and energies...')
-    script_str, _, kwargs, _ = runpar.run_qchem_par(*mod_ts_sp_thy_info[0:2])
+    script_str, _, kwargs, _ = es_runner.qchem_params(*mod_ts_sp_thy_info[0:2])
     scn_locs = filesys.build.scn_locs_from_fs(
         scn_save_fs, [dist_name], constraint_dct=None)
     print('\n Running Hessians...')
-    script_str, _, kwargs, _ = runpar.run_qchem_par(*mod_ts_thy_info[0:2])
+    script_str, _, kwargs, _ = es_runner.qchem_params(*mod_ts_thy_info[0:2])
     for locs in scn_locs:
         if locs != inf_locs:
             geo_run_path = scn_run_fs[-1].path(locs)
@@ -153,7 +153,7 @@ def molrad_scan(ts_zma, ts_info,
                            scn_save_fs, geo_run_path, geo_save_path, locs,
                            script_str, overwrite, **kwargs)
     print('\n Running Energies...')
-    script_str, _, kwargs, _ = runpar.run_qchem_par(*mod_ts_sp_thy_info[0:2])
+    script_str, _, kwargs, _ = es_runner.qchem_params(*mod_ts_sp_thy_info[0:2])
     for locs in scn_locs:
         if locs != inf_locs:
             geo_run_path = scn_run_fs[-1].path(locs)
