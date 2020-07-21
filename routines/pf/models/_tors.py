@@ -220,7 +220,7 @@ def _rotor_tors_strs(tors_name, group, axis,
             remdummy=remdummy,
             geom=hr_geo,
             use_quantum_weight=True,
-            therm_pow_max=50,
+            therm_pow_max=None,
             rotor_id=tors_name)
 
     mess_ir_str = ''

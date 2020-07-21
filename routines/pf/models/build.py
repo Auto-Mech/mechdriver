@@ -335,7 +335,7 @@ def tau_data(spc_dct_i,
 
     # Get the conformer filesys for the reference geom and energy
     if harm_min_locs:
-        ref_geom = harm_cnf_fs[-1].file.geometry.read(harm_min_locs)
+        geom = harm_cnf_fs[-1].file.geometry.read(harm_min_locs)
         min_ene = harm_cnf_fs[-1].file.energy.read(harm_min_locs)
 
     # Set the filesystem
@@ -360,22 +360,28 @@ def tau_data(spc_dct_i,
     vib_model = chn_pf_models['vib']
     if vib_model != 'tau':
         read_gradient, read_hessian = False, False
-        freqs, _, proj_zpve, harm_zpe = vib.tors_projected_freqs_zpe(
+        freqs, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
             pf_filesystems, hr_str, prot_str, saddle=False)
         zpe_chnlvl = proj_zpve * phycon.EH2KCAL
     else:
         read_gradient, read_hessian = True, True
         freqs = ()
-        _, _, proj_zpe, harm_zpe = vib.tors_projected_freqs_zpe(
+        _, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
             pf_filesystems, hr_str, prot_str, saddle=False)
         zpe_chnlvl = proj_zpve * phycon.EH2KCAL
 
     # Set reference energy to harmonic zpve
     reference_energy = harm_zpve * phycon.EH2KCAL
+    if read_gradient and read_hessian:
+       tau_locs = [locs for locs in tau_save_fs[-1].existing()
+                   if tau_save_fs[-1].file.hessian.exists(locs)]
+       print('tau_locs hess test:', tau_locs)
+    else:
+       tau_locs = tau_save_fs[-1].existing()
 
-    # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
-    for locs in tau_save_fs[-1].existing():
+    print('tau_locs test:', tau_locs)
+    for locs in tau_locs:
 
         # print('Reading tau info at path {}'.format(
             # tau_save_fs[-1].path(locs)))
@@ -389,19 +395,21 @@ def tau_data(spc_dct_i,
         ene_str = autofile.data_types.swrite.energy(rel_ene)
         samp_enes.append(ene_str)
 
-        if read_gradient:
+        if read_gradient and read_hessian:
             grad = tau_save_fs[-1].file.gradient.read(locs)
             grad_str = autofile.data_types.swrite.gradient(grad)
             samp_grads.append(grad_str)
 
-        if read_hessian:
             hess = tau_save_fs[-1].file.hessian.read(locs)
             hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess_str)
 
+    # Read the geom, ene, grad, and hessian for each sample
+    samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
+
     # Read a geometry, grad, and hessian for a reference geom if needed
     ref_geom, ref_grad, ref_hessian = [], [], []
-    if vib_mode != 'tau':
+    if vib_model != 'tau':
 
         # Get harmonic filesystem information
         [harm_save_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
@@ -426,11 +434,11 @@ def tau_data(spc_dct_i,
         frm_bnd_keys=(), brk_bnd_keys=())
 
     # Create info dictionary
-    keys = ['ref_geom', 'sym_factor', 'elec_levels', 'freqs', 'flux_mode_str',
+    keys = ['geom', 'sym_factor', 'elec_levels', 'freqs', 'flux_mode_str',
             'samp_geoms', 'samp_enes', 'samp_grads', 'samp_hessians',
             'ref_geom', 'ref_grad', 'ref_hessian',
             'zpe_chnlvl', 'reference_energy']
-    vals = [ref_geom, sym_factor, spc_dct_i['elec_levels'], freqs, flux_str,
+    vals = [geom, sym_factor, spc_dct_i['elec_levels'], freqs, flux_str,
             samp_geoms, samp_enes, samp_grads, samp_hessians,
             ref_geom, ref_grad, ref_hessian,
             zpe_chnlvl, reference_energy]

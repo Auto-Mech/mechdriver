@@ -95,7 +95,7 @@ def conformer_sampling(zma, spc_info,
             # thy_save_fs[-1].file.zmatrix.write(zma, mod_thy_info[1:4])
         else:
             # thy_save_fs[0].file.zmatrix.write(geo)
-            thy_save_fs[0].file.geometry.write(zma)
+            thy_save_fs[0].file.geometry.write(geo)
 
     return bool(min_cnf_locs)
 
