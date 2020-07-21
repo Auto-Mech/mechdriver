@@ -14,9 +14,14 @@ def hindered_rotor_scans(
         script_str, overwrite,
         scn_typ='relaxed',
         saddle=False, const_names=None,
-        retryfail=True, **opt_kwargs):
+        retryfail=True, chkstab=None, **opt_kwargs):
     """ Perform scans over each of the torsional coordinates
     """
+
+    # Set appropriate value for check stability
+    # If not set, don't check if saddle=True
+    if chkstab is None:
+        chkstab = bool(not saddle)
 
     print('\nRunning hindered rotor scans for the following rotors...')
     for names in run_tors_names:
@@ -51,14 +56,16 @@ def hindered_rotor_scans(
                 scn_save_fs=scn_save_fs,
                 scn_typ=scn_typ,
                 coo_names=tors_names,
-                mod_thy_info=mod_thy_info)
+                mod_thy_info=mod_thy_info,
+                in_zma_fs=True)
         else:
             scan.save_cscan(
                 cscn_run_fs=scn_run_fs,
                 cscn_save_fs=scn_save_fs,
                 scn_typ=scn_typ,
                 coo_names=tors_names,
-                mod_thy_info=mod_thy_info)
+                mod_thy_info=mod_thy_info,
+                in_zma_fs=True)
 
         print('\nRunning any HR Scans if needed...')
         scan.run_scan(
@@ -76,6 +83,7 @@ def hindered_rotor_scans(
             saddle=saddle,
             retryfail=retryfail,
             constraint_dct=constraint_dct,
+            chkstab=chkstab,  # do not check stability if saddle=True
             **opt_kwargs,
         )
 
@@ -86,11 +94,14 @@ def hindered_rotor_scans(
                 scn_save_fs=scn_save_fs,
                 scn_typ=scn_typ,
                 coo_names=tors_names,
-                mod_thy_info=mod_thy_info)
+                mod_thy_info=mod_thy_info,
+                in_zma_fs=True)
         else:
             scan.save_cscan(
                 cscn_run_fs=scn_run_fs,
                 cscn_save_fs=scn_save_fs,
                 scn_typ=scn_typ,
                 coo_names=tors_names,
-                mod_thy_info=mod_thy_info)
+                mod_thy_info=mod_thy_info,
+                in_zma_fs=True)
+

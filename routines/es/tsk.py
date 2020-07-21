@@ -697,7 +697,7 @@ def check_unstable_species(tsk, spc_dct, spc_name,
     """ see if a species and unstable and handle task management
     """
 
-    if 'ts' not in spc_name or 'find_ts' not in tsk:
+    if 'ts' not in spc_name:
 
         # Build filesystem
         spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])

@@ -49,7 +49,7 @@ def run_energy(zma, geo, spc_info, thy_info,
 
         # Add options matrix for energy runs for molpro
         if thy_info[0] == 'molpro2015':
-            errs, optmat = es_runner.par.set_molpro_options_mat(spc_info, geo)
+            errs, optmat = es_runner.molpro_opts_mat(spc_info, geo)
         else:
             errs = ()
             optmat = ()

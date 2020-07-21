@@ -70,7 +70,7 @@ def run(spc_dct, spc_name,
     # Build filesys for thy info for single reference
     _, thy_run_path = filesys.build.rxn_thy_fs_from_root(
         run_prefix, rxn_info, mod_thy_info)
-    _, thy_save_path = filesys.build.rxn_thy_fs_from_root(
+    thy_save_fs, thy_save_path = filesys.build.rxn_thy_fs_from_root(
         save_prefix, rxn_info, mod_thy_info)
 
     # Build filesys for ini thy info for single reference
@@ -210,6 +210,7 @@ def run(spc_dct, spc_name,
             sadpt_transition_state(
                 ini_zma, ts_info, mod_thy_info,
                 thy_run_path, thy_save_path,
+                thy_save_fs,
                 ini_ts_save_path,
                 cnf_save_fs,
                 ts_save_fs, ts_save_path, run_fs,
@@ -227,6 +228,7 @@ def run(spc_dct, spc_name,
 def sadpt_transition_state(
         ini_zma, ts_info, mod_thy_info,
         thy_run_path, thy_save_path,
+        thy_save_fs,
         ini_ts_save_path,
         cnf_save_fs,
         ts_save_fs, ts_save_path, run_fs,
@@ -248,11 +250,19 @@ def sadpt_transition_state(
 
         print(' - No Z-Matrix in found in save filesys.')
         print('\nRunning scan to generate guess Z-Matrix for opt...')
-        scn_run_fs = autofile.fs.scan(thy_run_path)
-        scn_save_fs = autofile.fs.scan(thy_save_path)
+        # Set up ini filesystem for scans
+        _, zma_run_path = filesys.build.zma_fs_from_prefix(
+            thy_run_path, zma_idxs=[0])
+        _, zma_save_path = filesys.build.zma_fs_from_prefix(
+            thy_save_path, zma_idxs=[0])
+        scn_run_fs = filesys.build.scn_fs_from_cnf(
+            zma_run_path, constraint_dct=None)
+        scn_save_fs = filesys.build.scn_fs_from_cnf(
+            zma_save_path, constraint_dct=None)
+
         guess_zmas = sadpt.scan_for_guess(
             typ, grid, dist_name, brk_name, ini_zma, ts_info,
-            mod_thy_info,
+            mod_thy_info, thy_save_fs,
             scn_run_fs, scn_save_fs, opt_script_str,
             overwrite, update_guess, **opt_kwargs)
 
