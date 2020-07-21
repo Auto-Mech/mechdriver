@@ -33,13 +33,14 @@ def check_filesys_for_guess(ini_ts_save_path):
     return guess_zmas
 
 
-def scan_for_guess(typ, grid, dist_name, brk_name,
-                   ts_zma, ts_info, mod_thy_info,
+def scan_for_guess(rxn_typ, grid, dist_name, brk_name,
+                   ts_zma, ts_info, mod_thy_info, thy_save_fs,
                    scn_run_fs, scn_save_fs, opt_script_str,
-                   overwrite, update_guess, **opt_kwargs):
+                   overwrite, update_guess, scn_typ='relaxed',
+                   **opt_kwargs):
     """ saddle point scan code
     """
-    if 'elimination' in typ:
+    if 'elimination' in rxn_typ:
         grid1, grid2 = grid
         grid_dct = {dist_name: grid1, brk_name: grid2}
     else:
@@ -47,39 +48,44 @@ def scan_for_guess(typ, grid, dist_name, brk_name,
     scan.run_scan(
         zma=ts_zma,
         spc_info=ts_info,
-        thy_info=mod_thy_info,
-        grid_dct=grid_dct,
+        mod_thy_info=mod_thy_info,
+        thy_save_fs=thy_save_fs,
+        coord_names=[dist_name],
+        coord_grids=[grid],
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
+        scn_typ=scn_typ,
         script_str=opt_script_str,
         overwrite=overwrite,
         update_guess=update_guess,
         reverse_sweep=False,
-        saddle=False,
+        saddle=True,
         constraint_dct=None,
         retryfail=False,
+        chkstab=False,
         **opt_kwargs,
         )
-    if 'elimination' in typ:
+    if 'elimination' in rxn_typ:
         coo_names = [dist_name, brk_name]
     else:
         coo_names = [dist_name]
     scan.save_scan(
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
-        scn_typ='relaxed',
+        scn_typ=scn_typ,
         coo_names=coo_names,
-        mod_thy_info=mod_thy_info
+        mod_thy_info=mod_thy_info,
+        in_zma_fs=True
         )
 
     # Find the structure at the maximum on the grid opt scan
-    if 'elimination' in typ:
+    if 'elimination' in rxn_typ:
         max_zma = rxngrid.find_max_2d(
-            grid1, grid2, dist_name, brk_name, scn_save_fs)
+            grid1, grid2, dist_name, brk_name, scn_save_fs, mod_thy_info)
         guess_zmas = [max_zma]
     else:
         guess_zmas = rxngrid.find_max_1d(
-            typ, grid, ts_zma, dist_name, scn_save_fs)
+            rxn_typ, grid, ts_zma, dist_name, scn_save_fs, mod_thy_info)
 
     return guess_zmas
 

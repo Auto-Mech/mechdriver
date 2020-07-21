@@ -111,6 +111,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
     bkp_ts_zma = ()
     bkp_tors_names = []
     bkp_dist_name = []
+    dist_name = []
     brk_name = []
     frm_bnd_keys = frozenset({})
     brk_bnd_key = frozenset({})
@@ -200,19 +201,20 @@ def determine_reaction_type(rct_zmas, prd_zmas,
         #         typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
         # Check for elimination
-        # if typ is None:
-        #     orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(
-        #         rct_zmas, prd_zmas)
-        #     if orig_dist:
-        #         rct_zmas = filesys.read.min_dist_conformer_zma_geo(
-        #             orig_dist, cnf_save_fs_lst[0])
-        #         ret = automol.zmatrix.ts.concerted_unimolecular_elimination(
-        #             rct_zmas, prd_zmas)
-        #         if ret and (not given_class or given_class == 'elimination'):
-        #             typ = 'elimination'
-        #             ts_zma, dist_name, brk_name, frm_bnd_keys, tors_names = ret
-        #             typ += ' '
-        #             typ += set_ts_spin(ts_mul, high_mul, low_mul)
+        if typ is None:
+            orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(
+                rct_zmas, prd_zmas)
+            print('origdist', orig_dist)
+            if orig_dist:
+                rct_zmas = filesys.mincnf.min_dist_conformer_zma_geo(
+                    orig_dist, cnf_save_fs_lst[0])
+                ret = automol.zmatrix.ts.concerted_unimolecular_elimination(
+                    rct_zmas, prd_zmas)
+                if ret and (not given_class or given_class == 'elimination'):
+                    typ = 'elimination'
+                    ts_zma, dist_name, brk_name, brk_bnd_keys, frm_bnd_keys, tors_names, rcts_gra = ret
+                    typ += ' '
+                    typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
         # Break if reaction found
         if typ is not None:
@@ -232,10 +234,11 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 
     # print('brk_bnd_key test:', brk_bnd_key)
     # print('ts_zma test:\n',automol.zmatrix.string(ts_zma))
-    if brk_bnd_key:
-        brk_name = automol.zmatrix.bond_key_from_idxs(ts_zma, brk_bnd_key)
-    else:
-        brk_name = []
+    if not brk_name:
+        if brk_bnd_key:
+            brk_name = automol.zmatrix.bond_key_from_idxs(ts_zma, brk_bnd_key)
+        else:
+            brk_name = []
 
     # Set big list to return stuff
     ret = [

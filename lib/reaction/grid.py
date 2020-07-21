@@ -5,11 +5,12 @@ import sys
 import math
 import numpy
 import automol
+import autofile
 from lib.phydat import phycon
 from lib.phydat import bnd
 
 
-def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs):
+def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs, mod_thy_info):
     """ Find the maxmimum of the grid along one dimension
     """
 
@@ -21,7 +22,9 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs):
         locs_list.append([[dist_name], [grid_val_i]])
     for locs in locs_list:
         if scn_save_fs[-1].exists(locs):
-            enes.append(scn_save_fs[-1].file.energy.read(locs))
+            scn_path = scn_save_fs[-1].path(locs)
+            sp_save_fs = autofile.fs.single_point(scn_path)
+            enes.append(sp_save_fs[-1].file.energy.read(mod_thy_info[1:4]))
             locs_lst.append(locs)
     max_ene = max(enes)
     max_idx = enes.index(max_ene)
@@ -31,6 +34,7 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs):
 
     # Get zma at maximum
     max_locs = locs_lst[max_idx]
+    print(scn_save_fs[-1].path(max_locs))
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
     guess_zmas.append(max_zma)
 
@@ -44,7 +48,7 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs):
     return guess_zmas
 
 
-def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs):
+def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs, mod_thy_info):
     """ Find the maxmimum of the grid along two dimensions
     """
     enes_lst = []
@@ -57,7 +61,9 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs):
         locs_lst = []
         for locs in locs_list:
             if scn_save_fs[-1].exists(locs):
-                enes.append(scn_save_fs[-1].file.energy.read(locs))
+                scn_path = scn_save_fs[-1].path(locs)
+                sp_save_fs = autofile.fs.single_point(scn_path)
+                enes.append(sp_save_fs[-1].file.energy.read(mod_thy_info[1:4]))
                 locs_lst.append(locs)
         locs_lst_lst.append(locs_lst)
         enes_lst.append(enes)
@@ -112,6 +118,7 @@ def build_grid(rtype, rbktype, bnd_atoms, ts_zma,
 
     # Set the main type
     # if spin == 'high':
+    print('rtype', rtype)
     if 'beta scission' in rtype:
         grid, update_guess = beta_scission_grid(npoints, bnd_atoms)
     elif 'addition' in rtype and 'rad' not in rtype:
@@ -119,7 +126,7 @@ def build_grid(rtype, rbktype, bnd_atoms, ts_zma,
     elif 'hydrogen migration' in rtype and 'rad' not in rtype:
         grid, update_guess = hydrogen_migration_grid(
             npoints, bnd_atoms, ts_zma, dist_name)
-    elif 'unimolecular elimination' in rtype:
+    elif 'elimination' in rtype:
         grid, update_guess = unimolecular_elimination_grid(
             bnd_atoms, ts_zma, dist_name, brk_name)
     elif 'hydrogen abstraction' in rtype:

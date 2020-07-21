@@ -15,8 +15,10 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
              coord_names, coord_grids,
              scn_run_fs, scn_save_fs, scn_typ,
              script_str, overwrite,
-             update_guess=True, reverse_sweep=True, saddle=False,
+             update_guess=True, reverse_sweep=True,
+             saddle=False, sadpt_opt=False,
              constraint_dct=None, retryfail=True,
+             chkstab=False,
              **kwargs):
     """ run constrained optimization scan
     """
@@ -51,7 +53,8 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
         retryfail=retryfail,
         update_guess=update_guess,
         saddle=saddle,
-        constraint_dct=constraint_dct
+        constraint_dct=constraint_dct,
+        chkstab=chkstab,
     )
 
     if reverse_sweep:
@@ -73,7 +76,8 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
             retryfail=retryfail,
             update_guess=update_guess,
             saddle=saddle,
-            constraint_dct=constraint_dct
+            constraint_dct=constraint_dct,
+            chkstab=chkstab,
         )
 
 
@@ -82,8 +86,9 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
               scn_run_fs, scn_save_fs, scn_typ,
               script_str, overwrite,
               errors=(), options_mat=(),
-              retryfail=True, update_guess=True, saddle=False,
-              constraint_dct=None,
+              retryfail=True, update_guess=True,
+              saddle=False, constraint_dct=None,
+              chkstab=False,
               **kwargs):
     """ new run function
     """
@@ -137,8 +142,11 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                 )
 
                 # Check connectivity, save instability files if needed
-                connected = save_instab(
-                    conn_geo, run_fs, thy_save_fs, mod_thy_info[1:4])
+                if chkstab:
+                    connected = save_instab(
+                        conn_geo, run_fs, thy_save_fs, mod_thy_info[1:4])
+                else:
+                    connected = True
 
                 # If connected and update requested: update geom
                 # If disconnected: break loop
@@ -178,7 +186,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
 
 
 def save_scan(scn_run_fs, scn_save_fs, scn_typ,
-              coo_names, mod_thy_info):
+              coo_names, mod_thy_info, in_zma_fs=False):
     """ save the scans that have been run so far
     """
 
@@ -196,7 +204,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             # Save the structure
             saved = save_struct(
                 run_fs, scn_save_fs, locs, _set_job(scn_typ),
-                mod_thy_info, in_zma_fs=True)
+                mod_thy_info, in_zma_fs=in_zma_fs)
 
             # Add to locs lst if the structure is saved
             if saved:
