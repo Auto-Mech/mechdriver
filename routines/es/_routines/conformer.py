@@ -296,7 +296,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
 
                 # Assess if geometry is properly connected
                 if _geo_connected(geo, saddle):
-                    if _inchi_are_same(geo, saved_geos):
+                    if _inchi_are_same(geo, saved_geos, saved_locs):
                         # Assess viability of transition state conformer
                         if saddle:
                             if not _ts_geo_viable(zma, cnf_save_fs, rxn_class):
@@ -359,8 +359,9 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, saddle):
     return unique
 
 
-def _inchi_are_same(geo, seen_geos):
-    """ Assess if a geometry is unique to saved geos
+def _inchi_are_same(geo, seen_geos, locs):
+    """ Assess if a geometry has the same connectivity to
+     saved geos evaluated in temrs of inchi 
     """
     ##This assumes you already have bad geos in your save
     same = False
@@ -368,12 +369,12 @@ def _inchi_are_same(geo, seen_geos):
     diff_ich = 0
     ich = automol.geom.inchi(geo)
     diff_ich_geos = []
-    for geoi in seen_geos:
+    for i, geoi in enumerate(seen_geos):
         if ich == automol.geom.inchi(geoi):
             same_ich += 1
         else:
             diff_ich += 1
-            diff_ich_geos.append(automol.geom.inchi(geoi))
+            diff_ich_geos.append(automol.geom.inchi(locs[i]))
     
     if same_ich > diff_ich:
         same = True
