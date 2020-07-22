@@ -296,28 +296,28 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
 
                 # Assess if geometry is properly connected
                 if _geo_connected(geo, saddle):
+                    if _inchi_are_same(geo, saved_geos):
+                        # Assess viability of transition state conformer
+                        if saddle:
+                            if not _ts_geo_viable(zma, cnf_save_fs, rxn_class):
+                                continue
 
-                    # Assess viability of transition state conformer
-                    if saddle:
-                        if not _ts_geo_viable(zma, cnf_save_fs, rxn_class):
-                            continue
-
-                    # Determine uniqueness of conformer, save if needed
-                    if _geo_unique(geo, ene, saved_geos, saved_enes, saddle):
-                        # iso check breaks because of zma location
-                        # if _is_proper_isomer(cnf_save_fs, zma):
-                        sym_id = _sym_unique(
-                            geo, ene, saved_geos, saved_enes)
-                        if sym_id is None:
-                            _save_unique_conformer(
-                                ret, thy_info, cnf_save_fs, locs)
-                            saved_geos.append(geo)
-                            saved_enes.append(ene)
-                            saved_locs.append(locs)
-                        else:
-                            sym_locs = saved_locs[sym_id]
-                            _save_sym_indistinct_conformer(
-                                geo, cnf_save_fs, locs, sym_locs)
+                        # Determine uniqueness of conformer, save if needed
+                        if _geo_unique(geo, ene, saved_geos, saved_enes, saddle):
+                            # iso check breaks because of zma location
+                            # if _is_proper_isomer(cnf_save_fs, zma):
+                            sym_id = _sym_unique(
+                                geo, ene, saved_geos, saved_enes)
+                            if sym_id is None:
+                                _save_unique_conformer(
+                                    ret, thy_info, cnf_save_fs, locs)
+                                saved_geos.append(geo)
+                                saved_enes.append(ene)
+                                saved_locs.append(locs)
+                            else:
+                                sym_locs = saved_locs[sym_id]
+                                _save_sym_indistinct_conformer(
+                                    geo, cnf_save_fs, locs, sym_locs)
 
         # Update the conformer trajectory file
         print('')
@@ -357,6 +357,44 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, saddle):
         print(" - Geometry is not unique. Conformer will not be saved.")
 
     return unique
+
+
+def _inchi_are_same(geo, seen_geos):
+    """ Assess if a geometry is unique to saved geos
+    """
+    ##This assumes you already have bad geos in your save
+    same = False
+    same_ich = 0
+    diff_ich = 0
+    ich = automol.geom.inchi(geo)
+    diff_ich_geos = []
+    for geoi in seen_geos:
+        if ich == automol.geom.inchi(geoi):
+            same_ich += 1
+        else:
+            diff_ich += 1
+            diff_ich_geos.append(automol.geom.inchi(geoi))
+    
+    if same_ich > diff_ich:
+        same = True
+        if diff_ich > 0:
+            print(" - Several saved conformers have different inchi:")
+            print(diff_ich_geos)
+    else:
+        print(" - inchi is not the same")
+        
+    #This would assume your saves are good    
+    #same = False
+    #ich = automol.geom.inchi(geo)
+    #for geoi in seen_geos:
+    #    if ich == automol.geom.inchi(geoi):
+    #        same = True
+    #        break
+
+    #if not same:
+    #    print(" - inchi is not the same")
+
+    return same
 
 
 def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
