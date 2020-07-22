@@ -52,7 +52,8 @@ def conformer_sampling(zma, spc_info,
         cnf_save_fs=cnf_save_fs,
         thy_info=mod_thy_info,
         saddle=saddle,
-        rxn_class=rxn_class
+        rxn_class=rxn_class,
+        orig_ich=ich
     )
 
     print('\nSampling for more conformers if needed...')
@@ -78,7 +79,8 @@ def conformer_sampling(zma, spc_info,
         cnf_save_fs=cnf_save_fs,
         thy_info=mod_thy_info,
         saddle=saddle,
-        rxn_class=rxn_class
+        rxn_class=rxn_class,
+        orig_ich=ich
     )
 
     # Save information about the minimum energy conformer in top directory
@@ -259,7 +261,7 @@ def run_conformers(
 
 
 def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
-                    rxn_class=''):
+                    rxn_class='',orig_ich=''):
     """ save the conformers that have been found so far
         # Only go through save procedure if conf not in save
         # may need to get geo, ene, etc; maybe make function
@@ -270,6 +272,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                   for locs in saved_locs]
     saved_enes = [cnf_save_fs[-1].file.energy.read(locs)
                   for locs in saved_locs]
+
+    _check_old_inchi(orig_ich, saved_geos, saved_locs)
 
     if not cnf_run_fs[0].exists():
         print(" - No conformers in run filesys to save.")
@@ -296,7 +300,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
 
                 # Assess if geometry is properly connected
                 if _geo_connected(geo, saddle):
-                    if _inchi_are_same(geo, saved_geos, saved_locs):
+                    if _inchi_are_same(orig_ich, geo):
                         # Assess viability of transition state conformer
                         if saddle:
                             if not _ts_geo_viable(zma, cnf_save_fs, rxn_class):
@@ -359,43 +363,29 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, saddle):
     return unique
 
 
-def _inchi_are_same(geo, seen_geos, locs):
+def _inchi_are_same(orig_ich, geo):
     """ Assess if a geometry has the same connectivity to
      saved geos evaluated in temrs of inchi 
     """
-    ##This assumes you already have bad geos in your save
     same = False
-    same_ich = 0
-    diff_ich = 0
     ich = automol.geom.inchi(geo)
-    diff_ich_geos = []
+    if not automol.inchi.has_stereo(orig_ich):
+        orig_ich = automol.inchi.add_stereo(orig_ich)
+    if ich == orig_ich:
+        same = True 
+    if not same:    
+        print(" - new inchi {} is not the same as old {}".format(ich, orig_ich))
+
+    return same   
+
+
+def _check_old_inchi(orig_ich, seen_geos, saved_locs):
+    ##This assumes you already have bad geos in your save
     for i, geoi in enumerate(seen_geos):
-        if ich == automol.geom.inchi(geoi):
-            same_ich += 1
-        else:
-            diff_ich += 1
-            diff_ich_geos.append(automol.geom.inchi(locs[i]))
-    
-    if same_ich > diff_ich:
-        same = True
-        if diff_ich > 0:
-            print(" - Several saved conformers have different inchi:")
-            print(diff_ich_geos)
-    else:
-        print(" - inchi is not the same")
-        
-    #This would assume your saves are good    
-    #same = False
-    #ich = automol.geom.inchi(geo)
-    #for geoi in seen_geos:
-    #    if ich == automol.geom.inchi(geoi):
-    #        same = True
-    #        break
-
-    #if not same:
-    #    print(" - inchi is not the same")
-
-    return same
+        if not orig_ich == automol.geom.inchi(geoi):
+            print('inchi do not match for {}'.format(automol.geom.smiles(geoi)))
+            print(saved_locs[i])
+    return 
 
 
 def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
