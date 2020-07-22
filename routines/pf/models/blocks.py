@@ -170,6 +170,7 @@ def tau_block(inf_dct):
             grads=inf_dct['ref_grad'],
             hessians=inf_dct['ref_hessian']
         )
+        ref_dat_str = "\n".join(ref_dat_str.splitlines()[1:])
         dat_dct.update({ref_config_file_name: ref_dat_str})
     else:
         ref_config_file_name = ''
@@ -183,7 +184,7 @@ def tau_block(inf_dct):
         data_file_name=tau_dat_file_name,
         reference_energy=inf_dct['reference_energy'],
         ref_config_file_name=ref_config_file_name,
-        ground_energy=None,
+        ground_energy=0.0,
         freqs=inf_dct['freqs'],
         use_cm_shift=True
     )

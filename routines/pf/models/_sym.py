@@ -34,8 +34,9 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
 
             # Set up the symmetry filesystem
             sym_fs = fs.manager(cnf_path, 'SYMMETRY')
-            sym_geos = [sym_fs[-1].file.geometry.read(locs)
-                        for locs in sym_fs[-1].existing()]
+            sym_geos = [geo]
+            sym_geos += [sym_fs[-1].file.geometry.read(locs)
+                         for locs in sym_fs[-1].existing()]
 
             # Obtain the internal
             if rotors:

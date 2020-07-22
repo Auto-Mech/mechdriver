@@ -358,29 +358,21 @@ def tau_data(spc_dct_i,
 
     # Use model to determine whether to read grads and hessians
     vib_model = chn_pf_models['vib']
-    if vib_model != 'tau':
-        read_gradient, read_hessian = False, False
-        freqs, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
-            pf_filesystems, hr_str, prot_str, saddle=False)
-        zpe_chnlvl = proj_zpve * phycon.EH2KCAL
-    else:
-        read_gradient, read_hessian = True, True
-        freqs = ()
-        _, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
-            pf_filesystems, hr_str, prot_str, saddle=False)
-        zpe_chnlvl = proj_zpve * phycon.EH2KCAL
+    freqs = ()
+    _, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
+        pf_filesystems, hr_str, prot_str, saddle=False)
+    zpe_chnlvl = proj_zpve * phycon.EH2KCAL
 
     # Set reference energy to harmonic zpve
     reference_energy = harm_zpve * phycon.EH2KCAL
-    if read_gradient and read_hessian:
+    if vib_model == 'tau':
        tau_locs = [locs for locs in tau_save_fs[-1].existing()
                    if tau_save_fs[-1].file.hessian.exists(locs)]
-       print('tau_locs hess test:', tau_locs)
     else:
        tau_locs = tau_save_fs[-1].existing()
 
+    # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
-    print('tau_locs test:', tau_locs)
     for locs in tau_locs:
 
         # print('Reading tau info at path {}'.format(
@@ -395,7 +387,7 @@ def tau_data(spc_dct_i,
         ene_str = autofile.data_types.swrite.energy(rel_ene)
         samp_enes.append(ene_str)
 
-        if read_gradient and read_hessian:
+        if vib_model == 'tau':
             grad = tau_save_fs[-1].file.gradient.read(locs)
             grad_str = autofile.data_types.swrite.gradient(grad)
             samp_grads.append(grad_str)
@@ -403,9 +395,6 @@ def tau_data(spc_dct_i,
             hess = tau_save_fs[-1].file.hessian.read(locs)
             hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess_str)
-
-    # Read the geom, ene, grad, and hessian for each sample
-    samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
 
     # Read a geometry, grad, and hessian for a reference geom if needed
     ref_geom, ref_grad, ref_hessian = [], [], []
