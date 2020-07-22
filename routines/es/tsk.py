@@ -501,6 +501,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     retryfail = es_keyword_dct['retryfail']
     tors_model = es_keyword_dct['tors_model']
     scan_increment = spc['hind_inc']
+    # comment to force merge
 
     # Bond key stuff
     if saddle:
