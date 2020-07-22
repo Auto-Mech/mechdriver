@@ -44,12 +44,16 @@ def make_spc_mess_str(spc_dct_i, spc_name,
     # Write the mol block
     mess_writer = getattr(BLOCK_MODULE, inf_dct['writer'])
     mess_block, dat_str_dct = mess_writer(inf_dct)
+    if inf_dct['writer'] == 'tau_block':
+        zero_energy = None
+    else:
+        zero_energy = inf_dct['zpe_chnlvl']
 
     # Write the mess string
     spc_str = mess_io.writer.species(
         spc_label=spc_name,
         spc_data=mess_block,
-        zero_energy=inf_dct['zpe_chnlvl']
+        zero_energy=zero_energy
     )
 
     return spc_str, dat_str_dct

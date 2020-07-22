@@ -164,25 +164,27 @@ def tau_block(inf_dct):
     # Write additional reference configuration file if needed
     if inf_dct['ref_geom'] and inf_dct['ref_grad'] and inf_dct['ref_hessian']:
         ref_config_file_name = 'reftau.dat'
-        dat_str = mess_io.writer.monte_carlo.mc_data(
+        ref_dat_str = mess_io.writer.monte_carlo.mc_data(
             geos=inf_dct['ref_geom'],
-            enes=[0.00],
+            enes=['0.00'],
             grads=inf_dct['ref_grad'],
             hessians=inf_dct['ref_hessian']
         )
+        ref_dat_str = "\n".join(ref_dat_str.splitlines()[1:])
         dat_dct.update({ref_config_file_name: ref_dat_str})
     else:
         ref_config_file_name = ''
 
     # Write the core string (seperate energies?)
     spc_str = mess_io.writer.monte_carlo.mc_species(
-        geom=inf_dct['ref_geom'],
+        geom=inf_dct['geom'],
         sym_factor=inf_dct['sym_factor'],
         elec_levels=inf_dct['elec_levels'],
         flux_mode_str=inf_dct['flux_mode_str'],
         data_file_name=tau_dat_file_name,
-        ground_energy=None,
         reference_energy=inf_dct['reference_energy'],
+        ref_config_file_name=ref_config_file_name,
+        ground_energy=0.0,
         freqs=inf_dct['freqs'],
         use_cm_shift=True
     )

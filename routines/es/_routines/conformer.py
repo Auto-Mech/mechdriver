@@ -95,7 +95,7 @@ def conformer_sampling(zma, spc_info,
             # thy_save_fs[-1].file.zmatrix.write(zma, mod_thy_info[1:4])
         else:
             # thy_save_fs[0].file.zmatrix.write(geo)
-            thy_save_fs[0].file.geometry.write(zma)
+            thy_save_fs[0].file.geometry.write(geo)
 
     return bool(min_cnf_locs)
 
@@ -179,14 +179,13 @@ def run_conformers(
             samp_zma = zma
 
         print('\nChecking if ZMA has high repulsion...')
-        if not automol.intmol.low_repulsion_struct(zma, samp_zma):
+        while not automol.intmol.low_repulsion_struct(zma, samp_zma):
             print('  ZMA has high repulsion.')
             print('  Bad geometry:')
             print(automol.geom.string(automol.zmatrix.geometry(samp_zma)))
             print('\n  Generating new sample ZMA')
             samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
-        else:
-            print('  ZMA is fine...')
+        print('  ZMA is fine...')
 
         cid = autofile.schema.generate_new_conformer_id()
         locs = [cid]
@@ -273,7 +272,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
     saved_enes = [cnf_save_fs[-1].file.energy.read(locs)
                   for locs in saved_locs]
 
-    _check_old_inchi(orig_ich, saved_geos, saved_locs)
+    _check_old_inchi(orig_ich, saved_geos, saved_locs, cnf_save_fs)
 
     if not cnf_run_fs[0].exists():
         print(" - No conformers in run filesys to save.")
@@ -379,12 +378,12 @@ def _inchi_are_same(orig_ich, geo):
     return same   
 
 
-def _check_old_inchi(orig_ich, seen_geos, saved_locs):
+def _check_old_inchi(orig_ich, seen_geos, saved_locs, cnf_save_fs):
     ##This assumes you already have bad geos in your save
     for i, geoi in enumerate(seen_geos):
         if not orig_ich == automol.geom.inchi(geoi):
-            print('inchi do not match for {}'.format(automol.geom.smiles(geoi)))
-            print(saved_locs[i])
+            print('ERROR: inchi do not match for {}'.format(automol.geom.smiles(geoi)))
+            print(cnf_save_fs[-1].path(saved_locs[i]))
     return 
 
 
