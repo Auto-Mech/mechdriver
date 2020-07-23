@@ -12,7 +12,7 @@ from lib import filesys
 from lib.reaction import grid as rxngrid
 
 
-def check_filesys_for_guess(ini_ts_save_path):
+def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info):
     """ Check if the filesystem for any TS structures at the input
         level of theory
     """
@@ -20,7 +20,7 @@ def check_filesys_for_guess(ini_ts_save_path):
 
     # Check and see if a zma is found from the filesystem
     ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-        ini_ts_save_path, cnf='min')
+        ini_ts_save_path, mod_ini_thy_info, cnf='min')
     if ini_cnf_save_locs:
         if ini_cnf_save_fs[-1].file.zmatrix.exists(ini_cnf_save_locs):
             geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
@@ -40,18 +40,22 @@ def scan_for_guess(rxn_typ, grid, dist_name, brk_name,
                    **opt_kwargs):
     """ saddle point scan code
     """
+
+    # Build grid and names appropriate for reaction type
     if 'elimination' in rxn_typ:
-        grid1, grid2 = grid
-        grid_dct = {dist_name: grid1, brk_name: grid2}
+        coord_grids = grid
+        coord_names = [dist_name, brk_name]
     else:
-        grid_dct = {dist_name: grid}
+        coord_grids = [grid]
+        coord_names = [dist_name]
+
     scan.run_scan(
         zma=ts_zma,
         spc_info=ts_info,
         mod_thy_info=mod_thy_info,
         thy_save_fs=thy_save_fs,
-        coord_names=[dist_name],
-        coord_grids=[grid],
+        coord_names=coord_names,
+        coord_grids=coord_grids,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
         scn_typ=scn_typ,
@@ -80,6 +84,7 @@ def scan_for_guess(rxn_typ, grid, dist_name, brk_name,
 
     # Find the structure at the maximum on the grid opt scan
     if 'elimination' in rxn_typ:
+        [grid1, grid2] = coord_grids
         max_zma = rxngrid.find_max_2d(
             grid1, grid2, dist_name, brk_name, scn_save_fs, mod_thy_info)
         guess_zmas = [max_zma]
@@ -190,7 +195,7 @@ def saddle_point_checker(imags):
         saddle = False
 
     for imag in imags:
-        if imag < 150.0:
+        if imag <= 200.0:
             print('Imaginary mode {} is relatively low. Worth checking')
 
     return saddle

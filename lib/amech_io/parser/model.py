@@ -131,6 +131,7 @@ def build_pes_model_keyword_dct(model_str):
     model_dct['punit'] = punit
     model_dct['fit_method'] = fitm
     model_dct['dbl_arrfit_thresh'] = ethr
+    model_dct['dbl_arrfit_check'] = echk
     # model_dct['nasa_temp_ranges'] = [200, 1000, 3000]
 
     # Check the dct

@@ -19,7 +19,8 @@ def nonrigid_tors(pf_models, rotors):
     """
     vib_model, tors_model = pf_models['vib'], pf_models['tors']
     has_tors = bool(any(rotors))
-    tors_hr_model = bool(tors_model in ('1dhr', '1dhrf', 'mdhr', 'mdhrv'))
+    tors_hr_model = bool(
+        tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'))
     tau_hr_model = bool(tors_model == 'tau' and vib_model != 'vib')
     # diatomic model?
     return has_tors and (tors_hr_model or tau_hr_model)

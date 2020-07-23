@@ -9,6 +9,7 @@ from routines.es._routines._fs import save_struct
 from routines.es._routines._fs import save_instab
 from routines.es._routines._fs import check_isomer
 from lib.structure import tors as torsprep
+from lib.structure import instab
 
 
 def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
@@ -16,7 +17,7 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
              scn_run_fs, scn_save_fs, scn_typ,
              script_str, overwrite,
              update_guess=True, reverse_sweep=True,
-             saddle=False, sadpt_opt=False,
+             saddle=False,
              constraint_dct=None, retryfail=True,
              chkstab=False,
              **kwargs):
@@ -24,16 +25,24 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     """
 
     # Check if ZMA matches one in filesys
-    check_isomer(zma, scn_save_fs)
+    # breaks for scans for right now
+    # check_isomer(zma, scn_save_fs)  
 
-    # for now, running only one-dimensional hindered rotor scans
-    scn_save_fs[1].create([coord_names])
-    inf_obj = autofile.schema.info_objects.scan_branch(
-        dict(zip(coord_names, coord_grids)))
-    scn_save_fs[1].file.info.write(inf_obj, [coord_names])
+    # Build the SCANS/CSCANS filesystems
+    if constraint_dct is None:
+        scn_save_fs[1].create([coord_names])
+        inf_obj = autofile.schema.info_objects.scan_branch(
+            dict(zip(coord_names, coord_grids)))
+        scn_save_fs[1].file.info.write(inf_obj, [coord_names])
+    else:
+        scn_save_fs[1].create([constraint_dct])
+        inf_obj = autofile.schema.info_objects.scan_branch(
+            dict(zip(coord_names, coord_grids)))
+        scn_save_fs[1].file.info.write(inf_obj, [constraint_dct])
+
 
     # Build the grid of values
-    _, grid_vals = torsprep.set_hr_dims(coord_grids)
+    _, grid_vals = torsprep.set_scan_dims(coord_grids)
 
     # Build run prefixses?
     _run_scan(
@@ -94,7 +103,8 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
     """
 
     # Get a connected geometry from the init guess_zma for instability checks
-    conn_geo = automol.zmatrix.geometry(guess_zma)
+    # conn_geo = automol.zmatrix.geometry(guess_zma)
+    conn_zma = guess_zma
 
     # Set the frozen coordinates (set job at this point?)
     if constraint_dct is not None:
@@ -108,7 +118,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
         # Set the locs for the scan point
         locs = [coord_names, vals]
         if constraint_dct is not None:
-            locs.append(constraint_dct)
+            locs = [constraint_dct] + locs
 
         # Create the filesys
         scn_run_fs[-1].create(locs)
@@ -141,24 +151,28 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     **kwargs
                 )
 
+                # Read the output
+                _, ret = es_runner.read_job(job=job, run_fs=run_fs)
+                if ret is not None:
+                    inf_obj, _, out_str = ret
+                    prog = inf_obj.prog
+                    opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                    opt_geo = elstruct.reader.opt_geometry(prog, out_str)
+
                 # Check connectivity, save instability files if needed
                 if chkstab:
-                    connected = save_instab(
-                        conn_geo, run_fs, thy_save_fs, mod_thy_info[1:4])
+                    connected = automol.geom.connected(opt_geo)
                 else:
                     connected = True
 
                 # If connected and update requested: update geom
-                # If disconnected: break loop
+                # If disconnected: save instab files and break loop
                 if connected:
-                    _, ret = es_runner.read_job(job=job, run_fs=run_fs)
-                    if ret is not None:
-                        inf_obj, _, out_str = ret
-                        prog = inf_obj.prog
-                        opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
-                        if update_guess:
-                            guess_zma = opt_zma
+                    if update_guess:
+                        guess_zma = opt_zma
                 else:
+                    instab.write_instab(conn_zma, opt_zma,
+                                        thy_save_fs, mod_thy_info)
                     break
 
             elif job == elstruct.Job.ENERGY:
@@ -216,15 +230,15 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
 
 def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
-               coo_names, mod_thy_info):
+               coo_names, constraint_dct, mod_thy_info, in_zma_fs=False):
     """ save the scans that have been run so far
     """
 
-    if not cscn_run_fs[1].exists([coo_names]):
+    if not cscn_run_fs[1].exists([constraint_dct]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs1 in cscn_run_fs[2].existing([coo_names]):
+        for locs1 in cscn_run_fs[2].existing([constraint_dct]):
             if cscn_run_fs[2].exists(locs1):
                 for locs2 in cscn_run_fs[3].existing(locs1):
                     
@@ -246,7 +260,7 @@ def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            _hr_traj(coo_names, cscn_save_fs, mod_thy_info, locs_lst)
+            _hr_traj(constraint_dct, cscn_save_fs, mod_thy_info, locs_lst)
 
 
 def _set_job(scn_typ):
@@ -266,7 +280,7 @@ def _set_job(scn_typ):
     return job
 
 
-def _hr_traj(coord_names, scn_save_fs, mod_thy_info, locs_lst):
+def _hr_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
     """ Save a hindered rotor trajectory
     """
 
@@ -287,6 +301,6 @@ def _hr_traj(coord_names, scn_save_fs, mod_thy_info, locs_lst):
         )
         traj.append((comment, geo))
 
-    traj_path = scn_save_fs[1].file.trajectory.path([coord_names])
+    traj_path = scn_save_fs[1].file.trajectory.path([ini_locs])
     print("Updating scan trajectory file at {}".format(traj_path))
-    scn_save_fs[1].file.trajectory.write(traj, [coord_names])
+    scn_save_fs[1].file.trajectory.write(traj, [ini_locs])

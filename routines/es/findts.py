@@ -88,9 +88,9 @@ def run(spc_dct, spc_name,
 
     # Set the cnf fs to see if TS is available or for searching
     cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-        ts_save_path, cnf='min')
+        ts_save_path, mod_thy_info, cnf='min')
     # cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-    #     ts_run_path, cnf=None)
+    #     ts_run_path, mod_thy_info ,cnf=None)
 
     # Find the transition state using the appropriate algorithm
     switch = False
@@ -208,7 +208,8 @@ def run(spc_dct, spc_name,
             script_str, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
                 *mod_thy_info[0:2])
             sadpt_transition_state(
-                ini_zma, ts_info, mod_thy_info,
+                ini_zma, ts_info,
+                mod_ini_thy_info, mod_thy_info,
                 thy_run_path, thy_save_path,
                 thy_save_fs,
                 ini_ts_save_path,
@@ -226,7 +227,8 @@ def run(spc_dct, spc_name,
 
 # SADPT FINDER FUNCTIONS
 def sadpt_transition_state(
-        ini_zma, ts_info, mod_thy_info,
+        ini_zma, ts_info,
+        mod_ini_thy_info, mod_thy_info,
         thy_run_path, thy_save_path,
         thy_save_fs,
         ini_ts_save_path,
@@ -243,7 +245,8 @@ def sadpt_transition_state(
     # Check filesystem for input level of theory
     print('\nSearching save filesys for guess Z-Matrix calculated',
           'at {} level...'.format(es_keyword_dct['inplvl']))
-    guess_zmas = sadpt.check_filesys_for_guess(ini_ts_save_path)
+    guess_zmas = sadpt.check_filesys_for_guess(
+        ini_ts_save_path, mod_ini_thy_info)
 
     # If no guess zma, run a TS searching algorithm
     if not guess_zmas:

@@ -64,6 +64,7 @@ def hindered_rotor_scans(
                 cscn_save_fs=scn_save_fs,
                 scn_typ=scn_typ,
                 coo_names=tors_names,
+                constraint_dct=constraint_dct,
                 mod_thy_info=mod_thy_info,
                 in_zma_fs=True)
 
@@ -102,6 +103,7 @@ def hindered_rotor_scans(
                 cscn_save_fs=scn_save_fs,
                 scn_typ=scn_typ,
                 coo_names=tors_names,
+                constraint_dct=constraint_dct,
                 mod_thy_info=mod_thy_info,
                 in_zma_fs=True)
 
