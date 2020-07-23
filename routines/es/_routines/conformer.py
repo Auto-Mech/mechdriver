@@ -82,7 +82,8 @@ def conformer_sampling(zma, spc_info,
     )
 
     # Save information about the minimum energy conformer in top directory
-    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(cnf_save_fs)
+    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
     if min_cnf_locs:
         geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         if not saddle:
@@ -93,7 +94,7 @@ def conformer_sampling(zma, spc_info,
             # thy_save_fs[-1].file.zmatrix.write(zma, mod_thy_info[1:4])
         else:
             # thy_save_fs[0].file.zmatrix.write(geo)
-            thy_save_fs[0].file.geometry.write(zma)
+            thy_save_fs[0].file.geometry.write(geo)
 
     return bool(min_cnf_locs)
 
@@ -299,7 +300,9 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
 
                     # Assess viability of transition state conformer
                     if saddle:
-                        if not _ts_geo_viable(zma, cnf_save_fs, rxn_class):
+                        ts_viable = _ts_geo_viable(
+                            zma, cnf_save_fs, rxn_class, thy_info)
+                        if not ts_viable:
                             continue
 
                     # Determine uniqueness of conformer, save if needed
@@ -395,7 +398,7 @@ def _is_proper_isomer(cnf_save_fs, zma):
     return proper_isomer
 
 
-def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=(0,)):
+def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     """ Perform a series of checks to assess the viability
         of a transition state geometry prior to saving
     """
@@ -404,7 +407,8 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, zma_locs=(0,)):
     viable = True
 
     # Obtain the min-ene zma and bond keys
-    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(cnf_save_fs)
+    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
     cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs)
     zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)

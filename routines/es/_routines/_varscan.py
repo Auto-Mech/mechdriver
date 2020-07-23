@@ -273,9 +273,9 @@ def reac_sep_ene(spc1_info, spc2_info,
 
         # Build conformer filesys
         ini_cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-            ini_thy_run_path, cnf=None)
+            ini_thy_run_path, mod_ini_thy_info, cnf=None)
         ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-            ini_thy_save_path, cnf='min')
+            ini_thy_save_path, mod_ini_thy_info, cnf='min')
         ini_cnf_save_paths = filesys.build.cnf_paths_from_locs(
             ini_cnf_save_fs, ini_cnf_save_locs)
 

@@ -62,28 +62,51 @@ def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
     return saved
 
 
-def save_instab(conn_geo, run_fs, thy_save_fs, mod_thy_info,
-                job=elstruct.Job.OPTIMIZATION):
+def save_instab(conn_zma, run_fs, cnf_save_fs, cnf_locs,
+                mod_thy_info,
+                job=elstruct.Job.OPTIMIZATION,
+                zma_locs=(0,)):
     """ Assess the instability
     """
+
+    # Get a connected geometry
+    conn_geo = automol.zmatrix.geometry(conn_zma)
 
     _, ret = es_runner.read_job(job=job, run_fs=run_fs)
 
     if ret:
 
-        # Get the geo, zma, and ene based on job type
-        _, _, samp_geo = _read(run_fs, job)
+        # Obtain inf obj and inp str to write in filesys
+        inf_obj, inp_str, out_str = ret
 
-        # Check connectivity of the sampled geometry
-        if automol.geom.connected(samp_geo):
-            geo_connected = True
-        else:
-            geo_connected = False
-            conn_gra, disconn_gras = instab.get_gras(conn_geo, samp_geo)
-            instab.write_instab(
-                conn_gra, disconn_gras, thy_save_fs, mod_thy_info)
+        # Set and print the save path information
+        save_path = cnf_save_fs[-1].path(cnf_locs)
+        print(" - Saving...")
+        print(" - Save path: {}".format(save_path))
 
-    return geo_connected
+        # Save the geometry information
+        cnf_save_fs[-1].create(cnf_locs)
+        cnf_save_fs[-1].file.geometry_info.write(inf_obj, cnf_locs)
+        cnf_save_fs[-1].file.geometry_input.write(inp_str, cnf_locs)
+        cnf_save_fs[-1].file.geometry.write(conn_geo, cnf_locs)
+
+        # Save zma information seperately, if required
+        zma_save_fs = autofile.fs.manager(save_path, 'ZMATRIX')
+        zma_save_fs[-1].create(zma_locs)
+        zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
+        zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
+        zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+
+        # Saving the energy to an SP filesys
+        print(" - Saving energy...")
+        prog = inf_obj.prog
+        method = inf_obj.method
+        ene = elstruct.reader.energy(prog, method, out_str)
+        sp_save_fs = autofile.fs.single_point(save_path)
+        sp_save_fs[-1].create(mod_thy_info[1:4])
+        sp_save_fs[-1].file.input.write(inp_str, mod_thy_info[1:4])
+        sp_save_fs[-1].file.info.write(inf_obj, mod_thy_info[1:4])
+        sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
 
 
 def _read(run_fs, job):

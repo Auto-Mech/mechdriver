@@ -149,7 +149,8 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
             if pdep_fit:
                 print('\nUser requested to assess pressure dependence',
                       'of reaction.')
-                dct = {k: pdep_fit[k] for k in pdep_fit if k != 'no_pdep_pval'}
+                pkeys = ('assess_pdep_temps', 'tolerance', 'plow', 'phigh')
+                dct = {k: pdep_fit[k] for k in pdep_fit if k in pkeys}
                 rxn_is_pdependent = ratefit.fit.assess_pressure_dependence(
                     valid_calc_tk_dct, **dct)
                 if rxn_is_pdependent:
