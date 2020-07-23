@@ -7,6 +7,7 @@ from routines.pf import runner as pfrunner
 from lib import filesys
 from lib.amech_io import writer
 from lib.amech_io import parser
+from lib.structure import instab
 
 
 def run(pes_formula, pes_idx, sub_pes_idx,
@@ -40,7 +41,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         pes_model_dct[pes_model]['dbl_arrfit_check']
     )
 
-    # Fix this to read ene model
+    # Obtain all of the transitions states
     print('\nIdentifying reaction classes for transition states...')
     ts_dct = {}
     for rxn in rxn_lst:
@@ -64,6 +65,15 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             direction='exo')
     spc_dct = parser.species.combine_sadpt_spc_dcts(
         ts_dct, spc_dct)
+
+    # Set reaction list with unstable species broken apart
+    print('ini rxn lst\n', rxn_lst)
+    rxn_lst = instab.break_all_unstable(
+        rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
+    print('\nsec rxn lst\n', rxn_lst)
+
+    # import sys
+    # sys.exit()
 
     # Build the MESS label idx dictionary for the PES
     label_dct = ktproutines.label.make_pes_label_dct(

@@ -15,6 +15,7 @@ from routines.es._routines import tau
 from routines.es._routines import irc
 from lib import filesys
 from lib import structure
+from lib.structure import instab
 
 
 # Dictionary of Electronic Structure Calculators
@@ -46,8 +47,8 @@ def run_tsk(tsk, spc_dct, spc_name,
     print('')
 
     # If species is unstable, set task to 'none'
-    stable = check_unstable_species(
-        tsk, spc_dct, spc_name,
+    stable = instab.check_unstable_species(
+        spc_dct, spc_name,
         thy_info, ini_thy_info, save_prefix)
 
     if stable:
@@ -127,9 +128,9 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     ini_thy_save_fs, _ = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_ini_thy_info)
     cnf_run_fs, _ = filesys.build.cnf_fs_from_thy(
-        thy_run_path, saddle=saddle)
+        thy_run_path, mod_thy_info, saddle=saddle)
     cnf_save_fs, _ = filesys.build.cnf_fs_from_thy(
-        thy_save_path, saddle=saddle)
+        thy_save_path, mod_thy_info, saddle=saddle)
 
     # Set the run filesystem
     if saddle:
@@ -144,12 +145,12 @@ def run_geom_init(spc, thy_info, ini_thy_info,
 
     # Get a reference geometry if one not found
     geo = geom.reference_geometry(
-        spc, mod_thy_info, mod_ini_thy_info,
+        spc, spc_info, mod_thy_info,
         thy_run_fs, thy_save_fs,
-        ini_thy_save_fs,
-        cnf_run_fs, cnf_save_fs, run_fs,
+        cnf_run_fs, cnf_save_fs,
+        run_fs,
         opt_script_str, overwrite,
-        kickoff_size=kickoff_size,
+        kickoff_size=kickoff_size, 
         kickoff_backward=kickoff_backward,
         **opt_kwargs)
 
@@ -219,13 +220,13 @@ def run_conformer_tsk(job, spc_dct, spc_name,
 
         # Build conformer filesys
         cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-            thy_run_path, cnf=None)
+            thy_run_path, mod_thy_info, cnf=None)
         cnf_save_fs, _ = filesys.build.cnf_fs_from_prefix(
-            thy_save_path, cnf=None)
+            thy_save_path, mod_thy_info, cnf=None)
 
         # Build the ini zma filesys
         ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-            ini_thy_save_path, cnf='min')
+            ini_thy_save_path, mod_ini_thy_info, cnf='min')
         ini_cnf_save_paths = filesys.build.cnf_paths_from_locs(
             ini_cnf_save_fs, ini_cnf_save_locs)
         ini_zma_save_fs, _ = filesys.build.zma_fs_from_prefix(
@@ -270,9 +271,9 @@ def run_conformer_tsk(job, spc_dct, spc_name,
 
         # Build conformer filesys
         cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-            ini_thy_run_path, cnf=None)
+            ini_thy_run_path, mod_ini_thy_info, cnf=None)
         cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-            ini_thy_save_path, cnf='min')
+            ini_thy_save_path, mod_ini_thy_info, cnf='min')
 
         # Check if locs exist, kill if it doesn't
         if not cnf_save_locs:
@@ -336,7 +337,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
 
     # Get the geom and energy of reference species
     ini_cnf_save_fs, ini_cnf_locs = filesys.build.cnf_fs_from_prefix(
-        ini_thy_save_path, cnf='min')
+        ini_thy_save_path, mod_ini_thy_info, cnf='min')
     zma, geo = filesys.inf.cnf_fs_zma_geo(
         ini_cnf_save_fs, ini_cnf_locs)
     ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_cnf_locs)
@@ -485,9 +486,9 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
     # Build cnf filesys using the ini thy filesys (needed for all HR jobs)
     ini_cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-        ini_thy_run_path, cnf=None)
+        ini_thy_run_path, mod_ini_thy_info, cnf=None)
     ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-        ini_thy_save_path, cnf='min')
+        ini_thy_save_path, mod_ini_thy_info, cnf='min')
     ini_cnf_save_paths = filesys.build.cnf_paths_from_locs(
         ini_cnf_save_fs, ini_cnf_save_locs)
     ini_cnf_run_paths = filesys.build.cnf_paths_from_locs(
@@ -649,9 +650,9 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     _, ini_thy_run_path = filesys.build.ts_fs_from_thy(ini_thy_run_path)
 
     ini_cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-        ini_thy_run_path, cnf=None)
+        ini_thy_run_path, mod_ini_thy_info, cnf=None)
     ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-        ini_thy_save_path, cnf='min')
+        ini_thy_save_path, mod_ini_thy_info, cnf='min')
     ini_cnf_save_paths = filesys.build.cnf_paths_from_locs(
         ini_cnf_save_fs, ini_cnf_save_locs)
     ini_cnf_run_paths = filesys.build.cnf_paths_from_locs(
@@ -691,35 +692,3 @@ def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 ini_scn_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite, **kwargs)
             print('\n')
-
-
-def check_unstable_species(tsk, spc_dct, spc_name,
-                           thy_info, ini_thy_info, save_prefix):
-    """ see if a species and unstable and handle task management
-    """
-
-    if 'ts' not in spc_name:
-
-        # Build filesystem
-        spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
-        _ = filesys.inf.modify_orb_restrict(spc_info, thy_info)
-        mod_ini_thy_info = filesys.inf.modify_orb_restrict(
-            spc_info, ini_thy_info)
-        ini_thy_save_fs, _ = filesys.build.spc_thy_fs_from_root(
-            save_prefix, spc_info, mod_ini_thy_info)
-
-        # Check if the instability files exist
-        thy_locs = mod_ini_thy_info[1:4]
-        if (ini_thy_save_fs[-1].file.transformation.exists(thy_locs) and
-                ini_thy_save_fs[-1].file.reactant_graph.exists(thy_locs)):
-            stable = False
-            thy_path = ini_thy_save_fs[-1].path(thy_locs)
-            print('\nFound instability files for species {}'.format(spc_name),
-                  'at path:\n{}'.format(thy_path))
-        else:
-            stable = True
-
-    else:
-        stable = True
-
-    return stable

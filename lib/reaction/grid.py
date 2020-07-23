@@ -103,6 +103,8 @@ def build_grid(rtype, rbktype, bnd_atoms, ts_zma,
     """ Set the grid for a transition state search
     """
 
+    # Build lists of coord values and symb pairs for generality
+
     # Pass npoints as a 2-element list
 
     # Set up the backup type
@@ -128,7 +130,7 @@ def build_grid(rtype, rbktype, bnd_atoms, ts_zma,
             npoints, bnd_atoms, ts_zma, dist_name)
     elif 'elimination' in rtype:
         grid, update_guess = unimolecular_elimination_grid(
-            bnd_atoms, ts_zma, dist_name, brk_name)
+            bnd_atoms, ts_zma, brk_name)
     elif 'hydrogen abstraction' in rtype:
         grid, update_guess = hydrogen_abstraction(npoints, bnd_atoms)
     elif 'substitution' in rtype:
@@ -213,17 +215,21 @@ def hydrogen_migration_grid(npoints, bnd_atoms, ts_zma, dist_name):
     return grid, update_guess
 
 
-def unimolecular_elimination_grid(bnd_atoms, ts_zma, syms, brk_name):
+def unimolecular_elimination_grid(bnd_atoms, ts_zma, brk_name):
     """ Build forward 2D grid for elimination reaction
     """
+    syms = automol.zmatrix.symbols(ts_zma)
+    print('syms', syms)
     brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
+    print('brk_coo', brk_coo)
+    print(automol.zmatrix.string(ts_zma))
     brk_len_key = tuple(sorted(map(syms.__getitem__, brk_coo)))
 
     # interval = 0.2 * phycon.ANG2BOHR
     # rmin = 1.4 * phycon.ANG2BOHR
     # rmax = 2.8 * phycon.ANG2BOHR
     print('Check bad grid')
-    sys.exit()
+
     npoints1 = 8
     npoints2 = 4
     bnd_len = bnd.read_len(bnd_atoms)
@@ -238,6 +244,8 @@ def unimolecular_elimination_grid(bnd_atoms, ts_zma, syms, brk_name):
         grid = [grid1, grid2]
         update_guess = False
 
+    print('grid', grid)
+    # sys.exit()
     return grid, update_guess
 
 

@@ -41,6 +41,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     # Determine grid for preliminary search for all different reaction types
     dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
     syms = automol.zmatrix.symbols(ts_zma)
+    print('dist_coo', dist_coo)
     ts_bnd_len = tuple(sorted(map(syms.__getitem__, dist_coo)))
     grid, update_guess, bkp_grid, bkp_update_guess = rxngrid.build_grid(
         typ, bkp_typ, ts_bnd_len, ts_zma, dist_name, brk_name, npoints=None)

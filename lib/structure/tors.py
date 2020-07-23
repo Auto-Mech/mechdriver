@@ -286,7 +286,7 @@ def build_constraint_dct(zma, const_names, scan_names=()):
     return constraint_dct
 
 
-def set_hr_dims(tors_grids):
+def set_scan_dims(tors_grids):
     """ Determine the dimensions of the grid
     """
     assert len(tors_grids) in (1, 2, 3, 4), 'Rotor must be 1-4 dimensions'

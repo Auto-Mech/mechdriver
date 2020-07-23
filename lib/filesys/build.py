@@ -159,7 +159,7 @@ def rxn_cnf_fs_from_root(root_prefix, spc_info, mod_thy_info, saddle=False):
     return cnf_fs
 
 
-def cnf_fs_from_thy(thy_prefix, cnf=None, saddle=False):
+def cnf_fs_from_thy(thy_prefix, mod_thy_info, cnf=None, saddle=False):
     """ create theory run path
     """
     # Build an intermediate TS filesystem if needed
@@ -177,7 +177,7 @@ def cnf_fs_from_thy(thy_prefix, cnf=None, saddle=False):
     cnf_locs = []
     if cnf is not None:
         if cnf == 'min':
-            cnf_locs = min_energy_conformer_locators(cnf_fs)
+            cnf_locs = min_energy_conformer_locators(cnf_fs, mod_thy_info)
         elif cnf == 'all':
             cnf_locs = cnf_fs[1].existing()
 
@@ -194,7 +194,7 @@ def cnf_fs_from_thy(thy_prefix, cnf=None, saddle=False):
     return cnf_fs, cnf_locs
 
 
-def cnf_fs_from_prefix(cnf_prefix, cnf=None):
+def cnf_fs_from_prefix(cnf_prefix, mod_thy_info, cnf=None):
     """ create theory run path
     """
     # Conformer filesys using theory
@@ -204,7 +204,7 @@ def cnf_fs_from_prefix(cnf_prefix, cnf=None):
     cnf_locs = []
     if cnf is not None:
         if cnf == 'min':
-            cnf_locs = min_energy_conformer_locators(cnf_fs)
+            cnf_locs = min_energy_conformer_locators(cnf_fs, mod_thy_info)
         elif cnf == 'all':
             cnf_locs = cnf_fs[1].existing()
 
