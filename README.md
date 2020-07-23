@@ -1,2 +1,2 @@
 # moldriver
-Molecular property routines using electronic structure calls
+Automated Molecular routines using electronic structure calls
