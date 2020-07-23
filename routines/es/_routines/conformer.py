@@ -180,6 +180,7 @@ def run_conformers(
             samp_zma = zma
 
         print('\nChecking if ZMA has high repulsion...')
+        # print('zma tests:', automol.zmatrix.string(zma), automol.zmatrix.string(zma))
         while not automol.intmol.low_repulsion_struct(zma, samp_zma):
             print('  ZMA has high repulsion.')
             print('  Bad geometry:')
@@ -371,11 +372,15 @@ def _inchi_are_same(orig_ich, geo):
     """
     same = False
     ich = automol.geom.inchi(geo)
-    if not automol.inchi.has_stereo(orig_ich):
-        orig_ich = automol.inchi.add_stereo(orig_ich)
+    # if not automol.inchi.has_stereo(orig_ich):
+    #if not automol.inchi.is_complete(orig_ich):
+        #orig_ich = automol.inchi.add_stereo(orig_ich)
+    assert automol.inchi.is_complete(orig_ich),(
+            'the inchi {} orig_ich is not complete'.format(orig_ich))
     if ich == orig_ich:
         same = True 
     if not same:    
+        print('test;', ich, orig_ich)
         print(" - new inchi {} is not the same as old {}".format(ich, orig_ich))
 
     return same   
