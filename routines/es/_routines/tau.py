@@ -202,7 +202,7 @@ def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
                 saved_geos.append(geo)
 
         # update the tau trajectory file
-        filesys.mincnf.traj_sort(tau_save_fs)
+        filesys.mincnf.traj_sort(tau_save_fs, mod_thy_info)
 
 
 def assess_pf_convergence(tau_save_fs, ref_ene,
