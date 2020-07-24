@@ -108,13 +108,19 @@ def locs_sort(save_fs):
     return sorted_locs
 
 
-def traj_sort(save_fs):
+def traj_sort(save_fs, mod_thy_info):
     """ sort trajectory file according to energies
     """
     locs_lst = save_fs[-1].existing()
     if locs_lst:
-        enes = [save_fs[-1].file.energy.read(locs)
-                for locs in locs_lst]
+        enes = []
+        for locs in locs_lst:
+            cnf_path = save_fs[-1].path(locs)
+            sp_fs = autofile.fs.single_point(cnf_path)
+            enes.append(
+                sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
+        # enes = [save_fs[-1].file.energy.read(locs)
+        #         for locs in locs_lst]
         geos = [save_fs[-1].file.geometry.read(locs)
                 for locs in locs_lst]
         traj = []

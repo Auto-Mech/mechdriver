@@ -333,7 +333,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
 
         # Update the conformer trajectory file
         print('')
-        filesys.mincnf.traj_sort(cnf_save_fs)
+        filesys.mincnf.traj_sort(cnf_save_fs, thy_info)
 
 
 def _geo_connected(geo, saddle):
