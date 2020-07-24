@@ -262,7 +262,7 @@ def run_conformers(
 
 
 def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
-                    rxn_class='',orig_ich=''):
+                    rxn_class='', orig_ich=''):
     """ save the conformers that have been found so far
         # Only go through save procedure if conf not in save
         # may need to get geo, ene, etc; maybe make function
@@ -271,8 +271,13 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
     saved_locs = list(cnf_save_fs[-1].existing())
     saved_geos = [cnf_save_fs[-1].file.geometry.read(locs)
                   for locs in saved_locs]
-    saved_enes = [cnf_save_fs[-1].file.energy.read(locs)
-                  for locs in saved_locs]
+    # saved_enes = [cnf_save_fs[-1].file.energy.read(locs)
+    #               for locs in saved_locs]
+    saved_enes = []
+    for locs in saved_locs:
+        path = cnf_save_fs[-1].path(locs)
+        sp_save_fs = autofile.fs.single_point(path)
+        saved_enes.append(sp_save_fs[-1].file.energy.read(thy_info[1:4]))
 
     _check_old_inchi(orig_ich, saved_geos, saved_locs, cnf_save_fs)
 
@@ -368,22 +373,21 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, saddle):
 
 def _inchi_are_same(orig_ich, geo):
     """ Assess if a geometry has the same connectivity to
-     saved geos evaluated in temrs of inchi 
+     saved geos evaluated in temrs of inchi
     """
     same = False
     ich = automol.geom.inchi(geo)
     # if not automol.inchi.has_stereo(orig_ich):
-    #if not automol.inchi.is_complete(orig_ich):
-        #orig_ich = automol.inchi.add_stereo(orig_ich)
-    assert automol.inchi.is_complete(orig_ich),(
-            'the inchi {} orig_ich is not complete'.format(orig_ich))
+    # if not automol.inchi.is_complete(orig_ich):
+    # orig_ich = automol.inchi.add_stereo(orig_ich)
+    assert automol.inchi.is_complete(orig_ich), (
+        'the inchi {} orig_ich is not complete'.format(orig_ich))
     if ich == orig_ich:
-        same = True 
-    if not same:    
-        print('test;', ich, orig_ich)
+        same = True
+    if not same:
         print(" - new inchi {} is not the same as old {}".format(ich, orig_ich))
 
-    return same   
+    return same
 
 
 def _check_old_inchi(orig_ich, seen_geos, saved_locs, cnf_save_fs):
@@ -392,7 +396,7 @@ def _check_old_inchi(orig_ich, seen_geos, saved_locs, cnf_save_fs):
         if not orig_ich == automol.geom.inchi(geoi):
             print('ERROR: inchi do not match for {}'.format(automol.geom.smiles(geoi)))
             print(cnf_save_fs[-1].path(saved_locs[i]))
-    return 
+    return
 
 
 def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
