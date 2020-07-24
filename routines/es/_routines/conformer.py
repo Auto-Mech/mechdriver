@@ -385,7 +385,6 @@ def _inchi_are_same(orig_ich, geo):
     if ich == orig_ich:
         same = True
     if not same:
-        print('test;', ich, orig_ich)
         print(" - new inchi {} is not the same as old {}".format(ich, orig_ich))
 
     return same
