@@ -153,7 +153,7 @@ def _optimize_molecule(spc_info, zma_init,
     if automol.geom.connected(geo):
 
         # Remove the imaginary mode
-        geo = _remove_imag(
+        geo, imag_fix_needed = _remove_imag(
             spc_info, geo, mod_thy_info, thy_run_fs,
             run_fs, kickoff_size, kickoff_backward,
             overwrite=overwrite)
@@ -168,7 +168,8 @@ def _optimize_molecule(spc_info, zma_init,
                 locs = [autofile.schema.generate_new_conformer_id()]
                 job = elstruct.Job.OPTIMIZATION
                 save_struct(run_fs, cnf_save_fs, locs, job, mod_thy_info,
-                            zma_locs=(0,), in_zma_fs=False)
+                            zma_locs=(0,), in_zma_fs=False,
+                            cart_to_zma=imag_fix_needed)
 
             else:
 
@@ -261,6 +262,9 @@ def _remove_imag(spc_info, geo, mod_thy_info, thy_run_fs, run_fs,
         spc_info, geo, mod_thy_info, thy_run_fs, script_str,
         overwrite, **kwargs)
 
+    # Make a variable to fix the imaginary mode if needed to pass to other functions
+    imag_fix_needed = bool(imag)
+
     # Make five attempts to remove imag mode if found
     print(automol.geom.string(geo), disp_xyzs)
     chk_idx = 0
@@ -286,7 +290,7 @@ def _remove_imag(spc_info, geo, mod_thy_info, thy_run_fs, run_fs,
         # Update kickoff size
         kickoff_size *= 2
 
-    return geo
+    return geo, imag_fix_needed
 
 
 def _check_imaginary(

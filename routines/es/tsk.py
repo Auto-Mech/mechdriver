@@ -243,16 +243,18 @@ def run_conformer_tsk(job, spc_dct, spc_name,
 
         # Read the geometry and zma from the ini file system
         if not saddle:
-            geo = ini_thy_save_fs[-1].file.geometry.read(mod_ini_thy_info[1:4])
+            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_cnf_save_locs)
             zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-            geo_path = thy_save_fs[-1].path(mod_ini_thy_info[1:4])
+            geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
         else:
             print('ini path', ini_thy_save_path)
-            geo = ini_thy_save_fs[0].file.geometry.read()
+            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_cnf_save_locs)
+            # geo = ini_thy_save_fs[0].file.geometry.read()
             zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
             tors_names = spc['amech_ts_tors_names']
-            geo_path = thy_save_fs[0].path()
+            # geo_path = thy_save_fs[0].path()
+            geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
 
         print('Sampling done using geom from {}'.format(geo_path))
 

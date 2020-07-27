@@ -41,7 +41,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     # Determine grid for preliminary search for all different reaction types
     dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
     syms = automol.zmatrix.symbols(ts_zma)
-    print('dist_coo', dist_coo)
+    # print('dist_coo', dist_coo)
     ts_bnd_len = tuple(sorted(map(syms.__getitem__, dist_coo)))
     grid, update_guess, bkp_grid, bkp_update_guess = rxngrid.build_grid(
         typ, bkp_typ, ts_bnd_len, ts_zma, dist_name, brk_name, npoints=None)
@@ -205,7 +205,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
         if typ is None:
             orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(
                 rct_zmas, prd_zmas)
-            print('origdist', orig_dist)
+            # print('origdist', orig_dist)
             if orig_dist:
                 rct_zmas = filesys.mincnf.min_dist_conformer_zma_geo(
                     orig_dist, cnf_save_fs_lst[0])
@@ -275,6 +275,7 @@ def determine_rad_rad(rxn_muls):
     """ determine if reaction is radical-radical
     """
     rct_muls = rxn_muls[0]
+    print('muls', rct_muls)
     if len(rct_muls) > 1:
         mul1, mul2 = rct_muls
         rad_rad = bool(mul1 > 1 and mul2 > 1)

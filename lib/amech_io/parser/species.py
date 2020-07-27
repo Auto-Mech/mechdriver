@@ -301,7 +301,8 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
     rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
     [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
     chg, low_mul, high_mul = filesys.inf.rxn_chg_mult(rxn_muls, rxn_chgs)
-    rad_rad = rxnid.determine_rad_rad(rxn_muls)
+    _, _, indir_rxn_muls = filesys.inf.rxn_info2(reacs, prods, spc_dct)
+    rad_rad = rxnid.determine_rad_rad(indir_rxn_muls)
     # Set the multiplcity of the TS to the low-spin mult by default
     ts_mul = low_mul
 
@@ -347,10 +348,6 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
 
         # Set the ts_bnd using the zma and distname
         ts_bnd = automol.zmatrix.coord_idxs(ret1[0], ret1[1])
-
-        print('BOND KEYS')
-        print('frm', ret1[4])
-        print('brk', ret1[5])
 
         # Put class stuff in the dct
         dct_keys = ['zma', 'dist_name', 'brk_name',

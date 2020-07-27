@@ -5,6 +5,7 @@
 import automol
 import autofile
 from routines.es._routines import _sadpt as sadpt
+from routines.es._routines import _vrctst as vrctst
 from routines.es._routines import _vtst as vtst
 from routines.es._routines import _wfn as wfn
 from routines.es import runner as es_runner
@@ -100,8 +101,10 @@ def run(spc_dct, spc_name,
     # Run multireference VTST or VRCTST TS Search
     if _radrad_barrierless_search(ts_dct, ts_search):
 
+        print('VRCTST/VTST')
+        
         # Modify the theory
-        hs_info = (ts_info[0], ts_info[1], ts_dct['high_mul'])
+        hs_info = (ts_info[0], ts_info[1], ts_dct['high_mult'])
         mod_var_scn_thy_info = filesys.inf.modify_orb_restrict(
             ts_info, var_scn_thy_info)
         hs_var_scn_thy_info = filesys.inf.modify_orb_restrict(
@@ -325,7 +328,7 @@ def barrierless_transition_state(
     # Get info from the reactants
     # rct_zmas = ts_dct['rct_zmas']
     rcts = ts_dct['reacs']
-    high_mul = ts_dct['high_mul']
+    high_mul = ts_dct['high_mult']
     spc_1_info = [spc_dct[rcts[0]]['inchi'],
                   spc_dct[rcts[0]]['charge'],
                   spc_dct[rcts[0]]['mult']]
@@ -335,7 +338,7 @@ def barrierless_transition_state(
 
     # Set the active space
     num_act_orb, num_act_elc = wfn.active_space(
-        ts_dct, spc_dct, ts_dct['high_mul'])
+        ts_dct, spc_dct, ts_dct['high_mult'])
 
     # Run PST, VTST, VRC-TST based on RAD_RAD_TS model
     if rad_rad_ts.lower() == 'pst':
@@ -363,18 +366,21 @@ def barrierless_transition_state(
         #     print('Scans for VTST succeeded')
         # else:
         #     print('Scans for VTST failed')
-    # elif rad_rad_ts.lower() == 'vrctst':
-    #     print('Beginning Calculations for VRC-TST Treatments')
-    #     ts_found = vrctst.calc_vrctst_flux(
-    #         ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
-    #         ts_dct['high_mul'], grid1, grid2, dist_name,
-    #         multi_level, mod_multi_opt_info, mod_multi_sp_info,
-    #         mod_ini_thy_info, mod_thy_info,
-    #         thy_run_path, thy_save_path,
-    #         overwrite, update_guess,
-    #         run_prefix, save_prefix,
-    #         vrc_dct,
-    #         corr_pot=True)
+    elif rad_rad_ts.lower() == 'vrctst':
+        # multi_level, multilevel is bad for some reason
+        print('Beginning Calculations for VRC-TST Treatments')
+        ts_found = vrctst.calc_vrctst_flux(
+            ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
+            ts_dct['high_mult'], grid1, grid2, dist_name,
+            mod_var_scn_thy_info,
+            mod_var_scn_thy_info,
+            mod_var_sp1_thy_info,
+            mod_ini_thy_info, mod_thy_info,
+            thy_run_path, thy_save_path,
+            overwrite, update_guess,
+            run_prefix, save_prefix,
+            vrc_dct,
+            corr_pot=True)
     #     if ts_found:
     #         print('VaReCoF run successful and flux file was obtained')
     #     else:
@@ -386,6 +392,7 @@ def barrierless_transition_state(
 # Functions to check what TS searching algorithm to launch
 def _radrad_barrierless_search(ts_dct, ts_search):
     """ Determine if we should search for rad-rad barrierless TS """
+    print('nobar', _nobarrier(ts_dct))
     return bool(
         _nobarrier(ts_dct) and ts_search in ('vtst', 'vrctst'))
 
@@ -410,6 +417,7 @@ def _sadpt_search(ts_dct, ts_search, switch):
 def _nobarrier(ts_dct):
     """ Determine if reaction is barrierless
     """
+    print('cla', ts_dct['class'])
     rad_rad = bool('radical radical' in ts_dct['class'])
     low_spin = bool('low' in ts_dct['class'])
     return rad_rad and low_spin
@@ -427,7 +435,7 @@ def _print_ts_method(ts_dct, ts_search, usr_choice, nobarrier_mod):
 
     # Print message about request or assumed search algorithm
     if usr_choice:
-        print('Runnning search algorithm according to {},'.format(ts_search),
+        print('Running search algorithm according to {},'.format(ts_search),
               'as requested by the user')
     else:
         if _nobarrier(ts_dct):

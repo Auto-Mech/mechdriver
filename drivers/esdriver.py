@@ -53,11 +53,11 @@ def run(pes_idx,
             es_keyword_dct['runlvl'], thy_dct)
         var_scn_thy_info = None
         var_sp2_thy_info = None
-        # if es_keyword_dct['var_scnlvl'] is not None:
-        #     var_scn_thy_info = filesys.inf.get_es_info(
-        #         es_keyword_dct['var_scnlvl'], thy_dct)
-        # else:
-        #     var_scn_thy_info = None
+        if es_keyword_dct['var_scnlvl'] is not None:
+            var_scn_thy_info = filesys.inf.get_es_info(
+                es_keyword_dct['var_scnlvl'], thy_dct)
+        else:
+            var_scn_thy_info = None
         var_sp1_thy_info = None
         if 'var_splvl1' in es_keyword_dct:
             if es_keyword_dct['var_splvl1'] is not None:
@@ -74,7 +74,6 @@ def run(pes_idx,
             spc_queue = parser.species.build_spc_queue(rxn_lst)
         elif obj == 'ts':
             if not built_dct:
-                print(es_keyword_dct)
                 rxndirn = es_keyword_dct['rxndirn']
                 ts_dct, ts_queue = parser.species.get_sadpt_dct(
                     pes_idx, es_tsk_lst, rxn_lst,
