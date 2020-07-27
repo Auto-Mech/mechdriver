@@ -29,7 +29,7 @@ def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
-            spc_dct_i, pf_filesystems, pf_models, saddle=False)
+            spc_dct_i, pf_filesystems, pf_models, pf_levels, saddle=False)
 
     # Return the total energy requested
     ene = None
@@ -86,7 +86,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
 
 
 def zero_point_energy(spc_dct_i,
-                      pf_filesystems, pf_models, saddle=False):
+                      pf_filesystems, pf_models, pf_levels, saddle=False):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
@@ -101,7 +101,7 @@ def zero_point_energy(spc_dct_i,
         zpe = 0.0
     else:
         rotors = tors.build_rotors(
-            spc_dct_i, pf_filesystems, pf_models,
+            spc_dct_i, pf_filesystems, pf_models, pf_levels,
             rxn_class=rxn_class,
             frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
             tors_geo=True)
