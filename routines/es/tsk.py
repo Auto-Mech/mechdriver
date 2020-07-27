@@ -318,10 +318,6 @@ def tau_tsk(job, spc_dct, spc_name,
     scan_increment = spc['hind_inc']
     nsamp_par = spc['tau_nsamp']
 
-    # Script
-    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
-        *thy_info[0:2])
-
     # Modify the theory
     ini_thy_info = filesys.inf.get_es_info(
         es_keyword_dct['inplvl'], thy_dct)
@@ -329,6 +325,10 @@ def tau_tsk(job, spc_dct, spc_name,
         es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
+    
+    # Script
+    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+        *thy_info[0:2])
 
     # Set the filesystem objects for thy info
     _, thy_run_path = filesys.build.spc_thy_fs_from_root(
@@ -345,7 +345,12 @@ def tau_tsk(job, spc_dct, spc_name,
         ini_thy_save_path, mod_ini_thy_info, cnf='min')
     zma, geo = filesys.inf.cnf_fs_zma_geo(
         ini_cnf_save_fs, ini_cnf_locs)
-    ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_cnf_locs)
+    ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_cnf_locs)
+    ini_sp_save_fs = autofile.fs.single_point(ini_cnf_save_path) 
+    if  ini_sp_save_fs[-1].file.energy.exists(mod_ini_thy_info[1:4]) :
+        ref_ene = ini_sp_save_fs[-1].file.energy.read(mod_ini_thy_info[1:4]) 
+    else:    
+        ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_cnf_locs)
 
     # Bond key stuff
     if saddle:
@@ -378,7 +383,7 @@ def tau_tsk(job, spc_dct, spc_name,
             thy_run_path, tau='all')
         tau_save_fs, tau_save_locs = filesys.build.tau_fs_from_thy(
             thy_save_path, tau='all')
-
+        tau_save_fs[-1].json_create()
         for locs in tau_save_locs:
             if tau_save_fs[-1].file.geometry.exists(locs):
                 geol = tau_save_fs[-1].file.geometry.read(locs)
@@ -433,43 +438,60 @@ def tau_tsk(job, spc_dct, spc_name,
                     jsp_save_fs[-1].json.info.write(inf_objl, sp_locs)
 
         tau_save_locs = tau_save_fs[-1].json_existing() 
-        if not tau_run_fs[0].exists():
-            print("No tau geometries to save. Skipping...")
-        else:
-            for locs in tau_run_fs[-1].existing():
-                run_path = tau_run_fs[-1].path(locs)
-                run_fs = autofile.fs.run(run_path)
-            if job == 'samp':
+        if job == 'samp':
 
-                # Set up the script
-                _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
-                    *thy_info[0:2])
+            # Set up the script
+            _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+                *thy_info[0:2])
 
-                # Run sampling
-                tau.tau_sampling(
-                    zma, ref_ene,
-                    spc_info, run_tors_names, nsamp_par,
-                    mod_ini_thy_info,
-                    tau_run_fs, tau_save_fs,
-                    opt_script_str, overwrite,
-                    saddle=saddle, **opt_kwargs)
-
+            # Run sampling
+            tau.tau_sampling(
+                zma, ref_ene,
+                spc_info, run_tors_names, nsamp_par,
                 mod_ini_thy_info,
                 tau_run_fs, tau_save_fs,
                 opt_script_str, overwrite,
                 saddle=saddle, **opt_kwargs)
 
-            elif job in ('energy', 'grad'):
+        elif job in ('energy', 'grad'):
 
-                # Set up the run scripts
-                script_str, _, kwargs, _ = es_runner.qchem_params(
-                    *thy_info[0:2])
-                # Run the job over all the conformers requested by the user
-                for locs in tau_save_locs:
-                    geo_run_path = tau_run_fs[-1].path(locs)
-                    #geo_save_path = tau_save_fs[-1].path(locs)
+            # Set up the run scripts
+            script_str, _, kwargs, _ = es_runner.qchem_params(
+                *thy_info[0:2])
+            # Run the job over all the conformers requested by the user
+            for locs in tau_save_locs:
+                geo_run_path = tau_run_fs[-1].path(locs)
+                #geo_save_path = tau_save_fs[-1].path(locs)
+                #geo = tau_save_fs[-1].file.geometry.read(locs)
+                geo_save_path = tau_save_fs[-1].root.path()
+                geo = tau_save_fs[-1].json.geometry.read(locs)
+                zma = None
+                tau_run_fs[-1].create(locs)
+                ES_TSKS[job](
+                    zma, geo, spc_info, mod_thy_info,
+                    tau_save_fs, geo_run_path, geo_save_path, locs,
+                    script_str, overwrite,
+                    retryfail=retryfail, **kwargs)
+                print('\n')
+
+        elif job == 'hess':
+
+            # Add the hessian max
+            hessmax = es_keyword_dct['hessmax']
+            
+            # Set up the run scripts
+            script_str, _, kwargs, _ = es_runner.qchem_params(
+                *thy_info[0:2])
+            # Run the job over all the conformers requested by the user
+            hess_cnt = 0
+            for locs in tau_save_locs:
+                print('\nHESS Number {}'.format(hess_cnt+1))
+                geo_run_path = tau_run_fs[-1].path(locs)
+                #geo_save_path = tau_save_fs[-1].path(locs)
+                geo_save_path = tau_save_fs[-1].root.path()
+                if not tau_save_fs[-1].json.hessian.exists(locs):
+                #if not tau_save_fs[-1].file.hessian.exists(locs):
                     #geo = tau_save_fs[-1].file.geometry.read(locs)
-                    geo_save_path = tau_save_fs[-1].root.path()
                     geo = tau_save_fs[-1].json.geometry.read(locs)
                     zma = None
                     tau_run_fs[-1].create(locs)
@@ -478,42 +500,14 @@ def tau_tsk(job, spc_dct, spc_name,
                         tau_save_fs, geo_run_path, geo_save_path, locs,
                         script_str, overwrite,
                         retryfail=retryfail, **kwargs)
-                    print('\n')
+                    hess_cnt += 1
+                else:
+                    print('Hessian found and saved previously at {}'.format(
+                        geo_save_path))
 
-            elif job == 'hess':
-
-                # Add the hessian max
-                hessmax = es_keyword_dct['hessmax']
-                
-                # Set up the run scripts
-                script_str, _, kwargs, _ = es_runner.qchem_params(
-                    *thy_info[0:2])
-                # Run the job over all the conformers requested by the user
-                hess_cnt = 0
-                for locs in tau_save_locs:
-                    print('\nHESS Number {}'.format(hess_cnt+1))
-                    geo_run_path = tau_run_fs[-1].path(locs)
-                    #geo_save_path = tau_save_fs[-1].path(locs)
-                    geo_save_path = tau_save_fs[-1].root.path()
-                    if not tau_save_fs[-1].json.hessian.exists(locs):
-                    #if not tau_save_fs[-1].file.hessian.exists(locs):
-                        #geo = tau_save_fs[-1].file.geometry.read(locs)
-                        geo = tau_save_fs[-1].json.geometry.read(locs)
-                        zma = None
-                        tau_run_fs[-1].create(locs)
-                        ES_TSKS[job](
-                            zma, geo, spc_info, mod_thy_info,
-                            tau_save_fs, geo_run_path, geo_save_path, locs,
-                            script_str, overwrite,
-                            retryfail=retryfail, **kwargs)
-                        hess_cnt += 1
-                    else:
-                        print('Hessian found and saved previously at {}'.format(
-                            geo_save_path))
-
-                        hess_cnt += 1
-                    if hess_cnt == hessmax:
-                        break
+                    hess_cnt += 1
+                if hess_cnt == hessmax:
+                    break
 
     else:
         print('No torsional modes in the species')
