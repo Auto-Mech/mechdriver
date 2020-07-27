@@ -162,7 +162,8 @@ def check_es_tsks_supported(es_tsks, thy_dct):
                     print(tsk, option)
                 sys.exit()
             else:
-                if key in ('runlvl', 'inplvl', 'var_splvl1', 'var_splvl2, var_scn_lvl'):
+                print(key)
+                if key in ('runlvl', 'inplvl', 'var_splvl1', 'var_splvl2', 'var_scnlvl'):
                     if val not in thy_dct:
                         print('*ERROR: tsk theory level',
                               '{} not given in theory.dat'.format(val))

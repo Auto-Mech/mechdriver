@@ -10,7 +10,7 @@ from lib.structure import instab
 
 
 def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
-                zma_locs=(0,), in_zma_fs=False):
+                zma_locs=(0,), in_zma_fs=False, cart_to_zma=False):
     """ Save a geometry and associated information from some
         electronic structure routine into the filesystem.
     """
@@ -20,7 +20,7 @@ def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
     if success:
 
         # Get the geo, zma, and ene based on job type
-        ene, zma, geo = _read(run_fs, job)
+        ene, zma, geo = _read(run_fs, job, cart_to_zma=cart_to_zma)
 
         # Obtain inf obj and inp str to write in filesys
         inf_obj, inp_str, _ = ret
@@ -109,7 +109,7 @@ def save_instab(conn_zma, run_fs, cnf_save_fs, cnf_locs,
         sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
 
 
-def _read(run_fs, job):
+def _read(run_fs, job, cart_to_zma=False):
     """ Read the output
     """
 
@@ -126,7 +126,10 @@ def _read(run_fs, job):
         if job == elstruct.Job.OPTIMIZATION:
             # Read the optimized structs from the output file
             geo = elstruct.reader.opt_geometry(prog, out_str)
-            zma = elstruct.reader.opt_zmatrix(prog, out_str)
+            if cart_to_zma:
+                zma = automol.geom.zmatrix(geo)
+            else:
+                zma = elstruct.reader.opt_zmatrix(prog, out_str)
         elif job == elstruct.Job.ENERGY:
             # Read the initial structs stored in the run filesys
             zma = run_fs[-1].file.zmatrix.read([job])

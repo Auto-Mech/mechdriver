@@ -88,8 +88,8 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs, mod_thy_info):
             locs = max_locs[idx_j]
     max_locs = locs
     max_ene = min_ene
-    # print('min max loc', max_ene, max_locs)
-    # print('min max loc', scn_save_fs[-1].path(max_locs))
+    print('min max loc', max_ene, max_locs)
+    print('min max loc', scn_save_fs[-1].path(max_locs))
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
 
     # print('geometry for maximum along scan:', max_zma)

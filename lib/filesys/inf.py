@@ -105,6 +105,25 @@ def rxn_info(reacs, prods, spc_dct, rxn_mul='low'):
     return [rxn_ichs, rxn_chgs, rxn_muls, mul]
 
 
+def rxn_info2(reacs, prods, spc_dct, rxn_mul='low'):
+    """ prepare rxn info and reverse the reactants and products
+        if reaction is endothermic
+    """
+    rxn_ichs = [[], []]
+    rxn_chgs = [[], []]
+    rxn_muls = [[], []]
+    for spc in reacs:
+        rxn_ichs[0].append(spc_dct[spc]['inchi'])
+        rxn_chgs[0].append(spc_dct[spc]['charge'])
+        rxn_muls[0].append(spc_dct[spc]['mult'])
+    for spc in prods:
+        rxn_ichs[1].append(spc_dct[spc]['inchi'])
+        rxn_chgs[1].append(spc_dct[spc]['charge'])
+        rxn_muls[1].append(spc_dct[spc]['mult'])
+
+    return rxn_ichs, rxn_chgs, rxn_muls
+
+
 def rxn_chg_mult(rxn_muls, rxn_chgs):
     """ evaluate the ts multiplicity from the multiplicities
         of the reactants and products
