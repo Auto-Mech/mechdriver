@@ -111,6 +111,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                 if ich == spc_dct[name]['inchi']:
                     ich_name_dct[ich] = name
         for name in uni_refs_dct:
+            print('name test', name, uni_refs_dct[name]['inchi'])
             if ich == uni_refs_dct[name]['inchi']:
                 ich_name_dct[ich] = name
 
@@ -147,8 +148,11 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             spc_dct_i = spc_dct[name]
             prname = name
         else:
-            spc_dct_i = uni_refs_dct[ich]
-            prname = ich
+            for key in uni_refs_dct:
+                if uni_refs_dct[key]['inchi'] == ich:
+                    spc_dct_i = uni_refs_dct[key]
+                    prname = ich
+        print('bases energies test:', ich)
         pf_filesystems = fs.pf_filesys(
             spc_dct_i, pf_levels,
             run_prefix, save_prefix, False)
