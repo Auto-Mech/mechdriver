@@ -380,6 +380,8 @@ def _inchi_are_same(orig_ich, geo):
     # if not automol.inchi.has_stereo(orig_ich):
     # if not automol.inchi.is_complete(orig_ich):
     # orig_ich = automol.inchi.add_stereo(orig_ich)
+    # print(automol.inchi.has_stereo(orig_ich), 'orig_ich test', orig_ich)
+    # print(automol.inchi.add_stereo(orig_ich))
     assert automol.inchi.is_complete(orig_ich), (
         'the inchi {} orig_ich is not complete'.format(orig_ich))
     if ich == orig_ich:
