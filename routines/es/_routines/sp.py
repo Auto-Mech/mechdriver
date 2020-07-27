@@ -22,7 +22,10 @@ def run_energy(zma, geo, spc_info, thy_info,
 
     # Prepare unique filesystem since many energies may be under same directory
     sp_run_fs = autofile.fs.single_point(geo_run_path)
-    sp_save_fs = autofile.fs.single_point(geo_save_path)
+    if 'TAU' in geo_save_path:
+        sp_save_fs = autofile.fs.single_point(geo_save_path, json_layer=locs)
+    else:    
+       sp_save_fs = autofile.fs.single_point(geo_save_path)
     sp_run_fs[-1].create(thy_info[1:4])
     sp_run_path = sp_run_fs[-1].path(thy_info[1:4])
     sp_save_fs[-1].create(thy_info[1:4])
@@ -106,7 +109,10 @@ def run_gradient(zma, geo, spc_info, thy_info,
 
     if not is_atom:
 
-        exists = geo_save_fs[-1].file.gradient.exists(locs)
+        if 'TAU' in geo_save_path:
+            exists = geo_save_fs[-1].json.gradient.exists(locs)
+        else:    
+            exists = geo_save_fs[-1].file.gradient.exists(locs)
         if not exists:
             print('No gradient found in save filesys. Running gradient...')
             _run = True
@@ -147,9 +153,14 @@ def run_gradient(zma, geo, spc_info, thy_info,
                     grad = elstruct.reader.gradient(inf_obj.prog, out_str)
 
                     print(" - Saving gradient...")
-                    geo_save_fs[-1].file.gradient_info.write(inf_obj, locs)
-                    geo_save_fs[-1].file.gradient_input.write(inp_str, locs)
-                    geo_save_fs[-1].file.gradient.write(grad, locs)
+                    if 'TAU' in geo_save_path:
+                        geo_save_fs[-1].json.gradient_info.write(inf_obj, locs)
+                        geo_save_fs[-1].json.gradient_input.write(inp_str, locs)
+                        geo_save_fs[-1].json.gradient.write(grad, locs)
+                    else:    
+                        geo_save_fs[-1].file.gradient_info.write(inf_obj, locs)
+                        geo_save_fs[-1].file.gradient_input.write(inp_str, locs)
+                        geo_save_fs[-1].file.gradient.write(grad, locs)
                     print(" - Save path: {}".format(geo_save_path))
 
         else:
@@ -185,7 +196,10 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
     if not is_atom:
 
-        exists = geo_save_fs[-1].file.hessian.exists(locs)
+        if 'TAU' in geo_save_path:
+            exists = geo_save_fs[-1].json.hessian.exists(locs)
+        else:    
+            exists = geo_save_fs[-1].file.hessian.exists(locs)
         if not exists:
             print('No Hessian found in save filesys. Running Hessian...')
             _run = True
@@ -223,9 +237,14 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
                 print(" - Saving Hessian...")
-                geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
-                geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
-                geo_save_fs[-1].file.hessian.write(hess, locs)
+                if 'TAU' in geo_save_path:
+                    geo_save_fs[-1].json.hessian_info.write(inf_obj, locs)
+                    geo_save_fs[-1].json.hessian_input.write(inp_str, locs)
+                    geo_save_fs[-1].json.hessian.write(hess, locs)
+                else:
+                    geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
+                    geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
+                    geo_save_fs[-1].file.hessian.write(hess, locs)
                 print(" - Save path: {}".format(geo_save_path))
 
                 _hess_grad(inf_obj.prog, out_str, geo_save_fs,
@@ -364,8 +383,10 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
     """ Calculate harmonic frequencies using Hessian
     """
-
-    exists = geo_save_fs[-1].file.harmonic_frequencies.exists(locs)
+    if 'TAU' in save_path:
+        exists = geo_save_fs[-1].json.harmonic_frequencies.exists(locs)
+    else:    
+        exists = geo_save_fs[-1].file.harmonic_frequencies.exists(locs)
     if not exists:
         print('No harmonic frequencies found in save filesys...')
         _run = True
@@ -378,7 +399,10 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
     if _run:
 
         # Read the Hessian from the filesystem
-        hess = geo_save_fs[-1].file.hessian.read(locs)
+        if 'TAU' in save_path:
+            hess = geo_save_fs[-1].file.hessian.read(locs)
+        else:    
+            hess = geo_save_fs[-1].json.hessian.read(locs)
 
         # Calculate and save the harmonic frequencies
         print(" - Calculating harmonic frequencies from Hessian...")

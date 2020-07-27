@@ -158,10 +158,9 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
 def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
     """ save the tau dependent geometries that have been found so far
     """
-
-    saved_geos = [tau_save_fs[-1].file.geometry.read(locs)
-                  for locs in tau_save_fs[-1].existing()]
-
+    saved_geos = [tau_save_fs[-1].json.geometry.read(locs)
+                  for locs in tau_save_fs[-1].json_existing()]
+    
     if not tau_run_fs[0].exists():
         print("No tau geometries to save. Skipping...")
     else:
@@ -180,24 +179,40 @@ def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
                 ene = elstruct.reader.energy(prog, method, out_str)
 
                 geo = elstruct.reader.opt_geometry(prog, out_str)
-
-                save_path = tau_save_fs[-1].path(locs)
+#
+#                save_path = tau_save_fs[-1].path(locs)
+#                print(" - Saving...")
+#                print(" - Save path: {}".format(save_path))
+                save_path = tau_save_fs[-1].root.path()
                 print(" - Saving...")
                 print(" - Save path: {}".format(save_path))
 
-                tau_save_fs[-1].create(locs)
-                tau_save_fs[-1].file.geometry_info.write(inf_obj, locs)
-                tau_save_fs[-1].file.geometry_input.write(inp_str, locs)
-                tau_save_fs[-1].file.energy.write(ene, locs)
-                tau_save_fs[-1].file.geometry.write(geo, locs)
+#                tau_save_fs[-1].create(locs)
+#                tau_save_fs[-1].file.geometry_info.write(inf_obj, locs)
+#                tau_save_fs[-1].file.geometry_input.write(inp_str, locs)
+#                tau_save_fs[-1].file.energy.write(ene, locs)
+#                tau_save_fs[-1].file.geometry.write(geo, locs)
+#                
+                tau_save_fs[-1].json_create()
+                tau_save_fs[-1].json.geometry_info.write(inf_obj, locs)
+                tau_save_fs[-1].json.geometry_input.write(inp_str, locs)
+                tau_save_fs[-1].json.energy.write(ene, locs)
+                tau_save_fs[-1].json.geometry.write(geo, locs)
+
+                # Saving the energy to a SP filesystem
 
                 # Saving the energy to a SP filesystem
                 print(" - Saving energy of unique geometry...")
-                sp_save_fs = autofile.fs.single_point(save_path)
-                sp_save_fs[-1].create(mod_thy_info[1:4])
-                sp_save_fs[-1].file.input.write(inp_str, mod_thy_info[1:4])
-                sp_save_fs[-1].file.info.write(inf_obj, mod_thy_info[1:4])
-                sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
+#                sp_save_fs = autofile.fs.single_point(save_path)
+#                sp_save_fs[-1].create(mod_thy_info[1:4])
+#                sp_save_fs[-1].file.input.write(inp_str, mod_thy_info[1:4])
+#                sp_save_fs[-1].file.info.write(inf_obj, mod_thy_info[1:4])
+#                sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
+
+                sp_save_fs = autofile.fs.single_point(save_path, json_layer=locs)
+                sp_save_fs[-1].json.input.write(inp_str, mod_thy_info[1:4])
+                sp_save_fs[-1].json.info.write(inf_obj, mod_thy_info[1:4])
+                sp_save_fs[-1].json.energy.write(ene, mod_thy_info[1:4])
 
                 saved_geos.append(geo)
 
