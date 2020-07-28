@@ -76,16 +76,18 @@ def hindered_rotor_scans(
             thy_save_fs=thy_save_fs,
             coord_names=tors_names,
             coord_grids=tors_grids,
-            scn_typ=scn_typ,
             scn_run_fs=scn_run_fs,
             scn_save_fs=scn_save_fs,
+            scn_typ=scn_typ,
             script_str=script_str,
             overwrite=overwrite,
+            update_guess=True,
+            reverse_sweep=True,
             saddle=saddle,
-            retryfail=retryfail,
             constraint_dct=constraint_dct,
-            chkstab=chkstab,  # do not check stability if saddle=True
-            **opt_kwargs,
+            retryfail=retryfail,
+            chkstab=chkstab,
+            **opt_kwargs
         )
 
         print('\nSaving any newly run HR scans in run filesys...')
@@ -106,4 +108,3 @@ def hindered_rotor_scans(
                 constraint_dct=constraint_dct,
                 mod_thy_info=mod_thy_info,
                 in_zma_fs=True)
-

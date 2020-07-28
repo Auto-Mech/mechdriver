@@ -23,14 +23,15 @@ def get_es_info(method, thy_dct):
 def get_thy_info(method, thy_dct):
     """ convert theory level dictionary to theory information array
     """
-    method_dct = thy_dct[method]
+    method_dct = thy_dct.get(method, None)
     err_msg = ''
     info = ['program', 'method', 'basis', 'orb_res']
-    for i, inf in enumerate(info):
-        if inf in method_dct:
-            info[i] = method_dct[inf]
-        else:
-            err_msg = inf
+    if method_dct is not None:
+        for i, inf in enumerate(info):
+            if inf in method_dct:
+                info[i] = method_dct.get(inf, None)
+            else:
+                err_msg = inf
     if err_msg:
         print('ERROR: No {} found'.format(err_msg))
     return info
