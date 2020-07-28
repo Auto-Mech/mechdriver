@@ -306,30 +306,31 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
 
                 # Assess if geometry is properly connected
                 if _geo_connected(geo, saddle):
-                    if _inchi_are_same(orig_ich, geo):
-                        # Assess viability of transition state conformer
-                        if saddle:
-                            ts_viable = _ts_geo_viable(
-                                zma, cnf_save_fs, rxn_class, thy_info)
-                            if not ts_viable:
-                                continue
+                    if saddle:
+                        ts_viable = _ts_geo_viable(
+                            zma, cnf_save_fs, rxn_class, thy_info)
+                        if not ts_viable:
+                            continue 
+                    elif not _inchi_are_same(orig_ich, geo):
+                        continue
+                    # Assess viability of transition state conformer
 
-                        # Determine uniqueness of conformer, save if needed
-                        if _geo_unique(geo, ene, saved_geos, saved_enes, saddle):
-                            # iso check breaks because of zma location
-                            # if _is_proper_isomer(cnf_save_fs, zma):
-                            sym_id = _sym_unique(
-                                geo, ene, saved_geos, saved_enes)
-                            if sym_id is None:
-                                _save_unique_conformer(
-                                    ret, thy_info, cnf_save_fs, locs)
-                                saved_geos.append(geo)
-                                saved_enes.append(ene)
-                                saved_locs.append(locs)
-                            else:
-                                sym_locs = saved_locs[sym_id]
-                                _save_sym_indistinct_conformer(
-                                    geo, cnf_save_fs, locs, sym_locs)
+                    # Determine uniqueness of conformer, save if needed
+                    if _geo_unique(geo, ene, saved_geos, saved_enes, saddle):
+                        # iso check breaks because of zma location
+                        # if _is_proper_isomer(cnf_save_fs, zma):
+                        sym_id = _sym_unique(
+                            geo, ene, saved_geos, saved_enes)
+                        if sym_id is None:
+                            _save_unique_conformer(
+                                ret, thy_info, cnf_save_fs, locs)
+                            saved_geos.append(geo)
+                            saved_enes.append(ene)
+                            saved_locs.append(locs)
+                        else:
+                            sym_locs = saved_locs[sym_id]
+                            _save_sym_indistinct_conformer(
+                                geo, cnf_save_fs, locs, sym_locs)
 
         # Update the conformer trajectory file
         print('')
