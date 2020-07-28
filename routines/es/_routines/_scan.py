@@ -26,7 +26,7 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
 
     # Check if ZMA matches one in filesys
     # breaks for scans for right now
-    # check_isomer(zma, scn_save_fs)  
+    # check_isomer(zma, scn_save_fs)
 
     # Build the SCANS/CSCANS filesystems
     if constraint_dct is None:
@@ -40,10 +40,10 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
             dict(zip(coord_names, coord_grids)))
         scn_save_fs[1].file.info.write(inf_obj, [constraint_dct])
 
-
     # Build the grid of values
     _, grid_vals = torsprep.set_scan_dims(coord_grids)
 
+    print(kwargs)
     # Build run prefixses?
     _run_scan(
         guess_zma=zma,
@@ -57,13 +57,12 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
         scn_typ=scn_typ,
         script_str=script_str,
         overwrite=overwrite,
-        errors=(),
-        options_mat=(),
         retryfail=retryfail,
         update_guess=update_guess,
         saddle=saddle,
         constraint_dct=constraint_dct,
         chkstab=chkstab,
+        **kwargs
     )
 
     if reverse_sweep:
@@ -80,13 +79,12 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
             scn_typ=scn_typ,
             script_str=script_str,
             overwrite=overwrite,
-            errors=(),
-            options_mat=(),
             retryfail=retryfail,
             update_guess=update_guess,
             saddle=saddle,
             constraint_dct=constraint_dct,
             chkstab=chkstab,
+            **kwargs
         )
 
 

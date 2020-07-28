@@ -60,13 +60,15 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs, mod_thy_info):
         enes = []
         locs_lst = []
         for locs in locs_list:
+            print('locs', locs)
             if scn_save_fs[-1].exists(locs):
                 scn_path = scn_save_fs[-1].path(locs)
                 sp_save_fs = autofile.fs.single_point(scn_path)
                 enes.append(sp_save_fs[-1].file.energy.read(mod_thy_info[1:4]))
                 locs_lst.append(locs)
         locs_lst_lst.append(locs_lst)
-        enes_lst.append(enes)
+        if enes:
+            enes_lst.append(enes)
         print('enes_lst', enes_lst)
     max_enes = []
     max_locs = []
@@ -74,18 +76,22 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs, mod_thy_info):
         max_ene = -10000.
         max_loc = ''
         for idx_i, ene in enumerate(enes):
+            print('ene max_ene', ene, max_ene)
             if ene > max_ene:
                 max_ene = ene
                 max_loc = locs_lst_lst[idx_j][idx_i]
                 print('new max', max_ene, max_loc)
         max_enes.append(max_ene)
         max_locs.append(max_loc)
+    print('max enes', max_enes)
     min_ene = 10000.
     locs = []
     for idx_j, ene in enumerate(max_enes):
+        print('ene min_ene', ene, min_ene)
         if ene < min_ene:
             min_ene = ene
             locs = max_locs[idx_j]
+            print('locs', locs)
     max_locs = locs
     max_ene = min_ene
     print('min max loc', max_ene, max_locs)
