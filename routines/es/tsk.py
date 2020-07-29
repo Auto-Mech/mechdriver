@@ -383,6 +383,7 @@ def tau_tsk(job, spc_dct, spc_name,
             thy_run_path, tau='all')
         tau_save_fs, tau_save_locs = filesys.build.tau_fs_from_thy(
             thy_save_path, tau='all')
+        tau_save_fs[-1].root.create()
         tau_save_fs[-1].json_create()
         for locs in tau_save_locs:
             if tau_save_fs[-1].file.geometry.exists(locs):

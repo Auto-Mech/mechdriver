@@ -348,6 +348,7 @@ def tau_data(spc_dct_i,
 
     # Get the conformer filesys for the reference geom and energy
     if harm_min_locs:
+        print(harm_cnf_fs[-1].path(harm_min_locs))
         geom = harm_cnf_fs[-1].file.geometry.read(harm_min_locs)
         min_ene = harm_cnf_fs[-1].file.energy.read(harm_min_locs)
 
@@ -359,7 +360,8 @@ def tau_data(spc_dct_i,
 
     # Get the rotor info
     rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
+        spc_dct_i, pf_filesystems, chn_pf_models,
+        chn_pf_levels,
         rxn_class=rxn_class,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
         tors_geo=True)
