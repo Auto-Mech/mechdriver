@@ -266,7 +266,6 @@ def _remove_imag(spc_info, geo, mod_thy_info, thy_run_fs, run_fs,
     imag_fix_needed = bool(imag)
 
     # Make five attempts to remove imag mode if found
-    print(automol.geom.string(geo), disp_xyzs)
     chk_idx = 0
     while imag and chk_idx < 5:
         chk_idx += 1

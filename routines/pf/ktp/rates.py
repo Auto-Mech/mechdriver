@@ -147,7 +147,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
                                      pf_info, ts_cls_info,
                                      run_prefix, save_prefix)
 
-        # Calculate the energies of all spc on the channel
+        # Calculate the relative energies of all spc on the channel
         chnl_enes = calc_channel_enes(chnl_infs, ref_ene,
                                       chn_model, ref_model)
 
@@ -278,8 +278,13 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
 
     # Write the initial data string and dat str dct with mdhr str
     mess_writer = getattr(BLOCK_MODULE, chnl_infs['ts']['writer'])
-    mess_str, mdhr_dat = mess_writer(chnl_infs['ts'])
-    # mess_str = mess_writer(*chnl_infs['ts'])
+    if chnl_infs['ts']['writer'] == 'species_block':
+        mess_str, mdhr_dat = mess_writer(chnl_infs['ts'])
+    elif chnl_infs['ts']['writer'] == 'pst_block':
+        mess_str, mdhr_dat = mess_writer(*chnl_infs['reacs'])
+    elif chnl_infs['ts']['writer'] == 'vrctst_block':
+        mess_str, mdhr_dat = mess_writer(
+            chnl_infs['ts'], *chnl_infs['reacs'])
 
     # Write the appropriate string for the tunneling model
     tunnel_str, sct_str = '', ''
@@ -408,7 +413,10 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
 
     # Set up data for TS
     if pst_ts(ts_class, ts_sadpt, ts_nobarrier):
-        chnl_infs['ts'] = {'writer': 'blocks.pst_block'}
+        chnl_infs['ts'] = {
+            'ene_chnlvl': sum(inf['ene_chnlvl'] for inf in chnl_infs['reacs']),
+            'writer': 'pst_block'
+        }
     else:
         inf_dct = build.read_ts_data(
             spc_dct[tsname], tsname,

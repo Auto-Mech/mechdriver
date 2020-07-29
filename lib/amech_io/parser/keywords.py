@@ -37,7 +37,7 @@ MODEL_PF_SUPPORTED_DCT = {
     'tors': ['rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'],
     'sym': ['none', 'sampling', '1dhr'],
     'ts_barrierless': ['pst', 'rpvtst', 'vrctst'],
-    'ts_sadpt': ['fixed', 'rpvtst'],
+    'ts_sadpt': ['fixed', 'pst', 'rpvtst', 'vrctst'],
     'wells': ['fake', 'find'],
     'tunnel': ['none', 'eckart', 'sct']
 }

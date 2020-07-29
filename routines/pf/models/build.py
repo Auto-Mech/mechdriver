@@ -89,7 +89,7 @@ def read_ts_data(spc_dct_i, tsname,
             inf_dct = 'rpvtst_data'
             writer = 'vtst_no_saddle_block'
         elif ts_nobarrier == 'vrctst':
-            inf_dct = 'vrctst_data'
+            inf_dct = flux_data()
             writer = 'vrctst_block'
 
     # Add writer to inf dct
@@ -232,19 +232,26 @@ def mol_data(spc_dct_i,
 
 
 # VRCTST
-# def flux_data(ts_dct, rxn, pf_levels, save_prefix):
-#     """ Grab the flux file from the filesystem
-#     """
-#
-#     # Set filesys
-#     ts_save_fs, ts_save_path = _ts_filesys(
-#         spc_dct, rxn, pf_levels, save_prefix, level='harm')
-#
-#     # Read the flux file string
-#     locs = []
-#     flux_str = ts_save_fs[-1].file.flux.read(locs)
-#
-#     return flux_str
+# def flux_data(spc_dct_i,
+#               chn_pf_models, chn_pf_levels,
+#               run_prefix, save_prefix):
+def flux_data():
+    """ Grab the flux file from the filesystem
+    """
+
+    # # Set filesys
+    # ts_save_fs, ts_save_path = _ts_filesys(
+    #     spc_dct, rxn, pf_levels, save_prefix, level='harm')
+
+    # # Read the flux file string
+    # locs = []
+    # flux_str = ts_save_fs[-1].file.flux.read(locs)
+    flux_str = 'FLUX STR'
+
+    # Create info dictionary
+    inf_dct = {'flux_str': flux_str}
+
+    return inf_dct
 
 
 # VTST
@@ -366,17 +373,17 @@ def tau_data(spc_dct_i,
     # Set reference energy to harmonic zpve
     reference_energy = harm_zpve * phycon.EH2KCAL
     if vib_model == 'tau':
-       tau_locs = [locs for locs in tau_save_fs[-1].existing()
-                   if tau_save_fs[-1].file.hessian.exists(locs)]
+        tau_locs = [locs for locs in tau_save_fs[-1].existing()
+                    if tau_save_fs[-1].file.hessian.exists(locs)]
     else:
-       tau_locs = tau_save_fs[-1].existing()
+        tau_locs = tau_save_fs[-1].existing()
 
     # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
     for locs in tau_locs:
 
         # print('Reading tau info at path {}'.format(
-            # tau_save_fs[-1].path(locs)))
+        #     tau_save_fs[-1].path(locs)))
 
         geo = tau_save_fs[-1].file.geometry.read(locs)
         geo_str = autofile.data_types.swrite.geometry(geo)
