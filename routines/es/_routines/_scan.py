@@ -157,21 +157,21 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
                     opt_geo = elstruct.reader.opt_geometry(prog, out_str)
 
-                # Check connectivity, save instability files if needed
-                if chkstab:
-                    connected = automol.geom.connected(opt_geo)
-                else:
-                    connected = True
+                    # Check connectivity, save instability files if needed
+                    if chkstab:
+                        connected = automol.geom.connected(opt_geo)
+                    else:
+                        connected = True
 
-                # If connected and update requested: update geom
-                # If disconnected: save instab files and break loop
-                if connected:
-                    if update_guess:
-                        guess_zma = opt_zma
-                else:
-                    instab.write_instab(conn_zma, opt_zma,
-                                        thy_save_fs, mod_thy_info)
-                    break
+                    # If connected and update requested: update geom
+                    # If disconnected: save instab files and break loop
+                    if connected:
+                        if update_guess:
+                            guess_zma = opt_zma
+                    else:
+                        instab.write_instab(conn_zma, opt_zma,
+                                            thy_save_fs, mod_thy_info)
+                        break
 
             elif job == elstruct.Job.ENERGY:
                 es_runner.run_job(

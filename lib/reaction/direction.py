@@ -79,7 +79,7 @@ def parse_rxn_class_file(job_path):
 
     if os.path.exists(os.path.join(job_path, CLA_INP)):
         print('  class.dat found. Reading contents...')
-        cla_str = ptt.read_inp_str(job_path, CLA_INP)
+        cla_str = ptt.read_inp_str(job_path, CLA_INP, remove_comments='#')
         cla_dct = _build_cla_dct(cla_str)
     else:
         print('  No class.dat found.')

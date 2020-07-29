@@ -19,7 +19,7 @@ KEYWORD_KEYVALUE_PATTERN = (
 )
 
 
-def read_inp_str(filepath, filename, remove_comments=True):
+def read_inp_str(filepath, filename, remove_comments=None):
     """ read the run parameters from a file
     """
     input_file = os.path.join(filepath, filename)
@@ -27,7 +27,7 @@ def read_inp_str(filepath, filename, remove_comments=True):
         with open(input_file, 'r') as inp_file:
             inp_str = inp_file.read()
         if remove_comments:
-            inp_str = ioformat.remove_comment_lines(inp_str, '#')
+            inp_str = ioformat.remove_comment_lines(inp_str, remove_comments)
     except FileNotFoundError:
         print('*ERROR: Input file does not exist: ', input_file)
         sys.exit()

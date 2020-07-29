@@ -18,7 +18,7 @@ MODEL_INP = 'inp/models.dat'
 def read_models_sections(job_path):
     """ species input
     """
-    mod_str = ptt.read_inp_str(job_path, MODEL_INP)
+    mod_str = ptt.read_inp_str(job_path, MODEL_INP, remove_comments='#')
 
     # Build a dictionary for the PES models
     pes_model_sections = apf.all_captures(

@@ -13,6 +13,7 @@ def pf_filesys(spc_dct_i, pf_levels,
     """
 
     pf_filesystems = {}
+    print('pf_fs test:', spc_dct_i)
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle)
     if pf_levels['sym']:
