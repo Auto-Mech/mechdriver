@@ -64,6 +64,12 @@ else:
 # Build a dictionary of submission scripts (to finish)
 # SUB_SCRIPT_DCT = build_sub_script_dct(JOB_PATH)
 
+# Kill run if just printing mechanism is wanted
+if RUN_INP_DCT['print_mech']:
+    print('\n\n')
+    printer.program_exit('amech')
+    sys.exit()
+
 # Initialize the filesystem
 print('\nBuilding the base Run-Save filesystems at')
 prefix_fs(RUN_INP_DCT['run_prefix'])

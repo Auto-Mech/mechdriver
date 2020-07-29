@@ -172,6 +172,9 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                         instab.write_instab(conn_zma, opt_zma,
                                             thy_save_fs, mod_thy_info)
                         break
+                else:
+                    print('No output found in file')
+
 
             elif job == elstruct.Job.ENERGY:
                 es_runner.run_job(

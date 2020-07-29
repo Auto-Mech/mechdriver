@@ -279,7 +279,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
         sp_save_fs = autofile.fs.single_point(path)
         saved_enes.append(sp_save_fs[-1].file.energy.read(thy_info[1:4]))
 
-    _check_old_inchi(orig_ich, saved_geos, saved_locs, cnf_save_fs)
+    if not saddle:
+        _check_old_inchi(orig_ich, saved_geos, saved_locs, cnf_save_fs)
 
     if not cnf_run_fs[0].exists():
         print(" - No conformers in run filesys to save.")

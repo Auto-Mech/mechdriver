@@ -70,6 +70,11 @@ def read_ts_data(spc_dct_i, tsname,
            '++++++++++++++++++++++++++++++++++++++'))
     print('\nReading filesystem info for {}'.format(tsname))
 
+    print('TS TYPE:')
+    print(ts_class)
+    print(typ.var_radrad(ts_class))
+    print(ts_nobarrier)
+
     # Get all of the information for the filesystem
     if not typ.var_radrad(ts_class):
         # Build MESS string for TS at a saddle point

@@ -11,11 +11,13 @@ RUN_INP_SUPPORTED_KEYWORDS = [
     'mech',
     'spc',
     'run_prefix',
-    'save_prefix'
+    'save_prefix',
+    'print_mech'
 ]
 RUN_INP_KEY_DCT = {
     'mech': ['chemkin'],
-    'spc': ['csv']
+    'spc': ['csv'],
+    'print_mech': [True, False]
 }
 RUN_SUPPORTED_KEYWORDS = [
     'es',
