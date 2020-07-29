@@ -15,7 +15,7 @@ def build_thy_dct(job_path):
     """ species input
     """
     # Obtain the species string
-    thy_str = ptt.read_inp_str(job_path, THY_INP)
+    thy_str = ptt.read_inp_str(job_path, THY_INP, remove_comments='#')
 
     # Obtain any thy_sections
     thy_sections = apf.all_captures(

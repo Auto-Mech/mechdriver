@@ -44,6 +44,8 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
 
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         spc_basis, coeff_basis = get_ref_fxn(spc_ich)
+        for i in range(len(spc_basis)):
+            spc_basis[i] = automol.inchi.add_stereo(spc_basis[i])[0]
 
         msg += '\nInCHIs for basis set:'
         for base in spc_basis:

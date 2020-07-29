@@ -35,6 +35,7 @@ def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
         save_fs[-1].file.geometry_info.write(inf_obj, locs)
         save_fs[-1].file.geometry_input.write(inp_str, locs)
         save_fs[-1].file.geometry.write(geo, locs)
+        save_fs[-1].file.energy.write(ene, locs)
 
         # Save zma information seperately, if required
         if not in_zma_fs:

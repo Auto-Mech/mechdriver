@@ -21,7 +21,7 @@ def build_run_inp_dct(job_path):
     """
 
     # Read the input section
-    run_str = ptt.read_inp_str(job_path, RUN_INP)
+    run_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
     keyword_dct = ptt.build_keyword_dct(inp_block(run_str))
 
     # Add defaults
@@ -82,7 +82,7 @@ def objects_dct(job_path):
     """
 
     # Read the obj section
-    run_str = ptt.read_inp_str(job_path, RUN_INP)
+    run_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
     obj_str = object_block(run_str)
 
     # Read the sections of the obj section
@@ -176,7 +176,7 @@ def build_run_jobs_lst(job_path):
     """
 
     # Read the jobs section
-    job_str = ptt.read_inp_str(job_path, RUN_INP)
+    job_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
     keyword_lst = ptt.build_keyword_lst(jobs_block(job_str))
 
     # Check the jobs sectuib
@@ -261,7 +261,7 @@ def read_es_tsks(job_path):
     """
 
     # Read the electronic structure tasks section
-    run_str = ptt.read_inp_str(job_path, RUN_INP)
+    run_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
     es_tsks_str = es_tsks_block(run_str)
 
     # Check if section is there

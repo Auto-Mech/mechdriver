@@ -45,7 +45,7 @@ def build_spc_dct(job_path, spc_type):
     """
 
     spc_str = ptt.read_inp_str(
-        job_path, CSV_INP, remove_comments=False)
+        job_path, CSV_INP)
     spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
 
     # Modify spc dct with params from the AMech file
@@ -101,7 +101,7 @@ def read_spc_amech(job_path):
 
     # Read the AMech species string
     if os.path.exists(os.path.join(job_path, DAT_INP)):
-        spc_amech_str = ptt.read_inp_str(job_path, DAT_INP)
+        spc_amech_str = ptt.read_inp_str(job_path, DAT_INP, remove_comments='#')
         print('Found species.dat. Reading file...')
     else:
         spc_amech_str = ''
