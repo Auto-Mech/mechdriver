@@ -3,6 +3,11 @@
 """
 
 import sys
+import os
+import math
+import multiprocessing 
+import random
+
 import automol.inchi
 import automol.geom
 from routines.pf.models.ene import read_energy
@@ -21,9 +26,58 @@ REF_CALLS = {"basic": "get_basic",
 def prepare_refs(ref_scheme, spc_dct, spc_queue):
     """ add refs to species list as necessary
     """
-    # Get a lst of ichs corresponding to the spc queue
+    nproc_avail =  len(os.sched_getaffinity(0)) - 1
+
     spc_names = [spc[0] for spc in spc_queue]
-    spc_ichs = [spc_dct[spc[0]]['inchi'] for spc in spc_queue]
+    num_spc = len(spc_names)
+    spc_per_proc = math.floor(num_spc / nproc_avail)
+    
+    queue = multiprocessing.Queue()
+    procs = []
+    random.shuffle(spc_names)
+    for proc_n in range(nproc_avail):
+        spc_start = proc_n*spc_per_proc
+        if proc_n == nproc_avail - 1:
+            spc_end = num_spc
+        else:
+            spc_end = (proc_n+1)*spc_per_proc
+
+        spc_lst = spc_names[spc_start:spc_end]
+
+        proc = multiprocessing.Process(
+                target=_prepare_refs, 
+                args=(queue, ref_scheme, spc_dct, spc_lst,))
+        procs.append(proc)
+        proc.start()
+
+    basis_dct = {}
+    unique_refs_dct = {}
+    for _ in procs:
+        bas_dct, unq_dct = queue.get()
+        basis_dct.update(bas_dct)
+        bas_ichs = [unique_refs_dct[spc]['inchi'] for spc in unique_refs_dct.keys()]
+        for spc in unq_dct:
+            new_ich = unq_dct[spc]['inchi']
+            if new_ich not in bas_ichs:
+                cnt = len(list(unique_refs_dct.keys())) + 1
+                ref_name = 'REF_{}'.format(cnt)
+                unique_refs_dct[ref_name] = unq_dct[spc]
+
+    for proc in procs:
+        proc.join()
+    #for unique_refs_dct in unique_refs_dct_lst:
+    #    print(unique_refs_dct)
+    #for basis_dct in basis_dct_lst:
+    #    print(basis_dct)
+    #print("FINAL", basis_dct, unique_refs_dct)    
+    return basis_dct, unique_refs_dct
+
+def _prepare_refs(queue, ref_scheme, spc_dct, spc_names):
+    # Get a lst of ichs corresponding to the spc queue
+    #spc_names = [spc[0] for spc in spc_queue]
+    #spc_ichs = [spc_dct[spc[0]]['inchi'] for spc in spc_queue]
+    print('Processor {} will prepare species: {}'.format(os.getpid(), ', '.join(spc_names)))
+    spc_ichs = [spc_dct[spc]['inchi'] for spc in spc_names]
     dct_ichs = [spc_dct[spc]['inchi'] for spc in spc_dct.keys()
                 if spc != 'global' and 'ts' not in spc]
 
@@ -37,11 +91,10 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
     msg = '\nDetermining reference molecules for scheme: {}'.format(ref_scheme)
     msg += '\n'
 
-    # Determine the reference species, list of inchis
     basis_dct = {}
     unique_refs_dct = {}
+    # Determine the reference species, list of inchis
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
-
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         spc_basis, coeff_basis = get_ref_fxn(spc_ich)
         for i in range(len(spc_basis)):
@@ -55,18 +108,17 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
         basis_dct[spc_name] = (spc_basis, coeff_basis)
 
         # Add to the dct with reference dct if it is not in the spc dct
-        cnt = 1
         for ref in spc_basis:
-            if ref not in spc_ichs and ref not in dct_ichs:
+            bas_ichs = [unique_refs_dct[spc]['inchi'] for spc in unique_refs_dct.keys()]
+            cnt = len(list(unique_refs_dct.keys())) + 1
+            if ref not in spc_ichs and ref not in dct_ichs and ref not in bas_ichs:
                 ref_name = 'REF_{}'.format(cnt)
-                msg += 'Adding reference species {}, InChI string:{}\n'.format(
+                msg += '\nAdding reference species {}, InChI string:{}'.format(
                     ref, ref_name)
                 unique_refs_dct[ref_name] = create_spec(ref)
-                cnt += 1
-
     print(msg)
-
-    return basis_dct, unique_refs_dct
+    queue.put((basis_dct, unique_refs_dct))
+ #   return basis_dct, unique_refs_dct
 
 
 def create_spec(ich, charge=0,
@@ -77,7 +129,7 @@ def create_spec(ich, charge=0,
     spec = {}
     rad = automol.formula.electron_count(automol.inchi.formula(ich)) % 2
     mult = 1 if not rad else 2
-    spec['zmatrix'] = automol.geom.zmatrix(automol.inchi.geometry(ich))
+    #spec['zmatrix'] = automol.geom.zmatrix(automol.inchi.geometry(ich))
     spec['inchi'] = ich
     spec['charge'] = charge
     spec['mult'] = mult
