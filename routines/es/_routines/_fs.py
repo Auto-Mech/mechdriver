@@ -123,14 +123,34 @@ def _read(run_fs, job, cart_to_zma=False):
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
         method = inf_obj.method
-        ene = elstruct.reader.energy(prog, method, out_str)
+
+        try:
+            ene = elstruct.reader.energy(prog, method, out_str)
+        except TypeError:
+            ene = None
+            print('No ENE')
+        except AttributeError:
+            ene = None
+            print('No ENE')
+
         if job == elstruct.Job.OPTIMIZATION:
             # Read the optimized structs from the output file
-            geo = elstruct.reader.opt_geometry(prog, out_str)
+            try:
+                geo = elstruct.reader.opt_geometry(prog, out_str)
+            except TypeError:
+                geo = None
+                print('No GEOM')
+        
+            # Read the optimized zma
             if cart_to_zma:
                 zma = automol.geom.zmatrix(geo)
             else:
-                zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                try:
+                    zma = elstruct.reader.opt_zmatrix(prog, out_str)
+                except TypeError:
+                    zma = None
+                    print('No ZMA')
+
         elif job == elstruct.Job.ENERGY:
             # Read the initial structs stored in the run filesys
             zma = run_fs[-1].file.zmatrix.read([job])

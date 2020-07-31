@@ -88,8 +88,8 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'conf_grad': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
     'conf_hess': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
     'conf_vpt2': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
-    'hr_scan': ['runlvl', 'inplvl', 'tors_model',
-                'retryfail', 'overwrite'],
+    'hr_scan': ['runlvl', 'inplvl', 'tors_model', 'resamp_min',
+                'retryfail', 'overwrite',],
     'hr_grad': ['runlvl', 'inplvl', 'tors_model',
                 'retryfail', 'overwrite'],
     'hr_hess': ['runlvl', 'inplvl', 'tors_model',
@@ -116,6 +116,7 @@ ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'retryfail': [True, False],
     'overwrite': [True, False],
     'rxndirn': ['forw', 'back', 'exo'],
+    'resamp_min': [True, False]
 }
 ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'runlvl': None,
@@ -130,6 +131,7 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'overwrite': False,
     'rxndirn': 'forw',
     'hessmax': 1000
+    'resamp_min': False
 }
 
 # Species keywords

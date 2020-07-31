@@ -209,7 +209,7 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
     dat_dct = {}
 
     # Combine electronic structure information for the two species together
-    sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
+    sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor'] * 0.850
 
     elec_levels = util.combine_elec_levels(
         inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])

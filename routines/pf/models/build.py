@@ -70,16 +70,14 @@ def read_ts_data(spc_dct_i, tsname,
            '++++++++++++++++++++++++++++++++++++++'))
     print('\nReading filesystem info for {}'.format(tsname))
 
-    print('TS TYPE:')
-    print(ts_class)
-    print(typ.var_radrad(ts_class))
-    print(ts_nobarrier)
-
     # Get all of the information for the filesystem
     if not typ.var_radrad(ts_class):
         # Build MESS string for TS at a saddle point
-        if ts_sadpt == 'vtst':
-            inf_dct = 'rpvtst_data'
+        if ts_nobarrier == 'pst':
+            inf_dct = {}
+            writer = 'pst_block'
+        elif ts_sadpt == 'rpvtst':
+            inf_dct = {}
             writer = 'vtst_saddle_block'
         else:
             inf_dct = mol_data(
@@ -90,8 +88,11 @@ def read_ts_data(spc_dct_i, tsname,
             writer = 'species_block'
     else:
         # Build MESS string for TS with no saddle point
-        if ts_nobarrier == 'vtst':
-            inf_dct = 'rpvtst_data'
+        if ts_nobarrier == 'pst':
+            inf_dct = {}
+            writer = 'pst_block'
+        elif ts_nobarrier == 'rpvtst':
+            inf_dct = {}
             writer = 'vtst_no_saddle_block'
         elif ts_nobarrier == 'vrctst':
             inf_dct = flux_data()

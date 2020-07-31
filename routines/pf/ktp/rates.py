@@ -18,7 +18,6 @@ from routines.pf.models.inf import set_ts_cls_info
 from routines.pf.models.inf import make_rxn_str
 from routines.pf.models.inf import print_pf_info
 from routines.pf.models.typ import treat_tunnel
-from routines.pf.models.typ import pst_ts
 from routines.pf.models.typ import need_fake_wells
 
 
@@ -140,7 +139,6 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
 
         # Print models
         ref_ene_lvl = model_dct[ref_model]['es']['ene']
-        print_pf_info(pf_info[1], pf_info[0], chn_model, ref_ene_lvl)
 
         # Obtain all of the species data
         chnl_infs = get_channel_data(rxn, tsname, spc_dct,
@@ -268,7 +266,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
     """
 
     # Unpack info objects
-    [_, ts_sadpt, ts_nobarrier, tunnel_model] = ts_cls_info
+    [_, ts_sadpt, ts_nobarrier, tunnel_model, radrad] = ts_cls_info
 
     # Initialize data string objects
     ts_dat_dct = {}
@@ -288,7 +286,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
 
     # Write the appropriate string for the tunneling model
     tunnel_str, sct_str = '', ''
-    if treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier):
+    if treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
         if tunnel_model == 'eckart':
             tunnel_str = tunnel.write_mess_eckart_str(
                 chnl_enes['ts'], chnl_enes['reacs'], chnl_enes['prods'],
@@ -304,14 +302,18 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
         pass
 
     # Write the MESS string for the TS
-    if ts_sadpt == 'vtst' or ts_nobarrier in ('vtst', 'vrctst'):
-        ts_str = mess_io.writer.ts_variational(
-            ts_label, inner_reac_label, inner_prod_label,
-            mess_str, tunnel_str)
-    else:
+    write_ts_pt_str = bool(
+        (not radrad and ts_sadpt != 'rpvtst') or
+        (radrad and ts_nobarrier != 'rpvtst')
+    )
+    if write_ts_pt_str:
         ts_str = '\n' + mess_io.writer.ts_sadpt(
             ts_label, inner_reac_label, inner_prod_label,
             mess_str, chnl_enes['ts'], tunnel_str)
+    else:
+        ts_str = mess_io.writer.ts_variational(
+            ts_label, inner_reac_label, inner_prod_label,
+            mess_str, tunnel_str)
 
     # Place strings in data dct if they are not empty
     if mdhr_dat:
@@ -389,7 +391,7 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
 
     # Unpack info objects
     [chn_pf_levels, chn_pf_models, ref_pf_levels, ref_pf_models] = pf_info
-    [ts_class, ts_sadpt, ts_nobarrier, _] = ts_cls_info
+    [ts_class, ts_sadpt, ts_nobarrier, _, _] = ts_cls_info
 
     # Determine the MESS data for the channel
     chnl_infs = {}
@@ -397,34 +399,33 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     chnl_infs['prods'] = []
     chnl_infs['ts'] = []
     for rct in rxn['reacs']:
-        inf_dct = build.read_spc_data(
-            spc_dct[rct], rct,
-            chn_pf_models, chn_pf_levels,
-            run_prefix, save_prefix,
-            ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
-        chnl_infs['reacs'].append(inf_dct)
+        chnl_infs['reacs'].append(
+            build.read_spc_data(
+                spc_dct[rct], rct,
+                chn_pf_models, chn_pf_levels,
+                run_prefix, save_prefix,
+                ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
+        )
     for prd in rxn['prods']:
-        inf_dct = build.read_spc_data(
-            spc_dct[prd], prd,
-            chn_pf_models, chn_pf_levels,
-            run_prefix, save_prefix,
-            ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
-        chnl_infs['prods'].append(inf_dct)
+        chnl_infs['prods'].append(
+            build.read_spc_data(
+                spc_dct[prd], prd,
+                chn_pf_models, chn_pf_levels,
+                run_prefix, save_prefix,
+                ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
+        )
 
     # Set up data for TS
-    if pst_ts(ts_class, ts_sadpt, ts_nobarrier):
-        chnl_infs['ts'] = {
-            'ene_chnlvl': sum(inf['ene_chnlvl'] for inf in chnl_infs['reacs']),
-            'writer': 'pst_block'
-        }
-    else:
-        inf_dct = build.read_ts_data(
-            spc_dct[tsname], tsname,
-            chn_pf_models, chn_pf_levels,
-            run_prefix, save_prefix,
-            ts_class, ts_sadpt, ts_nobarrier,
-            ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
-        chnl_infs['ts'] = inf_dct
+    chnl_infs['ts'] = build.read_ts_data(
+        spc_dct[tsname], tsname,
+        chn_pf_models, chn_pf_levels,
+        run_prefix, save_prefix,
+        ts_class, ts_sadpt, ts_nobarrier,
+        ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
+
+    if chnl_infs['ts']['writer'] in ('pst_block', 'vrctst_block'):
+        ts_ene = sum(inf['ene_chnlvl'] for inf in chnl_infs['reacs'])
+        chnl_infs['ts'].update({'ene_chnlvl': ts_ene})
 
     # Set up the info for the wells
     if need_fake_wells(ts_class):

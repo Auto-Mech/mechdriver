@@ -8,6 +8,7 @@ from routines.es import runner as es_runner
 from routines.es._routines._fs import save_struct
 from routines.es._routines._fs import save_instab
 from routines.es._routines._fs import check_isomer
+from routines.es._routines._fs import _read as read_zma_geo
 from lib.structure import tors as torsprep
 from lib.structure import instab
 
@@ -149,13 +150,10 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     **kwargs
                 )
 
-                # Read the output
-                _, ret = es_runner.read_job(job=job, run_fs=run_fs)
-                if ret is not None:
-                    inf_obj, _, out_str = ret
-                    prog = inf_obj.prog
-                    opt_zma = elstruct.reader.opt_zmatrix(prog, out_str)
-                    opt_geo = elstruct.reader.opt_geometry(prog, out_str)
+                # Read the output for the zma and geo
+                _, opt_zma, opt_geo = read_zma_geo(run_fs, job)
+
+                if opt_zma is not None and opt_geo is not None:
 
                     # Check connectivity, save instability files if needed
                     if chkstab:

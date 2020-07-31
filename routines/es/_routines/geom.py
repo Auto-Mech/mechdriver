@@ -16,6 +16,7 @@ def reference_geometry(spc_dct_i, spc_info,
                        mod_thy_info,
                        thy_run_fs, thy_save_fs,
                        cnf_run_fs, cnf_save_fs,
+                       ini_cnf_save_fs, ini_min_cnf_locs,
                        run_fs,
                        opt_script_str, overwrite,
                        kickoff_size=0.1, kickoff_backward=False,
@@ -46,7 +47,8 @@ def reference_geometry(spc_dct_i, spc_info,
 
     if not thy_save_fs[-1].file.geometry.exists(mod_thy_info[1:4]):
         print('No geometry in filesys. Attempting to initialize new geometry.')
-        geo_init = _obtain_ini_geom(spc_dct_i)
+        geo_init = _obtain_ini_geom(spc_dct_i,
+                                    ini_cnf_save_fs, ini_min_cnf_locs)
         if geo_init is not None:
             zma_init = automol.geom.zmatrix(geo_init)
             if not automol.geom.is_atom(geo_init):
@@ -85,7 +87,7 @@ def reference_geometry(spc_dct_i, spc_info,
     return geo_found
 
 
-def _obtain_ini_geom(spc_dct_i):
+def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs, ini_min_cnf_locs):
     """ Obtain an initial geometry to be optimized. Checks a hieratchy
         of places to obtain the initial geom.
             (1) Geom dict which is the input from the user
@@ -97,11 +99,17 @@ def _obtain_ini_geom(spc_dct_i):
     # Obtain geom from user input geometry or inchi
     if 'geo_obj' in spc_dct_i:
         geo_init = spc_dct_i['geo_obj']
-        print('Getting geometry from geom dictionary')
+        print('Getting initial geometry from geom dictionary')
 
     if geo_init is None:
+        if ini_min_cnf_locs:
+            geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
+            print('Getting inital geometry from inplvl at path',
+                  '{}'.format(ini_cnf_save_fs[-1].path(ini_min_cnf_locs)))
+    
+    if geo_init is None:
         geo_init = automol.inchi.geometry(spc_dct_i['inchi'])
-        print('Getting reference geometry from inchi')
+        print('Getting initial geometry from inchi')
 
     # Check if the init geometry is connected
     if geo_init is not None:
