@@ -348,7 +348,6 @@ def tau_data(spc_dct_i,
 
     # Get the conformer filesys for the reference geom and energy
     if harm_min_locs:
-        print(harm_cnf_fs[-1].path(harm_min_locs))
         geom = harm_cnf_fs[-1].file.geometry.read(harm_min_locs)
         min_ene = harm_cnf_fs[-1].file.energy.read(harm_min_locs)
 
@@ -381,10 +380,13 @@ def tau_data(spc_dct_i,
     # Set reference energy to harmonic zpve
     reference_energy = harm_zpve * phycon.EH2KCAL
     if vib_model == 'tau':
-        tau_locs = [locs for locs in tau_save_fs[-1].existing()
-                    if tau_save_fs[-1].file.hessian.exists(locs)]
+       #tau_locs = [locs for locs in tau_save_fs[-1].existing()
+       #            if tau_save_fs[-1].file.hessian.exists(locs)]
+       tau_locs = [locs for locs in tau_save_fs[-1].json_existing()
+                   if tau_save_fs[-1].json.hessian.exists(locs)]
     else:
-        tau_locs = tau_save_fs[-1].existing()
+       #tau_locs = tau_save_fs[-1].existing()
+       tau_locs = tau_save_fs[-1].json_existing()
 
     # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
@@ -393,21 +395,25 @@ def tau_data(spc_dct_i,
         # print('Reading tau info at path {}'.format(
         #     tau_save_fs[-1].path(locs)))
 
-        geo = tau_save_fs[-1].file.geometry.read(locs)
+        geo = tau_save_fs[-1].json.geometry.read(locs)
+        #geo = tau_save_fs[-1].file.geometry.read(locs)
         geo_str = autofile.data_types.swrite.geometry(geo)
         samp_geoms.append(geo_str)
 
-        tau_ene = tau_save_fs[-1].file.energy.read(locs)
+        tau_ene = tau_save_fs[-1].json.energy.read(locs)
+        #tau_ene = tau_save_fs[-1].file.energy.read(locs)
         rel_ene = (tau_ene - min_ene) * phycon.EH2KCAL
         ene_str = autofile.data_types.swrite.energy(rel_ene)
         samp_enes.append(ene_str)
 
         if vib_model == 'tau':
-            grad = tau_save_fs[-1].file.gradient.read(locs)
+            #grad = tau_save_fs[-1].file.gradient.read(locs)
+            grad = tau_save_fs[-1].json.gradient.read(locs)
             grad_str = autofile.data_types.swrite.gradient(grad)
             samp_grads.append(grad_str)
 
-            hess = tau_save_fs[-1].file.hessian.read(locs)
+            #hess = tau_save_fs[-1].file.hessian.read(locs)
+            hess = tau_save_fs[-1].json.hessian.read(locs)
             hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess_str)
 

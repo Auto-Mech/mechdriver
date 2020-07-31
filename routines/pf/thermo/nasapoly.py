@@ -4,8 +4,8 @@
 
 import os
 import automol
-#import thermp_io
-#import pac99_io
+import thermp_io
+import pac99_io
 from routines.pf import runner as pfrunner
 from lib.amech_io import writer
 from lib import pathtools

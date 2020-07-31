@@ -444,7 +444,6 @@ def tau_tsk(job, spc_dct, spc_name,
             # Set up the script
             _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
                 *thy_info[0:2])
-
             # Run sampling
             tau.tau_sampling(
                 zma, ref_ene,
