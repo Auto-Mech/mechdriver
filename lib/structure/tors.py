@@ -236,13 +236,78 @@ def is_methyl_rotor(zma, rotor):
     raise NotImplementedError(zma, rotor)
 
 
+# Handle the potential
+def read_hr_pot(tors_names, tors_grids, cnf_save_path,
+                mod_tors_ene_info, ref_ene,
+                constraint_dct,
+                read_geom=False, read_grad=False, read_hess=False):
+    """ Get the potential for a hindered rotor
+    """
+
+    # print('cscn_path', scn_run_fs[1].path([coo_names]))
+
+    # Build initial lists for storing potential energies and Hessians
+    grid_points, grid_vals = torsprep.set_scan_dims(tors_grids)
+    pot, geoms, grads, hessians = {}, {}, {}, {}
+
+    # Set up filesystem information
+    zma_fs = fs.manager(cnf_save_path, 'ZMATRIX')
+    zma_path = zma_fs[-1].path([0])
+    if constraint_dct is None:
+        scn_fs = autofile.fs.scan(zma_path)
+    else:
+        scn_fs = autofile.fs.cscan(zma_path)
+
+    # Read the energies and Hessians from the filesystem
+    for point, vals in zip(grid_points, grid_vals):
+
+        locs = [tors_names, vals]
+        if constraint_dct is not None:
+            locs = [constraint_dct] + locs
+
+        print('tors_path', scn_fs[-1].path(locs))
+        ene = _read_tors_ene(scn_fs, locs, mod_tors_ene_info)
+        if ene is not None:
+            pot[point] = (ene - ref_ene) * phycon.EH2KCAL
+        else:
+            pot[point] = -10.0
+
+        if read_geom:
+            geoms[point] = scn_fs[-1].file.geometry.read(locs)
+
+        if read_grad:
+            grads[point] = scn_fs[-1].file.gradient.read(locs)
+
+        if read_hess:
+            hessians[point] = scn_fs[-1].file.hessian.read(locs)
+
+    return pot, geoms, grads, hessians
+
+
+def calc_hr_frequenices(geoms, grads, hessians, run_path):
+    """ Calculate the frequencies
+    """
+
+    # Initialize hr freqs list
+    hr_freqs = {}
+    for point in geoms.keys():
+        _, proj_freqs, _, _ = vibprep.projrot_freqs(
+            [geoms[point]],
+            [hessians[point]],
+            run_path,
+            grads=[grads[point]])
+        hr_freqs[point] = proj_freqs
+
+    return hr_freqs
+
+
 # Building constraints
 def build_constraint_dct(zma, const_names, scan_names=()):
     """ Build a dictionary of constraints
     """
 
-    print('const_names', const_names)
-    print('scan_names', scan_names)
+    # print('const_names', const_names)
+    # print('scan_names', scan_names)
 
     # Get the list names sorted for dictionary
     rnames = (name for name in const_names if 'R' in name)
@@ -254,10 +319,10 @@ def build_constraint_dct(zma, const_names, scan_names=()):
     constraint_names = rnames + anames + dnames
 
     # Remove the scan coordinates so they are not placed in the dict
-    print('rnames', rnames)
-    print('anames', anames)
-    print('dnames', dnames)
-    print('constraint_names', constraint_names)
+    # print('rnames', rnames)
+    # print('anames', anames)
+    # print('dnames', dnames)
+    # print('constraint_names', constraint_names)
     constraint_names = tuple(name for name in constraint_names
                              if name not in scan_names)
     print('constraint_names', constraint_names)

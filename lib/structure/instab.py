@@ -62,13 +62,9 @@ def _disconnected_zmas(disconn_zma):
     disconn_gras = automol.graph.connected_components(
         automol.geom.graph(disconn_geo))
 
-    print('disconn_gras', disconn_gras)
-
     # Get the zmas
     disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
                     for gra in disconn_gras]
-
-    print('disconn_zmas', disconn_gras)
 
     return disconn_zmas
 
@@ -79,7 +75,10 @@ def check_unstable_species(spc_dct, spc_name,
     """ see if a species and unstable and handle task management
     """
 
+    
     if 'ts' not in spc_name:
+
+        print('Checking filesystem if species is unstable...')
 
         # Build filesystem
         spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
@@ -89,17 +88,21 @@ def check_unstable_species(spc_dct, spc_name,
         ini_thy_save_fs, _ = filesys.build.spc_thy_fs_from_root(
             save_prefix, spc_info, mod_ini_thy_info)
 
-        # Check if the instability files exist
         thy_locs = mod_ini_thy_info[1:4]
+        thy_path = ini_thy_save_fs[-1].path(thy_locs)
+
+        # Check if the instability files exist
         if (ini_thy_save_fs[-1].file.transformation.exists(thy_locs) and
                 ini_thy_save_fs[-1].file.reactant_graph.exists(thy_locs)):
             stable = False
-            thy_path = ini_thy_save_fs[-1].path(thy_locs)
-            print('\nFound instability files for species {}'.format(spc_name),
-                  'at path:\n{}'.format(thy_path))
+            print('- Found files denoting species instability at path')
+            print('    {}'.format(thy_path))
+            print('- Skipping requested task...')
         else:
-            print('no inst', ini_thy_save_fs[-1].path(thy_locs))
             stable = True
+            print('- No files denoting instability were found at path')
+            print('    {}'.format(thy_path))
+            print('- Proceeding with requested task...')
 
     else:
         stable = True

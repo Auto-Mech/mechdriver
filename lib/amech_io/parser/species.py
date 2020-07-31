@@ -363,9 +363,6 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         # put in increment, make sure it can still be overwritten from .dat
         ts_dct['hind_inc'] = 30.0 * phycon.DEG2RAD
 
-        # print('Torsional Names for TS:')
-        # print(ret1[6])
-
         # Reaction fs for now
         rinf = filesys.build.get_rxn_fs(
             run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)

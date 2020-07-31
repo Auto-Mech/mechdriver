@@ -50,6 +50,7 @@ def run_tsk(tsk, spc_dct, spc_name,
     stable = instab.check_unstable_species(
         spc_dct, spc_name,
         thy_info, ini_thy_info, save_prefix)
+    print()
 
     if stable:
 
@@ -125,12 +126,14 @@ def run_geom_init(spc, thy_info, ini_thy_info,
         run_prefix, spc_info, mod_thy_info)
     thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_thy_info)
-    ini_thy_save_fs, _ = filesys.build.spc_thy_fs_from_root(
+    ini_thy_save_fs, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_ini_thy_info)
     cnf_run_fs, _ = filesys.build.cnf_fs_from_thy(
         thy_run_path, mod_thy_info, saddle=saddle)
     cnf_save_fs, _ = filesys.build.cnf_fs_from_thy(
         thy_save_path, mod_thy_info, saddle=saddle)
+    ini_cnf_save_fs, ini_min_cnf_locs = filesys.build.cnf_fs_from_thy(
+        ini_thy_save_path, mod_ini_thy_info, cnf='min')
 
     # Set the run filesystem
     if saddle:
@@ -148,6 +151,7 @@ def run_geom_init(spc, thy_info, ini_thy_info,
         spc, spc_info, mod_thy_info,
         thy_run_fs, thy_save_fs,
         cnf_run_fs, cnf_save_fs,
+        ini_cnf_save_fs, ini_min_cnf_locs,
         run_fs,
         opt_script_str, overwrite,
         kickoff_size=kickoff_size, 
@@ -503,8 +507,8 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
     tors_model = es_keyword_dct['tors_model']
+    resamp_min = es_keyword_dct['resamp_min']
     scan_increment = spc['hind_inc']
-    # comment to force merge
 
     # Bond key stuff
     if saddle:
@@ -561,6 +565,7 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
 
         if job == 'scan':
 
+            # Run the scan
             hr.hindered_rotor_scans(
                 zma, spc_info, mod_thy_info, ini_thy_save_fs,
                 ini_zma_run_path, ini_zma_save_path,
@@ -569,6 +574,23 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 scn_typ=scn_typ,
                 saddle=saddle, const_names=const_names,
                 retryfail=retryfail, **opt_kwargs)
+
+            # Read and print the potential
+
+            # Check for new minimum conformer
+
+            # Launch new conformer sampling from negative if requested
+            # if new_min and resamp_min:
+            #     _ = conformer.conformer_sampling(
+            #         zma, spc_info,
+            #         mod_thy_info, thy_save_fs,
+            #         cnf_run_fs, cnf_save_fs,
+            #         opt_script_str, overwrite,
+            #         saddle=saddle, nsamp_par=mc_nsamp,
+            #         tors_names=run_tors_names,
+            #         two_stage=two_stage, retryfail=retryfail,
+            #         rxn_class=rxn_class, **opt_kwargs)
+
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 

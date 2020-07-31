@@ -39,8 +39,6 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info,
         for locs in cnf_locs_lst:
             cnf_path = cnf_save_fs[-1].path(locs)
             sp_fs = autofile.fs.single_point(cnf_path)
-            print('cnf_path test:', cnf_path)
-            print('model test:', mod_thy_info[1:4])
             cnf_enes.append(
                 sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
         if zpe_corrd:

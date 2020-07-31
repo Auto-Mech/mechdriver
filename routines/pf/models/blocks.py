@@ -12,11 +12,13 @@ def atom_block(inf_dct):
     """ prepare the species input for messpf
     """
 
+    # Initialize an empty dat_dct for the return
+    dat_dct = {}
+
+    # Build the appropriate MESS string
     spc_str = mess_io.writer.atom(
         mass=inf_dct['mass'],
         elec_levels=inf_dct['elec_levels'])
-
-    dat_dct = {}
 
     return spc_str, dat_dct
 
@@ -25,7 +27,7 @@ def species_block(inf_dct):
     """ prepare the species input for messpf
     """
 
-    # Build the multidim files
+    # Build the data files dct
     dat_dct = {}
 
     # Build the appropriate core string
@@ -96,10 +98,13 @@ def fake_species_block(inf_dct_i, inf_dct_j):
         hind_rot=mess_hr_str,
         xmat=(),
         rovib_coups=(),
-        rot_dists=()
+        rot_dists=(),
+        inf_intens=(),
+        freq_scale_factor=None,
+        use_harmfreqs_key=False
     )
 
-    # Need to fix
+    # Fix? I don't think you can do multirotor for the phase space theory
     dat_dct = {}
 
     return spc_str, dat_dct
@@ -136,7 +141,10 @@ def pst_block(inf_dct_i, inf_dct_j):
         hind_rot=mess_hr_str,
         xmat=(),
         rovib_coups=(),
-        rot_dists=()
+        rot_dists=(),
+        inf_intens=(),
+        freq_scale_factor=None,
+        use_harmfreqs_key=False
     )
 
     # Need to fix
@@ -193,53 +201,52 @@ def tau_block(inf_dct):
 
 
 # TS BLOCKS FOR VARIATIONAL TREATMENTS
-# def vrctst_block(spc_dct_i, spc_dct_j, rxn, pf_models, pf_levels,
-#                  save_prefix):
-#     """ write a VRCTST block
-#     """
-#
-#     # Build a dct combinining various information from the filesys and MESS
-#     inf_dct_i = read_filesys_for_spc(
-#         spc_dct_i, rxn, pf_models, pf_levels, save_prefix, saddle=False)
-#     inf_dct_j = read_filesys_for_spc(
-#         spc_dct_j, rxn, pf_models, pf_levels, save_prefix, saddle=False)
-#
-#     # Get the flux file
-#     flux_file_name = '{}_flux.dat'.format('ts')  # fix
-#     flux_str = read_filesys_for_flux(rxn, pf_models)
-#
-#     # Combine electronic structure information for the two species together
-#     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
-#
-#     elec_levels = util.combine_elec_levels(
-#         inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
-#
-#     freqs = inf_dct_i['freqs'] + inf_dct_j['freqs']
-#
-#     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
-#
-#     # Get the total stoichiometry of the two species
-#     stoich = util.get_stoich(inf_dct_i['geom'], inf_dct_j['geom'])
-#
-#     # Write the MESS string for the VRCTST TS
-#     core_str = mess_io.writer.core_rotd(
-#         sym_factor=sym_factor,
-#         flux_file_name=flux_file_name,
-#         stoich=stoich
-#     )
-#     spc_str = mess_io.writer.molecule(
-#         core=core_str,
-#         freqs=freqs,
-#         elec_levels=elec_levels,
-#         hind_rot=mess_hr_str,
-#         xmat=(),
-#         rovib_coups=(),
-#         rot_dists=()
-#     )
-#
-#     return spc_str, flux_str
-#
-#
+def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
+    """ write a VRCTST block
+    """
+
+    # Build the data files dct
+    dat_dct = {}
+
+    # Combine electronic structure information for the two species together
+    sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor'] * 0.850
+
+    elec_levels = util.combine_elec_levels(
+        inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
+
+    freqs = inf_dct_i['freqs'] + inf_dct_j['freqs']
+
+    mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
+
+    # Get the total stoichiometry of the two species
+    stoich = util.get_stoich(inf_dct_i['geom'], inf_dct_j['geom'])
+
+    # Set the auxiliary flux file information
+    flux_file_name = '{}_flux.dat'.format('ts')
+    dat_dct[flux_file_name] = inf_dct_ts['flux_str']
+
+    # Write the MESS string for the VRCTST TS
+    core_str = mess_io.writer.core_rotd(
+        sym_factor=sym_factor,
+        flux_file_name=flux_file_name,
+        stoich=stoich
+    )
+    spc_str = mess_io.writer.molecule(
+        core=core_str,
+        freqs=freqs,
+        elec_levels=elec_levels,
+        hind_rot=mess_hr_str,
+        xmat=(),
+        rovib_coups=(),
+        rot_dists=(),
+        inf_intens=(),
+        freq_scale_factor=None,
+        use_harmfreqs_key=False
+    )
+
+    return spc_str, dat_dct
+
+
 # def rpath_vtst_nosadpt_block(ts_dct, ts_label, reac_label, prod_label,
 #                              spc_ene, projrot_script_str, multi_info):
 #     """ prepare the mess input string for a variational TS that does not have

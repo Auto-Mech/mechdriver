@@ -11,11 +11,13 @@ RUN_INP_SUPPORTED_KEYWORDS = [
     'mech',
     'spc',
     'run_prefix',
-    'save_prefix'
+    'save_prefix',
+    'print_mech'
 ]
 RUN_INP_KEY_DCT = {
     'mech': ['chemkin'],
-    'spc': ['csv']
+    'spc': ['csv'],
+    'print_mech': [True, False]
 }
 RUN_SUPPORTED_KEYWORDS = [
     'es',
@@ -37,7 +39,7 @@ MODEL_PF_SUPPORTED_DCT = {
     'tors': ['rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'],
     'sym': ['none', 'sampling', '1dhr'],
     'ts_barrierless': ['pst', 'rpvtst', 'vrctst'],
-    'ts_sadpt': ['fixed', 'rpvtst'],
+    'ts_sadpt': ['fixed', 'pst', 'rpvtst', 'vrctst'],
     'wells': ['fake', 'find'],
     'tunnel': ['none', 'eckart', 'sct']
 }
@@ -86,8 +88,8 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'conf_grad': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
     'conf_hess': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
     'conf_vpt2': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
-    'hr_scan': ['runlvl', 'inplvl', 'tors_model',
-                'retryfail', 'overwrite'],
+    'hr_scan': ['runlvl', 'inplvl', 'tors_model', 'resamp_min',
+                'retryfail', 'overwrite',],
     'hr_grad': ['runlvl', 'inplvl', 'tors_model',
                 'retryfail', 'overwrite'],
     'hr_hess': ['runlvl', 'inplvl', 'tors_model',
@@ -114,6 +116,7 @@ ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'retryfail': [True, False],
     'overwrite': [True, False],
     'rxndirn': ['forw', 'back', 'exo'],
+    'resamp_min': [True, False]
 }
 ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'runlvl': None,
@@ -127,7 +130,8 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'retryfail': True,
     'overwrite': False,
     'rxndirn': 'forw',
-    'hessmax': 1000
+    'hessmax': 1000,
+    'resamp_min': False
 }
 
 # Species keywords

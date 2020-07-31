@@ -105,6 +105,7 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct,
 
         # Get a list of the idxs corresponding to which channels to run
         run_chnls = []
+        print('run dct', run_obj_dct)
         for pes_chn_pair in run_obj_dct:
             pes_num, chn_num = pes_chn_pair
             if idx_dct[pes_num] == formula:
@@ -124,6 +125,7 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct,
                     prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
                     rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
                     rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])
+                    print('chn_idx', chn_idx)
                     rxn_chn_idxs.append(chn_idx)
 
             # Form reaction list (is empty if no chnls requested on sub pes)

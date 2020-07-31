@@ -29,6 +29,8 @@ def build_run_inp_dct(job_path):
         keyword_dct['mech'] = 'chemkin'
     if 'spc' not in keyword_dct:
         keyword_dct['spc'] = 'csv'
+    if 'print_mech' not in keyword_dct:
+        keyword_dct['print_mech'] = False
 
     # Check if section specified fully and supported
     check_run_keyword_dct(keyword_dct)

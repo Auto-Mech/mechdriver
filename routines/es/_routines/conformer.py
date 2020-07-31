@@ -279,7 +279,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
         sp_save_fs = autofile.fs.single_point(path)
         saved_enes.append(sp_save_fs[-1].file.energy.read(thy_info[1:4]))
 
-    _check_old_inchi(orig_ich, saved_geos, saved_locs, cnf_save_fs)
+    if not saddle:
+        _check_old_inchi(orig_ich, saved_geos, saved_locs, cnf_save_fs)
 
     if not cnf_run_fs[0].exists():
         print(" - No conformers in run filesys to save.")
@@ -323,7 +324,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                             geo, ene, saved_geos, saved_enes)
                         if sym_id is None:
                             _save_unique_conformer(
-                                ret, thy_info, cnf_save_fs, locs)
+                                ret, thy_info, cnf_save_fs, locs, saddle=saddle)
                             saved_geos.append(geo)
                             saved_enes.append(ene)
                             saved_locs.append(locs)
@@ -558,7 +559,8 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     return viable
 
 
-def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs, zma_locs=(0,)):
+def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
+                           saddle=False, zma_locs=(0,)):
     """ Save the conformer in the filesystem
     """
 
@@ -574,6 +576,15 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs, zma_locs=(0,)):
     ene = elstruct.reader.energy(prog, method, out_str)
     geo = elstruct.reader.opt_geometry(prog, out_str)
     zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+    # Read the tra and graph
+    if saddle:
+        ts_min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
+            cnf_save_fs, thy_info)
+        ts_min_path = cnf_save_fs[-1].path(ts_min_cnf_locs)
+        ts_min_zma_fs = fs.manager(ts_min_path, 'ZMATRIX')
+        tra = ts_min_zma_fs[-1].file.transformation.read(zma_locs) 
+        rct_gra = ts_min_zma_fs[-1].file.reactant_graph.read(zma_locs)
 
     # Build the conformer filesystem and save the structural info
     print(" - Geometry is unique. Saving...")
@@ -591,6 +602,11 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs, zma_locs=(0,)):
     zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
 
+    # Save the tra and gra for a saddle
+    if saddle:
+        zma_save_fs[-1].file.transformation.write(tra, zma_locs) 
+        zma_save_fs[-1].file.reactant_graph.write(rct_gra, zma_locs)
+
     # Saving the energy to a SP filesystem
     print(" - Saving energy of unique geometry...")
     sp_save_fs = autofile.fs.single_point(cnf_save_path)
@@ -599,6 +615,7 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs, zma_locs=(0,)):
     sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
     sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
 
+    # Save the trans and graph 
 
 def _save_sym_indistinct_conformer(geo, cnf_save_fs,
                                    cnf_tosave_locs, cnf_saved_locs):
