@@ -359,7 +359,7 @@ def tau_data(spc_dct_i,
 
     # Get the rotor info
     rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, chn_pf_models,
+        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
         rxn_class=rxn_class,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
         tors_geo=True)

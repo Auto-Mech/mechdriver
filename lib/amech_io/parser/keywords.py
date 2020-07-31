@@ -130,7 +130,7 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'retryfail': True,
     'overwrite': False,
     'rxndirn': 'forw',
-    'hessmax': 1000
+    'hessmax': 1000,
     'resamp_min': False
 }
 

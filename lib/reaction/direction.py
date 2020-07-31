@@ -217,7 +217,6 @@ def get_geos(
     spc_geos = []
     cnf_save_fs_lst = []
     for spc in spcs:
-        # print('spc', spc)
         spc_info = [spc_dct[spc]['inchi'],
                     spc_dct[spc]['charge'],
                     spc_dct[spc]['mult']]
@@ -230,8 +229,6 @@ def get_geos(
         cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         cnf_save_fs_lst.append(cnf_save_fs)
         min_cnf_locs = min_energy_conformer_locators(cnf_save_fs, ini_thy_lvl)
-        # print('thy path', ini_thy_save_path)
-        # print('locs', min_cnf_locs)
         if min_cnf_locs:
             geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         # else:
