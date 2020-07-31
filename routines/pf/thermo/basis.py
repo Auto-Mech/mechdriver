@@ -131,6 +131,7 @@ def create_spec(ich, charge=0,
     mult = 1 if not rad else 2
     #spec['zmatrix'] = automol.geom.zmatrix(automol.inchi.geometry(ich))
     spec['inchi'] = ich
+    spec['sens'] = 0.0
     spec['charge'] = charge
     spec['mult'] = mult
     spec['mc_nsamp'] = mc_nsamp
