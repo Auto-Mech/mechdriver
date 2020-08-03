@@ -378,15 +378,20 @@ def tau_data(spc_dct_i,
     zpe_chnlvl = proj_zpve * phycon.EH2KCAL
 
     # Set reference energy to harmonic zpve
+    db_style = 'directory'
     reference_energy = harm_zpve * phycon.EH2KCAL
     if vib_model == 'tau':
-       #tau_locs = [locs for locs in tau_save_fs[-1].existing()
-       #            if tau_save_fs[-1].file.hessian.exists(locs)]
-       tau_locs = [locs for locs in tau_save_fs[-1].json_existing()
-                   if tau_save_fs[-1].json.hessian.exists(locs)]
+        if db_style == 'directory':
+            tau_locs = [locs for locs in tau_save_fs[-1].existing()
+                       if tau_save_fs[-1].file.hessian.exists(locs)]
+        elif db_style == 'jsondb':
+            tau_locs = [locs for locs in tau_save_fs[-1].json_existing()
+                       if tau_save_fs[-1].json.hessian.exists(locs)]
     else:
-       #tau_locs = tau_save_fs[-1].existing()
-       tau_locs = tau_save_fs[-1].json_existing()
+        if db_style == 'directory':
+            tau_locs = tau_save_fs[-1].existing()
+        elif db_style == 'jsondb':
+            tau_locs = tau_save_fs[-1].json_existing()
 
     # Read the geom, ene, grad, and hessian for each sample
     samp_geoms, samp_enes, samp_grads, samp_hessians = [], [], [], []
@@ -395,25 +400,34 @@ def tau_data(spc_dct_i,
         # print('Reading tau info at path {}'.format(
         #     tau_save_fs[-1].path(locs)))
 
-        geo = tau_save_fs[-1].json.geometry.read(locs)
-        #geo = tau_save_fs[-1].file.geometry.read(locs)
+        if db_style == 'directory':
+            geo = tau_save_fs[-1].file.geometry.read(locs)
+        elif db_style == 'jsondb':
+            geo = tau_save_fs[-1].json.geometry.read(locs)
+            
         geo_str = autofile.data_types.swrite.geometry(geo)
         samp_geoms.append(geo_str)
 
-        tau_ene = tau_save_fs[-1].json.energy.read(locs)
-        #tau_ene = tau_save_fs[-1].file.energy.read(locs)
+        if db_style == 'directory':
+            tau_ene = tau_save_fs[-1].file.energy.read(locs)
+        elif db_style == 'jsondb':
+            tau_ene = tau_save_fs[-1].json.energy.read(locs)
         rel_ene = (tau_ene - min_ene) * phycon.EH2KCAL
         ene_str = autofile.data_types.swrite.energy(rel_ene)
         samp_enes.append(ene_str)
 
         if vib_model == 'tau':
-            #grad = tau_save_fs[-1].file.gradient.read(locs)
-            grad = tau_save_fs[-1].json.gradient.read(locs)
+            if db_style == 'directory':
+                grad = tau_save_fs[-1].file.gradient.read(locs)
+            elif db_style == 'jsondb':
+                grad = tau_save_fs[-1].json.gradient.read(locs)
             grad_str = autofile.data_types.swrite.gradient(grad)
             samp_grads.append(grad_str)
 
-            #hess = tau_save_fs[-1].file.hessian.read(locs)
-            hess = tau_save_fs[-1].json.hessian.read(locs)
+            if db_style == 'directory':
+                hess = tau_save_fs[-1].file.hessian.read(locs)
+            elif db_style == 'jsondb':
+                hess = tau_save_fs[-1].json.hessian.read(locs)
             hess_str = autofile.data_types.swrite.hessian(hess)
             samp_hessians.append(hess_str)
 
