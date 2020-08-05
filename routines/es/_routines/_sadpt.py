@@ -12,7 +12,7 @@ from lib import filesys
 from lib.reaction import grid as rxngrid
 
 
-def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info):
+def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info, zma_locs=(0,)):
     """ Check if the filesystem for any TS structures at the input
         level of theory
     """
@@ -22,13 +22,14 @@ def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info):
     ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
         ini_ts_save_path, mod_ini_thy_info, cnf='min')
     if ini_cnf_save_locs:
-        if ini_cnf_save_fs[-1].file.zmatrix.exists(ini_cnf_save_locs):
-            geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
+        ini_zma_fs = autofile.fs.manager(
+            ini_cnf_save_fs[-1].path(ini_cnf_save_locs), 'ZMATRIX')
+        if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
+            geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
             print(' - Z-Matrix found.')
             print(' - Reading Z-Matrix from path {}'.format(geo_path))
             guess_zmas.append(
-                ini_cnf_save_fs[-1].file.zmatrix.read(
-                    ini_cnf_save_locs))
+                ini_zma_fs[-1].file.zmatrix.read(zma_locs))
 
     return guess_zmas
 

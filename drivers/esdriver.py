@@ -38,6 +38,9 @@ def run(pes_idx,
 
     # Initialize variable for building a dct for ts
     built_dct = False
+    # if any(obj == 'ts' for _, tsk, es_keyword_dct in es_tsk_lst):
+    #     print('yay')
+    # put in check for rxndirn
 
     # Loop over Tasks
     print('\nRunning electronic structure tasks given in the input...')
@@ -45,26 +48,6 @@ def run(pes_idx,
 
         # Unpack the options
         [obj, tsk, es_keyword_dct] = tsk_lst
-
-        # Set Task and theory information
-        ini_thy_info = filesys.inf.get_es_info(
-            es_keyword_dct['inplvl'], thy_dct)
-        thy_info = filesys.inf.get_es_info(
-            es_keyword_dct['runlvl'], thy_dct)
-        var_scn_thy_info = None
-        var_sp1_thy_info = None
-        var_sp2_thy_info = None
-        if 'var_scnlvl' in es_keyword_dct:
-            var_scn_thy_info = filesys.inf.get_es_info(
-                es_keyword_dct['var_scnlvl'], thy_dct)
-        if 'var_splvl1' in es_keyword_dct:
-            var_sp1_thy_info = filesys.inf.get_es_info(
-                es_keyword_dct['var_splvl1'], thy_dct)
-        # if es_keyword_dct['var_splvl2'] is not None:
-        #     var_sp2_thy_info = filesys.inf.get_es_info(
-        #         es_keyword_dct['var_splvl2'], thy_dct)
-        # else:
-        #     var_sp2_thy_info = None
 
         # Build the queue of species based on user request
         if obj == 'spc':
@@ -85,9 +68,6 @@ def run(pes_idx,
 
         # Run the electronic structure task for all spc in queue
         for spc_name, _ in spc_queue:
-            run_tsk(
-                tsk, spc_dct, spc_name,
-                thy_info, ini_thy_info,
-                var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info,
-                run_prefix, save_prefix,
-                es_keyword_dct=es_keyword_dct)
+            run_tsk(tsk, spc_dct, spc_name,
+                    thy_dct, es_keyword_dct,
+                    run_prefix, save_prefix)

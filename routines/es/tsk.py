@@ -29,10 +29,8 @@ ES_TSKS = {
 
 
 def run_tsk(tsk, spc_dct, spc_name,
-            thy_info, ini_thy_info,
-            var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info,
-            run_prefix, save_prefix,
-            es_keyword_dct=None):
+            thy_dct, es_keyword_dct,
+            run_prefix, save_prefix):
     """ run an electronic structure task
     for generating a list of conformer or tau sampling geometries
     """
@@ -45,11 +43,10 @@ def run_tsk(tsk, spc_dct, spc_name,
     for key, val in es_keyword_dct.items():
         print('{} = {}'.format(key, val))
     print('')
-
+    
     # If species is unstable, set task to 'none'
     stable = instab.check_unstable_species(
-        spc_dct, spc_name,
-        thy_info, ini_thy_info, save_prefix)
+        tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix)
     print()
 
     if stable:
@@ -58,54 +55,43 @@ def run_tsk(tsk, spc_dct, spc_name,
         saddle = bool('ts_' in spc_name)
         # vdw = bool('vdw' in spc_name)
         spc = spc_dct[spc_name]
-
+    
         # Get stuff from task
         [_, job] = tsk.split('_')
 
         # Run the task if an initial geom exists
         if 'init' in tsk:
-            _ = run_geom_init(
-                spc, thy_info, ini_thy_info,
-                run_prefix, save_prefix, saddle, es_keyword_dct)
+            _ = geom_init(
+                spc, thy_dct, es_keyword_dct,
+                run_prefix, save_prefix, saddle)
         elif 'conf' in tsk:
-            run_conformer_tsk(
-                job, spc_dct, spc_name,
-                thy_info, ini_thy_info,
-                run_prefix, save_prefix,
-                saddle, es_keyword_dct)
+            conformer_tsk(
+                job, spc_dct, spc_name, thy_dct, es_keyword_dct,
+                run_prefix, save_prefix, saddle)
         elif 'tau' in tsk:
-            run_tau_tsk(
-                job, spc_dct, spc_name,
-                thy_info, ini_thy_info,
-                run_prefix, save_prefix,
-                saddle, es_keyword_dct)
+            tau_tsk(
+                job, spc_dct, spc_name, thy_dct, es_keyword_dct,
+                run_prefix, save_prefix, saddle)
         elif 'hr' in tsk:
-            run_hr_tsk(
-                job, spc_dct, spc_name,
-                thy_info, ini_thy_info,
-                run_prefix, save_prefix,
-                saddle, es_keyword_dct)
+            hr_tsk(
+                job, spc_dct, spc_name, thy_dct, es_keyword_dct,
+                run_prefix, save_prefix, saddle)
         elif 'irc' in tsk:
-            run_irc_tsk(
-                job, spc_dct, spc_name,
-                thy_info, ini_thy_info,
-                run_prefix, save_prefix,
-                es_keyword_dct)
+            irc_tsk(
+                job, spc_dct, spc_name, thy_dct, es_keyword_dct,
+                run_prefix, save_prefix, saddle)
         elif 'find' in tsk:
             findts.run(
-                spc_dct, spc_name,
-                thy_info, ini_thy_info,
-                var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info,
-                run_prefix, save_prefix,
-                es_keyword_dct)
+                job, spc_dct, spc_name, thy_dct, es_keyword_dct,
+                run_prefix, save_prefix)
 
     else:
         print('\nSkipping task for unstable species...')
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
-def run_geom_init(spc, thy_info, ini_thy_info,
-                  run_prefix, save_prefix, saddle, es_keyword_dct):
+def geom_init(spc, thy_dct, es_keyword_dct,
+                  run_prefix, save_prefix, saddle):
     """ Find the initial geometry
     """
 
@@ -117,7 +103,11 @@ def run_geom_init(spc, thy_info, ini_thy_info,
     overwrite = es_keyword_dct['overwrite']
     # retryfail = es_keyword_dct['retryfail']
 
-    # Modify the theory
+    # Get the thery info
+    ini_thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['inplvl'], thy_dct)
+    thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
@@ -126,7 +116,7 @@ def run_geom_init(spc, thy_info, ini_thy_info,
         run_prefix, spc_info, mod_thy_info)
     thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_thy_info)
-    ini_thy_save_fs, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
+    _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_ini_thy_info)
     cnf_run_fs, _ = filesys.build.cnf_fs_from_thy(
         thy_run_path, mod_thy_info, saddle=saddle)
@@ -154,17 +144,16 @@ def run_geom_init(spc, thy_info, ini_thy_info,
         ini_cnf_save_fs, ini_min_cnf_locs,
         run_fs,
         opt_script_str, overwrite,
-        kickoff_size=kickoff_size, 
+        kickoff_size=kickoff_size,
         kickoff_backward=kickoff_backward,
         **opt_kwargs)
 
     return geo
 
 
-def run_conformer_tsk(job, spc_dct, spc_name,
-                      thy_info, ini_thy_info,
-                      run_prefix, save_prefix,
-                      saddle, es_keyword_dct):
+def conformer_tsk(job, spc_dct, spc_name,
+                      thy_dct, es_keyword_dct,
+                      run_prefix, save_prefix, saddle):
     """ Launch tasks associated with conformers.
         Scan: Generate a set of conformer geometries and energies via
               random sampling over torsional coordinates
@@ -181,6 +170,10 @@ def run_conformer_tsk(job, spc_dct, spc_name,
     retryfail = es_keyword_dct['retryfail']
 
     # Modify the theory
+    ini_thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['inplvl'], thy_dct)
+    thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
@@ -190,7 +183,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             run_prefix, spc_info, mod_ini_thy_info)
         ini_thy_fs = filesys.build.spc_thy_fs_from_root(
             save_prefix, spc_info, mod_ini_thy_info)
-        [ini_thy_save_fs, ini_thy_save_path] = ini_thy_fs
+        [_, ini_thy_save_path] = ini_thy_fs
 
     else:
         rxn_info = filesys.inf.rxn_info(
@@ -200,7 +193,7 @@ def run_conformer_tsk(job, spc_dct, spc_name,
             run_prefix, rxn_info, mod_ini_thy_info)
         _, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_ini_thy_info)
-        ini_thy_save_fs, ini_thy_save_path = filesys.build.ts_fs_from_thy(
+        _, ini_thy_save_path = filesys.build.ts_fs_from_thy(
             ini_thy_save_path)
         _, ini_thy_run_path = filesys.build.ts_fs_from_thy(
             ini_thy_run_path)
@@ -304,10 +297,9 @@ def run_conformer_tsk(job, spc_dct, spc_name,
                 retryfail=retryfail, **kwargs)
 
 
-def run_tau_tsk(job, spc_dct, spc_name,
-                thy_info, ini_thy_info,
-                run_prefix, save_prefix,
-                saddle, es_keyword_dct):
+def tau_tsk(job, spc_dct, spc_name,
+                thy_dct, es_keyword_dct,
+                run_prefix, save_prefix, saddle):
     """ Energies, gradients, and hessians,
         for set of arbitrarily sampled torsional coordinates
         with all other coordinates optimized
@@ -328,6 +320,10 @@ def run_tau_tsk(job, spc_dct, spc_name,
         *thy_info[0:2])
 
     # Modify the theory
+    ini_thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['inplvl'], thy_dct)
+    thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
@@ -418,7 +414,7 @@ def run_tau_tsk(job, spc_dct, spc_name,
 
             # Add the hessian max
             hessmax = es_keyword_dct['hessmax']
-            
+
             # Set up the run scripts
             script_str, _, kwargs, _ = es_runner.qchem_params(
                 *thy_info[0:2])
@@ -450,9 +446,9 @@ def run_tau_tsk(job, spc_dct, spc_name,
         print('No torsional modes in the species')
 
 
-def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
-               run_prefix, save_prefix,
-               saddle, es_keyword_dct):
+def hr_tsk(job, spc_dct, spc_name,
+               thy_dct, es_keyword_dct,
+               run_prefix, save_prefix, saddle):
     """ run a scan over the specified torsional coordinates
     """
 
@@ -461,13 +457,17 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
     # Set the spc_info
     spc_info = filesys.inf.get_spc_info(spc)
 
-    # Script
-    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
-        *thy_info[0:2])
-
     # Modify the theory
+    ini_thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['inplvl'], thy_dct)
+    thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
+    
+    # Script
+    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+        *mod_thy_info[0:2])
 
     # Set the filesystem objects
     if not saddle:
@@ -576,21 +576,40 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
                 retryfail=retryfail, **opt_kwargs)
 
             # Read and print the potential
+            ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_cnf_save_locs)
+            tors_pots, tors_zmas = {}, {}
+            for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
+                constraint_dct = structure.tors.build_constraint_dct(
+                    zma, const_names, tors_names)
+                pot, _, _, _, zmas = structure.tors.read_hr_pot(
+                    tors_names, tors_grids,
+                    ini_cnf_save_paths[0],
+                    mod_ini_thy_info, ref_ene,
+                    constraint_dct,
+                    read_zma=True)
+                tors_pots[tors_names] = pot
+                tors_zmas[tors_names] = zmas
 
-            # Check for new minimum conformer
+            # Print potential
+            structure.tors.print_hr_pot(tors_pots)
 
             # Launch new conformer sampling from negative if requested
-            # if new_min and resamp_min:
-            #     _ = conformer.conformer_sampling(
-            #         zma, spc_info,
-            #         mod_thy_info, thy_save_fs,
-            #         cnf_run_fs, cnf_save_fs,
-            #         opt_script_str, overwrite,
-            #         saddle=saddle, nsamp_par=mc_nsamp,
-            #         tors_names=run_tors_names,
-            #         two_stage=two_stage, retryfail=retryfail,
-            #         rxn_class=rxn_class, **opt_kwargs)
+            if resamp_min:
 
+                # Check for new minimum conformer
+                new_min_zma = structure.tors.check_hr_pot(tors_pots, tors_zmas)
+            
+                if new_min_zma is not None:
+                    print('Finding new low energy conformer...')
+                    #     _ = conformer.conformer_sampling(
+                    #         zma, spc_info,
+                    #         mod_thy_info, thy_save_fs,
+                    #         cnf_run_fs, cnf_save_fs,
+                    #         opt_script_str, overwrite,
+                    #         saddle=saddle, nsamp_par=mc_nsamp,
+                    #         tors_names=run_tors_names,
+                    #         two_stage=two_stage, retryfail=retryfail,
+                    #         rxn_class=rxn_class, **opt_kwargs)
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 
@@ -628,8 +647,9 @@ def run_hr_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
         print('No torsional modes in the species')
 
 
-def run_irc_tsk(job, spc_dct, spc_name, thy_info, ini_thy_info,
-                run_prefix, save_prefix, es_keyword_dct):
+def irc_tsk(job, spc_dct, spc_name,
+                thy_dct, es_keyword_dct,
+                run_prefix, save_prefix, saddle):
     """ run a scan over the specified torsional coordinates
     """
 

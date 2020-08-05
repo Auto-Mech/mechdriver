@@ -12,13 +12,11 @@ from routines.es import runner as es_runner
 from lib import filesys
 
 
-def run(spc_dct, spc_name,
-        thy_info, ini_thy_info,
-        var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info,
-        run_prefix, save_prefix,
-        es_keyword_dct):
+def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
+        run_prefix, save_prefix):
     """ find a transition state
     """
+    var_sp1_thy_info, var_sp2_thy_info, var_scn_thy_info = None, None, None
 
     # Get dct for specific species task is run for
     ts_dct = spc_dct[spc_name]
@@ -65,6 +63,10 @@ def run(spc_dct, spc_name,
     nobar_mod = es_keyword_dct['nobarrier']
 
     # Modify the theory
+    ini_thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['inplvl'], thy_dct)
+    thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(ts_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(ts_info, ini_thy_info)
 

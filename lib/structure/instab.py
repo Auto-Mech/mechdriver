@@ -70,13 +70,17 @@ def _disconnected_zmas(disconn_zma):
 
 
 # Unstable check
-def check_unstable_species(spc_dct, spc_name,
-                           thy_info, ini_thy_info, save_prefix):
+def check_unstable_species(tsk, spc_dct, spc_name, thy_dct,
+                           es_keyword_dct, save_prefix):
     """ see if a species and unstable and handle task management
     """
 
+    if 'ts' not in spc_name and tsk != 'init_geom':
     
-    if 'ts' not in spc_name:
+        ini_thy_info = filesys.inf.get_es_info(
+            es_keyword_dct['inplvl'], thy_dct)
+        thy_info = filesys.inf.get_es_info(
+            es_keyword_dct['runlvl'], thy_dct)
 
         print('Checking filesystem if species is unstable...')
 
