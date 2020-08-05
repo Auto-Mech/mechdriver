@@ -8,8 +8,10 @@ import automol
 import autofile
 from autofile import fs
 import mess_io
+from lib.structure import vib as vibprep
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
+from lib.phydat import phycon
 
 
 # FUNCTIONS TO SET UP TORSION NAME LISTS
@@ -17,7 +19,7 @@ def tors_name_prep(spc_dct_i, cnf_fs, min_cnf_locs, tors_model):
     """ Obtain torsion names through various means
     """
 
-    if tors_model in ('1dhr', 'mdhr', 'tau'):
+    if tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'):
         run_tors_names = ()
         if 'tors_names' in spc_dct_i:
             run_tors_names = names_from_dct(spc_dct_i, tors_model)
@@ -78,7 +80,7 @@ def names_from_dct(spc_dct_i, ndim_tors):
         inp_tors_names = tuple(tuple(x) for x in inp_tors_names)
     if 'amech_ts_tors_names' in spc_dct_i:
         amech_ts_tors_names = spc_dct_i['amech_ts_tors_names']
-        if ndim_tors == '1dhr':
+        if ndim_tors in ('1dhr', '1dhrf', '1dhrfa'):
             amech_ts_tors_names = [[name] for name in amech_ts_tors_names]
         else:
             amech_ts_tors_names = [amech_ts_tors_names]
@@ -237,18 +239,34 @@ def is_methyl_rotor(zma, rotor):
 
 
 # Handle the potential
+def set_scan_dims(tors_grids):
+    """ Determine the dimensions of the grid
+    """
+    assert len(tors_grids) in (1, 2, 3, 4), 'Rotor must be 1-4 dimensions'
+
+    grid_points = ((i for i in range(len(grid)))
+                   for grid in tors_grids)
+    grid_vals = ((x for x in grid)
+                 for grid in tors_grids)
+    grid_points = tuple(itertools.product(*grid_points))
+    grid_vals = tuple(itertools.product(*grid_vals))
+
+    return grid_points, grid_vals
+
+
 def read_hr_pot(tors_names, tors_grids, cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct,
-                read_geom=False, read_grad=False, read_hess=False):
+                read_geom=False, read_grad=False,
+                read_hess=False, read_zma=False):
     """ Get the potential for a hindered rotor
     """
 
     # print('cscn_path', scn_run_fs[1].path([coo_names]))
 
     # Build initial lists for storing potential energies and Hessians
-    grid_points, grid_vals = torsprep.set_scan_dims(tors_grids)
-    pot, geoms, grads, hessians = {}, {}, {}, {}
+    grid_points, grid_vals = set_scan_dims(tors_grids)
+    pot, geoms, grads, hessians, zmas = {}, {}, {}, {}, {}
 
     # Set up filesystem information
     zma_fs = fs.manager(cnf_save_path, 'ZMATRIX')
@@ -265,7 +283,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
 
-        print('tors_path', scn_fs[-1].path(locs))
+        # print('tors_path', scn_fs[-1].path(locs))
         ene = _read_tors_ene(scn_fs, locs, mod_tors_ene_info)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL
@@ -281,7 +299,10 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
         if read_hess:
             hessians[point] = scn_fs[-1].file.hessian.read(locs)
 
-    return pot, geoms, grads, hessians
+        if read_zma:
+            zmas[point] = scn_fs[-1].file.geometry.read(locs)
+
+    return pot, geoms, grads, hessians, zmas
 
 
 def calc_hr_frequenices(geoms, grads, hessians, run_path):
@@ -299,6 +320,59 @@ def calc_hr_frequenices(geoms, grads, hessians, run_path):
         hr_freqs[point] = proj_freqs
 
     return hr_freqs
+
+
+def _read_tors_ene(filesys, locs, mod_tors_ene_info):
+    """ read the energy for torsions
+    """
+
+    if filesys[-1].exists(locs):
+        path = filesys[-1].path(locs)
+        sp_fs = autofile.fs.single_point(path)
+        if sp_fs[-1].file.energy.exists(mod_tors_ene_info[1:4]):
+            ene = sp_fs[-1].file.energy.read(mod_tors_ene_info[1:4])
+        else:
+            ene = None
+    else:
+        ene = None
+
+    return ene
+
+
+def print_hr_pot(tors_pots):
+    """ Check hr pot to see if a new mimnimum is needed
+    """
+
+    print('\nHR potentials...')
+    for name in tors_pots:
+
+        print('- Rotor {}'.format(name))
+        pot_str = ''
+        for pot in tors_pots[name].values():
+            pot_str += ' {0:.2f}'.format(pot)
+
+        print('- Pot:{}'.format(pot_str))
+
+
+def check_hr_pot(tors_pots, tors_zmas):
+    """ Check hr pot to see if a new mimnimum is needed
+    """
+
+    new_min_zma = None
+    neg_ene_min = 1000.
+
+    print('\nAssessing the HR potential...')
+    for name in tors_pots:
+
+        print('- Rotor {}'.format(name))
+        pots, zmas = tors_pots[name].values(), tors_zmas[name].values()
+        for pot, zma in zip(pots, zmas):
+            if pot < 0.0:
+                if pot < neg_ene_min:
+                    new_min_zma = zma
+                    print('New minimmum energy ZMA found for torsion')
+
+    return new_min_zma
 
 
 # Building constraints
@@ -349,21 +423,6 @@ def build_constraint_dct(zma, const_names, scan_names=()):
     # sys.exit()
 
     return constraint_dct
-
-
-def set_scan_dims(tors_grids):
-    """ Determine the dimensions of the grid
-    """
-    assert len(tors_grids) in (1, 2, 3, 4), 'Rotor must be 1-4 dimensions'
-
-    grid_points = ((i for i in range(len(grid)))
-                   for grid in tors_grids)
-    grid_vals = ((x for x in grid)
-                 for grid in tors_grids)
-    grid_points = tuple(itertools.product(*grid_points))
-    grid_vals = tuple(itertools.product(*grid_vals))
-
-    return grid_points, grid_vals
 
 
 # Functions to handle setting up groups and axes used to define torstions
