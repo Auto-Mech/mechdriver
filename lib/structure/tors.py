@@ -291,16 +291,28 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
             pot[point] = -10.0
 
         if read_geom:
-            geoms[point] = scn_fs[-1].file.geometry.read(locs)
+            if scn_fs[-1].file.geometry.exists(locs):
+                geoms[point] = scn_fs[-1].file.geometry.read(locs)
+            else:
+                geoms[point] = None
 
         if read_grad:
-            grads[point] = scn_fs[-1].file.gradient.read(locs)
+            if scn_fs[-1].file.gradient.exists(locs):
+                grads[point] = scn_fs[-1].file.gradient.read(locs)
+            else:
+                grads[point] = None
 
         if read_hess:
-            hessians[point] = scn_fs[-1].file.hessian.read(locs)
+            if scn_fs[-1].file.hessian.exists(locs):
+                hessians[point] = scn_fs[-1].file.hessian.read(locs)
+            else:
+                hessians[point] = None
 
         if read_zma:
-            zmas[point] = scn_fs[-1].file.geometry.read(locs)
+            if scn_fs[-1].file.zmatrix.exists(locs):
+                zmas[point] = scn_fs[-1].file.zmatrix.read(locs)
+            else:
+                zmas[point] = None
 
     return pot, geoms, grads, hessians, zmas
 
