@@ -64,20 +64,25 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
     brk_bnd_keys = ts_dct['brk_bnd_keys']
     rcts_gra = ts_dct['rcts_gra']
 
-    # Get the names of the reaction coordinates
-    dist_name = ''
-    brk_name = ''
+    # Get reaction coordinates
+    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
     # Get method stuff
     mod_ini_thy_info = method_dct['inplvl']
     mod_thy_info = method_dct['runlvl']
 
     # Get filesys stuff
-    _, thy_run_path = runfs_dct['thy_fs']
-    thy_save_fs, thy_save_path = savefs_dct['thy_fs']
-    cnf_save_fs, cnf_save_locs = savefs_dct['cnf_fs']
+    _, ts_run_path = runfs_dct['ts_fs']
+    scn_run_fs, _ = runfs_dct['scn_fs']
 
-    run_fs = autofile.fs.run(ts_run_fs[1])
+    thy_save_fs, _ = savefs_dct['thy_fs']
+    cnf_save_fs, cnf_save_locs = savefs_dct['cnf_fs']
+    _, ini_ts_save_path = savefs_dct['ini_ts_fs']
+    ts_save_fs, ts_save_path = savefs_dct['ts_fs']
+    scn_save_fs, _ = savefs_dct['scn_fs']
+
+    run_fs = autofile.fs.run(ts_run_path)
 
     # Find the TS
     if cnf_save_locs and not overwrite:
@@ -94,26 +99,27 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
         sadpt_transition_state(
             ini_zma, ts_info,
             mod_ini_thy_info, mod_thy_info,
-            thy_run_path, thy_save_path,
             thy_save_fs,
             ini_ts_save_path,
             cnf_save_fs,
+            scn_save_fs, scn_run_fs,
             ts_save_fs, ts_save_path, run_fs,
             typ, grid, update_guess,
-            dist_name, brk_name,
+            frm_name, brk_name,
             frm_bnd_keys, brk_bnd_keys, rcts_gra,
             opt_script_str, script_str, overwrite,
-            es_keyword_dct, **opt_kwargs)
+            es_keyword_dct, **opt_kwargs
+        )
 
 
 # SADPT FINDER FUNCTIONS
 def sadpt_transition_state(
         ini_zma, ts_info,
         mod_ini_thy_info, mod_thy_info,
-        thy_run_path, thy_save_path,
         thy_save_fs,
         ini_ts_save_path,
         cnf_save_fs,
+        scn_save_fs, scn_run_fs,
         ts_save_fs, ts_save_path, run_fs,
         typ, grid, update_guess,
         dist_name, brk_name,
@@ -131,19 +137,8 @@ def sadpt_transition_state(
 
     # If no guess zma, run a TS searching algorithm
     if not guess_zmas:
-
         print(' - No Z-Matrix in found in save filesys.')
         print('\nRunning scan to generate guess Z-Matrix for opt...')
-        # Set up ini filesystem for scans
-        # _, zma_run_path = filesys.build.zma_fs_from_prefix(
-        #     thy_run_path, zma_idxs=[0])
-        # _, zma_save_path = filesys.build.zma_fs_from_prefix(
-        #     thy_save_path, zma_idxs=[0])
-        # scn_run_fs = filesys.build.scn_fs_from_cnf(
-        #     zma_run_path, constraint_dct=None)
-        # scn_save_fs = filesys.build.scn_fs_from_cnf(
-        #     zma_save_path, constraint_dct=None)
-
         guess_zmas = sadpt.scan_for_guess(
             typ, grid, dist_name, brk_name, ini_zma, ts_info,
             mod_thy_info, thy_save_fs,
@@ -189,30 +184,39 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
 
     # Build inf objects for the rxn and ts
     ts_info = info_dct['ts_info']
-    rxn_info = info_dct['rxn_info']
     rct1_info = info_dct['rct1_info']
     rct2_info = info_dct['rct2_info']
 
     # Set various TS information using the dictionary
     ini_zma = ts_dct['zma']
-    typ = ts_dct['class']
     frm_bnd_keys = ts_dct['frm_bnd_keys']
-    brk_bnd_keys = ts_dct['brk_bnd_keys']
-    rcts_gra = ts_dct['rcts_gra']
+
+    # Get reaction coordinates
+    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
+    update_guess = False  # check
 
     # Make grid
     [grid1, grid2] = grid
+
+    # Get method stuff
+    mod_ini_thy_info = method_dct['inplvl']
+    mod_thy_info = method_dct['runlvl']
+    mod_var_sp1_thy_info = method_dct['var_splvl1']
+
+    # Get filesys stuff
+    scn_save_fs, _ = savefs_dct['scn_fs']
+    scn_run_fs, _ = runfs_dct['scn_fs']
 
     # Run single reference mol-rad VTST Search
     vtst.molrad_scan(
         ini_zma, ts_info,
         rct1_info, rct2_info,
-        grid1, grid2, dist_name,
-        thy_info, ini_thy_info,
-        var_sp1_thy_info,
+        grid1, grid2, frm_name,
+        mod_thy_info, mod_ini_thy_info,
+        mod_var_sp1_thy_info,
         scn_run_fs, scn_save_fs,
         run_prefix, save_prefix,
         overwrite, update_guess
