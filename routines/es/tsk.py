@@ -43,10 +43,12 @@ def run_tsk(tsk, spc_dct, spc_name,
     for key, val in es_keyword_dct.items():
         print('{} = {}'.format(key, val))
     print('')
-    
+
     # If species is unstable, set task to 'none'
+    ini_thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['inplvl'], thy_dct)
     stable = instab.check_unstable_species(
-        tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix)
+        tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
     print()
 
     if stable:
@@ -55,7 +57,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         saddle = bool('ts_' in spc_name)
         # vdw = bool('vdw' in spc_name)
         spc = spc_dct[spc_name]
-    
+
         # Get stuff from task
         [_, job] = tsk.split('_')
 

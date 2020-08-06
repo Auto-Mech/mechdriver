@@ -363,6 +363,17 @@ def ts_fs_from_thy(thy_prefix):
     return ts_fs, ts_path
 
 
+def vrc_fs_from_thy(thy_prefix):
+    """ Create species filesystem object and path
+    """
+
+    vrc_fs = autofile.fs.vrctst(thy_prefix)
+    vrc_fs[0].create()
+    vrc_path = vrc_fs[0].path()
+
+    return vrc_fs, vrc_path
+
+
 def run_fs_from_prefix(prefix):
     """ Build a run filesystem object forom some generic prefix
     """

@@ -70,34 +70,29 @@ def _disconnected_zmas(disconn_zma):
 
 
 # Unstable check
-def check_unstable_species(tsk, spc_dct, spc_name, thy_dct,
-                           es_keyword_dct, save_prefix):
+def check_unstable_species(tsk, spc_dct, spc_name,
+                           thy_info, save_prefix):
     """ see if a species and unstable and handle task management
     """
 
     if 'ts' not in spc_name and tsk != 'init_geom':
-    
-        ini_thy_info = filesys.inf.get_es_info(
-            es_keyword_dct['inplvl'], thy_dct)
-        thy_info = filesys.inf.get_es_info(
-            es_keyword_dct['runlvl'], thy_dct)
 
         print('Checking filesystem if species is unstable...')
 
         # Build filesystem
         spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
         _ = filesys.inf.modify_orb_restrict(spc_info, thy_info)
-        mod_ini_thy_info = filesys.inf.modify_orb_restrict(
-            spc_info, ini_thy_info)
-        ini_thy_save_fs, _ = filesys.build.spc_thy_fs_from_root(
-            save_prefix, spc_info, mod_ini_thy_info)
+        mod_thy_info = filesys.inf.modify_orb_restrict(
+            spc_info, thy_info)
+        thy_save_fs, _ = filesys.build.spc_thy_fs_from_root(
+            save_prefix, spc_info, mod_thy_info)
 
-        thy_locs = mod_ini_thy_info[1:4]
-        thy_path = ini_thy_save_fs[-1].path(thy_locs)
+        thy_locs = mod_thy_info[1:4]
+        thy_path = thy_save_fs[-1].path(thy_locs)
 
         # Check if the instability files exist
-        if (ini_thy_save_fs[-1].file.transformation.exists(thy_locs) and
-                ini_thy_save_fs[-1].file.reactant_graph.exists(thy_locs)):
+        if (thy_save_fs[-1].file.transformation.exists(thy_locs) and
+                thy_save_fs[-1].file.reactant_graph.exists(thy_locs)):
             stable = False
             print('- Found files denoting species instability at path')
             print('    {}'.format(thy_path))
@@ -134,7 +129,7 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
         new_rxn['reacs'] = []
         for rct in rxn['reacs']:
             rct_stable = check_unstable_species(
-                spc_dct, rct, ini_thy_info, ini_thy_info, save_prefix)
+                'rate', spc_dct, rct, ini_thy_info, save_prefix)
             if rct_stable:
                 new_rct = rct
                 new_rxn['reacs'].append(new_rct)
@@ -147,7 +142,7 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
         new_rxn['prods'] = []
         for prd in rxn['prods']:
             prd_stable = check_unstable_species(
-                spc_dct, prd, ini_thy_info, ini_thy_info, save_prefix)
+                'rate', spc_dct, prd, ini_thy_info, save_prefix)
             if prd_stable:
                 new_prd = prd
                 new_rxn['prods'].append(new_prd)
