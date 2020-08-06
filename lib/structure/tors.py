@@ -284,7 +284,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
             locs = [constraint_dct] + locs
 
         # print('tors_path', scn_fs[-1].path(locs))
-        ene = _read_tors_ene(scn_fs, locs, mod_tors_ene_info)
+        ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL
         else:
@@ -334,7 +334,7 @@ def calc_hr_frequenices(geoms, grads, hessians, run_path):
     return hr_freqs
 
 
-def _read_tors_ene(filesys, locs, mod_tors_ene_info):
+def read_tors_ene(filesys, locs, mod_tors_ene_info):
     """ read the energy for torsions
     """
 

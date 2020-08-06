@@ -583,7 +583,7 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
             cnf_save_fs, thy_info)
         ts_min_path = cnf_save_fs[-1].path(ts_min_cnf_locs)
         ts_min_zma_fs = fs.manager(ts_min_path, 'ZMATRIX')
-        tra = ts_min_zma_fs[-1].file.transformation.read(zma_locs) 
+        tra = ts_min_zma_fs[-1].file.transformation.read(zma_locs)
         rct_gra = ts_min_zma_fs[-1].file.reactant_graph.read(zma_locs)
 
     # Build the conformer filesystem and save the structural info
@@ -604,7 +604,7 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
 
     # Save the tra and gra for a saddle
     if saddle:
-        zma_save_fs[-1].file.transformation.write(tra, zma_locs) 
+        zma_save_fs[-1].file.transformation.write(tra, zma_locs)
         zma_save_fs[-1].file.reactant_graph.write(rct_gra, zma_locs)
 
     # Saving the energy to a SP filesystem
@@ -615,7 +615,6 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
     sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
 
-    # Save the trans and graph 
 
 def _save_sym_indistinct_conformer(geo, cnf_save_fs,
                                    cnf_tosave_locs, cnf_saved_locs):
