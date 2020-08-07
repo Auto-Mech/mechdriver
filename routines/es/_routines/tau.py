@@ -226,3 +226,8 @@ def assess_pf_convergence(tau_save_fs, ref_ene,
             sigma = numpy.sqrt(
                 (abs(sum2/float(idx)-(sumq/float(idx))**2))/float(idx))
             print(sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
+        inf_obj_s = tau_save_fs[0].file.info.read()
+        nsamp = inf_obj_s.nsamp
+        saved_locs = tau_save_fs[-1].existing()
+        ratio = len(saved_locs) / float(nsamp)
+        print('ratio of good to sampled geometries', ratio)
