@@ -73,7 +73,7 @@ def read_ts_data(spc_dct_i, tsname,
     # Get all of the information for the filesystem
     if not typ.var_radrad(ts_class):
         # Build MESS string for TS at a saddle point
-        if ts_nobarrier == 'pst':
+        if ts_sadpt == 'pst':
             inf_dct = {}
             writer = 'pst_block'
         elif ts_sadpt == 'rpvtst':
