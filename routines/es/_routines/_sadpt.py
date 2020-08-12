@@ -12,18 +12,13 @@ from lib import filesys
 from lib.reaction import grid as rxngrid
 
 
-def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info, zma_locs=(0,)):
+def check_filesys_for_guess(ini_zma_fs, zma_locs=(0,)):
     """ Check if the filesystem for any TS structures at the input
         level of theory
     """
-    guess_zmas = []
 
-    # Check and see if a zma is found from the filesystem
-    ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-        ini_ts_save_path, mod_ini_thy_info, cnf='min')
-    if ini_cnf_save_locs:
-        ini_zma_fs = autofile.fs.manager(
-            ini_cnf_save_fs[-1].path(ini_cnf_save_locs), 'ZMATRIX')
+    guess_zmas = []
+    if ini_zma_fs is not None:
         if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
             geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
             print(' - Z-Matrix found.')
@@ -225,6 +220,10 @@ def save_saddle_point(
     geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
     zma = elstruct.reader.opt_zmatrix(opt_prog, opt_out_str)
 
+    # Build new zma using x2z and new torsion coordinates
+    # zma = automol.geometry.zmatrix(
+    #     geo, ts_bnd=(frm_bnd_keys, brk_bnd_keys))
+    
     print(" - Reading hessian from output...")
     hess_inf_obj, hess_inp_str, hess_out_str = hess_ret
     hess_prog = hess_inf_obj.prog
@@ -284,131 +283,25 @@ def save_saddle_point(
     sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
 
 
-# HELPER FUNCTIONS FOR THE MAIN FINDER FUNCTIONS
-# def check_ts_zma(zma, ts_zma):
-#     """ Check to see if zma in filesystem matches guess ts zma
-#         check to see if rxn class for already found ts is of expected class
-#         do this by comparing names
+#####
+# def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info, zma_locs=(0,)):
+#     """ Check if the filesystem for any TS structures at the input
+#         level of theory
 #     """
-#     chk_bkp = False
-#     if automol.zmatrix.names(zma) == automol.zmatrix.names(ts_zma):
-#         if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1, True):
-#             if 'babs1' in automol.zmatrix.names(ts_zma):
-#                 babs1 = 170. * phycon.DEG2RAD
-#                 if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
-#                     babs1 = 85. * phycon.DEG2RAD
-#                 ts_zma = automol.zmatrix.set_valuess(
-#                     ts_zma, {'babs1': babs1})
-#                 if not automol.zmatrix.almost_equal(zma, ts_zma, 4e-1):
-#                     chk_bkp = True
-#             else:
-#                 chk_bkp = True
-#     else:
-#         chk_bkp = True
+#     guess_zmas = []
 #
-#     return chk_bkp
-# def check_filesys_for_ts(ts_dct, ts_zma, cnf_save_fs, overwrite,
-#                          typ, dist_info, dist_name, bkp_ts_class_data):
-#     """ Check if TS is in filesystem and matches original guess
-#     """
-#     update_dct = {}
+#     # Check and see if a zma is found from the filesystem
+#     ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
+#         ini_ts_save_path, mod_ini_thy_info, cnf='min')
+#     if ini_cnf_save_locs:
+#         ini_zma_fs = autofile.fs.manager(
+#             ini_cnf_save_fs[-1].path(ini_cnf_save_locs), 'ZMATRIX')
+#         if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
+#             geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
+#             print(' - Z-Matrix found.')
+#             print(' - Reading Z-Matrix from path {}'.format(geo_path))
+#             guess_zmas.append(
+#                 ini_zma_fs[-1].file.zmatrix.read(zma_locs))
 #
-#     # Check if TS is in filesystem and check if there is a match
-#     min_cnf_locs = fsmin.min_energy_conformer_locators(cnf_save_fs)
-#     if min_cnf_locs and not overwrite:
-#
-#         print('Found TS at {}'.format(cnf_save_fs[0].path()))
-#
-#         # Check if TS matches original guess
-#         zma = cnf_save_fs[-1].file.zmatrix.read(min_cnf_locs)
-#         chk_bkp = check_ts_zma(zma, ts_zma)
-#
-#         # Check if TS matches original guess from back reaction
-#         if chk_bkp and bkp_ts_class_data:
-#            [bkp_typ, bkp_ts_zma, _, _, bkp_tors_names, _] = bkp_ts_class_data
-#             is_bkp = check_ts_zma(zma, bkp_ts_zma)
-#
-#         # Set information in ts_dct as needed
-#         update_dct['class'] = ts_dct['class'] if not is_bkp else bkp_typ
-#         update_dct['zma'] = ts_dct['zma'] if not is_bkp else bkp_ts_zma
-#        update_dct['tors_names'] = ts_dct['zma'] if not is_bkp else bkp_ts_zma
-#         # ts_dct['original_zma'] = ts_zma
-#         if is_bkp:
-#             print('updating reaction class to {}'.format(bkp_typ))
-#             update_dct['class'] = ts_dct['class'] if not is_bkp else bkp_typ
-#             update_dct['zma'] = ts_dct['zma'] if not is_bkp else bkp_ts_zma
-#             # ts_dct['class'] = bkp_typ
-#             # ts_dct['original_zma'] = bkp_ts_zma
-#             # ts_dct['tors_names'] = bkp_tors_names
-#             # if not is_typ or not is
-#         else:
-#             print("TS may not be original type or backup type")
-#             print("Some part of the z-matrices have changed")
-#
-#         print('class test:', ts_dct['class'])
-#         vals = automol.zmatrix.values(zma)
-#         final_dist = vals[dist_name]
-#         dist_info[1] = final_dist
-#
-#         # Add an angle check which is added to spc dct for TS
-#         angle = lts.check_angle(
-#             ts_dct['original_zma'],
-#             ts_dct['dist_info'],
-#             ts_dct['class'])
-#         ts_dct['dist_info'][1] = final_dist
-#         ts_dct['dist_info'].append(angle)
-#
-#     return ts_dct
-# SOME SECOND ATTEMPT REACTION BASED ON REACTION TYPES
-# def aa
-#     """
-#     """
-#     elif 'addition' in typ and bkp_ts_class_data and attempt > 2:
-#         # Try to find addition rxn TS in reverse direction
-#         bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid, bkp_tors_names,
-#         bkp_update_guess = bkp_ts_class_data
-#         print('TS find failed. Attempting to find with new',
-#               'reaction class: {}'.format(bkp_typ))
-#         bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
-#         ts_dct['class'] = bkp_typ
-#         ts_dct['original_zma'] = bkp_ts_zma
-#         ts_dct['dist_info'] = bkp_dist_info
-#         ts_dct['tors_names'] = bkp_tors_names
-#         attempt += 1
-#         geo, zma, final_dist = find_ts(
-#             spc_dct, ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info,
-#             bkp_grid, None, ini_thy_info, thy_info, run_prefix,
-#             save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
-#             attempt=attempt)
-#     elif ('addition ' in typ or 'abstraction' in typ) and attempt < 3:
-#         # Try to find addition rxn TS in reverse direction with addn tricks
-#         babs1 = 170. * phycon.DEG2RAD
-#         if automol.zmatrix.values(ts_zma)['babs1'] == babs1:
-#             babs1 = 85. * phycon.DEG2RAD
-#         print('TS find failed. Attempting to find with '
-#               'new angle of attack: {:.1f}'.format(babs1))
-#         ts_zma = automol.zmatrix.set_values(ts_zma, {'babs1': babs1})
-#         ts_dct['original_zma'] = ts_zma
-#         attempt += 1
-#         geo, zma, final_dist = find_ts(
-#             spc_dct, ts_dct, ts_info, ts_zma, typ, dist_info, grid,
-#             bkp_ts_class_data, ini_thy_info, thy_info, run_prefix,
-#             save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
-#             attempt=attempt)
-#     elif 'beta scission' in typ and bkp_ts_class_data and attempt < 2:
-#         # Run reverse for a beta scission reaction
-#         [bkp_typ, bkp_ts_zma, bkp_dist_name, bkp_grid,
-#          bkp_tors_names, bkp_update_guess] = bkp_ts_class_data
-#         print('TS find failed. Attempting to find with'
-#               'new reaction class: {}'.format(bkp_typ))
-#         bkp_dist_info = [bkp_dist_name, 0., bkp_update_guess]
-#         ts_dct['class'] = bkp_typ
-#         ts_dct['original_zma'] = bkp_ts_zma
-#         ts_dct['dist_info'] = bkp_dist_info
-#         ts_dct['tors_names'] = bkp_tors_names
-#         attempt += 1
-#         geo, zma, final_dist = find_ts(
-#             spc_dct, ts_dct, ts_info, bkp_ts_zma, bkp_typ, bkp_dist_info,
-#             bkp_grid, None, ini_thy_info, thy_info, run_prefix,
-#             save_prefix, rxn_run_path, rxn_save_path, overwrite=True,
-#             attempt=attempt)
+#     return guess_zmas
+

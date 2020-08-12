@@ -7,7 +7,8 @@ import importlib
 import autofile
 import automol
 from routines.es import runner as es_runner
-from routines.es import findts
+from routines.es.findts import run as runts
+# from routines.es.newts import run as runts
 from routines.es._routines import conformer
 from routines.es._routines import geom
 from routines.es._routines import hr
@@ -59,7 +60,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         spc = spc_dct[spc_name]
 
         # Get stuff from task
-        [_, job] = tsk.split('_')
+        job = tsk.split('_', 1)[1]
 
         # Run the task if an initial geom exists
         if 'init' in tsk:
@@ -83,7 +84,7 @@ def run_tsk(tsk, spc_dct, spc_name,
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix, saddle)
         elif 'find' in tsk:
-            findts.run(
+            runts(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
 
