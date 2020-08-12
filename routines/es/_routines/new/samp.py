@@ -78,14 +78,15 @@ def run_sampling(
                 retryfail=retryfail,
                 **kwargs
             )
-            print('Stage one success, reading for stage 2')
+            # print('Stage one success, reading for stage 2')
             success, ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if success:
                 sinf_obj, _, out_str = ret
                 prog = sinf_obj.prog
                 samp_zma = elstruct.reader.opt_zmatrix(prog, out_str)
-                print('Stage one success beginning stage two on', samp_zma)
+                print('Stage one success beginning stage two')
+                #print('Stage one success beginning stage two on', samp_zma)
                 es_runner.run_job(
                     job=elstruct.Job.OPTIMIZATION,
                     script_str=script_str,

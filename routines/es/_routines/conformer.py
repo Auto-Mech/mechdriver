@@ -181,12 +181,14 @@ def run_conformers(
 
         print('\nChecking if ZMA has high repulsion...')
         # print('zma tests:', automol.zmatrix.string(zma), automol.zmatrix.string(zma))
-        while not automol.intmol.low_repulsion_struct(zma, samp_zma):
+        bad_geom_count = 0
+        while not automol.intmol.low_repulsion_struct(zma, samp_zma) and bad_geom_count < 1000:
             print('  ZMA has high repulsion.')
-            print('  Bad geometry:')
-            print(automol.geom.string(automol.zmatrix.geometry(samp_zma)))
+            # print('  Bad geometry:')
+            # print(automol.geom.string(automol.zmatrix.geometry(samp_zma)))
             print('\n  Generating new sample ZMA')
             samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+            bad_geom_count += 1
         print('  ZMA is fine...')
 
         cid = autofile.schema.generate_new_conformer_id()
@@ -214,14 +216,15 @@ def run_conformers(
                 retryfail=retryfail,
                 **kwargs
             )
-            print('Stage one success, reading for stage 2')
+            # print('Stage one success, reading for stage 2')
             success, ret = es_runner.read_job(
                 job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
             if success:
                 sinf_obj, _, out_str = ret
                 prog = sinf_obj.prog
                 samp_zma = elstruct.reader.opt_zmatrix(prog, out_str)
-                print('Stage one success beginning stage two on', samp_zma)
+                print('Stage one success beginning stage two')
+                # print('Stage one success beginning stage two on', samp_zma)
                 es_runner.run_job(
                     job=elstruct.Job.OPTIMIZATION,
                     script_str=script_str,
@@ -583,7 +586,9 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
             cnf_save_fs, thy_info)
         ts_min_path = cnf_save_fs[-1].path(ts_min_cnf_locs)
         ts_min_zma_fs = fs.manager(ts_min_path, 'ZMATRIX')
+        print('ts_min_path test:', ts_min_path)
         tra = ts_min_zma_fs[-1].file.transformation.read(zma_locs)
+        print('zma_locs test:', zma_locs)
         rct_gra = ts_min_zma_fs[-1].file.reactant_graph.read(zma_locs)
 
     # Build the conformer filesystem and save the structural info

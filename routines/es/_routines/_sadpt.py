@@ -190,7 +190,7 @@ def saddle_point_checker(imags):
         print('Warning: More than one imaginary mode for geometry')
         nbig_imag = 0
         for imag in imags:
-            if imag >= 20.0:
+            if imag >= 40.0:
                 nbig_imag += 1
         if nbig_imag > 1:
             saddle = False
@@ -264,13 +264,8 @@ def save_saddle_point(
     # shift_brk_bnd_keys = structure.geom.shift_vals_from_dummy(
     #     brk_bnd_keys, zma)
 
-    print('frm', frm_bnd_keys)
-    print('brk', brk_bnd_keys)
     tra = (frozenset({frm_bnd_keys}),
            frozenset({brk_bnd_keys}))
-    print('tra', tra)
-    print('rcts gra\n')
-    print(automol.graph.string(rcts_gra))
     zma_save_fs[-1].file.transformation.write(tra, zma_locs)
     zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
 

@@ -296,7 +296,12 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
     reacs, prods, given_class = rxndirn.set_reaction_direction(
         reacs, prods, spc_dct, cla_dct,
         thy_info, ini_thy_info, save_prefix, direction=direction)
-
+    for reac in reacs:
+       rich = spc_dct[reac]['inchi']
+       print(rich)
+    for prod in prods:
+       pich = spc_dct[prod]['inchi']
+       print(pich)
     # Set the info regarding mults and chgs
     rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
     [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
