@@ -289,8 +289,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
     if treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
         if tunnel_model == 'eckart':
             tunnel_str = tunnel.write_mess_eckart_str(
-                chnl_enes['ts'], chnl_enes['reacs'], chnl_enes['prods'],
-                chnl_infs['ts']['imag'])
+                chnl_enes, chnl_infs['ts']['imag'])
         # elif tun_model == 'sct':
         #     tunnel_file = tsname + '_sct.dat'
         #     path = 'cat'

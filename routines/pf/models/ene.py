@@ -212,7 +212,7 @@ def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
     if 'fake_vdwp' in channel_infs:
         vdwp_ene = prod_ene - (1.0 * phycon.KCAL2EH)
         sum_ene.update(
-            {'fake_vdwp': vdwp_ene, 'fake_vdwp_ts': reac_ene}
+            {'fake_vdwp': vdwp_ene, 'fake_vdwp_ts': prod_ene}
         )
 
     # Scale all of the energies in the dict

@@ -25,7 +25,11 @@ def tors_name_prep(spc_dct_i, cnf_fs, min_cnf_locs, tors_model):
             run_tors_names = names_from_dct(spc_dct_i, tors_model)
             tloc = 'dct'
         if not run_tors_names:
-            run_tors_names = names_from_filesys(
+            run_tors_names = names_from_filesys1(
+                cnf_fs, min_cnf_locs, tors_model)
+            tloc = 'fs'
+        if not run_tors_names:
+            run_tors_names = names_from_filesys2(
                 cnf_fs, min_cnf_locs, tors_model)
             tloc = 'fs'
         if not run_tors_names and tors_model == 'tau':
@@ -99,7 +103,28 @@ def names_from_dct(spc_dct_i, ndim_tors):
     return tors_names, amech_ts_tors_names
 
 
-def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_model):
+def new_names_from_filesys2(tors_cnf_fs, tors_min_cnf_locs, tors_model):
+    """ read names from filesystem
+    """
+
+    tors_names = None
+    if tors_min_cnf_locs is not None:
+        if tors_cnf_fs[0].file.info.exists():
+            inf_obj = cnf_save_fs[0].file.info.read()
+            tors_range_dct = inf_obj.tors_ranges
+            tors_names = list(tors_range_dct.keys())
+
+    print('torsname test:', tors_names)
+    if tors_names is not None:
+        if tors_model in ('1dhr', '1dhrf', '1dhrfa', 'tau'):
+            tors_names = [[name] for name in tors_names]
+        else:
+            tors_names = [[name for name in tors_names]]
+
+    return tors_names
+
+
+def names_from_filesys1(tors_cnf_fs, tors_min_cnf_locs, tors_model):
     """ Read out the torsional names from the filesystem
     """
 

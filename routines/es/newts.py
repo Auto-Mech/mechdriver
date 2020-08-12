@@ -13,7 +13,7 @@ from lib import filesys
 
 
 def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix, zma_locs=(0,)):
     """ New run function
     """
 
@@ -21,29 +21,39 @@ def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     search_method = _ts_finder_match(tsk, spc_dct[tsname], tsname)
 
     # Build necessary objects
-    method_dct, runfs_dct, savefs_dct = _set_methods(
-        thy_dct, es_keyword_dct)
     info_dct = _set_info(spc_dct, tsname)
+    # frm_name, brk_name = _set_coords(ts_dct)
     grid = _set_grid(search_method, spc_dct[tsname])
+    method_dct, runfs_dct, savefs_dct = _set_methods(
+        spc_dct[tsname], thy_dct, es_keyword_dct, info_dct,
+        run_prefix, save_prefix, zma_locs=zma_locs)
 
     # Find the transition state
+    print('search', search_method)
     if search_method == 'sadpt':
         run_sadpt(spc_dct, tsname, es_keyword_dct,
                   method_dct, runfs_dct, savefs_dct,
-                  info_dct, grid, run_prefix, save_prefix)
+                  info_dct, grid)
     elif search_method == 'molrad_vtst':
-        run_molrad_vtst()
+        print('in good if statement')
+        run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
+                        method_dct, runfs_dct, savefs_dct,
+                        info_dct, grid, run_prefix, save_prefix)
     elif search_method == 'radrad_vtst':
-        run_radrad_vtst()
+        run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
+                        method_dct, runfs_dct, savefs_dct,
+                        info_dct, grid, run_prefix, save_prefix)
     elif search_method == 'vrctst':
-        run_vrctst()
+        run_vrctst(spc_dct, tsname, es_keyword_dct,
+                   method_dct, runfs_dct, savefs_dct,
+                   info_dct, grid, run_prefix, save_prefix)
     elif search_method is None:
         print('No TS search algorithm was specified or able to determined')
 
 
 def run_sadpt(spc_dct, tsname, es_keyword_dct,
               method_dct, runfs_dct, savefs_dct,
-              info_dct, grid, run_prefix, save_prefix):
+              info_dct, grid):
     """ find a transition state
     """
 
@@ -69,18 +79,17 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
     brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
     # Get method stuff
-    mod_ini_thy_info = method_dct['inplvl']
     mod_thy_info = method_dct['runlvl']
 
     # Get filesys stuff
-    _, ts_run_path = runfs_dct['ts_fs']
-    scn_run_fs, _ = runfs_dct['scn_fs']
+    _, ts_run_path = runfs_dct['runlvl_ts_fs']
+    scn_run_fs = runfs_dct['runlvl_scn_fs']
 
-    thy_save_fs, _ = savefs_dct['thy_fs']
-    cnf_save_fs, cnf_save_locs = savefs_dct['cnf_fs']
-    _, ini_ts_save_path = savefs_dct['ini_ts_fs']
-    ts_save_fs, ts_save_path = savefs_dct['ts_fs']
-    scn_save_fs, _ = savefs_dct['scn_fs']
+    ini_zma_fs = savefs_dct['inilvl_zma_fs']
+    thy_save_fs, _ = savefs_dct['runlvl_thy_fs']
+    cnf_save_fs, cnf_save_locs = savefs_dct['runlvl_cnf_fs']
+    ts_save_fs, ts_save_path = savefs_dct['runlvl_ts_fs']
+    scn_save_fs = savefs_dct['runlvl_scn_fs']
 
     run_fs = autofile.fs.run(ts_run_path)
 
@@ -98,9 +107,9 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
             *mod_thy_info[0:2])
         sadpt_transition_state(
             ini_zma, ts_info,
-            mod_ini_thy_info, mod_thy_info,
+            mod_thy_info,
             thy_save_fs,
-            ini_ts_save_path,
+            ini_zma_fs,
             cnf_save_fs,
             scn_save_fs, scn_run_fs,
             ts_save_fs, ts_save_path, run_fs,
@@ -115,9 +124,9 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
 # SADPT FINDER FUNCTIONS
 def sadpt_transition_state(
         ini_zma, ts_info,
-        mod_ini_thy_info, mod_thy_info,
+        mod_thy_info,
         thy_save_fs,
-        ini_ts_save_path,
+        ini_zma_fs,
         cnf_save_fs,
         scn_save_fs, scn_run_fs,
         ts_save_fs, ts_save_path, run_fs,
@@ -132,8 +141,9 @@ def sadpt_transition_state(
     # Check filesystem for input level of theory
     print('\nSearching save filesys for guess Z-Matrix calculated',
           'at {} level...'.format(es_keyword_dct['inplvl']))
-    guess_zmas = sadpt.check_filesys_for_guess(
-        ini_ts_save_path, mod_ini_thy_info)
+    guess_zmas = sadpt.check_filesys_for_guess(ini_zma_fs)
+    # guess_zmas = sadpt.check_filesys_for_guess(
+    #     ini_ts_save_path, mod_ini_thy_info)
 
     # If no guess zma, run a TS searching algorithm
     if not guess_zmas:
@@ -196,6 +206,7 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
+    retryfail = es_keyword_dct['retryfail']
     update_guess = False  # check
 
     # Make grid
@@ -204,22 +215,26 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
     # Get method stuff
     mod_ini_thy_info = method_dct['inplvl']
     mod_thy_info = method_dct['runlvl']
-    mod_var_sp1_thy_info = method_dct['var_splvl1']
+    mod_vsp1_thy_info = method_dct['var_splvl1']
 
-    # Get filesys stuff
-    scn_save_fs, _ = savefs_dct['scn_fs']
-    scn_run_fs, _ = runfs_dct['scn_fs']
+    # Get filesys stuff (might only have the theory, build the scn here?)
+    thy_save_fs = savefs_dct['runlvl_thy_fs']
+    scn_save_fs = savefs_dct['runlvl_scn_fs']
+    scn_run_fs = runfs_dct['runlvl_scn_fs']
+    rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
 
     # Run single reference mol-rad VTST Search
+    print('above scan fit')
     vtst.molrad_scan(
         ini_zma, ts_info,
-        rct1_info, rct2_info,
         grid1, grid2, frm_name,
         mod_thy_info, mod_ini_thy_info,
-        mod_var_sp1_thy_info,
+        mod_vsp1_thy_info,
+        thy_save_fs,
         scn_run_fs, scn_save_fs,
+        rcts_cnf_fs,
         run_prefix, save_prefix,
-        overwrite, update_guess
+        overwrite, update_guess, retryfail
     )
 
 
@@ -229,39 +244,74 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     """ find a transition state
     """
 
-    switch = False
-    s = vrc_dct
-
-    # Set information from the transition state
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
-    [grid1, grid2] = grid
+    # Get dct for specific species task is run for
+    ts_dct = spc_dct[tsname]
 
     # Get info from the reactants
-    # rct_zmas = ts_dct['rct_zmas']
-    rcts = ts_dct['reacs']
     high_mul = ts_dct['high_mult']
+    ts_info = info_dct['ts_info']
     rct1_info = info_dct['rct1_info']
     rct2_info = info_dct['rct2_info']
+
+    # Set information from the transition state
+    high_mul = ts_dct['high_mult']
+    ini_zma = ts_dct['zma']
+    frm_bnd_keys = ts_dct['frm_bnd_keys']
+    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
+
+    # Get reaction coordinates
+    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+
+    # Get es options
+    overwrite = es_keyword_dct['overwrite']
+    update_guess = False  # check
+
+    # Grid
+    [grid1, grid2] = grid
+
+    # Get method stuff
+    mod_ini_thy_info = method_dct['inplvl']
+    mod_thy_info = method_dct['runlvl']
+    mod_var_scn_thy_info = method_dct['var_scnlvl']
+    mod_var_sp1_thy_info = method_dct['var_splvl1']
+    mod_var_sp2_thy_info = method_dct['var_splvl2']
+    hs_var_scn_thy_info = method_dct['hs_var_scnlvl']
+    hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
+    hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
 
     # Set the active space
     num_act_orb, num_act_elc = wfn.active_space(
         ts_dct, spc_dct, ts_dct['high_mult'])
 
+    print('high mult', ts_dct['high_mult'])
+    print('num orb', num_act_orb)
+    print('num elc', num_act_elc)
+    import sys
+    sys.exit()
+
+    # Get the filesys stuff
+    var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
+    var_scn_run_fs = runfs_dct['vscnlvl_scn_fs']
+    rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
+    vscnlvl_thy_save_fs = savefs_dct['vscnlvl_thy_fs']
+
     vtst.radrad_scan(
-        ts_zma, ts_info, ts_formula, high_mul,
-        rct1_info, rct2_info,
-        grid1, grid2, dist_name,
+        ini_zma, ts_info, ts_formula, high_mul,
+        grid1, grid2, frm_name,
         num_act_orb, num_act_elc,
         mod_var_scn_thy_info,
-        mod_var_sp1_thy_info, mod_var_sp2_thy_info,
+        mod_var_sp1_thy_info,
+        mod_var_sp2_thy_info,
         hs_var_scn_thy_info,
         hs_var_sp1_thy_info,
         hs_var_sp2_thy_info,
-        mod_ini_thy_info, mod_thy_info,
-        scn_run_fs, scn_save_fs,
+        mod_ini_thy_info,
+        vscnlvl_thy_save_fs,
+        var_scn_run_fs, var_scn_save_fs,
+        rcts_cnf_fs,
         run_prefix, save_prefix,
-        overwrite, update_guess,
-        **opt_kwargs)
+        overwrite, update_guess
+    )
 
 
 def run_vrctst(spc_dct, tsname, es_keyword_dct,
@@ -270,26 +320,59 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     """ find a transition state
     """
 
-    switch = False
-    _ = vrc_dct
-
-    # Set information from the transition state
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
-    [grid1, grid2] = grid
+    # Get dct for specific species task is run for
+    ts_dct = spc_dct[tsname]
 
     # Get info from the reactants
     high_mul = ts_dct['high_mult']
+    ts_info = info_dct['ts_info']
     rct1_info = info_dct['rct1_info']
     rct2_info = info_dct['rct2_info']
+
+    # Set information from the transition state
+    high_mul = ts_dct['high_mult']
+    ini_zma = ts_dct['zma']
+    frm_bnd_keys = ts_dct['frm_bnd_keys']
+    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
+
+    # Get reaction coordinates
+    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+
+    # Get es options
+    overwrite = es_keyword_dct['overwrite']
+    update_guess = False  # check
+
+    # Grid
+    [grid1, grid2] = grid
+
+    # Get method stuff
+    mod_ini_thy_info = method_dct['inplvl']
+    mod_thy_info = method_dct['runlvl']
+    mod_var_scn_thy_info = method_dct['var_splvl1']
+    mod_var_sp1_thy_info = method_dct['var_splvl1']
+    mod_var_sp2_thy_info = method_dct['var_splvl2']
+    hs_var_scn_thy_info = method_dct['hs_splvl1']
+    hs_var_sp1_thy_info = method_dct['hs_splvl1']
+    hs_var_sp2_thy_info = method_dct['hs_splvl2']
 
     # Set the active space
     num_act_orb, num_act_elc = wfn.active_space(
         ts_dct, spc_dct, ts_dct['high_mult'])
 
+    # print('high mult', ts_dct['high_mult'])
+    # print('num orb', num_act_orb)
+    # print('num elc', num_act_elc)
+    # import sys
+    # sys.exit()
+
+    # Get the filesys stuff
+    var_scn_save_fs, _ = savefs_dct['var_scn_fs']
+    var_scn_run_fs, _ = runfs_dct['var_scn_fs']
+
     print('Beginning Calculations for VRC-TST Treatments')
     vrctst.calc_vrctst_flux(
-        ts_zma, ts_formula, ts_info, ts_dct, spc_dct,
-        high_mul, grid1, grid2, dist_name,
+        ini_zma, ts_formula, ts_info, ts_dct, spc_dct,
+        high_mul, grid1, grid2, frm_name,
         mod_var_scn_thy_info,
         mod_var_scn_thy_info,
         mod_var_sp1_thy_info,
@@ -322,19 +405,26 @@ def _ts_finder_match(tsk, ts_dct, tsname):
         print('No search algorithm requested')
     print()
 
+    print('ini_method1', ini_method)
+
     # ID search algorithm if user did not specify one (wrong)
     if ini_method is None:
         if _nobarrier(ts_dct):
-            ini_method = ['vtst', 'vrctst']
+            print('nobar TS')
+            ini_method = ['radrad_vtst', 'vrctst']
             print('Reaction is low-spin, radical-radical addition/abstraction')
             print('Assuming reaction is barrierless...')
             print('Finding a transition state according to either vtst or'
                   'vrctst, depending on the current task')
         else:
+            print('bar TS')
             ini_method = ['sadpt']
             print('Assuming reaction has saddle point on potential surface...')
             print('Use species.dat to specify VTST search for mol-rad rxn...')
             print('Finding the geometry of the saddle point...')
+
+    print('ini method2', ini_method)
+    print('tsk', tsk)
 
     # Print message if no algorithm found
     if ini_method is None:
@@ -345,9 +435,7 @@ def _ts_finder_match(tsk, ts_dct, tsname):
         print('Phase Space Theory Used, No ES calculations are needed')
     if tsk in ini_method:
         print('Search algorithm matches task')
-        search_method = ini_method
-    elif rad_rad_ts.lower() == 'pst':
-        print('Phase Space Theory Used, No ES calculations are needed')
+        search_method = tsk
     else:
         print('Algorithm does not match task')
         search_method = None
@@ -363,9 +451,12 @@ def _ts_finder_match(tsk, ts_dct, tsname):
 def _nobarrier(ts_dct):
     """ Determine if reaction is barrierless
     """
+    print('no bar chk')
     print('cla', ts_dct['class'])
     radrad = _radrad(ts_dct)
     low_spin = bool('low' in ts_dct['class'])
+    print('radrad', radrad)
+    print('spin', low_spin)
     return radrad and low_spin
 
 
@@ -378,7 +469,9 @@ def _set_grid(ts_search, ts_dct):
     """ Set the TS grid
     """
 
-    if ts_search in ('vtst', 'vrctst'):
+    print('build grid')
+    print(ts_search)
+    if ts_search in ('molrad_vtst', 'radrad_vtst', 'vrctst'):
         if 'rad' in ts_dct['class']:
             grid = ts_dct['grid']
         else:
@@ -404,162 +497,239 @@ def _set_info(spc_dct, tsname):
         'ts_info': ('', chg, mult),
         'hs_info': ('', chg, high_mult),
         'rxn_info': filesys.inf.rxn_info(reacs, prods, spc_dct),
-        'rct1_info': filesys.get_spc_info(reacs[0]),
-        'rct2_info': filesys.get_spc_info(reacs[1])
+        'rct1_info': filesys.inf.get_spc_info(spc_dct[reacs[0]]),
+        'rct2_info': filesys.inf.get_spc_info(spc_dct[reacs[1]])
     }
+
+    # print(reacs[0])
+    # import sys
+    # sys.exit()
 
     return info_dct
 
 
-def _set_methods(ts_dct, thy_dct, es_keyword_dct,
-                 ts_info, rxn_info,
-                 run_prefix, save_prefix):
+def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
+                 run_prefix, save_prefix,
+                 zma_locs=(0,)):
     """ set the theory
     """
+
+    ts_info = info_dct['ts_info']
+    rxn_info = info_dct['rxn_info']
+    rct1_info = info_dct['rct1_info']
+    rct2_info = info_dct['rct2_info']
+
+    # Get the name
+    ini_zma = ts_dct['zma']
+    frm_bnd_keys = ts_dct['frm_bnd_keys']
+    brk_bnd_keys = ts_dct['brk_bnd_keys']
+    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
     # Set the hs info
     hs_info = (ts_info[0], ts_info[1], ts_dct['high_mult'])
 
-    # Build all of the theory objects
+    # Initialize the theory objects
     mod_ini_thy_info = None
     mod_thy_info = None
-    mod_var_scn_thy_info = None
-    mod_var_sp1_thy_info = None
-    mod_var_sp2_thy_info = None
-    hs_var_scn_thy_info = None
-    hs_var_sp1_thy_info = None
-    hs_var_sp2_thy_info = None
+    mod_vscnlvl_thy_info = None
+    mod_vsp1lvl_thy_info = None
+    mod_vsp2lvl_thy_info = None
+    hs_vscnlvl_thy_info = None
+    hs_vsp1lvl_thy_info = None
+    hs_vsp2lvl_thy_info = None
 
-    if 'inplvl' in es_keyword_dct:
+    # Initialize the necessary run filesystem
+    runlvl_ts_run_fs = None
+    runlvl_scn_run_fs = None
+    vscnlvl_ts_run_fs = None
+    vscnlvl_scn_run_fs = None
+    vrctst_run_fs = None
+
+    # Initialize the necessary save filesystem
+    ini_zma_save_fs = None
+    runlvl_ts_save_fs = None
+    runlvl_scn_save_fs = None   # above cnf filesys, for search scans
+    runlvl_cnf_save_fs = None
+    vscnlvl_thy_save_fs = None
+    vscnlvl_ts_save_fs = None
+    vscnlvl_scn_save_fs = None
+    vrctst_save_fs = None
+
+    if es_keyword_dct.get('inplvl', None) is not None:
+
         ini_thy_info = filesys.inf.get_es_info(
             es_keyword_dct['inplvl'], thy_dct)
         mod_ini_thy_info = filesys.inf.modify_orb_restrict(
             ts_info, ini_thy_info)
 
-    if 'runlvl' in es_keyword_dct:
+        ini_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
+            save_prefix, rxn_info, mod_ini_thy_info)
+        ini_ts_save_fs = filesys.build.ts_fs_from_thy(
+            ini_thy_save_fs[1])
+        ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
+            ini_ts_save_fs[1], mod_ini_thy_info, cnf='min')
+        if ini_cnf_save_locs:
+            ini_zma_save_fs = autofile.fs.manager(
+                ini_cnf_save_fs[-1].path(ini_cnf_save_locs), 'ZMATRIX')
+
+    if es_keyword_dct.get('runlvl', None) is not None:
+
         thy_info = filesys.inf.get_es_info(
             es_keyword_dct['runlvl'], thy_dct)
         mod_thy_info = filesys.inf.modify_orb_restrict(
             ts_info, thy_info)
 
-    if 'var_scnlvl' in es_keyword_dct:
-        var_scn_thy_info = filesys.inf.get_es_info(
+        runlvl_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
+            run_prefix, rxn_info, mod_thy_info)
+        runlvl_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
+            save_prefix, rxn_info, mod_thy_info)
+
+        runlvl_ts_save_fs = filesys.build.ts_fs_from_thy(
+            runlvl_thy_save_fs[1])
+        runlvl_ts_run_fs = filesys.build.ts_fs_from_thy(
+            runlvl_thy_run_fs[1])
+
+        runlvl_cnf_save_fs = filesys.build.cnf_fs_from_prefix(
+            runlvl_ts_save_fs[1], mod_thy_info, cnf='min')
+
+        _, runlvl_zma_run_path = filesys.build.zma_fs_from_prefix(
+            runlvl_thy_run_fs[1], zma_idxs=zma_locs)
+        _, runlvl_zma_save_path = filesys.build.zma_fs_from_prefix(
+            runlvl_thy_save_fs[1], zma_idxs=zma_locs)
+        runlvl_scn_run_fs = filesys.build.scn_fs_from_cnf(
+            runlvl_zma_run_path, constraint_dct=None)
+        runlvl_scn_save_fs = filesys.build.scn_fs_from_cnf(
+            runlvl_zma_save_path, constraint_dct=None)
+
+    if es_keyword_dct.get('var_scnlvl', None) is not None:
+
+        print('HERE')
+
+        vscnlvl_thy_info = filesys.inf.get_es_info(
             es_keyword_dct['var_scnlvl'], thy_dct)
-        mod_var_scn_thy_info = filesys.inf.modify_orb_restrict(
-            ts_info, var_scn_thy_info)
-        hs_var_scn_thy_info = filesys.inf.modify_orb_restrict(
-            hs_info, var_scn_thy_info)
+        mod_vscnlvl_thy_info = filesys.inf.modify_orb_restrict(
+            ts_info, vscnlvl_thy_info)
+        hs_vscnlvl_thy_info = filesys.inf.modify_orb_restrict(
+            hs_info, vscnlvl_thy_info)
 
-    if 'var_splvl1' in es_keyword_dct:
-        var_sp1_thy_info = filesys.inf.get_es_info(
-            es_keyword_dct['var_splvl1'], thy_dct)
-        mod_var_sp1_thy_info = filesys.inf.modify_orb_restrict(
-            ts_info, var_sp1_thy_info)
-        hs_var_sp1_thy_info = filesys.inf.modify_orb_restrict(
-            hs_info, var_sp1_thy_info)
+        vscnlvl_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
+            run_prefix, rxn_info, mod_vscnlvl_thy_info)
+        vscnlvl_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
+            save_prefix, rxn_info, mod_vscnlvl_thy_info)
 
-    if 'var_splvl2' in es_keyword_dct:
-        var_sp2_thy_info = filesys.inf.get_es_info(
-            es_keyword_dct['var_splvl2'], thy_dct)
-        mod_var_sp2_thy_info = filesys.inf.modify_orb_restrict(
-            ts_info, var_sp2_thy_info)
-        hs_var_sp2_thy_info = filesys.inf.modify_orb_restrict(
-            hs_info, var_sp2_thy_info)
+        vscnlvl_ts_save_fs = filesys.build.ts_fs_from_thy(
+            vscnlvl_thy_save_fs[1])
+        vscnlvl_ts_run_fs = filesys.build.ts_fs_from_thy(
+            vscnlvl_thy_run_fs[1])
 
-    # Build the filesys objects for the ini thy lvl
-    # Only need save to see if guess zmat can be found
-    ini_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-        save_prefix, rxn_info, mod_ini_thy_info)
+        # put the scan filesys
+        _, vscnlvl_zma_run_path = filesys.build.zma_fs_from_prefix(
+            vscnlvl_thy_run_fs[1], zma_idxs=zma_locs)
+        _, vscnlvl_zma_save_path = filesys.build.zma_fs_from_prefix(
+            vscnlvl_thy_save_fs[1], zma_idxs=zma_locs)
+        vscnlvl_scn_run_fs = filesys.build.scn_fs_from_cnf(
+            vscnlvl_zma_run_path, constraint_dct=None)
+        vscnlvl_scn_save_fs = filesys.build.scn_fs_from_cnf(
+            vscnlvl_zma_save_path, constraint_dct=None)
 
-    ini_ts_save_fs = filesys.build.ts_fs_from_thy(
-        ini_thy_save_fs[1])
+        vrctst_save_fs = filesys.build.vrc_fs_from_thy(
+            vscnlvl_ts_save_fs[1])
+        vrctst_run_fs = filesys.build.vrc_fs_from_thy(
+            vscnlvl_ts_run_fs[1])
 
-    # Build the filesys objects for the thy lvl
-    thy_run_fs = filesys.build.rxn_thy_fs_from_root(
-        run_prefix, rxn_info, mod_thy_info)
-    thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-        save_prefix, rxn_info, mod_thy_info)
+        if es_keyword_dct.get('var_splvl1', None) is not None:
 
-    # Build the filesys objects for variational treatments
-    if mod_var_scn_thy_info is not None:
-        var_scn_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
-            run_prefix, rxn_info, mod_var_scn_thy_info)
-        var_scn_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-            save_prefix, rxn_info, mod_var_scn_thy_info)
+            vsp1lvl_thy_info = filesys.inf.get_es_info(
+                es_keyword_dct['var_splvl1'], thy_dct)
+            mod_vsp1lvl_thy_info = filesys.inf.modify_orb_restrict(
+                ts_info, vsp1lvl_thy_info)
+            hs_vsp1lvl_thy_info = filesys.inf.modify_orb_restrict(
+                hs_info, vsp1lvl_thy_info)
 
-    # Set up TS filesystem objects for sadpts
-    ts_save_fs = filesys.build.ts_fs_from_thy(thy_save_fs[1])
-    ts_run_fs = filesys.build.ts_fs_from_thy(thy_run_fs[1])
-    cnf_save_fs = filesys.build.cnf_fs_from_prefix(
-        ts_save_fs[1], mod_thy_info, cnf='min')
+            # vscnlvl_scn_run_fs = filesys.build.scn_fs_from_cnf(
+            #     vscnlvl_zma_run_path, constraint_dct=None)
+            # vscnlvl_scn_save_fs = filesys.build.scn_fs_from_cnf(
+            #    vscnlvl_zma_save_path, constraint_dct=None)
+            #     var_sp1_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
+            #         run_prefix, rxn_info, mod_var_sp1_thy_info)
+            #     var_sp1_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
+            #         save_prefix, rxn_info, mod_var_sp1_thy_info)
 
-    # Set up TS filesystem objects for multiref objects
-    mref_ts_save_fs = filesys.build.ts_fs_from_thy(var_scn_thy_save_fs[1])
-    mref_ts_run_fs = filesys.build.ts_fs_from_thy(var_scn_thy_run_fs[1])
+        if es_keyword_dct.get('var_splvl2', None) is not None:
 
-    vrctst_save_fs = filesys.build.vrc_fs_from_thy(mref_ts_save_fs[1])
-    vrctst_run_fs = filesys.build.vrc_fs_from_thy(mref_ts_run_fs[1])
+            vsp2_thy_info = filesys.inf.get_es_info(
+                es_keyword_dct['var_splvl2'], thy_dct)
+            mod_vsp2_thy_info = filesys.inf.modify_orb_restrict(
+                ts_info, vsp2_thy_info)
+            hs_vsp2_thy_info = filesys.inf.modify_orb_restrict(
+                hs_info, vsp2_thy_info)
 
-    # SP filesys may be better to build in function
-    # if mod_var_sp1_thy_info is not None:
-    #     var_sp1_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
-    #         run_prefix, rxn_info, mod_var_sp1_thy_info)
-    #     var_sp2_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-    #         save_prefix, rxn_info, mod_var_sp1_thy_info)
+            #     var_sp2_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
+            #         run_prefix, rxn_info, mod_var_sp2_thy_info)
+            #     var_sp2_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
+            #         save_prefix, rxn_info, mod_var_sp2_thy_info)
 
-    # if mod_var_sp2_thy_info is not None:
-    #     var_sp2_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
-    #         run_prefix, rxn_info, mod_var_sp2_thy_info)
-    #     var_sp2_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-    #         save_prefix, rxn_info, mod_var_sp2_thy_info)
-
-    # Set up the scan filesys for single and multiref
-    _, zma_run_path = filesys.build.zma_fs_from_prefix(
-        thy_run_path, zma_idxs=[0])
-    _, zma_save_path = filesys.build.zma_fs_from_prefix(
-        thy_save_path, zma_idxs=[0])
-    sadpt_scn_run_fs = filesys.build.scn_fs_from_cnf(
-        zma_run_path, constraint_dct=None)
-    sadpt_scn_save_fs = filesys.build.scn_fs_from_cnf(
-        zma_save_path, constraint_dct=None)
-
-    # fix
-    _, zma_run_path = filesys.build.zma_fs_from_prefix(
-        thy_run_path, zma_idxs=[0])
-    _, zma_save_path = filesys.build.zma_fs_from_prefix(
-        thy_save_path, zma_idxs=[0])
-    var_scn_run_fs = autofile.fs.scan(var_scn_thy_run_fs[1])
-    var_scn_save_fs = autofile.fs.scan(var_scn_thy_save_fs[1])
+    # Get the conformer filesys for the reactants
+    reac_cnf_fs = _reac_cnf_fs(
+        rct1_info, rct2_info, mod_ini_thy_info, run_prefix, save_prefix)
 
     # Build the dictionaries for the return
     method_dct = {
         'inplvl': mod_ini_thy_info,
         'runlvl': mod_thy_info,
-        'var_scnlvl': mod_var_scn_thy_info,
-        'hs_var_scnlvl': hs_var_scn_thy_info,
-        'var_splvl1': mod_var_sp1_thy_info,
-        'hs_var_splvl1': hs_var_sp1_thy_info,
-        'var_splvl2': mod_var_sp2_thy_info,
-        'hs_var_splvl2': hs_var_sp2_thy_info
+        'var_scnlvl': mod_vscnlvl_thy_info,
+        'var_splvl1': mod_vsp1lvl_thy_info,
+        'var_splvl2': mod_vsp2lvl_thy_info,
+        'hs_var_scnlvl': hs_vscnlvl_thy_info,
+        'hs_var_splvl1': hs_vsp1lvl_thy_info,
+        'hs_var_splvl2': hs_vsp2lvl_thy_info
     }
 
     runfs_dct = {
-        'thy_fs': thy_run_fs,
-        'var_scn_thy_fs': var_scn_thy_run_fs,
-        'ts_fs': ts_run_fs,
-        'mref_ts_fs': mref_ts_run_fs,
-        'vrctst_fs': vrctst_run_fs
+        'runlvl_ts_fs': runlvl_ts_run_fs,
+        'runlvl_scn_fs': runlvl_scn_run_fs,
+        'vscnlvl_ts_fs': vscnlvl_ts_run_fs,
+        'vscnlvl_scn_fs': vscnlvl_scn_run_fs,
+        'vrctst_fs': vrctst_run_fs,
     }
 
     savefs_dct = {
-        'ini_thy_fs': ini_thy_save_fs,
-        'ini_ts_fs': ini_ts_save_fs,
-        'thy_fs': thy_save_fs,
-        'var_scn_thy_fs': var_scn_thy_save_fs,
-        'ts_fs': ts_save_fs,
-        'cnf_save_fs': cnf_save_fs,
-        'mref_ts_fs': mref_ts_save_fs,
-        'vrctst_fs': vrctst_save_fs
+        'inilvl_zma_fs': ini_zma_save_fs,
+        'runlvl_thy_fs': runlvl_thy_save_fs,
+        'runlvl_ts_fs': runlvl_ts_save_fs,
+        'runlvl_scn_fs': runlvl_scn_save_fs,
+        'runlvl_cnf_fs': runlvl_cnf_save_fs,
+        'vscnlvl_thy_fs': vscnlvl_thy_save_fs,
+        'vscnlvl_ts_fs': vscnlvl_ts_save_fs,
+        'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
+        'vrctst_fs': vrctst_save_fs,
+        'rcts_cnf_fs': reac_cnf_fs
     }
 
     return method_dct, runfs_dct, savefs_dct
+
+
+def _reac_cnf_fs(rct1_info, rct2_info, mod_ini_thy_info, run_prefix, save_prefix):
+    """ set reactant method stuff
+    """
+
+    rct_cnf_fs = []
+
+    for rct_info in (rct1_info, rct2_info):
+
+        # Build filesys for ini thy info
+        _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
+            run_prefix, rct_info, mod_ini_thy_info)
+        _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
+            save_prefix, rct_info, mod_ini_thy_info)
+
+        # Build conformer filesys
+        ini_cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
+            ini_thy_run_path, mod_ini_thy_info, cnf=None)
+        ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
+            ini_thy_save_path, mod_ini_thy_info, cnf='min')
+        ini_cnf_save_paths = filesys.build.cnf_paths_from_locs(
+            ini_cnf_save_fs, ini_cnf_save_locs)
+
+    return rct_cnf_fs
