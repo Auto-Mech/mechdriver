@@ -436,7 +436,7 @@ def build_constraint_dct(zma, const_names, scan_names=()):
     # print('constraint_names', constraint_names)
     constraint_names = tuple(name for name in constraint_names
                              if name not in scan_names)
-    print('constraint_names', constraint_names)
+    # print('constraint_names', constraint_names)
 
     # Build dictionary
     if constraint_names:
