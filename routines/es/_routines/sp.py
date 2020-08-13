@@ -13,7 +13,7 @@ from lib.phydat import symm
 def run_energy(zma, geo, spc_info, thy_info,
                geo_save_fs, geo_run_path, geo_save_path, locs,
                script_str, overwrite,
-               retryfail=True, **kwargs):
+               retryfail=True, highspin=False, **kwargs):
     """ Find the energy for the given structure
     """
 
@@ -21,8 +21,12 @@ def run_energy(zma, geo, spc_info, thy_info,
     _, _ = geo_save_fs, locs
 
     # Prepare unique filesystem since many energies may be under same directory
-    sp_run_fs = autofile.fs.single_point(geo_run_path)
-    sp_save_fs = autofile.fs.single_point(geo_save_path)
+    if not highspin:
+        sp_run_fs = autofile.fs.single_point(geo_run_path)
+        sp_save_fs = autofile.fs.single_point(geo_save_path)
+    else:
+        sp_run_fs = autofile.fs.high_spin(geo_run_path)
+        sp_save_fs = autofile.fs.high_spin(geo_save_path)
     sp_run_fs[-1].create(thy_info[1:4])
     sp_run_path = sp_run_fs[-1].path(thy_info[1:4])
     sp_save_fs[-1].create(thy_info[1:4])

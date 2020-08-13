@@ -24,36 +24,15 @@ def multiref_rscan(ts_zma, ts_info, ts_formula, high_mul,
     """ run constrained optimization scan
     """
 
-    # Build the elstruct CASSCF options list used to build the wfn guess
-    # (1) Build wfn with active space
-    # (2) Build wfn with active space + 2 closed orbitals for stability
-    cas_opt = []
-    cas_opt.append(
-        wfn.cas_options(
-            ts_info, ts_formula, num_act_elc, num_act_orb,
-            add_two_closed=False))
-    cas_opt.append(
-        wfn.cas_options(
-            ts_info, ts_formula, num_act_elc, num_act_orb,
-            add_two_closed=True))
-
-    # Write the string that has all the components for building the wfn guess
-    ref_zma = automol.zmatrix.set_values(ts_zma, {coord_name: grid1[0]})
-    guess_str = wfn.multiref_wavefunction_guess(
-        high_mul, ref_zma, ts_info, mod_var_scn_thy_info, cas_opt)
-    guess_lines = guess_str.splitlines()
-
     # Set the opt script string and build the opt_kwargs
     [prog, method, _, _] = mod_var_scn_thy_info
     _, opt_script_str, _, opt_kwargs = qchem_params(
         prog, method)
-    opt_kwargs['casscf_options'] = cas_opt[1]
-    opt_kwargs['gen_lines'] = {1: guess_lines}
-    opt_kwargs['mol_options'] = ['nosym']  # Turn off symmetry
+
+    # Set the active space
+    opt_kwargs = build_wfn_kwargs()
 
     # Build the filesystem for the scan
-    print('g1', grid1)
-    print('g2', grid2)
     full_grid = numpy.concatenate((grid1, grid2), axis=None)  # wrong
     scn_save_fs[1].create([coord_name])
     inf_obj = autofile.schema.info_objects.scan_branch({coord_name: full_grid})
@@ -92,7 +71,6 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
 
     # Setup and run the first part of the scan to shorter distances
     for grid in (grid1, grid2):
-        print('grid arr', grid)
         scan.run_scan(
             zma=ts_zma,
             spc_info=ts_info,
@@ -146,12 +124,11 @@ def molrad_inf_sep_ene(rcts_cnf_fs,
 
 def radrad_inf_sep_ene(
         spc1_info, spc2_info, ts_info, high_mul, ref_zma,
-        mod_var_scn_thy_info,
-        mod_var_sp1_thy_info, mod_var_sp2_thy_info,
-        hs_var_scn_thy_info,
-        hs_var_sp1_thy_info,
-        hs_var_sp2_thy_info,
-        mod_ini_thy_info,
+        mod_var_scn_thy_info, mod_var_sp1_thy_info,
+        hs_var_scn_thy_info, hs_var_sp1_thy_info,
+        mod_ini_thy_info, mod_thy_info,
+        hs_thy_info,
+        rcts_cnf_fs,
         geo, geo_run_path, geo_save_path,
         run_prefix, save_prefix,
         overwrite=False,
@@ -163,79 +140,88 @@ def radrad_inf_sep_ene(
         scn = thy for optimizations
         sp1 = low-spin single points
         sp2 = high-spin single points for inf sep
+
+        inf = spc0 + spc1 - hs_sr_e + hs_mr_ene
+
+        spc0, spc1, at sep species
+          - runlvl//inilvl
+        hs_sr_e and hs_mr_e at longest dist possible (~4 Ang)
+          - sr: runlvl//inilvl
+          - mr: vsp1lvl//vscnlvl
+
+
     """
 
     # Initialize infinite sep energy
     inf_sep_ene = -1.0e12
 
     # Prepare filesys and guesses for the multi reference calc
-    hs_run_fs, hs_var_run_path = filesys.build.high_spin_from_prefix(
-        geo_run_path, hs_var_sp1_thy_info)
-    hs_save_fs, hs_var_save_path = filesys.build.high_spin_from_prefix(
-        geo_save_path, hs_var_sp1_thy_info)
+    # hs_run_fs, hs_var_run_path = filesys.build.high_spin_from_prefix(
+    #     geo_run_path, hs_var_sp1_thy_info)
+    # hs_save_fs, hs_var_save_path = filesys.build.high_spin_from_prefix(
+    #     geo_save_path, hs_var_sp1_thy_info)
 
-    opt_script_str, _, opt_kwargs, _ = qchem_params(
-        multi_info[0], multi_info[1])
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
-    cas_opt = wfn.cas_options(
-        hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
-    guess_str = wfn.multiref_wavefunction_guess(
-        high_mul, ref_zma, hs_info, multi_lvl, [cas_opt])
-    guess_lines = guess_str.splitlines()
-    opt_kwargs['casscf_options'] = cas_opt
-    opt_kwargs['mol_options'] = ['nosym']
-    opt_kwargs['gen_lines'] = {1: guess_lines}
+    # opt_script_str, _, opt_kwargs, _ = qchem_params(
+    #     multi_info[0], multi_info[1])
+    # ts_formula = automol.geom.formula(automol.zmatrix.geometry(ref_zma))
+    # cas_opt = wfn.cas_options(
+    #     hs_info, ts_formula, num_act_elc, num_act_orb, high_mul)
+    # guess_str = wfn.multiref_wavefunction_guess(
+    #     high_mul, ref_zma, hs_info, multi_lvl, [cas_opt])
+    # guess_lines = guess_str.splitlines()
+    # opt_kwargs['casscf_options'] = cas_opt
+    # opt_kwargs['mol_options'] = ['nosym']
+    # opt_kwargs['gen_lines'] = {1: guess_lines}
 
-    opt_script_str, _, opt_kwargs, _ = qchem_params(
-        multi_info[0], multi_info[1])
+    # opt_script_str, _, opt_kwargs, _ = qchem_params(
+    #     multi_info[0], multi_info[1])
 
-    # Prepare filesys and guesses for the single reference calc
-    hs_run_fs, hs_sr_run_path = filesys.build.high_spin_from_prefix(
-        geo_run_path, hs_var_sp2_thy_info)
-    hs_save_fs, hs_sr_save_path = filesys.build.high_spin_from_prefix(
-        geo_save_path, hs_var_sp2_thy_info)
-    run_sr_fs = autofile.fs.run(hs_sr_run_path)
-
-    sp_script_str, _, kwargs, _ = qchem_params(
-        *mod_var_sp2_thy_info[0:2])
-    errors, options_mat = es_runner.par.set_molpro_options_mat(
-        hs_info, geo)
+    # sp_script_str, _, kwargs, _ = qchem_params(
+    #     *mod_var_sp2_thy_info[0:2])
+    # errors, options_mat = es_runner.par.set_molpro_options_mat(
+    #     hs_info, geo)
 
     # Calculate the energies for the two cases
-    for x in s:
-        if not hs_save_fs[-1].file.energy.exists(multi_lvl[1:4]) or overwrite:
-            print(" - Running high spin multi reference energy ...")
-            opt_script_str, _, opt_kwargs, _ = qchem_params(
-                multi_info[0], multi_info[1])
+    for idx, thy_info in enumerate((hs_thy_info, hs_var_sp1_thy_info)):
 
-            # Calculate the single point energy
-            if not sp_save_fs[-1].file.energy.exists(thy_lvl[1:4]) or overwrite:
-                sp.run_energy(zma, geo, spc_info, thy_info,
-                              geo_save_fs, geo_run_path, geo_save_path, locs,
-                              script_str, overwrite, **kwargs)
-                if not sp_save_fs[-1].file.energy.exists(thy_lvl[1:4]):
-                    print('ERROR: High spin single reference energy job fails: ',
-                           'Energy is needed to evaluate infinite separation energy')
-                    hs_sr_ene = None
-                else:
-                    print(" - Reading high spin single ref energy from output...")
-                    hs_sr_ene = sp_save_fs[-1].file.energy.read(thy_lvl[1:4])
-            else:
-                hs_sr_ene = sp_save_fs[-1].file.energy.read(thy_lvl[1:4])
-
+        if idx == 0:
+            print(" - Running high-spin single reference energy ...")
         else:
-            hs_var_ene = hs_save_fs[-1].file.energy.read(multi_lvl[1:4])
+            print(" - Running high-spin multi reference energy ...")
+
+        # Calculate the single point energy
+        script_str, _, kwargs, _ = qchem_params(
+            thy_info[0], thy_info[1])
+        sp.run_energy(zma, geo, spc_info, thy_info,
+                      geo_save_fs, geo_run_path, geo_save_path, locs,
+                      script_str, overwrite, **kwargs)
+
+        # Read the energty from the filesystem
+        hs_save_fs, hs_var_save_path = filesys.build.high_spin_from_prefix(
+            geo_save_path, thy_info)
+        if not hs_save_fs[-1].file.energy.exists(thy_info[1:4]):
+            print('ERROR: High-spin energy job failed: ',
+                  'energy is needed to evaluate infinite separation energy')
+            ene = None
+        else:
+           print(" - Reading high-spin energy from filesystem...")
+           ene = sp_save_fs[-1].file.energy.read(thy_info[1:4])
+
+        if idx == 0:
+            hs_sr_ene = ene
+        else:
+            hs_mr_ene = ene
 
     # get the single reference energy for each of the reactant configurations
     reac1_ene, reac2_ene = reac_sep_ene(
-        spc1_info, spc2_info,
+        rcts_cnf_fs,
         run_prefix, save_prefix,
-        mod_var_sp2_thy_info, mod_ini_thy_info,
+        mod_thy_info, mod_ini_thy_info,
         overwrite, sp_script_str,
         **kwargs)
 
     # Calculate the infinite seperation energy
-    all_enes = (reac1_ene, reac2_ene, hs_sr_ene, hs_var_ene)
+    all_enes = (reac1_ene, reac2_ene, hs_sr_ene, hs_mr_ene)
     if all(ene is not None for ene in all_enes):
         inf_sep_ene = reac1_ene + reac2_ene - hs_sr_ene + hs_var_ene
     else:

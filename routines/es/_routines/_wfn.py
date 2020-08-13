@@ -6,6 +6,69 @@ import elstruct
 from lib.phydat import act_space
 
 
+# BUILD THE MULTIREFERENCE WAVEFUNCTION TO PASS MOLPRO ELSTRUCT
+def build_wfn():
+    """ Build wavefunction
+    """
+
+    num_act_orb, num_act_elc = wfn.active_space(ts_dct, spc_dct)
+
+    if dct.get('wfn_str', None) is not None:
+        # Need cas opt and wfn string (spc.dat guess, nact, nelc)
+        opt
+    else:
+
+        # Build the elstruct CASSCF options list used to build the wfn guess
+        # (1) Build wfn with active space
+        # (2) Build wfn with active space + 2 closed orbitals for stability
+        cas_opt = []
+        cas_opt.append(
+            wfn.cas_options(
+                ts_info, ts_formula, num_act_elc, num_act_orb,
+                add_two_closed=False))
+        cas_opt.append(
+            wfn.cas_options(
+                ts_info, ts_formula, num_act_elc, num_act_orb,
+                add_two_closed=True))
+
+        # Write the string that has all the components for building the wfn guess
+        ref_zma = automol.zmatrix.set_values(ts_zma, {coord_name: grid1[0]})
+        guess_str = wfn.multiref_wavefunction_guess(
+            high_mul, ref_zma, ts_info, mod_var_scn_thy_info, cas_opt)
+        guess_lines = guess_str.splitlines()
+
+        # Set the opt script string and build the opt_kwargs
+        [prog, method, _, _] = mod_var_scn_thy_info
+        _, opt_script_str, _, opt_kwargs = qchem_params(
+            prog, method)
+
+    # Manipulate the opt kwargs to use the wavefunction guess
+    opt_kwargs['casscf_options'] = cas_opt[0]
+    opt_kwargs['gen_lines'] = {1: guess_lines}
+    opt_kwargs['mol_options'] = ['nosym']  # Turn off symmetry
+
+    return opt_kwargs
+
+
+# BUILD THE CASSCF OPTIONS
+def active_space(ts_dct, spc_dct):
+    """ Determine the active space for the multireference MEP scan
+    """
+    rcts = ts_dct['reacs']
+    num_act_orb, num_act_elc = 0, 0
+    for rct in rcts:
+        rct_ich = spc_dct[rct]['inchi']
+        if rct_ich in act_space.DCT:
+            num_act_orb += act_space.DCT[rct_ich][0]
+            num_act_elc += act_space.DCT[rct_ich][1]
+        else:
+            rct_mult = spc_dct[rct]['mult']
+            num_act_orb += (rct_mult - 1)
+            num_act_elc += (rct_mult - 1)
+
+    return num_act_orb, num_act_elc
+
+
 def cas_options(spc_info, formula, num_act_elc, num_act_orb,
                 add_two_closed=False):
     """ Prepare values prepare cas options for multireference wavefunctions
@@ -15,6 +78,11 @@ def cas_options(spc_info, formula, num_act_elc, num_act_orb,
     elec_count = automol.formula.electron_count(formula)
     closed_orb = (elec_count - num_act_elc) // 2
     occ_orb = closed_orb + num_act_orb
+    print('closed', closed_orb)
+    print('occ', occ_orb)
+    # import sys
+    # sys.exit()
+
     if add_two_closed:
         closed_orb -= 2
 
@@ -37,31 +105,7 @@ def cas_options(spc_info, formula, num_act_elc, num_act_orb,
     return cas_opt
 
 
-def wfn_string(spc_info, formula, num_act_elc, num_act_orb,
-               high_mul, add_two_closed=False):
-    """ Prepare values prepare cas options for multireference wavefunctions
-    """
-
-    # Set electron counts and orbital indexes
-    elec_count = automol.formula.electron_count(formula)
-    closed_orb = (elec_count - num_act_elc) // 2
-    occ_orb = closed_orb + num_act_orb
-    if add_two_closed:
-        closed_orb -= 2
-
-    # Set the spin and charge values for the species
-    two_spin = spc_info[2] - 1
-    high_two_spin = high_mul - 1
-
-    # Write a wavefunction card string
-    wfn_str = (
-        "{{uhf,maxit=300;wf,{0},1,{1}}}\n"
-        "{{multi,maxit=40;closed,{2};occ,{3};wf,{0},1,{4};orbprint,3}}"
-    ).format(elec_count, high_two_spin, closed_orb, occ_orb, two_spin)
-
-    return wfn_str
-
-
+# CONSTRUCT MULTIREFERENCE WAVEFUNCTION STRINGS FOR COMPLEX GUESSES
 def multiref_wavefunction_guess(high_mul, zma,
                                 spc_info, mod_thy_info,
                                 casscf_options):
@@ -102,7 +146,7 @@ def multiref_wavefunction_guess(high_mul, zma,
     guess_str2 = '\n'.join(guess_str2.splitlines()[2:-6])
 
     # Combine two strings together
-    guess_str = guess_str1 + guess_str2
+    guess_str = guess_str1 + '\n' + guess_str2 + '\n'
 
     # Write a second string for low-spin, lg active space CASSCF wfn calc
     if len(casscf_options) > 1:
@@ -119,24 +163,32 @@ def multiref_wavefunction_guess(high_mul, zma,
             )
         guess_str3 += '\n\n'
         guess_str3 = '\n'.join(guess_str3.splitlines()[2:])
-        guess_str += guess_str3
+        guess_str += guess_str3 + '\n'
 
     return guess_str
 
 
-def active_space(ts_dct, spc_dct):
-    """ Determine the active space for the multireference MEP scan
+# STRING WRITER FOR VRC-TST TO REPLACE
+def wfn_string(spc_info, formula, num_act_elc, num_act_orb,
+               high_mul, add_two_closed=False):
+    """ Prepare values prepare cas options for multireference wavefunctions
     """
-    rcts = ts_dct['reacs']
-    num_act_orb, num_act_elc = 0, 0
-    for rct in rcts:
-        rct_ich = spc_dct[rct]['inchi']
-        if rct_ich in act_space.DCT:
-            num_act_orb += act_space.DCT[rct_ich][0]
-            num_act_elc += act_space.DCT[rct_ich][1]
-        else:
-            rct_mult = spc_dct[rct]['mult']
-            num_act_orb += (rct_mult - 1)
-            num_act_elc += (rct_mult - 1)
 
-    return num_act_orb, num_act_elc
+    # Set electron counts and orbital indexes
+    elec_count = automol.formula.electron_count(formula)
+    closed_orb = (elec_count - num_act_elc) // 2
+    occ_orb = closed_orb + num_act_orb
+    if add_two_closed:
+        closed_orb -= 2
+
+    # Set the spin and charge values for the species
+    two_spin = spc_info[2] - 1
+    high_two_spin = high_mul - 1
+
+    # Write a wavefunction card string
+    wfn_str = (
+        "{{uhf,maxit=300;wf,{0},1,{1}}}\n"
+        "{{multi,maxit=40;closed,{2};occ,{3};wf,{0},1,{4};orbprint,3}}"
+    ).format(elec_count, high_two_spin, closed_orb, occ_orb, two_spin)
+
+    return wfn_str

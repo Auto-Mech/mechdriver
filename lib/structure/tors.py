@@ -487,6 +487,7 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
     """ Set the initial set of groups
     """
     gra = automol.zmatrix.graph(zma, remove_stereo=True)
+    ts_gra = automol.graph.add_ts_bonds(gra, keys=[ts_bnd])
     coo_dct = automol.zmatrix.coordinates(zma, multi=False)
     axis = coo_dct[tors_name][1:3]
     atm_key = axis[1]
@@ -542,8 +543,9 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
         if all_hyd and hyd_count == 3:
             sym_num = 3
             lpot = int(len(pot)/3)
-            potp = []
-            potp[0:lpot] = pot[0:lpot]
+            potp = {}
+            for pval in range(lpot):
+               potp[(pval,)] = pot[(pval,)]
             pot = potp
 
     return group, axis, pot, sym_num
