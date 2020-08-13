@@ -10,15 +10,16 @@ def write_mess_eckart_str(chnl_enes, imag_freq):
     """
     
     # Get the energies from the enes dct
-    chnl_enes['ts']
+    ts_ene = chnl_enes['ts']
+    print('chnl_enes test:', chnl_enes)
             
     if chnl_enes.get('fake_vdwr', None) is not None:
-        reac_ene = chnl_enes['fake_vwdr']
+        reac_ene = chnl_enes['fake_vdwr']
     else:
         reac_ene = chnl_enes['reacs']
     
     if chnl_enes.get('fake_vdwp', None) is not None:
-        prod_ene = chnl_enes['fake_vwdp']
+        prod_ene = chnl_enes['fake_vdwp']
     else:
         prod_ene = chnl_enes['prods']
 
