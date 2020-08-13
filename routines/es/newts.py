@@ -279,15 +279,11 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
     hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
 
-    # Set the active space
-    num_act_orb, num_act_elc = wfn.active_space(
-        ts_dct, spc_dct, ts_dct['high_mult'])
-
     print('high mult', ts_dct['high_mult'])
     print('num orb', num_act_orb)
     print('num elc', num_act_elc)
-    import sys
-    sys.exit()
+    # import sys
+    # sys.exit()
 
     # Get the filesys stuff
     var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
@@ -298,7 +294,6 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     vtst.radrad_scan(
         ini_zma, ts_info, ts_formula, high_mul,
         grid1, grid2, frm_name,
-        num_act_orb, num_act_elc,
         mod_var_scn_thy_info,
         mod_var_sp1_thy_info,
         mod_var_sp2_thy_info,
@@ -354,10 +349,6 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     hs_var_scn_thy_info = method_dct['hs_splvl1']
     hs_var_sp1_thy_info = method_dct['hs_splvl1']
     hs_var_sp2_thy_info = method_dct['hs_splvl2']
-
-    # Set the active space
-    num_act_orb, num_act_elc = wfn.active_space(
-        ts_dct, spc_dct, ts_dct['high_mult'])
 
     # print('high mult', ts_dct['high_mult'])
     # print('num orb', num_act_orb)

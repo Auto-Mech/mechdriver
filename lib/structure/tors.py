@@ -309,7 +309,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
             locs = [constraint_dct] + locs
 
         ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
-        #print('tors_path', scn_fs[-1].path(locs), locs)
+        # print('tors_path', scn_fs[-1].path(locs), locs)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL
         else:
@@ -484,6 +484,7 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
     """ Set the initial set of groups
     """
     gra = automol.zmatrix.graph(zma, remove_stereo=True)
+    # ts_gra = automol.graph.add_ts_bonds(gra, keys=[ts_bnd])
     coo_dct = automol.zmatrix.coordinates(zma, multi=False)
     axis = coo_dct[tors_name][1:3]
     atm_key = axis[1]
@@ -492,12 +493,12 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
             if atm in ts_bnd:
                 atm_key = atm
                 break
-    # print('tors_def_info test:') 
-    # print('zma test:', automol.zmatrix.string(zma)) 
-    # print('tors_name test:', tors_name) 
-    # print('ts_bnd test:', ts_bnd) 
+    # print('tors_def_info test:')
+    # print('zma test:', automol.zmatrix.string(zma))
+    # print('tors_name test:', tors_name)
+    # print('ts_bnd test:', ts_bnd)
     # print('saddle test:', saddle)
-    # print('axis test:', axis) 
+    # print('axis test:', axis)
     # print('atm key test:', atm_key)
     # print('gra test:', gra)
     if saddle:
@@ -556,7 +557,7 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
     if new_pot:
         potr = {}
         for pval in range(lpot):
-           potr[(pval,)] = pot[(pval,)]
+            potr[(pval,)] = pot[(pval,)]
     else:
         potr = copy.deepcopy(pot)
 

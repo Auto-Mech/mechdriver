@@ -10,7 +10,6 @@ from routines.es._routines import _scan as scan
 
 def radrad_scan(ts_zma, ts_info, ts_formula, high_mul,
                 grid1, grid2, coord_name,
-                num_act_orb, num_act_elc,
                 mod_var_scn_thy_info,
                 mod_var_sp1_thy_info,
                 mod_var_sp2_thy_info,
@@ -34,8 +33,6 @@ def radrad_scan(ts_zma, ts_info, ts_formula, high_mul,
         grid1=grid1,
         grid2=grid2,
         coord_name=coord_name,
-        num_act_orb=num_act_orb,
-        num_act_elc=num_act_elc,
         mod_var_scn_thy_info=mod_var_scn_thy_info,
         vscnlvl_thy_save_fs=vscnlvl_thy_save_fs,
         scn_run_fs=scn_run_fs,
@@ -55,7 +52,7 @@ def radrad_scan(ts_zma, ts_info, ts_formula, high_mul,
     geo_save_path = scn_save_fs[-1].path(locs)
     geo = scn_save_fs[-1].file.geometry.read(locs)
 
-    inf_sep_ene = varscan.infinite_separation_energy(
+    inf_sep_ene = varscan.radrad_inf_sep_ene(
         spc_1_info, spc_2_info, ts_info, high_mul, ts_zma,
         mod_var_scn_thy_info,
         mod_var_sp1_thy_info, mod_var_sp2_thy_info,
@@ -72,7 +69,9 @@ def radrad_scan(ts_zma, ts_info, ts_formula, high_mul,
     scn_save_fs[-1].file.energy.write(inf_sep_ene, inf_locs)
 
     # Run the Hessians
-    # _vtst_hess_ene()
+    # _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
+    #                scn_save_fs, scn_run_fs, scn_locs, inf_locs,
+    #                overwrite)
 
 
 def molrad_scan(ts_zma, ts_info,
@@ -126,6 +125,17 @@ def molrad_scan(ts_zma, ts_info,
     print('\nRunning Hessians and energies...')
     scn_locs = filesys.build.scn_locs_from_fs(
         scn_save_fs, [coord_name], constraint_dct=None)
+
+    _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
+                   scn_save_fs, scn_run_fs, scn_locs, inf_locs,
+                   overwrite)
+
+
+def _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
+                   scn_save_fs, scn_run_fs, scn_locs, inf_locs,
+                   overwrite):
+    """ VTST Hessians and Energies
+    """
 
     print('\n Running Hessians...')
     script_str, _, kwargs, _ = es_runner.qchem_params(
