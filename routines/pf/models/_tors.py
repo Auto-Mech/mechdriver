@@ -100,7 +100,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
                 constraint_dct)
 
             # Get the HR groups and axis for the rotor
-            group, axis, sym_num = torsprep.set_tors_def_info(
+            group, axis, pot, sym_num = torsprep.set_tors_def_info(
                 zma, tname, tsym, pot,
                 frm_bnd_keys, rxn_class, saddle=saddle)
             remdummy = geomprep.build_remdummy_shift_lst(zma)

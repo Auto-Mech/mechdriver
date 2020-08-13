@@ -61,6 +61,8 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
         # Reduce sym factor using rotor symmetries
         sym_factor = tors_reduced_sym_factor(sym_factor, rotors)
 
+        print('sym_factor test:', sym_factor)
+
     return sym_factor
 
 
@@ -80,12 +82,21 @@ def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
 
     int_sym_num = 0
     sym_geos2 = []
+    # count1 = 0
     for geo_sym_i in sym_geos:
         new_geos = automol.geom.rot_permutated_geoms(
             geo_sym_i, frm_bnd_keys, brk_bnd_keys)
+        # count1 += 1
+        # print('count1 test:', count1, len(sym_geos))
+        # count2 = 0
         for new_geo in new_geos:
             new_geom = True
+            # count2 += 1
+            # print('count2 test:', count2, len(new_geos))
+            # count3 = 0
             for geo_sym_j in sym_geos2:
+                # count3 += 1
+                # print('count3 test:', count3, len(sym_geos2))
                 if automol.geom.almost_equal_dist_matrix(
                         new_geo, geo_sym_j, thresh=3e-1):
                     if saddle:
