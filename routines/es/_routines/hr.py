@@ -43,7 +43,7 @@ def hindered_rotor_scans(
             zma, const_names, tors_names)
 
         # Setting the filesystem
-        print('hr constraint dct', constraint_dct)
+        # print('hr constraint dct', constraint_dct)
         scn_run_fs = filesys.build.scn_fs_from_cnf(
             zma_run_path, constraint_dct=constraint_dct)
         scn_save_fs = filesys.build.scn_fs_from_cnf(

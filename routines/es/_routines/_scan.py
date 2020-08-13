@@ -44,7 +44,7 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     # Build the grid of values
     _, grid_vals = torsprep.set_scan_dims(coord_grids)
 
-    print(kwargs)
+    # print(kwargs)
     # Build run prefixses?
     _run_scan(
         guess_zma=zma,

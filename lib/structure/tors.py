@@ -103,18 +103,19 @@ def names_from_dct(spc_dct_i, ndim_tors):
     return tors_names, amech_ts_tors_names
 
 
-def new_names_from_filesys2(tors_cnf_fs, tors_min_cnf_locs, tors_model):
+def names_from_filesys2(tors_cnf_fs, tors_min_cnf_locs, tors_model):
     """ read names from filesystem
     """
 
     tors_names = None
     if tors_min_cnf_locs is not None:
         if tors_cnf_fs[0].file.info.exists():
-            inf_obj = cnf_save_fs[0].file.info.read()
-            tors_range_dct = inf_obj.tors_ranges
+            inf_obj = tors_cnf_fs[0].file.info.read()
+            tors_range_dct = dict(inf_obj.tors_ranges)
+            # print('tors_range_dct test:', tors_range_dct)
             tors_names = list(tors_range_dct.keys())
 
-    print('torsname test:', tors_names)
+    # print('torsname test:', tors_names)
     if tors_names is not None:
         if tors_model in ('1dhr', '1dhrf', '1dhrfa', 'tau'):
             tors_names = [[name] for name in tors_names]
@@ -495,6 +496,13 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
             if atm in ts_bnd:
                 atm_key = atm
                 break
+    print('tors_def_info test:') 
+    print('zma test:', automol.zmatrix.string(zma)) 
+    print('tors_name test:', tors_name) 
+    print('ts_bnd test:', ts_bnd) 
+    print('saddle test:', saddle)
+    print('axis test:', axis) 
+    print('amt key test:', atm_key)
     group = list(
         automol.graph.branch_atom_keys(
             gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) - set(axis))

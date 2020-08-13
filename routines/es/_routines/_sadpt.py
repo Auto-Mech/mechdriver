@@ -40,6 +40,7 @@ def check_filesys_for_guess2(ini_zma_fs, zma_locs=(0,)):
     """
 
     guess_zmas = []
+    print('ini_zma_fs test:', ini_zma_fs, zma_locs)
     if ini_zma_fs is not None:
         if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
             geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
