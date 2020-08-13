@@ -3,6 +3,7 @@
 
 import os
 import itertools
+import copy
 import numpy
 import automol
 import autofile
@@ -471,6 +472,7 @@ def set_tors_def_info(zma, tors_name, tors_sym, pot,
     group, axis, atm_key = _set_groups_ini(
         zma, tors_name, ts_bnd, saddle)
     if saddle:
+        # print('pot test:', pot)
         group, axis, pot, chkd_sym_num = _check_saddle_groups(
             zma, rxn_class, group, axis,
             pot, ts_bnd, tors_sym)
@@ -481,7 +483,7 @@ def set_tors_def_info(zma, tors_name, tors_sym, pot,
     if (atm_key+1) != axis[1]:
         axis.reverse()
 
-    return group, axis, chkd_sym_num
+    return group, axis, pot, chkd_sym_num
 
 
 def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
@@ -502,17 +504,20 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
     print('ts_bnd test:', ts_bnd) 
     print('saddle test:', saddle)
     print('axis test:', axis) 
-    print('amt key test:', atm_key)
+    print('atm key test:', atm_key)
+    print('gra test:', gra)
+    if saddle:
+        gra = automol.graph.add_ts_bonds(gra, keys=[ts_bnd])
     group = list(
         automol.graph.branch_atom_keys(
-            gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) - set(axis))
+            gra, atm_key, axis) - set(axis))
     if not group:
         for atm in axis:
             if atm != atm_key:
                 atm_key = atm
         group = list(
             automol.graph.branch_atom_keys(
-                gra, atm_key, axis, saddle=saddle, ts_bnd=ts_bnd) - set(axis))
+                gra, atm_key, axis) - set(axis))
 
     return group, axis, atm_key
 
@@ -533,6 +538,8 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
                     group.append(atm)
 
     # Check to see if symmetry of XH3 rotor was missed
+    new_pot = False
+    print('sym_num test:', sym_num)
     if sym_num == 1:
         group2 = []
         for idx in range(n_atm):
@@ -550,11 +557,17 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
         if all_hyd and hyd_count == 3:
             sym_num = 3
             lpot = int(len(pot)/3)
-            potp = []
-            potp[0:lpot] = pot[0:lpot]
-            pot = potp
+            new_pot = True
+            print('sym_num test 2:', sym_num, lpot, new_pot)
+    if new_pot:
+        potr = {}
+        for pval in range(lpot):
+           potr[(pval,)] = pot[(pval,)]
+    else:
+        potr = copy.deepcopy(pot)
 
-    return group, axis, pot, sym_num
+    print('potr test:', potr)
+    return group, axis, potr, sym_num
 
 
 # CALCULATE THE ZPES OF EACH TORSION USING MESS
