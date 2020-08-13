@@ -124,7 +124,7 @@ def multiref_wavefunction_guess(high_mul, zma,
     return guess_str
 
 
-def active_space(ts_dct, spc_dct, ts_high_mul):
+def active_space(ts_dct, spc_dct):
     """ Determine the active space for the multireference MEP scan
     """
     rcts = ts_dct['reacs']
@@ -135,7 +135,8 @@ def active_space(ts_dct, spc_dct, ts_high_mul):
             num_act_orb += act_space.DCT[rct_ich][0]
             num_act_elc += act_space.DCT[rct_ich][1]
         else:
-            num_act_orb += (ts_high_mul - 1)
-            num_act_elc += (ts_high_mul - 1)
+            rct_mult = spc_dct[rct]['mult']
+            num_act_orb += (rct_mult - 1)
+            num_act_elc += (rct_mult - 1)
 
     return num_act_orb, num_act_elc
