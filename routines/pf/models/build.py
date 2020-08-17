@@ -197,6 +197,8 @@ def mol_data(spc_dct_i,
     if typ.anharm_vib(chn_pf_models):
         xmat = vib.read_anharmon_matrix(pf_filesystems)
 
+    print('zpe test:', zpe)
+
     # Obtain symmetry factor
     print('\nDetermining the symmetry factor...')
     sym_factor = sym.symmetry_factor(

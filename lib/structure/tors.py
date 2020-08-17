@@ -289,8 +289,6 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
     """ Get the potential for a hindered rotor
     """
 
-    # print('cscn_path', scn_run_fs[1].path([coo_names]))
-
     # Build initial lists for storing potential energies and Hessians
     grid_points, grid_vals = set_scan_dims(tors_grids)
     pot, geoms, grads, hessians, zmas = {}, {}, {}, {}, {}
@@ -310,8 +308,8 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
 
-        # print('tors_path', scn_fs[-1].path(locs))
         ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
+        #print('tors_path', scn_fs[-1].path(locs), locs)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL
         else:
@@ -432,13 +430,9 @@ def build_constraint_dct(zma, const_names, scan_names=()):
     constraint_names = rnames + anames + dnames
 
     # Remove the scan coordinates so they are not placed in the dict
-    # print('rnames', rnames)
-    # print('anames', anames)
-    # print('dnames', dnames)
-    # print('constraint_names', constraint_names)
+
     constraint_names = tuple(name for name in constraint_names
                              if name not in scan_names)
-    # print('constraint_names', constraint_names)
 
     # Build dictionary
     if constraint_names:
@@ -498,14 +492,14 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
             if atm in ts_bnd:
                 atm_key = atm
                 break
-    print('tors_def_info test:') 
-    print('zma test:', automol.zmatrix.string(zma)) 
-    print('tors_name test:', tors_name) 
-    print('ts_bnd test:', ts_bnd) 
-    print('saddle test:', saddle)
-    print('axis test:', axis) 
-    print('atm key test:', atm_key)
-    print('gra test:', gra)
+    # print('tors_def_info test:') 
+    # print('zma test:', automol.zmatrix.string(zma)) 
+    # print('tors_name test:', tors_name) 
+    # print('ts_bnd test:', ts_bnd) 
+    # print('saddle test:', saddle)
+    # print('axis test:', axis) 
+    # print('atm key test:', atm_key)
+    # print('gra test:', gra)
     if saddle:
         gra = automol.graph.add_ts_bonds(gra, keys=[ts_bnd])
     group = list(
@@ -523,7 +517,7 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
 
 
 def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
-    """ Assess that hindered rotor groups and axes
+    """ Assess the hindered rotor groups and axes
     """
     n_atm = automol.zmatrix.count(zma)
     if 'addition' in rxn_class or 'abstraction' in rxn_class:
