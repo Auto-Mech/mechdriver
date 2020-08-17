@@ -23,7 +23,7 @@ REF_CALLS = {"basic": "get_basic",
              "cbh2": "get_cbhtwo"}
 
 
-def prepare_refs(ref_scheme, spc_dct, spc_queue):
+def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False):
     """ add refs to species list as necessary
     """
     nproc_avail =  len(os.sched_getaffinity(0)) - 1
@@ -72,7 +72,7 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue):
     #print("FINAL", basis_dct, unique_refs_dct)    
     return basis_dct, unique_refs_dct
 
-def _prepare_refs(queue, ref_scheme, spc_dct, spc_names):
+def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False):
     # Get a lst of ichs corresponding to the spc queue
     #spc_names = [spc[0] for spc in spc_queue]
     #spc_ichs = [spc_dct[spc[0]]['inchi'] for spc in spc_queue]
@@ -111,7 +111,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names):
         for ref in spc_basis:
             bas_ichs = [unique_refs_dct[spc]['inchi'] for spc in unique_refs_dct.keys()]
             cnt = len(list(unique_refs_dct.keys())) + 1
-            if ref not in spc_ichs and ref not in dct_ichs and ref not in bas_ichs:
+            if ((ref not in spc_ichs and ref not in dct_ichs) or repeats) and ref not in bas_ichs:
                 ref_name = 'REF_{}'.format(cnt)
                 msg += '\nAdding reference species {}, InChI string:{}'.format(
                     ref, ref_name)
