@@ -81,14 +81,16 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
 
             # Build constraint dct
             if tors_model == '1dhrf':
+                tname_tup = tuple([tname])
                 const_names = tuple(itertools.chain(*rotor_inf[0]))
                 constraint_dct = torsprep.build_constraint_dct(
-                    zma, const_names, tname)
+                    zma, const_names, tname_tup)
             elif tors_model == '1dhrfa':
                 coords = list(automol.zmatrix.coordinates(zma))
                 const_names = tuple(coord for coord in coords)
+                tname_tup = tuple([tname])
                 constraint_dct = torsprep.build_constraint_dct(
-                    zma, const_names, tname)
+                    zma, const_names, tname_tup)
             else:
                 constraint_dct = None
 
@@ -98,6 +100,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct)
+            pot = _hrpot_spline_fitter(pot, min_thresh=-0.10, max_thresh=50.0)
 
             # Get the HR groups and axis for the rotor
             group, axis, pot, sym_num = torsprep.set_tors_def_info(
@@ -119,6 +122,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
                     mode_idxs, mode_span, geo]
             rotor_dct[tname] = dict(zip(keys, vals))
 
+        # print('rotors pot test:', pot)
         # Append to lst
         rotors.append(rotor_dct)
 
@@ -326,35 +330,45 @@ def _calc_hr_frequenices(geoms, grads, hessians, run_path):
     return hr_freqs
 
 
-def _hrpot_spline_fitter(pot, min_thresh=-0.05, max_thresh=15.0):
+def _hrpot_spline_fitter(pot_dct, min_thresh=-0.10, max_thresh=50.0):
     """ Get a physical hindered rotor potential via a series of spline fits
     """
+
+    pot = list(pot_dct.values())
 
     # Initialize a variable for the size of the potential
     lpot = len(pot)+1
     pot.append(0.0)
 
-    # Build a potential list from only successful calculations
-    idx_success = []
-    pot_success = []
-    for idx in range(lpot):
-        if pot[idx] < 600.:
-            idx_success.append(idx)
-            pot_success.append(pot[idx])
-
     # Print warning messages
+    print_pot = False
     if any(val > max_thresh for val in pot):
+        print_pot = True
         max_pot = max(pot)
         print('Warning: Found pot val of {0:.2f}'.format(max_pot),
               ' which is larger than',
               'the typical maximum for a torsional potential')
-        print('Potential before spline:', pot)
     if any(val < min_thresh for val in pot):
+        print_pot = True
         min_pot = min(pot)
         print('Warning: Found pot val of {0:.2f}'.format(min_pot),
               ' which is below',
               '{0} kcal. Refit w/ positives'.format(min_thresh))
+    if print_pot:
         print('Potential before spline:', pot)
+
+    # Build a potential list from only successful calculations
+    # First replace high potential values with max_thresh
+    # Then replace any negative potential values cubic spline fit values 
+    idx_success = []
+    pot_success = []
+    for idx in range(lpot):
+        if pot[idx] < 600. and pot[idx] > min_thresh:
+            idx_success.append(idx)
+            if pot[idx] < max_thresh:
+                pot_success.append(pot[idx])
+            else:
+                pot_success.append(max_thresh)
 
     # Build a new potential list using a spline fit of the HR potential
     pot_spl = interp1d(
@@ -411,4 +425,8 @@ def _hrpot_spline_fitter(pot, min_thresh=-0.05, max_thresh=15.0):
 
     final_potential = final_potential[:-1]
 
-    return final_potential
+    fin_dct = {}
+    for i, val in enumerate(final_potential):
+        fin_dct[(i,)] = val
+
+    return fin_dct

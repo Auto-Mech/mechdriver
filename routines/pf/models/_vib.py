@@ -135,6 +135,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     # calculated directly by treating the torsions in MESS
     diff_tors_zpe = harm_tors_zpe - tors_zpe
     diff_tors_zpe_2 = harm_tors_zpe_2 - tors_zpe
+    print('zpe test:', tors_zpe, harm_tors_zpe, harm_tors_zpe_2, harm_zpe_notors_1, harm_zpe_notors_2)
     if diff_tors_zpe <= diff_tors_zpe_2:
         freqs = rth_freqs1
         imag_freqs = rth_imag1
@@ -159,5 +160,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
         print('Warning: There is a difference of ',
               '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
               'kcal/mol between harmonic and hindered torsional ZPVEs')
+
+    print('freqs test:', freqs, imag, zpe, harm_zpe)
 
     return freqs, imag, zpe, harm_zpe
