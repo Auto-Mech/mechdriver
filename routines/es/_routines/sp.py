@@ -10,6 +10,9 @@ from lib.phydat import phycon
 from lib.phydat import symm
 
 
+#_JSON_SAVE = ['TAU']   
+_JSON_SAVE = []   
+
 def run_energy(zma, geo, spc_info, thy_info,
                geo_save_fs, geo_run_path, geo_save_path, locs,
                script_str, overwrite,
@@ -22,7 +25,10 @@ def run_energy(zma, geo, spc_info, thy_info,
 
     # Prepare unique filesystem since many energies may be under same directory
     sp_run_fs = autofile.fs.single_point(geo_run_path)
-    sp_save_fs = autofile.fs.single_point(geo_save_path)
+    if _json_database(geo_save_path):
+        sp_save_fs = autofile.fs.single_point(geo_save_path, json_layer=locs)
+    else:    
+       sp_save_fs = autofile.fs.single_point(geo_save_path)
     sp_run_fs[-1].create(thy_info[1:4])
     sp_run_path = sp_run_fs[-1].path(thy_info[1:4])
     sp_save_fs[-1].create(thy_info[1:4])
@@ -106,7 +112,10 @@ def run_gradient(zma, geo, spc_info, thy_info,
 
     if not is_atom:
 
-        exists = geo_save_fs[-1].file.gradient.exists(locs)
+        if _json_database(geo_save_path):
+            exists = geo_save_fs[-1].json.gradient.exists(locs)
+        else:    
+            exists = geo_save_fs[-1].file.gradient.exists(locs)
         if not exists:
             print('No gradient found in save filesys. Running gradient...')
             _run = True
@@ -147,9 +156,14 @@ def run_gradient(zma, geo, spc_info, thy_info,
                     grad = elstruct.reader.gradient(inf_obj.prog, out_str)
 
                     print(" - Saving gradient...")
-                    geo_save_fs[-1].file.gradient_info.write(inf_obj, locs)
-                    geo_save_fs[-1].file.gradient_input.write(inp_str, locs)
-                    geo_save_fs[-1].file.gradient.write(grad, locs)
+                    if _json_database(geo_save_path):
+                        geo_save_fs[-1].json.gradient_info.write(inf_obj, locs)
+                        geo_save_fs[-1].json.gradient_input.write(inp_str, locs)
+                        geo_save_fs[-1].json.gradient.write(grad, locs)
+                    else:    
+                        geo_save_fs[-1].file.gradient_info.write(inf_obj, locs)
+                        geo_save_fs[-1].file.gradient_input.write(inp_str, locs)
+                        geo_save_fs[-1].file.gradient.write(grad, locs)
                     print(" - Save path: {}".format(geo_save_path))
 
         else:
@@ -185,7 +199,10 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
     if not is_atom:
 
-        exists = geo_save_fs[-1].file.hessian.exists(locs)
+        if _json_database(geo_save_path):
+            exists = geo_save_fs[-1].json.hessian.exists(locs)
+        else:    
+            exists = geo_save_fs[-1].file.hessian.exists(locs)
         if not exists:
             print('No Hessian found in save filesys. Running Hessian...')
             _run = True
@@ -223,9 +240,14 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
                 print(" - Saving Hessian...")
-                geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
-                geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
-                geo_save_fs[-1].file.hessian.write(hess, locs)
+                if _json_database(geo_save_path):
+                    geo_save_fs[-1].json.hessian_info.write(inf_obj, locs)
+                    geo_save_fs[-1].json.hessian_input.write(inp_str, locs)
+                    geo_save_fs[-1].json.hessian.write(hess, locs)
+                else:
+                    geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
+                    geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
+                    geo_save_fs[-1].file.hessian.write(hess, locs)
                 print(" - Save path: {}".format(geo_save_path))
 
                 _hess_grad(inf_obj.prog, out_str, geo_save_fs,
@@ -364,8 +386,10 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
     """ Calculate harmonic frequencies using Hessian
     """
-
-    exists = geo_save_fs[-1].file.harmonic_frequencies.exists(locs)
+    if _json_database(save_path):
+        exists = geo_save_fs[-1].json.harmonic_frequencies.exists(locs)
+    else:    
+        exists = geo_save_fs[-1].file.harmonic_frequencies.exists(locs)
     if not exists:
         print('No harmonic frequencies found in save filesys...')
         _run = True
@@ -378,7 +402,10 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
     if _run:
 
         # Read the Hessian from the filesystem
-        hess = geo_save_fs[-1].file.hessian.read(locs)
+        if _json_database(save_path):
+            hess = geo_save_fs[-1].json.hessian.read(locs)
+        else:    
+            hess = geo_save_fs[-1].file.hessian.read(locs)
 
         # Calculate and save the harmonic frequencies
         print(" - Calculating harmonic frequencies from Hessian...")
@@ -386,7 +413,10 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
             [geo], [hess], run_path)
         freqs = sorted(rt_imags + rt_freqs)
         print(" - Saving harmonic frequencies...")
-        geo_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
+        if _json_database(save_path):
+            geo_save_fs[-1].json.harmonic_frequencies.write(freqs, locs)
+        else:    
+            geo_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
         print(" - Save path: {}".format(save_path))
 
     else:
@@ -399,7 +429,10 @@ def _hess_grad(prog, out_str, geo_save_fs,
     """ Grab and save the gradient from a Hessian job if possible.
     """
 
-    exists = geo_save_fs[-1].file.gradient.exists(locs)
+    if _json_database(save_path):
+        exists = geo_save_fs[-1].json.gradient.exists(locs)
+    else:
+        exists = geo_save_fs[-1].file.gradient.exists(locs)
     if not exists:
         print('No gradient found in save filesys...')
         _read = True
@@ -420,7 +453,10 @@ def _hess_grad(prog, out_str, geo_save_fs,
             # Calculate and save the harmonic frequencies
             print(' - Gradient found in Hessian job output.')
             print(" - Saving gradient...")
-            geo_save_fs[-1].file.gradient.write(grad, locs)
+            if _json_database(save_path):
+                geo_save_fs[-1].json.gradient.write(grad, locs)
+            else:    
+                geo_save_fs[-1].file.gradient.write(grad, locs)
             print(" - Save path: {}".format(save_path))
 
         else:
@@ -430,3 +466,13 @@ def _hess_grad(prog, out_str, geo_save_fs,
     else:
         print('Gradient found and saved previously at {}'.format(
             save_path))
+
+def _json_database(save_path):
+    """Is this save path using a json style database (or directory style)
+    """
+    it_is = False
+    for inst in _JSON_SAVE:
+        if inst in save_path:
+           it_is =  True
+    return it_is
+

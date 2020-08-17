@@ -202,7 +202,7 @@ def stoich(ich):
     return stoich_dct
 
 
-def cbhzed(ich):
+def cbhzed(ich, bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
     INPUT:
@@ -229,10 +229,12 @@ def cbhzed(ich):
         _add2dic(frags, frag)
     # print('cbhzed frags', frags)
     # print(_balance_frags(ich, frags))
-    return _balance_frags(ich, frags)
+    if bal:
+        frags = _balance_frags(ich, frags)
+    return frags
 
 
-def cbhone(ich):
+def cbhone(ich, bal=True):
     """
     Fragments molecule in a way that conserves each heavy-atom/heavy-atom bond
     INPUT:
@@ -274,35 +276,24 @@ def cbhone(ich):
     frags = {k: v for k, v in frags.items() if v}
 
     # Balance
-    balance_ = _balance(ich, frags)
-    balance_ = {k: v for k, v in balance_.items() if v}
-
-    if balance_:
-        newfrags = {}
-        zedfrags = cbhzed(ich)
-        new = {}
-        for frag in frags:
-            newfrags[frag] = frags[frag]
-            new = cbhzed(frag)
-            for i in new:
-                _add2dic(newfrags, i, - new[i] * frags[frag])
-        if not frags:
-            frags = cbhzed(ich)
-        for frag in zedfrags:
-            if frag in newfrags:
-                _add2dic(newfrags, frag, zedfrags[frag])
-        frags = newfrags
-        frags = {k: v for k, v in frags.items() if v}
+    if bal:
         balance_ = _balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
 
-    if balance_:
-        frags = _balance_frags(ich, frags)
+        if balance_:
+            zedfrags = cbhzed(ich, bal=False)
+            newfrags = frags.copy()
+            for frag in zedfrags:
+                _add2dic(newfrags, frag, -zedfrags[frag])
+        frags = {k: v for k, v in newfrags.items() if v}
+        balance_ = _balance(ich, frags)
+        if balance_:
+            frags = _balance_frags(ich, frags)
 
     return frags
 
 
-def cbhtwo(ich):
+def cbhtwo(ich, bal=True):
     """
     Fragments molecule for each heavy-atom to stay bonded to its adjacent atoms
     INPUT:
@@ -350,50 +341,28 @@ def cbhtwo(ich):
         _add2dic(frags, frag)
 
     frags = {k: v for k, v in frags.items() if v}
-
     # Balance
-    balance_ = _balance(ich, frags)
-    balance_ = {k: v for k, v in balance_.items() if v}
-    if balance_:
-        newfrags = {}
-        onefrags = cbhone(ich)
-        new = {}
-        for frag in frags:
-            newfrags[frag] = frags[frag]
-            new = cbhone(frag)
-            for i in new:
-                _add2dic(newfrags, i, - new[i] * frags[frag])
-        if not frags:
-            frags = cbhone(ich)
-        for frag in onefrags:
-            if frag in newfrags:
-                _add2dic(newfrags, frag, onefrags[frag])
-        frags = newfrags
-        frags = {k: v for k, v in frags.items() if v}
-
+    if bal:
         balance_ = _balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            newfrags = {}
-            zedfrags = cbhzed(ich)
-            new = {}
-            for frag in frags:
-                newfrags[frag] = frags[frag]
-                new = cbhzed(frag)
-                for i in new:
-                    _add2dic(newfrags, i, - new[i] * frags[frag])
-            if not frags:
-                frags = cbhzed(ich)
-            for frag in zedfrags:
-                if frag in newfrags:
-                    _add2dic(newfrags, frag, zedfrags[frag])
-            frags = newfrags
-            frags = {k: v for k, v in frags.items() if v}
-
+            newfrags = frags.copy()
+            onefrags = cbhone(ich, bal=False)
+            for frag in onefrags:
+                _add2dic(newfrags, frag, -onefrags[frag])
+            frags = {k: v for k, v in newfrags.items() if v}
             balance_ = _balance(ich, frags)
             balance_ = {k: v for k, v in balance_.items() if v}
             if balance_:
-                frags = _balance_frags(ich, frags)
+                newfrags = frags.copy()
+                zedfrags = cbhzed(ich, bal=False)
+                for frag in zedfrags:
+                    _add2dic(newfrags, frag, -zedfrags[frag])
+                frags = {k: v for k, v in newfrags.items() if v}
+                balance_ = _balance(ich, frags)
+                balance_ = {k: v for k, v in balance_.items() if v}
+                if balance_:
+                    frags = _balance_frags(ich, frags)
 
     return frags
 
