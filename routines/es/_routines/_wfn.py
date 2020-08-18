@@ -7,76 +7,86 @@ from lib.phydat import act_space
 
 
 # BUILD THE MULTIREFERENCE WAVEFUNCTION TO PASS MOLPRO ELSTRUCT
-def build_wfn():
+def build_wfn(ref_zma, ts_info, ts_formula, high_mul,
+              rct_ichs, rct_info,
+              aspace, mod_var_scn_thy_info):
     """ Build wavefunction
     """
 
-    num_act_orb, num_act_elc = wfn.active_space(ts_dct, spc_dct)
+    if aspace is not None:
 
-    if dct.get('wfn_str', None) is not None:
-        # Need cas opt and wfn string (spc.dat guess, nact, nelc)
-        opt
+        num_act_orb, num_act_elc, num_states, guess_str = aspace
+        guess_lines = guess_str.splitlines()
+        casscf_options = cas_options(
+            ts_info, ts_formula, num_act_elc, num_act_orb, num_states,
+            add_two_closed=False)
+        print('\nUsing wfn guess from file...')
+
     else:
+        num_act_orb, num_act_elc, num_states = active_space(
+            rct_ichs, rct_info)
 
         # Build the elstruct CASSCF options list used to build the wfn guess
         # (1) Build wfn with active space
         # (2) Build wfn with active space + 2 closed orbitals for stability
         cas_opt = []
         cas_opt.append(
-            wfn.cas_options(
-                ts_info, ts_formula, num_act_elc, num_act_orb,
+            cas_options(
+                ts_info, ts_formula, num_act_elc, num_act_orb, num_states,
                 add_two_closed=False))
         cas_opt.append(
-            wfn.cas_options(
-                ts_info, ts_formula, num_act_elc, num_act_orb,
+            cas_options(
+                ts_info, ts_formula, num_act_elc, num_act_orb, num_states,
                 add_two_closed=True))
 
-        # Write the string that has all the components for building the wfn guess
-        ref_zma = automol.zmatrix.set_values(ts_zma, {coord_name: grid1[0]})
-        guess_str = wfn.multiref_wavefunction_guess(
+        # Write string that has all the components for building the wfn guess
+        guess_str = multiref_wavefunction_guess(
             high_mul, ref_zma, ts_info, mod_var_scn_thy_info, cas_opt)
         guess_lines = guess_str.splitlines()
 
-        # Set the opt script string and build the opt_kwargs
-        [prog, method, _, _] = mod_var_scn_thy_info
-        _, opt_script_str, _, opt_kwargs = qchem_params(
-            prog, method)
+        # Set casscf options
+        casscf_options = cas_opt[0]
+
+        print('\nGenerating wfn guess from internal options...')
 
     # Manipulate the opt kwargs to use the wavefunction guess
-    opt_kwargs['casscf_options'] = cas_opt[0]
-    opt_kwargs['gen_lines'] = {1: guess_lines}
-    opt_kwargs['mol_options'] = ['nosym']  # Turn off symmetry
+    cas_kwargs = {
+        'casscf_options': casscf_options,
+        'gen_lines': {1: guess_lines},
+        'mol_options': ['nosym']  # Turn off symmetry
+    }
 
-    return opt_kwargs
+    return cas_kwargs
 
 
 # BUILD THE CASSCF OPTIONS
-def active_space(ts_dct, spc_dct):
+def active_space(rct_ichs, rct_info):
     """ Determine the active space for the multireference MEP scan
     """
-    rcts = ts_dct['reacs']
-    num_act_orb, num_act_elc = 0, 0
-    for rct in rcts:
-        rct_ich = spc_dct[rct]['inchi']
-        if rct_ich in act_space.DCT:
-            num_act_orb += act_space.DCT[rct_ich][0]
-            num_act_elc += act_space.DCT[rct_ich][1]
+
+    num_act_orb, num_act_elc, num_states = 0, 0, 1
+    for idx, ich in enumerate(rct_ichs):
+        if ich in act_space.DCT:
+            num_act_orb += act_space.DCT[ich][0]
+            num_act_elc += act_space.DCT[ich][1]
+            num_states *= act_space.DCT[ich][2]
         else:
-            rct_mult = spc_dct[rct]['mult']
+            rct_mult = rct_info[idx][2]
             num_act_orb += (rct_mult - 1)
             num_act_elc += (rct_mult - 1)
+            num_states *= 1
 
-    return num_act_orb, num_act_elc
+    return num_act_orb, num_act_elc, num_states
 
 
-def cas_options(spc_info, formula, num_act_elc, num_act_orb,
+def cas_options(spc_info, formula, num_act_elc, num_act_orb, num_states,
                 add_two_closed=False):
     """ Prepare values prepare cas options for multireference wavefunctions
     """
 
-    # Set electron counts and orbital indexes
-    elec_count = automol.formula.electron_count(formula)
-    closed_orb = (elec_count - num_act_elc) // 2
+    # Set the number of closed and occupied orbitals
+    elec_cnt = automol.formula.electron_count(formula)
+    closed_orb = (elec_cnt - num_act_elc) // 2
     occ_orb = closed_orb + num_act_orb
     print('closed', closed_orb)
     print('occ', occ_orb)
@@ -87,7 +97,7 @@ def cas_options(spc_info, formula, num_act_elc, num_act_orb,
         closed_orb -= 2
 
     # Set the spin and charge values for the species
-    two_spin = spc_info[2] - 1
+    spin = spc_info[2] - 1
     chg = spc_info[1]
 
     # Combine into a CASSCF options for elstruct
@@ -99,7 +109,7 @@ def cas_options(spc_info, formula, num_act_elc, num_act_orb,
         elstruct.option.specify(
             elstruct.Option.Casscf.CLOSED_, closed_orb),
         elstruct.option.specify(
-            elstruct.Option.Casscf.WFN_, elec_count, 1, two_spin, chg)
+            elstruct.Option.Casscf.WFN_, elec_cnt, 1, spin, chg, num_states)
         ]
 
     return cas_opt

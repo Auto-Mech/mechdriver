@@ -3,6 +3,7 @@ utility functions
 """
 
 import automol
+import autofile
 from lib import structure
 
 
@@ -60,18 +61,49 @@ def set_dist_names(spc_dct_i, saddle):
     return dist_names
 
 
-def get_bnd_keys(pf_filesystems, saddle, zma_locs=(0,)):
+def get_bnd_keys(cnf_fs, cnf_locs, saddle, zma_locs=(0,)):
     """ get bond broken and formed keys for a transition state
     """
     if not saddle:
         frm_bnd_keys = []
         brk_bnd_keys = []
     else:
-        [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
         frm_bnd_keys, brk_bnd_keys = structure.ts.rxn_bnd_keys(
-            cnf_fs, min_cnf_locs, zma_locs=zma_locs)
+            cnf_fs, cnf_locs, zma_locs=zma_locs)
 
     return frm_bnd_keys, brk_bnd_keys
+
+
+def get_bnd_keys2(ts_path, saddle, zma_locs=(0,)):
+    """ get bond broken and formed keys for a transition state
+    """
+    if not saddle:
+        frm_bnd_keys = []
+        brk_bnd_keys = []
+    else:
+        frm_bnd_keys, brk_bnd_keys = structure.ts.rxn_bnd_keys2(
+            ts_path, zma_locs=zma_locs)
+
+    return frm_bnd_keys, brk_bnd_keys
+
+
+
+def get_rxn_coord_name(ts_path, frm_bnd_keys, sadpt=False, zma_locs=(0,)):
+    """ get the name of the reaction coordinate
+    """
+
+    if sadpt:
+        zma_fs = autofile.fs.manager(ts_path, 'ZMATRIX')
+        zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+        frm_name = automol.zmatrix.bond_key_from_idxs(
+            zma, frm_bnd_keys)
+    else:
+        zma_fs = autofile.fs.manager(ts_path, 'ZMATRIX')
+        vma = zma_fs[-1].file.vmatrix.read(zma_locs)
+        frm_name = automol.vmatrix.bond_key_from_idxs(
+            vma, frm_bnd_keys)
+
+    return frm_name
 
 
 def set_ts_bnd(spc_dct_i, saddle):

@@ -13,9 +13,12 @@ from routines.pf.models import _rot as rot
 from routines.pf.models import _tors as tors
 from routines.pf.models import _sym as sym
 from routines.pf.models import _vib as vib
+from routines.pf.models import _flux as flux
 from routines.pf.models import _fs as fs
 from routines.pf.models import _util as util
+from lib.structure import tors as torsprep
 from lib.phydat import phycon
+from lib import filesys
 
 
 # General readers
@@ -58,7 +61,7 @@ def read_spc_data(spc_dct_i, spc_name,
     return inf_dct
 
 
-def read_ts_data(spc_dct_i, tsname,
+def read_ts_data(ts_dct, tsname,
                  chn_pf_models, chn_pf_levels,
                  run_prefix, save_prefix,
                  ts_class, ts_sadpt, ts_nobarrier,
@@ -77,11 +80,15 @@ def read_ts_data(spc_dct_i, tsname,
             inf_dct = {}
             writer = 'pst_block'
         elif ts_sadpt == 'rpvtst':
-            inf_dct = {}
-            writer = 'vtst_saddle_block'
+            inf_dct = rpvtst_data(
+                ts_dct,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix)
+            writer = 'rpvtst_saddle_block'
         else:
             inf_dct = mol_data(
-                spc_dct_i,
+                ts_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, saddle=True, tors_wgeo=True)
@@ -92,13 +99,22 @@ def read_ts_data(spc_dct_i, tsname,
             inf_dct = {}
             writer = 'pst_block'
         elif ts_nobarrier == 'rpvtst':
-            inf_dct = {}
-            writer = 'vtst_no_saddle_block'
+            inf_dct = rpvtst_data(
+                ts_dct,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix)
+            writer = 'rpvtst_nosadpt_block'
         elif ts_nobarrier == 'vrctst':
-            inf_dct = flux_data()
+            inf_dct = flux_data(
+                ts_dct,
+                chn_pf_models, chn_pf_levels,
+                ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix)
             writer = 'vrctst_block'
 
     # Add writer to inf dct
+    # print(inf_dct)
     inf_dct['writer'] = writer
 
     return inf_dct
@@ -159,7 +175,10 @@ def mol_data(spc_dct_i,
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
 
     # Set information for transition states
-    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(pf_filesystems, saddle)
+    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
+    # cnf_path = cnf_fs[-1].path(min_cnf_locs)
+    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(
+        cnf_fs, min_cnf_locs, saddle)
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Obtain rotor information used to determine new information
@@ -238,21 +257,22 @@ def mol_data(spc_dct_i,
 
 
 # VRCTST
-# def flux_data(spc_dct_i,
-#               chn_pf_models, chn_pf_levels,
-#               run_prefix, save_prefix):
-def flux_data():
+def flux_data(ts_dct,
+              chn_pf_models, chn_pf_levels,
+              ref_pf_models, ref_pf_levels,
+              run_prefix, save_prefix):
     """ Grab the flux file from the filesystem
     """
 
-    # # Set filesys
-    # ts_save_fs, ts_save_path = _ts_filesys(
-    #     spc_dct, rxn, pf_levels, save_prefix, level='harm')
+    # Fake setting for plugin
+    _, _, _ = chn_pf_models, ref_pf_models, ref_pf_levels
 
-    # # Read the flux file string
-    # locs = []
-    # flux_str = ts_save_fs[-1].file.flux.read(locs)
-    flux_str = 'FLUX STR'
+    # Read the flux file from the filesystem
+    _, ts_save_path = fs.set_rpath_filesys(
+        ts_dct, chn_pf_levels['rpath'][1],
+        run_prefix, save_prefix, True)
+
+    flux_str = flux.read_flux(ts_save_path)
 
     # Create info dictionary
     inf_dct = {'flux_str': flux_str}
@@ -261,72 +281,72 @@ def flux_data():
 
 
 # VTST
-# def rpvtst_data(rpath_vals, sadpt=True):
-#     """ Pull all of the neccessary information from the
-#         filesystem for a species
-#     """
-#     # Set filesys
-#     if sadpt:
-#         _, cnf_save_path, _, _ = _cnf_filesys(
-#             spc_dct_i, rxn, pf_levels, save_prefix,
-#             saddle=saddle, level='harm')
-#         scn_save_fs, scn_locs, save_paths = _scn_filesys(
-#             cnf_save_path, run_tors_names)
-#     else:
-#         ts_save_fs, ts_save_path = _ts_filesys(
-#             spc_dct, rxn, pf_levels, save_prefix, level='harm')
-#         scn_save_fs, scn_locs, save_paths = _scn_filesys(
-#             ts_save_path, run_tors_names)
-#
-#     # Loop over scan filesystem and pull out the values
-#     inf_dct_lst = []
-#     for locs in scn_locs:
-#
-#         # Check if to pull info
-#         if locs not in rpath_vals:
-#             continue
-#
-#         # Get geometry, energy, vibrational freqs, and zpe
-#         if scn_save_fs[-1].file.geometry.exists(locs):
-#             geom = scn_save_fs[-1].file.geometry.read(locs)
-#         else:
-#             print('no geom')
-#             continue
-#         if scn_save_fs[-1].file.energy.exists(locs):
-#             sp_save_fs = autofile.fs.single_point(scn_save_path)
-#             sp_level = fsorb.mod_orb_restrict(ts_info, ene_thy_level)
-#             if sp_save_fs[-1].file.energy.exists(sp_level[1:4]):
-#                 ene = sp_save_fs[-1].file.energy.read(sp_level[1:4])
-#             else:
-#                 print('no energy')
-#                 continue
-#         else:
-#             print('no energy')
-#             continue
-#         if scn_save_fs[-1].file.hessian.exists(locs):
-#             proj_rotors_str = ''
-#             hess = scn_save_fs[-1].file.hessian.read(locs)
-#             scn_save_path = scn_save_fs[-1].path(locs)
-#             freqs, _, _ = vib.projrot_freqs_1(
-#                 geom, hess,
-#                 proj_rotors_str,
-#                 scn_save_path, pot=False, saddle=True)
-#             zpe = sum(freqs)*phycon.WAVEN2KCAL/2.
-#         else:
-#             print('no hessian')
-#             continue
-#
-#         # Get the relative energy
-#         zero_ene = ''
-#
-#         # Create info dictionary and append to lst
-#         sym_factor = 1.0
-#         elec_levels = ts_dct['elec_levels']
-#         keys = ['geom', 'sym_factor', 'freqs', 'elec_levels', 'zero_ene']
-#         vals = [geom, sym_factor, freqs, elec_levels, zero_ene]
-#         inf_dct_lst.append(dict(zip(keys, vals)))
-#
-#     return inf_dct_lst
+def rpvtst_data(ts_dct,
+                chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
+                run_prefix, save_prefix):
+    """ Pull all of the neccessary information from the
+        filesystem for a species
+    """
+
+    # Fake setting for plugin
+    _, _, _ = chn_pf_models, ref_pf_models, ref_pf_levels
+
+    sadpt = bool(not typ.var_radrad(ts_dct['class']))
+
+    # Set up all the filesystem objects using models and levels
+    if sadpt:
+        pf_filesystems = fs.pf_filesys(
+            ts_dct, chn_pf_levels, run_prefix, save_prefix, True)
+        [_, ts_save_path, _, _, _] = pf_filesystems['harm']
+    else:
+        print('RPATH')
+        tspaths = fs.set_rpath_filesys(
+            ts_dct, chn_pf_levels['rpath'][1],
+            run_prefix, save_prefix, True)
+        ts_run_path, ts_save_path, _, thy_save_path = tspaths
+
+    # Set TS reaction coordinate
+    print('path: ', ts_save_path)
+    frm_bnd_keys, _ = util.get_bnd_keys2(ts_save_path, True)
+    frm_name = util.get_rxn_coord_name(
+        ts_save_path, frm_bnd_keys, sadpt=sadpt, zma_locs=(0,))
+    scn_coords = fs.get_rxn_scn_coords(thy_save_path, frm_name)
+
+    # Need to read the sp vals along the scan. add to read
+    ref_ene = 0.0
+    scn_ene_info = chn_pf_levels['rpath'][1][0]
+    mod_scn_ene_info = filesys.inf.modify_orb_restrict(
+        filesys.inf.get_spc_info(ts_dct), scn_ene_info)
+    enes, geoms, grads, hessians, _ = torsprep.read_hr_pot(
+        [frm_name], [scn_coords],
+        thy_save_path,
+        mod_scn_ene_info, ref_ene,
+        constraint_dct=None,   # No extra frozen treatments
+        read_geom=True,
+        read_grad=True,
+        read_hess=True)
+    freqs = torsprep.calc_hr_frequenices(
+        geoms, grads, hessians, ts_run_path)
+
+    # Grab the values from the read
+    inf_dct = {}
+    inf_dct['rpath'] = []
+    for pot, geo, frq in zip(enes.values(), geoms.values(), freqs.values()):
+
+        # Get the relative energy
+        zpe = sum(frq)*phycon.WAVEN2KCAL/2.
+        zero_ene = pot + zpe
+
+        # Set values constant across the scan
+        sym_factor = 1.0
+        elec_levels = ts_dct['elec_levels']
+
+        # Create info dictionary and append to lst
+        keys = ['geom', 'sym_factor', 'freqs', 'elec_levels', 'zero_ene']
+        vals = [geo, sym_factor, frq, elec_levels, zero_ene]
+        inf_dct['rpath'].append(dict(zip(keys, vals)))
+
+    return inf_dct
 
 
 # TAU

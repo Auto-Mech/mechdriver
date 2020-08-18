@@ -264,9 +264,11 @@ def _rotor_tors_strs(tors_name, group, axis,
 
 
 # Functions to obtain values of the HR potentials from the filesystem
-def _hrpot_spline_fitter(pot, min_thresh=-0.05, max_thresh=15.0):
+def _hrpot_spline_fitter(pot_dct, min_thresh=-0.05, max_thresh=15.0):
     """ Get a physical hindered rotor potential via a series of spline fits
     """
+    
+    pot = list(pot_dct.values())
 
     # Initialize a variable for the size of the potential
     lpot = len(pot)+1
@@ -349,4 +351,8 @@ def _hrpot_spline_fitter(pot, min_thresh=-0.05, max_thresh=15.0):
 
     final_potential = final_potential[:-1]
 
-    return final_potential
+    fin_dct = {}
+    for i, val in enumerate(final_potential):
+        fin_dct[(i,)] = val
+
+    return fin_dct

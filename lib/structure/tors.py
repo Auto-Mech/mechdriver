@@ -308,7 +308,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
 
-        # print('tors_path', scn_fs[-1].path(locs))
+        print('tors_path', scn_fs[-1].path(locs))
         ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL

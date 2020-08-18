@@ -10,7 +10,7 @@ def nonrigid_rotations(pf_models):
         information is needed from the filesystem
     """
     rot_model = pf_models['rot']
-    return bool(rot_model in ('vpt2'))
+    return bool(rot_model == 'vpt2')
 
 
 def nonrigid_tors(pf_models, rotors):

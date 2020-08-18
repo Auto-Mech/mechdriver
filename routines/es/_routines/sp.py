@@ -40,6 +40,7 @@ def run_energy(zma, geo, spc_info, thy_info,
         job_geo = zma
 
     exists = sp_save_fs[-1].file.energy.exists(thy_info[1:4])
+    exists = sp_save_fs[-1].file.energy.exists(thy_info[1:4])
     if not exists:
         print('No energy found in save filesys. Running energy...')
         _run = True
