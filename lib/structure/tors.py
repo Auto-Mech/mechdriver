@@ -342,7 +342,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
     return pot, geoms, grads, hessians, zmas
 
 
-def calc_hr_frequenices(geoms, grads, hessians, run_path):
+def calc_hr_frequencies(geoms, grads, hessians, run_path):
     """ Calculate the frequencies
     """
 
