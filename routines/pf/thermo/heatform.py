@@ -285,7 +285,7 @@ def cbhone(ich, bal=True):
             newfrags = frags.copy()
             for frag in zedfrags:
                 _add2dic(newfrags, frag, -zedfrags[frag])
-        frags = {k: v for k, v in newfrags.items() if v}
+            frags = {k: v for k, v in newfrags.items() if v}
         balance_ = _balance(ich, frags)
         if balance_:
             frags = _balance_frags(ich, frags)
