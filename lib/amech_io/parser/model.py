@@ -269,9 +269,11 @@ def pf_level_info(es_model, thy_dct):
     vpt2_lvl = es_model['vpt2'] if 'vpt2' in es_model else None
     sym_lvl = es_model['sym'] if 'sym' in es_model else None
 
-    # Torsional Scan which needs a reference for itself
+    # Torsions and rxn paths which needs a reference for itself
     tors_lvl_sp = es_model['tors'][0] if 'tors' in es_model else None
     tors_lvl_scn = es_model['tors'][1] if 'tors' in es_model else None
+    rpath_lvl_sp = es_model['rpath'][0] if 'rpath' in es_model else None
+    rpath_lvl_scn = es_model['rpath'][1] if 'rpath' in es_model else None
 
     # Set the theory info objects
     geo_thy_info = filesys.inf.get_thy_info(geo_lvl, thy_dct)
@@ -284,14 +286,20 @@ def pf_level_info(es_model, thy_dct):
                         if tors_lvl_sp else None)
     tors_scn_thy_info = (filesys.inf.get_thy_info(tors_lvl_scn, thy_dct)
                          if tors_lvl_scn else None)
+    rpath_sp_thy_info = (filesys.inf.get_thy_info(rpath_lvl_sp, thy_dct)
+                         if rpath_lvl_sp else None)
+    rpath_scn_thy_info = (filesys.inf.get_thy_info(rpath_lvl_scn, thy_dct)
+                          if rpath_lvl_scn else None)
 
     # Set the ene thy info as a list of methods with coefficients
     ene_thy_info = []
     if isinstance(ene_lvl, str):
-        ene_thy_info.append([1.00, filesys.inf.get_thy_info(ene_lvl, thy_dct)])
+        ene_thy_info.append(
+            [1.00, filesys.inf.get_thy_info(ene_lvl, thy_dct)])
     else:
         for lvl in ene_lvl:
-            ene_thy_info.append([lvl[0], filesys.inf.get_thy_info(lvl[1], thy_dct)])
+            ene_thy_info.append(
+                [lvl[0], filesys.inf.get_thy_info(lvl[1], thy_dct)])
 
     # Combine levels into a list
     es_levels = {
@@ -301,7 +309,9 @@ def pf_level_info(es_model, thy_dct):
         'vpt2': (vpt2_lvl, vpt2_thy_info),
         'sym': (sym_lvl, sym_thy_info),
         'tors': ([tors_lvl_sp, tors_lvl_scn],
-                 [tors_sp_thy_info, tors_scn_thy_info])
+                 [tors_sp_thy_info, tors_scn_thy_info]),
+        'rpath': ([rpath_lvl_sp, rpath_lvl_scn],
+                  [rpath_sp_thy_info, rpath_scn_thy_info])
     }
 
     return es_levels

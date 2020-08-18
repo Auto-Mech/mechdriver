@@ -383,7 +383,7 @@ def run_fs_from_prefix(prefix):
     return run_fs
 
 
-def zma_fs_from_prefix(prefix, zma_idxs=(0)):
+def zma_fs_from_prefix(prefix, zma_idxs=(0,)):
     """ Build a zma filesys object
     """
 

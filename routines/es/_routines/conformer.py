@@ -314,7 +314,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                         ts_viable = _ts_geo_viable(
                             zma, cnf_save_fs, rxn_class, thy_info)
                         if not ts_viable:
-                            continue 
+                            continue
                     elif not _inchi_are_same(orig_ich, geo):
                         continue
                     # Assess viability of transition state conformer
@@ -327,7 +327,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                             geo, ene, saved_geos, saved_enes)
                         if sym_id is None:
                             _save_unique_conformer(
-                                ret, thy_info, cnf_save_fs, locs, saddle=saddle)
+                                ret, thy_info, cnf_save_fs,
+                                locs, saddle=saddle)
                             saved_geos.append(geo)
                             saved_enes.append(ene)
                             saved_locs.append(locs)

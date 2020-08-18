@@ -93,7 +93,10 @@ def zero_point_energy(spc_dct_i,
     print('- Calculating zero-point energy')
 
     # spc_dct_i = spc_dct[spc_name]
-    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(spc_dct_i, saddle)
+    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
+    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(
+        cnf_fs, min_cnf_locs, saddle)
+    # frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(spc_dct_i, saddle)
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Calculate ZPVE

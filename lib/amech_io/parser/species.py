@@ -101,7 +101,8 @@ def read_spc_amech(job_path):
 
     # Read the AMech species string
     if os.path.exists(os.path.join(job_path, DAT_INP)):
-        spc_amech_str = ptt.read_inp_str(job_path, DAT_INP, remove_comments='#')
+        spc_amech_str = ptt.read_inp_str(
+            job_path, DAT_INP, remove_comments='#')
         print('Found species.dat. Reading file...')
     else:
         spc_amech_str = ''
@@ -197,6 +198,25 @@ def modify_spc_dct(job_path, spc_dct):
             mod_spc_dct[spc]['mc_nsamp'] = [True, 12, 1, 3, 100, 25]
         if 'pst_params' not in mod_spc_dct[spc]:
             mod_spc_dct[spc]['pst_params'] = [1.0, 6]
+
+        # Set active space stuff
+        if 'active' not in mod_spc_dct[spc]:
+            mod_spc_dct[spc]['active_space'] = None
+        else:
+            aspace = mod_spc_dct[spc].get('active')
+            assert len(aspace) == 4, (
+                'active must be length 4: {}'.format(aspace)
+            )
+            wfn_file = aspace[3]
+            wfn_inp = os.path.join(os.path.join(job_path, 'inp/'+wfn_file))
+            if os.path.exists(wfn_inp):
+                wfn_str = ptt.read_inp_str(job_path, wfn_inp)
+                print('Found file: {}. Reading file...'.format(wfn_file))
+            else:
+                wfn_str = None
+                print('No file: {}. Reading file...'.format(wfn_file))
+            mod_spc_dct[spc]['active_space'] = (
+                aspace[0], aspace[1], aspace[2], wfn_str)
 
         # Perform conversions as needed
         mod_spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD

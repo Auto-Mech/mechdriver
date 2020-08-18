@@ -31,7 +31,7 @@ def pf_filesys(spc_dct_i, pf_levels,
 
 
 def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
-    """ Gets filesystem objects for torsional calculations
+    """ Gets filesystem objects for reading many calculations
     """
 
     # Set the spc_info
@@ -80,6 +80,65 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
         cnf_save_path = ''
 
     return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]
+
+
+def set_rpath_filesys(ts_dct, level, run_prefix, save_prefix, saddle):
+    """ Gets filesystem objects for reading many calculations
+    """
+
+    # Set the spc_info
+    spc_info = finf.get_spc_info(ts_dct)
+
+    # Set some path stuff
+    save_path = ts_dct['rxn_fs'][3]
+    run_path = ts_dct['rxn_fs'][2]
+
+    # Set theory filesystem used throughout
+    thy_save_fs = autofile.fs.theory(save_path)
+    thy_run_fs = autofile.fs.theory(run_path)
+
+    levelp = finf.modify_orb_restrict(spc_info, level[1])
+
+    # Get the save fileystem path
+    print('level', levelp)
+    save_path = thy_save_fs[-1].path(levelp[1:4])
+    run_path = thy_run_fs[-1].path(levelp[1:4])
+
+    thy_save_fs[-1].create(levelp[1:4])
+    thy_run_fs[-1].create(levelp[1:4])
+
+    thy_save_path = thy_save_fs[-1].path(levelp[1:4])
+    thy_run_path = thy_run_fs[-1].path(levelp[1:4])
+
+    ts_save_fs = autofile.fs.transition_state(thy_save_path)
+    ts_save_fs[0].create()
+    ts_save_path = ts_save_fs[0].path()
+    ts_run_fs = autofile.fs.transition_state(thy_run_path)
+    ts_run_fs[0].create()
+    ts_run_path = ts_run_fs[0].path()
+
+    return ts_run_path, ts_save_path, thy_run_path, thy_save_path
+
+
+def get_rxn_scn_coords(ts_path, coord_name, zma_locs=(0,)):
+    """ Get the values along the reaction coordinate
+    """
+
+    # Build ZMA filesys
+    zma_fs = autofile.fs.manager(ts_path, 'ZMATRIX')
+    zma_path = zma_fs[-1].path(zma_locs)
+
+    print('ts', ts_path)
+    print('zma', zma_path)
+    print('coord', coord_name)
+
+    # Read the values of the reaction coord
+    scn_save_fs = autofile.fs.scan(zma_path)
+    scn_locs = scn_save_fs[-1].existing([[coord_name]])
+    scn_grids = [locs[1][0] for locs in scn_locs
+                 if locs[1][0] != 1000.0]
+
+    return scn_grids
 
 
 def make_run_path(pf_filesystems, choice):

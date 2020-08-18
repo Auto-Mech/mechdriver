@@ -7,7 +7,6 @@ import autofile
 from routines.es._routines import _sadpt as sadpt
 from routines.es._routines import _vrctst as vrctst
 from routines.es._routines import _vtst as vtst
-from routines.es._routines import _wfn as wfn
 from routines.es import runner as es_runner
 from lib import filesys
 
@@ -35,7 +34,6 @@ def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
                   method_dct, runfs_dct, savefs_dct,
                   info_dct, grid)
     elif search_method == 'molrad_vtst':
-        print('in good if statement')
         run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
                         method_dct, runfs_dct, savefs_dct,
                         info_dct, grid, run_prefix, save_prefix)
@@ -141,7 +139,7 @@ def sadpt_transition_state(
     # Check filesystem for input level of theory
     print('\nSearching save filesys for guess Z-Matrix calculated',
           'at {} level...'.format(es_keyword_dct['inplvl']))
-    guess_zmas = sadpt.check_filesys_for_guess(ini_zma_fs)
+    guess_zmas = sadpt.check_filesys_for_guess2(ini_zma_fs)
     # guess_zmas = sadpt.check_filesys_for_guess(
     #     ini_ts_save_path, mod_ini_thy_info)
 
@@ -194,8 +192,7 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
 
     # Build inf objects for the rxn and ts
     ts_info = info_dct['ts_info']
-    rct1_info = info_dct['rct1_info']
-    rct2_info = info_dct['rct2_info']
+    rct_info = info_dct['rct_info']
 
     # Set various TS information using the dictionary
     ini_zma = ts_dct['zma']
@@ -221,18 +218,20 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
     thy_save_fs = savefs_dct['runlvl_thy_fs']
     scn_save_fs = savefs_dct['runlvl_scn_fs']
     scn_run_fs = runfs_dct['runlvl_scn_fs']
+    ts_save_fs = savefs_dct['runlvl_ts_fs']
     rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
 
     # Run single reference mol-rad VTST Search
     print('above scan fit')
     vtst.molrad_scan(
         ini_zma, ts_info,
+        rct_info, rcts_cnf_fs,
         grid1, grid2, frm_name,
         mod_thy_info, mod_ini_thy_info,
         mod_vsp1_thy_info,
         thy_save_fs,
+        ts_save_fs,
         scn_run_fs, scn_save_fs,
-        rcts_cnf_fs,
         run_prefix, save_prefix,
         overwrite, update_guess, retryfail
     )
@@ -250,14 +249,16 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     # Get info from the reactants
     high_mul = ts_dct['high_mult']
     ts_info = info_dct['ts_info']
-    rct1_info = info_dct['rct1_info']
-    rct2_info = info_dct['rct2_info']
+    rct_info = info_dct['rct_info']
+    rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
 
     # Set information from the transition state
     high_mul = ts_dct['high_mult']
     ini_zma = ts_dct['zma']
     frm_bnd_keys = ts_dct['frm_bnd_keys']
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
+    active_space = ts_dct['active_space']
+    rcts_gra = ts_dct['rcts_gra']
 
     # Get reaction coordinates
     frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
@@ -278,32 +279,29 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     hs_var_scn_thy_info = method_dct['hs_var_scnlvl']
     hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
     hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
-
-    print('high mult', ts_dct['high_mult'])
-    print('num orb', num_act_orb)
-    print('num elc', num_act_elc)
-    # import sys
-    # sys.exit()
+    hs_thy_info = method_dct['hs_runlvl']
 
     # Get the filesys stuff
     var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
     var_scn_run_fs = runfs_dct['vscnlvl_scn_fs']
     rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
     vscnlvl_thy_save_fs = savefs_dct['vscnlvl_thy_fs']
+    vscnlvl_ts_save_fs = savefs_dct['vscnlvl_ts_fs']
 
     vtst.radrad_scan(
-        ini_zma, ts_info, ts_formula, high_mul,
-        grid1, grid2, frm_name,
+        ini_zma, ts_info, ts_formula, high_mul, active_space,
+        rct_info, rct_ichs, rcts_cnf_fs, rcts_gra,
+        grid1, grid2, frm_name, frm_bnd_keys,
         mod_var_scn_thy_info,
         mod_var_sp1_thy_info,
         mod_var_sp2_thy_info,
         hs_var_scn_thy_info,
         hs_var_sp1_thy_info,
         hs_var_sp2_thy_info,
-        mod_ini_thy_info,
+        mod_ini_thy_info, mod_thy_info,
         vscnlvl_thy_save_fs,
+        vscnlvl_ts_save_fs,
         var_scn_run_fs, var_scn_save_fs,
-        rcts_cnf_fs,
         run_prefix, save_prefix,
         overwrite, update_guess
     )
@@ -321,14 +319,15 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     # Get info from the reactants
     high_mul = ts_dct['high_mult']
     ts_info = info_dct['ts_info']
-    rct1_info = info_dct['rct1_info']
-    rct2_info = info_dct['rct2_info']
+    rct_info = info_dct['rct_info']
+    rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
 
     # Set information from the transition state
     high_mul = ts_dct['high_mult']
     ini_zma = ts_dct['zma']
     frm_bnd_keys = ts_dct['frm_bnd_keys']
     ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
+    active_space = ts_dct['active_space']
 
     # Get reaction coordinates
     frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
@@ -350,27 +349,29 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     hs_var_sp1_thy_info = method_dct['hs_splvl1']
     hs_var_sp2_thy_info = method_dct['hs_splvl2']
 
-    # print('high mult', ts_dct['high_mult'])
-    # print('num orb', num_act_orb)
-    # print('num elc', num_act_elc)
-    # import sys
-    # sys.exit()
-
     # Get the filesys stuff
-    var_scn_save_fs, _ = savefs_dct['var_scn_fs']
-    var_scn_run_fs, _ = runfs_dct['var_scn_fs']
+    var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
+    var_scn_run_fs = runfs_dct['vscnlvl_scn_fs']
+    rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
+    vscnlvl_thy_save_fs = savefs_dct['vscnlvl_thy_fs']
+    vscnlvl_ts_save_fs = savefs_dct['vscnlvl_ts_fs']
 
     print('Beginning Calculations for VRC-TST Treatments')
     vrctst.calc_vrctst_flux(
-        ini_zma, ts_formula, ts_info, ts_dct, spc_dct,
-        high_mul, grid1, grid2, frm_name,
-        mod_var_scn_thy_info,
+        ini_zma, ts_info, ts_formula, high_mul, active_space,
+        rct_info, rct_ichs, rcts_cnf_fs,
+        grid1, grid2, frm_name,
         mod_var_scn_thy_info,
         mod_var_sp1_thy_info,
+        hs_var_scn_thy_info,
+        hs_var_sp1_thy_info,
+        hs_var_sp2_thy_info,
         mod_ini_thy_info, mod_thy_info,
-        thy_run_path, thy_save_path,
-        overwrite, update_guess,
+        vscnlvl_thy_save_fs,
+        vscnlvl_ts_save_fs,
+        var_scn_run_fs, var_scn_save_fs,
         run_prefix, save_prefix,
+        overwrite, update_guess,
         vrc_dct,
         corr_pot=True)
 
@@ -482,19 +483,16 @@ def _set_info(spc_dct, tsname):
     chg = ts_dct['charge']
     mult, high_mult = ts_dct['mult'], ts_dct['high_mult']
     reacs, prods = ts_dct['reacs'], ts_dct['prods']
+    rct1_info = filesys.inf.get_spc_info(spc_dct[reacs[0]])
+    rct2_info = filesys.inf.get_spc_info(spc_dct[reacs[1]])
 
     # Build dct holding all the info objects
     info_dct = {
         'ts_info': ('', chg, mult),
         'hs_info': ('', chg, high_mult),
         'rxn_info': filesys.inf.rxn_info(reacs, prods, spc_dct),
-        'rct1_info': filesys.inf.get_spc_info(spc_dct[reacs[0]]),
-        'rct2_info': filesys.inf.get_spc_info(spc_dct[reacs[1]])
+        'rct_info': (rct1_info, rct2_info)
     }
-
-    # print(reacs[0])
-    # import sys
-    # sys.exit()
 
     return info_dct
 
@@ -507,15 +505,14 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
 
     ts_info = info_dct['ts_info']
     rxn_info = info_dct['rxn_info']
-    rct1_info = info_dct['rct1_info']
-    rct2_info = info_dct['rct2_info']
+    rct_info = info_dct['rct_info']
 
     # Get the name
-    ini_zma = ts_dct['zma']
-    frm_bnd_keys = ts_dct['frm_bnd_keys']
-    brk_bnd_keys = ts_dct['brk_bnd_keys']
-    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-    brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
+    # ini_zma = ts_dct['zma']
+    # frm_bnd_keys = ts_dct['frm_bnd_keys']
+    # brk_bnd_keys = ts_dct['brk_bnd_keys']
+    # frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    # brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
     # Set the hs info
     hs_info = (ts_info[0], ts_info[1], ts_dct['high_mult'])
@@ -529,12 +526,14 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
     hs_vscnlvl_thy_info = None
     hs_vsp1lvl_thy_info = None
     hs_vsp2lvl_thy_info = None
+    hs_thy_info = None
 
     # Initialize the necessary run filesystem
     runlvl_ts_run_fs = None
     runlvl_scn_run_fs = None
     vscnlvl_ts_run_fs = None
     vscnlvl_scn_run_fs = None
+    vscnlvl_cscn_run_fs = None
     vrctst_run_fs = None
 
     # Initialize the necessary save filesystem
@@ -545,6 +544,7 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
     vscnlvl_thy_save_fs = None
     vscnlvl_ts_save_fs = None
     vscnlvl_scn_save_fs = None
+    vscnlvl_cscn_save_fs = None
     vrctst_save_fs = None
 
     if es_keyword_dct.get('inplvl', None) is not None:
@@ -570,6 +570,8 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
             es_keyword_dct['runlvl'], thy_dct)
         mod_thy_info = filesys.inf.modify_orb_restrict(
             ts_info, thy_info)
+        hs_thy_info = filesys.inf.modify_orb_restrict(
+            hs_info, thy_info)
 
         runlvl_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
             run_prefix, rxn_info, mod_thy_info)
@@ -619,10 +621,11 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
             vscnlvl_thy_run_fs[1], zma_idxs=zma_locs)
         _, vscnlvl_zma_save_path = filesys.build.zma_fs_from_prefix(
             vscnlvl_thy_save_fs[1], zma_idxs=zma_locs)
-        vscnlvl_scn_run_fs = filesys.build.scn_fs_from_cnf(
-            vscnlvl_zma_run_path, constraint_dct=None)
-        vscnlvl_scn_save_fs = filesys.build.scn_fs_from_cnf(
-            vscnlvl_zma_save_path, constraint_dct=None)
+
+        vscnlvl_scn_run_fs = autofile.fs.scan(vscnlvl_zma_run_path)
+        vscnlvl_scn_save_fs = autofile.fs.scan(vscnlvl_zma_save_path)
+        vscnlvl_cscn_run_fs = autofile.fs.cscan(vscnlvl_zma_run_path)
+        vscnlvl_cscn_save_fs = autofile.fs.cscan(vscnlvl_zma_save_path)
 
         vrctst_save_fs = filesys.build.vrc_fs_from_thy(
             vscnlvl_ts_save_fs[1])
@@ -649,12 +652,12 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
 
         if es_keyword_dct.get('var_splvl2', None) is not None:
 
-            vsp2_thy_info = filesys.inf.get_es_info(
+            vsp2lvl_thy_info = filesys.inf.get_es_info(
                 es_keyword_dct['var_splvl2'], thy_dct)
-            mod_vsp2_thy_info = filesys.inf.modify_orb_restrict(
-                ts_info, vsp2_thy_info)
-            hs_vsp2_thy_info = filesys.inf.modify_orb_restrict(
-                hs_info, vsp2_thy_info)
+            mod_vsp2lvl_thy_info = filesys.inf.modify_orb_restrict(
+                ts_info, vsp2lvl_thy_info)
+            hs_vsp2lvl_thy_info = filesys.inf.modify_orb_restrict(
+                hs_info, vsp2lvl_thy_info)
 
             #     var_sp2_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
             #         run_prefix, rxn_info, mod_var_sp2_thy_info)
@@ -663,7 +666,13 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
 
     # Get the conformer filesys for the reactants
     reac_cnf_fs = _reac_cnf_fs(
-        rct1_info, rct2_info, mod_ini_thy_info, run_prefix, save_prefix)
+        rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
+
+    print('high spin thy info')
+    print('vscn', hs_vscnlvl_thy_info)
+    print('vsp1', hs_vsp1lvl_thy_info)
+    print('vsp2', hs_vsp2lvl_thy_info)
+    print('run', hs_thy_info)
 
     # Build the dictionaries for the return
     method_dct = {
@@ -674,7 +683,8 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
         'var_splvl2': mod_vsp2lvl_thy_info,
         'hs_var_scnlvl': hs_vscnlvl_thy_info,
         'hs_var_splvl1': hs_vsp1lvl_thy_info,
-        'hs_var_splvl2': hs_vsp2lvl_thy_info
+        'hs_var_splvl2': hs_vsp2lvl_thy_info,
+        'hs_runlvl': hs_thy_info
     }
 
     runfs_dct = {
@@ -682,6 +692,7 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
         'runlvl_scn_fs': runlvl_scn_run_fs,
         'vscnlvl_ts_fs': vscnlvl_ts_run_fs,
         'vscnlvl_scn_fs': vscnlvl_scn_run_fs,
+        'vscnlvl_cscn_fs': vscnlvl_cscn_run_fs,
         'vrctst_fs': vrctst_run_fs,
     }
 
@@ -694,6 +705,7 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
         'vscnlvl_thy_fs': vscnlvl_thy_save_fs,
         'vscnlvl_ts_fs': vscnlvl_ts_save_fs,
         'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
+        'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
         'vrctst_fs': vrctst_save_fs,
         'rcts_cnf_fs': reac_cnf_fs
     }
@@ -701,26 +713,34 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
     return method_dct, runfs_dct, savefs_dct
 
 
-def _reac_cnf_fs(rct1_info, rct2_info, mod_ini_thy_info, run_prefix, save_prefix):
+def _reac_cnf_fs(rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix):
     """ set reactant method stuff
     """
 
-    rct_cnf_fs = []
+    ini_thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['inplvl'], thy_dct)
 
-    for rct_info in (rct1_info, rct2_info):
+    rct_cnf_fs = ()
+
+    for rinfo in rct_info:
+
+        mod_ini_thy_info = filesys.inf.modify_orb_restrict(
+            rinfo, ini_thy_info)
+        print('reac bld, ini thy', mod_ini_thy_info)
 
         # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
-            run_prefix, rct_info, mod_ini_thy_info)
+            run_prefix, rinfo, mod_ini_thy_info)
         _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
-            save_prefix, rct_info, mod_ini_thy_info)
+            save_prefix, rinfo, mod_ini_thy_info)
 
         # Build conformer filesys
         ini_cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
             ini_thy_run_path, mod_ini_thy_info, cnf=None)
-        ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
+        ini_cnf_save_fs, ini_min_locs = filesys.build.cnf_fs_from_prefix(
             ini_thy_save_path, mod_ini_thy_info, cnf='min')
-        ini_cnf_save_paths = filesys.build.cnf_paths_from_locs(
-            ini_cnf_save_fs, ini_cnf_save_locs)
+        ini_cnf_run_fs[-1].create(ini_min_locs)
+
+        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs, ini_min_locs),)
 
     return rct_cnf_fs

@@ -7,8 +7,8 @@ import importlib
 import autofile
 import automol
 from routines.es import runner as es_runner
-from routines.es.findts import run as runts
-# from routines.es.newts import run as runts
+# from routines.es.findts import run as runts
+from routines.es.newts import run as runts
 from routines.es._routines import conformer
 from routines.es._routines import geom
 from routines.es._routines import hr
@@ -155,8 +155,8 @@ def geom_init(spc, thy_dct, es_keyword_dct,
 
 
 def conformer_tsk(job, spc_dct, spc_name,
-                      thy_dct, es_keyword_dct,
-                      run_prefix, save_prefix, saddle):
+                  thy_dct, es_keyword_dct,
+                  run_prefix, save_prefix, saddle):
     """ Launch tasks associated with conformers.
         Scan: Generate a set of conformer geometries and energies via
               random sampling over torsional coordinates
@@ -301,8 +301,8 @@ def conformer_tsk(job, spc_dct, spc_name,
 
 
 def tau_tsk(job, spc_dct, spc_name,
-                thy_dct, es_keyword_dct,
-                run_prefix, save_prefix, saddle):
+            thy_dct, es_keyword_dct,
+            run_prefix, save_prefix, saddle):
     """ Energies, gradients, and hessians,
         for set of arbitrarily sampled torsional coordinates
         with all other coordinates optimized
@@ -524,8 +524,8 @@ def tau_tsk(job, spc_dct, spc_name,
 
 
 def hr_tsk(job, spc_dct, spc_name,
-               thy_dct, es_keyword_dct,
-               run_prefix, save_prefix, saddle):
+           thy_dct, es_keyword_dct,
+           run_prefix, save_prefix, saddle):
     """ run a scan over the specified torsional coordinates
     """
 
@@ -541,7 +541,7 @@ def hr_tsk(job, spc_dct, spc_name,
         es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
-    
+
     # Script
     _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         *mod_thy_info[0:2])
@@ -675,7 +675,7 @@ def hr_tsk(job, spc_dct, spc_name,
 
                 # Check for new minimum conformer
                 new_min_zma = structure.tors.check_hr_pot(tors_pots, tors_zmas)
-            
+
                 if new_min_zma is not None:
                     print('Finding new low energy conformer...')
                     #     _ = conformer.conformer_sampling(

@@ -247,117 +247,73 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
     return spc_str, dat_dct
 
 
-# def rpath_vtst_nosadpt_block(ts_dct, ts_label, reac_label, prod_label,
-#                              spc_ene, projrot_script_str, multi_info):
-#     """ prepare the mess input string for a variational TS that does not have
-#     a saddle point. Do it by calling the species block for each grid point
-#     in the scan file system
-#     """
-#
-#     ts_info = ['', ts_dct['chg'], ts_dct['mul']]
-#     multi_level = fsorb.mod_orb_restrict(ts_info, multi_info)
-#
-#     rxn_save_path = ts_dct['rxn_fs'][3]
-#     thy_save_fs = autofile.fs.theory(rxn_save_path)
-#     thy_save_fs[-1].create(multi_level[1:4])
-#     thy_save_path = thy_save_fs[-1].path(multi_level[1:4])
-#     scn_save_fs = autofile.fs.scan(thy_save_path)
-#
-#     # Read the scan save filesystem to get the molecular info
-#     sym_factor = 1.
-#     irc_pt_strs = []
-#     proj_rotors_str = ''
-#     pot = []
-#
-#     elec_levels = [[0., ts_dct['mul']]]
-#     grid = ts_dct['grid']
-#     grid = numpy.append(grid[0], grid[1])
-#     dist_name = ts_dct['dist_info'][0]
-#
-#     # Read the infinite separation energy
-#     inf_locs = [[dist_name], [1000.]]
-#     inf_sep_ene = scn_save_fs[-1].file.energy.read(inf_locs)
-#
-#     # Build dct of vtst info
-#     inf_dct = read_filesys_for_rpvtst()
-#
-#     # Write the string
-#     variational_str = _write_mess_variational_str()
-#
-#     return variational_str
-#
-#
-# def rpath_vtst_sadpt_block(ts_dct, ene_thy_level, geo_thy_level,
-#                            ts_label, reac_label, prod_label,
-#                            first_ground_ene):
-#     """ prepare the mess input string for a variational TS where there is a
-#         saddle point on the MEP.
-#         In this case, there is limited torsional information.
-#     """
-#     [geo_thy_level, ene_thy_level, _, _, _, _] = pf_levels
-#
-#     irc_idxs = ts_dct['irc_idxs']
-#     ts_info = ['', ts_dct['chg'], ts_dct['mul']]
-#
-#     # Build the TS scan file system
-#     scn_save_fs, _, _, _ = irc.ts_scn_fs(
-#         ts_dct, ts_info, geo_thy_level)
-#
-#     # Set the distance name for the reaction coordinate
-#     dist_name = 'RC'
-#
-#     # Build dct of vtst info
-#     inf_dct_lst = read_filesys_for_rpvtst()
-#
-#     # Get the saddle point
-#
-#     # Write the string
-#     variational_str = _write_mess_variational_str(
-#         inf_dct_lst, irc_idxs, ts_idx=None)
-#
-#     return variational_str
-#
-#
-# def _write_mess_variational_str(inf_dct_lst, rpath_idxs, ts_idx=None):
-#     """ write the variational string
-#     """
-#
-#     rpath_pt_strs = []
-#     for idx, inf_dct in zip(rpath_idxs, inf_dct_lst):
-#
-#         # Iniialize the header of the rxn path pt string
-#         rpath_pt_str = '!-----------------------------------------------\n'
-#         rpath_pt_str += '! RXN Path Point {0}'.format(str(int(idx+1)))
-#         if ts_idx is not None and ts_idx == idx:
-#             rpath_pt_str += '  (Saddle Point)'
-#         rpath_pt_str += '\n'
-#
-#         # Write MESS string for the rxn path pt; add to rxn path pt string
-#         core_str = mess_io.writer.mol_data.core_rigidrotor(
-#             geom=inf_dct['geom'],
-#             sym_factor=inf_dct['sym_factor'],
-#             interp_emax=None
-#         )
-#         rpath_pt_str += mess_io.writer.species.molecule(
-#             core=core_str,
-#             freqs=inf_dct['freqs'],
-#             elec_levels=inf_dct['elec_levels'],
-#             hind_rot='',
-#             xmat=(),
-#             rovib_coups=(),
-#             rot_dists=()
-#         )
-#
-#         # Add the ZPVE string for the rxn path point
-#         rpath_pt_str += (
-#             '  ZeroEnergy[kcal/mol]' +
-#             '      {0:<8.2f}'.format(inf_dct['zero_ene'])
-#         )
-#
-#         # Append rxn path pt string to full list of rpath strings
-#         rpath_pt_strs.append(rpath_pt_str)
-#
-#     return rpath_pt_strs
+def rpvtst_nosadpt_block(inf_dct):
+    """ prepare the mess input string for a variational TS that does not have
+    a saddle point. Do it by calling the species block for each grid point
+    in the scan file system
+    """
+    return _write_mess_variational_str(
+        inf_dct, rpath_idxs=None, ts_idx=None)
+
+
+def rpvtst_sadpt_block(inf_dct, ts_idx=11):
+    """ prepare the mess input string for a variational TS where there is a
+        saddle point on the MEP.
+        In this case, there is limited torsional information.
+    """
+    return _write_mess_variational_str(
+        inf_dct, rpath_idxs=None, ts_idx=ts_idx)
+
+
+def _write_mess_variational_str(inf_dct, rpath_idxs=None, ts_idx=None):
+    """ write the variational string
+    """
+
+    # Trim the lst of inf_dcts if there are any rpath idx restrictions
+    # if rpath_idxs is not None:
+    #     inf_dct_lst = (dct for i, dct in enumerate(inf_dct['rpath'])
+    #                    if i in rpath_idxs)
+
+    # Get the strings for each point along the reaction path
+    rpath_pt_strs = []
+    for idx, dct in enumerate(inf_dct['rpath']):
+
+        # Iniialize the header of the rxn path pt string
+        rpath_pt_str = '!-----------------------------------------------\n'
+        rpath_pt_str += '! RXN Path Point {0}'.format(str(int(idx+1)))
+        if ts_idx is not None and ts_idx == idx:
+            rpath_pt_str += '  (Saddle Point)'
+        rpath_pt_str += '\n'
+
+        # Write MESS string for the rxn path pt; add to rxn path pt string
+        core_str = mess_io.writer.mol_data.core_rigidrotor(
+            geom=dct['geom'],
+            sym_factor=dct['sym_factor'],
+            interp_emax=None
+        )
+        rpath_pt_str += mess_io.writer.molecule(
+            core=core_str,
+            freqs=dct['freqs'],
+            elec_levels=dct['elec_levels'],
+            hind_rot='',
+            xmat=(),
+            rovib_coups=(),
+            rot_dists=()
+        )
+
+        # Add the ZPVE string for the rxn path point
+        rpath_pt_str += (
+            '  ZeroEnergy[kcal/mol]' +
+            '      {0:<8.2f}'.format(dct['zero_ene'])
+        )
+
+        # Append rxn path pt string to full list of rpath strings
+        rpath_pt_strs.append(rpath_pt_str)
+
+    # Write the mess string
+    rpath_str = '\n'.join(rpath_pt_strs)
+
+    return rpath_str
 #
 #
 # def vtst_energy():
