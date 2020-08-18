@@ -275,6 +275,8 @@ def _hrpot_spline_fitter(pot_dct, min_thresh=-0.10, max_thresh=50.0):
 
     pot = list(pot_dct.values())
 
+    pot = list(pot_dct.values())
+
     # Initialize a variable for the size of the potential
     lpot = len(pot)+1
     pot.append(0.0)

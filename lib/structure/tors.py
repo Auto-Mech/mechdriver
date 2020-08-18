@@ -552,6 +552,7 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
         if all_hyd and hyd_count == 3:
             sym_num = 3
             lpot = int(len(pot)/3)
+<<<<<<< HEAD
             new_pot = True
             print('sym_num test 2:', sym_num, lpot, new_pot)
     if new_pot:
@@ -560,6 +561,12 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
             potr[(pval,)] = pot[(pval,)]
     else:
         potr = copy.deepcopy(pot)
+=======
+            potp = {}
+            for pval in range(lpot):
+               potp[(pval,)] = pot[(pval,)]
+            pot = potp
+>>>>>>> 571a0d73ce2afdb3c8ddf2f38e76b9801591e622
 
     print('potr test:', potr)
     return group, axis, potr, sym_num
