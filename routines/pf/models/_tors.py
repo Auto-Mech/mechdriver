@@ -208,7 +208,7 @@ def make_hr_strings(rotors, run_path, tors_model,
         # if len(rotor) > 1 and 'mdhr_pot_data' in rotor:
         if 'mdhr_pot_data' in rotor:
             pot, geoms, grads, hessians = rotor['mdhr_pot_data']
-            hr_freqs = torsprep.calc_hr_frequenices(
+            hr_freqs = torsprep.calc_hr_frequencies(
                 geoms, grads, hessians, run_path)
             mdhr_dat = mess_io.writer.mdhr_data(
                 pot, freqs=hr_freqs, nrot=numrotors)
@@ -265,69 +265,6 @@ def _rotor_tors_strs(tors_name, group, axis,
             remdummy=remdummy)
 
     return mess_hr_str, mess_ir_str, mess_flux_str, projrot_str
-
-
-# Functions to obtain values of the HR potentials from the filesystem
-def _read_hr_pot(tors_names, tors_grids, cnf_save_path, 
-                 mod_tors_ene_info, ref_ene,
-                 constraint_dct,
-                 read_geom=False, read_grad=False, read_hess=False):
-    """ Get the potential for a hindered rotor
-    """
-
-    # print('cscn_path', scn_run_fs[1].path([coo_names]))
-
-    # Build initial lists for storing potential energies and Hessians
-    grid_points, grid_vals = torsprep.set_scan_dims(tors_grids)
-    pot, geoms, grads, hessians = {}, {}, {}, {}
-
-    # Set up filesystem information
-    zma_fs = fs.manager(cnf_save_path, 'ZMATRIX')
-    zma_path = zma_fs[-1].path([0])
-    if constraint_dct is None:
-        scn_fs = autofile.fs.scan(zma_path)
-    else:
-        scn_fs = autofile.fs.cscan(zma_path)
-
-    # Read the energies and Hessians from the filesystem
-    for point, vals in zip(grid_points, grid_vals):
-
-        locs = [tors_names, vals]
-        if constraint_dct is not None:
-            locs = [constraint_dct] + locs
-
-        ene = _read_tors_ene(scn_fs, locs, mod_tors_ene_info)
-        if ene is not None:
-            pot[point] = (ene - ref_ene) * phycon.EH2KCAL
-        else:
-            pot[point] = -10.0
-
-        if read_geom:
-            geoms[point] = scn_fs[-1].file.geometry.read(locs)
-
-        if read_grad:
-            grads[point] = scn_fs[-1].file.gradient.read(locs)
-
-        if read_hess:
-            hessians[point] = scn_fs[-1].file.hessian.read(locs)
-    return pot, geoms, grads, hessians
-
-
-def _calc_hr_frequenices(geoms, grads, hessians, run_path):
-    """ Calculate the frequencies
-    """
-
-    # Initialize hr freqs list
-    hr_freqs = {}
-    for point in geoms.keys():
-        _, proj_freqs, _, _ = vibprep.projrot_freqs(
-            [geoms[point]],
-            [hessians[point]],
-            run_path,
-            grads=[grads[point]])
-        hr_freqs[point] = proj_freqs
-
-    return hr_freqs
 
 
 def _hrpot_spline_fitter(pot_dct, min_thresh=-0.10, max_thresh=50.0):
