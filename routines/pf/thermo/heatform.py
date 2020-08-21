@@ -26,8 +26,9 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
     dhzero = hzero_mol * EH2KCAL
     for i, spc in enumerate(basis):
         h_basis = get_ref_h(spc, ref_set, 0)
-        if h_basis is None:
-            h_basis = 0.0
+        assert h_basis is not None, (
+                'h is not available for the reference {}'.format(automol.inchi.smiles(spc)))
+            
         dhzero += coeff[i] * h_basis * KJ2KCAL
         dhzero -= coeff[i] * hzero_basis[i] * EH2KCAL
 
@@ -303,6 +304,7 @@ def cbhtwo(ich, bal=True):
     value as INT their coefficient
     """
 
+    print('ich test:', ich)
     # Graphical info about molecule
     gra = automol.inchi.graph(ich)
     atms = automol.graph.atoms(gra)
