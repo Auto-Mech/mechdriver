@@ -17,8 +17,7 @@ from lib.structure import geom as geomprep
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
 def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                 rxn_class='', frm_bnd_keys=(), brk_bnd_keys=(),
-                 tors_geo=True):
+                 rxn_class='', frm_bnd_keys=(), brk_bnd_keys=()):
     """ Add more rotor info
     """
 
@@ -36,7 +35,10 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
         zma_fs = fs.manager(cnf_fs[-1].path(min_cnf_locs), 'ZMATRIX')
         zma = zma_fs[-1].file.zmatrix.read([0])
         remdummy = geomprep.build_remdummy_shift_lst(zma)
-        geo = cnf_fs[-1].file.geometry.read(min_cnf_locs) if tors_geo else None
+        if _need_tors_geo(pf_levels):
+            geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
+        else:
+            geo = None
 
         # Read the reference energy
         ref_ene = torsprep.read_tors_ene(
@@ -105,7 +107,8 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
             # Get the HR groups and axis for the rotor
             group, axis, pot, sym_num = torsprep.set_tors_def_info(
                 zma, tname, tsym, pot,
-                frm_bnd_keys, rxn_class, saddle=saddle)
+                frm_bnd_keys, brk_bnd_keys,
+                rxn_class, saddle=saddle)
             remdummy = geomprep.build_remdummy_shift_lst(zma)
 
             # Get the indices for the torsion
@@ -267,13 +270,16 @@ def _rotor_tors_strs(tors_name, group, axis,
     return mess_hr_str, mess_ir_str, mess_flux_str, projrot_str
 
 
+def _need_tors_geo(pf_levels):
+    """ Determine if a torsional geometry is geometry if needed
+    """
+    print('pflvl', pf_levels)
+    return bool(pf_levels['tors'][1] == pf_levels['harm'])
+
+
 def _hrpot_spline_fitter(pot_dct, min_thresh=-0.10, max_thresh=50.0):
     """ Get a physical hindered rotor potential via a series of spline fits
     """
-
-    pot = list(pot_dct.values())
-
-    pot = list(pot_dct.values())
 
     pot = list(pot_dct.values())
 

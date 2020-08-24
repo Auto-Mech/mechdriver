@@ -249,11 +249,27 @@ def pf_model_info(pf_model):
     vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
     sym_model = pf_model['sym'] if 'sym' in pf_model else 'none'
 
+    # Set well models
+    if 'wells' in pf_model:
+        rwells_model = pf_model['wells']
+        pwells_model = pf_model['wells']
+    else:
+        if 'rwells' in pf_model:
+            rwells_model = pf_model['rwells']
+        else:
+            rwells_model = 'fake'
+        if 'pwells' in pf_model:
+            pwells_model = pf_model['pwells']
+        else:
+            pwells_model = 'fake'
+
     pf_models = {
         'rot': rot_model,
         'tors': tors_model,
         'vib': vib_model,
-        'sym': sym_model
+        'sym': sym_model,
+        'rwells': rwells_model,
+        'pwells': pwells_model
     }
 
     return pf_models

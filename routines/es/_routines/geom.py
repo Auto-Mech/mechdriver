@@ -7,7 +7,6 @@ import elstruct
 import autofile
 from routines.es import runner as es_runner
 from routines.es._routines._fs import save_struct
-from routines.es._routines._fs import save_instab
 from lib import structure
 from lib.phydat import phycon
 
@@ -106,7 +105,7 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs, ini_min_cnf_locs):
             geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
             print('Getting inital geometry from inplvl at path',
                   '{}'.format(ini_cnf_save_fs[-1].path(ini_min_cnf_locs)))
-    
+
     if geo_init is None:
         geo_init = automol.inchi.geometry(spc_dct_i['inchi'])
         print('Getting initial geometry from inchi')
@@ -182,12 +181,15 @@ def _optimize_molecule(spc_info, zma_init,
             else:
 
                 print('Saving disconnected species...')
-                locs = [autofile.schema.generate_new_conformer_id()]
-                job = elstruct.Job.OPTIMIZATION
-                save_instab(zma_init, run_fs, cnf_save_fs, locs,
-                            mod_thy_info)
+                _, opt_ret = es_runner.read_job(
+                    job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                 structure.instab.write_instab(
-                    zma_init, zma, thy_save_fs, mod_thy_info[1:4])
+                    zma_init, zma,
+                    thy_save_fs, mod_thy_info[1:4],
+                    opt_ret,
+                    zma_locs=(0,),
+                    save_cnf=True
+                )
 
         else:
 
@@ -198,12 +200,15 @@ def _optimize_molecule(spc_info, zma_init,
 
         print('Saving disconnected species...')
         conf_found = False
-        locs = [autofile.schema.generate_new_conformer_id()]
-        job = elstruct.Job.OPTIMIZATION
-        save_instab(zma_init, run_fs, cnf_save_fs, locs,
-                    mod_thy_info)
+        _, opt_ret = es_runner.read_job(
+            job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
         structure.instab.write_instab(
-            zma_init, zma, thy_save_fs, mod_thy_info[1:4])
+            zma_init, zma,
+            thy_save_fs, mod_thy_info[1:4],
+            opt_ret,
+            zma_locs=(0,),
+            save_cnf=True
+        )
 
     # Save geom in thy filesys if a good geom is found
     if conf_found:
@@ -270,7 +275,7 @@ def _remove_imag(spc_info, geo, mod_thy_info, thy_run_fs, run_fs,
         spc_info, geo, mod_thy_info, thy_run_fs, script_str,
         overwrite, **kwargs)
 
-    # Make a variable to fix the imaginary mode if needed to pass to other functions
+    # Make var to fix the imaginary mode if needed to pass to other functions
     imag_fix_needed = bool(imag)
 
     # Make five attempts to remove imag mode if found

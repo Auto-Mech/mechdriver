@@ -52,7 +52,7 @@ def read_spc_data(spc_dct_i, spc_name,
                 spc_dct_i,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix, saddle=False, tors_wgeo=True)
+                run_prefix, save_prefix, saddle=False)
             writer = 'species_block'
 
     # Add writer to inf dct
@@ -91,7 +91,7 @@ def read_ts_data(ts_dct, tsname,
                 ts_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix, saddle=True, tors_wgeo=True)
+                run_prefix, save_prefix, saddle=True)
             writer = 'species_block'
     else:
         # Build MESS string for TS with no saddle point
@@ -161,7 +161,7 @@ def atm_data(spc_dct_i,
 
 def mol_data(spc_dct_i,
              chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
-             run_prefix, save_prefix, saddle=False, tors_wgeo=True):
+             run_prefix, save_prefix, saddle=False):
     """ Pull all of the neccessary information from the filesystem for a species
     """
 
@@ -186,8 +186,7 @@ def mol_data(spc_dct_i,
     rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
         rxn_class=rxn_class,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
-        tors_geo=tors_wgeo)
+        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
     if typ.nonrigid_tors(chn_pf_models, rotors):
         run_path = fs.make_run_path(pf_filesystems, 'tors')
@@ -215,8 +214,6 @@ def mol_data(spc_dct_i,
 
     if typ.anharm_vib(chn_pf_models):
         xmat = vib.read_anharmon_matrix(pf_filesystems)
-
-    print('zpe test:', zpe)
 
     # Obtain symmetry factor
     print('\nDetermining the symmetry factor...')
@@ -308,7 +305,6 @@ def rpvtst_data(ts_dct,
         ts_run_path, ts_save_path, _, thy_save_path = tspaths
 
     # Set TS reaction coordinate
-    print('path: ', ts_save_path)
     frm_bnd_keys, _ = util.get_bnd_keys2(ts_save_path, True)
     frm_name = util.get_rxn_coord_name(
         ts_save_path, frm_bnd_keys, sadpt=sadpt, zma_locs=(0,))
@@ -336,15 +332,15 @@ def rpvtst_data(ts_dct,
     for pot, geo, frq in zip(enes.values(), geoms.values(), freqs.values()):
 
         # Get the relative energy
-        zpe = sum(frq)*phycon.WAVEN2KCAL/2.
-        zero_ene = pot + zpe
+        zpe = (sum(frq) / 2.0) * phycon.WAVEN2KCAL
+        zero_ene = (pot + zpe) * phycon.KCAL2EH
 
         # Set values constant across the scan
         sym_factor = 1.0
         elec_levels = ts_dct['elec_levels']
 
         # Create info dictionary and append to lst
-        keys = ['geom', 'sym_factor', 'freqs', 'elec_levels', 'zero_ene']
+        keys = ['geom', 'sym_factor', 'freqs', 'elec_levels', 'ene_chnlvl']
         vals = [geo, sym_factor, frq, elec_levels, zero_ene]
         inf_dct['rpath'].append(dict(zip(keys, vals)))
 
@@ -384,8 +380,7 @@ def tau_data(spc_dct_i,
         spc_dct_i, pf_filesystems, chn_pf_models,
         chn_pf_levels,
         rxn_class=rxn_class,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
-        tors_geo=True)
+        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
     run_path = fs.make_run_path(pf_filesystems, 'tors')
     tors_strs = tors.make_hr_strings(
@@ -405,10 +400,10 @@ def tau_data(spc_dct_i,
     if vib_model == 'tau':
         if db_style == 'directory':
             tau_locs = [locs for locs in tau_save_fs[-1].existing()
-                       if tau_save_fs[-1].file.hessian.exists(locs)]
+                        if tau_save_fs[-1].file.hessian.exists(locs)]
         elif db_style == 'jsondb':
             tau_locs = [locs for locs in tau_save_fs[-1].json_existing()
-                       if tau_save_fs[-1].json.hessian.exists(locs)]
+                        if tau_save_fs[-1].json.hessian.exists(locs)]
     else:
         if db_style == 'directory':
             tau_locs = tau_save_fs[-1].existing()
@@ -426,7 +421,7 @@ def tau_data(spc_dct_i,
             geo = tau_save_fs[-1].file.geometry.read(locs)
         elif db_style == 'jsondb':
             geo = tau_save_fs[-1].json.geometry.read(locs)
-            
+
         geo_str = autofile.data_types.swrite.geometry(geo)
         samp_geoms.append(geo_str)
 

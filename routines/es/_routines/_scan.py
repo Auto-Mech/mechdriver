@@ -30,6 +30,8 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     # Check if ZMA matches one in filesys
     # breaks for scans for right now
     # check_isomer(zma, scn_save_fs)
+    print('2 coord name', coord_names)
+    print('2 grid', coord_grids)
 
     # Build the SCANS/CSCANS filesystems
     if constraint_dct is None:
@@ -109,7 +111,9 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
 
     # Set the frozen coordinates (set job at this point?)
     if constraint_dct is not None:
-        frozen_coordinates = coord_names + tuple(constraint_dct)
+        print(coord_names)
+        print(tuple(constraint_dct))
+        frozen_coordinates = tuple(coord_names) + tuple(constraint_dct)
     else:
         frozen_coordinates = coord_names
 
@@ -126,6 +130,8 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
         run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
 
         # Build the zma
+        print('3 coord name', coord_names)
+        print('3 grid', vals)
         zma = automol.zmatrix.set_values(
             guess_zma, dict(zip(coord_names, vals)))
 
@@ -169,8 +175,14 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                         if update_guess:
                             guess_zma = opt_zma
                     else:
-                        instab.write_instab(conn_zma, opt_zma,
-                                            thy_save_fs, mod_thy_info)
+                        _, opt_ret = es_runner.read_job(job=job, run_fs=run_fs)
+                        instab.write_instab(
+                            conn_zma, opt_zma,
+                            thy_save_fs, mod_thy_info[1:4],
+                            opt_ret,
+                            zma_locs=(0,),
+                            save_cnf=False
+                        )
                         break
                 else:
                     print('No output found in file')
@@ -323,6 +335,8 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
 
     # Setup and run the first part of the scan to shorter distances
     for grid in (grid1, grid2):
+        print('1 coord name', coord_name)
+        print('1 grid', grid)
         run_scan(
             zma=ts_zma,
             spc_info=ts_info,
@@ -344,15 +358,23 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
             **opt_kwargs
         )
 
-    # Save the scan
-    save_scan(
-        scn_run_fs=scn_run_fs,
-        scn_save_fs=scn_save_fs,
-        scn_typ='relaxed',
-        coo_names=[coord_name],
-        mod_thy_info=mod_var_scn_thy_info,
-        in_zma_fs=True
-    )
+    print('\nSaving the scans...')
+    if constraint_dct is None:
+        save_scan(
+            scn_run_fs=scn_run_fs,
+            scn_save_fs=scn_save_fs,
+            scn_typ='relaxed',
+            coo_names=[coord_name],
+            mod_thy_info=mod_var_scn_thy_info,
+            in_zma_fs=True)
+    else:
+        save_cscan(
+            cscn_run_fs=scn_run_fs,
+            cscn_save_fs=scn_save_fs,
+            scn_typ='relaxed',
+            constraint_dct=constraint_dct,
+            mod_thy_info=mod_var_scn_thy_info,
+            in_zma_fs=True)
 
 
 # DERIVED FUNCTION FOR MULTIREFERENCE SCAN CALCULATIONS
@@ -376,10 +398,19 @@ def multiref_rscan(ts_zma, ts_info,
     # print('\n')
 
     # Build the filesystem for the scan
-    scn_save_fs[1].create([coord_name])
-    inf_obj = autofile.schema.info_objects.scan_branch(
-        {coord_name: numpy.concatenate((grid1, grid2), axis=None)})
-    scn_save_fs[1].file.info.write(inf_obj, [coord_name])
+    # coord_grid = list(numpy.concatenate((grid1, grid2), axis=None))
+    # inf_obj = autofile.schema.info_objects.scan_branch(
+    #     {coord_name: coord_grid})
+    # if constraint_dct is None:
+    #     scn_save_fs[1].create([coord_name])
+    #     scn_save_fs[1].file.info.write(inf_obj, [coord_name])
+    # else:
+    #     scn_save_fs[1].create([constraint_dct])
+    #     scn_save_fs[1].file.info.write(inf_obj, [constraint_dct])
+    # scn_save_fs[1].create([coord_name])
+    # inf_obj = autofile.schema.info_objects.scan_branch(
+    #     {coord_name: numpy.concatenate((grid1, grid2), axis=None)})
+    # scn_save_fs[1].file.info.write(inf_obj, [coord_name])
 
     # Run the scans
     # print('opt_kwargs', opt_kwargs)
@@ -421,7 +452,6 @@ def radrad_inf_sep_ene(ts_info, high_mul, ref_zma,
                        hs_var_sp2_thy_info,
                        geo, geo_run_path, geo_save_path,
                        scn_save_fs, inf_locs,
-                       run_prefix, save_prefix,
                        overwrite=False,
                        **cas_kwargs):
     """ Obtain the infinite separation energy from the multireference energy

@@ -62,14 +62,18 @@ def pst_ts(tsclass, ts_sadpt, ts_nobarrier):
     return pst
 
 
-def need_fake_wells(tsclass):
+def need_fake_wells(tsclass, well_model):
     """ Return boolean to see if fake wells are needed
     """
-    abst_rxn = bool('abstraction' in tsclass)
-    # addn_rxn = bool('addition' in tsclass)
-    subs_rxn = bool('substitution' in tsclass)
-    return bool(abst_rxn or subs_rxn)
-    # return bool(abst_rxn or addn_rxn or subs_rxn)
+    if well_model == 'fake':
+        abst_rxn = bool('abstraction' in tsclass)
+        # addn_rxn = bool('addition' in tsclass)
+        subs_rxn = bool('substitution' in tsclass)
+        need = bool(abst_rxn or subs_rxn)
+    else:
+        need = False
+
+    return need
 
 
 def var_radrad(tsclass):
@@ -87,7 +91,7 @@ def treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
     treat = True
     if tunnel_model != 'none':
         if radrad:
-            if ts_nobarrier in ('pst', 'vrctst'):
+            if ts_nobarrier in ('pst', 'rpvtst', 'vrctst'):
                 treat = False
         else:
             if ts_sadpt == ('pst', 'vrctst'):

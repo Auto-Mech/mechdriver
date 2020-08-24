@@ -179,26 +179,35 @@ def multiref_wavefunction_guess(high_mul, zma,
 
 
 # STRING WRITER FOR VRC-TST TO REPLACE
-def wfn_string(spc_info, formula, num_act_elc, num_act_orb,
-               high_mul, add_two_closed=False):
-    """ Prepare values prepare cas options for multireference wavefunctions
+def wfn_string(ts_info, mod_var_scn_thy_info, inf_sep_ene, cas_kwargs):
+    """  Prepare a wfn string for VRC-TST
     """
 
-    # Set electron counts and orbital indexes
-    elec_count = automol.formula.electron_count(formula)
-    closed_orb = (elec_count - num_act_elc) // 2
-    occ_orb = closed_orb + num_act_orb
-    if add_two_closed:
-        closed_orb -= 2
+    method_dct = {
+        'caspt2': 'rs2',
+        'caspt2c': 'rs2c',
+    }
+    method = method_dct[mod_var_scn_thy_info[1]]
 
-    # Set the spin and charge values for the species
-    two_spin = spc_info[2] - 1
-    high_two_spin = high_mul - 1
+    # Set the lines for methods
+    method_lines = (
+        "if (iterations.ge.0) then",
+        "  {{{},shift=0.25}}".format(method),
+        "  molpro_energy = energy + {}".format(inf_sep_ene),
+        "else",
+        "  molpro_energy = 10.0"
+    )
+    cas_kwargs.update({'gen_lines': {3: method_lines}})
 
-    # Write a wavefunction card string
-    wfn_str = (
-        "{{uhf,maxit=300;wf,{0},1,{1}}}\n"
-        "{{multi,maxit=40;closed,{2};occ,{3};wf,{0},1,{4};orbprint,3}}"
-    ).format(elec_count, high_two_spin, closed_orb, occ_orb, two_spin)
+    inp_str = elstruct.writer.energy(
+        geom='GEOMETRY_HERE',
+        charge=ts_info[1],
+        mult=ts_info[2],
+        method='casscf',
+        basis=mod_var_scn_thy_info[2],
+        prog=mod_var_scn_thy_info[0],
+        orb_type=mod_var_scn_thy_info[3],
+        **cas_kwargs
+        )
 
-    return wfn_str
+    return inp_str

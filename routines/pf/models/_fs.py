@@ -13,7 +13,6 @@ def pf_filesys(spc_dct_i, pf_levels,
     """
 
     pf_filesystems = {}
-    print('pf_fs test:', spc_dct_i)
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle)
     if pf_levels['sym']:
@@ -127,10 +126,6 @@ def get_rxn_scn_coords(ts_path, coord_name, zma_locs=(0,)):
     # Build ZMA filesys
     zma_fs = autofile.fs.manager(ts_path, 'ZMATRIX')
     zma_path = zma_fs[-1].path(zma_locs)
-
-    print('ts', ts_path)
-    print('zma', zma_path)
-    print('coord', coord_name)
 
     # Read the values of the reaction coord
     scn_save_fs = autofile.fs.scan(zma_path)

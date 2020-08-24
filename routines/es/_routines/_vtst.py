@@ -73,7 +73,6 @@ def radrad_scan(ts_zma, ts_info, ts_formula, high_mul, active_space,
         hs_var_sp2_thy_info,
         geo, geo_run_path, geo_save_path,
         scn_save_fs, inf_locs,
-        run_prefix, save_prefix,
         overwrite, **cas_kwargs)
 
     inf_locs = [[coord_name], [1000.]]

@@ -316,12 +316,6 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
     reacs, prods, given_class = rxndirn.set_reaction_direction(
         reacs, prods, spc_dct, cla_dct,
         thy_info, ini_thy_info, save_prefix, direction=direction)
-    for reac in reacs:
-       rich = spc_dct[reac]['inchi']
-       print(rich)
-    for prod in prods:
-       pich = spc_dct[prod]['inchi']
-       print(pich)
     # Set the info regarding mults and chgs
     rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
     [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
@@ -338,6 +332,7 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         ini_thy_info, save_prefix, run_prefix, kickoff_size,
         kickoff_backward)
     [rct_zmas, prd_zmas, rct_cnf_save_fs, prd_cnf_save_fs] = zma_inf
+
     ret = rxnid.ts_class(
         rct_zmas, prd_zmas, rad_rad,
         ts_mul, low_mul, high_mul,
@@ -374,12 +369,16 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         # Set the ts_bnd using the zma and distname
         ts_bnd = automol.zmatrix.coord_idxs(ret1[0], ret1[1])
 
+        print('ts zma from id')
+        print(automol.zmatrix.string(ret1[0]))
+
         # Put class stuff in the dct
         dct_keys = ['zma', 'dist_name', 'brk_name',
                     'grid', 'frm_bnd_keys', 'brk_bnd_keys',
                     'amech_ts_tors_names', 'update_guess',
                     'var_grid', 'rcts_gra']
         ts_dct.update(dict(zip(dct_keys, ret1)))
+        ts_dct['rct_zmas'] = rct_zmas
         ts_dct['ts_bnd'] = ts_bnd
         ts_dct['bkp_data'] = ret2 if ret2 else None
         ts_dct['dist_info'] = [

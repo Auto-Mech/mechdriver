@@ -275,23 +275,23 @@ def _write_mess_variational_str(inf_dct, rpath_idxs=None, ts_idx=None):
     #                    if i in rpath_idxs)
 
     # Get the strings for each point along the reaction path
-    rpath_pt_strs = []
+    rpath_strs = []
     for idx, dct in enumerate(inf_dct['rpath']):
 
         # Iniialize the header of the rxn path pt string
-        rpath_pt_str = '!-----------------------------------------------\n'
-        rpath_pt_str += '! RXN Path Point {0}'.format(str(int(idx+1)))
+        rpath_str = '!-----------------------------------------------\n'
+        rpath_str += '! RXN Path Point {0}'.format(str(int(idx+1)))
         if ts_idx is not None and ts_idx == idx:
-            rpath_pt_str += '  (Saddle Point)'
-        rpath_pt_str += '\n'
+            rpath_str += '  (Saddle Point)'
+        rpath_str += '\n\n'
 
         # Write MESS string for the rxn path pt; add to rxn path pt string
-        core_str = mess_io.writer.mol_data.core_rigidrotor(
+        core_str = mess_io.writer.core_rigidrotor(
             geom=dct['geom'],
             sym_factor=dct['sym_factor'],
             interp_emax=None
         )
-        rpath_pt_str += mess_io.writer.molecule(
+        rpath_str += mess_io.writer.molecule(
             core=core_str,
             freqs=dct['freqs'],
             elec_levels=dct['elec_levels'],
@@ -301,19 +301,10 @@ def _write_mess_variational_str(inf_dct, rpath_idxs=None, ts_idx=None):
             rot_dists=()
         )
 
-        # Add the ZPVE string for the rxn path point
-        rpath_pt_str += (
-            '  ZeroEnergy[kcal/mol]' +
-            '      {0:<8.2f}'.format(dct['zero_ene'])
-        )
-
         # Append rxn path pt string to full list of rpath strings
-        rpath_pt_strs.append(rpath_pt_str)
+        rpath_strs.append(rpath_str)
 
-    # Write the mess string
-    rpath_str = '\n'.join(rpath_pt_strs)
-
-    return rpath_str
+    return rpath_strs
 #
 #
 # def vtst_energy():

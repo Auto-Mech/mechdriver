@@ -90,12 +90,14 @@ def thermo_paths(spc_dct_i, run_prefix):
     spc_info = inf.get_spc_info(spc_dct_i)
     spc_formula = automol.inchi.formula_string(spc_info[0])
     ich_key = automol.inchi.inchi_key(spc_info[0])
+    print(spc_info[0])
 
     # PF
     bld_locs = ['PF', 0]
     bld_save_fs = autofile.fs.build(run_prefix)
     bld_save_fs[-1].create(bld_locs)
     bld_path = bld_save_fs[-1].path(bld_locs)
+    print(bld_path, spc_formula, ich_key)
     spc_pf_path = os.path.join(bld_path, spc_formula, ich_key)
 
     # NASA polynomials

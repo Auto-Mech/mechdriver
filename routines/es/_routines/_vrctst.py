@@ -17,16 +17,20 @@ from lib.phydat import phycon
 
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM
 def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
-                     rct_info, rct_ichs, rcts_cnf_fs,
+                     rct_info, rct_ichs, rct_zmas, rcts_cnf_fs,
                      grid1, grid2, coord_name,
                      mod_var_scn_thy_info,
                      mod_var_sp1_thy_info,
+                     mod_var_sp2_thy_info,
                      hs_var_scn_thy_info,
                      hs_var_sp1_thy_info,
                      hs_var_sp2_thy_info,
                      mod_ini_thy_info, mod_thy_info,
                      vscnlvl_thy_save_fs,
-                     var_scn_run_fs, var_scn_save_fs,
+                     vscnlvl_ts_save_fs,
+                     vscnlvl_ts_run_fs,
+                     vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
+                     vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs,
                      run_prefix, save_prefix,
                      overwrite, update_guess,
                      vrc_dct):
@@ -40,26 +44,24 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
                                active_space, mod_var_scn_thy_info)
 
     # Get indices for potentials and input
-    bnd_frm_idxs = automol.zmatrix.coord_idxs(ini_zma, dist_name)
+    bnd_frm_idxs = automol.zmatrix.coord_idxs(ini_zma, coord_name)
     min_idx, max_idx = min(bnd_frm_idxs), max(bnd_frm_idxs)
     bnd_frm_idxs = (bnd_frm_idxs[0]+1, bnd_frm_idxs[1]+1)
 
     # Build the VRC-TST run directory, including the needed scr dir
-    vrc_path = _build_vrctst_fs(run_path)
+    vrc_path = _build_vrctst_fs(vscnlvl_ts_run_fs)
 
     # Calculate the correction potential along the MEP
     inf_sep_ene, npot = _build_correction_potential(
-        ts_info, high_mul, ts_zma, rct_zmas,
+        ts_info, high_mul, ref_zma,
         coord_name, bnd_frm_idxs,
         grid1, grid2,
-        rct_info, rcts_cnf_fs,
+        rct_info, rcts_cnf_fs, rct_zmas,
         mod_var_scn_thy_info, mod_var_sp1_thy_info,
         hs_var_scn_thy_info, hs_var_sp1_thy_info,
         mod_ini_thy_info, mod_thy_info,
         mod_var_sp2_thy_info,
         hs_var_sp2_thy_info,
-        geo, geo_run_path, geo_save_path,
-        scn_run_fs, scn_save_fs,
         vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
         vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs,
         vscnlvl_thy_save_fs,
@@ -68,14 +70,15 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
         **cas_kwargs)
 
     # Write remaining VaReCoF input files
-    varecof_inp = _write_varecof_input(
-        ts_zma, ts_dct['rct_zmas'],
-        npot, inf_sep_ene,
-        min_idx, max_idx,
-        vrc_dct, vrc_path)
+    _write_varecof_input(ref_zma, ts_info, ts_formula, high_mul,
+                         rct_ichs, rct_info, rct_zmas,
+                         active_space, mod_var_sp1_thy_info,
+                         npot, inf_sep_ene,
+                         min_idx, max_idx,
+                         vrc_dct, vrc_path)
 
     # Run VaReCoF to generate flux file
-    _run_varecof(varecof_inp, vrc_path)
+    _run_varecof(vrc_path)
 
     # Check for success and save the flux file if so
     # if _varecof_success(vrc_path):
@@ -83,31 +86,29 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
 
 
 # FUNCTIONS TO SET UP THE libcorrpot.so FILE USED BY VARECOF
-def build_correction_potential(ts_info, high_mul, ts_zma, rct_zmas,
-                               coord_name, bnd_frm_idxs,
-                               grid1, grid2,
-                               rct_info, rcts_cnf_fs,
-                               mod_var_scn_thy_info, mod_var_sp1_thy_info,
-                               hs_var_scn_thy_info, hs_var_sp1_thy_info,
-                               mod_ini_thy_info, mod_thy_info,
-                               mod_var_sp2_thy_info,
-                               hs_var_sp2_thy_info,
-                               geo, geo_run_path, geo_save_path,
-                               scn_run_fs, scn_save_fs,
-                               vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
-                               vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs,
-                               vscnlvl_thy_save_fs,
-                               overwrite, update_guess,
-                               vrc_dct, vrc_path,
-                               **cas_kwargs):
+def _build_correction_potential(ts_info, high_mul, ref_zma,
+                                coord_name, bnd_frm_idxs,
+                                grid1, grid2,
+                                rct_info, rcts_cnf_fs, rct_zmas,
+                                mod_var_scn_thy_info, mod_var_sp1_thy_info,
+                                hs_var_scn_thy_info, hs_var_sp1_thy_info,
+                                mod_ini_thy_info, mod_thy_info,
+                                mod_var_sp2_thy_info,
+                                hs_var_sp2_thy_info,
+                                vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
+                                vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs,
+                                vscnlvl_thy_save_fs,
+                                overwrite, update_guess,
+                                vrc_dct, vrc_path,
+                                **cas_kwargs):
     """  use the MEP potentials to compile the correction potential .so file
     """
 
     # Build the constraint dictionary
-    constraint_dct = _set_alt_constraints(ts_zma, rct_zmas)
+    constraint_dct = _set_alt_constraints(ref_zma, rct_zmas)
 
     # Run the potentials
-    _run_potentials(ts_zma, ts_info,
+    _run_potentials(ref_zma, ts_info,
                     mod_var_scn_thy_info,
                     coord_name, grid1, grid2,
                     vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
@@ -122,11 +123,11 @@ def build_correction_potential(ts_info, high_mul, ts_zma, rct_zmas,
     # max_grid = max([max(grid1), max(grid2)])
     # locs = [[dist_name], [max_grid]]
     inf_locs = [[coord_name], [grid1[0]]]
-    ts_zma = scn_save_fs[-1].file.zmatrix.read(inf_locs)
-    geo = scn_save_fs[-1].file.geometry.read(inf_locs)
+    ts_zma = vscnlvl_scn_save_fs[-1].file.zmatrix.read(inf_locs)
+    geo = vscnlvl_scn_save_fs[-1].file.geometry.read(inf_locs)
 
-    geo_run_path = scn_run_fs[-1].path(inf_locs)
-    geo_save_path = scn_save_fs[-1].path(inf_locs)
+    geo_run_path = vscnlvl_scn_run_fs[-1].path(inf_locs)
+    geo_save_path = vscnlvl_scn_save_fs[-1].path(inf_locs)
 
     inf_sep_ene = scan.radrad_inf_sep_ene(
         ts_info, high_mul, ts_zma,
@@ -137,7 +138,7 @@ def build_correction_potential(ts_info, high_mul, ts_zma, rct_zmas,
         mod_var_sp2_thy_info,
         hs_var_sp2_thy_info,
         geo, geo_run_path, geo_save_path,
-        scn_save_fs, inf_locs,
+        vscnlvl_scn_save_fs, inf_locs,
         overwrite, **cas_kwargs)
 
     # Combine and sort the grids for organization
@@ -158,6 +159,8 @@ def build_correction_potential(ts_info, high_mul, ts_zma, rct_zmas,
         pot_labels=pot_labels,
         pot_file_names=[vrc_dct['spc_name']],
         spc_name=vrc_dct['spc_name'])
+
+    return inf_sep_ene, len(potentials)
 
 
 def _set_alt_constraints(inf_sep_zma, rct_zmas):
@@ -217,8 +220,12 @@ def _run_potentials(inf_sep_zma, ts_info,
     for constraints in (None, constraint_dct):
         if constraints is None:
             scn_run_fs, scn_save_fs = vscnlvl_scn_run_fs, vscnlvl_scn_save_fs
+            print('\nRunning full scans..')
         else:
             scn_run_fs, scn_save_fs = vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs
+            print('\nRunning constrained scans..')
+
+        print('scn thy test', mod_var_scn_thy_info)
         scan.multiref_rscan(
             ts_zma=inf_sep_zma,
             ts_info=ts_info,
@@ -275,7 +282,7 @@ def _scan_sp(ts_info, coord_name,
 
 
 def _read_potentials(scn_save_fs, cscn_save_fs,
-                     sp_thy_info, dist_name, full_grid,
+                     sp_thy_info, dist_name, full_grid, inf_sep_ene,
                      constraint_dct):
     """ Read values form the filesystem to get the values to
         correct ht MEP
@@ -381,7 +388,9 @@ def _compile_potentials(mep_distances, potentials,
 
 
 # FUNCTIONS TO WRITE THE STRINGS FOR ALL OF THE VARECOF INPUT FILE
-def _write_varecof_input(ts_zma, rct_zmas,
+def _write_varecof_input(ref_zma, ts_info, ts_formula, high_mul,
+                         rct_ichs, rct_info, rct_zmas,
+                         active_space, mod_var_sp1_thy_info,
                          npot, inf_sep_ene,
                          min_idx, max_idx,
                          vrc_dct, vrc_path):
@@ -403,7 +412,7 @@ def _write_varecof_input(ts_zma, rct_zmas,
 
     # Build geometries needed for the varecof run
     total_geom, frag_geoms, frag_geoms_wdummy = fragment_geometries(
-        ts_zma, rct_zmas, min_idx, max_idx)
+        ref_zma, rct_zmas, min_idx, max_idx)
 
     # Set information for the pivot points needed in divsur.inp
     frames, npivots = build_pivot_frames(
@@ -462,10 +471,11 @@ def _write_varecof_input(ts_zma, rct_zmas,
         geom_ptt='GEOMETRY_HERE', ene_ptt='molpro_energy')
 
     # Write the electronic structure template file
-    memory, basis, method = '', '', ''
-    tml_inp_str = build_molpro_template_str(
-        ts_zma, ts_info, ts_dct['high_mul'],
-        memory, basis, method, inf_sep_ene)
+    tml_inp_str = _build_molpro_template_str(
+        ref_zma, ts_info, ts_formula, high_mul,
+        rct_ichs, rct_info,
+        active_space, mod_var_sp1_thy_info,
+        inf_sep_ene)
 
     # Write the mc_flux.inp input string
     mc_flux_inp_str = varecof_io.writer.input_file.mc_flux()
@@ -489,18 +499,18 @@ def _write_varecof_input(ts_zma, rct_zmas,
     _write_varecof_inp(inp, vrc_path)
 
 
-def build_molpro_template_str(ts_zma, ts_info, high_mul,
-                              memory, basis, method, inf_sep_ene):
+def _build_molpro_template_str(ref_zma, ts_info, ts_formula, high_mul,
+                               rct_ichs, rct_info,
+                               active_space, mod_var_sp1_thy_info,
+                               inf_sep_ene):
     """ Write the electronic structure template file
     """
-    num_act_elc = high_mul
-    num_act_orb = num_act_elc
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
-    wfn_str = wfn.wfn_string(
-        ts_info, ts_formula, num_act_elc, num_act_orb,
-        high_mul, add_two_closed=False)
-    tml_inp_str = varecof_io.writer.input_file.tml(
-        memory, basis, wfn_str, method, inf_sep_ene)
+
+    cas_kwargs = wfn.build_wfn(ref_zma, ts_info, ts_formula, high_mul,
+                               rct_ichs, rct_info,
+                               active_space, mod_var_sp1_thy_info)
+    tml_inp_str = wfn.wfn_string(
+        ts_info, mod_var_sp1_thy_info, inf_sep_ene, cas_kwargs)
 
     return tml_inp_str
 
@@ -762,12 +772,14 @@ def calc_pivot_xyzs(min_idx, max_idx, total_geom, frag_geoms):
 
 
 # VARIOUS JOB RUN FUNCTIONS
-def _build_vrctst_fs(run_path):
+def _build_vrctst_fs(ts_run_fs):
     """ build the filesystem and return the path
     """
 
+    ts_fs, _ = ts_run_fs
+    ts_run_path = ts_fs[0].path()
     bld_locs = ['VARECOF', 0]
-    bld_save_fs = autofile.fs.build(run_path)
+    bld_save_fs = autofile.fs.build(ts_run_path)
     bld_save_fs[-1].create(bld_locs)
     vrc_path = bld_save_fs[-1].path(bld_locs)
     os.makedirs(os.path.join(vrc_path, 'scratch'), exist_ok=True)

@@ -109,7 +109,7 @@ def mod_arr_fit(ktp_dct, mess_path,
 
     assert fit_type in ('single', 'double'), 'Only single/double fits'
     if inp_param_dct is not None:
-        assert set(list(ktp_dct.keys())) == set(list(inp_param_dct.keys())), (
+        assert set(list(ktp_dct.keys())) <= set(list(inp_param_dct.keys())), (
                 'Pressures for ktp and guess dcts must be the same: \n {} \n{}'.format(
                     list(ktp_dct.keys()), list(inp_param_dct.keys()))
                 )

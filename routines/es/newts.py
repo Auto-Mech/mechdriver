@@ -313,11 +313,14 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     """ find a transition state
     """
 
+    vrc_dct = {}
+
     # Get dct for specific species task is run for
     ts_dct = spc_dct[tsname]
 
     # Get info from the reactants
     high_mul = ts_dct['high_mult']
+    rct_zmas = ts_dct['rct_zmas']
     ts_info = info_dct['ts_info']
     rct_info = info_dct['rct_info']
     rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
@@ -342,38 +345,43 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     # Get method stuff
     mod_ini_thy_info = method_dct['inplvl']
     mod_thy_info = method_dct['runlvl']
-    mod_var_scn_thy_info = method_dct['var_splvl1']
+    mod_var_scn_thy_info = method_dct['var_scnlvl']
     mod_var_sp1_thy_info = method_dct['var_splvl1']
     mod_var_sp2_thy_info = method_dct['var_splvl2']
-    hs_var_scn_thy_info = method_dct['hs_splvl1']
-    hs_var_sp1_thy_info = method_dct['hs_splvl1']
-    hs_var_sp2_thy_info = method_dct['hs_splvl2']
+    hs_var_scn_thy_info = method_dct['hs_var_scnlvl']
+    hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
+    hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
 
     # Get the filesys stuff
-    var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
-    var_scn_run_fs = runfs_dct['vscnlvl_scn_fs']
+    vscnlvl_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
+    vscnlvl_scn_run_fs = runfs_dct['vscnlvl_scn_fs']
+    vscnlvl_cscn_save_fs = savefs_dct['vscnlvl_cscn_fs']
+    vscnlvl_cscn_run_fs = runfs_dct['vscnlvl_cscn_fs']
     rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
     vscnlvl_thy_save_fs = savefs_dct['vscnlvl_thy_fs']
     vscnlvl_ts_save_fs = savefs_dct['vscnlvl_ts_fs']
+    vscnlvl_ts_run_fs = runfs_dct['vscnlvl_ts_fs']
 
     print('Beginning Calculations for VRC-TST Treatments')
     vrctst.calc_vrctst_flux(
         ini_zma, ts_info, ts_formula, high_mul, active_space,
-        rct_info, rct_ichs, rcts_cnf_fs,
+        rct_info, rct_ichs, rct_zmas, rcts_cnf_fs,
         grid1, grid2, frm_name,
         mod_var_scn_thy_info,
         mod_var_sp1_thy_info,
+        mod_var_sp2_thy_info,
         hs_var_scn_thy_info,
         hs_var_sp1_thy_info,
         hs_var_sp2_thy_info,
         mod_ini_thy_info, mod_thy_info,
         vscnlvl_thy_save_fs,
         vscnlvl_ts_save_fs,
-        var_scn_run_fs, var_scn_save_fs,
+        vscnlvl_ts_run_fs,
+        vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
+        vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs,
         run_prefix, save_prefix,
         overwrite, update_guess,
-        vrc_dct,
-        corr_pot=True)
+        vrc_dct)
 
 
 # SET THE SEARCHING ALGORITHM

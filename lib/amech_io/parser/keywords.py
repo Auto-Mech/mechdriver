@@ -40,7 +40,8 @@ MODEL_PF_SUPPORTED_DCT = {
     'sym': ['none', 'sampling', '1dhr'],
     'ts_barrierless': ['pst', 'rpvtst', 'vrctst'],
     'ts_sadpt': ['fixed', 'pst', 'rpvtst', 'vrctst'],
-    'wells': ['fake', 'find'],
+    'rwells': ['fake', 'find', 'none'],
+    'pwells': ['fake', 'find', 'none'],
     'tunnel': ['none', 'eckart', 'sct']
 }
 MODEL_PF_DEFAULT_DCT = {

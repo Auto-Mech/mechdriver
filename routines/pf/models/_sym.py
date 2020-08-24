@@ -61,7 +61,7 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
         # Reduce sym factor using rotor symmetries
         sym_factor = tors_reduced_sym_factor(sym_factor, rotors)
 
-        print('sym_factor test:', sym_factor)
+        # print('sym_factor test:', sym_factor)
 
     return sym_factor
 
