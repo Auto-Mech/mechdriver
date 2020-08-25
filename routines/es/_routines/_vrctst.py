@@ -13,6 +13,7 @@ from lib import filesys
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 from lib.phydat import phycon
+from lib import get_host_node
 
 
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM
@@ -430,7 +431,7 @@ def _write_varecof_input(ref_zma, ts_info, ts_formula, high_mul,
     flux_err = vrc_dct['flux_err']
     pes_size = vrc_dct['pes_size']
     base_name = vrc_dct['base_name']
-    exe_path = vrc_dct['exe_path']
+    # exe_path = vrc_dct['exe_path']
 
     # Build geometries needed for the varecof run
     total_geom, frag_geoms, frag_geoms_wdummy = fragment_geometries(
@@ -544,7 +545,11 @@ def _build_molpro_template_str(ref_zma, ts_info, ts_formula, high_mul,
 def build_machinefile_str():
     """ Take machine list and write the string for the machine file
     """
-    machines = ['b450:8', 'b451:8', 'b452:8', 'b453:8']
+
+    host_node = get_host_node()
+    num_cores = '10'
+
+    machines = ['{}:{}'.format(host_node, num_cores)]
     machine_file_str = ''
     for machine in machines:
         machine_file_str += machine + '\n'
@@ -821,10 +826,17 @@ def _write_varecof_inp(varecof_inp, vrc_path):
     """ Write all of the VaReCoF inut files and run the code
     """
 
+    exe_names = ('molpro.sh')
+
     # Write all of the VaReCoF input files
     for (inp_str, inp_name) in varecof_inp:
-        with open(os.path.join(vrc_path, inp_name), 'w') as inp_file:
+        file_name = os.path.join(vrc_path, inp_name)
+        # Write the file
+        with open(file_name, 'w') as inp_file:
             inp_file.write(inp_str)
+        # Make file an executable
+        if inp_name in exe_names:
+            os.chmod(file_name, mode=os.stat(file_name).st_mode | stat.S_IEXEC)
 
 
 def _run_varecof(vrc_path):
