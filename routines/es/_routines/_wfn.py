@@ -197,7 +197,11 @@ def wfn_string(ts_info, mod_var_scn_thy_info, inf_sep_ene, cas_kwargs):
         "else",
         "  molpro_energy = 10.0"
     )
-    cas_kwargs.update({'gen_lines': {3: method_lines}})
+
+    # Update the cas kwargs dct
+    gen_lines_dct = cas_kwargs.get('gen_lines')
+    gen_lines_dct.update({3: method_lines})
+    cas_kwargs.update({'gen_lines': gen_lines_dct})
 
     inp_str = elstruct.writer.energy(
         geom='GEOMETRY_HERE',

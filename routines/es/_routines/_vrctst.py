@@ -56,7 +56,7 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
     vrc_path = _build_vrctst_fs(vscnlvl_ts_run_fs)
 
     # Calculate the correction potential along the MEP
-    inf_sep_ene, npot = _build_correction_potential(
+    inf_sep_ene, npot, zma_for_inp = _build_correction_potential(
         ts_info, high_mul, ref_zma,
         coord_name, bnd_frm_idxs,
         grid1, grid2,
@@ -74,7 +74,7 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
         **cas_kwargs)
 
     # Write remaining VaReCoF input files
-    _write_varecof_input(ref_zma, ts_info, ts_formula, high_mul,
+    _write_varecof_input(zma_for_inp, ts_info, ts_formula, high_mul,
                          rct_ichs, rct_info, rct_zmas,
                          active_space, mod_var_sp1_thy_info,
                          npot, inf_sep_ene,
@@ -148,12 +148,15 @@ def _build_correction_potential(ts_info, high_mul, ref_zma,
     # Combine and sort the grids for organization
     full_grid = list(grid1) + list(grid2)
     full_grid.sort()
-
+    
+    # Get grid val for zma used to make structure.inp and divsur.inp
+    grid_val_for_zma = grid1[-1]
+    
     # Read the values for the correction potential from filesystem
-    potentials, pot_labels = _read_potentials(
+    potentials, pot_labels, zma_for_inp = _read_potentials(
         vscnlvl_scn_save_fs, vscnlvl_cscn_save_fs,
         mod_var_sp1_thy_info, coord_name, full_grid, inf_sep_ene,
-        constraint_dct)
+        constraint_dct, grid_val_for_zma)
 
     # Build correction potential .so file used by VaReCoF
     _compile_potentials(
@@ -164,7 +167,11 @@ def _build_correction_potential(ts_info, high_mul, ref_zma,
         pot_file_names=[vrc_dct['spc_name']],
         spc_name=vrc_dct['spc_name'])
 
-    return inf_sep_ene, len(potentials)
+    # Set zma if needed
+    if zma_for_inp is None:
+        zma_for_inp = ref_zma
+
+    return inf_sep_ene, len(potentials), zma_for_inp
 
 
 def _set_alt_constraints(inf_sep_zma, rct_zmas):
@@ -267,8 +274,6 @@ def _scan_sp(ts_info, coord_name,
         *mod_var_sp1_thy_info[0:2])
 
     # Compute the single-point energies along the scan
-    print('vscn', vscnlvl_scn_save_fs)
-    print('coord', coord_name)
     for locs in vscnlvl_scn_save_fs[-1].existing([[coord_name]]):
 
         print('splocs', locs)
@@ -279,8 +284,8 @@ def _scan_sp(ts_info, coord_name,
         geo_save_path = vscnlvl_scn_save_fs[-1].path(locs)
         geo = vscnlvl_scn_save_fs[-1].file.geometry.read(locs)
         zma = vscnlvl_scn_save_fs[-1].file.zmatrix.read(locs)
-        print('scn_run_path')
-        print(geo_run_path)
+        # print('scn_run_path')
+        # print(geo_run_path)
 
         # Run the energy
         sp.run_energy(zma, geo, ts_info, mod_var_sp1_thy_info,
@@ -292,7 +297,7 @@ def _scan_sp(ts_info, coord_name,
 
 def _read_potentials(scn_save_fs, cscn_save_fs,
                      sp_thy_info, dist_name, full_grid, inf_sep_ene,
-                     constraint_dct):
+                     constraint_dct, grid_val_for_zma):
     """ Read values form the filesystem to get the values to
         correct ht MEP
     """
@@ -349,7 +354,14 @@ def _read_potentials(scn_save_fs, cscn_save_fs,
         potentials = [relax_corr_pot, full_corr_pot]
         potential_labels = ['relax', 'full']
 
-    return potentials, potential_labels
+    # Get zma used to make structure.inp and divsur.inp
+    inp_zma_locs = [[dist_name], [grid_val]]
+    if scn_save_fs[-1].file.zmatrix.exists(inp_zma_locs):
+        zma_for_inp = scn_save_fs[-1].file.zmatrix.read(inp_zma_locs)
+    else:
+        zma_for_inp = None
+
+    return potentials, potential_labels, zma_for_inp
 
 
 def _compile_potentials(mep_distances, potentials,
@@ -522,6 +534,7 @@ def _build_molpro_template_str(ref_zma, ts_info, ts_formula, high_mul,
     cas_kwargs = wfn.build_wfn(ref_zma, ts_info, ts_formula, high_mul,
                                rct_ichs, rct_info,
                                active_space, mod_var_sp1_thy_info)
+
     tml_inp_str = wfn.wfn_string(
         ts_info, mod_var_sp1_thy_info, inf_sep_ene, cas_kwargs)
 
@@ -546,6 +559,7 @@ def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
     """
 
     # Get geometries of fragments from the ts_zma from the MEP
+    print('amol zma\n', ts_zma)
     mep_total_geo = automol.zmatrix.geometry(ts_zma)
     mep_fgeos = [mep_total_geo[:max_idx], mep_total_geo[max_idx:]]
 
@@ -866,5 +880,4 @@ def _vrc_dct():
         'nsamp_min': 50,
         'flux_err': 10,
         'pes_size': 2,
-        'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
     }
