@@ -313,8 +313,6 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     """ find a transition state
     """
 
-    vrc_dct = {}
-
     # Get dct for specific species task is run for
     ts_dct = spc_dct[tsname]
 
@@ -380,8 +378,7 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
         vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
         vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs,
         run_prefix, save_prefix,
-        overwrite, update_guess,
-        vrc_dct)
+        overwrite, update_guess)
 
 
 # SET THE SEARCHING ALGORITHM

@@ -488,9 +488,16 @@ def radrad_inf_sep_ene(ts_info, high_mul, ref_zma,
         # Calculate the single point energy
         print('thy inf', thy_info)
         script_str, _, kwargs, _ = es_runner.qchem_params(*thy_info[0:2])
+
+        # print('cas_kwargs\n', cas_kwargs)
+        # print()
+        # print('kwargs\n', kwargs)
+        # import sys
+        # sys.exit()
+
         sp.run_energy(ref_zma, geo, ts_info, thy_info,
                       scn_save_fs, geo_run_path, geo_save_path, inf_locs,
-                      script_str, overwrite, highspin=True, **kwargs)
+                      script_str, overwrite, highspin=True, **cas_kwargs)
 
         # Read the energty from the filesystem
         hs_save_fs, hs_var_save_path = filesys.build.high_spin_from_prefix(

@@ -162,16 +162,16 @@ def build_spc_model_keyword_dct(model_str):
         opts_dct['ref_enes'] = 'ATcT'
     if 'ref_scheme' not in opts_dct:
         opts_dct['ref_scheme'] = 'basic'
-    if vrctst_str is not None:
-        vrctst_dct = ptt.build_keyword_dct(vrctst_str)
-    else:
-        vrctst_dct = {}
+    # if vrctst_str is not None:
+    #     vrctst_dct = ptt.build_keyword_dct(vrctst_str)
+    # else:
+    #     vrctst_dct = _vrc_dct()
 
     # Combine dcts into single model dct
     model_dct = {}
     model_dct['pf'] = pf_dct
     model_dct['es'] = es_dct
-    model_dct['vrctst'] = vrctst_dct
+    # model_dct['vrctst'] = vrctst_dct
     model_dct['options'] = opts_dct
 
     # Check the dct
@@ -331,3 +331,24 @@ def pf_level_info(es_model, thy_dct):
     }
 
     return es_levels
+
+
+def _vrc_dct():
+    """ Build VRC dict
+    """
+    return {
+        'fortran_compiler': 'gfortran',
+        'spc_name': 'mol',
+        'memory': 4.0,
+        'r1dists_lr': [8., 6., 5., 4.5, 4.],
+        'r1dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+        'r2dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+        'd1dists': [0.01, 0.5, 1.],
+        'd2dists': [0.01, 0.5, 1.],
+        'conditions': {},
+        'nsamp_max': 2000,
+        'nsamp_min': 50,
+        'flux_err': 10,
+        'pes_size': 2,
+        'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
+    }

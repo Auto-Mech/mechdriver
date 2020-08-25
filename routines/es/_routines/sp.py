@@ -29,12 +29,12 @@ def run_energy(zma, geo, spc_info, thy_info,
         sp_run_fs = autofile.fs.single_point(geo_run_path)
         sp_save_fs = autofile.fs.single_point(geo_save_path)
     else:
-        sp_run_fs = autofile.fs.single_point(geo_run_path)
+        sp_run_fs = autofile.fs.high_spin(geo_run_path)
         if _json_database(geo_save_path):
-            sp_save_fs = autofile.fs.single_point(
+            sp_save_fs = autofile.fs.high_spin(
                 geo_save_path, json_layer=locs)
         else:
-            sp_save_fs = autofile.fs.single_point(geo_save_path)
+            sp_save_fs = autofile.fs.high_spin(geo_save_path)
 
     sp_run_fs[-1].create(thy_info[1:4])
     sp_run_path = sp_run_fs[-1].path(thy_info[1:4])

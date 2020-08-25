@@ -32,16 +32,20 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
                      vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
                      vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs,
                      run_prefix, save_prefix,
-                     overwrite, update_guess,
-                     vrc_dct):
+                     overwrite, update_guess):
     """ Set up n VRC-TST calculations to get the flux file
     """
+
+    # Set vrc tst dct
+    vrc_dct = _vrc_dct()
 
     # Set up the casscf options
     ref_zma = automol.zmatrix.set_values(ini_zma, {coord_name: grid1[0]})
     cas_kwargs = wfn.build_wfn(ref_zma, ts_info, ts_formula, high_mul,
                                rct_ichs, rct_info,
                                active_space, mod_var_scn_thy_info)
+    _, script_str, _, _ = es_runner.qchem_params(
+        mod_var_sp1_thy_info[0], mod_var_sp1_thy_info[1])
 
     # Get indices for potentials and input
     bnd_frm_idxs = automol.zmatrix.coord_idxs(ini_zma, coord_name)
@@ -75,7 +79,7 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
                          active_space, mod_var_sp1_thy_info,
                          npot, inf_sep_ene,
                          min_idx, max_idx,
-                         vrc_dct, vrc_path)
+                         vrc_dct, vrc_path, script_str)
 
     # Run VaReCoF to generate flux file
     _run_varecof(vrc_path)
@@ -243,6 +247,7 @@ def _run_potentials(inf_sep_zma, ts_info,
         )
 
     # Run the single points on top of the initial scan
+    print('spthy', sp_thy_info)
     if sp_thy_info is not None:
         _scan_sp(ts_info, coord_name,
                  vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
@@ -262,7 +267,11 @@ def _scan_sp(ts_info, coord_name,
         *mod_var_sp1_thy_info[0:2])
 
     # Compute the single-point energies along the scan
-    for locs in vscnlvl_scn_save_fs[-1].existing([coord_name]):
+    print('vscn', vscnlvl_scn_save_fs)
+    print('coord', coord_name)
+    for locs in vscnlvl_scn_save_fs[-1].existing([[coord_name]]):
+
+        print('splocs', locs)
 
         # Set up single point filesys
         vscnlvl_scn_run_fs[-1].create(locs)
@@ -296,7 +305,7 @@ def _read_potentials(scn_save_fs, cscn_save_fs,
 
         # Set the locs for the full scan and constrained scan
         locs = [[dist_name], [grid_val]]
-        const_locs = [[dist_name], [grid_val], constraint_dct]
+        const_locs = [constraint_dct, [dist_name], [grid_val]]
 
         # Read the energies from the scan and constrained scan
         if scn_save_fs[-1].file.energy.exists(locs):
@@ -313,7 +322,8 @@ def _read_potentials(scn_save_fs, cscn_save_fs,
             scn_save_path = scn_save_fs[-1].path(locs)
             sp_save_fs = autofile.fs.single_point(scn_save_path)
             sp_save_fs[-1].create(sp_thy_info[1:4])
-            if sp_save_fs[-1].file.energy.read(sp_thy_info[1:4]):
+            # print('sp', sp_save_fs[-1].path(sp_thy_info[1:4]))
+            if sp_save_fs[-1].file.energy.exists(sp_thy_info[1:4]):
                 sp_pot.append(
                     sp_save_fs[-1].file.energy.read(sp_thy_info[1:4]))
 
@@ -352,7 +362,7 @@ def _compile_potentials(mep_distances, potentials,
     """
 
     # Change the coordinates of the MEP distances
-    mep_distances = [dist * phycon.BOHR2ANG for dist in mep_distances]
+    # mep_distances = [dist * phycon.BOHR2ANG for dist in mep_distances]
 
     # Build string Fortan src file containing correction potentials
     species_corr_str = varecof_io.writer.corr_potentials.species(
@@ -393,7 +403,7 @@ def _write_varecof_input(ref_zma, ts_info, ts_formula, high_mul,
                          active_space, mod_var_sp1_thy_info,
                          npot, inf_sep_ene,
                          min_idx, max_idx,
-                         vrc_dct, vrc_path):
+                         vrc_dct, vrc_path, script_str):
     """ prepare all the input files for a vrc-tst calculation
     """
 
@@ -464,10 +474,11 @@ def _write_varecof_input(ref_zma, ts_info, ts_formula, high_mul,
         nsamp_max, nsamp_min, flux_err, pes_size,
         faces=faces, faces_symm=faces_symm)
 
-    # Write the potential energy surface input string
+    # Write the molpro executable and potential energy surface input string
     els_inp_str = varecof_io.writer.input_file.elec_struct(
-        exe_path, vrc_path, base_name, npot,
+        vrc_path, base_name, npot,
         dummy_name='dummy_corr_', lib_name='libcorrpot.so',
+        exe_name='molpro.sh',
         geom_ptt='GEOMETRY_HERE', ene_ptt='molpro_energy')
 
     # Write the electronic structure template file
@@ -490,11 +501,13 @@ def _write_varecof_input(ref_zma, ts_info, ts_formula, high_mul,
     input_strs = (
         lrdivsur_inp_str, tst_inp_str,
         els_inp_str, tml_inp_str,
-        mc_flux_inp_str, conv_inp_str, machine_file_str)
+        mc_flux_inp_str, conv_inp_str,
+        machine_file_str, script_str)
     input_names = (
         'lr_divsur.inp', 'tst.inp',
         'molpro.inp', 'mol.tml',
-        'mc_flux.inp', 'convert.inp', 'machines')
+        'mc_flux.inp', 'convert.inp',
+        'machines', 'molpro.sh')
     inp = tuple(zip(input_strs, input_names))
     _write_varecof_inp(inp, vrc_path)
 
@@ -833,3 +846,25 @@ def _run_varecof(vrc_path):
 #     # Write the VRC-Flux and info files
 #     ts_save_fs[0].file.vrc_flux.write(flux_str)
 #     ts_save_fs[0].file.vrc_flux_info.write(flux_str)
+
+
+def _vrc_dct():
+    """ Build VRC dict
+    """
+    return {
+        'fortran_compiler': 'gfortran',
+        'base_name': 'mol',
+        'spc_name': 'mol',
+        'memory': 4.0,
+        'r1dists_lr': [8., 6., 5., 4.5, 4.],
+        'r1dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+        'r2dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+        'd1dists': [0.01, 0.5, 1.],
+        'd2dists': [0.01, 0.5, 1.],
+        'conditions': {},
+        'nsamp_max': 2000,
+        'nsamp_min': 50,
+        'flux_err': 10,
+        'pes_size': 2,
+        'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
+    }
