@@ -95,7 +95,7 @@ def run_tsk(tsk, spc_dct, spc_name,
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
 def geom_init(spc, thy_dct, es_keyword_dct,
-                  run_prefix, save_prefix, saddle):
+              run_prefix, save_prefix, saddle):
     """ Find the initial geometry
     """
 
@@ -122,8 +122,6 @@ def geom_init(spc, thy_dct, es_keyword_dct,
         save_prefix, spc_info, mod_thy_info)
     _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_ini_thy_info)
-    cnf_run_fs, _ = filesys.build.cnf_fs_from_thy(
-        thy_run_path, mod_thy_info, saddle=saddle)
     cnf_save_fs, _ = filesys.build.cnf_fs_from_thy(
         thy_save_path, mod_thy_info, saddle=saddle)
     ini_cnf_save_fs, ini_min_cnf_locs = filesys.build.cnf_fs_from_thy(
@@ -144,7 +142,7 @@ def geom_init(spc, thy_dct, es_keyword_dct,
     geo = geom.reference_geometry(
         spc, spc_info, mod_thy_info,
         thy_run_fs, thy_save_fs,
-        cnf_run_fs, cnf_save_fs,
+        cnf_save_fs,
         ini_cnf_save_fs, ini_min_cnf_locs,
         run_fs,
         opt_script_str, overwrite,
@@ -326,7 +324,7 @@ def tau_tsk(job, spc_dct, spc_name,
         es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
-    
+
     # Script
     _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         *thy_info[0:2])
@@ -347,10 +345,10 @@ def tau_tsk(job, spc_dct, spc_name,
     zma, geo = filesys.inf.cnf_fs_zma_geo(
         ini_cnf_save_fs, ini_cnf_locs)
     ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_cnf_locs)
-    ini_sp_save_fs = autofile.fs.single_point(ini_cnf_save_path) 
-    if  ini_sp_save_fs[-1].file.energy.exists(mod_ini_thy_info[1:4]) :
-        ref_ene = ini_sp_save_fs[-1].file.energy.read(mod_ini_thy_info[1:4]) 
-    else:    
+    ini_sp_save_fs = autofile.fs.single_point(ini_cnf_save_path)
+    if ini_sp_save_fs[-1].file.energy.exists(mod_ini_thy_info[1:4]):
+        ref_ene = ini_sp_save_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
+    else:
         ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_cnf_locs)
 
     # Bond key stuff
@@ -384,7 +382,7 @@ def tau_tsk(job, spc_dct, spc_name,
             thy_run_path, tau='all')
         tau_save_fs, tau_save_locs = filesys.build.tau_fs_from_thy(
             thy_save_path, tau='all')
-        #db_style = 'jsondb'
+        # db_style = 'jsondb'
         db_style = 'directory'
         if db_style == 'jsondb':
             tau_save_fs[-1].root.create()
@@ -441,8 +439,8 @@ def tau_tsk(job, spc_dct, spc_name,
                     if sp_save_fs[-1].file.info.exists(sp_locs):
                         inf_objl = sp_save_fs[-1].file.info.read(sp_locs)
                         jsp_save_fs[-1].json.info.write(inf_objl, sp_locs)
-            tau_save_locs = tau_save_fs[-1].json_existing() 
-            
+            tau_save_locs = tau_save_fs[-1].json_existing()
+
         if job == 'samp':
 
             # Set up the script
@@ -484,7 +482,7 @@ def tau_tsk(job, spc_dct, spc_name,
 
             # Add the hessian max
             hessmax = es_keyword_dct['hessmax']
-            
+
             # Set up the run scripts
             script_str, _, kwargs, _ = es_runner.qchem_params(
                 *thy_info[0:2])
@@ -726,8 +724,8 @@ def hr_tsk(job, spc_dct, spc_name,
 
 
 def irc_tsk(job, spc_dct, spc_name,
-                thy_dct, es_keyword_dct,
-                run_prefix, save_prefix, saddle):
+            thy_dct, es_keyword_dct,
+            run_prefix, save_prefix):
     """ run a scan over the specified torsional coordinates
     """
 
@@ -740,11 +738,11 @@ def irc_tsk(job, spc_dct, spc_name,
     # Set the spc_info
     spc_info = filesys.inf.get_spc_info(spc)
 
-    # Script
-    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
-        *thy_info[0:2])
-
     # Modify the theory
+    ini_thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['inplvl'], thy_dct)
+    thy_info = filesys.inf.get_es_info(
+        es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
@@ -752,6 +750,10 @@ def irc_tsk(job, spc_dct, spc_name,
     overwrite = es_keyword_dct['overwrite']
     # retryfail = es_keyword_dct['retryfail']
     irc_idxs = spc['irc_idxs']
+
+    # Set up the script
+    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+        *mod_thy_info[0:2])
 
     # Set the filesystem objects
     rxn_info = filesys.inf.rxn_info(
@@ -788,7 +790,7 @@ def irc_tsk(job, spc_dct, spc_name,
 
         # Script
         _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
-            *thy_info[0:2])
+            *mod_thy_info[0:2])
 
         zma, geo = filesys.inf.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
         irc.scan(

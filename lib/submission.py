@@ -138,12 +138,12 @@ MESSRATE = (
 VARECOF = (
     "#!/usr/bin/env bash\n"
     "ulimit -c 0\n"
-    "/home/ygeorgi/build/rotd/multi >& varecof.out"
+    "/home/ygeorgi/build/rotd/multi tst.inp >& varecof.out"
 )
 MCFLUX = (
     "#!/usr/bin/env bash\n"
     "ulimit -c 0\n"
-    "/home/ygeorgi/build/rotd/mc_flux"
+    "/home/ygeorgi/build/rotd/mc_flux mc_flux.inp"
 )
 TSTCHECK = (
     "#!/usr/bin/env bash\n"

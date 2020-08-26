@@ -2,6 +2,7 @@
 """
 
 import os
+import stat
 import autofile
 import automol
 import varecof_io
@@ -17,7 +18,8 @@ from lib import get_host_node
 
 
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM
-def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
+def calc_vrctst_flux(ini_zma, ts_info, hs_info,
+                     ts_formula, high_mul, active_space,
                      rct_info, rct_ichs, rct_zmas, rcts_cnf_fs,
                      grid1, grid2, coord_name,
                      mod_var_scn_thy_info,
@@ -58,7 +60,7 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
 
     # Calculate the correction potential along the MEP
     inf_sep_ene, npot, zma_for_inp = _build_correction_potential(
-        ts_info, high_mul, ref_zma,
+        ts_info, hs_info, high_mul, ref_zma,
         coord_name, bnd_frm_idxs,
         grid1, grid2,
         rct_info, rcts_cnf_fs, rct_zmas,
@@ -72,7 +74,7 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
         vscnlvl_thy_save_fs,
         overwrite, update_guess,
         vrc_dct, vrc_path,
-        **cas_kwargs)
+        cas_kwargs)
 
     # Write remaining VaReCoF input files
     _write_varecof_input(zma_for_inp, ts_info, ts_formula, high_mul,
@@ -91,7 +93,7 @@ def calc_vrctst_flux(ini_zma, ts_info, ts_formula, high_mul, active_space,
 
 
 # FUNCTIONS TO SET UP THE libcorrpot.so FILE USED BY VARECOF
-def _build_correction_potential(ts_info, high_mul, ref_zma,
+def _build_correction_potential(ts_info, hs_info, high_mul, ref_zma,
                                 coord_name, bnd_frm_idxs,
                                 grid1, grid2,
                                 rct_info, rcts_cnf_fs, rct_zmas,
@@ -105,7 +107,7 @@ def _build_correction_potential(ts_info, high_mul, ref_zma,
                                 vscnlvl_thy_save_fs,
                                 overwrite, update_guess,
                                 vrc_dct, vrc_path,
-                                **cas_kwargs):
+                                cas_kwargs):
     """  use the MEP potentials to compile the correction potential .so file
     """
 
@@ -121,8 +123,8 @@ def _build_correction_potential(ts_info, high_mul, ref_zma,
                     vscnlvl_thy_save_fs,
                     overwrite, update_guess,
                     constraint_dct,
-                    sp_thy_info=mod_var_sp1_thy_info,
-                    **cas_kwargs)
+                    cas_kwargs,
+                    sp_thy_info=mod_var_sp1_thy_info)
 
     # Calculate and store the infinite separation energy
     # max_grid = max([max(grid1), max(grid2)])
@@ -151,12 +153,14 @@ def _build_correction_potential(ts_info, high_mul, ref_zma,
     full_grid.sort()
     
     # Get grid val for zma used to make structure.inp and divsur.inp
+    print('grid1', grid1)
     grid_val_for_zma = grid1[-1]
     
     # Read the values for the correction potential from filesystem
     potentials, pot_labels, zma_for_inp = _read_potentials(
         vscnlvl_scn_save_fs, vscnlvl_cscn_save_fs,
-        mod_var_sp1_thy_info, coord_name, full_grid, inf_sep_ene,
+        mod_var_scn_thy_info, mod_var_sp1_thy_info,
+        coord_name, full_grid, inf_sep_ene,
         constraint_dct, grid_val_for_zma)
 
     # Build correction potential .so file used by VaReCoF
@@ -222,8 +226,8 @@ def _run_potentials(inf_sep_zma, ts_info,
                     vscnlvl_thy_save_fs,
                     overwrite, update_guess,
                     constraint_dct,
-                    sp_thy_info=None,
-                    **cas_kwargs):
+                    cas_kwargs,
+                    sp_thy_info=None):
     """ Run and save the scan along both grids while
           (1) constraining only reaction coordinate, then
           (2) constraining all intermolecular coordinates
@@ -237,7 +241,6 @@ def _run_potentials(inf_sep_zma, ts_info,
             scn_run_fs, scn_save_fs = vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs
             print('\nRunning constrained scans..')
 
-        print('scn thy test', mod_var_scn_thy_info)
         scan.multiref_rscan(
             ts_zma=inf_sep_zma,
             ts_info=ts_info,
@@ -255,7 +258,6 @@ def _run_potentials(inf_sep_zma, ts_info,
         )
 
     # Run the single points on top of the initial scan
-    print('spthy', sp_thy_info)
     if sp_thy_info is not None:
         _scan_sp(ts_info, coord_name,
                  vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
@@ -271,13 +273,12 @@ def _scan_sp(ts_info, coord_name,
     """
 
     # Set up script and kwargs for the irc run
-    script_str, _, _, _ = es_runner.qchem_params(
+    script_str, _, sp_kwargs, _ = es_runner.qchem_params(
         *mod_var_sp1_thy_info[0:2])
+    sp_kwargs.update(cas_kwargs)
 
     # Compute the single-point energies along the scan
     for locs in vscnlvl_scn_save_fs[-1].existing([[coord_name]]):
-
-        print('splocs', locs)
 
         # Set up single point filesys
         vscnlvl_scn_run_fs[-1].create(locs)
@@ -285,19 +286,18 @@ def _scan_sp(ts_info, coord_name,
         geo_save_path = vscnlvl_scn_save_fs[-1].path(locs)
         geo = vscnlvl_scn_save_fs[-1].file.geometry.read(locs)
         zma = vscnlvl_scn_save_fs[-1].file.zmatrix.read(locs)
-        # print('scn_run_path')
-        # print(geo_run_path)
 
         # Run the energy
         sp.run_energy(zma, geo, ts_info, mod_var_sp1_thy_info,
                       vscnlvl_scn_save_fs,
                       geo_run_path, geo_save_path, locs,
                       script_str, overwrite,
-                      highspin=False, **cas_kwargs)
+                      highspin=False, **sp_kwargs)
 
 
 def _read_potentials(scn_save_fs, cscn_save_fs,
-                     sp_thy_info, dist_name, full_grid, inf_sep_ene,
+                     mod_var_scn_thy_info, mod_var_sp1_thy_info,
+                     dist_name, full_grid, inf_sep_ene,
                      constraint_dct, grid_val_for_zma):
     """ Read values form the filesystem to get the values to
         correct ht MEP
@@ -307,31 +307,45 @@ def _read_potentials(scn_save_fs, cscn_save_fs,
     smp_pot = []
     const_pot = []
     sp_pot = []
-    for grid_val in full_grid:
 
-        # Set the locs for the full scan and constrained scan
-        locs = [[dist_name], [grid_val]]
-        const_locs = [constraint_dct, [dist_name], [grid_val]]
+    # Put scans info together
+    scans = (
+        (scn_save_fs, mod_var_scn_thy_info[1:4]),
+        (cscn_save_fs, mod_var_scn_thy_info[1:4])
+    )
+    if mod_var_sp1_thy_info is not None:
+        scans += ((scn_save_fs, mod_var_sp1_thy_info[1:4]),)
 
-        # Read the energies from the scan and constrained scan
-        if scn_save_fs[-1].file.energy.exists(locs):
-            smp_pot.append(scn_save_fs[-1].file.energy.read(locs))
-        else:
-            print('No scan energy')
-        if cscn_save_fs[-1].file.energy.exists(const_locs):
-            const_pot.append(cscn_save_fs[-1].file.energy.read(const_locs))
-        else:
-            print('No constrained scan energy')
+    smp_pot, const_pot, sp_pot = [], [], []
+    for idx, (scn_fs, thy_info) in enumerate(scans):
 
-        # Read the single point energy from the potential
-        if sp_thy_info is not None:
-            scn_save_path = scn_save_fs[-1].path(locs)
-            sp_save_fs = autofile.fs.single_point(scn_save_path)
-            sp_save_fs[-1].create(sp_thy_info[1:4])
-            # print('sp', sp_save_fs[-1].path(sp_thy_info[1:4]))
-            if sp_save_fs[-1].file.energy.exists(sp_thy_info[1:4]):
-                sp_pot.append(
-                    sp_save_fs[-1].file.energy.read(sp_thy_info[1:4]))
+        for grid_val in full_grid:
+
+            # Set the locs for the full scan and constrained scan
+            if idx in (0, 2):
+                locs = [[dist_name], [grid_val]]
+            else:
+                locs = [constraint_dct, [dist_name], [grid_val]]
+
+            # Read the energies from the scan and constrained scan
+            scn_path = scn_fs[-1].path(locs)
+            sp_fs = autofile.fs.single_point(scn_path)
+            if sp_fs[-1].file.energy.exists(thy_info):
+                sp_ene = sp_fs[-1].file.energy.read(thy_info)
+                print('sp_path', sp_fs[-1].path(thy_info))
+                print('sp_ene', sp_ene)
+            else:
+                print('No scan energy')
+
+            # Store the energy in a lst
+            if idx == 0:
+                smp_pot.append(sp_ene)
+            elif idx == 1:
+                const_pot.append(sp_ene)
+            elif idx == 2:
+                sp_pot.append(sp_ene)
+
+        print()
 
     # Calculate each of the correction potentials
     relax_corr_pot = []
@@ -340,7 +354,7 @@ def _read_potentials(scn_save_fs, cscn_save_fs,
     for i, _ in enumerate(smp_pot):
         relax_corr = (smp_pot[i] - const_pot[i]) * phycon.EH2KCAL
         relax_corr_pot.append(relax_corr)
-        if sp_thy_info is not None:
+        if sp_pot:
             sp_corr = (sp_pot[i] - smp_pot[i]) * phycon.EH2KCAL
             sp_corr_pot.append(sp_corr)
         else:
@@ -348,7 +362,7 @@ def _read_potentials(scn_save_fs, cscn_save_fs,
         full_corr_pot.append(relax_corr + sp_corr)
 
     # Collate the potentials together in a list
-    if sp_thy_info is not None:
+    if sp_pot:
         potentials = [relax_corr_pot, sp_corr_pot, full_corr_pot]
         potential_labels = ['relax', 'sp', 'full']
     else:
@@ -462,12 +476,18 @@ def _write_varecof_input(ref_zma, ts_info, ts_formula, high_mul,
     if automol.geom.is_linear(frag_geoms[1]):
         d2dists = [0.]
         t2angs = []
+    if all(npiv > 1 for npiv in npivots):
+        r2dists = r2dists_sr
+    else:
+        r2dists = []
+        print('no r2dist')
+
     srdivsur_inp_str = varecof_io.writer.input_file.divsur(
         r1dists_sr, npivots[0], npivots[1], pivot_xyzs[0], pivot_xyzs[1],
         frame1=frames[0], frame2=frames[1],
         d1dists=d1dists, d2dists=d2dists,
         t1angs=t1angs, t2angs=t2angs,
-        r2dists=r2dists_sr,
+        r2dists=r2dists,
         **conditions)
 
     # Build the structure input file string
@@ -564,7 +584,6 @@ def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
     """
 
     # Get geometries of fragments from the ts_zma from the MEP
-    print('amol zma\n', ts_zma)
     mep_total_geo = automol.zmatrix.geometry(ts_zma)
     mep_fgeos = [mep_total_geo[:max_idx], mep_total_geo[max_idx:]]
 
@@ -718,7 +737,6 @@ def build_pivot_frames(min_idx, max_idx,
     for i, (rxn_idx, geom, _) in enumerate(geom_data):
 
         # Single pivot point centered on atom
-        print('geom test in build_pivot:', geom)
         if automol.geom.is_atom(geom):
             npivot = 1
             frame = [0, 0, 0, 0]

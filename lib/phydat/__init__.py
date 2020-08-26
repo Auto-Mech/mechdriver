@@ -5,11 +5,13 @@ from lib.phydat import phycon
 from lib.phydat import eleclvl
 from lib.phydat import sigmarad
 from lib.phydat import symm
+from lib.phydat import instab_fgrps
 
 
 __all__ = [
     'phycon',
     'eleclvl',
     'sigmarad',
-    'symm'
+    'symm',
+    'instab_fgrps'
 ]

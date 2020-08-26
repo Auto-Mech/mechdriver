@@ -9,12 +9,13 @@ from routines.es import runner as es_runner
 from routines.es._routines._fs import save_struct
 from lib import structure
 from lib.phydat import phycon
+from lib.phydat import instab_fgrps
 
 
 def reference_geometry(spc_dct_i, spc_info,
                        mod_thy_info,
                        thy_run_fs, thy_save_fs,
-                       cnf_run_fs, cnf_save_fs,
+                       cnf_save_fs,
                        ini_cnf_save_fs, ini_min_cnf_locs,
                        run_fs,
                        opt_script_str, overwrite,
@@ -45,27 +46,34 @@ def reference_geometry(spc_dct_i, spc_info,
         run_fs[0].file.info.write(inf_obj, [])
 
     if not thy_save_fs[-1].file.geometry.exists(mod_thy_info[1:4]):
-        print('No geometry in filesys. Attempting to initialize new geometry.')
+        print('Obtaining some initial guess geometry.')
         geo_init = _obtain_ini_geom(spc_dct_i,
                                     ini_cnf_save_fs, ini_min_cnf_locs)
+
         if geo_init is not None:
-            zma_init = automol.geom.zmatrix(geo_init)
-            if not automol.geom.is_atom(geo_init):
-                geo_found = _optimize_molecule(
-                    spc_info, zma_init,
-                    mod_thy_info, thy_run_fs, thy_save_fs,
-                    cnf_save_fs,
-                    run_fs,
-                    opt_script_str, overwrite,
-                    kickoff_size=kickoff_size,
-                    kickoff_backward=kickoff_backward,
-                    **opt_kwargs)
+            print('Assessing if there are any functional groups',
+                  'that cause instability')
+            if _functional_groups_stable(geo_init, thy_save_fs, mod_thy_info):
+                zma_init = automol.geom.zmatrix(geo_init)
+                if not automol.geom.is_atom(geo_init):
+                    geo_found = _optimize_molecule(
+                        spc_info, zma_init,
+                        mod_thy_info, thy_run_fs, thy_save_fs,
+                        cnf_save_fs,
+                        run_fs,
+                        opt_script_str, overwrite,
+                        kickoff_size=kickoff_size,
+                        kickoff_backward=kickoff_backward,
+                        **opt_kwargs)
+                else:
+                    geo_found = _optimize_atom(
+                        spc_info, zma_init,
+                        mod_thy_info, thy_run_fs,
+                        cnf_save_fs, run_fs,
+                        overwrite, opt_script_str, **opt_kwargs)
             else:
-                geo_found = _optimize_atom(
-                    spc_info, zma_init,
-                    mod_thy_info, thy_run_fs,
-                    cnf_save_fs, run_fs,
-                    overwrite, opt_script_str, **opt_kwargs)
+                geo_found = False
+                print('Found functional groups that cause instabilities')
         else:
             geo_found = False
             print('Unable to obtain an initial guess geometry')
@@ -116,6 +124,54 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs, ini_min_cnf_locs):
             geo_init = None
 
     return geo_init
+
+
+def _functional_groups_stable(geo, thy_save_fs, mod_thy_info):
+    """ look for functional group attachments that could cause
+        molecule instabilities
+    """
+
+    # Initialize empty set of product graphs
+    prd_gras = ()
+
+    # Check for instability causing functional groups
+    gra = automol.geom.graph(geo)
+    rad_grp_dct = automol.graph.radical_group_dct(gra)
+    for atm, grps in rad_grp_dct.items():
+        fgrps, prds = instab_fgrps.DCT[atm]
+        print('frgrps', fgrps)
+        print('prds', prds)
+        for grp in grps:
+            print('grp\n', grp)
+            grp_ich = automol.graph.inchi(grp)
+            if grp_ich in fgrps:
+                # If instability is found determine the prd of the instability
+                prd_ich = prds[fgrps.index(grp_ich)]
+                print('prd_ich', prd_ich)
+                prd_gra = automol.inchi.graph(prd_ich)
+                print('prd_gra')
+                print(automol.graph.string(prd_gra))
+                print('gra')
+                print(automol.graph.string(gra))
+                print('----')
+                prd_gras = automol.graph.radical_dissociation_prods(
+                    gra, prd_gra)
+                break
+
+    if prd_gras:
+        disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
+                        for gra in prd_gras]
+        conn_zma = automol.geom.zmatrix(geo)
+        structure.instab.write_instab2(
+            conn_zma, disconn_zmas,
+            thy_save_fs, mod_thy_info[1:4],
+            zma_locs=(0,),
+            save_cnf=True)
+
+        stable = False
+    else:
+        stable = True
+    return stable
 
 
 def _optimize_atom(spc_info, zma_init,

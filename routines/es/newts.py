@@ -249,6 +249,7 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     # Get info from the reactants
     high_mul = ts_dct['high_mult']
     ts_info = info_dct['ts_info']
+    hs_info = info_dct['hs_info']
     rct_info = info_dct['rct_info']
     rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
 
@@ -289,7 +290,8 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     vscnlvl_ts_save_fs = savefs_dct['vscnlvl_ts_fs']
 
     vtst.radrad_scan(
-        ini_zma, ts_info, ts_formula, high_mul, active_space,
+        ini_zma, ts_info, hs_info,
+        ts_formula, high_mul, active_space,
         rct_info, rct_ichs, rcts_cnf_fs, rcts_gra,
         grid1, grid2, frm_name, frm_bnd_keys,
         mod_var_scn_thy_info,
@@ -320,6 +322,7 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     high_mul = ts_dct['high_mult']
     rct_zmas = ts_dct['rct_zmas']
     ts_info = info_dct['ts_info']
+    hs_info = info_dct['hs_info']
     rct_info = info_dct['rct_info']
     rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
 
@@ -362,7 +365,8 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
 
     print('Beginning Calculations for VRC-TST Treatments')
     vrctst.calc_vrctst_flux(
-        ini_zma, ts_info, ts_formula, high_mul, active_space,
+        ini_zma, ts_info, hs_info,
+        ts_formula, high_mul, active_space,
         rct_info, rct_ichs, rct_zmas, rcts_cnf_fs,
         grid1, grid2, frm_name,
         mod_var_scn_thy_info,
@@ -402,8 +406,6 @@ def _ts_finder_match(tsk, ts_dct, tsname):
         print('No search algorithm requested')
     print()
 
-    print('ini_method1', ini_method)
-
     # ID search algorithm if user did not specify one (wrong)
     if ini_method is None:
         if _nobarrier(ts_dct):
@@ -419,9 +421,6 @@ def _ts_finder_match(tsk, ts_dct, tsname):
             print('Assuming reaction has saddle point on potential surface...')
             print('Use species.dat to specify VTST search for mol-rad rxn...')
             print('Finding the geometry of the saddle point...')
-
-    print('ini method2', ini_method)
-    print('tsk', tsk)
 
     # Print message if no algorithm found
     if ini_method is None:
@@ -448,12 +447,8 @@ def _ts_finder_match(tsk, ts_dct, tsname):
 def _nobarrier(ts_dct):
     """ Determine if reaction is barrierless
     """
-    print('no bar chk')
-    print('cla', ts_dct['class'])
     radrad = _radrad(ts_dct)
     low_spin = bool('low' in ts_dct['class'])
-    print('radrad', radrad)
-    print('spin', low_spin)
     return radrad and low_spin
 
 
@@ -466,8 +461,6 @@ def _set_grid(ts_search, ts_dct):
     """ Set the TS grid
     """
 
-    print('build grid')
-    print(ts_search)
     if ts_search in ('molrad_vtst', 'radrad_vtst', 'vrctst'):
         if 'rad' in ts_dct['class']:
             grid = ts_dct['grid']
@@ -602,8 +595,6 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
 
     if es_keyword_dct.get('var_scnlvl', None) is not None:
 
-        print('HERE')
-
         vscnlvl_thy_info = filesys.inf.get_es_info(
             es_keyword_dct['var_scnlvl'], thy_dct)
         mod_vscnlvl_thy_info = filesys.inf.modify_orb_restrict(
@@ -673,12 +664,6 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
     reac_cnf_fs = _reac_cnf_fs(
         rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
 
-    print('high spin thy info')
-    print('vscn', hs_vscnlvl_thy_info)
-    print('vsp1', hs_vsp1lvl_thy_info)
-    print('vsp2', hs_vsp2lvl_thy_info)
-    print('run', hs_thy_info)
-
     # Build the dictionaries for the return
     method_dct = {
         'inplvl': mod_ini_thy_info,
@@ -731,7 +716,6 @@ def _reac_cnf_fs(rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix):
 
         mod_ini_thy_info = filesys.inf.modify_orb_restrict(
             rinfo, ini_thy_info)
-        print('reac bld, ini thy', mod_ini_thy_info)
 
         # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(

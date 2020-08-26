@@ -30,8 +30,6 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     # Check if ZMA matches one in filesys
     # breaks for scans for right now
     # check_isomer(zma, scn_save_fs)
-    print('2 coord name', coord_names)
-    print('2 grid', coord_grids)
 
     # Build the SCANS/CSCANS filesystems
     if constraint_dct is None:
@@ -111,8 +109,6 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
 
     # Set the frozen coordinates (set job at this point?)
     if constraint_dct is not None:
-        print(coord_names)
-        print(tuple(constraint_dct))
         frozen_coordinates = tuple(coord_names) + tuple(constraint_dct)
     else:
         frozen_coordinates = coord_names
@@ -130,8 +126,6 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
         run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
 
         # Build the zma
-        print('3 coord name', coord_names)
-        print('3 grid', vals)
         zma = automol.zmatrix.set_values(
             guess_zma, dict(zip(coord_names, vals)))
 
@@ -335,8 +329,6 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
 
     # Setup and run the first part of the scan to shorter distances
     for grid in (grid1, grid2):
-        print('1 coord name', coord_name)
-        print('1 grid', grid)
         run_scan(
             zma=ts_zma,
             spc_info=ts_info,
@@ -391,9 +383,9 @@ def multiref_rscan(ts_zma, ts_info,
 
     # Set the opt script string and build the opt_kwargs
     [prog, method, _, _] = mod_var_scn_thy_info
+    print('mref method', method)
     _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         prog, method)
-    # print('cas_kwargs', cas_kwargs)
     opt_kwargs.update(cas_kwargs)
     # print('\n')
 
@@ -443,7 +435,7 @@ def molrad_inf_sep_ene(rct_info, rcts_cnf_fs,
     return inf_sep_ene
 
 
-def radrad_inf_sep_ene(ts_info, high_mul, ref_zma,
+def radrad_inf_sep_ene(hs_info, high_mul, ref_zma,
                        rct_info, rcts_cnf_fs,
                        mod_var_scn_thy_info, mod_var_sp1_thy_info,
                        hs_var_scn_thy_info, hs_var_sp1_thy_info,
@@ -486,16 +478,12 @@ def radrad_inf_sep_ene(ts_info, high_mul, ref_zma,
             print(" - Running high-spin multi reference energy ...")
 
         # Calculate the single point energy
-        print('thy inf', thy_info)
         script_str, _, kwargs, _ = es_runner.qchem_params(*thy_info[0:2])
-
-        # print('cas_kwargs\n', cas_kwargs)
-        # print()
-        # print('kwargs\n', kwargs)
-        # import sys
-        # sys.exit()
-
-        sp.run_energy(ref_zma, geo, ts_info, thy_info,
+        print('cas kwargs', cas_kwargs)
+        print()
+        cas_kwargs.update(kwargs)
+        print('cas kwargs', cas_kwargs)
+        sp.run_energy(ref_zma, geo, hs_info, thy_info,
                       scn_save_fs, geo_run_path, geo_save_path, inf_locs,
                       script_str, overwrite, highspin=True, **cas_kwargs)
 
@@ -555,7 +543,6 @@ def reac_sep_ene(rct_info, rcts_cnf_fs, mod_thy_info,
         geo_save_path = cnf_save_fs[-1].path(min_locs)
 
         # Build the single point filesys objects
-        print('sp thy inf', mod_thy_info)
         sp_save_fs, _ = filesys.build.sp_from_prefix(
             cnf_save_paths[0], mod_thy_info)
 

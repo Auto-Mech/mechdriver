@@ -100,6 +100,56 @@ def write_instab(conn_zma, disconn_zma,
             sp_save_fs[-1].file.energy.write(ene, thy_locs)
 
 
+# Write the instability files
+def write_instab2(conn_zma, disconn_zmas,
+                 thy_save_fs, thy_locs,
+                 zma_locs=(0,),
+                 save_cnf=False):
+    """ write the instability files
+    """
+
+    # Get a connected geometry
+    conn_geo = automol.zmatrix.geometry(conn_zma)
+
+    # Set and print the save path information
+    save_path = thy_save_fs[-1].path(thy_locs)
+    print(" - Saving...")
+    print(" - Save path: {}".format(save_path))
+
+    # Save the geometry information
+    instab_fs = autofile.fs.instab(save_path)
+    instab_fs[-1].create()
+    instab_fs[-1].file.geometry.write(conn_geo)
+    instab_path = instab_fs[-1].path()
+
+    # Grab the zma and instability transformation
+    conn_zma, frm_bnd_keys, rcts_gra = _instab_info2(conn_zma, disconn_zmas)
+    tra = (frozenset({frm_bnd_keys}),
+           frozenset({frozenset({})}))
+
+    # Save zma information seperately, if required
+    zma_save_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
+    zma_save_fs[-1].create(zma_locs)
+    zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+
+    # Write the files into the filesystem
+    zma_save_fs[-1].file.transformation.write(tra, zma_locs)
+    zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
+
+    if save_cnf:
+        # Save the geometry information
+        cnf_fs = autofile.fs.conformer(save_path)
+        cnf_locs = [autofile.schema.generate_new_conformer_id()]
+        cnf_fs[-1].create(cnf_locs)
+        cnf_fs[-1].file.geometry.write(conn_geo, cnf_locs)
+        cnf_path = cnf_fs[-1].path(cnf_locs)
+
+        # Save zma information seperately, if required
+        zma_save_fs = autofile.fs.manager(cnf_path, 'ZMATRIX')
+        zma_save_fs[-1].create(zma_locs)
+        zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+
+
 def _instab_info(conn_zma, disconn_zma):
     """ Obtain instability info
     """
@@ -108,19 +158,39 @@ def _instab_info(conn_zma, disconn_zma):
     prd_zmas = [conn_zma]
 
     # Get the zmas used for the identification
-    rct_zmas = _disconnected_zmas(disconn_zma)
-
-    # print('prd')
-    # for zma in prd_zmas:
-    #     print(automol.zmatrix.string(zma))
-    #     print()
-    # print('\nrct')
-    # for zma in rct_zmas:
-    #     print(automol.zmatrix.string(zma))
-    #     print()
+    rct_zmas = _disconnect_zmas(disconn_zma)
 
     # Get the keys
     ret = addition(rct_zmas, prd_zmas, ())
+    zma, _, frm_bnd_keys, _, rcts_gra = ret
+
+    # Set the bond in the zma to a physical length
+    symbols = automol.zmatrix.symbols(zma)
+    frm_symbs = [symbols[key] for key in frm_bnd_keys]
+    frm_name = automol.zmatrix.bond_key_from_idxs(zma, frm_bnd_keys)
+    bnd_len = bnd.read_len(tuple(frm_symbs)) * phycon.ANG2BOHR
+    zma = automol.zmatrix.set_values(zma, {frm_name: bnd_len})
+
+    return zma, frm_bnd_keys, rcts_gra
+
+
+def _instab_info2(conn_zma, disconn_zmas):
+    """ Obtain instability info
+    """
+
+    # Get the zma for the connected graph
+    prd_zmas = [conn_zma]
+
+    print('prd zma')
+    for zma in prd_zmas:
+        print(automol.zmatrix.string(zma))
+    print('\n\nrct zma')
+    for zma in disconn_zmas:
+        print(automol.zmatrix.string(zma))
+        print()
+
+    # Get the keys
+    ret = addition(disconn_zmas, prd_zmas, ())
     zma, _, frm_bnd_keys, _, rcts_gra = ret
 
     # Set the bond in the zma to a physical length

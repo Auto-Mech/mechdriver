@@ -10,7 +10,8 @@ from routines.es._routines import _wfn as wfn
 from routines.es._routines import _scan as scan
 
 
-def radrad_scan(ts_zma, ts_info, ts_formula, high_mul, active_space,
+def radrad_scan(ts_zma, ts_info, hs_info,
+                ts_formula, high_mul, active_space,
                 rct_info, rct_ichs, rcts_cnf_fs, rcts_gra,
                 grid1, grid2, coord_name, frm_bnd_keys,
                 mod_var_scn_thy_info,
@@ -64,7 +65,7 @@ def radrad_scan(ts_zma, ts_info, ts_formula, high_mul, active_space,
     geo_save_path = scn_save_fs[-1].path(inf_locs)
 
     inf_sep_ene = scan.radrad_inf_sep_ene(
-        ts_info, high_mul, ts_zma,
+        hs_info, high_mul, ts_zma,
         rct_info, rcts_cnf_fs,
         mod_var_scn_thy_info, mod_var_sp1_thy_info,
         hs_var_scn_thy_info, hs_var_sp1_thy_info,

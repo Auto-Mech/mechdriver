@@ -88,8 +88,8 @@ def cas_options(spc_info, formula, num_act_elc, num_act_orb, num_states,
     elec_cnt = automol.formula.electron_count(formula)
     closed_orb = (elec_cnt - num_act_elc) // 2
     occ_orb = closed_orb + num_act_orb
-    print('closed', closed_orb)
-    print('occ', occ_orb)
+    # print('closed', closed_orb)
+    # print('occ', occ_orb)
     # import sys
     # sys.exit()
 

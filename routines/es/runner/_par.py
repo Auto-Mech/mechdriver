@@ -70,7 +70,7 @@ def qchem_params(prog, method):  # , saddle=False):
             )
         if method in ('caspt2', 'caspt2c'):
             kwargs = {
-                'memory': 15,
+                'memory': 10,
                 'corr_options': ['shift=0.2'],
                 'mol_options': ['nosym'],
             }
