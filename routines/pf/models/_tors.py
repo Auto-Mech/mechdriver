@@ -211,7 +211,7 @@ def make_hr_strings(rotors, run_path, tors_model,
         # if len(rotor) > 1 and 'mdhr_pot_data' in rotor:
         if 'mdhr_pot_data' in rotor:
             pot, geoms, grads, hessians = rotor['mdhr_pot_data']
-            hr_freqs = torsprep.calc_hr_frequenices(
+            hr_freqs = torsprep.calc_hr_frequencies(
                 geoms, grads, hessians, run_path)
             mdhr_dat = mess_io.writer.mdhr_data(
                 pot, freqs=hr_freqs, nrot=numrotors)

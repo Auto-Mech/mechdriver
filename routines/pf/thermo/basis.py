@@ -23,56 +23,56 @@ REF_CALLS = {"basic": "get_basic",
              "cbh2": "get_cbhtwo"}
 
 
-def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False):
+def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False):
     """ add refs to species list as necessary
     """
-    nproc_avail =  len(os.sched_getaffinity(0)) - 1
-
     spc_names = [spc[0] for spc in spc_queue]
-    num_spc = len(spc_names)
-    spc_per_proc = math.floor(num_spc / nproc_avail)
-    
-    queue = multiprocessing.Queue()
-    procs = []
-    random.shuffle(spc_names)
-    for proc_n in range(nproc_avail):
-        spc_start = proc_n*spc_per_proc
-        if proc_n == nproc_avail - 1:
-            spc_end = num_spc
-        else:
-            spc_end = (proc_n+1)*spc_per_proc
 
-        spc_lst = spc_names[spc_start:spc_end]
+    if parallel:
+        nproc_avail =  len(os.sched_getaffinity(0)) - 1
+  
+        num_spc = len(spc_names)
+        spc_per_proc = math.floor(num_spc / nproc_avail)
+        
+        queue = multiprocessing.Queue()
+        procs = []
+        random.shuffle(spc_names)
+        for proc_n in range(nproc_avail):
+            spc_start = proc_n*spc_per_proc
+            if proc_n == nproc_avail - 1:
+                spc_end = num_spc
+            else:
+                spc_end = (proc_n+1)*spc_per_proc
 
-        proc = multiprocessing.Process(
-                target=_prepare_refs, 
-                args=(queue, ref_scheme, spc_dct, spc_lst,))
-        procs.append(proc)
-        proc.start()
+            spc_lst = spc_names[spc_start:spc_end]
 
-    basis_dct = {}
-    unique_refs_dct = {}
-    for _ in procs:
-        bas_dct, unq_dct = queue.get()
-        basis_dct.update(bas_dct)
-        bas_ichs = [unique_refs_dct[spc]['inchi'] for spc in unique_refs_dct.keys()]
-        for spc in unq_dct:
-            new_ich = unq_dct[spc]['inchi']
-            if new_ich not in bas_ichs:
-                cnt = len(list(unique_refs_dct.keys())) + 1
-                ref_name = 'REF_{}'.format(cnt)
-                unique_refs_dct[ref_name] = unq_dct[spc]
+            proc = multiprocessing.Process(
+                    target=_prepare_refs, 
+                    args=(queue, ref_scheme, spc_dct, spc_lst,
+                         repeats, parallel))
+            procs.append(proc)
+            proc.start()
 
-    for proc in procs:
-        proc.join()
-    #for unique_refs_dct in unique_refs_dct_lst:
-    #    print(unique_refs_dct)
-    #for basis_dct in basis_dct_lst:
-    #    print(basis_dct)
-    #print("FINAL", basis_dct, unique_refs_dct)    
+        basis_dct = {}
+        unique_refs_dct = {}
+        for _ in procs:
+            bas_dct, unq_dct = queue.get()
+            basis_dct.update(bas_dct)
+            bas_ichs = [unique_refs_dct[spc]['inchi'] for spc in unique_refs_dct.keys()]
+            for spc in unq_dct:
+                new_ich = unq_dct[spc]['inchi']
+                if new_ich not in bas_ichs:
+                    cnt = len(list(unique_refs_dct.keys())) + 1
+                    ref_name = 'REF_{}'.format(cnt)
+                    unique_refs_dct[ref_name] = unq_dct[spc]
+
+        for proc in procs:
+            proc.join()
+    else:
+        basis_dct, unique_refs_dct = _prepare_refs(None, ref_scheme, spc_dct, spc_names, repeats=repeats, parallel=parallel)
     return basis_dct, unique_refs_dct
 
-def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False):
+def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel=False):
     # Get a lst of ichs corresponding to the spc queue
     #spc_names = [spc[0] for spc in spc_queue]
     #spc_ichs = [spc_dct[spc[0]]['inchi'] for spc in spc_queue]
@@ -117,7 +117,10 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False):
                     ref, ref_name)
                 unique_refs_dct[ref_name] = create_spec(ref)
     print(msg)
-    queue.put((basis_dct, unique_refs_dct))
+    if parallel:
+        queue.put((basis_dct, unique_refs_dct))
+    else:
+        return basis_dct, unique_refs_dct
  #   return basis_dct, unique_refs_dct
 
 

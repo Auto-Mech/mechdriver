@@ -338,7 +338,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
     return pot, geoms, grads, hessians, zmas
 
 
-def calc_hr_frequenices(geoms, grads, hessians, run_path):
+def calc_hr_frequencies(geoms, grads, hessians, run_path):
     """ Calculate the frequencies
     """
 
@@ -507,9 +507,8 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
     # print('axis test:', axis)
     # print('atm key test:', atm_key)
     # print('gra test:', gra)
+
     if saddle:
-        # print('tsbnd 1', ts_bnd)
-        print('bnd keys', automol.graph.bond_keys(gra))
         if ts_bnd not in automol.graph.bond_keys(gra):
             gra = automol.graph.add_ts_bonds(gra, keys=[ts_bnd])
     group = list(

@@ -98,9 +98,8 @@ def run(spc_dct,
             ref_enes = spc_model_dct[spc_model]['options']['ref_enes']
 
             # Determine info about the basis species used in thermochem calcs
-            # maybe move above for loop
             basis_dct, uniref_dct = thmroutines.basis.prepare_refs(
-                ref_scheme, spc_dct, spc_queue)
+                ref_scheme, spc_dct, [[spc_name, None]])
 
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc_name]

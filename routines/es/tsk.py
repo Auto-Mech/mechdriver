@@ -493,7 +493,7 @@ def tau_tsk(job, spc_dct, spc_name,
                 geo_run_path = tau_run_fs[-1].path(locs)
                 if db_style == 'directory':
                     geo_save_path = tau_save_fs[-1].path(locs)
-                    if tau_save_fs[-1].json.hessian.exists(locs):
+                    if tau_save_fs[-1].file.hessian.exists(locs):
                         print('Hessian found and saved previously at {}'.format(
                         geo_save_path))
                         hess_cnt += 1
@@ -501,7 +501,7 @@ def tau_tsk(job, spc_dct, spc_name,
                     geo = tau_save_fs[-1].file.geometry.read(locs)
                 elif db_style == 'jsondb':
                     geo_save_path = tau_save_fs[-1].root.path()
-                    if tau_save_fs[-1].file.hessian.exists(locs):
+                    if tau_save_fs[-1].json.hessian.exists(locs):
                         print('Hessian found and saved previously at {}'.format(
                         geo_save_path))
                         hess_cnt += 1

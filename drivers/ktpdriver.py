@@ -62,7 +62,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ts_dct[tsname] = parser.species.build_sing_chn_sadpt_dct(
             tsname, rxn, thy_info, ini_thy_info,
             run_inp_dct, spc_dct, cla_dct,
-            direction='exo')
+            direction='forw')
     spc_dct = parser.species.combine_sadpt_spc_dcts(
         ts_dct, spc_dct)
 
