@@ -458,45 +458,87 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
     # Read the form and broken keys from the min conf
-    frm_bnd_keys, brk_bnd_keys = tsprep.rxn_bnd_keys(
+    # frm_bnd_keys, brk_bnd_keys = tsprep.rxn_bnd_keys(
+    frm_bnd_keys, brk_bnd_keys = tsprep.all_rxn_bnd_keys(
         cnf_save_fs, min_cnf_locs, zma_locs=zma_locs)
 
     # Use the idxs to set the forming and breaking bond names
-    if frm_bnd_keys:
-        frm_name = automol.zmatrix.bond_key_from_idxs(
-            zma, frm_bnd_keys)
-        ts_bnd1, ts_bnd2 = min(frm_bnd_keys), max(frm_bnd_keys)
-    else:
-        frm_name = ''
-        ts_bnd1, ts_bnd2 = None, None
+#    if frm_bnd_keys:
+#      #  frm_name = automol.zmatrix.bond_key_from_idxs(
+#      #      zma, frm_bnd_keys)
+#        ts_bnd1, ts_bnd2 = min(frm_bnd_keys), max(frm_bnd_keys)
+#    else:
+#      #  frm_name = ''
+#        ts_bnd1, ts_bnd2 = None, None
 
-    if brk_bnd_keys:
-        brk_name = automol.zmatrix.bond_key_from_idxs(
-            zma, brk_bnd_keys)
-    else:
-        brk_name = ''
-    print('frm_name', frm_name)
-    print('brk_name', brk_name)
+   # if brk_bnd_keys:
+      #  brk_name = automol.zmatrix.bond_key_from_idxs(
+      #      zma, brk_bnd_keys)
+   # else:
+      #  brk_name = ''
+   # print('frm_name', frm_name)
+   # print('brk_name', brk_name)
 
-    # Calculate the distance of bond being formed
-    cnf_dct = automol.zmatrix.values(zma)
-    ref_dct = automol.zmatrix.values(ref_zma)
-    cnf_dist = cnf_dct.get(frm_name, None)
-    ref_dist = ref_dct.get(frm_name, None)
-    if cnf_dist is None:
-        cnf_dist = cnf_dct.get(brk_name, None)
-    if ref_dist is None:
-        ref_dist = ref_dct.get(brk_name, None)
-    print('conf_dist', cnf_dist)
-    print('ref_dist', ref_dist)
+    ## Calculate the distance of bond being formed
+    #cnf_dct = automol.zmatrix.values(zma)
+    #ref_dct = automol.zmatrix.values(ref_zma)
+    cnf_geo = automol.zmatrix.geometry(zma)
+    ref_geo = automol.zmatrix.geometry(ref_zma)
 
-    # Calculate the central angle of reacting moiety of zma
-    cnf_angle = geomprep.calc_rxn_angle(
-        zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
-    ref_angle = geomprep.calc_rxn_angle(
-        ref_zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
-    print('conf_angle', cnf_angle)
-    print('ref_angle', ref_angle)
+    cnf_dist_lst = []
+    ref_dist_lst = []
+    bnd_key_lst = []
+    cnf_ang_lst = []
+    ref_ang_lst = []
+    for frm_bnd_key in frm_bnd_keys:
+        print('frm_bnd_key test:', frm_bnd_key)
+        frm_idx1, frm_idx2 = list(frm_bnd_key)
+        cnf_dist = automol.geom.distance(cnf_geo, frm_idx1, frm_idx2)
+        ref_dist = automol.geom.distance(ref_geo, frm_idx1, frm_idx2)
+        cnf_dist_lst.append(cnf_dist)
+        ref_dist_lst.append(ref_dist)
+        bnd_key_lst.append(frm_bnd_key)
+
+    for brk_bnd_key in brk_bnd_keys:
+        brk_idx1, brk_idx2 = list(brk_bnd_key)
+        cnf_dist = automol.geom.distance(cnf_geo, brk_idx1, brk_idx2)
+        ref_dist = automol.geom.distance(ref_geo, brk_idx1, brk_idx2)
+        cnf_dist_lst.append(cnf_dist)
+        ref_dist_lst.append(ref_dist)
+        bnd_key_lst.append(brk_bnd_key)
+
+    for frm_bnd_key in frm_bnd_keys:
+        for brk_bnd_key in brk_bnd_keys:
+            for frm_idx in frm_bnd_key:
+                for brk_idx in brk_bnd_key:
+                    if frm_idx == brk_idx:
+                        idx2 = frm_idx
+                        idx1 = list(frm_bnd_key - frozenset({idx2}))[0]
+                        idx3 = list(brk_bnd_key - frozenset({idx2}))[0]
+                        cnf_ang = automol.geom.central_angle(cnf_geo, idx1, idx2, idx3)
+                        ref_ang = automol.geom.central_angle(ref_geo, idx1, idx2, idx3)
+                        cnf_ang_lst.append(cnf_ang)
+                        ref_ang_lst.append(ref_ang)
+
+  #      cnf_dist = cnf_dct.get(frm_name, None)
+  #      ref_dist = ref_dct.get(frm_name, None)
+  #  if cnf_dist is None:
+  #      cnf_dist = cnf_dct.get(brk_name, None)
+  #  if ref_dist is None:
+  #      ref_dist = ref_dct.get(brk_name, None)
+    print('bnd_key_list', bnd_key_lst)
+    print('conf_dist', cnf_dist_lst)
+    print('ref_dist', ref_dist_lst)
+    print('conf_angle', cnf_ang_lst)
+    print('ref_angle', ref_ang_lst)
+
+  #  # Calculate the central angle of reacting moiety of zma
+  #  cnf_angle = geomprep.calc_rxn_angle(
+  #      zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
+  #  ref_angle = geomprep.calc_rxn_angle(
+  #      ref_zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
+  #  print('conf_angle', cnf_angle)
+  #  print('ref_angle', ref_angle)
 
     # Set the maximum allowed displacement for a TS conformer
     max_disp = 0.6
@@ -506,58 +548,68 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
         max_disp = 1.4
 
     # Check forming bond angle similar to ini config
-    if ref_angle is not None and 'elimination' not in rxn_class:
-        if abs(cnf_angle - ref_angle) > .44:
-            print(" - Transition State conformer has",
-                  "diverged from original structure of",
-                  "angle {:.3f} with angle {:.3f}".format(
-                      ref_angle, cnf_angle))
-            viable = False
+    if 'elimination' not in rxn_class:
+        for ref_angle, cnf_angle in zip(ref_ang_lst, cnf_ang_lst):
+            if abs(cnf_angle - ref_angle) > .44:
+                print(" - Transition State conformer has",
+                      "diverged from original structure of",
+                      "angle {:.3f} with angle {:.3f}".format(
+                          ref_angle, cnf_angle))
+                viable = False
 
-    # Check if radical atom is closer to some atom other than the bonding atom
-    if 'add' in rxn_class or 'abst' in rxn_class:
-        cls = geomprep.is_atom_closest_to_bond_atom(
-            zma, ts_bnd2, cnf_dist)
-        if not cls:
-            print(" - Transition State conformer has",
-                  "diverged from original structure of",
-                  "dist {:.3f} with dist {:.3f}".format(
-                      ref_dist, cnf_dist))
-            print(' - Radical atom now has a new nearest neighbor')
-            viable = False
-        if abs(cnf_dist - ref_dist) > max_disp:
-            print(" - Transition State conformer has",
-                  "diverged from original structure of",
-                  "dist {:.3f} with dist {:.3f}".format(
-                      ref_dist, cnf_dist))
-            viable = False
+                    # Check if radical atom is closer to some atom other than the bonding atom
+    symbols = automol.geom.symbols(cnf_geo)
+    for ref_dist, cnf_dist, bnd_key in zip(ref_dist_lst, cnf_dist_lst, bnd_key_lst):
+        if 'add' in rxn_class or 'abst' in rxn_class:
+            ref_dist = ref_dist
+            cnf_dist = cnf_dist
+            bnd_key1, bnd_key2 = min(list(bnd_key)), max(list(bnd_key))
+            symb1 = symbols[bnd_key1]
+            symb2 = symbols[bnd_key2]
+
+            if bnd_key in frm_bnd_keys:
+                cls = geomprep.is_atom_closest_to_bond_atom(
+                    zma, bnd_key2, cnf_dist)
+                if not cls:
+                    print(" - Transition State conformer has",
+                          "diverged from original structure of",
+                          "dist {:.3f} with dist {:.3f}".format(
+                              ref_dist, cnf_dist))
+                    print(' - Radical atom now has a new nearest neighbor')
+                    viable = False
+                if abs(cnf_dist - ref_dist) > max_disp:
+                    print(" - Transition State conformer has",
+                          "diverged from original structure of",
+                          "dist {:.3f} with dist {:.3f}".format(
+                              ref_dist, cnf_dist))
+                    viable = False
 
         # Check distances
-        symbols = automol.zmatrix.symbols(zma)
-        symb1, symb2 = symbols[ts_bnd1], symbols[ts_bnd2]
-        if (symb1, symb2) in bnd.LEN_DCT:
-            equi_bnd = bnd.LEN_DCT[(symb1, symb2)]
-        elif (symb2, symb1) in bnd.LEN_DCT:
-            equi_bnd = bnd.LEN_DCT[(symb2, symb1)]
+            #symbols = automol.zmatrix.symbols(zma)
+            #symb1, symb2 = symbols[ts_bnd1], symbols[ts_bnd2]
+            if (symb1, symb2) in bnd.LEN_DCT:
+                equi_bnd = bnd.LEN_DCT[(symb1, symb2)]
+            elif (symb2, symb1) in bnd.LEN_DCT:
+                equi_bnd = bnd.LEN_DCT[(symb2, symb1)]
+            else:
+                equi_bnd = 0.0
+            displace_from_equi = cnf_dist - equi_bnd
+            dchk1 = abs(cnf_dist - ref_dist) > 0.2
+            dchk2 = displace_from_equi < 0.2
+            if dchk1 and dchk2:
+                print(" - Transition State conformer has",
+                      "converged to an",
+                      "equilibrium structure with dist",
+                      " {:.3f} comp with equil {:.3f}".format(
+                          cnf_dist, equi_bnd))
+                viable = False
         else:
-            equi_bnd = 0.0
-        displace_from_equi = cnf_dist - equi_bnd
-        dchk1 = abs(cnf_dist - ref_dist) > 0.2
-        dchk2 = displace_from_equi < 0.2
-        if dchk1 and dchk2:
-            print(" - Transition State conformer has",
-                  "converged to an",
-                  "equilibrium structure with dist",
-                  " {:.3f} comp with equil {:.3f}".format(
-                      cnf_dist, equi_bnd))
-            viable = False
-    else:
-        if abs(cnf_dist - ref_dist) > 0.4:
-            print(" - Transition State conformer has",
-                  "diverged from original structure of",
-                  "dist {:.3f} with dist {:.3f}".format(
-                      ref_dist, cnf_dist))
-            viable = False
+            if abs(cnf_dist - ref_dist) > 0.4:
+                print(" - Transition State conformer has",
+                      "diverged from original structure of",
+                      "dist {:.3f} with dist {:.3f}".format(
+                          ref_dist, cnf_dist))
+                viable = False
 
     return viable
 

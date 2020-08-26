@@ -500,8 +500,10 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
     # print('axis test:', axis) 
     # print('atm key test:', atm_key)
     # print('gra test:', gra)
+
     if saddle:
-        gra = automol.graph.add_ts_bonds(gra, keys=[ts_bnd])
+        if ts_bnd not in automol.graph.bond_keys(gra):
+            gra = automol.graph.add_ts_bonds(gra, keys=[ts_bnd])
     group = list(
         automol.graph.branch_atom_keys(
             gra, atm_key, axis) - set(axis))

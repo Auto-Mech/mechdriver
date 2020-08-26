@@ -26,6 +26,10 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
             rct_zmas, prd_zmas)
 
     # Determine the reaction types
+    for rct_zma in rct_zmas:
+        print('zma test in ts_class:', automol.zmatrix.string(rct_zma))
+    for prd_zma in prd_zmas:
+        print('zma test in ts_class:', automol.zmatrix.string(prd_zma))
     ret = determine_reaction_type(
         rct_zmas, prd_zmas,
         ts_mul, high_mul, low_mul,
