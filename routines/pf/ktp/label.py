@@ -2,6 +2,7 @@
   Handle labels
 """
 
+from lib.amech_io import parser
 from routines.pf.models.typ import need_fake_wells
 
 
@@ -15,8 +16,10 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_model_dct):
         print('rxn\n', rxn)
         print()
         chn_idx = rxn['chn_idx']
-        rwell_model = spc_model_dct[rxn['model'][1]]['pf']['rwells']
-        pwell_model = spc_model_dct[rxn['model'][1]]['pf']['pwells']
+        pf_models = parser.model.pf_model_info(
+            spc_model_dct[rxn['model'][1]]['pf'])
+        rwell_model = pf_models['rwells']
+        pwell_model = pf_models['pwells']
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx)
         pes_label_dct.update(
             _make_channel_label_dct(

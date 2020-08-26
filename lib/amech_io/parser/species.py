@@ -369,9 +369,6 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
         # Set the ts_bnd using the zma and distname
         ts_bnd = automol.zmatrix.coord_idxs(ret1[0], ret1[1])
 
-        print('ts zma from id')
-        print(automol.zmatrix.string(ret1[0]))
-
         # Put class stuff in the dct
         dct_keys = ['zma', 'dist_name', 'brk_name',
                     'grid', 'frm_bnd_keys', 'brk_bnd_keys',

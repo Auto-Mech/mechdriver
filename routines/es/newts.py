@@ -28,7 +28,6 @@ def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
         run_prefix, save_prefix, zma_locs=zma_locs)
 
     # Find the transition state
-    print('search', search_method)
     if search_method == 'sadpt':
         run_sadpt(spc_dct, tsname, es_keyword_dct,
                   method_dct, runfs_dct, savefs_dct,
@@ -36,7 +35,7 @@ def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     elif search_method == 'molrad_vtst':
         run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
                         method_dct, runfs_dct, savefs_dct,
-                        info_dct, grid, run_prefix, save_prefix)
+                        info_dct, grid)
     elif search_method == 'radrad_vtst':
         run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
                         method_dct, runfs_dct, savefs_dct,
@@ -210,9 +209,8 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
     [grid1, grid2] = grid
 
     # Get method stuff
-    mod_ini_thy_info = method_dct['inplvl']
-    mod_thy_info = method_dct['runlvl']
-    mod_vsp1_thy_info = method_dct['var_splvl1']
+    thy_info = method_dct['runlvl']
+    vsp1_thy_info = method_dct['var_splvl1']
 
     # Get filesys stuff (might only have the theory, build the scn here?)
     thy_save_fs = savefs_dct['runlvl_thy_fs']
@@ -221,14 +219,13 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
     ts_save_fs = savefs_dct['runlvl_ts_fs']
     rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
 
+    # print('ts_save', ts_save_fs)
     # Run single reference mol-rad VTST Search
-    print('above scan fit')
     vtst.molrad_scan(
         ini_zma, ts_info,
         rct_info, rcts_cnf_fs,
         grid1, grid2, frm_name,
-        mod_thy_info, mod_ini_thy_info,
-        mod_vsp1_thy_info,
+        thy_info, vsp1_thy_info,
         thy_save_fs,
         ts_save_fs,
         scn_run_fs, scn_save_fs,
@@ -295,14 +292,12 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
         mod_var_scn_thy_info,
         mod_var_sp1_thy_info,
         mod_var_sp2_thy_info,
-        hs_var_scn_thy_info,
         hs_var_sp1_thy_info,
         hs_var_sp2_thy_info,
-        mod_ini_thy_info, mod_thy_info,
+        mod_thy_info,
         vscnlvl_thy_save_fs,
         vscnlvl_ts_save_fs,
         var_scn_run_fs, var_scn_save_fs,
-        run_prefix, save_prefix,
         overwrite, update_guess
     )
 
@@ -397,8 +392,6 @@ def _ts_finder_match(tsk, ts_dct, tsname):
         print('Running search algorithm according to {},'.format(
             ts_dct['ts_search']),
               'as requested by the user')
-        # Add the tsname
-        print('requested by the user for {}'.format(tsname))
     else:
         ini_method = None
         print('No search algorithm requested')
@@ -407,14 +400,12 @@ def _ts_finder_match(tsk, ts_dct, tsname):
     # ID search algorithm if user did not specify one (wrong)
     if ini_method is None:
         if _nobarrier(ts_dct):
-            print('nobar TS')
             ini_method = ['radrad_vtst', 'vrctst']
             print('Reaction is low-spin, radical-radical addition/abstraction')
             print('Assuming reaction is barrierless...')
             print('Finding a transition state according to either vtst or'
                   'vrctst, depending on the current task')
         else:
-            print('bar TS')
             ini_method = ['sadpt']
             print('Assuming reaction has saddle point on potential surface...')
             print('Use species.dat to specify VTST search for mol-rad rxn...')
@@ -514,11 +505,11 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
     hs_info = (ts_info[0], ts_info[1], ts_dct['high_mult'])
 
     # Initialize the theory objects
-    mod_ini_thy_info = None
-    mod_thy_info = None
-    mod_vscnlvl_thy_info = None
-    mod_vsp1lvl_thy_info = None
-    mod_vsp2lvl_thy_info = None
+    ini_thy_info, mod_ini_thy_info = None, None
+    thy_info, mod_thy_info = None, None
+    vscnlvl_thy_info, mod_vscnlvl_thy_info = None, None
+    vsp1lvl_thy_info, mod_vsp1lvl_thy_info = None, None
+    vsp2lvl_thy_info, mod_vsp2lvl_thy_info = None, None
     hs_vscnlvl_thy_info = None
     hs_vsp1lvl_thy_info = None
     hs_vsp2lvl_thy_info = None
@@ -664,11 +655,16 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
 
     # Build the dictionaries for the return
     method_dct = {
-        'inplvl': mod_ini_thy_info,
-        'runlvl': mod_thy_info,
-        'var_scnlvl': mod_vscnlvl_thy_info,
-        'var_splvl1': mod_vsp1lvl_thy_info,
-        'var_splvl2': mod_vsp2lvl_thy_info,
+        'inplvl': ini_thy_info,
+        'runlvl': thy_info,
+        'var_scnlvl': vscnlvl_thy_info,
+        'var_splvl1': vsp1lvl_thy_info,
+        'var_splvl2': vsp2lvl_thy_info,
+        'mod_inplvl': mod_ini_thy_info,
+        'mod_runlvl': mod_thy_info,
+        'mod_var_scnlvl': mod_vscnlvl_thy_info,
+        'mod_var_splvl1': mod_vsp1lvl_thy_info,
+        'mod_var_splvl2': mod_vsp2lvl_thy_info,
         'hs_var_scnlvl': hs_vscnlvl_thy_info,
         'hs_var_splvl1': hs_vsp1lvl_thy_info,
         'hs_var_splvl2': hs_vsp2lvl_thy_info,

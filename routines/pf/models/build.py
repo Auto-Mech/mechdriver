@@ -84,7 +84,7 @@ def read_ts_data(ts_dct, tsname,
                 ts_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix)
+                run_prefix, save_prefix, sadpt=True)
             writer = 'rpvtst_saddle_block'
         else:
             inf_dct = mol_data(
@@ -103,7 +103,7 @@ def read_ts_data(ts_dct, tsname,
                 ts_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix)
+                run_prefix, save_prefix, sadpt=False)
             writer = 'rpvtst_nosadpt_block'
         elif ts_nobarrier == 'vrctst':
             inf_dct = flux_data(
@@ -279,15 +279,13 @@ def flux_data(ts_dct,
 # VTST
 def rpvtst_data(ts_dct,
                 chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix):
+                run_prefix, save_prefix, sadpt=False):
     """ Pull all of the neccessary information from the
         filesystem for a species
     """
 
     # Fake setting for plugin
     _, _, _ = chn_pf_models, ref_pf_models, ref_pf_levels
-
-    sadpt = bool(not typ.var_radrad(ts_dct['class']))
 
     # Set up all the filesystem objects using models and levels
     if sadpt:

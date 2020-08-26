@@ -34,10 +34,9 @@ def radrad_scan(ts_zma, ts_info, hs_info,
     cas_kwargs = wfn.build_wfn(ref_zma, ts_info, ts_formula, high_mul,
                                rct_ichs, rct_info,
                                active_space, mod_var_scn_thy_info)
-    # print('cas_kwargs1', cas_kwargs)
-    # print('\n')
 
     # Run the scan along the reaction coordinate
+    print('const dct radrad', constraint_dct)
     scan.multiref_rscan(
         ts_zma=ts_zma,
         ts_info=ts_info,
@@ -78,19 +77,14 @@ def radrad_scan(ts_zma, ts_info, hs_info,
 
     # Save the vmatrix for use in reading
     print('\nSaving the VMatrix into the filesystem...')
-    print(vscnlvl_ts_save_fs)
     ts_fs, _ = vscnlvl_ts_save_fs
     ts_path = ts_fs[-1].path()
     zma_fs = autofile.fs.manager(ts_path, 'ZMATRIX')
     zma_fs[-1].create(zma_locs)
     zma_fs[-1].file.vmatrix.write(automol.zmatrix.var_(ts_zma), zma_locs)
 
-    print('frm', frm_bnd_keys)
     tra = (frozenset({frm_bnd_keys}),
            frozenset({}))
-    print('tra', tra)
-    print('rcts gra\n')
-    print(automol.graph.string(rcts_gra))
     zma_fs[-1].file.transformation.write(tra, zma_locs)
     zma_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
 
@@ -106,7 +100,7 @@ def radrad_scan(ts_zma, ts_info, hs_info,
 def molrad_scan(ts_zma, ts_info,
                 rct_info, rcts_cnf_fs,
                 grid1, grid2, coord_name,
-                mod_thy_info, mod_vsp1_thy_info,
+                thy_info, vsp1_thy_info,
                 thy_save_fs,
                 ts_save_fs,
                 scn_run_fs, scn_save_fs,
@@ -114,10 +108,13 @@ def molrad_scan(ts_zma, ts_info,
     """ Run the scan for VTST calculations
     """
 
-    if mod_vsp1_thy_info is not None:
-        inf_thy_info = mod_vsp1_thy_info
+    # Set the thy info objects appropriately
+    if vsp1_thy_info is not None:
+        inf_thy_info = vsp1_thy_info
     else:
-        inf_thy_info = mod_thy_info
+        inf_thy_info = thy_info
+    mod_thy_info = filesys.inf.modify_orb_restrict(ts_info, thy_info)
+    mod_vsp1_thy_info = filesys.inf.modify_orb_restrict(ts_info, vsp1_thy_info)
 
     # Set script
     _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
@@ -132,7 +129,7 @@ def molrad_scan(ts_zma, ts_info,
         opt_script_str, overwrite,
         update_guess=update_guess,
         reverse_sweep=False,
-        saddle=False,
+        saddle=False,   # opts along scan are min, not sadpt opts
         constraint_dct=None,
         retryfail=retryfail,
         **opt_kwargs
@@ -140,6 +137,7 @@ def molrad_scan(ts_zma, ts_info,
 
     # Infinite seperation energy calculation
     print('\nCalculating infinite separation energy...')
+    print('inf_thy_info', inf_thy_info)
     inf_sep_ene = scan.molrad_inf_sep_ene(
         rct_info, rcts_cnf_fs,
         inf_thy_info, overwrite)
@@ -150,7 +148,8 @@ def molrad_scan(ts_zma, ts_info,
 
     # Save the vmatrix for use in reading
     print('\nSaving the VMatrix into the filesystem...')
-    ts_save_fs[-1].file.vmatrix.write(
+    ts_fs, _ = ts_save_fs
+    ts_fs[-1].file.vmatrix.write(
         automol.zmatrix.var_(ts_zma))
 
     print('\nRunning Hessians and energies...')

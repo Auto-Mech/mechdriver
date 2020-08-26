@@ -243,7 +243,7 @@ def set_default_pf(dct):
 def pf_model_info(pf_model):
     """ Set the PF model list based on the input
     """
-
+    print('pfmodel', pf_model)
     rot_model = pf_model['rot'] if 'rot' in pf_model else 'rigid'
     tors_model = pf_model['tors'] if 'tors' in pf_model else 'rigid'
     vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
@@ -271,6 +271,7 @@ def pf_model_info(pf_model):
         'rwells': rwells_model,
         'pwells': pwells_model
     }
+    print('pfmodels', pf_models)
 
     return pf_models
 

@@ -26,6 +26,7 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     """
 
     # Build the SCANS/CSCANS filesystems
+    print('const dct run scan', constraint_dct)
     if constraint_dct is None:
         scn_save_fs[1].create([coord_names])
         inf_obj = autofile.schema.info_objects.scan_branch(
@@ -320,6 +321,7 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
     """
 
     # Setup and run the first part of the scan to shorter distances
+    print('const dct run two', constraint_dct)
     for grid in (grid1, grid2):
         run_scan(
             zma=ts_zma,
@@ -380,6 +382,7 @@ def multiref_rscan(ts_zma, ts_info,
     opt_kwargs.update(cas_kwargs)
 
     # Run the scans
+    print('const dct multi', constraint_dct)
     run_two_way_scan(
         ts_zma, ts_info, mod_var_scn_thy_info,
         grid1, grid2, coord_name,
@@ -475,7 +478,7 @@ def radrad_inf_sep_ene(hs_info, ref_zma,
     # the spin is going to be wrong for the reactants
 
     # Calculate the infinite seperation energy
-    all_enes = (reac_ene, hs_sr_ene, hs_mr_ene)
+    all_enes = (eac_ene, hs_sr_ene, hs_mr_ene)
     if all(ene is not None for ene in all_enes):
         inf_sep_ene = reac_ene - hs_sr_ene + hs_mr_ene
     else:
@@ -484,7 +487,7 @@ def radrad_inf_sep_ene(hs_info, ref_zma,
     return inf_sep_ene
 
 
-def reac_sep_ene(rct_info, rcts_cnf_fs, mod_thy_info,
+def reac_sep_ene(rct_info, rcts_cnf_fs, thy_info,
                  overwrite, sp_script_str, **kwargs):
     """ Calculate the sum of two reactants
     """
@@ -492,6 +495,9 @@ def reac_sep_ene(rct_info, rcts_cnf_fs, mod_thy_info,
     # get the single reference energy for each of the reactant configurations
     spc_enes = []
     for (cnf_run_fs, cnf_save_fs, min_locs), inf in zip(rcts_cnf_fs, rct_info):
+
+        # Set the modified thy info
+        mod_thy_info = filesys.inf.modify_orb_restrict(inf, thy_info)
 
         # Build filesys
         cnf_save_paths = filesys.build.cnf_paths_from_locs(

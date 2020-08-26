@@ -138,25 +138,27 @@ def _functional_groups_stable(geo, thy_save_fs, mod_thy_info):
     gra = automol.geom.graph(geo)
     rad_grp_dct = automol.graph.radical_group_dct(gra)
     for atm, grps in rad_grp_dct.items():
-        fgrps, prds = instab_fgrps.DCT[atm]
-        print('frgrps', fgrps)
-        print('prds', prds)
-        for grp in grps:
-            print('grp\n', grp)
-            grp_ich = automol.graph.inchi(grp)
-            if grp_ich in fgrps:
-                # If instability is found determine the prd of the instability
-                prd_ich = prds[fgrps.index(grp_ich)]
-                print('prd_ich', prd_ich)
-                prd_gra = automol.inchi.graph(prd_ich)
-                print('prd_gra')
-                print(automol.graph.string(prd_gra))
-                print('gra')
-                print(automol.graph.string(gra))
-                print('----')
-                prd_gras = automol.graph.radical_dissociation_prods(
-                    gra, prd_gra)
-                break
+        if atm in instab_fgrps.DCT:
+            fgrps, prds = instab_fgrps.DCT[atm]
+            print('frgrps', fgrps)
+            print('prds', prds)
+            for grp in grps:
+                print('grp\n', grp)
+                grp_ich = automol.graph.inchi(grp)
+                if grp_ich in fgrps:
+                    # If instability is found determine the prd of the instability
+                    prd_ich = prds[fgrps.index(grp_ich)]
+                    print('prd_ich', prd_ich)
+                    prd_geo = automol.inchi.geometry(prd_ich)
+                    prd_gra = automol.geom.graph(prd_geo)
+                    print('prd_gra')
+                    print(automol.graph.string(prd_gra))
+                    print('gra')
+                    print(automol.graph.string(gra))
+                    print('----')
+                    prd_gras = automol.graph.radical_dissociation_prods(
+                        gra, prd_gra)
+                    break
 
     if prd_gras:
         disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
