@@ -183,7 +183,7 @@ def sadpt_transition_state(
 
 def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
                     method_dct, runfs_dct, savefs_dct,
-                    info_dct, grid, run_prefix, save_prefix):
+                    info_dct, grid):
     """ find a transition state
     """
 
@@ -232,7 +232,6 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
         thy_save_fs,
         ts_save_fs,
         scn_run_fs, scn_save_fs,
-        run_prefix, save_prefix,
         overwrite, update_guess, retryfail
     )
 
@@ -280,7 +279,6 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     hs_var_scn_thy_info = method_dct['hs_var_scnlvl']
     hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
     hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
-    hs_thy_info = method_dct['hs_runlvl']
 
     # Get the filesys stuff
     var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']

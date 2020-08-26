@@ -1,13 +1,11 @@
 """ es_runners for coordinate scans
 """
 
-import numpy
 import automol
 import autofile
 import elstruct
 from routines.es import runner as es_runner
 from routines.es._routines import sp
-# from routines.es._routines import _wfn as wfn
 from routines.es._routines._fs import save_struct
 from routines.es._routines._fs import _read as read_zma_geo
 from lib.structure import tors as torsprep
@@ -27,10 +25,6 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     """ run constrained optimization scan
     """
 
-    # Check if ZMA matches one in filesys
-    # breaks for scans for right now
-    # check_isomer(zma, scn_save_fs)
-
     # Build the SCANS/CSCANS filesystems
     if constraint_dct is None:
         scn_save_fs[1].create([coord_names])
@@ -46,8 +40,6 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     # Build the grid of values
     _, grid_vals = torsprep.set_scan_dims(coord_grids)
 
-    # print(kwargs)
-    # Build run prefixses?
     _run_scan(
         guess_zma=zma,
         spc_info=spc_info,
@@ -383,29 +375,11 @@ def multiref_rscan(ts_zma, ts_info,
 
     # Set the opt script string and build the opt_kwargs
     [prog, method, _, _] = mod_var_scn_thy_info
-    print('mref method', method)
     _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
         prog, method)
     opt_kwargs.update(cas_kwargs)
-    # print('\n')
-
-    # Build the filesystem for the scan
-    # coord_grid = list(numpy.concatenate((grid1, grid2), axis=None))
-    # inf_obj = autofile.schema.info_objects.scan_branch(
-    #     {coord_name: coord_grid})
-    # if constraint_dct is None:
-    #     scn_save_fs[1].create([coord_name])
-    #     scn_save_fs[1].file.info.write(inf_obj, [coord_name])
-    # else:
-    #     scn_save_fs[1].create([constraint_dct])
-    #     scn_save_fs[1].file.info.write(inf_obj, [constraint_dct])
-    # scn_save_fs[1].create([coord_name])
-    # inf_obj = autofile.schema.info_objects.scan_branch(
-    #     {coord_name: numpy.concatenate((grid1, grid2), axis=None)})
-    # scn_save_fs[1].file.info.write(inf_obj, [coord_name])
 
     # Run the scans
-    # print('opt_kwargs', opt_kwargs)
     run_two_way_scan(
         ts_zma, ts_info, mod_var_scn_thy_info,
         grid1, grid2, coord_name,
@@ -435,13 +409,10 @@ def molrad_inf_sep_ene(rct_info, rcts_cnf_fs,
     return inf_sep_ene
 
 
-def radrad_inf_sep_ene(hs_info, high_mul, ref_zma,
+def radrad_inf_sep_ene(hs_info, ref_zma,
                        rct_info, rcts_cnf_fs,
-                       mod_var_scn_thy_info, mod_var_sp1_thy_info,
-                       hs_var_scn_thy_info, hs_var_sp1_thy_info,
-                       mod_ini_thy_info, mod_thy_info,
                        mod_var_sp2_thy_info,
-                       hs_var_sp2_thy_info,
+                       hs_var_sp1_thy_info, hs_var_sp2_thy_info,
                        geo, geo_run_path, geo_save_path,
                        scn_save_fs, inf_locs,
                        overwrite=False,
@@ -455,14 +426,6 @@ def radrad_inf_sep_ene(hs_info, high_mul, ref_zma,
         sp2 = high-spin single points for inf sep
 
         inf = spc0 + spc1 - hs_sr_e + hs_mr_ene
-
-        spc0, spc1, at sep species
-          - runlvl//inilvl
-        hs_sr_e and hs_mr_e at longest dist possible (~4 Ang)
-          - sr: runlvl//inilvl
-          - mr: vsp1lvl//vscnlvl
-
-
     """
 
     # Initialize infinite sep energy
@@ -488,7 +451,7 @@ def radrad_inf_sep_ene(hs_info, high_mul, ref_zma,
                       script_str, overwrite, highspin=True, **cas_kwargs)
 
         # Read the energty from the filesystem
-        hs_save_fs, hs_var_save_path = filesys.build.high_spin_from_prefix(
+        hs_save_fs, _ = filesys.build.high_spin_from_prefix(
             geo_save_path, thy_info)
         if not hs_save_fs[-1].file.energy.exists(thy_info[1:4]):
             print('ERROR: High-spin energy job failed: ',

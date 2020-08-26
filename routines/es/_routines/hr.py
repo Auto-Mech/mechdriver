@@ -26,9 +26,6 @@ def hindered_rotor_scans(
     print('\nRunning hindered rotor scans for the following rotors...')
     for names in run_tors_names:
         print(names)
-    # print(*run_tors_names)
-    # print(list(itertools.chain(*run_tors_names)))
-    # print(const_names)
     if const_names is not None:
         if set(list(itertools.chain(*run_tors_names))) == set(const_names):
             print('\nUser requested all torsions of system will be fixed.')

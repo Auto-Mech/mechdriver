@@ -10,7 +10,6 @@ from routines.es._routines import _scan as scan
 from routines.es._routines import _wfn as wfn
 from routines.es._routines import sp
 from routines.es import runner as es_runner
-from lib import filesys
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 from lib.phydat import phycon
@@ -23,18 +22,14 @@ def calc_vrctst_flux(ini_zma, ts_info, hs_info,
                      rct_info, rct_ichs, rct_zmas, rcts_cnf_fs,
                      grid1, grid2, coord_name,
                      mod_var_scn_thy_info,
-                     mod_var_sp1_thy_info,
-                     mod_var_sp2_thy_info,
+                     mod_var_sp1_thy_info, mod_var_sp2_thy_info,
                      hs_var_scn_thy_info,
-                     hs_var_sp1_thy_info,
-                     hs_var_sp2_thy_info,
+                     hs_var_sp1_thy_info, hs_var_sp2_thy_info,
                      mod_ini_thy_info, mod_thy_info,
                      vscnlvl_thy_save_fs,
-                     vscnlvl_ts_save_fs,
                      vscnlvl_ts_run_fs,
                      vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
                      vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs,
-                     run_prefix, save_prefix,
                      overwrite, update_guess):
     """ Set up n VRC-TST calculations to get the flux file
     """
@@ -60,13 +55,12 @@ def calc_vrctst_flux(ini_zma, ts_info, hs_info,
 
     # Calculate the correction potential along the MEP
     inf_sep_ene, npot, zma_for_inp = _build_correction_potential(
-        ts_info, hs_info, high_mul, ref_zma,
+        ts_info, hs_info, ref_zma,
         coord_name, bnd_frm_idxs,
         grid1, grid2,
         rct_info, rcts_cnf_fs, rct_zmas,
         mod_var_scn_thy_info, mod_var_sp1_thy_info,
-        hs_var_scn_thy_info, hs_var_sp1_thy_info,
-        mod_ini_thy_info, mod_thy_info,
+        hs_var_sp1_thy_info,
         mod_var_sp2_thy_info,
         hs_var_sp2_thy_info,
         vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
@@ -93,13 +87,12 @@ def calc_vrctst_flux(ini_zma, ts_info, hs_info,
 
 
 # FUNCTIONS TO SET UP THE libcorrpot.so FILE USED BY VARECOF
-def _build_correction_potential(ts_info, hs_info, high_mul, ref_zma,
+def _build_correction_potential(ts_info, hs_info, ref_zma,
                                 coord_name, bnd_frm_idxs,
                                 grid1, grid2,
                                 rct_info, rcts_cnf_fs, rct_zmas,
                                 mod_var_scn_thy_info, mod_var_sp1_thy_info,
-                                hs_var_scn_thy_info, hs_var_sp1_thy_info,
-                                mod_ini_thy_info, mod_thy_info,
+                                hs_var_sp1_thy_info,
                                 mod_var_sp2_thy_info,
                                 hs_var_sp2_thy_info,
                                 vscnlvl_scn_run_fs, vscnlvl_scn_save_fs,
@@ -137,13 +130,10 @@ def _build_correction_potential(ts_info, hs_info, high_mul, ref_zma,
     geo_save_path = vscnlvl_scn_save_fs[-1].path(inf_locs)
 
     inf_sep_ene = scan.radrad_inf_sep_ene(
-        ts_info, high_mul, ts_zma,
+        hs_info, ts_zma,
         rct_info, rcts_cnf_fs,
-        mod_var_scn_thy_info, mod_var_sp1_thy_info,
-        hs_var_scn_thy_info, hs_var_sp1_thy_info,
-        mod_ini_thy_info, mod_thy_info,
         mod_var_sp2_thy_info,
-        hs_var_sp2_thy_info,
+        hs_var_sp1_thy_info, hs_var_sp2_thy_info,
         geo, geo_run_path, geo_save_path,
         vscnlvl_scn_save_fs, inf_locs,
         overwrite, **cas_kwargs)
@@ -151,11 +141,11 @@ def _build_correction_potential(ts_info, hs_info, high_mul, ref_zma,
     # Combine and sort the grids for organization
     full_grid = list(grid1) + list(grid2)
     full_grid.sort()
-    
+
     # Get grid val for zma used to make structure.inp and divsur.inp
     print('grid1', grid1)
     grid_val_for_zma = grid1[-1]
-    
+
     # Read the values for the correction potential from filesystem
     potentials, pot_labels, zma_for_inp = _read_potentials(
         vscnlvl_scn_save_fs, vscnlvl_cscn_save_fs,
@@ -297,7 +287,7 @@ def _scan_sp(ts_info, coord_name,
 
 def _read_potentials(scn_save_fs, cscn_save_fs,
                      mod_var_scn_thy_info, mod_var_sp1_thy_info,
-                     dist_name, full_grid, inf_sep_ene,
+                     dist_name, full_grid,
                      constraint_dct, grid_val_for_zma):
     """ Read values form the filesystem to get the values to
         correct ht MEP
@@ -370,7 +360,7 @@ def _read_potentials(scn_save_fs, cscn_save_fs,
         potential_labels = ['relax', 'full']
 
     # Get zma used to make structure.inp and divsur.inp
-    inp_zma_locs = [[dist_name], [grid_val]]
+    inp_zma_locs = [[dist_name], [grid_val_for_zma]]
     if scn_save_fs[-1].file.zmatrix.exists(inp_zma_locs):
         zma_for_inp = scn_save_fs[-1].file.zmatrix.read(inp_zma_locs)
     else:

@@ -17,14 +17,12 @@ def radrad_scan(ts_zma, ts_info, hs_info,
                 mod_var_scn_thy_info,
                 mod_var_sp1_thy_info,
                 mod_var_sp2_thy_info,
-                hs_var_scn_thy_info,
                 hs_var_sp1_thy_info,
                 hs_var_sp2_thy_info,
-                mod_ini_thy_info, mod_thy_info,
+                mod_thy_info,
                 vscnlvl_thy_save_fs,
                 vscnlvl_ts_save_fs,
                 scn_run_fs, scn_save_fs,
-                run_prefix, save_prefix,
                 overwrite, update_guess,
                 constraint_dct=None,
                 zma_locs=(0,)):
@@ -65,16 +63,14 @@ def radrad_scan(ts_zma, ts_info, hs_info,
     geo_save_path = scn_save_fs[-1].path(inf_locs)
 
     inf_sep_ene = scan.radrad_inf_sep_ene(
-        hs_info, high_mul, ts_zma,
+        hs_info, ts_zma,
         rct_info, rcts_cnf_fs,
-        mod_var_scn_thy_info, mod_var_sp1_thy_info,
-        hs_var_scn_thy_info, hs_var_sp1_thy_info,
-        mod_ini_thy_info, mod_thy_info,
         mod_var_sp2_thy_info,
-        hs_var_sp2_thy_info,
+        hs_var_sp1_thy_info, hs_var_sp2_thy_info,
         geo, geo_run_path, geo_save_path,
         scn_save_fs, inf_locs,
-        overwrite, **cas_kwargs)
+        overwrite=overwrite,
+        **cas_kwargs)
 
     inf_locs = [[coord_name], [1000.]]
     scn_save_fs[-1].create(inf_locs)

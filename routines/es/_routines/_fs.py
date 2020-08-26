@@ -6,7 +6,6 @@ import automol
 import elstruct
 import autofile
 from routines.es import runner as es_runner
-from lib.structure import instab
 
 
 def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
@@ -93,7 +92,7 @@ def _read(run_fs, job, cart_to_zma=False):
             except TypeError:
                 geo = None
                 print('No GEOM')
-        
+
             # Read the optimized zma
             if cart_to_zma:
                 zma = automol.geom.zmatrix(geo)

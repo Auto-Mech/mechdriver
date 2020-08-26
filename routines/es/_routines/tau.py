@@ -157,12 +157,12 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
 def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
     """ save the tau dependent geometries that have been found so far
     """
-    #db_style = 'jsondb'
+    # db_style = 'jsondb'
     db_style = 'directory'
     if db_style == 'jsondb':
-        saved_locs = tau_save_fs[-1].json_existing() 
+        saved_locs = tau_save_fs[-1].json_existing()
         saved_geos = tau_save_fs[-1].json.geometry.read_all(saved_locs)
-    elif db_style == 'directory':    
+    elif db_style == 'directory':
         saved_geos = [tau_save_fs[-1].file.geometry.read(locs)
                       for locs in tau_save_fs[-1].existing()]
     if not tau_run_fs[0].exists():
@@ -205,18 +205,19 @@ def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
                     sp_save_fs[-1].file.info.write(inf_obj, mod_thy_info[1:4])
                     sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
                 elif db_style == 'jsondb':
-              #      tau_save_fs[-1].json.geometry_info.write(inf_obj, locs)
-              #      tau_save_fs[-1].json.geometry_input.write(inp_str, locs)
-              #      tau_save_fs[-1].json.energy.write(ene, locs)
-              #      tau_save_fs[-1].json.geometry.write(geo, locs)
+                    # tau_save_fs[-1].json.geometry_info.write(inf_obj, locs)
+                    # tau_save_fs[-1].json.geometry_input.write(inp_str, locs)
+                    # tau_save_fs[-1].json.energy.write(ene, locs)
+                    # tau_save_fs[-1].json.geometry.write(geo, locs)
                     print(" - Saving energy and geo of unique geometry...")
-                    save_info[0].append(locs)        
-                    save_info[1].append(inf_obj)        
-                    save_info[2].append(inp_str)        
-                    save_info[3].append(ene)        
-                    save_info[4].append(geo)        
+                    save_info[0].append(locs)
+                    save_info[1].append(inf_obj)
+                    save_info[2].append(inp_str)
+                    save_info[3].append(ene)
+                    save_info[4].append(geo)
 
-                    sp_save_fs = autofile.fs.single_point(save_path, json_layer=locs)
+                    sp_save_fs = autofile.fs.single_point(
+                        save_path, json_layer=locs)
                     sp_save_info[0].append(sp_save_fs)
                     sp_save_info[1].append(mod_thy_info[1:4])
                     sp_save_info[2].append(inp_str)
@@ -230,15 +231,22 @@ def save_tau(tau_run_fs, tau_save_fs, mod_thy_info):
 
         if db_style == 'jsondb':
             tau_save_fs[-1].json_create()
-            tau_save_fs[-1].json.geometry_info.write_all(save_info[1], save_info[0])
-            tau_save_fs[-1].json.geometry_input.write_all(save_info[2], save_info[0])
-            tau_save_fs[-1].json.energy.write_all(save_info[3], save_info[0])
-            tau_save_fs[-1].json.geometry.write_all(save_info[4], save_info[0])
+            tau_save_fs[-1].json.geometry_info.write_all(
+                save_info[1], save_info[0])
+            tau_save_fs[-1].json.geometry_input.write_all(
+                save_info[2], save_info[0])
+            tau_save_fs[-1].json.energy.write_all(
+                save_info[3], save_info[0])
+            tau_save_fs[-1].json.geometry.write_all(
+                save_info[4], save_info[0])
 
             for i, sp_save_fs_i in enumerate(sp_save_info[0]):
-                sp_save_fs_i[-1].json.input.write(sp_save_info[2][i], sp_save_info[1][i])
-                sp_save_fs_i[-1].json.info.write(sp_save_info[3][i], sp_save_info[1][i])
-                sp_save_fs_i[-1].json.energy.write(sp_save_info[4][i], sp_save_info[1][i])
+                sp_save_fs_i[-1].json.input.write(
+                    sp_save_info[2][i], sp_save_info[1][i])
+                sp_save_fs_i[-1].json.info.write(
+                    sp_save_info[3][i], sp_save_info[1][i])
+                sp_save_fs_i[-1].json.energy.write(
+                    sp_save_info[4][i], sp_save_info[1][i])
 
         # update the tau trajectory file
         filesys.mincnf.traj_sort(tau_save_fs, mod_thy_info)

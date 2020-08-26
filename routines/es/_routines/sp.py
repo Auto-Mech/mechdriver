@@ -30,11 +30,7 @@ def run_energy(zma, geo, spc_info, thy_info,
         sp_save_fs = autofile.fs.single_point(geo_save_path)
     else:
         sp_run_fs = autofile.fs.high_spin(geo_run_path)
-        if _json_database(geo_save_path):
-            sp_save_fs = autofile.fs.high_spin(
-                geo_save_path, json_layer=locs)
-        else:
-            sp_save_fs = autofile.fs.high_spin(geo_save_path)
+        sp_save_fs = autofile.fs.high_spin(geo_save_path)
 
     sp_run_fs[-1].create(thy_info[1:4])
     sp_run_path = sp_run_fs[-1].path(thy_info[1:4])
@@ -166,11 +162,13 @@ def run_gradient(zma, geo, spc_info, thy_info,
                     print(" - Saving gradient...")
                     if _json_database(geo_save_path):
                         geo_save_fs[-1].json.gradient_info.write(inf_obj, locs)
-                        geo_save_fs[-1].json.gradient_input.write(inp_str, locs)
+                        geo_save_fs[-1].json.gradient_input.write(
+                            inp_str, locs)
                         geo_save_fs[-1].json.gradient.write(grad, locs)
                     else:
                         geo_save_fs[-1].file.gradient_info.write(inf_obj, locs)
-                        geo_save_fs[-1].file.gradient_input.write(inp_str, locs)
+                        geo_save_fs[-1].file.gradient_input.write(
+                            inp_str, locs)
                         geo_save_fs[-1].file.gradient.write(grad, locs)
                     print(" - Save path: {}".format(geo_save_path))
 
@@ -482,5 +480,5 @@ def _json_database(save_path):
     it_is = False
     for inst in _JSON_SAVE:
         if inst in save_path:
-           it_is = True
+            it_is = True
     return it_is

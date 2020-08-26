@@ -1,7 +1,6 @@
 """ Functions for sadpt
 """
 
-import automol
 import autofile
 from autofile import fs
 import elstruct
@@ -220,7 +219,8 @@ def saddle_point_checker(imags):
 
     for imag in imags:
         if imag <= 200.0:
-            print('Imaginary mode {} is relatively low. Worth checking'.format(imag))
+            print('Imaginary mode {} is relatively low'.format(imag))
+            print('Worth checking')
 
     return saddle
 
@@ -282,11 +282,6 @@ def save_saddle_point(
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
 
     # Save the form and break keys in the filesystem
-    # shift_frm_bnd_keys = structure.geom.shift_vals_from_dummy(
-    #     frm_bnd_keys, zma)
-    # shift_brk_bnd_keys = structure.geom.shift_vals_from_dummy(
-    #     brk_bnd_keys, zma)
-
     tra = (frozenset({frm_bnd_keys}),
            frozenset({brk_bnd_keys}))
     zma_save_fs[-1].file.transformation.write(tra, zma_locs)
@@ -299,27 +294,3 @@ def save_saddle_point(
     sp_save_fs[-1].file.input.write(opt_inp_str, mod_thy_info[1:4])
     sp_save_fs[-1].file.info.write(opt_inf_obj, mod_thy_info[1:4])
     sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
-
-
-#####
-# def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info, zma_locs=(0,)):
-#     """ Check if the filesystem for any TS structures at the input
-#         level of theory
-#     """
-#     guess_zmas = []
-#
-#     # Check and see if a zma is found from the filesystem
-#     ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-#         ini_ts_save_path, mod_ini_thy_info, cnf='min')
-#     if ini_cnf_save_locs:
-#         ini_zma_fs = autofile.fs.manager(
-#             ini_cnf_save_fs[-1].path(ini_cnf_save_locs), 'ZMATRIX')
-#         if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
-#             geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
-#             print(' - Z-Matrix found.')
-#             print(' - Reading Z-Matrix from path {}'.format(geo_path))
-#             guess_zmas.append(
-#                 ini_zma_fs[-1].file.zmatrix.read(zma_locs))
-#
-#     return guess_zmas
-
