@@ -123,24 +123,26 @@ def assess_rxn_ene(reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix):
         rxn_ichs[1].append(spc_dct[spc]['inchi'])
         rxn_chgs[1].append(spc_dct[spc]['charge'])
         rxn_muls[1].append(spc_dct[spc]['mult'])
-    try:
+
+    rxn_ene = reaction_energy(
+        save_prefix, rxn_ichs, rxn_chgs, rxn_muls,
+        thy_info, ini_thy_info)
+    method1, method2 = thy_info, ini_thy_info
+    if rxn_ene is None:
         rxn_ene = reaction_energy(
-            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, thy_info)
-        method = thy_info
-    except TypeError:
-        rxn_ene = reaction_energy(
-            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
-        method = ini_thy_info
-    except AssertionError:
-        rxn_ene = reaction_energy(
-            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
-        method = ini_thy_info
-    except IOError:
-        rxn_ene = reaction_energy(
-            save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
-        method = ini_thy_info
-    print('    Reaction energy is {:.2f} at {} level'.format(
-        rxn_ene*phycon.EH2KCAL, method[1]))
+            save_prefix, rxn_ichs, rxn_chgs, rxn_muls,
+            ini_thy_info, ini_thy_info)
+        method1, method2 = ini_thy_info, ini_thy_info
+    # except AssertionError:
+    #     rxn_ene = reaction_energy(
+    #         save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
+    #     method = ini_thy_info
+    # except IOError:
+    #     rxn_ene = reaction_energy(
+    #         save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
+    #     method = ini_thy_info
+    print('    Reaction energy is {:.2f} at {}//{} level'.format(
+        rxn_ene*phycon.EH2KCAL, method1[1], method2[1]))
     if rxn_ene > 0:
         reacs, prods = prods, reacs
         print('    Reaction is endothermic, flipping reaction.')
@@ -148,34 +150,59 @@ def assess_rxn_ene(reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix):
     return reacs, prods
 
 
-def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul, thy_level):
+def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul,
+                    sp_thy_info, geo_thy_info):
     """ reaction energy """
     rct_ichs, prd_ichs = rxn_ich
     rct_chgs, prd_chgs = rxn_chg
     rct_muls, prd_muls = rxn_mul
     rct_enes = reagent_energies(
-        save_prefix, rct_ichs, rct_chgs, rct_muls, thy_level)
+        save_prefix, rct_ichs, rct_chgs, rct_muls,
+        sp_thy_info, geo_thy_info)
     prd_enes = reagent_energies(
-        save_prefix, prd_ichs, prd_chgs, prd_muls, thy_level)
+        save_prefix, prd_ichs, prd_chgs, prd_muls,
+        sp_thy_info, geo_thy_info)
 
-    return sum(prd_enes) - sum(rct_enes)
+    if rct_enes is not None and prd_enes is not None:
+        rxn_ene = sum(prd_enes) - sum(rct_enes)
+    else:
+        rxn_ene = None
+
+    return rxn_ene
 
 
-def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls, thy_level):
+def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls,
+                     sp_thy_info, geo_thy_info):
     """ reagent energies """
+
     enes = []
     for rgt_ich, rgt_chg, rgt_mul in zip(rgt_ichs, rgt_chgs, rgt_muls):
+
+        # Set filesys
         spc_save_fs = autofile.fs.species(save_prefix)
         rgt_info = [rgt_ich, rgt_chg, rgt_mul]
         spc_save_path = spc_save_fs[-1].path(rgt_info)
 
-        thy_lvl = modify_orb_restrict(rgt_info, thy_level)
+        mod_geo_thy_info = modify_orb_restrict(rgt_info, geo_thy_info)
+        mod_sp_thy_info = modify_orb_restrict(rgt_info, sp_thy_info)
         thy_save_fs = autofile.fs.theory(spc_save_path)
-        thy_save_path = thy_save_fs[-1].path(thy_lvl[1:4])
+        thy_save_path = thy_save_fs[-1].path(mod_geo_thy_info[1:4])
         cnf_save_fs = autofile.fs.conformer(thy_save_path)
-        min_cnf_locs = min_energy_conformer_locators(cnf_save_fs, thy_lvl)
-        ene = cnf_save_fs[-1].file.energy.read(min_cnf_locs)
+        min_cnf_locs = min_energy_conformer_locators(
+            cnf_save_fs, mod_geo_thy_info)
+
+        # Read energy
+        ene = None
+        if min_cnf_locs:
+            cnf_path = cnf_save_fs[-1].path(min_cnf_locs)
+            sp_fs = autofile.fs.single_point(cnf_path)
+            if sp_fs[-1].file.energy.exists(mod_sp_thy_info[1:4]):
+                ene = sp_fs[-1].file.energy.read(mod_sp_thy_info[1:4])
         enes.append(ene)
+
+    if any(ene is None for ene in enes):
+        enes = None
+
     return enes
 
 

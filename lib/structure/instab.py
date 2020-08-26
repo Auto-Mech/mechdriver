@@ -8,23 +8,146 @@
 
 import automol
 import autofile
+import elstruct
 from lib import filesys
+from lib.phydat import bnd, phycon
 from automol.zmatrix._bimol_ts import addition
 
 
 # Write the instability files
-def write_instab(conn_zma, disconn_zma, save_fs, locs):
+def write_instab(conn_zma, disconn_zma,
+                 thy_save_fs, thy_locs,
+                 opt_ret,
+                 zma_locs=(0,),
+                 save_cnf=False):
     """ write the instability files
     """
 
-    # Obtain the transformation and reactants graph
-    frm_bnd_keys, rcts_gra = _instab_info(conn_zma, disconn_zma)
+    # Get a connected geometry
+    conn_geo = automol.zmatrix.geometry(conn_zma)
+
+    if opt_ret:
+
+        # Obtain inf obj and inp str to write in filesys
+        inf_obj, inp_str, out_str = opt_ret
+
+        # Set and print the save path information
+        save_path = thy_save_fs[-1].path(thy_locs)
+        print(" - Saving...")
+        print(" - Save path: {}".format(save_path))
+
+        # Save the geometry information
+        instab_fs = autofile.fs.instab(save_path)
+        instab_fs[-1].create()
+        instab_fs[-1].file.geometry_info.write(inf_obj)
+        instab_fs[-1].file.geometry_input.write(inp_str)
+        instab_fs[-1].file.geometry.write(conn_geo)
+        instab_path = instab_fs[-1].path()
+
+        # Grab the zma and instability transformation
+        conn_zma, frm_bnd_keys, rcts_gra = _instab_info(conn_zma, disconn_zma)
+        tra = (frozenset({frm_bnd_keys}),
+               frozenset({frozenset({})}))
+
+        # Save zma information seperately, if required
+        zma_save_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
+        zma_save_fs[-1].create(zma_locs)
+        zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
+        zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
+        zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+
+        # Write the files into the filesystem
+        zma_save_fs[-1].file.transformation.write(tra, zma_locs)
+        zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
+
+        # Saving the energy to an SP filesys
+        print(" - Saving energy...")
+        prog = inf_obj.prog
+        method = inf_obj.method
+        ene = elstruct.reader.energy(prog, method, out_str)
+        sp_save_fs = autofile.fs.single_point(save_path)
+        sp_save_fs[-1].create(thy_locs)
+        sp_save_fs[-1].file.input.write(inp_str, thy_locs)
+        sp_save_fs[-1].file.info.write(inf_obj, thy_locs)
+        sp_save_fs[-1].file.energy.write(ene, thy_locs)
+
+        if save_cnf:
+            # Save the geometry information
+            cnf_fs = autofile.fs.conformer(save_path)
+            cnf_locs = [autofile.schema.generate_new_conformer_id()]
+            cnf_fs[-1].create(cnf_locs)
+            cnf_fs[-1].file.geometry_info.write(inf_obj, cnf_locs)
+            cnf_fs[-1].file.geometry_input.write(inp_str, cnf_locs)
+            cnf_fs[-1].file.geometry.write(conn_geo, cnf_locs)
+            cnf_path = cnf_fs[-1].path(cnf_locs)
+
+            # Save zma information seperately, if required
+            zma_save_fs = autofile.fs.manager(cnf_path, 'ZMATRIX')
+            zma_save_fs[-1].create(zma_locs)
+            zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
+            zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
+            zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+
+            # Saving the energy to an SP filesys
+            print(" - Saving energy...")
+            prog = inf_obj.prog
+            method = inf_obj.method
+            ene = elstruct.reader.energy(prog, method, out_str)
+            sp_save_fs = autofile.fs.single_point(cnf_path)
+            sp_save_fs[-1].create(thy_locs)
+            sp_save_fs[-1].file.input.write(inp_str, thy_locs)
+            sp_save_fs[-1].file.info.write(inf_obj, thy_locs)
+            sp_save_fs[-1].file.energy.write(ene, thy_locs)
+
+
+# Write the instability files
+def write_instab2(conn_zma, disconn_zmas,
+                 thy_save_fs, thy_locs,
+                 zma_locs=(0,),
+                 save_cnf=False):
+    """ write the instability files
+    """
+
+    # Get a connected geometry
+    conn_geo = automol.zmatrix.geometry(conn_zma)
+
+    # Set and print the save path information
+    save_path = thy_save_fs[-1].path(thy_locs)
+    print(" - Saving...")
+    print(" - Save path: {}".format(save_path))
+
+    # Save the geometry information
+    instab_fs = autofile.fs.instab(save_path)
+    instab_fs[-1].create()
+    instab_fs[-1].file.geometry.write(conn_geo)
+    instab_path = instab_fs[-1].path()
+
+    # Grab the zma and instability transformation
+    conn_zma, frm_bnd_keys, rcts_gra = _instab_info2(conn_zma, disconn_zmas)
     tra = (frozenset({frm_bnd_keys}),
            frozenset({frozenset({})}))
 
+    # Save zma information seperately, if required
+    zma_save_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
+    zma_save_fs[-1].create(zma_locs)
+    zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+
     # Write the files into the filesystem
-    save_fs[-1].file.transformation.write(tra, locs)
-    save_fs[-1].file.reactant_graph.write(rcts_gra, locs)
+    zma_save_fs[-1].file.transformation.write(tra, zma_locs)
+    zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
+
+    if save_cnf:
+        # Save the geometry information
+        cnf_fs = autofile.fs.conformer(save_path)
+        cnf_locs = [autofile.schema.generate_new_conformer_id()]
+        cnf_fs[-1].create(cnf_locs)
+        cnf_fs[-1].file.geometry.write(conn_geo, cnf_locs)
+        cnf_path = cnf_fs[-1].path(cnf_locs)
+
+        # Save zma information seperately, if required
+        zma_save_fs = autofile.fs.manager(cnf_path, 'ZMATRIX')
+        zma_save_fs[-1].create(zma_locs)
+        zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
 
 
 def _instab_info(conn_zma, disconn_zma):
@@ -35,22 +158,49 @@ def _instab_info(conn_zma, disconn_zma):
     prd_zmas = [conn_zma]
 
     # Get the zmas used for the identification
-    rct_zmas = _disconnected_zmas(disconn_zma)
-
-    # print('prd')
-    # for zma in prd_zmas:
-    #     print(automol.zmatrix.string(zma))
-    #     print()
-    # print('\nrct')
-    # for zma in rct_zmas:
-    #     print(automol.zmatrix.string(zma))
-    #     print()
+    rct_zmas = _disconnect_zmas(disconn_zma)
 
     # Get the keys
     ret = addition(rct_zmas, prd_zmas, ())
-    _, _, frm_bnd_keys, _, rcts_gra = ret
+    zma, _, frm_bnd_keys, _, rcts_gra = ret
 
-    return frm_bnd_keys, rcts_gra
+    # Set the bond in the zma to a physical length
+    symbols = automol.zmatrix.symbols(zma)
+    frm_symbs = [symbols[key] for key in frm_bnd_keys]
+    frm_name = automol.zmatrix.bond_key_from_idxs(zma, frm_bnd_keys)
+    bnd_len = bnd.read_len(tuple(frm_symbs)) * phycon.ANG2BOHR
+    zma = automol.zmatrix.set_values(zma, {frm_name: bnd_len})
+
+    return zma, frm_bnd_keys, rcts_gra
+
+
+def _instab_info2(conn_zma, disconn_zmas):
+    """ Obtain instability info
+    """
+
+    # Get the zma for the connected graph
+    prd_zmas = [conn_zma]
+
+    print('prd zma')
+    for zma in prd_zmas:
+        print(automol.zmatrix.string(zma))
+    print('\n\nrct zma')
+    for zma in disconn_zmas:
+        print(automol.zmatrix.string(zma))
+        print()
+
+    # Get the keys
+    ret = addition(disconn_zmas, prd_zmas, ())
+    zma, _, frm_bnd_keys, _, rcts_gra = ret
+
+    # Set the bond in the zma to a physical length
+    symbols = automol.zmatrix.symbols(zma)
+    frm_symbs = [symbols[key] for key in frm_bnd_keys]
+    frm_name = automol.zmatrix.bond_key_from_idxs(zma, frm_bnd_keys)
+    bnd_len = bnd.read_len(tuple(frm_symbs)) * phycon.ANG2BOHR
+    zma = automol.zmatrix.set_values(zma, {frm_name: bnd_len})
+
+    return zma, frm_bnd_keys, rcts_gra
 
 
 def _disconnected_zmas(disconn_zma):
@@ -77,7 +227,8 @@ def check_unstable_species(tsk, spc_dct, spc_name,
 
     if 'ts' not in spc_name and tsk != 'init_geom':
 
-        print('Checking filesystem if species is unstable...')
+        print('\nChecking filesystem if species {}'.format(spc_name),
+              'is unstable...')
 
         # Build filesystem
         spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
@@ -90,18 +241,26 @@ def check_unstable_species(tsk, spc_dct, spc_name,
         thy_locs = mod_thy_info[1:4]
         thy_path = thy_save_fs[-1].path(thy_locs)
 
-        # Check if the instability files exist
-        if (thy_save_fs[-1].file.transformation.exists(thy_locs) and
-                thy_save_fs[-1].file.reactant_graph.exists(thy_locs)):
-            stable = False
-            print('- Found files denoting species instability at path')
-            print('    {}'.format(thy_path))
-            print('- Skipping requested task...')
+        instab_fs = autofile.fs.instab(thy_path)
+        if instab_fs[-1].exists():
+
+            instab_path = instab_fs[-1].path()
+            zma_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
+            zma_locs = (0,)
+
+            # Check if the instability files exist
+            if (zma_fs[-1].file.transformation.exists(zma_locs) and
+                    zma_fs[-1].file.reactant_graph.exists(zma_locs)):
+                stable = False
+                print('- Found files denoting species instability at path')
+                print('    {}'.format(zma_fs[-1].path(zma_locs)))
+            else:
+                stable = True
+                print('- No files denoting instability were found at path')
+                print('    {}'.format(zma_fs[-1].path(zma_locs)))
+
         else:
             stable = True
-            print('- No files denoting instability were found at path')
-            print('    {}'.format(thy_path))
-            print('- Proceeding with requested task...')
 
     else:
         stable = True
@@ -134,8 +293,10 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
                 new_rct = rct
                 new_rxn['reacs'].append(new_rct)
             else:
+                print('\nSplitting species...')
                 new_rct = split_species(spc_dct, rct,
                                         ini_thy_info, save_prefix)
+                print('- New species: {}'.format(' '.join(new_rct)))
                 new_rxn['reacs'].extend(new_rct)
 
         # Assess the products for unstable species
@@ -147,9 +308,16 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
                 new_prd = prd
                 new_rxn['prods'].append(new_prd)
             else:
+                print('- Splitting species...')
                 new_prd = split_species(spc_dct, prd,
                                         ini_thy_info, save_prefix)
+                print('- New species: {}'.format(' '.join(new_prd)))
                 new_rxn['prods'].extend(new_prd)
+
+        if len(rxn['reacs']) > len(new_rxn['reacs']):
+            print('WARNING: LIKELY MISSING DATA FOR REACTANTS FOR SPLIT')
+        if len(rxn['prods']) > len(new_rxn['prods']):
+            print('WARNING: LIKELY MISSING DATA FOR PRODUCTS FOR SPLIT')
 
         # Add a print statement showing reaction being rewritten
 
@@ -177,18 +345,17 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_thy_info)
-    cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_thy(
-        thy_save_path, mod_thy_info, cnf='min', saddle=False)
-    cnf_save_paths = filesys.build.cnf_paths_from_locs(
-        cnf_save_fs, cnf_save_locs)
 
-    zma_save_fs = autofile.fs.manager(cnf_save_paths[0], 'ZMATRIX')
+    instab_fs = autofile.fs.instab(thy_save_path)
+    instab_path = instab_fs[-1].path()
+
+    zma_save_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
 
     # Read the zma for the unstable species
     instab_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
     # Read the instability transformation information from the filesystem
-    tra = thy_save_fs[-1].file.transformation.read(mod_thy_info[1:4])
+    tra = zma_save_fs[-1].file.transformation.read(zma_locs)
     frm_bnd_key, brk_bnd_key = tra
     # rcts_gra = save_fs[-1].file.reactant_graph.write(locs)
 

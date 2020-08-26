@@ -7,15 +7,15 @@ import elstruct
 import autofile
 from routines.es import runner as es_runner
 from routines.es._routines._fs import save_struct
-from routines.es._routines._fs import save_instab
 from lib import structure
 from lib.phydat import phycon
+from lib.phydat import instab_fgrps
 
 
 def reference_geometry(spc_dct_i, spc_info,
                        mod_thy_info,
                        thy_run_fs, thy_save_fs,
-                       cnf_run_fs, cnf_save_fs,
+                       cnf_save_fs,
                        ini_cnf_save_fs, ini_min_cnf_locs,
                        run_fs,
                        opt_script_str, overwrite,
@@ -46,27 +46,34 @@ def reference_geometry(spc_dct_i, spc_info,
         run_fs[0].file.info.write(inf_obj, [])
 
     if not thy_save_fs[-1].file.geometry.exists(mod_thy_info[1:4]):
-        print('No geometry in filesys. Attempting to initialize new geometry.')
+        print('Obtaining some initial guess geometry.')
         geo_init = _obtain_ini_geom(spc_dct_i,
                                     ini_cnf_save_fs, ini_min_cnf_locs)
+
         if geo_init is not None:
-            zma_init = automol.geom.zmatrix(geo_init)
-            if not automol.geom.is_atom(geo_init):
-                geo_found = _optimize_molecule(
-                    spc_info, zma_init,
-                    mod_thy_info, thy_run_fs, thy_save_fs,
-                    cnf_save_fs,
-                    run_fs,
-                    opt_script_str, overwrite,
-                    kickoff_size=kickoff_size,
-                    kickoff_backward=kickoff_backward,
-                    **opt_kwargs)
+            print('Assessing if there are any functional groups',
+                  'that cause instability')
+            if _functional_groups_stable(geo_init, thy_save_fs, mod_thy_info):
+                zma_init = automol.geom.zmatrix(geo_init)
+                if not automol.geom.is_atom(geo_init):
+                    geo_found = _optimize_molecule(
+                        spc_info, zma_init,
+                        mod_thy_info, thy_run_fs, thy_save_fs,
+                        cnf_save_fs,
+                        run_fs,
+                        opt_script_str, overwrite,
+                        kickoff_size=kickoff_size,
+                        kickoff_backward=kickoff_backward,
+                        **opt_kwargs)
+                else:
+                    geo_found = _optimize_atom(
+                        spc_info, zma_init,
+                        mod_thy_info, thy_run_fs,
+                        cnf_save_fs, run_fs,
+                        overwrite, opt_script_str, **opt_kwargs)
             else:
-                geo_found = _optimize_atom(
-                    spc_info, zma_init,
-                    mod_thy_info, thy_run_fs,
-                    cnf_save_fs, run_fs,
-                    overwrite, opt_script_str, **opt_kwargs)
+                geo_found = False
+                print('Found functional groups that cause instabilities')
         else:
             geo_found = False
             print('Unable to obtain an initial guess geometry')
@@ -106,7 +113,7 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs, ini_min_cnf_locs):
             geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
             print('Getting inital geometry from inplvl at path',
                   '{}'.format(ini_cnf_save_fs[-1].path(ini_min_cnf_locs)))
-    
+
     if geo_init is None:
         geo_init = automol.inchi.geometry(spc_dct_i['inchi'])
         print('Getting initial geometry from inchi')
@@ -117,6 +124,56 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs, ini_min_cnf_locs):
             geo_init = None
 
     return geo_init
+
+
+def _functional_groups_stable(geo, thy_save_fs, mod_thy_info):
+    """ look for functional group attachments that could cause
+        molecule instabilities
+    """
+
+    # Initialize empty set of product graphs
+    prd_gras = ()
+
+    # Check for instability causing functional groups
+    gra = automol.geom.graph(geo)
+    rad_grp_dct = automol.graph.radical_group_dct(gra)
+    for atm, grps in rad_grp_dct.items():
+        if atm in instab_fgrps.DCT:
+            fgrps, prds = instab_fgrps.DCT[atm]
+            print('frgrps', fgrps)
+            print('prds', prds)
+            for grp in grps:
+                print('grp\n', grp)
+                grp_ich = automol.graph.inchi(grp)
+                if grp_ich in fgrps:
+                    # If instability is found determine the prd of the instability
+                    prd_ich = prds[fgrps.index(grp_ich)]
+                    print('prd_ich', prd_ich)
+                    prd_geo = automol.inchi.geometry(prd_ich)
+                    prd_gra = automol.geom.graph(prd_geo)
+                    print('prd_gra')
+                    print(automol.graph.string(prd_gra))
+                    print('gra')
+                    print(automol.graph.string(gra))
+                    print('----')
+                    prd_gras = automol.graph.radical_dissociation_prods(
+                        gra, prd_gra)
+                    break
+
+    if prd_gras:
+        disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
+                        for gra in prd_gras]
+        conn_zma = automol.geom.zmatrix(geo)
+        structure.instab.write_instab2(
+            conn_zma, disconn_zmas,
+            thy_save_fs, mod_thy_info[1:4],
+            zma_locs=(0,),
+            save_cnf=True)
+
+        stable = False
+    else:
+        stable = True
+    return stable
 
 
 def _optimize_atom(spc_info, zma_init,
@@ -182,12 +239,15 @@ def _optimize_molecule(spc_info, zma_init,
             else:
 
                 print('Saving disconnected species...')
-                locs = [autofile.schema.generate_new_conformer_id()]
-                job = elstruct.Job.OPTIMIZATION
-                save_instab(zma_init, run_fs, cnf_save_fs, locs,
-                            mod_thy_info)
+                _, opt_ret = es_runner.read_job(
+                    job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                 structure.instab.write_instab(
-                    zma_init, zma, thy_save_fs, mod_thy_info[1:4])
+                    zma_init, zma,
+                    thy_save_fs, mod_thy_info[1:4],
+                    opt_ret,
+                    zma_locs=(0,),
+                    save_cnf=True
+                )
 
         else:
 
@@ -198,12 +258,15 @@ def _optimize_molecule(spc_info, zma_init,
 
         print('Saving disconnected species...')
         conf_found = False
-        locs = [autofile.schema.generate_new_conformer_id()]
-        job = elstruct.Job.OPTIMIZATION
-        save_instab(zma_init, run_fs, cnf_save_fs, locs,
-                    mod_thy_info)
+        _, opt_ret = es_runner.read_job(
+            job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
         structure.instab.write_instab(
-            zma_init, zma, thy_save_fs, mod_thy_info[1:4])
+            zma_init, zma,
+            thy_save_fs, mod_thy_info[1:4],
+            opt_ret,
+            zma_locs=(0,),
+            save_cnf=True
+        )
 
     # Save geom in thy filesys if a good geom is found
     if conf_found:
@@ -270,7 +333,7 @@ def _remove_imag(spc_info, geo, mod_thy_info, thy_run_fs, run_fs,
         spc_info, geo, mod_thy_info, thy_run_fs, script_str,
         overwrite, **kwargs)
 
-    # Make a variable to fix the imaginary mode if needed to pass to other functions
+    # Make var to fix the imaginary mode if needed to pass to other functions
     imag_fix_needed = bool(imag)
 
     # Make five attempts to remove imag mode if found
@@ -405,60 +468,3 @@ def _kickoff_saddle(
         geo = elstruct.reader.opt_geometry(prog, out_str)
 
     return geo
-
-
-# Old fake conf function that may not be useful
-def fake_conf(mod_thy_info, filesystem, inf=()):
-    """ generate data to be used for a fake well I think?
-    """
-    cnf_save_fs = filesystem[5]
-    cnf_run_fs = filesystem[4]
-    thy_save_fs = filesystem[3]
-    run_fs = filesystem[-1]
-    thy_save_path = thy_save_fs[-1].path(mod_thy_info[1:4])
-    geo = thy_save_fs[-1].file.geometry.read(mod_thy_info[1:4])
-    if inf:
-        inf_obj, ene = inf
-    else:
-        ene = thy_save_fs[-1].file.energy.read(mod_thy_info[1:4])
-        inf_obj = run_fs[0].file.info.read()
-    tors_range_dct = {}
-    cinf_obj = autofile.schema.info.conformer_trunk(0, tors_range_dct)
-    cinf_obj.nsamp = 1
-    cnf_save_fs = autofile.fs.conformer(thy_save_path)
-    cnf_save_fs[0].create()
-    cnf_run_fs[0].create()
-    cnf_save_fs[0].file.info.write(cinf_obj)
-    cnf_run_fs[0].file.info.write(cinf_obj)
-    locs_lst = cnf_save_fs[-1].existing()
-    if not locs_lst:
-        cid = autofile.schema.generate_new_conformer_id()
-        locs = [cid]
-    else:
-        locs = locs_lst[0]
-    cnf_save_fs[-1].create(locs)
-    cnf_run_fs[-1].create(locs)
-    cnf_save_fs[-1].file.geometry_info.write(
-        inf_obj, locs)
-    cnf_run_fs[-1].file.geometry_info.write(
-        inf_obj, locs)
-    # method = inf_obj.method
-    cnf_save_fs[-1].file.energy.write(ene, locs)
-    cnf_run_fs[-1].file.energy.write(ene, locs)
-    cnf_save_fs[-1].file.geometry.write(geo, locs)
-    cnf_run_fs[-1].file.geometry.write(geo, locs)
-# old way to check torsions of new geom after imag check
-# # Check the torsons to see if ref matches (needed?)
-# tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-# locs_lst = cnf_save_fs[-1].existing()
-# if locs_lst:
-#     saved_geo = cnf_save_fs[-1].file.geometry.read(
-#         locs_lst[0])
-#     saved_tors = automol.geom.zmatrix_torsion_coordinate_names(
-#         saved_geo)
-#     if tors_names != saved_tors:
-#         print("New reference geometry doesn't match original",
-#               " reference geometry")
-#         print('Removing original conformer save data')
-#         cnf_run_fs.remove()
-#         cnf_save_fs.remove()

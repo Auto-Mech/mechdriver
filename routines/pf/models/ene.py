@@ -93,7 +93,10 @@ def zero_point_energy(spc_dct_i,
     print('- Calculating zero-point energy')
 
     # spc_dct_i = spc_dct[spc_name]
-    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(spc_dct_i, saddle)
+    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
+    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(
+        cnf_fs, min_cnf_locs, saddle)
+    # frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(spc_dct_i, saddle)
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Calculate ZPVE
@@ -103,8 +106,7 @@ def zero_point_energy(spc_dct_i,
         rotors = tors.build_rotors(
             spc_dct_i, pf_filesystems, pf_models, pf_levels,
             rxn_class=rxn_class,
-            frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
-            tors_geo=True)
+            frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
         if typ.nonrigid_tors(pf_models, rotors):
             run_path = fs.make_run_path(pf_filesystems, 'tors')
@@ -185,23 +187,20 @@ def calc_channel_enes(channel_infs, ref_ene,
 def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
     """ sum the energies
     """
+
+    # Initialize sum ene dct
+    sum_ene = {}
+
     # Calculate energies for species
     reac_ene = 0.0
     for rct in channel_infs['reacs']:
         reac_ene += rct[ene_lvl]
+    sum_ene.update({'reacs': reac_ene})
+
     prod_ene = 0.0
     for prd in channel_infs['prods']:
         prod_ene += prd[ene_lvl]
-
-    # Set energy for inner transition state
-    ts_ene = channel_infs['ts'][ene_lvl]
-
-    # Initialize energy dct
-    sum_ene = {
-        'reacs': reac_ene,
-        'prods': prod_ene,
-        'ts': ts_ene
-    }
+    sum_ene.update({'prods': prod_ene})
 
     # Calculate energies for fake entrance- and exit-channel wells
     if 'fake_vdwr' in channel_infs:
@@ -215,9 +214,18 @@ def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
             {'fake_vdwp': vdwp_ene, 'fake_vdwp_ts': prod_ene}
         )
 
-    # Scale all of the energies in the dict
+    # Scale all of the current energies in the dict
     for spc, ene in sum_ene.items():
         sum_ene[spc] = (ene - ref_ene) * phycon.EH2KCAL
+
+    # Set the inner TS ene and scale them
+    if 'rpath' in channel_infs['ts']:
+        ts_enes = [dct[ene_lvl] for dct in channel_infs['ts']['rpath']]
+    else:
+        ts_enes = [channel_infs['ts'][ene_lvl]]
+    ts_enes = [(ene - ref_ene) * phycon.EH2KCAL for ene in ts_enes]
+
+    sum_ene.update({'ts': ts_enes})
 
     return sum_ene
 

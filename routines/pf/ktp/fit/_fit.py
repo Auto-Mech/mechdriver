@@ -101,7 +101,9 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     ktp_dct = {}
 
     # Read the MESS output file into a string
-    with open(mess_path+'/rate.out', 'r') as mess_file:
+    mess_file = mess_path+'/rate.out'
+    print('mess file', mess_file)
+    with open(mess_file, 'r') as mess_file:
         output_string = mess_file.read()
 
     # Read the temperatures and pressures out of the MESS output

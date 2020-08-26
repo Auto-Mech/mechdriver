@@ -10,6 +10,9 @@ from lib import structure
 from lib import pathtools
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
+from lib.submission import print_host_name
+from lib.submission import get_host_node
+from lib.submission import get_pid
 
 
 __all__ = [
@@ -20,5 +23,8 @@ __all__ = [
     'structure',
     'pathtools',
     'run_script',
-    'DEFAULT_SCRIPT_DCT'
+    'DEFAULT_SCRIPT_DCT',
+    'print_host_name',
+    'get_host_node',
+    'get_pid'
 ]

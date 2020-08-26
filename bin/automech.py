@@ -11,6 +11,7 @@ from lib.amech_io import parser
 from lib.amech_io import printer
 from lib.reaction import direction as rxndirn
 from lib.filesys.build import prefix_fs
+from lib import print_host_name
 
 
 # Set runtime options based on user input
@@ -19,7 +20,7 @@ JOB_PATH = sys.argv[1]
 # Print the header message and host name
 printer.program_header('amech')
 printer.random_cute_animal()
-printer.host_name()
+print_host_name()
 printer.program_header('inp')
 
 # Parse the run input

@@ -113,10 +113,8 @@ def names_from_filesys2(tors_cnf_fs, tors_min_cnf_locs, tors_model):
         if tors_cnf_fs[0].file.info.exists():
             inf_obj = tors_cnf_fs[0].file.info.read()
             tors_range_dct = dict(inf_obj.tors_ranges)
-            # print('tors_range_dct test:', tors_range_dct)
             tors_names = list(tors_range_dct.keys())
 
-    # print('torsname test:', tors_names)
     if tors_names is not None:
         if tors_model in ('1dhr', '1dhrf', '1dhrfa', 'tau'):
             tors_names = [[name] for name in tors_names]
@@ -194,7 +192,6 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
     # Build the grids corresponding to the torsions
     tors_grids, tors_sym_nums = [], []
     for tors_names in tors_name_grps:
-        print(tors_names)
         tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_keys,
             brk_bnd_key=brk_bnd_keys)
@@ -309,7 +306,6 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
             locs = [constraint_dct] + locs
 
         ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
-        #print('tors_path', scn_fs[-1].path(locs), locs)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL
         else:
@@ -460,9 +456,19 @@ def build_constraint_dct(zma, const_names, scan_names=()):
 
 # Functions to handle setting up groups and axes used to define torstions
 def set_tors_def_info(zma, tors_name, tors_sym, pot,
-                      ts_bnd, rxn_class, saddle=False):
+                      frm_bnd_keys, brk_bnd_keys,
+                      rxn_class, saddle=False):
     """ set stuff
     """
+
+    # Set the ts bnd to the break or form keys based on rxn class
+    if frm_bnd_keys:
+        ts_bnd = frm_bnd_keys
+    else:
+        ts_bnd = brk_bnd_keys
+
+    print('bnd test class', rxn_class)
+
     group, axis, atm_key = _set_groups_ini(
         zma, tors_name, ts_bnd, saddle)
     if saddle:
@@ -484,6 +490,7 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
     """ Set the initial set of groups
     """
     gra = automol.zmatrix.graph(zma, remove_stereo=True)
+    # ts_gra = automol.graph.add_ts_bonds(gra, keys=[ts_bnd])
     coo_dct = automol.zmatrix.coordinates(zma, multi=False)
     axis = coo_dct[tors_name][1:3]
     atm_key = axis[1]
@@ -492,12 +499,12 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
             if atm in ts_bnd:
                 atm_key = atm
                 break
-    # print('tors_def_info test:') 
-    # print('zma test:', automol.zmatrix.string(zma)) 
-    # print('tors_name test:', tors_name) 
-    # print('ts_bnd test:', ts_bnd) 
+    # print('tors_def_info test:')
+    # print('zma test:', automol.zmatrix.string(zma))
+    # print('tors_name test:', tors_name)
+    # print('ts_bnd test:', ts_bnd)
     # print('saddle test:', saddle)
-    # print('axis test:', axis) 
+    # print('axis test:', axis)
     # print('atm key test:', atm_key)
     # print('gra test:', gra)
 
@@ -535,7 +542,6 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
 
     # Check to see if symmetry of XH3 rotor was missed
     new_pot = False
-    print('sym_num test:', sym_num)
     if sym_num == 1:
         group2 = []
         for idx in range(n_atm):
@@ -558,11 +564,10 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
     if new_pot:
         potr = {}
         for pval in range(lpot):
-           potr[(pval,)] = pot[(pval,)]
+            potr[(pval,)] = pot[(pval,)]
     else:
         potr = copy.deepcopy(pot)
 
-    print('potr test:', potr)
     return group, axis, potr, sym_num
 
 

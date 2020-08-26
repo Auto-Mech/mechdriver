@@ -28,6 +28,8 @@ def run(spc_dct,
 
     # Build a list of the species to calculate thermochem for loops below
     spc_queue = parser.species.build_queue(rxn_lst)
+    print(spc_queue)
+
 
     # Build the paths [(messpf, nasa)], models and levels for each spc
     starting_path = os.getcwd()
@@ -56,6 +58,9 @@ def run(spc_dct,
                 run_prefix, save_prefix)
             messpf_inp_str = thmroutines.qt.make_messpf_str(
                 global_pf_str, spc_str)
+            print('\n\n')
+            print('MESSPF Input String:\n')
+            print(messpf_inp_str)
             print('\n\n')
             pfrunner.mess.write_mess_file(
                 messpf_inp_str, dat_str_dct, thm_paths[idx][0],

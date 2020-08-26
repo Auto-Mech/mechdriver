@@ -2,26 +2,38 @@
   Handle labels
 """
 
+from lib.amech_io import parser
 from routines.pf.models.typ import need_fake_wells
 
 
-def make_pes_label_dct(rxn_lst, pes_idx, spc_dct):
+def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_model_dct):
     """ Builds a dictionary that matches the mechanism name to the labels used
         in the MESS input and output files for the whole PES
     """
 
     pes_label_dct = {}
     for rxn in rxn_lst:
+        print('rxn\n', rxn)
+        print()
         chn_idx = rxn['chn_idx']
+        pf_models = parser.model.pf_model_info(
+            spc_model_dct[rxn['model'][1]]['pf'])
+        rwell_model = pf_models['rwells']
+        pwell_model = pf_models['pwells']
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx)
         pes_label_dct.update(
             _make_channel_label_dct(
-                tsname, chn_idx, pes_label_dct, rxn, spc_dct))
+                tsname, chn_idx, pes_label_dct, rxn, spc_dct,
+                rwell_model, pwell_model))
+        print('pes_label dct')
+        print(pes_label_dct)
+        print()
 
     return pes_label_dct
 
 
-def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct):
+def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
+                            rwell_model, pwell_model):
     """ Builds a dictionary that matches the mechanism name to the labels used
         in the MESS input and output files
     """
@@ -76,8 +88,7 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct):
 
     # Determine idxs for any fake wells if they are needed
     fake_wellr_label = ''
-    fake_wellp_label = ''
-    if need_fake_wells(spc_dct[tsname]['class']):
+    if need_fake_wells(spc_dct[tsname]['class'], rwell_model):
         well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
         well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
         if well_dct_key1 not in label_dct:
@@ -96,6 +107,9 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct):
                 pst_r_label = label_dct[well_dct_key1.replace('F', 'FRB')]
         else:
             fake_wellr_label = label_dct[well_dct_key1]
+
+    fake_wellp_label = ''
+    if need_fake_wells(spc_dct[tsname]['class'], pwell_model):
         well_dct_key1 = 'F' + '+'.join(rxn['prods'])
         well_dct_key2 = 'F' + '+'.join(rxn['prods'][::-1])
         if well_dct_key1 not in label_dct:

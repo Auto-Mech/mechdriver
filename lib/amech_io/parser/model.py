@@ -162,16 +162,16 @@ def build_spc_model_keyword_dct(model_str):
         opts_dct['ref_enes'] = 'ATcT'
     if 'ref_scheme' not in opts_dct:
         opts_dct['ref_scheme'] = 'basic'
-    if vrctst_str is not None:
-        vrctst_dct = ptt.build_keyword_dct(vrctst_str)
-    else:
-        vrctst_dct = {}
+    # if vrctst_str is not None:
+    #     vrctst_dct = ptt.build_keyword_dct(vrctst_str)
+    # else:
+    #     vrctst_dct = _vrc_dct()
 
     # Combine dcts into single model dct
     model_dct = {}
     model_dct['pf'] = pf_dct
     model_dct['es'] = es_dct
-    model_dct['vrctst'] = vrctst_dct
+    # model_dct['vrctst'] = vrctst_dct
     model_dct['options'] = opts_dct
 
     # Check the dct
@@ -243,18 +243,35 @@ def set_default_pf(dct):
 def pf_model_info(pf_model):
     """ Set the PF model list based on the input
     """
-
+    print('pfmodel', pf_model)
     rot_model = pf_model['rot'] if 'rot' in pf_model else 'rigid'
     tors_model = pf_model['tors'] if 'tors' in pf_model else 'rigid'
     vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
     sym_model = pf_model['sym'] if 'sym' in pf_model else 'none'
 
+    # Set well models
+    if 'wells' in pf_model:
+        rwells_model = pf_model['wells']
+        pwells_model = pf_model['wells']
+    else:
+        if 'rwells' in pf_model:
+            rwells_model = pf_model['rwells']
+        else:
+            rwells_model = 'fake'
+        if 'pwells' in pf_model:
+            pwells_model = pf_model['pwells']
+        else:
+            pwells_model = 'fake'
+
     pf_models = {
         'rot': rot_model,
         'tors': tors_model,
         'vib': vib_model,
-        'sym': sym_model
+        'sym': sym_model,
+        'rwells': rwells_model,
+        'pwells': pwells_model
     }
+    print('pfmodels', pf_models)
 
     return pf_models
 
@@ -269,9 +286,11 @@ def pf_level_info(es_model, thy_dct):
     vpt2_lvl = es_model['vpt2'] if 'vpt2' in es_model else None
     sym_lvl = es_model['sym'] if 'sym' in es_model else None
 
-    # Torsional Scan which needs a reference for itself
+    # Torsions and rxn paths which needs a reference for itself
     tors_lvl_sp = es_model['tors'][0] if 'tors' in es_model else None
     tors_lvl_scn = es_model['tors'][1] if 'tors' in es_model else None
+    rpath_lvl_sp = es_model['rpath'][0] if 'rpath' in es_model else None
+    rpath_lvl_scn = es_model['rpath'][1] if 'rpath' in es_model else None
 
     # Set the theory info objects
     geo_thy_info = filesys.inf.get_thy_info(geo_lvl, thy_dct)
@@ -284,14 +303,20 @@ def pf_level_info(es_model, thy_dct):
                         if tors_lvl_sp else None)
     tors_scn_thy_info = (filesys.inf.get_thy_info(tors_lvl_scn, thy_dct)
                          if tors_lvl_scn else None)
+    rpath_sp_thy_info = (filesys.inf.get_thy_info(rpath_lvl_sp, thy_dct)
+                         if rpath_lvl_sp else None)
+    rpath_scn_thy_info = (filesys.inf.get_thy_info(rpath_lvl_scn, thy_dct)
+                          if rpath_lvl_scn else None)
 
     # Set the ene thy info as a list of methods with coefficients
     ene_thy_info = []
     if isinstance(ene_lvl, str):
-        ene_thy_info.append([1.00, filesys.inf.get_thy_info(ene_lvl, thy_dct)])
+        ene_thy_info.append(
+            [1.00, filesys.inf.get_thy_info(ene_lvl, thy_dct)])
     else:
         for lvl in ene_lvl:
-            ene_thy_info.append([lvl[0], filesys.inf.get_thy_info(lvl[1], thy_dct)])
+            ene_thy_info.append(
+                [lvl[0], filesys.inf.get_thy_info(lvl[1], thy_dct)])
 
     # Combine levels into a list
     es_levels = {
@@ -301,7 +326,30 @@ def pf_level_info(es_model, thy_dct):
         'vpt2': (vpt2_lvl, vpt2_thy_info),
         'sym': (sym_lvl, sym_thy_info),
         'tors': ([tors_lvl_sp, tors_lvl_scn],
-                 [tors_sp_thy_info, tors_scn_thy_info])
+                 [tors_sp_thy_info, tors_scn_thy_info]),
+        'rpath': ([rpath_lvl_sp, rpath_lvl_scn],
+                  [rpath_sp_thy_info, rpath_scn_thy_info])
     }
 
     return es_levels
+
+
+def _vrc_dct():
+    """ Build VRC dict
+    """
+    return {
+        'fortran_compiler': 'gfortran',
+        'spc_name': 'mol',
+        'memory': 4.0,
+        'r1dists_lr': [8., 6., 5., 4.5, 4.],
+        'r1dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+        'r2dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+        'd1dists': [0.01, 0.5, 1.],
+        'd2dists': [0.01, 0.5, 1.],
+        'conditions': {},
+        'nsamp_max': 2000,
+        'nsamp_min': 50,
+        'flux_err': 10,
+        'pes_size': 2,
+        'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
+    }

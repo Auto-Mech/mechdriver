@@ -48,6 +48,37 @@ class _EnterDirectory():
         os.chdir(self.working_directory)
 
 
+# Handle jobs
+HOST_MSG = """
+=========================================================
+HOST: {}
+PID: {}
+========================================================="""
+def print_host_name():
+    """ print the host the calculation is running on
+    """
+    host_node = get_host_node()
+    pid = get_pid()
+    print(HOST_MSG.format(host_node, pid))
+
+
+def get_host_node():
+    """ get the nodes
+    """
+    proc = subprocess.Popen(['hostname'], stdout=subprocess.PIPE)
+    host_node = proc.stdout.read()
+    host_node = host_node.decode('ascii')
+    host_node = host_node.strip()
+    
+    return host_node
+
+
+def get_pid():
+    """ get pid
+    """
+    return os.getpid()
+
+
 # Build a dictionary of submission scripts
 # SUB_DIR = 'inp/sub_scripts'
 # def read_inp_scripts(job_path):
@@ -107,12 +138,12 @@ MESSRATE = (
 VARECOF = (
     "#!/usr/bin/env bash\n"
     "ulimit -c 0\n"
-    "/home/ygeorgi/build/rotd/multi >& varecof.out"
+    "/home/ygeorgi/build/rotd/multi tst.inp >& varecof.out"
 )
 MCFLUX = (
     "#!/usr/bin/env bash\n"
     "ulimit -c 0\n"
-    "/home/ygeorgi/build/rotd/mc_flux"
+    "/home/ygeorgi/build/rotd/mc_flux mc_flux.inp"
 )
 TSTCHECK = (
     "#!/usr/bin/env bash\n"
