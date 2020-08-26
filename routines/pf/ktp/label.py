@@ -25,11 +25,6 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_model_dct):
         print('pes_label dct')
         print(pes_label_dct)
         print()
-    
-    # print('pes_label dct')
-    # print(pes_label_dct)
-    # import sys
-    # sys.exit()
 
     return pes_label_dct
 

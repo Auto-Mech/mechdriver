@@ -109,8 +109,7 @@ def read_ts_data(ts_dct, tsname,
             inf_dct = flux_data(
                 ts_dct,
                 chn_pf_models, chn_pf_levels,
-                ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix)
+                ref_pf_models, ref_pf_levels)
             writer = 'vrctst_block'
 
     # Add writer to inf dct
@@ -258,8 +257,7 @@ def mol_data(spc_dct_i,
 # VRCTST
 def flux_data(ts_dct,
               chn_pf_models, chn_pf_levels,
-              ref_pf_models, ref_pf_levels,
-              run_prefix, save_prefix):
+              ref_pf_models, ref_pf_levels):
     """ Grab the flux file from the filesystem
     """
 
@@ -267,9 +265,8 @@ def flux_data(ts_dct,
     _, _, _ = chn_pf_models, ref_pf_models, ref_pf_levels
 
     # Read the flux file from the filesystem
-    _, ts_save_path = fs.set_rpath_filesys(
-        ts_dct, chn_pf_levels['rpath'][1],
-        run_prefix, save_prefix, True)
+    _, ts_save_path, _, _ = fs.set_rpath_filesys(
+        ts_dct, chn_pf_levels['rpath'][1])
 
     flux_str = flux.read_flux(ts_save_path)
 
@@ -300,8 +297,7 @@ def rpvtst_data(ts_dct,
     else:
         print('RPATH')
         tspaths = fs.set_rpath_filesys(
-            ts_dct, chn_pf_levels['rpath'][1],
-            run_prefix, save_prefix, True)
+            ts_dct, chn_pf_levels['rpath'][1])
         ts_run_path, ts_save_path, _, thy_save_path = tspaths
 
     # Set TS reaction coordinate

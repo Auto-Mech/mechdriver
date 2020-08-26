@@ -253,7 +253,7 @@ def rpvtst_nosadpt_block(inf_dct):
     in the scan file system
     """
     return _write_mess_variational_str(
-        inf_dct, rpath_idxs=None, ts_idx=None)
+        inf_dct, ts_idx=None)
 
 
 def rpvtst_sadpt_block(inf_dct, ts_idx=11):
@@ -262,10 +262,10 @@ def rpvtst_sadpt_block(inf_dct, ts_idx=11):
         In this case, there is limited torsional information.
     """
     return _write_mess_variational_str(
-        inf_dct, rpath_idxs=None, ts_idx=ts_idx)
+        inf_dct, ts_idx=ts_idx)
 
 
-def _write_mess_variational_str(inf_dct, rpath_idxs=None, ts_idx=None):
+def _write_mess_variational_str(inf_dct, ts_idx=None):
     """ write the variational string
     """
 

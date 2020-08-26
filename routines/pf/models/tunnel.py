@@ -8,16 +8,16 @@ import mess_io
 def write_mess_eckart_str(chnl_enes, imag_freq):
     """ Write the Eckart tunneling string for MESS'
     """
-    
+
     # Get the energies from the enes dct
     ts_ene = chnl_enes['ts'][0]
     # print('chnl_enes test:', chnl_enes)
-            
+
     if chnl_enes.get('fake_vdwr', None) is not None:
         reac_ene = chnl_enes['fake_vdwr']
     else:
         reac_ene = chnl_enes['reacs']
-    
+
     if chnl_enes.get('fake_vdwp', None) is not None:
         prod_ene = chnl_enes['fake_vdwp']
     else:

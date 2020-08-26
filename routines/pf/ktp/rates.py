@@ -16,7 +16,6 @@ from routines.pf.models import tunnel
 from routines.pf.models.inf import set_pf_info
 from routines.pf.models.inf import set_ts_cls_info
 from routines.pf.models.inf import make_rxn_str
-from routines.pf.models.inf import print_pf_info
 from routines.pf.models.typ import treat_tunnel
 from routines.pf.models.typ import need_fake_wells
 
@@ -136,9 +135,6 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         # Obtain useful info objects
         pf_info = set_pf_info(model_dct, thy_dct, chn_model, ref_model)
         ts_cls_info = set_ts_cls_info(spc_dct, model_dct, tsname, chn_model)
-
-        # Print models
-        ref_ene_lvl = model_dct[ref_model]['es']['ene']
 
         # Obtain all of the species data
         chnl_infs = get_channel_data(rxn, tsname, spc_dct,

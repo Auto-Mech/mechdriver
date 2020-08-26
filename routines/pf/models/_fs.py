@@ -81,7 +81,7 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
     return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]
 
 
-def set_rpath_filesys(ts_dct, level, run_prefix, save_prefix, saddle):
+def set_rpath_filesys(ts_dct, level):
     """ Gets filesystem objects for reading many calculations
     """
 
