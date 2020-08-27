@@ -35,10 +35,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
         zma_fs = fs.manager(cnf_fs[-1].path(min_cnf_locs), 'ZMATRIX')
         zma = zma_fs[-1].file.zmatrix.read([0])
         remdummy = geomprep.build_remdummy_shift_lst(zma)
-        if _need_tors_geo(pf_levels):
-            geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
-        else:
-            geo = None
+        geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
 
         # Read the reference energy
         ref_ene = torsprep.read_tors_ene(

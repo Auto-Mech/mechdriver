@@ -36,11 +36,14 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info,
     cnf_locs_lst = cnf_save_fs[-1].existing()
     if cnf_locs_lst:
         cnf_enes = []
-        for locs in cnf_locs_lst:
-            cnf_path = cnf_save_fs[-1].path(locs)
-            sp_fs = autofile.fs.single_point(cnf_path)
-            cnf_enes.append(
-                sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
+        if len(cnf_locs_lst) == 1:
+            cnf_enes = [10]
+        else:
+            for locs in cnf_locs_lst:
+                cnf_path = cnf_save_fs[-1].path(locs)
+                sp_fs = autofile.fs.single_point(cnf_path)
+                cnf_enes.append(
+                    sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
         if zpe_corrd:
             pass
             # # How to calculate the ZPE (just use harm zpe?A
