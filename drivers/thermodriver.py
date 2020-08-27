@@ -127,8 +127,9 @@ def run(spc_dct,
             thmroutines.nasapoly.print_nasa_temps(temps)
 
             # Write the NASA polynomial in CHEMKIN-format string
+            ref_scheme = spc_model_dct[spc_model]['options']['ref_scheme']
             ckin_nasa_str += writer.ckin.model_header(
-                pf_levels[idx], pf_models[idx])
+                pf_levels[idx], pf_models[idx], refscheme=ref_scheme)
 
             # Build POLY
             ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
