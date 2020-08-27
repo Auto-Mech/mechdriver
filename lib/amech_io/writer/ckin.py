@@ -5,7 +5,7 @@
 import os
 
 
-def model_header(pf_levels, pf_models):
+def model_header(pf_levels, pf_models, refscheme = ''):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
 
@@ -28,6 +28,9 @@ def model_header(pf_levels, pf_models):
         chemkin_header_str += '! tors level: {}{}/{}//{}{}/{}\n'.format(
             tors_info[1][3], tors_info[1][1], tors_info[1][2],
             tors_info[0][3], tors_info[0][1], tors_info[0][2])
+    if refscheme:    
+        chemkin_header_str = '! reference scheme: {0}\n'.format(refscheme)
+
     # if vpt2_info:
     #     chemkin_header_str += '! vpt2 level: {}{}/{}\n'.format(
     #         vpt2_info[3], vpt2_info[1], vpt2_info[2])
