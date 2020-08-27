@@ -115,6 +115,7 @@ def write_instab2(conn_zma, disconn_zmas,
     save_path = thy_save_fs[-1].path(thy_locs)
     print(" - Saving...")
     print(" - Save path: {}".format(save_path))
+    thy_save_fs[-1].file.geometry.write(conn_geo, thy_locs)
 
     # Save the geometry information
     instab_fs = autofile.fs.instab(save_path)

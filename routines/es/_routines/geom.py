@@ -35,7 +35,7 @@ def reference_geometry(spc_dct_i, spc_info,
     if run_fs[0].file.info.exists([]):
         inf_obj = run_fs[0].file.info.read([])
         if inf_obj.status == autofile.schema.RunStatus.RUNNING:
-            print('Reference geometry already running')
+            print('Reference geometry already running in {}'.format(run_fs[0].path([])))
             return ret
     else:
         [prog, method, basis, _] = mod_thy_info
@@ -72,7 +72,7 @@ def reference_geometry(spc_dct_i, spc_info,
                         cnf_save_fs, run_fs,
                         overwrite, opt_script_str, **opt_kwargs)
             else:
-                geo_found = False
+                geo_found = True
                 print('Found functional groups that cause instabilities')
         else:
             geo_found = False
@@ -161,8 +161,15 @@ def _functional_groups_stable(geo, thy_save_fs, mod_thy_info):
                     break
 
     if prd_gras:
-        disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
-                        for gra in prd_gras]
+        disconn_zmas = []
+        for gra in prd_gras:
+            ich = automol.graph.inchi(gra)
+            geo_tmp = automol.inchi.geometry(ich)
+            zma = automol.geom.zmatrix(geo_tmp)
+            disconn_zmas.append(zma)
+            print('geo test in init_geom test:', geo_tmp)
+        #disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
+                        # for gra in prd_gras]
         conn_zma = automol.geom.zmatrix(geo)
         structure.instab.write_instab2(
             conn_zma, disconn_zmas,
