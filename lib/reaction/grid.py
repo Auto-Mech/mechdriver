@@ -10,7 +10,8 @@ from lib.phydat import phycon
 from lib.phydat import bnd
 
 
-def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs, mod_thy_info):
+def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs,
+                mod_thy_info, constraint_dct):
     """ Find the maxmimum of the grid along one dimension
     """
 
@@ -19,7 +20,10 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs, mod_thy_info):
     locs_lst = []
     enes = []
     for grid_val_i in grid:
-        locs_list.append([[dist_name], [grid_val_i]])
+        if constraint_dct is None:
+            locs_list.append([[dist_name], [grid_val_i]])
+        else:
+            locs_list.append([constraint_dct, [dist_name], [grid_val_i]])
     for locs in locs_list:
         if scn_save_fs[-1].exists(locs):
             scn_path = scn_save_fs[-1].path(locs)
@@ -48,7 +52,8 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs, mod_thy_info):
     return guess_zmas
 
 
-def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs, mod_thy_info):
+def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs,
+                mod_thy_info, constraint_dct):
     """ Find the maxmimum of the grid along two dimensions
     """
     enes_lst = []
@@ -56,7 +61,12 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs, mod_thy_info):
     for grid_val_j in grid2:
         locs_list = []
         for grid_val_i in grid1:
-            locs_list.append([[dist_name, brk_name], [grid_val_i, grid_val_j]])
+            if constraint_dct is None:
+                locs_list.append([[dist_name, brk_name],
+                                  [grid_val_i, grid_val_j]])
+            else:
+                locs_list.append([constraint_dct, [dist_name, brk_name],
+                                  [grid_val_i, grid_val_j]])
         enes = []
         locs_lst = []
         for locs in locs_list:

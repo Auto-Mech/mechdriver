@@ -75,6 +75,14 @@ def read_ts_data(ts_dct, tsname,
 
     # Get all of the information for the filesystem
     if not typ.var_radrad(ts_class):
+
+        # Set up the saddle point keyword
+        sadpt = True
+        search = ts_dct.get('ts_search')
+        if search is not None:
+            if 'vtst' in search:
+                sadpt = False
+
         # Build MESS string for TS at a saddle point
         if ts_sadpt == 'pst':
             inf_dct = {}
@@ -84,8 +92,8 @@ def read_ts_data(ts_dct, tsname,
                 ts_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
-                run_prefix, save_prefix, sadpt=True)
-            writer = 'rpvtst_saddle_block'
+                run_prefix, save_prefix, sadpt=sadpt)
+            writer = 'rpvtst_block'
         else:
             inf_dct = mol_data(
                 ts_dct,
@@ -94,6 +102,7 @@ def read_ts_data(ts_dct, tsname,
                 run_prefix, save_prefix, saddle=True)
             writer = 'species_block'
     else:
+
         # Build MESS string for TS with no saddle point
         if ts_nobarrier == 'pst':
             inf_dct = {}
@@ -104,7 +113,7 @@ def read_ts_data(ts_dct, tsname,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, sadpt=False)
-            writer = 'rpvtst_nosadpt_block'
+            writer = 'rpvtst_block'
         elif ts_nobarrier == 'vrctst':
             inf_dct = flux_data(
                 ts_dct,
@@ -228,6 +237,7 @@ def mol_data(spc_dct_i,
     chn_ene = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
         read_ene=True, read_zpe=False)
+    print('chn_ene', chn_ene)
     ene_chnlvl = chn_ene + zpe
 
     ene_reflvl = None
@@ -289,43 +299,55 @@ def rpvtst_data(ts_dct,
 
     # Set up all the filesystem objects using models and levels
     if sadpt:
+        # Set up filesystems and coordinates for saddle point
+        # Scan along RxnCoord is under THY/TS/CONFS/cid/Z
         pf_filesystems = fs.pf_filesys(
             ts_dct, chn_pf_levels, run_prefix, save_prefix, True)
-        [_, ts_save_path, _, _, _] = pf_filesystems['harm']
+        tspaths = pf_filesystems['harm']
+        ts_run_path, ts_save_path, _, thy_save_path = tspaths
+
+        # Set TS reaction coordinate
+        frm_name = 'IRC'
+        scn_vals = fs.get_rxn_scn_coords(thy_save_path, frm_name)
+        scn_ene_info = chn_pf_levels['harm'][0]
     else:
-        print('RPATH')
+        # Set up filesystems and coordinates for reaction path
+        # Scan along RxnCoord is under THY/TS/Z
         tspaths = fs.set_rpath_filesys(
             ts_dct, chn_pf_levels['rpath'][1])
         ts_run_path, ts_save_path, _, thy_save_path = tspaths
 
-    # Set TS reaction coordinate
-    frm_bnd_keys, _ = util.get_bnd_keys2(ts_save_path, True)
-    frm_name = util.get_rxn_coord_name(
-        ts_save_path, frm_bnd_keys, sadpt=sadpt, zma_locs=(0,))
-    scn_coords = fs.get_rxn_scn_coords(thy_save_path, frm_name)
+        # Set TS reaction coordinate
+        frm_bnd_keys, _ = util.get_bnd_keys2(ts_save_path, True)
+        frm_name = util.get_rxn_coord_name(
+            ts_save_path, frm_bnd_keys, sadpt=sadpt, zma_locs=(0,))
+        scn_vals = fs.get_rxn_scn_coords(thy_save_path, frm_name)
+        scn_ene_info = chn_pf_levels['rpath'][1][0]
+
+    # Modify the scn thy info
+    mod_scn_ene_info = filesys.inf.modify_orb_restrict(
+        filesys.inf.get_spc_info(ts_dct), scn_ene_info)
 
     # Need to read the sp vals along the scan. add to read
     ref_ene = 0.0
-    scn_ene_info = chn_pf_levels['rpath'][1][0]
-    mod_scn_ene_info = filesys.inf.modify_orb_restrict(
-        filesys.inf.get_spc_info(ts_dct), scn_ene_info)
     enes, geoms, grads, hessians, _ = torsprep.read_hr_pot(
-        [frm_name], [scn_coords],
+        [frm_name], [scn_vals],
         thy_save_path,
         mod_scn_ene_info, ref_ene,
         constraint_dct=None,   # No extra frozen treatments
         read_geom=True,
         read_grad=True,
         read_hess=True)
-    freqs = torsprep.calc_hr_frequenices(
+    freqs = torsprep.calc_hr_frequencies(
         geoms, grads, hessians, ts_run_path)
 
     # Grab the values from the read
     inf_dct = {}
     inf_dct['rpath'] = []
-    for pot, geo, frq in zip(enes.values(), geoms.values(), freqs.values()):
+    pot_info = zip(scn_vals, enes.values(), geoms.values(), freqs.values())
+    for idx, (rval, pot, geo, frq) in enumerate(pot_info):
 
-        # Get the relative energy
+        # Get the relative energy (edit for radrad scans)
         zpe = (sum(frq) / 2.0) * phycon.WAVEN2KCAL
         zero_ene = (pot + zpe) * phycon.KCAL2EH
 
@@ -334,8 +356,10 @@ def rpvtst_data(ts_dct,
         elec_levels = ts_dct['elec_levels']
 
         # Create info dictionary and append to lst
-        keys = ['geom', 'sym_factor', 'freqs', 'elec_levels', 'ene_chnlvl']
-        vals = [geo, sym_factor, frq, elec_levels, zero_ene]
+        keys = ['rval', 'geom', 'sym_factor',
+                'freqs', 'elec_levels', 'ene_chnlvl']
+        vals = [rval, geo, sym_factor,
+                frq, elec_levels, zero_ene]
         inf_dct['rpath'].append(dict(zip(keys, vals)))
 
     return inf_dct

@@ -83,7 +83,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         elif 'irc' in tsk:
             irc_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
-                run_prefix, save_prefix, saddle)
+                run_prefix, save_prefix)
         elif 'find' in tsk:
             runts(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
@@ -733,7 +733,7 @@ def irc_tsk(job, spc_dct, spc_name,
     spc = spc_dct[spc_name]
 
     # Set up coordinate name
-    coo_name = 'RC'
+    coord_name = ['IRC']
 
     # Set the spc_info
     spc_info = filesys.inf.get_spc_info(spc)
@@ -770,32 +770,45 @@ def irc_tsk(job, spc_dct, spc_name,
         run_prefix, rxn_info, mod_ini_thy_info)
     _, ini_thy_save_path = filesys.build.rxn_thy_fs_from_root(
         save_prefix, rxn_info, mod_ini_thy_info)
-    _, ini_thy_save_path = filesys.build.ts_fs_from_thy(ini_thy_save_path)
-    _, ini_thy_run_path = filesys.build.ts_fs_from_thy(ini_thy_run_path)
+    _, ini_ts_save_path = filesys.build.ts_fs_from_thy(ini_thy_save_path)
+    _, ini_ts_run_path = filesys.build.ts_fs_from_thy(ini_thy_run_path)
 
-    ini_cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-        ini_thy_run_path, mod_ini_thy_info, cnf=None)
     ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-        ini_thy_save_path, mod_ini_thy_info, cnf='min')
+        ini_ts_save_path, mod_ini_thy_info, cnf='min')
     ini_cnf_save_paths = filesys.build.cnf_paths_from_locs(
         ini_cnf_save_fs, ini_cnf_save_locs)
+    ini_cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
+        ini_ts_run_path, mod_ini_thy_info, cnf=None)
     ini_cnf_run_paths = filesys.build.cnf_paths_from_locs(
         ini_cnf_run_fs, ini_cnf_save_locs)
     ini_cnf_run_fs[-1].create(ini_cnf_save_locs)
 
-    ini_scn_run_fs = autofile.fs.scan(ini_cnf_run_paths[0])
-    ini_scn_save_fs = autofile.fs.scan(ini_cnf_save_paths[0])
+    # Set up ini filesystem for scans
+    _, ini_zma_save_path = filesys.build.zma_fs_from_prefix(
+        ini_cnf_save_paths[0], zma_idxs=[0])
+    ini_scn_save_fs = filesys.build.scn_fs_from_cnf(
+        ini_zma_save_path, constraint_dct=None)
+    _, ini_zma_run_path = filesys.build.zma_fs_from_prefix(
+        ini_cnf_run_paths[0], zma_idxs=[0])
+    ini_scn_run_fs = filesys.build.scn_fs_from_cnf(
+        ini_zma_run_path, constraint_dct=None)
 
+    # Get the zma an geo
+    zma, geo = filesys.inf.cnf_fs_zma_geo(
+        ini_cnf_save_fs, ini_cnf_save_locs)
+
+    # Run job
     if job == 'scan':
 
         # Script
         _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
             *mod_thy_info[0:2])
+        opt_kwargs.update(
+            {'job_options': ['calcall', 'stepsize=3', 'maxpoints=4']})
 
-        zma, geo = filesys.inf.get_zma_geo(ini_cnf_save_fs, ini_cnf_save_locs)
         irc.scan(
-            geo, spc_info, mod_thy_info, coo_name, irc_idxs,
-            ini_scn_save_fs, ini_scn_run_fs, ini_cnf_run_paths[0],
+            geo, spc_info, mod_ini_thy_info, coord_name,
+            ini_scn_save_fs, ini_cnf_run_paths[0],
             overwrite, opt_script_str, **opt_kwargs)
 
     elif job in ('energy', 'grad', 'hess'):
@@ -805,11 +818,11 @@ def irc_tsk(job, spc_dct, spc_name,
             *mod_thy_info[0:2])
 
         # Need to put in something with the IRC idxs
-        for idx in irc_idxs:
-            locs = [[coo_name], [idx]]
+        scn_locs = filesys.build.scn_locs_from_fs(
+            ini_scn_save_fs, coord_name, constraint_dct=None)
+        for locs in scn_locs:
             geo_run_path = ini_scn_run_fs[-1].path(locs)
             geo_save_path = ini_scn_save_fs[-1].path(locs)
-            zma, geo = filesys.inf.get_zma_geo(ini_scn_save_fs, locs)
             ini_scn_run_fs[-1].create(locs)
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,

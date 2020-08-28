@@ -5,6 +5,7 @@
 import mess_io
 from routines.pf.models import _fake as fake
 from routines.pf.models import _util as util
+from lib.phydat import phycon
 
 
 # SINGLE SPECIES BLOCKS
@@ -247,42 +248,19 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
     return spc_str, dat_dct
 
 
-def rpvtst_nosadpt_block(inf_dct):
+def rpvtst_block(inf_dct):
     """ prepare the mess input string for a variational TS that does not have
     a saddle point. Do it by calling the species block for each grid point
     in the scan file system
     """
-    return _write_mess_variational_str(
-        inf_dct, ts_idx=None)
 
-
-def rpvtst_sadpt_block(inf_dct, ts_idx=11):
-    """ prepare the mess input string for a variational TS where there is a
-        saddle point on the MEP.
-        In this case, there is limited torsional information.
-    """
-    return _write_mess_variational_str(
-        inf_dct, ts_idx=ts_idx)
-
-
-def _write_mess_variational_str(inf_dct, ts_idx=None):
-    """ write the variational string
-    """
-
-    # Trim the lst of inf_dcts if there are any rpath idx restrictions
-    # if rpath_idxs is not None:
-    #     inf_dct_lst = (dct for i, dct in enumerate(inf_dct['rpath'])
-    #                    if i in rpath_idxs)
-
-    # Get the strings for each point along the reaction path
     rpath_strs = []
     for idx, dct in enumerate(inf_dct['rpath']):
 
         # Iniialize the header of the rxn path pt string
         rpath_str = '!-----------------------------------------------\n'
-        rpath_str += '! RXN Path Point {0}'.format(str(int(idx+1)))
-        if ts_idx is not None and ts_idx == idx:
-            rpath_str += '  (Saddle Point)'
+        rpath_str += '! Rxn Path Pt {0}: '.format(str(idx+1))
+        rpath_str += 'R = {0:.2f} Ang'.format(dct['rval'] * phycon.BOHR2ANG)
         rpath_str += '\n\n'
 
         # Write MESS string for the rxn path pt; add to rxn path pt string

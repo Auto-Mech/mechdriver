@@ -340,7 +340,7 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
     ts_class, ret1, ret2 = ret
 
     if ret1:
-        [_, dist_name, brk_name, _, _, _, _, update_guess, _, _] = ret1
+        [_, dist_name, brk_name, _, _, _, _, _, update_guess, _, _] = ret1
     else:
         dist_name, brk_name, update_guess = None, None, None
         # bkp_data = None
@@ -371,7 +371,7 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
 
         # Put class stuff in the dct
         dct_keys = ['zma', 'dist_name', 'brk_name',
-                    'grid', 'frm_bnd_keys', 'brk_bnd_keys',
+                    'grid', 'frm_bnd_keys', 'brk_bnd_keys', 'const_bnd_key',
                     'amech_ts_tors_names', 'update_guess',
                     'var_grid', 'rcts_gra']
         ts_dct.update(dict(zip(dct_keys, ret1)))

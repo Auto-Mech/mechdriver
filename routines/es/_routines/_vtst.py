@@ -16,7 +16,7 @@ def radrad_scan(ts_zma, ts_info, hs_info,
                 grid1, grid2, coord_name, frm_bnd_keys,
                 mod_var_scn_thy_info,
                 mod_var_sp1_thy_info,
-                mod_var_sp2_thy_info,
+                var_sp2_thy_info,
                 hs_var_sp1_thy_info,
                 hs_var_sp2_thy_info,
                 mod_thy_info,
@@ -36,7 +36,6 @@ def radrad_scan(ts_zma, ts_info, hs_info,
                                active_space, mod_var_scn_thy_info)
 
     # Run the scan along the reaction coordinate
-    print('const dct radrad', constraint_dct)
     scan.multiref_rscan(
         ts_zma=ts_zma,
         ts_info=ts_info,
@@ -54,20 +53,20 @@ def radrad_scan(ts_zma, ts_info, hs_info,
     )
 
     # Calculate and store the infinite separation energy
-    inf_locs = [[coord_name], [grid1[0]]]
-    ts_zma = scn_save_fs[-1].file.zmatrix.read(inf_locs)
-    geo = scn_save_fs[-1].file.geometry.read(inf_locs)
+    far_locs = [[coord_name], [grid1[0]]]
+    ts_zma = scn_save_fs[-1].file.zmatrix.read(far_locs)
+    geo = scn_save_fs[-1].file.geometry.read(far_locs)
 
-    geo_run_path = scn_run_fs[-1].path(inf_locs)
-    geo_save_path = scn_save_fs[-1].path(inf_locs)
+    geo_run_path = scn_run_fs[-1].path(far_locs)
+    geo_save_path = scn_save_fs[-1].path(far_locs)
 
     inf_sep_ene = scan.radrad_inf_sep_ene(
         hs_info, ts_zma,
         rct_info, rcts_cnf_fs,
-        mod_var_sp2_thy_info,
+        var_sp2_thy_info,
         hs_var_sp1_thy_info, hs_var_sp2_thy_info,
         geo, geo_run_path, geo_save_path,
-        scn_save_fs, inf_locs,
+        scn_save_fs, far_locs,
         overwrite=overwrite,
         **cas_kwargs)
 
@@ -76,17 +75,8 @@ def radrad_scan(ts_zma, ts_info, hs_info,
     scn_save_fs[-1].file.energy.write(inf_sep_ene, inf_locs)
 
     # Save the vmatrix for use in reading
-    print('\nSaving the VMatrix into the filesystem...')
-    ts_fs, _ = vscnlvl_ts_save_fs
-    ts_path = ts_fs[-1].path()
-    zma_fs = autofile.fs.manager(ts_path, 'ZMATRIX')
-    zma_fs[-1].create(zma_locs)
-    zma_fs[-1].file.vmatrix.write(automol.zmatrix.var_(ts_zma), zma_locs)
-
-    tra = (frozenset({frm_bnd_keys}),
-           frozenset({}))
-    zma_fs[-1].file.transformation.write(tra, zma_locs)
-    zma_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
+    _save_traj(ts_zma, frm_bnd_keys, rcts_gra, 
+               vscnlvl_ts_save_fs, zma_locs=zma_locs)
 
     print('\nRunning Hessians and energies...')
     scn_locs = filesys.build.scn_locs_from_fs(
@@ -98,13 +88,14 @@ def radrad_scan(ts_zma, ts_info, hs_info,
 
 
 def molrad_scan(ts_zma, ts_info,
-                rct_info, rcts_cnf_fs,
-                grid1, grid2, coord_name,
+                rct_info, rcts_cnf_fs, rcts_gra,
+                grid1, grid2, coord_name, frm_bnd_keys,
                 thy_info, vsp1_thy_info,
                 thy_save_fs,
                 ts_save_fs,
                 scn_run_fs, scn_save_fs,
-                overwrite, update_guess, retryfail):
+                overwrite, update_guess, retryfail,
+                zma_locs=(0,)):
     """ Run the scan for VTST calculations
     """
 
@@ -147,10 +138,8 @@ def molrad_scan(ts_zma, ts_info,
     scn_save_fs[-1].file.energy.write(inf_sep_ene, inf_locs)
 
     # Save the vmatrix for use in reading
-    print('\nSaving the VMatrix into the filesystem...')
-    ts_fs, _ = ts_save_fs
-    ts_fs[-1].file.vmatrix.write(
-        automol.zmatrix.var_(ts_zma))
+    _save_traj(ts_zma, frm_bnd_keys, rcts_gra,
+               ts_save_fs, zma_locs=zma_locs)
 
     print('\nRunning Hessians and energies...')
     scn_locs = filesys.build.scn_locs_from_fs(
@@ -192,3 +181,21 @@ def _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
             sp.run_energy(zma, geo, ts_info, mod_vsp1_thy_info,
                           scn_save_fs, geo_run_path, geo_save_path, locs,
                           script_str, overwrite, **kwargs)
+
+
+def _save_traj(ts_zma, frm_bnd_keys, rcts_gra, ts_save_fs, zma_locs=(0,)):
+    """ save trajectory and zma stuff
+    """
+
+    print('\nSaving the V-Matrix into the filesystem...')
+    ts_fs, _ = ts_save_fs
+    ts_path = ts_fs[-1].path()
+    zma_fs = autofile.fs.manager(ts_path, 'ZMATRIX')
+    zma_fs[-1].create(zma_locs)
+    zma_fs[-1].file.vmatrix.write(automol.zmatrix.var_(ts_zma), zma_locs)
+
+    print('\nSaving the trajectory into the filesystem...')
+    tra = (frozenset({frm_bnd_keys}),
+           frozenset({}))
+    zma_fs[-1].file.transformation.write(tra, zma_locs)
+    zma_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)

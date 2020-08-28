@@ -35,6 +35,16 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
     frm_bnd_keys = ts_dct['frm_bnd_keys']
     brk_bnd_keys = ts_dct['brk_bnd_keys']
     rcts_gra = ts_dct['rcts_gra']
+    if ts_dct.get('const_bnd_key', None) is not None:
+        const_bnd_key = ts_dct['const_bnd_key']
+        const_name = automol.zmatrix.bond_key_from_idxs(
+            ini_zma, const_bnd_key)
+        coords = automol.zmatrix.coordaintes(ini_zma)
+        const_val = coords[const_name]
+        constraint_dct = {const_name: const_val}
+    else:
+        constraint_dct = None
+    print('constraints in ts scan', constraint_dct)
 
     # set ts searching algorithm and grid info
     typ = ts_dct['class']
@@ -224,7 +234,7 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 dist_name, brk_name,
                 frm_bnd_keys, brk_bnd_keys, rcts_gra,
                 opt_script_str, script_str, overwrite,
-                es_keyword_dct, **opt_kwargs)
+                es_keyword_dct, constraint_dct, **opt_kwargs)
 
     # if not ts_found:
     #    print('No TS was found...')
@@ -243,7 +253,7 @@ def sadpt_transition_state(
         dist_name, brk_name,
         frm_bnd_keys, brk_bnd_keys, rcts_gra,
         opt_script_str, script_str, overwrite,
-        es_keyword_dct, **opt_kwargs):
+        es_keyword_dct, constraint_dct, **opt_kwargs):
     """ Find a sadddle point
     """
 
@@ -272,7 +282,7 @@ def sadpt_transition_state(
             typ, grid, dist_name, brk_name, ini_zma, ts_info,
             mod_thy_info, thy_save_fs,
             scn_run_fs, scn_save_fs, opt_script_str,
-            overwrite, update_guess, **opt_kwargs)
+            overwrite, update_guess, constraint_dct, **opt_kwargs)
 
     # Optimize the saddle point
     print('\nOptimizing guess Z-Matrix obtained from scan or filesys...')

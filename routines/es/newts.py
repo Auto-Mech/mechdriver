@@ -17,7 +17,7 @@ def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     """
 
     # Set the TS searching algorithm to use: (1) Check dct, (2) Set by Class
-    search_method = _ts_finder_match(tsk, spc_dct[tsname], tsname)
+    search_method = _ts_finder_match(tsk, spc_dct[tsname])
 
     # Build necessary objects
     info_dct = _set_info(spc_dct, tsname)
@@ -39,7 +39,7 @@ def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     elif search_method == 'radrad_vtst':
         run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
                         method_dct, runfs_dct, savefs_dct,
-                        info_dct, grid, run_prefix, save_prefix)
+                        info_dct, grid)
     elif search_method == 'vrctst':
         run_vrctst(spc_dct, tsname, es_keyword_dct,
                    method_dct, runfs_dct, savefs_dct,
@@ -192,6 +192,7 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
     # Build inf objects for the rxn and ts
     ts_info = info_dct['ts_info']
     rct_info = info_dct['rct_info']
+    rcts_gra = ts_dct['rcts_gra']
 
     # Set various TS information using the dictionary
     ini_zma = ts_dct['zma']
@@ -223,8 +224,8 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
     # Run single reference mol-rad VTST Search
     vtst.molrad_scan(
         ini_zma, ts_info,
-        rct_info, rcts_cnf_fs,
-        grid1, grid2, frm_name,
+        rct_info, rcts_cnf_fs, rcts_gra,
+        grid1, grid2, frm_name, frm_bnd_keys,
         thy_info, vsp1_thy_info,
         thy_save_fs,
         ts_save_fs,
@@ -235,7 +236,7 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
 
 def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
                     method_dct, runfs_dct, savefs_dct,
-                    info_dct, grid, run_prefix, save_prefix):
+                    info_dct, grid):
     """ find a transition state
     """
 
@@ -268,12 +269,10 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     [grid1, grid2] = grid
 
     # Get method stuff
-    mod_ini_thy_info = method_dct['inplvl']
-    mod_thy_info = method_dct['runlvl']
-    mod_var_scn_thy_info = method_dct['var_scnlvl']
-    mod_var_sp1_thy_info = method_dct['var_splvl1']
-    mod_var_sp2_thy_info = method_dct['var_splvl2']
-    hs_var_scn_thy_info = method_dct['hs_var_scnlvl']
+    mod_thy_info = method_dct['mod_runlvl']
+    mod_var_scn_thy_info = method_dct['mod_var_scnlvl']
+    mod_var_sp1_thy_info = method_dct['mod_var_splvl1']
+    var_sp2_thy_info = method_dct['var_splvl2']
     hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
     hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
 
@@ -291,7 +290,7 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
         grid1, grid2, frm_name, frm_bnd_keys,
         mod_var_scn_thy_info,
         mod_var_sp1_thy_info,
-        mod_var_sp2_thy_info,
+        var_sp2_thy_info,
         hs_var_sp1_thy_info,
         hs_var_sp2_thy_info,
         mod_thy_info,
@@ -337,12 +336,9 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     [grid1, grid2] = grid
 
     # Get method stuff
-    mod_ini_thy_info = method_dct['inplvl']
-    mod_thy_info = method_dct['runlvl']
     mod_var_scn_thy_info = method_dct['var_scnlvl']
     mod_var_sp1_thy_info = method_dct['var_splvl1']
     mod_var_sp2_thy_info = method_dct['var_splvl2']
-    hs_var_scn_thy_info = method_dct['hs_var_scnlvl']
     hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
     hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
 
@@ -363,12 +359,8 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
         rct_info, rct_ichs, rct_zmas, rcts_cnf_fs,
         grid1, grid2, frm_name,
         mod_var_scn_thy_info,
-        mod_var_sp1_thy_info,
-        mod_var_sp2_thy_info,
-        hs_var_scn_thy_info,
-        hs_var_sp1_thy_info,
-        hs_var_sp2_thy_info,
-        mod_ini_thy_info, mod_thy_info,
+        mod_var_sp1_thy_info, mod_var_sp2_thy_info,
+        hs_var_sp1_thy_info, hs_var_sp2_thy_info,
         vscnlvl_thy_save_fs,
         vscnlvl_ts_save_fs,
         vscnlvl_ts_run_fs,
@@ -379,7 +371,7 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
 
 
 # SET THE SEARCHING ALGORITHM
-def _ts_finder_match(tsk, ts_dct, tsname):
+def _ts_finder_match(tsk, ts_dct):
     """ Determine the algorithm that should be used for a given transition
         state by looking at the requested user input or determining
     """
