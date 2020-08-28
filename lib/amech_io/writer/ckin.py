@@ -29,7 +29,7 @@ def model_header(pf_levels, pf_models, refscheme = ''):
             tors_info[1][3], tors_info[1][1], tors_info[1][2],
             tors_info[0][3], tors_info[0][1], tors_info[0][2])
     if refscheme:    
-        chemkin_header_str = '! reference scheme: {0}\n'.format(refscheme)
+        chemkin_header_str += '! reference scheme: {0}\n'.format(refscheme)
 
     # if vpt2_info:
     #     chemkin_header_str += '! vpt2 level: {}{}/{}\n'.format(
