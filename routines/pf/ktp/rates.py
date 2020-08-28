@@ -301,10 +301,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
     elif chnl_infs['ts']['writer'] == 'vrctst_block':
         mess_str, mdhr_dat = mess_writer(
             chnl_infs['ts'], *chnl_infs['reacs'])
-    elif chnl_infs['ts']['writer'] == 'rpvtst_nosadpt_block':
-        mess_str = mess_writer(chnl_infs['ts'])
-        mdhr_dat = {}
-    elif chnl_infs['ts']['writer'] == 'rpvtst_sadpt_block':
+    elif chnl_infs['ts']['writer'] == 'rpvtst_block':
         mess_str = mess_writer(chnl_infs['ts'])
         mdhr_dat = {}
 

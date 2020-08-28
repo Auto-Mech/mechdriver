@@ -26,7 +26,6 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     """
 
     # Build the SCANS/CSCANS filesystems
-    print('const dct run scan', constraint_dct)
     if constraint_dct is None:
         scn_save_fs[1].create([coord_names])
         inf_obj = autofile.schema.info_objects.scan_branch(
@@ -321,7 +320,6 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
     """
 
     # Setup and run the first part of the scan to shorter distances
-    print('const dct run two', constraint_dct)
     for grid in (grid1, grid2):
         run_scan(
             zma=ts_zma,
@@ -382,7 +380,6 @@ def multiref_rscan(ts_zma, ts_info,
     opt_kwargs.update(cas_kwargs)
 
     # Run the scans
-    print('const dct multi', constraint_dct)
     run_two_way_scan(
         ts_zma, ts_info, mod_var_scn_thy_info,
         grid1, grid2, coord_name,
@@ -414,7 +411,7 @@ def molrad_inf_sep_ene(rct_info, rcts_cnf_fs,
 
 def radrad_inf_sep_ene(hs_info, ref_zma,
                        rct_info, rcts_cnf_fs,
-                       mod_var_sp2_thy_info,
+                       var_sp2_thy_info,
                        hs_var_sp1_thy_info, hs_var_sp2_thy_info,
                        geo, geo_run_path, geo_save_path,
                        scn_save_fs, inf_locs,
@@ -445,10 +442,8 @@ def radrad_inf_sep_ene(hs_info, ref_zma,
 
         # Calculate the single point energy
         script_str, _, kwargs, _ = es_runner.qchem_params(*thy_info[0:2])
-        print('cas kwargs', cas_kwargs)
-        print()
         cas_kwargs.update(kwargs)
-        print('cas kwargs', cas_kwargs)
+
         sp.run_energy(ref_zma, geo, hs_info, thy_info,
                       scn_save_fs, geo_run_path, geo_save_path, inf_locs,
                       script_str, overwrite, highspin=True, **cas_kwargs)
@@ -471,14 +466,13 @@ def radrad_inf_sep_ene(hs_info, ref_zma,
 
     # get the single reference energy for each of the reactant configurations
     sp_script_str, _, kwargs, _ = es_runner.qchem_params(
-        *mod_var_sp2_thy_info[0:2])
+        *var_sp2_thy_info[0:2])
     reac_ene = reac_sep_ene(
         rct_info, rcts_cnf_fs,
-        mod_var_sp2_thy_info, overwrite, sp_script_str, **kwargs)
-    # the spin is going to be wrong for the reactants
+        var_sp2_thy_info, overwrite, sp_script_str, **kwargs)
 
     # Calculate the infinite seperation energy
-    all_enes = (eac_ene, hs_sr_ene, hs_mr_ene)
+    all_enes = (reac_ene, hs_sr_ene, hs_mr_ene)
     if all(ene is not None for ene in all_enes):
         inf_sep_ene = reac_ene - hs_sr_ene + hs_mr_ene
     else:

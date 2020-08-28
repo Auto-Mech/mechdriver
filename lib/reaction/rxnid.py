@@ -40,7 +40,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
      ts_zma, bkp_ts_zma,
      tors_names, bkp_tors_names,
      dist_name, bkp_dist_name, brk_name,
-     frm_bnd_keys, brk_bnd_key, rcts_gra] = ret
+     frm_bnd_keys, brk_bnd_key, const_bnd_key, rcts_gra] = ret
 
     # Determine grid for preliminary search for all different reaction types
     dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
@@ -62,7 +62,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     if typ:
         ts_class_data = [
             ts_zma, dist_name, brk_name,
-            grid, frm_bnd_keys, brk_bnd_key,
+            grid, frm_bnd_keys, brk_bnd_key, const_bnd_key,
             tors_names, update_guess, var_grid, rcts_gra]
     else:
         ts_class_data = []
@@ -120,6 +120,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
     brk_name = []
     frm_bnd_keys = frozenset({})
     brk_bnd_key = frozenset({})
+    const_bnd_key = frozenset({})
     rcts_gra = ()
 
     # Cycle through each possible reaction type checking if it is in the class
@@ -169,7 +170,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
                 ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
                 if ret:
                     typ = 'hydrogen migration'
-                    zma, dist_name, frm_bnd_keys, brk_bnd_key, tors_names, rcts_gra = ret
+                    zma, dist_name, frm_bnd_keys, brk_bnd_key, const_bnd_key, tors_names, rcts_gra = ret
                     ts_zma = zma
 
         # Check for hydrogen abstraction
@@ -251,7 +252,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
         ts_zma, bkp_ts_zma,
         tors_names, bkp_tors_names,
         dist_name, bkp_dist_name, brk_name,
-        frm_bnd_keys, brk_bnd_key, rcts_gra]
+        frm_bnd_keys, brk_bnd_key, const_bnd_key, rcts_gra]
 
     return ret
 
