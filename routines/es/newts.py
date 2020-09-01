@@ -144,7 +144,7 @@ def sadpt_transition_state(
 
     # If no guess zma, run a TS searching algorithm
     if not guess_zmas:
-        print(' - No Z-Matrix in found in save filesys.')
+        print(' - No Z-Matrix is found in save filesys.')
         print('\nRunning scan to generate guess Z-Matrix for opt...')
         guess_zmas = sadpt.scan_for_guess(
             typ, grid, dist_name, brk_name, ini_zma, ts_info,

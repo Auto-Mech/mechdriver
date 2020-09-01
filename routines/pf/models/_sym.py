@@ -81,33 +81,32 @@ def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
     saddle = bool(frm_bnd_keys or brk_bnd_keys)
 
     int_sym_num = 0
-    sym_geos2 = []
-    # count1 = 0
+    # modify geometries to remove H's from rotatable XHn end group
+    # this will be accounted for separately as multiplicative factor
+    mod_sym_geos = []
     for geo_sym_i in sym_geos:
-        new_geos = automol.geom.rot_permutated_geoms(
+        mod_geo_sym_i, end_group_factor = automol.geom.end_group_sym_factor(
             geo_sym_i, frm_bnd_keys, brk_bnd_keys)
-        # count1 += 1
-        # print('count1 test:', count1, len(sym_geos))
-        # count2 = 0
-        for new_geo in new_geos:
-            new_geom = True
-            # count2 += 1
-            # print('count2 test:', count2, len(new_geos))
-            # count3 = 0
-            for geo_sym_j in sym_geos2:
-                # count3 += 1
-                # print('count3 test:', count3, len(sym_geos2))
-                if automol.geom.almost_equal_dist_matrix(
-                        new_geo, geo_sym_j, thresh=3e-1):
-                    if saddle:
-                        new_geom = False
-                        break
-                    if structure.geom.are_torsions_same(new_geo, geo_sym_j, ts_bnds=()):
-                        new_geom = False
-                        break
-            if new_geom:
-                sym_geos2.append(new_geo)
-                int_sym_num += 1
+        # print('end_group_factor test:', end_group_factor)
+
+        new_geom = True
+        for mod_geo_sym_j in mod_sym_geos:
+            if automol.geom.almost_equal_dist_matrix(
+                    mod_geo_sym_i, mod_geo_sym_j, thresh=3e-1):
+                if saddle:
+                    new_geom = False
+                    break
+                if structure.geom.are_torsions_same(mod_geo_sym_i, mod_geo_sym_j, ts_bnds=()):
+                    new_geom = False
+                    break
+        if new_geom:
+            mod_sym_geos.append(mod_geo_sym_i)
+            int_sym_num += 1
+            print('new geom test:', automol.geom.string(mod_geo_sym_i))
+
+    int_sym_num *= end_group_factor
+
+    print('int_sym_num_test:', int_sym_num)
 
     return int_sym_num
 
