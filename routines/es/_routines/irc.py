@@ -32,9 +32,10 @@ def scan(zma, ts_info, mod_ini_thy_info, coord_name,
         )
         save_irc(
             irc_job,
+            coord_name,
             run_fs,
             ini_scn_save_fs,
-            coord_name,
+            mod_ini_thy_info
         )
 
 
@@ -47,15 +48,18 @@ def run_irc(zma, irc_job, coord_name, run_fs, ini_scn_save_fs,
     # Maybe check for positive coords
     if not _irc_ran(ini_scn_save_fs, coord_name, irc_job):
         print('No IRC calculation in save filesystem')
-        print('Running IRC calculation')
-        need_irc = True
+        opt_success, _ = es_runner.read_job(
+            job=irc_job,
+            run_fs=run_fs,
+        )
+        need_irc = bool(not opt_success)
     else:
         print('Found IRC directory at {}'.format(
             ini_scn_save_fs[1].path([coord_name])))
-        print('Skipping IRC calculation')
         need_irc = False
 
     if need_irc:
+        print('Running IRC calculation')
         es_runner.run_job(
             job=irc_job,
             script_str=opt_script_str,
@@ -66,9 +70,12 @@ def run_irc(zma, irc_job, coord_name, run_fs, ini_scn_save_fs,
             overwrite=overwrite,
             **opt_kwargs,
         )
+    else:
+        print('Skipping IRC calculation')
 
 
-def save_irc(irc_job, run_fs, ini_scn_save_fs, coord_name):
+def save_irc(irc_job, coord_name,
+             run_fs, ini_scn_save_fs, mod_ini_thy_info):
     """ Read IRC output and store data in filesystem
     """
 
@@ -77,20 +84,12 @@ def save_irc(irc_job, run_fs, ini_scn_save_fs, coord_name):
         run_fs=run_fs,
     )
     if opt_success is not None:
-        inf_obj, _, out_str = opt_ret
+
+        # Read the IRC output file
+        inf_obj, inp_str, out_str = opt_ret
         prog = inf_obj.prog
         geos, gras, hessians = elstruct.reader.irc_points(prog, out_str)
-        enes = elstruct.reader.irc_energies(prog, out_str)
-        coord_vals = elstruct.reader.irc_coordinates(prog, out_str)
-
-        # Write the IRC inf file and input file string
-        # scn_save_fs[1].file.irc_info.write(inf_obj, [coord_name])
-        # scn_save_fs[1].file.irc_input.write(inp_str, [coord_name])
-
-        # Write the IRC coords and enes to a yaml file
-        # irc_inf_obj = autofile.schema.info_objects.irc(
-        #    idxs=irc_idxs, coords=coords)
-        # scn_save_fs[1].file.info.write(irc_inf_obj, [coord_name])
+        coord_vals, enes = elstruct.reader.irc_path(prog, out_str)
 
         # Write the data for each geom along IRC to the filesystem
         save_path = ini_scn_save_fs[1].path([coord_name])
@@ -103,17 +102,32 @@ def save_irc(irc_job, run_fs, ini_scn_save_fs, coord_name):
             if irc_job == elstruct.Job.IRCR:
                 if locs_idx == 0:
                     continue
-                val *= -1
+                # val *= -1  coord vals negative from elstruct fxn for g09
 
-            # Scale the coordinates so that there are all zeros in the .2f number
+            # Scale the coordinates so rounding to .2f number is non-zero
             locs = [coord_name, [val*100.0]]
+            print('irc locs', locs)
 
             # Save files
             ini_scn_save_fs[-1].create(locs)
             ini_scn_save_fs[-1].file.energy.write(enes[idx], locs)
             ini_scn_save_fs[-1].file.geometry.write(geos[idx], locs)
-            ini_scn_save_fs[-1].file.gradient.write(gras[idx], locs)
-            ini_scn_save_fs[-1].file.hessian.write(hessians[idx], locs)
+            ini_scn_save_fs[-1].file.geometry_input.write(inp_str, locs)
+            ini_scn_save_fs[-1].file.geometry_info.write(inf_obj, locs)
+            if gras:
+                ini_scn_save_fs[-1].file.gradient.write(gras[idx], locs)
+                ini_scn_save_fs[-1].file.gradient_info.write(inf_obj, locs)
+            if hessians:
+                ini_scn_save_fs[-1].file.hessian.write(hessians[idx], locs)
+                ini_scn_save_fs[-1].file.hessian_info.write(inf_obj, locs)
+
+            scn_save_path = ini_scn_save_fs[-1].path(locs)
+            print('scn_save_path')
+            sp_save_fs = autofile.fs.single_point(scn_save_path)
+            sp_save_fs[-1].create(mod_ini_thy_info[1:4])
+            sp_save_fs[-1].file.input.write(inp_str, mod_ini_thy_info[1:4])
+            sp_save_fs[-1].file.info.write(inf_obj, mod_ini_thy_info[1:4])
+            sp_save_fs[-1].file.energy.write(enes[idx], mod_ini_thy_info[1:4])
 
 
 def _irc_ran(ini_scn_save_fs, coord_name, irc_job):

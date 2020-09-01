@@ -304,12 +304,15 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
         locs = [tors_names, vals]
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
+        print('scn path', scn_fs[-1].path(locs))
 
         ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
+        print('read ene', ene)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL
         else:
             pot[point] = -10.0
+        print('read ene', ene)
 
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):
@@ -359,6 +362,7 @@ def read_tors_ene(filesys, locs, mod_tors_ene_info):
     """ read the energy for torsions
     """
 
+    print(locs, mod_tors_ene_info)
     if filesys[-1].exists(locs):
         path = filesys[-1].path(locs)
         sp_fs = autofile.fs.single_point(path)
