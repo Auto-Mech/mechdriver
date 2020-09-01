@@ -266,7 +266,7 @@ def sadpt_transition_state(
     # If no guess zma, run a TS searching algorithm
     if not guess_zmas:
 
-        print(' - No Z-Matrix in found in save filesys.')
+        print(' - No Z-Matrix is found in save filesys.')
         print('\nRunning scan to generate guess Z-Matrix for opt...')
         # Set up ini filesystem for scans
         _, zma_run_path = filesys.build.zma_fs_from_prefix(
