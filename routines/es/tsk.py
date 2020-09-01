@@ -749,7 +749,6 @@ def irc_tsk(job, spc_dct, spc_name,
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
     # retryfail = es_keyword_dct['retryfail']
-    irc_idxs = spc['irc_idxs']
 
     # Set up the script
     _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
@@ -823,6 +822,8 @@ def irc_tsk(job, spc_dct, spc_name,
         for locs in scn_locs:
             geo_run_path = ini_scn_run_fs[-1].path(locs)
             geo_save_path = ini_scn_save_fs[-1].path(locs)
+            zma, geo = filesys.inf.cnf_fs_zma_geo(
+                ini_scn_save_fs, locs)
             ini_scn_run_fs[-1].create(locs)
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,

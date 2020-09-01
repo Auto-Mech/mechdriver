@@ -35,11 +35,11 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
     frm_bnd_keys = ts_dct['frm_bnd_keys']
     brk_bnd_keys = ts_dct['brk_bnd_keys']
     rcts_gra = ts_dct['rcts_gra']
-    if ts_dct.get('const_bnd_key', None) is not None:
-        const_bnd_key = ts_dct['const_bnd_key']
+    const_bnd_key = ts_dct['const_bnd_key']
+    if const_bnd_key:
         const_name = automol.zmatrix.bond_key_from_idxs(
             ini_zma, const_bnd_key)
-        coords = automol.zmatrix.coordaintes(ini_zma)
+        coords = automol.zmatrix.values(ini_zma)
         const_val = coords[const_name]
         constraint_dct = {const_name: const_val}
     else:
@@ -114,7 +114,7 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
     if _radrad_barrierless_search(ts_dct, ts_search):
 
         print('VRCTST/VTST')
-        
+
         # Modify the theory
         hs_info = (ts_info[0], ts_info[1], ts_dct['high_mult'])
         mod_var_scn_thy_info = filesys.inf.modify_orb_restrict(
@@ -274,9 +274,9 @@ def sadpt_transition_state(
         _, zma_save_path = filesys.build.zma_fs_from_prefix(
             thy_save_path, zma_idxs=[0])
         scn_run_fs = filesys.build.scn_fs_from_cnf(
-            zma_run_path, constraint_dct=None)
+            zma_run_path, constraint_dct=constraint_dct)
         scn_save_fs = filesys.build.scn_fs_from_cnf(
-            zma_save_path, constraint_dct=None)
+            zma_save_path, constraint_dct=constraint_dct)
 
         guess_zmas = sadpt.scan_for_guess(
             typ, grid, dist_name, brk_name, ini_zma, ts_info,

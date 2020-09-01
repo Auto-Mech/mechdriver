@@ -309,8 +309,9 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
     tunnel_str, sct_str = '', ''
     if treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
         if tunnel_model == 'eckart':
+            ts_idx = chnl_infs['ts'].get('ts_idx', 0)
             tunnel_str = tunnel.write_mess_eckart_str(
-                chnl_enes, chnl_infs['ts']['imag'])
+                chnl_enes, chnl_infs['ts']['imag'], ts_idx=ts_idx)
         # elif tun_model == 'sct':
         #     tunnel_file = tsname + '_sct.dat'
         #     path = 'cat'
@@ -333,7 +334,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
             mess_str, ts_ene, tunnel_str)
     else:
         ts_enes = chnl_enes['ts']
-        ts_str = mess_io.writer.ts_variational(
+        ts_str = '\n' + mess_io.writer.ts_variational(
             ts_label, inner_reac_label, inner_prod_label,
             mess_str, ts_enes, tunnel_str)
 

@@ -224,7 +224,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            _hr_traj(coo_names, scn_save_fs, mod_thy_info, locs_lst)
+            _write_traj(coo_names, scn_save_fs, mod_thy_info, locs_lst)
 
 
 def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
@@ -258,7 +258,7 @@ def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            _hr_traj(constraint_dct, cscn_save_fs, mod_thy_info, locs_lst)
+            _write_traj(constraint_dct, cscn_save_fs, mod_thy_info, locs_lst)
 
 
 def _set_job(scn_typ):
@@ -278,7 +278,7 @@ def _set_job(scn_typ):
     return job
 
 
-def _hr_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
+def _write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
     """ Save a hindered rotor trajectory
     """
 
@@ -293,9 +293,11 @@ def _hr_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
 
     traj = []
     for idxs, ene, geo in zip(idxs_lst, enes, geos):
+        idx_lst = ['{0:.2f}'.format(idx) for idx in idxs]
+        idx_str = ','.join(idx_lst)
         comment = (
             'energy: {:>15.10f}, '.format(ene) +
-            'grid idxs: {}'.format(idxs)
+            'grid idxs: {}'.format(idx_str)
         )
         traj.append((comment, geo))
 

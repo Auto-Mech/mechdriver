@@ -304,12 +304,15 @@ def rpvtst_data(ts_dct,
         pf_filesystems = fs.pf_filesys(
             ts_dct, chn_pf_levels, run_prefix, save_prefix, True)
         tspaths = pf_filesystems['harm']
-        ts_run_path, ts_save_path, _, thy_save_path = tspaths
+        [_, cnf_save_path, min_locs, _, cnf_run_fs] = tspaths
+        ts_run_path = cnf_run_fs[-1].path(min_locs)
 
         # Set TS reaction coordinate
         frm_name = 'IRC'
-        scn_vals = fs.get_rxn_scn_coords(thy_save_path, frm_name)
-        scn_ene_info = chn_pf_levels['harm'][0]
+        scn_vals = fs.get_rxn_scn_coords(cnf_save_path, frm_name)
+        scn_vals.sort()
+        scn_ene_info = chn_pf_levels['ene'][1][0][1]  # fix to be ene lvl
+        scn_prefix = cnf_save_path
     else:
         # Set up filesystems and coordinates for reaction path
         # Scan along RxnCoord is under THY/TS/Z
@@ -322,17 +325,22 @@ def rpvtst_data(ts_dct,
         frm_name = util.get_rxn_coord_name(
             ts_save_path, frm_bnd_keys, sadpt=sadpt, zma_locs=(0,))
         scn_vals = fs.get_rxn_scn_coords(thy_save_path, frm_name)
+        scn_vals.sort()
         scn_ene_info = chn_pf_levels['rpath'][1][0]
+        scn_prefix = thy_save_path
 
     # Modify the scn thy info
+    print('scn thy info', scn_ene_info)
+    print('scn vals', scn_vals)
     mod_scn_ene_info = filesys.inf.modify_orb_restrict(
         filesys.inf.get_spc_info(ts_dct), scn_ene_info)
+    # scn thy info [[1.0, ['molpro2015', 'ccsd(t)', 'cc-pvdz', 'RR']]]
 
     # Need to read the sp vals along the scan. add to read
     ref_ene = 0.0
     enes, geoms, grads, hessians, _ = torsprep.read_hr_pot(
         [frm_name], [scn_vals],
-        thy_save_path,
+        scn_prefix,
         mod_scn_ene_info, ref_ene,
         constraint_dct=None,   # No extra frozen treatments
         read_geom=True,
@@ -341,15 +349,25 @@ def rpvtst_data(ts_dct,
     freqs = torsprep.calc_hr_frequencies(
         geoms, grads, hessians, ts_run_path)
 
+    # Scale the scn values
+    if sadpt:
+        scn_vals = [val / 100.0 for val in scn_vals]
+    scn_vals = [val * phycon.BOHR2ANG for val in scn_vals]
+
     # Grab the values from the read
     inf_dct = {}
     inf_dct['rpath'] = []
     pot_info = zip(scn_vals, enes.values(), geoms.values(), freqs.values())
-    for idx, (rval, pot, geo, frq) in enumerate(pot_info):
+    for rval, pot, geo, frq in pot_info:
+
+        # Scale the r-values
 
         # Get the relative energy (edit for radrad scans)
         zpe = (sum(frq) / 2.0) * phycon.WAVEN2KCAL
         zero_ene = (pot + zpe) * phycon.KCAL2EH
+
+        print('pot', pot)
+        print('zpe', zpe)
 
         # Set values constant across the scan
         sym_factor = 1.0
@@ -361,6 +379,17 @@ def rpvtst_data(ts_dct,
         vals = [rval, geo, sym_factor,
                 frq, elec_levels, zero_ene]
         inf_dct['rpath'].append(dict(zip(keys, vals)))
+
+    # Calculate and store the imaginary mode
+    if sadpt:
+        _, imag, _ = vib.read_harmonic_freqs(
+            pf_filesystems, saddle=True)
+        ts_idx = scn_vals.index(0.00)
+    else:
+        imag = None
+        ts_idx = 0
+    inf_dct.update({'imag': imag})
+    inf_dct.update({'ts_idx': ts_idx})
 
     return inf_dct
 
