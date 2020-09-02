@@ -272,6 +272,7 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     mod_thy_info = method_dct['mod_runlvl']
     mod_var_scn_thy_info = method_dct['mod_var_scnlvl']
     mod_var_sp1_thy_info = method_dct['mod_var_splvl1']
+    var_sp1_thy_info = method_dct['var_splvl2']
     var_sp2_thy_info = method_dct['var_splvl2']
     hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
     hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
@@ -290,6 +291,7 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
         grid1, grid2, frm_name, frm_bnd_keys,
         mod_var_scn_thy_info,
         mod_var_sp1_thy_info,
+        var_sp1_thy_info,
         var_sp2_thy_info,
         hs_var_sp1_thy_info,
         hs_var_sp2_thy_info,

@@ -64,6 +64,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
     if os.path.exists(cnf_path):
 
         e_elec = 0.0
+        print('lvls', ene_levels)
         for (coeff, level) in ene_levels:
             # Build SP filesys
             mod_thy_info = finf.modify_orb_restrict(spc_info, level)
@@ -122,6 +123,47 @@ def zero_point_energy(spc_dct_i,
             _, _, zpe = vib.read_harmonic_freqs(pf_filesystems)
 
     return zpe
+
+
+def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
+                  ene_info1, ene_info2):
+    """ Get the reference energy along a reaction path
+    """
+
+    # Set up the filesystem
+    zma_fs = autofile.fs.manager(scn_prefix, 'ZMATRIX')
+    zma_path = zma_fs[-1].path([0])
+    scn_fs = autofile.fs.scan(zma_path)
+
+    print('eneinf', ene_info1)
+    print('eneinf', ene_info2)
+    ene_info1 = ene_info1[1][0][1]
+    ene_info2 = ene_info2[0]
+    print('eneinf', ene_info1)
+    print('eneinf', ene_info2)
+    mod_ene_info1 = finf.modify_orb_restrict(
+        finf.get_spc_info(ts_dct), ene_info1)
+    mod_ene_info2 = finf.modify_orb_restrict(
+        finf.get_spc_info(ts_dct), ene_info2)
+   
+    ene1, ene2, ref_val = None, None, None
+    for val in reversed(scn_vals):
+        locs = [[coord_name], [val]]
+        path = scn_fs[-1].path(locs)
+        hs_fs = autofile.fs.high_spin(path)
+        if hs_fs[-1].file.energy.exists(mod_ene_info1[1:4]):
+            ene1 = hs_fs[-1].file.energy.read(mod_ene_info1[1:4])
+        if hs_fs[-1].file.energy.exists(mod_ene_info2[1:4]):
+            ene2 = hs_fs[-1].file.energy.read(mod_ene_info2[1:4])
+        if ene1 is not None and ene2 is not None:
+            print('found', val)
+            ref_val = val
+            break
+
+    if ref_val is not None:
+        scn_idx = scn_vals.index(ref_val)
+
+    return scn_idx, ene1, ene2
 
 
 # Functions to handle energies for a channel

@@ -248,14 +248,21 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
     return spc_str, dat_dct
 
 
-def rpvtst_block(inf_dct):
+def rpvtst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     """ prepare the mess input string for a variational TS that does not have
     a saddle point. Do it by calling the species block for each grid point
     in the scan file system
     """
+    
+    # Combine electronic structure information for the two species together
+    sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
+    mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
+    elec_levels = [[0.0, 1.0]]
+    # elec_levels = util.combine_elec_levels(
+    #     inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
     rpath_strs = []
-    for idx, dct in enumerate(inf_dct['rpath']):
+    for idx, dct in enumerate(ts_inf_dct['rpath']):
 
         # Iniialize the header of the rxn path pt string
         rpath_str = '!-----------------------------------------------\n'
@@ -266,14 +273,14 @@ def rpvtst_block(inf_dct):
         # Write MESS string for the rxn path pt; add to rxn path pt string
         core_str = mess_io.writer.core_rigidrotor(
             geom=dct['geom'],
-            sym_factor=dct['sym_factor'],
+            sym_factor=sym_factor,
             interp_emax=None
         )
         rpath_str += mess_io.writer.molecule(
             core=core_str,
             freqs=dct['freqs'],
-            elec_levels=dct['elec_levels'],
-            hind_rot='',
+            elec_levels=elec_levels,
+            hind_rot=mess_hr_str,
             xmat=(),
             rovib_coups=(),
             rot_dists=()
