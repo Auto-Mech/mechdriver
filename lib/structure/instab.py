@@ -362,7 +362,7 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
 
     # Obtain the inchi strings for the species it breaks in to
     constituent_ichs = automol.zmatrix.ts.zmatrix_reactant_inchis(
-        instab_zma, frm_bnd_key, brk_bnd_key)
+        instab_zma, frm_bnd_key, brk_bnd_key, remove_stereo=False)
 
     # Obtain the product names from the species dct
     prd_names = []

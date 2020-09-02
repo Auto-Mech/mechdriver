@@ -405,9 +405,10 @@ def rpvtst_data(ts_dct, reac_dcts,
             print(ene_hs_mr_ref)
             print(pot * phycon.KCAL2EH)
 
-            elec_ene = (reac_ene + 
-                   ene_hs_sr_ref - inf_ene -
-                   ene_hs_mr_ref + pot * phycon.KCAL2EH
+            elec_ene = (
+                reac_ene + 
+                ene_hs_sr_ref - inf_ene -
+                ene_hs_mr_ref + pot * phycon.KCAL2EH
             )
             zpe_pt = zpe - zpe_ref
             zero_ene = elec_ene + zpe_pt
