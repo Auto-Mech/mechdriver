@@ -61,7 +61,7 @@ def read_spc_data(spc_dct_i, spc_name,
     return inf_dct
 
 
-def read_ts_data(ts_dct, tsname,
+def read_ts_data(ts_dct, tsname, reac_dcts, 
                  chn_pf_models, chn_pf_levels,
                  run_prefix, save_prefix,
                  ts_class, ts_sadpt, ts_nobarrier,
@@ -89,7 +89,7 @@ def read_ts_data(ts_dct, tsname,
             writer = 'pst_block'
         elif ts_sadpt == 'rpvtst':
             inf_dct = rpvtst_data(
-                ts_dct,
+                ts_dct, reac_dcts,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, sadpt=sadpt)
@@ -109,7 +109,7 @@ def read_ts_data(ts_dct, tsname,
             writer = 'pst_block'
         elif ts_nobarrier == 'rpvtst':
             inf_dct = rpvtst_data(
-                ts_dct,
+                ts_dct, reac_dcts,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, sadpt=False)
@@ -287,7 +287,7 @@ def flux_data(ts_dct,
 
 
 # VTST
-def rpvtst_data(ts_dct,
+def rpvtst_data(ts_dct, reac_dcts,
                 chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, sadpt=False):
     """ Pull all of the neccessary information from the
@@ -349,10 +349,41 @@ def rpvtst_data(ts_dct,
     freqs = torsprep.calc_hr_frequencies(
         geoms, grads, hessians, ts_run_path)
 
+    # Get the energies and zpes at R_ref
+    if not sadpt:
+        idx, ene_hs_sr_ref, ene_hs_mr_ref = ene.rpath_ref_idx(
+            ts_dct, scn_vals, frm_name, scn_prefix,
+            chn_pf_levels['ene'],
+            chn_pf_levels['rpath'][1])
+    zpe_ref = (sum(freqs[(idx,)]) / 2.0) * phycon.WAVEN2KCAL
+
+    # Get the reactants and infinite seperation energy
+    reac_ene = 0.0
+    inf_ene = 0.0
+    for dct in reac_dcts:
+        pf_filesystems = fs.pf_filesys(
+            dct, chn_pf_levels, run_prefix, save_prefix, False)
+        pf_levels = {
+            'ene': chn_pf_levels['ene'],
+            'harm': chn_pf_levels['harm']
+        }
+        reac_ene += ene.read_energy(
+            dct, pf_filesystems, chn_pf_models, pf_levels,
+            read_ene=True, read_zpe=False)
+
+        print('rpath', chn_pf_levels['rpath'][1])
+        pf_levels = {
+            'ene': ['mlvl', [[1.0, chn_pf_levels['rpath'][1][2]]]],
+            'harm': chn_pf_levels['harm']
+        }
+        inf_ene += ene.read_energy(
+            dct, pf_filesystems, chn_pf_models, pf_levels,
+            read_ene=True, read_zpe=False)
+
     # Scale the scn values
     if sadpt:
         scn_vals = [val / 100.0 for val in scn_vals]
-    scn_vals = [val * phycon.BOHR2ANG for val in scn_vals]
+    # scn_vals = [val * phycon.BOHR2ANG for val in scn_vals]
 
     # Grab the values from the read
     inf_dct = {}
@@ -364,20 +395,47 @@ def rpvtst_data(ts_dct,
 
         # Get the relative energy (edit for radrad scans)
         zpe = (sum(frq) / 2.0) * phycon.WAVEN2KCAL
-        zero_ene = (pot + zpe) * phycon.KCAL2EH
+        if sadpt:
+            zero_ene = (pot + zpe) * phycon.KCAL2EH
+        else:
+            print('enes')
+            print(reac_ene)
+            print(ene_hs_sr_ref)
+            print(inf_ene)
+            print(ene_hs_mr_ref)
+            print(pot * phycon.KCAL2EH)
 
-        print('pot', pot)
-        print('zpe', zpe)
+            elec_ene = (reac_ene + 
+                   ene_hs_sr_ref - inf_ene -
+                   ene_hs_mr_ref + pot * phycon.KCAL2EH
+            )
+            zpe_pt = zpe - zpe_ref
+            zero_ene = elec_ene + zpe_pt
+
+        # ENE
+        # ene = (reac_ene +
+        #        ene_hs_sr(R_ref) - ene_hs_sr(inf) +
+        #        ene_ls_mr(R_ref) - ene_hs_mr(R_ref) +
+        #        ene_ls_mr(R) - ene_ls_mr(R_ref))
+        # ene = (reac_ene +
+        #        ene_hs_sr(R_ref) - ene_hs_sr(inf) -
+        #        ene_hs_mr(R_ref) + ene_ls_mr(R))
+        # inf_sep_ene = reac_ene + hs_sr_ene - hs_mr_ene
+        # inf_sep_ene_p = (reac_ene +
+        #                  hs_sr_ene(R_ref) - ene_hs_sr(inf) +
+        #                  ls_mr_ene(R_ref) - hs_mr_ene(R_ref))
+        # ene = inf_sep_ene_p + ene_ls_mr(R) - ene_ls_mr(R_ref)
+        # ZPE
+        # zpe = zpe(R) - zpe(inf)
+        # or
+        # zpe = zpe_ls_mr(R) - zpe_ls_mr(R_ref)
 
         # Set values constant across the scan
-        sym_factor = 1.0
         elec_levels = ts_dct['elec_levels']
 
         # Create info dictionary and append to lst
-        keys = ['rval', 'geom', 'sym_factor',
-                'freqs', 'elec_levels', 'ene_chnlvl']
-        vals = [rval, geo, sym_factor,
-                frq, elec_levels, zero_ene]
+        keys = ['rval', 'geom', 'freqs', 'elec_levels', 'ene_chnlvl']
+        vals = [rval, geo, frq, elec_levels, zero_ene]
         inf_dct['rpath'].append(dict(zip(keys, vals)))
 
     # Calculate and store the imaginary mode
