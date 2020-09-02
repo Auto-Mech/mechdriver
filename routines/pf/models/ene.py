@@ -64,7 +64,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
     if os.path.exists(cnf_path):
 
         e_elec = 0.0
-        print('lvls', ene_levels)
+        # print('lvls', ene_levels)
         for (coeff, level) in ene_levels:
             # Build SP filesys
             mod_thy_info = finf.modify_orb_restrict(spc_info, level)
@@ -135,12 +135,10 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
     zma_path = zma_fs[-1].path([0])
     scn_fs = autofile.fs.scan(zma_path)
 
-    print('eneinf', ene_info1)
-    print('eneinf', ene_info2)
     ene_info1 = ene_info1[1][0][1]
     ene_info2 = ene_info2[0]
-    print('eneinf', ene_info1)
-    print('eneinf', ene_info2)
+    # print('eneinf', ene_info1)
+    # print('eneinf', ene_info2)
     mod_ene_info1 = finf.modify_orb_restrict(
         finf.get_spc_info(ts_dct), ene_info1)
     mod_ene_info2 = finf.modify_orb_restrict(
