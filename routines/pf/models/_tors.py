@@ -174,7 +174,8 @@ def make_hr_strings(rotors, run_path, tors_model,
         :return mess_hr_str: hr strs
     """
 
-    mess_allr_str, mess_hr_str, mess_flux_str, projrot_str = '', '', '', ''
+    mess_allr_str, mess_allr_nogeo_str = '', ''
+    mess_hr_str, mess_flux_str, projrot_str = '', '', ''
     mdhr_dat = ''
     numrotors = len(rotors)
     for rotor in rotors:
@@ -224,17 +225,32 @@ def _rotor_tors_strs(tors_name, group, axis,
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
 
-    mess_hr_str = ''
+    mess_hr_str, mess_hr_nogeo_str = '', ''
     if mess_hr:
         mess_hr_str = mess_io.writer.rotor_hindered(
             group=group,
             axis=axis,
             symmetry=sym_num,
             potential=pot,
+            hmin=None,
+            hmax=None,
+            lvl_ene_max=None,
+            therm_pow_max=None,
             remdummy=remdummy,
             geom=hr_geo,
-            use_quantum_weight=True,
+            rotor_id=tors_name)
+
+        mess_hr_nogeo_str = mess_io.writer.rotor_hindered(
+            group=group,
+            axis=axis,
+            symmetry=sym_num,
+            potential=pot,
+            hmin=None,
+            hmax=None,
+            lvl_ene_max=None,
             therm_pow_max=None,
+            remdummy=remdummy,
+            geom=None,
             rotor_id=tors_name)
 
     mess_ir_str = ''
@@ -264,7 +280,10 @@ def _rotor_tors_strs(tors_name, group, axis,
             group=group,
             remdummy=remdummy)
 
-    return mess_hr_str, mess_ir_str, mess_flux_str, projrot_str
+    return (mess_hr_str, mess_ir_str,
+            mess_flux_str, projrot_str)
+    # return (mess_hr_str, mess_hr_nogeo_str, mess_ir_str,
+    #         mess_flux_str, projrot_str)
 
 
 def _need_tors_geo(pf_levels):

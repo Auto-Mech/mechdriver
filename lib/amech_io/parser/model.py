@@ -291,6 +291,7 @@ def pf_level_info(es_model, thy_dct):
     tors_lvl_scn = es_model['tors'][1] if 'tors' in es_model else None
     rpath_lvl_sp = es_model['rpath'][0] if 'rpath' in es_model else None
     rpath_lvl_scn = es_model['rpath'][1] if 'rpath' in es_model else None
+    rpath_lvl_sp2 = es_model['rpath'][2] if 'rpath' in es_model else None
 
     # Set the theory info objects
     geo_thy_info = filesys.inf.get_thy_info(geo_lvl, thy_dct)
@@ -307,6 +308,8 @@ def pf_level_info(es_model, thy_dct):
                          if rpath_lvl_sp else None)
     rpath_scn_thy_info = (filesys.inf.get_thy_info(rpath_lvl_scn, thy_dct)
                           if rpath_lvl_scn else None)
+    rpath_sp2_thy_info = (filesys.inf.get_thy_info(rpath_lvl_sp2, thy_dct)
+                         if rpath_lvl_sp2 else None)
 
     # Set the ene thy info as a list of methods with coefficients
     ene_thy_info = []
@@ -327,8 +330,8 @@ def pf_level_info(es_model, thy_dct):
         'sym': (sym_lvl, sym_thy_info),
         'tors': ([tors_lvl_sp, tors_lvl_scn],
                  [tors_sp_thy_info, tors_scn_thy_info]),
-        'rpath': ([rpath_lvl_sp, rpath_lvl_scn],
-                  [rpath_sp_thy_info, rpath_scn_thy_info])
+        'rpath': ([rpath_lvl_sp, rpath_lvl_scn, rpath_lvl_sp2],
+                  [rpath_sp_thy_info, rpath_scn_thy_info, rpath_sp2_thy_info])
     }
 
     return es_levels

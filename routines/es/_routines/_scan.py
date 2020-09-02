@@ -413,7 +413,7 @@ def molrad_inf_sep_ene(rct_info, rcts_cnf_fs,
 
 def radrad_inf_sep_ene(hs_info, ref_zma,
                        rct_info, rcts_cnf_fs,
-                       var_sp2_thy_info,
+                       var_sp1_thy_info, var_sp2_thy_info,
                        hs_var_sp1_thy_info, hs_var_sp2_thy_info,
                        geo, geo_run_path, geo_save_path,
                        scn_save_fs, inf_locs,
@@ -466,12 +466,13 @@ def radrad_inf_sep_ene(hs_info, ref_zma,
         else:
             hs_mr_ene = ene
 
-    # get the single reference energy for each of the reactant configurations
-    sp_script_str, _, kwargs, _ = es_runner.qchem_params(
-        *var_sp2_thy_info[0:2])
-    reac_ene = reac_sep_ene(
-        rct_info, rcts_cnf_fs,
-        var_sp2_thy_info, overwrite, sp_script_str, **kwargs)
+    # Get the single reference energy for each of the reactant configurations
+    for thy_inf in (var_sp1_thy_info, var_sp2_thy_info):
+        sp_script_str, _, kwargs, _ = es_runner.qchem_params(
+            *var_sp2_thy_info[0:2])
+        reac_ene = reac_sep_ene(
+            rct_info, rcts_cnf_fs,
+            thy_inf, overwrite, sp_script_str, **kwargs)
 
     # Calculate the infinite seperation energy
     all_enes = (reac_ene, hs_sr_ene, hs_mr_ene)

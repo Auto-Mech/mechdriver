@@ -302,7 +302,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
         mess_str, mdhr_dat = mess_writer(
             chnl_infs['ts'], *chnl_infs['reacs'])
     elif chnl_infs['ts']['writer'] == 'rpvtst_block':
-        mess_str = mess_writer(chnl_infs['ts'])
+        mess_str = mess_writer(chnl_infs['ts'], *chnl_infs['reacs'])
         mdhr_dat = {}
 
     # Write the appropriate string for the tunneling model
@@ -433,7 +433,7 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     # Set up data for TS
     chnl_infs['ts'] = []
     chnl_infs['ts'] = build.read_ts_data(
-        spc_dct[tsname], tsname,
+        spc_dct[tsname], tsname, [spc_dct[name] for name in rxn['reacs']],
         chn_pf_models, chn_pf_levels,
         run_prefix, save_prefix,
         ts_class, ts_sadpt, ts_nobarrier,
