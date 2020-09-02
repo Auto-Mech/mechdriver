@@ -397,7 +397,7 @@ def _ts_finder_match(tsk, ts_dct):
             ini_method = ['radrad_vtst', 'vrctst']
             print('Reaction is low-spin, radical-radical addition/abstraction')
             print('Assuming reaction is barrierless...')
-            print('Finding a transition state according to either vtst or'
+            print('Finding a transition state according to either vtst or '
                   'vrctst, depending on the current task')
         else:
             ini_method = ['sadpt']

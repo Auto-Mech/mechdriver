@@ -368,6 +368,7 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     # Obtain the product names from the species dct
     prd_names = []
     for ich in constituent_ichs:
+        print('constituent ichs:', ich, automol.inchi.smiles(ich))
         for name, spc_dct_i in spc_dct.items():
             if ich == spc_dct_i.get('inchi'):
                 prd_names.append(name)
