@@ -104,11 +104,11 @@ def zero_point_energy(spc_dct_i,
     if typ.is_atom(spc_dct_i):
         zpe = 0.0
     else:
-        rotors = tors.build_rotors(
-            spc_dct_i, pf_filesystems, pf_models, pf_levels,
-            rxn_class=rxn_class,
-            frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
-
+        # rotors = tors.build_rotors(
+        #     spc_dct_i, pf_filesystems, pf_models, pf_levels,
+        #     rxn_class=rxn_class,
+        #     frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+        rotors = []
         if typ.nonrigid_tors(pf_models, rotors):
             run_path = fs.make_run_path(pf_filesystems, 'tors')
             tors_strs = tors.make_hr_strings(

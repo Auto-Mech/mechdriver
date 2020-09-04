@@ -176,6 +176,9 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
     bi_str, well_str, ts_str = '', '', ''
     full_dat_dct = {}
 
+    # Set variable to store if a dummy used
+    dummy = False
+
     # Write the MESS string for the channel reactant(s) and product(s)
     for side in ('reacs', 'prods'):
 
@@ -192,6 +195,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
                 spc_str, dat_dct = _make_spc_mess_str(inf)
                 spc_strs.append(spc_str)
                 full_dat_dct.update(dat_dct)
+            dummy = True
 
         # Set the labels to put into the file
         spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
@@ -204,7 +208,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
             if len(rgt_names) == 3:
                 bi_str += '\n! {} + {} + {}\n'.format(
                     rgt_names[0], rgt_names[1], rgt_names[2])
-                bi_str += mess_io.writer.dummy(chn_label, zero_ene=rgt_ene)
+                bi_str += mess_io.writer.dummy(chn_label, zero_ene=None)
             elif len(rgt_names) == 2:
                 # bi_str += mess_io.writer.species_separation_str()
                 bi_str += '\n! {} + {}\n'.format(rgt_names[0], rgt_names[1])
@@ -264,7 +268,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
     ts_label = label_dct[tsname]
     sts_str, ts_dat_dct = _make_ts_mess_str(
         chnl_infs, chnl_enes, ts_cls_info,
-        ts_label, inner_reac_label, inner_prod_label)
+        ts_label, inner_reac_label, inner_prod_label, dummy=dummy)
     ts_str += sts_str
     full_dat_dct.update(ts_dat_dct)
 
@@ -279,7 +283,8 @@ def _make_spc_mess_str(inf_dct):
 
 
 def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
-                      ts_label, inner_reac_label, inner_prod_label):
+                      ts_label, inner_reac_label, inner_prod_label,
+                      dummy=False):
     """ makes the main part of the MESS species block for a given species
     """
 
@@ -311,7 +316,8 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
         if tunnel_model == 'eckart':
             ts_idx = chnl_infs['ts'].get('ts_idx', 0)
             tunnel_str = tunnel.write_mess_eckart_str(
-                chnl_enes, chnl_infs['ts']['imag'], ts_idx=ts_idx)
+                chnl_enes, chnl_infs['ts']['imag'],
+                ts_idx=ts_idx, dummy=dummy)
         # elif tun_model == 'sct':
         #     tunnel_file = tsname + '_sct.dat'
         #     path = 'cat'

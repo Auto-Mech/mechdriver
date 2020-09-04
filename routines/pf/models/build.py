@@ -199,7 +199,8 @@ def mol_data(spc_dct_i,
     if typ.nonrigid_tors(chn_pf_models, rotors):
         run_path = fs.make_run_path(pf_filesystems, 'tors')
         tors_strs = tors.make_hr_strings(
-            rotors, run_path, chn_pf_models['tors'])
+            rotors, run_path, chn_pf_models['tors'],
+            scale_factor=None)
         [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
 
     # Obtain rotation partition function information
@@ -212,14 +213,22 @@ def mol_data(spc_dct_i,
     # Obtain vibration partition function information
     print('\nObtaining the vibrational frequencies and zpves...')
     if typ.nonrigid_tors(chn_pf_models, rotors):
-        freqs, imag, zpe, _ = vib.tors_projected_freqs_zpe(
+        freqs, imag, zpe, _, scale_factor = vib.tors_projected_freqs_zpe(
             pf_filesystems, hr_str, prot_str, saddle=saddle)
+        # Make final hindered rotor strings
+        # if typ.scale_1d(chn_pf_models, scale_mod):
+        #     tors_strs = tors.make_hr_strings(
+        #         rotors, run_path, chn_pf_models['tors'],
+        #         scale_factor=scale_factor)
         if 'mdhrv' in chn_pf_models['tors']:
             freqs = ()
     else:
         freqs, imag, zpe = vib.read_harmonic_freqs(
             pf_filesystems, saddle=saddle)
 
+    # Scale the frequencies    
+    # freqs = vib.scale_frequencies(freqs, chn_pf_levels, method=method)
+ 
     if typ.anharm_vib(chn_pf_models):
         xmat = vib.read_anharmon_matrix(pf_filesystems)
 
@@ -355,11 +364,13 @@ def rpvtst_data(ts_dct, reac_dcts,
             ts_dct, scn_vals, frm_name, scn_prefix,
             chn_pf_levels['ene'],
             chn_pf_levels['rpath'][1])
-    zpe_ref = (sum(freqs[(idx,)]) / 2.0) * phycon.WAVEN2KCAL
+    fr_idx = len(scn_vals) - 1
+    print('fr_idx', fr_idx)
+    zpe_ref = (sum(freqs[(fr_idx,)]) / 2.0) * phycon.WAVEN2KCAL
 
     # Get the reactants and infinite seperation energy
     reac_ene = 0.0
-    inf_ene = 0.0
+    ene_hs_sr_inf = 0.0
     for dct in reac_dcts:
         pf_filesystems = fs.pf_filesys(
             dct, chn_pf_levels, run_prefix, save_prefix, False)
@@ -369,14 +380,14 @@ def rpvtst_data(ts_dct, reac_dcts,
         }
         reac_ene += ene.read_energy(
             dct, pf_filesystems, chn_pf_models, pf_levels,
-            read_ene=True, read_zpe=False)
+            read_ene=True, read_zpe=True)
 
         print('rpath', chn_pf_levels['rpath'][1])
         pf_levels = {
             'ene': ['mlvl', [[1.0, chn_pf_levels['rpath'][1][2]]]],
             'harm': chn_pf_levels['harm']
         }
-        inf_ene += ene.read_energy(
+        ene_hs_sr_inf += ene.read_energy(
             dct, pf_filesystems, chn_pf_models, pf_levels,
             read_ene=True, read_zpe=False)
 
@@ -399,19 +410,22 @@ def rpvtst_data(ts_dct, reac_dcts,
             zero_ene = (pot + zpe) * phycon.KCAL2EH
         else:
             print('enes')
-            print(reac_ene)
-            print(ene_hs_sr_ref)
-            print(inf_ene)
-            print(ene_hs_mr_ref)
-            print(pot * phycon.KCAL2EH)
+            print('reac ene', reac_ene)
+            print('hs sr', ene_hs_sr_ref)
+            print('inf', ene_hs_sr_inf)
+            print('hs mr', ene_hs_mr_ref)
+            print('pot R', pot * phycon.KCAL2EH)
+            print('zpe', zpe)
+            print('zpe ref', zpe_ref)
 
             elec_ene = (
-                reac_ene + 
-                ene_hs_sr_ref - inf_ene -
+                ene_hs_sr_ref - ene_hs_sr_inf -
                 ene_hs_mr_ref + pot * phycon.KCAL2EH
             )
             zpe_pt = zpe - zpe_ref
-            zero_ene = elec_ene + zpe_pt
+            zero_ene = reac_ene + (elec_ene + zpe_pt * phycon.KCAL2EH)
+            print('elec ene', elec_ene)
+            print('zero ene', zero_ene)
 
         # ENE
         # ene = (reac_ene +

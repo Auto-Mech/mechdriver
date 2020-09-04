@@ -5,7 +5,7 @@ NEW: Interface to MESS and projrot to set-up tunneling blocks
 import mess_io
 
 
-def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0):
+def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, dummy=False):
     """ Write the Eckart tunneling string for MESS'
     """
 
@@ -18,10 +18,13 @@ def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0):
     else:
         reac_ene = chnl_enes['reacs']
 
-    if chnl_enes.get('fake_vdwp', None) is not None:
-        prod_ene = chnl_enes['fake_vdwp']
+    if dummy:
+        prod_ene = reac_ene
     else:
-        prod_ene = chnl_enes['prods']
+        if chnl_enes.get('fake_vdwp', None) is not None:
+            prod_ene = chnl_enes['fake_vdwp']
+        else:
+            prod_ene = chnl_enes['prods']
 
     # Set the depth of the wells from the transition state
     ts_reac_barr = ts_ene - reac_ene

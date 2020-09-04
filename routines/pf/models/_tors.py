@@ -89,6 +89,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
                 const_names = tuple(coord for coord in coords)
                 tname_tup = tuple([tname])
                 constraint_dct = torsprep.build_constraint_dct(
+                        E
                     zma, const_names, tname_tup)
             else:
                 constraint_dct = None
@@ -167,6 +168,7 @@ def _rotor_info(zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
 
 # FUNCTIONS TO WRITE STRINGS FOR THE ROTORS FOR VARIOUS SITUATION
 def make_hr_strings(rotors, run_path, tors_model,
+                    scale_factor=None,
                     mess_hr=True, mess_ir=True,
                     mess_flux=True, projrot=True):
     """ Procedure for building the MESS strings
@@ -185,11 +187,18 @@ def make_hr_strings(rotors, run_path, tors_model,
         # Write the strings for each torsion of the rotor
         for tors_name, tors_dct in rotor.items():
             if 'D' in tors_name:
+
+                if scale is None:
+                    pot = tors_dct['pot']
+                else:
+                    pot = _scale_pot(tors_dct['pot'], scale_factor) 
+
                 tors_strs = _rotor_tors_strs(
                     tors_name, tors_dct['group'], tors_dct['axis'],
-                    tors_dct['sym_num'], tors_dct['pot'],
+                    tors_dct['sym_num'], pot,
                     tors_dct['remdummy'], tors_dct['hrgeo'],
                     tors_dct['atm_idxs'], tors_dct['span'],
+                    scale=None,
                     mess_hr=mess_hr, mess_ir=mess_ir,
                     mess_flux=mess_flux, projrot=projrot)
                 mess_hr_str += tors_strs[0]
@@ -291,6 +300,17 @@ def _need_tors_geo(pf_levels):
     """
     print('pflvl', pf_levels)
     return bool(pf_levels['tors'][1] == pf_levels['harm'])
+
+
+def _scale_pot(pot, scale_factor):
+    """ Scale the potential
+    """
+
+    new_pot = {}
+    for idx, val in pot.items():
+        new_pot[(idx,)] = pot[(idx,)] * scale_factor
+        
+    return new_pot 
 
 
 def _hrpot_spline_fitter(pot_dct, min_thresh=-0.10, max_thresh=50.0):

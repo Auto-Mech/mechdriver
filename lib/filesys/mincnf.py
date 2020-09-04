@@ -29,33 +29,74 @@ def get_zma_geo(filesys, locs):
 
 
 def min_energy_conformer_locators(cnf_save_fs, mod_thy_info,
-                                  zpe_corrd=False):
+                                  cnf_range='min'):
     """ locators for minimum energy conformer
     """
 
-    cnf_locs_lst = cnf_save_fs[-1].existing()
-    if cnf_locs_lst:
-        cnf_enes = []
-        if len(cnf_locs_lst) == 1:
-            cnf_enes = [10]
-        else:
-            for locs in cnf_locs_lst:
-                cnf_path = cnf_save_fs[-1].path(locs)
-                sp_fs = autofile.fs.single_point(cnf_path)
-                cnf_enes.append(
-                    sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
-        if zpe_corrd:
-            pass
-            # # How to calculate the ZPE (just use harm zpe?A
-            # # Ignore confs without zpe? or break the run
-            # cnf_hessians = [cnf_save_fs[-1].file.hessian.read(locs)
-            #             for locs in cnf_locs_lst]
-            # cnf_corrs = [ene+zpe for ene, zpe
-            # in zip(cnf_enes, cnf_zpes)]
-        else:
-            min_cnf_locs = cnf_locs_lst[cnf_enes.index(min(cnf_enes))]
+    cnf_locs = cnf_save_fs[-1].existing()
+    min_cnf_locs = []
+
+    if cnf_locs:
+
+        cnf_locs, cnf_enes = _sorted_cnf_lsts(cnf_locs, mod_thy_info)
+        print('min conf locs test:\n', cnf_locs, '\n', cnf_enes)
+
+        if cnf_range == 'min':
+            min_cnf_locs = [cnf_locs[0]]
+        elif 'e' in cnf_range and '_' in cnf_range:
+            min_cnf_locs = _erange_locs(cnf_locs, cnf_enes, cnf_range)
+        elif 'n' in cnf_range and '_' in cnf_range:
+            min_cnf_locs = _nrange_locs(cnf_locs, cnf_range)
+
+    return min_cnf_locs
+
+
+def _sorted_cnf_lsts(cnf_locs_lst, mod_thy_info):
+    """ Get a list of conformer locs and energies, sorted by energies
+    """
+
+    cnf_enes = []
+    if len(cnf_locs) == 1:
+        cnf_enes = [10]
     else:
-        min_cnf_locs = []
+        for locs in cnf_locs:
+            cnf_path = cnf_save_fs[-1].path(locs)
+            sp_fs = autofile.fs.single_point(cnf_path)
+            cnf_enes.append(sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
+
+    # Sort the cnf locs and cnf enes
+    cnf_enes, cnf_locs = zip(*sorted(zip(cnf_enes, cnf_locs)))
+
+    return cnf_locs, cnf_enes
+
+
+def _erange_locs(cnf_locs, cnf_enes, ethresh):
+    """ Get a range of e values
+    """
+
+    thresh[1] = ethresh.split('_') 
+
+    min_cnf_locs = []
+    min_ene = cnf_enes[0]
+    for locs, ene in zip(cnf_locs, cnf_enes):
+        rel_ene = (ene - min_ene) * phycon.EH2KCAL
+        if rel_ene <= thresh:
+            min_cnf_locs.append(locs)
+
+    return min_cnf_locs
+
+
+def _nrange_locs(cnf_locs, nthresh):
+    """ Get a range of n values
+    """
+
+    thresh[1] = nthresh.split('_') 
+    
+    min_cnf_locs = []
+    for idx, locs in enumerate(cnf_locs):
+        if idx+1 <= thresh:
+            min_cnf_locs.append(locs)
+
     return min_cnf_locs
 
 
