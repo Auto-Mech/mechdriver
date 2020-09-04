@@ -98,10 +98,10 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
                     'var_splvl1', 'var_splvl2', 'var_scnlvl',
                     'nobarrier', 'retryfail', 'overwrite'],
     'conf_samp': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'conf_energy': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
-    'conf_grad': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
-    'conf_hess': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
-    'conf_vpt2': ['runlvl', 'inplvl', 'zpve_min', 'retryfail', 'overwrite'],
+    'conf_energy': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
+    'conf_grad': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
+    'conf_hess': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
+    'conf_vpt2': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'hr_scan': ['runlvl', 'inplvl', 'tors_model', 'resamp_min',
                 'retryfail', 'overwrite'],
     'hr_grad': ['runlvl', 'inplvl', 'tors_model',
@@ -125,7 +125,7 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
 }
 ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'tors_model': ['1dhr', '1dhrf', '1dhrfa', 'mdhr'],
-    'zpve_min': [True, False],
+    'cnf_range': ['min'],
     'nobarrier': ['pst', 'rpvtst', 'vrctst'],
     'retryfail': [True, False],
     'overwrite': [True, False],
@@ -139,7 +139,7 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'var_splvl2': None,
     'var_scnlvl': None,
     'tors_model': '1dhr',
-    'zpve_min': False,
+    'cnf_range': 'min',
     'nobarrier': 'pst',
     'retryfail': True,
     'overwrite': False,
@@ -197,3 +197,5 @@ THY_SUPPORTED_KEYWORDS = [
     'econv',
     'gconv'
 ]
+
+# Model Keywords

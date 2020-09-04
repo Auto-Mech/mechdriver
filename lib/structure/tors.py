@@ -610,10 +610,11 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
     # Run MESSPF
     run_script(script_str, pf_path)
 
-    # Obtain the torsional zpes from the MESS output
+    # Obtain the torsional zpes and freqs from the MESS output
     with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
         output_string = mess_file.read()
-    tors_zpes = mess_io.reader.tors.zpves(output_string)
-    tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
 
-    return tors_zpe
+    tors_zpes = mess_io.reader.tors.zpves(output_string)
+    tors_freqs = mess_io.reader.tors.freqs(output_string)
+
+    return tors_zpes, tors_freqs

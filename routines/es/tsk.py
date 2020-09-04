@@ -170,6 +170,7 @@ def conformer_tsk(job, spc_dct, spc_name,
     # Get es options
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
+    cnf_range = es_keyword_dct['cnf_range']
 
     # Modify the theory
     ini_thy_info = filesys.inf.get_es_info(

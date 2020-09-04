@@ -310,10 +310,11 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
                 new_rxn['prods'].append(new_prd)
             else:
                 print('- Splitting species...')
-                new_prd = split_species(spc_dct, prd,
-                                        ini_thy_info, save_prefix)
-                print('- New species: {}'.format(' '.join(new_prd)))
-                new_rxn['prods'].extend(new_prd)
+                new_rxn['prods'].extend(['FAKE1', 'FAKE2', 'FAKE3'])
+                # new_prd = split_species(spc_dct, prd,
+                #                         ini_thy_info, save_prefix)
+                # print('- New species: {}'.format(' '.join(new_prd)))
+                # new_rxn['prods'].extend(new_prd)
 
         if len(rxn['reacs']) > len(new_rxn['reacs']):
             print('WARNING: LIKELY MISSING DATA FOR REACTANTS FOR SPLIT')

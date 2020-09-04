@@ -2,6 +2,7 @@
   Handle vibrational data info
 """
 
+import math
 import autofile
 from lib.structure import tors as torsprep
 from lib.structure import vib as vibprep
@@ -97,9 +98,13 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     hess_path = harm_cnf_fs[-1].path(harm_min_locs)
     print(' - Reading Hessian from path {}'.format(hess_path))
 
-    # Calculate ZPVES of the hindered rotors
+    # Read info for the hindered rotors
     print(' - Calculating the torsional ZPVES using MESS...')
-    tors_zpe = torsprep.mess_tors_zpes(tors_geo, mess_hr_str, tors_run_path)
+    tors_zpes, tors_freqs = torsprep.mess_tors_zpes(
+        tors_geo, mess_hr_str, tors_run_path)
+    
+    # Calculate ZPVES of the hindered rotors
+    tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
     tors_zpe *= phycon.KCAL2EH
 
     print(' - Calculating the RT and RT-rotor projected frequencies ProjRot')
@@ -152,6 +157,11 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     else:
         imag = None
 
+    # Create a scaling factor for the frequencie
+    unproj_prod = math.prod(rt_freqs1)
+    proj_prod = math.prod(freqs) * math.prod(tors_freqs)
+    scale_factor = proj_prod / unproj_prod
+
     # Check if there are significant differences caused by the rotor projection
     diff_tors_zpe *= phycon.EH2KCAL
     diff_tors_zpe_2 *= phycon.EH2KCAL
@@ -160,4 +170,26 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
               '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
               'kcal/mol between harmonic and hindered torsional ZPVEs')
 
-    return freqs, imag, zpe, harm_zpe
+    return freqs, imag, zpe, harm_zpe, scale_factor
+
+
+M1_COEFFS = {
+    ('wb97xd', '6-31g*'): 0.85
+}
+M2_COEFFS = {
+    ('wb97xd', '6-31g*'): [0.85, 0.90]
+}
+
+
+def scale_frequencies(freqs, chn_pf_levels, scale_method='scalar'):
+    """ Scale frequencies according to some method
+    """
+    
+    thy_method = chn_pf_levels['harm']
+    if scale_method == 'scalar':
+        coeff = M1_COEFFS[thy_method]
+        freqs = [freq*coeff for freq in freqs]
+    elif:
+        coeffs = M2_COEFFS[thy_method]
+
+    return freqs
