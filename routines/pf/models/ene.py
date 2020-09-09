@@ -143,7 +143,7 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
         finf.get_spc_info(ts_dct), ene_info1)
     mod_ene_info2 = finf.modify_orb_restrict(
         finf.get_spc_info(ts_dct), ene_info2)
-   
+
     ene1, ene2, ref_val = None, None, None
     for val in reversed(scn_vals):
         locs = [[coord_name], [val]]

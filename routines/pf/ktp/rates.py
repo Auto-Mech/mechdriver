@@ -195,19 +195,23 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
                 spc_str, dat_dct = _make_spc_mess_str(inf)
                 spc_strs.append(spc_str)
                 full_dat_dct.update(dat_dct)
-            dummy = True
 
-        # Set the labels to put into the file
-        spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
-                     for name in rgt_names]
-        chn_label = label_dct[make_rxn_str(rgt_names)]
+            # Set the labels to put into the file
+            spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
+                         for name in rgt_names]
+            chn_label = label_dct[make_rxn_str(rgt_names)]
+        else:
+            # Set the labels to put into the file
+            spc_label = 'FAKE1+FAKE2+FAKE3'
+            chn_label = label_dct[spc_label]
 
         # Write the strings
         if chn_label not in written_labels:
             written_labels.append(chn_label)
             if len(rgt_names) == 3:
-                bi_str += '\n! {} + {} + {}\n'.format(
-                    rgt_names[0], rgt_names[1], rgt_names[2])
+                # bi_str += '\n! {} + {} + {}\n'.format(
+                #     rgt_names[0], rgt_names[1], rgt_names[2])
+                bi_str += '\n! DUMMY FOR UNSTABLE SPECIES\n'
                 bi_str += mess_io.writer.dummy(chn_label, zero_ene=None)
             elif len(rgt_names) == 2:
                 # bi_str += mess_io.writer.species_separation_str()
@@ -241,7 +245,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
         well_str += fwell_str
         ts_str += fts_str
 
-        # Reset the reactant label for the inner transition state
+        # Re-set the reactant label for the inner transition state
         inner_reac_label = fake_lbl
 
         # Update the data string dct if necessary
@@ -268,7 +272,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
     ts_label = label_dct[tsname]
     sts_str, ts_dat_dct = _make_ts_mess_str(
         chnl_infs, chnl_enes, ts_cls_info,
-        ts_label, inner_reac_label, inner_prod_label, dummy=dummy)
+        ts_label, inner_reac_label, inner_prod_label)
     ts_str += sts_str
     full_dat_dct.update(ts_dat_dct)
 
@@ -283,8 +287,7 @@ def _make_spc_mess_str(inf_dct):
 
 
 def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
-                      ts_label, inner_reac_label, inner_prod_label,
-                      dummy=False):
+                      ts_label, inner_reac_label, inner_prod_label):
     """ makes the main part of the MESS species block for a given species
     """
 
@@ -315,9 +318,10 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
     if treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
         if tunnel_model == 'eckart':
             ts_idx = chnl_infs['ts'].get('ts_idx', 0)
+            symm_barrier = chnl_infs['ts'].get('symm_barrier', False)
             tunnel_str = tunnel.write_mess_eckart_str(
                 chnl_enes, chnl_infs['ts']['imag'],
-                ts_idx=ts_idx, dummy=dummy)
+                ts_idx=ts_idx, symm_barrier=symm_barrier)
         # elif tun_model == 'sct':
         #     tunnel_file = tsname + '_sct.dat'
         #     path = 'cat'
@@ -414,27 +418,28 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     # Initialize the dict
     chnl_infs = {}
 
-    # Determine the MESS data for the channel
-    chnl_infs['reacs'] = []
-    for rct in rxn['reacs']:
-        chnl_infs['reacs'].append(
-            build.read_spc_data(
-                spc_dct[rct], rct,
-                chn_pf_models, chn_pf_levels,
-                run_prefix, save_prefix,
-                ref_pf_models=ref_pf_models,
-                ref_pf_levels=ref_pf_levels)
-        )
+    # Initialize the symm_barrier variable for TS
+    symm_barrier = False
 
-    chnl_infs['prods'] = []
-    for prd in rxn['prods']:
-        chnl_infs['prods'].append(
-            build.read_spc_data(
-                spc_dct[prd], prd,
-                chn_pf_models, chn_pf_levels,
-                run_prefix, save_prefix,
-                ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
-        )
+    # Determine the MESS data for the reactants and products
+    # Gather data or set fake information for dummy reactants/products
+    chnl_infs['reacs'], chnl_infs['prods'] = [], []
+    for side in ('reacs', 'prods'):
+        rgts = rxn[side]
+        if len(rgts) < 3:
+            for rgt in rgts:
+                chnl_infs[side].append(
+                    build.read_spc_data(
+                        spc_dct[rgt], rgt,
+                        chn_pf_models, chn_pf_levels,
+                        run_prefix, save_prefix,
+                        ref_pf_models=ref_pf_models,
+                        ref_pf_levels=ref_pf_levels)
+                )
+        else:
+            symm_barrier = True
+            for _ in range(3):
+                chnl_infs[side].append({'ene_chnlvl': 0.00})
 
     # Set up data for TS
     chnl_infs['ts'] = []
@@ -448,6 +453,8 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     if chnl_infs['ts']['writer'] in ('pst_block', 'vrctst_block'):
         ts_ene = sum(inf['ene_chnlvl'] for inf in chnl_infs['reacs'])
         chnl_infs['ts'].update({'ene_chnlvl': ts_ene})
+
+    chnl_infs['ts']['symm_barrier'] = symm_barrier
 
     # Set up the info for the wells
     rwell_model = chn_pf_models['rwells']

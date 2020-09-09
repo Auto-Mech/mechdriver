@@ -45,7 +45,17 @@ def reference_geometry(spc_dct_i, spc_info,
             status=status)
         run_fs[0].file.info.write(inf_obj, [])
 
-    if not thy_save_fs[-1].file.geometry.exists(mod_thy_info[1:4]):
+    exists = thy_save_fs[-1].file.geometry.exists(mod_thy_info[1:4])
+    if not exists:
+        print('No energy found in save filesys. Running energy...')
+        _run = True
+    elif overwrite:
+        print('User specified to overwrite energy with new run...')
+        _run = True
+    else:
+        _run = False
+
+    if _run:
         print('Obtaining some initial guess geometry.')
         geo_init = _obtain_ini_geom(spc_dct_i,
                                     ini_cnf_save_fs, ini_min_cnf_locs)
@@ -168,8 +178,8 @@ def _functional_groups_stable(geo, thy_save_fs, mod_thy_info):
             zma = automol.geom.zmatrix(geo_tmp)
             disconn_zmas.append(zma)
             print('geo test in init_geom test:', geo_tmp)
-        #disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
-                        # for gra in prd_gras]
+        # disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
+        #     for gra in prd_gras]
         conn_zma = automol.geom.zmatrix(geo)
         structure.instab.write_instab2(
             conn_zma, disconn_zmas,

@@ -5,7 +5,7 @@ NEW: Interface to MESS and projrot to set-up tunneling blocks
 import mess_io
 
 
-def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, dummy=False):
+def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, symm_barrier=False):
     """ Write the Eckart tunneling string for MESS'
     """
 
@@ -18,7 +18,7 @@ def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, dummy=False):
     else:
         reac_ene = chnl_enes['reacs']
 
-    if dummy:
+    if symm_barrier:
         prod_ene = reac_ene
     else:
         if chnl_enes.get('fake_vdwp', None) is not None:

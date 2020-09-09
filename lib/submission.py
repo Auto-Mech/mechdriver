@@ -158,7 +158,7 @@ THERMP = (
 PAC99 = (
     "#!/usr/bin/env bash\n"
     "ulimit -c 0\n"
-    "PACC << EOF\n"
+    "PACC << EOF >& pac99.out\n"
     "FORMULA\n"
     "EOF"
 )

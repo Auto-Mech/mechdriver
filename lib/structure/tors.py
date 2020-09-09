@@ -467,8 +467,6 @@ def set_tors_def_info(zma, tors_name, tors_sym, pot,
     else:
         ts_bnd = brk_bnd_keys
 
-    print('bnd test class', rxn_class)
-
     group, axis, atm_key = _set_groups_ini(
         zma, tors_name, ts_bnd, saddle)
     if saddle:

@@ -89,7 +89,6 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
                 const_names = tuple(coord for coord in coords)
                 tname_tup = tuple([tname])
                 constraint_dct = torsprep.build_constraint_dct(
-                        E
                     zma, const_names, tname_tup)
             else:
                 constraint_dct = None
@@ -188,17 +187,16 @@ def make_hr_strings(rotors, run_path, tors_model,
         for tors_name, tors_dct in rotor.items():
             if 'D' in tors_name:
 
-                if scale is None:
+                if scale_factor is None:
                     pot = tors_dct['pot']
                 else:
-                    pot = _scale_pot(tors_dct['pot'], scale_factor) 
+                    pot = _scale_pot(tors_dct['pot'], scale_factor)
 
                 tors_strs = _rotor_tors_strs(
                     tors_name, tors_dct['group'], tors_dct['axis'],
                     tors_dct['sym_num'], pot,
                     tors_dct['remdummy'], tors_dct['hrgeo'],
                     tors_dct['atm_idxs'], tors_dct['span'],
-                    scale=None,
                     mess_hr=mess_hr, mess_ir=mess_ir,
                     mess_flux=mess_flux, projrot=projrot)
                 mess_hr_str += tors_strs[0]
@@ -308,7 +306,8 @@ def _scale_pot(pot, scale_factor):
 
     new_pot = {}
     for idx, val in pot.items():
-        new_pot[(idx,)] = pot[(idx,)] * scale_factor
+        print('potidxx', idx)
+        new_pot[idx] = pot[idx] * scale_factor
         
     return new_pot 
 

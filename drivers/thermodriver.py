@@ -124,7 +124,7 @@ def run(spc_dct,
 
             # Read the temperatures from the pf.dat file, check if viable
             temps = pfrunner.read_messpf_temps(thm_paths[idx][0])
-            thmroutines.nasapoly.print_nasa_temps(temps)
+            # thmroutines.nasapoly.print_nasa_temps(temps)
 
             # Write the NASA polynomial in CHEMKIN-format string
             ref_scheme = spc_model_dct[spc_model]['options']['ref_scheme']

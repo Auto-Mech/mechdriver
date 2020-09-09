@@ -2,7 +2,7 @@
   Handle vibrational data info
 """
 
-import math
+import numpy
 import autofile
 from lib.structure import tors as torsprep
 from lib.structure import vib as vibprep
@@ -102,14 +102,14 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     print(' - Calculating the torsional ZPVES using MESS...')
     tors_zpes, tors_freqs = torsprep.mess_tors_zpes(
         tors_geo, mess_hr_str, tors_run_path)
-    
+
     # Calculate ZPVES of the hindered rotors
     tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
     tors_zpe *= phycon.KCAL2EH
 
     print(' - Calculating the RT and RT-rotor projected frequencies ProjRot')
     # Run ProjRot to get the frequencies v1
-    rt_freqs1, rth_freqs1, _, rth_imag1 = vibprep.projrot_freqs(
+    rt_freqs1, rth_freqs1, rt_imag1, _ = vibprep.projrot_freqs(
         [harm_geo], [hess], harm_run_path,
         grads=[[]], rotors_str=projrot_hr_str, coord_proj='cartesian',
         script_str=DEFAULT_SCRIPT_DCT['projrot'])
@@ -119,7 +119,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
         "#!/usr/bin/env bash\n"
         "RPHt2.exe >& /dev/null"
     )
-    _, rth_freqs2, _, rth_imag2 = vibprep.projrot_freqs(
+    _, rth_freqs2, rt_imag2, _ = vibprep.projrot_freqs(
         [harm_geo], [hess], harm_run_path,
         grads=[[]], rotors_str=projrot_hr_str, coord_proj='cartesian',
         script_str=projrot_script_str2)
@@ -142,11 +142,11 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     diff_tors_zpe_2 = harm_tors_zpe_2 - tors_zpe
     if diff_tors_zpe <= diff_tors_zpe_2:
         freqs = rth_freqs1
-        imag_freqs = rth_imag1
+        imag_freqs = rt_imag1
         zpe = harm_zpe_notors_1 + tors_zpe
     else:
         freqs = rth_freqs2
-        imag_freqs = rth_imag2
+        imag_freqs = rt_imag2
         zpe = harm_zpe_notors_2 + tors_zpe
 
     # Check imaginary frequencies and set freqs
@@ -158,9 +158,10 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
         imag = None
 
     # Create a scaling factor for the frequencie
-    unproj_prod = math.prod(rt_freqs1)
-    proj_prod = math.prod(freqs) * math.prod(tors_freqs)
+    unproj_prod = numpy.prod(rt_freqs1)
+    proj_prod = numpy.prod(freqs) * numpy.prod(tors_freqs)
     scale_factor = proj_prod / unproj_prod
+    print('scale fact test', scale_factor)
 
     # Check if there are significant differences caused by the rotor projection
     diff_tors_zpe *= phycon.EH2KCAL
@@ -174,22 +175,34 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
 
 
 M1_COEFFS = {
-    ('wb97xd', '6-31g*'): 0.85
+    ('b2plyd3', 'cc-pvtz'): 1.00
 }
 M2_COEFFS = {
-    ('wb97xd', '6-31g*'): [0.85, 0.90]
+    ('b2plypd3', 'cc-pvtz'): (1.066, 0.008045)
 }
 
 
-def scale_frequencies(freqs, chn_pf_levels, scale_method='scalar'):
+def scale_frequencies(freqs, chn_pf_levels, scale_method='2c'):
     """ Scale frequencies according to some method
     """
-    
-    thy_method = chn_pf_levels['harm']
-    if scale_method == 'scalar':
-        coeff = M1_COEFFS[thy_method]
-        freqs = [freq*coeff for freq in freqs]
-    elif:
-        coeffs = M2_COEFFS[thy_method]
+    print('in scale freqs')
+    thy_info = chn_pf_levels['harm'][1]
+    thy_method = (thy_info[1], thy_info[2])
+    print('thy_method', thy_method)
+    if scale_method == '2c':
+        acf, bcf = M2_COEFFS.get(thy_method, (1.0, 0.0))
+        scaled_freqs = []
+        for freq in freqs:
+            scaled_freqs.append(
+                (acf - (bcf * freq**0.33)) * freq
+            )
+        print('coef2', acf, bcf)
+    elif scale_method == 'scalar':
+        acf = M2_COEFFS.get(thy_method, 1.0)
+        scaled_freqs = [freq * acf for freq in freqs]
+        print('coef1', acf)
 
-    return freqs
+    print('freqs', freqs)
+    print('scaled_freqs', scaled_freqs)
+
+    return scaled_freqs

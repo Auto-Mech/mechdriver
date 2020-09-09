@@ -170,7 +170,6 @@ def conformer_tsk(job, spc_dct, spc_name,
     # Get es options
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
-    cnf_range = es_keyword_dct['cnf_range']
 
     # Modify the theory
     ini_thy_info = filesys.inf.get_es_info(
@@ -270,6 +269,8 @@ def conformer_tsk(job, spc_dct, spc_name,
             rxn_class=rxn_class, **opt_kwargs)
 
     elif job in ('energy', 'grad', 'hess', 'vpt2'):
+
+        # cnf_range = es_keyword_dct['cnf_range']
 
         # Build conformer filesys
         cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(

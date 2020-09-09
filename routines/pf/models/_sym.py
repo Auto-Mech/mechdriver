@@ -96,17 +96,16 @@ def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
                 if saddle:
                     new_geom = False
                     break
-                if structure.geom.are_torsions_same(mod_geo_sym_i, mod_geo_sym_j, ts_bnds=()):
+                tors_same = structure.geom.are_torsions_same(
+                    mod_geo_sym_i, mod_geo_sym_j, ts_bnds=())
+                if tors_same:
                     new_geom = False
                     break
         if new_geom:
             mod_sym_geos.append(mod_geo_sym_i)
             int_sym_num += 1
-            print('new geom test:', automol.geom.string(mod_geo_sym_i))
 
     int_sym_num *= end_group_factor
-
-    print('int_sym_num_test:', int_sym_num)
 
     return int_sym_num
 
