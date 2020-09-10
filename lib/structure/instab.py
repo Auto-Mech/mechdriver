@@ -164,7 +164,7 @@ def _instab_info(conn_zma, disconn_zmas):
     for zma in prd_zmas:
         print(automol.zmatrix.string(zma))
     print('\n\nrct zma')
-    for zma in disconn_zmas:
+    for zma in rct_zmas:
         print(automol.zmatrix.string(zma))
         print()
 
@@ -256,6 +256,8 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
         geo_model = spc_model_dct[spc_model]['es']['geo']
         ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
 
+        new_rxn['dummy'] = []
+
         # Asses the reactants for unstable species
         new_rxn['reacs'] = []
         for rct in rxn['reacs']:
@@ -270,6 +272,7 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
                                         ini_thy_info, save_prefix)
                 print('- New species: {}'.format(' '.join(new_rct)))
                 new_rxn['reacs'].extend(new_rct)
+                new_rxn['dummy'].append('reacs')
 
         # Assess the products for unstable species
         new_rxn['prods'] = []
@@ -281,11 +284,12 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
                 new_rxn['prods'].append(new_prd)
             else:
                 print('- Splitting species...')
-                new_rxn['prods'].extend(['FAKE1', 'FAKE2', 'FAKE3'])
-                # new_prd = split_species(spc_dct, prd,
-                #                         ini_thy_info, save_prefix)
-                # print('- New species: {}'.format(' '.join(new_prd)))
-                # new_rxn['prods'].extend(new_prd)
+                # new_rxn['prods'].extend(['FAKE1', 'FAKE2', 'FAKE3'])
+                new_prd = split_species(spc_dct, prd,
+                                        ini_thy_info, save_prefix)
+                print('- New species: {}'.format(' '.join(new_prd)))
+                new_rxn['prods'].extend(new_prd)
+                new_rxn['dummy'].append('prods')
 
         if len(rxn['reacs']) > len(new_rxn['reacs']):
             print('WARNING: LIKELY MISSING DATA FOR REACTANTS FOR SPLIT')
@@ -335,6 +339,7 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     # Obtain the inchi strings for the species it breaks in to
     constituent_ichs = automol.zmatrix.ts.zmatrix_product_inchis(
         instab_zma, frm_bnd_key, brk_bnd_key, remove_stereo=False)
+    print('constituent ichs', constituent_ichs)
 
     # Obtain the product names from the species dct
     prd_names = []
@@ -342,7 +347,7 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     for ich in constituent_ichs:
         print('constituent ichs:', ich, automol.inchi.smiles(ich))
         for name, spc_dct_i in spc_dct.items():
-            if ich == spc_dct_i.get('inchi'): 
+            if ich == spc_dct_i.get('inchi'):
                 if ich not in prd_ichs:
                     prd_names.append(name)
                     prd_ichs.append(ich)

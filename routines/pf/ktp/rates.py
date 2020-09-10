@@ -196,23 +196,20 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
                 spc_strs.append(spc_str)
                 full_dat_dct.update(dat_dct)
 
-            # Set the labels to put into the file
-            spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
-                         for name in rgt_names]
-            chn_label = label_dct[make_rxn_str(rgt_names)]
-        else:
-            # Set the labels to put into the file
-            spc_label = 'FAKE1+FAKE2+FAKE3'
-            chn_label = label_dct[spc_label]
+        # Set the labels to put into the file
+        spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
+                     for name in rgt_names]
+        chn_label = label_dct[make_rxn_str(rgt_names)]
 
         # Write the strings
         if chn_label not in written_labels:
             written_labels.append(chn_label)
             if len(rgt_names) == 3:
-                # bi_str += '\n! {} + {} + {}\n'.format(
-                #     rgt_names[0], rgt_names[1], rgt_names[2])
-                bi_str += '\n! DUMMY FOR UNSTABLE SPECIES\n'
-                bi_str += mess_io.writer.dummy(chn_label, zero_ene=None)
+                bi_str += '\n! {} + {} + {}\n'.format(
+                    rgt_names[0], rgt_names[1], rgt_names[2])
+                bi_str += mess_io.writer.dummy(chn_label, zero_ene=rgt_ene)
+                # bi_str += '\n! DUMMY FOR UNSTABLE SPECIES\n'
+                # bi_str += mess_io.writer.dummy(chn_label, zero_ene=None)
             elif len(rgt_names) == 2:
                 # bi_str += mess_io.writer.species_separation_str()
                 bi_str += '\n! {} + {}\n'.format(rgt_names[0], rgt_names[1])
@@ -425,21 +422,20 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     # Gather data or set fake information for dummy reactants/products
     chnl_infs['reacs'], chnl_infs['prods'] = [], []
     for side in ('reacs', 'prods'):
-        rgts = rxn[side]
-        if len(rgts) < 3:
-            for rgt in rgts:
-                chnl_infs[side].append(
-                    build.read_spc_data(
-                        spc_dct[rgt], rgt,
-                        chn_pf_models, chn_pf_levels,
-                        run_prefix, save_prefix,
-                        ref_pf_models=ref_pf_models,
-                        ref_pf_levels=ref_pf_levels)
-                )
-        else:
+        for rgt in rxn[side]:
+            print('build inf')
+            chnl_infs[side].append(
+                build.read_spc_data(
+                    spc_dct[rgt], rgt,
+                    chn_pf_models, chn_pf_levels,
+                    run_prefix, save_prefix,
+                    ref_pf_models=ref_pf_models,
+                    ref_pf_levels=ref_pf_levels)
+            )
+        if side in rxn['dummy']:
             symm_barrier = True
-            for _ in range(3):
-                chnl_infs[side].append({'ene_chnlvl': 0.00})
+            # for _ in range(len(rxn[side])):
+            #     chnl_infs[side].append({'ene_chnlvl': 0.00})
 
     # Set up data for TS
     chnl_infs['ts'] = []
