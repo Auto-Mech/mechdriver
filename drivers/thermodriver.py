@@ -28,19 +28,20 @@ def run(spc_dct,
 
     # Build a list of the species to calculate thermochem for loops below
     spc_queue = parser.species.build_queue(rxn_lst)
-    print(spc_queue)
-
-
+    spc_queue = parser.species.split_queue(spc_queue)
     # Build the paths [(messpf, nasa)], models and levels for each spc
     starting_path = os.getcwd()
     ckin_path = os.path.join(starting_path, 'ckin')
     thm_paths = [pfrunner.thermo_paths(spc_dct[name], run_prefix)
                  for name, _ in spc_queue]
+    models = []
+    for _, (_, mods, _, _) in spc_queue:
+        models.extend(mods)
     pf_levels = [pf_level_info(spc_model_dct[spc_model]['es'], thy_dct)
-                 for _, (_, spc_model) in spc_queue]
+                 for spc_model in models]
     pf_models = [pf_model_info(spc_model_dct[spc_model]['pf'])
-                 for _, (_, spc_model) in spc_queue]
-
+                 for spc_model in models]
+    print('pf levels, models', pf_levels, pf_models)
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
 
@@ -48,27 +49,28 @@ def run(spc_dct,
                '--------------------------------------'))
         print('\nPreparing MESSPF input files for all species')
 
-        for idx, (spc_name, (pes_model, spc_model)) in enumerate(spc_queue):
+        for idx, (spc_name, (pes_model, spc_models, coeffs, operators)) in enumerate(spc_queue):
+           
+            for spc_model in spc_models:
+                global_pf_str = thmroutines.qt.make_pf_header(
+                    pes_model_dct[pes_model]['therm_temps'])
+                spc_str, dat_str_dct = thmroutines.qt.make_spc_mess_str(
+                    spc_dct[spc_name], spc_name,
+                    pf_models[idx], pf_levels[idx],
+                    run_prefix, save_prefix)
+                messpf_inp_str = thmroutines.qt.make_messpf_str(
+                    global_pf_str, spc_str)
+                print('\n\n')
+                print('MESSPF Input String:\n')
+                print(messpf_inp_str)
+                print('\n\n')
+                pfrunner.mess.write_mess_file(
+                    messpf_inp_str, dat_str_dct, thm_paths[idx][0],
+                    filename='pf.inp')
 
-            global_pf_str = thmroutines.qt.make_pf_header(
-                pes_model_dct[pes_model]['therm_temps'])
-            spc_str, dat_str_dct = thmroutines.qt.make_spc_mess_str(
-                spc_dct[spc_name], spc_name,
-                pf_models[idx], pf_levels[idx],
-                run_prefix, save_prefix)
-            messpf_inp_str = thmroutines.qt.make_messpf_str(
-                global_pf_str, spc_str)
-            print('\n\n')
-            print('MESSPF Input String:\n')
-            print(messpf_inp_str)
-            print('\n\n')
-            pfrunner.mess.write_mess_file(
-                messpf_inp_str, dat_str_dct, thm_paths[idx][0],
-                filename='pf.inp')
-
-            # Write MESS file into job directory
-            pfrunner.write_cwd_pf_file(
-                messpf_inp_str, spc_dct[spc_name]['inchi'])
+                # Write MESS file into job directory
+                pfrunner.write_cwd_pf_file(
+                    messpf_inp_str, spc_dct[spc_name]['inchi'])
 
     # Run the MESSPF files that have been written
     if run_messpf:

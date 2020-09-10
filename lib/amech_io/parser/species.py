@@ -25,7 +25,6 @@ def build_queue(rxn_lst):
         :return spc_queue: all the species and corresponding models in rxn
         :rtype: list[(species, model),...]
     """
-
     if 'all' in rxn_lst:
         # First check if rxn_lst is a bunch of species
         spc_queue = rxn_lst['all']['species']
@@ -38,6 +37,38 @@ def build_queue(rxn_lst):
             spc_queue.extend(((prod, model) for prod in rxn['prods']))
 
     return spc_queue
+
+
+def split_queue(spc_queue):
+    new_queue = []
+    op_dct = {'*': 'multiply', '+': 'add', '/': 'divide', '-': 'substract'}
+    for (spc_name, (pes_model, spc_model)) in spc_queue:
+        coeffs = []
+        operators = []
+        models = []
+        coeff = ''
+        model = ''
+        for char in spc_model:
+            if char == '.' or char.isdigit():
+                coeff += char
+            elif char.isalpha():
+                model += char
+            elif char in op_dct:
+                operators.append(op_dct[char])
+                if coeff:
+                    coeffs.append(float(coeff))
+                else:
+                    coeffs.append(1)
+                models.append(model)
+                coeff = ''
+                model = ''
+        if coeff:
+            coeffs.append(float(coeff))
+        else:
+            coeffs.append(1)
+        models.append(model)
+        new_queue.append((spc_name, (pes_model, models, coeffs, operators)))       
+    return new_queue
 
 
 def build_spc_dct(job_path, spc_type):
