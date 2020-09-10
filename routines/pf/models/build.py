@@ -216,19 +216,25 @@ def mol_data(spc_dct_i,
         freqs, imag, zpe, _, scale_factor = vib.tors_projected_freqs_zpe(
             pf_filesystems, hr_str, prot_str, saddle=saddle)
         # Make final hindered rotor strings
-        # if typ.scale_1d(chn_pf_models, scale_mod):
-        #     tors_strs = tors.make_hr_strings(
-        #         rotors, run_path, chn_pf_models['tors'],
-        #         scale_factor=scale_factor)
+        if typ.scale_1d(chn_pf_models):
+            tors_strs = tors.make_hr_strings(
+                rotors, run_path, chn_pf_models['tors'],
+                scale_factor=scale_factor)
+            print('hr_str1\n', allr_str)
+            [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
+            print('hr_str2\n', allr_str)
+            freqs, imag, zpe, _, _ = vib.tors_projected_freqs_zpe(
+                pf_filesystems, hr_str, prot_str, saddle=saddle)
         if 'mdhrv' in chn_pf_models['tors']:
             freqs = ()
     else:
         freqs, imag, zpe = vib.read_harmonic_freqs(
             pf_filesystems, saddle=saddle)
 
-    # Scale the frequencies    
-    # freqs = vib.scale_frequencies(freqs, chn_pf_levels, method=method)
- 
+    # Scale the frequencies
+    if freqs:
+        freqs = vib.scale_frequencies(freqs, chn_pf_levels, scale_method='2c')
+
     if typ.anharm_vib(chn_pf_models):
         xmat = vib.read_anharmon_matrix(pf_filesystems)
 
@@ -246,7 +252,6 @@ def mol_data(spc_dct_i,
     chn_ene = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
         read_ene=True, read_zpe=False)
-    print('chn_ene', chn_ene)
     ene_chnlvl = chn_ene + zpe
 
     ene_reflvl = None

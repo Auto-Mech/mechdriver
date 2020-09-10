@@ -168,7 +168,12 @@ SPC_SUPPORTED_KEYWORDS = [
     'geom',
     'kickoff',
     'ts_search',
-    'active'
+    'active',
+    'zma_idx',
+    # etrans
+    'smin',
+    'smax',
+    'etrans_nsamp',
 ]
 SPC_DEFAULT_DCT = {
     'kickoff': [0.1, False],
@@ -198,4 +203,19 @@ THY_SUPPORTED_KEYWORDS = [
     'gconv'
 ]
 
-# Model Keywords
+# ETrans
+ETRANS_TSK_SUPPORTED_DCT = {
+    'spc': ['ljparams']
+}
+ETRANS_TSK_KEYWORDS_SUPPORTED_DCT = {
+    'ljparams': ['runlvl', 'inplvl', 'bath', 'pot',
+                 'retryfail', 'overwrite']
+}
+ETRANS_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
+    'retryfail': [True, False],
+    'overwrite': [True, False],
+}
+ETRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT = {
+    'retryfail': True,
+    'overwrite': False
+}

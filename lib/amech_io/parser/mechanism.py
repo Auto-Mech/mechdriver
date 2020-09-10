@@ -167,6 +167,8 @@ def format_run_rxn_lst(rct_names_lst, prd_names_lst,
              'reacs': list(rct_names_lst[idx]),
              'prods': list(prd_names_lst[idx]),
              'model': rxn_model_lst[idx],
-             'chn_idx': rxn_chn_idxs[idx]})
+             'chn_idx': rxn_chn_idxs[idx],
+             'dummy': []}
+        )
 
     return run_lst

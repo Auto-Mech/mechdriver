@@ -5,6 +5,7 @@
 import sys
 import automol
 import autofile
+from lib.phydat import phycon
 
 
 def get_zma_geo(filesys, locs):
@@ -38,11 +39,11 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info,
 
     if cnf_locs:
 
-        cnf_locs, cnf_enes = _sorted_cnf_lsts(cnf_locs, mod_thy_info)
-        print('min conf locs test:\n', cnf_locs, '\n', cnf_enes)
+        cnf_locs, cnf_enes = _sorted_cnf_lsts(
+            cnf_locs, cnf_save_fs, mod_thy_info)
 
         if cnf_range == 'min':
-            min_cnf_locs = [cnf_locs[0]]
+            min_cnf_locs = cnf_locs[0]
         elif 'e' in cnf_range and '_' in cnf_range:
             min_cnf_locs = _erange_locs(cnf_locs, cnf_enes, cnf_range)
         elif 'n' in cnf_range and '_' in cnf_range:
@@ -51,7 +52,7 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info,
     return min_cnf_locs
 
 
-def _sorted_cnf_lsts(cnf_locs_lst, mod_thy_info):
+def _sorted_cnf_lsts(cnf_locs, cnf_save_fs, mod_thy_info):
     """ Get a list of conformer locs and energies, sorted by energies
     """
 
@@ -74,7 +75,7 @@ def _erange_locs(cnf_locs, cnf_enes, ethresh):
     """ Get a range of e values
     """
 
-    thresh[1] = ethresh.split('_') 
+    thresh = ethresh.split('_')[1]
 
     min_cnf_locs = []
     min_ene = cnf_enes[0]
@@ -90,8 +91,8 @@ def _nrange_locs(cnf_locs, nthresh):
     """ Get a range of n values
     """
 
-    thresh[1] = nthresh.split('_') 
-    
+    thresh = nthresh.split('_')[1]
+
     min_cnf_locs = []
     for idx, locs in enumerate(cnf_locs):
         if idx+1 <= thresh:

@@ -10,8 +10,7 @@ import automol
 import autofile
 import elstruct
 from lib import filesys
-from lib.phydat import bnd, phycon
-from automol.zmatrix._bimol_ts import addition
+from automol.zmatrix._unimol_ts import beta_scission
 
 
 # Write the instability files
@@ -102,9 +101,9 @@ def write_instab(conn_zma, disconn_zma,
 
 # Write the instability files
 def write_instab2(conn_zma, disconn_zmas,
-                 thy_save_fs, thy_locs,
-                 zma_locs=(0,),
-                 save_cnf=False):
+                  thy_save_fs, thy_locs,
+                  zma_locs=(0,),
+                  save_cnf=False):
     """ write the instability files
     """
 
@@ -124,9 +123,9 @@ def write_instab2(conn_zma, disconn_zmas,
     instab_path = instab_fs[-1].path()
 
     # Grab the zma and instability transformation
-    conn_zma, frm_bnd_keys, rcts_gra = _instab_info2(conn_zma, disconn_zmas)
-    tra = (frozenset({frm_bnd_keys}),
-           frozenset({frozenset({})}))
+    conn_zma, brk_bnd_keys, rcts_gra = _instab_info(conn_zma, disconn_zmas)
+    tra = (frozenset({frozenset({})}),
+           frozenset({brk_bnd_keys}))
 
     # Save zma information seperately, if required
     zma_save_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
@@ -151,57 +150,29 @@ def write_instab2(conn_zma, disconn_zmas,
         zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
 
 
-def _instab_info(conn_zma, disconn_zma):
+def _instab_info(conn_zma, disconn_zmas):
     """ Obtain instability info
     """
 
     # Get the zma for the connected graph
-    prd_zmas = [conn_zma]
+    rct_zmas = [conn_zma]
 
     # Get the zmas used for the identification
-    rct_zmas = _disconnect_zmas(disconn_zma)
-
-    # Get the keys
-    ret = addition(rct_zmas, prd_zmas, ())
-    zma, _, frm_bnd_keys, _, rcts_gra = ret
-
-    # Set the bond in the zma to a physical length
-    symbols = automol.zmatrix.symbols(zma)
-    frm_symbs = [symbols[key] for key in frm_bnd_keys]
-    frm_name = automol.zmatrix.bond_key_from_idxs(zma, frm_bnd_keys)
-    bnd_len = bnd.read_len(tuple(frm_symbs)) * phycon.ANG2BOHR
-    zma = automol.zmatrix.set_values(zma, {frm_name: bnd_len})
-
-    return zma, frm_bnd_keys, rcts_gra
-
-
-def _instab_info2(conn_zma, disconn_zmas):
-    """ Obtain instability info
-    """
-
-    # Get the zma for the connected graph
-    prd_zmas = [conn_zma]
+    prd_zmas = disconn_zmas
 
     print('prd zma')
     for zma in prd_zmas:
         print(automol.zmatrix.string(zma))
     print('\n\nrct zma')
-    for zma in disconn_zmas:
+    for zma in rct_zmas:
         print(automol.zmatrix.string(zma))
         print()
 
     # Get the keys
-    ret = addition(disconn_zmas, prd_zmas, ())
-    zma, _, frm_bnd_keys, _, rcts_gra = ret
+    ret = beta_scission(rct_zmas, prd_zmas)
+    zma, _, brk_bnd_keys, _, rcts_gra = ret
 
-    # Set the bond in the zma to a physical length
-    symbols = automol.zmatrix.symbols(zma)
-    frm_symbs = [symbols[key] for key in frm_bnd_keys]
-    frm_name = automol.zmatrix.bond_key_from_idxs(zma, frm_bnd_keys)
-    bnd_len = bnd.read_len(tuple(frm_symbs)) * phycon.ANG2BOHR
-    zma = automol.zmatrix.set_values(zma, {frm_name: bnd_len})
-
-    return zma, frm_bnd_keys, rcts_gra
+    return zma, brk_bnd_keys, rcts_gra
 
 
 def _disconnected_zmas(disconn_zma):
@@ -285,6 +256,8 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
         geo_model = spc_model_dct[spc_model]['es']['geo']
         ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
 
+        new_rxn['dummy'] = []
+
         # Asses the reactants for unstable species
         new_rxn['reacs'] = []
         for rct in rxn['reacs']:
@@ -299,6 +272,7 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
                                         ini_thy_info, save_prefix)
                 print('- New species: {}'.format(' '.join(new_rct)))
                 new_rxn['reacs'].extend(new_rct)
+                new_rxn['dummy'].append('reacs')
 
         # Assess the products for unstable species
         new_rxn['prods'] = []
@@ -310,11 +284,12 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
                 new_rxn['prods'].append(new_prd)
             else:
                 print('- Splitting species...')
-                new_rxn['prods'].extend(['FAKE1', 'FAKE2', 'FAKE3'])
-                # new_prd = split_species(spc_dct, prd,
-                #                         ini_thy_info, save_prefix)
-                # print('- New species: {}'.format(' '.join(new_prd)))
-                # new_rxn['prods'].extend(new_prd)
+                # new_rxn['prods'].extend(['FAKE1', 'FAKE2', 'FAKE3'])
+                new_prd = split_species(spc_dct, prd,
+                                        ini_thy_info, save_prefix)
+                print('- New species: {}'.format(' '.join(new_prd)))
+                new_rxn['prods'].extend(new_prd)
+                new_rxn['dummy'].append('prods')
 
         if len(rxn['reacs']) > len(new_rxn['reacs']):
             print('WARNING: LIKELY MISSING DATA FOR REACTANTS FOR SPLIT')
@@ -345,7 +320,7 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     # Get filesys
     spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
-    thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
+    _, thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_thy_info)
 
     instab_fs = autofile.fs.instab(thy_save_path)
@@ -362,8 +337,9 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     # rcts_gra = save_fs[-1].file.reactant_graph.write(locs)
 
     # Obtain the inchi strings for the species it breaks in to
-    constituent_ichs = automol.zmatrix.ts.zmatrix_reactant_inchis(
+    constituent_ichs = automol.zmatrix.ts.zmatrix_product_inchis(
         instab_zma, frm_bnd_key, brk_bnd_key, remove_stereo=False)
+    print('constituent ichs', constituent_ichs)
 
     # Obtain the product names from the species dct
     prd_names = []
@@ -371,7 +347,7 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     for ich in constituent_ichs:
         print('constituent ichs:', ich, automol.inchi.smiles(ich))
         for name, spc_dct_i in spc_dct.items():
-            if ich == spc_dct_i.get('inchi'): 
+            if ich == spc_dct_i.get('inchi'):
                 if ich not in prd_ichs:
                     prd_names.append(name)
                     prd_ichs.append(ich)

@@ -319,14 +319,14 @@ def radrad_addition_grid():
     """ Build forward 1D grid for a beta scission reaction
     """
 
-    npoints1 = 4
-    npoints2 = 4
-    rstart = 2.4 * phycon.ANG2BOHR
+    npoints1 = 5
+    npoints2 = 6
+    rstart = 2.6 * phycon.ANG2BOHR
     rend1 = 1.8 * phycon.ANG2BOHR
-    rend2 = 3.0 * phycon.ANG2BOHR
+    rend2 = 3.85 * phycon.ANG2BOHR
     grid1 = numpy.linspace(rstart, rend1, npoints1)
     grid2 = numpy.linspace(rstart, rend2, npoints2)
-    grid2 = numpy.delete(grid2, 0)
+    # grid2 = numpy.delete(grid2, 0)
     grid = [grid1, grid2]
     update_guess = True
 

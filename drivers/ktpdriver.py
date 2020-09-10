@@ -72,6 +72,8 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     rxn_lst = instab.break_all_unstable(
         rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
     # print('\nsec rxn lst\n', rxn_lst)
+    import sys
+    sys.exit()
 
     # Build the MESS label idx dictionary for the PES
     label_dct = ktproutines.label.make_pes_label_dct(
