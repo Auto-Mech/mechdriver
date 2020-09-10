@@ -273,6 +273,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         # cnf_range = es_keyword_dct['cnf_range']
 
         # Build conformer filesys
+        cnf_range = es_keyword_dct['cnf_range']
         cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
             ini_thy_run_path, mod_ini_thy_info, cnf=None)
         cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(

@@ -97,7 +97,7 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'find_vrctst': ['runlvl', 'inplvl', 'rxndirn',
                     'var_splvl1', 'var_splvl2', 'var_scnlvl',
                     'nobarrier', 'retryfail', 'overwrite'],
-    'conf_samp': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
+    'conf_samp': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_energy': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_grad': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_hess': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],

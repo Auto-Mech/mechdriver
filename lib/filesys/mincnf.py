@@ -49,6 +49,8 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info,
         elif 'n' in cnf_range and '_' in cnf_range:
             min_cnf_locs = _nrange_locs(cnf_locs, cnf_range)
 
+        # print('min_cnf_locs test:', min_cnf_locs)
+
     return min_cnf_locs
 
 
