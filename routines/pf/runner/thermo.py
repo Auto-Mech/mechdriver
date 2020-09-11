@@ -81,7 +81,7 @@ def run_pac(formula, nasa_path):
             sys.exit()
 
 
-def thermo_paths(spc_dct_i, run_prefix):
+def thermo_paths(spc_dct_i, run_prefix, idx):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """
@@ -93,7 +93,7 @@ def thermo_paths(spc_dct_i, run_prefix):
     print(spc_info[0])
 
     # PF
-    bld_locs = ['PF', 0]
+    bld_locs = ['PF', idx]
     bld_save_fs = autofile.fs.build(run_prefix)
     bld_save_fs[-1].create(bld_locs)
     bld_path = bld_save_fs[-1].path(bld_locs)
@@ -101,7 +101,7 @@ def thermo_paths(spc_dct_i, run_prefix):
     spc_pf_path = os.path.join(bld_path, spc_formula, ich_key)
 
     # NASA polynomials
-    bld_locs = ['NASA', 0]
+    bld_locs = ['NASA', idx]
     bld_save_fs = autofile.fs.build(run_prefix)
     bld_save_fs[-1].create(bld_locs)
     bld_path = bld_save_fs[-1].path(bld_locs)

@@ -285,6 +285,7 @@ def pf_level_info(es_model, thy_dct):
     sym_lvl = es_model['sym'] if 'sym' in es_model else None
 
     # Torsions and rxn paths which needs a reference for itself
+    print('torsion stuff in lib', es_model['tors'])
     tors_lvl_sp = es_model['tors'][0] if 'tors' in es_model else None
     tors_lvl_scn = es_model['tors'][1] if 'tors' in es_model else None
     rpath_lvl_sp = es_model['rpath'][0] if 'rpath' in es_model else None
