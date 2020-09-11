@@ -84,7 +84,7 @@ def write_cwd_pf_file(mess_str, inchi, fname='pf.inp'):
         file_obj.write(mess_str)
 
     print('Saving MESS input copy at {}'.format(fin_path))
-
+    return fin_path
 
 def write_cwd_rate_file(mess_str, pes_formula, sub_pes_idx, fname='mess.inp'):
     """ Write a copy of the MESS file in the current working directory
@@ -134,23 +134,73 @@ def read_mess_file(mess_path):
     return mess_inp_str, dat_str_lst
 
 
+def write_mess_output(formulastr, final_pf, mess_path, filename='pf.dat'):
+    """ Write a mess output file for a pf file
+    """
+    mess_out_str = 'Natural log of the partition function and its derivatives:\n'
+    mess_out_str += ' T, K            {}'.format(formulastr)
+    # Write MESS output string
+    temps, logq, dq_dt, d2q_dt2 = final_pf
+    for idx in range(len(temps)):
+        mess_out_str += '\n'
+        mess_out_str += str(temps[idx]) + '\t'
+        mess_out_str += str(logq[idx]) + '\t'
+        mess_out_str += str(dq_dt[idx]) + '\t'
+        mess_out_str += str(d2q_dt2[idx]) + '\t'
+    # Write the MESS file
+    if not os.path.exists(mess_path):
+        os.makedirs(mess_path)
+    print('\n\nWriting MESS Output file...')
+    print(' - Path: {}'.format(mess_path))
+    with open(os.path.join(mess_path, filename), 'w') as mess_file:
+        mess_file.write(mess_out_str)
+
+
 def read_messpf_temps(pf_path):
     """ Obtain the temperatures from the MESSPF file
     """
 
-    # Read MESSPF file
-    messpf_file = os.path.join(pf_path, 'pf.dat')
-    with open(messpf_file, 'r') as pffile:
-        output_string = pffile.read()
-
     # Obtain the temperatures, remove the 298.2 value
-    temps, _, _, _ = mess_io.reader.pfs.partition_fxn(output_string)
+    temps, _, _, _ = read_messpf(pf_path)
     temps = [temp for temp in temps if not numpy.isclose(temp, 298.2)]
 
     return temps
 
 
-# Run MESS jobs
+def read_messpf(pf_path):
+    """ Obtain the log partition functions from the MESSPF file
+    """
+    # Read MESSPF file
+    messpf_file = os.path.join(pf_path, 'pf.dat')
+    with open(messpf_file, 'r') as pffile:
+        output_string = pffile.read()
+    temps, logq, dq_dt, dq2_dt2 = mess_io.reader.pfs.partition_fxn(
+        output_string)
+    return temps, logq, dq_dt, dq2_dt2
+
+
+def multiply_pfs(pfa, pfb, coeff):
+    """ Obtain the pf information of the multiplication of pfa and pfb
+    """
+    tempsa, logqa, dq_dta, d2q_dt2a = pfa
+    tempsb, logqb, dq_dtb, d2q_dt2b = pfb
+    logq = [a+b+numpy.log(coeff) for a, b in zip(logqa, logqb)]
+    dq_dt = [a+b+numpy.log(coeff) for a, b in zip(dq_dta, dq_dtb)]
+    d2q_dt2 = [a+b+numpy.log(coeff) for a, b in zip(d2q_dt2a, d2q_dt2b)]
+    return tempsa, logq, dq_dt, d2q_dt2
+
+
+def divide_pfs(pfa, pfb, coeff):
+    """ Obtain the pf information of the multiplication of pfa and pfb
+    """
+    tempsa, logqa, dq_dta, d2q_dt2a = pfa
+    tempsb, logqb, dq_dtb, d2q_dt2b = pfb
+    logq = [a-b-numpy.log(coeff) for a, b in zip(logqa, logqb)]
+    dq_dt = [a-b-numpy.log(coeff) for a, b in zip(dq_dta, dq_dtb)]
+    d2q_dt2 = [a-b-numpy.log(coeff) for a, b in zip(d2q_dt2a, d2q_dt2b)]
+    return tempsa, logq, dq_dt, d2q_dt2
+
+
 def run_rates(mess_path, script_str=DEFAULT_SCRIPT_DCT['messrate']):
     """ Run the mess file that was wriiten
     """
@@ -160,7 +210,8 @@ def run_rates(mess_path, script_str=DEFAULT_SCRIPT_DCT['messrate']):
 def run_pf(mess_path, script_str=DEFAULT_SCRIPT_DCT['messpf']):
     """ Run the mess file that was wriiten
     """
-    if os.path.exists(os.path.join(mess_path, 'pf.inp')):
+    if os.path.exists(mess_path):
+    #if os.path.exists(os.path.join(mess_path, 'pf.inp')):
         print('Running MESS input file...')
         print(' - Path: {}'.format(mess_path))
         run_script(script_str, mess_path)
