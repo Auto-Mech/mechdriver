@@ -53,6 +53,8 @@ def tors_name_prep(spc_dct_i, cnf_fs, min_cnf_locs, tors_model):
             print(' - Obtaining spc tors names from the geometry...')
         elif tloc == 'dct':
             print(' - Obtaining ts tors names from the geometry...')
+    else:
+        print('Warning: Your file system did not have any torsions defined')
 
     return run_tors_names
 
@@ -249,6 +251,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
         else:
             pot[point] = -10.0
 
+        print('path test in read_hr_pot:', scn_fs[-1].path(locs))
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):
                 geoms[point] = scn_fs[-1].file.geometry.read(locs)

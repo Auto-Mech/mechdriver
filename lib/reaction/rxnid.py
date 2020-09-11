@@ -26,10 +26,10 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
             rct_zmas, prd_zmas)
 
     # Determine the reaction types
-    for rct_zma in rct_zmas:
-        print('zma test in ts_class:', automol.zmatrix.string(rct_zma))
-    for prd_zma in prd_zmas:
-        print('zma test in ts_class:', automol.zmatrix.string(prd_zma))
+    #for rct_zma in rct_zmas:
+        # print('zma test in ts_class:', automol.zmatrix.string(rct_zma))
+    #for prd_zma in prd_zmas:
+        # print('zma test in ts_class:', automol.zmatrix.string(prd_zma))
     ret = determine_reaction_type(
         rct_zmas, prd_zmas,
         ts_mul, high_mul, low_mul,
@@ -40,7 +40,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
      ts_zma, bkp_ts_zma,
      tors_names, bkp_tors_names,
      dist_name, bkp_dist_name, brk_name,
-     frm_bnd_keys, brk_bnd_key, const_bnd_key, rcts_gra] = ret
+     frm_bnd_keys, brk_bnd_key, const_bnd_key, rcts_gra, rxn_dir] = ret
 
     # Determine grid for preliminary search for all different reaction types
     dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
@@ -63,7 +63,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
         ts_class_data = [
             ts_zma, dist_name, brk_name,
             grid, frm_bnd_keys, brk_bnd_key, const_bnd_key,
-            tors_names, update_guess, var_grid, rcts_gra]
+            tors_names, update_guess, var_grid, rcts_gra, rxn_dir]
     else:
         ts_class_data = []
     if bkp_typ:
@@ -122,6 +122,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
     brk_bnd_key = frozenset({})
     const_bnd_key = frozenset({})
     rcts_gra = ()
+    rxn_dir = 'forward'
 
     # Cycle through each possible reaction type checking if it is in the class
     # Check both orders of reactants and products
@@ -167,6 +168,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             if orig_dist and hmcls:
                 rct_zmas = filesys.mincnf.min_dist_conformer_zma_geo(
                     orig_dist, cnf_save_fs_lst[0])
+                # print('rct_zmas in hydrogen_migration:', rct_zmas)
                 ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
                 if ret:
                     typ = 'hydrogen migration'
@@ -224,6 +226,8 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 
         # Break if reaction found
         if typ is not None:
+            rxn_dir = 'reverse'
+            print("Reaction has been reversed by reaction classifier.")
             break
 
     # Nothing was found
@@ -252,7 +256,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
         ts_zma, bkp_ts_zma,
         tors_names, bkp_tors_names,
         dist_name, bkp_dist_name, brk_name,
-        frm_bnd_keys, brk_bnd_key, const_bnd_key, rcts_gra]
+        frm_bnd_keys, brk_bnd_key, const_bnd_key, rcts_gra, rxn_dir]
 
     return ret
 

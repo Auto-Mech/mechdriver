@@ -546,7 +546,8 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     if 'addition' in rxn_class:
         max_disp = 0.8
     if 'abstraction' in rxn_class:
-        max_disp = 1.4
+        # this was 1.4 - SJK reduced it to make it work for some OH abstractions
+        max_disp = 1.0
 
     # Check forming bond angle similar to ini config
     if 'elimination' not in rxn_class:
@@ -558,17 +559,15 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
                           ref_angle, cnf_angle))
                 viable = False
 
-                    # Check if radical atom is closer to some atom other than the bonding atom
     symbols = automol.geom.symbols(cnf_geo)
     for ref_dist, cnf_dist, bnd_key in zip(ref_dist_lst, cnf_dist_lst, bnd_key_lst):
         if 'add' in rxn_class or 'abst' in rxn_class:
-            ref_dist = ref_dist
-            cnf_dist = cnf_dist
             bnd_key1, bnd_key2 = min(list(bnd_key)), max(list(bnd_key))
             symb1 = symbols[bnd_key1]
             symb2 = symbols[bnd_key2]
 
             if bnd_key in frm_bnd_keys:
+                # Check if radical atom is closer to some atom other than the bonding atom
                 cls = geomprep.is_atom_closest_to_bond_atom(
                     zma, bnd_key2, cnf_dist)
                 if not cls:
@@ -578,6 +577,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
                               ref_dist, cnf_dist))
                     print(' - Radical atom now has a new nearest neighbor')
                     viable = False
+                # check forming bond distance
                 if abs(cnf_dist - ref_dist) > max_disp:
                     print(" - Transition State conformer has",
                           "diverged from original structure of",
@@ -585,9 +585,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
                               ref_dist, cnf_dist))
                     viable = False
 
-        # Check distances
-            #symbols = automol.zmatrix.symbols(zma)
-            #symb1, symb2 = symbols[ts_bnd1], symbols[ts_bnd2]
+            # Check distance relative to equi. bond
             if (symb1, symb2) in bnd.LEN_DCT:
                 equi_bnd = bnd.LEN_DCT[(symb1, symb2)]
             elif (symb2, symb1) in bnd.LEN_DCT:
@@ -595,7 +593,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
             else:
                 equi_bnd = 0.0
             displace_from_equi = cnf_dist - equi_bnd
-            dchk1 = abs(cnf_dist - ref_dist) > 0.2
+            dchk1 = abs(cnf_dist - ref_dist) > 0.1
             dchk2 = displace_from_equi < 0.2
             if dchk1 and dchk2:
                 print(" - Transition State conformer has",
@@ -605,6 +603,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
                           cnf_dist, equi_bnd))
                 viable = False
         else:
+            # check forming/breaking bond distance
             if abs(cnf_dist - ref_dist) > 0.4:
                 print(" - Transition State conformer has",
                       "diverged from original structure of",
