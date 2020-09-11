@@ -40,17 +40,18 @@ def tau_pf(pf_models):
     return bool(tors_model == 'tau')
 
 
-# def scale_tors_pot(pf_models, use_scale):
-#     """ determine if we need to scale the potential
-#     """
-#     could_scale = bool('1dhr' in pf_models['tors'])
-#     return could_scale and use_scale
-
 def scale_1d(pf_models):
     """ determine if we need to scale the potential
     """
     print('tors model in scale set', pf_models['tors'])
     return bool(pf_models['tors'] == '1dhrfa')
+
+
+def scale_tors_pot(pf_models, to_scale): 
+    """ determine if we need to scale the potential
+    """
+    onedhr_model = bool('1dhr' in pf_models['tors'])
+    return bool(onedhr_model and to_scale)
 
 
 def vib_tau(pf_models):
