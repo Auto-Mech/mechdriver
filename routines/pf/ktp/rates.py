@@ -176,9 +176,6 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
     bi_str, well_str, ts_str = '', '', ''
     full_dat_dct = {}
 
-    # Set variable to store if a dummy used
-    dummy = False
-
     # Write the MESS string for the channel reactant(s) and product(s)
     for side in ('reacs', 'prods'):
 

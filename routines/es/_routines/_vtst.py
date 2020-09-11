@@ -83,9 +83,9 @@ def radrad_scan(ts_zma, ts_info, hs_info,
     scn_locs = filesys.build.scn_locs_from_fs(
         scn_save_fs, [coord_name], constraint_dct=None)
 
-    _vtst_hess_ene(ts_info, mod_thy_info, mod_var_sp1_thy_info,
+    _vtst_hess_ene(ts_info, mod_var_scn_thy_info, mod_var_sp1_thy_info,
                    scn_save_fs, scn_run_fs, scn_locs, inf_locs,
-                   overwrite)
+                   overwrite, **cas_kwargs)
 
 
 def molrad_scan(ts_zma, ts_info,
@@ -143,23 +143,28 @@ def molrad_scan(ts_zma, ts_info,
                ts_save_fs, zma_locs=zma_locs)
 
     print('\nRunning Hessians and energies...')
+    cas_kwargs = {}
     scn_locs = filesys.build.scn_locs_from_fs(
         scn_save_fs, [coord_name], constraint_dct=None)
 
     _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
                    scn_save_fs, scn_run_fs, scn_locs, inf_locs,
-                   overwrite)
+                   overwrite, **cas_kwargs)
 
 
 def _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
                    scn_save_fs, scn_run_fs, scn_locs, inf_locs,
-                   overwrite):
+                   overwrite, **cas_kwargs):
     """ VTST Hessians and Energies
     """
 
-    print('\n Running Hessians...')
-    script_str, _, kwargs, _ = es_runner.qchem_params(
+    print('\n Running Hessians and Gradients...')
+    hess_script_str, _, hess_kwargs, _ = es_runner.qchem_params(
         *mod_thy_info[0:2])
+    hess_kwargs.update(cas_kwargs)
+    for x, y in hess_kwargs.items():
+        print(x)
+        print(y)
     for locs in scn_locs:
         if locs != inf_locs:
             geo_run_path = scn_run_fs[-1].path(locs)
@@ -168,11 +173,15 @@ def _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
             zma, geo = filesys.inf.cnf_fs_zma_geo(scn_save_fs, locs)
             sp.run_hessian(zma, geo, ts_info, mod_thy_info,
                            scn_save_fs, geo_run_path, geo_save_path, locs,
-                           script_str, overwrite, **kwargs)
+                           hess_script_str, overwrite, **hess_kwargs)
+            sp.run_gradient(zma, geo, ts_info, mod_thy_info,
+                            scn_save_fs, geo_run_path, geo_save_path, locs,
+                            hess_script_str, overwrite, **hess_kwargs)
 
     print('\n Running Energies...')
-    script_str, _, kwargs, _ = es_runner.qchem_params(
+    script_str, _, ene_kwargs, _ = es_runner.qchem_params(
         *mod_vsp1_thy_info[0:2])
+    ene_kwargs.update(cas_kwargs)
     for locs in scn_locs:
         if locs != inf_locs:
             geo_run_path = scn_run_fs[-1].path(locs)
@@ -181,7 +190,7 @@ def _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
             zma, geo = filesys.inf.cnf_fs_zma_geo(scn_save_fs, locs)
             sp.run_energy(zma, geo, ts_info, mod_vsp1_thy_info,
                           scn_save_fs, geo_run_path, geo_save_path, locs,
-                          script_str, overwrite, **kwargs)
+                          script_str, overwrite, **ene_kwargs)
 
 
 def _save_traj(ts_zma, frm_bnd_keys, rcts_gra, ts_save_fs, zma_locs=(0,)):

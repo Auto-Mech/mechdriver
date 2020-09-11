@@ -102,3 +102,13 @@ def write_nasa_file(ckin_nasa_str, ckin_path):
     fpath = os.path.join(ckin_path, 'all.ckin')
     with open(fpath, 'w') as nasa_file:
         nasa_file.write(ckin_nasa_str)
+
+
+def write_transport_file(ckin_trans_str, ckin_path):
+    """ write out the transport file
+    """
+    if not os.path.exists(ckin_path):
+        os.makedirs(ckin_path)
+    fpath = os.path.join(ckin_path, 'trans.ckin')
+    with open(fpath, 'w') as nasa_file:
+        nasa_file.write(ckin_trans_str)

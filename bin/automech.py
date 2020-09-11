@@ -83,6 +83,7 @@ print('\nDrivers and tasks user has requested to be run...')
 RUN_ES = bool('es' in RUN_JOBS_LST)
 WRITE_MESSPF, RUN_MESSPF, RUN_NASA = parser.run.set_thermodriver(RUN_JOBS_LST)
 WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = parser.run.set_ktpdriver(RUN_JOBS_LST)
+RUN_TRANS = bool('trans' in RUN_JOBS_LST)
 if RUN_ES:
     print('  - ESDriver')
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
@@ -101,6 +102,8 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
         print('    - run_messrate')
     if RUN_FITS:
         print('    - run_fits')
+if RUN_TRANS:
+    print('  - TransportDriver')
 
 printer.program_exit('inp')
 
@@ -183,6 +186,39 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
         )
 
     printer.program_exit('thermo')
+
+
+# TransportDriver
+if RUN_TRANS:
+
+    printer.program_header('thermo')
+
+    # Call ThermoDriver for spc in PES
+    if RUN_OBJ_DCT['pes']:
+        for _, rxn_lst in RUN_PES_DCT.items():
+            transportdriver.run(
+                SPC_DCT,
+                PES_MODEL_DCT, SPC_MODEL_DCT,
+                THY_DCT,
+                rxn_lst,
+                RUN_INP_DCT,
+                write_messpf=WRITE_MESSPF,
+                run_messpf=RUN_MESSPF,
+                run_nasa=RUN_NASA,
+            )
+    else:
+        for spc in RUN_SPC_LST_DCT:
+            print('\nCalculating Thermochem for species: {}'.format(spc))
+        transportdriver.run(
+            SPC_DCT,
+            PES_MODEL_DCT, SPC_MODEL_DCT,
+            THY_DCT,
+            RUN_SPC_LST_DCT,
+            RUN_INP_DCT,
+            write_messpf=WRITE_MESSPF,
+            run_messpf=RUN_MESSPF,
+            run_nasa=RUN_NASA,
+        )
 
 # kTPDriver
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
