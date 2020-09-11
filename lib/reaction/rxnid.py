@@ -226,9 +226,10 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 
         # Break if reaction found
         if typ is not None:
+            break
+        else:
             rxn_dir = 'reverse'
             print("Reaction has been reversed by reaction classifier.")
-            break
 
     # Nothing was found
     if typ is None:
