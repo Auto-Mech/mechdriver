@@ -12,6 +12,7 @@ JOB_ERROR_DCT = {
     elstruct.Job.GRADIENT: elstruct.Error.SCF_NOCONV,
     elstruct.Job.HESSIAN: elstruct.Error.SCF_NOCONV,
     elstruct.Job.VPT2: elstruct.Error.SCF_NOCONV,
+    elstruct.Job.MOLPROP: elstruct.Error.SCF_NOCONV,
     elstruct.Job.OPTIMIZATION: elstruct.Error.OPT_NOCONV,
     elstruct.Job.IRCF: elstruct.Error.IRC_NOCONV,
     elstruct.Job.IRCR: elstruct.Error.IRC_NOCONV,
@@ -22,6 +23,7 @@ JOB_SUCCESS_DCT = {
     elstruct.Job.GRADIENT: elstruct.Success.SCF_CONV,
     elstruct.Job.HESSIAN: elstruct.Success.SCF_CONV,
     elstruct.Job.VPT2: elstruct.Success.SCF_CONV,
+    elstruct.Job.MOLPROP: elstruct.Success.SCF_CONV,
     elstruct.Job.OPTIMIZATION: elstruct.Success.OPT_CONV,
     elstruct.Job.IRCF: elstruct.Success.IRC_CONV,
     elstruct.Job.IRCR: elstruct.Success.IRC_CONV,
@@ -36,6 +38,8 @@ JOB_RUNNER_DCT = {
         optseq.options_matrix_run, elstruct.writer.hessian),
     elstruct.Job.VPT2: functools.partial(
         optseq.options_matrix_run, elstruct.writer.vpt2),
+    elstruct.Job.MOLPROP: functools.partial(
+        optseq.options_matrix_run, elstruct.writer.molec_properties),
     elstruct.Job.OPTIMIZATION: optseq.options_matrix_optimization,
     elstruct.Job.IRCF: functools.partial(
         optseq.options_matrix_run, elstruct.writer.irc),

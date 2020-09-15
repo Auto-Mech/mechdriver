@@ -137,6 +137,7 @@ def write_instab2(conn_zma, disconn_zmas,
     zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
 
     if save_cnf:
+
         # Save the geometry information
         cnf_fs = autofile.fs.conformer(save_path)
         cnf_locs = [autofile.schema.generate_new_conformer_id()]

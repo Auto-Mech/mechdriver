@@ -109,6 +109,7 @@ def names_from_filesys(tors_cnf_fs, tors_min_cnf_locs, tors_model):
             tors_names = [[name] for name in tors_names]
         else:
             tors_names = [[name for name in tors_names]]
+        tors_names = tuple(tuple(x) for x in tors_names)
 
     return tors_names
 
@@ -226,7 +227,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
 
     # Build initial lists for storing potential energies and Hessians
     grid_points, grid_vals = set_scan_dims(tors_grids)
-    pot, geoms, grads, hessians, zmas = {}, {}, {}, {}, {}
+    pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
     zma_fs = fs.manager(cnf_save_path, 'ZMATRIX')
@@ -273,7 +274,9 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
             else:
                 zmas[point] = None
 
-    return pot, geoms, grads, hessians, zmas
+        paths[point] = scn_fs[-1].path(locs)
+
+    return pot, geoms, grads, hessians, zmas, paths
 
 
 def calc_hr_frequencies(geoms, grads, hessians, run_path):
@@ -325,29 +328,54 @@ def print_hr_pot(tors_pots):
         print('- Pot:{}'.format(pot_str))
 
 
-def check_hr_pot(tors_pots, tors_zmas):
+def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
     """ Check hr pot to see if a new mimnimum is needed
     """
 
     new_min_zma = None
-    neg_ene_min = -1.0
 
     print('\nAssessing the HR potential...')
     for name in tors_pots:
 
         print('- Rotor {}'.format(name))
-        pots, zmas = tors_pots[name].values(), tors_zmas[name].values()
-        for pot, zma in zip(pots, zmas):
-            if pot < neg_ene_min:
-                geo = automol.zmatrix.geometry(zma)
-                if automol.geom.connected(geo):
-                    new_min_zma = zma
-                    print('New minimmum energy ZMA found for torsion')
-
+        pots = tors_pots[name].values()
+        zmas = tors_zmas[name].values()
+        paths = tors_paths[name].values()
+        for pot, zma, path in zip(pots, zmas, paths):
+            if emin < pot < emax:
+                new_min_zma = zma
+                emin = pot
+                print(' - New minimmum energy ZMA found for torsion')
+                print(' - Ene = {}'.format(pot))
+                print(' - Found at path: {}'.format(path))
+                print(automol.zmatrix.string(zma))
+        
     return new_min_zma
 
 
 # Building constraints
+def set_constraint_names(zma, tors_names, tors_model):
+    """ Determine the names of constraints along a torsion scan
+    """
+
+    const_names = tuple()
+    if tors_names and tors_model in ('1dhrf', '1dhrfa'):
+        if tors_model == '1dhrf':
+            const_names = tuple(
+                itertools.chain(*tors_names))
+            # if saddle:
+            #     const_names = tuple(
+            #         itertools.chain(*amech_sadpt_tors_names))
+            # else:
+            #     const_names = tuple(
+            #         itertools.chain(*amech_spc_tors_names))
+        elif tors_model == '1dhrfa':
+            coords = list(automol.zmatrix.coordinates(zma))
+            const_names = tuple(coord for coord in coords)
+
+    return const_names
+
+
 def build_constraint_dct(zma, const_names, scan_names=()):
     """ Build a dictionary of constraints
     """

@@ -35,6 +35,8 @@ def conformer_sampling(zma, spc_info,
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
+    print('tors_names', tors_names)
+    print('tors_range_dct', tors_range_dct)
     if not saddle:
         gra = automol.inchi.graph(ich)
         ntaudof = len(
@@ -91,7 +93,8 @@ def conformer_sampling(zma, spc_info,
         if not saddle:
             # print(automol.zmatrix.string(zma))
             # print(automol.zmatrix.string(automol.geom.zmatrix(geo)))
-            # assert automol.zmatrix.almost_equal(zma, automol.geom.zmatrix(geo))
+            # assert automol.zmatrix.almost_equal(
+            #  zma, automol.geom.zmatrix(geo))
             thy_save_fs[-1].file.geometry.write(geo, mod_thy_info[1:4])
             # thy_save_fs[-1].file.zmatrix.write(zma, mod_thy_info[1:4])
         else:
@@ -180,7 +183,8 @@ def run_conformers(
             samp_zma = zma
 
         print('\nChecking if ZMA has high repulsion...')
-        # print('zma tests:', automol.zmatrix.string(zma), automol.zmatrix.string(zma))
+        # print('zma tests:',
+        #         automol.zmatrix.string(zma), automol.zmatrix.string(zma))
         bad_geom_count = 0
         while not automol.intmol.low_repulsion_struct(zma, samp_zma) and bad_geom_count < 1000:
             print('  ZMA has high repulsion.')
@@ -393,13 +397,15 @@ def _inchi_are_same(orig_ich, geo):
     if ich == orig_ich:
         same = True
     if not same:
-        print(" - new inchi {} is not the same as old {}".format(ich, orig_ich))
+        print(" - new inchi {} not the same as old {}".format(ich, orig_ich))
 
     return same
 
 
 def _check_old_inchi(orig_ich, seen_geos, saved_locs, cnf_save_fs):
-    ##This assumes you already have bad geos in your save
+    """
+    This assumes you already have bad geos in your save
+    """
     for i, geoi in enumerate(seen_geos):
         if not orig_ich == automol.geom.inchi(geoi):
             print('ERROR: inchi do not match for {}'.format(automol.geom.smiles(geoi)))
@@ -613,6 +619,40 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
                 viable = False
 
     return viable
+
+
+def unique_fs_confs(cnf_save_fs, cnf_save_locs,
+                    ini_cnf_save_fs, ini_cnf_save_locs):
+    """ Assess which structures from the cnf_save_fs currently exist
+        within the ini_cnf_save_fs. Generate a lst of unique structures
+        in the ini_cnf_save_fs.
+    """
+    
+    uni_ini_cnf_save_locs = []
+    for ini_locs in ini_cnf_save_locs:
+
+        # Initialize variable to see if initial struct is found
+        found = False
+
+        # Loop over structs in cnf_save, see if they match the current struct
+        ini_zma, ini_geo = filesys.inf.cnf_fs_zma_geo(
+            ini_cnf_save_fs, ini_locs)
+        ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
+        print('Checking structure from path {}'.format(ini_cnf_save_path))
+        for locs in cnf_save_locs:
+            zma, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
+            if automol.geom.almost_equal_dist_matrix(
+                ini_geo, geo, thresh=3e-1):
+                cnf_save_path = cnf_save_fs[-1].path(cnf_save_locs)
+                print('- Similar structure found at {}'.format(cnf_save_path))
+                found = True
+                break
+
+        # If no match was found, add to unique locs lst
+        if not found:
+            uni_ini_cnf_save_locs.append(ini_locs)
+
+    return uni_ini_cnf_save_locs
 
 
 def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,

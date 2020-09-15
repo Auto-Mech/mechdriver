@@ -162,7 +162,9 @@ def check_es_tsks_supported(es_tsks, thy_dct):
                     print(tsk, option)
                 sys.exit()
             else:
-                if key in ('runlvl', 'inplvl', 'var_splvl1', 'var_splvl2', 'var_scnlvl'):
+                tlvl = ('runlvl', 'inplvl',
+                        'var_splvl1', 'var_splvl2', 'var_scnlvl')
+                if key in tlvl:
                     if val not in thy_dct:
                         print('*ERROR: tsk theory level',
                               '{} not given in theory.dat'.format(val))
@@ -173,9 +175,17 @@ def check_es_tsks_supported(es_tsks, thy_dct):
                         #               'for molpro')
                         #         sys.exit()
                 elif key == 'hessmax':
-                    print('check', key, val)
                     if not isinstance(val, int):
                         print('{} must be set to an integer'.format(key))
+                elif key == 'cnf_range':
+                    if 'n' in val or 'e' in val:
+                        val2 = val[1:]
+                        try:
+                            val2 = int(val2)
+                        except ValueError:
+                            print('cnf_range should n<int> or e<float>')
+                    else:
+                        print('cnf_range should n<int> or e<float>')
                 else:
                     if val not in ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT[key]:
                         print('*ERROR: key {}'.format(key),

@@ -17,7 +17,7 @@ def get_geometry(cnf_save_fs, mod_thy_info, conf='sphere'):
     if conf == 'minimum':
         geom = _min_energy_conformer(cnf_save_fs, mod_thy_info)
     elif conf == 'spherical':
-        geom = _spherical_conformer(cnf_save_fs, mod_thy_info)
+        geom = _spherical_conformer(cnf_save_fs)
 
     # Format the geom into xyz strings
     geo_str = automol.geom.string(geom)

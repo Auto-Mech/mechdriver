@@ -203,10 +203,11 @@ def cnf_fs_from_prefix(cnf_prefix, mod_thy_info, cnf=None):
     # Set the locs and the path
     cnf_locs = []
     if cnf is not None:
-        if cnf == 'min':
-            cnf_locs = min_energy_conformer_locators(cnf_fs, mod_thy_info)
-        elif cnf == 'all':
+        if cnf == 'all':
             cnf_locs = cnf_fs[1].existing()
+        else:
+            cnf_locs = min_energy_conformer_locators(
+                cnf_fs, mod_thy_info, cnf_range=cnf)
 
     return cnf_fs, cnf_locs
 
@@ -392,6 +393,19 @@ def zma_fs_from_prefix(prefix, zma_idxs=(0,)):
     zma_path = zma_fs[-1].path(zma_idxs)
 
     return zma_fs, zma_path
+
+
+def etrans_fs_from_prefix(prefix, bath_info, thy_info):
+    """ Build an energy transfer filesystem obj
+    """
+
+    # Build the energy transfer filesys object
+    etrans_fs = autofile.fs.manager(prefix, 'ENERGY_TRANSFER')
+
+    # Build the energy transfer locs object
+    etrans_locs = bath_info + thy_info
+
+    return etrans_fs, etrans_locs
 
 
 # Old function that I need to get rid of

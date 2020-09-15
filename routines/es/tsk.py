@@ -25,7 +25,8 @@ ES_TSKS = {
     'energy': SP_MODULE.run_energy,
     'grad': SP_MODULE.run_gradient,
     'hess': SP_MODULE.run_hessian,
-    'vpt2': SP_MODULE.run_vpt2
+    'vpt2': SP_MODULE.run_vpt2,
+    'prop': SP_MODULE.run_prop
 }
 
 
@@ -124,8 +125,6 @@ def geom_init(spc, thy_dct, es_keyword_dct,
         save_prefix, spc_info, mod_ini_thy_info)
     cnf_save_fs, _ = filesys.build.cnf_fs_from_thy(
         thy_save_path, mod_thy_info, saddle=saddle)
-    ini_cnf_save_fs, ini_min_cnf_locs = filesys.build.cnf_fs_from_thy(
-        ini_thy_save_path, mod_ini_thy_info, cnf='min')
 
     # Set the run filesystem
     if saddle:
@@ -143,7 +142,7 @@ def geom_init(spc, thy_dct, es_keyword_dct,
         spc, spc_info, mod_thy_info,
         thy_run_fs, thy_save_fs,
         cnf_save_fs,
-        ini_cnf_save_fs, ini_min_cnf_locs,
+        ini_thy_save_path, mod_ini_thy_info,
         run_fs,
         opt_script_str, overwrite,
         kickoff_size=kickoff_size,
@@ -268,15 +267,39 @@ def conformer_tsk(job, spc_dct, spc_name,
             two_stage=two_stage, retryfail=retryfail,
             rxn_class=rxn_class, **opt_kwargs)
 
-    elif job in ('energy', 'grad', 'hess', 'vpt2'):
+    elif job == 'opt':
 
-        # cnf_range = es_keyword_dct['cnf_range']
+        cnf_range = es_keyword_dct['cnf_range']
+        print('range', cnf_range)
+
+        # Build conformer filesys
+        ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
+            ini_thy_save_path, mod_ini_thy_info, cnf=cnf_range)
+        cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
+            ini_thy_run_path, mod_thy_info, cnf=None)
+        cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(
+            ini_thy_save_path, mod_thy_info, cnf='all')
+
+        # Truncate the list of the ini confs
+        uni_locs = conformer.unique_fs_confs(
+            cnf_save_fs, cnf_save_locs, ini_cnf_save_fs, ini_cnf_save_locs)
+        for locs in uni_locs:
+            conformer.single_conformer(
+                zma, spc_info, thy_info,
+                thy_save_fs, cnf_run_fs, cnf_save_fs,
+                overwrite, saddle=False)
+
+    elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
+
+        cnf_range = es_keyword_dct['cnf_range']
+        print('range', cnf_range)
 
         # Build conformer filesys
         cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
             ini_thy_run_path, mod_ini_thy_info, cnf=None)
         cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-            ini_thy_save_path, mod_ini_thy_info, cnf='min')
+            ini_thy_save_path, mod_ini_thy_info, cnf=cnf_range)
+        print('cnf_locs', cnf_save_locs)
 
         # Check if locs exist, kill if it doesn't
         if not cnf_save_locs:
@@ -290,13 +313,14 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Run the job over all the conformers requested by the user
         for locs in cnf_save_locs:
-            geo_run_path = cnf_run_fs[-1].path([locs])
-            geo_save_path = cnf_save_fs[-1].path([locs])
-            cnf_run_fs[-1].create([locs])
-            zma, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, [locs])
+            print('\n\nRunning task for cnf locs', locs)
+            geo_run_path = cnf_run_fs[-1].path(locs)
+            geo_save_path = cnf_save_fs[-1].path(locs)
+            cnf_run_fs[-1].create(locs)
+            zma, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,
-                cnf_save_fs, geo_run_path, geo_save_path, [locs],
+                cnf_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite,
                 retryfail=retryfail, **kwargs)
 
@@ -585,7 +609,6 @@ def hr_tsk(job, spc_dct, spc_name,
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
     tors_model = es_keyword_dct['tors_model']
-    resamp_min = es_keyword_dct['resamp_min']
     scan_increment = spc['hind_inc']
 
     # Bond key stuff
@@ -601,29 +624,19 @@ def hr_tsk(job, spc_dct, spc_name,
     # Set up the torsion info
     run_tors_names = structure.tors.tors_name_prep(
         spc, ini_cnf_save_fs, ini_cnf_save_locs, tors_model)
-
+    print('run_tors_names', run_tors_names)
     run_tors_names, run_tors_grids, _ = structure.tors.hr_prep(
         zma, tors_name_grps=run_tors_names,
         scan_increment=scan_increment, tors_model=tors_model,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+    print('run_tors_names', run_tors_names)
 
     # Run the task if any torsions exist
     if run_tors_names:
 
         # Set constraints
-        if tors_model in ('1dhr', 'mdhr', 'mdhrv'):
-            const_names = ()
-        else:
-            if tors_model == '1dhrf':
-                if saddle:
-                    const_names = tuple(
-                        itertools.chain(*amech_sadpt_tors_names))
-                else:
-                    const_names = tuple(
-                        itertools.chain(*amech_spc_tors_names))
-            elif tors_model == '1dhrfa':
-                coords = list(automol.zmatrix.coordinates(zma))
-                const_names = tuple(coord for coord in coords)
+        const_names = structure.tors.set_constraint_names(
+            zma, run_tors_names, tors_model)
 
         # Set if scan is rigid or relaxed
         scn_typ = 'relaxed' if tors_model != '1dhrfa' else 'rigid'
@@ -664,23 +677,45 @@ def hr_tsk(job, spc_dct, spc_name,
             # Print potential
             structure.tors.print_hr_pot(tors_pots)
 
-            # Launch new conformer sampling from negative if requested
-            if resamp_min:
+        elif job == 'resamp':
 
-                # Check for new minimum conformer
-                new_min_zma = structure.tors.check_hr_pot(tors_pots, tors_zmas)
+            # pull stuff from dcts
+            two_stage = saddle
+            rxn_class = spc['class'] if saddle else ''
+            mc_nsamp = spc['mc_nsamp']
+            ethresh = es_keyword_dct['hrthresh']
 
-                if new_min_zma is not None:
-                    print('Finding new low energy conformer...')
-                    #     _ = conformer.conformer_sampling(
-                    #         zma, spc_info,
-                    #         mod_thy_info, thy_save_fs,
-                    #         cnf_run_fs, cnf_save_fs,
-                    #         opt_script_str, overwrite,
-                    #         saddle=saddle, nsamp_par=mc_nsamp,
-                    #         tors_names=run_tors_names,
-                    #         two_stage=two_stage, retryfail=retryfail,
-                    #         rxn_class=rxn_class, **opt_kwargs)
+            # Read and print the potential
+            ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_cnf_save_locs)
+            tors_pots, tors_zmas, tors_paths = {}, {}, {}
+            for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
+                constraint_dct = structure.tors.build_constraint_dct(
+                    zma, const_names, tors_names)
+                pot, _, _, _, zmas, paths = structure.tors.read_hr_pot(
+                    tors_names, tors_grids,
+                    ini_cnf_save_paths[0],
+                    mod_ini_thy_info, ref_ene,
+                    constraint_dct,
+                    read_zma=True)
+                tors_pots[tors_names] = pot
+                tors_zmas[tors_names] = zmas
+                tors_paths[tors_names] = paths
+
+            # Check for new minimum conformer
+            new_min_zma = structure.tors.check_hr_pot(
+                tors_pots, tors_zmas, tors_paths, emax=ethresh)
+
+            if new_min_zma is not None:
+                print('\nFinding new low energy conformer...')
+                _ = conformer.conformer_sampling(
+                    zma, spc_info,
+                    mod_thy_info, ini_thy_save_fs,
+                    ini_cnf_run_fs, ini_cnf_save_fs,
+                    opt_script_str, overwrite,
+                    saddle=saddle, nsamp_par=mc_nsamp,
+                    tors_names=tuple(itertools.chain(*tors_names)),
+                    two_stage=two_stage, retryfail=retryfail,
+                    rxn_class=rxn_class, **opt_kwargs)
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 

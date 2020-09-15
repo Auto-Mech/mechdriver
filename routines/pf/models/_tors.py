@@ -190,7 +190,7 @@ def make_hr_strings(rotors, run_path, tors_model,
                 if scale_factor is None:
                     pot = tors_dct['pot']
                 else:
-                    pot = _scale_pot(tors_dct['pot'], scale_factor)
+                    pot = _scale_pot(tors_dct['pot'], scale_factor, numrotors)
 
                 tors_strs = _rotor_tors_strs(
                     tors_name, tors_dct['group'], tors_dct['axis'],
@@ -300,9 +300,11 @@ def _need_tors_geo(pf_levels):
     return bool(pf_levels['tors'][1] == pf_levels['harm'])
 
 
-def _scale_pot(pot, scale_factor):
+def _scale_pot(pot, scale_coeff, numrotors):
     """ Scale the potential
     """
+    
+    scale_factor = scale_coeff**(2.0/numrotors)
 
     new_pot = {}
     for idx, val in pot.items():

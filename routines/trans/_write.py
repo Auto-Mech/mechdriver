@@ -2,6 +2,7 @@
   CHEMKIN for ETRANS
 """
 
+import automol
 import chemkin_io
 from lib import filesys
 
@@ -47,11 +48,13 @@ def collate_properties(spc_queue, spc_name, bath_name,
         else:
             geom = None
         if cnf_fs[-1].file.dipole_moment.exist(cnf_locs):
-            dip_mom = cnf_fs[-1].file.dipole_moment.read(cnf_locs)
+            dip_mom_vec = cnf_fs[-1].file.dipole_moment.read(cnf_locs)
+            dip_mom = automol.prop.total_dipole_moment(dip_mom_vec)
         else:
             dip_mom = None
         if cnf_fs[-1].file.polarizability.exist(cnf_locs):
-            polar = cnf_fs[-1].file.polarizability.read(cnf_locs)
+            polar_tensor = cnf_fs[-1].file.polarizability.read(cnf_locs)
+            polar = automol.prop.total_polarizability(polar_tensor)
         else:
             polar = None
 
@@ -69,7 +72,7 @@ def collate_properties(spc_queue, spc_name, bath_name,
         names.append(spc_name)
         geoms.append(geom)
         dipole_moments.append(dip_mom)
-        polarizabilities.appen(polar)
+        polarizabilities.append(polar)
         epsilons.append(eps)
         sigmas.append(sig)
 
@@ -81,19 +84,3 @@ def collate_properties(spc_queue, spc_name, bath_name,
     print(transport_str)
 
     return transport_str
-
-
-def _etrans_fs(cnf_fs, cnf_locs, bath_dct, thy_info):
-    """ Build the etrans filesystem
-    """
-
-    # Build the energy transfer filesys object
-    cnf_path = cnf_fs[-1].path(cnf_locs)
-    etrans_fs = autofile.fs.manager(cnf_path, 'ENERGY_TRANSFER')
-
-    # Build the energy transfer locs object
-    bath_info = get_spc_info(spc_dct[bath_name])
-    thy_info = get_thy_info(spc_dct[bath_name])
-    etrans_locs = [bath_info, thy_info]
-
-    return etrans_fs, etrans_locs
