@@ -108,7 +108,7 @@ def geom_init(spc, thy_dct, es_keyword_dct,
     overwrite = es_keyword_dct['overwrite']
     # retryfail = es_keyword_dct['retryfail']
 
-    # Get the thery info
+    # Get the theory info
     ini_thy_info = filesys.inf.get_es_info(
         es_keyword_dct['inplvl'], thy_dct)
     thy_info = filesys.inf.get_es_info(

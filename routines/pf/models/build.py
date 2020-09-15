@@ -232,7 +232,7 @@ def mol_data(spc_dct_i,
 
     # Scale the frequencies
     if freqs:
-        freqs = vib.scale_frequencies(freqs, chn_pf_levels, scale_method='2c')
+        freqs = vib.scale_frequencies(freqs, chn_pf_levels, scale_method='3c')
 
     if typ.anharm_vib(chn_pf_models):
         xmat = vib.read_anharmon_matrix(pf_filesystems)

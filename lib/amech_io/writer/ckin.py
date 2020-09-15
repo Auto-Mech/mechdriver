@@ -5,35 +5,38 @@
 import os
 
 
-def model_header(pf_levels, pf_models, refscheme = ''):
+# COMMON HEADER STUFF FOR kTP and THERMO CKIN FILES
+def model_header(pf_levels, pf_models, refscheme=''):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
 
+    # Pull information out of pf dictionaries
     tors_model = pf_models['tors']
     vib_model = pf_models['vib']
     sym_model = pf_models['sym']
+    vpt2_model = pf_models['vpt2']
     geo_info = pf_levels['geo'][1]
     ene_info = pf_levels['ene'][1]
     har_info = pf_levels['harm'][1]
     tors_info = pf_levels['tors'][1]
+    vpt2_info = pf_levels['vpt2'][1]
 
-    # Convert the pac99 polynomial to chemkin polynomial
+    # Write the theory information info header for a reaction/species
     chemkin_header_str = '! vib model: {0}\n'.format(vib_model)
     chemkin_header_str += '! tors model: {0}\n'.format(tors_model)
-    # chemkin_header_str += '! vpt2 model: {0}\n'.format(vpt2_model)
+    chemkin_header_str += '! vpt2 model: {0}\n'.format(vpt2_model)
     chemkin_header_str += '! sym model: {0}\n'.format(sym_model)
-    if har_info and ene_info:
+    if har_info is not None and ene_info is not None:
         chemkin_header_str += _ckin_ene_lvl_str(ene_info, geo_info)
-    if tors_info:
+    if tors_info is not None:
         chemkin_header_str += '! tors level: {}{}/{}//{}{}/{}\n'.format(
             tors_info[1][3], tors_info[1][1], tors_info[1][2],
             tors_info[0][3], tors_info[0][1], tors_info[0][2])
-    if refscheme:    
+    if vpt2_info is not None:
+        chemkin_header_str += '! vpt2 level: {}/{}\n'.format(
+            vpt2_info[1], vpt2_info[2])
+    if refscheme:
         chemkin_header_str += '! reference scheme: {0}\n'.format(refscheme)
-
-    # if vpt2_info:
-    #     chemkin_header_str += '! vpt2 level: {}{}/{}\n'.format(
-    #         vpt2_info[3], vpt2_info[1], vpt2_info[2])
 
     return chemkin_header_str
 
@@ -53,6 +56,7 @@ def _ckin_ene_lvl_str(ene_info, geo_info):
     return ene_str
 
 
+# kTP
 def write_rxn_file(ckin_rxn_dct, pes_formula, ckin_path):
     """ write out the rates
     """
@@ -84,6 +88,7 @@ def write_rxn_file(ckin_rxn_dct, pes_formula, ckin_path):
                 cfile.write(header_str + rstring)
 
 
+# THERMO
 def nasa_polynomial(hform0, hform298, ckin_poly_str):
     """ write the nasa polynomial str
     """
@@ -104,6 +109,7 @@ def write_nasa_file(ckin_nasa_str, ckin_path):
         nasa_file.write(ckin_nasa_str)
 
 
+# TRANSPORT
 def write_transport_file(ckin_trans_str, ckin_path):
     """ write out the transport file
     """

@@ -2,8 +2,8 @@
 Executes the automation part of 1DMin
 """
 
-from routines.trans.lj import onedmin
-from routines.trans._write import collate_properties
+from routines.trans._routines import lj
+from routines.trans._routines import build
 
 
 def run(tsk, spc_queue, spc_name, bath_name,
@@ -14,12 +14,12 @@ def run(tsk, spc_queue, spc_name, bath_name,
     """
 
     if tsk == 'onedmin':
-        onedmin(spc_queue, spc_name, bath_name,
-                spc_dct, pf_levels,
-                thy_dct, etrans_keyword_dct,
-                run_prefix, save_prefix)
+        lj.onedmin(spc_queue, spc_name, bath_name,
+                   spc_dct, pf_levels,
+                   thy_dct, etrans_keyword_dct,
+                   run_prefix, save_prefix)
     elif tsk == 'write_transport':
-        collate_properties(spc_queue, spc_name, bath_name,
-                           spc_dct, pf_levels,
-                           thy_dct, etrans_keyword_dct,
-                           run_prefix, save_prefix)
+        build.collate_properties(spc_queue, spc_name, bath_name,
+                                 spc_dct, pf_levels,
+                                 thy_dct, etrans_keyword_dct,
+                                 run_prefix, save_prefix)
