@@ -194,7 +194,7 @@ def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls,
         # Read energy
         ene = None
         if min_cnf_locs:
-            cnf_path = cnf_save_fs[-1].path(min_cnf_locs)
+            cnf_path = cnf_save_fs[-1].path(min_cnf_locs[0])
             sp_fs = autofile.fs.single_point(cnf_path)
             if sp_fs[-1].file.energy.exists(mod_sp_thy_info[1:4]):
                 ene = sp_fs[-1].file.energy.read(mod_sp_thy_info[1:4])
@@ -256,8 +256,9 @@ def get_geos(
         cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         cnf_save_fs_lst.append(cnf_save_fs)
         min_cnf_locs = min_energy_conformer_locators(cnf_save_fs, ini_thy_lvl)
+        print('min_cnf_locs test:', min_cnf_locs)
         if min_cnf_locs:
-            geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
+            geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs[0])
         # else:
         #     spc_run_fs = autofile.fs.species(run_prefix)
         #     spc_run_fs[-1].create(spc_info)
