@@ -1,22 +1,23 @@
 """ es_runners for initial geometry optimization
 """
 
+import shutil
 import numpy
 import automol
 import elstruct
 import autofile
 from routines.es import runner as es_runner
-from routines.es._routines._fs import save_struct
 from lib import structure
 from lib.phydat import phycon
 from lib.phydat import instab_fgrps
+from lib import filesys
 
 
 def reference_geometry(spc_dct_i, spc_info,
                        mod_thy_info,
                        thy_run_fs, thy_save_fs,
                        cnf_save_fs,
-                       ini_cnf_save_fs, ini_min_cnf_locs,
+                       ini_thy_save_path, mod_ini_thy_info,
                        run_fs,
                        opt_script_str, overwrite,
                        kickoff_size=0.1, kickoff_backward=False,
@@ -58,11 +59,13 @@ def reference_geometry(spc_dct_i, spc_info,
     if _run:
         print('Obtaining some initial guess geometry.')
         geo_init = _obtain_ini_geom(spc_dct_i,
-                                    ini_cnf_save_fs, ini_min_cnf_locs)
+                                    ini_thy_save_path, mod_ini_thy_info,
+                                    overwrite)
 
         if geo_init is not None:
             print('Assessing if there are any functional groups',
                   'that cause instability')
+            print('geo str\n', automol.geom.string(geo_init))
             if _functional_groups_stable(geo_init, thy_save_fs, mod_thy_info):
                 zma_init = automol.geom.zmatrix(geo_init)
                 if not automol.geom.is_atom(geo_init):
@@ -104,7 +107,7 @@ def reference_geometry(spc_dct_i, spc_info,
     return geo_found
 
 
-def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs, ini_min_cnf_locs):
+def _obtain_ini_geom(spc_dct_i, ini_thy_save_path, mod_ini_thy_info, overwrite):
     """ Obtain an initial geometry to be optimized. Checks a hieratchy
         of places to obtain the initial geom.
             (1) Geom dict which is the input from the user
@@ -113,16 +116,27 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs, ini_min_cnf_locs):
 
     geo_init = None
 
-    # Obtain geom from user input geometry or inchi
-    if 'geo_obj' in spc_dct_i:
-        geo_init = spc_dct_i['geo_obj']
-        print('Getting initial geometry from geom dictionary')
-
-    if geo_init is None:
+    # Obtain geom from thy fs or remove the conformer filesystem if needed
+    if not overwrite:
+        ini_cnf_save_fs, ini_min_cnf_locs = filesys.build.cnf_fs_from_thy(
+            ini_thy_save_path, mod_ini_thy_info, cnf='min')
         if ini_min_cnf_locs:
             geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
             print('Getting inital geometry from inplvl at path',
                   '{}'.format(ini_cnf_save_fs[-1].path(ini_min_cnf_locs)))
+    else:
+        print('Removing original conformer save data for instability')
+        ini_cnf_save_fs, _ = filesys.build.cnf_fs_from_thy(
+            ini_thy_save_path, mod_ini_thy_info, cnf=None)
+        for locs in ini_cnf_save_fs[-1].existing():
+            cnf_path = ini_cnf_save_fs[-1].path(locs)
+            print('Removing {}'.format(cnf_path))
+            shutil.rmtree(cnf_path)
+
+    if geo_init is None:
+        if 'geo_obj' in spc_dct_i:
+            geo_init = spc_dct_i['geo_obj']
+            print('Getting initial geometry from geom dictionary')
 
     if geo_init is None:
         geo_init = automol.inchi.geometry(spc_dct_i['inchi'])
@@ -207,8 +221,8 @@ def _optimize_atom(spc_info, zma_init,
     if geo is not None and zma is not None:
         locs = [autofile.schema.generate_new_conformer_id()]
         job = elstruct.Job.OPTIMIZATION
-        save_struct(run_fs, cnf_save_fs, locs, job, mod_thy_info,
-                    zma_locs=(0,), in_zma_fs=False)
+        filesys.save_struct(run_fs, cnf_save_fs, locs, job, mod_thy_info,
+                            zma_locs=(0,), in_zma_fs=False)
         conf_found = True
     else:
         conf_found = False
@@ -249,7 +263,7 @@ def _optimize_molecule(spc_info, zma_init,
                 print('\nSaving structure as the first conformer...')
                 locs = [autofile.schema.generate_new_conformer_id()]
                 job = elstruct.Job.OPTIMIZATION
-                save_struct(run_fs, cnf_save_fs, locs, job, mod_thy_info,
+                filesys.save_struct(run_fs, cnf_save_fs, locs, job, mod_thy_info,
                             zma_locs=(0,), in_zma_fs=False,
                             cart_to_zma=imag_fix_needed)
 

@@ -66,14 +66,16 @@ ES_TSK_OBJ_SUPPORTED_LST = [
 ES_TSK_SUPPORTED_DCT = {
     'spc': [
         'init_geom',
-        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess', 'conf_vpt2',
-        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess',
+        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess',
+        'conf_vpt2', 'conf_prop',
+        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess', 'hr_vpt2', 'hr_resamp',
         'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess'],
     'ts': [
         'find_ts',
         'find_sadpt', 'find_molrad_vtst', 'find_radrad_vtst', 'find_vrctst',
-        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess', 'conf_vpt2',
-        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess',
+        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess',
+        'conf_vpt2', 'conf_prop',
+        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess', 'hr_vpt2', 'hr_resamp',
         # 'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess',
         'irc_scan', 'irc_energy', 'irc_grad', 'irc_hess',
         'drp_samp', 'drp_energy', 'drp_grad', 'drp_hess'],
@@ -102,6 +104,7 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'conf_grad': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_hess': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_vpt2': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
+    'conf_prop': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'hr_scan': ['runlvl', 'inplvl', 'tors_model', 'resamp_min',
                 'retryfail', 'overwrite'],
     'hr_grad': ['runlvl', 'inplvl', 'tors_model',
@@ -110,6 +113,10 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
                 'retryfail', 'overwrite'],
     'hr_energy': ['runlvl', 'inplvl', 'tors_model',
                   'retryfail', 'overwrite'],
+    'hr_vpt2': ['runlvl', 'inplvl', 'tors_model',
+                'retryfail', 'overwrite'],
+    'hr_resamp': ['runlvl', 'inplvl', 'tors_model',
+                  'retryfail', 'overwrite', 'hrthresh'],
     'tau_samp': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'tau_energy': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'tau_grad': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
@@ -145,7 +152,7 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'overwrite': False,
     'rxndirn': 'forw',
     'hessmax': 1000,
-    'resamp_min': False
+    'hrthresh': -0.5,
 }
 
 # Species keywords

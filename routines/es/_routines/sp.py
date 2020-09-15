@@ -381,12 +381,84 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 geo_save_path))
 
 
-# def run_prop(zma, geo, spc_info, thy_info,
-#              geo_save_fs, geo_run_path, geo_save_path, locs,
-#              script_str, overwrite,
-#              retryfail=True, **kwargs):
-#     """ Determine the properties in the given location
-#     """
+def run_prop(zma, geo, spc_info, thy_info,
+             geo_save_fs, geo_run_path, geo_save_path, locs,
+             script_str, overwrite,
+             retryfail=True, **kwargs):
+    """ Determine the properties in the given location
+    """
+
+    # Set input geom
+    if geo is not None:
+        job_geo = geo
+    else:
+        job_geo = automol.zmatrix.geometry(zma)
+
+    if _json_database(geo_save_path):
+        dmom_exists = geo_save_fs[-1].json.dipole_moment.exists(locs)
+        polar_exists = geo_save_fs[-1].json.polarizability.exists(locs)
+    else:
+        dmom_exists = geo_save_fs[-1].file.dipole_moment.exists(locs)
+        polar_exists = geo_save_fs[-1].file.polarizability.exists(locs)
+    if not dmom_exists or not polar_exists:
+        print('Either no dipole moment or polarizability found in'
+              'in save filesys. Running properties...')
+        _run = True
+    elif overwrite:
+        print('User specified to overwrite property with new run...')
+        _run = True
+    else:
+        _run = False
+
+    if _run:
+
+        run_fs = autofile.fs.run(geo_run_path)
+
+        es_runner.run_job(
+            job='molec_properties',
+            script_str=script_str,
+            run_fs=run_fs,
+            geom=job_geo,
+            spc_info=spc_info,
+            thy_info=thy_info,
+            overwrite=overwrite,
+            retryfail=retryfail,
+            **kwargs,
+        )
+
+        success, ret = es_runner.read_job(
+            job='molec_properties',
+            run_fs=run_fs,
+        )
+
+        if success:
+            inf_obj, inp_str, out_str = ret
+
+            print(" - Reading dipole moment from output...")
+            dmom = elstruct.reader.dipole_moment(inf_obj.prog, out_str)
+            print(" - Reading polarizability from output...")
+            polar = elstruct.reader.polarizability(inf_obj.prog, out_str)
+
+            print('dip mom', dmom)
+            print('polar', polar)
+            print(" - Saving dipole moment and polarizability...")
+            if _json_database(geo_save_path):
+                # geo_save_fs[-1].json.property_info.write(inf_obj, locs)
+                # geo_save_fs[-1].json.property_input.write(
+                #     inp_str, locs)
+                geo_save_fs[-1].json.dipole_moment.write(dmom, locs)
+                geo_save_fs[-1].json.polarizability.write(polar, locs)
+            else:
+                # geo_save_fs[-1].file.property_info.write(inf_obj, locs)
+                # geo_save_fs[-1].file.property_input.write(
+                #     inp_str, locs)
+                geo_save_fs[-1].file.dipole_moment.write(dmom, locs)
+                geo_save_fs[-1].file.polarizability.write(polar, locs)
+            print(" - Save path: {}".format(geo_save_path))
+
+    else:
+        print('Dipole moment and polarizability found and',
+              'saved previously at {}'.format(geo_save_path))
 
 
 def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):

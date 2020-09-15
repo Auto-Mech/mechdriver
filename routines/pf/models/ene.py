@@ -7,10 +7,10 @@ import autofile
 from routines.pf.models import typ
 from routines.pf.models import _tors as tors
 from routines.pf.models import _vib as vib
-from routines.pf.models import _fs as fs
 from routines.pf.models import _util as util
 from lib.phydat import phycon
 from lib.filesys import inf as finf
+from lib.filesys import models as fmod
 from lib.amech_io import parser
 
 
@@ -110,7 +110,7 @@ def zero_point_energy(spc_dct_i,
         #     frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
         rotors = []
         if typ.nonrigid_tors(pf_models, rotors):
-            run_path = fs.make_run_path(pf_filesystems, 'tors')
+            run_path = fmod.make_run_path(pf_filesystems, 'tors')
             tors_strs = tors.make_hr_strings(
                 rotors, run_path, pf_models['tors'])
             [_, hr_str, _, prot_str, _] = tors_strs
@@ -195,7 +195,7 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
         print(' - Calculating energy for {}...'.format(rgt))
 
         # Build filesystem
-        pf_filesystems = fs.pf_filesys(
+        pf_filesystems = fmod.pf_filesys(
             spc_dct[rgt], pf_levels, run_prefix, save_prefix, saddle=False)
 
         # Calcualte the total energy

@@ -6,8 +6,6 @@ import autofile
 import elstruct
 from routines.es import runner as es_runner
 from routines.es._routines import sp
-from routines.es._routines._fs import save_struct
-from routines.es._routines._fs import _read as read_zma_geo
 from lib.structure import tors as torsprep
 from lib.structure import instab
 from lib import filesys
@@ -145,7 +143,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                 )
 
                 # Read the output for the zma and geo
-                _, opt_zma, opt_geo = read_zma_geo(run_fs, job)
+                _, opt_zma, opt_geo = filesys.read_zma_geo(run_fs, job)
 
                 if opt_zma is not None and opt_geo is not None:
 
@@ -214,7 +212,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             print("Reading from scan run at {}".format(run_path))
 
             # Save the structure
-            saved = save_struct(
+            saved = filesys.save_struct(
                 run_fs, scn_save_fs, locs, _set_job(scn_typ),
                 mod_thy_info, in_zma_fs=in_zma_fs)
 
@@ -246,7 +244,7 @@ def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
                     print("Reading from scan run at {}".format(run_path))
 
                     # Save the structure
-                    saved = save_struct(
+                    saved = filesys.save_struct(
                         run_fs, cscn_save_fs, locs2, _set_job(scn_typ),
                         mod_thy_info, in_zma_fs=in_zma_fs)
 

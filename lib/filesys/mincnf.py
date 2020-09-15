@@ -41,14 +41,16 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info,
 
         cnf_locs, cnf_enes = _sorted_cnf_lsts(
             cnf_locs, cnf_save_fs, mod_thy_info)
+        print('ini sorted cnf_locs', cnf_locs)
+        print('ini sorted cnf_enes', cnf_enes)
 
         if cnf_range == 'min':
-            min_cnf_locs = cnf_locs[0]
+            min_cnf_locs = [cnf_locs[0]]
         elif cnf_range == 'all':
             min_cnf_locs = cnf_locs
-        elif 'e' in cnf_range and '_' in cnf_range:
+        elif 'e' in cnf_range:
             min_cnf_locs = _erange_locs(cnf_locs, cnf_enes, cnf_range)
-        elif 'n' in cnf_range and '_' in cnf_range:
+        elif 'n' in cnf_range:
             min_cnf_locs = _nrange_locs(cnf_locs, cnf_range)
 
         # print('min_cnf_locs test:', min_cnf_locs)
@@ -83,12 +85,14 @@ def _erange_locs(cnf_locs, cnf_enes, ethresh):
     """ Get a range of e values
     """
 
-    thresh = ethresh.split('_')[1]
+    thresh = float(ethresh.split('e')[1])
 
     min_cnf_locs = []
     min_ene = cnf_enes[0]
     for locs, ene in zip(cnf_locs, cnf_enes):
         rel_ene = (ene - min_ene) * phycon.EH2KCAL
+        print('enes', ene, min_ene, rel_ene)
+        print('thresh', thresh)
         if rel_ene <= thresh:
             min_cnf_locs.append(locs)
 
@@ -99,7 +103,7 @@ def _nrange_locs(cnf_locs, nthresh):
     """ Get a range of n values
     """
 
-    thresh = nthresh.split('_')[1]
+    thresh = int(nthresh.split('n')[1])
 
     min_cnf_locs = []
     for idx, locs in enumerate(cnf_locs):

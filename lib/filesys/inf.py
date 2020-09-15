@@ -162,6 +162,16 @@ def rxn_chg_mult(rxn_muls, rxn_chgs):
     return ts_chg, ts_mul_low, ts_mul_high
 
 
+def trans_chg_mult(tgt_info, bath_info):
+    """ Determine what the combined charge and mult is for a run
+    """
+
+    chg = tgt_info[1] + bath_info[1]
+    mult = max([tgt_info[2], bath_info[2]])
+
+    return chg, mult
+
+
 def cnf_fs_zma_geo(filesys, locs):
     """ Get the geometry and zmatrix from a filesystem
     """

@@ -3,16 +3,58 @@ input file writing routines for parallel OneDMin runs
 """
 
 import os
+import stat
 import subprocess
 import random
-import moldr
 import elstruct
-import py1dmin.interface
+
+from lib.amech_io.writer import write_files
 
 
-def write_input(job_dir_path, nsamp,
-                target_name='target.xyz', bath_name='bath,xyz',
-                smin=2, smax=6):
+def write():
+    """ write all of the input files
+    """
+
+    # Write the 1DMin input file
+    print('  Writing input files...')
+    onedmin_str = _write_input(
+        job_dir_path, NSAMPS,
+        target_name='target.xyz', bath_name='bath.xyz',
+        smin=SMIN, smax=SMAX)
+
+    # Write the geometry files
+    print('  Writing xyz files for target and bath....')
+    xyz1_str, xyz2_str = _write_xyz(
+        job_dir_path, TARGET_GEO, BATH_GEO)
+
+    # Write the electronic structure template file
+    print('  Writing electronic structure submission inp template...')
+    elstruct_inp_str = _write_elstruct_inp(
+        job_dir_path,
+        chg, mlt, run_method, run_basis, theory_info,
+        run_prog, run_memory)
+
+    # Write the electronic structure sumbission script
+    print('  Writing electronic structure submission script...')
+    elstruct_sub_str = _write_elstruct_sub(
+        job_dir_path, DRIVE_PATH, RUN_PROG)
+
+    # Collate the input strings and write the remaining files
+    input_strs = (
+        onedmin_str,
+        xyz1_str, xyz2_str,
+        elstruct_inp_str, elstruct_sub_str)
+    input_names = (
+        'input.dat'
+        'target.xyz', 'bath.xyz'
+        'qc.mol', 'elstruct.x')
+    inp = tuple(zip(input_strs, input_names))
+    write_files(inp, vrc_path)
+
+
+def _write_input(job_dir_path, nsamp,
+                 target_name='target.xyz', bath_name='bath.xyz',
+                 smin=2, smax=6):
     """ write the input file
     """
 
@@ -20,27 +62,10 @@ def write_input(job_dir_path, nsamp,
     inp_str = py1dmin.interface.writer.onedmin_input(
         ranseed, nsamp, target_name, bath_name, smin, smax)
 
-    job_file_path = os.path.join(job_dir_path, 'input.dat')
-    with open(job_file_path, 'w') as input_file:
-        input_file.write(inp_str)
 
-
-def write_xyz(job_dir_path, target_geo, bath_geo):
-    """ write the target and bath xyz files
-    """
-
-    job_file_path = os.path.join(job_dir_path, 'target.xyz')
-    with open(job_file_path, 'w') as xyz_file:
-        xyz_file.write(target_geo)
-
-    job_file_path = os.path.join(job_dir_path, 'bath.xyz')
-    with open(job_file_path, 'w') as xyz_file:
-        xyz_file.write(bath_geo)
-
-
-def write_elstruct_inp(job_dir_path,
-                       charge, mult, method, basis, thry_lvl,
-                       prog, memory):
+def _write_elstruct_inp(job_dir_path,
+                        charge, mult, method, basis, thry_lvl,
+                        prog, memory):
     """ writes the electronic structure input file
     """
     assert prog in ('g09', 'molpro')
@@ -95,3 +120,12 @@ def submit_job(drive_path, run_path, njobs):
         drive_path, run_path, njobs)
 
     moldr.util.run_script(submit_str, run_path)
+
+
+def make_job_dirs(etrans_run_path, idx):
+    """ write the files
+    """
+    job_dir_path = os.path.join(
+        etrans_run_path, 'run{0}'.format(str(idx+1)))
+    os.mkdir(job_dir_path)
+    print('\n\nWriting files to'+job_dir_path)

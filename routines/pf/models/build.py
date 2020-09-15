@@ -14,7 +14,6 @@ from routines.pf.models import _tors as tors
 from routines.pf.models import _sym as sym
 from routines.pf.models import _vib as vib
 from routines.pf.models import _flux as flux
-from routines.pf.models import _fs as fs
 from routines.pf.models import _util as util
 from lib.structure import tors as torsprep
 from lib.phydat import phycon
@@ -136,7 +135,7 @@ def atm_data(spc_dct_i,
     """
 
     # Set up all the filesystem objects using models and levels
-    pf_filesystems = fs.pf_filesys(
+    pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, False)
 
     print('\nObtaining the geometry...')
@@ -179,7 +178,7 @@ def mol_data(spc_dct_i,
     xmat, rovib_coups, rot_dists = None, None, None
 
     # Set up all the filesystem objects using models and levels
-    pf_filesystems = fs.pf_filesys(
+    pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
 
     # Set information for transition states
@@ -289,7 +288,7 @@ def flux_data(ts_dct,
     _, _, _ = chn_pf_models, ref_pf_models, ref_pf_levels
 
     # Read the flux file from the filesystem
-    _, ts_save_path, _, _ = fs.set_rpath_filesys(
+    _, ts_save_path, _, _ = filesys.models.set_rpath_filesys(
         ts_dct, chn_pf_levels['rpath'][1])
 
     flux_str = flux.read_flux(ts_save_path)
@@ -315,7 +314,7 @@ def rpvtst_data(ts_dct, reac_dcts,
     if sadpt:
         # Set up filesystems and coordinates for saddle point
         # Scan along RxnCoord is under THY/TS/CONFS/cid/Z
-        pf_filesystems = fs.pf_filesys(
+        pf_filesystems = filesys.models.pf_filesys(
             ts_dct, chn_pf_levels, run_prefix, save_prefix, True)
         tspaths = pf_filesystems['harm']
         [_, cnf_save_path, min_locs, _, cnf_run_fs] = tspaths
@@ -323,14 +322,14 @@ def rpvtst_data(ts_dct, reac_dcts,
 
         # Set TS reaction coordinate
         frm_name = 'IRC'
-        scn_vals = fs.get_rxn_scn_coords(cnf_save_path, frm_name)
+        scn_vals = filesys.models.get_rxn_scn_coords(cnf_save_path, frm_name)
         scn_vals.sort()
         scn_ene_info = chn_pf_levels['ene'][1][0][1]  # fix to be ene lvl
         scn_prefix = cnf_save_path
     else:
         # Set up filesystems and coordinates for reaction path
         # Scan along RxnCoord is under THY/TS/Z
-        tspaths = fs.set_rpath_filesys(
+        tspaths = filesys.models.set_rpath_filesys(
             ts_dct, chn_pf_levels['rpath'][1])
         ts_run_path, ts_save_path, _, thy_save_path = tspaths
 
@@ -338,7 +337,7 @@ def rpvtst_data(ts_dct, reac_dcts,
         frm_bnd_keys, _ = util.get_bnd_keys2(ts_save_path, True)
         frm_name = util.get_rxn_coord_name(
             ts_save_path, frm_bnd_keys, sadpt=sadpt, zma_locs=(0,))
-        scn_vals = fs.get_rxn_scn_coords(thy_save_path, frm_name)
+        scn_vals = filesys.models.get_rxn_scn_coords(thy_save_path, frm_name)
         scn_vals.sort()
         scn_ene_info = chn_pf_levels['rpath'][1][0]
         scn_prefix = thy_save_path
@@ -377,7 +376,7 @@ def rpvtst_data(ts_dct, reac_dcts,
     reac_ene = 0.0
     ene_hs_sr_inf = 0.0
     for dct in reac_dcts:
-        pf_filesystems = fs.pf_filesys(
+        pf_filesystems = filesys.models.pf_filesys(
             dct, chn_pf_levels, run_prefix, save_prefix, False)
         pf_levels = {
             'ene': chn_pf_levels['ene'],
@@ -483,7 +482,7 @@ def tau_data(spc_dct_i,
     brk_bnd_keys = ()
 
     # Set up all the filesystem objects using models and levels
-    pf_filesystems = fs.pf_filesys(
+    pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
     [harm_cnf_fs, _,
      harm_min_locs, harm_save, _] = pf_filesystems['harm']
@@ -507,7 +506,7 @@ def tau_data(spc_dct_i,
         rxn_class=rxn_class,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
-    run_path = fs.make_run_path(pf_filesystems, 'tors')
+    run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
     tors_strs = tors.make_hr_strings(
         rotors, run_path, chn_pf_models['tors'])
     [_, hr_str, flux_str, prot_str, _] = tors_strs
