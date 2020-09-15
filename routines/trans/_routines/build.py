@@ -16,6 +16,7 @@ def collate_properties(spc_queue, spc_name, bath_name,
     """ Write the chemkin string
     """
 
+    # Get the theory info
     thy_info = filesys.inf.get_es_info(
         etrans_keyword_dct['inplvl'], thy_dct)
     # Need to get a combined spin for the modification
@@ -34,7 +35,7 @@ def collate_properties(spc_queue, spc_name, bath_name,
 
 
         # Build the filesystem objects
-        pf_filesystems = pf_filesys(
+        pf_filesystems = filesys.modelspf_filesys(
             tgt_dct, pf_levels,
             run_prefix, save_prefix, saddle=False)
         [cnf_fs, _, cnf_locs, _, _] = pf_filesystems['harm']

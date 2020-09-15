@@ -174,33 +174,28 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     return freqs, imag, zpe, harm_zpe, scale_factor
 
 
-M1_COEFFS = {
-    ('b2plyd3', 'cc-pvtz'): 1.00
-}
-M2_COEFFS = {
-    ('b2plypd3', 'cc-pvtz'): (1.066, 0.008045)
+M3_COEFFS = {
+    ('b2plypd3', 'cc-pvtz'): (1.066, 0.008045, 0.33),
+    ('wb97xd', '6-31g*'): (1.657244, 0.56000691, 0.029624)
 }
 
 
-def scale_frequencies(freqs, chn_pf_levels, scale_method='2c'):
+def scale_frequencies(freqs, chn_pf_levels, scale_method='3c'):
     """ Scale frequencies according to some method
     """
     print('in scale freqs')
     thy_info = chn_pf_levels['harm'][1]
     thy_method = (thy_info[1], thy_info[2])
     print('thy_method', thy_method)
-    if scale_method == '2c':
-        acf, bcf = M2_COEFFS.get(thy_method, (1.0, 0.0))
+    if scale_method == '3c':
+        cf1, cf2, cf3 = M3_COEFFS.get(thy_method, (1.0, 0.0, 0.0))
         scaled_freqs = []
         for freq in freqs:
-            scaled_freqs.append(
-                (acf - (bcf * freq**0.33)) * freq
-            )
-        print('coef2', acf, bcf)
-    elif scale_method == 'scalar':
-        acf = M2_COEFFS.get(thy_method, 1.0)
-        scaled_freqs = [freq * acf for freq in freqs]
-        print('coef1', acf)
+            scale_factor = cf1 - (cf2 * freq**cf3)
+            scaled_freqs.append(freq * scale_factor)
+        print('coef2', cf1, cf2, cf3)
+    else:
+        scaled_freqs = freqs
 
     print('freqs', freqs)
     print('scaled_freqs', scaled_freqs)

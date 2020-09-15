@@ -308,7 +308,7 @@ def pf_level_info(es_model, thy_dct):
     rpath_scn_thy_info = (filesys.inf.get_thy_info(rpath_lvl_scn, thy_dct)
                           if rpath_lvl_scn else None)
     rpath_sp2_thy_info = (filesys.inf.get_thy_info(rpath_lvl_sp2, thy_dct)
-                         if rpath_lvl_sp2 else None)
+                          if rpath_lvl_sp2 else None)
 
     # Set the ene thy info as a list of methods with coefficients
     ene_thy_info = []
