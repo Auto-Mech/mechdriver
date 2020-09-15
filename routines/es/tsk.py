@@ -315,13 +315,14 @@ def conformer_tsk(job, spc_dct, spc_name,
         # Run the job over all the conformers requested by the user
         for locs in cnf_save_locs:
             print('\n\nRunning task for cnf locs', locs)
-            geo_run_path = cnf_run_fs[-1].path(locs)
-            geo_save_path = cnf_save_fs[-1].path(locs)
-            cnf_run_fs[-1].create(locs)
-            zma, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
+            locs_i = [locs]
+            geo_run_path = cnf_run_fs[-1].path(locs_i)
+            geo_save_path = cnf_save_fs[-1].path(locs_i)
+            cnf_run_fs[-1].create(locs_i)
+            zma, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs_i)
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,
-                cnf_save_fs, geo_run_path, geo_save_path, locs,
+                cnf_save_fs, geo_run_path, geo_save_path, locs_i,
                 script_str, overwrite,
                 retryfail=retryfail, **kwargs)
 
@@ -666,7 +667,7 @@ def hr_tsk(job, spc_dct, spc_name,
             for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
                 constraint_dct = structure.tors.build_constraint_dct(
                     zma, const_names, tors_names)
-                pot, _, _, _, zmas = structure.tors.read_hr_pot(
+                pot, _, _, _, zmas, _ = structure.tors.read_hr_pot(
                     tors_names, tors_grids,
                     ini_cnf_save_paths[0],
                     mod_ini_thy_info, ref_ene,

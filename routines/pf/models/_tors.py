@@ -66,7 +66,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
             # Read and MDHR potential for single MDHR rotor
             # Could be MDHR mod for sys w/ 1 Rotor
             if ((num_rotors > 1 and len(tors_names) > 1) or num_rotors == 1):
-                pot, geoms, grads, hessians, _ = torsprep.read_hr_pot(
+                pot, geoms, grads, hessians, _, _ = torsprep.read_hr_pot(
                     tors_names, tors_grids,
                     cnf_save_path,
                     mod_tors_ene_info, ref_ene,
@@ -94,7 +94,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
                 constraint_dct = None
 
             # Call read pot for 1DHR
-            pot, _, _, _, _ = torsprep.read_hr_pot(
+            pot, _, _, _, _, _ = torsprep.read_hr_pot(
                 [tname], [tgrid],
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,

@@ -11,9 +11,9 @@ import random
 import automol.inchi
 import automol.geom
 from routines.pf.models.ene import read_energy
-from routines.pf.models import _fs as fs
 from routines.pf.thermo import heatform
 from lib.phydat import phycon
+from lib import filesys
 
 
 # FUNCTIONS TO PREPARE THE LIST OF REFERENCE SPECIES NEEDED FOR THERM CALCS #
@@ -189,7 +189,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
 
     # Get the species energy
     print('\n Calculating energy for species...')
-    pf_filesystems = fs.pf_filesys(
+    pf_filesystems = filesys.models.pf_filesys(
         spc_dct[spc_name], pf_levels,
         run_prefix, save_prefix, False)
     h_spc = read_energy(
@@ -212,7 +212,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                     spc_dct_i = uni_refs_dct[key]
                     prname = ich
         print('bases energies test:', ich)
-        pf_filesystems = fs.pf_filesys(
+        pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, pf_levels,
             run_prefix, save_prefix, False)
         print('\n Calculating energy for basis {}...'.format(prname))

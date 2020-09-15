@@ -196,7 +196,7 @@ def mol_data(spc_dct_i,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
     if typ.nonrigid_tors(chn_pf_models, rotors):
-        run_path = fs.make_run_path(pf_filesystems, 'tors')
+        run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
         tors_strs = tors.make_hr_strings(
             rotors, run_path, chn_pf_models['tors'],
             scale_factor=None)
