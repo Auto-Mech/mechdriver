@@ -137,8 +137,8 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
 
     ene_info1 = ene_info1[1][0][1]
     ene_info2 = ene_info2[0]
-    # print('eneinf', ene_info1)
-    # print('eneinf', ene_info2)
+    print('mod_eneinf1', ene_info1)
+    print('mod_eneinf2', ene_info2)
     mod_ene_info1 = finf.modify_orb_restrict(
         finf.get_spc_info(ts_dct), ene_info1)
     mod_ene_info2 = finf.modify_orb_restrict(

@@ -58,25 +58,21 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info,
     return min_cnf_locs
 
 
-<<<<<<< HEAD
 def _sorted_cnf_lsts(cnf_locs, cnf_save_fs, mod_thy_info):
-=======
-def _sorted_cnf_lsts(cnf_locs_lst, mod_thy_info, cnf_save_fs):
->>>>>>> debug
     """ Get a list of conformer locs and energies, sorted by energies
     """
 
     cnf_enes = []
-    if len(cnf_locs_lst) == 1:
+    if len(cnf_locs) == 1:
         cnf_enes = [10]
     else:
-        for locs in cnf_locs_lst:
+        for locs in cnf_locs:
             cnf_path = cnf_save_fs[-1].path(locs)
             sp_fs = autofile.fs.single_point(cnf_path)
             cnf_enes.append(sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
 
     # Sort the cnf locs and cnf enes
-    cnf_enes, cnf_locs = zip(*sorted(zip(cnf_enes, cnf_locs_lst)))
+    cnf_enes, cnf_locs = zip(*sorted(zip(cnf_enes, cnf_locs)))
 
     return cnf_locs, cnf_enes
 

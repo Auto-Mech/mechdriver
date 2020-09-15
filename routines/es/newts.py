@@ -464,6 +464,7 @@ def _set_info(spc_dct, tsname):
     chg = ts_dct['charge']
     mult, high_mult = ts_dct['mult'], ts_dct['high_mult']
     reacs, prods = ts_dct['reacs'], ts_dct['prods']
+    print('reacs test:', reacs)
     rct1_info = filesys.inf.get_spc_info(spc_dct[reacs[0]])
     rct2_info = filesys.inf.get_spc_info(spc_dct[reacs[1]])
 

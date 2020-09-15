@@ -7,8 +7,8 @@ import importlib
 import autofile
 import automol
 from routines.es import runner as es_runner
-# from routines.es.findts import run as runts
-from routines.es.newts import run as runts
+from routines.es.findts import run as runts
+#from routines.es.newts import run as runts
 from routines.es._routines import conformer
 from routines.es._routines import geom
 from routines.es._routines import hr
