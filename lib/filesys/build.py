@@ -6,7 +6,7 @@ import os
 import sys
 import autofile
 from autofile import fs
-from lib.filesys.mincnf import min_energy_conformer_locators
+from lib.filesys.mincnf import conformer_locators
 
 
 # BUILD HIGH LEVEL SPC AND RXN FILESYS #
@@ -176,20 +176,11 @@ def cnf_fs_from_thy(thy_prefix, mod_thy_info, cnf=None, saddle=False):
     # Set the locs and the path
     cnf_locs = []
     if cnf is not None:
-        if cnf == 'min':
-            cnf_locs = min_energy_conformer_locators(cnf_fs, mod_thy_info)
-        elif cnf == 'all':
+        if cnf == 'all':
             cnf_locs = cnf_fs[1].existing()
-
-    # elif selection == 'subset':
-    #     min_locs = min_energy_conformer_locators(save_dir)
-    #     min_ene = energy.read(min_lcs)
-    #     ini_locs_lst = save_dir[-1].existing()
-    #     locs_lst = []
-    #     for locs in ini_locs_lst:
-    #         ene = energy.read(locs) - min_ene
-    #         if ene <= ene_cut_off:
-    #             locs_lst.append(locs)
+        else:
+            cnf_locs = conformer_locators(
+                cnf_fs, mod_thy_info, cnf_range=cnf)
 
     return cnf_fs, cnf_locs
 
@@ -206,10 +197,8 @@ def cnf_fs_from_prefix(cnf_prefix, mod_thy_info, cnf=None):
         if cnf == 'all':
             cnf_locs = cnf_fs[1].existing()
         else:
-            cnf_locs = min_energy_conformer_locators(
+            cnf_locs = conformer_locators(
                 cnf_fs, mod_thy_info, cnf_range=cnf)
-            # if cnf == 'min':
-                # cnf_locs = cnf_locs[0]
 
     return cnf_fs, cnf_locs
 
@@ -220,7 +209,7 @@ def cnf_paths_from_locs(cnf_fs, cnf_locs):
     cnf_paths = []
     if cnf_locs:
         for locs in cnf_locs:
-            cnf_paths.append(cnf_fs[-1].path([locs[0]]))
+            cnf_paths.append(cnf_fs[-1].path(locs))
 
     return cnf_paths
 

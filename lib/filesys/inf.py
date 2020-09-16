@@ -162,14 +162,17 @@ def rxn_chg_mult(rxn_muls, rxn_chgs):
     return ts_chg, ts_mul_low, ts_mul_high
 
 
-def trans_chg_mult(tgt_info, bath_info):
-    """ Determine what the combined charge and mult is for a run
+def combine_spc_info(spc_info1, spc_info2, mval='max'):
+    """ Created a spc info for two species where charge and mult
+        have been combined
     """
 
-    chg = tgt_info[1] + bath_info[1]
-    mult = max([tgt_info[2], bath_info[2]])
+    ich = (spc_info1[0], spc_info2[1])
+    chg = spc_info1[1] + spc_info2[1]
+    if mval == 'max':
+        mult = max([spc_info1[2], spc_info2[2]])
 
-    return chg, mult
+    return (ich, chg, mult)
 
 
 def cnf_fs_zma_geo(filesys, locs):
@@ -178,15 +181,15 @@ def cnf_fs_zma_geo(filesys, locs):
 
     # Read the zma
     zma_fs, _ = zma_fs_from_prefix(
-        filesys[-1].path(locs[0]), zma_idxs=[0])
+        filesys[-1].path(locs), zma_idxs=[0])
     if zma_fs[-1].file.zmatrix.exists([0]):
         zma = zma_fs[-1].file.zmatrix.read([0])
     else:
         zma = None
 
     # Read the geom
-    if filesys[-1].file.geometry.exists(locs[0]):
-        geo = filesys[-1].file.geometry.read(locs[0])
+    if filesys[-1].file.geometry.exists(locs):
+        geo = filesys[-1].file.geometry.read(locs)
     else:
         geo = None
 

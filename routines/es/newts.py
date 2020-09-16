@@ -540,11 +540,13 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
             save_prefix, rxn_info, mod_ini_thy_info)
         ini_ts_save_fs = filesys.build.ts_fs_from_thy(
             ini_thy_save_fs[1])
-        ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-            ini_ts_save_fs[1], mod_ini_thy_info, cnf='min')
-        if ini_cnf_save_locs:
+        ini_cnf_save_fs = autofile.fs.conformer(ini_ts_save_fs[1])
+        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+            ini_cnf_save_fs, mod_ini_thy_info)
+
+        if ini_min_cnf_locs:
             ini_zma_save_fs = autofile.fs.manager(
-                ini_cnf_save_fs[-1].path(ini_cnf_save_locs), 'ZMATRIX')
+                ini_cnf_save_fs[-1].path(ini_min_cnf_locs), 'ZMATRIX')
 
     if es_keyword_dct.get('runlvl', None) is not None:
 
@@ -565,8 +567,10 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
         runlvl_ts_run_fs = filesys.build.ts_fs_from_thy(
             runlvl_thy_run_fs[1])
 
-        runlvl_cnf_save_fs = filesys.build.cnf_fs_from_prefix(
-            runlvl_ts_save_fs[1], mod_thy_info, cnf='min')
+        runlvl_fs = autofile.fs.conformer(ini_ts_save_fs[1])
+        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+            runlvl_fs, mod_thy_info)
+        runlvl_cnf_save_fs = (runlvl_fs, ini_min_cnf_locs)
 
         _, runlvl_zma_run_path = filesys.build.zma_fs_from_prefix(
             runlvl_thy_run_fs[1], zma_idxs=zma_locs)
@@ -713,12 +717,13 @@ def _reac_cnf_fs(rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix):
             save_prefix, rinfo, mod_ini_thy_info)
 
         # Build conformer filesys
-        ini_cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-            ini_thy_run_path, mod_ini_thy_info, cnf=None)
-        ini_cnf_save_fs, ini_min_locs = filesys.build.cnf_fs_from_prefix(
-            ini_thy_save_path, mod_ini_thy_info, cnf='min')
-        ini_cnf_run_fs[-1].create(ini_min_locs)
+        ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
+        ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
+        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+            ini_cnf_save_fs, mod_ini_thy_info)
 
-        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs, ini_min_locs),)
+        ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
+
+        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs, ini_min_cnf_locs),)
 
     return rct_cnf_fs

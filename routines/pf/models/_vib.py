@@ -143,11 +143,11 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     if diff_tors_zpe <= diff_tors_zpe_2:
         freqs = rth_freqs1
         imag_freqs = rt_imag1
-        zpe = harm_zpe_notors_1 + tors_zpe
+        proj_zpe = harm_zpe_notors_1
     else:
         freqs = rth_freqs2
         imag_freqs = rt_imag2
-        zpe = harm_zpe_notors_2 + tors_zpe
+        proj_zpe = harm_zpe_notors_2
 
     # Check imaginary frequencies and set freqs
     if saddle:
@@ -171,7 +171,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
               '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
               'kcal/mol between harmonic and hindered torsional ZPVEs')
 
-    return freqs, imag, zpe, harm_zpe, scale_factor
+    return freqs, imag, tors_zpe, scale_factor
 
 
 M3_COEFFS = {
@@ -180,9 +180,13 @@ M3_COEFFS = {
 }
 
 
-def scale_frequencies(freqs, chn_pf_levels, scale_method='3c'):
+def scale_frequencies(freqs, tors_zpe,
+                      chn_pf_levels, scale_method='3c'):
     """ Scale frequencies according to some method
+        obtain a corrected zpe
     """
+
+    # Scale the frequencies
     print('in scale freqs')
     thy_info = chn_pf_levels['harm'][1]
     thy_method = (thy_info[1], thy_info[2])
@@ -196,8 +200,14 @@ def scale_frequencies(freqs, chn_pf_levels, scale_method='3c'):
         print('coef2', cf1, cf2, cf3)
     else:
         scaled_freqs = freqs
-
     print('freqs', freqs)
     print('scaled_freqs', scaled_freqs)
 
-    return scaled_freqs
+    # Calculate the zpe
+    freq_zpe = 0.0
+    for freq, scfreq in zip(freqs, scaled_freqs):
+        freq_zpe += ((freq / 2.0) - (1.0 / 8.0) * (scfreq - freq))
+    freq_zpe *= phycon.WAVEN2EH
+    tot_zpe = freq_zpe + tors_zpe
+
+    return scaled_freqs, tot_zpe

@@ -47,7 +47,7 @@ def scale_1d(pf_models):
     return bool(pf_models['tors'] == '1dhrfa')
 
 
-def scale_tors_pot(pf_models, to_scale): 
+def scale_tors_pot(pf_models, to_scale):
     """ determine if we need to scale the potential
     """
     onedhr_model = bool('1dhr' in pf_models['tors'])

@@ -29,52 +29,64 @@ def get_zma_geo(filesys, locs):
     return zma, geo
 
 
-def min_energy_conformer_locators(cnf_save_fs, mod_thy_info,
-                                  cnf_range='min'):
+def min_energy_conformer_locators(cnf_save_fs, mod_thy_info):
+    """ wrapper for minimum locs
+    """
+    locs, paths = conformer_locators(
+        cnf_save_fs, mod_thy_info, cnf_range='min')
+    if locs and paths:
+        ret = locs[0], paths[0]
+    else:
+        ret = [], []
+    return ret
+
+
+def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
     """ locators for minimum energy conformer
     """
 
-    cnf_locs = cnf_save_fs[-1].existing()
-    min_cnf_locs = []
+    cnf_locs_lst = cnf_save_fs[-1].existing()
+    fin_locs_lst, fin_paths_lst = [], []
 
-    if cnf_locs:
+    if cnf_locs_lst:
 
-        cnf_locs, cnf_enes = _sorted_cnf_lsts(
-            cnf_locs, cnf_save_fs, mod_thy_info)
-        print('ini sorted cnf_locs', cnf_locs)
-        print('ini sorted cnf_enes', cnf_enes)
+        cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
+            cnf_locs_lst, cnf_save_fs, mod_thy_info)
+        print('ini sorted cnf_locs', cnf_locs_lst)
+        print('ini sorted cnf_enes', cnf_enes_lst)
 
         if cnf_range == 'min':
-            min_cnf_locs = [cnf_locs[0]]
+            fin_locs_lst = [cnf_locs_lst[0]]
         elif cnf_range == 'all':
-            min_cnf_locs = cnf_locs
+            fin_locs_lst = cnf_locs_lst
         elif 'e' in cnf_range:
-            min_cnf_locs = _erange_locs(cnf_locs, cnf_enes, cnf_range)
+            fin_locs_lst = _erange_locs(cnf_locs_lst, cnf_enes_lst, cnf_range)
         elif 'n' in cnf_range:
-            min_cnf_locs = _nrange_locs(cnf_locs, cnf_range)
+            fin_locs_lst = _nrange_locs(cnf_locs_lst, cnf_range)
 
-        # print('min_cnf_locs test:', min_cnf_locs)
+    for locs in fin_locs_lst:
+        fin_paths_lst.append(cnf_save_fs[-1].path(locs))
 
-    return min_cnf_locs
+    return fin_locs_lst, fin_paths_lst
 
 
-def _sorted_cnf_lsts(cnf_locs, cnf_save_fs, mod_thy_info):
+def _sorted_cnf_lsts(cnf_locs_lst, cnf_save_fs, mod_thy_info):
     """ Get a list of conformer locs and energies, sorted by energies
     """
 
-    cnf_enes = []
-    if len(cnf_locs) == 1:
-        cnf_enes = [10]
+    cnf_enes_lst = []
+    if len(cnf_locs_lst) == 1:
+        cnf_enes_lst = [10]
     else:
-        for locs in cnf_locs:
+        for locs in cnf_locs_lst:
             cnf_path = cnf_save_fs[-1].path(locs)
             sp_fs = autofile.fs.single_point(cnf_path)
-            cnf_enes.append(sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
+            cnf_enes_lst.append(sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
 
     # Sort the cnf locs and cnf enes
-    cnf_enes, cnf_locs = zip(*sorted(zip(cnf_enes, cnf_locs)))
+    cnf_enes_lst, cnf_locs_lst = zip(*sorted(zip(cnf_enes_lst, cnf_locs_lst)))
 
-    return cnf_locs, cnf_enes
+    return cnf_locs_lst, cnf_enes_lst
 
 
 def _erange_locs(cnf_locs, cnf_enes, ethresh):

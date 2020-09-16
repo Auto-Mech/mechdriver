@@ -86,11 +86,11 @@ def conformer_sampling(zma, spc_info,
     )
 
     # Save information about the minimum energy conformer in top directory
-    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
+    min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
     if min_cnf_locs:
         print('min_cnf_locs test in save_conformer:', min_cnf_locs)
-        geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs[0])
+        geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         if not saddle:
             # print(automol.zmatrix.string(zma))
             # print(automol.zmatrix.string(automol.geom.zmatrix(geo)))
@@ -105,30 +105,56 @@ def conformer_sampling(zma, spc_info,
     return bool(min_cnf_locs)
 
 
-def single_conformer(zma, spc_info, thy_info,
-                     thy_save_fs, cnf_run_fs, cnf_save_fs,
-                     overwrite, saddle=False):
-    """ generate single optimized geometry for
-        randomly sampled initial torsional angles
+def single_conformer(zma, spc_info, mod_thy_info,
+                     cnf_run_fs, cnf_save_fs,
+                     script_str, overwrite,
+                     retryfail=True, saddle=False, **kwargs):
+    """ generate single optimized geometry to be saved into a
+        filesystem
     """
-    opt_script_str, _, kwargs, _ = es_runner.qchem_params(*thy_info[0:2])
-    conf_found = conformer_sampling(
-        zma=zma,
-        spc_info=spc_info,
-        mod_thy_info=thy_info,
-        thy_save_fs=thy_save_fs,
-        cnf_run_fs=cnf_run_fs,
-        cnf_save_fs=cnf_save_fs,
-        script_str=opt_script_str,
-        overwrite=overwrite,
-        nsamp_par=[False, 0, 0, 0, 0, 1],
-        saddle=saddle,
-        two_stage=saddle,
-        retryfail=False,
-        **kwargs,
-    )
 
-    return conf_found
+    # Build the filesystem
+    locs = [autofile.schema.generate_new_conformer_id()]
+    cnf_run_fs[-1].create(locs)
+    cnf_run_path = cnf_run_fs[-1].path(locs)
+    run_fs = autofile.fs.run(cnf_run_path)
+
+    # Run the optimization
+    print('Optimizing a singel conformer')
+    es_runner.run_job(
+        job=elstruct.Job.OPTIMIZATION,
+        script_str=script_str,
+        run_fs=run_fs,
+        geom=zma,
+        spc_info=spc_info,
+        thy_info=mod_thy_info,
+        overwrite=overwrite,
+        frozen_coordinates=(),
+        saddle=saddle,
+        retryfail=retryfail,
+        **kwargs
+    )
+    # print('Stage one success, reading for stage 2')
+    success, ret = es_runner.read_job(
+        job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+
+    if success:
+        inf_obj, _, out_str = ret
+        prog = inf_obj.prog
+        method = inf_obj.method
+        ene = elstruct.reader.energy(prog, method, out_str)
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+        zma = elstruct.reader.opt_zmatrix(prog, out_str)
+        _, saved_geos, saved_enes = _saved_cnf_info(
+            cnf_save_fs, mod_thy_info)
+
+        if _geo_unique(geo, ene, saved_geos, saved_enes, saddle):
+            sym_id = _sym_unique(
+                geo, ene, saved_geos, saved_enes)
+            if sym_id is None:
+                _save_unique_conformer(
+                    ret, mod_thy_info, cnf_save_fs, locs,
+                    saddle=saddle, zma_locs=(0,))
 
 
 def run_conformers(
@@ -187,7 +213,8 @@ def run_conformers(
         # print('zma tests:',
         #         automol.zmatrix.string(zma), automol.zmatrix.string(zma))
         bad_geom_count = 0
-        while not automol.intmol.low_repulsion_struct(zma, samp_zma) and bad_geom_count < 1000:
+        while (not automol.intmol.low_repulsion_struct(zma, samp_zma) and
+               bad_geom_count < 1000):
             print('  ZMA has high repulsion.')
             # print('  Bad geometry:')
             # print(automol.geom.string(automol.zmatrix.geometry(samp_zma)))
@@ -276,16 +303,8 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
         # may need to get geo, ene, etc; maybe make function
     """
 
-    saved_locs = list(cnf_save_fs[-1].existing())
-    saved_geos = [cnf_save_fs[-1].file.geometry.read(locs)
-                  for locs in saved_locs]
-    # saved_enes = [cnf_save_fs[-1].file.energy.read(locs)
-    #               for locs in saved_locs]
-    saved_enes = []
-    for locs in saved_locs:
-        path = cnf_save_fs[-1].path(locs)
-        sp_save_fs = autofile.fs.single_point(path)
-        saved_enes.append(sp_save_fs[-1].file.energy.read(thy_info[1:4]))
+    saved_locs, saved_geos, saved_enes = _saved_cnf_info(
+        cnf_save_fs, thy_info)
 
     if not saddle:
         _check_old_inchi(orig_ich, saved_geos, saved_locs, cnf_save_fs)
@@ -409,9 +428,9 @@ def _check_old_inchi(orig_ich, seen_geos, saved_locs, cnf_save_fs):
     """
     for i, geoi in enumerate(seen_geos):
         if not orig_ich == automol.geom.inchi(geoi):
-            print('ERROR: inchi do not match for {}'.format(automol.geom.smiles(geoi)))
+            smi = automol.geom.smiles(geoi)
+            print('ERROR: inchi do not match for {}'.format(smi))
             print(cnf_save_fs[-1].path(saved_locs[i]))
-    return
 
 
 def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
@@ -459,9 +478,8 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     viable = True
 
     # Obtain the min-ene zma and bond keys
-    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
+    min_cnf_locs, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
-    cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs[0])
     zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
@@ -471,25 +489,25 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
         cnf_save_fs, min_cnf_locs, zma_locs=zma_locs)
 
     # Use the idxs to set the forming and breaking bond names
-#    if frm_bnd_keys:
-#      #  frm_name = automol.zmatrix.bond_key_from_idxs(
-#      #      zma, frm_bnd_keys)
-#        ts_bnd1, ts_bnd2 = min(frm_bnd_keys), max(frm_bnd_keys)
-#    else:
-#      #  frm_name = ''
-#        ts_bnd1, ts_bnd2 = None, None
+    #    if frm_bnd_keys:
+    #      frm_name = automol.zmatrix.bond_key_from_idxs(
+    #           zma, frm_bnd_keys)
+    #        ts_bnd1, ts_bnd2 = min(frm_bnd_keys), max(frm_bnd_keys)
+    #    else:
+    #      frm_name = ''
+    #        ts_bnd1, ts_bnd2 = None, None
 
-   # if brk_bnd_keys:
-      #  brk_name = automol.zmatrix.bond_key_from_idxs(
-      #      zma, brk_bnd_keys)
-   # else:
-      #  brk_name = ''
-   # print('frm_name', frm_name)
-   # print('brk_name', brk_name)
+    # if brk_bnd_keys:
+    #  brk_name = automol.zmatrix.bond_key_from_idxs(
+    #      zma, brk_bnd_keys)
+    # else:
+    #  brk_name = ''
+    # print('frm_name', frm_name)
+    # print('brk_name', brk_name)
 
-    ## Calculate the distance of bond being formed
-    #cnf_dct = automol.zmatrix.values(zma)
-    #ref_dct = automol.zmatrix.values(ref_zma)
+    # Calculate the distance of bond being formed
+    # cnf_dct = automol.zmatrix.values(zma)
+    # ref_dct = automol.zmatrix.values(ref_zma)
     cnf_geo = automol.zmatrix.geometry(zma)
     ref_geo = automol.zmatrix.geometry(ref_zma)
 
@@ -523,37 +541,39 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
                         idx2 = frm_idx
                         idx1 = list(frm_bnd_key - frozenset({idx2}))[0]
                         idx3 = list(brk_bnd_key - frozenset({idx2}))[0]
-                        cnf_ang = automol.geom.central_angle(cnf_geo, idx1, idx2, idx3)
-                        ref_ang = automol.geom.central_angle(ref_geo, idx1, idx2, idx3)
+                        cnf_ang = automol.geom.central_angle(
+                            cnf_geo, idx1, idx2, idx3)
+                        ref_ang = automol.geom.central_angle(
+                            ref_geo, idx1, idx2, idx3)
                         cnf_ang_lst.append(cnf_ang)
                         ref_ang_lst.append(ref_ang)
 
-  #      cnf_dist = cnf_dct.get(frm_name, None)
-  #      ref_dist = ref_dct.get(frm_name, None)
-  #  if cnf_dist is None:
-  #      cnf_dist = cnf_dct.get(brk_name, None)
-  #  if ref_dist is None:
-  #      ref_dist = ref_dct.get(brk_name, None)
+    #      cnf_dist = cnf_dct.get(frm_name, None)
+    #      ref_dist = ref_dct.get(frm_name, None)
+    #  if cnf_dist is None:
+    #      cnf_dist = cnf_dct.get(brk_name, None)
+    #  if ref_dist is None:
+    #      ref_dist = ref_dct.get(brk_name, None)
     print('bnd_key_list', bnd_key_lst)
     print('conf_dist', cnf_dist_lst)
     print('ref_dist', ref_dist_lst)
     print('conf_angle', cnf_ang_lst)
     print('ref_angle', ref_ang_lst)
 
-  #  # Calculate the central angle of reacting moiety of zma
-  #  cnf_angle = geomprep.calc_rxn_angle(
-  #      zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
-  #  ref_angle = geomprep.calc_rxn_angle(
-  #      ref_zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
-  #  print('conf_angle', cnf_angle)
-  #  print('ref_angle', ref_angle)
+    #  # Calculate the central angle of reacting moiety of zma
+    #  cnf_angle = geomprep.calc_rxn_angle(
+    #      zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
+    #  ref_angle = geomprep.calc_rxn_angle(
+    #      ref_zma, frm_bnd_keys, brk_bnd_keys, rxn_class)
+    #  print('conf_angle', cnf_angle)
+    #  print('ref_angle', ref_angle)
 
     # Set the maximum allowed displacement for a TS conformer
     max_disp = 0.6
     if 'addition' in rxn_class:
         max_disp = 0.8
     if 'abstraction' in rxn_class:
-        # this was 1.4 - SJK reduced it to make it work for some OH abstractions
+        # this was 1.4 - SJK reduced it to work for some OH abstractions
         max_disp = 1.0
 
     # Check forming bond angle similar to ini config
@@ -567,14 +587,16 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
                 viable = False
 
     symbols = automol.geom.symbols(cnf_geo)
-    for ref_dist, cnf_dist, bnd_key in zip(ref_dist_lst, cnf_dist_lst, bnd_key_lst):
+    lst_info = zip(ref_dist_lst, cnf_dist_lst, bnd_key_lst)
+    for ref_dist, cnf_dist, bnd_key in lst_info:
         if 'add' in rxn_class or 'abst' in rxn_class:
             bnd_key1, bnd_key2 = min(list(bnd_key)), max(list(bnd_key))
             symb1 = symbols[bnd_key1]
             symb2 = symbols[bnd_key2]
 
             if bnd_key in frm_bnd_keys:
-                # Check if radical atom is closer to some atom other than the bonding atom
+                # Check if radical atom is closer to some atom
+                # other than the bonding atom
                 cls = geomprep.is_atom_closest_to_bond_atom(
                     zma, bnd_key2, cnf_dist)
                 if not cls:
@@ -627,7 +649,7 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs,
         within the ini_cnf_save_fs. Generate a lst of unique structures
         in the ini_cnf_save_fs.
     """
-    
+
     uni_ini_cnf_save_locs = []
     for ini_locs in ini_cnf_save_locs:
 
@@ -635,14 +657,13 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs,
         found = False
 
         # Loop over structs in cnf_save, see if they match the current struct
-        ini_zma, ini_geo = filesys.inf.cnf_fs_zma_geo(
+        _, inigeo = filesys.inf.cnf_fs_zma_geo(
             ini_cnf_save_fs, ini_locs)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
         print('Checking structure from path {}'.format(ini_cnf_save_path))
         for locs in cnf_save_locs:
-            zma, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
-            if automol.geom.almost_equal_dist_matrix(
-                ini_geo, geo, thresh=3e-1):
+            _, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
+            if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):
                 cnf_save_path = cnf_save_fs[-1].path(cnf_save_locs)
                 print('- Similar structure found at {}'.format(cnf_save_path))
                 found = True
@@ -675,9 +696,8 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
 
     # Read the tra and graph
     if saddle:
-        ts_min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
+        ts_min_cnf_locs, ts_min_path = filesys.mincnf.min_energy_conformer_locators(
             cnf_save_fs, thy_info)
-        ts_min_path = cnf_save_fs[-1].path(ts_min_cnf_locs[0])
         ts_min_zma_fs = fs.manager(ts_min_path, 'ZMATRIX')
         print('ts_min_path test:', ts_min_path)
         tra = ts_min_zma_fs[-1].file.transformation.read(zma_locs)
@@ -732,3 +752,20 @@ def _save_sym_indistinct_conformer(geo, cnf_save_fs,
     sym_save_fs[-1].file.geometry.write(geo, cnf_tosave_locs)
     # sym_save_fs[-1].file.energy.write(ene, cnf_tosave_locs)
     # sym_save_fs[-1].file.zmatrix.write(zma, cnf_tosave_locs)
+
+
+def _saved_cnf_info(cnf_save_fs, mod_thy_info):
+    """ get the locs, geos and enes for saved conformers
+    """
+
+    saved_locs = list(cnf_save_fs[-1].existing())
+    saved_geos = [cnf_save_fs[-1].file.geometry.read(locs)
+                  for locs in saved_locs]
+    saved_enes = []
+    for locs in saved_locs:
+        path = cnf_save_fs[-1].path(locs)
+        sp_save_fs = autofile.fs.single_point(path)
+        saved_enes.append(sp_save_fs[-1].file.energy.read(
+            mod_thy_info[1:4]))
+
+    return saved_locs, saved_geos, saved_enes
