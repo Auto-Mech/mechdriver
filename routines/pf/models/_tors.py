@@ -411,6 +411,7 @@ def _hrpot_spline_fitter(pot_dct, min_thresh=-0.10, max_thresh=50.0):
 
     fin_dct = {}
     for i, val in enumerate(final_potential):
-        fin_dct[(i,)] = val
+        val_fin = min(val, max_thresh)
+        fin_dct[(i,)] = val_fin
 
     return fin_dct

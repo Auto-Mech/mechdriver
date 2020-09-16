@@ -468,7 +468,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     # Read the form and broken keys from the min conf
     # frm_bnd_keys, brk_bnd_keys = tsprep.rxn_bnd_keys(
     frm_bnd_keys, brk_bnd_keys = tsprep.all_rxn_bnd_keys(
-        cnf_save_fs, min_cnf_locs[0], zma_locs=zma_locs)
+        cnf_save_fs, min_cnf_locs, zma_locs=zma_locs)
 
     # Use the idxs to set the forming and breaking bond names
 #    if frm_bnd_keys:

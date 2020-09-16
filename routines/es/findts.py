@@ -214,7 +214,7 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
         if cnf_save_locs and not overwrite:
 
             print('TS found and saved previously in ',
-                  cnf_save_fs[-1].path(cnf_save_locs))
+                  cnf_save_fs[-1].path(cnf_save_locs[0]))
         else:
 
             print('No transition state found in filesys',

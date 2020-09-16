@@ -208,8 +208,8 @@ def cnf_fs_from_prefix(cnf_prefix, mod_thy_info, cnf=None):
         else:
             cnf_locs = min_energy_conformer_locators(
                 cnf_fs, mod_thy_info, cnf_range=cnf)
-            if cnf == 'min':
-                cnf_locs = cnf_locs[0]
+            # if cnf == 'min':
+                # cnf_locs = cnf_locs[0]
 
     return cnf_fs, cnf_locs
 
@@ -220,7 +220,7 @@ def cnf_paths_from_locs(cnf_fs, cnf_locs):
     cnf_paths = []
     if cnf_locs:
         for locs in cnf_locs:
-            cnf_paths.append(cnf_fs[-1].path([locs]))
+            cnf_paths.append(cnf_fs[-1].path([locs[0]]))
 
     return cnf_paths
 

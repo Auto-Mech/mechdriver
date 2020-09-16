@@ -241,18 +241,18 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Read the geometry and zma from the ini file system
         if not saddle:
-            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_cnf_save_locs)
+            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_cnf_save_locs[0])
             zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
             tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-            geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
+            geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs[0])
         else:
             print('ini path', ini_thy_save_path)
-            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_cnf_save_locs)
+            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_cnf_save_locs[0])
             # geo = ini_thy_save_fs[0].file.geometry.read()
             zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
             tors_names = spc['amech_ts_tors_names']
             # geo_path = thy_save_fs[0].path()
-            geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
+            geo_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs[0])
 
         print('Sampling done using geom from {}'.format(geo_path))
 
@@ -313,16 +313,19 @@ def conformer_tsk(job, spc_dct, spc_name,
             *thy_info[0:2])
 
         # Run the job over all the conformers requested by the user
-        for locs in cnf_save_locs:
+        for locs in cnf_save_locs[0]:
             print('\n\nRunning task for cnf locs', locs)
-            locs_i = [locs]
-            geo_run_path = cnf_run_fs[-1].path(locs_i)
-            geo_save_path = cnf_save_fs[-1].path(locs_i)
-            cnf_run_fs[-1].create(locs_i)
-            zma, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs_i)
+            #if cnf_range == 'min':
+                # locs_i = [locs]
+            # else:
+                # locs_i = locs
+            geo_run_path = cnf_run_fs[-1].path(locs[0])
+            geo_save_path = cnf_save_fs[-1].path(locs[0])
+            cnf_run_fs[-1].create(locs[0])
+            zma, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs[0])
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,
-                cnf_save_fs, geo_run_path, geo_save_path, locs_i,
+                cnf_save_fs, geo_run_path, geo_save_path, locs[0],
                 script_str, overwrite,
                 retryfail=retryfail, **kwargs)
 
@@ -605,7 +608,7 @@ def hr_tsk(job, spc_dct, spc_name,
         ini_cnf_run_fs, ini_cnf_save_locs)
 
     # Create run fs if that directory has been deleted to run the jobs
-    ini_cnf_run_fs[-1].create(ini_cnf_save_locs)
+    ini_cnf_run_fs[-1].create(ini_cnf_save_locs[0])
 
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
@@ -662,7 +665,7 @@ def hr_tsk(job, spc_dct, spc_name,
                 retryfail=retryfail, **opt_kwargs)
 
             # Read and print the potential
-            ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_cnf_save_locs)
+            ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_cnf_save_locs[0])
             tors_pots, tors_zmas = {}, {}
             for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
                 constraint_dct = structure.tors.build_constraint_dct(

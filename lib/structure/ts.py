@@ -10,7 +10,7 @@ def rxn_bnd_keys(cnf_fs, cnf_locs, zma_locs=(0,)):
     """
 
     print('cnf locs', cnf_locs)
-    cnf_path = cnf_fs[-1].path(cnf_locs)
+    cnf_path = cnf_fs[-1].path(cnf_locs[0])
     zma_fs = fs.manager(cnf_path, 'ZMATRIX')
     tra = zma_fs[-1].file.transformation.read(zma_locs)
     frm_bnd_keys, brk_bnd_keys = tra
@@ -45,7 +45,7 @@ def all_rxn_bnd_keys(cnf_fs, cnf_locs, zma_locs=(0,)):
     """ get bond broken and formed keys for a transition state
     """
 
-    cnf_path = cnf_fs[-1].path(cnf_locs)
+    cnf_path = cnf_fs[-1].path(cnf_locs[0])
     zma_fs = fs.manager(cnf_path, 'ZMATRIX')
     tra = zma_fs[-1].file.transformation.read(zma_locs)
     frm_bnd_keys, brk_bnd_keys = tra

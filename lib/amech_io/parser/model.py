@@ -247,6 +247,7 @@ def pf_model_info(pf_model):
     tors_model = pf_model['tors'] if 'tors' in pf_model else 'rigid'
     vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
     sym_model = pf_model['sym'] if 'sym' in pf_model else 'none'
+    vpt2_model = pf_model['vpt2'] if 'vpt2' in pf_model else 'none'
 
     # Set well models
     if 'wells' in pf_model:
@@ -267,6 +268,7 @@ def pf_model_info(pf_model):
         'tors': tors_model,
         'vib': vib_model,
         'sym': sym_model,
+        'vpt2': vpt2_model,
         'rwells': rwells_model,
         'pwells': pwells_model
     }
