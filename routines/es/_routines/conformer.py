@@ -86,11 +86,11 @@ def conformer_sampling(zma, spc_info,
     )
 
     # Save information about the minimum energy conformer in top directory
-    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
+    min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
     if min_cnf_locs:
         print('min_cnf_locs test in save_conformer:', min_cnf_locs)
-        geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs[0])
+        geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         if not saddle:
             # print(automol.zmatrix.string(zma))
             # print(automol.zmatrix.string(automol.geom.zmatrix(geo)))
@@ -478,9 +478,8 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     viable = True
 
     # Obtain the min-ene zma and bond keys
-    min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
+    min_cnf_locs, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
-    cnf_save_path = cnf_save_fs[-1].path(min_cnf_locs[0])
     zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
@@ -697,9 +696,8 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
 
     # Read the tra and graph
     if saddle:
-        ts_min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
+        ts_min_cnf_locs, ts_min_path = filesys.mincnf.min_energy_conformer_locators(
             cnf_save_fs, thy_info)
-        ts_min_path = cnf_save_fs[-1].path(ts_min_cnf_locs[0])
         ts_min_zma_fs = fs.manager(ts_min_path, 'ZMATRIX')
         print('ts_min_path test:', ts_min_path)
         tra = ts_min_zma_fs[-1].file.transformation.read(zma_locs)

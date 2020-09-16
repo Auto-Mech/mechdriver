@@ -18,11 +18,13 @@ def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info, zma_locs=(0,)):
     guess_zmas = []
 
     # Check and see if a zma is found from the filesystem
-    ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-        ini_ts_save_path, mod_ini_thy_info, cnf='min')
-    if ini_cnf_save_locs:
+    ini_cnf_save_fs = autofile.fs.conformer(ini_ts_save_path)
+    ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+        ini_cnf_save_fs, mod_ini_thy_info)
+
+    if ini_min_cnf_locs:
         ini_zma_fs = autofile.fs.manager(
-            ini_cnf_save_fs[-1].path(ini_cnf_save_locs), 'ZMATRIX')
+            ini_cnf_save_fs[-1].path(ini_min_cnf_locs), 'ZMATRIX')
         if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
             geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
             print(' - Z-Matrix found.')

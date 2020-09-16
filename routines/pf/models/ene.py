@@ -104,23 +104,45 @@ def zero_point_energy(spc_dct_i,
     if typ.is_atom(spc_dct_i):
         zpe = 0.0
     else:
-        # rotors = tors.build_rotors(
-        #     spc_dct_i, pf_filesystems, pf_models, pf_levels,
-        #     rxn_class=rxn_class,
-        #     frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
-        rotors = []
+        rotors = tors.build_rotors(
+            spc_dct_i, pf_filesystems, pf_models, pf_levels,
+            rxn_class=rxn_class,
+            frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+
         if typ.nonrigid_tors(pf_models, rotors):
             run_path = fmod.make_run_path(pf_filesystems, 'tors')
             tors_strs = tors.make_hr_strings(
-                rotors, run_path, pf_models['tors'])
+                rotors, run_path, pf_models['tors'],
+                scale_factor=None)
             [_, hr_str, _, prot_str, _] = tors_strs
 
-        # Obtain vibration partition function information
         if typ.nonrigid_tors(pf_models, rotors):
-            _, _, zpe, _ = vib.tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str)
+            # Calculate init proj. freqs, unproj. imag, tors zpe and scale fact
+            freqs, _, tors_zpe, pot_scalef = vib.tors_projected_freqs_zpe(
+                pf_filesystems, hr_str, prot_str, saddle=saddle)
+            # Make final hindered rotor strings and get corrected tors zpe
+            if typ.scale_1d(pf_models):
+                tors_strs = tors.make_hr_strings(
+                    rotors, run_path, pf_models['tors'],
+                    scale_factor=pot_scalef)
+                [_, hr_str, _, prot_str, _] = tors_strs
+                _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
+                    pf_filesystems, hr_str, prot_str, saddle=saddle)
+                # Calculate current zpe assuming no freq scaling: tors+projfreq
+            zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
+
+            # For mdhrv model no freqs needed in MESS input, zero out freqs lst
+            if 'mdhrv' in pf_models['tors']:
+                freqs = ()
         else:
-            _, _, zpe = vib.read_harmonic_freqs(pf_filesystems)
+            freqs, _, zpe = vib.read_harmonic_freqs(
+                pf_filesystems, saddle=saddle)
+            tors_zpe = 0.0
+
+        # Scale the frequencies
+        if freqs:
+            freqs, zpe = vib.scale_frequencies(
+                freqs, tors_zpe, pf_levels, scale_method='3c')
 
     return zpe
 

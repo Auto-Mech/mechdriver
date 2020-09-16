@@ -107,7 +107,8 @@ def reference_geometry(spc_dct_i, spc_info,
     return geo_found
 
 
-def _obtain_ini_geom(spc_dct_i, ini_thy_save_path, mod_ini_thy_info, overwrite):
+def _obtain_ini_geom(spc_dct_i, ini_thy_save_path,
+                     mod_ini_thy_info, overwrite):
     """ Obtain an initial geometry to be optimized. Checks a hieratchy
         of places to obtain the initial geom.
             (1) Geom dict which is the input from the user
@@ -118,18 +119,18 @@ def _obtain_ini_geom(spc_dct_i, ini_thy_save_path, mod_ini_thy_info, overwrite):
 
     # Obtain geom from thy fs or remove the conformer filesystem if needed
     if not overwrite:
-        ini_cnf_save_fs, ini_min_cnf_locs = filesys.build.cnf_fs_from_thy(
-            ini_thy_save_path, mod_ini_thy_info, cnf='min')
+        ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
+        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+            ini_cnf_save_fs, mod_ini_thy_info)
         if ini_min_cnf_locs:
-            geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs[0])
+            geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
             print('Getting inital geometry from inplvl at path',
                   '{}'.format(ini_cnf_save_fs[-1].path(ini_min_cnf_locs)))
     else:
         print('Removing original conformer save data for instability')
-        ini_cnf_save_fs, _ = filesys.build.cnf_fs_from_thy(
-            ini_thy_save_path, mod_ini_thy_info, cnf=None)
+        ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         for locs in ini_cnf_save_fs[-1].existing():
-            cnf_path = ini_cnf_save_fs[-1].path(locs[0])
+            cnf_path = ini_cnf_save_fs[-1].path(locs)
             print('Removing {}'.format(cnf_path))
             shutil.rmtree(cnf_path)
 

@@ -60,7 +60,7 @@ def read_spc_data(spc_dct_i, spc_name,
     return inf_dct
 
 
-def read_ts_data(ts_dct, tsname, reac_dcts, 
+def read_ts_data(ts_dct, tsname, reac_dcts,
                  chn_pf_models, chn_pf_levels,
                  run_prefix, save_prefix,
                  ts_class, ts_sadpt, ts_nobarrier,
@@ -212,27 +212,32 @@ def mol_data(spc_dct_i,
     # Obtain vibration partition function information
     print('\nObtaining the vibrational frequencies and zpves...')
     if typ.nonrigid_tors(chn_pf_models, rotors):
-        freqs, imag, zpe, _, scale_factor = vib.tors_projected_freqs_zpe(
+        # Calculate initial proj. freqs, unproj. imag, tors zpe and scale fact
+        freqs, imag, tors_zpe, pot_scalef = vib.tors_projected_freqs_zpe(
             pf_filesystems, hr_str, prot_str, saddle=saddle)
-        # Make final hindered rotor strings
+        # Make final hindered rotor strings and get corrected tors zpe
         if typ.scale_1d(chn_pf_models):
             tors_strs = tors.make_hr_strings(
                 rotors, run_path, chn_pf_models['tors'],
-                scale_factor=scale_factor)
-            print('hr_str1\n', allr_str)
+                scale_factor=pot_scalef)
             [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
-            print('hr_str2\n', allr_str)
-            freqs, imag, zpe, _, _ = vib.tors_projected_freqs_zpe(
+            _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
                 pf_filesystems, hr_str, prot_str, saddle=saddle)
+            # Calculate current zpe assuming no freq scaling: tors+projfreq
+        zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
+
+        # For mdhrv model no freqs needed in MESS input, zero out freqs lst
         if 'mdhrv' in chn_pf_models['tors']:
             freqs = ()
     else:
         freqs, imag, zpe = vib.read_harmonic_freqs(
             pf_filesystems, saddle=saddle)
+        tors_zpe = 0.0
 
     # Scale the frequencies
     if freqs:
-        freqs = vib.scale_frequencies(freqs, chn_pf_levels, scale_method='3c')
+        freqs, zpe = vib.scale_frequencies(
+            freqs, tors_zpe, chn_pf_levels, scale_method='3c')
 
     if typ.anharm_vib(chn_pf_models):
         xmat = vib.read_anharmon_matrix(pf_filesystems)

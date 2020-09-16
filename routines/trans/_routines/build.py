@@ -3,6 +3,7 @@
 """
 
 import automol
+import autofile
 import chemkin_io
 from lib import filesys
 
@@ -37,27 +38,27 @@ def collate_properties(spc_queue, bath_name,
         # Build the conformer filesystem objects
         _, thy_save_path = filesys.build.spc_thy_fs_from_root(
             save_prefix, tgt_info, mod_tgt_thy_info)
-        cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-            thy_save_path, mod_tgt_thy_info, cnf='min')
-        cnf_save_paths = filesys.build.cnf_paths_from_locs(
-            cnf_save_fs, cnf_save_locs)
+        cnf_save_fs = autofile.fs.conformer(thy_save_path)
+        cnf_info = filesys.mincnf.min_energy_conformer_locators(
+            cnf_save_fs, mod_tgt_thy_info)
+        min_cnf_locs, min_cnf_path = cnf_info
 
         # Build the energy transfer filesystem objects
         etrans_fs, etrans_locs = filesys.build.etrans_fs_from_prefix(
-            cnf_save_paths[0], bath_info, mod_lj_thy_info)
+            min_cnf_path, bath_info, mod_lj_thy_info)
 
         # Read the conformer filesystems
-        if cnf_save_fs[-1].file.geometry.exists(cnf_save_locs):
-            geom = cnf_save_fs[-1].file.geometry.read(cnf_save_locs)
+        if cnf_save_fs[-1].file.geometry.exists(min_cnf_locs):
+            geom = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         else:
             geom = None
-        if cnf_save_fs[-1].file.dipole_moment.exists(cnf_save_locs):
-            vec = cnf_save_fs[-1].file.dipole_moment.read(cnf_save_locs)
+        if cnf_save_fs[-1].file.dipole_moment.exists(min_cnf_locs):
+            vec = cnf_save_fs[-1].file.dipole_moment.read(min_cnf_locs)
             dip_mom = automol.prop.total_dipole_moment(vec)
         else:
             dip_mom = None
-        if cnf_save_fs[-1].file.polarizability.exists(cnf_save_locs):
-            tensor = cnf_save_fs[-1].file.polarizability.read(cnf_save_locs)
+        if cnf_save_fs[-1].file.polarizability.exists(min_cnf_locs):
+            tensor = cnf_save_fs[-1].file.polarizability.read(min_cnf_locs)
             polar = automol.prop.total_polarizability(tensor)
         else:
             polar = None

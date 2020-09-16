@@ -100,10 +100,9 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
         ini_thy_save_path)
 
     # Set the cnf fs to see if TS is available or for searching
-    cnf_save_fs, cnf_save_locs = filesys.build.cnf_fs_from_prefix(
-        ts_save_path, mod_thy_info, cnf='min')
-    # cnf_run_fs, _ = filesys.build.cnf_fs_from_prefix(
-    #     ts_run_path, mod_thy_info ,cnf=None)
+    cnf_save_fs = autofile.fs.conformer(ini_ts_save_path)
+    min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
 
     # Find the transition state using the appropriate algorithm
     switch = False
@@ -211,10 +210,10 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
     if _sadpt_search(ts_dct, ts_search, switch):
 
         # ts_found = False
-        if cnf_save_locs and not overwrite:
+        if min_cnf_locs and not overwrite:
 
             print('TS found and saved previously in ',
-                  cnf_save_fs[-1].path(cnf_save_locs[0]))
+                  cnf_save_fs[-1].path(min_cnf_locs))
         else:
 
             print('No transition state found in filesys',
