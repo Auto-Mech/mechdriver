@@ -121,7 +121,7 @@ def _obtain_ini_geom(spc_dct_i, ini_thy_save_path, mod_ini_thy_info, overwrite):
         ini_cnf_save_fs, ini_min_cnf_locs = filesys.build.cnf_fs_from_thy(
             ini_thy_save_path, mod_ini_thy_info, cnf='min')
         if ini_min_cnf_locs:
-            geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
+            geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs[0])
             print('Getting inital geometry from inplvl at path',
                   '{}'.format(ini_cnf_save_fs[-1].path(ini_min_cnf_locs)))
     else:
@@ -129,7 +129,7 @@ def _obtain_ini_geom(spc_dct_i, ini_thy_save_path, mod_ini_thy_info, overwrite):
         ini_cnf_save_fs, _ = filesys.build.cnf_fs_from_thy(
             ini_thy_save_path, mod_ini_thy_info, cnf=None)
         for locs in ini_cnf_save_fs[-1].existing():
-            cnf_path = ini_cnf_save_fs[-1].path(locs)
+            cnf_path = ini_cnf_save_fs[-1].path(locs[0])
             print('Removing {}'.format(cnf_path))
             shutil.rmtree(cnf_path)
 
