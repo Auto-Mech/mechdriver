@@ -20,6 +20,5 @@ def run(tsk, spc_queue, spc_name, bath_name,
                    run_prefix, save_prefix)
     elif tsk == 'write_transport':
         build.collate_properties(spc_queue, spc_name, bath_name,
-                                 spc_dct, pf_levels,
-                                 thy_dct, etrans_keyword_dct,
-                                 run_prefix, save_prefix)
+                                 spc_dct, thy_dct, etrans_keyword_dct,
+                                 save_prefix)

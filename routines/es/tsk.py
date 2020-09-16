@@ -8,7 +8,7 @@ import autofile
 import automol
 from routines.es import runner as es_runner
 from routines.es.findts import run as runts
-#from routines.es.newts import run as runts
+# from routines.es.newts import run as runts
 from routines.es._routines import conformer
 from routines.es._routines import geom
 from routines.es._routines import hr
@@ -272,6 +272,10 @@ def conformer_tsk(job, spc_dct, spc_name,
         cnf_range = es_keyword_dct['cnf_range']
         print('range', cnf_range)
 
+        # Set up the run scripts
+        _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+            *mod_thy_info[0:2])
+
         # Build conformer filesys
         ini_cnf_save_fs, ini_cnf_save_locs = filesys.build.cnf_fs_from_prefix(
             ini_thy_save_path, mod_ini_thy_info, cnf=cnf_range)
@@ -285,9 +289,10 @@ def conformer_tsk(job, spc_dct, spc_name,
             cnf_save_fs, cnf_save_locs, ini_cnf_save_fs, ini_cnf_save_locs)
         for locs in uni_locs:
             conformer.single_conformer(
-                zma, spc_info, thy_info,
-                thy_save_fs, cnf_run_fs, cnf_save_fs,
-                overwrite, saddle=False)
+                zma, spc_info, mod_thy_info,
+                cnf_run_fs, cnf_save_fs,
+                opt_script_str, overwrite,
+                retryfail=retryfail, saddle=saddle, **opt_kwargs)
 
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 
@@ -453,13 +458,16 @@ def tau_tsk(job, spc_dct, spc_name,
                     zmatl = tau_save_fs[-1].file.zmatrix.read(locs)
                     tau_save_fs[-1].json.zmatrix.write(zmatl, locs)
                 if tau_save_fs[-1].file.harmonic_frequencies.exists(locs):
-                    hfreql = tau_save_fs[-1].file.harmonic_frequencies.read(locs)
-                    tau_save_fs[-1].json.harmonic_frequencies.write(hfreql, locs)
+                    hfreql = tau_save_fs[-1].file.harmonic_frequencies.read(
+                        locs)
+                    tau_save_fs[-1].json.harmonic_frequencies.write(
+                        hfreql, locs)
                 save_path = tau_save_fs[-1].path(locs)
                 sp_save_fs = autofile.fs.single_point(save_path)
                 sp_save_locs = sp_save_fs[-1].existing()
                 save_path = tau_save_fs[-1].root.path()
-                jsp_save_fs = autofile.fs.single_point(save_path, json_layer=locs)
+                jsp_save_fs = autofile.fs.single_point(
+                    save_path, json_layer=locs)
                 for sp_locs in sp_save_locs:
                     if sp_save_fs[-1].file.energy.exists(sp_locs):
                         enel = sp_save_fs[-1].file.energy.read(sp_locs)
