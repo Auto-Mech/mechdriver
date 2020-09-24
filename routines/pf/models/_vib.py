@@ -153,14 +153,24 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     if saddle:
         if len(imag_freqs) > 1:
             print('There is more than one imaginary frequency')
-        imag = imag_freqs[0]
+        imag = max(imag_freqs)
     else:
         imag = None
 
     # Create a scaling factor for the frequencie
-    unproj_prod = numpy.prod(rt_freqs1)
-    proj_prod = numpy.prod(freqs) * numpy.prod(tors_freqs)
-    scale_factor = proj_prod / unproj_prod
+    log_rt_freq = [numpy.log(freq) for freq in rt_freqs1]
+    log_rt_freq = sum(log_rt_freq)
+    log_freq = [numpy.log(freq) for freq in freqs]
+    log_freq = sum(log_freq)
+    log_tors_freq = [numpy.log(freq) for freq in tors_freqs]
+    log_tors_freq = sum(log_tors_freq)
+    #unproj_prod = numpy.prod(rt_freqs1)
+    #proj_prod = numpy.prod(freqs) * numpy.prod(tors_freqs)
+    #print('proj_prod test:', unproj_prod, proj_prod)
+    print('log_freq_tests:', log_rt_freq, log_freq, log_tors_freq)
+    print('freq test:', freqs, tors_freqs, rt_freqs1)
+    #scale_factor = unproj_prod / proj_prod
+    scale_factor = numpy.exp(log_rt_freq - log_freq - log_tors_freq)
     print('scale fact test', scale_factor)
 
     # Check if there are significant differences caused by the rotor projection

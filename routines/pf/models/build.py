@@ -239,6 +239,7 @@ def mol_data(spc_dct_i,
         freqs, zpe = vib.scale_frequencies(
             freqs, tors_zpe, chn_pf_levels, scale_method='3c')
 
+    # print('zpe in mol_data test:', zpe)
     if typ.anharm_vib(chn_pf_models):
         xmat = vib.read_anharmon_matrix(pf_filesystems)
 

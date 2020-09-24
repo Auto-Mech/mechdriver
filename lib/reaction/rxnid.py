@@ -38,7 +38,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
         given_class, rad_rad)
     [typ, bkp_typ,
      ts_zma, bkp_ts_zma,
-     tors_names, bkp_tors_names,
+     tors_names, bkp_tors_names, const_tors_names, const_angs_names,
      dist_name, bkp_dist_name, brk_name,
      frm_bnd_keys, brk_bnd_key, const_bnd_key, rcts_gra, rxn_dir] = ret
 
@@ -63,7 +63,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
         ts_class_data = [
             ts_zma, dist_name, brk_name,
             grid, frm_bnd_keys, brk_bnd_key, const_bnd_key,
-            tors_names, update_guess, var_grid, rcts_gra, rxn_dir]
+            tors_names, const_tors_names, const_angs_names, update_guess, var_grid, rcts_gra, rxn_dir]
     else:
         ts_class_data = []
     if bkp_typ:
@@ -118,6 +118,8 @@ def determine_reaction_type(rct_zmas, prd_zmas,
     bkp_dist_name = []
     dist_name = []
     brk_name = []
+    const_angs_names = []
+    const_tors_names = []
     frm_bnd_keys = frozenset({})
     brk_bnd_key = frozenset({})
     const_bnd_key = frozenset({})
@@ -224,6 +226,16 @@ def determine_reaction_type(rct_zmas, prd_zmas,
                     typ += ' '
                     typ += set_ts_spin(ts_mul, high_mul, low_mul)
 
+        # Check for ring forming scission
+        if typ is None:
+            ret = automol.zmatrix.ts.ring_forming_scission(rct_zmas, prd_zmas)
+            if ret and (not given_class or given_class == 'ring forming scission'):
+                typ = 'ring forming scission'
+                # ts_zma, dist_name, brk_name, brk_bnd_key, frm_bnd_keys, tors_names, rcts_gra = ret
+                ts_zma, dist_name, brk_bnd_key, const_tors_names, tors_names, const_angs_names, rcts_gra = ret
+                typ += ' '
+                typ += set_ts_spin(ts_mul, high_mul, low_mul)
+
         # Break if reaction found
         if typ is not None:
             break
@@ -255,7 +267,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
     ret = [
         typ, bkp_typ,
         ts_zma, bkp_ts_zma,
-        tors_names, bkp_tors_names,
+        tors_names, bkp_tors_names, const_tors_names, const_angs_names,
         dist_name, bkp_dist_name, brk_name,
         frm_bnd_keys, brk_bnd_key, const_bnd_key, rcts_gra, rxn_dir]
 

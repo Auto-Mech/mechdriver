@@ -124,7 +124,7 @@ def build_grid(rtype, rbktype, bnd_atoms, ts_zma,
     # Pass npoints as a 2-element list
 
     # Set up the backup type
-    if 'beta_scission' in rbktype:
+    if 'beta scission' in rbktype:
         bkp_grid, bkp_update_guess = beta_scission_bkp_grid(
             npoints, bnd_atoms)
     elif 'addition' in rtype:
@@ -147,6 +147,9 @@ def build_grid(rtype, rbktype, bnd_atoms, ts_zma,
     elif 'elimination' in rtype:
         grid, update_guess = unimolecular_elimination_grid(
             bnd_atoms, ts_zma, brk_name)
+    elif 'ring forming scission' in rtype:
+        grid, update_guess = ring_forming_scission_grid(
+            npoints, bnd_atoms)
     elif 'hydrogen abstraction' in rtype:
         grid, update_guess = hydrogen_abstraction(npoints, bnd_atoms)
     elif 'substitution' in rtype:
@@ -166,9 +169,37 @@ def build_grid(rtype, rbktype, bnd_atoms, ts_zma,
 
 # Tight TS grid
 
+def ring_forming_scission_grid(npoints, bnd_atoms):
+    """ Build forward WD grid for a ring forming scission reaction
+    """
+
+    # the following allows for a 2-d grid search in the initial ts_search
+    # for now try 1-d grid and see if it is effective
+    npoints1 = 8 if npoints is None else npoints
+    # npoints2 = 8
+    # syms = automol.zmatrix.symbols(ts_zma)
+    # brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
+    # brk_len_key = tuple(sorted(map(syms.__getitem__, brk_coo)))
+    # brk_len = bnd.LEN_DCT[brk_len_key]
+    bnd_len = bnd.read_len(bnd_atoms)
+    if bnd_len is not None:
+        r1min = bnd_len + 0.1 * phycon.ANG2BOHR
+        r1max = bnd_len + 0.8 * phycon.ANG2BOHR
+        # r2min = brk_len + 0.1 * phycon.ANG2BOHR
+        # r2max = brk_len + 0.8 * phycon.ANG2BOHR
+        grid1 = numpy.linspace(r1min, r1max, npoints1)
+        # grid2 = numpy.linspace(r2min, r2max, npoints2)
+        grid = grid1
+        # grid = [grid1, grid2]
+        update_guess = False
+
+    return grid, update_guess
+
+
 def beta_scission_grid(npoints, bnd_atoms):
     """ Build forward 1D grid for a beta scission reaction
     """
+    # This logic seems backward - sjk
     npoints = 8 if npoints is not None else npoints
     rmin = 1.4 * phycon.ANG2BOHR
     rmax = 2.0 * phycon.ANG2BOHR

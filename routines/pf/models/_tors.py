@@ -187,10 +187,14 @@ def make_hr_strings(rotors, run_path, tors_model,
         for tors_name, tors_dct in rotor.items():
             if 'D' in tors_name:
 
+                print('pot test in make_hr_string:', tors_dct['pot'])
+
                 if scale_factor is None:
                     pot = tors_dct['pot']
                 else:
                     pot = _scale_pot(tors_dct['pot'], scale_factor, numrotors)
+
+                print('pot test in make_hr_string after scaling:', pot)
 
                 tors_strs = _rotor_tors_strs(
                     tors_name, tors_dct['group'], tors_dct['axis'],
@@ -305,6 +309,7 @@ def _scale_pot(pot, scale_coeff, numrotors):
     """
     
     scale_factor = scale_coeff**(2.0/numrotors)
+    print('scale_coeff test:', scale_coeff, numrotors, scale_factor)
 
     new_pot = {}
     for idx, val in pot.items():

@@ -144,6 +144,8 @@ def zero_point_energy(spc_dct_i,
             freqs, zpe = vib.scale_frequencies(
                 freqs, tors_zpe, pf_levels, scale_method='3c')
 
+        # print('zpe in zero_point_energy test:', zpe, freqs)
+
     return zpe
 
 

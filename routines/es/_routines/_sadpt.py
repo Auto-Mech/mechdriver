@@ -219,20 +219,20 @@ def saddle_point_checker(imags):
 
     saddle = True
     if len(imags) < 1:
-        print('Warning: No imaginary modes for geometry')
+        print('WARNING: No imaginary modes for geometry')
         saddle = False
     elif len(imags) > 1:
-        print('Warning: More than one imaginary mode for geometry')
+        print('WARNING: More than one imaginary mode for geometry')
         nbig_imag = 0
         for imag in imags:
-            if imag >= 40.0:
+            if imag >= 50.0:
                 nbig_imag += 1
         if nbig_imag > 1:
             saddle = False
 
     for imag in imags:
         if imag <= 200.0:
-            print('Imaginary mode {} is relatively low'.format(imag))
+            print('WARNING: Imaginary mode {} is relatively low'.format(imag))
             print('Worth checking')
 
     return saddle
