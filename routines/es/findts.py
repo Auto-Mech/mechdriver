@@ -36,13 +36,26 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
     brk_bnd_keys = ts_dct['brk_bnd_keys']
     rcts_gra = ts_dct['rcts_gra']
     const_bnd_key = ts_dct['const_bnd_key']
+    const_tors_names = ts_dct['const_tors_names']
+    const_angs_names = ts_dct['const_angs_names']
+    constraint_dct = {}
     if const_bnd_key:
         const_name = automol.zmatrix.bond_key_from_idxs(
             ini_zma, const_bnd_key)
         coords = automol.zmatrix.values(ini_zma)
         const_val = coords[const_name]
-        constraint_dct = {const_name: const_val}
-    else:
+        constraint_dct[const_name] = const_val
+    if const_tors_names:
+        coords = automol.zmatrix.values(ini_zma)
+        for const_tors_name in const_tors_names:
+            const_val = coords[const_tors_name]
+            constraint_dct[const_tors_name] = const_val
+    if const_angs_names:
+        coords = automol.zmatrix.values(ini_zma)
+        for const_angs_name in const_angs_names:
+            const_val = coords[const_angs_name]
+            constraint_dct[const_angs_name] = const_val
+    if not constraint_dct:
         constraint_dct = None
     print('constraints in ts scan', constraint_dct)
 

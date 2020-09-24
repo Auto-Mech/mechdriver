@@ -437,6 +437,7 @@ def set_tors_def_info(zma, tors_name, tors_sym, pot,
     else:
         ts_bnd = brk_bnd_keys
 
+    print('set_tors_def_info test:', automol.zmatrix.string(zma), tors_name, ts_bnd, frm_bnd_keys, brk_bnd_keys)
     group, axis, atm_key = _set_groups_ini(
         zma, tors_name, ts_bnd, saddle)
     if saddle:
