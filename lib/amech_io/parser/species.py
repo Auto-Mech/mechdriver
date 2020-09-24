@@ -167,6 +167,7 @@ def modify_spc_dct(job_path, spc_dct):
 
     # Read in other dcts
     amech_dct = read_spc_amech(job_path)
+    print('amech_dct', amech_dct)
     geom_dct = geometry_dictionary(job_path)
 
     mod_spc_dct = {}
@@ -256,7 +257,7 @@ def modify_spc_dct(job_path, spc_dct):
 
         # Add geoms from geo dct (prob switch to amech file)
         if ich in geom_dct:
-            mod_spc_dct[spc]['geo_obj'] = geom_dct[ich]
+            mod_spc_dct[spc]['geo_inp'] = geom_dct[ich]
 
     return mod_spc_dct
 

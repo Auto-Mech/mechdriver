@@ -12,8 +12,9 @@ from routines.es._routines import sp
 from routines.es import runner as es_runner
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
+from lib.submission import get_host_node
+from lib.submission import qchem_params
 from lib.phydat import phycon
-from lib import get_host_node
 
 
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM
@@ -40,7 +41,7 @@ def calc_vrctst_flux(ini_zma, ts_info, hs_info,
     cas_kwargs = wfn.build_wfn(ref_zma, ts_info, ts_formula, high_mul,
                                rct_ichs, rct_info,
                                active_space, mod_var_scn_thy_info)
-    _, script_str, _, _ = es_runner.qchem_params(
+    _, script_str, _, _ = qchem_params(
         mod_var_sp1_thy_info[0], mod_var_sp1_thy_info[1])
 
     # Get indices for potentials and input
@@ -261,7 +262,7 @@ def _scan_sp(ts_info, coord_name,
     """
 
     # Set up script and kwargs for the irc run
-    script_str, _, sp_kwargs, _ = es_runner.qchem_params(
+    script_str, _, sp_kwargs, _ = qchem_params(
         *mod_var_sp1_thy_info[0:2])
     sp_kwargs.update(cas_kwargs)
 

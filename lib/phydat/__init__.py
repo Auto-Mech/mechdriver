@@ -6,6 +6,7 @@ from lib.phydat import eleclvl
 from lib.phydat import sigmarad
 from lib.phydat import symm
 from lib.phydat import instab_fgrps
+from lib.phydat import etrans
 
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     'eleclvl',
     'sigmarad',
     'symm',
-    'instab_fgrps'
+    'instab_fgrps',
+    'etrans'
 ]

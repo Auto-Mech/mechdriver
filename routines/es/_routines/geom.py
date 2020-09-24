@@ -11,6 +11,7 @@ from lib import structure
 from lib.phydat import phycon
 from lib.phydat import instab_fgrps
 from lib import filesys
+from lib.submission import qchem_params
 
 
 def reference_geometry(spc_dct_i, spc_info,
@@ -135,8 +136,8 @@ def _obtain_ini_geom(spc_dct_i, ini_thy_save_path,
             shutil.rmtree(cnf_path)
 
     if geo_init is None:
-        if 'geo_obj' in spc_dct_i:
-            geo_init = spc_dct_i['geo_obj']
+        if 'geo_inp' in spc_dct_i:
+            geo_init = spc_dct_i['geo_inp']
             print('Getting initial geometry from geom dictionary')
 
     if geo_init is None:
@@ -165,22 +166,13 @@ def _functional_groups_stable(geo, thy_save_fs, mod_thy_info):
     for atm, grps in rad_grp_dct.items():
         if atm in instab_fgrps.DCT:
             fgrps, prds = instab_fgrps.DCT[atm]
-            print('frgrps', fgrps)
-            print('prds', prds)
             for grp in grps:
-                print('grp\n', grp)
                 grp_ich = automol.graph.inchi(grp)
                 if grp_ich in fgrps:
                     # If instability is found determine the prd of the instability
                     prd_ich = prds[fgrps.index(grp_ich)]
-                    print('prd_ich', prd_ich)
                     prd_geo = automol.inchi.geometry(prd_ich)
                     prd_gra = automol.geom.graph(prd_geo)
-                    print('prd_gra')
-                    print(automol.graph.string(prd_gra))
-                    print('gra')
-                    print(automol.graph.string(gra))
-                    print('----')
                     prd_gras = automol.graph.radical_dissociation_prods(
                         gra, prd_gra)
                     break
@@ -192,9 +184,6 @@ def _functional_groups_stable(geo, thy_save_fs, mod_thy_info):
             geo_tmp = automol.inchi.geometry(ich)
             zma = automol.geom.zmatrix(geo_tmp)
             disconn_zmas.append(zma)
-            print('geo test in init_geom test:', geo_tmp)
-        # disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
-        #     for gra in prd_gras]
         conn_zma = automol.geom.zmatrix(geo)
         structure.instab.write_instab2(
             conn_zma, disconn_zmas,
@@ -358,7 +347,7 @@ def _remove_imag(spc_info, geo, mod_thy_info, thy_run_fs, run_fs,
     """
 
     print('The initial geometries will be checked for imaginary frequencies')
-    script_str, opt_script_str, kwargs, opt_kwargs = es_runner.qchem_params(
+    script_str, opt_script_str, kwargs, opt_kwargs = qchem_params(
         *mod_thy_info[0:2])
 
     imag, disp_xyzs = _check_imaginary(

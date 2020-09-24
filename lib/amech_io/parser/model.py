@@ -87,7 +87,7 @@ def build_pes_model_keyword_dct(model_str):
         ptt.paren_section('rate_temps'), model_str)
     pressures_str = apf.first_capture(
         ptt.paren_section('pressures'), model_str)
-    etrans_str = apf.first_capture(ptt.paren_section('etransfer'), model_str)
+    tr_str = apf.first_capture(ptt.paren_section('etransfer'), model_str)
     pdep_str = apf.first_capture(ptt.paren_section('pdep_fit'), model_str)
     tunit = apf.first_capture(ptt.keyword_pattern('tunit'), model_str)
     punit = apf.first_capture(ptt.keyword_pattern('punit'), model_str)
@@ -98,7 +98,6 @@ def build_pes_model_keyword_dct(model_str):
         ptt.keyword_pattern('dbl_arrfit_check'), model_str)
     # assert temps_str is not None
     assert pressures_str is not None
-    assert etrans_str is not None
 
     # Get the dictionary/values for each section and check them
     # Setting defaults
@@ -112,7 +111,7 @@ def build_pes_model_keyword_dct(model_str):
         rate_temps_dct = ptt.build_vals_lst(rate_temps_str)
 
     pressures_dct = ptt.build_vals_lst(pressures_str)
-    etransfer_dct = ptt.build_keyword_dct(etrans_str)
+    trans_dct = ptt.build_keyword_dct(tr_str) if tr_str is not None else {}
     pdep_dct = ptt.build_keyword_dct(pdep_str) if pdep_str is not None else {}
     tunit = ptt.set_value_type(tunit) if tunit is not None else 'K'
     punit = ptt.set_value_type(punit) if punit is not None else 'atm'
@@ -125,7 +124,7 @@ def build_pes_model_keyword_dct(model_str):
     model_dct['rate_temps'] = rate_temps_dct
     model_dct['therm_temps'] = therm_temps_dct
     model_dct['pressures'] = pressures_dct
-    model_dct['etransfer'] = etransfer_dct
+    model_dct['etransfer'] = trans_dct
     model_dct['pdep_fit'] = pdep_dct
     model_dct['tunit'] = tunit
     model_dct['punit'] = punit
@@ -248,6 +247,7 @@ def pf_model_info(pf_model):
     vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
     sym_model = pf_model['sym'] if 'sym' in pf_model else 'none'
     vpt2_model = pf_model['vpt2'] if 'vpt2' in pf_model else 'none'
+    etrans_model = pf_model['etrans'] if 'etrans' in pf_model else 'none'
 
     # Set well models
     if 'wells' in pf_model:
@@ -269,6 +269,7 @@ def pf_model_info(pf_model):
         'vib': vib_model,
         'sym': sym_model,
         'vpt2': vpt2_model,
+        'etrans': etrans_model,
         'rwells': rwells_model,
         'pwells': pwells_model
     }
@@ -285,6 +286,7 @@ def pf_level_info(es_model, thy_dct):
     harm_lvl = es_model['harm'] if 'harm' in es_model else None
     vpt2_lvl = es_model['vpt2'] if 'vpt2' in es_model else None
     sym_lvl = es_model['sym'] if 'sym' in es_model else None
+    etrans_lvl = es_model['etrans'] if 'etrans' in es_model else None
 
     # Torsions and rxn paths which needs a reference for itself
     print('torsion stuff in lib', es_model['tors'])
@@ -301,6 +303,8 @@ def pf_level_info(es_model, thy_dct):
                      if vpt2_lvl else None)
     sym_thy_info = (filesys.inf.get_thy_info(sym_lvl, thy_dct)
                     if sym_lvl else None)
+    etrans_thy_info = (filesys.inf.get_thy_info(etrans_lvl, thy_dct)
+                    if etrans_lvl else None)
     tors_sp_thy_info = (filesys.inf.get_thy_info(tors_lvl_sp, thy_dct)
                         if tors_lvl_sp else None)
     tors_scn_thy_info = (filesys.inf.get_thy_info(tors_lvl_scn, thy_dct)
@@ -329,6 +333,7 @@ def pf_level_info(es_model, thy_dct):
         'harm': (harm_lvl, harm_thy_info),
         'vpt2': (vpt2_lvl, vpt2_thy_info),
         'sym': (sym_lvl, sym_thy_info),
+        'etrans': (etrans_lvl, etrans_thy_info),
         'tors': ([tors_lvl_sp, tors_lvl_scn],
                  [tors_sp_thy_info, tors_scn_thy_info]),
         'rpath': ([rpath_lvl_sp, rpath_lvl_scn, rpath_lvl_sp2],

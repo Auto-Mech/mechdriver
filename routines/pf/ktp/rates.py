@@ -12,6 +12,7 @@ from routines.pf.models import blocks
 from routines.pf.models import build
 from routines.pf.models.ene import set_reference_ene
 from routines.pf.models.ene import calc_channel_enes
+from routines.pf.models import etrans
 from routines.pf.models import tunnel
 from routines.pf.models.inf import set_pf_info
 from routines.pf.models.inf import set_ts_cls_info
@@ -68,32 +69,42 @@ def make_header_str(temps, press):
     return header_str
 
 
-def make_etrans_str(spc_dct, rxn_lst,
-                    exp_factor, exp_power, exp_cutoff,
-                    eps1, eps2, sig1, sig2, mass1):
-    """ makes the standard header and energy transfer sections for MESS input file
+def make_etrans_str(rxn_lst, spc_dct, etrans_dct):
+    """ Makes the standard header and energy transfer sections
+        for MESS input file
     """
 
     print('\nPreparing energy transfer section for MESS input...')
 
-    # Get masses for energy transfer section
-    print(' - Using masses of reactants of first channel')
-    tot_mass = 0.
-    for rct in rxn_lst[0]['reacs']:
-        geo = automol.inchi.geometry(spc_dct[rct]['inchi'])
-        masses = automol.geom.masses(geo)
-        for mass in masses:
-            tot_mass += mass
+    # Determine the species for which you 
+    print('\n- Determining reference well species...')
+    well_info = etrans.set_well(rxn_lst, spc_dct)
 
-    # Write MESS-format energy transfer section string
-    print(' - Using Lennard-Jones sigma and epsilon parameters',
-          'defined by the user.')
-    print(' - Using exponential-down energy-transfer model parameters',
-          'defined by the user.')
-    # Energy transfer section
+    # Determine the bath
+    print('\n- Determining information for the bath species...')
+    bath_info = etrans.set_bath(spc_dct, etrans_dct)
+
+    # Determine all of the energy transfer parameters
+    print('\n- Determining the energy-down transfer model parameters...')
+    exp_factor, exp_power, exp_cutoff = etrans.edown_params(
+        well_info, bath_info, spc_dct, etrans_dct)
+
+    print('\n- Determining the Lennard-Jones model parameters...')
+    sig1, sig2, eps1, eps2 = etrans.lj_params(
+        well_info, bath_info, spc_dct, etrans_dct)
+
+    print('\n- Determining the masses...')
+    mass1, mass2 = etrans.mass_params(
+        well_info, bath_info, spc_dct, etrans_dct)
+
+    # Write the Energy Transfer section string
     energy_trans_str = mess_io.writer.energy_transfer(
         exp_factor, exp_power, exp_cutoff,
-        eps1, eps2, sig1, sig2, mass1, tot_mass)
+        eps1, eps2, sig1, sig2, mass1, mass2)
+    print('\nenergy_trans_str')
+    print(energy_trans_str)
+    import sys
+    sys.exit()
 
     return energy_trans_str
 

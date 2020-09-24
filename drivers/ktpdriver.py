@@ -67,13 +67,9 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ts_dct, spc_dct)
 
     # Set reaction list with unstable species broken apart
-    # print('ini rxn lst\n', rxn_lst)
     print('Checking stability of all species...')
     rxn_lst = instab.break_all_unstable(
         rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
-    # print('\nsec rxn lst\n', rxn_lst)
-    # import sys
-    # sys.exit()
 
     # Build the MESS label idx dictionary for the PES
     label_dct = ktproutines.label.make_pes_label_dct(
@@ -100,7 +96,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
 
         # Write the energy transfer section strings for MESS file
         energy_trans_str = ktproutines.rates.make_etrans_str(
-            spc_dct, rxn_lst, **etransfer)
+            rxn_lst, spc_dct, etransfer)
 
         # Write the MESS strings for all the PES channels
         well_str, bi_str, ts_str, dats = ktproutines.rates.make_pes_mess_str(

@@ -7,11 +7,12 @@ import sys
 from drivers import esdriver
 from drivers import thermodriver
 from drivers import ktpdriver
+from drivers import transdriver
 from lib.amech_io import parser
 from lib.amech_io import printer
 from lib.reaction import direction as rxndirn
 from lib.filesys.build import prefix_fs
-from lib import print_host_name
+from lib.submission import print_host_name
 
 
 # Set runtime options based on user input
@@ -29,6 +30,7 @@ RUN_INP_DCT = parser.run.build_run_inp_dct(JOB_PATH)
 RUN_OBJ_DCT = parser.run.objects_dct(JOB_PATH)
 RUN_JOBS_LST = parser.run.build_run_jobs_lst(JOB_PATH)
 ES_TSK_STR = parser.run.read_es_tsks(JOB_PATH)
+TRANS_TSK_STR = parser.run.read_trans_tsks(JOB_PATH)
 
 # Parse the theory input
 print('\nReading theory.dat...')
@@ -83,7 +85,7 @@ print('\nDrivers and tasks user has requested to be run...')
 RUN_ES = bool('es' in RUN_JOBS_LST)
 WRITE_MESSPF, RUN_MESSPF, RUN_NASA = parser.run.set_thermodriver(RUN_JOBS_LST)
 WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = parser.run.set_ktpdriver(RUN_JOBS_LST)
-RUN_TRANS = bool('trans' in RUN_JOBS_LST)
+RUN_TRANS = bool('transport' in RUN_JOBS_LST)
 if RUN_ES:
     print('  - ESDriver')
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
@@ -191,33 +193,31 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
 # TransportDriver
 if RUN_TRANS:
 
-    printer.program_header('thermo')
+    printer.program_header('trans')
+    
+    # Build the elec struct tsk lst
+    TRANS_TSK_LST = parser.run.build_run_trans_tsks_lst(
+        TRANS_TSK_STR, THY_DCT)
 
     # Call ThermoDriver for spc in PES
     if RUN_OBJ_DCT['pes']:
         for _, rxn_lst in RUN_PES_DCT.items():
-            transportdriver.run(
+            transdriver.run(
                 SPC_DCT,
-                PES_MODEL_DCT, SPC_MODEL_DCT,
                 THY_DCT,
                 rxn_lst,
-                RUN_INP_DCT,
-                write_messpf=WRITE_MESSPF,
-                run_messpf=RUN_MESSPF,
-                run_nasa=RUN_NASA,
+                TRANS_TSK_LST,
+                RUN_INP_DCT
             )
     else:
         for spc in RUN_SPC_LST_DCT:
-            print('\nCalculating Thermochem for species: {}'.format(spc))
-        transportdriver.run(
+            print('\nCalculating Transport for species: {}'.format(spc))
+        transdriver.run(
             SPC_DCT,
-            PES_MODEL_DCT, SPC_MODEL_DCT,
             THY_DCT,
             RUN_SPC_LST_DCT,
-            RUN_INP_DCT,
-            write_messpf=WRITE_MESSPF,
-            run_messpf=RUN_MESSPF,
-            run_nasa=RUN_NASA,
+            TRANS_TSK_LST,
+            RUN_INP_DCT
         )
 
 # kTPDriver

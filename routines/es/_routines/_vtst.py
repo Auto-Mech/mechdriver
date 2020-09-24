@@ -4,10 +4,10 @@
 import automol
 import autofile
 from lib import filesys
-from routines.es import runner as es_runner
 from routines.es._routines import sp
 from routines.es._routines import _wfn as wfn
 from routines.es._routines import _scan as scan
+from lib.submission import qchem_params
 
 
 def radrad_scan(ts_zma, ts_info, hs_info,
@@ -15,7 +15,7 @@ def radrad_scan(ts_zma, ts_info, hs_info,
                 rct_info, rct_ichs, rcts_cnf_fs, rcts_gra,
                 grid1, grid2, coord_name, frm_bnd_keys,
                 mod_var_scn_thy_info,
-                mod_var_sp1_thy_info, # Need an unmodified 
+                mod_var_sp1_thy_info,  # Need an unmodifie
                 var_sp1_thy_info,
                 var_sp2_thy_info,
                 hs_var_sp1_thy_info,
@@ -109,7 +109,7 @@ def molrad_scan(ts_zma, ts_info,
     mod_vsp1_thy_info = filesys.inf.modify_orb_restrict(ts_info, vsp1_thy_info)
 
     # Set script
-    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+    _, opt_script_str, _, opt_kwargs = qchem_params(
         *mod_thy_info[0:2])
 
     # Setup and run the first part of the scan to shorte
@@ -159,7 +159,7 @@ def _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
     """
 
     print('\n Running Hessians and Gradients...')
-    hess_script_str, _, hess_kwargs, _ = es_runner.qchem_params(
+    hess_script_str, _, hess_kwargs, _ = qchem_params(
         *mod_thy_info[0:2])
     hess_kwargs.update(cas_kwargs)
     for x, y in hess_kwargs.items():
@@ -179,7 +179,7 @@ def _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
                             hess_script_str, overwrite, **hess_kwargs)
 
     print('\n Running Energies...')
-    script_str, _, ene_kwargs, _ = es_runner.qchem_params(
+    script_str, _, ene_kwargs, _ = qchem_params(
         *mod_vsp1_thy_info[0:2])
     ene_kwargs.update(cas_kwargs)
     for locs in scn_locs:

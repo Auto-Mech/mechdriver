@@ -52,8 +52,6 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
 
         cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
             cnf_locs_lst, cnf_save_fs, mod_thy_info)
-        print('ini sorted cnf_locs', cnf_locs_lst)
-        print('ini sorted cnf_enes', cnf_enes_lst)
 
         if cnf_range == 'min':
             fin_locs_lst = [cnf_locs_lst[0]]
@@ -99,8 +97,6 @@ def _erange_locs(cnf_locs, cnf_enes, ethresh):
     min_ene = cnf_enes[0]
     for locs, ene in zip(cnf_locs, cnf_enes):
         rel_ene = (ene - min_ene) * phycon.EH2KCAL
-        print('enes', ene, min_ene, rel_ene)
-        print('thresh', thresh)
         if rel_ene <= thresh:
             min_cnf_locs.append(locs)
 

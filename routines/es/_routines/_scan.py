@@ -9,6 +9,7 @@ from routines.es._routines import sp
 from lib.structure import tors as torsprep
 from lib.structure import instab
 from lib import filesys
+from lib.submission import qchem_params
 
 
 def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
@@ -375,7 +376,7 @@ def multiref_rscan(ts_zma, ts_info,
 
     # Set the opt script string and build the opt_kwargs
     [prog, method, _, _] = mod_var_scn_thy_info
-    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+    _, opt_script_str, _, opt_kwargs = qchem_params(
         prog, method)
     opt_kwargs.update(cas_kwargs)
 
@@ -400,7 +401,7 @@ def molrad_inf_sep_ene(rct_info, rcts_cnf_fs,
                        mod_thy_info, overwrite):
     """ Calculate the inf spe ene for a mol-rad ene
     """
-    sp_script_str, _, kwargs, _ = es_runner.qchem_params(
+    sp_script_str, _, kwargs, _ = qchem_params(
         *mod_thy_info[0:2])
     inf_sep_ene = reac_sep_ene(
         rct_info, rcts_cnf_fs,
@@ -441,7 +442,7 @@ def radrad_inf_sep_ene(hs_info, ref_zma,
             print(" - Running high-spin multi reference energy ...")
 
         # Calculate the single point energy
-        script_str, _, kwargs, _ = es_runner.qchem_params(*thy_info[0:2])
+        script_str, _, kwargs, _ = qchem_params(*thy_info[0:2])
         cas_kwargs.update(kwargs)
 
         sp.run_energy(ref_zma, geo, hs_info, thy_info,
@@ -466,7 +467,7 @@ def radrad_inf_sep_ene(hs_info, ref_zma,
 
     # Get the single reference energy for each of the reactant configurations
     for thy_inf in (var_sp1_thy_info, var_sp2_thy_info):
-        sp_script_str, _, kwargs, _ = es_runner.qchem_params(
+        sp_script_str, _, kwargs, _ = qchem_params(
             *var_sp2_thy_info[0:2])
         reac_ene = reac_sep_ene(
             rct_info, rcts_cnf_fs,
