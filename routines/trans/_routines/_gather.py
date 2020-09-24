@@ -3,83 +3,78 @@ routines for running OneDMin
 """
 
 import os
-import statistics
-import py1dmin.interface
+import onedmin_io
 
 
-def lj_parameters(run_path):
+def read_filesys(etrans_save_fs, etrans_locs):
+    """ get the lj params thar are saved currently in the filesystem
+    """
+    _, _ = etrans_save_fs, etrans_locs
+    sigmas, epsilons, geoms = [], [], []
+    return sigmas, epsilons, geoms
+
+
+def read_output(run_path):
     """ get the lj params from each run and average them together
     """
 
-    avg_sigma = None
-    avg_epsilon = None
+    all_sigmas, all_epsilons = [], []
+    for jobdir in _jobdirs(run_path):
 
-    job_dirs = [os.path.join(run_path, directory)
-                for directory in os.listdir(run_path)
-                if 'build' not in directory and 'yaml' not in directory]
-    sigmas, epsilons = [], []
-    for job_dir in job_dirs:
-        lj_file_name = os.path.join(job_dir, 'lj.out')
-        if os.path.exists(lj_file_name):
-            with open(lj_file_name, 'r') as lj_file:
-                output_string = lj_file.read()
-            sigs, epss = py1dmin.interface.reader.lennard_jones(
-                output_string)
-            if sigs is not None and epss is not None:
-                for sig, eps in zip(sigs, epss):
-                    sigmas.append(sig)
-                    epsilons.append(eps)
+        # Read the output file strings
+        lj_str = _output_str(jobdir, 'lj.out')
+        geo_str = _output_str(jobdir, 'min_geoms.out')
 
-    assert len(sigmas) == len(epsilons)
+        # Parse the sigma and epsilon values from the output
+        sigmas, epsilons = onedmin_io.reader.lennard_jones(lj_str)
+        if sigmas is not None and epsilons is not None:
+            all_sigmas.extend(sigmas)
+            all_epsilons.extend(epsilons)
+
+        # Parse the geometries from the min geoms file
+        geoms = geo_str.split()
+
+    return sigmas, epsilons, geoms
+
+
+def prog_version(run_path):
+    """ read the program and version
+    """
+    for jobdir in _jobdirs(run_path):
+        lj_str = _output_str(jobdir, 'lj.out')
+        break
+    version = onedmin_io.reader.program_version(lj_str)
+
+    return version
+
+
+def _jobdirs(run_path):
+    """ Obtain a list of all the directory names where OneDMin
+        jobs were run
+    """
+    return [os.path.join(run_path, directory)
+            for directory in os.listdir(run_path)
+            if 'build' not in directory and 'yaml' not in directory]
+
+
+def _output_str(jobdir, output_name):
+    """ Read the output file
+    """
+
+    output_file_name = os.path.join(jobdir, output_name)
+    if os.path.exists(output_file_name):
+        with open(output_file_name, 'r') as outfile:
+            out_str = outfile.read()
+    else:
+        out_str = None
+
+    return out_str
+
+
+def print_lj_parms(sigmas, epsilons):
+    """ Print the lj parameters out
+    """
     if sigmas and epsilons:
-        avg_sigma = statistics.mean(sigmas)
-        avg_epsilon = statistics.mean(epsilons)
         print('{0:<14s}{1:<16s}'.format('\nSigma (Ang)', 'Epsilon (cm-1)'))
         for sig, eps in zip(sigmas, epsilons):
             print('{0:<14.4f}{1:<16.4f}'.format(sig, eps))
-        print('\nAverage Sigma =', avg_sigma)
-        print('Average Epsilon =', avg_epsilon)
-        print('Number of values = ', len(sigmas))
-    else:
-        print('No Sigma and Epsilon Values obtained =(')
-
-    return avg_sigma, avg_epsilon
-
-
-def lj_well_geometries(run_path):
-    """ get the miniumum geometries file from each run
-    """
-
-    geo_str = ''
-
-    job_dirs = [os.path.join(run_path, directory)
-                for directory in os.listdir(run_path)
-                if 'build' not in directory and 'yaml' not in directory]
-    for job_dir in job_dirs:
-        geo_file_name = os.path.join(job_dir, 'lj.out')
-        if os.path.exists(geo_file_name):
-            with open(geo_file_name, 'r') as geo_file:
-                geo_str += geo_file.read()
-
-    return geo_str
-
-
-def zero_energies(run_path):
-    """ get the zero-energy
-    """
-
-    ene = None
-
-    job_dirs = [os.path.join(run_path, directory)
-                for directory in os.listdir(run_path)
-                if 'build' not in directory and 'yaml' not in directory]
-    for job_dir in job_dirs:
-        ene_file_name = os.path.join(job_dir, 'zero.ene')
-        if os.path.exists(ene_file_name):
-            with open(ene_file_name, 'r') as ene_file:
-                ene_str = ene_file.read()
-            ene = float(ene_str)
-            # use autofile above to read the string
-            break
-
-    return ene

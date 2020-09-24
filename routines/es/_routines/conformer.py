@@ -41,10 +41,9 @@ def conformer_sampling(zma, spc_info,
         gra = automol.inchi.graph(ich)
         ntaudof = len(
             automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
-        nsamp = util.nsamp_init(nsamp_par, ntaudof)
     else:
         ntaudof = len(tors_names)
-        nsamp = util.nsamp_init(nsamp_par, ntaudof)
+    nsamp = util.nsamp_init(nsamp_par, ntaudof)
 
     # Check samples and if nsamp met and no resave
 
@@ -145,7 +144,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
         ene = elstruct.reader.energy(prog, method, out_str)
         geo = elstruct.reader.opt_geometry(prog, out_str)
         zma = elstruct.reader.opt_zmatrix(prog, out_str)
-        _, saved_geos, saved_enes = _saved_cnf_info(
+        saved_locs, saved_geos, saved_enes = _saved_cnf_info(
             cnf_save_fs, mod_thy_info)
 
         if _geo_unique(geo, ene, saved_geos, saved_enes, saddle):
@@ -155,6 +154,13 @@ def single_conformer(zma, spc_info, mod_thy_info,
                 _save_unique_conformer(
                     ret, mod_thy_info, cnf_save_fs, locs,
                     saddle=saddle, zma_locs=(0,))
+                saved_geos.append(geo)
+                saved_enes.append(ene)
+                saved_locs.append(locs)
+
+        # Update the conformer trajectory file
+        print('')
+        filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info)
 
 
 def run_conformers(
@@ -643,15 +649,15 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     return viable
 
 
-def unique_fs_confs(cnf_save_fs, cnf_save_locs,
-                    ini_cnf_save_fs, ini_cnf_save_locs):
+def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
+                    ini_cnf_save_fs, ini_cnf_save_locs_lst):
     """ Assess which structures from the cnf_save_fs currently exist
         within the ini_cnf_save_fs. Generate a lst of unique structures
         in the ini_cnf_save_fs.
     """
 
     uni_ini_cnf_save_locs = []
-    for ini_locs in ini_cnf_save_locs:
+    for ini_locs in ini_cnf_save_locs_lst:
 
         # Initialize variable to see if initial struct is found
         found = False
@@ -659,12 +665,12 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs,
         # Loop over structs in cnf_save, see if they match the current struct
         _, inigeo = filesys.inf.cnf_fs_zma_geo(
             ini_cnf_save_fs, ini_locs)
-        ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_cnf_save_locs)
+        ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
         print('Checking structure from path {}'.format(ini_cnf_save_path))
-        for locs in cnf_save_locs:
+        for locs in cnf_save_locs_lst:
             _, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
             if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):
-                cnf_save_path = cnf_save_fs[-1].path(cnf_save_locs)
+                cnf_save_path = cnf_save_fs[-1].path(locs)
                 print('- Similar structure found at {}'.format(cnf_save_path))
                 found = True
                 break

@@ -1,6 +1,7 @@
 """ Functions for sadpt
 """
 
+import automol
 import autofile
 from autofile import fs
 import elstruct
@@ -216,7 +217,8 @@ def saddle_point_hessian(opt_ret, ts_info, mod_thy_info,
 def saddle_point_checker(imags):
     """ run things for checking Hessian
     """
-
+    
+    print('Checking the imaginary frequencies of the saddle point...')
     saddle = True
     if len(imags) < 1:
         print('WARNING: No imaginary modes for geometry')
@@ -255,6 +257,9 @@ def save_saddle_point(
     ene = elstruct.reader.energy(opt_prog, opt_method, opt_out_str)
     geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
     zma = elstruct.reader.opt_zmatrix(opt_prog, opt_out_str)
+    print('TS Geometry:')
+    print(automol.geom.string(geo))
+    print()
 
     # Build new zma using x2z and new torsion coordinates
     # zma = automol.geometry.zmatrix(
@@ -265,6 +270,7 @@ def save_saddle_point(
     hess_prog = hess_inf_obj.prog
     hess = elstruct.reader.hessian(hess_prog, hess_out_str)
     freqs = sorted([-1.0*val for val in imags] + freqs)
+    print('TS freqs: {}'.format(' '.join(str(freq) for freq in freqs)))
 
     # Save the information into the filesystem
     print(" - Saving...")
@@ -285,6 +291,7 @@ def save_saddle_point(
     cnf_save_fs[-1].file.hessian.write(hess, locs)
     cnf_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
     cnf_save_path = cnf_save_fs[-1].path(locs)
+    
 
     # Save the zmatrix information in a zma filesystem
     cnf_save_path = cnf_save_fs[-1].path(locs)

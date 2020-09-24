@@ -86,8 +86,7 @@ EXITING THERMODRIVER
 TRANS_MSG = """
 =========================================================
 TRANSPORTDRIVER
-Kevin Moore, Daniel Moberg,
-Ahren Jasper, Stephen Klippenstein
+Kevin Moore, Ahren Jasper, Stephen Klippenstein
 ========================================================="""
 
 TRANS_EXIT_MSG = """

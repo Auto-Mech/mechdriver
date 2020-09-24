@@ -28,7 +28,8 @@ RUN_SUPPORTED_KEYWORDS = [
     'run_nasa',
     'write_messrate',
     'run_messrate',
-    'run_fits'
+    'run_fits',
+    'transport'
 ]
 
 # Model keywords
@@ -43,7 +44,8 @@ MODEL_PF_SUPPORTED_DCT = {
     'wells': ['fake', 'find', 'none'],
     'rwells': ['fake', 'find', 'none'],
     'pwells': ['fake', 'find', 'none'],
-    'tunnel': ['none', 'eckart', 'sct']
+    'tunnel': ['none', 'eckart', 'sct'],
+    'etrans': ['none', 'estimate', 'read']
 }
 MODEL_PF_DEFAULT_DCT = {
     'ene': 'sp',
@@ -54,7 +56,8 @@ MODEL_PF_DEFAULT_DCT = {
     'ts_nobar': 'pst',
     'ts_sadpt': 'fixed',
     'wells': 'fake',
-    'tunnel': 'none'
+    'tunnel': 'none',
+    'etrans': 'estimate'
 }
 
 # Electronic Structure Tasks
@@ -67,15 +70,15 @@ ES_TSK_SUPPORTED_DCT = {
     'spc': [
         'init_geom',
         'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess',
-        'conf_vpt2', 'conf_prop',
-        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess', 'hr_vpt2', 'hr_resamp',
+        'conf_vpt2', 'conf_prop', 'conf_opt',
+        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess', 'hr_vpt2', 'hr_reopt',
         'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess'],
     'ts': [
         'find_ts',
         'find_sadpt', 'find_molrad_vtst', 'find_radrad_vtst', 'find_vrctst',
         'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess',
         'conf_vpt2', 'conf_prop',
-        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess', 'hr_vpt2', 'hr_resamp',
+        'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess', 'hr_vpt2', 'hr_reopt',
         # 'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess',
         'irc_scan', 'irc_energy', 'irc_grad', 'irc_hess',
         'drp_samp', 'drp_energy', 'drp_grad', 'drp_hess'],
@@ -105,6 +108,7 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'conf_hess': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_vpt2': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_prop': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
+    'conf_opt': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'hr_scan': ['runlvl', 'inplvl', 'tors_model', 'resamp_min',
                 'retryfail', 'overwrite'],
     'hr_grad': ['runlvl', 'inplvl', 'tors_model',
@@ -115,8 +119,8 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
                   'retryfail', 'overwrite'],
     'hr_vpt2': ['runlvl', 'inplvl', 'tors_model',
                 'retryfail', 'overwrite'],
-    'hr_resamp': ['runlvl', 'inplvl', 'tors_model',
-                  'retryfail', 'overwrite', 'hrthresh'],
+    'hr_reopt': ['runlvl', 'inplvl', 'tors_model',
+                 'retryfail', 'overwrite', 'hrthresh'],
     'tau_samp': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'tau_energy': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'tau_grad': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
@@ -211,18 +215,26 @@ THY_SUPPORTED_KEYWORDS = [
 ]
 
 # ETrans
-ETRANS_TSK_SUPPORTED_DCT = {
-    'spc': ['ljparams']
+TRANS_TSK_SUPPORTED_DCT = {
+    'spc': ['onedmin']
 }
-ETRANS_TSK_KEYWORDS_SUPPORTED_DCT = {
-    'ljparams': ['runlvl', 'inplvl', 'bath', 'pot',
-                 'retryfail', 'overwrite']
+TRANS_TSK_KEYWORDS_SUPPORTED_DCT = {
+    'onedmin': ['runlvl', 'inplvl', 'bath', 'pot',
+                'njobs', 'nsamp',
+                'smin', 'smax', 'conf',
+                'retryfail', 'overwrite']
 }
-ETRANS_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
+TRANS_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'retryfail': [True, False],
     'overwrite': [True, False],
 }
-ETRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT = {
+TRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT = {
+    'pot': 'lj_12_6',
+    'njobs': 1,
+    'nsamp': 1,
+    'smin': 2.0,
+    'smax': 6.0,
+    'conf': 'sphere',
     'retryfail': True,
-    'overwrite': False
+    'overwrite': False,
 }

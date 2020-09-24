@@ -129,38 +129,3 @@ def qchem_params(prog, method):  # , saddle=False):
             }
 
     return sp_script_str, opt_script_str, kwargs, opt_kwargs
-
-
-def molpro_opts_mat(spc_info, geo):
-    """ prepare the errors and options mat to perform successive
-        single-point energy calculations in Molpro when the RHF fails to
-        converge. This currently only works for doublets.
-    """
-
-    # Get the nelectrons, spins, and orbitals for the wf card
-    formula = automol.geom.formula(geo)
-    elec_count = automol.formula.electron_count(formula)
-    two_spin = spc_info[2] - 1
-    num_act_elc = two_spin
-    num_act_orb = num_act_elc
-    closed_orb = (elec_count - num_act_elc) // 2
-    occ_orb = closed_orb + num_act_orb
-
-    # Build the strings UHF and CASSCF wf card and set the errors and options
-    uhf_str = (
-        "{{uhf,maxit=300;wf,{0},1,{1};orbprint,3}}"
-    ).format(elec_count, two_spin)
-    cas_str = (
-        "{{casscf,maxit=40;"
-        "closed,{0};occ,{1};wf,{2},1,{3};canonical;orbprint,3}}"
-    ).format(closed_orb, occ_orb, elec_count, two_spin)
-
-    errors = [elstruct.Error.SCF_NOCONV]
-    options_mat = [
-        [{'gen_lines': {2: [uhf_str]}},
-         {'gen_lines': {2: [cas_str]}},
-         {'gen_lines': {2: [cas_str]}}
-         ]
-    ]
-
-    return errors, options_mat

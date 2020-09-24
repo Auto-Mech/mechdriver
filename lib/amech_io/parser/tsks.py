@@ -9,8 +9,13 @@ from lib.amech_io.parser.keywords import ES_TSK_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import ES_TSK_KEYWORDS_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import ES_TSK_KEYWORDS_DEFAULT_DCT
+from lib.amech_io.parser.keywords import TRANS_TSK_SUPPORTED_DCT
+from lib.amech_io.parser.keywords import TRANS_TSK_KEYWORDS_SUPPORTED_DCT
+from lib.amech_io.parser.keywords import TRANS_TSK_KEYWORDS_VAL_SUPPORTED_DCT
+from lib.amech_io.parser.keywords import TRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT
 
 
+# ES TSKS
 def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
     """ Set the sequence of electronic structure tasks for a given
         species or PESs
@@ -26,7 +31,7 @@ def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
     check_es_tsks_supported(tsk_lst, thy_dct)
 
     # Add defaults if they are missing
-    mod_tsk_lst = add_defaults_to_tsk_keyword_dct(tsk_lst)
+    mod_tsk_lst = add_defaults_to_es_keyword_dct(tsk_lst)
 
     return mod_tsk_lst
 
@@ -46,10 +51,35 @@ def es_tsks_from_lst(es_tsks_str):
         else:
             print('BAAD')
         tsk_lst.append([obj, tsk, keyword_dct])
-
+    
     return tsk_lst
 
 
+# TRANS TSKS
+def trans_tsk_lst(trans_tsk_str, thy_dct, saddle=False):
+    """ Set the sequence of electronic structure tasks for a given
+        species or PESs
+    """
+
+    # Split the string into different strings of keywords
+    tsk_lst = []
+    trans_tsks_str = ioformat.remove_whitespace(trans_tsk_str)
+    for line in trans_tsks_str.splitlines():
+        tsk_line = line.split()
+        if len(tsk_line) > 2:
+            obj, tsk, keyword_lst = tsk_line[0], tsk_line[1], tsk_line[2:]
+            keyword_dct = format_tsk_keywords(keyword_lst)
+        else:
+            print('BAAD')
+        tsk_lst.append([obj, tsk, keyword_dct])
+    
+    # Add defaults if they are missing
+    mod_tsk_lst = add_defaults_to_trans_keyword_dct(tsk_lst)
+
+    return mod_tsk_lst
+
+
+# FORMAT KEYWORDS
 def format_tsk_keywords(keyword_lst):
     """ format keywords string
     """
@@ -77,7 +107,8 @@ def format_val(val):
     return formtd_val
 
 
-def add_defaults_to_tsk_keyword_dct(tsk_lsts):
+# ES TASKS
+def add_defaults_to_es_keyword_dct(tsk_lsts):
     """ Add default values to a checked keyword dct
     """
     mod_tsk_lst = []
@@ -205,3 +236,20 @@ def check_es_tsks_supported(es_tsks, thy_dct):
         #     print('*ERROR: es_tsk not formatted correctly')
         #     print(tsk_lst)
         #     sys.exit()
+
+
+# TRANS TASKS
+def add_defaults_to_trans_keyword_dct(tsk_lsts):
+    """ Add default values to a checked keyword dct
+    """
+    mod_tsk_lst = []
+    for tsk_lst in tsk_lsts:
+        [obj, tsk, keyword_dct] = tsk_lst
+        for dkey, dval in TRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT.items():
+            if dkey not in keyword_dct:
+                if dkey in TRANS_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                    keyword_dct[dkey] = dval
+        mod_tsk_lst.append([obj, tsk, keyword_dct])
+
+    return mod_tsk_lst
+

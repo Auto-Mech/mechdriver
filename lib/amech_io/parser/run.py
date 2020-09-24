@@ -288,3 +288,42 @@ def build_run_es_tsks_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
         es_tsk_str, rxn_model_dct, thy_dct, saddle=saddle)
 
     return es_tsk_lst
+
+
+# PARSE THE TRANS_TSKS SECTION OF THE FILE #
+def read_trans_tsks(job_path):
+    """ Build a dictionary for all the theory keywords
+    """
+
+    # Read the electronic structure tasks section
+    run_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
+    trans_tsks_str = trans_tsks_block(run_str)
+
+    # Check if section is there
+    if trans_tsks_str is None:
+        print('No "trans_tsks" section defined in run.dat')
+        # print('*ERROR: No "trans_tsks" section defined in run.dat')
+        # sys.exit()
+
+    return trans_tsks_str
+
+
+def trans_tsks_block(inp_str):
+    """ Read the string that has the global model information
+    """
+    cap = apf.first_capture(ptt.end_section('trans_tsks'), inp_str)
+    if cap is not None:
+        trans_str = ioformat.remove_whitespace(cap)
+    else:
+        trans_str = None
+
+    return trans_str
+
+
+def build_run_trans_tsks_lst(trans_tsk_str, thy_dct, saddle=False):
+    """ Build the list of ES tasks, potentially w/ models
+    """
+    trans_tsk_lst = tsks.trans_tsk_lst(
+        trans_tsk_str, thy_dct, saddle=saddle)
+
+    return trans_tsk_lst

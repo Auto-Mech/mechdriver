@@ -11,26 +11,23 @@ def get_geometry(cnf_save_fs, mod_thy_info, conf='sphere'):
     """ get the geometry
     """
 
-    assert conf in ('minimum', 'spherical')
+    assert conf in ('minimum', 'sphere')
 
     # Read the file system
     if conf == 'minimum':
         geom = _min_energy_conformer(cnf_save_fs, mod_thy_info)
-    elif conf == 'spherical':
+    elif conf == 'sphere':
         geom = _spherical_conformer(cnf_save_fs)
 
-    # Format the geom into xyz strings
-    geo_str = automol.geom.string(geom)
-
-    return geo_str
+    return geom
 
 
 def _min_energy_conformer(cnf_save_fs, mod_thy_info):
     """ Reads the minimum-energy conformer from the save FileSystem
     """
 
-    min_locs, _ = filesys.min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info, cnf_range='min')
+    min_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
     if min_locs:
         min_conf = cnf_save_fs[-1].file.geometry.read(min_locs)
     else:

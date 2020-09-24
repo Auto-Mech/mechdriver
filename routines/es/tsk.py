@@ -2,11 +2,9 @@
 """
 
 import sys
-import itertools
 import importlib
 import autofile
 import automol
-from routines.es import runner as es_runner
 from routines.es.findts import run as runts
 # from routines.es.newts import run as runts
 from routines.es._routines import conformer
@@ -17,6 +15,7 @@ from routines.es._routines import irc
 from lib import filesys
 from lib import structure
 from lib.structure import instab
+from lib.submission import qchem_params
 
 
 # Dictionary of Electronic Structure Calculators
@@ -133,7 +132,7 @@ def geom_init(spc, thy_dct, es_keyword_dct,
         run_fs = filesys.build.run_fs_from_prefix(thy_run_path)
 
     # Set up the script
-    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+    _, opt_script_str, _, opt_kwargs = qchem_params(
         *thy_info[0:2])
 
     # Get a reference geometry if one not found
@@ -229,7 +228,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             ini_min_cnf_path, zma_idxs=[0])
 
         # Set up the run scripts
-        _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+        _, opt_script_str, _, opt_kwargs = qchem_params(
             *thy_info[0:2])
 
         # Set variables if it is a saddle
@@ -271,7 +270,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         print('range', cnf_range)
 
         # Set up the run scripts
-        _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+        _, opt_script_str, _, opt_kwargs = qchem_params(
             *mod_thy_info[0:2])
 
         # Build conformer filesys
@@ -288,12 +287,16 @@ def conformer_tsk(job, spc_dct, spc_name,
         # Truncate the list of the ini confs
         uni_locs_lst = conformer.unique_fs_confs(
             cnf_save_fs, cnf_locs_lst, ini_cnf_save_fs, ini_cnf_locs_lst)
+        print('uni lst', uni_locs_lst)
         for locs in uni_locs_lst:
+            zma, geo = filesys.inf.cnf_fs_zma_geo(ini_cnf_save_fs, locs)
+            cnf_run_fs[-1].create(locs)
             conformer.single_conformer(
                 zma, spc_info, mod_thy_info,
                 cnf_run_fs, cnf_save_fs,
                 opt_script_str, overwrite,
                 retryfail=retryfail, saddle=saddle, **opt_kwargs)
+
 
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 
@@ -313,7 +316,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             sys.exit()
 
         # Set up the run scripts
-        script_str, _, kwargs, _ = es_runner.qchem_params(
+        script_str, _, kwargs, _ = qchem_params(
             *mod_ini_thy_info[0:2])
 
         # Run the job over all the conformers requested by the user
@@ -357,7 +360,7 @@ def tau_tsk(job, spc_dct, spc_name,
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
     # Script
-    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+    _, opt_script_str, _, opt_kwargs = qchem_params(
         *thy_info[0:2])
 
     # Set the filesystem objects for thy info
@@ -480,7 +483,7 @@ def tau_tsk(job, spc_dct, spc_name,
         if job == 'samp':
 
             # Set up the script
-            _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+            _, opt_script_str, _, opt_kwargs = qchem_params(
                 *thy_info[0:2])
             # Run sampling
             tau.tau_sampling(
@@ -494,7 +497,7 @@ def tau_tsk(job, spc_dct, spc_name,
         elif job in ('energy', 'grad'):
 
             # Set up the run scripts
-            script_str, _, kwargs, _ = es_runner.qchem_params(
+            script_str, _, kwargs, _ = qchem_params(
                 *thy_info[0:2])
             # Run the job over all the conformers requested by the user
             for locs in tau_save_locs:
@@ -520,7 +523,7 @@ def tau_tsk(job, spc_dct, spc_name,
             hessmax = es_keyword_dct['hessmax']
 
             # Set up the run scripts
-            script_str, _, kwargs, _ = es_runner.qchem_params(
+            script_str, _, kwargs, _ = qchem_params(
                 *thy_info[0:2])
             # Run the job over all the conformers requested by the user
             hess_cnt = 0
@@ -578,7 +581,7 @@ def hr_tsk(job, spc_dct, spc_name,
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
 
     # Script
-    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+    _, opt_script_str, _, opt_kwargs = qchem_params(
         *mod_thy_info[0:2])
 
     # Set the filesystem objects
@@ -688,7 +691,7 @@ def hr_tsk(job, spc_dct, spc_name,
             # Print potential
             structure.tors.print_hr_pot(tors_pots)
 
-        elif job == 'resamp':
+        elif job == 'reopt':
 
             # pull stuff from dcts
             two_stage = saddle
@@ -718,19 +721,15 @@ def hr_tsk(job, spc_dct, spc_name,
 
             if new_min_zma is not None:
                 print('\nFinding new low energy conformer...')
-                _ = conformer.conformer_sampling(
-                    zma, spc_info,
-                    mod_thy_info, ini_thy_save_fs,
+                conformer.single_conformer(
+                    zma, spc_info, mod_thy_info,
                     ini_cnf_run_fs, ini_cnf_save_fs,
                     opt_script_str, overwrite,
-                    saddle=saddle, nsamp_par=mc_nsamp,
-                    tors_names=tuple(itertools.chain(*run_tors_names)),
-                    two_stage=two_stage, retryfail=retryfail,
-                    rxn_class=rxn_class, **opt_kwargs)
+                    retryfail=retryfail, saddle=saddle, **opt_kwargs)
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 
-            script_str, _, kwargs, _ = es_runner.qchem_params(
+            script_str, _, kwargs, _ = qchem_params(
                 *thy_info[0:2])
             for tors_names in run_tors_names:
 
@@ -792,7 +791,7 @@ def irc_tsk(job, spc_dct, spc_name,
     # retryfail = es_keyword_dct['retryfail']
 
     # Set up the script
-    _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+    _, opt_script_str, _, opt_kwargs = qchem_params(
         *mod_thy_info[0:2])
 
     # Set the filesystem objects
@@ -843,7 +842,7 @@ def irc_tsk(job, spc_dct, spc_name,
     if job == 'scan':
 
         # Script
-        _, opt_script_str, _, opt_kwargs = es_runner.qchem_params(
+        _, opt_script_str, _, opt_kwargs = qchem_params(
             *mod_thy_info[0:2])
         opt_kwargs.update(
             {'job_options': ['calcall', 'stepsize=3', 'maxpoints=4']})
@@ -856,7 +855,7 @@ def irc_tsk(job, spc_dct, spc_name,
     elif job in ('energy', 'grad', 'hess'):
 
         # Script
-        script_str, _, kwargs, _ = es_runner.qchem_params(
+        script_str, _, kwargs, _ = qchem_params(
             *mod_thy_info[0:2])
 
         # Need to put in something with the IRC idxs

@@ -391,10 +391,14 @@ def etrans_fs_from_prefix(prefix, bath_info, thy_info):
     """
 
     # Build the energy transfer filesys object
-    etrans_fs = autofile.fs.manager(prefix, 'ENERGY_TRANSFER')
+    etrans_fs = autofile.fs.manager(prefix, 'ENERGY TRANSFER')
 
     # Build the energy transfer locs object
-    etrans_locs = bath_info + thy_info
+    etrans_locs = bath_info + thy_info[1:4]
+   
+    # Create directory
+    print('etrans locs', etrans_locs)
+    etrans_fs[-1].create(etrans_locs)
 
     return etrans_fs, etrans_locs
 

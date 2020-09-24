@@ -161,14 +161,6 @@ def _instab_info(conn_zma, disconn_zmas):
     # Get the zmas used for the identification
     prd_zmas = disconn_zmas
 
-    print('prd zma')
-    for zma in prd_zmas:
-        print(automol.zmatrix.string(zma))
-    print('\n\nrct zma')
-    for zma in rct_zmas:
-        print(automol.zmatrix.string(zma))
-        print()
-
     # Get the keys
     ret = beta_scission(rct_zmas, prd_zmas)
     zma, _, brk_bnd_keys, _, rcts_gra = ret
@@ -285,7 +277,6 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
                 new_rxn['prods'].append(new_prd)
             else:
                 print('- Splitting species...')
-                # new_rxn['prods'].extend(['FAKE1', 'FAKE2', 'FAKE3'])
                 new_prd = split_species(spc_dct, prd,
                                         ini_thy_info, save_prefix)
                 print('- New species: {}'.format(' '.join(new_prd)))
@@ -296,8 +287,6 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
             print('WARNING: LIKELY MISSING DATA FOR REACTANTS FOR SPLIT')
         if len(rxn['prods']) > len(new_rxn['prods']):
             print('WARNING: LIKELY MISSING DATA FOR PRODUCTS FOR SPLIT')
-
-        # Add a print statement showing reaction being rewritten
 
         # Build rxn dct
         new_rxn.update(
