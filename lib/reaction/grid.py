@@ -175,7 +175,7 @@ def ring_forming_scission_grid(npoints, bnd_atoms):
 
     # the following allows for a 2-d grid search in the initial ts_search
     # for now try 1-d grid and see if it is effective
-    npoints1 = 8 if npoints is None else npoints
+    npoints1 = 7 if npoints is None else npoints
     # npoints2 = 8
     # syms = automol.zmatrix.symbols(ts_zma)
     # brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
@@ -184,7 +184,7 @@ def ring_forming_scission_grid(npoints, bnd_atoms):
     bnd_len = bnd.read_len(bnd_atoms)
     if bnd_len is not None:
         r1min = bnd_len + 0.1 * phycon.ANG2BOHR
-        r1max = bnd_len + 0.8 * phycon.ANG2BOHR
+        r1max = bnd_len + 0.7 * phycon.ANG2BOHR
         # r2min = brk_len + 0.1 * phycon.ANG2BOHR
         # r2max = brk_len + 0.8 * phycon.ANG2BOHR
         grid1 = numpy.linspace(r1min, r1max, npoints1)

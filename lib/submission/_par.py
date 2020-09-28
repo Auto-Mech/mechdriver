@@ -50,7 +50,7 @@ def qchem_params(prog, method):  # , saddle=False):
     if prog == 'molpro2015':
         sp_script_str = (
             "#!/usr/bin/env bash\n"
-            "molpro -n 4 run.inp -o run.out >> stdout.log &> stderr.log"
+            "molpro -n 6 run.inp -o run.out >> stdout.log &> stderr.log"
         )
         if method == 'caspt2':
             opt_script_str = (
@@ -110,7 +110,7 @@ def qchem_params(prog, method):  # , saddle=False):
             }
         else:
             kwargs = {
-                'memory': 8,
+                'memory': 20,
                 'corr_options': ['maxit=100'],
                 'mol_options': ['nosym'],
             }

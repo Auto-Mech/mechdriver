@@ -103,8 +103,8 @@ def make_etrans_str(rxn_lst, spc_dct, etrans_dct):
         eps1, eps2, sig1, sig2, mass1, mass2)
     print('\nenergy_trans_str')
     print(energy_trans_str)
-    import sys
-    sys.exit()
+    # import sys
+    # sys.exit()
 
     return energy_trans_str
 
