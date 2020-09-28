@@ -278,11 +278,11 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         cnf_save_fs = autofile.fs.conformer(thy_save_path)
         cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            cnf_save_fs, mod_thy_info)
+            cnf_save_fs, mod_thy_info, cnf_range='all')
 
         ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         ini_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
+            ini_cnf_save_fs, mod_ini_thy_info, cnf_range=cnf_range)
 
         # Truncate the list of the ini confs
         uni_locs_lst = conformer.unique_fs_confs(
@@ -297,17 +297,24 @@ def conformer_tsk(job, spc_dct, spc_name,
                 opt_script_str, overwrite,
                 retryfail=retryfail, saddle=saddle, **opt_kwargs)
 
+        print_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+            cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
+        for locs in print_cnf_locs_lst:
+            geo = cnf_save_fs[-1].file.geometry.read(locs)
+            print('Geometry: \n{}'.format(automol.geom.string(geo)))
+
+
 
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 
         cnf_range = es_keyword_dct['cnf_range']
-        print('range', cnf_range)
+        # print('range', cnf_range)
 
         ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
 
         ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         ini_cnf_save_locs_lst, _ = filesys.mincnf.conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
+            ini_cnf_save_fs, mod_ini_thy_info, cnf_range=cnf_range)
 
         # Check if locs exist, kill if it doesn't
         if not ini_cnf_save_locs_lst:
@@ -317,7 +324,7 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Set up the run scripts
         script_str, _, kwargs, _ = qchem_params(
-            *mod_ini_thy_info[0:2])
+            *mod_thy_info[0:2])
 
         # Run the job over all the conformers requested by the user
         for locs in ini_cnf_save_locs_lst:

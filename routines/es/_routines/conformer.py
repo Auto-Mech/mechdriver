@@ -119,7 +119,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
     run_fs = autofile.fs.run(cnf_run_path)
 
     # Run the optimization
-    print('Optimizing a singel conformer')
+    print('Optimizing a single conformer')
     es_runner.run_job(
         job=elstruct.Job.OPTIMIZATION,
         script_str=script_str,
