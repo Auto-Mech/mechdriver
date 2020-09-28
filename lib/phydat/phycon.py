@@ -16,7 +16,7 @@ EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 KCAL2EH = qcc.conversion_factor('kcal/mol', 'hartree')
 WAVEN2EH = qcc.conversion_factor('wavenumber', 'hartree')
 EH2WAVEN = qcc.conversion_factor('hartree', 'wavenumber')
-AMU2KG = qcc.conversion_factor('atomic mass unit', 'kilogram')
+#AMU2KG = qcc.conversion_factor('atomic mass unit', 'kilogram')
 
 # Physical Constants
 NAVO = 6.02214076e23

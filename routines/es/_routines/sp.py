@@ -88,6 +88,7 @@ def run_energy(zma, geo, spc_info, thy_info,
             print(" - Reading energy from output...")
             ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
+            print("Energy: {}".format(ene))
             print(" - Saving energy...")
             sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
             sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
@@ -97,6 +98,8 @@ def run_energy(zma, geo, spc_info, thy_info,
     else:
         print('Energy found and saved previously at {}'.format(
             sp_save_path))
+        ene = sp_save_fs[-1].file.energy.read(thy_info[1:4])
+        print("Energy: {}".format(ene))
 
 
 def run_gradient(zma, geo, spc_info, thy_info,
@@ -489,6 +492,9 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         rt_freqs, _, rt_imags, _ = structure.vib.projrot_freqs(
             [geo], [hess], run_path)
         freqs = sorted(rt_imags + rt_freqs)
+        print("Harmonic frequencies: {}".format('    '.join([str(freq) for freq in freqs])))
+        harm_zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
+        print("Harmonic ZPVE: {}".format(harm_zpe))
         print(" - Saving harmonic frequencies...")
         if _json_database(save_path):
             geo_save_fs[-1].json.harmonic_frequencies.write(freqs, locs)
@@ -499,6 +505,10 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
     else:
         print('Harmonic frequencies found and saved previously at {}'.format(
             save_path))
+        freqs = geo_save_fs[-1].file.harmonic_frequencies.read(locs)
+        harm_zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
+        print("Harmonic frequencies: {}".format('    '.join([str(freq) for freq in freqs])))
+        print("Harmonic ZPVE: {}".format(harm_zpe))
 
 
 def _hess_grad(prog, out_str, geo_save_fs,
