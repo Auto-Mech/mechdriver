@@ -97,6 +97,7 @@ def _erange_locs(cnf_locs, cnf_enes, ethresh):
     min_ene = cnf_enes[0]
     for locs, ene in zip(cnf_locs, cnf_enes):
         rel_ene = (ene - min_ene) * phycon.EH2KCAL
+        print('rel_ene:', rel_ene, thresh)
         if rel_ene <= thresh:
             min_cnf_locs.append(locs)
 
