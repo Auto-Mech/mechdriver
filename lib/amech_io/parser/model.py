@@ -271,7 +271,7 @@ def pf_model_info(pf_model):
         'vpt2': vpt2_model,
         'etrans': etrans_model,
         'rwells': rwells_model,
-        'pwells': pwells_model
+        'pwells': pwells_model,
     }
 
     return pf_models
@@ -337,7 +337,8 @@ def pf_level_info(es_model, thy_dct):
         'tors': ([tors_lvl_sp, tors_lvl_scn],
                  [tors_sp_thy_info, tors_scn_thy_info]),
         'rpath': ([rpath_lvl_sp, rpath_lvl_scn, rpath_lvl_sp2],
-                  [rpath_sp_thy_info, rpath_scn_thy_info, rpath_sp2_thy_info])
+                  [rpath_sp_thy_info, rpath_scn_thy_info, rpath_sp2_thy_info]),
+        'ref_scheme': ref_scheme
     }
 
     return es_levels
