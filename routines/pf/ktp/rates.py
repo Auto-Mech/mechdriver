@@ -25,23 +25,11 @@ BLOCK_MODULE = importlib.import_module('routines.pf.models.blocks')
 
 
 # Input string writer
-def make_messrate_str(globkey_str, energy_trans_str,
-                      well_str, bi_str, ts_str):
+def make_messrate_str(globkey_str, energy_trans_str, rxn_chan_str):
     """ Combine various MESS strings together to combined MESS rates
     """
-
-    rchan_header_str = rxnchan_header_str()
-    mess_inp_str = '\n'.join(
-        [globkey_str,
-         energy_trans_str,
-         rchan_header_str,
-         well_str,
-         bi_str,
-         ts_str]
-    )
-    mess_inp_str = ioformat.remove_trail_whitespace(mess_inp_str)
-
-    return mess_inp_str
+    return mess_io.writer.messrates_inp_str(
+        globkey_str, energy_trans_str, rxn_chan_str)
 
 
 # Headers
@@ -69,42 +57,26 @@ def make_header_str(temps, press):
     return header_str
 
 
-def make_etrans_str(rxn_lst, spc_dct, etrans_dct):
+def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
     """ Makes the standard header and energy transfer sections
         for MESS input file
     """
 
     print('\nPreparing energy transfer section for MESS input...')
 
-    # Determine the species for which you 
+    # Determine the species for which you
     print('\n- Determining reference well species...')
-    well_info = etrans.set_well(rxn_lst, spc_dct)
+    well_info = etrans.set_etrans_well(rxn_lst, spc_dct)
 
     # Determine the bath
     print('\n- Determining information for the bath species...')
     bath_info = etrans.set_bath(spc_dct, etrans_dct)
 
-    # Determine all of the energy transfer parameters
-    print('\n- Determining the energy-down transfer model parameters...')
-    exp_factor, exp_power, exp_cutoff = etrans.edown_params(
-        well_info, bath_info, spc_dct, etrans_dct)
-
-    print('\n- Determining the Lennard-Jones model parameters...')
-    sig1, sig2, eps1, eps2 = etrans.lj_params(
-        well_info, bath_info, spc_dct, etrans_dct)
-
-    print('\n- Determining the masses...')
-    mass1, mass2 = etrans.mass_params(
-        well_info, bath_info, spc_dct, etrans_dct)
-
-    # Write the Energy Transfer section string
-    energy_trans_str = mess_io.writer.energy_transfer(
-        exp_factor, exp_power, exp_cutoff,
-        eps1, eps2, sig1, sig2, mass1, mass2)
-    print('\nenergy_trans_str')
-    print(energy_trans_str)
-    import sys
-    sys.exit()
+    # Write the MESS energy transfer strings
+    edown_str, collid_str = etrans.make_energy_transfer_strs(
+        well_info, bath_info, etrans_dct)
+    energy_trans_str = mess_io.writer.global_energy_transfer(
+        edown_str, collid_str)
 
     return energy_trans_str
 
@@ -121,7 +93,9 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
     # Initialize empty MESS strings
     full_well_str, full_bi_str, full_ts_str = '', '', ''
     full_dat_str_dct = {}
-
+    pes_ene_dct = {}
+    conn_lst = tuple()
+    
     # Set the energy and model for the first reference species
     # print('\nCalculating reference energy for PES')
     ref_ene, ref_model = set_reference_ene(
@@ -168,10 +142,34 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         full_ts_str += ts_str
         full_dat_str_dct.update(dat_str_dct)
 
-    # Add final End statement for the end of the MESS file
-    full_ts_str += '\nEnd\n'
+        print('rxn', rxn)
+        print('enes', chnl_enes)
+        print('label dct', label_dct)
+        print('written labels', written_labels)
 
-    return full_well_str, full_bi_str, full_ts_str, full_dat_str_dct
+        # Build PES energy dct and connection lists
+        for side, ene in chnl_enes.items():
+            if 'fake' not in side:
+                if side in ('reacs', 'prods'):
+                    rct_str = '+'.join(rxn[side])
+                    label = label_dct[rct_str]
+                    pes_ene_dct[label] = ene        
+                elif 'ts' in side:
+                    rct_str = tsname
+                    label = label_dct[rct_str]
+                    pes_ene_dct[label] = max(ene)
+
+        reac_str = '+'.join(rxn['reacs'])
+        prod_str = '+'.join(rxn['prods'])
+        reac_lbl = label_dct[reac_str]
+        prod_lbl = label_dct[prod_str]
+        ts_lbl = label_dct[tsname]
+        conn_lst += ((reac_lbl, ts_lbl), (ts_lbl, prod_lbl))
+
+    # Combine all the reaction channel strings
+    rxn_chan_str = '\n'.join([full_well_str, full_bi_str, full_ts_str])
+
+    return rxn_chan_str, full_dat_str_dct, pes_ene_dct, conn_lst
 
 
 def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
@@ -225,10 +223,16 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
                     chn_label, spc_label[0], spc_strs[0],
                     spc_label[1], spc_strs[1], rgt_ene)
             else:
+                edown_str = rgt_infs[0].get('edown_str', None)
+                collid_freq_str = rgt_infs[0].get('collid_freq_str', None)
+
                 # well_str += mess_io.writer.species_separation_str()
                 well_str += '\n! {}\n'.format(rgt_names[0])
                 well_str += mess_io.writer.well(
-                    chn_label, spc_strs[0], rgt_ene)
+                    chn_label, spc_strs[0],
+                    zero_energy=rgt_ene,
+                    edown_str=edown_str,
+                    collid_freq_str=collid_freq_str)
 
         # Initialize the reactant and product MESS label
         if side == 'reacs':
@@ -310,7 +314,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
     if chnl_infs['ts']['writer'] == 'species_block':
         mess_str, mdhr_dat = mess_writer(chnl_infs['ts'])
     elif chnl_infs['ts']['writer'] == 'pst_block':
-        mess_str, mdhr_dat = mess_writer(*chnl_infs['reacs'])
+        mess_str, mdhr_dat = mess_writer(chnl_infs['ts'], *chnl_infs['reacs'])
     elif chnl_infs['ts']['writer'] == 'vrctst_block':
         mess_str, mdhr_dat = mess_writer(
             chnl_infs['ts'], *chnl_infs['reacs'])
@@ -383,6 +387,12 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
     fake_dat_dct = {}
     well_str, ts_str = '', ''
 
+    # Build a fake TS dct
+    ts_inf_dct = {
+        'n_pst': 6.0,
+        'cn_pst': 10.0
+    }
+
     # MESS string for the fake reactant side well
     well_dct_key = make_rxn_str(rxn[side], prepend='F')
     fake_well_label = label_dct[well_dct_key]
@@ -396,7 +406,7 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
     # MESS PST TS string for fake reactant side well -> reacs
     well_dct_key = make_rxn_str(rxn[side], prepend=prepend_key)
     pst_label = label_dct[well_dct_key]
-    pst_ts_str, pst_ts_dat = blocks.pst_block(*fake_inf_dcts)
+    pst_ts_str, pst_ts_dat = blocks.pst_block(ts_inf_dct, *fake_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_label, side_label, fake_well_label, pst_ts_str,
         chnl_enes[ts_key], tunnel='')

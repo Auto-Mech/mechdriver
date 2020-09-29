@@ -95,19 +95,18 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             temps, pressures)
 
         # Write the energy transfer section strings for MESS file
-        energy_trans_str = ktproutines.rates.make_etrans_str(
+        energy_trans_str = ktproutines.rates.make_global_etrans_str(
             rxn_lst, spc_dct, etransfer)
 
         # Write the MESS strings for all the PES channels
-        well_str, bi_str, ts_str, dats = ktproutines.rates.make_pes_mess_str(
+        chan_str, dats, p_enes, cnlst = ktproutines.rates.make_pes_mess_str(
             spc_dct, rxn_lst, pes_idx,
             run_prefix, save_prefix, label_dct,
             spc_model_dct, thy_dct)
 
         # Combine strings together
         mess_inp_str = ktproutines.rates.make_messrate_str(
-            globkey_str, energy_trans_str,
-            well_str, bi_str, ts_str)
+            globkey_str, energy_trans_str, chan_str)
 
         # Write the MESS file into the filesystem
         print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
@@ -118,6 +117,9 @@ def run(pes_formula, pes_idx, sub_pes_idx,
 
         # Write MESS file into job directory
         pfrunner.write_cwd_rate_file(mess_inp_str, pes_formula, sub_pes_idx)
+
+        # Create a plot of the PES energies
+        ktproutines.plot_from_dct(p_enes, cnlst, pes_formula)
 
     # Run mess to produce rate output
     if run_messrate:

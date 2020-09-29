@@ -86,6 +86,7 @@ def write_cwd_pf_file(mess_str, inchi, fname='pf.inp'):
     print('Saving MESS input copy at {}'.format(fin_path))
     return fin_path
 
+
 def write_cwd_rate_file(mess_str, pes_formula, sub_pes_idx, fname='mess.inp'):
     """ Write a copy of the MESS file in the current working directory
     """
@@ -137,7 +138,8 @@ def read_mess_file(mess_path):
 def write_mess_output(formulastr, final_pf, mess_path, filename='pf.dat'):
     """ Write a mess output file for a pf file
     """
-    mess_out_str = 'Natural log of the partition function and its derivatives:\n'
+    mess_out_str = 'Natural log of the partition function '
+    mess_out_str += 'and its derivatives:\n'
     mess_out_str += ' T, K            {}'.format(formulastr)
     # Write MESS output string
     temps, logq, dq_dt, d2q_dt2 = final_pf

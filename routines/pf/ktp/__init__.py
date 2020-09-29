@@ -4,12 +4,12 @@
 from routines.pf.ktp import fit
 from routines.pf.ktp import rates
 from routines.pf.ktp import label
-from routines.pf.ktp._plot import plot_pes
+from routines.pf.ktp._plot import plot_from_dct
 
 
 __all__ = [
     'fit',
     'rates',
     'label',
-    'plot_pes'
+    'plot_from_dct'
 ]

@@ -13,7 +13,7 @@ BLOCK_MODULE = importlib.import_module('routines.pf.models.blocks')
 def make_messpf_str(globkey_str, spc_str):
     """ Combine various MESS strings together to combined MESSPF
     """
-    return '\n'.join([globkey_str, spc_str]) + '\n'
+    return mess_io.writer.messpf_inp_str(globkey_str, spc_str)
 
 
 def make_pf_header(temps):
