@@ -99,10 +99,10 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
 
     # Set the energy and model for the first reference species
     # print('\nCalculating reference energy for PES')
+
     ref_ene, ref_model = set_reference_ene(
         rxn_lst, spc_dct, thy_dct, model_dct,
         run_prefix, save_prefix, ref_idx=0)
-
     # Loop over all the channels and write the MESS strings
     written_labels = []
     for rxn in rxn_lst:

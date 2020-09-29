@@ -20,8 +20,14 @@ from lib import filesys
 REF_CALLS = {"basic": "get_basic",
              "cbh0": "get_cbhzed",
              "cbh1": "get_cbhone",
-             "cbh2": "get_cbhtwo"}
+             "cbh2": "get_cbhtwo",
+             "cbh3": "get_cbhthree"}
 
+TS_REF_CALLS = {"basic": "get_basic_ts",
+             "cbh0": "get_cbhzed_ts",
+             "cbh1": "get_cbhzed_ts",
+             "cbh2": "get_cbhzed_ts",
+             "cbh3": "get_cbhzed_ts"}
 
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False):
     """ add refs to species list as necessary
@@ -84,6 +90,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
     # Determine the function to be used to get the thermochemistry ref species
     if ref_scheme in REF_CALLS:
         get_ref_fxn = getattr(heatform, REF_CALLS[ref_scheme])
+        get_ts_ref_fxn = getattr(heatform, TS_REF_CALLS[ref_scheme])
     else:
         raise NotImplementedError
 
@@ -96,7 +103,10 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
     # Determine the reference species, list of inchis
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
         msg += '\nDetermining basis for species: {}'.format(spc_name)
-        spc_basis, coeff_basis = get_ref_fxn(spc_ich)
+        if 'class' in spc_dct[spc_name]:
+            spc_basis, coeff_basis = get_ts_ref_fxn(spc_ich, spc_dct[spc_name]['class'])
+        else:
+            spc_basis, coeff_basis = get_ref_fxn(spc_ich)
         for i in range(len(spc_basis)):
             spc_basis[i] = automol.inchi.add_stereo(spc_basis[i])[0]
 

@@ -18,6 +18,15 @@ def set_pf_info(model_dct, thy_dct, chn_model, ref_model):
     ref_pf_models = parser.model.pf_model_info(
         model_dct[ref_model]['pf'])
 
+    chn_pf_models['ref_scheme'] = model_dct[chn_model]['options']['ref_scheme'] 
+        if 'ref_scheme' in model_dct[ref_model]['options'] else 'none'
+    ref_pf_models['ref_scheme'] = model_dct[ref_model]['options']['ref_scheme'] 
+        if 'ref_scheme' in model_dct[ref_model]['options'] else 'none'
+    chn_pf_models['ref_enes'] = model_dct[chn_model]['options']['ref_enes'] 
+        if 'ref_enes' in model_dct[ref_model]['options'] else 'none'
+    ref_pf_models['ref_enes'] = model_dct[ref_model]['options']['ref_enes'] 
+        if 'ref_enes' in model_dct[ref_model]['options'] else 'none'
+
     return chn_pf_levels, chn_pf_models, ref_pf_levels, ref_pf_models
 
 

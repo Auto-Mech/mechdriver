@@ -4,6 +4,7 @@
 import os
 import automol
 import autofile
+from routines.pf import thermo as thmroutines
 from routines.pf.models import typ
 from routines.pf.models import _tors as tors
 from routines.pf.models import _vib as vib
@@ -209,6 +210,9 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
     pf_models = parser.model.pf_model_info(
         model_dct[ref_model]['pf'])
     ref_ene_level = pf_levels['ene'][0]
+    ref_scheme = model_dct[ref_model]['options']['ref_scheme']
+    ref_enes = model_dct[ref_model]['options']['ref_enes']
+
     print(' - Energy Level for Reference Species: {}'.format(ref_ene_level))
 
     # Get the elec+zpe energy for the reference species
@@ -217,17 +221,26 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
     for rgt in ref_rgts:
 
         print(' - Calculating energy for {}...'.format(rgt))
+        basis_dct, uniref_dct = thmroutines.basis.prepare_refs(
+            ref_scheme, spc_dct, [[rgt, None]])
+        spc_basis, coeff_basis = basis_dct[rgt]
 
         # Build filesystem
-        pf_filesystems = fmod.pf_filesys(
-            spc_dct[rgt], pf_levels, run_prefix, save_prefix, saddle=False)
+        ene_spc, ene_basis = thmroutines.basis.basis_energy(
+            rgt, spc_basis, uniref_dct, spc_dct,
+            pf_levels, pf_models, run_prefix, save_prefix)
+        #pf_filesystems = fmod.pf_filesys(
+        #    spc_dct[rgt], pf_levels, run_prefix, save_prefix, saddle=False)
 
         # Calcualte the total energy
-        ref_ene += read_energy(
-            spc_dct[rgt], pf_filesystems, pf_models, pf_levels,
-            read_ene=True, read_zpe=True)
+        hf0k = thmroutines.heatform.calc_hform_0k(
+            ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
+        #ref_ene += read_energy(
+        #    spc_dct[rgt], pf_filesystems, pf_models, pf_levels,
+        #    read_ene=True, read_zpe=True)
 
-    return ref_ene, ref_model
+    return hf0k, ref_model
+    #return ref_ene, ref_model
 
 
 def calc_channel_enes(channel_infs, ref_ene,
