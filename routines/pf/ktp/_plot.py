@@ -6,7 +6,15 @@ import mess_io
 import mechanalyzer
 
 
-def plot_pes(mess_input_string, formula):
+def plot_from_dct(ene_dct, conn_lst, formula):
+    """ Generate a PES plot
+    """
+    print('ene', ene_dct)
+    print('conn', conn_lst)
+    mechanalyzer.plotter.pes.build(ene_dct, conn_lst, formula)
+
+
+def plot_from_str(mess_input_string, formula):
     """ Generate a PES plot
     """
 
