@@ -46,13 +46,14 @@ def make_header_str(temps, press):
         'ModelEnergyLimit'
     )
     keystr2 = (
-        'CalculationMethod, WellCutoff, ChemicalEigenvalueMax, ' +
-        'ReductionMethod, AtomDistanceMin'
+        'CalculationMethod, WellCutoff, WellExtension, ' +
+        'ChemicalEigenvalueMax, ReductionMethod, AtomDistanceMin'
     )
     print('     {}'.format(keystr1))
     print('     {}'.format(keystr2))
 
-    header_str = mess_io.writer.global_reaction(temps, press)
+    header_str = mess_io.writer.global_reaction(
+        temps, press, excess_ene_temp=None, well_extend=None)
 
     return header_str
 
@@ -95,7 +96,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
     full_dat_str_dct = {}
     pes_ene_dct = {}
     conn_lst = tuple()
-    
+
     # Set the energy and model for the first reference species
     # print('\nCalculating reference energy for PES')
     ref_ene, ref_model = set_reference_ene(

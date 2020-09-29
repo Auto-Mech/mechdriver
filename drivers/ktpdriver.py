@@ -118,8 +118,8 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         # Write MESS file into job directory
         pfrunner.write_cwd_rate_file(mess_inp_str, pes_formula, sub_pes_idx)
 
-        # Create a plot of the PES energies
-        ktproutines.plot_from_dct(p_enes, cnlst, pes_formula)
+        # Create a plot of the PES energies (not working correctly)
+        # ktproutines.plot_from_dct(p_enes, cnlst, pes_formula)
 
     # Run mess to produce rate output
     if run_messrate:
