@@ -111,7 +111,7 @@ def fake_species_block(inf_dct_i, inf_dct_j):
     return spc_str, dat_dct
 
 
-def pst_block(inf_dct_i, inf_dct_j):
+def pst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     """ prepare a Phase Space Theory species block
     """
 
@@ -133,7 +133,9 @@ def pst_block(inf_dct_i, inf_dct_j):
         geom1=inf_dct_i['geom'],
         geom2=inf_dct_j['geom'],
         sym_factor=sym_factor,
-        stoich=stoich
+        stoich=stoich,
+        pot_prefactor=ts_inf_dct['cn_pst'],
+        pot_exp=ts_inf_dct['n_pst'],
     )
     spc_str = mess_io.writer.molecule(
         core=core_str,

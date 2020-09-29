@@ -8,20 +8,17 @@ from lib import phydat
 
 
 # CALCULATE THE EFFECTIVE ALPHA VALUE
-def alpha(n_eff, n_heavy, bath_model, tgt_model):
+def alpha(n_eff, zlj_dct, bath_model, tgt_model):
     """ Calculate the alpha param using the method in Ahren's paper
     """
 
     # Calculate Zalpha(Neff) at T = 300, 1000, 2000 K
     z_alphas_n_eff = _calc_z_alpha(n_eff, bath_model, tgt_model)
 
-    # Calculate Z(N)
-    z_n_heavy = _collision_frequency(n_heavy, bath_model, tgt_model)
-
     # Calculate alpha = Zalpha(Neff) / Z(N) at T = 300, 1000, 2000 K
     alphas = {}
     for temp, z_alpha_n_eff in z_alphas_n_eff.items():
-        alphas[temp] = z_alpha_n_eff / z_n_heavy
+        alphas[temp] = z_alpha_n_eff / zlj_dct[temp]
 
     # Determine alpha and n for the e-down model
     edown_alpha, edown_n = _calc_edown_expt(alphas)
@@ -37,9 +34,9 @@ def _calc_z_alpha(n_eff, bath_model, tgt_model):
         """ calculate an effective Z*alpha parameter
         """
         return ((coeff[0] * n_eff**(3) +
-                coeff[1] * n_eff**(2) +
-                coeff[2] * n_eff**(1) +
-                coeff[3]) / 1.0e9)
+                 coeff[1] * n_eff**(2) +
+                 coeff[2] * n_eff**(1) +
+                 coeff[3]) / 1.0e9)
 
     # Read the proper coefficients from the moldriver dct
     coeff_dct = phydat.etrans.read_z_alpha_dct(bath_model, tgt_model)
@@ -52,27 +49,33 @@ def _calc_z_alpha(n_eff, bath_model, tgt_model):
     return z_alpha_dct
 
 
-def _collision_frequency(n_heavy, bath_model, tgt_model):
-    """ Determine the collision frequency for num of rotors
-    """
-    # read Z(N) or calculate it
-    # z_n_heavy = _collision_freq(bath_model, tgt_model, n_heavy)
-    z_n_heavy = 4.07367230361971E-10
-    return z_n_heavy
-
-
-def _coll(sig, eps, mass1, mass2):
+def lj_collision_frequency(sig, eps, mass1, mass2,
+                           temps=(300., 1000., 2000.)):
     """ Calculate the collisin freq by Troe formula
     """
 
-    red_mass = ((mass1 * mass2) / (mass1 + mass2)) * phydat.phycon.AMU2KG
-    pref1 = numpy.pi * numpy.sqrt(
-        ((8.0 * 1.380603e-23 * temp) / (numpy.pi * red_mass)) * 1.0e-14
-    )
-    pref2 = 0.7 + 0.52 + numpy.log(0.69502 * temp / eps)/ numpy.log(10)
-    zlj = sig * 2.0 * pref1 / pref2
 
-    return zlj
+    # Calculate the reduced mass
+    red_mass = ((mass1 * mass2) / (mass1 + mass2)) * phydat.phycon.AMU2KG
+
+    #  Calculate the frequency at each temperature
+    zlj_dct = {}
+    for temp in temps:
+        pref1 = 1.0e-14 * numpy.sqrt(
+            ((8.0 * 1.380603e-23 * temp) / (numpy.pi * red_mass))
+        )
+        pref2 = 0.7 + 0.52 * (numpy.log(0.69502 * temp / eps) / numpy.log(10))
+
+        zlj = 2.0 * numpy.pi * sig * (pref1 / pref2)
+
+        zlj_dct[temp] = zlj
+
+    print('    - Collisional frequencies from LJ parameters')
+    for temp, val in zlj_dct.items():
+        print('       T = {0} K, zlj = {1:<.3e} cm3/s'.format(temp, val))
+
+    return zlj_dct
+
 
 def _calc_edown_expt(alpha_dct):
     """ Calculate power n, for model:
@@ -81,14 +84,14 @@ def _calc_edown_expt(alpha_dct):
         Does a least-squares for n to solve the linear equation
         ln(E_down/E_down_300) = [ln(T/300)] * n
     """
-   
+
     assert 300 in alpha_dct, (
         'Must have 300 K in alphas'
     )
-    
+
     # Set the edown alpha to the value at 300 K
     edown_alpha = alpha_dct[300]
-  
+
     # Build vectors and matrices used for the fitting
     temps = numpy.array(list(alpha_dct.keys()), dtype=numpy.float64)
     alphas = numpy.array(list(alpha_dct.values()), dtype=numpy.float64)
@@ -97,7 +100,7 @@ def _calc_edown_expt(alpha_dct):
     coeff_mat = numpy.array([n_vec], dtype=numpy.float64)
     coeff_mat = coeff_mat.transpose()
 
-    edown_vec = numpy.log(alphas/ edown_alpha)
+    edown_vec = numpy.log(alphas / edown_alpha)
 
     # Perform the least-squares fit
     theta = numpy.linalg.lstsq(coeff_mat, edown_vec, rcond=None)[0]
@@ -106,14 +109,14 @@ def _calc_edown_expt(alpha_dct):
     edown_n = theta[0]
 
     print('    - Alpha parameters from estimation')
-    for temp, alpha in alpha_dct.items():
-        print('       T = {0} K, alpha = {1:<.3f} cm-1'.format(temp, alpha))
+    for temp, val in alpha_dct.items():
+        print('       T = {0} K, alpha = {1:<.3f} cm-1'.format(temp, val))
 
     return edown_alpha, edown_n
 
 
 # CALCULATE THE EFFECTIVE LENNARD-JONES SIGMA AND EPSILON
-def lj(n_heavy, bath_model, tgt_model):
+def lj_sig_eps(n_heavy, bath_model, tgt_model):
     """ Returns in angstrom and cm-1
     """
 
@@ -121,7 +124,6 @@ def lj(n_heavy, bath_model, tgt_model):
         """ calculate an effective Lennard-Jones parameter
         """
         return param * n_heavy**(expt)
-
 
     # Read the proper coefficients from the moldriver dct
     coeffs = phydat.etrans.read_lj_dct(bath_model, tgt_model)
@@ -151,7 +153,7 @@ def calc_n_eff(geo,
      n_qq,
      n_co, n_oo,
      n_ss_ring, n_rings] = _rotor_counts(gra, symbs)
-   
+
     print('    - Rotor Counts for N_eff:')
     print('       N_pp:{}, N_ps:{}, N_pt:{}, N_pq:{}'.format(
         n_pp, n_ps, n_pt, n_pq))
@@ -254,13 +256,30 @@ def _rotor_counts(gra, symbs):
 def estimate_viable(well_geo, bath_info):
     """ Assess whether we can estimate using the formula
     """
-    
-    allowed_symbs = {'H', 'C', 'O'}
-    symbs = set(automol.geom.symbols(well_geo))
-    if symbs <= allowed_symbs:
-        # Call a moiety checker
-        ret = ('InChI=1S/N2/c1-2', 'n-alkane')
+
+    # Initialize the models
+    bath_model = bath_info[0]
+    tgt_model = None
+
+    # Build the graph
+    well_gra = automol.geom.graph(well_geo)
+
+    # Identify the the target model
+    if automol.graph.hydrocarbon_species(well_gra):
+        tgt_model = 'n-alkane'
+    elif automol.graph.radical_species(well_gra):
+        tgt_model = 'peroxide'
     else:
-        ret = None
+        fgrp_dct = automol.graph.functional_group_dct(well_gra)
+        if fgrp_dct[automol.graph.FUNC_GROUP.ALCOHOL]:
+            tgt_model = 'alcohol'
+        elif fgrp_dct[automol.graph.FUNC_GROUP.PEROXIDE]:
+            tgt_model = 'peroxide'
+
+    # For now, set model to alkanes if nothing found and set up return obj
+    if tgt_model is None:
+        tgt_model = 'n-alkane'
+    
+    ret = (bath_model, tgt_model)
 
     return ret

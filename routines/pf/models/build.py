@@ -6,14 +6,17 @@
   and calculate electronic and zero-point vibrational energies.
 """
 
+import automol
 import autofile
 from routines.pf.models import ene
 from routines.pf.models import typ
+from routines.pf.models import etrans
 from routines.pf.models import _rot as rot
 from routines.pf.models import _tors as tors
 from routines.pf.models import _sym as sym
 from routines.pf.models import _vib as vib
 from routines.pf.models import _flux as flux
+from routines.pf.models import _pst as pst
 from routines.pf.models import _util as util
 from lib.structure import tors as torsprep
 from lib.phydat import phycon
@@ -84,7 +87,10 @@ def read_ts_data(ts_dct, tsname, reac_dcts,
 
         # Build MESS string for TS at a saddle point
         if ts_sadpt == 'pst':
-            inf_dct = {}
+            inf_dct = pst_data(
+                ts_dct, reac_dcts,
+                chn_pf_levels,
+                run_prefix, save_prefix)
             writer = 'pst_block'
         elif ts_sadpt == 'rpvtst':
             inf_dct = rpvtst_data(
@@ -104,7 +110,10 @@ def read_ts_data(ts_dct, tsname, reac_dcts,
 
         # Build MESS string for TS with no saddle point
         if ts_nobarrier == 'pst':
-            inf_dct = {}
+            inf_dct = pst_data(
+                ts_dct, reac_dcts,
+                chn_pf_levels,
+                run_prefix, save_prefix)
             writer = 'pst_block'
         elif ts_nobarrier == 'rpvtst':
             inf_dct = rpvtst_data(
@@ -253,7 +262,7 @@ def mol_data(spc_dct_i,
     elec_levels = spc_dct_i['elec_levels']
 
     # Obtain energy levels
-    print('\nObtaining the electronic energy...')
+    print('\nObtaining the electronic energy + zpve...')
     chn_ene = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
         read_ene=True, read_zpe=False)
@@ -269,15 +278,30 @@ def mol_data(spc_dct_i,
     #                                 save_prefix, saddle=False,
     #                                 read_ene=True, read_zpe=True)
 
+    #  Build the energy transfer section strings
+    if not saddle:
+        print('\n Determining energy transfer parameters...')
+        well_info = filesys.inf.get_spc_info(spc_dct_i)
+        print('well_inf', well_info)
+        bath_info = ['InChI=1S/N2/c1-2', 0, 1]  # how to do...
+        etrans_dct = etrans.build_etrans_dct(spc_dct_i)
+
+        edown_str, collid_freq_str = etrans.make_energy_transfer_strs(
+            well_info, bath_info, etrans_dct)
+    else:
+        edown_str, collid_freq_str = None, None
+
     # Create info dictionary
     keys = ['geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
             'mess_hr_str', 'mdhr_dat',
             'xmat', 'rovib_coups', 'rot_dists',
-            'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl']
+            'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl',
+            'edown_str', 'collid_freq_str']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
             allr_str, mdhr_dat,
             xmat, rovib_coups, rot_dists,
-            ene_chnlvl, ene_reflvl, zpe]
+            ene_chnlvl, ene_reflvl, zpe,
+            edown_str, collid_freq_str]
     inf_dct = dict(zip(keys, vals))
 
     return inf_dct
@@ -473,6 +497,39 @@ def rpvtst_data(ts_dct, reac_dcts,
         ts_idx = 0
     inf_dct.update({'imag': imag})
     inf_dct.update({'ts_idx': ts_idx})
+
+    return inf_dct
+
+
+# PST
+def pst_data(ts_dct, reac_dcts,
+             chn_pf_levels,
+             run_prefix, save_prefix):
+    """ Set up the data for PST parameters
+    """
+
+    # Get the k(T), T, and n values to get a Cn
+    kt_pst, temp_pst, n_pst = pst.set_vals_for_cn(ts_dct)
+
+    print('\nDetermining parameters for Phase Space Theory (PST)',
+          'treatment that yields k({} K) = {}'.format(temp_pst, kt_pst))
+    print('  Assuming PST model potential V = C0 / R^{}'.format(n_pst))
+
+    # Obtain the reduced mass of the reactants
+    print('\nReading reactant geometries to obtain reduced mass...')
+    geoms = []
+    for dct in reac_dcts:
+        pf_filesystems = filesys.models.pf_filesys(
+            dct, chn_pf_levels, run_prefix, save_prefix, False)
+        geoms.append(rot.read_geom(pf_filesystems))
+    mred = automol.geom.reduced_mass(geoms[0], geoms[1])
+
+    cn_pst = pst.calc_cn_for_pst(kt_pst, n_pst, mred, temp_pst)
+
+    # Create info dictionary
+    keys = ['n_pst', 'cn_pst']
+    vals = [n_pst, cn_pst]
+    inf_dct = dict(zip(keys, vals))
 
     return inf_dct
 

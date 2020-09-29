@@ -185,6 +185,11 @@ SPC_SUPPORTED_KEYWORDS = [
     'smin',
     'smax',
     'etrans_nsamp',
+    'kt_pst',
+    'temp_pst',
+    'n_pst',
+    'lj',
+    'edown'
 ]
 SPC_DEFAULT_DCT = {
     'kickoff': [0.1, False],
@@ -192,7 +197,9 @@ SPC_DEFAULT_DCT = {
     'hind_inc': 30.0,
     'mc_nsamp': [True, 12, 1, 3, 100, 25],
     'tau_nsamp': [True, 12, 1, 3, 100, 25],
-    'sym_factor': 1.0
+    'sym_factor': 1.0,
+    'lj': None,
+    'edown': None
 }
 
 # Theory Keywords
