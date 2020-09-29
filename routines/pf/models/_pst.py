@@ -32,11 +32,15 @@ def pst_kt(n_par, mred, cn_par, temp):
     """
 
     k2eh = 0.000003166808534191
-    amu2au = (1.0 / 9.1093837015e-28) * 6.022e23
+    amu2au = 1.0 / (9.1093837015e-28 * 6.022e23)
     BOHR2CM = 5.29177e-9
 
+    # print ('mred test 1', mred)
     mred *= amu2au
     temp *= k2eh
+    # print ('mred test;', mred)
+    # print ('temp test:', temp)
+    # print ('uconv test:', amu2au, k2eh)
 
     kt_val = (
         (8.0 * numpy.pi)**(1.0/2.0) *
@@ -49,7 +53,8 @@ def pst_kt(n_par, mred, cn_par, temp):
 
     jiffy = 2.441888e-17
 
-    kt_val *= jiffy * BOHR2CM**3
+    kt_val *= BOHR2CM**3 / jiffy
+    # print('kt_val test:', kt_val, cn_par)
 
     return kt_val
 
