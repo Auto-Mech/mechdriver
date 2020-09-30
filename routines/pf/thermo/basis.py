@@ -110,16 +110,12 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         if 'class' in spc_dct[spc_name]:
-<<<<<<< HEAD
             print('TS info in basis: ', spc_dct[spc_name].keys())
             if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES:
                 spc_basis, coeff_basis = get_ts_ref_fxn(spc_ich, spc_dct[spc_name]['class'])
             else:
                 spc_basis = spc_dct[spc_name]['reacs']
                 coeff_basis = [1. for spc_i in spc_basis]
-=======
-            spc_basis, coeff_basis = get_ts_ref_fxn(spc_ich, spc_dct[spc_name]['class'])
->>>>>>> beginning to incorporate cbhts
         else:
             spc_basis, coeff_basis = get_ref_fxn(spc_ich)
         for i in range(len(spc_basis)):
