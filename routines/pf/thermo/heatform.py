@@ -809,8 +809,7 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key):
     """
     gra = automol.zmatrix.connectivity_graph(zma)
     site = [_xor(frm_key, brk_key), _intersec(frm_key, brk_key), _xor(brk_key, frm_key)]
-    
-    if rxnclass == 'h_abstraction':
+    if rxnclass == 'hydrogen abstraction':
         frags = cbhzed_habs(gra, site)
     else:
         raise NotImplementedError

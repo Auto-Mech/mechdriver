@@ -29,6 +29,8 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
              "cbh2": "get_cbhzed_ts",
              "cbh3": "get_cbhzed_ts"}
 
+IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction']
+
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False):
     """ add refs to species list as necessary
     """
@@ -64,14 +66,18 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False):
         for _ in procs:
             bas_dct, unq_dct = queue.get()
             basis_dct.update(bas_dct)
-            bas_ichs = [unique_refs_dct[spc]['inchi'] for spc in unique_refs_dct.keys()]
+            bas_ichs = [unique_refs_dct[spc]['inchi'] if 'inchi' in unique_refs_dct[spc] else
+                    unique_refs_dct['reacs'] for spc in unique_refs_dct.keys()]
             for spc in unq_dct:
-                new_ich = unq_dct[spc]['inchi']
+                new_ich = unq_dct[spc]['inchi'] if 'inchi' in unq_dct[spc] else unq_dct[spc]['reacs']
                 if new_ich not in bas_ichs:
                     cnt = len(list(unique_refs_dct.keys())) + 1
-                    ref_name = 'REF_{}'.format(cnt)
-                    unique_refs_dct[ref_name] = unq_dct[spc]
-
+                    if isinstance(new_ich, str):
+                        ref_name = 'REF_{}'.format(cnt)
+                        unique_refs_dct[ref_name] = unq_dct[spc]
+                    else:
+                        ref_name = 'TS_REF_{}'.format(cnt)
+                        unique_refs_dct[ref_name] = unq_dct[spc]
         for proc in procs:
             proc.join()
     else:
@@ -104,7 +110,12 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         if 'class' in spc_dct[spc_name]:
-            spc_basis, coeff_basis = get_ts_ref_fxn(spc_ich, spc_dct[spc_name]['class'])
+            print('TS info in basis: ', spc_dct[spc_name].keys())
+            if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES:
+                spc_basis, coeff_basis = get_ts_ref_fxn(spc_ich, spc_dct[spc_name]['class'])
+            else:
+                spc_basis = spc_dct[spc_name]['reacs']
+                coeff_basis = [1. for spc_i in spc_basis]
         else:
             spc_basis, coeff_basis = get_ref_fxn(spc_ich)
         for i in range(len(spc_basis)):
@@ -119,20 +130,39 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
 
         # Add to the dct with reference dct if it is not in the spc dct
         for ref in spc_basis:
-            bas_ichs = [unique_refs_dct[spc]['inchi'] for spc in unique_refs_dct.keys()]
+            bas_ichs = [unique_refs_dct[spc]['inchi'] if 'inchi' in unique_refs_dct[spc] 
+                    else unique_refs_dct[spc]['reacs'] for spc in unique_refs_dct.keys()]
             cnt = len(list(unique_refs_dct.keys())) + 1
-            if ((ref not in spc_ichs and ref not in dct_ichs) or repeats) and ref not in bas_ichs:
-                ref_name = 'REF_{}'.format(cnt)
-                msg += '\nAdding reference species {}, InChI string:{}'.format(
-                    ref, ref_name)
-                unique_refs_dct[ref_name] = create_spec(ref)
+            if isinstance(ref, str):
+                if ((ref not in spc_ichs and ref not in dct_ichs) or repeats) and ref not in bas_ichs:
+                    ref_name = 'REF_{}'.format(cnt)
+                    msg += '\nAdding reference species {}, InChI string:{}'.format(
+                        ref, ref_name)
+                    unique_refs_dct[ref_name] = create_spec(ref)
+            else:
+                if ((((ref not in spc_ichs and ref not in dct_ichs) or repeats) and ref not in bas_ichs) or 
+                    (ref[:-1] not in spc_ichs and ref[:-1] not in dct_ichs) or repeats) and ref not in bas_ichs[:-1])):
+                    ref_name = 'REF_{}'.format(cnt)
+                    msg += '\nAdding reference species {}, InChI string:{}'.format(
+                        ref, ref_name)
+                    unique_refs_dct[ref_name] = create_ts_spc(ref)
     print(msg)
     if parallel:
         queue.put((basis_dct, unique_refs_dct))
     else:
         return basis_dct, unique_refs_dct
- #   return basis_dct, unique_refs_dct
 
+ #   return basis_dct, unique_refs_dct
+def create_ts_spc(ref):
+    spec = {}
+    rad = 0
+    for spc in ref:
+        rad += automol.formula.electron_count(automol.inchi.formula(spc)) % 2
+    mult = 1 + rad
+    #spec['zmatrix'] = automol.geom.zmatrix(automol.inchi.geometry(ich))
+    spec['reacs'] = ref
+    spec['mult'] = mult
+    return spec
 
 def create_spec(ich, charge=0,
                 mc_nsamp=(True, 3, 1, 3, 100, 12),
@@ -167,21 +197,36 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
 
     # Initialize ich name dct to noe
     ich_name_dct = {}
+    ts_ich_name_dct = {}
     for ich in spc_basis:
-        ich_name_dct[ich] = None
+        if isinstance(ich, str):
+            ich_name_dct[ich] = Nonr
+        else:    
+            ich_name_dct['REACS' + 'REAC'.join(ich[0]) + r'PRODS' + 'PROD'.join(ich[1])] = name
+            #ts_ich_name_dct['REAC' + 'REAC'.join(ich[0]) +  'PROD' + 'PROD'.join(ich[1])] = name
 
     # Add the name of the species of interest
     # ich_name_dct[spc_name] = spc_dct[spc_name]['inchi']
 
     # Get names of the basis species from the respective spc dcts
-    for ich in spc_basis:
+    for ichs in spc_basis:
         for name in spc_dct:
             if name != 'global' and 'ts' not in name:
                 if ich == spc_dct[name]['inchi']:
                     ich_name_dct[ich] = name
-        for name in uni_refs_dct:
+            elif name != 'global':        
+                if ((ich[0] == spc_dct[name]['reacs'] or ich[0] == spc_dct[name]['reacs'][::-1]) and
+                        (ich[1] == spc_dct[name]['prods'] or ich[1] == spc_dct[name]['prods'][::-1])):
+                    #ts_ich_name_dct['REAC' + 'REAC'.join(ich[0]) +  'PROD' + 'PROD'.join(ich[1])] = name
+                    ich_name_dct['REACS' + 'REAC'.join(ich[0]) +  'PRODS' + 'PROD'.join(ich[1])] = name
+        for name in uni_refs_dct:i
             print('name test', name, uni_refs_dct[name]['inchi'])
-            if ich == uni_refs_dct[name]['inchi']:
+            if 'TS' in name:
+                if ((ich[0] == uniref_dct[name]['reacs'] or ich[0] == uniref_dct[name]['reacs'][::-1]) and
+                        (ich[1] == uniref_dct[name]['prods'] or ich[1] == uniref_dct[name]['prods'][::-1])):
+                    ich_name_dct['REACS' + 'REAC'.join(ich[0]) +  'PRODS' + 'PROD'.join(ich[1])] = name
+                    #ts_ich_name_dct['REAC' + 'REAC'.join(ich[0]) +  'PROD' + 'PROD'.join(ich[1])] = name
+            elif ich == uni_refs_dct[name]['inchi']:
                 ich_name_dct[ich] = name
 
     # Check the ich_name_dct
@@ -216,11 +261,14 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
         if name in spc_dct:
             spc_dct_i = spc_dct[name]
             prname = name
-        else:
-            for key in uni_refs_dct:
-                if uni_refs_dct[key]['inchi'] == ich:
-                    spc_dct_i = uni_refs_dct[key]
-                    prname = ich
+        elif name in uniref_dct:
+            spc_dct_i = uni_refs_dct[name]
+            prname = name
+        #else:
+        #    for key in uni_refs_dct:
+        #        if uni_refs_dct[key]['inchi'] == ich:
+        #           u spc_dct_i = uni_refs_dct[key]
+        #            prname = ich
         print('bases energies test:', ich)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, pf_levels,
