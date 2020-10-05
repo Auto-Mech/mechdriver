@@ -130,7 +130,6 @@ def read_ts_data(ts_dct, tsname, reac_dcts,
             writer = 'vrctst_block'
 
     # Add writer to inf dct
-    # print(inf_dct)
     inf_dct['writer'] = writer
 
     return inf_dct
@@ -381,7 +380,7 @@ def rpvtst_data(ts_dct, reac_dcts,
 
     # Need to read the sp vals along the scan. add to read
     ref_ene = 0.0
-    enes, geoms, grads, hessians, _ = torsprep.read_hr_pot(
+    enes, geoms, grads, hessians, _, _ = torsprep.read_hr_pot(
         [frm_name], [scn_vals],
         scn_prefix,
         mod_scn_ene_info, ref_ene,
@@ -399,7 +398,6 @@ def rpvtst_data(ts_dct, reac_dcts,
             chn_pf_levels['ene'],
             chn_pf_levels['rpath'][1])
     fr_idx = len(scn_vals) - 1
-    print('fr_idx', fr_idx)
     zpe_ref = (sum(freqs[(fr_idx,)]) / 2.0) * phycon.WAVEN2KCAL
 
     # Get the reactants and infinite seperation energy
@@ -410,7 +408,8 @@ def rpvtst_data(ts_dct, reac_dcts,
             dct, chn_pf_levels, run_prefix, save_prefix, False)
         pf_levels = {
             'ene': chn_pf_levels['ene'],
-            'harm': chn_pf_levels['harm']
+            'harm': chn_pf_levels['harm'],
+            'tors': chn_pf_levels['tors']
         }
         reac_ene += ene.read_energy(
             dct, pf_filesystems, chn_pf_models, pf_levels,
@@ -419,7 +418,8 @@ def rpvtst_data(ts_dct, reac_dcts,
         print('rpath', chn_pf_levels['rpath'][1])
         pf_levels = {
             'ene': ['mlvl', [[1.0, chn_pf_levels['rpath'][1][2]]]],
-            'harm': chn_pf_levels['harm']
+            'harm': chn_pf_levels['harm'],
+            'tors': chn_pf_levels['tors']
         }
         ene_hs_sr_inf += ene.read_energy(
             dct, pf_filesystems, chn_pf_models, pf_levels,

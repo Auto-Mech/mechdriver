@@ -69,6 +69,8 @@ def lj_params(well_info, bath_info, etrans_dct):
     """ Build the lennard-jones parameters
     """
 
+    sig1, eps1, sig2, eps2 = None, None, None, None
+
     ljpar = etrans_dct.get('lj', None)
 
     if ljpar is not None:
@@ -81,8 +83,9 @@ def lj_params(well_info, bath_info, etrans_dct):
         elif ljpar == 'estimate':
 
             print('- Estimating the parameters...')
-            well_geo = automol.inchi.geometry(well_info[0])
-            params = eff.estimate_viable(well_geo, bath_info)
+            well_ich = well_info[0]
+            well_geo = automol.inchi.geometry(well_ich)
+            params = eff.estimate_viable(well_ich, well_geo, bath_info)
             if params is not None:
                 bath_model, tgt_model = params
                 print('    - Series to use for estimation for estimation...')
@@ -114,6 +117,8 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
     """ Energy down model parameters
     """
 
+    efactor, epower, ecutoff = None, None, None
+
     edown = etrans_dct.get('edown', None)
 
     if edown is not None:
@@ -128,8 +133,9 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
             assert ljpar is not None
 
             print('  - Estimating the parameters...')
-            well_geo = automol.inchi.geometry(well_info[0])
-            params = eff.estimate_viable(well_geo, bath_info)
+            well_ich = well_info[0]
+            well_geo = automol.inchi.geometry(well_ich)
+            params = eff.estimate_viable(well_ich, well_geo, bath_info)
             if params is not None:
                 bath_model, tgt_model = params
                 print('    - Series to use for estimation for estimation...')
@@ -157,9 +163,6 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
                 pf_filesystems = 0
                 efactor = _read_alpha(pf_filesystems)
 
-    else:
-
-        efactor, epower, ecutoff = None, None, None
 
     return efactor, epower, ecutoff
 

@@ -136,6 +136,7 @@ def pst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
         stoich=stoich,
         pot_prefactor=ts_inf_dct['cn_pst'],
         pot_exp=ts_inf_dct['n_pst'],
+        tstlvl='e'
     )
     spc_str = mess_io.writer.molecule(
         core=core_str,
