@@ -266,6 +266,8 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     update_guess = False  # check
 
     # Grid
+    print('newts class', ts_dct['class'])
+    print('newts grid', grid)
     [grid1, grid2] = grid
 
     # Get method stuff
@@ -719,11 +721,13 @@ def _reac_cnf_fs(rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix):
         # Build conformer filesys
         ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
         ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
-        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
+        ini_min_cnf_locs, ini_cnf_path = ini_loc_info
 
         ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
 
-        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs, ini_min_cnf_locs),)
+        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs,
+                        ini_min_cnf_locs, ini_cnf_path),)
 
     return rct_cnf_fs

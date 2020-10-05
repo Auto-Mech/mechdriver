@@ -53,10 +53,11 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
     # Hack in variational grids for addition and abstraction
     if 'addition' in typ and 'rad' not in typ:
         var_grid, _ = rxngrid.radrad_addition_grid()
-    elif 'hydrogen abstraction' in typ and 'rad' not in typ:
+    elif 'hydrogen abstraction' in typ and 'rad' in typ:
         var_grid, _ = rxngrid.radrad_hydrogen_abstraction_grid()
     else:
         var_grid = []
+    print('var grid', var_grid)
 
     # Build class data lists to return from the function
     if typ:

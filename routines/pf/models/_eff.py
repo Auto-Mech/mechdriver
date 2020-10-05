@@ -16,9 +16,10 @@ def alpha(n_eff, zlj_dct, bath_model, tgt_model):
     z_alphas_n_eff = _calc_z_alpha(n_eff, bath_model, tgt_model)
 
     # Calculate alpha = Zalpha(Neff) / Z(N) at T = 300, 1000, 2000 K
+    # Empirical correction factor of (1/2) used for 1D Master Equations
     alphas = {}
     for temp, z_alpha_n_eff in z_alphas_n_eff.items():
-        alphas[temp] = z_alpha_n_eff / zlj_dct[temp]
+        alphas[temp] = (z_alpha_n_eff / zlj_dct[temp]) / 2.0
 
     # Determine alpha and n for the e-down model
     edown_alpha, edown_n = _calc_edown_expt(alphas)
@@ -54,7 +55,6 @@ def lj_collision_frequency(sig, eps, mass1, mass2,
     """ Calculate the collisin freq by Troe formula
     """
 
-
     # Calculate the reduced mass
     red_mass = ((mass1 * mass2) / (mass1 + mass2)) * phydat.phycon.AMU2KG
 
@@ -62,11 +62,12 @@ def lj_collision_frequency(sig, eps, mass1, mass2,
     zlj_dct = {}
     for temp in temps:
         pref1 = 1.0e-14 * numpy.sqrt(
-            ((8.0 * 1.380603e-23 * temp) / (numpy.pi * red_mass))
+            (8.0 * 1.380603e-23 * temp) / (numpy.pi * red_mass)
         )
+        print('eps', eps)
         pref2 = 0.7 + 0.52 * (numpy.log(0.69502 * temp / eps) / numpy.log(10))
 
-        zlj = 2.0 * numpy.pi * sig * (pref1 / pref2)
+        zlj = numpy.pi * sig**2 * (pref1 / pref2)
 
         zlj_dct[temp] = zlj
 
@@ -131,6 +132,10 @@ def lj_sig_eps(n_heavy, bath_model, tgt_model):
     # Calculate the effective sigma and epsilon values
     sigma = _lj(coeffs[0], n_heavy, coeffs[1])
     epsilon = _lj(coeffs[2], n_heavy, coeffs[3])
+
+    # Put in a check for zeros
+    if sigma == 0 or epsilon == 0:
+        sigma, epsilon = None, None
 
     return sigma, epsilon
 
@@ -253,7 +258,11 @@ def _rotor_counts(gra, symbs):
 
 
 # CHECKERS
-def estimate_viable(well_geo, bath_info):
+BAD_ICHS = (
+    'InChI=1S/H2/h1H'
+)
+    
+def estimate_viable(well_ich, well_geo, bath_info):
     """ Assess whether we can estimate using the formula
     """
 
@@ -265,21 +274,35 @@ def estimate_viable(well_geo, bath_info):
     well_gra = automol.geom.graph(well_geo)
 
     # Identify the the target model
-    if automol.graph.hydrocarbon_species(well_gra):
-        tgt_model = 'n-alkane'
-    elif automol.graph.radical_species(well_gra):
-        tgt_model = 'peroxide'
-    else:
-        fgrp_dct = automol.graph.functional_group_dct(well_gra)
-        if fgrp_dct[automol.graph.FUNC_GROUP.ALCOHOL]:
-            tgt_model = 'alcohol'
-        elif fgrp_dct[automol.graph.FUNC_GROUP.PEROXIDE]:
-            tgt_model = 'peroxide'
+    if well_ich not in BAD_ICHS: 
+        if automol.graph.hydrocarbon_species(well_gra):
+            tgt_model = 'n-alkane'
+        elif automol.graph.radical_species(well_gra):
+            tgt_model = '1-alkyl'
+        else:
+            fgrp_dct = automol.graph.functional_group_dct(well_gra)
+            if fgrp_dct[automol.graph.FUNC_GROUP.ALCOHOL]:
+                tgt_model = 'n-alcohol'
+            elif fgrp_dct[automol.graph.FUNC_GROUP.PEROXIDE]:
+                tgt_model = 'n-hydroperoxide'
 
-    # For now, set model to alkanes if nothing found and set up return obj
-    if tgt_model is None:
-        tgt_model = 'n-alkane'
-    
-    ret = (bath_model, tgt_model)
+        # For now, set model to alkanes if nothing found and set up return obj
+        if tgt_model is None:
+            tgt_model = 'n-alkane'
+
+        ret = (bath_model, tgt_model)
+    else:    
+        ret = None
 
     return ret
+
+
+if __name__ == '__main__':
+    SIG = 4.11
+    EPS = 119.0
+    MASS1 = 30.07
+    MASS2 = 28.0134
+    lj_collision_frequency(
+        SIG, EPS, MASS1, MASS2,
+        temps=(300., 1000., 2000.)
+    )

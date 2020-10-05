@@ -76,15 +76,29 @@ def print_pes_channels(pes_dct):
 
     print('\n  Sorted Mechanism read from file:')
     for pes_idx, formula in enumerate(pes_dct):
-        print('    PES:', pes_idx+1, formula)
+        print('! PES:', pes_idx+1, formula)
         pes_rxn_name_lst = pes_dct[formula]['rxn_name_lst']
         pes_rct_names_lst = pes_dct[formula]['rct_names_lst']
         pes_prd_names_lst = pes_dct[formula]['prd_names_lst']
         for chn_idx, _ in enumerate(pes_rxn_name_lst):
-            print('      Channel {}: {} = {}'.format(
-                chn_idx+1,
+            # print('      Channel {}: {} = {}'.format(
+            #     chn_idx+1,
+            #     ' + '.join(pes_rct_names_lst[chn_idx]),
+            #     ' + '.join(pes_prd_names_lst[chn_idx])))
+            print('  {} = {}   1.0 0.0 0.0'.format(
                 ' + '.join(pes_rct_names_lst[chn_idx]),
                 ' + '.join(pes_prd_names_lst[chn_idx])))
+
+    # for (formula, pes_idx, sub_pes_idx), rxn_lst in pes_dct.items():
+
+    #     # Print PES form and SUB PES Channels
+    #     print('\nPES {}: {}, SUB PES {}'.format(
+    #         pes_idx, formula, sub_pes_idx))
+    #     for rxn in rxn_lst:
+    #         print('  Channel {}: {} = {}'.format(
+    #             rxn['chn_idx'],
+    #             '+'.join(rxn['reacs']),
+    #             '+'.join(rxn['prods'])))
 
 
 def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct,
