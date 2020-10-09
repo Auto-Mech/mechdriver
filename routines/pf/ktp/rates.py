@@ -396,6 +396,7 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
 
     # MESS string for the fake reactant side well
     well_dct_key = make_rxn_str(rxn[side], prepend='F')
+    fake_well_label = label_dct[well_dct_key]
     # well_str += mess_io.writer.species_separation_str()
     # well_str += mess_io.writer.species_separation_str()
     well_str += '\n! Fake Well for {}\n'.format(

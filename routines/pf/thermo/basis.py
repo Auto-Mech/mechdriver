@@ -107,7 +107,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
 
     basis_dct = {}
     unique_refs_dct = {}
-    print('spc dct: ', spc_dct.keys())
+    # print('spc dct: ', spc_dct.keys())
     run_prefix = None
     save_prefix = None
     rxnclass = None
@@ -316,6 +316,22 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
         #        if uni_refs_dct[key]['inchi'] == ich:
         #           u spc_dct_i = uni_refs_dct[key]
         #            prname = ich
+        if 'ts' in name or 'TS' in name:
+            reacs, prods = ich.split('PRODS')
+            reacs = reacs.replace('REACS', '')
+            reacs = reacs.split('REAC')
+            prods = prods.split('PROD')
+            reac_lbl = 'r1'
+            if len(reacs) > 1:
+                reac_lbl += 'r2'
+            prod_lbl = 'p1'
+            if len(prod) > 1:
+                prod_lbl += 'p2'
+            print('Basis Reaction: {}={} 1 1 1 '.format(reac_lbl, prod_lbl))
+            for i, reac in enumerate(reacs):
+                print('r{},{},{},{}'.format(str(i), reac, automol.inchi.smiles(reac), '1'))
+            for i, prod in enumerate(prods):
+                print('p{},{},{},{}'.format(str(i), prod, automol.inchi.smiles(prod), '1'))
         print('bases energies test:', ich, name)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, pf_levels,
@@ -325,7 +341,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             read_energy(
                 spc_dct_i, pf_filesystems,
                 pf_models, pf_levels,
-                read_ene=True, read_zpe=True, 
+                read_ene=True, read_zpe=True,
                 saddle='ts' in name or 'TS' in name
             )
         )
