@@ -35,7 +35,7 @@ def pst_kt(n_par, mred, cn_par, temp):
     amu2au = 1.0 / (9.1093837015e-28 * 6.022e23)
     BOHR2CM = 5.29177e-9
 
-    # print ('mred test 1', mred)
+    print ('mred test 1', mred)
     mred *= amu2au
     temp *= k2eh
     # print ('mred test;', mred)
