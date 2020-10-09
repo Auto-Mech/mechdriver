@@ -29,8 +29,8 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
              "cbh2": "get_cbhzed_ts",
              "cbh3": "get_cbhzed_ts"}
 
-#IMPLEMENTED_CBH_TS_CLASSES = []
-IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high','beta scission','hydrogen migration']
+IMPLEMENTED_CBH_TS_CLASSES = []
+#IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high','beta scission','hydrogen migration']
 
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False):
     """ add refs to species list as necessary
@@ -325,7 +325,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             if len(reacs) > 1:
                 reac_lbl += 'r2'
             prod_lbl = 'p1'
-            if len(prod) > 1:
+            if len(prods) > 1:
                 prod_lbl += 'p2'
             print('Basis Reaction: {}={} 1 1 1 '.format(reac_lbl, prod_lbl))
             for i, reac in enumerate(reacs):

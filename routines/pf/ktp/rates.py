@@ -149,23 +149,23 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         print('written labels', written_labels)
 
         # Build PES energy dct and connection lists
-        for side, ene in chnl_enes.items():
-            if 'fake' not in side:
-                if side in ('reacs', 'prods'):
-                    rct_str = '+'.join(rxn[side])
-                    label = label_dct[rct_str]
-                    pes_ene_dct[label] = ene        
-                elif 'ts' in side:
-                    rct_str = tsname
-                    label = label_dct[rct_str]
-                    pes_ene_dct[label] = max(ene)
+        #for side, ene in chnl_enes.items():
+        #    if 'fake' not in side:
+        #        if side in ('reacs', 'prods'):
+        #            rct_str = '+'.join(rxn[side])
+        #            label = label_dct[rct_str]
+        #            pes_ene_dct[label] = ene        
+        #        elif 'ts' in side:
+        #            rct_str = tsname
+        #            label = label_dct[rct_str]
+        #            pes_ene_dct[label] = max(ene)
 
-        reac_str = '+'.join(rxn['reacs'])
-        prod_str = '+'.join(rxn['prods'])
-        reac_lbl = label_dct[reac_str]
-        prod_lbl = label_dct[prod_str]
-        ts_lbl = label_dct[tsname]
-        conn_lst += ((reac_lbl, ts_lbl), (ts_lbl, prod_lbl))
+        #reac_str = '+'.join(rxn['reacs'])
+        #prod_str = '+'.join(rxn['prods'])
+        #reac_lbl = label_dct[reac_str]
+        #prod_lbl = label_dct[prod_str]
+        #ts_lbl = label_dct[tsname]
+        #conn_lst += ((reac_lbl, ts_lbl), (ts_lbl, prod_lbl))
 
     # Combine all the reaction channel strings
     rxn_chan_str = '\n'.join([full_well_str, full_bi_str, full_ts_str])
@@ -206,7 +206,14 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
         # Set the labels to put into the file
         spc_label = [automol.inchi.smiles(spc_dct[name]['inchi'])
                      for name in rgt_names]
-        chn_label = label_dct[make_rxn_str(rgt_names)]
+        _rxn_str = make_rxn_str(rgt_names)
+        _rxn_str_rev = make_rxn_str(rgt_names[::-1])
+        if _rxn_str in label_dct:
+            chn_label = label_dct[_rxn_str]
+        elif _rxn_str_rev in label_dct:
+            chn_label = label_dct[_rxn_str_rev]
+        else:
+            print('no {} in label dct'.format(_rxn_str))
 
         # Write the strings
         if chn_label not in written_labels:
@@ -382,7 +389,10 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
     elif side == 'prods':
         well_key = 'fake_vdwp'
         ts_key = 'fake_vdwp_ts'
-        prepend_key = 'FPB'
+        if rxn['reacs'] == rxn['prods'] or rxn['reacs'] == rxn['prods'][::-1]: 
+           prepend_key = 'FRB'
+        else:   
+           prepend_key = 'FPB'
 
     # Initialize well and ts strs and data dcts
     fake_dat_dct = {}
@@ -396,8 +406,13 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
 
     # MESS string for the fake reactant side well
     well_dct_key = make_rxn_str(rxn[side], prepend='F')
-    fake_well_label = label_dct[well_dct_key]
-    # well_str += mess_io.writer.species_separation_str()
+    well_dct_key_rev = make_rxn_str(rxn[side][::-1], prepend='F')
+    if well_dct_key in label_dct:
+        fake_well_label = label_dct[well_dct_key]
+    elif well_dct_key_rev in label_dct:
+        fake_well_label = label_dct[well_dct_key_rev]
+    else:    
+        print('No label {} in label dict'.format(well_dct_key))
     # well_str += mess_io.writer.species_separation_str()
     well_str += '\n! Fake Well for {}\n'.format(
         '+'.join(rxn[side]))
@@ -407,7 +422,15 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
 
     # MESS PST TS string for fake reactant side well -> reacs
     well_dct_key = make_rxn_str(rxn[side], prepend=prepend_key)
-    pst_label = label_dct[well_dct_key]
+    well_dct_key_rev = make_rxn_str(rxn[side][::-1], prepend=prepend_key)
+    if well_dct_key in label_dct:
+        fake_well_label = label_dct[well_dct_key]
+        pst_label = label_dct[well_dct_key]
+    elif well_dct_key_rev in label_dct:
+        fake_well_label = label_dct[well_dct_key_rev]
+        pst_label = label_dct[well_dct_key_rev]
+    else:    
+        print('No label {} in label dict'.format(well_dct_key))
     pst_ts_str, pst_ts_dat = blocks.pst_block(ts_inf_dct, *fake_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_label, side_label, fake_well_label, pst_ts_str,
