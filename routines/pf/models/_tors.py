@@ -24,6 +24,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     saddle = bool(rxn_class and (frm_bnd_keys or brk_bnd_keys))
 
     # Set up tors level filesystem and model and level
+    print('pflvls', pf_levels)
     tors_model = pf_models['tors']
     tors_ene_info = pf_levels['tors'][1][0]
     mod_tors_ene_info = filesys.inf.modify_orb_restrict(

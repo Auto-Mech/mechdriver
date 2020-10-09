@@ -113,7 +113,7 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
         ini_thy_save_path)
 
     # Set the cnf fs to see if TS is available or for searching
-    cnf_save_fs = autofile.fs.conformer(ini_ts_save_path)
+    cnf_save_fs = autofile.fs.conformer(ts_save_path)
     min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
 

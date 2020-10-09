@@ -160,15 +160,16 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                         if update_guess:
                             guess_zma = opt_zma
                     else:
-                        _, opt_ret = es_runner.read_job(job=job, run_fs=run_fs)
-                        instab.write_instab(
-                            conn_zma, opt_zma,
-                            thy_save_fs, mod_thy_info[1:4],
-                            opt_ret,
-                            zma_locs=(0,),
-                            save_cnf=False
-                        )
-                        break
+                        print('WARNING: Structure seems to be unstable...')
+                        # _, opt_ret = es_runner.read_job(job=job, run_fs=run_fs)
+                        # instab.write_instab(
+                        #     conn_zma, opt_zma,
+                        #     thy_save_fs, mod_thy_info[1:4],
+                        #     opt_ret,
+                        #     zma_locs=(0,),
+                        #     save_cnf=False
+                        # )
+                        # break
                 else:
                     print('No output found in file')
 
@@ -490,31 +491,29 @@ def reac_sep_ene(rct_info, rcts_cnf_fs, thy_info,
 
     # get the single reference energy for each of the reactant configurations
     spc_enes = []
-    for (cnf_run_fs, cnf_save_fs, min_locs), inf in zip(rcts_cnf_fs, rct_info):
+    for (run_fs, save_fs, mlocs, mpath), inf in zip(rcts_cnf_fs, rct_info):
 
         # Set the modified thy info
         mod_thy_info = filesys.inf.modify_orb_restrict(inf, thy_info)
 
         # Build filesys
-        cnf_save_paths = filesys.build.cnf_paths_from_locs(
-            cnf_save_fs, min_locs)
-        zma_fs, _ = filesys.build.zma_fs_from_prefix(
-            cnf_save_paths[0])
+        print('locs test', mlocs)
+        zma_fs, _ = filesys.build.zma_fs_from_prefix(mpath, zma_idxs=[0])
 
         # Read the geometry and set paths
         zma = zma_fs[-1].file.zmatrix.read([0])
-        geo = cnf_save_fs[-1].file.geometry.read(min_locs)
-        geo_run_path = cnf_run_fs[-1].path(min_locs)
-        geo_save_path = cnf_save_fs[-1].path(min_locs)
+        geo = save_fs[-1].file.geometry.read(mlocs)
+        geo_run_path = run_fs[-1].path(mlocs)
+        geo_save_path = save_fs[-1].path(mlocs)
 
         # Build the single point filesys objects
         sp_save_fs, _ = filesys.build.sp_from_prefix(
-            cnf_save_paths[0], mod_thy_info)
+            mpath, mod_thy_info)
 
         # Calculate the save single point energy
         sp.run_energy(zma, geo, inf, mod_thy_info,
-                      cnf_save_fs, geo_run_path, geo_save_path,
-                      min_locs, sp_script_str, overwrite,
+                      save_fs, geo_run_path, geo_save_path,
+                      mlocs, sp_script_str, overwrite,
                       **kwargs)
         exists = sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4])
         if not exists:

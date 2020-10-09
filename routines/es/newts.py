@@ -21,7 +21,6 @@ def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
 
     # Build necessary objects
     info_dct = _set_info(spc_dct, tsname)
-    # frm_name, brk_name = _set_coords(ts_dct)
     grid = _set_grid(search_method, spc_dct[tsname])
     method_dct, runfs_dct, savefs_dct = _set_methods(
         spc_dct[tsname], thy_dct, es_keyword_dct, info_dct,
@@ -70,23 +69,49 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
     frm_bnd_keys = ts_dct['frm_bnd_keys']
     brk_bnd_keys = ts_dct['brk_bnd_keys']
     rcts_gra = ts_dct['rcts_gra']
+    # tors_names = ts_dct['amech_ts_tors_names']
 
     # Get reaction coordinates
     frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
     brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
+    # Constraint dcts for saddle point searches
+    const_bnd_key = ts_dct['const_bnd_key']
+    const_tors_names = ts_dct['const_tors_names']
+    const_angs_names = ts_dct['const_angs_names']
+    constraint_dct = {}
+    if const_bnd_key:
+        const_name = automol.zmatrix.bond_key_from_idxs(
+            ini_zma, const_bnd_key)
+        coords = automol.zmatrix.values(ini_zma)
+        const_val = coords[const_name]
+        constraint_dct[const_name] = const_val
+    if const_tors_names:
+        coords = automol.zmatrix.values(ini_zma)
+        for const_tors_name in const_tors_names:
+            const_val = coords[const_tors_name]
+            constraint_dct[const_tors_name] = const_val
+    if const_angs_names:
+        coords = automol.zmatrix.values(ini_zma)
+        for const_angs_name in const_angs_names:
+            const_val = coords[const_angs_name]
+            constraint_dct[const_angs_name] = const_val
+    if not constraint_dct:
+        constraint_dct = None
+    print('constraints in ts scan', constraint_dct)
+
     # Get method stuff
+    mod_ini_thy_info = method_dct['inplvl']
     mod_thy_info = method_dct['runlvl']
 
     # Get filesys stuff
     _, ts_run_path = runfs_dct['runlvl_ts_fs']
-    scn_run_fs = runfs_dct['runlvl_scn_fs']
+    _, thy_run_path = runfs_dct['runlvl_thy_fs']
 
-    ini_zma_fs = savefs_dct['inilvl_zma_fs']
-    thy_save_fs, _ = savefs_dct['runlvl_thy_fs']
+    _, ini_ts_save_path = savefs_dct['inilvl_ts_fs']
+    thy_save_fs, thy_save_path = savefs_dct['runlvl_thy_fs']
     cnf_save_fs, cnf_save_locs = savefs_dct['runlvl_cnf_fs']
     ts_save_fs, ts_save_path = savefs_dct['runlvl_ts_fs']
-    scn_save_fs = savefs_dct['runlvl_scn_fs']
 
     run_fs = autofile.fs.run(ts_run_path)
 
@@ -102,82 +127,20 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
               'Proceeding to find it...')
         script_str, opt_script_str, _, opt_kwargs = qchem_params(
             *mod_thy_info[0:2])
-        sadpt_transition_state(
+        sadpt.sadpt_transition_state(
             ini_zma, ts_info,
-            mod_thy_info,
+            mod_ini_thy_info, mod_thy_info,
+            thy_run_path, thy_save_path,
             thy_save_fs,
-            ini_zma_fs,
+            ini_ts_save_path,
             cnf_save_fs,
-            scn_save_fs, scn_run_fs,
             ts_save_fs, ts_save_path, run_fs,
             typ, grid, update_guess,
             frm_name, brk_name,
             frm_bnd_keys, brk_bnd_keys, rcts_gra,
             opt_script_str, script_str, overwrite,
-            es_keyword_dct, **opt_kwargs
+            es_keyword_dct, constraint_dct, **opt_kwargs
         )
-
-
-# SADPT FINDER FUNCTIONS
-def sadpt_transition_state(
-        ini_zma, ts_info,
-        mod_thy_info,
-        thy_save_fs,
-        ini_zma_fs,
-        cnf_save_fs,
-        scn_save_fs, scn_run_fs,
-        ts_save_fs, ts_save_path, run_fs,
-        typ, grid, update_guess,
-        dist_name, brk_name,
-        frm_bnd_keys, brk_bnd_keys, rcts_gra,
-        opt_script_str, script_str, overwrite,
-        es_keyword_dct, **opt_kwargs):
-    """ Find a sadddle point
-    """
-
-    # Check filesystem for input level of theory
-    print('\nSearching save filesys for guess Z-Matrix calculated',
-          'at {} level...'.format(es_keyword_dct['inplvl']))
-    guess_zmas = sadpt.check_filesys_for_guess2(ini_zma_fs)
-    # guess_zmas = sadpt.check_filesys_for_guess(
-    #     ini_ts_save_path, mod_ini_thy_info)
-
-    # If no guess zma, run a TS searching algorithm
-    if not guess_zmas:
-        print(' - No Z-Matrix is found in save filesys.')
-        print('\nRunning scan to generate guess Z-Matrix for opt...')
-        guess_zmas = sadpt.scan_for_guess(
-            typ, grid, dist_name, brk_name, ini_zma, ts_info,
-            mod_thy_info, thy_save_fs,
-            scn_run_fs, scn_save_fs, opt_script_str,
-            overwrite, update_guess, **opt_kwargs)
-
-    # Optimize the saddle point
-    print('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
-    opt_ret = sadpt.optimize_saddle_point(
-        guess_zmas, ts_info, mod_thy_info,
-        run_fs, opt_script_str, overwrite, **opt_kwargs)
-
-    # Calculate the Hessian for the optimized structure
-    if opt_ret is not None:
-        print('\nCalculating Hessian for the optimized geometry...')
-        hess_ret, freqs, imags = sadpt.saddle_point_hessian(
-            opt_ret, ts_info, mod_thy_info,
-            run_fs, script_str, overwrite, **opt_kwargs)
-
-        # Assess saddle point, save it if viable
-        print('Assessing the saddle point...')
-        saddle = sadpt.saddle_point_checker(imags)
-        if saddle:
-            sadpt.save_saddle_point(
-                opt_ret, hess_ret, freqs, imags,
-                mod_thy_info,
-                cnf_save_fs,
-                ts_save_fs, ts_save_path,
-                frm_bnd_keys, brk_bnd_keys, rcts_gra,
-                zma_locs=[0])
-    else:
-        print('\n TS optimization failed. No geom to check and save.')
 
 
 def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
@@ -262,10 +225,13 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
 
     # Get es options
+    pot_thresh = es_keyword_dct['pot_thresh']
     overwrite = es_keyword_dct['overwrite']
     update_guess = False  # check
 
     # Grid
+    print('newts class', ts_dct['class'])
+    print('newts grid', grid)
     [grid1, grid2] = grid
 
     # Get method stuff
@@ -299,8 +265,24 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
         vscnlvl_thy_save_fs,
         vscnlvl_ts_save_fs,
         var_scn_run_fs, var_scn_save_fs,
+        pot_thresh,
         overwrite, update_guess
     )
+
+    # if sadpt_zma is None:
+    #     sadpt.sadpt_transition_state(
+    #         ini_zma, ts_info,
+    #         mod_thy_info,
+    #         thy_save_fs,
+    #         ini_zma_fs,
+    #         cnf_save_fs,
+    #         scn_save_fs, scn_run_fs,
+    #         ts_save_fs, ts_save_path, run_fs,
+    #         typ, grid, update_guess,
+    #         dist_name, brk_name,
+    #         frm_bnd_keys, brk_bnd_keys, rcts_gra,
+    #         opt_script_str, script_str, overwrite,
+    #         es_keyword_dct, **opt_kwargs)
 
 
 def run_vrctst(spc_dct, tsname, es_keyword_dct,
@@ -681,6 +663,7 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
 
     savefs_dct = {
         'inilvl_zma_fs': ini_zma_save_fs,
+        'inilvl_ts_fs': ini_ts_save_fs,
         'runlvl_thy_fs': runlvl_thy_save_fs,
         'runlvl_ts_fs': runlvl_ts_save_fs,
         'runlvl_scn_fs': runlvl_scn_save_fs,
@@ -719,11 +702,13 @@ def _reac_cnf_fs(rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix):
         # Build conformer filesys
         ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
         ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
-        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
+        ini_min_cnf_locs, ini_cnf_path = ini_loc_info
 
         ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
 
-        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs, ini_min_cnf_locs),)
+        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs,
+                        ini_min_cnf_locs, ini_cnf_path),)
 
     return rct_cnf_fs
