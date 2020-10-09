@@ -29,8 +29,8 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
              "cbh2": "get_cbhzed_ts",
              "cbh3": "get_cbhzed_ts"}
 
-IMPLEMENTED_CBH_TS_CLASSES = []
-#IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high','beta scission','hydrogen migration']
+# IMPLEMENTED_CBH_TS_CLASSES = []
+IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high','beta scission','hydrogen migration']
 
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False):
     """ add refs to species list as necessary
@@ -186,14 +186,17 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
                if spc_dct[name]['inchi'] == rct:
                    rct_muls.append(spc_dct[name]['mult'])
                    rct_chgs.append(spc_dct[name]['charge'])
+                   break
     for rct in spec['prods']:
        for name in spc_dct:
            if 'inchi' in spc_dct[name]:
                if spc_dct[name]['inchi'] == rct:
                    prd_muls.append(spc_dct[name]['mult'])
                    prd_chgs.append(spc_dct[name]['charge'])
+                   break
     rxn_muls = [rct_muls, prd_muls]               
     rxn_chgs = [rct_chgs, prd_chgs]              
+    # print('rxn_chgs test:', rxn_chgs, rct_chgs, prd_chgs)
     try:
         rinf = filesys.build.get_rxn_fs(
             run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, mult)

@@ -24,46 +24,40 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
     else:
         high_params = [1.0, 0.0, 0.0]
     
-    pressures = tuple(pressure for pressure in ktp_dct.keys()
-                      if pressure != 'high')
-
-    # Fit rate constants to Chebyshev polynomial
-    alpha, trange, prange = ratefit.fit.chebyshev.kfit(
-        inp_temps, ktp_dct, tdeg=tdeg, pdeg=pdeg)
-    tmin, tmax = trange
-    pmin, pmax = prange
+    if list(ktp_dct.keys()) != ['high']:
+        pressures = tuple(pressure for pressure in ktp_dct.keys()
+                          if pressure != 'high')
     
-    # Calculate the fitted rate constants
-    fit_ktps = ratefit.calc.chebyshev(
-        alpha, tmin, tmax, pmin, pmax, inp_temps, pressures)
+        # Fit rate constants to Chebyshev polynomial
+        alpha, trange, prange = ratefit.fit.chebyshev.kfit(
+            inp_temps, ktp_dct, tdeg=tdeg, pdeg=pdeg)
+        tmin, tmax = trange
+        pmin, pmax = prange
+        
+        # Calculate the fitted rate constants
+        fit_ktps = ratefit.calc.chebyshev(
+            alpha, tmin, tmax, pmin, pmax, inp_temps, pressures)
+    
+        # Calculate errors
+        err_dct, temp_dct = {}, {}
+        for pressure in pressures:
+            rate_kts = ktp_dct[pressure][1]
+            fit_kts = numpy.array(fit_ktps[pressure])
+            mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
+                rate_kts, fit_kts)
+    
+            # Add to the dct
+            err_dct[pressure] = [mean_avg_err, max_avg_err]
 
-    # Calculate errors
-    err_dct, temp_dct = {}, {}
-    for pressure in pressures:
-        rate_kts = ktp_dct[pressure][1]
-        fit_kts = numpy.array(fit_ktps[pressure])
-        mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
-            rate_kts, fit_kts)
-
-        # Add to the dct
-        err_dct[pressure] = [mean_avg_err, max_avg_err]
-
-    # Write the Chemkin strings
-    chemkin_str = chemkin_io.writer.reaction.chebyshev(
-        reaction, high_params, alpha, tmin, tmax, pmin, pmax)
-    chemkin_str += '\n'
-    chemkin_str += chemkin_io.writer.reaction.fit_info(
-        pressures, temp_dct, err_dct)
+        # Write the Chemkin strings
+        chemkin_str = chemkin_io.writer.reaction.chebyshev(
+            reaction, high_params, alpha, tmin, tmax, pmin, pmax)
+        chemkin_str += '\n'
+        chemkin_str += chemkin_io.writer.reaction.fit_info(
+            pressures, temp_dct, err_dct)
+    else:
+        pass
 
     return chemkin_str
-
-
-def _cheb_err():
-    """ chebyshev error
-    """
-
-    fit_ktps = ratefit.calc.chebyshev(
-        alpha, TMIN, TMAX, PMIN, PMAX, TEMPS, PRESSURES)
-
 
 
