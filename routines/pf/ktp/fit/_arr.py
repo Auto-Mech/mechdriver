@@ -30,8 +30,10 @@ def perform_fits(ktp_dct, reaction, mess_path,
 
     # Write a chemkin string for the single fit
     sing_chemkin_str = chemkin_io.writer.reaction.plog(
-        reaction, sing_params_dct,
-        err_dct=sing_fit_err_dct, temp_dct=sing_fit_temp_dct)
+        reaction, sing_params_dct)
+    sing_chemkin_str += '\n'
+    sing_chemkin_str += chemkin_io.writer.reaction.fit_info(
+            pressures, sing_fit_temp_dct, sing_fit_err_dct)
 
     # Assess single fitting errors:
     # are they within threshold at each pressure
