@@ -421,16 +421,14 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
         fake_well_label, fake_well, chnl_enes[well_key])
 
     # MESS PST TS string for fake reactant side well -> reacs
-    well_dct_key = make_rxn_str(rxn[side], prepend=prepend_key)
-    well_dct_key_rev = make_rxn_str(rxn[side][::-1], prepend=prepend_key)
-    if well_dct_key in label_dct:
-        fake_well_label = label_dct[well_dct_key]
-        pst_label = label_dct[well_dct_key]
-    elif well_dct_key_rev in label_dct:
-        fake_well_label = label_dct[well_dct_key_rev]
-        pst_label = label_dct[well_dct_key_rev]
+    pst_dct_key = make_rxn_str(rxn[side], prepend=prepend_key)
+    pst_dct_key_rev = make_rxn_str(rxn[side][::-1], prepend=prepend_key)
+    if pst_dct_key in label_dct:
+        pst_label = label_dct[pst_dct_key]
+    elif pst_dct_key_rev in label_dct:
+        pst_label = label_dct[pst_dct_key_rev]
     else:    
-        print('No label {} in label dict'.format(well_dct_key))
+        print('No label {} in label dict'.format(pst_dct_key))
     pst_ts_str, pst_ts_dat = blocks.pst_block(ts_inf_dct, *fake_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_label, side_label, fake_well_label, pst_ts_str,
