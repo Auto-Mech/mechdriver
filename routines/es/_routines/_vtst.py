@@ -139,11 +139,19 @@ def molrad_scan(ts_zma, ts_info,
         rct_info, rcts_cnf_fs,
         inf_thy_info, overwrite)
 
+<<<<<<< HEAD
+=======
+    # inf_locs = [[coord_name], [1000.]]
+    # scn_save_fs[-1].create(inf_locs)
+    # scn_save_fs[-1].file.energy.write(inf_sep_ene, inf_locs)
+
+>>>>>>> a0069620f5bebfd592abd3430f95caff9e0462b5
     # Save the vmatrix for use in reading
     _save_traj(ts_zma, frm_bnd_keys, rcts_gra,
                ts_save_fs, zma_locs=zma_locs)
 
     print('\nRunning Hessians and energies...')
+<<<<<<< HEAD
     _vtst_hess_ene(ts_info, coord_name,
                    mod_thy_info, mod_vsp1_thy_info,
                    scn_save_fs, scn_run_fs,
@@ -153,6 +161,22 @@ def molrad_scan(ts_zma, ts_info,
 def _vtst_hess_ene(ts_info, coord_name,
                    mod_thy_info, mod_vsp1_thy_info,
                    scn_save_fs, scn_run_fs,
+=======
+    cas_kwargs = {}
+    scn_locs = filesys.build.scn_locs_from_fs(
+        scn_save_fs, [coord_name], constraint_dct=None)
+
+    _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
+                   scn_save_fs, scn_run_fs, scn_locs,
+                   overwrite, **cas_kwargs)
+    # _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
+    #                scn_save_fs, scn_run_fs, scn_locs, inf_locs,
+    #                overwrite, **cas_kwargs)
+
+
+def _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
+                   scn_save_fs, scn_run_fs, scn_locs,
+>>>>>>> a0069620f5bebfd592abd3430f95caff9e0462b5
                    overwrite, **cas_kwargs):
     """ VTST Hessians and Energies
     """

@@ -230,8 +230,8 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     update_guess = False  # check
 
     # Grid
-    # print('newts class', ts_dct['class'])
-    # print('newts grid', grid)
+    print('newts class', ts_dct['class'])
+    print('newts grid', grid)
     [grid1, grid2] = grid
 
     # Get method stuff
