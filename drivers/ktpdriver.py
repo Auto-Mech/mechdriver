@@ -70,7 +70,6 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     print('Checking stability of all species...')
     rxn_lst = instab.break_all_unstable(
         rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
-
     # Build the MESS label idx dictionary for the PES
     label_dct = ktproutines.label.make_pes_label_dct(
         rxn_lst, pes_idx, spc_dct, spc_model_dct)

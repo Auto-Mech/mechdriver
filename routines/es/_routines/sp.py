@@ -496,6 +496,7 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         print("Harmonic frequencies: {}".format('    '.join([str(freq) for freq in freqs])))
         harm_zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
         print("Harmonic ZPVE: {}".format(harm_zpe))
+        print("Geometry: {}".format(automol.geom.string(geo)))
         print(" - Saving harmonic frequencies...")
         if _json_database(save_path):
             geo_save_fs[-1].json.harmonic_frequencies.write(freqs, locs)
@@ -510,6 +511,7 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         harm_zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
         print("Harmonic frequencies: {}".format('    '.join([str(freq) for freq in freqs])))
         print("Harmonic ZPVE: {}".format(harm_zpe))
+        print("Geometry: {}".format(automol.geom.string(geo)))
 
 
 def _hess_grad(prog, out_str, geo_save_fs,

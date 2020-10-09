@@ -18,6 +18,7 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_model_dct):
         chn_idx = rxn['chn_idx']
         pf_models = parser.model.pf_model_info(
             spc_model_dct[rxn['model'][1]]['pf'])
+        print(pf_models)
         rwell_model = pf_models['rwells']
         pwell_model = pf_models['pwells']
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx)

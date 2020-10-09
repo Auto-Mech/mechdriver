@@ -18,13 +18,15 @@ from routines.pf.models import _vib as vib
 from routines.pf.models import _flux as flux
 from routines.pf.models import _pst as pst
 from routines.pf.models import _util as util
+from routines.pf.thermo import basis 
+from routines.pf.thermo import heatform
 from lib.structure import tors as torsprep
 from lib.phydat import phycon
 from lib import filesys
 
 
 # General readers
-def read_spc_data(spc_dct_i, spc_name,
+def read_spc_data(spc_dct, spc_name,
                   chn_pf_models, chn_pf_levels,
                   run_prefix, save_prefix,
                   ref_pf_models=(), ref_pf_levels=()):
@@ -35,6 +37,7 @@ def read_spc_data(spc_dct_i, spc_name,
     print('\nReading filesystem info for {}'.format(spc_name))
 
     vib_model, tors_model = chn_pf_models['vib'], chn_pf_models['tors']
+    spc_dct_i = spc_dct[spc_name]
     if typ.is_atom(spc_dct_i):
         inf_dct = atm_data(
             spc_dct_i,
@@ -51,7 +54,7 @@ def read_spc_data(spc_dct_i, spc_name,
             writer = 'tau_block'
         else:
             inf_dct = mol_data(
-                spc_dct_i,
+                spc_name, spc_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, saddle=False)
@@ -63,7 +66,7 @@ def read_spc_data(spc_dct_i, spc_name,
     return inf_dct
 
 
-def read_ts_data(ts_dct, tsname, reac_dcts,
+def read_ts_data(spc_dct, tsname, reac_dcts,
                  chn_pf_models, chn_pf_levels,
                  run_prefix, save_prefix,
                  ts_class, ts_sadpt, ts_nobarrier,
@@ -74,7 +77,7 @@ def read_ts_data(ts_dct, tsname, reac_dcts,
     print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
            '++++++++++++++++++++++++++++++++++++++'))
     print('\nReading filesystem info for {}'.format(tsname))
-
+    ts_dct = spc_dct[tsname]
     # Get all of the information for the filesystem
     if not typ.var_radrad(ts_class):
 
@@ -101,7 +104,7 @@ def read_ts_data(ts_dct, tsname, reac_dcts,
             writer = 'rpvtst_block'
         else:
             inf_dct = mol_data(
-                ts_dct,
+                tsname, spc_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels,
                 run_prefix, save_prefix, saddle=True)
@@ -174,11 +177,13 @@ def atm_data(spc_dct_i,
     return inf_dct
 
 
-def mol_data(spc_dct_i,
+def mol_data(spc_name, spc_dct,
              chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
              run_prefix, save_prefix, saddle=False):
     """ Pull all of the neccessary information from the filesystem for a species
     """
+    
+    spc_dct_i = spc_dct[spc_name]
 
     # Initialize all of the elements of the inf dct
     geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
@@ -264,8 +269,32 @@ def mol_data(spc_dct_i,
     print('\nObtaining the electronic energy + zpve...')
     chn_ene = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
-        read_ene=True, read_zpe=False)
+        read_ene=True, read_zpe=False, saddle=saddle)
     ene_chnlvl = chn_ene + zpe
+    print('ene_chnlvl: ', ene_chnlvl)
+    ref_scheme = chn_pf_models['ref_scheme']
+    ref_enes = chn_pf_models['ref_enes']
+
+    # Determine info about the basis species used in thermochem calcs
+    basis_dct, uniref_dct = basis.prepare_refs(
+        ref_scheme, spc_dct, [[spc_name, None]])
+
+    # Get the basis info for the spc of interest
+    spc_basis, coeff_basis = basis_dct[spc_name]
+
+    # Get the energies for the spc and its basis
+    ene_spc, ene_basis = basis.basis_energy(
+        spc_name, spc_basis, uniref_dct, spc_dct,
+        chn_pf_levels, chn_pf_models,
+        run_prefix, save_prefix)
+
+    print('ene from thmroutines: ', ene_spc)
+    # Calculate and store the 0 K Enthalpy
+    hf0k = heatform.calc_hform_0k(
+        ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
+    print('ABS Energy: ', ene_chnlvl)
+    print('Hf0K Energy: ', hf0k)
+    ene_chnlvl = hf0k
 
     ene_reflvl = None
     _, _ = ref_pf_models, ref_pf_levels
@@ -413,7 +442,7 @@ def rpvtst_data(ts_dct, reac_dcts,
         }
         reac_ene += ene.read_energy(
             dct, pf_filesystems, chn_pf_models, pf_levels,
-            read_ene=True, read_zpe=True)
+            read_ene=True, read_zpe=True, saddle=sadpt)
 
         print('rpath', chn_pf_levels['rpath'][1])
         pf_levels = {

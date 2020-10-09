@@ -271,7 +271,7 @@ def pf_model_info(pf_model):
         'vpt2': vpt2_model,
         'etrans': etrans_model,
         'rwells': rwells_model,
-        'pwells': pwells_model
+        'pwells': pwells_model,
     }
 
     return pf_models
