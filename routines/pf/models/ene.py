@@ -17,7 +17,7 @@ from lib.amech_io import parser
 
 # Functions to hand reading and formatting energies of single species
 def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                read_ene=True, read_zpe=True):
+                read_ene=True, read_zpe=True, saddle=False):
     """ Get the energy for a species on a channel
     """
 
@@ -30,7 +30,7 @@ def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
-            spc_dct_i, pf_filesystems, pf_models, pf_levels, saddle=False)
+            spc_dct_i, pf_filesystems, pf_models, pf_levels, saddle=saddle)
 
     # Return the total energy requested
     ene = None
@@ -102,7 +102,11 @@ def zero_point_energy(spc_dct_i,
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Calculate ZPVE
-    if typ.is_atom(spc_dct_i):
+    is_atom = False
+    if not saddle:
+        if typ.is_atom(spc_dct_i):
+            is_atom = True
+    if is_atom:
         zpe = 0.0
     else:
         rotors = tors.build_rotors(

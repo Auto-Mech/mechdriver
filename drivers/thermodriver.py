@@ -44,6 +44,10 @@ def run(spc_dct,
         for mod in mods:
             pf_levels[mod] = pf_level_info(spc_model_dct[mod]['es'], thy_dct)
             pf_models[mod] = pf_model_info(spc_model_dct[mod]['pf'])
+            pf_models[mod]['ref_scheme'] = (spc_model_dct[mod]['options']['ref_scheme'] 
+                if 'ref_scheme' in spc_model_dct[mod]['options'] else 'none')
+            pf_models[mod]['ref_enes'] = (spc_model_dct[mod]['options']['ref_enes'] 
+                if 'ref_enes' in spc_model_dct[mod]['options'] else 'none')
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
 
@@ -58,7 +62,7 @@ def run(spc_dct,
                 global_pf_str = thmroutines.qt.make_pf_header(
                     pes_model_dct[pes_model]['therm_temps'])
                 spc_str, dat_str_dct = thmroutines.qt.make_spc_mess_str(
-                    spc_dct[spc_name], spc_name,
+                    spc_dct, spc_name,
                     pf_models[spc_model], pf_levels[spc_model],
                     run_prefix, save_prefix)
                 messpf_inp_str = thmroutines.qt.make_messpf_str(

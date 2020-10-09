@@ -35,7 +35,6 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
 
     # Set the spc_info
     spc_info = finf.get_spc_info(spc_dct_i)
-
     # Set some path stuff
     if saddle:
         save_path = spc_dct_i['rxn_fs'][3]

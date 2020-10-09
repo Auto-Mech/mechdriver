@@ -396,7 +396,7 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
 
     # MESS string for the fake reactant side well
     well_dct_key = make_rxn_str(rxn[side], prepend='F')
-    fake_well_label = label_dct[well_dct_key]
+    # well_str += mess_io.writer.species_separation_str()
     # well_str += mess_io.writer.species_separation_str()
     well_str += '\n! Fake Well for {}\n'.format(
         '+'.join(rxn[side]))
@@ -445,7 +445,7 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
             print('build inf')
             chnl_infs[side].append(
                 build.read_spc_data(
-                    spc_dct[rgt], rgt,
+                    spc_dct, rgt,
                     chn_pf_models, chn_pf_levels,
                     run_prefix, save_prefix,
                     ref_pf_models=ref_pf_models,
@@ -459,7 +459,7 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     # Set up data for TS
     chnl_infs['ts'] = []
     chnl_infs['ts'] = build.read_ts_data(
-        spc_dct[tsname], tsname, [spc_dct[name] for name in rxn['reacs']],
+        spc_dct, tsname, [spc_dct[name] for name in rxn['reacs']],
         chn_pf_models, chn_pf_levels,
         run_prefix, save_prefix,
         ts_class, ts_sadpt, ts_nobarrier,
