@@ -275,16 +275,20 @@ def estimate_viable(well_ich, well_geo, bath_info):
 
     # Identify the the target model
     if well_ich not in BAD_ICHS: 
-        if automol.graph.hydrocarbon_species(well_gra):
-            tgt_model = 'n-alkane'
-        elif automol.graph.radical_species(well_gra):
+        if automol.graph.radical_species(well_gra):
             tgt_model = '1-alkyl'
+        elif automol.graph.hydrocarbon_species(well_gra):
+            tgt_model = 'n-alkane'
         else:
             fgrp_dct = automol.graph.functional_group_dct(well_gra)
-            if fgrp_dct[automol.graph.FUNC_GROUP.ALCOHOL]:
-                tgt_model = 'n-alcohol'
-            elif fgrp_dct[automol.graph.FUNC_GROUP.PEROXIDE]:
+            if fgrp_dct[automol.graph.Fgroup.HYDROPEROXY]:
                 tgt_model = 'n-hydroperoxide'
+            elif fgrp_dct[automol.graph.Fgroup.EPOXIDE]:
+                tgt_model = 'epoxide'
+            elif fgrp_dct[automol.graph.Fgroup.ETHER]:
+                tgt_model = 'ether'
+            elif fgrp_dct[automol.graph.Fgroup.ALCOHOL]:
+                tgt_model = 'n-alcohol'
 
         # For now, set model to alkanes if nothing found and set up return obj
         if tgt_model is None:
@@ -295,14 +299,3 @@ def estimate_viable(well_ich, well_geo, bath_info):
         ret = None
 
     return ret
-
-
-if __name__ == '__main__':
-    SIG = 4.11
-    EPS = 119.0
-    MASS1 = 30.07
-    MASS2 = 28.0134
-    lj_collision_frequency(
-        SIG, EPS, MASS1, MASS2,
-        temps=(300., 1000., 2000.)
-    )

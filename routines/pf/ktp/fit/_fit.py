@@ -1,6 +1,6 @@
 """
   Fit the rate constants read from the MESS output to
-  Arrhenius, Plog, or Troe expressions
+  Arrhenius, Plog, Troe, and Chebyshev expressions
 """
 
 import copy
@@ -10,6 +10,7 @@ import mess_io
 from lib.amech_io import writer
 from lib.phydat import phycon
 from routines.pf.ktp.fit import _arr as arr
+from routines.pf.ktp.fit import _cheb as cheb
 
 
 def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
@@ -35,7 +36,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
 
         print(('\n--------------------------------------------' +
                '------------------------------------------'))
-        print('\nGetting Rates for {}'.format(
+        print('\nReading and Fitting Rates for {}'.format(
             reaction))
 
         # Read the rate constants out of the mess outputs
@@ -57,13 +58,18 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
             chemkin_str = arr.perform_fits(
                 ktp_dct, reaction, mess_path,
                 a_conv_factor, arrfit_thresh)
-        elif fit_method == 'troe':
-            print('\nFitting k(T,P)s to Troe Form...')
-            # pass
-            # chemkin_str += troe.perform_fits(
-            #     ktp_dct, reaction, mess_path,
-            #     troe_param_fit_lst,
-            #     a_conv_factor, err_thresh)
+        elif fit_method == 'chebyshev':
+            print('\nFitting k(T,P)s to Chebyshev Form...')
+            chemkin_str = cheb.perform_fits(
+                ktp_dct, inp_temps, reaction, mess_path,
+                a_conv_factor)
+        # elif fit_method == 'troe':
+        #     print('\nFitting k(T,P)s to Troe Form...')
+        #     # pass
+        #     # chemkin_str += troe.perform_fits(
+        #     #     ktp_dct, reaction, mess_path,
+        #     #     troe_param_fit_lst,
+        #     #     a_conv_factor, err_thresh)
 
         # Update the chemkin string dct
         print('\nFitting Parameters in CHEMKIN Format:')

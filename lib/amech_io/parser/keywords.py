@@ -98,7 +98,8 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
                          'nobarrier', 'retryfail', 'overwrite'],
     'find_radrad_vtst': ['runlvl', 'inplvl', 'rxndirn',
                          'var_splvl1', 'var_splvl2', 'var_scnlvl',
-                         'nobarrier', 'retryfail', 'overwrite'],
+                         'nobarrier', 'pot_thresh',
+                         'retryfail', 'overwrite'],
     'find_vrctst': ['runlvl', 'inplvl', 'rxndirn',
                     'var_splvl1', 'var_splvl2', 'var_scnlvl',
                     'nobarrier', 'retryfail', 'overwrite'],
@@ -157,6 +158,7 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'rxndirn': 'forw',
     'hessmax': 1000,
     'hrthresh': -0.5,
+    'pot_thresh': 0.3
 }
 
 # Species keywords

@@ -12,7 +12,70 @@ from lib import filesys
 from lib.reaction import grid as rxngrid
 
 
-def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info, zma_locs=(0,)):
+# SADPT FINDER FUNCTIONS
+def sadpt_transition_state(
+        ini_zma, ts_info,
+        mod_thy_info,
+        thy_save_fs,
+        ini_zma_fs,
+        cnf_save_fs,
+        scn_save_fs, scn_run_fs,
+        ts_save_fs, ts_save_path, run_fs,
+        typ, grid, update_guess,
+        dist_name, brk_name,
+        frm_bnd_keys, brk_bnd_keys, rcts_gra,
+        opt_script_str, script_str, overwrite,
+        es_keyword_dct, **opt_kwargs):
+    """ Find a sadddle point
+    """
+
+    # Check filesystem for input level of theory
+    print('\nSearching save filesys for guess Z-Matrix calculated',
+          'at {} level...'.format(es_keyword_dct['inplvl']))
+    guess_zmas = check_filesys_for_guess2(ini_zma_fs)
+    # guess_zmas = sadpt.check_filesys_for_guess(
+    #     ini_ts_save_path, mod_ini_thy_info)
+
+    # If no guess zma, run a TS searching algorithm
+    if not guess_zmas:
+        print(' - No Z-Matrix is found in save filesys.')
+        print('\nRunning scan to generate guess Z-Matrix for opt...')
+        guess_zmas = scan_for_guess(
+            typ, grid, dist_name, brk_name, ini_zma, ts_info,
+            mod_thy_info, thy_save_fs,
+            scn_run_fs, scn_save_fs, opt_script_str,
+            overwrite, update_guess, **opt_kwargs)
+
+    # Optimize the saddle point
+    print('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
+    opt_ret = optimize_saddle_point(
+        guess_zmas, ts_info, mod_thy_info,
+        run_fs, opt_script_str, overwrite, **opt_kwargs)
+
+    # Calculate the Hessian for the optimized structure
+    if opt_ret is not None:
+        print('\nCalculating Hessian for the optimized geometry...')
+        hess_ret, freqs, imags = saddle_point_hessian(
+            opt_ret, ts_info, mod_thy_info,
+            run_fs, script_str, overwrite, **opt_kwargs)
+
+        # Assess saddle point, save it if viable
+        print('Assessing the saddle point...')
+        saddle = saddle_point_checker(imags)
+        if saddle:
+            save_saddle_point(
+                opt_ret, hess_ret, freqs, imags,
+                mod_thy_info,
+                cnf_save_fs,
+                ts_save_fs, ts_save_path,
+                frm_bnd_keys, brk_bnd_keys, rcts_gra,
+                zma_locs=[0])
+    else:
+        print('\n TS optimization failed. No geom to check and save.')
+
+
+def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info,
+                            zma_locs=(0,)):
     """ Check if the filesystem for any TS structures at the input
         level of theory
     """
@@ -36,7 +99,7 @@ def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info, zma_locs=(0,)):
     return guess_zmas
 
 
-def check_filesys_for_guess2(ini_zma_fs, zma_locs=(0,)):
+def _check_filesys_for_guess2(ini_zma_fs, zma_locs=(0,)):
     """ Check if the filesystem for any TS structures at the input
         level of theory
     """
@@ -165,8 +228,25 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
             run_fs=run_fs,
         )
 
+        # If successful, break loop. If not, try constrained opt+full opt seq
         if opt_success:
             break
+        else:
+            print()
+            # es_runner.run_job(
+            #     job='optimization',
+            #     script_str=opt_script_str,
+            #     run_fs=run_fs,
+            #     geom=zma,
+            #     spc_info=ts_info,
+            #     thy_info=mod_thy_info,
+            #     frozen_coordinates=frozen_coordinates,
+            #     saddle=True,
+            #     overwrite=overwrite,
+            #     **opt_kwargs,
+            #     )
+
+
 
     return opt_ret
 
@@ -217,7 +297,7 @@ def saddle_point_hessian(opt_ret, ts_info, mod_thy_info,
 def saddle_point_checker(imags):
     """ run things for checking Hessian
     """
-    
+
     print('Checking the imaginary frequencies of the saddle point...')
     saddle = True
     if len(imags) < 1:
@@ -240,13 +320,12 @@ def saddle_point_checker(imags):
     return saddle
 
 
-def save_saddle_point(
-        opt_ret, hess_ret, freqs, imags,
-        mod_thy_info,
-        cnf_save_fs,
-        ts_save_fs, ts_save_path,
-        frm_bnd_keys, brk_bnd_keys, rcts_gra,
-        zma_locs=(0,)):
+def save_saddle_point(opt_ret, hess_ret, freqs, imags,
+                      mod_thy_info,
+                      cnf_save_fs,
+                      ts_save_fs, ts_save_path,
+                      frm_bnd_keys, brk_bnd_keys, rcts_gra,
+                      zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
     """
 
@@ -291,7 +370,6 @@ def save_saddle_point(
     cnf_save_fs[-1].file.hessian.write(hess, locs)
     cnf_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
     cnf_save_path = cnf_save_fs[-1].path(locs)
-    
 
     # Save the zmatrix information in a zma filesystem
     cnf_save_path = cnf_save_fs[-1].path(locs)

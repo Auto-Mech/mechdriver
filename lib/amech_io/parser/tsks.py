@@ -13,6 +13,7 @@ from lib.amech_io.parser.keywords import TRANS_TSK_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import TRANS_TSK_KEYWORDS_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import TRANS_TSK_KEYWORDS_VAL_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import TRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT
+from lib.amech_io.parser.ptt import set_value_type
 
 
 # ES TSKS
@@ -87,7 +88,8 @@ def format_tsk_keywords(keyword_lst):
     keyword_dct = {}
     for keyword in keyword_lst:
         [key, val] = keyword.split('=')
-        keyword_dct[key] = format_val(val)
+        # keyword_dct[key] = format_val(val)
+        keyword_dct[key] = set_value_type(val)
 
     return keyword_dct
 
@@ -208,6 +210,10 @@ def check_es_tsks_supported(es_tsks, thy_dct):
                 elif key == 'hessmax':
                     if not isinstance(val, int):
                         print('{} must be set to an integer'.format(key))
+                elif key == 'pot_thresh':
+                    print(key, val, type(val))
+                    if not isinstance(val, float):
+                        print('{} must be set to an float'.format(key))
                 elif key == 'cnf_range':
                     if 'n' in val or 'e' in val:
                         val2 = val[1:]

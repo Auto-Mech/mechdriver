@@ -3,11 +3,12 @@
 
 import automol
 import autofile
-from lib import filesys
 from routines.es._routines import sp
 from routines.es._routines import _wfn as wfn
 from routines.es._routines import _scan as scan
+from lib import filesys
 from lib.submission import qchem_params
+from lib.reaction import grid as rxngrid
 
 
 def radrad_scan(ts_zma, ts_info, hs_info,
@@ -24,6 +25,7 @@ def radrad_scan(ts_zma, ts_info, hs_info,
                 vscnlvl_thy_save_fs,
                 vscnlvl_ts_save_fs,
                 scn_run_fs, scn_save_fs,
+                pot_thresh,
                 overwrite, update_guess,
                 constraint_dct=None,
                 zma_locs=(0,)):
@@ -53,39 +55,42 @@ def radrad_scan(ts_zma, ts_info, hs_info,
         **cas_kwargs
     )
 
-    # Calculate and store the infinite separation energy
-    far_locs = [[coord_name], [grid1[0]]]
-    ts_zma = scn_save_fs[-1].file.zmatrix.read(far_locs)
-    geo = scn_save_fs[-1].file.geometry.read(far_locs)
+    # Assess the potentials to see if there is a saddle point zma
+    print('above vtst max')
+    sadpt_zma = rxngrid.vtst_max(
+        list(grid1)+list(grid2), coord_name, scn_save_fs,
+        mod_var_scn_thy_info, constraint_dct,
+        ethresh=pot_thresh)
 
-    geo_run_path = scn_run_fs[-1].path(far_locs)
-    geo_save_path = scn_save_fs[-1].path(far_locs)
+    print('sadpt_zma', sadpt_zma)
+    if sadpt_zma is None:
+        # Calculate and the energies needed for inf sep ene
+        far_locs = [[coord_name], [grid1[0]]]
+        ts_zma = scn_save_fs[-1].file.zmatrix.read(far_locs)
+        geo = scn_save_fs[-1].file.geometry.read(far_locs)
 
-    _ = scan.radrad_inf_sep_ene(
-        hs_info, ts_zma,
-        rct_info, rcts_cnf_fs,
-        var_sp1_thy_info, var_sp2_thy_info,
-        hs_var_sp1_thy_info, hs_var_sp2_thy_info,
-        geo, geo_run_path, geo_save_path,
-        scn_save_fs, far_locs,
-        overwrite=overwrite,
-        **cas_kwargs)
+        geo_run_path = scn_run_fs[-1].path(far_locs)
+        geo_save_path = scn_save_fs[-1].path(far_locs)
 
-    # inf_locs = [[coord_name], [1000.]]
-    # scn_save_fs[-1].create(inf_locs)
-    # scn_save_fs[-1].file.energy.write(inf_sep_ene, inf_locs)
+        _ = scan.radrad_inf_sep_ene(
+            hs_info, ts_zma,
+            rct_info, rcts_cnf_fs,
+            var_sp1_thy_info, var_sp2_thy_info,
+            hs_var_sp1_thy_info, hs_var_sp2_thy_info,
+            geo, geo_run_path, geo_save_path,
+            scn_save_fs, far_locs,
+            overwrite=overwrite,
+            **cas_kwargs)
 
-    # Save the vmatrix for use in reading
-    _save_traj(ts_zma, frm_bnd_keys, rcts_gra,
-               vscnlvl_ts_save_fs, zma_locs=zma_locs)
+        # Save the vmatrix for use in reading
+        _save_traj(ts_zma, frm_bnd_keys, rcts_gra,
+                   vscnlvl_ts_save_fs, zma_locs=zma_locs)
 
-    print('\nRunning Hessians and energies...')
-    scn_locs = filesys.build.scn_locs_from_fs(
-        scn_save_fs, [coord_name], constraint_dct=None)
-
-    _vtst_hess_ene(ts_info, mod_var_scn_thy_info, mod_var_sp1_thy_info,
-                   scn_save_fs, scn_run_fs, scn_locs,
-                   overwrite, **cas_kwargs)
+        print('\nRunning Hessians and energies...')
+        _vtst_hess_ene(ts_info, coord_name,
+                       mod_var_scn_thy_info, mod_var_sp1_thy_info,
+                       scn_save_fs, scn_run_fs,
+                       overwrite, **cas_kwargs)
 
 
 def molrad_scan(ts_zma, ts_info,
@@ -134,32 +139,26 @@ def molrad_scan(ts_zma, ts_info,
         rct_info, rcts_cnf_fs,
         inf_thy_info, overwrite)
 
-    # inf_locs = [[coord_name], [1000.]]
-    # scn_save_fs[-1].create(inf_locs)
-    # scn_save_fs[-1].file.energy.write(inf_sep_ene, inf_locs)
-
     # Save the vmatrix for use in reading
     _save_traj(ts_zma, frm_bnd_keys, rcts_gra,
                ts_save_fs, zma_locs=zma_locs)
 
     print('\nRunning Hessians and energies...')
-    cas_kwargs = {}
-    scn_locs = filesys.build.scn_locs_from_fs(
-        scn_save_fs, [coord_name], constraint_dct=None)
-
-    _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
-                   scn_save_fs, scn_run_fs, scn_locs,
-                   overwrite, **cas_kwargs)
-    # _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
-    #                scn_save_fs, scn_run_fs, scn_locs, inf_locs,
-    #                overwrite, **cas_kwargs)
+    _vtst_hess_ene(ts_info, coord_name,
+                   mod_thy_info, mod_vsp1_thy_info,
+                   scn_save_fs, scn_run_fs,
+                   overwrite, **{})
 
 
-def _vtst_hess_ene(ts_info, mod_thy_info, mod_vsp1_thy_info,
-                   scn_save_fs, scn_run_fs, scn_locs,
+def _vtst_hess_ene(ts_info, coord_name,
+                   mod_thy_info, mod_vsp1_thy_info,
+                   scn_save_fs, scn_run_fs,
                    overwrite, **cas_kwargs):
     """ VTST Hessians and Energies
     """
+
+    scn_locs = filesys.build.scn_locs_from_fs(
+        scn_save_fs, [coord_name], constraint_dct=None)
 
     print('\n Running Hessians and Gradients...')
     hess_script_str, _, hess_kwargs, _ = qchem_params(

@@ -117,7 +117,7 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs,
 
 
 # Functions to build lists potential sadpts
-def vtst_max(typ, grid, ts_zma, dist_name, scn_save_fs,
+def vtst_max(grid, dist_name, scn_save_fs,
              mod_thy_info, constraint_dct, ethresh=0.3):
     """ Look along a vtst potential and determine if sadpt there
         (need to make the generic version)
@@ -131,15 +131,18 @@ def vtst_max(typ, grid, ts_zma, dist_name, scn_save_fs,
     # Locate all potential sadpts
     sadpt_idxs, sadpt_enes = _potential_sadpt(enes_lst, ethresh=ethresh)
 
-    # For now, find the greatest max for the saddle point
-    max_idx = sadpt_enes.index(max(sadpt_enes))
-    sadpt_idx = sadpt_idxs[max_idx][1]
+    if sadpt_idxs and sadpt_enes:
+        # For now, find the greatest max for the saddle point
+        max_idx = sadpt_enes.index(max(sadpt_enes))
+        sadpt_idx = sadpt_idxs[max_idx][1]
 
-    # Get the locs for the maximum
-    sadpt_locs = locs_lst[sadpt_idx]
+        # Get the locs for the maximum
+        sadpt_locs = locs_lst[sadpt_idx]
 
-    # Get the max zma
-    sadpt_zma = scn_save_fs[-1].file.zmatrix.read(sadpt_locs)
+        # Get the max zma
+        sadpt_zma = scn_save_fs[-1].file.zmatrix.read(sadpt_locs)
+    else:
+        sadpt_zma = None
 
     return sadpt_zma
 
@@ -154,14 +157,15 @@ def _grid_vals(grid, dist_name, scn_save_fs,
     enes_lst = []
 
     # Build the lists of all the locs for the grid
+    grid_locs = []
     for grid_val_i in grid:
         if constraint_dct is None:
-            locs_lst.append([[dist_name], [grid_val_i]])
+            grid_locs.append([[dist_name], [grid_val_i]])
         else:
-            locs_lst.append([constraint_dct, [dist_name], [grid_val_i]])
+            grid_locs.append([constraint_dct, [dist_name], [grid_val_i]])
 
     # Get the energies along the grid
-    for locs in locs_lst:
+    for locs in grid_locs:
         if scn_save_fs[-1].exists(locs):
             scn_path = scn_save_fs[-1].path(locs)
             sp_save_fs = autofile.fs.single_point(scn_path)

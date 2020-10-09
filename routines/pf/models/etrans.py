@@ -246,7 +246,7 @@ def set_bath(spc_dct, etrans_dct):
         bath_info = finf.get_spc_info(bath_dct)
         print('  - Using bath {} input by user'.format(bath_name))
     else:
-        bath_info = ['InChI=1S/N2/c1-2', 0, 1]
-        print('  - No bath provided, using N2 as bath')
+        bath_info = ['InChI=1S/Ar', 0, 1]
+        print('  - No bath provided, using Argon as bath')
 
     return bath_info
