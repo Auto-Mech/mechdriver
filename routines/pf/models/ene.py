@@ -221,7 +221,8 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
 
     # Get the elec+zpe energy for the reference species
     print('')
-    ref_ene = 0.0
+    # ref_ene = 0.0
+    hf0k = 0.0
     for rgt in ref_rgts:
 
         print(' - Calculating energy for {}...'.format(rgt))
@@ -237,12 +238,12 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
         #    spc_dct[rgt], pf_levels, run_prefix, save_prefix, saddle=False)
 
         # Calcualte the total energy
-        hf0k = thmroutines.heatform.calc_hform_0k(
+        hf0k += thmroutines.heatform.calc_hform_0k(
             ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
         #ref_ene += read_energy(
         #    spc_dct[rgt], pf_filesystems, pf_models, pf_levels,
         #    read_ene=True, read_zpe=True)
-
+    hf0k *= phycon.KCAL2EH
     return hf0k, ref_model
     #return ref_ene, ref_model
 

@@ -293,8 +293,8 @@ def mol_data(spc_name, spc_dct,
     hf0k = heatform.calc_hform_0k(
         ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
     print('ABS Energy: ', ene_chnlvl)
-    print('Hf0K Energy: ', hf0k)
-    ene_chnlvl = hf0k
+    print('Hf0K Energy: ', hf0k * phycon.KCAL2KJ)
+    ene_chnlvl = hf0k * phycon.KCAL2EH
 
     ene_reflvl = None
     _, _ = ref_pf_models, ref_pf_levels
