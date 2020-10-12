@@ -15,7 +15,7 @@ from routines.pf.ktp.fit import _cheb as cheb
 
 def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
               pes_formula, label_dct, es_info, pf_model,
-              mess_path, fit_method, pdep_fit,
+              mess_path, inp_fit_method, pdep_fit,
               arrfit_thresh):
     """ Parse the MESS output and fit the rates to
         Arrhenius expressions written as CHEMKIN strings
@@ -46,26 +46,21 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
             lab_i, lab_j, mess_path, pdep_fit,
             bimol=numpy.isclose(a_conv_factor, 6.0221e23))
 
-        # Move ahead in loop if no rates found
-        if not ktp_dct:
-            print('\nNo valid k(T,Ps)s from MESS output.')
-            print('\nSkipping to next reaction...')
-            continue
-
+        # Check the ktp dct and fit_method to see how to fit rates
+        fit_method = _assess_fit_method(ktp_dct, inp_fit_method)
+        
         # Get the desired fits in the form of CHEMKIN strs
-        if fit_method == 'arrhenius':
-            print('\nFitting k(T,P)s to PLOG/Arrhenius Form....')
+        if fit_method is None:
+            continue
+        elif fit_method == 'arrhenius':
             chemkin_str = arr.perform_fits(
                 ktp_dct, reaction, mess_path,
                 a_conv_factor, arrfit_thresh)
         elif fit_method == 'chebyshev':
-            print('\nFitting k(T,P)s to Chebyshev Form...')
             chemkin_str = cheb.perform_fits(
                 ktp_dct, inp_temps, reaction, mess_path,
                 a_conv_factor)
         # elif fit_method == 'troe':
-        #     print('\nFitting k(T,P)s to Troe Form...')
-        #     # pass
         #     # chemkin_str += troe.perform_fits(
         #     #     ktp_dct, reaction, mess_path,
         #     #     troe_param_fit_lst,
@@ -181,3 +176,39 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
             ktp_dct['high'] = valid_calc_tk_dct['high']
 
     return ktp_dct
+
+
+def _assess_fit_method(ktp_dct, inp_fit_method):
+    """ Assess if there are any rates to fit and if so, check if
+        the input fit method should be used, or just simple Arrhenius
+        fits will suffice because there is only one pressure for which
+        rates exist to be fit.
+    """
+
+    if ktp_dct:
+        pressures = list(ktp_dct.keys())
+        npressures = len(pressures)
+        # If only one pressure (outside HighP limit), just run Arrhenius
+        if npressures == 1:
+            fit_method = 'arrhenius'
+        elif npressures == 2 and 'high' in pressures:
+            fit_method = 'arrhenius'
+        else:
+            fit_method = inp_fit_method
+    else:
+        fit_method = None
+
+    # Print message to say what fitting will be done
+    if fit_method == 'arrhenius':
+        if inp_fit_method != 'arrhenius':
+            print('\nNot enough pressure-dependent rates for Troe/Chebyshev.')
+        print('\nFitting k(T,P)s to PLOG/Arrhenius Form....')
+    elif fit_method == 'chebyshev':
+        print('\nFitting k(T,P)s to Chebyshev Form...')
+    elif fit_method == 'troe':
+        print('\nFitting k(T,P)s to Troe Form...')
+    elif fit_method is None:
+        print('\nNo valid k(T,Ps)s from MESS output to fit.')
+        print('\nSkipping to next reaction...')
+
+    return fit_method
