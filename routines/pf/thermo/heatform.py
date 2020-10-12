@@ -331,6 +331,7 @@ def _ts_graph(gra, site):
         bnd_ords[frozenset({*brk})] = frozenset({list(bnd_ords[frozenset({*brk})])[0] - 0.6})
         adj_atms[site[0]] = frozenset({site[1], *adj_atms[site[0]]})
         adj_atms[site[1]] = frozenset({site[0], *adj_atms[site[1]]})
+    print('ts gra', atms, bnd_ords)    
     return rad_atms, atms, bnd_ords, atm_vals
 
 def remove_zero_order_bnds(gra):
@@ -339,6 +340,7 @@ def remove_zero_order_bnds(gra):
     for bnd in bnds:
         if bnds[bnd][0] > 0:
             new_bnds[bnd] = bnds[bnd]
+    print('new bonds ', new_bnds)        
     return (atms, new_bnds)
 
 
@@ -366,7 +368,9 @@ def split_beta_gras(gras):
                       atm[1] = atm[1] - 0.4
                       atms[atmi] = tuple(atm)
                       order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
+                      print('key2 ', atmbi, atmi, order)
                       bnd_ords[frozenset({atmbi, atmi})] = (order - 0.6, tmp)
+                      print('key2 seonc ', bnd_ords)
             rct_gra = remove_zero_order_bnds((atms, bnd_ords))
             rct_gras = automol.graph.connected_components(rct_gra)
             print('rct_gras', rct_gras)
@@ -405,6 +409,7 @@ def split_beta_gras(gras):
 def split_gras(gras):
     rct_ichs = ['','']
     prd_ichs = ['','']
+    print('gra in split gras', gras)
     atms, bnd_ords = gras
     atms = atms.copy()
     bnd_ords = bnd_ords.copy()
@@ -413,18 +418,18 @@ def split_gras(gras):
         if np.floor(order) == order - 0.4:
             bnd_ords[bnd_ord] = (order + 0.6, tmp)
             atmai, atmbi = bnd_ord
-            if not np.floor(atms[atmai][1]) == atms[atmai][1]-0.4:
+            if not abs(np.floor(atms[atmai][1]) - (atms[atmai][1]-0.4)) < 0.01:
                 atmbi, atmai = atmai, atmbi
             atma = list(atms[atmai])
             atmb = list(atms[atmbi])
             atma[1] = atma[1] - 0.6
-            atmb[1] = atmb[1] + 1
             atms[atmai] = tuple(atma)
             atms[atmbi] = tuple(atmb)
             for atmi in atms:
-                if np.floor(atms[atmi][1]) == atms[atmi][1]-0.4:
+                print(atmi, atms[atmi][1], np.floor(atms[atmi][1]), atms[atmi][1]-0.4, np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4))
+                if abs(np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4)) < 0.01:
                       atm =  list(atms[atmi])
-                      atm[1] = atm[1] - 0.4
+                      atm[1] = round(atm[1] - 0.4, 1)
                       atms[atmi] = tuple(atm)
                       order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
                       bnd_ords[frozenset({atmbi, atmi})] = (order - 0.6, tmp)
@@ -439,18 +444,17 @@ def split_gras(gras):
         if np.floor(order) == order - 0.4:
             bnd_ords[bnd_ord] = (order - 0.4, tmp)
             atmai, atmbi = bnd_ord
-            if not np.floor(atms[atmai][1]) == atms[atmai][1]-0.4:
+            if not abs(np.floor(atms[atmai][1]) -( atms[atmai][1]-0.4)) < 0.01:
                 atmbi, atmai = atmai, atmbi
             atma = list(atms[atmai])
             atmb = list(atms[atmbi])
             atma[1] = atma[1] - 0.6
-            atmb[1] = atmb[1] + 1
             atms[atmai] = tuple(atma)
             atms[atmbi] = tuple(atmb)
             for atmi in atms:
-                if np.floor(atms[atmi][1]) == atms[atmi][1]-0.4:
+                if abs(np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4)) < 0.01:
                       atm =  list(atms[atmi])
-                      atm[1] = atm[1] - 0.4
+                      atm[1] = round(atm[1] - 0.4, 1)
                       atms[atmi] = tuple(atm)
                       atms[atmi] = tuple(atm)
                       order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
@@ -938,7 +942,7 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key):
         print('site ', site)        
         adj_atms = automol.graph.atom_neighbor_keys(gra)
 
-    if 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass:
+    if 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass or 'hydrogen migration' in rxnclass:
         frags = cbhzed_habs(gra, site)
     else:
         raise NotImplementedError
@@ -955,6 +959,7 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key):
             else:    
                 fraglist.append(split_gras(frags[frag]['ts_gra']))
             clist.append(frags[frag]['coeff'])
+    print('frags from cbh_ts ', fraglist)        
     return fraglist, clist
    
 def get_cbhzed(ich):
