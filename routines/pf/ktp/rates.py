@@ -464,7 +464,6 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     chnl_infs['reacs'], chnl_infs['prods'] = [], []
     for side in ('reacs', 'prods'):
         for rgt in rxn[side]:
-            print('build inf')
             chnl_infs[side].append(
                 build.read_spc_data(
                     spc_dct, rgt,

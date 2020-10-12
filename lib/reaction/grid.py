@@ -288,7 +288,8 @@ def build_grid(rtype, rbktype, bnd_atoms, ts_zma,
     elif 'ring forming scission' in rtype:
         grid, update_guess = ring_forming_scission_grid(
             npoints, bnd_atoms)
-    elif 'hydrogen abstraction' in rtype and 'rad' not in rtype:
+    elif 'hydrogen abstraction' in rtype:
+    # elif 'hydrogen abstraction' in rtype and 'rad' not in rtype:
         grid, update_guess = hydrogen_abstraction(npoints, bnd_atoms)
     elif 'substitution' in rtype:
         grid, update_guess = substitution(npoints, bnd_atoms)
@@ -497,6 +498,7 @@ def radrad_addition_grid():
     grid2 = numpy.linspace(rstart, rend2, npoints2)
     # grid2 = numpy.delete(grid2, 0)
     grid = [grid1, grid2]
+    # grid = numpy.concatenate((grid1, grid2), axis=None)
     update_guess = True
 
     return grid, update_guess
@@ -514,6 +516,7 @@ def radrad_hydrogen_abstraction_grid():
     grid1 = numpy.linspace(rstart, rend1, npoints1)
     grid2 = numpy.linspace(rstart, rend2, npoints2)
     grid2 = numpy.delete(grid2, 0)
+    # grid = numpy.concatenate((grid1, grid2), axis=None)
     grid = [grid1, grid2]
     update_guess = True
 

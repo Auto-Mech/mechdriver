@@ -196,6 +196,7 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
             print('Analysis of computed surface suggests saddle point.')
             print('Attempting to find saddle point using surface...')
 
+    print('ts_dct_grid test:', ts_dct['grid'])
     # Run single reference mol-rad VTST Search
     if _molrad_barrierless_search(ts_dct, ts_search):
         rcts = ts_dct['reacs']
@@ -206,6 +207,7 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                       spc_dct[rcts[1]]['charge'],
                       spc_dct[rcts[1]]['mult']]
         [grid1, grid2] = grid
+        print('in barrierless search', grid1, grid2, grid)
         # Set up the scan filesys (need scan and cscan for rc
         scn_run_fs = autofile.fs.scan(thy_run_path)
         scn_save_fs = autofile.fs.scan(thy_save_path)

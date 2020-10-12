@@ -57,7 +57,7 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
         var_grid, _ = rxngrid.radrad_hydrogen_abstraction_grid()
     else:
         var_grid = []
-    print('var grid', var_grid)
+    # print('var grid', var_grid)
 
     # Build class data lists to return from the function
     if typ:

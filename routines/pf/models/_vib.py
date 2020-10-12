@@ -167,7 +167,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     #unproj_prod = numpy.prod(rt_freqs1)
     #proj_prod = numpy.prod(freqs) * numpy.prod(tors_freqs)
     #print('proj_prod test:', unproj_prod, proj_prod)
-    print('log_freq_tests:', log_rt_freq, log_freq, log_tors_freq)
+    # print('log_freq_tests:', log_rt_freq, log_freq, log_tors_freq)
     print('freq test:', freqs, tors_freqs, rt_freqs1)
     #scale_factor = unproj_prod / proj_prod
     scale_factor = numpy.exp(log_rt_freq - log_freq - log_tors_freq)
@@ -197,10 +197,8 @@ def scale_frequencies(freqs, tors_zpe,
     """
 
     # Scale the frequencies
-    print('in scale freqs')
     thy_info = chn_pf_levels['harm'][1]
     thy_method = (thy_info[1], thy_info[2])
-    print('thy_method', thy_method)
     if scale_method == '3c':
         cf1, cf2, cf3 = M3_COEFFS.get(thy_method, (1.0, 0.0, 0.0))
         scaled_freqs = []
