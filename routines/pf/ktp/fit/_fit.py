@@ -85,7 +85,15 @@ def gen_reaction_pairs(label_dct):
                 if 'F' not in lab_j and 'B' not in lab_j and lab_i != lab_j:
                     rxn_pairs += (((name_i, lab_i), (name_j, lab_j)),)
 
-    return rxn_pairs
+    sorted_rxn_pairs = ()
+    for pair in rxn_pairs:
+        rct, prd = pair
+        if (rct, prd) in sorted_rxn_pairs or (prd, rct) in sorted_rxn_pairs:
+            continue
+        else:
+            sorted_rxn_pairs += ((rct, prd),)
+
+    return sorted_rxn_pairs
 
 
 # Readers
