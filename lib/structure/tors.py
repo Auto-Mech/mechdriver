@@ -252,7 +252,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
         else:
             pot[point] = -10.0
 
-        print('path test in read_hr_pot:', scn_fs[-1].path(locs))
+        # print('path test in read_hr_pot:', scn_fs[-1].path(locs))
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):
                 geoms[point] = scn_fs[-1].file.geometry.read(locs)
@@ -437,7 +437,7 @@ def set_tors_def_info(zma, tors_name, tors_sym, pot,
     else:
         ts_bnd = brk_bnd_keys
 
-    print('set_tors_def_info test:', automol.zmatrix.string(zma), tors_name, ts_bnd, frm_bnd_keys, brk_bnd_keys)
+    # print('set_tors_def_info test:', automol.zmatrix.string(zma), tors_name, ts_bnd, frm_bnd_keys, brk_bnd_keys)
     group, axis, atm_key = _set_groups_ini(
         zma, tors_name, ts_bnd, saddle)
     if saddle:

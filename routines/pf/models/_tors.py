@@ -314,7 +314,6 @@ def _scale_pot(pot, scale_coeff, numrotors):
 
     new_pot = {}
     for idx, val in pot.items():
-        print('potidxx', idx)
         new_pot[idx] = pot[idx] * scale_factor
         
     return new_pot 

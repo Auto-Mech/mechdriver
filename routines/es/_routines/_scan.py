@@ -27,6 +27,7 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     # Build the SCANS/CSCANS filesystems
     if constraint_dct is None:
         scn_save_fs[1].create([coord_names])
+        print('coord_grids test:', coord_grids)
         inf_obj = autofile.schema.info_objects.scan_branch(
             dict(zip(coord_names, coord_grids)))
         scn_save_fs[1].file.info.write(inf_obj, [coord_names])
