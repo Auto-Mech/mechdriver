@@ -7,6 +7,7 @@ import copy
 import ratefit
 import chemkin_io
 import mess_io
+from routines.pf.ktp.fit._util import pull_highp_from_dct
 
 
 # Functions to fit rates to Arrhenius/PLOG function
@@ -29,11 +30,13 @@ def perform_fits(ktp_dct, reaction, mess_path,
         t_ref=1.0, a_conv_factor=a_conv_factor)
 
     # Write a chemkin string for the single fit
+    sing_highp, sing_plog_dct, pressures = pull_highp_from_dct(
+        sing_params_dct)
     sing_chemkin_str = chemkin_io.writer.reaction.plog(
-        reaction, sing_params_dct)
+        reaction, sing_highp, sing_plog_dct)
     sing_chemkin_str += '\n'
     sing_chemkin_str += chemkin_io.writer.reaction.fit_info(
-            pressures, sing_fit_temp_dct, sing_fit_err_dct)
+        pressures, sing_fit_temp_dct, sing_fit_err_dct)
 
     # Assess single fitting errors:
     # are they within threshold at each pressure
@@ -59,16 +62,10 @@ def perform_fits(ktp_dct, reaction, mess_path,
     if sgl_fit_good:
         print('\nSingle fit errors acceptable: Using single fits')
         chemkin_str += sing_chemkin_str
-        chemkin_str += '\n'
-        chemkin_str += chemkin_io.writer.reaction.fit_info(
-            pressures, sing_fit_temp_dct, sing_fit_err_dct)
     elif not sgl_fit_good and not dbl_fit_poss:
         print('\nNot enough temperatures for a double fit:',
               ' Using single fits')
         chemkin_str += sing_chemkin_str
-        chemkin_str += '\n'
-        chemkin_str += chemkin_io.writer.reaction.fit_info(
-            pressures, sing_fit_temp_dct, sing_fit_err_dct)
     elif not sgl_fit_good and dbl_fit_poss:
         print('\nSingle fit errs too large & double fit possible:',
               ' Trying double fit')
@@ -95,8 +92,10 @@ def perform_fits(ktp_dct, reaction, mess_path,
             doub_fit_err_dct = assess_arr_fit_err(
                 doub_params_dct, ktp_dct, fit_type='double',
                 t_ref=1.0, a_conv_factor=a_conv_factor)
+            doub_highp, doub_plog_dct, pressures = pull_highp_from_dct(
+                doub_params_dct)
             chemkin_str += chemkin_io.writer.reaction.plog(
-                reaction, doub_params_dct,
+                reaction, doub_plog_dct,
                 err_dct=doub_fit_err_dct, temp_dct=doub_fit_temp_dct)
             chemkin_str += '\n'
             chemkin_str += chemkin_io.writer.reaction.fit_info(
@@ -105,9 +104,6 @@ def perform_fits(ktp_dct, reaction, mess_path,
             print('\nDouble Arrhenius Fit failed for some reason:',
                   ' Using Single fits')
             chemkin_str += sing_chemkin_str
-            chemkin_str += '\n'
-            chemkin_str += chemkin_io.writer.reaction.fit_info(
-                pressures, sing_fit_temp_dct, sing_fit_err_dct)
 
     return chemkin_str
 
@@ -142,9 +138,11 @@ def mod_arr_fit(ktp_dct, mess_path,
 
         # Fit rate constants using desired Arrhenius fit
         if fit_type == 'single':
+
             fit_params = ratefit.fit.arrhenius.single(
                 temps, rate_constants, t_ref, fit_method,
                 dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
+
         elif fit_type == 'double':
 
             # Generate guess parameters
