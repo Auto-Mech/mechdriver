@@ -40,7 +40,7 @@ def read_spc_data(spc_dct, spc_name,
     spc_dct_i = spc_dct[spc_name]
     if typ.is_atom(spc_dct_i):
         inf_dct = atm_data(
-            spc_dct_i,
+            spc_dct, spc_name,
             chn_pf_models, chn_pf_levels,
             ref_pf_models, ref_pf_levels,
             run_prefix, save_prefix)
@@ -139,12 +139,13 @@ def read_ts_data(spc_dct, tsname, reac_dcts,
 
 
 # Data Readers
-def atm_data(spc_dct_i,
+def atm_data(spc_dct, spc_name,
              chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
              run_prefix, save_prefix):
     """ Pull all neccessary info for the atom
     """
 
+    spc_dct_i = spc_dct[spc_name]
     # Set up all the filesystem objects using models and levels
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, chn_pf_levels, run_prefix, save_prefix, False)
@@ -160,6 +161,30 @@ def atm_data(spc_dct_i,
     ene_reflvl = None
     _, _ = ref_pf_models, ref_pf_levels
     zpe_chnlvl = None
+
+    ref_scheme = chn_pf_models['ref_scheme']
+    ref_enes = chn_pf_models['ref_enes']
+
+    # Determine info about the basis species used in thermochem calcs
+    basis_dct, uniref_dct = basis.prepare_refs(
+        ref_scheme, spc_dct, [[spc_name, None]])
+
+    # Get the basis info for the spc of interest
+    spc_basis, coeff_basis = basis_dct[spc_name]
+
+    # Get the energies for the spc and its basis
+    ene_spc, ene_basis = basis.basis_energy(
+        spc_name, spc_basis, uniref_dct, spc_dct,
+        chn_pf_levels, chn_pf_models,
+        run_prefix, save_prefix)
+
+    print('ene from thmroutines: ', ene_spc)
+    # Calculate and store the 0 K Enthalpy
+    hf0k = heatform.calc_hform_0k(
+        ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
+    print('ABS Energy: ', ene_chnlvl)
+    print('Hf0K Energy: ', hf0k * phycon.KCAL2KJ)
+    ene_chnlvl = hf0k * phycon.KCAL2EH
 
     # Create info dictionary
     inf_dct = {

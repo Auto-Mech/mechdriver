@@ -94,7 +94,7 @@ def var_radrad(tsclass):
     """ Return boolean to see if fake wells are needed
     """
     rad_rad = 'radical radical' in tsclass
-    low_spin = 'high spin' not in tsclass
+    low_spin = 'high' not in tsclass
     corr_rxn = 'addition' in tsclass or 'abstraction' in tsclass
     return bool(rad_rad and low_spin and corr_rxn)
 
