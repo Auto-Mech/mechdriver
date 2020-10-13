@@ -2,12 +2,13 @@
 """
 
 import os
+import sys
 import subprocess
 import warnings
 import stat
 
 
-def run_script(script_str, run_dir):
+def run_script(script_str, run_dir, kill_job=False):
     """ run a program from a script
     """
 
@@ -31,6 +32,11 @@ def run_script(script_str, run_dir):
         except subprocess.CalledProcessError:
             # If the program failed, continue with a warning
             warnings.warn("run failed in {}".format(run_dir))
+            # For now, always kill AutoMech if MESS calculations die, 
+            # otherwise results may look fine, when they are wrong
+            if kill_job or script_str == MESSRATE or script_str == MESSPF:
+                print('killing AutoMech:')
+                sys.exit()
 
 
 class _EnterDirectory():
