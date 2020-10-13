@@ -76,6 +76,7 @@ def get_spc_info(spc_dct):
             err_msg = prop
     if err_msg:
         print('ERROR: No {} found'.format(err_msg))
+        print('for spc_dct {}:'.format(spc_dct))
     return props
 
 

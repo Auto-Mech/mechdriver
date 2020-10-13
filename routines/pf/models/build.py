@@ -336,7 +336,8 @@ def mol_data(spc_name, spc_dct,
         print('\n Determining energy transfer parameters...')
         well_info = filesys.inf.get_spc_info(spc_dct_i)
         print('well_inf', well_info)
-        bath_info = ['InChI=1S/N2/c1-2', 0, 1]  # how to do...
+        #bath_info = ['InChI=1S/N2/c1-2', 0, 1]  # how to do...
+        bath_info = ['InChI=1S/Ar', 0, 1]  # how to do...
         etrans_dct = etrans.build_etrans_dct(spc_dct_i)
 
         edown_str, collid_freq_str = etrans.make_energy_transfer_strs(

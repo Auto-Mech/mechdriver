@@ -65,6 +65,7 @@ def get_ref_h(species, ref, temp, ts=False):
                     val = None
                 h_species = float(val)
     print('h_species is ', h_species)
+    assert h_species is not None
     return h_species
 
 
@@ -486,8 +487,8 @@ def cbhzed_habs(gra, site, bal=True):
             if atm == site[1] or atm == site[2]:
                 continue
             coeff = 1.0
-            if not bal:
-                coeff = branchpoint(adj_atms[atm]) * terminalmoity(adj_atms[atm])
+            # if not bal:
+                # coeff = branchpoint(adj_atms[atm]) * terminalmoity(adj_atms[atm])
             if atm == site[0]:
                 key1 = [site[0], site[1]]
                 key1.sort()
