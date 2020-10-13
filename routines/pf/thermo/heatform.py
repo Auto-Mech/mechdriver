@@ -352,28 +352,25 @@ def split_beta_gras(gras):
     bnd_ords = bnd_ords.copy()
     for bnd_ord in bnd_ords:
         order, tmp = bnd_ords[bnd_ord]
-        if np.floor(order) == order - 0.4:
-            bnd_ords[bnd_ord] = (order + 0.6, tmp)
+        if abs(np.floor(order) - (order - 0.4)) < 0.01:
+            bnd_ords[bnd_ord] = (round(order + 0.6, 1), tmp)
             atmai, atmbi = bnd_ord
-            if not np.floor(atms[atmai][1]) == atms[atmai][1]-0.6:
+            if not abs(np.floor(atms[atmai][1]) - (atms[atmai][1]-0.6)) < 0.01:
                 atmbi, atmai = atmai, atmbi
             atma = list(atms[atmai])
             atmb = list(atms[atmbi])
-            atma[1] = atma[1] - 0.6
+            atma[1] = round(atma[1] - 0.6, 1)
             atms[atmai] = tuple(atma)
             atms[atmbi] = tuple(atmb)
             for atmi in atms:
-                if np.floor(atms[atmi][1]) == atms[atmi][1]-0.4:
+                if abs(np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4)) < .01:
                       atm =  list(atms[atmi])
-                      atm[1] = atm[1] - 0.4
+                      atm[1] = round(atm[1] - 0.4, 1)
                       atms[atmi] = tuple(atm)
                       order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
-                      print('key2 ', atmbi, atmi, order)
-                      bnd_ords[frozenset({atmbi, atmi})] = (order - 0.6, tmp)
-                      print('key2 seonc ', bnd_ords)
+                      bnd_ords[frozenset({atmbi, atmi})] = (round(order - 0.6, 1), tmp)
             rct_gra = remove_zero_order_bnds((atms, bnd_ords))
             rct_gras = automol.graph.connected_components(rct_gra)
-            print('rct_gras', rct_gras)
             for idx, rgra in enumerate(rct_gras):
                 if rgra:
                    rct_ichs[idx] = automol.graph.inchi(rgra)
@@ -381,74 +378,72 @@ def split_beta_gras(gras):
     atms, bnd_ords = gras
     for bnd_ord in bnd_ords:
         order, tmp = bnd_ords[bnd_ord]
-        if np.floor(order) == order - 0.4:
-            bnd_ords[bnd_ord] = (order - 0.4, tmp)
+        if abs(np.floor(order) - (order - 0.4)) < 0.01:
+            bnd_ords[bnd_ord] = (round(order - 0.4, 1), tmp)
             atmai, atmbi = bnd_ord
-            if not np.floor(atms[atmai][1]) == atms[atmai][1]-0.6:
+            if not abs(np.floor(atms[atmai][1]) - (atms[atmai][1]-0.6)) < 0.01:
                 atmbi, atmai = atmai, atmbi
             atma = list(atms[atmai])
             atmb = list(atms[atmbi])
-            atma[1] = atma[1] - 0.6
+            atma[1] = round(atma[1] - 0.6, 1)
             atms[atmai] = tuple(atma)
             atms[atmbi] = tuple(atmb)
             for atmi in atms:
-                if np.floor(atms[atmi][1]) == atms[atmi][1]-0.4:
+                if abs(np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4)) < 0.01:
                       atm =  list(atms[atmi])
-                      atm[1] = atm[1] - 0.4
+                      atm[1] = round(atm[1] - 0.4, 1)
                       atms[atmi] = tuple(atm)
                       order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
-                      bnd_ords[frozenset({atmbi, atmi})] = (order + 0.4, tmp)
+                      bnd_ords[frozenset({atmbi, atmi})] = (round(order + 0.4, 1), tmp)
             prd_gra = remove_zero_order_bnds((atms, bnd_ords))
             prd_gras = automol.graph.connected_components(prd_gra)
-            print('prd_gras', prd_gras)
             for idx, pgra in enumerate(prd_gras):
                 prd_ichs[idx] = automol.graph.inchi(pgra)
     prd_ichs = automol.inchi.sorted_(prd_ichs)
     return (rct_ichs, prd_ichs)  
 
 def split_gras(gras):
-    rct_ichs = ['','']
-    prd_ichs = ['','']
-    print('gra in split gras', gras)
+    rct_ichs = []
+    prd_ichs = []
     atms, bnd_ords = gras
     atms = atms.copy()
     bnd_ords = bnd_ords.copy()
     for bnd_ord in bnd_ords:
         order, tmp = bnd_ords[bnd_ord]
-        if np.floor(order) == order - 0.4:
-            bnd_ords[bnd_ord] = (order + 0.6, tmp)
+        if abs(np.floor(order) - (order - 0.4)) < 0.01:
+            bnd_ords[bnd_ord] = (round(order + 0.6, 1), tmp)
             atmai, atmbi = bnd_ord
             if not abs(np.floor(atms[atmai][1]) - (atms[atmai][1]-0.4)) < 0.01:
                 atmbi, atmai = atmai, atmbi
             atma = list(atms[atmai])
             atmb = list(atms[atmbi])
-            atma[1] = atma[1] - 0.6
+            atma[1] = round(atma[1] - 0.6, 1)
             atms[atmai] = tuple(atma)
             atms[atmbi] = tuple(atmb)
             for atmi in atms:
-                print(atmi, atms[atmi][1], np.floor(atms[atmi][1]), atms[atmi][1]-0.4, np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4))
                 if abs(np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4)) < 0.01:
                       atm =  list(atms[atmi])
                       atm[1] = round(atm[1] - 0.4, 1)
                       atms[atmi] = tuple(atm)
                       order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
-                      bnd_ords[frozenset({atmbi, atmi})] = (order - 0.6, tmp)
+                      bnd_ords[frozenset({atmbi, atmi})] = (round(order - 0.6, 1), tmp)
             rct_gra = remove_zero_order_bnds((atms, bnd_ords))
             rct_gras = automol.graph.connected_components(rct_gra)
-            for idx, rgra in enumerate(rct_gras):
-                rct_ichs[idx] = automol.graph.inchi(rgra)
-    rct_ichs = automol.inchi.sorted_(rct_ichs)
+            for rgra in rct_gras:
+                rct_ichs.append(automol.graph.inchi(rgra))
+    if len(rct_ichs) > 1:            
+        rct_ichs = automol.inchi.sorted_(rct_ichs)
     atms, bnd_ords = gras
     for bnd_ord in bnd_ords:
         order, tmp = bnd_ords[bnd_ord]
-        if np.floor(order) == order - 0.4:
-            bnd_ords[bnd_ord] = (order - 0.4, tmp)
+        if abs(np.floor(order) - (order - 0.4)) < 0.01:
+            bnd_ords[bnd_ord] = (round(order - 0.4, 1), tmp)
             atmai, atmbi = bnd_ord
             if not abs(np.floor(atms[atmai][1]) -( atms[atmai][1]-0.4)) < 0.01:
                 atmbi, atmai = atmai, atmbi
             atma = list(atms[atmai])
             atmb = list(atms[atmbi])
-            atma[1] = atma[1] - 0.6
+            atma[1] = round(atma[1] - 0.6, 1)
             atms[atmai] = tuple(atma)
             atms[atmbi] = tuple(atmb)
             for atmi in atms:
@@ -458,12 +453,13 @@ def split_gras(gras):
                       atms[atmi] = tuple(atm)
                       atms[atmi] = tuple(atm)
                       order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
-                      bnd_ords[frozenset({atmbi, atmi})] = (order + 0.4, tmp)
+                      bnd_ords[frozenset({atmbi, atmi})] = (round(order + 0.4, 1), tmp)
             prd_gra = remove_zero_order_bnds((atms, bnd_ords))
             prd_gras = automol.graph.connected_components(prd_gra)
-            for idx, pgra in enumerate(prd_gras):
-                prd_ichs[idx] = automol.graph.inchi(pgra)
-            prd_ichs = automol.inchi.sorted_(prd_ichs)
+            for pgra in prd_gras:
+                prd_ichs.append(automol.graph.inchi(pgra))
+    if len(prd_ichs) > 1:    
+        prd_ichs = automol.inchi.sorted_(prd_ichs)
     return (rct_ichs, prd_ichs)   
 
 
@@ -486,7 +482,7 @@ def cbhzed_habs(gra, site, bal=True):
     #        atm_vals[atm] -= 1
     print('geo in habs:\n', atms, bnd_ords)
     for atm in atm_vals:
-        if atms[atm][0] != 'H':
+        if (atms[atm][0] != 'H' or atm in site):
             if atm == site[1] or atm == site[2]:
                 continue
             coeff = 1.0
@@ -919,13 +915,40 @@ def _remove_frm_bnd(gra, brk_key, frm_key):
         gra = automol.graph.remove_bonds(gra, [frm_key])
     return gra    
 
+def _add_appropriate_pi_bonds(gra):
+    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    unsat_atms_dct = automol.graph.atom_unsaturated_valences(gra)
+    atms, bnd_ords = gra
+    brk_key = frozenset({})
+    unsat_atms = []
+    for atm in unsat_atms_dct:
+        if unsat_atms_dct[atm] > 0:
+            unsat_atms.append(atm)
+    for atmi in unsat_atms:
+        for atmj in unsat_atms:
+            if atmi > atmj:
+                print(atmi, atmj)
+                if atmi in adj_atms[atmj]:
+                    print('are pi bond')
+                    key = [atmi, atmj]
+                    key.sort()
+                    key = frozenset(key)
+                    brk_key = key
+                    bnd, tmp = bnd_ords[key]
+                    bnd_ords[key] = (bnd + 1, tmp)
+
+    return (atms, bnd_ords), brk_key
+
 def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key):
     """ get basis for CBH0 for a TS molecule
     """
     zma, frm_key, brk_key = _remove_dummies(zma, frm_key, brk_key)
+    print('bond info ', frm_key, brk_key, rxnclass)        
     gra = automol.zmatrix.connectivity_graph(zma)
+    if 'addition' in rxnclass:
+        gra, brk_key = _add_appropriate_pi_bonds(gra)
+    print('gra in cbhzed',  gra)
     gra = _remove_frm_bnd(gra, brk_key, frm_key)
-    print('bond info ', frm_key, brk_key)        
     if frm_key and brk_key:
         site = [_xor(frm_key, brk_key), _intersec(frm_key, brk_key), _xor(brk_key, frm_key)]
     elif 'beta scission' in rxnclass:
@@ -941,8 +964,10 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key):
                 site[2] = atm
         print('site ', site)        
         adj_atms = automol.graph.atom_neighbor_keys(gra)
+    elif 'addition' in rxnclass:
+        print('made it to 945')
 
-    if 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass or 'hydrogen migration' in rxnclass:
+    if 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass or 'hydrogen migration' in rxnclass or 'addition' in rxnclass:
         frags = cbhzed_habs(gra, site)
     else:
         raise NotImplementedError
