@@ -123,8 +123,13 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
             if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES:
                 spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
             else:
-                spc_basis = [spc_dct[spci]['inchi'] for spci in spc_dct[spc_name]['reacs']]
-                coeff_basis = [1. for spc_i in spc_basis]
+                spc_basis = []
+                coeff_basis = []
+                for spc_i in spc_dct[spc_name]['reacs']:
+                    bas_dct_i, _ = prepare_refs(ref_scheme, spc_dct, [[spc_i, None]]) 
+                    spc_bas_i, coeff_bas_i = bas_dct_i[spc_i]
+                    spc_basis.extend(spc_bas_i)
+                    coeff_basis.extend(coeff_bas_i)
         else:
             spc_basis, coeff_basis = get_ref_fxn(spc_ich)
         for i in range(len(spc_basis)):
