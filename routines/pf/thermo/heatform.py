@@ -1006,7 +1006,6 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None):
         if 'exp_gra' in frags[frag]:
             fraglist.append(automol.graph.inchi(frags[frag]['exp_gra']))
             clist.append(frags[frag]['coeff'])
-            print(automol.geom.string(automol.graph.geometry(frags[frag]['exp_gra'])))
         else:
             if 'beta' in rxnclass:
                 fraglist.append(split_beta_gras(frags[frag]['ts_gra']))

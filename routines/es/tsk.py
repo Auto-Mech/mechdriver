@@ -681,7 +681,9 @@ def hr_tsk(job, spc_dct, spc_name,
                 retryfail=retryfail, **opt_kwargs)
 
             # Read and print the potential
-            ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
+            sp_fs = autofile.fs.single_point(ini_cnf_save_path)
+            ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
+            # ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
             tors_pots, tors_zmas = {}, {}
             for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
                 constraint_dct = structure.tors.build_constraint_dct(
@@ -707,7 +709,9 @@ def hr_tsk(job, spc_dct, spc_name,
             ethresh = es_keyword_dct['hrthresh']
 
             # Read and print the potential
-            ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
+            sp_fs = autofile.fs.single_point(ini_cnf_save_path)
+            ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
+            # ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
             tors_pots, tors_zmas, tors_paths = {}, {}, {}
             for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
                 constraint_dct = structure.tors.build_constraint_dct(
