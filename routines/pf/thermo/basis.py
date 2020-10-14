@@ -30,7 +30,7 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
                 "cbh3": "get_cbhzed_ts"}
 
 # IMPLEMENTED_CBH_TS_CLASSES = []
-IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 
+IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 'beta scission',
                               'hydrogen migration', 'addition high']
 
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, geom=None):
