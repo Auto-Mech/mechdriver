@@ -899,15 +899,21 @@ def _remove_dummies(zma, frm_key, brk_key, geo=None):
                 brk1 -= 1
             if idx < brk2:
                 brk2 -= 1
-            brk_key = frozenset({brk1, brk2})   
-    if dummy_idxs:        
-        if not geo:
-            geo = automol.geom.without_dummy_atoms(zgeo)
-        zma = automol.geom.zmatrix(geo, [frm_key, brk_key])
-        atm_ord = automol.geom.zmatrix_atom_ordering(geo, [frm_key, brk_key])
-        frm_key = frozenset({atm_ord[atm] for atm in frm_key})    
-        brk_key = frozenset({atm_ord[atm] for atm in brk_key})    
-    return zma, frm_key, brk_key
+            brk_key = frozenset({brk1, brk2})  
+
+    if not geo: 
+        geo = automol.geom.without_dummy_atoms(zgeo)
+    
+    gra = automol.geom.graph(geo)
+    #if dummy_idxs:        
+    #    if not geo:
+    #        geo = automol.geom.without_dummy_atoms(zgeo)
+    #    zma = automol.geom.zmatrix(geo, [frm_key, brk_key])
+    #    atm_ord = automol.geom.zmatrix_atom_ordering(geo, [frm_key, brk_key])
+    #    frm_key = frozenset({atm_ord[atm] for atm in frm_key})    
+    #    brk_key = frozenset({atm_ord[atm] for atm in brk_key})    
+    #return zma, frm_key, brk_key
+    return gra, frm_key, brk_key
 
 def _remove_frm_bnd(gra, brk_key, frm_key):
     bond_keys = automol.graph.bond_keys(gra)
@@ -962,10 +968,11 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None):
     # if 'elimination' in rxnclass:
     #     brk_key, brk_key2 = brk_key
     #     frm_key2 = _elimination_second_forming_bond(gra, brk_key, brk_key2)
-    zma, frm_key, brk_key = _remove_dummies(zma, frm_key, brk_key, geo=geo)
+    gra, frm_key, brk_key = _remove_dummies(zma, frm_key, brk_key, geo=geo)
+    #zma, frm_key, brk_key = _remove_dummies(zma, frm_key, brk_key, geo=geo)
     # if 'elimination' in rxnclass:
     #     _, frm_key2, brk_key2 = _remove_dummies(zma, frm_key2, brk_key2)
-    gra = automol.zmatrix.connectivity_graph(zma)
+    #gra = automol.zmatrix.connectivity_graph(zma)
     if 'addition' in rxnclass:
         gra, brk_key = _add_appropriate_pi_bonds(gra)
     gra = _remove_frm_bnd(gra, brk_key, frm_key)
