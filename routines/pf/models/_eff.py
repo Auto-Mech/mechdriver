@@ -4,6 +4,7 @@ Calculate an effective alpha parameter using certain rules
 
 import numpy
 import automol
+from automol.graph._util import ring_idxs
 from lib import phydat
 
 
@@ -195,6 +196,7 @@ def _rotor_counts(gra, symbs):
 
     # Get the rings  and the number
     rings = automol.graph.rings(gra)
+    ring_keys = set(ring_idxs(automol.graph.rings(gra)))
     n_rings = len(rings)
 
     # Loop over the bonds and count the number of atoms
@@ -202,11 +204,7 @@ def _rotor_counts(gra, symbs):
     for bnd in automol.graph.bond_keys(gra):
         key1, key2 = bnd
         symb1, symb2 = symbs[key1], symbs[key2]
-        if (symb1 == 'C' and symb2 == 'O') or (symb1 == 'O' and symb2 == 'C'):
-            n_co += 1
-        elif symb1 == 'O' and symb2 == 'O':
-            n_oo += 1
-        elif symb1 == 'C' and symb2 == 'C':
+        if symb1 == 'C' and symb2 == 'C':
             # Figure out which neighbors are carbons and count the number
             atom1_neighbors = neighbors[key1]
             numc1 = 0
@@ -228,15 +226,10 @@ def _rotor_counts(gra, symbs):
             elif (numc1 == 1 and numc2 == 4) or (numc1 == 4 and numc2 == 1):
                 n_pq += 1
             elif numc1 == 2 and numc2 == 2:
-                in_ring = False
-                for ring in rings:
-                    if {key1, key2} <= set(ring):
-                        in_ring = True
-                        break
-                if not in_ring:
-                    n_ss += 1
-                else:
+                if {key1, key2} <= ring_keys:
                     n_ss_ring += 1
+                else:
+                    n_ss += 1
             elif (numc1 == 2 and numc2 == 3) or (numc1 == 3 and numc2 == 2):
                 n_st += 1
             elif (numc1 == 2 and numc2 == 4) or (numc1 == 4 and numc2 == 2):
@@ -247,6 +240,10 @@ def _rotor_counts(gra, symbs):
                 n_tq += 1
             elif numc1 == 4 and numc2 == 4:
                 n_qq += 1
+        elif (symb1 == 'C' and symb2 == 'O') or (symb1 == 'O' and symb2 == 'C'):
+            n_co += 1
+        elif symb1 == 'O' and symb2 == 'O':
+            n_oo += 1
 
     # Compile counts into a tuple
     return [n_pp, n_ps, n_pt, n_pq,
