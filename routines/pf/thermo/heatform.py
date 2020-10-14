@@ -464,7 +464,7 @@ def split_gras(gras):
     return (rct_ichs, prd_ichs)   
 
 
-def cbhzed_habs(gra, site, bal=True):
+def cbhzed_habs(gra, site, site2=[], bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
     INPUT:
@@ -880,11 +880,11 @@ def _xor(lst1, lst2):
    return ret
 
 
-def _remove_dummies(zma, frm_key, brk_key):
+def _remove_dummies(zma, frm_key, brk_key, geo=None):
     """get zma and bond key idxs without dummy atoms
     """
-    geo = automol.zmatrix.geometry(zma)
-    dummy_idxs = automol.geom.dummy_atom_indices(geo)
+    zgeo = automol.zmatrix.geometry(zma)
+    dummy_idxs = automol.geom.dummy_atom_indices(zgeo)
     for idx in dummy_idxs:
         if frm_key:
             frm1, frm2 = frm_key
@@ -901,7 +901,8 @@ def _remove_dummies(zma, frm_key, brk_key):
                 brk2 -= 1
             brk_key = frozenset({brk1, brk2})   
     if dummy_idxs:        
-        geo = automol.geom.without_dummy_atoms(geo)
+        if not geo:
+            geo = automol.geom.without_dummy_atoms(zgeo)
         zma = automol.geom.zmatrix(geo, [frm_key, brk_key])
         atm_ord = automol.geom.zmatrix_atom_ordering(geo, [frm_key, brk_key])
         frm_key = frozenset({atm_ord[atm] for atm in frm_key})    
@@ -940,18 +941,39 @@ def _add_appropriate_pi_bonds(gra):
 
     return (atms, bnd_ords), brk_key
 
-def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key):
+def _elimination_second_forming_bond(gra, brk_key1, brk_key2):
+    frm_bnd2 = frozenset({})
+    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    for atm1 in brk_key1:
+        for atm2 in brk_key2:
+            if atm2 in adj_atms[atm1]:
+                frm_bnd2 = [atm1, atm2]
+                frm_bnd2.sort()
+                frm_bnd2 = frozenset(frm_bnd2)
+    return frm_bnd2            
+
+
+def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None):
     """ get basis for CBH0 for a TS molecule
     """
-    zma, frm_key, brk_key = _remove_dummies(zma, frm_key, brk_key)
-    print('bond info ', frm_key, brk_key, rxnclass)        
+    brk_key2 = None
+    frm_key2 = None
+    site2 = None
+    # if 'elimination' in rxnclass:
+    #     brk_key, brk_key2 = brk_key
+    #     frm_key2 = _elimination_second_forming_bond(gra, brk_key, brk_key2)
+    zma, frm_key, brk_key = _remove_dummies(zma, frm_key, brk_key, geo=geo)
+    # if 'elimination' in rxnclass:
+    #     _, frm_key2, brk_key2 = _remove_dummies(zma, frm_key2, brk_key2)
     gra = automol.zmatrix.connectivity_graph(zma)
     if 'addition' in rxnclass:
         gra, brk_key = _add_appropriate_pi_bonds(gra)
-    print('gra in cbhzed',  gra)
     gra = _remove_frm_bnd(gra, brk_key, frm_key)
     if frm_key and brk_key:
         site = [_xor(frm_key, brk_key), _intersec(frm_key, brk_key), _xor(brk_key, frm_key)]
+    if frm_key2 and brk_key2:
+        site2 = [_xor(frm_key2, brk_key2), _intersec(frm_key2, brk_key2), _xor(brk_key2, frm_key2)]
+        site = site.extend(site2)
     elif 'beta scission' in rxnclass:
         rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
         adj_atms = automol.graph.atom_neighbor_keys(gra)
@@ -965,11 +987,10 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key):
                 site[2] = atm
         print('site ', site)        
         adj_atms = automol.graph.atom_neighbor_keys(gra)
-    elif 'addition' in rxnclass:
-        print('made it to 945')
-
     if 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass or 'hydrogen migration' in rxnclass or 'addition' in rxnclass:
         frags = cbhzed_habs(gra, site)
+    # elif 'elimination' in rxnclass:
+    #     frags = cbhzed_elim(gra, site)
     else:
         raise NotImplementedError
     fraglist = []

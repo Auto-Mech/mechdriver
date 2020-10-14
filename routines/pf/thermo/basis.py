@@ -29,10 +29,10 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
              "cbh2": "get_cbhzed_ts",
              "cbh3": "get_cbhzed_ts"}
 
-IMPLEMENTED_CBH_TS_CLASSES = []
-# IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 'beta scission', 'hydrogen migration']
+#IMPLEMENTED_CBH_TS_CLASSES = []
+IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 'beta scission', 'hydrogen migration', 'addition high']
 
-def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False):
+def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, geom=None):
     """ add refs to species list as necessary
     """
     spc_names = [spc[0] for spc in spc_queue]
@@ -58,7 +58,7 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False):
             proc = multiprocessing.Process(
                     target=_prepare_refs, 
                     args=(queue, ref_scheme, spc_dct, spc_lst,
-                         repeats, parallel))
+                         repeats, parallel, geom))
             procs.append(proc)
             proc.start()
 
@@ -82,10 +82,10 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False):
         for proc in procs:
             proc.join()
     else:
-        basis_dct, unique_refs_dct = _prepare_refs(None, ref_scheme, spc_dct, spc_names, repeats=repeats, parallel=parallel)
+        basis_dct, unique_refs_dct = _prepare_refs(None, ref_scheme, spc_dct, spc_names, repeats=repeats, parallel=parallel, geom=geom)
     return basis_dct, unique_refs_dct
 
-def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel=False):
+def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel=False, geom=None):
     # Get a lst of ichs corresponding to the spc queue
     #spc_names = [spc[0] for spc in spc_queue]
     #spc_ichs = [spc_dct[spc[0]]['inchi'] for spc in spc_queue]
@@ -121,7 +121,8 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
             save_prefix = rxn_save_path.split('/RXN')[0]
             rxnclass = spc_dct[spc_name]['class']
             if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES:
-                spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
+                spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], 
+                                         spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'], geo=geom)
             else:
                 spc_basis = []
                 coeff_basis = []
