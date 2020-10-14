@@ -107,7 +107,8 @@ def run(spc_dct,
                         pfrunner.mess.divide_pfs(final_pf, pf2, coeff)
                     elif operator == 'multiply': 
                         pfrunner.mess.multiply_pfs(final_pf, pf2, coeff)
-            thm_path['final'] = pfrunner.thermo_paths(spc_dct[spc_name], run_prefix, len(spc_models))
+            thm_paths[idx]['final'] = pfrunner.thermo_paths(
+                    spc_dct[spc_name], run_prefix, len(spc_models))
             pfrunner.mess.write_mess_output(
                 fstring(spc_dct[spc_name]['inchi']),
                 final_pf, thm_paths[idx]['final'][0],

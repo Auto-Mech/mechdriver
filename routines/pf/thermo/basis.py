@@ -24,13 +24,14 @@ REF_CALLS = {"basic": "get_basic",
              "cbh3": "get_cbhthree"}
 
 TS_REF_CALLS = {"basic": "get_basic_ts",
-             "cbh0": "get_cbhzed_ts",
-             "cbh1": "get_cbhzed_ts",
-             "cbh2": "get_cbhzed_ts",
-             "cbh3": "get_cbhzed_ts"}
+                "cbh0": "get_cbhzed_ts",
+                "cbh1": "get_cbhzed_ts",
+                "cbh2": "get_cbhzed_ts",
+                "cbh3": "get_cbhzed_ts"}
 
-#IMPLEMENTED_CBH_TS_CLASSES = []
-IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 'beta scission', 'hydrogen migration', 'addition high']
+# IMPLEMENTED_CBH_TS_CLASSES = []
+IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 
+                              'hydrogen migration', 'addition high']
 
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, geom=None):
     """ add refs to species list as necessary
@@ -38,11 +39,11 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
     spc_names = [spc[0] for spc in spc_queue]
 
     if parallel:
-        nproc_avail =  len(os.sched_getaffinity(0)) - 1
-  
+        nproc_avail = len(os.sched_getaffinity(0)) - 1
+
         num_spc = len(spc_names)
         spc_per_proc = math.floor(num_spc / nproc_avail)
-        
+      
         queue = multiprocessing.Queue()
         procs = []
         random.shuffle(spc_names)

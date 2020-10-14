@@ -3,6 +3,7 @@
 
 import os
 import itertools
+import random
 import copy
 import numpy
 import automol
@@ -552,6 +553,11 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
     bld_save_fs = autofile.fs.build(tors_save_path)
     bld_save_fs[-1].create(bld_locs)
     pf_path = bld_save_fs[-1].path(bld_locs)
+
+    pf_path = os.path.join(pf_path, str(random.randint(0,12345678)))
+    if not os.path.exists(pf_path):
+        os.mkdir(pf_path)
+
     print('Run path for MESSPF:')
     print(pf_path)
 
