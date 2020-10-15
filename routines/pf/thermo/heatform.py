@@ -976,6 +976,7 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None):
     if 'addition' in rxnclass:
         gra, brk_key = _add_appropriate_pi_bonds(gra)
     gra = _remove_frm_bnd(gra, brk_key, frm_key)
+    print(automol.graph.string(gra))
     if frm_key and brk_key:
         site = [_xor(frm_key, brk_key), _intersec(frm_key, brk_key), _xor(brk_key, frm_key)]
     if frm_key2 and brk_key2:
@@ -992,7 +993,6 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None):
             else:
                 #site[0] = atm
                 site[2] = atm
-        print('site ', site)        
         adj_atms = automol.graph.atom_neighbor_keys(gra)
     if 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass or 'hydrogen migration' in rxnclass or 'addition' in rxnclass:
         frags = cbhzed_habs(gra, site)
@@ -1010,6 +1010,7 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None):
             if 'beta' in rxnclass:
                 fraglist.append(split_beta_gras(frags[frag]['ts_gra']))
             else:    
+                print(automol.graph.string(frags[frag]['ts_gra']))
                 fraglist.append(split_gras(frags[frag]['ts_gra']))
             clist.append(frags[frag]['coeff'])
     print('frags from cbh_ts ', fraglist)        

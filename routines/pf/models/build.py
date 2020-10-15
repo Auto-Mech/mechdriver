@@ -302,7 +302,7 @@ def mol_data(spc_name, spc_dct,
 
     # Determine info about the basis species used in thermochem calcs
     basis_dct, uniref_dct = basis.prepare_refs(
-        ref_scheme, spc_dct, [[spc_name, None]], geom=geom)
+        ref_scheme, spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
 
     # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
