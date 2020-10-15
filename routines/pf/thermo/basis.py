@@ -33,7 +33,7 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
 IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 'beta scission',
                               'hydrogen migration', 'addition high']
 
-def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, geom=None):
+def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, ts_geom=None):
     """ add refs to species list as necessary
     """
     spc_names = [spc[0] for spc in spc_queue]
@@ -59,7 +59,7 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
             proc = multiprocessing.Process(
                     target=_prepare_refs, 
                     args=(queue, ref_scheme, spc_dct, spc_lst,
-                         repeats, parallel, geom))
+                         repeats, parallel, ts_geom))
             procs.append(proc)
             proc.start()
 
@@ -83,10 +83,10 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
         for proc in procs:
             proc.join()
     else:
-        basis_dct, unique_refs_dct = _prepare_refs(None, ref_scheme, spc_dct, spc_names, repeats=repeats, parallel=parallel, geom=geom)
+        basis_dct, unique_refs_dct = _prepare_refs(None, ref_scheme, spc_dct, spc_names, repeats=repeats, parallel=parallel, ts_geom=ts_geom)
     return basis_dct, unique_refs_dct
 
-def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel=False, geom=None):
+def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel=False, ts_geom=None):
     # Get a lst of ichs corresponding to the spc queue
     #spc_names = [spc[0] for spc in spc_queue]
     #spc_ichs = [spc_dct[spc[0]]['inchi'] for spc in spc_queue]
@@ -122,8 +122,13 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
             save_prefix = rxn_save_path.split('/RXN')[0]
             rxnclass = spc_dct[spc_name]['class']
             if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES:
-                spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], 
-                                         spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'], geo=geom)
+                if ts_geom:
+                    geo, brk_bnd_keys, frm_bnd_keys = ts_geom
+                    spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], 
+                        frm_bnd_keys, brk_bnd_keys, geo=geo)
+                else:
+                    spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], 
+                        spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
             else:
                 spc_basis = []
                 coeff_basis = []
@@ -334,12 +339,12 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             reacs = reacs.replace('REACS', '')
             reacs = reacs.split('REAC')
             prods = prods.split('PROD')
-            reac_lbl = 'r1'
+            reac_lbl = 'r0'
             if len(reacs) > 1:
-                reac_lbl += 'r2'
-            prod_lbl = 'p1'
+                reac_lbl += '+r1'
+            prod_lbl = 'p0'
             if len(prods) > 1:
-                prod_lbl += 'p2'
+                prod_lbl += '+p1'
             print('Basis Reaction: {}={} 1 1 1 '.format(reac_lbl, prod_lbl))
             for i, reac in enumerate(reacs):
                 print('r{},{},{},{}'.format(str(i), reac, automol.inchi.smiles(reac), '1'))
