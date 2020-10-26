@@ -66,7 +66,7 @@ def read_spc_data(spc_dct, spc_name,
     return inf_dct
 
 
-def read_ts_data(spc_dct, tsname, reac_dcts,
+def read_ts_data(spc_dct, tsname, rcts, prds,
                  chn_pf_models, chn_pf_levels,
                  run_prefix, save_prefix,
                  ts_class, ts_sadpt, ts_nobarrier,
@@ -78,6 +78,9 @@ def read_ts_data(spc_dct, tsname, reac_dcts,
            '++++++++++++++++++++++++++++++++++++++'))
     print('\nReading filesystem info for {}'.format(tsname))
     ts_dct = spc_dct[tsname]
+    reac_dcts = [spc_dct[name] for name in rcts]
+    prod_dcts = [spc_dct[name] for name in prds]
+
     # Get all of the information for the filesystem
     if not typ.var_radrad(ts_class):
 
@@ -113,10 +116,16 @@ def read_ts_data(spc_dct, tsname, reac_dcts,
 
         # Build MESS string for TS with no saddle point
         if ts_nobarrier == 'pst':
-            inf_dct = pst_data(
-                ts_dct, reac_dcts,
-                chn_pf_levels,
-                run_prefix, save_prefix)
+            if len(rcts) == 2:
+                inf_dct = pst_data(
+                    ts_dct, reac_dcts,
+                    chn_pf_levels,
+                    run_prefix, save_prefix)
+            else:
+                inf_dct = pst_data(
+                    ts_dct, prod_dcts,
+                    chn_pf_levels,
+                    run_prefix, save_prefix)
             writer = 'pst_block'
         elif ts_nobarrier == 'rpvtst':
             inf_dct = rpvtst_data(

@@ -229,10 +229,28 @@ def build_etrans_dct(spc_dct_i):
 def set_etrans_well(rxn_lst, spc_dct):
     """ Build info object for reference well on PES
     """
-    reac = rxn_lst[0]['reacs'][0]
-    reac_info = finf.get_spc_info(spc_dct[reac])
 
-    return reac_info
+    well_dct = None
+
+    reacs = rxn_lst[0]['reacs']
+    prods = rxn_lst[0]['prods']
+    if len(reacs) == 1:
+        well_dct = spc_dct[reacs[0]]
+    elif len(prods) == 1:
+        well_dct = spc_dct[prods[0]]
+    else:
+        rct1_dct = spc_dct[reacs[0]]
+        rct2_dct = spc_dct[reacs[1]]
+        rct1_count = automol.geom.count(automol.inchi.geometry(rct1_dct['inchi']))
+        rct2_count = automol.geom.count(automol.inchi.geometry(rct2_dct['inchi']))
+        if rct1_count > rct2_count:
+            well_dct = rct1_dct
+        else:
+            well_dct = rct2_dct
+
+    well_info = finf.get_spc_info(well_dct)
+
+    return well_info
 
 
 def set_bath(spc_dct, etrans_dct):

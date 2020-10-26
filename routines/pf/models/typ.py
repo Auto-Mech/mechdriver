@@ -95,8 +95,11 @@ def var_radrad(tsclass):
     """
     rad_rad = 'radical radical' in tsclass
     low_spin = 'high' not in tsclass
-    corr_rxn = 'addition' in tsclass or 'abstraction' in tsclass
-    return bool(rad_rad and low_spin and corr_rxn)
+
+    # corr_rxn = 'addition' in tsclass or 'abstraction' in tsclass
+    # return bool(rad_rad and low_spin and corr_rxn)
+
+    return bool(rad_rad and low_spin)
 
 
 def treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
