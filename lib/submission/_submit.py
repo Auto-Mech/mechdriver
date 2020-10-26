@@ -15,13 +15,16 @@ def run_script(script_str, run_dir, kill_job=False):
     script_name = 'build.sh'
     with _EnterDirectory(run_dir):
         # Write the submit script to the run directory
+        print('trying to delete build.sh:', run_dir)
         try:
             os.remove('build.sh')
             with open(script_name, 'w') as script_obj:
                 script_obj.write(script_str)
+            print('succeeded in deleting build.sh:')
         except IOError:
             with open(script_name, 'w') as script_obj:
                 script_obj.write(script_str)
+            print('failed to delete build.sh:')
 
         # Make the script executable
         os.chmod(script_name, mode=os.stat(script_name).st_mode | stat.S_IEXEC)
@@ -105,7 +108,7 @@ MESSPF = (
 )
 MESSRATE = (
     "#!/usr/bin/env bash\n"
-    "export OMP_NUM_THREADS=10\n"
+    "export OMP_NUM_THREADS=8\n"
     "ulimit -c 0\n"
     "mess mess.inp rate.out >> stdout.log &> stderr.log"
 )

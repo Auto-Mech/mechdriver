@@ -576,6 +576,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
 
     # Set the maximum allowed displacement for a TS conformer
     max_disp = 0.6
+    # would be better to check for bond forming length in bond scission with ring forming
     if 'addition' in rxn_class:
         max_disp = 0.8
     if 'abstraction' in rxn_class:
@@ -639,7 +640,10 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
                 viable = False
         else:
             # check forming/breaking bond distance
-            if abs(cnf_dist - ref_dist) > 0.4:
+            # if abs(cnf_dist - ref_dist) > 0.4:
+            # max disp of 0.4 causes problems for bond scission with ring forming 
+            # not sure if setting it to 0.3 will cause problems for other cases
+            if abs(cnf_dist - ref_dist) > 0.3:
                 print(" - Transition State conformer has",
                       "diverged from original structure of",
                       "dist {:.3f} with dist {:.3f}".format(

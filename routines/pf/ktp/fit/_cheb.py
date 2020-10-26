@@ -40,11 +40,13 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
     
     # Calculate errors
     err_dct, temp_dct = {}, {}
+    # print('reaction in rate fit test:', reaction)
     for pressure in pressures:
         rate_kts = ktp_dct[pressure][1]
         fit_kts = numpy.array(fit_ktps[pressure])
         mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
             rate_kts, fit_kts)
+        # print('rate fit test:', pressure, rate_kts, fit_kts)
     
         # Add to the dct
         err_dct[pressure] = [mean_avg_err, max_avg_err]
