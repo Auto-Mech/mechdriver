@@ -233,6 +233,7 @@ def mol_data(spc_name, spc_dct,
     # cnf_path = cnf_fs[-1].path(min_cnf_locs)
     frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(
         cnf_fs, min_cnf_locs, saddle)
+    print('bnd keys in mol_data', frm_bnd_keys, brk_bnd_keys)
     rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Obtain rotor information used to determine new information
@@ -304,6 +305,8 @@ def mol_data(spc_name, spc_dct,
     chn_ene = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
         read_ene=True, read_zpe=False, saddle=saddle)
+    print('zpe in models build ', zpe)    
+    print('elec ene in models build ', chn_ene)    
     ene_chnlvl = chn_ene + zpe
     print('ene_chnlvl: ', ene_chnlvl)
     ref_scheme = chn_pf_models['ref_scheme']

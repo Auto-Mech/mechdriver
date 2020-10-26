@@ -29,9 +29,9 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
                 "cbh2": "get_cbhzed_ts",
                 "cbh3": "get_cbhzed_ts"}
 
-# IMPLEMENTED_CBH_TS_CLASSES = []
+#IMPLEMENTED_CBH_TS_CLASSES = []
 IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 'beta scission',
-                              'hydrogen migration', 'addition high']
+                              'hydrogen migration', 'addition high', 'elimination high']
 
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, ts_geom=None):
     """ add refs to species list as necessary
@@ -122,11 +122,13 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
             save_prefix = rxn_save_path.split('/RXN')[0]
             rxnclass = spc_dct[spc_name]['class']
             if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES:
-                if ts_geom:
+                if ts_geom and 'elimination' not in spc_dct[spc_name]['class']:
                     geo, brk_bnd_keys, frm_bnd_keys = ts_geom
                     spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], 
                         frm_bnd_keys, brk_bnd_keys, geo=geo)
                 else:
+                    print('bond keys in basis', spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
+                    print(automol.geom.string(automol.zmatrix.geometry(spc_dct[spc_name]['zma'])))
                     spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], 
                         spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
             else:
@@ -199,19 +201,31 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
     rct_chgs = []
     prd_chgs = []
     for rct in spec['reacs']:
+       found = False 
        for name in spc_dct:
            if 'inchi' in spc_dct[name]:
                if spc_dct[name]['inchi'] == rct:
                    rct_muls.append(spc_dct[name]['mult'])
                    rct_chgs.append(spc_dct[name]['charge'])
+                   found = True
                    break
+       if not found:
+           new_spc = create_spec(rct)
+           rct_muls.append(new_spc['mult'])
+           rct_chgs.append(new_spc['charge'])
     for rct in spec['prods']:
+       found = False 
        for name in spc_dct:
            if 'inchi' in spc_dct[name]:
                if spc_dct[name]['inchi'] == rct:
                    prd_muls.append(spc_dct[name]['mult'])
                    prd_chgs.append(spc_dct[name]['charge'])
+                   found = True
                    break
+       if not found:
+           new_spc = create_spec(rct)
+           prd_muls.append(new_spc['mult'])
+           prd_chgs.append(new_spc['charge'])
     rxn_muls = [rct_muls, prd_muls] 
     rxn_chgs = [rct_chgs, prd_chgs]
     print('rxn_chgs test:', rxn_chgs, rct_chgs, prd_chgs)

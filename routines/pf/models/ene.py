@@ -26,11 +26,13 @@ def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     if read_ene:
         e_elec = electronic_energy(
             spc_dct_i, pf_filesystems, pf_levels)
+        print('e_elec in models ene ', e_elec)
 
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
             spc_dct_i, pf_filesystems, pf_models, pf_levels, saddle=saddle)
+        print('zpe in models ene ', e_zpe)
 
     # Return the total energy requested
     ene = None
@@ -150,7 +152,6 @@ def zero_point_energy(spc_dct_i,
                 freqs, tors_zpe, pf_levels, scale_method='3c')
 
         # print('zpe in zero_point_energy test:', zpe, freqs)
-
     return zpe
 
 
