@@ -313,8 +313,12 @@ def mol_data(spc_name, spc_dct,
     basis_dct, uniref_dct = basis.prepare_refs(
         ref_scheme, spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
 
+    print('basis_dct test in mol_data:', basis_dct)
+
     # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
+
+    print('spc_basis test in mol_data:', spc_basis)
 
     # Get the energies for the spc and its basis
     ene_spc, ene_basis = basis.basis_energy(

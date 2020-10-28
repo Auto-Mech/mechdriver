@@ -43,6 +43,8 @@ def read_harmonic_freqs(pf_filesystems, saddle=False):
         print('Calculating ZPVE using harmonic frequencies...')
         zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
 
+        print('harmonic zpe is {} kcal/mol'.format(zpe))
+
         # Check imaginary frequencies and set freqs
         if saddle:
             if len(imag_freqs) > 1:
@@ -100,12 +102,14 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
 
     # Read info for the hindered rotors
     print(' - Calculating the torsional ZPVES using MESS...')
-    tors_zpes, tors_freqs = torsprep.mess_tors_zpes(
+    _, tors_freqs = torsprep.mess_tors_zpes(
         tors_geo, mess_hr_str, tors_run_path)
 
     # Calculate ZPVES of the hindered rotors
-    tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
-    tors_zpe *= phycon.KCAL2EH
+    #tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
+    tors_zpe = sum(tors_freqs)/2. 
+    tors_zpe *= phycon.WAVEN2EH
+    # tors_zpe *= phycon.KCAL2EH
 
     print(' - Calculating the RT and RT-rotor projected frequencies ProjRot')
     # Run ProjRot to get the frequencies v1
@@ -126,6 +130,8 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
 
     # Calculate harmonic ZPVE from all harmonic freqs, including torsionals
     harm_zpe = (sum(rt_freqs1) / 2.0) * phycon.WAVEN2EH
+
+    print('harmonic zpe is {} kcal/mol'.format(harm_zpe))
 
     # Calculate harmonic ZPVE from freqs where torsions have been projected out
     # Value from both projrot versions, which use different projection schemes
