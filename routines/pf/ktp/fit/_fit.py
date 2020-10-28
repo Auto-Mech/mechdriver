@@ -48,11 +48,11 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
 
         # Check the ktp dct and fit_method to see how to fit rates
         fit_method = _assess_fit_method(ktp_dct, inp_fit_method)
-        
+
         # Get the desired fits in the form of CHEMKIN strs
         if fit_method is None:
             continue
-        elif fit_method == 'arrhenius':
+        if fit_method == 'arrhenius':
             chemkin_str = arr.perform_fits(
                 ktp_dct, reaction, mess_path,
                 a_conv_factor, arrfit_thresh)
@@ -60,6 +60,10 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
             chemkin_str = cheb.perform_fits(
                 ktp_dct, inp_temps, reaction, mess_path,
                 a_conv_factor)
+            if not chemkin_str:
+                chemkin_str = arr.perform_fits(
+                    ktp_dct, reaction, mess_path,
+                    a_conv_factor, arrfit_thresh)
         # elif fit_method == 'troe':
         #     # chemkin_str += troe.perform_fits(
         #     #     ktp_dct, reaction, mess_path,
@@ -67,7 +71,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
         #     #     a_conv_factor, err_thresh)
 
         # Update the chemkin string dct
-        print('\nFitting Parameters in CHEMKIN Format:')
+        print('\n\nFinal Fitting Parameters in CHEMKIN Format:')
         print(chemkin_str)
         ridx = pes_formula + '_' + reaction.replace('=', '_')
         chemkin_str_dct.update({ridx: chemkin_str})
@@ -90,8 +94,7 @@ def gen_reaction_pairs(label_dct):
         rct, prd = pair
         if (rct, prd) in sorted_rxn_pairs or (prd, rct) in sorted_rxn_pairs:
             continue
-        else:
-            sorted_rxn_pairs += ((rct, prd),)
+        sorted_rxn_pairs += ((rct, prd),)
 
     return sorted_rxn_pairs
 
@@ -209,7 +212,7 @@ def _assess_fit_method(ktp_dct, inp_fit_method):
     # Print message to say what fitting will be done
     if fit_method == 'arrhenius':
         if inp_fit_method != 'arrhenius':
-            print('\nNot enough pressure-dependent rates for Troe/Chebyshev.')
+            print('\nRates at not enough pressures for Troe/Chebyshev.')
         print('\nFitting k(T,P)s to PLOG/Arrhenius Form....')
     elif fit_method == 'chebyshev':
         print('\nFitting k(T,P)s to Chebyshev Form...')

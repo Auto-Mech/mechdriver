@@ -135,8 +135,14 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
                 for spc_i in spc_dct[spc_name]['reacs']:
                     bas_dct_i, _ = prepare_refs(ref_scheme, spc_dct, [[spc_i, None]]) 
                     spc_bas_i, coeff_bas_i = bas_dct_i[spc_i]
-                    spc_basis.extend(spc_bas_i)
-                    coeff_basis.extend(coeff_bas_i)
+                    for bas_i, c_bas_i in zip(spc_bas_i, coeff_bas_i):
+                        if bas_i not in spc_basis:
+                            spc_basis.append(bas_i)
+                            coeff_basis.append(c_bas_i)
+                        else:
+                            for j, bas_j in enumerate(spc_basis):
+                                if bas_i == bas_j:
+                                    coeff_basis[j] += c_bas_i
         else:
             spc_basis, coeff_basis = get_ref_fxn(spc_ich)
         for i in range(len(spc_basis)):
@@ -374,5 +380,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
     if no_ene_cnt > 1:
         print('*ERROR: Not all energies found for the basis species')
         sys.exit()
+
+    print('basis tests in basis:', h_basis, spc_basis)
 
     return h_spc, h_basis

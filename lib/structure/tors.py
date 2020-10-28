@@ -590,6 +590,7 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
         output_string = mess_file.read()
 
     tors_zpes = mess_io.reader.tors.zpves(output_string)
-    tors_freqs = mess_io.reader.tors.freqs(output_string)
+    # tors_freqs = mess_io.reader.tors.freqs(output_string)
+    tors_freqs = mess_io.reader.grid_min_freqs(output_string)
 
     return tors_zpes, tors_freqs

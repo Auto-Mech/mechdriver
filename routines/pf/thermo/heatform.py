@@ -24,6 +24,7 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
     """
 
     dhzero = hzero_mol * EH2KCAL
+    print('basis test:', basis, coeff)
     for i, spc in enumerate(basis):
         ts = True
         if isinstance(spc, str):
@@ -267,11 +268,13 @@ def cbhzed(ich, bal=True):
         gra = (atm_dic, {})
         frag = automol.graph.inchi(gra)
         _add2dic(frags, frag, coeff)
+    print('frags in cbhzed before bal test:', frags)
     if bal:
         balance_ = _balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             frags = _balance_frags(ich, frags)
+    print('frags in cbhzed after bal test:', frags)
     return frags
 
 def _ts_graph(gra, site):
@@ -1025,6 +1028,7 @@ def get_cbhzed(ich):
     for frag in frags:
         fraglist.append(frag)
         clist.append(frags[frag])
+    print('fraglist test:', fraglist, clist)
     return fraglist, clist
     # return list(cbhzed(ich).keys())
 
