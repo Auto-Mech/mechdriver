@@ -173,11 +173,11 @@ def atm_data(spc_dct, spc_name,
 
     ref_scheme = chn_pf_models['ref_scheme']
     ref_enes = chn_pf_models['ref_enes']
-
+    
     # Determine info about the basis species used in thermochem calcs
     basis_dct, uniref_dct = basis.prepare_refs(
         ref_scheme, spc_dct, [[spc_name, None]])
-
+    
     # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
 
@@ -191,9 +191,25 @@ def atm_data(spc_dct, spc_name,
     # Calculate and store the 0 K Enthalpy
     hf0k = heatform.calc_hform_0k(
         ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
+
+    ts_ref_scheme = 'cbh0'
+    if ref_scheme != ts_ref_scheme:
+        basis_dct_trs, uniref_dct_trs = basis.prepare_refs(ts_ref_scheme, 
+            spc_dct, [[spc_name, None]])
+        spc_basis_trs, coeff_basis_trs = basis_dct_trs[spc_name]
+        ene_spc_trs, ene_basis_trs = basis.basis_energy(
+            spc_name, spc_basis_trs, uniref_dct_trs, spc_dct,
+            chn_pf_levels, chn_pf_models,
+            run_prefix, save_prefix)
+        hf0K_trs = heatform.calc_hform_0k(
+            ene_spc_trs, ene_basis_trs, spc_basis_trs, coeff_basis_trs, ref_set=ref_enes)
+    else:
+        hf0K_trs = hf0k
+
     print('ABS Energy: ', ene_chnlvl)
     print('Hf0K Energy: ', hf0k * phycon.KCAL2KJ)
     ene_chnlvl = hf0k * phycon.KCAL2EH
+    hf0K_trs *= phycon.KCAL2EH
 
     # Create info dictionary
     inf_dct = {
@@ -205,6 +221,7 @@ def atm_data(spc_dct, spc_name,
         'elec_levels': spc_dct_i['elec_levels'],
         'ene_chnlvl': ene_chnlvl,
         'ene_reflvl': ene_reflvl,
+        'ene_tsref': hf0K_trs,
         'zpe_chnlvl': zpe_chnlvl
     }
 
@@ -309,9 +326,10 @@ def mol_data(spc_name, spc_dct,
     print('elec ene in models build ', chn_ene)    
     ene_chnlvl = chn_ene + zpe
     print('ene_chnlvl: ', ene_chnlvl)
+
     ref_scheme = chn_pf_models['ref_scheme']
     ref_enes = chn_pf_models['ref_enes']
-
+    
     # Determine info about the basis species used in thermochem calcs
     basis_dct, uniref_dct = basis.prepare_refs(
         ref_scheme, spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
@@ -333,9 +351,32 @@ def mol_data(spc_name, spc_dct,
     # Calculate and store the 0 K Enthalpy
     hf0k = heatform.calc_hform_0k(
         ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
+
+    #if rxn_class in basis.IMPLEMENTED_CBH_TS_CLASSES:
+    #    ts_ref_scheme = 'cbh0'
+    #else:
+    #    ts_ref_scheme = None
+    ts_ref_scheme = 'cbh0'
+    if not saddle:
+        if ref_scheme != ts_ref_scheme:
+            basis_dct_trs, uniref_dct_trs = basis.prepare_refs(ts_ref_scheme, 
+                spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
+            spc_basis_trs, coeff_basis_trs = basis_dct_trs[spc_name]
+            ene_spc_trs, ene_basis_trs = basis.basis_energy(
+                spc_name, spc_basis_trs, uniref_dct_trs, spc_dct,
+                chn_pf_levels, chn_pf_models,
+                run_prefix, save_prefix)
+            hf0K_trs = heatform.calc_hform_0k(
+                ene_spc_trs, ene_basis_trs, spc_basis_trs, coeff_basis_trs, ref_set=ref_enes)
+        else:
+            hf0K_trs = hf0k
+    else:
+        hf0K_trs = 0.0
+
     print('ABS Energy: ', ene_chnlvl)
     print('Hf0K Energy: ', hf0k * phycon.KCAL2KJ)
     ene_chnlvl = hf0k * phycon.KCAL2EH
+    hf0K_trs *= phycon.KCAL2EH
 
     ene_reflvl = None
     _, _ = ref_pf_models, ref_pf_levels
@@ -365,12 +406,12 @@ def mol_data(spc_name, spc_dct,
     keys = ['geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
             'mess_hr_str', 'mdhr_dat',
             'xmat', 'rovib_coups', 'rot_dists',
-            'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl',
+            'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl', 'ene_tsref',
             'edown_str', 'collid_freq_str']
     vals = [geom, sym_factor, freqs, imag, elec_levels,
             allr_str, mdhr_dat,
             xmat, rovib_coups, rot_dists,
-            ene_chnlvl, ene_reflvl, zpe,
+            ene_chnlvl, ene_reflvl, zpe, hf0K_trs,
             edown_str, collid_freq_str]
     inf_dct = dict(zip(keys, vals))
 

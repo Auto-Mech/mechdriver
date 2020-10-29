@@ -273,16 +273,22 @@ def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
 
     # Initialize sum ene dct
     sum_ene = {}
-
+    
     # Calculate energies for species
     reac_ene = 0.0
+    reac_ref_ene = 0.0
     for rct in channel_infs['reacs']:
         reac_ene += rct[ene_lvl]
+        reac_ref_ene += rct['ene_tsref']
+        print('reac ene', rct[ene_lvl], rct['ene_tsref'])
     sum_ene.update({'reacs': reac_ene})
 
     prod_ene = 0.0
+    prod_ref_ene = 0.0
     for prd in channel_infs['prods']:
         prod_ene += prd[ene_lvl]
+        prod_ref_ene += prd['ene_tsref']
+        print('prod ene', prd[ene_lvl], prd['ene_tsref'])
     sum_ene.update({'prods': prod_ene})
 
     # Calculate energies for fake entrance- and exit-channel wells
@@ -296,17 +302,30 @@ def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
         sum_ene.update(
             {'fake_vdwp': vdwp_ene, 'fake_vdwp_ts': prod_ene}
         )
-
+    
+    print('REAC HoF (0 K) spc lvl kcal/mol: ', reac_ene * phycon.EH2KCAL)
+    print('REAC HoF (0 K) ts lvl kcal/mol: ', reac_ref_ene * phycon.EH2KCAL)
+    print('PROD HoF (0 K) spc lvl kcal/mol: ', prod_ene * phycon.EH2KCAL)
+    print('PROD HoF (0 K) ts lvl kcal/mol: ', prod_ref_ene * phycon.EH2KCAL)
     # Scale all of the current energies in the dict
     for spc, ene in sum_ene.items():
         sum_ene[spc] = (ene - ref_ene) * phycon.EH2KCAL
-
+    
     # Set the inner TS ene and scale them
     if 'rpath' in channel_infs['ts']:
         ts_enes = [dct[ene_lvl] for dct in channel_infs['ts']['rpath']]
     else:
         ts_enes = [channel_infs['ts'][ene_lvl]]
+
+    print('TS HoF (0 K) ts lvl kcal/mol: ', ts_enes[0] * phycon.EH2KCAL)
+    if reac_ref_ene and abs(ts_enes[0] - reac_ene) > 0.00000001:
+        if abs(ts_enes[0] - reac_ref_ene) < abs(ts_enes[0] - prod_ref_ene):
+            ts_enes = [ene - reac_ref_ene + reac_ene for ene in ts_enes]
+        else:   
+            ts_enes = [ene - prod_ref_ene + prod_ene for ene in ts_enes]
+    print('TS HoF (0 K) approx spc lvl kcal/mol: ', ts_enes[0] * phycon.EH2KCAL)
     ts_enes = [(ene - ref_ene) * phycon.EH2KCAL for ene in ts_enes]
+    
 
     sum_ene.update({'ts': ts_enes})
 
