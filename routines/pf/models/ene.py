@@ -17,7 +17,7 @@ from lib.amech_io import parser
 
 # Functions to hand reading and formatting energies of single species
 def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                read_ene=True, read_zpe=True, saddle=False):
+                run_prefix, read_ene=True, read_zpe=True, saddle=False):
     """ Get the energy for a species on a channel
     """
 
@@ -31,7 +31,7 @@ def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
-            spc_dct_i, pf_filesystems, pf_models, pf_levels, saddle=saddle)
+            spc_dct_i, pf_filesystems, pf_models, pf_levels, run_prefix, saddle=saddle)
         print('zpe in models ene ', e_zpe)
 
     # Return the total energy requested
@@ -90,7 +90,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
 
 
 def zero_point_energy(spc_dct_i,
-                      pf_filesystems, pf_models, pf_levels, saddle=False):
+                      pf_filesystems, pf_models, pf_levels, run_prefix, saddle=False):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
@@ -126,7 +126,7 @@ def zero_point_energy(spc_dct_i,
         if typ.nonrigid_tors(pf_models, rotors):
             # Calculate init proj. freqs, unproj. imag, tors zpe and scale fact
             freqs, _, tors_zpe, pot_scalef = vib.tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str, saddle=saddle)
+                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
             # Make final hindered rotor strings and get corrected tors zpe
             if typ.scale_1d(pf_models):
                 tors_strs = tors.make_hr_strings(
@@ -134,7 +134,7 @@ def zero_point_energy(spc_dct_i,
                     scale_factor=pot_scalef)
                 [_, hr_str, _, prot_str, _] = tors_strs
                 _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
-                    pf_filesystems, hr_str, prot_str, saddle=saddle)
+                    pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
                 # Calculate current zpe assuming no freq scaling: tors+projfreq
             zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
 
