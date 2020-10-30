@@ -2,6 +2,7 @@
   Handle vibrational data info
 """
 
+import os
 import numpy
 import autofile
 from lib.structure import tors as torsprep
@@ -79,9 +80,13 @@ def read_anharmon_matrix(pf_filesystems):
 
 
 def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
-                             saddle=False):
+                             prefix, saddle=False):
     """ Get frequencies from one version of ProjRot
     """
+
+    run_path = os.path.join(prefix, 'TORS_PF')
+    if not os.path.exists(run_path):
+        os.mkdir(run_path)
 
     # Build the filesystems
     [harm_cnf_fs, _, harm_min_locs, _, harm_run_fs] = pf_filesystems['harm']
@@ -103,7 +108,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     # Read info for the hindered rotors
     print(' - Calculating the torsional ZPVES using MESS...')
     _, tors_freqs = torsprep.mess_tors_zpes(
-        tors_geo, mess_hr_str, tors_run_path)
+        tors_geo, mess_hr_str, run_path)
 
     # Calculate ZPVES of the hindered rotors
     #tors_zpe = sum(tors_zpes) if tors_zpes else 0.0

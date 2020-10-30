@@ -165,7 +165,7 @@ def atm_data(spc_dct, spc_name,
     print('\nObtaining the electronic energy...')
     ene_chnlvl = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
-        read_ene=True, read_zpe=False)
+        run_prefix, read_ene=True, read_zpe=False)
 
     ene_reflvl = None
     _, _ = ref_pf_models, ref_pf_levels
@@ -279,7 +279,7 @@ def mol_data(spc_name, spc_dct,
     if typ.nonrigid_tors(chn_pf_models, rotors):
         # Calculate initial proj. freqs, unproj. imag, tors zpe and scale fact
         freqs, imag, tors_zpe, pot_scalef = vib.tors_projected_freqs_zpe(
-            pf_filesystems, hr_str, prot_str, saddle=saddle)
+            pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
         # Make final hindered rotor strings and get corrected tors zpe
         if typ.scale_1d(chn_pf_models):
             tors_strs = tors.make_hr_strings(
@@ -287,7 +287,7 @@ def mol_data(spc_name, spc_dct,
                 scale_factor=pot_scalef)
             [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
             _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str, saddle=saddle)
+                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
             # Calculate current zpe assuming no freq scaling: tors+projfreq
         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
 
@@ -321,9 +321,9 @@ def mol_data(spc_name, spc_dct,
     print('\nObtaining the electronic energy + zpve...')
     chn_ene = ene.read_energy(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
-        read_ene=True, read_zpe=False, saddle=saddle)
-    print('zpe in models build ', zpe)    
-    print('elec ene in models build ', chn_ene)    
+        run_prefix, read_ene=True, read_zpe=False, saddle=saddle)
+    print('zpe in models build ', zpe)
+    print('elec ene in models build ', chn_ene)
     ene_chnlvl = chn_ene + zpe
     print('ene_chnlvl: ', ene_chnlvl)
 
@@ -525,7 +525,7 @@ def rpvtst_data(ts_dct, reac_dcts,
         }
         reac_ene += ene.read_energy(
             dct, pf_filesystems, chn_pf_models, pf_levels,
-            read_ene=True, read_zpe=True, saddle=sadpt)
+            run_prefix, read_ene=True, read_zpe=True, saddle=sadpt)
 
         print('rpath', chn_pf_levels['rpath'][1])
         pf_levels = {
@@ -535,7 +535,7 @@ def rpvtst_data(ts_dct, reac_dcts,
         }
         ene_hs_sr_inf += ene.read_energy(
             dct, pf_filesystems, chn_pf_models, pf_levels,
-            read_ene=True, read_zpe=False)
+            run_prefix, read_ene=True, read_zpe=False)
 
     # Scale the scn values
     if sadpt:
@@ -690,7 +690,7 @@ def tau_data(spc_dct_i,
     vib_model = chn_pf_models['vib']
     freqs = ()
     _, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
-        pf_filesystems, hr_str, prot_str, saddle=False)
+        pf_filesystems, hr_str, prot_str, run_prefix, saddle=False)
     zpe_chnlvl = proj_zpve * phycon.EH2KCAL
 
     # Set reference energy to harmonic zpve

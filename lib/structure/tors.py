@@ -25,7 +25,11 @@ def tors_name_prep(spc_dct_i, cnf_fs, min_cnf_locs, tors_model):
         run_tors_names = ()
         if 'tors_names' in spc_dct_i:
             run_tors_names = spc_dct_i['tors_names']
-            run_tors_names = tuple(tuple(x) for x in run_tors_names)
+            if '1dhr' in tors_model:
+                run_tors_names = tuple(itertools.chain(*run_tors_names))
+                run_tors_names = tuple((x,) for x in run_tors_names)
+            else:
+                run_tors_names = tuple(tuple(x) for x in run_tors_names)
             tloc = 'user'
         if not run_tors_names:
             run_tors_names = names_from_filesys(
