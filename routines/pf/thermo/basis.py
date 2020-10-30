@@ -26,7 +26,7 @@ REF_CALLS = {"basic": "get_basic",
 TS_REF_CALLS = {"basic": "get_basic_ts",
                 "cbh0": "get_cbhzed_ts",
                 "cbh1": "get_cbhzed_ts",
-                "cbh2": "get_cbhone_ts",
+                "cbh2": "get_cbhzed_ts",
                 "cbh3": "get_cbhone_ts"}
 
 #IMPLEMENTED_CBH_TS_CLASSES = []
@@ -121,7 +121,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
             run_prefix = rxn_run_path.split('/RXN')[0]
             save_prefix = rxn_save_path.split('/RXN')[0]
             rxnclass = spc_dct[spc_name]['class']
-            if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES:
+            if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES and 'basic' not in ref_scheme:
                 if ts_geom and 'elimination' not in spc_dct[spc_name]['class']:
                     geo, brk_bnd_keys, frm_bnd_keys = ts_geom
                     spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], 
@@ -135,7 +135,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
                 spc_basis = []
                 coeff_basis = []
                 for spc_i in spc_dct[spc_name]['reacs']:
-                    bas_dct_i, _ = prepare_refs('cbh0', spc_dct, [[spc_i, None]]) 
+                    bas_dct_i, _ = prepare_refs(ref_scheme, spc_dct, [[spc_i, None]]) 
                     spc_bas_i, coeff_bas_i = bas_dct_i[spc_i]
                     for bas_i, c_bas_i in zip(spc_bas_i, coeff_bas_i):
                         if bas_i not in spc_basis:
