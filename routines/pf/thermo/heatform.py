@@ -1307,6 +1307,9 @@ def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None):
 def get_cbhone_ts(zma, rxnclass, frm_key, brk_key, geo=None):
     return get_cbh_ts('cbh1', zma, rxnclass, frm_key, brk_key, geo)
 
+def get_basic_ts(zma, rxnclass, frm_key, brk_key, geo=None):
+    return
+
 def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None):
     """ get basis for CBH0 for a TS molecule
     """
