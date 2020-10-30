@@ -20,17 +20,26 @@ from lib import filesys
 REF_CALLS = {"basic": "get_basic",
              "cbh0": "get_cbhzed",
              "cbh1": "get_cbhone",
+             "cbh1_0": "get_cbhone",
+             "cbh1_1": "get_cbhone",
              "cbh2": "get_cbhtwo",
+             "cbh2_0": "get_cbhtwo",
+             "cbh2_1": "get_cbhtwo",
              "cbh3": "get_cbhthree"}
 
 TS_REF_CALLS = {"basic": "get_basic_ts",
                 "cbh0": "get_cbhzed_ts",
-                "cbh1": "get_cbhzed_ts",
+                "cbh1": "get_cbhone_ts",
+                "cbh1_0": "get_cbhzed_ts",
+                "cbh1_1": "get_cbhone_ts",
                 "cbh2": "get_cbhzed_ts",
+                "cbh2_0": "get_cbhzed_ts",
+                "cbh2_1": "get_cbhone_ts",
                 "cbh3": "get_cbhone_ts"}
 
 #IMPLEMENTED_CBH_TS_CLASSES = []
 IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 'beta scission',
+                              # 'hydrogen migration', 'addition high']
                               'hydrogen migration', 'addition high', 'elimination high']
 
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, ts_geom=None):
@@ -57,8 +66,8 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
             spc_lst = spc_names[spc_start:spc_end]
 
             proc = multiprocessing.Process(
-                    target=_prepare_refs, 
-                    args=(queue, ref_scheme, spc_dct, spc_lst,
+                    target=_prepare_refs,
+                    args=(queue, ref_scheme, spc_dct, spc_lst, 
                          repeats, parallel, ts_geom))
             procs.append(proc)
             proc.start()
@@ -83,7 +92,8 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
         for proc in procs:
             proc.join()
     else:
-        basis_dct, unique_refs_dct = _prepare_refs(None, ref_scheme, spc_dct, spc_names, repeats=repeats, parallel=parallel, ts_geom=ts_geom)
+        basis_dct, unique_refs_dct = _prepare_refs(None, ref_scheme, spc_dct, spc_names, 
+                repeats=repeats, parallel=parallel, ts_geom=ts_geom)
     return basis_dct, unique_refs_dct
 
 def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel=False, ts_geom=None):
@@ -124,12 +134,12 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
             if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES and 'basic' not in ref_scheme:
                 if ts_geom and 'elimination' not in spc_dct[spc_name]['class']:
                     geo, brk_bnd_keys, frm_bnd_keys = ts_geom
-                    spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], 
+                    spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
                         frm_bnd_keys, brk_bnd_keys, geo=geo)
                 else:
                     print('bond keys in basis', spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
                     print(automol.geom.string(automol.zmatrix.geometry(spc_dct[spc_name]['zma'])))
-                    spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'], 
+                    spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
                         spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
             else:
                 spc_basis = []
@@ -335,7 +345,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
         run_prefix, save_prefix, saddle='ts' in spc_name)
     h_spc = read_energy(
         spc_dct[spc_name], pf_filesystems,
-        pf_models, pf_levels,
+        pf_models, pf_levels, run_prefix,
         read_ene=True, read_zpe=True, saddle='ts' in spc_name)
     if h_spc is None:
         print('*ERROR: No energy found for {}'.format(spc_name))
@@ -379,7 +389,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
         h_basis.append(
             read_energy(
                 spc_dct_i, pf_filesystems,
-                pf_models, pf_levels,
+                pf_models, pf_levels, run_prefix,
                 read_ene=True, read_zpe=True,
                 saddle='ts' in name or 'TS' in name
             )
