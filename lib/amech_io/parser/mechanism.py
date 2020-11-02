@@ -18,7 +18,7 @@ def build_pes_dct(job_path, mech_type,
     mech_str = ptt.read_inp_str(job_path, MECH_INP, remove_comments='!')
 
     # Build the total PES dct
-    mech_info = mechanalyzer.parser.pes.mechanism_file(
+    mech_info = mechanalyzer.parser.pes.read_mechanism_file(
         mech_str, mech_type, spc_dct, sort_rxns=sort_rxns)
     pes_dct = mechanalyzer.parser.pes.build_pes_dct(*mech_info)
 
