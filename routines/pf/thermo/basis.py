@@ -38,9 +38,13 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
                 "cbh3": "get_cbhone_ts"}
 
 #IMPLEMENTED_CBH_TS_CLASSES = []
-IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 'beta scission',
-                              # 'hydrogen migration', 'addition high']
-                              'hydrogen migration', 'addition high', 'elimination high']
+IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 
+                              'hydrogen migration', 
+                              # 'beta scission',
+                              'elimination high', 
+                              # 'radical radical hydrogen abstraction high',
+                              'addition high']
+                              # 'hydrogen migration', 'addition high', 'elimination high']
 
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, ts_geom=None):
     """ add refs to species list as necessary

@@ -66,7 +66,10 @@ def get_ref_h(species, ref, temp, ts=False):
                 if val == '':
                     val = None
                 h_species = float(val)
-    assert h_species is not None
+    assert h_species is not None, (
+        'Could not find heat of formation for {} '.format(species)
+        )
+
     return h_species
 
 

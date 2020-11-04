@@ -43,8 +43,9 @@ def read_harmonic_freqs(pf_filesystems, saddle=False):
         # Calculate the zpve
         print('Calculating ZPVE using harmonic frequencies...')
         zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
+        zpe_kcal = zpe*phycon.EH2KCAL
 
-        print('harmonic zpe is {} kcal/mol'.format(zpe))
+        print('harmonic zpe is {} kcal/mol'.format(zpe_kcal))
 
         # Check imaginary frequencies and set freqs
         if saddle:

@@ -193,6 +193,9 @@ def atm_data(spc_dct, spc_name,
         ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
 
     ts_ref_scheme = 'cbh0'
+    if '_' in ref_scheme:
+        ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
+    print('ts_ref_scheme test:', ts_ref_scheme)
     if ref_scheme != ts_ref_scheme:
         basis_dct_trs, uniref_dct_trs = basis.prepare_refs(ts_ref_scheme, 
             spc_dct, [[spc_name, None]])
@@ -370,6 +373,9 @@ def mol_data(spc_name, spc_dct,
     #else:
     #    ts_ref_scheme = None
     ts_ref_scheme = 'cbh0'
+    if '_' in ref_scheme:
+        ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
+    print('ts_ref_scheme test:', ts_ref_scheme)
     if not saddle:
         if ref_scheme != ts_ref_scheme:
             basis_dct_trs, uniref_dct_trs = basis.prepare_refs(ts_ref_scheme, 
