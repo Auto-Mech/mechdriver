@@ -39,7 +39,7 @@ def make_spc_mess_str(spc_dct, spc_name,
     inf_dct = build.read_spc_data(
         spc_dct, spc_name,
         chn_pf_models, chn_pf_levels,
-        run_prefix, save_prefix)
+        run_prefix, save_prefix, {})
 
     # Write the mol block
     mess_writer = getattr(BLOCK_MODULE, inf_dct['writer'])

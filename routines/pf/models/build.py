@@ -28,7 +28,7 @@ from lib import filesys
 # General readers
 def read_spc_data(spc_dct, spc_name,
                   chn_pf_models, chn_pf_levels,
-                  run_prefix, save_prefix,
+                  run_prefix, save_prefix, chn_basis_ene_dct,
                   ref_pf_models=(), ref_pf_levels=()):
     """ Determines which block writer to use tau
     """
@@ -53,22 +53,22 @@ def read_spc_data(spc_dct, spc_name,
                 run_prefix, save_prefix, saddle=False)
             writer = 'tau_block'
         else:
-            inf_dct = mol_data(
+            inf_dct, chn_basis_ene_dct = mol_data(
                 spc_name, spc_dct,
                 chn_pf_models, chn_pf_levels,
-                ref_pf_models, ref_pf_levels,
+                ref_pf_models, ref_pf_levels, chn_basis_ene_dct,
                 run_prefix, save_prefix, saddle=False)
             writer = 'species_block'
 
     # Add writer to inf dct
     inf_dct['writer'] = writer
 
-    return inf_dct
+    return inf_dct, chn_basis_ene_dct
 
 
 def read_ts_data(spc_dct, tsname, rcts, prds,
                  chn_pf_models, chn_pf_levels,
-                 run_prefix, save_prefix,
+                 run_prefix, save_prefix, chn_basis_ene_dct,
                  ts_class, ts_sadpt, ts_nobarrier,
                  ref_pf_models=(), ref_pf_levels=()):
     """ Determine which block function to useset block functions
@@ -106,10 +106,10 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 run_prefix, save_prefix, sadpt=sadpt)
             writer = 'rpvtst_block'
         else:
-            inf_dct = mol_data(
+            inf_dct, chn_basis_ene_dct = mol_data(
                 tsname, spc_dct,
                 chn_pf_models, chn_pf_levels,
-                ref_pf_models, ref_pf_levels,
+                ref_pf_models, ref_pf_levels, chn_basis_ene_dct,
                 run_prefix, save_prefix, saddle=True)
             writer = 'species_block'
     else:
@@ -144,7 +144,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     # Add writer to inf dct
     inf_dct['writer'] = writer
 
-    return inf_dct
+    return inf_dct, chn_basis_ene_dct
 
 
 # Data Readers
@@ -229,7 +229,7 @@ def atm_data(spc_dct, spc_name,
 
 
 def mol_data(spc_name, spc_dct,
-             chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels,
+             chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels, chn_basis_ene_dct,
              run_prefix, save_prefix, saddle=False):
     """ Pull all of the neccessary information from the filesystem for a species
     """
@@ -340,14 +340,27 @@ def mol_data(spc_name, spc_dct,
     spc_basis, coeff_basis = basis_dct[spc_name]
 
     print('spc_basis test in mol_data:', spc_basis)
+    ene_spc = ene_chnlvl
+    ene_basis = []
+    energy_missing = False
+    for spc_basis_i in spc_basis:
+        if spc_basis_i in chn_basis_ene_dct:
+            print('Energy already found for basis species: ', spc_basis_i)
+            ene_basis.append(chn_basis_ene_dct[spc_basis_i])
+        else:
+            print('Energy will be determined for basis species: ', spc_basis_i)
+            energy_missing = True
 
     # Get the energies for the spc and its basis
-    ene_spc, ene_basis = basis.basis_energy(
-        spc_name, spc_basis, uniref_dct, spc_dct,
-        chn_pf_levels, chn_pf_models,
-        run_prefix, save_prefix)
-
+    if energy_missing:
+        _, ene_basis = basis.basis_energy(
+            spc_name, spc_basis, uniref_dct, spc_dct,
+            chn_pf_levels, chn_pf_models,
+            run_prefix, save_prefix)
+        for spc_basis_i, ene_basis_i in zip(spc_basis, ene_basis):
+            chn_basis_ene_dct[spc_basis_i] = ene_basis_i
     print('ene from thmroutines: ', ene_spc)
+
     # Calculate and store the 0 K Enthalpy
     hf0k = heatform.calc_hform_0k(
         ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
@@ -362,10 +375,23 @@ def mol_data(spc_name, spc_dct,
             basis_dct_trs, uniref_dct_trs = basis.prepare_refs(ts_ref_scheme, 
                 spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
             spc_basis_trs, coeff_basis_trs = basis_dct_trs[spc_name]
-            ene_spc_trs, ene_basis_trs = basis.basis_energy(
-                spc_name, spc_basis_trs, uniref_dct_trs, spc_dct,
-                chn_pf_levels, chn_pf_models,
-                run_prefix, save_prefix)
+            ene_basis_trs = []
+            energy_missing = False
+            for spc_basis_i in spc_basis_trs:
+                if spc_basis_i in chn_basis_ene_dct:
+                    print('Energy already found for basis species: ', spc_basis_i)
+                    ene_basis_trs.append(chn_basis_ene_dct[spc_basis_i])
+                else:
+                    print('Energy will be determined for basis species: ', spc_basis_i)
+                    energy_missing = True
+            if energy_missing:
+                _, ene_basis_trs = basis.basis_energy(
+                    spc_name, spc_basis_trs, uniref_dct_trs, spc_dct,
+                    chn_pf_levels, chn_pf_models,
+                    run_prefix, save_prefix)
+                for spc_basis_i, ene_basis_i in zip(spc_basis_trs, ene_basis_trs):
+                    chn_basis_ene_dct[spc_basis_i] = ene_basis_i
+            ene_spc_trs = ene_chnlvl    
             hf0K_trs = heatform.calc_hform_0k(
                 ene_spc_trs, ene_basis_trs, spc_basis_trs, coeff_basis_trs, ref_set=ref_enes)
         else:
@@ -415,7 +441,7 @@ def mol_data(spc_name, spc_dct,
             edown_str, collid_freq_str]
     inf_dct = dict(zip(keys, vals))
 
-    return inf_dct
+    return inf_dct, chn_basis_ene_dct
 
 
 # VRCTST

@@ -105,6 +105,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         run_prefix, save_prefix, ref_idx=0)
     # Loop over all the channels and write the MESS strings
     written_labels = []
+    basis_energy_dct = {}
     for rxn in rxn_lst:
 
         print('\n\nReading PES electronic structure data ' +
@@ -123,9 +124,15 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         ts_cls_info = set_ts_cls_info(spc_dct, model_dct, tsname, chn_model)
 
         # Obtain all of the species data
-        chnl_infs = get_channel_data(rxn, tsname, spc_dct,
+        if not chn_model in basis_energy_dct:
+            basis_energy_dct[chn_model] = {}
+
+        chnl_infs, chn_basis_ene_dct = get_channel_data(rxn, tsname, spc_dct,
+                                     basis_energy_dct[chn_model],
                                      pf_info, ts_cls_info,
                                      run_prefix, save_prefix)
+
+        basis_energy_dct[chn_model].update(chn_basis_ene_dct)
 
         # Calculate the relative energies of all spc on the channel
         chnl_enes = calc_channel_enes(chnl_infs, ref_ene,
@@ -451,7 +458,7 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
 
 
 # Data Retriever Functions
-def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
+def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct, pf_info, ts_cls_info,
                      run_prefix, save_prefix):
     """ generate dcts with the models
     """
@@ -471,14 +478,13 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     chnl_infs['reacs'], chnl_infs['prods'] = [], []
     for side in ('reacs', 'prods'):
         for rgt in rxn[side]:
-            chnl_infs[side].append(
-                build.read_spc_data(
-                    spc_dct, rgt,
-                    chn_pf_models, chn_pf_levels,
-                    run_prefix, save_prefix,
-                    ref_pf_models=ref_pf_models,
-                    ref_pf_levels=ref_pf_levels)
-            )
+            chnl_infs_i, model_basis_energy_dct = build.read_spc_data(
+                spc_dct, rgt,
+                chn_pf_models, chn_pf_levels,
+                run_prefix, save_prefix, model_basis_energy_dct,
+                ref_pf_models=ref_pf_models,
+                ref_pf_levels=ref_pf_levels)
+            chnl_infs[side].append(chnl_infs_i)
         if side in rxn['dummy']:
             symm_barrier = True
             # for _ in range(len(rxn[side])):
@@ -486,10 +492,10 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
 
     # Set up data for TS
     chnl_infs['ts'] = []
-    chnl_infs['ts'] = build.read_ts_data(
+    chnl_infs['ts'], model_basis_energy_dct = build.read_ts_data(
         spc_dct, tsname, rxn['reacs'], rxn['prods'],
         chn_pf_models, chn_pf_levels,
-        run_prefix, save_prefix,
+        run_prefix, save_prefix, model_basis_energy_dct,
         ts_class, ts_sadpt, ts_nobarrier,
         ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
 
@@ -507,4 +513,4 @@ def get_channel_data(rxn, tsname, spc_dct, pf_info, ts_cls_info,
     if need_fake_wells(ts_class, pwell_model):
         chnl_infs['fake_vdwp'] = copy.deepcopy(chnl_infs['prods'])
 
-    return chnl_infs
+    return chnl_infs, model_basis_energy_dct
