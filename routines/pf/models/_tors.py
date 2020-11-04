@@ -150,6 +150,7 @@ def _rotor_info(zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
     # Obtain the info for each of the rotors
     run_tors_names = torsprep.tors_name_prep(
         spc_dct_i, cnf_fs, min_cnf_locs, tors_model)
+    print('tors_names test:', spc_dct_i, cnf_fs, min_cnf_locs, tors_model, run_tors_names)
     if run_tors_names:
         rotor_names, rotor_grids, rotor_syms = torsprep.hr_prep(
             zma=zma,
@@ -319,7 +320,7 @@ def _scale_pot(pot, scale_coeff, numrotors):
     return new_pot 
 
 
-def _hrpot_spline_fitter(pot_dct, min_thresh=-0.10, max_thresh=50.0):
+def _hrpot_spline_fitter(pot_dct, min_thresh=0.0, max_thresh=50.0):
     """ Get a physical hindered rotor potential via a series of spline fits
     """
 
