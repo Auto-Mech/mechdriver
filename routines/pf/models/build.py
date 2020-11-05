@@ -347,6 +347,13 @@ def mol_data(spc_name, spc_dct,
     ene_basis = []
     energy_missing = False
     for spc_basis_i in spc_basis:
+        if not isinstance(spc_basis_i, str):
+            basreacs, basprods = spc_basis_i
+            spc_basis_i = ''
+            for entry in basreacs:
+                spc_basis_i += entry
+            for entry in basprods:
+                spc_basis_i += entry
         if spc_basis_i in chn_basis_ene_dct:
             print('Energy already found for basis species: ', spc_basis_i)
             ene_basis.append(chn_basis_ene_dct[spc_basis_i])
@@ -361,6 +368,13 @@ def mol_data(spc_name, spc_dct,
             chn_pf_levels, chn_pf_models,
             run_prefix, save_prefix)
         for spc_basis_i, ene_basis_i in zip(spc_basis, ene_basis):
+            if not isinstance(spc_basis_i, str):
+                basreacs, basprods = spc_basis_i
+                spc_basis_i = ''
+                for entry in basreacs:
+                    spc_basis_i += entry
+                for entry in basprods:
+                    spc_basis_i += entry
             chn_basis_ene_dct[spc_basis_i] = ene_basis_i
     print('ene from thmroutines: ', ene_spc)
 
