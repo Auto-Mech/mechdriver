@@ -27,6 +27,10 @@ def run(spc_dct,
     run_prefix = run_inp_dct['run_prefix']
 
     # Build a list of the species to calculate thermochem for loops below
+    # Set reaction list with unstable species broken apart
+    print('Checking stability of all species...')
+    rxn_lst = instab.break_all_unstable2(
+        rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
     spc_queue = parser.species.build_queue(rxn_lst)
     spc_queue = parser.species.split_queue(spc_queue)
     # Build the paths [(messpf, nasa)], models and levels for each spc

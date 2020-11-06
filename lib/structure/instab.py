@@ -343,3 +343,33 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
                     prd_ichs.append(ich)
 
     return prd_names
+
+
+def break_all_unstable2(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
+    """ Loop over the reaction list and break up the unstable species
+    """
+
+    new_spc_queue = []
+    for spc, spc_model in spc_queue:
+
+        # Get theory
+        geo_model = spc_model_dct[spc_model[1]]['es']['geo']
+        ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
+
+        # Asses the reactants for unstable species
+        spc_stable = check_unstable_species(
+            'thermo', spc_dct, spc, ini_thy_info, save_prefix)
+        if spc_stable:
+            new_spc_queue.append((spc, spc_model))
+        else:
+            print('\nSplitting species...')
+            new_spcs = split_species(spc_dct, spc
+                                     ini_thy_info, save_prefix)
+            for new_spc in new_spcs:
+                new_spc_queue.append((new_spc, spc_model))
+
+    # Remove redundant species
+    new_spc_queue = list(set(new_spc_queue))
+
+    return new_spc_queue
+
