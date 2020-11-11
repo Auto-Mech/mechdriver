@@ -262,7 +262,7 @@ def mol_data(spc_name, spc_dct,
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
         rxn_class=rxn_class,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
-
+    print('Frm and brk key in model build', frm_bnd_keys, brk_bnd_keys)
     if typ.nonrigid_tors(chn_pf_models, rotors):
         run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
         tors_strs = tors.make_hr_strings(

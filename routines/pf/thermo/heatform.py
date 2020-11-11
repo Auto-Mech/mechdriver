@@ -430,6 +430,89 @@ def split_beta_gras(gras):
     return (rct_ichs, prd_ichs)  
 
 
+def split_radradabs_gras(gras):
+    rct_ichs = []
+    prd_ichs = []
+    atms, bnd_ords = gras
+    atms = atms.copy()
+    bnd_ords = bnd_ords.copy()
+    for bnd_ord in bnd_ords:
+        order, tmp = bnd_ords[bnd_ord]
+        if abs(np.floor(order) - (order - 0.4)) < 0.01:
+            bnd_ords[bnd_ord] = (round(order + 0.6, 1), tmp)
+            atmai, atmbi = bnd_ord
+            if abs(np.floor(atms[atmbi][1]) - (atms[atmbi][1]-0.6)) < 0.01:
+                atmbi, atmai = atmai, atmbi
+            atma = list(atms[atmai])
+            atmb = list(atms[atmbi])
+            atmb[1] = np.floor(atmb[1])
+            atma[1] = np.floor(atma[1])
+            atms[atmai] = tuple(atma)
+            atms[atmbi] = tuple(atmb)
+            for atmi in atms:
+                if frozenset({atmi, atmbi}) in bnd_ords and atmi != atmai:
+                    order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
+                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
+                        atm =  list(atms[atmi])
+                        atm[1] = np.floor(atm[1])
+                        atms[atmi] = tuple(atm)
+                        bnd_ords[frozenset({atmbi, atmi})] = (round(order - 0.6, 1), tmp)
+                if frozenset({atmi, atmai}) in bnd_ords and atmi != atmbi:
+                    order, tmp =  bnd_ords[frozenset({atmai, atmi})]
+                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
+                        atm =  list(atms[atmi])
+                        atm[1] = np.floor(atm[1])
+                        atms[atmi] = tuple(atm)
+                        bnd_ords[frozenset({atmai, atmi})] = (round(order - 0.6, 1), tmp)
+            print('gra is', (atms, bnd_ords))
+            rct_gra = remove_zero_order_bnds((atms, bnd_ords))
+            atms, bnd_ords = rct_gra
+    rct_gras = automol.graph.connected_components(rct_gra)
+    for rgra in rct_gras:
+        rct_ichs.append(automol.graph.inchi(rgra))
+    if len(rct_ichs) > 1:            
+        rct_ichs = automol.inchi.sorted_(rct_ichs)
+    atms, bnd_ords = gras
+    for bnd_ord in bnd_ords:
+        order, tmp = bnd_ords[bnd_ord]
+        if abs(np.floor(order) - (order - 0.4)) < 0.01:
+            bnd_ords[bnd_ord] = (round(order - 0.4, 1), tmp)
+            atmai, atmbi = bnd_ord
+            if abs(np.floor(atms[atmbi][1]) - (atms[atmbi][1]-0.6)) < 0.01:
+                atmbi, atmai = atmai, atmbi
+            atma = list(atms[atmai])
+            atmb = list(atms[atmbi])
+            atmb[1] = np.floor(atmb[1])
+            atma[1] = np.floor(atma[1])
+            atms[atmai] = tuple(atma)
+            atms[atmbi] = tuple(atmb)
+            for atmi in atms:
+                if frozenset({atmi, atmbi}) in bnd_ords and atmi != atmai:
+                    order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
+                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
+                        atm =  list(atms[atmi])
+                        atm[1] = np.floor(atm[1])
+                        atms[atmi] = tuple(atm)
+                        atms[atmi] = tuple(atm)
+                        order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
+                        bnd_ords[frozenset({atmbi, atmi})] = (round(order + 0.4, 1), tmp)
+                if frozenset({atmi, atmai}) in bnd_ords and atmi != atmbi:
+                    order, tmp =  bnd_ords[frozenset({atmai, atmi})]
+                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
+                        atm =  list(atms[atmi])
+                        atm[1] = np.floor(atm[1])
+                        atms[atmi] = tuple(atm)
+                        order, tmp =  bnd_ords[frozenset({atmai, atmi})]
+            prd_gra = remove_zero_order_bnds((atms, bnd_ords))
+            atms, bnd_ords = prd_gra
+    prd_gras = automol.graph.connected_components(prd_gra)
+    for pgra in prd_gras:
+        prd_ichs.append(automol.graph.inchi(pgra))
+    if len(prd_ichs) > 1:    
+        prd_ichs = automol.inchi.sorted_(prd_ichs)
+    return (rct_ichs, prd_ichs)   
+
+
 def split_elim_gras(gras):
     rct_ichs = []
     prd_ichs = []
@@ -457,7 +540,6 @@ def split_elim_gras(gras):
                         atm[1] = np.floor(atm[1])
                         atms[atmi] = tuple(atm)
                         bnd_ords[frozenset({atmbi, atmi})] = (round(order - 0.6, 1), tmp)
-            print('gra is', (atms, bnd_ords))
             rct_gra = remove_zero_order_bnds((atms, bnd_ords))
             atms, bnd_ords = rct_gra
     rct_gras = automol.graph.connected_components(rct_gra)
@@ -469,7 +551,6 @@ def split_elim_gras(gras):
     for bnd_ord in bnd_ords:
         order, tmp = bnd_ords[bnd_ord]
         if abs(np.floor(order) - (order - 0.4)) < 0.01:
-            print('bnd is', bnd_ord)
             bnd_ords[bnd_ord] = (round(order - 0.4, 1), tmp)
             atmai, atmbi = bnd_ord
             if abs(np.floor(atms[atmbi][1]) - (atms[atmbi][1]-0.6)) < 0.01:
@@ -482,12 +563,10 @@ def split_elim_gras(gras):
             atms[atmbi] = tuple(atmb)
             for atmi in atms:
                 if frozenset({atmi, atmbi}) in bnd_ords and atmi != atmai:
-                    print('bnd is', atmi, atmbi)
                     order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
                     if abs(np.floor(order) - (order - 0.6)) < 0.01:
                         atm =  list(atms[atmi])
                         atm[1] = np.floor(atm[1])
-                        atms[atmi] = tuple(atm)
                         atms[atmi] = tuple(atm)
                         order, tmp =  bnd_ords[frozenset({atmbi, atmi})]
                         bnd_ords[frozenset({atmbi, atmi})] = (round(order + 0.4, 1), tmp)
@@ -499,7 +578,6 @@ def split_elim_gras(gras):
         prd_ichs.append(automol.graph.inchi(pgra))
     if len(prd_ichs) > 1:    
         prd_ichs = automol.inchi.sorted_(prd_ichs)
-    print(rct_ichs, prd_ichs)    
     return (rct_ichs, prd_ichs)   
 
 
@@ -568,6 +646,90 @@ def split_gras(gras):
     return (rct_ichs, prd_ichs)   
 
 
+def cbhzed_radradabs(gra, site1, site2, bal=True):
+    """
+    Fragments molecule so that each heavy-atom is a seperate fragment
+    INPUT:
+    ich --  STR inchi name for molecule
+    OUTPUT
+    frags -- DIC dictionary with keys as STR inchi name for fragments
+    and value as INT their coefficient
+    """
+
+    # Graphical info about molecule
+    rad_atms, atms, bnd_ords, atm_vals, adj_atms = _ts_graph(gra, site1, site2)
+    # Determine CBHzed fragments
+    frags = {}
+    for atm in atm_vals:
+        if (atms[atm][0] != 'H' or atm in site1 or atm in site2):
+            if atm == site1[1] or atm == site1[2] or atm == site2[0] or atm == site2[2]:
+                continue
+            coeff = 1.0
+    #        if not bal:
+    #            if atm in site1:
+    #                nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site1[1]])
+    #                nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site2[2]])
+    #                for adj in nonH_adj_atms1:
+    #                    if adj in site1:
+    #                        nonH_adj_atms1.remove(adj)
+    #                coeff = branchpoint(nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(nonH_adj_atms1, nonH_adj_atms2)
+    #            else:
+    #                nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
+    #                coeff = branchpoint(nonH_adj_atms) * terminalmoity(nonH_adj_atms)
+            if atm == site1[0]:
+                key1 = [site1[0], site1[1]]
+                key1.sort()
+                key = frozenset({*key1})
+                bnd_ord1 = list(bnd_ords[key])[0]
+                atm_dic = {0: (atms[atm][0], atm_vals[atm]-bnd_ord1, None)}
+                bnd_dct = {frozenset({0, 1}): (bnd_ord1, None)}
+                key1 = [site1[2], site1[1]]
+                key1.sort()
+                key = frozenset({*key1})
+                bnd_ord2 = list(bnd_ords[key])[0] + 0.6
+                atm_dic[1] = (atms[site1[1]][0], atm_vals[site1[1]]-bnd_ord1-bnd_ord2, None)
+                atm_dic[2] = (atms[site1[2]][0], atm_vals[site1[2]]-bnd_ord2, None)
+                bnd_dct[frozenset({1, 2})] = (bnd_ord2, None)
+                key1 = [site2[0], site2[1]]
+                key1.sort()
+                key = frozenset({*key1})
+                bnd_ord1 = list(bnd_ords[key])[0]
+                atm_dic[3] = (atms[site2[0]][0], atm_vals[site2[0]]-bnd_ord1, None)
+                atm_dic[2] = (atms[site1[2]][0], atm_dic[2][1]-bnd_ord1, None)
+                bnd_dct[frozenset({3, 2})] = (bnd_ord1, None)
+                print('ts frag', atm_dic, bnd_dct)
+            else:   
+                bnd_dct = {}
+                atm_dic = {0: (atms[atm][0], int(atm_vals[atm]), None)}
+            grai = (atm_dic, bnd_dct)
+            try:
+                grai = automol.graph.explicit(grai)
+                key = 'exp_gra'
+            except:
+                key = 'ts_gra'
+            newname = None
+            repeat = False
+            for name in frags:
+                if key in frags[name]:
+                    if automol.graph.full_isomorphism(frags[name][key], grai):
+                        newname = name
+                        repeat = True
+            if not repeat:
+                newname = len(frags.keys())
+                frags[newname] = {}
+                frags[newname][key] = grai
+            #frag = automol.graph.inchi(gra)
+            _add2dic(frags[newname], 'coeff', coeff)
+    frags = _simplify_gra_frags(frags)
+    if bal:
+        balance_ = _balance_ts(gra, frags)
+        balance_ = {k: v for k, v in balance_.items() if v}
+        if balance_:
+            frags = _balance_frags_ts(gra, frags)
+    frags = _simplify_gra_frags(frags)
+    return frags
+
+
 def cbhzed_elim(gra, site1, site2, bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
@@ -584,9 +746,6 @@ def cbhzed_elim(gra, site1, site2, bal=True):
     frags = {}
     if not site1[0] == site2[2]:
         site2, site1 = site1, site2
-    #for atm in atm_vals:
-    #    if atm in rad_atms:
-    #        atm_vals[atm] -= 1
     for atm in atm_vals:
         if (atms[atm][0] != 'H' or atm in site1 or atm in site2):
             if atm == site1[1] or atm == site1[2] or atm == site2[0] or atm == site2[1]:
@@ -599,8 +758,6 @@ def cbhzed_elim(gra, site1, site2, bal=True):
                     for adj in nonH_adj_atms1:
                         if adj in site1:
                             nonH_adj_atms1.remove(adj)
-                    #nonH_adj_atms1.append(site[2])
-                    #nonH_adj_atms2.append(site[0])
                     coeff = branchpoint(nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(nonH_adj_atms1, nonH_adj_atms2)
                 else:
                     nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
@@ -679,9 +836,6 @@ def cbhzed_habs(gra, site, bal=True):
     rad_atms, atms, bnd_ords, atm_vals, adj_atms = _ts_graph(gra, site)
     # Determine CBHzed fragments
     frags = {}
-    #for atm in atm_vals:
-    #    if atm in rad_atms:
-    #        atm_vals[atm] -= 1
     for atm in atm_vals:
         if (atms[atm][0] != 'H' or atm in site):
             if atm == site[1] or atm == site[2]:
@@ -1452,25 +1606,29 @@ def get_basic_ts(zma, rxnclass, frm_key, brk_key, geo=None):
 def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None):
     """ get basis for CBH0 for a TS molecule
     """
+
+    # Set up graph and reaction site information
     brk_key2 = None
     frm_key2 = None
     site2 = None
     gra, frm_key, brk_key, brk_key2 = _remove_dummies(zma, frm_key, brk_key, geo=geo)
+    
+    # Add extra bonding information for:
+    #  Elimination missing the forming double bond
     if 'elimination' in rxnclass:
         brk_key, brk_key2 = _elimination_find_brk_bnds(gra, frm_key)
         frm_key2 = _elimination_second_forming_bond(gra, brk_key, brk_key2)
-    #zma, frm_key, brk_key = _remove_dummies(zma, frm_key, brk_key, geo=geo)
-    #if 'elimination' in rxnclass:
-    #     _, frm_key2, brk_key2 = _remove_dummies(zma, frm_key2, brk_key2)
-    #gra = automol.zmatrix.connectivity_graph(zma)
-    if 'addition' in rxnclass:
+    
+    #  Addition is missing the 2nd order bond in the graph    
+    elif 'addition' in rxnclass:
         gra, brk_key = _add_appropriate_pi_bonds(gra)
     gra = _remove_frm_bnd(gra, brk_key, frm_key)
-    print('gra in cbhzedts', gra)
-    print('frmbrkbonds', frm_key, frm_key2, brk_key, brk_key2)
-    print(automol.graph.string(gra))
+    
+    # The first set of forming and breaking bonds defines the first reaction site
     if frm_key and brk_key and 'elimination' not in rxnclass:
         site = [_xor(frm_key, brk_key), _intersec(frm_key, brk_key), _xor(brk_key, frm_key)]
+    
+    #  eliminations are one large reaction site that we split into site1 and site2 for convieninece    
     if 'elimination' in rxnclass:
         try:
             site = [_xor(frm_key, brk_key), _intersec(frm_key, brk_key), _xor(brk_key, frm_key)]
@@ -1481,16 +1639,37 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None):
     elif 'beta scission' in rxnclass:
         rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
         adj_atms = automol.graph.atom_neighbor_keys(gra)
-        #site = [None,None,rad_atm]
         site = [rad_atm,None,None]
         for atm in brk_key:
             if rad_atm in adj_atms[atm]:
-                site[1] =  atm
+                site[1] = atm
             else:
-                #site[0] = atm
                 site[2] = atm
         adj_atms = automol.graph.atom_neighbor_keys(gra)
-    if 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass or 'hydrogen migration' in rxnclass or 'addition' in rxnclass:
+    
+    #  radical radical hydrogen abstraction needs a second site, where the pi bond is formed    
+    elif 'radical radical hyd' in rxnclass:
+        rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+        adj_atms = automol.graph.atom_neighbor_keys(gra)
+        atmc, atmd = frm_key
+        if atmc not in rad_atms:
+            atmd, atmc = atmc, atmd
+        for atma in brk_key:
+            if atma != atmd:
+                for atmb in adj_atms[atma]:
+                    if atmb in rad_atms:
+                        frm_key2 = frozenset({atma, atmb})
+                        site2 = [atmb, atma, atmd]
+
+
+    # Run the appropriate function to transform the graph so that breaking bonds are order N.6 and forming are N.4 and the valences
+    # of the atoms involved are appropriately altered
+    if 'radical radical hyd' in rxnclass:
+        if cbhlevel == 'cbh0':
+            frags = cbhzed_radradabs(gra, site, site2)
+        elif cbhlevel == 'cbh1':
+            frags = cbhzed_radradabs(gra, site, site2)
+    elif 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass or 'hydrogen migration' in rxnclass or 'addition' in rxnclass:
         if cbhlevel == 'cbh0':
             frags = cbhzed_habs(gra, site)
         elif cbhlevel == 'cbh1':
@@ -1502,6 +1681,8 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None):
             frags = cbhone_elim(gra, site, site2)
     else:
         raise NotImplementedError
+
+    # Split the transformed graphs into a list of inchis 
     fraglist = []
     clist = []
     for frag in frags:
@@ -1513,6 +1694,8 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None):
                 fraglist.append(split_beta_gras(frags[frag]['ts_gra']))
             elif 'elim' in rxnclass:
                 fraglist.append(split_elim_gras(frags[frag]['ts_gra']))
+            elif 'radical radical hyd' in rxnclass:    
+                fraglist.append(split_radradabs_gras(frags[frag]['ts_gra']))
             else:    
                 fraglist.append(split_gras(frags[frag]['ts_gra']))
             clist.append(frags[frag]['coeff'])
