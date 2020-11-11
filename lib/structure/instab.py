@@ -363,7 +363,7 @@ def break_all_unstable2(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
             new_spc_queue.append((spc, spc_model))
         else:
             print('\nSplitting species...')
-            new_spcs = split_species(spc_dct, spc
+            new_spcs = split_species(spc_dct, spc,
                                      ini_thy_info, save_prefix)
             for new_spc in new_spcs:
                 new_spc_queue.append((new_spc, spc_model))

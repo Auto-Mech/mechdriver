@@ -169,20 +169,45 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     else:
         imag = None
 
-    # Create a scaling factor for the frequencie
-    log_rt_freq = [numpy.log(freq) for freq in rt_freqs1]
-    log_rt_freq = sum(log_rt_freq)
+    # Create a scaling factor for the frequencies
+    # First sort tors frequencies in ascending order 
+    sort_tors_freqs = sorted(tors_freqs)
+    # keep only freqs whose RRHO freqs are above a threshold
+    freq_thresh = 50.
+    log_rt_freq = 0.0
+    nfreq_remove = 0
+    for freq in rt_freqs1:
+        if freq > freq_thresh:
+            log_rt_freq += numpy.log(freq)
+        else:
+            nfreq_remove += 1
+
     log_freq = [numpy.log(freq) for freq in freqs]
     log_freq = sum(log_freq)
-    log_tors_freq = [numpy.log(freq) for freq in tors_freqs]
-    log_tors_freq = sum(log_tors_freq)
+
+    log_tors_freq = 0.0
+    idx_remove = []
+    for idx, freq in enumerate(sort_tors_freqs):
+        if idx+1 > nfreq_remove:
+            log_tors_freq += numpy.log(freq)
+        else:
+            idx_remove.append(tors_freqs.index(freq))
+
+    # log_rt_freq = [numpy.log(freq) for freq in rt_freqs1]
+    # log_rt_freq = sum(log_rt_freq)
+    # log_tors_freq = [numpy.log(freq) for freq in tors_freqs]
+    # log_tors_freq = sum(log_tors_freq)
     #unproj_prod = numpy.prod(rt_freqs1)
     #proj_prod = numpy.prod(freqs) * numpy.prod(tors_freqs)
     #print('proj_prod test:', unproj_prod, proj_prod)
     # print('log_freq_tests:', log_rt_freq, log_freq, log_tors_freq)
-    print('freq test:', freqs, tors_freqs, rt_freqs1)
     #scale_factor = unproj_prod / proj_prod
-    scale_factor = numpy.exp(log_rt_freq - log_freq - log_tors_freq)
+
+    # generate the scaling factor
+    factor = numpy.exp(log_rt_freq - log_freq - log_tors_freq)
+    print('freq test:', freqs, tors_freqs, rt_freqs1)
+    # generate the set of indices for torsions that are two be scales
+    scale_factor = (idx_remove, factor)
     print('scale fact test', scale_factor)
 
     # Check if there are significant differences caused by the rotor projection

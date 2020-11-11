@@ -120,7 +120,7 @@ def zero_point_energy(spc_dct_i,
             run_path = fmod.make_run_path(pf_filesystems, 'tors')
             tors_strs = tors.make_hr_strings(
                 rotors, run_path, pf_models['tors'],
-                scale_factor=None)
+                )
             [_, hr_str, _, prot_str, _] = tors_strs
 
         if typ.nonrigid_tors(pf_models, rotors):
