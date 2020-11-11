@@ -267,7 +267,7 @@ def mol_data(spc_name, spc_dct,
         run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
         tors_strs = tors.make_hr_strings(
             rotors, run_path, chn_pf_models['tors'],
-            scale_factor=None)
+            )
         [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
 
     # Obtain rotation partition function information

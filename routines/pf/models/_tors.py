@@ -169,7 +169,7 @@ def _rotor_info(zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
 
 # FUNCTIONS TO WRITE STRINGS FOR THE ROTORS FOR VARIOUS SITUATION
 def make_hr_strings(rotors, run_path, tors_model,
-                    scale_factor=None,
+                    scale_factor=((), None),
                     mess_hr=True, mess_ir=True,
                     mess_flux=True, projrot=True):
     """ Procedure for building the MESS strings
@@ -181,20 +181,25 @@ def make_hr_strings(rotors, run_path, tors_model,
     mess_hr_str, mess_flux_str, projrot_str = '', '', ''
     mdhr_dat = ''
     numrotors = len(rotors)
+    scale_indcs, factor = scale_factor
+    numtors = 0
+    for rotor in rotors:
+        numtors += len(rotor)
     for rotor in rotors:
         # Set some options for writing
         # if len(rotor) == 1:
 
         # Write the strings for each torsion of the rotor
-        for tors_name, tors_dct in rotor.items():
+        for tors_index, (tors_name, tors_dct) in enumerate(rotor.items()):
             if 'D' in tors_name:
 
                 print('pot test in make_hr_string:', tors_dct['pot'])
+                nscale = numtors - len(scale_indcs)
 
-                if scale_factor is None:
-                    pot = tors_dct['pot']
+                if tors_index not in scale_indcs and factor is not None:
+                    pot = _scale_pot(tors_dct['pot'], factor, nscale)
                 else:
-                    pot = _scale_pot(tors_dct['pot'], scale_factor, numrotors)
+                    pot = tors_dct['pot']
 
                 print('pot test in make_hr_string after scaling:', pot)
 
@@ -306,12 +311,13 @@ def _need_tors_geo(pf_levels):
     return bool(pf_levels['tors'][1] == pf_levels['harm'])
 
 
-def _scale_pot(pot, scale_coeff, numrotors):
+def _scale_pot(pot, scale_coeff, numtors):
     """ Scale the potential
     """
     
-    scale_factor = scale_coeff**(2.0/numrotors)
-    print('scale_coeff test:', scale_coeff, numrotors, scale_factor)
+    print('scale_coeff test 0:', scale_coeff, numtors)
+    scale_factor = scale_coeff**(2.0/numtors)
+    print('scale_coeff test:', scale_coeff, numtors, scale_factor)
 
     new_pot = {}
     for idx, val in pot.items():
