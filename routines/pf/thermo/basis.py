@@ -5,7 +5,7 @@
 import sys
 import os
 import math
-import multiprocessing 
+import multiprocessing
 import random
 
 import automol.inchi
@@ -37,16 +37,17 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
                 "cbh2_1": "get_cbhone_ts",
                 "cbh3": "get_cbhone_ts"}
 
-IMPLEMENTED_CBH_TS_CLASSES = []
-#IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 
-#                              'hydrogen migration', 
-#                              'beta scission',
-#                              'elimination high', 
-#                              'radical radical hydrogen abstraction high',
-#                              'addition high']
-#                              # 'hydrogen migration', 'addition high', 'elimination high']
+# IMPLEMENTED_CBH_TS_CLASSES = []
+IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high',
+                              # 'beta scission',
+                              # 'radical radical hydrogen abstraction high',
+                              # 'addition high',
+                              # 'elimination high',
+                              'hydrogen migration']
+                              # 'hydrogen migration', 'addition high', 'elimination high']
 
-def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, ts_geom=None):
+def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False,
+                 ts_geom=None):
     """ add refs to species list as necessary
     """
     spc_names = [spc[0] for spc in spc_queue]
@@ -56,7 +57,7 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
 
         num_spc = len(spc_names)
         spc_per_proc = math.floor(num_spc / nproc_avail)
-      
+
         queue = multiprocessing.Queue()
         procs = []
         random.shuffle(spc_names)
@@ -70,9 +71,9 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
             spc_lst = spc_names[spc_start:spc_end]
 
             proc = multiprocessing.Process(
-                    target=_prepare_refs,
-                    args=(queue, ref_scheme, spc_dct, spc_lst, 
-                         repeats, parallel, ts_geom))
+                target=_prepare_refs,
+                args=(queue, ref_scheme, spc_dct, spc_lst,
+                      repeats, parallel, ts_geom))
             procs.append(proc)
             proc.start()
 
@@ -81,8 +82,8 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
         for _ in procs:
             bas_dct, unq_dct = queue.get()
             basis_dct.update(bas_dct)
-            bas_ichs = [unique_refs_dct[spc]['inchi'] if 'inchi' in unique_refs_dct[spc] else
-                    unique_refs_dct['reacs'] for spc in unique_refs_dct.keys()]
+            bas_ichs = [unique_refs_dct[spc]['inchi'] if 'inchi' in unique_refs_dct[spc]
+                        else unique_refs_dct['reacs'] for spc in unique_refs_dct.keys()]
             for spc in unq_dct:
                 new_ich = unq_dct[spc]['inchi'] if 'inchi' in unq_dct[spc] else unq_dct[spc]['reacs']
                 if new_ich not in bas_ichs:
@@ -96,14 +97,13 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
         for proc in procs:
             proc.join()
     else:
-        basis_dct, unique_refs_dct = _prepare_refs(None, ref_scheme, spc_dct, spc_names, 
-                repeats=repeats, parallel=parallel, ts_geom=ts_geom)
+        basis_dct, unique_refs_dct = _prepare_refs(
+            None, ref_scheme, spc_dct, spc_names, repeats=repeats, parallel=parallel,
+            ts_geom=ts_geom)
     return basis_dct, unique_refs_dct
 
-def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel=False, ts_geom=None):
-    # Get a lst of ichs corresponding to the spc queue
-    #spc_names = [spc[0] for spc in spc_queue]
-    #spc_ichs = [spc_dct[spc[0]]['inchi'] for spc in spc_queue]
+def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel=False,
+                  ts_geom=None):
     print('Processor {} will prepare species: {}'.format(os.getpid(), ', '.join(spc_names)))
     spc_ichs = [spc_dct[spc]['inchi'] for spc in spc_names]
     dct_ichs = [spc_dct[spc]['inchi'] for spc in spc_dct.keys()
@@ -138,18 +138,24 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
             if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES and 'basic' not in ref_scheme:
                 if ts_geom and 'elimination' not in spc_dct[spc_name]['class']:
                     geo, brk_bnd_keys, frm_bnd_keys = ts_geom
-                    spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
+                    spc_basis, coeff_basis = get_ts_ref_fxn(
+                        spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
                         frm_bnd_keys, brk_bnd_keys, geo=geo)
                 else:
-                    print('bond keys in basis', spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
-                    print(automol.geom.string(automol.zmatrix.geometry(spc_dct[spc_name]['zma'])))
-                    spc_basis, coeff_basis = get_ts_ref_fxn(spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
-                        spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
+                    print('bond keys in basis', spc_dct[spc_name]['frm_bnd_keys'],
+                          spc_dct[spc_name]['brk_bnd_keys'])
+                    print(automol.geom.string(automol.zmatrix.geometry(
+                        spc_dct[spc_name]['zma'])))
+                    spc_basis, coeff_basis = get_ts_ref_fxn(
+                        spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
+                        spc_dct[spc_name]['frm_bnd_keys'],
+                        spc_dct[spc_name]['brk_bnd_keys'])
             else:
                 spc_basis = []
                 coeff_basis = []
                 for spc_i in spc_dct[spc_name]['reacs']:
-                    bas_dct_i, _ = prepare_refs(ref_scheme, spc_dct, [[spc_i, None]]) 
+                    bas_dct_i, _ = prepare_refs(
+                        ref_scheme, spc_dct, [[spc_i, None]])
                     spc_bas_i, coeff_bas_i = bas_dct_i[spc_i]
                     for bas_i, c_bas_i in zip(spc_bas_i, coeff_bas_i):
                         if bas_i not in spc_basis:
@@ -174,22 +180,25 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
 
         # Add to the dct with reference dct if it is not in the spc dct
         for ref in spc_basis:
-            bas_ichs = [unique_refs_dct[spc]['inchi'] if 'inchi' in unique_refs_dct[spc] 
-                    else unique_refs_dct[spc]['reacs'] for spc in unique_refs_dct.keys()]
+            bas_ichs = [unique_refs_dct[spc]['inchi'] if 'inchi' in unique_refs_dct[spc]
+                        else unique_refs_dct[spc]['reacs'] for spc in unique_refs_dct.keys()]
             cnt = len(list(unique_refs_dct.keys())) + 1
             if isinstance(ref, str):
-                if ((ref not in spc_ichs and ref not in dct_ichs) or repeats) and ref not in bas_ichs:
+                if ((ref not in spc_ichs and ref not in dct_ichs)
+                        or repeats) and ref not in bas_ichs:
                     ref_name = 'REF_{}'.format(cnt)
                     msg += '\nAdding reference species {}, InChI string:{}'.format(
                         ref, ref_name)
                     unique_refs_dct[ref_name] = create_spec(ref)
             else:
-                if (((((ref not in spc_ichs and ref not in dct_ichs) or repeats) and ref not in bas_ichs) or 
-                        (ref[::-1] not in spc_ichs and ref[::-1] not in dct_ichs) or repeats) and ref not in bas_ichs[::-1]):
+                if (((((ref not in spc_ichs and ref not in dct_ichs) or repeats) and ref not in bas_ichs) or
+                      (ref[::-1] not in spc_ichs and ref[::-1] not in dct_ichs) or repeats) and ref not in bas_ichs[::-1]):
                     ref_name = 'TS_REF_{}'.format(cnt)
                     msg += '\nAdding reference species {}, InChI string:{}'.format(
                         ref, ref_name)
-                    unique_refs_dct[ref_name] = create_ts_spc(ref, spc_dct, spc_dct[spc_name]['mult'], run_prefix, save_prefix, rxnclass)
+                    unique_refs_dct[ref_name] = create_ts_spc(
+                        ref, spc_dct, spc_dct[spc_name]['mult'], run_prefix, save_prefix,
+                        rxnclass)
     print(msg)
     if parallel:
         queue.put((basis_dct, unique_refs_dct))
@@ -198,8 +207,10 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
 
  #   return basis_dct, unique_refs_dct
 def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
+    """ add a ts species to the species dictionary
+    """
     spec = {}
-    rad = 0
+    #rad = 0
     #for spc in ref:
     #    rad += automol.formula.electron_count(automol.inchi.formula(spc)) % 2
     #mult = 1 + rad
@@ -215,32 +226,32 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
     rct_chgs = []
     prd_chgs = []
     for rct in spec['reacs']:
-       found = False 
-       for name in spc_dct:
-           if 'inchi' in spc_dct[name]:
-               if spc_dct[name]['inchi'] == rct:
-                   rct_muls.append(spc_dct[name]['mult'])
-                   rct_chgs.append(spc_dct[name]['charge'])
-                   found = True
-                   break
-       if not found:
-           new_spc = create_spec(rct)
-           rct_muls.append(new_spc['mult'])
-           rct_chgs.append(new_spc['charge'])
+        found = False
+        for name in spc_dct:
+            if 'inchi' in spc_dct[name]:
+                if spc_dct[name]['inchi'] == rct:
+                    rct_muls.append(spc_dct[name]['mult'])
+                    rct_chgs.append(spc_dct[name]['charge'])
+                    found = True
+                    break
+        if not found:
+            new_spc = create_spec(rct)
+            rct_muls.append(new_spc['mult'])
+            rct_chgs.append(new_spc['charge'])
     for rct in spec['prods']:
-       found = False 
-       for name in spc_dct:
-           if 'inchi' in spc_dct[name]:
-               if spc_dct[name]['inchi'] == rct:
-                   prd_muls.append(spc_dct[name]['mult'])
-                   prd_chgs.append(spc_dct[name]['charge'])
-                   found = True
-                   break
-       if not found:
-           new_spc = create_spec(rct)
-           prd_muls.append(new_spc['mult'])
-           prd_chgs.append(new_spc['charge'])
-    rxn_muls = [rct_muls, prd_muls] 
+        found = False
+        for name in spc_dct:
+            if 'inchi' in spc_dct[name]:
+                if spc_dct[name]['inchi'] == rct:
+                    prd_muls.append(spc_dct[name]['mult'])
+                    prd_chgs.append(spc_dct[name]['charge'])
+                    found = True
+                    break
+        if not found:
+            new_spc = create_spec(rct)
+            prd_muls.append(new_spc['mult'])
+            prd_chgs.append(new_spc['charge'])
+    rxn_muls = [rct_muls, prd_muls]
     rxn_chgs = [rct_chgs, prd_chgs]
     print('rxn_chgs test:', rxn_chgs, rct_chgs, prd_chgs)
     print('rxn_muls test:', rxn_muls, rct_muls, prd_muls)
@@ -249,9 +260,10 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
     try:
         rinf = filesys.build.get_rxn_fs(
             run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, mult)
-    except:    
+    except:
         rinf = filesys.build.get_rxn_fs(
-                run_prefix, save_prefix, rxn_ichs[::-1], rxn_chgs[::-1], rxn_muls[::-1], mult)
+            run_prefix, save_prefix, rxn_ichs[::-1], rxn_chgs[::-1], rxn_muls[::-1], 
+            mult)
     [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path] = rinf
     spec['rxn_fs'] = [
         rxn_run_fs,
@@ -294,11 +306,11 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
 
     # Initialize ich name dct to noe
     ich_name_dct = {}
-    ts_ich_name_dct = {}
+    # ts_ich_name_dct = {}
     for ich in spc_basis:
         if isinstance(ich, str):
             ich_name_dct[ich] = None
-        else:    
+        else:
             ich_name_dct['REACS' + 'REAC'.join(ich[0]) + r'PRODS' + 'PROD'.join(ich[1])] = None
             #ts_ich_name_dct['REAC' + 'REAC'.join(ich[0]) +  'PROD' + 'PROD'.join(ich[1])] = name
 
@@ -311,7 +323,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             if name != 'global' and 'ts' not in name:
                 if ich == spc_dct[name]['inchi']:
                     ich_name_dct[ich] = name
-            elif name != 'global':        
+            elif name != 'global':
                 if 'reacs' in spc_dct[name]:
                     if ((list(ich[0]) == spc_dct[name]['reacs'] or list(ich[0]) == spc_dct[name]['reacs'][::-1]) and
                             (list(ich[1]) == spc_dct[name]['prods'] or list(ich[1]) == spc_dct[name]['prods'][::-1])):
