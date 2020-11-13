@@ -29,7 +29,7 @@ from lib import filesys
 def read_spc_data(spc_dct, spc_name,
                   chn_pf_models, chn_pf_levels,
                   run_prefix, save_prefix, chn_basis_ene_dct,
-                  ref_pf_models=(), ref_pf_levels=()):
+                  ref_pf_models=(), ref_pf_levels=(), calc_chn_ene=True):
     """ Determines which block writer to use tau
     """
     print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
@@ -57,7 +57,7 @@ def read_spc_data(spc_dct, spc_name,
                 spc_name, spc_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels, chn_basis_ene_dct,
-                run_prefix, save_prefix, saddle=False)
+                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene, saddle=False)
             writer = 'species_block'
 
     # Add writer to inf dct
@@ -233,11 +233,15 @@ def atm_data(spc_dct, spc_name,
 
 def mol_data(spc_name, spc_dct,
              chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels, chn_basis_ene_dct,
-             run_prefix, save_prefix, saddle=False):
+             run_prefix, save_prefix, calc_chn_ene=True, saddle=False):
     """ Pull all of the neccessary information from the filesystem for a species
     """
     
     spc_dct_i = spc_dct[spc_name]
+    ene_chnlvl = None
+    ene_reflvl = None
+    zpe = None
+    hf0K_trs = None
 
     # Initialize all of the elements of the inf dct
     geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
@@ -322,52 +326,32 @@ def mol_data(spc_name, spc_dct,
 
     # Obtain energy levels
     print('\nObtaining the electronic energy + zpve...')
-    chn_ene = ene.read_energy(
-        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
-        run_prefix, read_ene=True, read_zpe=False, saddle=saddle)
-    print('zpe in models build ', zpe)
-    print('elec ene in models build ', chn_ene)
-    ene_chnlvl = chn_ene + zpe
-    print('ene_chnlvl: ', ene_chnlvl)
+    if calc_chn_ene:
+        chn_ene = ene.read_energy(
+            spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
+            run_prefix, read_ene=True, read_zpe=False, saddle=saddle)
+        print('zpe in models build ', zpe)
+        print('elec ene in models build ', chn_ene)
+        ene_chnlvl = chn_ene + zpe
+        print('ene_chnlvl: ', ene_chnlvl)
 
-    ref_scheme = chn_pf_models['ref_scheme']
-    ref_enes = chn_pf_models['ref_enes']
-    
-    # Determine info about the basis species used in thermochem calcs
-    basis_dct, uniref_dct = basis.prepare_refs(
-        ref_scheme, spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
+        ref_scheme = chn_pf_models['ref_scheme']
+        ref_enes = chn_pf_models['ref_enes']
+        
+        # Determine info about the basis species used in thermochem calcs
+        basis_dct, uniref_dct = basis.prepare_refs(
+            ref_scheme, spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
 
-    print('basis_dct test in mol_data:', basis_dct)
+        print('basis_dct test in mol_data:', basis_dct)
 
-    # Get the basis info for the spc of interest
-    spc_basis, coeff_basis = basis_dct[spc_name]
+        # Get the basis info for the spc of interest
+        spc_basis, coeff_basis = basis_dct[spc_name]
 
-    print('spc_basis test in mol_data:', spc_basis)
-    ene_spc = ene_chnlvl
-    ene_basis = []
-    energy_missing = False
-    for spc_basis_i in spc_basis:
-        if not isinstance(spc_basis_i, str):
-            basreacs, basprods = spc_basis_i
-            spc_basis_i = ''
-            for entry in basreacs:
-                spc_basis_i += entry
-            for entry in basprods:
-                spc_basis_i += entry
-        if spc_basis_i in chn_basis_ene_dct:
-            print('Energy already found for basis species: ', spc_basis_i)
-            ene_basis.append(chn_basis_ene_dct[spc_basis_i])
-        else:
-            print('Energy will be determined for basis species: ', spc_basis_i)
-            energy_missing = True
-
-    # Get the energies for the spc and its basis
-    if energy_missing:
-        _, ene_basis = basis.basis_energy(
-            spc_name, spc_basis, uniref_dct, spc_dct,
-            chn_pf_levels, chn_pf_models,
-            run_prefix, save_prefix)
-        for spc_basis_i, ene_basis_i in zip(spc_basis, ene_basis):
+        print('spc_basis test in mol_data:', spc_basis)
+        ene_spc = ene_chnlvl
+        ene_basis = []
+        energy_missing = False
+        for spc_basis_i in spc_basis:
             if not isinstance(spc_basis_i, str):
                 basreacs, basprods = spc_basis_i
                 spc_basis_i = ''
@@ -375,54 +359,75 @@ def mol_data(spc_name, spc_dct,
                     spc_basis_i += entry
                 for entry in basprods:
                     spc_basis_i += entry
-            chn_basis_ene_dct[spc_basis_i] = ene_basis_i
-    print('ene from thmroutines: ', ene_spc)
+            if spc_basis_i in chn_basis_ene_dct:
+                print('Energy already found for basis species: ', spc_basis_i)
+                ene_basis.append(chn_basis_ene_dct[spc_basis_i])
+            else:
+                print('Energy will be determined for basis species: ', spc_basis_i)
+                energy_missing = True
 
-    # Calculate and store the 0 K Enthalpy
-    hf0k = heatform.calc_hform_0k(
-        ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
+        # Get the energies for the spc and its basis
+        if energy_missing:
+            _, ene_basis = basis.basis_energy(
+                spc_name, spc_basis, uniref_dct, spc_dct,
+                chn_pf_levels, chn_pf_models,
+                run_prefix, save_prefix)
+            for spc_basis_i, ene_basis_i in zip(spc_basis, ene_basis):
+                if not isinstance(spc_basis_i, str):
+                    basreacs, basprods = spc_basis_i
+                    spc_basis_i = ''
+                    for entry in basreacs:
+                        spc_basis_i += entry
+                    for entry in basprods:
+                        spc_basis_i += entry
+                chn_basis_ene_dct[spc_basis_i] = ene_basis_i
+        print('ene from thmroutines: ', ene_spc)
 
-    #if rxn_class in basis.IMPLEMENTED_CBH_TS_CLASSES:
-    #    ts_ref_scheme = 'cbh0'
-    #else:
-    #    ts_ref_scheme = None
-    ts_ref_scheme = 'cbh0'
-    if '_' in ref_scheme:
-        ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
-    print('ts_ref_scheme test:', ts_ref_scheme)
-    if not saddle:
-        if ref_scheme != ts_ref_scheme:
-            basis_dct_trs, uniref_dct_trs = basis.prepare_refs(ts_ref_scheme, 
-                spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
-            spc_basis_trs, coeff_basis_trs = basis_dct_trs[spc_name]
-            ene_basis_trs = []
-            energy_missing = False
-            for spc_basis_i in spc_basis_trs:
-                if spc_basis_i in chn_basis_ene_dct:
-                    print('Energy already found for basis species: ', spc_basis_i)
-                    ene_basis_trs.append(chn_basis_ene_dct[spc_basis_i])
-                else:
-                    print('Energy will be determined for basis species: ', spc_basis_i)
-                    energy_missing = True
-            if energy_missing:
-                _, ene_basis_trs = basis.basis_energy(
-                    spc_name, spc_basis_trs, uniref_dct_trs, spc_dct,
-                    chn_pf_levels, chn_pf_models,
-                    run_prefix, save_prefix)
-                for spc_basis_i, ene_basis_i in zip(spc_basis_trs, ene_basis_trs):
-                    chn_basis_ene_dct[spc_basis_i] = ene_basis_i
-            ene_spc_trs = ene_chnlvl    
-            hf0K_trs = heatform.calc_hform_0k(
-                ene_spc_trs, ene_basis_trs, spc_basis_trs, coeff_basis_trs, ref_set=ref_enes)
+        # Calculate and store the 0 K Enthalpy
+        hf0k = heatform.calc_hform_0k(
+            ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
+
+        #if rxn_class in basis.IMPLEMENTED_CBH_TS_CLASSES:
+        #    ts_ref_scheme = 'cbh0'
+        #else:
+        #    ts_ref_scheme = None
+        ts_ref_scheme = 'cbh0'
+        if '_' in ref_scheme:
+            ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
+        print('ts_ref_scheme test:', ts_ref_scheme)
+        if not saddle:
+            if ref_scheme != ts_ref_scheme:
+                basis_dct_trs, uniref_dct_trs = basis.prepare_refs(ts_ref_scheme, 
+                    spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
+                spc_basis_trs, coeff_basis_trs = basis_dct_trs[spc_name]
+                ene_basis_trs = []
+                energy_missing = False
+                for spc_basis_i in spc_basis_trs:
+                    if spc_basis_i in chn_basis_ene_dct:
+                        print('Energy already found for basis species: ', spc_basis_i)
+                        ene_basis_trs.append(chn_basis_ene_dct[spc_basis_i])
+                    else:
+                        print('Energy will be determined for basis species: ', spc_basis_i)
+                        energy_missing = True
+                if energy_missing:
+                    _, ene_basis_trs = basis.basis_energy(
+                        spc_name, spc_basis_trs, uniref_dct_trs, spc_dct,
+                        chn_pf_levels, chn_pf_models,
+                        run_prefix, save_prefix)
+                    for spc_basis_i, ene_basis_i in zip(spc_basis_trs, ene_basis_trs):
+                        chn_basis_ene_dct[spc_basis_i] = ene_basis_i
+                ene_spc_trs = ene_chnlvl    
+                hf0K_trs = heatform.calc_hform_0k(
+                    ene_spc_trs, ene_basis_trs, spc_basis_trs, coeff_basis_trs, ref_set=ref_enes)
+            else:
+                hf0K_trs = hf0k
         else:
-            hf0K_trs = hf0k
-    else:
-        hf0K_trs = 0.0
+            hf0K_trs = 0.0
 
-    print('ABS Energy: ', ene_chnlvl)
-    print('Hf0K Energy: ', hf0k * phycon.KCAL2KJ)
-    ene_chnlvl = hf0k * phycon.KCAL2EH
-    hf0K_trs *= phycon.KCAL2EH
+        print('ABS Energy: ', ene_chnlvl)
+        print('Hf0K Energy: ', hf0k * phycon.KCAL2KJ)
+        ene_chnlvl = hf0k * phycon.KCAL2EH
+        hf0K_trs *= phycon.KCAL2EH
 
     ene_reflvl = None
     _, _ = ref_pf_models, ref_pf_levels
