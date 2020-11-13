@@ -10,6 +10,8 @@ from lib.amech_io import writer
 from lib.amech_io import parser
 from lib.amech_io.parser.model import pf_level_info, pf_model_info
 from automol.inchi import formula_string as fstring
+from lib import filesys
+from routines.pf.models import ene
 
 def run(spc_dct,
         pes_model_dct, spc_model_dct,
@@ -29,8 +31,8 @@ def run(spc_dct,
     # Build a list of the species to calculate thermochem for loops below
     # Set reaction list with unstable species broken apart
     print('Checking stability of all species...')
-    rxn_lst = instab.break_all_unstable2(
-        rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
+    #rxn_lst = instab.break_all_unstable2(
+    #    rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
     spc_queue = parser.species.build_queue(rxn_lst)
     spc_queue = parser.species.split_queue(spc_queue)
     # Build the paths [(messpf, nasa)], models and levels for each spc
@@ -124,11 +126,14 @@ def run(spc_dct,
         print(('\n\n------------------------------------------------' +
                '--------------------------------------'))
         print('\nRunning Thermochemistry calculations for all species')
+      
+        chn_basis_ene_dct = {}
 
         for idx, (spc_name, (pes_model, spc_models, _, _)) in enumerate(spc_queue):
-
             print('\n{}'.format(spc_name))
             spc_model = spc_models[0]
+            if not spc_model in chn_basis_ene_dct:
+                chn_basis_ene_dct[spc_model] = {}
             # Get the reference scheme and energies
             ref_scheme = spc_model_dct[spc_model]['options']['ref_scheme']
             ref_enes = spc_model_dct[spc_model]['options']['ref_enes']
@@ -139,12 +144,31 @@ def run(spc_dct,
 
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc_name]
-
+            
             # Get the energies for the spc and its basis
-            ene_spc, ene_basis = thmroutines.basis.basis_energy(
-                spc_name, spc_basis, uniref_dct, spc_dct,
-                pf_levels[spc_model], pf_models[spc_model],
-                run_prefix, save_prefix)
+            ene_basis = []
+            energy_missing = False
+            for spc_basis_i in spc_basis:
+                if spc_basis_i in chn_basis_ene_dct[spc_model]:
+                    print('Energy already found for basis species: ', spc_basis_i)
+                    ene_basis.append(chn_basis_ene_dct[spc_model][spc_basis_i])
+                else:
+                    print('Energy will be determined for basis species: ', spc_basis_i)
+                    energy_missing = True
+            if not energy_missing:
+                pf_filesystems = filesys.models.pf_filesys(
+                    spc_dct[spc_name], pf_levels[spc_model],
+                    run_prefix, save_prefix, saddle=False)
+                ene_spc = ene.read_energy(
+                    spc_dct[spc_name], pf_filesystems, pf_models[spc_model], pf_levels[spc_model],
+                    run_prefix, read_ene=True, read_zpe=True, saddle=False)
+            else:     
+                ene_spc, ene_basis = thmroutines.basis.basis_energy(
+                    spc_name, spc_basis, uniref_dct, spc_dct,
+                    pf_levels[spc_model], pf_models[spc_model],
+                    run_prefix, save_prefix)
+                for spc_basis_i, ene_basis_i in zip(spc_basis, ene_basis):
+                    chn_basis_ene_dct[spc_model][spc_basis_i] = ene_basis_i
 
             # Calculate and store the 0 K Enthalpy
             hf0k = thmroutines.heatform.calc_hform_0k(
