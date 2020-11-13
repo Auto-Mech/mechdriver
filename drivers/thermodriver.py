@@ -6,12 +6,13 @@
 import os
 from routines.pf import thermo as thmroutines
 from routines.pf import runner as pfrunner
+from routines.pf.models import ene
 from lib.amech_io import writer
 from lib.amech_io import parser
 from lib.amech_io.parser.model import pf_level_info, pf_model_info
-from automol.inchi import formula_string as fstring
+# from lib.structure import instab
 from lib import filesys
-from routines.pf.models import ene
+from automol.inchi import formula_string as fstring
 
 def run(spc_dct,
         pes_model_dct, spc_model_dct,
@@ -30,9 +31,9 @@ def run(spc_dct,
 
     # Build a list of the species to calculate thermochem for loops below
     # Set reaction list with unstable species broken apart
-    print('Checking stability of all species...')
-    #rxn_lst = instab.break_all_unstable2(
-    #    rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
+    # print('Checking stability of all species...')
+    # rxn_lst = instab.break_all_unstable2(
+        # rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
     spc_queue = parser.species.build_queue(rxn_lst)
     spc_queue = parser.species.split_queue(spc_queue)
     # Build the paths [(messpf, nasa)], models and levels for each spc
@@ -50,9 +51,11 @@ def run(spc_dct,
         for mod in mods:
             pf_levels[mod] = pf_level_info(spc_model_dct[mod]['es'], thy_dct)
             pf_models[mod] = pf_model_info(spc_model_dct[mod]['pf'])
-            pf_models[mod]['ref_scheme'] = (spc_model_dct[mod]['options']['ref_scheme'] 
+            pf_models[mod]['ref_scheme'] = (
+                spc_model_dct[mod]['options']['ref_scheme']
                 if 'ref_scheme' in spc_model_dct[mod]['options'] else 'none')
-            pf_models[mod]['ref_enes'] = (spc_model_dct[mod]['options']['ref_enes'] 
+            pf_models[mod]['ref_enes'] = (
+                spc_model_dct[mod]['options']['ref_enes']
                 if 'ref_enes' in spc_model_dct[mod]['options'] else 'none')
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
@@ -111,22 +114,22 @@ def run(spc_dct,
                             operator = 'divide'
                     if operator == 'divide':
                         pfrunner.mess.divide_pfs(final_pf, pf2, coeff)
-                    elif operator == 'multiply': 
+                    elif operator == 'multiply':
                         pfrunner.mess.multiply_pfs(final_pf, pf2, coeff)
             thm_paths[idx]['final'] = pfrunner.thermo_paths(
-                    spc_dct[spc_name], run_prefix, len(spc_models))
+                spc_dct[spc_name], run_prefix, len(spc_models))
             pfrunner.mess.write_mess_output(
                 fstring(spc_dct[spc_name]['inchi']),
                 final_pf, thm_paths[idx]['final'][0],
                 filename='pf.dat')
-             
+
     # Use MESS partition functions to compute thermo quantities
     if run_nasa:
 
         print(('\n\n------------------------------------------------' +
                '--------------------------------------'))
         print('\nRunning Thermochemistry calculations for all species')
-      
+
         chn_basis_ene_dct = {}
 
         for idx, (spc_name, (pes_model, spc_models, _, _)) in enumerate(spc_queue):
@@ -144,7 +147,7 @@ def run(spc_dct,
 
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc_name]
-            
+
             # Get the energies for the spc and its basis
             ene_basis = []
             energy_missing = False
@@ -160,9 +163,10 @@ def run(spc_dct,
                     spc_dct[spc_name], pf_levels[spc_model],
                     run_prefix, save_prefix, saddle=False)
                 ene_spc = ene.read_energy(
-                    spc_dct[spc_name], pf_filesystems, pf_models[spc_model], pf_levels[spc_model],
+                    spc_dct[spc_name], pf_filesystems, pf_models[spc_model],
+                    pf_levels[spc_model],
                     run_prefix, read_ene=True, read_zpe=True, saddle=False)
-            else:     
+            else:
                 ene_spc, ene_basis = thmroutines.basis.basis_energy(
                     spc_name, spc_basis, uniref_dct, spc_dct,
                     pf_levels[spc_model], pf_models[spc_model],
