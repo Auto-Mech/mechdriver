@@ -30,7 +30,7 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
 
     # Fit rate constants to Chebyshev polynomial
     alpha, trange, prange = ratefit.fit.chebyshev.kfit(
-        inp_temps, ktp_dct, tdeg=tdeg, pdeg=pdeg)
+        inp_temps, ktp_dct, tdeg=tdeg, pdeg=pdeg, a_conv_factor=a_conv_factor)
     tmin, tmax = trange
     pmin, pmax = prange
 
@@ -43,7 +43,7 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
     num_kts = []
     # print('reaction in rate fit test:', reaction)
     for pressure in pressures:
-        rate_kts = ktp_dct[pressure][1]
+        rate_kts = ktp_dct[pressure][1] * a_conv_factor
         fit_kts = numpy.array(fit_ktps[pressure])
         mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
             rate_kts, fit_kts)
