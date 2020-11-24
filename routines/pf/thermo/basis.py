@@ -25,6 +25,7 @@ REF_CALLS = {"basic": "get_basic",
              "cbh2": "get_cbhtwo",
              "cbh2_0": "get_cbhtwo",
              "cbh2_1": "get_cbhtwo",
+             "cbh2_2": "get_cbhtwo",
              "cbh3": "get_cbhthree"}
 
 TS_REF_CALLS = {"basic": "get_basic_ts",
@@ -37,17 +38,16 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
                 "cbh2_1": "get_cbhone_ts",
                 "cbh3": "get_cbhone_ts"}
 
-# IMPLEMENTED_CBH_TS_CLASSES = []
-IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high',
-                              # 'beta scission',
-                              # 'radical radical hydrogen abstraction high',
-                              # 'addition high',
-                              # 'elimination high',
-                              'hydrogen migration']
+IMPLEMENTED_CBH_TS_CLASSES = []
+IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 
+                              'hydrogen migration', 
+                              'beta scission',
+                              'elimination high', 
+                              'radical radical hydrogen abstraction high',
+                              'addition high']
                               # 'hydrogen migration', 'addition high', 'elimination high']
 
-def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False,
-                 ts_geom=None):
+def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, ts_geom=None):
     """ add refs to species list as necessary
     """
     spc_names = [spc[0] for spc in spc_queue]
@@ -112,9 +112,10 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
     # Determine the function to be used to get the thermochemistry ref species
     if ref_scheme in REF_CALLS:
         get_ref_fxn = getattr(heatform, REF_CALLS[ref_scheme])
+    if ref_scheme in TS_REF_CALLS:
         get_ts_ref_fxn = getattr(heatform, TS_REF_CALLS[ref_scheme])
-    else:
-        raise NotImplementedError
+    #else:
+    #    raise NotImplementedError
 
     # Print the message
     msg = '\nDetermining reference molecules for scheme: {}'.format(ref_scheme)
@@ -140,7 +141,9 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
                     geo, brk_bnd_keys, frm_bnd_keys = ts_geom
                     spc_basis, coeff_basis = get_ts_ref_fxn(
                         spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
-                        frm_bnd_keys, brk_bnd_keys, geo=geo)
+                        frm_bnd_keys, brk_bnd_keys, 
+                        geo=geo, backup_frm_key=spc_dct[spc_name]['frm_bnd_keys'],
+                        backup_brk_key=spc_dct[spc_name]['brk_bnd_keys'])
                 else:
                     print('bond keys in basis', spc_dct[spc_name]['frm_bnd_keys'],
                           spc_dct[spc_name]['brk_bnd_keys'])

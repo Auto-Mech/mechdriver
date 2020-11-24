@@ -665,17 +665,16 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
             if atm == site1[1] or atm == site1[2] or atm == site2[0] or atm == site2[2]:
                 continue
             coeff = 1.0
-    #        if not bal:
-    #            if atm in site1:
-    #                nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site1[1]])
-    #                nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site2[2]])
-    #                for adj in nonH_adj_atms1:
-    #                    if adj in site1:
-    #                        nonH_adj_atms1.remove(adj)
-    #                coeff = branchpoint(nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(nonH_adj_atms1, nonH_adj_atms2)
-    #            else:
-    #                nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
-    #                coeff = branchpoint(nonH_adj_atms) * terminalmoity(nonH_adj_atms)
+            if not bal:
+                if atm in site1 + site2:
+                    nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site1[0]])
+                    nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site2[0]])
+                    nonH_adj_atms1.append(site2[0])
+                    nonH_adj_atms2.append(site1[0])
+                    coeff = branchpoint(nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(nonH_adj_atms1, nonH_adj_atms2)
+                else:
+                    nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
+                    coeff = branchpoint(nonH_adj_atms) * terminalmoity(nonH_adj_atms)
             if atm == site1[0]:
                 key1 = [site1[0], site1[1]]
                 key1.sort()
@@ -697,7 +696,6 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
                 atm_dic[3] = (atms[site2[0]][0], atm_vals[site2[0]]-bnd_ord1, None)
                 atm_dic[2] = (atms[site1[2]][0], atm_dic[2][1]-bnd_ord1, None)
                 bnd_dct[frozenset({3, 2})] = (bnd_ord1, None)
-                print('ts frag', atm_dic, bnd_dct)
             else:   
                 bnd_dct = {}
                 atm_dic = {0: (atms[atm][0], int(atm_vals[atm]), None)}
@@ -728,6 +726,130 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
             frags = _balance_frags_ts(gra, frags)
     frags = _simplify_gra_frags(frags)
     return frags
+
+
+def cbhone_radradabs(gra, site1, site2, bal=True):
+    """
+    Fragments molecule so that each heavy-atom is a seperate fragment
+    INPUT:
+    ich --  STR inchi name for molecule
+    OUTPUT
+    frags -- DIC dictionary with keys as STR inchi name for fragments
+    and value as INT their coefficient
+    """
+
+    # Graphical info about molecule
+    rad_atms, atms, bnd_ords, atm_vals, adj_atms = _ts_graph(gra, site1, site2)
+    # Determine CBHzed fragments
+    frags = {}
+    for bnd in bnd_ords:
+        atma, atmb = bnd
+        unique_bond = False
+        if atma not in site1 + site2 or atmb not in site1 + site2:
+            coeff = 1.0
+            if atmb in site1 + site2:
+                atma, atmb = atmb, atma
+            if (atma in site1 or atma in site2) and (atms[atmb][0] != 'H'):
+                key1 = [site1[0], site1[1]]
+                key1.sort()
+
+                
+    for atm in atm_vals:
+        if (atms[atm][0] != 'H' or atm in site1 or atm in site2):
+            if atm == site1[1] or atm == site1[2] or atm == site2[0] or atm == site2[2]:
+                continue
+            coeff = 1.0
+            if atm == site1[0]:
+                key1 = [site1[0], site1[1]]
+                key1.sort()
+                key = frozenset({*key1})
+                bnd_ord1 = list(bnd_ords[key])[0]
+                atm_dic = {0: (atms[atm][0], atm_vals[atm]-bnd_ord1, None)}
+                bnd_dct = {frozenset({0, 1}): (bnd_ord1, None)}
+                key1 = [site1[2], site1[1]]
+                key1.sort()
+                key = frozenset({*key1})
+                bnd_ord2 = list(bnd_ords[key])[0] + 0.6
+                atm_dic[1] = (atms[site1[1]][0], atm_vals[site1[1]]-bnd_ord1-bnd_ord2, None)
+                atm_dic[2] = (atms[site1[2]][0], atm_vals[site1[2]]-bnd_ord2, None)
+                bnd_dct[frozenset({1, 2})] = (bnd_ord2, None)
+                key1 = [site2[0], site2[1]]
+                key1.sort()
+                key = frozenset({*key1})
+                bnd_ord1 = list(bnd_ords[key])[0]
+                atm_dic[3] = (atms[site2[0]][0], atm_vals[site2[0]]-bnd_ord1, None)
+                atm_dic[2] = (atms[site1[2]][0], atm_dic[2][1]-bnd_ord1, None)
+                bnd_dct[frozenset({3, 2})] = (bnd_ord1, None)
+                key1 = [atma, atmb]
+                key1.sort()
+                key = frozenset({*key1})
+                bnd_ord1 = list(bnd_ords[key])[0]
+                atm_dic[4] = (atms[atmb][0], atm_vals[atmb]-bnd_ord1, None)
+                if atma == site1[0]:
+                    atm_dic[0] = (atm_dic[0][0], atm_dic[0][1] - bnd_ord1, None)
+                    bnd_dct[frozenset({0, 4})] = (bnd_ord1, None)
+                elif atma == site2[0]:
+                    atm_dic[3] = (atm_dic[3][0], atm_dic[3][1] - bnd_ord1, None)
+                    bnd_dct[frozenset({3, 5})] = (bnd_ord1, None)
+                elif atma == site1[1]:
+                    atm_dic[1] = (atm_dic[1][0], atm_dic[1][1] - bnd_ord1, None)
+                    bnd_dct[frozenset({1, 5})] = (bnd_ord1, None)
+                elif atma == site1[2]:
+                    atm_dic[2] = (atm_dic[2][0], atm_dic[2][1] - bnd_ord1, None)
+                    bnd_dct[frozenset({2, 5})] = (bnd_ord1, None)
+            else:   
+                bnd_dct = {}
+                atm_dic = {0: (atms[atm][0], int(atm_vals[atm]), None)}
+            grai = (atm_dic, bnd_dct)
+            try:
+                grai = automol.graph.explicit(grai)
+                key = 'exp_gra'
+            except:
+                key = 'ts_gra'
+            newname = None
+            repeat = False
+            for name in frags:
+                if key in frags[name]:
+                    if automol.graph.full_isomorphism(frags[name][key], grai):
+                        newname = name
+                        repeat = True
+            if not repeat:
+                newname = len(frags.keys())
+                frags[newname] = {}
+                frags[newname][key] = grai
+            _add2dic(frags[newname], 'coeff', coeff)
+    frags = _simplify_gra_frags(frags)
+    if bal:
+        balance_ = _balance_ts(gra, frags)
+        balance_ = {k: v for k, v in balance_.items() if v}
+        if balance_:
+            zedfrags = cbhzed_radradabs(gra, site1, site2, bal=False)
+            newfrags = frags.copy()
+            for zedname in zedfrags:
+                newname = None
+                repeat = False
+                if 'exp_gra' in zedfrags[zedname]:
+                    key = 'exp_gra'
+                    for onename in newfrags:
+                        if 'exp_gra' in newfrags[onename]:
+                            if automol.graph.full_isomorphism(newfrags[onename][key], zedfrags[zedname][key]):
+                                newname = onename
+                                repeat = True
+                else:
+                    key = 'ts_gra'
+                if not repeat:
+                    newname = len(newfrags.keys())
+                    newfrags[newname] = {}
+                    newfrags[newname][key] = zedfrags[zedname][key]
+                _add2dic(newfrags[newname], 'coeff',  -zedfrags[zedname]['coeff'])
+            frags = newfrags   
+        balance_ = _balance_ts(gra, frags)
+        balance_ = {k: v for k, v in balance_.items() if v}
+        if balance_:
+            frags = _balance_frags_ts(gra, frags)
+    frags = _simplify_gra_frags(frags)
+    return frags
+
 
 
 def cbhzed_elim(gra, site1, site2, bal=True):
@@ -1594,16 +1716,16 @@ def _elimination_find_brk_bnds(gra, frm_key):
 
     return frozenset(brk_key1), frozenset(brk_key2)
 
-def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None):
-    return get_cbh_ts('cbh0', zma, rxnclass, frm_key, brk_key, geo)
+def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_key=None, backup_brk_key=None):
+    return get_cbh_ts('cbh0', zma, rxnclass, frm_key, brk_key, geo, backup_frm_key, backup_brk_key)
 
-def get_cbhone_ts(zma, rxnclass, frm_key, brk_key, geo=None):
-    return get_cbh_ts('cbh1', zma, rxnclass, frm_key, brk_key, geo)
+def get_cbhone_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_key=None, backup_brk_key=None):
+    return get_cbh_ts('cbh1', zma, rxnclass, frm_key, brk_key, geo, backup_frm_key, backup_brk_key)
 
-def get_basic_ts(zma, rxnclass, frm_key, brk_key, geo=None):
+def get_basic_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_key=None, backup_brk_key=None):
     return
 
-def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None):
+def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_key=None, backup_brk_key=None):
     """ get basis for CBH0 for a TS molecule
     """
 
@@ -1612,7 +1734,6 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None):
     frm_key2 = None
     site2 = None
     gra, frm_key, brk_key, brk_key2 = _remove_dummies(zma, frm_key, brk_key, geo=geo)
-    
     # Add extra bonding information for:
     #  Elimination missing the forming double bond
     if 'elimination' in rxnclass:
@@ -1622,8 +1743,11 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None):
     #  Addition is missing the 2nd order bond in the graph    
     elif 'addition' in rxnclass:
         gra, brk_key = _add_appropriate_pi_bonds(gra)
+        if not brk_key:
+            gra, frm_key, brk_key, brk_key2 = _remove_dummies(zma, frm_key, brk_key)
+            gra = _remove_frm_bnd(gra, brk_key, frm_key)
+            gra, brk_key = _add_appropriate_pi_bonds(gra)
     gra = _remove_frm_bnd(gra, brk_key, frm_key)
-    
     # The first set of forming and breaking bonds defines the first reaction site
     if frm_key and brk_key and 'elimination' not in rxnclass:
         site = [_xor(frm_key, brk_key), _intersec(frm_key, brk_key), _xor(brk_key, frm_key)]
@@ -1645,7 +1769,24 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None):
                 site[1] = atm
             else:
                 site[2] = atm
-        adj_atms = automol.graph.atom_neighbor_keys(gra)
+        if site[2] is None:
+            gra, frm_key, brk_key, brk_key2 = _remove_dummies(zma, backup_frm_key, backup_brk_key)
+            rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
+            print(automol.geom.string(automol.graph.geometry(gra)), rad_atm, backup_brk_key)
+            rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
+            adj_atms = automol.graph.atom_neighbor_keys(gra)
+            site = [rad_atm,None,None]
+            for atm in backup_brk_key:
+                if rad_atm in adj_atms[atm]:
+                    site[1] = atm
+                else:
+                    site[2] = atm
+            #if rad_atm in backup_brk_key:
+            #    gra = automol.graph.add_bonds(gra, [backup_brk_key])
+            #print(automol.geom.string(automol.graph.geometry(gra)), rad_atm)
+            #print(automol.geom.string(automol.graph.geometry(gra)), rad_atm)
+
+        print('frm_key site gra', site) 
     
     #  radical radical hydrogen abstraction needs a second site, where the pi bond is formed    
     elif 'radical radical hyd' in rxnclass:

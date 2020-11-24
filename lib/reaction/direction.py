@@ -279,5 +279,5 @@ def get_geos(
         #         opt_script_str, overwrite,
         #         kickoff_size=kickoff_size,
         #         kickoff_backward=kickoff_backward)
-        spc_geos.append(geo)
+            spc_geos.append(geo)
     return spc_geos, cnf_save_fs_lst
