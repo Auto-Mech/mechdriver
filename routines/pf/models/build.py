@@ -393,9 +393,12 @@ def mol_data(spc_name, spc_dct,
         #    ts_ref_scheme = 'cbh0'
         #else:
         #    ts_ref_scheme = None
-        ts_ref_scheme = 'cbh0'
-        if '_' in ref_scheme:
-            ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
+        if 'basic' in ref_scheme:
+            ts_ref_scheme = 'basic'
+        else:
+            ts_ref_scheme = 'cbh0'
+            if '_' in ref_scheme:
+                ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
         print('ts_ref_scheme test:', ts_ref_scheme)
         if not saddle:
             if ref_scheme != ts_ref_scheme:

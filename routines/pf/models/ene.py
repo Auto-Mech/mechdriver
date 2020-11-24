@@ -312,20 +312,26 @@ def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
         sum_ene[spc] = (ene - ref_ene) * phycon.EH2KCAL
     
     # Set the inner TS ene and scale them
-    if 'rpath' in channel_infs['ts']:
-        ts_enes = [dct[ene_lvl] for dct in channel_infs['ts']['rpath']]
-    else:
-        ts_enes = [channel_infs['ts'][ene_lvl]]
 
-    print('TS HoF (0 K) ts lvl kcal/mol: ', ts_enes[0] * phycon.EH2KCAL)
-    if reac_ref_ene and abs(ts_enes[0] - reac_ene) > 0.00000001:
-        if abs(ts_enes[0] - reac_ref_ene) < abs(ts_enes[0] - prod_ref_ene):
-            ts_enes = [ene - reac_ref_ene + reac_ene for ene in ts_enes]
-        else:   
-            ts_enes = [ene - prod_ref_ene + prod_ene for ene in ts_enes]
-    print('TS HoF (0 K) approx spc lvl kcal/mol: ', ts_enes[0] * phycon.EH2KCAL)
+    if channel_infs['ts']['writer'] in ('pst_block', 'vrctst_block'):
+        if len(channel_infs['reacs']) == 2:
+            ts_enes = [sum(inf['ene_chnlvl'] for inf in channel_infs['reacs'])]
+        else: 
+            ts_enes = [sum(inf['ene_chnlvl'] for inf in channel_infs['prods'])]
+        channel_infs['ts'].update({'ene_chnlvl': ts_enes})
+    else:
+        if 'rpath' in channel_infs['ts']:
+            ts_enes = [dct[ene_lvl] for dct in channel_infs['ts']['rpath']]
+        else:
+            ts_enes = [channel_infs['ts'][ene_lvl]]
+        print('TS HoF (0 K) ts lvl kcal/mol: ', ts_enes[0] * phycon.EH2KCAL)
+        if reac_ref_ene:
+            if abs(ts_enes[0] - reac_ref_ene) < abs(ts_enes[0] - prod_ref_ene):
+                ts_enes = [ene - reac_ref_ene + reac_ene for ene in ts_enes]
+            else:   
+                ts_enes = [ene - prod_ref_ene + prod_ene for ene in ts_enes]
+        print('TS HoF (0 K) approx spc lvl kcal/mol: ', ts_enes[0] * phycon.EH2KCAL)
     ts_enes = [(ene - ref_ene) * phycon.EH2KCAL for ene in ts_enes]
-    
 
     sum_ene.update({'ts': ts_enes})
 

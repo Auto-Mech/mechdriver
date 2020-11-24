@@ -28,4 +28,6 @@ LEN_DCT = {
     ('N', 'N'): 1.45 * ANG2BOHR,
     ('N', 'O'): 1.45 * ANG2BOHR,
     ('O', 'O'): 1.40 * ANG2BOHR,
+    ('C', 'Cl'): 1.74 * ANG2BOHR,
+    ('Cl', 'Cl'): 2.0 * ANG2BOHR,
 }
