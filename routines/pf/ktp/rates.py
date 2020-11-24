@@ -499,9 +499,12 @@ def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct, pf_info, ts_c
         ts_class, ts_sadpt, ts_nobarrier,
         ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
 
-    if chnl_infs['ts']['writer'] in ('pst_block', 'vrctst_block'):
-        ts_ene = sum(inf['ene_chnlvl'] for inf in chnl_infs['reacs'])
-        chnl_infs['ts'].update({'ene_chnlvl': ts_ene})
+    # if chnl_infs['ts']['writer'] in ('pst_block', 'vrctst_block'):
+    #     if len(chnl_infs['reacs']) == 2:
+    #         ts_ene = sum(inf['ene_chnlvl'] for inf in chnl_infs['reacs'])
+    #     else: 
+    #         ts_ene = sum(inf['ene_chnlvl'] for inf in chnl_infs['prods'])
+    #     chnl_infs['ts'].update({'ene_chnlvl': ts_ene})
 
     chnl_infs['ts']['symm_barrier'] = symm_barrier
 
