@@ -233,10 +233,10 @@ def stoich(ich):
             stoich_dct[atms[atm][0]] = 1
     return stoich_dct
 
-def remove_H_from_adj_atms(atms, adj_atms):
+def remove_H_from_adj_atms(atms, adj_atms, othersite=[]):
     new_adj_atms = []
     for atm in adj_atms:
-        if atms[atm][0] != 'H':
+        if atms[atm][0] != 'H' and atm not in othersite:
             new_adj_atms.append(atm)
     return new_adj_atms
 
@@ -464,7 +464,6 @@ def split_radradabs_gras(gras):
                         atm[1] = np.floor(atm[1])
                         atms[atmi] = tuple(atm)
                         bnd_ords[frozenset({atmai, atmi})] = (round(order - 0.6, 1), tmp)
-            print('gra is', (atms, bnd_ords))
             rct_gra = remove_zero_order_bnds((atms, bnd_ords))
             atms, bnd_ords = rct_gra
     rct_gras = automol.graph.connected_components(rct_gra)
@@ -667,10 +666,11 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site1 + site2:
-                    nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site1[0]])
-                    nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site2[0]])
+                    nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site1[0]], site2)
+                    nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site2[0]], site1)
                     nonH_adj_atms1.append(site2[0])
                     nonH_adj_atms2.append(site1[0])
+                    print('nonHadjatms', nonH_adj_atms1, nonH_adj_atms2)
                     coeff = branchpoint(nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(nonH_adj_atms1, nonH_adj_atms2)
                 else:
                     nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
@@ -752,19 +752,9 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
             if (atma in site1 or atma in site2) and (atms[atmb][0] != 'H'):
                 key1 = [site1[0], site1[1]]
                 key1.sort()
-
-                
-    for atm in atm_vals:
-        if (atms[atm][0] != 'H' or atm in site1 or atm in site2):
-            if atm == site1[1] or atm == site1[2] or atm == site2[0] or atm == site2[2]:
-                continue
-            coeff = 1.0
-            if atm == site1[0]:
-                key1 = [site1[0], site1[1]]
-                key1.sort()
                 key = frozenset({*key1})
                 bnd_ord1 = list(bnd_ords[key])[0]
-                atm_dic = {0: (atms[atm][0], atm_vals[atm]-bnd_ord1, None)}
+                atm_dic = {0: (atms[site1[0]][0], atm_vals[site1[0]]-bnd_ord1, None)}
                 bnd_dct = {frozenset({0, 1}): (bnd_ord1, None)}
                 key1 = [site1[2], site1[1]]
                 key1.sort()
@@ -790,34 +780,39 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
                     bnd_dct[frozenset({0, 4})] = (bnd_ord1, None)
                 elif atma == site2[0]:
                     atm_dic[3] = (atm_dic[3][0], atm_dic[3][1] - bnd_ord1, None)
-                    bnd_dct[frozenset({3, 5})] = (bnd_ord1, None)
+                    bnd_dct[frozenset({3, 4})] = (bnd_ord1, None)
                 elif atma == site1[1]:
                     atm_dic[1] = (atm_dic[1][0], atm_dic[1][1] - bnd_ord1, None)
-                    bnd_dct[frozenset({1, 5})] = (bnd_ord1, None)
+                    bnd_dct[frozenset({1, 4})] = (bnd_ord1, None)
                 elif atma == site1[2]:
                     atm_dic[2] = (atm_dic[2][0], atm_dic[2][1] - bnd_ord1, None)
-                    bnd_dct[frozenset({2, 5})] = (bnd_ord1, None)
-            else:   
-                bnd_dct = {}
-                atm_dic = {0: (atms[atm][0], int(atm_vals[atm]), None)}
-            grai = (atm_dic, bnd_dct)
-            try:
-                grai = automol.graph.explicit(grai)
-                key = 'exp_gra'
-            except:
-                key = 'ts_gra'
-            newname = None
-            repeat = False
-            for name in frags:
-                if key in frags[name]:
-                    if automol.graph.full_isomorphism(frags[name][key], grai):
-                        newname = name
-                        repeat = True
-            if not repeat:
-                newname = len(frags.keys())
-                frags[newname] = {}
-                frags[newname][key] = grai
-            _add2dic(frags[newname], 'coeff', coeff)
+                    bnd_dct[frozenset({2, 4})] = (bnd_ord1, None)
+                unique_bond = True    
+            elif atms[atma][0] != 'H' and atms[atmb][0] != 'H':
+                bnd_ord = list(bnd_ords[bnd])[0]
+                atm_dic = {0: (atms[atma][0], int(atm_vals[atma])-bnd_ord, None)}
+                atm_dic[1] = (atms[atmb][0], int(atm_vals[atmb])-bnd_ord, None)
+                bnd_dct = {frozenset({0, 1}): (bnd_ord, None)}
+                unique_bond = True    
+            if unique_bond:    
+                grai = (atm_dic, bnd_dct)
+                try:
+                    grai = automol.graph.explicit(grai)
+                    key = 'exp_gra'
+                except:
+                    key = 'ts_gra'
+                newname = None
+                repeat = False
+                for name in frags:
+                    if key in frags[name]:
+                        if automol.graph.full_isomorphism(frags[name][key], grai):
+                            newname = name
+                            repeat = True
+                if not repeat:
+                    newname = len(frags.keys())
+                    frags[newname] = {}
+                    frags[newname][key] = grai
+                _add2dic(frags[newname], 'coeff', coeff)
     frags = _simplify_gra_frags(frags)
     if bal:
         balance_ = _balance_ts(gra, frags)
@@ -1809,7 +1804,7 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_k
         if cbhlevel == 'cbh0':
             frags = cbhzed_radradabs(gra, site, site2)
         elif cbhlevel == 'cbh1':
-            frags = cbhzed_radradabs(gra, site, site2)
+            frags = cbhone_radradabs(gra, site, site2)
     elif 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass or 'hydrogen migration' in rxnclass or 'addition' in rxnclass:
         if cbhlevel == 'cbh0':
             frags = cbhzed_habs(gra, site)
