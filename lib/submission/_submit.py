@@ -104,13 +104,13 @@ MESSPF = (
     "#!/usr/bin/env bash\n"
     "export OMP_NUM_THREADS=10\n"
     "ulimit -c 0\n"
-    "messpf pf.inp pf.out >> stdout.log &> stderr.log"
+    "/lcrc/project/CMRP/amech/MESS/build/messpf pf.inp pf.out >> stdout.log &> stderr.log"
 )
 MESSRATE = (
     "#!/usr/bin/env bash\n"
     "export OMP_NUM_THREADS=8\n"
     "ulimit -c 0\n"
-    "mess mess.inp rate.out >> stdout.log &> stderr.log"
+    "/lcrc/project/CMRP/amech/MESS/build/mess mess.inp rate.out >> stdout.log &> stderr.log"
 )
 VARECOF = (
     "#!/usr/bin/env bash\n"

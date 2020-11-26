@@ -167,7 +167,6 @@ def modify_spc_dct(job_path, spc_dct):
 
     # Read in other dcts
     amech_dct = read_spc_amech(job_path)
-    print('amech_dct', amech_dct)
     geom_dct = geometry_dictionary(job_path)
 
     mod_spc_dct = {}
