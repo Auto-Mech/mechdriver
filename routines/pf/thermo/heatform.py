@@ -805,9 +805,14 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
                 repeat = False
                 for name in frags:
                     if key in frags[name]:
-                        if automol.graph.full_isomorphism(frags[name][key], grai):
-                            newname = name
-                            repeat = True
+                        if key == 'exp_gra':
+                            if automol.graph.full_isomorphism(frags[name][key], grai):
+                                newname = name
+                                repeat = True
+                        else:
+                            if frags[name][key] == grai:
+                                newname = name
+                                repeat = True
                 if not repeat:
                     newname = len(frags.keys())
                     frags[newname] = {}
