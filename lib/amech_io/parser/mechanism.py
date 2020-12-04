@@ -20,7 +20,7 @@ def build_pes_dct(job_path, mech_type,
     # Build the total PES dct
     mech_info = mechanalyzer.parser.pes.read_mechanism_file(
         mech_str, mech_type, spc_dct, sort_rxns=sort_rxns)
-    pes_dct = mechanalyzer.parser.pes.build_pes_dct(*mech_info)
+    pes_dct = mechanalyzer.parser.pes.build_pes_dct(*mech_info[1:])
 
     # Build an index dct relating idx to formula
     idx_dct, form_dct = build_pes_idx_dct(pes_dct)
