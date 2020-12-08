@@ -233,25 +233,24 @@ def stoich(ich):
             stoich_dct[atms[atm][0]] = 1
     return stoich_dct
 
-def remove_H_from_adj_atms(atms, adj_atms, othersite=[]):
+def remove_H_from_adj_atms(atms, adj_atms, othersite=[], other_adj=[]):
     new_adj_atms = []
     for atm in adj_atms:
         if atms[atm][0] != 'H' and atm not in othersite:
-            new_adj_atms.append(atm)
+            if atm not in other_adj:
+                new_adj_atms.append(atm)
+                        
     return new_adj_atms
 
-def branchpoint(adj_atms_i, adj_atms_j=[]):
-    other_site_atms = 0
-    if adj_atms_j:
-        other_site_atms = max(0, len(adj_atms_j) - 2) 
-    return max(1, len(adj_atms_i) - 1 + other_site_atms)
+def branchpoint(adj_atms_i, adj_atms_j=[], adj_atms_k=[]):
+    return max(1, len(adj_atms_i) + len(adj_atms_j) + len(adj_atms_k) - 1)
 
-def terminalmoity(adj_atms_i, adj_atms_j=[]):
+def terminalmoity(adj_atms_i, adj_atms_j=[], adj_atms_k=[], endisterm=True):
      ret = 1
-     if len(adj_atms_i) == 1:
-         ret = 0     
-     if len(adj_atms_j) == 1:
-         ret = 0     
+     if len(adj_atms_i) + len(adj_atms_j) < 2:
+         ret = 0    
+     if ret == 0 and len(adj_atms_k) > 0 and not endisterm:
+         ret = 1     
      return ret
 
 def cbhzed(ich, bal=True):
@@ -666,11 +665,15 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site1 + site2:
-                    nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site1[0]], site2)
-                    nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site2[0]], site1)
-                    nonH_adj_atms1.append(site2[0])
-                    nonH_adj_atms2.append(site1[0])
-                    print('nonHadjatms', nonH_adj_atms1, nonH_adj_atms2)
+                    nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site1[0]], site2, other_adj=adj_atms[site2[0]])
+                    nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site2[0]], site1, other_adj=adj_atms[site1[0]])
+                    for adj in nonH_adj_atms1:
+                        if adj in site1:
+                            nonH_adj_atms1.remove(adj)
+                    for adj in nonH_adj_atms2:
+                        if adj in site2:
+                            nonH_adj_atms2.remove(adj)
+                    print('nonHadjatms', site1, site2, nonH_adj_atms1, nonH_adj_atms2)
                     coeff = branchpoint(nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(nonH_adj_atms1, nonH_adj_atms2)
                 else:
                     nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
@@ -875,12 +878,17 @@ def cbhzed_elim(gra, site1, site2, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site1:
-                    nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site1[1]])
-                    nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site2[2]])
+                    nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site1[1]], othersite=site2)
+                    nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site2[2]], othersite=site1)
                     for adj in nonH_adj_atms1:
                         if adj in site1:
                             nonH_adj_atms1.remove(adj)
+                    for adj in nonH_adj_atms2:
+                        if adj in site2:
+                            nonH_adj_atms2.remove(adj)
+                    print('elim nonH', site1[1], site2[2], nonH_adj_atms1, nonH_adj_atms2, site1, site2)
                     coeff = branchpoint(nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(nonH_adj_atms1, nonH_adj_atms2)
+                    print('coeff from nonH', coeff)
                 else:
                     nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
                     coeff = branchpoint(nonH_adj_atms) * terminalmoity(nonH_adj_atms)
@@ -965,11 +973,20 @@ def cbhzed_habs(gra, site, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site:
-                    nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site[0]])
-                    nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site[2]])
-                    nonH_adj_atms1.append(site[2])
-                    nonH_adj_atms2.append(site[0])
-                    coeff = branchpoint(nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(nonH_adj_atms1, nonH_adj_atms2)
+                    nonH_adj_atms1 = remove_H_from_adj_atms(atms, adj_atms[site[0]], site, other_adj=adj_atms[site[2]])
+                    nonH_adj_atms2 = remove_H_from_adj_atms(atms, adj_atms[site[2]], site, other_adj=adj_atms[site[0]])
+                    nonH_adj_atms3 = []
+                    for adj in adj_atms[site[0]]:
+                        if adj in adj_atms[site[2]]:
+                            nonH_adj_atms3 = remove_H_from_adj_atms(atms, adj_atms[adj], othersite=site)
+                            print('sitemid', adj, nonH_adj_atms3)
+                    print('adj_Atms', adj_atms)
+                    print('adj0adj2', adj_atms[site[0]], adj_atms[site[2]])
+                    print('site0 in cbhzedhabs', site[0], nonH_adj_atms1)
+                    print('site2', site[2], nonH_adj_atms2)
+                    print('site1', site[1])
+                    coeff = branchpoint(nonH_adj_atms1, nonH_adj_atms2, nonH_adj_atms3) * terminalmoity(nonH_adj_atms1, nonH_adj_atms2, nonH_adj_atms3, endisterm=False)
+                    print('coeff', coeff)
                 else:
                     nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
                     coeff = branchpoint(nonH_adj_atms) * terminalmoity(nonH_adj_atms)
@@ -1201,6 +1218,9 @@ def cbhone_habs(gra, site, bal=True):
                 elif atma == site[2]:
                     atm_dic[2] = (atm_dic[2][0], atm_dic[2][1] - bnd_ord1, None)
                     bnd_dct[frozenset({2, 3})] = (bnd_ord1, None)
+                elif atma == site[1]:
+                    atm_dic[1] = (atm_dic[1][0], atm_dic[1][1] - bnd_ord1, None)
+                    bnd_dct[frozenset({1, 3})] = (bnd_ord1, None)
             else:
                 bnd_ord = list(bnd_ords[bnd])[0]
                 atm_dic = {0: (atms[atma][0], int(atm_vals[atma])-bnd_ord, None)}
