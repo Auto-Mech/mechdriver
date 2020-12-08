@@ -44,7 +44,7 @@ IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high',
                               'elimination high', 
                               'radical radical hydrogen abstraction high',
                               'addition high']
-# IMPLEMENTED_CBH_TS_CLASSES = []
+#IMPLEMENTED_CBH_TS_CLASSES = []
                               # 'hydrogen migration', 'addition high', 'elimination high']
 
 def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, ts_geom=None):
@@ -226,7 +226,14 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
     spec['charge'] = 0
     spec['class'] = rxnclass
     spec['mult'] = mult
-    rxn_ichs = [spec['reacs'], spec['prods']]
+    rxn_ichs = [[],[]]
+    print('spec in build spc', spec)
+    for rct_ich in spec['reacs']:
+        if rct_ich:
+            rxn_ichs[0].append(automol.inchi.add_stereo(rct_ich)[0])
+    for prd_ich in spec['prods']:
+        if prd_ich:
+            rxn_ichs[1].append(automol.inchi.add_stereo(prd_ich)[0])
     rct_muls = []
     prd_muls = []
     rct_chgs = []
