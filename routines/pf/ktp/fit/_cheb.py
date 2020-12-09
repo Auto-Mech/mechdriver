@@ -15,14 +15,14 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
     """ Read the rates for each channel and perform the fits
     """
 
-    # Obtain the fit paramts for the high-pressure rate constants, if needed
-    if 'high' in ktp_dct:
-        [temps, rate_constants] = ktp_dct['high']
-        highp_params = ratefit.fit.arrhenius.single(
+    # Obtain the fit paramts for the 1-atm rate constants, if available
+    if 1 in ktp_dct.keys():
+        [temps, rate_constants] = ktp_dct[1]
+        one_atm_params = ratefit.fit.arrhenius.single(
             temps, rate_constants, t_ref, arrfit_method,
             dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
     else:
-        highp_params = [1.0, 0.0, 0.0]
+        one_atm_params = [1.0, 0.0, 0.0]
 
     # If there are rates for more than one pressure
     pressures = tuple(pressure for pressure in ktp_dct.keys()
@@ -70,7 +70,7 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
     
         # Write the Chemkin strings
         chemkin_str = chemkin_io.writer.reaction.chebyshev(
-            reaction, highp_params, alpha, tmin, tmax, pmin, pmax)
+            reaction, one_atm_params, alpha, tmin, tmax, pmin, pmax)
         chemkin_str += '\n'
         chemkin_str += chemkin_io.writer.reaction.fit_info(
             pressures, temp_dct, err_dct)

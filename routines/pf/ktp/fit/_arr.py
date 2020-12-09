@@ -30,10 +30,11 @@ def perform_fits(ktp_dct, reaction, mess_path,
         t_ref=1.0, a_conv_factor=a_conv_factor)
 
     # Write a chemkin string for the single fit
-    sing_highp, sing_plog_dct, pressures = pull_highp_from_dct(
-        sing_params_dct)
-    sing_chemkin_str = chemkin_io.writer.reaction.plog(
-        reaction, sing_highp, sing_plog_dct)
+    sing_highp, sing_plog_dct, pressures = pull_highp_from_dct(sing_params_dct)
+    if sing_plog_dct:  # if PLOG
+        sing_chemkin_str = chemkin_io.writer.reaction.plog(reaction, sing_plog_dct)
+    else:  # if Arrhenius
+        sing_chemkin_str = chemkin_io.writer.reaction.arrhenius(reaction, sing_highp)
     sing_chemkin_str += '\n'
     sing_chemkin_str += chemkin_io.writer.reaction.fit_info(
         pressures, sing_fit_temp_dct, sing_fit_err_dct)
@@ -82,9 +83,9 @@ def perform_fits(ktp_dct, reaction, mess_path,
             inp_param_dct=guess_params_dct)
 
         if doub_fit_suc:
-            print('\nSuccessful fit to Double Arrhenius at all T, P')
+            print('\nSuccessful fit to double Arrhenius at all T, P')
 
-            print('\nWriting fitting parameters and errors from',
+            print('\nWriting fitting parameters and errors from ',
                   'single arrhenius fit for comparison')
             print(sing_chemkin_str)
 
@@ -94,15 +95,17 @@ def perform_fits(ktp_dct, reaction, mess_path,
                 t_ref=1.0, a_conv_factor=a_conv_factor)
             doub_highp, doub_plog_dct, pressures = pull_highp_from_dct(
                 doub_params_dct)
-            chemkin_str += chemkin_io.writer.reaction.plog(
-                reaction, doub_plog_dct,
-                err_dct=doub_fit_err_dct, temp_dct=doub_fit_temp_dct)
+            if doub_plog_dct:  # if PLOG
+                chemkin_str += chemkin_io.writer.reaction.plog(reaction, doub_plog_dct)
+            else:  # if Arrhenius
+                chemkin_str = chemkin_io.writer.reaction.arrhenius(reaction, doub_highp)
+    
             chemkin_str += '\n'
             chemkin_str += chemkin_io.writer.reaction.fit_info(
                 pressures, doub_fit_temp_dct, doub_fit_err_dct)
         else:
-            print('\nDouble Arrhenius Fit failed for some reason:',
-                  ' Using Single fits')
+            print('\nDouble Arrhenius fit failed for some reason:',
+                  ' Using single fits')
             chemkin_str += sing_chemkin_str
 
     return chemkin_str
