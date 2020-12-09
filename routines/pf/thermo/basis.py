@@ -39,7 +39,7 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
                 "cbh3": "get_cbhone_ts"}
 
 IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 
-                              'hydrogen migration', 
+                              # 'hydrogen migration', 
                               'beta scission',
                               'elimination high', 
                               'radical radical hydrogen abstraction high',
