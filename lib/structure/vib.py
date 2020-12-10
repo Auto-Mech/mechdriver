@@ -3,8 +3,10 @@
 """
 
 import os
-import autofile
+import random
 import projrot_io
+import autofile
+from lib import filesys
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 
@@ -16,10 +18,22 @@ def projrot_freqs(geoms, hessians, run_path,
         run path at thy later
     """
 
+    # Set up the filesys
     bld_locs = ['PROJROT', 0]
-    bld_run_fs = autofile.fs.build(run_path)
-    bld_run_fs[-1].create(bld_locs)
-    projrot_path = bld_run_fs[-1].path(bld_locs)
+    bld_save_fs = autofile.fs.build(run_path)
+    bld_save_fs[-1].create(bld_locs)
+    projrot_path = bld_save_fs[-1].path(bld_locs)
+
+    projrot_path = os.path.join(projrot_path, str(random.randint(0,1234567)))
+    if not os.path.exists(projrot_path):
+        os.makedirs(projrot_path)
+
+    # print('run path test for ProjRot:', run_path)
+    # bld_fs, bld_locs = filesys.build.build_fs(
+        # run_path, 'PROJROT', locs_idx=None)
+    # bld_fs[-1].create(bld_locs)
+    # projrot_path = bld_fs[-1].path(bld_locs)
+
     print('Run path for ProjRot:')
     print(projrot_path)
 

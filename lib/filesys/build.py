@@ -395,12 +395,36 @@ def etrans_fs_from_prefix(prefix, bath_info, thy_info):
 
     # Build the energy transfer locs object
     etrans_locs = bath_info + thy_info[1:4]
-   
+
     # Create directory
     print('etrans locs', etrans_locs)
     etrans_fs[-1].create(etrans_locs)
 
     return etrans_fs, etrans_locs
+
+
+def build_fs(prefix, run, locs_idx=None):
+    """ Create a build filesys object for some procedure
+    """
+
+    # Initialize the build object
+    bld_run_fs = autofile.fs.build(prefix)
+
+    # Set the build locs
+    if locs_idx is not None:
+        assert isinstance(locs_idx, int), (
+            'locs idx {} is not an integer'.format(locs_idx)
+        )
+    else:
+        bld_run_fs[-1].create([run, 0])
+        existing_locs = bld_run_fs[-1].existing()
+        current_idxs = tuple(idx for [name, idx] in existing_locs
+                             if name == run)
+        locs_idx = max(current_idxs) + 1
+
+    bld_locs = [run, locs_idx]
+
+    return bld_run_fs, bld_locs
 
 
 # Old function that I need to get rid of
@@ -423,3 +447,4 @@ def get_rxn_fs(run_prefix, save_prefix,
         [rxn_ichs, rxn_chgs, rxn_muls, ts_mul])
 
     return rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path
+
