@@ -1634,6 +1634,9 @@ def _remove_dummies(zma, frm_key, brk_key, geo=None):
     if isinstance(brk_key, list):
         brk_key, brk_key2 = brk_key
     dummy_idxs = automol.geom.dummy_atom_indices(zgeo)
+    print('geo in dummys', automol.geom.string(zgeo))
+    print('dummys', dummy_idxs)
+    print('frm_key, brk_key', frm_key, brk_key)
     for idx in dummy_idxs:
         if frm_key:
             frm1, frm2 = frm_key
@@ -1658,6 +1661,8 @@ def _remove_dummies(zma, frm_key, brk_key, geo=None):
             brk_key2 = frozenset({brk3, brk4})  
     if not geo: 
         geo = automol.geom.without_dummy_atoms(zgeo)
+    print('geo in dummys after removal', automol.geom.string(geo))
+    print('frm_key, brk_key after removal', frm_key, brk_key)
     
     gra = automol.geom.graph(geo)
     #if dummy_idxs:        
@@ -1736,16 +1741,16 @@ def _elimination_find_brk_bnds(gra, frm_key):
 
     return frozenset(brk_key1), frozenset(brk_key2)
 
-def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_key=None, backup_brk_key=None):
-    return get_cbh_ts('cbh0', zma, rxnclass, frm_key, brk_key, geo, backup_frm_key, backup_brk_key)
+def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=None, backup_frm_key=None, backup_brk_key=None):
+    return get_cbh_ts('cbh0', zma, rxnclass, frm_key, brk_key, geo, backup_zma, backup_frm_key, backup_brk_key)
 
-def get_cbhone_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_key=None, backup_brk_key=None):
-    return get_cbh_ts('cbh1', zma, rxnclass, frm_key, brk_key, geo, backup_frm_key, backup_brk_key)
+def get_cbhone_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=None, backup_frm_key=None, backup_brk_key=None):
+    return get_cbh_ts('cbh1', zma, rxnclass, frm_key, brk_key, geo, backup_zma, backup_frm_key, backup_brk_key)
 
-def get_basic_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_key=None, backup_brk_key=None):
+def get_basic_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=None, backup_frm_key=None, backup_brk_key=None):
     return
 
-def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_key=None, backup_brk_key=None):
+def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=None, backup_frm_key=None, backup_brk_key=None):
     """ get basis for CBH0 for a TS molecule
     """
 
@@ -1753,7 +1758,10 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_frm_k
     brk_key2 = None
     frm_key2 = None
     site2 = None
-    gra, frm_key, brk_key, brk_key2 = _remove_dummies(zma, frm_key, brk_key, geo=geo)
+    if backup_zma:
+        gra, frm_key, brk_key, brk_key2 = _remove_dummies(backup_zma, frm_key, brk_key, geo=geo)
+    else:
+        gra, frm_key, brk_key, brk_key2 = _remove_dummies(zma, backup_frm_key, backup_brk_key)
     # Add extra bonding information for:
     #  Elimination missing the forming double bond
     if 'elimination' in rxnclass:

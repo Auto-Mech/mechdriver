@@ -339,10 +339,16 @@ def mol_data(spc_name, spc_dct,
 
         ref_scheme = chn_pf_models['ref_scheme']
         ref_enes = chn_pf_models['ref_enes']
+
+        zma = None
+        if saddle:
+            cnf_path = cnf_fs[-1].path(min_cnf_locs)
+            zma_fs = autofile.fs.manager(cnf_path, 'ZMATRIX')
+            zma = zma_fs[-1].file.zmatrix.read((0,))
         
         # Determine info about the basis species used in thermochem calcs
         basis_dct, uniref_dct = basis.prepare_refs(
-            ref_scheme, spc_dct, [[spc_name, None]], ts_geom=(geom, brk_bnd_keys, frm_bnd_keys))
+            ref_scheme, spc_dct, [[spc_name, None]], ts_geom=(geom, zma, brk_bnd_keys, frm_bnd_keys))
 
         print('basis_dct test in mol_data:', basis_dct)
 

@@ -138,11 +138,15 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
             rxnclass = spc_dct[spc_name]['class']
             if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES and 'basic' not in ref_scheme:
                 if ts_geom and 'elimination' not in spc_dct[spc_name]['class']:
-                    geo, brk_bnd_keys, frm_bnd_keys = ts_geom
+                    geo, zma, brk_bnd_keys, frm_bnd_keys = ts_geom
+                    print('zma geo', automol.geom.string(automol.zmatrix.geometry(spc_dct[spc_name]['zma'])))
+                    print('geo geo', automol.geom.string(geo))
+                    print('keys1', frm_bnd_keys, brk_bnd_keys)
+                    print('keys2', spc_dct[spc_name]['frm_bnd_keys'], spc_dct[spc_name]['brk_bnd_keys'])
                     spc_basis, coeff_basis = get_ts_ref_fxn(
                         spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
                         frm_bnd_keys, brk_bnd_keys, 
-                        geo=geo, backup_frm_key=spc_dct[spc_name]['frm_bnd_keys'],
+                        geo=geo, backup_zma=zma, backup_frm_key=spc_dct[spc_name]['frm_bnd_keys'],
                         backup_brk_key=spc_dct[spc_name]['brk_bnd_keys'])
                 else:
                     print('bond keys in basis', spc_dct[spc_name]['frm_bnd_keys'],
