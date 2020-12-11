@@ -6,6 +6,7 @@ import stat
 import autofile
 import automol
 import varecof_io
+from phydat import phycon
 from routines.es._routines import _scan as scan
 from routines.es._routines import _wfn as wfn
 from routines.es._routines import sp
@@ -14,7 +15,6 @@ from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
 from lib.submission import get_host_node
 from lib.submission import qchem_params
-from lib.phydat import phycon
 
 
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM

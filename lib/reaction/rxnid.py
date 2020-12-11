@@ -2,8 +2,8 @@
 """
 
 import automol
+from phydat import phycon
 from lib import filesys
-from lib.phydat import phycon
 from lib.reaction import grid as rxngrid
 
 

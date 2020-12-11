@@ -10,10 +10,10 @@ import automol
 import autofile
 from autofile import fs
 import mess_io
+from phydat import phycon
 from lib.structure import vib as vibprep
 from lib.submission import run_script
 from lib.submission import DEFAULT_SCRIPT_DCT
-from lib.phydat import phycon
 
 
 # FUNCTIONS TO SET UP TORSION NAME LISTS
@@ -237,7 +237,7 @@ def read_hr_pot(tors_names, tors_grids, cnf_save_path,
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
-    zma_fs = fs.manager(cnf_save_path, 'ZMATRIX')
+    zma_fs = fs.zmatrix(cnf_save_path)
     zma_path = zma_fs[-1].path([0])
     if constraint_dct is None:
         scn_fs = autofile.fs.scan(zma_path)

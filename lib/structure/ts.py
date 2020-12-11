@@ -11,7 +11,7 @@ def rxn_bnd_keys(cnf_fs, cnf_locs, zma_locs=(0,)):
 
     print('cnf locs', cnf_locs)
     cnf_path = cnf_fs[-1].path(cnf_locs)
-    zma_fs = fs.manager(cnf_path, 'ZMATRIX')
+    zma_fs = fs.zmatrix(cnf_path)
     tra = zma_fs[-1].file.transformation.read(zma_locs)
     frm_bnd_keys, brk_bnd_keys = tra
     print('rxn keys')
@@ -30,7 +30,7 @@ def rxn_bnd_keys2(path, zma_locs=(0,)):
     """
 
     print('zma path', path)
-    zma_fs = fs.manager(path, 'ZMATRIX')
+    zma_fs = fs.zmatrix(path)
     tra = zma_fs[-1].file.transformation.read(zma_locs)
     frm_bnd_keys, brk_bnd_keys = tra
     if frm_bnd_keys:
@@ -46,7 +46,7 @@ def all_rxn_bnd_keys(cnf_fs, cnf_locs, zma_locs=(0,)):
     """
 
     cnf_path = cnf_fs[-1].path(cnf_locs)
-    zma_fs = fs.manager(cnf_path, 'ZMATRIX')
+    zma_fs = fs.zmatrix(cnf_path)
     tra = zma_fs[-1].file.transformation.read(zma_locs)
     frm_bnd_keys, brk_bnd_keys = tra
     print('rxn keys')

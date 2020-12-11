@@ -6,10 +6,10 @@ import numpy
 import automol
 import elstruct
 import autofile
+from phydat import instab_fgrps
+from phydat import phycon
 from routines.es import runner as es_runner
 from lib import structure
-from lib.phydat import phycon
-from lib.phydat import instab_fgrps
 from lib import filesys
 from lib.submission import qchem_params
 

@@ -5,7 +5,7 @@
 import mess_io
 from routines.pf.models import _fake as fake
 from routines.pf.models import _util as util
-from lib.phydat import phycon
+from phydat import phycon
 
 
 # SINGLE SPECIES BLOCKS

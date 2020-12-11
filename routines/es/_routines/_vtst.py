@@ -197,7 +197,7 @@ def _save_traj(ts_zma, frm_bnd_keys, rcts_gra, ts_save_fs, zma_locs=(0,)):
     print('\nSaving the V-Matrix into the filesystem...')
     ts_fs, _ = ts_save_fs
     ts_path = ts_fs[-1].path()
-    zma_fs = autofile.fs.manager(ts_path, 'ZMATRIX')
+    zma_fs = autofile.fs.zmatrix(ts_path)
     zma_fs[-1].create(zma_locs)
     zma_fs[-1].file.vmatrix.write(automol.zmatrix.var_(ts_zma), zma_locs)
 

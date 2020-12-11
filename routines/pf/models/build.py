@@ -8,6 +8,7 @@
 
 import automol
 import autofile
+from phydat import phycon
 from routines.pf.models import ene
 from routines.pf.models import typ
 from routines.pf.models import etrans
@@ -21,7 +22,6 @@ from routines.pf.models import _util as util
 from routines.pf.thermo import basis 
 from routines.pf.thermo import heatform
 from lib.structure import tors as torsprep
-from lib.phydat import phycon
 from lib import filesys
 
 
@@ -343,7 +343,7 @@ def mol_data(spc_name, spc_dct,
         zma = None
         if saddle:
             cnf_path = cnf_fs[-1].path(min_cnf_locs)
-            zma_fs = autofile.fs.manager(cnf_path, 'ZMATRIX')
+            zma_fs = autofile.fs.zmatrix(cnf_path)
             zma = zma_fs[-1].file.zmatrix.read((0,))
         
         # Determine info about the basis species used in thermochem calcs

@@ -8,9 +8,9 @@ from scipy.interpolate import interp1d
 import automol
 import mess_io
 import projrot_io
+from phydat import phycon
 from autofile import fs
 from lib import filesys
-from lib.phydat import phycon
 from lib.structure import tors as torsprep
 from lib.structure import geom as geomprep
 
@@ -33,7 +33,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
 
     # Grab the zmatrix
     if min_cnf_locs is not None:
-        zma_fs = fs.manager(cnf_fs[-1].path(min_cnf_locs), 'ZMATRIX')
+        zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
         zma = zma_fs[-1].file.zmatrix.read([0])
         remdummy = geomprep.build_remdummy_shift_lst(zma)
         geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)

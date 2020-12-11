@@ -7,8 +7,8 @@ import numpy
 from scipy.signal import argrelextrema
 import automol
 import autofile
-from lib.phydat import phycon
-from lib.phydat import bnd
+from phydat import phycon
+from phydat import bnd
 
 
 # Functions for locating maxima

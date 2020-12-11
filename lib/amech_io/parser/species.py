@@ -6,10 +6,10 @@ import automol
 import autofile
 import mechanalyzer
 import autoparse.find as apf
+from phydat import symm
+from phydat import eleclvl
+from phydat import phycon
 from lib import filesys
-from lib.phydat import symm
-from lib.phydat import eleclvl
-from lib.phydat import phycon
 from lib.reaction import rxnid
 from lib.reaction import direction as rxndirn
 from lib.amech_io.parser import ptt

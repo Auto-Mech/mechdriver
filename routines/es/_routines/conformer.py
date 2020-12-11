@@ -6,12 +6,12 @@ import automol
 import elstruct
 import autofile
 from autofile import fs
+from phydat import bnd
 from routines.es._routines import _util as util
 from routines.es import runner as es_runner
 from lib import filesys
 from lib.structure import geom as geomprep
 from lib.structure import ts as tsprep
-from lib.phydat import bnd
 
 
 def conformer_sampling(zma, spc_info,
@@ -184,12 +184,12 @@ def run_conformers(
     #     assert vma == existing_vma
     # cnf_save_fs[0].file.vmatrix.write(vma)
     nsamp0 = nsamp
-    inf_obj = autofile.schema.info_objects.conformer_trunk(0, tors_range_dct)
-    if cnf_save_fs[0].file.info.exists():
-        inf_obj_s = cnf_save_fs[0].file.info.read()
+    inf_obj = autofile.schema.info_objects.conformer_trunk(0)
+    if cnf_save_fs[0].file.info2.exists():
+        inf_obj_s = cnf_save_fs[0].file.info2.read()
         nsampd = inf_obj_s.nsamp
-    elif cnf_run_fs[0].file.info.exists():
-        inf_obj_r = cnf_run_fs[0].file.info.read()
+    elif cnf_run_fs[0].file.info2.exists():
+        inf_obj_r = cnf_run_fs[0].file.info2.read()
         nsampd = inf_obj_r.nsamp
     else:
         nsampd = 0
@@ -289,17 +289,17 @@ def run_conformers(
                 **kwargs
             )
 
-        if cnf_save_fs[0].file.info.exists():
-            inf_obj_s = cnf_save_fs[0].file.info.read()
+        if cnf_save_fs[0].file.info2.exists():
+            inf_obj_s = cnf_save_fs[0].file.info2.read()
             nsampd = inf_obj_s.nsamp
-        elif cnf_run_fs[0].file.info.exists():
-            inf_obj_r = cnf_run_fs[0].file.info.read()
+        elif cnf_run_fs[0].file.info2.exists():
+            inf_obj_r = cnf_run_fs[0].file.info2.read()
             nsampd = inf_obj_r.nsamp
         nsampd += 1
         samp_idx += 1
         inf_obj.nsamp = nsampd
-        cnf_save_fs[0].file.info.write(inf_obj)
-        cnf_run_fs[0].file.info.write(inf_obj)
+        cnf_save_fs[0].file.info2.write(inf_obj)
+        cnf_run_fs[0].file.info2.write(inf_obj)
 
 
 def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
@@ -486,7 +486,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     # Obtain the min-ene zma and bond keys
     min_cnf_locs, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
-    zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
+    zma_save_fs = fs.zmatrix(cnf_save_path)
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
     # Read the form and broken keys from the min conf
@@ -708,7 +708,7 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     if saddle:
         ts_min_cnf_locs, ts_min_path = filesys.mincnf.min_energy_conformer_locators(
             cnf_save_fs, thy_info)
-        ts_min_zma_fs = fs.manager(ts_min_path, 'ZMATRIX')
+        ts_min_zma_fs = fs.zmatrix(ts_min_path)
         print('ts_min_path test:', ts_min_path)
         tra = ts_min_zma_fs[-1].file.transformation.read(zma_locs)
         print('zma_locs test:', zma_locs)
@@ -724,7 +724,7 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     cnf_save_fs[-1].file.geometry.write(geo, locs)
 
     # Build the zma filesystem and save the z-matrix
-    zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
+    zma_save_fs = fs.zmatrix(cnf_save_path)
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
     zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
@@ -754,7 +754,7 @@ def _save_sym_indistinct_conformer(geo, cnf_save_fs,
     cnf_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
 
     # Build the sym file sys
-    sym_save_fs = fs.manager(cnf_save_path, 'SYMMETRY')
+    sym_save_fs = fs.symmetry(cnf_save_path)
     sym_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
     print(" - Saving structure in a sym directory at path {}".format(
         sym_save_path))

@@ -140,7 +140,7 @@ def get_rxn_scn_coords(ts_path, coord_name, zma_locs=(0,)):
     """
 
     # Build ZMA filesys
-    zma_fs = autofile.fs.manager(ts_path, 'ZMATRIX')
+    zma_fs = autofile.fs.zmatrix(ts_path)
     zma_path = zma_fs[-1].path(zma_locs)
 
     # Read the values of the reaction coord

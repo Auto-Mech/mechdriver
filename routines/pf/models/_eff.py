@@ -5,7 +5,7 @@ Calculate an effective alpha parameter using certain rules
 import numpy
 import automol
 from automol.graph._util import ring_idxs
-from lib import phydat
+import phydat
 
 
 # CALCULATE THE EFFECTIVE ALPHA VALUE

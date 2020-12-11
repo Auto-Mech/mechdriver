@@ -5,7 +5,7 @@
 import sys
 import automol
 import autofile
-from lib.phydat import phycon
+from phydat import phycon
 
 
 def get_zma_geo(filesys, locs):
@@ -123,7 +123,7 @@ def min_dist_conformer_zma(dist_name, cnf_save_fs):
     cnf_locs_lst = cnf_save_fs[-1].existing()
     cnf_zmas = []
     for locs in cnf_locs_lst:
-        zma_fs = autofile.fs.manager(cnf_save_fs[-1].path(locs), 'ZMATRIX')
+        zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
         cnf_zmas.append(zma_fs[-1].file.zmatrix.read([0]))
     min_dist = 100.
     min_zma = []
@@ -141,7 +141,7 @@ def min_dist_conformer_zma_geo(dist_coords, cnf_save_fs):
     cnf_locs_lst = cnf_save_fs[-1].existing()
     cnf_zmas = []
     for locs in cnf_locs_lst:
-        zma_fs = autofile.fs.manager(cnf_save_fs[-1].path(locs), 'ZMATRIX')
+        zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
         cnf_zmas.append(zma_fs[-1].file.zmatrix.read([0]))
     min_dist = 100.
     min_zma = []

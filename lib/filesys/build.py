@@ -379,7 +379,7 @@ def zma_fs_from_prefix(prefix, zma_idxs=(0,)):
     """ Build a zma filesys object
     """
 
-    zma_fs = fs.manager(prefix, 'ZMATRIX')
+    zma_fs = fs.zmatrix(prefix)
     zma_fs[-1].create(zma_idxs)
     zma_path = zma_fs[-1].path(zma_idxs)
 
@@ -391,7 +391,7 @@ def etrans_fs_from_prefix(prefix, bath_info, thy_info):
     """
 
     # Build the energy transfer filesys object
-    etrans_fs = autofile.fs.manager(prefix, 'ENERGY TRANSFER')
+    etrans_fs = autofile.fs.energy_transfer(prefix)
 
     # Build the energy transfer locs object
     etrans_locs = bath_info + thy_info[1:4]
