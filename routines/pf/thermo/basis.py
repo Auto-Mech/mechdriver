@@ -12,7 +12,7 @@ import automol.inchi
 import automol.geom
 from routines.pf.models.ene import read_energy
 from routines.pf.thermo import heatform
-from lib.phydat import phycon
+from phydat import phycon
 from lib import filesys
 
 

@@ -20,5 +20,4 @@ setup(name='moldriver',
                 'lib.amech_io.parser',
                 'lib.amech_io.writer',
                 'lib.filesys',
-                'lib.phydat',
                 'lib.reaction'])

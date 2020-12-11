@@ -38,7 +38,7 @@ def save_struct(run_fs, save_fs, locs, job, mod_thy_info,
 
         # Save zma information seperately, if required
         if not in_zma_fs:
-            zma_save_fs = autofile.fs.manager(save_path, 'ZMATRIX')
+            zma_save_fs = autofile.fs.zmatrix(save_path)
             zma_save_fs[-1].create(zma_locs)
             zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
             zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)

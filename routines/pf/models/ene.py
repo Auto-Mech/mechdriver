@@ -4,12 +4,12 @@
 import os
 import automol
 import autofile
+from phydat import phycon
 from routines.pf import thermo as thmroutines
 from routines.pf.models import typ
 from routines.pf.models import _tors as tors
 from routines.pf.models import _vib as vib
 from routines.pf.models import _util as util
-from lib.phydat import phycon
 from lib.filesys import inf as finf
 from lib.filesys import models as fmod
 from lib.amech_io import parser
@@ -161,7 +161,7 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
     """
 
     # Set up the filesystem
-    zma_fs = autofile.fs.manager(scn_prefix, 'ZMATRIX')
+    zma_fs = autofile.fs.zmatrix(scn_prefix)
     zma_path = zma_fs[-1].path([0])
     scn_fs = autofile.fs.scan(zma_path)
 

@@ -87,8 +87,8 @@ def check_filesys_for_guess(ini_ts_save_path, mod_ini_thy_info,
         ini_cnf_save_fs, mod_ini_thy_info)
 
     if ini_min_cnf_locs:
-        ini_zma_fs = autofile.fs.manager(
-            ini_cnf_save_fs[-1].path(ini_min_cnf_locs), 'ZMATRIX')
+        ini_zma_fs = autofile.fs.zmatrix(
+            ini_cnf_save_fs[-1].path(ini_min_cnf_locs))
         if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
             geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
             print(' - Z-Matrix found.')
@@ -373,7 +373,7 @@ def save_saddle_point(opt_ret, hess_ret, freqs, imags,
 
     # Save the zmatrix information in a zma filesystem
     cnf_save_path = cnf_save_fs[-1].path(locs)
-    zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
+    zma_save_fs = fs.zmatrix(cnf_save_path)
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.geometry_info.write(opt_inf_obj, zma_locs)
     zma_save_fs[-1].file.geometry_input.write(opt_inp_str, zma_locs)

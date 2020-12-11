@@ -9,7 +9,7 @@ import autofile
 from routines.es._routines import _util as util
 from routines.es import runner as es_runner
 from lib import filesys
-from lib.phydat import phycon
+from phydat import phycon
 
 
 def tau_sampling(zma, ref_ene, spc_info, tors_name_grps, nsamp_par,
