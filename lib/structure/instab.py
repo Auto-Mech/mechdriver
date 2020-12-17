@@ -49,7 +49,7 @@ def write_instab(conn_zma, disconn_zma,
                frozenset({frozenset({})}))
 
         # Save zma information seperately, if required
-        zma_save_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
+        zma_save_fs = autofile.fs.zmatrix(instab_path)
         zma_save_fs[-1].create(zma_locs)
         zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
         zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
@@ -81,7 +81,7 @@ def write_instab(conn_zma, disconn_zma,
             cnf_path = cnf_fs[-1].path(cnf_locs)
 
             # Save zma information seperately, if required
-            zma_save_fs = autofile.fs.manager(cnf_path, 'ZMATRIX')
+            zma_save_fs = autofile.fs.zmatrix(cnf_path)
             zma_save_fs[-1].create(zma_locs)
             zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
             zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
@@ -128,7 +128,7 @@ def write_instab2(conn_zma, disconn_zmas,
            frozenset({brk_bnd_keys}))
 
     # Save zma information seperately, if required
-    zma_save_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
+    zma_save_fs = autofile.fs.zmatrix(instab_path)
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
 
@@ -146,7 +146,7 @@ def write_instab2(conn_zma, disconn_zmas,
         cnf_path = cnf_fs[-1].path(cnf_locs)
 
         # Save zma information seperately, if required
-        zma_save_fs = autofile.fs.manager(cnf_path, 'ZMATRIX')
+        zma_save_fs = autofile.fs.zmatrix(cnf_path)
         zma_save_fs[-1].create(zma_locs)
         zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
 
@@ -210,7 +210,7 @@ def check_unstable_species(tsk, spc_dct, spc_name,
         if instab_fs[-1].exists():
 
             instab_path = instab_fs[-1].path()
-            zma_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
+            zma_fs = autofile.fs.zmatrix(instab_path)
             zma_locs = (0,)
 
             # Check if the instability files exist
@@ -316,7 +316,7 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     instab_fs = autofile.fs.instab(thy_save_path)
     instab_path = instab_fs[-1].path()
 
-    zma_save_fs = autofile.fs.manager(instab_path, 'ZMATRIX')
+    zma_save_fs = autofile.fs.zmatrix(instab_path)
 
     # Read the zma for the unstable species
     instab_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)

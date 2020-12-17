@@ -5,9 +5,9 @@
 import os
 import numpy
 import autofile
+from phydat import phycon
 from lib.structure import tors as torsprep
 from lib.structure import vib as vibprep
-from lib.phydat import phycon
 from lib.submission import DEFAULT_SCRIPT_DCT
 
 

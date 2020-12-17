@@ -6,11 +6,11 @@ import numpy
 import automol
 import elstruct
 import autofile
+from phydat import phycon
 from routines.es._routines import _util as util
 from routines.es._routines import geom
 from routines.es import runner as es_runner
 from lib import filesys
-from lib.phydat import phycon
 from lib.submission import qchem_params
 
 

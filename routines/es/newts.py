@@ -527,8 +527,8 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
             ini_cnf_save_fs, mod_ini_thy_info)
 
         if ini_min_cnf_locs:
-            ini_zma_save_fs = autofile.fs.manager(
-                ini_cnf_save_fs[-1].path(ini_min_cnf_locs), 'ZMATRIX')
+            ini_zma_save_fs = autofile.fs.zmatrix(
+                ini_cnf_save_fs[-1].path(ini_min_cnf_locs))
 
     if es_keyword_dct.get('runlvl', None) is not None:
 

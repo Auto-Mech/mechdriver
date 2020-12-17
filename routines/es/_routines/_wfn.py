@@ -3,7 +3,7 @@
 
 import automol
 import elstruct
-from lib.phydat import act_space
+from phydat import act_space
 
 
 # BUILD THE MULTIREFERENCE WAVEFUNCTION TO PASS MOLPRO ELSTRUCT

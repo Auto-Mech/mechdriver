@@ -7,8 +7,8 @@ import copy
 import numpy
 import ratefit
 import mess_io
+from phydat import phycon
 from lib.amech_io import writer
-from lib.phydat import phycon
 from routines.pf.ktp.fit import _arr as arr
 from routines.pf.ktp.fit import _cheb as cheb
 
