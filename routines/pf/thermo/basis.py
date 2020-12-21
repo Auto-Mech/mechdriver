@@ -137,7 +137,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, repeats=False, parallel
             save_prefix = rxn_save_path.split('/RXN')[0]
             rxnclass = spc_dct[spc_name]['class']
             if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES and 'basic' not in ref_scheme:
-                if ts_geom and 'elimination' not in spc_dct[spc_name]['class']:
+                if ts_geom:
                     geo, zma, brk_bnd_keys, frm_bnd_keys = ts_geom
                     print('zma geo', automol.geom.string(automol.zmatrix.geometry(spc_dct[spc_name]['zma'])))
                     print('geo geo', automol.geom.string(geo))

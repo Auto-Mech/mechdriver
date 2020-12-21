@@ -1758,7 +1758,7 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=N
     brk_key2 = None
     frm_key2 = None
     site2 = None
-    if backup_zma:
+    if backup_zma and 'elimination' not in rxnclass:
         gra, frm_key, brk_key, brk_key2 = _remove_dummies(backup_zma, frm_key, brk_key, geo=geo)
     else:
         gra, frm_key, brk_key, brk_key2 = _remove_dummies(zma, backup_frm_key, backup_brk_key)
