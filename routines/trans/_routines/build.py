@@ -78,7 +78,7 @@ def collate_properties(tgt_queue,
         dct = {
             'shape_idx': shape_idx,
             'dipole_moment': dip_mom,
-            'polarizabily': polar,
+            'polarizability': polar,
             'epsilon': tt_eps,
             'sigma': tt_sig
         }
