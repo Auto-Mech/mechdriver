@@ -5,6 +5,7 @@ import os
 import automol
 import autofile
 import mechanalyzer
+import ioformat
 import autoparse.find as apf
 from phydat import symm
 from phydat import eleclvl
@@ -12,7 +13,6 @@ from phydat import phycon
 from lib import filesys
 from lib.reaction import rxnid
 from lib.reaction import direction as rxndirn
-from lib.amech_io.parser import ptt
 
 
 CSV_INP = 'inp/species.csv'
@@ -75,7 +75,7 @@ def build_spc_dct(job_path, spc_type):
     """ Build the species dct
     """
 
-    spc_str = ptt.read_inp_str(
+    spc_str = ioformat.ptt.read_inp_str(
         job_path, CSV_INP)
     spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
 
@@ -132,7 +132,7 @@ def read_spc_amech(job_path):
 
     # Read the AMech species string
     if os.path.exists(os.path.join(job_path, DAT_INP)):
-        spc_amech_str = ptt.read_inp_str(
+        spc_amech_str = ioformat.ptt.read_inp_str(
             job_path, DAT_INP, remove_comments='#')
         print('Found species.dat. Reading file...')
     else:
@@ -144,18 +144,18 @@ def read_spc_amech(job_path):
     if spc_amech_str:
         # Read each of the species sections and build the dcts
         spc_sections = apf.all_captures(
-            ptt.end_section_wname2('spc'), spc_amech_str)
+            ioformat.ptt.end_section_wname2('spc'), spc_amech_str)
         if spc_sections:
             # Get the global species section
             for section in spc_sections:
                 if section[0] == 'global':
                     # Build the global species section
-                    keyword_dct = ptt.build_keyword_dct(section[1])
+                    keyword_dct = ioformat.ptt.build_keyword_dct(section[1])
                     amech_dct['global'] = keyword_dct
                 else:
                     # Build each species dct to overwrite global dct
                     name = section[0]
-                    keyword_dct = ptt.build_keyword_dct(section[1])
+                    keyword_dct = ioformat.ptt.build_keyword_dct(section[1])
                     amech_dct[name] = keyword_dct
 
     return amech_dct
@@ -241,7 +241,7 @@ def modify_spc_dct(job_path, spc_dct):
             wfn_file = aspace[3]
             wfn_inp = os.path.join(os.path.join(job_path, 'inp/'+wfn_file))
             if os.path.exists(wfn_inp):
-                wfn_str = ptt.read_inp_str(job_path, wfn_inp)
+                wfn_str = ioformat.ptt.read_inp_str(job_path, wfn_inp)
                 print('Found file: {}. Reading file...'.format(wfn_file))
             else:
                 wfn_str = None
