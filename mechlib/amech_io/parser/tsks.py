@@ -17,7 +17,6 @@ from mechlib.amech_io.parser.keywords import PRNT_TSK_OBJ_SUPPORTED_LST
 from mechlib.amech_io.parser.keywords import PRNT_TSK_SUPPORTED_DCT
 from mechlib.amech_io.parser.keywords import PRNT_TSK_KEYWORDS_SUPPORTED_DCT
 from mechlib.amech_io.parser.keywords import PRNT_TSK_KEYWORDS_DEFAULT_DCT
-from mechlib.amech_io.parser.ptt import set_value_type
 
 
 # ES TSKS

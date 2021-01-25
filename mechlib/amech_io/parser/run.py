@@ -4,7 +4,7 @@
 import sys
 import ioformat
 import autoparse.find as apf
-from mechlib.amech_io.parser import ptt
+from ioformat import ptt
 from mechlib.amech_io.parser import tsks
 from mechlib.amech_io.parser.keywords import RUN_INP_SUPPORTED_KEYWORDS
 from mechlib.amech_io.parser.keywords import RUN_INP_REQUIRED_KEYWORDS

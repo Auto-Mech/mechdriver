@@ -6,6 +6,7 @@ import automol
 import autofile
 import mechanalyzer
 import ioformat
+from ioformat import ptt
 import autoparse.find as apf
 from phydat import symm
 from phydat import eleclvl
@@ -13,7 +14,6 @@ from phydat import phycon
 from mechlib import filesys
 from mechlib.reaction import rxnid
 from mechlib.reaction import direction as rxndirn
-from mechlib.amech_io.parser import ptt
 
 
 CSV_INP = 'inp/species.csv'
