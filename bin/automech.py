@@ -8,47 +8,50 @@ from drivers import esdriver
 from drivers import thermodriver
 from drivers import ktpdriver
 from drivers import transdriver
-from lib.amech_io import parser
-from lib.amech_io import printer
-from lib.reaction import direction as rxndirn
-from lib.filesys.build import prefix_fs
-from lib.submission import print_host_name
+from drivers import printdriver
+from mechlib.amech_io import parser
+from mechlib.amech_io import printer as ioprinter
+from mechlib.reaction import direction as rxndirn
+from mechlib.filesys.build import prefix_fs
+from mechlib.submission import print_host_name
 
 
 # Set runtime options based on user input
 JOB_PATH = sys.argv[1]
 
 # Print the header message and host name
-printer.program_header('amech')
-printer.random_cute_animal()
-print_host_name()
-printer.program_header('inp')
+ioprinter.program_header('amech')
+ioprinter.random_cute_animal()
+ioprinter.host_name()
+ioprinter.program_header('inp')
 
 # Parse the run input
-print('\nReading run.dat...')
+ioprinter.reading('run.dat...', newline=1)
 RUN_INP_DCT = parser.run.build_run_inp_dct(JOB_PATH)
 RUN_OBJ_DCT = parser.run.objects_dct(JOB_PATH)
 RUN_JOBS_LST = parser.run.build_run_jobs_lst(JOB_PATH)
 ES_TSK_STR = parser.run.read_es_tsks(JOB_PATH)
+PRINT_TSK_STR = parser.run.read_print_tsks(JOB_PATH)
 TRANS_TSK_STR = parser.run.read_trans_tsks(JOB_PATH)
 
 # Parse the theory input
-print('\nReading theory.dat...')
+ioprinter.reading('theory.dat...', newline=1)
 THY_DCT = parser.theory.build_thy_dct(JOB_PATH)
 
 # Parse the model input
-print('\nReading model.dat...')
+ioprinter.reading('model.dat...', newline=1)
 PES_MODEL_DCT, SPC_MODEL_DCT = parser.model.read_models_sections(JOB_PATH)
 
 # Parse the species input to get a dct with ALL species in mechanism
-print('\nReading species.csv...')
+ioprinter.reading('species.csv...', newline=1)
 SPC_DCT = parser.species.build_spc_dct(JOB_PATH, 'csv')
 
 # Parse mechanism input and get a dct with info on PESs user request to run
 if RUN_OBJ_DCT['pes']:
-    print('\nRunning Calculations for PESs. Need input for mechanism.')
+    ioprinter.running(
+        'Calculations for PESs. Need input for mechanism.', newline=1)
     CLA_DCT = rxndirn.parse_rxn_class_file(JOB_PATH)
-    print('  Reading mechanism.dat...')
+    ioprinter.reading('mechanism.dat...', newline=1)
     RUN_PES_DCT = parser.mechanism.build_pes_dct(
         JOB_PATH,
         RUN_INP_DCT['mech'],
@@ -61,7 +64,7 @@ elif RUN_OBJ_DCT['spc']:
     RUN_SPC_LST_DCT = parser.species.build_run_spc_dct(SPC_DCT, RUN_OBJ_DCT)
     CLA_DCT = {}
 else:
-    print('No Proper Run object specified')
+    ioprinter.error_message('No Proper Run object specified')
     sys.exit()
 
 # Build a dictionary of submission scripts (to finish)
@@ -69,50 +72,35 @@ else:
 
 # Kill run if just printing mechanism is wanted
 if RUN_INP_DCT['print_mech']:
-    print('\n\n')
-    printer.program_exit('amech')
+    ioprinter.obj('vspace')
+    ioprinter.program_exit('amech')
     sys.exit()
 
 # Initialize the filesystem
-print('\nBuilding the base Run-Save filesystems at')
+ioprinter.info_message('Building the base Run-Save filesystems at', newline=1)
 prefix_fs(RUN_INP_DCT['run_prefix'])
-print('{}'.format(RUN_INP_DCT['run_prefix']))
+ioprinter.info_message('{}'.format(RUN_INP_DCT['run_prefix']), indent=1)
 prefix_fs(RUN_INP_DCT['save_prefix'])
-print('{}'.format(RUN_INP_DCT['save_prefix']))
+ioprinter.info_message('{}'.format(RUN_INP_DCT['save_prefix']), indent=1)
 
 # Print messages describing drivers and tasks running
-print('\nDrivers and tasks user has requested to be run...')
+ioprinter.info_message(
+    'Drivers and tasks user has requested to be run...', newline=1)
 RUN_ES = bool('es' in RUN_JOBS_LST)
+RUN_PRINT = bool('print' in RUN_JOBS_LST)
 WRITE_MESSPF, RUN_MESSPF, RUN_NASA = parser.run.set_thermodriver(RUN_JOBS_LST)
 WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS = parser.run.set_ktpdriver(RUN_JOBS_LST)
 RUN_TRANS = bool('transport' in RUN_JOBS_LST)
-if RUN_ES:
-    print('  - ESDriver')
-if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
-    print('  - ThermoDriver')
-    if WRITE_MESSPF:
-        print('    - write_messpf')
-    if RUN_MESSPF:
-        print('    - run_messpf')
-    if RUN_MESSPF:
-        print('    - run_nasa')
-if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
-    print('  - kTPDriver')
-    if WRITE_MESSRATE:
-        print('    - write_messrate')
-    if RUN_MESSRATE:
-        print('    - run_messrate')
-    if RUN_FITS:
-        print('    - run_fits')
-if RUN_TRANS:
-    print('  - TransportDriver')
+ioprinter.driver_tasks(
+    RUN_ES, WRITE_MESSPF, RUN_MESSPF, RUN_NASA,
+    WRITE_MESSRATE, RUN_MESSRATE, RUN_FITS, RUN_TRANS)
 
-printer.program_exit('inp')
+ioprinter.program_exit('inp')
 
 # ESDriver
 if RUN_ES:
 
-    printer.program_header('es')
+    ioprinter.program_header('es')
 
     # Build the elec struct tsk lst
     ES_TSK_LST = parser.run.build_run_es_tsks_lst(
@@ -123,13 +111,9 @@ if RUN_ES:
         for (formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
 
             # Print PES form and SUB PES Channels
-            print('\nRunning PES {}: {}, SUB PES {}'.format(
-                pes_idx, formula, sub_pes_idx))
+            ioprinter.pes(pes_idx, formula, sub_pes_idx)
             for rxn in rxn_lst:
-                print('  Running Channel {}: {} = {}'.format(
-                    rxn['chn_idx'],
-                    '+'.join(rxn['reacs']),
-                    '+'.join(rxn['prods'])))
+                ioprinter.channel(rxn['chn_idx'], rxn['reacs'], rxn['prods'])
 
             esdriver.run(
                 pes_idx,
@@ -152,13 +136,13 @@ if RUN_ES:
             RUN_INP_DCT
         )
 
-    printer.program_exit('es')
+    ioprinter.program_exit('es')
 
 
 # ThermoDriver
 if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
 
-    printer.program_header('thermo')
+    ioprinter.program_header('thermo')
 
     # Call ThermoDriver for spc in PES
     if RUN_OBJ_DCT['pes']:
@@ -175,7 +159,9 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
             )
     else:
         for spc in RUN_SPC_LST_DCT:
-            print('\nCalculating Thermochem for species: {}'.format(spc))
+            ioprinter.info_message(
+                'Calculating Thermochem for species: {}'.format(spc),
+                newline=1)
         thermodriver.run(
             SPC_DCT,
             PES_MODEL_DCT, SPC_MODEL_DCT,
@@ -187,13 +173,13 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
             run_nasa=RUN_NASA,
         )
 
-    printer.program_exit('thermo')
+    ioprinter.program_exit('thermo')
 
 
 # TransportDriver
 if RUN_TRANS:
 
-    printer.program_header('trans')
+    ioprinter.program_header('trans')
     
     # Build the elec struct tsk lst
     TRANS_TSK_LST = parser.run.build_run_trans_tsks_lst(
@@ -211,7 +197,7 @@ if RUN_TRANS:
             )
     else:
         for spc in RUN_SPC_LST_DCT:
-            print('\nCalculating Transport for species: {}'.format(spc))
+            ioprinter.message('Calculating Transport for species: {}'.format(spc), newline=1)
         transdriver.run(
             SPC_DCT,
             THY_DCT,
@@ -223,20 +209,19 @@ if RUN_TRANS:
 # kTPDriver
 if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
 
-    printer.program_header('ktp')
+    ioprinter.program_header('ktp')
 
     # Call kTPDriver for each SUB PES
     if RUN_OBJ_DCT['pes']:
         for (formula, pes_idx, sub_pes_idx), rxn_lst in RUN_PES_DCT.items():
 
             # Print PES form and SUB PES Channels
-            print('\nCalculating Rates for PES {}: {}, SUB PES {}'.format(
-                pes_idx, formula, sub_pes_idx))
+            ioprinter.pes(pes_idx, formula, sub_pes_idx)
             for chn_idx, rxn in enumerate(rxn_lst):
-                print('  Including Channel {}: {} = {}'.format(
+                ioprinter.channel(
                     rxn['chn_idx'],
                     '+'.join(rxn['reacs']),
-                    '+'.join(rxn['prods'])))
+                    '+'.join(rxn['prods']))
 
             ktpdriver.run(
                 formula, pes_idx, sub_pes_idx,
@@ -251,10 +236,32 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
                 run_fits=RUN_FITS
             )
     else:
-        print("Can't run kTPDriver without a PES being specified")
+        ioprinter.error_message("Can't run kTPDriver without a PES being specified")
 
-    printer.program_exit('ktp')
+    ioprinter.program_exit('ktp')
+
+# Print Driver
+if RUN_PRINT:
+    
+    ioprinter.program_header('print')
+
+    # Build the elec struct tsk lst
+    PRINT_TSK_LST = parser.run.build_run_prnt_tsks_lst(
+        PRINT_TSK_STR, SPC_MODEL_DCT, THY_DCT)
+
+    PES_IDX = 0
+    printdriver.run(
+        PES_IDX,
+        RUN_SPC_LST_DCT,
+        SPC_DCT,
+        CLA_DCT,
+        PRINT_TSK_LST,
+        THY_DCT,
+        RUN_INP_DCT,
+        SPC_MODEL_DCT
+    )
+
 
 # Exit Program
-print('\n\n')
-printer.program_exit('amech')
+ioprinter.obj('vspace')
+ioprinter.program_exit('amech')

@@ -2,8 +2,8 @@
     Lennard-Jones parameters
 """
 
-from routines.trans import run_tsk
-from lib.amech_io import parser
+from mechroutines.trans import run_tsk
+from mechlib.amech_io import parser
 
 
 def run(spc_dct,
@@ -20,7 +20,6 @@ def run(spc_dct,
 
     # Build a list of the species to calculate thermochem for loops below
     spc_queue = parser.species.build_queue(rxn_lst)
-    print(spc_queue)
 
     # Loop over Tasks
     for tsk_lst in trans_tsk_lst:

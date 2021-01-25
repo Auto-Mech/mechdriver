@@ -2,13 +2,13 @@
 """
 
 import os
-from routines.pf import ktp as ktproutines
-from routines.pf import runner as pfrunner
-from lib import filesys
-from lib.amech_io import writer
-from lib.amech_io import parser
-from lib.structure import instab
-
+from mechroutines.pf import ktp as ktproutines
+from mechroutines.pf import runner as pfrunner
+from mechlib import filesys
+from mechlib.amech_io import writer
+from mechlib.amech_io import parser
+from mechlib.amech_io import printer as ioprinter
+from mechlib.structure import instab
 
 def run(pes_formula, pes_idx, sub_pes_idx,
         spc_dct,
@@ -42,7 +42,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     )
 
     # Obtain all of the transitions states
-    print('\nIdentifying reaction classes for transition states...')
+    ioprinter.message('Identifitying reaction classes for transition states...')
     ts_dct = {}
     for rxn in rxn_lst:
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
@@ -67,7 +67,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ts_dct, spc_dct)
 
     # Set reaction list with unstable species broken apart
-    print('Checking stability of all species...')
+    ioprinter.message('Identifying stability of all species...', newline=1)
     rxn_lst = instab.break_all_unstable(
         rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
     # Build the MESS label idx dictionary for the PES
@@ -85,9 +85,8 @@ def run(pes_formula, pes_idx, sub_pes_idx,
 
     # Write the MESS file
     if write_messrate:  # and not mess_inp_str:
-        print(('\n\n------------------------------------------------' +
-               '--------------------------------------'))
-        print('\nBuilding the MESS input file...')
+        
+        ioprinter.messpf('write_header')
 
         # Write the strings for the MESS input file
         globkey_str = ktproutines.rates.make_header_str(
@@ -108,10 +107,10 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             globkey_str, energy_trans_str, chan_str)
 
         # Write the MESS file into the filesystem
-        print(('\n++++++++++++++++++++++++++++++++++++++++++++++++' +
-               '++++++++++++++++++++++++++++++++++++++'))
-        print('\nWriting the MESS input file at {}'.format(mess_path))
-        print(mess_inp_str)
+        ioprinter.obj('line_plus')
+        ioprinter.writing('MESS input file', mess_path)
+        ioprinter.debug_message(mess_inp_str)
+
         pfrunner.write_mess_file(mess_inp_str, dats, mess_path)
 
         # Write MESS file into job directory
@@ -122,16 +121,16 @@ def run(pes_formula, pes_idx, sub_pes_idx,
 
     # Run mess to produce rate output
     if run_messrate:
-        print(('\n\n------------------------------------------------' +
-               '--------------------------------------'))
-        print('\nRunning MESS for the input file at {}'.format(mess_path))
+        ioprinter.obj('vspace')
+        ioprinter.obj('line_dash')
+        ioprinter.running('MESS for the input file', mess_path)
         pfrunner.run_rates(mess_path)
 
     # Fit rate output to modified Arrhenius forms, print in ChemKin format
     if run_fits:
-        print(('\n\n------------------------------------------------' +
-               '--------------------------------------'))
-        print('\nFitting Rate Constants for PES to Functional Forms')
+        ioprinter.obj('vspace')
+        ioprinter.obj('line_dash')
+        ioprinter.info_message('Fitting Rate Constants for PES to Functional Forms', newline=1)
         ckin_str_dct = ktproutines.fit.fit_rates(
             temps, pressures, tunit, punit,
             pes_formula, label_dct,
