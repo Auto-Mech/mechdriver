@@ -1,8 +1,8 @@
 """ electronic structure drivers
 """
 
-from routines.es import run_tsk
-from lib.amech_io import parser
+from mechroutines.es import run_tsk
+from mechlib.amech_io import parser
 
 
 def run(pes_idx,
@@ -36,12 +36,8 @@ def run(pes_idx,
 
     # Initialize variable for building a dct for ts
     built_dct = False
-    # if any(obj == 'ts' for _, tsk, es_keyword_dct in es_tsk_lst):
-    #     print('yay')
-    # put in check for rxndirn
 
     # Loop over Tasks
-    print('\nRunning electronic structure tasks given in the input...')
     for tsk_lst in es_tsk_lst:
 
         # Unpack the options
