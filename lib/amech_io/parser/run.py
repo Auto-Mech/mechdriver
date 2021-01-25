@@ -4,7 +4,6 @@
 import sys
 import ioformat
 import autoparse.find as apf
-from lib.amech_io.parser import ptt
 from lib.amech_io.parser import tsks
 from lib.amech_io.parser.keywords import RUN_INP_SUPPORTED_KEYWORDS
 from lib.amech_io.parser.keywords import RUN_INP_REQUIRED_KEYWORDS
@@ -21,8 +20,8 @@ def build_run_inp_dct(job_path):
     """
 
     # Read the input section
-    run_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
-    keyword_dct = ptt.build_keyword_dct(inp_block(run_str))
+    run_str = ioformat.ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
+    keyword_dct = ioformat.ptt.build_keyword_dct(inp_block(run_str))
 
     # Add defaults
     if 'mech' not in keyword_dct:
@@ -42,7 +41,7 @@ def inp_block(inp_str):
     """ Read the string that has the global model information
     """
     return ioformat.remove_whitespace(
-        apf.first_capture(ptt.end_section('input'), inp_str))
+        apf.first_capture(ioformat.ptt.end_section('input'), inp_str))
 
 
 def check_run_keyword_dct(dct):
@@ -84,12 +83,12 @@ def objects_dct(job_path):
     """
 
     # Read the obj section
-    run_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
+    run_str = ioformat.ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
     obj_str = object_block(run_str)
 
     # Read the sections of the obj section
-    pes_block_str = apf.first_capture(ptt.paren_section('pes'), obj_str)
-    spc_block_str = apf.first_capture(ptt.paren_section('spc'), obj_str)
+    pes_block_str = apf.first_capture(ioformat.ptt.paren_section('pes'), obj_str)
+    spc_block_str = apf.first_capture(ioformat.ptt.paren_section('spc'), obj_str)
 
     # Check if the obj section has been specified
     check_obj_spec(obj_str, pes_block_str, spc_block_str)
@@ -112,7 +111,7 @@ def object_block(inp_str):
     """ Read the string that has the global model information
     """
     return ioformat.remove_whitespace(
-        apf.first_capture(ptt.end_section('obj'), inp_str))
+        apf.first_capture(ioformat.ptt.end_section('obj'), inp_str))
 
 
 def get_pes_idxs(pes_str):
@@ -124,8 +123,8 @@ def get_pes_idxs(pes_str):
             [pes, chns] = line.strip().split(';')
             [pes_idx_str, pes_mod_str] = pes.strip().split()
             [chns_idx_str, chns_mod_str] = chns.strip().split()
-            pes_lst = ptt.parse_idx_inp(pes_idx_str)
-            chn_lst = ptt.parse_idx_inp(chns_idx_str)
+            pes_lst = ioformat.ptt.parse_idx_inp(pes_idx_str)
+            chn_lst = ioformat.ptt.parse_idx_inp(chns_idx_str)
             pes_mod = pes_mod_str.strip()
             chns_mod = chns_mod_str.strip()
             for pes in pes_lst:
@@ -146,7 +145,7 @@ def get_spc_idxs(pes_str):
     for line in pes_str.splitlines():
         try:
             [spc_idxs, proc1, proc2] = line.strip().split()
-            spc_lst = ptt.parse_idx_inp(spc_idxs)
+            spc_lst = ioformat.ptt.parse_idx_inp(spc_idxs)
             proc1 = proc1.strip()
             proc2 = proc2.strip()
             for spc in spc_lst:
@@ -178,8 +177,8 @@ def build_run_jobs_lst(job_path):
     """
 
     # Read the jobs section
-    job_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
-    keyword_lst = ptt.build_keyword_lst(jobs_block(job_str))
+    job_str = ioformat.ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
+    keyword_lst = ioformat.ptt.build_keyword_lst(jobs_block(job_str))
 
     # Check the jobs sectuib
     check_run_jobs_section(job_str, keyword_lst)
@@ -191,7 +190,7 @@ def jobs_block(inp_str):
     """ Read the string that has the global model information
     """
     return ioformat.remove_whitespace(
-        apf.first_capture(ptt.end_section('jobs'), inp_str))
+        apf.first_capture(ioformat.ptt.end_section('jobs'), inp_str))
 
 
 def set_thermodriver(run_jobs_lst):
@@ -263,7 +262,7 @@ def read_es_tsks(job_path):
     """
 
     # Read the electronic structure tasks section
-    run_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
+    run_str = ioformat.ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
     es_tsks_str = es_tsks_block(run_str)
 
     # Check if section is there
@@ -278,7 +277,7 @@ def es_tsks_block(inp_str):
     """ Read the string that has the global model information
     """
     return ioformat.remove_whitespace(
-        apf.first_capture(ptt.end_section('es_tsks'), inp_str))
+        apf.first_capture(ioformat.ptt.end_section('es_tsks'), inp_str))
 
 
 def build_run_es_tsks_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
@@ -296,7 +295,7 @@ def read_trans_tsks(job_path):
     """
 
     # Read the electronic structure tasks section
-    run_str = ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
+    run_str = ioformat.ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
     trans_tsks_str = trans_tsks_block(run_str)
 
     # Check if section is there
@@ -311,7 +310,7 @@ def read_trans_tsks(job_path):
 def trans_tsks_block(inp_str):
     """ Read the string that has the global model information
     """
-    cap = apf.first_capture(ptt.end_section('trans_tsks'), inp_str)
+    cap = apf.first_capture(ioformat.ptt.end_section('trans_tsks'), inp_str)
     if cap is not None:
         trans_str = ioformat.remove_whitespace(cap)
     else:

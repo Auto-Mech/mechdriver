@@ -8,10 +8,10 @@ import autofile
 import chemkin_io
 from phydat import phycon
 from ioformat import remove_whitespace
+from ioformat import ptt
 # from routines.es._routines import geom
 from lib.filesys.mincnf import min_energy_conformer_locators
 from lib.filesys.inf import modify_orb_restrict
-from lib.amech_io.parser import ptt
 
 
 CLA_INP = 'inp/class.csv'

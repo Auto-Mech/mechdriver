@@ -3,7 +3,7 @@
 
 import sys
 import autoparse.find as apf
-from lib.amech_io.parser import ptt
+from ioformat import ptt
 from lib.amech_io.parser.keywords import THY_REQUIRED_KEYWORDS
 from lib.amech_io.parser.keywords import THY_SUPPORTED_KEYWORDS
 

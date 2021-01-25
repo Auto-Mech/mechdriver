@@ -4,7 +4,6 @@
 from lib.amech_io.parser import keywords
 from lib.amech_io.parser import mechanism
 from lib.amech_io.parser import model
-from lib.amech_io.parser import ptt
 from lib.amech_io.parser import run
 from lib.amech_io.parser import species
 from lib.amech_io.parser import theory
@@ -15,7 +14,6 @@ __all__ = [
     'keywords',
     'mechanism',
     'model',
-    'ptt',
     'run',
     'species',
     'theory',

@@ -5,7 +5,7 @@ import sys
 import copy
 import autoparse.find as apf
 from lib import filesys
-from lib.amech_io.parser import ptt
+from ioformat import ptt
 from lib.amech_io.parser.keywords import MODEL_PF_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import MODEL_PF_DEFAULT_DCT
 

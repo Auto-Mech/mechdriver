@@ -1,7 +1,7 @@
 input
     mech = chemkin
-    run_prefix = {0}/run
-    save_prefix = {0}/save
+    run_prefix = /gpfs/fs1/home/ac.lpratalimaffei/amech/mechdriver/tests/run
+    save_prefix = /gpfs/fs1/home/ac.lpratalimaffei/amech/mechdriver/tests/save
 end
 
 obj 

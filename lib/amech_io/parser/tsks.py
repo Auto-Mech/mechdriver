@@ -4,6 +4,7 @@
 
 import sys
 import ioformat
+from ioformat.ptt import set_value_type
 from lib.amech_io.parser.keywords import ES_TSK_OBJ_SUPPORTED_LST
 from lib.amech_io.parser.keywords import ES_TSK_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import ES_TSK_KEYWORDS_SUPPORTED_DCT
@@ -13,7 +14,6 @@ from lib.amech_io.parser.keywords import TRANS_TSK_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import TRANS_TSK_KEYWORDS_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import TRANS_TSK_KEYWORDS_VAL_SUPPORTED_DCT
 from lib.amech_io.parser.keywords import TRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT
-from lib.amech_io.parser.ptt import set_value_type
 
 
 # ES TSKS
