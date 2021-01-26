@@ -165,33 +165,10 @@ def _functional_groups_stable(geo, thy_save_fs, mod_thy_info):
         molecule instabilities
     """
 
-    # Initialize empty set of product graphs
-    prd_gras = ()
+    zma = automol.geom.zmatrix(geo)
+    disconn_zmas = automol.instab.product_zmas(zma)
 
-    # Check for instability causing functional groups
-    gra = automol.geom.graph(geo)
-    rad_grp_dct = automol.graph.radical_group_dct(gra)
-    for atm, grps in rad_grp_dct.items():
-        if atm in instab_fgrps.DCT:
-            fgrps, prds = instab_fgrps.DCT[atm]
-            for grp in grps:
-                grp_ich = automol.graph.inchi(grp)
-                if grp_ich in fgrps:
-                    # If instability is found determine the prd of the instability
-                    prd_ich = prds[fgrps.index(grp_ich)]
-                    prd_geo = automol.inchi.geometry(prd_ich)
-                    prd_gra = automol.geom.graph(prd_geo)
-                    prd_gras = automol.graph.radical_dissociation_prods(
-                        gra, prd_gra)
-                    break
-
-    if prd_gras:
-        disconn_zmas = []
-        for gra in prd_gras:
-            ich = automol.graph.inchi(gra)
-            geo_tmp = automol.inchi.geometry(ich)
-            zma = automol.geom.zmatrix(geo_tmp)
-            disconn_zmas.append(zma)
+    if disconn_zmas:
         conn_zma = automol.geom.zmatrix(geo)
         structure.instab.write_instab2(
             conn_zma, disconn_zmas,
@@ -202,6 +179,7 @@ def _functional_groups_stable(geo, thy_save_fs, mod_thy_info):
         stable = False
     else:
         stable = True
+
     return stable
 
 
