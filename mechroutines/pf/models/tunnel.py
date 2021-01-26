@@ -4,6 +4,7 @@ NEW: Interface to MESS and projrot to set-up tunneling blocks
 
 import mess_io
 import autofile
+from ioformat import run_script
 from mechlib.amech_io import printer as ioprinter
 
 

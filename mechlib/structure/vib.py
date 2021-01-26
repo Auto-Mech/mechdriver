@@ -6,8 +6,8 @@ import os
 import random
 import projrot_io
 import autofile
+from ioformat import run_script
 from mechlib import filesys
-from mechlib.submission import run_script
 from mechlib.submission import DEFAULT_SCRIPT_DCT
 
 
