@@ -6,7 +6,7 @@ import os
 import numpy
 import automol
 import mess_io
-from mechlib.submission import run_script
+from ioformat import run_script
 from mechlib.submission import DEFAULT_SCRIPT_DCT
 from mechlib.amech_io import printer as ioprinter
 
