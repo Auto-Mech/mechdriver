@@ -7,7 +7,7 @@ import automol
 import varecof_io
 from phydat import phycon
 from ioformat import run_script
-from mechroutines.es._routines import _scan as scan
+from mechroutines.es.runner import scan
 from mechroutines.es._routines import _wfn as wfn
 from mechroutines.es._routines import sp
 from mechlib.submission import DEFAULT_SCRIPT_DCT

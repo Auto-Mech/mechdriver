@@ -1,7 +1,7 @@
 """ es_runners for coordinate scans
 """
 
-from mechroutines.es._routines import _scan as scan
+from mechroutines.es.runner import scan
 from mechlib import filesys
 from mechlib.structure import tors as torsprep
 from mechlib.amech_io import printer as ioprinter

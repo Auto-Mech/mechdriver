@@ -5,7 +5,7 @@ import automol
 import autofile
 from mechroutines.es._routines import sp
 from mechroutines.es._routines import _wfn as wfn
-from mechroutines.es._routines import _scan as scan
+from mechroutines.es.runner import scan
 from mechlib import filesys
 from mechlib.submission import qchem_params
 from mechlib.reaction import grid as rxngrid
