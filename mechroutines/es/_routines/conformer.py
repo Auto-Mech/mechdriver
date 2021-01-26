@@ -411,8 +411,13 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, saddle):
     """ Assess if a geometry is unique to saved geos
     """
 
-    unique = geomprep.is_unique_tors_dist_mat_energy(
-        geo, ene, seen_geos, seen_enes, saddle)
+    if not automol.util.value_similar_to(ene, seen_enes):
+        # unique = geomprep.is_unique_tors_dist_mat_energy(
+        #     geo, ene, seen_geos, seen_enes, saddle)
+        unique, _ = automol.geom.compare(
+                geo, seen_geos, check_dct={'dist': None, 'tors': None})
+    else:
+        unique = True
     if not unique:
         ioprinter.bad_conformer('not unique')
 
@@ -458,13 +463,15 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
         existing conformers in the filesystem
     """
 
-    sym_idx = None
-    for idx, (geoi, enei) in enumerate(zip(saved_geos, saved_enes)):
-        if abs(enei - ene) < ethresh:
-            unique = geomprep.is_unique_coulomb_energy(
-                geo, ene, [geoi], [enei])
-            if not unique:
-                sym_idx = idx
+    unique, sym_idx = automol.geom.compare(
+        geo, seen_geos, check_dct={'coulomb': None})
+    # sym_idx = None
+    # for idx, (geoi, enei) in enumerate(zip(saved_geos, saved_enes)):
+    #     if abs(enei - ene) < ethresh:
+    #         unique = geomprep.is_unique_coulomb_energy(
+    #             geo, ene, [geoi], [enei])
+    #         if not unique:
+    #             sym_idx = idx
 
     if sym_idx is not None:
         ioprinter.warning_message(' - Structure is not symmetrically unique.')
