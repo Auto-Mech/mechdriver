@@ -5,7 +5,7 @@ import automol
 import autofile
 from autofile import fs
 import elstruct
-from mechroutines.es._routines import _scan as scan
+from mechroutines.es.runner import scan
 from mechroutines.es import runner as es_runner
 from mechlib import structure
 from mechlib import filesys
