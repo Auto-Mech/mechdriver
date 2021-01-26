@@ -6,7 +6,6 @@ from mechlib import amech_io
 from mechlib import filesys
 from mechlib import reaction
 from mechlib import structure
-from mechlib import pathtools
 from mechlib import submission
 
 
@@ -15,6 +14,5 @@ __all__ = [
     'filesys',
     'reaction',
     'structure',
-    'pathtools',
     'submission'
 ]
