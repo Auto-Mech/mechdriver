@@ -4,9 +4,7 @@
 import functools
 import elstruct
 import autofile
-from mechlib.amech_io import printer as ioprinter
-
-from . import _optseq as optseq
+from . import _seq as optseq
 
 
 JOB_ERROR_DCT = {
@@ -50,13 +48,12 @@ JOB_RUNNER_DCT = {
 }
 
 
-def run_job(
-        job, script_str, run_fs,
-        geom, spc_info, thy_info,
-        errors=(), options_mat=(), retryfail=True, feedback=False,
-        frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
-        irc_direction=None,
-        **kwargs):
+def run_job(job, script_str, run_fs,
+            geom, spc_info, thy_info,
+            errors=(), options_mat=(), retryfail=True, feedback=False,
+            frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
+            irc_direction=None,
+            **kwargs):
     """ run an elstruct job by name
     """
     assert job in JOB_RUNNER_DCT
@@ -68,35 +65,30 @@ def run_job(
     run_path = run_fs[-1].path([job])
     if overwrite:
         do_run = True
-        ioprinter.info_message(" - Running {} job at {}".format(job, run_path))
+        print(" - Running {} job at {}".format(job, run_path))
     else:
         if not run_fs[-1].file.info.exists([job]):
             do_run = True
-            ioprinter.info_message(
-                " - Running {} job at {}".format(job, run_path))
+            print(" - Running {} job at {}".format(job, run_path))
         else:
             inf_obj = run_fs[-1].file.info.read([job])
             if inf_obj.status == autofile.schema.RunStatus.FAILURE:
-                ioprinter.info_message(
-                    " - Found failed {} job at {}".format(job, run_path))
+                print(" - Found failed {} job at {}".format(job, run_path))
                 if retryfail:
-                    ioprinter.info_message(" - Retrying...")
+                    print(" - Retrying...")
                     do_run = True
                 else:
-                    ioprinter.info_message(
-                        " - Skipping failed job, per user request...")
+                    print(" - Skipping failed job, per user request...")
                     do_run = False
             else:
                 do_run = False
                 if inf_obj.status == autofile.schema.RunStatus.SUCCESS:
-                    ioprinter.info_message(
-                        " - Found completed {} job at {}".format(
-                            job, run_path))
+                    print(" - Found completed {} job at {}"
+                          .format(job, run_path))
                 else:
-                    ioprinter.info_message(
-                        " - Found running {} job at {}".format(
-                            job, run_path))
-                    ioprinter.info_message(" - Skipping...")
+                    print(" - Found running {} job at {}"
+                          .format(job, run_path))
+                    print(" - Skipping...")
 
     if do_run:
         # create the run directory
@@ -137,14 +129,14 @@ def run_job(
         prog = inf_obj.prog
         if is_successful_output(out_str, job, prog):
             run_fs[-1].file.output.write(out_str, [job])
-            ioprinter.info_message(" - Run succeeded.")
+            print(" - Run succeeded.")
             status = autofile.schema.RunStatus.SUCCESS
         else:
             # Added writing output at point even for fail
             # Need to check if this is bad. But read_job changes
             # should address this hopefully
             run_fs[-1].file.output.write(out_str, [job])
-            ioprinter.info_message(" - Run failed.")
+            print(" - Run failed.")
             status = autofile.schema.RunStatus.FAILURE
         version = elstruct.reader.program_version(prog, out_str)
         inf_obj.version = version
@@ -159,10 +151,9 @@ def read_job(job, run_fs):
 
     run_path = run_fs[-1].path([job])
 
-    ioprinter.info_message(
-        " - Reading from {} job at {}".format(job, run_path))
+    print(" - Reading from {} job at {}".format(job, run_path))
     if not run_fs[-1].file.output.exists([job]):
-        ioprinter.info_message(" - No output file found. Skipping...")
+        print(" - No output file found. Skipping...")
         success = False
         ret = None
     else:
@@ -175,11 +166,10 @@ def read_job(job, run_fs):
         ret = (inf_obj, inp_str, out_str)
 
         if is_successful_output(out_str, job, prog):
-            ioprinter.info_message(" - Found successful output. Reading...")
+            print(" - Found successful output. Reading...")
             success = True
         else:
-            ioprinter.info_message(
-                " - Output has an error message. Skipping...")
+            print(" - Output has an error message. Skipping...")
             success = False
 
     return success, ret
