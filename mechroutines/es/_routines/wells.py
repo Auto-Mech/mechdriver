@@ -155,7 +155,7 @@ def find_vdw(ts_name, spc_dct, thy_info, ini_thy_info, vdw_params,
             # Generate the z-matrix and sampling ranges
             es_runner.run_job(
                 job=elstruct.Job.OPTIMIZATION,
-                geom=geo,
+                geo=geo,
                 spc_info=spc_info,
                 th_info=thy_info,
                 run_fs=run_fs,

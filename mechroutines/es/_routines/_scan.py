@@ -98,7 +98,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
     """
 
     # Get a connected geometry from the init guess_zma for instability checks
-    # conn_geo = automol.zmatrix.geometry(guess_zma)
+    # conn_geo = automol.zmat.geometry(guess_zma)
     conn_zma = guess_zma
 
     # Set the frozen coordinates (set job at this point?)
@@ -120,7 +120,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
         run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
 
         # Build the zma
-        zma = automol.zmatrix.set_values(
+        zma = automol.zmat.set_values(
             guess_zma, dict(zip(coord_names, vals)))
 
         # Set the job
@@ -134,7 +134,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     job=job,
                     script_str=script_str,
                     run_fs=run_fs,
-                    geom=zma,
+                    geo=zma,
                     spc_info=spc_info,
                     thy_info=mod_thy_info,
                     overwrite=overwrite,
@@ -182,7 +182,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     job=job,
                     script_str=script_str,
                     run_fs=run_fs,
-                    geom=zma,
+                    geo=zma,
                     spc_info=spc_info,
                     thy_info=mod_thy_info,
                     overwrite=overwrite,
@@ -198,7 +198,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                 # Write initial geos in run fs as they are needed later
                 run_fs[-1].file.zmatrix.write(zma, [job])
                 run_fs[-1].file.geometry.write(
-                    automol.zmatrix.geometry(zma), [job])
+                    automol.zmat.geometry(zma), [job])
 
 
 def save_scan(scn_run_fs, scn_save_fs, scn_typ,

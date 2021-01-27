@@ -14,7 +14,7 @@ from mechroutines.es._routines import tau
 from mechroutines.es._routines import irc
 from mechlib import filesys
 from mechlib import structure
-from mechlib.structure import instab
+# from mechlib.structure import instab
 from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
@@ -44,9 +44,9 @@ def run_tsk(tsk, spc_dct, spc_name,
     # If species is unstable, set task to 'none'
     ini_thy_info = filesys.inf.get_es_info(
         es_keyword_dct['inplvl'], thy_dct)
-    stable = instab.check_unstable_species(
-        tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
-
+    # stable = instab.check_unstable_species(
+    #     tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
+    stable = True
     if stable:
         ioprinter.debug_message('- Proceeding with requested task...')
 

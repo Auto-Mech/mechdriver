@@ -34,7 +34,7 @@ def radrad_scan(ts_zma, ts_info, hs_info,
     """
 
     # Set up the casscf options
-    ref_zma = automol.zmatrix.set_values(ts_zma, {coord_name: grid1[0]})
+    ref_zma = automol.zmat.set_values(ts_zma, {coord_name: grid1[0]})
     cas_kwargs = wfn.build_wfn(ref_zma, ts_info, ts_formula, high_mul,
                                rct_ichs, rct_info,
                                active_space, mod_var_scn_thy_info)
@@ -203,7 +203,7 @@ def _save_traj(ts_zma, frm_bnd_keys, rcts_gra, ts_save_fs, zma_locs=(0,)):
     ts_path = ts_fs[-1].path()
     zma_fs = autofile.fs.zmatrix(ts_path)
     zma_fs[-1].create(zma_locs)
-    zma_fs[-1].file.vmatrix.write(automol.zmatrix.var_(ts_zma), zma_locs)
+    zma_fs[-1].file.vmatrix.write(automol.zmat.var_(ts_zma), zma_locs)
 
     ioprinter.info_message(
         'Saving the trajectory into the filesystem...', newline=1)

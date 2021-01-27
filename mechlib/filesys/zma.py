@@ -57,12 +57,12 @@ def chk_direction(rxn_info, ts_zma,
     """ Get the zma locs that are needed
     """
 
-    fs_rct_ichs = automol.zmatrix.ts.zmatrix_product_inchis(
-        ts_zma, frm_bnd_keys, brk_bnd_keys, remove_stereo=False)
+    fs_rct_ichs = automol.zmat.ts.zmatrix_product_inchis(
+        ts_zma, frm_bnd_keys, brk_bnd_keys, stereo=True)
     fs_rct_ichs = set(fs_rct_ichs)
 
-    fs_prd_ichs = automol.zmatrix.ts.zmatrix_product_inchis(
-        ts_zma, frm_bnd_keys, brk_bnd_keys, remove_stereo=False)
+    fs_prd_ichs = automol.zmat.ts.zmatrix_product_inchis(
+        ts_zma, frm_bnd_keys, brk_bnd_keys, stereo=True)
     fs_prd_ichs = set(fs_prd_ichs)
 
     rct_ichs, prd_ichs = rxn_info[0][0], rxn_info[0][1]

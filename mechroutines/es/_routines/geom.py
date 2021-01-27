@@ -6,7 +6,7 @@ import numpy
 import automol
 import elstruct
 import autofile
-from phydat import instab_fgrps
+# from phydat import instab_fgrps
 from phydat import phycon
 from mechroutines.es import runner as es_runner
 from mechlib import structure
@@ -71,7 +71,7 @@ def reference_geometry(spc_dct_i, spc_info,
                 'Assessing if there are any functional groups',
                 'that cause instability')
             ioprinter.debug_message('geo str\n', automol.geom.string(geo_init))
-            if _functional_groups_stable(geo_init, thy_save_fs, mod_thy_info):
+            if True: #_functional_groups_stable(geo_init, thy_save_fs, mod_thy_info):
                 zma_init = automol.geom.zmatrix(geo_init)
                 if not automol.geom.is_atom(geo_init):
                     geo_found = _optimize_molecule(
@@ -326,7 +326,7 @@ def _init_geom_opt(zma_init, spc_info, mod_thy_info,
         job=elstruct.Job.OPTIMIZATION,
         script_str=opt_script_str,
         run_fs=run_fs,
-        geom=zma_init,
+        geo=zma_init,
         spc_info=spc_info,
         thy_info=mod_thy_info,
         overwrite=overwrite,
@@ -416,7 +416,7 @@ def _check_imaginary(
         job=elstruct.Job.HESSIAN,
         spc_info=spc_info,
         thy_info=mod_thy_info,
-        geom=geo,
+        geo=geo,
         run_fs=run_fs,
         script_str=script_str,
         overwrite=overwrite,
@@ -486,7 +486,7 @@ def _kickoff_saddle(
         job=elstruct.Job.OPTIMIZATION,
         script_str=opt_script_str,
         run_fs=run_fs,
-        geom=geom,
+        geo=geom,
         spc_info=spc_info,
         thy_info=mod_thy_info,
         overwrite=True,

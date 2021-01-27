@@ -87,7 +87,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
                 constraint_dct = torsprep.build_constraint_dct(
                     zma, const_names, tname_tup)
             elif tors_model == '1dhrfa':
-                coords = list(automol.zmatrix.coordinates(zma))
+                coords = list(automol.zmat.coordinates(zma))
                 const_names = tuple(coord for coord in coords)
                 tname_tup = tuple([tname])
                 constraint_dct = torsprep.build_constraint_dct(
@@ -111,7 +111,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
             remdummy = geomprep.build_remdummy_shift_lst(zma)
 
             # Get the indices for the torsion
-            mode_idxs = automol.zmatrix.coord_idxs(zma, tname)
+            mode_idxs = automol.zmat.coord_idxs(zma, tname)
             mode_idxs = tuple((idx+1 for idx in mode_idxs))
 
             # Determine the flux span using the symmetry number

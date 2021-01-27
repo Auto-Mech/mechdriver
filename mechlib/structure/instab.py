@@ -10,7 +10,7 @@ import automol
 import autofile
 import elstruct
 from mechlib import filesys
-from automol.zmatrix._unimol_ts import beta_scission
+# from automol.zmat._unimol_ts import beta_scission
 
 
 # Write the instability files
@@ -23,7 +23,7 @@ def write_instab(conn_zma, disconn_zma,
     """
 
     # Get a connected geometry
-    conn_geo = automol.zmatrix.geometry(conn_zma)
+    conn_geo = automol.zmat.geometry(conn_zma)
 
     if opt_ret:
 
@@ -108,7 +108,7 @@ def write_instab2(conn_zma, disconn_zmas,
     """
 
     # Get a connected geometry
-    conn_geo = automol.zmatrix.geometry(conn_zma)
+    conn_geo = automol.zmat.geometry(conn_zma)
 
     # Set and print the save path information
     save_path = thy_save_fs[-1].path(thy_locs)
@@ -173,7 +173,7 @@ def _disconnected_zmas(disconn_zma):
     """
 
     # Convert to disconnected component graph
-    disconn_geo = automol.zmatrix.geometry(disconn_zma)
+    disconn_geo = automol.zmat.geometry(disconn_zma)
     disconn_gras = automol.graph.connected_components(
         automol.geom.graph(disconn_geo))
 
@@ -327,8 +327,8 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     # rcts_gra = save_fs[-1].file.reactant_graph.write(locs)
 
     # Obtain the inchi strings for the species it breaks in to
-    constituent_ichs = automol.zmatrix.ts.zmatrix_product_inchis(
-        instab_zma, frm_bnd_key, brk_bnd_key, remove_stereo=False)
+    constituent_ichs = automol.zmat.ts.zmatrix_product_inchis(
+        instab_zma, frm_bnd_key, brk_bnd_key, stereo=True)
     print('constituent ichs', constituent_ichs)
 
     # Obtain the product names from the species dct

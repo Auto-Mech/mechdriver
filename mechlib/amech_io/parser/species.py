@@ -403,7 +403,7 @@ def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
              'elec_levels': [[0.0, ts_mul]]})
 
         # Set the ts_bnd using the zma and distname
-        ts_bnd = automol.zmatrix.coord_idxs(ret1[0], ret1[1])
+        ts_bnd = automol.zmat.coord_idxs(ret1[0], ret1[1])
 
         # Put class stuff in the dct
         dct_keys = ['zma', 'dist_name', 'brk_name',

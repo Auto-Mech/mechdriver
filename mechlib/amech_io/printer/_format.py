@@ -4,7 +4,7 @@ Format a string
 
 
 def _indent(message, number):
-    message = '\t'.expandtabs(number * 8) + message
+    message = '\t'.expandtabs(int(number * 8)) + message
     return message
 
 

@@ -125,7 +125,7 @@ def multiref_wavefunction_guess(high_mul, zma,
 
     # Write a string to for high-spin UHF wfn calculation
     guess_str1 = elstruct.writer.energy(
-        geom=zma,
+        geo=zma,
         charge=charge,
         mult=high_mul,
         method='hf',
@@ -139,7 +139,7 @@ def multiref_wavefunction_guess(high_mul, zma,
 
     # Write a string for low-spin CASSCF wfn calc
     guess_str2 = elstruct.writer.energy(
-        geom=zma,
+        geo=zma,
         charge=charge,
         mult=mul,
         method='casscf',
@@ -158,7 +158,7 @@ def multiref_wavefunction_guess(high_mul, zma,
     # Write a second string for low-spin, lg active space CASSCF wfn calc
     if len(casscf_options) > 1:
         guess_str3 = elstruct.writer.energy(
-            geom=zma,
+            geo=zma,
             charge=charge,
             mult=mul,
             method='casscf',
@@ -201,7 +201,7 @@ def wfn_string(ts_info, mod_var_scn_thy_info, inf_sep_ene, cas_kwargs):
     cas_kwargs.update({'gen_lines': gen_lines_dct})
 
     inp_str = elstruct.writer.energy(
-        geom='GEOMETRY_HERE',
+        geo='GEOMETRY_HERE',
         charge=ts_info[1],
         mult=ts_info[2],
         method='casscf',

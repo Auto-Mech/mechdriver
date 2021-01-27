@@ -129,7 +129,7 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
     """
 
     # Get the tors names if thery have not already been supplied
-    val_dct = automol.zmatrix.values(zma)
+    val_dct = automol.zmat.value_dictionary(zma)
 
     # Deal with the dimensionality of the rotors
     if tors_model in ('mdhr', 'mdhrv'):
@@ -138,7 +138,7 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
     # Build the grids corresponding to the torsions
     tors_grids, tors_sym_nums = [], []
     for tors_names in tors_name_grps:
-        tors_linspaces = automol.zmatrix.torsional_scan_linspaces(
+        tors_linspaces = automol.zmat.torsional_scan_linspaces(
             zma, tors_names, scan_increment, frm_bnd_key=frm_bnd_keys,
             brk_bnd_key=brk_bnd_keys)
         tors_grids.append(
@@ -146,7 +146,7 @@ def hr_prep(zma, tors_name_grps, scan_increment=30.0, tors_model='1dhr',
              for name, linspace in zip(tors_names, tors_linspaces)]
         )
         tors_sym_nums.append(
-            automol.zmatrix.torsional_symmetry_numbers(
+            automol.zmat.torsional_symmetry_numbers(
                 zma, tors_names,
                 frm_bnd_key=frm_bnd_keys, brk_bnd_key=brk_bnd_keys)
         )
@@ -356,7 +356,7 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
                 print(' - New minimmum energy ZMA found for torsion')
                 print(' - Ene = {}'.format(pot))
                 print(' - Found at path: {}'.format(path))
-                print(automol.zmatrix.string(zma))
+                print(automol.zmat.string(zma))
         
     return new_min_zma
 
@@ -378,7 +378,7 @@ def set_constraint_names(zma, tors_names, tors_model):
             #     const_names = tuple(
             #         itertools.chain(*amech_spc_tors_names))
         elif tors_model == '1dhrfa':
-            coords = list(automol.zmatrix.coordinates(zma))
+            coords = list(automol.zmat.coordinates(zma))
             const_names = tuple(coord for coord in coords)
 
     return const_names
@@ -407,8 +407,8 @@ def build_constraint_dct(zma, const_names, scan_names=()):
 
     # Build dictionary
     if constraint_names:
-        zma_vals = automol.zmatrix.values(zma)
-        zma_coords = automol.zmatrix.coordinates(zma)
+        zma_vals = automol.zmat.value_dictionary(zma)
+        zma_coords = automol.zmat.coordinates(zma)
         assert set(constraint_names) <= set(zma_coords.keys()), (
             'Attempting to constrain coordinates not in zma:\n{}\n{}'.format(
                 constraint_names, zma_coords)
@@ -442,7 +442,7 @@ def set_tors_def_info(zma, tors_name, tors_sym, pot,
     else:
         ts_bnd = brk_bnd_keys
 
-    # print('set_tors_def_info test:', automol.zmatrix.string(zma), tors_name, ts_bnd, frm_bnd_keys, brk_bnd_keys)
+    # print('set_tors_def_info test:', automol.zmat.string(zma), tors_name, ts_bnd, frm_bnd_keys, brk_bnd_keys)
     group, axis, atm_key = _set_groups_ini(
         zma, tors_name, ts_bnd, saddle)
     if saddle:
@@ -463,9 +463,9 @@ def set_tors_def_info(zma, tors_name, tors_sym, pot,
 def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
     """ Set the initial set of groups
     """
-    gra = automol.zmatrix.graph(zma, remove_stereo=True)
+    gra = automol.zmat.graph(zma, stereo=False)
     # ts_gra = automol.graph.add_ts_bonds(gra, keys=[ts_bnd])
-    coo_dct = automol.zmatrix.coordinates(zma, multi=False)
+    coo_dct = automol.zmat.coordinates(zma, multi=False)
     axis = coo_dct[tors_name][1:3]
     atm_key = axis[1]
     if ts_bnd:
@@ -474,7 +474,7 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
                 atm_key = atm
                 break
     # print('tors_def_info test:')
-    # print('zma test:', automol.zmatrix.string(zma))
+    # print('zma test:', automol.zmat.string(zma))
     # print('tors_name test:', tors_name)
     # print('ts_bnd test:', ts_bnd)
     # print('saddle test:', saddle)
@@ -502,7 +502,7 @@ def _set_groups_ini(zma, tors_name, ts_bnd, saddle):
 def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
     """ Assess the hindered rotor groups and axes
     """
-    n_atm = automol.zmatrix.count(zma)
+    n_atm = automol.zmat.count(zma)
     if 'addition' in rxn_class or 'abstraction' in rxn_class:
         group2 = []
         ts_bnd1 = min(ts_bnd)
@@ -522,7 +522,7 @@ def _check_saddle_groups(zma, rxn_class, group, axis, pot, ts_bnd, sym_num):
             if idx not in group and idx not in axis:
                 group2.append(idx)
         all_hyd = True
-        symbols = automol.zmatrix.symbols(zma)
+        symbols = automol.zmat.symbols(zma)
         hyd_count = 0
         for idx in group2:
             if symbols[idx] != 'H' and symbols[idx] != 'X':
@@ -579,7 +579,7 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
     spc_str = mess_io.writer.species(
         spc_label='Tmp',
         spc_data=dat_str,
-        zero_energy=0.0
+        zero_ene=0.0
     )
     pf_inp_str = '\n'.join([global_pf_str, spc_str]) + '\n'
 
@@ -593,8 +593,9 @@ def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
     with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
         output_string = mess_file.read()
 
-    tors_zpes = mess_io.reader.tors.zpves(output_string)
+    tors_zpes = mess_io.reader.tors.zero_point_vibrational_energies(
+        output_string)
     # tors_freqs = mess_io.reader.tors.freqs(output_string)
-    tors_freqs = mess_io.reader.grid_min_freqs(output_string)
+    tors_freqs = mess_io.reader.tors.grid_minimum_frequencies(output_string)
 
     return tors_zpes, tors_freqs

@@ -27,13 +27,10 @@ def options_matrix_optimization(script_str, prefix,
     max_macro_idx, _ = max(subrun_fs[-1].existing(), default=(-1, -1))
     macro_idx = max_macro_idx + 1
     micro_idx = 0
-    read_geom_ = (elstruct.reader.opt_zmatrix_(prog)
-                  if automol.zmatrix.is_valid(geom) else
-                  elstruct.reader.opt_geometry_(prog))
 
-    if freeze_dummy_atoms and automol.zmatrix.is_valid(geom):
+    if freeze_dummy_atoms and automol.zmat.is_valid(geom):
         frozen_coordinates = (tuple(frozen_coordinates) +
-                              automol.zmatrix.dummy_coordinate_names(geom))
+                              automol.zmat.dummy_coordinate_names(geom))
 
     kwargs_ = dict(kwargs)
     while True:
@@ -44,7 +41,7 @@ def options_matrix_optimization(script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 elstruct.writer.optimization, script_str, path,
-                geom=geom, charge=chg, mult=mul, method=method,
+                geo=geom, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, frozen_coordinates=frozen_coordinates,
                 **kwargs_)
 
@@ -71,7 +68,9 @@ def options_matrix_optimization(script_str, prefix,
             kwargs_ = optmat.updated_kwargs(kwargs, options_mat)
             options_mat = optmat.advance(error_row_idx, options_mat)
             if feedback:
-                geom = read_geom_(out_str)
+                geom = (elstruct.reader.opt_zmatrix(prog, out_str)
+                              if automol.zmat.is_valid(geom) else
+                              elstruct.reader.opt_geometry(prog, out_str))
         else:
             # failure
             warnings.resetwarnings()
@@ -107,7 +106,7 @@ def options_matrix_run(input_writer, script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 input_writer, script_str, path,
-                geom=geom, charge=chg, mult=mul, method=method,
+                geo=geom, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, **kwargs_)
 
         error_vals = [elstruct.reader.has_error_message(prog, error, out_str)

@@ -95,9 +95,9 @@ def conformer_sampling(zma, spc_info,
         ioprinter.debug_message('min_cnf_locs test in save_conformer:', min_cnf_locs)
         geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
         if not saddle:
-            # print(automol.zmatrix.string(zma))
-            # print(automol.zmatrix.string(automol.geom.zmatrix(geo)))
-            # assert automol.zmatrix.almost_equal(
+            # print(automol.zmat.string(zma))
+            # print(automol.zmat.string(automol.geom.zmatrix(geo)))
+            # assert automol.zmat.almost_equal(
             #  zma, automol.geom.zmatrix(geo))
             thy_save_fs[-1].file.geometry.write(geo, mod_thy_info[1:4])
             # thy_save_fs[-1].file.zmatrix.write(zma, mod_thy_info[1:4])
@@ -128,7 +128,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
         job=elstruct.Job.OPTIMIZATION,
         script_str=script_str,
         run_fs=run_fs,
-        geom=zma,
+        geo=zma,
         spc_info=spc_info,
         thy_info=mod_thy_info,
         overwrite=overwrite,
@@ -182,7 +182,7 @@ def run_conformers(
     # following check breaks; prob add checks to zmas in idv confs
     # kind of pain
     # ignoring the idea of storing multiple zmas right now
-    # vma = automol.zmatrix.var_(zma)
+    # vma = automol.zmat.var_(zma)
     # if cnf_save_fs[0].file.vmatrix.exists():
     #     existing_vma = cnf_save_fs[0].file.vmatrix.read()
     #     assert vma == existing_vma
@@ -218,23 +218,25 @@ def run_conformers(
 
         # Run the conformer sampling
         if nsampd > 0:
-            samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+            samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
         else:
             samp_zma = zma
 
         ioprinter.debug_message(
             'Checking if ZMA has high repulsion...', newline=1)
         # print('zma tests:',
-        #         automol.zmatrix.string(zma), automol.zmatrix.string(zma))
+        #         automol.zmat.string(zma), automol.zmat.string(zma))
         bad_geom_count = 0
-        while (not automol.intmol.low_repulsion_struct(zma, samp_zma) and
+        geo = automol.zmat.geometry(zma)
+        samp_geo = automol.zmat.geometry(samp_zma)
+        while (not automol.pot.low_repulsion_struct(geo, samp_geo) and
                bad_geom_count < 1000):
             ioprinter.warning_message('ZMA has high repulsion.', indent=1/2.)
             # print('  Bad geometry:')
-            # print(automol.geom.string(automol.zmatrix.geometry(samp_zma)))
+            # print(automol.geom.string(automol.zmat.geometry(samp_zma)))
             ioprinter.warning_message(
                 'Generating new sample ZMA', indent=1/2., newline=1)
-            samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+            samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
             bad_geom_count += 1
         ioprinter.debug_message('ZMA is fine...', indent=1/2.)
 
@@ -255,7 +257,7 @@ def run_conformers(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=samp_zma,
+                geo=samp_zma,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
@@ -277,7 +279,7 @@ def run_conformers(
                     job=elstruct.Job.OPTIMIZATION,
                     script_str=script_str,
                     run_fs=run_fs,
-                    geom=samp_zma,
+                    geo=samp_zma,
                     spc_info=spc_info,
                     thy_info=thy_info,
                     overwrite=overwrite,
@@ -290,7 +292,7 @@ def run_conformers(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=samp_zma,
+                geo=samp_zma,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
@@ -473,7 +475,7 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
 def _is_proper_isomer(cnf_save_fs, zma):
     """ Check if geom is the same isomer as those in the filesys
     """
-    vma = automol.zmatrix.var_(zma)
+    vma = automol.zmat.var_(zma)
     if cnf_save_fs[0].file.vmatrix.exists():
         exist_vma = cnf_save_fs[0].file.vmatrix.read()
         if vma != exist_vma:
@@ -509,7 +511,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
 
     # Use the idxs to set the forming and breaking bond names
     #    if frm_bnd_keys:
-    #      frm_name = automol.zmatrix.bond_key_from_idxs(
+    #      frm_name = automol.zmat.bond_key_from_idxs(
     #           zma, frm_bnd_keys)
     #        ts_bnd1, ts_bnd2 = min(frm_bnd_keys), max(frm_bnd_keys)
     #    else:
@@ -517,7 +519,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     #        ts_bnd1, ts_bnd2 = None, None
 
     # if brk_bnd_keys:
-    #  brk_name = automol.zmatrix.bond_key_from_idxs(
+    #  brk_name = automol.zmat.bond_key_from_idxs(
     #      zma, brk_bnd_keys)
     # else:
     #  brk_name = ''
@@ -525,10 +527,10 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     # print('brk_name', brk_name)
 
     # Calculate the distance of bond being formed
-    # cnf_dct = automol.zmatrix.values(zma)
-    # ref_dct = automol.zmatrix.values(ref_zma)
-    cnf_geo = automol.zmatrix.geometry(zma)
-    ref_geo = automol.zmatrix.geometry(ref_zma)
+    # cnf_dct = automol.zmat.value_dictionary(zma)
+    # ref_dct = automol.zmat.value_dictionary(ref_zma)
+    cnf_geo = automol.zmat.geometry(zma)
+    ref_geo = automol.zmat.geometry(ref_zma)
 
     cnf_dist_lst = []
     ref_dist_lst = []

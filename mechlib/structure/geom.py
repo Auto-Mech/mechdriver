@@ -11,13 +11,12 @@ def build_remdummy_shift_lst(zma):
     """ Assess the zma for dummys and build a list to shift values
         derived from zma
     """
-
-    atom_symbols = automol.zmatrix.symbols(zma)
+    atom_symbols = automol.zmat.symbols(zma)
     dummy_idx = []
     for atm_idx, atm in enumerate(atom_symbols):
         if atm == 'X':
             dummy_idx.append(atm_idx)
-    remdummy = numpy.zeros(len(zma[0]))
+    remdummy = numpy.zeros(automol.zmat.count(zma))
     for dummy in dummy_idx:
         for idx, _ in enumerate(remdummy):
             if dummy < idx:
@@ -31,7 +30,7 @@ def shift_vals_from_dummy(vals, zma):
         Shift requires indices be 1-indexed
     """
 
-    dummy_idxs = automol.zmatrix.atom_indices(zma, 'X', match=True)
+    dummy_idxs = automol.zmat.atom_indices(zma, 'X', match=True)
 
     shift_vals = []
     for val in vals:
@@ -49,7 +48,7 @@ def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
     """ Check to see whether the radical atom is still closest to the bond
         formation site.
     """
-    geo = automol.zmatrix.geometry(zma)
+    geo = automol.zmat.geometry(zma)
     atom_closest = True
     for idx, _ in enumerate(geo):
         if idx < idx_rad:
@@ -79,7 +78,7 @@ def calc_rxn_angle(ts_zma, frm_bnd_keys, brk_bnd_keys, rxn_class):
                     if idx != ang_atms[1]:
                         ang_atms[2] = idx
 
-                geom = automol.zmatrix.geometry(ts_zma)
+                geom = automol.zmat.geometry(ts_zma)
                 angle = automol.geom.central_angle(
                     geom, *ang_atms)
 
@@ -148,8 +147,8 @@ def are_torsions_same(geo, geoi, ts_bnds=()):
     zmai = automol.geom.zmatrix(geoi)
     tors_namesi = automol.geom.zmatrix_torsion_coordinate_names(geoi, ts_bnds=ts_bnds)
     for idx, tors_name in enumerate(tors_names):
-        val = automol.zmatrix.values(zma)[tors_name]
-        vali = automol.zmatrix.values(zmai)[tors_namesi[idx]]
+        val = automol.zmat.value_dictionary(zma)[tors_name]
+        vali = automol.zmat.value_dictionary(zmai)[tors_namesi[idx]]
         valip = vali+2.*numpy.pi
         valim = vali-2.*numpy.pi
         vchk1 = abs(val - vali)
