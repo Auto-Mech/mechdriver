@@ -41,18 +41,18 @@ def run(job, spc_dct, spc_name, thy_dct, es_keyword_dct,
     const_angs_names = ts_dct['const_angs_names']
     constraint_dct = {}
     if const_bnd_key:
-        const_name = automol.zmatrix.bond_key_from_idxs(
+        const_name = automol.zmat.bond_key_from_idxs(
             ini_zma, const_bnd_key)
-        coords = automol.zmatrix.values(ini_zma)
+        coords = automol.zmat.value_dictionary(ini_zma)
         const_val = coords[const_name]
         constraint_dct[const_name] = const_val
     if const_tors_names:
-        coords = automol.zmatrix.values(ini_zma)
+        coords = automol.zmat.value_dictionary(ini_zma)
         for const_tors_name in const_tors_names:
             const_val = coords[const_tors_name]
             constraint_dct[const_tors_name] = const_val
     if const_angs_names:
-        coords = automol.zmatrix.values(ini_zma)
+        coords = automol.zmat.value_dictionary(ini_zma)
         for const_angs_name in const_angs_names:
             const_val = coords[const_angs_name]
             constraint_dct[const_angs_name] = const_val
@@ -358,7 +358,7 @@ def barrierless_transition_state(
     _ = vrc_dct
 
     # Set information from the transition state
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ts_zma))
+    ts_formula = automol.geom.formula(automol.zmat.geometry(ts_zma))
     [grid1, grid2] = grid
 
     # Get info from the reactants

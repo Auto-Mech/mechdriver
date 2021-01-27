@@ -130,7 +130,7 @@ def min_dist_conformer_zma(dist_name, cnf_save_fs):
     min_dist = 100.
     min_zma = []
     for zma in cnf_zmas:
-        dist = automol.zmatrix.values(zma)[dist_name]
+        dist = automol.zmat.value_dictionary(zma)[dist_name]
         if dist < min_dist:
             min_dist = dist
             min_zma = zma
@@ -148,9 +148,9 @@ def min_dist_conformer_zma_geo(dist_coords, cnf_save_fs):
     min_dist = 100.
     min_zma = []
     for zma in cnf_zmas:
-        zmas, _ = automol.zmatrix.shifted_standard_zmas_graphs([zma])
+        zmas, _ = automol.zmat.shifted_standard_zmas_graphs([zma])
         zma = zmas[0]
-        geo = automol.zmatrix.geometry(zma)
+        geo = automol.zmat.geometry(zma)
         dist = automol.geom.distance(geo, *list(dist_coords))
         if dist < min_dist:
             min_dist = dist

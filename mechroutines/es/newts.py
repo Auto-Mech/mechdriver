@@ -72,8 +72,8 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
     # tors_names = ts_dct['amech_ts_tors_names']
 
     # Get reaction coordinates
-    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-    brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
+    frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    brk_name = automol.zmat.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
     # Constraint dcts for saddle point searches
     const_bnd_key = ts_dct['const_bnd_key']
@@ -81,18 +81,18 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
     const_angs_names = ts_dct['const_angs_names']
     constraint_dct = {}
     if const_bnd_key:
-        const_name = automol.zmatrix.bond_key_from_idxs(
+        const_name = automol.zmat.bond_key_from_idxs(
             ini_zma, const_bnd_key)
-        coords = automol.zmatrix.values(ini_zma)
+        coords = automol.zmat.value_dictionary(ini_zma)
         const_val = coords[const_name]
         constraint_dct[const_name] = const_val
     if const_tors_names:
-        coords = automol.zmatrix.values(ini_zma)
+        coords = automol.zmat.value_dictionary(ini_zma)
         for const_tors_name in const_tors_names:
             const_val = coords[const_tors_name]
             constraint_dct[const_tors_name] = const_val
     if const_angs_names:
-        coords = automol.zmatrix.values(ini_zma)
+        coords = automol.zmat.value_dictionary(ini_zma)
         for const_angs_name in const_angs_names:
             const_val = coords[const_angs_name]
             constraint_dct[const_angs_name] = const_val
@@ -162,7 +162,7 @@ def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
     frm_bnd_keys = ts_dct['frm_bnd_keys']
 
     # Get reaction coordinates
-    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
@@ -217,12 +217,12 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     high_mul = ts_dct['high_mult']
     ini_zma = ts_dct['zma']
     frm_bnd_keys = ts_dct['frm_bnd_keys']
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
+    ts_formula = automol.geom.formula(automol.zmat.geometry(ini_zma))
     active_space = ts_dct['active_space']
     rcts_gra = ts_dct['rcts_gra']
 
     # Get reaction coordinates
-    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
 
     # Get es options
     pot_thresh = es_keyword_dct['pot_thresh']
@@ -306,11 +306,11 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     high_mul = ts_dct['high_mult']
     ini_zma = ts_dct['zma']
     frm_bnd_keys = ts_dct['frm_bnd_keys']
-    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
+    ts_formula = automol.geom.formula(automol.zmat.geometry(ini_zma))
     active_space = ts_dct['active_space']
 
     # Get reaction coordinates
-    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
@@ -475,8 +475,8 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
     # ini_zma = ts_dct['zma']
     # frm_bnd_keys = ts_dct['frm_bnd_keys']
     # brk_bnd_keys = ts_dct['brk_bnd_keys']
-    # frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-    # brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
+    # frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    # brk_name = automol.zmat.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
     # Set the hs info
     hs_info = (ts_info[0], ts_info[1], ts_dct['high_mult'])

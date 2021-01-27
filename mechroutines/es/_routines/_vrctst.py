@@ -38,7 +38,7 @@ def calc_vrctst_flux(ini_zma, ts_info, hs_info,
     vrc_dct = _vrc_dct()
 
     # Set up the casscf options
-    ref_zma = automol.zmatrix.set_values(ini_zma, {coord_name: grid1[0]})
+    ref_zma = automol.zmat.set_values(ini_zma, {coord_name: grid1[0]})
     cas_kwargs = wfn.build_wfn(ref_zma, ts_info, ts_formula, high_mul,
                                rct_ichs, rct_info,
                                active_space, mod_var_scn_thy_info)
@@ -46,7 +46,7 @@ def calc_vrctst_flux(ini_zma, ts_info, hs_info,
         mod_var_sp1_thy_info[0], mod_var_sp1_thy_info[1])
 
     # Get indices for potentials and input
-    bnd_frm_idxs = automol.zmatrix.coord_idxs(ini_zma, coord_name)
+    bnd_frm_idxs = automol.zmat.coord_idxs(ini_zma, coord_name)
     min_idx, max_idx = min(bnd_frm_idxs), max(bnd_frm_idxs)
     bnd_frm_idxs = (bnd_frm_idxs[0]+1, bnd_frm_idxs[1]+1)
 
@@ -173,8 +173,8 @@ def _set_alt_constraints(inf_sep_zma, rct_zmas):
     """ Set the additional constraints for the constrained MEP
     """
 
-    frag1_natom = automol.zmatrix.count(rct_zmas[0])
-    frag2_natom = automol.zmatrix.count(rct_zmas[1])
+    frag1_natom = automol.zmat.count(rct_zmas[0])
+    frag2_natom = automol.zmat.count(rct_zmas[1])
 
     # Build pairs for intermolecular coords to optimize:
     #   (zma_atom_idx, coord_idx in row) (uses 0-indexing)
@@ -193,7 +193,7 @@ def _set_alt_constraints(inf_sep_zma, rct_zmas):
 
     # Now grab the coordinates NOT in the opt coord idxs
     alt_froz_coords = []
-    name_matrix = automol.zmatrix.name_matrix(inf_sep_zma)
+    name_matrix = automol.zmat.name_matrix(inf_sep_zma)
     for row_idx, row in enumerate(name_matrix):
         for coord_idx, coord in enumerate(row):
             if [row_idx, coord_idx] not in no_frz_idxs:
@@ -201,7 +201,7 @@ def _set_alt_constraints(inf_sep_zma, rct_zmas):
                     alt_froz_coords.append(coord)
 
     # Now build the constraint dictionary
-    zma_vals = automol.zmatrix.values(inf_sep_zma)
+    zma_vals = automol.zmat.value_dictionary(inf_sep_zma)
     constraint_dct = dict(zip(
         alt_froz_coords, (zma_vals[name] for name in alt_froz_coords)))
 
@@ -574,11 +574,11 @@ def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
     """
 
     # Get geometries of fragments from the ts_zma from the MEP
-    mep_total_geo = automol.zmatrix.geometry(ts_zma)
+    mep_total_geo = automol.zmat.geometry(ts_zma)
     mep_fgeos = [mep_total_geo[:max_idx], mep_total_geo[max_idx:]]
 
     # Get geometries of isolated fragments at infinite sepearation
-    iso_fgeos = [automol.zmatrix.geometry(zma) for zma in rct_zmas]
+    iso_fgeos = [automol.zmat.geometry(zma) for zma in rct_zmas]
 
     # Reorder the iso_fgeos to line up with the mep_frag_geos
     (iso1_symbs, iso2_symbs) = (automol.geom.symbols(geo) for geo in iso_fgeos)

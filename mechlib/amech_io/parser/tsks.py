@@ -3,6 +3,7 @@
 """
 
 import sys
+import ioformat
 from ioformat.ptt import set_value_type
 from mechlib.amech_io.parser.keywords import ES_TSK_OBJ_SUPPORTED_LST
 from mechlib.amech_io.parser.keywords import ES_TSK_SUPPORTED_DCT

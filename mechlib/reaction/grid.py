@@ -50,7 +50,7 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs,
     # # Add second guess zma for migrations
     if 'migration' in typ:
         max_grid_val = grid[max_idx]
-        mig_zma = automol.zmatrix.set_values(
+        mig_zma = automol.zmat.set_values(
             ts_zma, {dist_name: max_grid_val})
         guess_zmas.append(mig_zma)
 
@@ -319,8 +319,8 @@ def ring_forming_scission_grid(npoints, bnd_atoms):
     # for now try 1-d grid and see if it is effective
     npoints1 = 7 if npoints is None else npoints
     # npoints2 = 8
-    # syms = automol.zmatrix.symbols(ts_zma)
-    # brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
+    # syms = automol.zmat.symbols(ts_zma)
+    # brk_coo, = automol.zmat.coordinates(ts_zma)[brk_name]
     # brk_len_key = tuple(sorted(map(syms.__getitem__, brk_coo)))
     # brk_len = bnd.LEN_DCT[brk_len_key]
     bnd_len = bnd.read_len(bnd_atoms)
@@ -379,10 +379,10 @@ def hydrogen_migration_grid(npoints, bnd_atoms, ts_zma, dist_name):
     """
     interval = 0.3*phycon.ANG2BOHR
     # get rmax from ts_zma
-    rmax = automol.zmatrix.values(ts_zma)[dist_name]
+    rmax = automol.zmat.value_dictionary(ts_zma)[dist_name]
     rmin1 = 2.0*phycon.ANG2BOHR
     rmin2 = 1.3*phycon.ANG2BOHR
-    # print('ts_zma:', automol.zmatrix.string(ts_zma))
+    # print('ts_zma:', automol.zmat.string(ts_zma))
     # print('rmin1, rmin2, rmax:', rmin1, rmin2, rmax)
     bnd_len = bnd.read_len(bnd_atoms)
     if bnd_len is not None:
@@ -407,11 +407,11 @@ def hydrogen_migration_grid(npoints, bnd_atoms, ts_zma, dist_name):
 def unimolecular_elimination_grid(bnd_atoms, ts_zma, brk_name):
     """ Build forward 2D grid for elimination reaction
     """
-    syms = automol.zmatrix.symbols(ts_zma)
+    syms = automol.zmat.symbols(ts_zma)
     print('syms', syms)
-    brk_coo, = automol.zmatrix.coordinates(ts_zma)[brk_name]
+    brk_coo, = automol.zmat.coordinates(ts_zma)[brk_name]
     print('brk_coo', brk_coo)
-    print(automol.zmatrix.string(ts_zma))
+    print(automol.zmat.string(ts_zma))
     brk_len_key = tuple(sorted(map(syms.__getitem__, brk_coo)))
 
     # interval = 0.2 * phycon.ANG2BOHR

@@ -12,7 +12,7 @@ from phydat import phycon
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import parser
 from mechlib import filesys
-from mechlib.structure import instab
+# from mechlib.structure import instab
 from mechroutines.pf.models import _vib as vib
 from mechroutines.pf.models import ene
 from mechroutines.pf.thermo import basis
@@ -59,14 +59,14 @@ def run_tsk(tsk, spc_dct, rxn_lst,
 
         ioprinter.obj('line_dash')
         ioprinter.info_message("Species: ", spc_name)
-        stable = instab.check_unstable_species(
-            tsk, spc_dct, spc_name, thy_info, save_prefix)
-        if not stable:
-            ioprinter.info_message(
-                'Properties for species {}'.format(spc_name),
-                'will not be included in output',
-                'because species is unstable')
-            continue
+        # stable = instab.check_unstable_species(
+        #     tsk, spc_dct, spc_name, thy_info, save_prefix)
+        # if not stable:
+        #     ioprinter.info_message(
+        #         'Properties for species {}'.format(spc_name),
+        #         'will not be included in output',
+        #         'because species is unstable')
+        #     continue
 
         spc_dct_i = spc_dct[spc_name]
 
@@ -155,7 +155,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                 zma = automol.geom.zmatrix(geo)
                 energy = cnf_fs[-1].file.energy.read(locs)
                 comment = 'energy: {0:>15.10f}\n'.format(energy)
-                zma_str = automol.zmatrix.string(zma)
+                zma_str = automol.zmat.string(zma)
                 spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
                     spc_name, locs, locs_path) + comment + zma_str
                 csv_data[label] = spc_data

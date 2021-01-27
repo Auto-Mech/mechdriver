@@ -27,9 +27,9 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
 
     # Determine the reaction types
     #for rct_zma in rct_zmas:
-        # print('zma test in ts_class:', automol.zmatrix.string(rct_zma))
+        # print('zma test in ts_class:', automol.zmat.string(rct_zma))
     #for prd_zma in prd_zmas:
-        # print('zma test in ts_class:', automol.zmatrix.string(prd_zma))
+        # print('zma test in ts_class:', automol.zmat.string(prd_zma))
     ret = determine_reaction_type(
         rct_zmas, prd_zmas,
         ts_mul, high_mul, low_mul,
@@ -43,8 +43,8 @@ def ts_class(rct_zmas, prd_zmas, rad_rad, ts_mul, low_mul, high_mul,
      frm_bnd_keys, brk_bnd_key, const_bnd_key, rcts_gra, rxn_dir] = ret
 
     # Determine grid for preliminary search for all different reaction types
-    dist_coo, = automol.zmatrix.coordinates(ts_zma)[dist_name]
-    syms = automol.zmatrix.symbols(ts_zma)
+    dist_coo, = automol.zmat.coordinates(ts_zma)[dist_name]
+    syms = automol.zmat.symbols(ts_zma)
     # print('dist_coo', dist_coo)
     ts_bnd_len = tuple(sorted(map(syms.__getitem__, dist_coo)))
     grid, update_guess, bkp_grid, bkp_update_guess = rxngrid.build_grid(
@@ -85,20 +85,20 @@ def conv_termol_to_bimol(rct_zmas, prd_zmas):
     # Need to be able to find the TS for channel preceding direct decomp.
     rct_tors_names = []
     if len(rct_zmas) > 2:
-        ret = automol.zmatrix.ts.addition(rct_zmas[1:-1], [prd_zmas[-1]])
+        ret = automol.zmat.ts.addition(rct_zmas[1:-1], [prd_zmas[-1]])
         new_zma, dist_name, rct_tors_names = ret
-        new_zma = automol.zmatrix.standard_form(new_zma)
-        babs2 = automol.zmatrix.get_babs2(new_zma, dist_name)
-        new_zma = automol.zmatrix.set_values(
+        new_zma = automol.zmat.standard_form(new_zma)
+        babs2 = automol.zmat.get_babs2(new_zma, dist_name)
+        new_zma = automol.zmat.set_values(
             new_zma, {dist_name: 2.2, babs2: 180. * phycon.DEG2RAD})
         rct_zmas = [rct_zmas[0], new_zma]
     elif len(prd_zmas) > 2:
-        ret = automol.zmatrix.ts.addition(prd_zmas[1:-1], [prd_zmas[-1]])
+        ret = automol.zmat.ts.addition(prd_zmas[1:-1], [prd_zmas[-1]])
         new_zma, dist_name, rct_tors_names = ret
-        new_zma = automol.zmatrix.standard_form(new_zma)
-        babs1 = automol.zmatrix.get_babs1(new_zma, dist_name)
+        new_zma = automol.zmat.standard_form(new_zma)
+        babs1 = automol.zmat.get_babs1(new_zma, dist_name)
         aabs1 = babs1.replace('D', 'A')
-        new_zma = automol.zmatrix.set_values(
+        new_zma = automol.zmat.set_values(
             new_zma, {dist_name: 2.2, aabs1: 170. * phycon.DEG2RAD})
         prd_zmas = [prd_zmas[0], new_zma]
 
@@ -140,25 +140,25 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             cnf_save_fs_lst = prd_cnf_save_fs_lst
 
         # Check for addition
-        ret = automol.zmatrix.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
+        ret = automol.zmat.ts.addition(rct_zmas, prd_zmas, rct_tors_names)
         if ret and (not given_class or given_class == 'addition'):
             typ = 'addition'
             ts_zma, dist_name, frm_bnd_keys, tors_names, rcts_gra = ret
             typ += ' '
             typ += set_ts_spin(ts_mul, high_mul, low_mul)
             # Set up beta sci as fall back option for failed addn TS search
-            ret2 = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
+            ret2 = automol.zmat.ts.beta_scission(rct_zmas, prd_zmas)
             if ret2:
                 bkp_typ = 'beta scission'
                 bkp_ts_zma, bkp_dist_name, _, bkp_tors_names, _ = ret2
 
         # Check for beta-scission
         if typ is None:
-            ret = automol.zmatrix.ts.beta_scission(rct_zmas, prd_zmas)
+            ret = automol.zmat.ts.beta_scission(rct_zmas, prd_zmas)
             if ret and (not given_class or given_class == 'betascission'):
                 typ = 'beta scission'
                 ts_zma, dist_name, brk_bnd_key, tors_names, rcts_gra = ret
-                ret2 = automol.zmatrix.ts.addition(
+                ret2 = automol.zmat.ts.addition(
                     prd_zmas, rct_zmas, rct_tors_names)
                 if ret2:
                     bkp_typ = 'addition'
@@ -166,13 +166,13 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 
         # Check for hydrogen migration
         if typ is None:
-            orig_dist = automol.zmatrix.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
+            orig_dist = automol.zmat.ts.min_hyd_mig_dist(rct_zmas, prd_zmas)
             hmcls = not given_class or given_class == 'hydrogenmigration'
             if orig_dist and hmcls:
                 rct_zmas = filesys.mincnf.min_dist_conformer_zma_geo(
                     orig_dist, cnf_save_fs_lst[0])
                 # print('rct_zmas in hydrogen_migration:', rct_zmas)
-                ret = automol.zmatrix.ts.hydrogen_migration(rct_zmas, prd_zmas)
+                ret = automol.zmat.ts.hydrogen_migration(rct_zmas, prd_zmas)
                 if ret:
                     typ = 'hydrogen migration'
                     zma, dist_name, frm_bnd_keys, brk_bnd_key, const_bnd_key, tors_names, rcts_gra = ret
@@ -180,7 +180,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 
         # Check for hydrogen abstraction
         if typ is None:
-            ret = automol.zmatrix.ts.hydrogen_abstraction(
+            ret = automol.zmat.ts.hydrogen_abstraction(
                 rct_zmas, prd_zmas, sigma=False)
             hmcls = not given_class or given_class == 'hydrogenmigration'
             if ret and hmcls:
@@ -195,7 +195,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 
         # Check for insertion
         if typ is None:
-            ret = automol.zmatrix.ts.insertion(rct_zmas, prd_zmas)
+            ret = automol.zmat.ts.insertion(rct_zmas, prd_zmas)
             if ret and (not given_class or given_class == 'insertion'):
                 typ = 'insertion'
                 ts_zma, dist_name, tors_names = ret
@@ -204,7 +204,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 
         # Check for subsitution
         # if typ is None:
-        #     ret = automol.zmatrix.ts.substitution(rct_zmas, prd_zmas)
+        #     ret = automol.zmat.ts.substitution(rct_zmas, prd_zmas)
         #     if ret and (not given_class or given_class == 'substitution'):
         #         typ = 'substitution'
         #         ts_zma, dist_name, tors_names = ret
@@ -213,13 +213,13 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 
         # Check for elimination
         if typ is None:
-            orig_dist = automol.zmatrix.ts.min_unimolecular_elimination_dist(
+            orig_dist = automol.zmat.ts.min_unimolecular_elimination_dist(
                 rct_zmas, prd_zmas)
             # print('origdist', orig_dist)
             if orig_dist:
                 rct_zmas = filesys.mincnf.min_dist_conformer_zma_geo(
                     orig_dist, cnf_save_fs_lst[0])
-                ret = automol.zmatrix.ts.concerted_unimolecular_elimination(
+                ret = automol.zmat.ts.concerted_unimolecular_elimination(
                     rct_zmas, prd_zmas)
                 if ret and (not given_class or given_class == 'elimination'):
                     typ = 'elimination'
@@ -229,7 +229,7 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 
         # Check for ring forming scission
         if typ is None:
-            ret = automol.zmatrix.ts.ring_forming_scission(rct_zmas, prd_zmas)
+            ret = automol.zmat.ts.ring_forming_scission(rct_zmas, prd_zmas)
             if ret and (not given_class or given_class == 'ring forming scission'):
                 typ = 'ring forming scission'
                 # ts_zma, dist_name, brk_name, brk_bnd_key, frm_bnd_keys, tors_names, rcts_gra = ret
@@ -257,10 +257,10 @@ def determine_reaction_type(rct_zmas, prd_zmas,
             bkp_typ = 'radical radical ' + bkp_typ
 
     # print('brk_bnd_key test:', brk_bnd_key)
-    # print('ts_zma test:\n',automol.zmatrix.string(ts_zma))
+    # print('ts_zma test:\n',automol.zmat.string(ts_zma))
     if not brk_name:
         if brk_bnd_key:
-            brk_name = automol.zmatrix.bond_key_from_idxs(ts_zma, brk_bnd_key)
+            brk_name = automol.zmat.bond_key_from_idxs(ts_zma, brk_bnd_key)
         else:
             brk_name = []
 
@@ -278,8 +278,8 @@ def determine_reaction_type(rct_zmas, prd_zmas,
 def set_rxn_molecularity(rct_zmas, prd_zmas):
     """ Determine molecularity of the reaction
     """
-    rct_molecularity = automol.zmatrix.count(rct_zmas)
-    prd_molecularity = automol.zmatrix.count(prd_zmas)
+    rct_molecularity = automol.zmat.count(rct_zmas)
+    prd_molecularity = automol.zmat.count(prd_zmas)
     rxn_molecularity = (rct_molecularity, prd_molecularity)
     return rxn_molecularity
 

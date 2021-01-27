@@ -22,10 +22,10 @@ def tau_sampling(zma, ref_ene, spc_info, tors_name_grps, nsamp_par,
     """
 
     # Read the geometry from the initial filesystem and set sampling
-    tors_ranges = automol.zmatrix.torsional_sampling_ranges(tors_name_grps)
+    tors_ranges = automol.zmat.torsional_sampling_ranges(tors_name_grps)
     tors_range_dct = dict(zip(
         tuple(grp[0] for grp in tors_name_grps), tors_ranges))
-    gra = automol.zmatrix.graph(zma)
+    gra = automol.zmat.graph(zma)
     ntaudof = len(automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
     nsamp = util.nsamp_init(nsamp_par, ntaudof)
     # Run through tau sampling process
@@ -72,7 +72,7 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
 
     tau_save_fs[0].create()
 
-    vma = automol.zmatrix.var_(zma)
+    vma = automol.zmat.var_(zma)
     if tau_save_fs[0].file.vmatrix.exists():
         existing_vma = tau_save_fs[0].file.vmatrix.read()
         assert vma == existing_vma
@@ -99,7 +99,7 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
 
         ioprinter.info_message("New nsamp is {:d}.".format(nsamp), indent=1)
 
-        samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+        samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
         tid = autofile.schema.generate_new_tau_id()
         locs = [tid]
 
@@ -112,13 +112,15 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
 
         ioprinter.debug_message(
             'Checking if ZMA has high repulsion...', newline=1)
-        if automol.intmol.low_repulsion_struct(zma, samp_zma):
+        geo = automol.zmat.geometry(zma)
+        samp_geo = automol.zmat.geometry(samp_zma)
+        if automol.pot.low_repulsion_struct(geo, samp_geo):
             ioprinter.debug_message('ZMA fine.')
             es_runner.run_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=samp_zma,
+                geo=samp_zma,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 saddle=saddle,
@@ -129,7 +131,7 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
         else:
             ioprinter.warning_message('repulsive ZMA:')
             inp_str = elstruct.writer.optimization(
-                geom=samp_zma,
+                geo=samp_zma,
                 charge=spc_info[1],
                 mult=spc_info[2],
                 method=thy_info[1],

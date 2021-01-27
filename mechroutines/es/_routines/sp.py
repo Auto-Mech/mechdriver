@@ -70,7 +70,7 @@ def run_energy(zma, geo, spc_info, thy_info,
             job='energy',
             script_str=script_str,
             run_fs=run_fs,
-            geom=job_geo,
+            geo=job_geo,
             spc_info=spc_info,
             thy_info=thy_info,
             errors=errs,
@@ -114,7 +114,7 @@ def run_gradient(zma, geo, spc_info, thy_info,
     if geo is not None:
         job_geo = geo
     else:
-        job_geo = automol.zmatrix.geometry(zma)
+        job_geo = automol.zmat.geometry(zma)
     is_atom = automol.geom.is_atom(job_geo)
 
     if not is_atom:
@@ -142,7 +142,7 @@ def run_gradient(zma, geo, spc_info, thy_info,
                 job='gradient',
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=job_geo,
+                geo=job_geo,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
@@ -204,7 +204,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
     if geo is not None:
         job_geo = geo
     else:
-        job_geo = automol.zmatrix.geometry(zma)
+        job_geo = automol.zmat.geometry(zma)
     is_atom = automol.geom.is_atom(job_geo)
 
     if not is_atom:
@@ -232,7 +232,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 job='hessian',
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=job_geo,
+                geo=job_geo,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
@@ -293,11 +293,11 @@ def run_vpt2(zma, geo, spc_info, thy_info,
     if spc_info[0] in symm.HIGH:
         if zma is not None:
             disp = symm.HIGH[spc_info[0]] * phycon.ANG2BOHR
-            vals = automol.zmatrix.values(zma)
-            job_geo = automol.zmatrix.set_values(
+            vals = automol.zmat.value_dictionary(zma)
+            job_geo = automol.zmat.set_values(
                 zma, {'R1': vals['R1'] + disp})
             is_atom = automol.geom.is_atom(
-                automol.zmatrix.geometry(job_geo))
+                automol.zmat.geometry(job_geo))
         else:
             ioprinter.warning_message(
                 'Need a zma for high-symmetry of {}.'.format(spc_info[0]),
@@ -307,7 +307,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
     else:
         if zma is not None:
             job_geo = zma
-            is_atom = automol.geom.is_atom(automol.zmatrix.geometry(job_geo))
+            is_atom = automol.geom.is_atom(automol.zmat.geometry(job_geo))
         else:
             job_geo = geo
             is_atom = automol.geom.is_atom(job_geo)
@@ -335,7 +335,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 job='vpt2',
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=job_geo,
+                geo=job_geo,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
@@ -400,7 +400,7 @@ def run_prop(zma, geo, spc_info, thy_info,
     if geo is not None:
         job_geo = geo
     else:
-        job_geo = automol.zmatrix.geometry(zma)
+        job_geo = automol.zmat.geometry(zma)
 
     if _json_database(geo_save_path):
         dmom_exists = geo_save_fs[-1].json.dipole_moment.exists(locs)
@@ -428,7 +428,7 @@ def run_prop(zma, geo, spc_info, thy_info,
             job='molec_properties',
             script_str=script_str,
             run_fs=run_fs,
-            geom=job_geo,
+            geo=job_geo,
             spc_info=spc_info,
             thy_info=thy_info,
             overwrite=overwrite,

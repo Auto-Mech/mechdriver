@@ -88,8 +88,9 @@ def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
     # this will be accounted for separately as multiplicative factor
     mod_sym_geos = []
     for geo_sym_i in sym_geos:
-        mod_geo_sym_i, end_group_factor = automol.geom.end_group_sym_factor(
+        ret = automol.geom.end_group_symmetry_factor(
             geo_sym_i, frm_bnd_keys, brk_bnd_keys)
+        mod_geo_sym_i, end_group_factor = ret
         # ioprinter.info_message('end_group_factor test:', end_group_factor)
 
         new_geom = True

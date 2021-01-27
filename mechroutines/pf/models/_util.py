@@ -95,7 +95,7 @@ def get_rxn_coord_name(ts_path, frm_bnd_keys, sadpt=False, zma_locs=(0,)):
     if sadpt:
         zma_fs = autofile.fs.zmatrix(ts_path)
         zma = zma_fs[-1].file.zmatrix.read(zma_locs)
-        frm_name = automol.zmatrix.bond_key_from_idxs(
+        frm_name = automol.zmat.bond_key_from_idxs(
             zma, frm_bnd_keys)
     else:
         zma_fs = autofile.fs.zmatrix(ts_path)

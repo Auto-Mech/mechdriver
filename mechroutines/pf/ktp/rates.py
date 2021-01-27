@@ -243,7 +243,7 @@ def _make_channel_mess_strs(tsname, rxn, spc_dct, label_dct, written_labels,
                 well_str += '\n! {}\n'.format(rgt_names[0])
                 well_str += mess_io.writer.well(
                     chn_label, spc_strs[0],
-                    zero_energy=rgt_ene,
+                    zero_ene=rgt_ene,
                     edown_str=edown_str,
                     collid_freq_str=collid_freq_str)
 

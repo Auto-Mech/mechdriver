@@ -52,7 +52,7 @@ def make_spc_mess_str(spc_dct, spc_name,
     spc_str = mess_io.writer.species(
         spc_label=spc_name,
         spc_data=mess_block,
-        zero_energy=zero_energy
+        zero_ene=zero_energy
     )
 
     return spc_str, dat_str_dct

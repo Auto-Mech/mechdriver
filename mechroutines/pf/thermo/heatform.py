@@ -1716,7 +1716,7 @@ def _xor(lst1, lst2):
 def _remove_dummies(zma, frm_key, brk_key, geo=None):
     """get zma and bond key idxs without dummy atoms
     """
-    zgeo = automol.zmatrix.geometry(zma)
+    zgeo = automol.zmat.geometry(zma)
     brk_key2 = None
     if isinstance(brk_key, list):
         brk_key, brk_key2 = brk_key
