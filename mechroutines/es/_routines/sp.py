@@ -294,7 +294,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
         if zma is not None:
             disp = symm.HIGH[spc_info[0]] * phycon.ANG2BOHR
             vals = automol.zmat.value_dictionary(zma)
-            job_geo = automol.zmat.set_values(
+            job_geo = automol.zmat.set_values_by_name(
                 zma, {'R1': vals['R1'] + disp})
             is_atom = automol.geom.is_atom(
                 automol.zmat.geometry(job_geo))

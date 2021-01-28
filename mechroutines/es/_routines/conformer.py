@@ -128,7 +128,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
         job=elstruct.Job.OPTIMIZATION,
         script_str=script_str,
         run_fs=run_fs,
-        geo=zma,
+        geom=zma,
         spc_info=spc_info,
         thy_info=mod_thy_info,
         overwrite=overwrite,
@@ -292,7 +292,7 @@ def run_conformers(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=run_fs,
-                geo=samp_zma,
+                geom=samp_zma,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
@@ -652,6 +652,33 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     return viable
 
 
+def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
+                  ini_cnf_save_fs, ini_cnf_save_locs_lst):
+    """ Assess which structures from the cnf_save_fs currently exist
+        within the ini_cnf_save_fs. Generate a dictionary to connect
+        the two
+    """
+
+    match_dct = {}
+    for ini_locs in ini_cnf_save_locs_lst:
+
+        match_dct[ini_locs] = None
+        # Loop over structs in cnf_save, see if they match the current struct
+        _, inigeo = filesys.inf.cnf_fs_zma_geo(
+            ini_cnf_save_fs, ini_locs)
+        ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
+        ioprinter.checking('structures', ini_cnf_save_path)
+        for locs in cnf_save_locs_lst:
+            _, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
+            if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):
+                cnf_save_path = cnf_save_fs[-1].path(locs)
+                ioprinter.info_message('- Similar structure found at {}'.format(cnf_save_path))
+                match_dct[ini_locs] = locs
+                break
+
+    return match_dct
+
+
 def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
                     ini_cnf_save_fs, ini_cnf_save_locs_lst):
     """ Assess which structures from the cnf_save_fs currently exist
@@ -669,7 +696,7 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
         _, inigeo = filesys.inf.cnf_fs_zma_geo(
             ini_cnf_save_fs, ini_locs)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
-        ioprinter.checking('structure', ini_cnf_save_path)
+        ioprinter.checking('structures', ini_cnf_save_path)
         for locs in cnf_save_locs_lst:
             _, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
             if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):

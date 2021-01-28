@@ -89,7 +89,7 @@ def read_anharmon_matrix(pf_filesystems):
 
 
 def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
-                             prefix, saddle=False):
+                             prefix, saddle=False, conf=None):
     """ Get frequencies from one version of ProjRot
     """
 
@@ -100,7 +100,9 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     # Build the filesystems
     [harm_cnf_fs, _, harm_min_locs, _, harm_run_fs] = pf_filesystems['harm']
     [tors_cnf_fs, _, tors_min_locs, _, tors_run_fs] = pf_filesystems['tors']
-
+    if conf:
+        harm_min_locs = conf[1]
+        harm_cnf_fs = conf[2]
     # Build the run filesystem using locs
     harm_run_fs[-1].create(harm_min_locs)
     harm_run_path = harm_run_fs[-1].path(harm_min_locs)

@@ -127,7 +127,7 @@ def run_job(
                 runner, irc_direction=irc_direction)
 
         inp_str, out_str = runner(
-            script_str, run_path, geo=geom, chg=spc_info[1],
+            script_str, run_path, geom=geom, chg=spc_info[1],
             mul=spc_info[2], method=thy_info[1], basis=thy_info[2],
             orb_type=thy_info[3], prog=thy_info[0],
             errors=errors, options_mat=options_mat, **kwargs

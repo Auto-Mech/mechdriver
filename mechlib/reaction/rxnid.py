@@ -89,7 +89,7 @@ def conv_termol_to_bimol(rct_zmas, prd_zmas):
         new_zma, dist_name, rct_tors_names = ret
         new_zma = automol.zmat.standard_form(new_zma)
         babs2 = automol.zmat.get_babs2(new_zma, dist_name)
-        new_zma = automol.zmat.set_values(
+        new_zma = automol.zmat.set_values_by_name(
             new_zma, {dist_name: 2.2, babs2: 180. * phycon.DEG2RAD})
         rct_zmas = [rct_zmas[0], new_zma]
     elif len(prd_zmas) > 2:
@@ -98,7 +98,7 @@ def conv_termol_to_bimol(rct_zmas, prd_zmas):
         new_zma = automol.zmat.standard_form(new_zma)
         babs1 = automol.zmat.get_babs1(new_zma, dist_name)
         aabs1 = babs1.replace('D', 'A')
-        new_zma = automol.zmat.set_values(
+        new_zma = automol.zmat.set_values_by_name(
             new_zma, {dist_name: 2.2, aabs1: 170. * phycon.DEG2RAD})
         prd_zmas = [prd_zmas[0], new_zma]
 
