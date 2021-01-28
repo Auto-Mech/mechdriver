@@ -17,8 +17,9 @@ from mechlib.amech_io import printer as ioprinter
 
 
 # Functions to hand reading and formatting energies of single species
-def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                run_prefix, read_ene=True, read_zpe=True, saddle=False):
+def read_energy(
+        spc_dct_i, pf_filesystems, pf_models, pf_levels,
+        run_prefix, read_ene=True, read_zpe=True, conf=None, saddle=False):
     """ Get the energy for a species on a channel
     """
 
@@ -26,14 +27,14 @@ def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     e_elec = None
     if read_ene:
         e_elec = electronic_energy(
-            spc_dct_i, pf_filesystems, pf_levels)
+            spc_dct_i, pf_filesystems, pf_levels, conf=conf)
         ioprinter.debug_message('e_elec in models ene ', e_elec)
 
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
             spc_dct_i, pf_filesystems, pf_models,
-            pf_levels, run_prefix, saddle=saddle)
+            pf_levels, run_prefix, saddle=saddle, conf=conf)
         ioprinter.debug_message('zpe in models ene ', e_zpe)
 
     # Return the total energy requested
@@ -49,7 +50,7 @@ def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     return ene
 
 
-def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
+def electronic_energy(spc_dct_i, pf_filesystems, pf_levels, conf=None):
     """ get high level energy at low level optimized geometry
     """
 
@@ -59,7 +60,10 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
     spc_info = finf.get_spc_info(spc_dct_i)
 
     # Get the harmonic filesys information
-    [_, cnf_path, _, _, _] = pf_filesystems['harm']
+    if conf:
+        cnf_path = conf[1]
+    else:
+        [_, cnf_path, _, _, _] = pf_filesystems['harm']
 
     # Get the electronic energy levels
     ene_levels = pf_levels['ene'][1]
@@ -93,7 +97,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
 
 def zero_point_energy(spc_dct_i,
                       pf_filesystems, pf_models, pf_levels,
-                      run_prefix, saddle=False):
+                      run_prefix, saddle=False, conf=None):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
@@ -117,7 +121,8 @@ def zero_point_energy(spc_dct_i,
         rotors = tors.build_rotors(
             spc_dct_i, pf_filesystems, pf_models, pf_levels,
             rxn_class=rxn_class,
-            frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+            frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
+            conf=conf)
 
         if typ.nonrigid_tors(pf_models, rotors):
             run_path = fmod.make_run_path(pf_filesystems, 'tors')
@@ -129,7 +134,8 @@ def zero_point_energy(spc_dct_i,
         if typ.nonrigid_tors(pf_models, rotors):
             # Calculate init proj. freqs, unproj. imag, tors zpe and scale fact
             freqs, _, tors_zpe, pot_scalef = vib.tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle,
+                conf=conf)
             # Make final hindered rotor strings and get corrected tors zpe
             if typ.scale_1d(pf_models):
                 tors_strs = tors.make_hr_strings(
@@ -137,7 +143,8 @@ def zero_point_energy(spc_dct_i,
                     scale_factor=pot_scalef)
                 [_, hr_str, _, prot_str, _] = tors_strs
                 _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
-                    pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+                    pf_filesystems, hr_str, prot_str, run_prefix,
+                    saddle=saddle, conf=conf)
                 # Calculate current zpe assuming no freq scaling: tors+projfreq
             zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
 
@@ -145,8 +152,13 @@ def zero_point_energy(spc_dct_i,
             if 'mdhrv' in pf_models['tors']:
                 freqs = ()
         else:
-            freqs, _, zpe = vib.read_harmonic_freqs(
-                pf_filesystems, saddle=saddle)
+            if conf:
+                [cnf_fs, harm_path, min_cnf_locs, _, _] = pf_filesystems['harm']
+                freqs, _, zpe = vib.read_locs_harmonic_freqs(
+                    cnf_fs, conf[1], conf[0], saddle=saddle)
+            else:
+                freqs, _, zpe = vib.read_harmonic_freqs(
+                    pf_filesystems, saddle=saddle)
             tors_zpe = 0.0
 
         # Scale the frequencies

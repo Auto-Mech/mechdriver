@@ -120,7 +120,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
         run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
 
         # Build the zma
-        zma = automol.zmat.set_values(
+        zma = automol.zmat.set_values_by_name(
             guess_zma, dict(zip(coord_names, vals)))
 
         # Set the job
@@ -134,7 +134,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     job=job,
                     script_str=script_str,
                     run_fs=run_fs,
-                    geo=zma,
+                    geom=zma,
                     spc_info=spc_info,
                     thy_info=mod_thy_info,
                     overwrite=overwrite,
@@ -182,7 +182,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     job=job,
                     script_str=script_str,
                     run_fs=run_fs,
-                    geo=zma,
+                    geom=zma,
                     spc_info=spc_info,
                     thy_info=mod_thy_info,
                     overwrite=overwrite,
@@ -215,7 +215,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             # Set run filesys
             run_path = scn_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(run_path)
-            ioprinter.readinge("scan", run_path)
+            ioprinter.reading("scan", run_path)
 
             # Save the structure
             saved = filesys.save_struct(

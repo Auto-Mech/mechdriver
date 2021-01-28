@@ -333,7 +333,7 @@ def prnt_tsks_from_lst(prnt_tsks_str):
     prnt_tsks_str = ioformat.remove_whitespace(prnt_tsks_str)
     for line in prnt_tsks_str.splitlines():
         tsk_line = line.split()
-        if len(tsk_line) > 2:
+        if len(tsk_line) >= 2:
             obj, tsk, keyword_lst = tsk_line[0], tsk_line[1], tsk_line[2:]
             keyword_dct = format_tsk_keywords(keyword_lst)
         else:

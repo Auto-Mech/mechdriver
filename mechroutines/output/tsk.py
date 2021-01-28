@@ -1,6 +1,7 @@
 """ eletronic structure routines modules
 """
 
+import os
 import sys
 import importlib
 import pandas
@@ -51,8 +52,6 @@ def run_tsk(tsk, spc_dct, rxn_lst,
         else:
             pf_levels, pf_models, _, _ = set_pf_info(
                 model_dct, thy_dct, pf_model, pf_model)
-            ioprinter.debug_message('test', pf_levels)
-            ioprinter.debug_message('test2', thy_dct)
             thy_info = pf_levels['geo'][1]
             #    filesys.inf.get_es_info(
             #    pf_levels['geo'][1], thy_dct)
@@ -102,7 +101,6 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                 es_model = util.freq_es_levels(print_keyword_dct)
                 pf_levels = parser.model.pf_level_info(
                     es_model, thy_dct)
-
                 freqs, _, zpe = vib.read_locs_harmonic_freqs(
                     cnf_fs, locs_path, locs, saddle=False)
                 #if pf_models:
@@ -128,9 +126,9 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                 #                prot_str, run_prefix, saddle=False) # saddle)
                 #            # Calculate current zpe assuming no freq scaling: tors+projfreq
  #              #         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-
                 tors_zpe = 0.0
                 spc_data = []
+                zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
                 if freqs:
                     freqs, zpe = vib.scale_frequencies(
                         freqs, tors_zpe, pf_levels, scale_method='3c')
@@ -161,8 +159,28 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                 csv_data[label] = spc_data
 
             elif 'ene' in tsk:
-                es_model = util.ene_es_levels(print_keyword_dct)
-                energy = cnf_fs[-1].file.energy.read(locs)
+                energy = None
+                if pf_levels:
+                    pf_filesystems = filesys.models.pf_filesys(
+                        spc_dct_i, pf_levels,
+                        run_prefix, save_prefix, saddle=False)
+                    energy = ene.electronic_energy(
+                        spc_dct_i, pf_filesystems, pf_levels,
+                        conf=(locs, locs_path, cnf_fs))
+                else:
+                    spc_info = filesys.inf.get_spc_info(spc_dct_i)
+                    thy_info = filesys.inf.get_es_info(
+                        print_keyword_dct['proplvl'], thy_dct)
+                    mod_thy_info = filesys.inf.modify_orb_restrict(
+                        spc_info, thy_info)
+                    sp_save_fs = autofile.fs.single_point(locs_path)
+                    sp_save_fs[-1].create(mod_thy_info[1:4])
+                    # Read the energy
+                    sp_path = sp_save_fs[-1].path(mod_thy_info[1:4])
+                    if os.path.exists(sp_path):
+                        ioprinter.reading('Energy', sp_path)
+                        energy = sp_save_fs[-1].file.energy.read(
+                            mod_thy_info[1:4])
                 csv_data[label] = [locs_path, energy]
 
             elif 'enthalpy' in tsk:
@@ -171,13 +189,13 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                     run_prefix, save_prefix, saddle=False)
                 ene_abs = ene.read_energy(
                     spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                    run_prefix, read_ene=True, read_zpe=True, saddle=False)
+                    run_prefix, conf=(locs, locs_path, cnf_fs),
+                    read_ene=True, read_zpe=True, saddle=False)
                 ts_geom = None
                 hf0k, _, chn_basis_ene_dct, hbasis = basis.enthalpy_calculation(
                     spc_dct, spc_name, ts_geom, ene_abs,
                     chn_basis_ene_dct, pf_levels, pf_models,
                     run_prefix, save_prefix, pforktp='pf', saddle=False)
-                hf0k = hf0k * phycon.KCAL2EH
                 spc_basis, coeff_basis = hbasis[spc_name]
                 coeff_array = []
                 for spc_i in spc_basis:
@@ -194,8 +212,8 @@ def run_tsk(tsk, spc_dct, rxn_lst,
         ncols = max([len(x) for x in csv_data.values()])
         df = pandas.DataFrame.from_dict(
             csv_data, orient='index',
-            columns=['Path', 'ZPVE', *[''] * (ncols-2)])
-        df.to_csv('freqs.csv', float_format='%.3f')
+            columns=['Path', 'ZPVE [A.U.]', *[''] * (ncols-2)])
+        df.to_csv('freqs.csv', float_format='%.5f')
     if 'geo' in tsk:
         all_data = '\n'.join([spc_data for spc_data in csv_data.values()])
         io.write_file('geometry.txt', all_data)
@@ -211,5 +229,5 @@ def run_tsk(tsk, spc_dct, rxn_lst,
         df = pandas.DataFrame.from_dict(
             csv_data, orient='index',
             columns=[
-                'Path', 'Energy [A.U.]', 'Hf (0 K) [kcal/mol]', *spc_array])
+                'Path', 'ZPVE+Energy [A.U.]', 'Hf (0 K) [kcal/mol]', *spc_array])
         df.to_csv('enthalpy.csv', float_format='%.6f')

@@ -18,7 +18,8 @@ from mechlib.amech_io import printer as ioprinter
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
 def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                 rxn_class='', frm_bnd_keys=(), brk_bnd_keys=()):
+                 rxn_class='', frm_bnd_keys=(), brk_bnd_keys=(),
+                 conf=None):
     """ Add more rotor info
     """
 
@@ -30,22 +31,28 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     tors_ene_info = pf_levels['tors'][1][0]
     mod_tors_ene_info = filesys.inf.modify_orb_restrict(
         filesys.inf.get_spc_info(spc_dct_i), tors_ene_info)
-    [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+    if conf:
+        target_locs = conf[0]
+        cnf_save_path = conf[1]
+        cnf_fs = conf[2]
+    else:
+        [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+        target_locs = min_cnf_locs
 
     # Grab the zmatrix
-    if min_cnf_locs is not None:
-        zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
+    if target_locs is not None:
+        zma_fs = fs.zmatrix(cnf_fs[-1].path(target_locs))
         zma = zma_fs[-1].file.zmatrix.read([0])
         remdummy = geomprep.build_remdummy_shift_lst(zma)
-        geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
+        geo = cnf_fs[-1].file.geometry.read(target_locs)
 
         # Read the reference energy
         ref_ene = torsprep.read_tors_ene(
-            cnf_fs, min_cnf_locs, mod_tors_ene_info)
+            cnf_fs, target_locs, mod_tors_ene_info)
 
     # Set the tors names
     rotor_inf = _rotor_info(
-        zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
+        zma, spc_dct_i, cnf_fs, target_locs, tors_model,
         frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
 
     # Read the potential energy surface for the rotors
