@@ -24,7 +24,7 @@ from autoparse import find as apf
 
 # FUNCTIONS FOR HANDLING THE SEQUENCE OF OPTIONS
 def options_matrix_optimization(script_str, prefix,
-                                geom, chg, mul, method, basis, prog,
+                                geo, chg, mul, method, basis, prog,
                                 errors=(), options_mat=(), feedback=False,
                                 frozen_coordinates=(),
                                 freeze_dummy_atoms=True,
@@ -41,9 +41,9 @@ def options_matrix_optimization(script_str, prefix,
     macro_idx = max_macro_idx + 1
     micro_idx = 0
 
-    if freeze_dummy_atoms and automol.zmat.is_valid(geom):
+    if freeze_dummy_atoms and automol.zmat.is_valid(geo):
         frozen_coordinates = (tuple(frozen_coordinates) +
-                              automol.zmat.dummy_coordinate_names(geom))
+                              automol.zmat.dummy_coordinate_names(geo))
 
     kwargs_ = dict(kwargs)
     while True:
@@ -54,7 +54,7 @@ def options_matrix_optimization(script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 elstruct.writer.optimization, script_str, path,
-                geo=geom, charge=chg, mult=mul, method=method,
+                geo=geo, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, frozen_coordinates=frozen_coordinates,
                 **kwargs_)
 
@@ -81,9 +81,9 @@ def options_matrix_optimization(script_str, prefix,
             kwargs_ = updated_kwargs(kwargs, options_mat)
             options_mat = advance(error_row_idx, options_mat)
             if feedback:
-                geom = (elstruct.reader.opt_zmatrix(prog, out_str)
-                        if automol.zmat.is_valid(geom) else
-                        elstruct.reader.opt_geometry(prog, out_str))
+                geo = (elstruct.reader.opt_zmatrix(prog, out_str)
+                       if automol.zmat.is_valid(geo) else
+                       elstruct.reader.opt_geometry(prog, out_str))
         else:
             # failure
             warnings.resetwarnings()
@@ -95,7 +95,7 @@ def options_matrix_optimization(script_str, prefix,
 
 
 def options_matrix_run(input_writer, script_str, prefix,
-                       geom, chg, mul, method, basis, prog,
+                       geo, chg, mul, method, basis, prog,
                        errors=(), options_mat=(),
                        **kwargs):
     """ try several sets of options to generate an output file
@@ -119,7 +119,7 @@ def options_matrix_run(input_writer, script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 input_writer, script_str, path,
-                geo=geom, charge=chg, mult=mul, method=method,
+                geo=geo, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, **kwargs_)
 
         error_vals = [elstruct.reader.has_error_message(prog, error, out_str)

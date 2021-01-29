@@ -191,7 +191,7 @@ def traj_sort(save_fs, mod_thy_info):
         traj_sort_data = sorted(zip(enes, geos, locs_lst), key=lambda x: x[0])
         for ene, geo, locs in traj_sort_data:
             comment = 'energy: {0:>15.10f} \t {1}'.format(ene, locs[0])
-            traj.append((comment, geo))
+            traj.append((geo, comment))
         traj_path = save_fs[0].file.trajectory.path()
         print("Updating trajectory file at {}".format(traj_path))
         save_fs[0].file.trajectory.write(traj)

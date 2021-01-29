@@ -411,10 +411,10 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, saddle):
     """ Assess if a geometry is unique to saved geos
     """
 
-    if not automol.util.value_similar_to(ene, seen_enes):
+    if not automol.util.value_similar_to(ene, seen_enes, 2.e-5):
         # unique = geomprep.is_unique_tors_dist_mat_energy(
         #     geo, ene, seen_geos, seen_enes, saddle)
-        unique, _ = automol.geom.compare(
+        unique, _ = automol.geom.is_unique(
                 geo, seen_geos, check_dct={'dist': None, 'tors': None})
     else:
         unique = True
@@ -463,8 +463,10 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
         existing conformers in the filesystem
     """
 
-    unique, sym_idx = automol.geom.compare(
-        geo, seen_geos, check_dct={'coulomb': None})
+    sym_idx = None
+    if not automol.util.value_similar_to(ene, saved_enes, 2.e-5):
+        unique, sym_idx = automol.geom.is_unique(
+            geo, saved_geos, check_dct={'coulomb': None})
     # sym_idx = None
     # for idx, (geoi, enei) in enumerate(zip(saved_geos, saved_enes)):
     #     if abs(enei - ene) < ethresh:

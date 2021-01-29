@@ -49,7 +49,7 @@ JOB_RUNNER_DCT = {
 
 
 def run_job(job, script_str, run_fs,
-            geom, spc_info, thy_info,
+            geo, spc_info, thy_info,
             errors=(), options_mat=(), retryfail=True, feedback=False,
             frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
             irc_direction=None,
@@ -119,7 +119,7 @@ def run_job(job, script_str, run_fs,
                 runner, irc_direction=irc_direction)
 
         inp_str, out_str = runner(
-            script_str, run_path, geo=geom, chg=spc_info[1],
+            script_str, run_path, geo=geo, chg=spc_info[1],
             mul=spc_info[2], method=thy_info[1], basis=thy_info[2],
             orb_type=thy_info[3], prog=thy_info[0],
             errors=errors, options_mat=options_mat, **kwargs
