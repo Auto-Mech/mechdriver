@@ -71,7 +71,8 @@ def reference_geometry(spc_dct_i, spc_info,
                 'Assessing if there are any functional groups',
                 'that cause instability')
             ioprinter.debug_message('geo str\n', automol.geom.string(geo_init))
-            if True: #_functional_groups_stable(geo_init, thy_save_fs, mod_thy_info):
+            # _functional_groups_stable(geo_init, thy_save_fs, mod_thy_info):
+            if True: 
                 zma_init = automol.geom.zmatrix(geo_init)
                 if not automol.geom.is_atom(geo_init):
                     geo_found = _optimize_molecule(
@@ -222,6 +223,7 @@ def _optimize_molecule(spc_info, zma_init,
         opt_script_str, overwrite, **opt_kwargs)
 
     # If connected, check for imaginary modes and fix them if possible
+    print('geom in ref geom', geo)
     if automol.geom.connected(geo):
 
         # Remove the imaginary mode
@@ -319,6 +321,7 @@ def _init_geom_opt(zma_init, spc_info, mod_thy_info,
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
         geo = elstruct.reader.opt_geometry(prog, out_str)
+        print('geo from read', geo)
         zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
     return geo, zma
