@@ -3,7 +3,7 @@
 """
 
 import elstruct
-from routines.es.runner._run import run_job, read_job
+from mechroutines.es.runner._run import run_job, read_job
 
 
 def multi_stage_optimization(script_str, run_fs,

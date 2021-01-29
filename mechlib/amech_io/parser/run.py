@@ -339,7 +339,7 @@ def read_print_tsks(job_path):
     # Check if section is there
     if prnt_tsks_str is None:
         print('*ERROR: No "print_tsks" section defined in run.dat')
-        sys.exit()
+        # sys.exit()
 
     return prnt_tsks_str
 
@@ -347,8 +347,10 @@ def read_print_tsks(job_path):
 def prnt_tsks_block(inp_str):
     """ Read the string that has the global model information
     """
-    return ioformat.remove_whitespace(
-        apf.first_capture(ptt.end_section('print_tsks'), inp_str))
+    print_str = apf.first_capture(ptt.end_section('print_tsks'), inp_str)
+    if print_str is not None:
+        print_str = ioformat.remove_whitespace(print_str)
+    return print_str
 
 
 def build_run_prnt_tsks_lst(prnt_tsk_str, rxn_model_dct, thy_dct, saddle=False):

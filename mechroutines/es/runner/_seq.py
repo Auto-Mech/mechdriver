@@ -82,8 +82,8 @@ def options_matrix_optimization(script_str, prefix,
             options_mat = advance(error_row_idx, options_mat)
             if feedback:
                 geom = (elstruct.reader.opt_zmatrix(prog, out_str)
-                              if automol.zmat.is_valid(geom) else
-                              elstruct.reader.opt_geometry(prog, out_str))
+                        if automol.zmat.is_valid(geom) else
+                        elstruct.reader.opt_geometry(prog, out_str))
         else:
             # failure
             warnings.resetwarnings()

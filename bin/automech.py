@@ -180,7 +180,7 @@ if WRITE_MESSPF or RUN_MESSPF or RUN_NASA:
 if RUN_TRANS:
 
     ioprinter.program_header('trans')
-    
+
     # Build the elec struct tsk lst
     TRANS_TSK_LST = parser.run.build_run_trans_tsks_lst(
         TRANS_TSK_STR, THY_DCT)
@@ -242,7 +242,7 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
 
 # Print Driver
 if RUN_PRINT:
-    
+
     ioprinter.program_header('print')
 
     # Build the elec struct tsk lst
