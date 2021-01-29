@@ -48,6 +48,34 @@ JOB_RUNNER_DCT = {
 }
 
 
+def execute_job(job, script_str, run_fs,
+                geo, spc_info, thy_info,
+                errors=(), options_mat=(),
+                retryfail=True, feedback=False,
+                frozen_coordinates=(), freeze_dummy_atoms=True,
+                overwrite=False,
+                irc_direction=None,
+                **kwargs):
+    """ run and read an elstruct job
+    """
+
+    run_job(job, script_str, run_fs,
+            geo, spc_info, thy_info,
+            errors=errors,
+            options_mat=options_mat,
+            retryfail=retryfail,
+            feedback=feedback,
+            frozen_coordinates=frozen_coordinates,
+            freeze_dummy_atoms=freeze_dummy_atoms,
+            overwrite=overwrite,
+            irc_direction=irc_direction,
+            **kwargs)
+
+    success, ret = read_job(job, run_fs)
+
+    return success, ret
+
+
 def run_job(job, script_str, run_fs,
             geo, spc_info, thy_info,
             errors=(), options_mat=(), retryfail=True, feedback=False,
@@ -56,6 +84,7 @@ def run_job(job, script_str, run_fs,
             **kwargs):
     """ run an elstruct job by name
     """
+
     assert job in JOB_RUNNER_DCT
     assert job in JOB_ERROR_DCT
     assert job in JOB_SUCCESS_DCT

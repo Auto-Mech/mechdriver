@@ -3,7 +3,7 @@
 """
 
 import elstruct
-from mechroutines.es.runner._run import run_job, read_job
+from mechroutines.es.runner._run import execute_job
 
 
 def multi_stage_optimization(script_str, run_fs,
@@ -23,7 +23,7 @@ def multi_stage_optimization(script_str, run_fs,
 
         print('Stage {} beginning,'.format(str(idx+1)),
               'holding following coordinates constant: {}'.format(coords))
-        run_job(
+        success, ret = execute_job(
             job=elstruct.Job.OPTIMIZATION,
             script_str=script_str,
             run_fs=run_fs,
@@ -37,9 +37,6 @@ def multi_stage_optimization(script_str, run_fs,
             **kwargs
         )
 
-        success, ret = read_job(
-            job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-
         if success:
             inf_obj, _, out_str = ret
             geom = elstruct.reader.opt_zmatrix(inf_obj.prog, out_str)
@@ -51,3 +48,5 @@ def multi_stage_optimization(script_str, run_fs,
         else:
             print('Failure. Exiting multi stage optimization...\n')
             break
+
+    return success, ret

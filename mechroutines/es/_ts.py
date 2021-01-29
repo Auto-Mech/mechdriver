@@ -4,15 +4,16 @@
 
 import automol
 import autofile
+from mechanalyzer.inf import spc as sinfo
 from mechroutines.es._routines import _sadpt as sadpt
 from mechroutines.es._routines import _vrctst as vrctst
 from mechroutines.es._routines import _vtst as vtst
 from mechlib import filesys
-from mechlib.submission import qchem_params
+from mechlib.structure import tors as torsprep
 
 
-def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
-        run_prefix, save_prefix, zma_locs=(0,)):
+def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
+           run_prefix, save_prefix):
     """ New run function
     """
 
@@ -20,186 +21,61 @@ def run(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     search_method = _ts_finder_match(tsk, spc_dct[tsname])
 
     # Build necessary objects
-    info_dct = _set_info(spc_dct, tsname)
-    grid = _set_grid(search_method, spc_dct[tsname])
     method_dct, runfs_dct, savefs_dct = _set_methods(
-        spc_dct[tsname], thy_dct, es_keyword_dct, info_dct,
-        run_prefix, save_prefix, zma_locs=zma_locs)
+        spc_dct[tsname], thy_dct, es_keyword_dct,
+        run_prefix, save_prefix)
 
     # Find the transition state
     if search_method == 'sadpt':
         run_sadpt(spc_dct, tsname, es_keyword_dct,
-                  method_dct, runfs_dct, savefs_dct,
-                  info_dct, grid)
+                  method_dct, runfs_dct, savefs_dct)
     elif search_method == 'molrad_vtst':
-        run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
-                        method_dct, runfs_dct, savefs_dct,
-                        info_dct, grid)
+        run_vtst(spc_dct, tsname, es_keyword_dct,
+                 method_dct, runfs_dct, savefs_dct)
     elif search_method == 'radrad_vtst':
-        run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
-                        method_dct, runfs_dct, savefs_dct,
-                        info_dct, grid)
-    elif search_method == 'vrctst':
         run_vrctst(spc_dct, tsname, es_keyword_dct,
-                   method_dct, runfs_dct, savefs_dct,
-                   info_dct, grid, run_prefix, save_prefix)
+                   method_dct, runfs_dct, savefs_dct)
     elif search_method is None:
-        ioprinter.message('No TS search algorithm was specified or able to determined')
+        print('No TS search algorithm was specified or able to determined')
 
 
 def run_sadpt(spc_dct, tsname, es_keyword_dct,
-              method_dct, runfs_dct, savefs_dct,
-              info_dct, grid):
+              method_dct, runfs_dct, savefs_dct):
     """ find a transition state
     """
 
-    # Get es options
-    overwrite = es_keyword_dct['overwrite']
-    update_guess = False  # check
-
-    # Get dct for specific species task is run for
+    # Get objects for the calculations
     ts_dct = spc_dct[tsname]
-
-    # Build inf objects for the rxn and ts
-    ts_info = info_dct['ts_info']
-
-    # Set various TS information using the dictionary
-    ini_zma = ts_dct['zma']
-    typ = ts_dct['class']
-    frm_bnd_keys = ts_dct['frm_bnd_keys']
-    brk_bnd_keys = ts_dct['brk_bnd_keys']
-    rcts_gra = ts_dct['rcts_gra']
-    # tors_names = ts_dct['amech_ts_tors_names']
-
-    # Get reaction coordinates
-    frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-    brk_name = automol.zmat.bond_key_from_idxs(ini_zma, brk_bnd_keys)
-
-    # Constraint dcts for saddle point searches
-    const_bnd_key = ts_dct['const_bnd_key']
-    const_tors_names = ts_dct['const_tors_names']
-    const_angs_names = ts_dct['const_angs_names']
-    constraint_dct = {}
-    if const_bnd_key:
-        const_name = automol.zmat.bond_key_from_idxs(
-            ini_zma, const_bnd_key)
-        coords = automol.zmat.value_dictionary(ini_zma)
-        const_val = coords[const_name]
-        constraint_dct[const_name] = const_val
-    if const_tors_names:
-        coords = automol.zmat.value_dictionary(ini_zma)
-        for const_tors_name in const_tors_names:
-            const_val = coords[const_tors_name]
-            constraint_dct[const_tors_name] = const_val
-    if const_angs_names:
-        coords = automol.zmat.value_dictionary(ini_zma)
-        for const_angs_name in const_angs_names:
-            const_val = coords[const_angs_name]
-            constraint_dct[const_angs_name] = const_val
-    if not constraint_dct:
-        constraint_dct = None
-    print('TS constraint dict: ', constraint_dct)
-
-    # Get method stuff
-    mod_ini_thy_info = method_dct['inplvl']
     mod_thy_info = method_dct['runlvl']
 
-    # Get filesys stuff
-    _, ts_run_path = runfs_dct['runlvl_ts_fs']
-    _, thy_run_path = runfs_dct['runlvl_thy_fs']
-
-    _, ini_ts_save_path = savefs_dct['inilvl_ts_fs']
-    thy_save_fs, thy_save_path = savefs_dct['runlvl_thy_fs']
-    cnf_save_fs, cnf_save_locs = savefs_dct['runlvl_cnf_fs']
-    ts_save_fs, ts_save_path = savefs_dct['runlvl_ts_fs']
-
-    run_fs = autofile.fs.run(ts_run_path)
-
     # Find the TS
-    if cnf_save_locs and not overwrite:
-
-        print('TS found and saved previously in ',
-              cnf_save_fs[-1].path(cnf_save_locs))
-    else:
-
+    cnf_save_fs, cnf_save_locs = savefs_dct['runlvl_cnf_fs']
+    overwrite = es_keyword_dct['overwrite']
+    if not cnf_save_locs:
         print('No transition state found in filesys',
               'at {} level...'.format(es_keyword_dct['runlvl']),
               'Proceeding to find it...')
-        script_str, opt_script_str, _, opt_kwargs = qchem_params(
-            *mod_thy_info[0:2])
-        sadpt.sadpt_transition_state(
-            ini_zma, ts_info,
-            mod_ini_thy_info, mod_thy_info,
-            thy_run_path, thy_save_path,
-            thy_save_fs,
-            ini_ts_save_path,
-            cnf_save_fs,
-            ts_save_fs, ts_save_path, run_fs,
-            typ, grid, update_guess,
-            frm_name, brk_name,
-            frm_bnd_keys, brk_bnd_keys, rcts_gra,
-            opt_script_str, script_str, overwrite,
-            es_keyword_dct, constraint_dct, **opt_kwargs
-        )
+        _run = True
+    elif overwrite:
+        print('User specified to overwrite energy with new run...')
+        _run = True
+    else:
+        print('TS found and saved previously in ',
+              cnf_save_fs[-1].path(cnf_save_locs))
+        _run = False
+
+    if _run:
+        guess_zmas = sadpt.generate_guess_structure(
+            ts_dct, mod_thy_info,
+            runfs_dct, savefs_dct, es_keyword_dct)
+        sadpt.obtain_saddle_point(
+            guess_zmas, ts_dct, mod_thy_info,
+            runfs_dct, savefs_dct, es_keyword_dct)
 
 
-def run_molrad_vtst(spc_dct, tsname, es_keyword_dct,
-                    method_dct, runfs_dct, savefs_dct,
-                    info_dct, grid):
-    """ find a transition state
-    """
-
-    # Get dct for specific species task is run for
-    ts_dct = spc_dct[tsname]
-
-    # Build inf objects for the rxn and ts
-    ts_info = info_dct['ts_info']
-    rct_info = info_dct['rct_info']
-    rcts_gra = ts_dct['rcts_gra']
-
-    # Set various TS information using the dictionary
-    ini_zma = ts_dct['zma']
-    frm_bnd_keys = ts_dct['frm_bnd_keys']
-
-    # Get reaction coordinates
-    frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-
-    # Get es options
-    overwrite = es_keyword_dct['overwrite']
-    retryfail = es_keyword_dct['retryfail']
-    update_guess = False  # check
-
-    # Make grid
-    [grid1, grid2] = grid
-
-    # Get method stuff
-    thy_info = method_dct['runlvl']
-    vsp1_thy_info = method_dct['var_splvl1']
-
-    # Get filesys stuff (might only have the theory, build the scn here?)
-    thy_save_fs = savefs_dct['runlvl_thy_fs']
-    scn_save_fs = savefs_dct['runlvl_scn_fs']
-    scn_run_fs = runfs_dct['runlvl_scn_fs']
-    ts_save_fs = savefs_dct['runlvl_ts_fs']
-    rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
-
-    # print('ts_save', ts_save_fs)
-    # Run single reference mol-rad VTST Search
-    vtst.molrad_scan(
-        ini_zma, ts_info,
-        rct_info, rcts_cnf_fs, rcts_gra,
-        grid1, grid2, frm_name, frm_bnd_keys,
-        thy_info, vsp1_thy_info,
-        thy_save_fs,
-        ts_save_fs,
-        scn_run_fs, scn_save_fs,
-        overwrite, update_guess, retryfail
-    )
-
-
-def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
-                    method_dct, runfs_dct, savefs_dct,
-                    info_dct, grid):
+def run_vtst(spc_dct, tsname, es_keyword_dct,
+             method_dct, runfs_dct, savefs_dct,
+             info_dct, grid):
     """ find a transition state
     """
 
@@ -207,27 +83,29 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     ts_dct = spc_dct[tsname]
 
     # Get info from the reactants
-    high_mul = ts_dct['high_mult']
     ts_info = info_dct['ts_info']
-    hs_info = info_dct['hs_info']
     rct_info = info_dct['rct_info']
-    rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
+    rcts_gra = ts_dct['rcts_gra']
+    if radrad:
+        high_mul = ts_dct['high_mult']
+        hs_info = info_dct['hs_info']
+        rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
 
     # Set information from the transition state
-    high_mul = ts_dct['high_mult']
     ini_zma = ts_dct['zma']
     frm_bnd_keys = ts_dct['frm_bnd_keys']
-    ts_formula = automol.geom.formula(automol.zmat.geometry(ini_zma))
-    active_space = ts_dct['active_space']
-    rcts_gra = ts_dct['rcts_gra']
+    if radrad:
+        ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
+        active_space = ts_dct['active_space']
 
     # Get reaction coordinates
-    frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
 
     # Get es options
-    pot_thresh = es_keyword_dct['pot_thresh']
     overwrite = es_keyword_dct['overwrite']
     update_guess = False  # check
+    if radrad:
+        pot_thresh = es_keyword_dct['pot_thresh']
 
     # Grid
     print('newts class', ts_dct['class'])
@@ -250,39 +128,81 @@ def run_radrad_vtst(spc_dct, tsname, es_keyword_dct,
     vscnlvl_thy_save_fs = savefs_dct['vscnlvl_thy_fs']
     vscnlvl_ts_save_fs = savefs_dct['vscnlvl_ts_fs']
 
-    vtst.radrad_scan(
-        ini_zma, ts_info, hs_info,
-        ts_formula, high_mul, active_space,
-        rct_info, rct_ichs, rcts_cnf_fs, rcts_gra,
-        grid1, grid2, frm_name, frm_bnd_keys,
-        mod_var_scn_thy_info,
-        mod_var_sp1_thy_info,
-        var_sp1_thy_info,
-        var_sp2_thy_info,
-        hs_var_sp1_thy_info,
-        hs_var_sp2_thy_info,
-        mod_thy_info,
-        vscnlvl_thy_save_fs,
-        vscnlvl_ts_save_fs,
-        var_scn_run_fs, var_scn_save_fs,
-        pot_thresh,
-        overwrite, update_guess
-    )
+    # Check for the saddle point
+    if not cnf_save_locs:
+        print('No energy found in save filesys. Running energy...')
+        _run = True
+    elif overwrite:
+        print('User specified to overwrite transition state with new run...')
+        _run_scan = True
+    else:
+        _run = False
 
-    # if sadpt_zma is None:
-    #     sadpt.sadpt_transition_state(
-    #         ini_zma, ts_info,
-    #         mod_thy_info,
-    #         thy_save_fs,
-    #         ini_zma_fs,
-    #         cnf_save_fs,
-    #         scn_save_fs, scn_run_fs,
-    #         ts_save_fs, ts_save_path, run_fs,
-    #         typ, grid, update_guess,
-    #         dist_name, brk_name,
-    #         frm_bnd_keys, brk_bnd_keys, rcts_gra,
-    #         opt_script_str, script_str, overwrite,
-    #         es_keyword_dct, **opt_kwargs)
+    # Find the TS (check the path)
+    if not cnf_save_locs:
+        print('No energy found in save filesys. Running energy...')
+        _run = True
+    elif overwrite:
+        print('User specified to overwrite transition state with new run...')
+        _run_scan = True
+    else:
+        _run = False
+
+    # Run the scan if needed
+    if _run:
+        if radrad:
+            vtst.radrad_scan(
+                ts_zma, ts_info,
+                ts_formula, high_mul, active_space,
+                rct_info, rct_ichs,
+                grid1, grid2, coord_name,
+                mod_var_scn_thy_info,
+                scn_run_fs, scn_save_fs,
+                overwrite, update_guess,
+                constraint_dct=None,
+                zma_locs=(0,))
+        else:
+            vtst.molrad_scan(ts_zma, ts_info,
+                             rct_info, rcts_cnf_fs, rcts_gra,
+                             grid1, grid2, coord_name, frm_bnd_keys,
+                             thy_info, vsp1_thy_info,
+                             thy_save_fs,
+                             ts_save_fs,
+                             scn_run_fs, scn_save_fs,
+                             overwrite, update_guess, retryfail,
+                             zma_locs=(0,))
+
+        sadpt_zma = rxngrid.vtst_max(
+            list(grid1)+list(grid2), coord_name, scn_save_fs,
+            mod_var_scn_thy_info, constraint_dct,
+            ethresh=pot_thresh)
+
+    if sadpt_zma is None:
+
+        if radrad:
+            scan.radrad_inf_sep_ene(
+                hs_info, ts_zma,
+                rct_info, rcts_cnf_fs,
+                var_sp1_thy_info, var_sp2_thy_info,
+                hs_var_sp1_thy_info, hs_var_sp2_thy_info,
+                geo, geo_run_path, geo_save_path,
+                scn_save_fs, far_locs,
+                overwrite=overwrite,
+                **cas_kwargs)
+        else:
+            scan.molrad_inf_sep_ene(
+                rct_info, rcts_cnf_fs,
+                inf_thy_info, overwrite)
+
+        _save_traj(ts_zma, frm_bnd_keys, rcts_gra,
+                   vscnlvl_ts_save_fs, zma_locs=zma_locs)
+
+        _vtst_hess_ene(ts_info, coord_name,
+                       mod_var_scn_thy_info, mod_var_sp1_thy_info,
+                       scn_save_fs, scn_run_fs,
+                       overwrite, **cas_kwargs)
+    else:
+        obtain_saddle_point()
 
 
 def run_vrctst(spc_dct, tsname, es_keyword_dct,
@@ -306,11 +226,11 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     high_mul = ts_dct['high_mult']
     ini_zma = ts_dct['zma']
     frm_bnd_keys = ts_dct['frm_bnd_keys']
-    ts_formula = automol.geom.formula(automol.zmat.geometry(ini_zma))
+    ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
     active_space = ts_dct['active_space']
 
     # Get reaction coordinates
-    frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
@@ -437,30 +357,6 @@ def _set_grid(ts_search, ts_dct):
     return grid
 
 
-def _set_info(spc_dct, tsname):
-    """ Build info objects
-    """
-
-    # Get needed objs from ts dict
-    ts_dct = spc_dct[tsname]
-    chg = ts_dct['charge']
-    mult, high_mult = ts_dct['mult'], ts_dct['high_mult']
-    reacs, prods = ts_dct['reacs'], ts_dct['prods']
-    print('reacs test:', reacs)
-    rct1_info = filesys.inf.get_spc_info(spc_dct[reacs[0]])
-    rct2_info = filesys.inf.get_spc_info(spc_dct[reacs[1]])
-
-    # Build dct holding all the info objects
-    info_dct = {
-        'ts_info': ('', chg, mult),
-        'hs_info': ('', chg, high_mult),
-        'rxn_info': filesys.inf.rxn_info(reacs, prods, spc_dct),
-        'rct_info': (rct1_info, rct2_info)
-    }
-
-    return info_dct
-
-
 def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
                  run_prefix, save_prefix,
                  zma_locs=(0,)):
@@ -475,8 +371,8 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
     # ini_zma = ts_dct['zma']
     # frm_bnd_keys = ts_dct['frm_bnd_keys']
     # brk_bnd_keys = ts_dct['brk_bnd_keys']
-    # frm_name = automol.zmat.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-    # brk_name = automol.zmat.bond_key_from_idxs(ini_zma, brk_bnd_keys)
+    # frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
+    # brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
     # Set the hs info
     hs_info = (ts_info[0], ts_info[1], ts_dct['high_mult'])
@@ -527,8 +423,8 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
             ini_cnf_save_fs, mod_ini_thy_info)
 
         if ini_min_cnf_locs:
-            ini_zma_save_fs = autofile.fs.zmatrix(
-                ini_cnf_save_fs[-1].path(ini_min_cnf_locs))
+            ini_zma_save_fs = autofile.fs.manager(
+                ini_cnf_save_fs[-1].path(ini_min_cnf_locs), 'ZMATRIX')
 
     if es_keyword_dct.get('runlvl', None) is not None:
 

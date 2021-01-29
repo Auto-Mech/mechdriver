@@ -5,7 +5,7 @@ import sys
 import importlib
 import autofile
 import automol
-from mechroutines.es.findts import run as runts
+from mechroutines.es._ts import run as runts
 # from mechroutines.es.newts import run as runts
 from mechroutines.es._routines import conformer
 from mechroutines.es._routines import geom
@@ -85,7 +85,8 @@ def run_tsk(tsk, spc_dct, spc_name,
                 run_prefix, save_prefix)
 
     else:
-        ioprinter.info_message('Skipping task for unstable species...', newline=1)
+        ioprinter.info_message(
+            'Skipping task for unstable species...', newline=1)
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #

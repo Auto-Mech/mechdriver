@@ -13,6 +13,49 @@ from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 
+def execute_scan(zma, spc_info, mod_thy_info, thy_save_fs,
+                 coord_names, coord_grids,
+                 scn_run_fs, scn_save_fs, scn_typ,
+                 script_str, overwrite,
+                 update_guess=True, reverse_sweep=True,
+                 saddle=False,
+                 constraint_dct=None, retryfail=True,
+                 chkstab=False,
+                 **kwargs):
+    """ Run and save the scan
+    """
+
+    run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
+             coord_names, coord_grids,
+             scn_run_fs, scn_save_fs, scn_typ,
+             script_str, overwrite,
+             update_guess=True, reverse_sweep=True,
+             saddle=False,
+             constraint_dct=None, retryfail=True,
+             chkstab=False,
+             **kwargs)
+
+    ioprinter.info_message(
+        'Saving any newly run HR scans in run filesys...',
+        newline=1)
+    if constraint_dct is None:
+        save_scan(
+            scn_run_fs=scn_run_fs,
+            scn_save_fs=scn_save_fs,
+            scn_typ=scn_typ,
+            coo_names=coord_names,
+            mod_thy_info=mod_thy_info,
+            in_zma_fs=True)
+    else:
+        save_cscan(
+            cscn_run_fs=scn_run_fs,
+            cscn_save_fs=scn_save_fs,
+            scn_typ=scn_typ,
+            constraint_dct=constraint_dct,
+            mod_thy_info=mod_thy_info,
+            in_zma_fs=True)
+
+
 def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
              coord_names, coord_grids,
              scn_run_fs, scn_save_fs, scn_typ,
@@ -128,7 +171,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
         geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
         if not geo_exists or overwrite:
             if job == elstruct.Job.OPTIMIZATION:
-                run_job(
+                success, ret = execute_job(
                     job=job,
                     script_str=script_str,
                     run_fs=run_fs,
