@@ -2,25 +2,32 @@
  New reaction ID code
 """
 
-def build_reaction():
+import automol
+from phydat import phycon
+
+
+def build_reaction(rxn_info, thy_info, zma_locs, save_prefix):
     """
     """
 
-    # Build objects for reaction
-    rxn_info = _build_rxn_info()
-
-    # Try to build the Z-Matrix reaction object or identify from scratch    
-    zrxn = _read_from_filesys(save_prefix, rxn_info, thy_info, zma_locs=None):
+    # Try to build the Z-Matrix reaction object or identify from scratch
+    # zrxn = _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix)
+    zrxn = None
     if zrxn is None:
         zrxn = _id_reaction(rxn_info)
 
+    print('    Reaction class identified as: {}'.format(rxn.class))
 
-def _read_from_filesys(save_prefix, rxn_info, thy_info, zma_locs=None):
+    return rxn, zma
+
+def _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix):
     """ Check if reaction exists in the filesystem and has been identified
     """
-                                      
+
+    mod_thy_info = thy_info  # Need to modify the theory object
+
     manager_prefix = [
-        ('REACTION', spc_info),
+        ('REACTION', mechanalyzer.inf.rxn.sort(rxn_info, scheme='autofile')),
         ('THEORY', mod_thy_info[1:4]),
         ('TRANSITION_STATE', ),
     ]
@@ -29,21 +36,22 @@ def _read_from_filesys(save_prefix, rxn_info, thy_info, zma_locs=None):
         cnf_save_fs, mod_thy_info)
     ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
     zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
-    
+
     if zma_fs[-1].file.reac.exists(zma_locs):
         zrxn = zma_fs[-1].file.reac.read(zma_locs)
+        zma = zma_fs[-1].file.zmatrixc.read(zma_locs)
     else:
-        zrxn = None
+        zma, zrxn = None, None
 
-    return zrxn
+    return zma, zrxn
 
 
 def _id_reaction(rxn_info):
-    """ Identify the reaction and build the object 
+    """ Identify the reaction and build the object
     """
 
-    [rxn_ichs, _, _, _] = rxn_info
-    rct_ichs, prd_ichs = rxn_ichs[0], prd_ichs[1]
+    [rxn_ichs, _, _, _] = rxn_info   # replace with mechanalyzer grab
+    rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
 
     rct_geos = list(map(automol.inchi.geometry, rct_ichs))
     prd_geos = list(map(automol.inchi.geometry, prd_ichs))
@@ -62,60 +70,12 @@ def _id_reaction(rxn_info):
     rxn, rct_geos, prd_geos = (
         automol.reac.standard_keys_with_sorted_geometries(
             rxn, rct_geos, prd_geos))
-    
+
     geo = automol.reac.ts_geometry(rxn, rct_geos, log=True)
     zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, geo)
     zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
 
-    return zrxn
-
-
-def test__mult():
-    """ test automol.mult.ts.high
-        test automol.mult.ts.low
-        test automol.mult.spin
-    """
-
-    rct_muls = (2, 2)
-    prd_muls1 = (1, 1)
-    prd_muls2 = (3, 1)
-    assert automol.mult.ts.low(rct_muls, prd_muls1) == 1
-    assert automol.mult.ts.high(rct_muls, prd_muls2) == 3
-
-    mult = 3
-    assert automol.mult.spin(mult) == 2
-
-
-# def test__trans():
-#     """ test automol.trans.string
-#         test automol.trans.from_string
-#     """
-
-
-# Deal with info and filesystem objects
-def _build_rxn_info(reacs, prod, spc_dct):
-    """
-    """
-    rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
-    [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
-    chg, low_mul, high_mul = filesys.inf.rxn_chg_mult(rxn_muls, rxn_chgs)
-    _, _, indir_rxn_muls = filesys.inf.rxn_info2(reacs, prods, spc_dct)
-    rad_rad = rxnid.determine_rad_rad(indir_rxn_muls)
-    # Set the multiplcity of the TS to the low-spin mult by default
-    ts_mul = low_mul
-
-    return rxn_info
-
-
-def _build_rxn_filesys():
-    """
-    """
-
-    rinf = filesys.build.get_rxn_fs(
-        run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
-    [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path] = rinf
-
-    return rinf
+    return zma, zrxn
 
 
 # from direction
@@ -131,6 +91,7 @@ def set_reaction_direction(reacs, prods, spc_dct, cla_dct,
             cla_dct, reacs, prods)
         if flip_rxn:
             reacs, prods = prods, reacs
+            rxn_info = mechanalyzer.inf.rxn.reverse(rxn_info)
     else:
         given_class = None
 
@@ -209,60 +170,36 @@ def _build_cla_dct(cla_str):
 
 
 # Functions for the exothermicity check
-def assess_rxn_ene(reacs, prods, spc_dct, thy_info, ini_thy_info, save_prefix):
+def assess_rxn_ene(reacs, prods, rxn_info, thy_info, ini_thy_info, save_prefix):
     """ Check the directionality of the reaction
     """
 
-    rxn_ichs = [[], []]
-    rxn_chgs = [[], []]
-    rxn_muls = [[], []]
-    for spc in reacs:
-        rxn_ichs[0].append(spc_dct[spc]['inchi'])
-        rxn_chgs[0].append(spc_dct[spc]['charge'])
-        rxn_muls[0].append(spc_dct[spc]['mult'])
-    for spc in prods:
-        rxn_ichs[1].append(spc_dct[spc]['inchi'])
-        rxn_chgs[1].append(spc_dct[spc]['charge'])
-        rxn_muls[1].append(spc_dct[spc]['mult'])
-
-    rxn_ene = reaction_energy(
-        save_prefix, rxn_ichs, rxn_chgs, rxn_muls,
-        thy_info, ini_thy_info)
+    rxn_ene = reaction_energy(rxn_info, thy_info, ini_thy_info, save_prefix)
     method1, method2 = thy_info, ini_thy_info
+
     if rxn_ene is None:
         rxn_ene = reaction_energy(
-            save_prefix, rxn_ichs, rxn_chgs, rxn_muls,
-            ini_thy_info, ini_thy_info)
+            rxn_info, ini_thy_info, ini_thy_info, save_prefix)
         method1, method2 = ini_thy_info, ini_thy_info
-    # except AssertionError:
-    #     rxn_ene = reaction_energy(
-    #         save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
-    #     method = ini_thy_info
-    # except IOError:
-    #     rxn_ene = reaction_energy(
-    #         save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ini_thy_info)
-    #     method = ini_thy_info
+
     print('    Reaction energy is {:.2f} at {}//{} level'.format(
         rxn_ene*phycon.EH2KCAL, method1[1], method2[1]))
+
     if rxn_ene > 0:
         reacs, prods = prods, reacs
+        rxn_info = mechanalyzer.inf.rxn.reverse(rxn_info)
         print('    Reaction is endothermic, flipping reaction.')
 
     return reacs, prods
 
 
-def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul,
-                    sp_thy_info, geo_thy_info):
+def reaction_energy(rxn_info, sp_thy_info, geo_thy_info, save_prefix):
     """ reaction energy """
-    rct_ichs, prd_ichs = rxn_ich
-    rct_chgs, prd_chgs = rxn_chg
-    rct_muls, prd_muls = rxn_mul
+
     rct_enes = reagent_energies(
-        save_prefix, rct_ichs, rct_chgs, rct_muls,
-        sp_thy_info, geo_thy_info)
+        'reacs', rxn_info, sp_thy_info, geo_thy_info, save_prefix)
     prd_enes = reagent_energies(
-        save_prefix, prd_ichs, prd_chgs, prd_muls,
-        sp_thy_info, geo_thy_info)
+        'prods', rxn_info, sp_thy_info, geo_thy_info, save_prefix)
 
     if rct_enes is not None and prd_enes is not None:
         rxn_ene = sum(prd_enes) - sum(rct_enes)
@@ -272,9 +209,10 @@ def reaction_energy(save_prefix, rxn_ich, rxn_chg, rxn_mul,
     return rxn_ene
 
 
-def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls,
-                     sp_thy_info, geo_thy_info):
+def reagent_energies(rgt, rxn_info, sp_thy_info, geo_thy_info, save_prefix):
     """ reagent energies """
+
+    rgt_ichs, rgt_chgs, rgt_muls = mechanalyzer.inf.rxn.rgt_info(rxn_info, rgt)
 
     enes = []
     for rgt_ich, rgt_chg, rgt_mul in zip(rgt_ichs, rgt_chgs, rgt_muls):
@@ -305,80 +243,3 @@ def reagent_energies(save_prefix, rgt_ichs, rgt_chgs, rgt_muls,
         enes = None
 
     return enes
-
-
-def get_zmas(
-        reacs, prods, spc_dct, ini_thy_info, save_prefix, run_prefix,
-        kickoff_size, kickoff_backward):
-    """get the zmats for reactants and products using the initial level of theory
-    """
-    if len(reacs) > 2:
-        ich = spc_dct[reacs[-1]]['inchi']
-        ichgeo = automol.inchi.geometry(ich)
-        ichzma = automol.geom.zmatrix(ichgeo)
-        reacs = reacs[:-1]
-    elif len(prods) > 2:
-        ich = spc_dct[prods[-1]]['inchi']
-        ichgeo = automol.inchi.geometry(ich)
-        ichzma = automol.geom.zmatrix(ichgeo)
-        prods = prods[:-1]
-    rct_geos, rct_cnf_save_fs_lst = get_geos(
-        reacs, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
-        kickoff_backward)
-    prd_geos, prd_cnf_save_fs_lst = get_geos(
-        prods, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
-        kickoff_backward)
-    rct_zmas = list(map(automol.geom.zmatrix, rct_geos))
-    prd_zmas = list(map(automol.geom.zmatrix, prd_geos))
-    if len(rct_zmas) > 2:
-        rct_zmas.append(ichzma)
-    if len(prd_zmas) > 2:
-        prd_zmas.append(ichzma)
-    return rct_zmas, prd_zmas, rct_cnf_save_fs_lst, prd_cnf_save_fs_lst
-
-
-def get_geos(
-        spcs, spc_dct, ini_thy_info, save_prefix, run_prefix, kickoff_size,
-        kickoff_backward):
-    """get geos for reactants and products using the initial level of theory
-    """
-    spc_geos = []
-    cnf_save_fs_lst = []
-    for spc in spcs:
-        spc_info = [spc_dct[spc]['inchi'],
-                    spc_dct[spc]['charge'],
-                    spc_dct[spc]['mult']]
-        ini_thy_lvl = modify_orb_restrict(spc_info, ini_thy_info)
-        spc_save_fs = autofile.fs.species(save_prefix)
-        spc_save_fs[-1].create(spc_info)
-        spc_save_path = spc_save_fs[-1].path(spc_info)
-        ini_thy_save_fs = autofile.fs.theory(spc_save_path)
-        ini_thy_save_path = ini_thy_save_fs[-1].path(ini_thy_lvl[1:4])
-        cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
-        cnf_save_fs_lst.append(cnf_save_fs)
-        min_cnf_locs, _ = min_energy_conformer_locators(
-            cnf_save_fs, ini_thy_lvl)
-        # print('min_cnf_locs test:', min_cnf_locs)
-        if min_cnf_locs:
-            geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
-        # else:
-        #     spc_run_fs = autofile.fs.species(run_prefix)
-        #     spc_run_fs[-1].create(spc_info)
-        #     spc_run_path = spc_run_fs[-1].path(spc_info)
-        #     ini_thy_run_fs = autofile.fs.theory(spc_run_path)
-        #     ini_thy_run_path = ini_thy_run_fs[-1].path(ini_thy_lvl[1:4])
-        #     cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
-        #     run_fs = autofile.fs.run(ini_thy_run_path)
-        #     run_fs[0].create()
-        #     geo = geom.reference_geometry(
-        #         spc_dct[spc], spc_info,
-        #         ini_thy_lvl, ini_thy_lvl,
-        #         ini_thy_run_fs, ini_thy_save_fs,
-        #         ini_thy_save_fs,
-        #         cnf_run_fs, cnf_save_fs,
-        #         run_fs,
-        #         opt_script_str, overwrite,
-        #         kickoff_size=kickoff_size,
-        #         kickoff_backward=kickoff_backward)
-            spc_geos.append(geo)
-    return spc_geos, cnf_save_fs_lst

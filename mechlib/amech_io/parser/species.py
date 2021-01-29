@@ -14,6 +14,8 @@ from phydat import phycon
 from mechlib import filesys
 from mechlib.reaction import rxnid
 from mechlib.reaction import direction as rxndirn
+from mechlib.reaction import new_id
+
 
 
 CSV_INP = 'inp/species.csv'
@@ -329,7 +331,45 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     return ts_dct
 
 
-def build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
+def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
+                             run_inp_dct, spc_dct, cla_dct,
+                             direction='forw'):
+    """ build dct for single reaction
+    """
+
+    save_prefix = run_inp_dct['save_prefix']
+
+    reacs = reaction['reacs']
+    prods = reaction['prods']
+    rxn_info = mechanalyzer.inf.rxn.from_dct(reacs, prods, spc_dct)
+    print('  Preparing {} for reaction {} = {}'.format(
+        tsname, '+'.join(reacs), '+'.join(prods)))
+
+    # Set the reacs and prods for the desired direction
+    reacs, prods, given_class = rxndirn.set_reaction_direction(
+        reacs, prods, rxn_info, cla_dct,
+        thy_info, ini_thy_info, save_prefix, direction=direction)
+
+    # Obtain the reaction object for the reaction
+    zma_locs = (0,)
+    rxn, zma = rxnid.build_reaction(
+        rxn_info, thy_info, zma_locs, save_prefix)
+
+    if rxn is not None:
+        ts_dct = {
+            'rxnobj': rxn,
+            'zmatrix': zma,
+            'reacs' reacs,
+            'prods' prods
+        }
+    else:
+        ts_dct = {}
+        print('Skipping reaction as class not given/identified')
+
+    return ts_dct
+
+
+def _build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
                              run_inp_dct, spc_dct, cla_dct,
                              direction='forw'):
     """ build dct for single reaction
@@ -491,14 +531,3 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
         # combined_dct[spc]['hind_inc'] *= phycon.DEG2RAD
 
     return combined_dct
-
-
-# Print messages
-def print_check_stero_msg(check_stereo):
-    """ Print a message detailing whether stereo is being checked
-    """
-    if check_stereo:
-        print('Species will be treated with stereochemistry.',
-              'Checking and adding stereo.')
-    else:
-        print('Stereochemistry will be ignored')
