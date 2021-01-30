@@ -122,13 +122,14 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         ts_cls_info = set_ts_cls_info(spc_dct, model_dct, tsname, chn_model)
 
         # Obtain all of the species data
-        if not chn_model in basis_energy_dct:
+        if chn_model not in basis_energy_dct:
             basis_energy_dct[chn_model] = {}
 
-        chnl_infs, chn_basis_ene_dct = get_channel_data(rxn, tsname, spc_dct,
-                                     basis_energy_dct[chn_model],
-                                     pf_info, ts_cls_info,
-                                     run_prefix, save_prefix)
+        chnl_infs, chn_basis_ene_dct = get_channel_data(
+            rxn, tsname, spc_dct,
+            basis_energy_dct[chn_model],
+            pf_info, ts_cls_info,
+            run_prefix, save_prefix)
 
         basis_energy_dct[chn_model].update(chn_basis_ene_dct)
 
@@ -152,25 +153,6 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         ioprinter.debug_message('enes', chnl_enes)
         ioprinter.debug_message('label dct', label_dct)
         ioprinter.debug_message('written labels', written_labels)
-
-        # Build PES energy dct and connection lists
-        #for side, ene in chnl_enes.items():
-        #    if 'fake' not in side:
-        #        if side in ('reacs', 'prods'):
-        #            rct_str = '+'.join(rxn[side])
-        #            label = label_dct[rct_str]
-        #            pes_ene_dct[label] = ene        
-        #        elif 'ts' in side:
-        #            rct_str = tsname
-        #            label = label_dct[rct_str]
-        #            pes_ene_dct[label] = max(ene)
-
-        #reac_str = '+'.join(rxn['reacs'])
-        #prod_str = '+'.join(rxn['prods'])
-        #reac_lbl = label_dct[reac_str]
-        #prod_lbl = label_dct[prod_str]
-        #ts_lbl = label_dct[tsname]
-        #conn_lst += ((reac_lbl, ts_lbl), (ts_lbl, prod_lbl))
 
     # Combine all the reaction channel strings
     rxn_chan_str = '\n'.join([full_well_str, full_bi_str, full_ts_str])
@@ -334,7 +316,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
             mess_str, mdhr_dat = mess_writer(
                 chnl_infs['ts'], *chnl_infs['prods'])
     # elif chnl_infs['ts']['writer'] == 'pst_block':
-        # mess_str, mdhr_dat = mess_writer(chnl_infs['ts'], *chnl_infs['reacs'])
+    # mess_str, mdhr_dat = mess_writer(chnl_infs['ts'], *chnl_infs['reacs'])
     elif chnl_infs['ts']['writer'] == 'vrctst_block':
         mess_str, mdhr_dat = mess_writer(
             chnl_infs['ts'], *chnl_infs['reacs'])
@@ -458,7 +440,8 @@ def _make_fake_mess_strs(rxn, side, fake_inf_dcts,
 
 
 # Data Retriever Functions
-def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct, pf_info, ts_cls_info,
+def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct,
+                     pf_info, ts_cls_info,
                      run_prefix, save_prefix):
     """ generate dcts with the models
     """
@@ -502,7 +485,7 @@ def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct, pf_info, ts_c
     # if chnl_infs['ts']['writer'] in ('pst_block', 'vrctst_block'):
     #     if len(chnl_infs['reacs']) == 2:
     #         ts_ene = sum(inf['ene_chnlvl'] for inf in chnl_infs['reacs'])
-    #     else: 
+    #     else:
     #         ts_ene = sum(inf['ene_chnlvl'] for inf in chnl_infs['prods'])
     #     chnl_infs['ts'].update({'ene_chnlvl': ts_ene})
 

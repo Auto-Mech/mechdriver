@@ -32,9 +32,11 @@ def perform_fits(ktp_dct, reaction, mess_path,
     # Write a chemkin string for the single fit
     sing_highp, sing_plog_dct, pressures = pull_highp_from_dct(sing_params_dct)
     if sing_plog_dct:  # if PLOG
-        sing_chemkin_str = chemkin_io.writer.reaction.plog(reaction, sing_plog_dct)
+        sing_chemkin_str = chemkin_io.writer.reaction.plog(
+            reaction, sing_plog_dct)
     else:  # if Arrhenius
-        sing_chemkin_str = chemkin_io.writer.reaction.arrhenius(reaction, sing_highp)
+        sing_chemkin_str = chemkin_io.writer.reaction.arrhenius(
+            reaction, sing_highp)
     sing_chemkin_str += '\n'
     sing_chemkin_str += chemkin_io.writer.reaction.fit_info(
         pressures, sing_fit_temp_dct, sing_fit_err_dct)

@@ -9,9 +9,9 @@ import ratefit
 import mess_io
 from phydat import phycon
 from mechlib.amech_io import writer
+from mechlib.amech_io import printer as ioprinter
 from mechroutines.pf.ktp.fit import _arr as arr
 from mechroutines.pf.ktp.fit import _cheb as cheb
-from mechlib.amech_io import printer as ioprinter
 
 
 def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,

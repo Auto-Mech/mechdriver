@@ -125,7 +125,8 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
             if not fake_wellp_label:
                 ioprinter.debug_message('label test', label_dct, well_dct_key1)
                 fake_wellp_label = label_dct[well_dct_key1]
-                if rxn['prods'] == rxn['reacs'] or rxn['prods'] == rxn['reacs'][::-1]:
+                if (rxn['prods'] == rxn['reacs'] or
+                   rxn['prods'] == rxn['reacs'][::-1]):
                     pst_p_label = label_dct[well_dct_key1.replace('F', 'FRB')]
                 else:
                     pst_p_label = label_dct[well_dct_key1.replace('F', 'FPB')]
