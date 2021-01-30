@@ -273,7 +273,7 @@ def _init_geom_opt(zma_init, spc_info, mod_thy_info,
 
     # Call the electronic structure optimizer
     run_fs = autofile.fs.run(thy_run_path)
-    es_runner.run_job(
+    success, ret = execute_job(
         job=elstruct.Job.OPTIMIZATION,
         script_str=opt_script_str,
         run_fs=run_fs,
@@ -283,8 +283,6 @@ def _init_geom_opt(zma_init, spc_info, mod_thy_info,
         overwrite=overwrite,
         **opt_kwargs
     )
-    success, ret = es_runner.read_job(
-        job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
 
     geo, zma = None, None
     if success:
@@ -397,7 +395,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
 
     # Run the optimization
     print('Optimizing a single conformer')
-    es_runner.run_job(
+    success, ret = execute_job(
         job=elstruct.Job.OPTIMIZATION,
         script_str=script_str,
         run_fs=run_fs,
@@ -410,9 +408,6 @@ def single_conformer(zma, spc_info, mod_thy_info,
         retryfail=retryfail,
         **kwargs
     )
-    # print('Stage one success, reading for stage 2')
-    success, ret = es_runner.read_job(
-        job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
 
     if success:
         inf_obj, _, out_str = ret
@@ -505,7 +500,7 @@ def run_conformers(
         tors_names = tuple(tors_range_dct.keys())
         if two_stage and tors_names:
             frozen_coords_lst = ((), tors_names)
-            es_runner.multi_stage_optimization(
+            _, _ = es_runner.multi_stage_optimization(
                 script_str=script_str,
                 run_fs=run_fs,
                 geom=samp_zma,

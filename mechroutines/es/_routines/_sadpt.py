@@ -3,13 +3,11 @@
 
 import automol
 import autofile
-from autofile import fs
 import elstruct
-from mechroutines.es._routines import _geom as geom
-from mechroutines.es._routines import _scan as scan
+from mechanalyzer.inf import rxn as rinfo
+# from mechroutines.es._routines import _geom as geom
 from mechroutines.es import runner as es_runner
 from mechlib import structure
-from mechlib import filesys
 from mechlib.reaction import grid as rxngrid
 from mechlib.submission import qchem_params
 
@@ -22,7 +20,7 @@ def generate_guess_structure(ts_dct, mod_thy_info,
         level of theory and if nothing existsm it will
         launch a scan to find the transition state.
     """
-    
+
     guess_zmas = _check_filesys_for_guess(savefs_dct, (0,), es_keyword_dct)
     if not guess_zmas:
         scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct)
@@ -37,45 +35,46 @@ def obtain_saddle_point(guess_zmas, ts_dct, mod_thy_info,
         proper saddle point
     """
 
+    # Get info (move later)
     script_str, opt_script_str, _, opt_kwargs = qchem_params(
         *mod_thy_info[0:2])
+    overwrite = es_keyword_dct['overwrite']
+    ts_info = rinfo.ts_info(ts_dct['rxn_info'])
+    rxn = ts_dct['rxn']
 
     # Optimize the saddle point
     opt_ret = optimize_saddle_point(
-        guess_zmas, ts_dct, mod_thy_info,
-        run_fs, opt_script_str, overwrite, **opt_kwargs)
+        guess_zmas, ts_info, mod_thy_info,
+        runfs_dct, opt_script_str, overwrite, **opt_kwargs)
 
     # Calculate the Hessian for the optimized structure
     if opt_ret is not None:
         # Get the Hessian and check the saddle point
         # (maybe just have remove imag do this?)
         hess_ret, freqs, imags = saddle_point_hessian(
-            opt_ret, ts_dct, mod_thy_info,
-            run_fs, script_str, overwrite, **opt_kwargs)
+            opt_ret, ts_info, mod_thy_info,
+            runfs_dct, script_str, overwrite, **opt_kwargs)
 
         sadpt_status = saddle_point_checker(imags)
 
         # Assess saddle point, save it if viable
-        if sadpt_status == 'kickoff':
-            opt_inf_obj, _, opt_out_str = opt_ret
-            opt_prog = opt_inf_obj.prog
-            geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
+        # if sadpt_status == 'kickoff':
+        #     opt_inf_obj, _, opt_out_str = opt_ret
+        #     opt_prog = opt_inf_obj.prog
+        #     geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
 
-            # Need to return an opt_ret
-            geo, _ = geom.remove_imag(
-                geo, ts_info, mod_thy_info, ts_run_fs, run_fs,
-                kickoff_size=0.1, kickoff_backward=False, kickoff_mode=1,
-                overwrite=False)
+        #     # Need to return an opt_ret
+        #     geo, _ = geom.remove_imag(
+        #         geo, ts_info, mod_thy_info, ts_run_fs, run_fs,
+        #         kickoff_size=0.1, kickoff_backward=False, kickoff_mode=1,
+        #         overwrite=False)
 
-            sadpt_status = saddle_point_checker(imags)
+        #     sadpt_status = saddle_point_checker(imags)
 
         if sadpt_status == 'success':
             save_saddle_point(
-                opt_ret, hess_ret, freqs, imags,
-                mod_thy_info,
-                cnf_save_fs,
-                ts_save_fs, ts_save_path,
-                frm_bnd_keys, brk_bnd_keys, rcts_gra,
+                rxn, opt_ret, hess_ret, freqs, imags,
+                mod_thy_info, savefs_dct,
                 zma_locs=[0])
 
     else:
@@ -115,18 +114,13 @@ def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct):
     scn_save_fs = savefs_dct['savelvl_scn_fs']
 
     # Build grid and names appropriate for reaction type
-    if 'elimination' in rxn_typ:
-        coord_grids = grid
-        coord_names = [frm_name, brk_name]
-    else:
-        coord_grids = [grid]
-        coord_names = [frm_name]
+    coord_names, constraint_dct, coord_grids, update_guess = build_scan(zrxn, zma)
 
     # Set up script string and kwargs
     _, opt_script_str, _, opt_kwargs = qchem_params(
         *mod_thy_info[0:2])
 
-    scan.execute_scan(
+    es_runner.execute_scan(
         zma=ts_zma,
         spc_info=ts_info,
         mod_thy_info=mod_thy_info,
@@ -180,7 +174,7 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
     # Loop over all the guess zmas to find a TS
     opt_ret = None
     for idx, zma in enumerate(guess_zmas):
-        print('\nAttempting optimization of guess Z-Matrix {}...'.format(idx+1))
+        print('\nOptimizing guess Z-Matrix {}...'.format(idx+1))
 
         # Run the transition state optimization
         opt_success, opt_ret = es_runner.execute_job(
@@ -199,19 +193,19 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
         if opt_success:
             break
 
-        frozen_coords_lst = ((), tors_names)
-        success, opt_ret = es_runner.multi_stage_optimization(
-            script_str=script_str,
-            run_fs=run_fs,
-            geom=inp_geom,
-            spc_info=spc_info,
-            thy_info=thy_info,
-            frozen_coords_lst=frozen_coords_lst,
-            overwrite=overwrite,
-            saddle=saddle,
-            retryfail=retryfail,
-            **kwargs
-        )
+        # frozen_coords_lst = ((), tors_names)
+        # success, opt_ret = es_runner.multi_stage_optimization(
+        #     script_str=opt_script_str,
+        #     run_fs=run_fs,
+        #     geom=inp_geom,
+        #     spc_info=spc_info,
+        #     thy_info=thy_info,
+        #     frozen_coords_lst=frozen_coords_lst,
+        #     overwrite=overwrite,
+        #     saddle=saddle,
+        #     retryfail=retryfail,
+        #     **kwargs
+        # )
 
     return opt_ret
 
@@ -292,14 +286,15 @@ def saddle_point_checker(imags):
     return status
 
 
-def save_saddle_point(opt_ret, hess_ret, freqs, imags,
-                      mod_thy_info,
-                      cnf_save_fs,
-                      ts_save_fs, ts_save_path,
-                      frm_bnd_keys, brk_bnd_keys, rcts_gra,
+def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
+                      mod_thy_info, savefs_dct,
                       zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
     """
+
+    cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
+    ts_save_fs, ts_save_path = savefs_dct['runlvl_ts_fs']
+
     print('Saving saddle point...')
 
     # Read the geom, energy, and Hessian from output
@@ -345,22 +340,13 @@ def save_saddle_point(opt_ret, hess_ret, freqs, imags,
     cnf_save_path = cnf_save_fs[-1].path(locs)
 
     # Save the zmatrix information in a zma filesystem
-    print(" - Generating new geometry...")
-    zma, tors_names, frm_bnd_keys, brk_bnd_keys = _generate_new_sadpt_zma(
-        geo, frm_bnd_keys, brk_bnd_keys)
-
     cnf_save_path = cnf_save_fs[-1].path(locs)
-    zma_save_fs = fs.manager(cnf_save_path, 'ZMATRIX')
+    zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.geometry_info.write(opt_inf_obj, zma_locs)
     zma_save_fs[-1].file.geometry_input.write(opt_inp_str, zma_locs)
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-
-    # Save the form and break keys in the filesystem
-    tra = (frozenset({frm_bnd_keys}),
-           frozenset({brk_bnd_keys}))
-    zma_save_fs[-1].file.transformation.write(tra, zma_locs)
-    zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
+    zma_save_fs[-1].file.reac.write(zrxn, zma_locs)
 
     # Save the energy in a single-point filesystem
     print(" - Saving energy...")
@@ -369,26 +355,3 @@ def save_saddle_point(opt_ret, hess_ret, freqs, imags,
     sp_save_fs[-1].file.input.write(opt_inp_str, mod_thy_info[1:4])
     sp_save_fs[-1].file.info.write(opt_inf_obj, mod_thy_info[1:4])
     sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
-
-
-def _generate_new_sadpt_zma(geo, frm_bnd_keys, brk_bnd_keys):
-    """ make new zma
-    """
-
-    print(" - Generating a new zma...")
-
-    # Build new zma using x2z and new torsion coordinates
-    zma = automol.geometry.zmatrix(
-        geo, ts_bnd=(frm_bnd_keys, brk_bnd_keys))
-
-    # Generate torsional names
-    tors_names = automol.geometry.zmatrix_torsion_coordinate_names(
-        geo, ts_bnd=(frm_bnd_keys, brk_bnd_keys))
-    # Get the ranges for the file?
-
-    # Remap the frm and broken keys to the new atom ordering
-    order_dct = automol.__.zmatrix_atom_ordering(x2m)
-    frm_bnd_keys = frozenset(order_dct[x] for x in frm_bnd_keys)
-    brk_bnd_keys = frozenset(order_dct[x] for x in brk_bnd_keys)
-
-    return zma, tors_names, frm_bnd_keys, brk_bnd_keys
