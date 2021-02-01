@@ -18,7 +18,8 @@ def remove_imag(geo, spc_info, mod_thy_info, thy_run_fs, run_fs,
     mode and then reoptimize
     """
 
-    print('The initial geometries will be checked for imaginary frequencies')
+    ioprinter.info_message(
+        'The initial geometries will be checked for imaginary frequencies')
     script_str, opt_script_str, kwargs, opt_kwargs = qchem_params(
         *mod_thy_info[0:2])
 
@@ -33,7 +34,8 @@ def remove_imag(geo, spc_info, mod_thy_info, thy_run_fs, run_fs,
     chk_idx = 0
     while imag and chk_idx < 5:
         chk_idx += 1
-        print('Attempting kick off along mode, attempt {}...'.format(chk_idx))
+        ioprinter.info_message(
+            'Attempting kick off along mode, attempt {}...'.format(chk_idx))
 
         geo = _kickoff_saddle(
             geo, norm_coords, spc_info, mod_thy_info,
@@ -41,12 +43,13 @@ def remove_imag(geo, spc_info, mod_thy_info, thy_run_fs, run_fs,
             kickoff_size, kickoff_backward, kickoff_mode,
             opt_cart=True, **opt_kwargs)
 
-        print('Removing faulty geometry from filesystem. Rerunning Hessian...')
+        ioprinter.info_message(
+            'Removing faulty geometry from filesystem. Rerunning Hessian...')
         thy_run_path = thy_run_fs[-1].path(mod_thy_info[1:4])
         run_fs = autofile.fs.run(thy_run_path)
         run_fs[-1].remove([elstruct.Job.HESSIAN])
 
-        print('Rerunning Hessian...')
+        ioprinter.info_message('Rerunning Hessian...')
         imag, norm_coords = _check_imaginary(
             spc_info, geo, mod_thy_info, thy_run_fs, script_str,
             overwrite, **kwargs)
@@ -103,7 +106,7 @@ def _check_imaginary(spc_info, geo, mod_thy_info, thy_run_fs, script_str,
             # Should decrease once freq projector functions properly
             if imag:
                 imag = True
-                print('Imaginary mode found, Reading normal coordinates...')
+                ioprinter.warning_message('Imaginary mode found:')
                 norm_coords = elstruct.reader.normal_coords(prog, out_str)
 
     return imag, norm_coords
@@ -129,6 +132,9 @@ def _kickoff_saddle(geo, norm_coords, spc_info, mod_thy_info,
     if kickoff_backward:
         disp_len *= -1
     disp_xyzs = numpy.multiply(disp_xyzs, disp_len)
+    ioprinter.debug_message(
+        'geo test in kickoff_saddle:',
+        automol.geom.string(geo), disp_xyzs)
 
     geo = automol.geom.displace(geo, disp_xyzs)
 

@@ -23,7 +23,8 @@ def generate_guess_structure(ts_dct, mod_thy_info,
 
     guess_zmas = _check_filesys_for_guess(savefs_dct, (0,), es_keyword_dct)
     if not guess_zmas:
-        scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct)
+        scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct,
+                       es_keyword_dct)
 
     return guess_zmas
 
@@ -103,18 +104,31 @@ def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
     return guess_zmas
 
 
-def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct):
+def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct,
+                   es_keyword_dct):
     """ saddle point scan code
     """
 
     print(' - No Z-Matrix is found in save filesys.')
     print('\nRunning scan to generate guess Z-Matrix for opt...')
 
+    # Get filesystem information
+    thy_save_fs = ()
     scn_run_fs = runfs_dct['runlvl_scn_fs']
     scn_save_fs = savefs_dct['savelvl_scn_fs']
 
+    # Get es keyword info
+    overwrite = es_keyword_dct['overwrite']
+
+    # Get info from the dct
+    ts_zma, zma_keys, dummy_key_dct = ts_dct['zma']
+    rxn = ts_dct['rxnobj']   # convert to zrxn
+    zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
+    ts_info = rinfo.ts_info(ts_dct['rxn_info'])
+
     # Build grid and names appropriate for reaction type
-    coord_names, constraint_dct, coord_grids, update_guess = build_scan(zrxn, zma)
+    scan_inf = automol.reac.build_scan_info(zrxn, ts_zma)
+    coord_names, constraint_dct, coord_grids, update_guess = scan_inf
 
     # Set up script string and kwargs
     _, opt_script_str, _, opt_kwargs = qchem_params(
@@ -129,7 +143,7 @@ def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct):
         coord_grids=coord_grids,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
-        scn_typ=scn_typ,
+        scn_typ='relaxed',
         script_str=opt_script_str,
         overwrite=overwrite,
         update_guess=update_guess,
@@ -142,16 +156,16 @@ def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct):
         )
 
     # Find the structure at the maximum on the grid opt scan
-    if 'elimination' in rxn_typ:
-        [grid1, grid2] = coord_grids
-        max_zma = rxngrid.find_max_2d(
-            grid1, grid2, frm_name, brk_name, scn_save_fs,
-            mod_thy_info, constraint_dct)
-        guess_zmas = [max_zma]
-    else:
-        guess_zmas = rxngrid.find_max_1d(
-            rxn_typ, grid, ts_zma, frm_name, scn_save_fs,
-            mod_thy_info, constraint_dct)
+    # if 'elimination' in rxn_typ:
+    #     [grid1, grid2] = coord_grids
+    #     max_zma = rxngrid.find_max_2d(
+    #         grid1, grid2, frm_name, brk_name, scn_save_fs,
+    #         mod_thy_info, constraint_dct)
+    #     guess_zmas = [max_zma]
+    # else:
+    guess_zmas = rxngrid.find_max_1d(
+        rxn.class_, coord_grids, ts_zma, coord_names, scn_save_fs,
+        mod_thy_info, constraint_dct)
 
     return guess_zmas
 

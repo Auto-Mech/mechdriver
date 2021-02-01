@@ -21,8 +21,7 @@ def multi_stage_optimization(script_str, run_fs,
 
     for idx, coords in enumerate(frozen_coord_lst):
 
-        print('Stage {} beginning,'.format(str(idx+1)),
-              'holding following coordinates constant: {}'.format(coords))
+        ioprinter.info_message('Stage one success beginning stage two')
         success, ret = execute_job(
             job=elstruct.Job.OPTIMIZATION,
             script_str=script_str,

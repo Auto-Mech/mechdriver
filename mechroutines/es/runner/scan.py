@@ -29,10 +29,10 @@ def execute_scan(zma, spc_info, mod_thy_info, thy_save_fs,
              coord_names, coord_grids,
              scn_run_fs, scn_save_fs, scn_typ,
              script_str, overwrite,
-             update_guess=True, reverse_sweep=True,
-             saddle=False,
-             constraint_dct=None, retryfail=True,
-             chkstab=False,
+             update_guess=update_guess, reverse_sweep=reverse_sweep,
+             saddle=saddle,
+             constraint_dct=constraint_dct, retryfail=retryfail,
+             chkstab=chkstab,
              **kwargs)
 
     ioprinter.info_message(
