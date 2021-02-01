@@ -4,11 +4,12 @@
 
 import elstruct
 from mechroutines.es.runner._run import execute_job
+from mechlib.amech_io import printer as ioprinter
 
 
 def multi_stage_optimization(script_str, run_fs,
-                             inp_geom, spc_info, thy_info,
-                             frozen_coord_lst,
+                             geo, spc_info, thy_info,
+                             frozen_coords_lst,
                              overwrite=False,
                              saddle=False,
                              retryfail=False,
@@ -16,17 +17,15 @@ def multi_stage_optimization(script_str, run_fs,
     """ Run some optimization where a set of coordinates are fixed
     """
 
-    # Initialize loop geom to the input
-    geom = inp_geom
+    for idx, coords in enumerate(frozen_coords_lst):
 
-    for idx, coords in enumerate(frozen_coord_lst):
-
-        ioprinter.info_message('Stage one success beginning stage two')
+        ioprinter.info_message(
+            'Stage {} success beginning stage two'.format(idx+1))
         success, ret = execute_job(
             job=elstruct.Job.OPTIMIZATION,
             script_str=script_str,
             run_fs=run_fs,
-            geom=geom,
+            geo=geo,
             spc_info=spc_info,
             thy_info=thy_info,
             overwrite=overwrite,
@@ -38,9 +37,9 @@ def multi_stage_optimization(script_str, run_fs,
 
         if success:
             inf_obj, _, out_str = ret
-            geom = elstruct.reader.opt_zmatrix(inf_obj.prog, out_str)
+            geo = elstruct.reader.opt_zmatrix(inf_obj.prog, out_str)
             print('Success. Moving to next stage...\n')
-            if idx+1 != len(frozen_coord_lst):
+            if idx+1 != len(frozen_coords_lst):
                 print('Success. Moving to next stage...\n')
             else:
                 print('Succes. Finished sequence')

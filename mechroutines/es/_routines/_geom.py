@@ -12,7 +12,7 @@ from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 
-def remove_imag(geo, spc_info, mod_thy_info, thy_run_fs, run_fs,
+def remove_imag(geo, ini_ret, spc_info, mod_thy_info, thy_run_fs, run_fs,
                 kickoff_size=0.1, kickoff_backward=False, kickoff_mode=0,
                 overwrite=False):
     """ if there is an imaginary frequency displace geometry along the imaginary
@@ -28,17 +28,15 @@ def remove_imag(geo, spc_info, mod_thy_info, thy_run_fs, run_fs,
         spc_info, geo, mod_thy_info, thy_run_fs, script_str,
         overwrite, **kwargs)
 
-    # Make var to fix the imaginary mode if needed to pass to other functions
-    imag_fix_needed = bool(imag)
-
     # Make five attempts to remove imag mode if found
     chk_idx = 0
+    kick_ret = None
     while imag and chk_idx < 5:
         chk_idx += 1
         ioprinter.info_message(
             'Attempting kick off along mode, attempt {}...'.format(chk_idx))
 
-        geo = _kickoff_saddle(
+        geo, kick_ret = _kickoff_saddle(
             geo, norm_coords, spc_info, mod_thy_info,
             run_fs, thy_run_fs, opt_script_str,
             kickoff_size, kickoff_backward, kickoff_mode,
@@ -58,7 +56,12 @@ def remove_imag(geo, spc_info, mod_thy_info, thy_run_fs, run_fs,
         # Update kickoff size
         kickoff_size *= 2.0
 
-    return geo, imag_fix_needed
+    if kick_ret is None:
+        ret = ini_ret
+    else:
+        ret = kick_ret
+
+    return geo, ret
 
 
 def _check_imaginary(spc_info, geo, mod_thy_info, thy_run_fs, script_str,
@@ -77,11 +80,11 @@ def _check_imaginary(spc_info, geo, mod_thy_info, thy_run_fs, script_str,
     hess = ((), ())
 
     # Run Hessian calculation
-    es_runner.run_job(
+    success, ret = es_runner.execute_job(
         job=elstruct.Job.HESSIAN,
         spc_info=spc_info,
         thy_info=mod_thy_info,
-        geom=geo,
+        geo=geo,
         run_fs=run_fs,
         script_str=script_str,
         overwrite=overwrite,
@@ -89,7 +92,6 @@ def _check_imaginary(spc_info, geo, mod_thy_info, thy_run_fs, script_str,
         )
 
     # Check for imaginary modes
-    success, ret = es_runner.read_job(job=elstruct.Job.HESSIAN, run_fs=run_fs)
     if success:
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
@@ -144,22 +146,20 @@ def _kickoff_saddle(geo, norm_coords, spc_info, mod_thy_info,
         geom = geo
     else:
         geom = automol.geom.zmatrix(geo)
-    es_runner.run_job(
+    success, ret = es_runner.execute_job(
         job=elstruct.Job.OPTIMIZATION,
         script_str=opt_script_str,
         run_fs=run_fs,
-        geom=geom,
+        geo=geom,
         spc_info=spc_info,
         thy_info=mod_thy_info,
         overwrite=True,
         **kwargs,
     )
 
-    success, ret = es_runner.read_job(
-        job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
     if success:
         inf_obj, _, out_str = ret
         prog = inf_obj.prog
         geo = elstruct.reader.opt_geometry(prog, out_str)
 
-    return geo
+    return geo, ret

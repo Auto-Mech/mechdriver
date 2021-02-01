@@ -50,31 +50,26 @@ def run_tsk(tsk, spc_dct, spc_name,
     if stable:
         ioprinter.debug_message('- Proceeding with requested task...')
 
-        # Set keys
-        saddle = bool('ts_' in spc_name)
-        # vdw = bool('vdw' in spc_name)
-        spc = spc_dct[spc_name]
-
         # Get stuff from task
         job = tsk.split('_', 1)[1]
 
         # Run the task if an initial geom exists
         if 'init' in tsk:
             _ = geom_init(
-                spc, thy_dct, es_keyword_dct,
-                run_prefix, save_prefix, saddle)
+                spc_dct, spc_name, thy_dct, es_keyword_dct,
+                run_prefix, save_prefix)
         elif 'conf' in tsk:
             conformer_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
-                run_prefix, save_prefix, saddle)
+                run_prefix, save_prefix)
         elif 'tau' in tsk:
             tau_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
-                run_prefix, save_prefix, saddle)
+                run_prefix, save_prefix)
         elif 'hr' in tsk:
             hr_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
-                run_prefix, save_prefix, saddle)
+                run_prefix, save_prefix)
         elif 'irc' in tsk:
             irc_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
@@ -90,10 +85,12 @@ def run_tsk(tsk, spc_dct, spc_name,
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
-def geom_init(spc, thy_dct, es_keyword_dct,
-              run_prefix, save_prefix, saddle):
+def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
+              run_prefix, save_prefix):
     """ Find the initial geometry
     """
+
+    spc = spc_dct[spc_name]
 
     # Set the spc_info
     spc_info = filesys.inf.get_spc_info(spc)
@@ -121,6 +118,7 @@ def geom_init(spc, thy_dct, es_keyword_dct,
     cnf_save_fs = autofile.fs.conformer(thy_save_path)
 
     # Set the run filesystem
+    saddle = bool('ts_' in spc_name)
     if saddle:
         _, ts_path = filesys.build.ts_fs_from_thy(thy_run_path)
         run_fs = filesys.build.run_fs_from_prefix(ts_path)
@@ -148,20 +146,26 @@ def geom_init(spc, thy_dct, es_keyword_dct,
 
 def conformer_tsk(job, spc_dct, spc_name,
                   thy_dct, es_keyword_dct,
-                  run_prefix, save_prefix, saddle):
+                  run_prefix, save_prefix):
     """ Launch tasks associated with conformers.
         Scan: Generate a set of conformer geometries and energies via
               random sampling over torsional coordinates
               following by optimization
         SP: Calculate ene, grad, ..
     """
+
+    saddle = bool('ts_' in spc_name)
+
     spc = spc_dct[spc_name]
 
     # Set the spc_info
     if not saddle:
         spc_info = filesys.inf.get_spc_info(spc)
+        rxn = None
     else:
         spc_info = rinfo.ts_info(spc['rxn_info'])
+        rxn = spc['rxnobj']
+    print('spc info test:', spc_info)
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
@@ -174,6 +178,8 @@ def conformer_tsk(job, spc_dct, spc_name,
         es_keyword_dct['runlvl'], thy_dct)
     mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
     mod_ini_thy_info = filesys.inf.modify_orb_restrict(spc_info, ini_thy_info)
+    print('spc info test:', spc_info)
+    print('mod thy info test:', mod_thy_info)
 
     # Set the filesystem objects
     if not saddle:
@@ -241,8 +247,11 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Read the torsions from the ini file sys
         if ini_zma_save_fs[-1].file.torsions.exists([0]):
-            tors_lst = ini_zma_save_fs[-1].file.torsions.read([0])
-            tors_names = automol.rotor.names(tors_lst, flat=True)
+            tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+            torsions = automol.rotor.from_data(zma, tors_dct)
+            print('tors_path', ini_zma_save_fs[-1].file.torsions.path([0]))
+            print('tors_lst', tors_dct)
+            tors_names = automol.rotor.names(torsions, flat=True)
         else:
             tors_names = ()
 
@@ -312,8 +321,8 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Check if locs exist, kill if it doesn't
         if not ini_cnf_save_locs_lst:
-            ioprinter.error_message('No min-energy conformer found for level:',
-                ini_thy_save_path)
+            ioprinter.error_message(
+                'No min-energy conformer found for level:', ini_thy_save_path)
             sys.exit()
 
         # Set up the run scripts
@@ -336,7 +345,7 @@ def conformer_tsk(job, spc_dct, spc_name,
 
 def tau_tsk(job, spc_dct, spc_name,
             thy_dct, es_keyword_dct,
-            run_prefix, save_prefix, saddle):
+            run_prefix, save_prefix):
     """ Energies, gradients, and hessians,
         for set of arbitrarily sampled torsional coordinates
         with all other coordinates optimized
@@ -388,31 +397,18 @@ def tau_tsk(job, spc_dct, spc_name,
     else:
         ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
 
-    # Bond key stuff
-    if saddle:
-        frm_bnd_keys, brk_bnd_keys = structure.ts.rxn_bnd_keys(
-            ini_cnf_save_fs, ini_min_cnf_locs, zma_locs=[0])
+    # Get the tors names
+    ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
+    if ini_zma_save_fs[-1].file.torsions.exists([0]):
+        tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+        torsions = automol.rotor.from_data(zma, tors_dct)
+        print('tors_path', ini_zma_save_fs[-1].file.torsions.path([0]))
+        print('tors_lst', tors_dct)
     else:
-        frm_bnd_keys, brk_bnd_keys = (), ()
-
-    # Set up the torsion info
-    dct_tors_names, _ = structure.tors.names_from_dct(
-        spc, '1dhr')
-    amech_spc_tors_names = structure.tors.names_from_geo(
-        geo, '1dhr', saddle=saddle)
-    if dct_tors_names:
-        run_tors_names = dct_tors_names
-    else:
-        run_tors_names = amech_spc_tors_names
-        ioprinter.debug_message('Using tors names generated by AutoMech...')
-
-    run_tors_names, _, _ = structure.tors.hr_prep(
-        zma, tors_name_grps=run_tors_names,
-        scan_increment=scan_increment, tors_model='1dhr',
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+        tors_names = ()
 
     # Run the task if any torsions exist
-    if run_tors_names:
+    if tors_names:
 
         # Set up tau filesystem objects
         tau_run_fs, _ = filesys.build.tau_fs_from_thy(
@@ -563,14 +559,19 @@ def tau_tsk(job, spc_dct, spc_name,
 
 def hr_tsk(job, spc_dct, spc_name,
            thy_dct, es_keyword_dct,
-           run_prefix, save_prefix, saddle):
+           run_prefix, save_prefix):
     """ run a scan over the specified torsional coordinates
     """
 
     spc = spc_dct[spc_name]
-
+    saddle = bool('ts_' in spc_name)
     # Set the spc_info
-    spc_info = filesys.inf.get_spc_info(spc)
+    if not saddle:
+        spc_info = filesys.inf.get_spc_info(spc)
+        rxn = None
+    else:
+        spc_info = rinfo.ts_info(spc['rxn_info'])
+        rxn = spc['rxnobj']
 
     # Modify the theory
     ini_thy_info = filesys.inf.get_es_info(
@@ -624,36 +625,23 @@ def hr_tsk(job, spc_dct, spc_name,
     retryfail = es_keyword_dct['retryfail']
     tors_model = es_keyword_dct['tors_model']
     scan_increment = spc['hind_inc']
-
-    # Bond key stuff
-    if saddle:
-        frm_bnd_keys, brk_bnd_keys = structure.ts.rxn_bnd_keys(
-            ini_cnf_save_fs, ini_min_cnf_locs, zma_locs=[0])
-    else:
-        frm_bnd_keys, brk_bnd_keys = (), ()
-
+    
     # Read fs for zma and geo
     zma, geo = filesys.inf.cnf_fs_zma_geo(ini_cnf_save_fs, ini_min_cnf_locs)
 
     # Set up the torsion info
-    run_tors_names = structure.tors.tors_name_prep(
-        spc, ini_cnf_save_fs, ini_min_cnf_locs, tors_model)
-    ioprinter.debug_message('run_tors_names', run_tors_names)
-    run_tors_names, run_tors_grids, _ = structure.tors.hr_prep(
-        zma, tors_name_grps=run_tors_names,
-        scan_increment=scan_increment, tors_model=tors_model,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
-    ioprinter.debug_message('run_tors_names', run_tors_names)
+    ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
+    if ini_zma_save_fs[-1].file.torsions.exists([0]):
+        tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+        torsions = automol.rotor.from_data(zma, tors_dct)
+        print('tors_path', ini_zma_save_fs[-1].file.torsions.path([0]))
+        print('tors_lst', tors_dct)
+        tors_names = automol.rotor.names(torsions, flat=True)
+    else:
+        torsions = ()
 
     # Run the task if any torsions exist
-    if run_tors_names:
-
-        # Set constraints
-        const_names = structure.tors.set_constraint_names(
-            zma, run_tors_names, tors_model)
-
-        # Set if scan is rigid or relaxed
-        scn_typ = 'relaxed' if tors_model != '1dhrfa' else 'rigid'
+    if any(torsions):
 
         # Set up ini filesystem for scans
         _, ini_zma_run_path = filesys.build.zma_fs_from_prefix(
@@ -667,31 +655,30 @@ def hr_tsk(job, spc_dct, spc_name,
             hr.hindered_rotor_scans(
                 zma, spc_info, mod_thy_info, ini_thy_save_fs,
                 ini_zma_run_path, ini_zma_save_path,
-                run_tors_names, run_tors_grids,
+                torsions, tors_model,
                 opt_script_str, overwrite,
-                scn_typ=scn_typ,
-                saddle=saddle, const_names=const_names,
+                saddle=saddle,
                 retryfail=retryfail, **opt_kwargs)
 
             # Read and print the potential
-            sp_fs = autofile.fs.single_point(ini_cnf_save_path)
-            ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
+            # sp_fs = autofile.fs.single_point(ini_cnf_save_path)
+            # ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
             # ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
-            tors_pots, tors_zmas = {}, {}
-            for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
-                constraint_dct = structure.tors.build_constraint_dct(
-                    zma, const_names, tors_names)
-                pot, _, _, _, zmas, _ = structure.tors.read_hr_pot(
-                    tors_names, tors_grids,
-                    ini_cnf_save_path,
-                    mod_ini_thy_info, ref_ene,
-                    constraint_dct,
-                    read_zma=True)
-                tors_pots[tors_names] = pot
-                tors_zmas[tors_names] = zmas
+            # tors_pots, tors_zmas = {}, {}
+            # for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
+            #     constraint_dct = structure.tors.build_constraint_dct(
+            #         zma, const_names, tors_names)
+            #     pot, _, _, _, zmas, _ = structure.tors.read_hr_pot(
+            #         tors_names, tors_grids,
+            #         ini_cnf_save_path,
+            #         mod_ini_thy_info, ref_ene,
+            #         constraint_dct,
+            #         read_zma=True)
+            #     tors_pots[tors_names] = pot
+            #     tors_zmas[tors_names] = zmas
 
-            # Print potential
-            structure.tors.print_hr_pot(tors_pots)
+            # # Print potential
+            # structure.tors.print_hr_pot(tors_pots)
 
         elif job == 'reopt':
 
@@ -724,12 +711,13 @@ def hr_tsk(job, spc_dct, spc_name,
                 tors_pots, tors_zmas, tors_paths, emax=ethresh)
 
             if new_min_zma is not None:
-                ioprinter.info_message('Finding new low energy conformer...', newline=1)
+                ioprinter.info_message(
+                    'Finding new low energy conformer...', newline=1)
                 conformer.single_conformer(
                     zma, spc_info, mod_thy_info,
                     ini_cnf_run_fs, ini_cnf_save_fs,
                     opt_script_str, overwrite,
-                    retryfail=retryfail, saddle=saddle, **opt_kwargs)
+                    retryfail=retryfail, rxn=rxn, **opt_kwargs)
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 

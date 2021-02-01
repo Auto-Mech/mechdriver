@@ -652,7 +652,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
         else:
             # check forming/breaking bond distance
             # if abs(cnf_dist - ref_dist) > 0.4:
-            # max disp of 0.4 causes problems for bond scission with ring forming 
+            # max disp of 0.4 causes problems for bond scission with ring forming
             # not sure if setting it to 0.3 will cause problems for other cases
             if abs(cnf_dist - ref_dist) > 0.3:
                 ioprinter.diverged_ts('distance', ref_dist, cnf_dist)
