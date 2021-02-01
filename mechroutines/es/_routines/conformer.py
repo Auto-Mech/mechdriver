@@ -310,10 +310,10 @@ def conformer_sampling(zma, spc_info,
                        mod_thy_info, thy_save_fs,
                        cnf_run_fs, cnf_save_fs,
                        script_str, overwrite,
-                       saddle=False, nsamp_par=(False, 3, 3, 1, 50, 50),
-                       tors_names='',
+                       rxn=None, nsamp_par=(False, 3, 3, 1, 50, 50),
+                       tors_names=(),
                        two_stage=False, retryfail=True,
-                       rxn_class='', **kwargs):
+                       **kwargs):
     """ Find the minimum energy conformer by optimizing from nsamp random
     initial torsional states
     """
@@ -322,14 +322,14 @@ def conformer_sampling(zma, spc_info,
     coo_names = []
 
     # Read the geometry and zma from the ini file system
-    if saddle:
+    if rxn:
         coo_names.append(tors_names)
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
     ioprinter.debug_message('tors_names', tors_names)
     ioprinter.debug_message('tors_range_dct', tors_range_dct)
-    if not saddle:
+    if not rxn:
         gra = automol.inchi.graph(ich)
         ntaudof = len(
             automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
@@ -345,8 +345,7 @@ def conformer_sampling(zma, spc_info,
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
         thy_info=mod_thy_info,
-        saddle=saddle,
-        rxn_class=rxn_class,
+        rxn=rxn,
         orig_ich=ich
     )
 
@@ -362,7 +361,7 @@ def conformer_sampling(zma, spc_info,
         cnf_save_fs=cnf_save_fs,
         script_str=script_str,
         overwrite=overwrite,
-        saddle=saddle,
+        rxn=rxn,
         two_stage=two_stage,
         retryfail=retryfail,
         **kwargs,
@@ -374,8 +373,7 @@ def conformer_sampling(zma, spc_info,
         cnf_run_fs=cnf_run_fs,
         cnf_save_fs=cnf_save_fs,
         thy_info=mod_thy_info,
-        saddle=saddle,
-        rxn_class=rxn_class,
+        rxn=rxn,
         orig_ich=ich
     )
 
@@ -385,7 +383,7 @@ def conformer_sampling(zma, spc_info,
     if min_cnf_locs:
         ioprinter.debug_message('min_cnf_locs;save_conformer:', min_cnf_locs)
         geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
-        if not saddle:
+        if not zrxn:
             thy_save_fs[-1].file.geometry.write(geo, mod_thy_info[1:4])
         else:
             thy_save_fs[0].file.geometry.write(geo)
@@ -393,10 +391,10 @@ def conformer_sampling(zma, spc_info,
     return bool(min_cnf_locs)
 
 
-def single_conformer(zma, spc_info, mod_thy_info,
+def single_conformer(zma, rxn, spc_info, mod_thy_info,
                      cnf_run_fs, cnf_save_fs,
                      script_str, overwrite,
-                     retryfail=True, saddle=False, **kwargs):
+                     retryfail=True, rxn=None, **kwargs):
     """ generate single optimized geometry to be saved into a
         filesystem
     """
@@ -418,7 +416,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
         thy_info=mod_thy_info,
         overwrite=overwrite,
         frozen_coordinates=(),
-        saddle=saddle,
+        saddle=bool(rxn is not None),
         retryfail=retryfail,
         **kwargs
     )
@@ -439,7 +437,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
             if sym_id is None:
                 _save_unique_conformer(
                     ret, mod_thy_info, cnf_save_fs, locs,
-                    saddle=saddle, zma_locs=(0,))
+                    rxn=rxn, zma_locs=(0,))
                 saved_geos.append(geo)
                 saved_enes.append(ene)
                 saved_locs.append(locs)
@@ -452,7 +450,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
 def run_conformers(
         zma, spc_info, thy_info, nsamp, tors_range_dct,
         cnf_run_fs, cnf_save_fs, script_str, overwrite,
-        saddle, two_stage, retryfail,
+        rxn, two_stage, retryfail,
         **kwargs):
     """ run sampling algorithm to find conformers
     """
@@ -530,7 +528,7 @@ def run_conformers(
                 thy_info=thy_info,
                 frozen_coords_lst=frozen_coords_lst,
                 overwrite=overwrite,
-                saddle=saddle,
+                saddle=bool(rxn is not None),
                 retryfail=retryfail,
                 **kwargs
             )
@@ -543,7 +541,7 @@ def run_conformers(
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
-                saddle=saddle,
+                saddle=bool(rxn is not None),
                 retryfail=retryfail,
                 **kwargs
             )
@@ -561,7 +559,7 @@ def run_conformers(
         cnf_run_fs[0].file.info.write(inf_obj)
 
 
-def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
+def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, rxn=None,
                     rxn_class='', orig_ich=''):
     """ save the conformers that have been found so far
         # Only go through save procedure if conf not in save
@@ -571,7 +569,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
     saved_locs, saved_geos, saved_enes = _saved_cnf_info(
         cnf_save_fs, thy_info)
 
-    if not saddle:
+    if rxn is None:
         _check_old_inchi(orig_ich, saved_geos, saved_locs, cnf_save_fs)
 
     if not cnf_run_fs[0].exists():
@@ -598,10 +596,10 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                 # zma = automol.geom.zmatrix(geo)
 
                 # Assess if geometry is properly connected
-                if _geo_connected(geo, saddle):
-                    if saddle:
+                if _geo_connected(geo, rxn):
+                    if rxn:
                         ts_viable = _ts_geo_viable(
-                            zma, cnf_save_fs, rxn_class, thy_info)
+                            zma, rxn, cnf_save_fs, rxn_class, thy_info)
                         if not ts_viable:
                             continue
                     elif not _inchi_are_same(orig_ich, geo):
@@ -609,7 +607,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                     # Assess viability of transition state conformer
 
                     # Determine uniqueness of conformer, save if needed
-                    if _geo_unique(geo, ene, saved_geos, saved_enes, saddle):
+                    if _geo_unique(geo, ene, saved_geos, saved_enes, rxn):
                         # iso check breaks because of zma location
                         # if _is_proper_isomer(cnf_save_fs, zma):
                         sym_id = _sym_unique(
@@ -617,7 +615,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
                         if sym_id is None:
                             _save_unique_conformer(
                                 ret, thy_info, cnf_save_fs,
-                                locs, saddle=saddle)
+                                locs, rxn=rxn)
                             saved_geos.append(geo)
                             saved_enes.append(ene)
                             saved_locs.append(locs)
@@ -631,13 +629,13 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, saddle=False,
         filesys.mincnf.traj_sort(cnf_save_fs, thy_info)
 
 
-def _geo_connected(geo, saddle):
+def _geo_connected(geo, rxn):
     """ Assess if geometry is connected. Right now only works for
         minima
     """
 
     # Determine connectivity (only for minima)
-    if not saddle:
+    if rxn is not None:
         gra = automol.geom.graph(geo)
         conns = automol.graph.connected_components(gra)
         lconns = len(conns)
@@ -660,7 +658,7 @@ def _geo_unique(geo, ene, seen_geos, seen_enes):
 
     if not automol.util.value_similar_to(ene, seen_enes, 2.e-5):
         # unique = geomprep.is_unique_tors_dist_mat_energy(
-        #     geo, ene, seen_geos, seen_enes, saddle)
+        #     geo, ene, seen_geos, seen_enes, zrxn)
         unique, _ = automol.geom.is_unique(
                 geo, seen_geos, check_dct={'dist': None, 'tors': None})
     else:
@@ -741,7 +739,7 @@ def _is_proper_isomer(cnf_save_fs, zma):
     return proper_isomer
 
 
-def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
+def _ts_geo_viable(zma, rxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
     """ Perform a series of checks to assess the viability
         of a transition state geometry prior to saving
     """
@@ -753,15 +751,19 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     min_cnf_locs, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
     zma_save_fs = fs.zmatrix(cnf_save_path)
+    # ref_geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
+    # ref_rxn = zma_save_fs[-1].file.reaction.read(zma_locs)
 
-    # Read the form and broken keys from the min conf
-    frm_bnd_keys, brk_bnd_keys = tsprep.all_rxn_bnd_keys(
-        cnf_save_fs, min_cnf_locs, zma_locs=zma_locs)
-
-    # Calculate the distance of bond being formed
-    cnf_geo = automol.zmatrix.geometry(zma)
+    # Get the bond dists and calculate the distance of bond being formed
     ref_geo = automol.zmatrix.geometry(ref_zma)
+    cnf_geo = automol.zmatrix.geometry(zma)
+
+    # zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, geo)
+    # zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
+
+    frm_bnd_keys = automol.reac.forming_bond_keys(rxn)
+    brk_bnd_keys = automol.reac.breaking_bond_keys(rxn)
 
     cnf_dist_lst = []
     ref_dist_lst = []
@@ -808,14 +810,14 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     # Set the maximum allowed displacement for a TS conformer
     max_disp = 0.6
     # better to check for bond-form length in bond scission with ring forming
-    if 'addition' in rxn_class:
+    if 'addition' in rxn.class_:
         max_disp = 0.8
-    if 'abstraction' in rxn_class:
+    if 'abstraction' in rxn.class_:
         # this was 1.4 - SJK reduced it to work for some OH abstractions
         max_disp = 1.0
 
     # Check forming bond angle similar to ini config
-    if 'elimination' not in rxn_class:
+    if 'elimination' not in rxn.class_:
         for ref_angle, cnf_angle in zip(ref_ang_lst, cnf_ang_lst):
             if abs(cnf_angle - ref_angle) > .44:
                 ioprinter.diverged_ts('angle', ref_angle, cnf_angle)
@@ -824,7 +826,7 @@ def _ts_geo_viable(zma, cnf_save_fs, rxn_class, mod_thy_info, zma_locs=(0,)):
     symbols = automol.geom.symbols(cnf_geo)
     lst_info = zip(ref_dist_lst, cnf_dist_lst, bnd_key_lst)
     for ref_dist, cnf_dist, bnd_key in lst_info:
-        if 'add' in rxn_class or 'abst' in rxn_class:
+        if 'add' in rxn.class_ or 'abst' in rxn.class_:
             bnd_key1, bnd_key2 = min(list(bnd_key)), max(list(bnd_key))
             symb1 = symbols[bnd_key1]
             symb2 = symbols[bnd_key2]
@@ -900,7 +902,7 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
 
 
 def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
-                           saddle=False, zma_locs=(0,)):
+                           rxn=None, zma_locs=(0,)):
     """ Save the conformer in the filesystem
     """
 
@@ -917,15 +919,22 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     geo = elstruct.reader.opt_geometry(prog, out_str)
     zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
+    # Generate the torsions
+    geo, gdummy_key_dct = automol.convert.zmat.geometry(zma)
+    zrxn = automol.reac.insert_dummy_atoms(rxn, gdummy_key_dct)
+    rotors = automol.rotor.from_zma(zma)  ## Add a graph for the TS zma
+    # geo, gdummy_key_dct = automol.convert.zmat.geometry(zma)
+    # lin_keys = sorted(gdummy_key_dct.keys())
+    # gbnd_keys = automol.graph.rotational_bond_keys(gtsg, lin_keys=lin_keys)
+
     # Read the tra and graph
-    if saddle:
+    if rxn:
         _, ts_min_path = filesys.mincnf.min_energy_conformer_locators(
             cnf_save_fs, thy_info)
         ts_min_zma_fs = autofile.fs.zmatrix(ts_min_path)
         print('ts_min_path test:', ts_min_path)
-        tra = ts_min_zma_fs[-1].file.transformation.read(zma_locs)
         print('zma_locs test:', zma_locs)
-        rct_gra = ts_min_zma_fs[-1].file.reactant_graph.read(zma_locs)
+        rxn = ts_min_zma_fs[-1].file.reaction.read(zma_locs)
 
     # Build the conformer filesystem and save the structural info
     print(" - Geometry is unique. Saving...")
@@ -944,13 +953,11 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
 
     # Get the tors names
-    tors_names = ()
-    zma_save_fs[-1].file.torsional_names.write(tors_names, zma_locs)
+    zma_save_fs[-1].file.torsionas.write(rotors, zma_locs)
 
-    # Save the tra and gra for a saddle
-    if saddle:
-        zma_save_fs[-1].file.transformation.write(tra, zma_locs)
-        zma_save_fs[-1].file.reactant_graph.write(rct_gra, zma_locs)
+    # Save the tra and gra for a zrxn
+    if zrxn:
+        zma_save_fs[-1].file.reaction.write(rxn, zma_locs)
 
     # Saving the energy to a SP filesystem
     print(" - Saving energy of unique geometry...")

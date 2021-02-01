@@ -232,24 +232,21 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Set variables if it is a saddle
         two_stage = saddle
-        rxn_class = spc['class'] if saddle else ''
         mc_nsamp = spc['mc_nsamp']
 
         # Read the geometry and zma from the ini file system
-        if not saddle:
-            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
-            zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
-            tors_names = automol.geom.zmatrix_torsion_coordinate_names(geo)
-            geo_path = ini_cnf_save_fs[-1].path(ini_min_cnf_locs)
-        else:
-            ioprinter.debug_message('ini path', ini_thy_save_path)
-            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
-            # geo = ini_thy_save_fs[0].file.geometry.read()
-            zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
-            tors_names = spc['amech_ts_tors_names']
-            # geo_path = thy_save_fs[0].path()
-            geo_path = ini_cnf_save_fs[-1].path(ini_min_cnf_locs)
+        geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
+        zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
+        ioprinter.debug_message('ini path', ini_thy_save_path)
 
+        # Read the torsions from the ini file sys
+        if ini_zma_save_fs[-1].file.torsions.exists([0]):
+            tors_lst = ini_zma_save_fs[-1].file.torsions.read([0])
+            tors_names = automol.rotor.names(tors_lst, flat=True)
+        else:
+            tors_names = ()
+
+        geo_path = ini_cnf_save_fs[-1].path(ini_min_cnf_locs)
         ioprinter.initial_geom_path('Sampling started', geo_path)
 
         # Run the sampling
@@ -258,10 +255,10 @@ def conformer_tsk(job, spc_dct, spc_name,
             mod_thy_info, thy_save_fs,
             cnf_run_fs, cnf_save_fs,
             opt_script_str, overwrite,
-            saddle=saddle, nsamp_par=mc_nsamp,
+            rxn=rxn, nsamp_par=mc_nsamp,
             tors_names=tors_names,
             two_stage=two_stage, retryfail=retryfail,
-            rxn_class=rxn_class, **opt_kwargs)
+            **opt_kwargs)
 
     elif job == 'opt':
 
