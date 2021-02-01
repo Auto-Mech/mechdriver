@@ -37,6 +37,9 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
         in the MESS input and output files
     """
 
+    # Get the class
+    rclass = spc_dct[tsname]['rxnobj'].class_
+
     # Initialize idxs for bimol, well, and fake species
     pidx, widx, fidx = 1, 1, 1
     for val in label_dct.values():
@@ -87,7 +90,7 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
 
     # Determine idxs for any fake wells if they are needed
     fake_wellr_label = ''
-    if need_fake_wells(spc_dct[tsname]['class'], rwell_model):
+    if need_fake_wells(rclass, rwell_model):
         well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
         well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
         if well_dct_key1 not in label_dct:
@@ -108,7 +111,7 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
             fake_wellr_label = label_dct[well_dct_key1]
 
     fake_wellp_label = ''
-    if need_fake_wells(spc_dct[tsname]['class'], pwell_model):
+    if need_fake_wells(rclass, pwell_model):
         well_dct_key1 = 'F' + '+'.join(rxn['prods'])
         well_dct_key2 = 'F' + '+'.join(rxn['prods'][::-1])
         if well_dct_key1 not in label_dct:

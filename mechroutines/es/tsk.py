@@ -5,6 +5,7 @@ import sys
 import importlib
 import autofile
 import automol
+from mechanalyzer.inf import rxn as rinfo
 from mechroutines.es._ts import findts
 # from mechroutines.es.newts import run as runts
 from mechroutines.es._routines import conformer
@@ -157,7 +158,10 @@ def conformer_tsk(job, spc_dct, spc_name,
     spc = spc_dct[spc_name]
 
     # Set the spc_info
-    spc_info = filesys.inf.get_spc_info(spc)
+    if not saddle:
+        spc_info = filesys.inf.get_spc_info(spc)
+    else:
+        spc_info = rinfo.ts_info(spc['rxn_info'])
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
@@ -297,8 +301,6 @@ def conformer_tsk(job, spc_dct, spc_name,
         for locs in print_cnf_locs_lst:
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             ioprinter.geometry(geo)
-
-
 
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 

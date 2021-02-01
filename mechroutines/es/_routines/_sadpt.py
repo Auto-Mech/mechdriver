@@ -30,7 +30,7 @@ def generate_guess_structure(ts_dct, mod_thy_info,
 
 
 def obtain_saddle_point(guess_zmas, ts_dct, mod_thy_info,
-                        savefs_dct, runfs_dct,
+                        runfs_dct, savefs_dct,
                         es_keyword_dct):
     """ Given the saddle point guess structure, obtain a
         proper saddle point
@@ -171,10 +171,13 @@ def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct,
 
 
 def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
-                          run_fs, opt_script_str, overwrite,
+                          runfs_dct, opt_script_str, overwrite,
                           **opt_kwargs):
     """ Optimize the transition state structure obtained from the grid search
     """
+
+    _, ts_run_path = runfs_dct['runlvl_ts_fs']
+    run_fs = autofile.fs.run(ts_run_path)
 
     print('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
 
@@ -225,10 +228,13 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
 
 
 def saddle_point_hessian(opt_ret, ts_info, mod_thy_info,
-                         run_fs, script_str, overwrite,
+                         runfs_dct, script_str, overwrite,
                          **opt_kwargs):
     """ run things for checking Hessian
     """
+    
+    _, ts_run_path = runfs_dct['runlvl_ts_fs']
+    run_fs = autofile.fs.run(ts_run_path)
 
     print('\nCalculating Hessian for the optimized geometry...')
 
@@ -305,7 +311,7 @@ def save_saddle_point(rxn, opt_ret, hess_ret, freqs, imags,
                       zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
     """
-
+    print('savefs keys', list(savefs_dct.keys()))
     cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
     ts_save_fs, ts_save_path = savefs_dct['runlvl_ts_fs']
 
@@ -360,7 +366,7 @@ def save_saddle_point(rxn, opt_ret, hess_ret, freqs, imags,
     zma_save_fs[-1].file.geometry_info.write(opt_inf_obj, zma_locs)
     zma_save_fs[-1].file.geometry_input.write(opt_inp_str, zma_locs)
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-    zma_save_fs[-1].file.reac.write(rxn, zma_locs)
+    zma_save_fs[-1].file.reaction.write(rxn, zma_locs)
 
     # Save the energy in a single-point filesystem
     print(" - Saving energy...")
