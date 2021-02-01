@@ -5,6 +5,7 @@
 import automol
 import autofile
 from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import rxn as rinfo
 from mechroutines.es._routines import _sadpt as sadpt
 from mechroutines.es._routines import _vrctst as vrctst
 from mechroutines.es._routines import _vtst as vtst
@@ -18,7 +19,8 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     """
 
     # Set the TS searching algorithm to use: (1) Check dct, (2) Set by Class
-    search_method = _ts_finder_match(tsk, spc_dct[tsname])
+    search_method = 'sadpt'
+    # search_method = _ts_finder_match(tsk, spc_dct[tsname])
 
     # Build necessary objects
     method_dct, runfs_dct, savefs_dct = _set_methods(
@@ -46,7 +48,7 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
 
     # Get objects for the calculations
     ts_dct = spc_dct[tsname]
-    mod_thy_info = method_dct['runlvl']
+    mod_thy_info = method_dct['mod_runlvl']
 
     # Find the TS
     cnf_save_fs, cnf_save_locs = savefs_dct['runlvl_cnf_fs']
@@ -75,7 +77,7 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
 
 def run_vtst(spc_dct, tsname, es_keyword_dct,
              method_dct, runfs_dct, savefs_dct,
-             info_dct, grid):
+             info_dct):
     """ find a transition state
     """
 
@@ -342,31 +344,19 @@ def _radrad(ts_dct):
 
 
 # SET OPTIONS FOR THE TRANSITION STATE
-def _set_grid(ts_search, ts_dct):
-    """ Set the TS grid
-    """
-
-    if ts_search in ('molrad_vtst', 'radrad_vtst', 'vrctst'):
-        if 'rad' in ts_dct['class']:
-            grid = ts_dct['grid']
-        else:
-            grid = ts_dct['var_grid']
-    else:
-        grid = ts_dct['grid']
-
-    return grid
-
-
-def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
+def _set_methods(ts_dct, thy_dct, es_keyword_dct,
                  run_prefix, save_prefix,
                  zma_locs=(0,)):
     """ set the theory
     """
 
-    ts_info = info_dct['ts_info']
-    rxn_info = info_dct['rxn_info']
-    rct_info = info_dct['rct_info']
+    rxn_info = ts_dct['rxn_info']
+    ts_info = rinfo.ts_info(rxn_info)
+    rct_info = rinfo.rgt_info(rxn_info, 'reacs')
+    rxn_info = rinfo.sort(rxn_info)
 
+    # high_mult = rinfo.ts_high_mult(rxn_info)
+    high_mult = 2
     # Get the name
     # ini_zma = ts_dct['zma']
     # frm_bnd_keys = ts_dct['frm_bnd_keys']
@@ -375,7 +365,7 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
     # brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
     # Set the hs info
-    hs_info = (ts_info[0], ts_info[1], ts_dct['high_mult'])
+    hs_info = (ts_info[0], ts_info[1], high_mult)
 
     # Initialize the theory objects
     ini_thy_info, mod_ini_thy_info = None, None
@@ -423,8 +413,8 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
             ini_cnf_save_fs, mod_ini_thy_info)
 
         if ini_min_cnf_locs:
-            ini_zma_save_fs = autofile.fs.manager(
-                ini_cnf_save_fs[-1].path(ini_min_cnf_locs), 'ZMATRIX')
+            ini_zma_save_fs = autofile.fs.zmatrix(
+                ini_cnf_save_fs[-1].path(ini_min_cnf_locs))
 
     if es_keyword_dct.get('runlvl', None) is not None:
 
@@ -575,7 +565,7 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct, info_dct,
     return method_dct, runfs_dct, savefs_dct
 
 
-def _reac_cnf_fs(rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix):
+def _reac_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
     """ set reactant method stuff
     """
 
@@ -583,17 +573,21 @@ def _reac_cnf_fs(rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix):
         es_keyword_dct['inplvl'], thy_dct)
 
     rct_cnf_fs = ()
+    
+    print('rct_infos', rct_infos)
 
-    for rinfo in rct_info:
+    for rct_info in rct_infos:
+
+        print('rct_info', rct_info)
 
         mod_ini_thy_info = filesys.inf.modify_orb_restrict(
-            rinfo, ini_thy_info)
+            rct_info, ini_thy_info)
 
         # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
-            run_prefix, rinfo, mod_ini_thy_info)
+            run_prefix, rct_info, mod_ini_thy_info)
         _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
-            save_prefix, rinfo, mod_ini_thy_info)
+            save_prefix, rct_info, mod_ini_thy_info)
 
         # Build conformer filesys
         ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)

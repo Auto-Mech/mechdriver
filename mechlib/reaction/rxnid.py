@@ -2,13 +2,19 @@
  New reaction ID code
 """
 
+import os
 import autofile
 import automol
+from ioformat import ptt
+import chemkin_io
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from phydat import phycon
 from mechlib import filesys
+
+
+CLA_INP = 'inp/class.csv'
 
 
 def build_reaction(rxn_info, thy_info, zma_locs, save_prefix):
@@ -87,7 +93,7 @@ def _id_reaction(rxn_info):
         print(automol.geom.string(geo))
         print()
 
-    geo = automol.reac.ts_geometry(rxn, rct_geos, log=True)
+    geo = automol.reac.ts_geometry(rxn, rct_geos, log=False)
     zma_inf = automol.reac.ts_zmatrix(rxn, geo)
     # zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, geo)
     # zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
@@ -231,7 +237,7 @@ def reagent_energies(rgt, rxn_info, sp_thy_info, geo_thy_info, save_prefix):
     """ reagent energies """
 
     enes = []
-    for rgt_info in rinfo.rgts_infos(rxn_info, rgt):
+    for rgt_info in rinfo.rgts_info(rxn_info, rgt):
 
         # Set filesys
         spc_save_fs = autofile.fs.species(save_prefix)

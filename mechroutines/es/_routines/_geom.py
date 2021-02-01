@@ -5,10 +5,11 @@ import numpy
 import automol
 import elstruct
 import autofile
-from routines.es import runner as es_runner
-from lib import structure
-from lib.phydat import phycon
-from lib.submission import qchem_params
+from phydat import phycon
+from mechroutines.es import runner as es_runner
+from mechlib import structure
+from mechlib.submission import qchem_params
+from mechlib.amech_io import printer as ioprinter
 
 
 def remove_imag(geo, spc_info, mod_thy_info, thy_run_fs, run_fs,
@@ -107,7 +108,7 @@ def _check_imaginary(spc_info, geo, mod_thy_info, thy_run_fs, script_str,
             if imag:
                 imag = True
                 ioprinter.warning_message('Imaginary mode found:')
-                norm_coords = elstruct.reader.normal_coords(prog, out_str)
+                norm_coords = elstruct.reader.normal_coordinates(prog, out_str)
 
     return imag, norm_coords
 

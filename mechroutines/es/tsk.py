@@ -5,10 +5,9 @@ import sys
 import importlib
 import autofile
 import automol
-from mechroutines.es._ts import run as runts
+from mechroutines.es._ts import findts
 # from mechroutines.es.newts import run as runts
 from mechroutines.es._routines import conformer
-from mechroutines.es._routines import geom
 from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
 from mechroutines.es._routines import irc
@@ -80,7 +79,7 @@ def run_tsk(tsk, spc_dct, spc_name,
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
         elif 'find' in tsk:
-            runts(
+            findts(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
 
@@ -132,7 +131,7 @@ def geom_init(spc, thy_dct, es_keyword_dct,
         *thy_info[0:2])
 
     # Get a reference geometry if one not found
-    geo = geom.reference_geometry(
+    geo = conformer.initial_conformer(
         spc, spc_info, mod_thy_info,
         thy_run_fs, thy_save_fs,
         cnf_save_fs,

@@ -17,8 +17,9 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs,
         mod_thy_info, constraint_dct)
 
     # Get the max zma
-    max_idx = automol.pot.find_max_1d(enes_lst)
-
+    max_idx = automol.pot.find_max1d(enes_lst)
+    print('max', max_idx)
+    
     # Build lst of guess zmas
     guess_zmas = []
 
@@ -29,6 +30,7 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs,
     except:
         max_geo = scn_save_fs[-1].file.geometry.read(max_locs)
         max_zma = automol.geom.zmatrix(max_geo)
+
     guess_zmas.append(max_zma)
 
     # # Add second guess zma for migrations
@@ -122,6 +124,7 @@ def _grid_vals(grid, dist_name, scn_save_fs,
 
     # Get the energies along the grid
     for locs in grid_locs:
+        print('locs', locs)
         if scn_save_fs[-1].exists(locs):
             scn_path = scn_save_fs[-1].path(locs)
             sp_save_fs = autofile.fs.single_point(scn_path)

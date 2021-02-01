@@ -23,8 +23,8 @@ def generate_guess_structure(ts_dct, mod_thy_info,
 
     guess_zmas = _check_filesys_for_guess(savefs_dct, (0,), es_keyword_dct)
     if not guess_zmas:
-        scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct,
-                       es_keyword_dct)
+        guess_zmas = scan_for_guess(
+            ts_dct, mod_thy_info, runfs_dct, savefs_dct, es_keyword_dct)
 
     return guess_zmas
 
@@ -41,7 +41,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, mod_thy_info,
         *mod_thy_info[0:2])
     overwrite = es_keyword_dct['overwrite']
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
-    rxn = ts_dct['rxn']
+    rxn = ts_dct['rxnobj']
 
     # Optimize the saddle point
     opt_ret = optimize_saddle_point(
@@ -115,13 +115,13 @@ def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct,
     # Get filesystem information
     thy_save_fs = ()
     scn_run_fs = runfs_dct['runlvl_scn_fs']
-    scn_save_fs = savefs_dct['savelvl_scn_fs']
+    scn_save_fs = savefs_dct['runlvl_scn_fs']
 
     # Get es keyword info
     overwrite = es_keyword_dct['overwrite']
 
     # Get info from the dct
-    ts_zma, zma_keys, dummy_key_dct = ts_dct['zma']
+    ts_zma, zma_keys, dummy_key_dct = ts_dct['zma_inf']
     rxn = ts_dct['rxnobj']   # convert to zrxn
     zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
@@ -134,7 +134,7 @@ def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct,
     _, opt_script_str, _, opt_kwargs = qchem_params(
         *mod_thy_info[0:2])
 
-    es_runner.execute_scan(
+    es_runner.scan.execute_scan(
         zma=ts_zma,
         spc_info=ts_info,
         mod_thy_info=mod_thy_info,
@@ -164,7 +164,7 @@ def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct,
     #     guess_zmas = [max_zma]
     # else:
     guess_zmas = rxngrid.find_max_1d(
-        rxn.class_, coord_grids, ts_zma, coord_names, scn_save_fs,
+        rxn.class_, coord_grids[0], ts_zma, coord_names[0], scn_save_fs,
         mod_thy_info, constraint_dct)
 
     return guess_zmas
@@ -195,7 +195,7 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
             job='optimization',
             script_str=opt_script_str,
             run_fs=run_fs,
-            geom=zma,
+            geo=zma,
             spc_info=ts_info,
             thy_info=mod_thy_info,
             saddle=True,
@@ -211,7 +211,7 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
         # success, opt_ret = es_runner.multi_stage_optimization(
         #     script_str=opt_script_str,
         #     run_fs=run_fs,
-        #     geom=inp_geom,
+        #     geo=inp_geom,
         #     spc_info=spc_info,
         #     thy_info=thy_info,
         #     frozen_coords_lst=frozen_coords_lst,
@@ -242,7 +242,7 @@ def saddle_point_hessian(opt_ret, ts_info, mod_thy_info,
         job='hessian',
         script_str=script_str,
         run_fs=run_fs,
-        geom=geo,
+        geo=geo,
         spc_info=ts_info,
         thy_info=mod_thy_info,
         overwrite=overwrite,
@@ -300,7 +300,7 @@ def saddle_point_checker(imags):
     return status
 
 
-def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
+def save_saddle_point(rxn, opt_ret, hess_ret, freqs, imags,
                       mod_thy_info, savefs_dct,
                       zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
@@ -360,7 +360,7 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     zma_save_fs[-1].file.geometry_info.write(opt_inf_obj, zma_locs)
     zma_save_fs[-1].file.geometry_input.write(opt_inp_str, zma_locs)
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-    zma_save_fs[-1].file.reac.write(zrxn, zma_locs)
+    zma_save_fs[-1].file.reac.write(rxn, zma_locs)
 
     # Save the energy in a single-point filesystem
     print(" - Saving energy...")

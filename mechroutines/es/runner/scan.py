@@ -4,7 +4,8 @@
 import automol
 import autofile
 import elstruct
-from mechroutines.es.runner._run import run_job, read_job
+from mechroutines.es.runner import scan
+from mechroutines.es.runner._run import execute_job
 from mechroutines.es._routines import sp
 from mechlib.structure import tors as torsprep
 from mechlib.structure import instab
@@ -71,6 +72,8 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     # Build the SCANS/CSCANS filesystems
     if constraint_dct is None:
         scn_save_fs[1].create([coord_names])
+        print('names', coord_names)
+        print('grids', coord_grids)
         inf_obj = autofile.schema.info_objects.scan_branch(
             dict(zip(coord_names, coord_grids)))
         scn_save_fs[1].file.info.write(inf_obj, [coord_names])
@@ -161,8 +164,9 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
         run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
 
         # Build the zma
-        zma = automol.zmatrix.set_values(
-            guess_zma, dict(zip(coord_names, vals)))
+        zma = automol.zmat.set_values_by_name(
+            guess_zma, dict(zip(coord_names, vals)),
+            angstrom=False, degree=False)
 
         # Set the job
         job = _set_job(scn_typ)
@@ -175,7 +179,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     job=job,
                     script_str=script_str,
                     run_fs=run_fs,
-                    geom=zma,
+                    geo=zma,
                     spc_info=spc_info,
                     thy_info=mod_thy_info,
                     overwrite=overwrite,
@@ -343,7 +347,7 @@ def _write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
             'energy: {:>15.10f}, '.format(ene) +
             'grid idxs: {}'.format(idx_str)
         )
-        traj.append((comment, geo))
+        traj.append((geo, comment))
 
     traj_path = scn_save_fs[1].file.trajectory.path([ini_locs])
     print("Updating scan trajectory file at {}".format(traj_path))

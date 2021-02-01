@@ -11,7 +11,7 @@ from drivers import transdriver
 from drivers import printdriver
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
-from mechlib.reaction import direction as rxndirn
+from mechlib.reaction import rxnid
 from mechlib.filesys.build import prefix_fs
 from mechlib.submission import print_host_name
 
@@ -50,7 +50,7 @@ SPC_DCT = parser.species.build_spc_dct(JOB_PATH, 'csv')
 if RUN_OBJ_DCT['pes']:
     ioprinter.running(
         'Calculations for PESs. Need input for mechanism.', newline=1)
-    CLA_DCT = rxndirn.parse_rxn_class_file(JOB_PATH)
+    CLA_DCT = rxnid.parse_rxn_class_file(JOB_PATH)
     ioprinter.reading('mechanism.dat...', newline=1)
     RUN_PES_DCT = parser.mechanism.build_pes_dct(
         JOB_PATH,

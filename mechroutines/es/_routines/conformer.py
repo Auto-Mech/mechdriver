@@ -9,8 +9,8 @@ import autofile
 from autofile import fs
 from phydat import bnd
 from mechroutines.es._routines import _util as util
+from mechroutines.es._routines._geom import remove_imag
 from mechroutines.es import runner as es_runner
-from mechroutines.es._geom import remove_imag
 from mechlib import filesys
 from mechlib.structure import geom as geomprep
 from mechlib.structure import ts as tsprep

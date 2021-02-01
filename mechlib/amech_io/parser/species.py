@@ -13,7 +13,6 @@ from phydat import eleclvl
 from phydat import phycon
 from mechlib import filesys
 from mechlib.reaction import rxnid
-from mechlib.reaction import direction as rxndirn
 
 
 CSV_INP = 'inp/species.csv'
@@ -344,7 +343,7 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
         tsname, '+'.join(reacs), '+'.join(prods)))
 
     # Set the reacs and prods for the desired direction
-    reacs, prods, _ = rxndirn.set_reaction_direction(
+    reacs, prods, _ = rxnid.set_reaction_direction(
         reacs, prods, rxn_info, cla_dct,
         thy_info, ini_thy_info, save_prefix, direction=direction)
 
