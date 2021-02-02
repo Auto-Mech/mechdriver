@@ -18,6 +18,11 @@ def hindered_rotor_scans(
         retryfail=True, chkstab=None, **opt_kwargs):
     """ Perform scans over each of the torsional coordinates
     """
+    if scn_typ == 'relaxed':
+        script_str, kwargs = qchem_params(
+            method_dct, job=elstruct.Job.OPTIMIZATION)
+    else:
+        script_str, kwargs = qchem_params(
 
     run_tors_names = automol.rotor.names(torsions)
     run_tors_grids = automol.rotor.grids(torsions)

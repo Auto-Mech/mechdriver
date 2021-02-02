@@ -758,25 +758,40 @@ def _ts_geo_viable(zma, rxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
     min_cnf_locs, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
     zma_save_fs = fs.zmatrix(cnf_save_path)
-    # ref_geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
+    ref_geo = cnf_save_fs[-1].file.geometry.read(min_cnf_locs)
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
     # ref_rxn = zma_save_fs[-1].file.reaction.read(zma_locs)
 
     # Get the bond dists and calculate the distance of bond being formed
-    ref_geo = automol.zmat.geometry(ref_zma)
+    ref_geo2 = automol.zmat.geometry(ref_zma)
     cnf_geo = automol.zmat.geometry(zma)
 
-    zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, cnf_geo)
-    zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
+    zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, ref_geo)
+    zma2, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, ref_geo2)
+    # zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
 
-    frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
-    brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
+    frm_bnd_keys = automol.reac.forming_bond_keys(rxn)
+    brk_bnd_keys = automol.reac.breaking_bond_keys(rxn)
 
     print('keys test:')
+    print('ref')
+    print(automol.geom.string(ref_geo))
+    print()
+    print(automol.geom.string(ref_geo2))
+    print()
+    print(automol.zmat.string(ref_zma))
+    print()
     print(automol.zmat.string(zma))
+    print()
+    print('cnf')
+    print(automol.geom.string(cnf_geo))
+    print()
+    print(automol.zmat.string(zma2))
+    print()
     print(frm_bnd_keys)
     print(brk_bnd_keys)
-
+    import sys
+    sys.exit()
     cnf_dist_lst = []
     ref_dist_lst = []
     bnd_key_lst = []

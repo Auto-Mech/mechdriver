@@ -83,20 +83,19 @@ def _id_reaction(rxn_info):
         automol.reac.standard_keys_with_sorted_geometries(
             rxn, rct_geos, prd_geos))
 
-    print()
-    print('REACTION ID')
-    print(rxn.class_)
-    for geo in rct_geos:
-        print(automol.geom.string(geo))
-        print()
-    for geo in prd_geos:
-        print(automol.geom.string(geo))
-        print()
-
     geo = automol.reac.ts_geometry(rxn, rct_geos, log=False)
+    print('ID geo')
+    print(automol.geom.string(geo))
     zma_inf = automol.reac.ts_zmatrix(rxn, geo)
     # zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, geo)
+    print(automol.zmat.string(zma_inf[0], one_indexed=False))
     # zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
+    print()
+    frm_bnd_keys = automol.reac.forming_bond_keys(rxn)
+    brk_bnd_keys = automol.reac.breaking_bond_keys(rxn)
+    print(frm_bnd_keys)
+    print(brk_bnd_keys)
+    
 
     return rxn, zma_inf
 
