@@ -3,7 +3,7 @@
 """
 
 import autofile
-from mechlib.filesys import inf as finf
+from mechanalyzer.inf import spc as sinfo
 from mechlib.filesys import mincnf
 
 
@@ -34,7 +34,7 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
     """
 
     # Set the spc_info
-    spc_info = finf.get_spc_info(spc_dct_i)
+    spc_info = sinfo.from_dct(spc_dct_i)
     # Set some path stuff
     if saddle:
         save_path = spc_dct_i['rxn_fs'][3]
@@ -52,7 +52,7 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
     thy_run_fs = autofile.fs.theory(run_path)
 
     # Set the level for the model
-    levelp = finf.modify_orb_restrict(spc_info, level)
+    levelp = tinfo.modify_orb_label(level, spc_info)
 
     # Get the save fileystem path
     save_path = thy_save_fs[-1].path(levelp[1:4])
@@ -86,7 +86,7 @@ def set_rpath_filesys(ts_dct, level):
     """
 
     # Set the spc_info
-    spc_info = finf.get_spc_info(ts_dct)
+    spc_info = sinfo.from_dct(ts_dct)
 
     # Set some path stuff
     save_path = ts_dct['rxn_fs'][3]
@@ -96,7 +96,7 @@ def set_rpath_filesys(ts_dct, level):
     thy_save_fs = autofile.fs.theory(save_path)
     thy_run_fs = autofile.fs.theory(run_path)
 
-    levelp = finf.modify_orb_restrict(spc_info, level[1])
+    levelp = tinfo.modify_orb_label(level[1], spc_info)
 
     # Get the save fileystem path
     print('level', levelp)

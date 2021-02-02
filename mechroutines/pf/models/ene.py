@@ -5,12 +5,13 @@ import os
 import automol
 import autofile
 from phydat import phycon
+from mechanalyzer.inf import rxn as rinfo
+from mechanalyzer.inf import spc as sinfo
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf.models import typ
 from mechroutines.pf.models import _tors as tors
 from mechroutines.pf.models import _vib as vib
 from mechroutines.pf.models import _util as util
-from mechlib.filesys import inf as finf
 from mechlib.filesys import models as fmod
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
@@ -56,7 +57,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
     ioprinter.info_message('- Calculating electronic energy')
 
     # spc_dct_i = spc_dct[spc_name]
-    spc_info = finf.get_spc_info(spc_dct_i)
+    spc_info = sinfo.from_dct(spc_dct_i)
 
     # Get the harmonic filesys information
     [_, cnf_path, _, _, _] = pf_filesystems['harm']
@@ -72,7 +73,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
         # ioprinter.info_message('lvls', ene_levels)
         for (coeff, level) in ene_levels:
             # Build SP filesys
-            mod_thy_info = finf.modify_orb_restrict(spc_info, level)
+            mod_thy_info = tinfo.modify_orb_label(level, spc_info)
             sp_save_fs = autofile.fs.single_point(cnf_path)
             sp_save_fs[-1].create(mod_thy_info[1:4])
             # Read the energy
@@ -172,10 +173,10 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
     ene_info2 = ene_info2[0]
     ioprinter.debug_message('mod_eneinf1', ene_info1)
     ioprinter.debug_message('mod_eneinf2', ene_info2)
-    mod_ene_info1 = finf.modify_orb_restrict(
-        finf.get_spc_info(ts_dct), ene_info1)
-    mod_ene_info2 = finf.modify_orb_restrict(
-        finf.get_spc_info(ts_dct), ene_info2)
+    mod_ene_info1 = tinfo.modify_orb_label(
+        sinfo.from_dct(ts_dct), ene_info1)
+    mod_ene_info2 = tinfo.modify_orb_label(
+        sinfo.from_dct(ts_dct), ene_info2)
 
     ene1, ene2, ref_val = None, None, None
     for val in reversed(scn_vals):

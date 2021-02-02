@@ -6,6 +6,7 @@ import automol
 import autofile
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import rxn as rinfo
+from mechanalyzer.inf import thy as tinfo
 from mechroutines.es._routines import _sadpt as sadpt
 from mechroutines.es._routines import _vrctst as vrctst
 from mechroutines.es._routines import _vtst as vtst
@@ -16,6 +17,9 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
            run_prefix, save_prefix):
     """ New run function
     """
+
+    method_dct = thy_dct.get(es_keyword_dct['runlvl'])
+    # ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
 
     # Set the TS searching algorithm to use: (1) Check dct, (2) Set by Class
     search_thy_inf_dct = 'sadpt'
@@ -28,7 +32,7 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
 
     # Find the transition state
     if search_thy_inf_dct == 'sadpt':
-        run_sadpt(spc_dct, tsname, es_keyword_dct,
+        run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
                   thy_inf_dct, runfs_dct, savefs_dct)
     elif search_thy_inf_dct == 'molrad_vtst':
         run_vtst(spc_dct, tsname, es_keyword_dct,
@@ -40,7 +44,7 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
         print('No TS search algorithm was specified or able to determined')
 
 
-def run_sadpt(spc_dct, tsname, es_keyword_dct,
+def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
               thy_inf_dct, runfs_dct, savefs_dct):
     """ find a transition state
     """
@@ -66,8 +70,8 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
 
     if _run:
         guess_zmas = sadpt.generate_guess_structure(
-            ts_dct, method_dct,
-            runfs_dct, savefs_dct, es_keyword_dct)
+            ts_dct, method_dct, es_keyword_dct,
+            runfs_dct, savefs_dct)
         sadpt.obtain_saddle_point(
             guess_zmas, ts_dct, method_dct,
             runfs_dct, savefs_dct, es_keyword_dct)
@@ -397,10 +401,10 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
     if es_keyword_dct.get('inplvl', None) is not None:
 
-        ini_thy_info = filesys.inf.get_es_info(
-            es_keyword_dct['inplvl'], thy_dct)
-        mod_ini_thy_info = filesys.inf.modify_orb_restrict(
-            ts_info, ini_thy_info)
+        ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
+        ini_thy_info = tinfo.from_dct(ini_method_dct)
+        mod_ini_thy_info = tinfo.modify_orb_label(
+            ini_thy_info, ts_info)
 
         ini_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
             save_prefix, rxn_info, mod_ini_thy_info)
@@ -416,12 +420,12 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
     if es_keyword_dct.get('runlvl', None) is not None:
 
-        thy_info = filesys.inf.get_es_info(
-            es_keyword_dct['runlvl'], thy_dct)
-        mod_thy_info = filesys.inf.modify_orb_restrict(
-            ts_info, thy_info)
-        hs_thy_info = filesys.inf.modify_orb_restrict(
-            hs_info, thy_info)
+        method_dct = thy_dct.get(es_keyword_dct['runlvl'])
+        thy_info = tinfo.from_dct(method_dct)
+        mod_thy_info = tinfo.modify_orb_label(
+            thy_info, ts_info)
+        hs_thy_info = tinfo.modify_orb_label(
+            thy_info, hs_info)
 
         runlvl_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
             run_prefix, rxn_info, mod_thy_info)
@@ -449,12 +453,12 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
     if es_keyword_dct.get('var_scnlvl', None) is not None:
 
-        vscnlvl_thy_info = filesys.inf.get_es_info(
-            es_keyword_dct['var_scnlvl'], thy_dct)
-        mod_vscnlvl_thy_info = filesys.inf.modify_orb_restrict(
-            ts_info, vscnlvl_thy_info)
-        hs_vscnlvl_thy_info = filesys.inf.modify_orb_restrict(
-            hs_info, vscnlvl_thy_info)
+        method_dct = thy_dct.get(es_keyword_dct['var_scnlvl'])
+        vscnlvl_thy_info = tinfo.from_dct(method_dct)
+        mod_vscnlvl_thy_info = tinfo.modify_orb_label(
+            vscnlvl_thy_info, ts_info)
+        hs_vscnlvl_thy_info = tinfo.modify_orb_label(
+            vscnlvl_thy_info, hs_info)
 
         vscnlvl_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
             run_prefix, rxn_info, mod_vscnlvl_thy_info)
@@ -484,12 +488,12 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
         if es_keyword_dct.get('var_splvl1', None) is not None:
 
-            vsp1lvl_thy_info = filesys.inf.get_es_info(
-                es_keyword_dct['var_splvl1'], thy_dct)
-            mod_vsp1lvl_thy_info = filesys.inf.modify_orb_restrict(
-                ts_info, vsp1lvl_thy_info)
-            hs_vsp1lvl_thy_info = filesys.inf.modify_orb_restrict(
-                hs_info, vsp1lvl_thy_info)
+            method_dct = thy_dct.get(es_keyword_dct['var_scnlvl1'])
+            vsplvl1_thy_info = tinfo.from_dct(method_dct)
+            mod_vsplvl1_thy_info = tinfo.modify_orb_label(
+                vsplvl1_thy_info, ts_info)
+            hs_vsplvl1_thy_info = tinfo.modify_orb_label(
+                vsplvl1_thy_info, hs_info)
 
             # vscnlvl_scn_run_fs = filesys.build.scn_fs_from_cnf(
             #     vscnlvl_zma_run_path, constraint_dct=None)
@@ -502,12 +506,12 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
         if es_keyword_dct.get('var_splvl2', None) is not None:
 
-            vsp2lvl_thy_info = filesys.inf.get_es_info(
-                es_keyword_dct['var_splvl2'], thy_dct)
-            mod_vsp2lvl_thy_info = filesys.inf.modify_orb_restrict(
-                ts_info, vsp2lvl_thy_info)
-            hs_vsp2lvl_thy_info = filesys.inf.modify_orb_restrict(
-                hs_info, vsp2lvl_thy_info)
+            method_dct = thy_dct.get(es_keyword_dct['var_scnlvl2'])
+            vsplvl2_thy_info = tinfo.from_dct(method_dct)
+            mod_vsplvl2_thy_info = tinfo.modify_orb_label(
+                vsplvl2_thy_info, ts_info)
+            hs_vsplvl2_thy_info = tinfo.modify_orb_label(
+                vsplvl2_thy_info, hs_info)
 
             #     var_sp2_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
             #         run_prefix, rxn_info, mod_var_sp2_thy_info)
@@ -569,15 +573,15 @@ def _reac_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
     """ set reactant filesystem stuff
     """
 
-    ini_thy_info = filesys.inf.get_es_info(
-        es_keyword_dct['inplvl'], thy_dct)
+    ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
+    ini_thy_info = tinfo.from_dct(ini_method_dct)
 
     rct_cnf_fs = ()
 
     for rct_info in rct_infos:
 
-        mod_ini_thy_info = filesys.inf.modify_orb_restrict(
-            rct_info, ini_thy_info)
+        mod_ini_thy_info = tinfo.modify_orb_label(
+            ini_thy_info, rct_info)
 
         # Build filesys for ini thy info
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(

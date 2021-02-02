@@ -21,7 +21,7 @@ def generate_guess_structure(ts_dct, method_dct, es_keyword_dct,
         launch a scan to find the transition state.
 
         :param ts_dct: dict of information for the TS
-        :param method_dct: 
+        :param method_dct:
     """
 
     guess_zmas = _check_filesys_for_guess(savefs_dct, (0,), es_keyword_dct)
@@ -40,29 +40,29 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
     """
 
     # Get info (move later)
-
-    mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), spc_info)
+    ts_info = rinfo.ts_info(ts_dct['rxn_info'])
+    mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
     script_str, kwargs = qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
 
     overwrite = es_keyword_dct['overwrite']
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
-    rxn = ts_dct['rxnobj']
+    zrxn = ts_dct['zrxn']
 
     # Optimize the saddle point
+    script_str, kwargs = qchem_params(
+        method_dct)
     opt_ret = optimize_saddle_point(
         guess_zmas, ts_info, mod_thy_info,
-        runfs_dct, opt_script_str, overwrite, **opt_kwargs)
+        runfs_dct, script_str, overwrite, **kwargs)
 
     # Calculate the Hessian for the optimized structure
     if opt_ret is not None:
         # Get the Hessian and check the saddle point
         # (maybe just have remove imag do this?)
-        script_str, kwargs = qchem_params(
-            method_dct)
         hess_ret, freqs, imags = saddle_point_hessian(
-            opt_ret, ts_info, mod_thy_info,
-            runfs_dct, script_str, overwrite, **kwargs)
+            opt_ret, ts_info, method_dct,
+            runfs_dct, overwrite)
 
         sadpt_status = saddle_point_checker(imags)
 
@@ -82,7 +82,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
 
         if sadpt_status == 'success':
             save_saddle_point(
-                rxn, opt_ret, hess_ret, freqs, imags,
+                zrxn, opt_ret, hess_ret, freqs, imags,
                 mod_thy_info, savefs_dct,
                 zma_locs=[0])
 
@@ -129,9 +129,8 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     overwrite = es_keyword_dct['overwrite']
 
     # Get info from the dct
-    ts_zma, zma_keys, dummy_key_dct = ts_dct['zma_inf']
-    rxn = ts_dct['rxnobj']   # convert to zrxn
-    zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
+    ts_zma = ts_dct['zma']
+    zrxn = ts_dct['zrxn']   # convert to zrxn
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
 
     # Build grid and names appropriate for reaction type
@@ -139,6 +138,7 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     coord_names, constraint_dct, coord_grids, update_guess = scan_inf
 
     # Set up script string and kwargs
+    mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
     script_str, kwargs = qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
 
@@ -152,7 +152,7 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
         scn_run_fs=scn_run_fs,
         scn_save_fs=scn_save_fs,
         scn_typ='relaxed',
-        script_str=opt_script_str,
+        script_str=script_str,
         overwrite=overwrite,
         update_guess=update_guess,
         reverse_sweep=False,
@@ -160,7 +160,7 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
         constraint_dct=constraint_dct,
         retryfail=False,
         chkstab=False,
-        **opt_kwargs,
+        **kwargs,
         )
 
     # Find the structure at the maximum on the grid opt scan
@@ -172,7 +172,7 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     #     guess_zmas = [max_zma]
     # else:
     guess_zmas = rxngrid.find_max_1d(
-        rxn.class_, coord_grids[0], ts_zma, coord_names[0], scn_save_fs,
+        zrxn.class_, coord_grids[0], ts_zma, coord_names[0], scn_save_fs,
         mod_thy_info, constraint_dct)
 
     return guess_zmas
@@ -235,14 +235,17 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
     return opt_ret
 
 
-def saddle_point_hessian(opt_ret, ts_info, mod_thy_info,
-                         runfs_dct, script_str, overwrite,
-                         **opt_kwargs):
+def saddle_point_hessian(opt_ret, ts_info, method_dct,
+                         runfs_dct, overwrite):
     """ run things for checking Hessian
     """
-    
+
     _, ts_run_path = runfs_dct['runlvl_ts_fs']
     run_fs = autofile.fs.run(ts_run_path)
+
+    mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
+    script_str, kwargs = qchem_params(
+        method_dct)
 
     print('\nCalculating Hessian for the optimized geometry...')
 
@@ -260,7 +263,7 @@ def saddle_point_hessian(opt_ret, ts_info, mod_thy_info,
         spc_info=ts_info,
         thy_info=mod_thy_info,
         overwrite=overwrite,
-        **opt_kwargs,
+        **kwargs,
         )
 
     # If successful, Read the geom and energy from the optimization
@@ -314,7 +317,7 @@ def saddle_point_checker(imags):
     return status
 
 
-def save_saddle_point(rxn, opt_ret, hess_ret, freqs, imags,
+def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
                       mod_thy_info, savefs_dct,
                       zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
@@ -374,12 +377,12 @@ def save_saddle_point(rxn, opt_ret, hess_ret, freqs, imags,
     zma_save_fs[-1].file.geometry_info.write(opt_inf_obj, zma_locs)
     zma_save_fs[-1].file.geometry_input.write(opt_inp_str, zma_locs)
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-    zma_save_fs[-1].file.reaction.write(rxn, zma_locs)
+    zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
 
     # Save the torsions
     # geo, gdummy_key_dct = automol.convert.zmat.geometry(zma)
     # zrxn = automol.reac.insert_dummy_atoms(rxn, gdummy_key_dct)
-    rotors = automol.rotor.from_zma(zma)  ## Add a graph for the TS zma
+    rotors = automol.rotor.from_zma(zma)  # Add a graph for the TS zma
     zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
 
     # Save the energy in a single-point filesystem

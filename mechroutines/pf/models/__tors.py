@@ -38,8 +38,6 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
         zma = zma_fs[-1].file.zmatrix.read([0])
         remdummy = geomprep.build_remdummy_shift_lst(zma)
         geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
-        tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
-        torsions = automol.rotor.from_data(zma, tors_dct)
 
         # Read the reference energy
         ref_ene = torsprep.read_tors_ene(
@@ -151,9 +149,26 @@ def _rotor_info(zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
         tors_model = 'mdhr'
 
     # Obtain the info for each of the rotors
-    ini_zma_save_fs[-1] = autofile.fs.zmatrix(min_cnf_locs)
-    tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
-    torsions = automol.rotor.from_data(zma, tors_dct)
+    run_tors_names = torsprep.tors_name_prep(
+        spc_dct_i, cnf_fs, min_cnf_locs, tors_model)
+    ioprinter.debug_message(
+        'tors_names test:', spc_dct_i, cnf_fs, min_cnf_locs,
+        tors_model, run_tors_names)
+    if run_tors_names:
+        rotor_names, rotor_grids, rotor_syms = torsprep.hr_prep(
+            zma=zma,
+            tors_name_grps=run_tors_names,
+            scan_increment=scan_increment,
+            tors_model=tors_model,
+            frm_bnd_keys=frm_bnd_keys,
+            brk_bnd_keys=brk_bnd_keys)
+
+    else:
+        rotor_names, rotor_grids, rotor_syms = (), (), ()
+        ioprinter.warning_message(
+            'No tors info could be found from spcdct, filesys, or geom.')
+
+    return rotor_names, rotor_grids, rotor_syms
 
 
 # FUNCTIONS TO WRITE STRINGS FOR THE ROTORS FOR VARIOUS SITUATION
@@ -187,11 +202,7 @@ def make_hr_strings(rotors, run_path, tors_model,
                 nscale = numtors - len(scale_indcs)
 
                 if tors_index not in scale_indcs and factor is not None:
-                    nscale = numtors - len(scale_indcs)
-                    sfactor = factor**(2.0/nscale)
-                    ioprinter.debug_message(
-                        'scale_coeff test:', factor, nscale, sfactor)
-                    pot = automol.pot.scale(tors_dct['pot'], sfactor)
+                    pot = _scale_pot(tors_dct['pot'], factor, nscale)
                 else:
                     pot = tors_dct['pot']
 
@@ -304,6 +315,23 @@ def _need_tors_geo(pf_levels):
     """
     ioprinter.debug_message('pflvl', pf_levels)
     return bool(pf_levels['tors'][1] == pf_levels['harm'])
+
+
+def _scale_pot(pot, scale_coeff, numtors):
+    """ Scale the potential
+    """
+    
+    ioprinter.debug_message(
+        'scale_coeff test 0:', scale_coeff, numtors)
+    scale_factor = scale_coeff**(2.0/numtors)
+    ioprinter.debug_message(
+        'scale_coeff test:', scale_coeff, numtors, scale_factor)
+
+    new_pot = {}
+    for idx, val in pot.items():
+        new_pot[idx] = pot[idx] * scale_factor
+        
+    return new_pot 
 
 
 def _hrpot_spline_fitter(pot_dct, min_thresh=-0.0001, max_thresh=50.0):

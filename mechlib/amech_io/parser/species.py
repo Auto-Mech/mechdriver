@@ -7,6 +7,7 @@ import autofile
 import mechanalyzer
 import ioformat
 import autoparse.find as apf
+from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from phydat import symm
 from phydat import eleclvl
@@ -293,10 +294,10 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
     for tsk_lst in es_tsk_lst:
         [obj, _, es_keyword_dct] = tsk_lst
         if 'ts' in obj:
-            ini_thy_info = filesys.inf.get_es_info(
-                es_keyword_dct['inplvl'], thy_dct)
-            thy_info = filesys.inf.get_es_info(
-                es_keyword_dct['runlvl'], thy_dct)
+            method_dct = thy_dct.get(es_keyword_dct['runlvl'])
+            ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
+            thy_info = tinfo.from_dct(method_dct)
+            ini_thy_info = tinfo.from_dct(ini_method_dct)
             ts_dct = build_sadpt_dct(
                 pes_idx, rxn_lst, thy_info, ini_thy_info,
                 run_inp_dct, spc_dct, cla_dct,
@@ -349,13 +350,13 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
 
     # Obtain the reaction object for the reaction
     zma_locs = (0,)
-    rxn, zma_inf = rxnid.build_reaction(
+    zrxn, zma = rxnid.build_reaction(
         rxn_info, thy_info, zma_locs, save_prefix)
 
-    if rxn is not None:
+    if zrxn is not None:
         ts_dct = {
-            'rxnobj': rxn,
-            'zma_inf': zma_inf,
+            'zrxn': zrxn,
+            'zma': zma,
             'reacs': reacs,
             'prods': prods,
             'rxn_info': rxn_info

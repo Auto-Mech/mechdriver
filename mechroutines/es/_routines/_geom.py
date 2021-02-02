@@ -6,23 +6,29 @@ import automol
 import elstruct
 import autofile
 from phydat import phycon
+from mechanalyzer.inf import thy as tinfo
 from mechroutines.es import runner as es_runner
 from mechlib import structure
 from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 
-def remove_imag(geo, ini_ret, spc_info, mod_thy_info, thy_run_fs, run_fs,
+def remove_imag(geo, ini_ret, spc_info, method_dct, thy_run_fs, run_fs,
                 kickoff_size=0.1, kickoff_backward=False, kickoff_mode=0,
                 overwrite=False):
     """ if there is an imaginary frequency displace geometry along the imaginary
     mode and then reoptimize
     """
+    
+    thy_info = tinfo.from_dct(method_dct)
+    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+    opt_script_str, opt_kwargs = qchem_params(
+        method_dct, job=elstruct.Job.OPTIMIZATION)
+    script_str, kwargs = qchem_params(
+        method_dct)
 
     ioprinter.info_message(
         'The initial geometries will be checked for imaginary frequencies')
-    script_str, opt_script_str, kwargs, opt_kwargs = qchem_params(
-        *mod_thy_info[0:2])
 
     imag, norm_coords = _check_imaginary(
         spc_info, geo, mod_thy_info, thy_run_fs, script_str,

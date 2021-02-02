@@ -106,6 +106,7 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     # Get the theory info
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
     ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
+    print('dct\n', method_dct)
     thy_info = tinfo.from_dct(method_dct)
     ini_thy_info = tinfo.from_dct(ini_method_dct)
     mod_thy_info = tinfo.modify_orb_label(
@@ -130,21 +131,16 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     else:
         run_fs = filesys.build.run_fs_from_prefix(thy_run_path)
 
-    # Set up the script
-    script_str, kwargs = qchem_params(
-        method_dct, job=elstruct.Job.OPTIMIZATION)
-
     # Get a reference geometry if one not found
     geo = conformer.initial_conformer(
-        spc_dct_i, spc_info, mod_thy_info,
+        spc_dct_i, spc_info, method_dct,
         thy_run_fs, thy_save_fs,
         cnf_save_fs,
         ini_thy_save_path, mod_ini_thy_info,
         run_fs,
-        script_str, overwrite,
+        overwrite,
         kickoff_size=kickoff_size,
-        kickoff_backward=kickoff_backward,
-        **kwargs)
+        kickoff_backward=kickoff_backward)
 
     return geo
 
@@ -166,11 +162,10 @@ def conformer_tsk(job, spc_dct, spc_name,
     # Set the spc_info
     if not saddle:
         spc_info = sinfo.from_dct(spc_dct_i)
-        rxn = None
+        zrxn = None
     else:
         spc_info = rinfo.ts_info(spc_dct_i['rxn_info'])
-        rxn = spc_dct_i['rxnobj']
-    print('spc info test:', spc_info)
+        zrxn = spc_dct_i['zrxn']
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
@@ -268,7 +263,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             mod_thy_info, thy_save_fs,
             cnf_run_fs, cnf_save_fs,
             script_str, overwrite,
-            rxn=rxn, nsamp_par=mc_nsamp,
+            zrxn=zrxn, nsamp_par=mc_nsamp,
             tors_names=tors_names,
             two_stage=two_stage, retryfail=retryfail,
             **kwargs)

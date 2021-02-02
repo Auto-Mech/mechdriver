@@ -5,7 +5,6 @@
 import automol
 import mess_io
 from mechroutines.pf.models import _eff as eff
-from mechlib.filesys import inf as finf
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -262,7 +261,7 @@ def set_etrans_well(rxn_lst, spc_dct):
         else:
             well_dct = rct2_dct
 
-    well_info = finf.get_spc_info(well_dct)
+    well_info = sinfo.from_dct(well_dct)
 
     return well_info
 
@@ -275,7 +274,7 @@ def set_bath(spc_dct, etrans_dct):
     bath_name = etrans_dct.get('bath', None)
     bath_dct = spc_dct.get(bath_name, None)
     if bath_dct is not None:
-        bath_info = finf.get_spc_info(bath_dct)
+        bath_info = sinfo.from_dct(bath_dct)
         ioprinter.info_message(
             '  - Using bath {} input by user'.format(bath_name))
     else:

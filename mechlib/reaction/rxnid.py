@@ -22,14 +22,14 @@ def build_reaction(rxn_info, thy_info, zma_locs, save_prefix):
     """
 
     # Try to build the Z-Matrix reaction object or identify from scratch
-    # rxn = _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix)
-    rxn = None
-    if rxn is None:
-        rxn, zma = _id_reaction(rxn_info)
+    # zrxn, rxn = _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix)
+    zrxn = None
+    if zrxn is None:
+        zrxn, zma = _id_reaction(rxn_info)
 
-    print('    Reaction class identified as: {}'.format(rxn.class_))
+    print('    Reaction class identified as: {}'.format(zrxn.class_))
 
-    return rxn, zma
+    return zrxn, zma
 
 
 def _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix):
@@ -46,7 +46,7 @@ def _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix):
     cnf_save_fs = autofile.fs.manager(save_prefix, manager_prefix, 'CONFORMER')
     ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
-    ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
+    _, ini_min_cnf_path = ini_loc_info
     zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
 
     if zma_fs[-1].file.reac.exists(zma_locs):
@@ -82,29 +82,12 @@ def _id_reaction(rxn_info):
     rxn, rct_geos, prd_geos = (
         automol.reac.standard_keys_with_sorted_geometries(
             rxn, rct_geos, prd_geos))
-    print('g keys')
-    print(automol.reac.forming_bond_keys(rxn))
-    print(automol.reac.breaking_bond_keys(rxn))
 
     geo = automol.reac.ts_geometry(rxn, rct_geos, log=False)
-    print('ID geo')
-    print(automol.geom.string(geo))
-    # zma_inf = automol.reac.ts_zmatrix(rxn, geo)
     zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, geo)
-    print(automol.zmat.string(zma, one_indexed=False))
     zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
-    print('z keys')
-    print(automol.reac.forming_bond_keys(zrxn))
-    print(automol.reac.breaking_bond_keys(zrxn))
-    print()
-    rxn = automol.reac.relabel_for_geometry(rxn)
-    print('new g keys')
-    print(automol.reac.forming_bond_keys(rxn))
-    print(automol.reac.breaking_bond_keys(rxn))
-    import sys
-    sys.exit()
 
-    return rxn, zma_inf
+    return zrxn, zma
 
 
 # from direction
