@@ -82,20 +82,27 @@ def _id_reaction(rxn_info):
     rxn, rct_geos, prd_geos = (
         automol.reac.standard_keys_with_sorted_geometries(
             rxn, rct_geos, prd_geos))
+    print('g keys')
+    print(automol.reac.forming_bond_keys(rxn))
+    print(automol.reac.breaking_bond_keys(rxn))
 
     geo = automol.reac.ts_geometry(rxn, rct_geos, log=False)
     print('ID geo')
     print(automol.geom.string(geo))
-    zma_inf = automol.reac.ts_zmatrix(rxn, geo)
-    # zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, geo)
-    print(automol.zmat.string(zma_inf[0], one_indexed=False))
-    # zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
+    # zma_inf = automol.reac.ts_zmatrix(rxn, geo)
+    zma, zma_keys, dummy_key_dct = automol.reac.ts_zmatrix(rxn, geo)
+    print(automol.zmat.string(zma, one_indexed=False))
+    zrxn = automol.reac.relabel_for_zmatrix(rxn, zma_keys, dummy_key_dct)
+    print('z keys')
+    print(automol.reac.forming_bond_keys(zrxn))
+    print(automol.reac.breaking_bond_keys(zrxn))
     print()
-    frm_bnd_keys = automol.reac.forming_bond_keys(rxn)
-    brk_bnd_keys = automol.reac.breaking_bond_keys(rxn)
-    print(frm_bnd_keys)
-    print(brk_bnd_keys)
-    
+    rxn = automol.reac.relabel_for_geometry(rxn)
+    print('new g keys')
+    print(automol.reac.forming_bond_keys(rxn))
+    print(automol.reac.breaking_bond_keys(rxn))
+    import sys
+    sys.exit()
 
     return rxn, zma_inf
 

@@ -5,6 +5,7 @@ import automol
 import autofile
 import elstruct
 from mechanalyzer.inf import rxn as rinfo
+from mechanalyzer.inf import thy as tinfo
 # from mechroutines.es._routines import _geom as geom
 from mechroutines.es import runner as es_runner
 from mechlib import structure
@@ -13,23 +14,25 @@ from mechlib.submission import qchem_params
 
 
 # SADPT FINDER FUNCTIONS
-def generate_guess_structure(ts_dct, mod_thy_info,
-                             runfs_dct, savefs_dct,
-                             es_keyword_dct):
+def generate_guess_structure(ts_dct, method_dct, es_keyword_dct,
+                             runfs_dct, savefs_dct):
     """ Checks the filesystem for z-matrices at some input
         level of theory and if nothing existsm it will
         launch a scan to find the transition state.
+
+        :param ts_dct: dict of information for the TS
+        :param method_dct: 
     """
 
     guess_zmas = _check_filesys_for_guess(savefs_dct, (0,), es_keyword_dct)
     if not guess_zmas:
         guess_zmas = scan_for_guess(
-            ts_dct, mod_thy_info, runfs_dct, savefs_dct, es_keyword_dct)
+            ts_dct, method_dct, runfs_dct, savefs_dct, es_keyword_dct)
 
     return guess_zmas
 
 
-def obtain_saddle_point(guess_zmas, ts_dct, mod_thy_info,
+def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
                         runfs_dct, savefs_dct,
                         es_keyword_dct):
     """ Given the saddle point guess structure, obtain a
@@ -37,8 +40,11 @@ def obtain_saddle_point(guess_zmas, ts_dct, mod_thy_info,
     """
 
     # Get info (move later)
-    script_str, opt_script_str, _, opt_kwargs = qchem_params(
-        *mod_thy_info[0:2])
+
+    mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), spc_info)
+    script_str, kwargs = qchem_params(
+        method_dct, job=elstruct.Job.OPTIMIZATION)
+
     overwrite = es_keyword_dct['overwrite']
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
     rxn = ts_dct['rxnobj']
@@ -52,9 +58,11 @@ def obtain_saddle_point(guess_zmas, ts_dct, mod_thy_info,
     if opt_ret is not None:
         # Get the Hessian and check the saddle point
         # (maybe just have remove imag do this?)
+        script_str, kwargs = qchem_params(
+            method_dct)
         hess_ret, freqs, imags = saddle_point_hessian(
             opt_ret, ts_info, mod_thy_info,
-            runfs_dct, script_str, overwrite, **opt_kwargs)
+            runfs_dct, script_str, overwrite, **kwargs)
 
         sadpt_status = saddle_point_checker(imags)
 
@@ -104,7 +112,7 @@ def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
     return guess_zmas
 
 
-def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct,
+def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
                    es_keyword_dct):
     """ saddle point scan code
     """
@@ -131,8 +139,8 @@ def scan_for_guess(ts_dct, mod_thy_info, runfs_dct, savefs_dct,
     coord_names, constraint_dct, coord_grids, update_guess = scan_inf
 
     # Set up script string and kwargs
-    _, opt_script_str, _, opt_kwargs = qchem_params(
-        *mod_thy_info[0:2])
+    script_str, kwargs = qchem_params(
+        method_dct, job=elstruct.Job.OPTIMIZATION)
 
     es_runner.scan.execute_scan(
         zma=ts_zma,

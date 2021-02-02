@@ -2,8 +2,10 @@
 """
 
 import automol
+import elstruct
 from mechroutines.es.runner import scan
 from mechlib import filesys
+from mechlib.submission import qchem_params
 from mechlib.structure import tors as torsprep
 from mechlib.amech_io import printer as ioprinter
 from mechlib import structure
@@ -12,31 +14,28 @@ from mechlib import structure
 def hindered_rotor_scans(
         zma, spc_info, mod_thy_info, thy_save_fs,
         zma_run_path, zma_save_path,
-        torsions, tors_model,
-        script_str, overwrite,
+        torsions, tors_model, method_dct,
+        overwrite,
         saddle=False, const_names=None,
-        retryfail=True, chkstab=None, **opt_kwargs):
+        retryfail=True, chkstab=None):
     """ Perform scans over each of the torsional coordinates
     """
-    if scn_typ == 'relaxed':
+
+    if tors_model != '1dhrfa':
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.OPTIMIZATION)
+        scn_typ = 'rigid'
     else:
         script_str, kwargs = qchem_params(
+            method_dct, job=elstruct.Job.ENERGY)
+        scn_typ = 'relaxed'
 
     run_tors_names = automol.rotor.names(torsions)
     run_tors_grids = automol.rotor.grids(torsions)
 
-    print('tors info')
-    print(run_tors_names)
-    print(run_tors_grids)
-
     # Set constraints
     const_names = structure.tors.set_constraint_names(
         zma, run_tors_names, tors_model)
-
-    # Set if scan is rigid or relaxed
-    scn_typ = 'relaxed' if tors_model != '1dhrfa' else 'rigid'
 
     # Set appropriate value for check stability
     # If not set, don't check if saddle=True
@@ -81,5 +80,5 @@ def hindered_rotor_scans(
             constraint_dct=constraint_dct,
             retryfail=retryfail,
             chkstab=False,
-            **opt_kwargs,
+            **kwargs,
         )

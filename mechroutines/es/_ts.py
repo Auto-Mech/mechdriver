@@ -10,7 +10,6 @@ from mechroutines.es._routines import _sadpt as sadpt
 from mechroutines.es._routines import _vrctst as vrctst
 from mechroutines.es._routines import _vtst as vtst
 from mechlib import filesys
-from mechlib.structure import tors as torsprep
 
 
 def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
@@ -19,36 +18,35 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     """
 
     # Set the TS searching algorithm to use: (1) Check dct, (2) Set by Class
-    search_method = 'sadpt'
-    # search_method = _ts_finder_match(tsk, spc_dct[tsname])
+    search_thy_inf_dct = 'sadpt'
+    # search_thy_inf_dct = _ts_finder_match(tsk, spc_dct[tsname])
 
     # Build necessary objects
-    method_dct, runfs_dct, savefs_dct = _set_methods(
+    thy_inf_dct, runfs_dct, savefs_dct = _set_thy_inf_dcts(
         spc_dct[tsname], thy_dct, es_keyword_dct,
         run_prefix, save_prefix)
 
     # Find the transition state
-    if search_method == 'sadpt':
+    if search_thy_inf_dct == 'sadpt':
         run_sadpt(spc_dct, tsname, es_keyword_dct,
-                  method_dct, runfs_dct, savefs_dct)
-    elif search_method == 'molrad_vtst':
+                  thy_inf_dct, runfs_dct, savefs_dct)
+    elif search_thy_inf_dct == 'molrad_vtst':
         run_vtst(spc_dct, tsname, es_keyword_dct,
-                 method_dct, runfs_dct, savefs_dct)
-    elif search_method == 'radrad_vtst':
+                 thy_inf_dct, runfs_dct, savefs_dct)
+    elif search_thy_inf_dct == 'radrad_vtst':
         run_vrctst(spc_dct, tsname, es_keyword_dct,
-                   method_dct, runfs_dct, savefs_dct)
-    elif search_method is None:
+                   thy_inf_dct, runfs_dct, savefs_dct)
+    elif search_thy_inf_dct is None:
         print('No TS search algorithm was specified or able to determined')
 
 
 def run_sadpt(spc_dct, tsname, es_keyword_dct,
-              method_dct, runfs_dct, savefs_dct):
+              thy_inf_dct, runfs_dct, savefs_dct):
     """ find a transition state
     """
 
     # Get objects for the calculations
     ts_dct = spc_dct[tsname]
-    mod_thy_info = method_dct['mod_runlvl']
 
     # Find the TS
     cnf_save_fs, cnf_save_locs = savefs_dct['runlvl_cnf_fs']
@@ -68,15 +66,15 @@ def run_sadpt(spc_dct, tsname, es_keyword_dct,
 
     if _run:
         guess_zmas = sadpt.generate_guess_structure(
-            ts_dct, mod_thy_info,
+            ts_dct, method_dct,
             runfs_dct, savefs_dct, es_keyword_dct)
         sadpt.obtain_saddle_point(
-            guess_zmas, ts_dct, mod_thy_info,
+            guess_zmas, ts_dct, method_dct,
             runfs_dct, savefs_dct, es_keyword_dct)
 
 
 def run_vtst(spc_dct, tsname, es_keyword_dct,
-             method_dct, runfs_dct, savefs_dct,
+             thy_inf_dct, runfs_dct, savefs_dct,
              info_dct):
     """ find a transition state
     """
@@ -114,14 +112,14 @@ def run_vtst(spc_dct, tsname, es_keyword_dct,
     print('newts grid', grid)
     [grid1, grid2] = grid
 
-    # Get method stuff
-    mod_thy_info = method_dct['mod_runlvl']
-    mod_var_scn_thy_info = method_dct['mod_var_scnlvl']
-    mod_var_sp1_thy_info = method_dct['mod_var_splvl1']
-    var_sp1_thy_info = method_dct['var_splvl2']
-    var_sp2_thy_info = method_dct['var_splvl2']
-    hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
-    hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
+    # Get thy_inf_dct stuff
+    mod_thy_info = thy_inf_dct['mod_runlvl']
+    mod_var_scn_thy_info = thy_inf_dct['mod_var_scnlvl']
+    mod_var_sp1_thy_info = thy_inf_dct['mod_var_splvl1']
+    var_sp1_thy_info = thy_inf_dct['var_splvl2']
+    var_sp2_thy_info = thy_inf_dct['var_splvl2']
+    hs_var_sp1_thy_info = thy_inf_dct['hs_var_splvl1']
+    hs_var_sp2_thy_info = thy_inf_dct['hs_var_splvl2']
 
     # Get the filesys stuff
     var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
@@ -208,7 +206,7 @@ def run_vtst(spc_dct, tsname, es_keyword_dct,
 
 
 def run_vrctst(spc_dct, tsname, es_keyword_dct,
-               method_dct, runfs_dct, savefs_dct,
+               thy_inf_dct, runfs_dct, savefs_dct,
                info_dct, grid, run_prefix, save_prefix):
     """ find a transition state
     """
@@ -241,12 +239,12 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
     # Grid
     [grid1, grid2] = grid
 
-    # Get method stuff
-    mod_var_scn_thy_info = method_dct['var_scnlvl']
-    mod_var_sp1_thy_info = method_dct['var_splvl1']
-    mod_var_sp2_thy_info = method_dct['var_splvl2']
-    hs_var_sp1_thy_info = method_dct['hs_var_splvl1']
-    hs_var_sp2_thy_info = method_dct['hs_var_splvl2']
+    # Get thy_inf_dct stuff
+    mod_var_scn_thy_info = thy_inf_dct['var_scnlvl']
+    mod_var_sp1_thy_info = thy_inf_dct['var_splvl1']
+    mod_var_sp2_thy_info = thy_inf_dct['var_splvl2']
+    hs_var_sp1_thy_info = thy_inf_dct['hs_var_splvl1']
+    hs_var_sp2_thy_info = thy_inf_dct['hs_var_splvl2']
 
     # Get the filesys stuff
     vscnlvl_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
@@ -286,48 +284,48 @@ def _ts_finder_match(tsk, ts_dct):
 
     # Set search algorithm to one specified by the user, if specified
     if 'ts_search' in ts_dct:
-        ini_method = [ts_dct['ts_search']]
+        ini_thy_inf_dct = [ts_dct['ts_search']]
         print('Running search algorithm according to {},'.format(
             ts_dct['ts_search']),
               'as requested by the user')
     else:
-        ini_method = None
+        ini_thy_inf_dct = None
         print('No search algorithm requested')
     print()
 
     # ID search algorithm if user did not specify one (wrong)
-    if ini_method is None:
+    if ini_thy_inf_dct is None:
         if _nobarrier(ts_dct):
-            ini_method = ['radrad_vtst', 'vrctst']
+            ini_thy_inf_dct = ['radrad_vtst', 'vrctst']
             print('Reaction is low-spin, radical-radical addition/abstraction')
             print('Assuming reaction is barrierless...')
             print('Finding a transition state according to either vtst or '
                   'vrctst, depending on the current task')
         else:
-            ini_method = ['sadpt']
+            ini_thy_inf_dct = ['sadpt']
             print('Assuming reaction has saddle point on potential surface...')
             print('Use species.dat to specify VTST search for mol-rad rxn...')
             print('Finding the geometry of the saddle point...')
 
     # Print message if no algorithm found
-    if ini_method is None:
+    if ini_thy_inf_dct is None:
         print('No TS search algorithm was specified or able to determined')
 
     # Set return for ts searching algorithm if there is one
-    if ini_method == 'pst':
+    if ini_thy_inf_dct == 'pst':
         print('Phase Space Theory Used, No ES calculations are needed')
-    if tsk in ini_method:
+    if tsk in ini_thy_inf_dct:
         print('Search algorithm matches task')
-        search_method = tsk
+        search_thy_inf_dct = tsk
     else:
         print('Algorithm does not match task')
-        search_method = None
+        search_thy_inf_dct = None
 
-    # Refine ret vtst method if that is what is being used
-    if search_method == 'vtst':
-        search_method = 'radrad_vtst' if _radrad(ts_dct) else 'molrad_vtst'
+    # Refine ret vtst thy_inf_dct if that is what is being used
+    if search_thy_inf_dct == 'vtst':
+        search_thy_inf_dct = 'radrad_vtst' if _radrad(ts_dct) else 'molrad_vtst'
 
-    return search_method
+    return search_thy_inf_dct
 
 
 # CHECKS FOR TYPE OF TRANSITION STATE
@@ -344,9 +342,9 @@ def _radrad(ts_dct):
 
 
 # SET OPTIONS FOR THE TRANSITION STATE
-def _set_methods(ts_dct, thy_dct, es_keyword_dct,
-                 run_prefix, save_prefix,
-                 zma_locs=(0,)):
+def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
+                      run_prefix, save_prefix,
+                      zma_locs=(0,)):
     """ set the theory
     """
 
@@ -521,7 +519,9 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct,
         rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
 
     # Build the dictionaries for the return
-    method_dct = {
+    method_dcts = {}
+
+    thy_inf_dct = {
         'inplvl': ini_thy_info,
         'runlvl': thy_info,
         'var_scnlvl': vscnlvl_thy_info,
@@ -562,23 +562,19 @@ def _set_methods(ts_dct, thy_dct, es_keyword_dct,
         'rcts_cnf_fs': reac_cnf_fs
     }
 
-    return method_dct, runfs_dct, savefs_dct
+    return thy_inf_dct, runfs_dct, savefs_dct
 
 
 def _reac_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
-    """ set reactant method stuff
+    """ set reactant filesystem stuff
     """
 
     ini_thy_info = filesys.inf.get_es_info(
         es_keyword_dct['inplvl'], thy_dct)
 
     rct_cnf_fs = ()
-    
-    print('rct_infos', rct_infos)
 
     for rct_info in rct_infos:
-
-        print('rct_info', rct_info)
 
         mod_ini_thy_info = filesys.inf.modify_orb_restrict(
             rct_info, ini_thy_info)
