@@ -16,7 +16,7 @@ def hindered_rotor_scans(
         zma_run_path, zma_save_path,
         torsions, tors_model, method_dct,
         overwrite,
-        saddle=False, const_names=None,
+        saddle=False,
         retryfail=True, chkstab=None):
     """ Perform scans over each of the torsional coordinates
     """
@@ -24,11 +24,11 @@ def hindered_rotor_scans(
     if tors_model != '1dhrfa':
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.OPTIMIZATION)
-        scn_typ = 'rigid'
+        scn_typ = 'relaxed'
     else:
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.ENERGY)
-        scn_typ = 'relaxed'
+        scn_typ = 'rigid'
 
     run_tors_names = automol.rotor.names(torsions)
     run_tors_grids = automol.rotor.grids(torsions)

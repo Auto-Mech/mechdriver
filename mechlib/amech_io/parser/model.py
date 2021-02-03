@@ -5,7 +5,7 @@ import sys
 import copy
 import autoparse.find as apf
 from ioformat import ptt
-from mechlib import filesys
+from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io.parser.keywords import MODEL_PF_SUPPORTED_DCT
 from mechlib.amech_io.parser.keywords import MODEL_PF_DEFAULT_DCT
 
@@ -296,34 +296,34 @@ def pf_level_info(es_model, thy_dct):
     rpath_lvl_sp2 = es_model['rpath'][2] if 'rpath' in es_model else None
 
     # Set the theory info objects
-    geo_thy_info = filesys.inf.get_thy_info(geo_lvl, thy_dct)
-    harm_thy_info = filesys.inf.get_thy_info(harm_lvl, thy_dct)
-    vpt2_thy_info = (filesys.inf.get_thy_info(vpt2_lvl, thy_dct)
+    geo_thy_info = tinfo.from_dct(thy_dct.get(geo_lvl))
+    harm_thy_info = tinfo.from_dct(thy_dct.get(harm_lvl))
+    vpt2_thy_info = (tinfo.from_dct(thy_dct.get(vpt2_lvl))
                      if vpt2_lvl else None)
-    sym_thy_info = (filesys.inf.get_thy_info(sym_lvl, thy_dct)
+    sym_thy_info = (tinfo.from_dct(thy_dct.get(sym_lvl))
                     if sym_lvl else None)
-    etrans_thy_info = (filesys.inf.get_thy_info(etrans_lvl, thy_dct)
+    etrans_thy_info = (tinfo.from_dct(thy_dct.get(etrans_lvl))
                     if etrans_lvl else None)
-    tors_sp_thy_info = (filesys.inf.get_thy_info(tors_lvl_sp, thy_dct)
+    tors_sp_thy_info = (tinfo.from_dct(thy_dct.get(tors_lvl_sp))
                         if tors_lvl_sp else None)
-    tors_scn_thy_info = (filesys.inf.get_thy_info(tors_lvl_scn, thy_dct)
+    tors_scn_thy_info = (tinfo.from_dct(thy_dct.get(tors_lvl_scn))
                          if tors_lvl_scn else None)
-    rpath_sp_thy_info = (filesys.inf.get_thy_info(rpath_lvl_sp, thy_dct)
+    rpath_sp_thy_info = (tinfo.from_dct(thy_dct.get(rpath_lvl_sp))
                          if rpath_lvl_sp else None)
-    rpath_scn_thy_info = (filesys.inf.get_thy_info(rpath_lvl_scn, thy_dct)
+    rpath_scn_thy_info = (tinfo.from_dct(thy_dct.get(rpath_lvl_scn))
                           if rpath_lvl_scn else None)
-    rpath_sp2_thy_info = (filesys.inf.get_thy_info(rpath_lvl_sp2, thy_dct)
+    rpath_sp2_thy_info = (tinfo.from_dct(thy_dct.get(rpath_lvl_sp2))
                           if rpath_lvl_sp2 else None)
 
     # Set the ene thy info as a list of methods with coefficients
     ene_thy_info = []
     if isinstance(ene_lvl, str):
         ene_thy_info.append(
-            [1.00, filesys.inf.get_thy_info(ene_lvl, thy_dct)])
+            [1.00, tinfo.from_dct(thy_dct.get(ene_lvl))])
     else:
         for lvl in ene_lvl:
             ene_thy_info.append(
-                [lvl[0], filesys.inf.get_thy_info(lvl[1], thy_dct)])
+                [lvl[0], tinfo.from_dct(thy_dct.get(thy_dct))])
 
     # Combine levels into a list
     es_levels = {

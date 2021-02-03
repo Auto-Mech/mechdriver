@@ -652,7 +652,7 @@ def hr_tsk(job, spc_dct, spc_name,
             hr.hindered_rotor_scans(
                 zma, spc_info, mod_thy_info, ini_thy_save_fs,
                 ini_zma_run_path, ini_zma_save_path,
-                torsions, tors_model,
+                torsions, tors_model, method_dct,
                 overwrite,
                 saddle=saddle,
                 retryfail=retryfail)

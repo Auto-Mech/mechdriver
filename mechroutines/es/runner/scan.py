@@ -222,11 +222,11 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     print('No output found in file')
 
             elif job == elstruct.Job.ENERGY:
-                run_job(
+                _, _ = execute_job(
                     job=job,
                     script_str=script_str,
                     run_fs=run_fs,
-                    geom=zma,
+                    geo=zma,
                     spc_info=spc_info,
                     thy_info=mod_thy_info,
                     overwrite=overwrite,
@@ -236,13 +236,10 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
                     **kwargs
                 )
 
-                # Run read_job to print status message
-                _, _ = read_job(job=job, run_fs=run_fs)
-
                 # Write initial geos in run fs as they are needed later
                 run_fs[-1].file.zmatrix.write(zma, [job])
                 run_fs[-1].file.geometry.write(
-                    automol.zmatrix.geometry(zma), [job])
+                    automol.zmat.geometry(zma), [job])
 
 
 def save_scan(scn_run_fs, scn_save_fs, scn_typ,

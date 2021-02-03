@@ -437,13 +437,13 @@ def single_conformer(zma, spc_info, mod_thy_info,
         saved_locs, saved_geos, saved_enes = _saved_cnf_info(
             cnf_save_fs, mod_thy_info)
 
-        if _geo_unique(geo, ene, saved_geos, saved_enes):
+        if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn=zrxn):
             sym_id = _sym_unique(
                 geo, ene, saved_geos, saved_enes)
             if sym_id is None:
                 _save_unique_conformer(
                     ret, mod_thy_info, cnf_save_fs, locs,
-                    rxn=rxn, zma_locs=(0,))
+                    zrxn=zrxn, zma_locs=(0,))
                 saved_geos.append(geo)
                 saved_enes.append(ene)
                 saved_locs.append(locs)
@@ -615,7 +615,7 @@ def save_conformers(cnf_run_fs, cnf_save_fs, thy_info, zrxn=None,
                     # Assess viability of transition state conformer
 
                     # Determine uniqueness of conformer, save if needed
-                    if _geo_unique(geo, ene, saved_geos, saved_enes):
+                    if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
                         # iso check breaks because of zma location
                         # if _is_proper_isomer(cnf_save_fs, zma):
                         sym_id = _sym_unique(
@@ -660,19 +660,22 @@ def _geo_connected(geo, rxn):
     return connected
 
 
-def _geo_unique(geo, ene, seen_geos, seen_enes):
+def _geo_unique(geo, ene, seen_geos, seen_enes, zrxn=None):
     """ Assess if a geometry is unique to saved geos
 
         Need to pass the torsions
     """
 
-    if not automol.util.value_similar_to(ene, seen_enes, 2.e-5):
-        # unique = geomprep.is_unique_tors_dist_mat_energy(
-        #     geo, ene, seen_geos, seen_enes, zrxn)
-        unique, _ = automol.geom.is_unique(
-                geo, seen_geos, check_dct={'dist': None, 'tors': None})
+    if zrxn is None:
+        check_dct={'dist': 0.3, 'tors': None}
     else:
-        unique = True
+        check_dct={'dist': 0.3}
+
+    if automol.util.value_similar_to(ene, seen_enes, 2.e-5):
+        unique, _ = automol.geom.is_unique(
+            geo, seen_geos, check_dct=check_dct)
+    else:
+        unique = False
     if not unique:
         ioprinter.bad_conformer('not unique')
 
@@ -836,6 +839,7 @@ def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
             if abs(cnf_angle - ref_angle) > .44:
                 ioprinter.diverged_ts('angle', ref_angle, cnf_angle)
                 viable = False
+                print('viable 1', viable)
 
     symbols = automol.geom.symbols(cnf_geo)
     lst_info = zip(ref_dist_lst, cnf_dist_lst, bnd_key_lst)
