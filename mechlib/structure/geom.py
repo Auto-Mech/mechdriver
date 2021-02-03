@@ -6,43 +6,6 @@ import numpy
 import automol
 
 
-# Handle idx lists for zmas with dummys
-def build_remdummy_shift_lst(zma):
-    """ Assess the zma for dummys and build a list to shift values
-        derived from zma
-    """
-    atom_symbols = automol.zmat.symbols(zma)
-    dummy_idx = []
-    for atm_idx, atm in enumerate(atom_symbols):
-        if atm == 'X':
-            dummy_idx.append(atm_idx)
-    remdummy = numpy.zeros(automol.zmat.count(zma))
-    for dummy in dummy_idx:
-        for idx, _ in enumerate(remdummy):
-            if dummy < idx:
-                remdummy[idx] += 1
-
-    return remdummy
-
-
-def shift_vals_from_dummy(vals, zma):
-    """ Shift a set of values using remdummy
-        Shift requires indices be 1-indexed
-    """
-
-    dummy_idxs = automol.zmat.atom_indices(zma, 'X', match=True)
-
-    shift_vals = []
-    for val in vals:
-        shift = 0
-        for dummy in dummy_idxs:
-            if val >= dummy:
-                shift += 1
-        shift_vals.append(val+shift)
-
-    return shift_vals
-
-
 # Various checks and assessments for geometries
 def is_atom_closest_to_bond_atom(zma, idx_rad, bond_dist):
     """ Check to see whether the radical atom is still closest to the bond

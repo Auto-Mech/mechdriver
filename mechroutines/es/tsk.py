@@ -109,8 +109,7 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     print('dct\n', method_dct)
     thy_info = tinfo.from_dct(method_dct)
     ini_thy_info = tinfo.from_dct(ini_method_dct)
-    mod_thy_info = tinfo.modify_orb_label(
-        thy_info, spc_info)
+    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     mod_ini_thy_info = tinfo.modify_orb_label(
         ini_thy_info, spc_info)
 

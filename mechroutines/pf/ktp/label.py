@@ -38,7 +38,7 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
     """
 
     # Get the class
-    rclass = spc_dct[tsname]['rxnobj'].class_
+    rclass = spc_dct[tsname]['zrxn'].class_
 
     # Initialize idxs for bimol, well, and fake species
     pidx, widx, fidx = 1, 1, 1

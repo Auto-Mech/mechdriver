@@ -189,6 +189,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
 
         # Add to the dct with reference dct if it is not in the spc dct
         for ref in spc_basis:
+            print('ref test', ref)
             bas_ichs = [
                 unique_refs_dct[spc]['inchi']
                 if 'inchi' in unique_refs_dct[spc]
@@ -289,6 +290,7 @@ def create_spec(ich, charge=0,
     """ add a species to the species dictionary
     """
     spec = {}
+    print('inchi test:', ich)
     rad = automol.formula.electron_count(automol.inchi.formula(ich)) % 2
     mult = 1 if not rad else 2
     spec['inchi'] = ich

@@ -224,13 +224,17 @@ def set_scan_dims(tors_grids):
     return grid_points, grid_vals
 
 
-def read_hr_pot(tors_names, tors_grids, cnf_save_path,
+def read_hr_pot(torsionss, cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct,
+                scan_increment=0.523599,
                 read_geom=False, read_grad=False,
                 read_hess=False, read_zma=False):
     """ Get the potential for a hindered rotor
     """
+    
+    names = automol.rotor.names(torsions)
+    grids = automol.rotor.grids(torsions, increment=scan_increment)
 
     # Build initial lists for storing potential energies and Hessians
     grid_points, grid_vals = set_scan_dims(tors_grids)

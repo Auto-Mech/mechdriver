@@ -38,6 +38,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
         zma = zma_fs[-1].file.zmatrix.read([0])
         remdummy = geomprep.build_remdummy_shift_lst(zma)
         geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
+
         tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
         torsions = automol.rotor.from_data(zma, tors_dct)
 
@@ -45,10 +46,11 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
         ref_ene = torsprep.read_tors_ene(
             cnf_fs, min_cnf_locs, mod_tors_ene_info)
 
-    # Set the tors names
-    rotor_inf = _rotor_info(
-        zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+    scan_increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
+    ini_zma_save_fs[-1] = autofile.fs.zmatrix(min_cnf_locs)
+    tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
+    torsions = automol.rotor.from_data(
+        zma, tors_dct, multi=bool('1d' in tors_model)
 
     # Read the potential energy surface for the rotors
     num_rotors = len(rotor_inf[0])
@@ -105,13 +107,6 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
                 constraint_dct)
             pot = _hrpot_spline_fitter(pot, min_thresh=-0.0001, max_thresh=50.0)
 
-            # Get the HR groups and axis for the rotor
-            group, axis, pot, sym_num = torsprep.set_tors_def_info(
-                zma, tname, tsym, pot,
-                frm_bnd_keys, brk_bnd_keys,
-                rxn_class, saddle=saddle)
-            remdummy = geomprep.build_remdummy_shift_lst(zma)
-
             # Get the indices for the torsion
             mode_idxs = automol.zmat.coord_idxs(zma, tname)
             mode_idxs = tuple((idx+1 for idx in mode_idxs))
@@ -119,41 +114,8 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
             # Determine the flux span using the symmetry number
             mode_span = 360.0 / tsym
 
-            # Build dictionary for the torsion
-            keys = ['group', 'axis', 'sym_num', 'remdummy', 'pot',
-                    'atm_idxs', 'span', 'hrgeo']
-            vals = [group, axis, sym_num, remdummy, pot,
-                    mode_idxs, mode_span, geo]
-            rotor_dct[tname] = dict(zip(keys, vals))
-
-        # ioprinter.info_message('rotors pot test:', pot)
-        # Append to lst
-        rotors.append(rotor_dct)
 
     return rotors
-
-
-def _rotor_info(zma, spc_dct_i, cnf_fs, min_cnf_locs, tors_model,
-                frm_bnd_keys=(), brk_bnd_keys=()):
-    """ get tors stuff
-    """
-
-    # Read the increments from the filesystem
-    if 'hind_inc' in spc_dct_i:
-        scan_increment = spc_dct_i['hind_inc']
-    else:
-        scan_increment = 30. * phycon.DEG2RAD
-
-    # Set up ndim tors
-    if '1dhr' in tors_model:
-        tors_model = '1dhr'
-    elif 'mdhr' in tors_model:
-        tors_model = 'mdhr'
-
-    # Obtain the info for each of the rotors
-    ini_zma_save_fs[-1] = autofile.fs.zmatrix(min_cnf_locs)
-    tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
-    torsions = automol.rotor.from_data(zma, tors_dct)
 
 
 # FUNCTIONS TO WRITE STRINGS FOR THE ROTORS FOR VARIOUS SITUATION
