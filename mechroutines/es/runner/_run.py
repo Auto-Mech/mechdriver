@@ -4,6 +4,7 @@
 import functools
 import elstruct
 import autofile
+from mechlib.amech_io import printer as ioprinter
 from . import _seq as optseq
 
 
@@ -220,3 +221,20 @@ def is_successful_output(out_str, job, prog):
             ret = True
 
     return ret
+
+def determine_if_run_job(exists):
+    """ Determine if you should run elstruct job
+    """
+
+    if not exists:
+        ioprinter.info_message(
+            'No Hessian found in save filesys. Running Hessian...')
+        _run = True
+    elif overwrite:
+        ioprinter.info_message(
+            'User specified to overwrite Hessian with new run...')
+        _run = True
+    else:
+        _run = False
+
+    return _run

@@ -46,13 +46,8 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
     rotors = []
     for rotor in rotors:
 
-        # Initialize dct to hold info for each torsion of rotor
-        rotor_dct = {}
-
         # Read the potential along the rotors
         if tors_model in ('mdhr', 'mdhrv'):
-
-            # Set to read additional info for vibrational adiabaticity
             if tors_model == 'mdhrv':
                 read_geom, read_grad, read_hess = True, True, True
             else:
@@ -110,7 +105,7 @@ def make_hr_strings(rotors, run_path, tors_model,
     """
 
     # Initialize empty strings
-    mess_allr_str, mess_allr_nogeo_str = '', ''
+    mess_allr_str  = ''
     mess_hr_str, mess_flux_str, projrot_str = '', '', ''
     mdhr_dat = ''
 
