@@ -4,6 +4,7 @@
 
 import autofile
 from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
 from mechlib.filesys import mincnf
 
 

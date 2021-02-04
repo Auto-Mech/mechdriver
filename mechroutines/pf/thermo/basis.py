@@ -178,7 +178,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
             spc_basis, coeff_basis = get_ref_fxn(spc_ich)
         for i in range(len(spc_basis)):
             if isinstance(spc_basis[i], str):
-                spc_basis[i] = automol.inchi.add_stereo(spc_basis[i])[0]
+                spc_basis[i] = automol.inchi.add_stereo(spc_basis[i])
 
         msg += '\nInCHIs for basis set:'
         for base in spc_basis:

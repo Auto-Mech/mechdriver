@@ -99,91 +99,6 @@ def write_instab(conn_zma, disconn_zma,
             sp_save_fs[-1].file.energy.write(ene, thy_locs)
 
 
-# Write the instability files
-def write_instab2(conn_zma, disconn_zmas,
-                  thy_save_fs, thy_locs,
-                  zma_locs=(0,),
-                  save_cnf=False):
-    """ write the instability files
-    """
-
-    # Get a connected geometry
-    conn_geo = automol.zmat.geometry(conn_zma)
-
-    # Set and print the save path information
-    save_path = thy_save_fs[-1].path(thy_locs)
-    print(" - Saving...")
-    print(" - Save path: {}".format(save_path))
-    thy_save_fs[-1].file.geometry.write(conn_geo, thy_locs)
-
-    # Save the geometry information
-    instab_fs = autofile.fs.instab(save_path)
-    instab_fs[-1].create()
-    instab_fs[-1].file.geometry.write(conn_geo)
-    instab_path = instab_fs[-1].path()
-
-    # Grab the zma and instability transformation
-    conn_zma, brk_bnd_keys, rcts_gra = _instab_info(conn_zma, disconn_zmas)
-    tra = (frozenset({frozenset({})}),
-           frozenset({brk_bnd_keys}))
-
-    # Save zma information seperately, if required
-    zma_save_fs = autofile.fs.zmatrix(instab_path)
-    zma_save_fs[-1].create(zma_locs)
-    zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
-
-    # Write the files into the filesystem
-    zma_save_fs[-1].file.transformation.write(tra, zma_locs)
-    zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
-
-    if save_cnf:
-
-        # Save the geometry information
-        cnf_fs = autofile.fs.conformer(save_path)
-        cnf_locs = [autofile.schema.generate_new_conformer_id()]
-        cnf_fs[-1].create(cnf_locs)
-        cnf_fs[-1].file.geometry.write(conn_geo, cnf_locs)
-        cnf_path = cnf_fs[-1].path(cnf_locs)
-
-        # Save zma information seperately, if required
-        zma_save_fs = autofile.fs.zmatrix(cnf_path)
-        zma_save_fs[-1].create(zma_locs)
-        zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
-
-
-def _instab_info(conn_zma, disconn_zmas):
-    """ Obtain instability info
-    """
-
-    # Get the zma for the connected graph
-    rct_zmas = [conn_zma]
-
-    # Get the zmas used for the identification
-    prd_zmas = disconn_zmas
-
-    # Get the keys
-    ret = beta_scission(rct_zmas, prd_zmas)
-    zma, _, brk_bnd_keys, _, rcts_gra = ret
-
-    return zma, brk_bnd_keys, rcts_gra
-
-
-def _disconnected_zmas(disconn_zma):
-    """ get graphs
-    """
-
-    # Convert to disconnected component graph
-    disconn_geo = automol.zmat.geometry(disconn_zma)
-    disconn_gras = automol.graph.connected_components(
-        automol.geom.graph(disconn_geo))
-
-    # Get the zmas
-    disconn_zmas = [automol.geom.zmatrix(automol.graph.geometry(gra))
-                    for gra in disconn_gras]
-
-    return disconn_zmas
-
-
 # Unstable check
 def check_unstable_species(tsk, spc_dct, spc_name,
                            thy_info, save_prefix):
@@ -372,4 +287,3 @@ def break_all_unstable2(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
     new_spc_queue = list(set(new_spc_queue))
 
     return new_spc_queue
-

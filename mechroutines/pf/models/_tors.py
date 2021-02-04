@@ -34,64 +34,53 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
         zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
         zma = zma_fs[-1].file.zmatrix.read([0])
         tors_dct = zma_fs[-1].file.torsions.read([0])
-        torsions = automol.rotor.from_data(
-            zma, tors_dct, multi=bool('1d' in tors_model))
-
-        # Read the reference energy
-        ref_ene = torsprep.read_tors_ene(
-            cnf_fs, min_cnf_locs, mod_tors_ene_info)
-
-    scan_increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
-
-    rotors = []
-    for rotor in rotors:
-
-        # Read the potential along the rotors
-        if tors_model in ('mdhr', 'mdhrv'):
-            if tors_model == 'mdhrv':
-                read_geom, read_grad, read_hess = True, True, True
-            else:
-                read_geom, read_grad, read_hess = False, False, False
-
-            # Read and MDHR potential for single MDHR rotor
-            # Could be MDHR mod for sys w/ 1 Rotor
-            if ((num_rotors > 1 and len(tors_names) > 1) or num_rotors == 1):
-                pot, geoms, grads, hessians, _, _ = torsprep.read_hr_pot(
-                    tors_names, tors_grids,
-                    cnf_save_path,
-                    mod_tors_ene_info, ref_ene,
-                    constraint_dct=None,   # No extra frozen treatments
-                    read_geom=read_geom,
-                    read_grad=read_grad,
-                    read_hess=read_hess)
-                rotor_dct['mdhr_pot_data'] = (pot, geoms, grads, hessians)
-
-        for torsion in rotor:
-
-            # Build constraint dct
-            if tors_model == '1dhrf':
-                tname_tup = tuple([tname])
-                const_names = tuple(itertools.chain(*rotor_inf[0]))
-                constraint_dct = torsprep.build_constraint_dct(
-                    zma, const_names, tname_tup)
-            elif tors_model == '1dhrfa':
-                coords = list(automol.zmat.coordinates(zma))
-                const_names = tuple(coord for coord in coords)
-                tname_tup = tuple([tname])
-                constraint_dct = torsprep.build_constraint_dct(
-                    zma, const_names, tname_tup)
-            else:
-                constraint_dct = None
-
-            # Call read pot for 1DHR
-            pot, _, _, _, _, _ = torsprep.read_hr_pot(
-                [tname], [tgrid],
-                cnf_save_path,
-                mod_tors_ene_info, ref_ene,
-                constraint_dct)
-            pot = _hrpot_spline_fitter(pot, min_thresh=-0.0001, max_thresh=50.0)
+        tors_names = spc_dct_i.get('tors_names', None)
+        rotors = automol.rotor.from_data(
+            zma, tors_dct, names=tors_names, multi=bool('1d' in tors_model))
 
     return rotors
+
+
+def build_mdhr_dat_str():
+    """ Build the data string for the MDHR
+    """
+
+    mdhr_dat = ''
+    
+    scan_increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
+
+    rotor_dims = automol.rotor.dimensions(rotors)
+
+    # Read the potential along the rotors
+    if tors_model in ('mdhr', 'mdhrv'):
+        if tors_model == 'mdhrv':
+            read_geom, read_grad, read_hess = True, True, True
+        else:
+            read_geom, read_grad, read_hess = False, False, False
+
+        # Read and MDHR potential for single MDHR rotor
+        # Could be MDHR mod for sys w/ 1 Rotor
+        if ((num_rotors > 1 and len(tors_names) > 1) or num_rotors == 1):
+            pot, geoms, grads, hessians, _, _ = torsprep.read_hr_pot(
+                tors_names, tors_grids,
+                cnf_save_path,
+                mod_tors_ene_info, ref_ene,
+                constraint_dct=None,   # No extra frozen treatments
+                read_geom=read_geom,
+                read_grad=read_grad,
+                read_hess=read_hess)
+            rotor_dct['mdhr_pot_data'] = (pot, geoms, grads, hessians)
+
+        # Write the MDHR potential file string for the one MDHR
+        # if len(rotor) > 1 and 'mdhr_pot_data' in rotor:
+        if 'mdhr_pot_data' in rotor:
+            pot, geoms, grads, hessians = rotor['mdhr_pot_data']
+            hr_freqs = torsprep.calc_hr_frequencies(
+                geoms, grads, hessians, run_path)
+            mdhr_dat = mess_io.writer.mdhr_data(
+                pot, freqs=hr_freqs, nrot=numrotors)
+
+    return mdhr_dat
 
 
 # FUNCTIONS TO WRITE STRINGS FOR THE ROTORS FOR VARIOUS SITUATION
@@ -126,14 +115,36 @@ def make_hr_strings(rotors, run_path, tors_model,
         'scale_coeff test:', factor, nscale, sfactor)
 
     for rotor in rotors:
+        multirotor = bool(len(rotor))
         for tidx, torsion in enumerate(rotor):
 
-            # Scale the potential
-            ioprinter.debug_message('pot before scale:', torsion.pot)
-            if tors_index not in scale_indcs and factor is not None:
-                pot = automol.pot.scale(tors_dct['pot'], sfactor)
+            # constraint_dct = _constraints()
+            # Read the potential
+            if tors_model == '1dhrf':
+                tname_tup = tuple([tname])
+                const_names = tuple(itertools.chain(*rotor_inf[0]))
+                constraint_dct = torsprep.build_constraint_dct(
+                    zma, const_names, tname_tup)
+            elif tors_model == '1dhrfa':
+                coords = list(automol.zmat.coordinates(zma))
+                const_names = tuple(coord for coord in coords)
+                tname_tup = tuple([tname])
+                constraint_dct = torsprep.build_constraint_dct(
+                    zma, const_names, tname_tup)
             else:
-                pot = tors_dct['pot']
+                constraint_dct = None
+
+            pot, _, _, _, _, _ = torsprep.read_hr_pot(
+                [tname], [tgrid],
+                cnf_save_path,
+                mod_tors_ene_info, ref_ene,
+                constraint_dct)
+            pot = _hrpot_spline_fitter(pot, min_thresh=-0.0001, max_thresh=50.0)
+
+            # Scale the potential
+            ioprinter.debug_message('pot before scale:', pot)
+            if tidx not in scale_indcs and factor is not None:
+                pot = automol.pot.scale(pot, sfactor)
             ioprinter.debug_message('pot after scale:', torsion.pot)
 
             # Write the rotor strings
@@ -154,6 +165,39 @@ def make_hr_strings(rotors, run_path, tors_model,
             else:
                 mess_allr_str += tors_strs[0]
 
+    return mess_allr_str, mess_hr_str, mess_flux_str, projrot_str, mdhr_dat
+
+
+def _mdhr_dat_str():
+    """ Build the data string for the MDHR
+    """
+
+    mdhr_dat = ''
+    
+    scan_increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
+
+    rotor_dims = automol.rotor.dimensions(rotors)
+
+    # Read the potential along the rotors
+    if tors_model in ('mdhr', 'mdhrv'):
+        if tors_model == 'mdhrv':
+            read_geom, read_grad, read_hess = True, True, True
+        else:
+            read_geom, read_grad, read_hess = False, False, False
+
+        # Read and MDHR potential for single MDHR rotor
+        # Could be MDHR mod for sys w/ 1 Rotor
+        if ((num_rotors > 1 and len(tors_names) > 1) or num_rotors == 1):
+            pot, geoms, grads, hessians, _, _ = torsprep.read_hr_pot(
+                tors_names, tors_grids,
+                cnf_save_path,
+                mod_tors_ene_info, ref_ene,
+                constraint_dct=None,   # No extra frozen treatments
+                read_geom=read_geom,
+                read_grad=read_grad,
+                read_hess=read_hess)
+            rotor_dct['mdhr_pot_data'] = (pot, geoms, grads, hessians)
+
         # Write the MDHR potential file string for the one MDHR
         # if len(rotor) > 1 and 'mdhr_pot_data' in rotor:
         if 'mdhr_pot_data' in rotor:
@@ -163,57 +207,46 @@ def make_hr_strings(rotors, run_path, tors_model,
             mdhr_dat = mess_io.writer.mdhr_data(
                 pot, freqs=hr_freqs, nrot=numrotors)
 
-    return mess_allr_str, mess_hr_str, mess_flux_str, projrot_str, mdhr_dat
+    return mdhr_dat
 
 
-def _rotor_tors_strs(torsion, geo,
-                     mess_hr=True, mess_ir=True,
-                     mess_flux=True, projrot=True):
+def _tors_strs(torsion, geo):
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
 
-    mess_hr_str = ''
-    if mess_hr:
-        mess_hr_str = mess_io.writer.rotor_hindered(
-            group=torsion.groups[0],
-            axis=torsion.axis,
-            symmetry=torsion.symmetry,
-            potential=pot,
-            hmin=None,
-            hmax=None,
-            lvl_ene_max=None,
-            therm_pow_max=None,
-            geo=geo,
-            rotor_id=torsion.name)
+    mess_hr_str = mess_io.writer.rotor_hindered(
+        group=torsion.groups[0],
+        axis=torsion.axis[0],
+        symmetry=torsion.symmetry,
+        potential=torsion.pot,
+        hmin=None,
+        hmax=None,
+        lvl_ene_max=None,
+        therm_pow_max=None,
+        geo=geo,
+        rotor_id=torsion.name)
 
-    mess_ir_str = ''
-    if mess_ir:
-        mess_ir_str = mess_io.writer.mol_data.rotor_internal(
-            group=torsion.groups[0],
-            axis=torsion.axis,
-            symmetry=torsion.symmetry,
-            grid_size=100,
-            mass_exp_size=5,
-            pot_exp_size=5,
-            hmin=13,
-            hmax=101,
-            geo=None,
-            rotor_id=torsion.name)
+    mess_ir_str = mess_io.writer.mol_data.rotor_internal(
+        group=torsion.groups[0],
+        axis=torsion.axis[0],
+        symmetry=torsion.symmetry,
+        grid_size=100,
+        mass_exp_size=5,
+        pot_exp_size=5,
+        hmin=13,
+        hmax=101,
+        geo=None,
+        rotor_id=torsion.name)
 
-    mess_flux_str = ''
-    if mess_flux:
-        mess_flux_str = mess_io.writer.fluxional_mode(
-            torsion.atom_idxs,
-            span=torsion.span)
+    mess_flux_str = mess_io.writer.fluxional_mode(
+        torsion.atom_idxs,
+        span=torsion.span)
 
-    projrot_str = ''
-    if projrot:
-        projrot_str = projrot_io.writer.rotors(
-            axis=torsion.axis,
-            group=torsion.groups[0])
+    projrot_str = projrot_io.writer.rotors(
+        axis=torsion.axis[0],
+        group=torsion.groups[0])
 
-    return (mess_hr_str, mess_ir_str,
-            mess_flux_str, projrot_str)
+    return mess_hr_str, mess_ir_str, mess_flux_str, projrot_str
 
 
 def _need_tors_geo(pf_levels):
@@ -221,6 +254,11 @@ def _need_tors_geo(pf_levels):
     """
     ioprinter.debug_message('pflvl', pf_levels)
     return bool(pf_levels['tors'][1] == pf_levels['harm'])
+
+
+def _constraints():
+    """ Build Constraints
+    """
 
 
 def _hrpot_spline_fitter(pot_dct, min_thresh=-0.0001, max_thresh=50.0):
