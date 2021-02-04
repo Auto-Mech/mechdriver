@@ -10,14 +10,13 @@ from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import spc as sinfo
 from mechroutines.es._ts import findts
-# from mechroutines.es.newts import run as runts
 from mechroutines.es._routines import conformer
 from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
 from mechroutines.es._routines import irc
 from mechlib import filesys
 from mechlib import structure
-# from mechlib.structure import instab
+from mechlib.structure import instab
 from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
@@ -45,10 +44,10 @@ def run_tsk(tsk, spc_dct, spc_name,
     ioprinter.keyword_list(es_keyword_dct, thy_dct)
 
     # If species is unstable, set task to 'none'
-    # ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-    # ini_thy_info = tinfo.from_dct(ini_method_dct)
-    # stable = instab.check_unstable_species(
-    #     tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
+    ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
+    ini_thy_info = tinfo.from_dct(ini_method_dct)
+    stable = instab.check_unstable_species(
+        tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
     stable = True
     if stable:
         ioprinter.debug_message('- Proceeding with requested task...')

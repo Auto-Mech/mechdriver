@@ -79,28 +79,36 @@ def initial_conformer(spc_dct_i, spc_info,
                 'Assessing if there are any functional groups',
                 'that cause instability')
             ioprinter.debug_message('geo str\n', automol.geom.string(geo_init))
-            # if _functional_groups_stable(
-            #  geo_init, thy_save_fs, mod_thy_info):
+
             zma_init = automol.geom.zmatrix(geo_init)
-            if not automol.geom.is_atom(geo_init):
-                geo_found = _optimize_molecule(
-                    spc_info, zma_init,
-                    method_dct, thy_run_fs, thy_save_fs,
-                    cnf_save_fs,
-                    run_fs,
-                    overwrite,
-                    kickoff_size=kickoff_size,
-                    kickoff_backward=kickoff_backward)
+
+            # Determine if there is an instability, if so return prods
+            instab_zmas = automol.reac.instability_product_zmas(zma_init)
+            if not instab_zmas:
+                if not automol.geom.is_atom(geo_init):
+                    geo_found = _optimize_molecule(
+                        spc_info, zma_init,
+                        method_dct, thy_run_fs, thy_save_fs,
+                        cnf_save_fs,
+                        run_fs,
+                        overwrite,
+                        kickoff_size=kickoff_size,
+                        kickoff_backward=kickoff_backward)
+                else:
+                    geo_found = _optimize_atom(
+                        spc_info, zma_init,
+                        method_dct, thy_run_fs,
+                        cnf_save_fs, run_fs,
+                        overwrite)
             else:
-                geo_found = _optimize_atom(
-                    spc_info, zma_init,
-                    method_dct, thy_run_fs,
-                    cnf_save_fs, run_fs,
-                    overwrite)
-            # else:
-            #     geo_found = True
-            #     ioprinter.info_message(
-            #         'Found functional groups that cause instabilities')
+                structure.instab.write_instab2(
+                    conn_zma, disconn_zmas,
+                    thy_save_fs, mod_thy_info[1:4],
+                    zma_locs=(0,),
+                    save_cnf=True)
+                geo_found = True
+                ioprinter.info_message(
+                    'Found functional groups that cause instabilities')
         else:
             geo_found = False
             ioprinter.warning_message(

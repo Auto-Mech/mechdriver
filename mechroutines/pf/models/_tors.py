@@ -259,6 +259,7 @@ def _need_tors_geo(pf_levels):
 def _constraints():
     """ Build Constraints
     """
+    raise NotImplementedError
 
 
 def _hrpot_spline_fitter(pot_dct, min_thresh=-0.0001, max_thresh=50.0):
