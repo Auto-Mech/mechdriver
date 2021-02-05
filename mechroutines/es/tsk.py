@@ -244,8 +244,8 @@ def conformer_tsk(job, spc_dct, spc_name,
         # Read the torsions from the ini file sys
         if ini_zma_save_fs[-1].file.torsions.exists([0]):
             tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
-            torsions = automol.rotor.from_data(zma, tors_dct)
-            tors_names = automol.rotor.names(torsions, flat=True)
+            rotors = automol.rotor.from_data(zma, tors_dct)
+            tors_names = automol.rotor.names(rotors, flat=True)
         else:
             tors_names = ()
 
@@ -627,7 +627,7 @@ def hr_tsk(job, spc_dct, spc_name,
     zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
     if ini_zma_save_fs[-1].file.torsions.exists([0]):
         tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
-        torsions = automol.rotor.from_data(zma, tors_dct)
+        torsions = automol.rotor.from_data(zma, tors_dct,)
     else:
         torsions = ()
 

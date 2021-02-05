@@ -226,19 +226,6 @@ def mol_data(spc_name, spc_dct,
     [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
     # cnf_path = cnf_fs[-1].path(min_cnf_locs)
 
-    # Obtain rotor information used to determine new information
-    ioprinter.info_message(
-        'Preparing internal rotor info building partition functions...',
-        newline=1)
-    rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels)
-    if typ.nonrigid_tors(chn_pf_models, rotors):
-        run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
-        tors_strs = tors.make_hr_strings(
-            rotors, run_path, chn_pf_models['tors'],
-            )
-        [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
-
     # Obtain rotation partition function information
     ioprinter.info_message(
         'Obtaining info for rotation partition function...', newline=1)
@@ -249,34 +236,16 @@ def mol_data(spc_name, spc_dct,
 
     # Obtain vibration partition function information
     ioprinter.info_message(
+        'Preparing internal rotor info building partition functions...',
+        newline=1)
+    rotors = tors.build_rotors(
+        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels)
+    ioprinter.info_message(
         'Obtaining the vibrational frequencies and zpves...', newline=1)
-    if typ.nonrigid_tors(chn_pf_models, rotors):
-        # Calculate initial proj. freqs, unproj. imag, tors zpe and scale fact
-        freqs, imag, tors_zpe, pot_scalef = vib.tors_projected_freqs_zpe(
-            pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
-        # Make final hindered rotor strings and get corrected tors zpe
-        if typ.scale_1d(chn_pf_models):
-            tors_strs = tors.make_hr_strings(
-                rotors, run_path, chn_pf_models['tors'],
-                scale_factor=pot_scalef)
-            [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
-            _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
-            # Calculate current zpe assuming no freq scaling: tors+projfreq
-        zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-
-        # For mdhrv model no freqs needed in MESS input, zero out freqs lst
-        if 'mdhrv' in chn_pf_models['tors']:
-            freqs = ()
-    else:
-        freqs, imag, zpe = vib.read_harmonic_freqs(
-            pf_filesystems, saddle=saddle)
-        tors_zpe = 0.0
-
-    # Scale the frequencies
-    if freqs:
-        freqs, zpe = vib.scale_frequencies(
-            freqs, tors_zpe, chn_pf_levels, scale_method='3c')
+    freqs, imag, zpe, tors_strs = vib.vib_analysis(
+        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
+        run_prefix, saddle=saddle)
+    allr_str = tors_strs[0]
 
     # ioprinter.info_message('zpe in mol_data test:', zpe)
     if typ.anharm_vib(chn_pf_models):

@@ -105,9 +105,6 @@ def zero_point_energy(spc_dct_i,
 
     ioprinter.info_message('- Calculating zero-point energy')
 
-    # spc_dct_i = spc_dct[spc_name]
-    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
-
     # Calculate ZPVE
     is_atom = False
     if not saddle:
@@ -116,45 +113,10 @@ def zero_point_energy(spc_dct_i,
     if is_atom:
         zpe = 0.0
     else:
-        rotors = tors.build_rotors(
-            spc_dct_i, pf_filesystems, pf_models, pf_levels)
+        _, _, zpe, _ = vib.vib_analysis(
+            spc_dct_i, pf_filesystems, pf_models, pf_levels,
+            run_prefix, saddle=saddle)
 
-        if typ.nonrigid_tors(pf_models, rotors):
-            run_path = fmod.make_run_path(pf_filesystems, 'tors')
-            tors_strs = tors.make_hr_strings(
-                rotors, run_path, pf_models['tors'],
-                )
-            [_, hr_str, _, prot_str, _] = tors_strs
-
-        if typ.nonrigid_tors(pf_models, rotors):
-            # Calculate init proj. freqs, unproj. imag, tors zpe and scale fact
-            freqs, _, tors_zpe, pot_scalef = vib.tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
-            # Make final hindered rotor strings and get corrected tors zpe
-            if typ.scale_1d(pf_models):
-                tors_strs = tors.make_hr_strings(
-                    rotors, run_path, pf_models['tors'],
-                    scale_factor=pot_scalef)
-                [_, hr_str, _, prot_str, _] = tors_strs
-                _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
-                    pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
-                # Calculate current zpe assuming no freq scaling: tors+projfreq
-            zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-
-            # For mdhrv model no freqs needed in MESS input, zero out freqs lst
-            if 'mdhrv' in pf_models['tors']:
-                freqs = ()
-        else:
-            freqs, _, zpe = vib.read_harmonic_freqs(
-                pf_filesystems, saddle=saddle)
-            tors_zpe = 0.0
-
-        # Scale the frequencies
-        if freqs:
-            freqs, zpe = vib.scale_frequencies(
-                freqs, tors_zpe, pf_levels, scale_method='3c')
-
-        # ioprinter.info_message('zpe in zero_point_energy test:', zpe, freqs)
     return zpe
 
 

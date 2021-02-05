@@ -16,7 +16,7 @@ from mechlib.structure import vib as vibprep
 from mechlib.submission import DEFAULT_SCRIPT_DCT
 
 
-def read_hr_pot(torsionss, cnf_save_path,
+def read_hr_pot(names, grid_vals, cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct,
                 scan_increment=0.523599,
@@ -24,12 +24,9 @@ def read_hr_pot(torsionss, cnf_save_path,
                 read_hess=False, read_zma=False):
     """ Get the potential for a hindered rotor
     """
-    
-    names = automol.rotor.names(torsions)
-    grids = automol.rotor.grids(torsions, increment=scan_increment)
 
     # Build initial lists for storing potential energies and Hessians
-    grid_points, grid_vals = set_scan_dims(tors_grids)
+    grid_points = autmol.pot.points(grid_vals)
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
@@ -43,7 +40,7 @@ def read_hr_pot(torsionss, cnf_save_path,
     # Read the energies and Hessians from the filesystem
     for point, vals in zip(grid_points, grid_vals):
 
-        locs = [tors_names, vals]
+        locs = [names, vals]
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
 

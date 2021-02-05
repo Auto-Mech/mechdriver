@@ -314,7 +314,7 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
 
 def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
-                    run_inp_dct, spc_dct, cla_dct,
+                    run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
                     direction='forw'):
     """ build a dct for saddle points for all reactions in rxn_lst
     """
@@ -323,14 +323,14 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     for rxn in rxn_lst:
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         ts_dct[tsname] = build_sing_chn_sadpt_dct(
-            tsname, rxn, thy_info, ini_thy_info,
+            tsname, rxn, thy_info, ini_thy_info, run_prefix, save_prefix,
             run_inp_dct, spc_dct, cla_dct, direction=direction)
 
     return ts_dct
 
 
 def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
-                             run_inp_dct, spc_dct, cla_dct,
+                             run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
                              direction='forw'):
     """ build dct for single reaction
     """
@@ -354,6 +354,13 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
         rxn_info, ini_thy_info, zma_locs, save_prefix)
 
     if zrxn is not None:
+        rxn_save_fs = autofile.fs.reaction(save_prefix)
+        rxn_save_fs[-1].create(rinfo.sort(rxn_info))
+        rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
+        rxn_run_fs = autofile.fs.reaction(run_prefix)
+        rxn_run_fs[-1].create(rinfo.sort(rxn_info))
+        rxn_run_path = rxn_run_fs[-1].path(rinfo.sort(rxn_info))
+        rxn_fs = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
         ts_dct = {
             'zrxn': zrxn,
             'zma': zma,
@@ -363,7 +370,9 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
             'inchi': '',
             'charge': rinfo.value(rxn_info, 'charge'),
             'mult': rinfo.value(rxn_info, 'tsmult'),
-            'elec_levels': [[0.0, rinfo.value(rxn_info, 'tsmult')]]
+            'elec_levels': [[0.0, rinfo.value(rxn_info, 'tsmult')]],
+            'class': zrxn.class_,
+            'rxn_fs': rxn_fs
         }
     else:
         ts_dct = {}

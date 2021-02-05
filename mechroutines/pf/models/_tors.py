@@ -2,7 +2,6 @@
   Functions handling hindered rotor model calculations
 """
 
-import itertools
 import numpy
 from scipy.interpolate import interp1d
 import automol
@@ -10,24 +9,32 @@ import mess_io
 import projrot_io
 from phydat import phycon
 from autofile import fs
-from mechlib import filesys
+from mechanalyzer.inf import thy as tinfo
+from mechanalyzer.inf import spc as sinfo
 from mechlib.structure import tors as torsprep
 from mechlib.amech_io import printer as ioprinter
 
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
-def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
+def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
+                scale_factor=((), None)):
     """ Add more rotor info
     """
+
+    run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
 
     # Set up tors level filesystem and model and level
     ioprinter.debug_message('pflvls', pf_levels)
     tors_model = pf_models['tors']
     tors_ene_info = pf_levels['tors'][1][0]
+    mod_tors_ene_info = tinfo.modify_orb_label(
+        tors_ene_info, sinfo.from_dct(spc_dct_i))
     [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
 
     # Build the rotors
     if min_cnf_locs is not None:
+        ref_ene = torsprep.read_tors_ene(
+            cnf_fs, min_cnf_locs, mod_tors_ene_info)
         zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
         zma = zma_fs[-1].file.zmatrix.read([0])
         if zma_fs[-1].file.torsions.exists([0]):
@@ -40,16 +47,20 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
             rotors = ()
 
     # Read the potential grids
-    # rotors = _read_potentials
+    rotors = _read_potentials(
+        rotors, spc_dct_i, run_path, cnf_save_path,
+        ref_ene, mod_tors_ene_info,
+        tors_model, scale_factor=scale_factor)
 
     return rotors
 
 
-def _read_potentials(rotors, spc_dct_i, run_path, tors_model,
-                     scale_factor=((), None)):
+def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
+                     ref_ene, mod_tors_ene_info,
+                     tors_model, scale_factor=((), None)):
     """ read out the potentials
     """
-    
+
     # Convert the rotor objects indexing to be in geoms
     increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
     rotor_zma = automol.rotor.zmatrix(rotors)
@@ -57,7 +68,6 @@ def _read_potentials(rotors, spc_dct_i, run_path, tors_model,
     tors_grids = automol.rotor.grids(rotors, increment=increment, flat=True)
 
     # Count numbers
-    numrotors = len(rotors)
     numtors = 0
     for rotor in rotors:
         numtors += len(rotor)
@@ -89,74 +99,71 @@ def _read_potentials(rotors, spc_dct_i, run_path, tors_model,
             torsion.pot = pot
 
     if multi_idx is not None:
-        tors_name = automol.rotor.names(rotors)[multi_idx]
-        tors_grid = automol.rotor.grids(rotors, increment=increment)[multi_idx]
+        mdhr_name = automol.rotor.names(rotors)[multi_idx]
+        mdhr_grid = automol.rotor.grids(rotors, increment=increment)[multi_idx]
 
         pot, geoms, grads, hessians, _, _ = torsprep.read_hr_pot(
-            tors_names, tors_grid,
+            mdhr_name, mdhr_grid,
             cnf_save_path,
             mod_tors_ene_info, ref_ene,
             constraint_dct=None,   # No extra frozen treatments
             read_geom=bool('v' in tors_model),
             read_grad=bool('v' in tors_model),
             read_hess=bool('v' in tors_model))
-        rotor_dct['mdhr_pot_data'] = (pot, geoms, grads, hessians)
-
-        if 'mdhr_pot_data' in rotor:
-            pot, geoms, grads, hessians = rotor['mdhr_pot_data']
-            hr_freqs = torsprep.calc_hr_frequencies(
-                geoms, grads, hessians, run_path)
+        freqs = torsprep.calc_hr_frequencies(
+            geoms, grads, hessians, run_path)
     else:
-        pass 
+        pass
 
     return rotors, (pot, freqs)
 
 
 # FUNCTIONS TO WRITE STRINGS FOR THE ROTORS FOR VARIOUS SITUATION
-def make_hr_strings(rotors, spc_dct_i, run_path, tors_model,
-                    scale_factor=((), None)):
+def make_hr_strings(rotors):
     """ Procedure for building the MESS strings
         :return mess_allrot_str: combination of intl and hr strs
         :return mess_hr_str: hr strs
     """
 
     # Initialize empty strings
-    mess_allr_str  = ''
+    mess_allr_str = ''
     mess_hr_str, mess_flux_str, projrot_str = '', '', ''
     mdhr_dat = ''
 
     # Convert the rotor objects indexing to be in geoms
-    increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
     rotors, geo = automol.rotor.relabel_for_geometry(rotors)
+    # numrotors = len(rotors)
 
     for ridx, rotor in enumerate(rotors):
-        multirotor = bool(len(rotor) > 1)
-        multi_idx = ridx
-        for tidx, torsion in enumerate(rotor):
+        # multirotor = bool(len(rotor) > 1)
+        # mdhr_idx = ridx if multirotor else None
+        for _, torsion in enumerate(rotor):
 
             # Write the rotor strings
             hr_str, ir_str, flux_str, prot_str = _tors_strs(torsion, geo)
+            mess_allr_str += hr_str
             mess_hr_str += hr_str
             mess_flux_str += flux_str
             projrot_str += prot_str
 
             # For MDHR, add the appropriate string
-            if 'mdhr' in tors_model:
-                if ((numrotors > 1 and multirotor) or numrotors == 1):
-                    mess_allr_str += ir_str
-                else:
-                    mess_allr_str += hr_str
-            else:
-                mess_allr_str += hr_str
+            # if 'mdhr' in tors_model:
+            #     if ((numrotors > 1 and multirotor) or numrotors == 1):
+            #         mess_allr_str += ir_str
+            #     else:
+            #         mess_allr_str += hr_str
+            # else:
+            #     mess_allr_str += hr_str
 
     # write the mdhr dat string
-    if mdhr_idx is not None:
-        mdhr_dat = _mdhr_dat_str(rotors, spc_dct_i, mdhr_idx)
-    else:
-        mdhr_dat = ''
+    # if mdhr_idx is not None:
+    #     mdhr_dat = mess_io.writer.mdhr_data(
+    #         pot, freqs=hr_freqs, nrot=numrotors)
+    # else:
+    mdhr_dat = ''
 
     return mess_allr_str, mess_hr_str, mess_flux_str, projrot_str, mdhr_dat
-# Build prgram strings containing the rotor info
+
 
 def _tors_strs(torsion, geo):
     """ Gather the 1DHR torsional data and gather them into a MESS file
@@ -195,32 +202,6 @@ def _tors_strs(torsion, geo):
         group=torsion.groups[0])
 
     return mess_hr_str, mess_ir_str, mess_flux_str, projrot_str
-
-
-def _mdhr_dat_str(rotors, spc_dct_i):
-    """ Build the data string for the MDHR
-    """
-
-    increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
-    rotor_dims = automol.rotor.dimensions(rotors)
-
-    # Read the potential along the rotors
-    if tors_model in ('mdhr', 'mdhrv'):
-        if tors_model == 'mdhrv':
-            read_geom, read_grad, read_hess = True, True, True
-        else:
-            read_geom, read_grad, read_hess = False, False, False
-
-        # Write the MDHR potential file string for the one MDHR
-        # if len(rotor) > 1 and 'mdhr_pot_data' in rotor:
-        if 'mdhr_pot_data' in rotor:
-            pot, geoms, grads, hessians = rotor['mdhr_pot_data']
-            hr_freqs = torsprep.calc_hr_frequencies(
-                geoms, grads, hessians, run_path)
-            mdhr_dat = mess_io.writer.mdhr_data(
-                pot, freqs=hr_freqs, nrot=numrotors)
-
-    return mdhr_dat
 
 
 def _need_tors_geo(pf_levels):
@@ -278,7 +259,7 @@ def _hrpot_spline_fitter(pot_dct, min_thresh=-0.0001, max_thresh=50.0):
                 pot_success.append(max_thresh)
 
     if len(pot_success) > 3:
-    # Build a new potential list using a spline fit of the HR potential
+        # Build a new potential list using a spline fit of the HR potential
         pot_spl = interp1d(
             numpy.array(idx_success), numpy.array(pot_success), kind='cubic')
         for idx in range(lpot):
@@ -306,8 +287,10 @@ def _hrpot_spline_fitter(pot_dct, min_thresh=-0.0001, max_thresh=50.0):
         ioprinter.debug_message('Potential after spline:', pot_pos_fit)
         # Perform second check to see if negative potentials have been fixed
         if any(val < min_thresh for val in pot_pos_fit):
-            ioprinter.warning_message('Still found negative potential values after second spline')
-            ioprinter.info_message('Replace with linear interpolation of positive values')
+            ioprinter.warning_message(
+                'Still found negative potential values after second spline')
+            ioprinter.info_message(
+                'Replace with linear interpolation of positive values')
             neg_idxs = [i for i in range(lpot) if pot_pos_fit[i] < min_thresh]
             clean_pot = []
             for i in range(lpot):

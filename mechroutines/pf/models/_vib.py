@@ -10,6 +10,51 @@ from mechlib.structure import tors as torsprep
 from mechlib.structure import vib as vibprep
 from mechlib.submission import DEFAULT_SCRIPT_DCT
 from mechlib.amech_io import printer as ioprinter
+from mechlib.filesys import models as fmod
+
+from mechroutines.pf.models import typ
+from mechroutines.pf.models import _tors as tors
+
+
+def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
+                 run_prefix, saddle=False):
+    """ process to get freq
+    """
+
+    rotors = tors.build_rotors(
+        spc_dct_i, pf_filesystems, chn_pf_models, pf_levels)
+
+    if typ.nonrigid_tors(chn_pf_models, rotors):
+        run_path = fmod.make_run_path(pf_filesystems, 'tors')
+        tors_strs = tors.make_hr_strings(
+            rotors, run_path, chn_pf_models['tors'],
+        )
+        [_, hr_str, _, prot_str, _] = tors_strs
+
+        freqs, imag, tors_zpe, pot_scalef = tors_projected_freqs_zpe(
+            pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+
+        # Make final hindered rotor strings and get corrected tors zpe
+        if typ.scale_1d(chn_pf_models):
+            tors_strs = tors.make_hr_strings(
+                rotors, run_path, chn_pf_models['tors'],
+                scale_factor=pot_scalef)
+            [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
+            _, _, tors_zpe, _ = tors_projected_freqs_zpe(
+                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+            # Calculate current zpe assuming no freq scaling: tors+projfreq
+
+        zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
+
+        # For mdhrv model no freqs needed in MESS input, zero out freqs lst
+        if 'mdhrv' in chn_pf_models['tors']:
+            freqs = ()
+    else:
+        freqs, imag, zpe = read_harmonic_freqs(
+            pf_filesystems, saddle=saddle)
+        tors_zpe = 0.0
+
+    return freqs, imag, zpe, tors_strs
 
 
 def read_harmonic_freqs(pf_filesystems, saddle=False):

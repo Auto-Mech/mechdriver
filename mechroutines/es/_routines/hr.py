@@ -14,7 +14,7 @@ from mechlib import structure
 def hindered_rotor_scans(
         zma, spc_info, mod_thy_info, thy_save_fs,
         zma_run_path, zma_save_path,
-        torsions, tors_model, method_dct,
+        rotors, tors_model, method_dct,
         overwrite,
         saddle=False,
         retryfail=True, chkstab=None):
@@ -30,8 +30,8 @@ def hindered_rotor_scans(
             method_dct, job=elstruct.Job.ENERGY)
         scn_typ = 'rigid'
 
-    run_tors_names = automol.rotor.names(torsions)
-    run_tors_grids = automol.rotor.grids(torsions)
+    run_tors_names = automol.rotor.names(rotors)
+    run_tors_grids = automol.rotor.grids(rotors)
 
     # Set constraints
     const_names = structure.tors.set_constraint_names(
