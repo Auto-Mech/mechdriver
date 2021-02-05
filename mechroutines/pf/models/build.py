@@ -224,21 +224,13 @@ def mol_data(spc_name, spc_dct,
     # Set information for transition states
     [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
     # cnf_path = cnf_fs[-1].path(min_cnf_locs)
-    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(
-        cnf_fs, min_cnf_locs, saddle)
-    ioprinter.debug_message('bnd keys in mol_data', frm_bnd_keys, brk_bnd_keys)
-    rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Obtain rotor information used to determine new information
     ioprinter.info_message(
         'Preparing internal rotor info building partition functions...',
         newline=1)
     rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
-        rxn_class=rxn_class,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
-    ioprinter.debug_message(
-        'Frm and brk key in model build', frm_bnd_keys, brk_bnd_keys)
+        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels)
     if typ.nonrigid_tors(chn_pf_models, rotors):
         run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
         tors_strs = tors.make_hr_strings(
@@ -293,8 +285,7 @@ def mol_data(spc_name, spc_dct,
     ioprinter.info_message(
         'Determining the symmetry factor...', newline=1)
     sym_factor = sym.symmetry_factor(
-        pf_filesystems, chn_pf_models, spc_dct_i, rotors,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+        pf_filesystems, chn_pf_models, spc_dct_i, rotors)
 
     # Obtain electronic energy levels
     elec_levels = spc_dct_i['elec_levels']
@@ -414,9 +405,6 @@ def rpvtst_data(ts_dct, reac_dcts,
         ts_run_path, ts_save_path, _, thy_save_path = tspaths
 
         # Set TS reaction coordinate
-        frm_bnd_keys, _ = util.get_bnd_keys2(ts_save_path, True)
-        frm_name = util.get_rxn_coord_name(
-            ts_save_path, frm_bnd_keys, sadpt=sadpt, zma_locs=(0,))
         scn_vals = filesys.models.get_rxn_scn_coords(thy_save_path, frm_name)
         scn_vals.sort()
         scn_ene_info = chn_pf_levels['rpath'][1][0]

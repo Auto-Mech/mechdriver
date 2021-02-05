@@ -45,14 +45,19 @@ def hindered_rotor_scans(
     ioprinter.run_rotors(run_tors_names, const_names)
 
     # for tors_name, tors_grid in zip(tors_names, tors_grids):
+    print('gridtest', run_tors_names)
+    print('gridtest', run_tors_grids)
     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
+
+        print('gridtest', tors_names)
+        print('gridtest', tors_grids)
 
         ioprinter.info_message(
             'Running Rotor: {}...'.format(tors_names),
             newline=1)
 
         # Setting the constraints
-        constraint_dct = torsprep.build_constraint_dct(
+        constraint_dct = automol.zmat.constraint_dct(
             zma, const_names, tors_names)
 
         # Setting the filesystem

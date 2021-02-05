@@ -22,10 +22,12 @@ def build_reaction(rxn_info, thy_info, zma_locs, save_prefix):
     """
 
     # Try to build the Z-Matrix reaction object or identify from scratch
-    # zrxn, rxn = _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix)
-    zrxn = None
+    zrxn, zma = _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix)
     if zrxn is None:
+        print('    Identifying class')
         zrxn, zma = _id_reaction(rxn_info)
+    else:
+        print('    Reading from fileysystem')
 
     print('    Reaction class identified as: {}'.format(zrxn.class_))
 
@@ -36,24 +38,31 @@ def _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix):
     """ Check if reaction exists in the filesystem and has been identified
     """
 
-    mod_thy_info = thy_info  # Need to modify the theory object
 
-    manager_prefix = [
-        ('REACTION', rinfo.sort(rxn_info, scheme='autofile')),
-        ('THEORY', mod_thy_info[1:4]),
-        ('TRANSITION_STATE', ),
-    ]
-    cnf_save_fs = autofile.fs.manager(save_prefix, manager_prefix, 'CONFORMER')
-    ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info)
-    _, ini_min_cnf_path = ini_loc_info
-    zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
+    sort_rxn_info = rinfo.sort(rxn_info, scheme='autofile')
+    ts_info = rinfo.ts_info(rxn_info)
+    mod_thy_info = tinfo.modify_orb_label(thy_info, ts_info)
 
-    if zma_fs[-1].file.reac.exists(zma_locs):
-        zrxn = zma_fs[-1].file.reac.read(zma_locs)
-        zma = zma_fs[-1].file.zmatrixc.read(zma_locs)
+    rxn_fs = autofile.fs.reaction(save_prefix)
+    if rxn_fs[-1].exists(sort_rxn_info):
+        manager_prefix = [
+            ('REACTION', sort_rxn_info),
+            ('THEORY', mod_thy_info[1:4]),
+            ('TRANSITION STATE', ()),
+        ]
+        cnf_save_fs = autofile.fs.manager(save_prefix, manager_prefix, 'CONFORMER')
+        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
+            cnf_save_fs, mod_thy_info)
+        _, ini_min_cnf_path = ini_loc_info
+        zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
+
+        if zma_fs[-1].file.reaction.exists(zma_locs):
+            zrxn = zma_fs[-1].file.reaction.read(zma_locs)
+            zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+        else:
+            zrxn, zma = None, None
     else:
-        zma, zrxn = None, None
+        zrxn, zma = None, None
 
     return zrxn, zma
 

@@ -13,7 +13,6 @@ from mechroutines.es._routines import _util as util
 from mechroutines.es._routines._geom import remove_imag
 from mechroutines.es import runner as es_runner
 from mechlib import filesys
-from mechlib.structure import geom as geomprep
 from mechlib.structure import instab
 from mechlib.amech_io import printer as ioprinter
 from mechlib.submission import qchem_params
@@ -728,13 +727,6 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
     if not automol.util.value_similar_to(ene, saved_enes, ethresh):
         _, sym_idx = automol.geom.is_unique(
             geo, saved_geos, check_dct={'coulomb': None})
-    # sym_idx = None
-    # for idx, (geoi, enei) in enumerate(zip(saved_geos, saved_enes)):
-    #     if abs(enei - ene) < ethresh:
-    #         unique = geomprep.is_unique_coulomb_energy(
-    #             geo, ene, [geoi], [enei])
-    #         if not unique:
-    #             sym_idx = idx
 
     if sym_idx is not None:
         ioprinter.warning_message(' - Structure is not symmetrically unique.')
@@ -781,14 +773,6 @@ def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
 
     frm_bnd_keys = automol.reac.forming_bond_keys(grxn)
     brk_bnd_keys = automol.reac.breaking_bond_keys(grxn)
-
-    print('keys test:\n')
-    print(automol.geom.string(ref_geo))
-    print()
-    print(automol.geom.string(cnf_geo))
-    print()
-    print(frm_bnd_keys)
-    print(brk_bnd_keys)
 
     cnf_dist_lst = []
     ref_dist_lst = []
@@ -860,7 +844,7 @@ def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
             if bnd_key in frm_bnd_keys:
                 # Check if radical atom is closer to some atom
                 # other than the bonding atom
-                cls = geomprep.is_atom_closest_to_bond_atom(
+                cls = automol.zmat.is_atom_closest_to_bond_atom(
                     zma, bnd_key2, cnf_dist)
                 if not cls:
                     ioprinter.diverged_ts('distance', ref_dist, cnf_dist)
@@ -950,7 +934,7 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     # Generate the torsions
     # geo, gdummy_key_dct = automol.convert.zmat.geometry(zma)
     # zrxn = automol.reac.insert_dummy_atoms(rxn, gdummy_key_dct)
-    rotors = automol.rotor.from_zma(zma)  ## Add a graph for the TS zma
+    rotors = automol.rotor.from_zmatrix(zma)  ## Add a graph for the TS zma
     # geo, gdummy_key_dct = automol.convert.zmat.geometry(zma)
     # lin_keys = sorted(gdummy_key_dct.keys())
     # gbnd_keys = automol.graph.rotational_bond_keys(gtsg, lin_keys=lin_keys)

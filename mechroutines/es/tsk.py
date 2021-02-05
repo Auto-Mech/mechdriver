@@ -105,7 +105,6 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     # Get the theory info
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
     ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-    print('dct\n', method_dct)
     thy_info = tinfo.from_dct(method_dct)
     ini_thy_info = tinfo.from_dct(ini_method_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
@@ -246,8 +245,6 @@ def conformer_tsk(job, spc_dct, spc_name,
         if ini_zma_save_fs[-1].file.torsions.exists([0]):
             tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
             torsions = automol.rotor.from_data(zma, tors_dct)
-            print('tors_path', ini_zma_save_fs[-1].file.torsions.path([0]))
-            print('tors_lst', tors_dct)
             tors_names = automol.rotor.names(torsions, flat=True)
         else:
             tors_names = ()
@@ -310,7 +307,6 @@ def conformer_tsk(job, spc_dct, spc_name,
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 
         cnf_range = es_keyword_dct['cnf_range']
-        # print('range', cnf_range)
 
         ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
 

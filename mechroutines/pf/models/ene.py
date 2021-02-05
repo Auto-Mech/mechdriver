@@ -103,10 +103,6 @@ def zero_point_energy(spc_dct_i,
 
     # spc_dct_i = spc_dct[spc_name]
     [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
-    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(
-        cnf_fs, min_cnf_locs, saddle)
-    # frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(spc_dct_i, saddle)
-    rxn_class = util.set_rxn_class(spc_dct_i, saddle)
 
     # Calculate ZPVE
     is_atom = False
@@ -117,9 +113,7 @@ def zero_point_energy(spc_dct_i,
         zpe = 0.0
     else:
         rotors = tors.build_rotors(
-            spc_dct_i, pf_filesystems, pf_models, pf_levels,
-            rxn_class=rxn_class,
-            frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+            spc_dct_i, pf_filesystems, pf_models, pf_levels)
 
         if typ.nonrigid_tors(pf_models, rotors):
             run_path = fmod.make_run_path(pf_filesystems, 'tors')

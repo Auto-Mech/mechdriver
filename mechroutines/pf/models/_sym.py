@@ -8,7 +8,7 @@ from mechlib.amech_io import printer as ioprinter
 
 
 def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
-                    frm_bnd_keys=(), brk_bnd_keys=()):
+                    grxn=None):
     """ Calculate the symmetry factor for a species
         Note: ignoring for saddle pts the possibility that two configurations
         differ only in their torsional values.
@@ -19,6 +19,12 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
         sym_factor = spc_dct_i['sym_factor']
         ioprinter.info_message(' - Reading symmetry number input by user:', sym_factor)
     else:
+
+        zrxn = spc_dct_i.get('zrxn', None)
+        if zrxn is not None:
+            grxn = automol.reac.relabel_for_geometry(zrxn)
+        else:
+            grxn = None
 
         # if automol.geom.is_atom(geo):
         sym_model = pf_models['sym']
@@ -44,10 +50,7 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
                 ioprinter.info_message(
                     ' - Determining internal sym number ',
                     'using sampling routine.')
-                int_sym = int_sym_num_from_sampling(
-                    sym_geos,
-                    frm_bnd_keys=frm_bnd_keys,
-                    brk_bnd_keys=brk_bnd_keys)
+                int_sym = int_sym_num_from_sampling(sym_geos, grxn=grxn)
             else:
                 ioprinter.info_message(' - No torsions, internal sym is 1.0')
                 int_sym = 1.0
@@ -69,7 +72,7 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
     return sym_factor
 
 
-def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
+def int_sym_num_from_sampling(sym_geos, grxn=None):
     """ Determine the symmetry number for a given conformer geometry.
     (1) Explore the saved conformers to find the list of similar conformers -
         i.e. those with a coulomb matrix and energy that are equivalent
@@ -80,8 +83,11 @@ def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
         the fully expanded conformer list.
     """
 
-    # Set saddle
-    saddle = bool(frm_bnd_keys or brk_bnd_keys)
+    if grxn is None:
+        frm_bnd_keys = automol.reac.forming_bond_keys(grxn)
+        brk_bnd_keys = automol.reac.breaking_bond_keys(grxn)
+    else:
+        frm_bnd_keys, brk_bnd_keys = frozenset({}), frozenset({})
 
     int_sym_num = 0
     # modify geometries to remove H's from rotatable XHn end group
@@ -97,7 +103,7 @@ def int_sym_num_from_sampling(sym_geos, frm_bnd_keys=(), brk_bnd_keys=()):
         for mod_geo_sym_j in mod_sym_geos:
             if automol.geom.almost_equal_dist_matrix(
                     mod_geo_sym_i, mod_geo_sym_j, thresh=3e-1):
-                if saddle:
+                if grxn is not None:
                     new_geom = False
                     break
                 tors_same = structure.geom.are_torsions_same(
@@ -118,9 +124,8 @@ def tors_reduced_sym_factor(sym_factor, rotors):
     """ Decrease the overall molecular symmetry factor by the
         torsional mode symmetry numbers
     """
-    for rotor in rotors:
-        for tors_name, tors_dct in rotor.items():
-            if 'D' in tors_name:
-                sym_factor /= tors_dct['sym_num']
+    tors_symms = automol.rotors.symmetries(rotors, flat=True)
+    for symm in tors_symms:
+        sym_factor /= tors_dct['sym_num']
 
     return sym_factor

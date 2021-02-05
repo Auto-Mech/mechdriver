@@ -9,8 +9,10 @@
 import automol
 import autofile
 import elstruct
+from mechanalyzer.inf import thy as tinfo
+# from mechanalyzer.inf import rxn as rinfo
+from mechanalyzer.inf import spc as sinfo
 from mechlib import filesys
-# from automol.zmat._unimol_ts import beta_scission
 
 
 # Write the instability files
@@ -162,10 +164,8 @@ def check_unstable_species(tsk, spc_dct, spc_name,
               'is unstable...')
 
         # Build filesystem
-        spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
-        _ = filesys.inf.modify_orb_restrict(spc_info, thy_info)
-        mod_thy_info = filesys.inf.modify_orb_restrict(
-            spc_info, thy_info)
+        spc_info = sinfo.from_dct(spc_dct[spc_name])
+        mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
         thy_save_fs, _ = filesys.build.spc_thy_fs_from_root(
             save_prefix, spc_info, mod_thy_info)
 
@@ -213,7 +213,8 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
         # Get theory
         spc_model = rxn['model'][1]
         geo_model = spc_model_dct[spc_model]['es']['geo']
-        ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
+        print('geo_model', geo_model)
+        ini_thy_info = tinfo.from_dct(geo_model)
 
         new_rxn['dummy'] = []
 
@@ -274,8 +275,8 @@ def split_species(spc_dct, spc_name, thy_info, save_prefix,
     """
 
     # Get filesys
-    spc_info = filesys.inf.get_spc_info(spc_dct[spc_name])
-    mod_thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+    spc_info = sinfo.from_dct(spc_dct[spc_name])
+    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     _, thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_thy_info)
 

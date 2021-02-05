@@ -322,7 +322,6 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
                       zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
     """
-    print('savefs keys', list(savefs_dct.keys()))
     cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
     ts_save_fs, ts_save_path = savefs_dct['runlvl_ts_fs']
 
@@ -380,9 +379,7 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
 
     # Save the torsions
-    # geo, gdummy_key_dct = automol.convert.zmat.geometry(zma)
-    # zrxn = automol.reac.insert_dummy_atoms(rxn, gdummy_key_dct)
-    rotors = automol.rotor.from_zma(zma)  # Add a graph for the TS zma
+    rotors = automol.rotor.from_zmatrix(zma)
     zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
 
     # Save the energy in a single-point filesystem
