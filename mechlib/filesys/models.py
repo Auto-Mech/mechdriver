@@ -5,6 +5,7 @@
 import autofile
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
+from mechanalyzer.inf import rxn as rinfo
 from mechlib.filesys import mincnf
 
 
@@ -35,12 +36,17 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
     """
 
     # Set the spc_info
-    spc_info = sinfo.from_dct(spc_dct_i)
+
     # Set some path stuff
     if saddle:
-        save_path = spc_dct_i['rxn_fs'][3]
-        run_path = spc_dct_i['rxn_fs'][2]
+        rxn_info = spc_dct_i['rxn_info']
+        spc_info = rinfo.ts_info(rxn_info)
+        rxn_save_fs = autofile.fs.reaction(save_prefix)
+        rxn_run_fs = autofile.fs.reaction(run_prefix)
+        save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
+        run_path = rxn_run_fs[-1].path(rinfo.sort(rxn_info))
     else:
+        spc_info = sinfo.from_dct(spc_dct_i)
         spc_save_fs = autofile.fs.species(save_prefix)
         spc_save_fs[-1].create(spc_info)
         save_path = spc_save_fs[-1].path(spc_info)

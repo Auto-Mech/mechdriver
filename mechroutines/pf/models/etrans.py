@@ -5,7 +5,6 @@
 import automol
 import mess_io
 from mechanalyzer.inf import spc as sinfo
-from mechroutines.pf.models import _eff as eff
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -30,7 +29,7 @@ def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
 
     print(sig1, eps1, sig2, eps2)
     ioprinter.info_message(
-        '- Determining the energy-down transfer model parameters...', 
+        '- Determining the energy-down transfer model parameters...',
         newline=1)
     exp_factor, exp_power, exp_cutoff = edown_params(
         well_info, bath_info, etrans_dct,
@@ -94,7 +93,8 @@ def lj_params(well_info, bath_info, etrans_dct):
             ioprinter.info_message('- Estimating the parameters...')
             well_ich = well_info[0]
             well_geo = automol.inchi.geometry(well_ich)
-            params = eff.estimate_viable(well_ich, well_geo, bath_info)
+            params = estimate_viable(
+                well_ich, well_geo, bath_info)
             if params is not None:
                 bath_model, tgt_model = params
                 ioprinter.info_message(
@@ -108,7 +108,8 @@ def lj_params(well_info, bath_info, etrans_dct):
                 n_heavy = automol.geom.atom_count(well_geo, 'H', match=False)
                 ioprinter.info_message(
                     '      N_heavy: ', n_heavy)
-                sig, eps = eff.lj_sig_eps(n_heavy, bath_model, tgt_model)
+                sig, eps = automol.etrans.eff.lennard_jones_params(
+                    n_heavy, bath_model, tgt_model)
                 sig1, eps1, sig2, eps2 = sig, eps, sig, eps
 
         elif ljpar == 'read':
@@ -148,27 +149,26 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
             ioprinter.info_message('  - Estimating the parameters...')
             well_ich = well_info[0]
             well_geo = automol.inchi.geometry(well_ich)
-            params = eff.estimate_viable(well_ich, well_geo, bath_info)
+            params = estimate_viable(
+                well_ich, well_geo, bath_info)
             if params is not None:
                 bath_model, tgt_model = params
                 ioprinter.info_message(
                     '    - Series to use for estimation for estimation...')
                 ioprinter.info_message(
-                    '      Bath: {}, Target: {} '.format(bath_model, tgt_model))
+                    '      Bath: {}, Target: {} '.format(bath_model, tgt_model)
+                )
 
                 ioprinter.info_message(
                     '    - Calculating the LJ collisional frequencies...')
-                sig, eps, mass1, mass2 = ljpar
-                zlj_dct = eff.lj_collision_frequency(
-                    sig, eps, mass1, mass2,
-                    temps=(300., 1000., 2000.))
                 ioprinter.info_message(
                     '    - Effective atom numbers for estimation...')
-                n_eff = eff.calc_n_eff(well_geo)
+                sig, eps, mass1, mass2 = ljpar
+                n_eff = automol.etrans.eff.effective_rotor_count(well_geo)
                 ioprinter.info_message(
                     '      N_eff: ', n_eff)
-                efactor, epower = eff.alpha(n_eff, zlj_dct,
-                                            bath_model, tgt_model)
+                efactor, epower = automol.etrans.eff.alpha(
+                    n_eff, eps, sig, mass1, mass2, bath_model, tgt_model)
                 ecutoff = 15.0
 
         elif edown == 'read':
@@ -288,3 +288,47 @@ def set_bath(spc_dct, etrans_dct):
             '  - No bath provided, using Argon as bath')
 
     return bath_info
+
+
+# CHECKERS
+BAD_ICHS = (
+    'InChI=1S/H2/h1H'
+)
+
+def estimate_viable(well_ich, well_geo, bath_info):
+    """ Assess whether we can estimate using the formula
+    """
+
+    # Initialize the models
+    bath_model = bath_info[0]
+    tgt_model = None
+
+    # Build the graph
+    well_gra = automol.geom.graph(well_geo)
+
+    # Identify the the target model
+    if well_ich not in BAD_ICHS:
+        if automol.graph.radical_species(well_gra):
+            tgt_model = '1-alkyl'
+        elif automol.graph.hydrocarbon_species(well_gra):
+            tgt_model = 'n-alkane'
+        else:
+            fgrp_dct = automol.graph.functional_group_dct(well_gra)
+            if fgrp_dct[automol.graph.Fgroup.HYDROPEROXY]:
+                tgt_model = 'n-hydroperoxide'
+            elif fgrp_dct[automol.graph.Fgroup.EPOXIDE]:
+                tgt_model = 'epoxide'
+            elif fgrp_dct[automol.graph.Fgroup.ETHER]:
+                tgt_model = 'ether'
+            elif fgrp_dct[automol.graph.Fgroup.ALCOHOL]:
+                tgt_model = 'n-alcohol'
+
+        # For now, set model to alkanes if nothing found and set up return obj
+        if tgt_model is None:
+            tgt_model = 'n-alkane'
+
+        ret = (bath_model, tgt_model)
+    else:
+        ret = None
+
+    return ret

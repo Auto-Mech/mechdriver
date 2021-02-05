@@ -9,6 +9,7 @@
 import automol
 import autofile
 from phydat import phycon
+from mechanalyzer.inf import spc as sinfo
 from mechroutines.pf.models import ene
 from mechroutines.pf.models import typ
 from mechroutines.pf.models import etrans
@@ -304,6 +305,13 @@ def mol_data(spc_name, spc_dct,
             cnf_path = cnf_fs[-1].path(min_cnf_locs)
             zma_fs = autofile.fs.zmatrix(cnf_path)
             zma = zma_fs[-1].file.zmatrix.read((0,))
+            zrxn = zma_fs[-1].file.reaction.read((0,))
+
+            frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
+            brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
+
+        else:
+            brk_bnd_keys, frm_bnd_keys = (), ()
 
         # Determine info about the basis species used in thermochem calcs
         ts_geom = (geom, zma, brk_bnd_keys, frm_bnd_keys)
@@ -321,7 +329,7 @@ def mol_data(spc_name, spc_dct,
     if not saddle:
         ioprinter.info_message(
             'Determining energy transfer parameters...', newline=1)
-        well_info = filesys.inf.get_spc_info(spc_dct_i)
+        well_info = sinfo.from_dct(spc_dct_i)
         # ioprinter.debug_message('well_inf', well_info)
         # bath_info = ['InChI=1S/N2/c1-2', 0, 1]  # how to do...
         bath_info = ['InChI=1S/Ar', 0, 1]  # how to do...

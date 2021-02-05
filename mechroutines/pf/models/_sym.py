@@ -124,7 +124,7 @@ def tors_reduced_sym_factor(sym_factor, rotors):
     """ Decrease the overall molecular symmetry factor by the
         torsional mode symmetry numbers
     """
-    tors_symms = automol.rotors.symmetries(rotors, flat=True)
+    tors_symms = automol.rotor.symmetries(rotors, flat=True)
     for symm in tors_symms:
         sym_factor /= tors_dct['sym_num']
 

@@ -17,12 +17,12 @@ from mechlib import filesys
 CLA_INP = 'inp/class.csv'
 
 
-def build_reaction(rxn_info, thy_info, zma_locs, save_prefix):
+def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
     """
     """
 
     # Try to build the Z-Matrix reaction object or identify from scratch
-    zrxn, zma = _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix)
+    zrxn, zma = _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix)
     if zrxn is None:
         print('    Identifying class')
         zrxn, zma = _id_reaction(rxn_info)
@@ -34,25 +34,25 @@ def build_reaction(rxn_info, thy_info, zma_locs, save_prefix):
     return zrxn, zma
 
 
-def _read_from_filesys(rxn_info, thy_info, zma_locs, save_prefix):
+def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
     """ Check if reaction exists in the filesystem and has been identified
     """
 
 
     sort_rxn_info = rinfo.sort(rxn_info, scheme='autofile')
     ts_info = rinfo.ts_info(rxn_info)
-    mod_thy_info = tinfo.modify_orb_label(thy_info, ts_info)
+    mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, ts_info)
 
     rxn_fs = autofile.fs.reaction(save_prefix)
     if rxn_fs[-1].exists(sort_rxn_info):
         manager_prefix = [
             ('REACTION', sort_rxn_info),
-            ('THEORY', mod_thy_info[1:4]),
+            ('THEORY', mod_ini_thy_info[1:4]),
             ('TRANSITION STATE', ()),
         ]
         cnf_save_fs = autofile.fs.manager(save_prefix, manager_prefix, 'CONFORMER')
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            cnf_save_fs, mod_thy_info)
+            cnf_save_fs, mod_ini_thy_info)
         _, ini_min_cnf_path = ini_loc_info
         zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
 

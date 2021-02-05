@@ -113,6 +113,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
     ioprinter.info_message(
         'Processor {} will prepare species: {}'.format(
             os.getpid(), ', '.join(spc_names)))
+    print('basis spc_names', spc_names)
     spc_ichs = [spc_dct[spc]['inchi'] for spc in spc_names]
     dct_ichs = [spc_dct[spc]['inchi'] for spc in spc_dct.keys()
                 if spc != 'global' and 'ts' not in spc]

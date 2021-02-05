@@ -34,7 +34,7 @@ def set_pf_info(model_dct, thy_dct, chn_model, ref_model):
 def set_ts_cls_info(spc_dct, model_dct, tsname, chn_model):
     """ figure out various information needed to establish reaction class
     """
-    ts_class = spc_dct[tsname]['class']
+    ts_class = spc_dct[tsname]['zrxn'].class_
     ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
     ts_nobarrier = model_dct[chn_model]['pf']['ts_barrierless']
     tunnel_model = model_dct[chn_model]['pf']['tunnel']

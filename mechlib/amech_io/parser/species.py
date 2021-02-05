@@ -351,7 +351,7 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
     # Obtain the reaction object for the reaction
     zma_locs = (0,)
     zrxn, zma = rxnid.build_reaction(
-        rxn_info, thy_info, zma_locs, save_prefix)
+        rxn_info, ini_thy_info, zma_locs, save_prefix)
 
     if zrxn is not None:
         ts_dct = {
@@ -359,7 +359,11 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
             'zma': zma,
             'reacs': reacs,
             'prods': prods,
-            'rxn_info': rxn_info
+            'rxn_info': rxn_info,
+            'inchi': '',
+            'charge': rinfo.value(rxn_info, 'charge'),
+            'mult': rinfo.value(rxn_info, 'tsmult'),
+            'elec_levels': [[0.0, rinfo.value(rxn_info, 'tsmult')]]
         }
     else:
         ts_dct = {}
