@@ -281,7 +281,7 @@ def geometry_dictionary(job_path):
 
 
 def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
-                  run_inp_dct, spc_dct, cla_dct,
+                  run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
                   direction='forw'):
     """ build a ts queue
     """
@@ -292,17 +292,17 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
     # Build the ts_dct
     ts_dct = {}
     for tsk_lst in es_tsk_lst:
-        [obj, _, es_keyword_dct] = tsk_lst
-        if 'ts' in obj:
-            method_dct = thy_dct.get(es_keyword_dct['runlvl'])
-            ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-            thy_info = tinfo.from_dct(method_dct)
-            ini_thy_info = tinfo.from_dct(ini_method_dct)
-            ts_dct = build_sadpt_dct(
-                pes_idx, rxn_lst, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, cla_dct,
-                direction=direction)
-            break
+       [obj, _, es_keyword_dct] = tsk_lst
+       if 'ts' in obj:
+           method_dct = thy_dct.get(es_keyword_dct['runlvl'])
+           ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
+           thy_info = tinfo.from_dct(method_dct)
+           ini_thy_info = tinfo.from_dct(ini_method_dct)
+           ts_dct = build_sadpt_dct(
+               pes_idx, rxn_lst, thy_info, ini_thy_info,
+               run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+               direction=direction)
+           break
 
     # Build the queue
     if ts_dct:
@@ -323,8 +323,9 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     for rxn in rxn_lst:
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         ts_dct[tsname] = build_sing_chn_sadpt_dct(
-            tsname, rxn, thy_info, ini_thy_info, run_prefix, save_prefix,
-            run_inp_dct, spc_dct, cla_dct, direction=direction)
+            tsname, rxn, thy_info, ini_thy_info,
+            run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+            direction=direction)
 
     return ts_dct
 

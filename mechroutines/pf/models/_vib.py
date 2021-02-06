@@ -21,14 +21,14 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
     """ process to get freq
     """
 
+    tors_strs = ['']
+
     rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, chn_pf_models, pf_levels)
+    print('rotors check', rotors)
 
     if typ.nonrigid_tors(chn_pf_models, rotors):
-        run_path = fmod.make_run_path(pf_filesystems, 'tors')
-        tors_strs = tors.make_hr_strings(
-            rotors, run_path, chn_pf_models['tors'],
-        )
+        tors_strs = tors.make_hr_strings(rotors)
         [_, hr_str, _, prot_str, _] = tors_strs
 
         freqs, imag, tors_zpe, pot_scalef = tors_projected_freqs_zpe(
@@ -36,10 +36,9 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
 
         # Make final hindered rotor strings and get corrected tors zpe
         if typ.scale_1d(chn_pf_models):
-            tors_strs = tors.make_hr_strings(
-                rotors, run_path, chn_pf_models['tors'],
-                scale_factor=pot_scalef)
-            [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
+            rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
+            tors_strs = tors.make_hr_strings(rotors)
+            [_, hr_str, _, prot_str, _] = tors_strs
             _, _, tors_zpe, _ = tors_projected_freqs_zpe(
                 pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
             # Calculate current zpe assuming no freq scaling: tors+projfreq

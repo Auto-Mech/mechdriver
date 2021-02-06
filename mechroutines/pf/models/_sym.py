@@ -83,7 +83,7 @@ def int_sym_num_from_sampling(sym_geos, grxn=None):
         the fully expanded conformer list.
     """
 
-    if grxn is None:
+    if grxn is not None:
         frm_bnd_keys = automol.reac.forming_bond_keys(grxn)
         brk_bnd_keys = automol.reac.breaking_bond_keys(grxn)
     else:

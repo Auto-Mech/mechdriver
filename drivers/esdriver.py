@@ -53,6 +53,7 @@ def run(pes_idx,
                 ts_dct, ts_queue = parser.species.get_sadpt_dct(
                     pes_idx, es_tsk_lst, rxn_lst,
                     thy_dct, run_inp_dct, spc_dct, cla_dct,
+                    run_prefix, save_prefix,
                     direction=rxndirn)
                 spc_dct = parser.species.combine_sadpt_spc_dcts(
                     ts_dct, spc_dct)

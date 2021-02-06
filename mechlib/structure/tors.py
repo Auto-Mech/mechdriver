@@ -19,14 +19,14 @@ from mechlib.submission import DEFAULT_SCRIPT_DCT
 def read_hr_pot(names, grid_vals, cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct,
-                scan_increment=0.523599,
                 read_geom=False, read_grad=False,
                 read_hess=False, read_zma=False):
     """ Get the potential for a hindered rotor
     """
 
     # Build initial lists for storing potential energies and Hessians
-    grid_points = autmol.pot.points(grid_vals)
+    print('gridval test', grid_vals)
+    grid_points = automol.pot.points(grid_vals)
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
