@@ -42,7 +42,8 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
             tors_names = spc_dct_i.get('tors_names', None)
             rotors = automol.rotor.from_data(
                 zma, tors_dct,
-                tors_names=tors_names, multi=bool('1d' in tors_model))
+                tors_names=tors_names,
+                multi=bool('1d' in tors_model))
         else:
             rotors = ()
 
@@ -84,6 +85,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 constraint_dct)
             pot = _hrpot_spline_fitter(
                 pot, min_thresh=-0.0001, max_thresh=50.0)
+            print('pot test', pot)
             # Add potential to potential
             torsion.pot = pot
 
@@ -145,9 +147,17 @@ def make_hr_strings(rotors):
     mdhr_dat = ''
 
     # Convert the rotor objects indexing to be in geoms
-    print('inhr rot1', rotors)
+    print('inhr rot1')
+    for rotor in rotors:
+        for tors in rotor:
+            print(tors.axis)
+            print(tors.pot)
     geo, rotors = automol.rotor.relabel_for_geometry(rotors)
-    print('inhr rot2', rotors)
+    print('inhr rot2')
+    for rotor in rotors:
+        for tors in rotor:
+            print(tors.axis)
+            print(tors.pot)
     # numrotors = len(rotors)
 
     for ridx, rotor in enumerate(rotors):
@@ -187,7 +197,7 @@ def _tors_strs(torsion, geo):
 
     mess_hr_str = mess_io.writer.rotor_hindered(
         group=torsion.groups[0],
-        axis=list(torsion.axis)[0],
+        axis=torsion.axis,
         symmetry=torsion.symmetry,
         potential=torsion.pot,
         hmin=None,
@@ -199,7 +209,7 @@ def _tors_strs(torsion, geo):
 
     mess_ir_str = mess_io.writer.mol_data.rotor_internal(
         group=torsion.groups[0],
-        axis=list(torsion.axis)[0],
+        axis=torsion.axis,
         symmetry=torsion.symmetry,
         grid_size=100,
         mass_exp_size=5,
@@ -210,11 +220,11 @@ def _tors_strs(torsion, geo):
         rotor_id=torsion.name)
 
     mess_flux_str = mess_io.writer.fluxional_mode(
-        torsion.atom_idxs,
+        torsion.indices,
         span=torsion.span)
 
     projrot_str = projrot_io.writer.rotors(
-        axis=list(torsion.axis)[0],
+        axis=torsion.axis,
         group=torsion.groups[0])
 
     return mess_hr_str, mess_ir_str, mess_flux_str, projrot_str

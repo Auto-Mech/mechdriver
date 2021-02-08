@@ -126,6 +126,6 @@ def tors_reduced_sym_factor(sym_factor, rotors):
     """
     tors_symms = automol.rotor.symmetries(rotors, flat=True)
     for symm in tors_symms:
-        sym_factor /= tors_dct['sym_num']
+        sym_factor /= symm
 
     return sym_factor

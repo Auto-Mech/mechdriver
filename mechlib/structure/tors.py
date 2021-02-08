@@ -27,6 +27,9 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
     # Build initial lists for storing potential energies and Hessians
     print('gridval test', grid_vals)
     grid_points = automol.pot.points(grid_vals)
+    grid_coords = automol.pot.coords(grid_vals)
+    print('gridval test', grid_coords)
+    print('gridval test', grid_points)
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
@@ -38,12 +41,13 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
         scn_fs = autofile.fs.cscan(zma_path)
 
     # Read the energies and Hessians from the filesystem
-    for point, vals in zip(grid_points, grid_vals):
+    for point, vals in zip(grid_points, grid_coords):
 
         locs = [names, vals]
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
 
+        print('locs', locs)
         ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL

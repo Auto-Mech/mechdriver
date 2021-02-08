@@ -26,6 +26,9 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
     rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, chn_pf_models, pf_levels)
     print('rotors check', rotors)
+    for rotor in rotors:
+        for tor in rotor:
+            print(tor.pot)
 
     if typ.nonrigid_tors(chn_pf_models, rotors):
         tors_strs = tors.make_hr_strings(rotors)
