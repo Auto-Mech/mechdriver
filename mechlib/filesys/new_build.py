@@ -24,7 +24,8 @@ def root_locs(spc_dct_i, saddle=False):
 def build_fs(run_prefix, save_prefix, end,
              rxn_locs=None, spc_locs=None,
              thy_locs=None, ts_locs=None,
-             cnf_locs=None, zma_locs=None,
+             cnf_locs=None, tau_locs=None,
+             zma_locs=None,
              scn_locs=None, cscn_locs=None):
     """ Build the filesystems
     """
@@ -36,7 +37,8 @@ def build_fs(run_prefix, save_prefix, end,
                 prefix, end,
                 rxn_locs=rxn_locs, spc_locs=spc_locs,
                 thy_locs=thy_locs, ts_locs=ts_locs,
-                cnf_locs=cnf_locs, zma_locs=zma_locs,
+                cnf_locs=cnf_locs, tau_locs=tau_locs,
+                zma_locs=zma_locs,
                 scn_locs=scn_locs, cscn_locs=cscn_locs)
         )
 
@@ -46,7 +48,8 @@ def build_fs(run_prefix, save_prefix, end,
 def _build_fs(prefix, end,
               rxn_locs=None, spc_locs=None,
               thy_locs=None, ts_locs=None,
-              cnf_locs=None, zma_locs=None,
+              cnf_locs=None, tau_locs=None,
+              zma_locs=None,
               scn_locs=None, cscn_locs=None):
     """ Build the filesystems
     """
@@ -60,6 +63,8 @@ def _build_fs(prefix, end,
         prefix_locs.append(('THEORY', thy_locs))
     if ts_locs is not None:
         prefix_locs.append(('TRANSITION STATE', ts_locs))
+    if cnf_locs is not None:
+        prefix_locs.append(('TAU', tau_locs))
     if cnf_locs is not None:
         prefix_locs.append(('CONFORMER', cnf_locs))
     if zma_locs is not None:

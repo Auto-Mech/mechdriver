@@ -19,12 +19,9 @@ from mechlib.submission import qchem_params
 
 
 # Initial conformer
-def initial_conformer(spc_dct_i, spc_info, method_dct,
-                      ini_cnf_save_fs,
-                      cnf_run_fs, cnf_save_fs,
-                      instab_save_fs,
-                      mod_ini_thy_info,
-                      overwrite):
+def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
+                      ini_cnf_save_fs, cnf_run_fs, cnf_save_fs,
+                      instab_save_fs, es_keyword_dct):
     """ determine what to use as the reference geometry for all future runs
     If ini_thy_info refers to geometry dictionary then use that,
     otherwise values are from a hierarchy of:
@@ -33,16 +30,18 @@ def initial_conformer(spc_dct_i, spc_info, method_dct,
     an imaginary frequency and then a conformer file system is set up.
     """
 
+    ini_thy_info = tinfo.from_dct(ini_method_dct)
     thy_info = tinfo.from_dct(method_dct)
     mod_thy_info = tinfo.modify_orb_label(
         thy_info, spc_info)
+    mod_ini_thy_info = tinfo.modify_orb_label(
+        ini_thy_info, spc_info)
     [kickoff_size, kickoff_backward] = spc_dct_i['kickoff']
 
-    # how to do this check before run, it is different (just get
-    # chk = (thy_save_fs[-1].file.geometry.exists(mod_thy_info[1:4]),
-    #          'geometry')
-    exists = cnf_save_fs[-1].existing()
-    if not exists:
+    cnf_locs, cnf_path = filesys.mincnf.min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
+    overwrite = es_keyword_dct['overwrite']
+    if not cnf_locs:
         ioprinter.info_message(
             'No energy found in save filesys. Running energy...')
         _run = True
@@ -70,11 +69,19 @@ def initial_conformer(spc_dct_i, spc_info, method_dct,
             # Determine if there is an instability, if so return prods
             instab_zmas = automol.reac.instability_product_zmas(zma_init)
             if not instab_zmas:
+
+                # Build a cid and a run fs
+                cid = [autofile.schema.generate_new_conformer_id()]
+                cnf_run_fs.create()
+                run_fs = autofile.fs.run(cnf_run_fs[-1].path(cid))
+
                 if not automol.geom.is_atom(geo_init):
                     geo_found = _optimize_molecule(
                         spc_info, zma_init,
                         method_dct,
-                        cnf_run_fs, cnf_save_fs,
+                        instab_save_fs,
+                        cnf_save_fs, cid,
+                        run_fs,
                         overwrite,
                         kickoff_size=kickoff_size,
                         kickoff_backward=kickoff_backward)
@@ -82,7 +89,8 @@ def initial_conformer(spc_dct_i, spc_info, method_dct,
                     geo_found = _optimize_atom(
                         spc_info, zma_init,
                         method_dct,
-                        cnf_run_fs, cnf_save_fs,
+                        cnf_save_fs, cid,
+                        run_fs,
                         overwrite)
             else:
                 instab.write_instab2(
@@ -98,6 +106,7 @@ def initial_conformer(spc_dct_i, spc_info, method_dct,
             ioprinter.warning_message(
                 'Unable to obtain an initial guess geometry')
     else:
+        ioprinter.existing_path('Initial geometry', cnf_path)
         geo_found = True
 
     return geo_found
@@ -150,7 +159,8 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
 
 def _optimize_atom(spc_info, zma_init,
                    method_dct,
-                   cnf_save_fs,
+                   cnf_save_fs, cnf_locs,
+                   run_fs,
                    overwrite):
     """ Deal with an atom separately
     """
@@ -160,27 +170,32 @@ def _optimize_atom(spc_info, zma_init,
     script_str, kwargs = qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
 
-    geo, zma, ret = _init_geom_opt(zma_init, spc_info, mod_thy_info,
-                                   run_fs, thy_run_fs,
-                                   script_str, overwrite, **kwargs)
+    # Call the electronic structure optimizer
+    success, ret = es_runner.execute_job(
+        job=elstruct.Job.OPTIMIZATION,
+        script_str=script_str,
+        run_fs=run_fs,
+        geo=zma_init,
+        spc_info=spc_info,
+        thy_info=mod_thy_info,
+        overwrite=overwrite,
+        **kwargs
+    )
 
-    if geo is not None and zma is not None:
-        locs = [autofile.schema.generate_new_conformer_id()]
+    if success:
+        ioprinter.info_message('Succesful reference geometry optimization')
         _save_unique_conformer(
-            ret, mod_thy_info, cnf_save_fs, locs,
+            ret, mod_thy_info, cnf_save_fs, cnf_locs,
             zrxn=None, zma_locs=(0,))
-        # filesys.save_struct(run_fs, cnf_save_fs, locs, job, mod_thy_info,
-        #                     zma_locs=(0,), in_zma_fs=False)
-        conf_found = True
-    else:
-        conf_found = False
 
-    return conf_found
+    return success
 
 
 def _optimize_molecule(spc_info, zma_init,
                        method_dct,
-                       cnf_run_fs, cnf_save_fs,
+                       instab_save_fs,
+                       cnf_save_fs, cnf_locs,
+                       run_fs,
                        overwrite,
                        kickoff_size=0.1, kickoff_backward=False):
     """ Optimize a proper geometry
@@ -191,17 +206,33 @@ def _optimize_molecule(spc_info, zma_init,
     script_str, kwargs = qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
 
-    # Optimize the initial geometry
-    geo, zma, ret = _init_geom_opt(
-        zma_init, spc_info, mod_thy_info, run_fs, thy_run_fs,
-        script_str, overwrite, **kwargs)
+    # Call the electronic structure optimizer
+    success, ret = es_runner.execute_job(
+        job=elstruct.Job.OPTIMIZATION,
+        script_str=script_str,
+        run_fs=run_fs,
+        geo=zma_init,
+        spc_info=spc_info,
+        thy_info=mod_thy_info,
+        overwrite=overwrite,
+        **kwargs
+    )
+
+    # read the geometry
+    if success:
+        inf_obj, _, out_str = ret
+        geo = elstruct.reader.opt_geometry(inf_obj.prog, out_str)
+        zma = elstruct.reader.opt_zmatrix(inf_obj.prog, out_str)
+        geo_conn = bool(automol.geom.connected(geo))
+    else:
+        geo_conn = False
 
     # If connected, check for imaginary modes and fix them if possible
-    if automol.geom.connected(geo):
+    if geo_conn:
 
         # Remove the imaginary mode
         geo, ret = remove_imag(
-            geo, ret, spc_info, method_dct, thy_run_fs,
+            geo, ret, spc_info, method_dct,
             run_fs, kickoff_size, kickoff_backward, kickoff_mode=0,
             overwrite=overwrite)
 
@@ -210,16 +241,13 @@ def _optimize_molecule(spc_info, zma_init,
 
             conf_found = True
             if automol.geom.connected(geo):
-
                 ioprinter.info_message(
                     'Saving structure as the first conformer...', newline=1)
                 locs = [autofile.schema.generate_new_conformer_id()]
                 _save_unique_conformer(
                     ret, mod_thy_info, cnf_save_fs, locs,
                     zrxn=None, zma_locs=(0,))
-
             else:
-
                 ioprinter.info_message('Saving disconnected species...')
                 _, opt_ret = es_runner.read_job(
                     job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
@@ -230,14 +258,10 @@ def _optimize_molecule(spc_info, zma_init,
                     zma_locs=(0,),
                     save_cnf=True
                 )
-
         else:
-
             ioprinter.warning_message('No geom found...', newline=1)
             conf_found = False
-
     else:
-
         ioprinter.info_message('Saving disconnected species...')
         conf_found = False
         _, opt_ret = es_runner.read_job(
@@ -251,41 +275,6 @@ def _optimize_molecule(spc_info, zma_init,
         )
 
     return conf_found
-
-
-def _init_geom_opt(zma_init, spc_info, mod_thy_info,
-                   run_fs, thy_run_fs,
-                   opt_script_str, overwrite, **opt_kwargs):
-    """ Generate initial geometry via optimization from either reference
-    geometries or from inchi
-    """
-
-    # Set up the filesystem
-    thy_run_fs[-1].create(mod_thy_info[1:4])
-    thy_run_path = thy_run_fs[-1].path(mod_thy_info[1:4])
-
-    # Call the electronic structure optimizer
-    run_fs = autofile.fs.run(thy_run_path)
-    success, ret = es_runner.execute_job(
-        job=elstruct.Job.OPTIMIZATION,
-        script_str=opt_script_str,
-        run_fs=run_fs,
-        geo=zma_init,
-        spc_info=spc_info,
-        thy_info=mod_thy_info,
-        overwrite=overwrite,
-        **opt_kwargs
-    )
-
-    geo, zma = None, None
-    if success:
-        ioprinter.info_message('Succesful reference geometry optimization')
-        inf_obj, _, out_str = ret
-        prog = inf_obj.prog
-        geo = elstruct.reader.opt_geometry(prog, out_str)
-        zma = elstruct.reader.opt_zmatrix(prog, out_str)
-
-    return geo, zma, ret
 
 
 def single_conformer(zma, spc_info, mod_thy_info,
@@ -397,7 +386,7 @@ def conformer_sampling(zma, spc_info, thy_info,
             ioprinter.warning_message('ZMA has high repulsion.', indent=1/2.)
             ioprinter.warning_message(
                 'Generating new sample ZMA', indent=1/2., newline=1)
-            samp_zma, = automol.zmatrix.samples(zma, 1, tors_range_dct)
+            samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
             bad_geom_count += 1
         ioprinter.debug_message('ZMA is fine...', indent=1/2.)
 
@@ -425,7 +414,7 @@ def conformer_sampling(zma, spc_info, thy_info,
                 **kwargs
             )
         else:
-            success, ret = es_runner.exectute_job(
+            success, ret = es_runner.execute_job(
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=run_fs,
@@ -626,7 +615,7 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
 def _is_proper_isomer(cnf_save_fs, zma):
     """ Check if geom is the same isomer as those in the filesys
     """
-    vma = automol.zmatrix.var_(zma)
+    vma = automol.zmat.var_(zma)
     if cnf_save_fs[0].file.vmatrix.exists():
         exist_vma = cnf_save_fs[0].file.vmatrix.read()
         if vma != exist_vma:

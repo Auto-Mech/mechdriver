@@ -4,7 +4,6 @@
 import numpy
 import automol
 import elstruct
-import autofile
 from phydat import phycon
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.es import runner as es_runner
@@ -13,13 +12,13 @@ from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 
-def remove_imag(geo, ini_ret, spc_info, method_dct, thy_run_fs, run_fs,
+def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
                 kickoff_size=0.1, kickoff_backward=False, kickoff_mode=0,
                 overwrite=False):
     """ if there is an imaginary frequency displace geometry along the imaginary
     mode and then reoptimize
     """
-    
+
     thy_info = tinfo.from_dct(method_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     opt_script_str, opt_kwargs = qchem_params(
@@ -31,7 +30,7 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, thy_run_fs, run_fs,
         'The initial geometries will be checked for imaginary frequencies')
 
     imag, norm_coords = _check_imaginary(
-        spc_info, geo, mod_thy_info, thy_run_fs, script_str,
+        spc_info, geo, mod_thy_info, run_fs, script_str,
         overwrite, **kwargs)
 
     # Make five attempts to remove imag mode if found
@@ -44,19 +43,17 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, thy_run_fs, run_fs,
 
         geo, kick_ret = _kickoff_saddle(
             geo, norm_coords, spc_info, mod_thy_info,
-            run_fs, thy_run_fs, opt_script_str,
+            run_fs, opt_script_str,
             kickoff_size, kickoff_backward, kickoff_mode,
             opt_cart=True, **opt_kwargs)
 
         ioprinter.info_message(
             'Removing faulty geometry from filesystem. Rerunning Hessian...')
-        thy_run_path = thy_run_fs[-1].path(mod_thy_info[1:4])
-        run_fs = autofile.fs.run(thy_run_path)
         run_fs[-1].remove([elstruct.Job.HESSIAN])
 
         ioprinter.info_message('Rerunning Hessian...')
         imag, norm_coords = _check_imaginary(
-            spc_info, geo, mod_thy_info, thy_run_fs, script_str,
+            spc_info, geo, mod_thy_info, run_fs, script_str,
             overwrite, **kwargs)
 
         # Update kickoff size
@@ -70,15 +67,10 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, thy_run_fs, run_fs,
     return geo, ret
 
 
-def _check_imaginary(spc_info, geo, mod_thy_info, thy_run_fs, script_str,
+def _check_imaginary(spc_info, geo, mod_thy_info, run_fs, script_str,
                      overwrite=False, **kwargs):
     """ check if species has an imaginary frequency
     """
-
-    # Handle filesystem
-    thy_run_fs[-1].create(mod_thy_info[1:4])
-    thy_run_path = thy_run_fs[-1].path(mod_thy_info[1:4])
-    run_fs = autofile.fs.run(thy_run_path)
 
     # Initialize info
     imag = False
@@ -105,9 +97,10 @@ def _check_imaginary(spc_info, geo, mod_thy_info, thy_run_fs, script_str,
 
         # Calculate vibrational frequencies
         if hess:
+            run_path = run_fs[-1].path([elstruct.Job.HESSIAN])
             imag = False
             _, _, imag_freq, _ = structure.vib.projrot_freqs(
-                [geo], [hess], thy_run_path)
+                [geo], [hess], run_path)
             if imag_freq:
                 imag = True
 
@@ -122,16 +115,11 @@ def _check_imaginary(spc_info, geo, mod_thy_info, thy_run_fs, script_str,
 
 
 def _kickoff_saddle(geo, norm_coords, spc_info, mod_thy_info,
-                    run_fs, thy_run_fs, opt_script_str,
+                    run_fs, opt_script_str,
                     kickoff_size=0.1, kickoff_backward=False, kickoff_mode=0,
                     opt_cart=True, **kwargs):
     """ kickoff from saddle to find connected minima
     """
-
-    # Set the filesys
-    thy_run_fs[-1].create(mod_thy_info[1:4])
-    thy_run_path = thy_run_fs[-1].path(mod_thy_info[1:4])
-    run_fs = autofile.fs.run(thy_run_path)
 
     # Choose the displacement xyzs
     disp_xyzs = norm_coords[kickoff_mode]

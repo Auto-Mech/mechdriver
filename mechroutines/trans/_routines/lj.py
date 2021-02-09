@@ -40,13 +40,9 @@ def onedmin(spc_name,
         lj_info, run_thy_info)
 
     # Build the target conformer filesystem objects
-    _, tgt_thy_run_path = filesys.build.spc_thy_fs_from_root(
-        run_prefix, tgt_info, tgt_mod_thy_info)
-    _, tgt_thy_save_path = filesys.build.spc_thy_fs_from_root(
-        save_prefix, tgt_info, tgt_mod_thy_info)
-
-    tgt_cnf_run_fs = autofile.fs.conformer(tgt_thy_run_path)
-    tgt_cnf_save_fs = autofile.fs.conformer(tgt_thy_save_path)
+    tgt_cnf_run_fs, tgt_cnf_save_fs = build_fs(
+        run_prefix, save_prefix, 'CONFORMER',
+        spc_locs=tgt_info, thy_locs=tgt_mod_thy_info[1:])
 
     tgt_loc_info = filesys.mincnf.min_energy_conformer_locators(
         tgt_cnf_save_fs, tgt_mod_thy_info)
@@ -56,16 +52,15 @@ def onedmin(spc_name,
         tgt_cnf_run_fs, [tgt_min_cnf_locs])[0]
 
     # Build the target energy transfer filesystem objects
-    etrans_run_fs, _ = filesys.build.etrans_fs_from_prefix(
-        tgt_cnf_run_path, bath_info, lj_mod_thy_info)
-    etrans_save_fs, etrans_locs = filesys.build.etrans_fs_from_prefix(
-        tgt_cnf_save_path, bath_info, lj_mod_thy_info)
+    etrans_run_fs = autofile.fs.energy_transfer(tgt_cnf_run_path)
+    etrans_save_fs = autofile.fs.energy_transfer(tgt_cnf_save_path)
+    etrans_locs = bath_info + lj_mod_thy_info[1:4]
 
     # Build the bath conformer filesystem objects
-    _, bath_thy_save_path = filesys.build.spc_thy_fs_from_root(
-        save_prefix, bath_info, bath_mod_thy_info)
-    ioprinter.debug_message('bath path', bath_thy_save_path)
-    bath_cnf_save_fs = autofile.fs.conformer(bath_thy_save_path)
+    # _, bath_thy_save_path = filesys.build.spc_thy_fs_from_root(
+    #     save_prefix, bath_info, bath_mod_thy_info)
+    # ioprinter.debug_message('bath path', bath_thy_save_path)
+    # bath_cnf_save_fs = autofile.fs.conformer(bath_thy_save_path)
 
     # Calculate and save the Lennard-Jones parameters, if needed
     run_needed, nsamp_needed = _need_run(

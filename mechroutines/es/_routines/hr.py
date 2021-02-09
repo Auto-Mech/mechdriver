@@ -6,14 +6,13 @@ import elstruct
 from mechroutines.es.runner import scan
 from mechlib import filesys
 from mechlib.submission import qchem_params
-from mechlib.structure import tors as torsprep
 from mechlib.amech_io import printer as ioprinter
 from mechlib import structure
 
 
 def hindered_rotor_scans(
         zma, spc_info, mod_thy_info, thy_save_fs,
-        zma_run_path, zma_save_path,
+        scn_run_fs, scn_save_fs,
         rotors, tors_model, method_dct,
         overwrite,
         saddle=False,
@@ -55,12 +54,6 @@ def hindered_rotor_scans(
         # Setting the constraints
         constraint_dct = automol.zmat.constraint_dct(
             zma, const_names, tors_names)
-
-        # Setting the filesystem
-        scn_run_fs = filesys.build.scn_fs_from_cnf(
-            zma_run_path, constraint_dct=constraint_dct)
-        scn_save_fs = filesys.build.scn_fs_from_cnf(
-            zma_save_path, constraint_dct=constraint_dct)
 
         scan.execute_scan(
             zma=zma,
@@ -107,3 +100,24 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
                 print(automol.zmat.string(zma))
 
     return new_min_zma
+
+
+# Read and print the potential
+# sp_fs = autofile.fs.single_point(ini_cnf_save_path)
+# ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
+# ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
+# tors_pots, tors_zmas = {}, {}
+# for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
+#     constraint_dct = structure.tors.build_constraint_dct(
+#         zma, const_names, tors_names)
+#     pot, _, _, _, zmas, _ = structure.tors.read_hr_pot(
+#         tors_names, tors_grids,
+#         ini_cnf_save_path,
+#         mod_ini_thy_info, ref_ene,
+#         constraint_dct,
+#         read_zma=True)
+#     tors_pots[tors_names] = pot
+#     tors_zmas[tors_names] = zmas
+
+# # Print potential
+# structure.tors.print_hr_pot(tors_pots)

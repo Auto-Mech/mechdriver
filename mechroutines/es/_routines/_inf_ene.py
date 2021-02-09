@@ -69,8 +69,7 @@ def radrad_inf_sep_ene(hs_info, ref_zma,
                       script_str, overwrite, highspin=True, **cas_kwargs)
 
         # Read the energty from the filesystem
-        hs_save_fs, _ = filesys.build.high_spin_from_prefix(
-            geo_save_path, thy_info)
+        hs_save_fs = autofile.fs.high_spin(geo_save_path)
         if not hs_save_fs[-1].file.energy.exists(thy_info[1:4]):
             ioprinter.error_message(
                 'High-spin energy job failed: ',
@@ -118,7 +117,7 @@ def reac_sep_ene(rct_info, rcts_cnf_fs, thy_info,
 
         # Build filesys
         ioprinter.debug_message('locs test', mlocs)
-        zma_fs, _ = filesys.build.zma_fs_from_prefix(mpath, zma_idxs=[0])
+        zma_fs = autofile.fs.zmatrix(mpath)
 
         # Read the geometry and set paths
         zma = zma_fs[-1].file.zmatrix.read([0])
@@ -127,8 +126,7 @@ def reac_sep_ene(rct_info, rcts_cnf_fs, thy_info,
         geo_save_path = save_fs[-1].path(mlocs)
 
         # Build the single point filesys objects
-        sp_save_fs, _ = filesys.build.sp_from_prefix(
-            mpath, mod_thy_info)
+        sp_save_fs = autofile.fs.single_point(mpath)
 
         # Calculate the save single point energy
         sp.run_energy(zma, geo, inf, mod_thy_info,
