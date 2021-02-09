@@ -19,10 +19,10 @@ from mechlib.submission import qchem_params
 
 
 # Initial conformer
-def initial_conformer(spc_dct_i, spc_info,
-                      method_dct,
+def initial_conformer(spc_dct_i, spc_info, method_dct,
                       ini_cnf_save_fs,
                       cnf_run_fs, cnf_save_fs,
+                      instab_save_fs,
                       mod_ini_thy_info,
                       overwrite):
     """ determine what to use as the reference geometry for all future runs
@@ -55,8 +55,8 @@ def initial_conformer(spc_dct_i, spc_info,
 
     if _run:
         ioprinter.info_message('Obtaining some initial guess geometry.')
-        geo_init = _obtain_ini_geom(spc_dct_i,
-                                    ini_thy_save_path, mod_ini_thy_info,
+        geo_init = _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
+                                    mod_ini_thy_info,
                                     overwrite)
 
         if geo_init is not None:
@@ -82,7 +82,7 @@ def initial_conformer(spc_dct_i, spc_info,
                     geo_found = _optimize_atom(
                         spc_info, zma_init,
                         method_dct,
-                        cnf_save_fs,
+                        cnf_run_fs, cnf_save_fs,
                         overwrite)
             else:
                 instab.write_instab2(
@@ -103,7 +103,7 @@ def initial_conformer(spc_dct_i, spc_info,
     return geo_found
 
 
-def _obtain_ini_geom(spc_dct_i, ini_thy_save_path,
+def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
                      mod_ini_thy_info, overwrite):
     """ Obtain an initial geometry to be optimized. Checks a hieratchy
         of places to obtain the initial geom.
@@ -115,7 +115,6 @@ def _obtain_ini_geom(spc_dct_i, ini_thy_save_path,
 
     # Obtain geom from thy fs or remove the conformer filesystem if needed
     if not overwrite:
-        ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
         if ini_min_cnf_locs:
@@ -126,7 +125,6 @@ def _obtain_ini_geom(spc_dct_i, ini_thy_save_path,
     else:
         ioprinter.debug_message(
             'Removing original conformer save data for instability')
-        ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
         for locs in ini_cnf_save_fs[-1].existing():
             cnf_path = ini_cnf_save_fs[-1].path(locs)
             ioprinter.debug_message('Removing {}'.format(cnf_path))
@@ -151,8 +149,8 @@ def _obtain_ini_geom(spc_dct_i, ini_thy_save_path,
 
 
 def _optimize_atom(spc_info, zma_init,
-                   method_dct, thy_run_fs,
-                   cnf_save_fs, run_fs,
+                   method_dct,
+                   cnf_save_fs,
                    overwrite):
     """ Deal with an atom separately
     """
@@ -181,9 +179,8 @@ def _optimize_atom(spc_info, zma_init,
 
 
 def _optimize_molecule(spc_info, zma_init,
-                       method_dct, thy_run_fs, thy_save_fs,
-                       cnf_save_fs,
-                       run_fs,
+                       method_dct,
+                       cnf_run_fs, cnf_save_fs,
                        overwrite,
                        kickoff_size=0.1, kickoff_backward=False):
     """ Optimize a proper geometry
@@ -220,10 +217,6 @@ def _optimize_molecule(spc_info, zma_init,
                 _save_unique_conformer(
                     ret, mod_thy_info, cnf_save_fs, locs,
                     zrxn=None, zma_locs=(0,))
-                # filesys.save_struct(
-                #     run_fs, cnf_save_fs, locs, job, mod_thy_info,
-                #     zma_locs=(0,), in_zma_fs=False,
-                #     cart_to_zma=imag_fix_needed)
 
             else:
 
@@ -232,7 +225,7 @@ def _optimize_molecule(spc_info, zma_init,
                     job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                 instab.write_instab(
                     zma_init, zma,
-                    thy_save_fs, mod_thy_info[1:4],
+                    instab_save_fs, mod_thy_info[1:4],
                     opt_ret,
                     zma_locs=(0,),
                     save_cnf=True
@@ -251,13 +244,11 @@ def _optimize_molecule(spc_info, zma_init,
             job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
         instab.write_instab(
             zma_init, zma,
-            thy_save_fs, mod_thy_info[1:4],
+            instab_save_fs, mod_thy_info[1:4],
             opt_ret,
             zma_locs=(0,),
             save_cnf=True
         )
-
-    # ioprinter.save_reference(thy_save_path)
 
     return conf_found
 
@@ -300,7 +291,7 @@ def _init_geom_opt(zma_init, spc_info, mod_thy_info,
 def single_conformer(zma, spc_info, mod_thy_info,
                      cnf_run_fs, cnf_save_fs,
                      script_str, overwrite,
-                     retryfail=True, rxn=None, **kwargs):
+                     retryfail=True, zrxn=None, **kwargs):
     """ generate single optimized geometry to be saved into a
         filesystem
     """
@@ -322,7 +313,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
         thy_info=mod_thy_info,
         overwrite=overwrite,
         frozen_coordinates=(),
-        saddle=bool(rxn is not None),
+        saddle=bool(zrxn is not None),
         retryfail=retryfail,
         **kwargs
     )
@@ -353,36 +344,24 @@ def single_conformer(zma, spc_info, mod_thy_info,
         filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info)
 
 
-def conformer_sampling(
-        zma, spc_info, thy_info, nsamp, tors_range_dct,
-        cnf_run_fs, cnf_save_fs, script_str, overwrite,
-        zrxn, two_stage, retryfail,
-        **kwargs):
+def conformer_sampling(zma, spc_info, thy_info,
+                       cnf_run_fs, cnf_save_fs,
+                       script_str, overwrite,
+                       nsamp_par=(False, 3, 3, 1, 50, 50),
+                       tors_names=(),
+                       zrxn=None, two_stage=False, retryfail=False,
+                       **kwargs):
     """ run sampling algorithm to find conformers
     """
-    ich = spc_info[0]
 
-    tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
-    tors_range_dct = dict(zip(tors_names, tors_ranges))
-    nsamp = util.nsamp_init(nsamp_par, len(tors_names))
-    ioprinter.debug_message('tors_names', tors_names)
-
-    if not tors_range_dct:
-        ioprinter.info_message(
-            " - No torsional coordinates. Setting nsamp to 1.")
-        nsamp = 1
-
+    # Build filesys
     cnf_save_fs[0].create()
-    nsamp0 = nsamp
     inf_obj = autofile.schema.info_objects.conformer_trunk(0)
-    if cnf_save_fs[0].file.info.exists():
-        inf_obj_s = cnf_save_fs[0].file.info.read()
-        nsampd = inf_obj_s.nsamp
-    elif cnf_run_fs[0].file.info.exists():
-        inf_obj_r = cnf_run_fs[0].file.info.read()
-        nsampd = inf_obj_r.nsamp
-    else:
-        nsampd = 0
+
+    # Set the samples
+    nsamp, tors_range_dct = _calc_nsamp(tors_names, nsamp_par)
+    nsamp0 = nsamp
+    nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs)
 
     tot_samp = nsamp - nsampd
     ioprinter.info_message(
@@ -462,19 +441,49 @@ def conformer_sampling(
         # save function added here
         if success:
             _save_conformer(
-                ret, cnf_save_fs, locs, thy_info, zrxn=zrxn, orig_ich=ich)
+                ret, cnf_save_fs, locs, thy_info,
+                zrxn=zrxn, orig_ich=spc_info[0])
 
-            if cnf_save_fs[0].file.info.exists():
-                inf_obj_s = cnf_save_fs[0].file.info.read()
-                nsampd = inf_obj_s.nsamp
-            elif cnf_run_fs[0].file.info.exists():
-                inf_obj_r = cnf_run_fs[0].file.info.read()
-                nsampd = inf_obj_r.nsamp
+            nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs)
             nsampd += 1
             samp_idx += 1
             inf_obj.nsamp = nsampd
             cnf_save_fs[0].file.info.write(inf_obj)
             cnf_run_fs[0].file.info.write(inf_obj)
+
+
+def _calc_nsamp(tors_names, nsamp_par):
+    """ Determine the number of samples to od
+    """
+
+    tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
+    tors_range_dct = dict(zip(tors_names, tors_ranges))
+    nsamp = util.nsamp_init(nsamp_par, len(tors_names))
+    ioprinter.debug_message('tors_names', tors_names)
+    ioprinter.debug_message('tors_range_dct', tors_range_dct)
+    if not tors_range_dct:
+        ioprinter.info_message(
+            " - No torsional coordinates. Setting nsamp to 1.")
+        nsamp = 1
+
+    return nsamp, tors_range_dct
+
+
+def _calc_nsampd(cnf_save_fs, cnf_run_fs):
+    """ Determine the number of samples completed
+    """
+
+    cnf_save_fs[0].create()
+    if cnf_save_fs[0].file.info.exists():
+        inf_obj_s = cnf_save_fs[0].file.info.read()
+        nsampd = inf_obj_s.nsamp
+    elif cnf_run_fs[0].file.info.exists():
+        inf_obj_r = cnf_run_fs[0].file.info.read()
+        nsampd = inf_obj_r.nsamp
+    else:
+        nsampd = 0
+
+    return nsampd
 
 
 def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
@@ -493,7 +502,6 @@ def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
     ene = elstruct.reader.energy(prog, method, out_str)
     geo = elstruct.reader.opt_geometry(prog, out_str)
     zma = elstruct.reader.opt_zmatrix(prog, out_str)
-    # zma = automol.geom.zmatrix(geo)
 
     # Assess if geometry is properly connected
     viable = _geo_connected(geo, zrxn)
@@ -642,7 +650,7 @@ def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
     viable = True
 
     # Obtain the min-ene zma and bond keys
-    min_cnf_locs, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
+    _, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
     zma_save_fs = fs.zmatrix(cnf_save_path)
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
@@ -810,21 +818,6 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     zma = elstruct.reader.opt_zmatrix(prog, out_str)
     if zma is None:
         zma = automol.geom.zmatrix(geo)
-
-    # Generate the torsions
-    # geo, gdummy_key_dct = automol.convert.zmat.geometry(zma)
-    # zrxn = automol.reac.insert_dummy_atoms(rxn, gdummy_key_dct)
-    rotors = automol.rotor.from_zmatrix(zma)  ## Add a graph for the TS zma
-    # geo, gdummy_key_dct = automol.convert.zmat.geometry(zma)
-    # lin_keys = sorted(gdummy_key_dct.keys())
-    # gbnd_keys = automol.graph.rotational_bond_keys(gtsg, lin_keys=lin_keys)
-
-    # Read the tra and graph
-    # if zrxn:
-    #     _, ts_min_path = filesys.mincnf.min_energy_conformer_locators(
-    #         cnf_save_fs, thy_info)
-    #     ts_min_zma_fs = autofile.fs.zmatrix(ts_min_path)
-    #     rxn = ts_min_zma_fs[-1].file.reaction.read(zma_locs)
 
     # Build the conformer filesystem and save the structural info
     ioprinter.save_conformer(cnf_save_path)

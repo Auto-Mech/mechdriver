@@ -15,6 +15,8 @@ from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
 from mechroutines.es._routines import irc
 from mechlib import filesys
+from mechlib.filesys import build_fs
+from mechlib.filesys import root_locs
 from mechlib import structure
 from mechlib.structure import instab
 from mechlib.submission import qchem_params
@@ -93,13 +95,7 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     """
 
     spc_dct_i = spc_dct[spc_name]
-
-    # Set the spc_info
     spc_info = sinfo.from_dct(spc_dct_i)
-
-    # Get es options
-    overwrite = es_keyword_dct['overwrite']
-    # retryfail = es_keyword_dct['retryfail']
 
     # Get the theory info
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
@@ -111,22 +107,19 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
         ini_thy_info, spc_info)
 
     # Set the filesystem objects
-    thy_run_fs, thy_run_path = filesys.build.spc_thy_fs_from_root(
-        run_prefix, spc_info, mod_thy_info)
-    thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
-        save_prefix, spc_info, mod_thy_info)
-    _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
-        save_prefix, spc_info, mod_ini_thy_info)
-    cnf_save_fs = autofile.fs.conformer(thy_save_path)
-    instab_save_fs = autofile.fs.instab(thy_save_path)
+    ini_cnf_fs = build_fs(run_prefix, save_prefix, 'CONFORMER',
+                          spc_locs=spc_info, thy_locs=mod_ini_thy_info[1:])
+    cnf_fs = build_fs(run_prefix, save_prefix, 'CONFORMER',
+                      spc_locs=spc_info, thy_locs=mod_thy_info[1:])
+    instab_fs = build_fs(run_prefix, save_prefix, 'INSTAB',
+                         spc_locs=spc_info, thy_locs=mod_thy_info[1:])
 
     # Get a reference geometry if one not found
     success = conformer.initial_conformer(
         spc_dct_i, spc_info, method_dct,
-        ini_cnf_save_fs,
-        cnf_run_fs, cnf_save_fs,
-        mod_ini_thy_info,
-        overwrite)
+        ini_cnf_fs[1], cnf_fs[0], cnf_fs[1],
+        instab_fs[1],
+        es_keyword_dct)
 
     return success
 
@@ -151,7 +144,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         zrxn = None
     else:
         spc_info = rinfo.ts_info(spc_dct_i['rxn_info'])
-        zrxn = spc_dct_i['zrxn']
+    # zrxn = spc_dct_i.get('zrxn', None)
 
     # Get es options
     overwrite = es_keyword_dct['overwrite']
@@ -166,7 +159,16 @@ def conformer_tsk(job, spc_dct, spc_name,
     mod_ini_thy_info = tinfo.modify_orb_label(
         ini_thy_info, spc_info)
 
-    # Set the filesystem objects
+    # New filesystem objects
+    _root = root_locs(spc_dct_i, saddle=saddle)
+    ini_cnf_fs = build_fs(run_prefix, save_prefix, 'CONFORMER',
+                          thy_locs=mod_ini_thy_info[1:],
+                          **_root)
+    cnf_fs = build_fs(run_prefix, save_prefix, 'CONFORMER',
+                      thy_locs=mod_thy_info[1:],
+                      **_root)
+
+    # Old filesys calls
     if not saddle:
         _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
             run_prefix, spc_info, mod_ini_thy_info)
@@ -244,11 +246,11 @@ def conformer_tsk(job, spc_dct, spc_name,
         # Run the sampling
         _ = conformer.conformer_sampling(
             zma, spc_info,
-            mod_thy_info, thy_save_fs,
+            mod_thy_info,
             cnf_run_fs, cnf_save_fs,
             script_str, overwrite,
-            zrxn=zrxn, nsamp_par=mc_nsamp,
-            tors_names=tors_names,
+            nsamp_par=mc_nsamp,
+            tors_names=tors_names, zrxn=zrxn,
             two_stage=two_stage, retryfail=retryfail,
             **kwargs)
 

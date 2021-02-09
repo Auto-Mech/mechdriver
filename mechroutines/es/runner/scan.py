@@ -1,15 +1,10 @@
 """ es_runners for coordinate scans
 """
 
-import itertools
 import automol
 import autofile
 import elstruct
-from mechroutines.es.runner import scan
 from mechroutines.es.runner._run import execute_job
-from mechroutines.es._routines import sp
-from mechlib.structure import tors as torsprep
-from mechlib.structure import instab
 from mechlib import filesys
 from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
@@ -27,34 +22,26 @@ def execute_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     """ Run and save the scan
     """
 
-    # Add a check to only run the scan if stuff is available
+    # need_run = check_scan()
+    need_run = True
 
-    run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
-             coord_names, coord_grids,
-             scn_run_fs, scn_save_fs, scn_typ,
-             script_str, overwrite,
-             update_guess=update_guess, reverse_sweep=reverse_sweep,
-             saddle=saddle,
-             constraint_dct=constraint_dct, retryfail=retryfail,
-             chkstab=chkstab,
-             **kwargs)
+    if need_run:
+        run_scan(
+            zma, spc_info, mod_thy_info, thy_save_fs,
+            coord_names, coord_grids,
+            scn_run_fs, scn_save_fs, scn_typ,
+            script_str, overwrite,
+            update_guess=update_guess, reverse_sweep=reverse_sweep,
+            saddle=saddle,
+            constraint_dct=constraint_dct, retryfail=retryfail,
+            chkstab=chkstab,
+            **kwargs)
 
-    ioprinter.info_message(
-        'Saving any newly run HR scans in run filesys...',
-        newline=1)
-    if constraint_dct is None:
         save_scan(
             scn_run_fs=scn_run_fs,
             scn_save_fs=scn_save_fs,
             scn_typ=scn_typ,
-            coo_names=coord_names,
-            mod_thy_info=mod_thy_info,
-            in_zma_fs=True)
-    else:
-        save_cscan(
-            cscn_run_fs=scn_run_fs,
-            cscn_save_fs=scn_save_fs,
-            scn_typ=scn_typ,
+            coord_names=coord_names,
             constraint_dct=constraint_dct,
             mod_thy_info=mod_thy_info,
             in_zma_fs=True)
@@ -74,51 +61,32 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
 
     # Build the SCANS/CSCANS filesystems
     if constraint_dct is None:
-        scn_save_fs[1].create([coord_names])
-        print('names', coord_names)
-        print('grids', coord_grids)
-        inf_obj = autofile.schema.info_objects.scan_branch(
-            dict(zip(coord_names, coord_grids)))
-        scn_save_fs[1].file.info.write(inf_obj, [coord_names])
+        coord_locs = [coord_names]
     else:
-        scn_save_fs[1].create([constraint_dct])
-        inf_obj = autofile.schema.info_objects.scan_branch(
-            dict(zip(coord_names, coord_grids)))
-        scn_save_fs[1].file.info.write(inf_obj, [constraint_dct])
+        coord_locs = [constraint_dct]
+
+    scn_save_fs[1].create([coord_locs])
+    inf_obj = autofile.schema.info_objects.scan_branch(
+        dict(zip(coord_locs, coord_grids)))
+    scn_save_fs[1].file.info.write(inf_obj, [coord_locs])
 
     # Build the grid of values
     mixed_grid_vals = automol.pot.coords(coord_grids)
-    print('mixed grid_vals\n', mixed_grid_vals)
-
-    _run_scan(
-        guess_zma=zma,
-        spc_info=spc_info,
-        mod_thy_info=mod_thy_info,
-        thy_save_fs=thy_save_fs,
-        coord_names=coord_names,
-        grid_vals=mixed_grid_vals,
-        scn_run_fs=scn_run_fs,
-        scn_save_fs=scn_save_fs,
-        scn_typ=scn_typ,
-        script_str=script_str,
-        overwrite=overwrite,
-        retryfail=retryfail,
-        update_guess=update_guess,
-        saddle=saddle,
-        constraint_dct=constraint_dct,
-        chkstab=chkstab,
-        **kwargs
-    )
-
     if reverse_sweep:
+        all_grid_vals = [mixed_grid_vals]
+    else:
+        all_grid_vals = [mixed_grid_vals, tuple(reversed(mixed_grid_vals))]
+
+    for grid_vals in all_grid_vals:
         print('\nDoing a reverse sweep of the HR scan to catch errors...')
+
         _run_scan(
             guess_zma=zma,
             spc_info=spc_info,
             mod_thy_info=mod_thy_info,
             thy_save_fs=thy_save_fs,
             coord_names=coord_names,
-            grid_vals=tuple(reversed(mixed_grid_vals)),
+            grid_vals=grid_vals,
             scn_run_fs=scn_run_fs,
             scn_save_fs=scn_save_fs,
             scn_typ=scn_typ,
@@ -133,7 +101,7 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
         )
 
 
-def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
+def _run_scan(guess_zma, spc_info, mod_thy_info,
               coord_names, grid_vals,
               scn_run_fs, scn_save_fs, scn_typ,
               script_str, overwrite,
@@ -247,15 +215,39 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
 
 
 def save_scan(scn_run_fs, scn_save_fs, scn_typ,
-              coo_names, mod_thy_info, in_zma_fs=False):
+              coord_names, constraint_dct,
+              mod_thy_info, in_zma_fs=False):
+    """ save the scan
+    """
+
+    ioprinter.info_message(
+        'Saving any newly run HR scans in run filesys...', newline=1)
+    if constraint_dct is None:
+        _save_fxn = _save_scanfs
+        coord_locs = coord_names
+    else:
+        _save_fxn = _save_cscanfs
+        coord_locs = constraint_dct
+
+        _save_fxn(
+            cscn_run_fs=scn_run_fs,
+            cscn_save_fs=scn_save_fs,
+            scn_typ=scn_typ,
+            coord_locs=coord_locs,
+            mod_thy_info=mod_thy_info,
+            in_zma_fs=in_zma_fs)
+
+
+def _save_scanfs(scn_run_fs, scn_save_fs, scn_typ,
+                 coord_locs, mod_thy_info, in_zma_fs=False):
     """ save the scans that have been run so far
     """
 
-    if not scn_run_fs[1].exists([coo_names]):
+    if not scn_run_fs[1].exists([coord_locs]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs in scn_run_fs[-1].existing([coo_names]):
+        for locs in scn_run_fs[-1].existing([coord_locs]):
 
             # Set run filesys
             run_path = scn_run_fs[-1].path(locs)
@@ -273,19 +265,19 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            _write_traj(coo_names, scn_save_fs, mod_thy_info, locs_lst)
+            _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
-def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
-               constraint_dct, mod_thy_info, in_zma_fs=True):
+def _save_cscanfs(cscn_run_fs, cscn_save_fs, scn_typ,
+                  coord_locs, mod_thy_info, in_zma_fs=True):
     """ save the scans that have been run so far
     """
 
-    if not cscn_run_fs[1].exists([constraint_dct]):
+    if not cscn_run_fs[1].exists([coord_locs]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs1 in cscn_run_fs[2].existing([constraint_dct]):
+        for locs1 in cscn_run_fs[2].existing([coord_locs]):
             if cscn_run_fs[2].exists(locs1):
                 for locs2 in cscn_run_fs[3].existing(locs1):
 
@@ -307,7 +299,7 @@ def save_cscan(cscn_run_fs, cscn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            _write_traj(constraint_dct, cscn_save_fs, mod_thy_info, locs_lst)
+            _write_traj(coord_locs, cscn_save_fs, mod_thy_info, locs_lst)
 
 
 def _set_job(scn_typ):
@@ -393,21 +385,11 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
             **opt_kwargs
         )
 
-    print('\nSaving the scans...')
-    if constraint_dct is None:
         save_scan(
             scn_run_fs=scn_run_fs,
             scn_save_fs=scn_save_fs,
             scn_typ='relaxed',
             coo_names=[coord_name],
-            mod_thy_info=mod_var_scn_thy_info,
-            in_zma_fs=True)
-    else:
-        save_cscan(
-            cscn_run_fs=scn_run_fs,
-            cscn_save_fs=scn_save_fs,
-            scn_typ='relaxed',
-            constraint_dct=constraint_dct,
             mod_thy_info=mod_var_scn_thy_info,
             in_zma_fs=True)
 

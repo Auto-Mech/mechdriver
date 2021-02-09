@@ -82,3 +82,28 @@ def hindered_rotor_scans(
             chkstab=False,
             **kwargs,
         )
+
+
+def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
+    """ Check hr pot to see if a new mimnimum is needed
+    """
+
+    new_min_zma = None
+
+    print('\nAssessing the HR potential...')
+    for name in tors_pots:
+
+        print('- Rotor {}'.format(name))
+        pots = tors_pots[name].values()
+        zmas = tors_zmas[name].values()
+        paths = tors_paths[name].values()
+        for pot, zma, path in zip(pots, zmas, paths):
+            if emin < pot < emax:
+                new_min_zma = zma
+                emin = pot
+                print(' - New minimmum energy ZMA found for torsion')
+                print(' - Ene = {}'.format(pot))
+                print(' - Found at path: {}'.format(path))
+                print(automol.zmat.string(zma))
+
+    return new_min_zma
