@@ -11,6 +11,7 @@ from mechroutines.es import runner as es_runner
 from mechlib import structure
 from mechlib.reaction import grid as rxngrid
 from mechlib.submission import qchem_params
+from mechlib.amech_io import printer as ioprinter
 
 
 # SADPT FINDER FUNCTIONS
@@ -87,7 +88,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
                 zma_locs=[0])
 
     else:
-        print('\n TS optimization failed. No geom to check and save.')
+        ioprinter.warning_message('\n TS optimization failed. No geom to check and save.')
 
 
 def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
@@ -95,7 +96,7 @@ def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
         level of theory
     """
 
-    print('\nSearching save filesys for guess Z-Matrix calculated',
+    ioprinter.info_message('\nSearching save filesys for guess Z-Matrix calculated',
           'at {} level...'.format(es_keyword_dct['inplvl']))
 
     ini_zma_fs = savefs_dct['inilvl_zma_fs']
@@ -104,8 +105,8 @@ def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
     if ini_zma_fs is not None:
         if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
             geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
-            print(' - Z-Matrix found.')
-            print(' - Reading Z-Matrix from path {}'.format(geo_path))
+            ioprinter.info_message(' - Z-Matrix found.')
+            ioprinter.info_message(' - Reading Z-Matrix from path {}'.format(geo_path))
             guess_zmas.append(
                 ini_zma_fs[-1].file.zmatrix.read(zma_locs))
 
@@ -187,19 +188,22 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
     _, ts_run_path = runfs_dct['runlvl_ts_fs']
     run_fs = autofile.fs.run(ts_run_path)
 
-    print('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
+    ioprinter.info_message('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
 
     if len(guess_zmas) == 1:
-        print('\nThere is 1 guess Z-Matrix',
-              'to attempt to find saddle point.')
+        ioprinter.info_message(
+            'There is 1 guess Z-Matrix',
+            'to attempt to find saddle point.',
+            newline=1)
     else:
-        print('\nThere are {} guess Z-Matrices'.format(len(guess_zmas)),
-              'to attempt to find saddle point.')
+        ioprinter.info_message(
+            'There are {} guess Z-Matrices'.format(len(guess_zmas)),
+            'to attempt to find saddle point.', newline=1)
 
     # Loop over all the guess zmas to find a TS
     opt_ret = None
     for idx, zma in enumerate(guess_zmas):
-        print('\nOptimizing guess Z-Matrix {}...'.format(idx+1))
+        ioprinter.info_message('\nOptimizing guess Z-Matrix {}...'.format(idx+1))
 
         # Run the transition state optimization
         opt_success, opt_ret = es_runner.execute_job(
@@ -247,8 +251,6 @@ def saddle_point_hessian(opt_ret, ts_info, method_dct,
     script_str, kwargs = qchem_params(
         method_dct)
 
-    print('\nCalculating Hessian for the optimized geometry...')
-
     # Obtain geometry from optimization
     opt_inf_obj, _, opt_out_str = opt_ret
     opt_prog = opt_inf_obj.prog
@@ -284,32 +286,30 @@ def saddle_point_checker(imags):
     """ run things for checking Hessian
     """
 
-    print('Assessing the saddle point...')
-
     big_imag, kick_imag = 0, 0
 
-    print('\nChecking the imaginary frequencies of the saddle point...')
+    ioprinter.checking('the imaginary frequencies of the saddle point...')
     if len(imags) < 1:
-        print('WARNING: No imaginary modes for geometry')
+        ioprinter.warning_message('No imaginary modes for geometry')
         status = 'fail'
     else:
         if len(imags) > 1:
-            print('WARNING: More than one imaginary mode for geometry')
+            ioprinter.warning_message('More than one imaginary mode for geometry')
         for idx, imag in enumerate(imags):
             if imag <= 50.0:
-                print('Mode {} {} cm-1 is low,'.format(str(idx+1), imag))
+                ioprinter.warning_message('Mode {} {} cm-1 is low,'.format(str(idx+1), imag))
             elif 50.0 < imag <= 200.0:
                 lowstr = 'Mode {} {} cm-1 is low,'.format(str(idx+1), imag)
-                print(lowstr + 'need a kickoff procedure to remove')
+                ioprinter.warning_message(lowstr + 'need a kickoff procedure to remove')
                 kick_imag += 1
             else:
-                print('Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
+                ioprinter.debug_message('Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
                 big_imag += 1
 
         if big_imag > 1:
-            print('WARNING: More than one imaginary mode for geometry')
+            ioprinter.warning_message('WARNING: More than one imaginary mode for geometry')
             if kick_imag >= 1:
-                print('Will kickoff to get saddle point')
+                ioprinter.debug_message('Will kickoff to get saddle point')
                 status = 'kickoff'
         elif big_imag == 1:
             status = 'success'
@@ -322,10 +322,9 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
                       zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
     """
+
     cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
     ts_save_fs, ts_save_path = savefs_dct['runlvl_ts_fs']
-
-    print('Saving saddle point...')
 
     # Read the geom, energy, and Hessian from output
     opt_inf_obj, opt_inp_str, opt_out_str = opt_ret
@@ -334,24 +333,18 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     ene = elstruct.reader.energy(opt_prog, opt_method, opt_out_str)
     geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
     zma = elstruct.reader.opt_zmatrix(opt_prog, opt_out_str)
-    print('TS Geometry:')
-    print(automol.geom.string(geo))
-    print()
-    # Build new zma using x2z and new torsion coordinates
-    print(" - Reading hessian from output...")
-    # zma, tors_names, frm_bnd_keys, brk_bnd_keys = _new_zma(
-    #     geo, frm_bnd_keys, brk_bnd_keys)
+    ioprinter.debug_message('TS Geometry:')
+    ioprinter.debug_message(automol.geom.string(geo))
 
-    print(" - Reading hessian from output...")
+    ioprinter.info_message(" - Reading hessian from output...")
     hess_inf_obj, hess_inp_str, hess_out_str = hess_ret
     hess_prog = hess_inf_obj.prog
     hess = elstruct.reader.hessian(hess_prog, hess_out_str)
     freqs = sorted([-1.0*val for val in imags] + freqs)
-    print('TS freqs: {}'.format(' '.join(str(freq) for freq in freqs)))
+    ioprinter.debug_message('TS freqs: {}'.format(' '.join(str(freq) for freq in freqs)))
 
     # Save the information into the filesystem
-    print(" - Saving...")
-    print(" - Save path: {}".format(ts_save_path))
+    ioprinter.save_geo(ts_save_path)
 
     # Save geom in the upper theory/TS layer
     ts_save_fs[0].file.geometry.write(geo)
@@ -380,10 +373,11 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
 
     # Save the torsions
     rotors = automol.rotor.from_zmatrix(zma)
-    zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
+    if any(rotors):
+        zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
 
     # Save the energy in a single-point filesystem
-    print(" - Saving energy...")
+    ioprinter.info_message(" - Saving energy...")
     sp_save_fs = autofile.fs.single_point(cnf_save_path)
     sp_save_fs[-1].create(mod_thy_info[1:4])
     sp_save_fs[-1].file.input.write(opt_inp_str, mod_thy_info[1:4])

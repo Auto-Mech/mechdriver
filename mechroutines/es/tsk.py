@@ -98,7 +98,6 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     spc_info = sinfo.from_dct(spc_dct_i)
 
     # Get es options
-    [kickoff_size, kickoff_backward] = spc_dct_i['kickoff']
     overwrite = es_keyword_dct['overwrite']
     # retryfail = es_keyword_dct['retryfail']
 
@@ -119,27 +118,17 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, spc_info, mod_ini_thy_info)
     cnf_save_fs = autofile.fs.conformer(thy_save_path)
-
-    # Set the run filesystem
-    saddle = bool('ts_' in spc_name)
-    if saddle:
-        _, ts_path = filesys.build.ts_fs_from_thy(thy_run_path)
-        run_fs = filesys.build.run_fs_from_prefix(ts_path)
-    else:
-        run_fs = filesys.build.run_fs_from_prefix(thy_run_path)
+    instab_save_fs = autofile.fs.instab(thy_save_path)
 
     # Get a reference geometry if one not found
-    geo = conformer.initial_conformer(
+    success = conformer.initial_conformer(
         spc_dct_i, spc_info, method_dct,
-        thy_run_fs, thy_save_fs,
-        cnf_save_fs,
-        ini_thy_save_path, mod_ini_thy_info,
-        run_fs,
-        overwrite,
-        kickoff_size=kickoff_size,
-        kickoff_backward=kickoff_backward)
+        ini_cnf_save_fs,
+        cnf_run_fs, cnf_save_fs,
+        mod_ini_thy_info,
+        overwrite)
 
-    return geo
+    return success
 
 
 def conformer_tsk(job, spc_dct, spc_name,

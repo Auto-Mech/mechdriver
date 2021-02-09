@@ -222,13 +222,20 @@ def is_successful_output(out_str, job, prog):
 
     return ret
 
-def determine_if_run_job(exists):
+
+def need_job(pathlst, overwrite):
     """ Determine if you should run elstruct job
+
+        pathlst =  ((file1.exists, file1.name), ...)
+
     """
 
-    if not exists:
-        ioprinter.info_message(
-            'No Hessian found in save filesys. Running Hessian...')
+    if not all(fexists for fexists, _ in pathlst):
+        for fexists, fname in pathlst:
+            if not fexists:
+                ioprinter.info_message(
+                    'No {} found in save filesys.'.format(fname))
+        ioprinter.info_message('Running Job...')
         _run = True
     elif overwrite:
         ioprinter.info_message(

@@ -27,6 +27,8 @@ def execute_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     """ Run and save the scan
     """
 
+    # Add a check to only run the scan if stuff is available
+
     run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
              coord_names, coord_grids,
              scn_run_fs, scn_save_fs, scn_typ,
@@ -158,10 +160,8 @@ def _run_scan(guess_zma, spc_info, mod_thy_info, thy_save_fs,
 
         # Set the locs for the scan point
         locs = [coord_names, vals]
-        print('locs', locs)
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
-        print('locs', locs)
 
         # Create the filesys
         scn_run_fs[-1].create(locs)

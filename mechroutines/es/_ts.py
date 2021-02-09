@@ -112,8 +112,6 @@ def run_vtst(spc_dct, tsname, es_keyword_dct,
         pot_thresh = es_keyword_dct['pot_thresh']
 
     # Grid
-    print('newts class', ts_dct['class'])
-    print('newts grid', grid)
     [grid1, grid2] = grid
 
     # Get thy_inf_dct stuff

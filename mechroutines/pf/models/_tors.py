@@ -85,7 +85,6 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 constraint_dct)
             pot = _hrpot_spline_fitter(
                 pot, min_thresh=-0.0001, max_thresh=50.0)
-            print('pot test', pot)
             # Add potential to potential
             torsion.pot = pot
 
@@ -147,17 +146,7 @@ def make_hr_strings(rotors):
     mdhr_dat = ''
 
     # Convert the rotor objects indexing to be in geoms
-    print('inhr rot1')
-    for rotor in rotors:
-        for tors in rotor:
-            print(tors.axis)
-            print(tors.pot)
     geo, rotors = automol.rotor.relabel_for_geometry(rotors)
-    print('inhr rot2')
-    for rotor in rotors:
-        for tors in rotor:
-            print(tors.axis)
-            print(tors.pot)
     # numrotors = len(rotors)
 
     for ridx, rotor in enumerate(rotors):
@@ -194,6 +183,8 @@ def make_hr_strings(rotors):
 def _tors_strs(torsion, geo):
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
+
+    print('geo in tors str\n', geo)
 
     mess_hr_str = mess_io.writer.rotor_hindered(
         group=torsion.groups[0],

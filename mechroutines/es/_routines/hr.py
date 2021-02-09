@@ -32,6 +32,7 @@ def hindered_rotor_scans(
 
     run_tors_names = automol.rotor.names(rotors)
     run_tors_grids = automol.rotor.grids(rotors)
+    print('grids es', run_tors_grids)
 
     # Set constraints
     const_names = structure.tors.set_constraint_names(
@@ -45,12 +46,7 @@ def hindered_rotor_scans(
     ioprinter.run_rotors(run_tors_names, const_names)
 
     # for tors_name, tors_grid in zip(tors_names, tors_grids):
-    print('gridtest', run_tors_names)
-    print('gridtest', run_tors_grids)
     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
-
-        print('gridtest', tors_names)
-        print('gridtest', tors_grids)
 
         ioprinter.info_message(
             'Running Rotor: {}...'.format(tors_names),
@@ -61,7 +57,6 @@ def hindered_rotor_scans(
             zma, const_names, tors_names)
 
         # Setting the filesystem
-        # print('hr constraint dct', constraint_dct)
         scn_run_fs = filesys.build.scn_fs_from_cnf(
             zma_run_path, constraint_dct=constraint_dct)
         scn_save_fs = filesys.build.scn_fs_from_cnf(
