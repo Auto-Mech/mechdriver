@@ -4,7 +4,6 @@
 
 import automol
 import autofile
-from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.es._routines import _sadpt as sadpt
@@ -404,11 +403,10 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
         mod_ini_thy_info = tinfo.modify_orb_label(
             ini_thy_info, ts_info)
 
-        ini_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-            save_prefix, rxn_info, mod_ini_thy_info)
-        ini_ts_save_fs = filesys.build.ts_fs_from_thy(
-            ini_thy_save_fs[1])
-        ini_cnf_save_fs = autofile.fs.conformer(ini_ts_save_fs[1])
+        _, ini_cnf_save_fs = build_fs(
+            run_prefix, save_prefix, 'CONFORMER',
+            rxn_locs=rxn_info, ts_locs=(),
+            thy_locs=mod_ini_thy_info[1:])
         ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
 
@@ -425,29 +423,19 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
         hs_thy_info = tinfo.modify_orb_label(
             thy_info, hs_info)
 
-        runlvl_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
-            run_prefix, rxn_info, mod_thy_info)
-        runlvl_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-            save_prefix, rxn_info, mod_thy_info)
+        _, runlvl_cnf_save_fs = build_fs(
+            run_prefix, save_prefix, 'CONFORMER',
+            rxn_locs=rxn_info, ts_locs=(),
+            thy_locs=mod_thy_info[1:])
 
-        runlvl_ts_save_fs = filesys.build.ts_fs_from_thy(
-            runlvl_thy_save_fs[1])
-        runlvl_ts_run_fs = filesys.build.ts_fs_from_thy(
-            runlvl_thy_run_fs[1])
-
-        runlvl_fs = autofile.fs.conformer(ini_ts_save_fs[1])
         ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
-            runlvl_fs, mod_thy_info)
+            runlvl_cnf_save_fs, mod_thy_info)
         runlvl_cnf_save_fs = (runlvl_fs, ini_min_cnf_locs)
 
-        _, runlvl_zma_run_path = filesys.build.zma_fs_from_prefix(
-            runlvl_thy_run_fs[1], zma_idxs=zma_locs)
-        _, runlvl_zma_save_path = filesys.build.zma_fs_from_prefix(
-            runlvl_thy_save_fs[1], zma_idxs=zma_locs)
-        runlvl_scn_run_fs = filesys.build.scn_fs_from_cnf(
-            runlvl_zma_run_path, constraint_dct=None)
-        runlvl_scn_save_fs = filesys.build.scn_fs_from_cnf(
-            runlvl_zma_save_path, constraint_dct=None)
+        runlvl_scn_run_fs, runlvl_scn_save_fs = build_fs(
+            run_prefix, save_prefix, 'SCAN',
+            rxn_locs=rxn_info, ts_locs=(),
+            thy_locs=mod_thy_info[1:], zma_locs=(0,))
 
     if es_keyword_dct.get('var_scnlvl', None) is not None:
 
@@ -458,31 +446,20 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
         hs_vscnlvl_thy_info = tinfo.modify_orb_label(
             vscnlvl_thy_info, hs_info)
 
-        vscnlvl_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
-            run_prefix, rxn_info, mod_vscnlvl_thy_info)
-        vscnlvl_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-            save_prefix, rxn_info, mod_vscnlvl_thy_info)
+        vscnlvl_scn_run_fs, vscnlvl_scn_save_fs = build_fs(
+            run_prefix, save_prefix, 'SCAN',
+            rxn_locs=rxn_info, ts_locs=(),
+            thy_locs=mod_thy_info[1:], zma_locs=(0,))
 
-        vscnlvl_ts_save_fs = filesys.build.ts_fs_from_thy(
-            vscnlvl_thy_save_fs[1])
-        vscnlvl_ts_run_fs = filesys.build.ts_fs_from_thy(
-            vscnlvl_thy_run_fs[1])
+        vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs = build_fs(
+            run_prefix, save_prefix, 'CSCAN',
+            rxn_locs=rxn_info, ts_locs=(),
+            thy_locs=mod_thy_info[1:], zma_locs=(0,))
 
-        # put the scan filesys
-        _, vscnlvl_zma_run_path = filesys.build.zma_fs_from_prefix(
-            vscnlvl_thy_run_fs[1], zma_idxs=zma_locs)
-        _, vscnlvl_zma_save_path = filesys.build.zma_fs_from_prefix(
-            vscnlvl_thy_save_fs[1], zma_idxs=zma_locs)
-
-        vscnlvl_scn_run_fs = autofile.fs.scan(vscnlvl_zma_run_path)
-        vscnlvl_scn_save_fs = autofile.fs.scan(vscnlvl_zma_save_path)
-        vscnlvl_cscn_run_fs = autofile.fs.cscan(vscnlvl_zma_run_path)
-        vscnlvl_cscn_save_fs = autofile.fs.cscan(vscnlvl_zma_save_path)
-
-        vrctst_save_fs = filesys.build.vrc_fs_from_thy(
-            vscnlvl_ts_save_fs[1])
-        vrctst_run_fs = filesys.build.vrc_fs_from_thy(
-            vscnlvl_ts_run_fs[1])
+        vrctst_run_fs, vrctst_save_fs = build_fs(
+            run_prefix, save_prefix, 'VRCTST',
+            rxn_locs=rxn_info, ts_locs=(),
+            thy_locs=mod_thy_info[1:])
 
         if es_keyword_dct.get('var_splvl1', None) is not None:
 
@@ -493,15 +470,6 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
             hs_vsplvl1_thy_info = tinfo.modify_orb_label(
                 vsplvl1_thy_info, hs_info)
 
-            # vscnlvl_scn_run_fs = filesys.build.scn_fs_from_cnf(
-            #     vscnlvl_zma_run_path, constraint_dct=None)
-            # vscnlvl_scn_save_fs = filesys.build.scn_fs_from_cnf(
-            #    vscnlvl_zma_save_path, constraint_dct=None)
-            #     var_sp1_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
-            #         run_prefix, rxn_info, mod_var_sp1_thy_info)
-            #     var_sp1_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-            #         save_prefix, rxn_info, mod_var_sp1_thy_info)
-
         if es_keyword_dct.get('var_splvl2', None) is not None:
 
             method_dct = thy_dct.get(es_keyword_dct['var_scnlvl2'])
@@ -511,17 +479,10 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
             hs_vsplvl2_thy_info = tinfo.modify_orb_label(
                 vsplvl2_thy_info, hs_info)
 
-            #     var_sp2_thy_run_fs = filesys.build.rxn_thy_fs_from_root(
-            #         run_prefix, rxn_info, mod_var_sp2_thy_info)
-            #     var_sp2_thy_save_fs = filesys.build.rxn_thy_fs_from_root(
-            #         save_prefix, rxn_info, mod_var_sp2_thy_info)
-
     # Get the conformer filesys for the reactants
     reac_cnf_fs = _reac_cnf_fs(
         rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
 
-    # Build the dictionaries for the return
-    method_dcts = {}
 
     thy_inf_dct = {
         'inplvl': ini_thy_info,
@@ -551,13 +512,8 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
     savefs_dct = {
         'inilvl_zma_fs': ini_zma_save_fs,
-        'inilvl_ts_fs': ini_ts_save_fs,
-        'runlvl_thy_fs': runlvl_thy_save_fs,
-        'runlvl_ts_fs': runlvl_ts_save_fs,
         'runlvl_scn_fs': runlvl_scn_save_fs,
         'runlvl_cnf_fs': runlvl_cnf_save_fs,
-        'vscnlvl_thy_fs': vscnlvl_thy_save_fs,
-        'vscnlvl_ts_fs': vscnlvl_ts_save_fs,
         'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
         'vrctst_fs': vrctst_save_fs,
@@ -582,14 +538,10 @@ def _reac_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
             ini_thy_info, rct_info)
 
         # Build filesys for ini thy info
-        _, ini_thy_run_path = filesys.build.spc_thy_fs_from_root(
-            run_prefix, rct_info, mod_ini_thy_info)
-        _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
-            save_prefix, rct_info, mod_ini_thy_info)
-
-        # Build conformer filesys
-        ini_cnf_run_fs = autofile.fs.conformer(ini_thy_run_path)
-        ini_cnf_save_fs = autofile.fs.conformer(ini_thy_save_path)
+        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
+            run_prefix, save_prefix, 'CONFORMER',
+            spc_locs=rct_info,
+            thy_locs=mod_ini_thy_info[1:])
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
         ini_min_cnf_locs, ini_cnf_path = ini_loc_info
