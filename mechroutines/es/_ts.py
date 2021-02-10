@@ -9,6 +9,7 @@ from mechanalyzer.inf import thy as tinfo
 from mechroutines.es._routines import _sadpt as sadpt
 from mechroutines.es._routines import _vrctst as vrctst
 from mechroutines.es._routines import _vtst as vtst
+from mechlib.filesys import build_fs
 from mechlib import filesys
 
 
@@ -423,7 +424,7 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
         hs_thy_info = tinfo.modify_orb_label(
             thy_info, hs_info)
 
-        _, runlvl_cnf_save_fs = build_fs(
+        _, runlvl_fs = build_fs(
             run_prefix, save_prefix, 'CONFORMER',
             rxn_locs=rxn_info, ts_locs=(),
             thy_locs=mod_thy_info[1:])
@@ -482,7 +483,6 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
     # Get the conformer filesys for the reactants
     reac_cnf_fs = _reac_cnf_fs(
         rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
-
 
     thy_inf_dct = {
         'inplvl': ini_thy_info,

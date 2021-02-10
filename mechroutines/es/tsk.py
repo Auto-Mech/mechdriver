@@ -48,8 +48,8 @@ def run_tsk(tsk, spc_dct, spc_name,
     # If species is unstable, set task to 'none'
     ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
     ini_thy_info = tinfo.from_dct(ini_method_dct)
-    stable = instab.check_unstable_species(
-        tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
+    # stable = instab.check_unstable_species(
+    #     tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
     stable = True
     if stable:
         ioprinter.debug_message('- Proceeding with requested task...')
@@ -113,6 +113,7 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     cnf_run_fs, cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         spc_locs=spc_info, thy_locs=mod_thy_info[1:])
+
     _, instab_save_fs = build_fs(
         run_prefix, save_prefix, 'INSTAB',
         spc_locs=spc_info, thy_locs=mod_thy_info[1:])
@@ -189,7 +190,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         mc_nsamp = spc_dct_i['mc_nsamp']
 
         # Read the geometry and zma from the ini file system
-        geo = ini_cnf_save_fs[1][-1].file.geometry.read(ini_min_cnf_locs)
+        geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
         zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
 
         # Read the torsions from the ini file sys
@@ -200,7 +201,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         else:
             tors_names = ()
 
-        geo_path = ini_cnf_save_fs[0][-1].path(ini_min_cnf_locs)
+        geo_path = ini_cnf_save_fs[-1].path(ini_min_cnf_locs)
         ioprinter.initial_geom_path('Sampling started', geo_path)
 
         # Run the sampling

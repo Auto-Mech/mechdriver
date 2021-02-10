@@ -17,7 +17,7 @@ from mechlib import filesys
 
 # Write the instability files
 def write_instab(conn_zma, disconn_zma,
-                 thy_save_fs, thy_locs,
+                 instab_save_fs, thy_locs,
                  opt_ret,
                  zma_locs=(0,),
                  save_cnf=False):
@@ -33,7 +33,7 @@ def write_instab(conn_zma, disconn_zma,
         inf_obj, inp_str, out_str = opt_ret
 
         # Set and print the save path information
-        save_path = thy_save_fs[-1].path(thy_locs)
+        save_path = instab_save_fs[-1].path()
         print(" - Saving...")
         print(" - Save path: {}".format(save_path))
 
@@ -103,7 +103,7 @@ def write_instab(conn_zma, disconn_zma,
 
 # Write the instability files
 def write_instab2(conn_zma, disconn_zmas,
-                  thy_save_fs, thy_locs,
+                  instab_save_fs, thy_locs,
                   zma_locs=(0,),
                   save_cnf=False):
     """ write the instability files
@@ -113,10 +113,9 @@ def write_instab2(conn_zma, disconn_zmas,
     conn_geo = automol.zmat.geometry(conn_zma)
 
     # Set and print the save path information
-    save_path = thy_save_fs[-1].path(thy_locs)
+    save_path = instab_save_fs[-1].path()
     print(" - Saving...")
     print(" - Save path: {}".format(save_path))
-    thy_save_fs[-1].file.geometry.write(conn_geo, thy_locs)
 
     # Save the geometry information
     instab_fs = autofile.fs.instab(save_path)
@@ -151,6 +150,7 @@ def write_instab2(conn_zma, disconn_zmas,
         zma_save_fs = autofile.fs.zmatrix(cnf_path)
         zma_save_fs[-1].create(zma_locs)
         zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+
 
 # Unstable check
 def check_unstable_species(tsk, spc_dct, spc_name,

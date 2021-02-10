@@ -12,6 +12,7 @@ from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from phydat import phycon
 from mechlib import filesys
+from mechlib.filesys import build_fs
 
 
 CLA_INP = 'inp/class.csv'
@@ -38,6 +39,7 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
     """ Check if reaction exists in the filesystem and has been identified
     """
 
+    zrxn, zma = None, None
 
     sort_rxn_info = rinfo.sort(rxn_info, scheme='autofile')
     ts_info = rinfo.ts_info(rxn_info)
@@ -45,24 +47,19 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
 
     rxn_fs = autofile.fs.reaction(save_prefix)
     if rxn_fs[-1].exists(sort_rxn_info):
-        manager_prefix = [
-            ('REACTION', sort_rxn_info),
-            ('THEORY', mod_ini_thy_info[1:4]),
-            ('TRANSITION STATE', ()),
-        ]
-        cnf_save_fs = autofile.fs.manager(save_prefix, manager_prefix, 'CONFORMER')
-        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            cnf_save_fs, mod_ini_thy_info)
-        _, ini_min_cnf_path = ini_loc_info
-        zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
+        _, cnf_save_fs = build_fs(
+            '', save_prefix, 'CONFORMER',
+            rxn_locs=sort_rxn_info,
+            thy_locs=mod_ini_thy_info[1:],
+            ts_locs=())
 
-        if zma_fs[-1].file.reaction.exists(zma_locs):
-            zrxn = zma_fs[-1].file.reaction.read(zma_locs)
-            zma = zma_fs[-1].file.zmatrix.read(zma_locs)
-        else:
-            zrxn, zma = None, None
-    else:
-        zrxn, zma = None, None
+        _, ini_min_cnf_path = filesys.mincnf.min_energy_conformer_locators(
+            cnf_save_fs, mod_ini_thy_info)
+        if ini_min_cnf_path:
+            zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
+            if zma_fs[-1].file.reaction.exists(zma_locs):
+                zrxn = zma_fs[-1].file.reaction.read(zma_locs)
+                zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
     return zrxn, zma
 

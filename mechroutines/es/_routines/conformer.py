@@ -72,7 +72,7 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
 
                 # Build a cid and a run fs
                 cid = [autofile.schema.generate_new_conformer_id()]
-                cnf_run_fs.create()
+                cnf_run_fs[-1].create(cid)
                 run_fs = autofile.fs.run(cnf_run_fs[-1].path(cid))
 
                 if not automol.geom.is_atom(geo_init):
