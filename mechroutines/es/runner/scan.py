@@ -14,7 +14,7 @@ def execute_scan(zma, spc_info, mod_thy_info, thy_save_fs,
                  coord_names, coord_grids,
                  scn_run_fs, scn_save_fs, scn_typ,
                  script_str, overwrite,
-                 update_guess=True, reverse_sweep=True,
+                 update_guess=True, reverse_sweep=False,
                  saddle=False,
                  constraint_dct=None, retryfail=True,
                  chkstab=False,
@@ -61,9 +61,9 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
 
     # Build the SCANS/CSCANS filesystems
     if constraint_dct is None:
-        coord_locs = [coord_names]
+        coord_locs = coord_names
     else:
-        coord_locs = [constraint_dct]
+        coord_locs = constraint_dct
 
     scn_save_fs[1].create([coord_locs])
     inf_obj = autofile.schema.info_objects.scan_branch(
@@ -72,19 +72,18 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
 
     # Build the grid of values
     mixed_grid_vals = automol.pot.coords(coord_grids)
-    if reverse_sweep:
+    if not reverse_sweep:
         all_grid_vals = [mixed_grid_vals]
     else:
         all_grid_vals = [mixed_grid_vals, tuple(reversed(mixed_grid_vals))]
 
     for grid_vals in all_grid_vals:
-        print('\nDoing a reverse sweep of the HR scan to catch errors...')
+        # print('\nDoing a reverse sweep of the HR scan to catch errors...')
 
         _run_scan(
             guess_zma=zma,
             spc_info=spc_info,
             mod_thy_info=mod_thy_info,
-            thy_save_fs=thy_save_fs,
             coord_names=coord_names,
             grid_vals=grid_vals,
             scn_run_fs=scn_run_fs,
@@ -164,34 +163,11 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
                 )
 
                 # Read the output for the zma and geo
-                _, opt_zma, opt_geo = filesys.read_zma_geo(run_fs, job)
-
-                if opt_zma is not None and opt_geo is not None:
-
-                    # Check connectivity, save instability files if needed
-                    if chkstab:
-                        connected = automol.geom.connected(opt_geo)
-                    else:
-                        connected = True
-
-                    # If connected and update requested: update geom
-                    # If disconnected: save instab files and break loop
-                    if connected:
-                        if update_guess:
-                            guess_zma = opt_zma
-                    else:
-                        print('WARNING: Structure seems to be unstable...')
-                        # _, opt_ret = read_job(job=job, run_fs=run_fs)
-                        # instab.write_instab(
-                        #     conn_zma, opt_zma,
-                        #     thy_save_fs, mod_thy_info[1:4],
-                        #     opt_ret,
-                        #     zma_locs=(0,),
-                        #     save_cnf=False
-                        # )
-                        # break
-                else:
-                    print('No output found in file')
+                if success:
+                    inf_obj, _, out_str = ret
+                    opt_zma = elstruct.reader.opt_zmatrix(
+                        inf_obj.prog, out_str)
+                    guess_zma = opt_zma
 
             elif job == elstruct.Job.ENERGY:
                 _, _ = execute_job(
@@ -229,13 +205,13 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
         _save_fxn = _save_cscanfs
         coord_locs = constraint_dct
 
-        _save_fxn(
-            cscn_run_fs=scn_run_fs,
-            cscn_save_fs=scn_save_fs,
-            scn_typ=scn_typ,
-            coord_locs=coord_locs,
-            mod_thy_info=mod_thy_info,
-            in_zma_fs=in_zma_fs)
+    _save_fxn(
+        scn_run_fs=scn_run_fs,
+        scn_save_fs=scn_save_fs,
+        scn_typ=scn_typ,
+        coord_locs=coord_locs,
+        mod_thy_info=mod_thy_info,
+        in_zma_fs=in_zma_fs)
 
 
 def _save_scanfs(scn_run_fs, scn_save_fs, scn_typ,
@@ -268,27 +244,27 @@ def _save_scanfs(scn_run_fs, scn_save_fs, scn_typ,
             _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
-def _save_cscanfs(cscn_run_fs, cscn_save_fs, scn_typ,
+def _save_cscanfs(scn_run_fs, scn_save_fs, scn_typ,
                   coord_locs, mod_thy_info, in_zma_fs=True):
     """ save the scans that have been run so far
     """
 
-    if not cscn_run_fs[1].exists([coord_locs]):
+    if not scn_run_fs[1].exists([coord_locs]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs1 in cscn_run_fs[2].existing([coord_locs]):
-            if cscn_run_fs[2].exists(locs1):
-                for locs2 in cscn_run_fs[3].existing(locs1):
+        for locs1 in scn_run_fs[2].existing([coord_locs]):
+            if scn_run_fs[2].exists(locs1):
+                for locs2 in scn_run_fs[3].existing(locs1):
 
                     # Set run filesys
-                    run_path = cscn_run_fs[-1].path(locs2)
+                    run_path = scn_run_fs[-1].path(locs2)
                     run_fs = autofile.fs.run(run_path)
                     print("Reading from scan run at {}".format(run_path))
 
                     # Save the structure
                     saved = filesys.save_struct(
-                        run_fs, cscn_save_fs, locs2, _set_job(scn_typ),
+                        run_fs, scn_save_fs, locs2, _set_job(scn_typ),
                         mod_thy_info, in_zma_fs=in_zma_fs)
 
                     # Add to locs lst if the structure is saved
@@ -299,7 +275,7 @@ def _save_cscanfs(cscn_run_fs, cscn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            _write_traj(coord_locs, cscn_save_fs, mod_thy_info, locs_lst)
+            _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
 def _set_job(scn_typ):
@@ -350,7 +326,6 @@ def _write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
 # DERIVED FUNCTION THAT RUNS RUN_SCAN AND SAVE IN TWO DIRECTIONS #
 def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
                      grid1, grid2, coord_name,
-                     thy_save_fs,
                      scn_run_fs, scn_save_fs,
                      opt_script_str, overwrite,
                      update_guess=True,
@@ -368,7 +343,6 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
             zma=ts_zma,
             spc_info=ts_info,
             mod_thy_info=mod_var_scn_thy_info,
-            thy_save_fs=thy_save_fs,
             coord_names=[coord_name],
             coord_grids=[grid],
             scn_run_fs=scn_run_fs,
@@ -416,7 +390,6 @@ def multiref_rscan(ts_zma, ts_info,
     run_two_way_scan(
         ts_zma, ts_info, mod_var_scn_thy_info,
         grid1, grid2, coord_name,
-        vscnlvl_thy_save_fs,
         scn_run_fs, scn_save_fs,
         opt_script_str, overwrite,
         update_guess=update_guess,

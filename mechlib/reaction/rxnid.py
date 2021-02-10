@@ -8,7 +8,6 @@ import automol
 from ioformat import ptt
 import chemkin_io
 from mechanalyzer.inf import rxn as rinfo
-from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from phydat import phycon
 from mechlib import filesys
@@ -19,11 +18,12 @@ CLA_INP = 'inp/class.csv'
 
 
 def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
-    """
+    """ reactin
     """
 
     # Try to build the Z-Matrix reaction object or identify from scratch
-    zrxn, zma = _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix)
+    zrxn, zma = _read_from_filesys(
+        rxn_info, ini_thy_info, zma_locs, save_prefix)
     if zrxn is None:
         print('    Identifying class')
         zrxn, zma = _id_reaction(rxn_info)

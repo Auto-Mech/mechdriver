@@ -15,6 +15,7 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs,
     locs_lst, enes_lst = _grid_vals(
         grid, dist_name, scn_save_fs,
         mod_thy_info, constraint_dct)
+    print('lst', locs_lst, enes_lst)
 
     # Get the max zma
     max_idx = automol.pot.find_max1d(enes_lst)
@@ -61,7 +62,6 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs,
         enes = []
         locs_lst = []
         for locs in locs_list:
-            print('locs', locs)
             if scn_save_fs[-1].exists(locs):
                 scn_path = scn_save_fs[-1].path(locs)
                 sp_save_fs = autofile.fs.single_point(scn_path)
@@ -70,7 +70,6 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs,
         locs_lst_lst.append(locs_lst)
         if enes:
             enes_lst.append(enes)
-        print('enes_lst', enes_lst)
     max_enes = []
     max_locs = []
     for idx_j, enes in enumerate(enes_lst):
@@ -125,7 +124,9 @@ def _grid_vals(grid, dist_name, scn_save_fs,
     # Get the energies along the grid
     for locs in grid_locs:
         print('locs', locs)
+        print(scn_save_fs[-1].path(locs))
         if scn_save_fs[-1].exists(locs):
+            print('exists')
             scn_path = scn_save_fs[-1].path(locs)
             sp_save_fs = autofile.fs.single_point(scn_path)
             enes_lst.append(sp_save_fs[-1].file.energy.read(mod_thy_info[1:4]))

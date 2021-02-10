@@ -424,14 +424,14 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
         hs_thy_info = tinfo.modify_orb_label(
             thy_info, hs_info)
 
-        _, runlvl_fs = build_fs(
+        runlvl_cnf_run_fs, runlvl_cnf_save_fs = build_fs(
             run_prefix, save_prefix, 'CONFORMER',
             rxn_locs=rxn_info, ts_locs=(),
             thy_locs=mod_thy_info[1:])
 
         ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
             runlvl_cnf_save_fs, mod_thy_info)
-        runlvl_cnf_save_fs = (runlvl_fs, ini_min_cnf_locs)
+        runlvl_cnf_save_fs = (runlvl_cnf_save_fs, ini_min_cnf_locs)
 
         runlvl_scn_run_fs, runlvl_scn_save_fs = build_fs(
             run_prefix, save_prefix, 'SCAN',
@@ -502,8 +502,8 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
     }
 
     runfs_dct = {
-        'runlvl_ts_fs': runlvl_ts_run_fs,
         'runlvl_scn_fs': runlvl_scn_run_fs,
+        'runlvl_cnf_fs': runlvl_cnf_run_fs,
         'vscnlvl_ts_fs': vscnlvl_ts_run_fs,
         'vscnlvl_scn_fs': vscnlvl_scn_run_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_run_fs,

@@ -50,12 +50,16 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
     zrxn = ts_dct['zrxn']
 
+    runlvl_cnf_run_fs = runfs_dct['runlvl_cnf_fs']
+    cid = [autofile.schema.generate_new_conformer_id()]
+    run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cid))
+
     # Optimize the saddle point
     script_str, kwargs = qchem_params(
         method_dct)
     opt_ret = optimize_saddle_point(
         guess_zmas, ts_info, mod_thy_info,
-        runfs_dct, script_str, overwrite, **kwargs)
+        run_fs, script_str, overwrite, **kwargs)
 
     # Calculate the Hessian for the optimized structure
     if opt_ret is not None:
@@ -63,7 +67,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
         # (maybe just have remove imag do this?)
         hess_ret, freqs, imags = saddle_point_hessian(
             opt_ret, ts_info, method_dct,
-            runfs_dct, overwrite)
+            run_fs, overwrite)
 
         sadpt_status = saddle_point_checker(imags)
 
@@ -84,7 +88,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
         if sadpt_status == 'success':
             save_saddle_point(
                 zrxn, opt_ret, hess_ret, freqs, imags,
-                mod_thy_info, savefs_dct,
+                mod_thy_info, savefs_dct, cid,
                 zma_locs=[0])
 
     else:
@@ -180,13 +184,10 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
 
 
 def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
-                          runfs_dct, opt_script_str, overwrite,
+                          run_fs, opt_script_str, overwrite,
                           **opt_kwargs):
     """ Optimize the transition state structure obtained from the grid search
     """
-
-    _, ts_run_path = runfs_dct['runlvl_ts_fs']
-    run_fs = autofile.fs.run(ts_run_path)
 
     ioprinter.info_message('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
 
@@ -240,12 +241,9 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
 
 
 def saddle_point_hessian(opt_ret, ts_info, method_dct,
-                         runfs_dct, overwrite):
+                         run_fs, overwrite):
     """ run things for checking Hessian
     """
-
-    _, ts_run_path = runfs_dct['runlvl_ts_fs']
-    run_fs = autofile.fs.run(ts_run_path)
 
     mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
     script_str, kwargs = qchem_params(
@@ -318,13 +316,12 @@ def saddle_point_checker(imags):
 
 
 def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
-                      mod_thy_info, savefs_dct,
+                      mod_thy_info, savefs_dct, locs,
                       zma_locs=(0,)):
     """ Optimize the transition state structure obtained from the grid search
     """
 
     cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
-    ts_save_fs, ts_save_path = savefs_dct['runlvl_ts_fs']
 
     # Read the geom, energy, and Hessian from output
     opt_inf_obj, opt_inp_str, opt_out_str = opt_ret
@@ -343,14 +340,7 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     freqs = sorted([-1.0*val for val in imags] + freqs)
     ioprinter.debug_message('TS freqs: {}'.format(' '.join(str(freq) for freq in freqs)))
 
-    # Save the information into the filesystem
-    ioprinter.save_geo(ts_save_path)
-
-    # Save geom in the upper theory/TS layer
-    ts_save_fs[0].file.geometry.write(geo)
-
     # Save this structure as first conformer
-    locs = [autofile.schema.generate_new_conformer_id()]
     cnf_save_fs[-1].create(locs)
     cnf_save_fs[-1].file.geometry_info.write(opt_inf_obj, locs)
     cnf_save_fs[-1].file.geometry_input.write(opt_inp_str, locs)
@@ -372,6 +362,7 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
 
     # Save the torsions
+    print('zma test:\n', zma)
     rotors = automol.rotor.from_zmatrix(zma)
     if any(rotors):
         zma_save_fs[-1].file.torsions.write(rotors, zma_locs)

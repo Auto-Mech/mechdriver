@@ -204,7 +204,6 @@ def job_fs(prefix, run, locs_idx=None):
     return bld_run_fs, bld_locs
 
 
-
 if __name__ == '__main__':
     RUN_PREFIX = os.path.join(os.getcwd(), 'run')
     SAVE_PREFIX = os.path.join(os.getcwd(), 'save')

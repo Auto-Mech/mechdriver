@@ -12,7 +12,7 @@ from mechanalyzer.inf import rxn as rinfo
 from phydat import symm
 from phydat import eleclvl
 from phydat import phycon
-from mechlib.ilesys import build_fs
+from mechlib.filesys import build_fs
 from mechlib.reaction import rxnid
 
 
@@ -355,8 +355,8 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
         rxn_info, ini_thy_info, zma_locs, save_prefix)
 
     if zrxn is not None:
-        rxn_run_fs, rxn_save_fs = build_fs(
-            run_prefix, save_prefix, [], 'REACTION')
+        rxn_run_fs = autofile.fs.reaction(run_prefix)
+        rxn_save_fs = autofile.fs.reaction(save_prefix)
         rxn_run_path = rxn_run_fs[-1].path(rinfo.sort(rxn_info))
         rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
         rxn_fs = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]

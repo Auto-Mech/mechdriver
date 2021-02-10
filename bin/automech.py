@@ -12,7 +12,7 @@ from drivers import printdriver
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 from mechlib.reaction import rxnid
-from mechlib.filesys.build import prefix_fs
+from mechlib.filesys import prefix_fs
 from mechlib.submission import print_host_name
 
 
