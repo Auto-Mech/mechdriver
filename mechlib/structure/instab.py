@@ -213,7 +213,6 @@ def break_all_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
         # Get theory
         spc_model = rxn['model'][1]
         geo_model = spc_model_dct[spc_model]['es']['geo']
-        print('geo_model', geo_model)
         ini_thy_info = tinfo.from_dct(geo_model)
 
         new_rxn['dummy'] = []

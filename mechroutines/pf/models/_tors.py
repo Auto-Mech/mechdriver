@@ -184,8 +184,6 @@ def _tors_strs(torsion, geo):
     """ Gather the 1DHR torsional data and gather them into a MESS file
     """
 
-    print('geo in tors str\n', geo)
-
     mess_hr_str = mess_io.writer.rotor_hindered(
         group=torsion.groups[0],
         axis=torsion.axis,

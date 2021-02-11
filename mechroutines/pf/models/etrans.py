@@ -20,21 +20,17 @@ def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
     mass1, mass2 = mass_params(
         well_info, bath_info, etrans_dct)
 
-    print(etrans_dct)
-
     ioprinter.info_message(
         '- Determining the Lennard-Jones model parameters...', newline=1)
     sig1, eps1, sig2, eps2 = lj_params(
         well_info, bath_info, etrans_dct)
 
-    print(sig1, eps1, sig2, eps2)
     ioprinter.info_message(
         '- Determining the energy-down transfer model parameters...',
         newline=1)
     exp_factor, exp_power, exp_cutoff = edown_params(
         well_info, bath_info, etrans_dct,
         ljpar=(sig1, eps1, mass1, mass2))
-    print(exp_factor, exp_power, exp_cutoff)
 
     # Write the Energy Transfer section string
     if all(val is not None

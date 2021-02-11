@@ -27,7 +27,6 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
     # Build initial lists for storing potential energies and Hessians
     grid_points = automol.pot.points(grid_vals)
     grid_coords = automol.pot.coords(grid_vals)
-    print('grid coords in read', grid_coords)
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
@@ -38,8 +37,6 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
     else:
         scn_fs = autofile.fs.cscan(zma_path)
 
-    print('cnf save path', cnf_save_path)
-    print('ref_ene', ref_ene)
     # Read the energies and Hessians from the filesystem
     for point, vals in zip(grid_points, grid_coords):
 
@@ -48,14 +45,11 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
             locs = [constraint_dct] + locs
 
         ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
-        print('path', scn_fs[-1].path(locs))
-        print('ene', ene)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL
         else:
             pot[point] = -10.0
 
-        # print('path test in read_hr_pot:', scn_fs[-1].path(locs))
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):
                 geoms[point] = scn_fs[-1].file.geometry.read(locs)
@@ -81,8 +75,6 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
                 zmas[point] = None
 
         paths[point] = scn_fs[-1].path(locs)
-
-    print('pot in read\n', pot)
 
     return pot, geoms, grads, hessians, zmas, paths
 

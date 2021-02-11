@@ -55,7 +55,6 @@ def pst_kt(n_par, mred, cn_par, temp):
     jiffy = 2.441888e-17
 
     kt_val *= BOHR2CM**3 / jiffy
-    # print('kt_val test:', kt_val, cn_par)
 
     return kt_val
 
