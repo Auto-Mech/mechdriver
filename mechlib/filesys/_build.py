@@ -14,11 +14,13 @@ def root_locs(spc_dct_i, saddle=False):
     if not saddle:
         spc_info = sinfo.from_dct(spc_dct_i)
         rxn_info = None
+        ts_info = None
     else:
         spc_info = None
         rxn_info = rinfo.sort(spc_dct_i['rxn_info'])
+        ts_info = ()
 
-    return {'spc_locs': spc_info, 'rxn_locs': rxn_info}
+    return {'spc_locs': spc_info, 'rxn_locs': rxn_info, 'ts_locs': ts_info}
 
 
 def build_fs(run_prefix, save_prefix, end,

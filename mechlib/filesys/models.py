@@ -7,6 +7,8 @@ from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.filesys import mincnf
+from mechlib.filesys import build_fs
+from mechlib.filesys import root_locs
 
 
 def pf_filesys(spc_dct_i, pf_levels,
@@ -44,15 +46,16 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
     levelp = tinfo.modify_orb_label(level, spc_info)
 
     _root = root_locs(spc_dct_i, saddle=saddle)
-    ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
+    cnf_run_fs, cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
-        thy_locs=mod_ini_thy_info[1:],
+        thy_locs=levelp[1:],
         **_root)
 
     min_cnf_locs, cnf_save_path = mincnf.min_energy_conformer_locators(
         cnf_save_fs, levelp)
 
-    return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]
+    return [cnf_save_fs, cnf_save_path, min_cnf_locs, '', cnf_run_fs]
+    # return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]
 
 
 def set_rpath_filesys(ts_dct, level):

@@ -145,10 +145,9 @@ def conformer_tsk(job, spc_dct, spc_name,
     # Set the spc_info
     if not saddle:
         spc_info = sinfo.from_dct(spc_dct_i)
-        zrxn = None
     else:
         spc_info = rinfo.ts_info(spc_dct_i['rxn_info'])
-    # zrxn = spc_dct_i.get('zrxn', None)
+    zrxn = spc_dct_i.get('zrxn', None)
 
     overwrite = es_keyword_dct['overwrite']
     retryfail = es_keyword_dct['retryfail']
@@ -515,7 +514,7 @@ def hr_tsk(job, spc_dct, spc_name,
     mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, spc_info)
 
     # Set the filesystem objects
-    _root = root_locs(spc_dct_i, saddle=False)
+    _root = root_locs(spc_dct_i, saddle=saddle)
     ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_ini_thy_info[1:],
@@ -524,9 +523,7 @@ def hr_tsk(job, spc_dct, spc_name,
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_thy_info[1:],
         **_root)
-    _, instab_save_fs = build_fs(
-        run_prefix, save_prefix, 'INSTAB',
-        spc_locs=spc_info, thy_locs=mod_thy_info[1:])
+    instab_save_fs = ()
 
     ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
         ini_cnf_save_fs, mod_ini_thy_info)

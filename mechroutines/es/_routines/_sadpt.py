@@ -363,7 +363,7 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
 
     # Save the torsions
     print('zma test:\n', zma)
-    rotors = automol.rotor.from_zmatrix(zma)
+    rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
     if any(rotors):
         zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
 
