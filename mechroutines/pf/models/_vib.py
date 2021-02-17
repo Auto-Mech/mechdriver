@@ -92,6 +92,18 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
                              prefix, saddle=False, conf=None):
     """ Get frequencies from one version of ProjRot
     """
+    ret = tors_projected_freqs(
+        pf_filesystems, mess_hr_str, projrot_hr_str,
+        prefix, saddle=saddle, conf=conf)
+    freqs, imag, tors_zpe, scale_factor, _, _ = ret
+
+    return freqs, imag, tors_zpe, scale_factor
+
+
+def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
+                         prefix, saddle=False, conf=None):
+    """ Get frequencies from one version of ProjRot
+    """
 
     run_path = os.path.join(prefix, 'TORS_PF')
     if not os.path.exists(run_path):
@@ -232,7 +244,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
             '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
             'kcal/mol between harmonic and hindered torsional ZPVEs')
 
-    return freqs, imag, tors_zpe, scale_factor
+    return freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1
 
 
 M3_COEFFS = {
