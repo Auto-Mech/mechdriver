@@ -256,21 +256,23 @@ PRNT_TSK_OBJ_SUPPORTED_LST = [
 ]
 PRNT_TSK_SUPPORTED_DCT = {
     'spc': [
-        'freqs', 'energy', 'geo', 'zmatrix', 'enthalpy'],
+        'freqs', 'energy', 'geo', 'zmatrix', 'enthalpy', 'coeffs'],
     'ts': [
         'freqs'],
     'vdw': [
         'freqs']}
 PRNT_TSK_KEYWORDS_SUPPORTED_DCT = {
-    'freqs': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
+    'freqs': ['geolvl', 'proplvl', 'nconfs', 'econfs', 'scale'],
     'energy': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
     'geo': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
     'zmatrix': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
     'enthalpy': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
+    'coeffs': [],
     }
 PRNT_TSK_KEYWORDS_DEFAULT_DCT = {
     'geolvl': None,
     'proplvl': None,
     'nconfs': 'min',
-    'econfs': 'min'
+    'econfs': 'min',
+    'scale': None
     }

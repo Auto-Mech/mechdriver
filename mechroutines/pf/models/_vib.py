@@ -132,7 +132,19 @@ def read_anharmon_matrix(pf_filesystems):
 
 
 def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
-                             prefix, saddle=False):
+                             prefix, saddle=False, conf=None):
+    """ Get frequencies from one version of ProjRot
+    """
+    ret = tors_projected_freqs(
+        pf_filesystems, mess_hr_str, projrot_hr_str,
+        prefix, saddle=saddle, conf=conf)
+    freqs, imag, tors_zpe, scale_factor, _, _ = ret
+
+    return freqs, imag, tors_zpe, scale_factor
+
+
+def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
+                         prefix, saddle=False, conf=None):
     """ Get frequencies from one version of ProjRot
     """
 
@@ -143,7 +155,9 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     # Build the filesystems
     [harm_cnf_fs, _, harm_min_locs, _, harm_run_fs] = pf_filesystems['harm']
     [tors_cnf_fs, _, tors_min_locs, _, tors_run_fs] = pf_filesystems['tors']
-
+    if conf:
+        harm_min_locs = conf[1]
+        harm_cnf_fs = conf[2]
     # Build the run filesystem using locs
     harm_run_fs[-1].create(harm_min_locs)
     harm_run_path = harm_run_fs[-1].path(harm_min_locs)
@@ -273,7 +287,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
             '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
             'kcal/mol between harmonic and hindered torsional ZPVEs')
 
-    return freqs, imag, tors_zpe, scale_factor
+    return freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1
 
 
 M3_COEFFS = {

@@ -36,7 +36,7 @@ def calc_vrctst_flux(ini_zma, ts_info, hs_info,
     vrc_dct = _vrc_dct()
 
     # Set up the casscf options
-    ref_zma = automol.zmat.set_values(ini_zma, {coord_name: grid1[0]})
+    ref_zma = automol.zmat.set_values_by_name(ini_zma, {coord_name: grid1[0]})
     cas_kwargs = wfn.build_wfn(ref_zma, ts_info, ts_formula, high_mul,
                                rct_ichs, rct_info,
                                active_space, mod_var_scn_thy_info)

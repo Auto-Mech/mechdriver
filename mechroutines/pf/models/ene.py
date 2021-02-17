@@ -19,8 +19,9 @@ from mechlib.amech_io import printer as ioprinter
 
 
 # Functions to hand reading and formatting energies of single species
-def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                run_prefix, read_ene=True, read_zpe=True, saddle=False):
+def read_energy(
+        spc_dct_i, pf_filesystems, pf_models, pf_levels,
+        run_prefix, read_ene=True, read_zpe=True, conf=None, saddle=False):
     """ Get the energy for a species on a channel
     """
 
@@ -28,14 +29,14 @@ def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     e_elec = None
     if read_ene:
         e_elec = electronic_energy(
-            spc_dct_i, pf_filesystems, pf_levels)
+            spc_dct_i, pf_filesystems, pf_levels, conf=conf)
         ioprinter.debug_message('e_elec in models ene ', e_elec)
 
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
             spc_dct_i, pf_filesystems, pf_models,
-            pf_levels, run_prefix, saddle=saddle)
+            pf_levels, run_prefix, saddle=saddle, conf=conf)
         ioprinter.debug_message('zpe in models ene ', e_zpe)
 
     # Return the total energy requested
@@ -51,7 +52,7 @@ def read_energy(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     return ene
 
 
-def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
+def electronic_energy(spc_dct_i, pf_filesystems, pf_levels, conf=None):
     """ get high level energy at low level optimized geometry
     """
 
@@ -65,7 +66,10 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
         spc_info = sinfo.from_dct(spc_dct_i)
 
     # Get the harmonic filesys information
-    [_, cnf_path, _, _, _] = pf_filesystems['harm']
+    if conf:
+        cnf_path = conf[1]
+    else:
+        [_, cnf_path, _, _, _] = pf_filesystems['harm']
 
     # Get the electronic energy levels
     ene_levels = pf_levels['ene'][1]
@@ -99,7 +103,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels):
 
 def zero_point_energy(spc_dct_i,
                       pf_filesystems, pf_models, pf_levels,
-                      run_prefix, saddle=False):
+                      run_prefix, saddle=False, conf=None):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
@@ -115,7 +119,6 @@ def zero_point_energy(spc_dct_i,
     else:
         _, _, zpe, _ = vib.vib_analysis(
             spc_dct_i, pf_filesystems, pf_models, pf_levels,
-            run_prefix, saddle=saddle)
 
     return zpe
 

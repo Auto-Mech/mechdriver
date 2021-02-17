@@ -34,11 +34,15 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
         h_basis = get_ref_h(spc, ref_set, 0, ts)
         if h_basis is None:
             h_basis = 0.0
-        dhzero += coeff[i] * h_basis * KJ2KCAL
+            ioprinter.warning_message(
+                'No Heat of Formation in database for {} {} ', spc, ref_set)
+        if ts:
+            h_basis *= KJ2KCAL
+        dhzero += coeff[i] * h_basis
         dhzero -= coeff[i] * hzero_basis[i] * EH2KCAL
         ioprinter.debug_message('Contriubtion from:', spc)
         ioprinter.debug_message(
-            'HF0K in kcal: {:g} * {:.5f}'.format(coeff[i], h_basis * KJ2KCAL))
+            'HF0K in kcal: {:g} * {:.5f}'.format(coeff[i], h_basis))
         ioprinter.debug_message(
             'ABS in kcal: {:g} * {:.5f}'.format(
                 coeff[i], hzero_basis[i] * EH2KCAL))
@@ -54,7 +58,7 @@ def get_ref_h(species, ref, temp, ts=False):
     if ts:
         thermodb_name = 'tsthermodb_{}K.csv'.format(str(int(temp)))
     else:
-        thermodb_name = 'thermodb_{}K.csv'.format(str(int(temp)))
+        thermodb_name = 'Hfdb_{}K.csv'.format(str(int(temp)))
     thermodb_file = os.path.join(SRC_PATH, thermodb_name)
     # Find the energy value for the given species and enery type
     h_species = None

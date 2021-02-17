@@ -327,6 +327,7 @@ def build_run_trans_tsks_lst(trans_tsk_str, thy_dct, saddle=False):
 
     return trans_tsk_lst
 
+
 # Read the print tasks
 def read_print_tsks(job_path):
     """ Build a dictionary for all the theory keywords
@@ -353,7 +354,8 @@ def prnt_tsks_block(inp_str):
     return print_str
 
 
-def build_run_prnt_tsks_lst(prnt_tsk_str, rxn_model_dct, thy_dct, saddle=False):
+def build_run_prnt_tsks_lst(
+        prnt_tsk_str, rxn_model_dct, thy_dct, saddle=False):
     """ Build the list of ES tasks, potentially w/ models
     """
     prnt_tsk_lst = tsks.prnt_tsk_lst(

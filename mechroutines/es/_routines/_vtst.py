@@ -34,7 +34,7 @@ def radrad_scan(ts_zma, ts_info, hs_info,
     """
 
     # Set up the casscf options
-    ref_zma = automol.zmat.set_values(ts_zma, {coord_name: grid1[0]})
+    ref_zma = automol.zmat.set_values_by_name(ts_zma, {coord_name: grid1[0]})
     cas_kwargs = wfn.build_wfn(ref_zma, ts_info, ts_formula, high_mul,
                                rct_ichs, rct_info,
                                active_space, mod_var_scn_thy_info)
