@@ -38,11 +38,14 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels,
     else:
         [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
         target_locs = min_cnf_locs
-
+    
+    print('spc_dct_i', spc_dct_i)
+    print('target_lcs', target_locs)
     # Grab the zmatrix
     if target_locs is not None:
         zma_fs = fs.zmatrix(cnf_fs[-1].path(target_locs))
         zma = zma_fs[-1].file.zmatrix.read([0])
+        print('zma', zma)
         remdummy = geomprep.build_remdummy_shift_lst(zma)
         geo = cnf_fs[-1].file.geometry.read(target_locs)
 

@@ -1,8 +1,11 @@
 """ util functions for output driver
 """
 
+import pandas
+
 from mechlib.amech_io import parser
 from mechlib import filesys
+from autofile import io_ as io
 
 def freq_es_levels(print_keyword_dct):
     es_model = _default_es_levels(print_keyword_dct)
@@ -44,6 +47,9 @@ def _set_conf_range(print_keyword_dct):
 def conformer_list(
         print_keyword_dct, save_prefix, run_prefix,
         spc_dct_i, thy_dct):
+    """ Create a list of conformers based on the species name
+        and run.dat geolvl/proplvl
+    """
     # conformer range
     cnf_range = _set_conf_range(print_keyword_dct)
 
@@ -62,14 +68,20 @@ def conformer_list(
 
     # confs
     [cnf_fs, _, _, _, _] = pf_filesystems['harm']
-    cnf_locs_lst, cnf_locs_paths = filesys.mincnf.conformer_locators(
-        cnf_fs, thy_info, cnf_range=cnf_range)
+    if cnf_fs is not None:
+        cnf_locs_lst, cnf_locs_paths = filesys.mincnf.conformer_locators(
+            cnf_fs, thy_info, cnf_range=cnf_range)
+    else:
+        cnf_locs_lst, cnf_locs_paths = [], []
     return cnf_fs, cnf_locs_lst, cnf_locs_paths
 
 
 def conformer_list_from_models(
         print_keyword_dct, save_prefix, run_prefix,
         spc_dct_i, thy_dct, pf_levels, pf_models):
+    """ Create a list of conformers based on the species name
+        and model.dat info
+    """
     # conformer range
     cnf_range = _set_conf_range(print_keyword_dct)
 
@@ -87,3 +99,65 @@ def conformer_list_from_models(
     cnf_locs_lst, cnf_locs_paths = filesys.mincnf.conformer_locators(
         cnf_fs, thy_info, cnf_range=cnf_range)
     return cnf_fs, cnf_locs_lst, cnf_locs_paths
+
+
+def set_csv_data(tsk):
+    """ some tasks have nested dictionaries, prep for that
+    """
+    csv_data = {}
+    if 'freq' in tsk:
+        csv_data['freq'] = {}
+        csv_data['tfreq'] = {}
+        csv_data['allfreq'] = {}
+        csv_data['scalefactor'] = {}
+
+    return csv_data
+
+
+def write_csv_data(tsk, csv_data, filelabel, spc_array):
+    """ Write the csv data dictionary into the correct type of csv 
+        or text file
+    """
+    if 'freq' in tsk:
+        final_csv_data = {}
+        for key in csv_data['freq']:
+            final_csv_data[key] = csv_data['freq'][key]
+        if csv_data['scalefactor']:
+            final_csv_data['Scale Factor'] = []
+            for key in csv_data['scalefactor']:
+                final_csv_data[key + '_scalefactor'] = csv_data['scalefactor'][key]
+            final_csv_data['Torsional Frequencies'] = []
+            for key in csv_data['tfreq']:
+                final_csv_data[key + '_tfreq'] = csv_data['tfreq'][key]
+            final_csv_data['All RT Harmonic Frequencies'] = []
+            for key in csv_data['allfreq']:
+                final_csv_data[key + '_RTFreq'] = csv_data['allfreq'][key]
+
+        ncols = max([len(x) for x in final_csv_data.values()])
+        df = pandas.DataFrame.from_dict(
+            final_csv_data, orient='index',
+            columns=['Path', 'ZPVE [A.U.]', *[''] * (ncols-2)])
+        df.to_csv(filelabel, float_format='%.5f')
+    if 'geo' in tsk:
+        all_data = '\n'.join([spc_data for spc_data in csv_data.values()])
+        io.write_file(filelabel, all_data)
+    if 'zma' in tsk:
+        all_data = '\n'.join([spc_data for spc_data in csv_data.values()])
+        io.write_file(filelabel, all_data)
+    if 'ene' in tsk:
+        df = pandas.DataFrame.from_dict(
+            csv_data, orient='index',
+            columns=['Path', 'Energy [A.U.]'])
+        df.to_csv(filelabel, float_format='%.8f')
+    if 'enthalpy' in tsk:
+        df = pandas.DataFrame.from_dict(
+            csv_data, orient='index',
+            columns=[
+                'Path', 'ZPVE+Energy [A.U.]', 'Hf (0 K) [kcal/mol]', *spc_array])
+        df.to_csv(filelabel, float_format='%.6f')
+    if 'coeffs' in tsk:
+        df = pandas.DataFrame.from_dict(
+            csv_data, orient='index',
+            columns=[
+                *spc_array])
+        df.to_csv(filelabel, float_format='%.2f')

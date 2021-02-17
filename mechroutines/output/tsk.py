@@ -4,7 +4,6 @@
 import os
 import sys
 import importlib
-import pandas
 
 import autofile
 import automol
@@ -15,11 +14,12 @@ from mechlib.amech_io import parser
 from mechlib import filesys
 # from mechlib.structure import instab
 from mechroutines.pf.models import _vib as vib
+from mechroutines.pf.models import _tors as tors
+from mechroutines.pf.models import typ
 from mechroutines.pf.models import ene
 from mechroutines.pf.thermo import basis
 from mechroutines.pf.models.inf import set_pf_info
 from . import _util as util
-from autofile import io_ as io
 
 # Dictionary of Electronic Structure Calculators
 
@@ -37,27 +37,20 @@ def run_tsk(tsk, spc_dct, rxn_lst,
     ioprinter.obj('line_dash')
     ioprinter.output_keyword_list(print_keyword_dct, thy_dct)
 
-    # If species is unstable, set task to 'none'
-    if 'enthalpy' in tsk:
-        chn_basis_ene_dct = {}
-        spc_array = []
+    # Setup csv data dictionary for specific task
+    csv_data = util.set_csv_data(tsk)
+    chn_basis_ene_dct = {}
+    spc_array = []
 
-    csv_data = {}
+    # Loop over species to collect task info
     spc_queue = parser.species.build_spc_queue(rxn_lst)
     for spc_name, (pf_model, spc_model) in spc_queue:
 
-        if print_keyword_dct['geolvl']:
-            thy_info = filesys.inf.get_es_info(
-                print_keyword_dct['geolvl'], thy_dct)
-        else:
-            pf_levels, pf_models, _, _ = set_pf_info(
-                model_dct, thy_dct, pf_model, pf_model)
-            thy_info = pf_levels['geo'][1]
-            #    filesys.inf.get_es_info(
-            #    pf_levels['geo'][1], thy_dct)
-
+        # print species
         ioprinter.obj('line_dash')
         ioprinter.info_message("Species: ", spc_name)
+
+        # If species is unstable, set task to 'none'
         # stable = instab.check_unstable_species(
         #     tsk, spc_dct, spc_name, thy_info, save_prefix)
         # if not stable:
@@ -67,167 +60,227 @@ def run_tsk(tsk, spc_dct, rxn_lst,
         #         'because species is unstable')
         #     continue
 
-        spc_dct_i = spc_dct[spc_name]
-
-        # # Set the filesystem objects
-        # thy_run_fs, thy_run_path = filesys.build.spc_thy_fs_from_root(
-        #     run_prefix, spc_info, mod_thy_info)
-        # thy_save_fs, thy_save_path = filesys.build.spc_thy_fs_from_root(
-        #     save_prefix, spc_info, mod_thy_info)
-        # _, ini_thy_save_path = filesys.build.spc_thy_fs_from_root(
-        #     save_prefix, spc_info, mod_ini_thy_info)
-        # cnf_save_fs = autofile.fs.conformer(thy_save_path)
-        # run_fs = filesys.build.run_fs_from_prefix(thy_run_path)
-
-        # Loop over conformers
-        if print_keyword_dct['geolvl']:
-            cnf_fs, cnf_locs_lst, cnf_locs_paths = util.conformer_list(
-                print_keyword_dct, save_prefix, run_prefix,
-                spc_dct_i, thy_dct)
-            pf_levels, pf_models = None, None
-        else:
+        # Heat of formation basis molecules and coefficients
+        # is not conformer specific
+        if 'coeffs' in tsk:
             pf_levels, pf_models, _, _ = set_pf_info(
-                model_dct, thy_dct, spc_model, spc_model)
-            ret = util.conformer_list_from_models(
-                print_keyword_dct, save_prefix, run_prefix,
-                spc_dct_i, thy_dct, pf_levels, pf_models)
-            cnf_fs, cnf_locs_lst, cnf_locs_paths = ret
-            # ref_scheme = pf_model['ref_scheme']
-            # ref_enes = pf_models['ref_enes']
-        for locs, locs_path in zip(cnf_locs_lst, cnf_locs_paths):
-            label = spc_name + '_' + '_'.join(locs)
-            if 'freq' in tsk:
-
-                es_model = util.freq_es_levels(print_keyword_dct)
-                pf_levels = parser.model.pf_level_info(
-                    es_model, thy_dct)
-                freqs, _, zpe = vib.read_locs_harmonic_freqs(
-                    cnf_fs, locs_path, locs, saddle=False)
-                #if pf_models:
-                #    pf_filesystems = filesys.models.pf_filesys(
-                #        spc_dct_i, pf_levels,
-                #        run_prefix, save_prefix, saddle=False)
-                #    rotors = tors.build_rotors(
-                #        spc_dct_i, pf_filesystems, pf_models, pf_levels)
-                #    #    rxn_class=rxn_class,
-                #    #    frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
-                #    if typ.nonrigid_tors(pf_models, rotors):
-                #        freqs, imag, tors_zpe, pot_scalef = ret
-                #        ret = vib.tors_projected_freqs_zpe(
-                #            pf_filesystems, hr_str, prot_str,
-                #            run_prefix, saddle=False) # saddle)
-                #        if typ.scale_1d(pf_models):
-                #            tors_strs = tors.make_hr_strings(
-                #                rotors, run_path, pf_models['tors'],
-                #                scale_factor=pot_scalef)
-                #            [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
-                #            _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
-                #                pf_filesystems, hr_str,
-                #                prot_str, run_prefix, saddle=False) # saddle)
-                #            # Calculate current zpe assuming no freq scaling: tors+projfreq
- #              #         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-                tors_zpe = 0.0
-                spc_data = []
-                zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-                if freqs:
-                    freqs, zpe = vib.scale_frequencies(
-                        freqs, tors_zpe, pf_levels, scale_method='3c')
-                    spc_data = [locs_path, zpe, *freqs]
-                csv_data[label] = spc_data
-
-            elif 'geo' in tsk:
-
-                if cnf_fs[-1].file.geometry.exists(locs):
-                    geo = cnf_fs[-1].file.geometry.read(locs)
-                    energy = cnf_fs[-1].file.energy.read(locs)
-                    comment = 'energy: {0:>15.10f}'.format(energy)
-                    xyz_str = automol.geom.xyz_string(geo, comment=comment)
+                model_dct, thy_dct, pf_model, pf_model)
+            thy_info = pf_levels['geo'][1]
+            filelabel = 'coeffs'
+            filelabel += '_{}'.format(pf_models['ref_scheme'])
+            filelabel += '.csv'
+            label = spc_name
+            basis_dct, uniref_dct = basis.prepare_refs(
+                pf_models['ref_scheme'], spc_dct, [[spc_name, None]])
+            # Get the basis info for the spc of interest
+            spc_basis, coeff_basis = basis_dct[spc_name]
+            coeff_array = []
+            for spc_i in spc_basis:
+                if spc_i not in spc_array:
+                    spc_array.append(spc_i)
+            for spc_i in spc_array:
+                if spc_i in spc_basis:
+                    coeff_array.append(coeff_basis[spc_basis.index(spc_i)])
                 else:
-                    xyz_str = '\t -- Missing --'
-                spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
-                    spc_name, locs, locs_path) + xyz_str
-                csv_data[label] = spc_data
+                    coeff_array.append(0)
+            csv_data[label] = [*coeff_array]
 
-            elif 'zma' in tsk:
-                geo = cnf_fs[-1].file.geometry.read(locs)
-                zma = automol.geom.zmatrix(geo)
-                energy = cnf_fs[-1].file.energy.read(locs)
-                comment = 'energy: {0:>15.10f}\n'.format(energy)
-                zma_str = automol.zmat.string(zma)
-                spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
-                    spc_name, locs, locs_path) + comment + zma_str
-                csv_data[label] = spc_data
+        else:
+            # unpack spc and level info
+            spc_dct_i = spc_dct[spc_name]
+            if print_keyword_dct['geolvl']:
+                thy_info = filesys.inf.get_es_info(
+                    print_keyword_dct['geolvl'], thy_dct)
+            else:
+                pf_levels, pf_models, _, _ = set_pf_info(
+                    model_dct, thy_dct, pf_model, pf_model)
+                thy_info = pf_levels['geo'][1]
 
-            elif 'ene' in tsk:
-                energy = None
-                if pf_levels:
+                # Loop over conformers
+            if print_keyword_dct['geolvl']:
+                cnf_fs, cnf_locs_lst, cnf_locs_paths = util.conformer_list(
+                    print_keyword_dct, save_prefix, run_prefix,
+                    spc_dct_i, thy_dct)
+                pf_levels, pf_models = None, None
+            else:
+                pf_levels, pf_models, _, _ = set_pf_info(
+                    model_dct, thy_dct, spc_model, spc_model)
+                ret = util.conformer_list_from_models(
+                    print_keyword_dct, save_prefix, run_prefix,
+                    spc_dct_i, thy_dct, pf_levels, pf_models)
+                cnf_fs, cnf_locs_lst, cnf_locs_paths = ret
+            for locs, locs_path in zip(cnf_locs_lst, cnf_locs_paths):
+
+                label = spc_name + '_' + '_'.join(locs)
+                if 'freq' in tsk:
+
+                    filelabel = 'freq'
+                    if pf_levels:
+                        filelabel += '_m{}'.format(pf_levels['harm'][0])
+                    else:
+                        filelabel += '_{}'.format(print_keyword_dct['geolvl'])
+                    filelabel += '.csv'
+
+                    if pf_models:
+                        pf_filesystems = filesys.models.pf_filesys(
+                            spc_dct_i, pf_levels,
+                            run_prefix, save_prefix, saddle=False)
+                        rotors = tors.build_rotors(
+                            spc_dct_i, pf_filesystems, pf_models, pf_levels)
+                         #   rxn_class=rxn_class,
+                         #    frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+                        if typ.nonrigid_tors(pf_models, rotors):
+                            run_path = filesys.models.make_run_path(
+                                pf_filesystems, 'tors')
+                            tors_strs = tors.make_hr_strings(
+                                rotors, run_path, pf_models['tors'])
+                            [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
+                            ret = vib.tors_projected_freqs(
+                                pf_filesystems, hr_str, prot_str,
+                                run_prefix, saddle=False) # saddle)
+                            freqs, imag, tors_zpe, scale_fact, tors_freqs, all_freqs = ret
+                            #if typ.scale_1d(pf_models):
+                            #    tors_strs = tors.make_hr_strings(
+                            #        rotors, run_path, pf_models['tors'],
+                            #        scale_factor=pot_scalef)
+                            #    [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
+                            #    _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
+                            #        pf_filesystems, hr_str,
+                            #        prot_str, run_prefix, saddle=False) # saddle)
+                    #            # Calculate current zpe assuming no freq scaling: tors+projfreq
+ #                  #         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
+                            csv_data['tfreq'][label] = tors_freqs
+                            csv_data['allfreq'][label] = all_freqs
+                            csv_data['scalefactor'][label] = scale_fact
+                    else:
+                        es_model = util.freq_es_levels(print_keyword_dct)
+                        pf_levels = parser.model.pf_level_info(
+                            es_model, thy_dct)
+                        try:
+                            freqs, _, zpe = vib.read_locs_harmonic_freqs(
+                                cnf_fs, locs_path, locs, saddle=False)
+                        except:
+                            freqs = []
+                            zpe = 0
+
+                    tors_zpe = 0.0
+                    spc_data = []
+                    zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
+                    if freqs and print_keyword_dct['scale'] is not None:
+                        freqs, zpe = vib.scale_frequencies(
+                            freqs, tors_zpe, pf_levels, scale_method='3c')
+                    spc_data = [locs_path, zpe, *freqs]
+                    csv_data['freq'][label] = spc_data
+                elif 'geo' in tsk:
+
+                    filelabel = 'geo'
+                    if pf_levels:
+                        filelabel += '_{}'.format(pf_levels['harm'])
+                    else:
+                        filelabel += '_{}'.format(print_keyword_dct['geolvl'])
+                    filelabel += '.txt'
+
+                    if cnf_fs[-1].file.geometry.exists(locs):
+                        geo = cnf_fs[-1].file.geometry.read(locs)
+                        energy = cnf_fs[-1].file.energy.read(locs)
+                        comment = 'energy: {0:>15.10f}'.format(energy)
+                        xyz_str = automol.geom.xyz_string(geo, comment=comment)
+                    else:
+                        xyz_str = '\t -- Missing --'
+                    spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
+                        spc_name, locs, locs_path) + xyz_str
+                    csv_data[label] = spc_data
+
+                elif 'zma' in tsk:
+                    
+                    filelabel = 'zmat'
+                    if pf_levels:
+                        filelabel += '_{}'.format(pf_levels['harm'])
+                    else:
+                        filelabel += '_{}'.format(print_keyword_dct['geolvl'])
+                    filelabel += '.txt'
+
+                    geo = cnf_fs[-1].file.geometry.read(locs)
+                    zma = automol.geom.zmatrix(geo)
+                    energy = cnf_fs[-1].file.energy.read(locs)
+                    comment = 'energy: {0:>15.10f}\n'.format(energy)
+                    zma_str = automol.zmat.string(zma)
+                    spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
+                        spc_name, locs, locs_path) + comment + zma_str
+                    csv_data[label] = spc_data
+
+                elif 'ene' in tsk:
+                    
+                    filelabel = 'ene'
+                    if pf_levels:
+                        filelabel += '_{}'.format(pf_levels['harm'])
+                        filelabel += '_{}'.format(pf_levels['ene'])
+                    else:
+                        filelabel += '_{}'.format(print_keyword_dct['geolvl'])
+                        filelabel += '_{}'.format(print_keyword_dct['proplvl'])
+                    filelabel += '.csv'
+
+                    energy = None
+                    if pf_levels:
+                        pf_filesystems = filesys.models.pf_filesys(
+                            spc_dct_i, pf_levels,
+                            run_prefix, save_prefix, saddle=False)
+                        energy = ene.electronic_energy(
+                            spc_dct_i, pf_filesystems, pf_levels,
+                            conf=(locs, locs_path, cnf_fs))
+                    else:
+                        spc_info = filesys.inf.get_spc_info(spc_dct_i)
+                        thy_info = filesys.inf.get_es_info(
+                            print_keyword_dct['proplvl'], thy_dct)
+                        mod_thy_info = filesys.inf.modify_orb_restrict(
+                            spc_info, thy_info)
+                        sp_save_fs = autofile.fs.single_point(locs_path)
+                        sp_save_fs[-1].create(mod_thy_info[1:4])
+                        # Read the energy
+                        sp_path = sp_save_fs[-1].path(mod_thy_info[1:4])
+                        if os.path.exists(sp_path):
+                            if sp_save_fs[-1].file.energy.exists(
+                                    mod_thy_info[1:4]):
+                                ioprinter.reading('Energy', sp_path)
+                                energy = sp_save_fs[-1].file.energy.read(
+                                    mod_thy_info[1:4])
+                    csv_data[label] = [locs_path, energy]
+
+                elif 'enthalpy' in tsk:
+                    
+                    filelabel = 'enthalpy'
+                    if pf_levels:
+                        filelabel += '_{}'.format(pf_levels['harm'])
+                        filelabel += '_{}'.format(pf_levels['ene'])
+                    else:
+                        filelabel += '_{}'.format(print_keyword_dct['geolvl'])
+                        filelabel += '_{}'.format(print_keyword_dct['proplvl'])
+                    filelabel = '.csv'
+                    
+                    print(spc_name, locs)
+                    energy = None
                     pf_filesystems = filesys.models.pf_filesys(
                         spc_dct_i, pf_levels,
                         run_prefix, save_prefix, saddle=False)
-                    energy = ene.electronic_energy(
-                        spc_dct_i, pf_filesystems, pf_levels,
-                        conf=(locs, locs_path, cnf_fs))
-                else:
-                    spc_info = filesys.inf.get_spc_info(spc_dct_i)
-                    thy_info = filesys.inf.get_es_info(
-                        print_keyword_dct['proplvl'], thy_dct)
-                    mod_thy_info = filesys.inf.modify_orb_restrict(
-                        spc_info, thy_info)
-                    sp_save_fs = autofile.fs.single_point(locs_path)
-                    sp_save_fs[-1].create(mod_thy_info[1:4])
-                    # Read the energy
-                    sp_path = sp_save_fs[-1].path(mod_thy_info[1:4])
-                    if os.path.exists(sp_path):
-                        ioprinter.reading('Energy', sp_path)
-                        energy = sp_save_fs[-1].file.energy.read(
-                            mod_thy_info[1:4])
-                csv_data[label] = [locs_path, energy]
-
-            elif 'enthalpy' in tsk:
-                pf_filesystems = filesys.models.pf_filesys(
-                    spc_dct_i, pf_levels,
-                    run_prefix, save_prefix, saddle=False)
-                ene_abs = ene.read_energy(
-                    spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                    run_prefix, conf=(locs, locs_path, cnf_fs),
-                    read_ene=True, read_zpe=True, saddle=False)
-                ts_geom = None
-                hf0k, _, chn_basis_ene_dct, hbasis = basis.enthalpy_calculation(
-                    spc_dct, spc_name, ts_geom, ene_abs,
-                    chn_basis_ene_dct, pf_levels, pf_models,
-                    run_prefix, save_prefix, pforktp='pf', saddle=False)
-                spc_basis, coeff_basis = hbasis[spc_name]
-                coeff_array = []
-                for spc_i in spc_basis:
-                    if spc_i not in spc_array:
-                        spc_array.append(spc_i)
-                for spc_i in spc_array:
-                    if spc_i in spc_basis:
-                        coeff_array.append(coeff_basis[spc_basis.index(spc_i)])
-                    else:
-                        coeff_array.append(0)
-                csv_data[label] = [locs_path, ene_abs, hf0k, *coeff_array]
-
-    if 'freq' in tsk:
-        ncols = max([len(x) for x in csv_data.values()])
-        df = pandas.DataFrame.from_dict(
-            csv_data, orient='index',
-            columns=['Path', 'ZPVE [A.U.]', *[''] * (ncols-2)])
-        df.to_csv('freqs.csv', float_format='%.5f')
-    if 'geo' in tsk:
-        all_data = '\n'.join([spc_data for spc_data in csv_data.values()])
-        io.write_file('geometry.txt', all_data)
-    if 'zma' in tsk:
-        all_data = '\n'.join([spc_data for spc_data in csv_data.values()])
-        io.write_file('zmatrix.txt', all_data)
-    if 'ene' in tsk:
-        df = pandas.DataFrame.from_dict(
-            csv_data, orient='index',
-            columns=['Path', 'Energy [A.U.]'])
-        df.to_csv('ene.csv', float_format='%.8f')
-    if 'enthalpy' in tsk:
-        df = pandas.DataFrame.from_dict(
-            csv_data, orient='index',
-            columns=[
-                'Path', 'ZPVE+Energy [A.U.]', 'Hf (0 K) [kcal/mol]', *spc_array])
-        df.to_csv('enthalpy.csv', float_format='%.6f')
+                    ene_abs = ene.read_energy(
+                        spc_dct_i, pf_filesystems, pf_models, pf_levels,
+                        run_prefix, conf=(locs, locs_path, cnf_fs),
+                        read_ene=True, read_zpe=True, saddle=False)
+                    ts_geom = None
+                    hf0k, _, chn_basis_ene_dct, hbasis = basis.enthalpy_calculation(
+                        spc_dct, spc_name, ts_geom, ene_abs,
+                        chn_basis_ene_dct, pf_levels, pf_models,
+                        run_prefix, save_prefix, pforktp='pf', saddle=False)
+                    spc_basis, coeff_basis = hbasis[spc_name]
+                    coeff_array = []
+                    for spc_i in spc_basis:
+                        if spc_i not in spc_array:
+                            spc_array.append(spc_i)
+                    for spc_i in spc_array:
+                        if spc_i in spc_basis:
+                            coeff_array.append(coeff_basis[spc_basis.index(spc_i)])
+                        else:
+                            coeff_array.append(0)
+                    csv_data[label] = [locs_path, ene_abs, hf0k, *coeff_array]
+    
+    util.write_csv_data(tsk, csv_data, filelabel, spc_array)
