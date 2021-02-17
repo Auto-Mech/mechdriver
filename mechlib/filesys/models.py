@@ -67,10 +67,15 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
         run_path = run_fs[0].path()
 
     # Get the fs object and the locs
-    cnf_run_fs = autofile.fs.conformer(run_path)
-    cnf_save_fs = autofile.fs.conformer(save_path)
-    min_cnf_locs, cnf_save_path = mincnf.min_energy_conformer_locators(
-        cnf_save_fs, levelp)
+    if thy_save_fs[-1].exists(levelp[1:4]):
+        cnf_run_fs = autofile.fs.conformer(run_path)
+        cnf_save_fs = autofile.fs.conformer(save_path)
+        min_cnf_locs, cnf_save_path = mincnf.min_energy_conformer_locators(
+            cnf_save_fs, levelp)
+    else:
+        cnf_save_fs, cnf_save_path = None, None 
+        min_cnf_locs, save_path, cnf_run_fs = None, None, None 
+        
 
     # Get the save path for the conformers
     # if min_cnf_locs:
