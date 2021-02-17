@@ -5,12 +5,14 @@ import os
 import automol
 import autofile
 from phydat import phycon
+from mechanalyzer.inf import rxn as rinfo
+from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf.models import typ
 from mechroutines.pf.models import _tors as tors
 from mechroutines.pf.models import _vib as vib
 from mechroutines.pf.models import _util as util
-from mechlib.filesys import inf as finf
 from mechlib.filesys import models as fmod
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
@@ -57,7 +59,11 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels, conf=None):
     ioprinter.info_message('- Calculating electronic energy')
 
     # spc_dct_i = spc_dct[spc_name]
-    spc_info = finf.get_spc_info(spc_dct_i)
+    rxn_info = spc_dct_i.get('rxn_info', None)
+    if rxn_info is not None:
+        spc_info = rinfo.ts_info(rxn_info)
+    else:
+        spc_info = sinfo.from_dct(spc_dct_i)
 
     # Get the harmonic filesys information
     if conf:
@@ -76,7 +82,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels, conf=None):
         # ioprinter.info_message('lvls', ene_levels)
         for (coeff, level) in ene_levels:
             # Build SP filesys
-            mod_thy_info = finf.modify_orb_restrict(spc_info, level)
+            mod_thy_info = tinfo.modify_orb_label(level, spc_info)
             sp_save_fs = autofile.fs.single_point(cnf_path)
             sp_save_fs[-1].create(mod_thy_info[1:4])
             # Read the energy
@@ -103,13 +109,6 @@ def zero_point_energy(spc_dct_i,
 
     ioprinter.info_message('- Calculating zero-point energy')
 
-    # spc_dct_i = spc_dct[spc_name]
-    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
-    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(
-        cnf_fs, min_cnf_locs, saddle)
-    # frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(spc_dct_i, saddle)
-    rxn_class = util.set_rxn_class(spc_dct_i, saddle)
-
     # Calculate ZPVE
     is_atom = False
     if not saddle:
@@ -118,55 +117,9 @@ def zero_point_energy(spc_dct_i,
     if is_atom:
         zpe = 0.0
     else:
-        rotors = tors.build_rotors(
+        _, _, zpe, _ = vib.vib_analysis(
             spc_dct_i, pf_filesystems, pf_models, pf_levels,
-            rxn_class=rxn_class,
-            frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys,
-            conf=conf)
 
-        if typ.nonrigid_tors(pf_models, rotors):
-            run_path = fmod.make_run_path(pf_filesystems, 'tors')
-            tors_strs = tors.make_hr_strings(
-                rotors, run_path, pf_models['tors'],
-                )
-            [_, hr_str, _, prot_str, _] = tors_strs
-
-        if typ.nonrigid_tors(pf_models, rotors):
-            # Calculate init proj. freqs, unproj. imag, tors zpe and scale fact
-            freqs, _, tors_zpe, pot_scalef = vib.tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle,
-                conf=conf)
-            # Make final hindered rotor strings and get corrected tors zpe
-            if typ.scale_1d(pf_models):
-                tors_strs = tors.make_hr_strings(
-                    rotors, run_path, pf_models['tors'],
-                    scale_factor=pot_scalef)
-                [_, hr_str, _, prot_str, _] = tors_strs
-                _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
-                    pf_filesystems, hr_str, prot_str, run_prefix,
-                    saddle=saddle, conf=conf)
-                # Calculate current zpe assuming no freq scaling: tors+projfreq
-            zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-
-            # For mdhrv model no freqs needed in MESS input, zero out freqs lst
-            if 'mdhrv' in pf_models['tors']:
-                freqs = ()
-        else:
-            if conf:
-                [cnf_fs, harm_path, min_cnf_locs, _, _] = pf_filesystems['harm']
-                freqs, _, zpe = vib.read_locs_harmonic_freqs(
-                    cnf_fs, conf[1], conf[0], saddle=saddle)
-            else:
-                freqs, _, zpe = vib.read_harmonic_freqs(
-                    pf_filesystems, saddle=saddle)
-            tors_zpe = 0.0
-
-        # Scale the frequencies
-        if freqs:
-            freqs, zpe = vib.scale_frequencies(
-                freqs, tors_zpe, pf_levels, scale_method='3c')
-
-        # ioprinter.info_message('zpe in zero_point_energy test:', zpe, freqs)
     return zpe
 
 
@@ -184,10 +137,10 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
     ene_info2 = ene_info2[0]
     ioprinter.debug_message('mod_eneinf1', ene_info1)
     ioprinter.debug_message('mod_eneinf2', ene_info2)
-    mod_ene_info1 = finf.modify_orb_restrict(
-        finf.get_spc_info(ts_dct), ene_info1)
-    mod_ene_info2 = finf.modify_orb_restrict(
-        finf.get_spc_info(ts_dct), ene_info2)
+    mod_ene_info1 = tinfo.modify_orb_label(
+        sinfo.from_dct(ts_dct), ene_info1)
+    mod_ene_info2 = tinfo.modify_orb_label(
+        sinfo.from_dct(ts_dct), ene_info2)
 
     ene1, ene2, ref_val = None, None, None
     for val in reversed(scn_vals):

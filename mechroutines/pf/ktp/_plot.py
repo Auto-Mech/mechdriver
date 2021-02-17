@@ -20,7 +20,7 @@ def plot_from_str(mess_input_string, formula):
     """
 
     # Read the MESS input string and build info needed for plotting
-    ene_dct, conn_lst = mess_io.reader.pes(
+    ene_dct, conn_lst, _ = mess_io.reader.pes(
         mess_input_string, read_fake=False)
 
     # Generate the plot

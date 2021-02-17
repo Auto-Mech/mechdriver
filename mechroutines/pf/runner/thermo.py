@@ -8,7 +8,6 @@ import subprocess
 import shutil
 import automol
 import autofile
-from mechlib.filesys import inf
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -90,7 +89,7 @@ def thermo_paths(spc_dct_i, run_prefix, idx):
     """
 
     # Get the formula and inchi key
-    spc_info = inf.get_spc_info(spc_dct_i)
+    spc_info = sinfo.from_dct(spc_dct_i)
     spc_formula = automol.inchi.formula_string(spc_info[0])
     ich_key = automol.inchi.inchi_key(spc_info[0])
 

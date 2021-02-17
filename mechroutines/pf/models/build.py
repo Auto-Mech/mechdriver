@@ -9,6 +9,7 @@
 import automol
 import autofile
 from phydat import phycon
+from mechanalyzer.inf import spc as sinfo
 from mechroutines.pf.models import ene
 from mechroutines.pf.models import typ
 from mechroutines.pf.models import etrans
@@ -224,27 +225,6 @@ def mol_data(spc_name, spc_dct,
     # Set information for transition states
     [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
     # cnf_path = cnf_fs[-1].path(min_cnf_locs)
-    frm_bnd_keys, brk_bnd_keys = util.get_bnd_keys(
-        cnf_fs, min_cnf_locs, saddle)
-    ioprinter.debug_message('bnd keys in mol_data', frm_bnd_keys, brk_bnd_keys)
-    rxn_class = util.set_rxn_class(spc_dct_i, saddle)
-
-    # Obtain rotor information used to determine new information
-    ioprinter.info_message(
-        'Preparing internal rotor info building partition functions...',
-        newline=1)
-    rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
-        rxn_class=rxn_class,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
-    ioprinter.debug_message(
-        'Frm and brk key in model build', frm_bnd_keys, brk_bnd_keys)
-    if typ.nonrigid_tors(chn_pf_models, rotors):
-        run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
-        tors_strs = tors.make_hr_strings(
-            rotors, run_path, chn_pf_models['tors'],
-            )
-        [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
 
     # Obtain rotation partition function information
     ioprinter.info_message(
@@ -256,34 +236,16 @@ def mol_data(spc_name, spc_dct,
 
     # Obtain vibration partition function information
     ioprinter.info_message(
+        'Preparing internal rotor info building partition functions...',
+        newline=1)
+    rotors = tors.build_rotors(
+        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels)
+    ioprinter.info_message(
         'Obtaining the vibrational frequencies and zpves...', newline=1)
-    if typ.nonrigid_tors(chn_pf_models, rotors):
-        # Calculate initial proj. freqs, unproj. imag, tors zpe and scale fact
-        freqs, imag, tors_zpe, pot_scalef = vib.tors_projected_freqs_zpe(
-            pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
-        # Make final hindered rotor strings and get corrected tors zpe
-        if typ.scale_1d(chn_pf_models):
-            tors_strs = tors.make_hr_strings(
-                rotors, run_path, chn_pf_models['tors'],
-                scale_factor=pot_scalef)
-            [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
-            _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
-            # Calculate current zpe assuming no freq scaling: tors+projfreq
-        zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-
-        # For mdhrv model no freqs needed in MESS input, zero out freqs lst
-        if 'mdhrv' in chn_pf_models['tors']:
-            freqs = ()
-    else:
-        freqs, imag, zpe = vib.read_harmonic_freqs(
-            pf_filesystems, saddle=saddle)
-        tors_zpe = 0.0
-
-    # Scale the frequencies
-    if freqs:
-        freqs, zpe = vib.scale_frequencies(
-            freqs, tors_zpe, chn_pf_levels, scale_method='3c')
+    freqs, imag, zpe, tors_strs = vib.vib_analysis(
+        spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
+        run_prefix, saddle=saddle)
+    allr_str = tors_strs[0]
 
     # ioprinter.info_message('zpe in mol_data test:', zpe)
     if typ.anharm_vib(chn_pf_models):
@@ -293,8 +255,7 @@ def mol_data(spc_name, spc_dct,
     ioprinter.info_message(
         'Determining the symmetry factor...', newline=1)
     sym_factor = sym.symmetry_factor(
-        pf_filesystems, chn_pf_models, spc_dct_i, rotors,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+        pf_filesystems, chn_pf_models, spc_dct_i, rotors)
 
     # Obtain electronic energy levels
     elec_levels = spc_dct_i['elec_levels']
@@ -313,6 +274,13 @@ def mol_data(spc_name, spc_dct,
             cnf_path = cnf_fs[-1].path(min_cnf_locs)
             zma_fs = autofile.fs.zmatrix(cnf_path)
             zma = zma_fs[-1].file.zmatrix.read((0,))
+            zrxn = zma_fs[-1].file.reaction.read((0,))
+
+            frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
+            brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
+
+        else:
+            brk_bnd_keys, frm_bnd_keys = (), ()
 
         # Determine info about the basis species used in thermochem calcs
         ts_geom = (geom, zma, brk_bnd_keys, frm_bnd_keys)
@@ -330,7 +298,7 @@ def mol_data(spc_name, spc_dct,
     if not saddle:
         ioprinter.info_message(
             'Determining energy transfer parameters...', newline=1)
-        well_info = filesys.inf.get_spc_info(spc_dct_i)
+        well_info = sinfo.from_dct(spc_dct_i)
         # ioprinter.debug_message('well_inf', well_info)
         # bath_info = ['InChI=1S/N2/c1-2', 0, 1]  # how to do...
         bath_info = ['InChI=1S/Ar', 0, 1]  # how to do...
@@ -414,9 +382,6 @@ def rpvtst_data(ts_dct, reac_dcts,
         ts_run_path, ts_save_path, _, thy_save_path = tspaths
 
         # Set TS reaction coordinate
-        frm_bnd_keys, _ = util.get_bnd_keys2(ts_save_path, True)
-        frm_name = util.get_rxn_coord_name(
-            ts_save_path, frm_bnd_keys, sadpt=sadpt, zma_locs=(0,))
         scn_vals = filesys.models.get_rxn_scn_coords(thy_save_path, frm_name)
         scn_vals.sort()
         scn_ene_info = chn_pf_levels['rpath'][1][0]

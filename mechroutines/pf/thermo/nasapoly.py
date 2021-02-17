@@ -6,9 +6,9 @@ import os
 import automol
 import thermp_io
 import pac99_io
+from ioformat import pathtools
 from mechroutines.pf import runner as pfrunner
 from mechlib.amech_io import writer
-from mechlib import pathtools
 from mechlib.amech_io import printer as ioprinter
 
 

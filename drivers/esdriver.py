@@ -48,10 +48,12 @@ def run(pes_idx,
             spc_queue = parser.species.build_spc_queue(rxn_lst)
         elif obj == 'ts':
             if not built_dct:
-                rxndirn = es_keyword_dct['rxndirn']
+                # rxndirn = es_keyword_dct['rxndirn']
+                rxndirn = 'forw' 
                 ts_dct, ts_queue = parser.species.get_sadpt_dct(
                     pes_idx, es_tsk_lst, rxn_lst,
                     thy_dct, run_inp_dct, spc_dct, cla_dct,
+                    run_prefix, save_prefix,
                     direction=rxndirn)
                 spc_dct = parser.species.combine_sadpt_spc_dcts(
                     ts_dct, spc_dct)

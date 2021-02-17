@@ -7,13 +7,14 @@ import os
 import math
 import multiprocessing
 import random
-
 import automol.inchi
 import automol.geom
+from mechanalyzer.inf import rxn as rinfo
 from mechroutines.pf.models.ene import read_energy
 from mechroutines.pf.thermo import heatform
 from phydat import phycon
 from mechlib import filesys
+from mechlib.filesys import build_fs
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -113,6 +114,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
     ioprinter.info_message(
         'Processor {} will prepare species: {}'.format(
             os.getpid(), ', '.join(spc_names)))
+    print('basis spc_names', spc_names)
     spc_ichs = [spc_dct[spc]['inchi'] for spc in spc_names]
     dct_ichs = [spc_dct[spc]['inchi'] for spc in spc_dct.keys()
                 if spc != 'global' and 'ts' not in spc]
@@ -178,7 +180,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
             spc_basis, coeff_basis = get_ref_fxn(spc_ich)
         for i in range(len(spc_basis)):
             if isinstance(spc_basis[i], str):
-                spc_basis[i] = automol.inchi.add_stereo(spc_basis[i])[0]
+                spc_basis[i] = automol.inchi.add_stereo(spc_basis[i])
 
         msg += '\nInCHIs for basis set:'
         for base in spc_basis:
@@ -189,6 +191,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
 
         # Add to the dct with reference dct if it is not in the spc dct
         for ref in spc_basis:
+            print('ref test', ref)
             bas_ichs = [
                 unique_refs_dct[spc]['inchi']
                 if 'inchi' in unique_refs_dct[spc]
@@ -267,19 +270,16 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
             prd_chgs.append(new_spc['charge'])
     rxn_muls = [rct_muls, prd_muls]
     rxn_chgs = [rct_chgs, prd_chgs]
-    try:
-        rinf = filesys.build.get_rxn_fs(
-            run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, mult)
-    except:
-        rinf = filesys.build.get_rxn_fs(
-            run_prefix, save_prefix, rxn_ichs[::-1],
-            rxn_chgs[::-1], rxn_muls[::-1], mult)
-    [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path] = rinf
+
+
+    rxn_info = rinfo.sort((rxn_ichs, rxn_chgs, rxn_muls, mult))
+    rxn_run_fs, rxn_save_fs = build_fs(run_prefix, save_prefix, [], 'REACTION')
+    rxn_run_path = rxn_run_fs[-1].path(rxn_info)
+    rxn_save_path = rxn_save_fs[-1].path(rxn_info)
     spec['rxn_fs'] = [
-        rxn_run_fs,
-        rxn_save_fs,
-        rxn_run_path,
-        rxn_save_path]
+        rxn_run_fs, rxn_save_fs,
+        rxn_run_path, rxn_save_path]
+
     return spec
 
 
@@ -289,6 +289,7 @@ def create_spec(ich, charge=0,
     """ add a species to the species dictionary
     """
     spec = {}
+    print('inchi test:', ich)
     rad = automol.formula.electron_count(automol.inchi.formula(ich)) % 2
     mult = 1 if not rad else 2
     spec['inchi'] = ich

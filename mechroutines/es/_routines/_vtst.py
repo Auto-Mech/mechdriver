@@ -5,7 +5,7 @@ import automol
 import autofile
 from mechroutines.es._routines import sp
 from mechroutines.es._routines import _wfn as wfn
-from mechroutines.es._routines import _scan as scan
+from mechroutines.es.runner import scan
 from mechlib import filesys
 from mechlib.submission import qchem_params
 from mechlib.reaction import grid as rxngrid
@@ -160,8 +160,7 @@ def _vtst_hess_ene(ts_info, coord_name,
     """ VTST Hessians and Energies
     """
 
-    scn_locs = filesys.build.scn_locs_from_fs(
-        scn_save_fs, [coord_name], constraint_dct=None)
+    scn_locs = scn_save_fs[-1].existing([coord_name])
 
     ioprinter.running('Hessians and Gradients...', newline=1)
     hess_script_str, _, hess_kwargs, _ = qchem_params(

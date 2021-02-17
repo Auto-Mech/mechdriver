@@ -6,14 +6,16 @@ import automol
 import autofile
 import mechanalyzer
 import ioformat
+from ioformat import ptt
 import autoparse.find as apf
-from mechanalyzer.inf import thy as tinfo
-from mechanalyzer.inf import rxn as rinfo
 from phydat import symm
 from phydat import eleclvl
 from phydat import phycon
-from mechlib.filesys import build_fs
+from mechlib import filesys
 from mechlib.reaction import rxnid
+from mechlib.reaction import direction as rxndirn
+from mechlib.reaction import new_id
+
 
 
 CSV_INP = 'inp/species.csv'
@@ -68,7 +70,7 @@ def split_queue(spc_queue):
         else:
             coeffs.append(1)
         models.append(model)
-        new_queue.append((spc_name, (pes_model, models, coeffs, operators)))
+        new_queue.append((spc_name, (pes_model, models, coeffs, operators)))       
     return new_queue
 
 
@@ -281,7 +283,7 @@ def geometry_dictionary(job_path):
 
 
 def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
-                  run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                  run_inp_dct, spc_dct, cla_dct,
                   direction='forw'):
     """ build a ts queue
     """
@@ -292,17 +294,17 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
     # Build the ts_dct
     ts_dct = {}
     for tsk_lst in es_tsk_lst:
-       [obj, _, es_keyword_dct] = tsk_lst
-       if 'ts' in obj:
-           method_dct = thy_dct.get(es_keyword_dct['runlvl'])
-           ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-           thy_info = tinfo.from_dct(method_dct)
-           ini_thy_info = tinfo.from_dct(ini_method_dct)
-           ts_dct = build_sadpt_dct(
-               pes_idx, rxn_lst, thy_info, ini_thy_info,
-               run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
-               direction=direction)
-           break
+        [obj, _, es_keyword_dct] = tsk_lst
+        if 'ts' in obj:
+            ini_thy_info = filesys.inf.get_es_info(
+                es_keyword_dct['inplvl'], thy_dct)
+            thy_info = filesys.inf.get_es_info(
+                es_keyword_dct['runlvl'], thy_dct)
+            ts_dct = build_sadpt_dct(
+                pes_idx, rxn_lst, thy_info, ini_thy_info,
+                run_inp_dct, spc_dct, cla_dct,
+                direction=direction)
+            break
 
     # Build the queue
     if ts_dct:
@@ -314,7 +316,7 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
 
 def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
-                    run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                    run_inp_dct, spc_dct, cla_dct,
                     direction='forw'):
     """ build a dct for saddle points for all reactions in rxn_lst
     """
@@ -324,14 +326,13 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         ts_dct[tsname] = build_sing_chn_sadpt_dct(
             tsname, rxn, thy_info, ini_thy_info,
-            run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
-            direction=direction)
+            run_inp_dct, spc_dct, cla_dct, direction=direction)
 
     return ts_dct
 
 
 def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
-                             run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                             run_inp_dct, spc_dct, cla_dct,
                              direction='forw'):
     """ build dct for single reaction
     """
@@ -340,42 +341,144 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
 
     reacs = reaction['reacs']
     prods = reaction['prods']
-    rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
+    rxn_info = mechanalyzer.inf.rxn.from_dct(reacs, prods, spc_dct)
     print('  Preparing {} for reaction {} = {}'.format(
         tsname, '+'.join(reacs), '+'.join(prods)))
 
     # Set the reacs and prods for the desired direction
-    reacs, prods, _ = rxnid.set_reaction_direction(
+    reacs, prods, given_class = rxndirn.set_reaction_direction(
         reacs, prods, rxn_info, cla_dct,
         thy_info, ini_thy_info, save_prefix, direction=direction)
 
     # Obtain the reaction object for the reaction
     zma_locs = (0,)
-    zrxn, zma = rxnid.build_reaction(
-        rxn_info, ini_thy_info, zma_locs, save_prefix)
+    rxn, zma = rxnid.build_reaction(
+        rxn_info, thy_info, zma_locs, save_prefix)
 
-    if zrxn is not None:
-        rxn_run_fs = autofile.fs.reaction(run_prefix)
-        rxn_save_fs = autofile.fs.reaction(save_prefix)
-        rxn_run_path = rxn_run_fs[-1].path(rinfo.sort(rxn_info))
-        rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
-        rxn_fs = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
+    if rxn is not None:
         ts_dct = {
-            'zrxn': zrxn,
-            'zma': zma,
-            'reacs': reacs,
-            'prods': prods,
-            'rxn_info': rxn_info,
-            'inchi': '',
-            'charge': rinfo.value(rxn_info, 'charge'),
-            'mult': rinfo.value(rxn_info, 'tsmult'),
-            'elec_levels': [[0.0, rinfo.value(rxn_info, 'tsmult')]],
-            'class': zrxn.class_,
-            'rxn_fs': rxn_fs
+            'rxnobj': rxn,
+            'zmatrix': zma,
+            'reacs' reacs,
+            'prods' prods
         }
     else:
         ts_dct = {}
         print('Skipping reaction as class not given/identified')
+
+    return ts_dct
+
+
+def _build_sing_chn_sadpt_dct(tsname, rxn, thy_info, ini_thy_info,
+                             run_inp_dct, spc_dct, cla_dct,
+                             direction='forw'):
+    """ build dct for single reaction
+    """
+    run_prefix = run_inp_dct['run_prefix']
+    save_prefix = run_inp_dct['save_prefix']
+    kickoff = [0.1, False]
+
+    # Get reac and prod
+    reacs = rxn['reacs']
+    prods = rxn['prods']
+    print('  Preparing {} for reaction {} = {}'.format(
+        tsname, '+'.join(reacs), '+'.join(prods)))
+
+    # Set the reacs and prods for the desired direction
+    reacs, prods, given_class = rxndirn.set_reaction_direction(
+        reacs, prods, spc_dct, cla_dct,
+        thy_info, ini_thy_info, save_prefix, direction=direction)
+    # Set the info regarding mults and chgs
+    rxn_info = filesys.inf.rxn_info(reacs, prods, spc_dct)
+    [rxn_ichs, rxn_chgs, rxn_muls, _] = rxn_info
+    chg, low_mul, high_mul = filesys.inf.rxn_chg_mult(rxn_muls, rxn_chgs)
+    _, _, indir_rxn_muls = filesys.inf.rxn_info2(reacs, prods, spc_dct)
+    rad_rad = rxnid.determine_rad_rad(indir_rxn_muls)
+    # Set the multiplcity of the TS to the low-spin mult by default
+    ts_mul = low_mul
+
+    # Generate rxn_fs from rxn_info stored in spc_dct
+    [kickoff_size, kickoff_backward] = kickoff
+    zma_inf = rxndirn.get_zmas(
+        reacs, prods, spc_dct,
+        ini_thy_info, save_prefix, run_prefix, kickoff_size,
+        kickoff_backward)
+    [rct_zmas, prd_zmas, rct_cnf_save_fs, prd_cnf_save_fs] = zma_inf
+
+    ret = rxnid.ts_class(
+        rct_zmas, prd_zmas, rad_rad,
+        ts_mul, low_mul, high_mul,
+        rct_cnf_save_fs, prd_cnf_save_fs, given_class)
+    ts_class, ret1, ret2 = ret
+
+    if ret1:
+        [_, dist_name, brk_name, _, _, _, _, _, _, _, update_guess, _, _, rxn_dir] = ret1
+    else:
+        dist_name, brk_name, update_guess, rxn_dir = None, None, None, None
+        # bkp_data = None
+
+    # Put everything in a dictionary if class identified
+    if ret1 and ts_class:
+        print('    Reaction class identified as: {}'.format(ts_class))
+
+        ts_dct = {}
+        ts_dct['inchi'] = ''
+
+        # Reacs and prods
+        ts_dct['class'] = ts_class
+        if rxn_dir == 'forward':
+            ts_dct['reacs'] = reacs
+            ts_dct['prods'] = prods
+        else:
+            ts_dct['reacs'] = prods
+            ts_dct['prods'] = reacs
+
+        # Put chg and mult stuff
+        ts_dct.update(
+            {'low_mult': low_mul,
+             'high_mult': high_mul,
+             'mult': ts_mul,
+             'charge': chg,
+             'rad_rad': rad_rad,
+             'elec_levels': [[0.0, ts_mul]]})
+
+        # Set the ts_bnd using the zma and distname
+        ts_bnd = automol.zmat.coord_idxs(ret1[0], ret1[1])
+
+        # Put class stuff in the dct
+        dct_keys = ['zma', 'dist_name', 'brk_name',
+                    'grid', 'frm_bnd_keys', 'brk_bnd_keys', 'const_bnd_key',
+                    'amech_ts_tors_names', 'const_tors_names', 'const_angs_names', 'update_guess',
+                    'var_grid', 'rcts_gra']
+        ts_dct.update(dict(zip(dct_keys, ret1)))
+        if rxn_dir == 'forward':
+            ts_dct['rct_zmas'] = rct_zmas
+        else:
+            ts_dct['rct_zmas'] = prd_zmas
+        ts_dct['ts_bnd'] = ts_bnd
+        ts_dct['bkp_data'] = ret2 if ret2 else None
+        ts_dct['dist_info'] = [
+            dist_name, 0., update_guess, brk_name, None]
+
+        # put in increment, make sure it can still be overwritten from .dat
+        ts_dct['hind_inc'] = 30.0 * phycon.DEG2RAD
+
+        # Reaction fs for now
+        rinf = filesys.build.get_rxn_fs(
+            run_prefix, save_prefix, rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
+        [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path] = rinf
+        ts_dct['rxn_fs'] = [
+            rxn_run_fs,
+            rxn_save_fs,
+            rxn_run_path,
+            rxn_save_path]
+    else:
+        print('Skipping reaction as class not given/identified')
+
+    print('')
+
+    # import sys
+    # sys.exit()
 
     return ts_dct
 

@@ -34,7 +34,7 @@ def species_block(inf_dct):
     # Build the appropriate core string
     if inf_dct['mdhr_dat']:
         core_str = mess_io.writer.core_multirotor(
-            geom=inf_dct['geom'],
+            geo=inf_dct['geom'],
             sym_factor=inf_dct['sym_factor'],
             pot_surf_file='mdhr_pot.dat',
             int_rot_str=inf_dct['mess_hr_str'],
@@ -45,7 +45,7 @@ def species_block(inf_dct):
         dat_dct['mdhr_pot.dat'] = inf_dct['mdhr_dat']
     else:
         core_str = mess_io.writer.core_rigidrotor(
-            geom=inf_dct['geom'],
+            geo=inf_dct['geom'],
             sym_factor=inf_dct['sym_factor'],
             interp_emax=None
         )
@@ -88,7 +88,7 @@ def fake_species_block(inf_dct_i, inf_dct_j):
 
     # Write the MESS string for the fake molecule
     core_str = mess_io.writer.core_rigidrotor(
-        geom=geom,
+        geo=geom,
         sym_factor=sym_factor,
         interp_emax=None
     )
@@ -130,8 +130,8 @@ def pst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
 
     # Write the MESS string for the Phase Space Theory TS
     core_str = mess_io.writer.core_phasespace(
-        geom1=inf_dct_i['geom'],
-        geom2=inf_dct_j['geom'],
+        geo1=inf_dct_i['geom'],
+        geo2=inf_dct_j['geom'],
         sym_factor=sym_factor,
         stoich=stoich,
         pot_prefactor=ts_inf_dct['cn_pst'],
@@ -189,7 +189,7 @@ def tau_block(inf_dct):
 
     # Write the core string (seperate energies?)
     spc_str = mess_io.writer.monte_carlo.mc_species(
-        geom=inf_dct['geom'],
+        geo=inf_dct['geom'],
         sym_factor=inf_dct['sym_factor'],
         elec_levels=inf_dct['elec_levels'],
         flux_mode_str=inf_dct['flux_mode_str'],
@@ -275,7 +275,7 @@ def rpvtst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
 
         # Write MESS string for the rxn path pt; add to rxn path pt string
         core_str = mess_io.writer.core_rigidrotor(
-            geom=dct['geom'],
+            geo=dct['geom'],
             sym_factor=sym_factor,
             interp_emax=None
         )

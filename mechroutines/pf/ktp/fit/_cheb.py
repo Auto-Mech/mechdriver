@@ -61,7 +61,6 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
             fit_kts = numpy.array(fit_ktps[pressure])
             mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
                 rate_kts, fit_kts)
-            # ioprinter.debug_message('rate fit test:', pressure, rate_kts, fit_kts)
 
             # Add to the dct and lst
             err_dct[pressure] = [mean_avg_err, max_avg_err]

@@ -2,6 +2,7 @@
 """
 
 import os
+from mechanalyzer.inf import thy as tinfo
 from mechroutines.pf import ktp as ktproutines
 from mechroutines.pf import runner as pfrunner
 from mechlib import filesys
@@ -55,21 +56,23 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             ene_method = ene_model[1][1]
         else:
             ene_method = ene_model
-        thy_info = filesys.inf.get_es_info(ene_method, thy_dct)
-        ini_thy_info = filesys.inf.get_es_info(geo_model, thy_dct)
+        method_dct = thy_dct.get(ene_method)
+        ini_method_dct = thy_dct.get(geo_model)
+        thy_info = tinfo.from_dct(method_dct)
+        ini_thy_info = tinfo.from_dct(ini_method_dct)
         pf_model = parser.model.pf_model_info(
             spc_model_dct[spc_model]['pf'])
         ts_dct[tsname] = parser.species.build_sing_chn_sadpt_dct(
             tsname, rxn, thy_info, ini_thy_info,
-            run_inp_dct, spc_dct, cla_dct,
+            run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
             direction='forw')
     spc_dct = parser.species.combine_sadpt_spc_dcts(
         ts_dct, spc_dct)
 
     # Set reaction list with unstable species broken apart
     ioprinter.message('Identifying stability of all species...', newline=1)
-    rxn_lst = instab.break_all_unstable(
-        rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
+    # rxn_lst = instab.break_all_unstable(
+    #     rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
     # Build the MESS label idx dictionary for the PES
     label_dct = ktproutines.label.make_pes_label_dct(
         rxn_lst, pes_idx, spc_dct, spc_model_dct)
