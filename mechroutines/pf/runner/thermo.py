@@ -8,6 +8,7 @@ import subprocess
 import shutil
 import automol
 import autofile
+from mechanalyzer.inf import spc as sinfo
 from mechlib.amech_io import printer as ioprinter
 
 
