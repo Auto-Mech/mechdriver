@@ -277,7 +277,7 @@ def cbhzed(ich, bal=True):
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
     atms = automol.graph.atoms(gra)
-    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
     # Determine CBHzed fragments
     frags = {}
@@ -305,7 +305,7 @@ def _ts_graph(gra, site1, site2=None):
     atm_vals = automol.graph.atom_element_valences(gra)
     atms = automol.graph.atoms(gra)
     bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
-    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
     sites = [site1]
     if site2:
@@ -1397,7 +1397,7 @@ def cbhone(ich, bal=True):
     bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
-    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
     # Determine CBHone fragments
     frags = {}
@@ -1456,7 +1456,7 @@ def cbhtwo(ich, bal=True):
     bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
-    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
     # Determine CBHtwo fragments
     frags = {}
@@ -1534,7 +1534,7 @@ def cbhthree(ich, bal=True):
     bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
-    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
     # Determine CBHfour fragments
     frags = {}
@@ -1763,7 +1763,7 @@ def _remove_frm_bnd(gra, brk_key, frm_key):
 
 
 def _add_appropriate_pi_bonds(gra):
-    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
     unsat_atms_dct = automol.graph.atom_unsaturated_valences(gra)
     atms, bnd_ords = gra
     brk_key = frozenset({})
@@ -1787,7 +1787,7 @@ def _add_appropriate_pi_bonds(gra):
 
 def _elimination_second_forming_bond(gra, brk_key1, brk_key2):
     frm_bnd2 = frozenset({})
-    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
     for atm1 in brk_key1:
         for atm2 in brk_key2:
             if atm2 in adj_atms[atm1]:
@@ -1797,10 +1797,24 @@ def _elimination_second_forming_bond(gra, brk_key1, brk_key2):
     return frm_bnd2
 
 
+def _ring_forming_forming_bond(gra, brk_key):
+    """ Add in missing forming bond for ring forming scission reactions
+    """
+    frm_key = frozenset({})
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+    form_atm1 = rad_atms[0]
+    for break_atm in brk_key:
+        if adj_atms[break_atm] > 1:
+            form_atm2 = break_atm
+            frm_key = frozenset({form_atm1, form_atm2})
+    return frm_key
+
+
 def _elimination_find_brk_bnds(gra, frm_key):
     brk_key1 = frozenset({})
     brk_key2 = frozenset({})
-    adj_atms = automol.graph.atom_neighbor_keys(gra)
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
     atms, _ = gra
     atm1, atm2 = frm_key
     atm3, atm4 = list(adj_atms[atm1])[0], list(adj_atms[atm2])[0]
@@ -1893,7 +1907,7 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=N
                 _xor(brk_key, frm_key2)]
     elif 'beta scission' in rxnclass:
         rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
-        adj_atms = automol.graph.atom_neighbor_keys(gra)
+        adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         site = [rad_atm,None,None]
         for atm in brk_key:
             if rad_atm in adj_atms[atm]:
@@ -1907,7 +1921,7 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=N
                 automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
             rad_atm = list(
                 automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
-            adj_atms = automol.graph.atom_neighbor_keys(gra)
+            adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
             site = [rad_atm, None, None]
             for atm in backup_brk_key:
                 if rad_atm in adj_atms[atm]:
@@ -1919,7 +1933,7 @@ def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=N
     #  where the pi bond is formed    
     elif 'radical radical hyd' in rxnclass:
         rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
-        adj_atms = automol.graph.atom_neighbor_keys(gra)
+        adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         atmc, atmd = frm_key
         if atmc not in rad_atms:
             atmd, atmc = atmc, atmd

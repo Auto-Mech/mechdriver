@@ -222,6 +222,9 @@ def conformer_tsk(job, spc_dct, spc_name,
         script_str, kwargs = qchem_params(
             method_dct, elstruct.Job.OPTIMIZATION)
 
+        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
+            ini_cnf_save_fs, mod_ini_thy_info)
+        ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
         cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             cnf_save_fs, mod_thy_info, cnf_range='all')
 
@@ -241,7 +244,7 @@ def conformer_tsk(job, spc_dct, spc_name,
                 zma, spc_info, mod_thy_info,
                 cnf_run_fs, cnf_save_fs,
                 script_str, overwrite,
-                retryfail=retryfail, saddle=saddle, **kwargs)
+                retryfail=retryfail, zrxn=saddle, **kwargs)
 
         print_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             cnf_save_fs, mod_thy_info, cnf_range=cnf_range)

@@ -66,11 +66,12 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
     # Convert the rotor objects indexing to be in geoms
     increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
     rotor_zma = automol.rotor.zmatrix(rotors)
-    tors_names = automol.rotor.names(rotors, flat=True)
-    tors_grids = automol.rotor.grids(rotors, increment=increment, flat=True)
 
     for ridx, rotor in enumerate(rotors):
         multi_idx = ridx
+        tors_names = automol.rotor.names((rotor,), flat=True)
+        tors_grids = automol.rotor.grids((rotor,), increment=increment, flat=True)
+
         for tidx, torsion in enumerate(rotor):
 
             # Read and spline-fit potential
@@ -78,6 +79,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 rotor_zma, torsion.name, tors_model)
             constraint_dct = automol.zmat.constraint_dct(
                 rotor_zma, const_names, torsion.name)
+            print('torsion names', torsion.name, tors_names[tidx])
             pot, _, _, _, _, _ = torsprep.read_hr_pot(
                 (tors_names[tidx],), (tors_grids[tidx],),
                 cnf_save_path,
@@ -235,7 +237,7 @@ def _hrpot_spline_fitter(pot_dct, min_thresh=-0.0001, max_thresh=50.0):
     # Initialize a variable for the size of the potential
     lpot = len(pot)+1
     pot.append(0.0)
-
+   
     # Print warning messages
     print_pot = False
     if any(val > max_thresh for val in pot):

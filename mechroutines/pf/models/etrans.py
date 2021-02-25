@@ -291,6 +291,7 @@ BAD_ICHS = (
     'InChI=1S/H2/h1H'
 )
 
+
 def estimate_viable(well_ich, well_geo, bath_info):
     """ Assess whether we can estimate using the formula
     """
@@ -310,13 +311,13 @@ def estimate_viable(well_ich, well_geo, bath_info):
             tgt_model = 'n-alkane'
         else:
             fgrp_dct = automol.graph.functional_group_dct(well_gra)
-            if fgrp_dct[automol.graph.Fgroup.HYDROPEROXY]:
+            if fgrp_dct[automol.graph.FunctionalGroup.HYDROPEROXY]:
                 tgt_model = 'n-hydroperoxide'
-            elif fgrp_dct[automol.graph.Fgroup.EPOXIDE]:
+            elif fgrp_dct[automol.graph.FunctionalGroup.EPOXIDE]:
                 tgt_model = 'epoxide'
-            elif fgrp_dct[automol.graph.Fgroup.ETHER]:
+            elif fgrp_dct[automol.graph.FunctionalGroup.ETHER]:
                 tgt_model = 'ether'
-            elif fgrp_dct[automol.graph.Fgroup.ALCOHOL]:
+            elif fgrp_dct[automol.graph.FunctionalGroup.ALCOHOL]:
                 tgt_model = 'n-alcohol'
 
         # For now, set model to alkanes if nothing found and set up return obj

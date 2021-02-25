@@ -3,7 +3,6 @@
 
 import automol
 from autofile import fs
-from mechlib import structure
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -106,7 +105,7 @@ def int_sym_num_from_sampling(sym_geos, grxn=None):
                 if grxn is not None:
                     new_geom = False
                     break
-                tors_same = structure.geom.are_torsions_same(
+                tors_same = automol.geom.are_torsions_same(
                     mod_geo_sym_i, mod_geo_sym_j, ts_bnds=())
                 if tors_same:
                     new_geom = False

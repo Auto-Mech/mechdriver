@@ -297,7 +297,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
         job=elstruct.Job.OPTIMIZATION,
         script_str=script_str,
         run_fs=run_fs,
-        geom=zma,
+        geo=zma,
         spc_info=spc_info,
         thy_info=mod_thy_info,
         overwrite=overwrite,
@@ -348,7 +348,7 @@ def conformer_sampling(zma, spc_info, thy_info,
     inf_obj = autofile.schema.info_objects.conformer_trunk(0)
 
     # Set the samples
-    nsamp, tors_range_dct = _calc_nsamp(tors_names, nsamp_par)
+    nsamp, tors_range_dct = _calc_nsamp(tors_names, nsamp_par, zma, zrxn=zrxn)
     nsamp0 = nsamp
     nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs)
 
@@ -376,8 +376,6 @@ def conformer_sampling(zma, spc_info, thy_info,
         else:
             samp_zma = zma
 
-        ioprinter.debug_message(
-            'Checking if ZMA has high repulsion...', newline=1)
         bad_geom_count = 0
         geo = automol.zmat.geometry(zma)
         samp_geo = automol.zmat.geometry(samp_zma)
@@ -418,7 +416,7 @@ def conformer_sampling(zma, spc_info, thy_info,
                 job=elstruct.Job.OPTIMIZATION,
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=samp_zma,
+                geo=samp_zma,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
@@ -441,13 +439,19 @@ def conformer_sampling(zma, spc_info, thy_info,
             cnf_run_fs[0].file.info.write(inf_obj)
 
 
-def _calc_nsamp(tors_names, nsamp_par):
+def _calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
     """ Determine the number of samples to od
     """
 
     tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
     tors_range_dct = dict(zip(tors_names, tors_ranges))
-    nsamp = util.nsamp_init(nsamp_par, len(tors_names))
+    if zrxn is None:
+        gra = automol.zmat.graph(zma)
+        ntaudof = len(
+            automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+    else:
+        ntaudof = len(tors_names)
+    nsamp = util.nsamp_init(nsamp_par, ntaudof)
     ioprinter.debug_message('tors_names', tors_names)
     ioprinter.debug_message('tors_range_dct', tors_range_dct)
     if not tors_range_dct:
@@ -766,13 +770,17 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
 
         match_dct[ini_locs] = None
         # Loop over structs in cnf_save, see if they match the current struct
-        _, inigeo = filesys.inf.cnf_fs_zma_geo(
-            ini_cnf_save_fs, ini_locs)
+        inigeo =  ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+        inizma = automol.geom.zmatrix(inigeo)
+        # inizma =  ini_cnf_save_fs[-1].file.zmatrix.read(ini_locs)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
         ioprinter.checking('structures', ini_cnf_save_path)
         for locs in cnf_save_locs_lst:
-            _, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
-            if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):
+            geo =  cnf_save_fs[-1].file.geometry.read(locs)
+            zma = automol.geom.zmatrix(geo)
+            # zma =  cnf_save_fs[-1].file.zmatrix.read(locs)
+            # if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):
+            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.018, ang_atol=.2):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 ioprinter.info_message('- Similar structure found at {}'.format(cnf_save_path))
                 match_dct[ini_locs] = locs
@@ -795,13 +803,16 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
         found = False
 
         # Loop over structs in cnf_save, see if they match the current struct
-        _, inigeo = filesys.inf.cnf_fs_zma_geo(
-            ini_cnf_save_fs, ini_locs)
+        inigeo =  ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+        inizma = automol.geom.zmatrix(inigeo)
+        # inizma =  ini_cnf_save_fs[-1].file.zmatrix.read(ini_locs)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
         ioprinter.checking('structures', ini_cnf_save_path)
         for locs in cnf_save_locs_lst:
-            _, geo = filesys.inf.cnf_fs_zma_geo(cnf_save_fs, locs)
-            if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):
+            geo =  cnf_save_fs[-1].file.geometry.read(locs)
+            zma = automol.geom.zmatrix(geo)
+            # zma =  cnf_save_fs[-1].file.zmatrix.read(locs)
+            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.018, ang_atol=.2):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 ioprinter.info_message(
                     '- Similar structure found at {}'.format(cnf_save_path))
