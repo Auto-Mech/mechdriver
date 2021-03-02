@@ -163,3 +163,58 @@ def write_csv_data(tsk, csv_data, filelabel, spc_array):
             columns=[
                 *spc_array])
         df.to_csv(filelabel, float_format='%.2f')
+
+
+def get_es_info(method, thy_dct):
+    """
+    Turn es dictionary into theory info array
+    """
+    if method == 'input':
+        ret = ['input_geom', None, None, None]
+    else:
+        ret = get_thy_info(method, thy_dct)
+    return ret
+
+
+def modify_orb_restrict(spc_info, thy_info):
+    """ append to the theory level the orb restricted stuff
+    """
+    orb_restr = _set_orbital_restriction_label(spc_info, thy_info)
+    thy_info = thy_info[0:3]
+    thy_info.append(orb_restr)
+
+    return thy_info
+
+
+def get_spc_info(spc_dct):
+    """ convert species dictionary to species_info array
+    """
+    err_msg = ''
+    props = ['inchi', 'charge', 'mult']
+    for i, prop in enumerate(props):
+        if prop in spc_dct:
+            props[i] = spc_dct[prop]
+        else:
+            err_msg = prop
+    if err_msg:
+        print('ERROR: No {} found'.format(err_msg))
+        print('for spc_dct {}:'.format(spc_dct))
+    return props
+
+
+def get_thy_info(method, thy_dct):
+    """ convert theory level dictionary to theory information array
+    """
+    method_dct = thy_dct.get(method, None)
+    err_msg = ''
+    info = ['program', 'method', 'basis', 'orb_res']
+    if method_dct is not None:
+        for i, inf in enumerate(info):
+            if inf in method_dct:
+                info[i] = method_dct.get(inf, None)
+            else:
+                err_msg = inf
+    if err_msg:
+        print('ERROR: No {} found'.format(err_msg))
+    return info
+

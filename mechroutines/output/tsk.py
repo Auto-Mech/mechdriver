@@ -89,7 +89,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
             # unpack spc and level info
             spc_dct_i = spc_dct[spc_name]
             if print_keyword_dct['geolvl']:
-                thy_info = filesys.inf.get_es_info(
+                thy_info = util.get_es_info(
                     print_keyword_dct['geolvl'], thy_dct)
             else:
                 pf_levels, pf_models, _, _ = set_pf_info(
@@ -229,10 +229,10 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                             spc_dct_i, pf_filesystems, pf_levels,
                             conf=(locs, locs_path, cnf_fs))
                     else:
-                        spc_info = filesys.inf.get_spc_info(spc_dct_i)
-                        thy_info = filesys.inf.get_es_info(
+                        spc_info = util.get_spc_info(spc_dct_i)
+                        thy_info = util.get_es_info(
                             print_keyword_dct['proplvl'], thy_dct)
-                        mod_thy_info = filesys.inf.modify_orb_restrict(
+                        mod_thy_info = util.modify_orb_restrict(
                             spc_info, thy_info)
                         sp_save_fs = autofile.fs.single_point(locs_path)
                         sp_save_fs[-1].create(mod_thy_info[1:4])
