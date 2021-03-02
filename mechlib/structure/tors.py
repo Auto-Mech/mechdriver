@@ -1,19 +1,12 @@
 """ drivers for coordinate scans
 """
 
-import os
 import itertools
-import random
-import copy
-import numpy
 import automol
 import autofile
 from autofile import fs
-from autorun import run_script
-import mess_io
 from phydat import phycon
 from mechlib.structure import vib as vibprep
-from mechlib.submission import DEFAULT_SCRIPT_DCT
 
 
 def read_hr_pot(names, grid_vals, cnf_save_path,
@@ -143,5 +136,3 @@ def set_constraint_names(zma, tors_names, tors_model):
             const_names = tuple(coord for coord in coords)
 
     return const_names
-
-

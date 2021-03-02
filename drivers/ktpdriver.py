@@ -85,9 +85,6 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     starting_path = os.getcwd()
     ckin_path = os.path.join(starting_path, 'ckin')
 
-    # Try and read the MESS file from the filesystem first
-    # _, _ = pfrunner.read_mess_file(mess_path)
-
     # Write the MESS file
     if write_messrate:  # and not mess_inp_str:
         
@@ -116,7 +113,9 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ioprinter.writing('MESS input file', mess_path)
         ioprinter.debug_message(mess_inp_str)
 
-        pfrunner.write_mess_file(mess_inp_str, dats, mess_path)
+        autorun.write_input(
+            mess_path, mess_inp_str,
+            aux_dct=dats, input_name='mess.inp')
 
         # Write MESS file into job directory
         pfrunner.write_cwd_rate_file(mess_inp_str, pes_formula, sub_pes_idx)

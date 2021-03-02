@@ -63,7 +63,7 @@ def run(spc_dct,
                 if 'ref_enes' in spc_model_dct[mod]['options'] else 'none')
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
-        
+
         ioprinter.messpf('write_header')
         pf_paths = {}
         for idx, (spc_name, (pes_model, spc_models, _, _)) in enumerate(spc_queue):
@@ -78,10 +78,10 @@ def run(spc_dct,
                 messpf_inp_str = thmroutines.qt.make_messpf_str(
                     global_pf_str, spc_str)
                 ioprinter.messpf('input_string')
-                pfrunner.mess.write_mess_file(
-                    messpf_inp_str, dat_str_dct, thm_paths[idx][spc_model][0],
-                    filename='pf.inp')
-
+                autorun.write_input(
+                    thm_paths[idx][spc_model][0], messpf_inp_str,
+                    input_name='pf.inp')
+ 
                 # Write MESS file into job directory
                 cpy_path = pfrunner.write_cwd_pf_file(
                     messpf_inp_str, spc_dct[spc_name]['inchi'])
@@ -196,7 +196,7 @@ def run(spc_dct,
             ref_scheme = spc_model_dct[spc_model]['options']['ref_scheme']
             for spc_model in spc_models:
                 ckin_nasa_str += writer.ckin.model_header(
-                    pf_levels[spc_model], pf_models[spc_model], 
+                    pf_levels[spc_model], pf_models[spc_model],
                     refscheme=ref_scheme)
 
             # Build POLY
