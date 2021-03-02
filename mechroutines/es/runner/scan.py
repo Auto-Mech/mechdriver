@@ -278,6 +278,33 @@ def _save_cscanfs(scn_run_fs, scn_save_fs, scn_typ,
             _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
+def _check_scan(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
+    """ See if the scan needs to be run
+    """
+
+    run_finished = True
+
+    # Build the SCANS/CSCANS filesystems
+    if constraint_dct is None:
+        coord_locs = coord_names
+    else:
+        coord_locs = constraint_dct
+    all_grid_vals = automol.pot.coords(coord_grids)
+
+    for vals in grid_vals:
+
+        # Set the locs for the scan point
+        locs = [coord_names, vals]
+        if constraint_dct is not None:
+            locs = [constraint_dct] + locs
+
+        # Check if ZMA (other info?) exists
+        if scn_save_fs[-1].file.zmatrix.exists(locs):
+            run_finished = False
+
+    return run_finished
+
+
 def _set_job(scn_typ):
     """ Determine if scan is rigid or relaxed and set the appropriate
         electronic structure job.
