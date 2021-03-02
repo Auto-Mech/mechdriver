@@ -9,9 +9,9 @@ import numpy
 import automol
 import autofile
 from autofile import fs
+from autorun import run_script
 import mess_io
 from phydat import phycon
-from ioformat import run_script
 from mechlib.structure import vib as vibprep
 from mechlib.submission import DEFAULT_SCRIPT_DCT
 
