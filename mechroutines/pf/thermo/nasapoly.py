@@ -81,7 +81,42 @@ def write_thermp_inp(formula, hform0, temps,
         thermp_file.write(thermp_str)
 
 
-def print_nasa_temps(temps):
-    """ Print the polynomial fit temps
+# NEW AUTORUN
+def new_build_polynomial(spc_name, spc_dct, temps,
+                         pf_path, nasa_path, starting_path):
+    """ Build a nasa polynomial
     """
-    ioprinter.nasa('fit', temps=temps)
+
+    ioprinter.generating('NASA polynomials', nasa_path)
+
+    # Generate forumula
+    spc_dct_i = spc_dct[spc_name]
+    formula = automol.inchi.formula_string(spc_dct_i['inchi'])
+    formula_dct = automol.inchi.formula(spc_dct_i['inchi'])
+    hform0 = spc_dct_i['Hfs'][0]
+    
+    thermp_script_str = autorun.SCRIPT_DCT['thermp']
+    pac99_script_str = autorun.SCRIPT_DCT['pac99'].format(formula_str)
+
+    # Get one of the pf or nasa path
+    # Set full paths to files
+    thermp_file = os.path.join(thermp_path, thermp_file_name)
+    pf_outfile = os.path.join(pf_path, pf_file_name)
+
+    # Copy MESSPF output file to THERMP run dir and rename to pf.dat
+    pf_datfile = os.path.join(thermp_path, 'pf.dat')
+    try:
+        shutil.copyfile(pf_outfile, pf_datfile)
+    except shutil.SameFileError:
+        pass
+
+    hform298, nasa_poly = autorun.thermo.direct(
+        thermp_script_str, pac99_script_str, nasa_path,
+        pf_str, spc_name, formula, hform0,
+        enthalpyt=0.0, breakt=1000.0, convert=true)
+
+    # Write the full CHEMKIN strings
+    nasa_str = writer.ckin.nasa_polynomial(hform0, hform298, ckin_poly_str)
+    full_ckin_str = '\n' + nasa_str
+
+    return full_ckin_str

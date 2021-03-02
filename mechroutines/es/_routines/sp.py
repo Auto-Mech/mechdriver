@@ -477,6 +477,9 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         # Calculate and save the harmonic frequencies
         ioprinter.info_message(
                 " - Calculating harmonic frequencies from Hessian...")
+        # script_str = autorun.SCRIPT_DCT['projrot']
+        # rt_freqs, _, rt_imags, _ = autorun.projrot.frequencies(
+        #     script_str, run_path, [geo], [[]], [hess])
         rt_freqs, _, rt_imags, _ = structure.vib.projrot_freqs(
             [geo], [hess], run_path)
         freqs = sorted(rt_imags + rt_freqs)

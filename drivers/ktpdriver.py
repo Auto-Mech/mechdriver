@@ -2,6 +2,7 @@
 """
 
 import os
+import autorun
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.pf import ktp as ktproutines
 from mechroutines.pf import runner as pfrunner
@@ -10,6 +11,7 @@ from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 from mechlib.structure import instab
+
 
 def run(pes_formula, pes_idx, sub_pes_idx,
         spc_dct,
@@ -127,7 +129,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ioprinter.obj('vspace')
         ioprinter.obj('line_dash')
         ioprinter.running('MESS for the input file', mess_path)
-        pfrunner.run_rates(mess_path)
+        autorun.run_script(autorun.SCRIPT_DCT['messrate'], mess_path)
 
     # Fit rate output to modified Arrhenius forms, print in ChemKin format
     if run_fits:

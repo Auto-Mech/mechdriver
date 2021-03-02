@@ -9,8 +9,6 @@ from mechroutines.pf.runner.mess import write_cwd_rate_file
 from mechroutines.pf.runner.mess import write_cwd_pf_file
 from mechroutines.pf.runner.mess import read_mess_file
 from mechroutines.pf.runner.mess import read_messpf_temps
-from mechroutines.pf.runner.mess import run_rates
-from mechroutines.pf.runner.mess import run_pf
 from mechroutines.pf.runner.thermo import thermo_paths
 from mechroutines.pf.runner.thermo import run_thermp
 from mechroutines.pf.runner.thermo import run_pac
@@ -28,7 +26,5 @@ __all__ = [
     'run_rates',
     'run_pf',
     'thermo_paths',
-    'run_thermp',
-    'run_pac',
     'ckin_path'
 ]
