@@ -6,6 +6,9 @@ import pandas
 from mechlib.amech_io import parser
 from mechlib import filesys
 from autofile import io_ as io
+from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
+
 
 def freq_es_levels(print_keyword_dct):
     es_model = _default_es_levels(print_keyword_dct)
@@ -54,10 +57,9 @@ def conformer_list(
     cnf_range = _set_conf_range(print_keyword_dct)
 
     # thy_info build
-    thy_info = filesys.inf.get_es_info(
-        print_keyword_dct['geolvl'], thy_dct)
-    spc_info = filesys.inf.get_spc_info(spc_dct_i)
-    thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+    thy_info = tinfo.from_dct(thy_dct.get(print_keyword_dct.get('geolvl')))
+    spc_info = sinfo.from_dct(spc_dct_i)
+    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
     # pf info build
     es_model = _default_es_levels(print_keyword_dct)
@@ -70,7 +72,7 @@ def conformer_list(
     [cnf_fs, _, _, _, _] = pf_filesystems['harm']
     if cnf_fs is not None:
         cnf_locs_lst, cnf_locs_paths = filesys.mincnf.conformer_locators(
-            cnf_fs, thy_info, cnf_range=cnf_range)
+            cnf_fs, mod_thy_info, cnf_range=cnf_range)
     else:
         cnf_locs_lst, cnf_locs_paths = [], []
     return cnf_fs, cnf_locs_lst, cnf_locs_paths
@@ -87,8 +89,8 @@ def conformer_list_from_models(
 
     # thy_info build
     thy_info = pf_levels['geo'][1]
-    spc_info = filesys.inf.get_spc_info(spc_dct_i)
-    thy_info = filesys.inf.modify_orb_restrict(spc_info, thy_info)
+    spc_info = sinfo.from_dct(spc_dct_i)
+    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
     # pf info build
     pf_filesystems = filesys.models.pf_filesys(

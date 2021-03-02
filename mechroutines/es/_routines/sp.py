@@ -66,11 +66,11 @@ def run_energy(zma, geo, spc_info, thy_info,
             errs = ()
             optmat = ()
 
-        es_runner.run_job(
+        success, ret = es_runner.execute_job(
             job='energy',
             script_str=script_str,
             run_fs=run_fs,
-            geom=job_geo,
+            geo=job_geo,
             spc_info=spc_info,
             thy_info=thy_info,
             errors=errs,
@@ -78,11 +78,6 @@ def run_energy(zma, geo, spc_info, thy_info,
             overwrite=overwrite,
             retryfail=retryfail,
             **kwargs,
-        )
-
-        success, ret = es_runner.read_job(
-            job='energy',
-            run_fs=run_fs,
         )
 
         if success:
@@ -138,21 +133,16 @@ def run_gradient(zma, geo, spc_info, thy_info,
 
             run_fs = autofile.fs.run(geo_run_path)
 
-            es_runner.run_job(
+            success, ret = es_runner.execute_job(
                 job='gradient',
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=job_geo,
+                geo=job_geo,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
                 retryfail=retryfail,
                 **kwargs,
-            )
-
-            success, ret = es_runner.read_job(
-                job='gradient',
-                run_fs=run_fs,
             )
 
             if success:
@@ -228,21 +218,16 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
             run_fs = autofile.fs.run(geo_run_path)
 
-            es_runner.run_job(
+            success, ret = es_runner.execute_job(
                 job='hessian',
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=job_geo,
+                geo=job_geo,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
                 retryfail=retryfail,
                 **kwargs,
-            )
-
-            success, ret = es_runner.read_job(
-                job='hessian',
-                run_fs=run_fs,
             )
 
             if success:
@@ -331,21 +316,16 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 
         if _run:
 
-            es_runner.run_job(
+            success, ret = es_runner.execute_job(
                 job='vpt2',
                 script_str=script_str,
                 run_fs=run_fs,
-                geom=job_geo,
+                geo=job_geo,
                 spc_info=spc_info,
                 thy_info=thy_info,
                 overwrite=overwrite,
                 retryfail=retryfail,
                 **kwargs,
-            )
-
-            success, ret = es_runner.read_job(
-                job='vpt2',
-                run_fs=run_fs,
             )
 
             if success:
@@ -424,21 +404,16 @@ def run_prop(zma, geo, spc_info, thy_info,
 
         run_fs = autofile.fs.run(geo_run_path)
 
-        es_runner.run_job(
+        success, ret = es_runner.execute_job(
             job='molec_properties',
             script_str=script_str,
             run_fs=run_fs,
-            geom=job_geo,
+            geo=job_geo,
             spc_info=spc_info,
             thy_info=thy_info,
             overwrite=overwrite,
             retryfail=retryfail,
             **kwargs,
-        )
-
-        success, ret = es_runner.read_job(
-            job='molec_properties',
-            run_fs=run_fs,
         )
 
         if success:

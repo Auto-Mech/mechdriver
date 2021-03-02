@@ -38,7 +38,7 @@ def build_polynomial(spc_name, spc_dct, temps,
 
     # Run PAC99 to get a NASA polynomial string in its format
     pfrunner.run_pac(formula, nasa_path)
-    c97_file = pathtools.prepare_path(nasa_path, formula + '.c97')
+    c97_file = pathtools.prepare_path([nasa_path, formula + '.c97'])
     with open(c97_file, 'r') as file_obj:
         pac99_out_str = file_obj.read()
     # pac99_out_str = pathtools.read_file(o97_file)
