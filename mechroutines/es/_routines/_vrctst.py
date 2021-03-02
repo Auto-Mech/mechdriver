@@ -6,7 +6,7 @@ import autofile
 import automol
 import varecof_io
 from phydat import phycon
-from ioformat import run_script
+from autorun import run_script
 from mechroutines.es.runner import scan
 from mechroutines.es._routines import _wfn as wfn
 from mechroutines.es._routines import sp

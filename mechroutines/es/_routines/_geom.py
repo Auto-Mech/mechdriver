@@ -4,6 +4,7 @@
 import numpy
 import automol
 import elstruct
+import autorun
 from phydat import phycon
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.es import runner as es_runner
@@ -98,20 +99,20 @@ def _check_imaginary(spc_info, geo, mod_thy_info, run_fs, script_str,
         # Calculate vibrational frequencies
         if hess:
             run_path = run_fs[-1].path([elstruct.Job.HESSIAN])
-            imag = False
-            _, _, imag_freq, _ = structure.vib.projrot_freqs(
-                [geo], [hess], run_path)
-            if imag_freq:
-                imag = True
+            # run_path = run_fs[-1].path(['VIB'])
+            script_str = autorun.SCRIPT_DCT['projrot']
+            _, _, imag_freq, _ = autorun.projrot.frequencies(
+               script_str, run_path, [geo], [[]], [hess])
+            # _, _, imag_freq, _ = structure.vib.projrot_freqs(
+            #     [geo], [hess], run_path)
 
             # Mode for now set the imaginary frequency check to -100:
             # Should decrease once freq projector functions properly
-            if imag:
-                imag = True
+            if imag_freq:
                 ioprinter.warning_message('Imaginary mode found:')
                 norm_coords = elstruct.reader.normal_coordinates(prog, out_str)
 
-    return imag, norm_coords
+    return bool(imag_freq), norm_coords
 
 
 def _kickoff_saddle(geo, norm_coords, spc_info, mod_thy_info,

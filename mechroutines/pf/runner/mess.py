@@ -6,7 +6,7 @@ import os
 import numpy
 import automol
 import mess_io
-from ioformat import run_script
+from autorun import run_script
 from mechlib.submission import DEFAULT_SCRIPT_DCT
 from mechlib.amech_io import printer as ioprinter
 
@@ -203,21 +203,3 @@ def divide_pfs(pfa, pfb, coeff):
     dq_dt = [a-b-numpy.log(coeff) for a, b in zip(dq_dta, dq_dtb)]
     d2q_dt2 = [a-b-numpy.log(coeff) for a, b in zip(d2q_dt2a, d2q_dt2b)]
     return tempsa, logq, dq_dt, d2q_dt2
-
-
-def run_rates(mess_path, script_str=DEFAULT_SCRIPT_DCT['messrate']):
-    """ Run the mess file that was wriiten
-    """
-    run_script(script_str, mess_path)
-
-
-def run_pf(mess_path, script_str=DEFAULT_SCRIPT_DCT['messpf']):
-    """ Run the mess file that was wriiten
-    """
-    if os.path.exists(mess_path):
-    # if os.path.exists(os.path.join(mess_path, 'pf.inp')):
-        ioprinter.messpf('run_file', mess_path)
-        run_script(script_str, mess_path)
-    else:
-        ioprinter.warning_message(
-            'No MESS input file at path: {}'.format(mess_path))

@@ -202,8 +202,9 @@ def job_fs(prefix, run, locs_idx=None):
         locs_idx = max(current_idxs) + 1
 
     bld_locs = [run, locs_idx]
+    bld_path = bld_save_fs[-1].path(bld_locs)
 
-    return bld_run_fs, bld_locs
+    return bld_run_fs, bld_locs, bld_path
 
 
 if __name__ == '__main__':

@@ -89,6 +89,8 @@ def read_locs_harmonic_freqs(
         # Obtain the frequencies
         ioprinter.info_message(
             'Calling ProjRot to diagonalize Hessian and get freqs...')
+        # freqs, _, imag_freqs, _ = autorin.projrot.frequencie(
+        #     script_str, harm_run_path, [geo], [[]], [hess])
         freqs, _, imag_freqs, _ = vibprep.projrot_freqs(
             [geo], [hess], run_path,
             grads=[[]], rotors_str='', coord_proj='cartesian',
@@ -199,6 +201,23 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         [harm_geo], [hess], harm_run_path,
         grads=[[]], rotors_str=projrot_hr_str, coord_proj='cartesian',
         script_str=projrot_script_str2)
+
+    # NEW projrot writing
+    # script_str = autorun.SCRIPT_DCT['projrot'])
+    # dist_cutoff_dct1 = {('H', 'O'): 2.26767, ('H', 'C'): 2.26767}   
+    # dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459}   
+    # rotor_dist1_str = projrot_io.writer.projection_distance_aux(
+    #     dist_cutoff_dct=dist_cutoff_dct)
+    # rotor_dist2_str = projrot_io.writer.projection_distance_aux(
+    #     dist_cutoff_dct=dist_cutoff_dct)
+    # aux_dct1 = {'dist_rotpr.dat': rotor_dist1_str}
+    # aux_dct2 = {'dist_rotpr.dat': rotor_dist2_str}
+    # rt_freqs1, rth_freqs1, rt_imag1, _ = autorin.projrot.frequencie(
+    #     script_str, harm_run_path, [harm_geo], [hess],
+    #     grads=[[]], rotors_str=projrot_hr_str, aux_dct=aux_dct1)
+    # _, rth_freqs2, rt_imag2, _ = autorun.projrot.frequencies(
+    #     script_str, harm_run_path, [harm_geo], [hess],
+    #     grads=[[]], rotors_str=projrot_hr_str, aux_dct=aux_dct2)
 
     # Calculate harmonic ZPVE from all harmonic freqs, including torsionals
     harm_zpe = (sum(rt_freqs1) / 2.0) * phycon.WAVEN2EH

@@ -4,6 +4,7 @@
 """
 
 import os
+import autorun
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf import runner as pfrunner
 from mechroutines.pf.models import ene
@@ -94,7 +95,9 @@ def run(spc_dct,
         for idx, (spc_name, (pes_model, spc_models, coeffs, operators)) in enumerate(spc_queue):
             ioprinter.message('{}'.format(spc_name), newline=1)
             for midx, spc_model in enumerate(spc_models):
-                pfrunner.run_pf(thm_paths[idx][spc_model][0])
+                autorun.run_script(
+                   autorun.SCRIPT_DCT['messpf'],
+                   thm_paths[idx][spc_model][0])
                 temps, logq, dq_dt, d2q_dt2 = pfrunner.mess.read_messpf(
                     thm_paths[idx][spc_model][0])
                 if midx == 0:
@@ -187,7 +190,7 @@ def run(spc_dct,
 
             # Read the temperatures from the pf.dat file, check if viable
             temps = pfrunner.read_messpf_temps(thm_paths[idx]['final'][0])
-            thmroutines.nasapoly.print_nasa_temps(temps)
+            ioprinter.nasa('fit', temps=temps)
 
             # Write the NASA polynomial in CHEMKIN-format string
             ref_scheme = spc_model_dct[spc_model]['options']['ref_scheme']
