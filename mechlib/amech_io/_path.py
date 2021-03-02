@@ -5,39 +5,9 @@
 import os
 import random
 import autofile
-
-
-def projrot(run_path):
-    """ Path to run projrot
-    """
-    # Set up the filesys
-    rand_int = random.randint(0, 9999999)
-
-    bld_locs = ['PROJROT', rand_int]
-    bld_save_fs = autofile.fs.build(run_path)
-    bld_save_fs[-1].create(bld_locs)
-    projrot_path = bld_save_fs[-1].path(bld_locs)
-
-    print('Run path for ProjRot:')
-    print(projrot_path)
-
-    return projrot_path
-
-
-def mess_tors(run_path):
-    """ Path to run MESS for torsion
-    """
-
-    # Set up the filesys
-    bld_locs = ['PF', 0]
-    bld_save_fs = autofile.fs.build(run_path)
-    bld_save_fs[-1].create(bld_locs)
-    pf_path = bld_save_fs[-1].path(bld_locs)
-
-    print('Run path for MESSPF:')
-    print(pf_path)
-
-    return pf_path
+import automol
+from mechanalyer.inf import spc as sinfo
+from mechlib.amech_io import printer as ioprinter
 
 
 # Set paths to MESS jobs
@@ -57,33 +27,6 @@ def messpf_path(prefix, inchi):
 
 
 # Write MESS files
-def write_mess_file(mess_inp_str, dat_str_dct, mess_path,
-                    filename='mess.inp'):
-    """ Write MESS file
-        add overwrite keyword to handle overwrite MESS input
-    """
-    ioprinter.messpf('write_file', mess_path)
-
-    # Write the MESS file
-    if not os.path.exists(mess_path):
-        os.makedirs(mess_path)
-    with open(os.path.join(mess_path, filename), 'w') as mess_file:
-        mess_file.write(mess_inp_str)
-
-    # Write all of the data files needed
-    if dat_str_dct:
-        ioprinter.info_message('Writing the MESS data files...')
-        for fname, fstring in dat_str_dct.items():
-            # dat_path = os.path.join(mess_path, fname)
-            if fstring:
-                data_file_path = os.path.join(mess_path, fname)
-                ioprinter.writing('data file', data_file_path)
-                with open(data_file_path, 'w') as file_obj:
-                    file_obj.write(fstring)
-    # ioprinter.info_message(' - WARNING: File will be overwriten.')
-    # ioprinter.info_message('No additional MESS input file will be written.')
-
-
 def write_cwd_pf_file(mess_str, inchi, fname='pf.inp'):
     """ Write a copy of the MESS file in the current working directory
     """
@@ -124,21 +67,16 @@ def thermo_paths(spc_dct_i, run_prefix, idx):
     ich_key = automol.inchi.inchi_key(spc_info[0])
 
     # PF
-    bld_locs = ['PF', idx]
-    bld_save_fs = autofile.fs.build(run_prefix)
-    bld_save_fs[-1].create(bld_locs)
-    bld_path = bld_save_fs[-1].path(bld_locs)
-    ioprinter.debug_message(
-        'preparing thermo for:', spc_info[0],
-        bld_path, spc_formula, ich_key)
-    spc_pf_path = os.path.join(bld_path, spc_formula, ich_key)
+    bld_pf_path = job_path(run_prefix, 'PF', locs_idx=idx)
+    spc_pf_path = os.path.join(bld_pf_path, spc_formula, ich_key)
 
     # NASA polynomials
-    bld_locs = ['NASA', idx]
-    bld_save_fs = autofile.fs.build(run_prefix)
-    bld_save_fs[-1].create(bld_locs)
-    bld_path = bld_save_fs[-1].path(bld_locs)
-    spc_nasa_path = os.path.join(bld_path, spc_formula, ich_key)
+    bld_nasa_path = job_path(run_prefix, 'NASA', locs_idx=idx)
+    spc_nasa_path = os.path.join(bld_nasa_path, spc_formula, ich_key)
+
+    ioprinter.debug_message(
+        'preparing thermo for:', spc_info[0],
+        bld_pf_path, spc_formula, ich_key)
 
     return spc_pf_path, spc_nasa_path
 
@@ -152,3 +90,33 @@ def ckin_path():
         os.makedirs(path)
 
     return path
+
+
+# Helper
+def job_path(prefix, job, locs_idx=None):
+    """ Create the path for some type of job
+    """
+
+    # Initialize the build object
+    bld_fs = autofile.fs.build(prefix)
+
+    # Determine the index for the locs if not provided
+    if locs_idx is not None:
+        assert isinstance(locs_idx, int), (
+            'locs idx {} is not an integer'.format(locs_idx)
+        )
+    else:
+        bld_fs[-1].create([job, 0])
+        locs_idx = random.randint(0, 9999999)
+        # existing_locs = bld_fs[-1].existing()
+        # current_idxs = tuple(idx for [name, idx] in existing_locs
+        #                      if name == job)
+        # locs_idx = max(current_idxs) + 1
+
+    bld_locs = [job, locs_idx]
+    bld_path = bld_fs[-1].path(bld_locs)
+
+    print('Path for {} Job:'.format(job))
+    print(bld_path)
+
+    return bld_path
