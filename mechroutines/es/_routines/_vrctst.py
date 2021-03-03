@@ -10,9 +10,6 @@ from autorun import run_script
 from mechroutines.es.runner import scan
 from mechroutines.es._routines import _wfn as wfn
 from mechroutines.es._routines import sp
-from mechlib.submission import DEFAULT_SCRIPT_DCT
-from mechlib.submission import get_host_node
-from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 

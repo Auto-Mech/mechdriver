@@ -11,6 +11,7 @@ from mechroutines.pf.models import ene
 from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io import thermo_paths
 from mechlib.amech_io.parser.model import pf_level_info, pf_model_info
 # from mechlib.structure import instab
 from mechlib import filesys
@@ -46,7 +47,7 @@ def run(spc_dct,
     for spc_name, (_, mods, _, _) in spc_queue:
         thm_path = {}
         for idx, mod in enumerate(mods):
-            thm_path[mod] = pfrunner.thermo_paths(
+            thm_path[mod] = thermo_paths(
                 spc_dct[spc_name], run_prefix, idx)
         thm_paths.append(thm_path)
     pf_levels = {}
@@ -83,7 +84,7 @@ def run(spc_dct,
                     input_name='pf.inp')
  
                 # Write MESS file into job directory
-                cpy_path = pfrunner.write_cwd_pf_file(
+                cpy_path = pfrunner.mess.write_cwd_pf_file(
                     messpf_inp_str, spc_dct[spc_name]['inchi'])
                 pf_paths[idx][spc_model] = cpy_path
 
@@ -115,7 +116,7 @@ def run(spc_dct,
                         pfrunner.mess.divide_pfs(final_pf, pf2, coeff)
                     elif operator == 'multiply':
                         pfrunner.mess.multiply_pfs(final_pf, pf2, coeff)
-            thm_paths[idx]['final'] = pfrunner.thermo_paths(
+            thm_paths[idx]['final'] = thermo_paths(
                 spc_dct[spc_name], run_prefix, len(spc_models))
             pfrunner.mess.write_mess_output(
                 fstring(spc_dct[spc_name]['inchi']),
@@ -201,10 +202,8 @@ def run(spc_dct,
 
             # Build POLY
             ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
-                spc_name, spc_dct, temps,
-                thm_paths[idx]['final'][0],
-                thm_paths[idx]['final'][1],
-                starting_path)
+                spc_name, spc_dct,
+                thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
 
         # Write all of the NASA polynomial strings

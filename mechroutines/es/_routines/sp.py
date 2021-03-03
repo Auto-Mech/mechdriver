@@ -4,10 +4,10 @@
 import automol
 import elstruct
 import autofile
+import autorun
 from phydat import phycon
 from phydat import symm
 from mechroutines.es import runner as es_runner
-from mechlib import structure
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -477,11 +477,9 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         # Calculate and save the harmonic frequencies
         ioprinter.info_message(
                 " - Calculating harmonic frequencies from Hessian...")
-        # script_str = autorun.SCRIPT_DCT['projrot']
-        # rt_freqs, _, rt_imags, _ = autorun.projrot.frequencies(
-        #     script_str, run_path, [geo], [[]], [hess])
-        rt_freqs, _, rt_imags, _ = structure.vib.projrot_freqs(
-            [geo], [hess], run_path)
+        script_str = autorun.SCRIPT_DCT['projrot']
+        rt_freqs, _, rt_imags, _ = autorun.projrot.frequencies(
+            script_str, run_path, [geo], [[]], [hess])
         freqs = sorted(rt_imags + rt_freqs)
         ioprinter.frequencies(freqs)
         ioprinter.geometry(geo)

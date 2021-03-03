@@ -3,10 +3,10 @@
 
 import itertools
 import automol
+import autorun
 import autofile
 from autofile import fs
 from phydat import phycon
-from mechlib.structure import vib as vibprep
 
 
 def read_hr_pot(names, grid_vals, cnf_save_path,
@@ -79,11 +79,12 @@ def calc_hr_frequencies(geoms, grads, hessians, run_path):
     # Initialize hr freqs list
     hr_freqs = {}
     for point in geoms.keys():
-        _, proj_freqs, _, _ = vibprep.projrot_freqs(
-            [geoms[point]],
-            [hessians[point]],
+        _, proj_freqs, _, _ = autorun.projrot.frequencies(
+            autorun.SCRIPT_DCT['projrot'],
             run_path,
-            grads=[grads[point]])
+            [geoms[point]],
+            [grads[point]],
+            [hessians[point]])
         hr_freqs[point] = proj_freqs
 
     return hr_freqs

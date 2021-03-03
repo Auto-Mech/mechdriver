@@ -15,12 +15,10 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs,
     locs_lst, enes_lst = _grid_vals(
         grid, dist_name, scn_save_fs,
         mod_thy_info, constraint_dct)
-    print('lst', locs_lst, enes_lst)
 
     # Get the max zma
     max_idx = automol.pot.find_max1d(enes_lst)
-    print('max', max_idx)
-    
+
     # Build lst of guess zmas
     guess_zmas = []
 
@@ -76,26 +74,19 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs,
         max_ene = -10000.
         max_loc = ''
         for idx_i, ene in enumerate(enes):
-            print('ene max_ene', ene, max_ene)
             if ene > max_ene:
                 max_ene = ene
                 max_loc = locs_lst_lst[idx_j][idx_i]
-                print('new max', max_ene, max_loc)
         max_enes.append(max_ene)
         max_locs.append(max_loc)
-    print('max enes', max_enes)
     min_ene = 10000.
     locs = []
     for idx_j, ene in enumerate(max_enes):
-        print('ene min_ene', ene, min_ene)
         if ene < min_ene:
             min_ene = ene
             locs = max_locs[idx_j]
-            print('locs', locs)
     max_locs = locs
     max_ene = min_ene
-    print('min max loc', max_ene, max_locs)
-    print('min max loc', scn_save_fs[-1].path(max_locs))
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
 
     # print('geometry for maximum along scan:', max_zma)
@@ -123,10 +114,7 @@ def _grid_vals(grid, dist_name, scn_save_fs,
 
     # Get the energies along the grid
     for locs in grid_locs:
-        print('locs', locs)
-        print(scn_save_fs[-1].path(locs))
         if scn_save_fs[-1].exists(locs):
-            print('exists')
             scn_path = scn_save_fs[-1].path(locs)
             sp_save_fs = autofile.fs.single_point(scn_path)
             enes_lst.append(sp_save_fs[-1].file.energy.read(mod_thy_info[1:4]))

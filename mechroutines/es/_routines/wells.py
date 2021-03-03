@@ -10,8 +10,8 @@ from phydat import phycon
 from mechroutines.es._routines import _util as util
 from mechroutines.es._routines import geom
 from mechroutines.es import runner as es_runner
+from mechroutines.es.runner import qchem_params
 from mechlib import filesys
-from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 

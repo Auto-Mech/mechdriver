@@ -11,9 +11,9 @@ from drivers import transdriver
 from drivers import printdriver
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
+# from mechlib.amech_io import print_host_name
 from mechlib.reaction import rxnid
 from mechlib.filesys import prefix_fs
-from mechlib.submission import print_host_name
 
 
 # Set runtime options based on user input

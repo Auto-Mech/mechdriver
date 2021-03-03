@@ -6,7 +6,7 @@ import os
 import random
 import autofile
 import automol
-from mechanalyer.inf import spc as sinfo
+from mechanalyzer.inf import spc as sinfo
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -24,36 +24,6 @@ def messpf_path(prefix, inchi):
     spc_formula = automol.inchi.formula_string(inchi)
     ich_key = automol.inchi.inchi_key(inchi)
     return os.path.join(prefix, 'MESSPF', spc_formula, ich_key)
-
-
-# Write MESS files
-def write_cwd_pf_file(mess_str, inchi, fname='pf.inp'):
-    """ Write a copy of the MESS file in the current working directory
-    """
-
-    # Set starting path
-    starting_path = os.getcwd()
-
-    # Set the MESS paths and build dirs if needed
-    jobdir_mess_path = messpf_path(starting_path, inchi)
-    if not os.path.exists(jobdir_mess_path):
-        os.makedirs(jobdir_mess_path)
-
-    # Write the files
-    file_path = os.path.join(jobdir_mess_path, fname)
-    if os.path.exists(file_path):
-        for i in range(1, 51):
-            if not os.path.exists(file_path+str(i+1)):
-                fin_path = file_path+str(i+1)
-                break
-    else:
-        fin_path = file_path
-    with open(fin_path, 'w') as file_obj:
-        file_obj.write(mess_str)
-
-    ioprinter.saving('MESS input copy', fin_path)
-
-    return fin_path
 
 
 def thermo_paths(spc_dct_i, run_prefix, idx):
@@ -93,7 +63,7 @@ def ckin_path():
 
 
 # Helper
-def job_path(prefix, job, locs_idx=None):
+def job_path(prefix, job, locs_idx=None, print_path=False):
     """ Create the path for some type of job
     """
 
@@ -106,8 +76,9 @@ def job_path(prefix, job, locs_idx=None):
             'locs idx {} is not an integer'.format(locs_idx)
         )
     else:
-        bld_fs[-1].create([job, 0])
         locs_idx = random.randint(0, 9999999)
+        bld_fs[-1].create([job, locs_idx])
+        # bld_fs[-1].create([job, 0])
         # existing_locs = bld_fs[-1].existing()
         # current_idxs = tuple(idx for [name, idx] in existing_locs
         #                      if name == job)
@@ -116,7 +87,8 @@ def job_path(prefix, job, locs_idx=None):
     bld_locs = [job, locs_idx]
     bld_path = bld_fs[-1].path(bld_locs)
 
-    print('Path for {} Job:'.format(job))
-    print(bld_path)
+    if print_path:
+        print('Path for {} Job:'.format(job))
+        print(bld_path)
 
     return bld_path
