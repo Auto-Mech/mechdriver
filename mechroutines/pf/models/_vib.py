@@ -5,13 +5,11 @@
 import os
 import numpy
 import autofile
+import autorun
+import projrot_io
 from phydat import phycon
-from mechlib.structure import tors as torsprep
-from mechlib.structure import vib as vibprep
-from mechlib.submission import DEFAULT_SCRIPT_DCT
 from mechlib.amech_io import printer as ioprinter
-from mechlib.filesys import models as fmod
-
+from mechlib.amech_io import job_path
 from mechroutines.pf.models import typ
 from mechroutines.pf.models import _tors as tors
 
@@ -85,16 +83,14 @@ def read_locs_harmonic_freqs(
         run_fs = autofile.fs.conformer(harm_path)
         run_fs[-1].create(cnf_locs)
         run_path = run_fs[-1].path(cnf_locs)
+        vib_path = job_path(run_path, 'PROJROT', print_path=True)
 
         # Obtain the frequencies
         ioprinter.info_message(
             'Calling ProjRot to diagonalize Hessian and get freqs...')
-        # freqs, _, imag_freqs, _ = autorin.projrot.frequencie(
-        #     script_str, harm_run_path, [geo], [[]], [hess])
-        freqs, _, imag_freqs, _ = vibprep.projrot_freqs(
-            [geo], [hess], run_path,
-            grads=[[]], rotors_str='', coord_proj='cartesian',
-            script_str=DEFAULT_SCRIPT_DCT['projrot'])
+        script_str = autorun.SCRIPT_DCT['projrot']
+        freqs, _, imag_freqs, _ = autorun.projrot.frequencies(
+            script_str, vib_path, [geo], [[]], [hess])
 
         # Calculate the zpve
         ioprinter.frequencies(freqs)
@@ -160,11 +156,6 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     if conf:
         harm_min_locs = conf[1]
         harm_cnf_fs = conf[2]
-    # Build the run filesystem using locs
-    harm_run_fs[-1].create(harm_min_locs)
-    harm_run_path = harm_run_fs[-1].path(harm_min_locs)
-    tors_run_fs[-1].create(tors_min_locs)
-    tors_run_path = tors_run_fs[-1].path(tors_min_locs)
 
     # Read info from the filesystem that is needed
     harm_geo = harm_cnf_fs[-1].file.geometry.read(harm_min_locs)
@@ -173,51 +164,37 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     hess_path = harm_cnf_fs[-1].path(harm_min_locs)
     ioprinter.reading('Hessian', hess_path)
 
-    # Read info for the hindered rotors
+    # Read info for the hindered rotors and calculate the ZPVE
     ioprinter.info_message(' - Calculating the torsional ZPVES using MESS...')
-    _, tors_freqs = torsprep.mess_tors_zpes(
-        tors_geo, mess_hr_str, run_path)
+    tors_path = job_path(run_path, 'MESS', print_path=True)
+    script_str = autorun.SCRIPT_DCT['messpf']
+    tors_freqs, _ = autorun.mess.torsions(
+        script_str, tors_path, tors_geo, mess_hr_str)
 
-    # Calculate ZPVES of the hindered rotors
-    #tors_zpe = sum(tors_zpes) if tors_zpes else 0.0
-    tors_zpe = sum(tors_freqs)/2.
-    tors_zpe *= phycon.WAVEN2EH
-    # tors_zpe *= phycon.KCAL2EH
+    tors_zpe = (sum(tors_freqs) / 2.0) * phycon.WAVEN2EH
+
+    ioprinter.info_message('tors freq test:', tors_freqs, tors_zpe)
 
     ioprinter.info_message(
         ' - Calculating the RT and RT-rotor projected frequencies ProjRot')
-    # Run ProjRot to get the frequencies v1
-    rt_freqs1, rth_freqs1, rt_imag1, _ = vibprep.projrot_freqs(
-        [harm_geo], [hess], harm_run_path,
-        grads=[[]], rotors_str=projrot_hr_str, coord_proj='cartesian',
-        script_str=DEFAULT_SCRIPT_DCT['projrot'])
-
-    # Run ProjRot to get the frequencies v2
-    projrot_script_str2 = (
-        "#!/usr/bin/env bash\n"
-        "RPHt2.exe >& /dev/null"
-    )
-    _, rth_freqs2, rt_imag2, _ = vibprep.projrot_freqs(
-        [harm_geo], [hess], harm_run_path,
-        grads=[[]], rotors_str=projrot_hr_str, coord_proj='cartesian',
-        script_str=projrot_script_str2)
 
     # NEW projrot writing
-    # script_str = autorun.SCRIPT_DCT['projrot'])
-    # dist_cutoff_dct1 = {('H', 'O'): 2.26767, ('H', 'C'): 2.26767}   
-    # dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459}   
-    # rotor_dist1_str = projrot_io.writer.projection_distance_aux(
-    #     dist_cutoff_dct=dist_cutoff_dct)
-    # rotor_dist2_str = projrot_io.writer.projection_distance_aux(
-    #     dist_cutoff_dct=dist_cutoff_dct)
-    # aux_dct1 = {'dist_rotpr.dat': rotor_dist1_str}
-    # aux_dct2 = {'dist_rotpr.dat': rotor_dist2_str}
-    # rt_freqs1, rth_freqs1, rt_imag1, _ = autorin.projrot.frequencie(
-    #     script_str, harm_run_path, [harm_geo], [hess],
-    #     grads=[[]], rotors_str=projrot_hr_str, aux_dct=aux_dct1)
-    # _, rth_freqs2, rt_imag2, _ = autorun.projrot.frequencies(
-    #     script_str, harm_run_path, [harm_geo], [hess],
-    #     grads=[[]], rotors_str=projrot_hr_str, aux_dct=aux_dct2)
+    vib_path = job_path(run_path, 'PROJROT', print_path=True)
+    script_str = autorun.SCRIPT_DCT['projrot']
+    dist_cutoff_dct1 = {('H', 'O'): 2.26767, ('H', 'C'): 2.26767}
+    dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459}
+    rotor_dist1_str = projrot_io.writer.projection_distance_aux(
+        dist_cutoff_dct=dist_cutoff_dct1)
+    rotor_dist2_str = projrot_io.writer.projection_distance_aux(
+        dist_cutoff_dct=dist_cutoff_dct2)
+    aux_dct1 = {'dist_rotpr.dat': rotor_dist1_str}
+    aux_dct2 = {'dist_rotpr.dat': rotor_dist2_str}
+    rt_freqs1, rth_freqs1, rt_imag1, _ = autorun.projrot.frequencies(
+        script_str, vib_path, [harm_geo], [[]], [hess],
+        rotors_str=projrot_hr_str, aux_dct=aux_dct1)
+    _, rth_freqs2, rt_imag2, _ = autorun.projrot.frequencies(
+        script_str, vib_path, [harm_geo], [[]], [hess],
+        rotors_str=projrot_hr_str, aux_dct=aux_dct2)
 
     # Calculate harmonic ZPVE from all harmonic freqs, including torsionals
     harm_zpe = (sum(rt_freqs1) / 2.0) * phycon.WAVEN2EH
@@ -257,7 +234,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         imag = None
 
     # Create a scaling factor for the frequencies
-    # First sort tors frequencies in ascending order 
+    # First sort tors frequencies in ascending order
     sort_tors_freqs = sorted(tors_freqs)
     # keep only freqs whose RRHO freqs are above a threshold
     freq_thresh = 50.

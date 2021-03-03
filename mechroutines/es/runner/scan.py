@@ -5,8 +5,8 @@ import automol
 import autofile
 import elstruct
 from mechroutines.es.runner._run import execute_job
+from mechroutines.es.runner._par import qchem_params
 from mechlib import filesys
-from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 

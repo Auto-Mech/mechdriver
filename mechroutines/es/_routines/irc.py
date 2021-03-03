@@ -5,7 +5,7 @@ IRC calcs
 import elstruct
 import autofile
 from mechroutines.es import runner as es_runner
-from mechlib.submission import qchem_params
+from mechroutines.es.runner import qchem_params
 
 
 def scan(zma, ts_info, coord_name,

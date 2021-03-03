@@ -2,7 +2,7 @@
 """
 
 import elstruct
-from mechlib.submission._submit import DEFAULT_SCRIPT_DCT
+from autorun import SCRIPT_DCT
 
 
 def qchem_params(method_dct, job=None):
@@ -31,7 +31,7 @@ def _gaussian(method_dct, job=None):
     method = method_dct.get('method')
 
     # Build the submission script string
-    script_str = DEFAULT_SCRIPT_DCT['gaussian09']
+    script_str = SCRIPT_DCT['gaussian09']
 
     # Build the options dictionary
     machine_options = ['%NProcShared={}'.format(nprocs)]
@@ -93,9 +93,9 @@ def _molpro(method_dct, job=None):
 
     # Build the script string
     if method in ('caspt2c', 'caspt2i'):
-        script_str = DEFAULT_SCRIPT_DCT['molpro2015_mppx'].format(nprocs)
+        script_str = SCRIPT_DCT['molpro2015_mppx'].format(nprocs)
     else:
-        script_str = DEFAULT_SCRIPT_DCT['molpro2015'].format(nprocs)
+        script_str = SCRIPT_DCT['molpro2015'].format(nprocs)
 
     # Build the kwargs
     kwargs = {
@@ -134,7 +134,7 @@ def _psi4(method_dct, job=None):
     _, _ = method_dct, job
 
     # Build the submission script string
-    script_str = DEFAULT_SCRIPT_DCT['psi4']
+    script_str = SCRIPT_DCT['psi4']
 
     # Build the options dictionary
     kwargs = {}

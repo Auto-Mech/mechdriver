@@ -8,8 +8,8 @@ import autorun
 from phydat import phycon
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.es import runner as es_runner
+from mechroutines.es.runner import qchem_params
 from mechlib import structure
-from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 

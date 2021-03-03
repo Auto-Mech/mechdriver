@@ -6,6 +6,7 @@ import autofile
 import elstruct
 from mechroutines.es import runner as es_runner
 from mechroutines.es._routines import sp
+from mechroutines.es.runner import qchem_params
 from mechlib.structure import tors as torsprep
 from mechlib.structure import instab
 from mechlib import filesys

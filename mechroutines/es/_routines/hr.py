@@ -4,8 +4,7 @@
 import automol
 import elstruct
 from mechroutines.es.runner import scan
-from mechlib import filesys
-from mechlib.submission import qchem_params
+from mechroutines.es.runner import qchem_params
 from mechlib.amech_io import printer as ioprinter
 from mechlib import structure
 

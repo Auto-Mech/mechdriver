@@ -5,7 +5,11 @@ from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer
 from mechlib.amech_io import runner
-from mechlib.amech_io import paths
+from mechlib.amech_io._path import messrate_path
+from mechlib.amech_io._path import messpf_path
+from mechlib.amech_io._path import thermo_paths
+from mechlib.amech_io._path import ckin_path
+from mechlib.amech_io._path import job_path
 
 
 __all__ = [
@@ -13,5 +17,9 @@ __all__ = [
     'parser',
     'printer',
     'runner',
-    'paths'
+    'messrate_path',
+    'messpf_path',
+    'thermo_paths',
+    'ckin_path',
+    'job_path'
 ]
