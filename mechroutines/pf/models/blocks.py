@@ -204,6 +204,16 @@ def tau_block(inf_dct):
     return spc_str, dat_dct
 
 
+def multiconfig_block(inf_dct_lst):
+    """ write a 
+    """
+
+    spc_str_lst = tuple(dct for dct in inf_dct_lst) 
+    config_str = configs_union(spc_str_lst)
+
+    return config_str
+
+
 # TS BLOCKS FOR VARIATIONAL TREATMENTS
 def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
     """ write a VRCTST block

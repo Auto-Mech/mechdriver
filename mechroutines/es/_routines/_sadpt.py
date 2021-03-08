@@ -4,6 +4,7 @@
 import automol
 import autofile
 import elstruct
+import autorun
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 # from mechroutines.es._routines import _geom as geom
@@ -272,11 +273,9 @@ def saddle_point_hessian(opt_ret, ts_info, method_dct,
         hess = elstruct.reader.hessian(hess_inf_obj.prog, hess_out_str)
         freq_run_path = run_fs[-1].path(['hessian'])
         run_fs[-1].create(['hessian'])
-        # script_str = autorun.SCRIPT_DCT['projrot']
-        # freqs, _, imags, _ = autorun.projrot.frequencies(
-        #     script_str, freq_run_path, [geo], [[]], [hess])
-        freqs, _, imags, _ = structure.vib.projrot_freqs(
-            [geo], [hess], freq_run_path)
+        script_str = autorun.SCRIPT_DCT['projrot']
+        freqs, _, imags, _ = autorun.projrot.frequencies(
+            script_str, freq_run_path, [geo], [[]], [hess])
     else:
         freqs, imags = [], []
 
