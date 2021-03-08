@@ -120,20 +120,3 @@ def print_hr_pot(tors_pots):
             pot_str += ' {0:.2f}'.format(pot)
 
         print('- Pot:{}'.format(pot_str))
-
-
-# Building constraints
-def set_constraint_names(zma, tors_names, tors_model):
-    """ Determine the names of constraints along a torsion scan
-    """
-
-    const_names = tuple()
-    if tors_names and tors_model in ('1dhrf', '1dhrfa'):
-        if tors_model == '1dhrf':
-            const_names = tuple(
-                itertools.chain(*tors_names))
-        elif tors_model == '1dhrfa':
-            coords = list(automol.zmat.coordinates(zma))
-            const_names = tuple(coord for coord in coords)
-
-    return const_names
