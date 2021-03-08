@@ -37,7 +37,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
             cnf_fs, min_cnf_locs, mod_tors_ene_info)
         zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
         zma = zma_fs[-1].file.zmatrix.read([0])
-        if zma_fs[-1].file.torsions.exists([0]):
+        if zma_fs[-1].file.torsions.exists([0]) and tors_model != 'rigid':
             tors_dct = zma_fs[-1].file.torsions.read([0])
             tors_names = spc_dct_i.get('tors_names', None)
             rotors = automol.rotor.from_data(

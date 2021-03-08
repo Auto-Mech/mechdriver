@@ -53,6 +53,50 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
     return freqs, imag, zpe, tors_strs
 
 
+def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
+                 run_prefix, saddle=False):
+    """ process to get freq
+    """
+
+    tors_strs = ['']
+    freqs = []
+    imag = []
+    tors_zpe = 0.0
+    scale_factor = 1.0
+    tors_freqs = []
+    rt_freqs1 = []
+
+    rotors = tors.build_rotors(
+        spc_dct_i, pf_filesystems, chn_pf_models, pf_levels)
+
+    if typ.nonrigid_tors(chn_pf_models, rotors):
+        tors_strs = tors.make_hr_strings(rotors)
+        [_, hr_str, _, prot_str, _] = tors_strs
+
+        freqs, imag, tors_zpe, pot_scalef = tors_projected_freqs_zpe(
+            pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+
+        # Make final hindered rotor strings and get corrected tors zpe
+        if typ.scale_1d(chn_pf_models):
+            rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
+            tors_strs = tors.make_hr_strings(rotors)
+            [_, hr_str, _, prot_str, _] = tors_strs
+            freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1 = tors_projected_freqs(
+                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+            # Calculate current zpe assuming no freq scaling: tors+projfreq
+
+        zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
+
+        # For mdhrv model no freqs needed in MESS input, zero out freqs lst
+        if 'mdhrv' in chn_pf_models['tors']:
+            freqs = ()
+    else:
+        freqs, imag, zpe = read_harmonic_freqs(
+            pf_filesystems, saddle=saddle)
+        tors_zpe = 0.0
+
+    return freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1
+
 def read_harmonic_freqs(pf_filesystems, saddle=False):
     """ Read the harmonic frequencies for the minimum
         energy conformer

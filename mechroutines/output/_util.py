@@ -99,7 +99,7 @@ def conformer_list_from_models(
     # confs
     [cnf_fs, _, _, _, _] = pf_filesystems['harm']
     cnf_locs_lst, cnf_locs_paths = filesys.mincnf.conformer_locators(
-        cnf_fs, thy_info, cnf_range=cnf_range)
+        cnf_fs, mod_thy_info, cnf_range=cnf_range)
     return cnf_fs, cnf_locs_lst, cnf_locs_paths
 
 
@@ -134,7 +134,7 @@ def write_csv_data(tsk, csv_data, filelabel, spc_array):
             final_csv_data['All RT Harmonic Frequencies'] = []
             for key in csv_data['allfreq']:
                 final_csv_data[key + '_RTFreq'] = csv_data['allfreq'][key]
-
+        print(final_csv_data)
         ncols = max([len(x) for x in final_csv_data.values()])
         df = pandas.DataFrame.from_dict(
             final_csv_data, orient='index',
@@ -155,7 +155,8 @@ def write_csv_data(tsk, csv_data, filelabel, spc_array):
         df = pandas.DataFrame.from_dict(
             csv_data, orient='index',
             columns=[
-                'Path', 'ZPVE+Energy [A.U.]', 'Hf (0 K) [kcal/mol]', *spc_array])
+                'Path', 'ZPVE+Energy [A.U.]', 'Hf (0 K) [kcal/mol]',
+                *spc_array])
         df.to_csv(filelabel, float_format='%.6f')
     if 'coeffs' in tsk:
         df = pandas.DataFrame.from_dict(
@@ -163,58 +164,3 @@ def write_csv_data(tsk, csv_data, filelabel, spc_array):
             columns=[
                 *spc_array])
         df.to_csv(filelabel, float_format='%.2f')
-
-
-def get_es_info(method, thy_dct):
-    """
-    Turn es dictionary into theory info array
-    """
-    if method == 'input':
-        ret = ['input_geom', None, None, None]
-    else:
-        ret = get_thy_info(method, thy_dct)
-    return ret
-
-
-def modify_orb_restrict(spc_info, thy_info):
-    """ append to the theory level the orb restricted stuff
-    """
-    orb_restr = _set_orbital_restriction_label(spc_info, thy_info)
-    thy_info = thy_info[0:3]
-    thy_info.append(orb_restr)
-
-    return thy_info
-
-
-def get_spc_info(spc_dct):
-    """ convert species dictionary to species_info array
-    """
-    err_msg = ''
-    props = ['inchi', 'charge', 'mult']
-    for i, prop in enumerate(props):
-        if prop in spc_dct:
-            props[i] = spc_dct[prop]
-        else:
-            err_msg = prop
-    if err_msg:
-        print('ERROR: No {} found'.format(err_msg))
-        print('for spc_dct {}:'.format(spc_dct))
-    return props
-
-
-def get_thy_info(method, thy_dct):
-    """ convert theory level dictionary to theory information array
-    """
-    method_dct = thy_dct.get(method, None)
-    err_msg = ''
-    info = ['program', 'method', 'basis', 'orb_res']
-    if method_dct is not None:
-        for i, inf in enumerate(info):
-            if inf in method_dct:
-                info[i] = method_dct.get(inf, None)
-            else:
-                err_msg = inf
-    if err_msg:
-        print('ERROR: No {} found'.format(err_msg))
-    return info
-
