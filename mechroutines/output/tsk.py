@@ -19,6 +19,8 @@ from mechroutines.pf.models import typ
 from mechroutines.pf.models import ene
 from mechroutines.pf.thermo import basis
 from mechroutines.pf.models.inf import set_pf_info
+from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
 from . import _util as util
 
 # Dictionary of Electronic Structure Calculators
@@ -89,8 +91,8 @@ def run_tsk(tsk, spc_dct, rxn_lst,
             # unpack spc and level info
             spc_dct_i = spc_dct[spc_name]
             if print_keyword_dct['geolvl']:
-                thy_info = filesys.inf.get_es_info(
-                    print_keyword_dct['geolvl'], thy_dct)
+                thy_info = tinfo.from_dct(thy_dct.get(
+                    print_keyword_dct['geolvl']))
             else:
                 pf_levels, pf_models, _, _ = set_pf_info(
                     model_dct, thy_dct, pf_model, pf_model)
@@ -125,33 +127,13 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                         pf_filesystems = filesys.models.pf_filesys(
                             spc_dct_i, pf_levels,
                             run_prefix, save_prefix, saddle=False)
-                        rotors = tors.build_rotors(
-                            spc_dct_i, pf_filesystems, pf_models, pf_levels)
-                         #   rxn_class=rxn_class,
-                         #    frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
-                        if typ.nonrigid_tors(pf_models, rotors):
-                            run_path = filesys.models.make_run_path(
-                                pf_filesystems, 'tors')
-                            tors_strs = tors.make_hr_strings(
-                                rotors, run_path, pf_models['tors'])
-                            [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
-                            ret = vib.tors_projected_freqs(
-                                pf_filesystems, hr_str, prot_str,
-                                run_prefix, saddle=False) # saddle)
-                            freqs, imag, tors_zpe, scale_fact, tors_freqs, all_freqs = ret
-                            #if typ.scale_1d(pf_models):
-                            #    tors_strs = tors.make_hr_strings(
-                            #        rotors, run_path, pf_models['tors'],
-                            #        scale_factor=pot_scalef)
-                            #    [allr_str, hr_str, _, prot_str, mdhr_dat] = tors_strs
-                            #    _, _, tors_zpe, _ = vib.tors_projected_freqs_zpe(
-                            #        pf_filesystems, hr_str,
-                            #        prot_str, run_prefix, saddle=False) # saddle)
-                    #            # Calculate current zpe assuming no freq scaling: tors+projfreq
- #                  #         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-                            csv_data['tfreq'][label] = tors_freqs
-                            csv_data['allfreq'][label] = all_freqs
-                            csv_data['scalefactor'][label] = scale_fact
+                        ret = vib.full_vib_analysis(
+                            spc_dct_i, pf_filesystems, pf_models, pf_levels,
+                            run_prefix, saddle=False)
+                        freqs, imag, tors_zpe, scale_fact, tors_freqs, all_freqs = ret
+                        csv_data['tfreq'][label] = tors_freqs
+                        csv_data['allfreq'][label] = all_freqs
+                        csv_data['scalefactor'][label] = [scale_fact]
                     else:
                         es_model = util.freq_es_levels(print_keyword_dct)
                         pf_levels = parser.model.pf_level_info(
@@ -229,11 +211,11 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                             spc_dct_i, pf_filesystems, pf_levels,
                             conf=(locs, locs_path, cnf_fs))
                     else:
-                        spc_info = filesys.inf.get_spc_info(spc_dct_i)
-                        thy_info = filesys.inf.get_es_info(
-                            print_keyword_dct['proplvl'], thy_dct)
-                        mod_thy_info = filesys.inf.modify_orb_restrict(
-                            spc_info, thy_info)
+                        spc_info = sinfo.from_dct(spc_dct_i)
+                        thy_info = tinfo.from_dct(thy_dct.get(
+                            print_keyword_dct['proplvl']))
+                        mod_thy_info = tinfo.modify_orb_label(
+                            thy_info, spc_info)
                         sp_save_fs = autofile.fs.single_point(locs_path)
                         sp_save_fs[-1].create(mod_thy_info[1:4])
                         # Read the energy
@@ -247,7 +229,6 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                     csv_data[label] = [locs_path, energy]
 
                 elif 'enthalpy' in tsk:
-                    
                     filelabel = 'enthalpy'
                     if pf_levels:
                         filelabel += '_{}'.format(pf_levels['harm'])
@@ -256,8 +237,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                         filelabel += '_{}'.format(print_keyword_dct['geolvl'])
                         filelabel += '_{}'.format(print_keyword_dct['proplvl'])
                     filelabel = '.csv'
-                    
-                    print(spc_name, locs)
+
                     energy = None
                     pf_filesystems = filesys.models.pf_filesys(
                         spc_dct_i, pf_levels,
@@ -278,9 +258,10 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                             spc_array.append(spc_i)
                     for spc_i in spc_array:
                         if spc_i in spc_basis:
-                            coeff_array.append(coeff_basis[spc_basis.index(spc_i)])
+                            coeff_array.append(
+                                coeff_basis[spc_basis.index(spc_i)])
                         else:
                             coeff_array.append(0)
                     csv_data[label] = [locs_path, ene_abs, hf0k, *coeff_array]
-    
+
     util.write_csv_data(tsk, csv_data, filelabel, spc_array)
