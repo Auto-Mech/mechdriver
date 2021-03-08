@@ -4,11 +4,10 @@ Executes the automation part of 1DMin
 
 import statistics
 import autofile
-from ioformat import run_script
+from autorun import run_script
 from mechroutines.trans._routines import _geom as geom
 from mechroutines.trans._routines import _gather as gather
 from mechroutines.trans.runner import lj as lj_runner
-from mechlib import submission
 from mechlib import filesys
 from mechlib import amech_io
 from mechlib.amech_io import printer as ioprinter

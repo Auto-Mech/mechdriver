@@ -1,19 +1,12 @@
 """ drivers for coordinate scans
 """
 
-import os
 import itertools
-import random
-import copy
-import numpy
 import automol
+import autorun
 import autofile
 from autofile import fs
-import mess_io
 from phydat import phycon
-from ioformat import run_script
-from mechlib.structure import vib as vibprep
-from mechlib.submission import DEFAULT_SCRIPT_DCT
 
 
 def read_hr_pot(names, grid_vals, cnf_save_path,
@@ -86,11 +79,12 @@ def calc_hr_frequencies(geoms, grads, hessians, run_path):
     # Initialize hr freqs list
     hr_freqs = {}
     for point in geoms.keys():
-        _, proj_freqs, _, _ = vibprep.projrot_freqs(
-            [geoms[point]],
-            [hessians[point]],
+        _, proj_freqs, _, _ = autorun.projrot.frequencies(
+            autorun.SCRIPT_DCT['projrot'],
             run_path,
-            grads=[grads[point]])
+            [geoms[point]],
+            [grads[point]],
+            [hessians[point]])
         hr_freqs[point] = proj_freqs
 
     return hr_freqs
@@ -126,76 +120,3 @@ def print_hr_pot(tors_pots):
             pot_str += ' {0:.2f}'.format(pot)
 
         print('- Pot:{}'.format(pot_str))
-
-
-# Building constraints
-def set_constraint_names(zma, tors_names, tors_model):
-    """ Determine the names of constraints along a torsion scan
-    """
-
-    const_names = tuple()
-    if tors_names and tors_model in ('1dhrf', '1dhrfa'):
-        if tors_model == '1dhrf':
-            const_names = tuple(
-                itertools.chain(*tors_names))
-        elif tors_model == '1dhrfa':
-            coords = list(automol.zmat.coordinates(zma))
-            const_names = tuple(coord for coord in coords)
-
-    return const_names
-
-
-# CALCULATE THE ZPES OF EACH TORSION USING MESS
-def mess_tors_zpes(tors_geo, hind_rot_str, tors_save_path,
-                   script_str=DEFAULT_SCRIPT_DCT['messpf']):
-    """ Calculate the frequencies and ZPVES of the hindered rotors
-        create a messpf input and run messpf to get tors_freqs and tors_zpes
-    """
-
-    # Set up the filesys
-    bld_locs = ['PF', 0]
-    bld_save_fs = autofile.fs.build(tors_save_path)
-    bld_save_fs[-1].create(bld_locs)
-    pf_path = bld_save_fs[-1].path(bld_locs)
-
-    pf_path = os.path.join(pf_path, str(random.randint(0,1234567)))
-    if not os.path.exists(pf_path):
-        os.makedirs(pf_path)
-
-    print('Run path for MESSPF:')
-    print(pf_path)
-
-    # Write the MESSPF input file
-    global_pf_str = mess_io.writer.global_pf(
-        temperatures=[100.0, 200.0, 300.0, 400.0, 500],
-        rel_temp_inc=0.001,
-        atom_dist_min=0.6)
-    dat_str = mess_io.writer.molecule(
-        core=mess_io.writer.core_rigidrotor(tors_geo, 1.0),
-        freqs=[1000.0],
-        elec_levels=[[0.0, 1.0]],
-        hind_rot=hind_rot_str,
-    )
-    spc_str = mess_io.writer.species(
-        spc_label='Tmp',
-        spc_data=dat_str,
-        zero_ene=0.0
-    )
-    pf_inp_str = '\n'.join([global_pf_str, spc_str]) + '\n'
-
-    with open(os.path.join(pf_path, 'pf.inp'), 'w') as pf_file:
-        pf_file.write(pf_inp_str)
-
-    # Run MESSPF
-    run_script(script_str, pf_path)
-
-    # Obtain the torsional zpes and freqs from the MESS output
-    with open(os.path.join(pf_path, 'pf.log'), 'r') as mess_file:
-        output_string = mess_file.read()
-
-    tors_zpes = mess_io.reader.tors.zero_point_vibrational_energies(
-        output_string)
-    # tors_freqs = mess_io.reader.tors.freqs(output_string)
-    tors_freqs = mess_io.reader.tors.grid_minimum_frequencies(output_string)
-
-    return tors_zpes, tors_freqs

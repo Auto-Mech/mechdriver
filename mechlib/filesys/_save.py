@@ -115,12 +115,3 @@ def _read(run_fs, job, cart_to_zma=False):
         ene, zma, geo = None, None, None
 
     return ene, zma, geo
-
-
-def check_isomer(zma, save_fs):
-    """ Ensure that the ZMA is being used
-    """
-    vma = automol.zmat.var_(zma)
-    if save_fs[0].file.vmatrix.exists():
-        existing_vma = save_fs[0].file.vmatrix.read()
-        assert vma == existing_vma

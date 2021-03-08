@@ -2,6 +2,7 @@
 """
 
 import os
+import autorun
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.pf import ktp as ktproutines
 from mechroutines.pf import runner as pfrunner
@@ -10,6 +11,7 @@ from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 from mechlib.structure import instab
+
 
 def run(pes_formula, pes_idx, sub_pes_idx,
         spc_dct,
@@ -83,9 +85,6 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     starting_path = os.getcwd()
     ckin_path = os.path.join(starting_path, 'ckin')
 
-    # Try and read the MESS file from the filesystem first
-    # _, _ = pfrunner.read_mess_file(mess_path)
-
     # Write the MESS file
     if write_messrate:  # and not mess_inp_str:
         
@@ -114,7 +113,9 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ioprinter.writing('MESS input file', mess_path)
         ioprinter.debug_message(mess_inp_str)
 
-        pfrunner.write_mess_file(mess_inp_str, dats, mess_path)
+        autorun.write_input(
+            mess_path, mess_inp_str,
+            aux_dct=dats, input_name='mess.inp')
 
         # Write MESS file into job directory
         pfrunner.write_cwd_rate_file(mess_inp_str, pes_formula, sub_pes_idx)
@@ -127,7 +128,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ioprinter.obj('vspace')
         ioprinter.obj('line_dash')
         ioprinter.running('MESS for the input file', mess_path)
-        pfrunner.run_rates(mess_path)
+        autorun.run_script(autorun.SCRIPT_DCT['messrate'], mess_path)
 
     # Fit rate output to modified Arrhenius forms, print in ChemKin format
     if run_fits:

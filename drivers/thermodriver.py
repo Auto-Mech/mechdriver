@@ -4,12 +4,14 @@
 """
 
 import os
+import autorun
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf import runner as pfrunner
 from mechroutines.pf.models import ene
 from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io import thermo_paths
 from mechlib.amech_io.parser.model import pf_level_info, pf_model_info
 # from mechlib.structure import instab
 from mechlib import filesys
@@ -45,7 +47,7 @@ def run(spc_dct,
     for spc_name, (_, mods, _, _) in spc_queue:
         thm_path = {}
         for idx, mod in enumerate(mods):
-            thm_path[mod] = pfrunner.thermo_paths(
+            thm_path[mod] = thermo_paths(
                 spc_dct[spc_name], run_prefix, idx)
         thm_paths.append(thm_path)
     pf_levels = {}
@@ -62,7 +64,7 @@ def run(spc_dct,
                 if 'ref_enes' in spc_model_dct[mod]['options'] else 'none')
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
-        
+
         ioprinter.messpf('write_header')
         pf_paths = {}
         for idx, (spc_name, (pes_model, spc_models, _, _)) in enumerate(spc_queue):
@@ -77,12 +79,12 @@ def run(spc_dct,
                 messpf_inp_str = thmroutines.qt.make_messpf_str(
                     global_pf_str, spc_str)
                 ioprinter.messpf('input_string')
-                pfrunner.mess.write_mess_file(
-                    messpf_inp_str, dat_str_dct, thm_paths[idx][spc_model][0],
-                    filename='pf.inp')
-
+                autorun.write_input(
+                    thm_paths[idx][spc_model][0], messpf_inp_str,
+                    input_name='pf.inp')
+ 
                 # Write MESS file into job directory
-                cpy_path = pfrunner.write_cwd_pf_file(
+                cpy_path = pfrunner.mess.write_cwd_pf_file(
                     messpf_inp_str, spc_dct[spc_name]['inchi'])
                 pf_paths[idx][spc_model] = cpy_path
 
@@ -94,7 +96,9 @@ def run(spc_dct,
         for idx, (spc_name, (pes_model, spc_models, coeffs, operators)) in enumerate(spc_queue):
             ioprinter.message('{}'.format(spc_name), newline=1)
             for midx, spc_model in enumerate(spc_models):
-                pfrunner.run_pf(thm_paths[idx][spc_model][0])
+                autorun.run_script(
+                   autorun.SCRIPT_DCT['messpf'],
+                   thm_paths[idx][spc_model][0])
                 temps, logq, dq_dt, d2q_dt2 = pfrunner.mess.read_messpf(
                     thm_paths[idx][spc_model][0])
                 if midx == 0:
@@ -112,7 +116,7 @@ def run(spc_dct,
                         pfrunner.mess.divide_pfs(final_pf, pf2, coeff)
                     elif operator == 'multiply':
                         pfrunner.mess.multiply_pfs(final_pf, pf2, coeff)
-            thm_paths[idx]['final'] = pfrunner.thermo_paths(
+            thm_paths[idx]['final'] = thermo_paths(
                 spc_dct[spc_name], run_prefix, len(spc_models))
             pfrunner.mess.write_mess_output(
                 fstring(spc_dct[spc_name]['inchi']),
@@ -187,21 +191,19 @@ def run(spc_dct,
 
             # Read the temperatures from the pf.dat file, check if viable
             temps = pfrunner.read_messpf_temps(thm_paths[idx]['final'][0])
-            thmroutines.nasapoly.print_nasa_temps(temps)
+            ioprinter.nasa('fit', temps=temps)
 
             # Write the NASA polynomial in CHEMKIN-format string
             ref_scheme = spc_model_dct[spc_model]['options']['ref_scheme']
             for spc_model in spc_models:
                 ckin_nasa_str += writer.ckin.model_header(
-                    pf_levels[spc_model], pf_models[spc_model], 
+                    pf_levels[spc_model], pf_models[spc_model],
                     refscheme=ref_scheme)
 
             # Build POLY
             ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
-                spc_name, spc_dct, temps,
-                thm_paths[idx]['final'][0],
-                thm_paths[idx]['final'][1],
-                starting_path)
+                spc_name, spc_dct,
+                thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
 
         # Write all of the NASA polynomial strings

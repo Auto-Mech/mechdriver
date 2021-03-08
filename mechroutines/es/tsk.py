@@ -14,12 +14,12 @@ from mechroutines.es._routines import conformer
 from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
 from mechroutines.es._routines import irc
+from mechroutines.es.runner import qchem_params
 from mechlib import filesys
 from mechlib.filesys import build_fs
 from mechlib.filesys import root_locs
 from mechlib import structure
 from mechlib.structure import instab
-from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 

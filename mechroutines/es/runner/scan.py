@@ -5,8 +5,8 @@ import automol
 import autofile
 import elstruct
 from mechroutines.es.runner._run import execute_job
+from mechroutines.es.runner._par import qchem_params
 from mechlib import filesys
-from mechlib.submission import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -23,9 +23,10 @@ def execute_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     """
 
     # need_run = check_scan()
-    need_run = True
+    if not _scan_finished(
+        coord_names, coord_grids,
+        scn_save_fs, constraint_dct=constraint_dct):
 
-    if need_run:
         run_scan(
             zma, spc_info, mod_thy_info, thy_save_fs,
             coord_names, coord_grids,
@@ -276,6 +277,35 @@ def _save_cscanfs(scn_run_fs, scn_save_fs, scn_typ,
         # Build the trajectory file
         if locs_lst:
             _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
+
+
+def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
+    """ See if the scan needs to be run
+
+        maybe return the grid that is not finished?
+    """
+
+    grid_vals = automol.pot.coords(coord_grids)
+
+    run_finished = True
+    for vals in grid_vals:
+
+        # Set the locs for the scan point
+        locs = [coord_names, vals]
+        if constraint_dct is not None:
+            locs = [constraint_dct] + locs
+
+        # Check if ZMA (other info?) exists
+        if not scn_save_fs[-1].file.zmatrix.exists(locs):
+            run_finished = False
+            break
+
+    if run_finished:
+        ioprinter.message('Scan finished')
+    else:
+        ioprinter.message('Need to run')
+
+    return run_finished
 
 
 def _set_job(scn_typ):

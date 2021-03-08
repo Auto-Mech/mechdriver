@@ -4,10 +4,10 @@
 import automol
 import elstruct
 import autofile
+import autorun
 from phydat import phycon
 from phydat import symm
 from mechroutines.es import runner as es_runner
-from mechlib import structure
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -346,13 +346,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                 vpt2_dct = elstruct.reader.vpt2(inf_obj.prog, out_str)
                 # hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
-                # Write the VPT2 file specifying the Fermi Treatments
-                # fermi_treatment = '{} Defaults'.format(inf_obj.prog)
-                # vpt2_inf_obj = autofile.schema.info.vpt2(
-                #     fermi_treatment=fermi_treatment)
-
                 ioprinter.save_anharmonicity(geo_save_path)
-                # geo_save_fs[-1].file.vpt2_info.write(inf_obj, locs)
                 geo_save_fs[-1].file.vpt2_input.write(inp_str, locs)
                 geo_save_fs[-1].file.anharmonic_frequencies.write(
                     vpt2_dct['freqs'], locs)
@@ -364,6 +358,10 @@ def run_vpt2(zma, geo, spc_info, thy_info,
                     vpt2_dct['cent_dist_const'], locs)
                 geo_save_fs[-1].file.anharmonicity_matrix.write(
                     vpt2_dct['x_mat'], locs)
+                geo_save_fs[-1].file.cubic_force_constants.write(
+                    vpt2_dct['cubic_fc'], locs)
+                geo_save_fs[-1].file.quartic_force_constants.write(
+                    vpt2_dct['quartic_fc'], locs)
 
         else:
             ioprinter.existing_path('VPT2 information', geo_save_path)
@@ -477,8 +475,9 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         # Calculate and save the harmonic frequencies
         ioprinter.info_message(
                 " - Calculating harmonic frequencies from Hessian...")
-        rt_freqs, _, rt_imags, _ = structure.vib.projrot_freqs(
-            [geo], [hess], run_path)
+        script_str = autorun.SCRIPT_DCT['projrot']
+        rt_freqs, _, rt_imags, _ = autorun.projrot.frequencies(
+            script_str, run_path, [geo], [[]], [hess])
         freqs = sorted(rt_imags + rt_freqs)
         ioprinter.frequencies(freqs)
         ioprinter.geometry(geo)

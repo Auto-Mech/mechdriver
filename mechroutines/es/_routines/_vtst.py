@@ -6,8 +6,8 @@ import autofile
 from mechroutines.es._routines import sp
 from mechroutines.es._routines import _wfn as wfn
 from mechroutines.es.runner import scan
+from mechroutines.es.runner import qchem_params
 from mechlib import filesys
-from mechlib.submission import qchem_params
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
 

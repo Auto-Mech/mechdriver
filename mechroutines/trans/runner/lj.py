@@ -8,7 +8,7 @@ import automol
 import autofile
 import elstruct
 import onedmin_io
-from mechlib.submission import qchem_params
+from mechroutines.es.runner import qchem_params
 from mechlib.amech_io import printer as ioprinter
 
 
