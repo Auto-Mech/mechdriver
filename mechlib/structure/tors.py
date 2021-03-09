@@ -72,6 +72,28 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
     return pot, geoms, grads, hessians, zmas, paths
 
 
+def set_constraint_names(zma, tors_names, tors_model):
+    """ Determine the names of constraints along a torsion scan
+    """
+
+    const_names = tuple()
+    if tors_names and tors_model in ('1dhrf', '1dhrfa'):
+        if tors_model == '1dhrf':
+            const_names = tuple(
+                itertools.chain(*tors_names))
+            # if saddle:
+            #     const_names = tuple(
+            #         itertools.chain(*amech_sadpt_tors_names))
+            # else:
+            #     const_names = tuple(
+            #         itertools.chain(*amech_spc_tors_names))
+        elif tors_model == '1dhrfa':
+            coords = list(automol.zmat.coordinates(zma))
+            const_names = tuple(coord for coord in coords)
+
+    return const_names
+
+
 def calc_hr_frequencies(geoms, grads, hessians, run_path):
     """ Calculate the frequencies
     """
