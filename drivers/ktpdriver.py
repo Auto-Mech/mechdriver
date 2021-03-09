@@ -9,6 +9,7 @@ from mechroutines.pf import runner as pfrunner
 from mechlib import filesys
 from mechlib.amech_io import writer
 from mechlib.amech_io import parser
+from mechlib.amech_io import messrate_path
 from mechlib.amech_io import printer as ioprinter
 from mechlib.structure import instab
 
@@ -80,7 +81,7 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         rxn_lst, pes_idx, spc_dct, spc_model_dct)
 
     # Set paths where files will be written and read
-    mess_path = pfrunner.messrate_path(
+    mess_path = messrate_path(
         run_prefix, pes_formula, sub_pes_idx)
     starting_path = os.getcwd()
     ckin_path = os.path.join(starting_path, 'ckin')
