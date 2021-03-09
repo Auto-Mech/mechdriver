@@ -42,6 +42,10 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
 
     if fit_viable:
 
+        fit_temps = list(set(inp_temps) & set(ktp_dct[pressures[0]][0]))
+        fit_temps.sort()
+        # print('fit_temps', fit_temps)
+
         # Fit rate constants to Chebyshev polynomial
         alpha, trange, prange = ratefit.fit.chebyshev.kfit(
             inp_temps, ktp_dct, tdeg=tdeg, pdeg=pdeg,
