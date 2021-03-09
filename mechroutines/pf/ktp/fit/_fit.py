@@ -113,7 +113,7 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
 
     # Dictionaries to store info; indexed by pressure (given in fit_ps)
     calc_k_dct = {}
-    valid_calc_tk_dct = {}
+    filt_ktp_dct = {}
     ktp_dct = {}
 
     # Read the MESS output file into a string
@@ -125,8 +125,8 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     # Read the temperatures and pressures out of the MESS output
     # mess_temps, tunit = mess_io.reader.rates.get_temperatures(
     #     output_string)
-    # mess_pressures, punit = mess_io.reader.rates.get_pressures(
-    #     output_string)
+    _, punit = mess_io.reader.rates.get_pressures(
+        output_string)
 
     mess_temps = inp_temps
     mess_pressures = inp_pressures
@@ -137,7 +137,7 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     # assert inp_punit == punit
 
     # Loop over the pressures obtained from the MESS output
-    calc_k_dct = mess_io.reader.rates.ktp_dct(
+    calc_ktp_dct = mess_io.reader.rates.ktp_dct(
         output_string, rct_lab, prd_lab)
 
     # Remove k(T) vals at each P where where k is negative or undefined
@@ -146,18 +146,14 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
         'Removing invalid k(T,P)s from MESS output that are either:\n',
         '  (1) negative, (2) undefined [***], or (3) below 10**(-21) if',
         'reaction is bimolecular', newline=1)
-    for pressure, calc_ks in calc_k_dct.items():
-        filtered_temps, filtered_ks = ratefit.fit.get_valid_tk(
-            mess_temps, calc_ks, bimol)
-        if filtered_ks.size > 0:
-            valid_calc_tk_dct[pressure] = [filtered_temps, filtered_ks]
+    filt_ktp_dct = ratefit.fit.filter_ktp_dct(calc_ktp_dct, bimol)
 
     # Filter the ktp dictionary by assessing the presure dependence
-    if valid_calc_tk_dct:
-        if list(valid_calc_tk_dct.keys()) == ['high']:
+    if filt_ktp_dct:
+        if list(filt_ktp_dct.keys()) == ['high']:
             ioprinter.info_message(
                 'Valid k(T)s only found at High Pressure...', newline=1)
-            ktp_dct['high'] = valid_calc_tk_dct['high']
+            ktp_dct['high'] = filt_ktp_dct['high']
         else:
             if pdep_fit:
                 ioprinter.info_message(
@@ -166,27 +162,27 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
                 pkeys = ('assess_pdep_temps', 'tolerance', 'plow', 'phigh')
                 dct = {k: pdep_fit[k] for k in pdep_fit if k in pkeys}
                 rxn_is_pdependent = ratefit.fit.assess_pressure_dependence(
-                    valid_calc_tk_dct, **dct)
+                    filt_ktp_dct, **dct)
                 if rxn_is_pdependent:
                     ioprinter.info_message(
                         'Reaction found to be pressure dependent.',
                         'Fitting all k(T)s from all pressures',
                         'found in MESS.', indent=1/2.)
-                    ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+                    ktp_dct = copy.deepcopy(filt_ktp_dct)
                 else:
                     no_pdep_pval = pdep_fit['no_pdep_pval']
                     ioprinter.info_message(
                         'No pressure dependence detected.',
                         'Grabbing k(T)s at {} {}'.format(
                             no_pdep_pval, punit), newline=1)
-                    if no_pdep_pval in valid_calc_tk_dct:
-                        ktp_dct['high'] = valid_calc_tk_dct[no_pdep_pval]
+                    if no_pdep_pval in filt_ktp_dct:
+                        ktp_dct['high'] = filt_ktp_dct[no_pdep_pval]
             else:
-                ktp_dct = copy.deepcopy(valid_calc_tk_dct)
+                ktp_dct = copy.deepcopy(filt_ktp_dct)
 
         # Patchy way to get high-pressure rates in dct if needed
-        if 'high' not in ktp_dct and 'high' in valid_calc_tk_dct.keys():
-            ktp_dct['high'] = valid_calc_tk_dct['high']
+        if 'high' not in ktp_dct and 'high' in filt_ktp_dct.keys():
+            ktp_dct['high'] = filt_ktp_dct['high']
 
     return ktp_dct
 
