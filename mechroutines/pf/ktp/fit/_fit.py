@@ -123,29 +123,22 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
         output_string = mess_file.read()
 
     # Read the temperatures and pressures out of the MESS output
-    mess_temps, tunit = mess_io.reader.rates.get_temperatures(
-        output_string)
-    mess_pressures, punit = mess_io.reader.rates.get_pressures(
-        output_string)
+    # mess_temps, tunit = mess_io.reader.rates.get_temperatures(
+    #     output_string)
+    # mess_pressures, punit = mess_io.reader.rates.get_pressures(
+    #     output_string)
+
+    mess_temps = inp_temps
+    mess_pressures = inp_pressures
 
     assert inp_temps <= mess_temps
     assert inp_pressures <= mess_pressures
-    assert inp_tunit == tunit
-    assert inp_punit == punit
+    # assert inp_tunit == tunit
+    # assert inp_punit == punit
 
     # Loop over the pressures obtained from the MESS output
-    for pressure in mess_pressures:
-
-        # Read the rate constants
-        if pressure == 'high':
-            rate_ks = mess_io.reader.highp_ks(
-                output_string, rct_lab, prd_lab)
-        else:
-            rate_ks = mess_io.reader.pdep_ks(
-                output_string, rct_lab, prd_lab, pressure)
-
-        # Store in a dictionary
-        calc_k_dct[pressure] = rate_ks
+    calc_k_dct = mess_io.reader.rates.ktp_dct(
+        output_string, rct_lab, prd_lab)
 
     # Remove k(T) vals at each P where where k is negative or undefined
     # If ANY valid k(T,P) vals at given pressure, store in dct
