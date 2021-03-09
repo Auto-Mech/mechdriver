@@ -131,6 +131,9 @@ def read_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
     mess_temps = inp_temps
     mess_pressures = inp_pressures
 
+    mess_temps = list(set(list(mess_temps)))
+    mess_temps.sort()
+
     assert inp_temps <= mess_temps
     assert inp_pressures <= mess_pressures
     # assert inp_tunit == tunit
