@@ -292,17 +292,17 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
     # Build the ts_dct
     ts_dct = {}
     for tsk_lst in es_tsk_lst:
-       [obj, _, es_keyword_dct] = tsk_lst
-       if 'ts' in obj:
-           method_dct = thy_dct.get(es_keyword_dct['runlvl'])
-           ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-           thy_info = tinfo.from_dct(method_dct)
-           ini_thy_info = tinfo.from_dct(ini_method_dct)
-           ts_dct = build_sadpt_dct(
-               pes_idx, rxn_lst, thy_info, ini_thy_info,
-               run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
-               direction=direction)
-           break
+        [obj, _, es_keyword_dct] = tsk_lst
+        if 'ts' in obj:
+            method_dct = thy_dct.get(es_keyword_dct['runlvl'])
+            ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
+            thy_info = tinfo.from_dct(method_dct)
+            ini_thy_info = tinfo.from_dct(ini_method_dct)
+            ts_dct = build_sadpt_dct(
+                pes_idx, rxn_lst, thy_info, ini_thy_info,
+                run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                direction=direction)
+            break
 
     # Build the queue
     if ts_dct:
@@ -321,6 +321,12 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
 
     ts_dct = {}
     for rxn in rxn_lst:
+        # ts_dct.update(
+        #     build_sing_chn_sadpt_dct(
+        #         pes_idx, rxn, thy_info, ini_thy_info,
+        #         run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+        #         direction=direction)
+        # )
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         ts_dct[tsname] = build_sing_chn_sadpt_dct(
             tsname, rxn, thy_info, ini_thy_info,
@@ -330,6 +336,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     return ts_dct
 
 
+# def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
 def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
                              run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
                              direction='forw'):
@@ -354,12 +361,17 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
     zrxn, zma = rxnid.build_reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
 
+    # ts_dct = {}
     if zrxn is not None:
+        # ts_dct = {}
+        # for idx, (zrxn, zma) in enumerate(zip(zrxns, zmas)):
         rxn_run_fs = autofile.fs.reaction(run_prefix)
         rxn_save_fs = autofile.fs.reaction(save_prefix)
         rxn_run_path = rxn_run_fs[-1].path(rinfo.sort(rxn_info))
         rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
         rxn_fs = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
+        # tsname = 'ts_{:g}_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'], idx)
+        # ts_dct[tsname] = {
         ts_dct = {
             'zrxn': zrxn,
             'zma': zma,
