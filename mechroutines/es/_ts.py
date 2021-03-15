@@ -1,5 +1,11 @@
 """
   TS Finding algorithms
+
+    2-TS
+    (1) mult. sadpts for TS (comes into task from ID)
+    (2) ring puckering (ID after initial sadpt found)
+    (3) different stereo in migration (ID after sadpt. I think)
+
 """
 
 import automol
@@ -75,6 +81,8 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
         sadpt.obtain_saddle_point(
             guess_zmas, ts_dct, method_dct,
             runfs_dct, savefs_dct, es_keyword_dct)
+
+        # Find a second sadpt
 
 
 def run_vtst(spc_dct, tsname, es_keyword_dct,

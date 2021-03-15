@@ -19,6 +19,7 @@ def root_locs(spc_dct_i, saddle=False):
         spc_info = None
         rxn_info = rinfo.sort(spc_dct_i['rxn_info'])
         ts_info = ()
+        # ts_info = (0,)  # may be more complicated
 
     return {'spc_locs': spc_info, 'rxn_locs': rxn_info, 'ts_locs': ts_info}
 

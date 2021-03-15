@@ -184,6 +184,10 @@ def _optimize_atom(spc_info, zma_init,
 
     if success:
         ioprinter.info_message('Succesful reference geometry optimization')
+        inf_obj = autofile.schema.info_objects.conformer_trunk(0)
+        inf_obj.nsamp = 1
+        cnf_save_fs[0].create()
+        cnf_save_fs[0].file.info.write(inf_obj)
         _save_unique_conformer(
             ret, mod_thy_info, cnf_save_fs, cnf_locs,
             zrxn=None, zma_locs=(0,))
@@ -244,6 +248,10 @@ def _optimize_molecule(spc_info, zma_init,
                 ioprinter.info_message(
                     'Saving structure as the first conformer...', newline=1)
                 locs = [autofile.schema.generate_new_conformer_id()]
+                inf_obj = autofile.schema.info_objects.conformer_trunk(0)
+                inf_obj.nsamp = 1
+                cnf_save_fs[0].create()
+                cnf_save_fs[0].file.info.write(inf_obj)
                 _save_unique_conformer(
                     ret, mod_thy_info, cnf_save_fs, locs,
                     zrxn=None, zma_locs=(0,))
@@ -321,6 +329,16 @@ def single_conformer(zma, spc_info, mod_thy_info,
             sym_id = _sym_unique(
                 geo, ene, saved_geos, saved_enes)
             if sym_id is None:
+                if cnf_save_fs[0].file.info.exists():
+                    inf_obj_s = cnf_save_fs[0].file.info.read()
+                    nsampd = inf_obj_s.nsamp
+                    nsampd += 1
+                    inf_obj.nsamp = nsampd
+                else:
+                    inf_obj = autofile.schema.info_objects.conformer_trunk(0)
+                    inf_obj.nsamp = 1
+                cnf_save_fs[0].create()
+                cnf_save_fs[0].file.info.write(inf_obj)
                 _save_unique_conformer(
                     ret, mod_thy_info, cnf_save_fs, locs,
                     zrxn=zrxn, zma_locs=(0,))
@@ -353,6 +371,8 @@ def conformer_sampling(zma, spc_info, thy_info,
     nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs)
 
     tot_samp = nsamp - nsampd
+    brk_tot_samp = nsamp * 5
+
     ioprinter.info_message(
         ' - Number of samples that have been currently run:', nsampd)
     ioprinter.info_message(' - Number of samples requested:', nsamp)
@@ -361,6 +381,7 @@ def conformer_sampling(zma, spc_info, thy_info,
         ioprinter.info_message(
             'Running {} samples...'.format(nsamp-nsampd), newline=1)
     samp_idx = 1
+    samp_attempt_idx = 1
     while True:
         nsamp = nsamp0 - nsampd
         # Break the while loop if enough sampls completed
@@ -368,6 +389,11 @@ def conformer_sampling(zma, spc_info, thy_info,
             ioprinter.info_message(
                 'Requested number of samples have been completed.',
                 'Conformer search complete.')
+            break
+        if samp_attempt_idx == brk_tot_samp:
+            ioprinter.info_message(
+                'Max number of samples 5*{} attempted, ending search'.format(nsamp),
+                'Run again if more samples desired.')
             break
 
         # Run the conformer sampling
@@ -437,6 +463,9 @@ def conformer_sampling(zma, spc_info, thy_info,
             inf_obj.nsamp = nsampd
             cnf_save_fs[0].file.info.write(inf_obj)
             cnf_run_fs[0].file.info.write(inf_obj)
+
+        # Increment attempt counter
+        samp_attempt_idx += 1
 
 
 def _calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
