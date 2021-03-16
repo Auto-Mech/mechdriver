@@ -411,6 +411,7 @@ def conformer_sampling(zma, spc_info, thy_info,
             ioprinter.warning_message(
                 'Generating new sample ZMA', indent=1/2., newline=1)
             samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
+            samp_geo = automol.zmat.geometry(samp_zma)
             bad_geom_count += 1
         ioprinter.debug_message('ZMA is fine...', indent=1/2.)
 
