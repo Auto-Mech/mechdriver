@@ -635,7 +635,7 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
     """
 
     sym_idx = None
-    if not automol.util.value_similar_to(ene, saved_enes, ethresh):
+    if automol.util.value_similar_to(ene, saved_enes, ethresh):
         _, sym_idx = automol.geom.is_unique(
             geo, saved_geos, check_dct={'coulomb': None})
 
