@@ -16,7 +16,6 @@ from mechroutines.pf.models import tunnel
 from mechroutines.pf.models.inf import set_pf_info
 from mechroutines.pf.models.inf import set_ts_cls_info
 from mechroutines.pf.models.inf import make_rxn_str
-from mechroutines.pf.models.typ import treat_tunnel
 from mechroutines.pf.models.typ import need_fake_wells
 from mechlib.amech_io import printer as ioprinter
 
@@ -33,7 +32,7 @@ def make_messrate_str(globkey_str, energy_trans_str, rxn_chan_str):
 
 
 # Headers
-def make_header_str(temps, press):
+def make_header_str(temps, pressures):
     """ makes the standard header and energy transfer sections for MESS input file
     """
 
@@ -51,7 +50,7 @@ def make_header_str(temps, press):
     ioprinter.debug_message('     {}'.format(keystr2))
 
     header_str = mess_io.writer.global_reaction(
-        temps, press, excess_ene_temp=None, well_extend=None)
+        temps, pressures, excess_ene_temp=None, well_extend=None)
 
     return header_str
 
@@ -96,11 +95,11 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
     conn_lst = tuple()
 
     # Set the energy and model for the first reference species
-    # ioprinter.info_message('\nCalculating reference energy for PES')
-
+    ioprinter.info_message('\nCalculating reference energy for PES')
     ref_ene, ref_model = set_reference_ene(
         rxn_lst, spc_dct, thy_dct, model_dct,
         run_prefix, save_prefix, ref_idx=0)
+
     # Loop over all the channels and write the MESS strings
     written_labels = []
     basis_energy_dct = {}
@@ -298,74 +297,56 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, ts_cls_info,
     # Unpack info objects
     [_, ts_sadpt, ts_nobarrier, tunnel_model, radrad] = ts_cls_info
 
-    # Initialize data string objects
-    ts_dat_dct = {}
-    flux_str, sct_str = '', ''
-    flux_dat_name = 'flux.dat'
-    sct_dat_name = 'sct.dat'
-
     # Write the initial data string and dat str dct with mdhr str
-    mess_writer = getattr(BLOCK_MODULE, chnl_infs['ts']['writer'])
-    if chnl_infs['ts']['writer'] == 'species_block':
-        mess_str, mdhr_dat = mess_writer(chnl_infs['ts'])
-    elif chnl_infs['ts']['writer'] == 'pst_block':
-        if len(chnl_infs['reacs']) == 2:
-            mess_str, mdhr_dat = mess_writer(
-                chnl_infs['ts'], *chnl_infs['reacs'])
+    mess_strs = []
+    tunnel_strs = []
+    ts_dat_dct = {}
+    for idx, ts_inf_dct in enumerate(chnl_infs['ts']):
+
+        # Build initial data block
+        mstr, mdhr_dat, flux_dat = blocks.barrier_dat_block(
+            ts_inf_dct, chnl_infs['reacs'], chnl_infs['prods'])
+
+        # Write the appropriate string for the tunneling model
+        tunnel_str, sct_dct = tunnel.write_mess_tunnel_str(
+            ts_inf_dct, chnl_infs, chnl_enes,
+            tunnel_model, ts_sadpt, ts_nobarrier, radrad, idx)
+
+        # Update master TS list
+        mess_strs.append(mstr)
+        tunnel_strs.append(tunnel_str)
+        if mdhr_dat:
+            ts_dat_dct.update(mdhr_dat)
+        if flux_dat:
+            ts_dat_dct.update(flux_dat)
+        if sct_dct:
+            ts_dat_dct.update(sct_dct)
+
+    # Place intermediate sadpt/rpath data into a MESS Barrier Block
+    if len(mess_strs) == 1:
+        mess_str = mess_strs[0]
+
+        write_ts_pt_str = bool(
+            (not radrad and ts_sadpt != 'rpvtst') or
+            (radrad and ts_nobarrier != 'rpvtst')
+        )
+        if write_ts_pt_str:
+            ts_ene = chnl_enes['ts'][0]
+            ts_str = '\n' + mess_io.writer.ts_sadpt(
+                ts_label, inner_reac_label, inner_prod_label,
+                mess_str, ts_ene, tunnel_str)
         else:
-            mess_str, mdhr_dat = mess_writer(
-                chnl_infs['ts'], *chnl_infs['prods'])
-    # elif chnl_infs['ts']['writer'] == 'pst_block':
-    # mess_str, mdhr_dat = mess_writer(chnl_infs['ts'], *chnl_infs['reacs'])
-    elif chnl_infs['ts']['writer'] == 'vrctst_block':
-        mess_str, mdhr_dat = mess_writer(
-            chnl_infs['ts'], *chnl_infs['reacs'])
-    elif chnl_infs['ts']['writer'] == 'rpvtst_block':
-        mess_str = mess_writer(chnl_infs['ts'], *chnl_infs['reacs'])
-        mdhr_dat = {}
-
-    # Write the appropriate string for the tunneling model
-    tunnel_str, sct_str = '', ''
-    if treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
-        if tunnel_model == 'eckart':
-            ts_idx = chnl_infs['ts'].get('ts_idx', 0)
-            symm_barrier = chnl_infs['ts'].get('symm_barrier', False)
-            tunnel_str = tunnel.write_mess_eckart_str(
-                chnl_enes, chnl_infs['ts']['imag'],
-                ts_idx=ts_idx, symm_barrier=symm_barrier)
-        # elif tun_model == 'sct':
-        #     tunnel_file = tsname + '_sct.dat'
-        #     path = 'cat'
-        #     tunnel_str, sct_str = tunnel.write_mess_sct_str(
-        #         spc_dct[tsname], pf_levels, path,
-        #         imag, tunnel_file,
-        #         cutoff_energy=2500, coord_proj='cartesian')
-    else:
-        pass
-
-    # Write the MESS string for the TS
-    write_ts_pt_str = bool(
-        (not radrad and ts_sadpt != 'rpvtst') or
-        (radrad and ts_nobarrier != 'rpvtst')
-    )
-    if write_ts_pt_str:
-        ts_ene = chnl_enes['ts'][0]
-        ts_str = '\n' + mess_io.writer.ts_sadpt(
-            ts_label, inner_reac_label, inner_prod_label,
-            mess_str, ts_ene, tunnel_str)
+            ts_enes = chnl_enes['ts']
+            ts_str = '\n' + mess_io.writer.ts_variational(
+                ts_label, inner_reac_label, inner_prod_label,
+                mess_str, ts_enes, tunnel_str)
     else:
         ts_enes = chnl_enes['ts']
-        ts_str = '\n' + mess_io.writer.ts_variational(
-            ts_label, inner_reac_label, inner_prod_label,
-            mess_str, ts_enes, tunnel_str)
+        mess_str = mess_io.writer.rxnchan.configs_union(
+            mess_strs, ts_enes, tunnel_strs=tunnel_strs)
 
-    # Place strings in data dct if they are not empty
-    if mdhr_dat:
-        ts_dat_dct.update(mdhr_dat)
-    if flux_str:
-        ts_dat_dct.update({flux_dat_name: flux_str})
-    if sct_str:
-        ts_dat_dct.update({sct_dat_name: sct_str})
+        ts_str = '\n' + mess_io.writer.barrier(
+            ts_label, inner_reac_label, inner_prod_label, mess_str)
 
     return ts_str, ts_dat_dct
 
@@ -454,7 +435,7 @@ def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct,
     chnl_infs = {}
 
     # Initialize the symm_barrier variable for TS
-    symm_barrier = False
+    # symm_barrier = False
 
     # Determine the MESS data for the reactants and products
     # Gather data or set fake information for dummy reactants/products
@@ -468,19 +449,22 @@ def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct,
                 ref_pf_models=ref_pf_models,
                 ref_pf_levels=ref_pf_levels)
             chnl_infs[side].append(chnl_infs_i)
-        if side in rxn['dummy']:
-            symm_barrier = True
-            # for _ in range(len(rxn[side])):
-            #     chnl_infs[side].append({'ene_chnlvl': 0.00})
+        # if side in rxn['dummy']:
+        #     symm_barrier = True
+        #     for _ in range(len(rxn[side])):
+        #         chnl_infs[side].append({'ene_chnlvl': 0.00})
 
     # Set up data for TS
     chnl_infs['ts'] = []
-    chnl_infs['ts'], model_basis_energy_dct = build.read_ts_data(
-        spc_dct, tsname, rxn['reacs'], rxn['prods'],
-        chn_pf_models, chn_pf_levels,
-        run_prefix, save_prefix, model_basis_energy_dct,
-        ts_class, ts_sadpt, ts_nobarrier,
-        ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
+    tsnames = [name for name in spc_dct.keys() if tsname in name]
+    for name in tsnames:
+        inf_dct, model_basis_energy_dct = build.read_ts_data(
+            spc_dct, name, rxn['reacs'], rxn['prods'],
+            chn_pf_models, chn_pf_levels,
+            run_prefix, save_prefix, model_basis_energy_dct,
+            ts_class, ts_sadpt, ts_nobarrier,
+            ref_pf_models=ref_pf_models, ref_pf_levels=ref_pf_levels)
+        chnl_infs['ts'].append(inf_dct)
 
     # if chnl_infs['ts']['writer'] in ('pst_block', 'vrctst_block'):
     #     if len(chnl_infs['reacs']) == 2:
@@ -489,7 +473,8 @@ def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct,
     #         ts_ene = sum(inf['ene_chnlvl'] for inf in chnl_infs['prods'])
     #     chnl_infs['ts'].update({'ene_chnlvl': ts_ene})
 
-    chnl_infs['ts']['symm_barrier'] = symm_barrier
+    # turn back on with fixed TSs
+    # chnl_infs['ts']['symm_barrier'] = symm_barrier
 
     # Set up the info for the wells
     rwell_model = chn_pf_models['rwells']

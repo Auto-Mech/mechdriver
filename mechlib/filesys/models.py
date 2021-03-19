@@ -12,28 +12,28 @@ from mechlib.filesys import root_locs
 
 
 def pf_filesys(spc_dct_i, pf_levels,
-               run_prefix, save_prefix, saddle):
+               run_prefix, save_prefix, saddle, name=None):
     """ Create various filesystems needed
     """
 
     pf_filesystems = {}
     pf_filesystems['harm'] = set_model_filesys(
-        spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle)
+        spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle, name=name)
     if pf_levels['sym']:
         pf_filesystems['sym'] = set_model_filesys(
-            spc_dct_i, pf_levels['sym'][1], run_prefix, save_prefix, saddle)
+            spc_dct_i, pf_levels['sym'][1], run_prefix, save_prefix, saddle, name=name)
     if pf_levels['tors']:
         pf_filesystems['tors'] = set_model_filesys(
             spc_dct_i, pf_levels['tors'][1][0],
-            run_prefix, save_prefix, saddle)
+            run_prefix, save_prefix, saddle, name=name)
     if pf_levels['vpt2']:
         pf_filesystems['vpt2'] = set_model_filesys(
-            spc_dct_i, pf_levels['vpt2'][1], run_prefix, save_prefix, saddle)
+            spc_dct_i, pf_levels['vpt2'][1], run_prefix, save_prefix, saddle, name=name)
 
     return pf_filesystems
 
 
-def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
+def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle, name=None):
     """ Gets filesystem objects for reading many calculations
     """
 
@@ -45,7 +45,7 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle):
         spc_info = sinfo.from_dct(spc_dct_i)
     levelp = tinfo.modify_orb_label(level, spc_info)
 
-    _root = root_locs(spc_dct_i, saddle=saddle)
+    _root = root_locs(spc_dct_i, saddle=saddle, name=name)
     cnf_run_fs, cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=levelp[1:],

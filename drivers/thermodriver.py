@@ -12,6 +12,7 @@ from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import thermo_paths
+from mechlib.amech_io import output_path
 from mechlib.amech_io.parser.model import pf_level_info, pf_model_info
 # from mechlib.structure import instab
 from mechlib import filesys
@@ -37,19 +38,13 @@ def run(spc_dct,
     # Set reaction list with unstable species broken apart
     # print('Checking stability of all species...')
     # rxn_lst = instab.break_all_unstable2(
-        # rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
+    #     rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
     spc_queue = parser.species.build_queue(rxn_lst)
     spc_queue = parser.species.split_queue(spc_queue)
+
     # Build the paths [(messpf, nasa)], models and levels for each spc
-    starting_path = os.getcwd()
-    ckin_path = os.path.join(starting_path, 'ckin')
-    thm_paths = []
-    for spc_name, (_, mods, _, _) in spc_queue:
-        thm_path = {}
-        for idx, mod in enumerate(mods):
-            thm_path[mod] = thermo_paths(
-                spc_dct[spc_name], run_prefix, idx)
-        thm_paths.append(thm_path)
+    thm_paths = thermo_paths(spc_dct, spc_queue, run_prefix)
+
     pf_levels = {}
     pf_models = {}
     for _, (_, mods, _, _) in spc_queue:
@@ -62,17 +57,18 @@ def run(spc_dct,
             pf_models[mod]['ref_enes'] = (
                 spc_model_dct[mod]['options']['ref_enes']
                 if 'ref_enes' in spc_model_dct[mod]['options'] else 'none')
+
     # Write and Run MESSPF inputs to generate the partition functions
     if write_messpf:
 
         ioprinter.messpf('write_header')
-        pf_paths = {}
+        # pf_paths = {}
         for idx, (spc_name, (pes_model, spc_models, _, _)) in enumerate(spc_queue):
-            pf_paths[idx] = {}
+            # pf_paths[idx] = {}
             for spc_model in spc_models:
                 global_pf_str = thmroutines.qt.make_pf_header(
                     pes_model_dct[pes_model]['therm_temps'])
-                spc_str, dat_str_dct = thmroutines.qt.make_spc_mess_str(
+                spc_str, _ = thmroutines.qt.make_spc_mess_str(
                     spc_dct, spc_name,
                     pf_models[spc_model], pf_levels[spc_model],
                     run_prefix, save_prefix)
@@ -82,11 +78,11 @@ def run(spc_dct,
                 autorun.write_input(
                     thm_paths[idx][spc_model][0], messpf_inp_str,
                     input_name='pf.inp')
- 
+
                 # Write MESS file into job directory
-                cpy_path = pfrunner.mess.write_cwd_pf_file(
-                    messpf_inp_str, spc_dct[spc_name]['inchi'])
-                pf_paths[idx][spc_model] = cpy_path
+                # cpy_path = pfrunner.mess.write_cwd_pf_file(
+                #     messpf_inp_str, spc_dct[spc_name]['inchi'])
+                # pf_paths[idx][spc_model] = cpy_path
 
     # Run the MESSPF files that have been written
     if run_messpf:
@@ -184,7 +180,7 @@ def run(spc_dct,
 
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str = ''
-        ckin_path = os.path.join(starting_path, 'ckin')
+        ckin_path = output_path('CKIN')
         for idx, (spc_name, (pes_model, spc_models, _, _)) in enumerate(
                 spc_queue):
             ioprinter.nasa('calculate', spc_name)

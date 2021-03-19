@@ -80,6 +80,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     ioprinter.reading(
         'Reading filesystem info for {}'.format(tsname), newline=1)
 
+    print('tsname2', tsname)
     ts_dct = spc_dct[tsname]
     reac_dcts = [spc_dct[name] for name in rcts]
     prod_dcts = [spc_dct[name] for name in prds]
@@ -220,7 +221,7 @@ def mol_data(spc_name, spc_dct,
 
     # Set up all the filesystem objects using models and levels
     pf_filesystems = filesys.models.pf_filesys(
-        spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
+        spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle, name=spc_name)
 
     # Set information for transition states
     [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']

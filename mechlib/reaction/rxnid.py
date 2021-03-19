@@ -22,17 +22,19 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
     """
 
     # Try to build the Z-Matrix reaction object or identify from scratch
-    zrxn, zma = _read_from_filesys(
-        rxn_info, ini_thy_info, zma_locs, save_prefix)
-    if zrxn is None:
+    # zrxn, zma = _read_from_filesys(
+    #     rxn_info, ini_thy_info, zma_locs, save_prefix)
+    zrxns = None
+    if zrxns is None:
         print('    Identifying class')
-        zrxn, zma = _id_reaction(rxn_info)
+        zrxns, zmas = _id_reaction(rxn_info)
     else:
         print('    Reading from fileysystem')
 
-    print('    Reaction class identified as: {}'.format(zrxn.class_))
+    print('    Reaction class identified as: {}'.format(zrxns[0].class_))
+    # print('    Reaction class identified as: {}'.format(zrxn.class_))
 
-    return zrxn, zma
+    return zrxns, zmas
 
 
 def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
@@ -65,6 +67,25 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
 
 
 def _id_reaction(rxn_info):
+    """ Identify the reaction and build the object
+    """
+
+    [rxn_ichs, _, _, _] = rxn_info   # replace with mechanalyzer grab
+    rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
+
+    zrxn_objs = automol.reac.rxn_objs_from_inchi(
+        rct_ichs, prd_ichs, indexing='zma')
+
+    zrxns, zmas = [], []
+    for objs in zrxn_objs:
+        zrxn, zma, _, _ = objs
+        zrxns.append(zrxn)
+        zmas.append(zma)
+
+    return zrxns, zmas
+
+
+def _id_reaction2(rxn_info):
     """ Identify the reaction and build the object
     """
 

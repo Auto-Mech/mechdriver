@@ -12,7 +12,6 @@ from mechanalyzer.inf import rxn as rinfo
 from phydat import symm
 from phydat import eleclvl
 from phydat import phycon
-from mechlib.filesys import build_fs
 from mechlib.reaction import rxnid
 
 
@@ -321,23 +320,23 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
 
     ts_dct = {}
     for rxn in rxn_lst:
-        # ts_dct.update(
-        #     build_sing_chn_sadpt_dct(
-        #         pes_idx, rxn, thy_info, ini_thy_info,
-        #         run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
-        #         direction=direction)
-        # )
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
-        ts_dct[tsname] = build_sing_chn_sadpt_dct(
-            tsname, rxn, thy_info, ini_thy_info,
-            run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
-            direction=direction)
+        ts_dct.update(
+            build_sing_chn_sadpt_dct(
+                pes_idx, rxn, thy_info, ini_thy_info,
+                run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                direction=direction)
+        )
+        # tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
+        # ts_dct[tsname] = build_sing_chn_sadpt_dct(
+        #     tsname, rxn, thy_info, ini_thy_info,
+        #     run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+        #     direction=direction)
 
     return ts_dct
 
 
-# def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
-def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
+# def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
+def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
                              run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
                              direction='forw'):
     """ build dct for single reaction
@@ -348,8 +347,10 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
     reacs = reaction['reacs']
     prods = reaction['prods']
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
-    print('  Preparing {} for reaction {} = {}'.format(
-        tsname, '+'.join(reacs), '+'.join(prods)))
+    # print('  Preparing {} for reaction {} = {}'.format(
+    #     tsname, '+'.join(reacs), '+'.join(prods)))
+    print('  Preparing for reaction {} = {}'.format(
+        '+'.join(reacs), '+'.join(prods)))
 
     # Set the reacs and prods for the desired direction
     reacs, prods, _ = rxnid.set_reaction_direction(
@@ -358,33 +359,34 @@ def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
 
     # Obtain the reaction object for the reaction
     zma_locs = (0,)
-    zrxn, zma = rxnid.build_reaction(
+    zrxns, zmas = rxnid.build_reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
 
     # ts_dct = {}
-    if zrxn is not None:
-        # ts_dct = {}
-        # for idx, (zrxn, zma) in enumerate(zip(zrxns, zmas)):
-        rxn_run_fs = autofile.fs.reaction(run_prefix)
-        rxn_save_fs = autofile.fs.reaction(save_prefix)
-        rxn_run_path = rxn_run_fs[-1].path(rinfo.sort(rxn_info))
-        rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
-        rxn_fs = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
-        # tsname = 'ts_{:g}_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'], idx)
-        # ts_dct[tsname] = {
-        ts_dct = {
-            'zrxn': zrxn,
-            'zma': zma,
-            'reacs': reacs,
-            'prods': prods,
-            'rxn_info': rxn_info,
-            'inchi': '',
-            'charge': rinfo.value(rxn_info, 'charge'),
-            'mult': rinfo.value(rxn_info, 'tsmult'),
-            'elec_levels': [[0.0, rinfo.value(rxn_info, 'tsmult')]],
-            'class': zrxn.class_,
-            'rxn_fs': rxn_fs
-        }
+    if zrxns is not None:
+        ts_dct = {}
+        for idx, (zrxn, zma) in enumerate(zip(zrxns, zmas)):
+            rxn_run_fs = autofile.fs.reaction(run_prefix)
+            rxn_save_fs = autofile.fs.reaction(save_prefix)
+            rxn_run_path = rxn_run_fs[-1].path(rinfo.sort(rxn_info))
+            rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
+            rxn_fs = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
+            tsname = 'ts_{:g}_{:g}_{:g}'.format(
+                pes_idx, reaction['chn_idx'], idx)
+            ts_dct[tsname] = {
+        # ts_dct = {
+                'zrxn': zrxn,
+                'zma': zma,
+                'reacs': reacs,
+                'prods': prods,
+                'rxn_info': rxn_info,
+                'inchi': '',
+                'charge': rinfo.value(rxn_info, 'charge'),
+                'mult': rinfo.value(rxn_info, 'tsmult'),
+                'elec_levels': [[0.0, rinfo.value(rxn_info, 'tsmult')]],
+                'class': zrxn.class_,
+                'rxn_fs': rxn_fs
+            }
     else:
         ts_dct = {}
         print('Skipping reaction as class not given/identified')
@@ -435,6 +437,8 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
                 8.0, 9.0, 10.0]
         if 'pst_params' not in combined_dct[sadpt]:
             combined_dct[sadpt]['pst_params'] = [1.0, 6]
+        if 'rxndirn' not in combined_dct[sadpt]:
+            combined_dct[sadpt] = rxndirn
 
         # Perform conversions as needed
         # combined_dct[spc]['hind_inc'] *= phycon.DEG2RAD

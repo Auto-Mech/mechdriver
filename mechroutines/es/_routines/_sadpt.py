@@ -126,11 +126,6 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     print(' - No Z-Matrix is found in save filesys.')
     print('\nRunning scan to generate guess Z-Matrix for opt...')
 
-    # Get filesystem information
-    thy_save_fs = ()
-    scn_run_fs = runfs_dct['runlvl_scn_fs']
-    scn_save_fs = savefs_dct['runlvl_scn_fs']
-
     # Get es keyword info
     overwrite = es_keyword_dct['overwrite']
 
@@ -139,9 +134,20 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     zrxn = ts_dct['zrxn']   # convert to zrxn
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
 
+    scn_save_fs = savefs_dct['runlvl_scn_fs']
+
     # Build grid and names appropriate for reaction type
     scan_inf = automol.reac.build_scan_info(zrxn, ts_zma)
     coord_names, constraint_dct, coord_grids, update_guess = scan_inf
+
+    # Get filesystem information
+    thy_save_fs = ()
+    if constraint_dct is None:
+        scn_run_fs = runfs_dct['runlvl_scn_fs']
+        scn_save_fs = savefs_dct['runlvl_scn_fs']
+    else:
+        scn_run_fs = runfs_dct['runlvl_cscn_fs']
+        scn_save_fs = savefs_dct['runlvl_cscn_fs']
 
     # Set up script string and kwargs
     mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
@@ -353,6 +359,11 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     cnf_save_fs[-1].file.hessian.write(hess, locs)
     cnf_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
     cnf_save_path = cnf_save_fs[-1].path(locs)
+
+    inf_obj = autofile.schema.info_objects.conformer_trunk(0)
+    inf_obj.nsamp = 1
+    cnf_save_fs[0].create()
+    cnf_save_fs[0].file.info.write(inf_obj)
 
     # Save the zmatrix information in a zma filesystem
     cnf_save_path = cnf_save_fs[-1].path(locs)

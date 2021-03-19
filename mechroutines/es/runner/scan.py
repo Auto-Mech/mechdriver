@@ -78,8 +78,9 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     else:
         all_grid_vals = [mixed_grid_vals, tuple(reversed(mixed_grid_vals))]
 
-    for grid_vals in all_grid_vals:
-        # print('\nDoing a reverse sweep of the HR scan to catch errors...')
+    for idx, grid_vals in enumerate(all_grid_vals):
+        if idx == 1:
+            print('\nDoing a reverse sweep of the HR scan to catch errors...')
 
         _run_scan(
             guess_zma=zma,
@@ -296,6 +297,8 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
             locs = [constraint_dct] + locs
 
         # Check if ZMA (other info?) exists
+        print('scn fs', scn_save_fs)
+        print('scn locs', locs)
         if not scn_save_fs[-1].file.zmatrix.exists(locs):
             run_finished = False
             break

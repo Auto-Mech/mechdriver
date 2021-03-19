@@ -30,7 +30,6 @@ def hindered_rotor_scans(
 
     run_tors_names = automol.rotor.names(rotors)
     run_tors_grids = automol.rotor.grids(rotors)
-    print('grids es', run_tors_grids)
 
     # Set constraints
     const_names = structure.tors.set_constraint_names(
@@ -68,7 +67,7 @@ def hindered_rotor_scans(
             overwrite=overwrite,
             update_guess=True,
             reverse_sweep=True,
-            saddle=False,
+            saddle=saddle,
             constraint_dct=constraint_dct,
             retryfail=retryfail,
             chkstab=False,

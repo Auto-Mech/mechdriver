@@ -33,7 +33,7 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
 
     # Build necessary objects
     thy_inf_dct, runfs_dct, savefs_dct = _set_thy_inf_dcts(
-        spc_dct[tsname], thy_dct, es_keyword_dct,
+        tsname, spc_dct[tsname], thy_dct, es_keyword_dct,
         run_prefix, save_prefix)
 
     # Find the transition state
@@ -352,7 +352,7 @@ def _radrad(ts_dct):
 
 
 # SET OPTIONS FOR THE TRANSITION STATE
-def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
+def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                       run_prefix, save_prefix,
                       zma_locs=(0,)):
     """ set the theory
@@ -362,6 +362,9 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
     ts_info = rinfo.ts_info(rxn_info)
     rct_info = rinfo.rgt_info(rxn_info, 'reacs')
     rxn_info = rinfo.sort(rxn_info)
+
+    ts_locs = (int(tsname.split('_')[-1]),)
+    print('ts locs test:', ts_locs)
 
     # high_mult = rinfo.ts_high_mult(rxn_info)
     high_mult = 2
@@ -389,6 +392,7 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
     # Initialize the necessary run filesystem
     runlvl_ts_run_fs = None
     runlvl_scn_run_fs = None
+    runlvl_cscn_run_fs = None
     vscnlvl_ts_run_fs = None
     vscnlvl_scn_run_fs = None
     vscnlvl_cscn_run_fs = None
@@ -398,6 +402,7 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
     ini_zma_save_fs = None
     runlvl_ts_save_fs = None
     runlvl_scn_save_fs = None   # above cnf filesys, for search scans
+    runlvl_cscn_save_fs = None   # above cnf filesys, for search scans
     runlvl_cnf_save_fs = None
     vscnlvl_thy_save_fs = None
     vscnlvl_ts_save_fs = None
@@ -414,7 +419,7 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
         _, ini_cnf_save_fs = build_fs(
             run_prefix, save_prefix, 'CONFORMER',
-            rxn_locs=rxn_info, ts_locs=(),
+            rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_ini_thy_info[1:])
         ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
@@ -434,7 +439,7 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
         runlvl_cnf_run_fs, runlvl_cnf_save_fs = build_fs(
             run_prefix, save_prefix, 'CONFORMER',
-            rxn_locs=rxn_info, ts_locs=(),
+            rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:])
 
         ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
@@ -443,7 +448,12 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
         runlvl_scn_run_fs, runlvl_scn_save_fs = build_fs(
             run_prefix, save_prefix, 'SCAN',
-            rxn_locs=rxn_info, ts_locs=(),
+            rxn_locs=rxn_info, ts_locs=ts_locs,
+            thy_locs=mod_thy_info[1:], zma_locs=(0,))
+  
+        runlvl_cscn_run_fs, runlvl_cscn_save_fs = build_fs(
+            run_prefix, save_prefix, 'CSCAN',
+            rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:], zma_locs=(0,))
 
     if es_keyword_dct.get('var_scnlvl', None) is not None:
@@ -457,17 +467,17 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
         vscnlvl_scn_run_fs, vscnlvl_scn_save_fs = build_fs(
             run_prefix, save_prefix, 'SCAN',
-            rxn_locs=rxn_info, ts_locs=(),
+            rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:], zma_locs=(0,))
 
         vscnlvl_cscn_run_fs, vscnlvl_cscn_save_fs = build_fs(
             run_prefix, save_prefix, 'CSCAN',
-            rxn_locs=rxn_info, ts_locs=(),
+            rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:], zma_locs=(0,))
 
         vrctst_run_fs, vrctst_save_fs = build_fs(
             run_prefix, save_prefix, 'VRCTST',
-            rxn_locs=rxn_info, ts_locs=(),
+            rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:])
 
         if es_keyword_dct.get('var_splvl1', None) is not None:
@@ -511,6 +521,7 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
 
     runfs_dct = {
         'runlvl_scn_fs': runlvl_scn_run_fs,
+        'runlvl_cscn_fs': runlvl_cscn_run_fs,
         'runlvl_cnf_fs': runlvl_cnf_run_fs,
         'vscnlvl_ts_fs': vscnlvl_ts_run_fs,
         'vscnlvl_scn_fs': vscnlvl_scn_run_fs,
@@ -521,6 +532,7 @@ def _set_thy_inf_dcts(ts_dct, thy_dct, es_keyword_dct,
     savefs_dct = {
         'inilvl_zma_fs': ini_zma_save_fs,
         'runlvl_scn_fs': runlvl_scn_save_fs,
+        'runlvl_cscn_fs': runlvl_cscn_save_fs,
         'runlvl_cnf_fs': runlvl_cnf_save_fs,
         'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
