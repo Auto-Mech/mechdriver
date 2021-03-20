@@ -439,6 +439,12 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
             combined_dct[sadpt]['pst_params'] = [1.0, 6]
         if 'rxndirn' not in combined_dct[sadpt]:
             combined_dct[sadpt] = rxndirn
+        if 'kt_pst' not in combined_dct[sadpt]:
+            combined_dct[sadpt]['kt_pst'] = 4.0e-10
+        if 'temp_pst' not in combined_dct[sadpt]:
+            combined_dct[sadpt]['temp_pst'] = 300.0
+        if 'n_pst' not in combined_dct[sadpt]:
+            combined_dct[sadpt]['n_pst'] = 6.0
 
         # Perform conversions as needed
         # combined_dct[spc]['hind_inc'] *= phycon.DEG2RAD

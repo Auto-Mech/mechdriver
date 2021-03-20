@@ -507,7 +507,7 @@ def rpvtst_data(ts_dct, reac_dcts,
     # Calculate and store the imaginary mode
     if sadpt:
         _, imag, _ = vib.read_harmonic_freqs(
-            pf_filesystems, saddle=True)
+            pf_filesystems, run_prefix, saddle=True)
         ts_idx = scn_vals.index(0.00)
     else:
         imag = None
@@ -526,7 +526,9 @@ def pst_data(ts_dct, reac_dcts,
     """
 
     # Get the k(T), T, and n values to get a Cn
-    kt_pst, temp_pst, n_pst = pst.set_vals_for_cn(ts_dct)
+    kt_pst = ts_dct.get('kt_pst', 4.0e-10)  # cm3/s
+    temp_pst = ts_dct.get('temp_pst', 300.0)  # K
+    n_pst = ts_dct.get('n_pst', 6.0)  # unitless
 
     ioprinter.info_message(
         'Determining parameters for Phase Space Theory (PST)',
