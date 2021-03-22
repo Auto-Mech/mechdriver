@@ -25,13 +25,11 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
     run_prefix = pf_filesystems['run_prefix']
     spc_info = sinfo.from_dct(spc_dct_i)
     spc_fml = automol.inchi.formula_string(spc_info[0])
-    print('run path test:', run_prefix, spc_fml)
     if spc_fml is None:
         spc_fml = 'TS'
-    run_path = job_path(run_prefix, 'PROJROT', 'VIB', spc_fml, locs_idx=None)
+    run_path = job_path(run_prefix, 'PROJROT', 'FREQ', spc_fml, locs_idx=None)
 
     # Set up tors level filesystem and model and level
-    ioprinter.debug_message('pflvls', pf_levels)
     tors_model = pf_models['tors']
     tors_ene_info = pf_levels['tors'][1][0]
     mod_tors_ene_info = tinfo.modify_orb_label(

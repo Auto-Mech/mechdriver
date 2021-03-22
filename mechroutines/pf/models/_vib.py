@@ -188,10 +188,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
                          prefix, saddle=False, conf=None):
     """ Get frequencies from one version of ProjRot
     """
-
-    run_path = os.path.join(prefix, 'TORS_PF')
-    if not os.path.exists(run_path):
-        os.mkdir(run_path)
+    run_prefix = pf_filesystems['run_prefix']
 
     # Build the filesystems
     [harm_cnf_fs, _, harm_min_locs, _, harm_run_fs] = pf_filesystems['harm']
@@ -217,8 +214,6 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         script_str, tors_path, tors_geo, mess_hr_str)
 
     tors_zpe = (sum(tors_freqs) / 2.0) * phycon.WAVEN2EH
-
-    ioprinter.info_message('tors freq test:', tors_freqs, tors_zpe)
 
     ioprinter.info_message(
         ' - Calculating the RT and RT-rotor projected frequencies ProjRot')
@@ -276,6 +271,19 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         imag = max(imag_freqs)
     else:
         imag = None
+
+    # NEW autorun function for the frequencies
+    # mess_script_str = autorun.SCRIPT_DCT['messpf']
+    # projrot_script_str = autorun.SCRIPT_DCT['projrot']
+
+    # proj_freqs, proj_imag_freqs, proj_zpe = autorun.projected_frequencies(
+    #     mess_script_str, projrot_script_str, RUN_DIR,
+    #     mess_hr_str, projrot_hr_str,
+    #     mess_geo, projrot_geo, hess)
+
+    # NEW scale factor functions
+    # scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
+    #     harm_freqs, tors_freqs)
 
     # Create a scaling factor for the frequencies
     # First sort tors frequencies in ascending order
@@ -341,6 +349,12 @@ def scale_frequencies(freqs, tors_zpe,
     """ Scale frequencies according to some method
         obtain a corrected zpe
     """
+
+    # NEW scaling
+    # thy_info = chn_pf_levels['harm'][1]
+    # thy_method = (thy_info[1], thy_info[2])
+    # scaled_freqs, scaled_zpe = anharm_by_scaling(freqs, method, basis, scale_method='c3')
+    # tot_zpe = scaled_zpe + tors_zpe
 
     # Scale the frequencies
     thy_info = chn_pf_levels['harm'][1]
