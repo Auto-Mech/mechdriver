@@ -22,13 +22,14 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
     """
 
     # Try to build the Z-Matrix reaction object or identify from scratch
-    # zrxn, zma = _read_from_filesys(
-    #     rxn_info, ini_thy_info, zma_locs, save_prefix)
-    zrxns = None
-    if zrxns is None:
+    zrxn, zma = _read_from_filesys(
+        rxn_info, ini_thy_info, zma_locs, save_prefix)
+    if zrxn is None:
         print('    Identifying class')
         zrxns, zmas = _id_reaction(rxn_info)
     else:
+        zrxns = [zrxn]
+        zmas = [zma]
         print('    Reading from fileysystem')
 
     print('    Reaction class identified as: {}'.format(zrxns[0].class_))
