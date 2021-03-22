@@ -1,55 +1,36 @@
 """ driver for rate constant evaluations
 """
 
-import os
 import autorun
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.pf import ktp as ktproutines
-from mechroutines.pf import runner as pfrunner
-from mechlib import filesys
 from mechlib.amech_io import writer
 from mechlib.amech_io import parser
-from mechlib.amech_io import messrate_path
+from mechlib.amech_io import job_path
+from mechlib.amech_io import output_path
 from mechlib.amech_io import printer as ioprinter
-from mechlib.structure import instab
+# from mechlib.structure import instab
 
 
 def run(pes_formula, pes_idx, sub_pes_idx,
-        spc_dct,
-        cla_dct,
-        thy_dct,
-        rxn_lst,
+        spc_dct, cla_dct, thy_dct, rxn_lst,
         pes_model_dct, spc_model_dct,
         run_inp_dct,
-        write_messrate=True,
-        run_messrate=True,
-        run_fits=True):
+        write_messrate=True, run_messrate=True, run_fits=True):
     """ main driver for generation of full set of rate constants on a single PES
     """
 
-    # Pull stuff from dcts for now
+    # Pull globally useful information from the dictionaries
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
 
-    # Pull PES model and pieces
     pes_model = rxn_lst[0]['model'][0]
-    temps = pes_model_dct[pes_model]['rate_temps']
-    pressures = pes_model_dct[pes_model]['pressures']
-    etransfer = pes_model_dct[pes_model]['etransfer']
-    pdep_fit = pes_model_dct[pes_model]['pdep_fit']
-    tunit = pes_model_dct[pes_model]['tunit']
-    punit = pes_model_dct[pes_model]['punit']
-    fit_method = pes_model_dct[pes_model]['fit_method']
-    arrfit_thresh = (
-        pes_model_dct[pes_model]['dbl_arrfit_thresh'],
-        pes_model_dct[pes_model]['dbl_arrfit_check']
-    )
 
     # Obtain all of the transitions states
-    ioprinter.message('Identifitying reaction classes for transition states...')
+    ioprinter.message('Identifying reaction classes for transition states...')
     ts_dct = {}
     for rxn in rxn_lst:
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
+        # tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
         spc_model = rxn['model'][1]
         ene_model = spc_model_dct[spc_model]['es']['ene']
         geo_model = spc_model_dct[spc_model]['es']['geo']
@@ -65,10 +46,15 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ini_thy_info = tinfo.from_dct(ini_method_dct)
         pf_model = parser.model.pf_model_info(
             spc_model_dct[spc_model]['pf'])
-        ts_dct[tsname] = parser.species.build_sing_chn_sadpt_dct(
-            tsname, rxn, thy_info, ini_thy_info,
-            run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
-            direction='forw')
+        # ts_dct[tsname] = parser.species.build_sing_chn_sadpt_dct(
+        #     tsname, rxn, thy_info, ini_thy_info,
+        #     run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+        #     direction='forw')
+        ts_dct.update(
+            parser.species.build_sing_chn_sadpt_dct(
+                pes_idx, rxn, thy_info, ini_thy_info,
+                run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                direction='forw'))
     spc_dct = parser.species.combine_sadpt_spc_dcts(
         ts_dct, spc_dct)
 
@@ -81,26 +67,26 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         rxn_lst, pes_idx, spc_dct, spc_model_dct)
 
     # Set paths where files will be written and read
-    mess_path = messrate_path(
-        run_prefix, pes_formula, sub_pes_idx)
-    starting_path = os.getcwd()
-    ckin_path = os.path.join(starting_path, 'ckin')
+    mess_path = job_path(
+        run_prefix, 'MESS', 'RATE', pes_formula, locs_idx=sub_pes_idx)
 
     # Write the MESS file
     if write_messrate:  # and not mess_inp_str:
-        
+
         ioprinter.messpf('write_header')
 
         # Write the strings for the MESS input file
         globkey_str = ktproutines.rates.make_header_str(
-            temps, pressures)
+            temps=pes_model_dct[pes_model]['rate_temps'],
+            pressures=pes_model_dct[pes_model]['pressures'])
 
         # Write the energy transfer section strings for MESS file
+        etransfer = pes_model_dct[pes_model]['etransfer']
         energy_trans_str = ktproutines.rates.make_global_etrans_str(
             rxn_lst, spc_dct, etransfer)
 
         # Write the MESS strings for all the PES channels
-        chan_str, dats, p_enes, cnlst = ktproutines.rates.make_pes_mess_str(
+        chan_str, dats, _, _ = ktproutines.rates.make_pes_mess_str(
             spc_dct, rxn_lst, pes_idx,
             run_prefix, save_prefix, label_dct,
             spc_model_dct, thy_dct)
@@ -118,12 +104,6 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             mess_path, mess_inp_str,
             aux_dct=dats, input_name='mess.inp')
 
-        # Write MESS file into job directory
-        pfrunner.write_cwd_rate_file(mess_inp_str, pes_formula, sub_pes_idx)
-
-        # Create a plot of the PES energies (not working correctly)
-        # ktproutines.plot_from_dct(p_enes, cnlst, pes_formula)
-
     # Run mess to produce rate output
     if run_messrate:
         ioprinter.obj('vspace')
@@ -135,11 +115,29 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     if run_fits:
         ioprinter.obj('vspace')
         ioprinter.obj('line_dash')
-        ioprinter.info_message('Fitting Rate Constants for PES to Functional Forms', newline=1)
+        ioprinter.info_message(
+            'Fitting Rate Constants for PES to Functional Forms', newline=1)
+
+        pdep_fit = pes_model_dct[pes_model]['pdep_fit']
+        fit_method = pes_model_dct[pes_model]['fit_method']
+        arrfit_thresh = (
+            pes_model_dct[pes_model]['dbl_arrfit_thresh'],
+            pes_model_dct[pes_model]['dbl_arrfit_check']
+        )
+
         ckin_str_dct = ktproutines.fit.fit_rates(
-            temps, pressures, tunit, punit,
-            pes_formula, label_dct,
-            es_info, pf_model,
-            mess_path, fit_method, pdep_fit,
-            arrfit_thresh)
+            inp_temps=pes_model_dct[pes_model]['rate_temps'],
+            inp_pressures=pes_model_dct[pes_model]['pressures'],
+            inp_tunit=pes_model_dct[pes_model]['tunit'],
+            inp_punit=pes_model_dct[pes_model]['punit'],
+            pes_formula=pes_formula,
+            label_dct=label_dct,
+            es_info=es_info,
+            pf_model=pf_model,
+            mess_path=mess_path,
+            inp_fit_method=fit_method,
+            pdep_fit=pdep_fit,
+            arrfit_thresh=arrfit_thresh)
+
+        ckin_path = output_path('CKIN')
         writer.ckin.write_rxn_file(ckin_str_dct, pes_formula, ckin_path)

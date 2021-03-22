@@ -162,7 +162,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         ini_thy_info, spc_info)
 
     # New filesystem objects
-    _root = root_locs(spc_dct_i, saddle=saddle)
+    _root = root_locs(spc_dct_i, saddle=saddle, name=spc_name)
     ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_ini_thy_info[1:],
@@ -517,7 +517,7 @@ def hr_tsk(job, spc_dct, spc_name,
     mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, spc_info)
 
     # Set the filesystem objects
-    _root = root_locs(spc_dct_i, saddle=saddle)
+    _root = root_locs(spc_dct_i, saddle=saddle, name=spc_name)
     ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_ini_thy_info[1:],

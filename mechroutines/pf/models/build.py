@@ -18,7 +18,6 @@ from mechroutines.pf.models import _tors as tors
 from mechroutines.pf.models import _sym as sym
 from mechroutines.pf.models import _vib as vib
 from mechroutines.pf.models import _flux as flux
-from mechroutines.pf.models import _pst as pst
 from mechroutines.pf.models import _util as util
 from mechroutines.pf.thermo import basis
 from mechroutines.pf.thermo import heatform
@@ -80,6 +79,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     ioprinter.reading(
         'Reading filesystem info for {}'.format(tsname), newline=1)
 
+    print('tsname2', tsname)
     ts_dct = spc_dct[tsname]
     reac_dcts = [spc_dct[name] for name in rcts]
     prod_dcts = [spc_dct[name] for name in prds]
@@ -220,7 +220,7 @@ def mol_data(spc_name, spc_dct,
 
     # Set up all the filesystem objects using models and levels
     pf_filesystems = filesys.models.pf_filesys(
-        spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle)
+        spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle, name=spc_name)
 
     # Set information for transition states
     [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
@@ -506,7 +506,7 @@ def rpvtst_data(ts_dct, reac_dcts,
     # Calculate and store the imaginary mode
     if sadpt:
         _, imag, _ = vib.read_harmonic_freqs(
-            pf_filesystems, saddle=True)
+            pf_filesystems, run_prefix, saddle=True)
         ts_idx = scn_vals.index(0.00)
     else:
         imag = None
@@ -525,7 +525,9 @@ def pst_data(ts_dct, reac_dcts,
     """
 
     # Get the k(T), T, and n values to get a Cn
-    kt_pst, temp_pst, n_pst = pst.set_vals_for_cn(ts_dct)
+    kt_pst = ts_dct.get('kt_pst', 4.0e-10)  # cm3/s
+    temp_pst = ts_dct.get('temp_pst', 300.0)  # K
+    n_pst = ts_dct.get('n_pst', 6.0)  # unitless
 
     ioprinter.info_message(
         'Determining parameters for Phase Space Theory (PST)',
@@ -545,7 +547,7 @@ def pst_data(ts_dct, reac_dcts,
         geoms.append(rot.read_geom(pf_filesystems))
     mred = automol.geom.reduced_mass(geoms[0], geoms[1])
 
-    cn_pst = pst.calc_cn_for_pst(kt_pst, n_pst, mred, temp_pst)
+    cn_pst = automol.reac.calc_cn_for_pst(kt_pst, n_pst, mred, temp_pst)
 
     # Create info dictionary
     keys = ['n_pst', 'cn_pst']

@@ -8,6 +8,26 @@ from mechroutines.pf.models import _util as util
 from phydat import phycon
 
 
+def barrier_dat_block(ts_dct, reac_dcts, prod_dcts):
+    """ prepare a block for data for the barrier
+    """
+
+    flux_dat = {}  # zero for now, need to set for vrctst? chk build
+
+    writer_typ = ts_dct['writer']
+    if writer_typ == 'species_block':
+        mstr, mdhr_dat = species_block(ts_dct)
+    elif writer_typ == 'pst_block':
+        side_dcts = reac_dcts if len(reac_dcts) == 2 else prod_dcts
+        mstr, mdhr_dat = pst_block(ts_dct, *side_dcts)
+    elif writer_typ == 'vrctst_block':
+        mstr, mdhr_dat = vrctst_block(ts_dct, *reac_dcts)
+    elif writer_typ == 'rpvtst_block':
+        mstr, mdhr_dat = rpvtst_block(ts_dct, *reac_dcts)
+
+    return mstr, mdhr_dat, flux_dat
+
+
 # SINGLE SPECIES BLOCKS
 def atom_block(inf_dct):
     """ prepare the species input for messpf
@@ -302,7 +322,7 @@ def rpvtst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
         # Append rxn path pt string to full list of rpath strings
         rpath_strs.append(rpath_str)
 
-    return rpath_strs
+    return rpath_strs, {}
 #
 #
 # def vtst_energy():

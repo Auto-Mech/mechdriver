@@ -6,6 +6,36 @@ import mess_io
 import autofile
 from autorun import run_script
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.pf.models.typ import treat_tunnel
+
+
+def write_mess_tunnel_str(ts_inf_dct, chnl_infs, chnl_enes,
+                          tunnel_model, ts_sadpt, ts_nobarrier, radrad,
+                          ts_idx):
+    """ Write the appropriate tunneling string for a transition state
+    """
+
+    tunnel_str, sct_str = '', ''
+    if treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
+        if tunnel_model == 'eckart':
+            # ts_idx = ts_inf_dct.get('ts_idx', 0)  # breaks for multiconfig
+            # symm_barrier = ts_inf_dct.get('symm_barrier', False)
+            symm_barrier = False
+            tunnel_str = write_mess_eckart_str(
+                chnl_enes, ts_inf_dct.get('imag', None),
+                ts_idx=ts_idx, symm_barrier=symm_barrier)
+        elif tunnel_model == 'sct':
+            tunnel_file = tsname + '_sct.dat'
+            path = 'cat'
+            tunnel_str, sct_str = tunnel.write_mess_sct_str(
+                spc_dct[tsname], pf_levels, path,
+                imag, tunnel_file,
+                cutoff_energy=2500, coord_proj='cartesian')
+
+    if sct_str:
+        ts_dat_dct.update({sct_dat_name: sct_str})
+
+    return tunnel_str, sct_str
 
 
 def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, symm_barrier=False):

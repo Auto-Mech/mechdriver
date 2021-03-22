@@ -6,66 +6,6 @@ import os
 import numpy
 import mess_io
 from mechlib.amech_io import printer as ioprinter
-from mechlib.amech_io import messpf_path
-from mechlib.amech_io import messrate_path
-
-
-# Read MESS files
-def write_cwd_pf_file(mess_str, inchi, fname='pf.inp'):
-    """ Write a copy of the MESS file in the current working directory
-    """
-
-    # Set starting path
-    starting_path = os.getcwd()
-
-    # Set the MESS paths and build dirs if needed
-    jobdir_mess_path = messpf_path(starting_path, inchi)
-    if not os.path.exists(jobdir_mess_path):
-        os.makedirs(jobdir_mess_path)
-
-    # Write the files
-    file_path = os.path.join(jobdir_mess_path, fname)
-    if os.path.exists(file_path):
-        for i in range(1, 51):
-            if not os.path.exists(file_path+str(i+1)):
-                fin_path = file_path+str(i+1)
-                break
-    else:
-        fin_path = file_path
-    with open(fin_path, 'w') as file_obj:
-        file_obj.write(mess_str)
-
-    ioprinter.saving('MESS input copy', fin_path)
-
-    return fin_path
-
-
-def write_cwd_rate_file(mess_str, pes_formula, sub_pes_idx, fname='mess.inp'):
-    """ Write a copy of the MESS file in the current working directory
-    """
-
-    # Set starting path
-    starting_path = os.getcwd()
-
-    # Set the MESS paths and build dirs if needed
-    jobdir_mess_path = messrate_path(
-        starting_path, pes_formula, sub_pes_idx)
-    if not os.path.exists(jobdir_mess_path):
-        os.makedirs(jobdir_mess_path)
-
-    # Write the files
-    file_path = os.path.join(jobdir_mess_path, fname)
-    if os.path.exists(file_path):
-        for i in range(1, 51):
-            if not os.path.exists(file_path+str(i+1)):
-                fin_path = file_path+str(i+1)
-                break
-    else:
-        fin_path = file_path
-    with open(fin_path, 'w') as file_obj:
-        file_obj.write(mess_str)
-
-    ioprinter.saving('MESS input copy', fin_path)
 
 
 def write_mess_output(formulastr, final_pf, mess_path, filename='pf.dat'):

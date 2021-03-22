@@ -289,17 +289,18 @@ def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
 
 # Set the inner TS ene and scale them
 
-    if channel_infs['ts']['writer'] in ('pst_block', 'vrctst_block'):
+    if channel_infs['ts'][0]['writer'] in ('pst_block', 'vrctst_block'):
         if len(channel_infs['reacs']) == 2:
             ts_enes = [sum(inf['ene_chnlvl'] for inf in channel_infs['reacs'])]
         else:
             ts_enes = [sum(inf['ene_chnlvl'] for inf in channel_infs['prods'])]
-        channel_infs['ts'].update({'ene_chnlvl': ts_enes})
+        channel_infs['ts'][0].update({'ene_chnlvl': ts_enes})
     else:
         if 'rpath' in channel_infs['ts']:
             ts_enes = [dct[ene_lvl] for dct in channel_infs['ts']['rpath']]
         else:
-            ts_enes = [channel_infs['ts'][ene_lvl]]
+            ts_enes = [dct[ene_lvl] for dct in channel_infs['ts']]
+            # ts_enes = [channel_infs['ts'][ene_lvl]]
         ioprinter.debug_message(
             'TS HoF (0 K) ts lvl kcal/mol: ', ts_enes[0] * phycon.EH2KCAL)
         if reac_ref_ene:

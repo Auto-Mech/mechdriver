@@ -179,9 +179,10 @@ def read_job(job, run_fs):
     """ read from an elstruct job by name
     """
 
-    run_path = run_fs[-1].path([job])
+    # run_path = run_fs[-1].path([job])
 
-    print(" - Reading from {} job at {}".format(job, run_path))
+    # print(" - Reading from {} job at {}".format(job, run_path))
+    # above print just doubling the printing...
     if not run_fs[-1].file.output.exists([job]):
         print(" - No output file found. Skipping...")
         success = False

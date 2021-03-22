@@ -361,6 +361,11 @@ def conformer_sampling(zma, spc_info, thy_info,
     """ run sampling algorithm to find conformers
     """
 
+    # Check if any saving needs to be done before hand
+    presamp_check = True  # Eventually make a user option
+    if presamp_check:
+        _presamp_save(spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=zrxn)
+
     # Build filesys
     cnf_save_fs[0].create()
     inf_obj = autofile.schema.info_objects.conformer_trunk(0)
@@ -506,6 +511,33 @@ def _calc_nsampd(cnf_save_fs, cnf_run_fs):
         nsampd = 0
 
     return nsampd
+
+
+def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=None):
+    """ Loop over the RUN filesys and save conformers
+    """
+
+    if not cnf_run_fs[0].exists():
+        print(" - No conformers in RUN filesys to save.")
+    else:
+        print(" - Found conformers in RUN filesys to save.\n")
+        for locs in cnf_run_fs[-1].existing():
+            cnf_run_path = cnf_run_fs[-1].path(locs)
+            run_fs = autofile.fs.run(cnf_run_path)
+            print("\nReading from conformer run at {}".format(cnf_run_path))
+
+            # Read the electronic structure optimization job
+            success, ret = es_runner.read_job(
+                job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+
+            if success:
+                _save_conformer(
+                    ret, cnf_save_fs, locs, thy_info,
+                    zrxn=zrxn, orig_ich=spc_info[0])
+
+        # Update the conformer trajectory file
+        print('')
+        filesys.mincnf.traj_sort(cnf_save_fs, thy_info)
 
 
 def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,

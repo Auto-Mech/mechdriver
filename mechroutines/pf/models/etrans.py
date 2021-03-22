@@ -59,7 +59,6 @@ def mass_params(well_info, bath_info, etrans_dct):
     else:
 
         ioprinter.info_message('  - Obtaining masses from geometries...')
-        ioprinter.info_message('well', well_info[0])
         geo = automol.inchi.geometry(well_info[0])
         mass1 = sum(automol.geom.masses(geo))
 

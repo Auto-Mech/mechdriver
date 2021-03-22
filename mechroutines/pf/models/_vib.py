@@ -6,6 +6,7 @@ import os
 import numpy
 import autofile
 import autorun
+import automol.geom
 import projrot_io
 from phydat import phycon
 from mechlib.amech_io import printer as ioprinter
@@ -47,14 +48,14 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             freqs = ()
     else:
         freqs, imag, zpe = read_harmonic_freqs(
-            pf_filesystems, saddle=saddle)
+            pf_filesystems, run_prefix, saddle=saddle)
         tors_zpe = 0.0
 
     return freqs, imag, zpe, tors_strs
 
 
 def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
-                 run_prefix, saddle=False):
+                      run_prefix, saddle=False):
     """ process to get freq
     """
 
@@ -92,24 +93,25 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             freqs = ()
     else:
         freqs, imag, zpe = read_harmonic_freqs(
-            pf_filesystems, saddle=saddle)
+            pf_filesystems, run_prefix, saddle=saddle)
         tors_zpe = 0.0
 
     return freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1
 
-def read_harmonic_freqs(pf_filesystems, saddle=False):
+
+def read_harmonic_freqs(pf_filesystems, run_prefix, saddle=False):
     """ Read the harmonic frequencies for the minimum
         energy conformer
     """
     # Get the harmonic filesys information
     [cnf_fs, harm_path, min_cnf_locs, _, _] = pf_filesystems['harm']
     freqs, imag, zpe = read_locs_harmonic_freqs(
-        cnf_fs, harm_path, min_cnf_locs, saddle=saddle)
+        cnf_fs, harm_path, min_cnf_locs, run_prefix, saddle=saddle)
     return freqs, imag, zpe
 
 
 def read_locs_harmonic_freqs(
-        cnf_fs, harm_path, cnf_locs, saddle=False):
+        cnf_fs, harm_path, cnf_locs, run_prefix, saddle=False):
     """ Read the harmonic frequencies for a specific conformer
     """
 
@@ -120,14 +122,11 @@ def read_locs_harmonic_freqs(
         # Obtain geom and freqs from filesys
         geo = cnf_fs[-1].file.geometry.read(cnf_locs)
         hess = cnf_fs[-1].file.hessian.read(cnf_locs)
-        hess_path = cnf_fs[-1].path(cnf_locs)
-        ioprinter.reading('Hessian', hess_path)
+        ioprinter.reading('Hessian', cnf_fs[-1].path(cnf_locs))
 
         # Build the run filesystem using locs
-        run_fs = autofile.fs.conformer(harm_path)
-        run_fs[-1].create(cnf_locs)
-        run_path = run_fs[-1].path(cnf_locs)
-        vib_path = job_path(run_path, 'PROJROT', print_path=True)
+        fml_str = automol.geom.formula_string(geo)
+        vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str)
 
         # Obtain the frequencies
         ioprinter.info_message(
@@ -189,10 +188,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
                          prefix, saddle=False, conf=None):
     """ Get frequencies from one version of ProjRot
     """
-
-    run_path = os.path.join(prefix, 'TORS_PF')
-    if not os.path.exists(run_path):
-        os.mkdir(run_path)
+    run_prefix = pf_filesystems['run_prefix']
 
     # Build the filesystems
     [harm_cnf_fs, _, harm_min_locs, _, harm_run_fs] = pf_filesystems['harm']
@@ -205,25 +201,24 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     harm_geo = harm_cnf_fs[-1].file.geometry.read(harm_min_locs)
     hess = harm_cnf_fs[-1].file.hessian.read(harm_min_locs)
     tors_geo = tors_cnf_fs[-1].file.geometry.read(tors_min_locs)
-    hess_path = harm_cnf_fs[-1].path(harm_min_locs)
-    ioprinter.reading('Hessian', hess_path)
+    ioprinter.reading('Hessian', harm_cnf_fs[-1].path(harm_min_locs))
+    
+    fml_str = automol.geom.formula_string(harm_geo)
+    vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str, print_path=True)
+    tors_path = job_path(run_prefix, 'MESS', 'TORS', fml_str, print_path=True)
 
     # Read info for the hindered rotors and calculate the ZPVE
     ioprinter.info_message(' - Calculating the torsional ZPVES using MESS...')
-    tors_path = job_path(run_path, 'MESS', print_path=True)
     script_str = autorun.SCRIPT_DCT['messpf']
     tors_freqs, _ = autorun.mess.torsions(
         script_str, tors_path, tors_geo, mess_hr_str)
 
     tors_zpe = (sum(tors_freqs) / 2.0) * phycon.WAVEN2EH
 
-    ioprinter.info_message('tors freq test:', tors_freqs, tors_zpe)
-
     ioprinter.info_message(
         ' - Calculating the RT and RT-rotor projected frequencies ProjRot')
 
     # NEW projrot writing
-    vib_path = job_path(run_path, 'PROJROT', print_path=True)
     script_str = autorun.SCRIPT_DCT['projrot']
     dist_cutoff_dct1 = {('H', 'O'): 2.26767, ('H', 'C'): 2.26767}
     dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459}
@@ -276,6 +271,19 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         imag = max(imag_freqs)
     else:
         imag = None
+
+    # NEW autorun function for the frequencies
+    # mess_script_str = autorun.SCRIPT_DCT['messpf']
+    # projrot_script_str = autorun.SCRIPT_DCT['projrot']
+
+    # proj_freqs, proj_imag_freqs, proj_zpe = autorun.projected_frequencies(
+    #     mess_script_str, projrot_script_str, RUN_DIR,
+    #     mess_hr_str, projrot_hr_str,
+    #     mess_geo, projrot_geo, hess)
+
+    # NEW scale factor functions
+    # scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
+    #     harm_freqs, tors_freqs)
 
     # Create a scaling factor for the frequencies
     # First sort tors frequencies in ascending order
@@ -341,6 +349,12 @@ def scale_frequencies(freqs, tors_zpe,
     """ Scale frequencies according to some method
         obtain a corrected zpe
     """
+
+    # NEW scaling
+    # thy_info = chn_pf_levels['harm'][1]
+    # thy_method = (thy_info[1], thy_info[2])
+    # scaled_freqs, scaled_zpe = anharm_by_scaling(freqs, method, basis, scale_method='c3')
+    # tot_zpe = scaled_zpe + tors_zpe
 
     # Scale the frequencies
     thy_info = chn_pf_levels['harm'][1]

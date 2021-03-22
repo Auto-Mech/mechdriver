@@ -34,8 +34,15 @@ def run(pes_idx,
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
 
-    # Initialize variable for building a dct for ts
-    built_dct = False
+    # Build a TS dictionary and add it to the spc dct if needed
+    if any(tsk_lst[0] == 'ts' for tsk_lst in es_tsk_lst):
+        ts_dct, ts_queue = parser.species.get_sadpt_dct(
+            pes_idx, es_tsk_lst, rxn_lst,
+            thy_dct, run_inp_dct, spc_dct, cla_dct,
+            run_prefix, save_prefix,
+            direction='forw')
+        spc_dct = parser.species.combine_sadpt_spc_dcts(
+            ts_dct, spc_dct)
 
     # Loop over Tasks
     for tsk_lst in es_tsk_lst:
@@ -44,26 +51,17 @@ def run(pes_idx,
         [obj, tsk, es_keyword_dct] = tsk_lst
 
         # Build the queue of species based on user request
+        if obj == 'all':
+            obj_queue = parser.species.build_spc_queue(rxn_lst) + ts_queue
         if obj == 'spc':
-            spc_queue = parser.species.build_spc_queue(rxn_lst)
+            obj_queue = parser.species.build_spc_queue(rxn_lst)
         elif obj == 'ts':
-            if not built_dct:
-                # rxndirn = es_keyword_dct['rxndirn']
-                rxndirn = 'forw' 
-                ts_dct, ts_queue = parser.species.get_sadpt_dct(
-                    pes_idx, es_tsk_lst, rxn_lst,
-                    thy_dct, run_inp_dct, spc_dct, cla_dct,
-                    run_prefix, save_prefix,
-                    direction=rxndirn)
-                spc_dct = parser.species.combine_sadpt_spc_dcts(
-                    ts_dct, spc_dct)
-                built_dct = True
-            spc_queue = ts_queue
+            obj_queue = ts_queue
         elif obj == 'vdw':
-            spc_queue = []
+            obj_queue = []
 
         # Run the electronic structure task for all spc in queue
-        for spc_name, _ in spc_queue:
+        for spc_name, _ in obj_queue:
             run_tsk(tsk, spc_dct, spc_name,
                     thy_dct, es_keyword_dct,
                     run_prefix, save_prefix)
