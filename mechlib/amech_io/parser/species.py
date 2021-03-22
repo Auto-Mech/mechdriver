@@ -438,7 +438,7 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
         if 'pst_params' not in combined_dct[sadpt]:
             combined_dct[sadpt]['pst_params'] = [1.0, 6]
         if 'rxndirn' not in combined_dct[sadpt]:
-            combined_dct[sadpt] = rxndirn
+            combined_dct[sadpt]['rxndirn'] = 'forw'
         if 'kt_pst' not in combined_dct[sadpt]:
             combined_dct[sadpt]['kt_pst'] = 4.0e-10
         if 'temp_pst' not in combined_dct[sadpt]:

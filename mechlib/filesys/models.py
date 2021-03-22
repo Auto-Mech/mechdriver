@@ -30,6 +30,10 @@ def pf_filesys(spc_dct_i, pf_levels,
         pf_filesystems['vpt2'] = set_model_filesys(
             spc_dct_i, pf_levels['vpt2'][1], run_prefix, save_prefix, saddle, name=name)
 
+    # Add the prefixes for now
+    pf_filesystems['run_prefix'] = run_prefix
+    pf_filesystems['save_prefix'] = save_prefix
+
     return pf_filesystems
 
 

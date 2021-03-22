@@ -18,7 +18,6 @@ from mechroutines.pf.models import _tors as tors
 from mechroutines.pf.models import _sym as sym
 from mechroutines.pf.models import _vib as vib
 from mechroutines.pf.models import _flux as flux
-from mechroutines.pf.models import _pst as pst
 from mechroutines.pf.models import _util as util
 from mechroutines.pf.thermo import basis
 from mechroutines.pf.thermo import heatform
@@ -548,7 +547,7 @@ def pst_data(ts_dct, reac_dcts,
         geoms.append(rot.read_geom(pf_filesystems))
     mred = automol.geom.reduced_mass(geoms[0], geoms[1])
 
-    cn_pst = pst.calc_cn_for_pst(kt_pst, n_pst, mred, temp_pst)
+    cn_pst = automol.reac.calc_cn_for_pst(kt_pst, n_pst, mred, temp_pst)
 
     # Create info dictionary
     keys = ['n_pst', 'cn_pst']

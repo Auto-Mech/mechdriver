@@ -5,6 +5,7 @@
 
 import os
 import autorun
+import automol.inchi
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf import runner as pfrunner
 from mechroutines.pf.models import ene
@@ -12,7 +13,9 @@ from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import thermo_paths
+from mechlib.amech_io import job_path
 from mechlib.amech_io import output_path
+from mechanalyzer.inf import spc as sinfo
 from mechlib.amech_io.parser.model import pf_level_info, pf_model_info
 # from mechlib.structure import instab
 from mechlib import filesys
@@ -41,6 +44,8 @@ def run(spc_dct,
     #     rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
     spc_queue = parser.species.build_queue(rxn_lst)
     spc_queue = parser.species.split_queue(spc_queue)
+    print('spc_queue')
+    print(spc_queue[0])
 
     # Build the paths [(messpf, nasa)], models and levels for each spc
     thm_paths = thermo_paths(spc_dct, spc_queue, run_prefix)
@@ -80,7 +85,7 @@ def run(spc_dct,
                     input_name='pf.inp')
 
                 # Write MESS file into job directory
-                # cpy_path = pfrunner.mess.write_cwd_pf_file(
+                # cpy_path = write_cwd_pf_file(
                 #     messpf_inp_str, spc_dct[spc_name]['inchi'])
                 # pf_paths[idx][spc_model] = cpy_path
 
@@ -112,8 +117,16 @@ def run(spc_dct,
                         pfrunner.mess.divide_pfs(final_pf, pf2, coeff)
                     elif operator == 'multiply':
                         pfrunner.mess.multiply_pfs(final_pf, pf2, coeff)
-            thm_paths[idx]['final'] = thermo_paths(
-                spc_dct[spc_name], run_prefix, len(spc_models))
+            # need to clean thm path build
+            tot_idx = len(spc_models)
+            spc_info = sinfo.from_dct(spc_dct[spc_name])
+            spc_fml = automol.inchi.formula_string(spc_info[0])
+            thm_paths[idx]['final'] = (
+                job_path(run_prefix, 'MESS', 'PF', spc_fml, locs_idx=tot_idx),
+                job_path(run_prefix, 'THERM', 'NASA', spc_fml, locs_idx=tot_idx)
+            )
+            # thm_paths[idx]['final'] = thermo_paths(
+            #     spc_dct[spc_name], run_prefix, len(spc_models))
             pfrunner.mess.write_mess_output(
                 fstring(spc_dct[spc_name]['inchi']),
                 final_pf, thm_paths[idx]['final'][0],

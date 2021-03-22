@@ -6,6 +6,7 @@ import os
 import numpy
 import autofile
 import autorun
+import automol.geom
 import projrot_io
 from phydat import phycon
 from mechlib.amech_io import printer as ioprinter

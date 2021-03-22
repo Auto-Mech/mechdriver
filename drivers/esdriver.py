@@ -35,7 +35,7 @@ def run(pes_idx,
     save_prefix = run_inp_dct['save_prefix']
 
     # Build a TS dictionary and add it to the spc dct if needed
-    if any(obj == 'ts' for tsk_lst in es_tsk_lst for [obj, _, _] in tsk_lst):
+    if any(tsk_lst[0] == 'ts' for tsk_lst in es_tsk_lst):
         ts_dct, ts_queue = parser.species.get_sadpt_dct(
             pes_idx, es_tsk_lst, rxn_lst,
             thy_dct, run_inp_dct, spc_dct, cla_dct,
