@@ -130,4 +130,12 @@ def build_trans_coeff_file(ts_inf_dct, run_path, coord_proj='cartesian'):
     with open(os.path.join(path, 'imactint.txt')) as tc_file:
         trans_coeff_str = tc_file.read()
 
+    # NEW autorun
+    # fml_str = automol.geom.formula_string(harm_geo)
+    # sct_path = job_path(run_prefix, 'PROJROT', 'SCT', fml_str, print_path=True)
+    # tc_str = autorun.projrot.small_curvature_tunneling(
+    #     script_str, run_dir, geoms, grads, hessians,
+    #     rpath_coords, rpath_enes, sadpt_idx,
+    #     rotors_str='')
+
     return trans_coeff_str

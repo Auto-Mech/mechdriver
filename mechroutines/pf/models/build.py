@@ -15,7 +15,7 @@ from mechroutines.pf.models import typ
 from mechroutines.pf.models import etrans
 from mechroutines.pf.models import _rot as rot
 from mechroutines.pf.models import _tors as tors
-from mechroutines.pf.models import _sym as sym
+from mechroutines.pf.models import _symm as symm
 from mechroutines.pf.models import _vib as vib
 from mechroutines.pf.models import _flux as flux
 from mechroutines.pf.models import _util as util
@@ -254,7 +254,7 @@ def mol_data(spc_name, spc_dct,
     # Obtain symmetry factor
     ioprinter.info_message(
         'Determining the symmetry factor...', newline=1)
-    sym_factor = sym.symmetry_factor(
+    sym_factor = symm.symmetry_factor(
         pf_filesystems, chn_pf_models, spc_dct_i, rotors)
 
     # Obtain electronic energy levels
@@ -680,7 +680,7 @@ def tau_data(spc_dct_i,
 
     # Obtain symmetry factor
     ioprinter.info_message('Determining the symmetry factor...', newline=1)
-    sym_factor = sym.symmetry_factor(
+    sym_factor = symm.symmetry_factor(
         pf_filesystems, chn_pf_models, spc_dct_i, rotors,
         frm_bnd_keys=(), brk_bnd_keys=())
 
