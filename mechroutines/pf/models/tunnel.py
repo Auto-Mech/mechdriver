@@ -101,41 +101,17 @@ def build_trans_coeff_file(ts_inf_dct, run_path, coord_proj='cartesian'):
         rpath_enes.append(dct['ene_chnlvl'] - sadpt_ene)
         rpath_coords.append(dct['rvals'])
 
-    # Write the input and coord-energy string for the ProjRot input
-    projrot_inp_str = projrot_io.writer.rpht_input(
-        geoms, grads, hessians,
-        saddle_idx=sadpt_idx,
-        rotors_str='',
-        coord_proj=coord_proj)
-    projrot_en_str = projrot_io.writer.rpht_path_coord_en(
-        rpath_coords, rpath_enes,
-        bnd1=(), bnd2=())
+    fml_str = automol.geom.formula_string(harm_geo)
+    sct_path = job_path(run_prefix, 'PROJROT', 'SCT', fml_str, print_path=True)
+    tc_str = autorun.projrot.small_curvature_tunneling(
+        script_str, run_dir, geoms, grads, hessians,
+        rpath_coords, rpath_enes, sadpt_idx,
+        rotors_str='')
 
-    ioprinter.debug_message('SCT test', projrot_inp_str, projrot_en_str)
+    return tc_str
 
-    # Write the ProjRot input files and run the code
-    bld_locs = ['PROJROT', 0]
-    bld_save_fs = autofile.fs.build(run_path)
-    bld_save_fs[-1].create(bld_locs)
-    path = bld_save_fs[-1].path(bld_locs)
-    ioprinter.debug_message('Build Path for ProjRot calls', path)
-    proj_file_path = os.path.join(path, 'RPHt_input_data.dat')
-    with open(proj_file_path, 'w') as proj_file:
-        proj_file.write(projrot_inp_str)
-    with open(proj_file_path, 'w') as proj_file:
-        proj_file.write(projrot_en_str)
-    run_script(DEFAULT_SCRIPT_DCT['projrot'], path)
 
-    # Read the transmission coefficient file
-    with open(os.path.join(path, 'imactint.txt')) as tc_file:
-        trans_coeff_str = tc_file.read()
-
-    # NEW autorun
-    # fml_str = automol.geom.formula_string(harm_geo)
-    # sct_path = job_path(run_prefix, 'PROJROT', 'SCT', fml_str, print_path=True)
-    # tc_str = autorun.projrot.small_curvature_tunneling(
-    #     script_str, run_dir, geoms, grads, hessians,
-    #     rpath_coords, rpath_enes, sadpt_idx,
-    #     rotors_str='')
-
-    return trans_coeff_str
+def tunnel_polyrate():
+    """ calculate s(E) using polyrate
+    """
+    raise NotImplementedError

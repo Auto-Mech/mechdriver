@@ -103,7 +103,7 @@ def fake_species_block(inf_dct_i, inf_dct_j):
 
     fake_freqs = automol.combine.fake_vdw_frequencies(
         inf_dct_i['geom'], inf_dct_j['geom'])
-    freqs = fake_freqs + inf_dct_i['freqs'] + inf_dct_j['freqs']
+    freqs = list(fake_freqs) + inf_dct_i['freqs'] + inf_dct_j['freqs']
 
     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
 
@@ -295,7 +295,7 @@ def rpvtst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
     elec_levels = [[0.0, 1.0]]
     # elec_levels = automol.combine.electronic_energy_levels(
-        inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
+    #     inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
     rpath_strs = []
     for idx, dct in enumerate(ts_inf_dct['rpath']):

@@ -25,12 +25,18 @@ def _read_run(job_path):
     # Read the blocks
     inp_block = _end_block(inp_str, 'input')
     obj_block = _end_block(inp_str, 'objs')
-    job_block = _end_block(inp_str, 'jobs')
+    # pes_block_str = apf.first_capture(ioformat.ptt.paren_section('pes'), obj_str)
+    # spc_block_str = apf.first_capture(ioformat.ptt.paren_section('spc'), obj_str)
+    job_block = _end_block(inp_str, 'jobs')  # could read and set as neccessary
     es_tsks_block = _end_block(inp_str, 'es_tsks')
     trans_tsks_block = _end_block(inp_str, 'trans_tsks')
     print_tsks_block = _end_block(inp_str, 'print_tsks')
 
     # Check if strings exist
+    for section in ('input', 'objs', 'jobs'):
+
+    # Check if needed strings exist
+
     if prnt_tsks_str is None:
         print('*ERROR: No "print_tsks" section defined in run.dat')
         # sys.exit()
@@ -60,6 +66,9 @@ def _read_spc(job_path):
     """ a
     """
     spc_str = ioformat.ptt.read_inp_str(job_path, CSV_INP)
+    dat_str = ioformat.ptt.read_inp_str(job_path, DAT_INP)
+
+    return spc_str
 
 
 def _read_mech(job_path):
@@ -71,6 +80,7 @@ def _read_mech(job_path):
     mech_info = util.read_mechanism_file(
         mech_str, mech_type, spc_dct, sort_rxns=sort_rxns)
 
+    return mech_info
 
 
 # Patterns of use
@@ -97,4 +107,3 @@ def _paren_block(string, header):
     """ A patter for a certain block
     """
     return apf.first_capture(ptt.paren_section(header), string)
-

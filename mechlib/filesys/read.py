@@ -9,11 +9,11 @@ from autofile import fs
 from phydat import phycon
 
 
-def read_hr_pot(names, grid_vals, cnf_save_path,
-                mod_tors_ene_info, ref_ene,
-                constraint_dct,
-                read_geom=False, read_grad=False,
-                read_hess=False, read_zma=False):
+def potential(names, grid_vals, cnf_save_path,
+              mod_tors_ene_info, ref_ene,
+              constraint_dct,
+              read_geom=False, read_grad=False,
+              read_hess=False, read_zma=False):
     """ Get the potential for a hindered rotor
     """
 
@@ -72,48 +72,9 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
     return pot, geoms, grads, hessians, zmas, paths
 
 
-def set_constraint_names(zma, tors_names, tors_model):
-    """ Determine the names of constraints along a torsion scan
-    """
-
-    const_names = tuple()
-    if tors_names and tors_model in ('1dhrf', '1dhrfa'):
-        if tors_model == '1dhrf':
-            const_names = tuple(
-                itertools.chain(*tors_names))
-            # if saddle:
-            #     const_names = tuple(
-            #         itertools.chain(*amech_sadpt_tors_names))
-            # else:
-            #     const_names = tuple(
-            #         itertools.chain(*amech_spc_tors_names))
-        elif tors_model == '1dhrfa':
-            coords = list(automol.zmat.coordinates(zma))
-            const_names = tuple(coord for coord in coords)
-
-    return const_names
-
-
-def calc_hr_frequencies(geoms, grads, hessians, run_path):
-    """ Calculate the frequencies
-    """
-
-    # Initialize hr freqs list
-    hr_freqs = {}
-    for point in geoms.keys():
-        _, proj_freqs, _, _ = autorun.projrot.frequencies(
-            autorun.SCRIPT_DCT['projrot'],
-            run_path,
-            [geoms[point]],
-            [grads[point]],
-            [hessians[point]])
-        hr_freqs[point] = proj_freqs
-
-    return hr_freqs
-
-
-def read_tors_ene(filesys, locs, mod_tors_ene_info):
-    """ read the energy for torsions
+def energy(filesys, locs, mod_tors_ene_info):
+    """ Read the energy from an SP filesystem that is located in some
+        root 'filesys object'
     """
 
     if filesys[-1].exists(locs):
@@ -127,18 +88,3 @@ def read_tors_ene(filesys, locs, mod_tors_ene_info):
         ene = None
 
     return ene
-
-
-def print_hr_pot(tors_pots):
-    """ Check hr pot to see if a new mimnimum is needed
-    """
-
-    print('\nHR potentials...')
-    for name in tors_pots:
-
-        print('- Rotor {}'.format(name))
-        pot_str = ''
-        for pot in tors_pots[name].values():
-            pot_str += ' {0:.2f}'.format(pot)
-
-        print('- Pot:{}'.format(pot_str))

@@ -118,4 +118,4 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
 #     tors_zmas[tors_names] = zmas
 
 # # Print potential
-# structure.tors.print_hr_pot(tors_pots)
+# ioprinter.hr_pot(tors_pots)
