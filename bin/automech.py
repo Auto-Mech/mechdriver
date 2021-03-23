@@ -103,8 +103,7 @@ if RUN_ES:
     ioprinter.program_header('es')
 
     # Build the elec struct tsk lst
-    ES_TSK_LST = parser.run.build_run_es_tsks_lst(
-        ES_TSK_STR, SPC_MODEL_DCT, THY_DCT)
+    ES_TSK_LST = parser.tsks.es_tsk_lst(ES_TSK_STR, THY_DCT)
 
     # Call ESDriver for spc in each PES or SPC
     if RUN_OBJ_DCT['pes']:
@@ -182,8 +181,7 @@ if RUN_TRANS:
     ioprinter.program_header('trans')
 
     # Build the elec struct tsk lst
-    TRANS_TSK_LST = parser.run.build_run_trans_tsks_lst(
-        TRANS_TSK_STR, THY_DCT)
+    TRANS_TSK_LST = parser.tsks.trans_tsk_lst(TRANS_TSK_STR, THY_DCT)
 
     # Call ThermoDriver for spc in PES
     if RUN_OBJ_DCT['pes']:
@@ -246,8 +244,7 @@ if RUN_PRINT:
     ioprinter.program_header('print')
 
     # Build the elec struct tsk lst
-    PRINT_TSK_LST = parser.run.build_run_prnt_tsks_lst(
-        PRINT_TSK_STR, SPC_MODEL_DCT, THY_DCT)
+    PRNT_TSK_LST = tsks.prnt_tsk_lst(PRNT_TSK_STR, THY_DCT)
 
     PES_IDX = 0
     printdriver.run(

@@ -280,15 +280,6 @@ def es_tsks_block(inp_str):
         apf.first_capture(ioformat.ptt.end_section('es_tsks'), inp_str))
 
 
-def build_run_es_tsks_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
-    """ Build the list of ES tasks, potentially w/ models
-    """
-    es_tsk_lst = tsks.es_tsk_lst(
-        es_tsk_str, rxn_model_dct, thy_dct, saddle=saddle)
-
-    return es_tsk_lst
-
-
 # PARSE THE TRANS_TSKS SECTION OF THE FILE #
 def read_trans_tsks(job_path):
     """ Build a dictionary for all the theory keywords
@@ -319,15 +310,6 @@ def trans_tsks_block(inp_str):
     return trans_str
 
 
-def build_run_trans_tsks_lst(trans_tsk_str, thy_dct, saddle=False):
-    """ Build the list of ES tasks, potentially w/ models
-    """
-    trans_tsk_lst = tsks.trans_tsk_lst(
-        trans_tsk_str, thy_dct, saddle=saddle)
-
-    return trans_tsk_lst
-
-
 # Read the print tasks
 def read_print_tsks(job_path):
     """ Build a dictionary for all the theory keywords
@@ -352,13 +334,3 @@ def prnt_tsks_block(inp_str):
     if print_str is not None:
         print_str = ioformat.remove_whitespace(print_str)
     return print_str
-
-
-def build_run_prnt_tsks_lst(
-        prnt_tsk_str, rxn_model_dct, thy_dct, saddle=False):
-    """ Build the list of ES tasks, potentially w/ models
-    """
-    prnt_tsk_lst = tsks.prnt_tsk_lst(
-        prnt_tsk_str, rxn_model_dct, thy_dct, saddle=saddle)
-
-    return prnt_tsk_lst
