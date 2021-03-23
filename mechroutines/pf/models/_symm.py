@@ -26,7 +26,6 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors, grxn=None):
         else:
             grxn = None
 
-        # if automol.geom.is_atom(geo):
         sym_model = pf_models['sym']
 
         # Obtain geometry, energy, and symmetry filesystem

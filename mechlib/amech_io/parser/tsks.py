@@ -20,17 +20,11 @@ from mechlib.amech_io.parser.keywords import PRNT_TSK_KEYWORDS_SUPPORTED_DCT
 from mechlib.amech_io.parser.keywords import PRNT_TSK_KEYWORDS_DEFAULT_DCT
 
 
-# ES TSKS
-def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
-    """ Set the sequence of electronic structure tasks for a given
-        species or PESs
+def es_tsks_lst(es_tsks_str, thy_dct):
+    """ Take the es tsk list string from input and set the tasks
+        Right now, we presume the tasks given in the file are correct
     """
-
-    # Set the task list using either the given models or supplied list
-    if 'models' in es_tsk_str:
-        tsk_lst = es_tsks_from_models(rxn_model_dct, saddle=saddle)
-    else:
-        tsk_lst = es_tsks_from_lst(es_tsk_str)
+    tsk_lst = _tsk_lst(es_tsk_str)
 
     # Ensure that all the tasks are in the supported tasks
     check_es_tsks_supported(tsk_lst, thy_dct)
@@ -41,31 +35,51 @@ def es_tsk_lst(es_tsk_str, rxn_model_dct, thy_dct, saddle=False):
     return mod_tsk_lst
 
 
-def es_tsks_from_lst(es_tsks_str):
-    """ Take the es tsk list string from input and set the tasks
-        Right now, we presume the tasks given in the file are correct
-    """
-    # Split the string into different strings of keywords
-    tsk_lst = []
-    es_tsks_str = ioformat.remove_whitespace(es_tsks_str)
-    for line in es_tsks_str.splitlines():
-        tsk_line = line.split()
-        if len(tsk_line) > 2:
-            obj, tsk, keyword_lst = tsk_line[0], tsk_line[1], tsk_line[2:]
-            keyword_dct = format_tsk_keywords(keyword_lst)
-        else:
-            print('BAAD')
-        tsk_lst.append([obj, tsk, keyword_dct])
-    
-    return tsk_lst
-
-
-# TRANS TSKS
-def trans_tsk_lst(trans_tsk_str, thy_dct, saddle=False):
+def trans_tsk_lst(trans_tsk_str):
     """ Set the sequence of electronic structure tasks for a given
         species or PESs
     """
 
+    # Split the string into different strings of keywords
+    tsk_lst = _tsk_lst(trans_tsk_str)
+    mod_tsk_lst = add_defaults_to_trans_keyword_dct(tsk_lst)
+
+    return mod_tsk_lst
+
+
+def therm_tsk_lst(therm_tsk_str):
+    """ Set sequence of tasks for therm
+    """
+    raise NotImplementedError
+
+
+def rate_tsk_lst(rate_tsk_str):
+    """ Set sequence of tasks for rate
+    """
+    raise NotImplementedError
+
+
+def prnt_tsk_lst(prnt_tsk_str, thy_dct):
+    """ Set the sequence of electronic structure tasks for a given
+        species or PESs
+    """
+
+    # Set the task list using either the given models or supplied list
+    tsk_lst = prnt_tsks_from_lst(prnt_tsk_str)
+
+    # Ensure that all the tasks are in the supported tasks
+    check_prnt_tsks_supported(tsk_lst, thy_dct)
+
+    # Add defaults if they are missing
+    mod_tsk_lst = add_defaults_to_prnt_keyword_dct(tsk_lst)
+
+    return mod_tsk_lst
+
+
+def _tsk_lst(trans_tsk_str):
+    """ Set the sequence of electronic structure tasks for a given
+        species or PESs
+    """
     # Split the string into different strings of keywords
     tsk_lst = []
     trans_tsks_str = ioformat.remove_whitespace(trans_tsk_str)
@@ -78,42 +92,28 @@ def trans_tsk_lst(trans_tsk_str, thy_dct, saddle=False):
             print('BAAD')
         tsk_lst.append([obj, tsk, keyword_dct])
     
-    # Add defaults if they are missing
-    mod_tsk_lst = add_defaults_to_trans_keyword_dct(tsk_lst)
-
-    return mod_tsk_lst
+    return tsk_lst
 
 
-# FORMAT KEYWORDS
-def format_tsk_keywords(keyword_lst):
-    """ format keywords string
-    """
-    # Build initial keyword dct
-    keyword_dct = {}
-    for keyword in keyword_lst:
-        [key, val] = keyword.split('=')
-        # keyword_dct[key] = format_val(val)
-        keyword_dct[key] = set_value_type(val)
+# def expand_es_tsks(es_tsk_lst):
+#     """ loop over tasks and expand tasks
+#     """
+#     if obj == 'all':
+#     tsk_lst.append(['spc', tsk, dct])
+#     tsk_lst.append(['ts', tsk, dct])
+#     expand_tsks = EXPAND_DCT.get(tsk, ())
+#     for expand_tsk in expand_tsks:
+#     tsk_lst.append([obj, expand_tsk, dct])
+# EXPAND_DCT = {
+#     'find_ts': ('sadpt_scan', 'sadpt_opt', 'sadpt_hess',)  # sadpt_check
+# }
 
-    return keyword_dct
-
-
-def format_val(val):
-    """ format val (probably switch to one in ptt later)
-    """
-    if val == 'True':
-        formtd_val = True
-    elif val == 'False':
-        formtd_val = False
-    elif val.isdigit():
-        formtd_val = int(val)
-    else:
-        formtd_val = val
-
-    return formtd_val
+# def expand_trans_tsks(trans_tsk_lst):
+#     """ loop over tasks and exapnd
+#     """
 
 
-# ES TASKS
+# Add defaults
 def add_defaults_to_es_keyword_dct(tsk_lsts):
     """ Add default values to a checked keyword dct
     """
@@ -129,84 +129,37 @@ def add_defaults_to_es_keyword_dct(tsk_lsts):
     return mod_tsk_lst
 
 
-def es_tsks_from_models(rxn_model_dct,
-                        saddle=False, wells=False):
-    """ Set a list of tasks using the model dictionary for
-        setting up the electronic structure calculations
+def add_defaults_to_trans_keyword_dct(tsk_lsts):
+    """ Add default values to a checked keyword dct
     """
-
-    # Initialize task list
-    tsk_lst = []
-
-    # Tasks for getting the geoms for minima, ts, and wells
-    tsk_lst.append('find_min')
-    tsk_lst.append('min_samp')
-    if saddle:
-        tsk_lst.append('find_ts')
-        tsk_lst.append('ts_samp')
-    if wells:
-        tsk_lst.append('find_wells')
-        tsk_lst.append('well_samp')
-
-    # Add hindered rotor calculations if requested
-    if rxn_model_dct['tors'] == '1dhr':
-        tsk_lst.append('hr_scan')
-
-    # Calculations using the geometries
-    tsk_lst.append('conf_hess')
-    # if rxn_model_dct['vib'] == 'vpt2':
-    #     tsk_lst.append('conf_vpt2')
-    tsk_lst.append('conf_energy')
-
-    # Add in the tasks for running ircs
-    # if rxn_model_dct['ts_sadpt'] == 'vtst' and not barrierless:
-    #    tsk_lst.append('run_irc')
-
-    return tsk_lst
-
-
-def check_prnt_tsks_supported(es_tsks, thy_dct):
-    """ Check to see if the list of es tasks are supported by the code
-    """
-    for tsk_lst in es_tsks:
-        # try:
-        # Unpack the list
+    mod_tsk_lst = []
+    for tsk_lst in tsk_lsts:
         [obj, tsk, keyword_dct] = tsk_lst
+        for dkey, dval in TRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT.items():
+            if dkey not in keyword_dct:
+                if dkey in TRANS_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                    keyword_dct[dkey] = dval
+        mod_tsk_lst.append([obj, tsk, keyword_dct])
 
-        # Check the object
-        if obj not in PRNT_TSK_OBJ_SUPPORTED_LST:
-            print('*ERROR: object requested that is not allowed')
-            print('Allowed objs')
-            for supp_obj in PRNT_TSK_OBJ_SUPPORTED_LST:
-                print(supp_obj)
-            sys.exit()
-
-        # Check the task
-        if tsk not in PRNT_TSK_SUPPORTED_DCT[obj]:
-            print('*ERROR: task requested not allowed for object')
-            print('Allowed objs')
-            for key, val in PRNT_TSK_SUPPORTED_DCT.items():
-                print(key)
-                print(val)
-            sys.exit()
-
-        # Check the requested es level
-        for key, val in keyword_dct.items():
-            if key not in PRNT_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
-                print('*ERROR: option not allowed for given task')
-                print('Allowed objs')
-                for option in PRNT_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
-                    print(tsk, option)
-                sys.exit()
-            else:
-                tlvl = ('geolvl', 'proplvl')
-                if key in tlvl:
-                    if val not in thy_dct:
-                        print('*ERROR: tsk theory level',
-                              '{} not given in theory.dat'.format(val))
-                        sys.exit()
+    return mod_tsk_lst
 
 
+def add_defaults_to_prnt_keyword_dct(tsk_lsts):
+    """ Add default values to a checked keyword dct
+    """
+    mod_tsk_lst = []
+    for tsk_lst in tsk_lsts:
+        [obj, tsk, keyword_dct] = tsk_lst
+        for dkey, dval in PRNT_TSK_KEYWORDS_DEFAULT_DCT.items():
+            if dkey not in keyword_dct:
+                if dkey in PRNT_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                    keyword_dct[dkey] = dval
+        mod_tsk_lst.append([obj, tsk, keyword_dct])
+
+    return mod_tsk_lst
+
+
+# Check keywords
 def check_es_tsks_supported(es_tsks, thy_dct):
     """ Check to see if the list of es tasks are supported by the code
     """
@@ -290,69 +243,43 @@ def check_es_tsks_supported(es_tsks, thy_dct):
         #     sys.exit()
 
 
-# TRANS TASKS
-def add_defaults_to_trans_keyword_dct(tsk_lsts):
-    """ Add default values to a checked keyword dct
+def check_prnt_tsks_supported(es_tsks, thy_dct):
+    """ Check to see if the list of es tasks are supported by the code
     """
-    mod_tsk_lst = []
-    for tsk_lst in tsk_lsts:
+    for tsk_lst in es_tsks:
+        # try:
+        # Unpack the list
         [obj, tsk, keyword_dct] = tsk_lst
-        for dkey, dval in TRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT.items():
-            if dkey not in keyword_dct:
-                if dkey in TRANS_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
-                    keyword_dct[dkey] = dval
-        mod_tsk_lst.append([obj, tsk, keyword_dct])
 
-    return mod_tsk_lst
+        # Check the object
+        if obj not in PRNT_TSK_OBJ_SUPPORTED_LST:
+            print('*ERROR: object requested that is not allowed')
+            print('Allowed objs')
+            for supp_obj in PRNT_TSK_OBJ_SUPPORTED_LST:
+                print(supp_obj)
+            sys.exit()
 
+        # Check the task
+        if tsk not in PRNT_TSK_SUPPORTED_DCT[obj]:
+            print('*ERROR: task requested not allowed for object')
+            print('Allowed objs')
+            for key, val in PRNT_TSK_SUPPORTED_DCT.items():
+                print(key)
+                print(val)
+            sys.exit()
 
-# PRINT TSKS
-def prnt_tsk_lst(prnt_tsk_str, rxn_model_dct, thy_dct, saddle=False):
-    """ Set the sequence of electronic structure tasks for a given
-        species or PESs
-    """
-
-    # Set the task list using either the given models or supplied list
-    tsk_lst = prnt_tsks_from_lst(prnt_tsk_str)
-
-    # Ensure that all the tasks are in the supported tasks
-    check_prnt_tsks_supported(tsk_lst, thy_dct)
-
-    # Add defaults if they are missing
-    mod_tsk_lst = add_defaults_to_prnt_keyword_dct(tsk_lst)
-
-    return mod_tsk_lst
-
-
-def prnt_tsks_from_lst(prnt_tsks_str):
-    """ Take the prnt tsk list string from input and set the tasks
-        Right now, we presume the tasks given in the file are correct
-    """
-    # Split the string into different strings of keywords
-    tsk_lst = []
-    prnt_tsks_str = ioformat.remove_whitespace(prnt_tsks_str)
-    for line in prnt_tsks_str.splitlines():
-        tsk_line = line.split()
-        if len(tsk_line) >= 2:
-            obj, tsk, keyword_lst = tsk_line[0], tsk_line[1], tsk_line[2:]
-            keyword_dct = format_tsk_keywords(keyword_lst)
-        else:
-            print('BAAD')
-        tsk_lst.append([obj, tsk, keyword_dct])
-
-    return tsk_lst
-
-
-def add_defaults_to_prnt_keyword_dct(tsk_lsts):
-    """ Add default values to a checked keyword dct
-    """
-    mod_tsk_lst = []
-    for tsk_lst in tsk_lsts:
-        [obj, tsk, keyword_dct] = tsk_lst
-        for dkey, dval in PRNT_TSK_KEYWORDS_DEFAULT_DCT.items():
-            if dkey not in keyword_dct:
-                if dkey in PRNT_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
-                    keyword_dct[dkey] = dval
-        mod_tsk_lst.append([obj, tsk, keyword_dct])
-
-    return mod_tsk_lst
+        # Check the requested es level
+        for key, val in keyword_dct.items():
+            if key not in PRNT_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                print('*ERROR: option not allowed for given task')
+                print('Allowed objs')
+                for option in PRNT_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                    print(tsk, option)
+                sys.exit()
+            else:
+                tlvl = ('geolvl', 'proplvl')
+                if key in tlvl:
+                    if val not in thy_dct:
+                        print('*ERROR: tsk theory level',
+                              '{} not given in theory.dat'.format(val))
+                        sys.exit()
