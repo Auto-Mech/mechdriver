@@ -5,6 +5,7 @@
 import sys
 import ioformat
 from ioformat.ptt import set_value_type
+from ioformat.ptt import format_tsk_keywords
 from mechlib.amech_io.parser.keywords import ES_TSK_OBJ_SUPPORTED_LST
 from mechlib.amech_io.parser.keywords import ES_TSK_SUPPORTED_DCT
 from mechlib.amech_io.parser.keywords import ES_TSK_KEYWORDS_SUPPORTED_DCT
@@ -20,7 +21,7 @@ from mechlib.amech_io.parser.keywords import PRNT_TSK_KEYWORDS_SUPPORTED_DCT
 from mechlib.amech_io.parser.keywords import PRNT_TSK_KEYWORDS_DEFAULT_DCT
 
 
-def es_tsks_lst(es_tsks_str, thy_dct):
+def es_tsk_lst(es_tsk_str, thy_dct):
     """ Take the es tsk list string from input and set the tasks
         Right now, we presume the tasks given in the file are correct
     """
@@ -76,14 +77,13 @@ def prnt_tsk_lst(prnt_tsk_str, thy_dct):
     return mod_tsk_lst
 
 
-def _tsk_lst(trans_tsk_str):
+def _tsk_lst(tsk_str):
     """ Set the sequence of electronic structure tasks for a given
         species or PESs
     """
-    # Split the string into different strings of keywords
     tsk_lst = []
-    trans_tsks_str = ioformat.remove_whitespace(trans_tsk_str)
-    for line in trans_tsks_str.splitlines():
+    tsk_str = ioformat.remove_whitespace(tsk_str)
+    for line in tsk_str.splitlines():
         tsk_line = line.split()
         if len(tsk_line) > 2:
             obj, tsk, keyword_lst = tsk_line[0], tsk_line[1], tsk_line[2:]

@@ -37,7 +37,7 @@ def potential(names, grid_vals, cnf_save_path,
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
 
-        ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
+        ene = energy(scn_fs, locs, mod_tors_ene_info)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL
         else:
@@ -72,6 +72,7 @@ def potential(names, grid_vals, cnf_save_path,
     return pot, geoms, grads, hessians, zmas, paths
 
 
+# Single data point readers
 def energy(filesys, locs, mod_tors_ene_info):
     """ Read the energy from an SP filesystem that is located in some
         root 'filesys object'

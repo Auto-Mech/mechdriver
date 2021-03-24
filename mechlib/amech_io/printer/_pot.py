@@ -1,7 +1,7 @@
 """ drivers for coordinate scans
 """
 
-def print_hr_pot(tors_pots):
+def hrpotentials(tors_pots):
     """ Check hr pot to see if a new mimnimum is needed
     """
 

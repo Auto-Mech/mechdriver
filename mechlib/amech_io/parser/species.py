@@ -280,7 +280,7 @@ def geometry_dictionary(job_path):
 
 
 def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
-                  run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                  run_inp_dct, spc_dct, run_prefix, save_prefix,
                   direction='forw'):
     """ build a ts queue
     """
@@ -299,7 +299,7 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
             ini_thy_info = tinfo.from_dct(ini_method_dct)
             ts_dct = build_sadpt_dct(
                 pes_idx, rxn_lst, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                run_inp_dct, spc_dct, run_prefix, save_prefix,
                 direction=direction)
             break
 
@@ -313,7 +313,7 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
 
 def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
-                    run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                    run_inp_dct, spc_dct, run_prefix, save_prefix,
                     direction='forw'):
     """ build a dct for saddle points for all reactions in rxn_lst
     """
@@ -323,21 +323,16 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
         ts_dct.update(
             build_sing_chn_sadpt_dct(
                 pes_idx, rxn, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                run_inp_dct, spc_dct, run_prefix, save_prefix,
                 direction=direction)
         )
-        # tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
-        # ts_dct[tsname] = build_sing_chn_sadpt_dct(
-        #     tsname, rxn, thy_info, ini_thy_info,
-        #     run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
-        #     direction=direction)
 
     return ts_dct
 
 
 # def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
 def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
-                             run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                             run_inp_dct, spc_dct, run_prefix, save_prefix,
                              direction='forw'):
     """ build dct for single reaction
     """
@@ -347,14 +342,12 @@ def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
     reacs = reaction['reacs']
     prods = reaction['prods']
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
-    # print('  Preparing {} for reaction {} = {}'.format(
-    #     tsname, '+'.join(reacs), '+'.join(prods)))
     print('  Preparing for reaction {} = {}'.format(
         '+'.join(reacs), '+'.join(prods)))
 
     # Set the reacs and prods for the desired direction
     reacs, prods, _ = rxnid.set_reaction_direction(
-        reacs, prods, rxn_info, cla_dct,
+        reacs, prods, rxn_info,
         thy_info, ini_thy_info, save_prefix, direction=direction)
 
     # Obtain the reaction object for the reaction
@@ -374,7 +367,6 @@ def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
             tsname = 'ts_{:g}_{:g}_{:g}'.format(
                 pes_idx, reaction['chn_idx'], idx)
             ts_dct[tsname] = {
-        # ts_dct = {
                 'zrxn': zrxn,
                 'zma': zma,
                 'reacs': reacs,
@@ -445,6 +437,10 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
             combined_dct[sadpt]['temp_pst'] = 300.0
         if 'n_pst' not in combined_dct[sadpt]:
             combined_dct[sadpt]['n_pst'] = 6.0
+
+        print('dct\n', combined_dct[sadpt])
+        import sys
+        sys.exit()
 
         # Perform conversions as needed
         # combined_dct[spc]['hind_inc'] *= phycon.DEG2RAD

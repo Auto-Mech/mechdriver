@@ -48,8 +48,8 @@ def run_tsk(tsk, spc_dct, spc_name,
     # If species is unstable, set task to 'none'
     ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
     ini_thy_info = tinfo.from_dct(ini_method_dct)
-    # stable = instab.check_unstable_species(
-    #     tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
+    stable = instab.check_unstable_species(
+        tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
     stable = True
     if stable:
         ioprinter.debug_message('- Proceeding with requested task...')
@@ -196,6 +196,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         # Set variables if it is a saddle
         two_stage = saddle
         mc_nsamp = spc_dct_i['mc_nsamp']
+        resave = es_keyword_dct['resave']
 
         # Read the geometry and zma from the ini file system
         geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
@@ -234,7 +235,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             script_str, overwrite,
             nsamp_par=mc_nsamp,
             tors_names=tors_names, zrxn=zrxn,
-            two_stage=two_stage, retryfail=retryfail,
+            two_stage=two_stage, retryfail=retryfail, resave=resave,
             **kwargs)
 
     elif job == 'pucker':
@@ -680,7 +681,7 @@ def hr_tsk(job, spc_dct, spc_name,
         #     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
         #         constraint_dct = structure.tors.build_constraint_dct(
         #             zma, const_names, tors_names)
-        #         pot, _, _, _, zmas, paths = structure.tors.read_hr_pot(
+        #         pot, _, _, _, zmas, paths = filesys.read.potential(
         #             tors_names, tors_grids,
         #             ini_cnf_save_path,
         #             mod_ini_thy_info, ref_ene,

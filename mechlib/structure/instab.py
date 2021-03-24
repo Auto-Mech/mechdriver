@@ -16,9 +16,8 @@ from mechlib import filesys
 
 
 # Write the instability files
-def write_instab(conn_zma, disconn_zma,
-                 instab_save_fs, thy_locs,
-                 opt_ret,
+def write_instab(conn_zma, disconn_zmas,
+                 instab_save_fs, cnf_save_fs,
                  zma_locs=(0,),
                  save_cnf=False):
     """ write the instability files
@@ -27,129 +26,41 @@ def write_instab(conn_zma, disconn_zma,
     # Get a connected geometry
     conn_geo = automol.zmat.geometry(conn_zma)
 
-    if opt_ret:
-
-        # Obtain inf obj and inp str to write in filesys
-        inf_obj, inp_str, out_str = opt_ret
-
-        # Set and print the save path information
-        save_path = instab_save_fs[-1].path()
-        print(" - Saving...")
-        print(" - Save path: {}".format(save_path))
-
-        # Save the geometry information
-        instab_fs = autofile.fs.instab(save_path)
-        instab_fs[-1].create()
-        instab_fs[-1].file.geometry_info.write(inf_obj)
-        instab_fs[-1].file.geometry_input.write(inp_str)
-        instab_fs[-1].file.geometry.write(conn_geo)
-        instab_path = instab_fs[-1].path()
-
-        # Grab the zma and instability transformation
-        conn_zma, frm_bnd_keys, rcts_gra = _instab_info(conn_zma, disconn_zma)
-        tra = (frozenset({frm_bnd_keys}),
-               frozenset({frozenset({})}))
-
-        # Save zma information seperately, if required
-        zma_save_fs = autofile.fs.zmatrix(instab_path)
-        zma_save_fs[-1].create(zma_locs)
-        zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
-        zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
-        zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
-
-        # Write the files into the filesystem
-        zma_save_fs[-1].file.transformation.write(tra, zma_locs)
-        zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
-
-        # Saving the energy to an SP filesys
-        print(" - Saving energy...")
-        prog = inf_obj.prog
-        method = inf_obj.method
-        ene = elstruct.reader.energy(prog, method, out_str)
-        sp_save_fs = autofile.fs.single_point(save_path)
-        sp_save_fs[-1].create(thy_locs)
-        sp_save_fs[-1].file.input.write(inp_str, thy_locs)
-        sp_save_fs[-1].file.info.write(inf_obj, thy_locs)
-        sp_save_fs[-1].file.energy.write(ene, thy_locs)
-
-        if save_cnf:
-            # Save the geometry information
-            cnf_fs = autofile.fs.conformer(save_path)
-            cnf_locs = [autofile.schema.generate_new_conformer_id()]
-            cnf_fs[-1].create(cnf_locs)
-            cnf_fs[-1].file.geometry_info.write(inf_obj, cnf_locs)
-            cnf_fs[-1].file.geometry_input.write(inp_str, cnf_locs)
-            cnf_fs[-1].file.geometry.write(conn_geo, cnf_locs)
-            cnf_path = cnf_fs[-1].path(cnf_locs)
-
-            # Save zma information seperately, if required
-            zma_save_fs = autofile.fs.zmatrix(cnf_path)
-            zma_save_fs[-1].create(zma_locs)
-            zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
-            zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
-            zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
-
-            # Saving the energy to an SP filesys
-            print(" - Saving energy...")
-            prog = inf_obj.prog
-            method = inf_obj.method
-            ene = elstruct.reader.energy(prog, method, out_str)
-            sp_save_fs = autofile.fs.single_point(cnf_path)
-            sp_save_fs[-1].create(thy_locs)
-            sp_save_fs[-1].file.input.write(inp_str, thy_locs)
-            sp_save_fs[-1].file.info.write(inf_obj, thy_locs)
-            sp_save_fs[-1].file.energy.write(ene, thy_locs)
-
-
-# Write the instability files
-def write_instab2(conn_zma, disconn_zmas,
-                  instab_save_fs, thy_locs,
-                  zma_locs=(0,),
-                  save_cnf=False):
-    """ write the instability files
-    """
-
-    # Get a connected geometry
-    conn_geo = automol.zmat.geometry(conn_zma)
-
-    # Set and print the save path information
-    save_path = instab_save_fs[-1].path()
-    print(" - Saving...")
-    print(" - Save path: {}".format(save_path))
-
     # Save the geometry information
-    instab_fs = autofile.fs.instab(save_path)
-    instab_fs[-1].create()
-    instab_fs[-1].file.geometry.write(conn_geo)
-    instab_path = instab_fs[-1].path()
+    instab_save_fs[-1].create()
+    instab_save_fs[-1].file.geometry.write(conn_geo)
+    instab_save_path = instab_save_fs[-1].path()
 
     # Grab the zma and instability transformation
-    conn_zma, brk_bnd_keys, rcts_gra = _instab_info(conn_zma, disconn_zmas)
-    tra = (frozenset({frozenset({})}),
-           frozenset({brk_bnd_keys}))
+    zrxn, conn_zma = automol.reac.instability_transformation(
+        conn_zma, disconn_zmas)
 
     # Save zma information seperately, if required
-    zma_save_fs = autofile.fs.zmatrix(instab_path)
+    zma_save_fs = autofile.fs.zmatrix(instab_save_path)
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
 
     # Write the files into the filesystem
-    zma_save_fs[-1].file.transformation.write(tra, zma_locs)
-    zma_save_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
+    zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
 
     if save_cnf:
 
         # Save the geometry information
-        cnf_fs = autofile.fs.conformer(save_path)
         cnf_locs = [autofile.schema.generate_new_conformer_id()]
-        cnf_fs[-1].create(cnf_locs)
-        cnf_fs[-1].file.geometry.write(conn_geo, cnf_locs)
-        cnf_path = cnf_fs[-1].path(cnf_locs)
+        cnf_save_fs[-1].create(cnf_locs)
+        cnf_save_fs[-1].file.geometry.write(conn_geo, cnf_locs)
+        cnf_save_path = cnf_save_fs[-1].path(cnf_locs)
 
         # Save zma information seperately, if required
-        zma_save_fs = autofile.fs.zmatrix(cnf_path)
+        zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
         zma_save_fs[-1].create(zma_locs)
         zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+    
+    # Set and print the save path information
+    print(" - Saving...")
+    print(" - Save path: {}".format(instab_save_path))
+    if save_cnf:
+        print(" - Save path: {}".format(cnf_save_path))
 
 
 # Unstable check

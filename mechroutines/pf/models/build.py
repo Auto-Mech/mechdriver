@@ -8,6 +8,7 @@
 
 import automol
 import autofile
+import autorun
 from phydat import phycon
 from mechanalyzer.inf import spc as sinfo
 from mechroutines.pf.models import ene
@@ -20,8 +21,6 @@ from mechroutines.pf.models import _vib as vib
 from mechroutines.pf.models import _flux as flux
 from mechroutines.pf.models import _util as util
 from mechroutines.pf.thermo import basis
-from mechroutines.pf.thermo import heatform
-from mechlib.structure import tors as torsprep
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 
@@ -396,7 +395,7 @@ def rpvtst_data(ts_dct, reac_dcts,
 
     # Need to read the sp vals along the scan. add to read
     ref_ene = 0.0
-    enes, geoms, grads, hessians, _, _ = torsprep.read_hr_pot(
+    enes, geoms, grads, hessians, _, _ = filesys.read.potential(
         [frm_name], [scn_vals],
         scn_prefix,
         mod_scn_ene_info, ref_ene,
@@ -404,8 +403,9 @@ def rpvtst_data(ts_dct, reac_dcts,
         read_geom=True,
         read_grad=True,
         read_hess=True)
-    freqs = torsprep.calc_hr_frequencies(
-        geoms, grads, hessians, ts_run_path)
+    script_str = autorun.SCRIPT_DCT['projrot']
+    freqs = autorun.projrot.pot_frequencies(
+        script_str, geoms, grads, hessians, ts_run_path)
 
     # Get the energies and zpes at R_ref
     if not sadpt:

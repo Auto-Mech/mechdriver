@@ -13,7 +13,7 @@ from mechlib.amech_io import printer as ioprinter
 
 
 def run(pes_formula, pes_idx, sub_pes_idx,
-        spc_dct, cla_dct, thy_dct, rxn_lst,
+        spc_dct, thy_dct, rxn_lst,
         pes_model_dct, spc_model_dct,
         run_inp_dct,
         write_messrate=True, run_messrate=True, run_fits=True):
@@ -46,14 +46,10 @@ def run(pes_formula, pes_idx, sub_pes_idx,
         ini_thy_info = tinfo.from_dct(ini_method_dct)
         pf_model = parser.model.pf_model_info(
             spc_model_dct[spc_model]['pf'])
-        # ts_dct[tsname] = parser.species.build_sing_chn_sadpt_dct(
-        #     tsname, rxn, thy_info, ini_thy_info,
-        #     run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
-        #     direction='forw')
         ts_dct.update(
             parser.species.build_sing_chn_sadpt_dct(
                 pes_idx, rxn, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, cla_dct, run_prefix, save_prefix,
+                run_inp_dct, spc_dct, run_prefix, save_prefix,
                 direction='forw'))
     spc_dct = parser.species.combine_sadpt_spc_dcts(
         ts_dct, spc_dct)

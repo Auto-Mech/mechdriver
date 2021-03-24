@@ -12,11 +12,12 @@ def message(message_label, *args, newline=None, indent=None):
         print(format_message(message_label, newline, indent))
 
 
-def debug_message(message_label, *args, newline=None, indent=None):
-    if len(args) > 0:
-        print('Debug: ', format_message(message_label, newline, indent), *args)
-    else:
-        print('Debug: ', format_message(message_label, newline, indent))
+def debug_message(message_label, *args, newline=None, indent=None, print_debug=True):
+    if print_debug:
+        if len(args) > 0:
+            print('Debug: ', format_message(message_label, newline, indent), *args)
+        else:
+            print('Debug: ', format_message(message_label, newline, indent))
 
 
 def info_message(message_label, *args, newline=None, indent=None):

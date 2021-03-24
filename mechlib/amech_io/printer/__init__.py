@@ -61,7 +61,12 @@ from mechlib.amech_io.printer._tsk import nasa
 from mechlib.amech_io.printer._pes import pes
 from mechlib.amech_io.printer._pes import channel
 
+from mechlib.amech_io.printer._pot import hrpotentials
+
 from mechlib.amech_io.printer._errors import missing_input
+
+
+
 
 __all__ = [
 
@@ -124,6 +129,8 @@ __all__ = [
 
     'pes',
     'channel',
+
+    'hrpotentials',
 
     'missing_input'
 ]

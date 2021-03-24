@@ -8,7 +8,6 @@ from mechlib.amech_io import parser
 def run(pes_idx,
         rxn_lst,
         spc_dct,
-        cla_dct,
         es_tsk_lst,
         thy_dct,
         run_inp_dct):
@@ -20,8 +19,6 @@ def run(pes_idx,
         :type rxn_lst: list[dict[species, reacs, prods, model]]
         :param spc_dct: species information
         :type spc_dct: dict[spc_name: spc_information]
-        :param cla_dct: input to change class dict
-        :type cla_dct: dict[]
         :param es_tsk_lst: list of the electronic structure tasks
         :type es_tsk_lst: list[[obj, tsk, keyword_dict]]
         :param thy_dct: all of the theory information
@@ -38,7 +35,7 @@ def run(pes_idx,
     if any(tsk_lst[0] == 'ts' for tsk_lst in es_tsk_lst):
         ts_dct, ts_queue = parser.species.get_sadpt_dct(
             pes_idx, es_tsk_lst, rxn_lst,
-            thy_dct, run_inp_dct, spc_dct, cla_dct,
+            thy_dct, run_inp_dct, spc_dct,
             run_prefix, save_prefix,
             direction='forw')
         spc_dct = parser.species.combine_sadpt_spc_dcts(

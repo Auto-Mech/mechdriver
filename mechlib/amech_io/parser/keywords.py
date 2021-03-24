@@ -12,19 +12,22 @@ RUN_INP_SUPPORTED_KEYWORDS = [
     'spc',
     'run_prefix',
     'save_prefix',
-    'print_mech'
+    'print_mech',
+    'print_debug'
 ]
 RUN_INP_KEY_DCT = {
     'mech': ['chemkin'],
     'spc': ['csv'],
-    'print_mech': [True, False]
+    'print_mech': [True, False],
+    'print_debug': [True, False]
 }
 RUN_DEFAULT_DCT = {
     'mech': 'chemkin',
     'spc': 'csv',
     'print_mech': False,
+    'print_debug': False,
     'run_prefix': None,
-    'save_prefix': None,
+    'save_prefix': None
 }
 RUN_SUPPORTED_KEYWORDS = [
     'es',
@@ -111,8 +114,8 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'find_vrctst': ['runlvl', 'inplvl', 'rxndirn',
                     'var_splvl1', 'var_splvl2', 'var_scnlvl',
                     'nobarrier', 'retryfail', 'overwrite'],
-    'conf_pucker': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
-    'conf_samp': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
+    'conf_pucker': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite', 'resave'],
+    'conf_samp': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite', 'resave'],
     'conf_energy': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_grad': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_hess': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
@@ -150,8 +153,9 @@ ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'nobarrier': ['pst', 'rpvtst', 'vrctst'],
     'retryfail': [True, False],
     'overwrite': [True, False],
+    'resave': [True, False],
     'rxndirn': ['forw', 'back', 'exo'],
-    'resamp_min': [True, False]
+    'resamp_min': [True, False],
 }
 ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'runlvl': None,
@@ -164,6 +168,7 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'nobarrier': 'pst',
     'retryfail': True,
     'overwrite': False,
+    'resave': False,
     'rxndirn': 'forw',
     'hessmax': 1000,
     'hrthresh': -0.5,

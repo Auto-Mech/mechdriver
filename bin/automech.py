@@ -50,7 +50,6 @@ SPC_DCT = parser.species.build_spc_dct(JOB_PATH, 'csv')
 if RUN_OBJ_DCT['pes']:
     ioprinter.running(
         'Calculations for PESs. Need input for mechanism.', newline=1)
-    CLA_DCT = rxnid.parse_rxn_class_file(JOB_PATH)
     ioprinter.reading('mechanism.dat...', newline=1)
     RUN_PES_DCT = parser.mechanism.build_pes_dct(
         JOB_PATH,
@@ -62,7 +61,6 @@ if RUN_OBJ_DCT['pes']:
 elif RUN_OBJ_DCT['spc']:
     RUN_PES_DCT = {}
     RUN_SPC_LST_DCT = parser.species.build_run_spc_dct(SPC_DCT, RUN_OBJ_DCT)
-    CLA_DCT = {}
 else:
     ioprinter.error_message('No Proper Run object specified')
     sys.exit()
@@ -118,7 +116,6 @@ if RUN_ES:
                 pes_idx,
                 rxn_lst,
                 SPC_DCT,
-                CLA_DCT,
                 ES_TSK_LST,
                 THY_DCT,
                 RUN_INP_DCT
@@ -129,7 +126,6 @@ if RUN_ES:
             PES_IDX,
             RUN_SPC_LST_DCT,
             SPC_DCT,
-            CLA_DCT,
             ES_TSK_LST,
             THY_DCT,
             RUN_INP_DCT
@@ -224,7 +220,6 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
             ktpdriver.run(
                 formula, pes_idx, sub_pes_idx,
                 SPC_DCT,
-                CLA_DCT,
                 THY_DCT,
                 rxn_lst,
                 PES_MODEL_DCT, SPC_MODEL_DCT,
@@ -251,7 +246,6 @@ if RUN_PRINT:
         PES_IDX,
         RUN_SPC_LST_DCT,
         SPC_DCT,
-        CLA_DCT,
         PRINT_TSK_LST,
         THY_DCT,
         RUN_INP_DCT,

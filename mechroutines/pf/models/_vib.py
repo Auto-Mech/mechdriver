@@ -214,10 +214,14 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     mess_script_str = autorun.SCRIPT_DCT['messpf']
     projrot_script_str = autorun.SCRIPT_DCT['projrot']
 
-    proj_freqs, proj_imag, proj_zpe, harm_freqs = autorun.projected_frequencies(
+    proj_freqs, proj_imags, proj_zpe, harm_freqs, tors_freqs = autorun.projected_frequencies(
         mess_script_str, projrot_script_str, vib_path,
         mess_hr_str, projrot_hr_str,
         tors_geo, harm_geo, hess)
+    if saddle:
+        proj_imag = proj_imags[0]
+    else:
+        proj_imag = []
 
     # NEW scale factor functions
     scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
