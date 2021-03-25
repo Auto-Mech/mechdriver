@@ -346,7 +346,7 @@ def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
         '+'.join(reacs), '+'.join(prods)))
 
     # Set the reacs and prods for the desired direction
-    reacs, prods, _ = rxnid.set_reaction_direction(
+    reacs, prods = rxnid.set_reaction_direction(
         reacs, prods, rxn_info,
         thy_info, ini_thy_info, save_prefix, direction=direction)
 
@@ -416,6 +416,8 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
                 combined_dct[sadpt][key] = val
 
         # Put in defaults if they were not defined
+        # combined_dct[sadpt] = automol.util._dict.right_update(
+        #     combined_dct[sadpt], TS_DEFAULT_DCT)
         if 'kickoff' not in combined_dct[sadpt]:
             combined_dct[sadpt]['kickoff'] = [0.1, False]
         if 'mc_nsamp' not in combined_dct[sadpt]:
@@ -438,11 +440,23 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
         if 'n_pst' not in combined_dct[sadpt]:
             combined_dct[sadpt]['n_pst'] = 6.0
 
-        print('dct\n', combined_dct[sadpt])
-        import sys
-        sys.exit()
-
         # Perform conversions as needed
         # combined_dct[spc]['hind_inc'] *= phycon.DEG2RAD
 
     return combined_dct
+
+SPC_DEFAULT_DCT = {
+    'hind_inc': 30.0,
+    'kickoff': (0.1, False),
+    'mc_nsamp': (True, 12, 1, 3, 100, 25),
+    'tau_nsamp': (True, 12, 1, 3, 100, 25)
+}
+TS_DEFAULT_DCT = SPC_DEFAULT_DCT + {
+    'pst_params': (1.0, 6),
+    'rxndirn': 'forw',
+    'kt_pst': 4.0e-10,
+    'temp_pst': 300.0,
+    'n_pst': 6.0
+}
+
+

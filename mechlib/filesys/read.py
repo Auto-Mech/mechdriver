@@ -89,3 +89,31 @@ def energy(filesys, locs, mod_tors_ene_info):
         ene = None
 
     return ene
+
+
+def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
+                               zma_locs=(0,)):
+    """ see if a species and unstable and handle task management
+    """
+
+    spc_info = sinfo.from_dct(spc_dct[spc_name])
+    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+    _, zma_save_fs = build_fs(
+        '', save_prefix, 'ZMATRIX',
+        spc_locs=spc_info,
+        thy_locs=mod_thy_info[1:],
+        instab_locs=())
+
+    # Check if the instability files exist
+     if zma_save_fs[-1].file.reaction.exists(zma_locs):
+         zrxn = zma_save_fs[-1].file.reaction.exists(zma_locs))
+         zma = zma_save_fs[-1].file.zmatrix.exists(zma_locs))
+         _instab = (zrxn, zma)
+         print('- Found files denoting species instability at path')
+         print('    {}'.format(zma_fs[-1].path(zma_locs)))
+     else:
+         _instab = None
+         print('- No files denoting instability were found at path')
+         print('    {}'.format(zma_fs[-1].path(zma_locs)))
+
+    return _instab

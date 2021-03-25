@@ -233,7 +233,7 @@ def _save_scanfs(scn_run_fs, scn_save_fs, scn_typ,
             print("Reading from scan run at {}".format(run_path))
 
             # Save the structure
-            saved = filesys.save_struct(
+            saved = filesys.save.structure(
                 run_fs, scn_save_fs, locs, _set_job(scn_typ),
                 mod_thy_info, in_zma_fs=in_zma_fs)
 
@@ -265,7 +265,7 @@ def _save_cscanfs(scn_run_fs, scn_save_fs, scn_typ,
                     print("Reading from scan run at {}".format(run_path))
 
                     # Save the structure
-                    saved = filesys.save_struct(
+                    saved = filesys.save.structure(
                         run_fs, scn_save_fs, locs2, _set_job(scn_typ),
                         mod_thy_info, in_zma_fs=in_zma_fs)
 

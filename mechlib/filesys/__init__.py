@@ -8,7 +8,7 @@ from mechlib.filesys._build import root_locs
 from mechlib.filesys import mincnf
 from mechlib.filesys import models
 from mechlib.filesys import read
-from mechlib.filesys._save import save_struct
+from mechlib.filesys import save
 
 
 __all__ = [
@@ -18,5 +18,5 @@ __all__ = [
     'mincnf',
     'models',
     'read',
-    'save_struct',
+    'save'
 ]

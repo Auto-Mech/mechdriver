@@ -48,9 +48,15 @@ def run_tsk(tsk, spc_dct, spc_name,
     # If species is unstable, set task to 'none'
     ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
     ini_thy_info = tinfo.from_dct(ini_method_dct)
-    stable = instab.check_unstable_species(
-        tsk, spc_dct, spc_name, ini_thy_info, save_prefix)
     stable = True
+    if 'ts' not in spc_name and tsk != 'init_geom':
+        # print('\nChecking filesystem if species {}'.format(spc_name),
+        #       'is unstable...')
+        # stable = bool(
+        #     files.read.instability_transformation(
+        #         tsk, spc_dct, spc_name, ini_thy_info, save_prefix))
+        pass
+
     if stable:
         ioprinter.debug_message('- Proceeding with requested task...')
 

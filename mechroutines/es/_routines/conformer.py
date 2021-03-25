@@ -97,7 +97,7 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
             else:
                 ioprinter.info_message(
                     'Found functional groups that cause instabilities')
-                instab.write_instab(
+                filesys.save.instability(
                     zma_init, instab_zmas,
                     instab_save_fs, cnf_save_fs,
                     zma_locs=(0,),
@@ -262,7 +262,7 @@ def _optimize_molecule(spc_info, zma_init,
                 ioprinter.info_message('Saving disconnected species...')
                 _, opt_ret = es_runner.read_job(
                     job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-                instab.write_instab(
+                filesys.save.instability(
                     zma_init, zma,
                     instab_save_fs, cnf_save_fs,
                     zma_locs=(0,),
@@ -276,7 +276,7 @@ def _optimize_molecule(spc_info, zma_init,
         conf_found = False
         _, opt_ret = es_runner.read_job(
             job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-        instab.write_instab(
+        filesys.save.instability(
             zma_init, zma,
             instab_save_fs, cnf_save_fs,
             zma_locs=(0,),

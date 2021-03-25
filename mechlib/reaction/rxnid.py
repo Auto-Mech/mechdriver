@@ -103,7 +103,7 @@ def set_reaction_direction(reacs, prods, rxn_info,
     print('    Running reaction as:')
     print('      {} = {}'.format('+'.join(reacs), '+'.join(prods)))
 
-    return reacs, prods, given_class
+    return reacs, prods
 
 
 # Functions for the exothermicity check
