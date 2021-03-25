@@ -361,8 +361,9 @@ def conformer_sampling(zma, spc_info, thy_info,
     """ run sampling algorithm to find conformers
     """
 
-    # Check if any saving needs to be done before hand
-    presamp_check = True  # Eventually make a user option
+# Check if any saving needs to be done before hand
+    presamp_check = False  # Eventually make a user option
+    # presamp_check = True  # Eventually make a user option
     if presamp_check:
         _presamp_save(spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=zrxn)
 
@@ -416,6 +417,7 @@ def conformer_sampling(zma, spc_info, thy_info,
             ioprinter.warning_message(
                 'Generating new sample ZMA', indent=1/2., newline=1)
             samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
+            samp_geo = automol.zmat.geometry(samp_zma)
             bad_geom_count += 1
         ioprinter.debug_message('ZMA is fine...', indent=1/2.)
 
@@ -471,6 +473,33 @@ def conformer_sampling(zma, spc_info, thy_info,
 
         # Increment attempt counter
         samp_attempt_idx += 1
+
+
+def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=None):
+    """ Loop over the RUN filesys and save conformers
+    """
+
+    if not cnf_run_fs[0].exists():
+        print(" - No conformers in RUN filesys to save.")
+    else:
+        print(" - Found conformers in RUN filesys to save.\n")
+        for locs in cnf_run_fs[-1].existing():
+            cnf_run_path = cnf_run_fs[-1].path(locs)
+            run_fs = autofile.fs.run(cnf_run_path)
+            print("\nReading from conformer run at {}".format(cnf_run_path))
+
+            # Read the electronic structure optimization job
+            success, ret = es_runner.read_job(
+                job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+
+            if success:
+                _save_conformer(
+                    ret, cnf_save_fs, locs, thy_info,
+                    zrxn=zrxn, orig_ich=spc_info[0])
+
+        # Update the conformer trajectory file
+        print('')
+        filesys.mincnf.traj_sort(cnf_save_fs, thy_info)
 
 
 def _calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
@@ -621,7 +650,7 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, zrxn=None):
     else:
         check_dct = {'dist': 0.3}
 
-    if automol.util.value_similar_to(ene, seen_enes, 2.e-5):
+    if not automol.util.value_similar_to(ene, seen_enes, 2.e-5):
         unique, _ = automol.geom.is_unique(
             geo, seen_geos, check_dct=check_dct)
     else:
