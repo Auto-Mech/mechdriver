@@ -3,11 +3,8 @@ utility functions
 """
 
 import automol
-import autofile
-from mechlib import structure
 
 
-# Functions used by build to set pieces of information
 def ini_elec_levels(spc_dct_i, spc_info):
     """ get initial elec levels
     """

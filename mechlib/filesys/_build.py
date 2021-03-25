@@ -1,6 +1,7 @@
 """ New autofile build interface
 """
 
+import sys
 import os
 import autofile
 from mechanalyzer.inf import rxn as rinfo
@@ -31,7 +32,7 @@ def build_fs(run_prefix, save_prefix, end,
              rxn_locs=None, spc_locs=None,
              thy_locs=None, ts_locs=None,
              cnf_locs=None, tau_locs=None,
-             zma_locs=None,
+             instab_locs=None, zma_locs=None,
              scn_locs=None, cscn_locs=None):
     """ Build the filesystems
     """
@@ -44,7 +45,7 @@ def build_fs(run_prefix, save_prefix, end,
                 rxn_locs=rxn_locs, spc_locs=spc_locs,
                 thy_locs=thy_locs, ts_locs=ts_locs,
                 cnf_locs=cnf_locs, tau_locs=tau_locs,
-                zma_locs=zma_locs,
+                instab_locs=instab_locs, zma_locs=zma_locs,
                 scn_locs=scn_locs, cscn_locs=cscn_locs)
         )
 
@@ -55,7 +56,7 @@ def _build_fs(prefix, end,
               rxn_locs=None, spc_locs=None,
               thy_locs=None, ts_locs=None,
               cnf_locs=None, tau_locs=None,
-              zma_locs=None,
+              instab_locs=None, zma_locs=None,
               scn_locs=None, cscn_locs=None):
     """ Build the filesystems
     """
@@ -67,9 +68,11 @@ def _build_fs(prefix, end,
         prefix_locs.append(('SPECIES', spc_locs))
     if thy_locs is not None:
         prefix_locs.append(('THEORY', thy_locs))
+    if instab_locs is not None:
+        prefix_locs.append(('INSTAB', instab_locs))
     if ts_locs is not None:
         prefix_locs.append(('TRANSITION STATE', ts_locs))
-    if cnf_locs is not None:
+    if tau_locs is not None:
         prefix_locs.append(('TAU', tau_locs))
     if cnf_locs is not None:
         prefix_locs.append(('CONFORMER', cnf_locs))

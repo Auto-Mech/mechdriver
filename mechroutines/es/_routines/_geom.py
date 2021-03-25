@@ -9,7 +9,6 @@ from phydat import phycon
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
-from mechlib import structure
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -103,8 +102,6 @@ def _check_imaginary(spc_info, geo, mod_thy_info, run_fs, script_str,
             script_str = autorun.SCRIPT_DCT['projrot']
             _, _, imag_freq, _ = autorun.projrot.frequencies(
                script_str, run_path, [geo], [[]], [hess])
-            # _, _, imag_freq, _ = structure.vib.projrot_freqs(
-            #     [geo], [hess], run_path)
 
             # Mode for now set the imaginary frequency check to -100:
             # Should decrease once freq projector functions properly

@@ -1,12 +1,13 @@
 """ drivers for coordinate scans
 """
 
-import itertools
 import automol
-import autorun
 import autofile
-from autofile import fs
 from phydat import phycon
+from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
+from mechlib.filesys import build_fs
+from mechlib.amech_io import printer as ioprinter
 
 
 def potential(names, grid_vals, cnf_save_path,
@@ -23,7 +24,7 @@ def potential(names, grid_vals, cnf_save_path,
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
-    zma_fs = fs.zmatrix(cnf_save_path)
+    zma_fs = autofile.fs.zmatrix(cnf_save_path)
     zma_path = zma_fs[-1].path([0])
     if constraint_dct is None:
         scn_fs = autofile.fs.scan(zma_path)
@@ -104,16 +105,21 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
         thy_locs=mod_thy_info[1:],
         instab_locs=())
 
+    ioprinter.info_message(
+        '\nChecking filesystem if species {} is unstable'.format(spc_name))
+    ioprinter.info_message(
+        '\nChecking for files at path:')
+    ioprinter.info_message(
+        '  {}'.format(zma_save_fs[-1].path(zma_locs)))
+
     # Check if the instability files exist
-     if zma_save_fs[-1].file.reaction.exists(zma_locs):
-         zrxn = zma_save_fs[-1].file.reaction.exists(zma_locs))
-         zma = zma_save_fs[-1].file.zmatrix.exists(zma_locs))
-         _instab = (zrxn, zma)
-         print('- Found files denoting species instability at path')
-         print('    {}'.format(zma_fs[-1].path(zma_locs)))
-     else:
-         _instab = None
-         print('- No files denoting instability were found at path')
-         print('    {}'.format(zma_fs[-1].path(zma_locs)))
+    if zma_save_fs[-1].file.reaction.exists(zma_locs):
+        zrxn = zma_save_fs[-1].file.reaction.exists(zma_locs)
+        zma = zma_save_fs[-1].file.zmatrix.exists(zma_locs)
+        _instab = (zrxn, zma)
+        print('- Found files denoting species instability at path')
+    else:
+        _instab = None
+        print('- No files denoting instability were found at path')
 
     return _instab

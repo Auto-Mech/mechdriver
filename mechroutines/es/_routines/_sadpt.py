@@ -7,10 +7,8 @@ import elstruct
 import autorun
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
-# from mechroutines.es._routines import _geom as geom
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
-from mechlib import structure
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
 from mechlib.filesys import build_fs

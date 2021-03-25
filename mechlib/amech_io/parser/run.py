@@ -101,6 +101,7 @@ def objects_dct(job_path):
         run_dct['pes'] = get_pes_idxs(ioformat.remove_whitespace(pes_block_str))
     else:
         run_dct['pes'] = []
+    # Build the reaction lists here?
     if spc_block_str is not None:
         run_dct['spc'] = get_spc_idxs(ioformat.remove_whitespace(spc_block_str))
     else:

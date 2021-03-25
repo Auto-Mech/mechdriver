@@ -445,18 +445,18 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
 
     return combined_dct
 
-SPC_DEFAULT_DCT = {
-    'hind_inc': 30.0,
-    'kickoff': (0.1, False),
-    'mc_nsamp': (True, 12, 1, 3, 100, 25),
-    'tau_nsamp': (True, 12, 1, 3, 100, 25)
-}
-TS_DEFAULT_DCT = SPC_DEFAULT_DCT + {
-    'pst_params': (1.0, 6),
-    'rxndirn': 'forw',
-    'kt_pst': 4.0e-10,
-    'temp_pst': 300.0,
-    'n_pst': 6.0
-}
+# SPC_DEFAULT_DCT = {
+#     'hind_inc': 30.0,
+#     'kickoff': (0.1, False),
+#     'mc_nsamp': (True, 12, 1, 3, 100, 25),
+#     'tau_nsamp': (True, 12, 1, 3, 100, 25)
+# }
+# TS_DEFAULT_DCT = SPC_DEFAULT_DCT + {
+#     'pst_params': (1.0, 6),
+#     'rxndirn': 'forw',
+#     'kt_pst': 4.0e-10,
+#     'temp_pst': 300.0,
+#     'n_pst': 6.0
+# }
 
 

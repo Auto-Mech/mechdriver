@@ -5,7 +5,7 @@ of a reaction channel
 
 from mechlib.reaction import rxnid
 from mechlib.reaction import grid
-from mechlib.reaction.instab import split_unstable
+from mechlib.reaction._instab import split_unstable
 
 
 __all__ = [

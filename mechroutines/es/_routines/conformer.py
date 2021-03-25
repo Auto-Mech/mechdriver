@@ -14,7 +14,6 @@ from mechroutines.es._routines._geom import remove_imag
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
 from mechlib import filesys
-from mechlib.structure import instab
 from mechlib.amech_io import printer as ioprinter
 from mechlib.filesys import build_fs
 

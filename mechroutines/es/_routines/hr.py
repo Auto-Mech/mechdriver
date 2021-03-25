@@ -6,7 +6,6 @@ import elstruct
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
 from mechlib.amech_io import printer as ioprinter
-from mechlib import structure
 
 
 def hindered_rotor_scans(
@@ -106,7 +105,7 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
 # ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
 # tors_pots, tors_zmas = {}, {}
 # for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
-#     constraint_dct = structure.tors.build_constraint_dct(
+#     constraint_dct = automol.zmat.build_constraint_dct(
 #         zma, const_names, tors_names)
 #     pot, _, _, _, zmas, _ = filesys.read.potential(
 #         tors_names, tors_grids,

@@ -18,8 +18,6 @@ from mechroutines.es.runner import qchem_params
 from mechlib import filesys
 from mechlib.filesys import build_fs
 from mechlib.filesys import root_locs
-from mechlib import structure
-from mechlib.structure import instab
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -50,12 +48,9 @@ def run_tsk(tsk, spc_dct, spc_name,
     ini_thy_info = tinfo.from_dct(ini_method_dct)
     stable = True
     if 'ts' not in spc_name and tsk != 'init_geom':
-        # print('\nChecking filesystem if species {}'.format(spc_name),
-        #       'is unstable...')
-        # stable = bool(
-        #     files.read.instability_transformation(
-        #         tsk, spc_dct, spc_name, ini_thy_info, save_prefix))
-        pass
+        stable = not bool(
+            filesys.read.instability_transformation(
+                spc_dct, spc_name, ini_thy_info, save_prefix))
 
     if stable:
         ioprinter.debug_message('- Proceeding with requested task...')
@@ -685,7 +680,7 @@ def hr_tsk(job, spc_dct, spc_name,
         #     # ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
         #     tors_pots, tors_zmas, tors_paths = {}, {}, {}
         #     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
-        #         constraint_dct = structure.tors.build_constraint_dct(
+        #         constraint_dct = automol.zmat.build_constraint_dct(
         #             zma, const_names, tors_names)
         #         pot, _, _, _, zmas, paths = filesys.read.potential(
         #             tors_names, tors_grids,
@@ -698,7 +693,7 @@ def hr_tsk(job, spc_dct, spc_name,
         #         tors_paths[tors_names] = paths
 
         #     # Check for new minimum conformer
-        #     new_min_zma = structure.tors.check_hr_pot(
+        #     new_min_zma = __.check_hr_pot(
         #         tors_pots, tors_zmas, tors_paths, emax=ethresh)
 
         #     if new_min_zma is not None:
@@ -720,9 +715,9 @@ def hr_tsk(job, spc_dct, spc_name,
             for tors_names in run_tors_names:
 
                 # Set the constraint dct and filesys for the scan
-                const_names = structure.tors.set_constraint_names(
+                const_names = automol.zmat.set_constraint_names(
                     zma, run_tors_names, tors_model)
-                constraint_dct = structure.tors.build_constraint_dct(
+                constraint_dct = automol.zmat.build_constraint_dct(
                     zma, const_names, tors_names)
 
                 # get the scn_locs, maybe get a function?

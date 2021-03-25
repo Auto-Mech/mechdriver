@@ -118,7 +118,6 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
     constituent_ichs = automol.graph.inchi(
         automol.reac.product_graphs(zrxn), stereo=True)
 
-    # Obtain the product names from the species dct
     prd_names = []
     prd_ichs = []
     for ich in constituent_ichs:
