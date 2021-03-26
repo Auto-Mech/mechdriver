@@ -1,4 +1,22 @@
 """ Run and Read the scans from VTST calculations
+
+    Find TS process:
+
+
+tasks:
+  Ts scan
+  Ts sadpt
+  Ts path hess, frees
+
+
+1. Grab TS alg. From 
+    1. Off, 2. Vrctst, 3. Sadpt
+2. Check for SaddlePoint
+3. Check for input saddle point if none
+3. Check path(s) if none
+4. 
+
+
 """
 
 import automol
@@ -12,6 +30,125 @@ from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
 
 
+# sadpt/vtst
+
+def _find_tsks():
+    """
+    """
+ 
+    if tsk == 'find_ts':
+        tsk = ['rpath_scan', 'opt_sadpt', 'rpath_hess', 'rpath_grad', 'rpath_ene']
+
+    if tsk == 'rpath_scan':
+
+    if tsk == 'rpath_hess':
+
+
+    Ts scan
+    Ts sadpt
+    Ts path hess, frees
+
+
+def _run():
+    """
+    """
+    if overwrite:
+        print('User specified to overwrite energy with new run...')
+        _run = True
+
+
+# functions
+def _check_filesys_for_sadpt():
+    """ See if a sadpt exists
+    """
+
+    # Find the TS
+    cnf_save_fs, cnf_save_locs = savefs_dct['runlvl_cnf_fs']
+    overwrite = es_keyword_dct['overwrite']
+    if not cnf_save_locs:
+        print('No transition state found in filesys',
+              'at {} level...'.format(es_keyword_dct['runlvl']),
+              'Proceeding to find it...')
+        _run = True
+    elif overwrite:
+        print('User specified to overwrite energy with new run...')
+        _run = True
+    else:
+        print('TS found and saved previously in ',
+              cnf_save_fs[-1].path(cnf_save_locs))
+        _run = False
+
+    return None
+    
+
+def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
+    """ Check if the filesystem for any TS structures at the input
+        level of theory
+    """
+
+    ioprinter.info_message('\nSearching save filesys for guess Z-Matrix calculated',
+          'at {} level...'.format(es_keyword_dct['inplvl']))
+
+    ini_zma_fs = savefs_dct['inilvl_zma_fs']
+
+    guess_zmas = []
+    if ini_zma_fs is not None:
+        if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
+            geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
+            ioprinter.info_message(' - Z-Matrix found.')
+            ioprinter.info_message(' - Reading Z-Matrix from path {}'.format(geo_path))
+            guess_zmas.append(
+                ini_zma_fs[-1].file.zmatrix.read(zma_locs))
+
+    return guess_zmas
+
+
+def _check_filesys_for_scan(savefs_dct, zma_locs, es_keyword_dct):
+    """ Check if the filesystem for any TS structures at the input
+        level of theory
+    """
+    guess_zmas = sadpt.generate_guess_structure(
+        ts_dct, method_dct, es_keyword_dct,
+        runfs_dct, savefs_dct)
+
+
+def _inf_ene():
+    """ complete scan calcs
+    """
+
+    if radrad:
+        scan.radrad_inf_sep_ene(
+            hs_info, ts_zma,
+            rct_info, rcts_cnf_fs,
+            var_sp1_thy_info, var_sp2_thy_info,
+            hs_var_sp1_thy_info, hs_var_sp2_thy_info,
+            geo, geo_run_path, geo_save_path,
+            scn_save_fs, far_locs,
+            overwrite=overwrite,
+            **cas_kwargs)
+    else:
+        scan.molrad_inf_sep_ene(
+            rct_info, rcts_cnf_fs,
+            inf_thy_info, overwrite)
+
+    _save_traj(ts_zma, frm_bnd_keys, rcts_gra,
+               vscnlvl_ts_save_fs, zma_locs=zma_locs)
+
+    _vtst_hess_ene(ts_info, coord_name,
+                   mod_var_scn_thy_info, mod_var_sp1_thy_info,
+                   scn_save_fs, scn_run_fs,
+                   overwrite, **cas_kwargs)
+
+def _opt_by_sadpt()
+    """s
+    """
+
+    sadpt.obtain_saddle_point(
+        [sadpt_zma], ts_dct, method_dct,
+        runfs_dct, savefs_dct, es_keyword_dct)
+
+
+##### OLD
 def radrad_scan(ts_zma, ts_info, hs_info,
                 ts_formula, high_mul, active_space,
                 rct_info, rct_ichs, rcts_cnf_fs, rcts_gra,
@@ -162,10 +299,13 @@ def _vtst_hess_ene(ts_info, coord_name,
 
     scn_locs = scn_save_fs[-1].existing([coord_name])
 
-    ioprinter.running('Hessians and Gradients...', newline=1)
+    ioprinter.running('Hessians and Gradients and Energies...', newline=1)
     hess_script_str, _, hess_kwargs, _ = qchem_params(
         *mod_thy_info[0:2])
     hess_kwargs.update(cas_kwargs)
+    script_str, _, ene_kwargs, _ = qchem_params(
+        *mod_vsp1_thy_info[0:2])
+    ene_kwargs.update(cas_kwargs)
     for locs in scn_locs:
         geo_run_path = scn_run_fs[-1].path(locs)
         geo_save_path = scn_save_fs[-1].path(locs)
@@ -177,22 +317,12 @@ def _vtst_hess_ene(ts_info, coord_name,
         sp.run_gradient(zma, geo, ts_info, mod_thy_info,
                         scn_save_fs, geo_run_path, geo_save_path, locs,
                         hess_script_str, overwrite, **hess_kwargs)
-
-    ioprinter.running('Energies...', newline=1)
-    script_str, _, ene_kwargs, _ = qchem_params(
-        *mod_vsp1_thy_info[0:2])
-    ene_kwargs.update(cas_kwargs)
-    for locs in scn_locs:
-        geo_run_path = scn_run_fs[-1].path(locs)
-        geo_save_path = scn_save_fs[-1].path(locs)
-        scn_run_fs[-1].create(locs)
-        zma, geo = filesys.inf.cnf_fs_zma_geo(scn_save_fs, locs)
         sp.run_energy(zma, geo, ts_info, mod_vsp1_thy_info,
                       scn_save_fs, geo_run_path, geo_save_path, locs,
                       script_str, overwrite, **ene_kwargs)
 
 
-def _save_traj(ts_zma, frm_bnd_keys, rcts_gra, ts_save_fs, zma_locs=(0,)):
+def _save_traj(ts_zma, frm_bnd_keys, rcts_gra, ts_save_fs, zrxn, zma_locs=(0,)):
     """ save trajectory and zma stuff
     """
 
@@ -206,7 +336,4 @@ def _save_traj(ts_zma, frm_bnd_keys, rcts_gra, ts_save_fs, zma_locs=(0,)):
 
     ioprinter.info_message(
         'Saving the trajectory into the filesystem...', newline=1)
-    tra = (frozenset({frm_bnd_keys}),
-           frozenset({}))
-    zma_fs[-1].file.transformation.write(tra, zma_locs)
-    zma_fs[-1].file.reactant_graph.write(rcts_gra, zma_locs)
+    zma_fs[-1].file.reaction.write(zrxn, zma_locs)

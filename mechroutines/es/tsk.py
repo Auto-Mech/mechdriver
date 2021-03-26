@@ -829,11 +829,7 @@ def irc_tsk(job, spc_dct, spc_name,
             geo_run_path = ini_scn_run_fs[-1].path(locs)
             geo_save_path = ini_scn_save_fs[-1].path(locs)
             geo = ini_scn_save_fs[-1].file.geometry.read(locs)
-            # zma = ini_scn_save_fs[-1].file.zmatrix.read(locs)
             zma = None
-            # FIX
-            # zma, geo = mechanalyzer.inf.cnf_fs_zma_geo(
-            #     ini_scn_save_fs, locs)
             ini_scn_run_fs[-1].create(locs)
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,

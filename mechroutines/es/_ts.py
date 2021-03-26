@@ -13,8 +13,8 @@ import autofile
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.es._routines import _sadpt as sadpt
-from mechroutines.es._routines import _vrctst as vrctst
-from mechroutines.es._routines import _vtst as vtst
+# from mechroutines.es._routines import _vrctst as vrctst
+# from mechroutines.es._routines import _vtst as vtst
 from mechlib.filesys import build_fs
 from mechlib import filesys
 
@@ -40,10 +40,10 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     if search_thy_inf_dct == 'sadpt':
         run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
                   thy_inf_dct, runfs_dct, savefs_dct)
-    elif search_thy_inf_dct == 'molrad_vtst':
+    elif search_thy_inf_dct == 'vtst':
         run_vtst(spc_dct, tsname, es_keyword_dct,
                  thy_inf_dct, runfs_dct, savefs_dct)
-    elif search_thy_inf_dct == 'radrad_vtst':
+    elif search_thy_inf_dct == 'vrctst':
         run_vrctst(spc_dct, tsname, es_keyword_dct,
                    thy_inf_dct, runfs_dct, savefs_dct)
     elif search_thy_inf_dct is None:
@@ -76,6 +76,7 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
         _run = False
 
     if _run:
+        # split below in guess, scan
         guess_zmas = sadpt.generate_guess_structure(
             ts_dct, method_dct, es_keyword_dct,
             runfs_dct, savefs_dct)
@@ -83,7 +84,7 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
             guess_zmas, ts_dct, method_dct,
             runfs_dct, savefs_dct, es_keyword_dct)
 
-        # Find a second sadpt
+        # Generate a second sadpt
 
 
 def run_vtst(spc_dct, tsname, es_keyword_dct,
@@ -141,7 +142,7 @@ def run_vtst(spc_dct, tsname, es_keyword_dct,
 
     # Check for the saddle point
     if not cnf_save_locs:
-        print('No energy found in save filesys. Running energy...')
+        print('No saddle point ...')
         _run = True
     elif overwrite:
         print('User specified to overwrite transition state with new run...')
@@ -149,12 +150,14 @@ def run_vtst(spc_dct, tsname, es_keyword_dct,
     else:
         _run = False
 
-    # Find the TS (check the path)
+    # Find the TS (check the path, geoms and energies?)
+    if not _scan_finished(coord_names, coord_grids,
+                          scn_save_fs, constraint_dct=None):
     if not cnf_save_locs:
-        print('No energy found in save filesys. Running energy...')
+        print('No path found in save filesys. Running energy...')
         _run = True
     elif overwrite:
-        print('User specified to overwrite transition state with new run...')
+        print('User specified to overwrite reaction path with new run...')
         _run_scan = True
     else:
         _run = False
@@ -173,15 +176,16 @@ def run_vtst(spc_dct, tsname, es_keyword_dct,
                 constraint_dct=None,
                 zma_locs=(0,))
         else:
-            vtst.molrad_scan(ts_zma, ts_info,
-                             rct_info, rcts_cnf_fs, rcts_gra,
-                             grid1, grid2, coord_name, frm_bnd_keys,
-                             thy_info, vsp1_thy_info,
-                             thy_save_fs,
-                             ts_save_fs,
-                             scn_run_fs, scn_save_fs,
-                             overwrite, update_guess, retryfail,
-                             zma_locs=(0,))
+            vtst.molrad_scan(
+                ts_zma, ts_info,
+                rct_info, rcts_cnf_fs, rcts_gra,
+                grid1, grid2, coord_name, frm_bnd_keys,
+                thy_info, vsp1_thy_info,
+                thy_save_fs,
+                ts_save_fs,
+                scn_run_fs, scn_save_fs,
+                overwrite, update_guess, retryfail,
+                zma_locs=(0,))
 
         sadpt_zma = rxngrid.vtst_max(
             list(grid1)+list(grid2), coord_name, scn_save_fs,
@@ -213,7 +217,9 @@ def run_vtst(spc_dct, tsname, es_keyword_dct,
                        scn_save_fs, scn_run_fs,
                        overwrite, **cas_kwargs)
     else:
-        obtain_saddle_point()
+        sadpt.obtain_saddle_point(
+            [sadpt_zma], ts_dct, method_dct,
+            runfs_dct, savefs_dct, es_keyword_dct)
 
 
 def run_vrctst(spc_dct, tsname, es_keyword_dct,
@@ -366,16 +372,9 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
 
     ts_locs = ()
     # ts_locs = (int(tsname.split('_')[-1]),)
-    print('ts locs test:', ts_locs)
 
     # high_mult = rinfo.ts_high_mult(rxn_info)
     high_mult = 2
-    # Get the name
-    # ini_zma = ts_dct['zma']
-    # frm_bnd_keys = ts_dct['frm_bnd_keys']
-    # brk_bnd_keys = ts_dct['brk_bnd_keys']
-    # frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-    # brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
 
     # Set the hs info
     hs_info = (ts_info[0], ts_info[1], high_mult)
