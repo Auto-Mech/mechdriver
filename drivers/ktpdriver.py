@@ -56,8 +56,8 @@ def run(pes_formula, pes_idx, sub_pes_idx,
 
     # Set reaction list with unstable species broken apart
     ioprinter.message('Identifying stability of all species...', newline=1)
-    # rxn_lst = split_unstable(
-    #     rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
+    rxn_lst = split_unstable(
+        rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
     # Build the MESS label idx dictionary for the PES
     label_dct = ktproutines.label.make_pes_label_dct(
         rxn_lst, pes_idx, spc_dct, spc_model_dct)

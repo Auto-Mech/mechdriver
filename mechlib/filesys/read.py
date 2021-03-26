@@ -114,8 +114,8 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
 
     # Check if the instability files exist
     if zma_save_fs[-1].file.reaction.exists(zma_locs):
-        zrxn = zma_save_fs[-1].file.reaction.exists(zma_locs)
-        zma = zma_save_fs[-1].file.zmatrix.exists(zma_locs)
+        zrxn = zma_save_fs[-1].file.reaction.read(zma_locs)
+        zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
         _instab = (zrxn, zma)
         print('- Found files denoting species instability at path')
     else:

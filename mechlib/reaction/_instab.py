@@ -23,22 +23,21 @@ def split_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
         # Get theory
         spc_model = rxn['model'][1]
         geo_model = spc_model_dct[spc_model]['es']['geo']
-        ini_thy_info = tinfo.from_dct(geo_model)
+        ini_thy_info = tinfo.from_dct(thy_dct[geo_model])
 
         new_rxn['dummy'] = []
 
         # Asses the reactants for unstable species
         new_rxn['reacs'] = []
         for rct in rxn['reacs']:
-            rct_stable = check_unstable_species(
-                'rate', spc_dct, rct, ini_thy_info, save_prefix)
-            if rct_stable:
+            split_rct = _split_species(spc_dct, rct,
+                                       ini_thy_info, save_prefix)
+            if not split_rct:
                 new_rct = rct
                 new_rxn['reacs'].append(new_rct)
             else:
                 print('\nSplitting species...')
-                new_rct = _split_species(spc_dct, rct,
-                                         ini_thy_info, save_prefix)
+                new_rct = split_rct
                 print('- New species: {}'.format(' '.join(new_rct)))
                 new_rxn['reacs'].extend(new_rct)
                 new_rxn['dummy'].append('reacs')
@@ -46,15 +45,14 @@ def split_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
         # Assess the products for unstable species
         new_rxn['prods'] = []
         for prd in rxn['prods']:
-            prd_stable = check_unstable_species(
-                'rate', spc_dct, prd, ini_thy_info, save_prefix)
-            if prd_stable:
+            split_prd = _split_species(spc_dct, prd,
+                                       ini_thy_info, save_prefix)
+            if not split_prd:
                 new_prd = prd
                 new_rxn['prods'].append(new_prd)
             else:
                 print('- Splitting species...')
-                new_prd = _split_species(spc_dct, prd,
-                                         ini_thy_info, save_prefix)
+                new_prd = split_prd
                 print('- New species: {}'.format(' '.join(new_prd)))
                 new_rxn['prods'].extend(new_prd)
                 new_rxn['dummy'].append('prods')
@@ -112,19 +110,22 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
     """  split up the unstable species
     """
 
-    zrxn, _ = filesys.read.instability_transformation(
-        spc_dct, spc_name, thy_info, save_prefix, zma_locs=zma_locs)
-
-    constituent_ichs = automol.graph.inchi(
-        automol.reac.product_graphs(zrxn), stereo=True)
-
+    # Initialize an empty list
     prd_names = []
-    prd_ichs = []
-    for ich in constituent_ichs:
-        for name, spc_dct_i in spc_dct.items():
-            if ich == spc_dct_i.get('inchi'):
-                if ich not in prd_ichs:
+
+    tra = filesys.read.instability_transformation(
+        spc_dct, spc_name, thy_info, save_prefix, zma_locs=zma_locs)
+    if tra is not None:
+        zrxn, _ = tra
+        prd_gras = automol.reac.product_graphs(zrxn)
+        constituent_ichs = tuple(automol.graph.inchi(gra, stereo=True) 
+                                 for gra in prd_gras)
+
+        for ich in constituent_ichs:
+            for name, spc_dct_i in spc_dct.items():
+                if ich == spc_dct_i.get('inchi'):
                     prd_names.append(name)
-                    prd_ichs.append(ich)
+                    break
+        prd_names = list(set(prd_names))
 
     return prd_names
