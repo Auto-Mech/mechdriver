@@ -50,13 +50,21 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle, name=No
     levelp = tinfo.modify_orb_label(level, spc_info)
 
     _root = root_locs(spc_dct_i, saddle=saddle, name=name)
-    cnf_run_fs, cnf_save_fs = build_fs(
-        run_prefix, save_prefix, 'CONFORMER',
+    rng_run_fs, rng_save_fs = build_fs(
+        run_prefix, save_prefix, 'RING_CONFORMER',
         thy_locs=levelp[1:],
         **_root)
 
-    min_cnf_locs, cnf_save_path = mincnf.min_energy_conformer_locators(
-        cnf_save_fs, levelp)
+    min_locs, min_paths = mincnf.min_energy_ring_conformer_locators(
+        rng_save_fs, levelp)
+    min_rng_locs, min_cnf_locs = min_locs
+    rng_save_path, cnf_save_path = min_paths
+
+    # Create run fs if that directory has been deleted to run the jobs
+    rng_run_fs[-1].create(min_rng_locs)
+    rng_run_path = rng_run_fs[-1].path(min_rng_locs)
+    cnf_run_fs, cnf_save_fs = build_fs(
+        rng_run_path, rng_save_path, 'CONFORMER')
 
     return [cnf_save_fs, cnf_save_path, min_cnf_locs, '', cnf_run_fs]
     # return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]

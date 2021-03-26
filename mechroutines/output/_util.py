@@ -61,21 +61,14 @@ def conformer_list(
     spc_info = sinfo.from_dct(spc_dct_i)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
-    # pf info build
-    es_model = _default_es_levels(print_keyword_dct)
-    pf_levels = parser.model.pf_level_info(
-        es_model, thy_dct)
-    pf_filesystems = filesys.models.pf_filesys(
-        spc_dct_i, pf_levels, run_prefix, save_prefix, saddle=False)
-
-    # confs
-    [cnf_fs, _, _, _, _] = pf_filesystems['harm']
-    if cnf_fs is not None:
-        cnf_locs_lst, cnf_locs_paths = filesys.mincnf.conformer_locators(
-            cnf_fs, mod_thy_info, cnf_range=cnf_range)
-    else:
-        cnf_locs_lst, cnf_locs_paths = [], []
-    return cnf_fs, cnf_locs_lst, cnf_locs_paths
+    _root = filesys.root_locs(spc_dct_i, saddle=False)
+    _, rng_save_fs = filesys.build_fs(
+        run_prefix, save_prefix, 'RING_CONFORMER',
+        thy_locs=mod_thy_info[1:],
+        **_root)
+    rng_cnf_locs_lst, rng_cnf_locs_paths = filesys.mincnf.ring_conformer_locators(
+        rng_save_fs, mod_thy_info, cnf_range=cnf_range)
+    return rng_save_fs, rng_cnf_locs_lst, rng_cnf_locs_paths
 
 
 def conformer_list_from_models(
@@ -92,15 +85,14 @@ def conformer_list_from_models(
     spc_info = sinfo.from_dct(spc_dct_i)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
-    # pf info build
-    pf_filesystems = filesys.models.pf_filesys(
-        spc_dct_i, pf_levels, run_prefix, save_prefix, saddle=False)
-
-    # confs
-    [cnf_fs, _, _, _, _] = pf_filesystems['harm']
-    cnf_locs_lst, cnf_locs_paths = filesys.mincnf.conformer_locators(
-        cnf_fs, mod_thy_info, cnf_range=cnf_range)
-    return cnf_fs, cnf_locs_lst, cnf_locs_paths
+    _root = filesys.root_locs(spc_dct_i, saddle=False)
+    _, rng_save_fs = filesys.build_fs(
+        run_prefix, save_prefix, 'RING_CONFORMER',
+        thy_locs=mod_thy_info[1:],
+        **_root)
+    rng_cnf_locs_lst, rng_cnf_locs_paths = filesys.mincnf.ring_conformer_locators(
+        rng_save_fs, mod_thy_info, cnf_range=cnf_range)
+    return rng_save_fs, rng_cnf_locs_lst, rng_cnf_locs_paths
 
 
 def set_csv_data(tsk):

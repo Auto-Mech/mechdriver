@@ -59,7 +59,10 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
     ts_dct = spc_dct[tsname]
 
     # Find the TS
-    cnf_save_fs, cnf_save_locs = savefs_dct['runlvl_cnf_fs']
+    cnf_info = savefs_dct['runlvl_cnf_fs']
+    if cnf_info is None:
+        cnf_info = savefs_dct['runlvl_rng_fs']
+    cnf_save_fs, cnf_save_locs = cnf_info
     overwrite = es_keyword_dct['overwrite']
     if not cnf_save_locs:
         print('No transition state found in filesys',
@@ -418,12 +421,20 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         mod_ini_thy_info = tinfo.modify_orb_label(
             ini_thy_info, ts_info)
 
-        _, ini_cnf_save_fs = build_fs(
-            run_prefix, save_prefix, 'CONFORMER',
+        ini_rng_run_fs, ini_rng_save_fs = build_fs(
+            run_prefix, save_prefix, 'RING_CONFORMER',
             rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_ini_thy_info[1:])
-        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
+
+        ini_loc_info = filesys.mincnf.min_energy_ring_conformer_locators(
+            ini_rng_save_fs, mod_ini_thy_info)
+        ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
+        ini_min_rng_locs, ini_min_cnf_locs = ini_min_cnf_locs
+        ini_min_rng_path, ini_min_cnf_path = ini_min_cnf_path
+
+        # Create run fs if that directory has been deleted to run the jobs
+        _, ini_cnf_save_fs = build_fs(
+            ini_min_rng_path, ini_min_rng_path, 'CONFORMER')
 
         if ini_min_cnf_locs:
             ini_zma_save_fs = autofile.fs.zmatrix(
@@ -438,15 +449,29 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         hs_thy_info = tinfo.modify_orb_label(
             thy_info, hs_info)
 
-        runlvl_cnf_run_fs, runlvl_cnf_save_fs = build_fs(
-            run_prefix, save_prefix, 'CONFORMER',
+        runlvl_rng_run_fs, runlvl_rng_save_fs = build_fs(
+            run_prefix, save_prefix, 'RING_CONFORMER',
             rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:])
 
-        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
-            runlvl_cnf_save_fs, mod_thy_info)
-        runlvl_cnf_save_fs = (runlvl_cnf_save_fs, ini_min_cnf_locs)
-
+        runlvl_loc_info = filesys.mincnf.min_energy_ring_conformer_locators(
+            runlvl_rng_save_fs, mod_thy_info)
+        runlvl_min_cnf_locs, runlvl_min_cnf_path = runlvl_loc_info
+        runlvl_min_rng_locs, runlvl_min_cnf_locs = runlvl_min_cnf_locs
+        runlvl_min_rng_path, runlvl_min_cnf_path = runlvl_min_cnf_path
+    
+        if runlvl_min_rng_locs:
+            # Create run fs if that directory has been deleted to run the jobs
+            runlvl_rng_run_fs[-1].create(runlvl_min_rng_locs)
+            runlvl_rng_run_path = runlvl_rng_run_fs[-1].path(runlvl_min_rng_locs)
+            runlvl_cnf_run_fs, runlvl_cnf_save_fs = build_fs(
+                runlvl_rng_run_path, runlvl_min_rng_path, 'CONFORMER')
+            runlvl_cnf_save_fs = (runlvl_cnf_save_fs, runlvl_min_cnf_locs)
+        else:
+            runlvl_cnf_save_fs = None
+            runlvl_cnf_run_fs = None
+        
+        runlvl_rng_save_fs = (runlvl_rng_save_fs, runlvl_min_rng_locs)
         runlvl_scn_run_fs, runlvl_scn_save_fs = build_fs(
             run_prefix, save_prefix, 'SCAN',
             rxn_locs=rxn_info, ts_locs=ts_locs,
@@ -524,6 +549,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'runlvl_scn_fs': runlvl_scn_run_fs,
         'runlvl_cscn_fs': runlvl_cscn_run_fs,
         'runlvl_cnf_fs': runlvl_cnf_run_fs,
+        'runlvl_rng_fs': runlvl_rng_run_fs,
         'vscnlvl_ts_fs': vscnlvl_ts_run_fs,
         'vscnlvl_scn_fs': vscnlvl_scn_run_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_run_fs,
@@ -534,6 +560,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'inilvl_zma_fs': ini_zma_save_fs,
         'runlvl_scn_fs': runlvl_scn_save_fs,
         'runlvl_cscn_fs': runlvl_cscn_save_fs,
+        'runlvl_rng_fs': runlvl_rng_save_fs,
         'runlvl_cnf_fs': runlvl_cnf_save_fs,
         'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
@@ -559,17 +586,26 @@ def _reac_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
             ini_thy_info, rct_info)
 
         # Build filesys for ini thy info
-        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
-            run_prefix, save_prefix, 'CONFORMER',
+        ini_rng_run_fs, ini_rng_save_fs = build_fs(
+            run_prefix, save_prefix, 'RING_CONFORMER',
             spc_locs=rct_info,
             thy_locs=mod_ini_thy_info[1:])
-        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_cnf_locs, ini_cnf_path = ini_loc_info
 
+        ini_loc_info = filesys.mincnf.min_energy_ring_conformer_locators(
+            ini_rng_save_fs, mod_ini_thy_info)
+        ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
+        ini_min_rng_locs, ini_min_cnf_locs = ini_min_cnf_locs
+        ini_min_rng_path, ini_min_cnf_path = ini_min_cnf_path
+
+        # Create run fs if that directory has been deleted to run the jobs
+        ini_rng_run_fs[-1].create(ini_min_rng_locs)
+        ini_rng_run_path = ini_rng_run_fs[-1].path(ini_min_rng_locs)
+        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
+            ini_rng_run_path, ini_min_rng_path, 'CONFORMER')
         ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
+        ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_cnf_locs)
 
         rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs,
-                        ini_min_cnf_locs, ini_cnf_path),)
+                        ini_min_cnf_locs, ini_min_cnf_path),)
 
     return rct_cnf_fs

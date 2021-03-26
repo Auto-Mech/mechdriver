@@ -100,7 +100,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
 
                 # Loop over conformers
             if print_keyword_dct['geolvl']:
-                cnf_fs, cnf_locs_lst, cnf_locs_paths = util.conformer_list(
+                _, rng_cnf_locs_lst, rng_cnf_locs_paths = util.conformer_list(
                     print_keyword_dct, save_prefix, run_prefix,
                     spc_dct_i, thy_dct)
                 pf_levels, pf_models = None, None
@@ -110,10 +110,14 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                 ret = util.conformer_list_from_models(
                     print_keyword_dct, save_prefix, run_prefix,
                     spc_dct_i, thy_dct, pf_levels, pf_models)
-                cnf_fs, cnf_locs_lst, cnf_locs_paths = ret
-            for locs, locs_path in zip(cnf_locs_lst, cnf_locs_paths):
+                _, rng_cnf_locs_lst, rng_cnf_locs_paths = ret
+            for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_paths):
 
                 label = spc_name + '_' + '_'.join(locs)
+                _, cnf_locs = locs
+                rng_path, cnf_path = locs_path
+                _, cnf_fs = filesys.build_fs(
+                    rng_path, rng_path, 'CONFORMER')
                 if 'freq' in tsk:
 
                     filelabel = 'freq'
@@ -140,7 +144,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                             es_model, thy_dct)
                         try:
                             freqs, _, zpe = vib.read_locs_harmonic_freqs(
-                                cnf_fs, locs_path, locs, saddle=False)
+                                cnf_fs, cnf_path, cnf_locs, saddle=False)
                         except:
                             freqs = []
                             zpe = 0
@@ -151,7 +155,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                     if freqs and print_keyword_dct['scale'] is not None:
                         freqs, zpe = vib.scale_frequencies(
                             freqs, tors_zpe, pf_levels, scale_method='3c')
-                    spc_data = [locs_path, zpe, *freqs]
+                    spc_data = [cnf_path, zpe, *freqs]
                     csv_data['freq'][label] = spc_data
                 elif 'geo' in tsk:
 
@@ -162,15 +166,15 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                         filelabel += '_{}'.format(print_keyword_dct['geolvl'])
                     filelabel += '.txt'
 
-                    if cnf_fs[-1].file.geometry.exists(locs):
-                        geo = cnf_fs[-1].file.geometry.read(locs)
-                        energy = cnf_fs[-1].file.energy.read(locs)
+                    if cnf_fs[-1].file.geometry.exists(cnf_locs):
+                        geo = cnf_fs[-1].file.geometry.read(cnf_locs)
+                        energy = cnf_fs[-1].file.energy.read(cnf_locs)
                         comment = 'energy: {0:>15.10f}'.format(energy)
                         xyz_str = automol.geom.xyz_string(geo, comment=comment)
                     else:
                         xyz_str = '\t -- Missing --'
                     spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
-                        spc_name, locs, locs_path) + xyz_str
+                        spc_name, cnf_locs, cnf_path) + xyz_str
                     csv_data[label] = spc_data
 
                 elif 'zma' in tsk:
@@ -182,9 +186,9 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                         filelabel += '_{}'.format(print_keyword_dct['geolvl'])
                     filelabel += '.txt'
 
-                    geo = cnf_fs[-1].file.geometry.read(locs)
+                    geo = cnf_fs[-1].file.geometry.read(cnf_locs)
                     zma = automol.geom.zmatrix(geo)
-                    energy = cnf_fs[-1].file.energy.read(locs)
+                    energy = cnf_fs[-1].file.energy.read(cnf_locs)
                     comment = 'energy: {0:>15.10f}\n'.format(energy)
                     zma_str = automol.zmat.string(zma)
                     spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
@@ -209,14 +213,14 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                             run_prefix, save_prefix, saddle=False)
                         energy = ene.electronic_energy(
                             spc_dct_i, pf_filesystems, pf_levels,
-                            conf=(locs, locs_path, cnf_fs))
+                            conf=(cnf_locs, cnf_path, cnf_fs))
                     else:
                         spc_info = sinfo.from_dct(spc_dct_i)
                         thy_info = tinfo.from_dct(thy_dct.get(
                             print_keyword_dct['proplvl']))
                         mod_thy_info = tinfo.modify_orb_label(
                             thy_info, spc_info)
-                        sp_save_fs = autofile.fs.single_point(locs_path)
+                        sp_save_fs = autofile.fs.single_point(cnf_path)
                         sp_save_fs[-1].create(mod_thy_info[1:4])
                         # Read the energy
                         sp_path = sp_save_fs[-1].path(mod_thy_info[1:4])
@@ -226,7 +230,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                                 ioprinter.reading('Energy', sp_path)
                                 energy = sp_save_fs[-1].file.energy.read(
                                     mod_thy_info[1:4])
-                    csv_data[label] = [locs_path, energy]
+                    csv_data[label] = [cnf_path, energy]
 
                 elif 'enthalpy' in tsk:
                     filelabel = 'enthalpy'
@@ -244,7 +248,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                         run_prefix, save_prefix, saddle=False)
                     ene_abs = ene.read_energy(
                         spc_dct_i, pf_filesystems, pf_models, pf_levels,
-                        run_prefix, conf=(locs, locs_path, cnf_fs),
+                        run_prefix, conf=(cnf_locs, cnf_path, cnf_fs),
                         read_ene=True, read_zpe=True, saddle=False)
                     ts_geom = None
                     hf0k, _, chn_basis_ene_dct, hbasis = basis.enthalpy_calculation(
@@ -262,6 +266,6 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                                 coeff_basis[spc_basis.index(spc_i)])
                         else:
                             coeff_array.append(0)
-                    csv_data[label] = [locs_path, ene_abs, hf0k, *coeff_array]
+                    csv_data[label] = [cnf_path, ene_abs, hf0k, *coeff_array]
 
     util.write_csv_data(tsk, csv_data, filelabel, spc_array)

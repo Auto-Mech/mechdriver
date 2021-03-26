@@ -6,6 +6,80 @@ import sys
 import automol
 import autofile
 from phydat import phycon
+from mechlib.filesys import build_fs
+
+def min_energy_ring_conformer_locators(rng_save_fs, mod_thy_info):
+    """ wrapper for minimum locs
+    """
+    rng_locs_lst = rng_save_fs[-1].existing()
+    rng_cnf_locs_lst = []
+    rng_cnf_enes_lst = []
+    for rng_locs in rng_locs_lst:
+        rng_save_path = rng_save_fs[-1].path(rng_locs)
+        _, rng_cnf_save_fs = build_fs(
+            rng_save_path, rng_save_path, 'CONFORMER')
+        locs, paths = conformer_locators(
+            rng_cnf_save_fs, mod_thy_info, cnf_range='min')
+        if locs and paths:
+            cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
+                locs, rng_cnf_save_fs, mod_thy_info)
+            rng_cnf_locs_lst.append((rng_locs, cnf_locs_lst[0],))
+            rng_cnf_enes_lst.append(cnf_enes_lst[0])
+    if rng_cnf_locs_lst:
+        rng_cnf_enes_lst, rng_cnf_locs_lst = zip(*sorted(zip(rng_cnf_enes_lst, rng_cnf_locs_lst)))
+        locs = rng_cnf_locs_lst[0]
+        rng_save_path = rng_save_fs[-1].path(locs[0])
+        _, rng_cnf_save_fs = build_fs(
+            rng_save_path, rng_save_path, 'CONFORMER')
+        rng_cnf_save_path = rng_cnf_save_fs[-1].path(locs[1])
+        paths = (rng_save_path, rng_cnf_save_path)
+        ret = locs, paths
+    else:
+        ret = ([], []), ('', '')
+    return ret
+
+
+def ring_conformer_locators(rng_save_fs, mod_thy_info, cnf_range='min'):
+    """ wrapper for minimum locs
+    """
+    rng_locs_lst = rng_save_fs[-1].existing()
+    rng_cnf_locs_lst = []
+    rng_cnf_enes_lst = []
+    for rng_locs in rng_locs_lst:
+        rng_save_path = rng_save_fs[-1].path(rng_locs)
+        _, rng_cnf_save_fs = build_fs(
+            rng_save_path, rng_save_path, 'CONFORMER')
+        locs_lst, path_lst = conformer_locators(
+            rng_cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
+        cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
+            locs_lst, rng_cnf_save_fs, mod_thy_info)
+        cnf_locs_lst_with_rngs = []
+        for locs in locs_lst:
+            cnf_locs_lst_with_rngs.append((rng_locs, locs,))
+        rng_cnf_locs_lst.extend(cnf_locs_lst_with_rngs)
+        rng_cnf_enes_lst.extend(cnf_enes_lst)
+    if rng_cnf_locs_lst:
+        rng_cnf_enes_lst, rng_cnf_locs_lst = zip(*sorted(zip(rng_cnf_enes_lst, rng_cnf_locs_lst)))
+        if cnf_range == 'min':
+            fin_locs_lst = [rng_cnf_locs_lst[0]]
+        elif cnf_range == 'all':
+            fin_locs_lst = rng_cnf_locs_lst
+        elif 'e' in cnf_range:
+            fin_locs_lst = _erange_locs(rng_cnf_locs_lst, rng_cnf_enes_lst, cnf_range)
+        elif 'n' in cnf_range:
+            fin_locs_lst = _nrange_locs(rng_cnf_locs_lst, cnf_range)
+        fin_paths = []
+        for locs in fin_locs_lst:
+            rng_locs, cnf_locs = locs
+            rng_save_path = rng_save_fs[-1].path(rng_locs)
+            _, rng_cnf_save_fs = build_fs(
+                rng_save_path, rng_save_path, 'CONFORMER')
+            rng_cnf_save_path = rng_cnf_save_fs[-1].path(cnf_locs)
+            fin_paths.append((rng_save_path, rng_cnf_save_path))
+        ret = fin_locs_lst, fin_paths
+    else:
+        ret = [([], [])], [('', '')]
+    return ret
 
 
 def min_energy_conformer_locators(cnf_save_fs, mod_thy_info):

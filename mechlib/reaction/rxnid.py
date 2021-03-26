@@ -50,14 +50,15 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
 
     rxn_fs = autofile.fs.reaction(save_prefix)
     if rxn_fs[-1].exists(sort_rxn_info):
-        _, cnf_save_fs = build_fs(
-            '', save_prefix, 'CONFORMER',
+        _, rng_save_fs = build_fs(
+            '', save_prefix, 'RING_CONFORMER',
             rxn_locs=sort_rxn_info,
             thy_locs=mod_ini_thy_info[1:],
             ts_locs=())
 
-        _, ini_min_cnf_path = filesys.mincnf.min_energy_conformer_locators(
-            cnf_save_fs, mod_ini_thy_info)
+        _, ini_paths = filesys.mincnf.min_energy_ring_conformer_locators(
+            rng_save_fs, mod_ini_thy_info)
+        _, ini_min_cnf_path = ini_paths
         if ini_min_cnf_path:
             zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
             if zma_fs[-1].file.reaction.exists(zma_locs):
@@ -264,15 +265,24 @@ def reagent_energies(rgt, rxn_info, sp_thy_info, geo_thy_info, save_prefix):
         mod_sp_thy_info = tinfo.modify_orb_label(sp_thy_info, rgt_info)
         thy_save_fs = autofile.fs.theory(spc_save_path)
         thy_save_path = thy_save_fs[-1].path(mod_geo_thy_info[1:4])
-        cnf_save_fs = autofile.fs.conformer(thy_save_path)
-        min_cnf_locs, _ = filesys.min_energy_conformer_locators(
-            cnf_save_fs, mod_geo_thy_info)
+        rng_save_fs = autofile.fs.ring_conformer(thy_save_path)
+        min_locs, min_paths = filesys.min_energy_ring_conformer_locators(
+            rng_save_fs, mod_geo_thy_info)
+       
+        min_rng_locs, min_cnf_locs = min_cnf_locs
+        min_rng_path, min_cnf_path = min_cnf_paths
 
         # Read energy
         ene = None
         if min_cnf_locs:
-            cnf_path = cnf_save_fs[-1].path(min_cnf_locs)
-            sp_fs = autofile.fs.single_point(cnf_path)
+            # Create run fs if that directory has been deleted to run the jobs
+            # rng_save_path = rng_save_fs[-1].path(min_rng_locs)
+            # _, rng_save_fs = build_fs(
+            #     rng_save_path, rng_save_path, 'CONFORMER')
+            # cnf_save_fs[-1].create(min_cnf_locs)
+            # cnf_path = cnf_save_fs[-1].path(min_cnf_locs)
+            # sp_fs = autofile.fs.single_point(cnf_path)
+            sp_fs = autofile.fs.single_point(min_cnf_path)
             if sp_fs[-1].file.energy.exists(mod_sp_thy_info[1:4]):
                 ene = sp_fs[-1].file.energy.read(mod_sp_thy_info[1:4])
         enes.append(ene)
