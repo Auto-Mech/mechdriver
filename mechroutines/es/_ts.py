@@ -40,9 +40,9 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     if search_thy_inf_dct == 'sadpt':
         run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
                   thy_inf_dct, runfs_dct, savefs_dct)
-    elif search_thy_inf_dct == 'vtst':
-        run_vtst(spc_dct, tsname, es_keyword_dct,
-                 thy_inf_dct, runfs_dct, savefs_dct)
+    # elif search_thy_inf_dct == 'vtst':
+    #     run_vtst(spc_dct, tsname, es_keyword_dct,
+    #              thy_inf_dct, runfs_dct, savefs_dct)
     elif search_thy_inf_dct == 'vrctst':
         run_vrctst(spc_dct, tsname, es_keyword_dct,
                    thy_inf_dct, runfs_dct, savefs_dct)
@@ -85,141 +85,6 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
             runfs_dct, savefs_dct, es_keyword_dct)
 
         # Generate a second sadpt
-
-
-def run_vtst(spc_dct, tsname, es_keyword_dct,
-             thy_inf_dct, runfs_dct, savefs_dct,
-             info_dct):
-    """ find a transition state
-    """
-
-    # Get dct for specific species task is run for
-    ts_dct = spc_dct[tsname]
-
-    # Get info from the reactants
-    ts_info = info_dct['ts_info']
-    rct_info = info_dct['rct_info']
-    rcts_gra = ts_dct['rcts_gra']
-    if radrad:
-        high_mul = ts_dct['high_mult']
-        hs_info = info_dct['hs_info']
-        rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
-
-    # Set information from the transition state
-    ini_zma = ts_dct['zma']
-    frm_bnd_keys = ts_dct['frm_bnd_keys']
-    if radrad:
-        ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
-        active_space = ts_dct['active_space']
-
-    # Get reaction coordinates
-    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-
-    # Get es options
-    overwrite = es_keyword_dct['overwrite']
-    update_guess = False  # check
-    if radrad:
-        pot_thresh = es_keyword_dct['pot_thresh']
-
-    # Grid
-    [grid1, grid2] = grid
-
-    # Get thy_inf_dct stuff
-    mod_thy_info = thy_inf_dct['mod_runlvl']
-    mod_var_scn_thy_info = thy_inf_dct['mod_var_scnlvl']
-    mod_var_sp1_thy_info = thy_inf_dct['mod_var_splvl1']
-    var_sp1_thy_info = thy_inf_dct['var_splvl2']
-    var_sp2_thy_info = thy_inf_dct['var_splvl2']
-    hs_var_sp1_thy_info = thy_inf_dct['hs_var_splvl1']
-    hs_var_sp2_thy_info = thy_inf_dct['hs_var_splvl2']
-
-    # Get the filesys stuff
-    var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
-    var_scn_run_fs = runfs_dct['vscnlvl_scn_fs']
-    rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
-    vscnlvl_thy_save_fs = savefs_dct['vscnlvl_thy_fs']
-    vscnlvl_ts_save_fs = savefs_dct['vscnlvl_ts_fs']
-
-    # Check for the saddle point
-    if not cnf_save_locs:
-        print('No saddle point ...')
-        _run = True
-    elif overwrite:
-        print('User specified to overwrite transition state with new run...')
-        _run_scan = True
-    else:
-        _run = False
-
-    # Find the TS (check the path, geoms and energies?)
-    if not _scan_finished(coord_names, coord_grids,
-                          scn_save_fs, constraint_dct=None):
-    if not cnf_save_locs:
-        print('No path found in save filesys. Running energy...')
-        _run = True
-    elif overwrite:
-        print('User specified to overwrite reaction path with new run...')
-        _run_scan = True
-    else:
-        _run = False
-
-    # Run the scan if needed
-    if _run:
-        if radrad:
-            vtst.radrad_scan(
-                ts_zma, ts_info,
-                ts_formula, high_mul, active_space,
-                rct_info, rct_ichs,
-                grid1, grid2, coord_name,
-                mod_var_scn_thy_info,
-                scn_run_fs, scn_save_fs,
-                overwrite, update_guess,
-                constraint_dct=None,
-                zma_locs=(0,))
-        else:
-            vtst.molrad_scan(
-                ts_zma, ts_info,
-                rct_info, rcts_cnf_fs, rcts_gra,
-                grid1, grid2, coord_name, frm_bnd_keys,
-                thy_info, vsp1_thy_info,
-                thy_save_fs,
-                ts_save_fs,
-                scn_run_fs, scn_save_fs,
-                overwrite, update_guess, retryfail,
-                zma_locs=(0,))
-
-        sadpt_zma = rxngrid.vtst_max(
-            list(grid1)+list(grid2), coord_name, scn_save_fs,
-            mod_var_scn_thy_info, constraint_dct,
-            ethresh=pot_thresh)
-
-    if sadpt_zma is None:
-
-        if radrad:
-            scan.radrad_inf_sep_ene(
-                hs_info, ts_zma,
-                rct_info, rcts_cnf_fs,
-                var_sp1_thy_info, var_sp2_thy_info,
-                hs_var_sp1_thy_info, hs_var_sp2_thy_info,
-                geo, geo_run_path, geo_save_path,
-                scn_save_fs, far_locs,
-                overwrite=overwrite,
-                **cas_kwargs)
-        else:
-            scan.molrad_inf_sep_ene(
-                rct_info, rcts_cnf_fs,
-                inf_thy_info, overwrite)
-
-        _save_traj(ts_zma, frm_bnd_keys, rcts_gra,
-                   vscnlvl_ts_save_fs, zma_locs=zma_locs)
-
-        _vtst_hess_ene(ts_info, coord_name,
-                       mod_var_scn_thy_info, mod_var_sp1_thy_info,
-                       scn_save_fs, scn_run_fs,
-                       overwrite, **cas_kwargs)
-    else:
-        sadpt.obtain_saddle_point(
-            [sadpt_zma], ts_dct, method_dct,
-            runfs_dct, savefs_dct, es_keyword_dct)
 
 
 def run_vrctst(spc_dct, tsname, es_keyword_dct,
