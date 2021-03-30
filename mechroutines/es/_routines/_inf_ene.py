@@ -9,17 +9,64 @@ from mechlib.amech_io import printer as ioprinter
 
 
 # CALCULATE INFINITE SEPARATION ENERGY #
-def molrad_inf_sep_ene(rct_info, rcts_cnf_fs,
-                       mod_thy_info, overwrite):
-    """ Calculate the inf spe ene for a mol-rad ene
+def inf_sep_ene(ts_dct, thy_inf_dct, savefs_dct, runfs_dct, es_keyword_dct):
+    """ complete scan calcs
     """
-    sp_script_str, _, kwargs, _ = qchem_params(
-        *mod_thy_info[0:2])
-    inf_sep_ene = reac_sep_ene(
-        rct_info, rcts_cnf_fs,
-        mod_thy_info, overwrite, sp_script_str, **kwargs)
 
-    return inf_sep_ene
+    # Get info from the reactants
+    ts_info = thy_inf_dct['ts_info']
+    ini_zma = ts_dct['zma']
+    rct_info = thy_inf_dct['rct_info']
+    overwrite = es_keyword_dct['overwrite']
+    update_guess = False  # check
+
+    # Grid
+    [grid1, grid2] = grid
+
+    # Get thy_inf_dct stuff
+    mod_thy_info = thy_inf_dct['mod_runlvl']
+    mod_var_scn_thy_info = thy_inf_dct['mod_var_scnlvl']
+    mod_var_sp1_thy_info = thy_inf_dct['mod_var_splvl1']
+    var_sp1_thy_info = thy_inf_dct['var_splvl2']
+    var_sp2_thy_info = thy_inf_dct['var_splvl2']
+    hs_var_sp1_thy_info = thy_inf_dct['hs_var_splvl1']
+    hs_var_sp2_thy_info = thy_inf_dct['hs_var_splvl2']
+
+    # Get the filesys stuff
+    var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
+    var_scn_run_fs = runfs_dct['vscnlvl_scn_fs']
+    rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
+    vscnlvl_thy_save_fs = savefs_dct['vscnlvl_thy_fs']
+    vscnlvl_ts_save_fs = savefs_dct['vscnlvl_ts_fs']
+
+    radrad = False
+    if radrad:
+        high_mul = ts_dct['high_mult']
+        hs_info = info_dct['hs_info']
+        rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
+        ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
+        active_space = ts_dct['active_space']
+        pot_thresh = es_keyword_dct['pot_thresh']
+
+        scan.radrad_inf_sep_ene(
+            hs_info, ts_zma,
+            rct_info, rcts_cnf_fs,
+            var_sp1_thy_info, var_sp2_thy_info,
+            hs_var_sp1_thy_info, hs_var_sp2_thy_info,
+            geo, geo_run_path, geo_save_path,
+            scn_save_fs, far_locs,
+            overwrite=overwrite,
+            **cas_kwargs)
+    else:
+        scan.molrad_inf_sep_ene(
+            rct_info, rcts_cnf_fs,
+            inf_thy_info, overwrite)
+
+    # Probably just move into the tasks from splitting the tasks initially
+    # _vtst_hess_ene(ts_info, coord_name,
+    #                mod_var_scn_thy_info, mod_var_sp1_thy_info,
+    #                scn_save_fs, scn_run_fs,
+    #                overwrite, **cas_kwargs)
 
 
 def radrad_inf_sep_ene(hs_info, ref_zma,
@@ -96,6 +143,16 @@ def radrad_inf_sep_ene(hs_info, ref_zma,
         inf_sep_ene = None
 
     return inf_sep_ene
+
+
+def molrad_inf_sep_ene(rct_info, rcts_cnf_fs,
+                       mod_thy_info, overwrite):
+    """ Calculate the inf spe ene for a mol-rad ene
+    """
+    script_str, kwargs = qchem_params(*mod_thy_info[0:2])
+    return reac_sep_ene(
+        rct_info, rcts_cnf_fs,
+        mod_thy_info, overwrite, script_str, **kwargs)
 
 
 def reac_sep_ene(rct_info, rcts_cnf_fs, thy_info,

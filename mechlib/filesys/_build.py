@@ -187,3 +187,20 @@ def _chk_direction(rxn_ichs, ts_zma,
         dirn = None
 
     return dirn
+
+
+def _build_vrctst_fs(ts_run_fs):
+    """ build the filesystem and return the path
+    """
+
+    ts_fs, _ = ts_run_fs
+    ts_run_path = ts_fs[0].path()
+    bld_locs = ['VARECOF', 0]
+    bld_save_fs = autofile.fs.build(ts_run_path)
+    bld_save_fs[-1].create(bld_locs)
+    vrc_path = bld_save_fs[-1].path(bld_locs)
+    os.makedirs(os.path.join(vrc_path, 'scratch'), exist_ok=True)
+
+    ioprinter.info_message('Build Path for VaReCoF calculations', vrc_path)
+
+    return vrc_path

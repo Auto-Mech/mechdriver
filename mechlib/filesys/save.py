@@ -156,9 +156,34 @@ def instability(conn_zma, disconn_zmas,
         zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
         zma_save_fs[-1].create(zma_locs)
         zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
-    
+
     # Set and print the save path information
     print(" - Saving...")
     print(" - Save path: {}".format(instab_save_path))
     if save_cnf:
         print(" - Save path: {}".format(cnf_save_path))
+
+
+def flux(vrc_ret, ts_run_fs, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
+    """ Save the VaReCoF flux and input
+    """
+
+    # Unpack the ret
+    inf_obj, inp_strs, out_str = vrc_ret
+    tst_str, divsur_str, molpro_str, tml_str, struct_str, pot_str = inp_strs
+
+    # Get the flux string (somehow)
+    flux_str = ''
+
+    # Save the files
+    ts_save_path = ts_save_fs[-1].path(ts_locs)
+
+    vrc_fs = autofile.fs.vrctst(ts_save_path)
+    vrc_fs[-1].create(vrc_locs)
+    vrc_fs[-1].file.vrctst_tst.write(tst_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_divsur.write(divsur_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_molpro.write(molpro_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_tml.write(tml_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_struct.write(struct_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_pot.write(pot_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_flux.write(flux_str, vrc_locs)

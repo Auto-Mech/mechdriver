@@ -43,7 +43,7 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
 
     # Assess if saddle pt exists in the filesystem at runlvl
     _run = _check_filesys_for_sadpt(
-        savefs_dct, es_keyword_dct, zma_locs=zma_locs)
+        savefs_dct, es_keyword_dct)
 
     if _run:
 
@@ -111,7 +111,7 @@ def _check_filesys_for_sadpt(savefs_dct, es_keyword_dct):
     return _run
 
 
-def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
+def _check_filesys_for_guess(savefs_dct, es_keyword_dct, zma_locs=(0,)):
     """ Check if the filesystem for any TS structures at the input
         level of theory
     """
@@ -134,88 +134,6 @@ def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
                 ini_zma_fs[-1].file.zmatrix.read(zma_locs))
 
     return guess_zmas
-
-
-def _check_filesys_for_scan(savefs_dct, zma_locs, es_keyword_dct):
-    """ Check if the filesystem for any TS structures at the input
-        level of theory
-    """
-    guess_zmas = sadpt.generate_guess_structure(
-        ts_dct, method_dct, es_keyword_dct,
-        runfs_dct, savefs_dct)
-
-
-def _inf_ene(ts_dct, thy_inf_dct, savefs_dct, runfs_dct, es_keyword_dct):
-    """ complete scan calcs
-    """
-
-    # Get info from the reactants
-    ts_info = info_dct['ts_info']
-    rct_info = info_dct['rct_info']
-    rcts_gra = ts_dct['rcts_gra']
-    if radrad:
-        high_mul = ts_dct['high_mult']
-        hs_info = info_dct['hs_info']
-        rct_ichs = [spc_dct[rct]['inchi'] for rct in ts_dct['reacs']]
-
-    # Set information from the transition state
-    ini_zma = ts_dct['zma']
-    frm_bnd_keys = ts_dct['frm_bnd_keys']
-    if radrad:
-        ts_formula = automol.geom.formula(automol.zmatrix.geometry(ini_zma))
-        active_space = ts_dct['active_space']
-
-    # Get reaction coordinates
-    frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-
-    # Get es options
-    overwrite = es_keyword_dct['overwrite']
-    update_guess = False  # check
-    if radrad:
-        pot_thresh = es_keyword_dct['pot_thresh']
-
-    # Grid
-    [grid1, grid2] = grid
-
-    # Get thy_inf_dct stuff
-    mod_thy_info = thy_inf_dct['mod_runlvl']
-    mod_var_scn_thy_info = thy_inf_dct['mod_var_scnlvl']
-    mod_var_sp1_thy_info = thy_inf_dct['mod_var_splvl1']
-    var_sp1_thy_info = thy_inf_dct['var_splvl2']
-    var_sp2_thy_info = thy_inf_dct['var_splvl2']
-    hs_var_sp1_thy_info = thy_inf_dct['hs_var_splvl1']
-    hs_var_sp2_thy_info = thy_inf_dct['hs_var_splvl2']
-
-    # Get the filesys stuff
-    var_scn_save_fs = savefs_dct['vscnlvl_scn_fs']
-    var_scn_run_fs = runfs_dct['vscnlvl_scn_fs']
-    rcts_cnf_fs = savefs_dct['rcts_cnf_fs']
-    vscnlvl_thy_save_fs = savefs_dct['vscnlvl_thy_fs']
-    vscnlvl_ts_save_fs = savefs_dct['vscnlvl_ts_fs']
-
-    radrad = False
-    if radrad:
-        scan.radrad_inf_sep_ene(
-            hs_info, ts_zma,
-            rct_info, rcts_cnf_fs,
-            var_sp1_thy_info, var_sp2_thy_info,
-            hs_var_sp1_thy_info, hs_var_sp2_thy_info,
-            geo, geo_run_path, geo_save_path,
-            scn_save_fs, far_locs,
-            overwrite=overwrite,
-            **cas_kwargs)
-    else:
-        scan.molrad_inf_sep_ene(
-            rct_info, rcts_cnf_fs,
-            inf_thy_info, overwrite)
-
-    _save_traj(ts_zma, savefs_dct, zma_locs=zma_locs)
-
-    # Probably just move into the tasks from splitting the tasks initially
-    # _vtst_hess_ene(ts_info, coord_name,
-    #                mod_var_scn_thy_info, mod_var_sp1_thy_info,
-    #                scn_save_fs, scn_run_fs,
-    #                overwrite, **cas_kwargs)
 
 
 def _opt_by_sadpt():

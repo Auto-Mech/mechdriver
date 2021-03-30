@@ -194,8 +194,6 @@ def _ts_finder_match(tsk, ts_dct):
         print('No TS search algorithm was specified or able to determined')
 
     # Set return for ts searching algorithm if there is one
-    if ini_thy_inf_dct == 'pst':
-        print('Phase Space Theory Used, No ES calculations are needed')
     if tsk in ini_thy_inf_dct:
         print('Search algorithm matches task')
         search_thy_inf_dct = tsk

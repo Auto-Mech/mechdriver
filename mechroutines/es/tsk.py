@@ -75,8 +75,8 @@ def run_tsk(tsk, spc_dct, spc_name,
             hr_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'irc' in tsk:
-            irc_tsk(
+        elif 'rpath' in tsk:
+            rpath_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
         elif 'find' in tsk:
@@ -738,9 +738,9 @@ def hr_tsk(job, spc_dct, spc_name,
         ioprinter.info_message('No torsional modes in the species')
 
 
-def irc_tsk(job, spc_dct, spc_name,
-            thy_dct, es_keyword_dct,
-            run_prefix, save_prefix):
+def rpath_tsk(job, spc_dct, spc_name,
+              thy_dct, es_keyword_dct,
+              run_prefix, save_prefix):
     """ run a scan over the specified torsional coordinates
     """
 
@@ -748,7 +748,12 @@ def irc_tsk(job, spc_dct, spc_name,
     spc_dct_i = spc_dct[spc_name]
 
     # Set up coordinate name
-    coord_name = ['IRC']
+    rxn_coord = es_keyword_dct.get('rxn_coord')
+    if rxn_coord == 'auto':
+        coord_name = ['Rn']  # grab from zrxn object
+    else:
+        # coord_name = 
+        coord_name = ['IRC']
 
     # Set the spc_info
     spc_info = sinfo.from_dct(spc_dct_i)
@@ -775,30 +780,38 @@ def irc_tsk(job, spc_dct, spc_name,
     fs_rxn_info = rinfo.sort(rxn_info)
 
     # New filesystem objects
-    _root = root_locs(spc_dct_i, saddle=True)
-    # ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
-    #     run_prefix, save_prefix, 'CONFORMER',
-    #     thy_locs=mod_ini_thy_info[1:],
-    #     **_root)
-    # cnf_run_fs, cnf_save_fs = build_fs(
-    #     run_prefix, save_prefix, 'CONFORMER',
-    #     thy_locs=mod_thy_info[1:],
-    #     **_root)
-    ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
-        run_prefix, save_prefix, 'CONFORMER',
-        thy_locs=mod_ini_thy_info[1:],
-        **_root)
-    cnf_run_fs, cnf_save_fs = build_fs(
-        run_prefix, save_prefix, 'CONFORMER',
-        thy_locs=mod_thy_info[1:],
-        **_root)
-    ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-        ini_cnf_save_fs, mod_ini_thy_info)
-    ini_min_locs, ini_cnf_save_path = ini_loc_info
-    # ini_min_rng_locs, ini_min_cnf_locs = ini_min_cnf_locs
-    # ini_min_rng_path, ini_min_cnf_path = ini_min_cnf_path
-    ini_cnf_run_fs[-1].create(ini_min_locs)
-    ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
+    if coord_name == 'irc':
+        _root = root_locs(spc_dct_i, saddle=True)
+        # ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
+        #     run_prefix, save_prefix, 'CONFORMER',
+        #     thy_locs=mod_ini_thy_info[1:],
+        #     **_root)
+        # cnf_run_fs, cnf_save_fs = build_fs(
+        #     run_prefix, save_prefix, 'CONFORMER',
+        #     thy_locs=mod_thy_info[1:],
+        #     **_root)
+        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
+            run_prefix, save_prefix, 'CONFORMER',
+            thy_locs=mod_ini_thy_info[1:],
+            **_root)
+        cnf_run_fs, cnf_save_fs = build_fs(
+            run_prefix, save_prefix, 'CONFORMER',
+            thy_locs=mod_thy_info[1:],
+            **_root)
+        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
+            ini_cnf_save_fs, mod_ini_thy_info)
+        ini_min_locs, ini_cnf_save_path = ini_loc_info
+        # ini_min_rng_locs, ini_min_cnf_locs = ini_min_cnf_locs
+        # ini_min_rng_path, ini_min_cnf_path = ini_min_cnf_path
+        ini_cnf_run_fs[-1].create(ini_min_locs)
+        ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
+
+    else:
+        ts_locs = ()
+        ini_ts_run_fs, ini_ts_save_fs = build_fs(
+            run_prefix, save_prefix, 'TS',
+            thy_locs=mod_ini_thy_info[1:],
+            **_root)
 
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
@@ -813,6 +826,8 @@ def irc_tsk(job, spc_dct, spc_name,
 
     # Run job
     if job == 'scan':
+
+        # if rcoord == 'irc':
         irc.scan(geo, spc_info, coord_name,
                  mod_ini_thy_info, ini_method_dct,
                  ini_scn_save_fs, ini_cnf_run_path,
@@ -836,3 +851,7 @@ def irc_tsk(job, spc_dct, spc_name,
                 ini_scn_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite, **kwargs)
             ioprinter.obj('vspace')
+
+    elif job == 'infene':
+        pass
+        # inf_sep_ene()

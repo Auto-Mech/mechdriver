@@ -25,13 +25,19 @@ def es_tsk_lst(es_tsk_str, thy_dct):
     """ Take the es tsk list string from input and set the tasks
         Right now, we presume the tasks given in the file are correct
     """
+    
     tsk_lst = _tsk_lst(es_tsk_str)
 
+    # mod_tsk_lst = expand_tsks(tsk_lst)
+    
     # Ensure that all the tasks are in the supported tasks
     check_es_tsks_supported(tsk_lst, thy_dct)
 
     # Add defaults if they are missing
-    mod_tsk_lst = add_defaults_to_es_keyword_dct(tsk_lst)
+    mod_tsk_lst = add_defaults_to_keyword_dct(
+        tsk_lst,
+        ES_TSK_KEYWORDS_DEFAULT_DCT,
+        ES_TSK_KEYWORDS_SUPPORTED_DCT)
 
     return mod_tsk_lst
 
@@ -41,9 +47,11 @@ def trans_tsk_lst(trans_tsk_str):
         species or PESs
     """
 
-    # Split the string into different strings of keywords
     tsk_lst = _tsk_lst(trans_tsk_str)
-    mod_tsk_lst = add_defaults_to_trans_keyword_dct(tsk_lst)
+    mod_tsk_lst = add_defaults_to_keyword_dct(
+        tsk_lst,
+        TRANS_TSK_KEYWORDS_DEFAULT_DCT,
+        TRANS_TSK_KEYWORDS_SUPPORTED_DCT)
 
     return mod_tsk_lst
 
@@ -72,7 +80,10 @@ def prnt_tsk_lst(prnt_tsk_str, thy_dct):
     check_prnt_tsks_supported(tsk_lst, thy_dct)
 
     # Add defaults if they are missing
-    mod_tsk_lst = add_defaults_to_prnt_keyword_dct(tsk_lst)
+    mod_tsk_lst = add_defaults_to_keyword_dct(
+       tsk_lst,
+       PRNT_TSK_KEYWORDS_DEFAULT_DCT,
+       PRNT_TSK_KEYWORDS_SUPPORTED_DCT)
 
     return mod_tsk_lst
 
@@ -95,64 +106,50 @@ def _tsk_lst(tsk_str):
     return tsk_lst
 
 
-# def expand_es_tsks(es_tsk_lst):
-#     """ loop over tasks and expand tasks
-#     """
-#     if obj == 'all':
-#     tsk_lst.append(['spc', tsk, dct])
-#     tsk_lst.append(['ts', tsk, dct])
-#     expand_tsks = EXPAND_DCT.get(tsk, ())
-#     for expand_tsk in expand_tsks:
-#     tsk_lst.append([obj, expand_tsk, dct])
-# EXPAND_DCT = {
-#     'find_ts': ('sadpt_scan', 'sadpt_opt', 'sadpt_hess',)  # sadpt_check
-# }
+def expand_tsks(tsks_lst):
+    """ loop over tasks and expand tasks
+    """
 
-# def expand_trans_tsks(trans_tsk_lst):
-#     """ loop over tasks and exapnd
-#     """
+    # Expand the objects for running
+    mod_tsks_lst = []
+    for tsk_lst in tsks_lst:
+        [obj, tsk, dct] = tsk_lst
+        if obj == 'all':
+            mod_tsks_lst.append(['spc', tsk, dct])
+            mod_tsks_lst.append(['ts', tsk, dct])
+        else:
+            mod_tsks_lst.append([obj, tsk, dct])
+
+    # Expand the tasks
+    mod_tsks_lst2 = []
+    for tsk_lst in mod_tsks_lst:
+        [obj, tsk, dct] = tsk_lst
+        expand_tsks = EXPAND_DCT.get(tsk, None)
+        if expand_tsks is None:
+            mod_tsks_lst2.append(tsk_lst)
+        else:
+            for tsk in expand_tsks:
+                mod_tsks_lst2.append([obj, tsk, dct])
+    
+    return mod_tsks_lst2
+
+
+EXPAND_DCT = {
+    'init_geom': ('test1', 'test2'),
+    'find_ts': ('sadpt_scan', 'sadpt_opt', 'sadpt_hess')  # sadpt_check
+}
 
 
 # Add defaults
-def add_defaults_to_es_keyword_dct(tsk_lsts):
+def add_defaults_to_keyword_dct(tsk_lsts, default_dct, supported_dct):
     """ Add default values to a checked keyword dct
     """
     mod_tsk_lst = []
     for tsk_lst in tsk_lsts:
         [obj, tsk, keyword_dct] = tsk_lst
-        for dkey, dval in ES_TSK_KEYWORDS_DEFAULT_DCT.items():
+        for dkey, dval in default_dct.items():
             if dkey not in keyword_dct:
-                if dkey in ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
-                    keyword_dct[dkey] = dval
-        mod_tsk_lst.append([obj, tsk, keyword_dct])
-
-    return mod_tsk_lst
-
-
-def add_defaults_to_trans_keyword_dct(tsk_lsts):
-    """ Add default values to a checked keyword dct
-    """
-    mod_tsk_lst = []
-    for tsk_lst in tsk_lsts:
-        [obj, tsk, keyword_dct] = tsk_lst
-        for dkey, dval in TRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT.items():
-            if dkey not in keyword_dct:
-                if dkey in TRANS_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
-                    keyword_dct[dkey] = dval
-        mod_tsk_lst.append([obj, tsk, keyword_dct])
-
-    return mod_tsk_lst
-
-
-def add_defaults_to_prnt_keyword_dct(tsk_lsts):
-    """ Add default values to a checked keyword dct
-    """
-    mod_tsk_lst = []
-    for tsk_lst in tsk_lsts:
-        [obj, tsk, keyword_dct] = tsk_lst
-        for dkey, dval in PRNT_TSK_KEYWORDS_DEFAULT_DCT.items():
-            if dkey not in keyword_dct:
-                if dkey in PRNT_TSK_KEYWORDS_SUPPORTED_DCT[tsk]:
+                if dkey in supported_dct[tsk]:
                     keyword_dct[dkey] = dval
         mod_tsk_lst.append([obj, tsk, keyword_dct])
 

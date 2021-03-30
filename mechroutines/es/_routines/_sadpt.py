@@ -16,7 +16,7 @@ from mechlib.filesys import build_fs
 
 # SADPT FINDER FUNCTIONS
 def generate_guess_structure(ts_dct, method_dct, es_keyword_dct,
-                             runfs_dct, savefs_dct):
+                             runfs_dct, savefs_dct, zma_locs=(0,)):
     """ Checks the filesystem for z-matrices at some input
         level of theory and if nothing existsm it will
         launch a scan to find the transition state.
@@ -25,7 +25,7 @@ def generate_guess_structure(ts_dct, method_dct, es_keyword_dct,
         :param method_dct:
     """
 
-    guess_zmas = _check_filesys_for_guess(savefs_dct, (0,), es_keyword_dct)
+    guess_zmas = _check_filesys_for_guess(savefs_dct, es_keyword_dct, zma_locs=zma_locs)
     if not guess_zmas:
         guess_zmas = scan_for_guess(
             ts_dct, method_dct, runfs_dct, savefs_dct, es_keyword_dct)

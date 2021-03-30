@@ -90,9 +90,7 @@ ES_TSK_SUPPORTED_DCT = {
         'conf_pucker', 'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess',
         'conf_vpt2', 'conf_prop',
         'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess', 'hr_vpt2', 'hr_reopt',
-        # 'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess',
-        'irc_scan', 'irc_energy', 'irc_grad', 'irc_hess',
-        'drp_samp', 'drp_energy', 'drp_grad', 'drp_hess'],
+        'rpath_scan', 'rpath_energy', 'rpath_grad', 'rpath_hess'],
     'vdw': [
         'find',
         'conf_pucker', 'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess']
@@ -138,15 +136,36 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'tau_energy': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'tau_grad': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
     'tau_hess': ['runlvl', 'inplvl', 'hessmax', 'retryfail', 'overwrite'],
-    'irc_scan': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'irc_energy': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'irc_grad': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'irc_hess': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'drp_scan': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'drp_energy': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'drp_grad': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
-    'drp_hess': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
+    'rpath_scan': ['runlvl', 'inplvl', 'rxncoord', 'retryfail', 'overwrite'],
+    'rpath_energy': ['runlvl', 'inplvl', 'rxncoord', 'retryfail', 'overwrite'],
+    'rpath_grad': ['runlvl', 'inplvl', 'rxncoord', 'retryfail', 'overwrite'],
+    'rpath_hess': ['runlvl', 'inplvl', 'rxncoord', 'retryfail', 'overwrite'],
 }
+
+# es tsk: (object type, (allowed values), default)  # use functions for weird
+NEW_ES_TSK_DCT = {
+    # all tasks
+    'runlvl': (str, (), None),
+    'inplvl': (str, (), None),
+    'var_splvl1': (str, (), None),
+    'var_splvl2': (str, (), None),
+    'var_scnlvl': (str, (), None),
+    'retryfail': (bool, (True, False), True),
+    'overwrite': (bool, (True, False), False),
+    # conformer tasks
+    'cnf_range': (str, (), 'min'),
+    # tau tasks
+    'hessmax': (int, (), 1000),
+    # hr tasks
+    'tors_model': (str, ('1dhr', '1dhrf', '1dhrfa', 'mdhr'), '1dhr'),
+    'resamp_min': (bool, (True, False), False),
+    'hrthresh': (float, (), -0.5),
+    # reaction
+    # 'rxndirn': ['forw', 'back', 'exo'],
+    'rxncoord': (str, ('irc', 'auto'), 'auto')
+}
+
+
 ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'tors_model': ['1dhr', '1dhrf', '1dhrfa', 'mdhr'],
     'cnf_range': ['min'],
@@ -155,6 +174,7 @@ ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
     'overwrite': [True, False],
     'resave': [True, False],
     'rxndirn': ['forw', 'back', 'exo'],
+    'rxncoord': ['irc', 'auto'],
     'resamp_min': [True, False],
 }
 ES_TSK_KEYWORDS_DEFAULT_DCT = {
@@ -170,6 +190,7 @@ ES_TSK_KEYWORDS_DEFAULT_DCT = {
     'overwrite': False,
     'resave': False,
     'rxndirn': 'forw',
+    'rxncoord': 'auto',
     'hessmax': 1000,
     'hrthresh': -0.5,
     'pot_thresh': 0.3
