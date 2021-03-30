@@ -59,9 +59,10 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
     ts_dct = spc_dct[tsname]
 
     # Find the TS
-    cnf_save_fs, cnf_save_locs = savefs_dct['runlvl_cnf_fs']
+    cnf_info = savefs_dct['runlvl_cnf_fs']
+    cnf_save_fs, cnf_save_locs = cnf_info
     overwrite = es_keyword_dct['overwrite']
-    if not cnf_save_locs:
+    if not cnf_save_locs[0]:
         print('No transition state found in filesys',
               'at {} level...'.format(es_keyword_dct['runlvl']),
               'Proceeding to find it...')
@@ -418,14 +419,16 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         mod_ini_thy_info = tinfo.modify_orb_label(
             ini_thy_info, ts_info)
 
-        _, ini_cnf_save_fs = build_fs(
+        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
             run_prefix, save_prefix, 'CONFORMER',
             rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_ini_thy_info[1:])
-        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
 
-        if ini_min_cnf_locs:
+        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
+            ini_cnf_save_fs, mod_ini_thy_info)
+        ini_min_cnf_locs, ini_path = ini_loc_info
+
+        if ini_path:
             ini_zma_save_fs = autofile.fs.zmatrix(
                 ini_cnf_save_fs[-1].path(ini_min_cnf_locs))
 
@@ -443,9 +446,10 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
             rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:])
 
-        ini_min_cnf_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+        runlvl_loc_info = filesys.mincnf.min_energy_conformer_locators(
             runlvl_cnf_save_fs, mod_thy_info)
-        runlvl_cnf_save_fs = (runlvl_cnf_save_fs, ini_min_cnf_locs)
+        runlvl_min_cnf_locs, _ = runlvl_loc_info
+        runlvl_cnf_save_fs = (runlvl_cnf_save_fs, runlvl_min_cnf_locs)
 
         runlvl_scn_run_fs, runlvl_scn_save_fs = build_fs(
             run_prefix, save_prefix, 'SCAN',
@@ -563,13 +567,15 @@ def _reac_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
             run_prefix, save_prefix, 'CONFORMER',
             spc_locs=rct_info,
             thy_locs=mod_ini_thy_info[1:])
+
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_cnf_locs, ini_cnf_path = ini_loc_info
+        ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
 
+        # Create run fs if that directory has been deleted to run the jobs
         ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
 
         rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs,
-                        ini_min_cnf_locs, ini_cnf_path),)
+                        ini_min_cnf_locs, ini_min_cnf_path),)
 
     return rct_cnf_fs

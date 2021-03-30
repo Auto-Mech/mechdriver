@@ -70,14 +70,14 @@ ES_TSK_OBJ_SUPPORTED_LST = [
 ES_TSK_SUPPORTED_DCT = {
     'spc': [
         'init_geom',
-        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess',
+        'conf_pucker', 'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess',
         'conf_vpt2', 'conf_prop', 'conf_opt',
         'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess', 'hr_vpt2', 'hr_reopt',
         'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess'],
     'ts': [
         'find_ts',
         'find_sadpt', 'find_molrad_vtst', 'find_radrad_vtst', 'find_vrctst',
-        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess',
+        'conf_pucker', 'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess',
         'conf_vpt2', 'conf_prop',
         'hr_scan', 'hr_energy', 'hr_grad', 'hr_hess', 'hr_vpt2', 'hr_reopt',
         # 'tau_samp', 'tau_energy', 'tau_grad', 'tau_hess',
@@ -85,7 +85,7 @@ ES_TSK_SUPPORTED_DCT = {
         'drp_samp', 'drp_energy', 'drp_grad', 'drp_hess'],
     'vdw': [
         'find',
-        'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess']
+        'conf_pucker', 'conf_samp', 'conf_energy', 'conf_grad', 'conf_hess']
 }
 ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'init_geom': ['runlvl', 'inplvl', 'retryfail', 'overwrite'],
@@ -104,6 +104,7 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'find_vrctst': ['runlvl', 'inplvl', 'rxndirn',
                     'var_splvl1', 'var_splvl2', 'var_scnlvl',
                     'nobarrier', 'retryfail', 'overwrite'],
+    'conf_pucker': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_samp': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_energy': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],
     'conf_grad': ['runlvl', 'inplvl', 'cnf_range', 'retryfail', 'overwrite'],

@@ -39,16 +39,26 @@ def onedmin(spc_name,
         lj_info, run_thy_info)
 
     # Build the target conformer filesystem objects
-    tgt_cnf_run_fs, tgt_cnf_save_fs = build_fs(
+    tgt_cnf_run_fs, tgt_cnf_save_fs = filesys.build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         spc_locs=tgt_info, thy_locs=tgt_mod_thy_info[1:])
 
     tgt_loc_info = filesys.mincnf.min_energy_conformer_locators(
         tgt_cnf_save_fs, tgt_mod_thy_info)
     tgt_min_cnf_locs, tgt_cnf_save_path = tgt_loc_info
+
+    # Create run fs if that directory has been deleted to run the jobs
     tgt_cnf_run_fs[-1].create(tgt_min_cnf_locs)
-    tgt_cnf_run_path = filesys.build.cnf_paths_from_locs(
-        tgt_cnf_run_fs, [tgt_min_cnf_locs])[0]
+    tgt_cnf_run_path = tgt_cnf_run_fs[-1].path(tgt_min_cnf_locs)
+
+    # Get options from the dct or es options lst
+    # tgt_cnf_run_fs[-1].create(tgt_min_cnf_locs)
+    # tgt_cnf_run_path = filesys.build.cnf_paths_from_locs(
+    #     tgt_cnf_run_fs, [tgt_min_cnf_locs])[0]
+
+
+
+
 
     # Build the target energy transfer filesystem objects
     etrans_run_fs = autofile.fs.energy_transfer(tgt_cnf_run_path)

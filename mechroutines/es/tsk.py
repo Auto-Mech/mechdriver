@@ -114,6 +114,13 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
         run_prefix, save_prefix, 'CONFORMER',
         spc_locs=spc_info, thy_locs=mod_thy_info[1:])
 
+   # _, ini_cnf_save_fs = build_fs(
+   #     run_prefix, save_prefix, 'CONFORMER',
+   #     spc_locs=spc_info, thy_locs=mod_ini_thy_info[1:])
+   # cnf_run_fs, cnf_save_fs = build_fs(
+   #     run_prefix, save_prefix, 'CONFORMER',
+   #     spc_locs=spc_info, thy_locs=mod_thy_info[1:])
+
     _, instab_save_fs = build_fs(
         run_prefix, save_prefix, 'INSTAB',
         spc_locs=spc_info, thy_locs=mod_thy_info[1:])
@@ -177,7 +184,9 @@ def conformer_tsk(job, spc_dct, spc_name,
         # Build the ini zma filesys
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
+        ini_locs, ini_min_cnf_path = ini_loc_info
+        ini_min_rid, ini_min_cid = ini_locs
+
         ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
 
         # Set up the run scripts
@@ -189,7 +198,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         mc_nsamp = spc_dct_i['mc_nsamp']
 
         # Read the geometry and zma from the ini file system
-        geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
+        geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
         zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
 
         # Read the torsions from the ini file sys
@@ -200,16 +209,71 @@ def conformer_tsk(job, spc_dct, spc_name,
         else:
             tors_names = ()
 
-        geo_path = ini_cnf_save_fs[-1].path(ini_min_cnf_locs)
+        geo_path = ini_cnf_save_fs[-1].path(ini_locs)
+        ioprinter.initial_geom_path('Sampling started', geo_path)
+
+        # Check runsystem for equal ring CONF make conf_fs
+        # Else make new ring conf directory
+        rid = conformer.rng_loc_for_geo(geo, cnf_run_fs, cnf_save_fs)
+
+        if rid is None:
+            conformer.single_conformer(
+                zma, spc_info, mod_thy_info,
+                cnf_run_fs, cnf_save_fs,
+                script_str, overwrite,
+                retryfail=retryfail, zrxn=zrxn,
+                **kwargs)
+
+            rid = conformer.rng_loc_for_geo(
+                geo, cnf_run_fs, cnf_save_fs)
+
+        # Run the sampling
+        conformer.conformer_sampling(
+            zma, spc_info, mod_thy_info,
+            cnf_run_fs, cnf_save_fs, rid,
+            script_str, overwrite,
+            nsamp_par=mc_nsamp,
+            tors_names=tors_names, zrxn=zrxn,
+            two_stage=two_stage, retryfail=retryfail,
+            **kwargs)
+
+    elif job == 'pucker':
+
+        # Build the ini zma filesys
+        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
+            ini_cnf_save_fs, mod_ini_thy_info)
+        ini_min_locs, ini_min_cnf_path = ini_loc_info
+        ini_min_rid, ini_min_cid = ini_min_locs
+        ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
+
+        # Set up the run scripts
+        script_str, kwargs = qchem_params(
+            method_dct, elstruct.Job.OPTIMIZATION)
+
+        # Set variables if it is a saddle
+        two_stage = saddle
+        mc_nsamp = spc_dct_i['mc_nsamp']
+
+        # Read the geometry and zma from the ini file system
+        geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
+        zma = ini_zma_save_fs[-1].file.zmatrix.read([0])
+
+        # Read the torsions from the ini file sys
+        if ini_zma_save_fs[-1].file.ring_torsions.exists([0]):
+            ring_tors_dct = ini_zma_save_fs[-1].file.ring_torsions.read([0])
+        else:
+            ring_tors_dct = {}
+
+        geo_path = ini_cnf_save_fs[-1].path(ini_min_locs)
         ioprinter.initial_geom_path('Sampling started', geo_path)
 
         # Run the sampling
-        _ = conformer.conformer_sampling(
+        conformer.ring_conformer_sampling(
             zma, spc_info, mod_thy_info,
             cnf_run_fs, cnf_save_fs,
             script_str, overwrite,
             nsamp_par=mc_nsamp,
-            tors_names=tors_names, zrxn=zrxn,
+            ring_tors_dct=ring_tors_dct, zrxn=zrxn,
             two_stage=two_stage, retryfail=retryfail,
             **kwargs)
 
@@ -224,31 +288,57 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
-        cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+        ini_min_locs, ini_min_cnf_path = ini_loc_info
+        ini_min_rid, ini_min_cid = ini_min_locs
+
+        rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             cnf_save_fs, mod_thy_info, cnf_range='all')
 
-        ini_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+        ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info, cnf_range=cnf_range)
 
         # Truncate the list of the ini confs
-        uni_locs_lst = conformer.unique_fs_confs(
-            cnf_save_fs, cnf_locs_lst, ini_cnf_save_fs, ini_cnf_locs_lst)
-        ioprinter.debug_message('uni lst', uni_locs_lst)
-        for locs in uni_locs_lst:
-            ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
-            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
+        uni_rng_locs_lst, uni_cnf_locs_lst = conformer.unique_fs_ring_confs(
+            cnf_save_fs, rng_cnf_locs_lst, ini_cnf_save_fs, ini_rng_cnf_locs_lst)
+        ioprinter.debug_message('uni lst that has no similar ring', uni_rng_locs_lst)
+        ioprinter.debug_message('uni lst that has similar ring', uni_cnf_locs_lst)
+
+        for locs in uni_rng_locs_lst:
+            rid, cid = locs
+            # Obtain the zma from ini loc
+            ini_cnf_save_path = ini_cnf_save_fs[-1].path(locs)
+            ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
             zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
-            cnf_run_fs[-1].create(locs)
+
+            # Make the ring filesystem
             conformer.single_conformer(
                 zma, spc_info, mod_thy_info,
                 cnf_run_fs, cnf_save_fs,
                 script_str, overwrite,
-                retryfail=retryfail, zrxn=saddle, **kwargs)
+                retryfail=retryfail, zrxn=zrxn,
+                use_locs=locs,
+                **kwargs)
 
-        print_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+        for locs in uni_cnf_locs_lst:
+            ini_locs, rid = locs
+            ini_rid, ini_cid = ini_locs
+            # Obtain the zma from ini loc
+            ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
+            ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
+            zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+            # obtain conformer filesystem associated with the ring at the runlevel
+            cid = autofile.schema.generate_new_conformer_id()
+            conformer.single_conformer(
+                zma, spc_info, mod_thy_info,
+                cnf_run_fs, cnf_save_fs,
+                script_str, overwrite,
+                retryfail=retryfail, zrxn=zrxn,
+                use_locs=(rid, cid),
+                **kwargs)
+
+        rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
-        for locs in print_cnf_locs_lst:
+        for locs in rng_cnf_locs_lst:
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             ioprinter.geometry(geo)
 
@@ -256,11 +346,11 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         cnf_range = es_keyword_dct['cnf_range']
 
-        ini_cnf_save_locs_lst, _ = filesys.mincnf.conformer_locators(
+        ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info, cnf_range=cnf_range)
 
         # Check if locs exist, kill if it doesn't
-        if not ini_cnf_save_locs_lst:
+        if not ini_rng_cnf_locs_lst:
             ioprinter.error_message(
                 'No min-energy conformer found for level:')
             sys.exit()
@@ -270,17 +360,19 @@ def conformer_tsk(job, spc_dct, spc_name,
             method_dct)
 
         # Run the job over all the conformers requested by the user
-        for locs in ini_cnf_save_locs_lst:
-            ioprinter.running('task for conformer: ', locs, newline=2)
-            geo_run_path = ini_cnf_run_fs[-1].path(locs)
-            geo_save_path = ini_cnf_save_fs[-1].path(locs)
-            ini_cnf_run_fs[-1].create(locs)
+        for ini_locs in ini_rng_cnf_locs_lst:
+            ini_rid, ini_cid = ini_locs
+            ioprinter.running('task for conformer: ', ini_locs, newline=2)
+            ini_cnf_run_fs[-1].create(ini_locs)
+            geo_run_path = ini_cnf_run_fs[-1].path(ini_locs)
+            geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
             ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
-            geo = ini_cnf_save_fs[-1].file.geometry.read(locs)
+            ioprinter.debug_message('reading geometry from ', geo_save_path)
+            geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
             zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,
-                ini_cnf_save_fs, geo_run_path, geo_save_path, locs,
+                ini_cnf_save_fs, geo_run_path, geo_save_path, ini_locs,
                 script_str, overwrite,
                 retryfail=retryfail, **kwargs)
 
@@ -322,6 +414,7 @@ def tau_tsk(job, spc_dct, spc_name,
     ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
         ini_cnf_save_fs, mod_ini_thy_info)
     ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
+    ini_min_rid, ini_min_cid = ini_min_cnf_locs
 
     ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
     geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
@@ -530,12 +623,13 @@ def hr_tsk(job, spc_dct, spc_name,
 
     ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
         ini_cnf_save_fs, mod_ini_thy_info)
-    ini_min_cnf_locs, ini_cnf_save_path = ini_loc_info
-
-    ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_cnf_locs)
+    ini_min_locs, ini_cnf_save_path = ini_loc_info
+    # ini_min_rng_locs, ini_min_cnf_locs = ini_min_cnf_locs
+    # ini_min_rng_path, ini_min_cnf_path = ini_min_cnf_path
 
     # Create run fs if that directory has been deleted to run the jobs
-    ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
+    ini_cnf_run_fs[-1].create(ini_min_locs)
+    ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
 
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
@@ -544,7 +638,7 @@ def hr_tsk(job, spc_dct, spc_name,
 
     # Read zma, geo, and torsions
     ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
-    geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
+    geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
     zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
     if ini_zma_save_fs[-1].file.torsions.exists([0]):
         tors_dct = ini_zma_save_fs[-1].file.torsions.read([0])
@@ -680,6 +774,14 @@ def irc_tsk(job, spc_dct, spc_name,
 
     # New filesystem objects
     _root = root_locs(spc_dct_i, saddle=True)
+    # ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
+    #     run_prefix, save_prefix, 'CONFORMER',
+    #     thy_locs=mod_ini_thy_info[1:],
+    #     **_root)
+    # cnf_run_fs, cnf_save_fs = build_fs(
+    #     run_prefix, save_prefix, 'CONFORMER',
+    #     thy_locs=mod_thy_info[1:],
+    #     **_root)
     ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_ini_thy_info[1:],
@@ -688,16 +790,24 @@ def irc_tsk(job, spc_dct, spc_name,
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_thy_info[1:],
         **_root)
-
     ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
         ini_cnf_save_fs, mod_ini_thy_info)
-    ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
-    ini_min_cnf_locs = filesys.mincnf.min_energy_conformer_locators(
-        ini_cnf_save_fs, mod_ini_thy_info)
+    ini_min_locs, ini_cnf_save_path = ini_loc_info
+    # ini_min_rng_locs, ini_min_cnf_locs = ini_min_cnf_locs
+    # ini_min_rng_path, ini_min_cnf_path = ini_min_cnf_path
+    ini_cnf_run_fs[-1].create(ini_min_locs)
+    ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
+
+    # Get options from the dct or es options lst
+    overwrite = es_keyword_dct['overwrite']
 
     ini_scn_run_fs, ini_scn_save_fs = build_fs(
         ini_cnf_run_path, ini_cnf_save_path, 'SCAN',
         zma_locs=(0,))
+
+    ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
+    geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
+    zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
 
     # Run job
     if job == 'scan':

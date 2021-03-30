@@ -37,7 +37,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
     [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
 
     # Build the rotors
-    if min_cnf_locs is not None:
+    if cnf_save_path:
         ref_ene = torsprep.read_tors_ene(
             cnf_fs, min_cnf_locs, mod_tors_ene_info)
         zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))

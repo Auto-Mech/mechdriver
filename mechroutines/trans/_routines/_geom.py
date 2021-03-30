@@ -26,10 +26,11 @@ def _min_energy_conformer(cnf_save_fs, mod_thy_info):
     """ Reads the minimum-energy conformer from the save FileSystem
     """
 
-    min_locs, _ = filesys.mincnf.min_energy_conformer_locators(
+    ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
-    if min_locs:
-        min_conf = cnf_save_fs[-1].file.geometry.read(min_locs)
+    locs, path = ini_loc_info
+    if path:
+        min_conf = cnf_save_fs[-1].file.geometry.read(locs)
     else:
         min_conf = None
 

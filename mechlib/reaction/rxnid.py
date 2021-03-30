@@ -265,14 +265,13 @@ def reagent_energies(rgt, rxn_info, sp_thy_info, geo_thy_info, save_prefix):
         thy_save_fs = autofile.fs.theory(spc_save_path)
         thy_save_path = thy_save_fs[-1].path(mod_geo_thy_info[1:4])
         cnf_save_fs = autofile.fs.conformer(thy_save_path)
-        min_cnf_locs, _ = filesys.min_energy_conformer_locators(
+        min_locs, min_path = filesys.min_energy_conformer_locators(
             cnf_save_fs, mod_geo_thy_info)
-
         # Read energy
         ene = None
-        if min_cnf_locs:
-            cnf_path = cnf_save_fs[-1].path(min_cnf_locs)
-            sp_fs = autofile.fs.single_point(cnf_path)
+        if min_locs:
+            # Create run fs if that directory has been deleted to run the jobs
+            sp_fs = autofile.fs.single_point(min_path)
             if sp_fs[-1].file.energy.exists(mod_sp_thy_info[1:4]):
                 ene = sp_fs[-1].file.energy.read(mod_sp_thy_info[1:4])
         enes.append(ene)

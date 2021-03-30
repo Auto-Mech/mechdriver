@@ -55,10 +55,14 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle, name=No
         thy_locs=levelp[1:],
         **_root)
 
-    min_cnf_locs, cnf_save_path = mincnf.min_energy_conformer_locators(
+    min_locs, min_path = mincnf.min_energy_conformer_locators(
         cnf_save_fs, levelp)
 
-    return [cnf_save_fs, cnf_save_path, min_cnf_locs, '', cnf_run_fs]
+    print('model filesys', min_locs, min_path)
+    # Create run fs if that directory has been deleted to run the jobs
+    cnf_run_fs[-1].create(min_locs)
+
+    return [cnf_save_fs, min_path, min_locs, '', cnf_run_fs]
     # return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]
 
 

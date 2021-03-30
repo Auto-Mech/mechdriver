@@ -100,7 +100,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
 
                 # Loop over conformers
             if print_keyword_dct['geolvl']:
-                cnf_fs, cnf_locs_lst, cnf_locs_paths = util.conformer_list(
+                _, rng_cnf_locs_lst, rng_cnf_locs_path = util.conformer_list(
                     print_keyword_dct, save_prefix, run_prefix,
                     spc_dct_i, thy_dct)
                 pf_levels, pf_models = None, None
@@ -110,10 +110,12 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                 ret = util.conformer_list_from_models(
                     print_keyword_dct, save_prefix, run_prefix,
                     spc_dct_i, thy_dct, pf_levels, pf_models)
-                cnf_fs, cnf_locs_lst, cnf_locs_paths = ret
-            for locs, locs_path in zip(cnf_locs_lst, cnf_locs_paths):
+                _, rng_cnf_locs_lst, rng_cnf_locs_path = ret
+            for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
 
                 label = spc_name + '_' + '_'.join(locs)
+                _, cnf_fs = filesys.build_fs(
+                    run_prefix, save_prefix, 'CONFORMER')
                 if 'freq' in tsk:
 
                     filelabel = 'freq'
@@ -171,6 +173,7 @@ def run_tsk(tsk, spc_dct, rxn_lst,
                         xyz_str = '\t -- Missing --'
                     spc_data = '\n\nSPC: {}\tConf: {}\tPath: {}\n'.format(
                         spc_name, locs, locs_path) + xyz_str
+
                     csv_data[label] = spc_data
 
                 elif 'zma' in tsk:

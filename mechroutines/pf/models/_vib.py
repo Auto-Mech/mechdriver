@@ -162,7 +162,7 @@ def read_anharmon_matrix(pf_filesystems):
     # Set up vpt2 level filesystem for rotational values
     [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['vpt2']
 
-    if min_cnf_locs is not None:
+    if cnf_path:
         xmat = cnf_fs[-1].file.anharmonicity_matrix.read(
             min_cnf_locs)
         ioprinter.reading('Anharm matrix', cnf_path)

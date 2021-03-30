@@ -13,6 +13,7 @@ from mechroutines.es.runner import qchem_params
 from mechlib import structure
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
+from mechlib.filesys import build_fs
 
 
 # SADPT FINDER FUNCTIONS
@@ -51,9 +52,15 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
     zrxn = ts_dct['zrxn']
 
+    # runlvl_cnf_run_fs = runfs_dct['runlvl_cnf_fs']
+    # cid = [autofile.schema.generate_new_conformer_id()]
+    # run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cid))
+
     runlvl_cnf_run_fs = runfs_dct['runlvl_cnf_fs']
-    cid = [autofile.schema.generate_new_conformer_id()]
-    run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cid))
+    rid = autofile.schema.generate_new_ring_id()
+    cid = autofile.schema.generate_new_conformer_id()
+    locs = (rid, cid)
+    run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(locs))
 
     # Optimize the saddle point
     script_str, kwargs = qchem_params(
@@ -87,9 +94,10 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
         #     sadpt_status = saddle_point_checker(imags)
 
         if sadpt_status == 'success':
+            runlvl_cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
             save_saddle_point(
                 zrxn, opt_ret, hess_ret, freqs, imags,
-                mod_thy_info, savefs_dct, cid,
+                mod_thy_info, savefs_dct, locs,
                 zma_locs=[0])
 
     else:
