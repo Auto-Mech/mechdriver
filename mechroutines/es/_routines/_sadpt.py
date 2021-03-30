@@ -56,9 +56,11 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
     # cid = [autofile.schema.generate_new_conformer_id()]
     # run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cid))
 
-    runlvl_rng_run_fs = runfs_dct['runlvl_rng_fs']
-    rid = [autofile.schema.generate_new_ring_id()]
-    run_fs = autofile.fs.run(runlvl_rng_run_fs[-1].path(rid))
+    runlvl_cnf_run_fs = runfs_dct['runlvl_cnf_fs']
+    rid = autofile.schema.generate_new_ring_id()
+    cid = autofile.schema.generate_new_conformer_id()
+    locs = (rid, cid)
+    run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(locs))
 
     # Optimize the saddle point
     script_str, kwargs = qchem_params(
@@ -92,25 +94,10 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
         #     sadpt_status = saddle_point_checker(imags)
 
         if sadpt_status == 'success':
-            runlvl_rng_save_fs, _ = savefs_dct['runlvl_rng_fs']
-            runfs_dct['runlvl_cnf_fs'] = runlvl_rng_run_fs
-            savefs_dct['runlvl_cnf_fs'] = (runlvl_rng_save_fs, rid)
+            runlvl_cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
             save_saddle_point(
                 zrxn, opt_ret, hess_ret, freqs, imags,
-                mod_thy_info, savefs_dct, rid,
-                zma_locs=[0])
-            runlvl_rng_run_fs[-1].create(rid)
-            runlvl_rng_save_fs[-1].create(rid)
-            runlvl_rng_run_path = runlvl_rng_run_fs[-1].path(rid)
-            runlvl_rng_save_path = runlvl_rng_save_fs[-1].path(rid)
-            runlvl_cnf_run_fs, runlvl_cnf_save_fs = build_fs(
-                runlvl_rng_run_path, runlvl_rng_save_path, 'CONFORMER')
-            cid = [autofile.schema.generate_new_conformer_id()]
-            runfs_dct['runlvl_cnf_fs'] = runlvl_cnf_run_fs
-            savefs_dct['runlvl_cnf_fs'] = (runlvl_cnf_save_fs, cid)
-            save_saddle_point(
-                zrxn, opt_ret, hess_ret, freqs, imags,
-                mod_thy_info, savefs_dct, cid,
+                mod_thy_info, savefs_dct, locs,
                 zma_locs=[0])
 
     else:

@@ -162,14 +162,10 @@ def _etrans_fs(spc_dct, tgt_name, bath_name, thy_info, save_prefix):
     #     cnf_save_fs, mod_tgt_thy_info)
     # min_cnf_locs, min_cnf_path = cnf_info
 
-    rng_cnf_save_fs = autofile.fs.ring_conformer(thy_save_path)
-    cnf_rng_info = filesys.mincnf.min_energy_ring_conformer_locators(
-        rng_cnf_save_fs, mod_tgt_thy_info)
-    min_rng_cnf_locs, min_rng_cnf_paths = cnf_rng_info
-    min_rng_locs , min_cnf_locs = min_rng_cnf_locs
-    min_rng_path, min_cnf_path = min_rng_cnf_paths
-    _, cnf_save_fs = filesys.build_fs(
-        min_rng_path, min_rng_path, 'CONFORMER')
+    cnf_save_fs = autofile.fs.conformer(thy_save_path)
+    cnf_rng_info = filesys.mincnf.min_energy_conformer_locators(
+        cnf_save_fs, mod_tgt_thy_info)
+    min_cnf_locs, min_cnf_path = cnf_rng_info
     
     # Build the energy transfer filesystem objects
     etrans_fs, etrans_locs = filesys.build.etrans_fs_from_prefix(

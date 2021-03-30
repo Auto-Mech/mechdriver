@@ -102,7 +102,7 @@ def job_path(prefix, prog, job, fml,
     # Build the path
     bld_locs = [job, fml, locs_idx]
     bld_path = bld_fs[-1].path(bld_locs)
-    
+
     # Make and print the path if desired
     if make_path:
         bld_fs[-1].create([job, fml, locs_idx])

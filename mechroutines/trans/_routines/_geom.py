@@ -22,19 +22,15 @@ def get_geometry(cnf_save_fs, mod_thy_info, conf='sphere'):
     return geom
 
 
-def _min_energy_conformer(rng_save_fs, mod_thy_info):
+def _min_energy_conformer(cnf_save_fs, mod_thy_info):
     """ Reads the minimum-energy conformer from the save FileSystem
     """
 
-    loc_info = filesys.mincnf.min_energy_ring_conformer_locators(
-        rng_save_fs, mod_thy_info)
-    locs, paths = ini_loc_info
-    rng_locs, cnf_locs = locs
-    if cnf_locs:
-        rng_save_path = rng_save_fs[-1].path(rng_locs)
-        _, cnf_save_fs = filesys.build_fs(
-            rng_save_path, rng_save_path, 'CONFORMER')
-        min_conf = cnf_save_fs[-1].file.geometry.read(cnf_locs)
+    ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
+    locs, path = ini_loc_info
+    if path:
+        min_conf = cnf_save_fs[-1].file.geometry.read(locs)
     else:
         min_conf = None
 

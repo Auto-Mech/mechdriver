@@ -13,7 +13,7 @@ def read_geom(pf_filesystems):
     [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['harm']
 
     # Read the filesys for the geometry
-    if min_cnf_locs:
+    if cnf_path:
         geom = cnf_fs[-1].file.geometry.read(min_cnf_locs)
         ioprinter.reading('geometry', cnf_path)
     else:
@@ -30,7 +30,7 @@ def read_rotational_values(pf_filesystems):
     [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['vpt2']
 
     # Read the filesys for rotational anharmonicity information
-    if min_cnf_locs:
+    if cnf_path:
         ioprinter.reading(
             'Vib-Rot Matrix and Centrifugal Dist. Consts from path:', cnf_path)
         vibrot_mat = cnf_fs[-1].file.vibro_rot_alpha_matrix.read(
