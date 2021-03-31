@@ -120,6 +120,7 @@ def object_block(inp_str):
 def get_pes_idxs(pes_str):
     """ Determine the indices corresponding to what PES and channels to run
     """
+    pes_str = ioformat.remove_whitespace(pes_str)
     run_pes = {}
     for line in pes_str.splitlines():
         try:
@@ -141,11 +142,12 @@ def get_pes_idxs(pes_str):
     return run_pes
 
 
-def get_spc_idxs(pes_str):
+def get_spc_idxs(spc_str):
     """ Determine the indices corresponding to what species to run
     """
+    spc_str = ioformat.remove_whitespace(spc_str)
     run_spc = {}
-    for line in pes_str.splitlines():
+    for line in spc_str.splitlines():
         try:
             [spc_idxs, proc1, proc2] = line.strip().split()
             spc_lst = ioformat.ptt.parse_idx_inp(spc_idxs)

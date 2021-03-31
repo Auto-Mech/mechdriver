@@ -21,14 +21,14 @@ RUN_INP_KEY_DCT = {
     'print_mech': [True, False],
     'print_debug': [True, False]
 }
-RUN_DEFAULT_DCT = {
+RUN_INP_DEFAULT_DCT = {
     'mech': 'chemkin',
-    'spc': 'csv',
     'print_mech': False,
     'print_debug': False,
     'run_prefix': None,
     'save_prefix': None
 }
+
 RUN_SUPPORTED_KEYWORDS = [
     'es',
     'thermochem',

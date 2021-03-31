@@ -6,6 +6,13 @@
     Check if the strings are none
 """
 
+import sys
+import autoparse.find as apf
+from ioformat import ptt
+from mechlib.amech_io.parser.keywords import THY_REQUIRED_KEYWORDS
+from mechlib.amech_io.parser.keywords import THY_SUPPORTED_KEYWORDS
+
+
 RUN_INP = 'inp/run.dat'
 CSV_INP = 'inp/species.csv'
 DAT_INP = 'inp/species.dat'
@@ -15,25 +22,41 @@ MODEL_INP = 'inp/models.dat'
 THY_INP = 'inp/theory.dat'
 
 
-def _read_run(job_path):
+def read_run(job_path):
     """ Parse the run.dat file
     """
    
     # Read the input string
     run_str = ioformat.ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
+    ioprinter.reading('run.dat...', newline=1)  # Add a Found <file> to msg
 
-    # Read the blocks
-    inp_block = _end_block(inp_str, 'input')
-    obj_block = _end_block(inp_str, 'objs')
-    # pes_block_str = apf.first_capture(ioformat.ptt.paren_section('pes'), obj_str)
-    # spc_block_str = apf.first_capture(ioformat.ptt.paren_section('spc'), obj_str)
-    job_block = _end_block(inp_str, 'jobs')  # could read and set as neccessary
-    es_tsks_block = _end_block(inp_str, 'es_tsks')
-    trans_tsks_block = _end_block(inp_str, 'trans_tsks')
-    print_tsks_block = _end_block(inp_str, 'print_tsks')
+    # Read the main blocks
+    inp_block = _end_block(run_str, 'input')
+    obj_block = _end_block(run_str, 'objs')
+    job_block = _end_block(run_str, 'jobs')  # could read and set as neccessary
+    es_tsks_block = _end_block(run_str, 'es_tsks')
+    if es_tsks_block is None:
+        print('no block')
+    # trans_tsks_block = _end_block(run_str, 'trans_tsks')
+    # therm_tsks_block = _end_block(run_str, 'therm_tsks')
+    # ktp_tsks_block = _end_block(run_str, 'ktp_tsks')
+    # print_tsks_block = _end_block(run_str, 'print_tsks')
 
-    # Check if strings exist
-    for section in ('input', 'objs', 'jobs'):
+    # Parse inp block
+    key_dct = keyword_dct(inp_str, def_dct)
+
+    # Parse objs blokcs
+    run_dct['pes'] = get_pes_idxs(_paren_block(obj_str, 'pes'))
+    run_dct['spc'] = get_spc_idxs(_paren_block(obj_str, 'spc'))
+    # check the run_obj_dct 
+
+    # Parse the job blocks
+    key_lst = keyword_lst(inp_str, def_dct)
+
+    # Parse tsks blokcs
+    es_tsk_lst = tsks.es_tsk_lst(es_tsk_str, thy_dct)
+    trans_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
+    prnt_tsk_lst = tsks.prnt_tsk_lst(prnt_tsk_str)
 
     # Check if needed strings exist
 
@@ -44,29 +67,46 @@ def _read_run(job_path):
     return None
 
 
-def _read_thy(job_path):
+def read_thy(job_path):
     """ Parse the theory.dat file
     """
 
     thy_str = ptt.read_inp_str(job_path, THY_INP, remove_comments='#')
+    ioprinter.reading('theory.dat...', newline=1)
+
     thy_blocks = _named_end_blocks(string, 'level')
-    check_thy_sections_nonempty(thy_blocks)
+    if thy_blocks is not None:
+        thy_methods = {}
+        for section in thy_sections:
+            name = section[0]
+            keyword_dct = ptt.build_keyword_dct(thy_str)
+            check_dictionary2(
+                keyword_dct,
+                THY_REQUIRED_KEYWORDS
+                THY_SUPPORTED_KEYWORDS)
+            thy_methods[name] = keyword_dct
+
+    return thy_methods
 
 
-def _read_model(job_path):
+def read_model(job_path):
     """ Parse the models.dat file
     """
 
-    thy_str = ptt.read_inp_str(job_path, THY_INP, remove_comments='#')
-    pes_blocks = _named_end_blocks(thy_str, 'pes_model')
-    spc_blocks = _named_end_blocks(thy_str, 'spc_model')
+    mod_str = ptt.read_inp_str(job_path, MOD_INP, remove_comments='#')
+    ioprinter.reading('model.dat...', newline=1)
+
+    pes_blocks = _named_end_blocks(mod_str, 'pes_model')
+    spc_blocks = _named_end_blocks(mod_str, 'spc_model')
 
 
-def _read_spc(job_path):
+def read_spc(job_path):
     """ a
     """
     spc_str = ioformat.ptt.read_inp_str(job_path, CSV_INP)
+    ioprinter.reading('species.csv...', newline=1)
     dat_str = ioformat.ptt.read_inp_str(job_path, DAT_INP)
+    ioprinter.reading('species.dat...', newline=1)
 
     return spc_str
 
@@ -81,6 +121,89 @@ def _read_mech(job_path):
         mech_str, mech_type, spc_dct, sort_rxns=sort_rxns)
 
     return mech_info
+
+
+# Keyword dict build and check functions
+def keyword_dct(inp_str, def_dct):
+    """ merge a dictionary from the input
+        :param inp_dct: dictionary of input keywords
+        :param def_dct: dictionary of default values
+                        (only has ones where defaults, won't have vals for 
+                         keys that user must input like run_prefix)
+    """
+    inp_dct = ioformat.ptt.build_keyword_dct(inp_str)
+    return automol.util.dict_.right_update(def_dct, inp_dct)
+
+
+def keyword_lst(inp_str, key_lst):
+    """ build lst and check against supported lsts
+        :param inp_dct: dictionary of input keywords
+        :param def_dct: dictionary of default values
+                        (only has ones where defaults, won't have vals for 
+                         keys that user must input like run_prefix)
+    """
+    return ioformat.ptt.build_keyword_lst(inp_str)
+
+
+def check_dictionary(inp_dct, chk_dct, section):
+    """ Check if the dictionary to see if it has the allowed vals
+    """
+
+    # if inp_dct is not None:  # check if nonempty to see if section undefined
+
+    # Assess if user-defined keywords
+    # (1) include requird keywords and (2) only define supported keywords
+    inp_keys = set(inp_dct.keys()) 
+    chk_keys = set(chk_dct.keys()) 
+    unsupported_keys = inp_keys - chk_keys
+    undefined_required_keys = chk_keys - inp_keys
+
+    if unsupported_keys:
+        print('User defined unsupported keywords in {}'.format(section))
+        for key in unsupported_keys:
+            print(key)
+    if undefined_required_keys:
+        print('User has not defined required keywords in {}'.format(section))
+        for key in undefined_required_keys:
+            print(key)
+
+    # Assess if the keywords have the appropriate value
+    for key, val in inp_dct.items():
+        allowed_typ, allowed_vals, _ = chk_dct[key]
+
+        if not isinstance(type(val), allowed_typ):
+            print('val must be type {}'.format(allowed_typ)
+        if allowed_vals:
+            if not val in allowed_vals:
+                print('val is {}, must be {}'.format(val, allowed_vals)
+
+
+def check_dictionary2(dct, req_keys, supp_keys):
+    """ Make sure the theory dictionary keywords are all correct
+    """
+    req_keys_def = all(key in dct.keys() for key in req_keys)
+    if not req_keys_def:
+        print('*ERROR: Required keywords missing from thy section')
+        print('level with issue: ', name)
+        print('Required keys:')
+        for key in THY_REQUIRED_KEYWORDS:
+            print(key)
+        sys.exit()
+    sup_keys_def = all(key in supp_keys for key in dct.keys())
+    if not sup_keys_def:
+        print('*ERROR: unsupported required keywords missing from thy section')
+        print('level with issue: ', name)
+        print('Supported keys:')
+        for key in THY_SUPPORTED_KEYWORDS:
+            print(key)
+        sys.exit()
+
+
+def check_lst(inp_lst, sup_lst):
+    """ Check 
+    """
+    if set(inp_lst) >= sup_lst:
+        print('Unsupported keys')
 
 
 # Patterns of use

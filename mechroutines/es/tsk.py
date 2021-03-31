@@ -800,24 +800,26 @@ def rpath_tsk(job, spc_dct, spc_name,
             **_root)
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_locs, ini_cnf_save_path = ini_loc_info
+        ini_min_locs, ini_pfx_save_path = ini_loc_info
         # ini_min_rng_locs, ini_min_cnf_locs = ini_min_cnf_locs
         # ini_min_rng_path, ini_min_cnf_path = ini_min_cnf_path
         ini_cnf_run_fs[-1].create(ini_min_locs)
-        ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
+        ini_pfx_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
 
     else:
-        ts_locs = ()
+        ts_info = (ts_num,)
         ini_ts_run_fs, ini_ts_save_fs = build_fs(
             run_prefix, save_prefix, 'TS',
             thy_locs=mod_ini_thy_info[1:],
             **_root)
+        ini_pfx_run_path = ini_ts_run_fs.path(ts_info)
+        ini_pfx_save_path = ini_ts_save_fs.path(ts_info)
 
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
 
     ini_scn_run_fs, ini_scn_save_fs = build_fs(
-        ini_cnf_run_path, ini_cnf_save_path, 'SCAN',
+        ini_pfx_run_path, ini_pfx_save_path, 'SCAN',
         zma_locs=(0,))
 
     ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
@@ -827,11 +829,14 @@ def rpath_tsk(job, spc_dct, spc_name,
     # Run job
     if job == 'scan':
 
-        # if rcoord == 'irc':
-        irc.scan(geo, spc_info, coord_name,
-                 mod_ini_thy_info, ini_method_dct,
-                 ini_scn_save_fs, ini_cnf_run_path,
-                 overwrite)
+        if rcoord == 'auto':
+
+        elif rcoord == 'irc':
+            rpath.irc_scan(
+                geo, spc_info, coord_name,
+                mod_ini_thy_info, ini_method_dct,
+                ini_scn_save_fs, ini_cnf_run_path,
+                overwrite)
 
     elif job in ('energy', 'grad', 'hess'):
 

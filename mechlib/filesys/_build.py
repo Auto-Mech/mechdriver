@@ -6,6 +6,8 @@ import os
 import autofile
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
+from mechlib.amech_io import printer as ioprinter
 
 
 def root_locs(spc_dct_i, saddle=False, name=None):
@@ -20,10 +22,10 @@ def root_locs(spc_dct_i, saddle=False, name=None):
         spc_info = None
         rxn_info = rinfo.sort(spc_dct_i['rxn_info'])
         ts_num = int(name.split('_')[-1])
-        # ts_info = (ts_num,)
+        ts_info = (ts_num,)
         # print('TEST ts locs:', ts_info)
         # ts_info = (0,)  # may be more complicated
-        ts_info = ()
+        # ts_info = ()
 
     return {'spc_locs': spc_info, 'rxn_locs': rxn_info, 'ts_locs': ts_info}
 
@@ -88,17 +90,20 @@ def _build_fs(prefix, end,
     return _fs
 
 
-def prefix_fs(prefix):
+def prefix_fs(run_prefix, save_prefix):
     """ Physically make the run/save filesys root given a prefix path
         :param str prefix: file path - /path/to/root/run
     """
-    if not os.path.exists(prefix):
-        try:
-            os.mkdir(prefix)
-        except FileNotFoundError:
-            print('Cannot make directory at path specified in run.dat.')
-            print('Path: {}'.format(prefix))
-            sys.exit()
+    ioprinter.info_message('Building the base Run-Save filesystems at', newline=1)
+    for prefix in (run_prefix, save_prefix):
+        if not os.path.exists(prefix):
+            try:
+                os.mkdir(prefix)
+            except FileNotFoundError:
+                print('Cannot make directory at path specified in run.dat.')
+                print('Path: {}'.format(prefix))
+                sys.exit()
+            ioprinter.info_message('{}'.format(prefix), indent=1)
 
 
 def get_zma_locs(zma_fs, spc_dct_i, rxn_ichs=None, wanted_dirn=('forw',)):
@@ -189,7 +194,7 @@ def _chk_direction(rxn_ichs, ts_zma,
     return dirn
 
 
-def _build_vrctst_fs(ts_run_fs):
+def vrctst_fs(ts_run_fs):
     """ build the filesystem and return the path
     """
 
@@ -204,3 +209,36 @@ def _build_vrctst_fs(ts_run_fs):
     ioprinter.info_message('Build Path for VaReCoF calculations', vrc_path)
 
     return vrc_path
+
+
+def reac_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
+    """ set reactant filesystem stuff
+    """
+
+    ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
+    ini_thy_info = tinfo.from_dct(ini_method_dct)
+
+    rct_cnf_fs = ()
+
+    for rct_info in rct_infos:
+
+        mod_ini_thy_info = tinfo.modify_orb_label(
+            ini_thy_info, rct_info)
+
+        # Build filesys for ini thy info
+        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
+            run_prefix, save_prefix, 'CONFORMER',
+            spc_locs=rct_info,
+            thy_locs=mod_ini_thy_info[1:])
+
+        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
+            ini_cnf_save_fs, mod_ini_thy_info)
+        ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
+
+        # Create run fs if that directory has been deleted to run the jobs
+        ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
+
+        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs,
+                        ini_min_cnf_locs, ini_min_cnf_path),)
+
+    return rct_cnf_fs

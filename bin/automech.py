@@ -19,11 +19,19 @@ from mechlib.filesys import prefix_fs
 # Set runtime options based on user input
 JOB_PATH = sys.argv[1]
 
-# Print the header message and host name
+# Print the header message and host name (probably combine into one function)
 ioprinter.program_header('amech')
 ioprinter.random_cute_animal()
 ioprinter.host_name()
+
+# Parse all of the input
 ioprinter.program_header('inp')
+# THY_DCT = parser.theory.build_thy_dct(JOB_PATH)
+# PES_MODEL_DCT, SPC_MODEL_DCT = parser.model.read_models_sections(JOB_PATH)
+# SPC_DCT = parser.species.build_spc_dct(JOB_PATH, 'csv')
+# RUN_PES_DCT = parser.mechanism.build_pes_dct(
+# SUB_SCRIPT_DCT = build_sub_script_dct(JOB_PATH)
+
 
 # Parse the run input
 ioprinter.reading('run.dat...', newline=1)
@@ -75,11 +83,7 @@ if RUN_INP_DCT['print_mech']:
     sys.exit()
 
 # Initialize the filesystem
-ioprinter.info_message('Building the base Run-Save filesystems at', newline=1)
-prefix_fs(RUN_INP_DCT['run_prefix'])
-ioprinter.info_message('{}'.format(RUN_INP_DCT['run_prefix']), indent=1)
-prefix_fs(RUN_INP_DCT['save_prefix'])
-ioprinter.info_message('{}'.format(RUN_INP_DCT['save_prefix']), indent=1)
+prefix_fs(RUN_INP_DCT['run_prefix'], RUN_INP_DCT['save_prefix'])
 
 # Print messages describing drivers and tasks running
 ioprinter.info_message(
