@@ -229,15 +229,22 @@ SPC_SUPPORTED_KEYWORDS = [
     'edown'
 ]
 SPC_DEFAULT_DCT = {
-    'kickoff': [0.1, False],
-    'pst_params': [1.0, 6],
-    'hind_inc': 30.0,
-    'mc_nsamp': [True, 12, 1, 3, 100, 25],
-    'tau_nsamp': [True, 12, 1, 3, 100, 25],
-    'sym_factor': 1.0,
+    'kickoff': (0.1, False),
+    'hind_inc': 30.0*phycon.DEG2RAD,
+    'mc_nsamp': (True, 12, 1, 3, 100, 25),
+    'tau_nsamp': (True, 12, 1, 3, 100, 25),
     'lj': None,
     'edown': None
 }
+TS_DEFAULT_DCT = {**SPC_DEFAULT_DCT, **{
+    'pst_params': (1.0, 6),
+    'rxndirn': 'forw',
+    'kt_pst': 4.0e-10,
+    'temp_pst': 300.0,
+    'n_pst': 6.0
+}}
+
+
 
 # Theory Keywords
 THY_REQUIRED_KEYWORDS = [

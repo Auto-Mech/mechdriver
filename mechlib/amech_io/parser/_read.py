@@ -32,37 +32,27 @@ def read_run(job_path):
 
     # Read the main blocks
     inp_block = _end_block(run_str, 'input')
-    obj_block = _end_block(run_str, 'objs')
-    job_block = _end_block(run_str, 'jobs')  # could read and set as neccessary
-    es_tsks_block = _end_block(run_str, 'es_tsks')
-    if es_tsks_block is None:
-        print('no block')
-    # trans_tsks_block = _end_block(run_str, 'trans_tsks')
-    # therm_tsks_block = _end_block(run_str, 'therm_tsks')
-    # ktp_tsks_block = _end_block(run_str, 'ktp_tsks')
-    # print_tsks_block = _end_block(run_str, 'print_tsks')
 
-    # Parse inp block
+    pes_block = _end_block(run_str, 'pes')
+    spc_block = _end_block(run_str, 'spc')
+
+    es_tsks_block = _end_block(run_str, 'es')
+    trans_tsks_block = _end_block(run_str, 'trans')
+    therm_tsks_block = _end_block(run_str, 'therm')
+    ktp_tsks_block = _end_block(run_str, 'ktp')
+    proc_tsks_block = _end_block(run_str, 'proc')
+
+    # Parse information in the blocks
     key_dct = keyword_dct(inp_str, def_dct)
 
-    # Parse objs blokcs
-    run_dct['pes'] = get_pes_idxs(_paren_block(obj_str, 'pes'))
-    run_dct['spc'] = get_spc_idxs(_paren_block(obj_str, 'spc'))
-    # check the run_obj_dct 
+    run_dct['pes'] = get_pes_idxs(pes_block)
+    run_dct['spc'] = get_spc_idxs(spc_block)
 
-    # Parse the job blocks
-    key_lst = keyword_lst(inp_str, def_dct)
-
-    # Parse tsks blokcs
     es_tsk_lst = tsks.es_tsk_lst(es_tsk_str, thy_dct)
+    therm_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
+    ktp_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
     trans_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
-    prnt_tsk_lst = tsks.prnt_tsk_lst(prnt_tsk_str)
-
-    # Check if needed strings exist
-
-    if prnt_tsks_str is None:
-        print('*ERROR: No "print_tsks" section defined in run.dat')
-        # sys.exit()
+    proc_tsk_lst = tsks.proc_tsk_lst(proc_tsk_str)
 
     return None
 
@@ -96,7 +86,7 @@ def read_model(job_path):
     mod_str = ptt.read_inp_str(job_path, MOD_INP, remove_comments='#')
     ioprinter.reading('model.dat...', newline=1)
 
-    pes_blocks = _named_end_blocks(mod_str, 'pes_model')
+    kin_blocks = _named_end_blocks(mod_str, '_model')
     spc_blocks = _named_end_blocks(mod_str, 'spc_model')
 
 
@@ -213,7 +203,7 @@ def _end_block(string, header):
         rtype: str
     """
     return ioformat.remove_whitespace(
-        apf.first_capture(ioformat.ptt.end_section(header), string))
+        apf.first_capture(ioformat.ptt.end_section2(header), string))
 
 
 def _named_end_blocks(string, header):

@@ -145,18 +145,13 @@ def read_spc_amech(job_path):
         # Read each of the species sections and build the dcts
         spc_sections = apf.all_captures(
             ioformat.ptt.end_section_wname2('spc'), spc_amech_str)
-        if spc_sections:
-            # Get the global species section
-            for section in spc_sections:
-                if section[0] == 'global':
-                    # Build the global species section
-                    keyword_dct = ioformat.ptt.build_keyword_dct(section[1])
-                    amech_dct['global'] = keyword_dct
-                else:
-                    # Build each species dct to overwrite global dct
-                    name = section[0]
-                    keyword_dct = ioformat.ptt.build_keyword_dct(section[1])
-                    amech_dct[name] = keyword_dct
+        amech_dct = ptt.build_keyword_dct_msec(spc_sections)
+
+    # Update the amech dct with the global
+    new_amech_dct = {}
+    glob = amech_dct.get('global', {})
+    for spc in (x for x in amech_dct if x != 'global'):
+        new_amech_dct[spc] = right_update(glob, amech_dct[spc])
 
     return amech_dct
 
@@ -169,68 +164,30 @@ def modify_spc_dct(job_path, spc_dct):
     amech_dct = read_spc_amech(job_path)
     geom_dct = geometry_dictionary(job_path)
 
-    mod_spc_dct = {}
+    # Add in all of the species
     for spc in spc_dct:
-        # Set the ich and mult
-        ich = spc_dct[spc]['inchi']
-        mul = spc_dct[spc]['mult']
-        chg = spc_dct[spc]['charge']
-        mod_spc_dct[spc] = {}
-        mod_spc_dct[spc]['inchi'] = ich
-        mod_spc_dct[spc]['mult'] = mul
-        mod_spc_dct[spc]['charge'] = chg
+        # Add stuff from the amech dct
+        spc_dct[spc] = automol.util.dict_.right_update(
+            spc_dct[spc], amech_dct.get(spc, {}))
+        # Add the defaults
+        spc_dct[spc] = automol.util.dict_.right_update(
+            SPC_DEFAULT_DCT, mod_spc_dct[spc])
 
-        # Add params from global dct in amech dct
-        if 'global' in amech_dct:
-            for key, val in amech_dct['global'].items():
-                mod_spc_dct[spc][key] = val
+        # Add speciaized calls not in the default dct
+        ich, mul = spc_dct[spc]['inchi'], spc_dct[spc]['mult']
+        if 'elec_levels' not in spc_dct[spc]:
+            spc_dct[spc]['elec_levels'] = eleclvl.DCT.get((ich, mul), (0.0, mul))
+        if 'sym_factor' not in spc_dct[spc]:
+            spc_dct[spc]['sym_factor'] = symm.DCT.get((ich, mul), 1.0)
 
-        # Add/Reset the parameters from the species specific dct
-        if spc in amech_dct:
-            for key, val in amech_dct[spc].items():
-                mod_spc_dct[spc][key] = val
-
-    # Second loop for transtion states defined in species.dat
-    for spc in amech_dct:
-        if 'ts' in spc:
-            mod_spc_dct[spc] = {}
-            # Add params from global dct in amech dct
-            if 'global' in amech_dct:
-                for key, val in amech_dct['global'].items():
-                    mod_spc_dct[spc][key] = val
-            # Add the ts stuff
-            mod_spc_dct[spc] = amech_dct[spc]
-
-    # Add global to mod_spc_dct for other TS stuff later
-    if 'global' in amech_dct:
-        mod_spc_dct['global'] = amech_dct['global']
-
-    # Final loop to add in things that are needed but could be missing
-    for spc in mod_spc_dct:
-        if spc != 'global' and 'ts_' not in spc:
-            ich, mul = mod_spc_dct[spc]['inchi'], mod_spc_dct[spc]['mult']
-            if 'elec_levels' not in mod_spc_dct[spc]:
-                if (ich, mul) in eleclvl.DCT:
-                    mod_spc_dct[spc]['elec_levels'] = eleclvl.DCT[(ich, mul)]
-                else:
-                    mod_spc_dct[spc]['elec_levels'] = [[0.0, mul]]
-            if 'sym_factor' not in mod_spc_dct[spc]:
-                if (ich, mul) in symm.DCT:
-                    mod_spc_dct[spc]['sym_factor'] = symm.DCT[(ich, mul)]
-
-        # Add defaults here for now
-        if 'hind_inc' not in mod_spc_dct[spc]:
-            mod_spc_dct[spc]['hind_inc'] = 30.0
-        if 'kickoff' not in mod_spc_dct[spc]:
-            mod_spc_dct[spc]['kickoff'] = [0.1, False]
-        if 'tau_nsamp' not in mod_spc_dct[spc]:
-            mod_spc_dct[spc]['tau_nsamp'] = [True, 12, 1, 3, 100, 25]
-        if 'mc_nsamp' not in mod_spc_dct[spc]:
-            mod_spc_dct[spc]['mc_nsamp'] = [True, 12, 1, 3, 100, 25]
-        if 'pst_params' not in mod_spc_dct[spc]:
-            mod_spc_dct[spc]['pst_params'] = [1.0, 6]
-
-        # Set active space stuff
+    # Add the transitions states defined in species.dat that are not defined in spc_dct
+    # they are not in the spc_dct currently, since we don't define TSs there; built later
+    spc_dct.update(ts_dct)
+    ts_dct = {}
+    for spc in (x for x in amech_dct if 'ts' in x):
+        ts_dct[spc] = {**amech_dct[spc]}
+        
+        # Add speciaized calls not in the default dct
         if 'active' not in mod_spc_dct[spc]:
             mod_spc_dct[spc]['active_space'] = None
         else:
@@ -248,15 +205,14 @@ def modify_spc_dct(job_path, spc_dct):
                 print('No file: {}. Reading file...'.format(wfn_file))
             mod_spc_dct[spc]['active_space'] = (
                 aspace[0], aspace[1], aspace[2], wfn_str)
+    
+    # add the TSs to the spc dct
+    spc_dct.update(ts_dct)
 
         # Perform conversions as needed
         mod_spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
-        # if 'ts' in spc:
-        #     print(mod_spc_dct[spc]['hind_inc'])
 
-        # Add geoms from geo dct (prob switch to amech file)
-        if ich in geom_dct:
-            mod_spc_dct[spc]['geo_inp'] = geom_dct[ich]
+        mod_spc_dct[spc]['geo_inp'] = geom_dct.get(ich, None)
 
     return mod_spc_dct
 
@@ -416,47 +372,7 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
                 combined_dct[sadpt][key] = val
 
         # Put in defaults if they were not defined
-        # combined_dct[sadpt] = automol.util._dict.right_update(
-        #     combined_dct[sadpt], TS_DEFAULT_DCT)
-        if 'kickoff' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['kickoff'] = [0.1, False]
-        if 'mc_nsamp' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['mc_nsamp'] = [True, 12, 1, 3, 100, 25]
-        if 'tau_nsamp' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['tau_nsamp'] = [True, 12, 1, 3, 100, 25]
-        if 'irc_idxs' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['irc_idxs'] = [
-                -10.0, -9.0, -8.0, -7.0, -6.0, -5.0, -4.0, -3.0,
-                -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0,
-                8.0, 9.0, 10.0]
-        if 'pst_params' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['pst_params'] = [1.0, 6]
-        if 'rxndirn' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['rxndirn'] = 'forw'
-        if 'kt_pst' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['kt_pst'] = 4.0e-10
-        if 'temp_pst' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['temp_pst'] = 300.0
-        if 'n_pst' not in combined_dct[sadpt]:
-            combined_dct[sadpt]['n_pst'] = 6.0
-
-        # Perform conversions as needed
-        # combined_dct[spc]['hind_inc'] *= phycon.DEG2RAD
+        combined_dct[sadpt] = automol.util._dict.right_update(
+           keyword.TS_DEFAULT_DCT, combined_dct[sadpt])
 
     return combined_dct
-
-# SPC_DEFAULT_DCT = {
-#     'hind_inc': 30.0,
-#     'kickoff': (0.1, False),
-#     'mc_nsamp': (True, 12, 1, 3, 100, 25),
-#     'tau_nsamp': (True, 12, 1, 3, 100, 25)
-# }
-# TS_DEFAULT_DCT = SPC_DEFAULT_DCT + {
-#     'pst_params': (1.0, 6),
-#     'rxndirn': 'forw',
-#     'kt_pst': 4.0e-10,
-#     'temp_pst': 300.0,
-#     'n_pst': 6.0
-# }
-
-
