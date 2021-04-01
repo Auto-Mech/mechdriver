@@ -40,7 +40,7 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
             h_basis *= KJ2KCAL
         dhzero += coeff[i] * h_basis
         dhzero -= coeff[i] * hzero_basis[i] * EH2KCAL
-        ioprinter.debug_message('Contriubtion from:', spc)
+        ioprinter.debug_message('Contribution from:', spc)
         ioprinter.debug_message(
             'HF0K in kcal: {:g} * {:.5f}'.format(coeff[i], h_basis))
         ioprinter.debug_message(

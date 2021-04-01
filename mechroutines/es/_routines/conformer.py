@@ -44,7 +44,7 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
     overwrite = es_keyword_dct['overwrite']
     if not cnf_path:
         ioprinter.info_message(
-            'No energy found in save filesys. Running energy...')
+            'No conformer found in save filesys. Running optimization ...')
         _run = True
     elif overwrite:
         ioprinter.info_message(

@@ -215,5 +215,7 @@ def run(spc_dct,
                 thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
 
+            print(ckin_nasa_str)
+
         # Write all of the NASA polynomial strings
         writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)
