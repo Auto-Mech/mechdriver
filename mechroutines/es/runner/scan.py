@@ -286,6 +286,7 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
         maybe return the grid that is not finished?
     """
 
+    print('grid_coords test:', coord_grids)
     grid_vals = automol.pot.coords(coord_grids)
 
     run_finished = True
@@ -297,8 +298,6 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
             locs = [constraint_dct] + locs
 
         # Check if ZMA (other info?) exists
-        print('scn fs', scn_save_fs)
-        print('scn locs', locs)
         if not scn_save_fs[-1].file.zmatrix.exists(locs):
             run_finished = False
             break

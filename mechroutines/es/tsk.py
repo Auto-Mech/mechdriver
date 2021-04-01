@@ -21,6 +21,7 @@ from mechlib.filesys import root_locs
 from mechlib import structure
 from mechlib.structure import instab
 from mechlib.amech_io import printer as ioprinter
+from phydat import phycon
 
 
 # Dictionary of Electronic Structure Calculators
@@ -656,12 +657,14 @@ def hr_tsk(job, spc_dct, spc_name,
 
         if job == 'scan':
 
+            increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
             hr.hindered_rotor_scans(
                 zma, spc_info, mod_thy_info, instab_save_fs,
                 ini_scn_run_fs, ini_scn_save_fs,
                 torsions, tors_model, method_dct,
                 overwrite,
                 saddle=saddle,
+                increment=increment,
                 retryfail=retryfail)
 
         # elif job == 'reopt':
