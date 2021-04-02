@@ -7,10 +7,13 @@
 """
 
 import sys
+import automol
 import autoparse.find as apf
-from ioformat import ptt
+import ioformat
+# from mechlib.amech_io.parser.tsks import
 from mechlib.amech_io.parser.keywords import THY_REQUIRED_KEYWORDS
 from mechlib.amech_io.parser.keywords import THY_SUPPORTED_KEYWORDS
+from mechlib.amech_io import printer as ioprinter
 
 
 RUN_INP = 'inp/run.dat'
@@ -27,32 +30,36 @@ def read_run(job_path):
     """
    
     # Read the input string
-    run_str = ioformat.ptt.read_inp_str(job_path, RUN_INP, remove_comments='#')
+    run_str = ioformat.pathtools.read_file(
+        job_path, RUN_INP, remove_comments='#', remove_whitespace=True)
     ioprinter.reading('run.dat...', newline=1)  # Add a Found <file> to msg
 
     # Read the main blocks
-    inp_block = _end_block(run_str, 'input')
+    inp_block = ioformat.ptt.end_block(run_str, 'input', footer='input')
 
-    pes_block = _end_block(run_str, 'pes')
-    spc_block = _end_block(run_str, 'spc')
+    pes_block = ioformat.ptt.end_block(run_str, 'pes', footer='pes')
+    spc_block = ioformat.ptt.end_block(run_str, 'spc', footer='spc')
 
-    es_tsks_block = _end_block(run_str, 'es')
-    trans_tsks_block = _end_block(run_str, 'trans')
-    therm_tsks_block = _end_block(run_str, 'therm')
-    ktp_tsks_block = _end_block(run_str, 'ktp')
-    proc_tsks_block = _end_block(run_str, 'proc')
+    es_tsks_block = ioformat.ptt.end_block(run_str, 'es', footer='es')
+    trans_tsks_block = ioformat.ptt.end_block(run_str, 'transport', footer='transport')
+    therm_tsks_block = ioformat.ptt.end_block(run_str, 'thermo', footer='thermo')
+    ktp_tsks_block = ioformat.ptt.end_block(run_str, 'ktp', footer='ktp')
+    proc_tsks_block = ioformat.ptt.end_block(run_str, 'proc', footer='proc')
 
     # Parse information in the blocks
-    key_dct = keyword_dct(inp_str, def_dct)
+    inp_key_dct = _keyword_dct(inp_block, {})
+    print('inp_dct\n', inp_key_dct) 
 
-    run_dct['pes'] = get_pes_idxs(pes_block)
-    run_dct['spc'] = get_spc_idxs(spc_block)
+    pes_idx_dct = _pes_idxs(pes_block)
+    spc_idx_dct = _spc_idxs(spc_block)
+    print('pes_dct\n', pes_idx_dct) 
+    print('spc_dct\n', spc_idx_dct) 
 
-    es_tsk_lst = tsks.es_tsk_lst(es_tsk_str, thy_dct)
-    therm_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
-    ktp_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
-    trans_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
-    proc_tsk_lst = tsks.proc_tsk_lst(proc_tsk_str)
+    # es_tsk_lst = tsks.es_tsk_lst(es_tsk_str, thy_dct)
+    # therm_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
+    # ktp_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
+    # trans_tsk_lst = tsks.trans_tsk_lst(trans_tsk_str)
+    # proc_tsk_lst = tsks.proc_tsk_lst(proc_tsk_str)
 
     return None
 
@@ -61,80 +68,127 @@ def read_thy(job_path):
     """ Parse the theory.dat file
     """
 
-    thy_str = ptt.read_inp_str(job_path, THY_INP, remove_comments='#')
+    thy_str = ioformat.pathtools.read_file(
+        job_path, THY_INP, remove_comments='#', remove_whitespace=True)
     ioprinter.reading('theory.dat...', newline=1)
 
-    thy_blocks = _named_end_blocks(string, 'level')
-    if thy_blocks is not None:
-        thy_methods = {}
-        for section in thy_sections:
-            name = section[0]
-            keyword_dct = ptt.build_keyword_dct(thy_str)
-            check_dictionary2(
-                keyword_dct,
-                THY_REQUIRED_KEYWORDS
-                THY_SUPPORTED_KEYWORDS)
-            thy_methods[name] = keyword_dct
+    thy_blocks = ioformat.ptt.named_end_blocks(thy_str, 'level', footer='level')
+    thy_dct = ioformat.ptt.keyword_dcts_from_lst(thy_blocks)
+    print(thy_dct)
 
-    return thy_methods
+    # check_dictionary2(thy_dct, THY_REQUIRED_KEYWORDS THY_SUPPORTED_KEYWORDS)
+
+    return thy_dct
 
 
 def read_model(job_path):
     """ Parse the models.dat file
     """
 
-    mod_str = ptt.read_inp_str(job_path, MOD_INP, remove_comments='#')
+    mod_str = ioformat.pathtools.read_file(
+        job_path, MODEL_INP, remove_comments='#', remove_whitespace=True)
     ioprinter.reading('model.dat...', newline=1)
 
-    kin_blocks = _named_end_blocks(mod_str, '_model')
-    spc_blocks = _named_end_blocks(mod_str, 'spc_model')
+    kin_blocks = ioformat.ptt.named_end_blocks(mod_str, 'kin')
+    spc_blocks = ioformat.ptt.named_end_blocks(mod_str, 'spc')
+
+    kin_mod_dct = ioformat.ptt.keyword_dcts_from_lst(kin_blocks)
+    spc_mod_dct = ioformat.ptt.keyword_dcts_from_lst(spc_blocks)
+
+    print('kin_mod\n', kin_mod_dct)
+    print('spc_mod\n', spc_mod_dct)
+    # mix the global dicts
+    # def combine_glob_and_spc_dct(glob_dct, spc_dct):
 
 
 def read_spc(job_path):
     """ a
     """
-    spc_str = ioformat.ptt.read_inp_str(job_path, CSV_INP)
+    spc_str = ioformat.pathtools.read_file(job_path, CSV_INP)
     ioprinter.reading('species.csv...', newline=1)
-    dat_str = ioformat.ptt.read_inp_str(job_path, DAT_INP)
+    dat_str = ioformat.pathtools.read_file(job_path, DAT_INP)
     ioprinter.reading('species.dat...', newline=1)
 
     return spc_str
 
 
-def _read_mech(job_path):
+def read_mech(job_path):
     """Build the PES dct
     """
 
     # Read the string
-    mech_str = ptt.read_inp_str(job_path, MECH_INP, remove_comments='!')
+    mech_str = ioformat.pathtools.read_file(
+        job_path, MECH_INP, remove_comments='!', remove_whitespace=True)
     mech_info = util.read_mechanism_file(
         mech_str, mech_type, spc_dct, sort_rxns=sort_rxns)
 
     return mech_info
 
 
-# Keyword dict build and check functions
-def keyword_dct(inp_str, def_dct):
+# Keyword dict build and check 
+def _keyword_dct(inp_str, def_dct):
     """ merge a dictionary from the input
         :param inp_dct: dictionary of input keywords
         :param def_dct: dictionary of default values
                         (only has ones where defaults, won't have vals for 
                          keys that user must input like run_prefix)
     """
-    inp_dct = ioformat.ptt.build_keyword_dct(inp_str)
+    inp_dct = ioformat.ptt.keyword_dct_from_string(inp_str)
     return automol.util.dict_.right_update(def_dct, inp_dct)
 
 
-def keyword_lst(inp_str, key_lst):
+def _keyword_lst(inp_str, key_lst):
     """ build lst and check against supported lsts
         :param inp_dct: dictionary of input keywords
         :param def_dct: dictionary of default values
                         (only has ones where defaults, won't have vals for 
                          keys that user must input like run_prefix)
     """
-    return ioformat.ptt.build_keyword_lst(inp_str)
+    return ioformat.ptt.keyword_lst(inp_str)
 
 
+def _pes_idxs(string):
+    """  Build a dictionary of the PESs.
+            {pes_idx: [chn_idxs]}
+            breaks if pes_idx is given on two lines
+    """
+   
+    run_pes = {}
+    for line in string.strip().splitlines():
+        [pes_nums, chn_nums] = line.split(':')
+        pes_idxs = ioformat.ptt.parse_idxs(pes_nums)
+        chn_idxs = ioformat.ptt.parse_idxs(chn_nums)
+        for idx in pes_idxs:
+            run_pes.update({idx: chn_idxs})
+
+    return run_pes
+
+
+def _spc_idxs(string):
+    """  Build a dictionary of the PESs.
+            {pes_idx: [chn_idxs]}
+    """
+   
+    spc_idxs = ()
+    for line in string.splitlines():
+        spc_idxs += ioformat.ptt.parse_idxs(line)
+
+    return {1: spc_idxs}
+
+
+def _merge_glob(amech_dct):
+    """ [change to pull out the glob dct and just use it to overwrite the spc dct
+        or have parser return an additional one?
+    """
+    new_amech_dct = {}
+    glob = amech_dct.get('global', {})
+    for spc in (x for x in amech_dct if x != 'global'):
+        new_amech_dct[spc] = right_update(glob, amech_dct[spc])
+
+    return new_amech_dct
+
+
+# Check the keyword dictionaries to see if proper things defined
 def check_dictionary(inp_dct, chk_dct, section):
     """ Check if the dictionary to see if it has the allowed vals
     """
@@ -162,10 +216,10 @@ def check_dictionary(inp_dct, chk_dct, section):
         allowed_typ, allowed_vals, _ = chk_dct[key]
 
         if not isinstance(type(val), allowed_typ):
-            print('val must be type {}'.format(allowed_typ)
+            print('val must be type {}'.format(allowed_typ))
         if allowed_vals:
             if not val in allowed_vals:
-                print('val is {}, must be {}'.format(val, allowed_vals)
+                print('val is {}, must be {}'.format(val, allowed_vals))
 
 
 def check_dictionary2(dct, req_keys, supp_keys):
@@ -194,29 +248,3 @@ def check_lst(inp_lst, sup_lst):
     """
     if set(inp_lst) >= sup_lst:
         print('Unsupported keys')
-
-
-# Patterns of use
-# maybe loop over different block types for keywords
-def _end_block(string, header):
-    """ A pattern for a certain block
-        rtype: str
-    """
-    return ioformat.remove_whitespace(
-        apf.first_capture(ioformat.ptt.end_section2(header), string))
-
-
-def _named_end_blocks(string, header):
-    """ A pattern for a certian block
-        rtype: dict[str: str]
-    """ 
-    caps = apf.all_captures(ptt.end_section_wname2(header), string)
-    if caps is not None:
-        caps = dict(zip((cap[0] for cap in caps), (cap[1] for cap in caps)))
-    return caps
-
-
-def _paren_block(string, header):
-    """ A patter for a certain block
-    """
-    return apf.first_capture(ptt.paren_section(header), string)

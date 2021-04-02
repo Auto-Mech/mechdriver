@@ -1,21 +1,17 @@
 """ Libraries of functions that parse the moldriver input files
 """
 
-from mechlib.amech_io.parser import keywords
-from mechlib.amech_io.parser import mechanism
-from mechlib.amech_io.parser import model
-from mechlib.amech_io.parser import run
-from mechlib.amech_io.parser import species
-from mechlib.amech_io.parser import theory
-from mechlib.amech_io.parser import tsks
+from mechlib.amech_io.parser._read import read_run
+from mechlib.amech_io.parser._read import read_thy
+from mechlib.amech_io.parser._read import read_model
+from mechlib.amech_io.parser._read import read_spc
+from mechlib.amech_io.parser._read import read_mech
 
 
 __all__ = [
-    'keywords',
-    'mechanism',
-    'model',
-    'run',
-    'species',
-    'theory',
-    'tsks'
+    'read_run',
+    'read_thy',
+    'read_model',
+    'read_spc',
+    'read_mech'
 ]

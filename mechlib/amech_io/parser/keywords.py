@@ -2,6 +2,9 @@
   Libraries to check for allowed and supported keywords
 """
 
+from phydat import phycon
+
+
 # Run Keywords
 RUN_INP_REQUIRED_KEYWORDS = [
     'mech',
@@ -22,7 +25,10 @@ RUN_INP_KEY_DCT = {
     'print_debug': [True, False]
 }
 RUN_INP_DEFAULT_DCT = {
-    'mech': 'chemkin',
+    'inp_mech': 'chemkin',
+    'inp_spc': 'csv',
+    'out_mech': 'chemkin',
+    'out_spc': 'csv',
     'print_mech': False,
     'print_debug': False,
     'run_prefix': None,
@@ -44,6 +50,26 @@ RUN_SUPPORTED_KEYWORDS = [
 ]
 
 # Model keywords
+MOD_KIN_DEFAULT = {
+    'pressures': (),
+    'rate_temps': (),
+    'thermo_temps': (),
+    'rate_fit': {
+        'fit_method': 'arrhenius',
+        'pdep_temps': (500, 100),
+        'pdep_tol': 20.0,
+        'pdep_pval': 1.0,
+        'pdep_low': None,
+        'pdep_high': None,
+        'arr_dbl_tol': 15.0,
+        'troe_param_fit_list': ('ts1', 'ts2', 'ts3', 'alpha'),
+    },
+    'thermo_fit': {
+        'ref_scheme': 'basic',
+        'ref_enes': 'ANL0'
+    }
+}
+
 MODEL_PF_SUPPORTED_DCT = {
     'ene': ['sp', 'composite'],
     'rot': ['rigid', 'vpt2'],
@@ -70,6 +96,25 @@ MODEL_PF_DEFAULT_DCT = {
     'tunnel': 'none',
     'etrans': 'estimate'
 }
+
+VRC_DCT = {
+'fortran_compiler': 'gfortran',
+'spc_name': 'mol',
+'memory': 4.0,
+'r1dists_lr': [8., 6., 5., 4.5, 4.],
+'r1dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+'r2dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+'d1dists': [0.01, 0.5, 1.],
+'d2dists': [0.01, 0.5, 1.],
+'conditions': {},
+'nsamp_max': 2000,
+'nsamp_min': 50,
+'flux_err': 10,
+'pes_size': 2,
+'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
+}
+
+
 
 # Electronic Structure Tasks
 ES_TSK_OBJ_SUPPORTED_LST = [

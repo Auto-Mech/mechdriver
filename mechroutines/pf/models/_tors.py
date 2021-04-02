@@ -13,7 +13,7 @@ from autofile import fs
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import spc as sinfo
 from mechlib.amech_io import printer as ioprinter
-from mechlib.amech_io import job_path
+# from mechlib.amech_io import job_path  # circular import
 from mechlib import filesys
 
 

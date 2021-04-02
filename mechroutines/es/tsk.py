@@ -13,7 +13,7 @@ from mechroutines.es._ts import findts
 from mechroutines.es._routines import conformer
 from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
-from mechroutines.es._routines import irc
+from mechroutines.es._routines import rpath
 from mechroutines.es.runner import qchem_params
 from mechlib import filesys
 from mechlib.filesys import build_fs
@@ -830,7 +830,7 @@ def rpath_tsk(job, spc_dct, spc_name,
     if job == 'scan':
 
         if rcoord == 'auto':
-
+            pass
         elif rcoord == 'irc':
             rpath.irc_scan(
                 geo, spc_info, coord_name,

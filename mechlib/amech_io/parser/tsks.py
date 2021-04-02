@@ -31,13 +31,13 @@ def es_tsk_lst(es_tsk_str, thy_dct):
     # mod_tsk_lst = expand_tsks(tsk_lst)
     
     # Ensure that all the tasks are in the supported tasks
-    check_es_tsks_supported(tsk_lst, thy_dct)
+    # check_es_tsks_supported(tsk_lst, thy_dct)
 
-    # Add defaults if they are missing
-    mod_tsk_lst = add_defaults_to_keyword_dct(
-        tsk_lst,
-        ES_TSK_KEYWORDS_DEFAULT_DCT,
-        ES_TSK_KEYWORDS_SUPPORTED_DCT)
+    # # Add defaults if they are missing
+    # mod_tsk_lst = add_defaults_to_keyword_dct(
+    #     tsk_lst,
+    #     ES_TSK_KEYWORDS_DEFAULT_DCT,
+    #     ES_TSK_KEYWORDS_SUPPORTED_DCT)
 
     return mod_tsk_lst
 
@@ -48,10 +48,10 @@ def trans_tsk_lst(trans_tsk_str):
     """
 
     tsk_lst = _tsk_lst(trans_tsk_str)
-    mod_tsk_lst = add_defaults_to_keyword_dct(
-        tsk_lst,
-        TRANS_TSK_KEYWORDS_DEFAULT_DCT,
-        TRANS_TSK_KEYWORDS_SUPPORTED_DCT)
+    # mod_tsk_lst = add_defaults_to_keyword_dct(
+    #     tsk_lst,
+    #     TRANS_TSK_KEYWORDS_DEFAULT_DCT,
+    #     TRANS_TSK_KEYWORDS_SUPPORTED_DCT)
 
     return mod_tsk_lst
 
