@@ -868,11 +868,17 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, zrxn=None):
     else:
         check_dct = {'dist': 0.3}
 
-    if not automol.util.value_similar_to(ene, seen_enes, 2.e-5):
+    no_similar_energies = True
+    for sene in seen_enes:
+        if abs(sene - ene) < 1e-5:
+            no_similar_energies = False
+
+    if no_similar_energies:
+        unique = True
+    else:
         unique, _ = automol.geom.is_unique(
             geo, seen_geos, check_dct=check_dct)
-    else:
-        unique = False
+
     if not unique:
         ioprinter.bad_conformer('not unique')
 
@@ -914,12 +920,20 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
     """
 
     sym_idx = None
-    if automol.util.value_similar_to(ene, saved_enes, ethresh):
+    new_saved_geos = []
+    idx_dct = {}
+    for i, (sene, sgeo) in enumerate(zip(saved_enes, saved_geos)):
+        if abs(ene - sene) < ethresh:
+            idx_dct[len(new_saved_geos)] = i
+            new_saved_geos.append(sgeo)
+    #if automol.util.value_similar_to(ene, saved_enes, ethresh):
+    if new_saved_geos:
         _, sym_idx = automol.geom.is_unique(
-            geo, saved_geos, check_dct={'coulomb': None})
+            geo, new_saved_geos, check_dct={'coulomb': 1e-2})
 
     if sym_idx is not None:
-        ioprinter.warning_message(' - Structure is not symmetrically unique.')
+        print(' - Structure is not symmetrically unique.')
+        sym_idx = idx_dct[sym_idx]
 
     return sym_idx
 
