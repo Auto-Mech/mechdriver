@@ -6,122 +6,19 @@ from phydat import phycon
 
 
 # Run Keywords
-RUN_INP_REQUIRED_KEYWORDS = [
-    'mech',
-    'spc'
-]
-RUN_INP_SUPPORTED_KEYWORDS = [
-    'mech',
-    'spc',
-    'run_prefix',
-    'save_prefix',
-    'print_mech',
-    'print_debug'
-]
-RUN_INP_KEY_DCT = {
-    'mech': ['chemkin'],
-    'spc': ['csv'],
-    'print_mech': [True, False],
-    'print_debug': [True, False]
-}
 RUN_INP_DEFAULT_DCT = {
-    'inp_mech': 'chemkin',
-    'inp_spc': 'csv',
-    'out_mech': 'chemkin',
-    'out_spc': 'csv',
-    'print_mech': False,
-    'print_debug': False,
-    'run_prefix': None,
-    'save_prefix': None
+    'inp_mech': (('chemkin'), 'chemkin'),
+    'inp_spc': (('csv',), 'csv'),
+    'out_mech': (('chemkin'), 'chemkin'),
+    'out_spc': (('csv',), 'csv'),
+    'print_mech': ((True, False), False),
+    'print_debug': ((True, False), False),
+    'run_prefix': (None, None),
+    'save_prefix': (None, None)
 }
-
-RUN_SUPPORTED_KEYWORDS = [
-    'es',
-    'thermochem',
-    'kinetics',
-    'write_messpf',
-    'run_messpf',
-    'run_nasa',
-    'write_messrate',
-    'run_messrate',
-    'run_fits',
-    'transport',
-    'print'
-]
-
-# Model keywords
-MOD_KIN_DEFAULT = {
-    'pressures': (),
-    'rate_temps': (),
-    'thermo_temps': (),
-    'rate_fit': {
-        'fit_method': 'arrhenius',
-        'pdep_temps': (500, 100),
-        'pdep_tol': 20.0,
-        'pdep_pval': 1.0,
-        'pdep_low': None,
-        'pdep_high': None,
-        'arr_dbl_tol': 15.0,
-        'troe_param_fit_list': ('ts1', 'ts2', 'ts3', 'alpha'),
-    },
-    'thermo_fit': {
-        'ref_scheme': 'basic',
-        'ref_enes': 'ANL0'
-    }
-}
-
-MODEL_PF_SUPPORTED_DCT = {
-    'ene': ['sp', 'composite'],
-    'rot': ['rigid', 'vpt2'],
-    'vib': ['harm', 'vpt2', 'tau'],
-    'tors': ['rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'],
-    'sym': ['none', 'sampling', '1dhr'],
-    'ts_barrierless': ['pst', 'rpvtst', 'vrctst'],
-    'ts_sadpt': ['fixed', 'pst', 'rpvtst', 'vrctst'],
-    'wells': ['fake', 'find', 'none'],
-    'rwells': ['fake', 'find', 'none'],
-    'pwells': ['fake', 'find', 'none'],
-    'tunnel': ['none', 'eckart', 'sct'],
-    'etrans': ['none', 'estimate', 'read']
-}
-MODEL_PF_DEFAULT_DCT = {
-    'ene': 'sp',
-    'rot': 'rigid',
-    'vib': 'harm',
-    'tors': 'rigid',
-    'sym': 'none',
-    'ts_nobar': 'pst',
-    'ts_sadpt': 'fixed',
-    'wells': 'fake',
-    'tunnel': 'none',
-    'etrans': 'estimate'
-}
-
-VRC_DCT = {
-'fortran_compiler': 'gfortran',
-'spc_name': 'mol',
-'memory': 4.0,
-'r1dists_lr': [8., 6., 5., 4.5, 4.],
-'r1dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
-'r2dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
-'d1dists': [0.01, 0.5, 1.],
-'d2dists': [0.01, 0.5, 1.],
-'conditions': {},
-'nsamp_max': 2000,
-'nsamp_min': 50,
-'flux_err': 10,
-'pes_size': 2,
-'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
-}
-
 
 
 # Electronic Structure Tasks
-ES_TSK_OBJ_SUPPORTED_LST = [
-    'spc',
-    'ts',
-    'vdw'
-]
 ES_TSK_SUPPORTED_DCT = {
     'spc': [
         'init_geom',
@@ -186,9 +83,35 @@ ES_TSK_KEYWORDS_SUPPORTED_DCT = {
     'rpath_grad': ['runlvl', 'inplvl', 'rxncoord', 'retryfail', 'overwrite'],
     'rpath_hess': ['runlvl', 'inplvl', 'rxncoord', 'retryfail', 'overwrite'],
 }
+TRANS_TSK_SUPPORTED_DCT = {
+    'spc': ['onedmin']
+}
+TRANS_TSK_KEYWORDS_SUPPORTED_DCT = {
+    'onedmin': ['runlvl', 'inplvl', 'bath', 'pot',
+                'njobs', 'nsamp',
+                'smin', 'smax', 'conf',
+                'retryfail', 'overwrite']
+}
+PRNT_TSK_SUPPORTED_DCT = {
+    'spc': [
+        'freqs', 'energy', 'geo', 'zmatrix', 'enthalpy', 'coeffs'],
+    'ts': [
+        'freqs'],
+    'vdw': [
+        'freqs']}
+PRNT_TSK_KEYWORDS_SUPPORTED_DCT = {
+    'freqs': ['geolvl', 'proplvl', 'nconfs', 'econfs', 'scale'],
+    'energy': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
+    'geo': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
+    'zmatrix': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
+    'enthalpy': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
+    'coeffs': [],
+    }
 
+
+# TASK DICTIONARIES
 # es tsk: (object type, (allowed values), default)  # use functions for weird
-NEW_ES_TSK_DCT = {
+ES_TSK_DCT = {
     # all tasks
     'runlvl': (str, (), None),
     'inplvl': (str, (), None),
@@ -198,48 +121,37 @@ NEW_ES_TSK_DCT = {
     'retryfail': (bool, (True, False), True),
     'overwrite': (bool, (True, False), False),
     # conformer tasks
-    'cnf_range': (str, (), 'min'),
+    'cnf_range': (str, _cnf_string, 'min'),
     # tau tasks
     'hessmax': (int, (), 1000),
     # hr tasks
-    'tors_model': (str, ('1dhr', '1dhrf', '1dhrfa', 'mdhr'), '1dhr'),
+    'tors_model': (str, ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'), '1dhr'),
     'resamp_min': (bool, (True, False), False),
     'hrthresh': (float, (), -0.5),
+    'potthresh': (float, (), 0.3),
     # reaction
-    # 'rxndirn': ['forw', 'back', 'exo'],
-    'rxncoord': (str, ('irc', 'auto'), 'auto')
+    'rxncoord': (str, ('irc', 'auto'), 'auto'),
+    'nobarrier': (str, ('pst', 'rpvtst', 'vrctst'), None)
 }
+TRANS_TSK_DCT = {
+    'pot': (str, ('sphere',), 'lj_12_6'),
+    'njobs': (int, (), 1),
+    'nsamp': (int, (), 1),
+    'smin': (float, (), 2.0),
+    'smax': (float, (), 6.0),
+    'conf': (str, ('sphere',), 'sphere'),
+    # prob redundant with es
+    'retryfail': (bool, (True, False), True),
+    'overwrite': (bool, (True, False), False)
+}
+PRNT_TSK_DCT = {
+    'geolvl': None,
+    'proplvl': None,
+    'nconfs': 'min',
+    'econfs': 'min',
+    'scale': None
+    }
 
-
-ES_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
-    'tors_model': ['1dhr', '1dhrf', '1dhrfa', 'mdhr'],
-    'cnf_range': ['min'],
-    'nobarrier': ['pst', 'rpvtst', 'vrctst'],
-    'retryfail': [True, False],
-    'overwrite': [True, False],
-    'resave': [True, False],
-    'rxndirn': ['forw', 'back', 'exo'],
-    'rxncoord': ['irc', 'auto'],
-    'resamp_min': [True, False],
-}
-ES_TSK_KEYWORDS_DEFAULT_DCT = {
-    'runlvl': None,
-    'inplvl': None,
-    'var_splvl1': None,
-    'var_splvl2': None,
-    'var_scnlvl': None,
-    'tors_model': '1dhr',
-    'cnf_range': 'min',
-    'nobarrier': 'pst',
-    'retryfail': True,
-    'overwrite': False,
-    'resave': False,
-    'rxndirn': 'forw',
-    'rxncoord': 'auto',
-    'hessmax': 1000,
-    'hrthresh': -0.5,
-    'pot_thresh': 0.3
-}
 
 # Species keywords
 SPC_REQUIRED_KEYWORDS = [
@@ -290,7 +202,6 @@ TS_DEFAULT_DCT = {**SPC_DEFAULT_DCT, **{
 }}
 
 
-
 # Theory Keywords
 THY_REQUIRED_KEYWORDS = [
     'program',
@@ -310,55 +221,135 @@ THY_SUPPORTED_KEYWORDS = [
     'gconv'
 ]
 
-# ETrans
-TRANS_TSK_SUPPORTED_DCT = {
-    'spc': ['onedmin']
+THY = {
+    'program': (str),
+    'method': (str),
+    'basis': (str),
+    'orb_res': (str, ('RR', 'UU', 'RU')),
+    'ncycles': (int),
+    'mem': (float),
+    'nprocs': (int),
+    'econv': (float),
+    'gconv': (float)
 }
-TRANS_TSK_KEYWORDS_SUPPORTED_DCT = {
-    'onedmin': ['runlvl', 'inplvl', 'bath', 'pot',
-                'njobs', 'nsamp',
-                'smin', 'smax', 'conf',
-                'retryfail', 'overwrite']
-}
-TRANS_TSK_KEYWORDS_VAL_SUPPORTED_DCT = {
-    'retryfail': [True, False],
-    'overwrite': [True, False],
-}
-TRANS_TSK_KEYWORDS_VAL_DEFAULT_DCT = {
-    'pot': 'lj_12_6',
-    'njobs': 1,
-    'nsamp': 1,
-    'smin': 2.0,
-    'smax': 6.0,
-    'conf': 'sphere',
-    'retryfail': True,
-    'overwrite': False,
-}
-# Print
-PRNT_TSK_OBJ_SUPPORTED_LST = [
-    'spc',
-    'ts',
-    'vdw'
-]
-PRNT_TSK_SUPPORTED_DCT = {
-    'spc': [
-        'freqs', 'energy', 'geo', 'zmatrix', 'enthalpy', 'coeffs'],
-    'ts': [
-        'freqs'],
-    'vdw': [
-        'freqs']}
-PRNT_TSK_KEYWORDS_SUPPORTED_DCT = {
-    'freqs': ['geolvl', 'proplvl', 'nconfs', 'econfs', 'scale'],
-    'energy': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
-    'geo': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
-    'zmatrix': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
-    'enthalpy': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
-    'coeffs': [],
+
+# Model keywords
+MOD_KIN_DEFAULT = {
+    'pressures': (),
+    'rate_temps': (),
+    'thermo_temps': (),
+    'rate_fit': {
+        'fit_method': 'arrhenius',
+        'pdep_temps': (500, 100),
+        'pdep_tol': 20.0,
+        'pdep_pval': 1.0,
+        'pdep_low': None,
+        'pdep_high': None,
+        'arr_dbl_tol': 15.0,
+        'troe_param_fit_list': ('ts1', 'ts2', 'ts3', 'alpha'),
+    },
+    'thermo_fit': {
+        'ref_scheme': 'basic',
+        'ref_enes': 'ANL0'
     }
-PRNT_TSK_KEYWORDS_DEFAULT_DCT = {
-    'geolvl': None,
-    'proplvl': None,
-    'nconfs': 'min',
-    'econfs': 'min',
-    'scale': None
-    }
+}
+
+MOD_PF_DEFAULT = {
+    'ene': (('sp', 'composite'), 'sp'),
+    'rot': (('rigid', 'vpt2'), 'rigid'),
+    'vib': (('harm', 'vpt2', 'tau'), 'harm'),
+    'tors': (('rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'), 'rigid'),
+    'sym': (('none', 'sampling', '1dhr'), 'none'),
+    'ts_nobar': (('pst', 'rpvtst', 'vrctst'), 'pst'),
+    'ts_sadpt': (('fixed', 'pst', 'rpvtst', 'vrctst'), 'fixed'),
+    'wells': (('fake', 'find', 'none'), 'fake'),
+    'rwells': (('fake', 'find', 'none'), 'fake'),
+    'pwells': (('fake', 'find', 'none'), 'fake'),
+    'tunnel': (('none', 'eckart', 'sct'), 'eckart'),
+    'etrans': (('none', 'estimate', 'read'), 'estimate')
+}
+
+
+# MISC
+VRC_DCT = {
+    'fortran_compiler': 'gfortran',
+    'spc_name': 'mol',
+    'memory': 4.0,
+    'r1dists_lr': [8., 6., 5., 4.5, 4.],
+    'r1dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+    'r2dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
+    'd1dists': [0.01, 0.5, 1.],
+    'd2dists': [0.01, 0.5, 1.],
+    'conditions': {},
+    'nsamp_max': 2000,
+    'nsamp_min': 50,
+    'flux_err': 10,
+    'pes_size': 2,
+    'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
+}
+
+
+# Dictionary Builders and Checkers
+def build_default():
+    """ Way of building the default dcts for various things, this is
+        for ES tasks
+    """
+    supp_keywrds = ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]  
+    default_dct = dict(
+        zip(keywrds, (NEW_ES_TSK_DCT[key][2] for key in keywrds)))
+
+    return default_dct
+
+
+def check_dictionary(inp_dct, chk_dct, section, dyn_vals=()):
+    """ Check if the dictionary to see if it has the allowed vals
+    """
+
+    # if inp_dct is not None:  # check if nonempty to see if section undefined
+
+    # Assess if user-defined keywords
+    # (1) include requird keywords and (2) only define supported keywords
+    inp_keys = set(inp_dct.keys())
+    chk_keys = set(chk_dct.keys())
+    unsupported_keys = inp_keys - chk_keys
+    undefined_required_keys = chk_keys - inp_keys
+
+    if unsupported_keys:
+        print('User defined unsupported keywords in {}'.format(section))
+        for key in unsupported_keys:
+            print(key)
+    if undefined_required_keys:
+        print('User has not defined required keywords in {}'.format(section))
+        for key in undefined_required_keys:
+            print(key)
+
+    # Assess if the keywords have the appropriate value
+    for key, val in inp_dct.items():
+        allowed_typ, allowed_vals, _ = chk_dct[key]
+
+        if not isinstance(type(val), allowed_typ):
+            print('val must be type {}'.format(allowed_typ))
+        if allowed_vals:
+            if val not in allowed_vals:
+                print('val is {}, must be {}'.format(val, allowed_vals))
+
+
+def check_thy_lvls(key_dct, method_dct):
+    """ For specific tasks, we need to a second level of cheeck to ensure
+        that values of keywords that correspond to blocks defined in either
+        the thy or model dat files.
+
+        :param key_dct:
+        :type key_dct: dict[]
+        :param method_dct: thy or mod dct 
+            
+    """
+    method_keys = ['runlvl', 'inplvl', 'var_splvl1', 'var_splvl2', 'var_scnlvl']
+    assert set(key_dct[key] for key in method_keys) <= set(method_dct.keys())
+
+
+def check_lst(inp_lst, sup_lst):
+    """ Check
+    """
+    if set(inp_lst) >= sup_lst:
+        print('Unsupported keys')

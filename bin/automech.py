@@ -4,7 +4,7 @@
 """
 
 import sys
-from mechlib.amech_io.parser import read_run, read_spc, read_thy, read_mech, read_model
+from mechlib.amech_io.parser import read_amech_inp
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -18,11 +18,7 @@ ioprinter.host_name()
 
 # Parse all of the input
 ioprinter.program_header('inp')
-a = read_run(JOB_PATH) 
-b = read_spc(JOB_PATH) 
-c = read_thy(JOB_PATH) 
-d = read_model(JOB_PATH) 
-e = read_mech(JOB_PATH) 
+e = read_amech_inp(JOB_PATH) 
 
 
 # THY_DCT = parser.theory.build_thy_dct(JOB_PATH)

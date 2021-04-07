@@ -126,47 +126,14 @@ def build_spc_queue(rxn_lst):
     return spc_queue
 
 
-def read_spc_amech(job_path):
-    """ Read an amech style input file for the species
-    """
-
-    # Read the AMech species string
-    if os.path.exists(os.path.join(job_path, DAT_INP)):
-        spc_amech_str = ioformat.ptt.read_inp_str(
-            job_path, DAT_INP, remove_comments='#')
-        print('Found species.dat. Reading file...')
-    else:
-        spc_amech_str = ''
-        print('No species.dat file...')
-
-    # Build the keyword dcts
-    amech_dct = {}
-    if spc_amech_str:
-        # Read each of the species sections and build the dcts
-        spc_sections = apf.all_captures(
-            ioformat.ptt.end_section_wname2('spc'), spc_amech_str)
-        amech_dct = ptt.build_keyword_dct_msec(spc_sections)
-
-    # Update the amech dct with the global
-    new_amech_dct = {}
-    glob = amech_dct.get('global', {})
-    for spc in (x for x in amech_dct if x != 'global'):
-        new_amech_dct[spc] = right_update(glob, amech_dct[spc])
-
-    return amech_dct
-
-
-def modify_spc_dct(job_path, spc_dct):
+def modify_spc_dct(spc_dct, amech_dct, geo_dct):
     """ Modify the species dct using input from the additional AMech file
     """
-
-    # Read in other dcts
-    amech_dct = read_spc_amech(job_path)
-    geom_dct = geometry_dictionary(job_path)
 
     # Add in all of the species
     for spc in spc_dct:
         # Add stuff from the amech dct
+        print('test', amech_dct)
         spc_dct[spc] = automol.util.dict_.right_update(
             spc_dct[spc], amech_dct.get(spc, {}))
         # Add the defaults
@@ -210,9 +177,10 @@ def modify_spc_dct(job_path, spc_dct):
     spc_dct.update(ts_dct)
 
         # Perform conversions as needed
-        mod_spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
+        # mod_spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
+        # mod_spc_dct[spc]['geo_inp'] = geom_dct.get(ich, None)
 
-        mod_spc_dct[spc]['geo_inp'] = geom_dct.get(ich, None)
+    # could merge glob here?
 
     return mod_spc_dct
 

@@ -28,7 +28,7 @@ def es_tsk_lst(es_tsk_str, thy_dct):
     
     tsk_lst = _tsk_lst(es_tsk_str)
 
-    # mod_tsk_lst = expand_tsks(tsk_lst)
+    mod_tsk_lst = expand_tsks(tsk_lst)
     
     # Ensure that all the tasks are in the supported tasks
     # check_es_tsks_supported(tsk_lst, thy_dct)
@@ -135,9 +135,34 @@ def expand_tsks(tsks_lst):
 
 
 EXPAND_DCT = {
-    'init_geom': ('test1', 'test2'),
     'find_ts': ('sadpt_scan', 'sadpt_opt', 'sadpt_hess')  # sadpt_check
 }
+
+
+def _new_check_dct(tsk_lst):
+    """
+    """
+
+    # First we add the defaults
+    mod_tsk_lst = []
+    for tsk_lst in tsk_lsts:
+
+        # Unpack the task
+        [obj, tsk, keyword_dct] = tsk_lst
+
+        # Build the dictionary of default values for task
+        supp_keywrds = ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]  
+        default_dct = dict(
+            zip(keywrds, (NEW_ES_TSK_DCT[key][2] for key in keywrds)))
+
+        # Update the current task dct with the default
+        new_key_dct = automol.util.dict_.right_update(default_dct, keyword_dct)
+
+        # Now check the defined in the dct are all supported
+        assert set(new_key_dct.keys() <= supp_keywrds)
+
+        # Check if the keyword values are allowed
+
 
 
 # Add defaults

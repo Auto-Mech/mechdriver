@@ -499,7 +499,7 @@ def _get_ring_atoms(zma, zrxn=None):
     if zrxn is None:
         rings_atoms = automol.graph.rings_atom_keys(automol.zmat.graph(zma))
     else:
-        rings = automol.reac.forming_rings_bond_keys(rxn)
+        rings = automol.reac.forming_rings_bond_keys(zrxn)
         for ring_bnds in rings:
             ring_atoms = []
             for bnd in ring_bnds:

@@ -16,9 +16,6 @@ def build_pes_dct(job_path, mech_type,
     """Build the PES dct
     """
 
-    # Read the string
-    mech_str = ptt.read_inp_str(job_path, MECH_INP, remove_comments='!')
-
     # Build the total PES dct
     mech_info = util.read_mechanism_file(
         mech_str, mech_type, spc_dct, sort_rxns=sort_rxns)
