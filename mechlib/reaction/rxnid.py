@@ -54,7 +54,9 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
             save_prefix, save_prefix, 'CONFORMER',
             rxn_locs=sort_rxn_info,
             thy_locs=mod_ini_thy_info[1:],
-            ts_locs=None)
+            # ts_locs=None)
+            ts_locs=(0,))
+            # this needs to be fixed for any case with more than one TS
 
         _, ini_min_cnf_path = filesys.mincnf.min_energy_conformer_locators(
             cnf_save_fs, mod_ini_thy_info)
