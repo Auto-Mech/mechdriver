@@ -7,13 +7,10 @@
     Check if the strings are none
 """
 
-import sys
 import automol
 import ioformat
 import mechanalyzer
 from mechlib.amech_io.parser import tsks
-from mechlib.amech_io.parser.keywords import THY_REQUIRED_KEYWORDS
-from mechlib.amech_io.parser.keywords import THY_SUPPORTED_KEYWORDS
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io.parser.mechanism import build_pes_dct
 from mechlib.amech_io.parser.species import modify_spc_dct
@@ -32,16 +29,16 @@ THY_INP = 'inp/theory.dat'
 def read_amech_inp(job_path):
     """ master read for simplicity for now
     """
-   
+
     # Read method input
-    thy_dct = read_thy(job_path) 
-    kin_mod_dct, spc_mod_dct = read_model(job_path) 
-   
+    thy_dct = read_thy(job_path)
+    kin_mod_dct, spc_mod_dct = read_model(job_path)
+
     # Read the run
-    a = read_run(job_path, thy_dct, kin_mod_dct, spc_mod_dct) 
+    a = read_run(job_path, thy_dct, kin_mod_dct, spc_mod_dct)
 
     # Read chemisry input
-    # b = read_spc(job_path) 
+    # b = read_spc(job_path)
 
     return None
 
@@ -87,7 +84,7 @@ def read_run(job_path, thy_dct, kin_mod_dct, spc_mod_dct):
     # ktp_tsks_lst = tsks.trans_tsk_lst(trans_tsks_block, kin_mod_dct, spc_mod_dct)
     # trans_tsks_lst = tsks.trans_tsk_lst(trans_tsks_block, thy_dct)
     # proc_tsks_lst = tsks.proc_tsk_lst(proc_tsks_block, thy_dct)
-    
+
     print('es\n', es_tsks_lst)
     # print('trans\n', trans_tsks_block)
     # print('therm\n', therm_tsks_block)
@@ -147,10 +144,10 @@ def read_spc(job_path):
 
     amech_str = ioformat.pathtools.read_file(job_path, DAT_INP, remove_comments='#')
     ioprinter.reading('species.dat...', newline=1)
-    
+
     geo_dct = geometry_dictionary(job_path)
     ioprinter.reading('geom.xyzs...', newline=1)
-   
+
     # Build the spc dct
     spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, 'csv')
 
@@ -239,7 +236,7 @@ def _merge_glob(dct, keep_glob=False):
 
     new_dct = {}
     glob = dct.get('global', {})
-    
+
     print('dct', dct)
     print('glob', glob)
 

@@ -71,20 +71,6 @@ def split_queue(spc_queue):
     return new_queue
 
 
-def build_spc_dct(job_path, spc_type):
-    """ Build the species dct
-    """
-
-    spc_str = ioformat.ptt.read_inp_str(
-        job_path, CSV_INP)
-    spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
-
-    # Modify spc dct with params from the AMech file
-    mod_spc_dct = modify_spc_dct(job_path, spc_dct)
-
-    return mod_spc_dct
-
-
 def build_run_spc_dct(spc_dct, run_obj_dct):
     """ Get a dictionary of requested species matching the PES_DCT format
     """
