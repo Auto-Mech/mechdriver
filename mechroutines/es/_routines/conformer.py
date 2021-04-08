@@ -303,7 +303,8 @@ def single_conformer(zma, spc_info, mod_thy_info,
         rid = autofile.schema.generate_new_ring_id()
         cid = autofile.schema.generate_new_conformer_id()
         locs = (rid, cid)
-
+    else:
+        locs = use_locs
     cnf_run_fs[-1].create(locs)
     cnf_run_path = cnf_run_fs[-1].path(locs)
     run_fs = autofile.fs.run(cnf_run_path)
@@ -356,7 +357,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
                 else:
                     cinf_obj = autofile.schema.info_objects.conformer_branch(0)
                     cinf_obj.nsamp = 1
-                cnf_save_fs[1].create(locs[0])
+                cnf_save_fs[1].create([locs[0]])
                 cnf_save_fs[0].file.info.write(rinf_obj)
                 cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
                 _save_unique_conformer(
@@ -369,7 +370,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
         # Update the conformer trajectory file
         ioprinter.obj('vspace')
         filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info)
-        filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, rid)
+        filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, locs[0])
 
 
 def conformer_sampling(zma, spc_info, thy_info,
@@ -1299,8 +1300,8 @@ def _save_sym_indistinct_conformer(geo, cnf_save_fs,
     sym_save_fs = autofile.fs.symmetry(cnf_save_path)
     sym_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
     ioprinter.save_symmetry(sym_save_path)
-    sym_save_fs[-1].create(cnf_tosave_locs)
-    sym_save_fs[-1].file.geometry.write(geo, cnf_tosave_locs)
+    sym_save_fs[-1].create([cnf_tosave_locs[-1]])
+    sym_save_fs[-1].file.geometry.write(geo, [cnf_tosave_locs[-1]])
 
 
 def _saved_cnf_info(cnf_save_fs, mod_thy_info):
