@@ -2,6 +2,7 @@
   Libraries to check for allowed and supported keywords
 """
 
+import sys
 from phydat import phycon
 
 
@@ -25,6 +26,8 @@ MREF = ('var_splvl1', 'var_splvl2', 'var_scnlvl')
 TRANS = ('bath', 'pot', 'njobs', 'nsamp', 'smin', 'smax', 'conf')
 PRNT = ('geolvl', 'proplvl', 'nconfs', 'econfs')
 
+# Determines what objects and keywords are allowed for tasks for ES,Trans,Print
+# Need way to set required tsks
 # Tasks: (allowed obj, allowed_keywords)
 TSK_KEY_DCT = {
     # Electronic Structure Driver Tasks
@@ -64,6 +67,7 @@ TSK_KEY_DCT = {
 }
 
 # es tsk: (object type, (allowed values), default)  # use functions for weird
+# maybe the required checks use if None given?
 TSK_VAL_DCT = {
     # Common
     'runlvl': (str, (), None),
@@ -71,17 +75,18 @@ TSK_VAL_DCT = {
     'var_splvl1': (str, (), None),
     'var_splvl2': (str, (), None),
     'var_scnlvl': (str, (), None),
+    'resave': (bool, (True, False), True),
     'retryfail': (bool, (True, False), True),
     'overwrite': (bool, (True, False), False),
     # ES
-    'cnf_range': (str, (), 'min'),
+    'cnf_range': (str, (), 'min'),   # change to econfs, nconfs
     'hessmax': (int, (), 1000),
     'tors_model': (str, ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'), '1dhr'),
     'resamp_min': (bool, (True, False), False),
     'hrthresh': (float, (), -0.5),
     'potthresh': (float, (), 0.3),
     'rxncoord': (str, ('irc', 'auto'), 'auto'),
-    'nobarrier': (str, ('pst', 'rpvtst', 'vrctst'), None)
+    'nobarrier': (str, ('pst', 'rpvtst', 'vrctst'), None),
     # TRans
     'pot': (str, ('sphere',), 'lj_12_6'),
     'njobs': (int, (), 1),
@@ -92,11 +97,24 @@ TSK_VAL_DCT = {
     # PRoc
     'geolvl': (str, (), None),
     'proplvl': (str, (), None),
-    'nconfs': (str, (), 'min'), 
+    'nconfs': (str, (), 'min'),
     'econfs': (str, (), 'min'),
     'scale': (str, (), None),
 }
+# Have nconfs and econfs keywords and combine them to figure out which to use?
 
+OTHER_TSK_KEY_DCT = {
+    'write_mess': ('kin_model', 'spc_model', 'overwrite'),
+    'run_mess': ('nprocs', 'inpname'),
+    'run_fits': ('kin_model',),
+}
+OTHER_TSK_VAL_DCT = {
+    'kin_model': (str, (), None),
+    'spc_model': (str, (), None),
+    'overwrite': (str, (), False),
+    'nprocs': (int, (), 10),
+    'inpname': (str, (), None)
+}
 
 # Species keywords
 SPC_REQUIRED_KEYWORDS = [
@@ -191,7 +209,8 @@ MOD_PF_DEFAULT = {
     'ene': (str, ('sp', 'composite'), 'sp'),
     'rot': (str, ('rigid', 'vpt2'), 'rigid'),
     'vib': (str, ('harm', 'vpt2', 'tau'), 'harm'),
-    'tors': (str, ('rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'), 'rigid'),
+    'tors': (str, ('rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'),
+             'rigid'),
     'sym': (str, ('none', 'sampling', '1dhr'), 'none'),
     'ts_nobar': (str, ('pst', 'rpvtst', 'vrctst'), 'pst'),
     'ts_sadpt': (str, ('fixed', 'pst', 'rpvtst', 'vrctst'), 'fixed'),
@@ -222,19 +241,42 @@ VRC_DCT = {
 }
 
 
-# Dictionary Builders and Checkers
-def build_default():
+# Dictionary Builders
+def build_tsk_default(tsk, tsk_key_dct, tsk_val_dct):
     """ Way of building the default dcts for various things, this is
         for ES tasks
     """
-    supp_keywrds = ES_TSK_KEYWORDS_SUPPORTED_DCT[tsk]
+
+    # Set all of the keywords that are allowed for a task
+    supp_keywrds = tsk_key_dct[tsk][1]
+
+    # Now build a dct where all the keywords are defaulted to internal value
     default_dct = dict(
-        zip(keywrds, (NEW_ES_TSK_DCT[key][2] for key in keywrds)))
+        zip(supp_keywrds, (tsk_val_dct[key][2] for key in supp_keywrds)))
 
     return default_dct
 
 
-def check_dictionary(inp_dct, chk_dct, section, dyn_vals=()):
+def build_spc_default(sadpt=False):
+    """ Use the spc dict and build the default values from it.
+        Have some way fo getting the TSs as well?
+    """
+
+    defaults = {}
+    if not sadpt:
+        for key, (_, _, val) in SPC_DEFAULT_DCT.items():
+            if val is not None:
+                defaults[key] = val
+    else:
+        for key, (_, _, val) in TS_DEFAULT_DCT.items():
+            if val is not None:
+                defaults[key] = val
+
+    return defaults
+
+
+# Dictionary Checkers
+def check_dictionary(inp_dct, key_dct, val_dct, section):
     """ Check if the dictionary to see if it has the allowed vals
     """
 
@@ -243,31 +285,44 @@ def check_dictionary(inp_dct, chk_dct, section, dyn_vals=()):
     # Assess if user-defined keywords
     # (1) include requird keywords and (2) only define supported keywords
     inp_keys = set(inp_dct.keys())
-    chk_keys = set(chk_dct.keys())
+    chk_keys = set(val_dct.keys())
     unsupported_keys = inp_keys - chk_keys
     undefined_required_keys = chk_keys - inp_keys
+
+    # print('inp\n', inp_keys)
+    # print('chk\n', chk_keys)
+    # print('unsupport\n', unsupported_keys)
+    # print('unrequired\n', undefined_required_keys)
 
     if unsupported_keys:
         print('User defined unsupported keywords in {}'.format(section))
         for key in unsupported_keys:
             print(key)
-    if undefined_required_keys:
-        print('User has not defined required keywords in {}'.format(section))
-        for key in undefined_required_keys:
-            print(key)
+        sys.exit()
+    # not correct, need new way to do this
+    # if undefined_required_keys:
+    #     print('User has not defined required keywords in {}'.format(section))
+    #     for key in undefined_required_keys:
+    #         print(key)
+    #     sys.exit()
 
     # Assess if the keywords have the appropriate value
     for key, val in inp_dct.items():
-        allowed_typ, allowed_vals, _ = chk_dct[key]
 
-        if not isinstance(type(val), allowed_typ):
-            print('val must be type {}'.format(allowed_typ))
+        allowed_typ, allowed_vals, _ = val_dct[key]
+
+        # fails if None hit, need some way of aviding this
+        # maybe the required checks use if None given?
+        if not isinstance(val, allowed_typ):
+            print('val {} must be type {}'.format(val, allowed_typ))
+            sys.exit()
         if allowed_vals:
             if val not in allowed_vals:
                 print('val is {}, must be {}'.format(val, allowed_vals))
+                sys.exit()
 
 
-def check_thy_lvls(key_dct, method_dct):
+def check_thy_lvls(key_dct, method_dct, section=''):
     """ For specific tasks, we need to a second level of cheeck to ensure
         that values of keywords that correspond to blocks defined in either
         the thy or model dat files.
@@ -275,10 +330,17 @@ def check_thy_lvls(key_dct, method_dct):
         :param key_dct:
         :type key_dct: dict[]
         :param method_dct: thy or mod dct
-
     """
-    method_keys = ['runlvl', 'inplvl', 'var_splvl1', 'var_splvl2', 'var_scnlvl']
-    assert set(key_dct[key] for key in method_keys) <= set(method_dct.keys())
+
+    thy_defined_methods = set(method_dct.keys())
+
+    for key in ('runlvl', 'inplvl', 'var_splvl1', 'var_splvl2', 'var_scnlvl'):
+        val = key_dct.get(key)
+        if val is not None:
+            if val not in thy_defined_methods:
+                print('User has not defined val in thy.dat')
+                print(key, val)
+                sys.exit()
 
 
 def check_lst(inp_lst, sup_lst):

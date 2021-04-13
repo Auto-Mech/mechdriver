@@ -39,7 +39,11 @@ def set_ts_cls_info(spc_dct, model_dct, tsname, chn_model):
     ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
     ts_nobarrier = model_dct[chn_model]['pf']['ts_barrierless']
     tunnel_model = model_dct[chn_model]['pf']['tunnel']
-    radrad = typ.var_radrad(ts_class)
+    _ = typ.var_radrad(ts_class)
+
+    radrad = rinfo.radrad(spc_dct[sub_tsname]['rxn_info'])
+    if radrad:
+        ts_class = 'radical radical ' + ts_class
 
     return ts_class, ts_sadpt, ts_nobarrier, tunnel_model, radrad
 

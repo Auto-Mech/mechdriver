@@ -76,7 +76,7 @@ def fit_rates(inp_temps, inp_pressures, inp_tunit, inp_punit,
         # Update the chemkin string dct
         ioprinter.obj('vspace')
         ioprinter.info_message(
-            'Final Fitting Parameters in CHEMKIN Format:', chemkin_str)
+            'Final Fitting Parameters in CHEMKIN Format:\n', chemkin_str)
         ridx = pes_formula + '_' + reaction.replace('=', '_')
         chemkin_str_dct.update({ridx: chemkin_str})
 

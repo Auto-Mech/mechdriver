@@ -123,28 +123,32 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
         spc_dct[spc] = automol.util.dict_.right_update(
             spc_dct[spc], amech_dct.get(spc, {}))
         # Add the defaults
+        # use function to build the default dict?
         spc_dct[spc] = automol.util.dict_.right_update(
-            SPC_DEFAULT_DCT, mod_spc_dct[spc])
+            SPC_DEFAULT_DCT, spc_dct[spc])
 
         # Add speciaized calls not in the default dct
         ich, mul = spc_dct[spc]['inchi'], spc_dct[spc]['mult']
         if 'elec_levels' not in spc_dct[spc]:
-            spc_dct[spc]['elec_levels'] = eleclvl.DCT.get((ich, mul), (0.0, mul))
+            spc_dct[spc]['elec_levels'] = eleclvl.DCT.get(
+                (ich, mul), (0.0, mul))
         if 'sym_factor' not in spc_dct[spc]:
-            spc_dct[spc]['sym_factor'] = symm.DCT.get((ich, mul), 1.0)
+            spc_dct[spc]['sym_factor'] = symm.DCT.get(
+                (ich, mul), 1.0)
 
     # Add the transitions states defined in species.dat that are not defined in spc_dct
     # they are not in the spc_dct currently, since we don't define TSs there; built later
-    spc_dct.update(ts_dct)
     ts_dct = {}
     for spc in (x for x in amech_dct if 'ts' in x):
         ts_dct[spc] = {**amech_dct[spc]}
-        
+
+        # Need to add the TS defaults
+
         # Add speciaized calls not in the default dct
-        if 'active' not in mod_spc_dct[spc]:
-            mod_spc_dct[spc]['active_space'] = None
+        if 'active' not in spc_dct[spc]:
+            spc_dct[spc]['active_space'] = None
         else:
-            aspace = mod_spc_dct[spc].get('active')
+            aspace = spc_dct[spc].get('active')
             assert len(aspace) == 4, (
                 'active must be length 4: {}'.format(aspace)
             )
@@ -156,15 +160,15 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
             else:
                 wfn_str = None
                 print('No file: {}. Reading file...'.format(wfn_file))
-            mod_spc_dct[spc]['active_space'] = (
+            spc_dct[spc]['active_space'] = (
                 aspace[0], aspace[1], aspace[2], wfn_str)
-    
+
     # add the TSs to the spc dct
     spc_dct.update(ts_dct)
 
-        # Perform conversions as needed
-        # mod_spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
-        # mod_spc_dct[spc]['geo_inp'] = geom_dct.get(ich, None)
+    # Perform conversions as needed
+    # mod_spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
+    # mod_spc_dct[spc]['geo_inp'] = geom_dct.get(ich, None)
 
     # could merge glob here?
 

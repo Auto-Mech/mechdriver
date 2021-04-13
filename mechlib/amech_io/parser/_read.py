@@ -38,7 +38,7 @@ def read_amech_inp(job_path):
     a = read_run(job_path, thy_dct, kin_mod_dct, spc_mod_dct)
 
     # Read chemisry input
-    # b = read_spc(job_path)
+    b = read_spc(job_path)
 
     return None
 
@@ -79,13 +79,13 @@ def read_run(job_path, thy_dct, kin_mod_dct, spc_mod_dct):
     print('spc_dct\n', spc_idx_dct)
 
     print('es\n', es_tsks_block)
-    es_tsks_lst = tsks.es_tsk_lst(es_tsks_block, thy_dct)
+    # es_tsks_lst = tsks.es_tsk_lst(es_tsks_block, thy_dct)
     # therm_tsks_lst = tsks.trans_tsk_lst(trans_tsks_block, kin_mod_dct, spc_mod_dct)
     # ktp_tsks_lst = tsks.trans_tsk_lst(trans_tsks_block, kin_mod_dct, spc_mod_dct)
     # trans_tsks_lst = tsks.trans_tsk_lst(trans_tsks_block, thy_dct)
     # proc_tsks_lst = tsks.proc_tsk_lst(proc_tsks_block, thy_dct)
 
-    print('es\n', es_tsks_lst)
+    # print('es\n', es_tsks_lst)
     # print('trans\n', trans_tsks_block)
     # print('therm\n', therm_tsks_block)
     # print('ktp\n', ktp_tsks_block)
