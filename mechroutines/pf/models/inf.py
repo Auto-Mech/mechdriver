@@ -5,6 +5,7 @@ Random functions that are needed in drivers and routines
 from mechroutines.pf.models import typ
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
+from mechanalyzer.inf import rxn as rinfo
 
 
 def set_pf_info(model_dct, thy_dct, chn_model, ref_model):
@@ -39,7 +40,11 @@ def set_ts_cls_info(spc_dct, model_dct, tsname, chn_model):
     ts_sadpt = model_dct[chn_model]['pf']['ts_sadpt']
     ts_nobarrier = model_dct[chn_model]['pf']['ts_barrierless']
     tunnel_model = model_dct[chn_model]['pf']['tunnel']
-    radrad = typ.var_radrad(ts_class)
+    _ = typ.var_radrad(ts_class)
+
+    radrad = rinfo.radrad(spc_dct[sub_tsname]['rxn_info'])
+    if radrad:
+        ts_class = 'radical radical ' + ts_class
 
     return ts_class, ts_sadpt, ts_nobarrier, tunnel_model, radrad
 

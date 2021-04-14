@@ -143,7 +143,11 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
 
             ioprinter.info_message('  - Estimating the parameters...')
             well_ich = well_info[0]
+            print('well info test:', well_info[0])
+            well_smi = automol.inchi.smiles(well_ich)
+            print('well smiles test:', well_smi)
             well_geo = automol.inchi.geometry(well_ich)
+            print('well geo test:', well_geo)
             params = estimate_viable(
                 well_ich, well_geo, bath_info)
             if params is not None:
