@@ -16,7 +16,7 @@ from mechroutines.pf.models import _tors as tors
 
 
 def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
-                 run_prefix, saddle=False):
+                 run_prefix, zrxn=None):
     """ process to get freq
     """
 
@@ -30,7 +30,7 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
         [_, hr_str, _, prot_str, _] = tors_strs
 
         freqs, imag, tors_zpe, pot_scalef = tors_projected_freqs_zpe(
-            pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+            pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
 
         # Make final hindered rotor strings and get corrected tors zpe
         if typ.scale_1d(chn_pf_models):
@@ -38,7 +38,7 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             tors_strs = tors.make_hr_strings(rotors)
             [_, hr_str, _, prot_str, _] = tors_strs
             _, _, tors_zpe, _ = tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+                pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
             # Calculate current zpe assuming no freq scaling: tors+projfreq
 
         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
@@ -48,14 +48,14 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             freqs = ()
     else:
         freqs, imag, zpe = read_harmonic_freqs(
-            pf_filesystems, run_prefix, saddle=saddle)
+            pf_filesystems, run_prefix, zrxn=zrxn)
         tors_zpe = 0.0
 
     return freqs, imag, zpe, tors_strs
 
 
 def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
-                      run_prefix, saddle=False):
+                      run_prefix, zrxn=None):
     """ process to get freq
     """
 
@@ -75,7 +75,7 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
         [_, hr_str, _, prot_str, _] = tors_strs
 
         freqs, imag, tors_zpe, pot_scalef = tors_projected_freqs_zpe(
-            pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+            pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
 
         # Make final hindered rotor strings and get corrected tors zpe
         if typ.scale_1d(chn_pf_models):
@@ -83,7 +83,7 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             tors_strs = tors.make_hr_strings(rotors)
             [_, hr_str, _, prot_str, _] = tors_strs
             freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1 = tors_projected_freqs(
-                pf_filesystems, hr_str, prot_str, run_prefix, saddle=saddle)
+                pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
             # Calculate current zpe assuming no freq scaling: tors+projfreq
 
         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
@@ -93,25 +93,25 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             freqs = ()
     else:
         freqs, imag, zpe = read_harmonic_freqs(
-            pf_filesystems, run_prefix, saddle=saddle)
+            pf_filesystems, run_prefix, zrxn=zrxn)
         tors_zpe = 0.0
 
     return freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1
 
 
-def read_harmonic_freqs(pf_filesystems, run_prefix, saddle=False):
+def read_harmonic_freqs(pf_filesystems, run_prefix, zrxn=None):
     """ Read the harmonic frequencies for the minimum
         energy conformer
     """
     # Get the harmonic filesys information
     [cnf_fs, harm_path, min_cnf_locs, _, _] = pf_filesystems['harm']
     freqs, imag, zpe = read_locs_harmonic_freqs(
-        cnf_fs, harm_path, min_cnf_locs, run_prefix, saddle=saddle)
+        cnf_fs, harm_path, min_cnf_locs, run_prefix, zrxn=zrxn)
     return freqs, imag, zpe
 
 
 def read_locs_harmonic_freqs(
-        cnf_fs, harm_path, cnf_locs, run_prefix, saddle=False):
+        cnf_fs, harm_path, cnf_locs, run_prefix, zrxn=None):
     """ Read the harmonic frequencies for a specific conformer
     """
 
@@ -140,7 +140,7 @@ def read_locs_harmonic_freqs(
         zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
 
         # Check imaginary frequencies and set freqs
-        if saddle:
+        if zrxn is not None:
             if len(imag_freqs) > 1:
                 ioprinter.warning_message(
                     'Saddle Point has more than',
@@ -173,19 +173,19 @@ def read_anharmon_matrix(pf_filesystems):
 
 
 def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
-                             prefix, saddle=False, conf=None):
+                             prefix, zrxn=None, conf=None):
     """ Get frequencies from one version of ProjRot
     """
     ret = tors_projected_freqs(
         pf_filesystems, mess_hr_str, projrot_hr_str,
-        prefix, saddle=saddle, conf=conf)
+        prefix, zrxn=zrxn, conf=conf)
     freqs, imag, tors_zpe, scale_factor, _, _ = ret
 
     return freqs, imag, tors_zpe, scale_factor
 
 
 def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
-                         prefix, saddle=False, conf=None):
+                         prefix, zrxn=None, conf=None):
     """ Get frequencies from one version of ProjRot
     """
     run_prefix = pf_filesystems['run_prefix']
@@ -264,7 +264,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         proj_zpe = harm_zpe_notors_2
 
     # Check imaginary frequencies and set freqs
-    if saddle:
+    if zrxn is not None:
         if len(imag_freqs) > 1:
             ioprinter.warning_message(
                'There is more than one imaginary frequency')

@@ -49,7 +49,7 @@ IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high',
 #IMPLEMENTED_CBH_TS_CLASSES = []
                               # 'hydrogen migration', 'addition high', 'elimination high']
 
-def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, ts_geom=None):
+def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, zrxn=None):
     """ add refs to species list as necessary
     """
     spc_names = [spc[0] for spc in spc_queue]
@@ -105,12 +105,12 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
         basis_dct, unique_refs_dct = _prepare_refs(
             None, ref_scheme, spc_dct, spc_names,
             repeats=repeats, parallel=parallel,
-            ts_geom=ts_geom)
+            zrxn=zrxn)
     return basis_dct, unique_refs_dct
 
 
 def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, 
-                  repeats=False, parallel=False, ts_geom=None):
+                  repeats=False, parallel=False, zrxn=None):
     ioprinter.info_message(
         'Processor {} will prepare species: {}'.format(
             os.getpid(), ', '.join(spc_names)))
@@ -138,27 +138,24 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
     # Determine the reference species, list of inchis
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
         msg += '\nDetermining basis for species: {}'.format(spc_name)
-        if 'class' in spc_dct[spc_name]:
-            ioprinter.info_message('TS info in basis: ', spc_dct[spc_name].keys())
-            _, _, rxn_run_path, rxn_save_path = spc_dct[spc_name]['rxn_fs']
-            run_prefix = rxn_run_path.split('/RXN')[0]
-            save_prefix = rxn_save_path.split('/RXN')[0]
-            rxnclass = spc_dct[spc_name]['class']
-            if spc_dct[spc_name]['class'] in IMPLEMENTED_CBH_TS_CLASSES and 'basic' not in ref_scheme:
-                if ts_geom:
-                    geo, zma, brk_bnd_keys, frm_bnd_keys = ts_geom
-                    spc_basis, coeff_basis = get_ts_ref_fxn(
-                        spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
-                        frm_bnd_keys, brk_bnd_keys,
-                        geo=geo, backup_zma=zma,
-                        backup_frm_key=spc_dct[spc_name]['frm_bnd_keys'],
-                        backup_brk_key=spc_dct[spc_name]['brk_bnd_keys'])
-                else:
-                    spc_basis, coeff_basis = get_ts_ref_fxn(
-                        spc_dct[spc_name]['zma'], spc_dct[spc_name]['class'],
-                        spc_dct[spc_name]['frm_bnd_keys'],
-                        spc_dct[spc_name]['brk_bnd_keys'])
+        if zrxn is not None:
+            rxnclass = automol.reac.reaction_class(zrxn)
+            # _, _, rxn_run_path, rxn_save_path = spc_dct[spc_name]['rxn_fs']
+            # run_prefix = rxn_run_path.split('/RXN')[0]
+            # save_prefix = rxn_save_path.split('/RXN')[0]
+            # rxnclass = spc_dct[spc_name]['class']
+            rct_gras = automol.reac.reactant_graphs(zrxn)
+            if rxnclass in IMPLEMENTED_CBH_TS_CLASSES and 'basic' not in ref_scheme:
+                frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
+                brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
+                rct_gras = automol.reac.reactant_graphs(zrxn)
+                rct_geos = (automol.graph.geometry(rgra) for rgra in rct_gras)
+                ts_geo = automol.reac.ts_geometry(zrxn, rct_geos)
+                ts_zma = automol.reac.ts_zmatrix(zrxn, ts_geo)
+                spc_basis, coeff_basis = get_ts_ref_fxn(
+                    ts_zma, rxnclass, frm_bnd_keys, brk_bnd_keys, geo=ts_geo)
             else:
+                # Use a basic scheme
                 spc_basis = []
                 coeff_basis = []
                 ts_ref_scheme = ref_scheme
@@ -443,17 +440,17 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
 
 
 def enthalpy_calculation(
-        spc_dct, spc_name, ts_geom, ene_chnlvl,
+        spc_dct, spc_name, ene_chnlvl,
         chn_basis_ene_dct, chn_pf_levels,
         chn_pf_models, run_prefix, save_prefix,
-        pforktp='ktp', saddle=False):
+        pforktp='ktp', zrxn=None):
 
     ref_scheme = chn_pf_models['ref_scheme']
     ref_enes = chn_pf_models['ref_enes']
 
     basis_dct, uniref_dct = prepare_refs(
         ref_scheme, spc_dct, [[spc_name, None]],
-        ts_geom=ts_geom)
+        zrxn=zrxn)
 
     # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
@@ -506,11 +503,11 @@ def enthalpy_calculation(
             ts_ref_scheme = 'cbh0'
             if '_' in ref_scheme:
                 ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
-        if not saddle:
+        if zrxn is None:
             if ref_scheme != ts_ref_scheme:
                 basis_dct_trs, uniref_dct_trs = prepare_refs(
                     ts_ref_scheme, spc_dct, [[spc_name, None]],
-                    ts_geom=ts_geom)
+                    zrxn=zrxn)
                 spc_basis_trs, coeff_basis_trs = basis_dct_trs[spc_name]
                 ene_basis_trs = []
                 energy_missing = False
