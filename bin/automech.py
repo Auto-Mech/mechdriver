@@ -220,8 +220,8 @@ if WRITE_MESSRATE or RUN_MESSRATE or RUN_FITS:
             for chn_idx, rxn in enumerate(rxn_lst):
                 ioprinter.channel(
                     rxn['chn_idx'],
-                    '+'.join(rxn['reacs']),
-                    '+'.join(rxn['prods']))
+                    rxn['reacs'],
+                    rxn['prods'])
 
             ktpdriver.run(
                 formula, pes_idx, sub_pes_idx,

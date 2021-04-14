@@ -221,7 +221,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     # NEW projrot writing
     script_str = autorun.SCRIPT_DCT['projrot']
     dist_cutoff_dct1 = {('H', 'O'): 2.26767, ('H', 'C'): 2.26767}
-    dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459}
+    dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459, ('C', 'O'): 3.7807}
     rotor_dist1_str = projrot_io.writer.projection_distance_aux(
         dist_cutoff_dct=dist_cutoff_dct1)
     rotor_dist2_str = projrot_io.writer.projection_distance_aux(

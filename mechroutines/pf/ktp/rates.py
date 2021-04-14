@@ -17,6 +17,7 @@ from mechroutines.pf.models.inf import set_pf_info
 from mechroutines.pf.models.inf import set_ts_cls_info
 from mechroutines.pf.models.inf import make_rxn_str
 from mechroutines.pf.models.typ import need_fake_wells
+from mechroutines.pf.models.typ import is_abstraction
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -32,7 +33,7 @@ def make_messrate_str(globkey_str, energy_trans_str, rxn_chan_str):
 
 
 # Headers
-def make_header_str(temps, pressures):
+def make_header_str(spc_dct, temps, pressures):
     """ makes the standard header and energy transfer sections for MESS input file
     """
 
@@ -49,8 +50,12 @@ def make_header_str(temps, pressures):
     ioprinter.debug_message('     {}'.format(keystr1))
     ioprinter.debug_message('     {}'.format(keystr2))
 
+    if is_abstraction(spc_dct):
+        well_extend = None
+    else:
+        well_extend = 'auto'
     header_str = mess_io.writer.global_reaction(
-        temps, pressures, excess_ene_temp=None, well_extend=None)
+        temps, pressures, excess_ene_temp=None, well_extend=well_extend)
 
     return header_str
 
@@ -109,8 +114,8 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         ioprinter.reading('PES electrion structure data')
         ioprinter.channel(
             rxn['chn_idx'],
-            '+'.join(rxn['reacs']),
-            '+'.join(rxn['prods']))
+            rxn['reacs'],
+            rxn['prods'])
 
         # Set the TS name and channel model
         tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])

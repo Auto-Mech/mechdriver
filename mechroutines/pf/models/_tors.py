@@ -83,7 +83,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
             const_names = torsprep.set_constraint_names(
                 rotor_zma, torsion.name, tors_model)
             constraint_dct = automol.zmat.constraint_dct(
-                rotor_zma, const_names, torsion.name)
+                rotor_zma, const_names, (torsion.name,))
             print('torsion names', torsion.name, tors_names[tidx])
             pot, _, _, _, _, _ = torsprep.read_hr_pot(
                 (tors_names[tidx],), (tors_grids[tidx],),
@@ -128,14 +128,16 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
     # Calculate the scaling factors
     scale_indcs, factor = scale_factor
     nscale = numtors - len(scale_indcs)
-    sfactor = factor**(2.0/nscale)
-    ioprinter.debug_message(
-        'scale_coeff test:', factor, nscale, sfactor)
+    print('nscale test:', nscale, numtors, scale_indcs, len(scale_indcs))
+    if nscale > 0:
+        sfactor = factor**(2.0/nscale)
+        ioprinter.debug_message(
+            'scale_coeff test:', factor, nscale, sfactor)
 
-    for rotor in rotors:
-        for tidx, torsion in enumerate(rotor):
-            if tidx not in scale_indcs and factor is not None:
-                torsion.pot = automol.pot.scale(torsion.pot, sfactor)
+        for rotor in rotors:
+            for tidx, torsion in enumerate(rotor):
+                if tidx not in scale_indcs and factor is not None:
+                    torsion.pot = automol.pot.scale(torsion.pot, sfactor)
 
     return rotors
 

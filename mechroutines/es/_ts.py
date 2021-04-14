@@ -364,8 +364,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
     rct_info = rinfo.rgt_info(rxn_info, 'reacs')
     rxn_info = rinfo.sort(rxn_info)
 
-    ts_locs = (0,)
-    # ts_locs = (int(tsname.split('_')[-1]),)
+    ts_locs = (int(tsname.split('_')[-1]),)
     print('ts locs test:', ts_locs)
 
     # high_mult = rinfo.ts_high_mult(rxn_info)
