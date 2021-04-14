@@ -1,55 +1,23 @@
 """ Library of parser functions for the model file
+
+    I think it this is very out of wack with current set-up
 """
 
 
-def check_model_combinations(pf_dct):
-    """ Check if a model combination is not implemented for PF routines
-    """
-    if pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == '1dhr':
-        print('*ERROR: VPT2 and 1DHR combination is not yet implemented')
-        sys.exit()
-    elif pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == 'tau':
-        print('*ERROR: VPT2 and TAU combination is not yet implemented')
-        sys.exit()
-
-
-def pf_model_info(pf_model):
+def pf_model_info(pf_model_dct):
     """ Set the PF model list based on the input
         Combine with es
 
         {'vib': {'model': '', 'geolvl_info': (), ...}}
     """
-    rot_model = pf_model['rot'] if 'rot' in pf_model else 'rigid'
-    tors_model = pf_model['tors'] if 'tors' in pf_model else 'rigid'
-    vib_model = pf_model['vib'] if 'vib' in pf_model else 'harm'
-    sym_model = pf_model['sym'] if 'sym' in pf_model else 'none'
-    vpt2_model = pf_model['vpt2'] if 'vpt2' in pf_model else 'none'
-    etrans_model = pf_model['etrans'] if 'etrans' in pf_model else 'none'
 
-    # Set well models
     if 'wells' in pf_model:
-        rwells_model = pf_model['wells']
-        pwells_model = pf_model['wells']
-    else:
-        if 'rwells' in pf_model:
-            rwells_model = pf_model['rwells']
-        else:
-            rwells_model = 'fake'
-        if 'pwells' in pf_model:
-            pwells_model = pf_model['pwells']
-        else:
-            pwells_model = 'fake'
+        pf_model_dct['rwells'] = pf_model_dct['wells']
+        pf_model_dct['pwells'] = pf_model_dct['wells']
+        pf_model_dct.pop('wells')
 
-    pf_models = {
-        'rot': rot_model,
-        'tors': tors_model,
-        'vib': vib_model,
-        'sym': sym_model,
-        'vpt2': vpt2_model,
-        'etrans': etrans_model,
-        'rwells': rwells_model,
-        'pwells': pwells_model,
-    }
+    new_dct = automol.util.dict_.right_update(
+      defaults_from_val_dct(MODPF_VAL_DCT), pf_model_dct)
 
     return pf_models
 

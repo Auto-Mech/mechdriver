@@ -1,21 +1,22 @@
-"""
-  Libraries to check for allowed and supported keywords
+""" Libraries of supported keywords and their corresponding values
+  
+    Also includes functionalities for constructing dictionaries
+    of default values as well as assessing the validity of user input.
 """
 
 import sys
-from phydat import phycon
 
 
 # Run Keywords
-RUN_INP_DCT = {
-    'inp_mech': (('chemkin'), 'chemkin'),
-    'inp_spc': (('csv',), 'csv'),
-    'out_mech': (('chemkin'), 'chemkin'),
-    'out_spc': (('csv',), 'csv'),
-    'print_mech': ((True, False), False),
-    'print_debug': ((True, False), False),
-    'run_prefix': (None, None),
-    'save_prefix': (None, None)
+RUN_INP_VAL_DCT = {
+    'inp_mech': (str, ('chemkin'), 'chemkin'),
+    'inp_spc': (str, ('csv',), 'csv'),
+    'out_mech': (str, ('chemkin'), 'chemkin'),
+    'out_spc': (str, ('csv',), 'csv'),
+    'print_mech': (bool, (True, False), False),
+    'print_debug': (bool, (True, False), False),
+    'run_prefix': (str, None, None),
+    'save_prefix': (str, None, None)
 }
 
 # HANDLE TASK KEYS
@@ -64,6 +65,10 @@ TSK_KEY_DCT = {
     'zmatrix': (('spc',), PRNT),
     'enthalpy': (('spc',), PRNT),
     'coeffs': (('spc',), ()),
+    # KTP/Therm
+    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite')),
+    'run_mess': ((), ('nprocs', 'inpname')),
+    'run_fits': ((), ('kin_model',)),
 }
 
 # es tsk: (object type, (allowed values), default)  # use functions for weird
@@ -87,101 +92,79 @@ TSK_VAL_DCT = {
     'potthresh': (float, (), 0.3),
     'rxncoord': (str, ('irc', 'auto'), 'auto'),
     'nobarrier': (str, ('pst', 'rpvtst', 'vrctst'), None),
-    # TRans
+    # Trans
     'pot': (str, ('sphere',), 'lj_12_6'),
     'njobs': (int, (), 1),
     'nsamp': (int, (), 1),
     'smin': (float, (), 2.0),
     'smax': (float, (), 6.0),
     'conf': (str, ('sphere',), 'sphere'),
-    # PRoc
+    # Proc
     'geolvl': (str, (), None),
     'proplvl': (str, (), None),
     'nconfs': (str, (), 'min'),
     'econfs': (str, (), 'min'),
     'scale': (str, (), None),
-}
-# Have nconfs and econfs keywords and combine them to figure out which to use?
-
-OTHER_TSK_KEY_DCT = {
-    'write_mess': ('kin_model', 'spc_model', 'overwrite'),
-    'run_mess': ('nprocs', 'inpname'),
-    'run_fits': ('kin_model',),
-}
-OTHER_TSK_VAL_DCT = {
+    # KTP/Therm
     'kin_model': (str, (), None),
     'spc_model': (str, (), None),
-    'overwrite': (str, (), False),
     'nprocs': (int, (), 10),
     'inpname': (str, (), None)
 }
+# Have nconfs and econfs keywords and combine them to figure out which to use?
 
-# Species keywords
-SPC_REQUIRED_KEYWORDS = [
-    'mult',
-    'charge',
-]
-SPC_SUPPORTED_KEYWORDS = [
-    'hind_inc',
-    'geom',
-    'ts_search',
-    'active',
-    'zma_idx',
-]
-SPC_ALT_DCT = {
-    'smin': (None, float, (), None),
-    'smax': (None, float, (), None),
-    'etrans_nsamp': (None, int, (), None),
-    'lj': (None, list, (), None),
-    'edown': (None, list, (), None)
+SPC_VAL_DCT = {
+    'mult': (int, (), None),
+    'charge': (int, (), None),
+    'inchi': (str, (), None),
+    'smiles': (str, (), None),
+    'tors_names': (str, (), None),
+    'elec_levels': (str, (), None),
+    'sym_factor': (str, (), None),
+    'kickoff': (tuple, (), (True, (0.1, False))),
+    'hind_inc': (float, (), 30.0),
+    'mc_nsamp': (tuple, (), (True, 12, 1, 3, 100, 25)),
+    'tau_nsamp': (tuple, (), (True, 12, 1, 3, 100, 25)),
+    'smin': (float, (), None),
+    'smax': (float, (), None),
+    'etrans_nsamp': (int, (), None),
+    'lj': (tuple, (), None),
+    'edown': (tuple, list, (), None)
+    'active': (tuple, (), None),
+    'zma_idx': (int, (), 0)
 }
-
-SPC_DEFAULT_DCT = {
-    # requied
-    'mult': (True, int, (), None),
-    'charge': (True, int, (), None),
-    'inchi': (),
-    'smiles': (),
-    # other
-    'tors_names': (),
-    'elec_levels': (),
-    'sym_factor': (),
-
-    # ones I know need to be in
-    'kickoff': (True, (0.1, False)),
-    'hind_inc': 30.0*phycon.DEG2RAD,
-    'mc_nsamp': (True, 12, 1, 3, 100, 25),
-    'tau_nsamp': (True, 12, 1, 3, 100, 25),
-    'lj': None,
-    'edown': None
+TS_VAL_DCT = {
+    **SPC_VAL_DCT,
+    **{
+        'pst_params': (tuple, (), (1.0, 6)),
+        'rxndirn': (str, (), 'forw'),
+        'kt_pst': (float, (), 4.0e-10),
+        'temp_pst': (float, (), 300.0),
+        'n_pst': (float, (), 6.0),
+        'active': (str, (), None),
+        'ts_seatch': (str, (), 'sadpt'),
+        'ts_idx': (int, (), 0)
+    }
 }
-TS_DEFAULT_DCT = {**SPC_DEFAULT_DCT, **{
-    'pst_params': (1.0, 6),
-    'rxndirn': 'forw',
-    'kt_pst': 4.0e-10,
-    'temp_pst': 300.0,
-    'n_pst': 6.0,
-    'active': (False, str, (), None),
-}}
 
 
 # Theory Keywords
 # rquired, Type, allowed, default,
 # maybe set defaults using the qchem params script?
-THY = {
-    'program': (True, str, (), None),
-    'method': (True, str, (), None),
-    'basis': (True, str, (), None),
-    'orb_res': (True, str, ('RR', 'UU', 'RU'), None),
-    'ncycles': (False, int, (), None),
-    'mem': (False, float, (), None),
-    'nprocs': (False, int, (), None),
-    'econv': (False, float, (), None),
-    'gconv': (False, float, (), None)
+THY_VAL_DCT = {
+    'program': (str, (), None),
+    'method': (str, (), None),
+    'basis': (str, (), None),
+    'orb_res': (str, ('RR', 'UU', 'RU'), None),
+    'ncycles': (int, (), None),
+    'mem': (float, (), None),
+    'nprocs': (int, (), None),
+    'econv': (float, (), None),
+    'gconv': (float, (), None)
 }
 
 # Model keywords
-MOD_KIN_DEFAULT = {
+MODKIN_VAL_DEFAULT = {
     'pressures': (),
     'rate_temps': (),
     'thermo_temps': (),
@@ -205,7 +188,7 @@ MOD_KIN_DEFAULT = {
     }
 }
 
-MOD_PF_DEFAULT = {
+MODPF_VAL_DCT = {
     'ene': (str, ('sp', 'composite'), 'sp'),
     'rot': (str, ('rigid', 'vpt2'), 'rigid'),
     'vib': (str, ('harm', 'vpt2', 'tau'), 'harm'),
@@ -214,7 +197,7 @@ MOD_PF_DEFAULT = {
     'sym': (str, ('none', 'sampling', '1dhr'), 'none'),
     'ts_nobar': (str, ('pst', 'rpvtst', 'vrctst'), 'pst'),
     'ts_sadpt': (str, ('fixed', 'pst', 'rpvtst', 'vrctst'), 'fixed'),
-    'wells': (str, ('fake', 'find', 'none'), 'fake'),
+    # 'wells': (str, ('fake', 'find', 'none'), 'fake'),
     'rwells': (str, ('fake', 'find', 'none'), 'fake'),
     'pwells': (str, ('fake', 'find', 'none'), 'fake'),
     'tunnel': (str, ('none', 'eckart', 'sct'), 'eckart'),
@@ -240,43 +223,77 @@ VRC_DCT = {
     'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
 }
 
+# Functions needed to build custom values
+def elvl_symf():
+    """
+    """
+    if 'elec_levels' not in spc_dct[spc]:
+        spc_dct[spc]['elec_levels'] = eleclvl.DCT.get(
+            (ich, mul), (0.0, mul))
+    if 'sym_factor' not in spc_dct[spc]:
+        spc_dct[spc]['sym_factor'] = symm.DCT.get(
+            (ich, mul), 1.0)
 
-# Dictionary Builders
-def build_tsk_default(tsk, tsk_key_dct, tsk_val_dct):
-    """ Way of building the default dcts for various things, this is
-        for ES tasks
+    return None 
+
+
+def active():
+    """
     """
 
-    # Set all of the keywords that are allowed for a task
-    supp_keywrds = tsk_key_dct[tsk][1]
+    # Add speciaized calls not in the default dct
+    if 'active' not in spc_dct[spc]:
+        spc_dct[spc]['active_space'] = None
+    else:
+        aspace = spc_dct[spc].get('active')
+        assert len(aspace) == 4, (
+            'active must be length 4: {}'.format(aspace)
+        )
+        wfn_file = aspace[3]
+        wfn_inp = os.path.join(os.path.join(job_path, 'inp/'+wfn_file))
+        if os.path.exists(wfn_inp):
+            wfn_str = ioformat.ptt.read_inp_str(job_path, wfn_inp)
+            print('Found file: {}. Reading file...'.format(wfn_file))
+        else:
+            wfn_str = None
+            print('No file: {}. Reading file...'.format(wfn_file))
+        spc_dct[spc]['active_space'] = (
+            aspace[0], aspace[1], aspace[2], wfn_str)
 
-    # Now build a dct where all the keywords are defaulted to internal value
+    return None
+
+
+# Dictionary Builders
+def defaults_from_val_dct(dct):
+    """ Building the default dictionary for run inp dictionary
+
+        prob works for spc as well
+    """
+    supp_keywrds = tuple(RUN_INP_DCT.keys())
     default_dct = dict(
-        zip(supp_keywrds, (tsk_val_dct[key][2] for key in supp_keywrds)))
+        zip(supp_keywrds, (RUN_INP_DCT[key][1] for key in supp_keywrds)))
 
     return default_dct
 
 
-def build_spc_default(sadpt=False):
-    """ Use the spc dict and build the default values from it.
-        Have some way fo getting the TSs as well?
+def defaults_from_key_val_dcts(key, key_dct, val_dct):
+    """ Way of building the default dcts for various things, this is
+        for tasks blocks
+
+        only works for tsks since it's info is in two dcts
     """
 
-    defaults = {}
-    if not sadpt:
-        for key, (_, _, val) in SPC_DEFAULT_DCT.items():
-            if val is not None:
-                defaults[key] = val
-    else:
-        for key, (_, _, val) in TS_DEFAULT_DCT.items():
-            if val is not None:
-                defaults[key] = val
+    # Set all of the keywords that are allowed for a task
+    keywrds = key_dct[key][1]
 
-    return defaults
+    # Now build a dct where all the keywords are defaulted to internal value
+    default_dct = dict(zip(keywrds, (val_dct[kwrd][2] for kwrd in keywrds)))
+
+    return default_dct
 
 
 # Dictionary Checkers
-def check_dictionary(inp_dct, key_dct, val_dct, section):
+def check_val_dictionary1(inp_dct, val_dct, section):
     """ Check if the dictionary to see if it has the allowed vals
     """
 
@@ -306,7 +323,11 @@ def check_dictionary(inp_dct, key_dct, val_dct, section):
     #         print(key)
     #     sys.exit()
 
+
+def check_val_dictionary2(inp_dct, val_dct, section):
     # Assess if the keywords have the appropriate value
+    print('inpdct\n', inp_dct)
+    print('valdct\n', val_dct)
     for key, val in inp_dct.items():
 
         allowed_typ, allowed_vals, _ = val_dct[key]
@@ -320,6 +341,40 @@ def check_dictionary(inp_dct, key_dct, val_dct, section):
             if val not in allowed_vals:
                 print('val is {}, must be {}'.format(val, allowed_vals))
                 sys.exit()
+
+
+# special checkers
+def _new_check_dct(tsk_lsts, tsk_key_dct, tsk_val_dct, thy_dct):
+    """ Loop over all of the tasks, add default keywords and parameters
+        and assesses if all the input is valid
+    """
+
+    for tsk_lst in tsk_lsts:
+
+        # Unpack the task
+        [obj, tsk, keyword_dct] = tsk_lst
+
+        # Build the dictionary of default values for task
+        default_dct = build_tsk_default(tsk, tsk_key_dct, tsk_val_dct)
+        if obj not in tsk_key_dct[tsk][0]:  # correct
+            print('tsk {}, not allowed for {}'.format(tsk, obj))
+            print('')
+            sys.exit()
+
+        # Update the current task dct with the default
+        new_key_dct = automol.util.dict_.right_update(default_dct, keyword_dct)
+
+        # Check if the keyword values are allowed
+        # need 2nd for anything that takes a string from the thy.dat file
+        if check_val_dictionary1(new_key_dct, tsk_val_dct, 'ES_TSKS'):
+            print('\n\nCHECK FAILED, QUITTING...')
+            sys.exit()
+        if check_val_dictionary2(new_key_dct, tsk_val_dct, 'ES_TSKS'):
+            print('\n\nCHECK FAILED, QUITTING...')
+            sys.exit()
+        if check_thy_lvls(new_key_dct, thy_dct):
+            print('\n\nCHECK FAILED, QUITTING...')
+            sys.exit()
 
 
 def check_thy_lvls(key_dct, method_dct, section=''):
@@ -343,8 +398,13 @@ def check_thy_lvls(key_dct, method_dct, section=''):
                 sys.exit()
 
 
-def check_lst(inp_lst, sup_lst):
-    """ Check
+def check_model_combinations(pf_dct):
+    """ Check if a model combination is not implemented for PF routines
     """
-    if set(inp_lst) >= sup_lst:
-        print('Unsupported keys')
+    if pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == '1dhr':
+        print('*ERROR: VPT2 and 1DHR combination is not yet implemented')
+        sys.exit()
+    elif pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == 'tau':
+        print('*ERROR: VPT2 and TAU combination is not yet implemented')
+        sys.exit()
+
