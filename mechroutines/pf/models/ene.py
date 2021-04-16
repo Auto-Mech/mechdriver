@@ -200,7 +200,7 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
 
         ioprinter.info_message(' - Calculating energy for {}...'.format(rgt))
         basis_dct, uniref_dct = thmroutines.basis.prepare_refs(
-            ref_scheme, spc_dct, [[rgt, None]])
+            ref_scheme, spc_dct, [[rgt, None]], run_prefix, save_prefix)
         spc_basis, coeff_basis = basis_dct[rgt]
 
         # Build filesystem

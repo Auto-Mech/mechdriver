@@ -49,7 +49,9 @@ IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high',
 #IMPLEMENTED_CBH_TS_CLASSES = []
                               # 'hydrogen migration', 'addition high', 'elimination high']
 
-def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, zrxn=None):
+def prepare_refs(
+        ref_scheme, spc_dct, spc_queue, run_prefix, save_prefix,
+        repeats=False, parallel=False, zrxn=None):
     """ add refs to species list as necessary
     """
     spc_names = [spc[0] for spc in spc_queue]
@@ -75,7 +77,8 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
             proc = multiprocessing.Process(
                 target=_prepare_refs,
                 args=(queue, ref_scheme, spc_dct, spc_lst,
-                      repeats, parallel, ts_geom))
+                        run_prefix, save_prefix,
+                      repeats, parallel, zrxn))
             procs.append(proc)
             proc.start()
 
@@ -104,12 +107,14 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue, repeats=False, parallel=False, 
     else:
         basis_dct, unique_refs_dct = _prepare_refs(
             None, ref_scheme, spc_dct, spc_names,
+            run_prefix, save_prefix,
             repeats=repeats, parallel=parallel,
             zrxn=zrxn)
     return basis_dct, unique_refs_dct
 
 
-def _prepare_refs(queue, ref_scheme, spc_dct, spc_names, 
+def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
+                  run_prefix, save_prefix,
                   repeats=False, parallel=False, zrxn=None):
     ioprinter.info_message(
         'Processor {} will prepare species: {}'.format(
@@ -132,28 +137,13 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
     basis_dct = {}
     unique_refs_dct = {}
     # ioprinter.info_message('spc dct: ', spc_dct.keys())
-    run_prefix = None
-    save_prefix = None
-    rxnclass = None
     # Determine the reference species, list of inchis
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         if zrxn is not None:
             rxnclass = automol.reac.reaction_class(zrxn)
-            # _, _, rxn_run_path, rxn_save_path = spc_dct[spc_name]['rxn_fs']
-            # run_prefix = rxn_run_path.split('/RXN')[0]
-            # save_prefix = rxn_save_path.split('/RXN')[0]
-            # rxnclass = spc_dct[spc_name]['class']
-            rct_gras = automol.reac.reactant_graphs(zrxn)
             if rxnclass in IMPLEMENTED_CBH_TS_CLASSES and 'basic' not in ref_scheme:
-                frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
-                brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
-                rct_gras = automol.reac.reactant_graphs(zrxn)
-                rct_geos = (automol.graph.geometry(rgra) for rgra in rct_gras)
-                ts_geo = automol.reac.ts_geometry(zrxn, rct_geos)
-                ts_zma = automol.reac.ts_zmatrix(zrxn, ts_geo)
-                spc_basis, coeff_basis = get_ts_ref_fxn(
-                    ts_zma, rxnclass, frm_bnd_keys, brk_bnd_keys, geo=ts_geo)
+                spc_basis, coeff_basis = get_ts_ref_fxn(zrxn)
             else:
                 # Use a basic scheme
                 spc_basis = []
@@ -225,16 +215,17 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
     spec['reacs'] = list(ref[0])
     spec['prods'] = list(ref[1])
     spec['charge'] = 0
+    spec['inchi'] = ''
     spec['class'] = rxnclass
     spec['mult'] = mult
     rxn_ichs = [[], []]
     ioprinter.info_message('spec in build spc', spec)
     for rct_ich in spec['reacs']:
         if rct_ich:
-            rxn_ichs[0].append(automol.inchi.add_stereo(rct_ich)[0])
+            rxn_ichs[0].append(automol.inchi.add_stereo(rct_ich))
     for prd_ich in spec['prods']:
         if prd_ich:
-            rxn_ichs[1].append(automol.inchi.add_stereo(prd_ich)[0])
+            rxn_ichs[1].append(automol.inchi.add_stereo(prd_ich))
     rct_muls = []
     prd_muls = []
     rct_chgs = []
@@ -268,9 +259,10 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
     rxn_muls = [rct_muls, prd_muls]
     rxn_chgs = [rct_chgs, prd_chgs]
 
-
     rxn_info = rinfo.sort((rxn_ichs, rxn_chgs, rxn_muls, mult))
-    rxn_run_fs, rxn_save_fs = build_fs(run_prefix, save_prefix, [], 'REACTION')
+    spec['rxn_info'] = rxn_info
+    spec['ts_locs'] = (0,)
+    rxn_run_fs, rxn_save_fs = build_fs(run_prefix, save_prefix, 'REACTION')
     rxn_run_path = rxn_run_fs[-1].path(rxn_info)
     rxn_save_path = rxn_save_fs[-1].path(rxn_info)
     spec['rxn_fs'] = [
@@ -308,7 +300,7 @@ def is_scheme(scheme):
 # FUNCTIONS TO CALCULATE ENERGIES FOR THERMOCHEMICAL PARAMETERS #
 def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                  pf_levels, pf_models, run_prefix, save_prefix,
-                 read_species = True):
+                 read_species=True):
     """ Return the electronic + zero point energies for a set of species.
     """
 
@@ -339,8 +331,6 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                         ich_name_dct['REACS' + 'REAC'.join(ich[0]) +  'PRODS' + 'PROD'.join(ich[1])] = name
         for name in uni_refs_dct:
             if 'TS' in name:
-                ioprinter.info_message('Name test', name)
-                ioprinter.info_message(ich[0], ich[1])
                 ioprinter.info_message(uni_refs_dct[name]['reacs'])
                 if ((list(ich[0]) == uni_refs_dct[name]['reacs'] or list(ich[0]) == uni_refs_dct[name]['reacs'][::-1]) and
                         (list(ich[1]) == uni_refs_dct[name]['prods'] or list(ich[1]) == uni_refs_dct[name]['prods'][::-1])):
@@ -450,6 +440,7 @@ def enthalpy_calculation(
 
     basis_dct, uniref_dct = prepare_refs(
         ref_scheme, spc_dct, [[spc_name, None]],
+        run_prefix, save_prefix,
         zrxn=zrxn)
 
     # Get the basis info for the spc of interest
@@ -507,6 +498,7 @@ def enthalpy_calculation(
             if ref_scheme != ts_ref_scheme:
                 basis_dct_trs, uniref_dct_trs = prepare_refs(
                     ts_ref_scheme, spc_dct, [[spc_name, None]],
+                    run_prefix, save_prefix,
                     zrxn=zrxn)
                 spc_basis_trs, coeff_basis_trs = basis_dct_trs[spc_name]
                 ene_basis_trs = []
