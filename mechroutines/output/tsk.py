@@ -73,7 +73,8 @@ def run_tsk(tsk, spc_dct, rxn_lst,
             filelabel += '.csv'
             label = spc_name
             basis_dct, uniref_dct = basis.prepare_refs(
-                pf_models['ref_scheme'], spc_dct, [[spc_name, None]])
+                pf_models['ref_scheme'], spc_dct, [[spc_name, None]],
+                run_prefix, save_prefix)
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc_name]
             coeff_array = []

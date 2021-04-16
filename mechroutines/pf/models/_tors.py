@@ -14,7 +14,6 @@ from mechanalyzer.inf import spc as sinfo
 from mechlib.structure import tors as torsprep
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import job_path
-from mechlib import filesys
 
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
@@ -23,6 +22,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
     """
 
     run_prefix = pf_filesystems['run_prefix']
+    print('spc_dct_i in _tors', spc_dct_i)
     spc_info = sinfo.from_dct(spc_dct_i)
     spc_fml = automol.inchi.formula_string(spc_info[0])
     if spc_fml is None:
