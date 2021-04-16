@@ -2,33 +2,31 @@
 Read the mechanism file
 """
 
+import sys
 from mechanalyzer.parser import pes
 from mechanalyzer.parser import util
 from ioformat import ptt
 import autoparse.find as apf
 
+
 MECH_INP = 'inp/mechanism.dat'
 SORT_INP = 'inp/sort.dat'
 
 
-def build_pes_dct(job_path, mech_type,
-                  spc_dct, run_obj_dct, sort_rxns=True):
+def pes_dictionary(mech_str, mech_type, spc_dct, pes_idxs):
     """Build the PES dct
     """
 
     # Build the total PES dct
     mech_info = util.read_mechanism_file(
-        mech_str, mech_type, spc_dct, sort_rxns=sort_rxns)
+        mech_str, mech_type, spc_dct, sort_rxns=False)
     pes_dct = pes.build_pes_dct(*mech_info[1:])
 
     # Build an index dct relating idx to formula
     idx_dct, form_dct = pes.build_pes_idx_dct(pes_dct)
 
     # Reduce the PES dct to only what the user requests
-    if run_obj_dct:
-        pesnums = [idx_pair[0] for idx_pair in run_obj_dct]
-    else:
-        pesnums = [idx_pair[0] for idx_pair in run_obj_dct]
+    pesnums = tuple(pes_idxs.keys())
     reduced_pes_dct = pes.reduce_pes_dct_to_user_inp(pes_dct, pesnums)
 
     # Get a dct for all of the connected channels with the PESs to run
@@ -38,7 +36,7 @@ def build_pes_dct(job_path, mech_type,
     # Form the pes dct that has info formatted to run
     # Get the models in here
     run_pes_dct = pes.pes_dct_w_rxn_lsts(
-        reduced_pes_dct, idx_dct, form_dct, conn_chnls_dct, run_obj_dct)
+        reduced_pes_dct, idx_dct, form_dct, conn_chnls_dct, pes_idxs)
 
     # Print the channels for the whole mechanism file
     pes.print_pes_channels(pes_dct)
@@ -92,8 +90,14 @@ def yesno_to_submech(yesno):
     """
 
     if yesno == 'yes':
-        return 'submech'
+        choice = 'submech'
     elif yesno == 'no':
-        return ''
+        choice = ''
     else:
+        choice = None
+
+    if choice is None:
         print('*ERROR: invalid option for submech in sort.dat')
+        sys.exit()
+
+    return choice

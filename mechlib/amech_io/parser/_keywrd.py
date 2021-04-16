@@ -1,10 +1,12 @@
 """ Libraries of supported keywords and their corresponding values
-  
+
     Also includes functionalities for constructing dictionaries
     of default values as well as assessing the validity of user input.
 """
 
 import sys
+import automol
+from phydat import symm, eleclvl
 
 
 # Run Keywords
@@ -129,24 +131,21 @@ SPC_VAL_DCT = {
     'smax': (float, (), None),
     'etrans_nsamp': (int, (), None),
     'lj': (tuple, (), None),
-    'edown': (tuple, list, (), None)
+    'edown': (tuple, list, (), None),
     'active': (tuple, (), None),
     'zma_idx': (int, (), 0)
 }
 TS_VAL_DCT = {
-    **SPC_VAL_DCT,
-    **{
-        'pst_params': (tuple, (), (1.0, 6)),
-        'rxndirn': (str, (), 'forw'),
-        'kt_pst': (float, (), 4.0e-10),
-        'temp_pst': (float, (), 300.0),
-        'n_pst': (float, (), 6.0),
-        'active': (str, (), None),
-        'ts_seatch': (str, (), 'sadpt'),
-        'ts_idx': (int, (), 0)
-    }
+    'pst_params': (tuple, (), (1.0, 6)),
+    'rxndirn': (str, (), 'forw'),
+    'kt_pst': (float, (), 4.0e-10),
+    'temp_pst': (float, (), 300.0),
+    'n_pst': (float, (), 6.0),
+    'active': (str, (), None),
+    'ts_seatch': (str, (), 'sadpt'),
+    'ts_idx': (int, (), 0)
 }
-
+TS_VAL_DCT.update(SPC_VAL_DCT)
 
 # Theory Keywords
 # rquired, Type, allowed, default,
@@ -223,44 +222,42 @@ VRC_DCT = {
     'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
 }
 
+
 # Functions needed to build custom values
-def elvl_symf():
+def elvl_symf(dct, ich, mul):
+    """ set elec levels and sym factor
     """
-    """
-    if 'elec_levels' not in spc_dct[spc]:
-        spc_dct[spc]['elec_levels'] = eleclvl.DCT.get(
+
+    if 'elec_levels' not in dct:
+        dct['elec_levels'] = eleclvl.DCT.get(
             (ich, mul), (0.0, mul))
-    if 'sym_factor' not in spc_dct[spc]:
-        spc_dct[spc]['sym_factor'] = symm.DCT.get(
+    if 'sym_factor' not in dct:
+        dct['sym_factor'] = symm.DCT.get(
             (ich, mul), 1.0)
 
-    return None 
 
-
-def active():
-    """
-    """
-
-    # Add speciaized calls not in the default dct
-    if 'active' not in spc_dct[spc]:
-        spc_dct[spc]['active_space'] = None
-    else:
-        aspace = spc_dct[spc].get('active')
-        assert len(aspace) == 4, (
-            'active must be length 4: {}'.format(aspace)
-        )
-        wfn_file = aspace[3]
-        wfn_inp = os.path.join(os.path.join(job_path, 'inp/'+wfn_file))
-        if os.path.exists(wfn_inp):
-            wfn_str = ioformat.ptt.read_inp_str(job_path, wfn_inp)
-            print('Found file: {}. Reading file...'.format(wfn_file))
-        else:
-            wfn_str = None
-            print('No file: {}. Reading file...'.format(wfn_file))
-        spc_dct[spc]['active_space'] = (
-            aspace[0], aspace[1], aspace[2], wfn_str)
-
-    return None
+# def active(dct):
+#     """ maybe just read them (like the geometry dct)
+#     """
+#     # Add speciaized calls not in the default dct
+#     if 'active' not in dct:
+#         dct['active_space'] = None
+#     else:
+#         aspace = dct.get('active')
+#         assert len(aspace) == 4, (
+#             'active must be length 4: {}'.format(aspace)
+#         )
+#         wfn_file = aspace[3]
+#         wfn_inp = os.path.join(os.path.join(job_path, 'inp/'+wfn_file))
+#         if os.path.exists(wfn_inp):
+#             wfn_str = ioformat.ptt.read_inp_str(job_path, wfn_inp)
+#             print('Found file: {}. Reading file...'.format(wfn_file))
+#         else:
+#             wfn_str = None
+#             print('No file: {}. Reading file...'.format(wfn_file))
+#         dct['active_space'] = (
+#             aspace[0], aspace[1], aspace[2], wfn_str)
+#     return None
 
 
 # Dictionary Builders
@@ -269,9 +266,9 @@ def defaults_from_val_dct(dct):
 
         prob works for spc as well
     """
-    supp_keywrds = tuple(RUN_INP_DCT.keys())
+    supp_keywrds = tuple(dct.keys())
     default_dct = dict(
-        zip(supp_keywrds, (RUN_INP_DCT[key][1] for key in supp_keywrds)))
+        zip(supp_keywrds, (dct[key][2] for key in supp_keywrds)))
 
     return default_dct
 
@@ -304,7 +301,7 @@ def check_val_dictionary1(inp_dct, val_dct, section):
     inp_keys = set(inp_dct.keys())
     chk_keys = set(val_dct.keys())
     unsupported_keys = inp_keys - chk_keys
-    undefined_required_keys = chk_keys - inp_keys
+    # undefined_required_keys = chk_keys - inp_keys
 
     # print('inp\n', inp_keys)
     # print('chk\n', chk_keys)
@@ -325,6 +322,9 @@ def check_val_dictionary1(inp_dct, val_dct, section):
 
 
 def check_val_dictionary2(inp_dct, val_dct, section):
+    """ check dct function 2
+    """
+
     # Assess if the keywords have the appropriate value
     print('inpdct\n', inp_dct)
     print('valdct\n', val_dct)
@@ -335,10 +335,12 @@ def check_val_dictionary2(inp_dct, val_dct, section):
         # fails if None hit, need some way of aviding this
         # maybe the required checks use if None given?
         if not isinstance(val, allowed_typ):
+            print('bad {}'.format(section))
             print('val {} must be type {}'.format(val, allowed_typ))
             sys.exit()
         if allowed_vals:
             if val not in allowed_vals:
+                print('bad {}'.format(section))
                 print('val is {}, must be {}'.format(val, allowed_vals))
                 sys.exit()
 
@@ -355,7 +357,7 @@ def _new_check_dct(tsk_lsts, tsk_key_dct, tsk_val_dct, thy_dct):
         [obj, tsk, keyword_dct] = tsk_lst
 
         # Build the dictionary of default values for task
-        default_dct = build_tsk_default(tsk, tsk_key_dct, tsk_val_dct)
+        default_dct = defaults_from_val_dct(tsk, tsk_key_dct, tsk_val_dct)
         if obj not in tsk_key_dct[tsk][0]:  # correct
             print('tsk {}, not allowed for {}'.format(tsk, obj))
             print('')
@@ -393,7 +395,7 @@ def check_thy_lvls(key_dct, method_dct, section=''):
         val = key_dct.get(key)
         if val is not None:
             if val not in thy_defined_methods:
-                print('User has not defined val in thy.dat')
+                print('User has not defined val in {}'.format(section))
                 print(key, val)
                 sys.exit()
 
@@ -407,4 +409,3 @@ def check_model_combinations(pf_dct):
     elif pf_dct['vib'] == 'vpt2' and pf_dct['tors'] == 'tau':
         print('*ERROR: VPT2 and TAU combination is not yet implemented')
         sys.exit()
-

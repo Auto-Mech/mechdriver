@@ -2,7 +2,6 @@
 """
 
 
-# Build quues to 
 def build_queue(rxn_lst):
     """ Build spc queue from the reaction lst for the drivers
         :return spc_queue: all the species and corresponding models in rxn
@@ -23,6 +22,9 @@ def build_queue(rxn_lst):
 
 
 def split_queue(spc_queue):
+    """ split the queue for multiple pfs
+    """
+
     new_queue = []
     op_dct = {'*': 'multiply', '+': 'add', '/': 'divide', '-': 'substract'}
     for (spc_name, (pes_model, spc_model)) in spc_queue:

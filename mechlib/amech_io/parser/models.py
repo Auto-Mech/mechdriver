@@ -3,7 +3,33 @@
     I think it this is very out of wack with current set-up
 """
 
+import automol
+import ioformat
+from mechanalyzer.inf import thy as tinfo
+from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
+from mechlib.amech_io.parser._keywrd import MODPF_VAL_DCT
 
+
+# Build Basic Objects
+def models_dictionary(mod_str):
+    """ Parse the models.dat file
+    """
+
+    # Format the models input to the kin and spc model dcts
+    kin_blocks = ioformat.ptt.named_end_blocks(mod_str, 'kin')
+    spc_blocks = ioformat.ptt.named_end_blocks(mod_str, 'spc')
+
+    kin_mod_dct = automol.util.dict_.merge_subdct(
+        ioformat.ptt.keyword_dcts_from_blocks(kin_blocks), keep_subdct=True)
+    spc_mod_dct = automol.util.dict_.merge_subdct(
+        ioformat.ptt.keyword_dcts_from_blocks(spc_blocks), keep_subdct=True)
+
+    # Assess if the model.dat input is valid
+
+    return kin_mod_dct, spc_mod_dct
+
+
+# Convert objects
 def pf_model_info(pf_model_dct):
     """ Set the PF model list based on the input
         Combine with es
@@ -11,7 +37,7 @@ def pf_model_info(pf_model_dct):
         {'vib': {'model': '', 'geolvl_info': (), ...}}
     """
 
-    if 'wells' in pf_model:
+    if 'wells' in pf_model_dct:
         pf_model_dct['rwells'] = pf_model_dct['wells']
         pf_model_dct['pwells'] = pf_model_dct['wells']
         pf_model_dct.pop('wells')
@@ -19,7 +45,7 @@ def pf_model_info(pf_model_dct):
     new_dct = automol.util.dict_.right_update(
       defaults_from_val_dct(MODPF_VAL_DCT), pf_model_dct)
 
-    return pf_models
+    return new_dct
 
 
 def pf_level_info(es_model, thy_dct):
@@ -48,7 +74,7 @@ def pf_level_info(es_model, thy_dct):
     sym_thy_info = (tinfo.from_dct(thy_dct.get(sym_lvl))
                     if sym_lvl else None)
     etrans_thy_info = (tinfo.from_dct(thy_dct.get(etrans_lvl))
-                    if etrans_lvl else None)
+                       if etrans_lvl else None)
     tors_sp_thy_info = (tinfo.from_dct(thy_dct.get(tors_lvl_sp))
                         if tors_lvl_sp else None)
     tors_scn_thy_info = (tinfo.from_dct(thy_dct.get(tors_lvl_scn))

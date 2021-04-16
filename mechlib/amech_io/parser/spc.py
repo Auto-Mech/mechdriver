@@ -1,10 +1,10 @@
 """ Build species dictionary for all spc and ts
 """
 
-import os
 import automol
 import autofile
 import ioformat
+import mechanalyzer
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from phydat import symm, eleclvl, phycon
@@ -13,9 +13,39 @@ from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
 from mechlib.amech_io.parser._keywrd import SPC_VAL_DCT, TS_VAL_DCT
 
 
+# Build spc
+def species_dictionary(spc_str, dat_str, geo_dct):
+    """ Read each of the species input files:
+            (1) species.csv: CSV file with basic info like names,inchis,mults
+            (2) species.dat:
+            (3) *.xyz: XYZ-files with geometries
+
+        :param job_path: directory path where the input file(s) exist
+        :type job_path: str
+        :rtype dict[str: dict]
+    """
+
+    spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, 'csv')
+
+    dat_blocks = ioformat.ptt.named_end_blocks(dat_str, 'spc', footer='spc')
+    dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
+
+    mod_spc_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct)
+
+    # Assess if the species.dat information is valid
+    # check_dictionary()
+
+    return mod_spc_dct
+
+
+# Format spc
 def modify_spc_dct(spc_dct, amech_dct, geo_dct):
     """ Modify the species dct using input from the additional AMech file
     """
+
+    # Build defaults
+    spc_default = defaults_from_val_dct(SPC_VAL_DCT)
+    ts_default = defaults_from_val_dct(TS_VAL_DCT)
 
     # Separate the global dct
     dat_dct, glob_dct = automol.util.dict_.separate_subdct(
@@ -32,7 +62,7 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
 
         # Add the defaults
         spc_dct[spc] = automol.util.dict_.right_update(
-            defaults_from_val_dct(SPC_VAL_DCT), spc_dct[spc])
+            spc_default, spc_dct[spc])
 
         # Add speciaized calls not in the default dct
         ich, mul = spc_dct[spc]['inchi'], spc_dct[spc]['mult']
@@ -50,7 +80,7 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
 
         # Need to add the TS defaults
         ts_dct[tsname] = automol.util.dict_.right_update(
-            defaults_from_val_dct(TS_VAL_DCT), ts_dct[tsname])
+            ts_default, ts_dct[tsname])
 
         # Add speciaized calls not in the default dct
         # _set_active_key()
@@ -97,7 +127,7 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
 
         # Put in defaults if they were not defined
         combined_dct[sadpt] = automol.util._dict.right_update(
-           keyword.TS_DEFAULT_DCT, combined_dct[sadpt])
+           TS_VAL_DCT, combined_dct[sadpt])
 
     return combined_dct
 
