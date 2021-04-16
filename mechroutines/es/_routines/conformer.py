@@ -340,11 +340,13 @@ def single_conformer(zma, spc_info, mod_thy_info,
                 geo, ene, saved_geos, saved_enes)
             if sym_id is None:
                 if cnf_save_fs[0].file.info.exists():
+                    ioprinter.debug_message('inf_obj path', cnf_save_fs[0].path())
                     rinf_obj_s = cnf_save_fs[0].file.info.read()
                     rinf_obj = inf_obj
-                    rnsampd = rinf_obj_s.nsamp
-                    rnsampd += 1
-                    rinf_obj.nsamp = rnsampd
+                    ioprinter.debug_message('inf_obj for r', rinf_obj)
+                    # rnsampd = rinf_obj_s.nsamp
+                    # rnsampd += 1
+                    # rinf_obj.nsamp = rnsampd
                 else:
                     rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
                     rinf_obj.nsamp = 1

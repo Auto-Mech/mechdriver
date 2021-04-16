@@ -263,11 +263,11 @@ PRNT_TSK_SUPPORTED_DCT = {
     'vdw': [
         'freqs']}
 PRNT_TSK_KEYWORDS_SUPPORTED_DCT = {
-    'freqs': ['geolvl', 'proplvl', 'nconfs', 'econfs', 'scale'],
-    'energy': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
-    'geo': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
-    'zmatrix': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
-    'enthalpy': ['geolvl', 'proplvl', 'nconfs', 'econfs'],
+    'freqs': ['geolvl', 'proplvl', 'nconfs', 'econfs', 'rconfs', 'scale'],
+    'energy': ['geolvl', 'proplvl', 'nconfs', 'econfs', 'rconfs',],
+    'geo': ['geolvl', 'proplvl', 'nconfs', 'econfs', 'rconfs',],
+    'zmatrix': ['geolvl', 'proplvl', 'nconfs', 'econfs', 'rconfs',],
+    'enthalpy': ['geolvl', 'proplvl', 'nconfs', 'econfs', 'rconfs'],
     'coeffs': [],
     }
 PRNT_TSK_KEYWORDS_DEFAULT_DCT = {
@@ -275,5 +275,6 @@ PRNT_TSK_KEYWORDS_DEFAULT_DCT = {
     'proplvl': None,
     'nconfs': 'min',
     'econfs': 'min',
+    'rconfs': 'min',
     'scale': None
     }
