@@ -10,7 +10,7 @@ import automol.geom
 import projrot_io
 from phydat import phycon
 from mechlib.amech_io import printer as ioprinter
-from mechlib.amech_io import job_path
+from mechlib.amech_io._path import job_path
 from mechroutines.pf.models import typ
 from mechroutines.pf.models import _tors as tors
 

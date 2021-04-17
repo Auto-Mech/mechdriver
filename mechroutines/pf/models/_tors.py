@@ -13,7 +13,7 @@ from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import spc as sinfo
 from mechlib.structure import tors as torsprep
 from mechlib.amech_io import printer as ioprinter
-from mechlib.amech_io import job_path
+from mechlib.amech_io._path import job_path
 
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
