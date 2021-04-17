@@ -9,6 +9,11 @@ import automol
 from phydat import symm, eleclvl
 
 
+# Might just be easier to reinstitute required lists again.
+# Right now it depends on if each val dct is used multiple times or once
+# then a required might be added (think this fails for tasks dicts)
+
+
 # Run Keywords
 RUN_INP_VAL_DCT = {
     'inp_mech': (str, ('chemkin'), 'chemkin'),
@@ -164,43 +169,68 @@ THY_VAL_DCT = {
 
 # Model keywords
 MODKIN_VAL_DEFAULT = {
-    'pressures': (),
-    'rate_temps': (),
-    'thermo_temps': (),
+    'pressures': (tuple, (), None),
+    'rate_temps': (tuple, (), None),
+    'thermo_temps': (tuple, (), None),
     'rate_fit': {
-        'fit_method': 'arrhenius',
-        'pdep_temps': (500, 100),
-        'pdep_tol': 20.0,
-        'pdep_pval': 1.0,
-        'pdep_low': None,
-        'pdep_high': None,
-        'arr_dbl_tol': 15.0,
-        'troe_param_fit_list': ('ts1', 'ts2', 'ts3', 'alpha'),
+        'fit_method': (str, ('arrhenius', 'chebyshev'), 'arrhenius'),
+        'pdep_temps': (tuple, (), (500, 100)),
+        'pdep_tol': (float, (), 20.0),
+        'pdep_pval': (float, (), 1.0),
+        'pdep_low': (float, (), None),
+        'pdep_high': (float, (), None),
+        'arr_dbl_tol': (float, (), 15.0),
+        'troe_param_fit_list': (
+            tuple, (), ('ts1', 'ts2', 'ts3', 'alpha'))
     },
     'thermo_fit': {
-        'ref_scheme': 'basic',
-        'ref_enes': 'ANL0'
+        'ref_scheme': (str, ('basic', 'cbh0'), 'basic'),
+        'ref_enes': (str, ('ANL0',), 'ANL0')
     },
     'glob_etransfer': {
-        'lj': 1.0,
-        'alpha': 1.0
+        'lj': (tuple, (), None),
+        'alpha': (tuple, (), None),
+        'mass': (tuple, (), None)
     }
 }
 
 MODPF_VAL_DCT = {
-    'ene': (str, ('sp', 'composite'), 'sp'),
-    'rot': (str, ('rigid', 'vpt2'), 'rigid'),
-    'vib': (str, ('harm', 'vpt2', 'tau'), 'harm'),
-    'tors': (str, ('rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'),
-             'rigid'),
-    'sym': (str, ('none', 'sampling', '1dhr'), 'none'),
-    'ts_nobar': (str, ('pst', 'rpvtst', 'vrctst'), 'pst'),
-    'ts_sadpt': (str, ('fixed', 'pst', 'rpvtst', 'vrctst'), 'fixed'),
-    # 'wells': (str, ('fake', 'find', 'none'), 'fake'),
-    'rwells': (str, ('fake', 'find', 'none'), 'fake'),
-    'pwells': (str, ('fake', 'find', 'none'), 'fake'),
-    'tunnel': (str, ('none', 'eckart', 'sct'), 'eckart'),
-    'etrans': (str, ('none', 'estimate', 'read'), 'estimate')
+    'ene': {
+        'lvl1': (tuple, (), None),
+        'lvl2': (tuple, (), None)
+    },
+    'rot': {
+        'mod': (str, ('rigid', 'vpt2'), 'rigid'),
+        'vpt2lvl': (str, (), None)
+    },
+    'vib': {
+        'mod': (str, ('harm', 'vpt2', 'tau'), 'harm'),
+        'geolvl': (str, (), None),
+        'vpt2lvl': (str, (), None),
+    },
+    'tors': {
+        'mod': (
+            str, ('rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'),
+            'rigid'),
+        'enelvl': (str, (), None),
+        'geolvl': (str, (), None),
+    },
+    'symm': {
+        'mod': (str, ('none', 'sampling', '1dhr'), 'none'),
+        'geolvl': (str, (), None),
+    },
+    'rpath': {
+        'enelvl': (str, (), None),
+        'geolvl': (str, (), None),
+    },
+    'ts': {
+        'nobar': (str, ('pst', 'rpvtst', 'vrctst'), 'pst'),
+        'sadpt': (str, ('fixed', 'pst', 'rpvtst', 'vrctst'), 'fixed'),
+        'rwells': (str, ('fake', 'find', 'none'), 'fake'),
+        'pwells': (str, ('fake', 'find', 'none'), 'fake'),
+        'tunnel': (str, ('none', 'eckart', 'sct'), 'eckart'),
+        'etrans': (str, ('none', 'estimate', 'read'), 'estimate')
+    }
 }
 
 
@@ -285,6 +315,26 @@ def defaults_from_key_val_dcts(key, key_dct, val_dct):
 
     # Now build a dct where all the keywords are defaulted to internal value
     default_dct = dict(zip(keywrds, (val_dct[kwrd][2] for kwrd in keywrds)))
+
+    return default_dct
+
+
+def defaults_with_dcts(dct):
+    """ Build defaults for something that could have dcts
+
+        now just dcts in MODPF, could also have lsts with MODKIN with
+        additional lines
+    """
+
+    default_dct = {}
+    for keywrd in dct.keys():
+        val = dct[keywrd]
+        if isinstance(val, dict):
+            keywrds2 = tuple(val.keys())
+            newv = dict(zip(keywrds2, (val[kwrd][2] for kwrd in keywrds2)))
+        elif isinstance(val, tuple):
+            newv = val[2]
+        default_dct[keywrd] = newv
 
     return default_dct
 

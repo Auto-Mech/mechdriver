@@ -3,7 +3,6 @@
     thermodynamic quantities: Enthalpy, Entropy, Gibbs
 """
 
-import os
 import autorun
 import automol.inchi
 from mechroutines.pf import thermo as thmroutines
@@ -22,7 +21,8 @@ from mechlib import filesys
 from automol.inchi import formula_string as fstring
 
 
-def run(spc_dct,
+def run(therm_tsk_lst,
+        spc_dct,
         pes_model_dct, spc_model_dct,
         thy_dct,
         rxn_lst,

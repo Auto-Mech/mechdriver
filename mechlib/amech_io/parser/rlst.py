@@ -8,10 +8,8 @@ def build_queue(rxn_lst):
         :rtype: list[(species, model),...]
     """
     if 'all' in rxn_lst:
-        # First check if rxn_lst is a bunch of species
         spc_queue = rxn_lst['all']['species']
     else:
-        # Build the list from expanding the reacs and prods
         spc_queue = []
         for rxn in rxn_lst:
             model = rxn['model']
@@ -75,23 +73,3 @@ def build_run_spc_dct(spc_dct, run_obj_dct):
     }
 
     return run_dct
-
-
-def build_spc_queue(rxn_lst):
-    """ Build spc queue from the reaction lst for the drivers
-        :return spc_queue: all the species and corresponding models in rxn
-        :rtype: list[(species, model),...]
-    """
-
-    if 'all' in rxn_lst:
-        # First check if rxn_lst is a bunch of species
-        spc_queue = rxn_lst['all']['species']
-    else:
-        # Build the list from expanding the reacs and prods
-        spc_queue = []
-        for rxn in rxn_lst:
-            model = rxn['model']
-            spc_queue.extend(((reac, model) for reac in rxn['reacs']))
-            spc_queue.extend(((prod, model) for prod in rxn['prods']))
-
-    return spc_queue

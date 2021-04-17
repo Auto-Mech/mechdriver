@@ -6,7 +6,8 @@
 import automol
 import ioformat
 from mechanalyzer.inf import thy as tinfo
-from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
+# from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
+from mechlib.amech_io.parser._keywrd import defaults_with_dcts
 from mechlib.amech_io.parser._keywrd import MODPF_VAL_DCT
 
 
@@ -25,32 +26,69 @@ def models_dictionary(mod_str):
         ioformat.ptt.keyword_dcts_from_blocks(spc_blocks), keep_subdct=True)
 
     # Assess if the model.dat input is valid
+    # kin_mod_dct = automol.util.dict_.right_update(
+    #     some_defaults_fxn(MODKIN_VAL_DCT), kin_mod_dct)
 
     return kin_mod_dct, spc_mod_dct
 
 
 # Convert objects
-def pf_model_info(pf_model_dct):
+def pf_model_info(spc_model_dct):
     """ Set the PF model list based on the input
         Combine with es
 
         {'vib': {'model': '', 'geolvl_info': (), ...}}
     """
 
-    if 'wells' in pf_model_dct:
-        pf_model_dct['rwells'] = pf_model_dct['wells']
-        pf_model_dct['pwells'] = pf_model_dct['wells']
-        pf_model_dct.pop('wells')
+    if 'wells' in spc_model_dct['ts']:
+        spc_model_dct['ts']['rwells'] = spc_model_dct['ts']['wells']
+        spc_model_dct['ts']['pwells'] = spc_model_dct['ts']['wells']
+        spc_model_dct['ts'].pop('wells')
 
     new_dct = automol.util.dict_.right_update(
-      defaults_from_val_dct(MODPF_VAL_DCT), pf_model_dct)
+      defaults_with_dcts(MODPF_VAL_DCT), spc_model_dct)
 
     return new_dct
 
 
-def pf_level_info(es_model, thy_dct):
+def pf_level_info(spc_model_dct, thy_dct):
     """ Set the model info
+
+        currently breaks for composite methods, e.g. energies
+        maybe just have a function grab all of them and calculate it with the
+        levels later
     """
+
+    def _format_val(lvl_val):
+        """ format weird energy calls
+        """
+        if isinstance(lvl_val, str):
+            val_inf = [1.00, tinfo.from_dct(thy_dct.get(ene_lvl))]
+        else:
+            val_inf = [lvl[0], tinfo.from_dct(thy_dct.get(thy_dct))]
+
+        return val_inf
+
+
+    new_dct = {}
+    for key1, val1 in spc_model_dct.items():
+        _new_dct = {}
+        for key2, val2 in val1.items():
+            if 'lvl' in key2:
+                thy_info = _format_lvl(val2)
+                # if isinstance(val2, str):
+                #     thy_info = (tinfo.from_dct(thy_dct.get(val2))
+                #                 if val2 else None)
+                # else:
+                #     pass
+                #     # do the theory list setting with coefficients
+                _new_dct[key2] = thy_info
+            else:
+                _new_dct[key2] = val2
+
+        new_dct[key1] = _new_dct
+
+
     # Read the ES models from the model dictionary
     geo_lvl = es_model['geo'] if 'geo' in es_model else None
     ene_lvl = es_model['ene'] if 'ene' in es_model else None

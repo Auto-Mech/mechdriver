@@ -13,6 +13,7 @@ from mechlib.reaction import split_unstable
 
 
 def run(pes_formula, pes_idx, sub_pes_idx,
+        ktp_tsk_lst,
         spc_dct, thy_dct, rxn_lst,
         pes_model_dct, spc_model_dct,
         run_inp_dct,
@@ -24,40 +25,18 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
 
-    pes_model = rxn_lst[0]['model'][0]
-
     # Obtain all of the transitions states
     ioprinter.message('Identifying reaction classes for transition states...')
-    ts_dct = {}
-    for rxn in rxn_lst:
-        # tsname = 'ts_{:g}_{:g}'.format(pes_idx, rxn['chn_idx'])
-        spc_model = rxn['model'][1]
-        ene_model = spc_model_dct[spc_model]['es']['ene']
-        geo_model = spc_model_dct[spc_model]['es']['geo']
-        es_info = parser.model.pf_level_info(
-            spc_model_dct[spc_model]['es'], thy_dct)
-        if not isinstance(ene_model, str):
-            ene_method = ene_model[1][1]
-        else:
-            ene_method = ene_model
-        method_dct = thy_dct.get(ene_method)
-        ini_method_dct = thy_dct.get(geo_model)
-        thy_info = tinfo.from_dct(method_dct)
-        ini_thy_info = tinfo.from_dct(ini_method_dct)
-        pf_model = parser.model.pf_model_info(
-            spc_model_dct[spc_model]['pf'])
-        ts_dct.update(
-            parser.species.build_sing_chn_sadpt_dct(
-                pes_idx, rxn, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, run_prefix, save_prefix,
-                direction='forw'))
-    spc_dct = parser.species.combine_sadpt_spc_dcts(
-        ts_dct, spc_dct)
+    spc_dct = parser.species.build_sadpt_dct2(
+        pes_idx, rxn_lst, ktp_tsk_lst,
+        spc_model_dct, thy_dct,
+        run_inp_dct, spc_dct, run_prefix, save_prefix)
 
     # Set reaction list with unstable species broken apart
     ioprinter.message('Identifying stability of all species...', newline=1)
     rxn_lst = split_unstable(
         rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
+
     # Build the MESS label idx dictionary for the PES
     label_dct = ktproutines.label.make_pes_label_dct(
         rxn_lst, pes_idx, spc_dct, spc_model_dct)
@@ -121,19 +100,20 @@ def run(pes_formula, pes_idx, sub_pes_idx,
             pes_model_dct[pes_model]['dbl_arrfit_check']
         )
 
-        ckin_str_dct = ktproutines.fit.fit_rates(
-            inp_temps=pes_model_dct[pes_model]['rate_temps'],
-            inp_pressures=pes_model_dct[pes_model]['pressures'],
-            inp_tunit=pes_model_dct[pes_model]['tunit'],
-            inp_punit=pes_model_dct[pes_model]['punit'],
-            pes_formula=pes_formula,
-            label_dct=label_dct,
-            es_info=es_info,
-            pf_model=pf_model,
+        ckin_str = ktproutines.fit.fit_rates(
             mess_path=mess_path,
             inp_fit_method=fit_method,
-            pdep_fit=pdep_fit,
-            arrfit_thresh=arrfit_thresh)
+            pdep_dct=pdep_fit,
+            arrfit_dct=arrfit_thresh,
+            chebfit_dct={},
+            troefit_dct={},
+            label_dct=label_dct,
+            fit_temps=pes_model_dct[pes_model]['rate_temps'],
+            fit_pressures=pes_model_dct[pes_model]['pressures'],
+            fit_tunit=pes_model_dct[pes_model]['tunit'],
+            fit_punit=pes_model_dct[pes_model]['punit']
+        )
 
         ckin_path = output_path('CKIN')
-        writer.ckin.write_rxn_file(ckin_str_dct, pes_formula, ckin_path)
+        writer.ckin.write_rxn_file(
+            {pes_formula: ckin_str}, pes_formula, ckin_path)

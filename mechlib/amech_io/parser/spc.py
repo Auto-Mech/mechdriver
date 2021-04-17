@@ -184,6 +184,35 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
     return ts_dct
 
 
+def build_sadpt_dct2(pes_idx, rxn_lst, spc_model,
+                     spc_model_dct, thy_dct,
+                     run_inp_dct, spc_dct, run_prefix, save_prefix):
+    """ build spc dct for ktp driver
+    """
+
+    ts_dct = {}
+    for rxn in rxn_lst:
+        ene_model = spc_model_dct[spc_model]['es']['ene']
+        geo_model = spc_model_dct[spc_model]['es']['geo']
+        if not isinstance(ene_model, str):
+            ene_method = ene_model[1][1]
+        else:
+            ene_method = ene_model
+        method_dct = thy_dct.get(ene_method)
+        ini_method_dct = thy_dct.get(geo_model)
+        thy_info = tinfo.from_dct(method_dct)
+        ini_thy_info = tinfo.from_dct(ini_method_dct)
+        ts_dct.update(
+            build_sing_chn_sadpt_dct(
+                pes_idx, rxn, thy_info, ini_thy_info,
+                run_inp_dct, spc_dct, run_prefix, save_prefix,
+                direction='forw'))
+    spc_dct = combine_sadpt_spc_dcts(
+        ts_dct, spc_dct)
+
+    return spc_dct
+
+
 # def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
 def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
                              run_inp_dct, spc_dct, run_prefix, save_prefix,
