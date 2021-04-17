@@ -69,10 +69,7 @@ def read_sort_section(job_path):
         # format the section
         species = apf.first_capture(
             ptt.paren_section('species'), submech_section[0])
-        submech_opt = apf.first_capture(
-            ptt.keyword_pattern('submech_ox'), submech_section[0])
-        submech_opt = yesno_to_submech(submech_opt)
-        isolate_species = ptt.build_keyword_lst(species+submech_opt)
+        isolate_species = ptt.build_keyword_lst(species)
 
     sortmech_section = apf.all_captures(
         ptt.end_section('sort_mech'), sort_str)
@@ -87,15 +84,3 @@ def read_sort_section(job_path):
         sort_list = ptt.build_keyword_lst(criteria+n_criteria)
 
     return isolate_species, sort_list
-
-
-def yesno_to_submech(yesno):
-    """ converts 'yes' to 'submech' and 'no' to ''
-    """
-
-    if yesno == 'yes':
-        return 'submech'
-    elif yesno == 'no':
-        return ''
-    else:
-        print('*ERROR: invalid option for submech in sort.dat')

@@ -1,17 +1,15 @@
 isolate_submech # this section is not mandatory
     species = (
         IC8
-        IC8-1R
     )
-    submech_ox = no
 end
 
 sort_mech
     criteria = (
         submech
+        subpes
         molecularity
-        rxn_class_broad
-        species        
+        rxn_class_broad        
     )
     n_criteria_headers = 1
 end
