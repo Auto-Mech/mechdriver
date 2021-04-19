@@ -59,23 +59,23 @@ def run_tsk(tsk, spc_dct, spc_name,
         job = tsk.split('_', 1)[1]
 
         # Run the task if an initial geom exists
-        if 'init' in tsk:
+        if 'init' in tsk and not skip_task(spc_dct, spc_name):
             _ = geom_init(
                 spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'conf' in tsk:
+        elif 'conf' in tsk and not skip_task(spc_dct, spc_name):
             conformer_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'tau' in tsk:
+        elif 'tau' in tsk and not skip_task(spc_dct, spc_name):
             tau_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'hr' in tsk:
+        elif 'hr' in tsk and not skip_task(spc_dct, spc_name):
             hr_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'irc' in tsk:
+        elif 'irc' in tsk and not skip_task(spc_dct, spc_name):
             irc_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
@@ -841,3 +841,25 @@ def irc_tsk(job, spc_dct, spc_name,
                 ini_scn_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite, **kwargs)
             ioprinter.obj('vspace')
+
+
+def skip_task(spc_dct, spc_name):
+    """ Should this task be skipped?
+    :param spc_dct: species dictionary
+    :type spc_dct: dictionary
+    :param spc_name: name of species
+    :type spc_name: string
+
+    :rtype skip: boolean
+    """
+    skip = False
+
+    # It should be skipped if its radical radical
+    if 'ts' in spc_name:
+        rxn_info = spc_dct[spc_name]['rxn_info']
+        if rinfo.radrad(rxn_info):
+            skip = True
+            ioprinter.info_message('Skipping task because {} is a radical radical reaction'.format(spc_name)) 
+    return skip
+
+
