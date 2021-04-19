@@ -2,6 +2,7 @@
 """
 
 import autorun
+import ratefit
 from mechroutines.pf import ktp as ktproutines
 from mechlib.amech_io import writer
 from mechlib.amech_io import parser
@@ -99,34 +100,34 @@ def run(pes_inf,
             mess_path, mess_inp_str,
             aux_dct=dats, input_name='mess.inp')
 
-    # Run mess to produce rate output
-    if run_messrate:
+    # Run mess to produce rates (currently nothing from tsk lst keys used)
+    run_messrate_tsk = parser.tsks.extract_tsk('run_messrate', ktp_tsk_lst)
+    if run_messrate_tsk is not None:
+
         ioprinter.obj('vspace')
         ioprinter.obj('line_dash')
         ioprinter.running('MESS for the input file', mess_path)
         autorun.run_script(autorun.SCRIPT_DCT['messrate'], mess_path)
 
     # Fit rate output to modified Arrhenius forms, print in ChemKin format
-    if run_fits:
+    run_fit_tsk = parser.tsks.extract_tsk('run_fit', ktp_tsk_lst)
+    if run_fit_tsk is not None:
+
+        tsk_key_dct = write_messrate_tsk[3]  # check format of the ktp tsk lst
+        pes_model = tsk_key_dct['pes_model']
+
         ioprinter.obj('vspace')
         ioprinter.obj('line_dash')
         ioprinter.info_message(
             'Fitting Rate Constants for PES to Functional Forms', newline=1)
 
-        pdep_fit = pes_model_dct[pes_model]['pdep_fit']
-        fit_method = pes_model_dct[pes_model]['fit_method']
-        arrfit_thresh = (
-            pes_model_dct[pes_model]['dbl_arrfit_thresh'],
-            pes_model_dct[pes_model]['dbl_arrfit_check']
-        )
-
-        ckin_str = ktproutines.fit.fit_rates(
+        ckin_str = ratefit.fit.fit_ktp_dct(
             mess_path=mess_path,
-            inp_fit_method=fit_method,
-            pdep_dct=pdep_fit,
-            arrfit_dct=arrfit_thresh,
-            chebfit_dct={},
-            troefit_dct={},
+            inp_fit_method=pes_model_dct[pes_model]['fit_method'],
+            pdep_fit=pes_model_dct[pes_model]['pdep_fit'],
+            arrfit_fit=pes_model_dct[pes_model]['arrfit_fit'],
+            chebfit_fit=pes_model_dct[pes_model]['chebfit_fit'],
+            troefit_fit=pes_model_dct[pes_model]['troefit_fit'],
             label_dct=label_dct,
             fit_temps=pes_model_dct[pes_model]['rate_temps'],
             fit_pressures=pes_model_dct[pes_model]['pressures'],
