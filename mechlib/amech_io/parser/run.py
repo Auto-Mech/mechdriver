@@ -76,7 +76,13 @@ def tasks(run_str, thy_dct, kin_mod_dct, spc_mod_dct):
 
     # _new_check_dct(mod_tsk_lst, TSK_KEY_DCT, TSK_VAL_DCT, thy_dct)
 
-    return es_tsks, therm_tsks, ktp_tsks, trans_tsks, proc_tsks
+    return {
+        'es': es_tsks,
+        'therm': therm_tsks,
+        'ktp': ktp_tsks,
+        'trans': trans_tsks,
+        'proc': proc_tsks
+    }
 
 
 def _tsk_lst(tsk_str, num):
@@ -144,3 +150,17 @@ def _expand_tsks(tsks_lst):
                 mod_tsks_lst2.append([obj, tsk, dct])
 
     return mod_tsks_lst2
+
+
+def extract_tsk(tsk, tsk_lst):
+    """ Searches for a task in the tsk lst and pulls out the info
+        if it is found. Only good if task in lst one time
+    """
+
+    tsk_inf = None
+    for _tsk_inf in tsk_lst:
+        if any(x == tsk for x in _tsk_inf):  # just looks in all pars
+            tsk_inf = _tsk_inf
+            break
+
+    return tsk_inf

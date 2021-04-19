@@ -2,7 +2,6 @@
 """
 
 import autorun
-from mechanalyzer.inf import thy as tinfo
 from mechroutines.pf import ktp as ktproutines
 from mechlib.amech_io import writer
 from mechlib.amech_io import parser
@@ -12,14 +11,27 @@ from mechlib.amech_io import printer as ioprinter
 from mechlib.reaction import split_unstable
 
 
-def run(pes_formula, pes_idx, sub_pes_idx,
+def run(pes_inf,
         ktp_tsk_lst,
         spc_dct, thy_dct, rxn_lst,
         pes_model_dct, spc_model_dct,
-        run_inp_dct,
-        write_messrate=True, run_messrate=True, run_fits=True):
+        run_inp_dct):
     """ main driver for generation of full set of rate constants on a single PES
     """
+
+    # ---------------------------------------------- #
+    # PREPARE INFORMATION TO PASS TO KTPDRIVER TASKS #
+    # ---------------------------------------------- #
+
+    # Unpack the ktp tsks lst
+    _ = ''
+
+    # Print PESs that are being run
+    if pes_inf is not None:
+        pes_formula, pes_idx, sub_pes_idx = pes_inf
+        ioprinter.pes(pes_idx, pes_formula, sub_pes_idx)
+        for rxn in rxn_lst:
+            ioprinter.channel(rxn['chn_idx'], rxn['reacs'], rxn['prods'])
 
     # Pull globally useful information from the dictionaries
     run_prefix = run_inp_dct['run_prefix']
@@ -45,8 +57,16 @@ def run(pes_formula, pes_idx, sub_pes_idx,
     mess_path = job_path(
         run_prefix, 'MESS', 'RATE', pes_formula, locs_idx=sub_pes_idx)
 
+    # --------------------------------- #
+    # RUN THE REQUESTED KTPDRIVER TASKS #
+    # --------------------------------- #
+
     # Write the MESS file
-    if write_messrate:  # and not mess_inp_str:
+    write_messrate_tsk = parser.tsks.extract_tsk('write_messrate', ktp_tsk_lst)
+    if write_messrate_tsk is not None:
+
+        tsk_key_dct = write_messrate_tsk[3]  # check format of the ktp tsk lst
+        pes_model = tsk_key_dct['pes_model']
 
         ioprinter.messpf('write_header')
 

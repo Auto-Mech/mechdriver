@@ -14,6 +14,12 @@ def run(spc_dct,
     """ main driver for etransfer run
     """
 
+    # Print
+    for spc in RUN_SPC_LST_DCT:
+        ioprinter.info_message(
+            'Calculating Thermochem for species: {}'.format(spc),
+            newline=1)
+
     # Pull stuff from dcts for now
     save_prefix = run_inp_dct['save_prefix']
     run_prefix = run_inp_dct['run_prefix']

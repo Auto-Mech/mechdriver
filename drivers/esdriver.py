@@ -3,9 +3,10 @@
 
 from mechroutines.es import run_tsk
 from mechlib.amech_io import parser
+from mechlib.amech_io import printer as ioprinter
 
 
-def run(pes_idx,
+def run(pes_inf,
         rxn_lst,
         spc_dct,
         es_tsk_lst,
@@ -13,8 +14,9 @@ def run(pes_idx,
         run_inp_dct):
     """ Central driver for all electronic structure tasks.
 
-        :param pes_idx: index for the PES where the channel/spc belong to
-        :type pes_idx: int
+        :param pes_inf: info for the PES
+            obj: formula, pes_idx, sub_pes_idx
+        :type pes_inf: int
         :param rxn_lst: species and models for all reactions being run
         :type rxn_lst: list[dict[species, reacs, prods, model]]
         :param spc_dct: species information
@@ -26,6 +28,17 @@ def run(pes_idx,
         :param run_inp_dct: information from input section of run.dat
         :type run_inp_dct: dict[]
     """
+
+    # --------------------------------------------- #
+    # PREPARE INFORMATION TO PASS TO ESDRIVER TASKS #
+    # --------------------------------------------- #
+
+    # Print PESs that are being run
+    if pes_inf is not None:
+        formula, pes_idx, sub_pes_idx = pes_inf
+        ioprinter.pes(pes_idx, formula, sub_pes_idx)
+        for rxn in rxn_lst:
+            ioprinter.channel(rxn['chn_idx'], rxn['reacs'], rxn['prods'])
 
     # Pull stuff from dcts for now
     run_prefix = run_inp_dct['run_prefix']
@@ -41,7 +54,10 @@ def run(pes_idx,
         spc_dct = parser.species.combine_sadpt_spc_dcts(
             ts_dct, spc_dct)
 
-    # Loop over Tasks
+    # -------------------------------- #
+    # RUN THE REQUESTED ESDRIVER TASKS #
+    # -------------------------------- #
+
     for tsk_lst in es_tsk_lst:
 
         # Unpack the options
