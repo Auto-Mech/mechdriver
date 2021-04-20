@@ -1,6 +1,6 @@
 """
    Main Driver to parse and sort the mechanism input files and
-   launch the desired drivers
+   launch the desired MechDriver drivers
 """
 
 import sys
