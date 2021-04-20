@@ -22,8 +22,10 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
     """
 
     # Try to build the Z-Matrix reaction object or identify from scratch
-    zrxn, zma = _read_from_filesys(
-        rxn_info, ini_thy_info, zma_locs, save_prefix)
+    # zrxn, zma = _read_from_filesys(
+        # rxn_info, ini_thy_info, zma_locs, save_prefix)
+    zrxn = None
+    # temporary hack
     if zrxn is None:
         print('    Identifying class')
         zrxns, zmas = _id_reaction(rxn_info)
@@ -65,6 +67,17 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
                 zrxn = zma_fs[-1].file.reaction.read(zma_locs)
                 zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
+        ts_locs=(0,)
+        if zrxn is None:
+            _, zma_fs = build_fs(
+                '', save_prefix, 'ZMATRIX',
+                rxn_locs=sort_rxn_info, ts_locs=ts_locs,
+                thy_locs=mod_ini_thy_info[1:])
+        
+            if zma_fs[-1].file.reaction.exists(zma_locs):
+                zrxn = zma_fs[-1].file.reaction.read(zma_locs)
+                zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+
     return zrxn, zma
 
 
@@ -83,6 +96,10 @@ def _id_reaction(rxn_info):
         zrxn, zma, _, _ = objs
         zrxns.append(zrxn)
         zmas.append(zma)
+        print('zrxn, zma in id:', zrxn, automol.zmat.string(zma))
+
+    import sys
+    sys.exit()
 
     return zrxns, zmas
 

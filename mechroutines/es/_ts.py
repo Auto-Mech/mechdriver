@@ -28,7 +28,10 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     # ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
 
     # Set the TS searching algorithm to use: (1) Check dct, (2) Set by Class
-    search_thy_inf_dct = 'sadpt'
+    print('spc_dct test:', spc_dct[tsname], tsname)
+    search_thy_inf_dct = spc_dct[tsname].get('ts_search', None)
+    if search_thy_inf_dct is None:
+        search_thy_inf_dct = 'sadpt'
     # search_thy_inf_dct = _ts_finder_match(tsk, spc_dct[tsname])
 
     # Build necessary objects
@@ -40,6 +43,8 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     if search_thy_inf_dct == 'sadpt':
         run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
                   thy_inf_dct, runfs_dct, savefs_dct)
+    elif search_thy_inf_dct == 'pst':
+        run_pst(spc_dct, tsname, savefs_dct, zma_locs=(0,))
     elif search_thy_inf_dct == 'molrad_vtst':
         run_vtst(spc_dct, tsname, es_keyword_dct,
                  thy_inf_dct, runfs_dct, savefs_dct)
@@ -84,6 +89,25 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
             runfs_dct, savefs_dct, es_keyword_dct)
 
         # Find a second sadpt
+
+def run_pst(spc_dct, tsname, savefs_dct,
+            zma_locs=(0,)):
+    """ For pst calcs, make a TS/00/Z dir and save
+    """
+
+    # Pull stuff from dcts
+    zma_save_fs = savefs_dct['runlvl_ts_zma_fs']
+
+    ts_dct = spc_dct[tsname]
+    zrxn = ts_dct['zrxn']
+    zma = ts_dct['zma']
+
+    zma_path = zma_save_fs[-1].path(zma_locs)
+    print('Saving reaction class data for pst at')
+    print('  {}'.format(zma_path))
+
+    zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
+    zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
 
 
 def run_vtst(spc_dct, tsname, es_keyword_dct,
@@ -410,6 +434,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
     vscnlvl_scn_save_fs = None
     vscnlvl_cscn_save_fs = None
     vrctst_save_fs = None
+    runlvl_ts_zma_fs = None
 
     if es_keyword_dct.get('inplvl', None) is not None:
 
@@ -442,6 +467,11 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
 
         runlvl_cnf_run_fs, runlvl_cnf_save_fs = build_fs(
             run_prefix, save_prefix, 'CONFORMER',
+            rxn_locs=rxn_info, ts_locs=ts_locs,
+            thy_locs=mod_thy_info[1:])
+
+        _, runlvl_ts_zma_save_fs = build_fs(
+            run_prefix, save_prefix, 'ZMATRIX',
             rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:])
 
@@ -541,7 +571,8 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
         'vrctst_fs': vrctst_save_fs,
-        'rcts_cnf_fs': reac_cnf_fs
+        'rcts_cnf_fs': reac_cnf_fs,
+        'runlvl_ts_zma_fs': runlvl_ts_zma_save_fs
     }
 
     return thy_inf_dct, runfs_dct, savefs_dct
