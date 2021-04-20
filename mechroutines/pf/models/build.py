@@ -57,7 +57,7 @@ def read_spc_data(spc_dct, spc_name,
                 spc_name, spc_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels, chn_basis_ene_dct,
-                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene, saddle=False)
+                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene, zrxn=None) 
             writer = 'species_block'
 
     # Add writer to inf dct
@@ -83,6 +83,14 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     reac_dcts = [spc_dct[name] for name in rcts]
     prod_dcts = [spc_dct[name] for name in prds]
 
+    # Set information for transition states
+    pf_filesystems = filesys.models.pf_filesys(
+        spc_dct[tsname], chn_pf_levels, run_prefix, save_prefix, True, name=tsname)
+    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
+    cnf_path = cnf_fs[-1].path(min_cnf_locs)
+    zma_fs = autofile.fs.zmatrix(cnf_path)
+    zma = zma_fs[-1].file.zmatrix.read((0,))
+    zrxn = zma_fs[-1].file.reaction.read((0,))
     # Get all of the information for the filesystem
     if not typ.var_radrad(ts_class):
 
@@ -112,7 +120,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 tsname, spc_dct,
                 chn_pf_models, chn_pf_levels,
                 ref_pf_models, ref_pf_levels, chn_basis_ene_dct,
-                run_prefix, save_prefix, saddle=True)
+                run_prefix, save_prefix, zrxn=zrxn)
             writer = 'species_block'
     else:
 
@@ -176,10 +184,10 @@ def atm_data(spc_dct, spc_name,
     zpe_chnlvl = None
 
     hf0k, hf0k_trs, _, _ = basis.enthalpy_calculation(
-        spc_dct, spc_name, None, ene_chnlvl,
+        spc_dct, spc_name, ene_chnlvl,
         {}, chn_pf_levels,
         chn_pf_models, run_prefix, save_prefix,
-        pforktp='ktp', saddle=False)
+        pforktp='ktp', zrxn=None)
     ene_chnlvl = hf0k * phycon.KCAL2EH
     hf0k_trs *= phycon.KCAL2EH
 
@@ -202,7 +210,7 @@ def atm_data(spc_dct, spc_name,
 
 def mol_data(spc_name, spc_dct,
              chn_pf_models, chn_pf_levels, ref_pf_models, ref_pf_levels, chn_basis_ene_dct,
-             run_prefix, save_prefix, calc_chn_ene=True, saddle=False):
+             run_prefix, save_prefix, calc_chn_ene=True, zrxn=None):
     """ Pull all of the neccessary information from the filesystem for a species
     """
     
@@ -219,11 +227,7 @@ def mol_data(spc_name, spc_dct,
 
     # Set up all the filesystem objects using models and levels
     pf_filesystems = filesys.models.pf_filesys(
-        spc_dct_i, chn_pf_levels, run_prefix, save_prefix, saddle, name=spc_name)
-
-    # Set information for transition states
-    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
-    # cnf_path = cnf_fs[-1].path(min_cnf_locs)
+        spc_dct_i, chn_pf_levels, run_prefix, save_prefix, zrxn is not None, name=spc_name)
 
     # Obtain rotation partition function information
     ioprinter.info_message(
@@ -243,7 +247,7 @@ def mol_data(spc_name, spc_dct,
         'Obtaining the vibrational frequencies and zpves...', newline=1)
     freqs, imag, zpe, tors_strs = vib.vib_analysis(
         spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
-        run_prefix, saddle=saddle)
+        run_prefix, zrxn=zrxn)
     allr_str = tors_strs[0]
 
     # ioprinter.info_message('zpe in mol_data test:', zpe)
@@ -265,28 +269,15 @@ def mol_data(spc_name, spc_dct,
     if calc_chn_ene:
         chn_ene = ene.read_energy(
             spc_dct_i, pf_filesystems, chn_pf_models, chn_pf_levels,
-            run_prefix, read_ene=True, read_zpe=False, saddle=saddle)
+            run_prefix, read_ene=True, read_zpe=False, saddle=zrxn is not None)
         ene_chnlvl = chn_ene + zpe
 
         zma = None
-        if saddle:
-            cnf_path = cnf_fs[-1].path(min_cnf_locs)
-            zma_fs = autofile.fs.zmatrix(cnf_path)
-            zma = zma_fs[-1].file.zmatrix.read((0,))
-            zrxn = zma_fs[-1].file.reaction.read((0,))
-
-            frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
-            brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
-
-        else:
-            brk_bnd_keys, frm_bnd_keys = (), ()
-
         # Determine info about the basis species used in thermochem calcs
-        ts_geom = (geom, zma, brk_bnd_keys, frm_bnd_keys)
         hf0k, hf0k_trs, chn_basis_ene_dct, _ = basis.enthalpy_calculation(
-            spc_dct, spc_name, ts_geom, ene_chnlvl,
+            spc_dct, spc_name, ene_chnlvl,
             chn_basis_ene_dct, chn_pf_levels, chn_pf_models,
-            run_prefix, save_prefix, saddle=False)
+            run_prefix, save_prefix, zrxn=zrxn)
         ene_chnlvl = hf0k * phycon.KCAL2EH
         hf0k_trs *= phycon.KCAL2EH
 
@@ -294,7 +285,7 @@ def mol_data(spc_name, spc_dct,
     _, _ = ref_pf_models, ref_pf_levels
 
     #  Build the energy transfer section strings
-    if not saddle:
+    if zrxn is None:
         ioprinter.info_message(
             'Determining energy transfer parameters...', newline=1)
         well_info = sinfo.from_dct(spc_dct_i)

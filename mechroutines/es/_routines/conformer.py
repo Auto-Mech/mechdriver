@@ -43,7 +43,7 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
     overwrite = es_keyword_dct['overwrite']
     if not cnf_path:
         ioprinter.info_message(
-            'No energy found in save filesys. Running energy...')
+            'No conformer found in save filesys. Running optimization ...')
         _run = True
     elif overwrite:
         ioprinter.info_message(
@@ -300,7 +300,8 @@ def single_conformer(zma, spc_info, mod_thy_info,
         rid = autofile.schema.generate_new_ring_id()
         cid = autofile.schema.generate_new_conformer_id()
         locs = (rid, cid)
-
+    else:
+        locs = use_locs
     cnf_run_fs[-1].create(locs)
     cnf_run_path = cnf_run_fs[-1].path(locs)
     run_fs = autofile.fs.run(cnf_run_path)
@@ -336,11 +337,13 @@ def single_conformer(zma, spc_info, mod_thy_info,
                 geo, ene, saved_geos, saved_enes)
             if sym_id is None:
                 if cnf_save_fs[0].file.info.exists():
+                    ioprinter.debug_message('inf_obj path', cnf_save_fs[0].path())
                     rinf_obj_s = cnf_save_fs[0].file.info.read()
                     rinf_obj = inf_obj
-                    rnsampd = rinf_obj_s.nsamp
-                    rnsampd += 1
-                    rinf_obj.nsamp = rnsampd
+                    ioprinter.debug_message('inf_obj for r', rinf_obj)
+                    # rnsampd = rinf_obj_s.nsamp
+                    # rnsampd += 1
+                    # rinf_obj.nsamp = rnsampd
                 else:
                     rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
                     rinf_obj.nsamp = 1
@@ -353,7 +356,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
                 else:
                     cinf_obj = autofile.schema.info_objects.conformer_branch(0)
                     cinf_obj.nsamp = 1
-                cnf_save_fs[1].create(locs[0])
+                cnf_save_fs[1].create([locs[0]])
                 cnf_save_fs[0].file.info.write(rinf_obj)
                 cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
                 _save_unique_conformer(
@@ -366,7 +369,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
         # Update the conformer trajectory file
         ioprinter.obj('vspace')
         filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info)
-        filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, rid)
+        filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, locs[0])
 
 
 def conformer_sampling(zma, spc_info, thy_info,
@@ -864,11 +867,17 @@ def _geo_unique(geo, ene, seen_geos, seen_enes, zrxn=None):
     else:
         check_dct = {'dist': 0.3}
 
-    if not automol.util.value_similar_to(ene, seen_enes, 2.e-5):
+    no_similar_energies = True
+    for sene in seen_enes:
+        if abs(sene - ene) < 1e-5:
+            no_similar_energies = False
+
+    if no_similar_energies:
+        unique = True
+    else:
         unique, _ = automol.geom.is_unique(
             geo, seen_geos, check_dct=check_dct)
-    else:
-        unique = False
+
     if not unique:
         ioprinter.bad_conformer('not unique')
 
@@ -910,12 +919,20 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
     """
 
     sym_idx = None
-    if automol.util.value_similar_to(ene, saved_enes, ethresh):
+    new_saved_geos = []
+    idx_dct = {}
+    for i, (sene, sgeo) in enumerate(zip(saved_enes, saved_geos)):
+        if abs(ene - sene) < ethresh:
+            idx_dct[len(new_saved_geos)] = i
+            new_saved_geos.append(sgeo)
+    #if automol.util.value_similar_to(ene, saved_enes, ethresh):
+    if new_saved_geos:
         _, sym_idx = automol.geom.is_unique(
-            geo, saved_geos, check_dct={'coulomb': None})
+            geo, new_saved_geos, check_dct={'coulomb': 1e-2})
 
     if sym_idx is not None:
-        ioprinter.warning_message(' - Structure is not symmetrically unique.')
+        print(' - Structure is not symmetrically unique.')
+        sym_idx = idx_dct[sym_idx]
 
     return sym_idx
 
@@ -1281,8 +1298,8 @@ def _save_sym_indistinct_conformer(geo, cnf_save_fs,
     sym_save_fs = autofile.fs.symmetry(cnf_save_path)
     sym_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
     ioprinter.save_symmetry(sym_save_path)
-    sym_save_fs[-1].create(cnf_tosave_locs)
-    sym_save_fs[-1].file.geometry.write(geo, cnf_tosave_locs)
+    sym_save_fs[-1].create([cnf_tosave_locs[-1]])
+    sym_save_fs[-1].file.geometry.write(geo, [cnf_tosave_locs[-1]])
 
 
 def _saved_cnf_info(cnf_save_fs, mod_thy_info):

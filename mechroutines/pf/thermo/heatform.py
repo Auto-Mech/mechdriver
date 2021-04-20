@@ -40,7 +40,7 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
             h_basis *= KJ2KCAL
         dhzero += coeff[i] * h_basis
         dhzero -= coeff[i] * hzero_basis[i] * EH2KCAL
-        ioprinter.debug_message('Contriubtion from:', spc)
+        ioprinter.debug_message('Contribution from:', spc)
         ioprinter.debug_message(
             'HF0K in kcal: {:g} * {:.5f}'.format(coeff[i], h_basis))
         ioprinter.debug_message(
@@ -1835,109 +1835,108 @@ def _elimination_find_brk_bnds(gra, frm_key):
 
     return frozenset(brk_key1), frozenset(brk_key2)
 
-def get_cbhzed_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=None, backup_frm_key=None, backup_brk_key=None):
-    return get_cbh_ts(
-        'cbh0', zma, rxnclass, frm_key,
-        brk_key, geo, backup_zma, backup_frm_key, backup_brk_key)
 
-def get_cbhone_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=None, backup_frm_key=None, backup_brk_key=None):
-    return get_cbh_ts(
-        'cbh1', zma, rxnclass, frm_key,
-        brk_key, geo, backup_zma, backup_frm_key, backup_brk_key)
+def _split_bnd_keys(bnd_keys):
+    bnd_key1 = None
+    bnd_key2 = None
+    bnd_keys = list(bnd_keys)
+    if len(bnd_keys) > 0:
+        bnd_key1 = bnd_keys[0]
+        if len(bnd_keys) > 1:
+            bnd_key2 = bnd_keys[1]
+    return bnd_key1, bnd_key2
 
-def get_basic_ts(zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=None, backup_frm_key=None, backup_brk_key=None):
+
+def get_cbhzed_ts(zrxn):
+    return get_cbh_ts('cbh0', zrxn)
+
+
+def get_cbhone_ts(zrxn):
+    return get_cbh_ts('cbh1', zrxn)
+
+
+def get_basic_ts(zrxn):
     return
 
-def get_cbh_ts(cbhlevel, zma, rxnclass, frm_key, brk_key, geo=None, backup_zma=None, backup_frm_key=None, backup_brk_key=None):
+
+def get_cbh_ts(cbhlevel, zrxn):
     """ get basis for CBH0 for a TS molecule
     """
+    rxnclass = automol.reac.reaction_class(zrxn)
+    frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
+    brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
+    frm_key1, frm_key2 = _split_bnd_keys(frm_bnd_keys)
+    brk_key1, brk_key2 = _split_bnd_keys(brk_bnd_keys)
+    gra = zrxn.forward_ts_graph
 
     # Set up graph and reaction site information
-    brk_key2 = None
-    frm_key2 = None
+    site = None
     site2 = None
-    if backup_zma and 'elimination' not in rxnclass:
-        gra, frm_key, brk_key, brk_key2 = _remove_dummies(
-            backup_zma, frm_key, brk_key, geo=geo)
-    else:
-        gra, frm_key, brk_key, brk_key2 = _remove_dummies(
-            zma, backup_frm_key, backup_brk_key)
-    # Add extra bonding information for:
+
     #  Elimination missing the forming double bond
     if 'elimination' in rxnclass:
-        brk_key, brk_key2 = _elimination_find_brk_bnds(gra, frm_key)
+        # brk_key, brk_key2 = _elimination_find_brk_bnds(gra, frm_key1)
         frm_key2 = _elimination_second_forming_bond(
-            gra, brk_key, brk_key2)
+            gra, brk_key1, brk_key2)
 
     #  Addition is missing the 2nd order bond in the graph
     elif 'addition' in rxnclass:
-        gra, brk_key = _add_appropriate_pi_bonds(gra)
-        if not brk_key:
-            gra, frm_key, brk_key, brk_key2 = _remove_dummies(
-                zma, frm_key, brk_key)
-            gra = _remove_frm_bnd(gra, brk_key, frm_key)
-            gra, brk_key = _add_appropriate_pi_bonds(gra)
-    gra = _remove_frm_bnd(gra, brk_key, frm_key)
+        gra, brk_key1 = _add_appropriate_pi_bonds(gra)
+        if not brk_key1:
+            gra = _remove_frm_bnd(gra, brk_key1, frm_key1)
+            gra, brk_key1 = _add_appropriate_pi_bonds(gra)
+
+    gra = _remove_frm_bnd(gra, brk_key1, frm_key1)
+    gra = _remove_frm_bnd(gra, brk_key2, frm_key2)
+
+
     # The first set of forming and breaking bonds makes the first reaction site
-    if frm_key and brk_key and 'elimination' not in rxnclass:
+    if frm_key1 and brk_key1 and 'elimination' not in rxnclass:
         site = [
-            _xor(frm_key, brk_key),
-            _intersec(frm_key, brk_key),
-            _xor(brk_key, frm_key)]
+            _xor(frm_key1, brk_key1),
+            _intersec(frm_key1, brk_key1),
+            _xor(brk_key1, frm_key1)]
     
     #  eliminations are one large reaction site that we split into site1 and site2 for convieninece    
     if 'elimination' in rxnclass:
         try:
             site = [
-                _xor(frm_key, brk_key),
-                _intersec(frm_key, brk_key),
-                _xor(brk_key, frm_key)]
+                _xor(frm_key1, brk_key1),
+                _intersec(frm_key1, brk_key1),
+                _xor(brk_key1, frm_key1)]
             site2 = [
                 _xor(frm_key2, brk_key2),
                 _intersec(frm_key2, brk_key2),
                 _xor(brk_key2, frm_key2)]
-        except:    
+        except: 
             site = [
-                _xor(frm_key, brk_key2),
-                _intersec(frm_key, brk_key2),
-                _xor(brk_key2, frm_key)]
+                _xor(frm_key1, brk_key2),
+                _intersec(frm_key1, brk_key2),
+                _xor(brk_key2, frm_key1)]
             site2 = [
-                _xor(frm_key2, brk_key),
-                _intersec(frm_key2, brk_key),
-                _xor(brk_key, frm_key2)]
+                _xor(frm_key2, brk_key2),
+                _intersec(frm_key2, brk_key2),
+                _xor(brk_key2, frm_key2)
+]
     elif 'beta scission' in rxnclass:
         rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         site = [rad_atm,None,None]
-        for atm in brk_key:
+        for atm in brk_key1:
             if rad_atm in adj_atms[atm]:
                 site[1] = atm
             else:
                 site[2] = atm
-        if site[2] is None:
-            gra, frm_key, brk_key, brk_key2 = _remove_dummies(
-                zma, backup_frm_key, backup_brk_key)
-            rad_atm = list(
-                automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
-            rad_atm = list(
-                automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
-            adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-            site = [rad_atm, None, None]
-            for atm in backup_brk_key:
-                if rad_atm in adj_atms[atm]:
-                    site[1] = atm
-                else:
-                    site[2] = atm
 
     #  radical radical hydrogen abstraction needs a second site
     #  where the pi bond is formed    
     elif 'radical radical hyd' in rxnclass:
         rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-        atmc, atmd = frm_key
+        atmc, atmd = frm_key1
         if atmc not in rad_atms:
             atmd, atmc = atmc, atmd
-        for atma in brk_key:
+        for atma in brk_key1:
             if atma != atmd:
                 for atmb in adj_atms[atma]:
                     if atmb in rad_atms:

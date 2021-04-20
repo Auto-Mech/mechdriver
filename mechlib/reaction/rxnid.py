@@ -51,10 +51,11 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
     rxn_fs = autofile.fs.reaction(save_prefix)
     if rxn_fs[-1].exists(sort_rxn_info):
         _, cnf_save_fs = build_fs(
-            '', save_prefix, 'CONFORMER',
+            save_prefix, save_prefix, 'CONFORMER',
             rxn_locs=sort_rxn_info,
             thy_locs=mod_ini_thy_info[1:],
-            ts_locs=())
+            # this needs to be fixed for any case with more than one TS
+            ts_locs=(0,))
 
         _, ini_min_cnf_path = filesys.mincnf.min_energy_conformer_locators(
             cnf_save_fs, mod_ini_thy_info)

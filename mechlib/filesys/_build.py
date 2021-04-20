@@ -23,6 +23,11 @@ def root_locs(spc_dct_i, saddle=False, name=None):
         rxn_info = rinfo.sort(spc_dct_i['rxn_info'])
         ts_num = int(name.split('_')[-1])
         ts_info = (ts_num,)
+        # if 'ts_locs' in spc_dct_i:
+        #     ts_info = spc_dct_i['ts_locs']
+        # else:
+        #     ts_num = int(name.split('_')[-1])
+        #     ts_info = (ts_num,)
         # print('TEST ts locs:', ts_info)
         # ts_info = (0,)  # may be more complicated
         # ts_info = ()

@@ -19,6 +19,7 @@ from mechlib import filesys
 from mechlib.filesys import build_fs
 from mechlib.filesys import root_locs
 from mechlib.amech_io import printer as ioprinter
+from phydat import phycon
 
 
 # Dictionary of Electronic Structure Calculators
@@ -59,24 +60,26 @@ def run_tsk(tsk, spc_dct, spc_name,
         job = tsk.split('_', 1)[1]
 
         # Run the task if an initial geom exists
-        if 'init' in tsk:
+        if 'init' in tsk and not skip_task(spc_dct, spc_name):
             _ = geom_init(
                 spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'conf' in tsk:
+        elif 'conf' in tsk and not skip_task(spc_dct, spc_name):
             conformer_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'tau' in tsk:
+        elif 'tau' in tsk and not skip_task(spc_dct, spc_name):
             tau_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'hr' in tsk:
+        elif 'hr' in tsk and not skip_task(spc_dct, spc_name):
             hr_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'rpath' in tsk:
-            rpath_tsk(
+        elif 'rpath' in tsk and not skip_task(spc_dct, spc_name):
+            pass
+        elif 'irc' in tsk and not skip_task(spc_dct, spc_name):
+            irc_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
         elif 'find' in tsk:
@@ -658,12 +661,14 @@ def hr_tsk(job, spc_dct, spc_name,
 
         if job == 'scan':
 
+            increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
             hr.hindered_rotor_scans(
                 zma, spc_info, mod_thy_info, instab_save_fs,
                 ini_scn_run_fs, ini_scn_save_fs,
                 torsions, tors_model, method_dct,
                 overwrite,
                 saddle=saddle,
+                increment=increment,
                 retryfail=retryfail)
 
         # elif job == 'reopt':
@@ -860,3 +865,23 @@ def rpath_tsk(job, spc_dct, spc_name,
     elif job == 'infene':
         pass
         # inf_sep_ene()
+
+
+def skip_task(spc_dct, spc_name):
+    """ Should this task be skipped?
+    :param spc_dct: species dictionary
+    :type spc_dct: dictionary
+    :param spc_name: name of species
+    :type spc_name: string
+
+    :rtype skip: boolean
+    """
+    skip = False
+
+    # It should be skipped if its radical radical
+    if 'ts' in spc_name:
+        rxn_info = spc_dct[spc_name]['rxn_info']
+        if rinfo.radrad(rxn_info):
+            skip = True
+            ioprinter.info_message('Skipping task because {} is a radical radical reaction'.format(spc_name)) 
+    return skip

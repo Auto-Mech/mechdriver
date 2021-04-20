@@ -124,3 +124,17 @@ def is_atom(spc_dct_i):
     """
     geo = automol.inchi.geometry(spc_dct_i['inchi'])
     return automol.geom.is_atom(geo)
+
+
+def is_abstraction(spc_dct):
+    """ Check if a PES consists of a single abstraction reaction.
+    """
+    _abstraction = False
+
+    ts_names = tuple(name for name in spc_dct.keys() if 'ts_' in name)
+    if len(ts_names) == 1:
+        ts_dct = spc_dct[ts_names[0]]
+        if 'abstraction' in ts_dct['zrxn'].class_:
+            _abstraction = True
+
+    return _abstraction

@@ -104,6 +104,8 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
             fin_locs_lst = _erange_locs(cnf_locs_lst, cnf_enes_lst, cnf_range)
         elif 'n' in cnf_range:
             fin_locs_lst = _nrange_locs(cnf_locs_lst, cnf_range)
+        elif 'r' in cnf_range:
+            fin_locs_lst = _rrange_locs(cnf_locs_lst, cnf_range)
 
     else:
         print('No conformers located in {}'.format(
@@ -147,6 +149,22 @@ def _erange_locs(cnf_locs, cnf_enes, ethresh):
         if rel_ene <= thresh:
             min_cnf_locs.append(locs)
 
+    return min_cnf_locs
+
+
+def _rrange_locs(cnf_locs, nthresh):
+    """ Get a range of n values
+    """
+
+    thresh = int(nthresh.split('r')[1])
+
+    min_cnf_locs = []
+    used_rids = []
+    for idx, locs in enumerate(cnf_locs):
+        if not list(locs)[0] in used_rids:
+            if idx+1 <= thresh:
+                min_cnf_locs.append(locs)
+                used_rids.append(list(locs)[0])
     return min_cnf_locs
 
 

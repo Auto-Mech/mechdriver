@@ -157,7 +157,8 @@ def run(therm_tsk_lst,
 
             # Determine info about the basis species used in thermochem calcs
             basis_dct, uniref_dct = thmroutines.basis.prepare_refs(
-                ref_scheme, spc_dct, [[spc_name, None]])
+                ref_scheme, spc_dct, [[spc_name, None]],
+                run_prefix, save_prefix)
 
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc_name]
@@ -220,6 +221,8 @@ def run(therm_tsk_lst,
                 spc_name, spc_dct,
                 thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
+
+            print(ckin_nasa_str)
 
         # Write all of the NASA polynomial strings
         writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)

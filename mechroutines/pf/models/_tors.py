@@ -23,6 +23,7 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
     """
 
     run_prefix = pf_filesystems['run_prefix']
+    print('spc_dct_i in _tors', spc_dct_i)
     spc_info = sinfo.from_dct(spc_dct_i)
     spc_fml = automol.inchi.formula_string(spc_info[0])
     if spc_fml is None:
@@ -128,14 +129,16 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
     # Calculate the scaling factors
     scale_indcs, factor = scale_factor
     nscale = numtors - len(scale_indcs)
-    sfactor = factor**(2.0/nscale)
-    ioprinter.debug_message(
-        'scale_coeff test:', factor, nscale, sfactor)
+    print('nscale test:', nscale, numtors, scale_indcs, len(scale_indcs))
+    if nscale > 0:
+        sfactor = factor**(2.0/nscale)
+        ioprinter.debug_message(
+            'scale_coeff test:', factor, nscale, sfactor)
 
-    for rotor in rotors:
-        for tidx, torsion in enumerate(rotor):
-            if tidx not in scale_indcs and factor is not None:
-                torsion.pot = automol.pot.scale(torsion.pot, sfactor)
+        for rotor in rotors:
+            for tidx, torsion in enumerate(rotor):
+                if tidx not in scale_indcs and factor is not None:
+                    torsion.pot = automol.pot.scale(torsion.pot, sfactor)
 
     return rotors
 

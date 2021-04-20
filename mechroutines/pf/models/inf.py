@@ -5,6 +5,7 @@ Random functions that are needed in drivers and routines
 from mechroutines.pf.models import typ
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
+from mechanalyzer.inf import rxn as rinfo
 
 
 def set_pf_info(model_dct, thy_dct, chn_model, ref_model):

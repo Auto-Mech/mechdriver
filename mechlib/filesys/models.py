@@ -11,7 +11,7 @@ from mechlib.filesys import build_fs
 from mechlib.filesys import root_locs
 
 
-def pf_filesys(spc_dct_i, pf_levels,
+def pf_rngs_filesys(spc_dct_i, pf_levels,
                run_prefix, save_prefix, saddle, name=None):
     """ Create various filesystems needed
     """
@@ -37,7 +37,33 @@ def pf_filesys(spc_dct_i, pf_levels,
     return pf_filesystems
 
 
-def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle, name=None):
+def pf_filesys(spc_dct_i, pf_levels,
+               run_prefix, save_prefix, saddle, name=None):
+    """ Create various filesystems needed
+    """
+
+    pf_filesystems = {}
+    pf_filesystems['harm'] = set_model_filesys(
+        spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle, name=name, rings='min')
+    if pf_levels['sym']:
+        pf_filesystems['sym'] = set_model_filesys(
+            spc_dct_i, pf_levels['sym'][1], run_prefix, save_prefix, saddle, name=name, rings='min')
+    if pf_levels['tors']:
+        pf_filesystems['tors'] = set_model_filesys(
+            spc_dct_i, pf_levels['tors'][1][0],
+            run_prefix, save_prefix, saddle, name=name, rings='min')
+    if pf_levels['vpt2']:
+        pf_filesystems['vpt2'] = set_model_filesys(
+            spc_dct_i, pf_levels['vpt2'][1], run_prefix, save_prefix, saddle, name=name, rings='min')
+
+    # Add the prefixes for now
+    pf_filesystems['run_prefix'] = run_prefix
+    pf_filesystems['save_prefix'] = save_prefix
+
+    return pf_filesystems
+
+
+def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle, name=None, rings='all'):
     """ Gets filesystem objects for reading many calculations
     """
 
@@ -55,14 +81,21 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle, name=No
         thy_locs=levelp[1:],
         **_root)
 
-    min_locs, min_path = mincnf.min_energy_conformer_locators(
-        cnf_save_fs, levelp)
+    if rings == 'min':
+        min_rngs_locs, min_rngs_path = mincnf.min_energy_conformer_locators(
+            cnf_save_fs, levelp)
+        cnf_run_fs[-1].create(min_rngs_locs)
+        
+    else:
+        min_rngs_locs, min_rngs_path = mincnf.conformer_locators(
+             cnf_save_fs, levelp, cnf_range='r100')
+        for min_locs in min_rngs_locs:
+            cnf_run_fs[-1].create(min_locs)
 
-    print('model filesys', min_locs, min_path)
+    print('model filesys', min_rngs_locs, min_rngs_path)
     # Create run fs if that directory has been deleted to run the jobs
-    cnf_run_fs[-1].create(min_locs)
 
-    return [cnf_save_fs, min_path, min_locs, '', cnf_run_fs]
+    return [cnf_save_fs, min_rngs_path, min_rngs_locs, '', cnf_run_fs]
     # return [cnf_save_fs, cnf_save_path, min_cnf_locs, save_path, cnf_run_fs]
 
 

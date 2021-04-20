@@ -56,10 +56,10 @@ def frequencies(freqs):
     """ Print out the Harmonic frequencies and ZPVE
     """
     if freqs is not None:
-        freq_str = automol.util.vec.string(freqs, num_per_row=6)
-        harm_zpe = (sum(freqs) / 2.0) * phycon.WAVEN2EH
+        freq_str = automol.util.vec.string(freqs, num_per_row=6, val_format='{0:>12.3f}')
+        harm_zpe = (sum(freqs) / 2.0) * phycon.WAVEN2KCAL
         info_message('Harmonic frequencies [cm-1]:\n{}'.format(freq_str), newline=1)
-        info_message('Harmonic ZPVE [cm-1]: {}'.format(harm_zpe), newline=1)
+        info_message('Harmonic ZPVE [kcal mol-1]: {}'.format(harm_zpe), newline=1)
 
 
 def molecular_properties(dmom, polar):

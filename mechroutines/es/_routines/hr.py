@@ -6,6 +6,7 @@ import elstruct
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
 from mechlib.amech_io import printer as ioprinter
+from phydat import phycon
 
 
 def hindered_rotor_scans(
@@ -14,6 +15,7 @@ def hindered_rotor_scans(
         rotors, tors_model, method_dct,
         overwrite,
         saddle=False,
+        increment=30.0*phycon.DEG2RAD,
         retryfail=True, chkstab=None):
     """ Perform scans over each of the torsional coordinates
     """
@@ -28,7 +30,7 @@ def hindered_rotor_scans(
         scn_typ = 'rigid'
 
     run_tors_names = automol.rotor.names(rotors)
-    run_tors_grids = automol.rotor.grids(rotors)
+    run_tors_grids = automol.rotor.grids(rotors, increment=increment)
 
     # Set constraints
     const_names = automol.zmat.set_constraint_names(

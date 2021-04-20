@@ -73,6 +73,7 @@ def run(pes_inf,
 
         # Write the strings for the MESS input file
         globkey_str = ktproutines.rates.make_header_str(
+            spc_dct,
             temps=pes_model_dct[pes_model]['rate_temps'],
             pressures=pes_model_dct[pes_model]['pressures'])
 

@@ -284,6 +284,7 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
         maybe return the grid that is not finished?
     """
 
+    print('grid_coords test:', coord_grids)
     grid_vals = automol.pot.coords(coord_grids)
 
     run_finished = True
