@@ -47,9 +47,9 @@ print('spc_dct\n', SPC_IDX_DCT)
 # Build the Run-Save Filesystem Directories
 prefix_fs(INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'])
 
-print('FINISH')
-import sys
-sys.exit()
+# print('FINISH')
+# import sys
+# sys.exit()
 
 # Run Drivers Requested by User
 ES_TSKS = TSK_LST_DCT.get('es')

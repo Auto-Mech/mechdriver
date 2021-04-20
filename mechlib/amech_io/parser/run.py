@@ -32,13 +32,16 @@ def pes_idxs(run_str):
 
     pes_block = ioformat.ptt.end_block(run_str, 'pes', footer='pes')
 
-    run_pes = {}
-    for line in pes_block.strip().splitlines():
-        [pes_nums, chn_nums] = line.split(':')
-        _pes_idxs = ioformat.ptt.idx_lst_from_line(pes_nums)
-        _chn_idxs = ioformat.ptt.idx_lst_from_line(chn_nums)
-        for idx in _pes_idxs:
-            run_pes.update({idx: _chn_idxs})
+    if pes_block is not None:
+        run_pes = {}
+        for line in pes_block.strip().splitlines():
+            [pes_nums, chn_nums] = line.split(':')
+            _pes_idxs = ioformat.ptt.idx_lst_from_line(pes_nums)
+            _chn_idxs = ioformat.ptt.idx_lst_from_line(chn_nums)
+            for idx in _pes_idxs:
+                run_pes.update({idx: _chn_idxs})
+    else:
+        run_pes = None
 
     return run_pes
 
@@ -50,11 +53,15 @@ def spc_idxs(run_str):
 
     spc_block = ioformat.ptt.end_block(run_str, 'spc', footer='spc')
 
-    _spc_idxs = ()
-    for line in spc_block.splitlines():
-        _spc_idxs += ioformat.ptt.idx_lst_from_line(line)
+    if spc_block is not None:
+        _idxs = ()
+        for line in spc_block.splitlines():
+            _idxs += ioformat.ptt.idx_lst_from_line(line)
+        _spc_idxs = {1: _idxs}
+    else:
+        _spc_idxs = None
 
-    return {1: _spc_idxs}
+    return _spc_idxs
 
 
 # DRIVER TASK LISTS

@@ -15,7 +15,7 @@ from mechlib.amech_io import thermo_paths
 from mechlib.amech_io import job_path
 from mechlib.amech_io import output_path
 from mechanalyzer.inf import spc as sinfo
-from mechlib.amech_io.parser.model import pf_level_info, pf_model_info
+from mechlib.amech_io.parser.models import pf_level_info, pf_model_info
 # from mechlib.structure import instab
 from mechlib import filesys
 from automol.inchi import formula_string as fstring

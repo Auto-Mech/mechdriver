@@ -1,6 +1,38 @@
 """ build objects strictly used for running things
 """
 
+# Overall run lst for both reactions and species
+def run_lst(pes_dct, spc_dct, pes_idxs, spc_idxs):
+    """ a
+    """
+
+    if pes_idxs is not None:
+
+    elif spc_idxs is not None:
+        _run_lst = _lst_for_spc(spc_dct, spc_idxs)
+    else:
+        _run_lst = None
+
+    return _run_lst
+
+
+def _lst_for_spc(spc_dct, spc_idxs):
+    """ Get a dictionary of requested species matching the PES_DCT format
+    """
+
+    _lst = tuple(spc for idx, spc in enumerate(spc_dct) if idx+1 in 
+                 spc_idxs.values())
+    run_dct = {}
+    run_dct[('SPC', 1, 1)] = {'species': _lst, 'reacs': (), 'prods': ()}
+
+    return run_dct
+    
+
+def _lst_for_pes(pes_dct, pes_idxs):
+    """ Get a dictionary of requested species matching the PES_DCT format
+    """
+    
+
 
 def build_queue(rxn_lst):
     """ Build spc queue from the reaction lst for the drivers

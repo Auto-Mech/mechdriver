@@ -16,6 +16,6 @@ __all__ = [
     'mech',
     'spc',
     'thy',
-    'models'
+    'models',
     'rlst'
 ]

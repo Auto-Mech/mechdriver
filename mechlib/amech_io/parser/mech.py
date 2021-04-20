@@ -3,6 +3,7 @@ Read the mechanism file
 """
 
 import sys
+from mechanalyzer.parser.mech import parse_mechanism
 from mechanalyzer.parser import pes
 from mechanalyzer.parser import util
 from ioformat import ptt
@@ -18,8 +19,7 @@ def pes_dictionary(mech_str, mech_type, spc_dct, pes_idxs):
     """
 
     # Build the total PES dct
-    mech_info = util.read_mechanism_file(
-        mech_str, mech_type, spc_dct, sort_rxns=False)
+    mech_info = parse_mechanism(mech_str, mech_type, spc_dct, sort_rxns=False)
     pes_dct = pes.build_pes_dct(*mech_info[1:])
 
     # Build an index dct relating idx to formula
