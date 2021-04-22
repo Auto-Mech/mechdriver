@@ -162,6 +162,10 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     script_str, kwargs = qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
 
+    print('zrxn:', zrxn)
+    print('ts_zma in scan_for_guess:', ts_zma)
+    print('scan_inf:', scan_inf)
+
     es_runner.scan.execute_scan(
         zma=ts_zma,
         spc_info=ts_info,
@@ -368,10 +372,13 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     cnf_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
     cnf_save_path = cnf_save_fs[-1].path(locs)
 
-    inf_obj = autofile.schema.info_objects.conformer_trunk(0)
-    inf_obj.nsamp = 1
-    cnf_save_fs[0].create()
-    cnf_save_fs[0].file.info.write(inf_obj)
+    rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
+    rinf_obj.nsamp = 1
+    cnf_save_fs[0].file.info.write(rinf_obj)
+
+    cinf_obj = autofile.schema.info_objects.conformer_branch(0)
+    cinf_obj.nsamp = 1
+    cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
 
     # Save the zmatrix information in a zma filesystem
     cnf_save_path = cnf_save_fs[-1].path(locs)

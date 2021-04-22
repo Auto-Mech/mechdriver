@@ -153,7 +153,8 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                     ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
                 for spc_i in spc_dct[spc_name]['reacs']:
                     bas_dct_i, _ = prepare_refs(
-                        ts_ref_scheme, spc_dct, [[spc_i, None]])
+                        ts_ref_scheme, spc_dct, [[spc_i, None]],
+                        run_prefix, save_prefix)
                     spc_bas_i, coeff_bas_i = bas_dct_i[spc_i]
                     for bas_i, c_bas_i in zip(spc_bas_i, coeff_bas_i):
                         if bas_i not in spc_basis:
