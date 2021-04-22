@@ -62,6 +62,7 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
 
         # Obtain overall number
         sym_factor = ext_sym * int_sym
+        print('sym_factor test:', ext_sym, int_sym, sym_factor)
 
         # Reduce sym factor using rotor symmetries
         sym_factor = tors_reduced_sym_factor(sym_factor, rotors)
@@ -124,6 +125,11 @@ def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
     # modify geometries to remove H's from rotatable XHn end group
     # this will be accounted for separately as multiplicative factor
     mod_sym_geos = []
+    print('sym_geos test:', sym_geos)
+    print('keys:', frm_bnd_keys, brk_bnd_keys)
+    ts_bnds = ()
+    if grxn is not None:
+        ts_bnds = (frm_bnd_keys, brk_bnd_keys)
     for geo_sym_i in sym_geos:
         ret = automol.geom.end_group_symmetry_factor(
             geo_sym_i, frm_bnd_keys, brk_bnd_keys)
@@ -148,8 +154,11 @@ def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
         if new_geom:
             mod_sym_geos.append(mod_geo_sym_i)
             int_sym_num += 1
+            print('sym_geo test:', mod_geo_sym_i, int_sym_num)
 
     int_sym_num *= end_group_factor
+    print('end_group_factor:', end_group_factor)
+    print('final int_sym_num:', int_sym_num)
 
     return int_sym_num
 

@@ -28,7 +28,7 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     # ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
 
     # Set the TS searching algorithm to use: (1) Check dct, (2) Set by Class
-    print('spc_dct test:', spc_dct[tsname], tsname)
+    # print('spc_dct test:', spc_dct[tsname], tsname)
     search_thy_inf_dct = spc_dct[tsname].get('ts_search', None)
     if search_thy_inf_dct is None:
         search_thy_inf_dct = 'sadpt'

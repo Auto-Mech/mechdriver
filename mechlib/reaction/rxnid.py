@@ -22,10 +22,9 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
     """
 
     # Try to build the Z-Matrix reaction object or identify from scratch
-    # zrxn, zma = _read_from_filesys(
-        # rxn_info, ini_thy_info, zma_locs, save_prefix)
-    zrxn = None
-    # temporary hack
+    zrxn, zma = _read_from_filesys(
+        rxn_info, ini_thy_info, zma_locs, save_prefix)
+    # zrxn = None
     if zrxn is None:
         print('    Identifying class')
         zrxns, zmas = _id_reaction(rxn_info)
@@ -92,14 +91,15 @@ def _id_reaction(rxn_info):
         rct_ichs, prd_ichs, indexing='zma')
 
     zrxns, zmas = [], []
-    for objs in zrxn_objs:
-        zrxn, zma, _, _ = objs
-        zrxns.append(zrxn)
-        zmas.append(zma)
-        print('zrxn, zma in id:', zrxn, automol.zmat.string(zma))
-
-    import sys
-    sys.exit()
+    # for objs in zrxn_objs:
+    #     zrxn, zma, _, _ = objs
+    #     zrxns.append(zrxn)
+    #     zmas.append(zma)
+    #     print('zrxn, zma in id:', zrxn, automol.zmat.string(zma))
+    # for now just use first zma until we are properly producing extra zmas
+    if zrxn_objs:
+        zrxns.append(zrxn_objs[0][0])
+        zmas.append(zrxn_objs[0][1])
 
     return zrxns, zmas
 
