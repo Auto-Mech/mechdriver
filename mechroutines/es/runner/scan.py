@@ -167,7 +167,8 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
                     inf_obj, _, out_str = ret
                     opt_zma = elstruct.reader.opt_zmatrix(
                         inf_obj.prog, out_str)
-                    guess_zma = opt_zma
+                    if update_guess:
+                        guess_zma = opt_zma
 
             elif job == elstruct.Job.ENERGY:
                 _, _ = execute_job(

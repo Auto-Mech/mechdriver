@@ -257,8 +257,17 @@ def mol_data(spc_name, spc_dct,
     # Obtain symmetry factor
     ioprinter.info_message(
         'Determining the symmetry factor...', newline=1)
-    sym_factor = symm.symmetry_factor(
-        pf_filesystems, chn_pf_models, spc_dct_i, rotors)
+
+    zma = None
+    if zrxn:
+        [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['harm']
+        # Build the rotors
+        if cnf_save_path:
+            zma_fs = autofile.fs.zmatrix(cnf_save_path)
+            zma = zma_fs[-1].file.zmatrix.read([0])
+
+    sym_factor = sym.symmetry_factor(
+        pf_filesystems, chn_pf_models, spc_dct_i, rotors, grxn=zrxn, zma=zma)
 
     # Obtain electronic energy levels
     elec_levels = spc_dct_i['elec_levels']

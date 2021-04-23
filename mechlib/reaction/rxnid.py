@@ -24,6 +24,7 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
     # Try to build the Z-Matrix reaction object or identify from scratch
     zrxn, zma = _read_from_filesys(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
+    # zrxn = None
     if zrxn is None:
         print('    Identifying class')
         zrxns, zmas = _id_reaction(rxn_info)
@@ -65,6 +66,17 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
                 zrxn = zma_fs[-1].file.reaction.read(zma_locs)
                 zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
+        ts_locs=(0,)
+        if zrxn is None:
+            _, zma_fs = build_fs(
+                '', save_prefix, 'ZMATRIX',
+                rxn_locs=sort_rxn_info, ts_locs=ts_locs,
+                thy_locs=mod_ini_thy_info[1:])
+        
+            if zma_fs[-1].file.reaction.exists(zma_locs):
+                zrxn = zma_fs[-1].file.reaction.read(zma_locs)
+                zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+
     return zrxn, zma
 
 
@@ -77,8 +89,18 @@ def _id_reaction(rxn_info):
 
     zrxn_objs = automol.reac.rxn_objs_from_inchi(
         rct_ichs, prd_ichs, indexing='zma')
-    zrxns = tuple(obj[0] for obj in zrxn_objs)
-    zmas = tuple(obj[1] for obj in zrxn_objs)
+    # zrxns = tuple(obj[0] for obj in zrxn_objs)
+    # zmas = tuple(obj[1] for obj in zrxn_objs)
+    zrxns, zmas = [], []
+    # for objs in zrxn_objs:
+    #     zrxn, zma, _, _ = objs
+    #     zrxns.append(zrxn)
+    #     zmas.append(zma)
+    #     print('zrxn, zma in id:', zrxn, automol.zmat.string(zma))
+    # for now just use first zma until we are properly producing extra zmas
+    if zrxn_objs:
+        zrxns.append(zrxn_objs[0][0])
+        zmas.append(zrxn_objs[0][1])
 
     return zrxns, zmas
 
