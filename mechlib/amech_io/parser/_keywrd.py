@@ -14,226 +14,6 @@ from phydat import symm, eleclvl
 # then a required might be added (think this fails for tasks dicts)
 
 
-# Run Keywords
-RUN_INP_VAL_DCT = {
-    'inp_mech': (str, ('chemkin'), 'chemkin'),
-    'inp_spc': (str, ('csv',), 'csv'),
-    'out_mech': (str, ('chemkin'), 'chemkin'),
-    'out_spc': (str, ('csv',), 'csv'),
-    'print_mech': (bool, (True, False), False),
-    'print_debug': (bool, (True, False), False),
-    'run_prefix': (str, None, None),
-    'save_prefix': (str, None, None)
-}
-
-# HANDLE TASK KEYS
-
-# Commonly useful task keyword lists
-BASE = ('runlvl', 'inplvl', 'retryfail', 'overwrite')
-MREF = ('var_splvl1', 'var_splvl2', 'var_scnlvl')
-TRANS = ('bath', 'pot', 'njobs', 'nsamp', 'smin', 'smax', 'conf')
-PRNT = ('geolvl', 'proplvl', 'nconfs', 'econfs')
-
-# Determines what objects and keywords are allowed for tasks for ES,Trans,Print
-# Need way to set required tsks
-# Tasks: (allowed obj, allowed_keywords)
-TSK_KEY_DCT = {
-    # Electronic Structure Driver Tasks
-    'init_geom': (('spc',), BASE),
-    'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier',)),
-    'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range',)),
-    'conf_samp': (('spc', 'ts'), BASE + ('cnf_range', 'resave',)),
-    'conf_energy': (('spc', 'ts'), BASE + ('cnf_range',)),
-    'conf_grad': (('spc', 'ts'), BASE + ('cnf_range',)),
-    'conf_hess': (('spc', 'ts'), BASE + ('cnf_range',)),
-    'conf_vpt2': (('spc', 'ts'), BASE + ('cnf_range',)),
-    'conf_prop': (('spc', 'ts'), BASE + ('cnf_range',)),
-    'conf_opt': (('spc', 'ts'), BASE + ('cnf_range',)),
-    'hr_scan': (('spc', 'ts'), BASE + ('tors_model', 'resamp_min',)),
-    'hr_grad': (('spc', 'ts'), BASE + ('tors_model',)),
-    'hr_hess': (('spc', 'ts'), BASE + ('tors_model',)),
-    'hr_energy': (('spc', 'ts'), BASE + ('tors_model',)),
-    'hr_vpt2': (('spc', 'ts'), BASE + ('tors_model',)),
-    'hr_reopt': (('spc', 'ts'), BASE + ('tors_model',)),
-    'tau_samp': (('spc', 'ts'), BASE),
-    'tau_energy': (('spc', 'ts'), BASE),
-    'tau_grad': (('spc', 'ts'), BASE),
-    'tau_hess': (('spc', 'ts'), BASE + ('hessmax',)),
-    'rpath_scan': (('ts',), BASE + ('rxncoord',)),
-    'rpath_energy': (('ts',), BASE + ('rxncoord',)),
-    'rpath_grad': (('ts',), BASE + ('rxncoord',)),
-    'rpath_hess': (('ts',), BASE + ('rxncoord',)),
-    # Transport Driver Tasks
-    'onedmin': (('spc',), (BASE + TRANS)),
-    # Process Driver Tasks
-    'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
-    'energy': (('spc',), PRNT),
-    'geo': (('spc',), PRNT),
-    'zmatrix': (('spc',), PRNT),
-    'enthalpy': (('spc',), PRNT),
-    'coeffs': (('spc',), ()),
-    # KTP/Therm
-    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite')),
-    'run_mess': ((), ('nprocs', 'inpname')),
-    'run_fits': ((), ('kin_model',)),
-}
-
-# es tsk: (object type, (allowed values), default)  # use functions for weird
-# maybe the required checks use if None given?
-TSK_VAL_DCT = {
-    # Common
-    'runlvl': (str, (), None),
-    'inplvl': (str, (), None),
-    'var_splvl1': (str, (), None),
-    'var_splvl2': (str, (), None),
-    'var_scnlvl': (str, (), None),
-    'resave': (bool, (True, False), True),
-    'retryfail': (bool, (True, False), True),
-    'overwrite': (bool, (True, False), False),
-    # ES
-    'cnf_range': (str, (), 'min'),   # change to econfs, nconfs
-    'hessmax': (int, (), 1000),
-    'tors_model': (str, ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'), '1dhr'),
-    'resamp_min': (bool, (True, False), False),
-    'hrthresh': (float, (), -0.5),
-    'potthresh': (float, (), 0.3),
-    'rxncoord': (str, ('irc', 'auto'), 'auto'),
-    'nobarrier': (str, ('pst', 'rpvtst', 'vrctst'), None),
-    # Trans
-    'pot': (str, ('sphere',), 'lj_12_6'),
-    'njobs': (int, (), 1),
-    'nsamp': (int, (), 1),
-    'smin': (float, (), 2.0),
-    'smax': (float, (), 6.0),
-    'conf': (str, ('sphere',), 'sphere'),
-    # Proc
-    'geolvl': (str, (), None),
-    'proplvl': (str, (), None),
-    'nconfs': (str, (), 'min'),
-    'econfs': (str, (), 'min'),
-    'scale': (str, (), None),
-    # KTP/Therm
-    'kin_model': (str, (), None),
-    'spc_model': (str, (), None),
-    'nprocs': (int, (), 10),
-    'inpname': (str, (), None)
-}
-# Have nconfs and econfs keywords and combine them to figure out which to use?
-
-SPC_VAL_DCT = {
-    'mult': (int, (), None),
-    'charge': (int, (), None),
-    'inchi': (str, (), None),
-    'smiles': (str, (), None),
-    'tors_names': (str, (), None),
-    'elec_levels': (str, (), None),
-    'sym_factor': (str, (), None),
-    'kickoff': (tuple, (), (True, (0.1, False))),
-    'hind_inc': (float, (), 30.0),
-    'mc_nsamp': (tuple, (), (True, 12, 1, 3, 100, 25)),
-    'tau_nsamp': (tuple, (), (True, 12, 1, 3, 100, 25)),
-    'smin': (float, (), None),
-    'smax': (float, (), None),
-    'etrans_nsamp': (int, (), None),
-    'lj': (tuple, (), None),
-    'edown': (tuple, list, (), None),
-    'active': (tuple, (), None),
-    'zma_idx': (int, (), 0)
-}
-TS_VAL_DCT = {
-    'pst_params': (tuple, (), (1.0, 6)),
-    'rxndirn': (str, (), 'forw'),
-    'kt_pst': (float, (), 4.0e-10),
-    'temp_pst': (float, (), 300.0),
-    'n_pst': (float, (), 6.0),
-    'active': (str, (), None),
-    'ts_seatch': (str, (), 'sadpt'),
-    'ts_idx': (int, (), 0)
-}
-TS_VAL_DCT.update(SPC_VAL_DCT)
-
-# Theory Keywords
-# rquired, Type, allowed, default,
-# maybe set defaults using the qchem params script?
-THY_VAL_DCT = {
-    'program': (str, (), None),
-    'method': (str, (), None),
-    'basis': (str, (), None),
-    'orb_res': (str, ('RR', 'UU', 'RU'), None),
-    'ncycles': (int, (), None),
-    'mem': (float, (), None),
-    'nprocs': (int, (), None),
-    'econv': (float, (), None),
-    'gconv': (float, (), None)
-}
-
-# Model keywords
-MODKIN_VAL_DEFAULT = {
-    'pressures': (tuple, (), None),
-    'rate_temps': (tuple, (), None),
-    'thermo_temps': (tuple, (), None),
-    'rate_fit': {
-        'fit_method': (str, ('arrhenius', 'chebyshev'), 'arrhenius'),
-        'pdep_temps': (tuple, (), (500, 100)),
-        'pdep_tol': (float, (), 20.0),
-        'pdep_pval': (float, (), 1.0),
-        'pdep_low': (float, (), None),
-        'pdep_high': (float, (), None),
-        'arr_dbl_tol': (float, (), 15.0),
-        'troe_param_fit_list': (
-            tuple, (), ('ts1', 'ts2', 'ts3', 'alpha'))
-    },
-    'thermo_fit': {
-        'ref_scheme': (str, ('basic', 'cbh0'), 'basic'),
-        'ref_enes': (str, ('ANL0',), 'ANL0')
-    },
-    'glob_etransfer': {
-        'lj': (tuple, (), None),
-        'alpha': (tuple, (), None),
-        'mass': (tuple, (), None)
-    }
-}
-
-MODPF_VAL_DCT = {
-    'ene': {
-        'lvl1': (tuple, (), None),
-        'lvl2': (tuple, (), None)
-    },
-    'rot': {
-        'mod': (str, ('rigid', 'vpt2'), 'rigid'),
-        'vpt2lvl': (str, (), None)
-    },
-    'vib': {
-        'mod': (str, ('harm', 'vpt2', 'tau'), 'harm'),
-        'geolvl': (str, (), None),
-        'vpt2lvl': (str, (), None),
-    },
-    'tors': {
-        'mod': (
-            str, ('rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'),
-            'rigid'),
-        'enelvl': (str, (), None),
-        'geolvl': (str, (), None),
-    },
-    'symm': {
-        'mod': (str, ('none', 'sampling', '1dhr'), 'none'),
-        'geolvl': (str, (), None),
-    },
-    'rpath': {
-        'enelvl': (str, (), None),
-        'geolvl': (str, (), None),
-    },
-    'ts': {
-        'nobar': (str, ('pst', 'rpvtst', 'vrctst'), 'pst'),
-        'sadpt': (str, ('fixed', 'pst', 'rpvtst', 'vrctst'), 'fixed'),
-        'rwells': (str, ('fake', 'find', 'none'), 'fake'),
-        'pwells': (str, ('fake', 'find', 'none'), 'fake'),
-        'tunnel': (str, ('none', 'eckart', 'sct'), 'eckart'),
-        'etrans': (str, ('none', 'estimate', 'read'), 'estimate')
-    }
-}
-
-
 # MISC
 VRC_DCT = {
     'fortran_compiler': 'gfortran',
@@ -258,10 +38,10 @@ def elvl_symf(dct, ich, mul):
     """ set elec levels and sym factor
     """
 
-    if 'elec_levels' not in dct:
+    if dct['elec_levels'] is None:
         dct['elec_levels'] = eleclvl.DCT.get(
             (ich, mul), (0.0, mul))
-    if 'sym_factor' not in dct:
+    if dct['sym_factor'] is None:
         dct['sym_factor'] = symm.DCT.get(
             (ich, mul), 1.0)
 
@@ -290,7 +70,7 @@ def elvl_symf(dct, ich, mul):
 #     return None
 
 
-# Dictionary Builders
+# Default Dictionary Builders
 def defaults_from_val_dct(dct):
     """ Building the default dictionary for run inp dictionary
 
@@ -340,93 +120,84 @@ def defaults_with_dcts(dct):
 
 
 # Dictionary Checkers
-def check_val_dictionary1(inp_dct, val_dct, section):
-    """ Check if the dictionary to see if it has the allowed vals
+def check_dct1(inp_dct, val_dct, req_lst, section):
+    """ Check all of the facets of a dictionary
+
+        Works if section is just a val dct
+    """
+    _check_required_keys(inp_dct, req_lst, section)
+    _check_supported_keys(inp_dct, val_dct, section)
+    _check_supported_vals(inp_dct, val_dct, req_lst, section)
+
+
+def _check_supported_keys(inp_dct, val_dct, section):
+    """ Check if all keywordws supplied in an input dictionary
+
+        :param inp_dct: input dictionary to assess
+        :type inp_dct: dict[]
+        :param val_dct: internal dictionary containing supported keywords
+        :type val_dct: dict[]
+        :param section: Label telling what section of the input is being checked
+        :type section: str
     """
 
-    # if inp_dct is not None:  # check if nonempty to see if section undefined
-
-    # Assess if user-defined keywords
-    # (1) include requird keywords and (2) only define supported keywords
     inp_keys = set(inp_dct.keys())
     chk_keys = set(val_dct.keys())
     unsupported_keys = inp_keys - chk_keys
-    # undefined_required_keys = chk_keys - inp_keys
-
-    # print('inp\n', inp_keys)
-    # print('chk\n', chk_keys)
-    # print('unsupport\n', unsupported_keys)
-    # print('unrequired\n', undefined_required_keys)
 
     if unsupported_keys:
         print('User defined unsupported keywords in {}'.format(section))
         for key in unsupported_keys:
             print(key)
         sys.exit()
-    # not correct, need new way to do this
-    # if undefined_required_keys:
-    #     print('User has not defined required keywords in {}'.format(section))
-    #     for key in undefined_required_keys:
-    #         print(key)
-    #     sys.exit()
 
 
-def check_val_dictionary2(inp_dct, val_dct, section):
+def _check_supported_vals(inp_dct, val_dct, req_lst, section):
     """ check dct function 2
+
+        if val in inp_dct is None? what to do?
+        maybe check if None if it is required lst
     """
 
     # Assess if the keywords have the appropriate value
-    print('inpdct\n', inp_dct)
-    print('valdct\n', val_dct)
     for key, val in inp_dct.items():
-
+        print('val dct', val_dct[key])
         allowed_typ, allowed_vals, _ = val_dct[key]
 
-        # fails if None hit, need some way of aviding this
-        # maybe the required checks use if None given?
-        if not isinstance(val, allowed_typ):
-            print('bad {}'.format(section))
-            print('val {} must be type {}'.format(val, allowed_typ))
-            sys.exit()
-        if allowed_vals:
-            if val not in allowed_vals:
+        if val is not None:
+            # Check val if one is given
+            if not isinstance(val, allowed_typ):
                 print('bad {}'.format(section))
-                print('val is {}, must be {}'.format(val, allowed_vals))
+                print('{}'.format(key))
+                print('val {} must be type {}'.format(val, allowed_typ))
+                sys.exit()
+            if allowed_vals:
+                if val not in allowed_vals:
+                    print('bad {}'.format(section))
+                    print('{}'.format(key))
+                    print('val is {}, must be {}'.format(val, allowed_vals))
+                    sys.exit()
+        else:
+            # If val is None, check if it is required
+            if key in req_lst:
+                print('bad {}'.format(section))
+                print('key {} has no value defined even though it is required'.format(key))
                 sys.exit()
 
-
-# special checkers
-def _new_check_dct(tsk_lsts, tsk_key_dct, tsk_val_dct, thy_dct):
-    """ Loop over all of the tasks, add default keywords and parameters
-        and assesses if all the input is valid
+    
+def _check_required_keys(inp_dct, req_lst, section):
+    """ Check if required keys are in the input dict
     """
+    
+    inp_keys = set(inp_dct.keys())
+    req_keys = set(req_lst)
+    undefined_required_keys = req_keys - inp_keys
 
-    for tsk_lst in tsk_lsts:
-
-        # Unpack the task
-        [obj, tsk, keyword_dct] = tsk_lst
-
-        # Build the dictionary of default values for task
-        default_dct = defaults_from_val_dct(tsk, tsk_key_dct, tsk_val_dct)
-        if obj not in tsk_key_dct[tsk][0]:  # correct
-            print('tsk {}, not allowed for {}'.format(tsk, obj))
-            print('')
-            sys.exit()
-
-        # Update the current task dct with the default
-        new_key_dct = automol.util.dict_.right_update(default_dct, keyword_dct)
-
-        # Check if the keyword values are allowed
-        # need 2nd for anything that takes a string from the thy.dat file
-        if check_val_dictionary1(new_key_dct, tsk_val_dct, 'ES_TSKS'):
-            print('\n\nCHECK FAILED, QUITTING...')
-            sys.exit()
-        if check_val_dictionary2(new_key_dct, tsk_val_dct, 'ES_TSKS'):
-            print('\n\nCHECK FAILED, QUITTING...')
-            sys.exit()
-        if check_thy_lvls(new_key_dct, thy_dct):
-            print('\n\nCHECK FAILED, QUITTING...')
-            sys.exit()
+    if undefined_required_keys:
+        print('Required keywords have not been defined in {}'.format(section))
+        for key in undefined_required_keys:
+            print(key)
+        sys.exit()
 
 
 def check_thy_lvls(key_dct, method_dct, section=''):

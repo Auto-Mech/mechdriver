@@ -30,19 +30,23 @@ PES_IDX_DCT = ioparser.run.pes_idxs(INP_STRS['run'])
 SPC_IDX_DCT = ioparser.run.spc_idxs(INP_STRS['run'])
 TSK_LST_DCT = ioparser.run.tasks(INP_STRS['run'], THY_DCT, KMOD_DCT, SMOD_DCT)
 SPC_DCT = ioparser.spc.species_dictionary(
-    INP_STRS['spc'], INP_STRS['dat'], INP_STRS['geo'])
+    INP_STRS['spc'], INP_STRS['dat'], INP_STRS['geo'], 'csv')
 PES_DCT = ioparser.mech.pes_dictionary(
-    INP_STRS['mech'], 'chemkin', SPC_DCT, PES_IDX_DCT)
+    INP_STRS['mech'], 'chemkin', SPC_DCT)
 
-RUN_DCT= {}  # Need a PES or SPC version
+PES_RLST, SPC_RLST = ioparser.rlst.run_lst(
+    PES_DCT, SPC_DCT, PES_IDX_DCT, SPC_IDX_DCT)
 
 print('kin_mod\n', KMOD_DCT)
 print('spc_mod\n', SMOD_DCT)
 print('thy dct\n', THY_DCT)
 print('spc_dct\n', SPC_DCT)
 print('inp_dct\n', INP_KEY_DCT)
-print('pes_dct\n', PES_IDX_DCT)
-print('spc_dct\n', SPC_IDX_DCT)
+print('pes_idx\n', PES_IDX_DCT)
+print('spc_idx\n', SPC_IDX_DCT)
+print('pes dct\n', PES_DCT)
+print('spc dct\n', SPC_DCT)
+
 
 # Build the Run-Save Filesystem Directories
 prefix_fs(INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'])
@@ -55,36 +59,22 @@ prefix_fs(INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'])
 ES_TSKS = TSK_LST_DCT.get('es')
 if ES_TSKS is not None:
     ioprinter.program_header('es')
-    if PES_IDX_DCT:
-        for pes_inf, rxn_lst in PES_DCT.items():
-            esdriver.run(
-                pes_inf,
-                rxn_lst,  # modify ((spc_lst), (chn_lst))
-                SPC_DCT,
-                ES_TSKS,
-                THY_DCT,
-                INP_KEY_DCT
-            )
-    else:
-        PES_INF = None
-        esdriver.run(
-            PES_INF,
-            RUN_SPC_LST_DCT,
-            SPC_DCT,
-            ES_TSKS,
-            THY_DCT,
-            INP_KEY_DCT
-        )
+    esdriver.run(
+        PES_RLST, SPC_RLST,
+        ES_TSKS,
+        SPC_DCT, THY_DCT,
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+    )
     ioprinter.program_exit('es')
 
 THERM_TSKS = TSK_LST_DCT.get('thermo')
 if THERM_TSKS is not None:
     ioprinter.program_header('thermo')
     thermodriver.run(
+        SPC_RLST,
         SPC_DCT,
         KMOD_DCT, SMOD_DCT,
         THY_DCT,
-        RUN_SPC_LST_DCT,
         INP_KEY_DCT,
     )
     ioprinter.program_exit('thermo')
@@ -94,9 +84,9 @@ if TRANS_TSKS is not None:
     ioprinter.program_header('trans')
     if PES_DCT:
         transdriver.run(
+            SPC_RLST,
             SPC_DCT,
             THY_DCT,
-            RUN_SPC_LST_DCT,
             TRANS_TSKS,
             INP_KEY_DCT
         )
@@ -105,15 +95,13 @@ if TRANS_TSKS is not None:
 KTP_TSKS = TSK_LST_DCT.get('ktp')
 if KTP_TSKS is not None:
     ioprinter.program_header('ktp')
-    for pes_inf, rxn_lst in PES_DCT.items():
-        ktpdriver.run(
-            pes_inf,
-            SPC_DCT,
-            THY_DCT,
-            rxn_lst,
-            KMOD_DCT, SMOD_DCT,
-            INP_KEY_DCT,
-        )
+    ktpdriver.run(
+        PES_RLST,
+        SPC_DCT,
+        THY_DCT,
+        KMOD_DCT, SMOD_DCT,
+        INP_KEY_DCT,
+    )
     ioprinter.program_exit('ktp')
 
 PROC_TSKS = TSK_LST_DCT.get('proc')
@@ -121,8 +109,7 @@ if PROC_TSKS is not None:
     ioprinter.program_header('proc')
     PES_IDX = None
     procdriver.run(
-        PES_INF,
-        RUN_SPC_LST_DCT,
+        PES_RLST, SPC_RLST,
         SPC_DCT,
         PROC_TSKS,
         THY_DCT,

@@ -11,6 +11,7 @@ from mechlib.amech_io.printer._print import error_message
 from mechlib.amech_io.printer._print import warning_message
 
 # General MechDriver Runtime Messages
+from mechlib.amech_io.printer._run import runlst
 from mechlib.amech_io.printer._mdriver import program_header
 from mechlib.amech_io.printer._mdriver import program_exit
 from mechlib.amech_io.printer._mdriver import driver_tasks
@@ -80,6 +81,7 @@ __all__ = [
     'warning_message',
 
     # General Runtime Messages
+    'runlst',
     'program_header',
     'program_exit',
     'driver_tasks',

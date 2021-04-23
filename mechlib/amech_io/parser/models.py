@@ -6,9 +6,74 @@
 import automol
 import ioformat
 from mechanalyzer.inf import thy as tinfo
-# from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
 from mechlib.amech_io.parser._keywrd import defaults_with_dcts
-from mechlib.amech_io.parser._keywrd import MODPF_VAL_DCT
+
+
+# DCTS
+MODKIN_VAL_DEFAULT = {
+    'pressures': (tuple, (), None),
+    'rate_temps': (tuple, (), None),
+    'thermo_temps': (tuple, (), None),
+    'rate_fit': {
+        'fit_method': (str, ('arrhenius', 'chebyshev'), 'arrhenius'),
+        'pdep_temps': (tuple, (), (500, 100)),
+        'pdep_tol': (float, (), 20.0),
+        'pdep_pval': (float, (), 1.0),
+        'pdep_low': (float, (), None),
+        'pdep_high': (float, (), None),
+        'arr_dbl_tol': (float, (), 15.0),
+        'troe_param_fit_list': (
+            tuple, (), ('ts1', 'ts2', 'ts3', 'alpha'))
+    },
+    'thermo_fit': {
+        'ref_scheme': (str, ('basic', 'cbh0'), 'basic'),
+        'ref_enes': (str, ('ANL0',), 'ANL0')
+    },
+    'glob_etransfer': {
+        'lj': (tuple, (), None),
+        'alpha': (tuple, (), None),
+        'mass': (tuple, (), None)
+    }
+}
+
+MODPF_VAL_DCT = {
+    'ene': {
+        'lvl1': (tuple, (), None),
+        'lvl2': (tuple, (), None)
+    },
+    'rot': {
+        'mod': (str, ('rigid', 'vpt2'), 'rigid'),
+        'vpt2lvl': (str, (), None)
+    },
+    'vib': {
+        'mod': (str, ('harm', 'vpt2', 'tau'), 'harm'),
+        'geolvl': (str, (), None),
+        'vpt2lvl': (str, (), None),
+    },
+    'tors': {
+        'mod': (
+            str, ('rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'),
+            'rigid'),
+        'enelvl': (str, (), None),
+        'geolvl': (str, (), None),
+    },
+    'symm': {
+        'mod': (str, ('none', 'sampling', '1dhr'), 'none'),
+        'geolvl': (str, (), None),
+    },
+    'rpath': {
+        'enelvl': (str, (), None),
+        'geolvl': (str, (), None),
+    },
+    'ts': {
+        'nobar': (str, ('pst', 'rpvtst', 'vrctst'), 'pst'),
+        'sadpt': (str, ('fixed', 'pst', 'rpvtst', 'vrctst'), 'fixed'),
+        'rwells': (str, ('fake', 'find', 'none'), 'fake'),
+        'pwells': (str, ('fake', 'find', 'none'), 'fake'),
+        'tunnel': (str, ('none', 'eckart', 'sct'), 'eckart'),
+        'etrans': (str, ('none', 'estimate', 'read'), 'estimate')
+    }
+}
 
 
 # Build Basic Objects
@@ -38,12 +103,20 @@ def pf_model_info(spc_model_dct):
         Combine with es
 
         {'vib': {'model': '', 'geolvl_info': (), ...}}
+
+        Take all of the spc model dcts or just one?
     """
 
     if 'wells' in spc_model_dct['ts']:
         spc_model_dct['ts']['rwells'] = spc_model_dct['ts']['wells']
         spc_model_dct['ts']['pwells'] = spc_model_dct['ts']['wells']
         spc_model_dct['ts'].pop('wells')
+
+    # for mod, dct in spc_model_dct
+    #     if 'wells' in dct['ts']:
+    #         spc_model_dct['ts']['rwells'] = spc_model_dct['ts']['wells']
+    #         spc_model_dct['ts']['pwells'] = spc_model_dct['ts']['wells']
+    #         spc_model_dct['ts'].pop('wells')
 
     new_dct = automol.util.dict_.right_update(
       defaults_with_dcts(MODPF_VAL_DCT), spc_model_dct)

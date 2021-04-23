@@ -12,11 +12,11 @@ from mechlib.amech_io import printer as ioprinter
 from mechlib.reaction import split_unstable
 
 
-def run(pes_inf,
+def run(pes_rlst,
         ktp_tsk_lst,
-        spc_dct, thy_dct, rxn_lst,
+        spc_dct, thy_dct,
         pes_model_dct, spc_model_dct,
-        run_inp_dct):
+        run_prefix, save_prefix):
     """ main driver for generation of full set of rate constants on a single PES
     """
 
@@ -24,19 +24,8 @@ def run(pes_inf,
     # PREPARE INFORMATION TO PASS TO KTPDRIVER TASKS #
     # ---------------------------------------------- #
 
-    # Unpack the ktp tsks lst
-    _ = ''
-
     # Print PESs that are being run
-    if pes_inf is not None:
-        pes_formula, pes_idx, sub_pes_idx = pes_inf
-        ioprinter.pes(pes_idx, pes_formula, sub_pes_idx)
-        for rxn in rxn_lst:
-            ioprinter.channel(rxn['chn_idx'], rxn['reacs'], rxn['prods'])
-
-    # Pull globally useful information from the dictionaries
-    run_prefix = run_inp_dct['run_prefix']
-    save_prefix = run_inp_dct['save_prefix']
+    ioprinter.runlst(run_inf, run_lst)
 
     # Obtain all of the transitions states
     ioprinter.message('Identifying reaction classes for transition states...')
@@ -66,36 +55,18 @@ def run(pes_inf,
     write_messrate_tsk = parser.tsks.extract_tsk('write_messrate', ktp_tsk_lst)
     if write_messrate_tsk is not None:
 
-        tsk_key_dct = write_messrate_tsk[3]  # check format of the ktp tsk lst
+        tsk_key_dct = write_messrate_tsk[-1]
         pes_model = tsk_key_dct['pes_model']
 
         ioprinter.messpf('write_header')
 
-        # Write the strings for the MESS input file
-        globkey_str = ktproutines.rates.make_header_str(
-            spc_dct,
-            temps=pes_model_dct[pes_model]['rate_temps'],
-            pressures=pes_model_dct[pes_model]['pressures'])
-
-        # Write the energy transfer section strings for MESS file
-        etransfer = pes_model_dct[pes_model]['etransfer']
-        energy_trans_str = ktproutines.rates.make_global_etrans_str(
-            rxn_lst, spc_dct, etransfer)
-
-        # Write the MESS strings for all the PES channels
-        chan_str, dats, _, _ = ktproutines.rates.make_pes_mess_str(
-            spc_dct, rxn_lst, pes_idx,
-            run_prefix, save_prefix, label_dct,
-            spc_model_dct, thy_dct)
-
-        # Combine strings together
-        mess_inp_str = ktproutines.rates.make_messrate_str(
-            globkey_str, energy_trans_str, chan_str)
-
-        # Write the MESS file into the filesystem
-        ioprinter.obj('line_plus')
-        ioprinter.writing('MESS input file', mess_path)
-        ioprinter.debug_message(mess_inp_str)
+        mess_inp_str, dats = ktproutines.rates.make_messrate_str(
+            pes_idx, rxn_lst,
+            pes_model,
+            spc_dct, thy_dct,
+            pes_model_dct, spc_model_dct,
+            label_dct,
+            mess_path, run_prefix, save_prefix)
 
         autorun.write_input(
             mess_path, mess_inp_str,
@@ -114,7 +85,7 @@ def run(pes_inf,
     run_fit_tsk = parser.tsks.extract_tsk('run_fit', ktp_tsk_lst)
     if run_fit_tsk is not None:
 
-        tsk_key_dct = write_messrate_tsk[3]  # check format of the ktp tsk lst
+        tsk_key_dct = run_fit_tsk[-1]
         pes_model = tsk_key_dct['pes_model']
 
         ioprinter.obj('vspace')

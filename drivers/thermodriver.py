@@ -21,27 +21,20 @@ from mechlib import filesys
 from automol.inchi import formula_string as fstring
 
 
-def run(therm_tsk_lst,
+def run(spc_rlst,
+        therm_tsk_lst,
         spc_dct,
         pes_model_dct, spc_model_dct,
         thy_dct,
-        rxn_lst,
-        run_inp_dct,
-        write_messpf=True,
-        run_messpf=True,
-        run_nasa=True):
+        run_prefix, save_prefix):
     """ main driver for thermo run
     """
 
     # Print
-    for spc in RUN_SPC_LST_DCT:
+    for spc in spc_rlst:
         ioprinter.info_message(
             'Calculating Thermochem for species: {}'.format(spc),
             newline=1)
-
-    # Pull stuff from dcts for now
-    save_prefix = run_inp_dct['save_prefix']
-    run_prefix = run_inp_dct['run_prefix']
 
     # Build a list of the species to calculate thermochem for loops below
     # Set reaction list with unstable species broken apart
@@ -70,7 +63,8 @@ def run(therm_tsk_lst,
                 if 'ref_enes' in spc_model_dct[mod]['options'] else 'none')
 
     # Write and Run MESSPF inputs to generate the partition functions
-    if write_messpf:
+    write_messpf_tsk = parser.tsks.extract_tsk('write_messpf', therm_tsk_lst)
+    if write_messpf_tsk is not None:
 
         ioprinter.messpf('write_header')
         # pf_paths = {}
@@ -96,7 +90,8 @@ def run(therm_tsk_lst,
                 # pf_paths[idx][spc_model] = cpy_path
 
     # Run the MESSPF files that have been written
-    if run_messpf:
+    run_messpf_tsk = parser.tsks.extract_tsk('run_messpf', therm_tsk_lst)
+    if run_messpf_tsk is not None:
 
         ioprinter.messpf('run_header')
 
@@ -139,7 +134,8 @@ def run(therm_tsk_lst,
                 filename='pf.dat')
 
     # Use MESS partition functions to compute thermo quantities
-    if run_nasa:
+    run_fit_tsk = parser.tsks.extract_tsk('run_fit', therm_tsk_lst)
+    if run_fit_tsk is not None:
 
         ioprinter.nasa('header')
 

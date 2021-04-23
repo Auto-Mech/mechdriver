@@ -28,6 +28,9 @@ def _gaussian(method_dct, job=None):
     # Set the options
     nprocs = method_dct.get('nprocs', 10)
     memory = method_dct.get('memory', 20)
+    nprocs = nprocs if nprocs is not None else 10
+    memory = memory if memory is not None else 20
+
     method = method_dct.get('method')
 
     # Build the submission script string
@@ -87,9 +90,13 @@ def _molpro(method_dct, job=None):
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         nprocs = method_dct.get('nprocs', 4)
         memory = method_dct.get('memory', 10)
+        nprocs = nprocs if nprocs is not None else 4
+        memory = memory if memory is not None else 10
     else:
         nprocs = method_dct.get('nprocs', 4)
         memory = method_dct.get('memory', 20)
+        nprocs = nprocs if nprocs is not None else 4
+        memory = memory if memory is not None else 10
 
     # Build the script string
     if method in ('caspt2c', 'caspt2i'):

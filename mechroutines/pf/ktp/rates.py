@@ -25,11 +25,42 @@ BLOCK_MODULE = importlib.import_module('mechroutines.pf.models.blocks')
 
 
 # Input string writer
-def make_messrate_str(globkey_str, energy_trans_str, rxn_chan_str):
+def make_messrate_str(pes_idx, rxn_lst,
+                      pes_model,
+                      spc_dct, thy_dct,
+                      pes_model_dct, spc_model_dct,
+                      label_dct,
+                      mess_path, run_prefix, save_prefix):
     """ Combine various MESS strings together to combined MESS rates
     """
-    return mess_io.writer.messrates_inp_str(
+
+    # Write the strings for the MESS input file
+    globkey_str = make_header_str(
+        spc_dct,
+        temps=pes_model_dct[pes_model]['rate_temps'],
+        pressures=pes_model_dct[pes_model]['pressures'])
+
+    # Write the energy transfer section strings for MESS file
+    etransfer = pes_model_dct[pes_model]['etransfer']
+    energy_trans_str = make_global_etrans_str(
+        rxn_lst, spc_dct, etransfer)
+
+    # Write the MESS strings for all the PES channels
+    rxn_chan_str, dats, _, _ = make_pes_mess_str(
+        spc_dct, rxn_lst, pes_idx,
+        run_prefix, save_prefix, label_dct,
+        spc_model_dct, thy_dct)
+
+    # Combine strings together
+    mess_inp_str = mess_io.writer.messrates_inp_str(
         globkey_str, energy_trans_str, rxn_chan_str)
+
+    # Write the MESS file into the filesystem
+    ioprinter.obj('line_plus')
+    ioprinter.writing('MESS input file', mess_path)
+    ioprinter.debug_message(mess_inp_str)
+
+    return mess_inp_str, dats
 
 
 # Headers

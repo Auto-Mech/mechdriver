@@ -80,3 +80,8 @@ def _geometry_dictionary(job_path):
                 geom_dct[ich] = geo
 
     return geom_dct
+
+
+def _active_space_dictionary(job_path):
+    """ Read in files for active space calculations
+    """

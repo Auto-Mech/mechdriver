@@ -10,11 +10,52 @@ from mechanalyzer.inf import rxn as rinfo
 from phydat import symm, eleclvl, phycon
 from mechlib.reaction import rxnid
 from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
-from mechlib.amech_io.parser._keywrd import SPC_VAL_DCT, TS_VAL_DCT
+from mechlib.amech_io.parser._keywrd import check_dct1
+
+
+# DCTS
+SPC_REQ = ('inchi', 'mult', 'charge', 'elec_levels', 'mc_nsamp')
+TS_REQ = ('rxndirn', 'kt_pst', 'temp_pst', 'n_pst')
+SPC_VAL_DCT = {
+    'mult': (int, (), None),
+    'charge': (int, (), None),
+    'inchi': (str, (), None),
+    'inchikey': (str, (), None),
+    'smiles': (str, (), None),
+    'sens': (float, (), None),  # auto from CSV reader, not used
+    'fml': (dict, (), None),  # auto from CSV reader, not used
+    'pst_params': (tuple, (), (1.0, 6)),
+    # ^^ shouldn't be in spc, but auto dat glob prob for all TS keys)
+    'tors_names': (str, (), None),
+    'elec_levels': (tuple, (), None),
+    'sym_factor': (float, (), None),
+    'kickoff': (tuple, (), (True, (0.1, False))),
+    'hind_inc': (float, (), 30.0),
+    'mc_nsamp': (tuple, (), (True, 12, 1, 3, 100, 25)),
+    'tau_nsamp': (tuple, (), (True, 12, 1, 3, 100, 25)),
+    'smin': (float, (), None),
+    'smax': (float, (), None),
+    'etrans_nsamp': (int, (), None),
+    'bath': (str, (), None),
+    'lj': (str, (), None),
+    'edown': (str, (), None),
+    'active': (tuple, (), None),
+    'zma_idx': (int, (), 0)
+}
+TS_VAL_DCT = {
+    'rxndirn': (str, (), 'forw'),
+    'kt_pst': (float, (), 4.0e-10),
+    'temp_pst': (float, (), 300.0),
+    'n_pst': (float, (), 6.0),
+    'active': (str, (), None),
+    'ts_seatch': (str, (), 'sadpt'),
+    'ts_idx': (int, (), 0)
+}
+TS_VAL_DCT.update(SPC_VAL_DCT)
 
 
 # Build spc
-def species_dictionary(spc_str, dat_str, geo_dct):
+def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
     """ Read each of the species input files:
             (1) species.csv: CSV file with basic info like names,inchis,mults
             (2) species.dat:
@@ -25,15 +66,20 @@ def species_dictionary(spc_str, dat_str, geo_dct):
         :rtype dict[str: dict]
     """
 
-    spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, 'csv')
+    # Parse out the dcts from the strings
+    spc_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, spc_type)
 
     dat_blocks = ioformat.ptt.named_end_blocks(dat_str, 'spc', footer='spc')
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
 
+    # Merge all of the species inputs into a dictionary
     mod_spc_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct)
 
     # Assess if the species.dat information is valid
-    # check_dictionary()
+    for name, dct in mod_spc_dct.items():
+        req_lst = SPC_REQ if 'ts' not in name else SPC_REQ+TS_REQ
+        val_dct = SPC_VAL_DCT if 'ts' not in name else TS_VAL_DCT
+        check_dct1(dct, val_dct, req_lst, 'Spc-{}'.format(name))
 
     return mod_spc_dct
 
@@ -51,6 +97,11 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
     dat_dct, glob_dct = automol.util.dict_.separate_subdct(
         amech_dct, key='global')
 
+    print('check')
+    print('spc', spc_dct.get('CH4'))
+    print('dat', spc_dct.get('CH4'))
+    print('glob', glob_dct)
+
     # Add in all of the species
     for spc in spc_dct:
 
@@ -66,12 +117,14 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
 
         # Add speciaized calls not in the default dct
         ich, mul = spc_dct[spc]['inchi'], spc_dct[spc]['mult']
-        if 'elec_levels' not in spc_dct[spc]:
+        if spc_dct[spc]['elec_levels'] is None:
             spc_dct[spc]['elec_levels'] = eleclvl.DCT.get(
                 (ich, mul), (0.0, mul))
-        if 'sym_factor' not in spc_dct[spc]:
+        if spc_dct[spc]['sym_factor'] is None:
             spc_dct[spc]['sym_factor'] = symm.DCT.get(
                 (ich, mul), 1.0)
+    
+    print('spc2', spc_dct.get('CH4'))
 
     # Add transitions states defined in species.dat not defined in spc_dct
     ts_dct = {}
@@ -87,6 +140,8 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
 
     # add the TSs to the spc dct
     spc_dct.update(ts_dct)
+
+    print('spc3', spc_dct.get('CH4'))
 
     # Final loop for conversions additions
     for spc in spc_dct:
@@ -126,7 +181,7 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
                 combined_dct[sadpt][key] = val
 
         # Put in defaults if they were not defined
-        combined_dct[sadpt] = automol.util._dict.right_update(
+        combined_dct[sadpt] = automol.util.dict_.right_update(
            TS_VAL_DCT, combined_dct[sadpt])
 
     return combined_dct
@@ -134,8 +189,7 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
 
 # Functions to the spc_dct contributions for TS
 def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
-                  run_inp_dct, spc_dct, run_prefix, save_prefix,
-                  direction='forw'):
+                  spc_dct, run_prefix, save_prefix):
     """ build a ts queue
     """
 
@@ -153,8 +207,7 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
             ini_thy_info = tinfo.from_dct(ini_method_dct)
             ts_dct = build_sadpt_dct(
                 pes_idx, rxn_lst, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, run_prefix, save_prefix,
-                direction=direction)
+                spc_dct, run_prefix, save_prefix)
             break
 
     # Build the queue
@@ -167,8 +220,7 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
 
 def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
-                    run_inp_dct, spc_dct, run_prefix, save_prefix,
-                    direction='forw'):
+                    spc_dct, run_prefix, save_prefix):
     """ build a dct for saddle points for all reactions in rxn_lst
     """
 
@@ -177,8 +229,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
         ts_dct.update(
             build_sing_chn_sadpt_dct(
                 pes_idx, rxn, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, run_prefix, save_prefix,
-                direction=direction)
+                spc_dct, run_prefix, save_prefix)
         )
 
     return ts_dct
@@ -186,7 +237,7 @@ def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
 
 def build_sadpt_dct2(pes_idx, rxn_lst, spc_model,
                      spc_model_dct, thy_dct,
-                     run_inp_dct, spc_dct, run_prefix, save_prefix):
+                     spc_dct, run_prefix, save_prefix):
     """ build spc dct for ktp driver
     """
 
@@ -205,25 +256,19 @@ def build_sadpt_dct2(pes_idx, rxn_lst, spc_model,
         ts_dct.update(
             build_sing_chn_sadpt_dct(
                 pes_idx, rxn, thy_info, ini_thy_info,
-                run_inp_dct, spc_dct, run_prefix, save_prefix,
-                direction='forw'))
+                spc_dct, run_prefix, save_prefix))
     spc_dct = combine_sadpt_spc_dcts(
         ts_dct, spc_dct)
 
     return spc_dct
 
 
-# def build_sing_chn_sadpt_dct(tsname, reaction, thy_info, ini_thy_info,
 def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
-                             run_inp_dct, spc_dct, run_prefix, save_prefix,
-                             direction='forw'):
+                             spc_dct, run_prefix, save_prefix):
     """ build dct for single reaction
     """
 
-    save_prefix = run_inp_dct['save_prefix']
-
-    reacs = reaction['reacs']
-    prods = reaction['prods']
+    reacs, prods = reaction[0], reaction[1]
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
     print('  Preparing for reaction {} = {}'.format(
         '+'.join(reacs), '+'.join(prods)))
@@ -231,12 +276,14 @@ def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
     # Set the reacs and prods for the desired direction
     reacs, prods = rxnid.set_reaction_direction(
         reacs, prods, rxn_info,
-        thy_info, ini_thy_info, save_prefix, direction=direction)
+        thy_info, ini_thy_info, save_prefix, direction='forw')
 
     # Obtain the reaction object for the reaction
     zma_locs = (0,)
     zrxns, zmas = rxnid.build_reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
+
+    # Could reverse the spc dct
 
     # ts_dct = {}
     if zrxns is not None:
@@ -265,5 +312,7 @@ def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
     else:
         ts_dct = {}
         print('Skipping reaction as class not given/identified')
+
+    # Add the ts dct to the spc dct here?
 
     return ts_dct
