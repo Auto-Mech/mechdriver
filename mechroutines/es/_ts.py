@@ -15,7 +15,7 @@ from mechanalyzer.inf import thy as tinfo
 from mechroutines.es._routines import _sadpt as sadpt
 # from mechroutines.es._routines import _vrctst as vrctst
 # from mechroutines.es._routines import _vtst as vtst
-from mechlib.filesys import build_fs
+from mechlib.filesys import build_fs, rcts_cnf_fs
 from mechlib import filesys
 
 
@@ -89,10 +89,6 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
             guess_zmas, ts_dct, method_dct,
             runfs_dct, savefs_dct, es_keyword_dct)
 
-<<<<<<< HEAD
-        # Generate a second sadpt
-=======
-        # Find a second sadpt
 
 def run_pst(spc_dct, tsname, savefs_dct,
             zma_locs=(0,)):
@@ -242,7 +238,6 @@ def run_vtst(spc_dct, tsname, es_keyword_dct,
                        overwrite, **cas_kwargs)
     else:
         obtain_saddle_point()
->>>>>>> ffca490ce72a8ad0ea464f62aa8b0fa70d26bae5
 
 
 def run_vrctst(spc_dct, tsname, es_keyword_dct,
@@ -530,7 +525,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 vsplvl2_thy_info, hs_info)
 
     # Get the conformer filesys for the reactants
-    rcts_cnf_fs = _reac_cnf_fs(
+    _rcts_cnf_fs = rcts_cnf_fs(
         rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
 
     thy_inf_dct = {
@@ -568,12 +563,8 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
         'vrctst_fs': vrctst_save_fs,
-<<<<<<< HEAD
-        'rcts_cnf_fs': rcts_cnf_fs
-=======
-        'rcts_cnf_fs': reac_cnf_fs,
+        'rcts_cnf_fs': _rcts_cnf_fs,
         'runlvl_ts_zma_fs': runlvl_ts_zma_save_fs
->>>>>>> ffca490ce72a8ad0ea464f62aa8b0fa70d26bae5
     }
 
     return thy_inf_dct, runfs_dct, savefs_dct

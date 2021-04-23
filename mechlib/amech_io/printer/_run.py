@@ -13,8 +13,9 @@ def runlst(run_inf, run_lst):
     formula, pes_idx, sub_pes_idx = run_inf
     if formula != 'SPC':
         print_pes(pes_idx, formula, sub_pes_idx)
-        for i, rxn in enumerate(run_lst):
-           print_channel(i+1, rxn[0], rxn[1])
+        for chnl in run_lst:
+            cidx, rxn = chnl
+            print_channel(cidx+1, rxn[0], rxn[1])
     else:
         for i, spc in enumerate(run_lst):
             message('Running SPC {}: {}'.format(i+1, spc))

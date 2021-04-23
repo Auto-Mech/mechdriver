@@ -16,7 +16,7 @@ from mechroutines.pf.models import typ
 from mechroutines.pf.models import etrans
 from mechroutines.pf.models import _rot as rot
 from mechroutines.pf.models import _tors as tors
-from mechroutines.pf.models import _symm as symm
+from mechroutines.pf.models import _sym as symm
 from mechroutines.pf.models import _vib as vib
 from mechroutines.pf.models import _flux as flux
 from mechroutines.pf.models import _util as util

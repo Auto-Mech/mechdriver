@@ -6,7 +6,19 @@ import os
 
 
 # COMMON HEADER STUFF FOR kTP and THERMO CKIN FILES
-def model_header(pf_levels, pf_models, refscheme=''):
+def model_header(spc_models, pf_levels_dct, pf_models_dct, refscheme=''):
+    """ Write a model header for multiple models
+    """
+    mod_str = ''
+    for spc_model in spc_models:
+        mod_str += _model_header(
+            pf_levels_dct[spc_model], pf_models_dct[spc_model],
+            refscheme=refscheme)
+
+    return mod_str
+
+
+def _model_header(pf_levels, pf_models, refscheme=''):
     """ prepare chemkin header info and convert pac 99 format to chemkin format
     """
 

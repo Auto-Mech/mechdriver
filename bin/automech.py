@@ -72,10 +72,10 @@ if THERM_TSKS is not None:
     ioprinter.program_header('thermo')
     thermodriver.run(
         SPC_RLST,
-        SPC_DCT,
+        THERM_TSKS,
         KMOD_DCT, SMOD_DCT,
-        THY_DCT,
-        INP_KEY_DCT,
+        SPC_DCT, THY_DCT,
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
     )
     ioprinter.program_exit('thermo')
 
@@ -97,10 +97,10 @@ if KTP_TSKS is not None:
     ioprinter.program_header('ktp')
     ktpdriver.run(
         PES_RLST,
-        SPC_DCT,
-        THY_DCT,
+        KTP_TSKS,
+        SPC_DCT, THY_DCT,
         KMOD_DCT, SMOD_DCT,
-        INP_KEY_DCT,
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
     )
     ioprinter.program_exit('ktp')
 

@@ -3,104 +3,96 @@
 """
 
 import automol
-import autofile
-import elstruct
 from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 
 
 # Handle reaction lst
-def split_unstable(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
+def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
     """ Loop over the reaction list and break up the unstable species
     """
+    
+    print('Checking stability of all species...')
 
-    new_rxn_lst = []
+    # Get theory
+    spc_model = rxn['model'][1]
+    geo_model = spc_model_dct[spc_model]['es']['geo']
+    ini_thy_info = tinfo.from_dct(thy_dct[geo_model])
+
+    # Build the mapping dictionary
+    split_map = _split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,))
+
+    # Loop over the reactions and split
+    new_rxn_lst = ()
     for rxn in rxn_lst:
 
-        # Initialize dct
-        new_rxn = {}
+        # Unpack the reaction
+        chnl_idx, (rcts, prds) = rxn
 
-        # Get theory
-        spc_model = rxn['model'][1]
-        geo_model = spc_model_dct[spc_model]['es']['geo']
-        ini_thy_info = tinfo.from_dct(thy_dct[geo_model])
+        # Assess and split the reactants and products for unstable species
+        new_rcts = ()
+        for rct in rcts:
+            new_rcts += split_map[rct]
 
-        new_rxn['dummy'] = []
+        new_prds = ()
+        for prd in prds:
+            new_prds += split_map[prd]
 
-        # Asses the reactants for unstable species
-        new_rxn['reacs'] = []
-        for rct in rxn['reacs']:
-            split_rct = _split_species(spc_dct, rct,
-                                       ini_thy_info, save_prefix)
-            if not split_rct:
-                new_rct = rct
-                new_rxn['reacs'].append(new_rct)
-            else:
-                print('\nSplitting species...')
-                new_rct = split_rct
-                print('- New species: {}'.format(' '.join(new_rct)))
-                new_rxn['reacs'].extend(new_rct)
-                new_rxn['dummy'].append('reacs')
-
-        # Assess the products for unstable species
-        new_rxn['prods'] = []
-        for prd in rxn['prods']:
-            split_prd = _split_species(spc_dct, prd,
-                                       ini_thy_info, save_prefix)
-            if not split_prd:
-                new_prd = prd
-                new_rxn['prods'].append(new_prd)
-            else:
-                print('- Splitting species...')
-                new_prd = split_prd
-                print('- New species: {}'.format(' '.join(new_prd)))
-                new_rxn['prods'].extend(new_prd)
-                new_rxn['dummy'].append('prods')
-
-        if len(rxn['reacs']) > len(new_rxn['reacs']):
-            print('WARNING: LIKELY MISSING DATA FOR REACTANTS FOR SPLIT')
-        if len(rxn['prods']) > len(new_rxn['prods']):
-            print('WARNING: LIKELY MISSING DATA FOR PRODUCTS FOR SPLIT')
-
-        # Build rxn dct
-        new_rxn.update(
-            {'model': rxn['model'],
-             'chn_idx': rxn['chn_idx'],
-             'species': new_rxn['reacs']+new_rxn['prods']})
+        # Check if the split species are in the spc dct
+        if len(rcts) > len(new_rcts):
+            print('WARNING: REACTANTS FROM SPLIT MISSING FROM SPC DCT')
+        if len(prds) > len(new_prds):
+            print('WARNING: PRODUCTS FROM SPLIT MISSING FROM SPC DCT')
 
         # Flip the reaction if the reactants are unstable?
 
         # Append to list
-        new_rxn_lst.append(new_rxn)
+        new_rxn = (chnl_idx, (new_rcts, new_prds))
+        new_rxn_lst += new_rxn
 
     return new_rxn_lst
 
 
-def _split_dct(rxn_lst, spc_dct, thy_info, save_prefix,
-               zma_locs=(0,)):
+def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct, thy_dct, save_prefix):
+    """ Loop over the reaction list and break up the unstable species
+    """
+    
+    print('Checking stability of all species...')
+
+    # Get theory
+    spc_model = rxn['model'][1]
+    geo_model = spc_model_dct[spc_model]['es']['geo']
+    ini_thy_info = tinfo.from_dct(thy_dct[geo_model])
+
+    # Build the mapping dictionary
+    split_map = _split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,))
+
+    # Loop over the species lst to get the unstable species
+    split_spc_names = ()
+
+    spc_names = spc_rlst.values()[0]
+    for spc in spc_names:
+        split_spc_names += split_map[spc]
+
+    return {('SPC', 0, 0): split_spc_names}
+
+
+def split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,)):
     """ Build a dictionry which maps the names of species into splits
         would like to build to just go over spc dct (good for mech pre-process)
-        could do 
+        could do
     """
 
     split_map = {}
-    for rxn in rxn_lst:
-
-        # Get theory
-        spc_model = rxn['model'][1]
-        geo_model = spc_model_dct[spc_model]['es']['geo']
-        ini_thy_info = tinfo.from_dct(geo_model)
-        
-        for spc in rxn['species']:
-            if spc not in split_map:
-                split_names = _split_species(
-                    spc_dct, spc, ini_thy_info, save_prefix)
-                if split_names:
-                    print('- Splitting species...')
-                    print('- New species: {}'.format(' '.join(split_names)))
-                    split_map[spc] = split_names
-                else:
-                    split_map[spc] = spc
+    for spc in spc_dct:
+        split_names = _split_species(
+            spc_dct, spc, thy_info, save_prefix, zma_locs=zma_locs)
+        if split_names:
+            print('- Splitting species...')
+            print('- New species: {}'.format(' '.join(split_names)))
+            split_map[spc] = split_names
+        else:
+            split_map[spc] = (spc,)
 
     return split_map
 
@@ -111,14 +103,16 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
     """
 
     # Initialize an empty list
-    prd_names = []
+    prd_names = ()
 
+    # Attempt to read the graph of the instability trans
+    # Get the product graphs and inchis
     tra = filesys.read.instability_transformation(
         spc_dct, spc_name, thy_info, save_prefix, zma_locs=zma_locs)
     if tra is not None:
         zrxn, _ = tra
         prd_gras = automol.reac.product_graphs(zrxn)
-        constituent_ichs = tuple(automol.graph.inchi(gra, stereo=True) 
+        constituent_ichs = tuple(automol.graph.inchi(gra, stereo=True)
                                  for gra in prd_gras)
 
         for ich in constituent_ichs:

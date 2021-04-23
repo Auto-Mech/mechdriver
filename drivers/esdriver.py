@@ -39,9 +39,9 @@ def run(pes_rlst, spc_rlst,
 
         # Build a TS dictionary and add it to the spc dct if needed
         if any(tsk_lst[0] == 'ts' for tsk_lst in es_tsk_lst):
-            pes_idx = run_inf[0]
-            pes_idx, ts_queue = parser.spc.get_sadpt_dct(
-                0, es_tsk_lst, run_lst,
+            pes_idx = run_inf[1]+1
+            ts_dct, ts_queue = parser.spc.get_sadpt_dct(
+                pes_idx, es_tsk_lst, run_lst,
                 thy_dct, spc_dct,
                 run_prefix, save_prefix)
             spc_dct = parser.spc.combine_sadpt_spc_dcts(

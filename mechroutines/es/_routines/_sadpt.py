@@ -25,7 +25,7 @@ def generate_guess_structure(ts_dct, method_dct, es_keyword_dct,
         :param method_dct:
     """
 
-    guess_zmas = _check_filesys_for_guess(savefs_dct, es_keyword_dct, zma_locs=zma_locs)
+    guess_zmas = _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct)
     if not guess_zmas:
         print(' - No Z-Matrix is found in save filesys.')
         print('\nRunning scan to generate guess Z-Matrix for opt...')

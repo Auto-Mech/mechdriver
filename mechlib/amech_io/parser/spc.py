@@ -212,9 +212,9 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
     # Build the queue
     if ts_dct:
-        ts_queue = [(sadpt, '') for sadpt in ts_dct]
+        ts_queue = tuple(sadpt for sadpt in ts_dct)
     else:
-        ts_queue = []
+        ts_queue = ()
 
     return ts_dct, ts_queue
 
@@ -268,7 +268,10 @@ def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
     """ build dct for single reaction
     """
 
-    reacs, prods = reaction[0], reaction[1]
+    # Unpack the reaction object
+    chnl_idx, _rxn = reaction
+    reacs, prods = _rxn[0], _rxn[1]
+
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
     print('  Preparing for reaction {} = {}'.format(
         '+'.join(reacs), '+'.join(prods)))
@@ -295,7 +298,7 @@ def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
             rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
             rxn_fs = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
             tsname = 'ts_{:g}_{:g}_{:g}'.format(
-                pes_idx, reaction['chn_idx'], idx)
+                pes_idx, chnl_idx+1, idx)
             ts_dct[tsname] = {
                 'zrxn': zrxn,
                 'zma': zma,

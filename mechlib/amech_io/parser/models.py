@@ -222,3 +222,60 @@ def pf_level_info(spc_model_dct, thy_dct):
     }
 
     return es_levels
+
+
+def mult_models(mods, spc_model_dct, thy_dct):
+    """ Build dictionaries with models
+    """
+
+    pf_levels = {}
+    pf_models = {}
+    for mod in mods:
+        pf_levels[mod] = pf_level_info(spc_model_dct[mod]['es'], thy_dct)
+        pf_models[mod] = pf_model_info(spc_model_dct[mod]['pf'])
+        pf_models[mod]['ref_scheme'] = (
+            spc_model_dct[mod]['options']['ref_scheme']
+            if 'ref_scheme' in spc_model_dct[mod]['options'] else 'none')
+        pf_models[mod]['ref_enes'] = (
+            spc_model_dct[mod]['options']['ref_enes']
+            if 'ref_enes' in spc_model_dct[mod]['options'] else 'none')
+
+    return pf_levels, pf_models
+
+
+def split_model(model):
+    """ Take a model given by a set of operations and split it into a set of models
+        and operators
+
+        model = 3*pf1-pf2 ->
+            model = (models, coefs, operators)
+            model = ((pf1, pf2), (3, 1), (multiple, subtract))
+    """
+
+    # Dictionary to map symbols to strings used later in the code
+    op_dct = {'*': 'multiply', '+': 'add', '/': 'divide', '-': 'substract'}
+
+    # Break the down the model string into
+    # constituent models, coefficients, and operators
+    coeffs, operators, models = [], [], []
+    coeff, model = '', ''
+    for char in model:
+        if char == '.' or char.isdigit():
+            coeff += char
+        elif char.isalpha():
+            model += char
+        elif char in op_dct:
+            operators.append(op_dct[char])
+            if coeff:
+                coeffs.append(float(coeff))
+            else:
+                coeffs.append(1.0)
+            models.append(model)
+            coeff = ''
+            model = ''
+    if coeff:
+        coeffs.append(float(coeff))
+    else:
+        coeffs.append(1.0)
+
+    return (tuple(models), tuple(coeffs), tuple(operators))

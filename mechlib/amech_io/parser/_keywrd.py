@@ -161,7 +161,6 @@ def _check_supported_vals(inp_dct, val_dct, req_lst, section):
 
     # Assess if the keywords have the appropriate value
     for key, val in inp_dct.items():
-        print('val dct', val_dct[key])
         allowed_typ, allowed_vals, _ = val_dct[key]
 
         if val is not None:
