@@ -5,15 +5,13 @@
 import automol
 from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
+from mechlib.amech_io import printer as ioprinter
 
 
 # Handle reaction lst
-def split_unstable_rxn(rxn_lst, spc_dct,
-                       spc_model_dct_i, thy_dct, save_prefix):
+def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
     """ Loop over the reaction list and break up the unstable species
     """
-
-    print('Checking stability of all species...')
 
     # Get theory
     thy_info = spc_model_dct_i['vib']['geolvl'][1][1]
@@ -54,25 +52,19 @@ def split_unstable_rxn(rxn_lst, spc_dct,
     return new_rxn_lst
 
 
-def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct, thy_dct, save_prefix):
+def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct_i, save_prefix):
     """ Loop over the reaction list and break up the unstable species
     """
 
-    print('Checking stability of all species...')
-
     # Get theory
-    spc_model = rxn['model'][1]
-    geo_model = spc_model_dct[spc_model]['es']['geo']
-    ini_thy_info = tinfo.from_dct(thy_dct[geo_model])
+    thy_info = spc_model_dct_i['vib']['geolvl'][1][1]
 
     # Build the mapping dictionary
     split_map = _split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,))
 
     # Loop over the species lst to get the unstable species
     split_spc_names = ()
-
-    spc_names = spc_rlst.values()[0]
-    for spc in spc_names:
+    for spc in list(spc_rlst.values())[0]:
         split_spc_names += split_map[spc]
 
     return {('SPC', 0, 0): split_spc_names}
@@ -108,9 +100,12 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
 
     # Attempt to read the graph of the instability trans
     # Get the product graphs and inchis
-    tra = filesys.read.instability_transformation(
+    tra, path = filesys.read.instability_transformation(
         spc_dct, spc_name, thy_info, save_prefix, zma_locs=zma_locs)
     if tra is not None:
+        ioprinter.info_message('\nFound instability files at path:')
+        ioprinter.info_message('  {}'.format(path))
+
         zrxn, _ = tra
         prd_gras = automol.reac.product_graphs(zrxn)
         constituent_ichs = tuple(automol.graph.inchi(gra, stereo=True)
@@ -119,8 +114,8 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
         for ich in constituent_ichs:
             for name, spc_dct_i in spc_dct.items():
                 if ich == spc_dct_i.get('inchi'):
-                    prd_names.append(name)
+                    prd_names += (name,)
                     break
-        prd_names = list(set(prd_names))
+        prd_names = tuple(set(prd_names))
 
     return prd_names

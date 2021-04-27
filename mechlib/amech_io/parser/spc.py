@@ -2,7 +2,6 @@
 """
 
 import automol
-import autofile
 import ioformat
 import mechanalyzer
 from mechanalyzer.inf import thy as tinfo
@@ -116,7 +115,7 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
         ich, mul = spc_dct[spc]['inchi'], spc_dct[spc]['mult']
         if spc_dct[spc]['elec_levels'] is None:
             spc_dct[spc]['elec_levels'] = eleclvl.DCT.get(
-                (ich, mul), (0.0, mul))
+                (ich, mul), ((0.0, mul),))
         if spc_dct[spc]['sym_factor'] is None:
             spc_dct[spc]['sym_factor'] = symm.DCT.get(
                 (ich, mul), 1.0)
@@ -181,8 +180,8 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
 
 
 # Functions to the spc_dct contributions for TS
-def ts_dct_from_etsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
-                      spc_dct, run_prefix, save_prefix):
+def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
+                       spc_dct, run_prefix, save_prefix):
     """ build a ts queue
     """
 
@@ -264,7 +263,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     # Obtain the reaction object for the reaction
     zma_locs = (0,)
-    zrxns, zmas = rxnid.build_reaction(
+    zrxns, zmas, rclasses = rxnid.build_reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
 
     # Could reverse the spc dct
@@ -272,13 +271,12 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     # ts_dct = {}
     if zrxns is not None:
         ts_dct = {}
-        for idx, (zrxn, zma) in enumerate(zip(zrxns, zmas)):
+        for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
             tsname = 'ts_{:g}_{:g}_{:g}'.format(
                 pes_idx+1, chnl_idx+1, idx)
             # build full class:
             ts_dct[tsname] = {
                 'zrxn': zrxn,
-                'radrad' = rinfo.radrad(spc_dct[sub_tsname]['rxn_info']),
                 'zma': zma,
                 'reacs': reacs,
                 'prods': prods,
@@ -286,8 +284,9 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'inchi': '',
                 'charge': rinfo.value(rxn_info, 'charge'),
                 'mult': rinfo.value(rxn_info, 'tsmult'),
-                'elec_levels': [[0.0, rinfo.value(rxn_info, 'tsmult')]],
-                'class': zrxn.class_,
+                'elec_levels': ((0.0, rinfo.value(rxn_info, 'tsmult')),),
+                'sym_factor': 1.0,  # remove later
+                'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }
     else:

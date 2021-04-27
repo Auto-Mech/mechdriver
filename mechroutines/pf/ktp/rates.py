@@ -10,11 +10,9 @@ import mess_io
 from mechroutines.pf.models import blocks
 from mechroutines.pf.models import build
 from mechroutines.pf.models.ene import set_reference_ene
-from mechroutines.pf.models.ene import calc_channel_enes
+from mechroutines.pf.models.ene import sum_channel_enes
 from mechroutines.pf.models import etrans
 from mechroutines.pf.models import tunnel
-from mechroutines.pf.models.inf import set_pf_info
-from mechroutines.pf.models.inf import set_ts_cls_info
 from mechroutines.pf.models.inf import make_rxn_str
 from mechroutines.pf.models.typ import need_fake_wells
 from mechroutines.pf.models.typ import is_abstraction
@@ -54,7 +52,7 @@ def make_messrate_str(pes_idx, rxn_lst,
     rxn_chan_str, dats, _, _ = make_pes_mess_str(
         spc_dct, rxn_lst, pes_idx,
         run_prefix, save_prefix, label_dct,
-        pes_model_dct_i, spc_model_dct_i, thy_dct)
+        pes_model_dct_i, spc_model_dct_i, spc_model, thy_dct)
 
     # Combine strings together
     mess_inp_str = mess_io.writer.messrates_inp_str(
@@ -125,7 +123,8 @@ def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
 # Reaction Channel Writers for the PES
 def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
                       run_prefix, save_prefix, label_dct,
-                      pes_model_dct_i, spc_model_dct_i, thy_dct):
+                      pes_model_dct_i, spc_model_dct_i,
+                      spc_model, thy_dct):
     """ Write all the MESS input file strings for the reaction channels
     """
 
@@ -139,7 +138,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
 
     # Set the energy and model for the first reference species
     ioprinter.info_message('\nCalculating reference energy for PES')
-    ref_ene, ref_model = set_reference_ene(
+    ref_ene = set_reference_ene(
         rxn_lst, spc_dct, thy_dct,
         pes_model_dct_i, spc_model_dct_i,
         run_prefix, save_prefix, ref_idx=0)
@@ -153,32 +152,30 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
 
         ioprinter.obj('vspace')
         ioprinter.reading('PES electrion structure data')
-        ioprinter.channel(
-            chnl_idx, reacs, prods)
+        ioprinter.channel(chnl_idx, reacs, prods)
 
         # Set the TS name and channel model
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx, chnl_idx)
-        chn_model = rxn['model'][1]
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
 
         # Obtain all of the species data
-        if chn_model not in basis_energy_dct:
-            basis_energy_dct[chn_model] = {}
+        if spc_model not in basis_energy_dct:
+            basis_energy_dct[spc_model] = {}
+
         # Pass in full ts class
         chnl_infs, chn_basis_ene_dct = get_channel_data(
-            chnl_idx, reacs, prods, tsname, spc_dct,
-            basis_energy_dct[chn_model],
+            reacs, prods, tsname,
+            spc_dct, basis_energy_dct[spc_model],
             pes_model_dct_i, spc_model_dct_i,
             run_prefix, save_prefix)
 
-        basis_energy_dct[chn_model].update(chn_basis_ene_dct)
+        basis_energy_dct[spc_model].update(chn_basis_ene_dct)
 
         # Calculate the relative energies of all spc on the channel
-        chnl_enes = calc_channel_enes(chnl_infs, ref_ene,
-                                      chn_model, ref_model)
+        chnl_enes = sum_channel_enes(chnl_infs, ref_ene)
 
         # Write the mess strings for all spc on the channel
         mess_strs, dat_str_dct, written_labels = _make_channel_mess_strs(
-            tsname, chnl_idx, reacs, prods, spc_dct, label_dct, written_labels,
+            tsname, reacs, prods, spc_dct, label_dct, written_labels,
             chnl_infs, chnl_enes, spc_model_dct_i)
 
         # Append to full MESS strings
@@ -199,7 +196,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
     return rxn_chan_str, full_dat_str_dct, pes_ene_dct, conn_lst
 
 
-def _make_channel_mess_strs(tsname, chnl_idx, reacs, prods,
+def _make_channel_mess_strs(tsname, reacs, prods,
                             spc_dct, label_dct, written_labels,
                             chnl_infs, chnl_enes, spc_model_dct_i):
     """ make the partition function strings for each of the channels
@@ -282,7 +279,7 @@ def _make_channel_mess_strs(tsname, chnl_idx, reacs, prods,
 
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fake_lbl, fake_dct = _make_fake_mess_strs(
-            rxn, 'reacs', chnl_infs['fake_vdwr'],
+            (reacs, prods), 'reacs', chnl_infs['fake_vdwr'],
             chnl_enes, label_dct, reac_label)
 
         # Append the fake strings to overall strings
@@ -299,7 +296,7 @@ def _make_channel_mess_strs(tsname, chnl_idx, reacs, prods,
 
         # Write all the MESS Strings for Fake Wells and TSs
         fwell_str, fts_str, fake_lbl, fake_dct = _make_fake_mess_strs(
-            rxn, 'prods', chnl_infs['fake_vdwp'],
+            (reacs, prods), 'prods', chnl_infs['fake_vdwp'],
             chnl_enes, label_dct, prod_label)
 
         # Append the fake strings to overall strings
@@ -314,8 +311,9 @@ def _make_channel_mess_strs(tsname, chnl_idx, reacs, prods,
 
     # Write MESS string for the inner transition state; append full
     ts_label = label_dct[tsname]
+    rclass = spc_dct[tsname+'_0']['class']
     sts_str, ts_dat_dct = _make_ts_mess_str(
-        chnl_infs, chnl_enes, spc_model_dct_i,
+        chnl_infs, chnl_enes, spc_model_dct_i, rclass,
         ts_label, inner_reac_label, inner_prod_label)
     ts_str += sts_str
     full_dat_dct.update(ts_dat_dct)
@@ -330,15 +328,13 @@ def _make_spc_mess_str(inf_dct):
     return mess_writer(inf_dct)
 
 
-def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i,
+def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
                       ts_label, inner_reac_label, inner_prod_label):
     """ makes the main part of the MESS species block for a given species
     """
 
     # Unpack info objects
-    [_, ts_sadpt, ts_nobarrier, tunnel_model, radrad] = ts_cls_info
-    ts_model = spc_model_dct_i['ts']
-    radrad = ''
+    ts_mod = spc_model_dct_i['ts']
 
     # Write the initial data string and dat str dct with mdhr str
     mess_strs = []
@@ -353,7 +349,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i,
         # Write the appropriate string for the tunneling model
         tunnel_str, sct_dct = tunnel.write_mess_tunnel_str(
             ts_inf_dct, chnl_infs, chnl_enes,
-            tunnel_model, ts_sadpt, ts_nobarrier, radrad, idx)
+            ts_mod, ts_class, idx)
 
         # Update master TS list
         mess_strs.append(mstr)
@@ -369,9 +365,11 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i,
     if len(mess_strs) == 1:
         mess_str = mess_strs[0]
 
+        ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
+        radrad = bool('radical radical' in ts_class)
         write_ts_pt_str = bool(
             (not radrad and ts_sadpt != 'rpvtst') or
-            (radrad and ts_nobarrier != 'rpvtst')
+            (radrad and ts_nobar != 'rpvtst')
         )
         if write_ts_pt_str:
             ts_ene = chnl_enes['ts'][0]
@@ -394,14 +392,13 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i,
     return ts_str, ts_dat_dct
 
 
-def _make_fake_mess_strs(reaction, side, fake_inf_dcts,
+def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
                          chnl_enes, label_dct, side_label):
     """ write the MESS strings for the fake wells and TSs
     """
 
     # Set vars based on the reacs/prods
-    _, chnl = reaction
-
+    reacs, prods = chnl
     if side == 'reacs':
         well_key = 'fake_vdwr'
         ts_key = 'fake_vdwr_ts'
@@ -411,7 +408,7 @@ def _make_fake_mess_strs(reaction, side, fake_inf_dcts,
         well_key = 'fake_vdwp'
         ts_key = 'fake_vdwp_ts'
         side_idx = 1
-        if reacs == prods or reacs == prods[::-1]:
+        if reacs in (prods, prods[::-1]):
             prepend_key = 'FRB'
         else:
             prepend_key = 'FPB'
@@ -468,16 +465,12 @@ def _make_fake_mess_strs(reaction, side, fake_inf_dcts,
 
 
 # Data Retriever Functions
-def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct,
+def get_channel_data(reacs, prods, tsname,
+                     spc_dct, model_basis_energy_dct,
                      pes_model_dct_i, spc_model_dct_i,
                      run_prefix, save_prefix):
     """ generate dcts with the models
     """
-
-    # Unpack info objects
-    _, (reacs, prods) = rxn
-    [chn_pf_levels, chn_pf_models, ref_pf_levels, ref_pf_models] = pf_info
-    [ts_class, ts_sadpt, ts_nobarrier, _, _] = ts_cls_info
 
     # Initialize the dict
     chnl_infs = {}
@@ -514,10 +507,11 @@ def get_channel_data(rxn, tsname, spc_dct, model_basis_energy_dct,
     # chnl_infs['ts']['symm_barrier'] = symm_barrier
 
     # Set up the info for the wells
-    rwell_model = spc_model_dct_i['rwells']
+    rwell_model = spc_model_dct_i['ts']['rwells']
+    ts_class = spc_dct[tsname+'_0']['class']
     if need_fake_wells(ts_class, rwell_model):
         chnl_infs['fake_vdwr'] = copy.deepcopy(chnl_infs['reacs'])
-    pwell_model = spc_model_dct_i['pwells']
+    pwell_model = spc_model_dct_i['ts']['pwells']
     if need_fake_wells(ts_class, pwell_model):
         chnl_infs['fake_vdwp'] = copy.deepcopy(chnl_infs['prods'])
 

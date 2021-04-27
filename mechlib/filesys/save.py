@@ -147,7 +147,10 @@ def instability(conn_zma, disconn_zmas,
     if save_cnf:
 
         # Save the geometry information
-        cnf_locs = [autofile.schema.generate_new_conformer_id()]
+        cnf_locs = (
+            autofile.schema.generate_new_ring_id(),
+            autofile.schema.generate_new_conformer_id()
+        )
         cnf_save_fs[-1].create(cnf_locs)
         cnf_save_fs[-1].file.geometry.write(conn_geo, cnf_locs)
         cnf_save_path = cnf_save_fs[-1].path(cnf_locs)

@@ -21,8 +21,9 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):
 
         # Get thhe name and class
         chnl_idx, (reacs, prods) = rxn
-        tsname = 'ts_{:g}_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1, 0)
-        rclass = spc_dct[tsname]['zrxn'].class_
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
+        sub_tsname = '{}_{:g}'.format(tsname, 0)
+        rclass = spc_dct[sub_tsname]['zrxn'].class_
 
         # Build labels
         pes_label_dct.update(

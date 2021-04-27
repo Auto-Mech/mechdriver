@@ -14,6 +14,8 @@ MODKIN_VAL_DCT = {
     'pressures': (tuple, (), None),
     'rate_temps': (tuple, (), None),
     'thermo_temps': (tuple, (), None),
+    'temp_unit': (str, (), 'K'),
+    'pressure_unit': (str, (), 'atm'),
     'rate_fit': {
         'fit_method': (str, ('arrhenius', 'chebyshev'), 'arrhenius'),
         'pdep_temps': (tuple, (), (500, 100)),
@@ -21,9 +23,12 @@ MODKIN_VAL_DCT = {
         'pdep_pval': (float, (), 1.0),
         'pdep_low': (float, (), None),
         'pdep_high': (float, (), None),
-        'arr_dbl_tol': (float, (), 15.0),
-        'troe_param_fit_list': (
-            tuple, (), ('ts1', 'ts2', 'ts3', 'alpha'))
+        'arrfit_dbltol': (float, (), 15.0),
+        'arrfit_dblcheck': (str, ('max', 'avg'), 'max'),
+        'troefit_params': (tuple, (), ('ts1', 'ts2', 'ts3', 'alpha')),
+        'chebfit_tdeg': (int, (), 6),
+        'chebfit_pdeg': (int, (), 4),
+        'chebfit_tol': (float, (), 20.0)
     },
     'thermo_fit': {
         'ref_scheme': (str, ('basic', 'cbh0'), 'basic'),
@@ -93,12 +98,10 @@ def models_dictionary(mod_str, thy_dct):
     print('kin', kin_mod_dct)
     print('spc', spc_mod_dct)
 
-    # Add defaults and format each kin dictionary
+    # Add defaults and format each kin and spc dictionary
     for mod, dct in kin_mod_dct.items():
-        kin_mod_dct[mod] = automol.util.dict_.right_update(
-            defaults_with_dcts(MODKIN_VAL_DCT), kin_mod_dct[mod])
+        kin_mod_dct[mod] = _kin_model_defaults(dct, thy_dct)
 
-    # Add defaults and format each spc dictionary
     for mod, dct in spc_mod_dct.items():
         spc_mod_dct[mod] = _spc_model_defaults(dct, thy_dct)
 
@@ -125,7 +128,8 @@ def _spc_model_defaults(spc_model_dct_i, thy_dct):
     new_dct = automol.util.dict_.right_update(
       defaults_with_dcts(MODPF_VAL_DCT), spc_model_dct_i)
 
-    # Have to check the dictionary to see if levels in mod are in thy dct or it breaks
+    # Have to check the dictionary to see if levels
+    # in mod are in thy dct or it breaks
 
     # Format the keys that are thy levels into info objects for later use
     def _format_lvl(lvl_val):
@@ -154,26 +158,54 @@ def _spc_model_defaults(spc_model_dct_i, thy_dct):
     return new_dct2
 
 
-def mult_models(mods, spc_model_dct, thy_dct):
-    """ Build dictionaries with models
+def _kin_model_defaults(kin_mod_dct_i, thy_dct):
+    """ set kin
     """
 
-    pf_levels = {}
-    pf_models = {}
-    for mod in mods:
-        pf_levels[mod] = pf_level_info(spc_model_dct[mod]['es'], thy_dct)
-        pf_models[mod] = pf_model_info(spc_model_dct[mod]['pf'])
-        pf_models[mod]['ref_scheme'] = (
-            spc_model_dct[mod]['options']['ref_scheme']
-            if 'ref_scheme' in spc_model_dct[mod]['options'] else 'none')
-        pf_models[mod]['ref_enes'] = (
-            spc_model_dct[mod]['options']['ref_enes']
-            if 'ref_enes' in spc_model_dct[mod]['options'] else 'none')
+    # Set defaults
+    new_kin_dct = automol.util.dict_.right_update(
+        defaults_with_dcts(MODKIN_VAL_DCT), kin_mod_dct_i)
 
-    return pf_levels, pf_models
+    # Repartition ratefit key word into dcts for `ratefit` code
+    old_ratefit = new_kin_dct['rate_fit']
+    new_ratefit = {}
+    for key, val in old_ratefit.items():
+        if not any(x in key for x in ('pdep', 'arr', 'cheb', 'troe')):
+            new_ratefit[key] = val
+
+    new_ratefit.update({
+        'pdep_fit': {key.replace('pdep_', ''): val
+                     for key, val in old_ratefit.items()
+                     if 'pdep' in key},
+        'arrfit_fit': {key.replace('arrfit_', ''): val
+                       for key, val in old_ratefit.items()
+                       if 'arrfit' in key},
+        'chebfit_fit': {key.replace('chebfit_', ''): val
+                       for key, val in old_ratefit.items()
+                       if 'chebfit' in key},
+        'troefit_fit': {key.replace('troefit_', ''): val
+                        for key, val in old_ratefit.items()
+                        if 'troefit' in key}
+    })
+
+    new_kin_dct.update({'rate_fit': new_ratefit})
+
+    return new_kin_dct
 
 
-def split_model(model):
+def extract_models(tsk):
+    """ pull modesl from tasks
+    """
+
+    key_dct = tsk[-1]
+    pes_mod = key_dct['kin_model']
+    spc_mods = tuple(key_dct[key] for key in key_dct.keys()
+                     if 'spc_mod' in key)
+
+    return spc_mods, pes_mod
+
+
+def split_model(mod):
     """ Take a model given by a set of operations and split it into a set of models
         and operators
 
@@ -189,7 +221,7 @@ def split_model(model):
     # constituent models, coefficients, and operators
     coeffs, operators, models = [], [], []
     coeff, model = '', ''
-    for char in model:
+    for char in mod:
         if char == '.' or char.isdigit():
             coeff += char
         elif char.isalpha():
@@ -207,5 +239,6 @@ def split_model(model):
         coeffs.append(float(coeff))
     else:
         coeffs.append(1.0)
+    models.append(model)
 
     return (tuple(models), tuple(coeffs), tuple(operators))

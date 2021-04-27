@@ -15,7 +15,7 @@ from mechroutines.pf.models import typ
 from mechroutines.pf.models import _tors as tors
 
 
-def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
+def vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                  run_prefix, zrxn=None):
     """ process to get freq
     """
@@ -23,9 +23,9 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
     tors_strs = ['']
 
     rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, chn_pf_models, pf_levels)
+        spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
-    if typ.nonrigid_tors(chn_pf_models, rotors):
+    if typ.nonrigid_tors(spc_mod_dct_i, rotors):
         tors_strs = tors.make_hr_strings(rotors)
         [_, hr_str, _, prot_str, _] = tors_strs
 
@@ -33,7 +33,7 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
 
         # Make final hindered rotor strings and get corrected tors zpe
-        if typ.scale_1d(chn_pf_models):
+        if typ.scale_1d(spc_mod_dct_i):
             rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
             tors_strs = tors.make_hr_strings(rotors)
             [_, hr_str, _, prot_str, _] = tors_strs
@@ -44,7 +44,7 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
-        if 'mdhrv' in chn_pf_models['tors']:
+        if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
             freqs = ()
     else:
         freqs, imag, zpe = read_harmonic_freqs(
@@ -54,7 +54,7 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
     return freqs, imag, zpe, tors_strs
 
 
-def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
+def full_vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                       run_prefix, zrxn=None):
     """ process to get freq
     """
@@ -68,9 +68,9 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
     rt_freqs1 = []
 
     rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, chn_pf_models, pf_levels)
+        spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
-    if typ.nonrigid_tors(chn_pf_models, rotors):
+    if typ.nonrigid_tors(spc_mod_dct_i, rotors):
         tors_strs = tors.make_hr_strings(rotors)
         [_, hr_str, _, prot_str, _] = tors_strs
 
@@ -78,7 +78,7 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
 
         # Make final hindered rotor strings and get corrected tors zpe
-        if typ.scale_1d(chn_pf_models):
+        if typ.scale_1d(spc_mod_dct_i):
             rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
             tors_strs = tors.make_hr_strings(rotors)
             [_, hr_str, _, prot_str, _] = tors_strs
@@ -89,7 +89,7 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
-        if 'mdhrv' in chn_pf_models['tors']:
+        if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
             freqs = ()
     else:
         freqs, imag, zpe = read_harmonic_freqs(

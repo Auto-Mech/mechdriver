@@ -10,13 +10,13 @@ from mechroutines.pf.models.typ import treat_tunnel
 
 
 def write_mess_tunnel_str(ts_inf_dct, chnl_infs, chnl_enes,
-                          tunnel_model, ts_sadpt, ts_nobarrier, radrad,
-                          ts_idx):
+                          ts_model, ts_class, ts_idx):
     """ Write the appropriate tunneling string for a transition state
     """
 
     tunnel_str, sct_str = '', ''
-    if treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
+    if treat_tunnel(ts_model, ts_class):
+        tunnel_model = ts_model['tunnel']
         if tunnel_model == 'eckart':
             # ts_idx = ts_inf_dct.get('ts_idx', 0)  # breaks for multiconfig
             # symm_barrier = ts_inf_dct.get('symm_barrier', False)

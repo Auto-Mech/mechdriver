@@ -29,7 +29,10 @@ def run(pes_rlst, spc_rlst,
     # --------------------------------------------- #
 
     # Set the appropriate run lst; default to PES if any
-    run_rlst = pes_rlst if pes_rlst is not None else spc_rlst
+    if pes_rlst:
+        run_rlst, run_typ = pes_rlst, 'pes'
+    else:
+        run_rlst, run_typ = spc_rlst, 'spc'
 
     # -------------------------------- #
     # RUN THE REQUESTED ESDRIVER TASKS #
@@ -46,6 +49,8 @@ def run(pes_rlst, spc_rlst,
                 run_prefix, save_prefix)
             spc_dct = parser.spc.combine_sadpt_spc_dcts(
                 ts_dct, spc_dct)
+        else:
+            ts_queue = ()
 
         # Print what is being run PESs that are being run
         ioprinter.runlst(run_inf, run_lst)
@@ -57,9 +62,9 @@ def run(pes_rlst, spc_rlst,
 
             # Build the queue of species based on user request
             if obj == 'all':
-                obj_queue = parser.rlst.spc_queue(run_lst) + ts_queue
+                obj_queue = parser.rlst.spc_queue(run_typ, run_lst) + ts_queue
             if obj == 'spc':
-                obj_queue = parser.rlst.spc_queue(run_lst)
+                obj_queue = parser.rlst.spc_queue(run_typ, run_lst)
             elif obj == 'ts':
                 obj_queue = ts_queue
             elif obj == 'vdw':

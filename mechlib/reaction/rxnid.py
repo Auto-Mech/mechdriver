@@ -24,7 +24,6 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
     # Try to build the Z-Matrix reaction object or identify from scratch
     zrxn, zma = _read_from_filesys(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
-    # zrxn = None
     if zrxn is None:
         print('    Identifying class')
         zrxns, zmas = _id_reaction(rxn_info)
@@ -33,10 +32,13 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
         zmas = (zma,)
         print('    Reading from fileysystem')
 
-    print('    Reaction class identified as: {}'.format(zrxns[0].class_))
-    # print('    Reaction class identified as: {}'.format(zrxn.class_))
+    rclasses = ()
+    for zrxn in zrxns:
+        rclasses += (_mod_class(zrxn.class_, rxn_info),)
 
-    return zrxns, zmas
+    print('    Reaction class identified as: {}'.format(rclasses[0]))
+
+    return zrxns, zmas, rclasses
 
 
 def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
@@ -106,6 +108,22 @@ def _id_reaction(rxn_info):
 
     return zrxns, zmas
 
+
+def _mod_class(cls, rxn_info):
+    """ append additional info to the class
+    """
+
+    # Determine the string for radical radical reactions
+    radrad  = rinfo.radrad(rxn_info)
+    radrad_str = 'radical-radical' if radrad else ''
+
+    # Set the spin of the reaction to high/low
+    ts_mul = rinfo.value(rxn_info, 'tsmult')
+    high_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
+    spin_str = 'high-spin' if ts_mul == high_mul else 'low-spin'
+
+    return '{} {} {}'.format(radrad_str, spin_str, cls)
+    
 
 # from direction
 def set_reaction_direction(reacs, prods, rxn_info,

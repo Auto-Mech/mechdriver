@@ -49,9 +49,9 @@ def run_tsk(tsk, spc_dct, spc_name,
     ini_thy_info = tinfo.from_dct(ini_method_dct)
     stable = True
     if 'ts' not in spc_name and tsk != 'init_geom':
-        stable = not bool(
-            filesys.read.instability_transformation(
-                spc_dct, spc_name, ini_thy_info, save_prefix))
+        zrxn, path = filesys.read.instability_transformation(
+            spc_dct, spc_name, ini_thy_info, save_prefix)
+        stable = bool(zrxn is None)
 
     if stable:
         ioprinter.debug_message('- Proceeding with requested task...')

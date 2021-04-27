@@ -28,8 +28,8 @@ def _lst_for_spc(spc_dct, spc_idxs):
     """
 
     _lst = tuple(spc for idx, spc in enumerate(spc_dct) if idx+1 in
-                 spc_idxs.values())
-    run_dct = {('SPC', 1, 1): _lst}
+                 tuple(spc_idxs.values())[0])
+    run_dct = {('SPC', 0, 0): _lst}
 
     return run_dct
 
@@ -55,19 +55,18 @@ def _lst_for_pes(pes_dct, run_pes_idxs):
     return red_pes_dct
 
 
-def spc_queue(rxn_lst):
+def spc_queue(typ, run_lst):
     """ Build spc queue from the reaction lst for the drivers
         :return spc_queue: all the species and corresponding models in rxn
         :rtype: list[(species, model),...]
     """
 
     # pron just taking the keys from dct so this should be simpler
-
-    if 'all' in rxn_lst:
-        spc_queue = rxn_lst.values()[0]
+    if typ == 'spc':
+        spc_queue = run_lst
     else:
         spc_queue = []
-        for (chnl_idx, chnl) in rxn_lst:
+        for (chnl_idx, chnl) in run_lst:
             spc_queue += [rgt for rgts in chnl for rgt in rgts]
         spc_queue = tuple(set(spc_queue))
 

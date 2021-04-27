@@ -88,6 +88,7 @@ def run(pes_rlst,
             # Get all the info for the task
             tsk_key_dct = run_fit_tsk[-1]
             pes_model = tsk_key_dct['kin_model']
+            ratefit_dct = pes_model_dct[pes_model]['rate_fit']
 
             if label_dct is not None:
                 spc_dct, rxn_lst, label_dct = _process(
@@ -100,24 +101,25 @@ def run(pes_rlst,
                 'Fitting Rate Constants for PES to Functional Forms',
                 newline=1)
 
+            ratefit_dct = pes_model_dct[pes_model]['rate_fit']
             ckin_str = ratefit.fit.fit_ktp_dct(
                 mess_path=mess_path,
-                inp_fit_method=pes_model_dct[pes_model]['fit_method'],
-                pdep_dct=pes_model_dct[pes_model]['pdep_fit'],
-                arrfit_dct=pes_model_dct[pes_model]['arrfit_fit'],
-                chebfit_dct=pes_model_dct[pes_model]['chebfit_fit'],
-                troefit_dct=pes_model_dct[pes_model]['troefit_fit'],
+                inp_fit_method=ratefit_dct['fit_method'],
+                pdep_dct=ratefit_dct['pdep_fit'],
+                arrfit_dct=ratefit_dct['arrfit_fit'],
+                chebfit_dct=ratefit_dct['chebfit_fit'],
+                troefit_dct=ratefit_dct['troefit_fit'],
                 label_dct=label_dct,
                 fit_temps=pes_model_dct[pes_model]['rate_temps'],
                 fit_pressures=pes_model_dct[pes_model]['pressures'],
-                fit_tunit=pes_model_dct[pes_model]['tunit'],
-                fit_punit=pes_model_dct[pes_model]['punit']
+                fit_tunit=pes_model_dct[pes_model]['temp_unit'],
+                fit_punit=pes_model_dct[pes_model]['pressure_unit']
             )
 
             ckin_path = output_path('CKIN')
+            ckin_dct = {'header': 'HEADER', pes_formula: ckin_str}
             writer.ckin.write_rxn_file(
-                {pes_formula: ckin_str}, pes_formula, ckin_path)
-
+                ckin_dct, pes_formula, ckin_path)
 
 # ------- #
 # UTILITY #
@@ -141,7 +143,7 @@ def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, spc_model,
     # Set reaction list with unstable species broken apart
     ioprinter.message('Identifying stability of all species...', newline=1)
     chkd_rxn_lst = split_unstable_rxn(
-        rxn_lst, spc_dct, spc_model_dct_i, thy_dct, save_prefix)
+        rxn_lst, spc_dct, spc_model_dct_i, save_prefix)
 
     # Build the MESS label idx dictionary for the PES
     print('chkd_rxn_lst', chkd_rxn_lst)

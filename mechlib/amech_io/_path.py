@@ -41,15 +41,15 @@ def write_cwd_pf_file(mess_str, inchi, fname='pf.inp'):
 
 
 # Set paths to MESS jobs
-def thermo_paths(spc_dct, spc_queue, run_prefix):
+def thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """
 
     thm_paths = []
-    for spc_name, (_, mods, _, _) in spc_queue:
+    for spc_name in spc_queue:
         thm_path = {}
-        for idx, mod in enumerate(mods):
+        for idx, mod in enumerate(spc_mods):
             spc_info = sinfo.from_dct(spc_dct[spc_name])
             spc_formula = automol.inchi.formula_string(spc_info[0])
             thm_path[mod] = (

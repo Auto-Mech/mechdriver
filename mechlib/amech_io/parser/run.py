@@ -2,7 +2,7 @@
     of calculations to run for a given session of the code.
 
     Specifcally, looks for and parses several subsections:
-        (1) `input` block: various input 
+        (1) `input` block: various input
         (2) `pes' block: idxs denoting what PESs in mech file to run
         (3) `spc` block: idxs denoting what species in .csv file to run
         (4) `els tasks` block: set of tasks for ESDriver
@@ -93,7 +93,7 @@ TSK_KEY_DCT = {
     'coeffs': (('spc',), ()),
     # KTP/Therm
     'write_mess': ((), ('kin_model', 'spc_model', 'overwrite')),
-    'run_mess': ((), ('nprocs', 'inpname')),
+    'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname')),
     'run_fits': ((), ('kin_model',)),
 }
 
@@ -168,8 +168,8 @@ def input_dictionary(run_str):
 # Chemistry objects
 # Need check
 def pes_idxs(run_str):
-    """  Parses the `pes` block of the run.dat file and 
-         builds a dictionary of the PESs and corresponding channels the 
+    """  Parses the `pes` block of the run.dat file and
+         builds a dictionary of the PESs and corresponding channels the
          user wishes to run.
 
          May break if a pes_idx is given on two lines of string.
@@ -197,8 +197,8 @@ def pes_idxs(run_str):
 
 
 def spc_idxs(run_str):
-    """  Parses the `spc` block of the run.dat file and 
-         builds a dictionary of the species the 
+    """  Parses the `spc` block of the run.dat file and
+         builds a dictionary of the species the
          user wishes to run.
 
          May break if a spc_idx is given on two lines of string.
@@ -268,7 +268,7 @@ def tasks(run_str, thy_dct, kin_mod_dct, spc_mod_dct):
     ktp_tsks = _tsk_defaults(ktp_tsks)
     trans_tsks = _tsk_defaults(trans_tsks)
     proc_tsks = _tsk_defaults(proc_tsks)
-   
+
     # Assess each dictionary for correctness
     _check_tsks(es_tsks, thy_dct)
     _check_tsks(therm_tsks, thy_dct)
@@ -278,7 +278,7 @@ def tasks(run_str, thy_dct, kin_mod_dct, spc_mod_dct):
 
     return {
         'es': es_tsks,
-        'therm': therm_tsks,
+        'thermo': therm_tsks,
         'ktp': ktp_tsks,
         'trans': trans_tsks,
         'proc': proc_tsks
@@ -310,8 +310,8 @@ def _tsk_lst(tsk_str, num):
 
 def _expand_tsks(tsks_lst):
     """ Loops over the driver task list and checks if each task is a
-        macro-task that should be expanded into sub-tasks. 
-        
+        macro-task that should be expanded into sub-tasks.
+
         :param tsk_lst: list of tasks to run for some driver
         :type tsk_lst: tuple(tuple(str/dict))
         :rtype: tuple(str/dict)
@@ -335,7 +335,7 @@ def _expand_tsks(tsks_lst):
 
 
 def _tsk_defaults(tsk_lst):
-    """ Fill out the keyword dictionaries for various task lists with 
+    """ Fill out the keyword dictionaries for various task lists with
         default values
     """
 

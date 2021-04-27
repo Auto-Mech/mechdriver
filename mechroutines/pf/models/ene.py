@@ -215,7 +215,7 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct,
     return hf0k
 
 
-def calc_channel_enes(channel_infs, ref_ene,
+def calc_channel_enes(chnl_infs, ref_ene,
                       chn_model, first_ground_model):
     """ Get the energies for several points on the reaction channel.
         The energy is determined by two different methods:
@@ -224,16 +224,16 @@ def calc_channel_enes(channel_infs, ref_ene,
     """
 
     if chn_model == first_ground_model:
-        chn_enes = sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl')
+        chn_enes = sum_channel_enes(chnl_infs, ref_ene, ene_lvl='ene_chnlvl')
     else:
-        chn_enes1 = sum_enes(channel_infs, ref_ene, ene_lvl='ene_reflvl')
-        chn_enes2 = sum_enes(channel_infs, ref_ene, ene_lvl='ene_reflvl')
+        chn_enes1 = sum_channel_enes(chnl_infs, ref_ene, ene_lvl='ene_reflvl')
+        chn_enes2 = sum_channel_enes(chnl_infs, ref_ene, ene_lvl='ene_reflvl')
         chn_enes = shift_enes(chn_enes1, chn_enes2)
 
     return chn_enes
 
 
-def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
+def sum_channel_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
     """ sum the energies
     """
 

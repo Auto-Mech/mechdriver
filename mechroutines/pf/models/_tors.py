@@ -13,12 +13,12 @@ from autofile import fs
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import spc as sinfo
 from mechlib.amech_io import printer as ioprinter
-# from mechlib.amech_io import job_path  # circular import
+from mechlib.amech_io import job_path
 from mechlib import filesys
 
 
 # FUNCTIONS TO BUILD ROTOR OBJECTS CONTAINING ALL NEEDED INFO
-def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
+def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i):
     """ Add more rotor info
     """
 
@@ -31,15 +31,15 @@ def build_rotors(spc_dct_i, pf_filesystems, pf_models, pf_levels):
     run_path = job_path(run_prefix, 'PROJROT', 'FREQ', spc_fml, locs_idx=None)
 
     # Set up tors level filesystem and model and level
-    tors_model = pf_models['tors']
-    tors_ene_info = pf_levels['tors'][1][0]
+    tors_model = spc_mod_dct_i['tors']['mod']
+    tors_ene_info = spc_mod_dct_i['tors']['enelvl'][1][1]
     mod_tors_ene_info = tinfo.modify_orb_label(
         tors_ene_info, sinfo.from_dct(spc_dct_i))
     [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
 
     # Build the rotors
     if cnf_save_path:
-        ref_ene = torsprep.read_tors_ene(
+        ref_ene = filesys.read.energy(
             cnf_fs, min_cnf_locs, mod_tors_ene_info)
         zma_fs = fs.zmatrix(cnf_fs[-1].path(min_cnf_locs))
         zma = zma_fs[-1].file.zmatrix.read([0])
@@ -76,7 +76,8 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
     for ridx, rotor in enumerate(rotors):
         multi_idx = ridx
         tors_names = automol.rotor.names((rotor,), flat=True)
-        tors_grids = automol.rotor.grids((rotor,), increment=increment, flat=True)
+        tors_grids = automol.rotor.grids(
+            (rotor,), increment=increment, flat=True)
 
         for tidx, torsion in enumerate(rotor):
 

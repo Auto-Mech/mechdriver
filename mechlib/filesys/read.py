@@ -99,29 +99,20 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
 
     spc_info = sinfo.from_dct(spc_dct[spc_name])
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    print('spc info', spc_info)
-    print('thy info', mod_thy_info)
     _, zma_save_fs = build_fs(
         '', save_prefix, 'ZMATRIX',
         spc_locs=spc_info,
         thy_locs=mod_thy_info[1:],
         instab_locs=())
 
-    ioprinter.info_message(
-        '\nChecking filesystem if species {} is unstable'.format(spc_name))
-    ioprinter.info_message(
-        '\nChecking for files at path:')
-    ioprinter.info_message(
-        '  {}'.format(zma_save_fs[-1].path(zma_locs)))
-
     # Check if the instability files exist
     if zma_save_fs[-1].file.reaction.exists(zma_locs):
         zrxn = zma_save_fs[-1].file.reaction.read(zma_locs)
         zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
         _instab = (zrxn, zma)
-        print('- Found files denoting species instability at path')
+        path = zma_save_fs[-1].file.zmatrix.path(zma_locs)
     else:
         _instab = None
-        print('- No files denoting instability were found at path')
+        path = None
 
-    return _instab
+    return _instab, path

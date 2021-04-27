@@ -11,7 +11,7 @@ BLOCK_MODULE = importlib.import_module('mechroutines.pf.models.blocks')
 
 # Input string writer
 def make_messpf_str(temps, spc_dct, spc_name,
-                    chn_pf_models, chn_pf_levels,
+                    pes_mod_dct_i, spc_mod_dct_i,
                     run_prefix, save_prefix):
     """ Combine various MESS strings together to combined MESSPF
     """
@@ -22,7 +22,7 @@ def make_messpf_str(temps, spc_dct, spc_name,
     # Write the molecules species strings
     spc_str, _ = make_spc_mess_str(
         spc_dct, spc_name,
-        chn_pf_models, chn_pf_levels,
+        pes_mod_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix)
 
     # Combine the strings together
@@ -35,7 +35,7 @@ def make_pf_header(temps):
     """ prepare partition function header string
     """
 
-    global_pf_str = mess_io.writer.global_pf(
+    global_pf_str = mess_io.writer.global_pf_input(
         temperatures=temps,
         rel_temp_inc=0.001,
         atom_dist_min=0.6
@@ -45,14 +45,14 @@ def make_pf_header(temps):
 
 
 def make_spc_mess_str(spc_dct, spc_name,
-                      chn_pf_models, chn_pf_levels,
+                      pes_mod_dct_i, spc_mod_dct_i,
                       run_prefix, save_prefix):
     """ Write the MESS input file strings
     """
     # Read the filesystem for the information
     inf_dct, _ = build.read_spc_data(
         spc_dct, spc_name,
-        chn_pf_models, chn_pf_levels,
+        pes_mod_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix, {}, calc_chn_ene=False)
 
     # Write the mol block
