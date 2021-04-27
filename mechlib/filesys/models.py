@@ -11,24 +11,27 @@ from mechlib.filesys import build_fs
 from mechlib.filesys import root_locs
 
 
-def pf_rngs_filesys(spc_dct_i, pf_levels,
-               run_prefix, save_prefix, saddle, name=None):
+def pf_rngs_filesys(spc_dct_i, spc_model_dct_i,
+                    run_prefix, save_prefix, saddle, name=None):
     """ Create various filesystems needed
     """
 
     pf_filesystems = {}
     pf_filesystems['harm'] = set_model_filesys(
-        spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle, name=name)
-    if pf_levels['sym']:
-        pf_filesystems['sym'] = set_model_filesys(
-            spc_dct_i, pf_levels['sym'][1], run_prefix, save_prefix, saddle, name=name)
-    if pf_levels['tors']:
-        pf_filesystems['tors'] = set_model_filesys(
-            spc_dct_i, pf_levels['tors'][1][0],
+        spc_dct_i, spc_model_dct_i['vib']['geolvl'][1][1],
+        run_prefix, save_prefix, saddle, name=name)
+    if spc_model_dct_i['symm']['mod'] == 'sampling':
+        pf_filesystems['symm'] = set_model_filesys(
+            spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
             run_prefix, save_prefix, saddle, name=name)
-    if pf_levels['vpt2']:
+    if spc_model_dct_i['tors']['mod'] != 'rigid':
+        pf_filesystems['tors'] = set_model_filesys(
+            spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
+            run_prefix, save_prefix, saddle, name=name)
+    if spc_model_dct_i['vib']['mod'] == 'vpt2':
         pf_filesystems['vpt2'] = set_model_filesys(
-            spc_dct_i, pf_levels['vpt2'][1], run_prefix, save_prefix, saddle, name=name)
+            spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
+            run_prefix, save_prefix, saddle, name=name)
 
     # Add the prefixes for now
     pf_filesystems['run_prefix'] = run_prefix
@@ -37,24 +40,32 @@ def pf_rngs_filesys(spc_dct_i, pf_levels,
     return pf_filesystems
 
 
-def pf_filesys(spc_dct_i, pf_levels,
+def pf_filesys(spc_dct_i, spc_model_dct_i,
                run_prefix, save_prefix, saddle, name=None):
     """ Create various filesystems needed
     """
 
     pf_filesystems = {}
+    print('harm')
     pf_filesystems['harm'] = set_model_filesys(
-        spc_dct_i, pf_levels['harm'][1], run_prefix, save_prefix, saddle, name=name, rings='min')
-    if pf_levels['sym']:
-        pf_filesystems['sym'] = set_model_filesys(
-            spc_dct_i, pf_levels['sym'][1], run_prefix, save_prefix, saddle, name=name, rings='min')
-    if pf_levels['tors']:
-        pf_filesystems['tors'] = set_model_filesys(
-            spc_dct_i, pf_levels['tors'][1][0],
+        spc_dct_i, spc_model_dct_i['vib']['geolvl'][1][1],
+        run_prefix, save_prefix, saddle, name=name, rings='min')
+    if spc_model_dct_i['symm']['mod'] == 'sampling':
+        print('symm')
+        pf_filesystems['symm'] = set_model_filesys(
+            spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
             run_prefix, save_prefix, saddle, name=name, rings='min')
-    if pf_levels['vpt2']:
-        pf_filesystems['vpt2'] = set_model_filesys(
-            spc_dct_i, pf_levels['vpt2'][1], run_prefix, save_prefix, saddle, name=name, rings='min')
+    if spc_model_dct_i['tors']['mod'] != 'rigid':
+        print('tors')
+        pf_filesystems['tors'] = set_model_filesys(
+            spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
+            run_prefix, save_prefix, saddle, name=name, rings='min')
+    if spc_model_dct_i['vib']['mod'] == 'vpt2':
+        print('vpt2')
+        if spc_model_dct_i['vib']['mod'] == 'vpt2':
+            pf_filesystems['vpt2'] = set_model_filesys(
+                spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
+                run_prefix, save_prefix, saddle, name=name, rings='min')
 
     # Add the prefixes for now
     pf_filesystems['run_prefix'] = run_prefix
@@ -63,7 +74,8 @@ def pf_filesys(spc_dct_i, pf_levels,
     return pf_filesystems
 
 
-def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle, name=None, rings='all'):
+def set_model_filesys(spc_dct_i, level,
+                      run_prefix, save_prefix, saddle, name=None, rings='all'):
     """ Gets filesystem objects for reading many calculations
     """
 
@@ -73,6 +85,8 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle, name=No
         spc_info = rinfo.ts_info(rxn_info)
     else:
         spc_info = sinfo.from_dct(spc_dct_i)
+
+    print('level', level)
     levelp = tinfo.modify_orb_label(level, spc_info)
 
     _root = root_locs(spc_dct_i, saddle=saddle, name=name)
@@ -85,7 +99,6 @@ def set_model_filesys(spc_dct_i, level, run_prefix, save_prefix, saddle, name=No
         min_rngs_locs, min_rngs_path = mincnf.min_energy_conformer_locators(
             cnf_save_fs, levelp)
         cnf_run_fs[-1].create(min_rngs_locs)
-        
     else:
         min_rngs_locs, min_rngs_path = mincnf.conformer_locators(
              cnf_save_fs, levelp, cnf_range='r100')

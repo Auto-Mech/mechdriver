@@ -24,7 +24,7 @@ ioprinter.program_header('inp')
 INP_STRS = ioparser.read_amech_input(JOB_PATH)
 
 THY_DCT = ioparser.thy.theory_dictionary(INP_STRS['thy'])
-KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(INP_STRS['mod'])
+KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(INP_STRS['mod'], THY_DCT)
 INP_KEY_DCT = ioparser.run.input_dictionary(INP_STRS['run'])
 PES_IDX_DCT = ioparser.run.pes_idxs(INP_STRS['run'])
 SPC_IDX_DCT = ioparser.run.spc_idxs(INP_STRS['run'])

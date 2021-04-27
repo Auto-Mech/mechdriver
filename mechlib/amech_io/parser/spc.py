@@ -9,6 +9,7 @@ from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from phydat import symm, eleclvl, phycon
 from mechlib.reaction import rxnid
+from mechlib.filesys import reaction_fs
 from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
 from mechlib.amech_io.parser._keywrd import check_dct1
 
@@ -28,6 +29,7 @@ SPC_VAL_DCT = {
     # ^^ shouldn't be in spc, but auto dat glob prob for all TS keys)
     'tors_names': (str, (), None),
     'elec_levels': (tuple, (), None),
+    'geo': (tuple, (), None),
     'sym_factor': (float, (), None),
     'kickoff': (tuple, (), (True, (0.1, False))),
     'hind_inc': (float, (), 30.0),
@@ -97,11 +99,6 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
     dat_dct, glob_dct = automol.util.dict_.separate_subdct(
         amech_dct, key='global')
 
-    print('check')
-    print('spc', spc_dct.get('CH4'))
-    print('dat', spc_dct.get('CH4'))
-    print('glob', glob_dct)
-
     # Add in all of the species
     for spc in spc_dct:
 
@@ -123,8 +120,6 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
         if spc_dct[spc]['sym_factor'] is None:
             spc_dct[spc]['sym_factor'] = symm.DCT.get(
                 (ich, mul), 1.0)
-    
-    print('spc2', spc_dct.get('CH4'))
 
     # Add transitions states defined in species.dat not defined in spc_dct
     ts_dct = {}
@@ -141,12 +136,10 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
     # add the TSs to the spc dct
     spc_dct.update(ts_dct)
 
-    print('spc3', spc_dct.get('CH4'))
-
-    # Final loop for conversions additions
+    # Final loop for conversions and additions
     for spc in spc_dct:
         spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
-        # spc_dct[spc]['geo_inp'] = geom_dct.get(ich, None)
+        spc_dct[spc]['geo'] = geo_dct.get(spc, None)
 
     return spc_dct
 
@@ -188,8 +181,8 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
 
 
 # Functions to the spc_dct contributions for TS
-def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
-                  spc_dct, run_prefix, save_prefix):
+def ts_dct_from_etsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
+                      spc_dct, run_prefix, save_prefix):
     """ build a ts queue
     """
 
@@ -199,78 +192,66 @@ def get_sadpt_dct(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
     # Build the ts_dct
     ts_dct = {}
     for tsk_lst in es_tsk_lst:
-        [obj, _, es_keyword_dct] = tsk_lst
+        obj, es_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
         if 'ts' in obj:
             method_dct = thy_dct.get(es_keyword_dct['runlvl'])
             ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
             thy_info = tinfo.from_dct(method_dct)
             ini_thy_info = tinfo.from_dct(ini_method_dct)
-            ts_dct = build_sadpt_dct(
-                pes_idx, rxn_lst, thy_info, ini_thy_info,
-                spc_dct, run_prefix, save_prefix)
             break
-
-    # Build the queue
-    if ts_dct:
-        ts_queue = tuple(sadpt for sadpt in ts_dct)
-    else:
-        ts_queue = ()
-
-    return ts_dct, ts_queue
-
-
-def build_sadpt_dct(pes_idx, rxn_lst, thy_info, ini_thy_info,
-                    spc_dct, run_prefix, save_prefix):
-    """ build a dct for saddle points for all reactions in rxn_lst
-    """
 
     ts_dct = {}
     for rxn in rxn_lst:
         ts_dct.update(
-            build_sing_chn_sadpt_dct(
-                pes_idx, rxn, thy_info, ini_thy_info,
-                spc_dct, run_prefix, save_prefix)
+            ts_dct_sing_chnl(
+                pes_idx, rxn,
+                spc_dct, run_prefix, save_prefix,
+                thy_info=thy_info, ini_thy_info=ini_thy_info)
+        )
+
+    # Build the queue
+    ts_queue = tuple(sadpt for sadpt in ts_dct) if ts_dct else ()
+
+    return ts_dct, ts_queue
+
+
+def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
+                        spc_model_dct, thy_dct,
+                        spc_dct, run_prefix, save_prefix):
+    """ Build ts dct from ktp tsks
+    """
+
+    print('ktptsks', ktp_tsk_lst)
+    for tsk_lst in ktp_tsk_lst:
+        [tsk, ktp_keyword_dct] = tsk_lst
+        if 'mess' in tsk:
+            spc_model = ktp_keyword_dct['spc_model']
+            ini_thy_info = spc_model_dct[spc_model]['vib']['geolvl'][1][1]
+            thy_info = spc_model_dct[spc_model]['ene']['lvl1'][1][1]
+            break
+
+    ts_dct = {}
+    for rxn in rxn_lst:
+        ts_dct.update(
+            ts_dct_sing_chnl(
+                pes_idx, rxn,
+                spc_dct, run_prefix, save_prefix,
+                thy_info=thy_info, ini_thy_info=ini_thy_info)
         )
 
     return ts_dct
 
 
-def build_sadpt_dct2(pes_idx, rxn_lst, spc_model,
-                     spc_model_dct, thy_dct,
-                     spc_dct, run_prefix, save_prefix):
-    """ build spc dct for ktp driver
-    """
-
-    ts_dct = {}
-    for rxn in rxn_lst:
-        ene_model = spc_model_dct[spc_model]['es']['ene']
-        geo_model = spc_model_dct[spc_model]['es']['geo']
-        if not isinstance(ene_model, str):
-            ene_method = ene_model[1][1]
-        else:
-            ene_method = ene_model
-        method_dct = thy_dct.get(ene_method)
-        ini_method_dct = thy_dct.get(geo_model)
-        thy_info = tinfo.from_dct(method_dct)
-        ini_thy_info = tinfo.from_dct(ini_method_dct)
-        ts_dct.update(
-            build_sing_chn_sadpt_dct(
-                pes_idx, rxn, thy_info, ini_thy_info,
-                spc_dct, run_prefix, save_prefix))
-    spc_dct = combine_sadpt_spc_dcts(
-        ts_dct, spc_dct)
-
-    return spc_dct
-
-
-def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
-                             spc_dct, run_prefix, save_prefix):
+def ts_dct_sing_chnl(pes_idx, reaction,
+                     spc_dct, run_prefix, save_prefix,
+                     thy_info=None, ini_thy_info=None):
     """ build dct for single reaction
     """
 
     # Unpack the reaction object
-    chnl_idx, _rxn = reaction
-    reacs, prods = _rxn[0], _rxn[1]
+    chnl_idx, (reacs, prods) = reaction
+    # chnl_idx, _rxn = reaction
+    # reacs, prods = _rxn[0], _rxn[1]
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
     print('  Preparing for reaction {} = {}'.format(
@@ -292,15 +273,12 @@ def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
     if zrxns is not None:
         ts_dct = {}
         for idx, (zrxn, zma) in enumerate(zip(zrxns, zmas)):
-            rxn_run_fs = autofile.fs.reaction(run_prefix)
-            rxn_save_fs = autofile.fs.reaction(save_prefix)
-            rxn_run_path = rxn_run_fs[-1].path(rinfo.sort(rxn_info))
-            rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
-            rxn_fs = [rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path]
             tsname = 'ts_{:g}_{:g}_{:g}'.format(
-                pes_idx, chnl_idx+1, idx)
+                pes_idx+1, chnl_idx+1, idx)
+            # build full class:
             ts_dct[tsname] = {
                 'zrxn': zrxn,
+                'radrad' = rinfo.radrad(spc_dct[sub_tsname]['rxn_info']),
                 'zma': zma,
                 'reacs': reacs,
                 'prods': prods,
@@ -310,7 +288,7 @@ def build_sing_chn_sadpt_dct(pes_idx, reaction, thy_info, ini_thy_info,
                 'mult': rinfo.value(rxn_info, 'tsmult'),
                 'elec_levels': [[0.0, rinfo.value(rxn_info, 'tsmult')]],
                 'class': zrxn.class_,
-                'rxn_fs': rxn_fs
+                'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }
     else:
         ts_dct = {}

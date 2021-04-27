@@ -8,16 +8,15 @@ from mechlib import filesys
 
 
 # Handle reaction lst
-def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
+def split_unstable_rxn(rxn_lst, spc_dct,
+                       spc_model_dct_i, thy_dct, save_prefix):
     """ Loop over the reaction list and break up the unstable species
     """
-    
+
     print('Checking stability of all species...')
 
     # Get theory
-    spc_model = rxn['model'][1]
-    geo_model = spc_model_dct[spc_model]['es']['geo']
-    ini_thy_info = tinfo.from_dct(thy_dct[geo_model])
+    thy_info = spc_model_dct_i['vib']['geolvl'][1][1]
 
     # Build the mapping dictionary
     split_map = _split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,))
@@ -27,6 +26,7 @@ def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
     for rxn in rxn_lst:
 
         # Unpack the reaction
+        print('ini rxn', rxn)
         chnl_idx, (rcts, prds) = rxn
 
         # Assess and split the reactants and products for unstable species
@@ -47,7 +47,8 @@ def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
         # Flip the reaction if the reactants are unstable?
 
         # Append to list
-        new_rxn = (chnl_idx, (new_rcts, new_prds))
+        new_rxn = ((chnl_idx, (new_rcts, new_prds)),)
+        print('new_rxn', new_rxn)
         new_rxn_lst += new_rxn
 
     return new_rxn_lst
@@ -56,7 +57,7 @@ def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix):
 def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct, thy_dct, save_prefix):
     """ Loop over the reaction list and break up the unstable species
     """
-    
+
     print('Checking stability of all species...')
 
     # Get theory
@@ -77,14 +78,14 @@ def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct, thy_dct, save_prefix):
     return {('SPC', 0, 0): split_spc_names}
 
 
-def split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,)):
+def _split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,)):
     """ Build a dictionry which maps the names of species into splits
         would like to build to just go over spc dct (good for mech pre-process)
         could do
     """
 
     split_map = {}
-    for spc in spc_dct:
+    for spc in (name for name in spc_dct.keys() if 'ts_' not in name):
         split_names = _split_species(
             spc_dct, spc, thy_info, save_prefix, zma_locs=zma_locs)
         if split_names:

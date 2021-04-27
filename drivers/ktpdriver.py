@@ -9,7 +9,7 @@ from mechlib.amech_io import parser
 from mechlib.amech_io import job_path
 from mechlib.amech_io import output_path
 from mechlib.amech_io import printer as ioprinter
-from mechlib.reaction import split_unstable
+from mechlib.reaction import split_unstable_rxn
 
 
 def run(pes_rlst,
@@ -30,27 +30,12 @@ def run(pes_rlst,
         # PREPARE INFORMATION TO PASS TO KTPDRIVER TASKS #
         # ---------------------------------------------- #
 
+        # Set objects
         pes_formula, pes_idx, subpes_idx = pes_inf
+        label_dct = None
 
         # Print PES Channels that are being run
         ioprinter.runlst(pes_inf, rxn_lst)
-
-        # Obtain all of the transitions states
-        ioprinter.message(
-            'Identifying reaction classes for transition states...')
-        spc_dct = parser.spc.build_sadpt_dct2(
-            pes_idx, rxn_lst, ktp_tsk_lst,
-            spc_model_dct, thy_dct,
-            spc_dct, run_prefix, save_prefix)
-
-        # Set reaction list with unstable species broken apart
-        ioprinter.message('Identifying stability of all species...', newline=1)
-        chkd_rxn_lst = split_unstable(
-            rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
-
-        # Build the MESS label idx dictionary for the PES
-        label_dct = ktproutines.label.make_pes_label_dct(
-            chkd_rxn_lst, pes_idx, spc_dct, spc_model_dct)
 
         # Set paths where files will be written and read
         mess_path = job_path(
@@ -61,17 +46,23 @@ def run(pes_rlst,
         # --------------------------------- #
 
         # Write the MESS file
-        write_rate_tsk = parser.run.extract_task('write_messrate', ktp_tsk_lst)
+        write_rate_tsk = parser.run.extract_task('write_mess', ktp_tsk_lst)
         if write_rate_tsk is not None:
 
+            # Get all the info for the task
             tsk_key_dct = write_rate_tsk[-1]
-            pes_model = tsk_key_dct['pes_model']
+            pes_model = tsk_key_dct['kin_model']
+            spc_model = tsk_key_dct['spc_model']
+
+            spc_dct, rxn_lst, label_dct = _process(
+                pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, spc_model,
+                thy_dct, spc_dct, run_prefix, save_prefix)
 
             ioprinter.messpf('write_header')
 
             mess_inp_str, dats = ktproutines.rates.make_messrate_str(
                 pes_idx, rxn_lst,
-                pes_model,
+                pes_model, spc_model,
                 spc_dct, thy_dct,
                 pes_model_dct, spc_model_dct,
                 label_dct,
@@ -82,7 +73,7 @@ def run(pes_rlst,
                 aux_dct=dats, input_name='mess.inp')
 
         # Run mess to produce rates (currently nothing from tsk lst keys used)
-        run_rate_tsk = parser.run.extract_task('run_messrate', ktp_tsk_lst)
+        run_rate_tsk = parser.run.extract_task('run_mess', ktp_tsk_lst)
         if run_rate_tsk is not None:
 
             ioprinter.obj('vspace')
@@ -91,11 +82,17 @@ def run(pes_rlst,
             autorun.run_script(autorun.SCRIPT_DCT['messrate'], mess_path)
 
         # Fit rate output to modified Arrhenius forms, print in ChemKin format
-        run_fit_tsk = parser.run.extract_task('run_fit', ktp_tsk_lst)
+        run_fit_tsk = parser.run.extract_task('run_fits', ktp_tsk_lst)
         if run_fit_tsk is not None:
 
+            # Get all the info for the task
             tsk_key_dct = run_fit_tsk[-1]
-            pes_model = tsk_key_dct['pes_model']
+            pes_model = tsk_key_dct['kin_model']
+
+            if label_dct is not None:
+                spc_dct, rxn_lst, label_dct = _process(
+                    pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, spc_model,
+                    thy_dct, spc_dct, run_prefix, save_prefix)
 
             ioprinter.obj('vspace')
             ioprinter.obj('line_dash')
@@ -120,3 +117,35 @@ def run(pes_rlst,
             ckin_path = output_path('CKIN')
             writer.ckin.write_rxn_file(
                 {pes_formula: ckin_str}, pes_formula, ckin_path)
+
+
+# ------- #
+# UTILITY #
+# ------- #
+def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, spc_model,
+             thy_dct, spc_dct, run_prefix, save_prefix):
+    """ Build info needed for the task
+    """
+
+    spc_model_dct_i = spc_model_dct[spc_model]
+
+    # Obtain all of the transitions states
+    ioprinter.message(
+        'Identifying reaction classes for transition states...')
+    ts_dct = parser.spc.ts_dct_from_ktptsks(
+        pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, thy_dct,
+        spc_dct, run_prefix, save_prefix)
+    spc_dct = parser.spc.combine_sadpt_spc_dcts(
+        ts_dct, spc_dct)
+
+    # Set reaction list with unstable species broken apart
+    ioprinter.message('Identifying stability of all species...', newline=1)
+    chkd_rxn_lst = split_unstable_rxn(
+        rxn_lst, spc_dct, spc_model_dct_i, thy_dct, save_prefix)
+
+    # Build the MESS label idx dictionary for the PES
+    print('chkd_rxn_lst', chkd_rxn_lst)
+    label_dct = ktproutines.label.make_pes_label_dct(
+        chkd_rxn_lst, pes_idx, spc_dct, spc_model_dct_i)
+
+    return spc_dct, chkd_rxn_lst, label_dct

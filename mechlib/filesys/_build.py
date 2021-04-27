@@ -214,3 +214,15 @@ def vrctst_fs(ts_run_fs):
     ioprinter.info_message('Build Path for VaReCoF calculations', vrc_path)
 
     return vrc_path
+
+
+def reaction_fs(run_prefix, save_prefix, rxn_info):
+    """ Build reaction filesystem for a big list
+    """
+    rxn_run_fs = autofile.fs.reaction(run_prefix)
+    rxn_save_fs = autofile.fs.reaction(save_prefix)
+    rxn_run_path = rxn_run_fs[-1].path(rinfo.sort(rxn_info))
+    rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
+
+    return (rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path)
+

@@ -7,7 +7,7 @@ from mechlib.reaction import rxnid
 from mechlib.reaction import grid
 from mechlib.reaction._instab import split_unstable_rxn
 from mechlib.reaction._instab import split_unstable_spc
-from mechlib.reaction._instab import split_mapping
+# from mechlib.reaction._instab import split_mapping
 
 
 __all__ = [
@@ -15,5 +15,5 @@ __all__ = [
     'rxnid',
     'split_unstable_rxn',
     'split_unstable_spc',
-    'split_mapping'
+    # 'split_mapping'
 ]

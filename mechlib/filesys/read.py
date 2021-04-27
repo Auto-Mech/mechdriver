@@ -99,6 +99,8 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
 
     spc_info = sinfo.from_dct(spc_dct[spc_name])
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+    print('spc info', spc_info)
+    print('thy info', mod_thy_info)
     _, zma_save_fs = build_fs(
         '', save_prefix, 'ZMATRIX',
         spc_locs=spc_info,

@@ -19,11 +19,13 @@ def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
         '- Determining the masses...', newline=1)
     mass1, mass2 = mass_params(
         well_info, bath_info, etrans_dct)
+    print('masspar', mass1, mass2)
 
     ioprinter.info_message(
         '- Determining the Lennard-Jones model parameters...', newline=1)
     sig1, eps1, sig2, eps2 = lj_params(
         well_info, bath_info, etrans_dct)
+    print('ljpar', sig1, eps1, sig2, eps2)
 
     ioprinter.info_message(
         '- Determining the energy-down transfer model parameters...',
@@ -31,6 +33,7 @@ def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
     exp_factor, exp_power, exp_cutoff = edown_params(
         well_info, bath_info, etrans_dct,
         ljpar=(sig1, eps1, mass1, mass2))
+    print('exp', exp_factor, exp_power, exp_cutoff)
 
     # Write the Energy Transfer section string
     if all(val is not None
@@ -75,7 +78,6 @@ def lj_params(well_info, bath_info, etrans_dct):
     sig1, eps1, sig2, eps2 = None, None, None, None
 
     ljpar = etrans_dct.get('lj', None)
-
     if ljpar is not None:
 
         if isinstance(ljpar, list):
@@ -247,8 +249,8 @@ def set_etrans_well(rxn_lst, spc_dct):
 
     well_dct = None
 
-    reacs = rxn_lst[0]['reacs']
-    prods = rxn_lst[0]['prods']
+    _, (reacs, prods) = rxn_lst[0]
+
     if len(reacs) == 1:
         well_dct = spc_dct[reacs[0]]
     elif len(prods) == 1:
