@@ -223,7 +223,7 @@ def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
     print('ktptsks', ktp_tsk_lst)
     for tsk_lst in ktp_tsk_lst:
         [tsk, ktp_keyword_dct] = tsk_lst
-        if 'mess' in tsk:
+        if 'mess' in tsk or 'fit' in tsk:
             spc_model = ktp_keyword_dct['spc_model']
             ini_thy_info = spc_model_dct[spc_model]['vib']['geolvl'][1][1]
             thy_info = spc_model_dct[spc_model]['ene']['lvl1'][1][1]

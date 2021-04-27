@@ -58,7 +58,7 @@ def _ckin_ene_lvl_str(ene_infos, har_info):
     """
     ene_str = '! energy level:'
     for i, ene_inf in enumerate(ene_infos):
-        print('ene inf test', ene_inf)
+        # print('ene inf test', ene_inf)
         ene_str += ' {:.2f} x {}{}/{}//{}{}/{}\n'.format(
             ene_inf[1][0],
             ene_inf[1][1][3], ene_inf[1][1][1], ene_inf[1][1][2],

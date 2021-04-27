@@ -15,7 +15,7 @@ from mechlib.reaction import split_unstable_rxn
 def run(pes_rlst,
         ktp_tsk_lst,
         spc_dct, thy_dct,
-        pes_model_dct, spc_model_dct,
+        pes_mod_dct, spc_mod_dct,
         run_prefix, save_prefix):
     """ main driver for generation of full set of rate constants on a single PES
     """
@@ -51,20 +51,20 @@ def run(pes_rlst,
 
             # Get all the info for the task
             tsk_key_dct = write_rate_tsk[-1]
-            pes_model = tsk_key_dct['kin_model']
-            spc_model = tsk_key_dct['spc_model']
+            pes_mod = tsk_key_dct['kin_model']
+            spc_mod = tsk_key_dct['spc_model']
 
             spc_dct, rxn_lst, label_dct = _process(
-                pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, spc_model,
+                pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
                 thy_dct, spc_dct, run_prefix, save_prefix)
 
             ioprinter.messpf('write_header')
 
             mess_inp_str, dats = ktproutines.rates.make_messrate_str(
                 pes_idx, rxn_lst,
-                pes_model, spc_model,
+                pes_mod, spc_mod,
                 spc_dct, thy_dct,
-                pes_model_dct, spc_model_dct,
+                pes_mod_dct, spc_mod_dct,
                 label_dct,
                 mess_path, run_prefix, save_prefix)
 
@@ -87,12 +87,13 @@ def run(pes_rlst,
 
             # Get all the info for the task
             tsk_key_dct = run_fit_tsk[-1]
-            pes_model = tsk_key_dct['kin_model']
-            ratefit_dct = pes_model_dct[pes_model]['rate_fit']
+            spc_mod = tsk_key_dct['spc_model']
+            pes_mod = tsk_key_dct['kin_model']
+            ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
 
-            if label_dct is not None:
+            if label_dct is None:
                 spc_dct, rxn_lst, label_dct = _process(
-                    pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, spc_model,
+                    pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
                     thy_dct, spc_dct, run_prefix, save_prefix)
 
             ioprinter.obj('vspace')
@@ -101,8 +102,9 @@ def run(pes_rlst,
                 'Fitting Rate Constants for PES to Functional Forms',
                 newline=1)
 
-            ratefit_dct = pes_model_dct[pes_model]['rate_fit']
-            ckin_str = ratefit.fit.fit_ktp_dct(
+            # Read and fit rates; write to ckin string
+            ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
+            ckin_dct = ratefit.fit.fit_ktp_dct(
                 mess_path=mess_path,
                 inp_fit_method=ratefit_dct['fit_method'],
                 pdep_dct=ratefit_dct['pdep_fit'],
@@ -110,32 +112,36 @@ def run(pes_rlst,
                 chebfit_dct=ratefit_dct['chebfit_fit'],
                 troefit_dct=ratefit_dct['troefit_fit'],
                 label_dct=label_dct,
-                fit_temps=pes_model_dct[pes_model]['rate_temps'],
-                fit_pressures=pes_model_dct[pes_model]['pressures'],
-                fit_tunit=pes_model_dct[pes_model]['temp_unit'],
-                fit_punit=pes_model_dct[pes_model]['pressure_unit']
+                fit_temps=pes_mod_dct[pes_mod]['rate_temps'],
+                fit_pressures=pes_mod_dct[pes_mod]['pressures'],
+                fit_tunit=pes_mod_dct[pes_mod]['temp_unit'],
+                fit_punit=pes_mod_dct[pes_mod]['pressure_unit']
             )
 
+            # Write the header part
+            ckin_dct.update({
+                'header': writer.ckin.model_header((spc_mod,), spc_mod_dct)
+            })
+
             ckin_path = output_path('CKIN')
-            ckin_dct = {'header': 'HEADER', pes_formula: ckin_str}
             writer.ckin.write_rxn_file(
                 ckin_dct, pes_formula, ckin_path)
 
 # ------- #
 # UTILITY #
 # ------- #
-def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, spc_model,
+def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
              thy_dct, spc_dct, run_prefix, save_prefix):
     """ Build info needed for the task
     """
 
-    spc_model_dct_i = spc_model_dct[spc_model]
+    spc_mod_dct_i = spc_mod_dct[spc_mod]
 
     # Obtain all of the transitions states
     ioprinter.message(
         'Identifying reaction classes for transition states...')
     ts_dct = parser.spc.ts_dct_from_ktptsks(
-        pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, thy_dct,
+        pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, thy_dct,
         spc_dct, run_prefix, save_prefix)
     spc_dct = parser.spc.combine_sadpt_spc_dcts(
         ts_dct, spc_dct)
@@ -143,11 +149,11 @@ def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_model_dct, spc_model,
     # Set reaction list with unstable species broken apart
     ioprinter.message('Identifying stability of all species...', newline=1)
     chkd_rxn_lst = split_unstable_rxn(
-        rxn_lst, spc_dct, spc_model_dct_i, save_prefix)
+        rxn_lst, spc_dct, spc_mod_dct_i, save_prefix)
 
     # Build the MESS label idx dictionary for the PES
     print('chkd_rxn_lst', chkd_rxn_lst)
     label_dct = ktproutines.label.make_pes_label_dct(
-        chkd_rxn_lst, pes_idx, spc_dct, spc_model_dct_i)
+        chkd_rxn_lst, pes_idx, spc_dct, spc_mod_dct_i)
 
     return spc_dct, chkd_rxn_lst, label_dct
