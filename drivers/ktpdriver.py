@@ -152,7 +152,6 @@ def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
         rxn_lst, spc_dct, spc_mod_dct_i, save_prefix)
 
     # Build the MESS label idx dictionary for the PES
-    print('chkd_rxn_lst', chkd_rxn_lst)
     label_dct = ktproutines.label.make_pes_label_dct(
         chkd_rxn_lst, pes_idx, spc_dct, spc_mod_dct_i)
 
