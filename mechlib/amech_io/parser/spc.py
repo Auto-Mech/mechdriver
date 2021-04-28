@@ -26,7 +26,7 @@ SPC_VAL_DCT = {
     'fml': (dict, (), None),  # auto from CSV reader, not used
     'pst_params': (tuple, (), (1.0, 6)),
     # ^^ shouldn't be in spc, but auto dat glob prob for all TS keys)
-    'tors_names': (str, (), None),
+    'tors_names': (tuple, (), None),
     'elec_levels': (tuple, (), None),
     'geo': (tuple, (), None),
     'sym_factor': (float, (), None),
@@ -78,7 +78,12 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
 
     # Assess if the species.dat information is valid
     for name, dct in mod_spc_dct.items():
-        req_lst = SPC_REQ if 'ts' not in name else SPC_REQ+TS_REQ
+        # last comment breaks since TS only partially built at this stage
+        # i.e. there is not a mult, that comes from the build later
+        # prolly fine, since we add required stuff for TS ourselves
+        # probably just check if stuff provided that is not supported
+        # req_lst = SPC_REQ if 'ts' not in name else SPC_REQ+TS_REQ
+        req_lst = SPC_REQ if 'ts' not in name else ()
         val_dct = SPC_VAL_DCT if 'ts' not in name else TS_VAL_DCT
         check_dct1(dct, val_dct, req_lst, 'Spc-{}'.format(name))
 
@@ -118,7 +123,7 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
                 (ich, mul), ((0.0, mul),))
         if spc_dct[spc]['sym_factor'] is None:
             spc_dct[spc]['sym_factor'] = symm.DCT.get(
-                (ich, mul), 1.0)
+                (ich, mul), None)
 
     # Add transitions states defined in species.dat not defined in spc_dct
     ts_dct = {}
@@ -173,8 +178,9 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
                 combined_dct[sadpt][key] = val
 
         # Put in defaults if they were not defined
+        # hindered rotor being set incorrectly here
         combined_dct[sadpt] = automol.util.dict_.right_update(
-           TS_VAL_DCT, combined_dct[sadpt])
+            defaults_from_val_dct(TS_VAL_DCT), combined_dct[sadpt])
 
     return combined_dct
 
@@ -220,7 +226,6 @@ def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
     """ Build ts dct from ktp tsks
     """
 
-    print('ktptsks', ktp_tsk_lst)
     for tsk_lst in ktp_tsk_lst:
         [tsk, ktp_keyword_dct] = tsk_lst
         if 'mess' in tsk or 'fit' in tsk:
@@ -249,8 +254,6 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     # Unpack the reaction object
     chnl_idx, (reacs, prods) = reaction
-    # chnl_idx, _rxn = reaction
-    # reacs, prods = _rxn[0], _rxn[1]
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
     print('  Preparing for reaction {} = {}'.format(
@@ -267,14 +270,11 @@ def ts_dct_sing_chnl(pes_idx, reaction,
         rxn_info, ini_thy_info, zma_locs, save_prefix)
 
     # Could reverse the spc dct
-
-    # ts_dct = {}
     if zrxns is not None:
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
             tsname = 'ts_{:g}_{:g}_{:g}'.format(
                 pes_idx+1, chnl_idx+1, idx)
-            # build full class:
             ts_dct[tsname] = {
                 'zrxn': zrxn,
                 'zma': zma,
@@ -285,7 +285,8 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'charge': rinfo.value(rxn_info, 'charge'),
                 'mult': rinfo.value(rxn_info, 'tsmult'),
                 'elec_levels': ((0.0, rinfo.value(rxn_info, 'tsmult')),),
-                'sym_factor': 1.0,  # remove later
+                'hind_inc': 30.0*phycon.DEG2RAD,
+                # 'sym_factor': 1.0,  # remove later
                 'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }

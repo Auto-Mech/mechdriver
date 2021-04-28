@@ -53,6 +53,9 @@ MREF = ('var_splvl1', 'var_splvl2', 'var_scnlvl')
 TRANS = ('bath', 'pot', 'njobs', 'nsamp', 'smin', 'smax', 'conf')
 PRNT = ('geolvl', 'proplvl', 'nconfs', 'econfs')
 
+# Supported object types for task (useful if task requestes 'all')
+SUPP_OBJS = ('spc', 'ts')
+
 # Determines what objects and keywords are allowed for tasks for ES,Trans,Print
 # Need way to set required tsks
 # Tasks: (allowed obj, allowed_keywords)
@@ -189,7 +192,7 @@ def pes_idxs(run_str):
             _pes_idxs = ioformat.ptt.idx_lst_from_line(pes_nums)
             _chn_idxs = ioformat.ptt.idx_lst_from_line(chn_nums)
             for idx in _pes_idxs:
-                run_pes.update({idx: _chn_idxs})
+                run_pes.update({idx-1: tuple(val-1 for val in _chn_idxs)})
     else:
         run_pes = None
 
@@ -215,7 +218,7 @@ def spc_idxs(run_str):
         _idxs = ()
         for line in spc_block.splitlines():
             _idxs += ioformat.ptt.idx_lst_from_line(line)
-        _spc_idxs = {1: _idxs}
+        _spc_idxs = {1: tuple(val-1 for val in _idxs)}
     else:
         _spc_idxs = None
 
@@ -362,27 +365,34 @@ def _check_tsks(tsk_lsts, thy_dct):
     """
 
     if tsk_lsts is not None:
+
         for tsk_lst in tsk_lsts:
+
             # Unpack the task
             _tsk = tsk_lst[:-1]
             if len(_tsk) == 2:
+                # Case(1): spc task keywords (ESDriver)
                 obj, tsk = _tsk[0], _tsk[1]
             else:
+                # Case(2): task keywords (ThermoDriver, kTPDriver)
                 obj, tsk = None, _tsk[0]
             key_dct = tsk_lst[-1]
 
-            # Check if the obj is allowes
+            # Check if the obj is allowed
             if obj is not None:
-                # breaks if obj == 'all' since not in TSK_KEY_DCT
-                # if obj not in TSK_KEY_DCT[tsk][0]:  # correct
-                #     print('tsk {}, not allowed for {}'.format(tsk, obj))
-                #     print('')
-                #     sys.exit()
+                # Have to make lst to handle case where obj == 'all'
+                obj_lst = SUPP_OBJS if obj == 'all' else (obj,)
+                for _obj in obj_lst:
+                    if _obj not in TSK_KEY_DCT[tsk][0]:
+                        print('obj {}, not allowed for {}'.format(obj, tsk))
+                        print('')
+                        sys.exit()
                 pass
 
-            # Check if the keyword values are allowed
-            # need 2nd for anything that takes a string from the thy.dat file
+            # Check if keyword values are allowed
             check_dct1(key_dct, TSK_VAL_DCT, (), 'Task')
+
+            # Check keywords with thy lvls as values use lvls defined in thy dct
             check_thy_lvls(key_dct, thy_dct)
 
 

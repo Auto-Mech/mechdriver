@@ -38,11 +38,13 @@ def run(pes_rlst, spc_rlst,
     # RUN THE REQUESTED ESDRIVER TASKS #
     # -------------------------------- #
 
-    for run_inf, run_lst in run_rlst.items():
+    for (pes_form, pes_idx, subpes_idx), run_lst in run_rlst.items():
+
+        # Print what is being run PESs that are being run
+        ioprinter.runlst((pes_form, pes_idx, subpes_idx), run_lst)
 
         # Build a TS dictionary and add it to the spc dct if needed
         if any(tsk_lst[0] == 'ts' for tsk_lst in es_tsk_lst):
-            pes_idx = run_inf[1]+1
             ts_dct, ts_queue = parser.spc.ts_dct_from_estsks(
                 pes_idx, es_tsk_lst, run_lst,
                 thy_dct, spc_dct,
@@ -52,9 +54,7 @@ def run(pes_rlst, spc_rlst,
         else:
             ts_queue = ()
 
-        # Print what is being run PESs that are being run
-        ioprinter.runlst(run_inf, run_lst)
-
+        # Loop over the tasks
         for tsk_lst in es_tsk_lst:
 
             # Unpack the options

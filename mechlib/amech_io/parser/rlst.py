@@ -41,13 +41,13 @@ def _lst_for_pes(pes_dct, run_pes_idxs):
     red_pes_dct = {}
     for (form, pidx, sidx), chnls in pes_dct.items():
         # Grab PES if idx in run_pes_idx dct
-        run_chnl_idxs = run_pes_idxs.get(pidx+1, None)
+        run_chnl_idxs = run_pes_idxs.get(pidx, None)
         if run_chnl_idxs is not None:
             # Grab the channels if they are in run_chnl_idxs
             red_chnls = ()
             for chnl in chnls:
                 cidx, rxn = chnl
-                if cidx+1 in run_chnl_idxs:
+                if cidx in run_chnl_idxs:
                     red_chnls += (chnl,)
 
             red_pes_dct[(form, pidx, sidx)] = red_chnls

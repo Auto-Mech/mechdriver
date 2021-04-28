@@ -12,7 +12,7 @@ def runlst(run_inf, run_lst):
 
     formula, pes_idx, sub_pes_idx = run_inf
     if formula != 'SPC':
-        print_pes(pes_idx, formula, sub_pes_idx)
+        print_pes(pes_idx+1, formula, sub_pes_idx+1)
         for chnl in run_lst:
             cidx, rxn = chnl
             print_channel(cidx+1, rxn[0], rxn[1])

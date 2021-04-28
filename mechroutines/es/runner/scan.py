@@ -302,9 +302,10 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
             break
 
     if run_finished:
-        ioprinter.message('Scan finished')
+        ioprinter.message('Scan saved previously at {}'.format(
+            scn_save_fs[0].path()))
     else:
-        ioprinter.message('Need to run')
+        ioprinter.message('Need to run scans')
 
     return run_finished
 

@@ -37,23 +37,8 @@ PES_DCT = ioparser.mech.pes_dictionary(
 PES_RLST, SPC_RLST = ioparser.rlst.run_lst(
     PES_DCT, SPC_DCT, PES_IDX_DCT, SPC_IDX_DCT)
 
-print('kin_mod\n', KMOD_DCT)
-print('spc_mod\n', SMOD_DCT)
-print('thy dct\n', THY_DCT)
-print('spc_dct\n', SPC_DCT)
-print('inp_dct\n', INP_KEY_DCT)
-print('pes_idx\n', PES_IDX_DCT)
-print('spc_idx\n', SPC_IDX_DCT)
-print('pes dct\n', PES_DCT)
-print('spc dct\n', SPC_DCT)
-
-
 # Build the Run-Save Filesystem Directories
 prefix_fs(INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'])
-
-# print('FINISH')
-# import sys
-# sys.exit()
 
 # Run Drivers Requested by User
 ES_TSKS = TSK_LST_DCT.get('es')

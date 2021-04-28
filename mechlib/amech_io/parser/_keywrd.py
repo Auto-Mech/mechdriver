@@ -34,18 +34,6 @@ VRC_DCT = {
 
 
 # Functions needed to build custom values
-def elvl_symf(dct, ich, mul):
-    """ set elec levels and sym factor
-    """
-
-    if dct['elec_levels'] is None:
-        dct['elec_levels'] = eleclvl.DCT.get(
-            (ich, mul), (0.0, mul))
-    if dct['sym_factor'] is None:
-        dct['sym_factor'] = symm.DCT.get(
-            (ich, mul), 1.0)
-
-
 # def active(dct):
 #     """ maybe just read them (like the geometry dct)
 #     """
@@ -128,6 +116,22 @@ def check_dct1(inp_dct, val_dct, req_lst, section):
     _check_required_keys(inp_dct, req_lst, section)
     _check_supported_keys(inp_dct, val_dct, section)
     _check_supported_vals(inp_dct, val_dct, req_lst, section)
+
+
+# def check_dct_with_dcts(dct, val_dct):
+#     """ Check dictionaries (BROKEN)
+#     """
+#     for keywrd in dct.keys():
+#         val = dct[keywrd]
+#         if isinstance(val, dict):
+#             keywrds2 = tuple(val.keys())
+#             vals2 = 
+#             newv = dict(zip(keywrds2, (val[kwrd][2] for kwrd in keywrds2)))
+#         else:
+#             newv = val[2]
+#     _check_required_keys(inp_dct, req_lst, section)
+#     _check_supported_keys(inp_dct, val_dct, section)
+#     _check_supported_vals(inp_dct, val_dct, req_lst, section)
 
 
 def _check_supported_keys(inp_dct, val_dct, section):

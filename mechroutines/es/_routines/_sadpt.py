@@ -162,10 +162,6 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     script_str, kwargs = qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
 
-    print('zrxn:', zrxn)
-    print('ts_zma in scan_for_guess:', ts_zma)
-    print('scan_inf:', scan_inf)
-
     es_runner.scan.execute_scan(
         zma=ts_zma,
         spc_info=ts_info,
@@ -390,7 +386,6 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
 
     # Save the torsions
-    print('zma test:\n', zma)
     rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
     if any(rotors):
         zma_save_fs[-1].file.torsions.write(rotors, zma_locs)

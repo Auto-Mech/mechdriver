@@ -49,8 +49,6 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
 
     sort_rxn_info = rinfo.sort(rxn_info, scheme='autofile')
     ts_info = rinfo.ts_info(rxn_info)
-    print('iniinf', ini_thy_info)
-    print('tsinf', ts_info)
     mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, ts_info)
 
     rxn_fs = autofile.fs.reaction(save_prefix)

@@ -883,7 +883,6 @@ def skip_task(spc_dct, spc_name):
         rxn_info = spc_dct[spc_name]['rxn_info']
         ts_mul = rinfo.value(rxn_info, 'tsmult')
         high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
-        print('ts_mul test in skip_task:', ts_mul, high_ts_mul)
         if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:
             skip = True
             ioprinter.info_message('Skipping task because {} is a low-spin radical radical reaction'.format(spc_name))

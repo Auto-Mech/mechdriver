@@ -10,6 +10,7 @@ from mechlib.amech_io.parser._keywrd import defaults_with_dcts
 
 
 # DCTS
+MODKIN_REQ_LST = ('pressures', 'rate_temps', 'thermo_temps')
 MODKIN_VAL_DCT = {
     'pressures': (tuple, (), None),
     'rate_temps': (tuple, (), None),
@@ -41,6 +42,7 @@ MODKIN_VAL_DCT = {
     }
 }
 
+MODPF_REQ_LST = ('pressures', 'rate_temps', 'thermo_temps')
 MODPF_VAL_DCT = {
     'ene': {
         'lvl1': (tuple, (), None),
@@ -95,21 +97,18 @@ def models_dictionary(mod_str, thy_dct):
     spc_mod_dct = automol.util.dict_.merge_subdct(
         ioformat.ptt.keyword_dcts_from_blocks(spc_blocks), keep_subdct=True)
 
-    print('kin', kin_mod_dct)
-    print('spc', spc_mod_dct)
-
-    # Add defaults and format each kin and spc dictionary
+    # Add defaults, check key-vals, and format each model dicts
     for mod, dct in kin_mod_dct.items():
-        kin_mod_dct[mod] = _kin_model_defaults(dct, thy_dct)
+        kin_mod_dct[mod] = _kin_model_build(dct, thy_dct)
 
     for mod, dct in spc_mod_dct.items():
-        spc_mod_dct[mod] = _spc_model_defaults(dct, thy_dct)
+        spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)
 
     return kin_mod_dct, spc_mod_dct
 
 
 # Convert objects
-def _spc_model_defaults(spc_model_dct_i, thy_dct):
+def _spc_model_build(spc_model_dct_i, thy_dct):
     """ Set the PF model list based on the input
         Combine with es
 
@@ -147,7 +146,6 @@ def _spc_model_defaults(spc_model_dct_i, thy_dct):
         _new_dct = {}
         for key2, val2 in val1.items():
             if 'lvl' in key2 and val2 is not None:
-                print('key, val', key2, val2)
                 thy_info = _format_lvl(val2)
                 _new_dct[key2] = (val2, thy_info)
             else:
@@ -158,13 +156,15 @@ def _spc_model_defaults(spc_model_dct_i, thy_dct):
     return new_dct2
 
 
-def _kin_model_defaults(kin_mod_dct_i, thy_dct):
+def _kin_model_build(kin_mod_dct_i, thy_dct):
     """ set kin
     """
 
     # Set defaults
     new_kin_dct = automol.util.dict_.right_update(
         defaults_with_dcts(MODKIN_VAL_DCT), kin_mod_dct_i)
+
+    # Check for correct input
 
     # Repartition ratefit key word into dcts for `ratefit` code
     old_ratefit = new_kin_dct['rate_fit']
