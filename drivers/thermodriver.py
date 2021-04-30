@@ -20,6 +20,8 @@ from mechlib.amech_io.parser.model import pf_level_info, pf_model_info
 # from mechlib.structure import instab
 from mechlib import filesys
 from automol.inchi import formula_string as fstring
+import mechanalyzer
+import chemkin_io
 
 
 def run(spc_dct,
@@ -217,6 +219,16 @@ def run(spc_dct,
             ckin_nasa_str += '\n\n'
 
             print(ckin_nasa_str)
+        nasa7_params_all =  chemkin_io.parser.thermo.create_spc_nasa7_dct(ckin_nasa_str)
+        ioprinter.info_message('SPECIES\t\tH(0 K)[kcal/mol]\tH(298 K)[kcal/mol]\tS(298 K)[cal/mol K]\n')
+        for spc_name in nasa7_params_all:
+            nasa7_params =  nasa7_params_all[spc_name]
+            h0 = spc_dct[spc_name]['Hfs'][0] / 4.184
+            h298 =  mechanalyzer.calculator.thermo.enthalpy(nasa7_params, 298.15) /1000.
+            s298 =  mechanalyzer.calculator.thermo.entropy(nasa7_params, 298.15)
+            ioprinter.info_message(spc_name, '\t', h0, '\t', h298, '\t', s298)
+    
+
 
         # Write all of the NASA polynomial strings
         writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)

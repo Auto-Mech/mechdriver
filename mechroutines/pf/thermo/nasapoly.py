@@ -4,7 +4,9 @@
 
 import automol
 import autorun
+import mechanalyzer
 import ioformat
+import chemkin_io
 from mechlib.amech_io import writer
 from mechlib.amech_io import printer as ioprinter
 
@@ -36,5 +38,7 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):
     # Write the full CHEMKIN strings
     ckin_str = writer.ckin.nasa_polynomial(hform0, hform298, poly_str)
     full_ckin_str = '\n' + ckin_str
+    # Print thermo
+    
 
     return full_ckin_str
