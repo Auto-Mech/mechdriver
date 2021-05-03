@@ -3,7 +3,7 @@ Read the mechanism file
 """
 
 from mechanalyzer.parser import pes
-from mechanalyzer.parser import util
+from mechanalyzer.parser import mech
 from ioformat import ptt
 import autoparse.find as apf
 
@@ -12,7 +12,7 @@ SORT_INP = 'inp/sort.dat'
 
 
 def build_pes_dct(job_path, mech_type,
-                  spc_dct, run_obj_dct, sort_rxns=True):
+                  spc_dct, run_obj_dct):
     """Build the PES dct
     """
 
@@ -20,8 +20,8 @@ def build_pes_dct(job_path, mech_type,
     mech_str = ptt.read_inp_str(job_path, MECH_INP, remove_comments='!')
 
     # Build the total PES dct
-    mech_info = util.read_mechanism_file(
-        mech_str, mech_type, spc_dct, sort_rxns=sort_rxns)
+    _, mech_info, _ = mech.parse_mechanism(
+        mech_str, mech_type, spc_dct)
     pes_dct = pes.build_pes_dct(*mech_info[1:])
 
     # Build an index dct relating idx to formula
