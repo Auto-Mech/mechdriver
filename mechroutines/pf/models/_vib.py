@@ -51,6 +51,9 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             pf_filesystems, run_prefix, zrxn=zrxn)
         tors_zpe = 0.0
 
+    freqs, zpe = scale_frequencies(freqs, tors_zpe,
+                      pf_levels, scale_method='3c')
+
     return freqs, imag, zpe, tors_strs
 
 
@@ -322,9 +325,13 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     # generate the scaling factor
     factor = numpy.exp(log_rt_freq - log_freq - log_tors_freq)
     ioprinter.info_message('freq test:', freqs, tors_freqs, rt_freqs1)
+    tau_factor = numpy.exp(log_rt_freq - log_freq)
+    tau_factor_mode = tau_factor
     # generate the set of indices for torsions that are two be scales
     scale_factor = (idx_remove, factor)
     ioprinter.info_message('scale fact test', scale_factor)
+    ioprinter.info_message('TAU FACTOR {:4.6f} \t {:g} \t {:3.6f} {} '
+            .format(tau_factor_mode, len(tors_freqs), factor, '-'.join([str(ridx) for ridx in idx_remove])))
 
     # Check if there are significant differences caused by the rotor projection
     diff_tors_zpe *= phycon.EH2KCAL

@@ -30,6 +30,9 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):
     # Copy MESSPF output file to THERMP run dir and rename to pf.dat
     pf_str = ioformat.pathtools.read_file(pf_path, 'pf.dat')
 
+    print('pf_path test:', pf_path)
+    print('pf_str test:', pf_str)
+
     hform298, poly_str = autorun.thermo(
         thermp_script_str, pac99_script_str, nasa_path,
         pf_str, spc_name, formula_dct, hform0,

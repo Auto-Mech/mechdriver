@@ -5,6 +5,8 @@
 
 import os
 import autorun
+import mechanalyzer
+import chemkin_io
 import automol.inchi
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf import runner as pfrunner
@@ -123,9 +125,10 @@ def run(spc_dct,
             tot_idx = len(spc_models)
             spc_info = sinfo.from_dct(spc_dct[spc_name])
             spc_fml = automol.inchi.formula_string(spc_info[0])
+            thm_prefix = [spc_fml, automol.inchi.inchi_key(spc_info[0])]
             thm_paths[idx]['final'] = (
-                job_path(run_prefix, 'MESS', 'PF', spc_fml, locs_idx=tot_idx),
-                job_path(run_prefix, 'THERM', 'NASA', spc_fml, locs_idx=tot_idx)
+                job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=tot_idx),
+                job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=tot_idx)
             )
             # thm_paths[idx]['final'] = thermo_paths(
             #     spc_dct[spc_name], run_prefix, len(spc_models))
@@ -229,6 +232,15 @@ def run(spc_dct,
             ioprinter.info_message(spc_name, '\t', h0, '\t', h298, '\t', s298)
     
 
+
+        nasa7_params_all =  chemkin_io.parser.thermo.create_spc_nasa7_dct(ckin_nasa_str)
+        ioprinter.info_message('SPECIES\t\tH(0 K)[kcal/mol]\tH(298 K)[kcal/mol]\tS(298 K)[cal/mol K]\n')
+        for spc_name in nasa7_params_all:
+            nasa7_params =  nasa7_params_all[spc_name]
+            h0 = spc_dct[spc_name]['Hfs'][0]
+            h298 =  mechanalyzer.calculator.thermo.enthalpy(nasa7_params, 298.15) /1000.
+            s298 =  mechanalyzer.calculator.thermo.entropy(nasa7_params, 298.15)
+            ioprinter.info_message('{}\t{:3.2f}\t{:3.2f}\t{:3.2f}'.format(spc_name, h0, h298, s298))
 
         # Write all of the NASA polynomial strings
         writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)
