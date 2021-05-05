@@ -2,10 +2,9 @@
 Read the mechanism file
 """
 
-from mechanalyzer.parser.mech import parse_mechanism
-from mechanalyzer.parser.mech import sorting
-from mechanalyzer.parser.mech import sorted_pes_dct
 from mechanalyzer.parser import pes
+from mechanalyzer.parser.mech import parse_mechanism
+from mechanalyzer.builder import sorter
 
 
 def pes_dictionary(mech_str, mech_type, spc_dct):
@@ -20,8 +19,8 @@ def pes_dictionary(mech_str, mech_type, spc_dct):
 
     # Build and print the full sorted PES dict
     _, mech_info, _ = parse_mechanism(mech_str, mech_type, spc_dct)
-    srt_mch = sorting(mech_info, spc_dct, sort_str, isolate_species)
-    pes_dct = sorted_pes_dct(srt_mch)
+    srt_mch = sorter.sorting(mech_info, spc_dct, sort_str, isolate_species)
+    pes_dct = sorter.sorted_pes_dct(srt_mch)
 
     pes.print_pes_channels(pes_dct)
 

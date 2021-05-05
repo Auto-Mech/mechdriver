@@ -1,8 +1,6 @@
 """ build objects strictly used for running things
 """
 
-import itertools
-
 
 # Overall run lst for both reactions and species
 def run_lst(pes_dct, spc_dct, pes_idxs, spc_idxs):
@@ -26,8 +24,7 @@ def run_lst(pes_dct, spc_dct, pes_idxs, spc_idxs):
 def _lst_for_spc(spc_dct, spc_idxs):
     """ Get a dictionary of requested species matching the PES_DCT format
     """
-
-    _lst = tuple(spc for idx, spc in enumerate(spc_dct) if idx+1 in
+    _lst = tuple(spc for idx, spc in enumerate(spc_dct) if idx in
                  tuple(spc_idxs.values())[0])
     run_dct = {('SPC', 0, 0): _lst}
 
@@ -46,16 +43,16 @@ def _lst_for_pes(pes_dct, run_pes_idxs):
             # Grab the channels if they are in run_chnl_idxs
             red_chnls = ()
             for chnl in chnls:
-                cidx, rxn = chnl
+                cidx, _ = chnl
                 if cidx in run_chnl_idxs:
                     red_chnls += (chnl,)
 
             red_pes_dct[(form, pidx, sidx)] = red_chnls
-    
+
     return red_pes_dct
 
 
-def spc_queue(typ, run_lst):
+def spc_queue(typ, runlst):
     """ Build spc queue from the reaction lst for the drivers
         :return spc_queue: all the species and corresponding models in rxn
         :rtype: list[(species, model),...]
@@ -63,11 +60,11 @@ def spc_queue(typ, run_lst):
 
     # pron just taking the keys from dct so this should be simpler
     if typ == 'spc':
-        spc_queue = run_lst
+        _queue = runlst
     else:
-        spc_queue = []
-        for (chnl_idx, chnl) in run_lst:
-            spc_queue += [rgt for rgts in chnl for rgt in rgts]
-        spc_queue = tuple(set(spc_queue))
+        _queue = []
+        for (_, chnl) in runlst:
+            _queue += [rgt for rgts in chnl for rgt in rgts]
+        _queue = tuple(set(spc_queue))
 
-    return spc_queue
+    return _queue

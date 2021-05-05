@@ -125,7 +125,7 @@ def check_dct1(inp_dct, val_dct, req_lst, section):
 #         val = dct[keywrd]
 #         if isinstance(val, dict):
 #             keywrds2 = tuple(val.keys())
-#             vals2 = 
+#             vals2 =
 #             newv = dict(zip(keywrds2, (val[kwrd][2] for kwrd in keywrds2)))
 #         else:
 #             newv = val[2]
@@ -187,11 +187,11 @@ def _check_supported_vals(inp_dct, val_dct, req_lst, section):
                 print('key {} has no value defined even though it is required'.format(key))
                 sys.exit()
 
-    
+
 def _check_required_keys(inp_dct, req_lst, section):
     """ Check if required keys are in the input dict
     """
-    
+
     inp_keys = set(inp_dct.keys())
     req_keys = set(req_lst)
     undefined_required_keys = req_keys - inp_keys

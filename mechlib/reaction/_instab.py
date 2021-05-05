@@ -24,7 +24,6 @@ def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
     for rxn in rxn_lst:
 
         # Unpack the reaction
-        print('ini rxn', rxn)
         chnl_idx, (rcts, prds) = rxn
 
         # Assess and split the reactants and products for unstable species
@@ -46,7 +45,6 @@ def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
 
         # Append to list
         new_rxn = ((chnl_idx, (new_rcts, new_prds)),)
-        print('new_rxn', new_rxn)
         new_rxn_lst += new_rxn
 
     return new_rxn_lst
@@ -102,6 +100,7 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
     # Get the product graphs and inchis
     tra, path = filesys.read.instability_transformation(
         spc_dct, spc_name, thy_info, save_prefix, zma_locs=zma_locs)
+
     if tra is not None:
         ioprinter.info_message('\nFound instability files at path:')
         ioprinter.info_message('  {}'.format(path))
