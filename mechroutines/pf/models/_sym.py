@@ -49,21 +49,26 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 ioprinter.info_message(
                     ' - Determining internal sym number ',
                     'using sampling routine.')
-                int_sym = int_sym_num_from_sampling(sym_geos, rotors, grxn=grxn, zma=zma)
+                int_sym, end_group_factor = int_sym_num_from_sampling(sym_geos, rotors, grxn=grxn, zma=zma)
             else:
                 ioprinter.info_message(' - No torsions, internal sym is 1.0')
                 int_sym = 1.0
+                end_group_factor = 1.0
 
         else:
             ioprinter.info_message(
                 'No symmetry model requested, ',
                 'setting internal sym factor to 1.0')
             int_sym = 1.0
+            end_group_factor = 1.0
 
         # Obtain overall number
+        if ext_sym % 3 == 0 and end_group_factor > 1:
+            if not automol.graph.is_branched(automol.geom.graph(geo)):
+                int_sym = int_sym/3
+
         sym_factor = ext_sym * int_sym
         print('sym_factor test:', ext_sym, int_sym, sym_factor)
-
         # Reduce sym factor using rotor symmetries
         sym_factor = tors_reduced_sym_factor(sym_factor, rotors)
 
@@ -160,7 +165,7 @@ def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
     print('end_group_factor:', end_group_factor)
     print('final int_sym_num:', int_sym_num)
 
-    return int_sym_num
+    return int_sym_num, end_group_factor
 
 
 def tors_reduced_sym_factor(sym_factor, rotors):

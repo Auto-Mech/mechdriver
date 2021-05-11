@@ -52,9 +52,11 @@ def thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix):
         for idx, mod in enumerate(spc_mods):
             spc_info = sinfo.from_dct(spc_dct[spc_name])
             spc_formula = automol.inchi.formula_string(spc_info[0])
+            thm_prefix = [spc_formula, automol.inchi.inchi_key(spc_info[0])]
+            print('thm_prefix test:', thm_prefix)
             thm_path[mod] = (
-                job_path(run_prefix, 'MESS', 'PF', spc_formula, locs_idx=idx),
-                job_path(run_prefix, 'THERM', 'NASA', spc_formula, locs_idx=idx)
+                job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=idx),
+                job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=idx)
             )
         thm_paths.append(thm_path)
 
@@ -99,9 +101,14 @@ def job_path(prefix, prog, job, fml,
     else:
         locs_idx = random.randint(0, 9999999)
 
+    if not isinstance(fml, str):
+        fml = '-'.join(fml)
     # Build the path
+    print('job path test:', job, fml, locs_idx)
     bld_locs = [job, fml, locs_idx]
+    print('job path test 2', bld_locs)
     bld_path = bld_fs[-1].path(bld_locs)
+    print('job path test 3', bld_path)
 
     # Make and print the path if desired
     if make_path:

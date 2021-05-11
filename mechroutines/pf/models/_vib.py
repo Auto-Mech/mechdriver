@@ -51,6 +51,9 @@ def vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
             pf_filesystems, run_prefix, zrxn=zrxn)
         tors_zpe = 0.0
 
+    freqs, zpe = scale_frequencies(freqs, tors_zpe,
+                      pf_levels, scale_method='3c')
+
     return freqs, imag, zpe, tors_strs
 
 
@@ -287,7 +290,61 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
 
     # NEW scale factor functions
     # scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
-    #     harm_freqs, proj_freqs, tors_freqs)
+    #     harm_freqs, tors_freqs)
+
+    # Create a scaling factor for the frequencies
+    # First sort tors frequencies in ascending order
+    sort_tors_freqs = sorted(tors_freqs)
+    # keep only freqs whose RRHO freqs are above a threshold
+    freq_thresh = 50.
+    log_rt_freq = 0.0
+    nfreq_remove = 0
+    for freq in rt_freqs1:
+        if freq > freq_thresh:
+            log_rt_freq += numpy.log(freq)
+        else:
+            nfreq_remove += 1
+
+    log_freq = [numpy.log(freq) for freq in freqs]
+    log_freq = sum(log_freq)
+
+    log_tors_freq = 0.0
+    idx_remove = []
+    for idx, freq in enumerate(sort_tors_freqs):
+        if idx+1 > nfreq_remove:
+            log_tors_freq += numpy.log(freq)
+        else:
+            idx_remove.append(tors_freqs.index(freq))
+
+    # log_rt_freq = [numpy.log(freq) for freq in rt_freqs1]
+    # log_rt_freq = sum(log_rt_freq)
+    # log_tors_freq = [numpy.log(freq) for freq in tors_freqs]
+    # log_tors_freq = sum(log_tors_freq)
+    #unproj_prod = numpy.prod(rt_freqs1)
+    #proj_prod = numpy.prod(freqs) * numpy.prod(tors_freqs)
+    #print('proj_prod test:', unproj_prod, proj_prod)
+    # ioprinter.info_message('log_freq_tests:', log_rt_freq, log_freq, log_tors_freq)
+    #scale_factor = unproj_prod / proj_prod
+
+    # generate the scaling factor
+    factor = numpy.exp(log_rt_freq - log_freq - log_tors_freq)
+    ioprinter.info_message('freq test:', freqs, tors_freqs, rt_freqs1)
+    tau_factor = numpy.exp(log_rt_freq - log_freq)
+    tau_factor_mode = tau_factor
+    # generate the set of indices for torsions that are two be scales
+    scale_factor = (idx_remove, factor)
+    ioprinter.info_message('scale fact test', scale_factor)
+    ioprinter.info_message('TAU FACTOR {:4.6f} \t {:g} \t {:3.6f} {} '
+            .format(tau_factor_mode, len(tors_freqs), factor, '-'.join([str(ridx) for ridx in idx_remove])))
+
+    # Check if there are significant differences caused by the rotor projection
+    diff_tors_zpe *= phycon.EH2KCAL
+    diff_tors_zpe_2 *= phycon.EH2KCAL
+    if abs(diff_tors_zpe) > 0.2 and abs(diff_tors_zpe_2) > 0.2:
+        ioprinter.warning_message(
+            'There is a difference of ',
+            '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
+            'kcal/mol between harmonic and hindered torsional ZPVEs')
 
     return (proj_freqs, proj_imag, proj_zpe,
             scale_factor, tors_freqs, harm_freqs)

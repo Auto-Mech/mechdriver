@@ -140,6 +140,8 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
             for tidx, torsion in enumerate(rotor):
                 if tidx not in scale_indcs and factor is not None:
                     torsion.pot = automol.pot.scale(torsion.pot, sfactor)
+                    # following is being used in a test to see how effective a scaling of fixed scan torsional pots can be
+                    torsion.pot = automol.pot.relax_scale(torsion.pot)
 
     return rotors
 
@@ -258,7 +260,7 @@ def _hrpot_spline_fitter(pot_dct, min_thresh=-0.0001, max_thresh=50.0):
             'the typical maximum for a torsional potential')
     # reset any negative values for the first grid point to 0.
     if pot[0] < 0.:
-        ioprinter.error_message('The first potential value should be 0.')
+        ioprinter.error_message('The first potential value is {} it should be 0.'.format(pot[0]))
         pot[0] = 0.
     if any(val < min_thresh for val in pot):
         print_pot = True

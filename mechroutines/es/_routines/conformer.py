@@ -2,7 +2,9 @@
 """
 
 import shutil
+import time
 import numpy
+import time
 import automol
 import elstruct
 import autofile
@@ -43,8 +45,14 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
     overwrite = es_keyword_dct['overwrite']
     if not cnf_path:
         ioprinter.info_message(
-            'No conformer found in save filesys. Running optimization ...')
-        _run = True
+            'No conformer found in save filesys. Checking for running jobs...')
+        if _init_geom_is_running(cnf_run_fs) and not overwrite:
+            _run = False
+        else:
+            ioprinter.info_message(
+                'No conformers are running in run filesys.' +
+                'Proceeding with optimization...')
+            _run = True
     elif overwrite:
         ioprinter.info_message(
             'User specified to overwrite energy with new run...')
@@ -294,82 +302,82 @@ def single_conformer(zma, spc_info, mod_thy_info,
     """ generate single optimized geometry to be saved into a
         filesystem
     """
+    if not _this_conformer_is_running(zma, cnf_run_fs):
+        # Build the filesystem
+        if use_locs is None:
+            rid = autofile.schema.generate_new_ring_id()
+            cid = autofile.schema.generate_new_conformer_id()
+            locs = (rid, cid)
+        else:
+            locs = use_locs
+        cnf_run_fs[-1].create(locs)
+        cnf_run_path = cnf_run_fs[-1].path(locs)
+        run_fs = autofile.fs.run(cnf_run_path)
 
-    # Build the filesystem
-    if use_locs is None:
-        rid = autofile.schema.generate_new_ring_id()
-        cid = autofile.schema.generate_new_conformer_id()
-        locs = (rid, cid)
-    else:
-        locs = use_locs
-    cnf_run_fs[-1].create(locs)
-    cnf_run_path = cnf_run_fs[-1].path(locs)
-    run_fs = autofile.fs.run(cnf_run_path)
+        # Run the optimization
+        ioprinter.info_message('Optimizing a single conformer', zrxn)
+        success, ret = es_runner.execute_job(
+            job=elstruct.Job.OPTIMIZATION,
+            script_str=script_str,
+            run_fs=run_fs,
+            geo=zma,
+            spc_info=spc_info,
+            thy_info=mod_thy_info,
+            overwrite=overwrite,
+            frozen_coordinates=(),
+            saddle=bool(zrxn is not None),
+            retryfail=retryfail,
+            **kwargs
+        )
 
-    # Run the optimization
-    ioprinter.info_message('Optimizing a single conformer', zrxn)
-    success, ret = es_runner.execute_job(
-        job=elstruct.Job.OPTIMIZATION,
-        script_str=script_str,
-        run_fs=run_fs,
-        geo=zma,
-        spc_info=spc_info,
-        thy_info=mod_thy_info,
-        overwrite=overwrite,
-        frozen_coordinates=(),
-        saddle=bool(zrxn is not None),
-        retryfail=retryfail,
-        **kwargs
-    )
+        if success:
+            inf_obj, _, out_str = ret
+            prog = inf_obj.prog
+            method = inf_obj.method
+            ene = elstruct.reader.energy(prog, method, out_str)
+            geo = elstruct.reader.opt_geometry(prog, out_str)
+            zma = elstruct.reader.opt_zmatrix(prog, out_str)
+            saved_locs, saved_geos, saved_enes = _saved_cnf_info(
+                cnf_save_fs, mod_thy_info)
 
-    if success:
-        inf_obj, _, out_str = ret
-        prog = inf_obj.prog
-        method = inf_obj.method
-        ene = elstruct.reader.energy(prog, method, out_str)
-        geo = elstruct.reader.opt_geometry(prog, out_str)
-        zma = elstruct.reader.opt_zmatrix(prog, out_str)
-        saved_locs, saved_geos, saved_enes = _saved_cnf_info(
-            cnf_save_fs, mod_thy_info)
+            if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn=zrxn):
+                sym_id = _sym_unique(
+                    geo, ene, saved_geos, saved_enes)
+                if sym_id is None:
+                    if cnf_save_fs[0].file.info.exists():
+                        ioprinter.debug_message('inf_obj path', cnf_save_fs[0].path())
+                        rinf_obj_s = cnf_save_fs[0].file.info.read()
+                        rinf_obj = inf_obj
+                        ioprinter.debug_message('inf_obj for r', rinf_obj)
+                        # rnsampd = rinf_obj_s.nsamp
+                        # rnsampd += 1
+                        # rinf_obj.nsamp = rnsampd
+                    else:
+                        rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
+                        rinf_obj.nsamp = 1
+                    if cnf_save_fs[1].file.info.exists([locs[0]]):
+                        cinf_obj_s = cnf_save_fs[1].file.info.read(locs[0])
+                        cinf_obj = inf_obj
+                        cnsampd = cinf_obj_s.nsamp
+                        cnsampd += 1
+                        cinf_obj.nsamp = cnsampd
+                    else:
+                        cinf_obj = autofile.schema.info_objects.conformer_branch(0)
+                        cinf_obj.nsamp = 1
+                    cnf_save_fs[1].create([locs[0]])
+                    cnf_save_fs[0].file.info.write(rinf_obj)
+                    cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
+                    _save_unique_conformer(
+                        ret, mod_thy_info, cnf_save_fs, locs,
+                        zrxn=zrxn, zma_locs=(0,))
+                    saved_geos.append(geo)
+                    saved_enes.append(ene)
+                    saved_locs.append(locs)
 
-        if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn=zrxn):
-            sym_id = _sym_unique(
-                geo, ene, saved_geos, saved_enes)
-            if sym_id is None:
-                if cnf_save_fs[0].file.info.exists():
-                    ioprinter.debug_message('inf_obj path', cnf_save_fs[0].path())
-                    rinf_obj_s = cnf_save_fs[0].file.info.read()
-                    rinf_obj = inf_obj
-                    ioprinter.debug_message('inf_obj for r', rinf_obj)
-                    # rnsampd = rinf_obj_s.nsamp
-                    # rnsampd += 1
-                    # rinf_obj.nsamp = rnsampd
-                else:
-                    rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
-                    rinf_obj.nsamp = 1
-                if cnf_save_fs[1].file.info.exists([locs[0]]):
-                    cinf_obj_s = cnf_save_fs[1].file.info.read(locs[0])
-                    cinf_obj = inf_obj
-                    cnsampd = cinf_obj_s.nsamp
-                    cnsampd += 1
-                    cinf_obj.nsamp = cnsampd
-                else:
-                    cinf_obj = autofile.schema.info_objects.conformer_branch(0)
-                    cinf_obj.nsamp = 1
-                cnf_save_fs[1].create([locs[0]])
-                cnf_save_fs[0].file.info.write(rinf_obj)
-                cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
-                _save_unique_conformer(
-                    ret, mod_thy_info, cnf_save_fs, locs,
-                    zrxn=zrxn, zma_locs=(0,))
-                saved_geos.append(geo)
-                saved_enes.append(ene)
-                saved_locs.append(locs)
-
-        # Update the conformer trajectory file
-        ioprinter.obj('vspace')
-        filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info)
-        filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, locs[0])
+            # Update the conformer trajectory file
+            ioprinter.obj('vspace')
+            filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info)
+            filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, locs[0])
 
 
 def conformer_sampling(zma, spc_info, thy_info,
@@ -784,53 +792,173 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=None, rid=No
 
 
 def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
-                    orig_ich='', rid_traj=False):
-    """ save the conformers that have been found so far
-        # Only go through save procedure if conf not in save
-        # may need to get geo, ene, etc; maybe make function
+                      orig_ich='', rid_traj=False):
+      """ save the conformers that have been found so far
+          # Only go through save procedure if conf not in save
+          # may need to get geo, ene, etc; maybe make function
+      """
+
+      saved_locs, saved_geos, saved_enes = _saved_cnf_info(
+          cnf_save_fs, thy_info)
+
+      inf_obj, _, out_str = ret
+      prog = inf_obj.prog
+      method = inf_obj.method
+      ene = elstruct.reader.energy(prog, method, out_str)
+      geo = elstruct.reader.opt_geometry(prog, out_str)
+      zma = elstruct.reader.opt_zmatrix(prog, out_str)
+
+      # Assess if geometry is properly connected
+      viable = _geo_connected(geo, zrxn)
+      if viable:
+          if zrxn:
+              viable = _ts_geo_viable(
+                  zma, zrxn, cnf_save_fs, thy_info)
+          else:
+              viable = _inchi_are_same(orig_ich, geo)
+
+      # Determine uniqueness of conformer, save if needed
+      if viable:
+          if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
+              # iso check breaks because of zma location
+              # if _is_proper_isomer(cnf_save_fs, zma):
+              sym_id = _sym_unique(
+                  geo, ene, saved_geos, saved_enes)
+              if sym_id is None:
+                  _save_unique_conformer(
+                      ret, thy_info, cnf_save_fs,
+                      locs, zrxn=zrxn)
+              else:
+                  sym_locs = saved_locs[sym_id]
+                  _save_sym_indistinct_conformer(
+                      geo, cnf_save_fs, locs, sym_locs)
+
+          # Update the conformer trajectory file
+          ioprinter.obj('vspace')
+          rid = None
+          if rid_traj:
+              rid = locs[0]
+          filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
+
+
+def _init_geom_is_running(cnf_run_fs):
+    running = False
+    for locs in cnf_run_fs[-1].existing():
+        geo_inf_obj = cnf_run_fs[-1].file.geometry_info.read(
+            locs)
+        status = geo_inf_obj.status
+        if status == autofile.schema.RunStatus.RUNNING:
+            start_time = geo_inf_obj.start_end_time
+            current_time = autofile.schema.utc_time()
+            if (current_time - start_time).total_seconds() < 500000:
+                path = cnf_run_fs[-1].path(locs)
+                ioprinter.info_message(
+                    'init_geom was started in the last ' +
+                    '{:3.4f} hours in {}.'.format(
+                        (current_time - start_time).total_seconds()/3600.,
+                        path))
+                running = True
+                break
+    return running
+
+
+def _saved_cnf_info(cnf_save_fs, mod_thy_info):
+    """ get the locs, geos and enes for saved conformers
     """
 
-    saved_locs, saved_geos, saved_enes = _saved_cnf_info(
-        cnf_save_fs, thy_info)
-
-    inf_obj, _, out_str = ret
-    prog = inf_obj.prog
-    method = inf_obj.method
-    ene = elstruct.reader.energy(prog, method, out_str)
-    geo = elstruct.reader.opt_geometry(prog, out_str)
-    zma = elstruct.reader.opt_zmatrix(prog, out_str)
-
-    # Assess if geometry is properly connected
-    viable = _geo_connected(geo, zrxn)
-    if viable:
-        if zrxn:
-            viable = _ts_geo_viable(
-                zma, zrxn, cnf_save_fs, thy_info)
+    saved_locs = list(cnf_save_fs[-1].existing())
+    saved_geos = [cnf_save_fs[-1].file.geometry.read(locs)
+                  for locs in saved_locs]
+    found_saved_locs = []
+    found_saved_geos = []
+    found_saved_enes = []
+    for idx, locs in enumerate(saved_locs):
+        path = cnf_save_fs[-1].path(locs)
+        sp_save_fs = autofile.fs.single_point(path)
+        if sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+            found_saved_enes.append(sp_save_fs[-1].file.energy.read(
+                mod_thy_info[1:4]))
+            found_saved_locs.append(saved_locs[idx])
+            found_saved_geos.append(saved_geos[idx])
         else:
-            viable = _inchi_are_same(orig_ich, geo)
+            ioprinter.info_message(
+                'No energy saved in single point directory for {}'
+                .format(path))
+            geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
+                mod_thy_info[1:4])
+            geo_end_time = geo_inf_obj.utc_end_time
+            current_time = autofile.schema.utc_time()
+            if (current_time - geo_end_time).total_seconds() < 120:
+                wait_time = 120 - (current_time - geo_end_time).total_seconds()
+                ioprinter.info_message(
+                    'Geo was saved in the last ' +
+                    '{:3.2f} seconds, waiting for {:3.2f} seconds'.format(
+                        (current_time - geo_end_time).total_seconds(),
+                        wait_time))
+                time.sleep(wait_time)
+                if sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+                    found_saved_enes.append(sp_save_fs[-1].file.energy.read(
+                        mod_thy_info[1:4]))
+                    found_saved_locs.append(saved_locs[idx])
+                    found_saved_geos.append(saved_geos[idx])
+                    ioprinter.info_message('the energy is now found')
+                else:
+                    ioprinter.info_message('waiting helped nothing')
+                
+    return found_saved_locs, found_saved_geos, found_saved_enes
 
-    # Determine uniqueness of conformer, save if needed
-    if viable:
-        if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
-            # iso check breaks because of zma location
-            # if _is_proper_isomer(cnf_save_fs, zma):
-            sym_id = _sym_unique(
-                geo, ene, saved_geos, saved_enes)
-            if sym_id is None:
-                _save_unique_conformer(
-                    ret, thy_info, cnf_save_fs,
-                    locs, zrxn=zrxn)
-            else:
-                sym_locs = saved_locs[sym_id]
-                _save_sym_indistinct_conformer(
-                    geo, cnf_save_fs, locs, sym_locs)
 
-        # Update the conformer trajectory file
-        ioprinter.obj('vspace')
-        rid = None
-        if rid_traj:
-            rid = locs[0]
-        filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
+def _init_geom_is_running(cnf_run_fs):
+    running = False
+    job = elstruct.Job.OPTIMIZATION
+    for locs in cnf_run_fs[-1].existing():
+        cnf_run_path = cnf_run_fs[-1].path(locs)
+        run_fs = autofile.fs.run(cnf_run_path)
+        inf_obj = run_fs[-1].file.info.read([job])
+        status = inf_obj.status
+        if status == autofile.schema.RunStatus.RUNNING:
+            start_time = inf_obj.start_end_time
+            current_time = autofile.schema.utc_time()
+            if (current_time - start_time).total_seconds() < 3000000:
+                path = cnf_run_fs[-1].path(locs)
+                ioprinter.info_message(
+                    'init_geom was started in the last ' +
+                    '{:3.4f} hours in {}.'.format(
+                        (current_time - start_time).total_seconds()/3600.,
+                        path))
+                running = True
+                break
+    return running
+
+
+def _this_conformer_is_running(zma, cnf_run_fs):
+    running = False
+    job = elstruct.Job.OPTIMIZATION
+    cnf_run_path = cnf_run_fs[0].path()
+    ioprinter.debug_message('cnf path ' + cnf_run_path)
+    for locs in cnf_run_fs[-1].existing(ignore_bad_formats=True):
+        cnf_run_path = cnf_run_fs[-1].path(locs)
+        run_fs = autofile.fs.run(cnf_run_path)
+        run_path = run_fs[-1].path([job])
+        inf_obj = run_fs[-1].file.info.read([job])
+        status = inf_obj.status
+        if status == autofile.schema.RunStatus.RUNNING:
+            start_time = inf_obj.utc_start_time
+            current_time = autofile.schema.utc_time()
+            if (current_time - start_time).total_seconds() < 3000000:
+                subrun_fs = autofile.fs.subrun(run_path)
+                inp_str = subrun_fs[0].file.input.read([0, 0]).replace('=','')
+                prog = inf_obj.prog
+                inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                if automol.zmat.almost_equal(inp_zma, zma, dist_rtol=0.018, ang_atol=.2):
+                    ioprinter.info_message(
+                        'This conformer was started in the last ' +
+                        '{:3.4f} hours in {}.'.format(
+                            (current_time - start_time).total_seconds()/3600.,
+                            run_path))
+                    running = True
+                    break
+    return running
 
 
 def _geo_connected(geo, rxn):
@@ -1101,7 +1229,7 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
             zma = automol.geom.zmatrix(geo)
             # zma =  cnf_save_fs[-1].file.zmatrix.read(locs)
             # if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):
-            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.018, ang_atol=.2):
+            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.1, ang_atol=.4):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 ioprinter.info_message('- Similar structure found at {}'.format(cnf_save_path))
                 match_dct[ini_locs] = locs
@@ -1155,7 +1283,7 @@ def unique_fs_ring_confs(
                 geo = cnf_save_fs[-1].file.geometry.read(tlocs)
                 frag_geo = _fragment_ring_geo(geo)
                 frag_zma = automol.geom.zmatrix(frag_geo)
-                if automol.zmat.almost_equal(frag_ini_zma, frag_zma, dist_rtol=0.018, ang_atol=.2):
+                if automol.zmat.almost_equal(frag_ini_zma, frag_zma, dist_rtol=0.1, ang_atol=.4):
                     rng_dct[ini_rid] = trid
                     found_rid = trid
                     break
@@ -1174,7 +1302,7 @@ def unique_fs_ring_confs(
             cnf_save_path = cnf_save_fs[-1].path(locs)
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             zma = automol.geom.zmatrix(geo)
-            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.018, ang_atol=.2):
+            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.1, ang_atol=.4):
                 ioprinter.info_message(
                     '- Similar structure found at {}'.format(cnf_save_path))
                 found = True
@@ -1210,7 +1338,7 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             zma = automol.geom.zmatrix(geo)
             # zma =  cnf_save_fs[-1].file.zmatrix.read(locs)
-            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.018, ang_atol=.2):
+            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.1, ang_atol=.4):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 ioprinter.info_message(
                     '- Similar structure found at {}'.format(cnf_save_path))
@@ -1241,8 +1369,10 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     ene = elstruct.reader.energy(prog, method, out_str)
     geo = elstruct.reader.opt_geometry(prog, out_str)
     zma = elstruct.reader.opt_zmatrix(prog, out_str)
+    print('zma 0 test:', zma, geo)
     if zma is None:
         zma = automol.geom.zmatrix(geo)
+    print('zma 1 test:', zma)
 
     # Build the conformer filesystem and save the structural info
     ioprinter.save_conformer(cnf_save_path)
@@ -1302,23 +1432,6 @@ def _save_sym_indistinct_conformer(geo, cnf_save_fs,
     sym_save_fs[-1].file.geometry.write(geo, [cnf_tosave_locs[-1]])
 
 
-def _saved_cnf_info(cnf_save_fs, mod_thy_info):
-    """ get the locs, geos and enes for saved conformers
-    """
-
-    saved_locs = list(cnf_save_fs[-1].existing())
-    saved_geos = [cnf_save_fs[-1].file.geometry.read(locs)
-                  for locs in saved_locs]
-    saved_enes = []
-    for locs in saved_locs:
-        path = cnf_save_fs[-1].path(locs)
-        sp_save_fs = autofile.fs.single_point(path)
-        saved_enes.append(sp_save_fs[-1].file.energy.read(
-            mod_thy_info[1:4]))
-
-    return saved_locs, saved_geos, saved_enes
-
-
 def _fragment_ring_geo(geo):
     """ fragment out the ring and its neighbors in a geo
     """
@@ -1359,7 +1472,7 @@ def rng_loc_for_geo(geo, cnf_run_fs, cnf_save_fs):
             rid = locs[0]
             break
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
-        if automol.zmat.almost_equal(frag_locs_zma, frag_zma, dist_rtol=0.018, ang_atol=.2):
+        if automol.zmat.almost_equal(frag_locs_zma, frag_zma, dist_rtol=0.1, ang_atol=.4):
             rid = locs[0]
             break
     return rid

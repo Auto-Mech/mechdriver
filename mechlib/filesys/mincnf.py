@@ -3,73 +3,12 @@
 """
 
 import sys
+import time
 import automol
 import autofile
 from phydat import phycon
 from mechlib.filesys import build_fs
-
-# def min_energy_ring_conformer_locators(cnf_save_fs, mod_thy_info):
-#     """ wrapper for minimum locs
-#     """
-#     rng_locs_lst = cnf_save_fs[-1].existing()
-#     rng_cnf_locs_lst = []
-#     rng_cnf_enes_lst = []
-#     for rng_locs in rng_locs_lst:
-#         rng_save_path = rng_save_fs[-1].path(rng_locs)
-#         _, rng_cnf_save_fs = build_fs(
-#             rng_save_path, rng_save_path, 'CONFORMER')
-#         locs, paths = conformer_locators(
-#             rng_cnf_save_fs, mod_thy_info, cnf_range='min')
-#         if locs and paths:
-#             cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
-#                 locs, rng_cnf_save_fs, mod_thy_info)
-#             rng_cnf_locs_lst.append((rng_locs, cnf_locs_lst[0],))
-#             rng_cnf_enes_lst.append(cnf_enes_lst[0])
-#     if rng_cnf_locs_lst:
-#         rng_cnf_enes_lst, rng_cnf_locs_lst = zip(*sorted(zip(rng_cnf_enes_lst, rng_cnf_locs_lst)))
-#         locs = rng_cnf_locs_lst[0]
-#         rng_save_path = rng_save_fs[-1].path(locs[0])
-#         _, rng_cnf_save_fs = build_fs(
-#             rng_save_path, rng_save_path, 'CONFORMER')
-#         rng_cnf_save_path = rng_cnf_save_fs[-1].path(locs[1])
-#         paths = (rng_save_path, rng_cnf_save_path)
-#         ret = locs, paths
-#     else:
-#         ret = ('',''), ('', '')
-#     return ret
-
-
-# def ring_conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
-#    """ wrapper for minimum locs
-#    """
-#    locs_lst = cnf_save_fs[-1].existing()
-#    rng_cnf_locs_lst = []
-#    rng_cnf_enes_lst = []
-#    if locs_lst:
-#        rng_cnf_locs_lst, rng_cnf_enes_lst = _sorted_cnf_lsts(
-#            locs_lst, cnf_save_fs, mod_thy_info)
-#    if rng_cnf_locs_lst:
-#        rng_cnf_enes_lst, rng_cnf_locs_lst = zip(*sorted(zip(rng_cnf_enes_lst, rng_cnf_locs_lst)))
-#        if cnf_range == 'min':
-#            fin_locs_lst = [rng_cnf_locs_lst[0]]
-#        elif cnf_range == 'all':
-#            fin_locs_lst = rng_cnf_locs_lst
-#        elif 'e' in cnf_range:
-#            fin_locs_lst = _erange_locs(rng_cnf_locs_lst, rng_cnf_enes_lst, cnf_range)
-#        elif 'n' in cnf_range:
-#            fin_locs_lst = _nrange_locs(rng_cnf_locs_lst, cnf_range)
-#        fin_paths = []
-#        for locs in fin_locs_lst:
-#            rng_locs, cnf_locs = locs
-#            rng_save_path = rng_save_fs[-1].path(rng_locs)
-#            _, rng_cnf_save_fs = build_fs(
-#                rng_save_path, rng_save_path, 'CONFORMER')
-#            rng_cnf_save_path = rng_cnf_save_fs[-1].path(cnf_locs)
-#            fin_paths.append((rng_save_path, rng_cnf_save_path))
-#        ret = fin_locs_lst, fin_paths
-#    else:
-#        ret = [([], [])], [('', '')]
-#    return ret
+from mechlib.amech_io import printer as ioprinter
 
 
 def min_energy_conformer_locators(cnf_save_fs, mod_thy_info):
@@ -120,17 +59,45 @@ def _sorted_cnf_lsts(cnf_locs_lst, cnf_save_fs, mod_thy_info):
     """ Get a list of conformer locs and energies, sorted by energies
     """
 
-    cnf_enes_lst = []
+    fnd_cnf_enes_lst = []
+    fnd_cnf_locs_lst = []
     if len(cnf_locs_lst) == 1:
-        cnf_enes_lst = [10]
+        fnd_cnf_enes_lst = [10]
+        fnd_cnf_locs_lst = cnf_locs_lst
     else:
-        for locs in cnf_locs_lst:
+        for idx, locs in enumerate(cnf_locs_lst):
             cnf_path = cnf_save_fs[-1].path(locs)
             sp_fs = autofile.fs.single_point(cnf_path)
-            cnf_enes_lst.append(sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
 
+            if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+                fnd_cnf_enes_lst.append(sp_fs[-1].file.energy.read(
+                    mod_thy_info[1:4]))
+                fnd_cnf_locs_lst.append(cnf_locs_lst[idx])
+            else:
+                ioprinter.info_message(
+                    'No energy saved in single point directory for {}'
+                    .format(cnf_path))
+                geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
+                    mod_thy_info[1:4])
+                geo_end_time = geo_inf_obj.utc_end_time
+                current_time = autofile.schema.utc_time()
+                if (current_time - geo_end_time).total_seconds() < 120:
+                    wait_time = 120 - (current_time - geo_end_time).total_seconds()
+                    ioprinter.info_message(
+                        'Geo was saved in the last ' +
+                        '{:3.2f} seconds, waiting for {:3.2f} seconds'.format(
+                            (current_time - geo_end_time).total_seconds(),
+                            wait_time))
+                    time.sleep(wait_time)
+                    if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+                        fnd_cnf_enes_lst.append(sp_fs[-1].file.energy.read(
+                            mod_thy_info[1:4]))
+                        fnd_cnf_locs_lst.append(cnf_locs_lst[idx])
+                        ioprinter.info_message('the energy is now found')
+                    else:
+                        ioprinter.info_message('waiting helped nothing')
     # Sort the cnf locs and cnf enes
-    cnf_enes_lst, cnf_locs_lst = zip(*sorted(zip(cnf_enes_lst, cnf_locs_lst)))
+    cnf_enes_lst, cnf_locs_lst = zip(*sorted(zip(fnd_cnf_enes_lst, fnd_cnf_locs_lst)))
 
     return cnf_locs_lst, cnf_enes_lst
 
