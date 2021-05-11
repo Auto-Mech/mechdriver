@@ -2,8 +2,8 @@
     Lennard-Jones parameters
 """
 
-from routines.trans import run_tsk
-from lib.amech_io import parser
+from mechroutines.trans import run_tsk
+from mechlib.amech_io import parser
 
 
 def run(spc_dct,
@@ -14,13 +14,18 @@ def run(spc_dct,
     """ main driver for etransfer run
     """
 
+    # Print
+    for spc in RUN_SPC_LST_DCT:
+        ioprinter.info_message(
+            'Calculating Thermochem for species: {}'.format(spc),
+            newline=1)
+
     # Pull stuff from dcts for now
     save_prefix = run_inp_dct['save_prefix']
     run_prefix = run_inp_dct['run_prefix']
 
     # Build a list of the species to calculate thermochem for loops below
     spc_queue = parser.species.build_queue(rxn_lst)
-    print(spc_queue)
 
     # Loop over Tasks
     for tsk_lst in trans_tsk_lst:

@@ -3,147 +3,139 @@
     thermodynamic quantities: Enthalpy, Entropy, Gibbs
 """
 
-import os
-from routines.pf import thermo as thmroutines
-from routines.pf import runner as pfrunner
-from routines.pf.models import ene
-from lib.amech_io import writer
-from lib.amech_io import parser
-from lib.amech_io.parser.model import pf_level_info, pf_model_info
-# from lib.structure import instab
-from lib import filesys
+import autorun
+import mechanalyzer
+import chemkin_io
+import automol.inchi
 from automol.inchi import formula_string as fstring
+from mechanalyzer.inf import spc as sinfo
+from mechroutines.pf import thermo as thmroutines
+from mechroutines.pf import runner as pfrunner
+from mechroutines.pf.models import ene
+from mechlib import filesys
+from mechlib.amech_io import writer
+from mechlib.amech_io import parser
+from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io import thermo_paths
+from mechlib.amech_io import job_path
+from mechlib.amech_io import output_path
+from mechlib.reaction import split_unstable_spc
 
-def run(spc_dct,
-        pes_model_dct, spc_model_dct,
-        thy_dct,
-        rxn_lst,
-        run_inp_dct,
-        write_messpf=True,
-        run_messpf=True,
-        run_nasa=True):
+
+def run(spc_rlst,
+        therm_tsk_lst,
+        pes_mod_dct, spc_mod_dct,
+        spc_dct,
+        run_prefix, save_prefix):
     """ main driver for thermo run
     """
 
-    # Pull stuff from dcts for now
-    save_prefix = run_inp_dct['save_prefix']
-    run_prefix = run_inp_dct['run_prefix']
+    # Print Header fo
+    ioprinter.info_message('Calculating Thermochem:')
+    ioprinter.runlst(('SPC', 0, 0), spc_rlst)
+
+    # ------------------------------------------------ #
+    # PREPARE INFORMATION TO PASS TO THERMDRIVER TASKS #
+    # ------------------------------------------------ #
 
     # Build a list of the species to calculate thermochem for loops below
-    # Set reaction list with unstable species broken apart
-    # print('Checking stability of all species...')
-    # rxn_lst = instab.break_all_unstable2(
-        # rxn_lst, spc_dct, spc_model_dct, thy_dct, save_prefix)
-    spc_queue = parser.species.build_queue(rxn_lst)
-    spc_queue = parser.species.split_queue(spc_queue)
+    spc_mods = list(spc_mod_dct.keys())  # hack
+    split_spc_lst = split_unstable_spc(
+        spc_rlst, spc_dct, spc_mod_dct[spc_mods[0]], save_prefix)
+    spc_queue = parser.rlst.spc_queue(
+        'spc', tuple(split_spc_lst.values())[0])
+
     # Build the paths [(messpf, nasa)], models and levels for each spc
-    starting_path = os.getcwd()
-    ckin_path = os.path.join(starting_path, 'ckin')
-    thm_paths = []
-    for spc_name, (_, mods, _, _) in spc_queue:
-        thm_path = {}
-        for idx, mod in enumerate(mods):
-            thm_path[mod] = pfrunner.thermo_paths(spc_dct[spc_name], run_prefix, idx)
-        thm_paths.append(thm_path)
-    pf_levels = {}
-    pf_models = {}
-    for _, (_, mods, _, _) in spc_queue:
-        for mod in mods:
-            pf_levels[mod] = pf_level_info(spc_model_dct[mod]['es'], thy_dct)
-            pf_models[mod] = pf_model_info(spc_model_dct[mod]['pf'])
-            pf_models[mod]['ref_scheme'] = (
-                spc_model_dct[mod]['options']['ref_scheme']
-                if 'ref_scheme' in spc_model_dct[mod]['options'] else 'none')
-            pf_models[mod]['ref_enes'] = (
-                spc_model_dct[mod]['options']['ref_enes']
-                if 'ref_enes' in spc_model_dct[mod]['options'] else 'none')
+    thm_paths = thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix)
+
+    # ----------------------------------- #
+    # RUN THE REQUESTED THERMDRIVER TASKS #
+    # ----------------------------------- #
+
     # Write and Run MESSPF inputs to generate the partition functions
-    if write_messpf:
+    write_messpf_tsk = parser.run.extract_task('write_mess', therm_tsk_lst)
+    if write_messpf_tsk is not None:
+        
+        ioprinter.messpf('write_header')
 
-        print(('\n\n------------------------------------------------' +
-               '--------------------------------------'))
-        print('\nPreparing MESSPF input files for all species')
-        pf_paths = {}
-        for idx, (spc_name, (pes_model, spc_models, _, _)) in enumerate(spc_queue):
-            pf_paths[idx] = {}
-            for spc_model in spc_models:
-                print('spc_model', spc_model)
-                global_pf_str = thmroutines.qt.make_pf_header(
-                    pes_model_dct[pes_model]['therm_temps'])
-                spc_str, dat_str_dct = thmroutines.qt.make_spc_mess_str(
-                    spc_dct, spc_name,
-                    pf_models[spc_model], pf_levels[spc_model],
-                    run_prefix, save_prefix)
+        spc_mods, pes_mod = parser.models.extract_models(write_messpf_tsk)
+
+        for idx, spc_name in enumerate(spc_queue):
+            print('write test {}'.format(spc_name))
+            for spc_mod in spc_mods:
                 messpf_inp_str = thmroutines.qt.make_messpf_str(
-                    global_pf_str, spc_str)
-                print('\n\n')
-                print('MESSPF Input String:\n')
-                print('\n\n')
-                pfrunner.mess.write_mess_file(
-                    messpf_inp_str, dat_str_dct, thm_paths[idx][spc_model][0],
-                    filename='pf.inp')
-
-                # Write MESS file into job directory
-                cpy_path = pfrunner.write_cwd_pf_file(
-                    messpf_inp_str, spc_dct[spc_name]['inchi'])
-                pf_paths[idx][spc_model] = cpy_path
+                    pes_mod_dct[pes_mod]['therm_temps'],
+                    spc_dct, spc_name,
+                    pes_mod_dct[pes_mod], spc_mod_dct[spc_mod],
+                    run_prefix, save_prefix)
+                ioprinter.messpf('input_string')
+                ioprinter.info_message(messpf_inp_str)
+                autorun.write_input(
+                    thm_paths[idx][spc_mod][0], messpf_inp_str,
+                    input_name='pf.inp')
 
     # Run the MESSPF files that have been written
-    if run_messpf:
+    run_messpf_tsk = parser.run.extract_task('run_mess', therm_tsk_lst)
+    if run_messpf_tsk is not None:
 
-        print(('\n\n------------------------------------------------' +
-               '--------------------------------------'))
-        print('\nRunning MESSPF calculations for all species')
+        spc_mod, pes_mod = parser.models.extract_models(run_messpf_tsk)
+        spc_mods = parser.models.split_model(spc_mod[0])
 
-        for idx, (spc_name, (pes_model, spc_models, coeffs, operators)) in enumerate(spc_queue):
-            print('\n{}'.format(spc_name))
-            for midx, spc_model in enumerate(spc_models):
-                pfrunner.run_pf(thm_paths[idx][spc_model][0])
-                temps, logq, dq_dt, d2q_dt2 = pfrunner.mess.read_messpf(
-                    thm_paths[idx][spc_model][0])
-                if midx == 0:
-                    coeff = coeffs[midx]
-                    final_pf = [temps, logq, dq_dt, d2q_dt2]
-                else:
-                    pf2 = temps, logq, dq_dt, d2q_dt2
-                    coeff = coeffs[midx]
-                    operator = operators[midx-1]
-                    if coeff < 0:
-                        coeff = abs(coeff)
-                        if operator == 'multiply':
-                            operator = 'divide'
-                    if operator == 'divide':
-                        pfrunner.mess.divide_pfs(final_pf, pf2, coeff)
-                    elif operator == 'multiply':
-                        pfrunner.mess.multiply_pfs(final_pf, pf2, coeff)
-            thm_paths[idx]['final'] = pfrunner.thermo_paths(
-                spc_dct[spc_name], run_prefix, len(spc_models))
+        ioprinter.messpf('run_header')
+        for idx, spc_name in enumerate(spc_queue):
+
+            _spc_mods, coeffs, operators = spc_mods
+
+            # Run MESSPF for all requested models, combine the PFS at the end
+            ioprinter.message('Run MESSPF: {}'.format(spc_name), newline=1)
+            _pfs = []
+            for spc_mod in _spc_mods:
+                autorun.run_script(
+                   autorun.SCRIPT_DCT['messpf'],
+                   thm_paths[idx][spc_mod][0])
+                _pfs.append(
+                    pfrunner.mess.read_messpf(thm_paths[idx][spc_mod][0]))
+            final_pf = pfrunner.mess.combine_pfs(_pfs, coeffs, operators)
+
+            # need to clean thm path build
+            tot_idx = len(spc_mods)
+            spc_info = sinfo.from_dct(spc_dct[spc_name])
+            spc_fml = automol.inchi.formula_string(spc_info[0])
+            thm_prefix = [spc_fml, automol.inchi.inchi_key(spc_info[0])]
+            thm_paths[idx]['final'] = (
+                job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=tot_idx),
+                job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=tot_idx)
+            )
             pfrunner.mess.write_mess_output(
                 fstring(spc_dct[spc_name]['inchi']),
                 final_pf, thm_paths[idx]['final'][0],
                 filename='pf.dat')
 
     # Use MESS partition functions to compute thermo quantities
-    if run_nasa:
+    run_fit_tsk = parser.run.extract_task('run_fits', therm_tsk_lst)
+    if run_fit_tsk is not None:
 
-        print(('\n\n------------------------------------------------' +
-               '--------------------------------------'))
-        print('\nRunning Thermochemistry calculations for all species')
+        spc_mods, pes_mod = parser.models.extract_models(run_fit_tsk)
+        pes_mod_dct_i = pes_mod_dct[pes_mod]
 
+        ioprinter.nasa('header')
         chn_basis_ene_dct = {}
+        for idx, spc_name in enumerate(spc_queue):
 
-        for idx, (spc_name, (pes_model, spc_models, _, _)) in enumerate(spc_queue):
-            print('\n{}'.format(spc_name))
-            spc_model = spc_models[0]
-            if not spc_model in chn_basis_ene_dct:
-                chn_basis_ene_dct[spc_model] = {}
-            # Get the reference scheme and energies
-            ref_scheme = spc_model_dct[spc_model]['options']['ref_scheme']
-            ref_enes = spc_model_dct[spc_model]['options']['ref_enes']
+            # Take species model and add it to the chn_basis_ene dct
+            spc_mod = spc_mods[0]
+            spc_mod_dct_i = spc_mod_dct[spc_mod]
+            if spc_mod not in chn_basis_ene_dct:
+                chn_basis_ene_dct[spc_mod] = {}
+
+            # Get the reference scheme and energies (ref in different place)
+            ref_scheme = pes_mod_dct_i['therm_fit']['ref_scheme']
+            ref_enes = pes_mod_dct_i['therm_fit']['ref_enes']
 
             # Determine info about the basis species used in thermochem calcs
             basis_dct, uniref_dct = thmroutines.basis.prepare_refs(
-                ref_scheme, spc_dct, [[spc_name, None]])
+                ref_scheme, spc_dct, [[spc_name, None]],
+                run_prefix, save_prefix)
 
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc_name]
@@ -152,27 +144,30 @@ def run(spc_dct,
             ene_basis = []
             energy_missing = False
             for spc_basis_i in spc_basis:
-                if spc_basis_i in chn_basis_ene_dct[spc_model]:
-                    print('Energy already found for basis species: ', spc_basis_i)
-                    ene_basis.append(chn_basis_ene_dct[spc_model][spc_basis_i])
+                if spc_basis_i in chn_basis_ene_dct[spc_mod]:
+                    ioprinter.message(
+                        'Energy already found for basis species: '
+                        + spc_basis_i)
+                    ene_basis.append(chn_basis_ene_dct[spc_mod][spc_basis_i])
                 else:
-                    print('Energy will be determined for basis species: ', spc_basis_i)
+                    ioprinter.message(
+                        'Energy will be determined for basis species: '
+                        + spc_basis_i)
                     energy_missing = True
             if not energy_missing:
                 pf_filesystems = filesys.models.pf_filesys(
-                    spc_dct[spc_name], pf_levels[spc_model],
+                    spc_dct[spc_name], spc_mod_dct_i,
                     run_prefix, save_prefix, saddle=False)
                 ene_spc = ene.read_energy(
-                    spc_dct[spc_name], pf_filesystems, pf_models[spc_model],
-                    pf_levels[spc_model],
+                    spc_dct[spc_name], pf_filesystems, spc_mod_dct_i,
                     run_prefix, read_ene=True, read_zpe=True, saddle=False)
             else:
                 ene_spc, ene_basis = thmroutines.basis.basis_energy(
                     spc_name, spc_basis, uniref_dct, spc_dct,
-                    pf_levels[spc_model], pf_models[spc_model],
+                    spc_mod_dct_i,
                     run_prefix, save_prefix)
                 for spc_basis_i, ene_basis_i in zip(spc_basis, ene_basis):
-                    chn_basis_ene_dct[spc_model][spc_basis_i] = ene_basis_i
+                    chn_basis_ene_dct[spc_mod][spc_basis_i] = ene_basis_i
 
             # Calculate and store the 0 K Enthalpy
             hf0k = thmroutines.heatform.calc_hform_0k(
@@ -181,26 +176,30 @@ def run(spc_dct,
 
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str = ''
-        ckin_path = os.path.join(starting_path, 'ckin')
-        for idx, (spc_name, (pes_model, spc_models, _, _)) in enumerate(spc_queue):
+        ckin_path = output_path('CKIN')
+        for idx, spc_name in enumerate(spc_queue):
 
-            print("\n\nStarting NASA polynomials calculation for ", spc_name)
+            ioprinter.nasa('calculate', spc_name)
 
-            # Read the temperatures from the pf.dat file, check if viable
-            temps = pfrunner.read_messpf_temps(thm_paths[idx]['final'][0])
-            thmroutines.nasapoly.print_nasa_temps(temps)
+            # Write the header describing the models used in thermo calcs
+            ckin_nasa_str += writer.ckin.model_header(spc_mods, spc_mod_dct)
 
-            # Write the NASA polynomial in CHEMKIN-format string
-            ref_scheme = spc_model_dct[spc_model]['options']['ref_scheme']
-            for spc_model in spc_models:
-                ckin_nasa_str += writer.ckin.model_header(
-                    pf_levels[spc_model], pf_models[spc_model], refscheme=ref_scheme)
-
-            # Build POLY
+            # Build and write the NASA polynomial in CHEMKIN-format string
+            # Call dies if you haven't run "write mess" task
             ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
-                spc_name, spc_dct, temps,
-                thm_paths[idx]['final'][0], thm_paths[idx]['final'][1], starting_path)
+                spc_name, spc_dct,
+                thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
+
+            print(ckin_nasa_str)
+        nasa7_params_all =  chemkin_io.parser.thermo.create_spc_nasa7_dct(ckin_nasa_str)
+        ioprinter.info_message('SPECIES\t\tH(0 K)[kcal/mol]\tH(298 K)[kcal/mol]\tS(298 K)[cal/mol K]\n')
+        for spc_name in nasa7_params_all:
+            nasa7_params =  nasa7_params_all[spc_name]
+            h0 = spc_dct[spc_name]['Hfs'][0]
+            h298 =  mechanalyzer.calculator.thermo.enthalpy(nasa7_params, 298.15) /1000.
+            s298 =  mechanalyzer.calculator.thermo.entropy(nasa7_params, 298.15)
+            ioprinter.info_message('{}\t{:3.2f}\t{:3.2f}\t{:3.2f}'.format(spc_name, h0, h298, s298))
 
         # Write all of the NASA polynomial strings
         writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)
