@@ -8,7 +8,7 @@ from mechlib.amech_io import printer as ioprinter
 
 def run(pes_rlst, spc_rlst,
         es_tsk_lst,
-        spc_dct, thy_dct,
+        spc_dct, glob_dct, thy_dct,
         run_prefix, save_prefix):
     """ Central driver for all electronic structure tasks.
 
@@ -50,7 +50,7 @@ def run(pes_rlst, spc_rlst,
                 thy_dct, spc_dct,
                 run_prefix, save_prefix)
             spc_dct = parser.spc.combine_sadpt_spc_dcts(
-                ts_dct, spc_dct)
+                ts_dct, spc_dct, glob_dct)
         else:
             ts_queue = ()
 

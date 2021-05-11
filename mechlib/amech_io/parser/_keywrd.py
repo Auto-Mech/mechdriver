@@ -151,8 +151,8 @@ def _check_supported_keys(inp_dct, val_dct, section):
 
     if unsupported_keys:
         print('User defined unsupported keywords in {}'.format(section))
-        for key in unsupported_keys:
-            print(key)
+        print('Unsupported keywords: {}'.format(','.join(unsupported_keys)))
+        print('Accepted keywords: {}'.format(','.join(chk_keys)))
         sys.exit()
 
 

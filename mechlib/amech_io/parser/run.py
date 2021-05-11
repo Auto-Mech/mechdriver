@@ -109,7 +109,7 @@ TSK_VAL_DCT = {
     'var_splvl1': (str, (), None),
     'var_splvl2': (str, (), None),
     'var_scnlvl': (str, (), None),
-    'resave': (bool, (True, False), True),
+    'resave': (bool, (True, False), False),
     'retryfail': (bool, (True, False), True),
     'overwrite': (bool, (True, False), False),
     # ES

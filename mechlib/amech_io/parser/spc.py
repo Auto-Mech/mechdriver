@@ -49,7 +49,7 @@ TS_VAL_DCT = {
     'temp_pst': (float, (), 300.0),
     'n_pst': (float, (), 6.0),
     'active': (str, (), None),
-    'ts_seatch': (str, (), 'sadpt'),
+    'ts_search': (str, (), 'sadpt'),
     'ts_idx': (int, (), 0)
 }
 TS_VAL_DCT.update(SPC_VAL_DCT)
@@ -74,7 +74,7 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
     dat_dct = ioformat.ptt.keyword_dcts_from_blocks(dat_blocks)
 
     # Merge all of the species inputs into a dictionary
-    mod_spc_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct)
+    mod_spc_dct, glob_dct = modify_spc_dct(spc_dct, dat_dct, geo_dct)
 
     # Assess if the species.dat information is valid
     for name, dct in mod_spc_dct.items():
@@ -87,7 +87,7 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
         val_dct = SPC_VAL_DCT if 'ts' not in name else TS_VAL_DCT
         check_dct1(dct, val_dct, req_lst, 'Spc-{}'.format(name))
 
-    return mod_spc_dct
+    return mod_spc_dct, glob_dct
 
 
 # Format spc
@@ -145,10 +145,10 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
         spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
         spc_dct[spc]['geo'] = geo_dct.get(spc, None)
 
-    return spc_dct
+    return spc_dct, glob_dct
 
 
-def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
+def combine_sadpt_spc_dcts(sadpt_dct, spc_dct, glob_dct):
     """ Create a new dictionary that combines init spc_dct and sadpt dct
     """
 
@@ -164,8 +164,8 @@ def combine_sadpt_spc_dcts(sadpt_dct, spc_dct):
 
         # Put in stuff from the global dct
         combined_dct[sadpt] = {}
-        if 'global' in spc_dct:
-            for key, val in spc_dct['global'].items():
+        if len(list(glob_dct.keys())) > 0:
+            for key, val in glob_dct.items():
                 combined_dct[sadpt][key] = val
 
         # Update any sadpt keywords if they are in the spc_dct from .dat file
