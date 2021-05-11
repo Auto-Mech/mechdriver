@@ -1,4 +1,4 @@
-name: mechanalyzer-env
+name: mechdriver-env
 
 channels:
     - auto-mech
@@ -12,6 +12,7 @@ dependencies:
     - pybind11
     - cmake
     - gcc_linux-64  # [linux]
+    - gxx_linux-64  # [linux]
     - gfortran_linux-64  # [linux]
     - numpy
     - scipy
@@ -27,6 +28,10 @@ dependencies:
     - rdkit::rdkit
     - openbabel::openbabel
     - conda-forge::qcelemental 
+    - conda-forge::nglview
+    - conda-forge::pypdf2
+    - conda-forge::python-igraph
+    - cantera::cantera
     - auto-mech::autoio
     - auto-mech::automol
     - auto-mech::autoparse
