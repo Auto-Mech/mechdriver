@@ -103,7 +103,7 @@ def fake_species_block(inf_dct_i, inf_dct_j):
 
     fake_freqs = automol.combine.fake_vdw_frequencies(
         inf_dct_i['geom'], inf_dct_j['geom'])
-    freqs = list(fake_freqs) + inf_dct_i['freqs'] + inf_dct_j['freqs']
+    freqs = fake_freqs + inf_dct_i['freqs'] + inf_dct_j['freqs']
 
     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
 

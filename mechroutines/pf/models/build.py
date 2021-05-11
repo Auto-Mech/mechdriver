@@ -190,7 +190,7 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
     inf_dct = {
         'geom': geom,
         'sym_factor': 1.0,
-        'freqs': [],
+        'freqs': tuple(),
         'mess_hr_str': '',
         'mass': util.atom_mass(spc_dct_i),
         'elec_levels': spc_dct_i['elec_levels'],

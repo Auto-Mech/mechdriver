@@ -51,8 +51,9 @@ def vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
             pf_filesystems, run_prefix, zrxn=zrxn)
         tors_zpe = 0.0
 
-    freqs, zpe = scale_frequencies(freqs, tors_zpe,
-                      pf_levels, scale_method='3c')
+    freqs, zpe = scale_frequencies(
+        freqs, tors_zpe,
+        spc_mod_dct_i, scale_method='3c')
 
     return freqs, imag, zpe, tors_strs
 
@@ -351,12 +352,13 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
 
 
 def scale_frequencies(freqs, tors_zpe,
-                      chn_pf_levels, scale_method='3c'):
+                      spc_mod_dct_i, scale_method='3c'):
     """ Scale frequencies according to some method
         obtain a corrected zpe
     """
 
-    thy_info = chn_pf_levels['harm'][1]
+    thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+    print('thy info scale test', thy_info)
     method, basis = thy_info[1], thy_info[2]
     scaled_freqs, scaled_zpe = automol.prop.freq.anharm_by_scaling(
         freqs, method, basis, scale_method='c3')
