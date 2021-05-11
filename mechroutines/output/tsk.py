@@ -18,7 +18,6 @@ from mechroutines.pf.models import _tors as tors
 from mechroutines.pf.models import typ
 from mechroutines.pf.models import ene
 from mechroutines.pf.thermo import basis
-from mechroutines.pf.models.inf import set_pf_info
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from . import _util as util

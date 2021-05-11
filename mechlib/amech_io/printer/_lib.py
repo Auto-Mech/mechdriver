@@ -25,6 +25,17 @@ LIB_DCT = {
 }
 
 
+def objs(keys, prechars=()):
+    """ Print a set of standard objects
+    """
+
+    obj_str = ''
+    for key, prechar in zip(keys, prechars):
+       obj_str += obj(key, prechar=prechar) 
+
+    message(obj_str)
+
+
 def obj(key, prechar=None):
     """ Print some standard object
     """
@@ -38,5 +49,3 @@ def obj(key, prechar=None):
         obj_str = addchar(obj_str, prechar, side='pre')
 
     message(obj_str)
-
-    return obj_str

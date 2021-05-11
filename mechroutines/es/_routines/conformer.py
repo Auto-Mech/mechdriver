@@ -16,7 +16,6 @@ from mechroutines.es._routines._geom import remove_imag
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
 from mechlib import filesys
-from mechlib.structure import instab
 from mechlib.amech_io import printer as ioprinter
 from mechlib.filesys import build_fs
 
@@ -103,14 +102,14 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
                         run_fs,
                         overwrite)
             else:
-                instab.write_instab2(
+                ioprinter.info_message(
+                    'Found functional groups that cause instabilities')
+                filesys.save.instability(
                     zma_init, instab_zmas,
-                    instab_save_fs, mod_thy_info[1:4],
+                    instab_save_fs, cnf_save_fs,
                     zma_locs=(0,),
                     save_cnf=True)
                 geo_found = True
-                ioprinter.info_message(
-                    'Found functional groups that cause instabilities')
         else:
             geo_found = False
             ioprinter.warning_message(
@@ -270,10 +269,9 @@ def _optimize_molecule(spc_info, zma_init,
                 ioprinter.info_message('Saving disconnected species...')
                 _, opt_ret = es_runner.read_job(
                     job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-                instab.write_instab(
+                filesys.save.instability(
                     zma_init, zma,
-                    instab_save_fs, mod_thy_info[1:4],
-                    opt_ret,
+                    instab_save_fs, cnf_save_fs,
                     zma_locs=(0,),
                     save_cnf=True
                 )
@@ -285,10 +283,9 @@ def _optimize_molecule(spc_info, zma_init,
         conf_found = False
         _, opt_ret = es_runner.read_job(
             job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
-        instab.write_instab(
+        filesys.save.instability(
             zma_init, zma,
-            instab_save_fs, mod_thy_info[1:4],
-            opt_ret,
+            instab_save_fs, cnf_save_fs,
             zma_locs=(0,),
             save_cnf=True
         )
@@ -388,15 +385,14 @@ def conformer_sampling(zma, spc_info, thy_info,
                        script_str, overwrite,
                        nsamp_par=(False, 3, 3, 1, 50, 50),
                        tors_names=(),
-                       zrxn=None, two_stage=False, retryfail=False,
+                       zrxn=None, two_stage=False,
+                       retryfail=False, resave=False,
                        **kwargs):
     """ run sampling algorithm to find conformers
     """
 
-# Check if any saving needs to be done before hand
-    presamp_check = False  # Eventually make a user option
-    # presamp_check = True  # Eventually make a user option
-    if presamp_check:
+    # Check if any saving needs to be done before hand
+    if resave:
         _presamp_save(spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=zrxn, rid=rid)
 
     # Build filesys

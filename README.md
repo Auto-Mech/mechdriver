@@ -12,6 +12,7 @@ conda ...
 4. theory.dat
 5. models.dat
 6. species.dat
+7. active space, geom.xyz (aux)
 
 ## Code Structure
 ### Drivers

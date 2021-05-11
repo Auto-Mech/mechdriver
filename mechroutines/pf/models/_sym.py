@@ -6,7 +6,7 @@ from autofile import fs
 from mechlib.amech_io import printer as ioprinter
 
 
-def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
+def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                     grxn=None, zma=None):
     """ Calculate the symmetry factor for a species
         Note: ignoring for saddle pts the possibility that two configurations
@@ -14,8 +14,8 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
         As a result, the symmetry factor is a lower bound of the true value
     """
 
-    if 'sym_factor' in spc_dct_i:
-        sym_factor = spc_dct_i['sym_factor']
+    sym_factor = spc_dct_i.get('sym_factor')
+    if sym_factor is not None:
         ioprinter.info_message(' - Reading symmetry number input by user:', sym_factor)
     else:
 
@@ -26,10 +26,10 @@ def symmetry_factor(pf_filesystems, pf_models, spc_dct_i, rotors,
             grxn = None
 
         # if automol.geom.is_atom(geo):
-        sym_model = pf_models['sym']
+        sym_model = spc_mod_dct_i['symm']['mod']
 
         # Obtain geometry, energy, and symmetry filesystem
-        [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['sym']
+        [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['symm']
         geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
 
         # Obtain the external symssetry number

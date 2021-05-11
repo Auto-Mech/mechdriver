@@ -40,10 +40,10 @@ TS_REF_CALLS = {"basic": "get_basic_ts",
                 "cbh2_1": "get_cbhone_ts",
                 "cbh3": "get_cbhone_ts"}
 
-IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high', 
-                              # 'hydrogen migration', 
+IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high',
+                              # 'hydrogen migration',
                               'beta scission',
-                              'elimination high', 
+                              'elimination high',
                               'radical radical hydrogen abstraction high',
                               'addition high']
 #IMPLEMENTED_CBH_TS_CLASSES = []
@@ -300,7 +300,7 @@ def is_scheme(scheme):
 
 # FUNCTIONS TO CALCULATE ENERGIES FOR THERMOCHEMICAL PARAMETERS #
 def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
-                 pf_levels, pf_models, run_prefix, save_prefix,
+                 spc_model_dct_i, run_prefix, save_prefix,
                  read_species=True):
     """ Return the electronic + zero point energies for a set of species.
     """
@@ -359,11 +359,11 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
         ioprinter.info_message(
             'Calculating energy for species {}'.format(spc_name), newline=1)
         pf_filesystems = filesys.models.pf_filesys(
-            spc_dct[spc_name], pf_levels,
+            spc_dct[spc_name], spc_model_dct_i,
             run_prefix, save_prefix, saddle='ts' in spc_name)
         h_spc = read_energy(
             spc_dct[spc_name], pf_filesystems,
-            pf_models, pf_levels, run_prefix,
+            spc_model_dct_i, run_prefix,
             read_ene=True, read_zpe=True, saddle='ts' in spc_name)
         if h_spc is None:
             ioprinter.error_message('No energy found for {}'.format(spc_name))
@@ -402,14 +402,14 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                         str(i), prod, automol.inchi.smiles(prod), '1'))
         ioprinter.debug_message('bases energies test:', ich, name)
         pf_filesystems = filesys.models.pf_filesys(
-            spc_dct_i, pf_levels,
+            spc_dct_i, spc_model_dct_i,
             run_prefix, save_prefix, 'ts' in name or 'TS' in name)
         ioprinter.info_message(
             'Calculating energy for basis {}...'.format(prname), newline=1)
         h_basis.append(
             read_energy(
                 spc_dct_i, pf_filesystems,
-                pf_models, pf_levels, run_prefix,
+                spc_model_dct_i, run_prefix,
                 read_ene=True, read_zpe=True,
                 saddle='ts' in name or 'TS' in name
             )
@@ -432,12 +432,12 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
 
 def enthalpy_calculation(
         spc_dct, spc_name, ene_chnlvl,
-        chn_basis_ene_dct, chn_pf_levels,
-        chn_pf_models, run_prefix, save_prefix,
+        chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
+        run_prefix, save_prefix,
         pforktp='ktp', zrxn=None):
 
-    ref_scheme = chn_pf_models['ref_scheme']
-    ref_enes = chn_pf_models['ref_enes']
+    ref_scheme = pes_mod_dct_i['therm_fit']['ref_scheme']
+    ref_enes = pes_mod_dct_i['therm_fit']['ref_enes']
 
     basis_dct, uniref_dct = prepare_refs(
         ref_scheme, spc_dct, [[spc_name, None]],
@@ -472,7 +472,7 @@ def enthalpy_calculation(
     if energy_missing:
         _, ene_basis = basis_energy(
             spc_name, spc_basis, uniref_dct, spc_dct,
-            chn_pf_levels, chn_pf_models,
+            spc_mod_dct_i,
             run_prefix, save_prefix, read_species=False)
         for spc_basis_i, ene_basis_i in zip(spc_basis, ene_basis):
             if not isinstance(spc_basis_i, str):
@@ -518,7 +518,7 @@ def enthalpy_calculation(
                 if energy_missing:
                     _, ene_basis_trs = basis_energy(
                         spc_name, spc_basis_trs, uniref_dct_trs, spc_dct,
-                        chn_pf_levels, chn_pf_models,
+                        spc_mod_dct_i,
                         run_prefix, save_prefix)
                     for spc_basis_i, ene_basis_i in zip(
                             spc_basis_trs, ene_basis_trs):

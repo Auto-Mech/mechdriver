@@ -22,10 +22,8 @@ def execute_scan(zma, spc_info, mod_thy_info, thy_save_fs,
     """ Run and save the scan
     """
 
-    # need_run = check_scan()
-    if not _scan_finished(
-        coord_names, coord_grids,
-        scn_save_fs, constraint_dct=constraint_dct):
+    if not _scan_finished(coord_names, coord_grids,
+                          scn_save_fs, constraint_dct=constraint_dct):
 
         run_scan(
             zma, spc_info, mod_thy_info, thy_save_fs,
@@ -234,7 +232,7 @@ def _save_scanfs(scn_run_fs, scn_save_fs, scn_typ,
             print("Reading from scan run at {}".format(run_path))
 
             # Save the structure
-            saved = filesys.save_struct(
+            saved = filesys.save.structure(
                 run_fs, scn_save_fs, locs, _set_job(scn_typ),
                 mod_thy_info, in_zma_fs=in_zma_fs)
 
@@ -266,7 +264,7 @@ def _save_cscanfs(scn_run_fs, scn_save_fs, scn_typ,
                     print("Reading from scan run at {}".format(run_path))
 
                     # Save the structure
-                    saved = filesys.save_struct(
+                    saved = filesys.save.structure(
                         run_fs, scn_save_fs, locs2, _set_job(scn_typ),
                         mod_thy_info, in_zma_fs=in_zma_fs)
 
@@ -304,9 +302,10 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
             break
 
     if run_finished:
-        ioprinter.message('Scan finished')
+        ioprinter.message('Scan saved previously at {}'.format(
+            scn_save_fs[0].path()))
     else:
-        ioprinter.message('Need to run')
+        ioprinter.message('Need to run scans')
 
     return run_finished
 
@@ -370,9 +369,8 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
     """ Run a two-part scan that goes into two directions, as for rxn path
     """
 
-    # Setup and run the first part of the scan to shorter distances
     for grid in (grid1, grid2):
-        run_scan(
+        _, _ = execute_scan(
             zma=ts_zma,
             spc_info=ts_info,
             mod_thy_info=mod_var_scn_thy_info,
@@ -391,44 +389,3 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
             chkstab=False,
             **opt_kwargs
         )
-
-        save_scan(
-            scn_run_fs=scn_run_fs,
-            scn_save_fs=scn_save_fs,
-            scn_typ='relaxed',
-            coo_names=[coord_name],
-            mod_thy_info=mod_var_scn_thy_info,
-            in_zma_fs=True)
-
-
-# DERIVED FUNCTION FOR MULTIREFERENCE SCAN CALCULATIONS
-def multiref_rscan(ts_zma, ts_info,
-                   grid1, grid2, coord_name,
-                   mod_var_scn_thy_info,
-                   vscnlvl_thy_save_fs,
-                   scn_run_fs, scn_save_fs,
-                   overwrite, update_guess=True,
-                   constraint_dct=None,
-                   **cas_kwargs):
-    """ run constrained optimization scan
-    """
-
-    # Set the opt script string and build the opt_kwargs
-    [prog, method, _, _] = mod_var_scn_thy_info
-    _, opt_script_str, _, opt_kwargs = qchem_params(
-        prog, method)
-    opt_kwargs.update(cas_kwargs)
-
-    # Run the scans
-    run_two_way_scan(
-        ts_zma, ts_info, mod_var_scn_thy_info,
-        grid1, grid2, coord_name,
-        scn_run_fs, scn_save_fs,
-        opt_script_str, overwrite,
-        update_guess=update_guess,
-        reverse_sweep=False,
-        saddle=False,
-        constraint_dct=constraint_dct,
-        retryfail=False,
-        **opt_kwargs
-    )

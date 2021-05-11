@@ -19,9 +19,9 @@ from mechlib.amech_io import printer as ioprinter
 
 
 # Functions to hand reading and formatting energies of single species
-def read_energy(
-        spc_dct_i, pf_filesystems, pf_models, pf_levels,
-        run_prefix, read_ene=True, read_zpe=True, conf=None, saddle=False):
+def read_energy(spc_dct_i, pf_filesystems,
+                spc_model_dct_i, run_prefix,
+                read_ene=True, read_zpe=True, conf=None, saddle=False):
     """ Get the energy for a species on a channel
     """
 
@@ -29,14 +29,14 @@ def read_energy(
     e_elec = None
     if read_ene:
         e_elec = electronic_energy(
-            spc_dct_i, pf_filesystems, pf_levels, conf=conf)
+            spc_dct_i, pf_filesystems, spc_model_dct_i, conf=conf)
         ioprinter.debug_message('e_elec in models ene ', e_elec)
 
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
-            spc_dct_i, pf_filesystems, pf_models,
-            pf_levels, run_prefix, saddle=saddle, conf=conf)
+            spc_dct_i, pf_filesystems, spc_model_dct_i,
+            run_prefix, saddle=saddle, conf=conf)
         ioprinter.debug_message('zpe in models ene ', e_zpe)
 
     # Return the total energy requested
@@ -52,7 +52,7 @@ def read_energy(
     return ene
 
 
-def electronic_energy(spc_dct_i, pf_filesystems, pf_levels, conf=None):
+def electronic_energy(spc_dct_i, pf_filesystems, spc_model_dct_i, conf=None):
     """ get high level energy at low level optimized geometry
     """
 
@@ -72,7 +72,9 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels, conf=None):
         [_, cnf_path, _, _, _] = pf_filesystems['harm']
 
     # Get the electronic energy levels
-    ene_levels = pf_levels['ene'][1]
+    ene_levels = tuple(val[1] for key, val in spc_model_dct_i['ene'].items()
+                       if 'lvl' in key)
+    print('ene levels', ene_levels)
 
     # Read the energies from the filesystem
     e_elec = None
@@ -102,7 +104,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, pf_levels, conf=None):
 
 
 def zero_point_energy(spc_dct_i,
-                      pf_filesystems, pf_models, pf_levels,
+                      pf_filesystems, spc_model_dct_i,
                       run_prefix, saddle=False, conf=None):
     """ compute the ZPE including torsional and anharmonic corrections
     """
@@ -118,7 +120,7 @@ def zero_point_energy(spc_dct_i,
         zpe = 0.0
     else:
         _, _, zpe, _ = vib.vib_analysis(
-            spc_dct_i, pf_filesystems, pf_models, pf_levels,
+            spc_dct_i, pf_filesystems, spc_model_dct_i,
             run_prefix, zrxn=(None if not saddle else 'placeholder'))
 
     return zpe
@@ -163,38 +165,34 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
 
 
 # Functions to handle energies for a channel
-def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
+def set_reference_ene(rxn_lst, spc_dct, thy_dct,
+                      pes_model_dct_i, spc_model_dct_i,
                       run_prefix, save_prefix, ref_idx=0):
     """ Sets the reference species for the PES for which all energies
         are scaled relative to.
     """
 
     # Set the index for the reference species, right now defualt to 1st spc
-    ref_rgts = rxn_lst[ref_idx]['reacs']
-    ref_model = rxn_lst[ref_idx]['model'][1]
+    ref_rxn = rxn_lst[ref_idx]
+
+    _, (ref_rgts, _) = ref_rxn
+
     ioprinter.info_message(
         'Determining the reference energy for PES...', newline=1)
     ioprinter.info_message(
         ' - Reference species assumed to be the',
         ' first set of reactants on PES: {}'.format('+'.join(ref_rgts)))
-    ioprinter.info_message(
-        ' - Model for Reference Species: {}'.format(ref_model))
 
     # Get the model for the first reference species
-    pf_levels = parser.model.pf_level_info(
-        model_dct[ref_model]['es'], thy_dct)
-    pf_models = parser.model.pf_model_info(
-        model_dct[ref_model]['pf'])
-    ref_ene_level = pf_levels['ene'][0]
-    ref_scheme = model_dct[ref_model]['options']['ref_scheme']
-    ref_enes = model_dct[ref_model]['options']['ref_enes']
+    ref_scheme = pes_model_dct_i['therm_fit']['ref_scheme']
+    ref_enes = pes_model_dct_i['therm_fit']['ref_enes']
 
+    ref_ene_level = spc_model_dct_i['ene']['lvl1'][0]
     ioprinter.info_message(
         ' - Energy Level for Reference Species: {}'.format(ref_ene_level))
 
     # Get the elec+zpe energy for the reference species
     ioprinter.info_message('')
-    # ref_ene = 0.0
     hf0k = 0.0
     for rgt in ref_rgts:
 
@@ -206,22 +204,18 @@ def set_reference_ene(rxn_lst, spc_dct, thy_dct, model_dct,
         # Build filesystem
         ene_spc, ene_basis = thmroutines.basis.basis_energy(
             rgt, spc_basis, uniref_dct, spc_dct,
-            pf_levels, pf_models, run_prefix, save_prefix)
-        #pf_filesystems = fmod.pf_filesys(
-        #    spc_dct[rgt], pf_levels, run_prefix, save_prefix, saddle=False)
+            spc_model_dct_i, run_prefix, save_prefix)
 
         # Calcualte the total energy
         hf0k += thmroutines.heatform.calc_hform_0k(
             ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
-        #ref_ene += read_energy(
-        #    spc_dct[rgt], pf_filesystems, pf_models, pf_levels,
-        #    read_ene=True, read_zpe=True)
+
     hf0k *= phycon.KCAL2EH
-    return hf0k, ref_model
-    #return ref_ene, ref_model
+
+    return hf0k
 
 
-def calc_channel_enes(channel_infs, ref_ene,
+def calc_channel_enes(chnl_infs, ref_ene,
                       chn_model, first_ground_model):
     """ Get the energies for several points on the reaction channel.
         The energy is determined by two different methods:
@@ -230,22 +224,22 @@ def calc_channel_enes(channel_infs, ref_ene,
     """
 
     if chn_model == first_ground_model:
-        chn_enes = sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl')
+        chn_enes = sum_channel_enes(chnl_infs, ref_ene, ene_lvl='ene_chnlvl')
     else:
-        chn_enes1 = sum_enes(channel_infs, ref_ene, ene_lvl='ene_reflvl')
-        chn_enes2 = sum_enes(channel_infs, ref_ene, ene_lvl='ene_reflvl')
+        chn_enes1 = sum_channel_enes(chnl_infs, ref_ene, ene_lvl='ene_reflvl')
+        chn_enes2 = sum_channel_enes(chnl_infs, ref_ene, ene_lvl='ene_reflvl')
         chn_enes = shift_enes(chn_enes1, chn_enes2)
 
     return chn_enes
 
 
-def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
+def sum_channel_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
     """ sum the energies
     """
 
     # Initialize sum ene dct
     sum_ene = {}
-    
+
     # Calculate energies for species
     reac_ene = 0.0
     reac_ref_ene = 0.0
@@ -274,7 +268,7 @@ def sum_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
         sum_ene.update(
             {'fake_vdwp': vdwp_ene, 'fake_vdwp_ts': prod_ene}
         )
- 
+
     ioprinter.debug_message(
         'REAC HoF (0 K) spc lvl kcal/mol: ', reac_ene * phycon.EH2KCAL)
     ioprinter.debug_message(

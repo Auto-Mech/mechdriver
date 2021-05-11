@@ -152,8 +152,6 @@ def molpro_opts_mat(spc_info, geo):
         converge. This currently only works for doublets.
     """
 
-    print('spc info test', spc_info)
-
     # Get the nelectrons, spins, and orbitals for the wf card
     formula = automol.geom.formula(geo)
     elec_count = automol.formula.electron_count(formula)

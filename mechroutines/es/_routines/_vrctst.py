@@ -74,11 +74,7 @@ def calc_vrctst_flux(ini_zma, ts_info, hs_info,
                          vrc_dct, vrc_path, script_str)
 
     # Run VaReCoF to generate flux file
-    _run_varecof(vrc_path)
-
-    # Check for success and save the flux file if so
-    # if _varecof_success(vrc_path):
-    #    _save_flux()
+    _save_flux()
 
 
 # FUNCTIONS TO SET UP THE libcorrpot.so FILE USED BY VARECOF
@@ -162,45 +158,6 @@ def _build_correction_potential(ts_info, hs_info, ref_zma,
         zma_for_inp = ref_zma
 
     return inf_sep_ene, len(potentials), zma_for_inp
-
-
-def _set_alt_constraints(inf_sep_zma, rct_zmas):
-    """ Set the additional constraints for the constrained MEP
-    """
-
-    frag1_natom = automol.zmat.count(rct_zmas[0])
-    frag2_natom = automol.zmat.count(rct_zmas[1])
-
-    # Build pairs for intermolecular coords to optimize:
-    #   (zma_atom_idx, coord_idx in row) (uses 0-indexing)
-    # frag1_natom, 0 is the scan coord already accounted for
-    no_frz_idxs = []
-    no_frz_idxs.append([frag1_natom, 0])
-    no_frz_idxs.append([frag1_natom, 1])
-    no_frz_idxs.append([frag1_natom, 2])
-    if frag2_natom == 2:
-        no_frz_idxs.append([frag1_natom+1, 1])
-        no_frz_idxs.append([frag1_natom+1, 2])
-    elif frag2_natom > 2:
-        no_frz_idxs.append([frag1_natom+1, 1])
-        no_frz_idxs.append([frag1_natom+1, 2])
-        no_frz_idxs.append([frag1_natom+2, 1])
-
-    # Now grab the coordinates NOT in the opt coord idxs
-    alt_froz_coords = []
-    name_matrix = automol.zmat.name_matrix(inf_sep_zma)
-    for row_idx, row in enumerate(name_matrix):
-        for coord_idx, coord in enumerate(row):
-            if [row_idx, coord_idx] not in no_frz_idxs:
-                if coord is not None:
-                    alt_froz_coords.append(coord)
-
-    # Now build the constraint dictionary
-    zma_vals = automol.zmat.value_dictionary(inf_sep_zma)
-    constraint_dct = dict(zip(
-        alt_froz_coords, (zma_vals[name] for name in alt_froz_coords)))
-
-    return constraint_dct
 
 
 def _run_potentials(inf_sep_zma, ts_info,
@@ -364,51 +321,6 @@ def _read_potentials(scn_save_fs, cscn_save_fs,
     return potentials, potential_labels, zma_for_inp
 
 
-def _compile_potentials(mep_distances, potentials,
-                        bnd_frm_idxs, fortran_compiler, vrc_path,
-                        dist_restrict_idxs=(),
-                        pot_labels=(),
-                        pot_file_names=(),
-                        spc_name='mol'):
-    """  use the MEP potentials to compile the correction potential .so file
-    """
-
-    # Change the coordinates of the MEP distances
-    # mep_distances = [dist * phycon.BOHR2ANG for dist in mep_distances]
-
-    # Build string Fortan src file containing correction potentials
-    species_corr_str = varecof_io.writer.corr_potentials.species(
-        mep_distances,
-        potentials,
-        bnd_frm_idxs,
-        dist_restrict_idxs=dist_restrict_idxs,
-        pot_labels=pot_labels,
-        species_name=spc_name)
-
-    # Build string dummy corr file where no correction used
-    dummy_corr_str = varecof_io.writer.corr_potentials.dummy()
-
-    # Build string for auxiliary file needed for spline fitting
-    pot_aux_str = varecof_io.writer.corr_potentials.auxiliary()
-
-    # Build string for makefile to compile corr pot file into .so file
-    makefile_str = varecof_io.writer.corr_potentials.makefile(
-        fortran_compiler, pot_file_names=pot_file_names)
-
-    # Write all of the files needed to build the correction potential
-    with open(os.path.join(vrc_path, spc_name+'_corr.f'), 'w') as corr_file:
-        corr_file.write(species_corr_str)
-    with open(os.path.join(vrc_path, 'dummy_corr.f'), 'w') as corr_file:
-        corr_file.write(dummy_corr_str)
-    with open(os.path.join(vrc_path, 'pot_aux.f'), 'w') as corr_file:
-        corr_file.write(pot_aux_str)
-    with open(os.path.join(vrc_path, 'makefile'), 'w') as corr_file:
-        corr_file.write(makefile_str)
-
-    # Compile the correction potential
-    varecof_io.writer.corr_potentials.compile_corr_pot(vrc_path)
-
-
 # FUNCTIONS TO WRITE THE STRINGS FOR ALL OF THE VARECOF INPUT FILE
 def _write_varecof_input(ref_zma, ts_info, ts_formula, high_mul,
                          rct_ichs, rct_info, rct_zmas,
@@ -547,335 +459,33 @@ def _build_molpro_template_str(ref_zma, ts_info, ts_formula, high_mul,
     return tml_inp_str
 
 
-def build_machinefile_str():
-    """ Take machine list and write the string for the machine file
-    """
-
-    host_node = get_host_node()
-    num_cores = '10'
-
-    machines = ['{}:{}'.format(host_node, num_cores)]
-    machine_file_str = ''
-    for machine in machines:
-        machine_file_str += machine + '\n'
-
-    return machine_file_str
-
-
-# FUNCTION TO SET UP THE FRAGMENT GEOMETRIES FOR THE STRUCTURE.INP FILE
-def fragment_geometries(ts_zma, rct_zmas, min_idx, max_idx):
-    """ Generate the fragment geometries from the ts Z-matrix and the
-        indices involved in the forming bond
-    """
-
-    # Get geometries of fragments from the ts_zma from the MEP
-    mep_total_geo = automol.zmat.geometry(ts_zma)
-    mep_fgeos = [mep_total_geo[:max_idx], mep_total_geo[max_idx:]]
-
-    # Get geometries of isolated fragments at infinite sepearation
-    iso_fgeos = [automol.zmat.geometry(zma) for zma in rct_zmas]
-
-    # Reorder the iso_fgeos to line up with the mep_frag_geos
-    (iso1_symbs, iso2_symbs) = (automol.geom.symbols(geo) for geo in iso_fgeos)
-    (mep1_symbs, mep2_symbs) = (automol.geom.symbols(geo) for geo in mep_fgeos)
-    if iso1_symbs != mep1_symbs or iso2_symbs != mep2_symbs:
-        iso_fgeos[0], iso_fgeos[1] = iso_fgeos[1], iso_fgeos[0]
-
-    # Get the geometries for the structure.inp file
-    iso_fgeos_wdummy = []
-    mol_data = zip(mep_fgeos, iso_fgeos, (max_idx, min_idx))
-    for i, (mep_fgeo, iso_fgeo, idx) in enumerate(mol_data):
-
-        if not automol.geom.is_atom(mep_fgeo):
-
-            # Build MEPFragGeom+X coordinates using MEP geometry
-            # x_idx: index for geom to place dummy X atom
-            # a1_idx: index corresponding to "bonding" atom in geometry
-            x_coord = mep_total_geo[idx][1]
-            dummy_row = ('X', x_coord)
-            if i == 0:
-                mep_geo_wdummy = mep_fgeo + (dummy_row,)
-                x_idx = len(mep_geo_wdummy) - 1
-                a1_idx = 0
-            else:
-                mep_geo_wdummy = (dummy_row,) + mep_fgeo
-                x_idx = 0
-                a1_idx = 1
-
-            # Set a2_idx to a1_idx + 1; should not be any restrictions
-            a2_idx = a1_idx + 1
-
-            # Set a3_idx.
-            # Need to ensure idx does NOT correspond to atom where x = 0.0
-            # The internal xyzp routine dies in this case
-            for idx2 in range(a2_idx+1, len(iso_fgeo)):
-                if not iso_fgeo[idx2][1][0] == 0.0:
-                    a3_idx = idx2
-                    break
-
-            # Calculate coords to define X position in IsoFragGeom structure
-            xyz1 = iso_fgeo[a1_idx][1]
-            xyz2 = iso_fgeo[a2_idx][1]
-            xdistance = automol.geom.distance(
-                mep_geo_wdummy, x_idx, a1_idx)
-            xangle = automol.geom.central_angle(
-                mep_geo_wdummy, x_idx, a1_idx, a2_idx)
-            if len(mep_fgeo) > 2:
-                xyz3 = iso_fgeo[a3_idx][1]
-                xdihedral = automol.geom.dihedral_angle(
-                    mep_geo_wdummy, x_idx, a1_idx, a2_idx, a3_idx)
-            else:
-                xyz3 = 0.0
-                xdihedral = 0.0
-
-            # Calculate the X Position for the IsoFrag structure
-            xyzp = automol.geom.find_xyzp_using_internals(
-                xyz1, xyz2, xyz3, xdistance, xangle, xdihedral)
-
-            # Generate the IsoFragGeom+X coordinates for the structure.inp file
-            if i == 0:
-                iso_geo_wdummy = iso_fgeo + (('X', xyzp),)
-            else:
-                iso_geo_wdummy = (('X', xyzp),) + iso_fgeo
-
-            # Append to final geoms
-            iso_fgeos_wdummy.append(iso_geo_wdummy)
-
-        else:
-            # If atom, set IsoFragGeom+X coords equal to mep_geo
-            iso_fgeos_wdummy.append(mep_fgeo)
-
-    return mep_total_geo, iso_fgeos, iso_fgeos_wdummy
-
-
-# FUNCTIONS TO SET UP THE SYMMETRY FOR THE TST.INP FILE
-def build_divsur_out_file(vrc_path, work_path):
-    """ get the divsur.out string containing divsur-frame geoms
-    """
-
-    # Have to to path with divsur.inp to run script (maybe can fix)
-    os.chdir(vrc_path)
-
-    # Run the VaReCoF utility script to get the divsur.out file
-    # Contains the fragment geometries in the divsur-defined coord sys
-    varecof_io.writer.util.divsur_frame_geom_script()
-
-    # Read fragment geoms from divsur.out with coordinates in the divsur frame
-    with open(os.path.join(vrc_path, 'divsur.out'), 'r') as divsur_file:
-        output_string = divsur_file.read()
-
-    os.chdir(work_path)
-
-    return output_string
-
-
-def assess_face_symmetries(divsur_out_string):
-    """ check the symmetry of the faces for each fragment
-    """
-
-    # Read fragment geoms from divsur.out with coordinates in the divsur frame
-    fgeo1, fgeo2 = varecof_io.reader.divsur.frag_geoms_divsur_frame(
-        divsur_out_string)
-    fgeos = [automol.geom.from_string(fgeo1), automol.geom.from_string(fgeo2)]
-
-    # Check facial symmetry if fragments are molecules
-    symms = [False, False]
-    for i, fgeo in enumerate(fgeos):
-        if not automol.geom.is_atom(fgeo):
-            # Reflect the dummy atom (pivot position) about the xy plane
-            if i == 0:
-                dummy_idx = len(fgeo) - 1
-            else:
-                dummy_idx = 0
-            fgeo_reflect = automol.geom.reflect_coordinates(
-                fgeo, [dummy_idx], ['x', 'y'])
-            # Compute Coloumb spectrum for each geom to its reflected version
-            symms[i] = automol.geom.almost_equal_coulomb_spectrum(
-                fgeo, fgeo_reflect, rtol=5e-2)
-
-    # Set the face and face_sym keywords based on the above tests
-    [symm1, symm2] = symms
-    if symm1 and symm2:
-        faces = [0, 1]
-        face_symm = 4
-    elif symm1 and not symm2:
-        faces = [0, 1]
-        face_symm = 2
-    elif not symm1 and symm2:
-        faces = [0, 1]
-        face_symm = 2
-    elif not symm1 and not symm2:
-        faces = [0]
-        face_symm = 1
-
-    return faces, face_symm
-
-
 # FUNCTIONS TO SET UP THE DIVIDING SURFACE FRAMES
-def build_pivot_frames(min_idx, max_idx,
-                       total_geom, frag_geoms, frag_geoms_wdummy):
-    """ Use geometries to get pivot info only set up for 1 or 2 pivot points
+def _save_flux(vrc_ret, ts_run_fs, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
+    """ Save the VaReCoF flux file
     """
+    mcflux_file = os.path.join(vrc_path, 'mc_flux.out')
+    if os.path.exists(mcflux_file):
+        with open(mcflux_file, 'r') as fluxfile:
+            flux_str = mcflux_file.read()
+        if flux_str != '':
+            ts_save_fs[0].create()
+            ts_save_path = ts_save_fs[0].path()
 
-    frames, npivots, = [], []
-    geom_data = zip([min_idx, max_idx], frag_geoms, frag_geoms_wdummy)
-    for i, (rxn_idx, geom, _) in enumerate(geom_data):
+            # Write the VRC-Flux and info files
+            ts_save_fs[0].file.vrc_flux.write(flux_str)
+            ts_save_fs[0].file.vrc_flux_info.write(flux_str)
 
-        # Single pivot point centered on atom
-        if automol.geom.is_atom(geom):
-            npivot = 1
-            frame = [0, 0, 0, 0]
-        # For linear species we place the pivot point on radical
-        # with no displacment, so no need to find coordinates
-        elif automol.geom.is_linear(geom):
-            npivot = 2
-            frame = [0, 0, 0, 0]
-        else:
-            # else we build an xy frame to easily place pivot point
-            npivot = 2
+    # Unpack the ret
 
-            # Find the idx in each fragment bonded to the atom at the pivot pt
-            for j, coords in enumerate(geom):
-                if coords == total_geom[rxn_idx]:
-                    coord_idx = j
-                    break
+    # Save the files
+    ts_save_path = ts_save_fs[-1].path(ts_locs)
 
-            # For each fragment, get indices for a
-            # chain (up to three atoms, that terminates at the dummy atom)
-            gra = automol.geom.graph(geom)
-            gra_neighbor_dct = automol.graph.atom_neighbor_keys(gra)
-            bond_neighbors = gra_neighbor_dct[coord_idx]
-
-            # Find idx in each fragment geom that corresponds to the bond index
-            for j, idx in enumerate(bond_neighbors):
-                if geom[idx][0] != 'H':
-                    bond_neighbor_idx = idx
-                    break
-                if geom[idx][0] == 'H' and j == (len(bond_neighbors) - 1):
-                    bond_neighbor_idx = idx
-
-            # Set up the frame indices for the divsur file
-            if i == 0:
-                pivot_idx = len(geom)
-                frame = [coord_idx, bond_neighbor_idx, pivot_idx, coord_idx]
-            else:
-                pivot_idx = 0
-                coord_idx += 1
-                bond_neighbor_idx += 1
-                frame = [coord_idx, bond_neighbor_idx, pivot_idx, coord_idx]
-            frame = [val+1 for val in frame]
-
-        # Append to lists
-        frames.append(frame)
-        npivots.append(npivot)
-
-    return frames, npivots
-
-
-def calc_pivot_angles(frag_geoms, frag_geoms_wdummy, frames):
-    """ get the angle for the three atoms definining the frame
-    """
-    angles = []
-    for geom, geom_wdummy, frame in zip(frag_geoms, frag_geoms_wdummy, frames):
-        if automol.geom.is_atom(geom) or automol.geom.is_linear(geom):
-            angle = None
-        else:
-            frame = [val-1 for val in frame]
-            angle = automol.geom.central_angle(
-                geom_wdummy, frame[2], frame[0], frame[1])
-        angles.append(angle)
-
-    return angles
-
-
-def calc_pivot_xyzs(min_idx, max_idx, total_geom, frag_geoms):
-    """ figure out where pivot point will be centered
-        only linear speces need to have non-zero xyz, as they
-        will not have a frame set up for them like atoms and
-        polyatomics
-    """
-    xyzs = []
-    for rxn_idx, geom in zip([min_idx, max_idx], frag_geoms):
-        if automol.geom.is_linear(geom):
-            xyz = total_geom[rxn_idx][1]
-        else:
-            xyz = [0.0, 0.0, 0.0]
-
-        xyzs.append(xyz)
-
-    return xyzs
-
-
-# VARIOUS JOB RUN FUNCTIONS
-def _build_vrctst_fs(ts_run_fs):
-    """ build the filesystem and return the path
-    """
-
-    ts_fs, _ = ts_run_fs
-    ts_run_path = ts_fs[0].path()
-    bld_locs = ['VARECOF', 0]
-    bld_save_fs = autofile.fs.build(ts_run_path)
-    bld_save_fs[-1].create(bld_locs)
-    vrc_path = bld_save_fs[-1].path(bld_locs)
-    os.makedirs(os.path.join(vrc_path, 'scratch'), exist_ok=True)
-
-    ioprinter.info_message('Build Path for VaReCoF calculations', vrc_path)
-
-    return vrc_path
-
-
-def _run_varecof(vrc_path):
-    """ Write all of the VaReCoF inut files and run the code
-    """
-
-    # Run VaReCoF
-    run_script(DEFAULT_SCRIPT_DCT['varecof'], vrc_path)
-
-    # Calculate the flux file from the output
-    ioprinter.info_message(
-        'Generating flux file with TS N(E) from VaReCoF output...')
-    run_script(DEFAULT_SCRIPT_DCT['mcflux'], vrc_path)
-
-
-# def _varecof_success(vrc_path):
-#     """ Check for success of the VaReCoF run and flux file generation
-#     """
-#     mcflux_file = os.path.join(vrc_path, 'mc_flux.out')
-#     if os.path.exists(mcflux_file):
-#         with open(mcflux_file, 'r') as fluxfile:
-#             flux_str = mcflux_file.read()
-#         if flux_str != '':
-#             ts_found = True
-#
-#     return ts_found
-
-# def _save_flux():
-#     """ Save the VaReCoF flux file
-#     """
-#     ts_save_fs[0].create()
-#     ts_save_path = ts_save_fs[0].path()
-#
-#     # Write the VRC-Flux and info files
-#     ts_save_fs[0].file.vrc_flux.write(flux_str)
-#     ts_save_fs[0].file.vrc_flux_info.write(flux_str)
-
-
-def _vrc_dct():
-    """ Build VRC dict
-    """
-    return {
-        'fortran_compiler': 'gfortran',
-        'base_name': 'mol',
-        'spc_name': 'mol',
-        'memory': 4.0,
-        'r1dists_lr': [8., 6., 5., 4.5, 4.],
-        'r1dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
-        'r2dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
-        'd1dists': [0.01, 0.5, 1.],
-        'd2dists': [0.01, 0.5, 1.],
-        'conditions': {},
-        'nsamp_max': 2000,
-        'nsamp_min': 50,
-        'flux_err': 10,
-        'pes_size': 2,
-    }
+    vrc_fs = autofile.fs.vrctst(ts_save_path)
+    vrc_fs[-1].create(vrc_locs)
+    vrc_fs[-1].file.vrctst_tst.write(ref_tst_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_divsur.write(ref_divsur_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_molpro.write(ref_molpro_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_tml.write(ref_tml_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_struct.write(ref_struct_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_pot.write(ref_pot_str, vrc_locs)
+    vrc_fs[-1].file.vrctst_flux.write(ref_flux_str, vrc_locs)

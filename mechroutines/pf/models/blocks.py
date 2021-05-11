@@ -2,9 +2,8 @@
     using data read from the save filesystem.
 """
 
+import automol.combine
 import mess_io
-from mechroutines.pf.models import _fake as fake
-from mechroutines.pf.models import _util as util
 from phydat import phycon
 
 
@@ -94,14 +93,16 @@ def fake_species_block(inf_dct_i, inf_dct_j):
     """
 
     # Combine the electronic structure information for the two species together
-    geom = fake.combine_geos_in_fake_well(inf_dct_i['geom'], inf_dct_j['geom'])
+    geom = automol.combine.fake_vdw_geometry(
+        inf_dct_i['geom'], inf_dct_j['geom'])
 
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
 
-    elec_levels = util.combine_elec_levels(
+    elec_levels = automol.combine.electronic_energy_levels(
         inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
-    fake_freqs = fake.set_fake_freqs(inf_dct_i['geom'], inf_dct_j['geom'])
+    fake_freqs = automol.combine.fake_vdw_frequencies(
+        inf_dct_i['geom'], inf_dct_j['geom'])
     freqs = fake_freqs + inf_dct_i['freqs'] + inf_dct_j['freqs']
 
     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
@@ -138,7 +139,7 @@ def pst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     # Combine the electronic structure information for the two species together
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
 
-    elec_levels = util.combine_elec_levels(
+    elec_levels = automol.combine.electronic_energy_levels(
         inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
     freqs = inf_dct_i['freqs'] + inf_dct_j['freqs']
@@ -146,7 +147,8 @@ def pst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
 
     # Get the total stoichiometry of the two species
-    stoich = util.get_stoich(inf_dct_i['geom'], inf_dct_j['geom'])
+    stoich = automol.combine.formula_string(
+        inf_dct_i['geom'], inf_dct_j['geom'])
 
     # Write the MESS string for the Phase Space Theory TS
     core_str = mess_io.writer.core_phasespace(
@@ -245,7 +247,7 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
     # Combine electronic structure information for the two species together
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor'] * 0.850
 
-    elec_levels = util.combine_elec_levels(
+    elec_levels = automol.combine.electronic_energy_levels(
         inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
     freqs = inf_dct_i['freqs'] + inf_dct_j['freqs']
@@ -253,7 +255,8 @@ def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
 
     # Get the total stoichiometry of the two species
-    stoich = util.get_stoich(inf_dct_i['geom'], inf_dct_j['geom'])
+    stoich = automol.combine.formula_string(
+        inf_dct_i['geom'], inf_dct_j['geom'])
 
     # Set the auxiliary flux file information
     flux_file_name = '{}_flux.dat'.format('ts')
@@ -291,7 +294,7 @@ def rpvtst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']
     elec_levels = [[0.0, 1.0]]
-    # elec_levels = util.combine_elec_levels(
+    # elec_levels = automol.combine.electronic_energy_levels(
     #     inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
 
     rpath_strs = []

@@ -1,6 +1,6 @@
-# cmd: conda build . -c kevinmooreiii -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
+# cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c cantera -c conda-forge
 package:
-    name: moldriver
+    name: mechdriver
     version: "0.1.0"
 
 source:
@@ -8,10 +8,14 @@ source:
 
 requirements:
     host:
-        - python
+        - python=3.7
+    build:
+        - cmake
     run:
-        - python
-        - {{ compiler('fortran') }}
+        - cmake
+        - gfortran_linux-64
+        - gcc_linux-64
+        - python=3.7
         - numpy
         - scipy
         - pyyaml
@@ -25,17 +29,20 @@ requirements:
         - rdkit::rdkit
         - openbabel::openbabel
         - conda-forge::qcelemental
+        - conda-forge::nglview
+        - conda-forge::pypdf2
+        - cantera::cantera
         - psi4::psi4
-        - kevinmooreiii::autofile
-        - kevinmooreiii::automol
-        - kevinmooreiii::autoparse
-        - kevinmooreiii::elstruct
-        - kevinmooreiii::interfaces
-        - kevinmooreiii::ratefit
+        - auto-mech::autoio
+        - auto-mech::automol
+        - auto-mech::autoparse
+        - auto-mech::elstruct
+        - auto-mech::ratefit
+        - auto-mech::mechanalyzer
         - auto-mech::mess
+        - auto-mech::mpack
         - auto-mech::pac99
         - auto-mech::projrot
+        - auto-mech::slatec
         - auto-mech::thermp
         - auto-mech::x2z
-        - auto-mech::slatec
-        - auto-mech::mpack

@@ -1,19 +1,20 @@
 """ drivers for coordinate scans
 """
 
-import itertools
 import automol
-import autorun
 import autofile
-from autofile import fs
 from phydat import phycon
+from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
+from mechlib.filesys import build_fs
+from mechlib.amech_io import printer as ioprinter
 
 
-def read_hr_pot(names, grid_vals, cnf_save_path,
-                mod_tors_ene_info, ref_ene,
-                constraint_dct,
-                read_geom=False, read_grad=False,
-                read_hess=False, read_zma=False):
+def potential(names, grid_vals, cnf_save_path,
+              mod_tors_ene_info, ref_ene,
+              constraint_dct,
+              read_geom=False, read_grad=False,
+              read_hess=False, read_zma=False):
     """ Get the potential for a hindered rotor
     """
 
@@ -23,7 +24,7 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
-    zma_fs = fs.zmatrix(cnf_save_path)
+    zma_fs = autofile.fs.zmatrix(cnf_save_path)
     zma_path = zma_fs[-1].path([0])
     if constraint_dct is None:
         scn_fs = autofile.fs.scan(zma_path)
@@ -37,7 +38,7 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
 
-        ene = read_tors_ene(scn_fs, locs, mod_tors_ene_info)
+        ene = energy(scn_fs, locs, mod_tors_ene_info)
         if ene is not None:
             pot[point] = (ene - ref_ene) * phycon.EH2KCAL
         else:
@@ -72,48 +73,10 @@ def read_hr_pot(names, grid_vals, cnf_save_path,
     return pot, geoms, grads, hessians, zmas, paths
 
 
-def set_constraint_names(zma, tors_names, tors_model):
-    """ Determine the names of constraints along a torsion scan
-    """
-
-    const_names = tuple()
-    if tors_names and tors_model in ('1dhrf', '1dhrfa'):
-        if tors_model == '1dhrf':
-            const_names = tuple(
-                itertools.chain(*tors_names))
-            # if saddle:
-            #     const_names = tuple(
-            #         itertools.chain(*amech_sadpt_tors_names))
-            # else:
-            #     const_names = tuple(
-            #         itertools.chain(*amech_spc_tors_names))
-        elif tors_model == '1dhrfa':
-            coords = list(automol.zmat.coordinates(zma))
-            const_names = tuple(coord for coord in coords)
-
-    return const_names
-
-
-def calc_hr_frequencies(geoms, grads, hessians, run_path):
-    """ Calculate the frequencies
-    """
-
-    # Initialize hr freqs list
-    hr_freqs = {}
-    for point in geoms.keys():
-        _, proj_freqs, _, _ = autorun.projrot.frequencies(
-            autorun.SCRIPT_DCT['projrot'],
-            run_path,
-            [geoms[point]],
-            [grads[point]],
-            [hessians[point]])
-        hr_freqs[point] = proj_freqs
-
-    return hr_freqs
-
-
-def read_tors_ene(filesys, locs, mod_tors_ene_info):
-    """ read the energy for torsions
+# Single data point readers
+def energy(filesys, locs, mod_tors_ene_info):
+    """ Read the energy from an SP filesystem that is located in some
+        root 'filesys object'
     """
 
     if filesys[-1].exists(locs):
@@ -129,16 +92,27 @@ def read_tors_ene(filesys, locs, mod_tors_ene_info):
     return ene
 
 
-def print_hr_pot(tors_pots):
-    """ Check hr pot to see if a new mimnimum is needed
+def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
+                               zma_locs=(0,)):
+    """ see if a species and unstable and handle task management
     """
 
-    print('\nHR potentials...')
-    for name in tors_pots:
+    spc_info = sinfo.from_dct(spc_dct[spc_name])
+    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+    _, zma_save_fs = build_fs(
+        '', save_prefix, 'ZMATRIX',
+        spc_locs=spc_info,
+        thy_locs=mod_thy_info[1:],
+        instab_locs=())
 
-        print('- Rotor {}'.format(name))
-        pot_str = ''
-        for pot in tors_pots[name].values():
-            pot_str += ' {0:.2f}'.format(pot)
+    # Check if the instability files exist
+    if zma_save_fs[-1].file.reaction.exists(zma_locs):
+        zrxn = zma_save_fs[-1].file.reaction.read(zma_locs)
+        zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
+        _instab = (zrxn, zma)
+        path = zma_save_fs[-1].file.zmatrix.path(zma_locs)
+    else:
+        _instab = None
+        path = None
 
-        print('- Pot:{}'.format(pot_str))
+    return _instab, path

@@ -6,7 +6,7 @@ import automol
 import autorun
 import mechanalyzer
 import ioformat
-import chemkin_io
+from mechroutines.pf import runner as pfrunner
 from mechlib.amech_io import writer
 from mechlib.amech_io import printer as ioprinter
 
@@ -15,6 +15,10 @@ from mechlib.amech_io import printer as ioprinter
 def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):
     """ Build a nasa polynomial
     """
+
+    # Read the temperatures from the pf.dat file, check if viable
+    temps = pfrunner.read_messpf_temps(pf_path)
+    ioprinter.nasa('fit', temps=temps)
 
     ioprinter.generating('NASA polynomials', nasa_path)
 

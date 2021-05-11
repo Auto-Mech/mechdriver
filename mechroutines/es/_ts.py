@@ -13,9 +13,9 @@ import autofile
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.es._routines import _sadpt as sadpt
-from mechroutines.es._routines import _vrctst as vrctst
-from mechroutines.es._routines import _vtst as vtst
-from mechlib.filesys import build_fs
+# from mechroutines.es._routines import _vrctst as vrctst
+# from mechroutines.es._routines import _vtst as vtst
+from mechlib.filesys import build_fs, rcts_cnf_fs
 from mechlib import filesys
 
 
@@ -45,10 +45,10 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
                   thy_inf_dct, runfs_dct, savefs_dct)
     elif search_thy_inf_dct == 'pst':
         run_pst(spc_dct, tsname, savefs_dct, zma_locs=(0,))
-    elif search_thy_inf_dct == 'molrad_vtst':
+    elif search_thy_inf_dct == 'vtst':
         run_vtst(spc_dct, tsname, es_keyword_dct,
                  thy_inf_dct, runfs_dct, savefs_dct)
-    elif search_thy_inf_dct == 'radrad_vtst':
+    elif search_thy_inf_dct == 'vrctst':
         run_vrctst(spc_dct, tsname, es_keyword_dct,
                    thy_inf_dct, runfs_dct, savefs_dct)
     elif search_thy_inf_dct is None:
@@ -81,6 +81,7 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
         _run = False
 
     if _run:
+        # split below in guess, scan
         guess_zmas = sadpt.generate_guess_structure(
             ts_dct, method_dct, es_keyword_dct,
             runfs_dct, savefs_dct)
@@ -88,7 +89,6 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
             guess_zmas, ts_dct, method_dct,
             runfs_dct, savefs_dct, es_keyword_dct)
 
-        # Find a second sadpt
 
 def run_pst(spc_dct, tsname, savefs_dct,
             zma_locs=(0,)):
@@ -347,8 +347,6 @@ def _ts_finder_match(tsk, ts_dct):
         print('No TS search algorithm was specified or able to determined')
 
     # Set return for ts searching algorithm if there is one
-    if ini_thy_inf_dct == 'pst':
-        print('Phase Space Theory Used, No ES calculations are needed')
     if tsk in ini_thy_inf_dct:
         print('Search algorithm matches task')
         search_thy_inf_dct = tsk
@@ -389,16 +387,8 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
     rxn_info = rinfo.sort(rxn_info)
 
     ts_locs = (int(tsname.split('_')[-1]),)
-    print('ts locs test:', ts_locs)
 
-    # high_mult = rinfo.ts_high_mult(rxn_info)
-    high_mult = 2
-    # Get the name
-    # ini_zma = ts_dct['zma']
-    # frm_bnd_keys = ts_dct['frm_bnd_keys']
-    # brk_bnd_keys = ts_dct['brk_bnd_keys']
-    # frm_name = automol.zmatrix.bond_key_from_idxs(ini_zma, frm_bnd_keys)
-    # brk_name = automol.zmatrix.bond_key_from_idxs(ini_zma, brk_bnd_keys)
+    high_mult = rinfo.ts_mult(rxn_info, rxn_mul='high')
 
     # Set the hs info
     hs_info = (ts_info[0], ts_info[1], high_mult)
@@ -533,7 +523,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 vsplvl2_thy_info, hs_info)
 
     # Get the conformer filesys for the reactants
-    reac_cnf_fs = _reac_cnf_fs(
+    _rcts_cnf_fs = rcts_cnf_fs(
         rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
 
     thy_inf_dct = {
@@ -571,41 +561,8 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         'vscnlvl_scn_fs': vscnlvl_scn_save_fs,
         'vscnlvl_cscn_fs': vscnlvl_cscn_save_fs,
         'vrctst_fs': vrctst_save_fs,
-        'rcts_cnf_fs': reac_cnf_fs,
+        'rcts_cnf_fs': _rcts_cnf_fs,
         'runlvl_ts_zma_fs': runlvl_ts_zma_save_fs
     }
 
     return thy_inf_dct, runfs_dct, savefs_dct
-
-
-def _reac_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
-    """ set reactant filesystem stuff
-    """
-
-    ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-    ini_thy_info = tinfo.from_dct(ini_method_dct)
-
-    rct_cnf_fs = ()
-
-    for rct_info in rct_infos:
-
-        mod_ini_thy_info = tinfo.modify_orb_label(
-            ini_thy_info, rct_info)
-
-        # Build filesys for ini thy info
-        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
-            run_prefix, save_prefix, 'CONFORMER',
-            spc_locs=rct_info,
-            thy_locs=mod_ini_thy_info[1:])
-
-        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
-
-        # Create run fs if that directory has been deleted to run the jobs
-        ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
-
-        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs,
-                        ini_min_cnf_locs, ini_min_cnf_path),)
-
-    return rct_cnf_fs

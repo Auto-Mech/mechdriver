@@ -7,39 +7,39 @@ from mechlib.amech_io import printer as ioprinter
 from mechroutines.pf.models.typ import need_fake_wells
 
 
-def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_model_dct):
+def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):
     """ Builds a dictionary that matches the mechanism name to the labels used
         in the MESS input and output files for the whole PES
     """
+    print('spc dct_names', list(spc_dct.keys()))
 
     pes_label_dct = {}
     for rxn in rxn_lst:
-        ioprinter.debug_message('rxn\n', rxn)
-        chn_idx = rxn['chn_idx']
-        pf_models = parser.model.pf_model_info(
-            spc_model_dct[rxn['model'][1]]['pf'])
-        ioprinter.debug_message(pf_models)
-        rwell_model = pf_models['rwells']
-        pwell_model = pf_models['pwells']
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx, chn_idx)
+        # Get the wells models
+        rwell_mod = spc_mod_dct_i['ts']['rwells']
+        pwell_mod = spc_mod_dct_i['ts']['pwells']
+
+        # Get thhe name and class
+        chnl_idx, (reacs, prods) = rxn
+        tsname = 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
+        sub_tsname = '{}_{:g}'.format(tsname, 0)
+        rclass = spc_dct[sub_tsname]['zrxn'].class_
+
+        # Build labels
         pes_label_dct.update(
             _make_channel_label_dct(
-                tsname, chn_idx, pes_label_dct, rxn, spc_dct,
-                rwell_model, pwell_model))
+                tsname, rclass, pes_label_dct, chnl_idx, reacs, prods,
+                rwell_mod, pwell_mod))
         ioprinter.debug_message('pes_label dct', pes_label_dct)
 
     return pes_label_dct
 
 
-def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
-                            rwell_model, pwell_model):
+def _make_channel_label_dct(tsname, rclass, label_dct, chn_idx, reacs, prods,
+                            rwell_mod, pwell_mod):
     """ Builds a dictionary that matches the mechanism name to the labels used
         in the MESS input and output files
     """
-
-    # Get the class
-    sub_tsname = tsname + '_0'
-    rclass = spc_dct[sub_tsname]['zrxn'].class_
 
     # Initialize idxs for bimol, well, and fake species
     pidx, widx, fidx = 1, 1, 1
@@ -53,9 +53,9 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
 
     # Determine the idxs for the channel reactants
     reac_label = ''
-    bimol = bool(len(rxn['reacs']) > 1)
-    well_dct_key1 = '+'.join(rxn['reacs'])
-    well_dct_key2 = '+'.join(rxn['reacs'][::-1])
+    bimol = bool(len(reacs) > 1)
+    well_dct_key1 = '+'.join(reacs)
+    well_dct_key2 = '+'.join(reacs[::-1])
     if well_dct_key1 not in label_dct:
         if well_dct_key2 in label_dct:
             well_dct_key1 = well_dct_key2
@@ -73,9 +73,9 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
 
     # Determine the idxs for the channel products
     prod_label = ''
-    bimol = bool(len(rxn['prods']) > 1)
-    well_dct_key1 = '+'.join(rxn['prods'])
-    well_dct_key2 = '+'.join(rxn['prods'][::-1])
+    bimol = bool(len(prods) > 1)
+    well_dct_key1 = '+'.join(prods)
+    well_dct_key2 = '+'.join(prods[::-1])
     if well_dct_key1 not in label_dct:
         if well_dct_key2 in label_dct:
             well_dct_key1 = well_dct_key2
@@ -91,9 +91,9 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
 
     # Determine idxs for any fake wells if they are needed
     fake_wellr_label = ''
-    if need_fake_wells(rclass, rwell_model):
-        well_dct_key1 = 'F' + '+'.join(rxn['reacs'])
-        well_dct_key2 = 'F' + '+'.join(rxn['reacs'][::-1])
+    if need_fake_wells(rclass, rwell_mod):
+        well_dct_key1 = 'F' + '+'.join(reacs)
+        well_dct_key2 = 'F' + '+'.join(reacs[::-1])
         if well_dct_key1 not in label_dct:
             if well_dct_key2 in label_dct:
                 well_dct_key1 = well_dct_key2
@@ -102,7 +102,6 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
                 fidx += 1
                 label_dct[well_dct_key1] = fake_wellr_label
 
-                # pst_r_label = 'FRB' + str(int(tsname.replace('ts_', ''))+1)
                 pst_r_label = 'FRB' + str(chn_idx)
                 label_dct[well_dct_key1.replace('F', 'FRB')] = pst_r_label
             if not fake_wellr_label:
@@ -112,9 +111,9 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
             fake_wellr_label = label_dct[well_dct_key1]
 
     fake_wellp_label = ''
-    if need_fake_wells(rclass, pwell_model):
-        well_dct_key1 = 'F' + '+'.join(rxn['prods'])
-        well_dct_key2 = 'F' + '+'.join(rxn['prods'][::-1])
+    if need_fake_wells(rclass, pwell_mod):
+        well_dct_key1 = 'F' + '+'.join(prods)
+        well_dct_key2 = 'F' + '+'.join(prods[::-1])
         if well_dct_key1 not in label_dct:
             if well_dct_key2 in label_dct:
                 well_dct_key1 = well_dct_key2
@@ -123,14 +122,12 @@ def _make_channel_label_dct(tsname, chn_idx, label_dct, rxn, spc_dct,
                 fidx += 1
                 label_dct[well_dct_key1] = fake_wellp_label
 
-                # pst_p_label = 'FPB' + str(int(tsname.replace('ts_', ''))+1)
                 pst_p_label = 'FPB' + str(chn_idx)
                 label_dct[well_dct_key1.replace('F', 'FPB')] = pst_p_label
             if not fake_wellp_label:
                 ioprinter.debug_message('label test', label_dct, well_dct_key1)
                 fake_wellp_label = label_dct[well_dct_key1]
-                if (rxn['prods'] == rxn['reacs'] or
-                   rxn['prods'] == rxn['reacs'][::-1]):
+                if prods in (reacs, reacs[::-1]):
                     pst_p_label = label_dct[well_dct_key1.replace('F', 'FRB')]
                 else:
                     pst_p_label = label_dct[well_dct_key1.replace('F', 'FPB')]

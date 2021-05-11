@@ -6,19 +6,20 @@ import automol
 from mechlib.amech_io import printer as ioprinter
 
 
-def nonrigid_rotations(pf_models):
+def nonrigid_rotations(spc_mod_dct_i):
     """ dtermine if a nonrigid rotation model is specified and further
         information is needed from the filesystem
     """
-    rot_model = pf_models['rot']
+    rot_model = spc_mod_dct_i['rot']['mod']
     return bool(rot_model == 'vpt2')
 
 
-def nonrigid_tors(pf_models, rotors):
+def nonrigid_tors(spc_mod_dct_i, rotors):
     """ dtermine if a nonrigid torsional model is specified and further
         information is needed from the filesystem
     """
-    vib_model, tors_model = pf_models['vib'], pf_models['tors']
+    vib_model = spc_mod_dct_i['vib']['mod']
+    tors_model = spc_mod_dct_i['vib']['mod']
     has_tors = bool(any(rotors))
     tors_hr_model = bool(
         tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'))
@@ -27,39 +28,39 @@ def nonrigid_tors(pf_models, rotors):
     return has_tors and (tors_hr_model or tau_hr_model)
 
 
-def anharm_vib(pf_models):
+def anharm_vib(spc_mod_dct_i):
     """ a
     """
-    vib_model = pf_models['vib']
+    vib_model = spc_mod_dct_i['vib']['mod']
     return bool(vib_model == 'vpt2')
 
 
-def tau_pf(pf_models):
+def tau_pf(spc_mod_dct_i):
     """ determine if pf is done with tau
     """
-    tors_model = pf_models['tors']
+    tors_model = spc_mod_dct_i['tors']['mod']
     return bool(tors_model == 'tau')
 
 
-def scale_1d(pf_models):
+def scale_1d(spc_mod_dct_i):
     """ determine if we need to scale the potential
     """
     ioprinter.debug_message(
-        'tors model in scale set', pf_models['tors'])
-    return bool(pf_models['tors'] == '1dhrfa')
+        'tors model in scale set', spc_mod_dct_i['mod']['tors'])
+    return bool(spc_mod_dct_i['tors']['mod'] == '1dhrfa')
 
 
-def scale_tors_pot(pf_models, to_scale):
+def scale_tors_pot(spc_mod_dct_i, to_scale):
     """ determine if we need to scale the potential
     """
-    onedhr_model = bool('1dhr' in pf_models['tors'])
+    onedhr_model = bool('1dhr' in spc_mod_dct_i['tors']['mod'])
     return bool(onedhr_model and to_scale)
 
 
-def vib_tau(pf_models):
+def vib_tau(spc_mod_dct_i):
     """ determine if vibrations are treated via tau sampling
     """
-    vib_model = pf_models['vib']
+    vib_model = spc_mod_dct_i['vib']['mod']
     return bool(vib_model == 'tau')
 
 
@@ -98,19 +99,21 @@ def var_radrad(tsclass):
     rad_rad = 'radical radical' in tsclass
     low_spin = 'high' not in tsclass
 
-    # corr_rxn = 'addition' in tsclass or 'abstraction' in tsclass
-    # return bool(rad_rad and low_spin and corr_rxn)
-
     return bool(rad_rad and low_spin)
 
 
-def treat_tunnel(tunnel_model, ts_sadpt, ts_nobarrier, radrad):
+def treat_tunnel(ts_mod, ts_class):
     """ decide to treat tunneling
     """
+
     treat = True
-    if tunnel_model != 'none':
+
+    ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
+    tunnel_model = ts_mod['tunnel']
+    radrad = 'radical radical' in ts_class
+    if tunnel_model is not None:
         if radrad:
-            if ts_nobarrier in ('pst', 'rpvtst', 'vrctst'):
+            if ts_nobar in ('pst', 'rpvtst', 'vrctst'):
                 treat = False
         else:
             if ts_sadpt == ('pst', 'vrctst'):

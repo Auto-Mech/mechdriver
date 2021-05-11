@@ -7,10 +7,8 @@ import elstruct
 import autorun
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
-# from mechroutines.es._routines import _geom as geom
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
-from mechlib import structure
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
 from mechlib.filesys import build_fs
@@ -18,7 +16,7 @@ from mechlib.filesys import build_fs
 
 # SADPT FINDER FUNCTIONS
 def generate_guess_structure(ts_dct, method_dct, es_keyword_dct,
-                             runfs_dct, savefs_dct):
+                             runfs_dct, savefs_dct, zma_locs=(0,)):
     """ Checks the filesystem for z-matrices at some input
         level of theory and if nothing existsm it will
         launch a scan to find the transition state.
@@ -27,8 +25,10 @@ def generate_guess_structure(ts_dct, method_dct, es_keyword_dct,
         :param method_dct:
     """
 
-    guess_zmas = _check_filesys_for_guess(savefs_dct, (0,), es_keyword_dct)
+    guess_zmas = _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct)
     if not guess_zmas:
+        print(' - No Z-Matrix is found in save filesys.')
+        print('\nRunning scan to generate guess Z-Matrix for opt...')
         guess_zmas = scan_for_guess(
             ts_dct, method_dct, runfs_dct, savefs_dct, es_keyword_dct)
 
@@ -161,10 +161,6 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
     script_str, kwargs = qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
-
-    print('zrxn:', zrxn)
-    print('ts_zma in scan_for_guess:', ts_zma)
-    print('scan_inf:', scan_inf)
 
     es_runner.scan.execute_scan(
         zma=ts_zma,
@@ -390,7 +386,6 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
 
     # Save the torsions
-    print('zma test:\n', zma)
     rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
     if any(rotors):
         zma_save_fs[-1].file.torsions.write(rotors, zma_locs)

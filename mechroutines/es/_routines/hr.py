@@ -6,7 +6,6 @@ import elstruct
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
 from mechlib.amech_io import printer as ioprinter
-from mechlib import structure
 from phydat import phycon
 
 
@@ -34,7 +33,7 @@ def hindered_rotor_scans(
     run_tors_grids = automol.rotor.grids(rotors, increment=increment)
 
     # Set constraints
-    const_names = structure.tors.set_constraint_names(
+    const_names = automol.zmat.set_constraint_names(
         zma, run_tors_names, tors_model)
 
     # Set appropriate value for check stability
@@ -108,9 +107,9 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
 # ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
 # tors_pots, tors_zmas = {}, {}
 # for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
-#     constraint_dct = structure.tors.build_constraint_dct(
+#     constraint_dct = automol.zmat.build_constraint_dct(
 #         zma, const_names, tors_names)
-#     pot, _, _, _, zmas, _ = structure.tors.read_hr_pot(
+#     pot, _, _, _, zmas, _ = filesys.read.potential(
 #         tors_names, tors_grids,
 #         ini_cnf_save_path,
 #         mod_ini_thy_info, ref_ene,
@@ -120,4 +119,4 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
 #     tors_zmas[tors_names] = zmas
 
 # # Print potential
-# structure.tors.print_hr_pot(tors_pots)
+# ioprinter.hr_pot(tors_pots)

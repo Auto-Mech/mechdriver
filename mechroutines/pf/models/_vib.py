@@ -15,7 +15,7 @@ from mechroutines.pf.models import typ
 from mechroutines.pf.models import _tors as tors
 
 
-def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
+def vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                  run_prefix, zrxn=None):
     """ process to get freq
     """
@@ -23,9 +23,9 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
     tors_strs = ['']
 
     rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, chn_pf_models, pf_levels)
+        spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
-    if typ.nonrigid_tors(chn_pf_models, rotors):
+    if typ.nonrigid_tors(spc_mod_dct_i, rotors):
         tors_strs = tors.make_hr_strings(rotors)
         [_, hr_str, _, prot_str, _] = tors_strs
 
@@ -33,7 +33,7 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
 
         # Make final hindered rotor strings and get corrected tors zpe
-        if typ.scale_1d(chn_pf_models):
+        if typ.scale_1d(spc_mod_dct_i):
             rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
             tors_strs = tors.make_hr_strings(rotors)
             [_, hr_str, _, prot_str, _] = tors_strs
@@ -44,20 +44,21 @@ def vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
-        if 'mdhrv' in chn_pf_models['tors']:
+        if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
             freqs = ()
     else:
         freqs, imag, zpe = read_harmonic_freqs(
             pf_filesystems, run_prefix, zrxn=zrxn)
         tors_zpe = 0.0
 
-    freqs, zpe = scale_frequencies(freqs, tors_zpe,
-                      pf_levels, scale_method='3c')
+    freqs, zpe = scale_frequencies(
+        freqs, tors_zpe,
+        spc_mod_dct_i, scale_method='3c')
 
     return freqs, imag, zpe, tors_strs
 
 
-def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
+def full_vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
                       run_prefix, zrxn=None):
     """ process to get freq
     """
@@ -71,9 +72,9 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
     rt_freqs1 = []
 
     rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, chn_pf_models, pf_levels)
+        spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
-    if typ.nonrigid_tors(chn_pf_models, rotors):
+    if typ.nonrigid_tors(spc_mod_dct_i, rotors):
         tors_strs = tors.make_hr_strings(rotors)
         [_, hr_str, _, prot_str, _] = tors_strs
 
@@ -81,7 +82,7 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
             pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
 
         # Make final hindered rotor strings and get corrected tors zpe
-        if typ.scale_1d(chn_pf_models):
+        if typ.scale_1d(spc_mod_dct_i):
             rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
             tors_strs = tors.make_hr_strings(rotors)
             [_, hr_str, _, prot_str, _] = tors_strs
@@ -92,7 +93,7 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, chn_pf_models, pf_levels,
         zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
-        if 'mdhrv' in chn_pf_models['tors']:
+        if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
             freqs = ()
     else:
         freqs, imag, zpe = read_harmonic_freqs(
@@ -194,8 +195,8 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     run_prefix = pf_filesystems['run_prefix']
 
     # Build the filesystems
-    [harm_cnf_fs, _, harm_min_locs, _, harm_run_fs] = pf_filesystems['harm']
-    [tors_cnf_fs, _, tors_min_locs, _, tors_run_fs] = pf_filesystems['tors']
+    [harm_cnf_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
+    [tors_cnf_fs, _, tors_min_locs, _, _] = pf_filesystems['tors']
     if conf:
         harm_min_locs = conf[1]
         harm_cnf_fs = conf[2]
@@ -205,10 +206,10 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     hess = harm_cnf_fs[-1].file.hessian.read(harm_min_locs)
     tors_geo = tors_cnf_fs[-1].file.geometry.read(tors_min_locs)
     ioprinter.reading('Hessian', harm_cnf_fs[-1].path(harm_min_locs))
-    
+
     fml_str = automol.geom.formula_string(harm_geo)
-    vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str, print_path=True)
-    tors_path = job_path(run_prefix, 'MESS', 'TORS', fml_str, print_path=True)
+    vib_path = job_path(
+        run_prefix, 'PROJROT', 'PROJFREQ', fml_str, print_path=True)
 
     # Read info for the hindered rotors and calculate the ZPVE
     ioprinter.info_message(' - Calculating the torsional ZPVES using MESS...')
@@ -279,10 +280,14 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     # mess_script_str = autorun.SCRIPT_DCT['messpf']
     # projrot_script_str = autorun.SCRIPT_DCT['projrot']
 
-    # proj_freqs, proj_imag_freqs, proj_zpe = autorun.projected_frequencies(
-    #     mess_script_str, projrot_script_str, RUN_DIR,
+    # proj_freqs, proj_imags, proj_zpe, harm_freqs, tors_freqs = autorun.projected_frequencies(
+    #     mess_script_str, projrot_script_str, vib_path,
     #     mess_hr_str, projrot_hr_str,
-    #     mess_geo, projrot_geo, hess)
+    #     tors_geo, harm_geo, hess)
+    # if saddle:
+    #     proj_imag = proj_imags[0]
+    # else:
+    #     proj_imag = []
 
     # NEW scale factor functions
     # scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
@@ -342,47 +347,21 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
             '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
             'kcal/mol between harmonic and hindered torsional ZPVEs')
 
-    return freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1
-
-
-M3_COEFFS = {
-    ('b2plypd3', 'cc-pvtz'): (1.066, 0.008045, 0.33),
-    ('wb97xd', '6-31g*'): (1.657244, 0.56000691, 0.029624)
-}
+    return (proj_freqs, proj_imag, proj_zpe,
+            scale_factor, tors_freqs, harm_freqs)
 
 
 def scale_frequencies(freqs, tors_zpe,
-                      chn_pf_levels, scale_method='3c'):
+                      spc_mod_dct_i, scale_method='3c'):
     """ Scale frequencies according to some method
         obtain a corrected zpe
     """
 
-    # NEW scaling
-    # thy_info = chn_pf_levels['harm'][1]
-    # thy_method = (thy_info[1], thy_info[2])
-    # scaled_freqs, scaled_zpe = anharm_by_scaling(freqs, method, basis, scale_method='c3')
-    # tot_zpe = scaled_zpe + tors_zpe
-
-    # Scale the frequencies
-    thy_info = chn_pf_levels['harm'][1]
-    thy_method = (thy_info[1], thy_info[2])
-    if scale_method == '3c':
-        cf1, cf2, cf3 = M3_COEFFS.get(thy_method, (1.0, 0.0, 0.0))
-        scaled_freqs = []
-        for freq in freqs:
-            scale_factor = cf1 - (cf2 * freq**cf3)
-            scaled_freqs.append(freq * scale_factor)
-        ioprinter.info_message('coef2', cf1, cf2, cf3)
-    else:
-        scaled_freqs = freqs
-    ioprinter.debug_message('freqs', freqs)
-    ioprinter.debug_message('scaled_freqs', scaled_freqs)
-
-    # Calculate the zpe
-    freq_zpe = 0.0
-    for freq, scfreq in zip(freqs, scaled_freqs):
-        freq_zpe += ((freq / 2.0) - (1.0 / 8.0) * (scfreq - freq))
-    freq_zpe *= phycon.WAVEN2EH
-    tot_zpe = freq_zpe + tors_zpe
+    thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+    print('thy info scale test', thy_info)
+    method, basis = thy_info[1], thy_info[2]
+    scaled_freqs, scaled_zpe = automol.prop.freq.anharm_by_scaling(
+        freqs, method, basis, scale_method='c3')
+    tot_zpe = scaled_zpe + tors_zpe
 
     return scaled_freqs, tot_zpe

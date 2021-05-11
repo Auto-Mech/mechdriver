@@ -11,6 +11,7 @@ from mechlib.amech_io.printer._print import error_message
 from mechlib.amech_io.printer._print import warning_message
 
 # General MechDriver Runtime Messages
+from mechlib.amech_io.printer._run import runlst
 from mechlib.amech_io.printer._mdriver import program_header
 from mechlib.amech_io.printer._mdriver import program_exit
 from mechlib.amech_io.printer._mdriver import driver_tasks
@@ -61,7 +62,12 @@ from mechlib.amech_io.printer._tsk import nasa
 from mechlib.amech_io.printer._pes import pes
 from mechlib.amech_io.printer._pes import channel
 
+from mechlib.amech_io.printer._pot import hrpotentials
+
 from mechlib.amech_io.printer._errors import missing_input
+
+
+
 
 __all__ = [
 
@@ -75,6 +81,7 @@ __all__ = [
     'warning_message',
 
     # General Runtime Messages
+    'runlst',
     'program_header',
     'program_exit',
     'driver_tasks',
@@ -124,6 +131,8 @@ __all__ = [
 
     'pes',
     'channel',
+
+    'hrpotentials',
 
     'missing_input'
 ]
