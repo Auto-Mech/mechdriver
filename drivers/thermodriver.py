@@ -98,7 +98,7 @@ def run(spc_rlst,
             final_pf = pfrunner.mess.combine_pfs(_pfs, coeffs, operators)
 
             # need to clean thm path build
-            totidx = len(spc_mods)
+            tot_idx = len(spc_mods)
             spc_info = sinfo.from_dct(spc_dct[spc_name])
             spc_fml = automol.inchi.formula_string(spc_info[0])
             thm_prefix = [spc_fml, automol.inchi.inchi_key(spc_info[0])]
@@ -192,17 +192,6 @@ def run(spc_rlst,
             ckin_nasa_str += '\n\n'
 
             print(ckin_nasa_str)
-        nasa7_params_all =  chemkin_io.parser.thermo.create_spc_nasa7_dct(ckin_nasa_str)
-        ioprinter.info_message('SPECIES\t\tH(0 K)[kcal/mol]\tH(298 K)[kcal/mol]\tS(298 K)[cal/mol K]\n')
-        for spc_name in nasa7_params_all:
-            nasa7_params =  nasa7_params_all[spc_name]
-            h0 = spc_dct[spc_name]['Hfs'][0] / 4.184
-            h298 =  mechanalyzer.calculator.thermo.enthalpy(nasa7_params, 298.15) /1000.
-            s298 =  mechanalyzer.calculator.thermo.entropy(nasa7_params, 298.15)
-            ioprinter.info_message(spc_name, '\t', h0, '\t', h298, '\t', s298)
-    
-
-
         nasa7_params_all =  chemkin_io.parser.thermo.create_spc_nasa7_dct(ckin_nasa_str)
         ioprinter.info_message('SPECIES\t\tH(0 K)[kcal/mol]\tH(298 K)[kcal/mol]\tS(298 K)[cal/mol K]\n')
         for spc_name in nasa7_params_all:

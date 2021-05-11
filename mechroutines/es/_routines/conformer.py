@@ -722,6 +722,8 @@ def _calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
         gra = automol.zmat.graph(zma)
         ntaudof = len(
             automol.graph.rotational_bond_keys(gra, with_h_rotors=False))
+        ioprinter.info_message(
+            " - Nonmethyl torsional coordinates {}".format(ntaudof))
     else:
         ntaudof = len(tors_names)
     nsamp = util.nsamp_init(nsamp_par, ntaudof)
