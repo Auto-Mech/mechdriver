@@ -246,7 +246,7 @@ def _hrpot_spline_fitter(pot_dct, min_thresh=-0.0001, max_thresh=50.0):
     # Initialize a variable for the size of the potential
     lpot = len(pot)+1
     pot.append(0.0)
-   
+
     # Print warning messages
     print_pot = False
     if any(val > max_thresh for val in pot):
