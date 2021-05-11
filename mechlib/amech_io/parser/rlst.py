@@ -65,6 +65,6 @@ def spc_queue(typ, runlst):
         _queue = []
         for (_, chnl) in runlst:
             _queue += [rgt for rgts in chnl for rgt in rgts]
-        _queue = tuple(set(spc_queue))
+        _queue = tuple(set(_queue))
 
     return _queue

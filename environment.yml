@@ -1,7 +1,6 @@
-name: moldriver-env
+name: mechanalyzer-env
 
 channels:
-    - kevinmooreiii
     - auto-mech
     - psi4
     - rdkit
@@ -9,32 +8,35 @@ channels:
     - conda-forge
 
 dependencies:
-    - python=3.7
+    - python
+    - pybind11
+    - cmake
+    - gcc_linux-64  # [linux]
+    - gfortran_linux-64  # [linux]
     - numpy
     - scipy
+    - pandas
     - pyyaml
     - mako
-    - matplotlib
     - pytest
     - pytest-cov
     - future
     - flake8
     - pylint
+    - psi4::psi4
     - rdkit::rdkit
     - openbabel::openbabel
-    - conda-forge::qcelemental
-    - psi4::psi4
-    # AutoMech
-    - kevinmooreiii::autofile
-    - kevinmooreiii::automol
-    - kevinmooreiii::autoparse
-    - kevinmooreiii::elstruct
-    - kevinmooreiii::interfaces
-    - kevinmooreiii::rateFit
+    - conda-forge::qcelemental 
+    - auto-mech::autoio
+    - auto-mech::automol
+    - auto-mech::autoparse
+    - auto-mech::elstruct
+    - auto-mech::ratefit
+    - auto-mech::mechanalyzer
     - auto-mech::mess
+    - auto-mech::mpack
     - auto-mech::pac99
     - auto-mech::projrot
+    - auto-mech::slatec
     - auto-mech::thermp
     - auto-mech::x2z
-    - auto-mech::slatec
-    - auto-mech::mpack

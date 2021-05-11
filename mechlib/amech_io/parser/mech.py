@@ -20,7 +20,7 @@ def pes_dictionary(mech_str, mech_type, spc_dct):
     # Build and print the full sorted PES dict
     _, mech_info, _ = parse_mechanism(mech_str, mech_type, spc_dct)
     srt_mch = sorter.sorting(mech_info, spc_dct, sort_str, isolate_species)
-    pes_dct = sorter.sorted_pes_dct(srt_mch)
+    pes_dct = srt_mch.return_pes_dct()
 
     pes.print_pes_channels(pes_dct)
 
