@@ -308,10 +308,10 @@ def _ts_search_method(ts_dct):
         state by looking at the requested user input or determining
     """
 
-    print('Determining if TS search algorithm matches the task requested')
+    print('Determining if TS search algorithm...')
 
     # Set search algorithm to one specified by the user, if specified
-    if 'ts_search' in ts_dct:
+    if ts_dct.get('ts_search') is not None:
         _search_method = ts_dct['ts_search']
         print('Running search algorithm according to {},'.format(
             ts_dct['ts_search']),
@@ -327,8 +327,7 @@ def _ts_search_method(ts_dct):
             _search_method = 'pst'
             print('Reaction is low-spin, radical-radical addition/abstraction')
             print('Assuming reaction is barrierless...')
-            print('Finding a transition state according to either vtst or '
-                  'vrctst, depending on the current task')
+            print('Assuming phase space theory treatment...')
         else:
             _search_method = 'sadpt'
             print('Assuming reaction has saddle point on potential surface...')
@@ -342,10 +341,8 @@ def _ts_search_method(ts_dct):
 def _nobarrier(ts_dct):
     """ Determine if reaction is barrierless
     """
-    print('class test', ts_dct['class'])
     radrad = _radrad(ts_dct)
     low_spin = bool('low' in ts_dct['class'])
-    print(radrad, low_spin)
     return radrad and low_spin
 
 
