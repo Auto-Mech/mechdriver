@@ -12,15 +12,15 @@ from mechlib.amech_io.parser._keywrd import check_dct1
 # maybe set defaults using the qchem params script?
 THY_REQ = ('program', 'method', 'basis', 'orb_res')
 THY_VAL_DCT = {
-    'program': (str, (), None),
-    'method': (str, (), None),
-    'basis': (str, (), None),
-    'orb_res': (str, ('RR', 'UU', 'RU'), None),
-    'ncycles': (int, (), None),
-    'mem': (float, (), None),
-    'nprocs': (int, (), None),
-    'econv': (float, (), None),
-    'gconv': (float, (), None)
+    'program': ((str,), (), None),
+    'method': ((str,), (), None),
+    'basis': ((str,), (), None),
+    'orb_res': ((str,), ('RR', 'UU', 'RU'), None),
+    'ncycles': ((int,), (), None),
+    'mem': ((float,), (), None),
+    'nprocs': ((int,), (), None),
+    'econv': ((float,), (), None),
+    'gconv': ((float,), (), None)
 }
 
 

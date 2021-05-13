@@ -12,73 +12,74 @@ from mechlib.amech_io.parser._keywrd import defaults_with_dcts
 # DCTS
 MODKIN_REQ_LST = ('pressures', 'rate_temps', 'thermo_temps')
 MODKIN_VAL_DCT = {
-    'pressures': (tuple, (), None),
-    'rate_temps': (tuple, (), None),
-    'thermo_temps': (tuple, (), None),
-    'temp_unit': (str, (), 'K'),
-    'pressure_unit': (str, (), 'atm'),
+    'pressures': ((tuple,), (), None),
+    'rate_temps': ((tuple,), (), None),
+    'thermo_temps': ((tuple,), (), None),
+    'temp_unit': ((str,), (), 'K'),
+    'pressure_unit': ((str,), (), 'atm'),
     'rate_fit': {
-        'fit_method': (str, ('arrhenius', 'chebyshev'), 'arrhenius'),
-        'pdep_temps': (tuple, (), (500, 100)),
-        'pdep_tol': (float, (), 20.0),
-        'pdep_pval': (float, (), 1.0),
-        'pdep_low': (float, (), None),
-        'pdep_high': (float, (), None),
-        'arrfit_dbltol': (float, (), 15.0),
-        'arrfit_dblcheck': (str, ('max', 'avg'), 'max'),
-        'troefit_params': (tuple, (), ('ts1', 'ts2', 'ts3', 'alpha')),
+        'fit_method': ((str,), ('arrhenius', 'chebyshev'), 'arrhenius'),
+        'pdep_temps': (((tuple,),), (), (500, 100)),
+        'pdep_tol': ((float,), (), 20.0),
+        'pdep_pval': ((float,), (), 1.0),
+        'pdep_low': ((float,), (), None),
+        'pdep_high': ((float,), (), None),
+        'arrfit_dbltol': ((float,), (), 15.0),
+        'arrfit_dblcheck': ((str,), ('max', 'avg'), 'max'),
+        'troefit_params': ((tuple,), (), ('ts1', 'ts2', 'ts3', 'alpha')),
         'chebfit_tdeg': (int, (), 6),
         'chebfit_pdeg': (int, (), 4),
-        'chebfit_tol': (float, (), 20.0)
+        'chebfit_tol': ((float,), (), 20.0)
     },
     'thermo_fit': {
-        'ref_scheme': (str, ('basic', 'cbh0'), 'basic'),
-        'ref_enes': (str, ('ANL0',), 'ANL0')
+        'ref_scheme': ((str,), ('basic', 'cbh0'), 'basic'),
+        'ref_enes': ((str,), ('ANL0',), 'ANL0')
     },
     'glob_etransfer': {
         'lj': (None, (), 'estimate'),
         'edown': (None, (), 'estimate'),
-        'mass': (tuple, (), None)
+        'mass': ((tuple,), (), None)
     }
 }
 
 MODPF_REQ_LST = ('pressures', 'rate_temps', 'thermo_temps')
 MODPF_VAL_DCT = {
     'ene': {
-        'lvl1': (tuple, (), None),
-        'lvl2': (tuple, (), None)
+        'lvl1': ((tuple,), (), None),
+        'lvl2': ((tuple,), (), None)
     },
     'rot': {
-        'mod': (str, ('rigid', 'vpt2'), 'rigid'),
-        'vpt2lvl': (str, (), None)
+        'mod': ((str,), ('rigid', 'vpt2'), 'rigid'),
+        'vpt2lvl': ((str,), (), None)
     },
     'vib': {
-        'mod': (str, ('harm', 'vpt2', 'tau'), 'harm'),
-        'geolvl': (str, (), None),
-        'vpt2lvl': (str, (), None),
+        'mod': ((str,), ('harm', 'vpt2', 'tau'), 'harm'),
+        'geolvl': ((str,), (), None),
+        'vpt2lvl': ((str,), (), None),
     },
     'tors': {
         'mod': (
-            str, ('rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'),
+            (str,),
+            ('rigid', '1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv', 'tau'),
             'rigid'),
-        'enelvl': (str, (), None),
-        'geolvl': (str, (), None),
+        'enelvl': ((str,), (), None),
+        'geolvl': ((str,), (), None),
     },
     'symm': {
-        'mod': (str, ('none', 'sampling', '1dhr'), 'none'),
-        'geolvl': (str, (), None),
+        'mod': ((str,), ('none', 'sampling', '1dhr'), 'none'),
+        'geolvl': ((str,), (), None),
     },
     'rpath': {
-        'enelvl': (str, (), None),
-        'geolvl': (str, (), None),
+        'enelvl': ((str,), (), None),
+        'geolvl': ((str,), (), None),
     },
     'ts': {
-        'nobar': (str, ('pst', 'rpvtst', 'vrctst'), 'pst'),
-        'sadpt': (str, ('fixed', 'pst', 'rpvtst', 'vrctst'), 'fixed'),
-        'rwells': (str, ('fake', 'find', 'none'), 'fake'),
-        'pwells': (str, ('fake', 'find', 'none'), 'fake'),
-        'tunnel': (str, ('none', 'eckart', 'sct'), 'eckart'),
-        'etrans': (str, ('none', 'estimate', 'read'), 'estimate')
+        'nobar': ((str,), ('pst', 'rpvtst', 'vrctst'), 'pst'),
+        'sadpt': ((str,), ('fixed', 'pst', 'rpvtst', 'vrctst'), 'fixed'),
+        'rwells': ((str,), ('fake', 'find', 'none'), 'fake'),
+        'pwells': ((str,), ('fake', 'find', 'none'), 'fake'),
+        'tunnel': ((str,), ('none', 'eckart', 'sct'), 'eckart'),
+        'etrans': ((str,), ('none', 'estimate', 'read'), 'estimate')
     }
 }
 
@@ -181,8 +182,8 @@ def _kin_model_build(kin_mod_dct_i, thy_dct):
                        for key, val in old_ratefit.items()
                        if 'arrfit' in key},
         'chebfit_fit': {key.replace('chebfit_', ''): val
-                       for key, val in old_ratefit.items()
-                       if 'chebfit' in key},
+                        for key, val in old_ratefit.items()
+                        if 'chebfit' in key},
         'troefit_fit': {key.replace('troefit_', ''): val
                         for key, val in old_ratefit.items()
                         if 'troefit' in key}

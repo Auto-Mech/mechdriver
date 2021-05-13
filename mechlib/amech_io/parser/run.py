@@ -35,14 +35,14 @@ from mechlib.amech_io.parser._keywrd import check_thy_lvls
 RUN_INP_REQ = [
     'inp_mech', 'out_mech', 'inp_spc', 'out_spc', 'run_prefix', 'save_prefix']
 RUN_INP_VAL_DCT = {
-    'inp_mech': (str, ('chemkin'), 'chemkin'),
-    'inp_spc': (str, ('csv',), 'csv'),
-    'out_mech': (str, ('chemkin'), 'chemkin'),
-    'out_spc': (str, ('csv',), 'csv'),
-    'print_mech': (bool, (True, False), False),
-    'print_debug': (bool, (True, False), False),
-    'run_prefix': (str, (), None),
-    'save_prefix': (str, (), None)
+    'inp_mech': ((str,), ('chemkin'), 'chemkin'),
+    'inp_spc': ((str,), ('csv',), 'csv'),
+    'out_mech': ((str,), ('chemkin'), 'chemkin'),
+    'out_spc': ((str,), ('csv',), 'csv'),
+    'print_mech': ((bool,), (True, False), False),
+    'print_debug': ((bool,), (True, False), False),
+    'run_prefix': ((str,), (), None),
+    'save_prefix': ((str,), (), None)
 }
 
 # HANDLE TASK KEYS
@@ -104,41 +104,42 @@ TSK_KEY_DCT = {
 # maybe the required checks use if None given?
 TSK_VAL_DCT = {
     # Common
-    'runlvl': (str, (), None),
-    'inplvl': (str, (), None),
-    'var_splvl1': (str, (), None),
-    'var_splvl2': (str, (), None),
-    'var_scnlvl': (str, (), None),
-    'resave': (bool, (True, False), False),
-    'retryfail': (bool, (True, False), True),
-    'overwrite': (bool, (True, False), False),
+    'runlvl': ((str,), (), None),
+    'inplvl': ((str,), (), None),
+    'var_splvl1': ((str,), (), None),
+    'var_splvl2': ((str,), (), None),
+    'var_scnlvl': ((str,), (), None),
+    'resave': ((bool,), (True, False), False),
+    'retryfail': ((bool,), (True, False), True),
+    'overwrite': ((bool,), (True, False), False),
     # ES
-    'cnf_range': (str, (), 'min'),   # change to econfs, nconfs
-    'hessmax': (int, (), 1000),
-    'tors_model': (str, ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'), '1dhr'),
-    'resamp_min': (bool, (True, False), False),
-    'hrthresh': (float, (), -0.5),
-    'potthresh': (float, (), 0.3),
-    'rxncoord': (str, ('irc', 'auto'), 'auto'),
-    'nobarrier': (str, ('pst', 'rpvtst', 'vrctst'), None),
+    'cnf_range': ((str,), (), 'min'),   # change to econfs, nconfs
+    'hessmax': ((int,), (), 1000),
+    'tors_model': ((str,),
+                   ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'), '1dhr'),
+    'resamp_min': ((bool,), (True, False), False),
+    'hrthresh': ((float,), (), -0.5),
+    'potthresh': ((float,), (), 0.3),
+    'rxncoord': ((str,), ('irc', 'auto'), 'auto'),
+    'nobarrier': ((str,), ('pst', 'rpvtst', 'vrctst'), None),
     # Trans
-    'pot': (str, ('sphere',), 'lj_12_6'),
-    'njobs': (int, (), 1),
-    'nsamp': (int, (), 1),
-    'smin': (float, (), 2.0),
-    'smax': (float, (), 6.0),
-    'conf': (str, ('sphere',), 'sphere'),
+    'pot': ((str,), ('sphere',), 'lj_12_6'),
+    'njobs': ((int,), (), 1),
+    'nsamp': ((int,), (), 1),
+    'smin': ((float,), (), 2.0),
+    'smax': ((float,), (), 6.0),
+    'conf': ((str,), ('sphere',), 'sphere'),
     # Proc
-    'geolvl': (str, (), None),
-    'proplvl': (str, (), None),
-    'nconfs': (str, (), 'min'),
-    'econfs': (str, (), 'min'),
-    'scale': (str, (), None),
+    'geolvl': ((str,), (), None),
+    'proplvl': ((str,), (), None),
+    'nconfs': ((str,), (), 'min'),
+    'econfs': ((str,), (), 'min'),
+    'scale': ((str,), (), None),
     # KTP/Therm
-    'kin_model': (str, (), None),
-    'spc_model': (str, (), None),
-    'nprocs': (int, (), 10),
-    'inpname': (str, (), None)
+    'kin_model': ((str,), (), None),
+    'spc_model': ((str,), (), None),
+    'nprocs': ((int,), (), 10),
+    'inpname': ((str,), (), None)
 }
 # Have nconfs and econfs keywords and combine them to figure out which to use?
 
@@ -347,7 +348,8 @@ def _tsk_defaults(tsk_lst):
         for _tsk_lst in tsk_lst:
             keyword_dct = _tsk_lst[-1]
             tsk = _tsk_lst[:-1][-1]
-            default_dct = defaults_from_key_val_dcts(tsk, TSK_KEY_DCT, TSK_VAL_DCT)
+            default_dct = defaults_from_key_val_dcts(
+                tsk, TSK_KEY_DCT, TSK_VAL_DCT)
             new_key_dct = automol.util.dict_.right_update(
                 default_dct, keyword_dct)
 
@@ -387,12 +389,11 @@ def _check_tsks(tsk_lsts, thy_dct):
                         print('obj {}, not allowed for {}'.format(obj, tsk))
                         print('')
                         sys.exit()
-                pass
 
             # Check if keyword values are allowed
             check_dct1(key_dct, TSK_VAL_DCT, (), 'Task')
 
-            # Check keywords with thy lvls as values use lvls defined in thy dct
+            # Check keywords with thylvls as values use lvls defined in thy dct
             check_thy_lvls(key_dct, thy_dct)
 
 

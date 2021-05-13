@@ -111,17 +111,27 @@ def _mod_class(cls, rxn_info):
     """ append additional info to the class
     """
 
+    full_cls_str = ''
+
     # Determine the string for radical radical reactions
-    radrad  = rinfo.radrad(rxn_info)
+    radrad = rinfo.radrad(rxn_info)
     radrad_str = 'radical-radical' if radrad else ''
+    full_cls_str += radrad_str
 
     # Set the spin of the reaction to high/low
-    ts_mul = rinfo.value(rxn_info, 'tsmult')
-    high_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
-    spin_str = 'high-spin' if ts_mul == high_mul else 'low-spin'
+    if 'addition' in cls or 'absraction' in cls:
+        ts_mul = rinfo.value(rxn_info, 'tsmult')
+        high_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
+        spin_str = 'high-spin' if ts_mul == high_mul else 'low-spin'
+        full_cls_str += ' ' + spin_str
+    else:
+        spin_str = ''
 
-    return '{} {} {}'.format(radrad_str, spin_str, cls)
-    
+    # Add the class label
+    full_cls_str += ' ' + cls
+
+    return full_cls_str
+
 
 # from direction
 def set_reaction_direction(reacs, prods, rxn_info,
