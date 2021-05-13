@@ -17,40 +17,40 @@ from mechlib.amech_io.parser._keywrd import check_dct1
 SPC_REQ = ('inchi', 'mult', 'charge', 'elec_levels', 'mc_nsamp')
 TS_REQ = ('rxndirn', 'kt_pst', 'temp_pst', 'n_pst')
 SPC_VAL_DCT = {
-    'mult': (int, (), None),
-    'charge': (int, (), None),
-    'inchi': (str, (), None),
-    'inchikey': (str, (), None),
-    'smiles': (str, (), None),
-    'sens': (float, (), None),  # auto from CSV reader, not used
-    'fml': (dict, (), None),  # auto from CSV reader, not used
-    'pst_params': (tuple, (), (1.0, 6)),
+    'mult': ((int,), (), None),
+    'charge': ((int,), (), None),
+    'inchi': ((str,), (), None),
+    'inchikey': ((str,), (), None),
+    'smiles': ((str,), (), None),
+    'sens': ((float,), (), None),  # auto from CSV reader, not used
+    'fml': ((dict,), (), None),  # auto from CSV reader, not used
+    'pst_params': ((tuple,), (), (1.0, 6)),
     # ^^ shouldn't be in spc, but auto dat glob prob for all TS keys)
-    'tors_names': (tuple, (), None),
-    'elec_levels': (tuple, (), None),
-    'geo': (tuple, (), None),
-    'sym_factor': (float, (), None),
-    'kickoff': (tuple, (), (True, (0.1, False))),
-    'hind_inc': (float, (), 30.0),
-    'mc_nsamp': (tuple, (), (True, 12, 1, 3, 100, 25)),
-    'tau_nsamp': (tuple, (), (True, 12, 1, 3, 100, 25)),
-    'smin': (float, (), None),
-    'smax': (float, (), None),
-    'etrans_nsamp': (int, (), None),
-    'bath': (str, (), None),
-    'lj': (str, (), None),
-    'edown': (str, (), None),
-    'active': (tuple, (), None),
-    'zma_idx': (int, (), 0)
+    'tors_names': ((tuple,), (), None),
+    'elec_levels': ((tuple,), (), None),
+    'geo': ((tuple,), (), None),
+    'sym_factor': ((float,), (), None),
+    'kickoff': ((tuple,), (), (True, (0.1, False))),
+    'hind_inc': ((float,), (), 30.0),
+    'mc_nsamp': ((tuple,), (), (True, 12, 1, 3, 100, 25)),
+    'tau_nsamp': ((tuple,), (), (True, 12, 1, 3, 100, 25)),
+    'smin': ((float,), (), None),
+    'smax': ((float,), (), None),
+    'etrans_nsamp': ((int,), (), None),
+    'bath': ((str,), (), None),
+    'lj': ((str,), (), None),
+    'edown': ((str,), (), None),
+    'active': ((tuple,), (), None),
+    'zma_idx': ((int,), (), 0)
 }
 TS_VAL_DCT = {
-    'rxndirn': (str, (), 'forw'),
-    'kt_pst': (float, (), 4.0e-10),
-    'temp_pst': (float, (), 300.0),
-    'n_pst': (float, (), 6.0),
-    'active': (str, (), None),
-    'ts_search': (str, (), 'sadpt'),
-    'ts_idx': (int, (), 0)
+    'rxndirn': ((str,), (), 'forw'),
+    'kt_pst': ((float,), (), 4.0e-10),
+    'temp_pst': ((float,), (), 300.0),
+    'n_pst': ((float,), (), 6.0),
+    'active': ((str,), (), None),
+    'ts_search': ((str,), (), None),
+    'ts_idx': ((int,), (), 0)
 }
 TS_VAL_DCT.update(SPC_VAL_DCT)
 

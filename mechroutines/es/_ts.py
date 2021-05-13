@@ -25,14 +25,6 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     """
 
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
-    # ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-
-    # Set the TS searching algorithm to use: (1) Check dct, (2) Set by Class
-    # print('spc_dct test:', spc_dct[tsname], tsname)
-    search_thy_inf_dct = spc_dct[tsname].get('ts_search', None)
-    if search_thy_inf_dct is None:
-        search_thy_inf_dct = 'sadpt'
-    # search_thy_inf_dct = _ts_finder_match(tsk, spc_dct[tsname])
 
     # Build necessary objects
     thy_inf_dct, runfs_dct, savefs_dct = _set_thy_inf_dcts(
@@ -40,18 +32,19 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
         run_prefix, save_prefix)
 
     # Find the transition state
-    if search_thy_inf_dct == 'sadpt':
+    search_method = _ts_search_method(spc_dct[tsname])
+    if search_method == 'sadpt':
         run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
                   thy_inf_dct, runfs_dct, savefs_dct)
-    elif search_thy_inf_dct == 'pst':
+    elif search_method == 'pst':
         run_pst(spc_dct, tsname, savefs_dct, zma_locs=(0,))
-    elif search_thy_inf_dct == 'vtst':
+    elif search_method == 'vtst':
         run_vtst(spc_dct, tsname, es_keyword_dct,
                  thy_inf_dct, runfs_dct, savefs_dct)
-    elif search_thy_inf_dct == 'vrctst':
+    elif search_method == 'vrctst':
         run_vrctst(spc_dct, tsname, es_keyword_dct,
                    thy_inf_dct, runfs_dct, savefs_dct)
-    elif search_thy_inf_dct is None:
+    elif search_method is None:
         print('No TS search algorithm was specified or able to determined')
 
 
@@ -310,7 +303,7 @@ def run_vrctst(spc_dct, tsname, es_keyword_dct,
 
 
 # SET THE SEARCHING ALGORITHM
-def _ts_finder_match(tsk, ts_dct):
+def _ts_search_method(ts_dct):
     """ Determine the algorithm that should be used for a given transition
         state by looking at the requested user input or determining
     """
@@ -319,59 +312,45 @@ def _ts_finder_match(tsk, ts_dct):
 
     # Set search algorithm to one specified by the user, if specified
     if 'ts_search' in ts_dct:
-        ini_thy_inf_dct = [ts_dct['ts_search']]
+        _search_method = ts_dct['ts_search']
         print('Running search algorithm according to {},'.format(
             ts_dct['ts_search']),
               'as requested by the user')
     else:
-        ini_thy_inf_dct = None
+        _search_method = None
         print('No search algorithm requested')
     print()
 
     # ID search algorithm if user did not specify one (wrong)
-    if ini_thy_inf_dct is None:
+    if _search_method is None:
         if _nobarrier(ts_dct):
-            ini_thy_inf_dct = ['radrad_vtst', 'vrctst']
+            _search_method = 'pst'
             print('Reaction is low-spin, radical-radical addition/abstraction')
             print('Assuming reaction is barrierless...')
             print('Finding a transition state according to either vtst or '
                   'vrctst, depending on the current task')
         else:
-            ini_thy_inf_dct = ['sadpt']
+            _search_method = 'sadpt'
             print('Assuming reaction has saddle point on potential surface...')
             print('Use species.dat to specify VTST search for mol-rad rxn...')
             print('Finding the geometry of the saddle point...')
 
-    # Print message if no algorithm found
-    if ini_thy_inf_dct is None:
-        print('No TS search algorithm was specified or able to determined')
-
-    # Set return for ts searching algorithm if there is one
-    if tsk in ini_thy_inf_dct:
-        print('Search algorithm matches task')
-        search_thy_inf_dct = tsk
-    else:
-        print('Algorithm does not match task')
-        search_thy_inf_dct = None
-
-    # Refine ret vtst thy_inf_dct if that is what is being used
-    if search_thy_inf_dct == 'vtst':
-        search_thy_inf_dct = 'radrad_vtst' if _radrad(ts_dct) else 'molrad_vtst'
-
-    return search_thy_inf_dct
+    return _search_method
 
 
 # CHECKS FOR TYPE OF TRANSITION STATE
 def _nobarrier(ts_dct):
     """ Determine if reaction is barrierless
     """
+    print('class test', ts_dct['class'])
     radrad = _radrad(ts_dct)
     low_spin = bool('low' in ts_dct['class'])
+    print(radrad, low_spin)
     return radrad and low_spin
 
 
 def _radrad(ts_dct):
-    return bool('radical radical' in ts_dct['class'])
+    return bool('radical-radical' in ts_dct['class'])
 
 
 # SET OPTIONS FOR THE TRANSITION STATE
