@@ -13,26 +13,6 @@ from phydat import symm, eleclvl
 # Right now it depends on if each val dct is used multiple times or once
 # then a required might be added (think this fails for tasks dicts)
 
-
-# MISC
-VRC_DCT = {
-    'fortran_compiler': 'gfortran',
-    'spc_name': 'mol',
-    'memory': 4.0,
-    'r1dists_lr': [8., 6., 5., 4.5, 4.],
-    'r1dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
-    'r2dists_sr': [4., 3.8, 3.6, 3.4, 3.2, 3., 2.8, 2.6, 2.4, 2.2],
-    'd1dists': [0.01, 0.5, 1.],
-    'd2dists': [0.01, 0.5, 1.],
-    'conditions': {},
-    'nsamp_max': 2000,
-    'nsamp_min': 50,
-    'flux_err': 10,
-    'pes_size': 2,
-    'exe_path': '/blues/gpfs/home/sjklipp/bin/molpro'
-}
-
-
 # Functions needed to build custom values
 # def active(dct):
 #     """ maybe just read them (like the geometry dct)
@@ -165,14 +145,14 @@ def _check_supported_vals(inp_dct, val_dct, req_lst, section):
 
     # Assess if the keywords have the appropriate value
     for key, val in inp_dct.items():
-        allowed_typ, allowed_vals, _ = val_dct[key]
+        allowed_typs, allowed_vals, _ = val_dct[key]
 
         if val is not None:
             # Check val if one is given
-            if not isinstance(val, allowed_typ):
+            if type(val) not in allowed_typs:
                 print('bad {}'.format(section))
                 print('{}'.format(key))
-                print('val {} must be type {}'.format(val, allowed_typ))
+                print('val {} must be type {}'.format(val, allowed_typs))
                 sys.exit()
             if allowed_vals:
                 if val not in allowed_vals:
