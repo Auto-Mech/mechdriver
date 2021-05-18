@@ -1,23 +1,5 @@
 .. _input:
 
-********************
-Input File Structure
-********************
-
-Required Files
-==============
-
-    run.dat
-    models.dat
-    theory.dat
-    species.csv
-    mechanism.dat (for mechanisms)
-
-Auxiliary Input Files:
-    species.dat
-    _.xyz
-    _.aspace
-
 Run.dat
 =======
 
