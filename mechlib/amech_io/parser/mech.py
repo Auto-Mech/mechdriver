@@ -1,5 +1,6 @@
-"""
-Read the mechanism file
+""" Parses the `mechanism.dat` input file for MechDriver that contains
+    all of the reactions of mechanism. The format of this file corresponds
+    to some user-specified format.
 """
 
 from mechanalyzer.parser import pes
@@ -8,8 +9,22 @@ from mechanalyzer.builder import sorter
 
 
 def pes_dictionary(mech_str, mech_type, spc_dct):
-    """ Build the PES dct
+    """ Constructs the Potential-Energy-Surface dictionary for all of the
+        channels of the user input utilizing the sorter functionality
+        from mechanalyzer. Currently, we sort just via PES and then SUB-PES.
 
+        Format: {(formula, pes idx, sub pes idx): ((chnl_idx, rcts, prds),)
+
+        Also currently prints the PES channels
+
+        :param mech_str: mechanism.dat input file string
+        :type mech_str: str
+        :param mech_type: 
+        :type mech_type: str
+        :param spc_dct: 
+        :type spc_dct: dict[str: ____]
+        :rtype:
+    
         Right now just resorts by pes and subpes, may need full suite later.
     """
 

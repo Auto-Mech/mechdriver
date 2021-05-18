@@ -297,7 +297,7 @@ def _tsk_lst(tsk_str, num):
     # Build the task lists from the string
     if tsk_str is not None:
         tsks = []
-        tsk_str = ioformat.remove_whitespace(tsk_str)
+        tsk_str = ioformat.remove_whitespace_from_string(tsk_str)
         for line in tsk_str.splitlines():
             try:
                 _tsk = _split_line(line, num)
