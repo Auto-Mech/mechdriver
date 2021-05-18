@@ -1,13 +1,13 @@
-level lvl_scf
+level wbsgs
     orb_res =  RU
     program =  psi4
-    method =  hf
+    method =  b3lyp
     basis =  6-31g*
-end
+end level
 
-level lvl_mp2
+level mp2dz
     orb_res =  RU
     program =  psi4
     method =  mp2
     basis =  cc-pvdz
-end
+end level

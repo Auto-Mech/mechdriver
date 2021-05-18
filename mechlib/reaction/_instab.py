@@ -3,7 +3,6 @@
 """
 
 import automol
-from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 
@@ -16,15 +15,17 @@ def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
     # Get theory
     thy_info = spc_model_dct_i['vib']['geolvl'][1][1]
 
-    # Build the mapping dictionary
-    split_map = _split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,))
-
     # Loop over the reactions and split
     new_rxn_lst = ()
     for rxn in rxn_lst:
 
         # Unpack the reaction
         chnl_idx, (rcts, prds) = rxn
+
+        # Build the mapping dictionary for the rxn species
+        rxn_names = rcts + prds
+        split_map = _split_mapping(spc_dct, thy_info, save_prefix,
+                                   spc_names=rxn_names, zma_locs=(0,))
 
         # Assess and split the reactants and products for unstable species
         new_rcts = ()
@@ -57,33 +58,33 @@ def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct_i, save_prefix):
     # Get theory
     thy_info = spc_model_dct_i['vib']['geolvl'][1][1]
 
-    # Build the mapping dictionary
-    split_map = _split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,))
-
-    # Loop over the species lst to get the unstable species
+    # Loop over the species lst and split as they god
     split_spc_names = ()
     for spc in list(spc_rlst.values())[0]:
-        split_spc_names += split_map[spc]
+        split_spc_names += _split_species(
+            spc_dct, spc, thy_info, save_prefix, zma_locs=(0,))
 
     return {('SPC', 0, 0): split_spc_names}
 
 
-def _split_mapping(spc_dct, thy_info, save_prefix, zma_locs=(0,)):
+def _split_mapping(spc_dct, thy_info, save_prefix,
+                   spc_names=None, zma_locs=(0,)):
     """ Build a dictionry which maps the names of species into splits
         would like to build to just go over spc dct (good for mech pre-process)
         could do
     """
 
+    if spc_names is None:
+        spc_names = tuple(name for name in spc_dct.keys() if 'ts_' not in name)
+
     split_map = {}
-    for spc in (name for name in spc_dct.keys() if 'ts_' not in name):
+    for spc_name in spc_names:
         split_names = _split_species(
-            spc_dct, spc, thy_info, save_prefix, zma_locs=zma_locs)
+            spc_dct, spc_name, thy_info, save_prefix, zma_locs=zma_locs)
         if split_names:
-            print('- Splitting species...')
-            print('- New species: {}'.format(' '.join(split_names)))
-            split_map[spc] = split_names
+            split_map[spc_name] = split_names
         else:
-            split_map[spc] = (spc,)
+            split_map[spc_name] = (spc_name,)
 
     return split_map
 
@@ -94,7 +95,7 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
     """
 
     # Initialize an empty list
-    prd_names = ()
+    split_names = ()
 
     # Attempt to read the graph of the instability trans
     # Get the product graphs and inchis
@@ -113,8 +114,11 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
         for ich in constituent_ichs:
             for name, spc_dct_i in spc_dct.items():
                 if ich == spc_dct_i.get('inchi'):
-                    prd_names += (name,)
+                    split_names += (name,)
                     break
-        prd_names = tuple(set(prd_names))
+        split_names = tuple(set(split_names))
 
-    return prd_names
+        print('- Splitting species...')
+        print('- New species: {}'.format(' '.join(split_names)))
+
+    return split_names

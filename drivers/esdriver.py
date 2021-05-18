@@ -20,8 +20,14 @@ def run(pes_rlst, spc_rlst,
         :type es_tsk_lst: list[[obj, tsk, keyword_dict]]
         :param spc_dct: species information
         :type spc_dct: dict[spc_name: spc_information]
+        :param glob_dct: global information for all species
+        :type glob_dct: dict[spc_name: spc_information]
         :param thy_dct: all of the theory information
         :type thy_dct: dict[]
+        :param run_prefix: root-path to the run-filesystem
+        :type: run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type: save_prefix: str
     """
 
     # --------------------------------------------- #

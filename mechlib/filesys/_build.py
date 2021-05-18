@@ -41,22 +41,34 @@ def build_fs(run_prefix, save_prefix, end,
              cnf_locs=None, tau_locs=None,
              instab_locs=None, zma_locs=None,
              scn_locs=None, cscn_locs=None):
-    """ Build the filesystems
+    """ Build the autofile filesystem objects for some specified
+        fileystem layer using the root run/save and locs to build
+        the full prefix path to the fileystem layer.
+
+        :param run_prefix: root-path to the run-filesystem
+        :type: run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type: save_prefix: str
+        :param end: filesystem layer
+        :type end: str
+
+        :param x_locs: locs used to construct prefix to end-layer
+        :type x_locs: locs fot REACTION layer
     """
 
-    _fs = []
+    _fs = ()
     for prefix in (run_prefix, save_prefix):
-        _fs.append(
+        _fs += (
             _build_fs(
                 prefix, end,
                 rxn_locs=rxn_locs, spc_locs=spc_locs,
                 thy_locs=thy_locs, ts_locs=ts_locs,
                 cnf_locs=cnf_locs, tau_locs=tau_locs,
                 instab_locs=instab_locs, zma_locs=zma_locs,
-                scn_locs=scn_locs, cscn_locs=cscn_locs)
+                scn_locs=scn_locs, cscn_locs=cscn_locs),
         )
 
-    return _fs[0], _fs[1]
+    return _fs
 
 
 def _build_fs(prefix, end,
@@ -65,7 +77,10 @@ def _build_fs(prefix, end,
               cnf_locs=None, tau_locs=None,
               instab_locs=None, zma_locs=None,
               scn_locs=None, cscn_locs=None):
-    """ Build the filesystems
+    """ Build the filesystem for single prefix
+
+        The if-check order implicitly sets up the order of
+        the prefix layers are constructed up to the end-layer.
     """
 
     prefix_locs = []

@@ -194,6 +194,7 @@ def _kin_model_build(kin_mod_dct_i, thy_dct):
     return new_kin_dct
 
 
+# Handle model tasks
 def extract_models(tsk):
     """ pull modesl from tasks
     """
@@ -243,3 +244,21 @@ def split_model(mod):
     models.append(model)
 
     return (tuple(models), tuple(coeffs), tuple(operators))
+
+
+# def get_model(comp, spc_mod_dct_i):
+#     """ get model for spc dct compoenent
+#     """
+#     return spc_mod_dct_i[comp]['mod']
+# def thy_method_name(mod_lvl):
+#     """ get the electronic strucure method
+#     """
+#     return mod_lvl[0]  # ?
+# def thy_info_coeff(mod_lvl):
+#     """ get the coefficient from the model
+#     """
+#     return mod_lvl[1][0]
+# def thy_info_obj(mod_lvl):
+#     """ get the name of the mod lvl
+#     """
+#     return mod_lvl[1][1]
