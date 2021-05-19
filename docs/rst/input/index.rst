@@ -1,23 +1,5 @@
 .. Documentation of the Input File Structure of MechDriver
 
-
-General Description
-===================
-
-Various files are required
-
-|    (1) run.dat
-|    (2) models.dat
-|    (3) theory.dat
-|    (4) species.csv
-|    (5) mechanism.dat (for mechanisms)
-
-Auxiliary Input Files:
-    species.dat
-    _.xyz
-    _.aspace
-
-
 File Description
 ================
 
@@ -27,7 +9,7 @@ File Description
 
     run
     thy
-    models
+    mod
     spc
     mech
     aux

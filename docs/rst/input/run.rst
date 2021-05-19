@@ -166,6 +166,49 @@ Above the <task> is what electronic structure calculation to be run on object.
 
 keyword=value cannot have spaces in between them.
 
+Allowed Tasks
+------------
+
+Each task is given in the following format <obj>_<job>
+ 
+'init_geom'
+'find_ts'
+'conf_pucker'
+'conf_samp'
+'conf_energy'
+'conf_grad'
+'conf_hess'
+'conf_vpt2'
+'conf_prop'
+'conf_opt
+'hr_scan'
+'hr_grad'
+'hr_hess'
+'hr_energy'
+'hr_vpt2'
+'hr_reopt': (',)),
+'tau_samp': (
+'tau_energy':
+'tau_grad': (
+'tau_hess': (),
+'rpath_scan':
+'rpath_energy,
+'rpath_grad':
+'rpath_hess':
+# Transport Driver Tasks
+'onedmin': (('spc',), (BASE + TRANS)),
+# Process Driver Tasks
+'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
+'energy': (('spc',), PRNT),
+'geo': (('spc',), PRNT),
+'zmatrix': (('spc',), PRNT),
+'enthalpy': (('spc',), PRNT),
+'coeffs': (('spc',), ()),
+# KTP/Therm
+'write_mess': ((), ('kin_model', 'spc_model', 'overwrite')),
+'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname')),
+'run_fits': ((), ('kin_model',)),
+
 
 Electronic Structure Driver Task Block
 ---------------------------------------

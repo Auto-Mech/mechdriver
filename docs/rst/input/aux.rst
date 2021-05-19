@@ -8,6 +8,8 @@ geom.xyz
 For species where the user wishes to seed some mechanism process with an input geometry, the user can supply any number of geom.xyz
 files. The format is a standard xyz file except the comment line means something
 
+File format::
+
 <natoms
 <name of species in species.csv>
 <xyz coordinates>
@@ -24,7 +26,7 @@ files.aspace
 
 For multireference calculations, the user may specify a wavefunction guess template for a molpro calculation. This will be inserted in front of wfn calculations.
 
-example:
+File format::
 
 ! <transition state name>
 <rest of the wfn template>
