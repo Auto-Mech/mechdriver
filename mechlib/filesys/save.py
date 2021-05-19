@@ -172,6 +172,7 @@ def read_job_zma(ret, init_zma=None, rebuild=False):
         print('Getting ZMA from a geometry...')
         geo = elstruct.reader.opt_geometry(prog, out_str)
         if init_zma is not None:
+            print('Resetting ZMA coords using opt geoms...')
             zma = rebuild_zma_from_opt_geo(init_zma, geo)
         else:
             zma = automol.geom.zmatrix(geo)
@@ -182,6 +183,7 @@ def read_job_zma(ret, init_zma=None, rebuild=False):
 def rebuild_zma_from_opt_geo(init_zma, opt_geo):
     """ build zma from opt
     """
+
     dummy_key_dct = automol.zmat.dummy_key_dictionary(init_zma)
     geo_wdummy = automol.geom.insert_dummies(opt_geo, dummy_key_dct)
     zma = automol.zmat.from_geometry(init_zma, geo_wdummy)
@@ -199,8 +201,9 @@ def _save_geom(ret, cnf_fs, cnf_locs):
     geo = elstruct.reader.opt_geometry(prog, out_str)
 
     cnf_fs[-1].create(cnf_locs)
-    cnf_save_path = cnf_fs[-1].path(cnf_locs)
-    print(" - Saving at {}".format(cnf_save_path))
+    cnf_path = cnf_fs[-1].path(cnf_locs)
+    print(" - Saving at {}".format(cnf_path))
+
     cnf_fs[-1].file.geometry_info.write(inf_obj, cnf_locs)
     cnf_fs[-1].file.geometry_input.write(inp_str, cnf_locs)
     cnf_fs[-1].file.geometry.write(geo, cnf_locs)
@@ -210,14 +213,15 @@ def _save_grad(ret, cnf_fs, cnf_locs):
     """ Saving a geometry
     """
 
-    print(" - Reading geometry from output...")
+    print(" - Reading gradient from output...")
     inf_obj, inp_str, out_str, prog, _ = _unpack_ret(ret)
 
     grad = elstruct.reader.gradient(prog, out_str)
 
     cnf_fs[-1].create(cnf_locs)
-    cnf_save_path = cnf_fs[-1].path(cnf_locs)
-    print(" - Saving at {}".format(cnf_save_path))
+    cnf_path = cnf_fs[-1].path(cnf_locs)
+    print(" - Saving at {}".format(cnf_path))
+
     cnf_fs[-1].file.gradient_info.write(inf_obj, cnf_locs)
     cnf_fs[-1].file.gradient_input.write(inp_str, cnf_locs)
     cnf_fs[-1].file.gradient.write(grad, cnf_locs)
@@ -230,12 +234,15 @@ def _save_zmatrix(ret, zma_fs, zma_locs, init_zma=None):
         might not work if redundants print like zma
     """
 
-    print(" - Reading geometry from output...")
+    print(" - Reading Z-Matrix from output...")
     inf_obj, inp_str, _, _, _ = _unpack_ret(ret)
 
     zma = read_job_zma(ret, init_zma=None, rebuild=False)
 
     zma_fs[-1].create(zma_locs)
+    zma_path = zma_fs[-1].path(zma_locs)
+    print(" - Saving at {}".format(zma_path))
+
     zma_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
     zma_fs[-1].file.geometry_input.write(inp_str, zma_locs)
     zma_fs[-1].file.zmatrix.write(zma, zma_locs)
@@ -250,8 +257,10 @@ def _save_energy(ret, sp_fs, sp_locs):
 
     ene = elstruct.reader.energy(prog, method, out_str)
 
-    print(" - Saving energy of unique geometry...")
     sp_fs[-1].create(sp_locs)
+    sp_path = sp_fs[-1].path(sp_locs)
+    print(" - Saving at {}".format(sp_path))
+
     sp_fs[-1].file.input.write(inp_str, sp_locs)
     sp_fs[-1].file.info.write(inf_obj, sp_locs)
     sp_fs[-1].file.energy.write(ene, sp_locs)
@@ -261,21 +270,16 @@ def _save_hessian(ret, cnf_fs, cnf_locs):
     """ saved the hessian
     """
 
-    print(" - Reading hessian from output...")
+    print(" - Reading hessian and harmonic frequencies from output...")
     inf_obj, inp_str, out_str, prog, _ = _unpack_ret(ret)
 
     hess = elstruct.reader.hessian(prog, out_str)
     freqs = elstruct.reader.harmonic_frequencies(prog, out_str)
-    print('freqs', freqs)
-
-    cnf_fs[-1].file.harmonic_frequencies.write(freqs, cnf_locs)
-    # neg, pos = automol.util.separate_negatives(lst)
-    # freqs = sorted([-1.0*val for val in imags] + freqs)
-    # print('TS freqs: {}'.format(' '.join(str(freq) for freq in freqs)))
 
     cnf_fs[-1].create(cnf_locs)
-    cnf_save_path = cnf_fs[-1].path(cnf_locs)
-    print(" - Saving at {}".format(cnf_save_path))
+    cnf_path = cnf_fs[-1].path(cnf_locs)
+    print(" - Saving at {}".format(cnf_path))
+
     cnf_fs[-1].file.hessian_info.write(inf_obj, cnf_locs)
     cnf_fs[-1].file.hessian_input.write(inp_str, cnf_locs)
     cnf_fs[-1].file.hessian.write(hess, cnf_locs)
@@ -291,7 +295,9 @@ def _save_rotors(zma_fs, zma_locs):
     zma = zma_fs[-1].file.zmatrix.read(zma_locs)
     rotors = automol.rotor.from_zmatrix(zma)
     if any(rotors):
-        print(" - Species has rotors, saving them...")
+        zma_path = zma_fs[-1].path(zma_locs)
+        print(" - Rotors identified from Z-Matrix at {}".format(zma_path))
+        print(" - Saving rotor information at same location")
         zma_fs[-1].file.torsions.write(rotors, zma_locs)
 
 

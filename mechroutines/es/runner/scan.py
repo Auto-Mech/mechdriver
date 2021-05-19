@@ -224,6 +224,9 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             # Save the structure
             success, ret = read_job(job, run_fs)
             if success:
+                # Need to get the init zma structure in here
+                # could write init zma to run filesys; wont work retro
+                # get init zma readers?
                 filesys.save.scan_point_structure(
                     ret, scn_save_fs, locs, mod_thy_info[1:], job)
                 locs_lst.append(locs)

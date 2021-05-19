@@ -148,7 +148,6 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     coord_names, constraint_dct, coord_grids, update_guess = scan_inf
 
     # Get filesystem information
-    thy_save_fs = ()
     if constraint_dct is None:
         scn_run_fs = runfs_dct['runlvl_scn_fs']
         scn_save_fs = savefs_dct['runlvl_scn_fs']
@@ -165,7 +164,6 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
         zma=ts_zma,
         spc_info=ts_info,
         mod_thy_info=mod_thy_info,
-        thy_save_fs=thy_save_fs,
         coord_names=coord_names,
         coord_grids=coord_grids,
         scn_run_fs=scn_run_fs,
@@ -178,18 +176,9 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
         saddle=False,
         constraint_dct=constraint_dct,
         retryfail=False,
-        chkstab=False,
         **kwargs,
         )
 
-    # Find the structure at the maximum on the grid opt scan
-    # if 'elimination' in rxn_typ:
-    #     [grid1, grid2] = coord_grids
-    #     max_zma = rxngrid.find_max_2d(
-    #         grid1, grid2, frm_name, brk_name, scn_save_fs,
-    #         mod_thy_info, constraint_dct)
-    #     guess_zmas = [max_zma]
-    # else:
     guess_zmas = rxngrid.find_max_1d(
         zrxn.class_, coord_grids[0], ts_zma, coord_names[0], scn_save_fs,
         mod_thy_info, constraint_dct)
