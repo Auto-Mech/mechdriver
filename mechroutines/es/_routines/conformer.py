@@ -192,13 +192,15 @@ def _optimize_atom(spc_info, zma_init,
 
     if success:
         ioprinter.info_message('Succesful reference geometry optimization')
-        _save_unique_conformer(
-            ret, mod_thy_info, cnf_save_fs, locs,
-            zrxn=None, zma_locs=(0,))
-        inf_obj = autofile.schema.info_objects.conformer_trunk(0)
-        inf_obj.nsamp = 1
-        cnf_save_fs[0].file.info.write(inf_obj)
-        cnf_save_fs[1].file.info.write(inf_obj, [locs[0]])
+        filesys.save.species_conformer(
+            ret, None, cnf_save_fs, mod_thy_info[1:])
+        # _save_unique_conformer(
+        #    ret, mod_thy_info, cnf_save_fs, locs,
+        #    zrxn=None, zma_locs=(0,))
+        # inf_obj = autofile.schema.info_objects.conformer_trunk(0)
+        # inf_obj.nsamp = 1
+        # cnf_save_fs[0].file.info.write(inf_obj)
+        # cnf_save_fs[1].file.info.write(inf_obj, [locs[0]])
 
     return success
 
@@ -257,18 +259,18 @@ def _optimize_molecule(spc_info, zma_init,
                 ioprinter.info_message(
                     'Saving structure as the first conformer...', newline=1)
 
-                _save_unique_conformer(
-                    ret, mod_thy_info, cnf_save_fs, locs,
-                    zrxn=None, zma_locs=(0,))
-                inf_obj = autofile.schema.info_objects.conformer_trunk(0)
-                inf_obj.nsamp = 1
-                cnf_save_fs[0].file.info.write(inf_obj)
-                cnf_save_fs[1].file.info.write(inf_obj, [locs[0]])
+                filesys.save.species_conformer(
+                    ret, None, cnf_save_fs, mod_thy_info[1:])
+                # _save_unique_conformer(
+                #     ret, mod_thy_info, cnf_save_fs, locs,
+                #     zrxn=None, zma_locs=(0,))
+                # inf_obj = autofile.schema.info_objects.conformer_trunk(0)
+                # inf_obj.nsamp = 1
+                # cnf_save_fs[0].file.info.write(inf_obj)
+                # cnf_save_fs[1].file.info.write(inf_obj, [locs[0]])
 
             else:
                 ioprinter.info_message('Saving disconnected species...')
-                _, opt_ret = es_runner.read_job(
-                    job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
                 filesys.save.instability(
                     zma_init, zma,
                     instab_save_fs, cnf_save_fs,
@@ -281,8 +283,6 @@ def _optimize_molecule(spc_info, zma_init,
     else:
         ioprinter.info_message('Saving disconnected species...')
         conf_found = False
-        _, opt_ret = es_runner.read_job(
-            job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
         filesys.save.instability(
             zma_init, zma,
             instab_save_fs, cnf_save_fs,

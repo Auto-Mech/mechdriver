@@ -14,9 +14,9 @@ end spc
 els
     spc init_geom     runlvl=wbsgs   inplvl=wbsgs
     ts  find_ts       runlvl=wbsgs   inplvl=wbsgs
-    all hr_scan       runlvl=wbsgs   inplvl=wbsgs  tors_model=1dhrfa
-    all conf_energy   runlvl=mp2dz   inplvl=wbsgs
-    all conf_hess     runlvl=wbsgs   inplvl=wbsgs
+    # all hr_scan       runlvl=wbsgs   inplvl=wbsgs  tors_model=1dhrfa
+    # all conf_energy   runlvl=mp2dz   inplvl=wbsgs
+    # all conf_hess     runlvl=wbsgs   inplvl=wbsgs
 end els
 
 # thermo
