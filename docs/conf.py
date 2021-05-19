@@ -30,7 +30,13 @@ author = 'Kevin Moore'
 extensions = ['sphinx.ext.autodoc'
 ]
 autodoc_member_order = 'bysource'
-autodoc_mock_imports = ['numpy']
+autodoc_mock_imports = [
+    'numpy',
+    'autofile',
+    'automol',
+    'autorun', 'phydat', 'ioformat', 'autoparse',
+    'elstruct', 'chemkin_io', 'mess_io',
+    'mechanalyzer']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

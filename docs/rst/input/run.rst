@@ -35,38 +35,10 @@ Example::
     end input
 
 
-.. list-table:: Keywords for the input section
-   :widths: 25 15 25 50
-   :header-rows: 1
-
-   * - Keyword
-     - Required
-     - Allowed
-     - Default
-   * - run_prefix
-     - x
-     -
-     - None
-   * - save_prefix
-     - x
-     -
-     - None
-   * - inp_mech
-     - x
-     - chemkin
-     - chemkin
-   * - out_mech
-     - x
-     - chemkin
-     - chemkin
-   * - inp_spc
-     - x
-     - csv
-     - csv
-   * - out_spc
-     - x
-     - csv
-     - csv
+.. csv-table:: keywords for theory blocks
+    :file: tables/runinp_keys.csv
+    :header-rows: 1
+    :widths: 10, 10, 10, 10
 
 
 Chemistry Blocks
@@ -166,60 +138,85 @@ Above the <task> is what electronic structure calculation to be run on object.
 
 keyword=value cannot have spaces in between them.
 
-Allowed Tasks
-------------
-
 Each task is given in the following format <obj>_<job>
  
-'init_geom'
-'find_ts'
-'conf_pucker'
-'conf_samp'
-'conf_energy'
-'conf_grad'
-'conf_hess'
-'conf_vpt2'
-'conf_prop'
-'conf_opt
-'hr_scan'
-'hr_grad'
-'hr_hess'
-'hr_energy'
-'hr_vpt2'
-'hr_reopt': (',)),
-'tau_samp': (
-'tau_energy':
-'tau_grad': (
-'tau_hess': (),
-'rpath_scan':
-'rpath_energy,
-'rpath_grad':
-'rpath_hess':
-# Transport Driver Tasks
-'onedmin': (('spc',), (BASE + TRANS)),
-# Process Driver Tasks
-'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
-'energy': (('spc',), PRNT),
-'geo': (('spc',), PRNT),
-'zmatrix': (('spc',), PRNT),
-'enthalpy': (('spc',), PRNT),
-'coeffs': (('spc',), ()),
-# KTP/Therm
-'write_mess': ((), ('kin_model', 'spc_model', 'overwrite')),
-'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname')),
-'run_fits': ((), ('kin_model',)),
-
-
 Electronic Structure Driver Task Block
 ---------------------------------------
 
 Specifies electronic structure tasks
 
-Order matters
+The order of the tasks in the input block corresponds to the order the tasks
+are conducted in the order they are calculated.
+
+Any number of tasks can be given in the file.
 
 
-kTPDriver Task Block
+Explanation of keywords
+
+init: geom
+find: ts
+conf: pucker, samp, energy, grad, hess, vpt2, prop, opt
+hr: scan, grad, hess, energy, vpt2, reopt
+tau: samp, energy, grad, hess
+rpath: scan, energy, grad, hess:
+
+init: task where no info possibly exists using InChI or input geometry
+find: TS searching algorithm
+conf: conformer of species/TS defined torsional angles of internal rotors and ring torsions
+hr: all geometries along the motion of an internal rotor
+
+energy: calculates electronic energy
+grad: calculates molecular gradient in Cartesian coordinates
+hess: calculates molecular hessian in Cartesian coordinates
+vpt2: calculates VPT2 equations and saves several components
+prop: calculates molecular properties including dipole moment and polarizability
+opt: optimizes some geometry
+reopt: optimizes the minimum on the HR potential if a new min is found
+samp: optimizes conformers according Monte Carlo sampling routine
+scan: scans across some specified internal coordinate
+
+| key descriptions:
+| inplvl = electronic structure method where geometry is read
+|          either for a guess (searching for scan) or for a calc on top (energy calc)
+| runlvl = electronic structure method to calculate desired data for
+| tors_model = model used to construct constraints for scan
+
+for electronic structure method, these should correspond to those that defines blocks in 
+theory.dat
+
+
+kTPDriver and ThermDriver Task Blocks
+-------------------------------------
+
+The order given in the task block is not used anywhere. We use our own
+internal order: write -> run -> fit
+
+| write_mess: Reads and processes all information according to models specified
+|             and then builds the required MESS file
+|             give path to where the MESS file is saved in run-filesys
+| run_mess: Run the MESS file existing in the filesystem
+| run_fits: Fit the rate constants (thermochem) to functional forms and output
+|           mechanism files with this data
+
+kin_model: conditions model (kin mod) to use that is defined in models.dat
+spc_model: conditions model (spc mod) to use that is defined in models.dat
+overwrite: overwrite the MESS file currently in the file system
+nprocs: number of processers to use during the MESS calculation
+inpname:
+
+Transport Driver Tasks
+----------------------
+
+'onedmin'
+
+Process Driver Tasks
 --------------------
 
-Order does not matter
+'freqs'
+'energy' 
+'geo':
+'zmatrix':
+'enthalpy'
+'coeffs': 
+
 

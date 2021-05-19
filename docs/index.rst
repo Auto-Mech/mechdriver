@@ -11,6 +11,8 @@ Welcome to MechDriver's documentation!
     :caption: Contents:
 
     rst/input/index
+    rst/proc
+    rst/workflow
 
 
 Indices and tables

@@ -28,8 +28,8 @@ For multireference calculations, the user may specify a wavefunction guess templ
 
 File format::
 
-! <transition state name>
-<rest of the wfn template>
+    ! <transition state name>
+    <rest of the wfn template>
 
 Internally, we have only very mild abilities to create guess wavefunctions. We can make
 (2,2) space assuming the two highest occupied orbitals are the two reactive radical orbitals.
