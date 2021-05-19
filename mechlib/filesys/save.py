@@ -5,7 +5,7 @@
 import automol
 import elstruct
 import autofile
-from mechroutines.es import runner as es_runner
+from mechlib.amech_io import printer as ioprinter
 
 
 def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
@@ -20,56 +20,68 @@ def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
     cnf_locs, zma_locs = _generate_locs(
         rng_locs=rng_locs, tors_locs=tors_locs, zma_locs=zma_locs)
 
-    # cnf_fs = autofile.fs.conformer(PREFIX)
-    # make paths and pass?
     zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
     sp_fs = autofile.fs.single_point(cnf_fs[-1].path(cnf_locs))
 
-    # Save data
+    # Save data from optimization and hessian jobs
     _save_geom(opt_ret, cnf_fs, cnf_locs)
-    _save_zmatrix(opt_ret, zma_fs, zma_locs)
-    _save_rotors(_, zma_fs, zma_locs)  # Need a zma, prob just read from filesys?
-    _save_reaction(zma_fs, zma_locs, zrxn=zrxn)
+    _save_zmatrix(opt_ret, zma_fs, zma_locs, init_zma=init_zma)
     _save_energy(opt_ret, sp_fs, thy_locs)
 
     if hess_ret is not None:
         _save_hessian(hess_ret, cnf_fs, cnf_locs)
 
+    # Save ring and cnf samp files, if needed
+    init_cnf_samp(cnf_fs, cnf_locs)
 
-def sym_indistinct_conformer(geo, cnf_fs, cnf_tosave_locs, cnf_saved__locs):
-    """
+    # Save auxiliary information for the structure, if needed
+    _save_rotors(zma_fs, zma_locs)
+    _save_reaction(zma_fs, zma_locs, zrxn=zrxn)
+
+
+def sym_indistinct_conformer(geo, cnf_fs, cnf_tosave_locs, cnf_saved_locs):
+    """ Save conformer that is symmetryically similar to another conformer
+        that is in the filesystem.
     """
 
     # Set the path to the conf filesys with sym similar
-    cnf_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
+    cnf_save_path = cnf_fs[-1].path(cnf_saved_locs)
 
     # Build the sym file sys
     sym_save_fs = autofile.fs.symmetry(cnf_save_path)
-    sym_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
+    sym_save_path = cnf_fs[-1].path(cnf_saved_locs)
     ioprinter.save_symmetry(sym_save_path)
     sym_save_fs[-1].create([cnf_tosave_locs[-1]])
     sym_save_fs[-1].file.geometry.write(geo, [cnf_tosave_locs[-1]])
 
 
-def hindered_rotor_point(opt_ret, scn_fs, scn_locs, job):
+def scan_point_structure(opt_ret, scn_fs, scn_locs, thy_locs, job):
     """ save info for the hindered rotor
     """
 
+    # if job == elstruct.Job.OPTIMIZATION:
     _save_geom(opt_ret, scn_fs, scn_locs)
     _save_zmatrix(opt_ret, scn_fs, scn_locs)
 
+    sp_fs = autofile.fs.single_point(scn_fs[-1].path(scn_locs))
+    _save_energy(opt_ret, sp_fs, thy_locs)
 
-def init_cnf_samp(cnf_save_fs, cnf_locs):
+
+def init_cnf_samp(cnf_fs, cnf_locs):
     """ init cnf samp
     """
 
     inf_obj = autofile.schema.info_objects.conformer_trunk(0)
     inf_obj.nsamp = 1
 
-    if not cnf_save_fs[0].info.exists():
-        cnf_save_fs[0].file.info.write(inf_obj)
-    if not cnf_save_fs[1].file.info.exists([locs[0]]):
-        cnf_save_fs[1].file.info.write(inf_obj, [locs[0]])
+    if not cnf_fs[0].file.info.exists():
+        rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
+        rinf_obj.nsamp = 1
+        cnf_fs[0].file.info.write(rinf_obj)
+    if not cnf_fs[1].file.info.exists([cnf_locs[0]]):
+        cinf_obj = autofile.schema.info_objects.conformer_branch(0)
+        cinf_obj.nsamp = 1
+        cnf_fs[1].file.info.write(cinf_obj, [cnf_locs[0]])
 
 
 # Saving other
@@ -123,12 +135,12 @@ def instability(conn_zma, disconn_zmas,
         print(" - Save path: {}".format(cnf_save_path))
 
 
-def flux(vrc_ret, ts_run_fs, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
+def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
     """ Save the VaReCoF flux and input
     """
 
     # Unpack the ret
-    inf_obj, inp_strs, out_str = vrc_ret
+    _, inp_strs, _ = vrc_ret
     tst_str, divsur_str, molpro_str, tml_str, struct_str, pot_str = inp_strs
 
     # Get the flux string (somehow)
@@ -171,8 +183,8 @@ def rebuild_zma_from_opt_geo(init_zma, opt_geo):
     """ build zma from opt
     """
     dummy_key_dct = automol.zmat.dummy_key_dictionary(init_zma)
-    geo_wdummy = automol.geom.insert_dummies(geo, dummy_key_dct)
-    zma = automol.zmat.from_geometry(zma, geo_wdummy)
+    geo_wdummy = automol.geom.insert_dummies(opt_geo, dummy_key_dct)
+    zma = automol.zmat.from_geometry(init_zma, geo_wdummy)
 
     return zma
 
@@ -219,7 +231,7 @@ def _save_zmatrix(ret, zma_fs, zma_locs, init_zma=None):
     """
 
     print(" - Reading geometry from output...")
-    inf_obj, inp_str, out_str, prog, _ = _unpack_ret(ret)
+    inf_obj, inp_str, _, _, _ = _unpack_ret(ret)
 
     zma = read_job_zma(ret, init_zma=None, rebuild=False)
 
@@ -253,6 +265,8 @@ def _save_hessian(ret, cnf_fs, cnf_locs):
     inf_obj, inp_str, out_str, prog, _ = _unpack_ret(ret)
 
     hess = elstruct.reader.hessian(prog, out_str)
+    freqs = elstruct.reader.harmonic_frequencies(prog, out_str)
+    print('freqs', freqs)
 
     cnf_fs[-1].file.harmonic_frequencies.write(freqs, cnf_locs)
     # neg, pos = automol.util.separate_negatives(lst)
@@ -268,10 +282,13 @@ def _save_hessian(ret, cnf_fs, cnf_locs):
     cnf_fs[-1].file.harmonic_frequencies.write(freqs, cnf_locs)
 
 
-def _save_rotors(zma, zma_fs, zma_locs):
+def _save_rotors(zma_fs, zma_locs):
     """ Save the rotors
+
+        Reading the ZMA from the filesystem to build rotors
     """
 
+    zma = zma_fs[-1].file.zmatrix.read(zma_locs)
     rotors = automol.rotor.from_zmatrix(zma)
     if any(rotors):
         print(" - Species has rotors, saving them...")

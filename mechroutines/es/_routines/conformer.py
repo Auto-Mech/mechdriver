@@ -4,7 +4,6 @@
 import shutil
 import time
 import numpy
-import time
 import automol
 import elstruct
 import autofile
@@ -192,15 +191,9 @@ def _optimize_atom(spc_info, zma_init,
 
     if success:
         ioprinter.info_message('Succesful reference geometry optimization')
-        filesys.save.species_conformer(
-            ret, None, cnf_save_fs, mod_thy_info[1:])
-        # _save_unique_conformer(
-        #    ret, mod_thy_info, cnf_save_fs, locs,
-        #    zrxn=None, zma_locs=(0,))
-        # inf_obj = autofile.schema.info_objects.conformer_trunk(0)
-        # inf_obj.nsamp = 1
-        # cnf_save_fs[0].file.info.write(inf_obj)
-        # cnf_save_fs[1].file.info.write(inf_obj, [locs[0]])
+        filesys.save.conformer(
+            ret, None, cnf_save_fs, mod_thy_info[1:],
+            rng_locs=locs[0], tors_locs=locs[1])
 
     return success
 
@@ -208,7 +201,6 @@ def _optimize_atom(spc_info, zma_init,
 def _optimize_molecule(spc_info, zma_init,
                        method_dct,
                        instab_save_fs,
-                     #  cnf_save_fs, cnf_locs,
                        cnf_save_fs, locs,
                        run_fs,
                        overwrite,
@@ -253,22 +245,13 @@ def _optimize_molecule(spc_info, zma_init,
 
         # Recheck connectivity for imag-checked geometry
         if geo is not None:
-
             conf_found = True
             if automol.geom.connected(geo):
                 ioprinter.info_message(
                     'Saving structure as the first conformer...', newline=1)
-
-                filesys.save.species_conformer(
-                    ret, None, cnf_save_fs, mod_thy_info[1:])
-                # _save_unique_conformer(
-                #     ret, mod_thy_info, cnf_save_fs, locs,
-                #     zrxn=None, zma_locs=(0,))
-                # inf_obj = autofile.schema.info_objects.conformer_trunk(0)
-                # inf_obj.nsamp = 1
-                # cnf_save_fs[0].file.info.write(inf_obj)
-                # cnf_save_fs[1].file.info.write(inf_obj, [locs[0]])
-
+                filesys.save.conformer(
+                    ret, None, cnf_save_fs, mod_thy_info[1:],
+                    rng_locs=locs[0], tors_locs=locs[1])
             else:
                 ioprinter.info_message('Saving disconnected species...')
                 filesys.save.instability(
@@ -367,9 +350,9 @@ def single_conformer(zma, spc_info, mod_thy_info,
                     cnf_save_fs[1].create([locs[0]])
                     cnf_save_fs[0].file.info.write(rinf_obj)
                     cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
-                    _save_unique_conformer(
-                        ret, mod_thy_info, cnf_save_fs, locs,
-                        zrxn=zrxn, zma_locs=(0,))
+                    filesys.save.conformer(
+                        ret, None, cnf_save_fs, mod_thy_info[1:], zrxn=zrxn,
+                        rng_locs=locs[0], tors_locs=locs[1])
                     saved_geos.append(geo)
                     saved_enes.append(ene)
                     saved_locs.append(locs)
@@ -393,7 +376,8 @@ def conformer_sampling(zma, spc_info, thy_info,
 
     # Check if any saving needs to be done before hand
     if resave:
-        _presamp_save(spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=zrxn, rid=rid)
+        _presamp_save(
+            spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=zrxn, rid=rid)
 
     # Build filesys
     cnf_save_fs[1].create([rid])
@@ -794,53 +778,51 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=None, rid=No
 
 
 def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
-                      orig_ich='', rid_traj=False):
-      """ save the conformers that have been found so far
+                    orig_ich='', rid_traj=False):
+    """ save the conformers that have been found so far
           # Only go through save procedure if conf not in save
           # may need to get geo, ene, etc; maybe make function
-      """
+    """
 
-      saved_locs, saved_geos, saved_enes = _saved_cnf_info(
-          cnf_save_fs, thy_info)
+    saved_locs, saved_geos, saved_enes = _saved_cnf_info(
+        cnf_save_fs, thy_info)
 
-      inf_obj, _, out_str = ret
-      prog = inf_obj.prog
-      method = inf_obj.method
-      ene = elstruct.reader.energy(prog, method, out_str)
-      geo = elstruct.reader.opt_geometry(prog, out_str)
-      zma = elstruct.reader.opt_zmatrix(prog, out_str)
+    inf_obj, _, out_str = ret
+    prog = inf_obj.prog
+    method = inf_obj.method
+    ene = elstruct.reader.energy(prog, method, out_str)
+    geo = elstruct.reader.opt_geometry(prog, out_str)
+    zma = elstruct.reader.opt_zmatrix(prog, out_str)
 
-      # Assess if geometry is properly connected
-      viable = _geo_connected(geo, zrxn)
-      if viable:
-          if zrxn:
-              viable = _ts_geo_viable(
-                  zma, zrxn, cnf_save_fs, thy_info)
-          else:
-              viable = _inchi_are_same(orig_ich, geo)
+    # Assess if geometry is properly connected
+    viable = _geo_connected(geo, zrxn)
+    if viable:
+        if zrxn:
+            viable = _ts_geo_viable(
+                zma, zrxn, cnf_save_fs, thy_info)
+        else:
+            viable = _inchi_are_same(orig_ich, geo)
 
-      # Determine uniqueness of conformer, save if needed
-      if viable:
-          if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
-              # iso check breaks because of zma location
-              # if _is_proper_isomer(cnf_save_fs, zma):
-              sym_id = _sym_unique(
-                  geo, ene, saved_geos, saved_enes)
-              if sym_id is None:
-                  _save_unique_conformer(
-                      ret, thy_info, cnf_save_fs,
-                      locs, zrxn=zrxn)
-              else:
-                  sym_locs = saved_locs[sym_id]
-                  _save_sym_indistinct_conformer(
-                      geo, cnf_save_fs, locs, sym_locs)
+    # Determine uniqueness of conformer, save if needed
+    if viable:
+        if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
+            sym_id = _sym_unique(
+                geo, ene, saved_geos, saved_enes)
+            if sym_id is None:
+                filesys.save.conformer(
+                    ret, None, cnf_save_fs, thy_info[1:], zrxn=zrxn,
+                    rng_locs=locs[0], tors_locs=locs[1])
+            else:
+                sym_locs = saved_locs[sym_id]
+                _save_sym_indistinct_conformer(
+                    geo, cnf_save_fs, locs, sym_locs)
 
-          # Update the conformer trajectory file
-          ioprinter.obj('vspace')
-          rid = None
-          if rid_traj:
-              rid = locs[0]
-          filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
+        # Update the conformer trajectory file
+        ioprinter.obj('vspace')
+        rid = None
+        if rid_traj:
+            rid = locs[0]
+        filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
 
 
 def _init_geom_is_running(cnf_run_fs):
@@ -906,7 +888,7 @@ def _saved_cnf_info(cnf_save_fs, mod_thy_info):
                     ioprinter.info_message('the energy is now found')
                 else:
                     ioprinter.info_message('waiting helped nothing')
-                
+
     return found_saved_locs, found_saved_geos, found_saved_enes
 
 
@@ -1352,70 +1334,6 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
             uni_ini_cnf_save_locs.append(ini_locs)
 
     return uni_ini_cnf_save_locs
-
-
-def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
-                           zrxn=None, zma_locs=(0,)):
-    """ Save the conformer in the filesystem
-    """
-
-    # Set the path to the conformer save filesystem
-    cnf_save_path = cnf_save_fs[-1].path(locs)
-
-    # Unpack the ret object and obtain the prog and method
-    inf_obj, inp_str, out_str = ret
-    prog = inf_obj.prog
-    method = inf_obj.method
-
-    # Read the energy and geom from the output
-    ene = elstruct.reader.energy(prog, method, out_str)
-    geo = elstruct.reader.opt_geometry(prog, out_str)
-    zma = elstruct.reader.opt_zmatrix(prog, out_str)
-    print('zma 0 test:', zma, geo)
-    if zma is None:
-        zma = automol.geom.zmatrix(geo)
-    print('zma 1 test:', zma)
-
-    # Build the conformer filesystem and save the structural info
-    ioprinter.save_conformer(cnf_save_path)
-    cnf_save_fs[-1].create(locs)
-    cnf_save_fs[-1].file.geometry_info.write(inf_obj, locs)
-    cnf_save_fs[-1].file.geometry_input.write(inp_str, locs)
-    cnf_save_fs[-1].file.energy.write(ene, locs)
-    cnf_save_fs[-1].file.geometry.write(geo, locs)
-
-    # Build the zma filesystem and save the z-matrix
-    zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
-    zma_save_fs[-1].create(zma_locs)
-    zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
-    zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
-    zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-
-    # Get the tors names
-    rotors = automol.rotor.from_zmatrix(zma)
-    if any(rotors):
-        zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
-
-    rings_atoms =  _get_ring_atoms(zma, zrxn)
-    tors_dct = {}
-    for ring_atoms in rings_atoms:
-        dct_label = '-'.join(str(atm+1) for atm in ring_atoms)
-        samp_range_dct = _get_ring_samp_ranges(zma, ring_atoms)
-        tors_dct[dct_label] = samp_range_dct
-    if tors_dct:
-        zma_save_fs[-1].file.ring_torsions.write(tors_dct, zma_locs)
-
-    # Save the tra and gra for a zrxn
-    if zrxn:
-        zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
-
-    # Saving the energy to a SP filesystem
-    sp_save_fs = autofile.fs.single_point(cnf_save_path)
-    sp_save_fs[-1].create(thy_info[1:4])
-    ioprinter.save_conformer_energy(sp_save_fs[-1].root.path())
-    sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
-    sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
-    sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
 
 
 def _save_sym_indistinct_conformer(geo, cnf_save_fs,

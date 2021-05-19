@@ -11,7 +11,7 @@ from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
-from mechlib.filesys import build_fs
+from mechlib import filesys
 
 
 # SADPT FINDER FUNCTIONS
@@ -95,13 +95,9 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
 
         if sadpt_status == 'success':
             runlvl_cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
-            # filesys.save.ts_conformer(
-            #     opt_ret, hess_ret, zrxn,
-            #    thy_locs, cnf_locs=None, zma_locs=None)
-            save_saddle_point(
-                zrxn, opt_ret, hess_ret, freqs, imags,
-                mod_thy_info, savefs_dct, locs,
-                zma_locs=[0])
+            filesys.save.conformer(
+                opt_ret, hess_ret, runlvl_cnf_save_fs, mod_thy_info[1:],
+                zrxn=zrxn, rng_locs=(rid,), tors_locs=(cid,), zma_locs=None)
 
     else:
         ioprinter.warning_message('\n TS optimization failed. No geom to check and save.')
@@ -332,71 +328,3 @@ def saddle_point_checker(imags):
             status = 'success'
 
     return status
-
-
-def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
-                      mod_thy_info, savefs_dct, locs,
-                      zma_locs=(0,)):
-    """ Optimize the transition state structure obtained from the grid search
-    """
-
-    cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
-
-    # Read the geom, energy, and Hessian from output
-    opt_inf_obj, opt_inp_str, opt_out_str = opt_ret
-    opt_prog = opt_inf_obj.prog
-    opt_method = opt_inf_obj.method
-    ene = elstruct.reader.energy(opt_prog, opt_method, opt_out_str)
-    geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
-    zma = elstruct.reader.opt_zmatrix(opt_prog, opt_out_str)
-    ioprinter.debug_message('TS Geometry:')
-    ioprinter.debug_message(automol.geom.string(geo))
-
-    ioprinter.info_message(" - Reading hessian from output...")
-    hess_inf_obj, hess_inp_str, hess_out_str = hess_ret
-    hess_prog = hess_inf_obj.prog
-    hess = elstruct.reader.hessian(hess_prog, hess_out_str)
-    freqs = sorted([-1.0*val for val in imags] + freqs)
-    ioprinter.debug_message('TS freqs: {}'.format(' '.join(str(freq) for freq in freqs)))
-
-    # Save this structure as first conformer
-    cnf_save_fs[-1].create(locs)
-    cnf_save_fs[-1].file.geometry_info.write(opt_inf_obj, locs)
-    cnf_save_fs[-1].file.geometry_input.write(opt_inp_str, locs)
-    cnf_save_fs[-1].file.hessian_info.write(hess_inf_obj, locs)
-    cnf_save_fs[-1].file.hessian_input.write(hess_inp_str, locs)
-    cnf_save_fs[-1].file.energy.write(ene, locs)
-    cnf_save_fs[-1].file.geometry.write(geo, locs)
-    cnf_save_fs[-1].file.hessian.write(hess, locs)
-    cnf_save_fs[-1].file.harmonic_frequencies.write(freqs, locs)
-    cnf_save_path = cnf_save_fs[-1].path(locs)
-
-    rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
-    rinf_obj.nsamp = 1
-    cnf_save_fs[0].file.info.write(rinf_obj)
-
-    cinf_obj = autofile.schema.info_objects.conformer_branch(0)
-    cinf_obj.nsamp = 1
-    cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
-
-    # Save the zmatrix information in a zma filesystem
-    cnf_save_path = cnf_save_fs[-1].path(locs)
-    zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
-    zma_save_fs[-1].create(zma_locs)
-    zma_save_fs[-1].file.geometry_info.write(opt_inf_obj, zma_locs)
-    zma_save_fs[-1].file.geometry_input.write(opt_inp_str, zma_locs)
-    zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-    zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
-
-    # Save the torsions
-    rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
-    if any(rotors):
-        zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
-
-    # Save the energy in a single-point filesystem
-    ioprinter.info_message(" - Saving energy...")
-    sp_save_fs = autofile.fs.single_point(cnf_save_path)
-    sp_save_fs[-1].create(mod_thy_info[1:4])
-    sp_save_fs[-1].file.input.write(opt_inp_str, mod_thy_info[1:4])
-    sp_save_fs[-1].file.info.write(opt_inf_obj, mod_thy_info[1:4])
-    sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
