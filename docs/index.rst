@@ -13,6 +13,7 @@ Welcome to MechDriver's documentation!
     rst/input/index
     rst/proc
     rst/workflow
+    rst/autolib/index
 
 
 Indices and tables
