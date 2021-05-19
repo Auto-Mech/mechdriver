@@ -1,41 +1,28 @@
-Theory table
 
-.. list-table:: Keywords for the input section
-   :widths: 25 15 25 50
-   :header-rows: 1
+theory.dat
+==========
 
-   * - Keyword
-     - Required
-     - Allowed
-     - Default
-   * - program
-     - x
-     -
-     - None
-   * - method
-     - x
-     -
-     - None
-   * - basis
-     - x
-     -
-     - None
-   * - orb_res
-     - x
-     -
-     - None
-   * - mem
-     - 
-     -
-     - 1.0
-   * - nprocs
-     - 
-     -
-     - 1
-   * - opt_coords
-     - 
-     -
-     - zma
+Details various electronic structure methods.
+
+Theory levels are given as a series of blocks like so:
+
+General format::
+
+    level <level_name>
+            <keyword1 = value>
+            <keyword2 = value>
+              …
+    end level
+
+Above, <level_name> serves as a descriptor of the method that is used in other parts of the code. This string can be whatever the user wishes. It must contain no whitespace.
+
+Any number of these level blocks can be given in theory.dat. The only blocks used by the code are those specified in run.dat and models.dat.
+
+
+.. csv-table:: keywords for theory blocks
+    :file: tables/thy_keys.csv
+    :header-rows: 1
+    :widths: 10, 10, 10, 10
 
 program: electronic structure program to run
 
@@ -62,3 +49,5 @@ where the first (second) label in each pair corresponds closed-shell (open-shell
 program (if version does not exist, just try other version, need to see if parsing makes filesys okay)
 
 maybe provide a link to elstruct for program (method/basis) availability
+
+
