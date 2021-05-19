@@ -15,7 +15,7 @@ def hindered_rotor_scans(
         rotors, tors_model, method_dct,
         overwrite,
         saddle=False,
-        increment=30.0*phycon.DEG2RAD,
+        increment=0.5235987756,
         retryfail=True):
     """ Perform scans over each of the torsional coordinates
     """

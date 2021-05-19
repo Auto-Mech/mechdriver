@@ -5,16 +5,12 @@ Computes the Heat of Formation at 0 K for a given species
 import os
 import csv
 import numpy as np
-from qcelemental import constants as qcc
 import automol.inchi
 import automol.graph
+from phydat import phycon
 from . import util
 from mechlib.amech_io import printer as ioprinter
 
-
-# Conversion factors
-KJ2KCAL = qcc.conversion_factor('kJ/mol', 'kcal/mol')
-EH2KCAL = qcc.conversion_factor('hartree', 'kcal/mol')
 
 # Path  the database files (stored in the thermo src directory)
 SRC_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -37,9 +33,9 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
             ioprinter.warning_message(
                 'No Heat of Formation in database for {} {} ', spc, ref_set)
         if ts:
-            h_basis *= KJ2KCAL
+            h_basis *= phycon.KJ2KCAL
         dhzero += coeff[i] * h_basis
-        dhzero -= coeff[i] * hzero_basis[i] * EH2KCAL
+        dhzero -= coeff[i] * hzero_basis[i] * phycon.EH2KCAL
         ioprinter.debug_message('Contribution from:', spc)
         ioprinter.debug_message(
             'HF0K in kcal: {:g} * {:.5f}'.format(coeff[i], h_basis))

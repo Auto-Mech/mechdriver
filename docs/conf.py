@@ -31,12 +31,12 @@ extensions = ['sphinx.ext.autodoc'
 ]
 autodoc_member_order = 'bysource'
 autodoc_mock_imports = [
-    'numpy',
+    'numpy', 'scipy', 'pandas',
     'autofile',
     'automol',
     'autorun', 'phydat', 'ioformat', 'autoparse',
-    'elstruct', 'chemkin_io', 'mess_io',
-    'mechanalyzer']
+    'elstruct', 'chemkin_io', 'mess_io', 'projrot_io', 'onedmin_io',
+    'mechanalyzer', 'ratefit']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
