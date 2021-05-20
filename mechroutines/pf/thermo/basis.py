@@ -14,7 +14,7 @@ from mechroutines.pf.models.ene import read_energy
 from mechroutines.pf.thermo import heatform
 from phydat import phycon
 from mechlib import filesys
-from mechlib.filesys import build_fs
+from mechlib.filesys import reaction_fs
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -52,11 +52,6 @@ IMPLEMENTED_CBH_TS_CLASSES = [
     'radical radical hydrogen abstraction high',
     'addition high'
 ]
-# IMPLEMENTED_CBH_TS_CLASSES = [
-#     'hydrogen migration',
-#     'addition high',
-#     'elimination high'
-# ]
 
 
 def prepare_refs(
@@ -103,7 +98,9 @@ def prepare_refs(
                 else unique_refs_dct['reacs']
                 for spc in unique_refs_dct]
             for spc in unq_dct:
-                new_ich = unq_dct[spc]['inchi'] if 'inchi' in unq_dct[spc] else unq_dct[spc]['reacs']
+                new_ich = (
+                    unq_dct[spc]['inchi']
+                    if 'inchi' in unq_dct[spc] else unq_dct[spc]['reacs'])
                 if new_ich not in bas_ichs:
                     cnt = len(list(unique_refs_dct.keys())) + 1
                     if isinstance(new_ich, str):
@@ -126,10 +123,12 @@ def prepare_refs(
 def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                   run_prefix, save_prefix,
                   repeats=False, parallel=False, zrxn=None):
+    """ Prepare references
+    """
+
     ioprinter.info_message(
         'Processor {} will prepare species: {}'.format(
             os.getpid(), ', '.join(spc_names)))
-    print('basis spc_names', spc_names)
     spc_ichs = [spc_dct[spc]['inchi'] for spc in spc_names]
     dct_ichs = [spc_dct[spc]['inchi'] for spc in spc_dct.keys()
                 if spc != 'global' and 'ts' not in spc]
@@ -152,7 +151,8 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         if zrxn is not None:
             rxnclass = automol.reac.reaction_class(zrxn)
-            if rxnclass in IMPLEMENTED_CBH_TS_CLASSES and 'basic' not in ref_scheme:
+            if (rxnclass in IMPLEMENTED_CBH_TS_CLASSES and
+               'basic' not in ref_scheme):
                 spc_basis, coeff_basis = get_ts_ref_fxn(zrxn)
             else:
                 # Use a basic scheme
@@ -176,7 +176,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                                     coeff_basis[j] += c_bas_i
         else:
             spc_basis, coeff_basis = get_ref_fxn(spc_ich)
-        for i in range(len(spc_basis)):
+        for i,  _ in enumerate(spc_basis):
             if isinstance(spc_basis[i], str):
                 spc_basis[i] = automol.inchi.add_stereo(spc_basis[i])
 
@@ -194,23 +194,25 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                 unique_refs_dct[spc]['inchi']
                 if 'inchi' in unique_refs_dct[spc]
                 else unique_refs_dct[spc]['reacs']
-                for spc in unique_refs_dct.keys()]
+                for spc in unique_refs_dct]
             cnt = len(list(unique_refs_dct.keys())) + 1
             if isinstance(ref, str):
                 if ((ref not in spc_ichs and ref not in dct_ichs)
                         or repeats) and ref not in bas_ichs:
                     ref_name = 'REF_{}'.format(cnt)
-                    msg += '\nAdding reference species {}, InChI string:{}'.format(
-                        ref, ref_name)
+                    msg += (
+                        '\nAdding reference species {}, InChI string:{}'
+                    ).format(ref, ref_name)
                     unique_refs_dct[ref_name] = create_spec(ref)
             else:
-                if (((((ref not in spc_ichs and ref not in dct_ichs) or repeats) and ref not in bas_ichs) or
-                      (ref[::-1] not in spc_ichs and ref[::-1] not in dct_ichs) or repeats) and ref not in bas_ichs[::-1]):
+                if _chk(ref, spc_ichs, dct_ichs, bas_ichs, repeats):
                     ref_name = 'TS_REF_{}'.format(cnt)
-                    msg += '\nAdding reference species {}, InChI string:{}'.format(
-                        ref, ref_name)
+                    msg += (
+                        '\nAdding reference species {}, InChI string:{}'
+                    ).format(ref, ref_name)
                     unique_refs_dct[ref_name] = create_ts_spc(
-                        ref, spc_dct, spc_dct[spc_name]['mult'], run_prefix, save_prefix,
+                        ref, spc_dct, spc_dct[spc_name]['mult'],
+                        run_prefix, save_prefix,
                         rxnclass)
     ioprinter.info_message(msg)
     if parallel:
@@ -222,65 +224,46 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
 def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
     """ add a ts species to the species dictionary
     """
-    spec = {}
-    spec['reacs'] = list(ref[0])
-    spec['prods'] = list(ref[1])
-    spec['charge'] = 0
-    spec['inchi'] = ''
-    spec['class'] = rxnclass
-    spec['mult'] = mult
-    rxn_ichs = [[], []]
-    ioprinter.info_message('spec in build spc', spec)
-    for rct_ich in spec['reacs']:
-        if rct_ich:
-            rxn_ichs[0].append(automol.inchi.add_stereo(rct_ich))
-    for prd_ich in spec['prods']:
-        if prd_ich:
-            rxn_ichs[1].append(automol.inchi.add_stereo(prd_ich))
-    rct_muls = []
-    prd_muls = []
-    rct_chgs = []
-    prd_chgs = []
-    for rct in spec['reacs']:
-        found = False
-        for name in spc_dct:
-            if 'inchi' in spc_dct[name]:
-                if spc_dct[name]['inchi'] == rct:
-                    rct_muls.append(spc_dct[name]['mult'])
-                    rct_chgs.append(spc_dct[name]['charge'])
-                    found = True
-                    break
-        if not found:
-            new_spc = create_spec(rct)
-            rct_muls.append(new_spc['mult'])
-            rct_chgs.append(new_spc['charge'])
-    for rct in spec['prods']:
-        found = False
-        for name in spc_dct:
-            if 'inchi' in spc_dct[name]:
-                if spc_dct[name]['inchi'] == rct:
-                    prd_muls.append(spc_dct[name]['mult'])
-                    prd_chgs.append(spc_dct[name]['charge'])
-                    found = True
-                    break
-        if not found:
-            new_spc = create_spec(rct)
-            prd_muls.append(new_spc['mult'])
-            prd_chgs.append(new_spc['charge'])
-    rxn_muls = [rct_muls, prd_muls]
-    rxn_chgs = [rct_chgs, prd_chgs]
 
-    rxn_info = rinfo.sort((rxn_ichs, rxn_chgs, rxn_muls, mult))
-    spec['rxn_info'] = rxn_info
-    spec['ts_locs'] = (0,)
-    rxn_run_fs, rxn_save_fs = build_fs(run_prefix, save_prefix, 'REACTION')
-    rxn_run_path = rxn_run_fs[-1].path(rxn_info)
-    rxn_save_path = rxn_save_fs[-1].path(rxn_info)
-    spec['rxn_fs'] = [
-        rxn_run_fs, rxn_save_fs,
-        rxn_run_path, rxn_save_path]
+    # Obtain the Reaction InChIs, Charges, Mults
+    reacs, prods = ref[0], ref[1]
+    rxn_ichs = (
+        tuple(automol.inchi.add_stereo(ich) for ich in reacs if ich),
+        tuple(automol.inchi.add_stereo(ich) for ich in prods if ich)
+    )
 
-    return spec
+    rxn_muls, rxn_chgs = (), ()
+    for rgts in (reacs, prods):
+        rgt_muls, rgt_chgs = (), ()
+        for rgt in rgts:
+            found = False
+            for name in spc_dct:
+                if 'inchi' in spc_dct[name]:
+                    if spc_dct[name]['inchi'] == rgt:
+                        rgt_muls += (spc_dct[name]['mult'],)
+                        rgt_chgs += (spc_dct[name]['charge'],)
+                        found = True
+                        break
+            if not found:
+                new_spc = create_spec(rgt)
+                rgt_muls += (new_spc['mult'],)
+                rgt_chgs += (new_spc['charge'],)
+        rxn_muls += (rgt_muls,)
+        rxn_chgs += (rgt_chgs,)
+
+    rxn_info = rinfo.from_data(rxn_ichs, rxn_chgs, rxn_muls, mult)
+
+    return {
+        'reacs': list(reacs),
+        'prods': list(prods),
+        'charge': 0,
+        'inchi': '',
+        'class': rxnclass,
+        'mult': mult,
+        'rxn_info': rxn_info,
+        'ts_locs': (0,),
+        'rxn_fs': reaction_fs(run_prefix, save_prefix, rinfo.sort(rxn_info))
+    }
 
 
 def create_spec(ich, charge=0,
@@ -288,19 +271,18 @@ def create_spec(ich, charge=0,
                 hind_inc=30.):
     """ add a species to the species dictionary
     """
-    spec = {}
-    print('inchi test:', ich)
     rad = automol.formula.electron_count(automol.inchi.formula(ich)) % 2
     mult = 1 if not rad else 2
-    spec['inchi'] = ich
-    spec['inchikey'] = automol.inchi.inchi_key(ich)
-    spec['sens'] = 0.0
-    spec['charge'] = charge
-    spec['mult'] = mult
-    spec['mc_nsamp'] = mc_nsamp
-    spec['hind_inc'] = hind_inc * phycon.DEG2RAD
 
-    return spec
+    return {
+        'inchi': ich,
+        'inchikey': automol.inchi.inchi_key(ich),
+        'sens': 0.0,
+        'charge': charge,
+        'mult': mult,
+        'mc_nsamp': mc_nsamp,
+        'hind_inc': hind_inc * phycon.DEG2RAD
+    }
 
 
 def is_scheme(scheme):
@@ -318,16 +300,11 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
 
     # Initialize ich name dct to noe
     ich_name_dct = {}
-    # ts_ich_name_dct = {}
     for ich in spc_basis:
         if isinstance(ich, str):
             ich_name_dct[ich] = None
         else:
-            ich_name_dct[
-                'REACS' + 'REAC'.join(ich[0]) + r'PRODS' + 'PROD'.join(ich[1])] = None
-
-    # Add the name of the species of interest
-    # ich_name_dct[spc_name] = spc_dct[spc_name]['inchi']
+            ich_name_dct[_ich_key_name(ich)] = None
 
     # Get names of the basis species from the respective spc dcts
     for ich in spc_basis:
@@ -337,17 +314,13 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                     ich_name_dct[ich] = name
             elif name != 'global':
                 if 'reacs' in spc_dct[name]:
-                    if ((list(ich[0]) == spc_dct[name]['reacs'] or list(ich[0]) == spc_dct[name]['reacs'][::-1]) and
-                            (list(ich[1]) == spc_dct[name]['prods'] or list(ich[1]) == spc_dct[name]['prods'][::-1])):
-                        #ts_ich_name_dct['REAC' + 'REAC'.join(ich[0]) +  'PROD' + 'PROD'.join(ich[1])] = name
-                        ich_name_dct['REACS' + 'REAC'.join(ich[0]) +  'PRODS' + 'PROD'.join(ich[1])] = name
+                    if _ich_in_rxn(ich, spc_dct[name]):
+                        ich_name_dct[_ich_key_name(ich)] = name
         for name in uni_refs_dct:
             if 'TS' in name:
                 ioprinter.info_message(uni_refs_dct[name]['reacs'])
-                if ((list(ich[0]) == uni_refs_dct[name]['reacs'] or list(ich[0]) == uni_refs_dct[name]['reacs'][::-1]) and
-                        (list(ich[1]) == uni_refs_dct[name]['prods'] or list(ich[1]) == uni_refs_dct[name]['prods'][::-1])):
-                    ich_name_dct['REACS' + 'REAC'.join(ich[0]) +  'PRODS' + 'PROD'.join(ich[1])] = name
-                    #ts_ich_name_dct['REAC' + 'REAC'.join(ich[0]) +  'PROD' + 'PROD'.join(ich[1])] = name
+                if _ich_in_rxn(ich, spc_dct[name]):
+                    ich_name_dct[_ich_key_name(ich)] = name
             elif ich == uni_refs_dct[name]['inchi']:
                 ich_name_dct[ich] = name
 
@@ -361,9 +334,6 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
     if dct_incomplete:
         ioprinter.error_message('Job ending since basis species not specified')
         sys.exit()
-
-    # Combine the two spc dcts together
-    # full_spc_dct = {**spc_dct, **uni_refs_dct}
 
     # Get the species energy
     if read_species:
@@ -381,6 +351,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             sys.exit()
     else:
         h_spc = None
+
     # Get the energies of the bases
     h_basis = []
     for ich, name in ich_name_dct.items():
@@ -446,6 +417,8 @@ def enthalpy_calculation(
         chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix,
         pforktp='ktp', zrxn=None):
+    """ Calculate the Enthalpy.
+    """
 
     ref_scheme = pes_mod_dct_i['therm_fit']['ref_scheme']
     ref_enes = pes_mod_dct_i['therm_fit']['ref_enes']
@@ -467,11 +440,6 @@ def enthalpy_calculation(
             basreacs, basprods = spc_basis_i
             spc_basis_i = ''.join(basreacs)
             spc_basis_i += ''.join(basprods)
-            # spc_basis_i = ''
-            # for entry in basreacs:
-            #     spc_basis_i += entry
-            # for entry in basprods:
-            #     spc_basis_i += entry
         if spc_basis_i in chn_basis_ene_dct:
             ioprinter.debug_message(
                 'Energy already found for basis species: ', spc_basis_i)
@@ -492,11 +460,6 @@ def enthalpy_calculation(
                 basreacs, basprods = spc_basis_i
                 spc_basis_i = ''.join(basreacs)
                 spc_basis_i += ''.join(basprods)
-                # spc_basis_i = ''
-                # for entry in basreacs:
-                #     spc_basis_i += entry
-                # for entry in basprods:
-                #     spc_basis_i += entry
             chn_basis_ene_dct[spc_basis_i] = ene_basis_i
 
     # Calculate and store the 0 K Enthalpy
@@ -552,3 +515,42 @@ def enthalpy_calculation(
     ioprinter.info_message('Hf0K Energy (kJ/mol): ', hf0k * phycon.KCAL2KJ)
 
     return hf0k, hf0k_trs, chn_basis_ene_dct, basis_dct
+
+
+# Helpers
+def _ich_key_name(ich):
+    """ Build a useful dictionary key of a joined ich
+    """
+    return ('REACS' + 'REAC'.join(ich[0]) +
+            r'PRODS' + 'PROD'.join(ich[1]))
+
+
+def _ich_in_rxn(ich, spc_dct_i):
+    """ Check if in a reaction
+    """
+
+    reacs = spc_dct_i['reacs']
+    reacs_rev = reacs[::-1]
+    prods = spc_dct_i['prods']
+    prods_rev = prods[::-1]
+
+    return bool(
+        list(ich[0]) in (reacs, reacs_rev) and
+        list(ich[1]) in (prods, prods_rev)
+    )
+
+
+def _chk(ref, spc_ichs, dct_ichs, bas_ichs, repeats):
+    """ a """
+
+    ini = (
+        ((ref not in spc_ichs and ref not in dct_ichs) or repeats) and
+        (ref not in bas_ichs)
+    )
+    rref = ref[::-1]
+    sec = (
+        ((rref not in spc_ichs and rref not in dct_ichs) or repeats) and
+        (ref not in bas_ichs[::-1])
+    )
+
+    return ini or sec

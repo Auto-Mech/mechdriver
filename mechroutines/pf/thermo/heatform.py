@@ -1,5 +1,4 @@
-"""
-Computes the Heat of Formation at 0 K for a given species
+""" Computes the Heat of Formation at 0 K for a given species
 """
 
 import os
@@ -8,8 +7,8 @@ import numpy as np
 import automol.inchi
 import automol.graph
 from phydat import phycon
-from . import util
 from mechlib.amech_io import printer as ioprinter
+from . import util
 
 
 # Path  the database files (stored in the thermo src directory)
@@ -20,19 +19,19 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
     """ calculates the heat-of-formation at 0 K
     """
 
-    dhzero = hzero_mol * EH2KCAL
+    dhzero = hzero_mol * phycon.EH2KCAL
     ioprinter.debug_message(
         'ABS of molecule in kcal: {:.5f}'.format(dhzero))
     for i, spc in enumerate(basis):
-        ts = True
+        _ts = True
         if isinstance(spc, str):
-            ts = False
-        h_basis = get_ref_h(spc, ref_set, 0, ts)
+            _ts = False
+        h_basis = get_ref_h(spc, ref_set, 0, _ts)
         if h_basis is None:
             h_basis = 0.0
             ioprinter.warning_message(
                 'No Heat of Formation in database for {} {} ', spc, ref_set)
-        if ts:
+        if _ts:
             h_basis *= phycon.KJ2KCAL
         dhzero += coeff[i] * h_basis
         dhzero -= coeff[i] * hzero_basis[i] * phycon.EH2KCAL
@@ -41,24 +40,24 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
             'HF0K in kcal: {:g} * {:.5f}'.format(coeff[i], h_basis))
         ioprinter.debug_message(
             'ABS in kcal: {:g} * {:.5f}'.format(
-                coeff[i], hzero_basis[i] * EH2KCAL))
+                coeff[i], hzero_basis[i] * phycon.EH2KCAL))
 
     return dhzero
 
 
-def get_ref_h(species, ref, temp, ts=False):
+def get_ref_h(species, ref, temp, transt=False):
     """ gets a reference value
     """
 
     # Set path and name to thermo database file
-    if ts:
+    if transt:
         thermodb_name = 'tsthermodb_{}K.csv'.format(str(int(temp)))
     else:
         thermodb_name = 'Hfdb_{}K.csv'.format(str(int(temp)))
     thermodb_file = os.path.join(SRC_PATH, thermodb_name)
     # Find the energy value for the given species and enery type
     h_species = None
-    if ts:
+    if transt:
         rcts, prds = species
         rct_str = '+'.join(rcts)
         prd_str = '+'.join(prds)
@@ -201,7 +200,11 @@ def calc_coefficients(basis, mol_atom_dict):
 
     return coeff
 
+
 def stoich_gra(gra):
+    """ Stoichiometry dictionary from a graph
+    """
+
     atms = automol.graph.atoms(gra)
     stoich_dct = {}
     hcount = 0
@@ -211,11 +214,13 @@ def stoich_gra(gra):
             stoich_dct[atms[atm][0]] += 1
         else:
             stoich_dct[atms[atm][0]] = 1
-    if not 'H' in stoich_dct:
+    if 'H' not in stoich_dct:
         stoich_dct['H'] = hcount
     else:
         stoich_dct['H'] += hcount
+
     return stoich_dct
+
 
 def stoich(ich):
     """
@@ -225,6 +230,8 @@ def stoich(ich):
     OUTPUT:
     stoich -- dictionary with key = STR atomsymbol,
                 val = INT number of atomsymbol in molecule
+
+    replace with automol.inchi.formula
     """
 
     stoich_dct = {'H': 0}
@@ -238,25 +245,39 @@ def stoich(ich):
             stoich_dct[atms[atm][0]] = 1
     return stoich_dct
 
-def remove_H_from_adj_atms(atms, adj_atms, othersite=[], other_adj=[]):
-    new_adj_atms = []
+
+def remove_hyd_from_adj_atms(atms, adj_atms, othersite=(), other_adj=()):
+    """ Removes H atoms from all atms adjacent to a set of atoms requested
+        by the user
+    """
+
+    new_adj_atms = ()
     for atm in adj_atms:
         if atms[atm][0] != 'H' and atm not in othersite:
             if atm not in other_adj:
-                new_adj_atms.append(atm)
-                        
+                new_adj_atms += (atm,)
+
     return new_adj_atms
 
-def branchpoint(adj_atms_i, adj_atms_j=[], adj_atms_k=[]):
+
+def branchpoint(adj_atms_i, adj_atms_j=(), adj_atms_k=()):
+    """ Branch point?
+    """
     return max(1, len(adj_atms_i) + len(adj_atms_j) + len(adj_atms_k) - 1)
 
-def terminalmoity(adj_atms_i, adj_atms_j=[], adj_atms_k=[], endisterm=True):
-     ret = 1
-     if len(adj_atms_i) + len(adj_atms_j) < 2:
-         ret = 0    
-     if ret == 0 and len(adj_atms_k) > 0 and not endisterm:
-         ret = 1     
-     return ret
+
+def terminalmoity(adj_atms_i, adj_atms_j=(), adj_atms_k=(), endisterm=True):
+    """ Get moiety of termial groups?
+    """
+
+    ret = 1
+    if len(adj_atms_i) + len(adj_atms_j) < 2:
+        ret = 0
+    if ret == 0 and len(adj_atms_k) > 0 and not endisterm:
+        ret = 1
+
+    return ret
+
 
 def cbhzed(ich, bal=True):
     """
@@ -287,16 +308,20 @@ def cbhzed(ich, bal=True):
         gra = (atm_dic, {})
         frag = automol.graph.inchi(gra)
         _add2dic(frags, frag, coeff)
-    # ioprinter.debug_message('frags in cbhzed before bal test:', frags)
+
     if bal:
         balance_ = _balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             frags = _balance_frags(ich, frags)
-    # ioprinter.debug_message('frags in cbhzed after bal test:', frags)
+
     return frags
 
+
 def _ts_graph(gra, site1, site2=None):
+    """ Get a transition state graph.
+    """
+
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
     atms = automol.graph.atoms(gra)
@@ -366,20 +391,28 @@ def _ts_graph(gra, site1, site2=None):
                 {list(bnd_ords[frozenset({*brk})])[0] - 0.6})
             adj_atms[site[0]] = frozenset({site[1], *adj_atms[site[0]]})
             adj_atms[site[1]] = frozenset({site[0], *adj_atms[site[1]]})
-        # ioprinter.debug_message('ts gra', atms, bnd_ords)
+
     return rad_atms, atms, bnd_ords, atm_vals, adj_atms
 
+
 def remove_zero_order_bnds(gra):
+    """ Remove bonds of zero-order from a molecular graph.
+    """
+
     atms, bnds = gra
     new_bnds = {}
     for bnd in bnds:
         if bnds[bnd][0] > 0:
             new_bnds[bnd] = bnds[bnd]
-    ioprinter.info_message('new bonds ', new_bnds)        
+    ioprinter.info_message('new bonds ', new_bnds)
+
     return (atms, new_bnds)
 
 
 def split_beta_gras(gras):
+    """ ?
+    """
+
     rct_ichs = ['']
     prd_ichs = ['', '']
     atms, bnd_ords = gras
@@ -406,7 +439,6 @@ def split_beta_gras(gras):
                     order, tmp = bnd_ords[frozenset({atmbi, atmi})]
                     bnd_ords[frozenset({atmbi, atmi})] = (round(
                         order - 0.6, 1), tmp)
-            # ioprinter.debug_message('rct gra after bond', bnd_ord, atms, bnd_ords)          
             rct_gra = remove_zero_order_bnds((atms, bnd_ords))
             atms, bnd_ords = rct_gra
     rct_gras = automol.graph.connected_components(rct_gra)
@@ -441,10 +473,15 @@ def split_beta_gras(gras):
     for idx, pgra in enumerate(prd_gras):
         prd_ichs[idx] = automol.graph.inchi(pgra)
     prd_ichs = automol.inchi.sorted_(prd_ichs)
+
     return (rct_ichs, prd_ichs)
 
 
 def split_radradabs_gras(gras):
+    """ Split a graph from radical-radical abstraction TS into the constituent
+        reactant/products graphs.
+    """
+
     rct_ichs = []
     prd_ichs = []
     atms, bnd_ords = gras
@@ -530,6 +567,10 @@ def split_radradabs_gras(gras):
 
 
 def split_elim_gras(gras):
+    """ Split a graph from elimination TS into the constituent
+        reactant/products graphs.
+    """
+
     rct_ichs = []
     prd_ichs = []
     atms, bnd_ords = gras
@@ -600,7 +641,9 @@ def split_elim_gras(gras):
 
 
 def split_gras(gras):
-    # ioprinter.debug_message('gras in split_gras', gras)
+    """ Split graphs by ???
+    """
+
     rct_ichs = []
     prd_ichs = []
     atms, bnd_ords = gras
@@ -663,6 +706,7 @@ def split_gras(gras):
         prd_ichs.append(automol.graph.inchi(pgra))
     if len(prd_ichs) > 1:
         prd_ichs = automol.inchi.sorted_(prd_ichs)
+
     return (rct_ichs, prd_ichs)
 
 
@@ -687,25 +731,26 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site1 + site2:
-                    nonH_adj_atms1 = remove_H_from_adj_atms(
+                    non_hyd_adj_atms1 = remove_hyd_from_adj_atms(
                         atms, adj_atms[site1[0]], site2,
                         other_adj=adj_atms[site2[0]])
-                    nonH_adj_atms2 = remove_H_from_adj_atms(
+                    non_hyd_adj_atms2 = remove_hyd_from_adj_atms(
                         atms, adj_atms[site2[0]], site1,
                         other_adj=adj_atms[site1[0]])
-                    for adj in nonH_adj_atms1:
+                    for adj in non_hyd_adj_atms1:
                         if adj in site1:
-                            nonH_adj_atms1.remove(adj)
-                    for adj in nonH_adj_atms2:
+                            non_hyd_adj_atms1.remove(adj)
+                    for adj in non_hyd_adj_atms2:
                         if adj in site2:
-                            nonH_adj_atms2.remove(adj)
+                            non_hyd_adj_atms2.remove(adj)
                     coeff = branchpoint(
-                        nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(
-                            nonH_adj_atms1, nonH_adj_atms2)
+                        non_hyd_adj_atms1, non_hyd_adj_atms2) * terminalmoity(
+                            non_hyd_adj_atms1, non_hyd_adj_atms2)
                 else:
-                    nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
-                    coeff = branchpoint(nonH_adj_atms) * terminalmoity(
-                        nonH_adj_atms)
+                    non_hyd_adj_atms = remove_hyd_from_adj_atms(
+                        atms, adj_atms[atm])
+                    coeff = branchpoint(non_hyd_adj_atms) * terminalmoity(
+                        non_hyd_adj_atms)
             if atm == site1[0]:
                 key1 = [site1[0], site1[1]]
                 key1.sort()
@@ -923,23 +968,24 @@ def cbhzed_elim(gra, site1, site2, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site1:
-                    nonH_adj_atms1 = remove_H_from_adj_atms(
+                    non_hyd_adj_atms1 = remove_hyd_from_adj_atms(
                         atms, adj_atms[site1[1]], othersite=site2)
-                    nonH_adj_atms2 = remove_H_from_adj_atms(
+                    non_hyd_adj_atms2 = remove_hyd_from_adj_atms(
                         atms, adj_atms[site2[2]], othersite=site1)
-                    for adj in nonH_adj_atms1:
+                    for adj in non_hyd_adj_atms1:
                         if adj in site1:
-                            nonH_adj_atms1.remove(adj)
-                    for adj in nonH_adj_atms2:
+                            non_hyd_adj_atms1.remove(adj)
+                    for adj in non_hyd_adj_atms2:
                         if adj in site2:
-                            nonH_adj_atms2.remove(adj)
+                            non_hyd_adj_atms2.remove(adj)
                     coeff = branchpoint(
-                        nonH_adj_atms1, nonH_adj_atms2) * terminalmoity(
-                            nonH_adj_atms1, nonH_adj_atms2)
+                        non_hyd_adj_atms1, non_hyd_adj_atms2) * terminalmoity(
+                            non_hyd_adj_atms1, non_hyd_adj_atms2)
                 else:
-                    nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
+                    non_hyd_adj_atms = remove_hyd_from_adj_atms(
+                        atms, adj_atms[atm])
                     coeff = branchpoint(
-                        nonH_adj_atms) * terminalmoity(nonH_adj_atms)
+                        non_hyd_adj_atms) * terminalmoity(non_hyd_adj_atms)
             if atm == site1[0]:
                 key1 = [site1[0], site1[1]]
                 key1.sort()
@@ -975,7 +1021,7 @@ def cbhzed_elim(gra, site1, site2, bal=True):
                     atms[site2[2]][0], list(atm_dic[0])[1]-bnd_ord2, None)
                 bnd_dct[frozenset({4, 0})] = (bnd_ord2, None)
                 bnd_dct[frozenset({2, 3})] = (1, None)
-            else:   
+            else:
                 bnd_dct = {}
                 atm_dic = {0: (atms[atm][0], int(atm_vals[atm]), None)}
             grai = (atm_dic, bnd_dct)
@@ -1022,31 +1068,32 @@ def cbhzed_habs(gra, site, bal=True):
     frags = {}
     for atm in atm_vals:
         if (atms[atm][0] != 'H' or atm in site):
-            if atm == site[1] or atm == site[2]:
+            if atm in (site[1], site[2]):
                 continue
             coeff = 1.0
             if not bal:
                 if atm in site:
-                    nonH_adj_atms1 = remove_H_from_adj_atms(
+                    non_hyd_adj_atms1 = remove_hyd_from_adj_atms(
                         atms, adj_atms[site[0]], site,
                         other_adj=adj_atms[site[2]])
-                    nonH_adj_atms2 = remove_H_from_adj_atms(
+                    non_hyd_adj_atms2 = remove_hyd_from_adj_atms(
                         atms, adj_atms[site[2]],
                         site, other_adj=adj_atms[site[0]])
-                    nonH_adj_atms3 = []
+                    non_hyd_adj_atms3 = []
                     for adj in adj_atms[site[0]]:
                         if adj in adj_atms[site[2]]:
-                            nonH_adj_atms3 = remove_H_from_adj_atms(
+                            non_hyd_adj_atms3 = remove_hyd_from_adj_atms(
                                 atms, adj_atms[adj], othersite=site)
                     coeff = branchpoint(
-                        nonH_adj_atms1, nonH_adj_atms2,
-                        nonH_adj_atms3) * terminalmoity(
-                            nonH_adj_atms1, nonH_adj_atms2, nonH_adj_atms3,
-                            endisterm=False)
+                        non_hyd_adj_atms1, non_hyd_adj_atms2,
+                        non_hyd_adj_atms3) * terminalmoity(
+                            non_hyd_adj_atms1, non_hyd_adj_atms2,
+                            non_hyd_adj_atms3, endisterm=False)
                 else:
-                    nonH_adj_atms = remove_H_from_adj_atms(atms, adj_atms[atm])
+                    non_hyd_adj_atms = remove_hyd_from_adj_atms(
+                        atms, adj_atms[atm])
                     coeff = branchpoint(
-                        nonH_adj_atms) * terminalmoity(nonH_adj_atms)
+                        non_hyd_adj_atms) * terminalmoity(non_hyd_adj_atms)
             if atm == site[0]:
                 key1 = [site[0], site[1]]
                 key1.sort()
@@ -1092,6 +1139,7 @@ def cbhzed_habs(gra, site, bal=True):
         if balance_:
             frags = _balance_frags_ts(gra, frags)
     frags = _simplify_gra_frags(frags)
+
     return frags
 
 
@@ -1104,8 +1152,9 @@ def cbhone_elim(gra, site1, site2, bal=True):
     frags -- DIC dictionary with keys as STR inchi name for fragments
     and value as INT their coefficient
     """
+
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = _ts_graph(gra, site1, site2)
+    _, atms, bnd_ords, atm_vals, _ = _ts_graph(gra, site1, site2)
     # Determine CBHone fragments
     frags = {}
     if not site1[0] == site2[2]:
@@ -1179,7 +1228,7 @@ def cbhone_elim(gra, site1, site2, bal=True):
                     atm_dic[4] = (
                         atm_dic[4][0], atm_dic[4][1] - bnd_ord1, None)
                     bnd_dct[frozenset({4, 5})] = (bnd_ord1, None)
-                unique_bond = True    
+                unique_bond = True
             elif atms[atma][0] != 'H' and atms[atmb][0] != 'H':
                 bnd_ord = list(bnd_ords[bnd])[0]
                 atm_dic = {
@@ -1258,14 +1307,17 @@ def cbhone_habs(gra, site, bal=True):
     frags -- DIC dictionary with keys as STR inchi name for fragments
     and value as INT their coefficient
     """
+
     # Graphical info about molecule
-    rad_atms, atms, bnd_ords, atm_vals, _ = _ts_graph(gra, site)
+    _, atms, bnd_ords, atm_vals, _ = _ts_graph(gra, site)
+
     # Determine CBHone fragments
     frags = {}
 
     for bnd in bnd_ords:
         atma, atmb = bnd
-        if (atms[atma][0] != 'H' or atma in site) and (atms[atmb][0] != 'H' or atmb in site):
+        if ((atms[atma][0] != 'H' or atma in site) and
+           (atms[atmb][0] != 'H' or atmb in site)):
             if atma in site and atmb in site:
                 continue
             coeff = 1.0
@@ -1323,7 +1375,8 @@ def cbhone_habs(gra, site, bal=True):
             for name in frags:
                 if key in frags[name]:
                     if key == 'exp_gra':
-                        if automol.graph.full_isomorphism(frags[name][key], grai):
+                        if automol.graph.full_isomorphism(
+                           frags[name][key], grai):
                             newname = name
                             repeat = True
                     else:
@@ -1349,7 +1402,9 @@ def cbhone_habs(gra, site, bal=True):
                     key = 'exp_gra'
                     for onename in newfrags:
                         if 'exp_gra' in newfrags[onename]:
-                            if automol.graph.full_isomorphism(newfrags[onename][key], zedfrags[zedname][key]):
+                            if automol.graph.full_isomorphism(
+                               newfrags[onename][key],
+                               zedfrags[zedname][key]):
                                 newname = onename
                                 repeat = True
                 else:
@@ -1366,14 +1421,19 @@ def cbhone_habs(gra, site, bal=True):
         if balance_:
             frags = _balance_frags_ts(gra, frags)
     frags = _simplify_gra_frags(frags)
+
     return frags
 
 
 def _simplify_gra_frags(frags):
+    """ ?
+    """
+
     new_frags = {}
     for i, frag in enumerate(frags.keys()):
         if abs(frags[frag]['coeff']) > 0.01:
             new_frags[i] = frags[frag]
+
     return new_frags
 
 
@@ -1516,14 +1576,18 @@ def cbhtwo(ich, bal=True):
 
 
 def cbhthree(ich, bal=True):
-    ''' 
-    Fragments molecule to retain each heavy-atom -- heavy-atom bond, and keep the bonds of each    atm1 b1 atm2 b2 atm3 b3 atm4 b4 atm5
-    would give atm1 [b1] atm2 b2 atm3, atm1 b1 atm2 [b2] atm3 b3 atm4, atm2 b2 atm3 [b3] atm4 b4 atm5, and atm3 b3 atm4 [b4] atm5
+    """
+    Fragments molecule to retain each heavy-atom -- heavy-atom bond,
+    and keep the bonds of each    atm1 b1 atm2 b2 atm3 b3 atm4 b4 atm5
+    would give atm1 [b1] atm2 b2 atm3, atm1 b1 atm2 [b2] atm3 b3 atm4,
+    atm2 b2 atm3 [b3] atm4 b4 atm5, and atm3 b3 atm4 [b4] atm5
     INPUT:
     ich --  STR inchi name for molecule
-    OUTPUT 
-    frags -- DIC dictionary with keys as STR inchi name for fragments and value as INT their coefficient
-    '''
+    OUTPUT
+    frags -- DIC dictionary with keys as STR inchi name
+    for fragments and value as INT their coefficient
+    """
+
     # Graphical info about molecule
     gra = automol.inchi.graph(ich)
     atms = automol.graph.atoms(gra)
@@ -1545,7 +1609,7 @@ def cbhthree(ich, bal=True):
                 vali -= 1
             for adj in list(adj_atms[atm]):
                 key = frozenset({atm, adj})
-                bnd_ord = list(bnd_ords[key] )[0]
+                bnd_ord = list(bnd_ords[key])[0]
                 vali -= bnd_ord
             atm_dic[i] = (atms[atm][0], int(vali), None)
             for j, adj in enumerate(list(adj_atms[atm]), start=1):
@@ -1557,7 +1621,7 @@ def cbhthree(ich, bal=True):
                     bnd_ord = list(bnd_ords[key])[0]
                     valj -= bnd_ord
                     atm_dic[i*4+j+1] = (atms[adj][0], int(valj), None)
-                    bnd_dic[frozenset({i,i*4+j+1})] = (bnd_ord, None)
+                    bnd_dic[frozenset({i, i*4+j+1})] = (bnd_ord, None)
         gra = (atm_dic, bnd_dic)
         frag = automol.graph.inchi(gra)
         _add2dic(frags, frag)
@@ -1574,9 +1638,9 @@ def cbhthree(ich, bal=True):
             for frag in twofrags:
                 _add2dic(newfrags, frag, -twofrags[frag])
             frags = {k: v for k, v in newfrags.items() if v}
-            #balance_ = _balance(ich, frags)
-            #balance_ = {k: v for k, v in balance_.items() if v}
-            #if balance_:
+            # balance_ = _balance(ich, frags)
+            # balance_ = {k: v for k, v in balance_.items() if v}
+            # if balance_:
             #    newfrags = frags.copy()
             #    newerfrags = {}
             #    onefrags = cbhone(ich, bal=False)
@@ -1595,19 +1659,24 @@ def cbhthree(ich, bal=True):
             #        balance_ = {k: v for k, v in balance_.items() if v}
             #        if balance_:
             #            frags = _balance_frags(ich, frags)
-    balance = _balance(ich, frags)
-    balance_ = {k: v for k, v in balance_.items() if v}
+    # balance = _balance(ich, frags)
+    # balance_ = {k: v for k, v in balance_.items() if v}
     return frags
 
-#def cbhfour(ich):
-#    ''' 
-#    Fragments molecule for each heavy-atom to stay bonded to its adjacent atoms, for those atoms to say bonded to their adjacent atoms atm1 b1 atm2 b2 atm3 b3 atm4 b4 atm5
-#    would give [atm1] b1 atm2 b2 atm3, atm1 b1 [atm2] b2 atm3 b3 atm4,  atm1 b1 atm2 b2  [atm3] b3 atm4 b4 amt5, atm2 b2 atm3 b3 [atm4] b4 atm5, atm3 b3 atm4 b4 [atm5]
+# def cbhfour(ich):
+#    """
+#    Fragments molecule for each heavy-atom to stay bonded to its
+#    adjacent atoms, for those atoms to say bonded to their adjacent atoms
+#    atm1 b1 atm2 b2 atm3 b3 atm4 b4 atm5
+#    would give [atm1] b1 atm2 b2 atm3, atm1 b1 [atm2] b2 atm3 b3 atm4,
+#    atm1 b1 atm2 b2  [atm3] b3 atm4 b4 amt5, atm2 b2 atm3 b3 [atm4] b4 atm5,
+#    atm3 b3 atm4 b4 [atm5]
 #    INPUT:
 #    ich --  STR inchi name for molecule
-#    OUTPUT 
-#    frags -- DIC dictionary with keys as STR inchi name for fragments and value as INT their coefficient
-#    '''
+#    OUTPUT
+#    frags -- DIC dictionary with keys as STR inchi name for fragments and
+#    value as INT their coefficient
+#    """
 #    #Graphical info about molecule
 #    gra      = automol.inchi.graph(ich)
 #    atms     = automol.graph.atoms(gra)
@@ -1630,7 +1699,8 @@ def cbhthree(ich, bal=True):
 #            vali   -= bnd_ord
 #        atm_dic = {0: (atms[atmi][0], int(vali), None)}
 #        bnd_dic = {}
-#        #Then Loop over j a second time to get bonds to i-j, valence of j, and bonds j-k
+#        # Then Loop over j a second time to get bonds
+#        # to i-j, valence of j, and bonds j-k
 #        for j, atmj in enumerate(list(adj_atms[atmi]), start = 1):
 #            valj = atm_vals[atmj]
 #            if atmj in rad_atms:
@@ -1646,7 +1716,7 @@ def cbhthree(ich, bal=True):
 #            #Add i-j bonds and j atoms
 #            atm_dic[j] = (atms[atmj][0], int(valj), None)
 #            bnd_dic[frozenset({0, j})] =  (1, None)
-#            
+#
 #            #Loop over k to add atoms k and j-k bonds
 #            for k, atmk in enumerate(list(adj_atms[atmj]), start = 1):
 #               if atmk != atmi:
@@ -1844,15 +1914,21 @@ def _split_bnd_keys(bnd_keys):
 
 
 def get_cbhzed_ts(zrxn):
+    """ ?
+    """
     return get_cbh_ts('cbh0', zrxn)
 
 
 def get_cbhone_ts(zrxn):
+    """ ?
+    """
     return get_cbh_ts('cbh1', zrxn)
 
 
 def get_basic_ts(zrxn):
-    return
+    """ ?
+    """
+    _ = zrxn
 
 
 def get_cbh_ts(cbhlevel, zrxn):
@@ -1885,15 +1961,15 @@ def get_cbh_ts(cbhlevel, zrxn):
     gra = _remove_frm_bnd(gra, brk_key1, frm_key1)
     gra = _remove_frm_bnd(gra, brk_key2, frm_key2)
 
-
     # The first set of forming and breaking bonds makes the first reaction site
     if frm_key1 and brk_key1 and 'elimination' not in rxnclass:
         site = [
             _xor(frm_key1, brk_key1),
             _intersec(frm_key1, brk_key1),
             _xor(brk_key1, frm_key1)]
-    
-    #  eliminations are one large reaction site that we split into site1 and site2 for convieninece    
+
+    #  eliminations are one large reaction site that we split into
+    # site1 and site2 for convieninece
     if 'elimination' in rxnclass:
         try:
             site = [
@@ -1904,7 +1980,7 @@ def get_cbh_ts(cbhlevel, zrxn):
                 _xor(frm_key2, brk_key2),
                 _intersec(frm_key2, brk_key2),
                 _xor(brk_key2, frm_key2)]
-        except: 
+        except:
             site = [
                 _xor(frm_key1, brk_key2),
                 _intersec(frm_key1, brk_key2),
@@ -1912,12 +1988,12 @@ def get_cbh_ts(cbhlevel, zrxn):
             site2 = [
                 _xor(frm_key2, brk_key2),
                 _intersec(frm_key2, brk_key2),
-                _xor(brk_key2, frm_key2)
-]
+                _xor(brk_key2, frm_key2)]
+
     elif 'beta scission' in rxnclass:
         rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-        site = [rad_atm,None,None]
+        site = [rad_atm, None, None]
         for atm in brk_key1:
             if rad_atm in adj_atms[atm]:
                 site[1] = atm
@@ -1925,7 +2001,7 @@ def get_cbh_ts(cbhlevel, zrxn):
                 site[2] = atm
 
     #  radical radical hydrogen abstraction needs a second site
-    #  where the pi bond is formed    
+    #  where the pi bond is formed
     elif 'radical radical hyd' in rxnclass:
         rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
@@ -1939,16 +2015,17 @@ def get_cbh_ts(cbhlevel, zrxn):
                         frm_key2 = frozenset({atma, atmb})
                         site2 = [atmb, atma, atmd]
 
-
     # Run the appropriate function to transform the graph so that
     # breaking bonds are order N.6 and forming are N.4 and the valences
     # of the atoms involved are appropriately altered
+    fclasses = ('hydrogen abstraction', 'beta scission',
+                'hydrogen migration', 'addition')
     if 'radical radical hyd' in rxnclass:
         if cbhlevel == 'cbh0':
             frags = cbhzed_radradabs(gra, site, site2)
         elif cbhlevel == 'cbh1':
             frags = cbhone_radradabs(gra, site, site2)
-    elif 'hydrogen abstraction' in rxnclass or 'beta scission' in rxnclass or 'hydrogen migration' in rxnclass or 'addition' in rxnclass:
+    elif any(cls in rxnclass for cls in fclasses):
         if cbhlevel == 'cbh0':
             frags = cbhzed_habs(gra, site)
         elif cbhlevel == 'cbh1':
@@ -1973,7 +2050,7 @@ def get_cbh_ts(cbhlevel, zrxn):
                 fraglist.append(split_beta_gras(frags[frag]['ts_gra']))
             elif 'elim' in rxnclass:
                 fraglist.append(split_elim_gras(frags[frag]['ts_gra']))
-            elif 'radical radical hyd' in rxnclass:    
+            elif 'radical radical hyd' in rxnclass:
                 fraglist.append(split_radradabs_gras(frags[frag]['ts_gra']))
             else:
                 fraglist.append(split_gras(frags[frag]['ts_gra']))

@@ -1,4 +1,4 @@
-name: mechdriver-env
+name: mechdriver-test-env
 
 channels:
     - auto-mech
