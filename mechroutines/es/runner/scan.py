@@ -76,7 +76,7 @@ def run_scan(zma, spc_info, mod_thy_info,
 
     for idx, grid_vals in enumerate(all_grid_vals):
         if idx == 1:
-            print('\nDoing a reverse sweep of the HR scan to catch errors...')
+            print('\nDoing a reverse sweep of the scan to catch errors...')
         _run_scan(
             guess_zma=zma,
             spc_info=spc_info,

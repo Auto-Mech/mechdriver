@@ -8,6 +8,29 @@ import autofile
 from mechlib.amech_io import printer as ioprinter
 
 
+def atom(sp_ret, cnf_fs, thy_locs, zma,
+         rng_locs=None, tors_locs=None, zma_locs=(0,)):
+    """ Save an atom from a single-point job
+    """
+
+    # Build filesystem locs and objects
+    cnf_locs, zma_locs = _generate_locs(
+        rng_locs=rng_locs, tors_locs=tors_locs, zma_locs=zma_locs)
+
+    # Save an arbitrary geom and zma
+    cnf_fs[-1].create(cnf_locs)
+    zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
+    zma_fs[-1].create(zma_locs)
+
+    geo = automol.zmat.geometry(zma)
+    cnf_fs[-1].file.geometry.write(geo, cnf_locs)
+    zma_fs[-1].file.zmatrix.write(zma, zma_locs)
+
+    # Save data from energy job
+    sp_fs = autofile.fs.single_point(cnf_fs[-1].path(cnf_locs))
+    _save_energy(sp_ret, sp_fs, thy_locs)
+
+
 def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
               zrxn=None, init_zma=None,
               rng_locs=None, tors_locs=None, zma_locs=None):
@@ -55,13 +78,14 @@ def sym_indistinct_conformer(geo, cnf_fs, cnf_tosave_locs, cnf_saved_locs):
     sym_save_fs[-1].file.geometry.write(geo, [cnf_tosave_locs[-1]])
 
 
-def scan_point_structure(opt_ret, scn_fs, scn_locs, thy_locs, job):
+def scan_point_structure(opt_ret, scn_fs, scn_locs, thy_locs, job,
+                         init_zma=None):
     """ save info for the hindered rotor
     """
 
     # if job == elstruct.Job.OPTIMIZATION:
     _save_geom(opt_ret, scn_fs, scn_locs)
-    _save_zmatrix(opt_ret, scn_fs, scn_locs)
+    _save_zmatrix(opt_ret, scn_fs, scn_locs, init_zma=init_zma)
 
     sp_fs = autofile.fs.single_point(scn_fs[-1].path(scn_locs))
     _save_energy(opt_ret, sp_fs, thy_locs)
@@ -164,6 +188,11 @@ def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
 # Constituent functions for saving various bits of information
 def read_job_zma(ret, init_zma=None, rebuild=False):
     """ trys to read a zma from a job and does processing on it as needed
+
+        (1) try to read opt zma from output
+        (2) update supplied init zma using opt geo (in outpt)
+        (3) update init zma (in output) using opt geo (in outpt)
+        (4) convert opt geo into a zma [dies for disconn zmas]
     """
 
     _, _, out_str, prog, _ = _unpack_ret(ret)
@@ -175,7 +204,12 @@ def read_job_zma(ret, init_zma=None, rebuild=False):
             print('Resetting ZMA coords using opt geoms...')
             zma = rebuild_zma_from_opt_geo(init_zma, geo)
         else:
-            zma = automol.geom.zmatrix(geo)
+            init_zma = elstruct.reader.inp_zmatrix(prog, out_str)
+            if init_zma is not None:
+                print('Resetting ZMA coords using opt geoms...')
+                zma = rebuild_zma_from_opt_geo(init_zma, geo)
+            else:
+                zma = automol.geom.zmatrix(geo)
 
     return zma
 
@@ -237,7 +271,7 @@ def _save_zmatrix(ret, zma_fs, zma_locs, init_zma=None):
     print(" - Reading Z-Matrix from output...")
     inf_obj, inp_str, _, _, _ = _unpack_ret(ret)
 
-    zma = read_job_zma(ret, init_zma=None, rebuild=False)
+    zma = read_job_zma(ret, init_zma=init_zma, rebuild=False)
 
     zma_fs[-1].create(zma_locs)
     zma_path = zma_fs[-1].path(zma_locs)

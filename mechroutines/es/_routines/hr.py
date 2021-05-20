@@ -24,10 +24,12 @@ def hindered_rotor_scans(
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.OPTIMIZATION)
         scn_typ = 'relaxed'
+        update_guess = True
     else:
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.ENERGY)
         scn_typ = 'rigid'
+        update_guess = False
 
     run_tors_names = automol.rotor.names(rotors)
     run_tors_grids = automol.rotor.grids(rotors, increment=increment)
@@ -58,7 +60,7 @@ def hindered_rotor_scans(
             scn_typ=scn_typ,
             script_str=script_str,
             overwrite=overwrite,
-            update_guess=True,
+            update_guess=update_guess,
             reverse_sweep=True,
             saddle=saddle,
             constraint_dct=constraint_dct,

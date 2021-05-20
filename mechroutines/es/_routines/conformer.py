@@ -179,7 +179,7 @@ def _optimize_atom(spc_info, zma_init,
 
     # Call the electronic structure optimizer
     success, ret = es_runner.execute_job(
-        job=elstruct.Job.OPTIMIZATION,
+        job=elstruct.Job.ENERGY,
         script_str=script_str,
         run_fs=run_fs,
         geo=zma_init,
@@ -191,9 +191,9 @@ def _optimize_atom(spc_info, zma_init,
 
     if success:
         ioprinter.info_message('Succesful reference geometry optimization')
-        filesys.save.conformer(
-            ret, None, cnf_save_fs, mod_thy_info[1:],
-            rng_locs=locs[0], tors_locs=locs[1])
+        filesys.save.atom(
+            ret, cnf_save_fs, mod_thy_info[1:], zma_init,
+            rng_locs=(locs[0],), tors_locs=(locs[1],))
 
     return success
 
@@ -251,7 +251,7 @@ def _optimize_molecule(spc_info, zma_init,
                     'Saving structure as the first conformer...', newline=1)
                 filesys.save.conformer(
                     ret, None, cnf_save_fs, mod_thy_info[1:],
-                    rng_locs=locs[0], tors_locs=locs[1])
+                    rng_locs=(locs[0],), tors_locs=(locs[1],))
             else:
                 ioprinter.info_message('Saving disconnected species...')
                 filesys.save.instability(
@@ -352,7 +352,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
                     cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
                     filesys.save.conformer(
                         ret, None, cnf_save_fs, mod_thy_info[1:], zrxn=zrxn,
-                        rng_locs=locs[0], tors_locs=locs[1])
+                        rng_locs=(locs[0],), tors_locs=(locs[1],))
                     saved_geos.append(geo)
                     saved_enes.append(ene)
                     saved_locs.append(locs)
@@ -811,7 +811,7 @@ def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
             if sym_id is None:
                 filesys.save.conformer(
                     ret, None, cnf_save_fs, thy_info[1:], zrxn=zrxn,
-                    rng_locs=locs[0], tors_locs=locs[1])
+                    rng_locs=(locs[0],), tors_locs=(locs[1],))
             else:
                 sym_locs = saved_locs[sym_id]
                 _save_sym_indistinct_conformer(

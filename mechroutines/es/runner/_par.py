@@ -107,6 +107,7 @@ def _molpro(method_dct, job=None):
     # Build the kwargs
     kwargs = {
         'memory': memory,
+        # 'mol_options': ['no_symmetry'],
         'mol_options': ['nosym'],
     }
 
@@ -139,12 +140,17 @@ def _psi4(method_dct, job=None):
 
     # Job unneeded for now
     _, _ = method_dct, job
+    memory = method_dct.get('memory', 20)
 
     # Build the submission script string
     script_str = SCRIPT_DCT['psi4']
 
     # Build the options dictionary
-    kwargs = {}
+    kwargs = {
+        'memory': memory,
+        # 'mol_options': ['no_symmetry']
+        'mol_options': ['symmetry c1']
+    }
 
     return script_str, kwargs
 
