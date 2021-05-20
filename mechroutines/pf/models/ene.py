@@ -10,11 +10,7 @@ from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf.models import typ
-from mechroutines.pf.models import _tors as tors
 from mechroutines.pf.models import _vib as vib
-from mechroutines.pf.models import _util as util
-from mechlib.filesys import models as fmod
-from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -303,7 +299,8 @@ def sum_channel_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
             else:
                 ts_enes = [ene - prod_ref_ene + prod_ene for ene in ts_enes]
         ioprinter.debug_message(
-            'TS HoF (0 K) approx spc lvl kcal/mol: ', ts_enes[0] * phycon.EH2KCAL)
+            'TS HoF (0 K) approx spc lvl kcal/mol: ',
+            ts_enes[0] * phycon.EH2KCAL)
     ts_enes = [(ene - ref_ene) * phycon.EH2KCAL for ene in ts_enes]
 
     sum_ene.update({'ts': ts_enes})
@@ -348,58 +345,3 @@ def zpe_str(spc_dct, zpe):
         zero_energy_str += '\nEnd'
 
     return zero_energy_str
-
-
-
-# OLD SHIFT FUNCTION
-# def calc_shift_ene2(spc_dct, spc_tgt, rxn,
-#                    thy_dct, model_dct,
-#                    chn_model, first_ground_model,
-#                    save_prefix, saddle=False):
-#    """ Function to shift the energy of a species to allow mixing of
-#        channels calculated with two different methods.
-#        We consider two levels of theory:
-#          (1) method for PES reference species and
-#          (2) method the user requested for this point on the PES.
-#        Shifted energy will be calculated as:
-#          E_t[1] = {E_s[1] + (E_t[2] - E_s[2])} - E_r[1]
-#        where E_t = ene of target species missing info at lvl 1,
-#              E_s = ene of other species on channel, and
-#              E_r = ene of species that is reference for whole PES.
-#        Note that this function only returns the part in curly braces and the
-#        final E_r[1] term is subtracted in some other part of the code.
-#    """
-#
-#    # Read the energy for the target species from the filesystem
-#    tgt_ene_lvl2 = get_fs_ene_zpe(spc_dct, spc_tgt,
-#                                  thy_dct, model_dct, chn_model,
-#                                  save_prefix, saddle=saddle)
-#
-#    # Loop over the species in the channel and find one species
-#    # where the energy and ZPVE has been calculated at levels 1 and 2.
-#    chn_enes = {}
-#    for spc in rxn:
-#        # Try and read the energies from the filesystem
-#        chn_ene1 = get_fs_ene_zpe(spc_dct, spc,
-#                                  thy_dct, model_dct, first_ground_model,
-#                                  save_prefix, saddle=bool('ts_' in spc))
-#        chn_ene2 = get_fs_ene_zpe(spc_dct, spc,
-#                                  thy_dct, model_dct, chn_model,
-#                                  save_prefix, saddle=bool('ts_' in spc))
-#        # Only add the energies to both dcts if ene1 and ene2 were found
-#        if chn_ene1 and chn_ene2:
-#            chn_enes[spc] = (chn_ene1, chn_ene2)
-#
-#    # Calculate the shifted energy for the species at level 1, if possible
-#    if chn_enes:
-#        # Get lvl1 and lvl2 enes for 1st spc in dcts (shouldn't matter which)
-#        for spc, enes in chn_enes.values():
-#            chn_ene_lvl1, chn_ene_lvl2 = enes
-#            break
-#        # Calculate energy
-#        tgt_ene_lvl1 = chn_ene_lvl1 + (chn_ene_lvl2 - tgt_ene_lvl2)
-#    else:
-#        ioprinter.info_message('No species on the channel with energies at methods 1 and 2')
-#        tgt_ene_lvl1 = None
-#
-#    return tgt_ene_lvl1

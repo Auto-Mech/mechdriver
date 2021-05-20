@@ -257,7 +257,7 @@ def mol_data(spc_name, spc_dct,
 
     zma = None
     if zrxn:
-        [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['harm']
+        [_, cnf_save_path, _, _, _] = pf_filesystems['harm']
         # Build the rotors
         if cnf_save_path:
             zma_fs = autofile.fs.zmatrix(cnf_save_path)
@@ -365,7 +365,7 @@ def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
         # Scan along RxnCoord is under THY/TS/Z
         tspaths = filesys.models.set_rpath_filesys(
             ts_dct, spc_mod_dct_i['rpath'][1])
-        ts_run_path, ts_save_path, _, thy_save_path = tspaths
+        ts_run_path, _, _, thy_save_path = tspaths
 
         # Set TS reaction coordinate
         scn_vals = filesys.models.get_rxn_scn_coords(thy_save_path, frm_name)
@@ -396,7 +396,7 @@ def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
 
     # Get the energies and zpes at R_ref
     if not sadpt:
-        idx, ene_hs_sr_ref, ene_hs_mr_ref = ene.rpath_ref_idx(
+        _, ene_hs_sr_ref, ene_hs_mr_ref = ene.rpath_ref_idx(
             ts_dct, scn_vals, frm_name, scn_prefix,
             spc_mod_dct_i['ene'],
             spc_mod_dct_i['rpath'][1])

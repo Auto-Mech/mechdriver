@@ -91,8 +91,8 @@ def collate_properties(tgt_queue,
     ioprinter.obj('vspace')
     ioprinter.obj('line_dash')
     ioprinter.info_message('Writing the CHEMKIN transport file', newline=1)
-    ckin_trans_str = transroutines.write_file()
-    writer.ckin.write_transport_file(ckin_trans_str, ckin_path)
+    # ckin_trans_str = transroutines.write_file()
+    # writer.ckin.write_transport_file(ckin_trans_str, ckin_path)
 
     return transport_str
 
@@ -166,7 +166,7 @@ def _etrans_fs(spc_dct, tgt_name, bath_name, thy_info, save_prefix):
     cnf_rng_info = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_tgt_thy_info)
     min_cnf_locs, min_cnf_path = cnf_rng_info
-    
+
     # Build the energy transfer filesystem objects
     etrans_fs, etrans_locs = filesys.build.etrans_fs_from_prefix(
         min_cnf_path, bath_info, mod_lj_thy_info)

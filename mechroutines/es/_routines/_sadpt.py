@@ -100,7 +100,8 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
                 zrxn=zrxn, rng_locs=(rid,), tors_locs=(cid,), zma_locs=None)
 
     else:
-        ioprinter.warning_message('\n TS optimization failed. No geom to check and save.')
+        ioprinter.warning_message(
+            '\n TS optimization failed. No geom to check and save.')
 
 
 def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
@@ -108,8 +109,9 @@ def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
         level of theory
     """
 
-    ioprinter.info_message('\nSearching save filesys for guess Z-Matrix calculated',
-          'at {} level...'.format(es_keyword_dct['inplvl']))
+    ioprinter.info_message(
+        '\nSearching save filesys for guess Z-Matrix calculated',
+        'at {} level...'.format(es_keyword_dct['inplvl']))
 
     ini_zma_fs = savefs_dct['inilvl_zma_fs']
 
@@ -118,7 +120,8 @@ def _check_filesys_for_guess(savefs_dct, zma_locs, es_keyword_dct):
         if ini_zma_fs[-1].file.zmatrix.exists(zma_locs):
             geo_path = ini_zma_fs[-1].file.zmatrix.exists(zma_locs)
             ioprinter.info_message(' - Z-Matrix found.')
-            ioprinter.info_message(' - Reading Z-Matrix from path {}'.format(geo_path))
+            ioprinter.info_message(
+                ' - Reading Z-Matrix from path {}'.format(geo_path))
             guess_zmas.append(
                 ini_zma_fs[-1].file.zmatrix.read(zma_locs))
 
@@ -192,7 +195,8 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
     """ Optimize the transition state structure obtained from the grid search
     """
 
-    ioprinter.info_message('\nOptimizing guess Z-Matrix obtained from scan or filesys...')
+    ioprinter.info_message(
+        '\nOptimizing guess Z-Matrix obtained from scan or filesys...')
 
     if len(guess_zmas) == 1:
         ioprinter.info_message(
@@ -207,7 +211,8 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
     # Loop over all the guess zmas to find a TS
     opt_ret = None
     for idx, zma in enumerate(guess_zmas):
-        ioprinter.info_message('\nOptimizing guess Z-Matrix {}...'.format(idx+1))
+        ioprinter.info_message(
+            '\nOptimizing guess Z-Matrix {}...'.format(idx+1))
 
         # Run the transition state optimization
         opt_success, opt_ret = es_runner.execute_job(
@@ -296,20 +301,25 @@ def saddle_point_checker(imags):
         status = 'fail'
     else:
         if len(imags) > 1:
-            ioprinter.warning_message('More than one imaginary mode for geometry')
+            ioprinter.warning_message(
+                'More than one imaginary mode for geometry')
         for idx, imag in enumerate(imags):
             if imag <= 50.0:
-                ioprinter.warning_message('Mode {} {} cm-1 is low,'.format(str(idx+1), imag))
+                ioprinter.warning_message(
+                    'Mode {} {} cm-1 is low,'.format(str(idx+1), imag))
             elif 50.0 < imag <= 200.0:
                 lowstr = 'Mode {} {} cm-1 is low,'.format(str(idx+1), imag)
-                ioprinter.warning_message(lowstr + 'need a kickoff procedure to remove')
+                ioprinter.warning_message(
+                    lowstr + 'need a kickoff procedure to remove')
                 kick_imag += 1
             else:
-                ioprinter.debug_message('Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
+                ioprinter.debug_message(
+                    'Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
                 big_imag += 1
 
         if big_imag > 1:
-            ioprinter.warning_message('WARNING: More than one imaginary mode for geometry')
+            ioprinter.warning_message(
+                'More than one imaginary mode for geometry')
             if kick_imag >= 1:
                 ioprinter.debug_message('Will kickoff to get saddle point')
                 status = 'kickoff'

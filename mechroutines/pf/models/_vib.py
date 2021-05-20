@@ -2,9 +2,7 @@
   Handle vibrational data info
 """
 
-import os
 import numpy
-import autofile
 import autorun
 import automol.geom
 import projrot_io
@@ -67,7 +65,7 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
     freqs = []
     imag = []
     tors_zpe = 0.0
-    scale_factor = 1.0
+    sfactor = 1.0
     tors_freqs = []
     rt_freqs1 = []
 
@@ -86,21 +84,19 @@ def full_vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
             rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
             tors_strs = tors.make_hr_strings(rotors)
             [_, hr_str, _, prot_str, _] = tors_strs
-            freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1 = tors_projected_freqs(
+            torsinf = tors_projected_freqs(
                 pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
-            # Calculate current zpe assuming no freq scaling: tors+projfreq
-
-        zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
+            freqs, imag, tors_zpe, sfactor, tors_freqs, rt_freqs1 = torsinf
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
         if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
             freqs = ()
     else:
-        freqs, imag, zpe = read_harmonic_freqs(
+        freqs, imag, _ = read_harmonic_freqs(
             pf_filesystems, run_prefix, zrxn=zrxn)
         tors_zpe = 0.0
 
-    return freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1
+    return freqs, imag, tors_zpe, sfactor, tors_freqs, rt_freqs1
 
 
 def read_harmonic_freqs(pf_filesystems, run_prefix, zrxn=None):
@@ -321,11 +317,12 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     # log_rt_freq = sum(log_rt_freq)
     # log_tors_freq = [numpy.log(freq) for freq in tors_freqs]
     # log_tors_freq = sum(log_tors_freq)
-    #unproj_prod = numpy.prod(rt_freqs1)
-    #proj_prod = numpy.prod(freqs) * numpy.prod(tors_freqs)
-    #print('proj_prod test:', unproj_prod, proj_prod)
-    # ioprinter.info_message('log_freq_tests:', log_rt_freq, log_freq, log_tors_freq)
-    #scale_factor = unproj_prod / proj_prod
+    # unproj_prod = numpy.prod(rt_freqs1)
+    # proj_prod = numpy.prod(freqs) * numpy.prod(tors_freqs)
+    # print('proj_prod test:', unproj_prod, proj_prod)
+    # ioprinter.info_message(
+    # 'log_freq_tests:', log_rt_freq, log_freq, log_tors_freq)
+    # scale_factor = unproj_prod / proj_prod
 
     # generate the scaling factor
     factor = numpy.exp(log_rt_freq - log_freq - log_tors_freq)
@@ -335,8 +332,10 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     # generate the set of indices for torsions that are two be scales
     scale_factor = (idx_remove, factor)
     ioprinter.info_message('scale fact test', scale_factor)
-    ioprinter.info_message('TAU FACTOR {:4.6f} \t {:g} \t {:3.6f} {} '
-            .format(tau_factor_mode, len(tors_freqs), factor, '-'.join([str(ridx) for ridx in idx_remove])))
+    ioprinter.info_message(
+        'TAU FACTOR {:4.6f} \t {:g} \t {:3.6f} {} '.format(
+            tau_factor_mode, len(tors_freqs), factor,
+            '-'.join([str(ridx) for ridx in idx_remove])))
 
     # Check if there are significant differences caused by the rotor projection
     diff_tors_zpe *= phycon.EH2KCAL
@@ -352,16 +351,15 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
 
 
 def scale_frequencies(freqs, tors_zpe,
-                      spc_mod_dct_i, scale_method='3c'):
+                      spc_mod_dct_i, scale_method='c3'):
     """ Scale frequencies according to some method
         obtain a corrected zpe
     """
 
     thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
-    print('thy info scale test', thy_info)
     method, basis = thy_info[1], thy_info[2]
     scaled_freqs, scaled_zpe = automol.prop.freq.anharm_by_scaling(
-        freqs, method, basis, scale_method='c3')
+        freqs, method, basis, scale_method=scale_method)
     tot_zpe = scaled_zpe + tors_zpe
 
     return scaled_freqs, tot_zpe

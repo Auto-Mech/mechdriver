@@ -2,7 +2,6 @@
   Handle labels
 """
 
-from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.pf.models.typ import need_fake_wells
 

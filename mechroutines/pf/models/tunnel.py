@@ -3,9 +3,6 @@ NEW: Interface to MESS and projrot to set-up tunneling blocks
 """
 
 import mess_io
-import autofile
-from autorun import run_script
-from mechlib.amech_io import printer as ioprinter
 from mechroutines.pf.models.typ import treat_tunnel
 
 
@@ -14,7 +11,7 @@ def write_mess_tunnel_str(ts_inf_dct, chnl_infs, chnl_enes,
     """ Write the appropriate tunneling string for a transition state
     """
 
-    tunnel_str, sct_str = '', ''
+    tunnel_str, sct_dat = '', {}
     if treat_tunnel(ts_model, ts_class):
         tunnel_model = ts_model['tunnel']
         if tunnel_model == 'eckart':
@@ -25,15 +22,14 @@ def write_mess_tunnel_str(ts_inf_dct, chnl_infs, chnl_enes,
                 chnl_enes, ts_inf_dct.get('imag', None),
                 ts_idx=ts_idx, symm_barrier=symm_barrier)
         elif tunnel_model == 'sct':
-            tunnel_file = tsname + '_sct.dat'
+            sct_dat_name = tsname + '_sct.dat'
             path = 'cat'
-            tunnel_str, sct_str = tunnel.write_mess_sct_str(
+            tunnel_str, sct_str = write_mess_sct_str(
                 spc_dct[tsname], pf_levels, path,
-                imag, tunnel_file,
+                imag, sct_dat_name,
                 cutoff_energy=2500, coord_proj='cartesian')
 
-    if sct_str:
-        ts_dat_dct.update({sct_dat_name: sct_str})
+            sct_dat = {sct_dat_name: sct_str}
 
     return tunnel_str, sct_str
 

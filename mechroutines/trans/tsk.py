@@ -2,9 +2,9 @@
 Executes the automation part of 1DMin
 """
 
+from mechlib.amech_io import printer as ioprinter
 from mechroutines.trans._routines import lj
 from mechroutines.trans._routines import build
-from mechlib.amech_io import printer as ioprinter
 
 
 def run_tsk(tsk, spc_queue,

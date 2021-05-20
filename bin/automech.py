@@ -4,10 +4,10 @@
 """
 
 import sys
-from drivers import esdriver, thermodriver, ktpdriver, transdriver, procdriver
 from mechlib.filesys import prefix_fs
 from mechlib.amech_io import parser as ioparser
 from mechlib.amech_io import printer as ioprinter
+from drivers import esdriver, thermodriver, ktpdriver, transdriver, procdriver
 
 
 # Set runtime options based on user input
@@ -24,7 +24,8 @@ ioprinter.program_header('inp')
 INP_STRS = ioparser.read_amech_input(JOB_PATH)
 
 THY_DCT = ioparser.thy.theory_dictionary(INP_STRS['thy'])
-KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(INP_STRS['mod'], THY_DCT)
+KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(
+    INP_STRS['mod'], THY_DCT)
 INP_KEY_DCT = ioparser.run.input_dictionary(INP_STRS['run'])
 PES_IDX_DCT = ioparser.run.pes_idxs(INP_STRS['run'])
 SPC_IDX_DCT = ioparser.run.spc_idxs(INP_STRS['run'])
@@ -83,8 +84,8 @@ if KTP_TSKS is not None:
     ktpdriver.run(
         PES_RLST,
         KTP_TSKS,
-        SPC_DCT, GLOB_DCT, THY_DCT,
-        KMOD_DCT, SMOD_DCT,
+        SPC_DCT, GLOB_DCT,
+        KMOD_DCT, SMOD_DCT, THY_DCT,
         INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
     )
     ioprinter.program_exit('ktp')

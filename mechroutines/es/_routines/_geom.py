@@ -73,7 +73,7 @@ def _check_imaginary(spc_info, geo, mod_thy_info, run_fs, script_str,
     """
 
     # Initialize info
-    imag = False
+    has_imag = False
     norm_coords = []
     hess = ((), ())
 
@@ -108,8 +108,9 @@ def _check_imaginary(spc_info, geo, mod_thy_info, run_fs, script_str,
             if imag_freq:
                 ioprinter.warning_message('Imaginary mode found:')
                 norm_coords = elstruct.reader.normal_coordinates(prog, out_str)
+                has_imag = True
 
-    return bool(imag_freq), norm_coords
+    return has_imag, norm_coords
 
 
 def _kickoff_saddle(geo, norm_coords, spc_info, mod_thy_info,

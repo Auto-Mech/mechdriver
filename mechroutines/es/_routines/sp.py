@@ -152,7 +152,8 @@ def run_gradient(zma, geo, spc_info, thy_info,
                 if is_atom:
                     grad = ()
                 else:
-                    ioprinter.info_message(" - Reading gradient from output...")
+                    ioprinter.info_message(
+                        " - Reading gradient from output...")
                     grad = elstruct.reader.gradient(inf_obj.prog, out_str)
 
                     ioprinter.info_message(" - Saving gradient...")
@@ -246,7 +247,8 @@ def run_hessian(zma, geo, spc_info, thy_info,
                     geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
                     geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
                     geo_save_fs[-1].file.hessian.write(hess, locs)
-                ioprinter.info_message(" - Save path: {}".format(geo_save_path))
+                ioprinter.info_message(
+                    " - Save path: {}".format(geo_save_path))
 
                 if thy_info[0] == 'gaussian09':
                     _hess_grad(inf_obj.prog, out_str, geo_save_fs,
@@ -332,20 +334,9 @@ def run_vpt2(zma, geo, spc_info, thy_info,
             if success:
                 inf_obj, inp_str, out_str = ret
 
-                # if not geo_save_fs[-1].file.hessian.exists(locs):
-                #     ioprinter.info_message(" - No Hessian in filesys.",
-                #           "Reading it from output...")
-                #     hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-                #     ioprinter.info_message(" - Saving Hessian...")
-                #     ioprinter.info_message(" - Save path: {}".format(geo_save_path))
-                #     geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
-                #     geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
-                #     geo_save_fs[-1].file.hessian.write(hess, locs)
-
                 ioprinter.info_message(
                     " - Reading anharmonicities from output...")
                 vpt2_dct = elstruct.reader.vpt2(inf_obj.prog, out_str)
-                # hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
                 ioprinter.save_anharmonicity(geo_save_path)
                 geo_save_fs[-1].file.vpt2_input.write(inp_str, locs)
@@ -416,7 +407,7 @@ def run_prop(zma, geo, spc_info, thy_info,
         )
 
         if success:
-            inf_obj, inp_str, out_str = ret
+            inf_obj, _, out_str = ret
 
             ioprinter.info_message(" - Reading dipole moment from output...")
             dmom = elstruct.reader.dipole_moment(inf_obj.prog, out_str)

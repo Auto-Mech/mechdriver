@@ -56,10 +56,6 @@ def onedmin(spc_name,
     # tgt_cnf_run_path = filesys.build.cnf_paths_from_locs(
     #     tgt_cnf_run_fs, [tgt_min_cnf_locs])[0]
 
-
-
-
-
     # Build the target energy transfer filesystem objects
     etrans_run_fs = autofile.fs.energy_transfer(tgt_cnf_run_path)
     etrans_save_fs = autofile.fs.energy_transfer(tgt_cnf_save_path)

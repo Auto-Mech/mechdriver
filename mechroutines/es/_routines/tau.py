@@ -1,7 +1,6 @@
 """ es_runners
 """
 
-# import itertools
 import numpy
 import automol
 import elstruct
@@ -9,8 +8,8 @@ import autofile
 from mechroutines.es._routines import _util as util
 from mechroutines.es import runner as es_runner
 from mechlib import filesys
-from phydat import phycon
 from mechlib.amech_io import printer as ioprinter
+from phydat import phycon
 
 
 def tau_sampling(zma, ref_ene, spc_info, tors_name_grps, nsamp_par,
@@ -283,7 +282,8 @@ def assess_pf_convergence(tau_save_fs, ref_ene,
             sum2 = sum2 + tmp**2
             sigma = numpy.sqrt(
                 (abs(sum2/float(idx)-(sumq/float(idx))**2))/float(idx))
-            ioprinter.debug_message(sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
+            ioprinter.debug_message(
+                sumq/float(idx), sigma, 100.*sigma*float(idx)/sumq, idx)
         inf_obj_s = tau_save_fs[0].file.info.read()
         nsamp = inf_obj_s.nsamp
         saved_locs = tau_save_fs[-1].existing()

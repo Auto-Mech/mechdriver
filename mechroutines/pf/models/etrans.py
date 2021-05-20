@@ -19,13 +19,11 @@ def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
         '- Determining the masses...', newline=1)
     mass1, mass2 = mass_params(
         well_info, bath_info, etrans_dct)
-    print('masspar', mass1, mass2)
 
     ioprinter.info_message(
         '- Determining the Lennard-Jones model parameters...', newline=1)
     sig1, eps1, sig2, eps2 = lj_params(
         well_info, bath_info, etrans_dct)
-    print('ljpar', sig1, eps1, sig2, eps2)
 
     ioprinter.info_message(
         '- Determining the energy-down transfer model parameters...',
@@ -33,7 +31,6 @@ def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
     exp_factor, exp_power, exp_cutoff = edown_params(
         well_info, bath_info, etrans_dct,
         ljpar=(sig1, eps1, mass1, mass2))
-    print('exp', exp_factor, exp_power, exp_cutoff)
 
     # Write the Energy Transfer section string
     if all(val is not None
@@ -145,11 +142,7 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
 
             ioprinter.info_message('  - Estimating the parameters...')
             well_ich = well_info[0]
-            print('well info test:', well_info[0])
-            well_smi = automol.inchi.smiles(well_ich)
-            print('well smiles test:', well_smi)
             well_geo = automol.inchi.geometry(well_ich)
-            print('well geo test:', well_geo)
             params = estimate_viable(
                 well_ich, well_geo, bath_info)
             if params is not None:
@@ -189,7 +182,8 @@ def _read_alpha(pf_filesystems):
     """ filesys
     """
 
-    etrans_fs, etrans_locs = 0, 0
+    _ = pf_filesystems
+    etrans_fs, etrans_locs = [], []
     # etrans_fs, etrans_locs = filesys.models.set_etrans_fs()
 
     # Read the epsilon and sigma values
@@ -209,7 +203,8 @@ def _read_lj(pf_filesystems):
     """ filesys
     """
 
-    etrans_fs, etrans_locs = 0, 0
+    _ = pf_filesystems
+    etrans_fs, etrans_locs = [], []
     # etrans_save_fs, etrans_locs = filesys.models.set_etrans_fs()
 
     # Read the epsilon and sigma values

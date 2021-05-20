@@ -8,7 +8,6 @@
 
 """
 
-import automol
 import autofile
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
@@ -25,7 +24,7 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
 
     # Build necessary objects
-    thy_inf_dct, runfs_dct, savefs_dct = _set_thy_inf_dcts(
+    _, runfs_dct, savefs_dct = _set_thy_inf_dcts(
         tsname, spc_dct[tsname], thy_dct, es_keyword_dct,
         run_prefix, save_prefix)
 
@@ -33,21 +32,15 @@ def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
     search_method = _ts_search_method(spc_dct[tsname])
     if search_method == 'sadpt':
         run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
-                  thy_inf_dct, runfs_dct, savefs_dct)
+                  runfs_dct, savefs_dct)
     elif search_method == 'pst':
         run_pst(spc_dct, tsname, savefs_dct, zma_locs=(0,))
-    elif search_method == 'vtst':
-        run_vtst(spc_dct, tsname, es_keyword_dct,
-                 thy_inf_dct, runfs_dct, savefs_dct)
-    elif search_method == 'vrctst':
-        run_vrctst(spc_dct, tsname, es_keyword_dct,
-                   thy_inf_dct, runfs_dct, savefs_dct)
     elif search_method is None:
         print('No TS search algorithm was specified or able to determined')
 
 
 def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
-              thy_inf_dct, runfs_dct, savefs_dct):
+              runfs_dct, savefs_dct):
     """ find a transition state
     """
 
@@ -136,19 +129,6 @@ def _ts_search_method(ts_dct):
     return _search_method
 
 
-# CHECKS FOR TYPE OF TRANSITION STATE
-def _nobarrier(ts_dct):
-    """ Determine if reaction is barrierless
-    """
-    radrad = _radrad(ts_dct)
-    low_spin = bool('low' in ts_dct['class'])
-    return radrad and low_spin
-
-
-def _radrad(ts_dct):
-    return bool('radical-radical' in ts_dct['class'])
-
-
 # SET OPTIONS FOR THE TRANSITION STATE
 def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                       run_prefix, save_prefix,
@@ -180,7 +160,6 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
     hs_thy_info = None
 
     # Initialize the necessary run filesystem
-    runlvl_ts_run_fs = None
     runlvl_scn_run_fs = None
     runlvl_cscn_run_fs = None
     vscnlvl_ts_run_fs = None
@@ -190,16 +169,12 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
 
     # Initialize the necessary save filesystem
     ini_zma_save_fs = None
-    runlvl_ts_save_fs = None
     runlvl_scn_save_fs = None   # above cnf filesys, for search scans
     runlvl_cscn_save_fs = None   # above cnf filesys, for search scans
     runlvl_cnf_save_fs = None
-    vscnlvl_thy_save_fs = None
-    vscnlvl_ts_save_fs = None
     vscnlvl_scn_save_fs = None
     vscnlvl_cscn_save_fs = None
     vrctst_save_fs = None
-    runlvl_ts_zma_fs = None
 
     if es_keyword_dct.get('inplvl', None) is not None:
 
@@ -208,7 +183,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         mod_ini_thy_info = tinfo.modify_orb_label(
             ini_thy_info, ts_info)
 
-        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
+        _, ini_cnf_save_fs = build_fs(
             run_prefix, save_prefix, 'CONFORMER',
             rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_ini_thy_info[1:])
@@ -249,7 +224,7 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
             run_prefix, save_prefix, 'SCAN',
             rxn_locs=rxn_info, ts_locs=ts_locs,
             thy_locs=mod_thy_info[1:], zma_locs=(0,))
-  
+
         runlvl_cscn_run_fs, runlvl_cscn_save_fs = build_fs(
             run_prefix, save_prefix, 'CSCAN',
             rxn_locs=rxn_info, ts_locs=ts_locs,

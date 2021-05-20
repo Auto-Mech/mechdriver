@@ -6,7 +6,6 @@ import elstruct
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
 from mechlib.amech_io import printer as ioprinter
-from phydat import phycon
 
 
 def hindered_rotor_scans(

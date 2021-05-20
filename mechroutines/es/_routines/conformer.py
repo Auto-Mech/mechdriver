@@ -16,7 +16,6 @@ from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
-from mechlib.filesys import build_fs
 
 
 # Initial conformer
@@ -131,13 +130,13 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
     geo_init = None
     # Obtain geom from thy fs or remove the conformer filesystem if needed
     if not overwrite:
-        ini_min_cnf_locs, ini_path = filesys.mincnf.min_energy_conformer_locators(
+        ini_min_locs, ini_path = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
         if ini_path:
-            geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
+            geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
             ioprinter.info_message(
                 'Getting inital geometry from inplvl at path',
-                '{}'.format(ini_cnf_save_fs[-1].path(ini_min_cnf_locs)))
+                '{}'.format(ini_cnf_save_fs[-1].path(ini_min_locs)))
     else:
         ioprinter.debug_message(
             'Removing original conformer save data for instability')
@@ -328,10 +327,12 @@ def single_conformer(zma, spc_info, mod_thy_info,
                     geo, ene, saved_geos, saved_enes)
                 if sym_id is None:
                     if cnf_save_fs[0].file.info.exists():
-                        ioprinter.debug_message('inf_obj path', cnf_save_fs[0].path())
-                        rinf_obj_s = cnf_save_fs[0].file.info.read()
+                        ioprinter.debug_message(
+                            'inf_obj path', cnf_save_fs[0].path())
+                        # rinf_obj_s = cnf_save_fs[0].file.info.read()
                         rinf_obj = inf_obj
-                        ioprinter.debug_message('inf_obj for r', rinf_obj)
+                        ioprinter.debug_message(
+                            'inf_obj for r', rinf_obj)
                         # rnsampd = rinf_obj_s.nsamp
                         # rnsampd += 1
                         # rinf_obj.nsamp = rnsampd
@@ -410,7 +411,7 @@ def conformer_sampling(zma, spc_info, thy_info,
             break
         if samp_attempt_idx == brk_tot_samp:
             ioprinter.info_message(
-                'Max number of samples 5*{} attempted, ending search'.format(nsamp),
+                'Max sample num: 5*{} attempted, ending search'.format(nsamp),
                 'Run again if more samples desired.')
             break
 
@@ -497,9 +498,9 @@ def _get_ring_atoms(zma, zrxn=None):
         rings = automol.reac.forming_rings_bond_keys(zrxn)
         for ring_bnds in rings:
             ring_atoms = []
-            for bnd in ring_bnds:
-                atma, atmb = bnd
-                if not atma in ring_atoms:
+            for ring_bnd in ring_bnds:
+                atma, _ = ring_bnd
+                if atma not in ring_atoms:
                     ring_atoms.append(atma)
             rings_atoms.append(ring_atoms)
 
@@ -525,8 +526,9 @@ def _get_ring_distances(zma, ring_atoms):
     """ return the distances between each pair of ring atoms
     """
     dist_value_dct = {}
-    for i in range(len(ring_atoms)):
-        dist_value_dct[i] = automol.zmat.distance(zma, ring_atoms[i-1], ring_atoms[i])
+    for i, _ in enumerate(ring_atoms):
+        dist_value_dct[i] = automol.zmat.distance(
+            zma, ring_atoms[i-1], ring_atoms[i])
     return dist_value_dct
 
 
@@ -544,8 +546,12 @@ def _ring_distances_passes(samp_zma, ring_atoms, dist_value_dct):
     """ are the distances between ring atoms reasonable?
     """
     condition = True
-    for i in range(len(ring_atoms)):
-        if abs(dist_value_dct[i] - automol.zmat.distance(samp_zma, ring_atoms[i-1], ring_atoms[i])) > .3:
+    for i, _ in enumerate(ring_atoms):
+        chk_dist = (
+            dist_value_dct[i] -
+            automol.zmat.distance(samp_zma, ring_atoms[i-1], ring_atoms[i])
+        )
+        if abs(chk_dist) > .3:
             condition = False
     return condition
 
@@ -554,9 +560,10 @@ def _ring_angles_passes(samp_geo, ring_atoms):
     """ ring angles are not crazy
     """
     condition = True
-    for i in range(len(ring_atoms)):
-        angle_atoms = [ring_atoms[i], ring_atoms[i-1], ring_atoms[i-2]]
-        if automol.geom.central_angle(samp_geo, *angle_atoms, degree=True) < 94.:
+    for i, _ in enumerate(ring_atoms):
+        _atoms = [ring_atoms[i], ring_atoms[i-1], ring_atoms[i-2]]
+        cangle = automol.geom.central_angle(samp_geo, *_atoms, degree=True)
+        if cangle < 94.0:
             condition = False
     return condition
 
@@ -564,9 +571,9 @@ def _ring_angles_passes(samp_geo, ring_atoms):
 def _num_samp_zmas(ring_atoms, nsamp_par):
     """ choose starting number of sample zmas
     """
-    n = len(ring_atoms) - 3
-    a, b, c = nsamp_par[0:3]
-    return 50 * (a + b * c**n)
+    ntors = len(ring_atoms) - 3
+    apar, bpar, cpar = nsamp_par[0:3]
+    return 50 * (apar + bpar * cpar**ntors)
 
 
 def ring_conformer_sampling(
@@ -589,8 +596,8 @@ def ring_conformer_sampling(
     check_dct = {
         'dist': 3.5e-1,
         'coulomb': 1.5e-2,
-       # 'stereo': None,
-       # 'tors': None
+        # 'stereo': None,
+        # 'tors': None
     }
     _, saved_geos, _ = _saved_cnf_info(
         cnf_save_fs, thy_info)
@@ -612,8 +619,12 @@ def ring_conformer_sampling(
                 frag_samp_geo = _fragment_ring_geo(samp_geo)
                 if _ring_angles_passes(samp_geo, ring_atoms):
                     if not automol.pot.low_repulsion_struct(geo, samp_geo):
-                        if automol.geom.is_unique(frag_samp_geo, frag_saved_geos, check_dct):
-                            if automol.geom.is_unique(samp_geo, unique_frag_geos, check_dct):
+                        frag_samp_unique = automol.geom.is_unique(
+                            frag_samp_geo, frag_saved_geos, check_dct)
+                        samp_unique = automol.geom.is_unique(
+                            samp_geo, unique_frag_geos, check_dct)
+                        if frag_samp_unique:
+                            if samp_unique:
                                 unique_zmas.append(samp_zma)
                                 unique_geos.append(samp_geo)
                                 unique_frag_geos.append(frag_samp_geo)
@@ -749,8 +760,8 @@ def _calc_nsampd(cnf_save_fs, cnf_run_fs, rid=None):
     return nsampd
 
 
-
-def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=None, rid=None):
+def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
+                  thy_info, zrxn=None, rid=None):
     """ Loop over the RUN filesys and save conformers
     """
 
@@ -1037,7 +1048,6 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
         if abs(ene - sene) < ethresh:
             idx_dct[len(new_saved_geos)] = i
             new_saved_geos.append(sgeo)
-    #if automol.util.value_similar_to(ene, saved_enes, ethresh):
     if new_saved_geos:
         _, sym_idx = automol.geom.is_unique(
             geo, new_saved_geos, check_dct={'coulomb': 1e-2})
@@ -1215,7 +1225,8 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
             # if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):
             if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.1, ang_atol=.4):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
-                ioprinter.info_message('- Similar structure found at {}'.format(cnf_save_path))
+                ioprinter.info_message(
+                    '- Similar structure found at {}'.format(cnf_save_path))
                 match_dct[ini_locs] = locs
                 break
 
@@ -1234,7 +1245,7 @@ def unique_fs_ring_confs(
     rng_dct = {}
 
     for ini_locs in ini_cnf_locs_lst:
-        ini_rid, ini_cid = ini_locs
+        ini_rid, _ = ini_locs
         if ini_rid in [locs[0] for locs in uni_ini_rng_locs]:
             uni_ini_rng_locs.append(ini_locs)
             continue
@@ -1257,7 +1268,7 @@ def unique_fs_ring_confs(
                 frag_ini_zma = automol.geom.zmatrix(frag_ini_geo)
             skip_trid = []
             for tlocs in cnf_save_fs[-1].existing():
-                trid, tcid = tlocs
+                trid, _ = tlocs
                 if frag_ini_geo is None:
                     found_rid = trid
                     rng_dct[ini_rid] = trid
@@ -1277,10 +1288,11 @@ def unique_fs_ring_confs(
             uni_ini_rng_locs.append(ini_locs)
             continue
 
-        # If a similar ring is found, check the actual conformers under that ring orientation
+        # If similar ring is found,
+        # check actual conformers under that ring orientation
         found = False
         for locs in cnf_locs_lst:
-            rid, cid = locs
+            rid, _ = locs
             if rid != found_rid:
                 continue
             cnf_save_path = cnf_save_fs[-1].path(locs)
@@ -1363,10 +1375,10 @@ def _fragment_ring_geo(geo):
     for ring_atoms in rings_atoms:
         for ring_atom in ring_atoms:
             ring_ngbs = ngbs[ring_atom]
-            if not ring_atom in ring_idxs:
+            if ring_atom not in ring_idxs:
                 ring_idxs.append(ring_atom)
             for ngb in ring_ngbs:
-                if not ngb in ring_idxs:
+                if ngb not in ring_idxs:
                     ring_idxs.append(ngb)
     if ring_idxs:
         ret = automol.geom.from_subset(geo, ring_idxs)
@@ -1375,6 +1387,10 @@ def _fragment_ring_geo(geo):
 
 
 def rng_loc_for_geo(geo, cnf_run_fs, cnf_save_fs):
+    """ Find the ring-conf locators for a given geometry in the
+        conformamer save filesystem
+    """
+
     rid = None
     frag_geo = _fragment_ring_geo(geo)
     if frag_geo is not None:
@@ -1384,8 +1400,7 @@ def rng_loc_for_geo(geo, cnf_run_fs, cnf_save_fs):
         current_rid, _ = locs
         if current_rid in checked_rids:
             continue
-        else:
-            checked_rids.append(current_rid) 
+        checked_rids.append(current_rid)
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
         frag_locs_geo = _fragment_ring_geo(locs_geo)
         if frag_locs_geo is None:
@@ -1395,4 +1410,5 @@ def rng_loc_for_geo(geo, cnf_run_fs, cnf_save_fs):
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma, dist_rtol=0.1, ang_atol=.4):
             rid = locs[0]
             break
+
     return rid

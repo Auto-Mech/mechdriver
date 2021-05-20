@@ -16,7 +16,8 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
 
     sym_factor = spc_dct_i.get('sym_factor')
     if sym_factor is not None:
-        ioprinter.info_message(' - Reading symmetry number input by user:', sym_factor)
+        ioprinter.info_message(
+            ' - Reading symmetry number input by user:', sym_factor)
     else:
 
         zrxn = spc_dct_i.get('zrxn', None)
@@ -49,7 +50,8 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 ioprinter.info_message(
                     ' - Determining internal sym number ',
                     'using sampling routine.')
-                int_sym, end_group_factor = int_sym_num_from_sampling(sym_geos, rotors, grxn=grxn, zma=zma)
+                int_sym, end_group_factor = int_sym_num_from_sampling(
+                    sym_geos, rotors, grxn=grxn, zma=zma)
             else:
                 ioprinter.info_message(' - No torsions, internal sym is 1.0')
                 int_sym = 1.0
@@ -132,15 +134,16 @@ def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
     mod_sym_geos = []
     print('sym_geos test:', sym_geos)
     print('keys:', frm_bnd_keys, brk_bnd_keys)
-    ts_bnds = ()
-    if grxn is not None:
-        ts_bnds = (frm_bnd_keys, brk_bnd_keys)
+    # ts_bnds = ()
+    # if grxn is not None:
+    #     ts_bnds = (frm_bnd_keys, brk_bnd_keys)
     for geo_sym_i in sym_geos:
         ret = automol.geom.end_group_symmetry_factor(
             geo_sym_i, frm_bnd_keys, brk_bnd_keys)
         mod_geo_sym_i, end_group_factor, removed_atms = ret
         if grxn is not None:
-            mod_tors_idxs = _modify_idxs(tors_idxs, removed_atms, automol.zmat.dummy_keys(zma))
+            mod_tors_idxs = _modify_idxs(
+                tors_idxs, removed_atms, automol.zmat.dummy_keys(zma))
         # ioprinter.info_message('end_group_factor test:', end_group_factor)
 
         new_geom = True

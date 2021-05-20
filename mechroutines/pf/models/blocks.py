@@ -227,11 +227,12 @@ def tau_block(inf_dct):
 
 
 def multiconfig_block(inf_dct_lst):
-    """ write a 
+    """ Write a Union Block for MESS.
     """
 
-    spc_str_lst = tuple(dct for dct in inf_dct_lst) 
-    config_str = configs_union(spc_str_lst)
+    spc_str_lst = tuple(dct for dct in inf_dct_lst)
+    zero_enes = []  # need to get differently somehow
+    config_str = mess_io.writer.configs_union(spc_str_lst, zero_enes)
 
     return config_str
 
@@ -289,7 +290,7 @@ def rpvtst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     a saddle point. Do it by calling the species block for each grid point
     in the scan file system
     """
-    
+
     # Combine electronic structure information for the two species together
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']

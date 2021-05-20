@@ -77,9 +77,7 @@ def run_tsk(tsk, spc_dct, spc_name,
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
         elif 'rpath' in tsk and not skip_task(spc_dct, spc_name):
-            pass
-        elif 'irc' in tsk and not skip_task(spc_dct, spc_name):
-            irc_tsk(
+            rpath_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
         elif 'find' in tsk:
@@ -117,14 +115,6 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     cnf_run_fs, cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         spc_locs=spc_info, thy_locs=mod_thy_info[1:])
-
-   # _, ini_cnf_save_fs = build_fs(
-   #     run_prefix, save_prefix, 'CONFORMER',
-   #     spc_locs=spc_info, thy_locs=mod_ini_thy_info[1:])
-   # cnf_run_fs, cnf_save_fs = build_fs(
-   #     run_prefix, save_prefix, 'CONFORMER',
-   #     spc_locs=spc_info, thy_locs=mod_thy_info[1:])
-
     _, instab_save_fs = build_fs(
         run_prefix, save_prefix, 'INSTAB',
         spc_locs=spc_info, thy_locs=mod_thy_info[1:])
@@ -304,9 +294,12 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Truncate the list of the ini confs
         uni_rng_locs_lst, uni_cnf_locs_lst = conformer.unique_fs_ring_confs(
-            cnf_save_fs, rng_cnf_locs_lst, ini_cnf_save_fs, ini_rng_cnf_locs_lst)
-        ioprinter.debug_message('uni lst that has no similar ring', uni_rng_locs_lst)
-        ioprinter.debug_message('uni lst that has similar ring', uni_cnf_locs_lst)
+            cnf_save_fs, rng_cnf_locs_lst,
+            ini_cnf_save_fs, ini_rng_cnf_locs_lst)
+        ioprinter.debug_message(
+            'uni lst that has no similar ring', uni_rng_locs_lst)
+        ioprinter.debug_message(
+            'uni lst that has similar ring', uni_cnf_locs_lst)
 
         for locs in uni_rng_locs_lst:
             rid, cid = locs
@@ -682,9 +675,9 @@ def hr_tsk(job, spc_dct, spc_name,
         #     # Read and print the potential
         #     sp_fs = autofile.fs.single_point(ini_cnf_save_path)
         #     ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
-        #     # ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
         #     tors_pots, tors_zmas, tors_paths = {}, {}, {}
-        #     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
+        #     for tors_names, tors_grids in ___
+        #     __zip(run_tors_names, run_tors_grids):
         #         constraint_dct = automol.zmat.build_constraint_dct(
         #             zma, const_names, tors_names)
         #         pot, _, _, _, zmas, paths = filesys.read.potential(
@@ -757,7 +750,6 @@ def rpath_tsk(job, spc_dct, spc_name,
     if rxn_coord == 'auto':
         coord_name = ['Rn']  # grab from zrxn object
     else:
-        # coord_name = 
         coord_name = ['IRC']
 
     # Set the spc_info
@@ -787,14 +779,6 @@ def rpath_tsk(job, spc_dct, spc_name,
     # New filesystem objects
     if coord_name == 'irc':
         _root = root_locs(spc_dct_i, saddle=True)
-        # ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
-        #     run_prefix, save_prefix, 'CONFORMER',
-        #     thy_locs=mod_ini_thy_info[1:],
-        #     **_root)
-        # cnf_run_fs, cnf_save_fs = build_fs(
-        #     run_prefix, save_prefix, 'CONFORMER',
-        #     thy_locs=mod_thy_info[1:],
-        #     **_root)
         ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
             run_prefix, save_prefix, 'CONFORMER',
             thy_locs=mod_ini_thy_info[1:],
@@ -834,9 +818,9 @@ def rpath_tsk(job, spc_dct, spc_name,
     # Run job
     if job == 'scan':
 
-        if rcoord == 'auto':
+        if rxn_coord == 'auto':
             pass
-        elif rcoord == 'irc':
+        elif rxn_coord == 'irc':
             rpath.irc_scan(
                 geo, spc_info, coord_name,
                 mod_ini_thy_info, ini_method_dct,
@@ -885,5 +869,8 @@ def skip_task(spc_dct, spc_name):
         high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
         if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:
             skip = True
-            ioprinter.info_message('Skipping task because {} is a low-spin radical radical reaction'.format(spc_name))
+            ioprinter.info_message(
+                'Skipping task because {}'.format(spc_name),
+                'is a low-spin radical radical reaction')
+
     return skip

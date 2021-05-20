@@ -14,8 +14,8 @@ from mechlib.reaction import split_unstable_rxn
 
 def run(pes_rlst,
         ktp_tsk_lst,
-        spc_dct, glob_dct, thy_dct,
-        pes_mod_dct, spc_mod_dct,
+        spc_dct, glob_dct,
+        pes_mod_dct, spc_mod_dct, thy_dct,
         run_prefix, save_prefix):
     """ main driver for generation of full set of rate constants on a single PES
     """
@@ -56,7 +56,7 @@ def run(pes_rlst,
 
             spc_dct, rxn_lst, label_dct = _process(
                 pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
-                thy_dct, spc_dct, glob_dct, run_prefix, save_prefix)
+                spc_dct, glob_dct, run_prefix, save_prefix)
 
             ioprinter.messpf('write_header')
 
@@ -94,7 +94,7 @@ def run(pes_rlst,
             if label_dct is None:
                 spc_dct, rxn_lst, label_dct = _process(
                     pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
-                    thy_dct, spc_dct, glob_dct, run_prefix, save_prefix)
+                    spc_dct, glob_dct, run_prefix, save_prefix)
 
             ioprinter.obj('vspace')
             ioprinter.obj('line_dash')
@@ -131,7 +131,7 @@ def run(pes_rlst,
 # UTILITY #
 # ------- #
 def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
-             thy_dct, spc_dct, glob_dct, run_prefix, save_prefix):
+             spc_dct, glob_dct, run_prefix, save_prefix):
     """ Build info needed for the task
     """
 
