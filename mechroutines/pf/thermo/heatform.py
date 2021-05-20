@@ -2133,7 +2133,7 @@ def _lhs_rhs(frags):
     return lhs, rhs
 
 
-def _print_lhs_rhs(ich, frags):
+def print_lhs_rhs(ich, frags):
     """ print the fragments from each side of the reaction
     """
     lhs, rhs = _lhs_rhs(frags)

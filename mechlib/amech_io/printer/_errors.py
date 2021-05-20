@@ -2,7 +2,7 @@
 ES routines prints
 """
 
-from mechlib.amech_io.printer import error_message
+from mechlib.amech_io.printer._print import error_message
 
 
 def missing_input(prop):

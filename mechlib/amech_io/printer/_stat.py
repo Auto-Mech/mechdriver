@@ -2,7 +2,7 @@
   Various status messages
 """
 
-from mechlib.amech_io.printer import message
+from mechlib.amech_io.printer._print import message
 
 
 def running(label=None, path=None, newline=False, indent=False):

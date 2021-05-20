@@ -3,8 +3,8 @@
 """
 
 import random
-from mechlib.amech_io.printer import obj
-from mechlib.amech_io.printer import message
+from mechlib.amech_io.printer._lib import obj
+from mechlib.amech_io.printer._print import message
 
 
 def program_header(driver):

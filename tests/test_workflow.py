@@ -26,6 +26,16 @@ EXE_PATH = os.path.join(PATH, '../../bin/automech.py')
 CMD_LINE = 'python -u {0} {1} & disown %1'.format(EXE_PATH, TMP_DIR)
 
 
+def test__():
+    """ test automech.py
+    """
+    _copy_input()
+    _rewrite_run_dat()
+
+    logfile = open('{0}/run.log'.format(TMP_DIR), 'w')
+    subprocess.call(CMD_LINE.split(), stdout=logfile, stderr=logfile)
+
+
 def _copy_input():
     """ Copy all of the input files
     """
@@ -56,16 +66,6 @@ def _rewrite_run_dat():
     new_inp_file = os.path.join(TMP_DIR, 'inp', 'run.dat')
     with open(new_inp_file, 'w') as fobj:
         inp_str = fobj.write(new_inp_str)
-
-
-def test__():
-    """ test automech.py
-    """
-    _copy_input()
-    _rewrite_run_dat()
-
-    logfile = open('{0}/run.log'.format(TMP_DIR), 'w')
-    subprocess.call(CMD_LINE.split(), stdout=logfile, stderr=logfile)
 
 
 if __name__ == '__main__':

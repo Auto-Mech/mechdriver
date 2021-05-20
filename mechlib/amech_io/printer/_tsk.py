@@ -2,7 +2,7 @@
 general task prints
 """
 
-from mechlib.amech_io.printer import message
+from mechlib.amech_io.printer._print import message
 from mechlib.amech_io.printer._lib import obj
 
 

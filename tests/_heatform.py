@@ -4,7 +4,6 @@ Tests calculating the 0 K heat-of-formation
 
 import os
 from thermo import heatform
-from thermo import util
 import automol.inchi
 import automol.smiles
 
@@ -22,14 +21,12 @@ def test__calc_hform_0k():
     """
 
     # Get the molecular formula from the inchi string
-    #formula = util.inchi_formula(ICH)
     formula = automol.inchi.formula(ICH)
     print('\nformula:')
     print(formula)
 
     # Get atom count dictionary
-    #atom_dict = util.get_atom_counts_dict(formula)
-    atom_dict = automol.inchi.formula_dct(ICH)
+    atom_dict = automol.inchi.formula(ICH)
     print('\natom dict:')
     print(atom_dict)
 
@@ -37,11 +34,6 @@ def test__calc_hform_0k():
     basis = heatform.select_basis(atom_dict)
     print('\nbasis:')
     print(basis)
-    
-    # Get the basis list from reduced_basis
-    #red_basis = heatform.select_basis(basis_ich, formula)
-    #print('\nreduced basis:')
-    #print(red_basis)
 
     # Get the coefficients for the balanced heat-of-formation eqn
     coeff = heatform.calc_coefficients(basis, atom_dict)
@@ -63,7 +55,8 @@ def test__calc_hform_0k():
     print(e_basis)
 
     # Get the 0 K heat of formation
-    hform = heatform.calc_hform_0k(e_mol, e_basis, basis, coeff, ref_set='ATcT')
+    hform = heatform.calc_hform_0k(
+        e_mol, e_basis, basis, coeff, ref_set='ATcT')
     print('\nhform(0 K):')
     print(hform)
 
@@ -86,19 +79,22 @@ def test__cbhzed():
     """ Fragments molecule in a way that conserves each heavy-atom/heavy-atom bond
     """
     frags = heatform.cbhzed(ICH2)
-    print('\nCBH0 formula: ', heatform._print_lhs_rhs(ICH2, frags))
+    print('\nCBH0 formula: ', heatform.print_lhs_rhs(ICH2, frags))
+
 
 def test__cbhone():
     """ Fragments molecule in a way that conserves each heavy-atom/heavy-atom bond
     """
     frags = heatform.cbhone(ICH2)
-    print('\nCBH1 formula: ', heatform._print_lhs_rhs(ICH2, frags))
+    print('\nCBH1 formula: ', heatform.print_lhs_rhs(ICH2, frags))
+
 
 def test__cbhtwo():
     """ Fragments molecule in a way that conserves each heavy-atom/heavy-atom bond
     """
     frags = heatform.cbhtwo(ICH2)
-    print('\nCBH2 formula: ', heatform._print_lhs_rhs(ICH2, frags))
+    print('\nCBH2 formula: ', heatform.print_lhs_rhs(ICH2, frags))
+
 
 if __name__ == '__main__':
     test__calc_hform_0k()

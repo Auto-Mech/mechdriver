@@ -1,7 +1,7 @@
 """ runtime messages
 """
 
-from mechlib.amech_io.printer import message
+from mechlib.amech_io.printer._print import message
 from mechlib.amech_io.printer._pes import pes as print_pes
 from mechlib.amech_io.printer._pes import channel as print_channel
 

@@ -1,9 +1,10 @@
 """ Script for calculating CBH values
 """
 
-import mechroutines.pf.thermo as thermo
 from autofile import io_ as io
 from automol import geom
+import mechroutines.pf.thermo as thermo
+
 
 # Set Reaction Info
 frm_key = [5, 6]

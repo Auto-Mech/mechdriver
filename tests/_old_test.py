@@ -5,6 +5,7 @@ import os
 import subprocess
 import pytest
 
+
 REPO_PATH = os.getcwd()
 DB_PATH = os.path.join(REPO_PATH, 'tests')
 RUN_PATH = os.path.dirname(__file__)
@@ -43,7 +44,7 @@ def test__conf_samp():
         run_str = file_obj.read()
     with open(RUN_DAT_PATH, 'w') as file_obj:
         file_obj.write(run_str.format(DB_PATH, tsks, drivers))
-         
+
     subprocess.call(CMD_LINE.split())
 
 
@@ -51,8 +52,9 @@ def test__conf_opt():
     """ test automech.py conf_energy
     """
 
-    tsks = '\n'.join(['\tspc  conf_opt    runlvl=lvl_scf  inplvl=lvl_scf  cnf_range=n2',
-                      '\tspc  conf_opt    runlvl=lvl_scf  inplvl=lvl_scf  cnf_range=e2'])
+    tsks = '\n'.join(
+        ['\tspc  conf_opt    runlvl=lvl_scf  inplvl=lvl_scf  cnf_range=n2',
+         '\tspc  conf_opt    runlvl=lvl_scf  inplvl=lvl_scf  cnf_range=e2'])
     drivers = '\tes'
     # Format the run.dat with the run-save dir paths
     with open(RUN_TEMP_PATH, 'r') as file_obj:
@@ -97,8 +99,9 @@ def test__conf_energy():
     """ test automech.py conf_energy
     """
 
-    tsks = '\n'.join(['\tspc  conf_energy    runlvl=lvl_mp2  inplvl=lvl_scf  cnf_range=n2',
-                      '\tspc  conf_energy    runlvl=lvl_mp2  inplvl=lvl_scf  cnf_range=e2'])
+    tsks = '\n'.join([
+        '\tspc  conf_energy    runlvl=lvl_mp2  inplvl=lvl_scf  cnf_range=n2',
+        '\tspc  conf_energy    runlvl=lvl_mp2  inplvl=lvl_scf  cnf_range=e2'])
     drivers = '\tes'
     # Format the run.dat with the run-save dir paths
     with open(RUN_TEMP_PATH, 'r') as file_obj:
@@ -158,7 +161,9 @@ def test__hr_energy():
     """ test automech.py hr_scan
     """
 
-    tsks = '\tspc  hr_energy    runlvl=lvl_scf  inplvl=lvl_scf tors_model=1dhrfa'
+    tsks = (
+        '\tspc  hr_energy    runlvl=lvl_scf  inplvl=lvl_scf tors_model=1dhrfa'
+    )
     drivers = '\tes'
     # Format the run.dat with the run-save dir paths
     with open(RUN_TEMP_PATH, 'r') as file_obj:
@@ -195,7 +200,7 @@ def test__ts_conf_samp():
         run_str = file_obj.read()
     with open(RUN_DAT_PATH, 'w') as file_obj:
         file_obj.write(run_str.format(DB_PATH, tsks, drivers))
-         
+
     subprocess.call(CMD_LINE.split())
 
 
@@ -350,28 +355,25 @@ def test__run_fits():
 
 
 if __name__ == '__main__':
- #   test__init_geom()
- #   test__conf_samp()
- #   test__conf_opt()
- #   test__conf_grad()
- #   test__conf_hess()
- #   test__conf_energy()
- #   test__hr_scan()
- #   test__hr_grad()
- #   test__hr_hess()
- #   test__hr_energy()
-
+    test__init_geom()
+    test__conf_samp()
+    test__conf_opt()
+    test__conf_grad()
+    test__conf_hess()
+    test__conf_energy()
+    test__hr_scan()
+    test__hr_grad()
+    test__hr_hess()
+    test__hr_energy()
     test__find_ts()
- #   test__ts_conf_samp()
- #   test__ts_conf_grad()
- #   test__ts_conf_hess()
- #   test__ts_conf_energy()
- #   test__ts_hr_scan()
- #   test__ts_hr_grad()
- #   test__ts_hr_hess()
- #   test__ts_hr_energy()
-
- #   test__write_messrate()
- #   test__run_messrate()
- #   test__run_fits()
-  
+    test__ts_conf_samp()
+    test__ts_conf_grad()
+    test__ts_conf_hess()
+    test__ts_conf_energy()
+    test__ts_hr_scan()
+    test__ts_hr_grad()
+    test__ts_hr_hess()
+    test__ts_hr_energy()
+    test__write_messrate()
+    test__run_messrate()
+    test__run_fits()

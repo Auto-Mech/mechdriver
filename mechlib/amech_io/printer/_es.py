@@ -5,7 +5,7 @@ ES routines prints
 from itertools import chain
 import automol
 from phydat import phycon
-from mechlib.amech_io.printer import info_message
+from mechlib.amech_io.printer._print import info_message
 
 
 def energy(ene):
@@ -143,6 +143,7 @@ def run_rotors(run_tors_names, const_names):
             info_message(
                 'User requested all torsions of system will be fixed.',
                 newline=1)
+
 
 def save_irc(save_path):
     """ a

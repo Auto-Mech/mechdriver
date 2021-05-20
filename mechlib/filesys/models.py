@@ -6,9 +6,10 @@ import autofile
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
-from mechlib.filesys import mincnf
-from mechlib.filesys import build_fs
-from mechlib.filesys import root_locs
+from mechlib.filesys.mincnf import min_energy_conformer_locators
+from mechlib.filesys.mincnf import conformer_locators
+from mechlib.filesys._build import build_fs
+from mechlib.filesys._build import root_locs
 
 
 def pf_rngs_filesys(spc_dct_i, spc_model_dct_i,
@@ -96,11 +97,11 @@ def set_model_filesys(spc_dct_i, level,
         **_root)
 
     if rings == 'min':
-        min_rngs_locs, min_rngs_path = mincnf.min_energy_conformer_locators(
+        min_rngs_locs, min_rngs_path = min_energy_conformer_locators(
             cnf_save_fs, levelp)
         cnf_run_fs[-1].create(min_rngs_locs)
     else:
-        min_rngs_locs, min_rngs_path = mincnf.conformer_locators(
+        min_rngs_locs, min_rngs_path = conformer_locators(
              cnf_save_fs, levelp, cnf_range='r100')
         for min_locs in min_rngs_locs:
             cnf_run_fs[-1].create(min_locs)
