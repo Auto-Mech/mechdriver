@@ -227,8 +227,11 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
                 # Need to get the init zma structure in here
                 # could write init zma to run filesys; wont work retro
                 # get init zma readers?
+                init_geo = run_fs[-1].file.geometry.read([job])
+                init_zma = run_fs[-1].file.zmatrix.read([job])
                 filesys.save.scan_point_structure(
-                    ret, scn_save_fs, locs, mod_thy_info[1:], job)
+                    ret, scn_save_fs, locs, mod_thy_info[1:], job,
+                    init_zma=init_zma, init_geo=init_geo)
                 locs_lst.append(locs)
 
         # Build the trajectory file

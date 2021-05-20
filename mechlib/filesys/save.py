@@ -58,7 +58,7 @@ def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
     init_cnf_samp(cnf_fs, cnf_locs)
 
     # Save auxiliary information for the structure, if needed
-    _save_rotors(zma_fs, zma_locs)
+    _save_rotors(zma_fs, zma_locs, zrxn=zrxn)
     _save_reaction(zma_fs, zma_locs, zrxn=zrxn)
 
 
@@ -79,13 +79,17 @@ def sym_indistinct_conformer(geo, cnf_fs, cnf_tosave_locs, cnf_saved_locs):
 
 
 def scan_point_structure(opt_ret, scn_fs, scn_locs, thy_locs, job,
-                         init_zma=None):
+                         init_zma=None, init_geo=None):
     """ save info for the hindered rotor
     """
 
-    # if job == elstruct.Job.OPTIMIZATION:
-    _save_geom(opt_ret, scn_fs, scn_locs)
-    _save_zmatrix(opt_ret, scn_fs, scn_locs, init_zma=init_zma)
+    if job == elstruct.Job.OPTIMIZATION:
+        _save_geom(opt_ret, scn_fs, scn_locs)
+        _save_zmatrix(opt_ret, scn_fs, scn_locs, init_zma=init_zma)
+    elif job == elstruct.Job.ENERGY:
+        scn_fs[-1].create(scn_locs)
+        scn_fs[-1].file.geometry.write(init_geo, scn_locs)
+        scn_fs[-1].file.zmatrix.write(init_zma, scn_locs)
 
     sp_fs = autofile.fs.single_point(scn_fs[-1].path(scn_locs))
     _save_energy(opt_ret, sp_fs, thy_locs)
@@ -320,14 +324,14 @@ def _save_hessian(ret, cnf_fs, cnf_locs):
     cnf_fs[-1].file.harmonic_frequencies.write(freqs, cnf_locs)
 
 
-def _save_rotors(zma_fs, zma_locs):
+def _save_rotors(zma_fs, zma_locs, zrxn=None):
     """ Save the rotors
 
         Reading the ZMA from the filesystem to build rotors
     """
 
     zma = zma_fs[-1].file.zmatrix.read(zma_locs)
-    rotors = automol.rotor.from_zmatrix(zma)
+    rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
     if any(rotors):
         zma_path = zma_fs[-1].path(zma_locs)
         print(" - Rotors identified from Z-Matrix at {}".format(zma_path))
