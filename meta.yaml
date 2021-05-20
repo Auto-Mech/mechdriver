@@ -11,13 +11,15 @@ requirements:
         - python=3.7
     build:
         - cmake
-    run:
-        - cmake
         - gfortran_linux-64
-        - gcc_linux-64
+    run:
         - python=3.7
+        - pybind11
+        - cmake
+        - gfortran_linux-64  # [linux]
         - numpy
         - scipy
+        - pandas
         - pyyaml
         - mako
         - matplotlib
@@ -26,23 +28,22 @@ requirements:
         - future
         - flake8
         - pylint
+        - psi4::psi4
         - rdkit::rdkit
         - openbabel::openbabel
         - conda-forge::qcelemental
         - conda-forge::nglview
         - conda-forge::pypdf2
+        - conda-forge::python-igraph
         - cantera::cantera
-        - psi4::psi4
-        - auto-mech::autoio
-        - auto-mech::automol
-        - auto-mech::autoparse
-        - auto-mech::elstruct
+        - auto-mech::autochem
+        - auto-mech::autofile
+        - auto-mech::autoio-base
+        - auto-mech::autoio-interfaces
         - auto-mech::ratefit
         - auto-mech::mechanalyzer
         - auto-mech::mess
-        - auto-mech::mpack
         - auto-mech::pac99
         - auto-mech::projrot
-        - auto-mech::slatec
         - auto-mech::thermp
         - auto-mech::x2z

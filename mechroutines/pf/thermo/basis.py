@@ -19,35 +19,45 @@ from mechlib.amech_io import printer as ioprinter
 
 
 # FUNCTIONS TO PREPARE THE LIST OF REFERENCE SPECIES NEEDED FOR THERM CALCS #
-REF_CALLS = {"basic": "get_basic",
-             "cbh0": "get_cbhzed",
-             "cbh1": "get_cbhone",
-             "cbh1_0": "get_cbhone",
-             "cbh1_1": "get_cbhone",
-             "cbh2": "get_cbhtwo",
-             "cbh2_0": "get_cbhtwo",
-             "cbh2_1": "get_cbhtwo",
-             "cbh2_2": "get_cbhtwo",
-             "cbh3": "get_cbhthree"}
+REF_CALLS = {
+    "basic": "get_basic",
+    "cbh0": "get_cbhzed",
+    "cbh1": "get_cbhone",
+    "cbh1_0": "get_cbhone",
+    "cbh1_1": "get_cbhone",
+    "cbh2": "get_cbhtwo",
+    "cbh2_0": "get_cbhtwo",
+    "cbh2_1": "get_cbhtwo",
+    "cbh2_2": "get_cbhtwo",
+    "cbh3": "get_cbhthree"
+}
 
-TS_REF_CALLS = {"basic": "get_basic_ts",
-                "cbh0": "get_cbhzed_ts",
-                "cbh1": "get_cbhone_ts",
-                "cbh1_0": "get_cbhzed_ts",
-                "cbh1_1": "get_cbhone_ts",
-                "cbh2": "get_cbhzed_ts",
-                "cbh2_0": "get_cbhzed_ts",
-                "cbh2_1": "get_cbhone_ts",
-                "cbh3": "get_cbhone_ts"}
+TS_REF_CALLS = {
+    "basic": "get_basic_ts",
+    "cbh0": "get_cbhzed_ts",
+    "cbh1": "get_cbhone_ts",
+    "cbh1_0": "get_cbhzed_ts",
+    "cbh1_1": "get_cbhone_ts",
+    "cbh2": "get_cbhzed_ts",
+    "cbh2_0": "get_cbhzed_ts",
+    "cbh2_1": "get_cbhone_ts",
+    "cbh3": "get_cbhone_ts"
+}
 
-IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high',
-                              # 'hydrogen migration',
-                              'beta scission',
-                              'elimination high',
-                              'radical radical hydrogen abstraction high',
-                              'addition high']
-#IMPLEMENTED_CBH_TS_CLASSES = []
-                              # 'hydrogen migration', 'addition high', 'elimination high']
+IMPLEMENTED_CBH_TS_CLASSES = [
+    'hydrogen abstraction high',
+    # 'hydrogen migration',
+    'beta scission',
+    'elimination high',
+    'radical radical hydrogen abstraction high',
+    'addition high'
+]
+# IMPLEMENTED_CBH_TS_CLASSES = [
+#     'hydrogen migration',
+#     'addition high',
+#     'elimination high'
+# ]
+
 
 def prepare_refs(
         ref_scheme, spc_dct, spc_queue, run_prefix, save_prefix,
@@ -77,7 +87,7 @@ def prepare_refs(
             proc = multiprocessing.Process(
                 target=_prepare_refs,
                 args=(queue, ref_scheme, spc_dct, spc_lst,
-                        run_prefix, save_prefix,
+                      run_prefix, save_prefix,
                       repeats, parallel, zrxn))
             procs.append(proc)
             proc.start()
@@ -91,7 +101,7 @@ def prepare_refs(
                 unique_refs_dct[spc]['inchi']
                 if 'inchi' in unique_refs_dct[spc]
                 else unique_refs_dct['reacs']
-                for spc in unique_refs_dct.keys()]
+                for spc in unique_refs_dct]
             for spc in unq_dct:
                 new_ich = unq_dct[spc]['inchi'] if 'inchi' in unq_dct[spc] else unq_dct[spc]['reacs']
                 if new_ich not in bas_ichs:
@@ -289,6 +299,7 @@ def create_spec(ich, charge=0,
     spec['mult'] = mult
     spec['mc_nsamp'] = mc_nsamp
     spec['hind_inc'] = hind_inc * phycon.DEG2RAD
+
     return spec
 
 
@@ -454,11 +465,13 @@ def enthalpy_calculation(
     for spc_basis_i in spc_basis:
         if not isinstance(spc_basis_i, str):
             basreacs, basprods = spc_basis_i
-            spc_basis_i = ''
-            for entry in basreacs:
-                spc_basis_i += entry
-            for entry in basprods:
-                spc_basis_i += entry
+            spc_basis_i = ''.join(basreacs)
+            spc_basis_i += ''.join(basprods)
+            # spc_basis_i = ''
+            # for entry in basreacs:
+            #     spc_basis_i += entry
+            # for entry in basprods:
+            #     spc_basis_i += entry
         if spc_basis_i in chn_basis_ene_dct:
             ioprinter.debug_message(
                 'Energy already found for basis species: ', spc_basis_i)
@@ -477,11 +490,13 @@ def enthalpy_calculation(
         for spc_basis_i, ene_basis_i in zip(spc_basis, ene_basis):
             if not isinstance(spc_basis_i, str):
                 basreacs, basprods = spc_basis_i
-                spc_basis_i = ''
-                for entry in basreacs:
-                    spc_basis_i += entry
-                for entry in basprods:
-                    spc_basis_i += entry
+                spc_basis_i = ''.join(basreacs)
+                spc_basis_i += ''.join(basprods)
+                # spc_basis_i = ''
+                # for entry in basreacs:
+                #     spc_basis_i += entry
+                # for entry in basprods:
+                #     spc_basis_i += entry
             chn_basis_ene_dct[spc_basis_i] = ene_basis_i
 
     # Calculate and store the 0 K Enthalpy

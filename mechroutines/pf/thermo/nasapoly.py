@@ -4,14 +4,12 @@
 
 import automol
 import autorun
-import mechanalyzer
 import ioformat
 from mechroutines.pf import runner as pfrunner
 from mechlib.amech_io import writer
 from mechlib.amech_io import printer as ioprinter
 
 
-# NEW AUTORUN
 def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):
     """ Build a nasa polynomial
     """
@@ -34,9 +32,6 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):
     # Copy MESSPF output file to THERMP run dir and rename to pf.dat
     pf_str = ioformat.pathtools.read_file(pf_path, 'pf.dat')
 
-    print('pf_path test:', pf_path)
-    print('pf_str test:', pf_str)
-
     hform298, poly_str = autorun.thermo(
         thermp_script_str, pac99_script_str, nasa_path,
         pf_str, spc_name, formula_dct, hform0,
@@ -45,7 +40,5 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):
     # Write the full CHEMKIN strings
     ckin_str = writer.ckin.nasa_polynomial(hform0, hform298, poly_str)
     full_ckin_str = '\n' + ckin_str
-    # Print thermo
-    
 
     return full_ckin_str

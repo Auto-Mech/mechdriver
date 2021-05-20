@@ -34,7 +34,6 @@ dependencies:
     - auto-mech::autofile
     - auto-mech::autoio-base
     - auto-mech::autoio-interfaces
-    - auto-mech::ratefit
     - auto-mech::mechanalyzer
     - auto-mech::mess
     - auto-mech::pac99
