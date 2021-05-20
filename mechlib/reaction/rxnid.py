@@ -2,11 +2,8 @@
  New reaction ID code
 """
 
-import os
 import autofile
 import automol
-from ioformat import ptt
-import chemkin_io
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 from phydat import phycon
@@ -68,13 +65,13 @@ def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
                 zrxn = zma_fs[-1].file.reaction.read(zma_locs)
                 zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
-        ts_locs=(0,)
+        ts_locs = (0,)
         if zrxn is None:
             _, zma_fs = build_fs(
                 '', save_prefix, 'ZMATRIX',
                 rxn_locs=sort_rxn_info, ts_locs=ts_locs,
                 thy_locs=mod_ini_thy_info[1:])
-        
+
             if zma_fs[-1].file.reaction.exists(zma_locs):
                 zrxn = zma_fs[-1].file.reaction.read(zma_locs)
                 zma = zma_fs[-1].file.zmatrix.read(zma_locs)

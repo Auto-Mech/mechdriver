@@ -19,12 +19,12 @@ def pes_dictionary(mech_str, mech_type, spc_dct):
 
         :param mech_str: mechanism.dat input file string
         :type mech_str: str
-        :param mech_type: 
+        :param mech_type:
         :type mech_type: str
-        :param spc_dct: 
+        :param spc_dct:
         :type spc_dct: dict[str: ____]
         :rtype:
-    
+
         Right now just resorts by pes and subpes, may need full suite later.
     """
 

@@ -339,21 +339,6 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
         zma_fs[-1].file.torsions.write(rotors, zma_locs)
 
 
-def _save_ring_tors(zma, zma_fs, zma_locs):
-    """ Save the rotors
-    """
-
-    rings_atoms =  _get_ring_atoms(zma, zrxn)
-    tors_dct = {}
-    for ring_atoms in rings_atoms:
-        dct_label = '-'.join(str(atm+1) for atm in ring_atoms)
-        samp_range_dct = _get_ring_samp_ranges(zma, ring_atoms)
-        tors_dct[dct_label] = samp_range_dct
-    if tors_dct:
-        print(" - Species has ring torsions, saving them...")
-        zma_save_fs[-1].file.ring_torsions.write(tors_dct, zma_locs)
-
-
 def _save_reaction(zma_fs, zma_locs, zrxn=None):
     """ Save the reaction object
     """
@@ -368,7 +353,7 @@ def _save_instab(ret, instab_fs):
     """
 
     print(" - Reading hessian from output...")
-    inf_obj, inp_str, out_str, prog, _ = _unpack_ret(ret)
+    inf_obj, inp_str, _, _, _ = _unpack_ret(ret)
 
     geo = ()
 

@@ -55,7 +55,7 @@ def run(spc_rlst,
     # Write and Run MESSPF inputs to generate the partition functions
     write_messpf_tsk = parser.run.extract_task('write_mess', therm_tsk_lst)
     if write_messpf_tsk is not None:
-        
+
         ioprinter.messpf('write_header')
 
         spc_mods, pes_mod = parser.models.extract_models(write_messpf_tsk)
@@ -98,13 +98,13 @@ def run(spc_rlst,
             final_pf = pfrunner.mess.combine_pfs(_pfs, coeffs, operators)
 
             # need to clean thm path build
-            tot_idx = len(spc_mods)
+            tdx = len(spc_mods)
             spc_info = sinfo.from_dct(spc_dct[spc_name])
             spc_fml = automol.inchi.formula_string(spc_info[0])
             thm_prefix = [spc_fml, automol.inchi.inchi_key(spc_info[0])]
             thm_paths[idx]['final'] = (
-                job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=tot_idx),
-                job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=tot_idx)
+                job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=tdx),
+                job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=tdx)
             )
             pfrunner.mess.write_mess_output(
                 fstring(spc_dct[spc_name]['inchi']),
@@ -190,16 +190,23 @@ def run(spc_rlst,
                 spc_name, spc_dct,
                 thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
-
             print(ckin_nasa_str)
-        nasa7_params_all =  chemkin_io.parser.thermo.create_spc_nasa7_dct(ckin_nasa_str)
-        ioprinter.info_message('SPECIES\t\tH(0 K)[kcal/mol]\tH(298 K)[kcal/mol]\tS(298 K)[cal/mol K]\n')
+
+        nasa7_params_all = chemkin_io.parser.thermo.create_spc_nasa7_dct(
+            ckin_nasa_str)
+        ioprinter.info_message(
+            'SPECIES\t\tH(0 K)[kcal/mol]\tH(298 K)[kcal/mol]\t' +
+            'S(298 K)[cal/mol K]\n')
         for spc_name in nasa7_params_all:
-            nasa7_params =  nasa7_params_all[spc_name]
-            h0 = spc_dct[spc_name]['Hfs'][0]
-            h298 =  mechanalyzer.calculator.thermo.enthalpy(nasa7_params, 298.15) /1000.
-            s298 =  mechanalyzer.calculator.thermo.entropy(nasa7_params, 298.15)
-            ioprinter.info_message('{}\t{:3.2f}\t{:3.2f}\t{:3.2f}'.format(spc_name, h0, h298, s298))
+            nasa7_params = nasa7_params_all[spc_name]
+            ht0 = spc_dct[spc_name]['Hfs'][0]
+            ht298 = mechanalyzer.calculator.thermo.enthalpy(
+                nasa7_params, 298.15)
+            st298 = mechanalyzer.calculator.thermo.entropy(
+                nasa7_params, 298.15)
+            ioprinter.info_message(
+                '{}\t{:3.2f}\t{:3.2f}\t{:3.2f}'.format(
+                    spc_name, ht0, ht298/1000., st298))
 
         # Write all of the NASA polynomial strings
         writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)

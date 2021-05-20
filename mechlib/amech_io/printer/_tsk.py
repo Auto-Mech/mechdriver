@@ -2,10 +2,9 @@
 general task prints
 """
 
-# import logging
-import automol
 from mechlib.amech_io.printer import message
 from mechlib.amech_io.printer._lib import obj
+
 
 TASK_STR = """Task
   {}
@@ -58,7 +57,6 @@ def output_keyword_list(es_keyword_dct, thy_dct=None):
                 method_dct['method'], method_dct['basis'])
         message('{}: {}    '.format(key, val) + method_str)
     obj('vspace')
-
 
 
 def messpf(statement, path=None):

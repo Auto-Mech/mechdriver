@@ -7,7 +7,6 @@ from phydat import phycon
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechlib.filesys import build_fs
-from mechlib.amech_io import printer as ioprinter
 
 
 def potential(names, grid_vals, cnf_save_path,

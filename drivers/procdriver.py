@@ -2,7 +2,6 @@
 """
 
 from mechroutines.output import run_tsk
-from mechlib.amech_io import parser
 
 
 def run(pes_idx,
@@ -28,12 +27,11 @@ def run(pes_idx,
         :type run_inp_dct: dict[]
     """
 
+    print('Running PES {}'.format(pes_idx))
+
     # Pull stuff from dcts for now
     run_prefix = run_inp_dct['run_prefix']
     save_prefix = run_inp_dct['save_prefix']
-
-    # Initialize variable for building a dct for ts
-    built_dct = False
 
     # Loop over Tasks
     for tsk_lst in prnt_tsk_lst:

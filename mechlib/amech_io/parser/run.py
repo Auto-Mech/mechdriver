@@ -249,7 +249,7 @@ def extract_task(tsk, tsk_lst):
     return tsk_inf
 
 
-def tasks(run_str, thy_dct, kin_mod_dct, spc_mod_dct):
+def tasks(run_str, thy_dct):
     """ runstr
     """
 
@@ -299,11 +299,12 @@ def _tsk_lst(tsk_str, num):
         tsks = []
         tsk_str = ioformat.remove_whitespace_from_string(tsk_str)
         for line in tsk_str.splitlines():
-            try:
-                _tsk = _split_line(line, num)
-            except:
-                print('Task line not formatted correctly:\n{}'.format(line))
-                sys.exit()
+            _tsk = _split_line(line, num)
+            # try:
+            #     _tsk = _split_line(line, num)
+            # except:
+            #     print('Task line not formatted correctly:\n{}'.format(line))
+            #     sys.exit()
             tsks.append(_tsk)
         mod_tsks = _expand_tsks(tsks) if num == 3 else tsks
     else:

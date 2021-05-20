@@ -2,12 +2,9 @@
   Functions to read the filesystem and pull objects from it
 """
 
-import sys
 import time
-import automol
 import autofile
 from phydat import phycon
-from mechlib.filesys import build_fs
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -19,7 +16,7 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info):
     if locs and paths:
         ret = locs[0], paths[0]
     else:
-        ret = ['',''], ''
+        ret = ['', ''], ''
     return ret
 
 
@@ -82,7 +79,9 @@ def _sorted_cnf_lsts(cnf_locs_lst, cnf_save_fs, mod_thy_info):
                 geo_end_time = geo_inf_obj.utc_end_time
                 current_time = autofile.schema.utc_time()
                 if (current_time - geo_end_time).total_seconds() < 120:
-                    wait_time = 120 - (current_time - geo_end_time).total_seconds()
+                    wait_time = (
+                        120 - (current_time - geo_end_time).total_seconds()
+                    )
                     ioprinter.info_message(
                         'Geo was saved in the last ' +
                         '{:3.2f} seconds, waiting for {:3.2f} seconds'.format(
@@ -96,8 +95,10 @@ def _sorted_cnf_lsts(cnf_locs_lst, cnf_save_fs, mod_thy_info):
                         ioprinter.info_message('the energy is now found')
                     else:
                         ioprinter.info_message('waiting helped nothing')
+
     # Sort the cnf locs and cnf enes
-    cnf_enes_lst, cnf_locs_lst = zip(*sorted(zip(fnd_cnf_enes_lst, fnd_cnf_locs_lst)))
+    cnf_enes_lst, cnf_locs_lst = zip(
+        *sorted(zip(fnd_cnf_enes_lst, fnd_cnf_locs_lst)))
 
     return cnf_locs_lst, cnf_enes_lst
 
@@ -198,9 +199,12 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
                             sp_fs[-1].file.energy.read(mod_thy_info[1:4]))
                         geos.append(save_fs[-1].file.geometry.read(locs))
                 traj = []
-                traj_sort_data = sorted(zip(enes, geos, locs_lst), key=lambda x: x[0])
+                traj_sort_data = sorted(
+                    zip(enes, geos, locs_lst), key=lambda x: x[0])
                 for ene, geo, locs in traj_sort_data:
-                    comment = 'energy: {0:>15.10f} \t {1} {2}'.format(ene, locs[0], locs[1])
+                    comment = (
+                        'energy: {0:>15.10f} \t {1} {2}'
+                    ).format(ene, locs[0], locs[1])
                     traj.append((geo, comment))
                 traj_path = save_fs[1].file.trajectory.path([rid])
                 print("Updating trajectory file at {}".format(traj_path))

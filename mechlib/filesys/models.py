@@ -150,22 +150,6 @@ def set_rpath_filesys(ts_dct, level):
     return ts_run_path, ts_save_path, thy_run_path, thy_save_path
 
 
-def set_etrans_fs(pf_filesystems, lj_info, thy_info):
-    """ build etrans filesystems
-    """
-
-    # Get the harmonic filesys information
-    [cnf_fs, harm_path, min_cnf_locs, _, run_path] = pf_filesystems['harm']
-
-    # Build the energy transfer filesys
-    lj_mod_thy_info = filesys.inf.modify_orb_restrict(
-        lj_info, run_thy_info)
-    etrans_save_fs, etrans_locs = filesys.build.etrans_fs_from_prefix(
-        tgt_cnf_save_path, bath_info, lj_mod_thy_info)
-
-    return etrans_save_fs, etrans_locs
-
-
 def get_rxn_scn_coords(ts_path, coord_name, zma_locs=(0,)):
     """ Get the values along the reaction coordinate
     """

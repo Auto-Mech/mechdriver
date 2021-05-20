@@ -94,7 +94,7 @@ def run(pes_rlst,
             if label_dct is None:
                 spc_dct, rxn_lst, label_dct = _process(
                     pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
-                    thy_dct, spc_dct, run_prefix, save_prefix)
+                    thy_dct, spc_dct, glob_dct, run_prefix, save_prefix)
 
             ioprinter.obj('vspace')
             ioprinter.obj('line_dash')
@@ -141,7 +141,7 @@ def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
     ioprinter.message(
         'Identifying reaction classes for transition states...')
     ts_dct = parser.spc.ts_dct_from_ktptsks(
-        pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, thy_dct,
+        pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct,
         spc_dct, run_prefix, save_prefix)
     spc_dct = parser.spc.combine_sadpt_spc_dcts(
         ts_dct, spc_dct, glob_dct)

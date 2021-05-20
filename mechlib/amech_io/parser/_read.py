@@ -114,9 +114,9 @@ def _geometry_dictionary(job_path):
     """
 
     geo_dct = {}
-    for _path in _inp_file_paths(job_path):
-        if _path.endswith('.xyz'):
-            xyz_str = ioformat.pathtools.read_file(_path)
+    for file_path, file_name in zip(_inp_file_paths(job_path)):
+        if file_path.endswith('.xyz'):
+            xyz_str = ioformat.pathtools.read_file(file_path, file_name)
             spc_name = automol.geom.comment_from_xyz_string(xyz_str)
             geo = automol.geom.from_xyz_string(xyz_str)
             if spc_name in geo_dct:
@@ -148,9 +148,9 @@ def _active_space_dictionary(job_path):
         return comm_line
 
     aspace_dct = {}
-    for _path in _inp_file_paths(job_path):
-        if _path.endswith('.asp'):
-            aspace_str = ioformat.pathtools.read_file(_path)
+    for file_path, file_name in zip(_inp_file_paths(job_path)):
+        if file_path.endswith('.asp'):
+            aspace_str = ioformat.pathtools.read_file(file_path, file_name)
             spc_name = _comment_name(aspace_str)
             if spc_name in aspace_dct:
                 print('Warning: Dupilicate active space geometry for ',
@@ -169,10 +169,12 @@ def _inp_file_paths(job_path):
     """
 
     file_paths = ()
+    file_names = ()
 
     geom_path = os.path.join(job_path, 'data')
     for dir_path, _, file_names in os.walk(geom_path):
         for file_name in file_names:
-            file_paths += (os.path.join(dir_path, file_name),)
+            file_paths += (dir_path,)
+            file_names += (file_name,)
 
-    return file_paths
+    return file_paths, file_names

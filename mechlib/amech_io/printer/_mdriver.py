@@ -42,7 +42,7 @@ def driver_tasks(
         write_messrate, run_messrate, run_fits, run_trans):
     """ a
     """
-    
+
     if run_es:
         message('  - ESDriver')
         # Add the tasks for the ESDriver
@@ -143,7 +143,7 @@ EXITING ESDRIVER
 
 PRINT_MSG = """
 =========================================================
-OUTPUT PREPARATION 
+OUTPUT PREPARATION
 Sarah Elliott, Andreas Copan, Kevin Moore,
 Carlo Cavolotti, Stephen Klippenstein
 ========================================================="""

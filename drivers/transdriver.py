@@ -15,10 +15,10 @@ def run(spc_dct,
     """
 
     # Print
-    for spc in RUN_SPC_LST_DCT:
-        ioprinter.info_message(
-            'Calculating Thermochem for species: {}'.format(spc),
-            newline=1)
+    # for spc in RUN_SPC_LST_DCT:
+    #     ioprinter.info_message(
+    #         'Calculating Thermochem for species: {}'.format(spc),
+    #         newline=1)
 
     # Pull stuff from dcts for now
     save_prefix = run_inp_dct['save_prefix']
@@ -29,7 +29,7 @@ def run(spc_dct,
 
     # Loop over Tasks
     for tsk_lst in trans_tsk_lst:
-        [obj, tsk, etrans_keyword_dct] = tsk_lst
+        [_, tsk, etrans_keyword_dct] = tsk_lst
         run_tsk(tsk, spc_queue,
                 spc_dct,
                 thy_dct, etrans_keyword_dct,

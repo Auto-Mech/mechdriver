@@ -100,7 +100,7 @@ def models_dictionary(mod_str, thy_dct):
 
     # Add defaults, check key-vals, and format each model dicts
     for mod, dct in kin_mod_dct.items():
-        kin_mod_dct[mod] = _kin_model_build(dct, thy_dct)
+        kin_mod_dct[mod] = _kin_model_build(dct)
 
     for mod, dct in spc_mod_dct.items():
         spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)
@@ -157,7 +157,7 @@ def _spc_model_build(spc_model_dct_i, thy_dct):
     return new_dct2
 
 
-def _kin_model_build(kin_mod_dct_i, thy_dct):
+def _kin_model_build(kin_mod_dct_i):
     """ set kin
     """
 
