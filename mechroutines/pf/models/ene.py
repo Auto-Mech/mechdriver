@@ -32,7 +32,7 @@ def read_energy(spc_dct_i, pf_filesystems,
     if read_zpe:
         e_zpe = zero_point_energy(
             spc_dct_i, pf_filesystems, spc_model_dct_i,
-            run_prefix, saddle=saddle, conf=conf)
+            run_prefix, saddle=saddle)
         ioprinter.debug_message('zpe in models ene ', e_zpe)
 
     # Return the total energy requested
@@ -101,7 +101,7 @@ def electronic_energy(spc_dct_i, pf_filesystems, spc_model_dct_i, conf=None):
 
 def zero_point_energy(spc_dct_i,
                       pf_filesystems, spc_model_dct_i,
-                      run_prefix, saddle=False, conf=None):
+                      run_prefix, saddle=False):
     """ compute the ZPE including torsional and anharmonic corrections
     """
 
@@ -161,7 +161,7 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
 
 
 # Functions to handle energies for a channel
-def set_reference_ene(rxn_lst, spc_dct, thy_dct,
+def set_reference_ene(rxn_lst, spc_dct,
                       pes_model_dct_i, spc_model_dct_i,
                       run_prefix, save_prefix, ref_idx=0):
     """ Sets the reference species for the PES for which all energies

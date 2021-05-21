@@ -3,8 +3,8 @@
 """
 
 import elstruct
-from mechroutines.es.runner._run import execute_job
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.es.runner._run import execute_job
 
 
 def multi_stage_optimization(script_str, run_fs,

@@ -105,10 +105,9 @@ def _id_reaction(rxn_info):
 
 
 def _mod_class(cls, rxn_info):
-    """ append additional info to the class
+    """ append additional info to the class. build class designator
+        defined in automol
     """
-
-    full_cls_str = ''
 
     # Determine the string for radical radical reactions
     radrad = rinfo.radrad(rxn_info)
@@ -124,10 +123,7 @@ def _mod_class(cls, rxn_info):
     else:
         spin_str = ''
 
-    # Add the class label
-    full_cls_str += ' ' + cls
-
-    return full_cls_str
+    return (cls, spin_str, radrad_str)
 
 
 # from direction

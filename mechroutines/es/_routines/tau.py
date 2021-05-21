@@ -5,11 +5,11 @@ import numpy
 import automol
 import elstruct
 import autofile
-from mechroutines.es._routines import _util as util
-from mechroutines.es import runner as es_runner
+from phydat import phycon
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
-from phydat import phycon
+from mechroutines.es._routines import _util as util
+from mechroutines.es import runner as es_runner
 
 
 def tau_sampling(zma, ref_ene, spc_info, tors_name_grps, nsamp_par,

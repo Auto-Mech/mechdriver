@@ -6,20 +6,21 @@ import importlib
 import autofile
 import automol
 import elstruct
+from phydat import phycon
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import spc as sinfo
-from mechroutines.es._ts import findts
-from mechroutines.es._routines import conformer
-from mechroutines.es._routines import hr
-from mechroutines.es._routines import tau
-from mechroutines.es._routines import rpath
-from mechroutines.es.runner import qchem_params
 from mechlib import filesys
 from mechlib.filesys import build_fs
 from mechlib.filesys import root_locs
 from mechlib.amech_io import printer as ioprinter
-from phydat import phycon
+from mechroutines.es._ts import findts
+from mechroutines.es._routines import conformer
+from mechroutines.es._routines import hr
+from mechroutines.es._routines import tau
+# from mechroutines.es._routines import rpath
+from mechroutines.es.runner import scan
+from mechroutines.es.runner import qchem_params
 
 
 # Dictionary of Electronic Structure Calculators
@@ -49,7 +50,7 @@ def run_tsk(tsk, spc_dct, spc_name,
     ini_thy_info = tinfo.from_dct(ini_method_dct)
     stable = True
     if 'ts' not in spc_name and tsk != 'init_geom':
-        zrxn, path = filesys.read.instability_transformation(
+        zrxn, _ = filesys.read.instability_transformation(
             spc_dct, spc_name, ini_thy_info, save_prefix)
         stable = bool(zrxn is None)
 
@@ -82,7 +83,7 @@ def run_tsk(tsk, spc_dct, spc_name,
                 run_prefix, save_prefix)
         elif 'find' in tsk:
             findts(
-                job, spc_dct, spc_name, thy_dct, es_keyword_dct,
+                spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
 
     else:
@@ -179,7 +180,6 @@ def conformer_tsk(job, spc_dct, spc_name,
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
         ini_locs, ini_min_cnf_path = ini_loc_info
-        ini_min_rid, ini_min_cid = ini_locs
 
         ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
 
@@ -238,7 +238,6 @@ def conformer_tsk(job, spc_dct, spc_name,
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
         ini_min_locs, ini_min_cnf_path = ini_loc_info
-        ini_min_rid, ini_min_cid = ini_min_locs
         ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
 
         # Set up the run scripts
@@ -284,7 +283,6 @@ def conformer_tsk(job, spc_dct, spc_name,
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
         ini_min_locs, ini_min_cnf_path = ini_loc_info
-        ini_min_rid, ini_min_cid = ini_min_locs
 
         rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             cnf_save_fs, mod_thy_info, cnf_range='all')
@@ -319,12 +317,11 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         for locs in uni_cnf_locs_lst:
             ini_locs, rid = locs
-            ini_rid, ini_cid = ini_locs
             # Obtain the zma from ini loc
             ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
             ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
             zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
-            # obtain conformer filesystem associated with the ring at the runlevel
+            # obtain conformer filesys associated with ring at the runlevel
             cid = autofile.schema.generate_new_conformer_id()
             conformer.single_conformer(
                 zma, spc_info, mod_thy_info,
@@ -359,7 +356,6 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Run the job over all the conformers requested by the user
         for ini_locs in ini_rng_cnf_locs_lst:
-            ini_rid, ini_cid = ini_locs
             ioprinter.running('task for conformer: ', ini_locs, newline=2)
             ini_cnf_run_fs[-1].create(ini_locs)
             geo_run_path = ini_cnf_run_fs[-1].path(ini_locs)
@@ -412,7 +408,6 @@ def tau_tsk(job, spc_dct, spc_name,
     ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
         ini_cnf_save_fs, mod_ini_thy_info)
     ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
-    ini_min_rid, ini_min_cid = ini_min_cnf_locs
 
     ini_zma_save_fs = autofile.fs.zmatrix(ini_min_cnf_path)
     geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_cnf_locs)
@@ -613,17 +608,10 @@ def hr_tsk(job, spc_dct, spc_name,
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_ini_thy_info[1:],
         **_root)
-    cnf_run_fs, cnf_save_fs = build_fs(
-        run_prefix, save_prefix, 'CONFORMER',
-        thy_locs=mod_thy_info[1:],
-        **_root)
-    instab_save_fs = ()
 
     ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
         ini_cnf_save_fs, mod_ini_thy_info)
     ini_min_locs, ini_cnf_save_path = ini_loc_info
-    # ini_min_rng_locs, ini_min_cnf_locs = ini_min_cnf_locs
-    # ini_min_rng_path, ini_min_cnf_path = ini_min_cnf_path
 
     # Create run fs if that directory has been deleted to run the jobs
     ini_cnf_run_fs[-1].create(ini_min_locs)
@@ -719,7 +707,8 @@ def hr_tsk(job, spc_dct, spc_name,
                     zma, const_names, tors_names)
 
                 # get the scn_locs, maybe get a function?
-                scn_locs = ()
+                _, scn_locs = scan.scan_locs(
+                    ini_scn_save_fs, tors_names, constraint_dct=constraint_dct)
                 for locs in scn_locs:
                     geo_run_path = ini_scn_run_fs[-1].path(locs)
                     geo_save_path = ini_scn_save_fs[-1].path(locs)
@@ -766,15 +755,14 @@ def rpath_tsk(job, spc_dct, spc_name,
 
     # Get options from the dct or es options lst
     overwrite = es_keyword_dct['overwrite']
-    # retryfail = es_keyword_dct['retryfail']
 
     # Set up the script
     script_str, kwargs = qchem_params(
         method_dct, elstruct.Job.OPTIMIZATION)
 
     # Set the filesystem objects
-    rxn_info = spc_dct_i['rxn_info']
-    fs_rxn_info = rinfo.sort(rxn_info)
+    # rxn_info = spc_dct_i['rxn_info']
+    # fs_rxn_info = rinfo.sort(rxn_info)
 
     # New filesystem objects
     if coord_name == 'irc':
@@ -783,20 +771,15 @@ def rpath_tsk(job, spc_dct, spc_name,
             run_prefix, save_prefix, 'CONFORMER',
             thy_locs=mod_ini_thy_info[1:],
             **_root)
-        cnf_run_fs, cnf_save_fs = build_fs(
-            run_prefix, save_prefix, 'CONFORMER',
-            thy_locs=mod_thy_info[1:],
-            **_root)
         ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info)
         ini_min_locs, ini_pfx_save_path = ini_loc_info
-        # ini_min_rng_locs, ini_min_cnf_locs = ini_min_cnf_locs
-        # ini_min_rng_path, ini_min_cnf_path = ini_min_cnf_path
         ini_cnf_run_fs[-1].create(ini_min_locs)
         ini_pfx_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
 
     else:
-        ts_info = (ts_num,)
+        # ts_info = (ts_num,)
+        ts_info = (0,)
         ini_ts_run_fs, ini_ts_save_fs = build_fs(
             run_prefix, save_prefix, 'TS',
             thy_locs=mod_ini_thy_info[1:],
@@ -811,21 +794,21 @@ def rpath_tsk(job, spc_dct, spc_name,
         ini_pfx_run_path, ini_pfx_save_path, 'SCAN',
         zma_locs=(0,))
 
-    ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
+    # ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
     geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
-    zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
+    # zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
 
     # Run job
     if job == 'scan':
-
-        if rxn_coord == 'auto':
-            pass
-        elif rxn_coord == 'irc':
-            rpath.irc_scan(
-                geo, spc_info, coord_name,
-                mod_ini_thy_info, ini_method_dct,
-                ini_scn_save_fs, ini_cnf_run_path,
-                overwrite)
+        pass
+        # if rxn_coord == 'auto':
+        #     pass
+        # elif rxn_coord == 'irc':
+        #     rpath.irc_scan(
+        #         geo, spc_info, coord_name,
+        #         mod_ini_thy_info, ini_method_dct,
+        #         ini_scn_save_fs, ini_cnf_run_path,
+        #         overwrite)
 
     elif job in ('energy', 'grad', 'hess'):
 

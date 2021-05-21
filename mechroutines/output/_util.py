@@ -2,27 +2,31 @@
 """
 
 import pandas
-
-from mechlib.amech_io import parser
-from mechlib import filesys
 from autofile import io_ as io
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
+from mechlib import filesys
 
 
 def freq_es_levels(print_keyword_dct):
+    """ ?
+    """
     es_model = _default_es_levels(print_keyword_dct)
     es_model['harm'] = print_keyword_dct['proplvl']
     return es_model
 
 
 def ene_es_levels(print_keyword_dct):
+    """ ?
+    """
     es_model = _default_es_levels(print_keyword_dct)
     es_model['ene'] = print_keyword_dct['proplvl']
     return es_model
 
 
 def _default_es_levels(print_keyword_dct):
+    """ ?
+    """
     es_model = {'geo': print_keyword_dct['geolvl']}
     es_model['harm'] = print_keyword_dct['geolvl']
     es_model['ene'] = print_keyword_dct['geolvl']
@@ -35,6 +39,8 @@ def _default_es_levels(print_keyword_dct):
 
 
 def _set_conf_range(print_keyword_dct):
+    """ ?
+    """
     cnf_range = print_keyword_dct['nconfs']
     if cnf_range == 'all':
         pass
@@ -73,7 +79,7 @@ def conformer_list(
 
 def conformer_list_from_models(
         print_keyword_dct, save_prefix, run_prefix,
-        spc_dct_i, thy_dct, pf_levels, pf_models):
+        spc_dct_i, spc_mod_dct_i):
     """ Create a list of conformers based on the species name
         and model.dat info
     """
@@ -81,7 +87,7 @@ def conformer_list_from_models(
     cnf_range = _set_conf_range(print_keyword_dct)
 
     # thy_info build
-    thy_info = pf_levels['geo'][1]
+    thy_info = spc_mod_dct_i['geo'][1]
     spc_info = sinfo.from_dct(spc_dct_i)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
@@ -91,8 +97,8 @@ def conformer_list_from_models(
         thy_locs=mod_thy_info[1:],
         **_root)
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
-        rng_save_fs, mod_thy_info, cnf_range=cnf_range)
-    return rng_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path
+        cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
+    return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path
 
 
 def set_csv_data(tsk):
@@ -109,50 +115,50 @@ def set_csv_data(tsk):
 
 
 def write_csv_data(tsk, csv_data, filelabel, spc_array):
-    """ Write the csv data dictionary into the correct type of csv 
+    """ Write the csv data dictionary into the correct type of csv
         or text file
     """
     if 'freq' in tsk:
-        final_csv_data = {}
+        fin_csv_data = {}
         for key in csv_data['freq']:
-            final_csv_data[key] = csv_data['freq'][key]
+            fin_csv_data[key] = csv_data['freq'][key]
         if csv_data['scalefactor']:
-            final_csv_data['Scale Factor'] = []
+            fin_csv_data['Scale Factor'] = []
             for key in csv_data['scalefactor']:
-                final_csv_data[key + '_scalefactor'] = csv_data['scalefactor'][key]
-            final_csv_data['Torsional Frequencies'] = []
+                fin_csv_data[key+'_scalefactor'] = csv_data['scalefactor'][key]
+            fin_csv_data['Torsional Frequencies'] = []
             for key in csv_data['tfreq']:
-                final_csv_data[key + '_tfreq'] = csv_data['tfreq'][key]
-            final_csv_data['All RT Harmonic Frequencies'] = []
+                fin_csv_data[key+'_tfreq'] = csv_data['tfreq'][key]
+            fin_csv_data['All RT Harmonic Frequencies'] = []
             for key in csv_data['allfreq']:
-                final_csv_data[key + '_RTFreq'] = csv_data['allfreq'][key]
-        print(final_csv_data)
-        ncols = max([len(x) for x in final_csv_data.values()])
-        df = pandas.DataFrame.from_dict(
-            final_csv_data, orient='index',
+                fin_csv_data[key+'_RTFreq'] = csv_data['allfreq'][key]
+        print(fin_csv_data)
+        ncols = max([len(x) for x in fin_csv_data.values()])
+        dframe = pandas.DataFrame.from_dict(
+            fin_csv_data, orient='index',
             columns=['Path', 'ZPVE [A.U.]', *[''] * (ncols-2)])
-        df.to_csv(filelabel, float_format='%.5f')
+        dframe.to_csv(filelabel, float_format='%.5f')
     if 'geo' in tsk:
-        all_data = '\n'.join([spc_data for spc_data in csv_data.values()])
+        all_data = '\n'.join(spc_data for spc_data in csv_data.values())
         io.write_file(filelabel, all_data)
     if 'zma' in tsk:
-        all_data = '\n'.join([spc_data for spc_data in csv_data.values()])
+        all_data = '\n'.join(spc_data for spc_data in csv_data.values())
         io.write_file(filelabel, all_data)
     if 'ene' in tsk:
-        df = pandas.DataFrame.from_dict(
+        dframe = pandas.DataFrame.from_dict(
             csv_data, orient='index',
             columns=['Path', 'Energy [A.U.]'])
-        df.to_csv(filelabel, float_format='%.8f')
+        dframe.to_csv(filelabel, float_format='%.8f')
     if 'enthalpy' in tsk:
-        df = pandas.DataFrame.from_dict(
+        dframe = pandas.DataFrame.from_dict(
             csv_data, orient='index',
             columns=[
                 'Path', 'ZPVE+Energy [A.U.]', 'Hf (0 K) [kcal/mol]',
                 *spc_array])
-        df.to_csv(filelabel, float_format='%.6f')
+        dframe.to_csv(filelabel, float_format='%.6f')
     if 'coeffs' in tsk:
-        df = pandas.DataFrame.from_dict(
+        dframe = pandas.DataFrame.from_dict(
             csv_data, orient='index',
             columns=[
                 *spc_array])
-        df.to_csv(filelabel, float_format='%.2f')
+        dframe.to_csv(filelabel, float_format='%.2f')

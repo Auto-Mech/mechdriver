@@ -7,9 +7,9 @@ import elstruct
 import autorun
 from phydat import phycon
 from mechanalyzer.inf import thy as tinfo
+from mechlib.amech_io import printer as ioprinter
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
-from mechlib.amech_io import printer as ioprinter
 
 
 def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,

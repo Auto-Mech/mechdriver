@@ -24,7 +24,7 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
     tors_hr_model = bool(
         tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'))
     tau_hr_model = bool(tors_model == 'tau' and vib_model != 'vib')
-    # diatomic model?
+
     return has_tors and (tors_hr_model or tau_hr_model)
 
 
@@ -64,12 +64,12 @@ def vib_tau(spc_mod_dct_i):
     return bool(vib_model == 'tau')
 
 
-def pst_ts(tsclass, ts_sadpt, ts_nobarrier):
+def pst_ts(rxn_class, ts_sadpt, ts_nobarrier):
     """ Return boolean to see if fake wells are needed
     """
 
     pst = False
-    if not var_radrad(tsclass):
+    if not automol.par.is_radrad(rxn_class):
         if ts_sadpt == 'pst':
             pst = True
     else:
@@ -79,30 +79,19 @@ def pst_ts(tsclass, ts_sadpt, ts_nobarrier):
     return pst
 
 
-def need_fake_wells(tsclass, well_model):
+def need_fake_wells(rxn_class, well_model):
     """ Return boolean to see if fake wells are needed
     """
     if well_model == 'fake':
-        abst_rxn = bool('abstraction' in tsclass)
-        # addn_rxn = bool('addition' in tsclass)
-        subs_rxn = bool('substitution' in tsclass)
-        need = bool(abst_rxn or subs_rxn)
+        need = any(rtyp in automol.par.typ(rxn_class)
+                   for rtyp in ('abstraction', 'substitution'))
     else:
         need = False
 
     return need
 
 
-def var_radrad(tsclass):
-    """ Return boolean to see if fake wells are needed
-    """
-    rad_rad = 'radical radical' in tsclass
-    low_spin = 'high' not in tsclass
-
-    return bool(rad_rad and low_spin)
-
-
-def treat_tunnel(ts_mod, ts_class):
+def treat_tunnel(ts_mod, rxn_class):
     """ decide to treat tunneling
     """
 
@@ -110,9 +99,8 @@ def treat_tunnel(ts_mod, ts_class):
 
     ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
     tunnel_model = ts_mod['tunnel']
-    radrad = 'radical radical' in ts_class
     if tunnel_model is not None:
-        if radrad:
+        if automol.par.is_radrad(rxn_class):
             if ts_nobar in ('pst', 'rpvtst', 'vrctst'):
                 treat = False
         else:
@@ -136,8 +124,8 @@ def is_abstraction(spc_dct):
 
     ts_names = tuple(name for name in spc_dct.keys() if 'ts_' in name)
     if len(ts_names) == 1:
-        ts_dct = spc_dct[ts_names[0]]
-        if 'abstraction' in ts_dct['zrxn'].class_:
+        rxn_class = spc_dct[ts_names[0]]['class']
+        if 'abstraction' in automol.par.typ(rxn_class):
             _abstraction = True
 
     return _abstraction

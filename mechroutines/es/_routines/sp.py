@@ -5,10 +5,9 @@ import automol
 import elstruct
 import autofile
 import autorun
-from phydat import phycon
-from phydat import symm
-from mechroutines.es import runner as es_runner
+from phydat import phycon, symm
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.es import runner as es_runner
 
 
 # _JSON_SAVE = ['TAU']

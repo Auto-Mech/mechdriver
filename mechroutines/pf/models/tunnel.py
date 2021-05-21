@@ -6,7 +6,7 @@ import mess_io
 from mechroutines.pf.models.typ import treat_tunnel
 
 
-def write_mess_tunnel_str(ts_inf_dct, chnl_infs, chnl_enes,
+def write_mess_tunnel_str(ts_inf_dct, chnl_enes,
                           ts_model, ts_class, ts_idx):
     """ Write the appropriate tunneling string for a transition state
     """
@@ -31,7 +31,7 @@ def write_mess_tunnel_str(ts_inf_dct, chnl_infs, chnl_enes,
 
             sct_dat = {sct_dat_name: sct_str}
 
-    return tunnel_str, sct_str
+    return tunnel_str, sct_dat
 
 
 def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, symm_barrier=False):
@@ -57,10 +57,8 @@ def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, symm_barrier=False):
     # Set the depth of the wells from the transition state
     ts_reac_barr = ts_ene - reac_ene
     ts_prod_barr = ts_ene - prod_ene
-    if ts_reac_barr < 0.:
-        ts_reac_barr = 0.1
-    if ts_prod_barr < 0.:
-        ts_prod_barr = 0.1
+    ts_reac_barr = ts_reac_barr if ts_reac_barr > 0.1 else 0.1
+    ts_prod_barr = ts_prod_barr if ts_prod_barr > 0.1 else 0.1
 
     # Write the MESS string
     tunnel_str = mess_io.writer.tunnel_eckart(
@@ -69,20 +67,25 @@ def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, symm_barrier=False):
     return tunnel_str
 
 
-def write_mess_sct_strs(ts_dct, pf_levels, save_path,
-                        imag_freq, tunnel_file,
-                        cutoff_energy=2500, coord_proj='cartesian'):
+def write_mess_sct_strs(ts_inf_dct, save_path,
+                        imag_freq, tunnel_file, sct_prog='projrot'):
     """ Write the Eckart tunneling string for MESS
     """
+
+    # Write the tunneling section of TS for MESS input file
     tunnel_str = mess_io.writer.tunnel_sct(
-        imag_freq, tunnel_file, cutoff_energy=cutoff_energy)
-    trans_coeff_str = build_trans_coeff_file(
-        ts_dct, pf_levels, save_path, coord_proj=coord_proj)
+        imag_freq, tunnel_file, cutoff_energy=2500)
 
-    return tunnel_str, trans_coeff_str
+    # Write the auxiliary file with the tunneling action
+    if sct_prog == 'projrot':
+        tc_str = _projrot_tunn_action_str(ts_inf_dct, save_path)
+    elif sct_prog == 'polyrate':
+        tc_str = _polyrate_tunn_action_str(ts_inf_dct, save_path)
+
+    return tunnel_str, tc_str
 
 
-def build_trans_coeff_file(ts_inf_dct, run_path, coord_proj='cartesian'):
+def _projrot_tunn_action_str(ts_inf_dct, run_prefix):
     """ Collate the IRC data and build
         the transmission coefficient file with ProjRot
     """
@@ -93,7 +96,7 @@ def build_trans_coeff_file(ts_inf_dct, run_path, coord_proj='cartesian'):
 
     # Obtain the energies and coords
     rpath_enes, rpath_coords = [], []
-    for idx, dct in enumerate(inf_dct['rpath']):
+    for _, dct in enumerate(inf_dct['rpath']):
         rpath_enes.append(dct['ene_chnlvl'] - sadpt_ene)
         rpath_coords.append(dct['rvals'])
 
@@ -107,7 +110,7 @@ def build_trans_coeff_file(ts_inf_dct, run_path, coord_proj='cartesian'):
     return tc_str
 
 
-def tunnel_polyrate():
+def _polyrate_tunn_action_str():
     """ calculate s(E) using polyrate
     """
     raise NotImplementedError

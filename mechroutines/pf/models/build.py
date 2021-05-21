@@ -65,8 +65,7 @@ def read_spc_data(spc_dct, spc_name,
 
 def read_ts_data(spc_dct, tsname, rcts, prds,
                  pes_mod_dct_i, spc_mod_dct_i,
-                 run_prefix, save_prefix, chn_basis_ene_dct,
-                 ref_pf_models=(), ref_pf_levels=()):
+                 run_prefix, save_prefix, chn_basis_ene_dct):
     """ Determine which block function to useset block functions
     """
 
@@ -92,7 +91,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
 
     # Get all of the information for the filesystem
-    if not typ.var_radrad(ts_dct['class']):
+    if not automol.par.is_radrad(ts_dct['class']):
 
         # Set up the saddle point keyword
         sadpt = True
@@ -110,9 +109,7 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
             writer = 'pst_block'
         elif ts_sadpt == 'rpvtst':
             inf_dct = rpvtst_data(
-                ts_dct, reac_dcts,
-                spc_mod_dct_i,
-                ref_pf_models, ref_pf_levels,
+                ts_dct, reac_dcts, spc_mod_dct_i,
                 run_prefix, save_prefix, sadpt=sadpt)
             writer = 'rpvtst_block'
         else:
@@ -344,6 +341,8 @@ def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
         filesystem for a species
     """
 
+    zrxn = ts_dct['zrxn']
+
     # Set up all the filesystem objects using models and levels
     if sadpt:
         # Set up filesystems and coordinates for saddle point
@@ -370,7 +369,7 @@ def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
         # Set TS reaction coordinate
         scn_vals = filesys.models.get_rxn_scn_coords(thy_save_path, frm_name)
         scn_vals.sort()
-        scn_ene_info = chn_pf_levels['rpath'][1][0]
+        scn_ene_info = spc_mod_dct_i['rpath'][1][0]
         scn_prefix = thy_save_path
 
     # Modify the scn thy info
@@ -409,24 +408,24 @@ def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
     for dct in reac_dcts:
         pf_filesystems = filesys.models.pf_filesys(
             dct, spc_mod_dct_i, run_prefix, save_prefix, False)
-        pf_levels = {
+        new_spc_dct_i = {
             'ene': spc_mod_dct_i['ene'],
             'harm': spc_mod_dct_i['harm'],
             'tors': spc_mod_dct_i['tors']
         }
         reac_ene += ene.read_energy(
-            dct, pf_filesystems, spc_mod_dct_i, pf_levels,
-            run_prefix, read_ene=True, read_zpe=True, saddle=sadpt)
+            dct, pf_filesystems, new_spc_dct_i, run_prefix,
+            read_ene=True, read_zpe=True, saddle=sadpt)
 
         ioprinter.debug_message('rpath', spc_mod_dct_i['rpath'][1])
-        pf_levels = {
+        new_spc_dct_i = {
             'ene': ['mlvl', [[1.0, spc_mod_dct_i['rpath'][1][2]]]],
             'harm': spc_mod_dct_i['harm'],
             'tors': spc_mod_dct_i['tors']
         }
         ene_hs_sr_inf += ene.read_energy(
-            dct, pf_filesystems, spc_mod_dct_i, pf_levels,
-            run_prefix, read_ene=True, read_zpe=False)
+            dct, pf_filesystems, new_spc_dct_i, run_prefix,
+            read_ene=True, read_zpe=False)
 
     # Scale the scn values
     if sadpt:
@@ -493,7 +492,7 @@ def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
     # Calculate and store the imaginary mode
     if sadpt:
         _, imag, _ = vib.read_harmonic_freqs(
-            pf_filesystems, run_prefix, saddle=True)
+            pf_filesystems, run_prefix, zrxn=zrxn)
         ts_idx = scn_vals.index(0.00)
     else:
         imag = None
@@ -568,14 +567,8 @@ def tau_data(spc_dct_i,
     # Set the filesystem
     tau_save_fs = autofile.fs.tau(harm_save)
 
-    # Set the ground and reference energy to set values for now
-    rxn_class = None
-
     # Get the rotor info
-    rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, spc_mod_dct_i,
-        rxn_class=rxn_class,
-        frm_bnd_keys=frm_bnd_keys, brk_bnd_keys=brk_bnd_keys)
+    rotors = tors.build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
     run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
     tors_strs = tors.make_hr_strings(

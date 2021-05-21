@@ -9,13 +9,13 @@ import multiprocessing
 import random
 import automol.inchi
 import automol.geom
-from mechanalyzer.inf import rxn as rinfo
-from mechroutines.pf.models.ene import read_energy
-from mechroutines.pf.thermo import heatform
 from phydat import phycon
 from mechlib import filesys
 from mechlib.filesys import reaction_fs
 from mechlib.amech_io import printer as ioprinter
+from mechanalyzer.inf import rxn as rinfo
+from mechroutines.pf.models.ene import read_energy
+from mechroutines.pf.thermo import heatform
 
 
 # FUNCTIONS TO PREPARE THE LIST OF REFERENCE SPECIES NEEDED FOR THERM CALCS #

@@ -3,9 +3,9 @@
 
 import automol
 import elstruct
+from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
-from mechlib.amech_io import printer as ioprinter
 
 
 def hindered_rotor_scans(

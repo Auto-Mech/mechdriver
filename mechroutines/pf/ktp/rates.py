@@ -313,7 +313,7 @@ def _make_channel_mess_strs(tsname, reacs, prods,
     ts_label = label_dct[tsname]
     rclass = spc_dct[tsname+'_0']['class']
     sts_str, ts_dat_dct = _make_ts_mess_str(
-        chnl_infs, chnl_enes, spc_model_dct_i, rclass,
+        tsname, chnl_infs, chnl_enes, spc_model_dct_i, rclass,
         ts_label, inner_reac_label, inner_prod_label)
     ts_str += sts_str
     full_dat_dct.update(ts_dat_dct)
@@ -328,7 +328,7 @@ def _make_spc_mess_str(inf_dct):
     return mess_writer(inf_dct)
 
 
-def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
+def _make_ts_mess_str(tsname, chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
                       ts_label, inner_reac_label, inner_prod_label):
     """ makes the main part of the MESS species block for a given species
     """

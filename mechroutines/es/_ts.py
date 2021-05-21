@@ -8,15 +8,16 @@
 
 """
 
+import automol.par
 import autofile
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
-from mechroutines.es._routines import _sadpt as sadpt
 from mechlib.filesys import build_fs, rcts_cnf_fs
 from mechlib import filesys
+from mechroutines.es._routines import _sadpt as sadpt
 
 
-def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
+def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
            run_prefix, save_prefix):
     """ New run function
     """
@@ -115,7 +116,7 @@ def _ts_search_method(ts_dct):
 
     # ID search algorithm if user did not specify one (wrong)
     if _search_method is None:
-        if _nobarrier(ts_dct):
+        if automol.par.has_nobarrier(ts_dct['class']):
             _search_method = 'pst'
             print('Reaction is low-spin, radical-radical addition/abstraction')
             print('Assuming reaction is barrierless...')
@@ -131,8 +132,7 @@ def _ts_search_method(ts_dct):
 
 # SET OPTIONS FOR THE TRANSITION STATE
 def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
-                      run_prefix, save_prefix,
-                      zma_locs=(0,)):
+                      run_prefix, save_prefix):
     """ set the theory
     """
 
@@ -257,20 +257,20 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
         if es_keyword_dct.get('var_splvl1', None) is not None:
 
             method_dct = thy_dct.get(es_keyword_dct['var_scnlvl1'])
-            vsplvl1_thy_info = tinfo.from_dct(method_dct)
-            mod_vsplvl1_thy_info = tinfo.modify_orb_label(
-                vsplvl1_thy_info, ts_info)
-            hs_vsplvl1_thy_info = tinfo.modify_orb_label(
-                vsplvl1_thy_info, hs_info)
+            vsp1lvl_thy_info = tinfo.from_dct(method_dct)
+            mod_vsp1lvl_thy_info = tinfo.modify_orb_label(
+                vsp1lvl_thy_info, ts_info)
+            hs_vsp1lvl_thy_info = tinfo.modify_orb_label(
+                vsp1lvl_thy_info, hs_info)
 
         if es_keyword_dct.get('var_splvl2', None) is not None:
 
             method_dct = thy_dct.get(es_keyword_dct['var_scnlvl2'])
-            vsplvl2_thy_info = tinfo.from_dct(method_dct)
-            mod_vsplvl2_thy_info = tinfo.modify_orb_label(
-                vsplvl2_thy_info, ts_info)
-            hs_vsplvl2_thy_info = tinfo.modify_orb_label(
-                vsplvl2_thy_info, hs_info)
+            vsp2lvl_thy_info = tinfo.from_dct(method_dct)
+            mod_vsp2lvl_thy_info = tinfo.modify_orb_label(
+                vsp2lvl_thy_info, ts_info)
+            hs_vsp2lvl_thy_info = tinfo.modify_orb_label(
+                vsp2lvl_thy_info, hs_info)
 
     # Get the conformer filesys for the reactants
     _rcts_cnf_fs = rcts_cnf_fs(

@@ -4,10 +4,10 @@
 import automol
 import autofile
 import elstruct
-from mechroutines.es.runner._run import execute_job
-from mechroutines.es.runner._run import read_job
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.es.runner._run import execute_job
+from mechroutines.es.runner._run import read_job
 
 
 def execute_scan(zma, spc_info, mod_thy_info,
@@ -197,18 +197,8 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
     job = _set_job(scn_typ)
 
     # Set locs for scan
-    if constraint_dct is None:
-        coord_locs = coord_names
-        save_locs = scn_run_fs[-1].existing([coord_locs])
-    else:
-        coord_locs = constraint_dct
-        save_locs = ()
-        # save_locs = scn_run_fs[3].existing()
-        save_locs = ()
-        for locs1 in scn_run_fs[2].existing([coord_locs]):
-            if scn_run_fs[2].exists(locs1):
-                for locs2 in scn_run_fs[3].existing(locs1):
-                    save_locs += (locs2,)
+    coord_locs, save_locs = scan_locs(
+        scn_run_fs, coord_names, constraint_dct=constraint_dct)
 
     if not scn_run_fs[1].exists([coord_locs]):
         print("No scan to save. Skipping...")
@@ -237,6 +227,27 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
         # Build the trajectory file
         if locs_lst:
             _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
+
+
+def scan_locs(scn_fs, coord_names, constraint_dct=None):
+    """ Get all of the scan locs for a given tors name for either a
+        SCAN or CSCAN filesys
+    """
+
+    if constraint_dct is None:
+        coord_locs = coord_names
+        scn_locs = scn_fs[-1].existing([coord_locs])
+    else:
+        coord_locs = constraint_dct
+        scn_locs = ()
+        # scn_locs = scn_fs[3].existing()
+        scn_locs = ()
+        for locs1 in scn_fs[2].existing([coord_locs]):
+            if scn_fs[2].exists(locs1):
+                for locs2 in scn_fs[3].existing(locs1):
+                    scn_locs += (locs2,)
+
+    return scn_locs
 
 
 def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):

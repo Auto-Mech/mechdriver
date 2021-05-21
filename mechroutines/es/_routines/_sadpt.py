@@ -7,11 +7,11 @@ import elstruct
 import autorun
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
-from mechroutines.es import runner as es_runner
-from mechroutines.es.runner import qchem_params
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
 from mechlib import filesys
+from mechroutines.es import runner as es_runner
+from mechroutines.es.runner import qchem_params
 
 
 # SADPT FINDER FUNCTIONS
@@ -73,7 +73,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
     if opt_ret is not None:
         # Get the Hessian and check the saddle point
         # (maybe just have remove imag do this?)
-        hess_ret, freqs, imags = saddle_point_hessian(
+        hess_ret, _, imags = saddle_point_hessian(
             opt_ret, ts_info, method_dct,
             run_fs, overwrite)
 

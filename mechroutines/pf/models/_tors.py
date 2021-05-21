@@ -5,7 +5,7 @@
 import numpy
 from scipy.interpolate import interp1d
 import automol
-import autorun
+# import autorun
 import mess_io
 import projrot_io
 from phydat import phycon
@@ -69,12 +69,14 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
     """ read out the potentials
     """
 
+    _ = run_path
+
     # Convert the rotor objects indexing to be in geoms
     increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
     rotor_zma = automol.rotor.zmatrix(rotors)
 
-    for ridx, rotor in enumerate(rotors):
-        multi_idx = ridx
+    for _, rotor in enumerate(rotors):
+        # multi_idx = ridx
         tors_names = automol.rotor.names((rotor,), flat=True)
         tors_grids = automol.rotor.grids(
             (rotor,), increment=increment, flat=True)
@@ -96,23 +98,23 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
             # Add potential to potential
             torsion.pot = pot
 
-    if multi_idx is not None:
-        mdhr_name = automol.rotor.names(rotors)[multi_idx]
-        mdhr_grid = automol.rotor.grids(rotors, increment=increment)[multi_idx]
+    # if multi_idx is not None:
+    #     mdhr_name = automol.rotor.names(rotors)[multi_idx]
+    #   mdhr_grid = automol.rotor.grids(rotors, increment=increment)[multi_idx]
 
-        pot, geoms, grads, hessians, _, _ = filesys.read.potential(
-            mdhr_name, mdhr_grid,
-            cnf_save_path,
-            mod_tors_ene_info, ref_ene,
-            constraint_dct=None,   # No extra frozen treatments
-            read_geom=bool('v' in tors_model),
-            read_grad=bool('v' in tors_model),
-            read_hess=bool('v' in tors_model))
-        script_str = autorun.SCRIPT_DCT['projrot']
-        freqs = autorun.projrot.pot_frequencies(
-            script_str, geoms, grads, hessians, run_path)
-    else:
-        pass
+    #     pot, geoms, grads, hessians, _, _ = filesys.read.potential(
+    #         mdhr_name, mdhr_grid,
+    #         cnf_save_path,
+    #         mod_tors_ene_info, ref_ene,
+    #         constraint_dct=None,   # No extra frozen treatments
+    #         read_geom=bool('v' in tors_model),
+    #         read_grad=bool('v' in tors_model),
+    #         read_hess=bool('v' in tors_model))
+    #     script_str = autorun.SCRIPT_DCT['projrot']
+    #     freqs = autorun.projrot.pot_frequencies(
+    #         script_str, geoms, grads, hessians, run_path)
+    # else:
+    #     pass
 
     # return rotors, (pot, freqs)
     return rotors
@@ -140,7 +142,8 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
             for tidx, torsion in enumerate(rotor):
                 if tidx not in scale_indcs and factor is not None:
                     torsion.pot = automol.pot.scale(torsion.pot, sfactor)
-                    # following is being used in a test to see how effective a scaling of fixed scan torsional pots can be
+                    # following is being used in a test to see how effective
+                    # a scaling of fixed scan torsional pots can be
                     torsion.pot = automol.pot.relax_scale(torsion.pot)
 
     return rotors
@@ -162,13 +165,13 @@ def make_hr_strings(rotors):
     geo, rotors = automol.rotor.relabel_for_geometry(rotors)
     # numrotors = len(rotors)
 
-    for ridx, rotor in enumerate(rotors):
+    for _, rotor in enumerate(rotors):
         # multirotor = bool(len(rotor) > 1)
         # mdhr_idx = ridx if multirotor else None
         for _, torsion in enumerate(rotor):
 
             # Write the rotor strings
-            hr_str, ir_str, flux_str, prot_str = _tors_strs(torsion, geo)
+            hr_str, _, flux_str, prot_str = _tors_strs(torsion, geo)
             mess_allr_str += hr_str
             mess_hr_str += hr_str
             mess_flux_str += flux_str
@@ -260,7 +263,8 @@ def _hrpot_spline_fitter(pot_dct, min_thresh=-0.0001, max_thresh=50.0):
             'the typical maximum for a torsional potential')
     # reset any negative values for the first grid point to 0.
     if pot[0] < 0.:
-        ioprinter.error_message('The first potential value is {} it should be 0.'.format(pot[0]))
+        ioprinter.error_message(
+            'The first potential value is {} it should be 0.'.format(pot[0]))
         pot[0] = 0.
     if any(val < min_thresh for val in pot):
         print_pot = True

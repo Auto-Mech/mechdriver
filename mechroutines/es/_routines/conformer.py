@@ -10,12 +10,12 @@ import autofile
 from autofile import fs
 from phydat import bnd
 from mechanalyzer.inf import thy as tinfo
+from mechlib import filesys
+from mechlib.amech_io import printer as ioprinter
 from mechroutines.es._routines import _util as util
 from mechroutines.es._routines._geom import remove_imag
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
-from mechlib import filesys
-from mechlib.amech_io import printer as ioprinter
 
 
 # Initial conformer
@@ -38,7 +38,7 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
         ini_thy_info, spc_info)
     [kickoff_size, kickoff_backward] = spc_dct_i['kickoff']
 
-    cnf_locs, cnf_path = filesys.mincnf.min_energy_conformer_locators(
+    _, cnf_path = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
     overwrite = es_keyword_dct['overwrite']
     if not cnf_path:
@@ -330,27 +330,27 @@ def single_conformer(zma, spc_info, mod_thy_info,
                         ioprinter.debug_message(
                             'inf_obj path', cnf_save_fs[0].path())
                         # rinf_obj_s = cnf_save_fs[0].file.info.read()
-                        rinf_obj = inf_obj
+                        rinf = inf_obj
                         ioprinter.debug_message(
-                            'inf_obj for r', rinf_obj)
+                            'inf_obj for r', rinf)
                         # rnsampd = rinf_obj_s.nsamp
                         # rnsampd += 1
                         # rinf_obj.nsamp = rnsampd
                     else:
-                        rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
-                        rinf_obj.nsamp = 1
+                        rinf = autofile.schema.info_objects.conformer_trunk(0)
+                        rinf.nsamp = 1
                     if cnf_save_fs[1].file.info.exists([locs[0]]):
                         cinf_obj_s = cnf_save_fs[1].file.info.read(locs[0])
-                        cinf_obj = inf_obj
+                        cinf = inf_obj
                         cnsampd = cinf_obj_s.nsamp
                         cnsampd += 1
-                        cinf_obj.nsamp = cnsampd
+                        cinf.nsamp = cnsampd
                     else:
-                        cinf_obj = autofile.schema.info_objects.conformer_branch(0)
-                        cinf_obj.nsamp = 1
+                        cinf = autofile.schema.info_objects.conformer_branch(0)
+                        cinf.nsamp = 1
                     cnf_save_fs[1].create([locs[0]])
-                    cnf_save_fs[0].file.info.write(rinf_obj)
-                    cnf_save_fs[1].file.info.write(cinf_obj, [locs[0]])
+                    cnf_save_fs[0].file.info.write(rinf)
+                    cnf_save_fs[1].file.info.write(cinf, [locs[0]])
                     filesys.save.conformer(
                         ret, None, cnf_save_fs, mod_thy_info[1:], zrxn=zrxn,
                         rng_locs=(locs[0],), tors_locs=(locs[1],))
@@ -581,7 +581,7 @@ def ring_conformer_sampling(
         cnf_run_fs, cnf_save_fs,
         script_str, overwrite,
         nsamp_par=(False, 3, 1, 3, 50, 50),
-        ring_tors_dct={},
+        ring_tors_dct=None,
         zrxn=None, two_stage=False, retryfail=False,
         **kwargs):
     """ run sampling algorithm to find conformers
@@ -596,19 +596,17 @@ def ring_conformer_sampling(
     check_dct = {
         'dist': 3.5e-1,
         'coulomb': 1.5e-2,
-        # 'stereo': None,
-        # 'tors': None
     }
     _, saved_geos, _ = _saved_cnf_info(
         cnf_save_fs, thy_info)
     frag_saved_geos = []
     for geoi in saved_geos:
         frag_saved_geos.append(_fragment_ring_geo(geoi))
-    unique_geos = []
-    unique_frag_geos = []
-    unique_zmas = []
+
     # Make sample zmas
-    for ring_atoms, samp_range_dct in ring_tors_dct.items():
+    unique_geos, unique_frag_geos, unique_zmas = [], [], []
+    tors_dcts = ring_tors_dct.items() if ring_tors_dct is not None else {}
+    for ring_atoms, samp_range_dct in tors_dcts:
         ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
         dist_value_dct = _get_ring_distances(zma, ring_atoms)
         nsamp = _num_samp_zmas(ring_atoms, nsamp_par)
@@ -664,7 +662,7 @@ def ring_conformer_sampling(
         run_fs = autofile.fs.run(cnf_run_path)
 
         ioprinter.info_message("Run {}/{}".format(samp_idx, tot_samp))
-        tors_names = tuple(samp_range_dct.keys())
+        tors_names = tuple(samp_range_dct.keys())  # Defined in the loop above
         if two_stage and tors_names:
             frozen_coords_lst = ((), tors_names)
             success, ret = es_runner.multi_stage_optimization(
@@ -942,10 +940,12 @@ def _this_conformer_is_running(zma, cnf_run_fs):
             current_time = autofile.schema.utc_time()
             if (current_time - start_time).total_seconds() < 3000000:
                 subrun_fs = autofile.fs.subrun(run_path)
-                inp_str = subrun_fs[0].file.input.read([0, 0]).replace('=','')
+                inp_str = subrun_fs[0].file.input.read([0, 0])
+                inp_str = inp_str.replace('=', '')
                 prog = inf_obj.prog
                 inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-                if automol.zmat.almost_equal(inp_zma, zma, dist_rtol=0.018, ang_atol=.2):
+                if automol.zmat.almost_equal(inp_zma, zma,
+                                             dist_rtol=0.018, ang_atol=.2):
                     ioprinter.info_message(
                         'This conformer was started in the last ' +
                         '{:3.4f} hours in {}.'.format(
@@ -1221,9 +1221,8 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
         for locs in cnf_save_locs_lst:
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             zma = automol.geom.zmatrix(geo)
-            # zma =  cnf_save_fs[-1].file.zmatrix.read(locs)
-            # if automol.geom.almost_equal_dist_matrix(inigeo, geo, thresh=.15):
-            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.1, ang_atol=.4):
+            if automol.zmat.almost_equal(inizma, zma,
+                                         dist_rtol=0.1, ang_atol=.4):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 ioprinter.info_message(
                     '- Similar structure found at {}'.format(cnf_save_path))
@@ -1278,7 +1277,8 @@ def unique_fs_ring_confs(
                 geo = cnf_save_fs[-1].file.geometry.read(tlocs)
                 frag_geo = _fragment_ring_geo(geo)
                 frag_zma = automol.geom.zmatrix(frag_geo)
-                if automol.zmat.almost_equal(frag_ini_zma, frag_zma, dist_rtol=0.1, ang_atol=.4):
+                if automol.zmat.almost_equal(frag_ini_zma, frag_zma,
+                                             dist_rtol=0.1, ang_atol=.4):
                     rng_dct[ini_rid] = trid
                     found_rid = trid
                     break
@@ -1298,7 +1298,8 @@ def unique_fs_ring_confs(
             cnf_save_path = cnf_save_fs[-1].path(locs)
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             zma = automol.geom.zmatrix(geo)
-            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.1, ang_atol=.4):
+            if automol.zmat.almost_equal(inizma, zma,
+                                         dist_rtol=0.1, ang_atol=.4):
                 ioprinter.info_message(
                     '- Similar structure found at {}'.format(cnf_save_path))
                 found = True
@@ -1334,7 +1335,8 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             zma = automol.geom.zmatrix(geo)
             # zma =  cnf_save_fs[-1].file.zmatrix.read(locs)
-            if automol.zmat.almost_equal(inizma, zma, dist_rtol=0.1, ang_atol=.4):
+            if automol.zmat.almost_equal(inizma, zma,
+                                         dist_rtol=0.1, ang_atol=.4):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 ioprinter.info_message(
                     '- Similar structure found at {}'.format(cnf_save_path))
@@ -1386,7 +1388,7 @@ def _fragment_ring_geo(geo):
     return ret
 
 
-def rng_loc_for_geo(geo, cnf_run_fs, cnf_save_fs):
+def rng_loc_for_geo(geo, cnf_save_fs):
     """ Find the ring-conf locators for a given geometry in the
         conformamer save filesystem
     """
@@ -1407,7 +1409,8 @@ def rng_loc_for_geo(geo, cnf_run_fs, cnf_save_fs):
             rid = locs[0]
             break
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
-        if automol.zmat.almost_equal(frag_locs_zma, frag_zma, dist_rtol=0.1, ang_atol=.4):
+        if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
+                                     dist_rtol=0.1, ang_atol=.4):
             rid = locs[0]
             break
 
