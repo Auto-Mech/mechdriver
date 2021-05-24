@@ -102,6 +102,7 @@ def write_rxn_file(ckin_rxn_dct, pes_formula, ckin_path):
 
 
 # THERMO
+# combine with nasapoly str
 def nasa_polynomial(hform0, hform298, ckin_poly_str):
     """ write the nasa polynomial str
     """
@@ -111,7 +112,7 @@ def nasa_polynomial(hform0, hform298, ckin_poly_str):
     )
     return hf_str + ckin_poly_str
 
-
+# prob can handle with autorun func
 def write_nasa_file(ckin_nasa_str, ckin_path):
     """ write out the nasa polynomials
     """
@@ -123,6 +124,7 @@ def write_nasa_file(ckin_nasa_str, ckin_path):
 
 
 # TRANSPORT
+# prob can handle with autorun func
 def write_transport_file(ckin_trans_str, ckin_path):
     """ write out the transport file
     """

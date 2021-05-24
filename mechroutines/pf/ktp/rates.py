@@ -29,9 +29,19 @@ def make_messrate_str(pes_idx, rxn_lst,
                       pes_model_dct, spc_model_dct,
                       label_dct,
                       mess_path, run_prefix, save_prefix):
-    """ Combine various MESS strings together to combined MESS rates
-
-        spc model could become a list for channel combinations
+    """ Reads and processes all information in the save filesys for
+        all species on the PES, required for MESS rate calculations,
+        as specified by the model dictionaries built from user input.
+   
+        :param pes_idx:
+        :type pes_idx: int
+        :param rxn_lst:
+        :type rxn_lst: 
+        :param pes_model: model for PES conditions for rates from user input
+        :type pes_model: str
+        :param spc_model: model for partition fxns for rates from user input
+        :type spc_model: str
+        :param mess_path: path to write mess file (change since pfx given?)
     """
 
     pes_model_dct_i = pes_model_dct[pes_model]
@@ -68,7 +78,19 @@ def make_messrate_str(pes_idx, rxn_lst,
 
 # Headers
 def make_header_str(spc_dct, temps, pressures):
-    """ makes the standard header and energy transfer sections for MESS input file
+    """ Built the head of the MESS input file that contains various global
+        keywords used for running rate calculations.
+
+        Function determines certain input parameters for the well-extension
+        methodology based on the reaction type stored in spc_dct.
+
+        :param spc_dct:
+        :type spc_dct: dict[]
+        :param temps: temperatures for the rate calculations (in K)
+        :type temps: tuple(float)
+        :param pressures: pressures for the rate calculations (in atm)
+        :type pressures: tuple(float)
+        :rtype: str
     """
 
     ioprinter.messpf('global_header')
@@ -97,8 +119,12 @@ def make_header_str(spc_dct, temps, pressures):
 
 
 def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
-    """ Makes the standard header and energy transfer sections
-        for MESS input file
+    """ Writes a string with defining global energy transfer parameters used
+        for all wells on the PES that do not have parameters defined in their
+        respective sections.
+
+        As a default, the function will obtain parameters for the first well
+        that appears on the PES.
     """
 
     ioprinter.messpf('transfer_section')
@@ -199,11 +225,35 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
 def _make_channel_mess_strs(tsname, reacs, prods,
                             spc_dct, label_dct, written_labels,
                             chnl_infs, chnl_enes, spc_model_dct_i):
-    """ make the partition function strings for each of the channels
-    includes strings for each of the unimolecular wells, bimolecular fragments,
-    and transition states connecting them.
-    It also includes a special treatment for abstraction to include phase space
-    blocks and coupling bimolecular fragments to fake van der Waals wells
+    """ For each reaction channel on the PES: take all of the pre-read and
+        pre-processed information from the save filesys for the
+        reactants, products, and transition state and write the appropriately
+        formatted MESS input strings that will eventually be combined into the
+        entire MESS input file.
+
+        Also returns dictionary for all additional auxiliary data files,
+        formatted as {file name: file string}, required by MESS.
+
+        List of labels corresponding to MESS strings that have already been
+        written and added to the master string, meaning that species string does
+        not need to be written again. Required since species appear on multiple
+        channels.
+    
+        :param tsname: mechanism name of the transition state 
+        :param reacs: mechanisms name for the reactants of the reaction channel
+        :type reacs: tuple(str)
+        :param prods: mechanisms name for the products of the reaction channel
+        :type prods: tuple(str)
+        :param label_dct: mapping between mechanism name and MESS input label
+        :type label_dct: dict[str: str]
+        :param written_labels:
+        :type written_labels:
+        :param chnl_infs: collated molecular info obtained from save filesys
+        :type chnl_infs: dict[str:__]
+        :param chnl_enes: energies for channel, relative to PES reference
+        :type chnl_enes: dict[str:float]
+        :rtype: (str, str, str), str, dict[str:str]
+
     """
 
     # Initialize empty strings
@@ -322,7 +372,14 @@ def _make_channel_mess_strs(tsname, reacs, prods,
 
 
 def _make_spc_mess_str(inf_dct):
-    """ makes the main part of the MESS species block for a given species
+    """  Writes all processed save filesys data for a species and
+         into an appropriately formatted MESS input string. Takes the
+         pre-identified writer designation and calls the approprate
+         MESS-block writer function in models/build module. 
+
+         :param inf_dct: save filesys data for species
+         :type inf_dct: dict[]
+         :rtype: str
     """
     mess_writer = getattr(BLOCK_MODULE, inf_dct['writer'])
     return mess_writer(inf_dct)
@@ -330,7 +387,21 @@ def _make_spc_mess_str(inf_dct):
 
 def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
                       ts_label, inner_reac_label, inner_prod_label):
-    """ makes the main part of the MESS species block for a given species
+    """  Writes all processed save filesys data for a transition state and
+         into an appropriately formatted MESS input string. Takes the
+         pre-identified writer designation and calls the approprate
+         MESS-block writer function in models/build module. 
+
+        ^ slightly off, maybe add additional block function for variational,
+        union, sadpt writing...
+
+         Prior to writing, function does some additional data processing
+         to write additional flux files and tunneling file strings for
+         the input transition state.
+
+         :param inf_dct: save filesys data for species
+         :type inf_dct: dict[]
+         :rtype: str
     """
 
     # Unpack info objects
@@ -395,6 +466,8 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
 def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
                          chnl_enes, label_dct, side_label):
     """ write the MESS strings for the fake wells and TSs
+
+
     """
 
     # Set vars based on the reacs/prods
@@ -469,7 +542,15 @@ def get_channel_data(reacs, prods, tsname,
                      spc_dct, model_basis_energy_dct,
                      pes_model_dct_i, spc_model_dct_i,
                      run_prefix, save_prefix):
-    """ generate dcts with the models
+    """ For all species and transition state for the channel and
+        read all required data from the save filesys, then process and
+        format it to be able to write it into a MESS filesystem.
+        
+        :param tsname: mechanism name of the transition state 
+        :param reacs: mechanisms name for the reactants of the reaction channel
+        :type reacs: tuple(str)
+        :param prods: mechanisms name for the products of the reaction channel
+        :type prods: tuple(str)
     """
 
     # Initialize the dict

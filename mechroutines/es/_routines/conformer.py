@@ -22,12 +22,21 @@ from mechroutines.es.runner import qchem_params
 def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
                       ini_cnf_save_fs, cnf_run_fs, cnf_save_fs,
                       instab_save_fs, es_keyword_dct):
-    """ determine what to use as the reference geometry for all future runs
-    If ini_thy_info refers to geometry dictionary then use that,
-    otherwise values are from a hierarchy of:
-    running level of theory, input level of theory, inchis.
-    From the hierarchy an optimization is performed followed by a check for
-    an imaginary frequency and then a conformer file system is set up.
+    """ Assess if a conformer layer with a geometry exists in the save
+        filesys for the given species. 
+        
+        If not, attempt to generate some guess structure using InChI strings
+        or input geom from user.
+        
+        and optimize
+        it with input method. Then assess if the optimized structure
+        corresponds to a genuine minimum on the PES via a frequency calculation.
+        
+        If a minimum is found, save the conformer geometry, zmatrix, energy,
+        and torsions to the save filesys.
+    
+        Also, the function assessess if the species is unstable and will
+        save the appropriate information.
     """
 
     ini_thy_info = tinfo.from_dct(ini_method_dct)

@@ -1,5 +1,5 @@
-"""
-  Handle the generation of necessary paths for various things
+""" Library to build specifically formatted directory paths for
+    various calculations conducted by MechDriver.
 """
 
 import os
@@ -33,16 +33,22 @@ def thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix):
 
 
 def output_path(dat, make_path=True, print_path=False):
-    """ Set path and make directories for making additional
-        files in the directory where mechdriver drops are submitted
-        and its output made
+    """ Create the path for sub-directories locatted in the run directory
+        where the MechDriver calculation was launched. These sub-directories
+        are used to store various useful output from the MechDriver process.
+        
+        :param make_path: physically create directory for path during function
+        :type make_path: bool
+        :param print_path: print the created path to the screen
+        :type print_path: bool
+        :rtype: str
     """
 
     # Initialize the path
     starting_path = os.getcwd()
     path = os.path.join(starting_path, dat)
 
-    # Make and print the path if desired
+    # Make and print the path, if requested
     if make_path:
         if not os.path.exists(path):
             os.makedirs(path)
@@ -54,7 +60,22 @@ def output_path(dat, make_path=True, print_path=False):
 
 def job_path(prefix, prog, job, fml,
              locs_idx=None, make_path=True, print_path=False):
-    """ Create the path for some type of job
+    """ Create the path for various types of calculations for 
+        a given species or PES.
+
+        :param prefix: root prefix to run/save filesyste,
+        :type prefix: str
+        :param prog: name of the program(s) called in the job
+        :type prog: str
+        :param fml: stoichiometry of the species/PES associate with job
+        :fml type: str
+        :param locs_idx: number denoting final layer of filesys for job
+        :type locs_idx: int
+        :param make_path: physically create directory for path during function
+        :type make_path: bool
+        :param print_path: print the created path to the screen
+        :type print_path: bool
+        :rtype: str
     """
 
     # Initialize the build object
@@ -71,14 +92,12 @@ def job_path(prefix, prog, job, fml,
 
     if not isinstance(fml, str):
         fml = '-'.join(fml)
-    # Build the path
-    print('job path test:', job, fml, locs_idx)
-    bld_locs = [job, fml, locs_idx]
-    print('job path test 2', bld_locs)
-    bld_path = bld_fs[-1].path(bld_locs)
-    print('job path test 3', bld_path)
 
-    # Make and print the path if desired
+    # Build the path
+    bld_locs = [job, fml, locs_idx]
+    bld_path = bld_fs[-1].path(bld_locs)
+
+    # Make and print the path, if requested
     if make_path:
         bld_fs[-1].create([job, fml, locs_idx])
     if print_path:

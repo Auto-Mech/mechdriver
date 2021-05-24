@@ -1,6 +1,7 @@
-""" Library of parser functions for the model file
+""" Parses the `models.dat` input file for MechDriver that specifies all
+    of the parameters used to construct the partition functions and
+    master equations for the calculation of rate constants and thermochemistry.
 
-    I think it this is very out of wack with current set-up
 """
 
 import automol
@@ -86,7 +87,13 @@ MODPF_VAL_DCT = {
 
 # Build Basic Objects
 def models_dictionary(mod_str, thy_dct):
-    """ Parse the models.dat file
+    """ Parse the models.dat file string and construct the corresponding
+        model dictionaries that are used by other parts of the code.
+
+        :param mod_str: models.dat input file string
+        :type mod_str: str
+        :param thy_dct: 
+        :type: dict[str:dict[str:str/float]]
     """
 
     # Format the models input to the kin and spc model dcts

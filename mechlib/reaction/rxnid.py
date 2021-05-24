@@ -15,7 +15,24 @@ CLA_INP = 'inp/class.csv'
 
 
 def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
-    """ reactin
+    """ For a given reaction, attempt to identify its reaction class obtain
+        the corresponding Z-Matrix reaction object.
+
+        Function will attempt to read the filesytem for the appropriate
+        reaction object in the appropriate latyer
+            save/RXN/THY/TS/CONFS/Z/
+
+        If file is not located it will build Z-Matrices for the reactants
+        and run the class identifier.
+
+        :param rxn_info: Mechanalyzer reaction info object
+        :type rxn_info: tuple(tuple(str/int))
+        :param ini_thy_info: Mechanalyzer theory info object (input lvl)
+        :type ini_thy_info: tuple(str)
+        :param zma_locs: locs for Z filesys to search for reaction object
+        :type zma_locs: tuple(int)
+        :param save_prefix: root path to the save filesys
+        :type save_prefix: str
     """
 
     # Try to build the Z-Matrix reaction object or identify from scratch

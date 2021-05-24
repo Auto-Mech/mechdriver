@@ -7,10 +7,11 @@ from mechroutines.pf.models.typ import need_fake_wells
 
 
 def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):
-    """ Builds a dictionary that matches the mechanism name to the labels used
-        in the MESS input and output files for the whole PES
+    """  Loop over all of the reaction channels of the PES to build a
+         dictionary that systematically maps the mechanism names of all
+         species and transition states to formatted labels used to designate
+         each as a well, bimol, or barrier component in a MESS input file. 
     """
-    print('spc dct_names', list(spc_dct.keys()))
 
     pes_label_dct = {}
     for rxn in rxn_lst:
@@ -37,7 +38,7 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):
 def _make_channel_label_dct(tsname, rclass, label_dct, chn_idx, reacs, prods,
                             rwell_mod, pwell_mod):
     """ Builds a dictionary that matches the mechanism name to the labels used
-        in the MESS input and output files
+        in the MESS input and output files.
     """
 
     # Initialize idxs for bimol, well, and fake species

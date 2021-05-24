@@ -1,4 +1,5 @@
-""" Set runtime parameters
+""" Set runtime options and job submission strings for
+    electronic structure package calculations.
 """
 
 import elstruct
@@ -7,6 +8,12 @@ from autorun import SCRIPT_DCT
 
 def qchem_params(method_dct, job=None):
     """ Build kwargs and script string
+
+        Function assumes a single-point energy job is none
+        is given.
+
+        :param method_dct: 
+        :type method_dct: dict[str:
     """
 
     prog = method_dct.get('program', None)

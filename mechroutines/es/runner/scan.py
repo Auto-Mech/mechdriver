@@ -1,4 +1,6 @@
-""" es_runners for coordinate scans
+""" Library to perform sequences of electronic structure calculations
+    along a molecular coordinate and save the resulting information to
+    SCAN or CSAN layers of the save filesystem.
 """
 
 import automol
@@ -18,7 +20,12 @@ def execute_scan(zma, spc_info, mod_thy_info,
                  saddle=False,
                  constraint_dct=None, retryfail=True,
                  **kwargs):
-    """ Run and save the scan
+    """ Run all of the electronic structure calculations for the 
+        scan and save the resulting information. 
+
+        Function will first assess whether the scan has been run by
+        searching the filesystem.
+
     """
 
     # Need a resave option
@@ -105,6 +112,18 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
               saddle=False, constraint_dct=None,
               **kwargs):
     """ new run function
+
+        :param coord_names: names of the scan coordinates
+        :type coord_names: tuple(tuple(str))
+        :param grid_vals: values of all the scan coordinates
+        :type grid_vals: ?? same as coord_grids?
+        :param scn_run_fs: SCAN/CSCAN object with run filesys prefix
+        :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_typ: label for scan type ('relaxed' or 'rigid')
+        :type scn_typ: str
+
     """
 
     # Get a connected geometry from the init guess_zma for instability checks
@@ -187,7 +206,16 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
 def save_scan(scn_run_fs, scn_save_fs, scn_typ,
               coord_names, constraint_dct,
               mod_thy_info):
-    """ save the scan
+    """ Search for output of electronic structure calculations along the scan coordinate that exist in the SCAN/CSCAN layer of the run filesys. Then parse out the required information and save it into formatted files in the SCAN/CSAN layer of the save filesys. 
+        
+        :param scn_run_fs: SCAN/CSCAN object with run filesys prefix
+        :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param coord_names: names of the scan coordinates
+        :type coord_names: tuple(tuple(str))
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
     """
 
     ioprinter.info_message(
@@ -229,31 +257,47 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
-def scan_locs(scn_fs, coord_names, constraint_dct=None):
-    """ Get all of the scan locs for a given tors name for either a
-        SCAN or CSCAN filesys
+def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
+    """  Determine the locs for all of the directories that currently
+         exist in the SCAN/CSAN layer of the save filesystem.
+        
+        :param coord_names: names of the scan coordinates
+        :type coord_names: tuple(tuple(str))
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
     """
 
     if constraint_dct is None:
         coord_locs = coord_names
-        scn_locs = scn_fs[-1].existing([coord_locs])
+        scn_locs = scan_save_fs[-1].existing([coord_locs])
     else:
         coord_locs = constraint_dct
         scn_locs = ()
-        # scn_locs = scn_fs[3].existing()
+        # scn_locs = scan_save_fs[3].existing()
         scn_locs = ()
-        for locs1 in scn_fs[2].existing([coord_locs]):
-            if scn_fs[2].exists(locs1):
-                for locs2 in scn_fs[3].existing(locs1):
+        for locs1 in scan_save_fs[2].existing([coord_locs]):
+            if scan_save_fs[2].exists(locs1):
+                for locs2 in scan_save_fs[3].existing(locs1):
                     scn_locs += (locs2,)
 
     return scn_locs
 
 
 def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
-    """ See if the scan needs to be run
+    """ Assesses if the scan calculations requested by the user have been
+        completed by assessing if Z-Matrices exist in the filesystem for
+        all grid values of the scan coordinates.
 
-        maybe return the grid that is not finished?
+        :param coord_names: names of the scan coordinates
+        :type coord_names: tuple(tuple(str))
+        :param coord_grids: values of all the scan coordinates
+        :type coord_grids: tuple(tuple(float))
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
     """
 
     run_finished = True
@@ -281,8 +325,11 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
 
 
 def _set_job(scn_typ):
-    """ Determine if scan is rigid or relaxed and set the appropriate
-        electronic structure job.
+    """ Set the appropriate job label defined in the elstruct package using the input scan type.
+
+        :param scn_typ: label for scan type ('relaxed' or 'rigid')
+        :type scn_typ: str
+        :rtype: str
     """
 
     assert scn_typ in ('relaxed', 'rigid'), (
@@ -298,7 +345,16 @@ def _set_job(scn_typ):
 
 
 def _write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
-    """ Save a hindered rotor trajectory
+    """ Read the geometries and energies of all optimized geometries
+        in the SCAN/CSCAN filesystem and collate them into am .xyz
+        trajectory file, which is thereafter written into a file inthe
+        filesystem.
+
+        :param ini_locs: locs for high level SCAN/CSCAN to save traj file
+        :type ini_locs: dict[]
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param mod_thy_info: thy info object with 
     """
 
     idxs_lst = [locs[-1] for locs in locs_lst]
