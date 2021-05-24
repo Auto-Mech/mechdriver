@@ -834,27 +834,6 @@ def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
         filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
 
 
-def _init_geom_is_running(cnf_run_fs):
-    running = False
-    for locs in cnf_run_fs[-1].existing():
-        geo_inf_obj = cnf_run_fs[-1].file.geometry_info.read(
-            locs)
-        status = geo_inf_obj.status
-        if status == autofile.schema.RunStatus.RUNNING:
-            start_time = geo_inf_obj.start_end_time
-            current_time = autofile.schema.utc_time()
-            if (current_time - start_time).total_seconds() < 500000:
-                path = cnf_run_fs[-1].path(locs)
-                ioprinter.info_message(
-                    'init_geom was started in the last ' +
-                    '{:3.4f} hours in {}.'.format(
-                        (current_time - start_time).total_seconds()/3600.,
-                        path))
-                running = True
-                break
-    return running
-
-
 def _saved_cnf_info(cnf_save_fs, mod_thy_info):
     """ get the locs, geos and enes for saved conformers
     """
@@ -902,6 +881,8 @@ def _saved_cnf_info(cnf_save_fs, mod_thy_info):
 
 
 def _init_geom_is_running(cnf_run_fs):
+    """ Check the RUN filesystem for currently running initial geometry submissions
+    """
     running = False
     job = elstruct.Job.OPTIMIZATION
     for locs in cnf_run_fs[-1].existing():
@@ -925,6 +906,10 @@ def _init_geom_is_running(cnf_run_fs):
 
 
 def _this_conformer_is_running(zma, cnf_run_fs):
+    """ Check the RUN filesystem for similar geometry
+        submissions that are currently running
+    """
+
     running = False
     job = elstruct.Job.OPTIMIZATION
     cnf_run_path = cnf_run_fs[0].path()

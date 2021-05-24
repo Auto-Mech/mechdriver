@@ -5,9 +5,9 @@
 import automol
 import autorun
 import ioformat
-from mechroutines.pf import runner as pfrunner
 from mechlib.amech_io import writer
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.pf import runner as pfrunner
 
 
 def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):

@@ -7,6 +7,7 @@ import copy
 
 import automol
 import mess_io
+from mechlib.amech_io import printer as ioprinter
 from mechroutines.pf.models import blocks
 from mechroutines.pf.models import build
 from mechroutines.pf.models.ene import set_reference_ene
@@ -16,7 +17,6 @@ from mechroutines.pf.models import tunnel
 from mechroutines.pf.models.inf import make_rxn_str
 from mechroutines.pf.models.typ import need_fake_wells
 from mechroutines.pf.models.typ import is_abstraction
-from mechlib.amech_io import printer as ioprinter
 
 
 BLOCK_MODULE = importlib.import_module('mechroutines.pf.models.blocks')
@@ -25,7 +25,7 @@ BLOCK_MODULE = importlib.import_module('mechroutines.pf.models.blocks')
 # Input string writer
 def make_messrate_str(pes_idx, rxn_lst,
                       pes_model, spc_model,
-                      spc_dct, thy_dct,
+                      spc_dct,
                       pes_model_dct, spc_model_dct,
                       label_dct,
                       mess_path, run_prefix, save_prefix):
@@ -52,7 +52,7 @@ def make_messrate_str(pes_idx, rxn_lst,
     rxn_chan_str, dats, _, _ = make_pes_mess_str(
         spc_dct, rxn_lst, pes_idx,
         run_prefix, save_prefix, label_dct,
-        pes_model_dct_i, spc_model_dct_i, spc_model, thy_dct)
+        pes_model_dct_i, spc_model_dct_i, spc_model)
 
     # Combine strings together
     mess_inp_str = mess_io.writer.messrates_inp_str(
@@ -124,7 +124,7 @@ def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
 def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
                       run_prefix, save_prefix, label_dct,
                       pes_model_dct_i, spc_model_dct_i,
-                      spc_model, thy_dct):
+                      spc_model):
     """ Write all the MESS input file strings for the reaction channels
     """
 
@@ -139,7 +139,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
     # Set the energy and model for the first reference species
     ioprinter.info_message('\nCalculating reference energy for PES')
     ref_ene = set_reference_ene(
-        rxn_lst, spc_dct, thy_dct,
+        rxn_lst, spc_dct,
         pes_model_dct_i, spc_model_dct_i,
         run_prefix, save_prefix, ref_idx=0)
 
@@ -313,7 +313,7 @@ def _make_channel_mess_strs(tsname, reacs, prods,
     ts_label = label_dct[tsname]
     rclass = spc_dct[tsname+'_0']['class']
     sts_str, ts_dat_dct = _make_ts_mess_str(
-        tsname, chnl_infs, chnl_enes, spc_model_dct_i, rclass,
+        chnl_infs, chnl_enes, spc_model_dct_i, rclass,
         ts_label, inner_reac_label, inner_prod_label)
     ts_str += sts_str
     full_dat_dct.update(ts_dat_dct)
@@ -328,7 +328,7 @@ def _make_spc_mess_str(inf_dct):
     return mess_writer(inf_dct)
 
 
-def _make_ts_mess_str(tsname, chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
+def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
                       ts_label, inner_reac_label, inner_prod_label):
     """ makes the main part of the MESS species block for a given species
     """

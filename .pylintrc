@@ -11,6 +11,7 @@ disable=
     deprecated-method,
     duplicate-code,
     no-member,
-    bare-except
+    bare-except,
+    too-many-lines
 [FORMAT]
     max-line-length=90

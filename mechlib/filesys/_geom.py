@@ -52,7 +52,7 @@ def _spherical_conformer(cnf_save_fs):
 
     return round_geom
 
-
+# MOVE TO AUTOMOL.GEOM
 def _roundify_geometry(geoms):
     """ Finds the smallest geometry (by volume) from a list of
         conformer geometries

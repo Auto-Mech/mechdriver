@@ -1,4 +1,6 @@
-""" eletronic structure routines modules
+""" ProcessDriver Routines for Parsing the save filesystem
+    and collating useful information in two a presentable
+    format
 """
 
 import os
@@ -17,7 +19,8 @@ from mechroutines.output import _util as util
 
 
 def run_tsk(tsk, spc_dct, spc_name,
-            thy_dct, proc_keyword_dct, spc_mod_dct_i,
+            thy_dct, proc_keyword_dct,
+            pes_mod_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix):
     """ run a proc tess task
     for generating a list of conformer or tau sampling geometries
@@ -40,15 +43,14 @@ def run_tsk(tsk, spc_dct, spc_name,
     # Heat of formation basis molecules and coefficients
     # is not conformer specific
     if 'coeffs' in tsk:
-        spc_mod_dct_i, pf_models, _, _ = set_pf_info(
-            model_dct, thy_dct, pf_model, pf_model)
         thy_info = spc_mod_dct_i['geo'][1]
         filelabel = 'coeffs'
-        filelabel += '_{}'.format(pf_models['ref_scheme'])
+        filelabel += '_{}'.format(pes_mod_dct_i['thermfit']['ref_scheme'])
         filelabel += '.csv'
         label = spc_name
         basis_dct, _ = basis.prepare_refs(
-            pf_models['ref_scheme'], spc_dct, [[spc_name, None]],
+            pes_mod_dct_i['thermfit']['ref_scheme'],
+            spc_dct, [[spc_name, None]],
             run_prefix, save_prefix)
         # Get the basis info for the spc of interest
         spc_basis, coeff_basis = basis_dct[spc_name]
@@ -70,8 +72,6 @@ def run_tsk(tsk, spc_dct, spc_name,
             thy_info = tinfo.from_dct(thy_dct.get(
                 proc_keyword_dct['geolvl']))
         else:
-            spc_mod_dct_i, pf_models, _, _ = set_pf_info(
-                model_dct, thy_dct, pf_model, pf_model)
             thy_info = spc_mod_dct_i['geo'][1]
 
             # Loop over conformers
@@ -81,8 +81,6 @@ def run_tsk(tsk, spc_dct, spc_name,
                 spc_dct_i, thy_dct)
             spc_mod_dct_i, pf_models = None, None
         else:
-            spc_mod_dct_i, pf_models, _, _ = set_pf_info(
-                model_dct, thy_dct, spc_model, spc_model)
             ret = util.conformer_list_from_models(
                 proc_keyword_dct, save_prefix, run_prefix,
                 spc_dct_i, thy_dct, spc_mod_dct_i, pf_models)
@@ -106,8 +104,8 @@ def run_tsk(tsk, spc_dct, spc_name,
                         spc_dct_i, spc_mod_dct_i,
                         run_prefix, save_prefix, saddle=False)
                     ret = vib.full_vib_analysis(
-                        spc_dct_i, pf_filesystems, pf_models, spc_mod_dct_i,
-                        run_prefix, saddle=False)
+                        spc_dct_i, pf_filesystems, spc_mod_dct_i,
+                        run_prefix, zrxn=None)
                     freqs, _, tors_zpe, sfactor, torsfreqs, all_freqs = ret
                     csv_data['tfreq'][label] = torsfreqs
                     csv_data['allfreq'][label] = all_freqs
@@ -118,7 +116,7 @@ def run_tsk(tsk, spc_dct, spc_name,
                         es_model, thy_dct)
                     try:
                         freqs, _, zpe = vib.read_locs_harmonic_freqs(
-                            cnf_fs, locs_path, locs, saddle=False)
+                            cnf_fs, locs, run_prefix, zrxn=None)
                     except:
                         freqs = []
                         zpe = 0
@@ -222,14 +220,13 @@ def run_tsk(tsk, spc_dct, spc_name,
                     spc_dct_i, spc_mod_dct_i,
                     run_prefix, save_prefix, saddle=False)
                 ene_abs = ene.read_energy(
-                    spc_dct_i, pf_filesystems, pf_models, spc_mod_dct_i,
+                    spc_dct_i, pf_filesystems, spc_mod_dct_i,
                     run_prefix, conf=(locs, locs_path, cnf_fs),
                     read_ene=True, read_zpe=True, saddle=False)
-                ts_geom = None
                 hf0k, _, chn_basis_ene_dct, hbasis = basis.enthalpy_calculation(
-                    spc_dct, spc_name, ts_geom, ene_abs,
-                    chn_basis_ene_dct, spc_mod_dct_i, pf_models,
-                    run_prefix, save_prefix, pforktp='pf', saddle=False)
+                    spc_dct, spc_name, ene_abs,
+                    chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
+                    run_prefix, save_prefix, pforktp='pf', zrxn=None)
                 spc_basis, coeff_basis = hbasis[spc_name]
                 coeff_array = []
                 for spc_i in spc_basis:

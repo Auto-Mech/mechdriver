@@ -104,14 +104,13 @@ def read_harmonic_freqs(pf_filesystems, run_prefix, zrxn=None):
         energy conformer
     """
     # Get the harmonic filesys information
-    [cnf_fs, harm_path, min_cnf_locs, _, _] = pf_filesystems['harm']
+    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
     freqs, imag, zpe = read_locs_harmonic_freqs(
-        cnf_fs, harm_path, min_cnf_locs, run_prefix, zrxn=zrxn)
+        cnf_fs, min_cnf_locs, run_prefix, zrxn=zrxn)
     return freqs, imag, zpe
 
 
-def read_locs_harmonic_freqs(
-        cnf_fs, harm_path, cnf_locs, run_prefix, zrxn=None):
+def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
     """ Read the harmonic frequencies for a specific conformer
     """
 
@@ -185,10 +184,10 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
 
 
 def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
-                         prefix, zrxn=None, conf=None):
+                         run_pfx, zrxn=None, conf=None):
     """ Get frequencies from one version of ProjRot
     """
-    run_prefix = pf_filesystems['run_prefix']
+    # run_prefix = pf_filesystems['run_prefix']
 
     # Build the filesystems
     [harm_cnf_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
@@ -204,8 +203,8 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     ioprinter.reading('Hessian', harm_cnf_fs[-1].path(harm_min_locs))
 
     fml_str = automol.geom.formula_string(harm_geo)
-    vib_path = job_path(
-        run_prefix, 'PROJROT', 'PROJFREQ', fml_str, print_path=True)
+    vib_path = job_path(run_pfx, 'PROJROT', 'FREQ', fml_str, print_path=True)
+    tors_path = job_path(run_pfx, 'MESS', 'TORS', fml_str, print_path=True)
 
     # Read info for the hindered rotors and calculate the ZPVE
     ioprinter.info_message(' - Calculating the torsional ZPVES using MESS...')
@@ -258,11 +257,11 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     if diff_tors_zpe <= diff_tors_zpe_2:
         freqs = rth_freqs1
         imag_freqs = rt_imag1
-        proj_zpe = harm_zpe_notors_1
+        # proj_zpe = harm_zpe_notors_1
     else:
         freqs = rth_freqs2
         imag_freqs = rt_imag2
-        proj_zpe = harm_zpe_notors_2
+        # proj_zpe = harm_zpe_notors_2
 
     # Check imaginary frequencies and set freqs
     if zrxn is not None:
@@ -277,14 +276,10 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     # mess_script_str = autorun.SCRIPT_DCT['messpf']
     # projrot_script_str = autorun.SCRIPT_DCT['projrot']
 
-    # proj_freqs, proj_imags, proj_zpe, harm_freqs, tors_freqs = autorun.projected_frequencies(
-    #     mess_script_str, projrot_script_str, vib_path,
+    # proj_freqs, proj_imag_freqs, proj_zpe = autorun.projected_frequencies(
+    #     mess_script_str, projrot_script_str, RUN_DIR,
     #     mess_hr_str, projrot_hr_str,
-    #     tors_geo, harm_geo, hess)
-    # if saddle:
-    #     proj_imag = proj_imags[0]
-    # else:
-    #     proj_imag = []
+    #     mess_geo, projrot_geo, hess)
 
     # NEW scale factor functions
     # scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
@@ -314,17 +309,6 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         else:
             idx_remove.append(tors_freqs.index(freq))
 
-    # log_rt_freq = [numpy.log(freq) for freq in rt_freqs1]
-    # log_rt_freq = sum(log_rt_freq)
-    # log_tors_freq = [numpy.log(freq) for freq in tors_freqs]
-    # log_tors_freq = sum(log_tors_freq)
-    # unproj_prod = numpy.prod(rt_freqs1)
-    # proj_prod = numpy.prod(freqs) * numpy.prod(tors_freqs)
-    # print('proj_prod test:', unproj_prod, proj_prod)
-    # ioprinter.info_message(
-    # 'log_freq_tests:', log_rt_freq, log_freq, log_tors_freq)
-    # scale_factor = unproj_prod / proj_prod
-
     # generate the scaling factor
     factor = numpy.exp(log_rt_freq - log_freq - log_tors_freq)
     ioprinter.info_message('freq test:', freqs, tors_freqs, rt_freqs1)
@@ -347,8 +331,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
             '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
             'kcal/mol between harmonic and hindered torsional ZPVEs')
 
-    return (proj_freqs, proj_imag, proj_zpe,
-            scale_factor, tors_freqs, harm_freqs)
+    return freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1
 
 
 def scale_frequencies(freqs, tors_zpe,

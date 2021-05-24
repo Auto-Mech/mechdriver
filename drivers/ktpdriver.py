@@ -63,7 +63,7 @@ def run(pes_rlst,
             mess_inp_str, dats = ktproutines.rates.make_messrate_str(
                 pes_idx, rxn_lst,
                 pes_mod, spc_mod,
-                spc_dct, thy_dct,
+                spc_dct,
                 pes_mod_dct, spc_mod_dct,
                 label_dct,
                 mess_path, run_prefix, save_prefix)

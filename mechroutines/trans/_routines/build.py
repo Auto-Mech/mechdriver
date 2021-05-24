@@ -96,7 +96,7 @@ def collate_properties(tgt_queue,
 
     return transport_str
 
-
+# MOVE TO ETRANS automol #
 def _combine_epsilon(tb_eps, bb_eps):
     """ Perform a combining rule for two epsilons.
         tt: target-target
@@ -123,7 +123,7 @@ def _combine_sigma(tb_sig, bb_sig):
 
     return tt_sig
 
-
+# chemkin_io move #
 def _shape_idx(geom):
     """ Determine the shape idx
     """
@@ -157,10 +157,6 @@ def _etrans_fs(spc_dct, tgt_name, bath_name, thy_info, save_prefix):
     # Build the conformer filesystem objects
     _, thy_save_path = filesys.build.spc_thy_fs_from_root(
         save_prefix, tgt_info, mod_tgt_thy_info)
-    # cnf_save_fs = autofile.fs.conformer(thy_save_path)
-    # cnf_info = filesys.mincnf.min_energy_conformer_locators(
-    #     cnf_save_fs, mod_tgt_thy_info)
-    # min_cnf_locs, min_cnf_path = cnf_info
 
     cnf_save_fs = autofile.fs.conformer(thy_save_path)
     cnf_rng_info = filesys.mincnf.min_energy_conformer_locators(

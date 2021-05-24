@@ -11,6 +11,8 @@ import autofile
 import autorun
 from phydat import phycon
 from mechanalyzer.inf import spc as sinfo
+from mechlib import filesys
+from mechlib.amech_io import printer as ioprinter
 from mechroutines.pf.models import ene
 from mechroutines.pf.models import typ
 from mechroutines.pf.models import etrans
@@ -21,8 +23,6 @@ from mechroutines.pf.models import _vib as vib
 from mechroutines.pf.models import _flux as flux
 from mechroutines.pf.models import _util as util
 from mechroutines.pf.thermo import basis
-from mechlib import filesys
-from mechlib.amech_io import printer as ioprinter
 
 
 # General readers
@@ -549,9 +549,6 @@ def tau_data(spc_dct_i,
     """ Read the filesystem to get information for TAU
     """
 
-    frm_bnd_keys = ()
-    brk_bnd_keys = ()
-
     # Set up all the filesystem objects using models and levels
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i, run_prefix, save_prefix, saddle)
@@ -579,7 +576,7 @@ def tau_data(spc_dct_i,
     vib_model = spc_mod_dct_i['vib']['mod']
     freqs = ()
     _, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
-        pf_filesystems, hr_str, prot_str, run_prefix, saddle=False)
+        pf_filesystems, hr_str, prot_str, run_prefix, zrxn=None)
     zpe_chnlvl = proj_zpve * phycon.EH2KCAL
 
     # Set reference energy to harmonic zpve

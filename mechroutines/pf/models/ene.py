@@ -8,10 +8,10 @@ from phydat import phycon
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
+from mechlib.amech_io import printer as ioprinter
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf.models import typ
 from mechroutines.pf.models import _vib as vib
-from mechlib.amech_io import printer as ioprinter
 
 
 # Functions to hand reading and formatting energies of single species

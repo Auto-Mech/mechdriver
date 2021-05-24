@@ -10,10 +10,10 @@ import random
 import automol.inchi
 import automol.geom
 from phydat import phycon
+from mechanalyzer.inf import rxn as rinfo
 from mechlib import filesys
 from mechlib.filesys import reaction_fs
 from mechlib.amech_io import printer as ioprinter
-from mechanalyzer.inf import rxn as rinfo
 from mechroutines.pf.models.ene import read_energy
 from mechroutines.pf.thermo import heatform
 
@@ -117,6 +117,7 @@ def prepare_refs(
             run_prefix, save_prefix,
             repeats=repeats, parallel=parallel,
             zrxn=zrxn)
+
     return basis_dct, unique_refs_dct
 
 
