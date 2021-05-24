@@ -57,7 +57,7 @@ def execute_job(job, script_str, run_fs,
                 overwrite=False,
                 irc_direction=None,
                 **kwargs):
-    """ run and read an elstruct job
+    """ Both ruBoth runs and reads electrouct jobs
     """
 
     run_job(job, script_str, run_fs,
@@ -121,7 +121,7 @@ def run_job(job, script_str, run_fs,
                     print(" - Skipping...")
 
     if do_run:
-        # create the run directory
+        # Create the run directory
         status = autofile.schema.RunStatus.RUNNING
         prog = thy_info[0]
         method = thy_info[1]
@@ -176,13 +176,17 @@ def run_job(job, script_str, run_fs,
 
 
 def read_job(job, run_fs):
-    """ read from an elstruct job by name
+    """ Reads the output file for an electronic structure job
+        from the run filesys and parses the string to
+        assess for successful job completion.
+
+        :param job: label for job formatted to elstruct package definitions
+        :type job: str
+        :param run_fs: filesystem object for the run filesys where job is run
+        :type run_fs: autofile.fs.run object
+        :rtype: (bool, (autofile.info_object object???, str, str))
     """
 
-    # run_path = run_fs[-1].path([job])
-
-    # print(" - Reading from {} job at {}".format(job, run_path))
-    # above print just doubling the printing...
     if not run_fs[-1].file.output.exists([job]):
         print(" - No output file found. Skipping...")
         success = False
@@ -207,8 +211,20 @@ def read_job(job, run_fs):
 
 
 def is_successful_output(out_str, job, prog):
-    """ is this a successful output string?
+    """ Parses the output string of the electronic structure job
+        to determine if the program has exited normally, contains
+        the approprate success messages for the job and, and 
+        precludes job error messages.
+
+        :param out_str: string for job output file
+        :type out_str: str
+        :param job: label for job formatted to elstruct package definitions
+        :type job: str
+        :param prog: name of the electronic structure program to run
+        :type prog: str
+        :rtype: bool
     """
+
     assert job in JOB_ERROR_DCT
     assert job in JOB_SUCCESS_DCT
     error = JOB_ERROR_DCT[job]
@@ -222,27 +238,3 @@ def is_successful_output(out_str, job, prog):
             ret = True
 
     return ret
-
-
-def need_job(pathlst, overwrite):
-    """ Determine if you should run elstruct job
-
-        pathlst =  ((file1.exists, file1.name), ...)
-
-    """
-
-    if not all(fexists for fexists, _ in pathlst):
-        for fexists, fname in pathlst:
-            if not fexists:
-                ioprinter.info_message(
-                    'No {} found in save filesys.'.format(fname))
-        ioprinter.info_message('Running Job...')
-        _run = True
-    elif overwrite:
-        ioprinter.info_message(
-            'User specified to overwrite {} with new run...')
-        _run = True
-    else:
-        _run = False
-
-    return _run

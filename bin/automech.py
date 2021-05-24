@@ -1,6 +1,8 @@
-"""
-   Main Driver to parse and sort the mechanism input files and
-   launch the desired MechDriver drivers
+""" Central Execution script to launch a MechDriver process which will
+    parse all of the user-supplied input files in a specified directory, then
+    launches all of the requested electronic structure, transport,
+    thermochemistry and kinetics calculations via their associated
+    sub-drivers.
 """
 
 import sys

@@ -27,7 +27,7 @@ def run(spc_rlst,
         pes_mod_dct, spc_mod_dct,
         spc_dct,
         run_prefix, save_prefix):
-    """ main driver for thermo run
+    """ Run ThermoDriver to perform all of the tasks requested by the user.
     """
 
     # Print Header fo

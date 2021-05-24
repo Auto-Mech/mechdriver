@@ -1,4 +1,4 @@
-""" electronic structure drivers
+""" Central driver for all electronic structure tasks.
 """
 
 from mechroutines.es import run_tsk
@@ -10,7 +10,7 @@ def run(pes_rlst, spc_rlst,
         es_tsk_lst,
         spc_dct, glob_dct, thy_dct,
         run_prefix, save_prefix):
-    """ Central driver for all electronic structure tasks.
+    """ Run all of the electronic structure tasks requested by user.
 
         :param pes_rlst: lst of PES-SUBPES-CHNLS ro tun
         :type pes_rlst: [dict[species, reacs, prods, model]]

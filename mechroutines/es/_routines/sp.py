@@ -1,4 +1,8 @@
-""" es_runners for single point calculations
+""" Routines for taking the geometry for a species or transition state
+    conformer and calculating various molecular properties via some specified
+    electronic structure method.A
+
+    * Maybe put long description from run_energy here
 """
 
 import automol
@@ -18,7 +22,15 @@ def run_energy(zma, geo, spc_info, thy_info,
                geo_save_fs, geo_run_path, geo_save_path, locs,
                script_str, overwrite,
                retryfail=True, highspin=False, **kwargs):
-    """ Find the energy for the given structure
+    """ Assesses if an electronic energy exists in the CONFS/SP/THY layer
+        of the save filesys for a species at the specified level of theory.
+        If an energy does not exist, or if a user requests overwrite, 
+        the appropriate electronic struture calculation is set-up, launched,
+        and then parsed within the run filesys, then that the energy and
+        job input is written into the save filesys.
+
+        :param zma: Z-Matrix for species/TS conformer
+        :type zma: automol Z-Matrix data structure
     """
 
     # geo_save_fs and locs unneeded for this
