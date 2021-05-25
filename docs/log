@@ -1,0 +1,204 @@
+Running Sphinx v4.0.1
+loading pickled environment... done
+building [mo]: targets for 0 po files that are out of date
+building [html]: targets for 1 source files that are out of date
+updating environment: 0 added, 2 changed, 0 removed
+reading sources... [ 50%] rst/input/index
+reading sources... [100%] rst/input/run
+
+rst/input/run.rst:22: WARNING: Unexpected section title.
+
+Input Block
+-----------
+rst/input/run.rst:70: WARNING: Unexpected section title.
+
+Chemistry Blocks
+----------------
+rst/input/run.rst:82: WARNING: Unexpected section title.
+
+Potential Energy Surface Block
+------------------------------
+rst/input/run.rst:97: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/run.rst:105: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/run.rst:112: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/run.rst:115: WARNING: Title underline too short.
+
+Species Block
+------------
+rst/input/run.rst:115: WARNING: Unexpected section title.
+
+Species Block
+------------
+rst/input/run.rst:128: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/run.rst:138: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/run.rst:142: WARNING: Unexpected section title.
+
+Task Block
+----------
+rst/input/run.rst:148: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/run.rst:150: WARNING: Unexpected indentation.
+rst/input/run.rst:151: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/run.rst:161: WARNING: Unexpected section title.
+
+Electronic Structure Driver Task Block
+---------------------------------------
+rst/input/run.rst:169: WARNING: Unexpected section title.
+
+kTPDriver Task Block
+--------------------
+rst/input/run.rst:175: WARNING: Unexpected section title.
+
+Model.dat
+=========
+rst/input/run.rst:184: WARNING: Unexpected indentation.
+rst/input/run.rst:185: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/run.rst:221: WARNING: Unexpected indentation.
+rst/input/run.rst:226: WARNING: Unexpected section title.
+
+Theory.dat
+==========
+rst/input/run.rst:236: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/run.rst:244: WARNING: Unexpected section title.
+
+Mechanism.dat
+=============
+rst/input/run.rst:270: WARNING: Unexpected section title.
+
+species.csv and species.dat
+===========================
+rst/input/run.rst:304: WARNING: Unexpected section title.
+
+Species.dat
+-----------
+rst/input/run.rst:313: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/run.rst:323: WARNING: Unexpected section title.
+
+geom.xyz
+--------
+rst/input/run.rst:340: WARNING: Unexpected section title.
+
+files.aspace
+------------
+rst/input/run.rst:354: WARNING: Unexpected section title.
+
+global section
+--------------
+rst/input/run.rst:359: WARNING: Unexpected section title or transition.
+
+********************
+rst/input/run.rst:361: WARNING: Unexpected section title.
+
+Full Minimal Example
+********************
+rst/input/run.rst:364: WARNING: Unexpected section title.
+
+Input
+-----
+rst/input/run.rst:502: WARNING: Unexpected section title.
+
+Output
+------
+rst/input/thy.rst:2: WARNING: Unexpected section title.
+
+Theory.dat
+==========
+rst/input/thy.rst:12: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/models.rst:9: WARNING: Unexpected indentation.
+rst/input/models.rst:10: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/models.rst:46: WARNING: Unexpected indentation.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/index.rst:40: WARNING: Title underline too short.
+
+species.dat
+==========
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/index.rst:40: WARNING: Title underline too short.
+
+species.dat
+==========
+rst/input/spc.rst:34: WARNING: Unexpected section title.
+
+Species.dat
+-----------
+rst/input/spc.rst:43: WARNING: Definition list ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/index.rst:46: WARNING: Title underline too short.
+
+mechanism.dat
+==========
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/index.rst:46: WARNING: Title underline too short.
+
+mechanism.dat
+==========
+rst/input/example.rst:2: WARNING: Unexpected section title or transition.
+
+********************
+rst/input/example.rst:4: WARNING: Unexpected section title.
+
+Full Minimal Example
+********************
+rst/input/example.rst:7: WARNING: Unexpected section title.
+
+Input
+=====
+rst/input/example.rst:72: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/example.rst:74: WARNING: Unexpected indentation.
+rst/input/example.rst:77: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/example.rst:79: WARNING: Unexpected indentation.
+rst/input/example.rst:82: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/example.rst:84: WARNING: Unexpected indentation.
+rst/input/example.rst:89: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/example.rst:91: WARNING: Unexpected indentation.
+rst/input/example.rst:93: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/example.rst:94: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/example.rst:99: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/example.rst:101: WARNING: Unexpected indentation.
+rst/input/example.rst:102: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/example.rst:104: WARNING: Unexpected indentation.
+rst/input/example.rst:106: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/example.rst:108: WARNING: Unexpected indentation.
+rst/input/example.rst:111: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/example.rst:113: WARNING: Unexpected indentation.
+rst/input/example.rst:115: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/example.rst:117: WARNING: Unexpected indentation.
+rst/input/example.rst:120: WARNING: Block quote ends without a blank line; unexpected unindent.
+rst/input/example.rst:121: WARNING: Definition list ends without a blank line; unexpected unindent.
+rst/input/example.rst:145: WARNING: Unexpected section title.
+
+Output
+======
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:97: WARNING: Definition list ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:105: WARNING: Definition list ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:112: WARNING: Definition list ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:115: WARNING: Title underline too short.
+
+Species Block
+------------
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:115: WARNING: Title underline too short.
+
+Species Block
+------------
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:128: WARNING: Definition list ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:138: WARNING: Definition list ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:148: WARNING: Block quote ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:150: WARNING: Unexpected indentation.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:151: WARNING: Definition list ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:184: WARNING: Unexpected indentation.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:185: WARNING: Block quote ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:221: WARNING: Unexpected indentation.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:236: WARNING: Definition list ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:313: WARNING: Definition list ends without a blank line; unexpected unindent.
+/home/kmoore/argonne/repos/mechdriver/docs/rst/input/run.rst:360: WARNING: Title level inconsistent:
+
+********************
+Full Minimal Example
+********************
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... /home/kmoore/argonne/repos/mechdriver/docs/rst/input/aux.rst: WARNING: document isn't included in any toctree
+done
+preparing documents... done
+writing output... [ 33%] index
+writing output... [ 66%] rst/input/index
+writing output... [100%] rst/input/run
+
+Interrupted!
+Makefile:20: recipe for target 'html' failed
+make: *** [html] Interrupt

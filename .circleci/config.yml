@@ -1,6 +1,6 @@
 version: 2
 jobs:
-    build-debian:
+    test-mechdriver:
         docker:
             - image: continuumio/miniconda3
         steps:
@@ -12,41 +12,18 @@ jobs:
                     apt-get install --yes libxrender-dev build-essential
                     conda env create -f environment.yml
             - run:
-                name: Build/install moldriver
+                name: Build/install mechdriver
                 command: |
-                    source activate moldriver-env
+                    source activate mechdriver-env
                     python setup.py install
-            # - run:
-            #    name: Test moldriver
-            #    command: |
-            #        source activate moldriver-env
-            #        pytest -v --cov=moldriver --pyargs moldriver
             - run:
-                name: Pylint bin
+                name: Test mechdriver pep8
                 command: |
-                    source activate moldriver-env
-                    flake8 --exit-zero bin
-                    pylint --rcfile=../.pylintrc bin
-            - run:
-                name: Pylint drivers
-                command: |
-                    source activate moldriver-env
-                    flake8 --exit-zero drivers
-                    pylint --rcfile=../.pylintrc drivers
-            - run:
-                name: Pylint routines
-                command: |
-                    source activate moldriver-env
-                    flake8 --exit-zero routines
-                    pylint --rcfile=../.pylintrc routines
-            - run:
-                name: Pylint lib
-                command: |
-                    source activate moldriver-env
-                    flake8 --exit-zero lib
-                    pylint --rcfile=../.pylintrc lib
+                    source activate mechdriver-env
+                    flake8 --exit-zero ../mechdriver
+                    pylint --rcfile=../../.pylintrc mechdriver
 workflows:
     version: 2
     build-all:
         jobs:
-            - build-debian
+            - test-mechdriver
