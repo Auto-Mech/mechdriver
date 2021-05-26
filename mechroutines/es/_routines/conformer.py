@@ -12,29 +12,28 @@ from phydat import bnd
 from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.es import runner as es_runner
 from mechroutines.es._routines import _util as util
 from mechroutines.es._routines._geom import remove_imag
-from mechroutines.es import runner as es_runner
-from mechroutines.es.runner import qchem_params
 
 
 # Initial conformer
 def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
                       ini_cnf_save_fs, cnf_run_fs, cnf_save_fs,
-                      instab_save_fs, es_keyword_dct):
+                      es_keyword_dct):
     """ Assess if a conformer layer with a geometry exists in the save
-        filesys for the given species. 
-        
+        filesys for the given species.
+
         If not, attempt to generate some guess structure using InChI strings
         or input geom from user.
-        
+
         and optimize
         it with input method. Then assess if the optimized structure
-        corresponds to a genuine minimum on the PES via a frequency calculation.
-        
+        corresponds to genuine minimum on the PES via a frequency calculation.
+
         If a minimum is found, save the conformer geometry, zmatrix, energy,
         and torsions to the save filesys.
-    
+
         Also, the function assessess if the species is unstable and will
         save the appropriate information.
     """
@@ -80,14 +79,15 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
             ioprinter.debug_message('geo str\n', automol.geom.string(geo_init))
 
             zma_init = automol.geom.zmatrix(geo_init)
+                
+            rid = autofile.schema.generate_new_ring_id()
+            cid = autofile.schema.generate_new_conformer_id()
 
             # Determine if there is an instability, if so return prods
             instab_zmas = automol.reac.instability_product_zmas(zma_init)
             if not instab_zmas:
 
                 # Build a cid and a run fs
-                rid = autofile.schema.generate_new_ring_id()
-                cid = autofile.schema.generate_new_conformer_id()
                 cnf_run_fs[-1].create((rid, cid))
                 run_fs = autofile.fs.run(cnf_run_fs[-1].path((rid, cid)))
 
@@ -95,7 +95,6 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
                     geo_found = _optimize_molecule(
                         spc_info, zma_init,
                         method_dct,
-                        instab_save_fs,
                         cnf_save_fs, (rid, cid),
                         run_fs,
                         overwrite,
@@ -112,10 +111,8 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
                 ioprinter.info_message(
                     'Found functional groups that cause instabilities')
                 filesys.save.instability(
-                    zma_init, instab_zmas,
-                    instab_save_fs, cnf_save_fs,
-                    zma_locs=(0,),
-                    save_cnf=True)
+                    zma_init, instab_zmas, cnf_save_fs,
+                    rng_locs=rid, tors_locs=cid, zma_locs=(0,))
                 geo_found = True
         else:
             geo_found = False
@@ -182,7 +179,7 @@ def _optimize_atom(spc_info, zma_init,
 
     thy_info = tinfo.from_dct(method_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    script_str, kwargs = qchem_params(
+    script_str, kwargs = es_runner.qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
 
     # Call the electronic structure optimizer
@@ -208,7 +205,6 @@ def _optimize_atom(spc_info, zma_init,
 
 def _optimize_molecule(spc_info, zma_init,
                        method_dct,
-                       instab_save_fs,
                        cnf_save_fs, locs,
                        run_fs,
                        overwrite,
@@ -217,7 +213,7 @@ def _optimize_molecule(spc_info, zma_init,
     """
     thy_info = tinfo.from_dct(method_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    script_str, kwargs = qchem_params(
+    script_str, kwargs = es_runner.qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
 
     # Call the electronic structure optimizer
@@ -263,11 +259,8 @@ def _optimize_molecule(spc_info, zma_init,
             else:
                 ioprinter.info_message('Saving disconnected species...')
                 filesys.save.instability(
-                    zma_init, zma,
-                    instab_save_fs, cnf_save_fs,
-                    zma_locs=(0,),
-                    save_cnf=True
-                )
+                    zma_init, zma, cnf_save_fs,
+                    rng_locs=(locs[0],), tors_locs=(locs[1],), zma_locs=(0,))
         else:
             ioprinter.warning_message('No geom found...', newline=1)
             conf_found = False
@@ -275,11 +268,8 @@ def _optimize_molecule(spc_info, zma_init,
         ioprinter.info_message('Saving disconnected species...')
         conf_found = False
         filesys.save.instability(
-            zma_init, zma,
-            instab_save_fs, cnf_save_fs,
-            zma_locs=(0,),
-            save_cnf=True
-        )
+            zma_init, zma, cnf_save_fs,
+            rng_locs=(locs[0],), tors_locs=(locs[1],), zma_locs=(0,))
 
     return conf_found
 
@@ -671,7 +661,9 @@ def ring_conformer_sampling(
         run_fs = autofile.fs.run(cnf_run_path)
 
         ioprinter.info_message("Run {}/{}".format(samp_idx, tot_samp))
-        tors_names = tuple(samp_range_dct.keys())  # Defined in the loop above
+        tors_names = tuple(set(names
+                               for tors_dct in ring_tors_dct.values()
+                               for names in tors_dct.keys()))
         if two_stage and tors_names:
             frozen_coords_lst = ((), tors_names)
             success, ret = es_runner.multi_stage_optimization(

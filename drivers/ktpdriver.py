@@ -9,7 +9,7 @@ from mechlib.amech_io import parser
 from mechlib.amech_io import job_path
 from mechlib.amech_io import output_path
 from mechlib.amech_io import printer as ioprinter
-from mechlib.reaction import split_unstable_rxn
+from mechlib.reaction import split_unstable_pes
 
 
 def run(pes_rlst,
@@ -60,6 +60,7 @@ def run(pes_rlst,
 
             ioprinter.messpf('write_header')
 
+            # Doesn't give full string
             mess_inp_str, dats = ktproutines.rates.make_messrate_str(
                 pes_idx, rxn_lst,
                 pes_mod, spc_mod,
@@ -148,7 +149,7 @@ def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
 
     # Set reaction list with unstable species broken apart
     ioprinter.message('Identifying stability of all species...', newline=1)
-    chkd_rxn_lst = split_unstable_rxn(
+    chkd_rxn_lst = split_unstable_pes(
         rxn_lst, spc_dct, spc_mod_dct_i, save_prefix)
 
     # Build the MESS label idx dictionary for the PES

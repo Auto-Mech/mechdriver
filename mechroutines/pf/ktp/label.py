@@ -10,7 +10,7 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):
     """  Loop over all of the reaction channels of the PES to build a
          dictionary that systematically maps the mechanism names of all
          species and transition states to formatted labels used to designate
-         each as a well, bimol, or barrier component in a MESS input file. 
+         each as a well, bimol, or barrier component in a MESS input file.
     """
 
     pes_label_dct = {}
@@ -23,7 +23,7 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):
         chnl_idx, (reacs, prods) = rxn
         tsname = 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
         sub_tsname = '{}_{:g}'.format(tsname, 0)
-        rclass = spc_dct[sub_tsname]['zrxn'].class_
+        rclass = spc_dct[sub_tsname]['class']
 
         # Build labels
         pes_label_dct.update(

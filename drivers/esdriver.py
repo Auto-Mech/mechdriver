@@ -30,27 +30,22 @@ def run(pes_rlst, spc_rlst,
         :type: save_prefix: str
     """
 
-    # --------------------------------------------- #
-    # PREPARE INFORMATION TO PASS TO ESDRIVER TASKS #
-    # --------------------------------------------- #
-
-    # Set the appropriate run lst; default to PES if any
-    if pes_rlst:
-        run_rlst, run_typ = pes_rlst, 'pes'
-    else:
-        run_rlst, run_typ = spc_rlst, 'spc'
-
     # -------------------------------- #
     # RUN THE REQUESTED ESDRIVER TASKS #
     # -------------------------------- #
 
-    for (pes_form, pes_idx, subpes_idx), run_lst in run_rlst.items():
+    # Set the appropriate run lst; default to PES if any
+    # Runs through PESs, then SPC
+    run_rlst = parser.rlst.combine(pes_rlst, spc_rlst)
+
+    for (fml, pes_idx, subpes_idx), run_lst in run_rlst.items():
 
         # Print what is being run PESs that are being run
-        ioprinter.runlst((pes_form, pes_idx, subpes_idx), run_lst)
+        ioprinter.runlst((fml, pes_idx, subpes_idx), run_lst)
 
         # Build a TS dictionary and add it to the spc dct if needed
-        if any(tsk_lst[0] == 'ts' for tsk_lst in es_tsk_lst):
+        if (fml != 'SPC' and
+           any(tsk_lst[0] in ('ts', 'all') for tsk_lst in es_tsk_lst)):
             ts_dct, ts_queue = parser.spc.ts_dct_from_estsks(
                 pes_idx, es_tsk_lst, run_lst,
                 thy_dct, spc_dct,
@@ -68,9 +63,9 @@ def run(pes_rlst, spc_rlst,
 
             # Build the queue of species based on user request
             if obj == 'all':
-                obj_queue = parser.rlst.spc_queue(run_typ, run_lst) + ts_queue
+                obj_queue = parser.rlst.spc_queue(run_lst, fml) + ts_queue
             if obj == 'spc':
-                obj_queue = parser.rlst.spc_queue(run_typ, run_lst)
+                obj_queue = parser.rlst.spc_queue(run_lst, fml)
             elif obj == 'ts':
                 obj_queue = ts_queue
             elif obj == 'vdw':

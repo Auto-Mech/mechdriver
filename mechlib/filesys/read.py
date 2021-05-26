@@ -7,6 +7,7 @@ from phydat import phycon
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechlib.filesys._build import build_fs
+from mechlib.filesys.mincnf import min_energy_conformer_locators
 
 
 def potential(names, grid_vals, cnf_save_path,
@@ -73,6 +74,52 @@ def potential(names, grid_vals, cnf_save_path,
 
 
 # Single data point readers
+def geometry(cnf_save_fs, mod_thy_info, conf='sphere'):
+    """ get the geometry
+    """
+
+    assert conf in ('minimum', 'sphere')
+
+    # Read the file system
+    if conf == 'minimum':
+        geom = _min_energy_conformer(cnf_save_fs, mod_thy_info)
+    elif conf == 'sphere':
+        geom = _spherical_conformer(cnf_save_fs)
+
+    return geom
+
+
+def _min_energy_conformer(cnf_save_fs, mod_thy_info):
+    """ Reads the minimum-energy conformer from the save FileSystem
+    """
+
+    ini_loc_info = min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
+    locs, path = ini_loc_info
+    if path:
+        min_conf = cnf_save_fs[-1].file.geometry.read(locs)
+    else:
+        min_conf = None
+
+    return min_conf
+
+
+def _spherical_conformer(cnf_save_fs):
+    """ Reads the conformer from the Save FileSystem that is the most
+        spherical.
+    """
+
+    cnf_locs_lst = cnf_save_fs[-1].existing()
+    if cnf_locs_lst:
+        cnf_geoms = [cnf_save_fs[-1].file.geometry.read(locs)
+                     for locs in cnf_locs_lst]
+        round_geom = automol.geom.minimum_volume_geometry(cnf_geoms)
+    else:
+        round_geom = None
+
+    return round_geom
+
+
 def energy(filesys, locs, mod_tors_ene_info):
     """ Read the energy from an SP filesystem that is located in some
         root 'filesys object'
@@ -98,11 +145,18 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
 
     spc_info = sinfo.from_dct(spc_dct[spc_name])
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    _, zma_save_fs = build_fs(
-        '', save_prefix, 'ZMATRIX',
+    
+    _, cnf_save_fs = build_fs(
+        '', save_prefix, 'CONFORMER',
         spc_locs=spc_info,
-        thy_locs=mod_thy_info[1:],
-        instab_locs=())
+        thy_locs=mod_thy_info[1:])
+    
+    # Check if any locs exist first?
+    ini_loc_info = min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
+    _, min_cnf_path = ini_loc_info
+    
+    zma_save_fs = autofile.fs.zmatrix(min_cnf_path)
 
     # Check if the instability files exist
     if zma_save_fs[-1].file.reaction.exists(zma_locs):
@@ -115,3 +169,17 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
         path = None
 
     return _instab, path
+
+
+def energy_trans(etrans_save_fs, etrans_locs):
+    """ Read out the the enery transfer parameters in the filesys
+    """
+
+    nsamp = etrans_save_fs[-1].file.read(etrans_locs)
+    epsilon = etrans_save_fs[-1].file.read.epsilon(etrans_locs)
+    sigma = etrans_save_fs[-1].file.read.sigma(etrans_locs)
+
+    min_geo_traj = etrans_save_fs[-1].file.read.min_geos(etrans_locs)
+    min_geos = automol.geom.from_xyz_trajectory_string(min_geo_traj)
+
+    return nsamp, epsilon, sigma, min_geos

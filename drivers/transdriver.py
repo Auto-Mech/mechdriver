@@ -25,7 +25,7 @@ def run(spc_dct,
     run_prefix = run_inp_dct['run_prefix']
 
     # Build a list of the species to calculate thermochem for loops below
-    spc_queue = parser.species.build_queue(rxn_lst)
+    spc_queue = parser.species.build_queue(spc_rlst, 'SPC')
 
     # Loop over Tasks
     for tsk_lst in trans_tsk_lst:

@@ -4,7 +4,7 @@
 import functools
 import elstruct
 import autofile
-from mechlib.amech_io import printer as ioprinter
+import automol
 from . import _seq as optseq
 
 
@@ -132,6 +132,9 @@ def run_job(job, script_str, run_fs,
         inf_obj.utc_start_time = autofile.schema.utc_time()
         run_fs[-1].file.info.write(inf_obj, [job])
 
+        # Write the initial geo/zma
+        _write_input_geo(geo, job, run_fs)
+
         # Set job runner based on user request; set special options as needed
         runner = JOB_RUNNER_DCT[job]
 
@@ -213,7 +216,7 @@ def read_job(job, run_fs):
 def is_successful_output(out_str, job, prog):
     """ Parses the output string of the electronic structure job
         to determine if the program has exited normally, contains
-        the approprate success messages for the job and, and 
+        the approprate success messages for the job and, and
         precludes job error messages.
 
         :param out_str: string for job output file
@@ -238,3 +241,16 @@ def is_successful_output(out_str, job, prog):
             ret = True
 
     return ret
+
+
+# Write initial geoms
+def _write_input_geo(geo, job, run_fs):
+    """ Can only reliably write the zma if it input is zma
+    """
+
+    if automol.zmat.is_valid(geo):
+        run_fs[-1].file.zmatrix.write(geo, [job])
+        run_fs[-1].file.geometry.write(
+            automol.zmat.geometry(geo), [job])
+    else:
+        run_fs[-1].file.geometry.write(geo, [job])

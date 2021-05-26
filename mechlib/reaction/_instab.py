@@ -8,7 +8,36 @@ from mechlib.amech_io import printer as ioprinter
 
 
 # Handle reaction lst
-def split_unstable_rxn(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
+def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
+                        spc_model_dct_i, save_prefix):
+    """ Loop over the pes reaction list and break up the unstable species
+    """
+
+    # Get split names from full PES run lst
+    print('pes rst', pes_rlst)
+    _split_rxn_names = ()
+    for _, rxn_lst in pes_rlst.items():
+        print(rxn_lst)
+        split_rxn_lst = split_unstable_pes(
+            rxn_lst, spc_dct, spc_model_dct_i, save_prefix)
+        for split_rxn in split_rxn_lst:
+            _, (new_rcts, new_prds) = split_rxn
+            _split_rxn_names += new_rcts
+            _split_rxn_names += new_prds
+
+    # Get split names from spc
+    _split_spc_names = split_unstable_spc(
+        spc_rlst, spc_dct, spc_model_dct_i, save_prefix)
+
+    # Combine both and remove duplicates
+    _split_names = _split_rxn_names + tuple(_split_spc_names.values())[0]
+    split_names = tuple(i for n, i in enumerate(_split_names)
+                        if i not in _split_names[:n])
+
+    return {('SPC', 0, 0): split_names}
+
+
+def split_unstable_pes(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
     """ Loop over the reaction list and break up the unstable species
     """
 
@@ -58,11 +87,17 @@ def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct_i, save_prefix):
     # Get theory
     thy_info = spc_model_dct_i['vib']['geolvl'][1][1]
 
-    # Loop over the species lst and split as they god
-    split_spc_names = ()
+    # Split each species
+    _split_spc_names = ()
     for spc in list(spc_rlst.values())[0]:
-        split_spc_names += _split_species(
+        split_names = _split_species(
             spc_dct, spc, thy_info, save_prefix, zma_locs=(0,))
+        if split_names:
+            _split_spc_names += split_names
+        else:
+            _split_spc_names += (spc,)
+    split_spc_names = tuple(i for n, i in enumerate(_split_spc_names)
+                            if i not in _split_spc_names[:n])
 
     return {('SPC', 0, 0): split_spc_names}
 
@@ -111,12 +146,14 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
         constituent_ichs = tuple(automol.graph.inchi(gra, stereo=True)
                                  for gra in prd_gras)
 
+        _split_names = ()
         for ich in constituent_ichs:
             for name, spc_dct_i in spc_dct.items():
                 if ich == spc_dct_i.get('inchi'):
-                    split_names += (name,)
+                    _split_names += (name,)
                     break
-        split_names = tuple(set(split_names))
+        split_names = tuple(i for n, i in enumerate(_split_names)
+                            if i not in _split_names[:n])
 
         print('- Splitting species...')
         print('- New species: {}'.format(' '.join(split_names)))

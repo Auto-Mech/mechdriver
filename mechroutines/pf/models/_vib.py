@@ -171,7 +171,7 @@ def read_anharmon_matrix(pf_filesystems):
     return xmat
 
 
-def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
+def tors_projected_freqs_zpe(pf_filesymess_hr_str, projrot_hr_str,
                              prefix, zrxn=None, conf=None):
     """ Get frequencies from one version of ProjRot
     """

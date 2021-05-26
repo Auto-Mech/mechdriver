@@ -36,16 +36,16 @@ spc global
     )
     vib = (
         mod = harm
-        geolvl = wbsgs
+        geolvl = mp2gs
     )
     tors = (
         mod = 1dhrfa
-        enelvl = wbsgs
-        geolvl = wbsgs
+        enelvl = mp2gs
+        geolvl = mp2gs
     )     
     symm = (
         mod = sampling
-        geolvl = wbsgs
+        geolvl = mp2gs
     )
     rpath = (
         # have to place or code breaks

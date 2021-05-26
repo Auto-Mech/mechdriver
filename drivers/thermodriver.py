@@ -19,10 +19,10 @@ from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import thermo_paths
 from mechlib.amech_io import job_path
 from mechlib.amech_io import output_path
-from mechlib.reaction import split_unstable_spc
+from mechlib.reaction import split_unstable_full
 
 
-def run(spc_rlst,
+def run(pes_rlst, spc_rlst,
         therm_tsk_lst,
         pes_mod_dct, spc_mod_dct,
         spc_dct,
@@ -40,10 +40,13 @@ def run(spc_rlst,
 
     # Build a list of the species to calculate thermochem for loops below
     spc_mods = list(spc_mod_dct.keys())  # hack
-    split_spc_lst = split_unstable_spc(
-        spc_rlst, spc_dct, spc_mod_dct[spc_mods[0]], save_prefix)
+    spc_mod_dct_i = spc_mod_dct[spc_mods[0]]
+    split_rlst = split_unstable_full(
+        pes_rlst, spc_rlst, spc_dct, spc_mod_dct_i, save_prefix)
+    print('split_lst', split_rlst)
     spc_queue = parser.rlst.spc_queue(
-        'spc', tuple(split_spc_lst.values())[0])
+        tuple(split_rlst.values())[0], 'SPC')
+    print('spc_queue', spc_queue)
 
     # Build the paths [(messpf, nasa)], models and levels for each spc
     thm_paths = thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix)

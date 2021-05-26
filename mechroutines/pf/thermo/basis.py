@@ -216,10 +216,14 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                         run_prefix, save_prefix,
                         rxnclass)
     ioprinter.info_message(msg)
+
+    ret = None
     if parallel:
         queue.put((basis_dct, unique_refs_dct))
     else:
-        return basis_dct, unique_refs_dct
+        ret = (basis_dct, unique_refs_dct)
+
+    return ret
 
 
 def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):

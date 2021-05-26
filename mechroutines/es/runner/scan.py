@@ -20,8 +20,8 @@ def execute_scan(zma, spc_info, mod_thy_info,
                  saddle=False,
                  constraint_dct=None, retryfail=True,
                  **kwargs):
-    """ Run all of the electronic structure calculations for the 
-        scan and save the resulting information. 
+    """ Run all of the electronic structure calculations for the
+        scan and save the resulting information.
 
         Function will first assess whether the scan has been run by
         searching the filesystem.
@@ -197,17 +197,15 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
                     **kwargs
                 )
 
-                # Write initial geos in run fs as they are needed later
-                run_fs[-1].file.zmatrix.write(zma, [job])
-                run_fs[-1].file.geometry.write(
-                    automol.zmat.geometry(zma), [job])
-
 
 def save_scan(scn_run_fs, scn_save_fs, scn_typ,
               coord_names, constraint_dct,
               mod_thy_info):
-    """ Search for output of electronic structure calculations along the scan coordinate that exist in the SCAN/CSCAN layer of the run filesys. Then parse out the required information and save it into formatted files in the SCAN/CSAN layer of the save filesys. 
-        
+    """ Search for output of electronic structure calculation along the scan
+        coordinate that exist in the SCAN/CSCAN layer of the run filesys. Then
+        parse out the required information and save it into formatted files
+        in the SCAN/CSAN layer of the save filesys.
+
         :param scn_run_fs: SCAN/CSCAN object with run filesys prefix
         :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
         :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
@@ -245,11 +243,11 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
                 # Need to get the init zma structure in here
                 # could write init zma to run filesys; wont work retro
                 # get init zma readers?
-                init_geo = run_fs[-1].file.geometry.read([job])
-                init_zma = run_fs[-1].file.zmatrix.read([job])
+                if run_fs[-1].file.zmatrix.exists([job]):
+                    init_zma = run_fs[-1].file.zmatrix.read([job])
                 filesys.save.scan_point_structure(
                     ret, scn_save_fs, locs, mod_thy_info[1:], job,
-                    init_zma=init_zma, init_geo=init_geo)
+                    init_zma=init_zma, init_geo=None)
                 locs_lst.append(locs)
 
         # Build the trajectory file
@@ -260,7 +258,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
     """  Determine the locs for all of the directories that currently
          exist in the SCAN/CSAN layer of the save filesystem.
-        
+
         :param coord_names: names of the scan coordinates
         :type coord_names: tuple(tuple(str))
         :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
@@ -271,18 +269,18 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
 
     if constraint_dct is None:
         coord_locs = coord_names
-        scn_locs = scan_save_fs[-1].existing([coord_locs])
+        scn_locs = scn_save_fs[-1].existing([coord_locs])
     else:
         coord_locs = constraint_dct
         scn_locs = ()
         # scn_locs = scan_save_fs[3].existing()
         scn_locs = ()
-        for locs1 in scan_save_fs[2].existing([coord_locs]):
-            if scan_save_fs[2].exists(locs1):
-                for locs2 in scan_save_fs[3].existing(locs1):
+        for locs1 in scn_save_fs[2].existing([coord_locs]):
+            if scn_save_fs[2].exists(locs1):
+                for locs2 in scn_save_fs[3].existing(locs1):
                     scn_locs += (locs2,)
 
-    return scn_locs
+    return coord_locs, scn_locs
 
 
 def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
@@ -325,7 +323,8 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
 
 
 def _set_job(scn_typ):
-    """ Set the appropriate job label defined in the elstruct package using the input scan type.
+    """ Set the appropriate job label defined in the elstruct
+        package using the input scan type.
 
         :param scn_typ: label for scan type ('relaxed' or 'rigid')
         :type scn_typ: str
@@ -354,7 +353,7 @@ def _write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
         :type ini_locs: dict[]
         :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
         :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
-        :param mod_thy_info: thy info object with 
+        :param mod_thy_info: thy info object with
     """
 
     idxs_lst = [locs[-1] for locs in locs_lst]

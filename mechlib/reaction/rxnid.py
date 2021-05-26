@@ -121,26 +121,21 @@ def _id_reaction(rxn_info):
     return zrxns, zmas
 
 
-def _mod_class(cls, rxn_info):
+def _mod_class(class_typ, rxn_info):
     """ append additional info to the class. build class designator
         defined in automol
     """
 
-    # Determine the string for radical radical reactions
-    radrad = rinfo.radrad(rxn_info)
-    radrad_str = 'radical-radical' if radrad else ''
-    full_cls_str += radrad_str
-
     # Set the spin of the reaction to high/low
-    if 'addition' in cls or 'absraction' in cls:
+    if automol.par.need_spin_designation(class_typ):
         ts_mul = rinfo.value(rxn_info, 'tsmult')
         high_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
-        spin_str = 'high-spin' if ts_mul == high_mul else 'low-spin'
-        full_cls_str += ' ' + spin_str
+        _spin = 'high-spin' if ts_mul == high_mul else 'low-spin'
     else:
-        spin_str = ''
+        _spin = ''
 
-    return (cls, spin_str, radrad_str)
+    return automol.par.reaction_class_from_data(
+        class_typ, _spin, rinfo.radrad(rxn_info))
 
 
 # from direction

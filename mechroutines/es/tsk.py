@@ -116,15 +116,11 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
     cnf_run_fs, cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         spc_locs=spc_info, thy_locs=mod_thy_info[1:])
-    _, instab_save_fs = build_fs(
-        run_prefix, save_prefix, 'INSTAB',
-        spc_locs=spc_info, thy_locs=mod_thy_info[1:])
 
     # Get a reference geometry if one not found
     success = conformer.initial_conformer(
         spc_dct_i, spc_info, ini_method_dct, method_dct,
         ini_cnf_save_fs, cnf_run_fs, cnf_save_fs,
-        instab_save_fs,
         es_keyword_dct)
 
     return success

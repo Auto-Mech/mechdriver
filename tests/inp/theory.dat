@@ -1,8 +1,15 @@
-level wbsgs
+level b3gs
     orb_res =  RU
     program =  psi4
     method =  b3lyp
     basis =  6-31g*
+end level
+
+level mp2gs
+    orb_res =  RU
+    program =  psi4
+    method =  mp2
+    basis =  sto-3g
 end level
 
 level mp2dz

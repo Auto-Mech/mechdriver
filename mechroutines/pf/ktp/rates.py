@@ -4,8 +4,8 @@ Write and Read MESS files for Rates
 
 import importlib
 import copy
-
 import automol
+import autorun
 import mess_io
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.pf.models import blocks
@@ -16,7 +16,7 @@ from mechroutines.pf.models import etrans
 from mechroutines.pf.models import tunnel
 from mechroutines.pf.models.inf import make_rxn_str
 from mechroutines.pf.models.typ import need_fake_wells
-from mechroutines.pf.models.typ import is_abstraction
+from mechroutines.pf.models.typ import is_abstraction_pes
 
 
 BLOCK_MODULE = importlib.import_module('mechroutines.pf.models.blocks')
@@ -28,15 +28,16 @@ def make_messrate_str(pes_idx, rxn_lst,
                       spc_dct,
                       pes_model_dct, spc_model_dct,
                       label_dct,
-                      mess_path, run_prefix, save_prefix):
+                      mess_path, run_prefix, save_prefix,
+                      make_lump_well_inp=False):
     """ Reads and processes all information in the save filesys for
         all species on the PES, required for MESS rate calculations,
         as specified by the model dictionaries built from user input.
-   
+
         :param pes_idx:
         :type pes_idx: int
         :param rxn_lst:
-        :type rxn_lst: 
+        :type rxn_lst:
         :param pes_model: model for PES conditions for rates from user input
         :type pes_model: str
         :param spc_model: model for partition fxns for rates from user input
@@ -64,14 +65,25 @@ def make_messrate_str(pes_idx, rxn_lst,
         run_prefix, save_prefix, label_dct,
         pes_model_dct_i, spc_model_dct_i, spc_model)
 
-    # Combine strings together
-    mess_inp_str = mess_io.writer.messrates_inp_str(
-        globkey_str, energy_trans_str, rxn_chan_str)
+    # Generate second string with well lumping if needed
+    if not is_abstraction_pes(spc_dct) and make_lump_well_inp:
+        print('Need to do well lumping scheme')
+        script_str = autorun.SCRIPT_DCT['messrate']
+        mess_inp_str = autorun.mess.well_lumped_input_file(
+            script_str, mess_path, globkey_str, rxn_chan_str,
+            energy_trans_str=energy_trans_str,
+            aux_dct=dats,
+            input_name='mess.inp',
+            output_names=('mess.aux',))
+    else:
+        mess_inp_str = mess_io.writer.messrates_inp_str(
+            globkey_str, rxn_chan_str,
+            energy_trans_str=energy_trans_str, well_lump_str=None)
 
     # Write the MESS file into the filesystem
     ioprinter.obj('line_plus')
     ioprinter.writing('MESS input file', mess_path)
-    ioprinter.debug_message(mess_inp_str)
+    ioprinter.debug_message('MESS Input:\n\n'+mess_inp_str)
 
     return mess_inp_str, dats
 
@@ -106,7 +118,7 @@ def make_header_str(spc_dct, temps, pressures):
     ioprinter.debug_message('     {}'.format(keystr1))
     ioprinter.debug_message('     {}'.format(keystr2))
 
-    if is_abstraction(spc_dct):
+    if is_abstraction_pes(spc_dct):
         well_extend = None
     else:
         well_extend = 'auto'
@@ -235,11 +247,11 @@ def _make_channel_mess_strs(tsname, reacs, prods,
         formatted as {file name: file string}, required by MESS.
 
         List of labels corresponding to MESS strings that have already been
-        written and added to the master string, meaning that species string does
+        written and added to master string, meaning that species string does
         not need to be written again. Required since species appear on multiple
         channels.
-    
-        :param tsname: mechanism name of the transition state 
+
+        :param tsname: mechanism name of the transition state
         :param reacs: mechanisms name for the reactants of the reaction channel
         :type reacs: tuple(str)
         :param prods: mechanisms name for the products of the reaction channel
@@ -375,7 +387,7 @@ def _make_spc_mess_str(inf_dct):
     """  Writes all processed save filesys data for a species and
          into an appropriately formatted MESS input string. Takes the
          pre-identified writer designation and calls the approprate
-         MESS-block writer function in models/build module. 
+         MESS-block writer function in models/build module.
 
          :param inf_dct: save filesys data for species
          :type inf_dct: dict[]
@@ -390,7 +402,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
     """  Writes all processed save filesys data for a transition state and
          into an appropriately formatted MESS input string. Takes the
          pre-identified writer designation and calls the approprate
-         MESS-block writer function in models/build module. 
+         MESS-block writer function in models/build module.
 
         ^ slightly off, maybe add additional block function for variational,
         union, sadpt writing...
@@ -419,7 +431,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
 
         # Write the appropriate string for the tunneling model
         tunnel_str, sct_dct = tunnel.write_mess_tunnel_str(
-            ts_inf_dct, chnl_infs, chnl_enes,
+            ts_inf_dct, chnl_enes,
             ts_mod, ts_class, idx)
 
         # Update master TS list
@@ -466,9 +478,11 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
 def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
                          chnl_enes, label_dct, side_label):
     """ write the MESS strings for the fake wells and TSs
-
-
     """
+
+    print('fake make test')
+    print(chnl, side, fake_inf_dcts,
+          chnl_enes, label_dct, side_label)
 
     # Set vars based on the reacs/prods
     reacs, prods = chnl
@@ -545,8 +559,8 @@ def get_channel_data(reacs, prods, tsname,
     """ For all species and transition state for the channel and
         read all required data from the save filesys, then process and
         format it to be able to write it into a MESS filesystem.
-        
-        :param tsname: mechanism name of the transition state 
+
+        :param tsname: mechanism name of the transition state
         :param reacs: mechanisms name for the reactants of the reaction channel
         :type reacs: tuple(str)
         :param prods: mechanisms name for the products of the reaction channel
@@ -589,11 +603,12 @@ def get_channel_data(reacs, prods, tsname,
 
     # Set up the info for the wells
     rwell_model = spc_model_dct_i['ts']['rwells']
-    ts_class = spc_dct[tsname+'_0']['class']
-    if need_fake_wells(ts_class, rwell_model):
-        chnl_infs['fake_vdwr'] = copy.deepcopy(chnl_infs['reacs'])
     pwell_model = spc_model_dct_i['ts']['pwells']
-    if need_fake_wells(ts_class, pwell_model):
+    rxn_class = spc_dct[tsname+'_0']['class']
+    if need_fake_wells(rxn_class, rwell_model):
+        chnl_infs['fake_vdwr'] = copy.deepcopy(chnl_infs['reacs'])
+    # pwell_model = spc_model_dct_i['ts']['pwells']
+    if need_fake_wells(rxn_class, pwell_model):
         chnl_infs['fake_vdwp'] = copy.deepcopy(chnl_infs['prods'])
 
     return chnl_infs, model_basis_energy_dct

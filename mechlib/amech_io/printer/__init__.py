@@ -63,6 +63,8 @@ from mechlib.amech_io.printer._pes import channel
 
 from mechlib.amech_io.printer._pot import hrpotentials
 
+from mechlib.amech_io.printer._lj import lennard_jones_params
+
 from mechlib.amech_io.printer._errors import missing_input
 
 
@@ -129,6 +131,8 @@ __all__ = [
     'channel',
 
     'hrpotentials',
+
+    'lennard_jones_params',
 
     'missing_input'
 ]

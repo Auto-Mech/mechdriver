@@ -88,8 +88,10 @@ def scan_point_structure(opt_ret, scn_fs, scn_locs, thy_locs, job,
         _save_zmatrix(opt_ret, scn_fs, scn_locs, init_zma=init_zma)
     elif job == elstruct.Job.ENERGY:
         scn_fs[-1].create(scn_locs)
-        scn_fs[-1].file.geometry.write(init_geo, scn_locs)
         scn_fs[-1].file.zmatrix.write(init_zma, scn_locs)
+        if init_geo is None:
+            init_geo = automol.zmat.geometry(init_zma)
+        scn_fs[-1].file.geometry.write(init_geo, scn_locs)
 
     sp_fs = autofile.fs.single_point(scn_fs[-1].path(scn_locs))
     _save_energy(opt_ret, sp_fs, thy_locs)
@@ -113,54 +115,33 @@ def init_cnf_samp(cnf_fs, cnf_locs):
 
 
 # Saving other
-def instability(conn_zma, disconn_zmas,
-                instab_save_fs, cnf_save_fs,
-                zma_locs=(0,),
-                save_cnf=False):
+def instability(conn_zma, disconn_zmas, cnf_save_fs,
+                rng_locs=None, tors_locs=None, zma_locs=(0,)):
     """ write the instability files
     """
 
-    # Get a connected geometry
+    cnf_locs, zma_locs = _generate_locs(
+        rng_locs=rng_locs, tors_locs=tors_locs, zma_locs=zma_locs)
+
+    # Get structural and instability info for storage
     conn_geo = automol.zmat.geometry(conn_zma)
 
-    # Save the geometry information
-    instab_save_fs[-1].create()
-    instab_save_fs[-1].file.geometry.write(conn_geo)
-    instab_save_path = instab_save_fs[-1].path()
-
-    # Grab the zma and instability transformation
     zrxn, conn_zma = automol.reac.instability_transformation(
         conn_zma, disconn_zmas)
 
+    # Save structure and stability info in CONF and Z filesys
+    cnf_save_fs[-1].create(cnf_locs)
+    cnf_save_fs[-1].file.geometry.write(conn_geo, cnf_locs)
+    cnf_save_path = cnf_save_fs[-1].path(cnf_locs)
+
     # Save zma information seperately, if required
-    zma_save_fs = autofile.fs.zmatrix(instab_save_path)
+    zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
 
-    # Write the files into the filesystem
-    zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
-
-    if save_cnf:
-
-        # Save the geometry information
-        cnf_locs = (
-            autofile.schema.generate_new_ring_id(),
-            autofile.schema.generate_new_conformer_id()
-        )
-        cnf_save_fs[-1].create(cnf_locs)
-        cnf_save_fs[-1].file.geometry.write(conn_geo, cnf_locs)
-        cnf_save_path = cnf_save_fs[-1].path(cnf_locs)
-
-        # Save zma information seperately, if required
-        zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
-        zma_save_fs[-1].create(zma_locs)
-        zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
-
     # Set and print the save path information
     print(" - Saving...")
-    print(" - Save path: {}".format(instab_save_path))
-    if save_cnf:
-        print(" - Save path: {}".format(cnf_save_path))
+    print(" - Save path: {}".format(cnf_save_path))
 
 
 def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
@@ -186,6 +167,69 @@ def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
     vrc_fs[-1].file.vrctst_struct.write(struct_str, vrc_locs)
     vrc_fs[-1].file.vrctst_pot.write(pot_str, vrc_locs)
     vrc_fs[-1].file.vrctst_flux.write(flux_str, vrc_locs)
+
+
+def energy_transfer(etrans_save_fs, etrans_locs,
+                    run_epsilons, run_sigmas, run_geos,
+                    ranseeds, version, input_str):
+    """ Save lennard-jones energy transfer params
+    """
+
+    # Set the run path to read the files
+    etrans_run_path = etrans_run_fs[-1].path(etrans_locs)
+
+    # Read any epsilons and sigma currently in the filesystem
+    ioprinter.info_message(
+        'Reading Lennard-Jones parameters and Geoms from filesystem...',
+        newline=1)
+    fs_geoms, fs_epsilons, fs_sigmas = filesys.read.energy_transfer(
+        etrans_save_fs, etrans_locs)
+    ioprinter.lennard_jones_params(fs_sigmas, fs_epsilons)
+
+    # Read the lj from all the output files
+    ioprinter.info_message(
+        'Reading Lennard-Jones parameters and Geoms from output...',
+        newline=1)
+    run_geoms, run_epsilons, run_sigmas = gather.read_output(etrans_run_path)
+    ioprinter.lennard_jones_params(run_sigmas, run_epsilons)
+
+    # Add the lists from the two together
+    geoms = fs_geoms + run_geoms
+    sigmas = fs_sigmas + run_sigmas
+    epsilons = fs_epsilons + run_epsilons
+
+    assert len(geoms) == len(sigmas) == len(epsilons), (
+        'Number of geoms, sigmas, and epsilons not the same'
+    )
+
+    avg_sigma = statistics.mean(sigmas)
+    avg_epsilon = statistics.mean(epsilons)
+    nsampd = len(sigmas)
+    ioprinter.info_message(
+        'Average Sigma to save [unit]:', avg_sigma, newline=1)
+    ioprinter.info_message('Average Epsilont to save [unit]:', avg_epsilon)
+    ioprinter.info_message('Number of values = ', nsampd)
+
+    # Update the trajectory file
+    traj = []
+    for geo, eps, sig in zip(geoms, epsilons, sigmas):
+        comment = 'Epsilon: {}   Sigma: {}'.format(eps, sig)
+        traj.append((comment, geo))
+
+    # Write the info obj add ranseeds to this I think
+    inf_obj = autofile.schema.info_objects.lennard_jones(
+        nsampd, program='OneDMin', version=prog_version)
+
+    # Set up the electronic structure input file
+    onedmin_inp_str = '<ONEDMIN INP>'
+    els_inp_str = '<ELSTRUCT INP>'
+
+    # Write the params to the save file system
+    etrans_save_fs[-1].file.lj_input.write(onedmin_inp_str, etrans_locs)
+    etrans_save_fs[-1].file.info.write(inf_obj, etrans_locs)
+    etrans_save_fs[-1].file.molpro_inp_file.write(els_inp_str, etrans_locs)
+    etrans_save_fs[-1].file.epsilon.write(avg_epsilon, etrans_locs)
+    etrans_save_fs[-1].file.sigma.write(avg_sigma, etrans_locs)
 
 
 # Job readers

@@ -82,13 +82,7 @@ def pst_ts(rxn_class, ts_sadpt, ts_nobarrier):
 def need_fake_wells(rxn_class, well_model):
     """ Return boolean to see if fake wells are needed
     """
-    if well_model == 'fake':
-        need = any(rtyp in automol.par.typ(rxn_class)
-                   for rtyp in ('abstraction', 'substitution'))
-    else:
-        need = False
-
-    return need
+    return (well_model == 'fake' and automol.par.need_wells(rxn_class))
 
 
 def treat_tunnel(ts_mod, rxn_class):
@@ -117,7 +111,7 @@ def is_atom(spc_dct_i):
     return automol.geom.is_atom(geo)
 
 
-def is_abstraction(spc_dct):
+def is_abstraction_pes(spc_dct):
     """ Check if a PES consists of a single abstraction reaction.
     """
     _abstraction = False
@@ -125,7 +119,8 @@ def is_abstraction(spc_dct):
     ts_names = tuple(name for name in spc_dct.keys() if 'ts_' in name)
     if len(ts_names) == 1:
         rxn_class = spc_dct[ts_names[0]]['class']
-        if 'abstraction' in automol.par.typ(rxn_class):
+        if (automol.par.typ(rxn_class) ==
+           automol.par.ReactionClass.Typ.HYDROGEN_ABSTRACTION):
             _abstraction = True
 
     return _abstraction

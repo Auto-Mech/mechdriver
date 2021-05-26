@@ -8,8 +8,8 @@ import autofile
 from phydat import phycon
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.es._routines import _util as util
 from mechroutines.es import runner as es_runner
+from mechroutines.es._routines import _util as util
 
 
 def tau_sampling(zma, ref_ene, spc_info, tors_name_grps, nsamp_par,

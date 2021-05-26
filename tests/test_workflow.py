@@ -22,7 +22,7 @@ INP_NAMES = ('run.template', 'mechanism.dat', 'species.csv',
              'models.dat', 'theory.dat')
 
 # Set command line
-EXE_PATH = os.path.join(PATH, '../../bin/automech.py')
+EXE_PATH = os.path.join(PATH, '../bin/automech.py')
 CMD_LINE = 'python -u {0} {1} & disown %1'.format(EXE_PATH, TMP_DIR)
 
 

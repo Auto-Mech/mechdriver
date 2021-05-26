@@ -31,7 +31,7 @@ KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(
 INP_KEY_DCT = ioparser.run.input_dictionary(INP_STRS['run'])
 PES_IDX_DCT = ioparser.run.pes_idxs(INP_STRS['run'])
 SPC_IDX_DCT = ioparser.run.spc_idxs(INP_STRS['run'])
-TSK_LST_DCT = ioparser.run.tasks(INP_STRS['run'], THY_DCT, KMOD_DCT, SMOD_DCT)
+TSK_LST_DCT = ioparser.run.tasks(INP_STRS['run'], THY_DCT)
 SPC_DCT, GLOB_DCT = ioparser.spc.species_dictionary(
     INP_STRS['spc'], INP_STRS['dat'], INP_STRS['geo'], 'csv')
 PES_DCT = ioparser.mech.pes_dictionary(
@@ -59,7 +59,7 @@ THERM_TSKS = TSK_LST_DCT.get('thermo')
 if THERM_TSKS is not None:
     ioprinter.program_header('thermo')
     thermodriver.run(
-        SPC_RLST,
+        PES_RLST, SPC_RLST,
         THERM_TSKS,
         KMOD_DCT, SMOD_DCT,
         SPC_DCT,
@@ -98,11 +98,10 @@ if PROC_TSKS is not None:
     PES_IDX = None
     procdriver.run(
         PES_RLST, SPC_RLST,
-        SPC_DCT,
         PROC_TSKS,
-        THY_DCT,
-        INP_KEY_DCT,
-        SMOD_DCT
+        SPC_DCT,
+        SMOD_DCT, THY_DCT,
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
     )
     ioprinter.program_exit('proc')
 

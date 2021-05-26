@@ -12,7 +12,7 @@ def qchem_params(method_dct, job=None):
         Function assumes a single-point energy job is none
         is given.
 
-        :param method_dct: 
+        :param method_dct:
         :type method_dct: dict[str:
     """
 

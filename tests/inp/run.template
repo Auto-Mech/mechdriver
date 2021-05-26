@@ -7,25 +7,25 @@ pes
     1: 1
 end pes
 
-# spc
-    1,2,3,4,5
+spc
+    5
 end spc
 
 els
-    spc init_geom     runlvl=wbsgs   inplvl=wbsgs
-    ts  find_ts       runlvl=wbsgs   inplvl=wbsgs
-    # all hr_scan       runlvl=wbsgs   inplvl=wbsgs  tors_model=1dhrfa
-    # all conf_energy   runlvl=mp2dz   inplvl=wbsgs
-    # all conf_hess     runlvl=wbsgs   inplvl=wbsgs
+    spc init_geom     runlvl=mp2gs   inplvl=mp2gs
+    ts  find_ts       runlvl=mp2gs   inplvl=mp2gs
+    all hr_scan       runlvl=mp2gs   inplvl=mp2gs  tors_model=1dhrfa
+    all conf_energy   runlvl=mp2dz   inplvl=mp2gs
+    all conf_hess     runlvl=mp2gs   inplvl=mp2gs
 end els
 
-# thermo
+thermo
     write_mess      kin_model=global  spc_model=global
     run_mess        kin_model=global  spc_model=global  nprocs=10
     run_fits        kin_model=global  spc_model=global
 end thermo
 
-# ktp
+ktp
     write_mess      kin_model=global  spc_model=global
     run_mess        nprocs=10
     run_fits        kin_model=global spc_model=global

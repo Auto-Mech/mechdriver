@@ -24,7 +24,7 @@ def run_energy(zma, geo, spc_info, thy_info,
                retryfail=True, highspin=False, **kwargs):
     """ Assesses if an electronic energy exists in the CONFS/SP/THY layer
         of the save filesys for a species at the specified level of theory.
-        If an energy does not exist, or if a user requests overwrite, 
+        If an energy does not exist, or if a user requests overwrite,
         the appropriate electronic struture calculation is set-up, launched,
         and then parsed within the run filesys, then that the energy and
         job input is written into the save filesys.
