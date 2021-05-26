@@ -333,7 +333,7 @@ def saddle_point_checker(imags):
 
 def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
                       mod_thy_info, savefs_dct, locs,
-                      zma_locs=(0,)):
+                      zma_locs=(0,), zma=None):
     """ Optimize the transition state structure obtained from the grid search
     """
 
@@ -345,7 +345,9 @@ def save_saddle_point(zrxn, opt_ret, hess_ret, freqs, imags,
     opt_method = opt_inf_obj.method
     ene = elstruct.reader.energy(opt_prog, opt_method, opt_out_str)
     geo = elstruct.reader.opt_geometry(opt_prog, opt_out_str)
-    zma = elstruct.reader.opt_zmatrix(opt_prog, opt_out_str)
+    if zma is None:
+        zma = elstruct.reader.opt_zmatrix(opt_prog, opt_out_str)
+    print('zma', zma)
     ioprinter.debug_message('TS Geometry:')
     ioprinter.debug_message(automol.geom.string(geo))
 

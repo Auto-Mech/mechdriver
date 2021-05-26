@@ -33,10 +33,12 @@ requirements:
         - conda-forge::pypdf2
         - cantera::cantera
         - psi4::psi4
+        - auto-mech::autofile
         - auto-mech::autoio
-        - auto-mech::automol
+        - auto-mech::autorun
         - auto-mech::autoparse
         - auto-mech::elstruct
+        - auto-mech::automol
         - auto-mech::ratefit
         - auto-mech::mechanalyzer
         - auto-mech::mess
