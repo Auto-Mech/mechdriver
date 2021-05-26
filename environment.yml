@@ -32,10 +32,11 @@ dependencies:
     - conda-forge::pypdf2
     - conda-forge::python-igraph
     - cantera::cantera
+    - auto-mech::autofile
     - auto-mech::autoio
-    - auto-mech::automol
     - auto-mech::autoparse
     - auto-mech::elstruct
+    - auto-mech::automol
     - auto-mech::ratefit
     - auto-mech::mechanalyzer
     - auto-mech::mess

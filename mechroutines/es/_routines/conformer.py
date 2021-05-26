@@ -347,7 +347,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
                     if cnf_save_fs[0].file.info.exists():
                         ioprinter.debug_message('inf_obj path', cnf_save_fs[0].path())
                         rinf_obj_s = cnf_save_fs[0].file.info.read()
-                        rinf_obj = inf_obj
+                        rinf_obj = inf_obj_s
                         ioprinter.debug_message('inf_obj for r', rinf_obj)
                         # rnsampd = rinf_obj_s.nsamp
                         # rnsampd += 1
@@ -357,7 +357,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
                         rinf_obj.nsamp = 1
                     if cnf_save_fs[1].file.info.exists([locs[0]]):
                         cinf_obj_s = cnf_save_fs[1].file.info.read(locs[0])
-                        cinf_obj = inf_obj
+                        cinf_obj = inf_obj_s
                         cnsampd = cinf_obj_s.nsamp
                         cnsampd += 1
                         cinf_obj.nsamp = cnsampd
@@ -1373,7 +1373,10 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     zma = elstruct.reader.opt_zmatrix(prog, out_str)
     print('zma 0 test:', zma, geo)
     if zma is None:
-        zma = automol.geom.zmatrix(geo)
+        if zrxn is None:
+            zma = automol.geom.zmatrix(geo)
+        else:
+            zma = automol.reac.ts_zmatrix(zrxn, geo)
     print('zma 1 test:', zma)
 
     # Build the conformer filesystem and save the structural info
