@@ -654,7 +654,7 @@ def hr_tsk(job, spc_dct, spc_name,
     # Run the task if any torsions exist
     if any(torsions):
 
-        scn = 'SCAN' if 'fa' not in tors_model else 'CSCAN'
+        scn = 'SCAN' if 'f' not in tors_model else 'CSCAN'
         ini_scn_run_fs, ini_scn_save_fs = build_fs(
             ini_cnf_run_path, ini_cnf_save_path, scn,
             zma_locs=(0,))
@@ -722,7 +722,11 @@ def hr_tsk(job, spc_dct, spc_name,
                 # Set the constraint dct and filesys for the scan
                 const_names = automol.zmat.set_constraint_names(
                     zma, run_tors_names, tors_model)
+<<<<<<< HEAD
                 constraint_dct = automol.zmat.build_constraint_dct(
+=======
+                constraint_dct = automol.zmat.constraint_dct(
+>>>>>>> atoz, scan fa, and thermo database fixes
                     zma, const_names, tors_names)
 
                 # get the scn_locs, maybe get a function?
