@@ -722,11 +722,7 @@ def hr_tsk(job, spc_dct, spc_name,
                 # Set the constraint dct and filesys for the scan
                 const_names = automol.zmat.set_constraint_names(
                     zma, run_tors_names, tors_model)
-<<<<<<< HEAD
-                constraint_dct = automol.zmat.build_constraint_dct(
-=======
                 constraint_dct = automol.zmat.constraint_dct(
->>>>>>> atoz, scan fa, and thermo database fixes
                     zma, const_names, tors_names)
 
                 # get the scn_locs, maybe get a function?
