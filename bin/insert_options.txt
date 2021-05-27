@@ -1,0 +1,31 @@
+!!!!! Options for inserting
+!!!!! A output and input file
+!!!!! into your save filesystem
+
+
+save_filesystem: /home/elliott/projects/AutoMech/dev/insert_species/save
+input_file: /home/elliott/projects/AutoMech/mechs/oxidc/test_run/RXN/C3H7O2/CRNRESQDLTXDRN/0/2/UHFFFAOYSA-N/C3H7O2/NALIQVLPVWZDOO/0/2/UHFFFAOYSA-N/2/u-ulpJU/TS/00/CONFS/r_N7zwiVUHwop/ckQj7Lm8_XNUE/RUN/OPTI/A00/run.inp
+output_file: /home/elliott/projects/AutoMech/mechs/oxidc/test_run/RXN/C3H7O2/CRNRESQDLTXDRN/0/2/UHFFFAOYSA-N/C3H7O2/NALIQVLPVWZDOO/0/2/UHFFFAOYSA-N/2/u-ulpJU/TS/00/CONFS/r_N7zwiVUHwop/ckQj7Lm8_XNUE/RUN/OPTI/A00/run.out
+
+!smiles does not ned to be specified if inchi
+!is an vice versa, but if you species has stereo
+!you must use inchi with stereo specified
+
+smiles: None
+inchi: InChI=1S/C3H7O2/c1-2-3-5-4/h2-3H2,1H3 = InChI=1S/C3H7O2/c1-2-3-5-4/h2,4H,3H2,1H3 
+mult: 2, 2
+charge: 0, 0
+ts_mult: 2
+rid: None
+cid: None
+zrxn_file: myzrxn.txt
+
+!theory key does not need to be specified
+!if program/method/basis/orb_res all are
+!and vice versa
+
+theory: lvl_wbs
+program: None
+method: None
+basis: None
+orb_res: None
