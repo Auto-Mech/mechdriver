@@ -385,6 +385,8 @@ def main(insert_dct):
         for zrxn_i in zrxns:
             forw_form_key = automol.reac.forming_bond_keys(zrxn_i)
             back_form_key = automol.reac.forming_bond_keys(zrxn_i, rev=True)
+            forw_brk_key = automol.reac.breaking_bond_keys(zrxn_i)
+            back_brk_key = automol.reac.breaking_bond_keys(zrxn_i, rev=True)
             forward_gra = automol.graph.without_stereo_parities(
                 automol.graph.without_dummy_bonds(
                     automol.graph.without_fractional_bonds(
@@ -395,6 +397,9 @@ def main(insert_dct):
                     automol.graph.without_fractional_bonds(
                         zrxn_i.backward_ts_graph)))
             backward_gra = automol.graph.add_bonds(backward_gra, back_form_key)
+            if zrxn_i.class_ == 'hydrogen abstraction':
+                forward_gra = automol.graph.remove_bonds(forward_gra, forw_brk_key)
+                backward_gra = automol.graph.remove_bonds(backward_gra, back_brk_key)
             print('forRXN', automol.graph.string(zrxn_i.forward_ts_graph))
             print('forRXN', automol.graph.string(forward_gra))
             print('bacRXN', automol.graph.string(zrxn_i.backward_ts_graph))
@@ -407,12 +412,13 @@ def main(insert_dct):
                 zma, _, _ = automol.reac.ts_zmatrix(zrxn, geo)
         if zrxn is None:
             print(
-                'Your geometry did not match any of the attempted' +
+                'Your geometry did not match any of the attempted ' +
                 'zrxns, which are the following')
             for zrxn_i in zrxns:
                 print(zrxns)
             sys.exit()
-        hess = elstruct.reader.hessian(prog, out_str)
+        # hess = elstruct.reader.hessian(prog, out_str)
+        hess = None
         if hess is None:
             print(
                 'No hessian found in output, cannot save ' +
