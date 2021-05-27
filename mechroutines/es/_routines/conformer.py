@@ -473,7 +473,8 @@ def conformer_sampling(zma, spc_info, thy_info,
         if success:
             _save_conformer(
                 ret, cnf_save_fs, locs, thy_info,
-                zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True)
+                zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True,
+                init_zma=samp_zma)
 
             nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs, rid)
             nsampd += 1
@@ -695,7 +696,8 @@ def ring_conformer_sampling(
         if success:
             _save_conformer(
                 ret, cnf_save_fs, locs, thy_info,
-                zrxn=zrxn, orig_ich=spc_info[0], rid_traj=False)
+                zrxn=zrxn, orig_ich=spc_info[0], rid_traj=False,
+                init_zma=samp_zma)
 
             nsampd = _calc_nsampd(cnf_save_fs, cnf_run_fs)
             nsampd += 1
@@ -763,6 +765,8 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
     """ Loop over the RUN filesys and save conformers
     """
 
+    job = elstruct.Job.OPTIMIZATION
+
     if not cnf_run_fs[0].exists():
         print(" - No conformers in RUN filesys to save.")
     else:
@@ -774,12 +778,17 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
 
             # Read the electronic structure optimization job
             success, ret = es_runner.read_job(
-                job=elstruct.Job.OPTIMIZATION, run_fs=run_fs)
+                job=job, run_fs=run_fs)
 
             if success:
+                if run_fs[-1].file.zmatrix.exists([job]):
+                    init_zma = run_fs[-1].file.zmatrix.read([job])
+                else:
+                    init_zma = None
                 _save_conformer(
                     ret, cnf_save_fs, locs, thy_info,
-                    zrxn=zrxn, orig_ich=spc_info[0])
+                    zrxn=zrxn, orig_ich=spc_info[0],
+                    init_zma=init_zma)
 
         # Update the conformer trajectory file
         print('')
@@ -787,7 +796,7 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
 
 
 def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
-                    orig_ich='', rid_traj=False):
+                    orig_ich='', rid_traj=False, init_zma=None):
     """ save the conformers that have been found so far
           # Only go through save procedure if conf not in save
           # may need to get geo, ene, etc; maybe make function
@@ -801,7 +810,7 @@ def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
     method = inf_obj.method
     ene = elstruct.reader.energy(prog, method, out_str)
     geo = elstruct.reader.opt_geometry(prog, out_str)
-    zma = elstruct.reader.opt_zmatrix(prog, out_str)
+    zma = filesys.save.read_job_zma(ret, init_zma=init_zma)
 
     # Assess if geometry is properly connected
     viable = _geo_connected(geo, zrxn)

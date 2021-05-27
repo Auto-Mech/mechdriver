@@ -8,7 +8,7 @@ end level
 level mp2_sto
     orb_res =  RU
     program =  psi4
-    method =  mp2
+    method =  b3lyp
     basis =  sto-3g
 end level
 
