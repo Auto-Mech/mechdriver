@@ -138,6 +138,7 @@ def instability(conn_zma, disconn_zmas, cnf_save_fs,
     zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+    zma_save_fs[-1].file.instability.write(zrxn, zma_locs)
 
     # Set and print the save path information
     print(" - Saving...")

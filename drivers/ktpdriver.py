@@ -67,7 +67,8 @@ def run(pes_rlst,
                 spc_dct,
                 pes_mod_dct, spc_mod_dct,
                 label_dct,
-                mess_path, run_prefix, save_prefix)
+                mess_path, run_prefix, save_prefix,
+                make_lump_well_inp=tsk_key_dct['lump_wells'])
 
             autorun.write_input(
                 mess_path, mess_inp_str,

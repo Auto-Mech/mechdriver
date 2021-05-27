@@ -73,7 +73,7 @@ def make_messrate_str(pes_idx, rxn_lst,
             script_str, mess_path, globkey_str, rxn_chan_str,
             energy_trans_str=energy_trans_str,
             aux_dct=dats,
-            input_name='mess.inp',
+            input_name='mess.inp',  # need dif name for this?
             output_names=('mess.aux',))
     else:
         mess_inp_str = mess_io.writer.messrates_inp_str(

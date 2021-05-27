@@ -79,7 +79,7 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
             ioprinter.debug_message('geo str\n', automol.geom.string(geo_init))
 
             zma_init = automol.geom.zmatrix(geo_init)
-                
+
             rid = autofile.schema.generate_new_ring_id()
             cid = autofile.schema.generate_new_conformer_id()
 
@@ -112,7 +112,7 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
                     'Found functional groups that cause instabilities')
                 filesys.save.instability(
                     zma_init, instab_zmas, cnf_save_fs,
-                    rng_locs=rid, tors_locs=cid, zma_locs=(0,))
+                    rng_locs=(rid,), tors_locs=(cid,), zma_locs=(0,))
                 geo_found = True
         else:
             geo_found = False
@@ -234,10 +234,9 @@ def _optimize_molecule(spc_info, zma_init,
         geo = elstruct.reader.opt_geometry(inf_obj.prog, out_str)
         zma = elstruct.reader.opt_zmatrix(inf_obj.prog, out_str)
         if zma is None:
-            zma = automol.geom.zmat(geo)
+            zma = automol.geom.zmatrix(geo)
         geo_conn = bool(automol.geom.connected(geo))
-    else:
-        geo_conn = False
+
     # If connected, check for imaginary modes and fix them if possible
     if geo_conn:
 

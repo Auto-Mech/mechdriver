@@ -1,4 +1,4 @@
-""" Runs automech
+""" Runs automech instancs for tests
 """
 
 import os
@@ -9,64 +9,72 @@ import subprocess
 
 # Set path where test input file exist
 PATH = os.path.dirname(os.path.realpath(__file__))
-INP_DIR = os.path.join(PATH, 'inp')
+CWD_INP_DIR = os.path.join(PATH, 'inp')
 
 # Set paths where tests will run
 TMP_DIR = tempfile.mkdtemp()
-RUN_DIR = os.path.join(TMP_DIR, 'run')
-SAVE_DIR = os.path.join(TMP_DIR, 'save')
-print('dir', TMP_DIR)
-
-# Set names of input
-INP_NAMES = ('run.template', 'mechanism.dat', 'species.csv',
-             'models.dat', 'theory.dat')
+TMP_INP_DIR = os.path.join(TMP_DIR, 'inp')
+TMP_RUN_DIR = os.path.join(TMP_DIR, 'run')
+TMP_SAVE_DIR = os.path.join(TMP_DIR, 'save')
+print(TMP_DIR)
 
 # Set command line
 EXE_PATH = os.path.join(PATH, '../bin/automech.py')
 CMD_LINE = 'python -u {0} {1} & disown %1'.format(EXE_PATH, TMP_DIR)
 
 
-def test__():
+# Test functions
+def test__rrho():
+    """ Run es, thermo, and rates for PES; standard run
+    """
+    _run('run_p3_rrho.temp')
+
+
+def test__instab():
+    """ Run es, thermo, and rates for PES with instabilities
+    """
+    _run('run_p1_rrho.temp')
+
+
+def test__etoh():
+    """ Run es, thermo, for EtOH with different rotor types
+
+        need a species that uses theory methods scaling
+    """
+    _run('run_c2h5oh_full.temp')
+
+
+# Helper functions to run a single instance of MechDriver
+def _run(run_template):
     """ test automech.py
     """
-    _copy_input()
-    _rewrite_run_dat()
+    # Copy input to tmp directory and replace it
+    shutil.copytree(CWD_INP_DIR, TMP_INP_DIR)
+    _fill_template_and_write_file(run_template, 'run.dat')
 
     logfile = open('{0}/run.log'.format(TMP_DIR), 'w')
     subprocess.call(CMD_LINE.split(), stdout=logfile, stderr=logfile)
 
 
-def _copy_input():
-    """ Copy all of the input files
-    """
-
-    inp_paths = tuple(
-        os.path.join(INP_DIR, name) for name in INP_NAMES)
-    tmp_paths = tuple(
-        os.path.join(TMP_DIR, 'inp', name) for name in INP_NAMES)
-    os.makedirs(
-        os.path.join(TMP_DIR, 'inp'))
-
-    for inp_path, tmp_path in zip(inp_paths, tmp_paths):
-        shutil.copy(inp_path, tmp_path)
-
-
-def _rewrite_run_dat():
+def _fill_template_and_write_file(templatefile, inpfile):
     """ Read the run.dat and replace run_prefix and save_prefix
     """
-    # Read the input file into a string
-    inp_file = os.path.join(TMP_DIR, 'inp', 'run.template')
+
+    # Set names of template and input for the calculation
+    inp_file = os.path.join(TMP_INP_DIR, templatefile)
+    new_inp_file = os.path.join(TMP_INP_DIR, inpfile)
+
+    # Read template and fill with the run and save prefix
     with open(inp_file, 'r') as fobj:
         inp_str = fobj.read()
+    new_inp_str = inp_str.format(TMP_RUN_DIR, TMP_SAVE_DIR)
 
-    # Put the dynamically loaded tmp paths into the input
-    new_inp_str = inp_str.format(RUN_DIR, SAVE_DIR)
-
-    # Write the input
-    new_inp_file = os.path.join(TMP_DIR, 'inp', 'run.dat')
+    # Write the run.dat and models.dat for the calculation
     with open(new_inp_file, 'w') as fobj:
-        inp_str = fobj.write(new_inp_str)
+        fobj.write(new_inp_str)
 
 
 if __name__ == '__main__':
-    test__()
+    test__rrho()
+    test__instab()
+    test__etoh()

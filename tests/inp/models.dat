@@ -27,31 +27,125 @@ kin global
     )
 end kin
 
-spc global
+spc rrhomod
     ene = (
-        lvl1 = mp2dz
+        lvl1 = mp2_gs
     )
     rot = (
         mod = rigid
     )
     vib = (
         mod = harm
-        geolvl = mp2gs
+        geolvl = mp2_sto
     )
     tors = (
-        mod = 1dhrfa
-        enelvl = mp2gs
-        geolvl = mp2gs
+        mod = rigid
+        enelvl = mp2_sto
+        geolvl = mp2_sto
     )     
     symm = (
         mod = sampling
-        geolvl = mp2gs
+        geolvl = mp2_sto
     )
     rpath = (
         # have to place or code breaks
     )
     ts = (
-        tunnel = eckart
+        tunnel = None
+        sadpt = fixed
+        nobar = pst
+        wells = fake
+    )
+end spc
+
+
+spc 1dhrmod
+    ene = (
+        lvl1 = mp2_gs
+    )
+    rot = (
+        mod = rigid
+    )
+    vib = (
+        mod = harm
+        geolvl = mp2_sto
+    )
+    tors = (
+        mod = 1dhr
+        enelvl = mp2_sto
+        geolvl = mp2_sto
+    )     
+    symm = (
+        mod = sampling
+        geolvl = mp2_sto
+    )
+    rpath = (
+        # have to place or code breaks
+    )
+    ts = (
+        tunnel = None
+        sadpt = fixed
+        nobar = pst
+        wells = fake
+    )
+end spc
+
+spc 1dhrfmod
+    ene = (
+        lvl1 = mp2_gs
+    )
+    rot = (
+        mod = rigid
+    )
+    vib = (
+        mod = harm
+        geolvl = mp2_sto
+    )
+    tors = (
+        mod = 1dhrf
+        enelvl = mp2_sto
+        geolvl = mp2_sto
+    )     
+    symm = (
+        mod = sampling
+        geolvl = mp2_sto
+    )
+    rpath = (
+        # have to place or code breaks
+    )
+    ts = (
+        tunnel = None
+        sadpt = fixed
+        nobar = pst
+        wells = fake
+    )
+end spc
+
+spc 1dhrfamod
+    ene = (
+        lvl1 = mp2_gs
+    )
+    rot = (
+        mod = rigid
+    )
+    vib = (
+        mod = harm
+        geolvl = mp2_sto
+    )
+    tors = (
+        mod = 1dhrfa
+        enelvl = mp2_sto
+        geolvl = mp2_sto
+    )     
+    symm = (
+        mod = sampling
+        geolvl = mp2_sto
+    )
+    rpath = (
+        # have to place or code breaks
+    )
+    ts = (
+        tunnel = None
         sadpt = fixed
         nobar = pst
         wells = fake

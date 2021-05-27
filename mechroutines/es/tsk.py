@@ -41,43 +41,35 @@ def run_tsk(tsk, spc_dct, spc_name,
     for generating a list of conformer or tau sampling geometries
     """
 
-    # Print the head of the task
     ioprinter.task_header(tsk, spc_name)
     ioprinter.keyword_list(es_keyword_dct, thy_dct)
 
-    # If species is unstable, set task to 'none'
-    ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-    ini_thy_info = tinfo.from_dct(ini_method_dct)
-    stable = True
-    if 'ts' not in spc_name and tsk != 'init_geom':
-        zrxn, _ = filesys.read.instability_transformation(
-            spc_dct, spc_name, ini_thy_info, save_prefix)
-        stable = bool(zrxn is None)
-
-    if stable:
+    skip = skip_task(tsk, spc_dct, spc_name,
+                     thy_dct, es_keyword_dct, save_prefix)
+    if not skip:
         ioprinter.debug_message('- Proceeding with requested task...')
 
         # Get stuff from task
         job = tsk.split('_', 1)[1]
 
         # Run the task if an initial geom exists
-        if 'init' in tsk and not skip_task(spc_dct, spc_name):
+        if 'init' in tsk:
             _ = geom_init(
                 spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'conf' in tsk and not skip_task(spc_dct, spc_name):
+        elif 'conf' in tsk:
             conformer_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'tau' in tsk and not skip_task(spc_dct, spc_name):
+        elif 'tau' in tsk:
             tau_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'hr' in tsk and not skip_task(spc_dct, spc_name):
+        elif 'hr' in tsk:
             hr_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'rpath' in tsk and not skip_task(spc_dct, spc_name):
+        elif 'rpath' in tsk:
             rpath_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
@@ -85,10 +77,6 @@ def run_tsk(tsk, spc_dct, spc_name,
             findts(
                 spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-
-    else:
-        ioprinter.info_message(
-            'Skipping task for unstable species...', newline=1)
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
@@ -205,7 +193,7 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Check runsystem for equal ring CONF make conf_fs
         # Else make new ring conf directory
-        rid = conformer.rng_loc_for_geo(geo, cnf_run_fs, cnf_save_fs)
+        rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
 
         if rid is None:
             conformer.single_conformer(
@@ -631,6 +619,15 @@ def hr_tsk(job, spc_dct, spc_name,
     # Run the task if any torsions exist
     if any(torsions):
 
+        if 'fa' in tors_model:
+            scn = 'CSCAN'
+        elif 'f' in tors_model:
+            if len(torsions) > 1:
+                scn = 'CSCAN'
+            else:
+                scn = 'SCAN'
+        else:
+            scn = 'SCAN'
         scn = 'SCAN' if 'fa' not in tors_model else 'CSCAN'
         ini_scn_run_fs, ini_scn_save_fs = build_fs(
             ini_cnf_run_path, ini_cnf_save_path, scn,
@@ -699,7 +696,7 @@ def hr_tsk(job, spc_dct, spc_name,
                 # Set the constraint dct and filesys for the scan
                 const_names = automol.zmat.set_constraint_names(
                     zma, run_tors_names, tors_model)
-                constraint_dct = automol.zmat.build_constraint_dct(
+                constraint_dct = automol.zmat.constraint_dct(
                     zma, const_names, tors_names)
 
                 # get the scn_locs, maybe get a function?
@@ -830,26 +827,55 @@ def rpath_tsk(job, spc_dct, spc_name,
         # inf_sep_ene()
 
 
-def skip_task(spc_dct, spc_name):
-    """ Should this task be skipped?
-    :param spc_dct: species dictionary
-    :type spc_dct: dictionary
-    :param spc_name: name of species
-    :type spc_name: string
+def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
+    """ Determine if an electronic structure task should be skipped based on
+        various parameters.
 
-    :rtype skip: boolean
+        :param spc_dct: species dictionary
+        :type spc_dct: dictionary
+        :param spc_name: name of species
+        :type spc_name: string
+        :rtype: bool
     """
+
+    # Initialize skip to be false
     skip = False
 
-    # It should be skipped if its radical radical
+    # Set theory info needed to find information
+    ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
+    ini_thy_info = tinfo.from_dct(ini_method_dct)
+
+    # Perform checks
     if 'ts' in spc_name:
-        rxn_info = spc_dct[spc_name]['rxn_info']
-        ts_mul = rinfo.value(rxn_info, 'tsmult')
-        high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
-        if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:
-            skip = True
-            ioprinter.info_message(
-                'Skipping task because {}'.format(spc_name),
-                'is a low-spin radical radical reaction')
+        # Skip all tasks except find_ts
+        # if rad-rad TS
+        if tsk != 'find_ts':
+            rxn_info = spc_dct[spc_name]['rxn_info']
+            ts_mul = rinfo.value(rxn_info, 'tsmult')
+            high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
+            if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:
+                skip = True
+                ioprinter.info_message(
+                    'Skipping task because {}'.format(spc_name),
+                    'is a low-spin radical radical reaction')
+    else:
+        spc_natoms = len(automol.inchi.geometry(spc_dct[spc_name]['inchi']))
+        if spc_natoms == 1:
+            # Skip all tasks except init_geom and conf_energy
+            # if species is an atom
+            if tsk not in ('init_geom', 'conf_energy'):
+                skip = True
+                ioprinter.info_message(
+                    'Skipping task for an atom...', newline=1)
+        else:
+            # Skip all tasks except ini_geom
+            # if (non-TS) species is unstable
+            if tsk != 'init_geom':
+                zrxn, _ = filesys.read.instability_transformation(
+                    spc_dct, spc_name, ini_thy_info, save_prefix)
+                skip = bool(zrxn is None)
+                if skip:
+                    ioprinter.info_message(
+                        'Skipping task for unstable species...', newline=1)
 
     return skip

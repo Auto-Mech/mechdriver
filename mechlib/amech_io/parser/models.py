@@ -92,13 +92,15 @@ def models_dictionary(mod_str, thy_dct):
 
         :param mod_str: models.dat input file string
         :type mod_str: str
-        :param thy_dct: 
+        :param thy_dct:
         :type: dict[str:dict[str:str/float]]
     """
 
     # Format the models input to the kin and spc model dcts
-    kin_blocks = ioformat.ptt.named_end_blocks(mod_str, 'kin')
-    spc_blocks = ioformat.ptt.named_end_blocks(mod_str, 'spc')
+    kin_blocks = ioformat.ptt.named_end_blocks(
+        mod_str, 'kin', footer='kin')
+    spc_blocks = ioformat.ptt.named_end_blocks(
+        mod_str, 'spc', footer='spc')
 
     kin_mod_dct = automol.util.dict_.merge_subdct(
         ioformat.ptt.keyword_dcts_from_blocks(kin_blocks), keep_subdct=True)
@@ -107,10 +109,12 @@ def models_dictionary(mod_str, thy_dct):
 
     # Add defaults, check key-vals, and format each model dicts
     for mod, dct in kin_mod_dct.items():
-        kin_mod_dct[mod] = _kin_model_build(dct)
+        if dct:  # if statement for empty global dcts from above fxn
+            kin_mod_dct[mod] = _kin_model_build(dct)
 
     for mod, dct in spc_mod_dct.items():
-        spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)
+        if dct:  # if statement for empty global dcts from above fxn
+            spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)
 
     return kin_mod_dct, spc_mod_dct
 

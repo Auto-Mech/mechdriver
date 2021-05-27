@@ -79,7 +79,7 @@ def run_energy(zma, geo, spc_info, thy_info,
             optmat = ()
 
         success, ret = es_runner.execute_job(
-            job='energy',
+            job=elstruct.Job.ENERGY,
             script_str=script_str,
             run_fs=run_fs,
             geo=job_geo,
@@ -146,7 +146,7 @@ def run_gradient(zma, geo, spc_info, thy_info,
             run_fs = autofile.fs.run(geo_run_path)
 
             success, ret = es_runner.execute_job(
-                job='gradient',
+                job=elstruct.Job.GRADIENT,
                 script_str=script_str,
                 run_fs=run_fs,
                 geo=job_geo,
@@ -232,7 +232,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
             run_fs = autofile.fs.run(geo_run_path)
 
             success, ret = es_runner.execute_job(
-                job='hessian',
+                job=elstruct.Job.HESSIAN,
                 script_str=script_str,
                 run_fs=run_fs,
                 geo=job_geo,
@@ -331,7 +331,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
         if _run:
 
             success, ret = es_runner.execute_job(
-                job='vpt2',
+                job=elstruct.Job.VPT2,
                 script_str=script_str,
                 run_fs=run_fs,
                 geo=job_geo,
@@ -406,7 +406,7 @@ def run_prop(zma, geo, spc_info, thy_info,
         run_fs = autofile.fs.run(geo_run_path)
 
         success, ret = es_runner.execute_job(
-            job='molec_properties',
+            job=elstruct.Job.MOLPROP,
             script_str=script_str,
             run_fs=run_fs,
             geo=job_geo,
