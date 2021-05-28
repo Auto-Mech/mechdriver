@@ -6,14 +6,30 @@ import autofile
 
 
 # Functions for locating maxima
-def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs,
+def find_max_1d(typ, grid, ts_zma, scan_name, scn_save_fs,
                 mod_thy_info, constraint_dct):
-    """ Find the maxmimum of the grid along one dimension
+    """ Find the maxmimum of a one-dimensional grid of points
+        calculated along some coordinate.
+
+        :param typ: reaction class type
+        :type typ: str
+        :param grid: set of points that comprise the grid
+        :type grid: tuple(numpy.ndarray)
+        :param ts_zma: initial ts_zma from ???
+        :type ts_zma: 
+        :param scan_name: name of coordinate in zma along which scan conducted
+        :type scan_name: str
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param mod_thy_info: ???
+        :type mod_thy_info: ???
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
     """
 
     # Get the locs and energies along the grid
     locs_lst, enes_lst = _grid_vals(
-        grid, dist_name, scn_save_fs,
+        grid, scan_name, scn_save_fs,
         mod_thy_info, constraint_dct)
 
     # Get the max zma
@@ -36,26 +52,43 @@ def find_max_1d(typ, grid, ts_zma, dist_name, scn_save_fs,
     if 'migration' in typ:
         max_grid_val = grid[max_idx]
         mig_zma = automol.zmat.set_values_by_name(
-            ts_zma, {dist_name: max_grid_val})
+            ts_zma, {scan_name: max_grid_val})
         guess_zmas.append(mig_zma)
 
     return guess_zmas
 
 
-def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs,
+def find_max_2d(grid1, grid2, scan_name, scan_name2, scn_save_fs,
                 mod_thy_info, constraint_dct):
-    """ Find the maxmimum of the grid along two dimensions
+    """ Find the maxmimum of a two-dimensional grid of points
+        calculated along two coordinates.
+
+        :param grid1: set of points that comprise first dimension of grid
+        :type: tuple(numpy.ndarray)
+        :param grid2: set of points that comprise second dimension of grid
+        :type: tuple(numpy.ndarray)
+        :param scan_name1: name of coordinate in zma along dirst dimension
+        :type scan_name1: str
+        :param scan_name2: name of coordinate in zma along second dimension
+        :type scan_name2: str
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param mod_thy_info: ???
+        :type mod_thy_info: ???
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
     """
+
     enes_lst = []
     locs_lst_lst = []
     for grid_val_j in grid2:
         locs_list = []
         for grid_val_i in grid1:
             if constraint_dct is None:
-                locs_list.append([[dist_name, brk_name],
+                locs_list.append([[scan_name1, scan_name2],
                                   [grid_val_i, grid_val_j]])
             else:
-                locs_list.append([constraint_dct, [dist_name, brk_name],
+                locs_list.append([constraint_dct, [scan_name1, scan_name2],
                                   [grid_val_i, grid_val_j]])
         enes = []
         locs_lst = []
@@ -89,15 +122,24 @@ def find_max_2d(grid1, grid2, dist_name, brk_name, scn_save_fs,
     max_ene = min_ene
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
 
-    # print('geometry for maximum along scan:', max_zma)
-    # print('energy for maximum along scan:', max_ene)
-
     return max_zma
 
 
-def _grid_vals(grid, dist_name, scn_save_fs,
+def _grid_vals(grid, scan_name, scn_save_fs,
                mod_thy_info, constraint_dct):
-    """ efef
+    """ Build a list of the filesystem locators for each optimized
+        structure as well as a list of their corresponding energies.
+        
+        :param grid: set of points that comprise the grid
+        :type grid: tuple(numpy.ndarray)
+        :param scan_name: name of coordinate in zma along which scan conducted
+        :type scan_name: str
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param mod_thy_info: ???
+        :type mod_thy_info: ???
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
     """
 
     # Initialize the lists
@@ -108,9 +150,9 @@ def _grid_vals(grid, dist_name, scn_save_fs,
     grid_locs = []
     for grid_val_i in grid:
         if constraint_dct is None:
-            grid_locs.append([[dist_name], [grid_val_i]])
+            grid_locs.append([[scan_name], [grid_val_i]])
         else:
-            grid_locs.append([constraint_dct, [dist_name], [grid_val_i]])
+            grid_locs.append([constraint_dct, [scan_name], [grid_val_i]])
 
     # Get the energies along the grid
     for locs in grid_locs:

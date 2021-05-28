@@ -118,10 +118,10 @@ def conformer_tsk(job, spc_dct, spc_name,
                   thy_dct, es_keyword_dct,
                   run_prefix, save_prefix):
     """ Launch tasks associated with conformers.
-        Scan: Generate a set of conformer geometries and energies via
-              random sampling over torsional coordinates
-              following by optimization
-        SP: Calculate ene, grad, ..
+
+        The calculation can either scan to generate conformer geometries via
+        random sampling over torsional coordinates followin by optimization.
+        Can also calculate things for geoms.
     """
 
     saddle = bool('ts_' in spc_name)

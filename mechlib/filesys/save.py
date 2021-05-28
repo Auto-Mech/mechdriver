@@ -10,7 +10,13 @@ from mechlib.amech_io import printer as ioprinter
 
 def atom(sp_ret, cnf_fs, thy_locs, zma,
          rng_locs=None, tors_locs=None, zma_locs=(0,)):
-    """ Save an atom from a single-point job
+    """ Save an all of the information for an atom into the
+        CONF layer of the save filesystem: SPC/THY/CONFS/Z
+        that can be parsed from a single-point energy job.
+
+        :param sp_ret: 
+        :type sp_ret:
+        :param cnf_fs: 
     """
 
     # Build filesystem locs and objects

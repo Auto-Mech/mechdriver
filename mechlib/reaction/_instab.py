@@ -14,10 +14,8 @@ def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
     """
 
     # Get split names from full PES run lst
-    print('pes rst', pes_rlst)
     _split_rxn_names = ()
     for _, rxn_lst in pes_rlst.items():
-        print(rxn_lst)
         split_rxn_lst = split_unstable_pes(
             rxn_lst, spc_dct, spc_model_dct_i, save_prefix)
         for split_rxn in split_rxn_lst:
@@ -38,7 +36,16 @@ def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
 
 
 def split_unstable_pes(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
-    """ Loop over the reaction list and break up the unstable species
+    """ Build a new list of reactions for a given PES where all of the
+        reactant and product species of the channels are assessed for
+        instability and broken up.
+
+        :param rxn_lst:
+        :type rxn_lst:
+        :param spc_dct: species information
+           dict[spc_name: spc_information]
+        :param spc_mod_dct_i:
+        :type spc_mod_dct_i: dict[]
     """
 
     # Get theory
@@ -81,7 +88,17 @@ def split_unstable_pes(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
 
 
 def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct_i, save_prefix):
-    """ Loop over the reaction list and break up the unstable species
+    """ Build a new list of species where each species of the input list
+        has been assessed for instability and broken up.
+
+        :param spc_rlst:
+        :type spc_rlst:
+        :param spc_dct: species information
+           dict[spc_name: spc_information]
+        :param spc_mod_dct_i:
+        :type spc_mod_dct_i: dict[]
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
     """
 
     # Get theory
@@ -104,9 +121,23 @@ def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct_i, save_prefix):
 
 def _split_mapping(spc_dct, thy_info, save_prefix,
                    spc_names=None, zma_locs=(0,)):
-    """ Build a dictionry which maps the names of species into splits
-        would like to build to just go over spc dct (good for mech pre-process)
-        could do
+    """ Build a dictionary that describes how species decomposes into
+        smaller species via some radical stability. Dictionary maps the
+        species name to the names of the decomposition products.
+        
+        If no names provided, a mapping will be generated for all species
+        in the species dictionary.
+
+        :param spc_dct: species information
+           dict[spc_name: spc_information]
+        :param spc_names: mechanism names of species to assess
+        :type spc_names: str
+        :param thy_info: ???
+        :type thy_info: ???
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
+        :param zma_locs: locs for zma filesys (put in spc dct)
+        :type zma_locs:
     """
 
     if spc_names is None:
@@ -126,7 +157,24 @@ def _split_mapping(spc_dct, thy_info, save_prefix,
 
 def _split_species(spc_dct, spc_name, thy_info, save_prefix,
                    zma_locs=(0,)):
-    """  split up the unstable species
+    """ Assess if a given species has an instability transformation
+        file located in the save filesystem within a Z-Matrix layer:
+        SPC/THY/CONFS/Z/ which are specified by the provided info.
+        
+        If file is found, use the contained information to break-up
+        the species into products of the instability transformation. If
+        no file found, return species.
+
+        :param spc_dct: species information
+           dict[spc_name: spc_information]
+        :param spc_name: mechanism name of species to assess
+        :type spc_name: str
+        :param thy_info: ???
+        :type thy_info: ???
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
+        :param zma_locs: locs for zma filesys (put in spc dct)
+        :type zma_locs:
     """
 
     # Initialize an empty list

@@ -26,7 +26,7 @@ def read_amech_input(job_path):
 
         :param job_path: directory path where all input files exist
         :type job_path: str
-        :rtype dict[str:str]
+        :rtype: dict[str:str]
     """
 
     # Read required input strings

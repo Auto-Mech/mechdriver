@@ -8,7 +8,6 @@ from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 from phydat import phycon
 from mechlib import filesys
-from mechlib.filesys import build_fs
 
 
 CLA_INP = 'inp/class.csv'
@@ -35,7 +34,6 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
         :type save_prefix: str
     """
 
-    # Try to build the Z-Matrix reaction object or identify from scratch
     zrxn, zma = _read_from_filesys(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
     if zrxn is None:
@@ -53,47 +51,6 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
     print('    Reaction class identified as: {}'.format(rclasses[0]))
 
     return zrxns, zmas, rclasses
-
-
-def _read_from_filesys(rxn_info, ini_thy_info, zma_locs, save_prefix):
-    """ Check if reaction exists in the filesystem and has been identified
-    """
-
-    zrxn, zma = None, None
-
-    sort_rxn_info = rinfo.sort(rxn_info, scheme='autofile')
-    ts_info = rinfo.ts_info(rxn_info)
-    mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, ts_info)
-
-    rxn_fs = autofile.fs.reaction(save_prefix)
-    if rxn_fs[-1].exists(sort_rxn_info):
-        _, cnf_save_fs = build_fs(
-            save_prefix, save_prefix, 'CONFORMER',
-            rxn_locs=sort_rxn_info,
-            thy_locs=mod_ini_thy_info[1:],
-            # this needs to be fixed for any case with more than one TS
-            ts_locs=(0,))
-
-        _, ini_min_cnf_path = filesys.mincnf.min_energy_conformer_locators(
-            cnf_save_fs, mod_ini_thy_info)
-        if ini_min_cnf_path:
-            zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
-            if zma_fs[-1].file.reaction.exists(zma_locs):
-                zrxn = zma_fs[-1].file.reaction.read(zma_locs)
-                zma = zma_fs[-1].file.zmatrix.read(zma_locs)
-
-        ts_locs = (0,)
-        if zrxn is None:
-            _, zma_fs = build_fs(
-                '', save_prefix, 'ZMATRIX',
-                rxn_locs=sort_rxn_info, ts_locs=ts_locs,
-                thy_locs=mod_ini_thy_info[1:])
-
-            if zma_fs[-1].file.reaction.exists(zma_locs):
-                zrxn = zma_fs[-1].file.reaction.read(zma_locs)
-                zma = zma_fs[-1].file.zmatrix.read(zma_locs)
-
-    return zrxn, zma
 
 
 def _id_reaction(rxn_info):
@@ -122,8 +79,14 @@ def _id_reaction(rxn_info):
 
 
 def _mod_class(class_typ, rxn_info):
-    """ append additional info to the class. build class designator
-        defined in automol
+    """ Create the object containing the full description of the 
+        reaction class, including its type, spin state, and whether
+        it is a radical-radical combination.
+
+        :param class_typ: reaction class type
+        :type class_typ: str
+        :param rxn_info: ???
+        :tpye rxn_info: ???
     """
 
     # Set the spin of the reaction to high/low
@@ -138,11 +101,28 @@ def _mod_class(class_typ, rxn_info):
         class_typ, _spin, rinfo.radrad(rxn_info))
 
 
-# from direction
+# from direction (loop over the reactions around split)
 def set_reaction_direction(reacs, prods, rxn_info,
                            thy_info, ini_thy_info, save_prefix,
                            direction='forw'):
-    """ Set the reaction of a direction
+    """ Arrange the reactants and products in the order corresponding
+        to the desired direction of the reaction. If the direction
+        is the exothermic direction, than the species energies are read
+        from the filesystem at the level of theory.
+
+        :param reacs: list of names of the reactants
+        :type reacs: tuple(str)
+        :param prods: list of names of the products
+        :type prods: tuple(str)
+        :param rxn_info:
+        :type rxn_info: tuple(tuple(str), tuple(int), tuple(int), int)
+        :param thy_info: ???
+        :type thy_info: ??
+        :param ini_thy_info: ??
+        :param direction: direction to set reaction to
+        :type direction: str 
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
     """
 
     if direction == 'forw':
@@ -155,6 +135,8 @@ def set_reaction_direction(reacs, prods, rxn_info,
               'Checking energies...')
         reacs, prods = assess_rxn_ene(
             reacs, prods, rxn_info, thy_info, ini_thy_info, save_prefix)
+    else:
+        raise NotImplementedError
 
     print('    Running reaction as:')
     print('      {} = {}'.format('+'.join(reacs), '+'.join(prods)))
@@ -221,10 +203,10 @@ def reagent_energies(rgt, rxn_info, sp_thy_info, geo_thy_info, save_prefix):
         cnf_save_fs = autofile.fs.conformer(thy_save_path)
         min_locs, min_path = filesys.min_energy_conformer_locators(
             cnf_save_fs, mod_geo_thy_info)
+
         # Read energy
         ene = None
         if min_locs:
-            # Create run fs if that directory has been deleted to run the jobs
             sp_fs = autofile.fs.single_point(min_path)
             if sp_fs[-1].file.energy.exists(mod_sp_thy_info[1:4]):
                 ene = sp_fs[-1].file.energy.read(mod_sp_thy_info[1:4])

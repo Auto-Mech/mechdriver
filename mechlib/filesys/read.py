@@ -138,6 +138,47 @@ def energy(filesys, locs, mod_tors_ene_info):
     return ene
 
 
+def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
+    """ Check if reaction exists in the filesystem and has been identified
+    """
+
+    zrxn, zma = None, None
+
+    sort_rxn_info = rinfo.sort(rxn_info, scheme='autofile')
+    ts_info = rinfo.ts_info(rxn_info)
+    mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, ts_info)
+
+    rxn_fs = autofile.fs.reaction(save_prefix)
+    if rxn_fs[-1].exists(sort_rxn_info):
+        _, cnf_save_fs = build_fs(
+            save_prefix, save_prefix, 'CONFORMER',
+            rxn_locs=sort_rxn_info,
+            thy_locs=mod_ini_thy_info[1:],
+            # this needs to be fixed for any case with more than one TS
+            ts_locs=ts_locs)
+
+        _, ini_min_cnf_path = filesys.mincnf.min_energy_conformer_locators(
+            cnf_save_fs, mod_ini_thy_info)
+        if ini_min_cnf_path:
+            zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
+            if zma_fs[-1].file.reaction.exists(zma_locs):
+                zrxn = zma_fs[-1].file.reaction.read(zma_locs)
+                zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+
+        if zrxn is None:
+            _, zma_fs = build_fs(
+                '', save_prefix, 'ZMATRIX',
+                rxn_locs=sort_rxn_info, ts_locs=ts_locs,
+                thy_locs=mod_ini_thy_info[1:])
+
+            if zma_fs[-1].file.reaction.exists(zma_locs):
+                zrxn = zma_fs[-1].file.reaction.read(zma_locs)
+                zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+
+    return zrxn, zma
+
+
+
 def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
                                zma_locs=(0,)):
     """ see if a species and unstable and handle task management
