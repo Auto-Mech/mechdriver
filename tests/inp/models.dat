@@ -59,7 +59,7 @@ spc rrhomod
 end spc
 
 
-spc onehrmod
+spc onedhrmod
     ene = (
         lvl1 = mp2_gs
     )
@@ -90,7 +90,7 @@ spc onehrmod
     )
 end spc
 
-spc onehrfmod
+spc onedhrfmod
     ene = (
         lvl1 = mp2_gs
     )
@@ -121,7 +121,7 @@ spc onehrfmod
     )
 end spc
 
-spc onehrfamod
+spc onedhrfamod
     ene = (
         lvl1 = mp2_gs
     )

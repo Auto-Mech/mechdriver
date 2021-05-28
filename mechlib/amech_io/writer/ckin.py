@@ -112,6 +112,7 @@ def nasa_polynomial(hform0, hform298, ckin_poly_str):
     )
     return hf_str + ckin_poly_str
 
+
 # prob can handle with autorun func
 def write_nasa_file(ckin_nasa_str, ckin_path):
     """ write out the nasa polynomials

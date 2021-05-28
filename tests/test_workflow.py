@@ -28,13 +28,13 @@ CMD_LINE = 'python -u {0} {1} & disown %1'.format(EXE_PATH, TMP_DIR)
 def test__rrho():
     """ Run es, thermo, and rates for PES; standard run
     """
-    _run('run_p3_rrho.temp')
+    _run('run_c2h6_h_rrho.temp')
 
 
 def test__1dhr():
     """ Run es, thermo, and rates for PES; standard run
     """
-    _run('run_p3_1dhr.temp')
+    _run('run_c2h6_h_1dhr.temp')
 
 
 def test__etoh():
@@ -48,8 +48,14 @@ def test__etoh():
 def test__instab():
     """ Run es, thermo, and rates for PES with instabilities
     """
-    _run('run_p1_rrho.temp')
-    # instab error
+    _run('run_ch2ooh_rrho.temp')
+
+
+def test__radrad():
+    """ Run es, thermo, and rates for PES with instabilities
+    """
+    _run('run_c2h5_h_1dhrfa.temp')
+    # later: switch c2h5 to vtst/vrctst and ch3_h to pst
 
 
 def test__trans():
@@ -98,6 +104,7 @@ if __name__ == '__main__':
     # test__rrho()
     # test__1dhr()
     # test__etoh()
-    test__instab()
+    # test__instab()
+    test__radrad()
     # test__trans()
     # test__proc()

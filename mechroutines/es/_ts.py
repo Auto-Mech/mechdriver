@@ -91,6 +91,7 @@ def run_pst(spc_dct, tsname, savefs_dct,
     print('Saving reaction class data for pst at')
     print('  {}'.format(zma_path))
 
+    zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
 
