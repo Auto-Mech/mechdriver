@@ -210,7 +210,7 @@ def read_job(job, run_fs):
             print(" - Output has an error message. Skipping...")
             success = False
 
-    return success, ret
+    return is_successful_output(out_str, job, prog), ret
 
 
 def is_successful_output(out_str, job, prog):
@@ -235,10 +235,16 @@ def is_successful_output(out_str, job, prog):
 
     ret = False
     if elstruct.reader.has_normal_exit_message(prog, out_str):
-        conv = elstruct.reader.check_convergence_messages(
+        conv, errs = elstruct.reader.check_convergence_messages(
             prog, error, success, out_str)
-        if conv:
+        if conv and not errs:
             ret = True
+        else:
+            print(" - Output has an error message: {}".format(errs))
+            print(" - Skipping...")
+
+    if ret:
+        print(" - Found successful output. Reading...")
 
     return ret
 

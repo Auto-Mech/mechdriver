@@ -147,6 +147,7 @@ def _psi4(method_dct, job=None):
 
     # Job unneeded for now
     _, _ = method_dct, job
+    method = method_dct.get('method')
     memory = method_dct.get('memory', 20)
 
     # Build the submission script string
@@ -158,6 +159,28 @@ def _psi4(method_dct, job=None):
         # 'mol_options': ['no_symmetry']
         'mol_options': ['symmetry c1']
     }
+    if job == elstruct.Job.OPTIMIZATION:
+        kwargs.update({
+            'feedback': False,
+            'errors': [
+                elstruct.Error.SYMM_NOFIND
+            ],
+            'options_mat': [
+                [{'job_options': ['set intrafrag_step_limit 0.08']},
+                 {'job_options': ['set intrafrag_step_limit 0.03']}]
+            ],
+        })
+
+    if elstruct.par.Method.is_dft(method):
+        kwargs.update({
+            'scf_options': [
+                # 'set dft_spherical_points 590',
+                # 'set dft_radial_points 99',
+                'set dft_basis_tolerance 1.0E-11',
+                # 'set dft_pruning_scheme robust'
+                'set opt_coordinates delocalized',  # for scan
+                'set ensure_bt_convergence true'
+            ]})
 
     return script_str, kwargs
 

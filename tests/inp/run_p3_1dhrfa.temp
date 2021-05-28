@@ -21,13 +21,13 @@ els
 end els
 
 thermo
-    write_mess      kin_model=global  spc_model=1dhrfamod
-    run_mess        kin_model=global  spc_model=1dhrfamod  nprocs=10
-    run_fits        kin_model=global  spc_model=1dhrfamod
+    write_mess      kin_model=global  spc_model=onedhrfamod
+    run_mess        kin_model=global  spc_model=onedhrfamod  nprocs=10
+    run_fits        kin_model=global  spc_model=onedhrfamod
 end thermo
 
 ktp
-    write_mess      kin_model=global  spc_model=1dhrfamod
+    write_mess      kin_model=global  spc_model=onedhrfamod
     run_mess        nprocs=10
-    run_fits        kin_model=global  spc_model=1dhrfamod
+    run_fits        kin_model=global  spc_model=onedhrfamod
 end ktp

@@ -145,17 +145,17 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
 
     spc_info = sinfo.from_dct(spc_dct[spc_name])
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    
+
     _, cnf_save_fs = build_fs(
         '', save_prefix, 'CONFORMER',
         spc_locs=spc_info,
         thy_locs=mod_thy_info[1:])
-    
+
     # Check if any locs exist first?
     ini_loc_info = min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
     _, min_cnf_path = ini_loc_info
-    
+
     zma_save_fs = autofile.fs.zmatrix(min_cnf_path)
 
     # Check if the instability files exist

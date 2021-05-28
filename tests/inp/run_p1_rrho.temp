@@ -12,11 +12,11 @@ spc
 end spc
 
 els
-    spc init_geom     runlvl=mp2_sto   inplvl=mp2_sto
-    ts  find_ts       runlvl=mp2_sto   inplvl=mp2_sto
-    all conf_samp     runlvl=mp2_sto   inplvl=mp2_sto
-    all conf_hess     runlvl=mp2_sto   inplvl=mp2_sto
-    all conf_energy   runlvl=mp2_gs    inplvl=mp2_sto
+    spc init_geom     runlvl=m06_gs   inplvl=m06_gs
+    ts  find_ts       runlvl=m06_gs   inplvl=m06_gs
+    all conf_samp     runlvl=m06_gs   inplvl=m06_gs
+    all conf_hess     runlvl=m06_gs   inplvl=m06_gs
+    all conf_energy   runlvl=m06_gs    inplvl=m06_gs
 end els
 
 thermo

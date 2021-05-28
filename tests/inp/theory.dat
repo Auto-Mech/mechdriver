@@ -5,10 +5,24 @@ level b3_sto
     basis =  sto-3g
 end level
 
+level b3_gs
+    orb_res =  RU
+    program =  psi4
+    method =  df-b3lyp
+    basis =  6-31g*
+end level
+
+level m06_gs
+    orb_res =  RU
+    program =  psi4
+    method =  m062x
+    basis =  6-31g*
+end level
+
 level mp2_sto
     orb_res =  RU
     program =  psi4
-    method =  b3lyp
+    method =  mp2
     basis =  sto-3g
 end level
 

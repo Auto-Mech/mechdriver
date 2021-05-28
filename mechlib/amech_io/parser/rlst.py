@@ -8,8 +8,12 @@ import copy
 def combine(pes_rlst, spc_rlst):
     """ Combine
     """
-    run_rlst = copy.deepcopy(pes_rlst)
-    run_rlst.update(spc_rlst)
+    if pes_rlst is not None:
+        run_rlst = copy.deepcopy(pes_rlst)
+        if spc_rlst is not None:
+            run_rlst.update(spc_rlst)
+    else:
+        run_rlst = copy.deepcopy(spc_rlst)
 
     return run_rlst
 

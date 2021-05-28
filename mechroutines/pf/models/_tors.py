@@ -35,9 +35,14 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i):
     tors_ene_info = spc_mod_dct_i['tors']['enelvl'][1][1]
     mod_tors_ene_info = tinfo.modify_orb_label(
         tors_ene_info, sinfo.from_dct(spc_dct_i))
-    [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+    tors_filesys = pf_filesystems['tors']
+    if tors_filesys is not None:
+        [cnf_fs, cnf_save_path, min_cnf_locs, _, _] = pf_filesystems['tors']
+    else:
+        cnf_save_path = ''
 
     # Build the rotors
+    rotors = ()
     if cnf_save_path:
         ref_ene = filesys.read.energy(
             cnf_fs, min_cnf_locs, mod_tors_ene_info)
@@ -50,8 +55,6 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i):
                 zma, tors_dct,
                 tors_names=tors_names,
                 multi=bool('1d' in tors_model))
-        else:
-            rotors = ()
 
     # Read the potential grids
     if any(rotors):

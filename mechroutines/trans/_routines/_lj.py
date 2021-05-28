@@ -7,6 +7,7 @@ import automol
 import onedmin_io
 import autorun
 from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io._path import job_path
@@ -132,11 +133,13 @@ def _runlj(nsamp_needed,
     run_dir = job_path(run_prefix, 'ONEDMIN', 'LJ', fml_str)
 
     # Get the sp str from the submission scritpt (Remove bash?)
+    sp_script_str = autorun.SCRIPT_DCT[tinfo.value(lj_mod_thy_info, 'program')]
+    sp_script_str = ''.join(sp_script_str.splitlines()[1:])
 
     # Run OneDMin
     # prolly better to just get strings
     # need geoms geo_str = _output_str(jobdir, 'min_geoms.out')
-    inp_strs, out_strs = autorun.onedmin.direct(
+    inp_strs, els_str, out_strs = autorun.onedmin.direct(
         sp_script_str, run_dir, nsamp_per_job, njobs,
         tgt_geo, bath_geo, lj_mod_thy_info, charge, mult,
         smin=tgt_dct['smin'], smax=tgt_dct['smax'], spin_method=1)
@@ -149,7 +152,7 @@ def _runlj(nsamp_needed,
     filesys.save.energy_transfer(
         etrans_save_fs, etrans_locs,
         epsilons, sigmas, geoms,
-        ranseeds, version, input_str)
+        ranseeds, version, input_str, els_str)
 
 
 # Helpers
@@ -162,7 +165,7 @@ def _parse(input_strs_lst, output_strs_lst):
     sigmas, epsilons, ranseeds, geos = (), (), (), ()
     for output_strs in output_strs_lst:
         sigmas, epsilons = onedmin_io.reader.lennard_jones(output_strs[1])
-        ranseed = ondemin_io.reader.ranseed(output_strs[1])
+        ranseed = onedmin_io.reader.ranseed(output_strs[1])
         sigmas += sigmas
         epsilons += epsilons
         ranseeds += (ranseed,)

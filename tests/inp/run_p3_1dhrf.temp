@@ -15,19 +15,19 @@ els
     spc init_geom     runlvl=mp2_sto   inplvl=mp2_sto
     ts  find_ts       runlvl=mp2_sto   inplvl=mp2_sto
     all conf_samp     runlvl=mp2_sto   inplvl=mp2_sto
-    all hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhrf
+    all hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhr
     all conf_hess     runlvl=mp2_sto   inplvl=mp2_sto
     all conf_energy   runlvl=mp2_gs    inplvl=mp2_sto
 end els
 
 thermo
-    write_mess      kin_model=global  spc_model=1dhrfmod
-    run_mess        kin_model=global  spc_model=1dhrfmod  nprocs=10
-    run_fits        kin_model=global  spc_model=1dhrfmod
+    write_mess      kin_model=global  spc_model=onedhrfmod
+    run_mess        kin_model=global  spc_model=onedhrfmod  nprocs=10
+    run_fits        kin_model=global  spc_model=onedhrfmod
 end thermo
 
 ktp
-    write_mess      kin_model=global  spc_model=1dhrfmod
+    write_mess      kin_model=global  spc_model=onedhrfmod
     run_mess        nprocs=10
-    run_fits        kin_model=global  spc_model=1dhrfmod
+    run_fits        kin_model=global  spc_model=onedhrfmod
 end ktp

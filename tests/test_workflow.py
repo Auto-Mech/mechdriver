@@ -12,6 +12,7 @@ PATH = os.path.dirname(os.path.realpath(__file__))
 CWD_INP_DIR = os.path.join(PATH, 'inp')
 
 # Set paths where tests will run
+# TMP_DIR = tempfile.mkdtemp()
 TMP_DIR = tempfile.mkdtemp()
 TMP_INP_DIR = os.path.join(TMP_DIR, 'inp')
 TMP_RUN_DIR = os.path.join(TMP_DIR, 'run')
@@ -30,10 +31,10 @@ def test__rrho():
     _run('run_p3_rrho.temp')
 
 
-def test__instab():
-    """ Run es, thermo, and rates for PES with instabilities
+def test__1dhr():
+    """ Run es, thermo, and rates for PES; standard run
     """
-    _run('run_p1_rrho.temp')
+    _run('run_p3_1dhr.temp')
 
 
 def test__etoh():
@@ -42,6 +43,12 @@ def test__etoh():
         need a species that uses theory methods scaling
     """
     _run('run_c2h5oh_full.temp')
+
+
+def test__instab():
+    """ Run es, thermo, and rates for PES with instabilities
+    """
+    _run('run_p1_rrho.temp')
 
 
 # Helper functions to run a single instance of MechDriver
@@ -75,6 +82,7 @@ def _fill_template_and_write_file(templatefile, inpfile):
 
 
 if __name__ == '__main__':
-    test__rrho()
+    # test__rrho()
+    # test__1dhr()
+    # test__etoh()
     test__instab()
-    test__etoh()

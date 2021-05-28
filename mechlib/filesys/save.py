@@ -171,64 +171,68 @@ def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
 
 
 def energy_transfer(etrans_save_fs, etrans_locs,
-                    run_epsilons, run_sigmas, run_geos,
-                    ranseeds, version, input_str):
+                    run_epsilons, run_sigmas, run_geos, run_ranseeds,
+                    version, input_str, els_str):
     """ Save lennard-jones energy transfer params
     """
-
-    # Set the run path to read the files
-    etrans_run_path = etrans_run_fs[-1].path(etrans_locs)
 
     # Read any epsilons and sigma currently in the filesystem
     ioprinter.info_message(
         'Reading Lennard-Jones parameters and Geoms from filesystem...',
         newline=1)
-    fs_geoms, fs_epsilons, fs_sigmas = filesys.read.energy_transfer(
-        etrans_save_fs, etrans_locs)
-    ioprinter.lennard_jones_params(fs_sigmas, fs_epsilons)
+    if etrans_save_fs[-1].file.epsilon.exists(etrans_locs):
+        fs_eps = etrans_save_fs[-1].file.epsilon.read(etrans_locs)
+    else:
+        fs_eps = ()
+    if etrans_save_fs[-1].file.sigma.exists(etrans_locs):
+        fs_sig = etrans_save_fs[-1].file.sigma.read(etrans_locs)
+    else:
+        fs_sig = ()
+    if etrans_save_fs[-1].file.trajectory.exists(etrans_locs):
+        traj = etrans_save_fs[-1].file.trajectory.read(etrans_locs)
+        fs_geos = tuple(x[0] for x in traj)
+        fs_ranseeds = tuple(x[1] for x in traj)
+    else:
+        fs_geos, fs_ranseeds = (), ()
 
-    # Read the lj from all the output files
-    ioprinter.info_message(
-        'Reading Lennard-Jones parameters and Geoms from output...',
-        newline=1)
-    run_geoms, run_epsilons, run_sigmas = gather.read_output(etrans_run_path)
-    ioprinter.lennard_jones_params(run_sigmas, run_epsilons)
+    # Set nsamp numbers
+    ini_nsampd = len(run_geos)
+    cur_nsampd = len(run_sigmas)
+    full_nsampd = ini_nsampd + cur_nsampd
 
     # Add the lists from the two together
-    geoms = fs_geoms + run_geoms
-    sigmas = fs_sigmas + run_sigmas
-    epsilons = fs_epsilons + run_epsilons
+    geoms = fs_geos + run_geos
+    sigmas = (fs_sig,) + run_sigmas
+    epsilons = (fs_eps,) + run_epsilons
+    ranseeds = fs_ranseeds + run_ranseeds
 
     assert len(geoms) == len(sigmas) == len(epsilons), (
         'Number of geoms, sigmas, and epsilons not the same'
     )
 
-    avg_sigma = statistics.mean(sigmas)
-    avg_epsilon = statistics.mean(epsilons)
-    nsampd = len(sigmas)
+    avg_sigma = sigmas / full_nsampd
+    avg_epsilon = epsilons / full_nsampd
+    ioprinter.info_message(
+        'Averaging new vals with one in filesys')
     ioprinter.info_message(
         'Average Sigma to save [unit]:', avg_sigma, newline=1)
-    ioprinter.info_message('Average Epsilont to save [unit]:', avg_epsilon)
-    ioprinter.info_message('Number of values = ', nsampd)
+    ioprinter.info_message('Number of values = ', full_nsampd)
 
     # Update the trajectory file
     traj = []
-    for geo, eps, sig in zip(geoms, epsilons, sigmas):
-        comment = 'Epsilon: {}   Sigma: {}'.format(eps, sig)
+    for geo, eps, sig, ranseed in zip(geoms, epsilons, sigmas, ranseeds):
+        comment = 'Epsilon: {} cm-1   Sigma: {} Ang   RandSeed: {}'.format(
+            eps, sig, ranseed)
         traj.append((comment, geo))
 
     # Write the info obj add ranseeds to this I think
     inf_obj = autofile.schema.info_objects.lennard_jones(
-        nsampd, program='OneDMin', version=prog_version)
-
-    # Set up the electronic structure input file
-    onedmin_inp_str = '<ONEDMIN INP>'
-    els_inp_str = '<ELSTRUCT INP>'
+        full_nsampd, program='OneDMin', version=version)
 
     # Write the params to the save file system
-    etrans_save_fs[-1].file.lj_input.write(onedmin_inp_str, etrans_locs)
+    etrans_save_fs[-1].file.lj_input.write(input_str, etrans_locs)
     etrans_save_fs[-1].file.info.write(inf_obj, etrans_locs)
-    etrans_save_fs[-1].file.molpro_inp_file.write(els_inp_str, etrans_locs)
+    etrans_save_fs[-1].file.molpro_inp_file.write(els_str, etrans_locs)
     etrans_save_fs[-1].file.epsilon.write(avg_epsilon, etrans_locs)
     etrans_save_fs[-1].file.sigma.write(avg_sigma, etrans_locs)
 

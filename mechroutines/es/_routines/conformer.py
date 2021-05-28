@@ -325,19 +325,12 @@ def single_conformer(zma, spc_info, mod_thy_info,
                     geo, ene, saved_geos, saved_enes)
                 if sym_id is None:
                     if cnf_save_fs[0].file.info.exists():
-<<<<<<< HEAD
                         ioprinter.debug_message(
                             'inf_obj path', cnf_save_fs[0].path())
                         # rinf_obj_s = cnf_save_fs[0].file.info.read()
                         rinf = inf_obj
                         ioprinter.debug_message(
                             'inf_obj for r', rinf)
-=======
-                        ioprinter.debug_message('inf_obj path', cnf_save_fs[0].path())
-                        rinf_obj_s = cnf_save_fs[0].file.info.read()
-                        rinf_obj = inf_obj_s
-                        ioprinter.debug_message('inf_obj for r', rinf_obj)
->>>>>>> 49ed24023a088e63ad9b0cd6d8e514eb4b38bae1
                         # rnsampd = rinf_obj_s.nsamp
                         # rnsampd += 1
                         # rinf_obj.nsamp = rnsampd
@@ -346,11 +339,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
                         rinf.nsamp = 1
                     if cnf_save_fs[1].file.info.exists([locs[0]]):
                         cinf_obj_s = cnf_save_fs[1].file.info.read(locs[0])
-<<<<<<< HEAD
                         cinf = inf_obj
-=======
-                        cinf_obj = inf_obj_s
->>>>>>> 49ed24023a088e63ad9b0cd6d8e514eb4b38bae1
                         cnsampd = cinf_obj_s.nsamp
                         cnsampd += 1
                         cinf.nsamp = cnsampd

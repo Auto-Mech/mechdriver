@@ -48,6 +48,9 @@ def options_matrix_optimization(script_str, prefix,
                               automol.zmat.dummy_coordinate_names(geo))
 
     kwargs_ = dict(kwargs)
+
+    # Initialize loop geo
+    step_geo = geo
     while True:
         subrun_fs[-1].create([macro_idx, micro_idx])
         path = subrun_fs[-1].path([macro_idx, micro_idx])
@@ -56,7 +59,7 @@ def options_matrix_optimization(script_str, prefix,
             warnings.simplefilter('ignore')
             inp_str, out_str = elstruct.run.direct(
                 elstruct.writer.optimization, script_str, path,
-                geo=geo, charge=chg, mult=mul, method=method,
+                geo=step_geo, charge=chg, mult=mul, method=method,
                 basis=basis, prog=prog, frozen_coordinates=frozen_coordinates,
                 **kwargs_)
 
@@ -83,9 +86,13 @@ def options_matrix_optimization(script_str, prefix,
             kwargs_ = updated_kwargs(kwargs, options_mat)
             options_mat = advance(error_row_idx, options_mat)
             if feedback:
+                # Try and get ZMA, then geo
+                # if neither present use geo from prev. step (for weird errs)
                 geo = (elstruct.reader.opt_zmatrix(prog, out_str)
                        if automol.zmat.is_valid(geo) else
                        elstruct.reader.opt_geometry(prog, out_str))
+                if geo is not None:
+                    step_geo = geo
         else:
             # failure
             warnings.resetwarnings()

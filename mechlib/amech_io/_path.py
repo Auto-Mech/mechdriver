@@ -36,7 +36,7 @@ def output_path(dat, make_path=True, print_path=False):
     """ Create the path for sub-directories locatted in the run directory
         where the MechDriver calculation was launched. These sub-directories
         are used to store various useful output from the MechDriver process.
-        
+
         :param make_path: physically create directory for path during function
         :type make_path: bool
         :param print_path: print the created path to the screen
@@ -60,7 +60,7 @@ def output_path(dat, make_path=True, print_path=False):
 
 def job_path(prefix, prog, job, fml,
              locs_idx=None, make_path=True, print_path=False):
-    """ Create the path for various types of calculations for 
+    """ Create the path for various types of calculations for
         a given species or PES.
 
         :param prefix: root prefix to run/save filesyste,
