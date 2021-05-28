@@ -159,10 +159,10 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
     zma_save_fs = autofile.fs.zmatrix(min_cnf_path)
 
     # Check if the instability files exist
-    if zma_save_fs[-1].file.reaction.exists(zma_locs):
-        zrxn = zma_save_fs[-1].file.reaction.read(zma_locs)
+    if zma_save_fs[-1].file.instability.exists(zma_locs):
+        instab_trans = zma_save_fs[-1].file.instability.read(zma_locs)
         zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
-        _instab = (zrxn, zma)
+        _instab = (instab_trans, zma)
         path = zma_save_fs[-1].file.zmatrix.path(zma_locs)
     else:
         _instab = None

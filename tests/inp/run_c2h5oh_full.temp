@@ -9,14 +9,14 @@ end spc
 
 els
     spc init_geom     runlvl=mp2_sto   inplvl=mp2_sto
-    all conf_samp     runlvl=mp2_sto   inplvl=mp2_sto
-    all hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhr
-    all hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhrf
-    all hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhrfa
-    all hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=mdhr
-    all hr_hess       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=mdhr
-    all conf_hess     runlvl=mp2_sto   inplvl=mp2_sto
-    all conf_energy   runlvl=mp2_gs    inplvl=mp2_sto
+    spc conf_samp     runlvl=mp2_sto   inplvl=mp2_sto
+    spc hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhr
+    spc hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhrf
+    spc hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhrfa
+    spc hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=mdhr
+    spc hr_hess       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=mdhr
+    spc conf_hess     runlvl=mp2_sto   inplvl=mp2_sto
+    spc conf_energy   runlvl=mp2_gs    inplvl=mp2_sto
 end els
 
 thermo

@@ -13,7 +13,7 @@ CWD_INP_DIR = os.path.join(PATH, 'inp')
 
 # Set paths where tests will run
 # TMP_DIR = tempfile.mkdtemp()
-TMP_DIR = tempfile.mkdtemp()
+TMP_DIR = os.path.join(os.getcwd(), 'tmp')
 TMP_INP_DIR = os.path.join(TMP_DIR, 'inp')
 TMP_RUN_DIR = os.path.join(TMP_DIR, 'run')
 TMP_SAVE_DIR = os.path.join(TMP_DIR, 'save')
@@ -49,6 +49,19 @@ def test__instab():
     """ Run es, thermo, and rates for PES with instabilities
     """
     _run('run_p1_rrho.temp')
+    # instab error
+
+
+def test__trans():
+    """ Run minimal tasks to generate ckin transport
+    """
+    _run('run_trans.temp')
+
+
+def test__proc():
+    """ Run minimal tasks to generate and produce output
+    """
+    _run('run_proc.temp')
 
 
 # Helper functions to run a single instance of MechDriver
@@ -86,3 +99,5 @@ if __name__ == '__main__':
     # test__1dhr()
     # test__etoh()
     test__instab()
+    # test__trans()
+    # test__proc()

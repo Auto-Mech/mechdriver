@@ -865,8 +865,10 @@ def _saved_cnf_info(cnf_save_fs, mod_thy_info):
             ioprinter.info_message(
                 'No energy saved in single point directory for {}'
                 .format(path))
+            # geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
+            #     mod_thy_info[1:4])
             geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
-                mod_thy_info[1:4])
+                locs)
             geo_end_time = geo_inf_obj.utc_end_time
             current_time = autofile.schema.utc_time()
             if (current_time - geo_end_time).total_seconds() < 120:

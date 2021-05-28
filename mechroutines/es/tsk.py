@@ -871,10 +871,14 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
             # Skip all tasks except ini_geom
             # if (non-TS) species is unstable (zrxn found (i.e. is not None))
             if tsk != 'init_geom':
-                zrxn, _ = filesys.read.instability_transformation(
+                instab, path = filesys.read.instability_transformation(
                     spc_dct, spc_name, ini_thy_info, save_prefix)
-                skip = (zrxn is not None)
+
+                skip = (instab is not None)
                 if skip:
+                    ioprinter.info_message(
+                        'Found instability files at path {}'.format(path),
+                        newline=1)
                     ioprinter.info_message(
                         'Skipping task for unstable species...', newline=1)
 

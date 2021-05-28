@@ -15,7 +15,7 @@ from mechlib.reaction import split_unstable_pes
 def run(pes_rlst,
         ktp_tsk_lst,
         spc_dct, glob_dct,
-        pes_mod_dct, spc_mod_dct, thy_dct,
+        pes_mod_dct, spc_mod_dct,
         run_prefix, save_prefix):
     """ main driver for generation of full set of rate constants on a single PES
     """

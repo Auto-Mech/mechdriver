@@ -50,7 +50,7 @@ RUN_INP_VAL_DCT = {
 # Commonly useful task keyword lists
 BASE = ('runlvl', 'inplvl', 'retryfail', 'overwrite')
 MREF = ('var_splvl1', 'var_splvl2', 'var_scnlvl')
-TRANS = ('bath', 'pot', 'njobs', 'nsamp', 'smin', 'smax', 'conf')
+TRANS = ('bath', 'njobs', 'nsamp', 'conf')
 PRNT = ('geolvl', 'proplvl', 'nconfs', 'econfs')
 
 # Supported object types for task (useful if task requestes 'all')
@@ -87,6 +87,7 @@ TSK_KEY_DCT = {
     'rpath_hess': (('ts',), BASE + ('rxncoord',)),
     # Transport Driver Tasks
     'onedmin': (('spc',), (BASE + TRANS)),
+    'write_transport': (('spc',), (BASE + TRANS)),
     # Process Driver Tasks
     'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
     'energy': (('spc',), PRNT),
@@ -123,12 +124,9 @@ TSK_VAL_DCT = {
     'rxncoord': ((str,), ('irc', 'auto'), 'auto'),
     'nobarrier': ((str,), ('pst', 'rpvtst', 'vrctst'), None),
     # Trans
-    'pot': ((str,), ('sphere',), 'lj_12_6'),
     'njobs': ((int,), (), 1),
     'nsamp': ((int,), (), 1),
-    'smin': ((float,), (), 2.0),
-    'smax': ((float,), (), 6.0),
-    'conf': ((str,), ('sphere',), 'sphere'),
+    'conf': ((str,), ('sphere', 'min'), 'sphere'),
     # Proc
     'geolvl': ((str,), (), None),
     'proplvl': ((str,), (), None),

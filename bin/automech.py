@@ -73,10 +73,9 @@ if TRANS_TSKS is not None:
     if PES_DCT:
         transdriver.run(
             SPC_RLST,
-            SPC_DCT,
-            THY_DCT,
             TRANS_TSKS,
-            INP_KEY_DCT
+            SPC_DCT, THY_DCT,
+            INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
         )
     ioprinter.program_exit('trans')
 
@@ -87,7 +86,7 @@ if KTP_TSKS is not None:
         PES_RLST,
         KTP_TSKS,
         SPC_DCT, GLOB_DCT,
-        KMOD_DCT, SMOD_DCT, THY_DCT,
+        KMOD_DCT, SMOD_DCT,
         INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
     )
     ioprinter.program_exit('ktp')
@@ -100,7 +99,7 @@ if PROC_TSKS is not None:
         PES_RLST, SPC_RLST,
         PROC_TSKS,
         SPC_DCT,
-        SMOD_DCT, THY_DCT,
+        KMOD_DCT, SMOD_DCT, THY_DCT,
         INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
     )
     ioprinter.program_exit('proc')

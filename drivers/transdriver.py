@@ -6,11 +6,10 @@ from mechroutines.trans import run_tsk
 from mechlib.amech_io import parser
 
 
-def run(spc_dct,
-        thy_dct,
-        rxn_lst,
+def run(spc_rlst,
         trans_tsk_lst,
-        run_inp_dct):
+        spc_dct, thy_dct,
+        run_prefix, save_prefix):
     """ main driver for etransfer run
     """
 
@@ -19,10 +18,6 @@ def run(spc_dct,
     #     ioprinter.info_message(
     #         'Calculating Thermochem for species: {}'.format(spc),
     #         newline=1)
-
-    # Pull stuff from dcts for now
-    save_prefix = run_inp_dct['save_prefix']
-    run_prefix = run_inp_dct['run_prefix']
 
     # Build a list of the species to calculate thermochem for loops below
     spc_queue = parser.species.build_queue(spc_rlst, 'SPC')
