@@ -1,4 +1,15 @@
-""" Central driver for all electronic structure tasks.
+""" Driver which executes all of the electronic structure tasks
+    for all species that comprise channels of input PES and and separate
+    species.
+  
+    Two Main Loops of Driver:
+        (1) species and transition states from input PES or SPC lists
+        (2) electronic structure task list
+
+    All tasks done following way:
+        (1) Search for electronic structure data in save filesystem
+        (2) Write, Run, Parse electronic structure job(s) in run fs
+        (3) Write final data into save filesystem
 """
 
 from mechroutines.es import run_tsk
@@ -10,7 +21,7 @@ def run(pes_rlst, spc_rlst,
         es_tsk_lst,
         spc_dct, glob_dct, thy_dct,
         run_prefix, save_prefix):
-    """ Run all of the electronic structure tasks requested by user.
+    """ Executes all electronic structure tasks.
 
         :param pes_rlst: lst of PES-SUBPES-CHNLS ro tun
         :type pes_rlst: tuple(dict[str: dict])

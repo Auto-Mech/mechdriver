@@ -1,4 +1,16 @@
-""" driver for rate constant evaluations
+""" Driver for thermochemistry evaluations including
+    heats-of-formation and NASA polynomials describing
+    thermodynamic quantities: Enthalpy, Entropy, Gibbs
+
+    Main Loop of Driver:
+        (1) PES
+
+    Main Workflow:
+        (1) Collate and process data from the SAVE filesystem
+        (2) Format and write data into MESS input file
+        (3) Run MESS file to obtain rate constants
+        (5) Fit rate constants to functional forms
+        (6) Write functional forms to mechanism file
 """
 
 import autorun

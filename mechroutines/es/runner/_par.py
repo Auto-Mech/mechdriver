@@ -1,5 +1,8 @@
 """ Set runtime options and job submission strings for
     electronic structure package calculations.
+
+    The options will be determined by the user input and
+    will correspond to the default otherwise.
 """
 
 import elstruct

@@ -1,6 +1,20 @@
 """ Driver for thermochemistry evaluations including
     heats-of-formation and NASA polynomials describing
     thermodynamic quantities: Enthalpy, Entropy, Gibbs
+
+    Main Loop of Driver:
+        (1) PES or SPC list
+
+    Main Workflow:
+        (1) Write MESS:
+            (1) Collate and process data from the SAVE filesystem
+            (2) Format and write data into MESSPF input file
+        (2) Run MESS:
+            (1) Run MESS file to obtain partition functions
+        (3) Run fits:
+            (1) Read all partition functions from MESS output
+            (2) Run PACC+ThermP to fit thermo NASA polynomials 
+            (3) Write functional forms to mechanism file
 """
 
 import autorun

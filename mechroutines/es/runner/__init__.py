@@ -1,5 +1,7 @@
-"""
- Various electronic structure job runnerss
+""" Interface to the elstruct library which writes, runs, and reads
+    electronic structure calculations.
+
+    This includes single-file jobs (e.g., energies, optimizations) as well as sequences of jobs (e.g., coordinate scans).
 """
 
 from mechroutines.es.runner._run import execute_job
