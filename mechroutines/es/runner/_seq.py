@@ -7,6 +7,9 @@ opts_dct = a dictionary of `optn`s by argument keyword
 opts_row = a list of `optn_dct`s for cycling to fix a particular error
 opts_mat = a list of `optn_row`s for each error
 note: options (`opts_dct`) are a subset of keyword arguments (`kwargs_dct`)
+    
+    The options matrix is used to update `kwargs` dictionaries that are passed
+    to elstruct package functions to write electronic structure input files.
 """
 
 import itertools
@@ -33,6 +36,8 @@ def options_matrix_optimization(script_str, prefix,
 
         :param script_str: BASH submission script for electronic structure job
         :type script_str: str
+        :param prefix: 
+        :type prefix: 
         :param geo: molecular geometry or Z-Matrix
         :type geo:
         :param chg: electric charge
@@ -134,10 +139,32 @@ def options_matrix_run(input_writer, script_str, prefix,
                        errors=(), options_mat=(),
                        **kwargs):
     """ try several sets of options to generate an output file
+        
+        :param script_str: BASH submission script for electronic structure job
+        :type script_str: str
+        :param prefix:
+        :type prefix:
+        :param geo: molecular geometry or Z-Matrix
+        :type geo:
+        :param chg: electric charge
+        :type chg: int
+        :param mul: spin-multiplicity
+        :type mul: int
+        :param method: name of the electronic structure method
+        :type method: str
+        :param basis: name of the basis set
+        :type basis: str
+        :param prog: name of the electronic structure program
+        :type prog: str
+        :param errors: list of error message types to search output for
+        :type errors: tuple(str)
+        :param options_mat: varopis options to run job with
+        :type options_mat: tuple(dict[str: str])
 
     :returns: the input string and the output string
     :rtype: (str, str)
     """
+
     assert len(errors) == len(options_mat)
 
     subrun_fs = autofile.fs.subrun(prefix)
@@ -179,52 +206,31 @@ def options_matrix_run(input_writer, script_str, prefix,
     return inp_str, out_str
 
 
-def molpro_opts_mat(spc_info, geo):
-    """ prepare the errors and options mat to perform successive
-        single-point energy calculations in Molpro when the RHF fails to
-        converge. This currently only works for doublets.
-    """
-
-    # Get the nelectrons, spins, and orbitals for the wf card
-    formula = automol.geom.formula(geo)
-    elec_count = automol.formula.electron_count(formula)
-    two_spin = spc_info[2] - 1
-    num_act_elc = two_spin
-    num_act_orb = num_act_elc
-    closed_orb = (elec_count - num_act_elc) // 2
-    occ_orb = closed_orb + num_act_orb
-
-    # Build the strings UHF and CASSCF wf card and set the errors and options
-    uhf_str = (
-        "{{uhf,maxit=300;wf,{0},1,{1};orbprint,3}}"
-    ).format(elec_count, two_spin)
-    cas_str = (
-        "{{casscf,maxit=40;"
-        "closed,{0};occ,{1};wf,{2},1,{3};canonical;orbprint,3}}"
-    ).format(closed_orb, occ_orb, elec_count, two_spin)
-
-    errors = [elstruct.Error.SCF_NOCONV]
-    options_mat = [
-        [{'gen_lines': {2: [uhf_str]}},
-         {'gen_lines': {2: [cas_str]}},
-         {'gen_lines': {2: [cas_str]}}
-         ]
-    ]
-
-    return errors, options_mat
-
-
 # OPTIONS MATRIX IMPLEMENTATION
 def is_exhausted(opts_mat):
-    """ is this options matrix exhausted?
-    the matrix is exhausted if any of its rows are
+    """ Assess if the options matrix has no remaining option
+        rows remaining inside of the matrix by assessing if
+        any row is empty.
+
+        :param opts_mat: options matrix
+        :type opts_mat: tuple(tuple(dict))
+        :rtype: bool
     """
     return any(not opts_row for opts_row in opts_mat)
 
 
 def advance(row_idx, opts_mat):
-    """ advance one row from the options matrix
+    """ Advance by one the list of options that are defined
+        in the given row of an options matrix. Does so removing
+        the first element of options list of that row.
+
+        :param row_idx: idx of row containing options list to advance
+        :type row_idx: int
+        :param opts_mat: options matrix
+        :type opts_mat: tuple(tuple(dict))
+        :rtype: tuple(tuple(dict))
     """
+
     assert not is_exhausted(opts_mat)
     assert row_idx < len(opts_mat)
 
@@ -236,9 +242,17 @@ def advance(row_idx, opts_mat):
 
 
 def updated_kwargs(kwargs_dct, opts_mat):
-    """ update `kwargs_dct` with the current set of options
-    merges the first entries from each options row into `kwargs_dct`
+    """ Update a `kwargs_dct` with the current options in the options matrix
+        with the current set of options. Does so by merging the first
+        entries from each options row into `kwargs_dct`
+      
+        :param kwargs_dct: dictionary of elstruct arguments
+        :type kwargs_dct: dict[str:]  
+        :param opts_mat: options matrix
+        :type opts_mat: tuple(tuple(dict))
+        :rtype: dict[str:]  
     """
+
     assert not is_exhausted(opts_mat)
 
     opts_col = [opts_row[0] for opts_row in opts_mat]
@@ -254,11 +268,14 @@ def updated_kwargs(kwargs_dct, opts_mat):
 
 
 def _update_kwargs(kwargs_dct, opts_dct):
-    """ update a kwargs dictionary with a dictionary of options
-    where an option has already been set in kwargs, the values from `opts_dct`
-    are appended to the existing ones; otherwise this is a regular dictionary
-    update
+    """ Update a kwargs dictionary with a dictionary of options,
+        where an option has already been set in kwargs. The values from         `opts_dct` are appended to the existing ones; otherwise
+        this is a regular dictionary.
+        
+        :param opts_dct: dictionary of options within matrix row
+        :type opts_mat: tuple(tuple(dict))
     """
+
     kwargs_dct = dict(kwargs_dct).copy()
 
     for key, opts in opts_dct.items():
@@ -276,5 +293,10 @@ def _update_kwargs(kwargs_dct, opts_dct):
 
 
 def _is_nonstring_sequence(obj):
+    """ Assess if the sequence is composed of non-string objects.
+        
+        :param obj: sequence object to assess
+        :rtype: bool
+    """
     return (isinstance(obj, _Sequence)
             and not isinstance(obj, (str, bytes, bytearray)))

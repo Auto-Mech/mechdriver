@@ -81,9 +81,32 @@ def run_job(job, script_str, run_fs,
             geo, spc_info, thy_info,
             errors=(), options_mat=(), retryfail=True, feedback=False,
             frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
-            irc_direction=None,
             **kwargs):
-    """ run an elstruct job by name
+    """ Run an electronic structure job in the specified RUN filesys layer
+        by calling the elstruct package to write the input file with the
+        information and executing the job with the specified script string.
+
+        Will first look into the RUN filesys and will either rewrite the
+        input and rerun the job if requested.
+
+        :param geo: input molecular geometry or Z-Matrix
+        :type geo:
+        :param errors: list of error message types to search output for
+        :type errors: tuple(str)
+        :param options_mat: varopis options to run job with
+        :type options_mat: tuple(dict[str: str])
+        :param retryfail: re-run the job if failed job found in RUN filesys
+        :type retryfail: bool
+        :param feedback: update geom with job from previous sequence
+        :type feedback: bool
+        :param frozen_coordinates: Z-matrix coordinate names to freeze in opts
+        :type frozen_coordinates: tuple(str)
+        :param freeze_dummy_atoms: freeze any coords defined by dummy atoms
+        :type freeze_dummy_atoms: bool
+        :param overwrite: overwrite existing input file with new one and rerun
+        :type overwrite: bool
+        :param kwargs: additional options for electronic structure job
+        :type kwarfs: dict[str]
     """
 
     assert job in JOB_RUNNER_DCT
@@ -179,9 +202,10 @@ def run_job(job, script_str, run_fs,
 
 
 def read_job(job, run_fs):
-    """ Reads the output file for an electronic structure job
-        from the run filesys and parses the string to
-        assess for successful job completion.
+    """ Searches for an output file for the specified electronic
+        structure job in the specified RUN filesytem. If an output file
+        is found, it is parsed for job success messages. If successful,
+        function returns job input, output and autofile job info object.
 
         :param job: label for job formatted to elstruct package definitions
         :type job: str
@@ -214,9 +238,9 @@ def read_job(job, run_fs):
 
 def is_successful_output(out_str, job, prog):
     """ Parses the output string of the electronic structure job
-        to determine if the program has exited normally, contains
-        the approprate success messages for the job and, and
-        precludes job error messages.
+        and calls the appropraite elstruct status readers to assess
+        if the program has exited normally, contains approprate success messages
+        for the job, and precludes error messages signifying job failure.
 
         :param out_str: string for job output file
         :type out_str: str
@@ -247,9 +271,19 @@ def is_successful_output(out_str, job, prog):
     return ret
 
 
-# Write initial geoms
+# Helpers
 def _write_input_geo(geo, job, run_fs):
-    """ Can only reliably write the zma if it input is zma
+    """ Writes input molecular structures into the specified RUN filesystem.
+
+        Can only reliably a Z-Matrix in the filesystem if the input `geo`
+        object is a Z-Matrix and not a geometry (due to conversion issues).
+
+        :param geo: input molecular geometry or Z-Matrix
+        :type geo:
+        :param job: label for job formatted to elstruct package definitions
+        :type job: str
+        :param run_fs: filesystem object for the run filesys where job is run
+        :type run_fs: autofile.fs.run object
     """
 
     if automol.zmat.is_valid(geo):

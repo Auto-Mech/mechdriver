@@ -37,8 +37,22 @@ ES_TSKS = {
 def run_tsk(tsk, spc_dct, spc_name,
             thy_dct, es_keyword_dct,
             run_prefix, save_prefix):
-    """ run an electronic structure task
-    for generating a list of conformer or tau sampling geometries
+    """ Execute the specified electronic structure task.
+
+        :param tsk: name of electronic structure task
+        :type tsk: str
+        :param spc_dct:
+        :type spc_dct:
+        :param spc_name: name of species 
+        :type spc_name: str
+        :param thy_dct:
+        :type thy_dct:
+        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :type es_keyword_dct: dict[str:str]
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
     """
 
     ioprinter.task_header(tsk, spc_name)
@@ -82,7 +96,21 @@ def run_tsk(tsk, spc_dct, spc_name,
 # FUNCTIONS FOR SAMPLING AND SCANS #
 def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
               run_prefix, save_prefix):
-    """ Find the initial geometry
+    """ Execute the task for a species used to seed the
+        filesystem with a reliable initial conformer.
+
+        :param spc_dct:
+        :type spc_dct:
+        :param spc_name: name of species 
+        :type spc_name: str
+        :param thy_dct:
+        :type thy_dct:
+        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :type es_keyword_dct: dict[str:str]
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
     """
 
     spc_dct_i = spc_dct[spc_name]
@@ -117,11 +145,26 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
 def conformer_tsk(job, spc_dct, spc_name,
                   thy_dct, es_keyword_dct,
                   run_prefix, save_prefix):
-    """ Launch tasks associated with conformers.
+    """ Prepares and executes all electronic structure tasks that
+        generate information for species and transition state conformers.
+        This includes sampling and optimization procedures to generate
+        conformer structures, as well as __ calculations using some
+        saved conformer as input.
 
-        The calculation can either scan to generate conformer geometries via
-        random sampling over torsional coordinates followin by optimization.
-        Can also calculate things for geoms.
+        :param job(subtask): calculatiion(s) to perform for conformer
+        :type job: str 
+        :param spc_dct:
+        :type spc_dct:
+        :param spc_name: name of species 
+        :type spc_name: str
+        :param thy_dct:
+        :type thy_dct:
+        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :type es_keyword_dct: dict[str:str]
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
     """
 
     saddle = bool('ts_' in spc_name)
@@ -567,7 +610,16 @@ def tau_tsk(job, spc_dct, spc_name,
 def hr_tsk(job, spc_dct, spc_name,
            thy_dct, es_keyword_dct,
            run_prefix, save_prefix):
-    """ run a scan over the specified torsional coordinates
+    """ Prepares and executes all electronic structure tasks that
+        generate information for points along hindered-rotor coordinate
+        scans which are launched from some conformer in the save filesystem. 
+
+        For species and transition state conformers.
+
+        This includes scanning procedures to generate geometries (relaxed) or energies (rigid) points along
+        conformer structures, as well as __ calculations using some
+        saved conformer as input.
+
     """
 
     spc_dct_i = spc_dct[spc_name]
