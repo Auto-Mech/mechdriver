@@ -1,7 +1,7 @@
 .. Documentation of the Input File Structure of MechDriver
 
-File Description
-================
+User's Manual
+=============
 
 .. toctree::
     :maxdepth: 2

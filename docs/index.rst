@@ -3,15 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to MechDriver's documentation!
-======================================
+MechDriver
+==========
 
 .. toctree::
     :maxdepth: 2
     :caption: Contents:
 
     rst/input/index
-    rst/proc
     rst/workflow
     rst/autolib/index
 
