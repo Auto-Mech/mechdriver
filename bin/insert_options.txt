@@ -3,7 +3,7 @@
 !!!!! into your save filesystem
 
 
-save_filesystem: /lcrc/project/PACC/AutoMech/data/save
+save_filesystem: /lcrc/project/PACC/AutoMech/data/save/
 input_file: /lcrc/project/PACC/AutoMech/data/old_run/RXN/C10H19.HO2/CEXDXAYXXKEPEF/0_0/2_2/UHFFFAOYSA-N/C10H20.O2/DVXGSNIJNJJJQK/0_0/1_3/UHFFFAOYSA-N/3/u-ulpJU/TS/00/RUN/OPTI/tmp.inp
 output_file: /lcrc/project/PACC/AutoMech/data/old_run/RXN/C10H19.HO2/CEXDXAYXXKEPEF/0_0/2_2/UHFFFAOYSA-N/C10H20.O2/DVXGSNIJNJJJQK/0_0/1_3/UHFFFAOYSA-N/3/u-ulpJU/TS/00/RUN/OPTI/tmp.log
 
@@ -19,6 +19,7 @@ ts_mult: 3
 rid: None
 cid: None
 zrxn_file: None
+rxn_class: hydrogen abstraction
 
 !theory key does not need to be specified
 !if program/method/basis/orb_res all are

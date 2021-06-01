@@ -906,7 +906,7 @@ def _saved_cnf_info(cnf_save_fs, mod_thy_info):
                     ioprinter.info_message('the energy is now found')
                 else:
                     ioprinter.info_message('waiting helped nothing')
-                
+
     return found_saved_locs, found_saved_geos, found_saved_enes
 
 
@@ -1359,9 +1359,6 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     """ Save the conformer in the filesystem
     """
 
-    # Set the path to the conformer save filesystem
-    cnf_save_path = cnf_save_fs[-1].path(locs)
-
     # Unpack the ret object and obtain the prog and method
     inf_obj, inp_str, out_str = ret
     prog = inf_obj.prog
@@ -1378,7 +1375,20 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
         else:
             zma = automol.reac.ts_zmatrix(zrxn, geo)
     print('zma 1 test:', zma)
+    props = (geo, zma, ene)
+    _save_unique_parsed_conformer(
+        thy_info, cnf_save_fs, locs, props, inf_obj,
+        inp_str, zrxn=zrxn, zma_locs=zma_locs)
 
+
+def _save_unique_parsed_conformer(
+        thy_info, cnf_save_fs, locs, props,
+        inf_obj, inp_str, zrxn=None, zma_locs=(0,)):
+
+    # Set the path to the conformer save filesystem
+    cnf_save_path = cnf_save_fs[-1].path(locs)
+
+    geo, zma, ene = props
     # Build the conformer filesystem and save the structural info
     ioprinter.save_conformer(cnf_save_path)
     cnf_save_fs[-1].create(locs)
@@ -1395,7 +1405,7 @@ def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
 
     # Get the tors names
-    rotors = automol.rotor.from_zmatrix(zma)
+    rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
     if any(rotors):
         zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
 
@@ -1470,7 +1480,7 @@ def rng_loc_for_geo(geo, cnf_run_fs, cnf_save_fs):
         if current_rid in checked_rids:
             continue
         else:
-            checked_rids.append(current_rid) 
+            checked_rids.append(current_rid)
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
         frag_locs_geo = _fragment_ring_geo(locs_geo)
         if frag_locs_geo is None:
