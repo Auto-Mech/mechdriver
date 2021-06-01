@@ -14,4 +14,5 @@ File Description
     mech
     aux
     example
+    keywords
 

@@ -41,10 +41,33 @@ def run(pes_rlst, spc_rlst,
         pes_mod_dct, spc_mod_dct,
         spc_dct,
         run_prefix, save_prefix):
-    """ Run ThermoDriver to perform all of the tasks requested by the user.
+    """ Executes all thermochemistry tasks.
+
+        :param pes_rlst: species from PESs to run
+            [(PES formula, PES idx, SUP-PES idx)
+             (CHANNEL idx, (REACS, PRODS))
+        :type pes_rlst: tuple(dict[str: dict])
+        :param spc_rlst: lst of species to run
+        :type spc_rlst: tuple(dict[str: dict])
+        :param es_tsk_lst: list of the electronic structure tasks
+            tuple(tuple(obj, tsk, keyword_dict))
+        :type es_tsk_lst: tuple(tuple(str, str, dict))
+        :param spc_dct: species information
+            dict[spc_name: spc_information]
+        :type spc_dct: dict[str:dict]
+        :param glob_dct: global information for all species
+            dict[spc_name: spc_information]
+        :type glob_dct: dict[str: dict]
+        :param thy_dct: all of the theory information
+            dict[thy name: inf]
+        :type thy_dct: dict[str:dict]
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
     """
 
-    # Print Header fo
+    # Print Header
     ioprinter.info_message('Calculating Thermochem:')
     ioprinter.runlst(('SPC', 0, 0), spc_rlst)
 
@@ -57,10 +80,8 @@ def run(pes_rlst, spc_rlst,
     spc_mod_dct_i = spc_mod_dct[spc_mods[0]]
     split_rlst = split_unstable_full(
         pes_rlst, spc_rlst, spc_dct, spc_mod_dct_i, save_prefix)
-    print('split_lst', split_rlst)
     spc_queue = parser.rlst.spc_queue(
         tuple(split_rlst.values())[0], 'SPC')
-    print('spc_queue', spc_queue)
 
     # Build the paths [(messpf, nasa)], models and levels for each spc
     thm_paths = thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix)

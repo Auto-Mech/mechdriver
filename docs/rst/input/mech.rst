@@ -18,9 +18,14 @@ Above, are names of chemical species undergoing the reaction. These names must c
 
 The numbers included in the above example are included for the input parser to work (but are also ignored). Note that rate-constant fit parameters normally included in the CHEMKIN file are ignored.
 
-Reaction lines preceded by a ‘!’ are ignored by the parser. (maybe include #?)
-
 The reactions do not need to be in any particular order, as AutoMech can sort the reactions into PESs itself.
 
 The only reactions that will be run by the code, will be those specified in run.dat.
+
+Commenting
+----------
+
+Reaction lines preceded by a ‘!’ are ignored by the parser. (maybe include #?)
+
+In accordance with chemkin rules
 

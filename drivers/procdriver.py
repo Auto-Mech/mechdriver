@@ -1,4 +1,6 @@
-""" process drivers
+""" Driver to read data from the SAVE filesystem and then
+    processing and formatting it for the purposes for ease of
+    reading and presentation.
 """
 
 from mechroutines.output import run_tsk

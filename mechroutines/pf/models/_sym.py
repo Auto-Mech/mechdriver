@@ -12,6 +12,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
         Note: ignoring for saddle pts the possibility that two configurations
         differ only in their torsional values.
         As a result, the symmetry factor is a lower bound of the true value
+
     """
 
     sym_factor = spc_dct_i.get('sym_factor')

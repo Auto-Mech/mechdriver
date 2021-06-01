@@ -30,8 +30,32 @@ def read_spc_data(spc_dct, spc_name,
                   pes_mod_dct_i, spc_mod_dct_i,
                   run_prefix, save_prefix, chn_basis_ene_dct,
                   calc_chn_ene=True):
-    """ Determines which block writer to use tau
+    """ Reads all required data from the SAVE filesystem for a given species.
+        Also sets the writer for appropriately formatting the data into
+        an MESS input file string.
+
+        All of the data that is read is determined by the models that
+        are described in the pes and spc model dictionaries.
+
+        Info and basis species stored in dicts.
+
+        :param spc_dct:
+        :type spc_dct:
+        :param spc_name: mechanism name of species
+        :type spc_name: str
+        :param pes_mod_dct_i: keyword dict of specific PES model
+        :type pes_mod_dct_i: dict[]        
+        :param spc_mod_dct_i: keyword dict of specific species model
+        :type spc_mod_dct_i: dict[]        
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
+        :param chn_basis_ene_dct: basis species <names> for mechanism species
+        :type chn_basis_ene_dct: dict[]
+        :rtype: (dict[], dict[])
     """
+
     ioprinter.obj('line_plus')
     ioprinter.reading(
         'Reading filesystem info for {}'.format(spc_name), newline=1)
@@ -66,7 +90,32 @@ def read_spc_data(spc_dct, spc_name,
 def read_ts_data(spc_dct, tsname, rcts, prds,
                  pes_mod_dct_i, spc_mod_dct_i,
                  run_prefix, save_prefix, chn_basis_ene_dct):
-    """ Determine which block function to useset block functions
+    """ Reads all required data from the SAVE filesystem for a transition state.
+        Also sets the writer for appropriately formatting the data into
+        an MESS input file string.
+
+        All of the data that is read is determined by the models that
+        are described in the pes and spc model dictionaries.
+
+        :param spc_dct:
+        :type spc_dct:
+        :param tsname: mechanism name of transition state
+        :type tsname: str
+        :param rcts: mechanism names of reactants connected to transition state
+        :type rcts: tuple(str)
+        :param prds: mechanism names of products connected to transition state
+        :type prds: tuple(str)
+        :param pes_mod_dct_i: keyword dict of specific PES model
+        :type pes_mod_dct_i: dict[]        
+        :param spc_mod_dct_i: keyword dict of specific species model
+        :type spc_mod_dct_i: dict[]        
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
+        :param chn_basis_ene_dct: basis species <names> for mechanism species
+        :type chn_basis_ene_dct: dict[]
+        :rtype: (dict[], dict[])
     """
 
     ioprinter.obj('line_plus')
@@ -152,7 +201,23 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
 # Data Readers
 def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
              run_prefix, save_prefix):
-    """ Pull all neccessary info for the atom
+    """ Reads all required data from the SAVE filesystem for an atom.
+        Stores data into an info dictionary.
+
+        All of the data that is read is determined by the models that
+        are described in the pes and spc model dictionaries.
+
+        :param spc_dct:
+        :type spc_dct:
+        :param pes_mod_dct_i: keyword dict of specific PES model
+        :type pes_mod_dct_i: dict[]        
+        :param spc_mod_dct_i: keyword dict of specific species model
+        :type spc_mod_dct_i: dict[]        
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
+        :rtype: dict[]
     """
 
     spc_dct_i = spc_dct[spc_name]
@@ -169,9 +234,6 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
     ene_chnlvl = ene.read_energy(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, read_ene=True, read_zpe=False)
-
-    ene_reflvl = None
-    zpe_chnlvl = None
 
     hf0k, hf0k_trs, _, _ = basis.enthalpy_calculation(
         spc_dct, spc_name, ene_chnlvl,
@@ -190,9 +252,9 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
         'mass': util.atom_mass(spc_dct_i),
         'elec_levels': spc_dct_i['elec_levels'],
         'ene_chnlvl': ene_chnlvl,
-        'ene_reflvl': ene_reflvl,
+        'ene_reflvl': None,
         'ene_tsref': hf0k_trs,
-        'zpe_chnlvl': zpe_chnlvl
+        'zpe_chnlvl': None
     }
 
     return inf_dct
@@ -202,7 +264,23 @@ def mol_data(spc_name, spc_dct,
              pes_mod_dct_i, spc_mod_dct_i,
              chn_basis_ene_dct,
              run_prefix, save_prefix, calc_chn_ene=True, zrxn=None):
-    """ Pull all of the neccessary information from the filesystem for a species
+    """ Reads all required data from the SAVE filesystem for a molecule.
+        Stores data into an info dictionary.
+
+        All of the data that is read is determined by the models that
+        are described in the pes and spc model dictionaries.
+
+        :param spc_dct:
+        :type spc_dct:
+        :param pes_mod_dct_i: keyword dict of specific PES model
+        :type pes_mod_dct_i: dict[]        
+        :param spc_mod_dct_i: keyword dict of specific species model
+        :type spc_mod_dct_i: dict[]        
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
+        :rtype: dict[]
     """
 
     spc_dct_i = spc_dct[spc_name]
@@ -317,7 +395,13 @@ def mol_data(spc_name, spc_dct,
 
 # VRCTST
 def flux_data(ts_dct, spc_mod_dct_i):
-    """ Grab the flux file from the filesystem
+    """ Read a VRC-TST flux file from the SAVE filesystem.
+        
+        :param ts_dct: species dict entry for a transition state
+        :type ts_dct: dict[]
+        :param spc_mod_dct_i: keyword dict of specific species model
+        :type spc_mod_dct_i: dict[]
+        :rtype: dict[str: str]
     """
 
     # Read the flux file from the filesystem
@@ -504,7 +588,24 @@ def rpvtst_data(ts_dct, reac_dcts, spc_mod_dct_i,
 # PST
 def pst_data(ts_dct, reac_dcts,
              spc_mod_dct_i, run_prefix, save_prefix):
-    """ Set up the data for PST parameters
+    """ Determine the parameters used to set a phase space theory (PST)
+        description of transition states.
+
+        Simply reads a geometries for reactants and uses it along
+        with various PST conditions from the user to set the n and Cn
+        paramater for the Vn = Cn/R^n potential model for PST in MESS. 
+
+        :param ts_dct: species dict entry for a transition state
+        :type ts_dct: dict[]
+        :param reac_dcts: species dict entries for connected reactants
+        :type reac_dcts:
+        :param spc_mod_dct_i: keyword dict of specific species model
+        :type spc_mod_dct_i: dict[]        
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
+
     """
 
     # Get the k(T), T, and n values to get a Cn
