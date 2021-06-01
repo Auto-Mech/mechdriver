@@ -1,4 +1,4 @@
-name: mechdriver-test-env
+name: mechdriver-env
 
 channels:
     - auto-mech
@@ -8,35 +8,34 @@ channels:
     - conda-forge
 
 dependencies:
-    - python=3.7
-    - pybind11
-    - cmake
     - gfortran_linux-64  # [linux]
-    - numpy
-    - scipy
-    - pandas
+    - python=3.7
+    - numpy=1.15.4
+    - scipy=1.5.0
+    - gcc_linux-64  # [linux]
+    - gxx_linux-64  # [linux]
     - pyyaml
+    - cmake
     - mako
+    - networkx
+    - matplotlib
     - pytest
     - pytest-cov
     - future
     - flake8
     - pylint
+    - pandas
     - psi4::psi4
     - rdkit::rdkit
     - openbabel::openbabel
-    - conda-forge::qcelemental 
-    - conda-forge::nglview
-    - conda-forge::pypdf2
-    - conda-forge::python-igraph
-    - cantera::cantera
+    - conda-forge::qcelemental
     - auto-mech::autochem
-    - auto-mech::autofile
     - auto-mech::autoio-base
-    - auto-mech::autoio-interfaces
-    - auto-mech::mechanalyzer
-    - auto-mech::mess
-    - auto-mech::pac99
-    - auto-mech::projrot
-    - auto-mech::thermp
     - auto-mech::x2z
+    - auto-mech::mess
+    - auto-mech::projrot
+    - auto-mech::pac99
+    - auto-mech::thermp
+    - auto-mech::autoio-interfaces
+    - auto-mech::autofile
+    - auto-mech::mechanalyzer
