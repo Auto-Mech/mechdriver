@@ -37,7 +37,7 @@ def test__1dhr():
     _run('run_c2h6_h_1dhr.temp')
 
 
-def test__etoh():
+def __etoh():
     """ Run es, thermo, for EtOH with different rotor types
 
         need a species that uses theory methods scaling
@@ -45,7 +45,7 @@ def test__etoh():
     _run('run_c2h5oh_full.temp')
 
 
-def test__instab():
+def __instab():
     """ Run es, thermo, and rates for PES with instabilities
     """
     _run('run_ch2ooh_rrho.temp')
@@ -58,13 +58,13 @@ def test__radrad():
     # later: switch c2h5 to vtst/vrctst and ch3_h to pst
 
 
-def test__trans():
+def __trans():
     """ Run minimal tasks to generate ckin transport
     """
     _run('run_trans.temp')
 
 
-def test__proc():
+def __proc():
     """ Run minimal tasks to generate and produce output
     """
     _run('run_proc.temp')

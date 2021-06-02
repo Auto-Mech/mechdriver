@@ -16,7 +16,7 @@ def find_max_1d(typ, grid, ts_zma, scan_name, scn_save_fs,
         :param grid: set of points that comprise the grid
         :type grid: tuple(numpy.ndarray)
         :param ts_zma: initial ts_zma from ???
-        :type ts_zma: 
+        :type ts_zma:
         :param scan_name: name of coordinate in zma along which scan conducted
         :type scan_name: str
         :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
@@ -58,7 +58,7 @@ def find_max_1d(typ, grid, ts_zma, scan_name, scn_save_fs,
     return guess_zmas
 
 
-def find_max_2d(grid1, grid2, scan_name, scan_name2, scn_save_fs,
+def find_max_2d(grid1, grid2, scan_name1, scan_name2, scn_save_fs,
                 mod_thy_info, constraint_dct):
     """ Find the maxmimum of a two-dimensional grid of points
         calculated along two coordinates.
@@ -129,7 +129,7 @@ def _grid_vals(grid, scan_name, scn_save_fs,
                mod_thy_info, constraint_dct):
     """ Build a list of the filesystem locators for each optimized
         structure as well as a list of their corresponding energies.
-        
+
         :param grid: set of points that comprise the grid
         :type grid: tuple(numpy.ndarray)
         :param scan_name: name of coordinate in zma along which scan conducted

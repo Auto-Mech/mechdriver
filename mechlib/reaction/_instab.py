@@ -124,7 +124,7 @@ def _split_mapping(spc_dct, thy_info, save_prefix,
     """ Build a dictionary that describes how species decomposes into
         smaller species via some radical stability. Dictionary maps the
         species name to the names of the decomposition products.
-        
+
         If no names provided, a mapping will be generated for all species
         in the species dictionary.
 
@@ -160,7 +160,7 @@ def _split_species(spc_dct, spc_name, thy_info, save_prefix,
     """ Assess if a given species has an instability transformation
         file located in the save filesystem within a Z-Matrix layer:
         SPC/THY/CONFS/Z/ which are specified by the provided info.
-        
+
         If file is found, use the contained information to break-up
         the species into products of the instability transformation. If
         no file found, return species.

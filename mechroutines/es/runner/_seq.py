@@ -7,7 +7,7 @@ opts_dct = a dictionary of `optn`s by argument keyword
 opts_row = a list of `optn_dct`s for cycling to fix a particular error
 opts_mat = a list of `optn_row`s for each error
 note: options (`opts_dct`) are a subset of keyword arguments (`kwargs_dct`)
-    
+
     The options matrix is used to update `kwargs` dictionaries that are passed
     to elstruct package functions to write electronic structure input files.
 """
@@ -36,8 +36,8 @@ def options_matrix_optimization(script_str, prefix,
 
         :param script_str: BASH submission script for electronic structure job
         :type script_str: str
-        :param prefix: 
-        :type prefix: 
+        :param prefix:
+        :type prefix:
         :param geo: molecular geometry or Z-Matrix
         :type geo:
         :param chg: electric charge
@@ -139,7 +139,7 @@ def options_matrix_run(input_writer, script_str, prefix,
                        errors=(), options_mat=(),
                        **kwargs):
     """ try several sets of options to generate an output file
-        
+
         :param script_str: BASH submission script for electronic structure job
         :type script_str: str
         :param prefix:
@@ -245,12 +245,12 @@ def updated_kwargs(kwargs_dct, opts_mat):
     """ Update a `kwargs_dct` with the current options in the options matrix
         with the current set of options. Does so by merging the first
         entries from each options row into `kwargs_dct`
-      
+
         :param kwargs_dct: dictionary of elstruct arguments
-        :type kwargs_dct: dict[str:]  
+        :type kwargs_dct: dict[str:]
         :param opts_mat: options matrix
         :type opts_mat: tuple(tuple(dict))
-        :rtype: dict[str:]  
+        :rtype: dict[str:]
     """
 
     assert not is_exhausted(opts_mat)
@@ -269,9 +269,10 @@ def updated_kwargs(kwargs_dct, opts_mat):
 
 def _update_kwargs(kwargs_dct, opts_dct):
     """ Update a kwargs dictionary with a dictionary of options,
-        where an option has already been set in kwargs. The values from         `opts_dct` are appended to the existing ones; otherwise
+        where an option has already been set in kwargs. The values from
+        `opts_dct` are appended to the existing ones; otherwise
         this is a regular dictionary.
-        
+
         :param opts_dct: dictionary of options within matrix row
         :type opts_mat: tuple(tuple(dict))
     """
@@ -294,7 +295,7 @@ def _update_kwargs(kwargs_dct, opts_dct):
 
 def _is_nonstring_sequence(obj):
     """ Assess if the sequence is composed of non-string objects.
-        
+
         :param obj: sequence object to assess
         :rtype: bool
     """

@@ -72,8 +72,9 @@ if TRANS_TSKS is not None:
     ioprinter.program_header('trans')
     if PES_DCT:
         transdriver.run(
-            SPC_RLST,
+            PES_RLST, SPC_RLST,
             TRANS_TSKS,
+            SMOD_DCT,
             SPC_DCT, THY_DCT,
             INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
         )

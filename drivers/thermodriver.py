@@ -13,7 +13,7 @@
             (1) Run MESS file to obtain partition functions
         (3) Run fits:
             (1) Read all partition functions from MESS output
-            (2) Run PACC+ThermP to fit thermo NASA polynomials 
+            (2) Run PACC+ThermP to fit thermo NASA polynomials
             (3) Write functional forms to mechanism file
 """
 

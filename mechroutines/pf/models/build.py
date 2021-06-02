@@ -44,9 +44,9 @@ def read_spc_data(spc_dct, spc_name,
         :param spc_name: mechanism name of species
         :type spc_name: str
         :param pes_mod_dct_i: keyword dict of specific PES model
-        :type pes_mod_dct_i: dict[]        
+        :type pes_mod_dct_i: dict[]
         :param spc_mod_dct_i: keyword dict of specific species model
-        :type spc_mod_dct_i: dict[]        
+        :type spc_mod_dct_i: dict[]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
@@ -106,9 +106,9 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
         :param prds: mechanism names of products connected to transition state
         :type prds: tuple(str)
         :param pes_mod_dct_i: keyword dict of specific PES model
-        :type pes_mod_dct_i: dict[]        
+        :type pes_mod_dct_i: dict[]
         :param spc_mod_dct_i: keyword dict of specific species model
-        :type spc_mod_dct_i: dict[]        
+        :type spc_mod_dct_i: dict[]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
@@ -210,9 +210,9 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
         :param spc_dct:
         :type spc_dct:
         :param pes_mod_dct_i: keyword dict of specific PES model
-        :type pes_mod_dct_i: dict[]        
+        :type pes_mod_dct_i: dict[]
         :param spc_mod_dct_i: keyword dict of specific species model
-        :type spc_mod_dct_i: dict[]        
+        :type spc_mod_dct_i: dict[]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
@@ -273,9 +273,9 @@ def mol_data(spc_name, spc_dct,
         :param spc_dct:
         :type spc_dct:
         :param pes_mod_dct_i: keyword dict of specific PES model
-        :type pes_mod_dct_i: dict[]        
+        :type pes_mod_dct_i: dict[]
         :param spc_mod_dct_i: keyword dict of specific species model
-        :type spc_mod_dct_i: dict[]        
+        :type spc_mod_dct_i: dict[]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
@@ -396,7 +396,7 @@ def mol_data(spc_name, spc_dct,
 # VRCTST
 def flux_data(ts_dct, spc_mod_dct_i):
     """ Read a VRC-TST flux file from the SAVE filesystem.
-        
+
         :param ts_dct: species dict entry for a transition state
         :type ts_dct: dict[]
         :param spc_mod_dct_i: keyword dict of specific species model
@@ -593,14 +593,14 @@ def pst_data(ts_dct, reac_dcts,
 
         Simply reads a geometries for reactants and uses it along
         with various PST conditions from the user to set the n and Cn
-        paramater for the Vn = Cn/R^n potential model for PST in MESS. 
+        paramater for the Vn = Cn/R^n potential model for PST in MESS.
 
         :param ts_dct: species dict entry for a transition state
         :type ts_dct: dict[]
         :param reac_dcts: species dict entries for connected reactants
         :type reac_dcts:
         :param spc_mod_dct_i: keyword dict of specific species model
-        :type spc_mod_dct_i: dict[]        
+        :type spc_mod_dct_i: dict[]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem

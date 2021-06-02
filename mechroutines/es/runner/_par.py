@@ -11,6 +11,7 @@
 """
 
 import elstruct
+import automol
 from autorun import SCRIPT_DCT
 
 
@@ -219,6 +220,7 @@ INI_PARAM_BUILD_DCT = {
     elstruct.par.Program.MOLPRO2015: _molpro,
     elstruct.par.Program.PSI4: _psi4,
 }
+
 
 # Unique constructors for programs
 def molpro_opts_mat(spc_info, geo):

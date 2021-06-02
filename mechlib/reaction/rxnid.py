@@ -34,7 +34,7 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
         :type save_prefix: str
     """
 
-    zrxn, zma = _read_from_filesys(
+    zrxn, zma = filesys.reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
     if zrxn is None:
         print('    Identifying class')
@@ -79,7 +79,7 @@ def _id_reaction(rxn_info):
 
 
 def _mod_class(class_typ, rxn_info):
-    """ Create the object containing the full description of the 
+    """ Create the object containing the full description of the
         reaction class, including its type, spin state, and whether
         it is a radical-radical combination.
 
@@ -120,7 +120,7 @@ def set_reaction_direction(reacs, prods, rxn_info,
         :type thy_info: ??
         :param ini_thy_info: ??
         :param direction: direction to set reaction to
-        :type direction: str 
+        :type direction: str
         :param save_prefix: root-path to the save-filesystem
         :type save_prefix: str
     """

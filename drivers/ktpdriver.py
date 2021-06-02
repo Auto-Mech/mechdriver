@@ -54,8 +54,6 @@ def run(pes_rlst,
         :param save_prefix: root-path to the save-filesystem
         :type save_prefix: str
     """
-    """ main driver for generation of full set of rate constants on a single PES
-    """
 
     # --------------------------------------- #
     # LOOP OVER ALL OF THE SUBPES in PES_RLST #
@@ -165,6 +163,7 @@ def run(pes_rlst,
             ckin_path = output_path('CKIN')
             writer.ckin.write_rxn_file(
                 ckin_dct, pes_formula, ckin_path)
+
 
 # ------- #
 # UTILITY #

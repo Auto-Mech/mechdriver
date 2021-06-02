@@ -6,6 +6,7 @@ import autofile
 from phydat import phycon
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
+from mechanalyzer.inf import rxn as rinfo
 from mechlib.filesys._build import build_fs
 from mechlib.filesys.mincnf import min_energy_conformer_locators
 
@@ -157,7 +158,7 @@ def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
             # this needs to be fixed for any case with more than one TS
             ts_locs=ts_locs)
 
-        _, ini_min_cnf_path = filesys.mincnf.min_energy_conformer_locators(
+        _, ini_min_cnf_path = min_energy_conformer_locators(
             cnf_save_fs, mod_ini_thy_info)
         if ini_min_cnf_path:
             zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
@@ -176,7 +177,6 @@ def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
                 zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
     return zrxn, zma
-
 
 
 def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,

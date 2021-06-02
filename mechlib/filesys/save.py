@@ -14,9 +14,9 @@ def atom(sp_ret, cnf_fs, thy_locs, zma,
         CONF layer of the save filesystem: SPC/THY/CONFS/Z
         that can be parsed from a single-point energy job.
 
-        :param sp_ret: 
+        :param sp_ret:
         :type sp_ret:
-        :param cnf_fs: 
+        :param cnf_fs:
     """
 
     # Build filesystem locs and objects

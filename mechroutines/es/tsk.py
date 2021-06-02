@@ -43,7 +43,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         :type tsk: str
         :param spc_dct:
         :type spc_dct:
-        :param spc_name: name of species 
+        :param spc_name: name of species
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
@@ -101,7 +101,7 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
 
         :param spc_dct:
         :type spc_dct:
-        :param spc_name: name of species 
+        :param spc_name: name of species
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
@@ -152,10 +152,10 @@ def conformer_tsk(job, spc_dct, spc_name,
         saved conformer as input.
 
         :param job(subtask): calculatiion(s) to perform for conformer
-        :type job: str 
+        :type job: str
         :param spc_dct:
         :type spc_dct:
-        :param spc_name: name of species 
+        :param spc_name: name of species
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
@@ -612,14 +612,14 @@ def hr_tsk(job, spc_dct, spc_name,
            run_prefix, save_prefix):
     """ Prepares and executes all electronic structure tasks that
         generate information for points along hindered-rotor coordinate
-        scans which are launched from some conformer in the save filesystem. 
+        scans which are launched from some conformer in the save filesystem.
 
         For species and transition state conformers.
 
-        This includes scanning procedures to generate geometries (relaxed) or energies (rigid) points along
+        This includes scanning procedures to generate geometries
+        (relaxed) or energies (rigid) points along
         conformer structures, as well as __ calculations using some
         saved conformer as input.
-
     """
 
     spc_dct_i = spc_dct[spc_name]

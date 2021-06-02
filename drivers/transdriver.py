@@ -1,22 +1,26 @@
 """ Driver for determining and writing parameters that describe
     energy transfer processes.
-    
+
     Main Loop of Driver:
         (1) PES or SPC list
 
     Main Workflow:
         (1) OneDMin:
-            (1) Calculate Lennard-Jones sigma and epsilon parameters via OneDMin
+            (1) Calculate Lennard-Jones sigma and epsilon parameters
         (2) Transport File:
-            (1) Collate and process data from the SAVE filesystem               (2) Format and write data into CHEMKIN tranport file
+            (1) Collate and process data from the SAVE filesystem
+            (2) Format and write data into CHEMKIN tranport file
 """
 
 from mechroutines.trans import run_tsk
 from mechlib.amech_io import parser
+from mechlib.amech_io import printer as ioprinter
+from mechlib.reaction import split_unstable_full
 
 
-def run(spc_rlst,
+def run(pes_rlst, spc_rlst,
         trans_tsk_lst,
+        spc_mod_dct,
         spc_dct, thy_dct,
         run_prefix, save_prefix):
     """ main driver for etransfer run

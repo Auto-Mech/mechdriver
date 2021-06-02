@@ -40,7 +40,8 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='all'):
 
         The conformer locators are filtered using various criteria
 
-        All conformer locators are supported by energy in ascending order. Using the energies at the SP layer:
+        All conformer locators are supported by energy in ascending order.
+        Using the energies at the SP layer:
         save/SPC/THY/CONFS/SP/THY
         save/RXN/THY/TS/CONFS/SP/THY
 
@@ -48,7 +49,7 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='all'):
         :type cnf_save_fs: autofile.fs.conformer obj
         :param mod_thy_info: ???
         :type mod_thy_info: ???
-        :param cnf_range: 
+        :param cnf_range:
         :rtype: (tuple(str, str), str)
     """
 
@@ -77,7 +78,8 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='all'):
 
 def _sorted_cnf_lsts(cnf_locs_lst, cnf_save_fs, mod_thy_info):
     """ Sort the list of conformer locators in the save filesystem
-        using the energies from the specified electronic structure method. The conformers are sorted such that the energies are sorted
+        using the energies from the specified electronic structure method.
+        The conformers are sorted such that the energies are sorted
         in ascedning order.
 
         :param cnf_locs_lst:
@@ -139,7 +141,7 @@ def _sorted_cnf_lsts(cnf_locs_lst, cnf_save_fs, mod_thy_info):
 def _erange_locs(cnf_locs, cnf_enes, ethresh):
     """ Obtain a list of conformer locators that includes the
         minimum-energy conformer and all conformers that lie
-        above it that are within some energy threshold. 
+        above it that are within some energy threshold.
 
         :param cnf_locs: list of conformer filesys locators
         :type cnf_locs:
@@ -164,8 +166,8 @@ def _erange_locs(cnf_locs, cnf_enes, ethresh):
 
 def _rrange_locs(cnf_locs, nthresh):
     """ Obtain a list of conformer locators that includes the
-        minimum-energy conformer and 
-        above it that are within some energy threshold. 
+        minimum-energy conformer and
+        above it that are within some energy threshold.
     """
 
     thresh = int(nthresh.split('r')[1])
@@ -217,7 +219,7 @@ def locs_sort(save_fs):
 
 
 def traj_sort(save_fs, mod_thy_info, rid=None):
-    """ Reads all geometries and energies which exist at the 
+    """ Reads all geometries and energies which exist at the
         lowest sub-layer of some specified layer in the save
         filesystem.
 
