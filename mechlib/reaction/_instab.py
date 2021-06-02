@@ -16,7 +16,7 @@ def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
     # Get split names from full PES run lst
     _split_rxn_names = ()
     for _, rxn_lst in pes_rlst.items():
-        split_rxn_lst = split_unstable_pes(
+        split_rxn_lst, _ = split_unstable_pes(
             rxn_lst, spc_dct, spc_model_dct_i, save_prefix)
         for split_rxn in split_rxn_lst:
             _, (new_rcts, new_prds) = split_rxn
@@ -53,6 +53,7 @@ def split_unstable_pes(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
 
     # Loop over the reactions and split
     new_rxn_lst = ()
+    unstable_chnl_idxs = ()
     for rxn in rxn_lst:
 
         # Unpack the reaction
@@ -72,19 +73,22 @@ def split_unstable_pes(rxn_lst, spc_dct, spc_model_dct_i, save_prefix):
         for prd in prds:
             new_prds += split_map[prd]
 
+        # Flip the reaction if the reactants are unstable?
+        # Append chnl idx if either reactants or products found to be unstable
+        if (len(rcts) < len(new_rcts)) or (len(prds) < len(new_prds)):
+            unstable_chnl_idxs += (chnl_idx,)
+
+        # Append to list
+        new_rxn = ((chnl_idx, (new_rcts, new_prds)),)
+        new_rxn_lst += new_rxn
+
         # Check if the split species are in the spc dct
         if len(rcts) > len(new_rcts):
             print('WARNING: REACTANTS FROM SPLIT MISSING FROM SPC DCT')
         if len(prds) > len(new_prds):
             print('WARNING: PRODUCTS FROM SPLIT MISSING FROM SPC DCT')
 
-        # Flip the reaction if the reactants are unstable?
-
-        # Append to list
-        new_rxn = ((chnl_idx, (new_rcts, new_prds)),)
-        new_rxn_lst += new_rxn
-
-    return new_rxn_lst
+    return new_rxn_lst, unstable_chnl_idxs
 
 
 def split_unstable_spc(spc_rlst, spc_dct, spc_model_dct_i, save_prefix):

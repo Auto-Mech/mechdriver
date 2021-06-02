@@ -101,8 +101,8 @@ def _fill_template_and_write_file(templatefile, inpfile):
 
 
 if __name__ == '__main__':
-    # test__rrho()
-    # test__1dhr()
+    test__rrho()
+    test__1dhr()
     # test__etoh()
     # test__instab()
     test__radrad()

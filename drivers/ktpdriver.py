@@ -89,7 +89,7 @@ def run(pes_rlst,
             pes_mod = tsk_key_dct['kin_model']
             spc_mod = tsk_key_dct['spc_model']
 
-            spc_dct, rxn_lst, label_dct = _process(
+            spc_dct, rxn_lst, instab_chnls, label_dct = _process(
                 pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
                 spc_dct, glob_dct, run_prefix, save_prefix)
 
@@ -101,7 +101,7 @@ def run(pes_rlst,
                 pes_mod, spc_mod,
                 spc_dct,
                 pes_mod_dct, spc_mod_dct,
-                label_dct,
+                instab_chnls, label_dct,
                 mess_path, run_prefix, save_prefix,
                 make_lump_well_inp=tsk_key_dct['lump_wells'])
 
@@ -129,7 +129,7 @@ def run(pes_rlst,
             ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
 
             if label_dct is None:
-                spc_dct, rxn_lst, label_dct = _process(
+                spc_dct, rxn_lst, _, label_dct = _process(
                     pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
                     spc_dct, glob_dct, run_prefix, save_prefix)
 
@@ -186,11 +186,11 @@ def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
 
     # Set reaction list with unstable species broken apart
     ioprinter.message('Identifying stability of all species...', newline=1)
-    chkd_rxn_lst = split_unstable_pes(
+    chkd_rxn_lst, instab_chnls = split_unstable_pes(
         rxn_lst, spc_dct, spc_mod_dct_i, save_prefix)
 
     # Build the MESS label idx dictionary for the PES
     label_dct = ktproutines.label.make_pes_label_dct(
         chkd_rxn_lst, pes_idx, spc_dct, spc_mod_dct_i)
 
-    return spc_dct, chkd_rxn_lst, label_dct
+    return spc_dct, chkd_rxn_lst, instab_chnls, label_dct

@@ -7,7 +7,7 @@ from mechroutines.pf.models.typ import treat_tunnel
 
 
 def write_mess_tunnel_str(ts_inf_dct, chnl_enes,
-                          ts_model, ts_class, ts_idx):
+                          ts_model, ts_class, ts_idx, unstable_chnl=False):
     """ Write the appropriate tunneling string for a transition state
     """
 
@@ -15,12 +15,9 @@ def write_mess_tunnel_str(ts_inf_dct, chnl_enes,
     if treat_tunnel(ts_model, ts_class):
         tunnel_model = ts_model['tunnel']
         if tunnel_model == 'eckart':
-            # ts_idx = ts_inf_dct.get('ts_idx', 0)  # breaks for multiconfig
-            # symm_barrier = ts_inf_dct.get('symm_barrier', False)
-            symm_barrier = False
             tunnel_str = write_mess_eckart_str(
                 chnl_enes, ts_inf_dct.get('imag', None),
-                ts_idx=ts_idx, symm_barrier=symm_barrier)
+                ts_idx=ts_idx, symm_barrier=unstable_chnl)
         # elif tunnel_model == 'sct':
         #     sct_dat_name = tsname + '_sct.dat'
         #     path = 'cat'

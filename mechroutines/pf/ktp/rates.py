@@ -27,7 +27,7 @@ def make_messrate_str(pes_idx, rxn_lst,
                       pes_model, spc_model,
                       spc_dct,
                       pes_model_dct, spc_model_dct,
-                      label_dct,
+                      unstab_chnls, label_dct,
                       mess_path, run_prefix, save_prefix,
                       make_lump_well_inp=False):
     """ Reads and processes all information in the save filesys for
@@ -61,7 +61,7 @@ def make_messrate_str(pes_idx, rxn_lst,
 
     # Write the MESS strings for all the PES channels
     rxn_chan_str, dats, _, _ = make_pes_mess_str(
-        spc_dct, rxn_lst, pes_idx,
+        spc_dct, rxn_lst, pes_idx, unstab_chnls,
         run_prefix, save_prefix, label_dct,
         pes_model_dct_i, spc_model_dct_i, spc_model)
 
@@ -159,7 +159,7 @@ def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
 
 
 # Reaction Channel Writers for the PES
-def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
+def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, unstable_chnls,
                       run_prefix, save_prefix, label_dct,
                       pes_model_dct_i, spc_model_dct_i,
                       spc_model):
@@ -214,7 +214,8 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
         # Write the mess strings for all spc on the channel
         mess_strs, dat_str_dct, written_labels = _make_channel_mess_strs(
             tsname, reacs, prods, spc_dct, label_dct, written_labels,
-            chnl_infs, chnl_enes, spc_model_dct_i)
+            chnl_infs, chnl_enes, spc_model_dct_i,
+            unstable_chnl=(chnl_idx in unstable_chnls))
 
         # Append to full MESS strings
         [well_str, bi_str, ts_str] = mess_strs
@@ -236,7 +237,8 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx,
 
 def _make_channel_mess_strs(tsname, reacs, prods,
                             spc_dct, label_dct, written_labels,
-                            chnl_infs, chnl_enes, spc_model_dct_i):
+                            chnl_infs, chnl_enes, spc_model_dct_i,
+                            unstable_chnl=False):
     """ For each reaction channel on the PES: take all of the pre-read and
         pre-processed information from the save filesys for the
         reactants, products, and transition state and write the appropriately
@@ -376,7 +378,8 @@ def _make_channel_mess_strs(tsname, reacs, prods,
     rclass = spc_dct[tsname+'_0']['class']
     sts_str, ts_dat_dct = _make_ts_mess_str(
         chnl_infs, chnl_enes, spc_model_dct_i, rclass,
-        ts_label, inner_reac_label, inner_prod_label)
+        ts_label, inner_reac_label, inner_prod_label,
+        unstable_chnl=unstable_chnl)
     ts_str += sts_str
     full_dat_dct.update(ts_dat_dct)
 
@@ -398,7 +401,8 @@ def _make_spc_mess_str(inf_dct):
 
 
 def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
-                      ts_label, inner_reac_label, inner_prod_label):
+                      ts_label, inner_reac_label, inner_prod_label,
+                      unstable_chnl=False):
     """  Writes all processed save filesys data for a transition state and
          into an appropriately formatted MESS input string. Takes the
          pre-identified writer designation and calls the approprate
@@ -431,8 +435,8 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
 
         # Write the appropriate string for the tunneling model
         tunnel_str, sct_dct = tunnel.write_mess_tunnel_str(
-            ts_inf_dct, chnl_enes,
-            ts_mod, ts_class, idx)
+            ts_inf_dct, chnl_enes, ts_mod, ts_class, idx,
+            unstable_chnl=unstable_chnl)
 
         # Update master TS list
         mess_strs.append(mstr)

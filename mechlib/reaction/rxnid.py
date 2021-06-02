@@ -34,7 +34,7 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
         :type save_prefix: str
     """
 
-    zrxn, zma = filesys.reaction(
+    zrxn, zma = filesys.read.reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
     if zrxn is None:
         print('    Identifying class')

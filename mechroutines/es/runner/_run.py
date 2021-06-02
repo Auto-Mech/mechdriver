@@ -55,7 +55,6 @@ def execute_job(job, script_str, run_fs,
                 retryfail=True, feedback=False,
                 frozen_coordinates=(), freeze_dummy_atoms=True,
                 overwrite=False,
-                irc_direction=None,
                 **kwargs):
     """ Both ruBoth runs and reads electrouct jobs
     """
@@ -69,7 +68,6 @@ def execute_job(job, script_str, run_fs,
             frozen_coordinates=frozen_coordinates,
             freeze_dummy_atoms=freeze_dummy_atoms,
             overwrite=overwrite,
-            irc_direction=irc_direction,
             **kwargs)
 
     success, ret = read_job(job, run_fs)
@@ -166,13 +164,6 @@ def run_job(job, script_str, run_fs,
                 runner, feedback=feedback,
                 frozen_coordinates=frozen_coordinates,
                 freeze_dummy_atoms=freeze_dummy_atoms)
-        elif job in (elstruct.Job.IRCF, elstruct.Job.IRCR):
-            if job == elstruct.Job.IRCF:
-                irc_direction = 'forward'
-            else:
-                irc_direction = 'reverse'
-            runner = functools.partial(
-                runner, irc_direction=irc_direction)
 
         inp_str, out_str = runner(
             script_str, run_path, geo=geo, chg=spc_info[1],
@@ -239,7 +230,7 @@ def read_job(job, run_fs):
 def is_successful_output(out_str, job, prog):
     """ Parses the output string of the electronic structure job
         and calls the appropraite elstruct status readers to assess
-        if the program has exited normally, contains approprate success messages
+        if program has exited normally, contains approprate success messages
         for the job, and precludes error messages signifying job failure.
 
         :param out_str: string for job output file

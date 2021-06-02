@@ -1,7 +1,7 @@
 """ Driver which executes all of the electronic structure tasks
     for all species that comprise channels of input PES and and separate
     species.
-  
+
     Two Main Loops of Driver:
         (1) species and transition states from input PES or SPC lists
         (2) electronic structure task list

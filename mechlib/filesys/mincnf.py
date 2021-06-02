@@ -21,7 +21,8 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info):
         :rtype: (tuple(str, str), str)
     """
 
-    locs, paths = conformer_locators(cnf_save_fs, mod_thy_info)
+    locs, paths = conformer_locators(
+        cnf_save_fs, mod_thy_info, cnf_range='min')
     if locs and paths:
         ret = locs[0], paths[0]
     else:
@@ -30,7 +31,7 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info):
     return ret
 
 
-def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='all'):
+def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
     """ Obtain the (ring-id, tors-id) filesystem locator pair and
         path for all conformers meeting
 
@@ -59,7 +60,9 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='all'):
     if cnf_locs_lst:
         cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
             cnf_locs_lst, cnf_save_fs, mod_thy_info)
-        if cnf_range == 'all':
+        if cnf_range == 'min':
+            fin_locs_lst = (cnf_locs_lst[0],)
+        elif cnf_range == 'all':
             fin_locs_lst = cnf_locs_lst
         elif 'e' in cnf_range:
             fin_locs_lst = _erange_locs(cnf_locs_lst, cnf_enes_lst, cnf_range)
@@ -71,7 +74,7 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='all'):
         print('No conformers located in {}'.format(
             cnf_save_fs[0].path()))
     for locs in fin_locs_lst:
-        fin_paths_lst.append(cnf_save_fs[-1].path(locs))
+        fin_paths_lst += (cnf_save_fs[-1].path(locs),)
 
     return fin_locs_lst, fin_paths_lst
 

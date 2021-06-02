@@ -1088,8 +1088,8 @@ def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
     # Get the bond dists and calculate the distance of bond being formed
-    ref_geo, _ = automol.convert.zmat.geometry(ref_zma)
-    cnf_geo, _ = automol.convert.zmat.geometry(zma)
+    ref_geo = automol.zmat.geometry(ref_zma)
+    cnf_geo = automol.zmat.geometry(zma)
     grxn = automol.reac.relabel_for_geometry(zrxn)
 
     frm_bnd_keys = automol.reac.forming_bond_keys(grxn)

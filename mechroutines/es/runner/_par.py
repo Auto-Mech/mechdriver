@@ -173,7 +173,6 @@ def _psi4(method_dct, job=None):
         :rtype: (dict[str:tuple(str)], str)
     """
 
-
     # Job unneeded for now
     _, _ = method_dct, job
     method = method_dct.get('method')
