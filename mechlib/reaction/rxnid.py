@@ -55,9 +55,13 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
 
 def _id_reaction(rxn_info):
     """ Identify the reaction and build the object
+
+        :param rxn_info: reaction info object
+        :type rxn_info: mechanalyzer.inf.rxn object
+        :rtype: (tuple(automol.Reaction object), tuple(automol.zmat object))
     """
 
-    [rxn_ichs, _, _, _] = rxn_info   # replace with mechanalyzer grab
+    rxn_ichs = rinfo.value(rxn_info, 'inchi')
     rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
 
     zrxn_objs = automol.reac.rxn_objs_from_inchi(
