@@ -1346,6 +1346,83 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
     return uni_ini_cnf_save_locs
 
 
+def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
+                           zrxn=None, zma_locs=(0,)):
+    """ Save the conformer in the filesystem
+    """
+
+    # Unpack the ret object and obtain the prog and method
+    inf_obj, inp_str, out_str = ret
+    prog = inf_obj.prog
+    method = inf_obj.method
+
+    # Read the energy and geom from the output
+    ene = elstruct.reader.energy(prog, method, out_str)
+    geo = elstruct.reader.opt_geometry(prog, out_str)
+    zma = elstruct.reader.opt_zmatrix(prog, out_str)
+    print('zma 0 test:', zma, geo)
+    if zma is None:
+        if zrxn is None:
+            zma = automol.geom.zmatrix(geo)
+        else:
+            zma = automol.reac.ts_zmatrix(zrxn, geo)
+    print('zma 1 test:', zma)
+    props = (geo, zma, ene)
+    _save_unique_parsed_conformer(
+        thy_info, cnf_save_fs, locs, props, inf_obj,
+        inp_str, zrxn=zrxn, zma_locs=zma_locs)
+
+
+def _save_unique_parsed_conformer(
+        thy_info, cnf_save_fs, locs, props,
+        inf_obj, inp_str, zrxn=None, zma_locs=(0,)):
+
+    # Set the path to the conformer save filesystem
+    cnf_save_path = cnf_save_fs[-1].path(locs)
+
+    geo, zma, ene = props
+    # Build the conformer filesystem and save the structural info
+    ioprinter.save_conformer(cnf_save_path)
+    cnf_save_fs[-1].create(locs)
+    cnf_save_fs[-1].file.geometry_info.write(inf_obj, locs)
+    cnf_save_fs[-1].file.geometry_input.write(inp_str, locs)
+    cnf_save_fs[-1].file.energy.write(ene, locs)
+    cnf_save_fs[-1].file.geometry.write(geo, locs)
+
+    # Build the zma filesystem and save the z-matrix
+    zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
+    zma_save_fs[-1].create(zma_locs)
+    zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
+    zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
+    zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
+
+    # Get the tors names
+    rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
+    if any(rotors):
+        zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
+
+    rings_atoms =  _get_ring_atoms(zma, zrxn)
+    tors_dct = {}
+    for ring_atoms in rings_atoms:
+        dct_label = '-'.join(str(atm+1) for atm in ring_atoms)
+        samp_range_dct = _get_ring_samp_ranges(zma, ring_atoms)
+        tors_dct[dct_label] = samp_range_dct
+    if tors_dct:
+        zma_save_fs[-1].file.ring_torsions.write(tors_dct, zma_locs)
+
+    # Save the tra and gra for a zrxn
+    if zrxn:
+        zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
+
+    # Saving the energy to a SP filesystem
+    sp_save_fs = autofile.fs.single_point(cnf_save_path)
+    sp_save_fs[-1].create(thy_info[1:4])
+    ioprinter.save_conformer_energy(sp_save_fs[-1].root.path())
+    sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
+    sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
+    sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
+
+
 def _save_sym_indistinct_conformer(geo, cnf_save_fs,
                                    cnf_tosave_locs, cnf_saved_locs):
     """ Save a structure into the SYM directory of a conformer

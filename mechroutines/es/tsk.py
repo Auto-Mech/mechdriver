@@ -670,7 +670,6 @@ def hr_tsk(job, spc_dct, spc_name,
 
     # Run the task if any torsions exist
     if any(torsions):
-
         if 'fa' in tors_model:
             scn = 'CSCAN'
         elif 'f' in tors_model:
@@ -680,7 +679,6 @@ def hr_tsk(job, spc_dct, spc_name,
                 scn = 'SCAN'
         else:
             scn = 'SCAN'
-        scn = 'SCAN' if 'fa' not in tors_model else 'CSCAN'
         ini_scn_run_fs, ini_scn_save_fs = build_fs(
             ini_cnf_run_path, ini_cnf_save_path, scn,
             zma_locs=(0,))
