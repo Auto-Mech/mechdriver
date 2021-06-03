@@ -75,7 +75,7 @@ def _run(run_template):
     """ test automech.py
     """
     # Copy input to tmp directory and replace it
-    if os.path.exists(TMP_INP_DIR):
+    if not os.path.exists(TMP_INP_DIR):
         shutil.copytree(CWD_INP_DIR, TMP_INP_DIR)
     _fill_template_and_write_file(run_template, 'run.dat')
 
