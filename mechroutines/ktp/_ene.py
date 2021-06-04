@@ -2,8 +2,9 @@
 """
 
 from phydat import phycon
+import thermfit
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.pf import thermo as thmroutines
+from mechroutines import thermo as thmroutines
 
 
 # Functions to handle energies for a channel
@@ -39,7 +40,7 @@ def set_reference_ene(rxn_lst, spc_dct,
     for rgt in ref_rgts:
 
         ioprinter.info_message(' - Calculating energy for {}...'.format(rgt))
-        basis_dct, uniref_dct = thmroutines.basis.prepare_refs(
+        basis_dct, uniref_dct = thermfit.prepare_refs(
             ref_scheme, spc_dct, [[rgt, None]], run_prefix, save_prefix)
         spc_basis, coeff_basis = basis_dct[rgt]
 
@@ -49,7 +50,7 @@ def set_reference_ene(rxn_lst, spc_dct,
             spc_model_dct_i, run_prefix, save_prefix)
 
         # Calcualte the total energy
-        hf0k += thmroutines.heatform.calc_hform_0k(
+        hf0k += thermfit.heatform.calc_hform_0k(
             ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
 
     hf0k *= phycon.KCAL2EH

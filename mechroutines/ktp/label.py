@@ -3,7 +3,7 @@
 """
 
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.pf.models.typ import need_fake_wells
+from mechroutines.models.typ import need_fake_wells
 
 
 def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):

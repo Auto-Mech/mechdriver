@@ -3,7 +3,7 @@ NEW: Interface to MESS and projrot to set-up tunneling blocks
 """
 
 import mess_io
-from mechroutines.pf.models.typ import treat_tunnel
+from mechroutines.models.typ import treat_tunnel
 
 
 def write_mess_tunnel_str(ts_inf_dct, chnl_enes,

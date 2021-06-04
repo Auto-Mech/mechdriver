@@ -58,6 +58,12 @@ def test__radrad():
     # later: switch c2h5 to vtst/vrctst and ch3_h to pst
 
 
+def test__therm_basic():
+    """ Run minimal tasks for simple thermo calc
+    """
+    _run('run_therm_basic.temp')
+
+
 def __trans():
     """ Run minimal tasks to generate ckin transport
     """
@@ -103,9 +109,10 @@ def _fill_template_and_write_file(templatefile, inpfile):
 
 if __name__ == '__main__':
     test__rrho()
-    test__1dhr()
+    # test__1dhr()
     # test__etoh()
     # test__instab()
-    test__radrad()
-    # test__trans()
+    # test__radrad()
+    # test__therm_basic()
+    # test__proc()
     # test__proc()

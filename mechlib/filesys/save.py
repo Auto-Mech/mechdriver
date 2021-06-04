@@ -65,6 +65,7 @@ def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
 
     # Save auxiliary information for the structure, if needed
     _save_rotors(zma_fs, zma_locs, zrxn=zrxn)
+    _save_rings(zma_fs, zma_locs, zrxn=zrxn)
     _save_reaction(zma_fs, zma_locs, zrxn=zrxn)
 
 
@@ -254,6 +255,12 @@ def read_job_zma(ret, init_zma=None, rebuild=False):
         (4) convert opt geo into a zma [dies for disconn zmas]
     """
 
+    # if zma is None:
+    #     if zrxn is None:
+    #         zma = automol.geom.zmatrix(geo)
+    #     else:
+    #         zma = automol.reac.ts_zmatrix(zrxn, geo)
+
     _, _, out_str, prog, _ = _unpack_ret(ret)
     zma = elstruct.reader.opt_zmatrix(prog, out_str)
     if zma is None or rebuild:
@@ -392,6 +399,21 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
         print(" - Rotors identified from Z-Matrix at {}".format(zma_path))
         print(" - Saving rotor information at same location")
         zma_fs[-1].file.torsions.write(rotors, zma_locs)
+
+
+def _save_rings(zma_fs, zma_locs, zrxn=None):
+    """ Save rings
+    """
+
+    zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+    rings_atoms = automol.zmat.ring_atoms(zma, zrxn)
+    tors_dct = {}
+    for ring_atoms in rings_atoms:
+        dct_label = '-'.join(str(atm+1) for atm in ring_atoms)
+        samp_range_dct = automol.zmat.ring_samp_ranges(zma, ring_atoms)
+        tors_dct[dct_label] = samp_range_dct
+    if tors_dct:
+        zma_fs[-1].file.ring_torsions.write(tors_dct, zma_locs)
 
 
 def _save_reaction(zma_fs, zma_locs, zrxn=None):

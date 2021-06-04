@@ -1,7 +1,7 @@
 """ eletronic structure routines modules
 """
 
-from mechroutines.output.tsk import run_tsk
+from mechroutines.proc.tsk import run_tsk
 
 
 __all__ = [

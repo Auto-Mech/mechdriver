@@ -13,16 +13,16 @@ from phydat import phycon
 from mechanalyzer.inf import spc as sinfo
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.pf.models import ene
-from mechroutines.pf.models import typ
-from mechroutines.pf.models import etrans
-from mechroutines.pf.models import _rot as rot
-from mechroutines.pf.models import _tors as tors
-from mechroutines.pf.models import _sym as symm
-from mechroutines.pf.models import _vib as vib
-from mechroutines.pf.models import _flux as flux
-from mechroutines.pf.models import _util as util
-from mechroutines.pf.thermo import basis
+from mechroutines.models import ene
+from mechroutines.models import typ
+from mechroutines.models import etrans
+from mechroutines.models import _rot as rot
+from mechroutines.models import _tors as tors
+from mechroutines.models import _sym as symm
+from mechroutines.models import _vib as vib
+from mechroutines.models import _flux as flux
+from mechroutines.models import _util as util
+from mechroutines.thermo import basis
 
 
 # General readers

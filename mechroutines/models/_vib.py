@@ -9,8 +9,8 @@ import projrot_io
 from phydat import phycon
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io._path import job_path
-from mechroutines.pf.models import typ
-from mechroutines.pf.models import _tors as tors
+from mechroutines.models import typ
+from mechroutines.models import _tors as tors
 
 
 def vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,

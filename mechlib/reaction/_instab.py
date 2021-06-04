@@ -15,13 +15,14 @@ def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
 
     # Get split names from full PES run lst
     _split_rxn_names = ()
-    for _, rxn_lst in pes_rlst.items():
-        split_rxn_lst, _ = split_unstable_pes(
-            rxn_lst, spc_dct, spc_model_dct_i, save_prefix)
-        for split_rxn in split_rxn_lst:
-            _, (new_rcts, new_prds) = split_rxn
-            _split_rxn_names += new_rcts
-            _split_rxn_names += new_prds
+    if pes_rlst is not None:
+        for _, rxn_lst in pes_rlst.items():
+            split_rxn_lst, _ = split_unstable_pes(
+                rxn_lst, spc_dct, spc_model_dct_i, save_prefix)
+            for split_rxn in split_rxn_lst:
+                _, (new_rcts, new_prds) = split_rxn
+                _split_rxn_names += new_rcts
+                _split_rxn_names += new_prds
 
     # Get split names from spc
     _split_spc_names = split_unstable_spc(

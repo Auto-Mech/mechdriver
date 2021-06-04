@@ -12,10 +12,10 @@ from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io import parser
 from mechlib import filesys
-from mechroutines.pf.models import _vib as vib
-from mechroutines.pf.models import ene
-from mechroutines.pf.thermo import basis
-from mechroutines.output import _util as util
+from mechroutines.models import _vib as vib
+from mechroutines.models import ene
+from mechroutines.thermo import basis
+from mechroutines.proc import _util as util
 
 
 def run_tsk(tsk, spc_dct, spc_name,

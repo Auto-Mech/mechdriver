@@ -23,7 +23,6 @@ def build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i):
     """
 
     run_prefix = pf_filesystems['run_prefix']
-    print('spc_dct_i in _tors', spc_dct_i)
     spc_info = sinfo.from_dct(spc_dct_i)
     spc_fml = automol.inchi.formula_string(spc_info[0])
     if spc_fml is None:
@@ -241,7 +240,6 @@ def _tors_strs(torsion, geo):
 def _need_tors_geo(pf_levels):
     """ Determine if a torsional geometry is geometry if needed
     """
-    ioprinter.debug_message('pflvl', pf_levels)
     return bool(pf_levels['tors'][1] == pf_levels['harm'])
 
 

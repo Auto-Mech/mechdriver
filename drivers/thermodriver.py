@@ -22,11 +22,12 @@ import mechanalyzer
 import chemkin_io
 import automol.inchi
 from automol.inchi import formula_string as fstring
+import thermfit
 from mechanalyzer.inf import spc as sinfo
-from mechroutines.pf import thermo as thmroutines
-from mechroutines.pf import runner as pfrunner
-from mechroutines.pf.models import ene
+from mechroutines import thermo as thmroutines
+from mechroutines.models import ene
 from mechlib import filesys
+from mechlib.amech_io import reader
 from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
@@ -132,8 +133,8 @@ def run(pes_rlst, spc_rlst,
                    autorun.SCRIPT_DCT['messpf'],
                    thm_paths[idx][spc_mod][0])
                 _pfs.append(
-                    pfrunner.mess.read_messpf(thm_paths[idx][spc_mod][0]))
-            final_pf = pfrunner.mess.combine_pfs(_pfs, coeffs, operators)
+                    reader.mess.messpf(thm_paths[idx][spc_mod][0]))
+            final_pf = thermfit.pf.combine(_pfs, coeffs, operators)
 
             # need to clean thm path build
             tdx = len(spc_mods)
@@ -144,7 +145,7 @@ def run(pes_rlst, spc_rlst,
                 job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=tdx),
                 job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=tdx)
             )
-            pfrunner.mess.write_mess_output(
+            writer.mess.output(
                 fstring(spc_dct[spc_name]['inchi']),
                 final_pf, thm_paths[idx]['final'][0],
                 filename='pf.dat')
@@ -171,9 +172,8 @@ def run(pes_rlst, spc_rlst,
             ref_enes = pes_mod_dct_i['therm_fit']['ref_enes']
 
             # Determine info about the basis species used in thermochem calcs
-            basis_dct, uniref_dct = thmroutines.basis.prepare_refs(
-                ref_scheme, spc_dct, [[spc_name, None]],
-                run_prefix, save_prefix)
+            basis_dct, uniref_dct = thermfit.prepare_refs(
+                ref_scheme, spc_dct, [[spc_name, None]])
 
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc_name]
@@ -208,7 +208,7 @@ def run(pes_rlst, spc_rlst,
                     chn_basis_ene_dct[spc_mod][spc_basis_i] = ene_basis_i
 
             # Calculate and store the 0 K Enthalpy
-            hf0k = thmroutines.heatform.calc_hform_0k(
+            hf0k = thermfit.heatform.calc_hform_0k(
                 ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
             spc_dct[spc_name]['Hfs'] = [hf0k]
 
@@ -228,7 +228,8 @@ def run(pes_rlst, spc_rlst,
                 spc_name, spc_dct,
                 thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
-            print(ckin_nasa_str)
+        print('CKIN NASA STR\n')
+        print(ckin_nasa_str)
 
         nasa7_params_all = chemkin_io.parser.thermo.create_spc_nasa7_dct(
             ckin_nasa_str)

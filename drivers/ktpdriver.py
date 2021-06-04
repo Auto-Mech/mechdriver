@@ -15,7 +15,7 @@
 
 import autorun
 import ratefit
-from mechroutines.pf import ktp as ktproutines
+from mechroutines import ktp as ktproutines
 from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import job_path

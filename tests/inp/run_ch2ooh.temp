@@ -8,15 +8,19 @@ pes
 end pes
 
 spc
-    5
+    3,6
 end spc
 
 els
-    spc init_geom     runlvl=m06_gs   inplvl=m06_gs
-    ts  find_ts       runlvl=m06_gs   inplvl=m06_gs
-    all conf_samp     runlvl=m06_gs   inplvl=m06_gs
-    all conf_hess     runlvl=m06_gs   inplvl=m06_gs
-    all conf_energy   runlvl=m06_gs    inplvl=m06_gs
+    spc init_geom     runlvl=mp2_gs   inplvl=mp2_gs
+    spc conf_samp     runlvl=mp2_gs   inplvl=mp2_gs
+    spc conf_hess     runlvl=mp2_gs   inplvl=mp2_gs
+    spc conf_energy   runlvl=mp2_gs    inplvl=mp2_gs
+    # spc init_geom     runlvl=m06_gs   inplvl=m06_gs
+    # ts  find_ts       runlvl=m06_gs   inplvl=m06_gs
+    # all conf_samp     runlvl=m06_gs   inplvl=m06_gs
+    # all conf_hess     runlvl=m06_gs   inplvl=m06_gs
+    # all conf_energy   runlvl=m06_gs    inplvl=m06_gs
 end els
 
 thermo
@@ -25,7 +29,7 @@ thermo
     run_fits        kin_model=global  spc_model=rrhomod
 end thermo
 
-ktp
+# ktp
     write_mess      kin_model=global  spc_model=rrhomod
     run_mess        nprocs=10
     run_fits        kin_model=global  spc_model=rrhomod

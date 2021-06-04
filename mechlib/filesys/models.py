@@ -94,7 +94,6 @@ def set_model_filesys(spc_dct_i, level,
     else:
         spc_info = sinfo.from_dct(spc_dct_i)
 
-    print('level', level)
     levelp = tinfo.modify_orb_label(level, spc_info)
 
     _root = root_locs(spc_dct_i, saddle=saddle, name=name)
@@ -113,7 +112,6 @@ def set_model_filesys(spc_dct_i, level,
         for min_locs in min_rngs_locs:
             cnf_run_fs[-1].create(min_locs)
 
-    print('model filesys', min_rngs_locs, min_rngs_path)
     # Create run fs if that directory has been deleted to run the jobs
 
     return [cnf_save_fs, min_rngs_path, min_rngs_locs, '', cnf_run_fs]
@@ -138,7 +136,6 @@ def set_rpath_filesys(ts_dct, level):
     levelp = tinfo.modify_orb_label(level[1], spc_info)
 
     # Get the save fileystem path
-    print('level', levelp)
     save_path = thy_save_fs[-1].path(levelp[1:4])
     run_path = thy_run_fs[-1].path(levelp[1:4])
 

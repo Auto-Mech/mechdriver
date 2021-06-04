@@ -22,7 +22,6 @@ def thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix):
             spc_info = sinfo.from_dct(spc_dct[spc_name])
             spc_formula = automol.inchi.formula_string(spc_info[0])
             thm_prefix = [spc_formula, automol.inchi.inchi_key(spc_info[0])]
-            print('thm_prefix test:', thm_prefix)
             thm_path[mod] = (
                 job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=idx),
                 job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=idx)

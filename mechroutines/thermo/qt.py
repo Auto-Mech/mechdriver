@@ -4,9 +4,9 @@ Collates information for, and writes MESS files for rate calculations
 
 import importlib
 import mess_io
-from mechroutines.pf.models import build
+from mechroutines.models import build
 
-BLOCK_MODULE = importlib.import_module('mechroutines.pf.models.blocks')
+BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
 
 
 # Input string writer

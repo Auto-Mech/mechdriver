@@ -8,18 +8,18 @@ import automol
 import autorun
 import mess_io
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.pf.models import blocks
-from mechroutines.pf.models import build
-from mechroutines.pf.models import etrans
-from mechroutines.pf.models import tunnel
-from mechroutines.pf.models.inf import make_rxn_str
-from mechroutines.pf.models.typ import need_fake_wells
-from mechroutines.pf.models.typ import is_abstraction_pes
-from mechroutines.pf.ktp._ene import set_reference_ene
-from mechroutines.pf.ktp._ene import sum_channel_enes
+from mechroutines.models import blocks
+from mechroutines.models import build
+from mechroutines.models import etrans
+from mechroutines.models import tunnel
+from mechroutines.models.inf import make_rxn_str
+from mechroutines.models.typ import need_fake_wells
+from mechroutines.models.typ import is_abstraction_pes
+from mechroutines.ktp._ene import set_reference_ene
+from mechroutines.ktp._ene import sum_channel_enes
 
 
-BLOCK_MODULE = importlib.import_module('mechroutines.pf.models.blocks')
+BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
 
 
 # Input string writer

@@ -3,7 +3,7 @@
     reading and presentation.
 """
 
-from mechroutines.output import run_tsk
+from mechroutines.proc import run_tsk
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 

@@ -8,7 +8,6 @@ import automol
 import elstruct
 import autofile
 from autofile import fs
-from phydat import bnd
 from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
@@ -487,86 +486,6 @@ def conformer_sampling(zma, spc_info, thy_info,
         samp_attempt_idx += 1
 
 
-def _get_ring_atoms(zma, zrxn=None):
-    """get ring atoms
-    """
-    rings_atoms = []
-    if zrxn is None:
-        rings_atoms = automol.graph.rings_atom_keys(automol.zmat.graph(zma))
-    else:
-        rings = automol.reac.forming_rings_bond_keys(zrxn)
-        for ring_bnds in rings:
-            ring_atoms = []
-            for ring_bnd in ring_bnds:
-                atma, _ = ring_bnd
-                if atma not in ring_atoms:
-                    ring_atoms.append(atma)
-            rings_atoms.append(ring_atoms)
-
-    return rings_atoms
-
-
-def _get_ring_dihedrals(zma, ring_atoms):
-    """get ring dihedral names and their angle values
-    """
-    coos = automol.zmat.coordinates(zma)
-    da_names = automol.zmat.dihedral_angle_names(zma)
-    val_dct = automol.zmat.value_dictionary(zma)
-
-    ring_value_dct = {}
-    for da_name in da_names:
-        da_idxs = list(coos[da_name])[0]
-        if len(list(set(da_idxs) & set(ring_atoms))) == 4:
-            ring_value_dct[da_name] = val_dct[da_name]
-    return ring_value_dct
-
-
-def _get_ring_distances(zma, ring_atoms):
-    """ return the distances between each pair of ring atoms
-    """
-    dist_value_dct = {}
-    for i, _ in enumerate(ring_atoms):
-        dist_value_dct[i] = automol.zmat.distance(
-            zma, ring_atoms[i-1], ring_atoms[i])
-    return dist_value_dct
-
-
-def _get_ring_samp_ranges(zma, ring_atoms):
-    """ set sampling range for ring dihedrals
-    """
-    samp_range_dct = {}
-    ring_value_dct = _get_ring_dihedrals(zma, ring_atoms)
-    for key, value in ring_value_dct.items():
-        samp_range_dct[key] = [value - numpy.pi/4, value + numpy.pi/4]
-    return samp_range_dct
-
-
-def _ring_distances_passes(samp_zma, ring_atoms, dist_value_dct):
-    """ are the distances between ring atoms reasonable?
-    """
-    condition = True
-    for i, _ in enumerate(ring_atoms):
-        chk_dist = (
-            dist_value_dct[i] -
-            automol.zmat.distance(samp_zma, ring_atoms[i-1], ring_atoms[i])
-        )
-        if abs(chk_dist) > .3:
-            condition = False
-    return condition
-
-
-def _ring_angles_passes(samp_geo, ring_atoms):
-    """ ring angles are not crazy
-    """
-    condition = True
-    for i, _ in enumerate(ring_atoms):
-        _atoms = [ring_atoms[i], ring_atoms[i-1], ring_atoms[i-2]]
-        cangle = automol.geom.central_angle(samp_geo, *_atoms, degree=True)
-        if cangle < 94.0:
-            condition = False
-    return condition
-
-
 def _num_samp_zmas(ring_atoms, nsamp_par):
     """ choose starting number of sample zmas
     """
@@ -600,21 +519,21 @@ def ring_conformer_sampling(
         cnf_save_fs, thy_info)
     frag_saved_geos = []
     for geoi in saved_geos:
-        frag_saved_geos.append(_fragment_ring_geo(geoi))
+        frag_saved_geos.append(automol.geom.fragment_ring_geo(geoi))
 
     # Make sample zmas
     unique_geos, unique_frag_geos, unique_zmas = [], [], []
     tors_dcts = ring_tors_dct.items() if ring_tors_dct is not None else {}
     for ring_atoms, samp_range_dct in tors_dcts:
         ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
-        dist_value_dct = _get_ring_distances(zma, ring_atoms)
+        dist_value_dct = automol.zmat.ring_distances(zma, ring_atoms)
         nsamp = _num_samp_zmas(ring_atoms, nsamp_par)
         samp_zmas = automol.zmat.samples(zma, nsamp, samp_range_dct)
         for samp_zma in samp_zmas:
-            if _ring_distances_passes(samp_zma, ring_atoms, dist_value_dct):
+            if automol.ring_distances_passes(samp_zma, ring_atoms, dist_value_dct):
                 samp_geo = automol.zmat.geometry(samp_zma)
-                frag_samp_geo = _fragment_ring_geo(samp_geo)
-                if _ring_angles_passes(samp_geo, ring_atoms):
+                frag_samp_geo = automol.geom.fragment_ring_geo(samp_geo)
+                if automol.geom.ring_angles_passes(samp_geo, ring_atoms):
                     if not automol.pot.low_repulsion_struct(geo, samp_geo):
                         frag_samp_unique = automol.geom.is_unique(
                             frag_samp_geo, frag_saved_geos, check_dct)
@@ -832,7 +751,7 @@ def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
                     rng_locs=(locs[0],), tors_locs=(locs[1],))
             else:
                 sym_locs = saved_locs[sym_id]
-                _save_sym_indistinct_conformer(
+                filesys.save.sym_indistinct_conformer(
                     geo, cnf_save_fs, locs, sym_locs)
 
         # Update the conformer trajectory file
@@ -1078,123 +997,13 @@ def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
         of a transition state geometry prior to saving
     """
 
-    # Initialize viable
-    viable = True
-
     # Obtain the min-ene zma and bond keys
     _, cnf_save_path = filesys.mincnf.min_energy_conformer_locators(
         cnf_save_fs, mod_thy_info)
     zma_save_fs = fs.zmatrix(cnf_save_path)
     ref_zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
 
-    # Get the bond dists and calculate the distance of bond being formed
-    ref_geo = automol.zmat.geometry(ref_zma)
-    cnf_geo = automol.zmat.geometry(zma)
-    grxn = automol.reac.relabel_for_geometry(zrxn)
-
-    frm_bnd_keys = automol.reac.forming_bond_keys(grxn)
-    brk_bnd_keys = automol.reac.breaking_bond_keys(grxn)
-
-    cnf_dist_lst = []
-    ref_dist_lst = []
-    bnd_key_lst = []
-    cnf_ang_lst = []
-    ref_ang_lst = []
-    for frm_bnd_key in frm_bnd_keys:
-        frm_idx1, frm_idx2 = list(frm_bnd_key)
-        cnf_dist = automol.geom.distance(cnf_geo, frm_idx1, frm_idx2)
-        ref_dist = automol.geom.distance(ref_geo, frm_idx1, frm_idx2)
-        cnf_dist_lst.append(cnf_dist)
-        ref_dist_lst.append(ref_dist)
-        bnd_key_lst.append(frm_bnd_key)
-
-    for brk_bnd_key in brk_bnd_keys:
-        brk_idx1, brk_idx2 = list(brk_bnd_key)
-        cnf_dist = automol.geom.distance(cnf_geo, brk_idx1, brk_idx2)
-        ref_dist = automol.geom.distance(ref_geo, brk_idx1, brk_idx2)
-        cnf_dist_lst.append(cnf_dist)
-        ref_dist_lst.append(ref_dist)
-        bnd_key_lst.append(brk_bnd_key)
-
-    for frm_bnd_key in frm_bnd_keys:
-        for brk_bnd_key in brk_bnd_keys:
-            for frm_idx in frm_bnd_key:
-                for brk_idx in brk_bnd_key:
-                    if frm_idx == brk_idx:
-                        idx2 = frm_idx
-                        idx1 = list(frm_bnd_key - frozenset({idx2}))[0]
-                        idx3 = list(brk_bnd_key - frozenset({idx2}))[0]
-                        cnf_ang = automol.geom.central_angle(
-                            cnf_geo, idx1, idx2, idx3)
-                        ref_ang = automol.geom.central_angle(
-                            ref_geo, idx1, idx2, idx3)
-                        cnf_ang_lst.append(cnf_ang)
-                        ref_ang_lst.append(ref_ang)
-
-    ioprinter.debug_message('bnd_key_list', bnd_key_lst)
-    ioprinter.debug_message('conf_dist', cnf_dist_lst)
-    ioprinter.debug_message('ref_dist', ref_dist_lst)
-    ioprinter.debug_message('conf_angle', cnf_ang_lst)
-    ioprinter.debug_message('ref_angle', ref_ang_lst)
-
-    # Set the maximum allowed displacement for a TS conformer
-    max_disp = 0.6
-    # better to check for bond-form length in bond scission with ring forming
-    if 'addition' in grxn.class_:
-        max_disp = 0.8
-    if 'abstraction' in grxn.class_:
-        # this was 1.4 - SJK reduced it to work for some OH abstractions
-        max_disp = 1.0
-
-    # Check forming bond angle similar to ini config
-    if 'elimination' not in grxn.class_:
-        for ref_angle, cnf_angle in zip(ref_ang_lst, cnf_ang_lst):
-            if abs(cnf_angle - ref_angle) > .44:
-                ioprinter.diverged_ts('angle', ref_angle, cnf_angle)
-                viable = False
-
-    symbols = automol.geom.symbols(cnf_geo)
-    lst_info = zip(ref_dist_lst, cnf_dist_lst, bnd_key_lst)
-    for ref_dist, cnf_dist, bnd_key in lst_info:
-        if 'add' in grxn.class_ or 'abst' in grxn.class_:
-            bnd_key1, bnd_key2 = min(list(bnd_key)), max(list(bnd_key))
-            symb1 = symbols[bnd_key1]
-            symb2 = symbols[bnd_key2]
-
-            if bnd_key in frm_bnd_keys:
-                # Check if radical atom is closer to some atom
-                # other than the bonding atom
-                cls = automol.zmat.is_atom_closest_to_bond_atom(
-                    zma, bnd_key2, cnf_dist)
-                if not cls:
-                    ioprinter.diverged_ts('distance', ref_dist, cnf_dist)
-                    ioprinter.info_message(
-                        ' - Radical atom now has a new nearest neighbor')
-                    viable = False
-                # check forming bond distance
-                if abs(cnf_dist - ref_dist) > max_disp:
-                    ioprinter.diverged_ts('distance', ref_dist, cnf_dist)
-                    viable = False
-
-            # Check distance relative to equi. bond
-            equi_bnd = automol.util.dict_.values_by_unordered_tuple(
-                bnd.LEN_DCT, (symb1, symb2), fill_val=0.0)
-            displace_from_equi = cnf_dist - equi_bnd
-            dchk1 = abs(cnf_dist - ref_dist) > 0.1
-            dchk2 = displace_from_equi < 0.2
-            if dchk1 and dchk2:
-                ioprinter.bad_equil_ts(cnf_dist, equi_bnd)
-                viable = False
-        else:
-            # check forming/breaking bond distance
-            # if abs(cnf_dist - ref_dist) > 0.4:
-            # max disp of 0.4 causes problems for bond scission w/ ring forming
-            # not sure if setting it to 0.3 will cause problems for other cases
-            if abs(cnf_dist - ref_dist) > 0.3:
-                ioprinter.diverged_ts('distance', ref_dist, cnf_dist)
-                viable = False
-
-    return viable
+    return automol.reac.similar_saddle_point_structure(zma, ref_zma, zrxn)
 
 
 def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
@@ -1244,10 +1053,6 @@ def unique_fs_ring_confs(
         if ini_rid in [locs[0] for locs in uni_ini_rng_locs]:
             uni_ini_rng_locs.append(ini_locs)
             continue
-        # ini_rng_save_path = ini_rng_save_fs[-1].path(ini_rng_locs)
-        # ini_cnf_save_fs, _ = build_fs(
-        #     ini_rng_save_path, ini_rng_save_path, 'CONFORMER')
-        # ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_cnf_locs)
         inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
         inizma = automol.geom.zmatrix(inigeo)
@@ -1258,7 +1063,7 @@ def unique_fs_ring_confs(
         if ini_rid in rng_dct:
             found_rid = rng_dct[ini_rid]
         else:
-            frag_ini_geo = _fragment_ring_geo(inigeo)
+            frag_ini_geo = automol.geom.fragment_ring_geo(inigeo)
             if frag_ini_geo is not None:
                 frag_ini_zma = automol.geom.zmatrix(frag_ini_geo)
             skip_trid = []
@@ -1271,7 +1076,7 @@ def unique_fs_ring_confs(
                 if trid in skip_trid:
                     continue
                 geo = cnf_save_fs[-1].file.geometry.read(tlocs)
-                frag_geo = _fragment_ring_geo(geo)
+                frag_geo = automol.geom.fragment_ring_geo(geo)
                 frag_zma = automol.geom.zmatrix(frag_geo)
                 if automol.zmat.almost_equal(frag_ini_zma, frag_zma,
                                              dist_rtol=0.1, ang_atol=.4):
@@ -1346,128 +1151,13 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
     return uni_ini_cnf_save_locs
 
 
-def _save_unique_conformer(ret, thy_info, cnf_save_fs, locs,
-                           zrxn=None, zma_locs=(0,)):
-    """ Save the conformer in the filesystem
-    """
-
-    # Unpack the ret object and obtain the prog and method
-    inf_obj, inp_str, out_str = ret
-    prog = inf_obj.prog
-    method = inf_obj.method
-
-    # Read the energy and geom from the output
-    ene = elstruct.reader.energy(prog, method, out_str)
-    geo = elstruct.reader.opt_geometry(prog, out_str)
-    zma = elstruct.reader.opt_zmatrix(prog, out_str)
-    print('zma 0 test:', zma, geo)
-    if zma is None:
-        if zrxn is None:
-            zma = automol.geom.zmatrix(geo)
-        else:
-            zma = automol.reac.ts_zmatrix(zrxn, geo)
-    print('zma 1 test:', zma)
-    props = (geo, zma, ene)
-    _save_unique_parsed_conformer(
-        thy_info, cnf_save_fs, locs, props, inf_obj,
-        inp_str, zrxn=zrxn, zma_locs=zma_locs)
-
-
-def _save_unique_parsed_conformer(
-        thy_info, cnf_save_fs, locs, props,
-        inf_obj, inp_str, zrxn=None, zma_locs=(0,)):
-
-    # Set the path to the conformer save filesystem
-    cnf_save_path = cnf_save_fs[-1].path(locs)
-
-    geo, zma, ene = props
-    # Build the conformer filesystem and save the structural info
-    ioprinter.save_conformer(cnf_save_path)
-    cnf_save_fs[-1].create(locs)
-    cnf_save_fs[-1].file.geometry_info.write(inf_obj, locs)
-    cnf_save_fs[-1].file.geometry_input.write(inp_str, locs)
-    cnf_save_fs[-1].file.energy.write(ene, locs)
-    cnf_save_fs[-1].file.geometry.write(geo, locs)
-
-    # Build the zma filesystem and save the z-matrix
-    zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
-    zma_save_fs[-1].create(zma_locs)
-    zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
-    zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
-    zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-
-    # Get the tors names
-    rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
-    if any(rotors):
-        zma_save_fs[-1].file.torsions.write(rotors, zma_locs)
-
-    rings_atoms =  _get_ring_atoms(zma, zrxn)
-    tors_dct = {}
-    for ring_atoms in rings_atoms:
-        dct_label = '-'.join(str(atm+1) for atm in ring_atoms)
-        samp_range_dct = _get_ring_samp_ranges(zma, ring_atoms)
-        tors_dct[dct_label] = samp_range_dct
-    if tors_dct:
-        zma_save_fs[-1].file.ring_torsions.write(tors_dct, zma_locs)
-
-    # Save the tra and gra for a zrxn
-    if zrxn:
-        zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
-
-    # Saving the energy to a SP filesystem
-    sp_save_fs = autofile.fs.single_point(cnf_save_path)
-    sp_save_fs[-1].create(thy_info[1:4])
-    ioprinter.save_conformer_energy(sp_save_fs[-1].root.path())
-    sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
-    sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
-    sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])
-
-
-def _save_sym_indistinct_conformer(geo, cnf_save_fs,
-                                   cnf_tosave_locs, cnf_saved_locs):
-    """ Save a structure into the SYM directory of a conformer
-    """
-
-    # Set the path to the conf filesys with sym similar
-    cnf_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
-
-    # Build the sym file sys
-    sym_save_fs = autofile.fs.symmetry(cnf_save_path)
-    sym_save_path = cnf_save_fs[-1].path(cnf_saved_locs)
-    ioprinter.save_symmetry(sym_save_path)
-    sym_save_fs[-1].create([cnf_tosave_locs[-1]])
-    sym_save_fs[-1].file.geometry.write(geo, [cnf_tosave_locs[-1]])
-
-
-def _fragment_ring_geo(geo):
-    """ fragment out the ring and its neighbors in a geo
-    """
-    gra = automol.geom.graph(geo)
-    rings_atoms = automol.graph.rings_atom_keys(gra)
-    ngbs = automol.graph.atoms_sorted_neighbor_atom_keys(gra)
-    ring_idxs = []
-    ret = None
-    for ring_atoms in rings_atoms:
-        for ring_atom in ring_atoms:
-            ring_ngbs = ngbs[ring_atom]
-            if ring_atom not in ring_idxs:
-                ring_idxs.append(ring_atom)
-            for ngb in ring_ngbs:
-                if ngb not in ring_idxs:
-                    ring_idxs.append(ngb)
-    if ring_idxs:
-        ret = automol.geom.from_subset(geo, ring_idxs)
-
-    return ret
-
-
 def rng_loc_for_geo(geo, cnf_save_fs):
     """ Find the ring-conf locators for a given geometry in the
         conformamer save filesystem
     """
 
     rid = None
-    frag_geo = _fragment_ring_geo(geo)
+    frag_geo = automol.geom.fragment_ring_geo(geo)
     if frag_geo is not None:
         frag_zma = automol.geom.zmatrix(frag_geo)
     checked_rids = []
@@ -1477,7 +1167,7 @@ def rng_loc_for_geo(geo, cnf_save_fs):
             continue
         checked_rids.append(current_rid)
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
-        frag_locs_geo = _fragment_ring_geo(locs_geo)
+        frag_locs_geo = automol.geom.fragment_ring_geo(locs_geo)
         if frag_locs_geo is None:
             rid = locs[0]
             break
