@@ -1,8 +1,7 @@
 # cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c cantera -c conda-forge
-
 package:
     name: mechdriver
-    version: "0.1.1"
+    version: "0.1.0"
 
 source:
     path: .
@@ -10,38 +9,40 @@ source:
 requirements:
     host:
         - python=3.7
-
     build:
         - cmake
     run:
-        - gfortran_linux-64  # [linux]
-        - python=3.7
-        - numpy=1.15.4
-        - scipy=1.5.0
-        - gcc_linux-64  # [linux]
-        - gxx_linux-64  # [linux]
-        - pyyaml
         - cmake
+        - gfortran_linux-64
+        - gcc_linux-64
+        - python=3.7
+        - numpy
+        - scipy
+        - pyyaml
         - mako
-        - networkx
         - matplotlib
         - pytest
         - pytest-cov
         - future
         - flake8
         - pylint
-        - pandas
-        - psi4::psi4
         - rdkit::rdkit
         - openbabel::openbabel
         - conda-forge::qcelemental
-        - auto-mech::autochem
-        - auto-mech::autoio-base
-        - auto-mech::x2z
-        - auto-mech::mess
-        - auto-mech::projrot
-        - auto-mech::pac99
-        - auto-mech::thermp
-        - auto-mech::autoio-interfaces
-        - auto-mech::autofile
+        - conda-forge::nglview
+        - conda-forge::pypdf2
+        - cantera::cantera
+        - psi4::psi4
+        - auto-mech::autoio
+        - auto-mech::automol
+        - auto-mech::autoparse
+        - auto-mech::elstruct
+        - auto-mech::ratefit
         - auto-mech::mechanalyzer
+        - auto-mech::mess
+        - auto-mech::mpack
+        - auto-mech::pac99
+        - auto-mech::projrot
+        - auto-mech::slatec
+        - auto-mech::thermp
+        - auto-mech::x2z

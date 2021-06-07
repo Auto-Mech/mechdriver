@@ -1,7 +1,6 @@
-""" Parses the `models.dat` input file for MechDriver that specifies all
-    of the parameters used to construct the partition functions and
-    master equations for the calculation of rate constants and thermochemistry.
+""" Library of parser functions for the model file
 
+    I think it this is very out of wack with current set-up
 """
 
 import automol
@@ -87,20 +86,12 @@ MODPF_VAL_DCT = {
 
 # Build Basic Objects
 def models_dictionary(mod_str, thy_dct):
-    """ Parse the models.dat file string and construct the corresponding
-        model dictionaries that are used by other parts of the code.
-
-        :param mod_str: models.dat input file string
-        :type mod_str: str
-        :param thy_dct:
-        :type: dict[str:dict[str:str/float]]
+    """ Parse the models.dat file
     """
 
     # Format the models input to the kin and spc model dcts
-    kin_blocks = ioformat.ptt.named_end_blocks(
-        mod_str, 'kin', footer='kin')
-    spc_blocks = ioformat.ptt.named_end_blocks(
-        mod_str, 'spc', footer='spc')
+    kin_blocks = ioformat.ptt.named_end_blocks(mod_str, 'kin')
+    spc_blocks = ioformat.ptt.named_end_blocks(mod_str, 'spc')
 
     kin_mod_dct = automol.util.dict_.merge_subdct(
         ioformat.ptt.keyword_dcts_from_blocks(kin_blocks), keep_subdct=True)
@@ -109,12 +100,10 @@ def models_dictionary(mod_str, thy_dct):
 
     # Add defaults, check key-vals, and format each model dicts
     for mod, dct in kin_mod_dct.items():
-        if dct:  # if statement for empty global dcts from above fxn
-            kin_mod_dct[mod] = _kin_model_build(dct)
+        kin_mod_dct[mod] = _kin_model_build(dct, thy_dct)
 
     for mod, dct in spc_mod_dct.items():
-        if dct:  # if statement for empty global dcts from above fxn
-            spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)
+        spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)
 
     return kin_mod_dct, spc_mod_dct
 
@@ -168,7 +157,7 @@ def _spc_model_build(spc_model_dct_i, thy_dct):
     return new_dct2
 
 
-def _kin_model_build(kin_mod_dct_i):
+def _kin_model_build(kin_mod_dct_i, thy_dct):
     """ set kin
     """
 
@@ -205,7 +194,6 @@ def _kin_model_build(kin_mod_dct_i):
     return new_kin_dct
 
 
-# Handle model tasks
 def extract_models(tsk):
     """ pull modesl from tasks
     """
@@ -255,21 +243,3 @@ def split_model(mod):
     models.append(model)
 
     return (tuple(models), tuple(coeffs), tuple(operators))
-
-
-# def get_model(comp, spc_mod_dct_i):
-#     """ get model for spc dct compoenent
-#     """
-#     return spc_mod_dct_i[comp]['mod']
-# def thy_method_name(mod_lvl):
-#     """ get the electronic strucure method
-#     """
-#     return mod_lvl[0]  # ?
-# def thy_info_coeff(mod_lvl):
-#     """ get the coefficient from the model
-#     """
-#     return mod_lvl[1][0]
-# def thy_info_obj(mod_lvl):
-#     """ get the name of the mod lvl
-#     """
-#     return mod_lvl[1][1]

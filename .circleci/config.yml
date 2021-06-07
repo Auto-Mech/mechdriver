@@ -17,19 +17,11 @@ jobs:
                     source activate mechdriver-env
                     python setup.py install
             - run:
-                name: Test MechDriver Workflow
-                command: |
-                    source activate mechdriver-env
-                    pytest . -v --disable-pytest-warnings
-            - run:
                 name: Test mechdriver pep8
                 command: |
                     source activate mechdriver-env
                     flake8 --exit-zero ../mechdriver
-                    pylint --rcfile=./.pylintrc bin
-                    pylint --rcfile=./.pylintrc drivers
-                    pylint --rcfile=./.pylintrc mechroutines
-                    pylint --rcfile=./.pylintrc mechlib
+                    pylint --rcfile=../../.pylintrc mechdriver
 workflows:
     version: 2
     build-all:

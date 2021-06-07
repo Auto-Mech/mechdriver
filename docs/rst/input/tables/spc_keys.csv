@@ -1,9 +1,0 @@
-Keyword,Required,Allowed,Default
-inchi,x,,None
-smiles,x,,None
-mult,x,,None
-charge,x,,None
-inchikey,,None
-sensitivity,,None
-tors_names,,None
-hind_inc,,None

@@ -3,18 +3,20 @@
 
 import automol
 import elstruct
+from mechroutines.es.runner import scan
+from mechroutines.es.runner import qchem_params
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.es.runner import scan, qchem_params
+from phydat import phycon
 
 
 def hindered_rotor_scans(
-        zma, spc_info, mod_thy_info,
+        zma, spc_info, mod_thy_info, thy_save_fs,
         scn_run_fs, scn_save_fs,
         rotors, tors_model, method_dct,
         overwrite,
         saddle=False,
-        increment=0.5235987756,
-        retryfail=True):
+        increment=30.0*phycon.DEG2RAD,
+        retryfail=True, chkstab=None):
     """ Perform scans over each of the torsional coordinates
     """
 
@@ -22,12 +24,10 @@ def hindered_rotor_scans(
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.OPTIMIZATION)
         scn_typ = 'relaxed'
-        update_guess = True
     else:
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.ENERGY)
         scn_typ = 'rigid'
-        update_guess = False
 
     run_tors_names = automol.rotor.names(rotors)
     run_tors_grids = automol.rotor.grids(rotors, increment=increment)
@@ -36,7 +36,14 @@ def hindered_rotor_scans(
     const_names = automol.zmat.set_constraint_names(
         zma, run_tors_names, tors_model)
 
+    # Set appropriate value for check stability
+    # If not set, don't check if saddle=True
+    if chkstab is None:
+        chkstab = bool(not saddle)
+
     ioprinter.run_rotors(run_tors_names, const_names)
+
+    # for tors_name, tors_grid in zip(tors_names, tors_grids):
     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
 
         ioprinter.info_message(
@@ -51,6 +58,7 @@ def hindered_rotor_scans(
             zma=zma,
             spc_info=spc_info,
             mod_thy_info=mod_thy_info,
+            thy_save_fs=thy_save_fs,
             coord_names=tors_names,
             coord_grids=tors_grids,
             scn_run_fs=scn_run_fs,
@@ -58,11 +66,12 @@ def hindered_rotor_scans(
             scn_typ=scn_typ,
             script_str=script_str,
             overwrite=overwrite,
-            update_guess=update_guess,
+            update_guess=True,
             reverse_sweep=True,
             saddle=saddle,
             constraint_dct=constraint_dct,
             retryfail=retryfail,
+            chkstab=False,
             **kwargs,
         )
 
@@ -90,3 +99,24 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
                 print(automol.zmat.string(zma))
 
     return new_min_zma
+
+
+# Read and print the potential
+# sp_fs = autofile.fs.single_point(ini_cnf_save_path)
+# ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
+# ref_ene = ini_cnf_save_fs[-1].file.energy.read(ini_min_cnf_locs)
+# tors_pots, tors_zmas = {}, {}
+# for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
+#     constraint_dct = automol.zmat.build_constraint_dct(
+#         zma, const_names, tors_names)
+#     pot, _, _, _, zmas, _ = filesys.read.potential(
+#         tors_names, tors_grids,
+#         ini_cnf_save_path,
+#         mod_ini_thy_info, ref_ene,
+#         constraint_dct,
+#         read_zma=True)
+#     tors_pots[tors_names] = pot
+#     tors_zmas[tors_names] = zmas
+
+# # Print potential
+# ioprinter.hr_pot(tors_pots)

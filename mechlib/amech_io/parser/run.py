@@ -50,7 +50,7 @@ RUN_INP_VAL_DCT = {
 # Commonly useful task keyword lists
 BASE = ('runlvl', 'inplvl', 'retryfail', 'overwrite')
 MREF = ('var_splvl1', 'var_splvl2', 'var_scnlvl')
-TRANS = ('bath', 'njobs', 'nsamp', 'conf')
+TRANS = ('bath', 'pot', 'njobs', 'nsamp', 'smin', 'smax', 'conf')
 PRNT = ('geolvl', 'proplvl', 'nconfs', 'econfs')
 
 # Supported object types for task (useful if task requestes 'all')
@@ -87,7 +87,6 @@ TSK_KEY_DCT = {
     'rpath_hess': (('ts',), BASE + ('rxncoord',)),
     # Transport Driver Tasks
     'onedmin': (('spc',), (BASE + TRANS)),
-    'write_transport': (('spc',), (BASE + TRANS)),
     # Process Driver Tasks
     'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
     'energy': (('spc',), PRNT),
@@ -96,7 +95,7 @@ TSK_KEY_DCT = {
     'enthalpy': (('spc',), PRNT),
     'coeffs': (('spc',), ()),
     # KTP/Therm
-    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite', 'lump_wells')),
+    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite')),
     'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname')),
     'run_fits': ((), ('kin_model',)),
 }
@@ -124,9 +123,12 @@ TSK_VAL_DCT = {
     'rxncoord': ((str,), ('irc', 'auto'), 'auto'),
     'nobarrier': ((str,), ('pst', 'rpvtst', 'vrctst'), None),
     # Trans
+    'pot': ((str,), ('sphere',), 'lj_12_6'),
     'njobs': ((int,), (), 1),
     'nsamp': ((int,), (), 1),
-    'conf': ((str,), ('sphere', 'min'), 'sphere'),
+    'smin': ((float,), (), 2.0),
+    'smax': ((float,), (), 6.0),
+    'conf': ((str,), ('sphere',), 'sphere'),
     # Proc
     'geolvl': ((str,), (), None),
     'proplvl': ((str,), (), None),
@@ -137,8 +139,7 @@ TSK_VAL_DCT = {
     'kin_model': ((str,), (), None),
     'spc_model': ((str,), (), None),
     'nprocs': ((int,), (), 10),
-    'inpname': ((str,), (), None),
-    'lump_wells': ((bool,), (), False)
+    'inpname': ((str,), (), None)
 }
 # Have nconfs and econfs keywords and combine them to figure out which to use?
 
@@ -248,7 +249,7 @@ def extract_task(tsk, tsk_lst):
     return tsk_inf
 
 
-def tasks(run_str, thy_dct):
+def tasks(run_str, thy_dct, kin_mod_dct, spc_mod_dct):
     """ runstr
     """
 
@@ -296,14 +297,13 @@ def _tsk_lst(tsk_str, num):
     # Build the task lists from the string
     if tsk_str is not None:
         tsks = []
-        tsk_str = ioformat.remove_whitespace_from_string(tsk_str)
+        tsk_str = ioformat.remove_whitespace(tsk_str)
         for line in tsk_str.splitlines():
-            _tsk = _split_line(line, num)
-            # try:
-            #     _tsk = _split_line(line, num)
-            # except:
-            #     print('Task line not formatted correctly:\n{}'.format(line))
-            #     sys.exit()
+            try:
+                _tsk = _split_line(line, num)
+            except:
+                print('Task line not formatted correctly:\n{}'.format(line))
+                sys.exit()
             tsks.append(_tsk)
         mod_tsks = _expand_tsks(tsks) if num == 3 else tsks
     else:

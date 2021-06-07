@@ -1,46 +1,39 @@
-""" Library to perform sequences of electronic structure calculations
-    along a molecular coordinate and save the resulting information to
-    SCAN or CSAN layers of the save filesystem.
+""" es_runners for coordinate scans
 """
 
 import automol
 import autofile
 import elstruct
+from mechroutines.es.runner._run import execute_job
+from mechroutines.es.runner._par import qchem_params
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.es.runner._run import execute_job
-from mechroutines.es.runner._run import read_job
 
 
-def execute_scan(zma, spc_info, mod_thy_info,
+def execute_scan(zma, spc_info, mod_thy_info, thy_save_fs,
                  coord_names, coord_grids,
                  scn_run_fs, scn_save_fs, scn_typ,
                  script_str, overwrite,
                  update_guess=True, reverse_sweep=False,
                  saddle=False,
                  constraint_dct=None, retryfail=True,
+                 chkstab=False,
                  **kwargs):
-    """ Run all of the electronic structure calculations for the
-        scan and save the resulting information.
-
-        Function will first assess whether the scan has been run by
-        searching the filesystem.
-
+    """ Run and save the scan
     """
 
-    # Need a resave option
-    _fin = _scan_finished(
-        coord_names, coord_grids, scn_save_fs, constraint_dct=constraint_dct)
+    if not _scan_finished(coord_names, coord_grids,
+                          scn_save_fs, constraint_dct=constraint_dct):
 
-    if not _fin:
         run_scan(
-            zma, spc_info, mod_thy_info,
+            zma, spc_info, mod_thy_info, thy_save_fs,
             coord_names, coord_grids,
             scn_run_fs, scn_save_fs, scn_typ,
             script_str, overwrite,
             update_guess=update_guess, reverse_sweep=reverse_sweep,
             saddle=saddle,
             constraint_dct=constraint_dct, retryfail=retryfail,
+            chkstab=chkstab,
             **kwargs)
 
         save_scan(
@@ -49,16 +42,18 @@ def execute_scan(zma, spc_info, mod_thy_info,
             scn_typ=scn_typ,
             coord_names=coord_names,
             constraint_dct=constraint_dct,
-            mod_thy_info=mod_thy_info)
+            mod_thy_info=mod_thy_info,
+            in_zma_fs=True)
 
 
-def run_scan(zma, spc_info, mod_thy_info,
+def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
              coord_names, coord_grids,
              scn_run_fs, scn_save_fs, scn_typ,
              script_str, overwrite,
              update_guess=True, reverse_sweep=True,
              saddle=False,
              constraint_dct=None, retryfail=True,
+             chkstab=False,
              **kwargs):
     """ run constrained optimization scan
     """
@@ -83,7 +78,8 @@ def run_scan(zma, spc_info, mod_thy_info,
 
     for idx, grid_vals in enumerate(all_grid_vals):
         if idx == 1:
-            print('\nDoing a reverse sweep of the scan to catch errors...')
+            print('\nDoing a reverse sweep of the HR scan to catch errors...')
+
         _run_scan(
             guess_zma=zma,
             spc_info=spc_info,
@@ -99,6 +95,7 @@ def run_scan(zma, spc_info, mod_thy_info,
             update_guess=update_guess,
             saddle=saddle,
             constraint_dct=constraint_dct,
+            chkstab=chkstab,
             **kwargs
         )
 
@@ -110,34 +107,20 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
               errors=(), options_mat=(),
               retryfail=True, update_guess=True,
               saddle=False, constraint_dct=None,
+              chkstab=False,
               **kwargs):
     """ new run function
-
-        :param coord_names: names of the scan coordinates
-        :type coord_names: tuple(tuple(str))
-        :param grid_vals: values of all the scan coordinates
-        :type grid_vals: ?? same as coord_grids?
-        :param scn_run_fs: SCAN/CSCAN object with run filesys prefix
-        :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
-        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
-        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
-        :param scn_typ: label for scan type ('relaxed' or 'rigid')
-        :type scn_typ: str
-
     """
 
     # Get a connected geometry from the init guess_zma for instability checks
     # conn_geo = automol.zmatrix.geometry(guess_zma)
-    # conn_zma = guess_zma
+    conn_zma = guess_zma
 
     # Set the frozen coordinates (set job at this point?)
     if constraint_dct is not None:
         frozen_coordinates = tuple(coord_names) + tuple(constraint_dct)
     else:
         frozen_coordinates = coord_names
-
-    # Set the job
-    job = _set_job(scn_typ)
 
     # Read the energies and Hessians from the filesystem
     for vals in grid_vals:
@@ -155,6 +138,9 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
         zma = automol.zmat.set_values_by_name(
             guess_zma, dict(zip(coord_names, vals)),
             angstrom=False, degree=False)
+
+        # Set the job
+        job = _set_job(scn_typ)
 
         # Run an optimization or energy job, as needed.
         geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
@@ -178,7 +164,9 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
 
                 # Read the output for the zma and geo
                 if success:
-                    opt_zma = filesys.save.read_job_zma(ret, init_zma=zma)
+                    inf_obj, _, out_str = ret
+                    opt_zma = elstruct.reader.opt_zmatrix(
+                        inf_obj.prog, out_str)
                     if update_guess:
                         guess_zma = opt_zma
 
@@ -197,40 +185,46 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
                     **kwargs
                 )
 
+                # Write initial geos in run fs as they are needed later
+                run_fs[-1].file.zmatrix.write(zma, [job])
+                run_fs[-1].file.geometry.write(
+                    automol.zmat.geometry(zma), [job])
+
 
 def save_scan(scn_run_fs, scn_save_fs, scn_typ,
               coord_names, constraint_dct,
-              mod_thy_info):
-    """ Search for output of electronic structure calculation along the scan
-        coordinate that exist in the SCAN/CSCAN layer of the run filesys. Then
-        parse out the required information and save it into formatted files
-        in the SCAN/CSAN layer of the save filesys.
-
-        :param scn_run_fs: SCAN/CSCAN object with run filesys prefix
-        :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
-        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
-        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
-        :param coord_names: names of the scan coordinates
-        :type coord_names: tuple(tuple(str))
-        :param constraint_dct: values of coordinates to constrain during scan
-        :type constraint_dct: dict[str: float]
+              mod_thy_info, in_zma_fs=False):
+    """ save the scan
     """
 
     ioprinter.info_message(
         'Saving any newly run HR scans in run filesys...', newline=1)
+    if constraint_dct is None:
+        _save_fxn = _save_scanfs
+        coord_locs = coord_names
+    else:
+        _save_fxn = _save_cscanfs
+        coord_locs = constraint_dct
 
-    # Set job
-    job = _set_job(scn_typ)
+    _save_fxn(
+        scn_run_fs=scn_run_fs,
+        scn_save_fs=scn_save_fs,
+        scn_typ=scn_typ,
+        coord_locs=coord_locs,
+        mod_thy_info=mod_thy_info,
+        in_zma_fs=in_zma_fs)
 
-    # Set locs for scan
-    coord_locs, save_locs = scan_locs(
-        scn_run_fs, coord_names, constraint_dct=constraint_dct)
+
+def _save_scanfs(scn_run_fs, scn_save_fs, scn_typ,
+                 coord_locs, mod_thy_info, in_zma_fs=False):
+    """ save the scans that have been run so far
+    """
 
     if not scn_run_fs[1].exists([coord_locs]):
         print("No scan to save. Skipping...")
     else:
         locs_lst = []
-        for locs in save_locs:
+        for locs in scn_run_fs[-1].existing([coord_locs]):
 
             # Set run filesys
             run_path = scn_run_fs[-1].path(locs)
@@ -238,16 +232,12 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             print("Reading from scan run at {}".format(run_path))
 
             # Save the structure
-            success, ret = read_job(job, run_fs)
-            if success:
-                # Need to get the init zma structure in here
-                # could write init zma to run filesys; wont work retro
-                # get init zma readers?
-                if run_fs[-1].file.zmatrix.exists([job]):
-                    init_zma = run_fs[-1].file.zmatrix.read([job])
-                filesys.save.scan_point_structure(
-                    ret, scn_save_fs, locs, mod_thy_info[1:], job,
-                    init_zma=init_zma, init_geo=None)
+            saved = filesys.save.structure(
+                run_fs, scn_save_fs, locs, _set_job(scn_typ),
+                mod_thy_info, in_zma_fs=in_zma_fs)
+
+            # Add to locs lst if the structure is saved
+            if saved:
                 locs_lst.append(locs)
 
         # Build the trajectory file
@@ -255,52 +245,50 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
-def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
-    """  Determine the locs for all of the directories that currently
-         exist in the SCAN/CSAN layer of the save filesystem.
-
-        :param coord_names: names of the scan coordinates
-        :type coord_names: tuple(tuple(str))
-        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
-        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
-        :param constraint_dct: values of coordinates to constrain during scan
-        :type constraint_dct: dict[str: float]
+def _save_cscanfs(scn_run_fs, scn_save_fs, scn_typ,
+                  coord_locs, mod_thy_info, in_zma_fs=True):
+    """ save the scans that have been run so far
     """
 
-    if constraint_dct is None:
-        coord_locs = coord_names
-        scn_locs = scn_save_fs[-1].existing([coord_locs])
+    if not scn_run_fs[1].exists([coord_locs]):
+        print("No scan to save. Skipping...")
     else:
-        coord_locs = constraint_dct
-        scn_locs = ()
-        # scn_locs = scan_save_fs[3].existing()
-        scn_locs = ()
-        for locs1 in scn_save_fs[2].existing([coord_locs]):
-            if scn_save_fs[2].exists(locs1):
-                for locs2 in scn_save_fs[3].existing(locs1):
-                    scn_locs += (locs2,)
+        locs_lst = []
+        for locs1 in scn_run_fs[2].existing([coord_locs]):
+            if scn_run_fs[2].exists(locs1):
+                for locs2 in scn_run_fs[3].existing(locs1):
 
-    return coord_locs, scn_locs
+                    # Set run filesys
+                    run_path = scn_run_fs[-1].path(locs2)
+                    run_fs = autofile.fs.run(run_path)
+                    print("Reading from scan run at {}".format(run_path))
+
+                    # Save the structure
+                    saved = filesys.save.structure(
+                        run_fs, scn_save_fs, locs2, _set_job(scn_typ),
+                        mod_thy_info, in_zma_fs=in_zma_fs)
+
+                    # Add to locs lst if the structure is saved
+                    if saved:
+                        locs_lst.append(locs2)
+            else:
+                print("No scan to save. Skipping...")
+
+        # Build the trajectory file
+        if locs_lst:
+            _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
 def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
-    """ Assesses if the scan calculations requested by the user have been
-        completed by assessing if Z-Matrices exist in the filesystem for
-        all grid values of the scan coordinates.
+    """ See if the scan needs to be run
 
-        :param coord_names: names of the scan coordinates
-        :type coord_names: tuple(tuple(str))
-        :param coord_grids: values of all the scan coordinates
-        :type coord_grids: tuple(tuple(float))
-        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
-        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
-        :param constraint_dct: values of coordinates to constrain during scan
-        :type constraint_dct: dict[str: float]
+        maybe return the grid that is not finished?
     """
 
-    run_finished = True
-
+    print('grid_coords test:', coord_grids)
     grid_vals = automol.pot.coords(coord_grids)
+
+    run_finished = True
     for vals in grid_vals:
 
         # Set the locs for the scan point
@@ -323,12 +311,8 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
 
 
 def _set_job(scn_typ):
-    """ Set the appropriate job label defined in the elstruct
-        package using the input scan type.
-
-        :param scn_typ: label for scan type ('relaxed' or 'rigid')
-        :type scn_typ: str
-        :rtype: str
+    """ Determine if scan is rigid or relaxed and set the appropriate
+        electronic structure job.
     """
 
     assert scn_typ in ('relaxed', 'rigid'), (
@@ -344,16 +328,7 @@ def _set_job(scn_typ):
 
 
 def _write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
-    """ Read the geometries and energies of all optimized geometries
-        in the SCAN/CSCAN filesystem and collate them into am .xyz
-        trajectory file, which is thereafter written into a file inthe
-        filesystem.
-
-        :param ini_locs: locs for high level SCAN/CSCAN to save traj file
-        :type ini_locs: dict[]
-        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
-        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
-        :param mod_thy_info: thy info object with
+    """ Save a hindered rotor trajectory
     """
 
     idxs_lst = [locs[-1] for locs in locs_lst]
@@ -395,7 +370,7 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
     """
 
     for grid in (grid1, grid2):
-        execute_scan(
+        _, _ = execute_scan(
             zma=ts_zma,
             spc_info=ts_info,
             mod_thy_info=mod_var_scn_thy_info,
@@ -411,5 +386,6 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
             saddle=saddle,
             constraint_dct=constraint_dct,
             retryfail=retryfail,
+            chkstab=False,
             **opt_kwargs
         )

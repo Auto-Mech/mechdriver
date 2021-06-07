@@ -1,0 +1,5 @@
+name,smiles,mult
+C2H6,'CC',1
+OH,'[OH]',2
+C2H5,'C[CH2]',2
+H2O,'O',1

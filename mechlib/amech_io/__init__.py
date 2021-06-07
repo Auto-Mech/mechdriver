@@ -2,7 +2,6 @@
 """
 
 from mechlib.amech_io import writer
-from mechlib.amech_io import reader
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer
 from mechlib.amech_io import runner
@@ -13,7 +12,6 @@ from mechlib.amech_io._path import job_path
 
 __all__ = [
     'writer',
-    'reader',
     'parser',
     'printer',
     'runner',
