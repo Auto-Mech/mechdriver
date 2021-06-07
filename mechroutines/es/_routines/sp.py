@@ -1,14 +1,17 @@
-""" es_runners for single point calculations
+""" Routines for taking the geometry for a species or transition state
+    conformer and calculating various molecular properties via some specified
+    electronic structure method.A
+
+    * Maybe put long description from run_energy here
 """
 
 import automol
 import elstruct
 import autofile
 import autorun
-from phydat import phycon
-from phydat import symm
-from mechroutines.es import runner as es_runner
+from phydat import phycon, symm
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.es import runner as es_runner
 
 
 # _JSON_SAVE = ['TAU']
@@ -19,7 +22,15 @@ def run_energy(zma, geo, spc_info, thy_info,
                geo_save_fs, geo_run_path, geo_save_path, locs,
                script_str, overwrite,
                retryfail=True, highspin=False, **kwargs):
-    """ Find the energy for the given structure
+    """ Assesses if an electronic energy exists in the CONFS/SP/THY layer
+        of the save filesys for a species at the specified level of theory.
+        If an energy does not exist, or if a user requests overwrite,
+        the appropriate electronic struture calculation is set-up, launched,
+        and then parsed within the run filesys, then that the energy and
+        job input is written into the save filesys.
+
+        :param zma: Z-Matrix for species/TS conformer
+        :type zma: automol Z-Matrix data structure
     """
 
     # geo_save_fs and locs unneeded for this
@@ -68,7 +79,7 @@ def run_energy(zma, geo, spc_info, thy_info,
             optmat = ()
 
         success, ret = es_runner.execute_job(
-            job='energy',
+            job=elstruct.Job.ENERGY,
             script_str=script_str,
             run_fs=run_fs,
             geo=job_geo,
@@ -135,7 +146,7 @@ def run_gradient(zma, geo, spc_info, thy_info,
             run_fs = autofile.fs.run(geo_run_path)
 
             success, ret = es_runner.execute_job(
-                job='gradient',
+                job=elstruct.Job.GRADIENT,
                 script_str=script_str,
                 run_fs=run_fs,
                 geo=job_geo,
@@ -152,7 +163,8 @@ def run_gradient(zma, geo, spc_info, thy_info,
                 if is_atom:
                     grad = ()
                 else:
-                    ioprinter.info_message(" - Reading gradient from output...")
+                    ioprinter.info_message(
+                        " - Reading gradient from output...")
                     grad = elstruct.reader.gradient(inf_obj.prog, out_str)
 
                     ioprinter.info_message(" - Saving gradient...")
@@ -220,7 +232,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
             run_fs = autofile.fs.run(geo_run_path)
 
             success, ret = es_runner.execute_job(
-                job='hessian',
+                job=elstruct.Job.HESSIAN,
                 script_str=script_str,
                 run_fs=run_fs,
                 geo=job_geo,
@@ -246,7 +258,8 @@ def run_hessian(zma, geo, spc_info, thy_info,
                     geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
                     geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
                     geo_save_fs[-1].file.hessian.write(hess, locs)
-                ioprinter.info_message(" - Save path: {}".format(geo_save_path))
+                ioprinter.info_message(
+                    " - Save path: {}".format(geo_save_path))
 
                 if thy_info[0] == 'gaussian09':
                     _hess_grad(inf_obj.prog, out_str, geo_save_fs,
@@ -318,7 +331,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
         if _run:
 
             success, ret = es_runner.execute_job(
-                job='vpt2',
+                job=elstruct.Job.VPT2,
                 script_str=script_str,
                 run_fs=run_fs,
                 geo=job_geo,
@@ -332,20 +345,9 @@ def run_vpt2(zma, geo, spc_info, thy_info,
             if success:
                 inf_obj, inp_str, out_str = ret
 
-                # if not geo_save_fs[-1].file.hessian.exists(locs):
-                #     ioprinter.info_message(" - No Hessian in filesys.",
-                #           "Reading it from output...")
-                #     hess = elstruct.reader.hessian(inf_obj.prog, out_str)
-                #     ioprinter.info_message(" - Saving Hessian...")
-                #     ioprinter.info_message(" - Save path: {}".format(geo_save_path))
-                #     geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
-                #     geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
-                #     geo_save_fs[-1].file.hessian.write(hess, locs)
-
                 ioprinter.info_message(
                     " - Reading anharmonicities from output...")
                 vpt2_dct = elstruct.reader.vpt2(inf_obj.prog, out_str)
-                # hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
                 ioprinter.save_anharmonicity(geo_save_path)
                 geo_save_fs[-1].file.vpt2_input.write(inp_str, locs)
@@ -404,7 +406,7 @@ def run_prop(zma, geo, spc_info, thy_info,
         run_fs = autofile.fs.run(geo_run_path)
 
         success, ret = es_runner.execute_job(
-            job='molec_properties',
+            job=elstruct.Job.MOLPROP,
             script_str=script_str,
             run_fs=run_fs,
             geo=job_geo,
@@ -416,7 +418,7 @@ def run_prop(zma, geo, spc_info, thy_info,
         )
 
         if success:
-            inf_obj, inp_str, out_str = ret
+            inf_obj, _, out_str = ret
 
             ioprinter.info_message(" - Reading dipole moment from output...")
             dmom = elstruct.reader.dipole_moment(inf_obj.prog, out_str)
@@ -492,7 +494,6 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         ioprinter.existing_path('Harmonic frequencies', save_path)
         freqs = geo_save_fs[-1].file.harmonic_frequencies.read(locs)
         ioprinter.frequencies(freqs)
-        ioprinter.geometry(geo)
 
 
 def _hess_grad(prog, out_str, geo_save_fs,

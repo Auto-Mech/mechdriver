@@ -1,4 +1,4 @@
-""" rct cnf fs because don't knwo where else to put it and avoid 
+""" rct cnf fs because don't knwo where else to put it and avoid
     circular imports
 """
 
@@ -38,15 +38,3 @@ def rcts_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
                         ini_min_cnf_locs, ini_min_cnf_path),)
 
     return rct_cnf_fs
-
-
-__all__ = [
-    'build_fs',
-    'prefix_fs',
-    'root_locs',
-    'mincnf',
-    'models',
-    'read',
-    'save'
-]
-

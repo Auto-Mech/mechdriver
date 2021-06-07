@@ -29,7 +29,7 @@ def _model_header(spc_mod_dct_i, refscheme=''):
     tors_geo_info = spc_mod_dct_i['tors']['geolvl'][1]
     tors_ene_info = spc_mod_dct_i['tors']['enelvl'][1]
     # vpt2_info = spc_mod_dct_i['vib']['vpt2lvl'][1]
-    vpt2_info = None
+    # vpt2_info = None
 
     ene_infos = tuple(inf for key, inf in spc_mod_dct_i['ene'].items()
                       if 'lvl' in key)
@@ -44,9 +44,9 @@ def _model_header(spc_mod_dct_i, refscheme=''):
         chemkin_header_str += '! tors level: {}{}/{}//{}{}/{}\n'.format(
             tors_ene_info[1][3], tors_ene_info[1][1], tors_ene_info[1][2],
             tors_geo_info[1][3], tors_geo_info[1][1], tors_geo_info[1][2])
-    if vpt2_info is not None:
-        chemkin_header_str += '! vpt2 level: {}/{}\n'.format(
-            vpt2_info[1][1], vpt2_info[1][2])
+    # if vpt2_info is not None:
+    #     chemkin_header_str += '! vpt2 level: {}/{}\n'.format(
+    #         vpt2_info[1][1], vpt2_info[1][2])
     if refscheme:
         chemkin_header_str += '! reference scheme: {0}\n'.format(refscheme)
 
@@ -102,6 +102,7 @@ def write_rxn_file(ckin_rxn_dct, pes_formula, ckin_path):
 
 
 # THERMO
+# combine with nasapoly str
 def nasa_polynomial(hform0, hform298, ckin_poly_str):
     """ write the nasa polynomial str
     """
@@ -112,6 +113,7 @@ def nasa_polynomial(hform0, hform298, ckin_poly_str):
     return hf_str + ckin_poly_str
 
 
+# prob can handle with autorun func
 def write_nasa_file(ckin_nasa_str, ckin_path):
     """ write out the nasa polynomials
     """
@@ -123,6 +125,7 @@ def write_nasa_file(ckin_nasa_str, ckin_path):
 
 
 # TRANSPORT
+# prob can handle with autorun func
 def write_transport_file(ckin_trans_str, ckin_path):
     """ write out the transport file
     """
