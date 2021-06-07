@@ -218,11 +218,9 @@ def read_job(job, run_fs):
         prog = inf_obj.prog
         ret = (inf_obj, inp_str, out_str)
 
-        if is_successful_output(out_str, job, prog):
-            print(" - Found successful output. Reading...")
-            success = True
-        else:
-            success = False
+        success = bool(is_successful_output(out_str, job, prog))
+        if success:
+            print(" - Reading successful ouput...")
 
     return success, ret
 
@@ -255,9 +253,6 @@ def is_successful_output(out_str, job, prog):
             ret = True
         else:
             print(" - Output has an error message. Skipping...")
-
-    if ret:
-        print(" - Found successful output. Reading...")
 
     return ret
 

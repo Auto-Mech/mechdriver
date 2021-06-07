@@ -1,0 +1,65 @@
+! vib model: harm
+! tors model: rigid
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = -0.03, Hf(298 K) = -3.45 kcal/mol
+C2H6                    H  6 C  2 O  0 N  0 G    200.0    3000.0   1000.0      1
+ 1.04300175E+00 2.06093825E-02-9.09413186E-06 1.97218523E-09-1.70467571E-13    2
+-2.80096486E+03 1.69469275E+01 4.34714843E+00 5.17834895E-03 1.86301383E-05    3
+-2.04549894E-08 6.65932376E-12-3.39018276E+03 1.45986635E+00                   4
+
+
+! vib model: harm
+! tors model: rigid
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = 0.06, Hf(298 K) = 0.53 kcal/mol
+H                       H  1 C  0 O  0 N  0 G    200.0    3000.0   1000.0      1
+ 2.49856327E+00 2.55065221E-06-1.88408471E-09 5.93128518E-13-6.85305400E-17    2
+-4.76645742E+02-4.53664370E-01 2.49929216E+00 1.08315920E-06 3.56328243E-09    3
+-9.26844763E-12 5.08428347E-15-4.77021842E+02-4.57956552E-01                   4
+
+
+! vib model: harm
+! tors model: rigid
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = 0.06, Hf(298 K) = -2.61 kcal/mol
+C2H5                    H  5 C  2 O  0 N  0 G    200.0    3000.0   1000.0      1
+ 1.81492774E+00 1.62759966E-02-6.92269316E-06 1.44901630E-09-1.21097809E-13    2
+-2.55038114E+03 1.51217352E+01 4.66830318E+00-3.97387721E-03 4.21608905E-05    3
+-4.83388658E-08 1.79796990E-11-2.81320307E+03 3.19015941E+00                   4
+
+
+! vib model: harm
+! tors model: rigid
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = 0.00, Hf(298 K) = 4.97 kcal/mol
+H2                      H  2 C  0 O  0 N  0 G    200.0    3000.0   1000.0      1
+ 3.50654340E+00 5.13445035E-05-1.32877188E-07 8.85855963E-11-1.34250004E-14    2
+-1.02600790E+03-4.38549093E+00 3.49948490E+00-2.64840700E-06 1.93973053E-08    3
+-3.37393964E-11 1.76769088E-14-1.01835025E+03-4.32587736E+00                   4
+
+
+! vib model: harm
+! tors model: rigid
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = -0.03, Hf(298 K) = -1.95 kcal/mol
+CH4                     H  4 C  1 O  0 N  0 G    200.0    3000.0   1000.0      1
+-1.52350386E-01 1.18356302E-02-4.72873965E-06 9.20053842E-10-7.07874495E-14    2
+-1.25265090E+03 2.03249357E+01 5.07313115E+00-1.10068680E-02 3.38642510E-05    3
+-2.86157044E-08 8.48899674E-12-2.24923085E+03-4.52010239E+00                   4
+
+

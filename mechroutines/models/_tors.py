@@ -134,7 +134,7 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
     # Calculate the scaling factors
     scale_indcs, factor = scale_factor
     nscale = numtors - len(scale_indcs)
-    print('nscale test:', nscale, numtors, scale_indcs, len(scale_indcs))
+
     if nscale > 0:
         sfactor = factor**(2.0/nscale)
         ioprinter.debug_message(

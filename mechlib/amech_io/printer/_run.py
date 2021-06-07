@@ -10,6 +10,7 @@ def runlst(run_inf, run_lst):
     """ checks if run lst is a species lst
     """
 
+    message('=========================================')
     formula, pes_idx, sub_pes_idx = run_inf
     if formula != 'SPC':
         print_pes(pes_idx+1, formula, sub_pes_idx+1)

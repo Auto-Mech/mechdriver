@@ -37,18 +37,19 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
     zrxn, zma = filesys.read.reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
     if zrxn is None:
-        print('    Identifying class')
+        print('    Identifying class...')
         zrxns, zmas = _id_reaction(rxn_info)
     else:
         zrxns = (zrxn,)
         zmas = (zma,)
-        print('    Reading from fileysystem')
+        print('    Reading from fileysystem...')
 
     rclasses = ()
     for zrxn in zrxns:
         rclasses += (_mod_class(zrxn.class_, rxn_info),)
 
-    print('    Reaction class identified as: {}'.format(rclasses[0]))
+    print('    Reaction class identified as: {}'.format(
+        automol.par.string(rclasses[0])))
 
     return zrxns, zmas, rclasses
 
@@ -142,8 +143,8 @@ def set_reaction_direction(reacs, prods, rxn_info,
     else:
         raise NotImplementedError
 
-    print('    Running reaction as:')
-    print('      {} = {}'.format('+'.join(reacs), '+'.join(prods)))
+    print('    Running reaction as: {} = {}'.format(
+        '+'.join(reacs), '+'.join(prods)))
 
     return reacs, prods
 

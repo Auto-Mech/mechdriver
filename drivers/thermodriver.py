@@ -173,7 +173,7 @@ def run(pes_rlst, spc_rlst,
 
             # Determine info about the basis species used in thermochem calcs
             basis_dct, uniref_dct = thermfit.prepare_refs(
-                ref_scheme, spc_dct, [[spc_name, None]])
+                ref_scheme, spc_dct, (spc_name,))
 
             # Get the basis info for the spc of interest
             spc_basis, coeff_basis = basis_dct[spc_name]

@@ -41,7 +41,7 @@ def set_reference_ene(rxn_lst, spc_dct,
 
         ioprinter.info_message(' - Calculating energy for {}...'.format(rgt))
         basis_dct, uniref_dct = thermfit.prepare_refs(
-            ref_scheme, spc_dct, [[rgt, None]], run_prefix, save_prefix)
+            ref_scheme, spc_dct, (rgt,))
         spc_basis, coeff_basis = basis_dct[rgt]
 
         # Build filesystem
@@ -52,8 +52,6 @@ def set_reference_ene(rxn_lst, spc_dct,
         # Calcualte the total energy
         hf0k += thermfit.heatform.calc_hform_0k(
             ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
-
-    hf0k *= phycon.KCAL2EH
 
     return hf0k
 

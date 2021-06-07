@@ -484,10 +484,6 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
     """ write the MESS strings for the fake wells and TSs
     """
 
-    print('fake make test')
-    print(chnl, side, fake_inf_dcts,
-          chnl_enes, label_dct, side_label)
-
     # Set vars based on the reacs/prods
     reacs, prods = chnl
     if side == 'reacs':

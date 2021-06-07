@@ -2,7 +2,6 @@
 """
 
 import os
-import automol
 import autofile
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import spc as sinfo
@@ -68,7 +67,6 @@ def electronic_energy(spc_dct_i, pf_filesystems, spc_model_dct_i, conf=None):
     # Get the electronic energy levels
     ene_levels = tuple(val[1] for key, val in spc_model_dct_i['ene'].items()
                        if 'lvl' in key)
-    print('ene levels', ene_levels)
 
     # Read the energies from the filesystem
     e_elec = None
@@ -156,17 +154,3 @@ def rpath_ref_idx(ts_dct, scn_vals, coord_name, scn_prefix,
         scn_idx = scn_vals.index(ref_val)
 
     return scn_idx, ene1, ene2
-
-
-# Writer
-def zpe_str(spc_dct, zpe):
-    """ return the zpe for a given species according a specified set of
-    partition function levels
-    """
-    if automol.geom.is_atom(automol.inchi.geometry(spc_dct['inchi'])):
-        zero_energy_str = 'End'
-    else:
-        zero_energy_str = ' ZeroEnergy[kcal/mol] ' + str(zpe)
-        zero_energy_str += '\nEnd'
-
-    return zero_energy_str

@@ -494,7 +494,6 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         ioprinter.existing_path('Harmonic frequencies', save_path)
         freqs = geo_save_fs[-1].file.harmonic_frequencies.read(locs)
         ioprinter.frequencies(freqs)
-        ioprinter.geometry(geo)
 
 
 def _hess_grad(prog, out_str, geo_save_fs,

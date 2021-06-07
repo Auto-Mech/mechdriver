@@ -80,6 +80,70 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
     return sym_factor
 
 
+def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
+    """ Determine the symmetry number for a given conformer geometry.
+    (1) Explore the saved conformers to find the list of similar conformers -
+        i.e. those with a coulomb matrix and energy that are equivalent
+        to those for the reference geometry.
+    (2) Expand each of those similar conformers by applying
+        rotational permutations to each of the terminal groups.
+    (3) Count how many distinct distance matrices there are in
+        the fully expanded conformer list.
+    """
+
+    if grxn is not None:
+        frm_bnd_keys = automol.reac.forming_bond_keys(grxn)
+        brk_bnd_keys = automol.reac.breaking_bond_keys(grxn)
+        tors_names = automol.rotor.names(rotors, flat=True)
+        tors_idxs = [automol.zmat.coord_idxs(zma, name) for name in tors_names]
+    else:
+        frm_bnd_keys, brk_bnd_keys = frozenset({}), frozenset({})
+
+    # Modify geometries to remove H's from rotatable XHn end group;
+    # this will be accounted for separately as multiplicative factor
+    int_sym_num = 0
+    mod_sym_geos = []
+    for geo_sym_i in sym_geos:
+        ret = automol.geom.end_group_symmetry_factor(
+            geo_sym_i, frm_bnd_keys, brk_bnd_keys)
+        mod_geo_sym_i, end_group_factor, removed_atms = ret
+        if grxn is not None:
+            mod_tors_idxs = _modify_idxs(
+                tors_idxs, removed_atms, automol.zmat.dummy_keys(zma))
+
+        new_geom = True
+        for mod_geo_sym_j in mod_sym_geos:
+            if automol.geom.almost_equal_dist_matrix(
+                    mod_geo_sym_i, mod_geo_sym_j, thresh=3e-1):
+                if grxn is None:
+                    tors_same = automol.geom.are_torsions_same(
+                        mod_geo_sym_i, mod_geo_sym_j, ts_bnds=())
+                else:
+                    tors_same = automol.geom.are_torsions_same2(
+                        mod_geo_sym_i, mod_geo_sym_j, mod_tors_idxs)
+                if tors_same:
+                    new_geom = False
+                    break
+        if new_geom:
+            mod_sym_geos.append(mod_geo_sym_i)
+            int_sym_num += 1
+
+    int_sym_num *= end_group_factor
+
+    return int_sym_num, end_group_factor
+
+
+def tors_reduced_sym_factor(sym_factor, rotors):
+    """ Decrease the overall molecular symmetry factor by the
+        torsional mode symmetry numbers
+    """
+    tors_symms = automol.rotor.symmetries(rotors, flat=True)
+    for symm in tors_symms:
+        sym_factor /= symm
+
+    return sym_factor
+
+
 def _modify_idxs(idxs_lst, removed_atms, dummy_atms):
     mod_idxs_lst = []
     no_dummy_idxs_lst = []
@@ -108,76 +172,3 @@ def _modify_idxs(idxs_lst, removed_atms, dummy_atms):
                 mod_idxs.append(mod_idx)
             mod_idxs_lst.append(mod_idxs)
     return mod_idxs_lst
-
-
-def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
-    """ Determine the symmetry number for a given conformer geometry.
-    (1) Explore the saved conformers to find the list of similar conformers -
-        i.e. those with a coulomb matrix and energy that are equivalent
-        to those for the reference geometry.
-    (2) Expand each of those similar conformers by applying
-        rotational permutations to each of the terminal groups.
-    (3) Count how many distinct distance matrices there are in
-        the fully expanded conformer list.
-    """
-
-    if grxn is not None:
-        frm_bnd_keys = automol.reac.forming_bond_keys(grxn)
-        brk_bnd_keys = automol.reac.breaking_bond_keys(grxn)
-        tors_names = automol.rotor.names(rotors, flat=True)
-        tors_idxs = [automol.zmat.coord_idxs(zma, name) for name in tors_names]
-    else:
-        frm_bnd_keys, brk_bnd_keys = frozenset({}), frozenset({})
-
-    int_sym_num = 0
-    # modify geometries to remove H's from rotatable XHn end group
-    # this will be accounted for separately as multiplicative factor
-    mod_sym_geos = []
-    print('sym_geos test:', sym_geos)
-    print('keys:', frm_bnd_keys, brk_bnd_keys)
-    # ts_bnds = ()
-    # if grxn is not None:
-    #     ts_bnds = (frm_bnd_keys, brk_bnd_keys)
-    for geo_sym_i in sym_geos:
-        ret = automol.geom.end_group_symmetry_factor(
-            geo_sym_i, frm_bnd_keys, brk_bnd_keys)
-        mod_geo_sym_i, end_group_factor, removed_atms = ret
-        if grxn is not None:
-            mod_tors_idxs = _modify_idxs(
-                tors_idxs, removed_atms, automol.zmat.dummy_keys(zma))
-        # ioprinter.info_message('end_group_factor test:', end_group_factor)
-
-        new_geom = True
-        for mod_geo_sym_j in mod_sym_geos:
-            if automol.geom.almost_equal_dist_matrix(
-                    mod_geo_sym_i, mod_geo_sym_j, thresh=3e-1):
-                if grxn is None:
-                    tors_same = automol.geom.are_torsions_same(
-                        mod_geo_sym_i, mod_geo_sym_j, ts_bnds=())
-                else:
-                    tors_same = automol.geom.are_torsions_same2(
-                        mod_geo_sym_i, mod_geo_sym_j, mod_tors_idxs)
-                if tors_same:
-                    new_geom = False
-                    break
-        if new_geom:
-            mod_sym_geos.append(mod_geo_sym_i)
-            int_sym_num += 1
-            print('sym_geo test:', mod_geo_sym_i, int_sym_num)
-
-    int_sym_num *= end_group_factor
-    print('end_group_factor:', end_group_factor)
-    print('final int_sym_num:', int_sym_num)
-
-    return int_sym_num, end_group_factor
-
-
-def tors_reduced_sym_factor(sym_factor, rotors):
-    """ Decrease the overall molecular symmetry factor by the
-        torsional mode symmetry numbers
-    """
-    tors_symms = automol.rotor.symmetries(rotors, flat=True)
-    for symm in tors_symms:
-        sym_factor /= symm
-
-    return sym_factor

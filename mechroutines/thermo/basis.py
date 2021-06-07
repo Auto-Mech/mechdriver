@@ -145,9 +145,7 @@ def enthalpy_calculation(
     ref_enes = pes_mod_dct_i['therm_fit']['ref_enes']
 
     basis_dct, uniref_dct = thermfit.prepare_refs(
-        ref_scheme, spc_dct, [[spc_name, None]],
-        run_prefix, save_prefix,
-        zrxn=zrxn)
+        ref_scheme, spc_dct, (spc_name,), zrxn=zrxn)
 
     # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
@@ -197,9 +195,7 @@ def enthalpy_calculation(
         if zrxn is None:
             if ref_scheme != ts_ref_scheme:
                 basis_dct_trs, uniref_dct_trs = thermfit.prepare_refs(
-                    ts_ref_scheme, spc_dct, [[spc_name, None]],
-                    run_prefix, save_prefix,
-                    zrxn=zrxn)
+                    ts_ref_scheme, spc_dct, (spc_name,), zrxn=zrxn)
                 spc_basis_trs, coeff_basis_trs = basis_dct_trs[spc_name]
                 ene_basis_trs = []
                 energy_missing = False

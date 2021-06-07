@@ -50,8 +50,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         label = spc_name
         basis_dct, _ = basis.prepare_refs(
             pes_mod_dct_i['thermfit']['ref_scheme'],
-            spc_dct, [[spc_name, None]],
-            run_prefix, save_prefix)
+            spc_dct, (spc_name,))
         # Get the basis info for the spc of interest
         spc_basis, coeff_basis = basis_dct[spc_name]
         coeff_array = []

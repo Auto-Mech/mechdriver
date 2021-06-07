@@ -61,8 +61,6 @@ def run_tsk(tsk, spc_dct, spc_name,
     skip = skip_task(tsk, spc_dct, spc_name,
                      thy_dct, es_keyword_dct, save_prefix)
     if not skip:
-        ioprinter.debug_message('- Proceeding with requested task...')
-
         # Get stuff from task
         job = tsk.split('_', 1)[1]
 
@@ -159,7 +157,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-values for electronic structure task
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
@@ -383,12 +381,11 @@ def conformer_tsk(job, spc_dct, spc_name,
 
         # Run the job over all the conformers requested by the user
         for ini_locs in ini_rng_cnf_locs_lst:
-            ioprinter.running('task for conformer: ', ini_locs, newline=2)
             ini_cnf_run_fs[-1].create(ini_locs)
             geo_run_path = ini_cnf_run_fs[-1].path(ini_locs)
             geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
             ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
-            ioprinter.debug_message('reading geometry from ', geo_save_path)
+            print('Running task for geometry at {}', geo_save_path)
             geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
             zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
             ES_TSKS[job](

@@ -3,19 +3,7 @@
 """
 
 import os
-import numpy
 import mess_io
-
-
-def messpf_temps(pf_path):
-    """ Obtain the temperatures from the MESSPF file
-    """
-
-    # Obtain the temperatures, remove the 298.2 value
-    temps, _, _, _ = messpf(pf_path)
-    temps = [temp for temp in temps if not numpy.isclose(temp, 298.2)]
-
-    return temps
 
 
 def messpf(pf_path):
