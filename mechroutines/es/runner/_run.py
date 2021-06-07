@@ -4,7 +4,7 @@
 import functools
 import elstruct
 import autofile
-import automol
+from mechlib.amech_io import printer as ioprinter
 from . import _seq as optseq
 
 
@@ -55,8 +55,9 @@ def execute_job(job, script_str, run_fs,
                 retryfail=True, feedback=False,
                 frozen_coordinates=(), freeze_dummy_atoms=True,
                 overwrite=False,
+                irc_direction=None,
                 **kwargs):
-    """ Both ruBoth runs and reads electrouct jobs
+    """ run and read an elstruct job
     """
 
     run_job(job, script_str, run_fs,
@@ -68,6 +69,7 @@ def execute_job(job, script_str, run_fs,
             frozen_coordinates=frozen_coordinates,
             freeze_dummy_atoms=freeze_dummy_atoms,
             overwrite=overwrite,
+            irc_direction=irc_direction,
             **kwargs)
 
     success, ret = read_job(job, run_fs)
@@ -79,32 +81,9 @@ def run_job(job, script_str, run_fs,
             geo, spc_info, thy_info,
             errors=(), options_mat=(), retryfail=True, feedback=False,
             frozen_coordinates=(), freeze_dummy_atoms=True, overwrite=False,
+            irc_direction=None,
             **kwargs):
-    """ Run an electronic structure job in the specified RUN filesys layer
-        by calling the elstruct package to write the input file with the
-        information and executing the job with the specified script string.
-
-        Will first look into the RUN filesys and will either rewrite the
-        input and rerun the job if requested.
-
-        :param geo: input molecular geometry or Z-Matrix
-        :type geo:
-        :param errors: list of error message types to search output for
-        :type errors: tuple(str)
-        :param options_mat: varopis options to run job with
-        :type options_mat: tuple(dict[str: str])
-        :param retryfail: re-run the job if failed job found in RUN filesys
-        :type retryfail: bool
-        :param feedback: update geom with job from previous sequence
-        :type feedback: bool
-        :param frozen_coordinates: Z-matrix coordinate names to freeze in opts
-        :type frozen_coordinates: tuple(str)
-        :param freeze_dummy_atoms: freeze any coords defined by dummy atoms
-        :type freeze_dummy_atoms: bool
-        :param overwrite: overwrite existing input file with new one and rerun
-        :type overwrite: bool
-        :param kwargs: additional options for electronic structure job
-        :type kwarfs: dict[str]
+    """ run an elstruct job by name
     """
 
     assert job in JOB_RUNNER_DCT
@@ -142,7 +121,7 @@ def run_job(job, script_str, run_fs,
                     print(" - Skipping...")
 
     if do_run:
-        # Create the run directory
+        # create the run directory
         status = autofile.schema.RunStatus.RUNNING
         prog = thy_info[0]
         method = thy_info[1]
@@ -153,9 +132,6 @@ def run_job(job, script_str, run_fs,
         inf_obj.utc_start_time = autofile.schema.utc_time()
         run_fs[-1].file.info.write(inf_obj, [job])
 
-        # Write the initial geo/zma
-        _write_input_geo(geo, job, run_fs)
-
         # Set job runner based on user request; set special options as needed
         runner = JOB_RUNNER_DCT[job]
 
@@ -164,6 +140,13 @@ def run_job(job, script_str, run_fs,
                 runner, feedback=feedback,
                 frozen_coordinates=frozen_coordinates,
                 freeze_dummy_atoms=freeze_dummy_atoms)
+        elif job in (elstruct.Job.IRCF, elstruct.Job.IRCR):
+            if job == elstruct.Job.IRCF:
+                irc_direction = 'forward'
+            else:
+                irc_direction = 'reverse'
+            runner = functools.partial(
+                runner, irc_direction=irc_direction)
 
         inp_str, out_str = runner(
             script_str, run_path, geo=geo, chg=spc_info[1],
@@ -193,18 +176,13 @@ def run_job(job, script_str, run_fs,
 
 
 def read_job(job, run_fs):
-    """ Searches for an output file for the specified electronic
-        structure job in the specified RUN filesytem. If an output file
-        is found, it is parsed for job success messages. If successful,
-        function returns job input, output and autofile job info object.
-
-        :param job: label for job formatted to elstruct package definitions
-        :type job: str
-        :param run_fs: filesystem object for the run filesys where job is run
-        :type run_fs: autofile.fs.run object
-        :rtype: (bool, (autofile.info_object object???, str, str))
+    """ read from an elstruct job by name
     """
 
+    # run_path = run_fs[-1].path([job])
+
+    # print(" - Reading from {} job at {}".format(job, run_path))
+    # above print just doubling the printing...
     if not run_fs[-1].file.output.exists([job]):
         print(" - No output file found. Skipping...")
         success = False
@@ -218,28 +196,19 @@ def read_job(job, run_fs):
         prog = inf_obj.prog
         ret = (inf_obj, inp_str, out_str)
 
-        success = bool(is_successful_output(out_str, job, prog))
-        if success:
-            print(" - Reading successful ouput...")
+        if is_successful_output(out_str, job, prog):
+            print(" - Found successful output. Reading...")
+            success = True
+        else:
+            print(" - Output has an error message. Skipping...")
+            success = False
 
     return success, ret
 
 
 def is_successful_output(out_str, job, prog):
-    """ Parses the output string of the electronic structure job
-        and calls the appropraite elstruct status readers to assess
-        if program has exited normally, contains approprate success messages
-        for the job, and precludes error messages signifying job failure.
-
-        :param out_str: string for job output file
-        :type out_str: str
-        :param job: label for job formatted to elstruct package definitions
-        :type job: str
-        :param prog: name of the electronic structure program to run
-        :type prog: str
-        :rtype: bool
+    """ is this a successful output string?
     """
-
     assert job in JOB_ERROR_DCT
     assert job in JOB_SUCCESS_DCT
     error = JOB_ERROR_DCT[job]
@@ -251,30 +220,29 @@ def is_successful_output(out_str, job, prog):
             prog, error, success, out_str)
         if conv:
             ret = True
-        else:
-            print(" - Output has an error message. Skipping...")
 
     return ret
 
 
-# Helpers
-def _write_input_geo(geo, job, run_fs):
-    """ Writes input molecular structures into the specified RUN filesystem.
+def need_job(pathlst, overwrite):
+    """ Determine if you should run elstruct job
 
-        Can only reliably a Z-Matrix in the filesystem if the input `geo`
-        object is a Z-Matrix and not a geometry (due to conversion issues).
+        pathlst =  ((file1.exists, file1.name), ...)
 
-        :param geo: input molecular geometry or Z-Matrix
-        :type geo:
-        :param job: label for job formatted to elstruct package definitions
-        :type job: str
-        :param run_fs: filesystem object for the run filesys where job is run
-        :type run_fs: autofile.fs.run object
     """
 
-    if automol.zmat.is_valid(geo):
-        run_fs[-1].file.zmatrix.write(geo, [job])
-        run_fs[-1].file.geometry.write(
-            automol.zmat.geometry(geo), [job])
+    if not all(fexists for fexists, _ in pathlst):
+        for fexists, fname in pathlst:
+            if not fexists:
+                ioprinter.info_message(
+                    'No {} found in save filesys.'.format(fname))
+        ioprinter.info_message('Running Job...')
+        _run = True
+    elif overwrite:
+        ioprinter.info_message(
+            'User specified to overwrite {} with new run...')
+        _run = True
     else:
-        run_fs[-1].file.geometry.write(geo, [job])
+        _run = False
+
+    return _run

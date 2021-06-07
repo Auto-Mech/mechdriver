@@ -1,9 +1,4 @@
-""" Parses the `theory.dat` input file for MechDriver that defines all
-    potential electronic structure methods. This includes method information
-    as well as runtime parameters.
-
-    The file consists of several `level` blocks which define each of
-    the electronic structure methods.
+""" theory
 """
 
 import automol
@@ -30,17 +25,7 @@ THY_VAL_DCT = {
 
 
 def theory_dictionary(thy_str):
-    """ Parse the theory.dat input for all of the user-defined level blocks.
-        These blocks are formatted into several keyword-value dictionaries
-        consisting of user-defined keywords as well as defaults:
-
-            {'user-defined level name': {keyword-value dictionary for level}}
-
-        These indiviual level dicts are packaged into an overall `thy_dct`.
-
-        :param thy_str: theory.dat input file string
-        :type thy_str: str
-        :rtype: dict[str: dict[str:obj]]
+    """ Parse the theory.dat file
     """
 
     # Format input to keyword-value theory dcts

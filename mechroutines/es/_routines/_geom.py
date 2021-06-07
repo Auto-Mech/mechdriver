@@ -7,9 +7,9 @@ import elstruct
 import autorun
 from phydat import phycon
 from mechanalyzer.inf import thy as tinfo
-from mechlib.amech_io import printer as ioprinter
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
+from mechlib.amech_io import printer as ioprinter
 
 
 def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
@@ -73,7 +73,7 @@ def _check_imaginary(spc_info, geo, mod_thy_info, run_fs, script_str,
     """
 
     # Initialize info
-    has_imag = False
+    imag = False
     norm_coords = []
     hess = ((), ())
 
@@ -108,9 +108,8 @@ def _check_imaginary(spc_info, geo, mod_thy_info, run_fs, script_str,
             if imag_freq:
                 ioprinter.warning_message('Imaginary mode found:')
                 norm_coords = elstruct.reader.normal_coordinates(prog, out_str)
-                has_imag = True
 
-    return has_imag, norm_coords
+    return bool(imag_freq), norm_coords
 
 
 def _kickoff_saddle(geo, norm_coords, spc_info, mod_thy_info,

@@ -1,0 +1,18 @@
+input
+    mech = chemkin
+    run_prefix = /gpfs/fs1/home/elliott/Packages/AutoMech/mechdriver/tests/run
+    save_prefix = /gpfs/fs1/home/elliott/Packages/AutoMech/mechdriver/tests/save
+end
+
+obj 
+    pes = (
+        1 global; 1 global
+    )
+
+jobs
+	es
+end
+
+es_tsks
+	ts  find_ts    runlvl=lvl_scf  inplvl=lvl_scf
+end

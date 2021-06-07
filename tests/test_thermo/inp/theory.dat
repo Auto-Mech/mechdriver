@@ -1,0 +1,13 @@
+level lvl_scf
+    orb_res =  RU
+    program =  psi4
+    method =  hf
+    basis =  6-31g*
+end
+
+level lvl_mp2
+    orb_res =  RU
+    program =  psi4
+    method =  mp2
+    basis =  cc-pvdz
+end

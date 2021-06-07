@@ -5,6 +5,8 @@
 """
 
 import sys
+import automol
+from phydat import symm, eleclvl
 
 
 # Might just be easier to reinstitute required lists again.
@@ -119,7 +121,7 @@ def _check_supported_keys(inp_dct, val_dct, section):
         :type inp_dct: dict[]
         :param val_dct: internal dictionary containing supported keywords
         :type val_dct: dict[]
-        :param section: Label for what section of the input is being checked
+        :param section: Label telling what section of the input is being checked
         :type section: str
     """
 
@@ -162,8 +164,7 @@ def _check_supported_vals(inp_dct, val_dct, req_lst, section):
             # If val is None, check if it is required
             if key in req_lst:
                 print('bad {}'.format(section))
-                print('key {} has no value defined even '.format(key),
-                      'though it is required')
+                print('key {} has no value defined even though it is required'.format(key))
                 sys.exit()
 
 

@@ -3,10 +3,10 @@
 
 import sys
 import os
-import automol
 import autofile
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import spc as sinfo
+from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -23,6 +23,14 @@ def root_locs(spc_dct_i, saddle=False, name=None):
         rxn_info = rinfo.sort(spc_dct_i['rxn_info'])
         ts_num = int(name.split('_')[-1])
         ts_info = (ts_num,)
+        # if 'ts_locs' in spc_dct_i:
+        #     ts_info = spc_dct_i['ts_locs']
+        # else:
+        #     ts_num = int(name.split('_')[-1])
+        #     ts_info = (ts_num,)
+        # print('TEST ts locs:', ts_info)
+        # ts_info = (0,)  # may be more complicated
+        # ts_info = ()
 
     return {'spc_locs': spc_info, 'rxn_locs': rxn_info, 'ts_locs': ts_info}
 
@@ -33,31 +41,19 @@ def build_fs(run_prefix, save_prefix, end,
              cnf_locs=None, tau_locs=None,
              instab_locs=None, zma_locs=None,
              scn_locs=None, cscn_locs=None):
-    """ Build the autofile filesystem objects for some specified
-        fileystem layer using the root run/save and locs to build
-        the full prefix path to the fileystem layer.
-
-        :param run_prefix: root-path to the run-filesystem
-        :type: run_prefix: str
-        :param save_prefix: root-path to the save-filesystem
-        :type: save_prefix: str
-        :param end: filesystem layer
-        :type end: str
-
-        :param x_locs: locs used to construct prefix to end-layer
-        :type x_locs: locs fot REACTION layer
+    """ Build the filesystems
     """
 
-    _fs = ()
+    _fs = []
     for prefix in (run_prefix, save_prefix):
-        _fs += (
+        _fs.append(
             _build_fs(
                 prefix, end,
                 rxn_locs=rxn_locs, spc_locs=spc_locs,
                 thy_locs=thy_locs, ts_locs=ts_locs,
                 cnf_locs=cnf_locs, tau_locs=tau_locs,
                 instab_locs=instab_locs, zma_locs=zma_locs,
-                scn_locs=scn_locs, cscn_locs=cscn_locs),
+                scn_locs=scn_locs, cscn_locs=cscn_locs)
         )
 
     return _fs[0], _fs[1]
@@ -69,10 +65,7 @@ def _build_fs(prefix, end,
               cnf_locs=None, tau_locs=None,
               instab_locs=None, zma_locs=None,
               scn_locs=None, cscn_locs=None):
-    """ Build the filesystem for single prefix
-
-        The if-check order implicitly sets up the order of
-        the prefix layers are constructed up to the end-layer.
+    """ Build the filesystems
     """
 
     prefix_locs = []
@@ -106,8 +99,7 @@ def prefix_fs(run_prefix, save_prefix):
     """ Physically make the run/save filesys root given a prefix path
         :param str prefix: file path - /path/to/root/run
     """
-    ioprinter.info_message(
-        'Building the base Run-Save filesystems at', newline=1)
+    ioprinter.info_message('Building the base Run-Save filesystems at', newline=1)
     for prefix in (run_prefix, save_prefix):
         if not os.path.exists(prefix):
             try:
@@ -162,18 +154,20 @@ def rxn_zma_locs_lst(zma_fs, rxn_ichs):
     """ Get the zma locs that are needed
     """
 
+    assert wanted_dirn in ('forw', 'rev', 'any')
+
     locs_lst = tuple()
     for locs in zma_fs[-1].existing():
         # Not placed in the scans filesystem
         # maybe place the vmatrix and transformation file?
         if zma_fs[-1].file.zmatrix.exists(locs):
             ts_zma = zma_fs[-1].file.zmatrix.read(locs)
-            frm_keys, brk_keys = zma_fs[-1].file.transformation.read(locs)
-            dirn = _chk_direction(
-                rxn_ichs, ts_zma, frm_keys, brk_keys)
+            frm_bnd_keys, brk_bnd_keys = zma_fs[-1].file.transformation.read(locs)
+            dirn = _chk_direction(rxn_ichs, ts_zma,
+                                  frm_bnd_keys, brk_bnd_keys)
             locs_lst += ((locs, dirn),)
 
-    return locs_lst
+    return zma_locs
 
 
 def _chk_direction(rxn_ichs, ts_zma,
@@ -231,3 +225,4 @@ def reaction_fs(run_prefix, save_prefix, rxn_info):
     rxn_save_path = rxn_save_fs[-1].path(rinfo.sort(rxn_info))
 
     return (rxn_run_fs, rxn_save_fs, rxn_run_path, rxn_save_path)
+

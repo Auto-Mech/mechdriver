@@ -6,10 +6,9 @@ import autofile
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
-from mechlib.filesys.mincnf import min_energy_conformer_locators
-from mechlib.filesys.mincnf import conformer_locators
-from mechlib.filesys._build import build_fs
-from mechlib.filesys._build import root_locs
+from mechlib.filesys import mincnf
+from mechlib.filesys import build_fs
+from mechlib.filesys import root_locs
 
 
 def pf_rngs_filesys(spc_dct_i, spc_model_dct_i,
@@ -25,20 +24,14 @@ def pf_rngs_filesys(spc_dct_i, spc_model_dct_i,
         pf_filesystems['symm'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
             run_prefix, save_prefix, saddle, name=name)
-    else:
-        pf_filesystems['symm'] = None
     if spc_model_dct_i['tors']['mod'] != 'rigid':
         pf_filesystems['tors'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
             run_prefix, save_prefix, saddle, name=name)
-    else:
-        pf_filesystems['tors'] = None
     if spc_model_dct_i['vib']['mod'] == 'vpt2':
         pf_filesystems['vpt2'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
             run_prefix, save_prefix, saddle, name=name)
-    else:
-        pf_filesystems['vpt2'] = None
 
     # Add the prefixes for now
     pf_filesystems['run_prefix'] = run_prefix
@@ -53,27 +46,26 @@ def pf_filesys(spc_dct_i, spc_model_dct_i,
     """
 
     pf_filesystems = {}
+    print('harm')
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, spc_model_dct_i['vib']['geolvl'][1][1],
         run_prefix, save_prefix, saddle, name=name, rings='min')
     if spc_model_dct_i['symm']['mod'] == 'sampling':
+        print('symm')
         pf_filesystems['symm'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
             run_prefix, save_prefix, saddle, name=name, rings='min')
-    else:
-        pf_filesystems['symm'] = None
     if spc_model_dct_i['tors']['mod'] != 'rigid':
+        print('tors')
         pf_filesystems['tors'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['tors']['geolvl'][1][1],
             run_prefix, save_prefix, saddle, name=name, rings='min')
-    else:
-        pf_filesystems['tors'] = None
     if spc_model_dct_i['vib']['mod'] == 'vpt2':
-        pf_filesystems['vpt2'] = set_model_filesys(
-            spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
-            run_prefix, save_prefix, saddle, name=name, rings='min')
-    else:
-        pf_filesystems['vpt2'] = None
+        print('vpt2')
+        if spc_model_dct_i['vib']['mod'] == 'vpt2':
+            pf_filesystems['vpt2'] = set_model_filesys(
+                spc_dct_i, spc_model_dct_i['vib']['vpt2lvl'][1][1],
+                run_prefix, save_prefix, saddle, name=name, rings='min')
 
     # Add the prefixes for now
     pf_filesystems['run_prefix'] = run_prefix
@@ -94,6 +86,7 @@ def set_model_filesys(spc_dct_i, level,
     else:
         spc_info = sinfo.from_dct(spc_dct_i)
 
+    print('level', level)
     levelp = tinfo.modify_orb_label(level, spc_info)
 
     _root = root_locs(spc_dct_i, saddle=saddle, name=name)
@@ -103,15 +96,16 @@ def set_model_filesys(spc_dct_i, level,
         **_root)
 
     if rings == 'min':
-        min_rngs_locs, min_rngs_path = min_energy_conformer_locators(
+        min_rngs_locs, min_rngs_path = mincnf.min_energy_conformer_locators(
             cnf_save_fs, levelp)
         cnf_run_fs[-1].create(min_rngs_locs)
     else:
-        min_rngs_locs, min_rngs_path = conformer_locators(
+        min_rngs_locs, min_rngs_path = mincnf.conformer_locators(
              cnf_save_fs, levelp, cnf_range='r100')
         for min_locs in min_rngs_locs:
             cnf_run_fs[-1].create(min_locs)
 
+    print('model filesys', min_rngs_locs, min_rngs_path)
     # Create run fs if that directory has been deleted to run the jobs
 
     return [cnf_save_fs, min_rngs_path, min_rngs_locs, '', cnf_run_fs]
@@ -136,6 +130,7 @@ def set_rpath_filesys(ts_dct, level):
     levelp = tinfo.modify_orb_label(level[1], spc_info)
 
     # Get the save fileystem path
+    print('level', levelp)
     save_path = thy_save_fs[-1].path(levelp[1:4])
     run_path = thy_run_fs[-1].path(levelp[1:4])
 
@@ -153,6 +148,22 @@ def set_rpath_filesys(ts_dct, level):
     ts_run_path = ts_run_fs[0].path()
 
     return ts_run_path, ts_save_path, thy_run_path, thy_save_path
+
+
+def set_etrans_fs(pf_filesystems, lj_info, thy_info):
+    """ build etrans filesystems
+    """
+
+    # Get the harmonic filesys information
+    [cnf_fs, harm_path, min_cnf_locs, _, run_path] = pf_filesystems['harm']
+
+    # Build the energy transfer filesys
+    lj_mod_thy_info = filesys.inf.modify_orb_restrict(
+        lj_info, run_thy_info)
+    etrans_save_fs, etrans_locs = filesys.build.etrans_fs_from_prefix(
+        tgt_cnf_save_path, bath_info, lj_mod_thy_info)
+
+    return etrans_save_fs, etrans_locs
 
 
 def get_rxn_scn_coords(ts_path, coord_name, zma_locs=(0,)):

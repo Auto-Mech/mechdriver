@@ -3,8 +3,8 @@
 """
 
 import elstruct
-from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner._run import execute_job
+from mechlib.amech_io import printer as ioprinter
 
 
 def multi_stage_optimization(script_str, run_fs,
@@ -14,25 +14,7 @@ def multi_stage_optimization(script_str, run_fs,
                              saddle=False,
                              retryfail=False,
                              **kwargs):
-    """ Run a series of optimizations that utilize varying constraint
-        conditions at each state.
-
-        :param script_str: BASH submission script for electronic structure job
-        :type script_str: str
-        :param geo: input molecular geometry or Z-Matrix
-        :type geo:
-        :param spc_info:
-        :type spc_info:
-        :param thy_info:
-        :type thy_info:
-        :param frozen_coords_lst:
-        :type frozen_coords_lst:
-        :param overwrite: overwrite existing input file with new one and rerun
-        :type overwrite: bool
-        :param saddle: perform saddle-point optimization
-        :type saddle: bool
-        :param retryfail: re-run the job if failed job found in RUN filesys
-        :type retryfail: bool
+    """ Run some optimization where a set of coordinates are fixed
     """
 
     for idx, coords in enumerate(frozen_coords_lst):

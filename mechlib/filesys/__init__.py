@@ -18,7 +18,7 @@ __all__ = [
     'prefix_fs',
     'reaction_fs',
     'root_locs',
-    'rcts_cnf_fs',
+    'rcts_cnf_fs'
     'mincnf',
     'models',
     'read',
