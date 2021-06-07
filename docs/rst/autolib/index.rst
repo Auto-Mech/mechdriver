@@ -27,12 +27,17 @@ Routines
     :members:
 .. automodule:: mechroutines.es.tsk.conformer
     :members:
-.. automodule:: mechroutines.pf
+.. automodule:: mechroutines.ktp
+    :members:
+.. automodule:: mechroutines.thermo
     :members:
 .. automodule:: mechroutines.trans
     :members:
-.. automodule:: mechroutines.output
+.. automodule:: mechroutines.proc
     :members:
+.. automodule:: mechroutines.models
+    :members:
+
 
 Lib
 ---
@@ -52,7 +57,5 @@ Lib
 .. automodule:: mechlib.filesys
     :members:
 .. automodule:: mechlib.reaction
-    :members:
-.. automodule:: mechroutines
     :members:
 

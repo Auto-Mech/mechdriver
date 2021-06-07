@@ -46,7 +46,7 @@ def run(pes_rlst, spc_rlst,
 
         :param pes_rlst: species from PESs to run
             [(PES formula, PES idx, SUP-PES idx)
-             (CHANNEL idx, (REACS, PRODS))
+            (CHANNEL idx, (REACS, PRODS))
         :type pes_rlst: tuple(dict[str: dict])
         :param spc_rlst: lst of species to run
         :type spc_rlst: tuple(dict[str: dict])

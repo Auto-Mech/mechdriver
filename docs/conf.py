@@ -36,7 +36,7 @@ autodoc_mock_imports = [
     'automol',
     'autorun', 'phydat', 'ioformat', 'autoparse',
     'elstruct', 'chemkin_io', 'mess_io', 'projrot_io', 'onedmin_io',
-    'mechanalyzer', 'ratefit']
+    'mechanalyzer', 'ratefit', 'thermfit']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
