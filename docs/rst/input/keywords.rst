@@ -1,8 +1,9 @@
-KEYWORDS
+
+Keywords
 --------
 
 Electronic Structure Driver Task Block
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Specifies electronic structure tasks
 
@@ -47,7 +48,7 @@ theory.dat
 
 
 kTPDriver and ThermDriver Task Blocks
--------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The order given in the task block is not used anywhere. We use our own
 internal order: write -> run -> fit
@@ -66,13 +67,13 @@ nprocs: number of processers to use during the MESS calculation
 inpname:
 
 Transport Driver Tasks
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 | onedmin: Run OneDMin to calculate LJ epsilon and sigma
 | write_transport: Build a ChemKin tranpsport file
 
 Process Driver Tasks
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 | freqs:
 | energy: 
@@ -83,7 +84,7 @@ Process Driver Tasks
 
 
 species
--------
+~~~~~~~
 
 inchi: InChI string (up to stereochemical layer [ref])
 smiles: SMILES string (any form)
@@ -135,7 +136,7 @@ pst_params: [pre-exponential factor, pre-exponential power] Assuming a PST model
 Maybe include  examples for input?
 
 theory
-------
+~~~~~~
 
 program: electronic structure program to run
 
@@ -165,7 +166,7 @@ maybe provide a link to elstruct for program (method/basis) availability
 
 
 models
-------
+~~~~~~
 
 | kin model: specify the conditions by which rates./thermo is calculated and fit
 |

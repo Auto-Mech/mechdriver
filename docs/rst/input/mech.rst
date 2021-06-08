@@ -1,6 +1,6 @@
 
 mechanism.dat
-=============
+-------------
 
 List of all the reactions that AutoMech may run.
 
@@ -23,7 +23,7 @@ The reactions do not need to be in any particular order, as AutoMech can sort th
 The only reactions that will be run by the code, will be those specified in run.dat.
 
 Commenting
-----------
+~~~~~~~~~~
 
 Reaction lines preceded by a ‘!’ are ignored by the parser. (maybe include #?)
 

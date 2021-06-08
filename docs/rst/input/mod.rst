@@ -1,10 +1,11 @@
 
 models.dat
-==========
+----------
 
 Only required for thermo, ktp, and proc driver.
 
 Two types of sections can be defined in the file::
+
     kin <model_name>
         <model information>
     end <model_name>
@@ -85,9 +86,9 @@ Arranged to build each section using any general combination of methods and assu
 
     mod: central model/assumption for evaluating part'n fxn.
     lvl: electronic structure method(s) used for data. must correspond to data that exists in save filesystem. may be fully defined by series/combinations of methods
-        geolvl: geometry method
-        enelvl: energy for single points
-        lvln: sequence of lvls for composite methods
+    geolvl: geometry method
+    enelvl: energy for single points
+    lvln: sequence of lvls for composite methods
 
 For ts there is additional considerations for transition state theory methods.
 

@@ -1,10 +1,4 @@
 
-Species
-=======
-
-Species information is provided in two files. One of which is required.
-
-
 species.csv
 -----------
 
@@ -28,7 +22,7 @@ species.csv
     Pre-procesing can be done to add sterochem inchi and thermo species (see section).
 
 
-Species.dat
+species.dat
 -----------
 
 Auxiliary input for species that specifies where more complex info for species as well as potential transition states.
@@ -52,8 +46,4 @@ General format::
     :file: tables/spc_keys.csv
     :header-rows: 1
     :widths: 10, 10, 10, 10
-
-
-..
-seperate or describe keys based on core definitions and ones that are task specific and driver specific. See global section.
 

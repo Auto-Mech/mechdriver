@@ -1,30 +1,30 @@
 
 run.dat
-=======
+-------
 
-Central input file which details the calculations that will be run during an instance of MechDriver. The user supplies several aspects of the calculation with sections::
+Central input file which describes all of the individual calculations the user wishes to run for one instance of MechDriver. User-defines these calculations via several containing lists of various formats that are detailed below.  Information in these sections will rely on definitions the user provides in the other input files.  These sections fall under three broad categories:
+
+|    (1) Options for various I/O :ref:`input<input-block>`
+|
+|    (2) Lists of Reactions and Species defined in mechanism to run calculations for
+|            pes, spc
+|
+|    (3) Lists of Tasks for Driver Tasks (electronic structure, kinetics, thermo methods):
+|            els, thermo, trans, ktp, process
+
+As can be seen there are multiple possible sections the user may define from type (2) and (3). Each of these sections are defined broadly via::
 
     <block_name>
         <block_contents>
     end <block_name>
 
-Three different primary blocks set a full mechdriver run.
 
-    (1) Input/Output:
-    (2) Chemistry Lists (parts of mechanism to run):
-            pes, spc
-    (3) Driver Tasks (electronic structure, kinetics, thermo methods):
-            els, thermo, trans, ktp, process
+.. _input-block:
 
-One or more sections from type (2) and (3) can be provided.
+Input Section
+~~~~~~~~~~~~~
 
-For many of the above, the user will supply labels that correspond to blocks of info that is pulled from the other input file. Auxlilary information and defintions will come from other input
-
-
-Input Block
------------
-
-Simple block that specifies forms of input
+Specifies various I/O options such as the paths where calculations are performed and saved, as well as what the input mechanism an species file types are.
 
 Example::
 
@@ -41,8 +41,9 @@ Example::
     :widths: 10, 10, 10, 10
 
 
-Chemistry Blocks
-----------------
+Chemistry Sections
+~~~~~~~~~~~~~~~~~~
+
 
 Tells the code what to do calculatiions to do for certain parts of the mechanism defined in the mech.dat file and spc.da file.
 
@@ -56,7 +57,7 @@ Lists the Potential Energy Surfaces and constituent channels
 (composed of species and transition states) for which to perform calculations.
 
 The indices for the PESs and channels correspond to the those provided in input
-`mechanism.dat` file. Similar to the PES Block, this section lists the species for which to perform calculations.
+`mechanism.dat` file. Similar to the PES Section, this section lists the species for which to perform calculations.
 The indices for the species correspond to the order of the species provided in the input `species.csv` 
 
 Note that multiple PES-Channel and species combinations can be given in one input. Lists can be extended across multiple lines. All of the components listed in the two blocks will be done the instance of mechdriver.
@@ -76,21 +77,13 @@ General Format::
 Example 1::
 
     pes
-        1: 1         # Runs Channel 1 on PES 1
-        1-2: 1-2     # Runs Channels 1,2 on PESs 1,2
-        1,3: 1-4     # Runs Channels 1,2,34 on PESs 1,3
-        1,3: 1-4,6   # Runs Channels 1,2,34 on PESs 1,3
+        1: 1          # Runs Channel 1 on PES 1
+        2-4: 1-2      # Runs Channels 1,2 on PES 2,3,4
+        5-8: 1,6-10   # Runs Channels 1,6,7,8,9,10 on PES 5,6,7,8
+        9,12: 1-4,6   # Runs Channels 1,2,3,4,6 on PES 9,12
     end
 
 Example 2::
-
-    pes
-       1: 1-5        # Runs Channels 1,2,3,4,5 on PES 1
-       2: 1,6-10     # Runs Channels 1,6,7,8,9,19 on PES 2
-       5: 8          # Runs Channel 8 on PES 5
-    end
-
-Example 3::
 
     spc
         1          # Runs species 1
@@ -102,8 +95,8 @@ Example 3::
     end
 
 
-Task Blocks
-----------
+Task Sections
+~~~~~~~~~~~
 
 For every task block defined in the input, this will signal MechDriver to run its various sub-Drivers.
 
@@ -116,17 +109,17 @@ General format::
         …
     end
 
-Above, the <object> is either spc (species, i.e. reacs, prods) or ts
-
-Above the <task> is what electronic structure calculation to be run on object.
-
+| where 
+| 
+| <object> is either spc, ts. Optional for certain drivers
+| <task> is what electronic structure calculation to be run on object.
 keyword=value cannot have spaces in between them.
 
 Each task is given in the following format <obj>_<job>
 
 
-Commenting out Blocks
----------------------
+Comments
+~~~~~~~~
 
     In general, all text preceded by `#` symbols will be ignored bythe parser. 
 

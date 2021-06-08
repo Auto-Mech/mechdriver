@@ -1,9 +1,9 @@
 
 Auxiliary Input Files
-=====================
+---------------------
 
 XYZ Geometry Files
-------------------
+~~~~~~~~~~~~~~~~~~
 
 For species where the user wishes to seed some mechanism process with an input geometry, the user can supply any number of geom.xyz
 files. The format is a standard xyz file except the comment line means something
@@ -22,7 +22,7 @@ this will be used
 
 
 Active Space Template Files
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For multireference calculations, This will be inserted in front of wfn calculations.
 

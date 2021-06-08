@@ -1,6 +1,6 @@
 
 theory.dat
-==========
+----------
 
 Details various electronic structure methods.
 
