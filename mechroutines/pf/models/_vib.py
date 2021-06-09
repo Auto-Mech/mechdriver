@@ -161,7 +161,9 @@ def read_locs_harmonic_freqs(
 
 
 def read_anharmon_matrix(pf_filesystems):
-    """ Read the anharmonicity matrix """
+    """ Read a anharmonicity matrix from the SAVE filesystem for a
+        species or transition state.
+    """
 
     # Set up vpt2 level filesystem for rotational values
     [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['vpt2']
@@ -352,9 +354,20 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
 
 
 def scale_frequencies(freqs, tors_zpe,
-                      spc_mod_dct_i, scale_method='3c'):
-    """ Scale frequencies according to some method
-        obtain a corrected zpe
+                      spc_mod_dct_i, scale_method='c3'):
+    """ Empirically scale the harmonic vibrational frequencies and harmonic
+        zero-point energy (ZPVE) of a species or transition to account
+        for anharmonic effects. The final ZPVE value also includes the ZPVEs
+        of internal rotations which are not scaled.
+
+        Scaling factors determined by the electronic structure
+        method used to calculate the frequencies and ZPVE as well as the 
+        requested scaling method.
+
+        :param freqs: harmonic frequencies [cm-1]
+        :type freqs: tuple(float)
+        :param tors_zpe:
+
     """
 
     thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
