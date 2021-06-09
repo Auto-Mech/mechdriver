@@ -84,11 +84,11 @@ of the interaction with the run-save filesystem.
 The requirements for `which` block must be provided depends somewhat on the driver
 the user wishes to use in the MechDriver run; however most drivers can utilize both
 sections with:
-    ESDriver: uses either/both pes and spc
-    ThermoDriver: uses either/both pes and spc (ignores TS)
-    kTPDriver: uses only pes
-    TransDriver: uses either/both pes and spc
-    ProcDriver: ???
+ESDriver: uses either/both pes and spc
+ThermoDriver: uses either/both pes and spc (ignores TS)
+kTPDriver: uses only pes
+TransDriver: uses either/both pes and spc
+ProcDriver: ???
 
 Again from the above, we see that most drivers can utilize one or the other blocks.
 Meaning you can run a set of tasks having only defined one of the blocks. In fact,
@@ -113,12 +113,30 @@ varies upon which driver is specified, although there is a general format::
         …
     end <driver name>
 
-| where 
-| <object> is either spc, ts. Optional for certain drivers
-| <task> is what electronic structure calculation to be run on object.
-| keyword=value cannot have spaces in between them.
+The initial <object> is only utilized by ESDriver. Here the user specificies if the
+user wishes to run a given task for `spc` or `ts` or `all`. For all drivers only
+the task and keyword-value pairs are required.
 
-Each task is given in the following format <obj>_<job>
+Each task and keyword-value pair are driver specific. Moreover, only keywords are only
+pertinent to certain tasks. See link? The only formatting
+guidelines of note is that the the keyword-value pairs must be input as presented, where
+each pair has only an "=" sign and no whitespace.
+
+Based on the task, certain keywords may be required, but in general, the user may define
+any number of allowed task keywords on the line.
+
+Example::
+    <es>
+
+Note the names on `lvl` and `mod` keywords. These correspond to names defined in
+theory.dat and models.dat.
+
+Similar to the other blocks, any number of tasks can be provided be provided in the
+subdriver task block.
+
+While the subdriver task blocks can placed in the input file, the subdrivers are
+launched in a specific order:
+(1) ESDriver, (2) ThermoDriver, (3) TransDriver, (4) kTPDriver, (5) ProcDriver
 
 
 Comments

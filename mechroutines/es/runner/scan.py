@@ -123,7 +123,6 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
         :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
         :param scn_typ: label for scan type ('relaxed' or 'rigid')
         :type scn_typ: str
-
     """
 
     # Get a connected geometry from the init guess_zma for instability checks
@@ -223,7 +222,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
     job = _set_job(scn_typ)
 
     # Set locs for scan
-    coord_locs, save_locs = scan_locs(
+    coord_locs, save_locs = _scan_locs(
         scn_run_fs, coord_names, constraint_dct=constraint_dct)
 
     if not scn_run_fs[1].exists([coord_locs]):
@@ -255,7 +254,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
-def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
+def _scan_locs(scn_save_fs, coord_names, constraint_dct=None):
     """  Determine the locs for all of the directories that currently
          exist in the SCAN/CSAN layer of the save filesystem.
 

@@ -4,6 +4,9 @@ Overview
 
 MechDriver serves as the automated workflow code of the AutoMech suite. 
 
+Can be considered as manager of several subdrivers
+    ES, therm, ktp,..
+
 Its primarily utility is to facilitate the calculation of thermochemical, kinetic, and transport
 parameters required to construct reliabel reaction mechanism models.
 

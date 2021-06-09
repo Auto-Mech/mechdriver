@@ -5,6 +5,12 @@ Lib
 .. automodule:: mechlib
     :members:
 
+.. automodule:: mechlib.filesys
+    :members:
+
+.. automodule:: mechlib.reaction
+    :members:
+
 .. automodule:: mechlib.amech_io
     :members:
 
@@ -18,11 +24,5 @@ Lib
     :members:
 
 .. automodule:: mechlib.amech_io.writer
-    :members:
-
-.. automodule:: mechlib.filesys
-    :members:
-
-.. automodule:: mechlib.reaction
     :members:
 

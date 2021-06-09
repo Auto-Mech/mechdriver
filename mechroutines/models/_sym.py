@@ -8,11 +8,20 @@ from mechlib.amech_io import printer as ioprinter
 
 def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                     grxn=None, zma=None):
-    """ Calculate the symmetry factor for a species
-        Note: ignoring for saddle pts the possibility that two configurations
-        differ only in their torsional values.
-        As a result, the symmetry factor is a lower bound of the true value
+    """ Determines the the overall (internal and external) symmetry factor for
+        a species or saddle point.
 
+        Function will simply take a symmetry factor provided by the user by way
+        of the spc_mod_dct_i, else it will calculate the symmetry factor using
+        the requested procedure.
+
+        For saddle points, the function ignores the possibility that two 
+        configurations differ only in their torsional values. As a result,
+        the symmetry factor is a lower bound of the true value.
+
+        :param pf_filesystems:
+        :param grxn:
+        :rtype: float
     """
 
     sym_factor = spc_dct_i.get('sym_factor')
@@ -42,8 +51,8 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
 
             # Set up the symmetry filesystem
             sym_fs = fs.symmetry(cnf_path)
-            sym_geos = [geo]
-            sym_geos += [sym_fs[-1].file.geometry.read(locs)
+            symm_geos = [geo]
+            symm_geos += [sym_fs[-1].file.geometry.read(locs)
                          for locs in sym_fs[-1].existing()]
 
             # Obtain the internal
@@ -52,7 +61,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                     ' - Determining internal sym number ',
                     'using sampling routine.')
                 int_sym, end_group_factor = int_sym_num_from_sampling(
-                    sym_geos, rotors, grxn=grxn, zma=zma)
+                    symm_geos, rotors, grxn=grxn, zma=zma)
             else:
                 ioprinter.info_message(' - No torsions, internal sym is 1.0')
                 int_sym = 1.0
@@ -80,15 +89,20 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
     return sym_factor
 
 
-def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
-    """ Determine the symmetry number for a given conformer geometry.
-    (1) Explore the saved conformers to find the list of similar conformers -
-        i.e. those with a coulomb matrix and energy that are equivalent
-        to those for the reference geometry.
-    (2) Expand each of those similar conformers by applying
-        rotational permutations to each of the terminal groups.
-    (3) Count how many distinct distance matrices there are in
-        the fully expanded conformer list.
+def int_sym_num_from_sampling(symm_geos, rotors, grxn=None, zma=None):
+    """ Determines the internal symmetry number for a given conformer geometry
+        by assessing a set of symmetrically similar structures that have been
+        obtained by previous conformer sampling processes.
+
+        (1) Explore saved conformers to find the list of similar conformers,
+            i.e., those with a coulomb matrix and energy that are equivalent
+            to those for the reference geometry.
+        (2) Expand each of those similar conformers by applying
+            rotational permutations to each of the terminal groups.
+        (3) Count how many distinct distance matrices there are in
+            the fully expanded conformer list.
+
+        :param symm_geos: geometries that are symmetrically similar to one another
     """
 
     if grxn is not None:
@@ -102,8 +116,8 @@ def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
     # Modify geometries to remove H's from rotatable XHn end group;
     # this will be accounted for separately as multiplicative factor
     int_sym_num = 0
-    mod_sym_geos = []
-    for geo_sym_i in sym_geos:
+    mod_symm_geos = []
+    for geo_sym_i in symm_geos:
         ret = automol.geom.end_group_symmetry_factor(
             geo_sym_i, frm_bnd_keys, brk_bnd_keys)
         mod_geo_sym_i, end_group_factor, removed_atms = ret
@@ -112,7 +126,7 @@ def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
                 tors_idxs, removed_atms, automol.zmat.dummy_keys(zma))
 
         new_geom = True
-        for mod_geo_sym_j in mod_sym_geos:
+        for mod_geo_sym_j in mod_symm_geos:
             if automol.geom.almost_equal_dist_matrix(
                     mod_geo_sym_i, mod_geo_sym_j, thresh=3e-1):
                 if grxn is None:
@@ -125,7 +139,7 @@ def int_sym_num_from_sampling(sym_geos, rotors, grxn=None, zma=None):
                     new_geom = False
                     break
         if new_geom:
-            mod_sym_geos.append(mod_geo_sym_i)
+            mod_symm_geos.append(mod_geo_sym_i)
             int_sym_num += 1
 
     int_sym_num *= end_group_factor
