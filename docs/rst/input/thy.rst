@@ -18,9 +18,3 @@ Above, <level_name> serves as a descriptor of the method that is used in other p
 
 Any number of these level blocks can be given in theory.dat. The only blocks used by the code are those specified in run.dat and models.dat.
 
-
-.. csv-table:: keywords for theory blocks
-    :file: tables/thy_keys.csv
-    :header-rows: 1
-    :widths: 10, 10, 10, 10
-

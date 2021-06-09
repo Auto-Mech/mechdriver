@@ -10,7 +10,7 @@ Conda be good yo.
 Running
 -------
 
-Eexecution of the code is very simple; the user only needs to run the mechdriver executable with python
+Execution of the code is very simple; the user only needs to run the mechdriver executable with python
 
 .. code-block:: console
     
@@ -40,7 +40,6 @@ This would SSH onto a node, load the Conda environment to handle the MechDriver 
 Currently, no multicore parallelilization is utilized directly by MechDriver, and processors for codes are defined in the input files. 
 
 (Add argparse options to mechdriver)
-
 
 As a Python code, individual modules and functions can be imported for use in other codes; however, this may not be the best use of this code. Most functionality of interest to import will likely exist in the lower-level libraries of the AutoMech suite.
 

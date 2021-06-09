@@ -32,23 +32,17 @@ def run(pes_rlst,
     """ Executes all kinetics tasks.
 
         :param pes_rlst: species from PESs to run
-            [(PES formula, PES idx, SUP-PES idx)
-            (CHANNEL idx, (REACS, PRODS))
         :type pes_rlst: tuple(dict[str: dict])
         :param spc_rlst: lst of species to run
         :type spc_rlst: tuple(dict[str: dict])
         :param es_tsk_lst: list of the electronic structure tasks
-            tuple(tuple(obj, tsk, keyword_dict))
         :type es_tsk_lst: tuple(tuple(str, str, dict))
         :param spc_dct: species information
-            dict[spc_name: spc_information]
-        :type spc_dct: dict[str:dict]
+        :type spc_dct: dict[str: dict]
         :param glob_dct: global information for all species
-            dict[spc_name: spc_information]
         :type glob_dct: dict[str: dict]
         :param thy_dct: all of the theory information
-            dict[thy name: inf]
-        :type thy_dct: dict[str:dict]
+        :type thy_dct: dict[str: dict]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
