@@ -110,7 +110,18 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
               chkstab=False,
               **kwargs):
     """ new run function
-    """
+
+        :param coord_names: names of the scan coordinates
+        :type coord_names: tuple(tuple(str))
+        :param grid_vals: values of all the scan coordinates
+        :type grid_vals: ?? same as coord_grids?
+        :param scn_run_fs: SCAN/CSCAN object with run filesys prefix
+        :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_typ: label for scan type ('relaxed' or 'rigid')
+        :type scn_typ: str
+>>>>>>> update for docs
 
     # Get a connected geometry from the init guess_zma for instability checks
     # conn_geo = automol.zmatrix.geometry(guess_zma)
@@ -214,11 +225,8 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
         mod_thy_info=mod_thy_info,
         in_zma_fs=in_zma_fs)
 
-
-def _save_scanfs(scn_run_fs, scn_save_fs, scn_typ,
-                 coord_locs, mod_thy_info, in_zma_fs=False):
-    """ save the scans that have been run so far
-    """
+    coord_locs, save_locs = _scan_locs(
+        scn_run_fs, coord_names, constraint_dct=constraint_dct)
 
     if not scn_run_fs[1].exists([coord_locs]):
         print("No scan to save. Skipping...")
@@ -245,9 +253,16 @@ def _save_scanfs(scn_run_fs, scn_save_fs, scn_typ,
             _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
-def _save_cscanfs(scn_run_fs, scn_save_fs, scn_typ,
-                  coord_locs, mod_thy_info, in_zma_fs=True):
-    """ save the scans that have been run so far
+def _scan_locs(scn_save_fs, coord_names, constraint_dct=None):
+    """  Determine the locs for all of the directories that currently
+         exist in the SCAN/CSAN layer of the save filesystem.
+
+        :param coord_names: names of the scan coordinates
+        :type coord_names: tuple(tuple(str))
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
     """
 
     if not scn_run_fs[1].exists([coord_locs]):
