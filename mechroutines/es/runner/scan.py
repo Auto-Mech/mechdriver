@@ -1,4 +1,6 @@
-""" es_runners for coordinate scans
+""" Library to perform sequences of electronic structure calculations
+    along a molecular coordinate and save the resulting information to
+    SCAN or CSAN layers of the SAVE filesystem.
 """
 
 import automol
@@ -19,7 +21,46 @@ def execute_scan(zma, spc_info, mod_thy_info, thy_save_fs,
                  constraint_dct=None, retryfail=True,
                  chkstab=False,
                  **kwargs):
-    """ Run and save the scan
+    """ Wrapper to perform both the run_scan and save_scan functions for
+        a series of electronic structure calculations along some
+        internal coordinates defined in a Z-Matrix.
+
+        Prior to launching any electronic structure jobs, function will
+        assess if Z-matrices exist at all points of the input grids in
+        the SCAN/CSAN filesystem layer of the SAVE filesystem.
+
+        :param zma: Z-Matrix to start scan from
+        :type zma: automol.zmtat object
+        :param spc_info:
+        :type spc_info:
+        :param mod_thy_info:
+        :type mod_thy_info:
+        :param coord_names: names of the scan coordinates
+        :type coord_names: tuple(tuple(str))
+        :param coord_grids: values of all the scan coordinates
+        :type coord_grids: tuple(tuple(float))
+        :param scn_run_fs: SCAN/CSCAN object with RUN filesys prefix
+        :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_save_fs: SCAN/CSCAN object with SAVE filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_typ: label for scan type ('relaxed' or 'rigid')
+        :type scn_typ: str
+        :param overwrite: overwrite existing input file with new one and rerun
+        :type overwrite: bool
+        :param update_guess: start optimization at point of scan using 
+            optimized structure from the previous point of the scan
+        :type update_guess: bool
+        :param reverse_sweep: attempt to run scan in both directions
+            of the coordinate defined by the grid
+        :type reverse_sweep: bool
+        :param saddle: perform saddle-point optimization
+        :type saddle: bool
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
+        :param retryfail: re-run the job if failed job found in RUN filesys
+        :type retryfail: bool
+        :param kwargs: addiitonal options for electronic structure job
+        :type kwargs: dict
     """
 
     if not _scan_finished(coord_names, coord_grids,
@@ -56,6 +97,39 @@ def run_scan(zma, spc_info, mod_thy_info, thy_save_fs,
              chkstab=False,
              **kwargs):
     """ run constrained optimization scan
+
+        :param zma: Z-Matrix to start scan from
+        :type zma: automol.zmtat object
+        :param spc_info:
+        :type spc_info:
+        :param mod_thy_info:
+        :type mod_thy_info:
+        :param coord_names: names of the scan coordinates
+        :type coord_names: tuple(tuple(str))
+        :param coord_grids: values of all the scan coordinates
+        :type coord_grids: tuple(tuple(float))
+        :param scn_run_fs: SCAN/CSCAN object with run filesys prefix
+        :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
+        :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
+        :param scn_typ: label for scan type ('relaxed' or 'rigid')
+        :type scn_typ: str
+        :param overwrite: overwrite existing input file with new one and rerun
+        :type overwrite: bool
+        :param update_guess: start optimization at point of scan using 
+            optimized structure from the previous point of the scan
+        :type update_guess: bool
+        :param reverse_sweep: attempt to run scan in both directions
+            of the coordinate defined by the grid
+        :type reverse_sweep: bool
+        :param saddle: perform saddle-point optimization
+        :type saddle: bool
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
+        :param retryfail: re-run the job if failed job found in RUN filesys
+        :type retryfail: bool
+        :param kwargs: addiitonal options for electronic structure job
+        :type kwargs: dict
     """
 
     # Build the SCANS/CSCANS filesystems
@@ -111,21 +185,45 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
               **kwargs):
     """ new run function
 
+        :param guess_zma: Z-Matrix to start scan from
+        :type guess_zma: automol.zmtat object
+        :param spc_info:
+        :type spc_info:
+        :param mod_thy_info:
+        :type mod_thy_info:
         :param coord_names: names of the scan coordinates
         :type coord_names: tuple(tuple(str))
         :param grid_vals: values of all the scan coordinates
-        :type grid_vals: ?? same as coord_grids?
+        :type grid_vals: same as coord_grids???
         :param scn_run_fs: SCAN/CSCAN object with run filesys prefix
         :type scn_run_fs: autofile.fs.scan or autofile.fs.cscan object
         :param scn_save_fs: SCAN/CSCAN object with save filesys prefix
         :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
         :param scn_typ: label for scan type ('relaxed' or 'rigid')
         :type scn_typ: str
->>>>>>> update for docs
-
-    # Get a connected geometry from the init guess_zma for instability checks
-    # conn_geo = automol.zmatrix.geometry(guess_zma)
-    conn_zma = guess_zma
+        :param script_str:
+        :type script_str: str
+        :param overwrite: overwrite existing input file with new one and rerun
+        :type overwrite: bool
+        :param errors: list of error message types to search output for
+        :type errors: tuple(str)
+        :param options_mat: varopis options to run job with
+        :type options_mat: tuple(dict[str: str])
+        :param update_guess: start optimization at point of scan using 
+            optimized structure from the previous point of the scan
+        :type update_guess: bool
+        :param reverse_sweep: attempt to run scan in both directions
+            of the coordinate defined by the grid
+        :type reverse_sweep: bool
+        :param saddle: perform saddle-point optimization
+        :type saddle: bool
+        :param constraint_dct: values of coordinates to constrain during scan
+        :type constraint_dct: dict[str: float]
+        :param retryfail: re-run the job if failed job found in RUN filesys
+        :type retryfail: bool
+        :param kwargs: addiitonal options for electronic structure job
+        :type kwargs: dict
+    """
 
     # Set the frozen coordinates (set job at this point?)
     if constraint_dct is not None:
@@ -255,7 +353,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
 def _scan_locs(scn_save_fs, coord_names, constraint_dct=None):
     """  Determine the locs for all of the directories that currently
-         exist in the SCAN/CSAN layer of the save filesystem.
+         exist in the SCAN/CSAN layer of the SAVE filesystem.
 
         :param coord_names: names of the scan coordinates
         :type coord_names: tuple(tuple(str))
@@ -382,6 +480,7 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
                      retryfail=False,
                      **opt_kwargs):
     """ Run a two-part scan that goes into two directions, as for rxn path
+        Wrapper to the execute_scan to run in two directions
     """
 
     for grid in (grid1, grid2):

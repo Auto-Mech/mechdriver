@@ -31,8 +31,36 @@ def options_matrix_optimization(script_str, prefix,
                                 **kwargs):
     """ try several sets of options to generate an output file
 
-    :returns: the input string and the output string
-    :rtype: (str, str)
+        :param script_str: Shell submission script for electronic structure job
+        :type script_str: str
+        :param prefix:
+        :type prefix:
+        :param geo: molecular geometry or Z-Matrix
+        :type geo:
+        :param chg: electric charge
+        :type chg: int
+        :param mul: spin-multiplicity
+        :type mul: int
+        :param method: name of the electronic structure method
+        :type method: str
+        :param basis: name of the basis set
+        :type basis: str
+        :param prog: name of the electronic structure program
+        :type prog: str
+        :param errors: list of error message types to search output for
+        :type errors: tuple(str)
+        :param options_mat: varopis options to run job with
+        :type options_mat: tuple(dict[str: str])
+        :param feedback: update geom with job from previous sequence
+        :type feedback: bool
+        :param frozen_coordinates: Z-matrix coordinate names to freeze in opts
+        :type frozen_coordinates: tuple(str)
+        :param freeze_dummy_atoms: freeze any coords defined by dummy atoms
+        :type freeze_dummy_atoms: bool
+        :param kwargs:
+        :type:
+        :returns: the input string and the output string
+        :rtype: (str, str)
     """
     assert len(errors) == len(options_mat)
 
@@ -102,8 +130,26 @@ def options_matrix_run(input_writer, script_str, prefix,
                        **kwargs):
     """ try several sets of options to generate an output file
 
-    :returns: the input string and the output string
-    :rtype: (str, str)
+        :param script_str: Shell submission script for electronic structure job
+        :type script_str: str
+        :param prefix:
+        :type prefix:
+        :param geo: molecular geometry or Z-Matrix
+        :type geo:
+        :param chg: electric charge
+        :type chg: int
+        :param mul: spin-multiplicity
+        :type mul: int
+        :param method: name of the electronic structure method
+        :type method: str
+        :param basis: name of the basis set
+        :type basis: str
+        :param prog: name of the electronic structure program
+        :type prog: str
+        :param errors: list of error message types to search output for
+        :type errors: tuple(str)
+        :param options_mat: varopis options to run job with
+        :type options_mat: tuple(dict[str: str])
     """
     assert len(errors) == len(options_mat)
 
