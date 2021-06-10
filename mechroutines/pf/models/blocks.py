@@ -1,5 +1,5 @@
 """ Writes the MESS strings for various species and treatments
-    using data read from the save filesystem.
+    using data read from the SAVE filesystem.
 """
 
 import automol.combine
@@ -7,29 +7,43 @@ import mess_io
 from phydat import phycon
 
 
-def barrier_dat_block(ts_dct, reac_dcts, prod_dcts):
-    """ prepare a block for data for the barrier
+def barrier_dat_block(ts_inf_dct, reac_dcts, prod_dcts):
+    """ Takes data for a transition state that has been previously
+        read and processed from the SAVE filesys, then writes
+        'RRHO' section for all points on a reaction path, involving
+        the appropriate 'Core' section. This is determined by the
+        transition state theory model requested by the user.
+
+        :param inf_dct: required info for all parts on the reaction path
+        :type inf_dct: dict
+        :rtype: str
     """
 
     flux_dat = {}  # zero for now, need to set for vrctst? chk build
 
     writer_typ = ts_dct['writer']
     if writer_typ == 'species_block':
-        mstr, mdhr_dat = species_block(ts_dct)
+        mstr, mdhr_dat = species_block(ts_inf_dct)
     elif writer_typ == 'pst_block':
         side_dcts = reac_dcts if len(reac_dcts) == 2 else prod_dcts
-        mstr, mdhr_dat = pst_block(ts_dct, *side_dcts)
+        mstr, mdhr_dat = pst_block(ts_inf_dct, *side_dcts)
     elif writer_typ == 'vrctst_block':
-        mstr, mdhr_dat = vrctst_block(ts_dct, *reac_dcts)
+        mstr, mdhr_dat = vrctst_block(ts_inf_dct, *reac_dcts)
     elif writer_typ == 'rpvtst_block':
-        mstr, mdhr_dat = rpvtst_block(ts_dct, *reac_dcts)
+        mstr, mdhr_dat = rpvtst_block(ts_inf_dct, *reac_dcts)
 
     return mstr, mdhr_dat, flux_dat
 
 
 # SINGLE SPECIES BLOCKS
 def atom_block(inf_dct):
-    """ prepare the species input for messpf
+    """ Takes data for an atom that has been previously read and processed
+        from the SAVE filesys, then writes it into the string that defines
+        an 'Atom' section of a MESSPF or MESSRATES input file.
+
+        :param inf_dct: required info for the atom
+        :type inf_dct: dict[str:___]
+        :rtype: str
     """
 
     # Initialize an empty dat_dct for the return
@@ -44,7 +58,13 @@ def atom_block(inf_dct):
 
 
 def species_block(inf_dct):
-    """ prepare the species input for messpf
+    """ Takes data for an atom that has been previously read and processed
+        from the SAVE filesys, then writes it into the string that defines
+        an 'Species' section of a MESSPF or MESSRATES input file.
+
+        :param inf_dct: required molecular info for the species
+        :type inf_dct: dict[str:___]
+        :rtype: str
     """
 
     # Build the data files dct
@@ -88,8 +108,14 @@ def species_block(inf_dct):
 
 
 def fake_species_block(inf_dct_i, inf_dct_j):
-    """ prepare a fake species block corresponding to the
-        van der Waals well between two fragments
+    """ Takes data for two species (atom/molecule) that are being combined
+        into a `fake` van der Waals well, which has been previously
+        read and processed from the SAVE filesys, then writes it into
+        the string that defines an '____' section of a MESSRATES input file.
+
+        :param inf_dct: required molecular info for the atom
+        :type inf_dct: dict[str:___]
+        :rtype: str
     """
 
     # Combine the electronic structure information for the two species together
@@ -133,7 +159,15 @@ def fake_species_block(inf_dct_i, inf_dct_j):
 
 
 def pst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
-    """ prepare a Phase Space Theory species block
+    """ Takes data for two species (atom/molecule) that are being combined
+        to describe a Phase-Space Theory transition state, which has been
+        previously read and processed from the SAVE filesys, then writes
+        it into the string that defines a `Barrier` section
+        of a MESSRATES input file.
+
+        :param inf_dct: required molecular info for the atom
+        :type inf_dct: dict[str:___]
+        :rtype: str
     """
 
     # Combine the electronic structure information for the two species together
@@ -227,10 +261,10 @@ def tau_block(inf_dct):
 
 
 def multiconfig_block(inf_dct_lst):
-    """ write a 
+    """ write a
     """
 
-    spc_str_lst = tuple(dct for dct in inf_dct_lst) 
+    spc_str_lst = tuple(dct for dct in inf_dct_lst)
     config_str = configs_union(spc_str_lst)
 
     return config_str
@@ -238,7 +272,17 @@ def multiconfig_block(inf_dct_lst):
 
 # TS BLOCKS FOR VARIATIONAL TREATMENTS
 def vrctst_block(inf_dct_ts, inf_dct_i, inf_dct_j):
-    """ write a VRCTST block
+    """ Takes data for two species (atom/molecule) that are being combined
+        to describe a Phase-Space Theory transition state, which has been
+        previously read and processed from the SAVE filesys, then writes
+        it into the string that defines a `Barrier` section
+        of a MESSRATES input file.
+
+        :param inf_dct: required molecular info for the atom
+        :type inf_dct: dict[str:___]
+        :rtype: str
+
+        ^ copy form PST block, make appropriate fot VRCTST
     """
 
     # Build the data files dct
@@ -289,7 +333,7 @@ def rpvtst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
     a saddle point. Do it by calling the species block for each grid point
     in the scan file system
     """
-    
+
     # Combine electronic structure information for the two species together
     sym_factor = inf_dct_i['sym_factor'] * inf_dct_j['sym_factor']
     mess_hr_str = inf_dct_i['mess_hr_str'] + inf_dct_j['mess_hr_str']

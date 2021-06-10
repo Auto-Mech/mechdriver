@@ -27,11 +27,22 @@ def make_messrate_str(pes_idx, rxn_lst,
                       pes_model, spc_model,
                       spc_dct, thy_dct,
                       pes_model_dct, spc_model_dct,
-                      label_dct,
-                      mess_path, run_prefix, save_prefix):
-    """ Combine various MESS strings together to combined MESS rates
+                      unstab_chnls, label_dct,
+                      mess_path, run_prefix, save_prefix,
+                      make_lump_well_inp=False):
+    """ Reads and processes all information in the save filesys for
+        all species on the PES that are required for MESS rate calculations,
+        as specified by the model dictionaries built from user input.
 
-        spc model could become a list for channel combinations
+        :param pes_idx:
+        :type pes_idx: int
+        :param rxn_lst:
+        :type rxn_lst:
+        :param pes_model: model for PES conditions for rates from user input
+        :type pes_model: str
+        :param spc_model: model for partition fxns for rates from user input
+        :type spc_model: str
+        :param mess_path: path to write mess file (change since pfx given?)
     """
 
     pes_model_dct_i = pes_model_dct[pes_model]
