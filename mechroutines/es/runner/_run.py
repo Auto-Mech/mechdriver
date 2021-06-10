@@ -56,7 +56,31 @@ def execute_job(job, script_str, run_fs,
                 frozen_coordinates=(), freeze_dummy_atoms=True,
                 overwrite=False,
                 **kwargs):
-    """ Both ruBoth runs and reads electrouct jobs
+    """ Wrapper to perform both the run_job and save_job functions for
+        electronic structure calculation.
+        
+        :param geo: input molecular geometry or Z-Matrix
+        :type geo: automol.geom/automol.zmtat object
+        :param spc_info:
+        :type spc_info:
+        :param thy_info:
+        :type thy_info:
+        :param errors: list of error message types to search output for
+        :type errors: tuple(str)
+        :param options_mat: varopis options to run job with
+        :type options_mat: tuple(dict[str: str])
+        :param retryfail: re-run the job if failed job found in RUN filesys
+        :type retryfail: bool
+        :param feedback: update geom with job from previous sequence
+        :type feedback: bool
+        :param frozen_coordinates: Z-matrix coordinate names to freeze in opts
+        :type frozen_coordinates: tuple(str)
+        :param freeze_dummy_atoms: freeze any coords defined by dummy atoms
+        :type freeze_dummy_atoms: bool
+        :param overwrite: overwrite existing input file with new one and rerun
+        :type overwrite: bool
+        :param kwargs: additional options for electronic structure job
+        :type kwarfs: dict[str]
     """
 
     run_job(job, script_str, run_fs,
@@ -88,7 +112,7 @@ def run_job(job, script_str, run_fs,
         input and rerun the job if requested.
 
         :param geo: input molecular geometry or Z-Matrix
-        :type geo:
+        :type geo: automol.geom/automol.zmtat object
         :param errors: list of error message types to search output for
         :type errors: tuple(str)
         :param options_mat: varopis options to run job with
