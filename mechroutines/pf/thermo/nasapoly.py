@@ -13,7 +13,21 @@ from mechlib.amech_io import printer as ioprinter
 
 # NEW AUTORUN
 def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):
-    """ Build a nasa polynomial
+    """ For a given species: obtain partition function data read from a
+        MESSPF output file currently existing in the RUN filesystem as well as
+        the previously computed 0 K heat-of-formation from the species
+        dictionary. Then use this to run ThermP and PAC99 in the RUN filesystem
+        to generate a ChemKin-formatted 7-coefficient NASA polynomial.
+    
+        :param spc_name: mechanism name of species to write MESSPF input for
+        :type spc_name: str
+        :param spc_dct:
+        :type spc_dct:
+        :param pf_path: path to existing MESSPF file in RUN filesystem
+        :type pf_path: str
+        :param nasa_path: path to run ThermP+PAC99 in RUN filesystem
+        :type nasa_path: str
+        :rtype: str
     """
 
     # Read the temperatures from the pf.dat file, check if viable
@@ -34,18 +48,12 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):
     # Copy MESSPF output file to THERMP run dir and rename to pf.dat
     pf_str = ioformat.pathtools.read_file(pf_path, 'pf.dat')
 
-    print('pf_path test:', pf_path)
-    print('pf_str test:', pf_str)
-
     hform298, poly_str = autorun.thermo(
         thermp_script_str, pac99_script_str, nasa_path,
         pf_str, spc_name, formula_dct, hform0,
         enthalpyt=0.0, breakt=1000.0, convert=True)
 
     # Write the full CHEMKIN strings
-    ckin_str = writer.ckin.nasa_polynomial(hform0, hform298, poly_str)
-    full_ckin_str = '\n' + ckin_str
-    # Print thermo
-    
+    ckin_str = '\n' + writer.ckin.nasa_polynomial(hform0, hform298, poly_str)
 
-    return full_ckin_str
+    return ckin_str
