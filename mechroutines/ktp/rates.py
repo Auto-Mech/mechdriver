@@ -31,7 +31,7 @@ def make_messrate_str(pes_idx, rxn_lst,
                       mess_path, run_prefix, save_prefix,
                       make_lump_well_inp=False):
     """ Reads and processes all information in the save filesys for
-        all species on the PES, required for MESS rate calculations,
+        all species on the PES that are required for MESS rate calculations,
         as specified by the model dictionaries built from user input.
 
         :param pes_idx:

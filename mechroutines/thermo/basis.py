@@ -16,7 +16,9 @@ from mechroutines.models.ene import read_energy
 def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                  spc_model_dct_i, run_prefix, save_prefix,
                  read_species=True):
-    """ Return the electronic + zero point energies for a set of species.
+    """ Reads the electronic and zero-point energies for a species and
+        transition state and their constituent basis set.
+    
     """
 
     # Initialize ich name dct to noe
