@@ -116,3 +116,18 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
         path = None
 
     return _instab, path
+
+
+def energy_trans(etrans_save_fs, etrans_locs):
+    """ Read out the the enery transfer parameters in the filesys
+    """
+
+    nsamp = etrans_save_fs[-1].file.read(etrans_locs)
+    epsilon = etrans_save_fs[-1].file.read.epsilon(etrans_locs)
+    sigma = etrans_save_fs[-1].file.read.sigma(etrans_locs)
+    # alpha = etrans_fs[-1].file.alpha.read(etrans_locs)
+
+    min_geo_traj = etrans_save_fs[-1].file.read.min_geos(etrans_locs)
+    min_geos = automol.geom.from_xyz_trajectory_string(min_geo_traj)
+
+    return nsamp, epsilon, sigma, min_geos
