@@ -623,7 +623,12 @@ def ring_conformer_sampling(
         nsamp = _num_samp_zmas(ring_atoms, nsamp_par)
         samp_zmas = automol.zmat.samples(zma, nsamp, samp_range_dct)
         for samp_zma in samp_zmas:
+<<<<<<< HEAD
             if _ring_distances_passes(samp_zma, ring_atoms, dist_value_dct):
+=======
+            if automol.ring_distances_passes(samp_zma, ring_atoms,
+                                             dist_value_dct):
+>>>>>>> debug thermo
                 samp_geo = automol.zmat.geometry(samp_zma)
                 frag_samp_geo = _fragment_ring_geo(samp_geo)
                 if _ring_angles_passes(samp_geo, ring_atoms):
