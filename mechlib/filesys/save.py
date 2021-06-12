@@ -406,14 +406,10 @@ def _save_rings(zma_fs, zma_locs, zrxn=None):
     """
 
     zma = zma_fs[-1].file.zmatrix.read(zma_locs)
-    rings_atoms = automol.zmat.ring_atoms(zma, zrxn)
-    tors_dct = {}
-    for ring_atoms in rings_atoms:
-        dct_label = '-'.join(str(atm+1) for atm in ring_atoms)
-        samp_range_dct = automol.zmat.ring_samp_ranges(zma, ring_atoms)
-        tors_dct[dct_label] = samp_range_dct
-    if tors_dct:
-        zma_fs[-1].file.ring_torsions.write(tors_dct, zma_locs)
+    rings_atoms = automol.zmat.all_rings_atoms(zma, zrxn=zrxn)
+    ring_dct = automol.zmat.all_rings_dct(zma, rings_atoms)
+    if ring_dct:
+        zma_fs[-1].file.ring_torsions.write(ring_dct, zma_locs)
 
 
 def _save_reaction(zma_fs, zma_locs, zrxn=None):

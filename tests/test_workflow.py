@@ -13,7 +13,7 @@ CWD_INP_DIR = os.path.join(PATH, 'inp')
 
 # Set paths where tests will run
 # TMP_DIR = tempfile.mkdtemp()
-TMP_DIR = os.path.join(os.getcwd(), 'tmp')
+TMP_DIR = os.path.join(os.getcwd(), 'tmp2')
 TMP_INP_DIR = os.path.join(TMP_DIR, 'inp')
 TMP_RUN_DIR = os.path.join(TMP_DIR, 'run')
 TMP_SAVE_DIR = os.path.join(TMP_DIR, 'save')
@@ -37,7 +37,7 @@ def test__1dhr():
     _run('run_c2h6_h_1dhr.temp')
 
 
-def __etoh():
+def test__etoh():
     """ Run es, thermo, for EtOH with different rotor types
 
         need a species that uses theory methods scaling
@@ -108,8 +108,8 @@ def _fill_template_and_write_file(templatefile, inpfile):
 
 
 if __name__ == '__main__':
-    test__rrho()
-    # test__1dhr()
+    # test__rrho()
+    test__1dhr()
     # test__etoh()
     # test__instab()
     # test__radrad()

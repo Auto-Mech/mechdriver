@@ -47,7 +47,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-value pairs for electronic structure tsk
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
@@ -409,7 +409,7 @@ def tau_tsk(job, spc_dct, spc_name,
         :type spc_name:
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-value pairs for electronic structure tsk
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
@@ -558,7 +558,6 @@ def tau_tsk(job, spc_dct, spc_name,
 
             # Run the job over all the conformers requested by the user
             for locs in tau_save_fs[-1].existing():
-                geo_run_path = tau_run_fs[-1].path(locs)
                 if db_style == 'jsondb':
                     geo_save_path = tau_save_fs[-1].root.path()
                     geo = tau_save_fs[-1].json.geometry.read(locs)
@@ -588,7 +587,6 @@ def tau_tsk(job, spc_dct, spc_name,
             for locs in tau_save_fs.existing():
                 ioprinter.info_message(
                     'HESS Number {}'.format(hess_cnt+1), newline=1)
-                geo_run_path = tau_run_fs[-1].path(locs)
                 if db_style == 'directory':
                     geo_save_path = tau_save_fs[-1].path(locs)
                     if tau_save_fs[-1].file.hessian.exists(locs):
@@ -783,7 +781,7 @@ def hr_tsk(job, spc_dct, spc_name,
                     ini_scn_run_fs[-1].create(locs)
                     ES_TSKS[job](
                         zma, geo, spc_info, mod_thy_info,
-                        init_scn_run_fs, ini_scn_save_fs, locs,
+                        ini_scn_run_fs, ini_scn_save_fs, locs,
                         script_str, overwrite,
                         retryfail=retryfail, **kwargs)
                     ioprinter.obj('vspace')
@@ -804,7 +802,7 @@ def rpath_tsk(job, spc_dct, spc_name,
         :type spc_name:
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-value pairs for electronic structure tsk
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str

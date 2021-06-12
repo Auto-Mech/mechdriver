@@ -46,7 +46,7 @@ def execute_scan(zma, spc_info, mod_thy_info,
         :type scn_typ: str
         :param overwrite: overwrite existing input file with new one and rerun
         :type overwrite: bool
-        :param update_guess: start optimization at point of scan using 
+        :param update_guess: start optimization at point of scan using
             optimized structure from the previous point of the scan
         :type update_guess: bool
         :param reverse_sweep: attempt to run scan in both directions
@@ -114,7 +114,7 @@ def run_scan(zma, spc_info, mod_thy_info,
         :type scn_typ: str
         :param overwrite: overwrite existing input file with new one and rerun
         :type overwrite: bool
-        :param update_guess: start optimization at point of scan using 
+        :param update_guess: start optimization at point of scan using
             optimized structure from the previous point of the scan
         :type update_guess: bool
         :param reverse_sweep: attempt to run scan in both directions
@@ -204,7 +204,7 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
         :type errors: tuple(str)
         :param options_mat: varopis options to run job with
         :type options_mat: tuple(dict[str: str])
-        :param update_guess: start optimization at point of scan using 
+        :param update_guess: start optimization at point of scan using
             optimized structure from the previous point of the scan
         :type update_guess: bool
         :param reverse_sweep: attempt to run scan in both directions

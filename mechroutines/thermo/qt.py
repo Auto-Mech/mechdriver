@@ -29,7 +29,7 @@ def make_messpf_str(temps, spc_dct, spc_name,
         :type save_prefix: str
         :rtype: str
     """
-    
+
     # Read the filesystem for the information
     inf_dct, _ = build.read_spc_data(
         spc_dct, spc_name,
@@ -37,12 +37,12 @@ def make_messpf_str(temps, spc_dct, spc_name,
         run_prefix, save_prefix, {}, calc_chn_ene=False)
 
     # Write the header string for the MESS input file
-    global_pf_str = mess_io.writer.global_pf_input(
+    globkey_str = mess_io.writer.global_pf_input(
         temperatures=temps,
         rel_temp_inc=0.001,
         atom_dist_min=0.6
     )
-    
+
     # Write the species data block for the MESS input file
     mess_writer = getattr(blocks, inf_dct['writer'])
     mess_block, dat_str_dct = mess_writer(inf_dct)
@@ -60,4 +60,4 @@ def make_messpf_str(temps, spc_dct, spc_name,
     # Combine the strings together to create full MESS input file string
     mess_inp_str = mess_io.writer.messpf_inp_str(globkey_str, spc_str)
 
-    return mess_inp_str
+    return mess_inp_str, dat_str_dct

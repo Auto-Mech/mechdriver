@@ -15,7 +15,7 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path):
         the previously computed 0 K heat-of-formation from the species
         dictionary. Then use this to run ThermP and PAC99 in the RUN filesystem
         to generate a ChemKin-formatted 7-coefficient NASA polynomial.
-    
+
         :param spc_name: mechanism name of species to write MESSPF input for
         :type spc_name: str
         :param spc_dct:

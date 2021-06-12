@@ -530,7 +530,8 @@ def ring_conformer_sampling(
         nsamp = _num_samp_zmas(ring_atoms, nsamp_par)
         samp_zmas = automol.zmat.samples(zma, nsamp, samp_range_dct)
         for samp_zma in samp_zmas:
-            if automol.ring_distances_passes(samp_zma, ring_atoms, dist_value_dct):
+            if automol.ring_distances_passes(samp_zma, ring_atoms,
+                                             dist_value_dct):
                 samp_geo = automol.zmat.geometry(samp_zma)
                 frag_samp_geo = automol.geom.fragment_ring_geo(samp_geo)
                 if automol.geom.ring_angles_passes(samp_geo, ring_atoms):

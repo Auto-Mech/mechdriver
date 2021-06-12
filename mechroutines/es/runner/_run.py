@@ -58,7 +58,7 @@ def execute_job(job, script_str, run_fs,
                 **kwargs):
     """ Wrapper to perform both the run_job and save_job functions for
         electronic structure calculation.
-        
+
         :param geo: input molecular geometry or Z-Matrix
         :type geo: automol.geom/automol.zmtat object
         :param spc_info:
