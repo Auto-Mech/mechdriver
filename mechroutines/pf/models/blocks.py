@@ -21,7 +21,7 @@ def barrier_dat_block(ts_inf_dct, reac_dcts, prod_dcts):
 
     flux_dat = {}  # zero for now, need to set for vrctst? chk build
 
-    writer_typ = ts_dct['writer']
+    writer_typ = ts_inf_dct['writer']
     if writer_typ == 'species_block':
         mstr, mdhr_dat = species_block(ts_inf_dct)
     elif writer_typ == 'pst_block':

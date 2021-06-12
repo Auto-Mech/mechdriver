@@ -104,7 +104,7 @@ def need_fake_wells(rxn_class, well_model):
         This is is determined by (1) if the user has requested the use
         of fake-wells, and (2) whether the reaction is bimol???
 
-        :param rxn_class: 
+        :param rxn_class:
         :type rxn_class:
         :param well_model:
         :type well_model:
@@ -134,7 +134,7 @@ def var_radrad(tsclass):
 def treat_tunnel(ts_mod, rxn_class):
     """ Determine if master equation treatments of a reaction channel
         should include treatments of quantum tunneling treatments.
-        
+
         This is is determined by (1) if the user has requested some tunneling
         treatment, and the transition state corresponds to a saddle point.
 
@@ -183,7 +183,7 @@ def is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
         chnl_idx, _ = rxn_lst[0]
         tsname = 'ts_{:g}_{:g}_0'.format(pes_idx+1, chnl_idx+1)
 
-        rxn_class = spc_dct[ts_name]['class']
+        rxn_class = spc_dct[tsname]['class']
         if (automol.par.typ(rxn_class) ==
            automol.par.ReactionClass.Typ.HYDROGEN_ABSTRACTION):
             _abstraction = True

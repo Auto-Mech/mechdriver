@@ -7,7 +7,6 @@ import numpy
 import autofile
 import autorun
 import automol.geom
-import projrot_io
 from phydat import phycon
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io._path import job_path
@@ -210,6 +209,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     ioprinter.reading('Hessian', harm_cnf_fs[-1].path(harm_min_locs))
 
     fml_str = automol.geom.formula_string(harm_geo)
+<<<<<<< HEAD:mechroutines/pf/models/_vib.py
     vib_path = job_path(
         run_prefix, 'PROJROT', 'PROJFREQ', fml_str, print_path=True)
 
@@ -290,24 +290,33 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     #     proj_imag = proj_imags[0]
     # else:
     #     proj_imag = []
+=======
+    vib_path = job_path(run_pfx, 'PROJROT', 'FREQ', fml_str, print_path=True)
+    # tors_path = job_path(run_pfx, 'MESS', 'TORS', fml_str, print_path=True)
+
+    # Calculate projeccted frequencies and associated information
+    mess_script_str = autorun.SCRIPT_DCT['messpf']
+    projrot_script_str = autorun.SCRIPT_DCT['projrot']
+    dist_cutoff_dct1 = {('H', 'O'): 2.26767, ('H', 'C'): 2.26767}
+    dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459,
+                        ('C', 'O'): 3.7807}
+
+    proj_inf = autorun.projected_frequencies(
+        mess_script_str, projrot_script_str, vib_path,
+        mess_hr_str, projrot_hr_str,
+        tors_geo, harm_geo, hess,
+        dist_cutoff_dct1=dist_cutoff_dct1,
+        dist_cutoff_dct2=dist_cutoff_dct2,
+        saddle=(zrxn is not None))
+    proj_freqs, proj_imag, _, harm_freqs, tors_freqs = proj_inf
+    tors_zpe = 0.5 * sum(tors_freqs) * phycon.WAVEN2EH
+>>>>>>> debug thermo:mechroutines/models/_vib.py
 
     # NEW scale factor functions
-    # scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
-    #     harm_freqs, tors_freqs)
+    scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
+        harm_freqs, proj_freqs, tors_freqs)
 
-    # Create a scaling factor for the frequencies
-    # First sort tors frequencies in ascending order
-    sort_tors_freqs = sorted(tors_freqs)
-    # keep only freqs whose RRHO freqs are above a threshold
-    freq_thresh = 50.
-    log_rt_freq = 0.0
-    nfreq_remove = 0
-    for freq in rt_freqs1:
-        if freq > freq_thresh:
-            log_rt_freq += numpy.log(freq)
-        else:
-            nfreq_remove += 1
-
+<<<<<<< HEAD:mechroutines/pf/models/_vib.py
     log_freq = [numpy.log(freq) for freq in freqs]
     log_freq = sum(log_freq)
 
@@ -361,7 +370,7 @@ def scale_frequencies(freqs, tors_zpe,
         of internal rotations which are not scaled.
 
         Scaling factors determined by the electronic structure
-        method used to calculate the frequencies and ZPVE as well as the 
+        method used to calculate the frequencies and ZPVE as well as the
         requested scaling method.
 
         :param freqs: harmonic frequencies [cm-1]

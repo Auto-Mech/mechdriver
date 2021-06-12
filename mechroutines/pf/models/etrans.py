@@ -108,7 +108,7 @@ def lj_params(well_info, bath_info, etrans_dct):
             ioprinter.info_message('- Estimating the parameters...')
             well_ich = well_info[0]
             well_geo = automol.inchi.geometry(well_ich)
-            params = estimate_viable(
+            params = automol.etrans.effective_model(
                 well_ich, well_geo, bath_info)
             if params is not None:
                 bath_model, tgt_model = params
@@ -127,14 +127,13 @@ def lj_params(well_info, bath_info, etrans_dct):
                     n_heavy, bath_model, tgt_model)
                 sig1, eps1, sig2, eps2 = sig, eps, sig, eps
 
-        elif ljpar == 'read':
-
-            ioprinter.info_message('- Reading the filesystem...')
-            ljs_lvl = etrans_dct.get('ljlvl', None)
-            if ljs_lvl is not None:
-                # Get the levels into theory objects
-                pf_filesystems = 0
-                sig1, eps1, sig2, eps2 = _read_lj(pf_filesystems)
+        # elif ljpar == 'read':
+        #     ioprinter.info_message('- Reading the filesystem...')
+        #     ljs_lvl = etrans_dct.get('ljlvl', None)
+        #     if ljs_lvl is not None:
+        #         # Get the levels into theory objects
+        #         pf_filesystems = 0
+        #         sig1, eps1, sig2, eps2 = _read_lj(pf_filesystems)
 
     else:
         sig1, eps1, sig2, eps2 = None, None, None, None
@@ -165,7 +164,7 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
             well_ich = well_info[0]
             well_smi = automol.inchi.smiles(well_ich)
             well_geo = automol.inchi.geometry(well_ich)
-            params = estimate_viable(
+            params = automol.etrans.effective_model(
                 well_ich, well_geo, bath_info)
             if params is not None:
                 bath_model, tgt_model = params
@@ -187,14 +186,13 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
                     n_eff, eps, sig, mass1, mass2, bath_model, tgt_model)
                 ecutoff = 15.0
 
-        elif edown == 'read':
-
-            ioprinter.info_message('  - Reading the filesystem...')
-            edownlvl = etrans_dct.get('edownlvl', None)
-            if edownlvl is not None:
-                # NEED: Get the levels into theory objects
-                pf_filesystems = 0
-                efactor = _read_alpha(pf_filesystems)
+        # elif edown == 'read':
+        #     ioprinter.info_message('  - Reading the filesystem...')
+        #     edownlvl = etrans_dct.get('edownlvl', None)
+        #     if edownlvl is not None:
+        #         # NEED: Get the levels into theory objects
+        #         pf_filesystems = 0
+        #         efactor = _read_alpha(pf_filesystems)
 
     return efactor, epower, ecutoff
 

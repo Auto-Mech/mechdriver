@@ -18,7 +18,6 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
                  read_species=True):
     """ Reads the electronic and zero-point energies for a species and
         transition state and their constituent basis set.
-    
     """
 
     # Initialize ich name dct to noe

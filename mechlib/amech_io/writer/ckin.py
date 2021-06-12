@@ -3,6 +3,7 @@
 """
 
 import os
+from phydat import phycon
 
 
 # COMMON HEADER STUFF FOR kTP and THERMO CKIN FILES
@@ -106,8 +107,8 @@ def nasa_polynomial(hform0, hform298, ckin_poly_str):
     """ write the nasa polynomial str
     """
     hf_str = (
-        '! Hf(0 K) = {:.2f}, '.format(hform0) +
-        'Hf(298 K) = {:.2f} kcal/mol\n'.format(hform298)
+        '! Hf(0 K) = {:.2f}, '.format(hform0*phycon.EH2KCAL) +
+        'Hf(298 K) = {:.2f} kcal/mol\n'.format(hform298*phycon.EH2KCAL)
     )
     return hf_str + ckin_poly_str
 

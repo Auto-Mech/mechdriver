@@ -8,6 +8,11 @@ import mechanalyzer
 import chemkin_io
 import automol.inchi
 from automol.inchi import formula_string as fstring
+<<<<<<< HEAD
+=======
+from phydat import phycon
+import thermfit
+>>>>>>> debug thermo
 from mechanalyzer.inf import spc as sinfo
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf import runner as pfrunner
@@ -86,7 +91,7 @@ def run(spc_rlst,
         for idx, spc_name in enumerate(spc_queue):
             print('write test {}'.format(spc_name))
             for spc_mod in spc_mods:
-                messpf_inp_str = thmroutines.qt.make_messpf_str(
+                messpf_inp_str, dat_dct = thmroutines.qt.make_messpf_str(
                     pes_mod_dct[pes_mod]['therm_temps'],
                     spc_dct, spc_name,
                     pes_mod_dct[pes_mod], spc_mod_dct[spc_mod],
@@ -95,6 +100,7 @@ def run(spc_rlst,
                 ioprinter.info_message(messpf_inp_str)
                 autorun.write_input(
                     thm_paths[idx][spc_mod][0], messpf_inp_str,
+                    aux_dct=dat_dct,
                     input_name='pf.inp')
 
     # Run the MESSPF files that have been written
@@ -193,8 +199,9 @@ def run(spc_rlst,
                     chn_basis_ene_dct[spc_mod][spc_basis_i] = ene_basis_i
 
             # Calculate and store the 0 K Enthalpy
-            hf0k = thmroutines.heatform.calc_hform_0k(
+            hf0k = thermfit.heatform.calc_hform_0k(
                 ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
+            print('finHf0K', hf0k, 'hart')
             spc_dct[spc_name]['Hfs'] = [hf0k]
 
         # Write the NASA polynomials in CHEMKIN format
@@ -209,12 +216,16 @@ def run(spc_rlst,
 
             # Build and write the NASA polynomial in CHEMKIN-format string
             # Call dies if you haven't run "write mess" task
+            spc_mods, pes_mod = parser.models.extract_models(run_fit_tsk)
+            spc_mod = spc_mods[0]
             ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
                 spc_name, spc_dct,
-                thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
-            ckin_nasa_str += '\n\n'
+                thm_paths[idx][spc_mod][0], thm_paths[idx][spc_mod][1])
+                # thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
 
-            print(ckin_nasa_str)
+        print('CKIN NASA STR\n')
+        print(ckin_nasa_str)
+        
         nasa7_params_all = chemkin_io.parser.thermo.create_spc_nasa7_dct(ckin_nasa_str)
         # print('ckin_nasa_str test', ckin_nasa_str)
         ioprinter.info_message('SPECIES           H(0 K)  H(298 K)  S(298 K)  Cp(300 K) Cp(500 K) Cp(1000 K) Cp(1500 K)\n')
@@ -222,7 +233,7 @@ def run(spc_rlst,
         for spc_name in nasa7_params_all:
             nasa7_params = nasa7_params_all[spc_name]
             whitespace = 18-len(spc_name)
-            h0 = spc_dct[spc_name]['Hfs'][0]
+            h0 = spc_dct[spc_name]['Hfs'][0] * phycon.EH2KCAL
             h298 = mechanalyzer.calculator.thermo.enthalpy(nasa7_params, 298.15) /1000.
             s298 = mechanalyzer.calculator.thermo.entropy(nasa7_params, 298.15)
             cp300 = mechanalyzer.calculator.thermo.heat_capacity(nasa7_params, 300)
@@ -235,3 +246,4 @@ def run(spc_rlst,
 
         # Write all of the NASA polynomial strings
         writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)
+

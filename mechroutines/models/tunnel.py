@@ -51,10 +51,10 @@ def write_mess_tunnel_str(ts_inf_dct, chnl_enes,
 def write_mess_eckart_str(chnl_enes, imag_freq, ts_idx=0, symm_barrier=False):
     """ Write a Eckart model `Tunneling` section string for a transition state
         for a MESS input file.
-    
+
         Function simply processes the energies of the reactants and products
         to calculate the well-depths relative to the saddle point of the
-        reaction coordinate. When needed, the depths are set to be similar 
+        reaction coordinate. When needed, the depths are set to be similar
         for unstable reactants or products. For cases involving very small
         well-depths are calculated, the depths are set to be 0.1 to avoid
         unphysical master equation simulations..

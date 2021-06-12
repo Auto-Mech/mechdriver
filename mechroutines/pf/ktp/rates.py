@@ -50,7 +50,7 @@ def make_messrate_str(pes_idx, rxn_lst,
 
     # Write the strings for the MESS input file
     globkey_str = make_header_str(
-        spc_dct,
+        spc_dct, rxn_lst, pes_idx,
         temps=pes_model_dct_i['rate_temps'],
         pressures=pes_model_dct_i['pressures'])
 
@@ -65,9 +65,21 @@ def make_messrate_str(pes_idx, rxn_lst,
         run_prefix, save_prefix, label_dct,
         pes_model_dct_i, spc_model_dct_i, spc_model, thy_dct)
 
-    # Combine strings together
-    mess_inp_str = mess_io.writer.messrates_inp_str(
-        globkey_str, energy_trans_str, rxn_chan_str)
+    # Generate second string with well lumping if needed
+    if (not is_abstraction_pes(spc_dct, rxn_lst, pes_idx) and
+       make_lump_well_inp):
+        print('Need to do well lumping scheme')
+        script_str = autorun.SCRIPT_DCT['messrate']
+        mess_inp_str = autorun.mess.well_lumped_input_file(
+            script_str, mess_path, globkey_str, rxn_chan_str,
+            energy_trans_str=energy_trans_str,
+            aux_dct=dats,
+            input_name='mess.inp',  # need dif name for this?
+            output_names=('mess.aux',))
+    else:
+        mess_inp_str = mess_io.writer.messrates_inp_str(
+            globkey_str, rxn_chan_str,
+            energy_trans_str=energy_trans_str, well_lump_str=None)
 
     # Write the MESS file into the filesystem
     ioprinter.obj('line_plus')
@@ -78,8 +90,20 @@ def make_messrate_str(pes_idx, rxn_lst,
 
 
 # Headers
-def make_header_str(spc_dct, temps, pressures):
-    """ makes the standard header and energy transfer sections for MESS input file
+def make_header_str(spc_dct, rxn_lst, pes_idx, temps, pressures):
+    """ Built the head of the MESS input file that contains various global
+        keywords used for running rate calculations.
+
+        Function determines certain input parameters for the well-extension
+        methodology based on the reaction type stored in spc_dct.
+
+        :param spc_dct:
+        :type spc_dct: dict[]
+        :param temps: temperatures for the rate calculations (in K)
+        :type temps: tuple(float)
+        :param pressures: pressures for the rate calculations (in atm)
+        :type pressures: tuple(float)
+        :rtype: str
     """
 
     ioprinter.messpf('global_header')
@@ -95,7 +119,7 @@ def make_header_str(spc_dct, temps, pressures):
     ioprinter.debug_message('     {}'.format(keystr1))
     ioprinter.debug_message('     {}'.format(keystr2))
 
-    if is_abstraction(spc_dct):
+    if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
         well_extend = None
     else:
         well_extend = 'auto'
@@ -486,9 +510,6 @@ def get_channel_data(reacs, prods, tsname,
     # Initialize the dict
     chnl_infs = {}
 
-    # Initialize the symm_barrier variable for TS
-    # symm_barrier = False
-
     # Determine the MESS data for the reactants and products
     # Gather data or set fake information for dummy reactants/products
     chnl_infs['reacs'], chnl_infs['prods'] = [], []
@@ -499,10 +520,6 @@ def get_channel_data(reacs, prods, tsname,
                 pes_model_dct_i, spc_model_dct_i,
                 run_prefix, save_prefix, model_basis_energy_dct)
             chnl_infs[side].append(chnl_infs_i)
-        # if side in rxn['dummy']:
-        #     symm_barrier = True
-        #     for _ in range(len(rxn[side])):
-        #         chnl_infs[side].append({'ene_chnlvl': 0.00})
 
     # Set up data for TS
     chnl_infs['ts'] = []
@@ -513,9 +530,6 @@ def get_channel_data(reacs, prods, tsname,
             pes_model_dct_i, spc_model_dct_i,
             run_prefix, save_prefix, model_basis_energy_dct)
         chnl_infs['ts'].append(inf_dct)
-
-    # turn back on with fixed TSs
-    # chnl_infs['ts']['symm_barrier'] = symm_barrier
 
     # Set up the info for the wells
     rwell_model = spc_model_dct_i['ts']['rwells']
