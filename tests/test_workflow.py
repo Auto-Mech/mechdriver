@@ -146,8 +146,8 @@ def _chk_therm(therm_dat_file):
 
 
 if __name__ == '__main__':
-    test__rrho()
-    # test__1dhr()
+    # test__rrho()
+    test__1dhr()
     # test__etoh()
     # test__instab()
     # test__radrad()
