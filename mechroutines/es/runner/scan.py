@@ -323,6 +323,10 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
         mod_thy_info=mod_thy_info,
         in_zma_fs=in_zma_fs)
 
+<<<<<<< HEAD
+=======
+    # Set locs for scan
+>>>>>>> 76ab1f69dcd1e906efb6eb9709cf8d42d2ed68aa
     coord_locs, save_locs = _scan_locs(
         scn_run_fs, coord_names, constraint_dct=constraint_dct)
 

@@ -8,11 +8,8 @@ import mechanalyzer
 import chemkin_io
 import automol.inchi
 from automol.inchi import formula_string as fstring
-<<<<<<< HEAD
-=======
 from phydat import phycon
 import thermfit
->>>>>>> debug thermo
 from mechanalyzer.inf import spc as sinfo
 from mechroutines.pf import thermo as thmroutines
 from mechroutines.pf import runner as pfrunner
@@ -199,6 +196,9 @@ def run(spc_rlst,
                     chn_basis_ene_dct[spc_mod][spc_basis_i] = ene_basis_i
 
             # Calculate and store the 0 K Enthalpy
+            print('basene test', spc_name)
+            print('ene spc', ene_spc)
+            print('ene basis', ene_basis)
             hf0k = thermfit.heatform.calc_hform_0k(
                 ene_spc, ene_basis, spc_basis, coeff_basis, ref_set=ref_enes)
             print('finHf0K', hf0k, 'hart')
