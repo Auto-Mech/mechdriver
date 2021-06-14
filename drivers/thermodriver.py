@@ -22,6 +22,7 @@ import mechanalyzer
 import chemkin_io
 import automol.inchi
 from automol.inchi import formula_string as fstring
+from phydat import phycon
 import thermfit
 from mechanalyzer.inf import spc as sinfo
 from mechroutines import thermo as thmroutines
@@ -231,21 +232,23 @@ def run(pes_rlst, spc_rlst,
         print('CKIN NASA STR\n')
         print(ckin_nasa_str)
 
-        nasa7_params_all = chemkin_io.parser.thermo.create_spc_nasa7_dct(
-            ckin_nasa_str)
-        ioprinter.info_message(
-            'SPECIES\t\tH(0 K)[kcal/mol]\tH(298 K)[kcal/mol]\t' +
-            'S(298 K)[cal/mol K]\n')
+        nasa7_params_all = chemkin_io.parser.thermo.create_spc_nasa7_dct(ckin_nasa_str)
+        # print('ckin_nasa_str test', ckin_nasa_str)
+        ioprinter.info_message('SPECIES           H(0 K)  H(298 K)  S(298 K)  Cp(300 K) Cp(500 K) Cp(1000 K) Cp(1500 K)\n')
+        ioprinter.info_message('                 kcal/mol kcal/mol cal/(mol K) ... \n')
         for spc_name in nasa7_params_all:
             nasa7_params = nasa7_params_all[spc_name]
-            ht0 = spc_dct[spc_name]['Hfs'][0]
-            ht298 = mechanalyzer.calculator.thermo.enthalpy(
-                nasa7_params, 298.15)
-            st298 = mechanalyzer.calculator.thermo.entropy(
-                nasa7_params, 298.15)
-            ioprinter.info_message(
-                '{}\t{:3.2f}\t{:3.2f}\t{:3.2f}'.format(
-                    spc_name, ht0, ht298/1000., st298))
+            whitespace = 18-len(spc_name)
+            h0 = spc_dct[spc_name]['Hfs'][0] * phycon.EH2KCAL
+            h298 = mechanalyzer.calculator.thermo.enthalpy(nasa7_params, 298.15) /1000.
+            s298 = mechanalyzer.calculator.thermo.entropy(nasa7_params, 298.15)
+            cp300 = mechanalyzer.calculator.thermo.heat_capacity(nasa7_params, 300)
+            cp500 = mechanalyzer.calculator.thermo.heat_capacity(nasa7_params, 500)
+            cp1000 = mechanalyzer.calculator.thermo.heat_capacity(nasa7_params, 1000)
+            cp1500 = mechanalyzer.calculator.thermo.heat_capacity(nasa7_params, 1500)
+            whitespace = whitespace*' '
+            ioprinter.info_message('{}{}{:>7.2f}{:>9.2f}{:>9.2f}{:>9.2f}{:>9.2f}{:>9.2f}{:>9.2f}'
+                    .format(spc_name, whitespace, h0, h298, s298, cp300, cp500, cp1000, cp1500))
 
         # Write all of the NASA polynomial strings
         writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)

@@ -519,7 +519,7 @@ def ring_conformer_sampling(
         cnf_save_fs, thy_info)
     frag_saved_geos = []
     for geoi in saved_geos:
-        frag_saved_geos.append(automol.geom.fragment_ring_geo(geoi))
+        frag_saved_geos.append(automol.geom.ring_fragments_geometry(geoi))
 
     # Make sample zmas
     unique_geos, unique_frag_geos, unique_zmas = [], [], []
@@ -532,7 +532,7 @@ def ring_conformer_sampling(
         for samp_zma in samp_zmas:
             if automol.ring_distances_passes(samp_zma, ring_atoms, dist_value_dct):
                 samp_geo = automol.zmat.geometry(samp_zma)
-                frag_samp_geo = automol.geom.fragment_ring_geo(samp_geo)
+                frag_samp_geo = automol.geom.ring_fragments_geometry(samp_geo)
                 if automol.geom.ring_angles_passes(samp_geo, ring_atoms):
                     if not automol.pot.low_repulsion_struct(geo, samp_geo):
                         frag_samp_unique = automol.geom.is_unique(
@@ -1063,7 +1063,7 @@ def unique_fs_ring_confs(
         if ini_rid in rng_dct:
             found_rid = rng_dct[ini_rid]
         else:
-            frag_ini_geo = automol.geom.fragment_ring_geo(inigeo)
+            frag_ini_geo = automol.geom.ring_fragments_geometry(inigeo)
             if frag_ini_geo is not None:
                 frag_ini_zma = automol.geom.zmatrix(frag_ini_geo)
             skip_trid = []
@@ -1076,7 +1076,7 @@ def unique_fs_ring_confs(
                 if trid in skip_trid:
                     continue
                 geo = cnf_save_fs[-1].file.geometry.read(tlocs)
-                frag_geo = automol.geom.fragment_ring_geo(geo)
+                frag_geo = automol.geom.ring_fragments_geometry(geo)
                 frag_zma = automol.geom.zmatrix(frag_geo)
                 if automol.zmat.almost_equal(frag_ini_zma, frag_zma,
                                              dist_rtol=0.1, ang_atol=.4):
@@ -1157,7 +1157,7 @@ def rng_loc_for_geo(geo, cnf_save_fs):
     """
 
     rid = None
-    frag_geo = automol.geom.fragment_ring_geo(geo)
+    frag_geo = automol.geom.ring_fragments_geometry(geo)
     if frag_geo is not None:
         frag_zma = automol.geom.zmatrix(frag_geo)
     checked_rids = []
@@ -1167,7 +1167,7 @@ def rng_loc_for_geo(geo, cnf_save_fs):
             continue
         checked_rids.append(current_rid)
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
-        frag_locs_geo = automol.geom.fragment_ring_geo(locs_geo)
+        frag_locs_geo = automol.geom.ring_fragments_geometry(locs_geo)
         if frag_locs_geo is None:
             rid = locs[0]
             break
