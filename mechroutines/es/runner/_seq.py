@@ -110,6 +110,8 @@ def options_matrix_run(input_writer, script_str, prefix,
     subrun_fs = autofile.fs.subrun(prefix)
     max_macro_idx, _ = max(subrun_fs[-1].existing(), default=(-1, -1))
     macro_idx = max_macro_idx + 1
+    if macro_idx == 26:
+        macro_idx = 0
     micro_idx = 0
 
     kwargs_ = dict(kwargs)

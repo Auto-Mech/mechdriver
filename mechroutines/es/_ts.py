@@ -342,7 +342,7 @@ def _nobarrier(ts_dct):
     """ Determine if reaction is barrierless
     """
     radrad = _radrad(ts_dct)
-    low_spin = bool('low' in ts_dct['class'])
+    low_spin = bool('high' not in ts_dct['class'])
     return radrad and low_spin
 
 

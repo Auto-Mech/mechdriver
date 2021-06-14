@@ -1930,7 +1930,7 @@ def get_cbh_ts(cbhlevel, zrxn):
 
     #  radical radical hydrogen abstraction needs a second site
     #  where the pi bond is formed    
-    elif 'radical radical hyd' in rxnclass:
+    elif 'radical-radical hyd' in rxnclass:
         rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         atmc, atmd = frm_key1
@@ -1947,7 +1947,7 @@ def get_cbh_ts(cbhlevel, zrxn):
     # Run the appropriate function to transform the graph so that
     # breaking bonds are order N.6 and forming are N.4 and the valences
     # of the atoms involved are appropriately altered
-    if 'radical radical hyd' in rxnclass:
+    if 'radical-radical hyd' in rxnclass:
         if cbhlevel == 'cbh0':
             frags = cbhzed_radradabs(gra, site, site2)
         elif cbhlevel == 'cbh1':

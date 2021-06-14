@@ -215,7 +215,7 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     ioprinter.info_message(' - Calculating the torsional ZPVES using MESS...')
     script_str = autorun.SCRIPT_DCT['messpf']
     tors_freqs, _ = autorun.mess.torsions(
-        script_str, tors_path, tors_geo, mess_hr_str)
+        script_str, vib_path, tors_geo, mess_hr_str)
 
     tors_zpe = (sum(tors_freqs) / 2.0) * phycon.WAVEN2EH
 
