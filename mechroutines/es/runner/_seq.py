@@ -34,7 +34,7 @@ def options_matrix_optimization(script_str, prefix,
                                 **kwargs):
     """ try several sets of options to generate an output file
 
-        :param script_str: Shell submission script for electronic structure job
+        :param script_str: BASH submission script for electronic structure job
         :type script_str: str
         :param prefix:
         :type prefix:
@@ -140,7 +140,7 @@ def options_matrix_run(input_writer, script_str, prefix,
                        **kwargs):
     """ try several sets of options to generate an output file
 
-        :param script_str: Shell submission script for electronic structure job
+        :param script_str: BASH submission script for electronic structure job
         :type script_str: str
         :param prefix:
         :type prefix:

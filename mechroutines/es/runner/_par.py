@@ -7,7 +7,7 @@
     Constructs `kwargs` dictionaries that are passed
     to elstruct package functions to write electronic structure input files.
 
-    Constructs Shell submission sctings
+    Constructs BASH submission sctings
 """
 
 import elstruct
@@ -16,7 +16,7 @@ from autorun import SCRIPT_DCT
 
 
 def qchem_params(method_dct, job=None):
-    """ Build the kwargs dictionary and Shell submission script string to
+    """ Build the kwargs dictionary and BASH submission script string to
         be used to write and run the electronic structure job.
 
         :param method_dct:
@@ -39,7 +39,7 @@ def qchem_params(method_dct, job=None):
 
 
 def _gaussian(method_dct, job=None):
-    """ Build kwargs dictionary and Shell submission script for Gaussian jobs.
+    """ Build kwargs dictionary and BASH submission script for Gaussian jobs.
 
         :param method_dct:
         :type method_dct: dict[str: obj]
@@ -105,7 +105,7 @@ def _gaussian(method_dct, job=None):
 
 
 def _molpro(method_dct, job=None):
-    """ Build kwargs dictionary and Shell submission script for Molpro jobs
+    """ Build kwargs dictionary and BASH submission script for Molpro jobs
 
         :param method_dct:
         :type method_dct: dict[str: obj]
@@ -164,7 +164,7 @@ def _molpro(method_dct, job=None):
 
 
 def _psi4(method_dct, job=None):
-    """ Build kwargs dictionary and Shell submission script for Psi4 jobs.
+    """ Build kwargs dictionary and BASH submission script for Psi4 jobs
 
         :param method_dct:
         :type method_dct: dict[str: obj]
@@ -226,12 +226,6 @@ def molpro_opts_mat(spc_info, geo):
     """ prepare the errors and options mat to perform successive
         single-point energy calculations in Molpro when the RHF fails to
         converge. This currently only works for doublets.
-
-        :param spc_info:
-        :type spc_info:
-        :param geo: input molecular geometry object
-        :type geo: automol.geom object
-        :rtype: (tuple(str), tuple(dict[str: str]))
     """
 
     # Get the nelectrons, spins, and orbitals for the wf card

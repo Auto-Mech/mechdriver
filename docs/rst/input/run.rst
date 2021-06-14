@@ -1,30 +1,30 @@
 
 run.dat
--------
+=======
 
-Central input file which describes all of the individual calculations the user wishes to run for one instance of MechDriver. User-defines these calculations via several containing lists of various formats that are detailed below.  Information in these sections will rely on definitions the user provides in the other input files.  These sections fall under three broad categories:
-
-|    (1) Options for various I/O :ref:`input<input-block>`
-|
-|    (2) Lists of Reactions and Species defined in mechanism to run calculations for
-|            pes, spc
-|
-|    (3) Lists of Tasks for Driver Tasks (electronic structure, kinetics, thermo methods):
-|            els, thermo, trans, ktp, process
-
-As can be seen there are multiple possible sections the user may define from type (2) and (3). Each of these sections are defined broadly via::
+Central input file which details the calculations that will be run during an instance of MechDriver. The user supplies several aspects of the calculation with sections::
 
     <block_name>
         <block_contents>
     end <block_name>
 
+Three different primary blocks set a full mechdriver run.
 
-.. _input-block:
+    (1) Input/Output:
+    (2) Chemistry Lists (parts of mechanism to run):
+            pes, spc
+    (3) Driver Tasks (electronic structure, kinetics, thermo methods):
+            els, thermo, trans, ktp, process
 
-Input Section
-~~~~~~~~~~~~~
+One or more sections from type (2) and (3) can be provided.
 
-Specifies various I/O options such as the paths where calculations are performed and saved, as well as what the input mechanism an species file types are.
+For many of the above, the user will supply labels that correspond to blocks of info that is pulled from the other input file. Auxlilary information and defintions will come from other input
+
+
+Input Block
+-----------
+
+Simple block that specifies forms of input
 
 Example::
 
@@ -35,112 +35,98 @@ Example::
     end input
 
 
-Chemistry Sections
-~~~~~~~~~~~~~~~~~~
+.. csv-table:: keywords for theory blocks
+    :file: tables/runinp_keys.csv
+    :header-rows: 1
+    :widths: 10, 10, 10, 10
 
-Two separate sections, a `pes` block and `spc` block can be placed in the input to 
-detail the potential energy surfaces and species from the input mechanism (defined in the mechanism.dat and species.csv) for which to perform calculations.
+
+Chemistry Blocks
+----------------
+
+Tells the code what to do calculatiions to do for certain parts of the mechanism defined in the mech.dat file and spc.da file.
+
+Currently both can be given in an output; however the PES block is given by
+priority and the SPC block is combined with it. Certain cases where a block
+is required.
+
+All of the components listed in the two blocks will be done the instance of mechdriver.
+
+Lists the Potential Energy Surfaces and constituent channels
+(composed of species and transition states) for which to perform calculations.
+
+The indices for the PESs and channels correspond to the those provided in input
+`mechanism.dat` file. Similar to the PES Block, this section lists the species for which to perform calculations.
+The indices for the species correspond to the order of the species provided in the input `species.csv` 
+
+Note that multiple PES-Channel and species combinations can be given in one input. Lists can be extended across multiple lines. All of the components listed in the two blocks will be done the instance of mechdriver.
+
+Note that all drivers can take both PES and spc lists. Will do them in that order. However, kTPDriver requires PES lists to be given.
 
 General Format::
-
-    pes
-        <PES indices>: <Channel indices>
-    end
 
     spc
         <Species indices>
     end
 
-The indices for the PESs and channels correspond to the those provided in input
-`mechanism.dat` file. Similar to the PES Section, this section lists the species for which to perform calculations.
-The indices for the species correspond to the order of the species provided in the input `species.csv` 
+    pes
+        <PES indices>: <Channel indices>
+    end
 
-PES Block Example::
+Example 1::
 
     pes
-        1: 1          # Runs Channel 1 on PES 1
-        2-4: 1-2      # Runs Channels 1,2 on PES 2,3,4
-        5-8: 1,6-10   # Runs Channels 1,6,7,8,9,10 on PES 5,6,7,8
-        9,12: 1-4,6   # Runs Channels 1,2,3,4,6 on PES 9,12
+        1: 1         # Runs Channel 1 on PES 1
+        1-2: 1-2     # Runs Channels 1,2 on PESs 1,2
+        1,3: 1-4     # Runs Channels 1,2,34 on PESs 1,3
+        1,3: 1-4,6   # Runs Channels 1,2,34 on PESs 1,3
     end
 
-SPC Block Example::
+Example 2::
+
+    pes
+       1: 1-5        # Runs Channels 1,2,3,4,5 on PES 1
+       2: 1,6-10     # Runs Channels 1,6,7,8,9,19 on PES 2
+       5: 8          # Runs Channel 8 on PES 5
+    end
+
+Example 3::
 
     spc
-        1             # Runs species 1
-        2,5           # Runs species 1,2
-        7-9           # Runs species 7,8,9
-        10,13-15      # Runs species 10,13,14,15
-        17-19,22      # Runs species 17,18,19,22
-        24-26,28-30   # Runs species 24,25,26,28,29,30
+        1          # Runs species 1
+        1,3        # Runs species 1,3
+        1-4        # Runs species 1,2,3,4
+        1,3-5      # Runs species 1,3,4,5
+        1-3,6      # Runs species 1,2,3,6
+        1-3,5-7    # Runs species 1,2,3,5,6,7
     end
 
-Note that any combination of PESs and channels can be given, as well as any number
-of species. Moreover the user can define sets of indices on as many lines as they see fit. In the above example, a requested driver will exectute requested tasks for ALL the
-channels and species detailed in the accompanying comment lines. Any redundancy of
-among the blocks may cost the user time but generally will not breakt things because
-of the interaction with the run-save filesystem.
 
-The requirements for `which` block must be provided depends somewhat on the driver
-the user wishes to use in the MechDriver run; however most drivers can utilize both
-sections with:
-ESDriver: uses either/both pes and spc
-ThermoDriver: uses either/both pes and spc (ignores TS)
-kTPDriver: uses only pes
-TransDriver: uses either/both pes and spc
-ProcDriver: ???
+Task Blocks
+----------
 
-Again from the above, we see that most drivers can utilize one or the other blocks.
-Meaning you can run a set of tasks having only defined one of the blocks. In fact,
-most blocks can loop over species specified in both blokcs. In the cases where user
-has provided both a pes and spc block for runs a driver that uses both. The driver
-will first loop over all tasks from the PES block first, then loop over all tasks
-for the SPC block.
+For every task block defined in the input, this will signal MechDriver to run its various sub-Drivers.
 
+General format::
 
-Task Sections
-~~~~~~~~~~~~~
-
-For each subdriver the user wishes to run with MechDriver, the user provides a section
-with a list of tasks they wish the driver to execute. If no subdriver section is provided,
-the driver will not be run during the MechDriver instance. The format of the section
-varies upon which driver is specified, although there is a general format::
-
-    <driver name>
+    tsks
         <object>  <task>  <keyword1=value  keyword2=value …>
         <object>  <task>  <keyword1=value  keyword2=value …>
         <object>  <task>  <keyword1=value  keyword2=value …>
         …
-    end <driver name>
+    end
 
-The initial <object> is only utilized by ESDriver. Here the user specificies if the
-user wishes to run a given task for `spc` or `ts` or `all`. For all drivers only
-the task and keyword-value pairs are required.
+Above, the <object> is either spc (species, i.e. reacs, prods) or ts
 
-Each task and keyword-value pair are driver specific. Moreover, only keywords are only
-pertinent to certain tasks. See link? The only formatting
-guidelines of note is that the the keyword-value pairs must be input as presented, where
-each pair has only an "=" sign and no whitespace.
+Above the <task> is what electronic structure calculation to be run on object.
 
-Based on the task, certain keywords may be required, but in general, the user may define
-any number of allowed task keywords on the line.
+keyword=value cannot have spaces in between them.
 
-Example::
-    <es>
-
-Note the names on `lvl` and `mod` keywords. These correspond to names defined in
-theory.dat and models.dat.
-
-Similar to the other blocks, any number of tasks can be provided be provided in the
-subdriver task block.
-
-While the subdriver task blocks can placed in the input file, the subdrivers are
-launched in a specific order:
-(1) ESDriver, (2) ThermoDriver, (3) TransDriver, (4) kTPDriver, (5) ProcDriver
+Each task is given in the following format <obj>_<job>
 
 
-Comments
-~~~~~~~~
+Commenting out Blocks
+---------------------
 
     In general, all text preceded by `#` symbols will be ignored bythe parser. 
 

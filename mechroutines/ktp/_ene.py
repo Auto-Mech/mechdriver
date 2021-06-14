@@ -122,7 +122,8 @@ def sum_channel_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
     for spc, ene in sum_ene.items():
         sum_ene[spc] = (ene - ref_ene) * phycon.EH2KCAL
 
-    # Set the inner TS ene and scale them
+# Set the inner TS ene and scale them
+
     if channel_infs['ts'][0]['writer'] in ('pst_block', 'vrctst_block'):
         if len(channel_infs['reacs']) == 2:
             ts_enes = [sum(inf['ene_chnlvl'] for inf in channel_infs['reacs'])]

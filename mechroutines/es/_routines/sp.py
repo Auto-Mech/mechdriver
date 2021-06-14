@@ -19,7 +19,7 @@ _JSON_SAVE = []
 
 
 def run_energy(zma, geo, spc_info, thy_info,
-               geo_run_fs, geo_save_fs, locs,
+               geo_save_fs, geo_run_path, geo_save_path, locs,
                script_str, overwrite,
                retryfail=True, highspin=False, **kwargs):
     """ Assesses if an electronic energy exists in the CONFS/SP/THY layer
@@ -29,25 +29,12 @@ def run_energy(zma, geo, spc_info, thy_info,
         and then parsed within the run filesys, then that the energy and
         job input is written into the save filesys.
 
-        :param zma: Z-Matrix for molecular structure to perform calculation
-        :type zma: automol.zmat object
-        :param geo: goemetry for molecular structure to perform calculation
-        :type geo: automol.geom object
-        :param spc_info:
-        :type spc_info:
-        :param thy_info:
-        :type thy_info:
-        :geo_run_fs: filesystem object for layer where structure is in RUN
-        :geo_run_fs: autofile.fs object
-        :geo_save_fs: filesystem object for layer where structure is in SAVE
-        :geo_save_fs: autofile.fs object
-        :param script_str: shell script for executing electronic structure job
-        :type script_str: str
-        :param overwrite:
+        :param zma: Z-Matrix for species/TS conformer
+        :type zma: automol Z-Matrix data structure
     """
 
-    geo_run_path = geo_run_fs[-1].path(locs)
-    geo_save_path = geo_save_fs[-1].path(locs)
+    # geo_save_fs and locs unneeded for this
+    _, _ = geo_save_fs, locs
 
     # Prepare unique filesystem since many energies may be under same directory
     if not highspin:
@@ -124,14 +111,11 @@ def run_energy(zma, geo, spc_info, thy_info,
 
 
 def run_gradient(zma, geo, spc_info, thy_info,
-                 geo_run_fs, geo_save_fs, locs,
+                 geo_save_fs, geo_run_path, geo_save_path, locs,
                  script_str, overwrite,
                  retryfail=True, **kwargs):
     """ Determine the gradient for the geometry in the given location
     """
-
-    geo_run_path = geo_run_fs[-1].path(locs)
-    geo_save_path = geo_save_fs[-1].path(locs)
 
     # Set input geom
     if geo is not None:
@@ -204,16 +188,18 @@ def run_gradient(zma, geo, spc_info, thy_info,
 
 
 def run_hessian(zma, geo, spc_info, thy_info,
-                geo_run_fs, geo_save_fs, locs,
+                geo_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite,
                 retryfail=True, **kwargs):
     """ Determine the hessian for the geometry in the given location
     """
 
     # Set the run filesystem information
-    geo_run_path = geo_run_fs[-1].path(locs)
-    geo_save_path = geo_save_fs[-1].path(locs)
     run_fs = autofile.fs.run(geo_run_path)
+
+    # if prog == 'molpro2015':
+    #     geo = hess_geometry(out_str)
+    #     scn_save_fs[-1].file.geometry.write(geo, locs)
 
     # Set input geom
     # Warning using internal coordinates leads to inconsistencies with Gaussian
@@ -292,15 +278,13 @@ def run_hessian(zma, geo, spc_info, thy_info,
 
 
 def run_vpt2(zma, geo, spc_info, thy_info,
-             geo_run_fs, geo_save_fs, locs,
+             geo_save_fs, geo_run_path, geo_save_path, locs,
              script_str, overwrite,
              retryfail=True, **kwargs):
     """ Perform vpt2 analysis for the geometry in the given location
     """
 
     # Set the run filesystem information
-    geo_run_path = geo_run_fs[-1].path(locs)
-    geo_save_path = geo_save_fs[-1].path(locs)
     run_fs = autofile.fs.run(geo_run_path)
 
     # Assess if symmetry needs to be broken for the calculation
@@ -387,15 +371,13 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 
 
 def run_prop(zma, geo, spc_info, thy_info,
-             geo_run_fs, geo_save_fs, locs,
+             geo_save_fs, geo_run_path, geo_save_path, locs,
              script_str, overwrite,
              retryfail=True, **kwargs):
     """ Determine the properties in the given location
     """
 
     # Set input geom
-    geo_run_path = geo_run_fs[-1].path(locs)
-    geo_save_path = geo_save_fs[-1].path(locs)
     if geo is not None:
         job_geo = geo
     else:

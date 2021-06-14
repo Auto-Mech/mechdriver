@@ -47,7 +47,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure tsk
+        :param es_keyword_dct: keyword-value pairs for electronic structure task
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
@@ -382,6 +382,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         # Run the job over all the conformers requested by the user
         for ini_locs in ini_rng_cnf_locs_lst:
             ini_cnf_run_fs[-1].create(ini_locs)
+            geo_run_path = ini_cnf_run_fs[-1].path(ini_locs)
             geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
             ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
             print('Running task for geometry at {}', geo_save_path)
@@ -389,7 +390,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
             ES_TSKS[job](
                 zma, geo, spc_info, mod_thy_info,
-                ini_cnf_run_fs, ini_cnf_save_fs, ini_locs,
+                ini_cnf_save_fs, geo_run_path, geo_save_path, ini_locs,
                 script_str, overwrite,
                 retryfail=retryfail, **kwargs)
 
@@ -400,21 +401,6 @@ def tau_tsk(job, spc_dct, spc_name,
     """ Energies, gradients, and hessians,
         for set of arbitrarily sampled torsional coordinates
         with all other coordinates optimized
-
-        :param job:
-        :type job:
-        :param spc_dct:
-        :type spc_dct:
-        :param spc_name:
-        :type spc_name:
-        :param thy_dct:
-        :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure tsk
-        :type es_keyword_dct: dict[str:str]
-        :param run_prefix: root-path to the run-filesystem
-        :type run_prefix: str
-        :param save_prefix: root-path to the save-filesystem
-        :type save_prefix: str
     """
     spc_dct_i = spc_dct[spc_name]
 
@@ -558,6 +544,7 @@ def tau_tsk(job, spc_dct, spc_name,
 
             # Run the job over all the conformers requested by the user
             for locs in tau_save_fs[-1].existing():
+                geo_run_path = tau_run_fs[-1].path(locs)
                 if db_style == 'jsondb':
                     geo_save_path = tau_save_fs[-1].root.path()
                     geo = tau_save_fs[-1].json.geometry.read(locs)
@@ -568,7 +555,7 @@ def tau_tsk(job, spc_dct, spc_name,
                 zma = None
                 ES_TSKS[job](
                     zma, geo, spc_info, mod_thy_info,
-                    tau_save_fs, locs,
+                    tau_save_fs, geo_run_path, geo_save_path, locs,
                     script_str, overwrite,
                     retryfail=retryfail, **kwargs)
                 ioprinter.obj('vspace')
@@ -587,6 +574,7 @@ def tau_tsk(job, spc_dct, spc_name,
             for locs in tau_save_fs.existing():
                 ioprinter.info_message(
                     'HESS Number {}'.format(hess_cnt+1), newline=1)
+                geo_run_path = tau_run_fs[-1].path(locs)
                 if db_style == 'directory':
                     geo_save_path = tau_save_fs[-1].path(locs)
                     if tau_save_fs[-1].file.hessian.exists(locs):
@@ -601,10 +589,11 @@ def tau_tsk(job, spc_dct, spc_name,
                         hess_cnt += 1
                         continue
                     geo = tau_save_fs[-1].json.geometry.read(locs)
+                zma = None
                 tau_run_fs[-1].create(locs)
                 ES_TSKS[job](
-                    None, geo, spc_info, mod_thy_info,
-                    tau_run_fs, tau_save_fs, locs,
+                    zma, geo, spc_info, mod_thy_info,
+                    tau_save_fs, geo_run_path, geo_save_path, locs,
                     script_str, overwrite,
                     retryfail=retryfail, **kwargs)
                 hess_cnt += 1
@@ -628,21 +617,6 @@ def hr_tsk(job, spc_dct, spc_name,
         (relaxed) or energies (rigid) points along
         conformer structures, as well as __ calculations using some
         saved conformer as input.
-
-        :param job:
-        :type job:
-        :param spc_dct:
-        :type spc_dct:
-        :param spc_name:
-        :type spc_name:
-        :param thy_dct:
-        :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
-        :type es_keyword_dct: dict[str:str]
-        :param run_prefix: root-path to the run-filesystem
-        :type run_prefix: str
-        :param save_prefix: root-path to the save-filesystem
-        :type save_prefix: str
     """
 
     spc_dct_i = spc_dct[spc_name]
@@ -776,12 +750,14 @@ def hr_tsk(job, spc_dct, spc_name,
                 _, scn_locs = scan.scan_locs(
                     ini_scn_save_fs, tors_names, constraint_dct=constraint_dct)
                 for locs in scn_locs:
+                    geo_run_path = ini_scn_run_fs[-1].path(locs)
+                    geo_save_path = ini_scn_save_fs[-1].path(locs)
                     geo = ini_scn_save_fs[-1].file.geometry.read(locs)
                     zma = ini_scn_save_fs[-1].file.zmatrix.read(locs)
                     ini_scn_run_fs[-1].create(locs)
                     ES_TSKS[job](
                         zma, geo, spc_info, mod_thy_info,
-                        ini_scn_run_fs, ini_scn_save_fs, locs,
+                        ini_scn_save_fs, geo_run_path, geo_save_path, locs,
                         script_str, overwrite,
                         retryfail=retryfail, **kwargs)
                     ioprinter.obj('vspace')
@@ -793,21 +769,6 @@ def rpath_tsk(job, spc_dct, spc_name,
               thy_dct, es_keyword_dct,
               run_prefix, save_prefix):
     """ run a scan over the specified torsional coordinates
-
-        :param job:
-        :type job:
-        :param spc_dct:
-        :type spc_dct:
-        :param spc_name:
-        :type spc_name:
-        :param thy_dct:
-        :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure tsk
-        :type es_keyword_dct: dict[str:str]
-        :param run_prefix: root-path to the run-filesystem
-        :type run_prefix: str
-        :param save_prefix: root-path to the save-filesystem
-        :type save_prefix: str
     """
 
     # Get dct for specific species task is run for
@@ -897,11 +858,14 @@ def rpath_tsk(job, spc_dct, spc_name,
 
         # Need to put in something with the IRC idxs
         for locs in ini_scn_save_fs[-1].existing():
+            geo_run_path = ini_scn_run_fs[-1].path(locs)
+            geo_save_path = ini_scn_save_fs[-1].path(locs)
             geo = ini_scn_save_fs[-1].file.geometry.read(locs)
+            zma = None
             ini_scn_run_fs[-1].create(locs)
             ES_TSKS[job](
-                None, geo, spc_info, mod_thy_info,
-                ini_scn_run_fs, ini_scn_save_fs, locs,
+                zma, geo, spc_info, mod_thy_info,
+                ini_scn_save_fs, geo_run_path, geo_save_path, locs,
                 script_str, overwrite, **kwargs)
             ioprinter.obj('vspace')
 
@@ -914,18 +878,10 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
     """ Determine if an electronic structure task should be skipped based on
         various parameters.
 
-        :param tsk:
-        :type tsk:
         :param spc_dct: species dictionary
         :type spc_dct: dictionary
         :param spc_name: name of species
         :type spc_name: string
-        :param thy_dct:
-        :type thy_dct:
-        :param es_keyword_dct:
-        :type es_keyword_dct:
-        :param save_prefix:
-        :type save_prefix: str
         :rtype: bool
     """
 

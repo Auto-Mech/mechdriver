@@ -20,19 +20,6 @@ from mechroutines.es._routines import _sadpt as sadpt
 def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
            run_prefix, save_prefix):
     """ New run function
-
-        :param spc_dct:
-        :type spc_dct:
-        :param tsname:
-        :type tsname:
-        :param thy_dct:
-        :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
-        :type es_keyword_dct: dict[str:str]
-        :param run_prefix: root-path to the run-filesystem
-        :type run_prefix: str
-        :param save_prefix: root-path to the save-filesystem
-        :type save_prefix: str
     """
 
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
@@ -56,19 +43,6 @@ def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
 def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
               runfs_dct, savefs_dct):
     """ find a transition state
-
-        :param spc_dct:
-        :type spc_dct:
-        :param tsname:
-        :type tsname:
-        :param method_dct:
-        :type method_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
-        :type es_keyword_dct: dict[str:str]
-        :param runfs_dct:
-        :type runfs_dct:
-        :param savefs_dct:
-        :type savefs_dct:
     """
 
     # Get objects for the calculations
@@ -104,19 +78,6 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
 def run_pst(spc_dct, tsname, savefs_dct,
             zma_locs=(0,)):
     """ For pst calcs, make a TS/00/Z dir and save
-
-        :param spc_dct:
-        :type spc_dct:
-        :param tsname:
-        :type tsname:
-        :param method_dct:
-        :type method_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
-        :type es_keyword_dct: dict[str:str]
-        :param runfs_dct:
-        :type runfs_dct:
-        :param savefs_dct:
-        :type savefs_dct:
     """
 
     # Pull stuff from dcts
@@ -139,10 +100,6 @@ def run_pst(spc_dct, tsname, savefs_dct,
 def _ts_search_method(ts_dct):
     """ Determine the algorithm that should be used for a given transition
         state by looking at the requested user input or determining
-
-        :param ts_dct:
-        :type ts_dct: dict
-        :rtype: str
     """
 
     print('Determining if TS search algorithm...')
@@ -178,19 +135,6 @@ def _ts_search_method(ts_dct):
 def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                       run_prefix, save_prefix):
     """ set the theory
-
-        :param tsname:
-        :type tsname:
-        :param ts_dct:
-        :type ts_dct:
-        :param thy_dct:
-        :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
-        :type es_keyword_dct: dict[str:str]
-        :param run_prefix: root-path to the run-filesystem
-        :type run_prefix: str
-        :param save_prefix: root-path to the save-filesystem
-        :type save_prefix: str
     """
 
     rxn_info = ts_dct['rxn_info']
