@@ -33,7 +33,7 @@ def theory_dictionary(thy_str):
     """ Parse the theory.dat input for all of the user-defined level blocks.
         These blocks are formatted into several keyword-value dictionaries
         consisting of user-defined keywords as well as defaults:
-        
+
             {'user-defined level name': {keyword-value dictionary for level}}
 
         These indiviual level dicts are packaged into an overall `thy_dct`.

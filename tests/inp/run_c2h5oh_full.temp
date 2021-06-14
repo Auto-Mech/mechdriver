@@ -1,0 +1,26 @@
+input
+    run_prefix = {0}
+    save_prefix = {1}
+end input
+
+spc
+    9,2,3,6
+end spc
+
+els
+    spc init_geom     runlvl=mp2_sto   inplvl=mp2_sto
+    spc conf_samp     runlvl=mp2_sto   inplvl=mp2_sto
+    # spc hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhr
+    # spc hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhrf
+    spc hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=1dhrfa
+    # spc hr_scan       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=mdhr
+    # spc hr_hess       runlvl=mp2_sto   inplvl=mp2_sto  tors_model=mdhr
+    spc conf_hess     runlvl=mp2_sto   inplvl=mp2_sto
+    spc conf_energy   runlvl=mp2_gs    inplvl=mp2_sto
+end els
+
+thermo
+    write_mess      kin_model=global  spc_model=onedhrmod
+    run_mess        kin_model=global  spc_model=onedhrmod  nprocs=10
+    run_fits        kin_model=global  spc_model=onedhrmod
+end thermo
