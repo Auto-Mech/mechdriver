@@ -1,0 +1,19 @@
+input
+    run_prefix = {0}
+    save_prefix = {1}
+end input
+
+spc
+    3,4,6
+end spc
+
+els
+    spc init_geom     runlvl=mp2_sto   inplvl=mp2_sto
+    spc conf_samp     runlvl=mp2_sto   inplvl=mp2_sto
+    spc conf_prop     runlvl=mp2_sto   inplvl=mp2_sto
+end els
+
+trans
+    onedmin           bath=He  nsamp=4  njobs=3  conf=round
+    write_transport   runlvl=mp2_sto   
+end thermo

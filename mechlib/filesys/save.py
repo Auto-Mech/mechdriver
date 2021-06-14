@@ -5,119 +5,159 @@
 import automol
 import elstruct
 import autofile
-from mechroutines.es import runner as es_runner
+from mechlib.amech_io import printer as ioprinter
 
 
-def structure(run_fs, save_fs, locs, job, mod_thy_info,
-              zma_locs=(0,), in_zma_fs=False, cart_to_zma=False):
-    """ Save a geometry and associated information from some
-        electronic structure routine into the filesystem.
+def atom(sp_ret, cnf_fs, thy_locs, zma,
+         rng_locs=None, tors_locs=None, zma_locs=(0,)):
+    """ Save an all of the information for an atom into the
+        CONF layer of the save filesystem: SPC/THY/CONFS/Z
+        that can be parsed from a single-point energy job.
+
+        :param sp_ret:
+        :type sp_ret:
+        :param cnf_fs:
     """
 
-    success, ret = es_runner.read_job(job=job, run_fs=run_fs)
+    # Build filesystem locs and objects
+    cnf_locs, zma_locs = _generate_locs(
+        rng_locs=rng_locs, tors_locs=tors_locs, zma_locs=zma_locs)
 
-    if success:
+    # Save an arbitrary geom and zma
+    cnf_fs[-1].create(cnf_locs)
+    zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
+    zma_fs[-1].create(zma_locs)
 
-        # Get the geo, zma, and ene based on job type
-        ene, zma, geo = _read(run_fs, job, cart_to_zma=cart_to_zma)
+    geo = automol.zmat.geometry(zma)
+    cnf_fs[-1].file.geometry.write(geo, cnf_locs)
+    zma_fs[-1].file.zmatrix.write(zma, zma_locs)
 
-        # Obtain inf obj and inp str to write in filesys
-        inf_obj, inp_str, _ = ret
-
-        # Set and print the save path information
-        save_path = save_fs[-1].path(locs)
-        print(" - Saving...")
-        print(" - Save path: {}".format(save_path))
-
-        # Save the geometry information
-        save_fs[-1].create(locs)
-        save_fs[-1].file.geometry_info.write(inf_obj, locs)
-        save_fs[-1].file.geometry_input.write(inp_str, locs)
-        save_fs[-1].file.geometry.write(geo, locs)
-        save_fs[-1].file.energy.write(ene, locs)
-
-        # Save zma information seperately, if required
-        if not in_zma_fs:
-            zma_save_fs = autofile.fs.zmatrix(save_path)
-            zma_save_fs[-1].create(zma_locs)
-            zma_save_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
-            zma_save_fs[-1].file.geometry_input.write(inp_str, zma_locs)
-            zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
-        elif zma:
-            save_fs[-1].file.zmatrix.write(zma, locs)
-
-        # Saving the energy to an SP filesys
-        print(" - Saving energy...")
-        sp_save_fs = autofile.fs.single_point(save_path)
-        sp_save_fs[-1].create(mod_thy_info[1:4])
-        sp_save_fs[-1].file.input.write(inp_str, mod_thy_info[1:4])
-        sp_save_fs[-1].file.info.write(inf_obj, mod_thy_info[1:4])
-        sp_save_fs[-1].file.energy.write(ene, mod_thy_info[1:4])
-
-        saved = True
-
-    else:
-        saved = False
-
-    return saved
+    # Save data from energy job
+    sp_fs = autofile.fs.single_point(cnf_fs[-1].path(cnf_locs))
+    _save_energy(sp_ret, sp_fs, thy_locs)
 
 
-def instability(conn_zma, disconn_zmas,
-                instab_save_fs, cnf_save_fs,
-                zma_locs=(0,),
-                save_cnf=False):
+def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
+              zrxn=None, init_zma=None,
+              rng_locs=None, tors_locs=None, zma_locs=None):
+    """ Save a conformer and relevant information.
+
+        thy_fs = (_fs, _locs)
+    """
+
+    # Build filesystem locs and objects
+    cnf_locs, zma_locs = _generate_locs(
+        rng_locs=rng_locs, tors_locs=tors_locs, zma_locs=zma_locs)
+
+    zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
+    sp_fs = autofile.fs.single_point(cnf_fs[-1].path(cnf_locs))
+
+    # Save data from optimization and hessian jobs
+    _save_geom(opt_ret, cnf_fs, cnf_locs)
+    _save_zmatrix(opt_ret, zma_fs, zma_locs, init_zma=init_zma)
+    _save_energy(opt_ret, sp_fs, thy_locs)
+
+    if hess_ret is not None:
+        _save_hessian(hess_ret, cnf_fs, cnf_locs)
+
+    # Save ring and cnf samp files, if needed
+    init_cnf_samp(cnf_fs, cnf_locs)
+
+    # Save auxiliary information for the structure, if needed
+    _save_rotors(zma_fs, zma_locs, zrxn=zrxn)
+    _save_rings(zma_fs, zma_locs, zrxn=zrxn)
+    _save_reaction(zma_fs, zma_locs, zrxn=zrxn)
+
+
+def sym_indistinct_conformer(geo, cnf_fs, cnf_tosave_locs, cnf_saved_locs):
+    """ Save conformer that is symmetryically similar to another conformer
+        that is in the filesystem.
+    """
+
+    # Set the path to the conf filesys with sym similar
+    cnf_save_path = cnf_fs[-1].path(cnf_saved_locs)
+
+    # Build the sym file sys
+    sym_save_fs = autofile.fs.symmetry(cnf_save_path)
+    sym_save_path = cnf_fs[-1].path(cnf_saved_locs)
+    ioprinter.save_symmetry(sym_save_path)
+    sym_save_fs[-1].create([cnf_tosave_locs[-1]])
+    sym_save_fs[-1].file.geometry.write(geo, [cnf_tosave_locs[-1]])
+
+
+def scan_point_structure(opt_ret, scn_fs, scn_locs, thy_locs, job,
+                         init_zma=None, init_geo=None):
+    """ save info for the hindered rotor
+    """
+
+    if job == elstruct.Job.OPTIMIZATION:
+        _save_geom(opt_ret, scn_fs, scn_locs)
+        _save_zmatrix(opt_ret, scn_fs, scn_locs, init_zma=init_zma)
+    elif job == elstruct.Job.ENERGY:
+        scn_fs[-1].create(scn_locs)
+        scn_fs[-1].file.zmatrix.write(init_zma, scn_locs)
+        if init_geo is None:
+            init_geo = automol.zmat.geometry(init_zma)
+        scn_fs[-1].file.geometry.write(init_geo, scn_locs)
+
+    sp_fs = autofile.fs.single_point(scn_fs[-1].path(scn_locs))
+    _save_energy(opt_ret, sp_fs, thy_locs)
+
+
+def init_cnf_samp(cnf_fs, cnf_locs):
+    """ init cnf samp
+    """
+
+    inf_obj = autofile.schema.info_objects.conformer_trunk(0)
+    inf_obj.nsamp = 1
+
+    if not cnf_fs[0].file.info.exists():
+        rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
+        rinf_obj.nsamp = 1
+        cnf_fs[0].file.info.write(rinf_obj)
+    if not cnf_fs[1].file.info.exists([cnf_locs[0]]):
+        cinf_obj = autofile.schema.info_objects.conformer_branch(0)
+        cinf_obj.nsamp = 1
+        cnf_fs[1].file.info.write(cinf_obj, [cnf_locs[0]])
+
+
+# Saving other
+def instability(conn_zma, disconn_zmas, cnf_save_fs,
+                rng_locs=None, tors_locs=None, zma_locs=(0,)):
     """ write the instability files
     """
 
-    # Get a connected geometry
+    cnf_locs, zma_locs = _generate_locs(
+        rng_locs=rng_locs, tors_locs=tors_locs, zma_locs=zma_locs)
+
+    # Get structural and instability info for storage
     conn_geo = automol.zmat.geometry(conn_zma)
 
-    # Save the geometry information
-    instab_save_fs[-1].create()
-    instab_save_fs[-1].file.geometry.write(conn_geo)
-    instab_save_path = instab_save_fs[-1].path()
-
-    # Grab the zma and instability transformation
     zrxn, conn_zma = automol.reac.instability_transformation(
         conn_zma, disconn_zmas)
 
+    # Save structure and stability info in CONF and Z filesys
+    cnf_save_fs[-1].create(cnf_locs)
+    cnf_save_fs[-1].file.geometry.write(conn_geo, cnf_locs)
+    cnf_save_path = cnf_save_fs[-1].path(cnf_locs)
+
     # Save zma information seperately, if required
-    zma_save_fs = autofile.fs.zmatrix(instab_save_path)
+    zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
     zma_save_fs[-1].create(zma_locs)
     zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
-
-    # Write the files into the filesystem
-    zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
-
-    if save_cnf:
-
-        # Save the geometry information
-        cnf_locs = (
-            autofile.schema.generate_new_ring_id(),
-            autofile.schema.generate_new_conformer_id()
-        )
-        cnf_save_fs[-1].create(cnf_locs)
-        cnf_save_fs[-1].file.geometry.write(conn_geo, cnf_locs)
-        cnf_save_path = cnf_save_fs[-1].path(cnf_locs)
-
-        # Save zma information seperately, if required
-        zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
-        zma_save_fs[-1].create(zma_locs)
-        zma_save_fs[-1].file.zmatrix.write(conn_zma, zma_locs)
+    zma_save_fs[-1].file.instability.write(zrxn, zma_locs)
 
     # Set and print the save path information
     print(" - Saving...")
-    print(" - Save path: {}".format(instab_save_path))
-    if save_cnf:
-        print(" - Save path: {}".format(cnf_save_path))
+    print(" - Save path: {}".format(cnf_save_path))
 
 
-def flux(vrc_ret, ts_run_fs, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
+def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
     """ Save the VaReCoF flux and input
     """
 
     # Unpack the ret
-    inf_obj, inp_strs, out_str = vrc_ret
+    _, inp_strs, _ = vrc_ret
     tst_str, divsur_str, molpro_str, tml_str, struct_str, pot_str = inp_strs
 
     # Get the flux string (somehow)
@@ -366,10 +406,10 @@ def _save_rings(zma_fs, zma_locs, zrxn=None):
     """
 
     zma = zma_fs[-1].file.zmatrix.read(zma_locs)
-    rings_atoms = automol.zmat.all_rings_atoms(zma, zrxn=zrxn)
-    ring_dct = automol.zmat.all_rings_dct(zma, rings_atoms)
-    if ring_dct:
-        zma_fs[-1].file.ring_torsions.write(ring_dct, zma_locs)
+    rings_atoms = automol.zmat.all_rings_atoms(zma, zrxn)
+    tors_dct = automol.zmat.all_rings_dct(zma, rings_atoms)
+    if tors_dct:
+        zma_fs[-1].file.ring_torsions.write(tors_dct, zma_locs)
 
 
 def _save_reaction(zma_fs, zma_locs, zrxn=None):

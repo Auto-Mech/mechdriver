@@ -2,8 +2,7 @@
 PES printing
 """
 
-from mechlib.amech_io.printer import message
-
+from mechlib.amech_io.printer._print import message
 
 
 def pes(pes_idx, formula, sub_pes_idx):
@@ -11,6 +10,7 @@ def pes(pes_idx, formula, sub_pes_idx):
     """
     message('Running PES {}: {}, SUB PES {}'.format(
                   pes_idx, formula, sub_pes_idx), newline=1)
+
 
 def channel(chn_idx, reacs, prods):
     """ a

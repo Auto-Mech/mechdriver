@@ -2,10 +2,9 @@
 general task prints
 """
 
-# import logging
-import automol
-from mechlib.amech_io.printer import message
+from mechlib.amech_io.printer._print import message
 from mechlib.amech_io.printer._lib import obj
+
 
 TASK_STR = """Task
   {}
@@ -60,11 +59,10 @@ def output_keyword_list(es_keyword_dct, thy_dct=None):
     obj('vspace')
 
 
-
 def messpf(statement, path=None):
     """ a
     """
-    obj('vspace')
+    # obj('vspace')
     if statement == 'write_header':
         obj('line_dash')
         message('Preparing MESSPF input files for all species', newline=1)
@@ -98,7 +96,7 @@ def messpf(statement, path=None):
         message('Preparing reaction channel section for MESS input... ')
 
 
-def nasa(statement, spc_name=None, temps=None):
+def nasa(statement, spc_name=None, path=None):
     """ a
     """
     obj('vspace')
@@ -113,5 +111,4 @@ def nasa(statement, spc_name=None, temps=None):
         message(
             'Attempting to fit NASA polynomials from',
             '200-1000 and 1000-3000 K ranges using\n',
-            'temps from MESSPF file = {}.'.format(
-                ' '.join(('{:.2f}'.format(x) for x in temps))))
+            'temps from MESSPF file:\n {}.'.format(path))

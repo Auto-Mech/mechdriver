@@ -14,6 +14,8 @@ def _newline(message, number):
 
 
 def format_message(message, newline, indent):
+    """ Format a message string
+    """
     if newline:
         message = _newline(message, newline)
     if indent:
