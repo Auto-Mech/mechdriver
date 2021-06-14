@@ -654,7 +654,7 @@ def hr_tsk(job, spc_dct, spc_name,
     # Run the task if any torsions exist
     if any(torsions):
 
-        scn = 'SCAN' if 'fa' not in tors_model else 'CSCAN'
+        scn = 'SCAN' if 'f' not in tors_model else 'CSCAN'
         ini_scn_run_fs, ini_scn_save_fs = build_fs(
             ini_cnf_run_path, ini_cnf_save_path, scn,
             zma_locs=(0,))
@@ -722,8 +722,9 @@ def hr_tsk(job, spc_dct, spc_name,
                 # Set the constraint dct and filesys for the scan
                 const_names = automol.zmat.set_constraint_names(
                     zma, run_tors_names, tors_model)
-                constraint_dct = automol.zmat.build_constraint_dct(
+                constraint_dct = automol.zmat.constraint_dct(
                     zma, const_names, tors_names)
+
 
                 # get the scn_locs, maybe get a function?
                 scn_locs = ()
@@ -878,12 +879,12 @@ def skip_task(spc_dct, spc_name):
     """
     skip = False
 
-    # It should be skipped if its radical radical
+    # It should be skipped if its radical-radical
     if 'ts' in spc_name:
         rxn_info = spc_dct[spc_name]['rxn_info']
         ts_mul = rinfo.value(rxn_info, 'tsmult')
         high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
         if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:
             skip = True
-            ioprinter.info_message('Skipping task because {} is a low-spin radical radical reaction'.format(spc_name))
+            ioprinter.info_message('Skipping task because {} is a low-spin radical-radical reaction'.format(spc_name))
     return skip

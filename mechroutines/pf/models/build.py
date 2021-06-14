@@ -79,17 +79,10 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
     prod_dcts = [spc_dct[name] for name in prds]
 
     # Set information for transition states
-    pf_filesystems = filesys.models.pf_filesys(
-        spc_dct[tsname], spc_mod_dct_i,
-        run_prefix, save_prefix, True, name=tsname)
-    [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
-    cnf_path = cnf_fs[-1].path(min_cnf_locs)
-
-    zma_fs = autofile.fs.zmatrix(cnf_path)
-    zrxn = zma_fs[-1].file.reaction.read((0,))
-
     ts_mod = spc_mod_dct_i['ts']
     ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
+
+    print('ts_dct test:',ts_dct['class'], ts_nobar, typ.var_radrad(ts_dct['class']))
 
     # Get all of the information for the filesystem
     if not typ.var_radrad(ts_dct['class']):
@@ -116,6 +109,14 @@ def read_ts_data(spc_dct, tsname, rcts, prds,
                 run_prefix, save_prefix, sadpt=sadpt)
             writer = 'rpvtst_block'
         else:
+            pf_filesystems = filesys.models.pf_filesys(
+                spc_dct[tsname], spc_mod_dct_i,
+                run_prefix, save_prefix, True, name=tsname)
+            [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
+            cnf_path = cnf_fs[-1].path(min_cnf_locs)
+
+            zma_fs = autofile.fs.zmatrix(cnf_path)
+            zrxn = zma_fs[-1].file.reaction.read((0,))
             inf_dct, chn_basis_ene_dct = mol_data(
                 tsname, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i,

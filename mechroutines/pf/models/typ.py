@@ -19,7 +19,7 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
         information is needed from the filesystem
     """
     vib_model = spc_mod_dct_i['vib']['mod']
-    tors_model = spc_mod_dct_i['vib']['mod']
+    tors_model = spc_mod_dct_i['tors']['mod']
     has_tors = bool(any(rotors))
     tors_hr_model = bool(
         tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'))
@@ -46,7 +46,7 @@ def scale_1d(spc_mod_dct_i):
     """ determine if we need to scale the potential
     """
     ioprinter.debug_message(
-        'tors model in scale set', spc_mod_dct_i['mod']['tors'])
+        'tors model in scale set', spc_mod_dct_i['tors']['mod'])
     return bool(spc_mod_dct_i['tors']['mod'] == '1dhrfa')
 
 
@@ -96,7 +96,7 @@ def need_fake_wells(tsclass, well_model):
 def var_radrad(tsclass):
     """ Return boolean to see if fake wells are needed
     """
-    rad_rad = 'radical radical' in tsclass
+    rad_rad = 'radical-radical' in tsclass
     low_spin = 'high' not in tsclass
 
     return bool(rad_rad and low_spin)
@@ -110,7 +110,7 @@ def treat_tunnel(ts_mod, ts_class):
 
     ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
     tunnel_model = ts_mod['tunnel']
-    radrad = 'radical radical' in ts_class
+    radrad = 'radical-radical' in ts_class
     if tunnel_model is not None:
         if radrad:
             if ts_nobar in ('pst', 'rpvtst', 'vrctst'):

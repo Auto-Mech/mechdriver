@@ -44,7 +44,7 @@ IMPLEMENTED_CBH_TS_CLASSES = ['hydrogen abstraction high',
                               # 'hydrogen migration',
                               'beta scission',
                               'elimination high',
-                              'radical radical hydrogen abstraction high',
+                              'radical-radical hydrogen abstraction high',
                               'addition high']
 #IMPLEMENTED_CBH_TS_CLASSES = []
                               # 'hydrogen migration', 'addition high', 'elimination high']

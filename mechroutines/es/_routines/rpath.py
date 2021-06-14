@@ -370,7 +370,6 @@ def reac_sep_ene(rct_info, rcts_cnf_fs, thy_info,
         mod_thy_info = filesys.inf.modify_orb_restrict(inf, thy_info)
 
         # Build filesys
-        ioprinter.debug_message('locs test', mlocs)
         zma_fs = autofile.fs.zmatrix(mpath)
 
         # Read the geometry and set paths

@@ -366,7 +366,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
         mess_str = mess_strs[0]
 
         ts_sadpt, ts_nobar = ts_mod['sadpt'], ts_mod['nobar']
-        radrad = bool('radical radical' in ts_class)
+        radrad = bool('radical-radical' in ts_class)
         write_ts_pt_str = bool(
             (not radrad and ts_sadpt != 'rpvtst') or
             (radrad and ts_nobar != 'rpvtst')
