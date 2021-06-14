@@ -31,10 +31,10 @@ def test__rrho():
     _run('run_c2h6_h_rrho.temp')
 
 
-def test__1dhr():
+def test__1dhrfa():
     """ Run es, thermo, and rates for PES; standard run
     """
-    _run('run_c2h6_h_1dhr.temp')
+    _run('run_c2h6_h_1dhrfa.temp')
 
 
 def __etoh():
@@ -108,8 +108,8 @@ def _fill_template_and_write_file(templatefile, inpfile):
 
 
 if __name__ == '__main__':
-    test__rrho()
-    # test__1dhr()
+    # test__rrho()
+    test__1dhrfa()
     # test__etoh()
     # test__instab()
     # test__radrad()
