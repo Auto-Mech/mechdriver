@@ -616,6 +616,8 @@ def ring_conformer_sampling(
     unique_geos = []
     unique_frag_geos = []
     unique_zmas = []
+        frag_saved_geos.append(automol.geom.ring_fragments_geometry(geoi))
+
     # Make sample zmas
     for ring_atoms, samp_range_dct in ring_tors_dct.items():
         ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
@@ -626,8 +628,8 @@ def ring_conformer_sampling(
             if automol.ring_distances_passes(samp_zma, ring_atoms,
                                              dist_value_dct):
                 samp_geo = automol.zmat.geometry(samp_zma)
-                frag_samp_geo = _fragment_ring_geo(samp_geo)
-                if _ring_angles_passes(samp_geo, ring_atoms):
+                frag_samp_geo = automol.geom.ring_fragments_geometry(samp_geo)
+                if automol.geom.ring_angles_passes(samp_geo, ring_atoms):
                     if not automol.pot.low_repulsion_struct(geo, samp_geo):
                         if automol.geom.is_unique(frag_samp_geo, frag_saved_geos, check_dct):
                             if automol.geom.is_unique(samp_geo, unique_frag_geos, check_dct):
