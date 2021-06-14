@@ -3,8 +3,8 @@
 """
 
 import random
-from mechlib.amech_io.printer import obj
-from mechlib.amech_io.printer import message
+from mechlib.amech_io.printer._lib import obj
+from mechlib.amech_io.printer._print import message
 
 
 def program_header(driver):
@@ -42,7 +42,7 @@ def driver_tasks(
         write_messrate, run_messrate, run_fits, run_trans):
     """ a
     """
-    
+
     if run_es:
         message('  - ESDriver')
         # Add the tasks for the ESDriver
@@ -143,7 +143,7 @@ EXITING ESDRIVER
 
 PRINT_MSG = """
 =========================================================
-OUTPUT PREPARATION 
+OUTPUT PREPARATION
 Sarah Elliott, Andreas Copan, Kevin Moore,
 Carlo Cavolotti, Stephen Klippenstein
 ========================================================="""

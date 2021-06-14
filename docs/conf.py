@@ -27,11 +27,8 @@ author = 'Kevin Moore'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    'sphinx.ext.autodoc',
-    'sphinxcontrib.bibtex'  # Needs pip install sphinxcontrib-bibtex
+extensions = ['sphinx.ext.autodoc'
 ]
-master_doc = 'index'
 autodoc_member_order = 'bysource'
 autodoc_mock_imports = [
     'numpy', 'scipy', 'pandas',
@@ -39,14 +36,10 @@ autodoc_mock_imports = [
     'automol',
     'autorun', 'phydat', 'ioformat', 'autoparse',
     'elstruct', 'chemkin_io', 'mess_io', 'projrot_io', 'onedmin_io',
-    'mechanalyzer', 'ratefit', 'thermfit'
-]
+    'mechanalyzer', 'ratefit', 'thermfit']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-
-# Add bibliography files
-bibtex_bibfiles = ['rst/refs.bib']
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -60,9 +53,6 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'alabaster'
-html_logo = 'logo.png'
-html_style = 'css/automech.css'
-html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'] }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

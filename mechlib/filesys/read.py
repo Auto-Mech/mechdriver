@@ -6,8 +6,9 @@ import autofile
 from phydat import phycon
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
-from mechlib.filesys import build_fs
-from mechlib.amech_io import printer as ioprinter
+from mechanalyzer.inf import rxn as rinfo
+from mechlib.filesys._build import build_fs
+from mechlib.filesys.mincnf import min_energy_conformer_locators
 
 
 def potential(names, grid_vals, cnf_save_path,
@@ -74,6 +75,52 @@ def potential(names, grid_vals, cnf_save_path,
 
 
 # Single data point readers
+def geometry(cnf_save_fs, mod_thy_info, conf='sphere'):
+    """ get the geometry
+    """
+
+    assert conf in ('minimum', 'sphere')
+
+    # Read the file system
+    if conf == 'minimum':
+        geom = _min_energy_conformer(cnf_save_fs, mod_thy_info)
+    elif conf == 'sphere':
+        geom = _spherical_conformer(cnf_save_fs)
+
+    return geom
+
+
+def _min_energy_conformer(cnf_save_fs, mod_thy_info):
+    """ Reads the minimum-energy conformer from the save FileSystem
+    """
+
+    ini_loc_info = min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
+    locs, path = ini_loc_info
+    if path:
+        min_conf = cnf_save_fs[-1].file.geometry.read(locs)
+    else:
+        min_conf = None
+
+    return min_conf
+
+
+def _spherical_conformer(cnf_save_fs):
+    """ Reads the conformer from the Save FileSystem that is the most
+        spherical.
+    """
+
+    cnf_locs_lst = cnf_save_fs[-1].existing()
+    if cnf_locs_lst:
+        cnf_geoms = [cnf_save_fs[-1].file.geometry.read(locs)
+                     for locs in cnf_locs_lst]
+        round_geom = automol.geom.minimum_volume_geometry(cnf_geoms)
+    else:
+        round_geom = None
+
+    return round_geom
+
+
 def energy(filesys, locs, mod_tors_ene_info):
     """ Read the energy from an SP filesystem that is located in some
         root 'filesys object'
@@ -92,6 +139,46 @@ def energy(filesys, locs, mod_tors_ene_info):
     return ene
 
 
+def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
+    """ Check if reaction exists in the filesystem and has been identified
+    """
+
+    zrxn, zma = None, None
+
+    sort_rxn_info = rinfo.sort(rxn_info, scheme='autofile')
+    ts_info = rinfo.ts_info(rxn_info)
+    mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, ts_info)
+
+    rxn_fs = autofile.fs.reaction(save_prefix)
+    if rxn_fs[-1].exists(sort_rxn_info):
+        _, cnf_save_fs = build_fs(
+            save_prefix, save_prefix, 'CONFORMER',
+            rxn_locs=sort_rxn_info,
+            thy_locs=mod_ini_thy_info[1:],
+            # this needs to be fixed for any case with more than one TS
+            ts_locs=ts_locs)
+
+        _, ini_min_cnf_path = min_energy_conformer_locators(
+            cnf_save_fs, mod_ini_thy_info)
+        if ini_min_cnf_path:
+            zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
+            if zma_fs[-1].file.reaction.exists(zma_locs):
+                zrxn = zma_fs[-1].file.reaction.read(zma_locs)
+                zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+
+        if zrxn is None:
+            _, zma_fs = build_fs(
+                '', save_prefix, 'ZMATRIX',
+                rxn_locs=sort_rxn_info, ts_locs=ts_locs,
+                thy_locs=mod_ini_thy_info[1:])
+
+            if zma_fs[-1].file.reaction.exists(zma_locs):
+                zrxn = zma_fs[-1].file.reaction.read(zma_locs)
+                zma = zma_fs[-1].file.zmatrix.read(zma_locs)
+
+    return zrxn, zma
+
+
 def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
                                zma_locs=(0,)):
     """ see if a species and unstable and handle task management
@@ -99,17 +186,24 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
 
     spc_info = sinfo.from_dct(spc_dct[spc_name])
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    _, zma_save_fs = build_fs(
-        '', save_prefix, 'ZMATRIX',
+
+    _, cnf_save_fs = build_fs(
+        '', save_prefix, 'CONFORMER',
         spc_locs=spc_info,
-        thy_locs=mod_thy_info[1:],
-        instab_locs=())
+        thy_locs=mod_thy_info[1:])
+
+    # Check if any locs exist first?
+    ini_loc_info = min_energy_conformer_locators(
+        cnf_save_fs, mod_thy_info)
+    _, min_cnf_path = ini_loc_info
+
+    zma_save_fs = autofile.fs.zmatrix(min_cnf_path)
 
     # Check if the instability files exist
-    if zma_save_fs[-1].file.reaction.exists(zma_locs):
-        zrxn = zma_save_fs[-1].file.reaction.read(zma_locs)
+    if zma_save_fs[-1].file.instability.exists(zma_locs):
+        instab_trans = zma_save_fs[-1].file.instability.read(zma_locs)
         zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
-        _instab = (zrxn, zma)
+        _instab = (instab_trans, zma)
         path = zma_save_fs[-1].file.zmatrix.path(zma_locs)
     else:
         _instab = None
@@ -125,7 +219,6 @@ def energy_trans(etrans_save_fs, etrans_locs):
     nsamp = etrans_save_fs[-1].file.read(etrans_locs)
     epsilon = etrans_save_fs[-1].file.read.epsilon(etrans_locs)
     sigma = etrans_save_fs[-1].file.read.sigma(etrans_locs)
-    # alpha = etrans_fs[-1].file.alpha.read(etrans_locs)
 
     min_geo_traj = etrans_save_fs[-1].file.read.min_geos(etrans_locs)
     min_geos = automol.geom.from_xyz_trajectory_string(min_geo_traj)

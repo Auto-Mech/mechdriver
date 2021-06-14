@@ -31,7 +31,7 @@ def objs(keys, prechars=()):
 
     obj_str = ''
     for key, prechar in zip(keys, prechars):
-       obj_str += obj(key, prechar=prechar) 
+        obj_str += obj(key, prechar=prechar)
 
     message(obj_str)
 

@@ -221,7 +221,7 @@ def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
 
 def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
-                        spc_model_dct, thy_dct,
+                        spc_model_dct,
                         spc_dct, run_prefix, save_prefix):
     """ Build ts dct from ktp tsks
     """
@@ -286,7 +286,6 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'mult': rinfo.value(rxn_info, 'tsmult'),
                 'elec_levels': ((0.0, rinfo.value(rxn_info, 'tsmult')),),
                 'hind_inc': 30.0*phycon.DEG2RAD,
-                # 'sym_factor': 1.0,  # remove later
                 'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }

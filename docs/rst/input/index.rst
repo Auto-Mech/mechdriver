@@ -7,13 +7,12 @@ User's Manual
     :maxdepth: 2
     :caption: Contents:
 
-    intro
     run
     thy
     mod
     spc
     mech
     aux
-    examples/index
+    example
     keywords
 
