@@ -392,6 +392,7 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
                      retryfail=False,
                      **opt_kwargs):
     """ Run a two-part scan that goes into two directions, as for rxn path
+        Wrapper to the execute_scan to run in two directions
     """
 
     for grid in (grid1, grid2):

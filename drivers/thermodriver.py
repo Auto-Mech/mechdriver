@@ -42,7 +42,7 @@ def run(pes_rlst, spc_rlst,
         therm_tsk_lst,
         pes_mod_dct, spc_mod_dct,
         spc_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix, mdriver_path):
     """ Executes all thermochemistry tasks.
 
         :param pes_rlst: species from PESs to run
@@ -67,6 +67,8 @@ def run(pes_rlst, spc_rlst,
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
         :type save_prefix: str
+        :param mdriver_path: path where mechdriver is running
+        :type mdriver_path: str
     """
 
     # Print Header
@@ -103,7 +105,7 @@ def run(pes_rlst, spc_rlst,
         for idx, spc_name in enumerate(spc_queue):
             print('write test {}'.format(spc_name))
             for spc_mod in spc_mods:
-                messpf_inp_str = thmroutines.qt.make_messpf_str(
+                messpf_inp_str, dat_dct = thmroutines.qt.make_messpf_str(
                     pes_mod_dct[pes_mod]['therm_temps'],
                     spc_dct, spc_name,
                     pes_mod_dct[pes_mod], spc_mod_dct[spc_mod],
@@ -112,6 +114,7 @@ def run(pes_rlst, spc_rlst,
                 ioprinter.info_message(messpf_inp_str)
                 autorun.write_input(
                     thm_paths[idx][spc_mod][0], messpf_inp_str,
+                    aux_dct=dat_dct,
                     input_name='pf.inp')
 
     # Run the MESSPF files that have been written
@@ -215,7 +218,7 @@ def run(pes_rlst, spc_rlst,
 
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str = ''
-        ckin_path = output_path('CKIN')
+        ckin_path = output_path('CKIN', prefix=mdriver_path)
         for idx, spc_name in enumerate(spc_queue):
 
             ioprinter.nasa('calculate', spc_name)
@@ -227,7 +230,8 @@ def run(pes_rlst, spc_rlst,
             # Call dies if you haven't run "write mess" task
             ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
                 spc_name, spc_dct,
-                thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
+                thm_paths[idx][spc_mod][0], thm_paths[idx][spc_mod][1])
+                # thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
         print('CKIN NASA STR\n')
         print(ckin_nasa_str)

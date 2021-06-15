@@ -31,7 +31,7 @@ def make_messrate_str(pes_idx, rxn_lst,
                       mess_path, run_prefix, save_prefix,
                       make_lump_well_inp=False):
     """ Reads and processes all information in the save filesys for
-        all species on the PES, required for MESS rate calculations,
+        all species on the PES that are required for MESS rate calculations,
         as specified by the model dictionaries built from user input.
 
         :param pes_idx:
@@ -50,7 +50,7 @@ def make_messrate_str(pes_idx, rxn_lst,
 
     # Write the strings for the MESS input file
     globkey_str = make_header_str(
-        spc_dct,
+        spc_dct, rxn_lst, pes_idx,
         temps=pes_model_dct_i['rate_temps'],
         pressures=pes_model_dct_i['pressures'])
 
@@ -66,7 +66,8 @@ def make_messrate_str(pes_idx, rxn_lst,
         pes_model_dct_i, spc_model_dct_i, spc_model)
 
     # Generate second string with well lumping if needed
-    if not is_abstraction_pes(spc_dct) and make_lump_well_inp:
+    if (not is_abstraction_pes(spc_dct, rxn_lst, pes_idx) and
+       make_lump_well_inp):
         print('Need to do well lumping scheme')
         script_str = autorun.SCRIPT_DCT['messrate']
         mess_inp_str = autorun.mess.well_lumped_input_file(
@@ -89,7 +90,7 @@ def make_messrate_str(pes_idx, rxn_lst,
 
 
 # Headers
-def make_header_str(spc_dct, temps, pressures):
+def make_header_str(spc_dct, rxn_lst, pes_idx, temps, pressures):
     """ Built the head of the MESS input file that contains various global
         keywords used for running rate calculations.
 
@@ -118,7 +119,7 @@ def make_header_str(spc_dct, temps, pressures):
     ioprinter.debug_message('     {}'.format(keystr1))
     ioprinter.debug_message('     {}'.format(keystr2))
 
-    if is_abstraction_pes(spc_dct):
+    if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
         well_extend = None
     else:
         well_extend = 'auto'
@@ -570,9 +571,6 @@ def get_channel_data(reacs, prods, tsname,
     # Initialize the dict
     chnl_infs = {}
 
-    # Initialize the symm_barrier variable for TS
-    # symm_barrier = False
-
     # Determine the MESS data for the reactants and products
     # Gather data or set fake information for dummy reactants/products
     chnl_infs['reacs'], chnl_infs['prods'] = [], []
@@ -583,10 +581,6 @@ def get_channel_data(reacs, prods, tsname,
                 pes_model_dct_i, spc_model_dct_i,
                 run_prefix, save_prefix, model_basis_energy_dct)
             chnl_infs[side].append(chnl_infs_i)
-        # if side in rxn['dummy']:
-        #     symm_barrier = True
-        #     for _ in range(len(rxn[side])):
-        #         chnl_infs[side].append({'ene_chnlvl': 0.00})
 
     # Set up data for TS
     chnl_infs['ts'] = []
@@ -598,16 +592,12 @@ def get_channel_data(reacs, prods, tsname,
             run_prefix, save_prefix, model_basis_energy_dct)
         chnl_infs['ts'].append(inf_dct)
 
-    # turn back on with fixed TSs
-    # chnl_infs['ts']['symm_barrier'] = symm_barrier
-
     # Set up the info for the wells
     rwell_model = spc_model_dct_i['ts']['rwells']
     pwell_model = spc_model_dct_i['ts']['pwells']
     rxn_class = spc_dct[tsname+'_0']['class']
     if need_fake_wells(rxn_class, rwell_model):
         chnl_infs['fake_vdwr'] = copy.deepcopy(chnl_infs['reacs'])
-    # pwell_model = spc_model_dct_i['ts']['pwells']
     if need_fake_wells(rxn_class, pwell_model):
         chnl_infs['fake_vdwp'] = copy.deepcopy(chnl_infs['prods'])
 

@@ -17,16 +17,16 @@ def multi_stage_optimization(script_str, run_fs,
     """ Run a series of optimizations that utilize varying constraint
         conditions at each state.
 
-        :param script_str: BASH submission script for electronic structure job
+        :param script_str: Shell submission script for electronic structure job
         :type script_str: str
         :param geo: input molecular geometry or Z-Matrix
-        :type geo:
+        :type geo: automol.geom object
         :param spc_info:
         :type spc_info:
         :param thy_info:
         :type thy_info:
-        :param frozen_coords_lst:
-        :type frozen_coords_lst:
+        :param frozen_coords_lst: Z-matrix coordinate names to freeze in opts
+        :type frozen_coords_lst: tuple(str)
         :param overwrite: overwrite existing input file with new one and rerun
         :type overwrite: bool
         :param saddle: perform saddle-point optimization

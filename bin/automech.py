@@ -64,7 +64,7 @@ if THERM_TSKS is not None:
         THERM_TSKS,
         KMOD_DCT, SMOD_DCT,
         SPC_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH
     )
     ioprinter.program_exit('thermo')
 
@@ -89,7 +89,7 @@ if KTP_TSKS is not None:
         KTP_TSKS,
         SPC_DCT, GLOB_DCT,
         KMOD_DCT, SMOD_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH
     )
     ioprinter.program_exit('ktp')
 

@@ -1,6 +1,4 @@
-""" Driver for thermochemistry evaluations including
-    heats-of-formation and NASA polynomials describing
-    thermodynamic quantities: Enthalpy, Entropy, Gibbs
+""" Driver for kinetic evaluations
 
     Main Loop of Driver:
         (1) PES
@@ -28,31 +26,27 @@ def run(pes_rlst,
         ktp_tsk_lst,
         spc_dct, glob_dct,
         pes_mod_dct, spc_mod_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix, mdriver_path):
     """ Executes all kinetics tasks.
 
         :param pes_rlst: species from PESs to run
-            [(PES formula, PES idx, SUP-PES idx)
-            (CHANNEL idx, (REACS, PRODS))
         :type pes_rlst: tuple(dict[str: dict])
         :param spc_rlst: lst of species to run
         :type spc_rlst: tuple(dict[str: dict])
         :param es_tsk_lst: list of the electronic structure tasks
-            tuple(tuple(obj, tsk, keyword_dict))
         :type es_tsk_lst: tuple(tuple(str, str, dict))
         :param spc_dct: species information
-            dict[spc_name: spc_information]
         :type spc_dct: dict[str:dict]
         :param glob_dct: global information for all species
-            dict[spc_name: spc_information]
         :type glob_dct: dict[str: dict]
         :param thy_dct: all of the theory information
-            dict[thy name: inf]
         :type thy_dct: dict[str:dict]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
         :type save_prefix: str
+        :param mdriver_path: path where mechdriver is running
+        :type mdriver_path: str
     """
 
     # --------------------------------------- #
@@ -160,7 +154,7 @@ def run(pes_rlst,
                 'header': writer.ckin.model_header((spc_mod,), spc_mod_dct)
             })
 
-            ckin_path = output_path('CKIN')
+            ckin_path = output_path('CKIN', prefix=mdriver_path)
             writer.ckin.write_rxn_file(
                 ckin_dct, pes_formula, ckin_path)
 

@@ -2,10 +2,8 @@
   Handle vibrational data info
 """
 
-import numpy
 import autorun
 import automol.geom
-import projrot_io
 from phydat import phycon
 from mechlib.amech_io import printer as ioprinter
 from mechlib.amech_io._path import job_path
@@ -156,7 +154,9 @@ def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
 
 
 def read_anharmon_matrix(pf_filesystems):
-    """ Read the anharmonicity matrix """
+    """ Read a anharmonicity matrix from the SAVE filesystem for a
+        species or transition state.
+    """
 
     # Set up vpt2 level filesystem for rotational values
     [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['vpt2']
@@ -204,140 +204,48 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
 
     fml_str = automol.geom.formula_string(harm_geo)
     vib_path = job_path(run_pfx, 'PROJROT', 'FREQ', fml_str, print_path=True)
-    tors_path = job_path(run_pfx, 'MESS', 'TORS', fml_str, print_path=True)
+    # tors_path = job_path(run_pfx, 'MESS', 'TORS', fml_str, print_path=True)
 
-    # Read info for the hindered rotors and calculate the ZPVE
-    ioprinter.info_message(' - Calculating the torsional ZPVES using MESS...')
-    script_str = autorun.SCRIPT_DCT['messpf']
-    tors_freqs, _ = autorun.mess.torsions(
-        script_str, tors_path, tors_geo, mess_hr_str)
-
-    tors_zpe = (sum(tors_freqs) / 2.0) * phycon.WAVEN2EH
-
-    ioprinter.info_message(
-        ' - Calculating the RT and RT-rotor projected frequencies ProjRot')
-
-    # NEW projrot writing
-    script_str = autorun.SCRIPT_DCT['projrot']
+    # Calculate projeccted frequencies and associated information
+    mess_script_str = autorun.SCRIPT_DCT['messpf']
+    projrot_script_str = autorun.SCRIPT_DCT['projrot']
     dist_cutoff_dct1 = {('H', 'O'): 2.26767, ('H', 'C'): 2.26767}
     dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459,
                         ('C', 'O'): 3.7807}
-    rotor_dist1_str = projrot_io.writer.projection_distance_aux(
-        dist_cutoff_dct=dist_cutoff_dct1)
-    rotor_dist2_str = projrot_io.writer.projection_distance_aux(
-        dist_cutoff_dct=dist_cutoff_dct2)
-    aux_dct1 = {'dist_rotpr.dat': rotor_dist1_str}
-    aux_dct2 = {'dist_rotpr.dat': rotor_dist2_str}
-    rt_freqs1, rth_freqs1, rt_imag1, _ = autorun.projrot.frequencies(
-        script_str, vib_path, [harm_geo], [[]], [hess],
-        rotors_str=projrot_hr_str, aux_dct=aux_dct1)
-    _, rth_freqs2, rt_imag2, _ = autorun.projrot.frequencies(
-        script_str, vib_path, [harm_geo], [[]], [hess],
-        rotors_str=projrot_hr_str, aux_dct=aux_dct2)
 
-    # Calculate harmonic ZPVE from all harmonic freqs, including torsionals
-    harm_zpe = (sum(rt_freqs1) / 2.0) * phycon.WAVEN2EH
-
-    ioprinter.info_message(
-        'harmonic zpe is {} kcal/mol'.format(harm_zpe))
-
-    # Calculate harmonic ZPVE from freqs where torsions have been projected out
-    # Value from both projrot versions, which use different projection schemes
-    harm_zpe_notors_1 = (sum(rth_freqs1) / 2.0) * phycon.WAVEN2EH
-    harm_zpe_notors_2 = (sum(rth_freqs2) / 2.0) * phycon.WAVEN2EH
-
-    # Calcuate the difference in the harmonic ZPVE from projecting out torsions
-    harm_tors_zpe = harm_zpe - harm_zpe_notors_1
-    harm_tors_zpe_2 = harm_zpe - harm_zpe_notors_2
-
-    # Check to see which of the above ZPVEs match more closely with tors ZPVE
-    # calculated directly by treating the torsions in MESS
-    diff_tors_zpe = harm_tors_zpe - tors_zpe
-    diff_tors_zpe_2 = harm_tors_zpe_2 - tors_zpe
-    if diff_tors_zpe <= diff_tors_zpe_2:
-        freqs = rth_freqs1
-        imag_freqs = rt_imag1
-        # proj_zpe = harm_zpe_notors_1
-    else:
-        freqs = rth_freqs2
-        imag_freqs = rt_imag2
-        # proj_zpe = harm_zpe_notors_2
-
-    # Check imaginary frequencies and set freqs
-    if zrxn is not None:
-        if len(imag_freqs) > 1:
-            ioprinter.warning_message(
-               'There is more than one imaginary frequency')
-        imag = max(imag_freqs)
-    else:
-        imag = None
-
-    # NEW autorun function for the frequencies
-    # mess_script_str = autorun.SCRIPT_DCT['messpf']
-    # projrot_script_str = autorun.SCRIPT_DCT['projrot']
-
-    # proj_freqs, proj_imag_freqs, proj_zpe = autorun.projected_frequencies(
-    #     mess_script_str, projrot_script_str, RUN_DIR,
-    #     mess_hr_str, projrot_hr_str,
-    #     mess_geo, projrot_geo, hess)
+    proj_inf = autorun.projected_frequencies(
+        mess_script_str, projrot_script_str, vib_path,
+        mess_hr_str, projrot_hr_str,
+        tors_geo, harm_geo, hess,
+        dist_cutoff_dct1=dist_cutoff_dct1,
+        dist_cutoff_dct2=dist_cutoff_dct2,
+        saddle=(zrxn is not None))
+    proj_freqs, proj_imag, _, harm_freqs, tors_freqs = proj_inf
+    tors_zpe = 0.5 * sum(tors_freqs) * phycon.WAVEN2EH
 
     # NEW scale factor functions
-    # scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
-    #     harm_freqs, tors_freqs)
+    scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
+        harm_freqs, proj_freqs, tors_freqs)
 
-    # Create a scaling factor for the frequencies
-    # First sort tors frequencies in ascending order
-    sort_tors_freqs = sorted(tors_freqs)
-    # keep only freqs whose RRHO freqs are above a threshold
-    freq_thresh = 50.
-    log_rt_freq = 0.0
-    nfreq_remove = 0
-    for freq in rt_freqs1:
-        if freq > freq_thresh:
-            log_rt_freq += numpy.log(freq)
-        else:
-            nfreq_remove += 1
-
-    log_freq = [numpy.log(freq) for freq in freqs]
-    log_freq = sum(log_freq)
-
-    log_tors_freq = 0.0
-    idx_remove = []
-    for idx, freq in enumerate(sort_tors_freqs):
-        if idx+1 > nfreq_remove:
-            log_tors_freq += numpy.log(freq)
-        else:
-            idx_remove.append(tors_freqs.index(freq))
-
-    # generate the scaling factor
-    factor = numpy.exp(log_rt_freq - log_freq - log_tors_freq)
-    ioprinter.info_message('freq test:', freqs, tors_freqs, rt_freqs1)
-    tau_factor = numpy.exp(log_rt_freq - log_freq)
-    tau_factor_mode = tau_factor
-    # generate the set of indices for torsions that are two be scales
-    scale_factor = (idx_remove, factor)
-    ioprinter.info_message('scale fact test', scale_factor)
-    ioprinter.info_message(
-        'TAU FACTOR {:4.6f} \t {:g} \t {:3.6f} {} '.format(
-            tau_factor_mode, len(tors_freqs), factor,
-            '-'.join([str(ridx) for ridx in idx_remove])))
-
-    # Check if there are significant differences caused by the rotor projection
-    diff_tors_zpe *= phycon.EH2KCAL
-    diff_tors_zpe_2 *= phycon.EH2KCAL
-    if abs(diff_tors_zpe) > 0.2 and abs(diff_tors_zpe_2) > 0.2:
-        ioprinter.warning_message(
-            'There is a difference of ',
-            '{0:.2f} and {1:.2f}'.format(diff_tors_zpe, diff_tors_zpe_2),
-            'kcal/mol between harmonic and hindered torsional ZPVEs')
-
-    return freqs, imag, tors_zpe, scale_factor, tors_freqs, rt_freqs1
+    return (proj_freqs, proj_imag, tors_zpe,
+            scale_factor, tors_freqs, harm_freqs)
 
 
 def scale_frequencies(freqs, tors_zpe,
                       spc_mod_dct_i, scale_method='c3'):
-    """ Scale frequencies according to some method
-        obtain a corrected zpe
+    """ Empirically scale the harmonic vibrational frequencies and harmonic
+        zero-point energy (ZPVE) of a species or transition to account
+        for anharmonic effects. The final ZPVE value also includes the ZPVEs
+        of internal rotations which are not scaled.
+
+        Scaling factors determined by the electronic structure
+        method used to calculate the frequencies and ZPVE as well as the
+        requested scaling method.
+
+        :param freqs: harmonic frequencies [cm-1]
+        :type freqs: tuple(float)
+        :param tors_zpe:
+
     """
 
     thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]

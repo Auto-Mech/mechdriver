@@ -10,7 +10,10 @@ from mechlib.amech_io import printer as ioprinter
 
 # FUNCTIONS TO WRITE THE ENERGY TRANSFER  STRINGS
 def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
-    """ Makes the standard header and energy transfer sections
+    """ Writes the energy down (`Edown`) and collision frequency (`ColldFreq`)
+        section strings for the MESS input.
+
+    Makes the standard header and energy transfer sections
         for MESS input file
     """
 
@@ -40,6 +43,7 @@ def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
         collid_freq_str = mess_io.writer.collision_frequency(
             eps1, eps2, sig1, sig2, mass1, mass2)
     else:
+        # set defaults?
         edown_str, collid_freq_str = None, None
 
     return edown_str, collid_freq_str
@@ -47,17 +51,26 @@ def make_energy_transfer_strs(well_info, bath_info, etrans_dct):
 
 # FUNCTIONS TO SET ALL OF THE PARAMETERS FOR THE MESS FILE
 def mass_params(well_info, bath_info, etrans_dct):
-    """ Build the mass parameters
+    """ Determine the mass parameters used to
+        define the energy transfer model for master equation simulations.
+
+        Function first assesses if a user has supplied mass parameters
+        by way of ___. If masses have not been provided, then the masses
+        will be simply calculated using the geometries of the well and
+        bath species.
+
+        :param well_info: spc_info object for well species
+        :type well_info: mechanalyzer.inf.spc object
+        :param bath_info: spc_info object for bath species
+        :type bath_info: mechanalyzer.inf.spc object
+        :param etrans_dct:
     """
 
     mass = etrans_dct.get('mass', None)
     if mass is not None:
-
         ioprinter.info_message('  - Using the user input values...')
         [mass1, mass2] = mass
-
     else:
-
         ioprinter.info_message('  - Obtaining masses from geometries...')
         geo = automol.inchi.geometry(well_info[0])
         mass1 = sum(automol.geom.masses(geo))
@@ -69,7 +82,12 @@ def mass_params(well_info, bath_info, etrans_dct):
 
 
 def lj_params(well_info, bath_info, etrans_dct):
-    """ Build the lennard-jones parameters
+    """ Determine the Lennard-Jones (LJ) epsilon and sigma parameters used to
+        define the energy transfer model for master equation simulations.
+
+        Function first assesses if a user has supplied mass parameters
+        by way of ___. If masses have not been provided, then the masses
+        will be simply calculated using the geometries of the well and
     """
 
     sig1, eps1, sig2, eps2 = None, None, None, None
@@ -87,7 +105,7 @@ def lj_params(well_info, bath_info, etrans_dct):
             ioprinter.info_message('- Estimating the parameters...')
             well_ich = well_info[0]
             well_geo = automol.inchi.geometry(well_ich)
-            params = estimate_viable(
+            params = automol.etrans.effective_model(
                 well_ich, well_geo, bath_info)
             if params is not None:
                 bath_model, tgt_model = params
@@ -106,14 +124,13 @@ def lj_params(well_info, bath_info, etrans_dct):
                     n_heavy, bath_model, tgt_model)
                 sig1, eps1, sig2, eps2 = sig, eps, sig, eps
 
-        elif ljpar == 'read':
-
-            ioprinter.info_message('- Reading the filesystem...')
-            ljs_lvl = etrans_dct.get('ljlvl', None)
-            if ljs_lvl is not None:
-                # Get the levels into theory objects
-                pf_filesystems = 0
-                sig1, eps1, sig2, eps2 = _read_lj(pf_filesystems)
+        # elif ljpar == 'read':
+        #     ioprinter.info_message('- Reading the filesystem...')
+        #     ljs_lvl = etrans_dct.get('ljlvl', None)
+        #     if ljs_lvl is not None:
+        #         # Get the levels into theory objects
+        #         pf_filesystems = 0
+        #         sig1, eps1, sig2, eps2 = _read_lj(pf_filesystems)
 
     else:
         sig1, eps1, sig2, eps2 = None, None, None, None
@@ -143,7 +160,7 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
             ioprinter.info_message('  - Estimating the parameters...')
             well_ich = well_info[0]
             well_geo = automol.inchi.geometry(well_ich)
-            params = estimate_viable(
+            params = automol.etrans.effective_model(
                 well_ich, well_geo, bath_info)
             if params is not None:
                 bath_model, tgt_model = params
@@ -165,55 +182,15 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
                     n_eff, eps, sig, mass1, mass2, bath_model, tgt_model)
                 ecutoff = 15.0
 
-        elif edown == 'read':
-
-            ioprinter.info_message('  - Reading the filesystem...')
-            edownlvl = etrans_dct.get('edownlvl', None)
-            if edownlvl is not None:
-                # NEED: Get the levels into theory objects
-                pf_filesystems = 0
-                efactor = _read_alpha(pf_filesystems)
+        # elif edown == 'read':
+        #     ioprinter.info_message('  - Reading the filesystem...')
+        #     edownlvl = etrans_dct.get('edownlvl', None)
+        #     if edownlvl is not None:
+        #         # NEED: Get the levels into theory objects
+        #         pf_filesystems = 0
+        #         efactor = _read_alpha(pf_filesystems)
 
     return efactor, epower, ecutoff
-
-
-# FILESYS READING
-def _read_alpha(pf_filesystems):
-    """ filesys
-    """
-
-    _ = pf_filesystems
-    etrans_fs, etrans_locs = [], []
-    # etrans_fs, etrans_locs = filesys.models.set_etrans_fs()
-
-    # Read the epsilon and sigma values
-    if etrans_fs[-1].file.epsilon.exists(etrans_locs):
-        eps = etrans_fs[-1].file.epsilon.read(etrans_locs)
-    else:
-        eps = None
-    if etrans_fs[-1].file.sigma.exists(etrans_locs):
-        sig = etrans_fs[-1].file.sigma.read(etrans_locs)
-    else:
-        sig = None
-
-    return eps, sig
-
-
-def _read_lj(pf_filesystems):
-    """ filesys
-    """
-
-    _ = pf_filesystems
-    etrans_fs, etrans_locs = [], []
-    # etrans_save_fs, etrans_locs = filesys.models.set_etrans_fs()
-
-    # Read the epsilon and sigma values
-    if etrans_fs[-1].file.alpha.exists(etrans_locs):
-        alpha = etrans_fs[-1].file.alpha.read(etrans_locs)
-    else:
-        alpha = None
-
-    return alpha
 
 
 # FUNCTION TO HANDLE BUILDING ETRANS OBJECTS
@@ -284,48 +261,3 @@ def set_bath(spc_dct, etrans_dct):
             '  - No bath provided, using Argon as bath')
 
     return bath_info
-
-
-# CHECKERS
-BAD_ICHS = (
-    'InChI=1S/H2/h1H'
-)
-
-
-def estimate_viable(well_ich, well_geo, bath_info):
-    """ Assess whether we can estimate using the formula
-    """
-
-    # Initialize the models
-    bath_model = bath_info[0]
-    tgt_model = None
-
-    # Build the graph
-    well_gra = automol.geom.graph(well_geo)
-
-    # Identify the the target model
-    if well_ich not in BAD_ICHS:
-        if automol.graph.radical_species(well_gra):
-            tgt_model = '1-alkyl'
-        elif automol.graph.hydrocarbon_species(well_gra):
-            tgt_model = 'n-alkane'
-        else:
-            fgrp_dct = automol.graph.functional_group_dct(well_gra)
-            if fgrp_dct[automol.graph.FunctionalGroup.HYDROPEROXY]:
-                tgt_model = 'n-hydroperoxide'
-            elif fgrp_dct[automol.graph.FunctionalGroup.EPOXIDE]:
-                tgt_model = 'epoxide'
-            elif fgrp_dct[automol.graph.FunctionalGroup.ETHER]:
-                tgt_model = 'ether'
-            elif fgrp_dct[automol.graph.FunctionalGroup.ALCOHOL]:
-                tgt_model = 'n-alcohol'
-
-        # For now, set model to alkanes if nothing found and set up return obj
-        if tgt_model is None:
-            tgt_model = 'n-alkane'
-
-        ret = (bath_model, tgt_model)
-    else:
-        ret = None
-
-    return ret

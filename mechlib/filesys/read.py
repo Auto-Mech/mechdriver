@@ -219,6 +219,7 @@ def energy_trans(etrans_save_fs, etrans_locs):
     nsamp = etrans_save_fs[-1].file.read(etrans_locs)
     epsilon = etrans_save_fs[-1].file.read.epsilon(etrans_locs)
     sigma = etrans_save_fs[-1].file.read.sigma(etrans_locs)
+    # alpha = etrans_fs[-1].file.alpha.read(etrans_locs)
 
     min_geo_traj = etrans_save_fs[-1].file.read.min_geos(etrans_locs)
     min_geos = automol.geom.from_xyz_trajectory_string(min_geo_traj)

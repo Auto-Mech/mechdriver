@@ -31,7 +31,7 @@ def thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix):
     return thm_paths
 
 
-def output_path(dat, make_path=True, print_path=False):
+def output_path(dat, make_path=True, print_path=False, prefix=None):
     """ Create the path for sub-directories locatted in the run directory
         where the MechDriver calculation was launched. These sub-directories
         are used to store various useful output from the MechDriver process.
@@ -40,11 +40,13 @@ def output_path(dat, make_path=True, print_path=False):
         :type make_path: bool
         :param print_path: print the created path to the screen
         :type print_path: bool
+        :param prefix: prefix for directory to be built
+        :type prefix: str
         :rtype: str
     """
 
     # Initialize the path
-    starting_path = os.getcwd()
+    starting_path = prefix if prefix is not None else os.getcwd()
     path = os.path.join(starting_path, dat)
 
     # Make and print the path, if requested
@@ -52,7 +54,7 @@ def output_path(dat, make_path=True, print_path=False):
         if not os.path.exists(path):
             os.makedirs(path)
     if print_path:
-        print('ckin path: {}'.format(path))
+        print('output path for {}: {}'.format(dat, path))
 
     return path
 

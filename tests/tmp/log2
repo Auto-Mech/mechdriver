@@ -1,0 +1,1691 @@
+
+          ================================================================
+          ==                        AUTOMECHANIC                        ==
+          ===         Andreas Copan, Sarah Elliott, Kevin Moore,       ===
+          ===     Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,   ===
+          ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
+          ================================================================
+
+                                 ,,,         ,,,
+                               ;"   ^;     ;'   ",
+                              ;    s$$$$$$$s      ;
+                               ,  ss$$$$$$$$$$s  ,'
+                               ;s$$$$$$$$$$$$$$$
+                               $$$$$$$$$$$$$$$$$$
+                              $$$$P""Y$$$Y""W$$$$$
+                              $$$$  0"$$$"0  $$$$$
+                              $$$$  .$$$$$.  $$$$
+                               $$$$$$$$$$$$$$$$$
+                                "Y$$$"'*'"$$$Y"
+                                   "$$b.d$$"        
+
+
+
+
+=========================================================
+HOST: b460
+PID: 14244
+=========================================================
+
+=========================================================
+PARSING INPUT
+=========================================================
+
+Reading run.dat...
+
+Reading theory.dat...
+
+Reading model.dat...
+
+Reading species.csv...
+
+Reading mechanism.dat...
+
+Reading species.dat...
+
+Reading geom.xyzs...
+
+Reading active_space templates...
+No inchi column in csv file, getting inchi from SMILES
+No inchi column in csv file, getting inchi from SMILES
+! C1H3O2 PES: 1, SUB-PES: 1, Channels: 1
+  CH2OOH = CH3OO
+! C2H6 PES: 2, SUB-PES: 1, Channels: 1
+  C2H5 + H = C2H6
+! C2H7 PES: 3, SUB-PES: 1, Channels: 1
+  C2H6 + H = C2H5 + H2
+
+Building the base Run-Save filesystems at
+
+=========================================================
+THERMODRIVER
+
+Sarah Elliott, Kevin Moore, Andreas Copan,
+Murat Keceli, Yuri Georgievski, Stephen Klippenstein
+=========================================================
+Calculating Thermochem:
+=========================================
+Running SPC 1: ('SPC', 0, 0)
+--------------------------------------------------------------------------------------
+
+Preparing MESSPF input files for all species
+write test C2H6
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for C2H6
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+
+Preparing internal rotor info building partition functions...
+ERROR: The first potential value should be 0.
+
+Obtaining the vibrational frequencies and zpves...
+ERROR: The first potential value should be 0.
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H6/9709946
+There is a difference of  2.14 and 2.14 kcal/mol between harmonic and hindered torsional ZPVEs
+TAU FACTOR 1334.208426 	 1 	 4.381766  
+Debug:  tors model in scale set 1dhrfa
+Debug:  scale_coeff test: 4.381766377247425 1 19.199876584776025
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H6/5641785
+There is a difference of  1.43 and 1.43 kcal/mol between harmonic and hindered torsional ZPVEs
+TAU FACTOR 1334.208426 	 1 	 1.667206  
+
+Determining the symmetry factor...
+ - Determining internal sym number  using sampling routine.
+terminal atom accepted: 0 [2, 3, 4]
+terminal atom accepted: 1 [5, 6, 7]
+terminal atom accepted: 0 [2, 3, 4]
+terminal atom accepted: 1 [5, 6, 7]
+terminal atom accepted: 0 [2, 3, 4]
+terminal atom accepted: 1 [5, 6, 7]
+
+Obtaining the electronic energy + zpve...
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species C2H6
+  RRHO
+    Geometry[angstrom]        8
+      C         -0.00000      -0.00000      -0.77749
+      C         -0.00000      -0.00000       0.77749
+      H         -0.00000       1.03145      -1.16848
+      H          0.89326      -0.51572      -1.16848
+      H         -0.89326      -0.51572      -1.16848
+      H         -0.89326       0.51572       1.16848
+      H          0.00000      -1.03145       1.16848
+      H          0.89326       0.51572       1.16848
+    Core RigidRotor
+      SymmetryFactor          6.0
+    End  ! Core
+    Frequencies[1/cm]         17
+      287     302     450     921     1294    1430
+      1550    1636    1650    1722    1748    2856
+      2870    3283    3496    3503    3564
+    ElectronicLevels[1/cm]    1
+      0.0  1
+    Rotor  Hindered   # D5
+      Geometry[angstrom]     8
+            C          0.00000       0.00000       0.00000
+            C          0.00000       0.00000       1.55497
+            H          0.00000       1.03145      -0.39099
+            H          0.89326      -0.51572      -0.39099
+            H         -0.89326      -0.51572      -0.39099
+            H         -0.89326       0.51572       1.94596
+            H          0.00000      -1.03145       1.94596
+            H          0.89326       0.51572       1.94596
+      Group                  3   4   5
+      Axis                   1   2
+      Symmetry               3
+      Potential[kcal/mol]    4
+        0.00    6.80    7.79    6.80
+    End  ! HindRot
+    ZeroEnergy[kcal/mol]      0.08
+End
+
+write test H
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for H
+
+Obtaining the geometry...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r8d7Nrz7YOsLX/cA2laJoFU1_lj
+
+Obtaining the electronic energy...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r8d7Nrz7YOsLX/cA2laJoFU1_lj/SP/3vxlpJU
+Processor 14244 will prepare species: H
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: H
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+Debug:  Energy will be determined for basis species:  InChI=1S/H2/h1H
+Debug:  bases energies test: InChI=1S/H2/h1H H2
+
+Calculating energy for basis H2...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9171.220
+
+Harmonic ZPVE [kcal mol-1]: 13.11091719386736
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: 0.5 * 0.00000
+ABS in hartree: 0.5 * -704.76269
+ABS Energy  (kJ/mol):  -0.49823291072907
+Hf0K Energy (kJ/mol):  0.26494137702205967
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species H
+  Atom
+    Mass[amu]                 1.00782503223
+    ElectronicLevels[1/cm]    1
+      0.0  2
+End
+
+write test C2H5
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for C2H5
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL
+
+Preparing internal rotor info building partition functions...
+
+Obtaining the vibrational frequencies and zpves...
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H5/9078119
+TAU FACTOR 201.947952 	 1 	 0.949008  
+Debug:  tors model in scale set 1dhrfa
+Debug:  scale_coeff test: 0.9490079937839982 1 0.9006161722659293
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H5/7918964
+TAU FACTOR 201.947952 	 1 	 0.995014  
+
+Determining the symmetry factor...
+ - Determining internal sym number  using sampling routine.
+terminal atom accepted: 1 [4, 5, 6]
+terminal atom accepted: 1 [4, 5, 6]
+
+Obtaining the electronic energy + zpve...
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species C2H5
+  RRHO
+    Geometry[angstrom]        7
+      C         -0.01697      -0.00456      -0.79562
+      C         -0.01697      -0.00456       0.73251
+      H         -0.01697       0.95961      -1.31971
+      H          0.46619      -0.83894      -1.31971
+      H         -0.74388       0.72641       1.12660
+      H         -0.27970      -1.00139       1.12660
+      H          0.97855       0.26289       1.13765
+    Core RigidRotor
+      SymmetryFactor          1.0
+    End  ! Core
+    Frequencies[1/cm]         14
+      594     893     1131    1164    1345    1614
+      1665    1727    1732    3357    3461    3516
+      3552    3629
+    ElectronicLevels[1/cm]    1
+      0.0  2
+    Rotor  Hindered   # D4
+      Geometry[angstrom]     7
+            C          0.00000       0.00000       0.00000
+            C          0.00000       0.00000       1.52813
+            H          0.00000       0.96417      -0.52409
+            H          0.48316      -0.83438      -0.52410
+            H         -0.72690       0.73097       1.92222
+            H         -0.26273      -0.99683       1.92222
+            H          0.99552       0.26745       1.93327
+      Group                  3   4
+      Axis                   1   2
+      Symmetry               3
+      Potential[kcal/mol]    4
+        0.00    0.41    0.79    0.44
+    End  ! HindRot
+    ZeroEnergy[kcal/mol]      0.07
+End
+
+write test H2
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for H2
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+
+Preparing internal rotor info building partition functions...
+
+Obtaining the vibrational frequencies and zpves...
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9171.220
+
+Harmonic ZPVE [kcal mol-1]: 13.11091719386736
+
+Determining the symmetry factor...
+ - No torsions, internal sym is 1.0
+
+Obtaining the electronic energy + zpve...
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species H2
+  RRHO
+    Geometry[angstrom]        2
+      H          0.00000       0.00000      -0.36188
+      H          0.00000       0.00000       0.36188
+    Core RigidRotor
+      SymmetryFactor          2.0
+    End  ! Core
+    Frequencies[1/cm]         1
+      9171
+    ElectronicLevels[1/cm]    1
+      0.0  1
+    ZeroEnergy[kcal/mol]      0.02
+End
+
+write test CH4
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for CH4
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp
+
+Preparing internal rotor info building partition functions...
+
+Obtaining the vibrational frequencies and zpves...
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    1576.960    1576.980    1576.980    1809.650    1809.660    3343.840
+    3601.440    3601.450    3601.460
+
+Harmonic ZPVE [kcal mol-1]: 32.16310606580687
+
+Determining the symmetry factor...
+ - No torsions, internal sym is 1.0
+
+Obtaining the electronic energy + zpve...
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species CH4
+  RRHO
+    Geometry[angstrom]        5
+      C         -0.00000      -0.00000      -0.00000
+      H         -0.00000       0.89750       0.63463
+      H          0.89750       0.00000      -0.63463
+      H         -0.89750      -0.00000      -0.63463
+      H          0.00000      -0.89750       0.63463
+    Core RigidRotor
+      SymmetryFactor          12.0
+    End  ! Core
+    Frequencies[1/cm]         9
+      1577    1577    1577    1810    1810    3343
+      3601    3601    3601
+    ElectronicLevels[1/cm]    1
+      0.0  1
+    ZeroEnergy[kcal/mol]      0.05
+End
+
+--------------------------------------------------------------------------------------
+
+Running MESSPF calculations for all species
+
+Run MESSPF: C2H6
+Writing MESS Output file...
+ - Path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/C2H6-OTMSDBZUPAUEDD-UHFFFAOYSA-N/3
+
+Run MESSPF: H
+Writing MESS Output file...
+ - Path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/H-YZCKVEUIGOORGS-UHFFFAOYSA-N/3
+
+Run MESSPF: C2H5
+Writing MESS Output file...
+ - Path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/C2H5-QUPDWYMUPZLYJZ-UHFFFAOYSA-N/3
+
+Run MESSPF: H2
+Writing MESS Output file...
+ - Path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/H2-UFHFLCQGNIYNRP-UHFFFAOYSA-N/3
+
+Run MESSPF: CH4
+Writing MESS Output file...
+ - Path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/CH4-VNWKTOKETHGBQD-UHFFFAOYSA-N/3
+
+
+
+--------------------------------------------------------------------------------------
+
+Running Thermochemistry calculations for all species
+Processor 14244 will prepare species: C2H6
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: C2H6
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+  InChI=1S/CH4/h1H4
+Energy will be determined for basis species: InChI=1S/H2/h1H
+Energy will be determined for basis species: InChI=1S/CH4/h1H4
+
+Calculating energy for species C2H6
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk/SP/3vxlpJR
+- Calculating zero-point energy
+ERROR: The first potential value should be 0.
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H6/7701366
+There is a difference of  2.14 and 2.14 kcal/mol between harmonic and hindered torsional ZPVEs
+TAU FACTOR 1334.208426 	 1 	 4.381766  
+Debug:  tors model in scale set 1dhrfa
+Debug:  scale_coeff test: 4.381766377247425 1 19.199876584776025
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H6/7760111
+There is a difference of  1.43 and 1.43 kcal/mol between harmonic and hindered torsional ZPVEs
+TAU FACTOR 1334.208426 	 1 	 1.667206  
+Debug:  bases energies test: InChI=1S/H2/h1H H2
+
+Calculating energy for basis H2...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9171.220
+
+Harmonic ZPVE [kcal mol-1]: 13.11091719386736
+Debug:  bases energies test: InChI=1S/CH4/h1H4 CH4
+
+Calculating energy for basis CH4...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    1576.960    1576.980    1576.980    1809.650    1809.660    3343.840
+    3601.440    3601.450    3601.460
+
+Harmonic ZPVE [kcal mol-1]: 32.16310606580687
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: -1 * 0.00000
+ABS in hartree: -1 * -704.76269
+ich lookup InChI=1S/CH4/h1H4
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val -15.91
+Contribution from: C
+HF0K in kcal: 2 * -15.91000
+ABS in hartree: 2 * -25279.56491
+Processor 14244 will prepare species: H
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: H
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+Energy already found for basis species: InChI=1S/H2/h1H
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r8d7Nrz7YOsLX/cA2laJoFU1_lj/SP/3vxlpJU
+- Calculating zero-point energy
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: 0.5 * 0.00000
+ABS in hartree: 0.5 * -704.76269
+Processor 14244 will prepare species: C2H5
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: C2H5
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+  InChI=1S/CH4/h1H4
+Energy already found for basis species: InChI=1S/H2/h1H
+Energy already found for basis species: InChI=1S/CH4/h1H4
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL/SP/3vxlpJU
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H5/5547905
+TAU FACTOR 201.947952 	 1 	 0.949008  
+Debug:  tors model in scale set 1dhrfa
+Debug:  scale_coeff test: 0.9490079937839982 1 0.9006161722659293
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H5/3276710
+TAU FACTOR 201.947952 	 1 	 0.995014  
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: -1.5 * 0.00000
+ABS in hartree: -1.5 * -704.76269
+ich lookup InChI=1S/CH4/h1H4
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val -15.91
+Contribution from: C
+HF0K in kcal: 2 * -15.91000
+ABS in hartree: 2 * -25279.56491
+Processor 14244 will prepare species: H2
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: H2
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+Energy already found for basis species: InChI=1S/H2/h1H
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9171.220
+
+Harmonic ZPVE [kcal mol-1]: 13.11091719386736
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: 1 * 0.00000
+ABS in hartree: 1 * -704.76269
+Processor 14244 will prepare species: CH4
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: CH4
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+  InChI=1S/CH4/h1H4
+Energy already found for basis species: InChI=1S/H2/h1H
+Energy already found for basis species: InChI=1S/CH4/h1H4
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    1576.960    1576.980    1576.980    1809.650    1809.660    3343.840
+    3601.440    3601.450    3601.460
+
+Harmonic ZPVE [kcal mol-1]: 32.16310606580687
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: 0 * 0.00000
+ABS in hartree: 0 * -704.76269
+ich lookup InChI=1S/CH4/h1H4
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val -15.91
+Contribution from: C
+HF0K in kcal: 1 * -15.91000
+ABS in hartree: 1 * -25279.56491
+
+
+
+Starting NASA polynomials calculation for C2H6
+
+
+
+Attempting to fit NASA polynomials from 200-1000 and 1000-3000 K ranges using
+ temps from MESSPF file:
+ /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/C2H6-OTMSDBZUPAUEDD-UHFFFAOYSA-N/3.
+Generating NASA polynomials at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/THERM/NASA/C2H6-OTMSDBZUPAUEDD-UHFFFAOYSA-N/3
+
+
+
+Starting NASA polynomials calculation for H
+
+
+
+Attempting to fit NASA polynomials from 200-1000 and 1000-3000 K ranges using
+ temps from MESSPF file:
+ /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/H-YZCKVEUIGOORGS-UHFFFAOYSA-N/3.
+Generating NASA polynomials at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/THERM/NASA/H-YZCKVEUIGOORGS-UHFFFAOYSA-N/3
+
+
+
+Starting NASA polynomials calculation for C2H5
+
+
+
+Attempting to fit NASA polynomials from 200-1000 and 1000-3000 K ranges using
+ temps from MESSPF file:
+ /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/C2H5-QUPDWYMUPZLYJZ-UHFFFAOYSA-N/3.
+Generating NASA polynomials at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/THERM/NASA/C2H5-QUPDWYMUPZLYJZ-UHFFFAOYSA-N/3
+
+
+
+Starting NASA polynomials calculation for H2
+
+
+
+Attempting to fit NASA polynomials from 200-1000 and 1000-3000 K ranges using
+ temps from MESSPF file:
+ /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/H2-UFHFLCQGNIYNRP-UHFFFAOYSA-N/3.
+Generating NASA polynomials at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/THERM/NASA/H2-UFHFLCQGNIYNRP-UHFFFAOYSA-N/3
+
+
+
+Starting NASA polynomials calculation for CH4
+
+
+
+Attempting to fit NASA polynomials from 200-1000 and 1000-3000 K ranges using
+ temps from MESSPF file:
+ /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/CH4-VNWKTOKETHGBQD-UHFFFAOYSA-N/3.
+Generating NASA polynomials at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/THERM/NASA/CH4-VNWKTOKETHGBQD-UHFFFAOYSA-N/3
+CKIN NASA STR
+
+! vib model: harm
+! tors model: 1dhrfa
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = -18.68, Hf(298 K) = -22.07 kcal/mol
+C2H6                    H  6 C  2 O  0 N  0 G    200.0    3000.0   1000.0      1
+ 4.51240061E-01 2.42552481E-02-1.24008225E-05 3.06219182E-09-2.96024676E-13    2
+-1.21804331E+04 1.93523389E+01 4.16573372E+00 6.97587195E-03 1.58981764E-05    3
+-1.64043005E-08 4.43635120E-12-1.27680904E+04 2.12913920E+00                   4
+
+
+! vib model: harm
+! tors model: 1dhrfa
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = 39.74, Hf(298 K) = 40.20 kcal/mol
+H                       H  1 C  0 O  0 N  0 G    200.0    3000.0   1000.0      1
+ 2.49856327E+00 2.55065221E-06-1.88408471E-09 5.93128518E-13-6.85305400E-17    2
+ 1.94865271E+04-4.53664370E-01 2.49929216E+00 1.08315920E-06 3.56328243E-09    3
+-9.26844763E-12 5.08428347E-15 1.94861510E+04-4.57956552E-01                   4
+
+
+! vib model: harm
+! tors model: 1dhrfa
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = 37.80, Hf(298 K) = 35.13 kcal/mol
+C2H5                    H  5 C  2 O  0 N  0 G    200.0    3000.0   1000.0      1
+ 1.47743822E+00 1.60215616E-02-6.76152900E-06 1.40251335E-09-1.16045345E-13    2
+ 1.65631593E+04 1.73057099E+01 5.31372233E+00-9.78341609E-03 5.42507276E-05    3
+-5.97202253E-08 2.19631303E-11 1.61567947E+04 9.58899818E-01                   4
+
+
+! vib model: harm
+! tors model: 1dhrfa
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = 0.00, Hf(298 K) = 4.97 kcal/mol
+H2                      H  2 C  0 O  0 N  0 G    200.0    3000.0   1000.0      1
+ 3.47401022E+00 1.24802776E-04-1.85099146E-07 1.00424014E-10-1.42112685E-14    2
+-1.01561836E+03-4.21187604E+00 3.49944639E+00-2.14429328E-06 1.71180077E-08    3
+-2.95228745E-11 1.50293661E-14-1.01834811E+03-4.32573891E+00                   4
+
+
+! vib model: harm
+! tors model: 1dhrfa
+! sym model: sampling
+! energy level: 1.00 x RUmp2/6-31G*//RUmp2/sto-3g
+! tors level: RUmp2/sto-3g//RUmp2/sto-3g
+
+! Hf(0 K) = -15.91, Hf(298 K) = -17.83 kcal/mol
+CH4                     H  4 C  1 O  0 N  0 G    200.0    3000.0   1000.0      1
+-1.51583330E-01 1.18342754E-02-4.72703796E-06 9.19271692E-10-7.06704660E-14    2
+-9.24642825E+03 2.03205862E+01 5.07334183E+00-1.10078450E-02 3.38648028E-05    3
+-2.86142889E-08 8.48824457E-12-1.02426330E+04-4.52092674E+00                   4
+
+
+
+SPECIES           H(0 K)  H(298 K)  S(298 K)  Cp(300 K) Cp(500 K) Cp(1000 K) Cp(1500 K)
+
+                 kcal/mol kcal/mol cal/(mol K) ... 
+
+C2H6               -18.68   -22.07    56.66    14.47    19.58    29.95    35.31
+H                   39.74    40.20    27.39     4.97     4.97     4.97     4.97
+C2H5                37.80    35.13    60.10    11.58    15.68    23.89    28.70
+H2                   0.00     0.05    31.03     6.95     6.96     6.96     6.98
+CH4                -15.91   -17.83    44.46     8.18     9.91    15.51    19.29
+
+=========================================================
+EXITING THERMODRIVER
+=========================================================
+
+
+=========================================================
+kTPDRIVER
+
+Sarah Elliott, Kevin Moore, Andreas Copan,
+Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,
+Ahren Jasper, Stephen Klippenstein
+=========================================================
+=========================================
+
+Running PES 3: C2H7, SUB PES 1
+        Running Channel 1: C2H6+H = C2H5+H2
+Identifying reaction classes for transition states...
+  Preparing for reaction C2H6+H = C2H5+H2
+    User requested forward direction.
+    Running reaction as: C2H6+H = C2H5+H2
+    Reading from fileysystem...
+    Reaction class identified as:  high-spin hydrogen abstraction
+
+Identifying stability of all species...
+Debug:  pes_label dct {'C2H6+H': 'P1', 'C2H5+H2': 'P2', 'FC2H6+H': 'F1', 'FRBC2H6+H': 'FRB0', 'FC2H5+H2': 'F2', 'FPBC2H5+H2': 'FPB0', 'ts_3_1': 'B0'}
+--------------------------------------------------------------------------------------
+
+Preparing MESSPF input files for all species
+Preparing global keywords section for MESS input...
+ - Using temperatures and pressures defined by user
+ - Using internal AutoMech defaults for other MESS keywords:
+Debug:       EnergyStepOverTemperature, ExcessEnergyOverTemperature, ModelEnergyLimit
+Debug:       CalculationMethod, WellCutoff, ChemicalEigenvalueMax, ReductionMethod, AtomDistanceMin
+Preparing energy transfer section for MESS input...
+- Determining reference well species...
+- Determining information for the bath species...
+  - No bath provided, using Argon as bath
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+- Estimating the parameters...
+    - Series to use for estimation for estimation...
+      Bath: InChI=1S/Ar, Target: n-alkane 
+    - Effective atom numbers for estimation...
+      N_heavy:  2
+
+- Determining the energy-down transfer model parameters...
+  - Estimating the parameters...
+    - Series to use for estimation for estimation...
+      Bath: InChI=1S/Ar, Target: n-alkane 
+    - Calculating the LJ collisional frequencies...
+    - Effective atom numbers for estimation...
+    - Rotor Counts for N_eff:
+       N_pp:1, N_ps:0, N_pt:0, N_pq:0
+       N_ss:0, N_st:0, N_sq:0
+       N_tt:0, N_tq:0
+       N_qq:0
+       N_co:0, N_oo:0
+       N_ss_ring:0, N_rings:0
+      N_eff:  2.0
+    - Alpha parameters from estimation
+       T = 300 K, alpha = 126.324 cm-1
+       T = 1000 K, alpha = 249.553 cm-1
+       T = 2000 K, alpha = 410.634 cm-1
+Preparing reaction channel section for MESS input... 
+
+Calculating reference energy for PES
+
+Determining the reference energy for PES...
+ - Reference species assumed to be the  first set of reactants on PES: C2H6+H
+ - Energy Level for Reference Species: mp2_gs
+
+ - Calculating energy for C2H6...
+Processor 14244 will prepare species: C2H6
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: C2H6
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+  InChI=1S/CH4/h1H4
+
+Calculating energy for species C2H6
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk/SP/3vxlpJR
+- Calculating zero-point energy
+ERROR: The first potential value should be 0.
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H6/2184343
+There is a difference of  2.14 and 2.14 kcal/mol between harmonic and hindered torsional ZPVEs
+TAU FACTOR 1334.208426 	 1 	 4.381766  
+Debug:  tors model in scale set 1dhrfa
+Debug:  scale_coeff test: 4.381766377247425 1 19.199876584776025
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H6/2030212
+There is a difference of  1.43 and 1.43 kcal/mol between harmonic and hindered torsional ZPVEs
+TAU FACTOR 1334.208426 	 1 	 1.667206  
+Debug:  bases energies test: InChI=1S/H2/h1H H2
+
+Calculating energy for basis H2...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9171.220
+
+Harmonic ZPVE [kcal mol-1]: 13.11091719386736
+Debug:  bases energies test: InChI=1S/CH4/h1H4 CH4
+
+Calculating energy for basis CH4...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    1576.960    1576.980    1576.980    1809.650    1809.660    3343.840
+    3601.440    3601.450    3601.460
+
+Harmonic ZPVE [kcal mol-1]: 32.16310606580687
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: -1 * 0.00000
+ABS in hartree: -1 * -704.76269
+ich lookup InChI=1S/CH4/h1H4
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val -15.91
+Contribution from: C
+HF0K in kcal: 2 * -15.91000
+ABS in hartree: 2 * -25279.56491
+ - Calculating energy for H...
+Processor 14244 will prepare species: H
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: H
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+
+Calculating energy for species H
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r8d7Nrz7YOsLX/cA2laJoFU1_lj/SP/3vxlpJU
+- Calculating zero-point energy
+Debug:  bases energies test: InChI=1S/H2/h1H H2
+
+Calculating energy for basis H2...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9171.220
+
+Harmonic ZPVE [kcal mol-1]: 13.11091719386736
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: 0.5 * 0.00000
+ABS in hartree: 0.5 * -704.76269
+
+
+
+Reading PES electrion structure data
+        Running Channel 0: C2H6+H = C2H5+H2
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for C2H6
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+
+Preparing internal rotor info building partition functions...
+ERROR: The first potential value should be 0.
+
+Obtaining the vibrational frequencies and zpves...
+ERROR: The first potential value should be 0.
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H6/2836224
+There is a difference of  2.14 and 2.14 kcal/mol between harmonic and hindered torsional ZPVEs
+TAU FACTOR 1334.208426 	 1 	 4.381766  
+Debug:  tors model in scale set 1dhrfa
+Debug:  scale_coeff test: 4.381766377247425 1 19.199876584776025
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H6/9272347
+There is a difference of  1.43 and 1.43 kcal/mol between harmonic and hindered torsional ZPVEs
+TAU FACTOR 1334.208426 	 1 	 1.667206  
+
+Determining the symmetry factor...
+ - Determining internal sym number  using sampling routine.
+terminal atom accepted: 0 [2, 3, 4]
+terminal atom accepted: 1 [5, 6, 7]
+terminal atom accepted: 0 [2, 3, 4]
+terminal atom accepted: 1 [5, 6, 7]
+terminal atom accepted: 0 [2, 3, 4]
+terminal atom accepted: 1 [5, 6, 7]
+
+Obtaining the electronic energy + zpve...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/r0-n78CHZch8b/cjKwJf2F_I4Uk/SP/3vxlpJR
+Processor 14244 will prepare species: C2H6
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: C2H6
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+  InChI=1S/CH4/h1H4
+Debug:  Energy will be determined for basis species:  InChI=1S/H2/h1H
+Debug:  Energy will be determined for basis species:  InChI=1S/CH4/h1H4
+Debug:  bases energies test: InChI=1S/H2/h1H H2
+
+Calculating energy for basis H2...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9171.220
+
+Harmonic ZPVE [kcal mol-1]: 13.11091719386736
+Debug:  bases energies test: InChI=1S/CH4/h1H4 CH4
+
+Calculating energy for basis CH4...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rMBYkEMREomO2/cl5XVSgPhKPOp
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    1576.960    1576.980    1576.980    1809.650    1809.660    3343.840
+    3601.440    3601.450    3601.460
+
+Harmonic ZPVE [kcal mol-1]: 32.16310606580687
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: -1 * 0.00000
+ABS in hartree: -1 * -704.76269
+ich lookup InChI=1S/CH4/h1H4
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val -15.91
+Contribution from: C
+HF0K in kcal: 2 * -15.91000
+ABS in hartree: 2 * -25279.56491
+ABS Energy  (kJ/mol):  -79.42705812004519
+Hf0K Energy (kJ/mol):  -0.12458012364990975
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for H
+
+Obtaining the geometry...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r8d7Nrz7YOsLX/cA2laJoFU1_lj
+
+Obtaining the electronic energy...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r8d7Nrz7YOsLX/cA2laJoFU1_lj/SP/3vxlpJU
+Processor 14244 will prepare species: H
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: H
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+Debug:  Energy will be determined for basis species:  InChI=1S/H2/h1H
+Debug:  bases energies test: InChI=1S/H2/h1H H2
+
+Calculating energy for basis H2...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS/SP/3vxlpJR
+- Calculating zero-point energy
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9171.220
+
+Harmonic ZPVE [kcal mol-1]: 13.11091719386736
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: 0.5 * 0.00000
+ABS in hartree: 0.5 * -704.76269
+ABS Energy  (kJ/mol):  -0.49823291072907
+Hf0K Energy (kJ/mol):  0.26494137702205967
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for C2H5
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL
+
+Preparing internal rotor info building partition functions...
+
+Obtaining the vibrational frequencies and zpves...
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H5/9422139
+TAU FACTOR 201.947952 	 1 	 0.949008  
+Debug:  tors model in scale set 1dhrfa
+Debug:  scale_coeff test: 0.9490079937839982 1 0.9006161722659293
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H5/2799712
+TAU FACTOR 201.947952 	 1 	 0.995014  
+
+Determining the symmetry factor...
+ - Determining internal sym number  using sampling routine.
+terminal atom accepted: 1 [4, 5, 6]
+terminal atom accepted: 1 [4, 5, 6]
+
+Obtaining the electronic energy + zpve...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/r3wQTTKQZH4QM/cKVxpVV3Q6lmL/SP/3vxlpJU
+Processor 14244 will prepare species: C2H5
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: C2H5
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+  InChI=1S/CH4/h1H4
+Debug:  Energy already found for basis species:  InChI=1S/H2/h1H
+Debug:  Energy already found for basis species:  InChI=1S/CH4/h1H4
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: -1.5 * 0.00000
+ABS in hartree: -1.5 * -704.76269
+ich lookup InChI=1S/CH4/h1H4
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val -15.91
+Contribution from: C
+HF0K in kcal: 2 * -15.91000
+ABS in hartree: 2 * -25279.56491
+ABS Energy  (kJ/mol):  -78.77548741090799
+Hf0K Energy (kJ/mol):  0.25204384786764444
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for H2
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+
+Preparing internal rotor info building partition functions...
+
+Obtaining the vibrational frequencies and zpves...
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9171.220
+
+Harmonic ZPVE [kcal mol-1]: 13.11091719386736
+
+Determining the symmetry factor...
+ - No torsions, internal sym is 1.0
+
+Obtaining the electronic energy + zpve...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rmqRRvGI3pPJU/crPXxKOTQgztS/SP/3vxlpJR
+Processor 14244 will prepare species: H2
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: H2
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+Debug:  Energy already found for basis species:  InChI=1S/H2/h1H
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: 1 * 0.00000
+ABS in hartree: 1 * -704.76269
+ABS Energy  (kJ/mol):  -1.1231108391551092
+Hf0K Energy (kJ/mol):  0.0
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for ts_3_1_0
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/roNwizn-_5qbB/c2LmBg8MgfP98
+
+Preparing internal rotor info building partition functions...
+ERROR: The first potential value should be 0.
+
+Obtaining the vibrational frequencies and zpves...
+ERROR: The first potential value should be 0.
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/roNwizn-_5qbB/c2LmBg8MgfP98
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H7/9170585
+TAU FACTOR 224.625820 	 1 	 0.971485  
+Debug:  tors model in scale set 1dhrfa
+Debug:  scale_coeff test: 0.9714851291608673 1 0.943783356180707
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/roNwizn-_5qbB/c2LmBg8MgfP98
+Path for PROJROT/FREQ Job:
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/PROJROT/FREQ/C2H7/8027187
+TAU FACTOR 224.625820 	 1 	 1.012457  
+
+Determining the symmetry factor...
+ - Determining internal sym number  using sampling routine.
+terminal atom accepted: 0 [2, 3, 4]
+terminal atom accepted: 0 [2, 3, 4]
+
+Obtaining the electronic energy + zpve...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/roNwizn-_5qbB/c2LmBg8MgfP98/SP/3vxlpJU
+Processor 14244 will prepare species: ts_3_1_0
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: ts_3_1_0
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+  InChI=1S/CH4/h1H4
+Debug:  Energy already found for basis species:  InChI=1S/H2/h1H
+Debug:  Energy already found for basis species:  InChI=1S/CH4/h1H4
+ich lookup InChI=1S/H2/h1H
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val 0.0
+Contribution from: [HH]
+HF0K in kcal: -0.5 * 0.00000
+ABS in hartree: -0.5 * -704.76269
+ich lookup InChI=1S/CH4/h1H4
+thermfile /lcrc/project/CMRP/amech/mechanalyzer/thermfit/thermdb/Hfdb_0K.csv
+hf_val -15.91
+Contribution from: C
+HF0K in kcal: 2 * -15.91000
+ABS in hartree: 2 * -25279.56491
+ABS Energy  (kJ/mol):  -79.88301593495893
+Hf0K Energy (kJ/mol):  0.317240254263427
+reac ene -4.745006315494157e-05 -4.745006315494157e-05
+reac ene 0.00010091084118187116 0.00010091084118187116
+prod ene 9.599843176221536e-05 9.599843176221536e-05
+prod ene 0.0 0.0
+Debug:  REAC HoF (0 K) spc lvl kcal/mol:  0.03354714468741632
+Debug:  REAC HoF (0 K) ts lvl kcal/mol:  0.03354714468741632
+Debug:  PROD HoF (0 K) spc lvl kcal/mol:  0.060239925398576595
+Debug:  PROD HoF (0 K) ts lvl kcal/mol:  0.060239925398576595
+Debug:  TS HoF (0 K) ts lvl kcal/mol:  0.07582224050273113
+Debug:  TS HoF (0 K) approx spc lvl kcal/mol:  0.07582224050273113
+Debug:  rxn (0, (('C2H6', 'H'), ('C2H5', 'H2')))
+Debug:  enes {'reacs': -21.017603964852107, 'prods': -20.99091118414095, 'fake_vdwr': -22.01760396485211, 'fake_vdwr_ts': -21.017603964852107, 'fake_vdwp': -21.99091118414095, 'fake_vdwp_ts': -20.99091118414095, 'ts': [-20.975328869036794]}
+Debug:  label dct {'C2H6+H': 'P1', 'C2H5+H2': 'P2', 'FC2H6+H': 'F1', 'FRBC2H6+H': 'FRB0', 'FC2H5+H2': 'F2', 'FPBC2H5+H2': 'FPB0', 'ts_3_1': 'B0'}
+Debug:  written labels ['P1', 'P2']
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Writing MESS input file at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/RATE/C2H7/0
+Debug:  MESS Input:
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     500.0  550.0  600.0  650.0  700.0  750.0  800.0  850.0  900.0  950.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500  1600.0  1700.0  1800.0  1900.0  2000.0  2200.0  2500.0
+PressureList[atm]                      0.03  0.1  0.3  1.0  3.0  10.0  30.0  100.0
+!
+EnergyStepOverTemperature              .2
+ModelEnergyLimit[kcal/mol]             800
+!
+CalculationMethod                      direct
+!
+WellCutoff                             10
+ChemicalEigenvalueMax                  0.2
+!
+ReductionMethod                        diagonalization
+!
+AtomDistanceMin[bohr]                  1.3
+RateOutput                             rate.out
+!
+!
+!===================================================
+!  BEGIN MASTER EQUATION MODEL
+!===================================================
+!
+Model
+!
+!---------------------------------------------------
+!  ENERGY TRANSFER SECTION
+!---------------------------------------------------
+  EnergyRelaxation
+    Exponential
+       Factor[1/cm]                     126.324
+       Power                            0.605
+       ExponentCutoff                   15.000
+  End  ! EneRelax
+  CollisionFrequency
+    LennardJones
+       Epsilons[1/cm]                   140.087    140.087
+       Sigmas[angstrom]                 3.852      3.852
+       Masses[amu]                      30.047     39.962
+  End  ! CollidFreq
+!---------------------------------------------------
+!  REACTION CHANNELS SECTION
+!---------------------------------------------------
+! Fake Well for C2H6+H
+Well F1
+  Species
+    RRHO
+      Geometry[angstrom]        9
+        C         -0.00000      -0.00000      -0.77749
+        C         -0.00000      -0.00000       0.77749
+        H         -0.00000       1.03145      -1.16848
+        H          0.89326      -0.51572      -1.16848
+        H         -0.89326      -0.51572      -1.16848
+        H         -0.89326       0.51572       1.16848
+        H          0.00000      -1.03145       1.16848
+        H          0.89326       0.51572       1.16848
+        H          0.00000       0.00000       4.34354
+      Core RigidRotor
+        SymmetryFactor          6.0
+      End  ! Core
+      Frequencies[1/cm]         19
+        30      50      287     302     450     921
+        1294    1430    1550    1636    1650    1721
+        1748    2857    2870    3283    3496    3502
+        3564
+      ElectronicLevels[1/cm]    1
+        0.0  2
+      Rotor  Hindered   # D5
+        Geometry[angstrom]     8
+              C          0.00000       0.00000       0.00000
+              C          0.00000       0.00000       1.55497
+              H          0.00000       1.03145      -0.39099
+              H          0.89326      -0.51572      -0.39099
+              H         -0.89326      -0.51572      -0.39099
+              H         -0.89326       0.51572       1.94596
+              H          0.00000      -1.03145       1.94596
+              H          0.89326       0.51572       1.94596
+        Group                  3   4   5
+        Axis                   1   2
+        Symmetry               3
+        Potential[kcal/mol]    4
+          0.00    6.80    7.79    6.80
+      End  ! HindRot
+      ZeroEnergy[kcal/mol]      -22.02
+  End  ! Species
+End  ! Well
+! Fake Well for C2H5+H2
+Well F2
+  Species
+    RRHO
+      Geometry[angstrom]        9
+        C         -0.01697      -0.00456      -0.79562
+        C         -0.01697      -0.00456       0.73251
+        H         -0.01697       0.95961      -1.31971
+        H          0.46619      -0.83894      -1.31971
+        H         -0.74388       0.72641       1.12660
+        H         -0.27970      -1.00139       1.12660
+        H          0.97855       0.26289       1.13765
+        H          0.00000       0.00000       4.31271
+        H          0.00000       0.00000       5.03648
+      Core RigidRotor
+        SymmetryFactor          2.0
+      End  ! Core
+      Frequencies[1/cm]         18
+        30      50      70      594     893     1130
+        1164    1345    1615    1665    1727    1732
+        3357    3461    3516    3552    3629    9171
+      ElectronicLevels[1/cm]    1
+        0.0  2
+      Rotor  Hindered   # D4
+        Geometry[angstrom]     7
+              C          0.00000       0.00000       0.00000
+              C          0.00000       0.00000       1.52813
+              H          0.00000       0.96417      -0.52409
+              H          0.48316      -0.83438      -0.52410
+              H         -0.72690       0.73097       1.92222
+              H         -0.26273      -0.99683       1.92222
+              H          0.99552       0.26745       1.93327
+        Group                  3   4
+        Axis                   1   2
+        Symmetry               3
+        Potential[kcal/mol]    4
+          0.00    0.41    0.79    0.44
+      End  ! HindRot
+      ZeroEnergy[kcal/mol]      -21.99
+  End  ! Species
+End  ! Well
+! C2H6 + H
+Bimolecular P1
+!---------------------------------------------------
+  Fragment CC
+    RRHO
+      Geometry[angstrom]        8
+        C         -0.00000      -0.00000      -0.77749
+        C         -0.00000      -0.00000       0.77749
+        H         -0.00000       1.03145      -1.16848
+        H          0.89326      -0.51572      -1.16848
+        H         -0.89326      -0.51572      -1.16848
+        H         -0.89326       0.51572       1.16848
+        H          0.00000      -1.03145       1.16848
+        H          0.89326       0.51572       1.16848
+      Core RigidRotor
+        SymmetryFactor          6.0
+      End  ! Core
+      Frequencies[1/cm]         17
+        287     302     450     921     1294    1430
+        1550    1636    1650    1722    1748    2856
+        2870    3283    3496    3503    3564
+      ElectronicLevels[1/cm]    1
+        0.0  1
+      Rotor  Hindered   # D5
+        Geometry[angstrom]     8
+              C          0.00000       0.00000       0.00000
+              C          0.00000       0.00000       1.55497
+              H          0.00000       1.03145      -0.39099
+              H          0.89326      -0.51572      -0.39099
+              H         -0.89326      -0.51572      -0.39099
+              H         -0.89326       0.51572       1.94596
+              H          0.00000      -1.03145       1.94596
+              H          0.89326       0.51572       1.94596
+        Group                  3   4   5
+        Axis                   1   2
+        Symmetry               3
+        Potential[kcal/mol]    4
+          0.00    6.80    7.79    6.80
+      End  ! HindRot
+      ZeroEnergy[kcal/mol]    0.0
+  End  ! Frag1
+!---------------------------------------------------
+  Fragment [H]
+    Atom
+      Mass[amu]                 1.00782503223
+      ElectronicLevels[1/cm]    1
+        0.0  2
+  End  ! Frag2
+!---------------------------------------------------
+  GroundEnergy[kcal/mol]    -21.02
+End  ! Bimol
+! C2H5 + H2
+Bimolecular P2
+!---------------------------------------------------
+  Fragment [CH2]C
+    RRHO
+      Geometry[angstrom]        7
+        C         -0.01697      -0.00456      -0.79562
+        C         -0.01697      -0.00456       0.73251
+        H         -0.01697       0.95961      -1.31971
+        H          0.46619      -0.83894      -1.31971
+        H         -0.74388       0.72641       1.12660
+        H         -0.27970      -1.00139       1.12660
+        H          0.97855       0.26289       1.13765
+      Core RigidRotor
+        SymmetryFactor          1.0
+      End  ! Core
+      Frequencies[1/cm]         14
+        594     893     1131    1164    1345    1614
+        1665    1727    1732    3357    3461    3516
+        3552    3629
+      ElectronicLevels[1/cm]    1
+        0.0  2
+      Rotor  Hindered   # D4
+        Geometry[angstrom]     7
+              C          0.00000       0.00000       0.00000
+              C          0.00000       0.00000       1.52813
+              H          0.00000       0.96417      -0.52409
+              H          0.48316      -0.83438      -0.52410
+              H         -0.72690       0.73097       1.92222
+              H         -0.26273      -0.99683       1.92222
+              H          0.99552       0.26745       1.93327
+        Group                  3   4
+        Axis                   1   2
+        Symmetry               3
+        Potential[kcal/mol]    4
+          0.00    0.41    0.79    0.44
+      End  ! HindRot
+      ZeroEnergy[kcal/mol]    0.0
+  End  ! Frag1
+!---------------------------------------------------
+  Fragment [HH]
+    RRHO
+      Geometry[angstrom]        2
+        H          0.00000       0.00000      -0.36188
+        H          0.00000       0.00000       0.36188
+      Core RigidRotor
+        SymmetryFactor          2.0
+      End  ! Core
+      Frequencies[1/cm]         1
+        9171
+      ElectronicLevels[1/cm]    1
+        0.0  1
+      ZeroEnergy[kcal/mol]    0.0
+  End  ! Frag2
+!---------------------------------------------------
+  GroundEnergy[kcal/mol]    -20.99
+End  ! Bimol
+Barrier FRB0 P1 F1
+  RRHO
+    Stoichiometry  C2H7
+    Core PhaseSpaceTheory
+      FragmentGeometry[angstrom]    8
+        C         -0.00000      -0.00000      -0.77749
+        C         -0.00000      -0.00000       0.77749
+        H         -0.00000       1.03145      -1.16848
+        H          0.89326      -0.51572      -1.16848
+        H         -0.89326      -0.51572      -1.16848
+        H         -0.89326       0.51572       1.16848
+        H          0.00000      -1.03145       1.16848
+        H          0.89326       0.51572       1.16848
+      FragmentGeometry[angstrom]    1
+        H          0.00000       0.00000       0.00000
+      SymmetryFactor                  6.0
+      PotentialPrefactor[au]          10.0
+      PotentialPowerExponent          6.0
+      TSTLevel EJ
+    End  ! Core
+    Frequencies[1/cm]         17
+      287     302     450     921     1294    1430
+      1550    1636    1650    1722    1748    2856
+      2870    3283    3496    3503    3564
+    ElectronicLevels[1/cm]    1
+      0.0  2
+    Rotor  Hindered   # D5
+      Geometry[angstrom]     8
+            C          0.00000       0.00000       0.00000
+            C          0.00000       0.00000       1.55497
+            H          0.00000       1.03145      -0.39099
+            H          0.89326      -0.51572      -0.39099
+            H         -0.89326      -0.51572      -0.39099
+            H         -0.89326       0.51572       1.94596
+            H          0.00000      -1.03145       1.94596
+            H          0.89326       0.51572       1.94596
+      Group                  3   4   5
+      Axis                   1   2
+      Symmetry               3
+      Potential[kcal/mol]    4
+        0.00    6.80    7.79    6.80
+    End  ! HindRot
+    ZeroEnergy[kcal/mol]      -21.02
+End  ! Barrier
+Barrier FPB0 P2 F2
+  RRHO
+    Stoichiometry  C2H7
+    Core PhaseSpaceTheory
+      FragmentGeometry[angstrom]    7
+        C         -0.01697      -0.00456      -0.79562
+        C         -0.01697      -0.00456       0.73251
+        H         -0.01697       0.95961      -1.31971
+        H          0.46619      -0.83894      -1.31971
+        H         -0.74388       0.72641       1.12660
+        H         -0.27970      -1.00139       1.12660
+        H          0.97855       0.26289       1.13765
+      FragmentGeometry[angstrom]    2
+        H          0.00000       0.00000      -0.36188
+        H          0.00000       0.00000       0.36188
+      SymmetryFactor                  2.0
+      PotentialPrefactor[au]          10.0
+      PotentialPowerExponent          6.0
+      TSTLevel EJ
+    End  ! Core
+    Frequencies[1/cm]         15
+      594     893     1131    1164    1345    1614
+      1665    1727    1732    3357    3461    3516
+      3552    3629    9171
+    ElectronicLevels[1/cm]    1
+      0.0  2
+    Rotor  Hindered   # D4
+      Geometry[angstrom]     7
+            C          0.00000       0.00000       0.00000
+            C          0.00000       0.00000       1.52813
+            H          0.00000       0.96417      -0.52409
+            H          0.48316      -0.83438      -0.52410
+            H         -0.72690       0.73097       1.92222
+            H         -0.26273      -0.99683       1.92222
+            H          0.99552       0.26745       1.93327
+      Group                  3   4
+      Axis                   1   2
+      Symmetry               3
+      Potential[kcal/mol]    4
+        0.00    0.41    0.79    0.44
+    End  ! HindRot
+    ZeroEnergy[kcal/mol]      -20.99
+End  ! Barrier
+Barrier B0 F1 F2
+  RRHO
+    Geometry[angstrom]        9
+      C          0.00009       0.07718      -0.82522
+      C         -0.00011       0.08059       0.72082
+      H         -0.00007       1.10965      -1.21931
+      H         -0.89376      -0.43754      -1.21700
+      H          0.89425      -0.43717      -1.21676
+      H          0.90655       0.53641       1.15372
+      H         -0.90707       0.53604       1.15348
+      H          0.00009      -1.15217       1.14252
+      H          0.00023      -2.03373       1.44638
+    Core RigidRotor
+      SymmetryFactor          1.0
+    End  ! Core
+    Frequencies[1/cm]         19
+      397     684     955     1016    1136    1311
+      1377    1542    1567    1617    1683    1728
+      1734    1779    3370    3426    3540    3553
+      3568
+    ElectronicLevels[1/cm]    1
+      0.0  2
+    Rotor  Hindered   # D5
+      Geometry[angstrom]     9
+            C          0.00000       0.00000       0.00000
+            C          0.00000       0.00000       1.54604
+            H          0.00000       1.03334      -0.39182
+            H         -0.89401      -0.51368      -0.39279
+            H          0.89401      -0.51367      -0.39279
+            H          0.90681       0.45469       1.97982
+            H         -0.90681       0.45469       1.97982
+            H          0.00000      -1.23368       1.96502
+            H          0.00000      -2.11591       2.26694
+      Group                  3   4   5
+      Axis                   1   2
+      Symmetry               3
+      Potential[kcal/mol]    4
+        0.00    0.96    1.75    0.96
+    End  ! HindRot
+    ZeroEnergy[kcal/mol]      -20.98
+End  ! Barrier
+End  ! Model
+!
+!===================================================
+!  END MASTER EQUATION MODEL
+!===================================================
+
+
+
+
+--------------------------------------------------------------------------------------
+Running MESS for the input file at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/RATE/C2H7/0
+
+
+
+--------------------------------------------------------------------------------------
+
+Fitting Rate Constants for PES to Functional Forms
+------------------------------------------------
+
+Reading and Fitting Rates for C2H6+H=C2H5+H2
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+No pressure dependence detected. Grabbing k(T)s at 1.0 atm
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Single fit errors acceptable: Using single fits
+
+Final Fitting Parameters in CHEMKIN Format: C2H6+H=C2H5+H2                                    2.157E+12     0.248     -961
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:   500-2500 K,  MeanAbsErr:   1.0%,  MaxErr:   3.1%
+
+
+=========================================================
+EXITING kTPDRIVER
+=========================================================
+
+
+
+
+
+          ================================================================
+          ==                    EXITING AUTOMECHANIC                    ==
+          ================================================================
+
