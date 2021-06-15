@@ -3,6 +3,7 @@ jobs:
     test-mechdriver:
         docker:
             - image: continuumio/miniconda3
+        working_directory: ~/mechdriver
         steps:
             - checkout  # checkout the code
             - run: 
@@ -25,8 +26,7 @@ jobs:
                 name: Assess PEP8
                 command: |
                     source activate mechdriver-env
-                    pwd
-                    flake8 --exit-zero ../
+                    flake8 --exit-zero mechdriver
                     pylint --rcfile=.pylintrc mechdriver
             - store_test_results:
                     path: htmlcov
