@@ -2,9 +2,9 @@
 Executes the automation part of 1DMin
 """
 
-from mechroutines.trans._routines import lj
-from mechroutines.trans._routines import build
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.trans._routines import run_onedmin
+from mechroutines.trans._routines import build_transport_file
 
 
 def run_tsk(tsk, spc_queue,
@@ -29,14 +29,14 @@ def run_tsk(tsk, spc_queue,
         ioprinter.info_message(
             'Obtaining LJ-Params using OneDMin', newline=1)
         for spc_name, _ in spc_queue:
-            lj.onedmin(spc_name,
-                       spc_dct, thy_dct, etrans_keyword_dct,
-                       run_prefix, save_prefix)
+            run_onedmin(spc_name,
+                        spc_dct, thy_dct, etrans_keyword_dct,
+                        run_prefix, save_prefix)
     elif tsk == 'write_transport':
         ioprinter.obj('vspace')
         ioprinter.obj('line_dash')
         ioprinter.info_message(
             'Writing the CHEMKIN transport file', newline=1)
-        build.collate_properties(spc_queue,
-                                 spc_dct, thy_dct, etrans_keyword_dct,
-                                 save_prefix)
+        build_transport_file(spc_queue,
+                             spc_dct, thy_dct, etrans_keyword_dct,
+                             save_prefix)

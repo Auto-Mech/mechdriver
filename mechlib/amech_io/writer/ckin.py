@@ -3,6 +3,7 @@
 """
 
 import os
+from phydat import phycon
 
 
 # COMMON HEADER STUFF FOR kTP and THERMO CKIN FILES
@@ -29,7 +30,7 @@ def _model_header(spc_mod_dct_i, refscheme=''):
     tors_geo_info = spc_mod_dct_i['tors']['geolvl'][1]
     tors_ene_info = spc_mod_dct_i['tors']['enelvl'][1]
     # vpt2_info = spc_mod_dct_i['vib']['vpt2lvl'][1]
-    vpt2_info = None
+    # vpt2_info = None
 
     ene_infos = tuple(inf for key, inf in spc_mod_dct_i['ene'].items()
                       if 'lvl' in key)
@@ -44,9 +45,9 @@ def _model_header(spc_mod_dct_i, refscheme=''):
         chemkin_header_str += '! tors level: {}{}/{}//{}{}/{}\n'.format(
             tors_ene_info[1][3], tors_ene_info[1][1], tors_ene_info[1][2],
             tors_geo_info[1][3], tors_geo_info[1][1], tors_geo_info[1][2])
-    if vpt2_info is not None:
-        chemkin_header_str += '! vpt2 level: {}/{}\n'.format(
-            vpt2_info[1][1], vpt2_info[1][2])
+    # if vpt2_info is not None:
+    #     chemkin_header_str += '! vpt2 level: {}/{}\n'.format(
+    #         vpt2_info[1][1], vpt2_info[1][2])
     if refscheme:
         chemkin_header_str += '! reference scheme: {0}\n'.format(refscheme)
 
@@ -78,51 +79,57 @@ def write_rxn_file(ckin_rxn_dct, pes_formula, ckin_path):
     if not os.path.exists(ckin_path):
         os.makedirs(ckin_path)
 
-    # Set the header string
-    header_str = ckin_rxn_dct['header'] + '\n\n\n'
+    # Add the REACTION section header
+    ckin_str = 'REACTIONS' + '\n\n'
+    # ckin_str = 'REACTION   CAL/MOLE  MOLES' + '\n\n\n'
 
-    # Write the header to the new, full PES ckin file
-    # This also causes old file to be overwritten
-    pes_ckin_name = os.path.join(ckin_path, pes_formula+'.ckin')
-    with open(pes_ckin_name, 'w') as cfile:
-        cfile.write(header_str)
+    # Set the model header string
+    ckin_str += ckin_rxn_dct['header'] + '\n\n'
 
     # Write the files by looping over the string
     for rxn, rstring in ckin_rxn_dct.items():
         if rxn != 'header':
+            ckin_str += rstring+'\n\n'
 
-            # Append to PES file
-            with open(pes_ckin_name, 'a') as cfile:
-                cfile.write(rstring+'\n\n')
+    # Add the REACTION section ending
+    ckin_str += 'END' + '\n\n'
 
-            # Write to individual ckin file
-            rxn_ckin_name = os.path.join(ckin_path, rxn+'.ckin')
-            with open(rxn_ckin_name, 'w') as cfile:
-                cfile.write(header_str + rstring)
+    pes_ckin_name = os.path.join(ckin_path, pes_formula+'.ckin')
+    with open(pes_ckin_name, 'w') as cfile:
+        cfile.write(ckin_str)
 
 
 # THERMO
+# combine with nasapoly str
 def nasa_polynomial(hform0, hform298, ckin_poly_str):
     """ write the nasa polynomial str
     """
     hf_str = (
-        '! Hf(0 K) = {:.2f}, '.format(hform0) +
-        'Hf(298 K) = {:.2f} kcal/mol\n'.format(hform298)
+        '! Hf(0 K) = {:.2f}, '.format(hform0 * phycon.EH2KCAL) +
+        'Hf(298 K) = {:.2f} kcal/mol\n'.format(hform298 * phycon.EH2KCAL)
     )
     return hf_str + ckin_poly_str
 
 
+# prob can handle with autorun func
 def write_nasa_file(ckin_nasa_str, ckin_path):
     """ write out the nasa polynomials
     """
     if not os.path.exists(ckin_path):
         os.makedirs(ckin_path)
-    fpath = os.path.join(ckin_path, 'all.ckin')
+    fpath = os.path.join(ckin_path, 'all_therm.ckin')
+
+    # Add the REACTION section header
+    ckin_str = 'THERMO' + '\n\n\n'
+    ckin_str += ckin_nasa_str + '\n\n'
+    ckin_str += 'END' + '\n\n'
+
     with open(fpath, 'w') as nasa_file:
-        nasa_file.write(ckin_nasa_str)
+        nasa_file.write(ckin_str)
 
 
 # TRANSPORT
+# prob can handle with autorun func
 def write_transport_file(ckin_trans_str, ckin_path):
     """ write out the transport file
     """

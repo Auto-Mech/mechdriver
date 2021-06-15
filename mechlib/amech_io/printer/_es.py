@@ -3,34 +3,11 @@ ES routines prints
 """
 
 from itertools import chain
-# import logging
-
 import automol
 from phydat import phycon
-from mechlib.amech_io.printer._tsk import keyword_list
-from mechlib.amech_io.printer import info_message
-
-def es_task_header(tsk, spc_name, spc_smiles, es_keyword_dct, thy_dct):
-    """ Print the top of the section for an electronic structure task
-    """
-    print()
-    # printer.obj('line_dash', prechar='\n')
-    # task_str = (
-    #     'Task'
-    #     '\n'
-    #     '  {}'.format(tsk)
-    #     '\n\n'
-    #     'Species'
-    #     '  Name: {}'.format(spc_name)
-    #     '  SMILES: {}'.format(spc_smiles)
-    #     '\n\n'
-    #     'Options'
-    #     keyword_list(keyword_dct, thy_dct=thy_dct)  # need indent 
-    # )
-    print(task_str)
+from mechlib.amech_io.printer._print import info_message
 
 
-# Results
 def energy(ene):
     """ Print an energy value
     """
@@ -56,10 +33,11 @@ def frequencies(freqs):
     """ Print out the Harmonic frequencies and ZPVE
     """
     if freqs is not None:
-        freq_str = automol.util.vec.string(freqs, num_per_row=6, val_format='{0:>12.3f}')
+        freq_str = automol.util.vec.string(
+            freqs, num_per_row=6, val_format='{0:>12.3f}')
         harm_zpe = (sum(freqs) / 2.0) * phycon.WAVEN2KCAL
-        info_message('Harmonic frequencies [cm-1]:\n{}'.format(freq_str), newline=1)
-        info_message('Harmonic ZPVE [kcal mol-1]: {}'.format(harm_zpe), newline=1)
+        info_message('\nHarmonic frequencies [cm-1]:\n{}'.format(freq_str))
+        info_message('\nHarmonic ZPVE [kcal mol-1]: {}'.format(harm_zpe))
 
 
 def molecular_properties(dmom, polar):
@@ -166,7 +144,7 @@ def run_rotors(run_tors_names, const_names):
                 'User requested all torsions of system will be fixed.',
                 newline=1)
 
-       
+
 def save_irc(save_path):
     """ a
     """

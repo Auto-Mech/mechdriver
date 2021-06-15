@@ -1,13 +1,16 @@
-"""
-   Main Driver to parse and sort the mechanism input files and
-   launch the desired MechDriver drivers
+""" Central Execution script to launch a MechDriver process which will
+    parse all of the user-supplied input files in a specified directory, then
+    launches all of the requested electronic structure, transport,
+    thermochemistry and kinetics calculations via their associated
+    sub-drivers.
 """
 
 import sys
-from drivers import esdriver, thermodriver, ktpdriver, transdriver, procdriver
+# import argparse
 from mechlib.filesys import prefix_fs
 from mechlib.amech_io import parser as ioparser
 from mechlib.amech_io import printer as ioprinter
+from drivers import esdriver, thermodriver, ktpdriver, transdriver, procdriver
 
 
 # Set runtime options based on user input
@@ -24,11 +27,12 @@ ioprinter.program_header('inp')
 INP_STRS = ioparser.read_amech_input(JOB_PATH)
 
 THY_DCT = ioparser.thy.theory_dictionary(INP_STRS['thy'])
-KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(INP_STRS['mod'], THY_DCT)
+KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(
+    INP_STRS['mod'], THY_DCT)
 INP_KEY_DCT = ioparser.run.input_dictionary(INP_STRS['run'])
 PES_IDX_DCT = ioparser.run.pes_idxs(INP_STRS['run'])
 SPC_IDX_DCT = ioparser.run.spc_idxs(INP_STRS['run'])
-TSK_LST_DCT = ioparser.run.tasks(INP_STRS['run'], THY_DCT, KMOD_DCT, SMOD_DCT)
+TSK_LST_DCT = ioparser.run.tasks(INP_STRS['run'], THY_DCT)
 SPC_DCT, GLOB_DCT = ioparser.spc.species_dictionary(
     INP_STRS['spc'], INP_STRS['dat'], INP_STRS['geo'], 'csv')
 PES_DCT = ioparser.mech.pes_dictionary(
@@ -56,11 +60,11 @@ THERM_TSKS = TSK_LST_DCT.get('thermo')
 if THERM_TSKS is not None:
     ioprinter.program_header('thermo')
     thermodriver.run(
-        SPC_RLST,
+        PES_RLST, SPC_RLST,
         THERM_TSKS,
         KMOD_DCT, SMOD_DCT,
         SPC_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH
     )
     ioprinter.program_exit('thermo')
 
@@ -69,11 +73,11 @@ if TRANS_TSKS is not None:
     ioprinter.program_header('trans')
     if PES_DCT:
         transdriver.run(
-            SPC_RLST,
-            SPC_DCT,
-            THY_DCT,
+            PES_RLST, SPC_RLST,
             TRANS_TSKS,
-            INP_KEY_DCT
+            SMOD_DCT,
+            SPC_DCT, THY_DCT,
+            INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
         )
     ioprinter.program_exit('trans')
 
@@ -83,9 +87,9 @@ if KTP_TSKS is not None:
     ktpdriver.run(
         PES_RLST,
         KTP_TSKS,
-        SPC_DCT, GLOB_DCT, THY_DCT,
+        SPC_DCT, GLOB_DCT,
         KMOD_DCT, SMOD_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH
     )
     ioprinter.program_exit('ktp')
 
@@ -95,11 +99,10 @@ if PROC_TSKS is not None:
     PES_IDX = None
     procdriver.run(
         PES_RLST, SPC_RLST,
-        SPC_DCT,
         PROC_TSKS,
-        THY_DCT,
-        INP_KEY_DCT,
-        SMOD_DCT
+        SPC_DCT,
+        KMOD_DCT, SMOD_DCT, THY_DCT,
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
     )
     ioprinter.program_exit('proc')
 

@@ -1,5 +1,5 @@
-"""
-  Handle the generation of necessary paths for various things
+""" Library to build specifically formatted directory paths for
+    various calculations conducted by MechDriver.
 """
 
 import os
@@ -7,37 +7,6 @@ import random
 import autofile
 import automol
 from mechanalyzer.inf import spc as sinfo
-from mechlib.amech_io import printer as ioprinter
-
-
-# specialized stuff (to delete)
-def write_cwd_pf_file(mess_str, inchi, fname='pf.inp'):
-    """ Write a copy of the MESS file in the current working directory
-    """
-
-    # Set starting path
-    starting_path = os.getcwd()
-
-    # Set the MESS paths and build dirs if needed
-    jobdir_mess_path = messpf_path(starting_path, inchi)
-    if not os.path.exists(jobdir_mess_path):
-        os.makedirs(jobdir_mess_path)
-
-    # Write the files
-    file_path = os.path.join(jobdir_mess_path, fname)
-    if os.path.exists(file_path):
-        for i in range(1, 51):
-            if not os.path.exists(file_path+str(i+1)):
-                fin_path = file_path+str(i+1)
-                break
-    else:
-        fin_path = file_path
-    with open(fin_path, 'w') as file_obj:
-        file_obj.write(mess_str)
-
-    ioprinter.saving('MESS input copy', fin_path)
-
-    return fin_path
 
 
 # Set paths to MESS jobs
@@ -62,30 +31,52 @@ def thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix):
     return thm_paths
 
 
-def output_path(dat, make_path=True, print_path=False):
-    """ Set path and make directories for making additional
-        files in the directory where mechdriver drops are submitted
-        and its output made
+def output_path(dat, make_path=True, print_path=False, prefix=None):
+    """ Create the path for sub-directories locatted in the run directory
+        where the MechDriver calculation was launched. These sub-directories
+        are used to store various useful output from the MechDriver process.
+
+        :param make_path: physically create directory for path during function
+        :type make_path: bool
+        :param print_path: print the created path to the screen
+        :type print_path: bool
+        :param prefix: prefix for directory to be built
+        :type prefix: str
+        :rtype: str
     """
 
     # Initialize the path
-    starting_path = os.getcwd()
+    starting_path = prefix if prefix is not None else os.getcwd()
     path = os.path.join(starting_path, dat)
 
-    # Make and print the path if desired
+    # Make and print the path, if requested
     if make_path:
         if not os.path.exists(path):
             os.makedirs(path)
     if print_path:
-        print('ckin path:'.format(path))
-        print(bld_path)
+        print('output path for {}: {}'.format(dat, path))
 
     return path
 
 
 def job_path(prefix, prog, job, fml,
              locs_idx=None, make_path=True, print_path=False):
-    """ Create the path for some type of job
+    """ Create the path for various types of calculations for
+        a given species or PES.
+
+        :param prefix: root prefix to run/save filesyste,
+        :type prefix: str
+        :param prog: name of the program(s) called in the job
+        :type prog: str
+        :param fml: stoichiometry of the species/PES associate with job
+        :fml type: str
+        :param locs_idx: number denoting final layer of filesys for job
+        :type locs_idx: int
+        :param make_path: physically create directory for path during function
+        :type make_path: bool
+        :param print_path: print the created path to the screen
+        :type print_path: bool
+        :rtype: str
     """
 
     # Initialize the build object
@@ -102,11 +93,12 @@ def job_path(prefix, prog, job, fml,
 
     if not isinstance(fml, str):
         fml = '-'.join(fml)
+
     # Build the path
     bld_locs = [job, fml, locs_idx]
     bld_path = bld_fs[-1].path(bld_locs)
 
-    # Make and print the path if desired
+    # Make and print the path, if requested
     if make_path:
         bld_fs[-1].create([job, fml, locs_idx])
     if print_path:

@@ -1,23 +1,52 @@
-""" driver for rate constant evaluations
+""" Driver for kinetic evaluations
+
+    Main Loop of Driver:
+        (1) PES
+
+    Main Workflow:
+        (1) Collate and process data from the SAVE filesystem
+        (2) Format and write data into MESS input file
+        (3) Run MESS file to obtain rate constants
+        (5) Fit rate constants to functional forms
+        (6) Write functional forms to mechanism file
 """
 
 import autorun
 import ratefit
-from mechroutines.pf import ktp as ktproutines
+from mechroutines import ktp as ktproutines
 from mechlib.amech_io import writer
 from mechlib.amech_io import parser
 from mechlib.amech_io import job_path
 from mechlib.amech_io import output_path
 from mechlib.amech_io import printer as ioprinter
-from mechlib.reaction import split_unstable_rxn
+from mechlib.reaction import split_unstable_pes
 
 
 def run(pes_rlst,
         ktp_tsk_lst,
-        spc_dct, glob_dct, thy_dct,
+        spc_dct, glob_dct,
         pes_mod_dct, spc_mod_dct,
-        run_prefix, save_prefix):
-    """ main driver for generation of full set of rate constants on a single PES
+        run_prefix, save_prefix, mdriver_path):
+    """ Executes all kinetics tasks.
+
+        :param pes_rlst: species from PESs to run
+        :type pes_rlst: tuple(dict[str: dict])
+        :param spc_rlst: lst of species to run
+        :type spc_rlst: tuple(dict[str: dict])
+        :param es_tsk_lst: list of the electronic structure tasks
+        :type es_tsk_lst: tuple(tuple(str, str, dict))
+        :param spc_dct: species information
+        :type spc_dct: dict[str:dict]
+        :param glob_dct: global information for all species
+        :type glob_dct: dict[str: dict]
+        :param thy_dct: all of the theory information
+        :type thy_dct: dict[str:dict]
+        :param run_prefix: root-path to the run-filesystem
+        :type run_prefix: str
+        :param save_prefix: root-path to the save-filesystem
+        :type save_prefix: str
+        :param mdriver_path: path where mechdriver is running
+        :type mdriver_path: str
     """
 
     # --------------------------------------- #
@@ -54,19 +83,21 @@ def run(pes_rlst,
             pes_mod = tsk_key_dct['kin_model']
             spc_mod = tsk_key_dct['spc_model']
 
-            spc_dct, rxn_lst, label_dct = _process(
+            spc_dct, rxn_lst, instab_chnls, label_dct = _process(
                 pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
-                thy_dct, spc_dct, glob_dct, run_prefix, save_prefix)
+                spc_dct, glob_dct, run_prefix, save_prefix)
 
             ioprinter.messpf('write_header')
 
+            # Doesn't give full string
             mess_inp_str, dats = ktproutines.rates.make_messrate_str(
                 pes_idx, rxn_lst,
                 pes_mod, spc_mod,
-                spc_dct, thy_dct,
+                spc_dct,
                 pes_mod_dct, spc_mod_dct,
-                label_dct,
-                mess_path, run_prefix, save_prefix)
+                instab_chnls, label_dct,
+                mess_path, run_prefix, save_prefix,
+                make_lump_well_inp=tsk_key_dct['lump_wells'])
 
             autorun.write_input(
                 mess_path, mess_inp_str,
@@ -92,9 +123,9 @@ def run(pes_rlst,
             ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
 
             if label_dct is None:
-                spc_dct, rxn_lst, label_dct = _process(
+                spc_dct, rxn_lst, _, label_dct = _process(
                     pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
-                    thy_dct, spc_dct, run_prefix, save_prefix)
+                    spc_dct, glob_dct, run_prefix, save_prefix)
 
             ioprinter.obj('vspace')
             ioprinter.obj('line_dash')
@@ -123,15 +154,16 @@ def run(pes_rlst,
                 'header': writer.ckin.model_header((spc_mod,), spc_mod_dct)
             })
 
-            ckin_path = output_path('CKIN')
+            ckin_path = output_path('CKIN', prefix=mdriver_path)
             writer.ckin.write_rxn_file(
                 ckin_dct, pes_formula, ckin_path)
+
 
 # ------- #
 # UTILITY #
 # ------- #
 def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
-             thy_dct, spc_dct, glob_dct, run_prefix, save_prefix):
+             spc_dct, glob_dct, run_prefix, save_prefix):
     """ Build info needed for the task
     """
 
@@ -141,18 +173,18 @@ def _process(pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, spc_mod,
     ioprinter.message(
         'Identifying reaction classes for transition states...')
     ts_dct = parser.spc.ts_dct_from_ktptsks(
-        pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct, thy_dct,
+        pes_idx, rxn_lst, ktp_tsk_lst, spc_mod_dct,
         spc_dct, run_prefix, save_prefix)
     spc_dct = parser.spc.combine_sadpt_spc_dcts(
         ts_dct, spc_dct, glob_dct)
 
     # Set reaction list with unstable species broken apart
     ioprinter.message('Identifying stability of all species...', newline=1)
-    chkd_rxn_lst = split_unstable_rxn(
+    chkd_rxn_lst, instab_chnls = split_unstable_pes(
         rxn_lst, spc_dct, spc_mod_dct_i, save_prefix)
 
     # Build the MESS label idx dictionary for the PES
     label_dct = ktproutines.label.make_pes_label_dct(
         chkd_rxn_lst, pes_idx, spc_dct, spc_mod_dct_i)
 
-    return spc_dct, chkd_rxn_lst, label_dct
+    return spc_dct, chkd_rxn_lst, instab_chnls, label_dct
