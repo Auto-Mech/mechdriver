@@ -17,8 +17,8 @@ PATH = os.path.dirname(os.path.realpath(__file__))
 CWD_INP_DIR = os.path.join(PATH, 'inp')
 
 # Set paths where tests will run
-# TMP_DIR = tempfile.mkdtemp()
-TMP_DIR = os.path.join(os.getcwd(), 'tmp')
+TMP_DIR = tempfile.mkdtemp()
+# TMP_DIR = os.path.join(os.getcwd(), 'tmp')
 TMP_INP_DIR = os.path.join(TMP_DIR, 'inp')
 TMP_RUN_DIR = os.path.join(TMP_DIR, 'run')
 TMP_SAVE_DIR = os.path.join(TMP_DIR, 'save')
@@ -34,7 +34,7 @@ PRESSURES = (1.0, 'high')
 
 
 # Test functions
-def test__rrho():
+def __rrho():
     """ Run es, thermo, and rates for PES; standard run
     """
     _run('run_c2h6_h_rrho.temp')
@@ -45,7 +45,7 @@ def test__rrho():
 def test__1dhrfa():
     """ Run es, thermo, and rates for PES; standard run
     """
-    # _run('run_c2h6_h_1dhrfa.temp')
+    _run('run_c2h6_h_1dhrfa.temp')
     _chk_therm('c2h6_h_1dhrfa_therm.ckin', 'all_therm.ckin')
     _chk_rates('c2h6_h_1dhrfa_rate.ckin', 'C2H7.ckin')
 
