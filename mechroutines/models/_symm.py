@@ -74,7 +74,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
 
         # Obtain overall number, reduced as needed
         int_symm = automol.geom.reduce_internal_symm(
-            int_symm, ext_symm, endgrp, geo)
+            geo, int_symm, ext_symm, endgrp)
 
         symm_factor = ext_symm * int_symm
 

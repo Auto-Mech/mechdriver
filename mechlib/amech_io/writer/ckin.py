@@ -79,27 +79,24 @@ def write_rxn_file(ckin_rxn_dct, pes_formula, ckin_path):
     if not os.path.exists(ckin_path):
         os.makedirs(ckin_path)
 
-    # Set the header string
-    header_str = ckin_rxn_dct['header'] + '\n\n\n'
+    # Add the REACTION section header
+    ckin_str = 'REACTIONS' + '\n\n'
+    # ckin_str = 'REACTION   CAL/MOLE  MOLES' + '\n\n\n'
 
-    # Write the header to the new, full PES ckin file
-    # This also causes old file to be overwritten
-    pes_ckin_name = os.path.join(ckin_path, pes_formula+'.ckin')
-    with open(pes_ckin_name, 'w') as cfile:
-        cfile.write(header_str)
+    # Set the model header string
+    ckin_str += ckin_rxn_dct['header'] + '\n\n'
 
     # Write the files by looping over the string
     for rxn, rstring in ckin_rxn_dct.items():
         if rxn != 'header':
+            ckin_str += rstring+'\n\n'
 
-            # Append to PES file
-            with open(pes_ckin_name, 'a') as cfile:
-                cfile.write(rstring+'\n\n')
+    # Add the REACTION section ending
+    ckin_str += 'END' + '\n\n'
 
-            # Write to individual ckin file
-            rxn_ckin_name = os.path.join(ckin_path, rxn+'.ckin')
-            with open(rxn_ckin_name, 'w') as cfile:
-                cfile.write(header_str + rstring)
+    pes_ckin_name = os.path.join(ckin_path, pes_formula+'.ckin')
+    with open(pes_ckin_name, 'w') as cfile:
+        cfile.write(ckin_str)
 
 
 # THERMO
@@ -120,9 +117,15 @@ def write_nasa_file(ckin_nasa_str, ckin_path):
     """
     if not os.path.exists(ckin_path):
         os.makedirs(ckin_path)
-    fpath = os.path.join(ckin_path, 'all.ckin')
+    fpath = os.path.join(ckin_path, 'all_therm.ckin')
+
+    # Add the REACTION section header
+    ckin_str = 'THERMO' + '\n\n\n'
+    ckin_str += ckin_nasa_str + '\n\n'
+    ckin_str += 'END' + '\n\n'
+
     with open(fpath, 'w') as nasa_file:
-        nasa_file.write(ckin_nasa_str)
+        nasa_file.write(ckin_str)
 
 
 # TRANSPORT

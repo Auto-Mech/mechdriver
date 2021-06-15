@@ -42,7 +42,7 @@ def run(pes_rlst, spc_rlst,
         therm_tsk_lst,
         pes_mod_dct, spc_mod_dct,
         spc_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix, mdriver_path):
     """ Executes all thermochemistry tasks.
 
         :param pes_rlst: species from PESs to run
@@ -67,6 +67,8 @@ def run(pes_rlst, spc_rlst,
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
         :type save_prefix: str
+        :param mdriver_path: path where mechdriver is running
+        :type mdriver_path: str
     """
 
     # Print Header
@@ -216,7 +218,7 @@ def run(pes_rlst, spc_rlst,
 
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str = ''
-        ckin_path = output_path('CKIN')
+        ckin_path = output_path('CKIN', prefix=mdriver_path)
         for idx, spc_name in enumerate(spc_queue):
 
             ioprinter.nasa('calculate', spc_name)

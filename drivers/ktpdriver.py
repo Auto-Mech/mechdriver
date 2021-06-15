@@ -1,6 +1,4 @@
-""" Driver for thermochemistry evaluations including
-    heats-of-formation and NASA polynomials describing
-    thermodynamic quantities: Enthalpy, Entropy, Gibbs
+""" Driver for kinetic evaluations
 
     Main Loop of Driver:
         (1) PES
@@ -28,7 +26,7 @@ def run(pes_rlst,
         ktp_tsk_lst,
         spc_dct, glob_dct,
         pes_mod_dct, spc_mod_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix, mdriver_path):
     """ Executes all kinetics tasks.
 
         :param pes_rlst: species from PESs to run
@@ -47,6 +45,8 @@ def run(pes_rlst,
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
         :type save_prefix: str
+        :param mdriver_path: path where mechdriver is running
+        :type mdriver_path: str
     """
 
     # --------------------------------------- #
@@ -154,7 +154,7 @@ def run(pes_rlst,
                 'header': writer.ckin.model_header((spc_mod,), spc_mod_dct)
             })
 
-            ckin_path = output_path('CKIN')
+            ckin_path = output_path('CKIN', prefix=mdriver_path)
             writer.ckin.write_rxn_file(
                 ckin_dct, pes_formula, ckin_path)
 
