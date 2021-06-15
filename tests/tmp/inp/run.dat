@@ -20,7 +20,7 @@ end spc
     all conf_energy   runlvl=mp2_gs    inplvl=mp2_sto
 end els
 
-thermo
+# thermo
     write_mess      kin_model=global  spc_model=onedhrfamod
     run_mess        kin_model=global  spc_model=onedhrfamod  nprocs=10
     run_fits        kin_model=global  spc_model=onedhrfamod

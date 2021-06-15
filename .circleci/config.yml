@@ -17,11 +17,19 @@ jobs:
                     source activate mechdriver-env
                     python setup.py install
             - run:
-                name: Test mechdriver pep8
+                name: Test mechdriver
                 command: |
                     source activate mechdriver-env
-                    flake8 --exit-zero ../mechdriver
-                    pylint --rcfile=../../.pylintrc mechdriver
+                    pytest -v --disable-pytest-warnings --cov=mechdriver --pyargs mechdriver --cov-report=html
+            - run:
+                name: Assess PEP8
+                command: |
+                    source activate mechdriver-env
+                    pwd
+                    flake8 --exit-zero ../
+                    pylint --rcfile=.pylintrc mechdriver
+            - store_test_results:
+                    path: htmlcov
 workflows:
     version: 2
     build-all:
