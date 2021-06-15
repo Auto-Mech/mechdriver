@@ -6,7 +6,10 @@ from mechlib.amech_io import printer as ioprinter
 
 
 def read_geom(pf_filesystems):
-    """ Read the geometry from the filesys
+    """ Read a Cartesian geometry from the SAVE filesystem for a
+        species or transition state.
+
+        something about electronic structure mehtod in pf_filesys
     """
 
     # Get the harmonic filesys information
@@ -23,7 +26,9 @@ def read_geom(pf_filesystems):
 
 
 def read_rotational_values(pf_filesystems):
-    """ Read the rotational info from filesys
+    """ Read the vibration-rotation matrix and centrifugal distortion
+        constant matrix calculated via VPT2 from the SAVE filesystem
+        for a species or transition state.
     """
 
     # Set up vpt2 level filesystem for rotational values

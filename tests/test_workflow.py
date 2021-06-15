@@ -106,6 +106,37 @@ def _fill_template_and_write_file(templatefile, inpfile):
     with open(new_inp_file, 'w') as fobj:
         fobj.write(new_inp_str)
 
+def _chk_therm(therm_dat_file):
+    """ Read Check the
+    """
+
+    # Read the data in the thermo and rate CKIN files
+    ckin_path = os.path.join(TMP_DIR, 'CKIN')
+
+    therm_calc_str = read_text_file([ckin_path], 'all.ckin')
+    therm_dat_str = read_text_file(['data'], therm_dat_file, path=PATH)
+
+    nasa7_calc = chemkin_io.parser.thermo.create_spc_nasa7_dct(therm_calc_str)
+    nasa7_dat = chemkin_io.parser.thermo.create_spc_nasa7_dct(therm_dat_str)
+
+    thm_calc = mechanalyzer.calculator.thermo.create_spc_thermo_dct(
+        nasa7_calc, (500., 1000., 1500., 2000.))
+    thm_dat = mechanalyzer.calculator.thermo.create_spc_thermo_dct(
+        nasa7_dat, (500., 1000., 1500., 2000.))
+
+    spc_str = read_text_file([], 'species.csv', path=TMP_INP_DIR)
+    spc_ident_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, 'csv')
+
+    thm_dct = mechanalyzer.calculator.compare.get_aligned_spc_thermo_dct(
+        [thm_dat, thm_calc], [spc_ident_dct, spc_ident_dct])
+
+    for thm_data in thm_dct.values():
+        # 0 is data/therm and 1 is calc'd therm
+        assert numpy.allclose(thm_data[0][0], thm_data[1][0])
+        assert numpy.allclose(thm_data[0][1], thm_data[1][1])
+        assert numpy.allclose(thm_data[0][2], thm_data[1][2])
+        assert numpy.allclose(thm_data[0][3], thm_data[1][3])
+
 
 if __name__ == '__main__':
     # test__rrho()

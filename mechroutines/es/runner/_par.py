@@ -226,6 +226,12 @@ def molpro_opts_mat(spc_info, geo):
     """ prepare the errors and options mat to perform successive
         single-point energy calculations in Molpro when the RHF fails to
         converge. This currently only works for doublets.
+
+        :param spc_info:
+        :type spc_info:
+        :param geo: input molecular geometry object
+        :type geo: automol.geom object
+        :rtype: (tuple(str), tuple(dict[str: str]))
     """
 
     # Get the nelectrons, spins, and orbitals for the wf card

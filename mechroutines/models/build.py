@@ -18,7 +18,7 @@ from mechroutines.models import typ
 from mechroutines.models import etrans
 from mechroutines.models import _rot as rot
 from mechroutines.models import _tors as tors
-from mechroutines.models import _sym as symm
+from mechroutines.models import _symm as symm
 from mechroutines.models import _vib as vib
 from mechroutines.models import _flux as flux
 from mechroutines.models import _util as util

@@ -103,7 +103,7 @@ def run(pes_rlst, spc_rlst,
         for idx, spc_name in enumerate(spc_queue):
             print('write test {}'.format(spc_name))
             for spc_mod in spc_mods:
-                messpf_inp_str = thmroutines.qt.make_messpf_str(
+                messpf_inp_str, dat_dct = thmroutines.qt.make_messpf_str(
                     pes_mod_dct[pes_mod]['therm_temps'],
                     spc_dct, spc_name,
                     pes_mod_dct[pes_mod], spc_mod_dct[spc_mod],
@@ -112,6 +112,7 @@ def run(pes_rlst, spc_rlst,
                 ioprinter.info_message(messpf_inp_str)
                 autorun.write_input(
                     thm_paths[idx][spc_mod][0], messpf_inp_str,
+                    aux_dct=dat_dct,
                     input_name='pf.inp')
 
     # Run the MESSPF files that have been written
@@ -227,7 +228,8 @@ def run(pes_rlst, spc_rlst,
             # Call dies if you haven't run "write mess" task
             ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
                 spc_name, spc_dct,
-                thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
+                thm_paths[idx][spc_mod][0], thm_paths[idx][spc_mod][1])
+                # thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
         print('CKIN NASA STR\n')
         print(ckin_nasa_str)

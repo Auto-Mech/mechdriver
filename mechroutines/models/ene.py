@@ -23,14 +23,14 @@ def read_energy(spc_dct_i, pf_filesystems,
     if read_ene:
         e_elec = electronic_energy(
             spc_dct_i, pf_filesystems, spc_model_dct_i, conf=conf)
-        ioprinter.debug_message('e_elec in models ene ', e_elec)
+        # ioprinter.debug_message('e_elec in models ene ', e_elec)
 
     e_zpe = None
     if read_zpe:
         e_zpe = zero_point_energy(
             spc_dct_i, pf_filesystems, spc_model_dct_i,
             run_prefix, saddle=saddle)
-        ioprinter.debug_message('zpe in models ene ', e_zpe)
+        # ioprinter.debug_message('zpe in models ene ', e_zpe)
 
     # Return the total energy requested
     ene = None
