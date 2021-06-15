@@ -3,7 +3,7 @@
 
 import os
 import shutil
-# import tempfile
+import tempfile
 import subprocess
 import numpy
 import chemkin_io
