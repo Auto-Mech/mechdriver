@@ -21,7 +21,7 @@ jobs:
                 name: Test mechdriver
                 command: |
                     source activate mechdriver-env
-                    pytest -v --disable-pytest-warnings --cov=mechdriver --pyargs mechdriver --cov-report=html
+                    pytest -v --disable-pytest-warnings --cov=. --cov-report=html
             - run:
                 name: Assess PEP8
                 command: |
