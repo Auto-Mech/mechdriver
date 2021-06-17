@@ -238,7 +238,7 @@ def energy_transfer(etrans_save_fs, etrans_locs,
 
     # Write the params to the save file system
     etrans_save_fs[-1].file.lj_input.write(input_str, etrans_locs)
-    etrans_save_fs[-1].file.info.write(inf_obj, etrans_locs)
+    etrans_save_fs[-1].file.lennard_jones_info.write(inf_obj, etrans_locs)
     etrans_save_fs[-1].file.molpro_inp_file.write(els_str, etrans_locs)
     etrans_save_fs[-1].file.epsilon.write(avg_epsilon, etrans_locs)
     etrans_save_fs[-1].file.sigma.write(avg_sigma, etrans_locs)

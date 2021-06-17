@@ -145,6 +145,7 @@ def run(pes_rlst, spc_rlst,
             spc_info = sinfo.from_dct(spc_dct[spc_name])
             spc_fml = automol.inchi.formula_string(spc_info[0])
             thm_prefix = [spc_fml, automol.inchi.inchi_key(spc_info[0])]
+            print('HEEEERE')
             thm_paths[idx]['final'] = (
                 job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=tdx),
                 job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=tdx)
@@ -228,10 +229,10 @@ def run(pes_rlst, spc_rlst,
 
             # Build and write the NASA polynomial in CHEMKIN-format string
             # Call dies if you haven't run "write mess" task
+            print(thm_paths[idx])
             ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
                 spc_name, spc_dct,
-                thm_paths[idx][spc_mod][0], thm_paths[idx][spc_mod][1])
-                # thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
+                thm_paths[idx]['final'][0], thm_paths[idx]['final'][1])
             ckin_nasa_str += '\n\n'
         print('CKIN NASA STR\n')
         print(ckin_nasa_str)
