@@ -19,8 +19,8 @@ DAT_PATH = os.path.join(PATH, 'data')
 CWD_INP_DIR = os.path.join(PATH, 'inp')
 
 # Set paths where tests will run
-# TMP_DIR = tempfile.mkdtemp()
-TMP_DIR = os.path.join(os.getcwd(), 'tmp')
+TMP_DIR = tempfile.mkdtemp()
+# TMP_DIR = os.path.join(os.getcwd(), 'tmp')
 TMP_INP_DIR = os.path.join(TMP_DIR, 'inp')
 TMP_RUN_DIR = os.path.join(TMP_DIR, 'run')
 TMP_SAVE_DIR = os.path.join(TMP_DIR, 'save')
