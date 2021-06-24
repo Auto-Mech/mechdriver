@@ -240,8 +240,7 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
         {}, pes_mod_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix,
         pforktp='ktp', zrxn=None)
-    ene_chnlvl = hf0k * phycon.KCAL2EH
-    hf0k_trs *= phycon.KCAL2EH
+    ene_chnlvl = hf0k
 
     # Create info dictionary
     inf_dct = {
@@ -357,9 +356,6 @@ def mol_data(spc_name, spc_dct,
             spc_dct, spc_name, ene_chnlvl,
             chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix, zrxn=zrxn)
-        ene_chnlvl = hf0k * phycon.KCAL2EH
-        hf0k_trs *= phycon.KCAL2EH
-
     ene_reflvl = None
 
     #  Build the energy transfer section strings

@@ -65,21 +65,22 @@ def make_messrate_str(pes_idx, rxn_lst,
         run_prefix, save_prefix, label_dct,
         pes_model_dct_i, spc_model_dct_i, spc_model)
 
-    # Generate second string with well lumping if needed
+    # Write MESS input string; make second string with well lumping if needed
+    mess_inp_str = mess_io.writer.messrates_inp_str(
+        globkey_str, rxn_chan_str,
+        energy_trans_str=energy_trans_str, well_lump_str=None)
     if (not is_abstraction_pes(spc_dct, rxn_lst, pes_idx) and
        make_lump_well_inp):
-        print('Need to do well lumping scheme')
+        print('User requested well lumping scheme')
         script_str = autorun.SCRIPT_DCT['messrate']
         mess_inp_str = autorun.mess.well_lumped_input_file(
-            script_str, mess_path, globkey_str, rxn_chan_str,
-            energy_trans_str=energy_trans_str,
+            script_str, mess_path,
+            pes_model_dct_i['lump_pressure'],
+            pes_model_dct_i['lump_temp'],
+            mess_inp_str,
             aux_dct=dats,
             input_name='mess.inp',  # need dif name for this?
             output_names=('mess.aux',))
-    else:
-        mess_inp_str = mess_io.writer.messrates_inp_str(
-            globkey_str, rxn_chan_str,
-            energy_trans_str=energy_trans_str, well_lump_str=None)
 
     # Write the MESS file into the filesystem
     ioprinter.obj('line_plus')
@@ -174,6 +175,9 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, unstable_chnls,
     full_dat_str_dct = {}
     pes_ene_dct = {}
     conn_lst = tuple()
+
+    # Read all of the energies for all of the species
+
 
     # Set the energy and model for the first reference species
     ioprinter.info_message('\nCalculating reference energy for PES')
