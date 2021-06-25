@@ -3,22 +3,24 @@
 
 import os
 import shutil
-# import tempfile
+import tempfile
 import subprocess
 import numpy
 import chemkin_io
-from ioformat import read_text_file
+from ioformat import pathtools
 import mechanalyzer
 import ratefit
 
 
-# Set path where test input file exist
+# Set path where test input files and output data comparison exist
 PATH = os.path.dirname(os.path.realpath(__file__))
+DAT_PATH = os.path.join(PATH, 'data')
+
 CWD_INP_DIR = os.path.join(PATH, 'inp')
 
 # Set paths where tests will run
-# TMP_DIR = tempfile.mkdtemp()
-TMP_DIR = os.path.join(os.getcwd(), 'tmp')
+TMP_DIR = tempfile.mkdtemp()
+# TMP_DIR = os.path.join(os.getcwd(), 'tmp')
 TMP_INP_DIR = os.path.join(TMP_DIR, 'inp')
 TMP_RUN_DIR = os.path.join(TMP_DIR, 'run')
 TMP_SAVE_DIR = os.path.join(TMP_DIR, 'save')
@@ -34,7 +36,7 @@ PRESSURES = (1.0, 'high')
 
 
 # Test functions
-def test__rrho():
+def __rrho():
     """ Run es, thermo, and rates for PES; standard run
     """
     _run('run_c2h6_h_rrho.temp')
@@ -45,7 +47,7 @@ def test__rrho():
 def test__1dhrfa():
     """ Run es, thermo, and rates for PES; standard run
     """
-    # _run('run_c2h6_h_1dhrfa.temp')
+    _run('run_c2h6_h_1dhrfa.temp')
     _chk_therm('c2h6_h_1dhrfa_therm.ckin', 'all_therm.ckin')
     _chk_rates('c2h6_h_1dhrfa_rate.ckin', 'C2H7.ckin')
 
@@ -111,8 +113,8 @@ def _chk_therm(therm_dat_file, therm_calc_file):
     # Read the data in the thermo and rate CKIN files
     ckin_path = os.path.join(TMP_DIR, 'CKIN')
 
-    therm_calc_str = read_text_file([ckin_path], therm_calc_file)
-    therm_dat_str = read_text_file(['data'], therm_dat_file, path=PATH)
+    therm_calc_str = pathtools.read_file([ckin_path], therm_calc_file)
+    therm_dat_str = pathtools.read_file(DAT_PATH, therm_dat_file)
 
     nasa7_calc = chemkin_io.parser.thermo.create_spc_nasa7_dct(therm_calc_str)
     nasa7_dat = chemkin_io.parser.thermo.create_spc_nasa7_dct(therm_dat_str)
@@ -122,7 +124,7 @@ def _chk_therm(therm_dat_file, therm_calc_file):
     thm_dat = mechanalyzer.calculator.thermo.create_spc_thermo_dct(
         nasa7_dat, TEMPS)
 
-    spc_str = read_text_file([], 'species.csv', path=TMP_INP_DIR)
+    spc_str = pathtools.read_file([], 'species.csv', path=TMP_INP_DIR)
     spc_ident_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, 'csv')
 
     thm_dct = mechanalyzer.calculator.compare.get_aligned_spc_thermo_dct(
@@ -143,8 +145,8 @@ def _chk_rates(rates_dat_file, rates_calc_file):
     # Read the data in the thermo and rate CKIN files
     ckin_path = os.path.join(TMP_DIR, 'CKIN')
 
-    rates_calc_str = read_text_file([ckin_path], rates_calc_file)
-    rates_dat_str = read_text_file(['data'], rates_dat_file, path=PATH)
+    rates_calc_str = pathtools.read_file([ckin_path], rates_calc_file)
+    rates_dat_str = pathtools.read_file(DAT_PATH, rates_dat_file)
 
     rxn_str_calc = chemkin_io.parser.mechanism.reaction_block(rates_calc_str)
     rxn_str_dat = chemkin_io.parser.mechanism.reaction_block(rates_dat_str)
@@ -158,7 +160,7 @@ def _chk_rates(rates_dat_file, rates_calc_file):
     rxn_ktp_dct_dat = mechanalyzer.calculator.rates.eval_rxn_param_dct(
         par_dct_dat, PRESSURES, TEMPS)
 
-    # spc_str = read_text_file([], 'species.csv', path=TMP_INP_DIR)
+    # spc_str = pathtools.read_file([], 'species.csv', path=TMP_INP_DIR)
     # spc_ident_dct = mechanalyzer.parser.spc.build_spc_dct(spc_str, 'csv')
 
     # ktp_dct = mechanalyzer.calculator.compare.get_aligned_rxn_ktp_dct(

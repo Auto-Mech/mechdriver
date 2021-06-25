@@ -229,8 +229,8 @@ def enthalpy_calculation(
             hf0k_trs = 0.0
     else:
         hf0k_trs = None
-    ioprinter.info_message('ABS Energy  (kJ/mol): ', ene_chnlvl)
-    ioprinter.info_message('Hf0K Energy (kJ/mol): ', hf0k * phycon.KCAL2KJ)
+    ioprinter.info_message('ABS Energy  (hart): ', ene_chnlvl)
+    ioprinter.info_message('Hf0K Energy (hart): ', hf0k * phycon.KCAL2KJ)
 
     return hf0k, hf0k_trs, chn_basis_ene_dct, basis_dct
 

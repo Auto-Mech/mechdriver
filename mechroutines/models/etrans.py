@@ -106,7 +106,7 @@ def lj_params(well_info, bath_info, etrans_dct):
             well_ich = well_info[0]
             well_geo = automol.inchi.geometry(well_ich)
             params = automol.etrans.effective_model(
-                well_ich, well_geo, bath_info)
+                well_ich, bath_info[0])
             if params is not None:
                 bath_model, tgt_model = params
                 ioprinter.info_message(
@@ -161,7 +161,7 @@ def edown_params(well_info, bath_info, etrans_dct, ljpar=None):
             well_ich = well_info[0]
             well_geo = automol.inchi.geometry(well_ich)
             params = automol.etrans.effective_model(
-                well_ich, well_geo, bath_info)
+                well_ich, bath_info[0])
             if params is not None:
                 bath_model, tgt_model = params
                 ioprinter.info_message(

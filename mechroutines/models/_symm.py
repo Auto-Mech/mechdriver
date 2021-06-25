@@ -60,7 +60,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 ioprinter.info_message(
                     ' - Determining internal sym number ',
                     'using sampling routine.')
-                int_symm, endgrp = automol.geom.internal_symm_from_sampling(
+                int_symm, endgrp = automol.symm.internal_symm_from_sampling(
                     symm_geos, rotors, grxn=grxn, zma=zma)
             else:
                 ioprinter.info_message(' - No torsions, internal sym is 1.0')
@@ -73,12 +73,12 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
             int_symm, endgrp = 1.0, 1.0
 
         # Obtain overall number, reduced as needed
-        int_symm = automol.geom.reduce_internal_symm(
+        int_symm = automol.symm.reduce_internal_symm(
             geo, int_symm, ext_symm, endgrp)
 
         symm_factor = ext_symm * int_symm
 
-        symm_factor = automol.geom.rotor_reduced_symm_factor(
+        symm_factor = automol.symm.rotor_reduced_symm_factor(
             symm_factor, automol.rotor.symmetries(rotors, flat=True))
 
     return symm_factor

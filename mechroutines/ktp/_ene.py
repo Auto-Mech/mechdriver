@@ -78,6 +78,8 @@ def sum_channel_enes(channel_infs, ref_ene, ene_lvl='ene_chnlvl'):
     """ sum the energies
     """
 
+    print('\n\nGetting energies for the reaction channel...')
+
     # Initialize sum ene dct
     sum_ene = {}
 

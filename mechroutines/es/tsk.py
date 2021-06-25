@@ -718,44 +718,52 @@ def hr_tsk(job, spc_dct, spc_name,
                 increment=increment,
                 retryfail=retryfail)
 
-        # elif job == 'reopt':
+        elif job == 'reopt':
+  
+            script_str, kwargs = qchem_params(
+                method_dct, elstruct.Job.OPTIMIZATION)
 
-        #     # pull stuff from dcts
-        #     two_stage = saddle
-        #     rxn_class = spc_dct_i['class'] if saddle else ''
-        #     mc_nsamp = spc_dct_i['mc_nsamp']
-        #     ethresh = es_keyword_dct['hrthresh']
+            # pull stuff from dcts
+            ethresh = es_keyword_dct['hrthresh']
 
-        #     # Read and print the potential
-        #     sp_fs = autofile.fs.single_point(ini_cnf_save_path)
-        #     ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
-        #     tors_pots, tors_zmas, tors_paths = {}, {}, {}
-        #     for tors_names, tors_grids in ___
-        #     __zip(run_tors_names, run_tors_grids):
-        #         constraint_dct = automol.zmat.build_constraint_dct(
-        #             zma, const_names, tors_names)
-        #         pot, _, _, _, zmas, paths = filesys.read.potential(
-        #             tors_names, tors_grids,
-        #             ini_cnf_save_path,
-        #             mod_ini_thy_info, ref_ene,
-        #             constraint_dct,
-        #             read_zma=True)
-        #         tors_pots[tors_names] = pot
-        #         tors_zmas[tors_names] = zmas
-        #         tors_paths[tors_names] = paths
+            zrxn = spc_dct_i.get('zrxn', None)
 
-        #     # Check for new minimum conformer
-        #     new_min_zma = __.check_hr_pot(
-        #         tors_pots, tors_zmas, tors_paths, emax=ethresh)
+            run_tors_names = automol.rotor.names(torsions)
+            run_tors_grids = automol.rotor.grids(torsions, increment=increment)
 
-        #     if new_min_zma is not None:
-        #         ioprinter.info_message(
-        #             'Finding new low energy conformer...', newline=1)
-        #         conformer.single_conformer(
-        #             zma, spc_info, mod_thy_info,
-        #             ini_cnf_run_fs, ini_cnf_save_fs,
-        #             script_str, overwrite,
-        #             retryfail=retryfail, rxn=rxn, **kwargs)
+            # Set constraints
+            const_names = automol.zmat.set_constraint_names(
+                zma, run_tors_names, tors_model)
+
+            # Read and print the potential
+            sp_fs = autofile.fs.single_point(ini_cnf_save_path)
+            ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
+            tors_pots, tors_zmas, tors_paths = {}, {}, {}
+            for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
+                constraint_dct = automol.zmat.constraint_dct(
+                    zma, const_names, tors_names)
+                pot, _, _, _, zmas, paths = filesys.read.potential(
+                    tors_names, tors_grids,
+                    ini_cnf_save_path,
+                    mod_ini_thy_info, ref_ene,
+                    constraint_dct,
+                    read_zma=True)
+                tors_pots[tors_names] = pot
+                tors_zmas[tors_names] = zmas
+                tors_paths[tors_names] = paths
+
+            # Check for new minimum conformer
+            new_min_zma = hr.check_hr_pot(
+                tors_pots, tors_zmas, tors_paths, emax=ethresh)
+
+            if new_min_zma is not None:
+                ioprinter.info_message(
+                    'Finding new low energy conformer...', newline=1)
+                conformer.single_conformer(
+                    zma, spc_info, mod_thy_info,
+                    ini_cnf_run_fs, ini_cnf_save_fs,
+                    script_str, overwrite,
+                    retryfail=retryfail, zrxn=zrxn, **kwargs)
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 
