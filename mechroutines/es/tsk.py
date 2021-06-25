@@ -759,11 +759,19 @@ def hr_tsk(job, spc_dct, spc_name,
             if new_min_zma is not None:
                 ioprinter.info_message(
                     'Finding new low energy conformer...', newline=1)
+                new_min_geo = automol.zmat.geometry(new_min_zma)
+                rid = conformer.rng_loc_for_geo(new_min_geo, ini_cnf_save_fs)
+                if rid is None:
+                    new_locs = None
+                else:
+                    cid = autofile.schema.generate_new_conformer_id()
+                    new_locs = (rid, cid)
                 conformer.single_conformer(
                     zma, spc_info, mod_thy_info,
                     ini_cnf_run_fs, ini_cnf_save_fs,
                     script_str, overwrite,
-                    retryfail=retryfail, zrxn=zrxn, **kwargs)
+                    retryfail=retryfail, zrxn=zrxn,
+                    use_locs=new_locs, **kwargs)
 
         elif job in ('energy', 'grad', 'hess', 'vpt2'):
 
