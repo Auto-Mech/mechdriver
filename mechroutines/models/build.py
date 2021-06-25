@@ -240,7 +240,6 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
         {}, pes_mod_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix,
         pforktp='ktp', zrxn=None)
-    ene_chnlvl = hf0k
 
     # Create info dictionary
     inf_dct = {
@@ -250,7 +249,7 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
         'mess_hr_str': '',
         'mass': util.atom_mass(spc_dct_i),
         'elec_levels': spc_dct_i['elec_levels'],
-        'ene_chnlvl': ene_chnlvl,
+        'ene_chnlvl': hf0k,
         'ene_reflvl': None,
         'ene_tsref': hf0k_trs,
         'zpe_chnlvl': None
@@ -356,6 +355,7 @@ def mol_data(spc_name, spc_dct,
             spc_dct, spc_name, ene_chnlvl,
             chn_basis_ene_dct, pes_mod_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix, zrxn=zrxn)
+
     ene_reflvl = None
 
     #  Build the energy transfer section strings
@@ -382,7 +382,7 @@ def mol_data(spc_name, spc_dct,
     vals = [geom, sym_factor, freqs, imag, elec_levels,
             allr_str, mdhr_dat,
             xmat, rovib_coups, rot_dists,
-            ene_chnlvl, ene_reflvl, zpe, hf0k_trs,
+            hf0k, ene_reflvl, zpe, hf0k_trs,
             edown_str, collid_freq_str]
     inf_dct = dict(zip(keys, vals))
 
