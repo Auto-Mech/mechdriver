@@ -245,6 +245,8 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
                 # get init zma readers?
                 if run_fs[-1].file.zmatrix.exists([job]):
                     init_zma = run_fs[-1].file.zmatrix.read([job])
+                else:
+                    init_zma = None
                 filesys.save.scan_point_structure(
                     ret, scn_save_fs, locs, mod_thy_info[1:], job,
                     init_zma=init_zma, init_geo=None)

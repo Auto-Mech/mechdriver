@@ -245,7 +245,7 @@ def conformer_tsk(job, spc_dct, spc_name,
                 **kwargs)
 
             rid = conformer.rng_loc_for_geo(
-                geo, cnf_run_fs, cnf_save_fs)
+                geo, cnf_save_fs)
 
         # Run the sampling
         conformer.conformer_sampling(
@@ -719,12 +719,13 @@ def hr_tsk(job, spc_dct, spc_name,
                 retryfail=retryfail)
 
         elif job == 'reopt':
-  
+
             script_str, kwargs = qchem_params(
                 method_dct, elstruct.Job.OPTIMIZATION)
 
             # pull stuff from dcts
             ethresh = es_keyword_dct['hrthresh']
+            increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
 
             zrxn = spc_dct_i.get('zrxn', None)
 

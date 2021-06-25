@@ -225,7 +225,8 @@ def run(pes_rlst, spc_rlst,
             ioprinter.nasa('calculate', spc_name)
 
             # Write the header describing the models used in thermo calcs
-            ckin_nasa_str += writer.ckin.model_header(spc_mods, spc_mod_dct)
+            ckin_nasa_str += writer.ckin.model_header(
+                spc_mods, spc_mod_dct, refscheme=ref_scheme)
 
             # Build and write the NASA polynomial in CHEMKIN-format string
             # Call dies if you haven't run "write mess" task
