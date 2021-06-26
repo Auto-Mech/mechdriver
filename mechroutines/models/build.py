@@ -285,6 +285,7 @@ def mol_data(spc_name, spc_dct,
     ene_chnlvl = None
     ene_reflvl = None
     zpe = None
+    hf0k = None
     hf0k_trs = None
 
     # Initialize all of the elements of the inf dct
