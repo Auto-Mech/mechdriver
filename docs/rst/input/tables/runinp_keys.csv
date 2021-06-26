@@ -1,0 +1,7 @@
+Keyword,Required,Allowed,Default
+run_prefix,x,,None
+save_prefix,x,,None
+inp_mech,,chemkin,chemkin
+out_mech,,chemkin,chemkin
+inp_spc,,csv,csv
+out_spc,,csv,csv
