@@ -21,6 +21,7 @@ jobs:
                 name: Test mechdriver
                 no_output_timeout: 60m
                 command: |
+                    export PYTHONUNBUFFERED=1
                     source activate mechdriver-env
                     pytest -v --disable-pytest-warnings --cov=. --cov-report=html
                     coverage report
