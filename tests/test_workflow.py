@@ -48,8 +48,8 @@ def test__1dhrfa():
     """ Run es, thermo, and rates for PES; standard run
     """
     _run('run_c2h6_h_1dhrfa.temp')
-    _chk_therm('c2h6_h_1dhrfa_therm.ckin', 'all_therm.ckin')
-    _chk_rates('c2h6_h_1dhrfa_rate.ckin', 'C2H7.ckin')
+    # _chk_therm('c2h6_h_1dhrfa_therm.ckin', 'all_therm.ckin')
+    # _chk_rates('c2h6_h_1dhrfa_rate.ckin', 'C2H7.ckin')
 
 
 def __etoh():
