@@ -11,12 +11,18 @@ from mechroutines.models import typ
 from mechroutines.models import _tors as tors
 
 
-def vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
-                 run_prefix, zrxn=None):
+def full_vib_analysis(
+        spc_dct_i, pf_filesystems, spc_mod_dct_i,
+        run_prefix, zrxn=None):
     """ process to get freq
     """
-
     tors_strs = ['']
+    freqs = []
+    imag = []
+    tors_zpe = 0.0
+    pot_scalef = 1.0
+    tors_freqs = []
+    harm_freqs = []
 
     rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
@@ -25,19 +31,27 @@ def vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
         tors_strs = tors.make_hr_strings(rotors)
         [_, hr_str, _, prot_str, _] = tors_strs
 
-        freqs, imag, tors_zpe, pot_scalef = tors_projected_freqs_zpe(
+        proj_freqs, harm_freqs, tors_freqs, imag = tors_projected_freqs(
             pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
 
         # Make final hindered rotor strings and get corrected tors zpe
         if typ.scale_1d(spc_mod_dct_i):
+
+            scaled_proj_freqs, _ = scale_frequencies(
+                proj_freqs, None, spc_mod_dct_i,
+                scale_method='c3_harm')
+            scaled_harm_freqs, _ = scale_frequencies(
+                harm_freqs, None, spc_mod_dct_i,
+                scale_method='c3_harm')
+            pot_scalef = potential_scale_factor(
+                scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
+            # get the pot scale factor
             rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
             tors_strs = tors.make_hr_strings(rotors)
             [_, hr_str, _, prot_str, _] = tors_strs
-            _, _, tors_zpe, _ = tors_projected_freqs_zpe(
+            _, _, tors_zpe = tors_projected_freqs_zpe(
                 pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
-            # Calculate current zpe assuming no freq scaling: tors+projfreq
-
-        zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
+        freqs = proj_freqs
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
         if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
@@ -51,50 +65,24 @@ def vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
         freqs, tors_zpe,
         spc_mod_dct_i, scale_method='3c')
 
-    return freqs, imag, zpe, tors_strs
+    harm_freqs, _ = scale_frequencies(
+        harm_freqs, None,
+        spc_mod_dct_i, scale_method='3c')
+
+    return freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs, harm_freqs
 
 
-def full_vib_analysis(spc_dct_i, pf_filesystems, spc_mod_dct_i,
-                      run_prefix, zrxn=None):
+def vib_analysis(
+        spc_dct_i, pf_filesystems, spc_mod_dct_i,
+        run_prefix, zrxn=None):
     """ process to get freq
     """
 
-    tors_strs = ['']
-    freqs = []
-    imag = []
-    tors_zpe = 0.0
-    sfactor = 1.0
-    tors_freqs = []
-    rt_freqs1 = []
-
-    rotors = tors.build_rotors(
-        spc_dct_i, pf_filesystems, spc_mod_dct_i)
-
-    if typ.nonrigid_tors(spc_mod_dct_i, rotors):
-        tors_strs = tors.make_hr_strings(rotors)
-        [_, hr_str, _, prot_str, _] = tors_strs
-
-        freqs, imag, tors_zpe, pot_scalef = tors_projected_freqs_zpe(
-            pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
-
-        # Make final hindered rotor strings and get corrected tors zpe
-        if typ.scale_1d(spc_mod_dct_i):
-            rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
-            tors_strs = tors.make_hr_strings(rotors)
-            [_, hr_str, _, prot_str, _] = tors_strs
-            torsinf = tors_projected_freqs(
-                pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
-            freqs, imag, tors_zpe, sfactor, tors_freqs, rt_freqs1 = torsinf
-
-        # For mdhrv model no freqs needed in MESS input, zero out freqs lst
-        if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
-            freqs = ()
-    else:
-        freqs, imag, _ = read_harmonic_freqs(
-            pf_filesystems, run_prefix, zrxn=zrxn)
-        tors_zpe = 0.0
-
-    return freqs, imag, tors_zpe, sfactor, tors_freqs, rt_freqs1
+    ret = full_vib_analysis(
+        spc_dct_i, pf_filesystems, spc_mod_dct_i,
+        run_prefix, zrxn=zrxn)
+    freqs, imag, zpe, _, tors_strs, _, _ = ret
+    return freqs, imag, zpe, tors_strs
 
 
 def read_harmonic_freqs(pf_filesystems, run_prefix, zrxn=None):
@@ -171,25 +159,14 @@ def read_anharmon_matrix(pf_filesystems):
     return xmat
 
 
-def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
-                             prefix, zrxn=None, conf=None):
-    """ Get frequencies from one version of ProjRot
-    """
-    ret = tors_projected_freqs(
-        pf_filesystems, mess_hr_str, projrot_hr_str,
-        prefix, zrxn=zrxn, conf=conf)
-    freqs, imag, tors_zpe, scale_factor, _, _ = ret
-
-    return freqs, imag, tors_zpe, scale_factor
-
-
 def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
-                         run_pfx, zrxn=None, conf=None):
-    """ Get frequencies from one version of ProjRot
-    """
-    # run_prefix = pf_filesystems['run_prefix']
+                         prefix, zrxn=None, conf=None):
+    """ Get the projected frequencies from harmonic frequencies,
+        which requires projrot run
 
-    # Build the filesystems
+        :param pf_filesytem: dictionary of the locations of various info
+        :param runf_pfx: location to run projrot
+    """
     [harm_cnf_fs, _, harm_min_locs, _, _] = pf_filesystems['harm']
     [tors_cnf_fs, _, tors_min_locs, _, _] = pf_filesystems['tors']
     if conf:
@@ -203,16 +180,13 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
     ioprinter.reading('Hessian', harm_cnf_fs[-1].path(harm_min_locs))
 
     fml_str = automol.geom.formula_string(harm_geo)
-    vib_path = job_path(run_pfx, 'PROJROT', 'FREQ', fml_str, print_path=True)
+    vib_path = job_path(prefix, 'PROJROT', 'FREQ', fml_str, print_path=True)
     # tors_path = job_path(run_pfx, 'MESS', 'TORS', fml_str, print_path=True)
-
-    # Calculate projeccted frequencies and associated information
     mess_script_str = autorun.SCRIPT_DCT['messpf']
     projrot_script_str = autorun.SCRIPT_DCT['projrot']
     dist_cutoff_dct1 = {('H', 'O'): 2.26767, ('H', 'C'): 2.26767}
     dist_cutoff_dct2 = {('H', 'O'): 2.83459, ('H', 'C'): 2.83459,
                         ('C', 'O'): 3.7807}
-
     proj_inf = autorun.projected_frequencies(
         mess_script_str, projrot_script_str, vib_path,
         mess_hr_str, projrot_hr_str,
@@ -221,14 +195,27 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         dist_cutoff_dct2=dist_cutoff_dct2,
         saddle=(zrxn is not None))
     proj_freqs, proj_imag, _, harm_freqs, tors_freqs = proj_inf
+    return proj_freqs, harm_freqs, tors_freqs, proj_imag
+
+
+def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
+                             prefix, zrxn=None, conf=None):
+    """ Get frequencies from one version of ProjRot
+    """
+    ret = tors_projected_freqs(
+        pf_filesystems, mess_hr_str, projrot_hr_str,
+        prefix, zrxn=zrxn, conf=conf)
+    proj_freqs, _, tors_freqs, proj_imag = ret
     tors_zpe = 0.5 * sum(tors_freqs) * phycon.WAVEN2EH
 
-    # NEW scale factor functions
-    scale_factor = automol.prop.freq.rotor_scale_factor_from_harmonics(
-        harm_freqs, proj_freqs, tors_freqs)
+    return proj_freqs, proj_imag, tors_zpe
 
-    return (proj_freqs, proj_imag, tors_zpe,
-            scale_factor, tors_freqs, harm_freqs)
+
+def potential_scale_factor(harm_freqs, proj_freqs, tors_freqs):
+    """ Get frequencies from one version of ProjRot
+    """
+    return automol.prop.freq.rotor_scale_factor_from_harmonics(
+        harm_freqs, proj_freqs, tors_freqs)
 
 
 def scale_frequencies(freqs, tors_zpe,
@@ -250,8 +237,15 @@ def scale_frequencies(freqs, tors_zpe,
 
     thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
     method, basis = thy_info[1], thy_info[2]
-    scaled_freqs, scaled_zpe = automol.prop.freq.anharm_by_scaling(
-        freqs, method, basis, scale_method=scale_method)
-    tot_zpe = scaled_zpe + tors_zpe
+    if tors_zpe is None:
+        ret = automol.prop.freq.scale_frequencies(
+            freqs, method, basis, scale_method=scale_method)
+        scaled_freqs = ret
+        tot_zpe = None
+    else:
+        ret = automol.prop.freq.scale_frequencies_and_zpe(
+            freqs, method, basis, scale_method=scale_method)
+        scaled_freqs, scaled_zpe = ret
+        tot_zpe = scaled_zpe + tors_zpe
 
     return scaled_freqs, tot_zpe

@@ -105,7 +105,7 @@ def run_tsk(tsk, spc_dct, spc_name,
                     ret = vib.full_vib_analysis(
                         spc_dct_i, pf_filesystems, spc_mod_dct_i,
                         run_prefix, zrxn=None)
-                    freqs, _, tors_zpe, sfactor, torsfreqs, all_freqs = ret
+                    freqs, _, zpe, sfactor, tors_strs, torsfreqs, all_freqs = ret
                     csv_data['tfreq'][label] = torsfreqs
                     csv_data['allfreq'][label] = all_freqs
                     csv_data['scalefactor'][label] = [sfactor]
@@ -113,19 +113,12 @@ def run_tsk(tsk, spc_dct, spc_name,
                     es_model = util.freq_es_levels(proc_keyword_dct)
                     spc_mod_dct_i = parser.model.pf_level_info(
                         es_model, thy_dct)
-                    try:
-                        freqs, _, zpe = vib.read_locs_harmonic_freqs(
-                            cnf_fs, locs, run_prefix, zrxn=None)
-                    except:
-                        freqs = []
-                        zpe = 0
+                    freqs, _, zpe = vib.read_locs_harmonic_freqs(
+                        cnf_fs, locs, run_prefix, zrxn=None)
+                    if freqs and proc_keyword_dct['scale'] is not None:
+                        freqs, zpe = vib.scale_frequencies(
+                            freqs, 0.0, spc_mod_dct_i, scale_method='3c')
 
-                tors_zpe = 0.0
-                spc_data = []
-                zpe = tors_zpe + (sum(freqs) / 2.0) * phycon.WAVEN2EH
-                if freqs and proc_keyword_dct['scale'] is not None:
-                    freqs, zpe = vib.scale_frequencies(
-                        freqs, tors_zpe, spc_mod_dct_i, scale_method='3c')
                 spc_data = [locs_path, zpe, *freqs]
                 csv_data['freq'][label] = spc_data
             elif 'geo' in tsk:
