@@ -22,7 +22,6 @@ jobs:
                 no_output_timeout: 60m
                 command: |
                     export PYTHONUNBUFFERED=1
-                    cd mechdriver
                     source activate mechdriver-env
                     pytest -v --disable-pytest-warnings --cov=mechlib --cov=mechroutines --cov=drivers --cov-report=html
                     coverage report
@@ -30,7 +29,6 @@ jobs:
                 name: Assess PEP8
                 command: |
                     source activate mechdriver-env
-                    cd mechdriver
                     flake8 --exit-zero mechlib
                     pylint --rcfile=.pylintrc mechlib
                     flake8 --exit-zero mechroutines
