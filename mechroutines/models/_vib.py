@@ -40,8 +40,11 @@ def full_vib_analysis(
             scaled_proj_freqs, _ = scale_frequencies(
                 proj_freqs, None, spc_mod_dct_i,
                 scale_method='c3_harm')
+            scaled_harm_freqs, _ = scale_frequencies(
+                harm_freqs, None, spc_mod_dct_i,
+                scale_method='c3_harm')
             pot_scalef = potential_scale_factor(
-                harm_freqs, scaled_proj_freqs, tors_freqs)
+                scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
             # get the pot scale factor
             rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
             tors_strs = tors.make_hr_strings(rotors)

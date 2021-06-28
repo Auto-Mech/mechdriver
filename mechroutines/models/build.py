@@ -286,6 +286,7 @@ def mol_data(spc_name, spc_dct,
     ene_reflvl = None
     zpe = None
     hf0k_trs = None
+    hf0k = None
 
     # Initialize all of the elements of the inf dct
     geom, sym_factor, freqs, imag, elec_levels = None, None, None, None, None
