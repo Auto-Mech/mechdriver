@@ -75,21 +75,24 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
     increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
     rotor_zma = automol.rotor.zmatrix(rotors)
 
-    for _, rotor in enumerate(rotors):
+    # Determine base-line rotor non-specific info for constraints
+    all_tors_names = automol.rotor.names(rotors)
+    const_names = automol.zmat.set_constraint_names(
+        rotor_zma, all_tors_names, tors_model)
+
+    # Recalculate the rotor potential grids using desired increment
+    rotor_grids = automol.rotor.grids(rotors, increment=increment)
+
+    for ridx, rotor in enumerate(rotors):
         # multi_idx = ridx
-        tors_names = automol.rotor.names((rotor,), flat=True)
-        tors_grids = automol.rotor.grids(
-            (rotor,), increment=increment, flat=True)
 
         for tidx, torsion in enumerate(rotor):
-
             # Read and spline-fit potential
-            const_names = automol.zmat.set_constraint_names(
-                rotor_zma, ((torsion.name,),), tors_model)
+            tors_grid = rotor_grids[ridx][tidx]
             constraint_dct = automol.zmat.constraint_dct(
                 rotor_zma, const_names, (torsion.name,))
             pot, _, _, _, _, _ = filesys.read.potential(
-                (tors_names[tidx],), (tors_grids[tidx],),
+                (torsion.name,), (tors_grid,),
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct)
