@@ -29,12 +29,15 @@ def pes_dictionary(mech_str, mech_type, spc_dct):
     # Initialize values used for the basic PES-SUBPES sorting
     sort_str = ['pes', 'subpes', 0]
     isolate_species = ()
-
+    
     # Build and print the full sorted PES dict
-    _, mech_info, _ = parse_mechanism(mech_str, mech_type, spc_dct)
-    srt_mch = sorter.sorting(mech_info, spc_dct, sort_str, isolate_species)
-    pes_dct = srt_mch.return_pes_dct()
+    if mech_str is not None:
+        _, mech_info, _ = parse_mechanism(mech_str, mech_type, spc_dct)
+        srt_mch = sorter.sorting(mech_info, spc_dct, sort_str, isolate_species)
+        pes_dct = srt_mch.return_pes_dct()
 
-    pes.print_pes_channels(pes_dct)
+        pes.print_pes_channels(pes_dct)
+    else:
+        pes_dct = None
 
     return pes_dct
