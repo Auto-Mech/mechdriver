@@ -85,7 +85,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
 
             # Read and spline-fit potential
             const_names = automol.zmat.set_constraint_names(
-                rotor_zma, torsion.name, tors_model)
+                rotor_zma, (torsion.name,) tors_model)
             constraint_dct = automol.zmat.constraint_dct(
                 rotor_zma, const_names, torsion.name)
             pot, _, _, _, _, _ = filesys.read.potential(
