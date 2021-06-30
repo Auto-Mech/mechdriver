@@ -40,12 +40,7 @@ def find_max_1d(typ, grid, ts_zma, scan_name, scn_save_fs,
 
     # Get zma at maximum
     max_locs = locs_lst[max_idx]
-    try:
-        max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
-    except:
-        max_geo = scn_save_fs[-1].file.geometry.read(max_locs)
-        max_zma = automol.geom.zmatrix(max_geo)
-
+    max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
     guess_zmas.append(max_zma)
 
     # # Add second guess zma for migrations
