@@ -80,6 +80,8 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
         int_symm = automol.symm.reduce_internal_symm(
             geo, int_symm, ext_symm, endgrp)
 
+        print('sym test:', int_symm, ext_symm)
+
         symm_factor = ext_symm * int_symm
 
     return symm_factor

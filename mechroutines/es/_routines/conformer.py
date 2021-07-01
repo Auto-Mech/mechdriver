@@ -326,19 +326,19 @@ def single_conformer(zma, spc_info, mod_thy_info,
                     if cnf_save_fs[0].file.info.exists():
                         ioprinter.debug_message(
                             'inf_obj path', cnf_save_fs[0].path())
-                        # rinf_obj_s = cnf_save_fs[0].file.info.read()
-                        rinf = inf_obj
+                        rinf_obj = cnf_save_fs[0].file.info.read()
+                        rinf = rinf_obj
                         ioprinter.debug_message(
                             'inf_obj for r', rinf)
-                        # rnsampd = rinf_obj_s.nsamp
-                        # rnsampd += 1
-                        # rinf_obj.nsamp = rnsampd
+                        rnsampd = rinf_obj.nsamp
+                        rnsampd += 1
+                        rinf.nsamp = rnsampd
                     else:
                         rinf = autofile.schema.info_objects.conformer_trunk(0)
                         rinf.nsamp = 1
                     if cnf_save_fs[1].file.info.exists([locs[0]]):
-                        cinf_obj_s = cnf_save_fs[1].file.info.read(locs[0])
-                        cinf = inf_obj
+                        cinf_obj_s = cnf_save_fs[1].file.info.read([locs[0]])
+                        cinf = cinf_obj_s
                         cnsampd = cinf_obj_s.nsamp
                         cnsampd += 1
                         cinf.nsamp = cnsampd
@@ -355,10 +355,10 @@ def single_conformer(zma, spc_info, mod_thy_info,
                     saved_enes.append(ene)
                     saved_locs.append(locs)
 
-            # Update the conformer trajectory file
-            ioprinter.obj('vspace')
-            filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info)
-            filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, locs[0])
+                    # Update the conformer trajectory file
+                    ioprinter.obj('vspace')
+                    filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info)
+                    filesys.mincnf.traj_sort(cnf_save_fs, mod_thy_info, locs[0])
 
 
 def conformer_sampling(zma, spc_info, thy_info,
@@ -511,6 +511,13 @@ def ring_conformer_sampling(
 
     # Set up torsions
     geo = automol.zmat.geometry(zma)
+    tors_dcts = ring_tors_dct.items() if ring_tors_dct is not None else {}
+    rings_atoms = []
+    for ring_atoms, samp_range_dct in tors_dcts:
+        rings_atoms.append([int(idx)-1 for idx in ring_atoms.split('-')])
+    gra = automol.geom.graph(geo)
+    ngbs = automol.graph.atoms_sorted_neighbor_atom_keys(gra)
+
     check_dct = {
         'dist': 3.5e-1,
         'coulomb': 1.5e-2,
@@ -519,27 +526,29 @@ def ring_conformer_sampling(
         cnf_save_fs, thy_info)
     frag_saved_geos = []
     for geoi in saved_geos:
-        frag_saved_geos.append(automol.geom.ring_fragments_geometry(geoi))
+        frag_saved_geos.append(automol.geom.ring_fragments_geometry(geoi, rings_atoms, ngbs))
 
     # Make sample zmas
     unique_geos, unique_frag_geos, unique_zmas = [], [], []
-    tors_dcts = ring_tors_dct.items() if ring_tors_dct is not None else {}
     for ring_atoms, samp_range_dct in tors_dcts:
         ring_atoms = [int(idx)-1 for idx in ring_atoms.split('-')]
         dist_value_dct = automol.zmat.ring_distances(zma, ring_atoms)
         nsamp = _num_samp_zmas(ring_atoms, nsamp_par)
         samp_zmas = automol.zmat.samples(zma, nsamp, samp_range_dct)
         for samp_zma in samp_zmas:
-            if automol.ring_distances_reasonable(
-                samp_zma, ring_atoms, dist_value_dct):
+            if automol.zmat.ring_distances_reasonable(
+                    samp_zma, ring_atoms, dist_value_dct):
                 samp_geo = automol.zmat.geometry(samp_zma)
-                frag_samp_geo = automol.geom.ring_fragments_geometry(samp_geo)
+                frag_samp_geo = automol.geom.ring_fragments_geometry(samp_geo, rings_atoms, ngbs)
                 if automol.geom.ring_angles_reasonable(samp_geo, ring_atoms):
                     if not automol.pot.low_repulsion_struct(geo, samp_geo):
+                        # print('frag geos:',automol.geom.string(frag_samp_geo))
+                        # for geoi in frag_saved_geos:
+                           # print('geoi:',automol.geom.string(geoi))
                         frag_samp_unique = automol.geom.is_unique(
                             frag_samp_geo, frag_saved_geos, check_dct)
                         samp_unique = automol.geom.is_unique(
-                            samp_geo, unique_frag_geos, check_dct)
+                            frag_samp_geo, unique_frag_geos, check_dct)
                         if frag_samp_unique:
                             if samp_unique:
                                 unique_zmas.append(samp_zma)
@@ -849,12 +858,28 @@ def _this_conformer_is_running(zma, cnf_run_fs):
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
         run_path = run_fs[-1].path([job])
-        inf_obj = run_fs[-1].file.info.read([job])
-        status = inf_obj.status
-        if status == autofile.schema.RunStatus.RUNNING:
-            start_time = inf_obj.utc_start_time
-            current_time = autofile.schema.utc_time()
-            if (current_time - start_time).total_seconds() < 3000000:
+        if run_fs[-1].file.info.exists([job]):
+            inf_obj = run_fs[-1].file.info.read([job])
+            status = inf_obj.status
+            if status == autofile.schema.RunStatus.RUNNING:
+                start_time = inf_obj.utc_start_time
+                current_time = autofile.schema.utc_time()
+                if (current_time - start_time).total_seconds() < 3000000:
+                    subrun_fs = autofile.fs.subrun(run_path)
+                    inp_str = subrun_fs[0].file.input.read([0, 0])
+                    inp_str = inp_str.replace('=', '')
+                    prog = inf_obj.prog
+                    inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                    if automol.zmat.almost_equal(inp_zma, zma,
+                                                 dist_rtol=0.018, ang_atol=.2):
+                        ioprinter.info_message(
+                            'This conformer was started in the last ' +
+                            '{:3.4f} hours in {}.'.format(
+                                (current_time - start_time).total_seconds()/3600.,
+                                run_path))
+                        running = True
+                        break
+            elif status == autofile.schema.RunStatus.SUCCESS:
                 subrun_fs = autofile.fs.subrun(run_path)
                 inp_str = subrun_fs[0].file.input.read([0, 0])
                 inp_str = inp_str.replace('=', '')
@@ -863,10 +888,8 @@ def _this_conformer_is_running(zma, cnf_run_fs):
                 if automol.zmat.almost_equal(inp_zma, zma,
                                              dist_rtol=0.018, ang_atol=.2):
                     ioprinter.info_message(
-                        'This conformer was started in the last ' +
-                        '{:3.4f} hours in {}.'.format(
-                            (current_time - start_time).total_seconds()/3600.,
-                            run_path))
+                        'This conformer was already run ' +
+                        'in {}.'.format(run_path))
                     running = True
                     break
     return running
@@ -1159,6 +1182,7 @@ def rng_loc_for_geo(geo, cnf_save_fs):
 
     rid = None
     frag_geo = automol.geom.ring_fragments_geometry(geo)
+    # print('geom test in rng_loc_for_geo:', automol.geom.string(frag_geo), automol.geom.string(geo))
     if frag_geo is not None:
         frag_zma = automol.geom.zmatrix(frag_geo)
     checked_rids = []
@@ -1169,12 +1193,14 @@ def rng_loc_for_geo(geo, cnf_save_fs):
         checked_rids.append(current_rid)
         locs_geo = cnf_save_fs[-1].file.geometry.read(locs)
         frag_locs_geo = automol.geom.ring_fragments_geometry(locs_geo)
+        # print('frag geo:', automol.geom.string(frag_locs_geo), automol.geom.string(locs_geo))
         if frag_locs_geo is None:
             rid = locs[0]
             break
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
+        # print('zmat test:', automol.zmat.string(frag_locs_zma), automol.zmat.string(frag_zma))
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
-                                     dist_rtol=0.1, ang_atol=.4):
+                                     dist_rtol=0.15, ang_atol=.45):
             rid = locs[0]
             break
 
