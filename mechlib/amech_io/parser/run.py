@@ -327,6 +327,7 @@ def _expand_tsks(tsks_lst):
     # Expand the tasks
     mod_tsks_lst = []
     for tsk_lst in tsks_lst:
+        print(tsk_lst)
         [obj, tsk, dct] = tsk_lst
         expanded_tsks = expand_dct.get(tsk, None)
         if expanded_tsks is None:

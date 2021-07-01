@@ -11,24 +11,42 @@ from mechlib import filesys
 def freq_es_levels(print_keyword_dct):
     """ ?
     """
-    es_model = _default_es_levels(print_keyword_dct)
-    es_model['harm'] = print_keyword_dct['proplvl']
-    return es_model
+    es_levels = _default_es_levels(print_keyword_dct)
+    es_levels['vib'] = print_keyword_dct['proplvl']
+    return es_levels
 
 
 def ene_es_levels(print_keyword_dct):
     """ ?
     """
-    es_model = _default_es_levels(print_keyword_dct)
-    es_model['ene'] = print_keyword_dct['proplvl']
-    return es_model
+    es_levels = _default_es_levels(print_keyword_dct)
+    es_levels['ene'] = print_keyword_dct['proplvl']
+    return es_levels
+
+
+def generate_spc_model_dct(es_levels, thy_dct):
+    """
+    """
+    spc_model_dct_i = []
+    for prop in es_levels:
+        spc_model_dct_i[prop] = {
+            'geolvl': (
+                es_levels['geo'],
+                (1.00, tinfo.from_dct(thy_dct.get(es_levels['geo']))))}
+        if prop == 'vib':
+            spc_model_dct_i[prop]['mod'] = 'harm'
+        elif prop == 'ene':
+            spc_model_dct_i[prop]['lvl1'] = (
+                es_levels['ene'],
+                (1.00, tinfo.from_dct(thy_dct.get(es_levels['ene']))))
+    return spc_model_dct_i
 
 
 def _default_es_levels(print_keyword_dct):
     """ ?
     """
     es_model = {'geo': print_keyword_dct['geolvl']}
-    es_model['harm'] = print_keyword_dct['geolvl']
+    es_model['vib'] = print_keyword_dct['geolvl']
     es_model['ene'] = print_keyword_dct['geolvl']
     es_model['sym'] = print_keyword_dct['geolvl']
     es_model['tors'] = (
@@ -37,6 +55,14 @@ def _default_es_levels(print_keyword_dct):
     es_model['vpt2'] = print_keyword_dct['geolvl']
     return es_model
 
+# ‘geolvl’: (‘lvl_wbt’, (1.00, thy_inf))
+# es_model = { 
+#           ‘ene’: {
+# >>            ‘geolvl’: (‘geolvl’, parser.models.format_lvl(print_keyword_dct[‘geolvl’]))
+#           }   
+#           ‘vib’: {
+#               ‘geolvl’: print_keyword_dct[‘geolvl’]
+#           }
 
 def _set_conf_range(print_keyword_dct):
     """ ?
@@ -87,7 +113,7 @@ def conformer_list_from_models(
     cnf_range = _set_conf_range(print_keyword_dct)
 
     # thy_info build
-    thy_info = spc_mod_dct_i['geo'][1]
+    thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
     spc_info = sinfo.from_dct(spc_dct_i)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
@@ -162,3 +188,83 @@ def write_csv_data(tsk, csv_data, filelabel, spc_array):
             columns=[
                 *spc_array])
         dframe.to_csv(filelabel, float_format='%.2f')
+
+
+def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
+    """ what is the name and extension for this processed file?
+    """
+    if 'coeffs' in tsk:
+        filelabel = 'coeffs'
+        filelabel += '_{}'.format(model_dct['thermfit']['ref_scheme'])
+        filelabel += '.csv'
+    elif 'freq' in tsk:
+        filelabel = 'freq'
+        if 'geolvl' in proc_keyword_dct:
+            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+        else:
+            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+        filelabel += '.csv'
+    elif 'geo' in tsk:
+        filelabel = 'geo'
+        if 'geolvl' in proc_keyword_dct:
+            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+        else:
+            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+        filelabel += '.txt'
+    elif 'zma' in tsk:
+        filelabel = 'zmat'
+        if 'geolvl' in proc_keyword_dct:
+            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+        if spc_mod_dct_i:
+            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+        filelabel += '.txt'
+    elif 'ene' in tsk:
+        filelabel = 'ene'
+        if 'geolvl' in proc_keyword_dct:
+            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+            filelabel += '_{}'.format(proc_keyword_dct['proplvl'])
+        else:
+            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+            filelabel += '_{}'.format(spc_mod_dct_i['ene']['lvl1'][0])
+        filelabel += '.csv'
+    elif 'enthalphy' in tsk:
+        filelabel = 'enthalpy'
+        if 'geolvl' in proc_keyword_dct:
+            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+            filelabel += '_{}'.format(proc_keyword_dct['proplvl'])
+        else:
+            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+            filelabel += '_{}'.format(spc_mod_dct_i['ene']['lvl1'][0])
+        filelabel = '.csv'
+    return filelabel
+
+
+def choose_theory(proc_keyword_dct, spc_mod_dct_i, thy_dct):
+    """ choose between theories set in models.dat and in run.dat
+    """
+    if proc_keyword_dct['geolvl']:
+        thy_info = tinfo.from_dct(thy_dct.get(
+            proc_keyword_dct['geolvl']))
+        spc_mod_dct_i = None
+    else:
+        thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+    return thy_info, spc_mod_dct_i
+
+
+def choose_conformers(
+        proc_keyword_dct, spc_mod_dct_i,
+        save_prefix, run_prefix, spc_dct_i, thy_dct):
+    """ get the locations (locs and paths) for the number of conformers
+        set in the proc_keyword_dct and in the theory directory specified
+        by either the same dct or by models.ddat
+    """
+    if proc_keyword_dct['geolvl']:
+        _, rng_cnf_locs_lst, rng_cnf_locs_path = conformer_list(
+            proc_keyword_dct, save_prefix, run_prefix,
+            spc_dct_i, thy_dct)
+    else:
+        ret = conformer_list_from_models(
+            proc_keyword_dct, save_prefix, run_prefix,
+            spc_dct_i, spc_mod_dct_i)
+        _, rng_cnf_locs_lst, rng_cnf_locs_path = ret
+    return rng_cnf_locs_lst, rng_cnf_locs_path

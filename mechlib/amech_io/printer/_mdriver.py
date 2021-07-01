@@ -17,7 +17,7 @@ def program_header(driver):
         'thermo': THM_MSG,
         'trans': TRANS_MSG,
         'es': ES_MSG,
-        'print': PRINT_MSG
+        'proc': PRINT_MSG
     }
     message(header_dct[driver])
 
@@ -32,7 +32,7 @@ def program_exit(driver):
         'thermo': THM_EXIT_MSG,
         'trans': TRANS_EXIT_MSG,
         'es': ES_EXIT_MSG,
-        'print': PRINT_EXIT_MSG
+        'proc': PRINT_EXIT_MSG
     }
     message(header_dct[driver]+'\n')
 

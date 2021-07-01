@@ -42,11 +42,10 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
         [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['symm']
         geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
 
-        # Obtain the external symssetry number
-        ext_symm = automol.geom.external_symmetry_factor(geo)
-
         # Obtain the internal symmetry number using some routine
         if sym_model == 'sampling':
+            # Obtain the external symssetry number
+            ext_symm = automol.geom.external_symmetry_factor(geo)
 
             # Set up the symmetry filesystem, read symmetrically similar geos
             # includes minimum geo
@@ -66,10 +65,15 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 ioprinter.info_message(' - No torsions, internal sym is 1.0')
                 int_symm, endgrp = 1.0, 1.0
 
+        elif sym_model == 'HCO_model':
+            ret = automol.symm.oxygenated_hydrocarbon_symm_num(geo)
+            int_symm, ext_symm = ret
+
         else:
             ioprinter.info_message(
                 'No symmetry model requested, ',
                 'setting internal sym factor to 1.0')
+            ext_symm = automol.geom.external_symmetry_factor(geo)
             int_symm, endgrp = 1.0, 1.0
 
         # Obtain overall number, reduced as needed
@@ -77,8 +81,5 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
             geo, int_symm, ext_symm, endgrp)
 
         symm_factor = ext_symm * int_symm
-
-        symm_factor = automol.symm.rotor_reduced_symm_factor(
-            symm_factor, automol.rotor.symmetries(rotors, flat=True))
 
     return symm_factor
