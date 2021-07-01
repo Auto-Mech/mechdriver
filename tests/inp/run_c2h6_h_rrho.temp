@@ -14,7 +14,7 @@ end spc
 els
     spc init_geom     runlvl=mp2_sto   inplvl=mp2_sto
     ts  find_ts       runlvl=mp2_sto   inplvl=mp2_sto
-    all conf_samp     runlvl=mp2_sto   inplvl=mp2_sto
+    # all conf_samp     runlvl=mp2_sto   inplvl=mp2_sto
     all conf_hess     runlvl=mp2_sto   inplvl=mp2_sto
     all conf_energy   runlvl=mp2_gs    inplvl=mp2_sto
 end els
