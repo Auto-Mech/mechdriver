@@ -24,7 +24,6 @@ setup(
         'mechlib.amech_io.parser',
         'mechlib.amech_io.printer',
         'mechlib.amech_io.reader',
-        'mechlib.amech_io.runner',
         'mechlib.amech_io.writer',
         'mechlib.filesys',
         'mechlib.reaction'],

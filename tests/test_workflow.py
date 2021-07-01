@@ -68,7 +68,7 @@ def __instab():
     _run('run_ch2ooh_rrho.temp')
 
 
-def __radrad():
+def test__radrad():
     """ Run es, thermo, and rates for PES with instabilities
     """
 
