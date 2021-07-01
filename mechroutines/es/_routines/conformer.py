@@ -337,7 +337,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
                         rinf = autofile.schema.info_objects.conformer_trunk(0)
                         rinf.nsamp = 1
                     if cnf_save_fs[1].file.info.exists([locs[0]]):
-                        cinf_obj_s = cnf_save_fs[1].file.info.read(locs[0])
+                        cinf_obj_s = cnf_save_fs[1].file.info.read([locs[0]])
                         cinf = cinf_obj_s
                         cnsampd = cinf_obj_s.nsamp
                         cnsampd += 1
@@ -858,12 +858,28 @@ def _this_conformer_is_running(zma, cnf_run_fs):
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
         run_path = run_fs[-1].path([job])
-        inf_obj = run_fs[-1].file.info.read([job])
-        status = inf_obj.status
-        if status == autofile.schema.RunStatus.RUNNING:
-            start_time = inf_obj.utc_start_time
-            current_time = autofile.schema.utc_time()
-            if (current_time - start_time).total_seconds() < 3000000:
+        if run_fs[-1].file.info.exists([job]):
+            inf_obj = run_fs[-1].file.info.read([job])
+            status = inf_obj.status
+            if status == autofile.schema.RunStatus.RUNNING:
+                start_time = inf_obj.utc_start_time
+                current_time = autofile.schema.utc_time()
+                if (current_time - start_time).total_seconds() < 3000000:
+                    subrun_fs = autofile.fs.subrun(run_path)
+                    inp_str = subrun_fs[0].file.input.read([0, 0])
+                    inp_str = inp_str.replace('=', '')
+                    prog = inf_obj.prog
+                    inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                    if automol.zmat.almost_equal(inp_zma, zma,
+                                                 dist_rtol=0.018, ang_atol=.2):
+                        ioprinter.info_message(
+                            'This conformer was started in the last ' +
+                            '{:3.4f} hours in {}.'.format(
+                                (current_time - start_time).total_seconds()/3600.,
+                                run_path))
+                        running = True
+                        break
+            elif status == autofile.schema.RunStatus.SUCCESS:
                 subrun_fs = autofile.fs.subrun(run_path)
                 inp_str = subrun_fs[0].file.input.read([0, 0])
                 inp_str = inp_str.replace('=', '')
@@ -872,10 +888,8 @@ def _this_conformer_is_running(zma, cnf_run_fs):
                 if automol.zmat.almost_equal(inp_zma, zma,
                                              dist_rtol=0.018, ang_atol=.2):
                     ioprinter.info_message(
-                        'This conformer was started in the last ' +
-                        '{:3.4f} hours in {}.'.format(
-                            (current_time - start_time).total_seconds()/3600.,
-                            run_path))
+                        'This conformer was already run ' +
+                        'in {}.'.format(run_path))
                     running = True
                     break
     return running

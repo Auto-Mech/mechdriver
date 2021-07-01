@@ -145,7 +145,6 @@ def run(pes_rlst, spc_rlst,
             spc_info = sinfo.from_dct(spc_dct[spc_name])
             spc_fml = automol.inchi.formula_string(spc_info[0])
             thm_prefix = [spc_fml, automol.inchi.inchi_key(spc_info[0])]
-            print('HEEEERE')
             thm_paths[idx]['final'] = (
                 job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=tdx),
                 job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=tdx)
