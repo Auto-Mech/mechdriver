@@ -27,7 +27,7 @@ def ene_es_levels(print_keyword_dct):
 def generate_spc_model_dct(es_levels, thy_dct):
     """
     """
-    spc_model_dct_i = []
+    spc_model_dct_i = {}
     for prop in es_levels:
         spc_model_dct_i[prop] = {
             'geolvl': (
@@ -239,16 +239,18 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
     return filelabel
 
 
-def choose_theory(proc_keyword_dct, spc_mod_dct_i, thy_dct):
+# def choose_theory(proc_keyword_dct, spc_mod_dct_i, thy_dct):
+def choose_theory(proc_keyword_dct, spc_mod_dct_i):
     """ choose between theories set in models.dat and in run.dat
     """
     if proc_keyword_dct['geolvl']:
-        thy_info = tinfo.from_dct(thy_dct.get(
-            proc_keyword_dct['geolvl']))
+        # thy_info = tinfo.from_dct(thy_dct.get(
+        #    proc_keyword_dct['geolvl']))
         spc_mod_dct_i = None
-    else:
-        thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
-    return thy_info, spc_mod_dct_i
+    # else:
+    #    thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+    # return thy_info, spc_mod_dct_i
+    return spc_mod_dct_i
 
 
 def choose_conformers(
@@ -259,12 +261,12 @@ def choose_conformers(
         by either the same dct or by models.ddat
     """
     if proc_keyword_dct['geolvl']:
-        _, rng_cnf_locs_lst, rng_cnf_locs_path = conformer_list(
+        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path = conformer_list(
             proc_keyword_dct, save_prefix, run_prefix,
             spc_dct_i, thy_dct)
     else:
         ret = conformer_list_from_models(
             proc_keyword_dct, save_prefix, run_prefix,
             spc_dct_i, spc_mod_dct_i)
-        _, rng_cnf_locs_lst, rng_cnf_locs_path = ret
-    return rng_cnf_locs_lst, rng_cnf_locs_path
+        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path = ret
+    return cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path
