@@ -50,9 +50,10 @@ def run_tsk(tsk, spc_dct, run_lst,
             spc_dct_i = spc_dct[spc_name]
             spc_mod_dct_i = util.choose_theory(
                 proc_keyword_dct, spc_mod_dct_i)
-            cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path = util.choose_conformers(
+            ret = util.choose_conformers(
                 proc_keyword_dct, spc_mod_dct_i,
                 save_prefix, run_prefix, spc_dct_i, thy_dct)
+            cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
 
             # Loop over conformers
             for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
@@ -70,12 +71,12 @@ def run_tsk(tsk, spc_dct, run_lst,
 
                 elif 'geo' in tsk:
                     csv_data_i = collect.geometry(
-                        spc_name, locs, locs_path, cnf_fs)
+                        spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
 
                 elif 'zma' in tsk:
                     csv_data_i = collect.zmatrix(
-                        spc_name, locs, locs_path, cnf_fs)
+                        spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
 
                 elif 'ene' in tsk:

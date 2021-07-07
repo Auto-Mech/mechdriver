@@ -15,13 +15,14 @@ from mechroutines.thermo import basis
 from mechroutines.proc import _util as util
 from mechlib.amech_io import printer as ioprinter
 
-def zmatrix(spc_name, locs, locs_path, cnf_fs):
+def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     """collect a zmatrix
     """
     if cnf_fs[-1].file.geometry.exists(locs):
         geo = cnf_fs[-1].file.geometry.read(locs)
         zma = automol.geom.zmatrix(geo)
-        energy = cnf_fs[-1].file.energy.read(locs)
+        sp_fs = autofile.fs.single_point(locs_path)
+        energy = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
         comment = 'energy: {0:>15.10f}\n'.format(energy)
         zma_str = automol.zmat.string(zma)
     else:
@@ -31,12 +32,13 @@ def zmatrix(spc_name, locs, locs_path, cnf_fs):
     return spc_data
 
 
-def geometry(spc_name, locs, locs_path, cnf_fs):
+def geometry(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     """collect a geometry
     """
     if cnf_fs[-1].file.geometry.exists(locs):
         geo = cnf_fs[-1].file.geometry.read(locs)
-        energy = cnf_fs[-1].file.energy.read(locs)
+        sp_fs = autofile.fs.single_point(locs_path)
+        energy = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
         comment = 'energy: {0:>15.10f}'.format(energy)
         xyz_str = automol.geom.xyz_string(geo, comment=comment)
     else:
