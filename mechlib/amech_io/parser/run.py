@@ -92,6 +92,7 @@ TSK_KEY_DCT = {
     'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
     'energy': (('spc',), PRNT),
     'geo': (('spc',), PRNT),
+    'molden': (('spc',), PRNT),
     'zmatrix': (('spc',), PRNT),
     'enthalpy': (('spc',), PRNT),
     'coeffs': (('spc',), ()),
