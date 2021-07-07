@@ -10,7 +10,7 @@ from mechanalyzer.inf import thy as tinfo
 from mechlib.amech_io import printer as ioprinter
 from mechlib import filesys
 from mechroutines.proc import _util as util
-from mechroutines.proc import _collect as collect
+# from mechroutines.proc import _collect as collect
 
 
 def run_tsk(tsk, spc_dct, run_lst,

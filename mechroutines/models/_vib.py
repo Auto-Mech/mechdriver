@@ -3,6 +3,7 @@
 """
 
 import autorun
+import automol.pot
 import automol.geom
 from phydat import phycon
 from mechlib.amech_io import printer as ioprinter
@@ -27,7 +28,14 @@ def full_vib_analysis(
     rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
+    if typ.squash_tors_pot(spc_mod_dct_i):
+        print('it thinks it is 1dhrfa')
+        for rotor in rotors:
+            for torsion in rotor:
+                torsion.pot = automol.pot.relax_scale(torsion.pot)
+
     if typ.nonrigid_tors(spc_mod_dct_i, rotors):
+
         tors_strs = tors.make_hr_strings(rotors)
         [_, hr_str, _, prot_str, _] = tors_strs
 
@@ -43,11 +51,23 @@ def full_vib_analysis(
             scaled_harm_freqs, _ = scale_frequencies(
                 harm_freqs, None, spc_mod_dct_i,
                 scale_method='c3_harm')
+            # print('scaling test:',scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
+            # print('tors string before scaling',tors_strs)
             pot_scalef = potential_scale_factor(
                 scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
+            # print('pot_scalef:', pot_scalef)
             # get the pot scale factor
+            # print('before scaling')
+            # for rotor in rotors:
+            #     for _tors in rotor:
+            #         print(_tors.pot)
             rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
+            # print('after scaling')
+            # for rotor in rotors:
+            #     for _tors in rotor:
+            #         print(_tors.pot)
             tors_strs = tors.make_hr_strings(rotors)
+            # print('tors string after scaling',tors_strs)
             [_, hr_str, _, prot_str, _] = tors_strs
             _, _, tors_zpe = tors_projected_freqs_zpe(
                 pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)

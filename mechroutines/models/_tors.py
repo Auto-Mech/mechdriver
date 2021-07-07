@@ -141,13 +141,16 @@ def scale_rotor_pots(rotors, scale_factor=((), None)):
         ioprinter.debug_message(
             'scale_coeff test:', factor, nscale, sfactor)
 
+        # test
+        # sfactor = 1
+        # test
         for rotor in rotors:
             for tidx, torsion in enumerate(rotor):
                 if tidx not in scale_indcs and factor is not None:
                     torsion.pot = automol.pot.scale(torsion.pot, sfactor)
                     # following is being used in a test to see how effective
                     # a scaling of fixed scan torsional pots can be
-                    torsion.pot = automol.pot.relax_scale(torsion.pot)
+                    # torsion.pot = automol.pot.relax_scale(torsion.pot)
 
     return rotors
 

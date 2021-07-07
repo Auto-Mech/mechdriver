@@ -65,6 +65,10 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 ioprinter.info_message(' - No torsions, internal sym is 1.0')
                 int_symm, endgrp = 1.0, 1.0
 
+            # Obtain overall number, reduced as needed
+            int_symm = automol.symm.reduce_internal_symm(
+                geo, int_symm, ext_symm, endgrp)
+
         elif sym_model == 'HCO_model':
             ret = automol.symm.oxygenated_hydrocarbon_symm_num(geo)
             int_symm, ext_symm = ret
@@ -74,13 +78,12 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 'No symmetry model requested, ',
                 'setting internal sym factor to 1.0')
             ext_symm = automol.geom.external_symmetry_factor(geo)
-            int_symm, endgrp = 1.0, 1.0
-
-        # Obtain overall number, reduced as needed
-        int_symm = automol.symm.reduce_internal_symm(
-            geo, int_symm, ext_symm, endgrp)
+            int_symm = 1.0 
+            # int_symm, endgrp = 1.0, 1.0
 
         print('sym test:', int_symm, ext_symm)
+        rotor_symms = automol.rotor.symmetries(rotors, flat=True)
+        int_symm = automol.symm.rotor_reduced_symm_factor(int_symm, rotor_symms)
 
         symm_factor = ext_symm * int_symm
 
