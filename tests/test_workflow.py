@@ -79,7 +79,7 @@ def __instab():
                    TMP_RUN_DIR, TMP_SAVE_DIR)
 
 
-def __radrad():
+def test__radrad():
     """ Run es, thermo, and rates for PES with instabilities
     """
 
