@@ -20,7 +20,7 @@ def potential(names, grid_vals, cnf_save_path,
     """
 
     # Build initial lists for storing potential energies and Hessians
-    grid_points = automol.pot.points(grid_vals)
+    # grid_points = automol.pot.points(grid_vals)
     grid_coords = automol.pot.coords(grid_vals)
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
@@ -32,44 +32,49 @@ def potential(names, grid_vals, cnf_save_path,
     else:
         scn_fs = autofile.fs.cscan(zma_path)
 
-    # Read the energies and Hessians from the filesystem
-    for point, vals in zip(grid_points, grid_coords):
+    # Read the filesystem
+    for vals in grid_coords:
 
+        # Get angles in degrees for potential for now
+        vals_conv = tuple(val*phycon.RAD2DEG for val in vals)
+
+        # Get locs for reading filesysten
         locs = [names, vals]
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
 
+        # Read values of interest
         ene = energy(scn_fs, locs, mod_tors_ene_info)
         if ene is not None:
-            pot[point] = (ene - ref_ene) * phycon.EH2KCAL
+            pot[vals_conv] = (ene - ref_ene) * phycon.EH2KCAL
         else:
-            pot[point] = -10.0
+            pot[vals_conv] = -10.0
 
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):
-                geoms[point] = scn_fs[-1].file.geometry.read(locs)
+                geoms[vals_conv] = scn_fs[-1].file.geometry.read(locs)
             else:
-                geoms[point] = None
+                geoms[vals_conv] = None
 
         if read_grad:
             if scn_fs[-1].file.gradient.exists(locs):
-                grads[point] = scn_fs[-1].file.gradient.read(locs)
+                grads[vals_conv] = scn_fs[-1].file.gradient.read(locs)
             else:
-                grads[point] = None
+                grads[vals_conv] = None
 
         if read_hess:
             if scn_fs[-1].file.hessian.exists(locs):
-                hessians[point] = scn_fs[-1].file.hessian.read(locs)
+                hessians[vals_conv] = scn_fs[-1].file.hessian.read(locs)
             else:
-                hessians[point] = None
+                hessians[vals_conv] = None
 
         if read_zma:
             if scn_fs[-1].file.zmatrix.exists(locs):
-                zmas[point] = scn_fs[-1].file.zmatrix.read(locs)
+                zmas[vals_conv] = scn_fs[-1].file.zmatrix.read(locs)
             else:
-                zmas[point] = None
+                zmas[vals_conv] = None
 
-        paths[point] = scn_fs[-1].path(locs)
+        paths[vals] = scn_fs[-1].path(locs)
 
     return pot, geoms, grads, hessians, zmas, paths
 

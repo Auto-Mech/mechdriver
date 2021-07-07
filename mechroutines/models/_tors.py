@@ -96,10 +96,13 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct)
-            pot = automol.pot.fit_1d_potential(
+            fit_pot = automol.pot.fit_1d_potential(
                 pot, min_thresh=-0.0001, max_thresh=50.0)
-            # Add potential to potential
-            torsion.pot = pot
+            # Hack: fix the indices to have the grid again be the keys
+            final_pot = {}
+            for i, grid in enumerate(pot.keys()):
+                final_pot[grid] = fit_pot[(i,)]
+            torsion.pot = final_pot
 
     # if multi_idx is not None:
     #     mdhr_name = automol.rotor.names(rotors)[multi_idx]
