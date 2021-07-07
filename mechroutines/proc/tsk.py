@@ -74,6 +74,11 @@ def run_tsk(tsk, spc_dct, run_lst,
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
 
+                elif 'molden' in tsk:
+                    csv_data_i = collect.molden(
+                        spc_name, locs, locs_path, cnf_fs, mod_thy_info)
+                    csv_data[label] = csv_data_i
+
                 elif 'zma' in tsk:
                     csv_data_i = collect.zmatrix(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)

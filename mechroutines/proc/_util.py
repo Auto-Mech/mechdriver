@@ -167,6 +167,9 @@ def write_csv_data(tsk, csv_data, filelabel, spc_array):
     if 'geo' in tsk:
         all_data = '\n'.join(spc_data for spc_data in csv_data.values())
         io.write_file(filelabel, all_data)
+    if 'molden' in tsk:
+        all_data = '\n'.join(spc_data for spc_data in csv_data.values())
+        io.write_file(filelabel, all_data)
     if 'zma' in tsk:
         all_data = '\n'.join(spc_data for spc_data in csv_data.values())
         io.write_file(filelabel, all_data)
@@ -205,6 +208,13 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
             filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
         filelabel += '.csv'
     elif 'geo' in tsk:
+        filelabel = 'molden'
+        if 'geolvl' in proc_keyword_dct:
+            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+        else:
+            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+        filelabel += '.txt'
+    elif 'molden' in tsk:
         filelabel = 'geo'
         if 'geolvl' in proc_keyword_dct:
             filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
@@ -261,12 +271,12 @@ def choose_conformers(
         by either the same dct or by models.ddat
     """
     if proc_keyword_dct['geolvl']:
-        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path = conformer_list(
+        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = conformer_list(
             proc_keyword_dct, save_prefix, run_prefix,
             spc_dct_i, thy_dct)
     else:
         ret = conformer_list_from_models(
             proc_keyword_dct, save_prefix, run_prefix,
             spc_dct_i, spc_mod_dct_i)
-        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path = ret
+        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
     return cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
