@@ -29,7 +29,7 @@ TEMPS = numpy.array([500.0, 1000.0, 1500.0, 2000.0])
 PRESSURES = (1.0, 'high')
 
 
-def __rrho():
+def test__rrho():
     """ Run es, thermo, and rates for PES; standard run
     """
     run_mechdriver('run_c2h6_h_rrho.temp',
@@ -79,7 +79,7 @@ def __instab():
                    TMP_RUN_DIR, TMP_SAVE_DIR)
 
 
-def __radrad():
+def test__radrad():
     """ Run es, thermo, and rates for PES with instabilities
     """
 
