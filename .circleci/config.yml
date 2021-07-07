@@ -23,7 +23,8 @@ jobs:
                 command: |
                     export PYTHONUNBUFFERED=1
                     source activate mechdriver-env
-                    pytest -v --disable-pytest-warnings --cov=mechlib --cov=mechroutines --cov=drivers --cov-report=html
+                    cd ..
+                    pytest -v --disable-pytest-warnings --cov=mechlib --cov=mechroutines --cov=drivers --cov-report=html --full-trace
                     coverage report
             - run:
                 name: Assess PEP8
