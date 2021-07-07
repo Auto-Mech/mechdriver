@@ -100,7 +100,7 @@ def conformer_list(
         **_root)
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
-    return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path
+    return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
 
 
 def conformer_list_from_models(
@@ -124,7 +124,7 @@ def conformer_list_from_models(
         **_root)
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
-    return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path
+    return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
 
 
 def set_csv_data(tsk):
@@ -269,4 +269,4 @@ def choose_conformers(
             proc_keyword_dct, save_prefix, run_prefix,
             spc_dct_i, spc_mod_dct_i)
         cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path = ret
-    return cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path
+    return cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
