@@ -96,7 +96,6 @@ if KTP_TSKS is not None:
 PROC_TSKS = TSK_LST_DCT.get('proc')
 if PROC_TSKS is not None:
     ioprinter.program_header('proc')
-    PES_IDX = None
     procdriver.run(
         PES_RLST, SPC_RLST,
         PROC_TSKS,
