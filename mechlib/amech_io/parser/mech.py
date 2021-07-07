@@ -29,7 +29,7 @@ def pes_dictionary(mech_str, mech_type, spc_dct):
     # Initialize values used for the basic PES-SUBPES sorting
     sort_str = ['pes', 'subpes', 0]
     isolate_species = ()
-    
+
     # Build and print the full sorted PES dict
     if mech_str is not None:
         _, mech_info, _ = parse_mechanism(mech_str, mech_type, spc_dct)
