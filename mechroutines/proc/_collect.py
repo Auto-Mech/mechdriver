@@ -32,6 +32,23 @@ def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     return spc_data
 
 
+def molden(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
+    """collect a geometry
+    """
+    if cnf_fs[-1].file.geometry.exists(locs):
+        geo = cnf_fs[-1].file.geometry.read(locs)
+        sp_fs = autofile.fs.single_point(locs_path)
+        energy = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+        comment = 'energy: {0:>15.10f}'.format(energy)
+        comment += 'SPC: {}\tConf: {}\tPath: {}'.format(
+        spc_name, locs, locs_path)
+        xyz_str = automol.geom.xyz_string(geo, comment=comment)
+    else:
+        xyz_str = '\t -- Missing --'
+    spc_data = xyz_str
+    return spc_data
+
+
 def geometry(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     """collect a geometry
     """
