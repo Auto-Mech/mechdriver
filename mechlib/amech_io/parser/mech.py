@@ -19,11 +19,11 @@ def pes_dictionary(mech_str, mech_type, spc_dct):
 
         :param mech_str: mechanism.dat input file string
         :type mech_str: str
-        :param mech_type:
+        :param mech_type: format of the mechanism string
         :type mech_type: str
-        :param spc_dct:
-        :type spc_dct: dict[str: ____]
-        :rtype: dict[tuple(str, int, int)] = tuple(int, tuple(str))
+        :param spc_dct: info for mechanism species and transition states
+        :type spc_dct: mechdriver.spc_dct object
+        :rtype: mechanalyer.pes.pes_dct object
     """
 
     # Initialize values used for the basic PES-SUBPES sorting

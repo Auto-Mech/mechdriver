@@ -92,7 +92,7 @@ def models_dictionary(mod_str, thy_dct):
 
         :param mod_str: models.dat input file string
         :type mod_str: str
-        :param thy_dct:
+        :param thy_dct: information
         :type: dict[str:dict[str:str/float]]
     """
 
