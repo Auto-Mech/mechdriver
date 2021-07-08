@@ -13,8 +13,6 @@ def pes_dictionary(mech_str, mech_type, spc_dct):
         channels of the user input utilizing the sorter functionality
         from mechanalyzer. Currently, we sort just via PES and then SUB-PES.
 
-        Format: {(formula, pes idx, sub pes idx): ((chnl_idx, rcts, prds),)
-
         Also, currently prints the PES channels.
 
         :param mech_str: mechanism.dat input file string
