@@ -260,6 +260,11 @@ def tasks(run_str, thy_dct):
     ktp_block = ioformat.ptt.end_block(run_str, 'ktp', footer='ktp')
     proc_block = ioformat.ptt.end_block(run_str, 'proc', footer='proc')
 
+    print('els\n', es_block)
+    print('therm\n', therm_block)
+    print('trans\n', trans_block)
+    print('proc\n', proc_block)
+
     es_tsks = _tsk_lst(es_block, 3)
     therm_tsks = _tsk_lst(therm_block, 2)
     ktp_tsks = _tsk_lst(ktp_block, 2)
