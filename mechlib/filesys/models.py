@@ -56,7 +56,7 @@ def pf_filesys(spc_dct_i, spc_model_dct_i,
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, spc_model_dct_i['vib']['geolvl'][1][1],
         run_prefix, save_prefix, saddle, name=name, rings='min')
-    if spc_model_dct_i['symm']['mod'] == 'sampling':
+    if 'mod' in spc_model_dct_i['symm']:
         pf_filesystems['symm'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
             run_prefix, save_prefix, saddle, name=name, rings='min')

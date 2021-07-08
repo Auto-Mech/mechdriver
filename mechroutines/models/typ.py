@@ -63,7 +63,7 @@ def scale_1d(spc_mod_dct_i):
     """
     ioprinter.debug_message(
         'tors model in scale set', spc_mod_dct_i['tors']['mod'])
-    return bool(spc_mod_dct_i['tors']['mod'] == '1dhrfa')
+    return bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa', '1dhrf'))
 
 
 def scale_tors_pot(spc_mod_dct_i, to_scale):
@@ -71,6 +71,14 @@ def scale_tors_pot(spc_mod_dct_i, to_scale):
     """
     onedhr_model = bool('1dhr' in spc_mod_dct_i['tors']['mod'])
     return bool(onedhr_model and to_scale)
+
+
+def squash_tors_pot(spc_mod_dct_i):
+    """ determine if we need to scale the potential
+    """
+    ioprinter.debug_message(
+        'tors model in scale set', spc_mod_dct_i['tors']['mod'])
+    return bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa',))
 
 
 def vib_tau(spc_mod_dct_i):
