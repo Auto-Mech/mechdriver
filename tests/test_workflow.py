@@ -32,6 +32,7 @@ PRESSURES = (1.0, 'high')
 def test__rrho():
     """ Run es, thermo, and rates for PES; standard run
     """
+    print('RUN test__rrho')
     run_mechdriver('run_c2h6_h_rrho.temp',
                    TMP_DIR,
                    TMP_INP_DIR, CWD_INP_DIR,
@@ -44,6 +45,7 @@ def test__1dhrfa():
     """ Run es, thermo, and rates for PES; standard run
     """
 
+    print('RUN test__1dhrfa')
     run_mechdriver('run_c2h6_h_1dhrfa.temp',
                    TMP_DIR,
                    TMP_INP_DIR, CWD_INP_DIR,
@@ -83,6 +85,7 @@ def test__radrad():
     """ Run es, thermo, and rates for PES with instabilities
     """
 
+    print('RUN test__radrad')
     run_mechdriver('run_c2h5_h_1dhrfa.temp',
                    TMP_DIR,
                    TMP_INP_DIR, CWD_INP_DIR,
@@ -91,6 +94,6 @@ def test__radrad():
 
 
 if __name__ == '__main__':
-    # test__rrho()
+    test__rrho()
     test__1dhrfa()
-    # test__radrad()
+    test__radrad()
