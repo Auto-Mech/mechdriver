@@ -24,6 +24,11 @@ def run_mechdriver(run_template,
     if not os.path.exists(tmp_inp_dir):
         shutil.copytree(cwd_inp_dir, tmp_inp_dir)
 
+    print('TMP DIR PRINT')
+    print('inp', tmp_inp_dir)
+    print('run', tmp_run_dir)
+    print('save', tmp_save_dir)
+
     _fill_template_and_write_file(
         run_template, 'run.dat',
         tmp_inp_dir, tmp_run_dir, tmp_save_dir)
