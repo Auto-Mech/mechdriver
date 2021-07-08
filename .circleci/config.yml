@@ -24,7 +24,7 @@ jobs:
                     export PYTHONUNBUFFERED=1
                     source activate mechdriver-env
                     cd ..
-                    pytest -v --disable-pytest-warnings --cov=mechlib --cov=mechroutines --cov=drivers --cov-report=html --full-trace
+                    pytest -vv --disable-pytest-warnings --cov=mechlib --cov=mechroutines --cov=drivers --cov-report=html --full-trace
                     coverage report
             - run:
                 name: Assess PEP8
@@ -37,7 +37,7 @@ jobs:
                     flake8 --exit-zero drivers
                     pylint --rcfile=.pylintrc drivers
             - store_artifacts:
-                    path: htmlcov
+                    path: ../htmlcov
 workflows:
     version: 2
     build-all:
