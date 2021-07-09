@@ -35,30 +35,9 @@ AutoMech is also distributed with binary codes:
 MESS is particularly important and forms the backbone of the AutoMech code as it handles all of the 
 master equation rate constant expressions.
 
-
-Citation
-========
-
-The following is the preferred citation for use of MechDriver or any other library of AutoMech:
-
-|    Cool paper yo! KevMo
-
-The following citations introduce and utilize MechDriver (or AutoMech?):
-
-.. bibliography:: refs.bib
-    :list: enumerated
-    
-    automech1
-    automech2
-
-
 Support
 =======
 
-| AutoMech:
 | Kevin Moore [kmoore@anl.gov]
-| Sarah Elliott []
-| 
-| MESS:
-| YG []
- 
+| Sarah Elliott [elliott@anl.gov]
+
