@@ -13,23 +13,21 @@ def pes_dictionary(mech_str, mech_type, spc_dct):
         channels of the user input utilizing the sorter functionality
         from mechanalyzer. Currently, we sort just via PES and then SUB-PES.
 
-        Format: {(formula, pes idx, sub pes idx): ((chnl_idx, rcts, prds),)
-
         Also, currently prints the PES channels.
 
         :param mech_str: mechanism.dat input file string
         :type mech_str: str
-        :param mech_type:
+        :param mech_type: format of the mechanism string
         :type mech_type: str
-        :param spc_dct:
-        :type spc_dct: dict[str: ____]
-        :rtype: dict[tuple(str, int, int)] = tuple(int, tuple(str))
+        :param spc_dct: info for mechanism species and transition states
+        :type spc_dct: mechdriver.spc_dct object
+        :rtype: mechanalyer.pes.pes_dct object
     """
 
     # Initialize values used for the basic PES-SUBPES sorting
     sort_str = ['pes', 'subpes', 0]
     isolate_species = ()
-    
+
     # Build and print the full sorted PES dict
     if mech_str is not None:
         _, mech_info, _ = parse_mechanism(mech_str, mech_type, spc_dct)

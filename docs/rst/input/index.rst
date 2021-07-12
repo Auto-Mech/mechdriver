@@ -15,5 +15,5 @@ User's Manual
     mech
     aux
     examples/index
-    keywords
+    glossary
 

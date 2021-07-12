@@ -2,41 +2,42 @@
 Overview
 ========
 
-MechDriver serves as the automated workflow code of the AutoMech suite. 
+MechDriver serves as the automated workflow code of the AutoMech suite. Acts as a manager
+to execute a series of tasks involving the calculation of chemical data, including electronic structure
+data as well as paramters describing thermochemistry, kinetic, and transport. These parameters are
+formatted into standard functional forms used in the simulation of reaction mechanism models. 
 
-Can be considered as manager of several subdrivers
-    ES, therm, ktp,..
+To accomplish each of the specified tasks, MechDriver calls the appropriate, constituent subdriver:
+    (1) ESDriver: electronic structure calculations (geometries, frequencies, energies, etc)
+    (2) ThermoDriver: species thermochemistry (enthalpies, entropies, etc)
+    (3) kTPDriver: T,P-dependent rate constants of multichannel potential energy surfaces
+    (4) TransDriver: energy transfer and chemical transport
+    (5) ProcDriver: post-processing module to format data
 
-Its primarily utility is to facilitate the calculation of thermochemical, kinetic, and transport
-parameters required to construct reliabel reaction mechanism models.
+Each of these subdrivers function by making appropriate calls to lower level Python libraries packaged
+in the AutoMech suite:
 
-The design principle of MechDriver is such that to act as a workflow manager which interfaces to any number of Python and other compiled codes to calculate quantities of interest.
+    | `autochem: <https://sne-autochem.readthedocs.io/en/latest/>`_ molecular representation  
+    | `autoio: <https://sne-autoio.readthedocs.io/en/latest/>`_  I/O parsing and execution for external codes
+    | `autofile: <https://sne-autofile.readthedocs.io/en/latest/>`_ builds and manages the RUN/SAVE filesystem 
+    | `mechanalyzer: <https://mechanalyzer2-kev.readthedocs.io/en/latest/>`_ pre- and post-processing mechanisms; handles mechanism objects internally
 
+These libraries handle much of the complicated procedures for I/O of external codes and processing
+data. MechDriver largely handles the sequence of tasks.
 
-The user supplies (1) a mechanism containing reaction channels and species and
-(2) desired property of interest.
+AutoMech is also distributed with binary codes:
 
+    | MESS
+    | ThermP+PAC99
+    | OneDMin
+    | PIPPy
 
-MechDriver will take these input options and schedule a set of tasks to calculate these quantities.
-
-In a simplified manner, it 
-
-
-Citation
-========
-
-The following citations introduce and utilize MechDriver:
-
-.. bibliography:: refs.bib
-    :list: enumerated
-    
-    automech1
-    automech2
-
+MESS is particularly important and forms the backbone of the AutoMech code as it handles all of the 
+master equation rate constant expressions.
 
 Support
 =======
 
-Technical Details and Installation:
-Kevin Moore [kmoore@anl.gov]
+| Kevin Moore [kmoore@anl.gov]
+| Sarah Elliott [elliott@anl.gov]
 
