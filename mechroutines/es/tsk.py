@@ -768,7 +768,7 @@ def hr_tsk(job, spc_dct, spc_name,
                     cid = autofile.schema.generate_new_conformer_id()
                     new_locs = (rid, cid)
                 conformer.single_conformer(
-                    zma, spc_info, mod_thy_info,
+                    new_min_zma, spc_info, mod_thy_info,
                     ini_cnf_run_fs, ini_cnf_save_fs,
                     script_str, overwrite,
                     retryfail=retryfail, zrxn=zrxn,
