@@ -72,6 +72,8 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
     """
 
     new_min_zma = None
+    new_emin = emax
+    new_path = None
 
     print('\nAssessing the HR potential...')
     for name in tors_pots:
@@ -82,11 +84,14 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
         paths = tors_paths[name].values()
         for pot, zma, path in zip(pots, zmas, paths):
             if emin < pot < emax:
-                new_min_zma = zma
-                emin = pot
-                print(' - New minimmum energy ZMA found for torsion')
-                print(' - Ene = {}'.format(pot))
-                print(' - Found at path: {}'.format(path))
-                print(automol.zmat.string(zma))
+                if pot < new_emin:
+                    new_min_zma = zma
+                    new_path = path
+                    new_emin = pot
+    if new_min_zma is not None:
+        print(' - New minimmum energy ZMA found for torsion')
+        print(' - Ene = {}'.format(new_emin))
+        print(' - Found at path: {}'.format(new_path))
+        print(automol.zmat.string(new_min_zma))
 
     return new_min_zma
