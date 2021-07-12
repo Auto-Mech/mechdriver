@@ -249,9 +249,11 @@ def extract_task(tsk, tsk_lst):
     return tsk_inf
 
 
-def tasks(run_str, thy_dct):
+def tasks(run_str, mech_str, thy_dct):
     """ runstr
     """
+
+    print('Parsing the run.dat file')
 
     # Read blocks and build user determined task lists`
     es_block = ioformat.ptt.end_block(run_str, 'els', footer='els')
@@ -260,10 +262,10 @@ def tasks(run_str, thy_dct):
     ktp_block = ioformat.ptt.end_block(run_str, 'ktp', footer='ktp')
     proc_block = ioformat.ptt.end_block(run_str, 'proc', footer='proc')
 
-    print('els\n', es_block)
-    print('therm\n', therm_block)
-    print('trans\n', trans_block)
-    print('proc\n', proc_block)
+    # print('els\n', es_block)
+    # print('therm\n', therm_block)
+    # print('trans\n', trans_block)
+    # print('proc\n', proc_block)
 
     es_tsks = _tsk_lst(es_block, 3)
     therm_tsks = _tsk_lst(therm_block, 2)
@@ -285,13 +287,18 @@ def tasks(run_str, thy_dct):
     _check_tsks(trans_tsks, thy_dct)
     _check_tsks(proc_tsks, thy_dct)
 
-    return {
+    tsk_dct = {
         'es': es_tsks,
         'thermo': therm_tsks,
         'ktp': ktp_tsks,
         'trans': trans_tsks,
         'proc': proc_tsks
     }
+
+    # Check if user provided enough input for requested drivers
+    _chk_input_for_drivers(tsk_dct, mech_str)
+
+    return tsk_dct
 
 
 def _tsk_lst(tsk_str, num):
@@ -333,7 +340,6 @@ def _expand_tsks(tsks_lst):
     # Expand the tasks
     mod_tsks_lst = []
     for tsk_lst in tsks_lst:
-        print(tsk_lst)
         [obj, tsk, dct] = tsk_lst
         expanded_tsks = expand_dct.get(tsk, None)
         if expanded_tsks is None:
@@ -415,3 +421,14 @@ def _split_line(line, num):
     key_dct = ioformat.ptt.keyword_dct_from_block('\n'.join(key_lst))
 
     return tsk + [key_dct]
+
+
+def _chk_input_for_drivers(tsk_dct, mech_str):
+    """ Check if a mechanism.dat file exists if mechanism task lists present
+    """
+
+    if ts_dct['ktp']:
+        if mech_str is not None:
+            print('kTPDriver Requested. ',
+                  'However no mechanism.dat provided. Exiting MechDriver...')
+            sys.exit()
