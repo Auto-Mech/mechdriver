@@ -99,6 +99,7 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
             fit_pot = automol.pot.fit_1d_potential(
                 pot, min_thresh=-0.0001, max_thresh=50.0)
             # Hack: fix the indices to have the grid again be the keys
+
             final_pot = {}
             gridvals = tuple(pot.keys())
             ref_val = gridvals[0][0]
