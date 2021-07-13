@@ -58,8 +58,8 @@ def read_amech_input(job_path):
         remove_comments='#')
 
     # Read structural and template files
-    geo_dct, _ = _geometry_dictionary(job_path)
-    act_dct, _ = _active_space_dictionary(job_path)
+    geo_dct, gname_dct = _geometry_dictionary(job_path)
+    act_dct, aname_dct = _active_space_dictionary(job_path)
 
     # Place all of the input into a dictionary to pass on
     inp_str_dct = {
@@ -74,7 +74,7 @@ def read_amech_input(job_path):
     }
 
     # Assess if all required strings are present
-    # _check_input_avail(inp_str_dct, gname_dct, aname_dct)
+    _check_input_avail(inp_str_dct, gname_dct, aname_dct)
 
     return inp_str_dct
 
