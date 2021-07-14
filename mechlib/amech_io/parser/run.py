@@ -427,7 +427,7 @@ def _chk_input_for_drivers(tsk_dct, mech_str):
     """ Check if a mechanism.dat file exists if mechanism task lists present
     """
 
-    if ts_dct['ktp']:
+    if tsk_dct['ktp']:
         if mech_str is not None:
             print('kTPDriver Requested. ',
                   'However no mechanism.dat provided. Exiting MechDriver...')

@@ -100,8 +100,10 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 pot, min_thresh=-0.0001, max_thresh=50.0)
             # Hack: fix the indices to have the grid again be the keys
             final_pot = {}
-            for i, grid in enumerate(pot.keys()):
-                final_pot[grid] = fit_pot[(i,)]
+            gridvals = tuple(pot.keys())
+            ref_val = gridvals[0][0]
+            for i, val in enumerate(gridvals):
+                final_pot[(val[0] - ref_val,)] = fit_pot[(i,)]
             torsion.pot = final_pot
 
     # if multi_idx is not None:

@@ -29,7 +29,7 @@ def full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
     if typ.squash_tors_pot(spc_mod_dct_i):
-        print('it thinks it is 1dhrfa')
+        # print('it thinks it is 1dhrfa')
         for rotor in rotors:
             for torsion in rotor:
                 torsion.pot = automol.pot.relax_scale(torsion.pot)
