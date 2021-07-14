@@ -3,6 +3,8 @@
     SCAN or CSAN layers of the save filesystem.
 """
 
+import numpy
+
 import automol
 import autofile
 import elstruct
@@ -10,7 +12,7 @@ from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner._run import execute_job
 from mechroutines.es.runner._run import read_job
-
+from phydat import phycon
 
 def execute_scan(zma, spc_info, mod_thy_info,
                  coord_names, coord_grids,
@@ -179,28 +181,34 @@ def run_backsteps(
             if success:
                 opt_zma = filesys.save.read_job_zma(ret, init_zma=zma)
                 guess_zma = opt_zma
+                filesys.save.scan_point_structure(
+                    ret, scn_save_fs, locs, mod_thy_info[1:], job,
+                    init_zma=zma, init_geo=None)
             else:
                 break
-        else:
-            break
         # break out of reverse sweep if the new energy is
         # within 1 kcal/mol of the value found in the forward
         # direction
         # Read in the forward and reverse energy
-        ioprinter.info_message("Cmparing to ", rev_grid_vals_orig_lst[idx])
-        if not geo_exists or overwrite:
-        ene = filesys.read.energy(scn_save_fs, locs, mod_tors_thy_info)
-        ene_orig = filesys.read.energy(scn_save_fs, locs_orig, mod_tors_thy_info)
+        ioprinter.info_message("Comparing to ", rev_grid_vals_orig_lst[idx])
+        path = scn_save_fs[-1].path(locs)
+        path_orig = scn_save_fs[-1].path(locs_orig)
+        sp_save_fs = autofile.fs.single_point(path)
+        orig_sp_save_fs = autofile.fs.single_point(path_orig)
+        ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+        ene_orig = orig_sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
         ene = ene * phycon.EH2KCAL
         ene_orig = ene_orig * phycon.EH2KCAL
         pot = ene - ene_orig
-        pot_thresh = -1. 
+        pot_thresh = -0.1 
         if pot > pot_thresh:
-            break
+            ioprinter.info_message("Reverse Sweep finds a potential {:5.2f} from the forward sweep".format(pot))
+            ioprinter.info_message("...no more backsteps required -- BUT IM DOING THEM ANYWAY")
+            # break
         else:
-            ioprinter.warning_message("Reverse Sweep finds a potential {%5.2f} from the forward sweep at ".format(pot))
+            ioprinter.warning_message("Backstep finds a potential less than forward sweep of {:5.2f} kcal/mol at ".format(pot))
             ioprinter.info_message(locs, locs_orig)
-            ioprinter.info_message("continuing reverse sweep")
+            ioprinter.info_message("...more backsteps required")
 
 
 

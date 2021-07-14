@@ -69,7 +69,7 @@ def hindered_rotor_scans(
         )
         if backstep:
             ioprinter.info_message('Attempting backstep routine')
-            scan.run_backstep(
+            scan.run_backsteps(
                 zma=zma,
                 spc_info=spc_info,
                 mod_thy_info=mod_thy_info,
