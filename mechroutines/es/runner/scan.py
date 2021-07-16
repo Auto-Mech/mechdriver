@@ -3,6 +3,8 @@
     SCAN or CSAN layers of the save filesystem.
 """
 
+import numpy
+
 import automol
 import autofile
 import elstruct
@@ -10,7 +12,7 @@ from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner._run import execute_job
 from mechroutines.es.runner._run import read_job
-
+from phydat import phycon
 
 def execute_scan(zma, spc_info, mod_thy_info,
                  coord_names, coord_grids,
@@ -77,11 +79,11 @@ def run_scan(zma, spc_info, mod_thy_info,
     # Build the grid of values
     mixed_grid_vals = automol.pot.coords(coord_grids)
     if not reverse_sweep:
-        all_grid_vals = [mixed_grid_vals]
+        grid_vals_groups = [mixed_grid_vals]
     else:
-        all_grid_vals = [mixed_grid_vals, tuple(reversed(mixed_grid_vals))]
+        grid_vals_groups = [mixed_grid_vals, tuple(reversed(mixed_grid_vals))]
 
-    for idx, grid_vals in enumerate(all_grid_vals):
+    for idx, grid_vals_group in enumerate(grid_vals_groups):
         if idx == 1:
             print('\nDoing a reverse sweep of the scan to catch errors...')
         _run_scan(
@@ -89,7 +91,7 @@ def run_scan(zma, spc_info, mod_thy_info,
             spc_info=spc_info,
             mod_thy_info=mod_thy_info,
             coord_names=coord_names,
-            grid_vals=grid_vals,
+            grid_vals=grid_vals_group,
             scn_run_fs=scn_run_fs,
             scn_save_fs=scn_save_fs,
             scn_typ=scn_typ,
@@ -101,6 +103,115 @@ def run_scan(zma, spc_info, mod_thy_info,
             constraint_dct=constraint_dct,
             **kwargs
         )
+
+
+def run_backsteps(
+        zma, spc_info, mod_thy_info,
+        coord_names, coord_grids,
+        scn_run_fs, scn_save_fs, scn_typ,
+        script_str, overwrite,
+        saddle=False,
+        constraint_dct=None, retryfail=True,
+        errors=(), options_mat=(),
+        **kwargs):
+    """ run backward steps along a scan and stop once there
+        is no hystersis (dont judge me i dont feel like googling
+        the spelling right now)
+    """
+    # Set up info that is constant across the scan
+    # i.e., jobtype, frozen_coords
+    job = _set_job(scn_typ)
+    if constraint_dct is None:
+        coord_locs = coord_names
+        frozen_coordinates = coord_names
+    else:
+        coord_locs = constraint_dct
+        frozen_coordinates = tuple(coord_names) + tuple(constraint_dct)
+
+    # Set the initial zma
+    guess_zma = zma
+
+    scn_save_fs[1].create([coord_locs])
+    inf_obj = autofile.schema.info_objects.scan_branch(
+        dict(zip(coord_locs, coord_grids)))
+    scn_save_fs[1].file.info.write(inf_obj, [coord_locs])
+
+    # Build the grid of values
+    mixed_grid_vals_lst = automol.pot.coords(coord_grids)
+    rev_grid_vals_orig_lst = tuple(reversed(mixed_grid_vals_lst))
+    rev_grid_vals_lst = tuple([tuple([
+        val + 4*numpy.pi for val in grid]) for grid in rev_grid_vals_orig_lst])
+
+    for idx, rev_grid_vals in enumerate(rev_grid_vals_lst):
+
+        # Get locs for reading and running filesysten
+        locs = [coord_names, rev_grid_vals]
+        locs_orig = [coord_names, rev_grid_vals_orig_lst[idx]]
+        if constraint_dct is not None:
+            locs = [constraint_dct] + locs
+            locs_orig = [constraint_dct] + locs_orig
+        scn_run_fs[-1].create(locs)
+        run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
+
+        # Build the zma
+        zma = automol.zmat.set_values_by_name(
+            guess_zma, dict(zip(coord_names, rev_grid_vals)),
+            angstrom=False, degree=False)
+
+        # Run an optimization or energy job, as needed.
+        geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
+        ioprinter.info_message("Taking a backstep at ", rev_grid_vals)
+        if not geo_exists or overwrite:
+            success, ret = execute_job(
+                job=job,
+                script_str=script_str,
+                run_fs=run_fs,
+                geo=zma,
+                spc_info=spc_info,
+                thy_info=mod_thy_info,
+                overwrite=overwrite,
+                frozen_coordinates=frozen_coordinates,
+                errors=errors,
+                options_mat=options_mat,
+                retryfail=retryfail,
+                saddle=saddle,
+                **kwargs
+            )
+            # Read the output for the zma and geo
+            if success:
+                opt_zma = filesys.save.read_job_zma(ret, init_zma=zma)
+                guess_zma = opt_zma
+                filesys.save.scan_point_structure(
+                    ret, scn_save_fs, locs, mod_thy_info[1:], job,
+                    init_zma=zma, init_geo=None)
+            else:
+                break
+        else:
+            guess_zma = scn_save_fs[-1].file.zmatrix.read(locs)
+        # break out of reverse sweep if the new energy is
+        # within 1 kcal/mol of the value found in the forward
+        # direction
+        # Read in the forward and reverse energy
+        ioprinter.info_message("Comparing to ", rev_grid_vals_orig_lst[idx])
+        path = scn_save_fs[-1].path(locs)
+        path_orig = scn_save_fs[-1].path(locs_orig)
+        sp_save_fs = autofile.fs.single_point(path)
+        orig_sp_save_fs = autofile.fs.single_point(path_orig)
+        ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+        ene_orig = orig_sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+        ene = ene * phycon.EH2KCAL
+        ene_orig = ene_orig * phycon.EH2KCAL
+        pot = ene - ene_orig
+        pot_thresh = -0.1 
+        if pot > pot_thresh:
+            ioprinter.info_message("Reverse Sweep finds a potential {:5.2f} from the forward sweep".format(pot))
+            ioprinter.info_message("...no more backsteps required")
+            break
+        else:
+            ioprinter.warning_message("Backstep finds a potential less than forward sweep of {:5.2f} kcal/mol at ".format(pot))
+            ioprinter.info_message(locs, locs_orig)
+            ioprinter.info_message("...more backsteps required")
+
 
 
 def _run_scan(guess_zma, spc_info, mod_thy_info,
