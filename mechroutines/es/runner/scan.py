@@ -186,6 +186,8 @@ def run_backsteps(
                     init_zma=zma, init_geo=None)
             else:
                 break
+        else:
+            guess_zma = scn_save_fs[-1].file.zmatrix.read(locs)
         # break out of reverse sweep if the new energy is
         # within 1 kcal/mol of the value found in the forward
         # direction
@@ -203,8 +205,8 @@ def run_backsteps(
         pot_thresh = -0.1 
         if pot > pot_thresh:
             ioprinter.info_message("Reverse Sweep finds a potential {:5.2f} from the forward sweep".format(pot))
-            ioprinter.info_message("...no more backsteps required -- BUT IM DOING THEM ANYWAY")
-            # break
+            ioprinter.info_message("...no more backsteps required")
+            break
         else:
             ioprinter.warning_message("Backstep finds a potential less than forward sweep of {:5.2f} kcal/mol at ".format(pot))
             ioprinter.info_message(locs, locs_orig)
