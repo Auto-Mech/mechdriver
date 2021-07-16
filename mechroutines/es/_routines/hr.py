@@ -18,11 +18,13 @@ def hindered_rotor_scans(
     """ Perform scans over each of the torsional coordinates
     """
 
+    backstep = False
     if tors_model != '1dhrfa':
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.OPTIMIZATION)
         scn_typ = 'relaxed'
         update_guess = True
+        backstep = True
     else:
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.ENERGY)
@@ -65,6 +67,24 @@ def hindered_rotor_scans(
             retryfail=retryfail,
             **kwargs,
         )
+        if backstep:
+            ioprinter.info_message('Attempting backstep routine')
+            scan.run_backsteps(
+                zma=zma,
+                spc_info=spc_info,
+                mod_thy_info=mod_thy_info,
+                coord_names=tors_names,
+                coord_grids=tors_grids,
+                scn_run_fs=scn_run_fs,
+                scn_save_fs=scn_save_fs,
+                scn_typ=scn_typ,
+                script_str=script_str,
+                overwrite=overwrite,
+                saddle=saddle,
+                constraint_dct=constraint_dct,
+                retryfail=retryfail,
+                **kwargs,
+            )
 
 
 def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):

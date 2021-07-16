@@ -1,6 +1,8 @@
 """ drivers for coordinate scans
 """
 
+import numpy
+
 import automol
 import autofile
 from phydat import phycon
@@ -22,6 +24,8 @@ def potential(names, grid_vals, cnf_save_path,
     # Build initial lists for storing potential energies and Hessians
     # grid_points = automol.pot.points(grid_vals)
     grid_coords = automol.pot.coords(grid_vals)
+    back_coords = tuple([tuple([
+        val + 4*numpy.pi for val in grid]) for grid in grid_coords])
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
@@ -33,20 +37,32 @@ def potential(names, grid_vals, cnf_save_path,
         scn_fs = autofile.fs.cscan(zma_path)
 
     # Read the filesystem
-    for vals in grid_coords:
+    for idx, vals in enumerate(grid_coords):
 
         # Get angles in degrees for potential for now
         vals_conv = tuple(val*phycon.RAD2DEG for val in vals)
 
         # Get locs for reading filesysten
         locs = [names, vals]
+        back_locs = [names, back_coords[idx]]
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
+            back_locs = [constraint_dct] + back_locs
 
         # Read values of interest
         ene = energy(scn_fs, locs, mod_tors_ene_info)
+        back_ene = energy(scn_fs, back_locs, mod_tors_ene_info)
+        step_ene = None
         if ene is not None:
-            pot[vals_conv] = (ene - ref_ene) * phycon.EH2KCAL
+            if back_ene is not None:
+                step_ene = min(ene, back_ene)
+            else:
+                step_ene = ene
+        elif back_ene is not None:
+            step_ene = back_ene
+
+        if step_ene is not None:
+            pot[vals_conv] = (step_ene - ref_ene) * phycon.EH2KCAL
         else:
             pot[vals_conv] = -10.0
 
