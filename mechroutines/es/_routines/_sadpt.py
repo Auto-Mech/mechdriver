@@ -146,6 +146,11 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
     # Build grid and names appropriate for reaction type
     scan_inf = automol.reac.build_scan_info(zrxn, ts_zma)
     coord_names, constraint_dct, coord_grids, update_guess = scan_inf
+    print('SCAN INFO')
+    print(coord_names)
+    print(constraint_dct)
+    print(coord_grids)
+    print(update_guess)
 
     # Get filesystem information
     if constraint_dct is None:
