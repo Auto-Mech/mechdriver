@@ -32,7 +32,6 @@ def read_amech_input(job_path):
     """
 
     # Read required input strings
-    print('Reading input')
     run_str = ioformat.pathtools.read_file(
         job_path, INP_FILE['run'][1],
         remove_comments='#', remove_whitespace=True)
@@ -93,22 +92,21 @@ def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
     inp_missing = []
     for key, (name, _, req) in INP_FILE.items():
         if inp_str_dct[key] is not None:
-            ioprinter.reading('{}...'.format(name), newline=1)
+            print('Found {} inp directory'.format(name))
         else:
-            print('Input file: ',
-                  '{} file NOT found in inp directory.'.format(name))
+            print('\n{} file NOT found in inp directory.'.format(name))
             if req:
                 inp_missing.append(name)
 
     if inp_missing:
-        print('Missing Required inputs files, quitting job...')
+        print('\nMissing Required inputs files, quitting job...')
         for name in inp_missing:
             print(name)
         sys.exit()
 
     # Check the auxiliary file dictionaries
     inf = (
-        ('geo', '.xyz files for species', gname_dct),
+        ('geo', '.xyz files for species/TSs', gname_dct),
         ('act', 'active space templates for TSs', aname_dct)
     )
     for key, msg, name_dct in inf:
@@ -116,9 +114,9 @@ def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
         if str_dct:
             print('Found {}:'.format(msg))
             for name in str_dct:
-                print('{} - {}'.format(name, name_dct[name]))
+                print('-  {}: {}'.format(name, name_dct[name]))
         else:
-            print('No active space template files for found.')
+            print('No {} were found.'.format(msg))
 
 
 # formatters, dont know where to build this
