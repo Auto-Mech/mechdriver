@@ -171,49 +171,38 @@ def input_dictionary(run_str):
 
 
 # Chemistry objects
-# Need check
-def pes_idxs(run_str):
+def chem_idxs(run_str):
     """  Parses the `pes` block of the run.dat file and
          builds a dictionary of the PESs and corresponding channels the
          user wishes to run.
 
-         May break if a pes_idx is given on two lines of string.
-
-        :param run_str: string of the run.dat input file
-        :type run_str: str
-        :returns: {pes_idx: list of channel_idxs}
-        :rtype: dict[str: tuple]
-    """
-
-    pes_block = ioformat.ptt.end_block(run_str, 'pes', footer='pes')
-
-    if pes_block is not None:
-        run_pes = {}
-        for line in pes_block.strip().splitlines():
-            [pes_nums, chn_nums] = line.split(':')
-            _pes_idxs = ioformat.ptt.idx_lst_from_line(pes_nums)
-            _chn_idxs = ioformat.ptt.idx_lst_from_line(chn_nums)
-            for idx in _pes_idxs:
-                run_pes.update({idx-1: tuple(val-1 for val in _chn_idxs)})
-    else:
-        run_pes = None
-
-    return run_pes
-
-
-def spc_idxs(run_str):
-    """  Parses the `spc` block of the run.dat file and
+         Parses the `spc` block of the run.dat file and
          builds a dictionary of the species the
          user wishes to run.
 
-         May break if a spc_idx is given on two lines of string.
+         May break if idx is given on two lines of string.
 
         :param run_str: string of the run.dat input file
         :type run_str: str
-        :returns: {1: list of species idxs}
-        :rtype: dict[int: tuple]
+        :returns: ({pes_idx: list of channel_idxs}, {1: list of species idxs})
+        :rtype: dict[str: tuple]
     """
 
+    # PES idxs to run
+    pes_block = ioformat.ptt.end_block(run_str, 'pes', footer='pes')
+
+    if pes_block is not None:
+        _pes_idxs = {}
+        for line in pes_block.strip().splitlines():
+            [pes_nums, chn_nums] = line.split(':')
+            _pes_nums = ioformat.ptt.idx_lst_from_line(pes_nums)
+            _chn_nums = ioformat.ptt.idx_lst_from_line(chn_nums)
+            for idx in _pes_nums:
+                _pes_idxs.update({idx-1: tuple(val-1 for val in _chn_nums)})
+    else:
+        _pes_idxs = None
+
+    # SPC idxs to run
     spc_block = ioformat.ptt.end_block(run_str, 'spc', footer='spc')
 
     if spc_block is not None:
@@ -224,7 +213,12 @@ def spc_idxs(run_str):
     else:
         _spc_idxs = None
 
-    return _spc_idxs
+    # Kill code if no idxs given
+    if _pes_idxs is None and _spc_idxs is None:
+        print('ERROR: No pes or spc section given in run.dat file. Quitting')
+        sys.exit()
+
+    return _pes_idxs, _spc_idxs
 
 
 # Driver Task Lists
@@ -421,7 +415,7 @@ def _split_line(line, num):
         tsk, key_lst = line[:1], line[1:]
     key_dct = ioformat.ptt.keyword_dct_from_block('\n'.join(key_lst))
 
-    return tsk + [key_dct]
+    return tsk + [key_dct]  # could convert to empty dct instead of None
 
 
 def _chk_input_for_drivers(tsk_dct, mech_str):

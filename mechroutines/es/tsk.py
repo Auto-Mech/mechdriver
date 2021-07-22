@@ -39,7 +39,7 @@ def run_tsk(tsk, spc_dct, spc_name,
             run_prefix, save_prefix):
     """ Execute the specified electronic structure task.
 
-        :param tsk: name of electronic structure task
+        :param tsk: name of task
         :type tsk: str
         :param spc_dct:
         :type spc_dct:
@@ -47,7 +47,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-value pairs for task
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str

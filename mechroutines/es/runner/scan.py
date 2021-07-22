@@ -455,6 +455,8 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
             locs = [constraint_dct] + locs
 
         # Check if ZMA (other info?) exists
+        print(scn_save_fs)
+        print(locs)
         if not scn_save_fs[-1].file.zmatrix.exists(locs):
             run_finished = False
             break

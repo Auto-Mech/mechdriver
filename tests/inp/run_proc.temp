@@ -16,6 +16,8 @@ els
     spc conf_energy   runlvl=mp2_gs    inplvl=mp2_sto
 end els
 
+
+#  Need versions where the geolvl is not specified
 proc
     spc geo           proplvl=mp2_sto  geolvl=mp2_sto  nconfs=2       
     spc zmatrix       proplvl=mp2_sto  geolvl=mp2_sto  nconfs=2       

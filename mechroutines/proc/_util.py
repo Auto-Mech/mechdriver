@@ -245,7 +245,7 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
         else:
             filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
             filelabel += '_{}'.format(spc_mod_dct_i['ene']['lvl1'][0])
-        filelabel = '.csv'
+        filelabel += '.csv'
     return filelabel
 
 

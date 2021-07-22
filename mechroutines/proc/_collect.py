@@ -154,6 +154,7 @@ def enthalpy(
         cnf_fs, run_prefix, save_prefix):
     """ collect enthalpies
     """
+    print('spc_mod_dct_i', spc_mod_dct_i)
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix, saddle=False)
