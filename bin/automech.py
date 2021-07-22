@@ -30,8 +30,7 @@ THY_DCT = ioparser.thy.theory_dictionary(INP_STRS['thy'])
 KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(
     INP_STRS['mod'], THY_DCT)
 INP_KEY_DCT = ioparser.run.input_dictionary(INP_STRS['run'])
-PES_IDX_DCT = ioparser.run.pes_idxs(INP_STRS['run'])
-SPC_IDX_DCT = ioparser.run.spc_idxs(INP_STRS['run'])
+PES_IDX_DCT, SPC_IDX_DCT = ioparser.run.chem_idxs(INP_STRS['run'])
 TSK_LST_DCT = ioparser.run.tasks(INP_STRS['run'], INP_STRS['mech'], THY_DCT)
 SPC_DCT, GLOB_DCT = ioparser.spc.species_dictionary(
     INP_STRS['spc'], INP_STRS['dat'], INP_STRS['geo'], 'csv')
