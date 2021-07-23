@@ -880,8 +880,9 @@ def _this_conformer_is_running(zma, cnf_run_fs):
                         running = True
                         break
             elif status == autofile.schema.RunStatus.SUCCESS:
-                subrun_fs = autofile.fs.subrun(run_path)
-                inp_str = subrun_fs[0].file.input.read([0, 0])
+                # subrun_fs = autofile.fs.subrun(run_path)
+                inp_str = run_fs[-1].file.input.read([job])
+                # inp_str = subrun_fs[0].file.input.read([0, 0])
                 inp_str = inp_str.replace('=', '')
                 prog = inf_obj.prog
                 inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
