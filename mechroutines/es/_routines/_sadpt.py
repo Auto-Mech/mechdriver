@@ -312,9 +312,12 @@ def saddle_point_checker(imags):
                     'Mode {} {} cm-1 is low,'.format(str(idx+1), imag))
             elif 50.0 < imag <= 200.0:
                 lowstr = 'Mode {} {} cm-1 is low,'.format(str(idx+1), imag)
-                ioprinter.warning_message(
-                    lowstr + 'need a kickoff procedure to remove')
-                kick_imag += 1
+                ioprinter.debug_message(
+                    lowstr + 'check mode and see if it should be corrected')
+                # Adding to the kick counter kills code for good TSs
+                # ioprinter.warning_message(
+                #     lowstr + 'need a kickoff procedure to remove')
+                # kick_imag += 1
             else:
                 ioprinter.debug_message(
                     'Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
