@@ -281,7 +281,15 @@ def single_conformer(zma, spc_info, mod_thy_info,
     """ generate single optimized geometry to be saved into a
         filesystem
     """
-    if not _this_conformer_is_running(zma, cnf_run_fs):
+    skip_job = False
+    if _this_conformer_is_running(zma, cnf_run_fs):
+        skip_job = True
+    elif _this_conformer_was_run_in_save(zma, cnf_save_fs):
+        skip_job = True
+    elif _this_conformer_was_run_in_run(zma, cnf_run_fs):
+        skip_job = True
+
+    if not skip_job:
         # Build the filesystem
         if use_locs is None:
             rid = autofile.schema.generate_new_ring_id()
@@ -845,6 +853,51 @@ def _init_geom_is_running(cnf_run_fs):
     return running
 
 
+def _this_conformer_was_run_in_save(zma, cnf_fs):
+    running = False
+    job = elstruct.Job.OPTIMIZATION
+    for locs in cnf_fs[-1].existing(ignore_bad_formats=True):
+        cnf_path = cnf_fs[-1].path(locs)
+        if cnf_fs[-1].file.input.exists(locs):
+            print('checking input at ', cnf_path)
+            inp_str = inp_str.replace('=', '')
+            prog = inf_obj.prog
+            inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+            if automol.zmat.almost_equal(inp_zma, zma,
+                                         dist_rtol=0.018, ang_atol=.2):
+                ioprinter.info_message(
+                    'This conformer was already run ' +
+                    'in {}.'.format(run_path))
+                running = True
+                break
+    return running
+
+
+def _this_conformer_was_run_in_run(zma, cnf_fs):
+    running = False
+    job = elstruct.Job.OPTIMIZATION
+    for locs in cnf_fs[-1].existing(ignore_bad_formats=True):
+        cnf_path = cnf_fs[-1].path(locs)
+        run_fs = autofile.fs.run(cnf_path)
+        run_path = run_fs[-1].path([job])
+        if run_fs[-1].file.info.exists([job]):
+            inf_obj = run_fs[-1].file.info.read([job])
+            status = inf_obj.status
+            if status == autofile.schema.RunStatus.SUCCESS:
+                inp_str = run_fs[-1].file.input.read([job])
+                inp_str = inp_str.replace('=', '')
+                prog = inf_obj.prog
+                inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                if automol.zmat.almost_equal(inp_zma, zma,
+                                             dist_rtol=0.018, ang_atol=.2):
+                    ioprinter.info_message(
+                        'This conformer was already run ' +
+                        'in {}.'.format(run_path))
+                    running = True
+                    break
+    return running
+
+
 def _this_conformer_is_running(zma, cnf_run_fs):
     """ Check the RUN filesystem for similar geometry
         submissions that are currently running
@@ -852,8 +905,6 @@ def _this_conformer_is_running(zma, cnf_run_fs):
 
     running = False
     job = elstruct.Job.OPTIMIZATION
-    cnf_run_path = cnf_run_fs[0].path()
-    ioprinter.debug_message('cnf path ' + cnf_run_path)
     for locs in cnf_run_fs[-1].existing(ignore_bad_formats=True):
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
@@ -879,20 +930,6 @@ def _this_conformer_is_running(zma, cnf_run_fs):
                                 run_path))
                         running = True
                         break
-            elif status == autofile.schema.RunStatus.SUCCESS:
-                # subrun_fs = autofile.fs.subrun(run_path)
-                inp_str = run_fs[-1].file.input.read([job])
-                # inp_str = subrun_fs[0].file.input.read([0, 0])
-                inp_str = inp_str.replace('=', '')
-                prog = inf_obj.prog
-                inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-                if automol.zmat.almost_equal(inp_zma, zma,
-                                             dist_rtol=0.018, ang_atol=.2):
-                    ioprinter.info_message(
-                        'This conformer was already run ' +
-                        'in {}.'.format(run_path))
-                    running = True
-                    break
     return running
 
 

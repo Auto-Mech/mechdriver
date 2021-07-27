@@ -198,7 +198,7 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
     """
     if 'coeffs' in tsk:
         filelabel = 'coeffs'
-        filelabel += '_{}'.format(model_dct['thermfit']['ref_scheme'])
+        filelabel += '_{}'.format(model_dct['therm_fit']['ref_scheme'])
         filelabel += '.csv'
     elif 'freq' in tsk:
         filelabel = 'freq'
@@ -237,7 +237,7 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
             filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
             filelabel += '_{}'.format(spc_mod_dct_i['ene']['lvl1'][0])
         filelabel += '.csv'
-    elif 'enthalphy' in tsk:
+    elif 'enthalpy' in tsk:
         filelabel = 'enthalpy'
         if 'geolvl' in proc_keyword_dct:
             filelabel += '_{}'.format(proc_keyword_dct['geolvl'])

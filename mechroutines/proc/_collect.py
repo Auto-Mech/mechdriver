@@ -1,6 +1,7 @@
 """Collects the target info
 """
 
+import os
 
 import thermfit
 import automol
@@ -97,7 +98,7 @@ def coeffs(spc_name, spc_dct, model_dct, spc_array):
     """ get the heat of formation reference molecules for one species.
     """
     basis_dct, _ = thermfit.prepare_refs(
-        model_dct['thermfit']['ref_scheme'],
+        model_dct['therm_fit']['ref_scheme'],
         spc_dct, (spc_name,))
     # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
@@ -155,6 +156,7 @@ def enthalpy(
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix, saddle=False)
+    print(pf_filesystems)
     ene_abs = ene.read_energy(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, conf=(locs, locs_path, cnf_fs),
@@ -174,4 +176,4 @@ def enthalpy(
                 coeff_basis[spc_basis.index(spc_i)])
         else:
             coeff_array.append(0)
-    return [locs_path, ene_abs, hf0k, *coeff_array]
+    return [locs_path, ene_abs, hf0k, *coeff_array], chn_basis_ene_dct, spc_array
