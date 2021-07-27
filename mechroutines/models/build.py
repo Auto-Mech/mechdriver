@@ -58,7 +58,7 @@ def read_spc_data(spc_dct, spc_name,
 
     ioprinter.obj('line_plus')
     ioprinter.reading(
-        'Reading filesystem info for {}'.format(spc_name), newline=1)
+        'filesystem info for {}'.format(spc_name), newline=1)
 
     vib_model = spc_mod_dct_i['vib']['mod']
     tors_model = spc_mod_dct_i['tors']['mod']

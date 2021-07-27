@@ -240,24 +240,28 @@ def run(pes_rlst, spc_rlst,
         nasa7_params_all = chemkin_io.parser.thermo.create_spc_nasa7_dct(ckin_nasa_str)
         # print('ckin_nasa_str test', ckin_nasa_str)
         templist = (298.15, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500)
+        ioprinter.info_message('SPECIES            H0f(0 K)  H0f(298 K) in kcal/mol:')
+        ioprinter.info_message(' T (K)   H - H(T)    S(T)      Cp(T) ')
+        ioprinter.info_message('Kelvin  kcal/mol cal/(mol K) cal/(mol K)')
+        whitespace2 = 45
+        whitespace2 = whitespace2*' '
         for spc_name in nasa7_params_all:
             nasa7_params = nasa7_params_all[spc_name]
             whitespace = 18-len(spc_name)
             whitespace = whitespace*' '
             hf0 = spc_dct[spc_name]['Hfs'][0] * phycon.EH2KCAL
             hf298 = mechanalyzer.calculator.thermo.enthalpy(nasa7_params, 298.15) /1000.
-            ioprinter.info_message('SPECIES            H0f(0 K)  H0f(298 K) in kcal/mol:')
-            ioprinter.info_message('{}{}{:>9.2f}{:>9.2f}'
-                                   .format(spc_name, whitespace, hf0, hf298))
-            ioprinter.info_message('\n T (K)   H - H(T)    S(T)      Cp(T) ')
-            ioprinter.info_message('Kelvin  kcal/mol cal/(mol K) cal/(mol K)')
+            ioprinter.info_message('{}'
+                                   .format(spc_name))
+            ioprinter.info_message('{}{:>9.2f}{:>9.2f}'
+                                   .format(whitespace2, hf0, hf298))
             hincref = hf298
             # hincref = hf298 - (mechanalyzer.calculator.thermo.enthalpy(nasa7_params, 10) /1000.)
             for temp in templist:
                 hinct = mechanalyzer.calculator.thermo.enthalpy(nasa7_params, temp) /1000. - hincref
                 entt = mechanalyzer.calculator.thermo.entropy(nasa7_params, temp)
                 cpt = mechanalyzer.calculator.thermo.heat_capacity(nasa7_params, temp)
-                ioprinter.info_message('{:>7.2f}{:>9.2f}{:>9.2f}{:>9.2f}'
+                ioprinter.info_message('{:>8.2f}{:>9.2f}{:>9.2f}{:>9.2f}'
                                        .format(temp, hinct, entt, cpt))
 
         # Write all of the NASA polynomial strings
