@@ -16,7 +16,6 @@ def run_tsk(tsk, spc_dct, run_lst,
     """ run a proc tess task
     for generating a list of conformer or tau sampling geometries
     """
-
     # Print the head of the task
     ioprinter.output_task_header(tsk)
     ioprinter.obj('line_dash')
@@ -98,6 +97,23 @@ def run_tsk(tsk, spc_dct, run_lst,
                         locs, locs_path, cnf_fs, run_prefix, save_prefix)
                     csv_data_i, chn_basis_ene_dct, spc_array = ret
                     csv_data[label] = csv_data_i
+
+                elif 'entropy' in tsk:
+                    ret = collect.enthalpy(
+                        spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
+                        model_dct, chn_basis_ene_dct, spc_array,
+                        locs, locs_path, cnf_fs, run_prefix, save_prefix)
+                    csv_data_i, chn_basis_ene_dct, spc_array = ret
+                    csv_data[label] = csv_data_i
+
+                elif 'heat' in tsk:
+                    ret = collect.enthalpy(
+                        spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
+                        model_dct, chn_basis_ene_dct, spc_array,
+                        locs, locs_path, cnf_fs, run_prefix, save_prefix)
+                    csv_data_i, chn_basis_ene_dct, spc_array = ret
+                    csv_data[label] = csv_data_i
+
 
     # write the csv data into the appropriate file
     util.write_csv_data(tsk, csv_data, filelabel, spc_array)
