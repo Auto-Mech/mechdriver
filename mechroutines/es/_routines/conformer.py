@@ -878,8 +878,8 @@ def _this_conformer_was_run_in_run(zma, cnf_fs):
     job = elstruct.Job.OPTIMIZATION
     for locs in cnf_fs[-1].existing(ignore_bad_formats=True):
         cnf_path = cnf_fs[-1].path(locs)
-            run_fs = autofile.fs.run(cnf_path)
-            run_path = run_fs[-1].path([job])
+        run_fs = autofile.fs.run(cnf_path)
+        run_path = run_fs[-1].path([job])
         if run_fs[-1].file.info.exists([job]):
             inf_obj = run_fs[-1].file.info.read([job])
             status = inf_obj.status
