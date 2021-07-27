@@ -63,7 +63,7 @@ def scale_1d(spc_mod_dct_i):
     """
     ioprinter.debug_message(
         'tors model in scale set', spc_mod_dct_i['tors']['mod'])
-    return bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa', '1dhrf'))
+    return bool(spc_mod_dct_i['tors']['mod'] in ('1dhrfa', '1dhrf', '1dhr'))
 
 
 def scale_tors_pot(spc_mod_dct_i, to_scale):
