@@ -5,8 +5,8 @@ import os
 # import tempfile
 import numpy
 from _util import run_mechdriver
-from _util import chk_therm
-from _util import chk_rates
+# from _util import chk_therm
+# from _util import chk_rates
 
 
 # Set path where test input files and output data comparison exist
@@ -90,10 +90,21 @@ def test__radrad():
                    TMP_DIR,
                    TMP_INP_DIR, CWD_INP_DIR,
                    TMP_RUN_DIR, TMP_SAVE_DIR)
-    # later: switch c2h5 to vtst/vrctst and ch3_h to pst
+
+
+def test__proc():
+    """ Run ProcDriver
+    """
+
+    print('RUN test__proc')
+    run_mechdriver('run_proc.temp',
+                   TMP_DIR,
+                   TMP_INP_DIR, CWD_INP_DIR,
+                   TMP_RUN_DIR, TMP_SAVE_DIR)
 
 
 if __name__ == '__main__':
     test__rrho()
     test__1dhrfa()
     test__radrad()
+    test__proc()
