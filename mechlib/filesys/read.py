@@ -217,7 +217,7 @@ def _spherical_conformer(cnf_save_fs):
     return round_geom
 
 
-def energy(filesys, locs, mod_tors_ene_info):
+def energy(filesys, locs, mod_thy_info):
     """ Read the energy from an SP filesystem that is located in some
         root 'filesys object'
     """
@@ -225,8 +225,8 @@ def energy(filesys, locs, mod_tors_ene_info):
     if filesys[-1].exists(locs):
         path = filesys[-1].path(locs)
         sp_fs = autofile.fs.single_point(path)
-        if sp_fs[-1].file.energy.exists(mod_tors_ene_info[1:4]):
-            ene = sp_fs[-1].file.energy.read(mod_tors_ene_info[1:4])
+        if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+            ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
         else:
             ene = None
     else:

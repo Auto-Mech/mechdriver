@@ -422,7 +422,7 @@ def _chk_input_for_drivers(tsk_dct, mech_str):
     """
 
     if tsk_dct['ktp']:
-        if mech_str is not None:
+        if mech_str is None:
             print('kTPDriver Requested. ',
                   'However no mechanism.dat provided. Exiting MechDriver...')
             sys.exit()

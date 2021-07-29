@@ -73,9 +73,9 @@ def _mechdriver_main(tmp_dir):
     kmod_dct, smod_dct = ioparser.models.models_dictionary(
         inp_strs['mod'], thy_dct)
     inp_key_dct = ioparser.run.input_dictionary(inp_strs['run'])
-    pes_idx_dct = ioparser.run.pes_idxs(inp_strs['run'])
-    spc_idx_dct = ioparser.run.spc_idxs(inp_strs['run'])
-    tsk_lst_dct = ioparser.run.tasks(inp_strs['run'], thy_dct)
+    pes_idx_dct, spc_idx_dct = ioparser.run.chem_idxs(inp_strs['run'])
+    tsk_lst_dct = ioparser.run.tasks(
+        inp_strs['run'], inp_strs['mech'], thy_dct)
     spc_dct, glob_dct = ioparser.spc.species_dictionary(
         inp_strs['spc'], inp_strs['dat'], inp_strs['geo'], 'csv')
     pes_dct = ioparser.mech.pes_dictionary(

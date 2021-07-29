@@ -25,11 +25,14 @@ def split_unstable_full(pes_rlst, spc_rlst, spc_dct,
                 _split_rxn_names += new_prds
 
     # Get split names from spc
-    _split_spc_names = split_unstable_spc(
-        spc_rlst, spc_dct, spc_model_dct_i, save_prefix)
+    _split_spc_names = ()
+    if spc_rlst is not None:
+        _split_spc_names = split_unstable_spc(
+             spc_rlst, spc_dct, spc_model_dct_i, save_prefix)
+        _split_spc_names = tuple(_split_spc_names.values())[0]
 
     # Combine both and remove duplicates
-    _split_names = _split_rxn_names + tuple(_split_spc_names.values())[0]
+    _split_names = _split_rxn_names + _split_spc_names
     split_names = tuple(i for n, i in enumerate(_split_names)
                         if i not in _split_names[:n])
 
