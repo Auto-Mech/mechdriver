@@ -1,0 +1,1212 @@
+/lcrc/project/CMRP/amech/mechdriver/tests/tmp
+RUN test__rrho
+TMP DIR PRINT
+inp /lcrc/project/CMRP/amech/mechdriver/tests/tmp/inp
+run /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run
+save /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save
+
+          ================================================================
+          ==                        AUTOMECHANIC                        ==
+          ===         Andreas Copan, Sarah Elliott, Kevin Moore,       ===
+          ===     Daniel Moberg, Carlo Cavallotti, Yuri Georgievski,   ===
+          ==       Ahren Jasper, Murat Keceli, Stephen Klippenstein     ==
+          ================================================================
+
+                                 ,,,         ,,,
+                               ;"   ^;     ;'   ",
+                              ;    s$$$$$$$s      ;
+                               ,  ss$$$$$$$$$$s  ,'
+                               ;s$$$$$$$$$$$$$$$
+                               $$$$$$$$$$$$$$$$$$
+                              $$$$P""Y$$$Y""W$$$$$
+                              $$$$  0"$$$"0  $$$$$
+                              $$$$  .$$$$$.  $$$$
+                               $$$$$$$$$$$$$$$$$
+                                "Y$$$"'*'"$$$Y"
+                                   "$$b.d$$"        
+
+
+
+
+=========================================================
+HOST: blueslogin3
+PID: 47054
+=========================================================
+
+=========================================================
+PARSING INPUT
+=========================================================
+Found run.dat inp directory
+Found theory.dat inp directory
+Found models.dat inp directory
+Found species.csv inp directory
+Found mechanism.dat inp directory
+Found species.dat inp directory
+No .xyz files for species/TSs were found.
+No active space templates for TSs were found.
+Parsing the run.dat file
+No inchi column in csv file, getting inchi from SMILES
+No inchi column in csv file, getting inchi from SMILES
+! C1H3O2 PES: 1, SUB-PES: 1, Channels: 1
+  CH2OOH = CH3OO
+! C2H6 PES: 2, SUB-PES: 1, Channels: 1
+  C2H5 + H = C2H6
+! C2H7 PES: 3, SUB-PES: 1, Channels: 1
+  C2H6 + H = C2H5 + H2
+
+Building the base Run-Save filesystems at
+        /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run
+        /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save
+
+=========================================================
+ESDRIVER
+Sarah Elliott, Andreas Copan, Kevin Moore,
+Carlo Cavolotti, Stephen Klippenstein
+=========================================================
+=========================================
+
+Running PES 3: C2H7, SUB PES 1
+        Running Channel 1: C2H6+H = C2H5+H2
+
+Tasks for transition states requested...
+Identifying reaction classes for transition states...
+  Preparing for reaction C2H6+H = C2H5+H2
+    User requested forward direction.
+    Running reaction as: C2H6+H = C2H5+H2
+    Identifying class...
+    Reaction class identified as: hydrogen abstraction
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: init_geom C2H6
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+
+
+
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS
+No conformer found in save filesys. Checking for running jobs...
+No conformers are running in run filesys.Proceeding with optimization...
+Obtaining some initial guess geometry.
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS
+Getting initial geometry from inchi
+Debug:  Assessing if there are any functional groups that cause instability
+Debug:  geo str
+ C    0.747559  -0.037852   0.106316
+C   -0.747558   0.037852  -0.106316
+H    0.989512  -0.778048   0.874813
+H    1.253502  -0.325236  -0.820211
+H    1.139857   0.931996   0.426501
+H   -1.253502   0.325237   0.820211
+H   -0.989513   0.778047  -0.874814
+H   -1.139857  -0.931996  -0.426499
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+The initial geometries will be checked for imaginary frequencies
+ - Running hessian job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q/RUN/HESS
+ - Run succeeded.
+ - Reading successful ouput...
+
+Saving structure as the first conformer...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q
+ - Reading Z-Matrix from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q/Z/00
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q/SP/3vxh69R
+ - Rotors identified from Z-Matrix at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q/Z/00
+ - Saving rotor information at same location
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: init_geom H
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+
+
+
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS
+No conformer found in save filesys. Checking for running jobs...
+No conformers are running in run filesys.Proceeding with optimization...
+Obtaining some initial guess geometry.
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS
+Getting initial geometry from inchi
+Debug:  Assessing if there are any functional groups that cause instability
+Debug:  geo str
+ H    0.000000   0.000000   0.000000
+ - Running energy job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rr4MGOC0643Qh/cJ4MLeSZepiMm/RUN/ENER
+ - Run succeeded.
+ - Reading successful ouput...
+Succesful reference geometry optimization
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rr4MGOC0643Qh/cJ4MLeSZepiMm/SP/3vxh69U
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: init_geom C2H5
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+
+
+
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS
+No conformer found in save filesys. Checking for running jobs...
+No conformers are running in run filesys.Proceeding with optimization...
+Obtaining some initial guess geometry.
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS
+Getting initial geometry from inchi
+Debug:  Assessing if there are any functional groups that cause instability
+Debug:  geo str
+ C    0.849363   0.082483   0.050154
+C   -0.623540  -0.083175  -0.012783
+H    1.490802  -0.485241  -0.613523
+H    1.284412   0.866474   0.658686
+H   -0.879367  -1.118213  -0.255906
+H   -1.075283   0.164917   0.951705
+H   -1.046386   0.572755  -0.778333
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+The initial geometries will be checked for imaginary frequencies
+ - Running hessian job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm/RUN/HESS
+ - Run succeeded.
+ - Reading successful ouput...
+
+Saving structure as the first conformer...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm
+ - Reading Z-Matrix from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm/Z/00
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm/SP/3vxh69U
+ - Rotors identified from Z-Matrix at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm/Z/00
+ - Saving rotor information at same location
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: init_geom H2
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+
+
+
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS
+No conformer found in save filesys. Checking for running jobs...
+No conformers are running in run filesys.Proceeding with optimization...
+Obtaining some initial guess geometry.
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS
+Getting initial geometry from inchi
+Debug:  Assessing if there are any functional groups that cause instability
+Debug:  geo str
+ H    0.350752   0.000000   0.000000
+H   -0.350752   0.000000   0.000000
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+The initial geometries will be checked for imaginary frequencies
+ - Running hessian job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ/RUN/HESS
+ - Run succeeded.
+ - Reading successful ouput...
+
+Saving structure as the first conformer...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ
+ - Reading Z-Matrix from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ/Z/00
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ/SP/3vxh69R
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: find_ts ts_3_1_0
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+var_splvl1: None    
+var_splvl2: None    
+var_scnlvl: None    
+nobarrier: None    
+
+
+
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS
+Determining if TS search algorithm...
+No search algorithm requested
+
+Assuming reaction has saddle point on potential surface...
+Use species.dat to specify VTST search for mol-rad rxn...
+Finding the geometry of the saddle point...
+No transition state found in filesys at mp2_sto level... Proceeding to find it...
+
+Searching save filesys for guess Z-Matrix calculated at mp2_sto level...
+ - No Z-Matrix is found in save filesys.
+
+Running scan to generate guess Z-Matrix for opt...
+SCAN INFO
+('R9',)
+None
+(array([1.58736995, 1.83033473, 2.07329952, 2.31626431, 2.5592291 ,
+       2.80219388, 3.04515867, 3.28812346]),)
+False
+(DataSeries('/lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00', scan_trunk), DataSeries('/lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00', scan_branch), DataSeries('/lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00', scan_leaf))
+[('R9',), (1.5873699453845758,)]
+Need to run scans
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.59/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.83/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.07/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.32/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.56/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.80/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.05/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.29/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+
+Saving any newly run HR scans in run filesys...
+Reading from scan run at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.59
+ - Reading successful ouput...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.59
+ - Reading Z-Matrix from output...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.59
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.59/SP/3vxh69U
+Reading from scan run at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.83
+ - Reading successful ouput...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.83
+ - Reading Z-Matrix from output...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.83
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/1.83/SP/3vxh69U
+Reading from scan run at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.07
+ - Reading successful ouput...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.07
+ - Reading Z-Matrix from output...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.07
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.07/SP/3vxh69U
+Reading from scan run at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.32
+ - Reading successful ouput...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.32
+ - Reading Z-Matrix from output...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.32
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.32/SP/3vxh69U
+Reading from scan run at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.56
+ - Reading successful ouput...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.56
+ - Reading Z-Matrix from output...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.56
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.56/SP/3vxh69U
+Reading from scan run at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.80
+ - Reading successful ouput...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.80
+ - Reading Z-Matrix from output...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.80
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/2.80/SP/3vxh69U
+Reading from scan run at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.05
+ - Reading successful ouput...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.05
+ - Reading Z-Matrix from output...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.05
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.05/SP/3vxh69U
+Reading from scan run at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.29
+ - Reading successful ouput...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.29
+ - Reading Z-Matrix from output...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.29
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/3.29/SP/3vxh69U
+Updating scan trajectory file at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/Z/00/SCANS/R9/scan.t.xyz
+
+Optimizing guess Z-Matrix obtained from scan or filesys...
+
+There is 1 guess Z-Matrix to attempt to find saddle point.
+
+Optimizing guess Z-Matrix 1...
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+ - Running hessian job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a/RUN/HESS
+ - Run succeeded.
+ - Reading successful ouput...
+Checking the imaginary frequencies of the saddle point...
+Debug:  Mode 1 2684.85 cm-1 likely fine,
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a
+ - Reading Z-Matrix from output...
+Getting ZMA from a geometry...
+Resetting ZMA coords using opt geoms...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a/Z/00
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a/SP/3vxh69U
+ - Reading hessian and harmonic frequencies from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a
+ - Rotors identified from Z-Matrix at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a/Z/00
+ - Saving rotor information at same location
+ - Saving reaction
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_hess C2H6
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q
+No Hessian found in save filesys. Running Hessian...
+ - Found completed hessian job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q/RUN/HESS
+ - Reading successful ouput...
+ - Reading hessian from output...
+ - Saving Hessian...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q
+No harmonic frequencies found in save filesys...
+ - Calculating harmonic frequencies from Hessian...
+
+Harmonic frequencies [cm-1]:
+     286.840     302.490     449.570     921.000     921.010    1293.710
+    1550.230    1608.310    1649.840    1721.890    1748.160    1748.160
+    2869.570    3283.040    3379.850    3502.800    3564.000    3564.010
+
+Harmonic ZPVE [kcal mol-1]: 49.12649044405335
+
+Geometry [Angstrom]:
+C   -0.000000  -0.000000  -0.777487
+C   -0.000000  -0.000000   0.777487
+H   -0.000000   1.031448  -1.168476
+H    0.893261  -0.515724  -1.168476
+H   -0.893261  -0.515724  -1.168476
+H   -0.893261   0.515724   1.168476
+H    0.000000  -1.031448   1.168476
+H    0.893261   0.515724   1.168476
+ - Saving frequencies...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_hess H
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+
+Skipping task for an atom...
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_hess C2H5
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm
+No Hessian found in save filesys. Running Hessian...
+ - Found completed hessian job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm/RUN/HESS
+ - Reading successful ouput...
+ - Reading hessian from output...
+ - Saving Hessian...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm
+No harmonic frequencies found in save filesys...
+ - Calculating harmonic frequencies from Hessian...
+
+Harmonic frequencies [cm-1]:
+     201.650     591.730     893.830    1130.620    1164.120    1344.900
+    1614.710    1665.370    1726.920    1732.480    3357.050    3461.220
+    3516.240    3552.330    3628.580
+
+Harmonic ZPVE [kcal mol-1]: 42.289234660130916
+
+Geometry [Angstrom]:
+C   -0.016901  -0.004519  -0.795587
+C   -0.016901  -0.004519   0.732524
+H   -0.016901   0.959455  -1.320034
+H    0.464155  -0.839881  -1.320034
+H   -0.742914   0.727314   1.126653
+H   -0.280822  -1.001022   1.126653
+H    0.978958   0.261737   1.137649
+ - Saving frequencies...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_hess H2
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ
+No Hessian found in save filesys. Running Hessian...
+ - Found completed hessian job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ/RUN/HESS
+ - Reading successful ouput...
+ - Reading hessian from output...
+ - Saving Hessian...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ
+No harmonic frequencies found in save filesys...
+ - Calculating harmonic frequencies from Hessian...
+
+Harmonic frequencies [cm-1]:
+    9235.480
+
+Harmonic ZPVE [kcal mol-1]: 13.202781475705319
+
+Geometry [Angstrom]:
+H    0.000000   0.000000  -0.361884
+H    0.000000   0.000000   0.361884
+ - Saving frequencies...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_hess ts_3_1_0
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a
+Hessian found and saved previously in  /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a
+Harmonic frequencies found and saved previously in  /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a
+
+Harmonic frequencies [cm-1]:
+   -2684.900     223.900     397.100     686.800     955.100    1016.300
+    1135.800    1311.600    1377.300    1542.400    1566.800    1616.600
+    1683.300    1728.500    1733.600    1779.400    3370.000    3426.300
+    3540.200    3553.600    3567.600
+
+Harmonic ZPVE [kcal mol-1]: 47.92968155097676
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_energy C2H6
+
+Options for electronic structure task:
+runlvl: mp2_gs    (mp2/6-31G*)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q
+No energy found in save filesys. Running energy...
+ - Running energy job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q/SP/3vxlpJR/RUN/ENER
+ - Run succeeded.
+ - Reading successful ouput...
+ - Reading energy from output...
+
+Energy [au]: -79.50306512    
+ - Saving energy...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q/SP/3vxlpJR
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_energy H
+
+Options for electronic structure task:
+runlvl: mp2_gs    (mp2/6-31G*)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rr4MGOC0643Qh/cJ4MLeSZepiMm
+No energy found in save filesys. Running energy...
+ - Running energy job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rr4MGOC0643Qh/cJ4MLeSZepiMm/SP/3vxlpJU/RUN/ENER
+ - Run succeeded.
+ - Reading successful ouput...
+ - Reading energy from output...
+
+Energy [au]: -0.49823291     
+ - Saving energy...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rr4MGOC0643Qh/cJ4MLeSZepiMm/SP/3vxlpJU
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_energy C2H5
+
+Options for electronic structure task:
+runlvl: mp2_gs    (mp2/6-31G*)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm
+No energy found in save filesys. Running energy...
+ - Running energy job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm/SP/3vxlpJU/RUN/ENER
+ - Run succeeded.
+ - Reading successful ouput...
+ - Reading energy from output...
+
+Energy [au]: -78.84289880    
+ - Saving energy...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm/SP/3vxlpJU
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_energy H2
+
+Options for electronic structure task:
+runlvl: mp2_gs    (mp2/6-31G*)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ
+No energy found in save filesys. Running energy...
+ - Running energy job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ/SP/3vxlpJR/RUN/ENER
+ - Run succeeded.
+ - Reading successful ouput...
+ - Reading energy from output...
+
+Energy [au]: -1.14400442     
+ - Saving energy...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ/SP/3vxlpJR
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_energy ts_3_1_0
+
+Options for electronic structure task:
+runlvl: mp2_gs    (mp2/6-31G*)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a
+No energy found in save filesys. Running energy...
+ - Running energy job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a/SP/3vxlpJU/RUN/ENER
+ - Run succeeded.
+ - Reading successful ouput...
+ - Reading energy from output...
+
+Energy [au]: -79.96550280    
+ - Saving energy...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/RXN/C2H5.H2/AZYGZKNHAUXYNZ/0_0/2_1/UHFFFAOYSA-N/C2H6.H/LTIIYKNOQWYAPP/0_0/1_2/UHFFFAOYSA-N/2/3vxh69U/TS/00/CONFS/rz5bWKgr5-7LB/cGsDkrcb7EL3a/SP/3vxlpJU
+=========================================
+Running SPC 1: CH4
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: init_geom CH4
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+
+
+
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS
+No conformer found in save filesys. Checking for running jobs...
+No conformers are running in run filesys.Proceeding with optimization...
+Obtaining some initial guess geometry.
+No conformers located in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS
+Getting initial geometry from inchi
+Debug:  Assessing if there are any functional groups that cause instability
+Debug:  geo str
+ C    0.000000   0.000001   0.000000
+H   -0.355014  -0.527166  -0.888234
+H   -0.446071   0.996354   0.034619
+H   -0.286718  -0.558506   0.893735
+H    1.087803   0.089317  -0.040120
+ - Running optimization job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt/RUN/OPTI
+ - Run succeeded.
+ - Reading successful ouput...
+The initial geometries will be checked for imaginary frequencies
+ - Running hessian job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt/RUN/HESS
+ - Run succeeded.
+ - Reading successful ouput...
+
+Saving structure as the first conformer...
+ - Reading geometry from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt
+ - Reading Z-Matrix from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt/Z/00
+ - Reading energy from output...
+ - Saving at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt/SP/3vxh69R
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_hess CH4
+
+Options for electronic structure task:
+runlvl: mp2_sto    (mp2/sto-3g)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt
+No Hessian found in save filesys. Running Hessian...
+ - Found completed hessian job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt/RUN/HESS
+ - Reading successful ouput...
+ - Reading hessian from output...
+ - Saving Hessian...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt
+No harmonic frequencies found in save filesys...
+ - Calculating harmonic frequencies from Hessian...
+
+Harmonic frequencies [cm-1]:
+     999.750    1015.150    1183.960    1577.140    1787.680    2445.020
+    2830.860    2969.440    3601.340
+
+Harmonic ZPVE [kcal mol-1]: 26.318902310809694
+
+Geometry [Angstrom]:
+C    0.000000  -0.000000   0.000000
+H    0.000000  -0.000000   1.099213
+H    0.000000   1.036348  -0.366404
+H    0.897504  -0.518174  -0.366404
+H   -0.897504  -0.518174  -0.366404
+ - Saving frequencies...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt
+
+
+
+--------------------------------------------------------------------------------------
+
+Task: conf_energy CH4
+
+Options for electronic structure task:
+runlvl: mp2_gs    (mp2/6-31G*)
+inplvl: mp2_sto    (mp2/sto-3g)
+retryfail: True    
+overwrite: False    
+cnf_range: min    
+
+
+
+Running task for geometry at {} /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt
+No energy found in save filesys. Running energy...
+ - Running energy job at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt/SP/3vxlpJR/RUN/ENER
+ - Run succeeded.
+ - Reading successful ouput...
+ - Reading energy from output...
+
+Energy [au]: -40.33680618    
+ - Saving energy...
+ - Save path: /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt/SP/3vxlpJR
+
+=========================================================
+EXITING ESDRIVER
+=========================================================
+
+
+=========================================================
+THERMODRIVER
+
+Sarah Elliott, Kevin Moore, Andreas Copan,
+Murat Keceli, Yuri Georgievski, Stephen Klippenstein
+=========================================================
+Calculating Thermochem:
+=========================================
+Running SPC 1: ('SPC', 0, 0)
+--------------------------------------------------------------------------------------
+
+Preparing MESSPF input files for all species
+write test C2H6
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for C2H6
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q
+
+Preparing internal rotor info building partition functions...
+
+Obtaining the vibrational frequencies and zpves...
+Debug:  tors model in scale set rigid
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H6/OTMSDBZUPAUEDD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/rw0LgMZ9bwarY/cDgUkhiLsXB_Q
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+     286.840     302.490     449.570     921.000     921.010    1293.710
+    1550.230    1608.310    1649.840    1721.890    1748.160    1748.160
+    2869.570    3283.040    3379.850    3502.800    3564.000    3564.010
+
+Harmonic ZPVE [kcal mol-1]: 49.12649044405335
+
+Determining the symmetry factor...
+ - No torsions, internal sym is 1.0
+sym test: 1.0 6
+
+Obtaining the electronic energy + zpve...
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species C2H6
+  RRHO
+    Geometry[angstrom]        8
+      C         -0.00000      -0.00000      -0.77749
+      C         -0.00000      -0.00000       0.77749
+      H         -0.00000       1.03145      -1.16848
+      H          0.89326      -0.51572      -1.16848
+      H         -0.89326      -0.51572      -1.16848
+      H         -0.89326       0.51572       1.16848
+      H          0.00000      -1.03145       1.16848
+      H          0.89326       0.51572       1.16848
+    Core RigidRotor
+      SymmetryFactor          6.0
+    End  ! Core
+    Frequencies[1/cm]         18
+      287     302     450     921     921     1293
+      1550    1608    1650    1722    1748    1748
+      2870    3283    3380    3503    3564    3564
+    ElectronicLevels[1/cm]    1
+      0.0  1
+    ZeroEnergy[kcal/mol]      0.08
+End
+
+write test H
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for H
+
+Obtaining the geometry...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rr4MGOC0643Qh/cJ4MLeSZepiMm
+
+Obtaining the electronic energy...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H/YZCKVEUIGOORGS/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rr4MGOC0643Qh/cJ4MLeSZepiMm/SP/3vxlpJU
+Debug:  e_elec in models ene  -0.49823291072907
+Processor 47054 will prepare species: H
+
+Determining reference molecules for scheme: basic
+
+Determining basis for species: H
+InCHIs for basis set:
+  InChI=1S/H2/h1H
+Debug:  Energy will be determined for basis species:  InChI=1S/H2/h1H
+Debug:  bases energies test: InChI=1S/H2/h1H H2
+
+Calculating energy for basis H2...
+- Calculating electronic energy
+Reading Energy at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ/SP/3vxlpJR
+Debug:  e_elec in models ene  -1.14400441565355
+- Calculating zero-point energy
+Debug:  tors model in scale set rigid
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9235.480
+
+Harmonic ZPVE [kcal mol-1]: 13.202781475705319
+Debug:  zpe in models ene  0.021039971550112287
+ABS Energy  (hart):  -0.49823291072907
+Hf0K Energy (hart):  0.2646351185739627
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species H
+  Atom
+    Mass[amu]                 1.00782503223
+    ElectronicLevels[1/cm]    1
+      0.0  2
+End
+
+write test C2H5
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for C2H5
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm
+
+Preparing internal rotor info building partition functions...
+
+Obtaining the vibrational frequencies and zpves...
+Debug:  tors model in scale set rigid
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/C2H5/QUPDWYMUPZLYJZ/0/2/UHFFFAOYSA-N/3vxh69U/CONFS/rYoDaJj2M4aVy/cMkYaPDL9rmEm
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+     201.650     591.730     893.830    1130.620    1164.120    1344.900
+    1614.710    1665.370    1726.920    1732.480    3357.050    3461.220
+    3516.240    3552.330    3628.580
+
+Harmonic ZPVE [kcal mol-1]: 42.289234660130916
+
+Determining the symmetry factor...
+ - No torsions, internal sym is 1.0
+sym test: 1.0 1
+
+Obtaining the electronic energy + zpve...
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species C2H5
+  RRHO
+    Geometry[angstrom]        7
+      C         -0.01690      -0.00452      -0.79559
+      C         -0.01690      -0.00452       0.73252
+      H         -0.01690       0.95945      -1.32003
+      H          0.46415      -0.83988      -1.32003
+      H         -0.74291       0.72731       1.12665
+      H         -0.28082      -1.00102       1.12665
+      H          0.97896       0.26174       1.13765
+    Core RigidRotor
+      SymmetryFactor          1.0
+    End  ! Core
+    Frequencies[1/cm]         15
+      202     592     894     1131    1164    1344
+      1615    1665    1727    1732    3357    3461
+      3516    3552    3629
+    ElectronicLevels[1/cm]    1
+      0.0  2
+    ZeroEnergy[kcal/mol]      0.07
+End
+
+write test H2
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for H2
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ
+
+Preparing internal rotor info building partition functions...
+
+Obtaining the vibrational frequencies and zpves...
+Debug:  tors model in scale set rigid
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/H2/UFHFLCQGNIYNRP/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/ryiEwXfdzTuF3/c3WS7sWfp2QnJ
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+    9235.480
+
+Harmonic ZPVE [kcal mol-1]: 13.202781475705319
+
+Determining the symmetry factor...
+ - No torsions, internal sym is 1.0
+sym test: 1.0 2
+
+Obtaining the electronic energy + zpve...
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species H2
+  RRHO
+    Geometry[angstrom]        2
+      H          0.00000       0.00000      -0.36188
+      H          0.00000       0.00000       0.36188
+    Core RigidRotor
+      SymmetryFactor          2.0
+    End  ! Core
+    Frequencies[1/cm]         1
+      9235
+    ElectronicLevels[1/cm]    1
+      0.0  1
+    ZeroEnergy[kcal/mol]      0.02
+End
+
+write test CH4
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Reading Reading filesystem info for CH4
+
+Obtaining info for rotation partition function...
+Reading geometry at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt
+
+Preparing internal rotor info building partition functions...
+
+Obtaining the vibrational frequencies and zpves...
+Debug:  tors model in scale set rigid
+Reading Hessian at /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save/SPC/CH4/VNWKTOKETHGBQD/0/1/UHFFFAOYSA-N/3vxh69R/CONFS/raAXMVKFqgju9/c-YCFTW94MKqt
+Calling ProjRot to diagonalize Hessian and get freqs...
+
+Harmonic frequencies [cm-1]:
+     999.750    1015.150    1183.960    1577.140    1787.680    2445.020
+    2830.860    2969.440    3601.340
+
+Harmonic ZPVE [kcal mol-1]: 26.318902310809694
+
+Determining the symmetry factor...
+ - No torsions, internal sym is 1.0
+sym test: 1.0 12
+
+Obtaining the electronic energy + zpve...
+
+Determining energy transfer parameters...
+
+- Determining the masses...
+  - Obtaining masses from geometries...
+
+- Determining the Lennard-Jones model parameters...
+
+- Determining the energy-down transfer model parameters...
+MESSPF Input String:
+
+
+
+
+
+
+!===================================================
+!  GLOBAL KEYWORDS
+!===================================================
+TemperatureList[K]                     200.0  300.0  400.0  500.0  600.0  700.0  800.0  900.0  1000.0  1100.0  1200.0  1300.0  1400.0  1500.0  1600.0  1700.0  1800.0  1900.0  2000.0  2100.0  2200.0  2300.0  2400.0  2500.0  2600.0  2700.0  2800.0  2900.0  3000.0
+RelativeTemperatureIncrement           0.001
+AtomDistanceMin[angstrom]              0.32
+Species CH4
+  RRHO
+    Geometry[angstrom]        5
+      C          0.00000      -0.00000       0.00000
+      H          0.00000      -0.00000       1.09921
+      H          0.00000       1.03635      -0.36640
+      H          0.89750      -0.51817      -0.36640
+      H         -0.89750      -0.51817      -0.36640
+    Core RigidRotor
+      SymmetryFactor          12.0
+    End  ! Core
+    Frequencies[1/cm]         9
+      1000    1015    1184    1577    1788    2445
+      2831    2969    3601
+    ElectronicLevels[1/cm]    1
+      0.0  1
+    ZeroEnergy[kcal/mol]      0.04
+End
+
+--------------------------------------------------------------------------------------
+
+Running MESSPF calculations for all species
+
+Run MESSPF: C2H6
+/lcrc/project/CMRP/amech/autoio/autoio-interfaces/autorun/_run.py:164: UserWarning: Program run failed in /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/C2H6-OTMSDBZUPAUEDD-UHFFFAOYSA-N/0
+  warnings.warn("Program run failed in {}".format(run_dir))
+Traceback (most recent call last):
+  File "test_workflow.py", line 107, in <module>
+    test__rrho()
+  File "test_workflow.py", line 39, in test__rrho
+    TMP_RUN_DIR, TMP_SAVE_DIR)
+  File "/lcrc/project/CMRP/amech/mechdriver/tests/_util.py", line 36, in run_mechdriver
+    _mechdriver_main(tmp_dir)
+  File "/lcrc/project/CMRP/amech/mechdriver/tests/_util.py", line 110, in _mechdriver_main
+    inp_key_dct['run_prefix'], inp_key_dct['save_prefix'], tmp_dir
+  File "/lcrc/project/CMRP/amech/mechdriver/drivers/thermodriver.py", line 140, in run
+    reader.mess.messpf(thm_paths[idx][spc_mod][0]))
+  File "/lcrc/project/CMRP/amech/mechdriver/mechlib/amech_io/reader/mess.py", line 14, in messpf
+    with open(messpf_file, 'r') as pffile:
+FileNotFoundError: [Errno 2] No such file or directory: '/lcrc/project/CMRP/amech/mechdriver/tests/tmp/run/MESS/PF/C2H6-OTMSDBZUPAUEDD-UHFFFAOYSA-N/0/pf.dat'

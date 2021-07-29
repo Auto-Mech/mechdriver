@@ -62,6 +62,9 @@ def run(pes_rlst, spc_rlst,
     """
 
     # Print Header
+    ioprinter.info_message('Calculating Thermochem:')
+    # ioprinter.runlst(('SPC', 0, 0), spc_rlst)
+    # TODO: Fix spc print; fails if only PES given
 
     # ------------------------------------------------ #
     # PREPARE INFORMATION TO PASS TO THERMDRIVER TASKS #

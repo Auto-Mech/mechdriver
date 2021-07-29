@@ -185,8 +185,8 @@ def scan_for_guess(ts_dct, method_dct, runfs_dct, savefs_dct,
         **kwargs,
         )
 
-    guess_zmas = rxngrid.find_max_1d(
-        zrxn.class_, coord_grids[0], ts_zma, coord_names[0], scn_save_fs,
+    guess_zmas = rxngrid.grid_maximum_zmatrices(
+        zrxn.class_, ts_zma, coord_grids, coord_names, scn_save_fs,
         mod_thy_info, constraint_dct)
 
     return guess_zmas
@@ -314,7 +314,9 @@ def saddle_point_checker(imags):
                 lowstr = 'Mode {} {} cm-1 is low,'.format(str(idx+1), imag)
                 ioprinter.debug_message(
                     lowstr + 'check mode and see if it should be corrected')
+                big_imag += 1
                 # Adding to the kick counter kills code for good TSs
+                # Some addditions of big species have low mode of this
                 # ioprinter.warning_message(
                 #     lowstr + 'need a kickoff procedure to remove')
                 # kick_imag += 1
