@@ -71,12 +71,12 @@ TSK_KEY_DCT = {
     'conf_vpt2': (('spc', 'ts'), BASE + ('cnf_range',)),
     'conf_prop': (('spc', 'ts'), BASE + ('cnf_range',)),
     'conf_opt': (('spc', 'ts'), BASE + ('cnf_range',)),
-    'hr_scan': (('spc', 'ts'), BASE + ('tors_model', 'resamp_min',)),
-    'hr_grad': (('spc', 'ts'), BASE + ('tors_model',)),
-    'hr_hess': (('spc', 'ts'), BASE + ('tors_model',)),
-    'hr_energy': (('spc', 'ts'), BASE + ('tors_model',)),
-    'hr_vpt2': (('spc', 'ts'), BASE + ('tors_model',)),
-    'hr_reopt': (('spc', 'ts'), BASE + ('tors_model', 'hrthresh',)),
+    'hr_scan': (('spc', 'ts'), BASE + ('tors_model', 'resamp_min', 'cnf_range',)),
+    'hr_grad': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range',)),
+    'hr_hess': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range',)),
+    'hr_energy': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range',)),
+    'hr_vpt2': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range',)),
+    'hr_reopt': (('spc', 'ts'), BASE + ('tors_model', 'hrthresh', 'cnf_range',)),
     'tau_samp': (('spc', 'ts'), BASE),
     'tau_energy': (('spc', 'ts'), BASE),
     'tau_grad': (('spc', 'ts'), BASE),
@@ -97,9 +97,9 @@ TSK_KEY_DCT = {
     'enthalpy': (('spc',), PRNT),
     'coeffs': (('spc',), ()),
     # KTP/Therm
-    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite', 'lump_wells')),
-    'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname')),
-    'run_fits': ((), ('kin_model',)),
+    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite', 'lump_wells', 'cnf_range')),
+    'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname', 'cnf_range')),
+    'run_fits': ((), ('kin_model', 'cnf_range')),
 }
 
 # es tsk: (object type, (allowed values), default)  # use functions for weird

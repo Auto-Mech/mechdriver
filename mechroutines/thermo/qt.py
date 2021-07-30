@@ -6,7 +6,7 @@ import mess_io
 from mechroutines.models import build, blocks
 
 
-def make_messpf_str(temps, spc_dct, spc_name,
+def make_messpf_str(temps, spc_dct, spc_name, spc_locs,
                     pes_mod_dct_i, spc_mod_dct_i,
                     run_prefix, save_prefix):
     """ Reads and processes all information in the save filesys for
@@ -34,7 +34,8 @@ def make_messpf_str(temps, spc_dct, spc_name,
     inf_dct, _ = build.read_spc_data(
         spc_dct, spc_name,
         pes_mod_dct_i, spc_mod_dct_i,
-        run_prefix, save_prefix, {}, calc_chn_ene=False)
+        run_prefix, save_prefix, {}, calc_chn_ene=False,
+        spc_locs=spc_locs)
 
     # Write the header string for the MESS input file
     globkey_str = mess_io.writer.global_pf_input(

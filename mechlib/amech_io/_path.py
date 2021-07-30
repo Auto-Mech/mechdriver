@@ -10,25 +10,49 @@ from mechanalyzer.inf import spc as sinfo
 
 
 # Set paths to MESS jobs
-def thermo_paths(spc_dct, spc_queue, spc_mods, run_prefix):
+def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
     """
 
-    thm_paths = []
-    for spc_name in spc_queue:
-        thm_path = {}
-        for idx, mod in enumerate(spc_mods):
-            spc_info = sinfo.from_dct(spc_dct[spc_name])
-            spc_formula = automol.inchi.formula_string(spc_info[0])
-            thm_prefix = [spc_formula, automol.inchi.inchi_key(spc_info[0])]
-            thm_path[mod] = (
-                job_path(run_prefix, 'MESS', 'PF', thm_prefix, locs_idx=idx),
-                job_path(run_prefix, 'THERM', 'NASA', thm_prefix, locs_idx=idx)
+    thm_path_dct = {}
+    for spc_name in spc_locs_dct:
+        spc_thm_path_dct = {}
+        spc_info = sinfo.from_dct(spc_dct[spc_name])
+        spc_formula = automol.inchi.formula_string(spc_info[0])
+        thm_prefix = [spc_formula, automol.inchi.inchi_key(spc_info[0])]
+        spc_locs_lst = spc_locs_dct[spc_name]
+        for sidx, spc_locs in enumerate(spc_locs_lst, start=1):
+            for midx, mod in enumerate(spc_mods):
+                spc_mod_thm_path_dct = {}
+                idx = sidx * 10 + midx
+                spc_mod_thm_path_dct[mod] = (
+                    job_path(
+                        run_prefix, 'MESS', 'PF',
+                        thm_prefix, locs_idx=idx),
+                    job_path(
+                        run_prefix, 'THERM', 'NASA',
+                        thm_prefix, locs_idx=idx)
+                )
+            spc_mod_thm_path_dct['mod_total'] = (
+                job_path(
+                    run_prefix, 'MESS', 'PF',
+                    thm_prefix, locs_idx=sidx),
+                job_path(
+                    run_prefix, 'THERM', 'NASA',
+                    thm_prefix, locs_idx=sidx)
             )
-        thm_paths.append(thm_path)
-
-    return thm_paths
+            spc_thm_path_dct[tuple(spc_locs)] = spc_mod_thm_path_dct
+        spc_thm_path_dct['spc_total'] = (
+            job_path(
+                run_prefix, 'MESS', 'PF',
+                thm_prefix, locs_idx=0),
+            job_path(
+                run_prefix, 'THERM', 'NASA',
+                thm_prefix, locs_idx=0)
+        )
+        thm_path_dct[spc_name] = spc_thm_path_dct
+    return thm_path_dct
 
 
 def output_path(dat, make_path=True, print_path=False, prefix=None):

@@ -29,7 +29,7 @@ from mechroutines.thermo import basis
 def read_spc_data(spc_dct, spc_name,
                   pes_mod_dct_i, spc_mod_dct_i,
                   run_prefix, save_prefix, chn_basis_ene_dct,
-                  calc_chn_ene=True):
+                  calc_chn_ene=True, spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a given species.
         Also sets the writer for appropriately formatting the data into
         an MESS input file string.
@@ -78,7 +78,8 @@ def read_spc_data(spc_dct, spc_name,
             inf_dct, chn_basis_ene_dct = mol_data(
                 spc_name, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i, chn_basis_ene_dct,
-                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene, zrxn=None)
+                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene, 
+                spc_locs=spc_locs, zrxn=None)
             writer = 'species_block'
 
     # Add writer to inf dct
@@ -261,7 +262,8 @@ def atm_data(spc_dct, spc_name, pes_mod_dct_i, spc_mod_dct_i,
 def mol_data(spc_name, spc_dct,
              pes_mod_dct_i, spc_mod_dct_i,
              chn_basis_ene_dct,
-             run_prefix, save_prefix, calc_chn_ene=True, zrxn=None):
+             run_prefix, save_prefix, calc_chn_ene=True, zrxn=None,
+             spc_locs=None):
     """ Reads all required data from the SAVE filesystem for a molecule.
         Stores data into an info dictionary.
 
@@ -297,7 +299,7 @@ def mol_data(spc_name, spc_dct,
     # Set up all the filesystem objects using models and levels
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i, run_prefix, save_prefix,
-        zrxn is not None, name=spc_name)
+        zrxn is not None, name=spc_name, spc_locs=spc_locs)
 
     # Obtain rotation partition function information
     ioprinter.info_message(
