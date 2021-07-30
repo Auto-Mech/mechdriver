@@ -11,6 +11,8 @@ from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.filesys._build import build_fs
 from mechlib.filesys.mincnf import min_energy_conformer_locators
+from scipy.interpolate import CubicSpline
+from scipy.interpolate import Akima1DInterpolator
 
 
 def potential(names, grid_vals, cnf_save_path,
@@ -64,7 +66,7 @@ def potential(names, grid_vals, cnf_save_path,
         if step_ene is not None:
             pot[vals_conv] = (step_ene - ref_ene) * phycon.EH2KCAL
         else:
-            pot[vals_conv] = -10.0
+            pot[vals_conv] = None
 
         if read_geom:
             if scn_fs[-1].file.geometry.exists(locs):
@@ -91,8 +93,81 @@ def potential(names, grid_vals, cnf_save_path,
                 zmas[vals_conv] = None
 
         paths[vals] = scn_fs[-1].path(locs)
+    bad_angle = identify_bad_point(pot)
+    if bad_angle is not None:
+        pot = remove_bad_point(pot, bad_angle)
+
+    # Remove None entries
+    pot = {k: v for k, v in pot.items() if v is not None}
 
     return pot, geoms, grads, hessians, zmas, paths
+
+
+def identify_bad_point(pot, thresh=0.05):
+    """ Identifies a single bad point in a torsional potential based on a
+        comparison of Akima and cubic spline fits
+    """
+
+    vals_conv = pot.keys()
+    step_enes = pot.values()
+ 
+    # Get the sorted angles
+    shifted_angles = []
+    for idx, angle in enumerate(vals_conv):
+        if len(angle) == 1:  # if a tuple, just take the first value
+            angle = angle[0]
+        if idx == 0:
+            start_angle = angle
+        angle = angle - start_angle
+        if angle > 180:
+            angle = angle - 360
+        shifted_angles.append(angle)
+    shifted_angles = numpy.array(shifted_angles)
+
+    # For methyl rotors, double the threshold
+    if len(shifted_angles) == 4:
+        thresh *= 2 
+        
+    # Get the potentials and then sort them according to increasing angle
+    step_enes = numpy.array(list(step_enes))
+    sorted_idxs = numpy.argsort(shifted_angles)
+    sorted_angles = shifted_angles[sorted_idxs]
+    sorted_potentials = step_enes[sorted_idxs]
+    
+    # Fit cubic and Akima splines
+    cub_spline = CubicSpline(sorted_angles, sorted_potentials)
+    akima_spline = Akima1DInterpolator(sorted_angles, sorted_potentials)
+
+    # Evaluate the splines on a fine grid to check for ringing
+    fine_grid = numpy.arange(min(sorted_angles), max(sorted_angles), 1)
+    diff = cub_spline(fine_grid) - akima_spline(fine_grid) 
+    max_fine_angle = fine_grid[numpy.argmax(diff)]
+    max_norm_diff = max(diff) / max(step_enes)  # normalized by max potential
+
+    # Remove the bad point
+    bad_angle = None
+    if max_norm_diff > thresh:
+        max_idxs = numpy.argsort(abs(shifted_angles - max_fine_angle))[:2]
+        suspect_enes = [step_enes[idx] for idx in max_idxs]   
+        bad_angle = shifted_angles[max_idxs[numpy.argmax(suspect_enes)]]
+        if bad_angle < 0:  
+            bad_angle += 360  # convert back to original angle
+        bad_angle += start_angle
+
+    return bad_angle
+
+
+def remove_bad_point(pot, bad_angle):
+    """ Remove a single bad angle from a potential
+    """ 
+    bad_tuple = (bad_angle,)  # lazy way; need to get the 2-D value
+    assert pot.get(bad_tuple) is not None, (
+        f'The angle {bad_angle} does not exist in the pot dictionary')
+
+    pot[bad_tuple] = None
+    print(f'Removing bad angle at {bad_angle} degrees')
+
+    return pot
 
 
 # Single data point readers
