@@ -142,76 +142,109 @@ def run_backsteps(
     rev_grid_vals_lst = tuple([tuple([
         val + 4*numpy.pi for val in grid]) for grid in rev_grid_vals_orig_lst])
 
-    for idx, rev_grid_vals in enumerate(rev_grid_vals_lst):
-
-        # Get locs for reading and running filesysten
-        locs = [coord_names, rev_grid_vals]
-        locs_orig = [coord_names, rev_grid_vals_orig_lst[idx]]
+    pot = {}
+    for idx, grid_vals in enumerate(mixed_grid_vals_lst):
+    
+        locs = [coord_names, grid_vals]
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
-            locs_orig = [constraint_dct] + locs_orig
-        scn_run_fs[-1].create(locs)
-        run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
 
-        # Build the zma
-        zma = automol.zmat.set_values_by_name(
-            guess_zma, dict(zip(coord_names, rev_grid_vals)),
-            angstrom=False, degree=False)
-
-        # Run an optimization or energy job, as needed.
-        geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
-        ioprinter.info_message("Taking a backstep at ", rev_grid_vals)
-        if not geo_exists or overwrite:
-            success, ret = execute_job(
-                job=job,
-                script_str=script_str,
-                run_fs=run_fs,
-                geo=zma,
-                spc_info=spc_info,
-                thy_info=mod_thy_info,
-                overwrite=overwrite,
-                frozen_coordinates=frozen_coordinates,
-                errors=errors,
-                options_mat=options_mat,
-                retryfail=retryfail,
-                saddle=saddle,
-                **kwargs
-            )
-            # Read the output for the zma and geo
-            if success:
-                opt_zma = filesys.save.read_job_zma(ret, init_zma=zma)
-                guess_zma = opt_zma
-                filesys.save.scan_point_structure(
-                    ret, scn_save_fs, locs, mod_thy_info[1:], job,
-                    init_zma=zma, init_geo=None)
-            else:
-                break
-        else:
-            guess_zma = scn_save_fs[-1].file.zmatrix.read(locs)
-        # break out of reverse sweep if the new energy is
-        # within 1 kcal/mol of the value found in the forward
-        # direction
-        # Read in the forward and reverse energy
-        ioprinter.info_message("Comparing to ", rev_grid_vals_orig_lst[idx])
         path = scn_save_fs[-1].path(locs)
-        path_orig = scn_save_fs[-1].path(locs_orig)
         sp_save_fs = autofile.fs.single_point(path)
-        orig_sp_save_fs = autofile.fs.single_point(path_orig)
-        ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
-        ene_orig = orig_sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
-        ene = ene * phycon.EH2KCAL
-        ene_orig = ene_orig * phycon.EH2KCAL
-        pot = ene - ene_orig
-        pot_thresh = -0.1 
-        if pot > pot_thresh:
-            ioprinter.info_message("Reverse Sweep finds a potential {:5.2f} from the forward sweep".format(pot))
-            ioprinter.info_message("...no more backsteps required")
-            break
-        else:
-            ioprinter.warning_message("Backstep finds a potential less than forward sweep of {:5.2f} kcal/mol at ".format(pot))
-            ioprinter.info_message(locs, locs_orig)
-            ioprinter.info_message("...more backsteps required")
+        if sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+            ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+            ene = ene * phycon.EH2KCAL
+            pot[grid_vals] = ene
 
+    # Convert the energies to a baseline relative to the first point;
+    # helps with numerical issues related to the spline fitting
+    ref_ene = pot[mixed_grid_vals_lst[0]]
+    for grid_vals, ene in pot.items():
+        pot[grid_vals] = ene - ref_ene
+
+    # Convert units to degrees (will need to fix for 2-D stuff)
+    conv_pot = {}
+    for grid_vals, ene in pot.items():
+        conv_grid_vals = (grid_vals[0] * phycon.RAD2DEG,)
+        conv_pot[conv_grid_vals] = ene
+
+    bad_grid_vals = (filesys.read.identify_bad_point(conv_pot),)
+    
+    if bad_grid_vals[0] is not None:
+        passed_bad_point = False
+        for idx, rev_grid_vals in enumerate(rev_grid_vals_lst):
+
+            if rev_grid_vals_orig_lst[idx] == bad_grid_vals:
+                passed_bad_point = True 
+
+            # Get locs for reading and running filesysten
+            locs = [coord_names, rev_grid_vals]
+            locs_orig = [coord_names, rev_grid_vals_orig_lst[idx]]
+            if constraint_dct is not None:
+                locs = [constraint_dct] + locs
+                locs_orig = [constraint_dct] + locs_orig
+            scn_run_fs[-1].create(locs)
+            run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
+    
+            # Build the zma
+            zma = automol.zmat.set_values_by_name(
+                guess_zma, dict(zip(coord_names, rev_grid_vals)),
+                angstrom=False, degree=False)
+    
+            # Run an optimization or energy job, as needed.
+            geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
+            ioprinter.info_message("Taking a backstep at ", rev_grid_vals)
+            if not geo_exists or overwrite:
+                success, ret = execute_job(
+                    job=job,
+                    script_str=script_str,
+                    run_fs=run_fs,
+                    geo=zma,
+                    spc_info=spc_info,
+                    thy_info=mod_thy_info,
+                    overwrite=overwrite,
+                    frozen_coordinates=frozen_coordinates,
+                    errors=errors,
+                    options_mat=options_mat,
+                    retryfail=retryfail,
+                    saddle=saddle,
+                    **kwargs
+                )
+                # Read the output for the zma and geo
+                if success:
+                    opt_zma = filesys.save.read_job_zma(ret, init_zma=zma)
+                    guess_zma = opt_zma
+                    filesys.save.scan_point_structure(
+                        ret, scn_save_fs, locs, mod_thy_info[1:], job,
+                        init_zma=zma, init_geo=None)
+                else:
+                    break
+            else:
+                guess_zma = scn_save_fs[-1].file.zmatrix.read(locs)
+            # break out of reverse sweep if the new energy is
+            # within 1 kcal/mol of the value found in the forward
+            # direction
+            # Read in the forward and reverse energy
+            ioprinter.info_message("Comparing to ", rev_grid_vals_orig_lst[idx])
+            path = scn_save_fs[-1].path(locs)
+            path_orig = scn_save_fs[-1].path(locs_orig)
+            sp_save_fs = autofile.fs.single_point(path)
+            orig_sp_save_fs = autofile.fs.single_point(path_orig)
+            ene = sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+            ene_orig = orig_sp_save_fs[-1].file.energy.read(mod_thy_info[1:4])
+            ene = ene * phycon.EH2KCAL
+            ene_orig = ene_orig * phycon.EH2KCAL
+            pot = ene - ene_orig
+            pot_thresh = -0.1 
+            if pot > pot_thresh and passed_bad_point:
+                ioprinter.info_message("Reverse Sweep finds a potential {:5.2f} from the forward sweep".format(pot))
+                ioprinter.info_message("...no more backsteps required")
+                break
+            else:
+                ioprinter.warning_message("Backstep finds a potential less than forward sweep of {:5.2f} kcal/mol at ".format(pot))
+                ioprinter.info_message(locs, locs_orig)
+                ioprinter.info_message("...more backsteps required")
+    
 
 
 def _run_scan(guess_zma, spc_info, mod_thy_info,
