@@ -9,7 +9,7 @@ from mechlib.amech_io import writer
 from mechlib.amech_io import printer as ioprinter
 
 
-def build_polynomial(spc_name, spc_dct, pf_path, nasa_path, spc_locs=None, spc_mod=None):
+def build_polynomial(spc_name, spc_dct, pf_path, nasa_path, spc_locs_idx=None, spc_mod=None):
     """ For a given species: obtain partition function data read from a
         MESSPF output file currently existing in the RUN filesystem as well as
         the previously computed 0 K heat-of-formation from the species
@@ -36,9 +36,10 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path, spc_locs=None, spc_m
     formula_str = automol.inchi.formula_string(spc_dct_i['inchi'])
     formula_dct = automol.inchi.formula(spc_dct_i['inchi'])
 
-    if spc_locs is not None:
-        hform0 = spc_dct_i['Hfs'][spc_locs][spc_mod][0]
-        spc_label = spc_name + '_' + spc_locs[1][:5]
+    if spc_locs_idx is not None:
+        hform0 = spc_dct_i['Hfs'][spc_locs_idx][spc_mod][0]
+        spc_label = spc_name# + '_{:g}'.format(spc_locs_idx) 
+        # spc_label = spc_name + '_' + spc_locs[1][:5]
     else:
         hform0 = spc_dct_i['Hfs'][0]
         spc_label = spc_name

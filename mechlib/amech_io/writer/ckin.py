@@ -112,13 +112,14 @@ def nasa_polynomial(hform0, hform298, ckin_poly_str):
 
 
 # prob can handle with autorun func
-def write_nasa_file(ckin_nasa_str, ckin_path):
+def write_nasa_file(ckin_nasa_str, ckin_path, idx=None):
     """ write out the nasa polynomials
     """
     if not os.path.exists(ckin_path):
         os.makedirs(ckin_path)
     fpath = os.path.join(ckin_path, 'all_therm.ckin')
-
+    if idx is not None:
+        fpath += '_{:g}'.format(idx)
     # Add the REACTION section header
     ckin_str = 'THERMO' + '\n\n\n'
     ckin_str += ckin_nasa_str + '\n\n'

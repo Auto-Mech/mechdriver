@@ -49,15 +49,10 @@ def therm_paths_messpf_run_locations(
         thm_paths_dct[spc_name]['spc_total'][0]))
 
 
-def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_mod):
+def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_locs_idx, spc_mod):
     """ Generate and print thermo properties with the nasa polynomial string
     """
 
-    spc_label_dct = {}
-    for spc_name in spc_locs_dct:
-        for spc_locs in spc_locs_dct[spc_name]:
-            spc_label_dct[spc_name + '_' + spc_locs[1][:5]] = [
-                spc_name, tuple(spc_locs)]
     nasa7_params_all = chemkin_io.parser.thermo.create_spc_nasa7_dct(
         ckin_nasa_str)
     templist = (
@@ -75,14 +70,13 @@ def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_mod):
         nasa7_params = nasa7_params_all[spc_name]
         whitespace = 18-len(spc_name)
         whitespace = whitespace*' '
-        spc_name_actual, spc_locs = spc_label_dct[spc_name]
         hf0 = (
-            spc_dct[spc_name_actual]['Hfs'][spc_locs][spc_mod][0]
+            spc_dct[spc_name]['Hfs'][spc_locs_idx][spc_mod][0]
             * phycon.EH2KCAL)
         hf298 = mechanalyzer.calculator.thermo.enthalpy(
             nasa7_params, 298.15) / 1000.
         info_message(
-            '{}---{}'.format(spc_name_actual, '_'.join(spc_locs)))
+            '{}---{}'.format(spc_name, '_'.join(spc_locs_dct[spc_name][spc_locs_idx])))
         info_message(
             '{}{:>9.2f}{:>9.2f}'.format(whitespace2, hf0, hf298))
         hincref = hf298
