@@ -858,16 +858,18 @@ def _this_conformer_was_run_in_save(zma, cnf_fs):
     job = elstruct.Job.OPTIMIZATION
     for locs in cnf_fs[-1].existing(ignore_bad_formats=True):
         cnf_path = cnf_fs[-1].path(locs)
-        if cnf_fs[-1].file.input.exists(locs):
+        if cnf_fs[-1].file.geometry_input.exists(locs):
             print('checking input at ', cnf_path)
+            inp_str = cnf_fs[-1].file.geometry_input.read(locs)
             inp_str = inp_str.replace('=', '')
+            inf_obj = cnf_fs[-1].file.geometry_info.read(locs)
             prog = inf_obj.prog
             inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
             if automol.zmat.almost_equal(inp_zma, zma,
                                          dist_rtol=0.018, ang_atol=.2):
                 ioprinter.info_message(
                     'This conformer was already run ' +
-                    'in {}.'.format(run_path))
+                    'in {}.'.format(cnf_path))
                 running = True
                 break
     return running
