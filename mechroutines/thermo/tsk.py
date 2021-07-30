@@ -153,14 +153,14 @@ def _check_for_reference_energies(spc_basis, chn_basis_ene_dct, spc_mod):
     return energy_missing, ene_basis
 
 
-def _add_hf_to_spc_dct(hf0k, spc_dct, spc_name, spc_locs, spc_mod):
+def _add_hf_to_spc_dct(hf0k, spc_dct, spc_name, spc_locs_idx, spc_mod):
     """ Put a new hf0k in the species dictioanry
     """
     if 'Hfs' not in spc_dct[spc_name]:
         spc_dct[spc_name]['Hfs'] = {}
-    if spc_locs not in spc_dct[spc_name]['Hfs']:
-        spc_dct[spc_name]['Hfs'][spc_locs] = {}
-    spc_dct[spc_name]['Hfs'][spc_locs][spc_mod] = [hf0k]
+    if spc_locs_idx not in spc_dct[spc_name]['Hfs']:
+        spc_dct[spc_name]['Hfs'][spc_locs_idx] = {}
+    spc_dct[spc_name]['Hfs'][spc_locs_idx][spc_mod] = [hf0k]
     return spc_dct
 
 
@@ -171,7 +171,7 @@ def get_heats_of_formation(
     """
     chn_basis_ene_dct = {}
     for spc_name in spc_locs_dct:
-        for spc_locs in spc_locs_dct[spc_name]:
+        for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
             spc_locs = tuple(spc_locs)
             for spc_mod in spc_mods:
                 # Take species model and add it to the chn_basis_ene dct
@@ -184,7 +184,7 @@ def get_heats_of_formation(
                     spc_mod_dct_i, ref_scheme, ref_enes,
                     chn_basis_ene_dct, run_prefix, save_prefix)
                 spc_dct = _add_hf_to_spc_dct(
-                    hf0k, spc_dct, spc_name, spc_locs, spc_mod)
+                    hf0k, spc_dct, spc_name, idx, spc_mod)
                 # TODO Make a combined Hf0K boltmann or something
     return spc_dct
 
@@ -194,10 +194,12 @@ def nasa_polynomial_task(
         spc_mod_dct, spc_mods, ref_scheme):
     """ generate the nasa polynomials
     """
-    ckin_nasa_str = ''
+    ckin_nasa_str_dct = {}
     ckin_path = output_path('CKIN', prefix=mdriver_path)
     for spc_name in spc_locs_dct:
-        for spc_locs in spc_locs_dct[spc_name]:
+        for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
+            if idx not in ckin_nasa_str_dct:
+                ckin_nasa_str_dct[idx] = ''
             spc_locs = tuple(spc_locs)
             ioprinter.nasa('calculate', spc_name)
             # for spc_mod in spc_mods:
@@ -214,14 +216,14 @@ def nasa_polynomial_task(
             #         spc_locs=spc_locs, spc_mod=spc_mod)
             #     ckin_nasa_str += '\n\n'
             ioprinter.message('for: ', spc_locs, ' combined models')
-            ckin_nasa_str += writer.ckin.model_header(
+            ckin_nasa_str_dct[idx] += writer.ckin.model_header(
                 spc_mods, spc_mod_dct, refscheme=ref_scheme)
-            ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
+            ckin_nasa_str_dct[idx] += thmroutines.nasapoly.build_polynomial(
                 spc_name, spc_dct,
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0],
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][1],
-                spc_locs=spc_locs, spc_mod=','.join(spc_mods))
-            ckin_nasa_str += '\n\n'
+                spc_locs_idx=idx, spc_mod=','.join(spc_mods))
+            ckin_nasa_str_dct[idx] += '\n\n'
         # ioprinter.message('for combined rid cids:', spc_locs_dct[spc_name])
         # ckin_nasa_str += writer.ckin.model_header(
         #     spc_mods, spc_mod_dct, refscheme=ref_scheme)
@@ -232,5 +234,5 @@ def nasa_polynomial_task(
         #     spc_locs=tuple(spc_locs_dct[spc_name][0]), spc_mod=spc_mods[0])
         # ckin_nasa_str += '\n\n'
             ioprinter.info_message('CKIN NASA STR\n')
-            ioprinter.info_message(ckin_nasa_str)
-    return ckin_nasa_str, ckin_path
+            ioprinter.info_message(ckin_nasa_str_dct[idx])
+    return ckin_nasa_str_dct, ckin_path

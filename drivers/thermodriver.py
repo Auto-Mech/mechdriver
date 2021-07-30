@@ -109,14 +109,18 @@ def run(pes_rlst, spc_rlst,
             ref_scheme, ref_enes, run_prefix, save_prefix)
 
         # Write the NASA polynomials in CHEMKIN format
-        ckin_nasa_str, ckin_path = thermo_tasks.nasa_polynomial_task(
+        ckin_nasa_str_dct, ckin_path = thermo_tasks.nasa_polynomial_task(
             mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
             spc_mod_dct, spc_mods, ref_scheme)
-        ioprinter.print_thermo(
-            spc_dct, ckin_nasa_str, spc_locs_dct, spc_mods[0])
 
-        # Write all of the NASA polynomial strings
-        writer.ckin.write_nasa_file(ckin_nasa_str, ckin_path)
+
+        for idx in ckin_nasa_str_dct:
+            ioprinter.print_thermo(
+                spc_dct, ckin_nasa_str_dct[idx],
+                spc_locs_dct, idx, spc_mods[0])
+
+            # Write all of the NASA polynomial strings
+            writer.ckin.write_nasa_file(ckin_nasa_str_dct[idx], ckin_path, idx=idx)
 
 
 def _set_spc_queue(

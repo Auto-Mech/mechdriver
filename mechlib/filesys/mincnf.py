@@ -5,6 +5,7 @@
 import time
 import autofile
 from phydat import phycon
+from automol.geom import hydrogen_bonded_structure
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -54,9 +55,12 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
         :rtype: (tuple(str, str), str)
     """
 
+    cnf_range, allow_hbnd = _process_cnf_range(cnf_range)
     fin_locs_lst, fin_paths_lst = (), ()
 
     cnf_locs_lst = cnf_save_fs[-1].existing()
+    if not allow_hbnd:
+        cnf_locs_lst = _remove_hbonded_structures(cnf_save_fs, cnf_locs_lst)
     if cnf_locs_lst:
         cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
             cnf_locs_lst, cnf_save_fs, mod_thy_info)
@@ -285,3 +289,27 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
                 traj_path = save_fs[1].file.trajectory.path([rid])
                 print("Updating trajectory file at {}".format(traj_path))
                 save_fs[1].file.trajectory.write(traj, [rid])
+
+
+def _remove_hbonded_structures(cnf_save_fs, cnf_locs_lst):
+    """ Remove conformer locations for conformers with hydrogen bonds
+    """
+    fin_locs_lst = ()
+    for locs in cnf_locs_lst:
+        if cnf_save_fs[-1].file.geometry.exists(locs):
+            geo = cnf_save_fs[-1].file.geometry.read(locs)
+            if not hydrogen_bonded_structure(geo):
+                fin_locs_lst += (locs,)
+            else:
+                print('Removing ', locs, ' from list because its hbonded')
+    return fin_locs_lst
+
+
+def _process_cnf_range(cnf_range):
+    """ Split specific info out of cnf_range
+    """
+    allow_hbnd = True
+    if '_noHB' in cnf_range:
+        cnf_range = cnf_range.replace('_noHB', '')
+        allow_hbnd = False
+    return cnf_range, allow_hbnd
