@@ -98,8 +98,8 @@ if PROC_TSKS is not None:
     procdriver.run(
         PES_RLST, SPC_RLST,
         PROC_TSKS,
-        SPC_DCT,
-        KMOD_DCT, SMOD_DCT, THY_DCT,
+        SPC_DCT, GLOB_DCT, THY_DCT,
+        KMOD_DCT, SMOD_DCT,
         INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
     )
     ioprinter.program_exit('proc')

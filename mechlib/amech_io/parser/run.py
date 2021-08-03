@@ -90,12 +90,12 @@ TSK_KEY_DCT = {
     'write_transport': (('spc',), (BASE + TRANS)),
     # Process Driver Tasks
     'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
-    'energy': (('spc',), PRNT),
-    'geo': (('spc',), PRNT),
-    'molden': (('spc',), PRNT),
-    'zmatrix': (('spc',), PRNT),
-    'enthalpy': (('spc',), PRNT),
-    'coeffs': (('spc',), ()),
+    'energy': (('spc', 'ts'), PRNT),
+    'geo': (('spc', 'ts'), PRNT),
+    'molden': (('spc', 'ts'), PRNT),
+    'zmatrix': (('spc', 'ts'), PRNT),
+    'enthalpy': (('spc', 'ts'), PRNT),
+    'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
     'write_mess': ((), ('kin_model', 'spc_model', 'overwrite', 'lump_wells', 'cnf_range')),
     'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname', 'cnf_range')),
@@ -323,24 +323,20 @@ def _expand_tsks(tsks_lst):
     """ Loops over the driver task list and checks if each task is a
         macro-task that should be expanded into sub-tasks.
 
+            Right now, it splits all obj tasks into spc and ts
+
         :param tsk_lst: list of tasks to run for some driver
         :type tsk_lst: tuple(tuple(str/dict))
         :rtype: tuple(str/dict)
     """
 
-    expand_dct = {
-        # 'find_ts': ('sadpt_scan', 'sadpt_opt', 'sadpt_hess')  # sadpt_check
-    }
     # Expand the tasks
     mod_tsks_lst = []
     for tsk_lst in tsks_lst:
         [obj, tsk, dct] = tsk_lst
-        expanded_tsks = expand_dct.get(tsk, None)
-        if expanded_tsks is None:
-            mod_tsks_lst.append(tsk_lst)
-        else:
-            for tsk in expanded_tsks:
-                mod_tsks_lst.append([obj, tsk, dct])
+        objs = ['spc', 'ts'] if obj == 'all' else [obj]
+        for obj in objs:
+            mod_tsks_lst.append([obj, tsk, dct])
 
     return mod_tsks_lst
 
