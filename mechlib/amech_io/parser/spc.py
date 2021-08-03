@@ -199,6 +199,7 @@ def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
     for tsk_lst in es_tsk_lst:
         obj, es_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
         if 'ts' in obj:
+            # want print for task list
             method_dct = thy_dct.get(es_keyword_dct['runlvl'])
             ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
             thy_info = tinfo.from_dct(method_dct)
@@ -244,6 +245,41 @@ def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
         )
 
     return ts_dct
+
+
+def ts_dct_from_proctsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
+                         spc_dct, run_prefix, save_prefix):
+    """ build a ts queue
+    """
+
+    print('\nTasks for transition states requested...')
+    print('Identifying reaction classes for transition states...')
+
+    # Build the ts_dct
+    ts_dct = {}
+    for tsk_lst in es_tsk_lst:
+        obj, es_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
+        if 'ts' in obj:
+            # want print for task list
+            method_dct = thy_dct.get(es_keyword_dct['geolvl'])
+            ini_method_dct = thy_dct.get(es_keyword_dct['geolvl'])
+            thy_info = tinfo.from_dct(method_dct)
+            ini_thy_info = tinfo.from_dct(ini_method_dct)
+            break
+
+    ts_dct = {}
+    for rxn in rxn_lst:
+        ts_dct.update(
+            ts_dct_sing_chnl(
+                pes_idx, rxn,
+                spc_dct, run_prefix, save_prefix,
+                thy_info=thy_info, ini_thy_info=ini_thy_info)
+        )
+
+    # Build the queue
+    ts_queue = tuple(sadpt for sadpt in ts_dct) if ts_dct else ()
+
+    return ts_dct, ts_queue
 
 
 def ts_dct_sing_chnl(pes_idx, reaction,

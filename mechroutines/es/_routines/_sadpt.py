@@ -313,7 +313,7 @@ def saddle_point_checker(imags):
             elif 50.0 < imag <= 200.0:
                 lowstr = 'Mode {} {} cm-1 is low,'.format(str(idx+1), imag)
                 ioprinter.debug_message(
-                    lowstr + 'check mode and see if it should be corrected')
+                    lowstr + ' check mode and see if it should be corrected')
                 big_imag += 1
                 # Adding to the kick counter kills code for good TSs
                 # Some addditions of big species have low mode of this
@@ -325,6 +325,7 @@ def saddle_point_checker(imags):
                     'Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
                 big_imag += 1
 
+        print('test big_imag', big_imag)
         if big_imag > 1:
             ioprinter.warning_message(
                 'More than one imaginary mode for geometry')

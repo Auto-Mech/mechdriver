@@ -62,7 +62,7 @@ def run(pes_rlst, spc_rlst,
 
         # Build a TS dictionary and add it to the spc dct if needed
         if (fml != 'SPC' and
-           any(tsk_lst[0] in ('ts', 'all') for tsk_lst in es_tsk_lst)):
+           any(tsk_lst[0] == 'ts' for tsk_lst in es_tsk_lst)):
             ts_dct, ts_queue = parser.spc.ts_dct_from_estsks(
                 pes_idx, es_tsk_lst, run_lst,
                 thy_dct, spc_dct,

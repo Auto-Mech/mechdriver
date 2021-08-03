@@ -4,18 +4,19 @@
 """
 
 from mechlib.amech_io import printer as ioprinter
-from mechlib import filesys
 from mechroutines.proc import _util as util
 from mechroutines.proc import _collect as collect
 
 
-def run_tsk(tsk, spc_dct, run_lst,
-            thy_dct, proc_keyword_dct,
+def run_tsk(tsk, obj_queue,
+            proc_keyword_dct,
+            spc_dct, thy_dct,
             spc_mod_dct_i, model_dct,
             run_prefix, save_prefix):
     """ run a proc tess task
     for generating a list of conformer or tau sampling geometries
     """
+
     # Print the head of the task
     ioprinter.output_task_header(tsk)
     ioprinter.obj('line_dash')
@@ -28,8 +29,11 @@ def run_tsk(tsk, spc_dct, run_lst,
     chn_basis_ene_dct = {}
     spc_array = []
 
+    # Set up lists for reporting missing data
+    miss_data = ()
+
     # Begin the loop over the species
-    for spc_name in run_lst:
+    for spc_name in obj_queue:
 
         # info printed to output file
         ioprinter.obj('line_dash')
@@ -50,9 +54,13 @@ def run_tsk(tsk, spc_dct, run_lst,
             spc_mod_dct_i = util.choose_theory(
                 proc_keyword_dct, spc_mod_dct_i)
             ret = util.choose_conformers(
-                proc_keyword_dct, spc_mod_dct_i,
+                spc_name, proc_keyword_dct, spc_mod_dct_i,
                 save_prefix, run_prefix, spc_dct_i, thy_dct)
             cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
+
+            # Add geo to missing data task if locs absent
+            if not rng_cnf_locs_lst:
+                miss_data += ((spc_name, mod_thy_info, 'geometry'),)
 
             # Loop over conformers
             for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
@@ -69,9 +77,11 @@ def run_tsk(tsk, spc_dct, run_lst,
                         csv_data['scalefactor'][label] = [sfactor]
 
                 elif 'geo' in tsk:
-                    csv_data_i = collect.geometry(
+                    csv_data_i, miss_data_i = collect.geometry(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'molden' in tsk:
                     csv_data_i = collect.molden(
@@ -81,6 +91,13 @@ def run_tsk(tsk, spc_dct, run_lst,
                 elif 'zma' in tsk:
                     csv_data_i = collect.zmatrix(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
+                    csv_data[label] = csv_data_i
+
+                elif 'torsion' in tsk:
+                    csv_data_i = collect.torsions(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        mod_thy_info,
+                        run_prefix, save_prefix)
                     csv_data[label] = csv_data_i
 
                 elif 'ene' in tsk:
@@ -114,6 +131,8 @@ def run_tsk(tsk, spc_dct, run_lst,
                     csv_data_i, chn_basis_ene_dct, spc_array = ret
                     csv_data[label] = csv_data_i
 
+    # Write a report that details what data is missing
+    util.write_missing_data_report(miss_data)
 
-    # write the csv data into the appropriate file
+    # Write the csv data into the appropriate file
     util.write_csv_data(tsk, csv_data, filelabel, spc_array)
