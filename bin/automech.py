@@ -104,7 +104,6 @@ if PROC_TSKS is not None:
         SPC_DCT, GLOB_DCT, THY_DCT,
         KMOD_DCT, SMOD_DCT,
         INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'],
-        print_debug=INP_KEY_DCT['print_debug']
     )
     ioprinter.program_exit('proc')
 

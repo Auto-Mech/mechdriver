@@ -34,6 +34,7 @@ def run_tsk(tsk, obj_queue,
     # Set up lists for reporting missing data
     miss_data = ()
 
+<<<<<<< HEAD
     # Exclude unstable species
     # These species break certain checks (e.g. no ene exists for geo collect)
     obj_queue, ts_miss_data = _remove_ts_missing(
@@ -41,6 +42,8 @@ def run_tsk(tsk, obj_queue,
     obj_queue = _remove_unstable(
         obj_queue, spc_dct, thy_dct, proc_keyword_dct, save_prefix)
 
+=======
+>>>>>>> ts for procdriver
     # Begin the loop over the species
     for spc_name in obj_queue:
 
@@ -143,8 +146,12 @@ def run_tsk(tsk, obj_queue,
                     csv_data[label] = csv_data_i
 
     # Write a report that details what data is missing
+<<<<<<< HEAD
     missing_data = miss_data + ts_miss_data
     util.write_missing_data_report(missing_data)
+=======
+    util.write_missing_data_report(miss_data)
+>>>>>>> ts for procdriver
 
     # Write the csv data into the appropriate file
     util.write_csv_data(tsk, csv_data, filelabel, spc_array)

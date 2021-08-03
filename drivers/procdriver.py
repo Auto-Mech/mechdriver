@@ -5,7 +5,6 @@
 
 from mechroutines.proc import run_tsk
 from mechlib.amech_io import parser
-from mechlib.amech_io import printer as ioprinter
 
 
 def run(pes_rlst, spc_rlst,

@@ -319,6 +319,7 @@ def saddle_point_checker(imags):
                     'Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
                 big_imag += 1
 
+        print('test big_imag', big_imag)
         if big_imag > 1:
             ioprinter.warning_message(
                 'More than one imaginary mode for geometry')
