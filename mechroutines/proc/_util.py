@@ -80,7 +80,7 @@ def _set_conf_range(print_keyword_dct):
 
 
 def conformer_list(
-        print_keyword_dct, save_prefix, run_prefix,
+        spc_name, print_keyword_dct, save_prefix, run_prefix,
         spc_dct_i, thy_dct):
     """ Create a list of conformers based on the species name
         and run.dat geolvl/proplvl
@@ -93,7 +93,11 @@ def conformer_list(
     spc_info = sinfo.from_dct(spc_dct_i)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
-    _root = filesys.root_locs(spc_dct_i, saddle=False)
+    zrxn = spc_dct_i.get('zrxn', None)
+    _root = filesys.root_locs(
+        spc_dct_i,
+        saddle=(zrxn is not None),
+        name=spc_name)
     _, cnf_save_fs = filesys.build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_thy_info[1:],
@@ -193,6 +197,20 @@ def write_csv_data(tsk, csv_data, filelabel, spc_array):
         dframe.to_csv(filelabel, float_format='%.2f')
 
 
+def write_missing_data_report(miss_data):
+    """ Write all of the data collating the missing data
+    """
+
+    print('\n\n\nMissing Data Requested by the User')
+    print('{0:<20s}{1:<12s}{2:<12s}{3:<12s}'.format(
+        'Name', 'Method', 'Basis', 'Data'))
+    for data in miss_data:
+        name, thy_info, dat = data
+        method, basis = thy_info[1:3]
+        print('{0:<20s}{1:<12s}{2:<12s}{3:<12s}'.format(
+            name, method, basis, dat))
+
+
 def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
     """ what is the name and extension for this processed file?
     """
@@ -264,7 +282,7 @@ def choose_theory(proc_keyword_dct, spc_mod_dct_i):
 
 
 def choose_conformers(
-        proc_keyword_dct, spc_mod_dct_i,
+        spc_name, proc_keyword_dct, spc_mod_dct_i,
         save_prefix, run_prefix, spc_dct_i, thy_dct):
     """ get the locations (locs and paths) for the number of conformers
         set in the proc_keyword_dct and in the theory directory specified
@@ -272,7 +290,7 @@ def choose_conformers(
     """
     if proc_keyword_dct['geolvl']:
         cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = conformer_list(
-            proc_keyword_dct, save_prefix, run_prefix,
+            spc_name, proc_keyword_dct, save_prefix, run_prefix,
             spc_dct_i, thy_dct)
     else:
         ret = conformer_list_from_models(
