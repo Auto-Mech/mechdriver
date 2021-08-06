@@ -18,7 +18,6 @@ from mechroutines.thermo import basis
 from mechroutines.proc import _util as util
 
 
-
 def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     """collect a zmatrix
     """

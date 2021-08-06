@@ -69,7 +69,7 @@ def run_tsk(tsk, spc_dct, spc_name,
 
         # Run the task if an initial geom exists
         if 'init' in tsk:
-            _ = geom_init(
+            success = geom_init(
                 spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
         elif 'conf' in tsk:

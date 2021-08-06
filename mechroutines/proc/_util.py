@@ -65,6 +65,7 @@ def _default_es_levels(print_keyword_dct):
 #           }
 
 
+<<<<<<< HEAD
 def _set_sort_info_lst(sort_str, thy_dct, spc_info):
     """
     """
@@ -90,6 +91,8 @@ def _set_sort_info_lst(sort_str, thy_dct, spc_info):
     return sort_lvls
 
 
+=======
+>>>>>>> update procdriver; pylint cleaning
 def _set_conf_range(print_keyword_dct):
     """ ?
     """
