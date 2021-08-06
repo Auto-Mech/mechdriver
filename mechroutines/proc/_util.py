@@ -25,7 +25,7 @@ def ene_es_levels(print_keyword_dct):
 
 
 def generate_spc_model_dct(es_levels, thy_dct):
-    """
+    """ Make a specie smodel dct to pass to pf_filesystems function
     """
     spc_model_dct_i = {}
     for prop in es_levels:
@@ -56,10 +56,10 @@ def _default_es_levels(print_keyword_dct):
     return es_model
 
 # ‘geolvl’: (‘lvl_wbt’, (1.00, thy_inf))
-# es_model = { 
-#           ‘ene’: {
-# >>            ‘geolvl’: (‘geolvl’, parser.models.format_lvl(print_keyword_dct[‘geolvl’]))
-#           }   
+# es_model = {
+#   ‘ene’: {
+# ‘geolvl’: (‘geolvl’, parser.models.format_lvl(print_keyword_dct[‘geolvl’]))
+#        }
 #           ‘vib’: {
 #               ‘geolvl’: print_keyword_dct[‘geolvl’]
 #           }
@@ -191,7 +191,7 @@ def write_csv_data(tsk, csv_data, filelabel, spc_array):
             fin_csv_data['All RT Harmonic Frequencies'] = []
             for key in csv_data['allfreq']:
                 fin_csv_data[key+'_RTFreq'] = csv_data['allfreq'][key]
-        print(fin_csv_data)
+        # print(fin_csv_data)
         ncols = max([len(x) for x in fin_csv_data.values()])
         dframe = pandas.DataFrame.from_dict(
             fin_csv_data, orient='index',
@@ -318,12 +318,14 @@ def choose_conformers(
         by either the same dct or by models.ddat
     """
     if proc_keyword_dct['geolvl']:
-        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = conformer_list(
+        cnf_inf = conformer_list(
             spc_name, proc_keyword_dct, save_prefix, run_prefix,
             spc_dct_i, thy_dct)
+        cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = cnf_inf
     else:
         ret = conformer_list_from_models(
             proc_keyword_dct, save_prefix, run_prefix,
             spc_dct_i, spc_mod_dct_i, thy_dct)
         cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
+
     return cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info

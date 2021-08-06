@@ -5,11 +5,12 @@
 
 from mechroutines.proc import run_tsk
 from mechlib.amech_io import parser
+from mechlib.amech_io import printer as ioprinter
 
 
 def run(pes_rlst, spc_rlst,
         proc_tsk_lst,
-        spc_dct, glob_dct, thy_dct,
+        spc_dct, thy_dct,
         pes_mod_dct, spc_mod_dct,
         run_prefix, save_prefix):
     """ Central driver for all output tasks.
@@ -29,17 +30,27 @@ def run(pes_rlst, spc_rlst,
     run_rlst = parser.rlst.combine(pes_rlst, spc_rlst)
 
     ts_queue = ()
-    for (fml, pes_idx, _), run_lst_i in run_rlst.items():
+    for (fml, pes_idx, subpes_idx), run_lst_i in run_rlst.items():
+        ioprinter.runlst((fml, pes_idx, subpes_idx), run_lst_i)
         if fml != 'SPC':
-            ts_dct, _queue = parser.spc.ts_dct_from_proctsks(
-                pes_idx, proc_tsk_lst, run_lst_i,
-                thy_dct, spc_dct,
-                run_prefix, save_prefix)
-            spc_dct = parser.spc.combine_sadpt_spc_dcts(
-                ts_dct, spc_dct, glob_dct)
-            ts_queue += _queue
+            if any(tsk_lst[0] == 'ts' for tsk_lst in proc_tsk_lst):
+                ts_dct, _queue = parser.spc.ts_dct_from_proctsks(
+                    pes_idx, proc_tsk_lst, run_lst_i,
+                    thy_dct, spc_dct,
+                    run_prefix, save_prefix)
+                # doesnt allow for info from .dat file or internal defaults
+                spc_dct.update(ts_dct)
+                # Doesnt work it ts species from earlier part of for loop lost
+                # spc_dct = parser.spc.combine_sadpt_spc_dcts(
+                #     ts_dct, spc_dct, glob_dct)
+                ts_queue += _queue
+            spc_queue += parser.rlst.spc_queue(run_lst_i, fml)
         else:
             spc_queue += run_lst_i
+
+    # Remove species from queue
+    spc_queue = tuple(i for n, i in enumerate(spc_queue)
+                      if i not in spc_queue[:n])
 
     # Loop over Tasks
     for tsk_lst in proc_tsk_lst:

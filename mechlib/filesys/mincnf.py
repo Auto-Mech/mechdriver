@@ -277,6 +277,7 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
 
     locs_lst = save_fs[-1].existing()
     if locs_lst:
+        # Update the trajectory file in the CONFS/rid level for rings
         enes = []
         for locs in locs_lst:
             cnf_path = save_fs[-1].path(locs)
@@ -291,7 +292,8 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
             comment = 'energy: {0:<15.10f} \t {1}'.format(ene, locs[0])
             traj.append((geo, comment))
         traj_path = save_fs[0].file.trajectory.path()
-        print("Updating trajectory file at {}".format(traj_path))
+
+        print("Updating ring-torsion trajectory file at {}".format(traj_path))
         save_fs[0].file.trajectory.write(traj)
 
         if rid is not None:
@@ -315,7 +317,7 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
                     ).format(ene, locs[0], locs[1])
                     traj.append((geo, comment))
                 traj_path = save_fs[1].file.trajectory.path([rid])
-                print("Updating trajectory file at {}".format(traj_path))
+                print("Updating torsion trajectory file at {}".format(traj_path))
                 save_fs[1].file.trajectory.write(traj, [rid])
 
 

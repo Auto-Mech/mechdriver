@@ -6,7 +6,8 @@ import os
 import sys
 import ioformat
 import automol
-from mechlib.amech_io import printer as ioprinter
+from mechlib.amech_io.printer import info_message, warning_message
+from mechlib.amech_io.printer import error_message
 
 
 # (name, path relative to job_path, required boolean)
@@ -92,16 +93,16 @@ def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
     inp_missing = []
     for key, (name, _, req) in INP_FILE.items():
         if inp_str_dct[key] is not None:
-            print('Found {} inp directory'.format(name))
+            info_message('Found {} inp directory'.format(name))
         else:
-            print('\n{} file NOT found in inp directory.'.format(name))
+            info_message('\n{} file NOT found in inp directory.'.format(name))
             if req:
                 inp_missing.append(name)
 
     if inp_missing:
-        print('\nMissing Required inputs files, quitting job...')
+        error_message('\nMissing Required inputs files, quitting job...')
         for name in inp_missing:
-            print(name)
+            info_message(name)
         sys.exit()
 
     # Check the auxiliary file dictionaries
@@ -112,11 +113,11 @@ def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
     for key, msg, name_dct in inf:
         str_dct = inp_str_dct[key]
         if str_dct:
-            print('Found {}:'.format(msg))
+            info_message('Found {}:'.format(msg))
             for name in str_dct:
-                print('-  {}: {}'.format(name, name_dct[name]))
+                info_message('-  {}: {}'.format(name, name_dct[name]))
         else:
-            print('No {} were found.'.format(msg))
+            info_message('No {} were found.'.format(msg))
 
 
 # formatters, dont know where to build this
@@ -140,7 +141,7 @@ def _geometry_dictionary(job_path):
                 spc_name = automol.geom.comment_from_xyz_string(xyz_str)
                 geo = automol.geom.from_xyz_string(xyz_str)
                 if spc_name in geo_dct:
-                    print('Warning: Dupilicate xyz geometry for ', spc_name)
+                    warning_message('Dupilicate xyz geometry for ', spc_name)
                 geo_dct[spc_name] = geo
                 path_dct[spc_name] = file_name
 
@@ -176,7 +177,7 @@ def _active_space_dictionary(job_path):
                 aspace_str = ioformat.pathtools.read_file(file_path, file_name)
                 spc_name = _comment_name(aspace_str)
                 if spc_name in aspace_dct:
-                    print('Warning: Dupilicate active space geometry for ',
+                    warning_message('Dupilicate active space geometry for ',
                           spc_name)
                 aspace_dct[spc_name] = aspace_str
                 path_dct[spc_name] = file_name
