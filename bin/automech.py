@@ -63,7 +63,7 @@ if THERM_TSKS is not None:
         PES_RLST, SPC_RLST,
         THERM_TSKS,
         KMOD_DCT, SMOD_DCT,
-        SPC_DCT,
+        SPC_DCT, THY_DCT,
         INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH
     )
     ioprinter.program_exit('thermo')
