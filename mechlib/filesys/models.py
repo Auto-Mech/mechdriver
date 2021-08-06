@@ -196,7 +196,7 @@ def make_run_path(pf_filesystems, choice):
 def get_spc_locs_lst(
         spc_dct_i, spc_model_dct_i,
         run_prefix, save_prefix, saddle,
-        cnf_range='min', name=None):
+        cnf_range='min', sort_info_lst=None, name=None):
     """ return the locations for a pf level
     """
     # Set the spc_info
@@ -209,6 +209,10 @@ def get_spc_locs_lst(
     level = spc_model_dct_i['vib']['geolvl'][1][1]
     levelp = tinfo.modify_orb_label(level, spc_info)
 
+    if sort_info_lst is not None:
+        for idx, info in enumerate(sort_info_lst):
+            if info is not None:
+                sort_info_lst[idx] = tinfo.modify_orb_label(info, spc_info)
     _root = root_locs(spc_dct_i, saddle=saddle, name=name)
     cnf_run_fs, cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
@@ -222,7 +226,8 @@ def get_spc_locs_lst(
         min_locs_lst = [min_locs]
     else:
         min_locs_lst, _ = conformer_locators(
-            cnf_save_fs, levelp, cnf_range=cnf_range)
+            cnf_save_fs, levelp, cnf_range=cnf_range,
+            sort_info_lst=sort_info_lst, print_enes=True)
         for min_locs in min_locs_lst:
             cnf_run_fs[-1].create(min_locs)
 

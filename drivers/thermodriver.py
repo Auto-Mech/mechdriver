@@ -17,6 +17,8 @@
             (3) Write functional forms to mechanism file
 """
 
+from mechanalyzer.inf import thy as tinfo
+
 from mechroutines.thermo import tsk as thermo_tasks
 from mechlib import filesys
 from mechlib.amech_io import writer
@@ -29,7 +31,7 @@ from mechlib.reaction import split_unstable_full
 def run(pes_rlst, spc_rlst,
         therm_tsk_lst,
         pes_mod_dct, spc_mod_dct,
-        spc_dct,
+        spc_dct, thy_dct,
         run_prefix, save_prefix, mdriver_path):
     """ Executes all thermochemistry tasks.
 
@@ -73,9 +75,10 @@ def run(pes_rlst, spc_rlst,
     # Build a list of the species to calculate thermochem for loops below
     # and build the paths [(messpf, nasa)], models and levels for each spc
     cnf_range = write_messpf_tsk[-1]['cnf_range']
+    sort_str = write_messpf_tsk[-1]['sort']
     spc_locs_dct, thm_paths_dct = _set_spc_queue(
-        spc_mod_dct, pes_rlst, spc_rlst, spc_dct, save_prefix,
-        run_prefix, cnf_range)
+        spc_mod_dct, pes_rlst, spc_rlst, spc_dct, thy_dct,
+        save_prefix, run_prefix, cnf_range, sort_str)
 
     # ----------------------------------- #
     # RUN THE REQUESTED THERMDRIVER TASKS #
@@ -113,43 +116,71 @@ def run(pes_rlst, spc_rlst,
             mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
             spc_mod_dct, spc_mods, ref_scheme)
 
-
         for idx in ckin_nasa_str_dct:
             ioprinter.print_thermo(
                 spc_dct, ckin_nasa_str_dct[idx],
                 spc_locs_dct, idx, spc_mods[0])
 
             # Write all of the NASA polynomial strings
-            writer.ckin.write_nasa_file(ckin_nasa_str_dct[idx], ckin_path, idx=idx)
+            writer.ckin.write_nasa_file(
+                ckin_nasa_str_dct[idx], ckin_path, idx=idx)
 
 
 def _set_spc_queue(
         spc_mod_dct, pes_rlst, spc_rlst,
-        spc_dct, save_prefix, run_prefix, cnf_range='min'):
+        spc_dct, thy_dct, save_prefix, run_prefix,
+        cnf_range='min', sort_str=None):
     """ Determine the list of species to do thermo on
     """
     spc_mods = list(spc_mod_dct.keys())  # hack
     spc_mod_dct_i = spc_mod_dct[spc_mods[0]]
+    sort_info_lst = _sort_info_lst(sort_str, thy_dct)
     split_rlst = split_unstable_full(
         pes_rlst, spc_rlst, spc_dct, spc_mod_dct_i, save_prefix)
     spc_queue = parser.rlst.spc_queue(
         tuple(split_rlst.values())[0], 'SPC')
     spc_locs_dct = _set_spc_locs_dct(
-        spc_queue, spc_dct, spc_mod_dct_i, run_prefix, save_prefix, cnf_range)
+        spc_queue, spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
+        cnf_range, sort_info_lst)
     thm_paths = thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix)
     return spc_locs_dct, thm_paths
 
 
 def _set_spc_locs_dct(
         spc_queue, spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
-        cnf_range='min', saddle=False):
-    """ get a dictionary of locs
+        cnf_range='min', sort_info_lst=None, saddle=False):
+    """ get a dictionary of locs 
     """
     spc_locs_dct = {}
     for spc_name in spc_queue:
         spc_locs_lst = filesys.models.get_spc_locs_lst(
             spc_dct[spc_name], spc_mod_dct_i,
             run_prefix, save_prefix, saddle=saddle,
-            cnf_range=cnf_range)
+            cnf_range=cnf_range, sort_info_lst=sort_info_lst)
         spc_locs_dct[spc_name] = spc_locs_lst
     return spc_locs_dct
+
+
+def _sort_info_lst(sort_str, thy_dct):
+    """ Return the levels to sort conformers by if zpve or sp
+        levels were assigned in input
+    """
+    sort_lvls = [None, None]
+    sort_typ_lst = ['zpe', 'sp']
+    if sort_str is not None:
+        for sort_param in sort_str.split(','):
+            idx = None
+            for typ_idx, typ_str in enumerate(sort_typ_lst):
+                if typ_str in sort_param:
+                    lvl_key = sort_str.split(typ_str + '(')[1].split(')')[0]
+                    idx = typ_idx
+            if idx is not None:
+                method_dct = thy_dct.get(lvl_key)
+                if method_dct is None:
+                    ioprinter.warning_message(
+                        'no {} in theory.dat, not using {} in sorting'.format(
+                            lvl_key, sort_typ_lst[idx]))
+                    continue
+                thy_info = tinfo.from_dct(method_dct)
+                sort_lvls[idx] = thy_info
+    return sort_lvls
