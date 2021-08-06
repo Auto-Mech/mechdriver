@@ -3,6 +3,8 @@
     format
 """
 
+from mechanalyzer.inf import thy as tinfo
+from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.proc import _util as util
 from mechroutines.proc import _collect as collect
@@ -31,6 +33,13 @@ def run_tsk(tsk, obj_queue,
 
     # Set up lists for reporting missing data
     miss_data = ()
+
+    # Exclude unstable species
+    # These species break certain checks (e.g. no ene exists for geo collect)
+    obj_queue, ts_miss_data = _remove_ts_missing(
+        obj_queue, spc_dct)
+    obj_queue = _remove_unstable(
+        obj_queue, spc_dct, thy_dct, proc_keyword_dct, save_prefix)
 
     # Begin the loop over the species
     for spc_name in obj_queue:
@@ -66,7 +75,7 @@ def run_tsk(tsk, obj_queue,
             for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
                 label = spc_name + '_' + '_'.join(locs)
                 if 'freq' in tsk:
-                    csv_data_i, csv_data_j = collect.freqs(
+                    csv_data_i, csv_data_j, miss_data_i = collect.frequencies(
                         spc_dct_i, spc_mod_dct_i, proc_keyword_dct, thy_dct,
                         cnf_fs, locs, locs_path, run_prefix, save_prefix)
                     csv_data['freq'][label] = csv_data_i
@@ -75,6 +84,8 @@ def run_tsk(tsk, obj_queue,
                         csv_data['tfreq'][label] = tors_freqs
                         csv_data['allfreq'][label] = all_freqs
                         csv_data['scalefactor'][label] = [sfactor]
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'geo' in tsk:
                     csv_data_i, miss_data_i = collect.geometry(
@@ -132,7 +143,55 @@ def run_tsk(tsk, obj_queue,
                     csv_data[label] = csv_data_i
 
     # Write a report that details what data is missing
-    util.write_missing_data_report(miss_data)
+    missing_data = miss_data + ts_miss_data
+    util.write_missing_data_report(missing_data)
 
     # Write the csv data into the appropriate file
     util.write_csv_data(tsk, csv_data, filelabel, spc_array)
+
+
+def _remove_unstable(spc_queue, spc_dct, thy_dct, proc_key_dct, save_prefix):
+    """ For each species in the queue see if there are files
+        in the save filesystem denoting they are unstable. If so,
+        that species is removed from the queue for collection tasks.
+    """
+
+    thy_info = tinfo.from_dct(thy_dct.get(proc_key_dct.get('geolvl')))
+
+    stable_queue = ()
+    for spc_name in spc_queue:
+        if 'ts_' in spc_name:
+            stable_queue += (spc_name,)
+        else:
+            instab, path = filesys.read.instability_transformation(
+                spc_dct, spc_name, thy_info, save_prefix)
+            if instab is None:
+                stable_queue += (spc_name,)
+            else:
+                ioprinter.info_message(
+                    'Found instability file at path {}'.format(path),
+                    newline=1)
+                ioprinter.info_message(
+                    'Removing {} from queue'.format(spc_name))
+
+    return stable_queue
+
+
+def _remove_ts_missing(obj_queue, spc_dct):
+    """ Generate list of missing data, remove ts from queue
+    """
+
+    new_queue = ()
+    ts_miss_data = ()
+    for obj in obj_queue:
+        if 'ts_' in obj:
+            ts_dct = spc_dct[obj]
+            miss = ts_dct.get('missdata')
+            if miss is not None:
+                ts_miss_data += ((obj, ts_dct['missdata'], 'geometry'),)
+            else:
+                new_queue += (obj,)
+        else:
+            new_queue += (obj,)
+
+    return new_queue, ts_miss_data

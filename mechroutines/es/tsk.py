@@ -36,7 +36,8 @@ ES_TSKS = {
 
 def run_tsk(tsk, spc_dct, spc_name,
             thy_dct, es_keyword_dct,
-            run_prefix, save_prefix):
+            run_prefix, save_prefix,
+            print_debug=False):
     """ Execute the specified electronic structure task.
 
         :param tsk: name of task
@@ -53,6 +54,8 @@ def run_tsk(tsk, spc_dct, spc_name,
         :type run_prefix: str
         :param save_prefix: root-path to the save-filesystem
         :type save_prefix: str
+        :param print_debug: option to print extra debug information
+        :type print_debug: bool
     """
 
     ioprinter.task_header(tsk, spc_name)
@@ -66,7 +69,7 @@ def run_tsk(tsk, spc_dct, spc_name,
 
         # Run the task if an initial geom exists
         if 'init' in tsk:
-            _ = geom_init(
+            success = geom_init(
                 spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
         elif 'conf' in tsk:
@@ -89,6 +92,8 @@ def run_tsk(tsk, spc_dct, spc_name,
             findts(
                 spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
+
+        # return success # complicated, since success means different thing
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
@@ -997,7 +1002,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
                 skip = (instab is not None)
                 if skip:
                     ioprinter.info_message(
-                        'Found instability files at path {}'.format(path),
+                        'Found instability file at path {}'.format(path),
                         newline=1)
                     ioprinter.info_message(
                         'Skipping task for unstable species...', newline=1)

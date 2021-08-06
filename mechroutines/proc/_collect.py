@@ -10,12 +10,12 @@ from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 
 from mechlib import filesys
+from mechlib.amech_io.printer import reading
 from mechroutines.models import _vib as vib
 from mechroutines.models import _tors as tors
 from mechroutines.models import ene
 from mechroutines.thermo import basis
 from mechroutines.proc import _util as util
-from mechlib.amech_io import printer as ioprinter
 
 
 def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
@@ -26,8 +26,8 @@ def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
         geo = cnf_fs[-1].file.geometry.read(locs)
         zma = automol.geom.zmatrix(geo)
         sp_fs = autofile.fs.single_point(locs_path)
-        energy = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
-        comment = 'energy: {0:>15.10f}\n'.format(energy)
+        _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+        comment = 'energy: {0:>15.10f}\n'.format(_ene)
         zma_str = automol.zmat.string(zma)
         miss_data = None
     else:
@@ -46,8 +46,8 @@ def molden(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     if cnf_fs[-1].file.geometry.exists(locs):
         geo = cnf_fs[-1].file.geometry.read(locs)
         sp_fs = autofile.fs.single_point(locs_path)
-        energy = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
-        comment = 'energy: {0:>15.10f}'.format(energy)
+        _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+        comment = 'energy: {0:>15.10f}'.format(_ene)
         comment += 'SPC: {}\tConf: {}\tPath: {}'.format(
             spc_name, locs, locs_path)
         xyz_str = automol.geom.xyz_string(geo, comment=comment)
@@ -66,8 +66,8 @@ def geometry(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     if cnf_fs[-1].file.geometry.exists(locs):
         geo = cnf_fs[-1].file.geometry.read(locs)
         sp_fs = autofile.fs.single_point(locs_path)
-        energy = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
-        comment = 'energy: {0:>15.10f}'.format(energy)
+        _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+        comment = 'energy: {0:>15.10f}'.format(_ene)
         xyz_str = automol.geom.xyz_string(geo, comment=comment)
         miss_data = None
     else:
@@ -80,7 +80,7 @@ def geometry(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     return spc_data, miss_data
 
 
-def freqs(
+def frequencies(
         spc_dct_i, spc_mod_dct_i, proc_keyword_dct, thy_dct,
         cnf_fs, locs, locs_path, run_prefix, save_prefix):
     """collect frequencies
@@ -97,16 +97,22 @@ def freqs(
         ret = vib.full_vib_analysis(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
             run_prefix, zrxn=zrxn)
-        freqs, _, zpe, sfactor, tors_strs, torsfreqs, all_freqs = ret
+        freqs, imag, zpe, sfactor, _, torsfreqs, all_freqs = ret
+        if saddle:
+            print('Imaginary Frequencies[cm-1]: {}'.format(imag))
+            freqs = (-1*imag,) + freqs
         miss_data = None
     else:
         es_levels = util.freq_es_levels(proc_keyword_dct)
         spc_mod_dct_i = util.generate_spc_model_dct(es_levels, thy_dct)
-        freqs, _, zpe = vib.read_locs_harmonic_freqs(
+        freqs, imag, zpe = vib.read_locs_harmonic_freqs(
             cnf_fs, locs, run_prefix, zrxn=zrxn)
         if freqs and proc_keyword_dct['scale'] is not None:
             freqs, zpe = vib.scale_frequencies(
                 freqs, 0.0, spc_mod_dct_i, scale_method='3c')
+        if saddle:
+            print('Imaginary Frequencies[cm-1]: {}'.format(imag))
+            freqs = (-1*imag,) + freqs
         torsfreqs = None
         all_freqs = None
         sfactor = None
@@ -124,7 +130,7 @@ def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
     """
 
     saddle = 'ts_' in spc_name
-
+    _ = mod_thy_info
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix, saddle=saddle)
@@ -158,21 +164,21 @@ def coeffs(spc_name, spc_dct, model_dct, spc_array):
     return [*coeff_array], spc_array
 
 
-def energy(
-    spc_name, spc_dct_i, spc_mod_dct_i, proc_keyword_dct,
-    thy_dct, locs, locs_path,
-    cnf_fs, run_prefix, save_prefix):
+def energy(spc_name, spc_dct_i,
+           spc_mod_dct_i, proc_keyword_dct,
+           thy_dct, locs, locs_path,
+           cnf_fs, run_prefix, save_prefix):
     """ collect energy
     """
 
     saddle = 'ts_' in spc_name
 
-    energy = None
+    _ene = None
     if spc_mod_dct_i:
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_mod_dct_i,
             run_prefix, save_prefix, saddle=saddle)
-        energy = ene.electronic_energy(
+        _ene = ene.electronic_energy(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
             conf=(locs, locs_path, cnf_fs))
     else:
@@ -188,16 +194,16 @@ def energy(
         if os.path.exists(sp_path):
             if sp_save_fs[-1].file.energy.exists(
                     mod_thy_info[1:4]):
-                ioprinter.reading('Energy', sp_path)
-                energy = sp_save_fs[-1].file.energy.read(
+                reading('Energy', sp_path)
+                _ene = sp_save_fs[-1].file.energy.read(
                     mod_thy_info[1:4])
 
-    if energy is not None:
+    if _ene is not None:
         miss_data = None
     else:
         miss_data = (spc_name, mod_thy_info, 'energy')
 
-    return [locs_path, energy], miss_data
+    return [locs_path, _ene], miss_data
 
 
 def enthalpy(
@@ -234,4 +240,8 @@ def enthalpy(
                 coeff_basis[spc_basis.index(spc_i)])
         else:
             coeff_array.append(0)
-    return [locs_path, ene_abs, hf0k, *coeff_array], chn_basis_ene_dct, spc_array
+    return (
+        [locs_path, ene_abs, hf0k, *coeff_array],
+        chn_basis_ene_dct,
+        spc_array
+    )

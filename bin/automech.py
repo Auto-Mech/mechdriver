@@ -51,7 +51,8 @@ if ES_TSKS is not None:
         PES_RLST, SPC_RLST,
         ES_TSKS,
         SPC_DCT, GLOB_DCT, THY_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'],
+        print_debug=INP_KEY_DCT['print_debug']
     )
     ioprinter.program_exit('es')
 
@@ -76,7 +77,7 @@ if TRANS_TSKS is not None:
             TRANS_TSKS,
             SMOD_DCT,
             SPC_DCT, THY_DCT,
-            INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+            INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'],
         )
     ioprinter.program_exit('trans')
 
@@ -88,7 +89,7 @@ if KTP_TSKS is not None:
         KTP_TSKS,
         SPC_DCT, GLOB_DCT,
         KMOD_DCT, SMOD_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH,
     )
     ioprinter.program_exit('ktp')
 
@@ -100,7 +101,7 @@ if PROC_TSKS is not None:
         PROC_TSKS,
         SPC_DCT, GLOB_DCT, THY_DCT,
         KMOD_DCT, SMOD_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'],
     )
     ioprinter.program_exit('proc')
 

@@ -20,7 +20,8 @@ from mechlib.amech_io import printer as ioprinter
 def run(pes_rlst, spc_rlst,
         es_tsk_lst,
         spc_dct, glob_dct, thy_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix,
+        print_debug=False):
     """ Executes all electronic structure tasks.
 
         :param pes_rlst: species from PESs to run
@@ -54,6 +55,8 @@ def run(pes_rlst, spc_rlst,
     # Set the appropriate run lst; default to PES if any
     # Runs through PESs, then SPC
     run_rlst = parser.rlst.combine(pes_rlst, spc_rlst)
+
+    print(run_rlst)
 
     for (fml, pes_idx, subpes_idx), run_lst in run_rlst.items():
 
@@ -92,4 +95,5 @@ def run(pes_rlst, spc_rlst,
             for spc_name in obj_queue:
                 run_tsk(tsk, spc_dct, spc_name,
                         thy_dct, es_keyword_dct,
-                        run_prefix, save_prefix)
+                        run_prefix, save_prefix,
+                        print_debug=print_debug)
