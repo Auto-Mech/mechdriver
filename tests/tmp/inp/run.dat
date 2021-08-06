@@ -1,0 +1,32 @@
+input
+    run_prefix = /lcrc/project/CMRP/amech/mechdriver/tests/tmp/run
+    save_prefix = /lcrc/project/CMRP/amech/mechdriver/tests/tmp/save
+end input
+
+pes
+    3: 1
+end pes
+
+spc
+    3
+end spc
+
+els
+    spc init_geom     runlvl=mp2_sto   inplvl=mp2_sto
+    ts  find_ts       runlvl=mp2_sto   inplvl=mp2_sto
+    # all conf_samp     runlvl=mp2_sto   inplvl=mp2_sto
+    all conf_hess     runlvl=mp2_sto   inplvl=mp2_sto
+    all conf_energy   runlvl=mp2_gs    inplvl=mp2_sto
+end els
+
+thermo
+    write_mess      kin_model=global  spc_model=rrhomod
+    run_mess        kin_model=global  spc_model=rrhomod  nprocs=10
+    run_fits        kin_model=global  spc_model=rrhomod
+end thermo
+
+ktp
+    write_mess      kin_model=global  spc_model=rrhomod
+    run_mess        nprocs=10
+    run_fits        kin_model=global  spc_model=rrhomod
+end ktp
