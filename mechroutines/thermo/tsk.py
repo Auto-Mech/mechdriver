@@ -97,8 +97,9 @@ def _get_heat_of_formation(
     """
 
     # Determine info about the basis species used in thermochem calcs
-    basis_dct, uniref_dct = thermfit.prepare_refs(
+    basis_dct = thermfit.prepare_basis(
         ref_scheme, spc_dct, (spc_name,))
+    uniref_dct = thermfit.unique_basis_species(basis_dct, spc_dct)
 
     # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
