@@ -78,7 +78,7 @@ def read_spc_data(spc_dct, spc_name,
             inf_dct, chn_basis_ene_dct = mol_data(
                 spc_name, spc_dct,
                 pes_mod_dct_i, spc_mod_dct_i, chn_basis_ene_dct,
-                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene, 
+                run_prefix, save_prefix, calc_chn_ene=calc_chn_ene,
                 spc_locs=spc_locs, zrxn=None)
             writer = 'species_block'
 
@@ -674,8 +674,10 @@ def tau_data(spc_dct_i,
     # Use model to determine whether to read grads and hessians
     vib_model = spc_mod_dct_i['vib']['mod']
     freqs = ()
-    _, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
-        pf_filesystems, hr_str, prot_str, run_prefix, zrxn=None)
+    harm_zpve = 'fix broken'
+    proj_zpve = 'fix broken'
+    # _, _, proj_zpve, harm_zpve = vib.tors_projected_freqs_zpe(
+    #     pf_filesystems, hr_str, prot_str, run_prefix, zrxn=None)
     zpe_chnlvl = proj_zpve * phycon.EH2KCAL
 
     # Set reference energy to harmonic zpve
