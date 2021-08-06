@@ -8,11 +8,11 @@ import numpy
 import automol
 import autofile
 import elstruct
+from phydat import phycon
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner._run import execute_job
 from mechroutines.es.runner._run import read_job
-from phydat import phycon
 
 
 def execute_scan(zma, spc_info, mod_thy_info,
