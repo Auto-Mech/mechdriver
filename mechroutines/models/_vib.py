@@ -161,6 +161,26 @@ def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
     return freqs, imag, zpe
 
 
+def read_locs_vib_displacements(cnf_fs, cnf_locs, run_prefix, zrxn=None):
+
+    if cnf_locs is not None:
+
+        # Obtain geom and freqs from filesys
+        geo = cnf_fs[-1].file.geometry.read(cnf_locs)
+        hess = cnf_fs[-1].file.hessian.read(cnf_locs)
+        ioprinter.reading('Hessian', cnf_fs[-1].path(cnf_locs))
+
+        # Build the run filesystem using locs
+        fml_str = automol.geom.formula_string(geo)
+        vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str)
+
+        script_str = autorun.SCRIPT_DCT['projrot']
+        harm_disp = autorun.projrot.displacements(
+            script_str, vib_path, [geo], [[]], [hess])
+
+        return harm_disp
+        
+
 def read_anharmon_matrix(pf_filesystems):
     """ Read a anharmonicity matrix from the SAVE filesystem for a
         species or transition state.

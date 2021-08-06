@@ -119,6 +119,9 @@ def frequencies(
         # miss_data = (spc_name, mod_thy_info, 'geometry')
         miss_data = None
 
+    # Lazy way to just rerun projrot and get the displacments...
+
+
     spc_data = [locs_path, zpe, *freqs]
     return spc_data, (torsfreqs, all_freqs, sfactor), miss_data
 
