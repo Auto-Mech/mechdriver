@@ -77,7 +77,6 @@ def initial_conformer(spc_dct_i, spc_info, ini_method_dct, method_dct,
             info_message(
                 'Assessing if there are any functional groups',
                 'that cause instability')
-            debug_message('geo str\n', automol.geom.string(geo_init))
 
             zma_init = automol.geom.zmatrix(geo_init)
 
