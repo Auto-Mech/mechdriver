@@ -13,7 +13,8 @@ from mechlib import filesys
 CLA_INP = 'inp/class.csv'
 
 
-def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
+def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
+                   id_missing=True):
     """ For a given reaction, attempt to identify its reaction class obtain
         the corresponding Z-Matrix reaction object.
 
@@ -34,22 +35,30 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix):
         :type save_prefix: str
     """
 
+    zmas, rclasses = (), ()
+
     zrxn, zma = filesys.read.reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix)
     if zrxn is None:
-        print('    Identifying class...')
-        zrxns, zmas = _id_reaction(rxn_info)
+        if id_missing:
+            print('    Identifying class...')
+            zrxns, zmas = _id_reaction(rxn_info)
+            if zrxns is None:
+                zrxns = 'MISSING-SKIP'
+        else:
+            zrxns = 'MISSING-ADD'
     else:
         zrxns = (zrxn,)
         zmas = (zma,)
         print('    Reading from fileysystem...')
 
-    rclasses = ()
-    for zrxn in zrxns:
-        rclasses += (_mod_class(zrxn.class_, rxn_info),)
+    if 'MISSING' not in zrxns:
+        rclasses = ()
+        for zrxn in zrxns:
+            rclasses += (_mod_class(zrxn.class_, rxn_info),)
 
-    print('    Reaction class identified as: {}'.format(
-        automol.par.string(rclasses[0])))
+        print('    Reaction class identified as: {}'.format(
+            automol.par.string(rclasses[0])))
 
     return zrxns, zmas, rclasses
 
@@ -69,7 +78,6 @@ def _id_reaction(rxn_info):
         rct_ichs, prd_ichs, indexing='zma')
     # zrxns = tuple(obj[0] for obj in zrxn_objs)
     # zmas = tuple(obj[1] for obj in zrxn_objs)
-    zrxns, zmas = [], []
     # for objs in zrxn_objs:
     #     zrxn, zma, _, _ = objs
     #     zrxns.append(zrxn)
@@ -77,8 +85,12 @@ def _id_reaction(rxn_info):
     #     print('zrxn, zma in id:', zrxn, automol.zmat.string(zma))
     # for now just use first zma until we are properly producing extra zmas
     if zrxn_objs:
+        zrxns, zmas = [], []
         zrxns.append(zrxn_objs[0][0])
         zmas.append(zrxn_objs[0][1])
+    else:
+        zrxns = None
+        zmas = None
 
     return zrxns, zmas
 

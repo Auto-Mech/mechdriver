@@ -220,7 +220,7 @@ def read_job(job, run_fs):
 
         success = bool(is_successful_output(out_str, job, prog))
         if success:
-            print(" - Reading successful ouput...")
+            print(" - Reading successful output...")
 
     return success, ret
 

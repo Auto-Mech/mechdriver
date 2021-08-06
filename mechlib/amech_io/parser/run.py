@@ -24,6 +24,7 @@
 import sys
 import automol
 import ioformat
+from mechlib.amech_io.printer import error_message
 from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
 from mechlib.amech_io.parser._keywrd import defaults_from_key_val_dcts
 from mechlib.amech_io.parser._keywrd import check_dct1
@@ -71,12 +72,14 @@ TSK_KEY_DCT = {
     'conf_vpt2': (('spc', 'ts'), BASE + ('cnf_range',)),
     'conf_prop': (('spc', 'ts'), BASE + ('cnf_range',)),
     'conf_opt': (('spc', 'ts'), BASE + ('cnf_range',)),
-    'hr_scan': (('spc', 'ts'), BASE + ('tors_model', 'resamp_min', 'cnf_range',)),
+    'hr_scan': (('spc', 'ts'),
+                BASE + ('tors_model', 'resamp_min', 'cnf_range',)),
     'hr_grad': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range',)),
     'hr_hess': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range',)),
     'hr_energy': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range',)),
     'hr_vpt2': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range',)),
-    'hr_reopt': (('spc', 'ts'), BASE + ('tors_model', 'hrthresh', 'cnf_range',)),
+    'hr_reopt': (('spc', 'ts'),
+                 BASE + ('tors_model', 'hrthresh', 'cnf_range',)),
     'tau_samp': (('spc', 'ts'), BASE),
     'tau_energy': (('spc', 'ts'), BASE),
     'tau_grad': (('spc', 'ts'), BASE),
@@ -97,8 +100,10 @@ TSK_KEY_DCT = {
     'enthalpy': (('spc', 'ts'), PRNT),
     'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
-    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite', 'lump_wells', 'cnf_range')),
-    'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname', 'cnf_range')),
+    'write_mess': ((), ('kin_model', 'spc_model',
+                        'overwrite', 'lump_wells', 'cnf_range')),
+    'run_mess': ((), ('kin_model', 'spc_model',
+                      'nprocs', 'inpname', 'cnf_range')),
     'run_fits': ((), ('kin_model', 'cnf_range')),
 }
 
@@ -214,7 +219,7 @@ def chem_idxs(run_str):
 
     # Kill code if no idxs given
     if _pes_idxs is None and _spc_idxs is None:
-        print('ERROR: No pes or spc section given in run.dat file. Quitting')
+        error_message('No pes or spc section given in run.dat file. Quitting')
         sys.exit()
 
     return _pes_idxs, _spc_idxs
@@ -306,11 +311,6 @@ def _tsk_lst(tsk_str, num):
         tsk_str = ioformat.remove_whitespace_from_string(tsk_str)
         for line in tsk_str.splitlines():
             _tsk = _split_line(line, num)
-            # try:
-            #     _tsk = _split_line(line, num)
-            # except:
-            #     print('Task line not formatted correctly:\n{}'.format(line))
-            #     sys.exit()
             tsks.append(_tsk)
         mod_tsks = _expand_tsks(tsks) if num == 3 else tsks
     else:
@@ -389,8 +389,8 @@ def _check_tsks(tsk_lsts, thy_dct):
                 obj_lst = SUPP_OBJS if obj == 'all' else (obj,)
                 for _obj in obj_lst:
                     if _obj not in TSK_KEY_DCT[tsk][0]:
-                        print('obj {}, not allowed for {}'.format(obj, tsk))
-                        print('')
+                        error_message(
+                            'obj {}, not allowed for {}'.format(obj, tsk))
                         sys.exit()
 
             # Check if keyword values are allowed
@@ -419,6 +419,7 @@ def _chk_input_for_drivers(tsk_dct, mech_str):
 
     if tsk_dct['ktp']:
         if mech_str is None:
-            print('kTPDriver Requested. ',
-                  'However no mechanism.dat provided. Exiting MechDriver...')
+            error_message(
+                'kTPDriver Requested. ',
+                'However no mechanism.dat provided. Exiting MechDriver...')
             sys.exit()

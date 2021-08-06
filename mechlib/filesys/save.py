@@ -397,7 +397,7 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
     if any(rotors):
         zma_path = zma_fs[-1].path(zma_locs)
         print(" - Rotors identified from Z-Matrix at {}".format(zma_path))
-        print(" - Saving rotor information at same location")
+        print(" - Saving rotor information at same location.")
         zma_fs[-1].file.torsions.write(rotors, zma_locs)
 
 
@@ -417,7 +417,8 @@ def _save_reaction(zma_fs, zma_locs, zrxn=None):
     """
 
     if zrxn is not None:
-        print(" - Saving reaction")
+        zma_path = zma_fs[-1].path(zma_locs)
+        print(" - Saving Reaction Class+Graph object at {}".format(zma_path))
         zma_fs[-1].file.reaction.write(zrxn, zma_locs)
 
 
