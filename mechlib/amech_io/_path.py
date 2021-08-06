@@ -23,8 +23,8 @@ def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix):
         thm_prefix = [spc_formula, automol.inchi.inchi_key(spc_info[0])]
         spc_locs_lst = spc_locs_dct[spc_name]
         for sidx, spc_locs in enumerate(spc_locs_lst, start=1):
+            spc_mod_thm_path_dct = {}
             for midx, mod in enumerate(spc_mods):
-                spc_mod_thm_path_dct = {}
                 idx = sidx * 10 + midx
                 spc_mod_thm_path_dct[mod] = (
                     job_path(
