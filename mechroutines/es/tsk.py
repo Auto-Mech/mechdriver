@@ -299,20 +299,21 @@ def conformer_tsk(job, spc_dct, spc_name,
     elif job == 'opt':
 
         cnf_range = es_keyword_dct['cnf_range']
+        cnf_sort_info_lst = _sort_info_lst(
+            es_keyword_dct['sort'], thy_dct, spc_info)
 
         # Set up the run scripts
         script_str, kwargs = qchem_params(
             method_dct, elstruct.Job.OPTIMIZATION)
 
-        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_locs, ini_min_cnf_path = ini_loc_info
-
         rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            cnf_save_fs, mod_thy_info, cnf_range='all')
+            cnf_save_fs, mod_thy_info,
+            cnf_range='all')
 
         ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info, cnf_range=cnf_range)
+            ini_cnf_save_fs, mod_ini_thy_info,
+            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+            print_enes=True)
 
         # Truncate the list of the ini confs
         uni_rng_locs_lst, uni_cnf_locs_lst = conformer.unique_fs_ring_confs(
@@ -355,8 +356,10 @@ def conformer_tsk(job, spc_dct, spc_name,
                 use_locs=(rid, cid),
                 **kwargs)
 
+        # print all geometres within cnfrange
         rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
+            cnf_save_fs, mod_thy_info,
+            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst)
         for locs in rng_cnf_locs_lst:
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             ioprinter.geometry(geo)
@@ -364,9 +367,13 @@ def conformer_tsk(job, spc_dct, spc_name,
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 
         cnf_range = es_keyword_dct['cnf_range']
+        cnf_sort_info_lst = _sort_info_lst(
+            es_keyword_dct['sort'], thy_dct, spc_info)
 
         ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info, cnf_range=cnf_range)
+            ini_cnf_save_fs, mod_ini_thy_info,
+            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+            print_enes=True)
 
         # Check if locs exist, kill if it doesn't
         if not ini_rng_cnf_locs_lst:
@@ -673,8 +680,11 @@ def hr_tsk(job, spc_dct, spc_name,
         **_root)
 
     cnf_range = es_keyword_dct['cnf_range']
+    cnf_sort_info_lst = _sort_info_lst(
+        es_keyword_dct['sort'], thy_dct, spc_info)
     ini_min_locs_lst, ini_path_lst = filesys.mincnf.conformer_locators(
-        ini_cnf_save_fs, mod_ini_thy_info, cnf_range=cnf_range)
+        ini_cnf_save_fs, mod_ini_thy_info,
+        cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst)
 
     # ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
     #     ini_cnf_save_fs, mod_ini_thy_info)
@@ -931,8 +941,8 @@ def rpath_tsk(job, spc_dct, spc_name,
                 script_str, overwrite, **kwargs)
             ioprinter.obj('vspace')
 
-    elif job == 'infene':
-        pass
+    elif Gjob == 'infene':
+        Gpass
         # inf_sep_ene()
 
 
@@ -992,3 +1002,29 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
                         'Skipping task for unstable species...', newline=1)
 
     return skip
+        
+
+def _sort_info_lst(sort_str, thy_dct, spc_info):
+    """ Return the levels to sort conformers by if zpve or sp
+        levels were assigned in input
+    """
+    sort_lvls = [None, None]
+    sort_typ_lst = ['zpe', 'sp']
+    if sort_str is not None:
+        for sort_param in sort_str.split(','):
+            idx = None
+            for typ_idx, typ_str in enumerate(sort_typ_lst):
+                if typ_str in sort_param:
+                    lvl_key = sort_str.split(typ_str + '(')[1].split(')')[0]
+                    idx = typ_idx
+            if idx is not None:
+                method_dct = thy_dct.get(lvl_key)
+                if method_dct is None:
+                    ioprinter.warning_message(
+                        'no {} in theory.dat, not using {} in sorting'.format(
+                            lvl_key, sort_typ_lst[idx]))
+                    continue
+                thy_info = tinfo.from_dct(method_dct)
+                mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+                sort_lvls[idx] = mod_thy_info
+    return sort_lvls

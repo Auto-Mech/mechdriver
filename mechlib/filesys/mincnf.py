@@ -32,7 +32,9 @@ def min_energy_conformer_locators(cnf_save_fs, mod_thy_info):
     return ret
 
 
-def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
+def conformer_locators(
+        cnf_save_fs, mod_thy_info,
+        cnf_range='min', sort_info_lst=None, print_enes=False):
     """ Obtain the (ring-id, tors-id) filesystem locator pair and
         path for all conformers meeting
 
@@ -51,11 +53,16 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
         :type cnf_save_fs: autofile.fs.conformer obj
         :param mod_thy_info: ???
         :type mod_thy_info: ???
-        :param cnf_range:
+        :param cnf_range: the range of conformers to grab
+        :type cnf_range: str
+        :param sort_info_lst: level info to include sp or zpe in sorting
+        :type sort_info_lst: list of tuples or Nones
         :rtype: (tuple(str, str), str)
     """
 
     cnf_range, allow_hbnd = _process_cnf_range(cnf_range)
+    zpe_info, sp_info = _process_sort_info(sort_info_lst)
+
     fin_locs_lst, fin_paths_lst = (), ()
 
     cnf_locs_lst = cnf_save_fs[-1].existing()
@@ -63,7 +70,8 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
         cnf_locs_lst = _remove_hbonded_structures(cnf_save_fs, cnf_locs_lst)
     if cnf_locs_lst:
         cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
-            cnf_locs_lst, cnf_save_fs, mod_thy_info)
+            cnf_locs_lst, cnf_save_fs, mod_thy_info,
+            zpe_info=zpe_info, sp_info=sp_info)
         if cnf_range == 'min':
             fin_locs_lst = (cnf_locs_lst[0],)
         elif cnf_range == 'all':
@@ -77,13 +85,22 @@ def conformer_locators(cnf_save_fs, mod_thy_info, cnf_range='min'):
     else:
         print('No conformers located in {}'.format(
             cnf_save_fs[0].path()))
-    for locs in fin_locs_lst:
+
+    if print_enes:
+        print('{:<16}{:<16}{:<16}'.format('rid', 'cid', 'energy[kcal/mol]'))
+        print('{:<16}{:<16}{:<16}'.format('-------', '-------', '------'))
+    for idx, locs in enumerate(fin_locs_lst):
         fin_paths_lst += (cnf_save_fs[-1].path(locs),)
+        if print_enes:
+            print('{:<16}{:<16}{:<16.2f}'.format(
+                *locs, (cnf_enes_lst[idx] - cnf_enes_lst[0])*phycon.EH2KCAL))
 
     return fin_locs_lst, fin_paths_lst
 
 
-def _sorted_cnf_lsts(cnf_locs_lst, cnf_save_fs, mod_thy_info):
+def _sorted_cnf_lsts(
+        cnf_locs_lst, cnf_save_fs, mod_thy_info,
+        zpe_info=None, sp_info=None):
     """ Sort the list of conformer locators in the save filesystem
         using the energies from the specified electronic structure method.
         The conformers are sorted such that the energies are sorted
@@ -108,9 +125,17 @@ def _sorted_cnf_lsts(cnf_locs_lst, cnf_save_fs, mod_thy_info):
             cnf_path = cnf_save_fs[-1].path(locs)
             sp_fs = autofile.fs.single_point(cnf_path)
 
-            if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+            zpe = zpe_from_harmonic_frequencies(
+                cnf_save_fs, locs, mod_thy_info, zpe_info)
+            if zpe is None:
+                continue
+            if sp_info:
+                sp_thy_info = sp_info[1:4]
+            else:
+                sp_thy_info = mod_thy_info[1:4]
+            if sp_fs[-1].file.energy.exists(sp_thy_info):
                 fnd_cnf_enes_lst.append(sp_fs[-1].file.energy.read(
-                    mod_thy_info[1:4]))
+                    sp_thy_info) + zpe)
                 fnd_cnf_locs_lst.append(cnf_locs_lst[idx])
             else:
                 ioprinter.info_message(
@@ -260,7 +285,7 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
         traj = []
         traj_sort_data = sorted(zip(enes, geos, locs_lst), key=lambda x: x[0])
         for ene, geo, locs in traj_sort_data:
-            comment = 'energy: {0:>15.10f} \t {1}'.format(ene, locs[0])
+            comment = 'energy: {0:<15.10f} \t {1}'.format(ene, locs[0])
             traj.append((geo, comment))
         traj_path = save_fs[0].file.trajectory.path()
         print("Updating trajectory file at {}".format(traj_path))
@@ -313,3 +338,36 @@ def _process_cnf_range(cnf_range):
         cnf_range = cnf_range.replace('_noHB', '')
         allow_hbnd = False
     return cnf_range, allow_hbnd
+
+
+def _process_sort_info(sort_info_lst):
+    """ Split out the zpe and sp sort info
+    """
+    zpe_info = None
+    sp_info = None
+    if sort_info_lst is not None:
+        zpe_info = sort_info_lst[0]
+        sp_info = sort_info_lst[1]
+    return zpe_info, sp_info
+
+
+def zpe_from_harmonic_frequencies(
+        cnf_fs, locs, mod_thy_info, zpe_info):
+    """ gets zpe from the harmonic frequencies
+        that are saved in the filesystem
+    """
+    zpe = 0
+    if zpe_info is not None:
+        if mod_thy_info != zpe_info:
+            print(
+                'geoemtry level {} does not match requested zpe level {}'
+                .format(mod_thy_info, zpe_info))
+            print('Will read zpe from geometry level instead')
+        if cnf_fs[-1].file.harmonic_frequencies.exists(locs):
+            freqs = cnf_fs[-1].file.harmonic_frequencies.read(locs)
+            zpe = 0.5 * sum(freqs) * phycon.WAVEN2EH
+        else:
+            print('No harmonic frequencies at: {}.'.format(
+                cnf_fs[-1].path(locs)))
+            zpe = None
+    return zpe
