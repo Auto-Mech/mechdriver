@@ -684,7 +684,8 @@ def hr_tsk(job, spc_dct, spc_name,
         es_keyword_dct['sort'], thy_dct, spc_info)
     ini_min_locs_lst, ini_path_lst = filesys.mincnf.conformer_locators(
         ini_cnf_save_fs, mod_ini_thy_info,
-        cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst)
+        cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+        print_enes=True)
 
     # ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
     #     ini_cnf_save_fs, mod_ini_thy_info)

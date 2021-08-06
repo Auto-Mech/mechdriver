@@ -137,12 +137,12 @@ def _sorted_cnf_lsts(
                 fnd_cnf_enes_lst.append(sp_fs[-1].file.energy.read(
                     sp_thy_info) + zpe)
                 fnd_cnf_locs_lst.append(cnf_locs_lst[idx])
-            else:
+            elif cnf_save_fs[-1].file.geometry_info.exists(locs):
                 ioprinter.info_message(
                     'No energy saved in single point directory for {}'
                     .format(cnf_path))
                 geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
-                    mod_thy_info[1:4])
+                    locs)
                 geo_end_time = geo_inf_obj.utc_end_time
                 current_time = autofile.schema.utc_time()
                 if (current_time - geo_end_time).total_seconds() < 120:
