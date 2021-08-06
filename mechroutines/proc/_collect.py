@@ -147,7 +147,7 @@ def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
 def coeffs(spc_name, spc_dct, model_dct, spc_array):
     """ get the heat of formation reference molecules for one species.
     """
-    basis_dct, _ = thermfit.prepare_refs(
+    basis_dct = thermfit.prepare_basis(
         model_dct['therm_fit']['ref_scheme'],
         spc_dct, (spc_name,))
     # Get the basis info for the spc of interest
