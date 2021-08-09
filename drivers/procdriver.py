@@ -4,6 +4,7 @@
 """
 
 from mechroutines.proc import run_tsk
+from mechroutines.proc import write_missing_data_report
 from mechlib.amech_io import parser
 from mechlib.amech_io import printer as ioprinter
 
@@ -12,7 +13,7 @@ def run(pes_rlst, spc_rlst,
         proc_tsk_lst,
         spc_dct, thy_dct,
         pes_mod_dct, spc_mod_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix, mdriver_path):
     """ Central driver for all output tasks.
 
         :param spc_dct: species information
@@ -33,9 +34,10 @@ def run(pes_rlst, spc_rlst,
     for (fml, pes_idx, subpes_idx), run_lst_i in run_rlst.items():
         ioprinter.runlst((fml, pes_idx, subpes_idx), run_lst_i)
         if fml != 'SPC':
-            if any(tsk_lst[0] == 'ts' for tsk_lst in proc_tsk_lst):
+            if any(tsk_lst[0] in ('all', 'ts') for tsk_lst in proc_tsk_lst):
                 ts_dct, _queue = parser.spc.ts_dct_from_proctsks(
                     pes_idx, proc_tsk_lst, run_lst_i,
+                    spc_mod_dct['global'],
                     thy_dct, spc_dct,
                     run_prefix, save_prefix)
                 # doesnt allow for info from .dat file or internal defaults
@@ -52,26 +54,33 @@ def run(pes_rlst, spc_rlst,
     spc_queue = tuple(i for n, i in enumerate(spc_queue)
                       if i not in spc_queue[:n])
 
+    # Set master missing data list to write out at the end of run
+    missing_data = ()
+
     # Loop over Tasks
     for tsk_lst in proc_tsk_lst:
 
         [obj, tsk, prnt_keyword_dct] = tsk_lst
 
         # Build the queue of species based on user request
-        if obj == 'all':
-            obj_queue = spc_queue + ts_queue
         if obj == 'spc':
             obj_queue = spc_queue
         elif obj == 'ts':
             obj_queue = ts_queue
+        elif obj == 'all':
+            obj_queue = spc_queue + ts_queue
 
         # Set up model dictionaries for the code to use
         spc_mod_dct_i = spc_mod_dct['global']
         pes_mod_dct_i = pes_mod_dct['global']
 
-        run_tsk(
+        # Run task and collate info about missing data
+        missing_data += run_tsk(
             tsk, obj_queue,
             prnt_keyword_dct,
             spc_dct, thy_dct,
             spc_mod_dct_i, pes_mod_dct_i,
-            run_prefix, save_prefix)
+            run_prefix, save_prefix, mdriver_path)
+
+    # Write a report that details what data is missing
+    write_missing_data_report(missing_data)

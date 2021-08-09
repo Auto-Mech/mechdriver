@@ -137,6 +137,7 @@ Description: information on how to compute the partition functions
 
 .. code-block:: python
 
+    # Description
     {
         'pf_comp_i' = {
             'mod': model_name
@@ -148,6 +149,39 @@ Description: information on how to compute the partition functions
         }
     }
 
+    # Example
+    spc_mod_dct_i = {
+        'ene': {
+            'lvl1': ('wbsgs', (1.0, ('gaussian09', 'wb97xd', '6-31g*', 'RU')))
+        },
+        'rot': {
+            'mod': 'rigid'
+        },
+        'vib': {
+            'mod': 'harm',
+            'geolvl': ('wbsgs', (1.0, ('gaussian09', 'wb97xd', '6-31g*', 'RU')))
+        },
+        'tors': {
+            'mod': '1dhrfa',
+            'enelvl': ('wbsgs', (1.0, ('gaussian09', 'wb97xd', '6-31g*', 'RU'))),
+            'geolvl': ('wbsgs', (1.0, ('gaussian09', 'wb97xd', '6-31g*', 'RU')))
+        },
+        'symm': {
+            'mod': 'sampling',
+            'geolvl': ('wbsgs', (1.0, ('gaussian09', 'wb97xd', '6-31g*', 'RU')))
+        },
+        'rpath': {
+            'enelvl': None,
+            'geolvl': None
+        },
+        'ts': {
+            'tunnel': 'eckart',
+            'sadpt': 'fixed',
+            'nobar': 'pst',
+            'rwells': 'fake',
+            'pwells': 'fake'
+        }
+    }
 
 pes_dct:
 Description: Reaction Channels from mechanism file sorted into potential energy surfaces

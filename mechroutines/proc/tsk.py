@@ -3,9 +3,8 @@
     format
 """
 
-from mechanalyzer.inf import thy as tinfo
-from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
+from mechroutines.models import typ
 from mechroutines.proc import _util as util
 from mechroutines.proc import _collect as collect
 
@@ -14,7 +13,7 @@ def run_tsk(tsk, obj_queue,
             proc_keyword_dct,
             spc_dct, thy_dct,
             spc_mod_dct_i, model_dct,
-            run_prefix, save_prefix):
+            run_prefix, save_prefix, mdriver_path):
     """ run a proc tess task
     for generating a list of conformer or tau sampling geometries
     """
@@ -26,20 +25,24 @@ def run_tsk(tsk, obj_queue,
 
     # Setup csv data dictionary for specific task
     csv_data = util.set_csv_data(tsk)
-    filelabel = util.get_file_label(
+    filelabel, thylabel = util.get_file_label(
         tsk, model_dct, proc_keyword_dct, spc_mod_dct_i)
     chn_basis_ene_dct = {}
     spc_array = []
 
+    # Exclude unstable species
+    # These species break certain checks (e.g. no ene exists for geo collect)
+    obj_queue = util.remove_unstable(
+        obj_queue, spc_dct, thy_dct, spc_mod_dct_i,
+        proc_keyword_dct, save_prefix)
+    obj_queue, ts_miss_data = util.remove_ts_missing(
+        obj_queue, spc_dct)
+
     # Set up lists for reporting missing data
     miss_data = ()
 
-    # Exclude unstable species
-    # These species break certain checks (e.g. no ene exists for geo collect)
-    obj_queue, ts_miss_data = _remove_ts_missing(
-        obj_queue, spc_dct)
-    obj_queue = _remove_unstable(
-        obj_queue, spc_dct, thy_dct, proc_keyword_dct, save_prefix)
+    # Initialize dictionaries to carry strings for writing
+    disp_dct = {}
 
     # Begin the loop over the species
     for spc_name in obj_queue:
@@ -74,16 +77,21 @@ def run_tsk(tsk, obj_queue,
             # Loop over conformers
             for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
                 label = spc_name + '_' + '_'.join(locs)
-                if 'freq' in tsk:
-                    csv_data_i, csv_data_j, miss_data_i = collect.frequencies(
-                        spc_dct_i, spc_mod_dct_i, proc_keyword_dct, thy_dct,
+                if 'freq' in tsk and not _skip_freqs(spc_name, spc_dct_i):
+                    _dat, miss_data_i = collect.frequencies(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        proc_keyword_dct, thy_dct,
                         cnf_fs, locs, locs_path, run_prefix, save_prefix)
-                    csv_data['freq'][label] = csv_data_i
-                    tors_freqs, all_freqs, sfactor = csv_data_j
-                    if tors_freqs is not None:
-                        csv_data['tfreq'][label] = tors_freqs
-                        csv_data['allfreq'][label] = all_freqs
-                        csv_data['scalefactor'][label] = [sfactor]
+                    if _dat is not None:
+                        csv_data_i, csv_data_j, disp_str = _dat
+                        csv_data['freq'][label] = csv_data_i
+                        tors_freqs, all_freqs, sfactor = csv_data_j
+                        if tors_freqs is not None:
+                            csv_data['tfreq'][label] = tors_freqs
+                            csv_data['allfreq'][label] = all_freqs
+                            csv_data['scalefactor'][label] = [sfactor]
+                        if disp_str is not None:
+                            disp_dct.update({spc_name: disp_str})
                     if miss_data_i is not None:
                         miss_data += (miss_data_i,)
 
@@ -100,16 +108,18 @@ def run_tsk(tsk, obj_queue,
                     csv_data[label] = csv_data_i
 
                 elif 'zma' in tsk:
-                    csv_data_i = collect.zmatrix(
+                    csv_data_i, miss_data_i = collect.zmatrix(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'torsion' in tsk:
-                    csv_data_i = collect.torsions(
+                    miss_data_i = collect.torsions(
                         spc_name, spc_dct_i, spc_mod_dct_i,
-                        mod_thy_info,
                         run_prefix, save_prefix)
-                    csv_data[label] = csv_data_i
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'ene' in tsk:
                     csv_data_i = collect.energy(
@@ -144,54 +154,23 @@ def run_tsk(tsk, obj_queue,
 
     # Write a report that details what data is missing
     missing_data = miss_data + ts_miss_data
-    util.write_missing_data_report(missing_data)
 
     # Write the csv data into the appropriate file
     util.write_csv_data(tsk, csv_data, filelabel, spc_array)
 
+    # Gather data that is provided for each species in files in a dir
+    data_dirs = (('displacements_'+thylabel, disp_dct),)
+    util.write_data_dirs(data_dirs, mdriver_path)
 
-def _remove_unstable(spc_queue, spc_dct, thy_dct, proc_key_dct, save_prefix):
-    """ For each species in the queue see if there are files
-        in the save filesystem denoting they are unstable. If so,
-        that species is removed from the queue for collection tasks.
+    return missing_data
+
+
+# Task manager/skipper functions
+def _skip_freqs(spc_name, spc_dct_i):
+    """ check if frequencies should be skipped
     """
-
-    thy_info = tinfo.from_dct(thy_dct.get(proc_key_dct.get('geolvl')))
-
-    stable_queue = ()
-    for spc_name in spc_queue:
-        if 'ts_' in spc_name:
-            stable_queue += (spc_name,)
-        else:
-            instab, path = filesys.read.instability_transformation(
-                spc_dct, spc_name, thy_info, save_prefix)
-            if instab is None:
-                stable_queue += (spc_name,)
-            else:
-                ioprinter.info_message(
-                    'Found instability file at path {}'.format(path),
-                    newline=1)
-                ioprinter.info_message(
-                    'Removing {} from queue'.format(spc_name))
-
-    return stable_queue
-
-
-def _remove_ts_missing(obj_queue, spc_dct):
-    """ Generate list of missing data, remove ts from queue
-    """
-
-    new_queue = ()
-    ts_miss_data = ()
-    for obj in obj_queue:
-        if 'ts_' in obj:
-            ts_dct = spc_dct[obj]
-            miss = ts_dct.get('missdata')
-            if miss is not None:
-                ts_miss_data += ((obj, ts_dct['missdata'], 'geometry'),)
-            else:
-                new_queue += (obj,)
-        else:
-            new_queue += (obj,)
-
-    return new_queue, ts_miss_data
+    skip = False
+    if 'ts' not in spc_name:
+        if typ.is_atom(spc_dct_i):
+            skip = True
+    return skip

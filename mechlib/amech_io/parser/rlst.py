@@ -60,10 +60,8 @@ def _lst_for_pes(pes_dct, run_pes_idxs):
             # Grab the channels if they are in run_chnl_idxs
             red_chnls = ()
             for chnl in chnls:
-                print(chnl)
                 cidx, _ = chnl
                 if cidx in run_chnl_idxs:
-                    print(cidx)
                     red_chnls += (chnl,)
 
             # Only add to reduced dct if any chnls found,

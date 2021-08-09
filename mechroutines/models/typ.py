@@ -36,7 +36,7 @@ def nonrigid_tors(spc_mod_dct_i, rotors):
     """
     vib_model = spc_mod_dct_i['vib']['mod']
     tors_model = spc_mod_dct_i['tors']['mod']
-    has_tors = bool(any(rotors))
+    has_tors = bool(rotors is not None)
     tors_hr_model = bool(
         tors_model in ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'))
     tau_hr_model = bool(tors_model == 'tau' and vib_model != 'vib')

@@ -17,6 +17,7 @@ def full_vib_analysis(
         run_prefix, zrxn=None):
     """ process to get freq
     """
+    # Pack into big object to pass into functions and return
     tors_strs = ['']
     freqs = []
     imag = []
@@ -28,105 +29,109 @@ def full_vib_analysis(
     rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
-    if typ.squash_tors_pot(spc_mod_dct_i):
-        # print('it thinks it is 1dhrfa')
-        for rotor in rotors:
-            for torsion in rotor:
-                torsion.pot = automol.pot.relax_scale(torsion.pot)
-
     if typ.nonrigid_tors(spc_mod_dct_i, rotors):
 
-        tors_strs = tors.make_hr_strings(rotors)
-        [_, hr_str, _, prot_str, _] = tors_strs
+        # Squash the rotor potentials as necessary
+        if typ.squash_tors_pot(spc_mod_dct_i):
+            # print('it thinks it is 1dhrfa')
+            for rotor in rotors:
+                for torsion in rotor:
+                    torsion.pot = automol.pot.relax_scale(torsion.pot)
 
-        proj_freqs, harm_freqs, tors_freqs, imag = tors_projected_freqs(
+        # Build initial MESS+ProjRot HindRot strings; calc. projected freq info
+        _, hr_str, _, prot_str, _ = tors.make_hr_strings(rotors)
+        ret = tors_projected_freqs(
             pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
 
-        # Make final hindered rotor strings and get corrected tors zpe
-        if typ.scale_1d(spc_mod_dct_i):
+        if ret is not None:
+            proj_freqs, harm_freqs, tors_freqs, imag, disps = ret
 
-            scaled_proj_freqs, _ = scale_frequencies(
-                proj_freqs, None, spc_mod_dct_i,
-                scale_method='c3_harm')
-            scaled_harm_freqs, _ = scale_frequencies(
-                harm_freqs, None, spc_mod_dct_i,
-                scale_method='c3_harm')
-            # print('scaling test:',scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
-            # print('tors string before scaling',tors_strs)
-            pot_scalef = potential_scale_factor(
-                scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
-            # print('pot_scalef:', pot_scalef)
-            # get the pot scale factor
-            # print('before scaling')
-            # for rotor in rotors:
-            #     for _tors in rotor:
-            #         print(_tors.pot)
-            rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
-            # print('after scaling')
-            # for rotor in rotors:
-            #     for _tors in rotor:
-            #         print(_tors.pot)
-            tors_strs = tors.make_hr_strings(rotors)
-            # print('tors string after scaling',tors_strs)
-            [_, hr_str, _, prot_str, _] = tors_strs
-            _, _, tors_zpe = tors_projected_freqs_zpe(
-                pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
-        freqs = proj_freqs
+            # Make final hindered rotor strings and get corrected tors zpe
+            if typ.scale_1d(spc_mod_dct_i):
+
+                scaled_proj_freqs, _ = scale_frequencies(
+                    proj_freqs, None, spc_mod_dct_i,
+                    scale_method='c3_harm')
+                scaled_harm_freqs, _ = scale_frequencies(
+                    harm_freqs, None, spc_mod_dct_i,
+                    scale_method='c3_harm')
+                # print('scaling test:', scaled_harm_freqs,
+                #       scaled_proj_freqs, tors_freqs)
+                # print('tors string before scaling',tors_strs)
+                pot_scalef = potential_scale_factor(
+                    scaled_harm_freqs, scaled_proj_freqs, tors_freqs)
+                # print('pot_scalef:', pot_scalef)
+                # get the pot scale factor
+                # print('before scaling')
+                # for rotor in rotors:
+                #     for _tors in rotor:
+                #         print(_tors.pot)
+                rotors = tors.scale_rotor_pots(rotors, scale_factor=pot_scalef)
+                # print('after scaling')
+                # for rotor in rotors:
+                #     for _tors in rotor:
+                #         print(_tors.pot)
+                _, hr_str, _, prot_str, _ = tors.make_hr_strings(rotors)
+                # print('tors string after scaling',tors_strs)
+                _, _, tors_zpe = tors_projected_freqs_zpe(
+                    pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
+            freqs = ret[0]  # freqs equal to proj_freqs
 
         # For mdhrv model no freqs needed in MESS input, zero out freqs lst
         if 'mdhrv' in spc_mod_dct_i['tors']['mod']:
             freqs = ()
     else:
-        freqs, imag, zpe = read_harmonic_freqs(
+        ret = read_harmonic_freqs(
             pf_filesystems, run_prefix, zrxn=zrxn)
-        tors_zpe = 0.0
+        freqs, imag, zpe, disps = ret
 
-    freqs, zpe = scale_frequencies(
-        freqs, tors_zpe,
-        spc_mod_dct_i, scale_method='c3')
+    if freqs:
+        freqs, zpe = scale_frequencies(
+            freqs, tors_zpe,
+            spc_mod_dct_i, scale_method='c3')
 
-    harm_freqs, _ = scale_frequencies(
-        harm_freqs, None,
-        spc_mod_dct_i, scale_method='c3')
+        harm_freqs, _ = scale_frequencies(
+            harm_freqs, None,
+            spc_mod_dct_i, scale_method='c3')
 
-    return freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs, harm_freqs
-
-
-def vib_analysis(
-        spc_dct_i, pf_filesystems, spc_mod_dct_i,
-        run_prefix, zrxn=None):
-    """ process to get freq
-    """
-
-    ret = full_vib_analysis(
-        spc_dct_i, pf_filesystems, spc_mod_dct_i,
-        run_prefix, zrxn=zrxn)
-    freqs, imag, zpe, _, tors_strs, _, _ = ret
-    return freqs, imag, zpe, tors_strs
+    return (freqs, imag, zpe, pot_scalef, tors_strs, tors_freqs,
+            harm_freqs, disps)
 
 
+# Read the Frequencies from the filesystem using the fs objs
 def read_harmonic_freqs(pf_filesystems, run_prefix, zrxn=None):
     """ Read the harmonic frequencies for the minimum
         energy conformer
     """
     # Get the harmonic filesys information
     [cnf_fs, _, min_cnf_locs, _, _] = pf_filesystems['harm']
-    freqs, imag, zpe = read_locs_harmonic_freqs(
+    return read_locs_harmonic_freqs(
         cnf_fs, min_cnf_locs, run_prefix, zrxn=zrxn)
-    return freqs, imag, zpe
 
 
 def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
     """ Read the harmonic frequencies for a specific conformer
+        Do the freqs obtain for two species for fake and pst?
     """
 
-    # probably should read freqs
-    # Do the freqs obtain for two species for fake and pst
     if cnf_locs is not None:
+        geo_exists = cnf_fs[-1].file.geometry.exists(cnf_locs)
+        hess_exists = cnf_fs[-1].file.hessian.exists(cnf_locs)
 
+        if not geo_exists:
+            ioprinter.error_message(
+                'Reference geometry is missing for harmonic frequencies')
+        if not hess_exists:
+            ioprinter.error_message(
+                'No Hessian available for harmonic frequencies calc')
+    else:
+        geo_exists, hess_exists = False, False
+
+    if geo_exists and hess_exists:
         # Obtain geom and freqs from filesys
         geo = cnf_fs[-1].file.geometry.read(cnf_locs)
         hess = cnf_fs[-1].file.hessian.read(cnf_locs)
+
         ioprinter.reading('Hessian', cnf_fs[-1].path(cnf_locs))
 
         # Build the run filesystem using locs
@@ -138,6 +143,10 @@ def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
             'Calling ProjRot to diagonalize Hessian and get freqs...')
         script_str = autorun.SCRIPT_DCT['projrot']
         freqs, _, imag_freqs, _ = autorun.projrot.frequencies(
+            script_str, vib_path, [geo], [[]], [hess])
+
+        # Obtain the displacements
+        harm_disps = autorun.projrot.displacements(
             script_str, vib_path, [geo], [[]], [hess])
 
         # Calculate the zpve
@@ -154,32 +163,12 @@ def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
         else:
             imag = None
 
+        ret = (freqs, imag, zpe, harm_disps)
     else:
-        ioprinter.error_message(
-            'Reference geometry is missing for harmonic frequencies')
+        ret = None
 
-    return freqs, imag, zpe
+    return ret
 
-
-def read_locs_vib_displacements(cnf_fs, cnf_locs, run_prefix, zrxn=None):
-
-    if cnf_locs is not None:
-
-        # Obtain geom and freqs from filesys
-        geo = cnf_fs[-1].file.geometry.read(cnf_locs)
-        hess = cnf_fs[-1].file.hessian.read(cnf_locs)
-        ioprinter.reading('Hessian', cnf_fs[-1].path(cnf_locs))
-
-        # Build the run filesystem using locs
-        fml_str = automol.geom.formula_string(geo)
-        vib_path = job_path(run_prefix, 'PROJROT', 'FREQ', fml_str)
-
-        script_str = autorun.SCRIPT_DCT['projrot']
-        harm_disp = autorun.projrot.displacements(
-            script_str, vib_path, [geo], [[]], [hess])
-
-        return harm_disp
-        
 
 def read_anharmon_matrix(pf_filesystems):
     """ Read a anharmonicity matrix from the SAVE filesystem for a
@@ -234,8 +223,14 @@ def tors_projected_freqs(pf_filesystems, mess_hr_str, projrot_hr_str,
         dist_cutoff_dct1=dist_cutoff_dct1,
         dist_cutoff_dct2=dist_cutoff_dct2,
         saddle=(zrxn is not None))
+
+    # Obtain the displacements
+    harm_disps = autorun.projrot.displacements(
+        projrot_script_str, vib_path, [harm_geo], [[]], [hess])
+
     proj_freqs, proj_imag, _, harm_freqs, tors_freqs = proj_inf
-    return proj_freqs, harm_freqs, tors_freqs, proj_imag
+
+    return proj_freqs, harm_freqs, tors_freqs, proj_imag, harm_disps
 
 
 def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
@@ -245,7 +240,7 @@ def tors_projected_freqs_zpe(pf_filesystems, mess_hr_str, projrot_hr_str,
     ret = tors_projected_freqs(
         pf_filesystems, mess_hr_str, projrot_hr_str,
         prefix, zrxn=zrxn, conf=conf)
-    proj_freqs, _, tors_freqs, proj_imag = ret
+    proj_freqs, _, tors_freqs, proj_imag, _ = ret
     tors_zpe = 0.5 * sum(tors_freqs) * phycon.WAVEN2EH
 
     return proj_freqs, proj_imag, tors_zpe

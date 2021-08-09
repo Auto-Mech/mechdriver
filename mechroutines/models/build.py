@@ -317,7 +317,7 @@ def mol_data(spc_name, spc_dct,
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
     ioprinter.info_message(
         'Obtaining the vibrational frequencies and zpves...', newline=1)
-    freqs, imag, zpe, tors_strs = vib.vib_analysis(
+    freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
         run_prefix, zrxn=zrxn)
     allr_str = tors_strs[0]

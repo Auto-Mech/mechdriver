@@ -3,9 +3,12 @@ input
     save_prefix = {1}
 end input
 
+pes
+    3: 1
+end pes
+
 spc
-    9
-    2,3,6
+    3, 9
 end spc
 
 els
@@ -19,10 +22,18 @@ end els
 
 #  Need versions where the geolvl is not specified
 proc
-    spc geo           proplvl=mp2_sto  geolvl=mp2_sto  nconfs=2       
-    spc zmatrix       proplvl=mp2_sto  geolvl=mp2_sto  nconfs=2       
-    spc freqs         proplvl=mp2_sto  geolvl=mp2_sto  nconfs=2  scale=0.92
-    spc energy        proplvl=mp2_gs   geolvl=mp2_sto  nconfs=2      
-    spc enthalpy      proplvl=mp2_gs   geolvl=mp2_sto  nconfs=2       
-    spc coeffs        proplvl=mp2_gs   geolvl=mp2_sto  nconfs=2  
-end thermo
+    all geo           proplvl=mp2_sto  geolvl=mp2_sto       
+    all zmatrix       proplvl=mp2_sto  geolvl=mp2_sto       
+    all freqs         proplvl=mp2_sto  geolvl=mp2_sto
+    all energy        proplvl=mp2_gs   geolvl=mp2_sto      
+    all coeffs        proplvl=mp2_gs   geolvl=mp2_sto  
+    # all enthalpy      proplvl=mp2_gs   geolvl=mp2_sto      
+    # all torsions      proplvl=mp2_gs   geolvl=mp2_sto  
+    all geo                 
+    all zmatrix             
+    all freqs         
+    all energy             
+    all coeffs         
+    all enthalpy           
+    all torsions           
+end proc
