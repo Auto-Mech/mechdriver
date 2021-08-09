@@ -93,12 +93,16 @@ def potential(names, grid_vals, cnf_save_path,
                 zmas[vals_conv] = None
 
         paths[vals] = scn_fs[-1].path(locs)
-    bad_angle = identify_bad_point(pot)
-    if bad_angle is not None:
-        pot = remove_bad_point(pot, bad_angle)
 
-    # Remove None entries
-    pot = {k: v for k, v in pot.items() if v is not None}
+    # If potential has any terms that are not None, ID and remove bad points
+    if automol.pot.is_nonempty(pot):
+        pot = automol.pot.remove_empty_terms(pot)
+        bad_angle = identify_bad_point(pot)
+        if bad_angle is not None:
+            pot = remove_bad_point(pot, bad_angle)
+            pot = automol.pot.remove_empty_terms(pot)
+    else:
+        pot = {}
 
     return pot, geoms, grads, hessians, zmas, paths
 
@@ -160,8 +164,19 @@ def identify_bad_point(pot, thresh=0.05):
 def remove_bad_point(pot, bad_angle):
     """ Remove a single bad angle from a potential
     """
-    bad_tuple = (bad_angle,)  # lazy way; need to get the 2-D value
-    assert pot.get(bad_tuple) is not None, (
+    print('bad_angle test')
+    print(pot)
+    print(bad_angle)
+
+    # Find angle in pot that is within 0.1 degrees of bad_angle
+    # to read the dictionary
+    # Only works for 1D
+    bad_tuple = None
+    for angle in pot.keys():
+        if numpy.isclose(angle, bad_angle, atol=0.1):
+            bad_tuple = (angle,)
+
+    assert bad_tuple is not None, (
         f'The angle {bad_angle} does not exist in the pot dictionary')
 
     pot[bad_tuple] = None

@@ -247,8 +247,8 @@ def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
     return ts_dct
 
 
-def ts_dct_from_proctsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
-                         spc_dct, run_prefix, save_prefix):
+def ts_dct_from_proctsks(pes_idx, proc_tsk_lst, rxn_lst, spc_mod_dct_i,
+                         thy_dct, spc_dct, run_prefix, save_prefix):
     """ build a ts queue
     """
 
@@ -257,14 +257,19 @@ def ts_dct_from_proctsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
 
     # Build the ts_dct
     ts_dct = {}
-    for tsk_lst in es_tsk_lst:
-        obj, es_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
-        if 'ts' in obj:
+    for tsk_lst in proc_tsk_lst:
+        obj, proc_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
+        if 'ts' in obj or 'all' in obj:
             # want print for task list
-            method_dct = thy_dct.get(es_keyword_dct['geolvl'])
-            ini_method_dct = thy_dct.get(es_keyword_dct['geolvl'])
-            thy_info = tinfo.from_dct(method_dct)
-            ini_thy_info = tinfo.from_dct(ini_method_dct)
+            if spc_mod_dct_i is not None:
+                print(spc_mod_dct_i)
+                ini_thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+                thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+            else:
+                ini_thy_info = tinfo.from_dct(thy_dct.get(
+                    proc_keyword_dct['proplvl']))
+                thy_info = tinfo.from_dct(thy_dct.get(
+                    proc_keyword_dct['proplvl']))
             break
 
     ts_dct = {}

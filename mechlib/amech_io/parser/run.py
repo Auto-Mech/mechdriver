@@ -95,6 +95,7 @@ TSK_KEY_DCT = {
     'geo': (('spc', 'ts'), PRNT),
     'molden': (('spc', 'ts'), PRNT),
     'zmatrix': (('spc', 'ts'), PRNT),
+    'torsions': (('spc', 'ts'), PRNT),
     'enthalpy': (('spc', 'ts'), PRNT),
     'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
@@ -309,7 +310,8 @@ def _tsk_lst(tsk_str, num):
         for line in tsk_str.splitlines():
             _tsk = _split_line(line, num)
             tsks.append(_tsk)
-        mod_tsks = _expand_tsks(tsks) if num == 3 else tsks
+        mod_tsks = tsks
+        # mod_tsks = _expand_tsks(tsks) if num == 3 else tsks
     else:
         mod_tsks = None
 
@@ -327,7 +329,6 @@ def _expand_tsks(tsks_lst):
         :rtype: tuple(str/dict)
     """
 
-    # Expand the tasks
     mod_tsks_lst = []
     for tsk_lst in tsks_lst:
         [obj, tsk, dct] = tsk_lst

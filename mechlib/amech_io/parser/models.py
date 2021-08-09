@@ -116,6 +116,8 @@ def models_dictionary(mod_str, thy_dct):
         if dct:  # if statement for empty global dcts from above fxn
             spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)
 
+    print(spc_mod_dct)
+
     return kin_mod_dct, spc_mod_dct
 
 
@@ -256,7 +258,7 @@ def split_model(mod):
 
     return (tuple(models), tuple(coeffs), tuple(operators))
 
-
+# Functions to simplify accessing the model dictionaries
 # def get_model(comp, spc_mod_dct_i):
 #     """ get model for spc dct compoenent
 #     """
