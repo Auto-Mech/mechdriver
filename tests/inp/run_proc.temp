@@ -8,7 +8,7 @@ pes
 end pes
 
 spc
-    3, 9
+    3, 6, 9
 end spc
 
 els
@@ -26,9 +26,9 @@ proc
     all zmatrix       proplvl=mp2_sto  geolvl=mp2_sto       
     all freqs         proplvl=mp2_sto  geolvl=mp2_sto
     all energy        proplvl=mp2_gs   geolvl=mp2_sto      
-    all coeffs        proplvl=mp2_gs   geolvl=mp2_sto  
     # all enthalpy      proplvl=mp2_gs   geolvl=mp2_sto      
     # all torsions      proplvl=mp2_gs   geolvl=mp2_sto  
+    all coeffs         
     all geo                 
     all zmatrix             
     all freqs         

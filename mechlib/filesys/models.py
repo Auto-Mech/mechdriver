@@ -53,9 +53,9 @@ def pf_filesys(spc_dct_i, spc_model_dct_i,
     """
 
     pf_filesystems = {}
-    cnf_range='min'
+    cnf_range = 'min'
     if spc_locs is not None:
-        cnf_range='specified'
+        cnf_range = 'specified'
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, spc_model_dct_i['vib']['geolvl'][1][1],
         run_prefix, save_prefix, saddle, name=name,

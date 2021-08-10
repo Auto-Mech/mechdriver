@@ -395,7 +395,7 @@ def conformer_tsk(job, spc_dct, spc_name,
             ini_cnf_run_fs[-1].create(ini_locs)
             geo_save_path = ini_cnf_save_fs[-1].path(ini_locs)
             ini_zma_save_fs = autofile.fs.zmatrix(geo_save_path)
-            print('Running task for geometry at {}', geo_save_path)
+            print('Running task for geometry at ', geo_save_path)
             geo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
             zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
             ES_TSKS[job](

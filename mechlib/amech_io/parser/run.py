@@ -64,20 +64,22 @@ TSK_KEY_DCT = {
     # Electronic Structure Driver Tasks
     'init_geom': (('spc',), BASE),
     'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier',)),
-    'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_samp': (('spc', 'ts'), BASE + ('cnf_range','sort', 'resave',)),
-    'conf_energy': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_grad': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_hess': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_vpt2': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_prop': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_opt': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'hr_scan': (('spc', 'ts'), BASE + ('tors_model', 'resamp_min', 'cnf_range','sort',)),
-    'hr_grad': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range','sort',)),
-    'hr_hess': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range','sort',)),
-    'hr_energy': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range','sort',)),
-    'hr_vpt2': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range','sort',)),
-    'hr_reopt': (('spc', 'ts'), BASE + ('tors_model', 'hrthresh', 'cnf_range','sort',)),
+    'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_samp': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 'resave',)),
+    'conf_energy': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_grad': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_hess': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_vpt2': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_prop': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_opt': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'hr_scan': (('spc', 'ts'), BASE + ('tors_model', 'resamp_min',
+                                       'cnf_range', 'sort',)),
+    'hr_grad': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),
+    'hr_hess': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),
+    'hr_energy': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),
+    'hr_vpt2': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),
+    'hr_reopt': (('spc', 'ts'), BASE + ('tors_model', 'hrthresh',
+                                        'cnf_range', 'sort',)),
     'tau_samp': (('spc', 'ts'), BASE),
     'tau_energy': (('spc', 'ts'), BASE),
     'tau_grad': (('spc', 'ts'), BASE),
@@ -99,9 +101,11 @@ TSK_KEY_DCT = {
     'enthalpy': (('spc', 'ts'), PRNT),
     'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
-    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite', 'lump_wells', 'cnf_range','sort')),
-    'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname', 'cnf_range','sort')),
-    'run_fits': ((), ('kin_model', 'cnf_range','sort')),
+    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite',
+                        'lump_wells', 'cnf_range', 'sort')),
+    'run_mess': ((), ('kin_model', 'spc_model', 'nprocs',
+                      'inpname', 'cnf_range', 'sort')),
+    'run_fits': ((), ('kin_model', 'cnf_range', 'sort')),
 }
 
 # es tsk: (object type, (allowed values), default)  # use functions for weird
@@ -118,7 +122,7 @@ TSK_VAL_DCT = {
     'overwrite': ((bool,), (True, False), False),
     # ES
     'cnf_range': ((str,), (), 'min'),   # change to econfs, nconfs
-    'sort':((str,),(), None),
+    'sort': ((str,), (), None),
     'hessmax': ((int,), (), 1000),
     'tors_model': ((str,),
                    ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'), '1dhr'),
@@ -249,8 +253,6 @@ def extract_task(tsk, tsk_lst):
 def tasks(run_str, mech_str, thy_dct):
     """ runstr
     """
-
-    print('Parsing the run.dat file')
 
     # Read blocks and build user determined task lists`
     es_block = ioformat.ptt.end_block(run_str, 'els', footer='els')

@@ -35,7 +35,8 @@ def multi_stage_optimization(script_str, run_fs,
         :type retryfail: bool
     """
 
-    ioprinter.info_message('Running {}-Stage Optimization')
+    ioprinter.info_message(
+        'Running {}-Stage Optimization'.format(len(frozen_coords_lst)))
     for idx, coords in enumerate(frozen_coords_lst):
 
         ioprinter.info_message('Beginning Stage {}...'.format(idx+1))

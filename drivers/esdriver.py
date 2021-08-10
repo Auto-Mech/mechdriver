@@ -56,8 +56,6 @@ def run(pes_rlst, spc_rlst,
     # Runs through PESs, then SPC
     run_rlst = parser.rlst.combine(pes_rlst, spc_rlst)
 
-    print(run_rlst)
-
     for (fml, pes_idx, subpes_idx), run_lst in run_rlst.items():
 
         # Print what is being run PESs that are being run

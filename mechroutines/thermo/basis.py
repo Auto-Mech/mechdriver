@@ -63,7 +63,9 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             'Calculating energy for species {}'.format(spc_name), newline=1)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct[spc_name], spc_model_dct_i,
-            run_prefix, save_prefix, saddle='ts' in spc_name)
+            run_prefix, save_prefix,
+            saddle='ts' in spc_name,
+            name=spc_name)
         h_spc = read_energy(
             spc_dct[spc_name], pf_filesystems,
             spc_model_dct_i, run_prefix,
@@ -107,7 +109,9 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
         ioprinter.debug_message('bases energies test:', ich, name)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_model_dct_i,
-            run_prefix, save_prefix, 'ts' in name or 'TS' in name)
+            run_prefix, save_prefix,
+            saddle=('ts' in name or 'TS' in name),
+            name=name)
         ioprinter.info_message(
             'Calculating energy for basis {}...'.format(prname), newline=1)
         h_basis.append(
