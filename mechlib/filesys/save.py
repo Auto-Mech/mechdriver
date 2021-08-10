@@ -409,6 +409,7 @@ def _save_rings(zma_fs, zma_locs, zrxn=None):
     rings_atoms = automol.zmat.all_rings_atoms(zma, zrxn=zrxn)
     ring_dct = automol.zmat.all_rings_dct(zma, rings_atoms)
     if ring_dct:
+        zma_path = zma_fs[-1].path(zma_locs)
         print(" - Ring torsions identified from Z-Matrix at {}".format(
             zma_path))
         print(" - Saving ring torsions information at same location.")

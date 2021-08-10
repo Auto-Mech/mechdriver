@@ -113,7 +113,8 @@ def frequencies(
     if spc_mod_dct_i is not None:
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_mod_dct_i,
-            run_prefix, save_prefix, saddle=saddle)
+            run_prefix, save_prefix,
+            name=spc_name, saddle=saddle)
 
         ret = vib.full_vib_analysis(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
@@ -189,9 +190,14 @@ def torsions(spc_name, spc_dct_i, spc_mod_dct_i,
 def coeffs(spc_name, spc_dct, model_dct, spc_array):
     """ get the heat of formation reference molecules for one species.
     """
+
+    spc_dct_i = spc_dct[spc_name]
+    zrxn = spc_dct_i.get('zrxn')
+
     basis_dct = thermfit.prepare_basis(
         model_dct['therm_fit']['ref_scheme'],
-        spc_dct, (spc_name,))
+        spc_dct, (spc_name,),
+        zrxn=zrxn)
     # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
     coeff_array = []
@@ -219,7 +225,8 @@ def energy(spc_name, spc_dct_i,
     if spc_mod_dct_i:
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_mod_dct_i,
-            run_prefix, save_prefix, saddle=saddle)
+            run_prefix, save_prefix,
+            name=spc_name, saddle=saddle)
         _ene = ene.electronic_energy(
             spc_dct_i, pf_filesystems, spc_mod_dct_i,
             conf=(locs, locs_path, cnf_fs))
@@ -261,7 +268,8 @@ def enthalpy(
     # print('spc_mod_dct_i', spc_mod_dct_i)
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
-        run_prefix, save_prefix, saddle=saddle)
+        run_prefix, save_prefix,
+        name=spc_name, saddle=saddle)
     # print(pf_filesystems)
     ene_abs = ene.read_energy(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,

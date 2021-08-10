@@ -609,7 +609,7 @@ def ring_conformer_sampling(
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
 
-        info_message("Run {}/{}".format(samp_idx, tot_samp))
+        info_message("\nSample {}/{}".format(samp_idx, tot_samp))
         tors_names = tuple(set(names
                                for tors_dct in ring_tors_dct.values()
                                for names in tors_dct.keys()))

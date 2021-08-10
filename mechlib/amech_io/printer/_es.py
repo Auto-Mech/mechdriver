@@ -54,19 +54,19 @@ def constraint_dictionary(dct):
     """ a
     """
     if dct is not None:
-        info_message('Contraint dictionary: ', dct)
+        info_message('Contraint dictionary:', dct)
 
 
 def existing_path(label, path):
     """ a
     """
-    info_message(label + ' found and saved previously in ', path)
+    info_message(label, 'found and saved previously in', path)
 
 
 def initial_geom_path(label, path):
     """ a
     """
-    info_message(label + ' using geom from ', path)
+    info_message(label, 'using geom from', path)
 
 
 def bad_conformer(reason):
@@ -126,7 +126,7 @@ def already_running(task, path):
 def save_reference(save_path):
     """ a
     """
-    info_message(" - Saving reference geometryg...")
+    info_message(" - Saving reference geometry...")
     info_message(" - Save path: {}".format(save_path))
 
 

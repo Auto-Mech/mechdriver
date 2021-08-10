@@ -372,7 +372,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
         scn_run_fs, coord_names, constraint_dct=constraint_dct)
 
     if not scn_run_fs[1].exists([coord_locs]):
-        print("No scan to save. Skipping...")
+        ioprinter.info_message("No scan to save. Skipping...")
     else:
         locs_lst = []
         for locs in save_locs:
@@ -380,7 +380,8 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             # Set run filesys
             run_path = scn_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(run_path)
-            print("Reading from scan run at {}".format(run_path))
+            ioprinter.info_message(
+                "Reading from scan run at {}".format(run_path))
 
             # Save the structure
             success, ret = read_job(job, run_fs)
@@ -420,8 +421,6 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
     else:
         coord_locs = constraint_dct
         scn_locs = ()
-        # scn_locs = scan_save_fs[3].existing()
-        scn_locs = ()
         for locs1 in scn_save_fs[2].existing([coord_locs]):
             if scn_save_fs[2].exists(locs1):
                 for locs2 in scn_save_fs[3].existing(locs1):
@@ -456,8 +455,6 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
             locs = [constraint_dct] + locs
 
         # Check if ZMA (other info?) exists
-        print(scn_save_fs)
-        print(locs)
         if not scn_save_fs[-1].file.zmatrix.exists(locs):
             run_finished = False
             break
