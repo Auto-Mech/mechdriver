@@ -164,8 +164,11 @@ def _sorted_cnf_lsts(
                         ioprinter.info_message('waiting helped nothing')
 
     # Sort the cnf locs and cnf enes
-    cnf_enes_lst, cnf_locs_lst = zip(
-        *sorted(zip(fnd_cnf_enes_lst, fnd_cnf_locs_lst)))
+    if fnd_cnf_locs_lst:
+        cnf_enes_lst, cnf_locs_lst = zip(
+            *sorted(zip(fnd_cnf_enes_lst, fnd_cnf_locs_lst)))
+    else:
+        cnf_locs_lst, cnf_enes_lst = [], []
 
     return cnf_locs_lst, cnf_enes_lst
 

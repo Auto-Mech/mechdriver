@@ -208,11 +208,13 @@ def get_spc_locs_lst(
 
     level = spc_model_dct_i['vib']['geolvl'][1][1]
     levelp = tinfo.modify_orb_label(level, spc_info)
-
+    mod_info_lst = []
     if sort_info_lst is not None:
         for idx, info in enumerate(sort_info_lst):
             if info is not None:
-                sort_info_lst[idx] = tinfo.modify_orb_label(info, spc_info)
+                mod_info_lst.append(tinfo.modify_orb_label(info, spc_info))
+            else:
+                mod_info_lst.append(None)
     _root = root_locs(spc_dct_i, saddle=saddle, name=name)
     cnf_run_fs, cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
@@ -227,7 +229,7 @@ def get_spc_locs_lst(
     else:
         min_locs_lst, _ = conformer_locators(
             cnf_save_fs, levelp, cnf_range=cnf_range,
-            sort_info_lst=sort_info_lst, print_enes=True)
+            sort_info_lst=mod_info_lst, print_enes=True)
         for min_locs in min_locs_lst:
             cnf_run_fs[-1].create(min_locs)
 

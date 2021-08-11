@@ -86,7 +86,7 @@ def freqs(
             cnf_fs, locs, run_prefix, zrxn=None)
         if freqs and proc_keyword_dct['scale'] is not None:
             freqs, zpe = vib.scale_frequencies(
-                freqs, 0.0, spc_mod_dct_i, scale_method='3c')
+                freqs, 0.0, spc_mod_dct_i, scale_method='c3')
         torsfreqs = None
         all_freqs = None
         sfactor = None

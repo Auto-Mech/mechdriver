@@ -64,18 +64,44 @@ def _default_es_levels(print_keyword_dct):
 #               ‘geolvl’: print_keyword_dct[‘geolvl’]
 #           }
 
+
+def _set_sort_info_lst(sort_str, thy_dct, spc_info):
+    """
+    """
+    sort_lvls = [None, None]
+    sort_typ_lst = ['zpe', 'sp']
+    if sort_str is not None:
+        for sort_param in sort_str.split(','):
+            idx = None
+            for typ_idx, typ_str in enumerate(sort_typ_lst):
+                if typ_str in sort_param:
+                    lvl_key = sort_str.split(typ_str + '(')[1].split(')')[0]
+                    idx = typ_idx
+            if idx is not None:
+                method_dct = thy_dct.get(lvl_key)
+                if method_dct is None:
+                    print(
+                        'no {} in theory.dat, not using {} in sorting'.format(
+                            lvl_key, sort_typ_lst[idx]))
+                    continue
+                thy_info = tinfo.from_dct(method_dct)
+                mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+                sort_lvls[idx] = mod_thy_info
+    return sort_lvls
+
+
 def _set_conf_range(print_keyword_dct):
     """ ?
     """
-    cnf_range = print_keyword_dct['nconfs']
-    if cnf_range == 'all':
-        pass
-    elif cnf_range != 'min':
-        cnf_range = 'n{}'.format(cnf_range)
-    else:
-        cnf_range = print_keyword_dct['econfs']
-        if cnf_range != 'min':
-            cnf_range = 'e{}'.format(cnf_range)
+    cnf_range = print_keyword_dct['cnf_range']
+    #if cnf_range == 'all':
+    #    pass
+    #elif cnf_range != 'min':
+    #    cnf_range = 'n{}'.format(cnf_range)
+    #else:
+    #    cnf_range = print_keyword_dct['econfs']
+    #    if cnf_range != 'min':
+    #        cnf_range = 'e{}'.format(cnf_range)
     return cnf_range
 
 
@@ -87,11 +113,12 @@ def conformer_list(
     """
     # conformer range
     cnf_range = _set_conf_range(print_keyword_dct)
-
     # thy_info build
     thy_info = tinfo.from_dct(thy_dct.get(print_keyword_dct.get('geolvl')))
     spc_info = sinfo.from_dct(spc_dct_i)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+    sort_info_lst = _set_sort_info_lst(
+        print_keyword_dct['sort'], thy_dct, spc_info)
 
     _root = filesys.root_locs(spc_dct_i, saddle=False)
     _, cnf_save_fs = filesys.build_fs(
@@ -99,13 +126,13 @@ def conformer_list(
         thy_locs=mod_thy_info[1:],
         **_root)
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
-        cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
+        cnf_save_fs, mod_thy_info, cnf_range=cnf_range, sort_info_lst=sort_info_lst)
     return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
 
 
 def conformer_list_from_models(
         print_keyword_dct, save_prefix, run_prefix,
-        spc_dct_i, spc_mod_dct_i):
+        spc_dct_i, spc_mod_dct_i, thy_dct):
     """ Create a list of conformers based on the species name
         and model.dat info
     """
@@ -116,6 +143,8 @@ def conformer_list_from_models(
     thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
     spc_info = sinfo.from_dct(spc_dct_i)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+    sort_info_lst = _set_sort_info_lst(
+        print_keyword_dct['sort'], thy_dct, spc_info)
 
     _root = filesys.root_locs(spc_dct_i, saddle=False)
     _, cnf_save_fs = filesys.build_fs(
@@ -123,7 +152,7 @@ def conformer_list_from_models(
         thy_locs=mod_thy_info[1:],
         **_root)
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
-        cnf_save_fs, mod_thy_info, cnf_range=cnf_range)
+        cnf_save_fs, mod_thy_info, cnf_range=cnf_range, sort_info_lst=sort_info_lst)
     return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
 
 
@@ -277,6 +306,6 @@ def choose_conformers(
     else:
         ret = conformer_list_from_models(
             proc_keyword_dct, save_prefix, run_prefix,
-            spc_dct_i, spc_mod_dct_i)
+            spc_dct_i, spc_mod_dct_i, thy_dct)
         cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
     return cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
