@@ -440,13 +440,13 @@ def conformer_sampling(zma, spc_info, thy_info,
             automol.zmat.geometry(samp_zma))
         while samp_pot-ref_pot > repulsion_thresh and bad_geo_cnt < 1000:
             if print_debug:
-                warning_message('Structure has high repulsion.', indent=1/2.)
+                warning_message('Structure has high repulsion.')
                 warning_message(
                     'Sums of intramol LJ potential interactions [kcal/mol]:',
                     'Ref:{:.2f}, Test:{:.2f}, Diff:{:.2f}'.format(
                         ref_pot, samp_pot, samp_pot-ref_pot))
                 warning_message(
-                    'Generating new sample Z-Matrix', indent=1/2., newline=1)
+                    'Generating new sample Z-Matrix')
             samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
             samp_pot = automol.pot.intramol_interaction_potential_sum(
                 automol.zmat.geometry(samp_zma))

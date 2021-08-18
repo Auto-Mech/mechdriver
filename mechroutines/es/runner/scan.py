@@ -400,7 +400,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
+            write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
 def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
@@ -489,7 +489,7 @@ def _set_job(scn_typ):
     return job
 
 
-def _write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
+def write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
     """ Read the geometries and energies of all optimized geometries
         in the SCAN/CSCAN filesystem and collate them into am .xyz
         trajectory file, which is thereafter written into a file inthe

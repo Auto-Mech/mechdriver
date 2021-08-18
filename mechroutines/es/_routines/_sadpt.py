@@ -76,6 +76,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
             run_fs, overwrite)
 
         sadpt_status = saddle_point_checker(imags)
+        ted_status = ted_coordinate_check(opt_ret, hess_ret, ts_dct, run_fs)
 
         # Assess saddle point, save it if viable
         # if sadpt_status == 'kickoff':
@@ -319,14 +320,68 @@ def saddle_point_checker(imags):
                     'Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
                 big_imag += 1
 
-        print('test big_imag', big_imag)
         if big_imag > 1:
             ioprinter.warning_message(
                 'More than one imaginary mode for geometry')
             if kick_imag >= 1:
                 ioprinter.debug_message('Will kickoff to get saddle point')
                 status = 'kickoff'
+            else:
+                status = 'failure'
         elif big_imag == 1:
             status = 'success'
 
     return status
+
+
+def ted_coordinate_check(opt_ret, hess_ret, ts_dct, run_fs):
+    """ Assess if the coordinate check can be performed
+    """
+
+    zrxn = ts_dct['zrxn']
+
+    opt_inf, _, opt_out_str = opt_ret
+    hess_inf, _, hess_out_str = hess_ret
+
+    zma = elstruct.reader.opt_zmatrix(opt_inf.prog, opt_out_str)
+    geo = elstruct.reader.opt_geometry(opt_inf.prog, opt_out_str)
+    hess = elstruct.reader.hessian(hess_inf.prog, hess_out_str)
+
+    ted_run_path = run_fs[-1].path(['hessian'])
+    run_fs[-1].create(['hessian'])
+
+    print(automol.zmat.dummy_keys(zma))
+    if not automol.zmat.dummy_keys(zma):
+
+        script_str = autorun.SCRIPT_DCT['intder']
+        ted_names = autorun.intder.ted_zmatrix_coordinates(
+            script_str, ted_run_path, geo, zma, hess, 0)
+
+        if ted_names is not None:
+            
+            # Get the zmat names corresponding to frm/brk keys; remove Nones
+            rxn_names = automol.reac.zmatrix_coordinate_names(zrxn, zma)
+            rxn_names = (tuple(x for x in rxn_names[0] if x is not None) +
+                         tuple(x for x in rxn_names[1] if x is not None))
+
+            print('Comparing Z-Matrix Coordinates.')
+            tedname_str = ' '.join(ted_names)
+            print('- TED: {}'.format(tedname_str))
+            rname_str = ' '.join(rxn_names)
+            print('- Forming/Breaking Bonds: {}'.format(rname_str))
+
+            if set(ted_names) & set(rxn_names):
+                print('Overlap of coordinates found, possible success')
+                success = True
+            else:
+                print('NO similarity of coords, likely something is wrong')
+                success = False
+        else:
+            print('IntDER had some error, skipping TED check')
+            success = True
+
+    else:
+        print('Z-Matrix has dummy atoms, cannot do TED check')
+        success = True
+
+    return success

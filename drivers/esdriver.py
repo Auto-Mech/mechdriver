@@ -82,7 +82,7 @@ def run(pes_rlst, spc_rlst,
             # Build the queue of species based on user request
             if obj == 'all':
                 obj_queue = parser.rlst.spc_queue(run_lst, fml) + ts_queue
-            if obj == 'spc':
+            elif obj == 'spc':
                 obj_queue = parser.rlst.spc_queue(run_lst, fml)
             elif obj == 'ts':
                 obj_queue = ts_queue

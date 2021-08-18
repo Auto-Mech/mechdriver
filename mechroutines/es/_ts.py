@@ -15,6 +15,10 @@ from mechanalyzer.inf import thy as tinfo
 from mechlib.filesys import build_fs, rcts_cnf_fs
 from mechlib import filesys
 from mechroutines.es._routines import _sadpt as sadpt
+# for isc code
+import elstruct
+import autorun
+from mechroutines.es.runner import qchem_params
 
 
 def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
@@ -96,6 +100,57 @@ def run_pst(spc_dct, tsname, savefs_dct,
     zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
 
 
+def run_isc(spc_dct, tsname, method_dct, es_keyword_dct,
+            runfs_dct, savefs_dct):
+    """ Search for an ISC TS by looking for
+        the minimum on the crossing seam
+    """
+
+    ts_dct = spc_dct[tsname]
+
+    # Get all of the structural information
+    ts_geo = automol.zmatrix.geometry(ts_zma['zma'])
+    ts_chg = rinfo.ts_chg(ts_dct['rxn_info'])
+    ts_mult = rinfo.ts_mult(ts_dct['rxn_info'])
+
+    # Set quantum chemistry parameters
+    thy_info = method_dct['runlvl']
+    prog, method, basis, orb_label = thy_info
+
+    if elstruct.Method.is_multireference(method):
+        cas_kwargs = multireference_calculation_parameters(
+            ref_zma, ts_info, ts_formula, high_mul,
+            rct_ichs, rct_info,
+            aspace, mod_var_scn_thy_info)
+    else:
+        cas_kwargs = None
+
+    _, kwargs = qchem_params(
+        method_dct, job=elstruct.Job.OPTIMIZATION)
+
+    # Get the run directory
+    runlvl_cnf_run_fs, _ = runfs_dct['runlvl_cnf_fs']
+    run_fs = autofile.fs.run()
+    run_path = run_fs[-1].path(['NST'])
+
+    # Perform the ISC TS search
+    msx_geo, hessians, flux_str = autorun.isc_flux(
+        run_dir, prog, ts_geo, ts_chg, mults,
+        method, basis, orb_label, ini_kwargs)
+
+    print('')
+    print('geo')
+    if msx_geo is not None:
+        print(automol.geom.string(msx_geo))
+    print('hessians')
+    if hessians is not None:
+        for hess in hessians:
+            print(hess)
+    print('flux')
+    if flux_str is not None:
+        print(flux_str)
+
+
 # SET THE SEARCHING ALGORITHM
 def _ts_search_method(ts_dct):
     """ Determine the algorithm that should be used for a given transition
@@ -117,7 +172,11 @@ def _ts_search_method(ts_dct):
 
     # ID search algorithm if user did not specify one (wrong)
     if _search_method is None:
-        if automol.par.has_nobarrier(ts_dct['class']):
+        if automol.par.isc(ts_dct['class']):
+            _search_method = 'isc'
+            print('Reactant and Product spins differ...')
+            print('Using intersystem crossing search sceme')
+        elif automol.par.has_nobarrier(ts_dct['class']):
             _search_method = 'pst'
             print('Reaction is low-spin, radical-radical addition/abstraction')
             print('Assuming reaction is barrierless...')
