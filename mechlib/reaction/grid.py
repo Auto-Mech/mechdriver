@@ -7,7 +7,7 @@ import autofile
 
 # Main callable function
 def grid_maximum_zmatrices(typ, ts_zma, scan_grids, scan_names, scn_save_fs,
-                           mod_thy_info, constraint_dct):
+                           mod_thy_info, constraint_dct, series='max'):
     """ Parses grid(s) of points run along a reaction
         coordinates for the maxima to be able to return guess Z-Matrices
         used in subsequent saddle point optimizations.
@@ -33,20 +33,22 @@ def grid_maximum_zmatrices(typ, ts_zma, scan_grids, scan_names, scn_save_fs,
 
     if typ != automol.par.ReactionClass.Typ.ELIMINATION:
         grid, name = scan_grids[0], scan_names[0]
-        guess_zmas = _find_max_1d(typ, grid, ts_zma, name,
-                                  mod_thy_info, scn_save_fs, constraint_dct)
+        max_zmas = _find_max_1d(typ, grid, ts_zma, name,
+                                mod_thy_info, scn_save_fs, constraint_dct,
+                                series=series)
     else:
         grid1, grid2 = scan_grids
         name1, name2 = scan_names
-        guess_zmas = _find_max_2d(grid1, grid2, name1, name2,
-                                  mod_thy_info, scn_save_fs, constraint_dct)
+        max_zmas = _find_max_2d(grid1, grid2, name1, name2,
+                                mod_thy_info, scn_save_fs, constraint_dct)
 
-    return guess_zmas
+    return max_zmas
 
 
 # Max Finder Functions
 def _find_max_1d(typ, grid, ts_zma, scan_name,
-                 mod_thy_info, scn_save_fs, constraint_dct):
+                 mod_thy_info, scn_save_fs, constraint_dct,
+                 series='max'):
     """ Parses a one-dimensional grid of points run along a reaction
         coordinates for the maxima to be able to return guess Z-Matrices
         used in subsequent saddle point optimizations.
@@ -55,6 +57,10 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
         taking the original guess zma and setting the value of the
         scan coordinate to its value at the maximum of the grid. Deals
         with unphysical coords caused by serial optimizations.
+
+        Also return a sequence of zmas {Z(n): 0 <= n <= nmax} where Z(n)
+        is a Z-matrix at a point of a scan grid and nmax is index for where
+        energy of the grid is maximum.
 
         :param typ: reaction class type
         :type typ: str
@@ -78,26 +84,28 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
         grid, scan_name, scn_save_fs,
         mod_thy_info, constraint_dct)
 
-    # Get the max zma
+    # Get the index where the max energy is found
     max_idx = automol.pot.find_max1d(enes_lst)
 
-    # Build lst of guess zmas
-    guess_zmas = []
+    # Build a series of Z-Matrices based on what series is requested
+    max_zmas = ()
+    if series == 'max':
+        # Get zma at maximum
+        max_zma = scn_save_fs[-1].file.zmatrix.read(locs_lst[max_idx])
+        max_zmas += (max_zma,)
 
-    # Get zma at maximum
-    max_locs = locs_lst[max_idx]
-    max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
-    guess_zmas.append(max_zma)
+        # Add second guess zma for migrations:
+        # ZMA = original guess zma with val of scan coord at max
+        if typ == automol.par.ReactionClass.Typ.HYDROGEN_MIGRATION:
+            max_grid_val = grid[max_idx]
+            mig_zma = automol.zmat.set_values_by_name(
+                ts_zma, {scan_name: max_grid_val})
+            max_zmas += (mig_zma,)
+    elif series == 'max-n1':
+        for idx in range(max_idx+1):
+            max_zmas += (scn_save_fs[-1].file.zmatrix.read(locs_lst[idx]),)
 
-    # Add second guess zma for migrations:
-    # ZMA = original guess zma with val of scan coord at max
-    if typ == automol.par.ReactionClass.Typ.HYDROGEN_MIGRATION:
-        max_grid_val = grid[max_idx]
-        mig_zma = automol.zmat.set_values_by_name(
-            ts_zma, {scan_name: max_grid_val})
-        guess_zmas.append(mig_zma)
-
-    return guess_zmas
+    return max_zmas
 
 
 def _find_max_2d(grid1, grid2, scan_name1, scan_name2,

@@ -262,7 +262,6 @@ def ts_dct_from_proctsks(pes_idx, proc_tsk_lst, rxn_lst, spc_mod_dct_i,
         if 'ts' in obj or 'all' in obj:
             # want print for task list
             if spc_mod_dct_i is not None:
-                print(spc_mod_dct_i)
                 ini_thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
                 thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
             else:

@@ -122,11 +122,13 @@ def run_tsk(tsk, obj_queue,
                         miss_data += (miss_data_i,)
 
                 elif 'ene' in tsk:
-                    csv_data_i = collect.energy(
+                    csv_data_i, miss_data_i = collect.energy(
                         spc_name, spc_dct_i, spc_mod_dct_i,
                         proc_keyword_dct, thy_dct, locs, locs_path,
                         cnf_fs, run_prefix, save_prefix)
                     csv_data[label] = csv_data_i
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'enthalpy' in tsk:
                     ret = collect.enthalpy(

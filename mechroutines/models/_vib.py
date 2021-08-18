@@ -120,10 +120,12 @@ def read_locs_harmonic_freqs(cnf_fs, cnf_locs, run_prefix, zrxn=None):
 
         if not geo_exists:
             ioprinter.error_message(
-                'Reference geometry is missing for harmonic frequencies')
+                'No Reference geometry for harmonic frequencies at path',
+                cnf_fs[-1].file.hessian.path(cnf_locs))
         if not hess_exists:
             ioprinter.error_message(
-                'No Hessian available for harmonic frequencies calc')
+                'No Hessian available for harmonic frequencies at path',
+                cnf_fs[-1].file.hessian.path(cnf_locs))
     else:
         geo_exists, hess_exists = False, False
 

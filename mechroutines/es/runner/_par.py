@@ -139,7 +139,7 @@ def _molpro(method_dct, job=None):
         # 'mol_options': ['no_symmetry'],
         'mol_options': ['nosym'],
     }
-
+    
     corr_options = ['maxit=100']
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         corr_options.append('shift=0.2')

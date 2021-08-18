@@ -108,7 +108,7 @@ TSK_KEY_DCT = {
     'run_fits': ((), ('kin_model', 'cnf_range', 'sort')),
 }
 
-# es tsk: (object type, (allowed values), default)  # use functions for weird
+# tsk: (object types, (allowed values), default)  # use functions for weird
 # maybe the required checks use if None given?
 TSK_VAL_DCT = {
     # Common
