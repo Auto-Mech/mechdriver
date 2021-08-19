@@ -66,22 +66,24 @@ def conformer_locators(
     fin_locs_lst, fin_paths_lst = (), ()
 
     cnf_locs_lst = cnf_save_fs[-1].existing()
-    if not allow_hbnd:
-        cnf_locs_lst = _remove_hbonded_structures(cnf_save_fs, cnf_locs_lst)
     if cnf_locs_lst:
         cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
             cnf_locs_lst, cnf_save_fs, mod_thy_info,
             zpe_info=zpe_info, sp_info=sp_info)
-        if cnf_range == 'min':
-            fin_locs_lst = (cnf_locs_lst[0],)
-        elif cnf_range == 'all':
-            fin_locs_lst = cnf_locs_lst
-        elif 'e' in cnf_range:
-            fin_locs_lst = _erange_locs(cnf_locs_lst, cnf_enes_lst, cnf_range)
-        elif 'n' in cnf_range:
-            fin_locs_lst = _nrange_locs(cnf_locs_lst, cnf_range)
-        elif 'r' in cnf_range:
-            fin_locs_lst = _rrange_locs(cnf_locs_lst, cnf_range)
+        if not allow_hbnd:
+            cnf_locs_lst, cnf_enes_lst = _remove_hbonded_structures(
+                cnf_save_fs, cnf_locs_lst, cnf_enes_lst)
+        if cnf_locs_lst:
+            if cnf_range == 'min':
+                fin_locs_lst = (cnf_locs_lst[0],)
+            elif cnf_range == 'all':
+                fin_locs_lst = cnf_locs_lst
+            elif 'e' in cnf_range:
+                fin_locs_lst = _erange_locs(cnf_locs_lst, cnf_enes_lst, cnf_range)
+            elif 'n' in cnf_range:
+                fin_locs_lst = _nrange_locs(cnf_locs_lst, cnf_range)
+            elif 'r' in cnf_range:
+                fin_locs_lst = _rrange_locs(cnf_locs_lst, cnf_range)
     else:
         print('No conformers located in {}'.format(
             cnf_save_fs[0].path()))
@@ -321,18 +323,20 @@ def traj_sort(save_fs, mod_thy_info, rid=None):
                 save_fs[1].file.trajectory.write(traj, [rid])
 
 
-def _remove_hbonded_structures(cnf_save_fs, cnf_locs_lst):
+def _remove_hbonded_structures(cnf_save_fs, cnf_locs_lst, cnf_enes_lst):
     """ Remove conformer locations for conformers with hydrogen bonds
     """
     fin_locs_lst = ()
-    for locs in cnf_locs_lst:
+    fin_enes_lst = ()
+    for locs, enes in zip(cnf_locs_lst, cnf_enes_lst):
         if cnf_save_fs[-1].file.geometry.exists(locs):
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             if not hydrogen_bonded_structure(geo):
                 fin_locs_lst += (locs,)
+                fin_enes_lst += (enes,)
             else:
                 print('Removing ', locs, ' from list because its hbonded')
-    return fin_locs_lst
+    return fin_locs_lst, fin_enes_lst
 
 
 def _process_cnf_range(cnf_range):

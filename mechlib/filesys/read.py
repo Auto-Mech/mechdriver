@@ -5,6 +5,8 @@ import numpy
 from scipy.interpolate import CubicSpline
 from scipy.interpolate import Akima1DInterpolator
 
+from scipy.interpolate import CubicSpline
+from scipy.interpolate import Akima1DInterpolator
 import automol
 import autofile
 from phydat import phycon
@@ -23,6 +25,7 @@ def potential(names, grid_vals, cnf_save_path,
     """ Get the potential for a hindered rotor
     """
 
+    # print('potential test:', names)
     # Build initial lists for storing potential energies and Hessians
     # grid_points = automol.pot.points(grid_vals)
     grid_coords = automol.pot.coords(grid_vals)
@@ -164,9 +167,6 @@ def identify_bad_point(pot, thresh=0.05):
 def remove_bad_point(pot, bad_angle):
     """ Remove a single bad angle from a potential
     """
-    print('bad_angle test')
-    print(pot)
-    print(bad_angle)
 
     # Find angle in pot that is within 0.1 degrees of bad_angle
     # to read the dictionary
@@ -177,9 +177,8 @@ def remove_bad_point(pot, bad_angle):
             bad_tuple = (angle,)
 
     assert bad_tuple is not None, (
-        f'The angle {bad_angle} does not exist in the pot dictionary')
+        f'The angle {bad_angle*phycon.DEG2RAD} does not exist in the pot dictionary')
 
-    pot[bad_tuple] = None
     print(f'Removing bad angle at {bad_angle} degrees')
 
     return pot
