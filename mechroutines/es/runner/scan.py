@@ -172,10 +172,11 @@ def run_backsteps(
     bad_grid_vals = (filesys.read.identify_bad_point(conv_pot),)
 
     if bad_grid_vals[0] is not None:
+        print('Akima spline identified potential hysteresis at ', bad_grid_vals[0]*phycon.DEG2RAD)
         passed_bad_point = False
         for idx, rev_grid_vals in enumerate(rev_grid_vals_lst):
 
-            if rev_grid_vals_orig_lst[idx] == bad_grid_vals:
+            if rev_grid_vals_orig_lst[idx] <= bad_grid_vals[0]*phycon.DEG2RAD:
                 passed_bad_point = True
 
             # Get locs for reading and running filesysten
