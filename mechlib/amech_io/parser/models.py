@@ -256,7 +256,7 @@ def split_model(mod):
 
     return (tuple(models), tuple(coeffs), tuple(operators))
 
-
+# Functions to simplify accessing the model dictionaries
 # def get_model(comp, spc_mod_dct_i):
 #     """ get model for spc dct compoenent
 #     """

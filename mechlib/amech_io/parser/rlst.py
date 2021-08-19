@@ -50,6 +50,8 @@ def _lst_for_pes(pes_dct, run_pes_idxs):
     """ Get a dictionary of requested species matching the PES_DCT format
     """
 
+    # Loop over input pes dictionary of full mechanism and grab PES and
+    # channels associated with the requested run idxs
     red_pes_dct = {}
     for (form, pidx, sidx), chnls in pes_dct.items():
         # Grab PES if idx in run_pes_idx dct
@@ -62,7 +64,11 @@ def _lst_for_pes(pes_dct, run_pes_idxs):
                 if cidx in run_chnl_idxs:
                     red_chnls += (chnl,)
 
-            red_pes_dct[(form, pidx, sidx)] = red_chnls
+            # Only add to reduced dct if any chnls found,
+            # main for loop over pes AND subpes, could add
+            # empty list of channels for subpes without check
+            if red_chnls:
+                red_pes_dct[(form, pidx, sidx)] = red_chnls
 
     return red_pes_dct
 

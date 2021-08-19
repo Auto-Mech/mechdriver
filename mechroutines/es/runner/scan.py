@@ -8,11 +8,12 @@ import numpy
 import automol
 import autofile
 import elstruct
+from phydat import phycon
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner._run import execute_job
 from mechroutines.es.runner._run import read_job
-from phydat import phycon
+
 
 def execute_scan(zma, spc_info, mod_thy_info,
                  coord_names, coord_grids,
@@ -144,7 +145,7 @@ def run_backsteps(
 
     pot = {}
     for idx, grid_vals in enumerate(mixed_grid_vals_lst):
-    
+
         locs = [coord_names, grid_vals]
         if constraint_dct is not None:
             locs = [constraint_dct] + locs
@@ -169,13 +170,13 @@ def run_backsteps(
         conv_pot[conv_grid_vals] = ene
 
     bad_grid_vals = (filesys.read.identify_bad_point(conv_pot),)
-    
+
     if bad_grid_vals[0] is not None:
         passed_bad_point = False
         for idx, rev_grid_vals in enumerate(rev_grid_vals_lst):
 
             if rev_grid_vals_orig_lst[idx] == bad_grid_vals:
-                passed_bad_point = True 
+                passed_bad_point = True
 
             # Get locs for reading and running filesysten
             locs = [coord_names, rev_grid_vals]
@@ -185,12 +186,12 @@ def run_backsteps(
                 locs_orig = [constraint_dct] + locs_orig
             scn_run_fs[-1].create(locs)
             run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
-    
+
             # Build the zma
             zma = automol.zmat.set_values_by_name(
                 guess_zma, dict(zip(coord_names, rev_grid_vals)),
                 angstrom=False, degree=False)
-    
+
             # Run an optimization or energy job, as needed.
             geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
             ioprinter.info_message("Taking a backstep at ", rev_grid_vals)
@@ -225,7 +226,8 @@ def run_backsteps(
             # within 1 kcal/mol of the value found in the forward
             # direction
             # Read in the forward and reverse energy
-            ioprinter.info_message("Comparing to ", rev_grid_vals_orig_lst[idx])
+            ioprinter.info_message(
+                "Comparing to ", rev_grid_vals_orig_lst[idx])
             path = scn_save_fs[-1].path(locs)
             path_orig = scn_save_fs[-1].path(locs_orig)
             sp_save_fs = autofile.fs.single_point(path)
@@ -235,7 +237,7 @@ def run_backsteps(
             ene = ene * phycon.EH2KCAL
             ene_orig = ene_orig * phycon.EH2KCAL
             pot = ene - ene_orig
-            pot_thresh = -0.1 
+            pot_thresh = -0.1
             if pot > pot_thresh and passed_bad_point:
                 ioprinter.info_message("Reverse Sweep finds a potential {:5.2f} from the forward sweep".format(pot))
                 ioprinter.info_message("...no more backsteps required")
@@ -244,7 +246,6 @@ def run_backsteps(
                 ioprinter.warning_message("Backstep finds a potential less than forward sweep of {:5.2f} kcal/mol at ".format(pot))
                 ioprinter.info_message(locs, locs_orig)
                 ioprinter.info_message("...more backsteps required")
-    
 
 
 def _run_scan(guess_zma, spc_info, mod_thy_info,
@@ -371,7 +372,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
         scn_run_fs, coord_names, constraint_dct=constraint_dct)
 
     if not scn_run_fs[1].exists([coord_locs]):
-        print("No scan to save. Skipping...")
+        ioprinter.info_message("No scan to save. Skipping...")
     else:
         locs_lst = []
         for locs in save_locs:
@@ -379,7 +380,8 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             # Set run filesys
             run_path = scn_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(run_path)
-            print("Reading from scan run at {}".format(run_path))
+            ioprinter.info_message(
+                "Reading from scan run at {}".format(run_path))
 
             # Save the structure
             success, ret = read_job(job, run_fs)
@@ -398,7 +400,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
 
         # Build the trajectory file
         if locs_lst:
-            _write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
+            write_traj(coord_locs, scn_save_fs, mod_thy_info, locs_lst)
 
 
 def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
@@ -418,8 +420,6 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
         scn_locs = scn_save_fs[-1].existing([coord_locs])
     else:
         coord_locs = constraint_dct
-        scn_locs = ()
-        # scn_locs = scan_save_fs[3].existing()
         scn_locs = ()
         for locs1 in scn_save_fs[2].existing([coord_locs]):
             if scn_save_fs[2].exists(locs1):
@@ -489,7 +489,7 @@ def _set_job(scn_typ):
     return job
 
 
-def _write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
+def write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
     """ Read the geometries and energies of all optimized geometries
         in the SCAN/CSCAN filesystem and collate them into am .xyz
         trajectory file, which is thereafter written into a file inthe

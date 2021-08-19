@@ -199,6 +199,7 @@ def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
     for tsk_lst in es_tsk_lst:
         obj, es_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
         if 'ts' in obj:
+            # want print for task list
             method_dct = thy_dct.get(es_keyword_dct['runlvl'])
             ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
             thy_info = tinfo.from_dct(method_dct)
@@ -246,9 +247,50 @@ def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
     return ts_dct
 
 
+def ts_dct_from_proctsks(pes_idx, proc_tsk_lst, rxn_lst, spc_mod_dct_i,
+                         thy_dct, spc_dct, run_prefix, save_prefix):
+    """ build a ts queue
+    """
+
+    print('\nTasks for transition states requested...')
+    print('Identifying reaction classes for transition states...')
+
+    # Build the ts_dct
+    ts_dct = {}
+    for tsk_lst in proc_tsk_lst:
+        obj, proc_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
+        if 'ts' in obj or 'all' in obj:
+            # want print for task list
+            if spc_mod_dct_i is not None:
+                ini_thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+                thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
+            else:
+                ini_thy_info = tinfo.from_dct(thy_dct.get(
+                    proc_keyword_dct['proplvl']))
+                thy_info = tinfo.from_dct(thy_dct.get(
+                    proc_keyword_dct['proplvl']))
+            break
+
+    ts_dct = {}
+    for rxn in rxn_lst:
+        ts_dct.update(
+            ts_dct_sing_chnl(
+                pes_idx, rxn,
+                spc_dct, run_prefix, save_prefix,
+                thy_info=thy_info, ini_thy_info=ini_thy_info,
+                id_missing=False)
+        )
+
+    # Build the queue
+    ts_queue = tuple(sadpt for sadpt in ts_dct) if ts_dct else ()
+
+    return ts_dct, ts_queue
+
+
 def ts_dct_sing_chnl(pes_idx, reaction,
                      spc_dct, run_prefix, save_prefix,
-                     thy_info=None, ini_thy_info=None):
+                     thy_info=None, ini_thy_info=None,
+                     id_missing=True):
     """ build dct for single reaction
     """
 
@@ -267,10 +309,11 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     # Obtain the reaction object for the reaction
     zma_locs = (0,)
     zrxns, zmas, rclasses = rxnid.build_reaction(
-        rxn_info, ini_thy_info, zma_locs, save_prefix)
+        rxn_info, ini_thy_info, zma_locs, save_prefix,
+        id_missing=id_missing)
 
     # Could reverse the spc dct
-    if zrxns is not None:
+    if zrxns not in ('MISSING-SKIP', 'MISSING-ADD'):
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
             tsname = 'ts_{:g}_{:g}_{:g}'.format(
@@ -289,7 +332,13 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }
-    else:
+    elif zrxns == 'MISSING-ADD':
+        tsname = 'ts_{:g}_{:g}_{:g}'.format(
+            pes_idx+1, chnl_idx+1, 0)
+        ts_dct = {}
+        ts_dct[tsname] = {'missdata': ini_thy_info}
+        # print('TS not found in filesystem')
+    elif zrxns == 'MISSING-SKIP':
         ts_dct = {}
         print('Skipping reaction as class not given/identified')
 

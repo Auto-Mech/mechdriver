@@ -111,7 +111,7 @@ def zero_point_energy(spc_dct_i,
     if is_atom:
         zpe = 0.0
     else:
-        _, _, zpe, _ = vib.vib_analysis(
+        _, _, zpe, _, _, _, _, _ = vib.full_vib_analysis(
             spc_dct_i, pf_filesystems, spc_model_dct_i,
             run_prefix, zrxn=(None if not saddle else 'placeholder'))
 

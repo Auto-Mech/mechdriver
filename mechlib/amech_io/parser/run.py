@@ -24,6 +24,7 @@
 import sys
 import automol
 import ioformat
+from mechlib.amech_io.printer import error_message
 from mechlib.amech_io.parser._keywrd import defaults_from_val_dct
 from mechlib.amech_io.parser._keywrd import defaults_from_key_val_dcts
 from mechlib.amech_io.parser._keywrd import check_dct1
@@ -63,20 +64,22 @@ TSK_KEY_DCT = {
     # Electronic Structure Driver Tasks
     'init_geom': (('spc',), BASE),
     'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier',)),
-    'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_samp': (('spc', 'ts'), BASE + ('cnf_range','sort', 'resave',)),
-    'conf_energy': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_grad': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_hess': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_vpt2': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_prop': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'conf_opt': (('spc', 'ts'), BASE + ('cnf_range','sort',)),
-    'hr_scan': (('spc', 'ts'), BASE + ('tors_model', 'resamp_min', 'cnf_range','sort',)),
-    'hr_grad': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range','sort',)),
-    'hr_hess': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range','sort',)),
-    'hr_energy': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range','sort',)),
-    'hr_vpt2': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range','sort',)),
-    'hr_reopt': (('spc', 'ts'), BASE + ('tors_model', 'hrthresh', 'cnf_range','sort',)),
+    'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_samp': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 'resave',)),
+    'conf_energy': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_grad': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_hess': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_vpt2': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_prop': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'conf_opt': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
+    'hr_scan': (('spc', 'ts'), BASE + ('tors_model', 'resamp_min',
+                                       'cnf_range', 'sort',)),
+    'hr_grad': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),
+    'hr_hess': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),
+    'hr_energy': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),
+    'hr_vpt2': (('spc', 'ts'), BASE + ('tors_model', 'cnf_range', 'sort',)),
+    'hr_reopt': (('spc', 'ts'), BASE + ('tors_model', 'hrthresh',
+                                        'cnf_range', 'sort',)),
     'tau_samp': (('spc', 'ts'), BASE),
     'tau_energy': (('spc', 'ts'), BASE),
     'tau_grad': (('spc', 'ts'), BASE),
@@ -90,19 +93,22 @@ TSK_KEY_DCT = {
     'write_transport': (('spc',), (BASE + TRANS)),
     # Process Driver Tasks
     'freqs': (('spc', 'ts', 'vdw'), PRNT + ('scale',)),
-    'energy': (('spc',), PRNT),
-    'geo': (('spc',), PRNT),
-    'molden': (('spc',), PRNT),
-    'zmatrix': (('spc',), PRNT),
-    'enthalpy': (('spc',), PRNT),
-    'coeffs': (('spc',), ()),
+    'energy': (('spc', 'ts'), PRNT),
+    'geo': (('spc', 'ts'), PRNT),
+    'molden': (('spc', 'ts'), PRNT),
+    'zmatrix': (('spc', 'ts'), PRNT),
+    'torsions': (('spc', 'ts'), PRNT),
+    'enthalpy': (('spc', 'ts'), PRNT),
+    'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
-    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite', 'lump_wells', 'cnf_range','sort')),
-    'run_mess': ((), ('kin_model', 'spc_model', 'nprocs', 'inpname', 'cnf_range','sort')),
-    'run_fits': ((), ('kin_model', 'cnf_range','sort')),
+    'write_mess': ((), ('kin_model', 'spc_model', 'overwrite',
+                        'lump_wells', 'cnf_range', 'sort')),
+    'run_mess': ((), ('kin_model', 'spc_model', 'nprocs',
+                      'inpname', 'cnf_range', 'sort')),
+    'run_fits': ((), ('kin_model', 'cnf_range', 'sort')),
 }
 
-# es tsk: (object type, (allowed values), default)  # use functions for weird
+# tsk: (object types, (allowed values), default)  # use functions for weird
 # maybe the required checks use if None given?
 TSK_VAL_DCT = {
     # Common
@@ -116,7 +122,7 @@ TSK_VAL_DCT = {
     'overwrite': ((bool,), (True, False), False),
     # ES
     'cnf_range': ((str,), (), 'min'),   # change to econfs, nconfs
-    'sort':((str,),(), None),
+    'sort': ((str,), (), None),
     'hessmax': ((int,), (), 1000),
     'tors_model': ((str,),
                    ('1dhr', '1dhrf', '1dhrfa', 'mdhr', 'mdhrv'), '1dhr'),
@@ -171,49 +177,38 @@ def input_dictionary(run_str):
 
 
 # Chemistry objects
-# Need check
-def pes_idxs(run_str):
+def chem_idxs(run_str):
     """  Parses the `pes` block of the run.dat file and
          builds a dictionary of the PESs and corresponding channels the
          user wishes to run.
 
-         May break if a pes_idx is given on two lines of string.
-
-        :param run_str: string of the run.dat input file
-        :type run_str: str
-        :returns: {pes_idx: list of channel_idxs}
-        :rtype: dict[str: tuple]
-    """
-
-    pes_block = ioformat.ptt.end_block(run_str, 'pes', footer='pes')
-
-    if pes_block is not None:
-        run_pes = {}
-        for line in pes_block.strip().splitlines():
-            [pes_nums, chn_nums] = line.split(':')
-            _pes_idxs = ioformat.ptt.idx_lst_from_line(pes_nums)
-            _chn_idxs = ioformat.ptt.idx_lst_from_line(chn_nums)
-            for idx in _pes_idxs:
-                run_pes.update({idx-1: tuple(val-1 for val in _chn_idxs)})
-    else:
-        run_pes = None
-
-    return run_pes
-
-
-def spc_idxs(run_str):
-    """  Parses the `spc` block of the run.dat file and
+         Parses the `spc` block of the run.dat file and
          builds a dictionary of the species the
          user wishes to run.
 
-         May break if a spc_idx is given on two lines of string.
+         May break if idx is given on two lines of string.
 
         :param run_str: string of the run.dat input file
         :type run_str: str
-        :returns: {1: list of species idxs}
-        :rtype: dict[int: tuple]
+        :returns: ({pes_idx: list of channel_idxs}, {1: list of species idxs})
+        :rtype: dict[str: tuple]
     """
 
+    # PES idxs to run
+    pes_block = ioformat.ptt.end_block(run_str, 'pes', footer='pes')
+
+    if pes_block is not None:
+        _pes_idxs = {}
+        for line in pes_block.strip().splitlines():
+            [pes_nums, chn_nums] = line.split(':')
+            _pes_nums = ioformat.ptt.idx_lst_from_line(pes_nums)
+            _chn_nums = ioformat.ptt.idx_lst_from_line(chn_nums)
+            for idx in _pes_nums:
+                _pes_idxs.update({idx-1: tuple(val-1 for val in _chn_nums)})
+    else:
+        _pes_idxs = None
+
+    # SPC idxs to run
     spc_block = ioformat.ptt.end_block(run_str, 'spc', footer='spc')
 
     if spc_block is not None:
@@ -224,7 +219,12 @@ def spc_idxs(run_str):
     else:
         _spc_idxs = None
 
-    return _spc_idxs
+    # Kill code if no idxs given
+    if _pes_idxs is None and _spc_idxs is None:
+        error_message('No pes or spc section given in run.dat file. Quitting')
+        sys.exit()
+
+    return _pes_idxs, _spc_idxs
 
 
 # Driver Task Lists
@@ -253,8 +253,6 @@ def extract_task(tsk, tsk_lst):
 def tasks(run_str, mech_str, thy_dct):
     """ runstr
     """
-
-    print('Parsing the run.dat file')
 
     # Read blocks and build user determined task lists`
     es_block = ioformat.ptt.end_block(run_str, 'els', footer='els')
@@ -313,13 +311,9 @@ def _tsk_lst(tsk_str, num):
         tsk_str = ioformat.remove_whitespace_from_string(tsk_str)
         for line in tsk_str.splitlines():
             _tsk = _split_line(line, num)
-            # try:
-            #     _tsk = _split_line(line, num)
-            # except:
-            #     print('Task line not formatted correctly:\n{}'.format(line))
-            #     sys.exit()
             tsks.append(_tsk)
-        mod_tsks = _expand_tsks(tsks) if num == 3 else tsks
+        mod_tsks = tsks
+        # mod_tsks = _expand_tsks(tsks) if num == 3 else tsks
     else:
         mod_tsks = None
 
@@ -330,24 +324,19 @@ def _expand_tsks(tsks_lst):
     """ Loops over the driver task list and checks if each task is a
         macro-task that should be expanded into sub-tasks.
 
+            Right now, it splits all obj tasks into spc and ts
+
         :param tsk_lst: list of tasks to run for some driver
         :type tsk_lst: tuple(tuple(str/dict))
         :rtype: tuple(str/dict)
     """
 
-    expand_dct = {
-        # 'find_ts': ('sadpt_scan', 'sadpt_opt', 'sadpt_hess')  # sadpt_check
-    }
-    # Expand the tasks
     mod_tsks_lst = []
     for tsk_lst in tsks_lst:
         [obj, tsk, dct] = tsk_lst
-        expanded_tsks = expand_dct.get(tsk, None)
-        if expanded_tsks is None:
-            mod_tsks_lst.append(tsk_lst)
-        else:
-            for tsk in expanded_tsks:
-                mod_tsks_lst.append([obj, tsk, dct])
+        objs = ['spc', 'ts'] if obj == 'all' else [obj]
+        for obj in objs:
+            mod_tsks_lst.append([obj, tsk, dct])
 
     return mod_tsks_lst
 
@@ -400,8 +389,8 @@ def _check_tsks(tsk_lsts, thy_dct):
                 obj_lst = SUPP_OBJS if obj == 'all' else (obj,)
                 for _obj in obj_lst:
                     if _obj not in TSK_KEY_DCT[tsk][0]:
-                        print('obj {}, not allowed for {}'.format(obj, tsk))
-                        print('')
+                        error_message(
+                            'obj {}, not allowed for {}'.format(obj, tsk))
                         sys.exit()
 
             # Check if keyword values are allowed
@@ -421,7 +410,7 @@ def _split_line(line, num):
         tsk, key_lst = line[:1], line[1:]
     key_dct = ioformat.ptt.keyword_dct_from_block('\n'.join(key_lst))
 
-    return tsk + [key_dct]
+    return tsk + [key_dct]  # could convert to empty dct instead of None
 
 
 def _chk_input_for_drivers(tsk_dct, mech_str):
@@ -429,7 +418,8 @@ def _chk_input_for_drivers(tsk_dct, mech_str):
     """
 
     if tsk_dct['ktp']:
-        if mech_str is not None:
-            print('kTPDriver Requested. ',
-                  'However no mechanism.dat provided. Exiting MechDriver...')
+        if mech_str is None:
+            error_message(
+                'kTPDriver Requested. ',
+                'However no mechanism.dat provided. Exiting MechDriver...')
             sys.exit()

@@ -30,8 +30,7 @@ THY_DCT = ioparser.thy.theory_dictionary(INP_STRS['thy'])
 KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(
     INP_STRS['mod'], THY_DCT)
 INP_KEY_DCT = ioparser.run.input_dictionary(INP_STRS['run'])
-PES_IDX_DCT = ioparser.run.pes_idxs(INP_STRS['run'])
-SPC_IDX_DCT = ioparser.run.spc_idxs(INP_STRS['run'])
+PES_IDX_DCT, SPC_IDX_DCT = ioparser.run.chem_idxs(INP_STRS['run'])
 TSK_LST_DCT = ioparser.run.tasks(INP_STRS['run'], INP_STRS['mech'], THY_DCT)
 SPC_DCT, GLOB_DCT = ioparser.spc.species_dictionary(
     INP_STRS['spc'], INP_STRS['dat'], INP_STRS['geo'], 'csv')
@@ -52,7 +51,8 @@ if ES_TSKS is not None:
         PES_RLST, SPC_RLST,
         ES_TSKS,
         SPC_DCT, GLOB_DCT, THY_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'],
+        print_debug=INP_KEY_DCT['print_debug']
     )
     ioprinter.program_exit('es')
 
@@ -77,7 +77,7 @@ if TRANS_TSKS is not None:
             TRANS_TSKS,
             SMOD_DCT,
             SPC_DCT, THY_DCT,
-            INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+            INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'],
         )
     ioprinter.program_exit('trans')
 
@@ -89,7 +89,7 @@ if KTP_TSKS is not None:
         KTP_TSKS,
         SPC_DCT, GLOB_DCT,
         KMOD_DCT, SMOD_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH,
     )
     ioprinter.program_exit('ktp')
 
@@ -99,9 +99,9 @@ if PROC_TSKS is not None:
     procdriver.run(
         PES_RLST, SPC_RLST,
         PROC_TSKS,
-        SPC_DCT,
-        KMOD_DCT, SMOD_DCT, THY_DCT,
-        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix']
+        SPC_DCT, THY_DCT,
+        KMOD_DCT, SMOD_DCT,
+        INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH
     )
     ioprinter.program_exit('proc')
 

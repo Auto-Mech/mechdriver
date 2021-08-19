@@ -4,18 +4,20 @@
 """
 
 from mechlib.amech_io import printer as ioprinter
-from mechlib import filesys
+from mechroutines.models import typ
 from mechroutines.proc import _util as util
 from mechroutines.proc import _collect as collect
 
 
-def run_tsk(tsk, spc_dct, run_lst,
-            thy_dct, proc_keyword_dct,
+def run_tsk(tsk, obj_queue,
+            proc_keyword_dct,
+            spc_dct, thy_dct,
             spc_mod_dct_i, model_dct,
-            run_prefix, save_prefix):
+            run_prefix, save_prefix, mdriver_path):
     """ run a proc tess task
     for generating a list of conformer or tau sampling geometries
     """
+
     # Print the head of the task
     ioprinter.output_task_header(tsk)
     ioprinter.obj('line_dash')
@@ -23,13 +25,27 @@ def run_tsk(tsk, spc_dct, run_lst,
 
     # Setup csv data dictionary for specific task
     csv_data = util.set_csv_data(tsk)
-    filelabel = util.get_file_label(
+    filelabel, thylabel = util.get_file_label(
         tsk, model_dct, proc_keyword_dct, spc_mod_dct_i)
     chn_basis_ene_dct = {}
     spc_array = []
 
+    # Exclude unstable species
+    # These species break certain checks (e.g. no ene exists for geo collect)
+    obj_queue = util.remove_unstable(
+        obj_queue, spc_dct, thy_dct, spc_mod_dct_i,
+        proc_keyword_dct, save_prefix)
+    obj_queue, ts_miss_data = util.remove_ts_missing(
+        obj_queue, spc_dct)
+
+    # Set up lists for reporting missing data
+    miss_data = ()
+
+    # Initialize dictionaries to carry strings for writing
+    disp_dct = {}
+
     # Begin the loop over the species
-    for spc_name in run_lst:
+    for spc_name in obj_queue:
 
         # info printed to output file
         ioprinter.obj('line_dash')
@@ -50,28 +66,41 @@ def run_tsk(tsk, spc_dct, run_lst,
             spc_mod_dct_i = util.choose_theory(
                 proc_keyword_dct, spc_mod_dct_i)
             ret = util.choose_conformers(
-                proc_keyword_dct, spc_mod_dct_i,
+                spc_name, proc_keyword_dct, spc_mod_dct_i,
                 save_prefix, run_prefix, spc_dct_i, thy_dct)
             cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
+
+            # Add geo to missing data task if locs absent
+            if not rng_cnf_locs_lst:
+                miss_data += ((spc_name, mod_thy_info, 'geometry'),)
 
             # Loop over conformers
             for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
                 label = spc_name + '_' + '_'.join(locs)
-                if 'freq' in tsk:
-                    csv_data_i, csv_data_j = collect.freqs(
-                        spc_dct_i, spc_mod_dct_i, proc_keyword_dct, thy_dct,
+                if 'freq' in tsk and not _skip_freqs(spc_name, spc_dct_i):
+                    _dat, miss_data_i = collect.frequencies(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        proc_keyword_dct, thy_dct,
                         cnf_fs, locs, locs_path, run_prefix, save_prefix)
-                    csv_data['freq'][label] = csv_data_i
-                    tors_freqs, all_freqs, sfactor = csv_data_j
-                    if tors_freqs is not None:
-                        csv_data['tfreq'][label] = tors_freqs
-                        csv_data['allfreq'][label] = all_freqs
-                        csv_data['scalefactor'][label] = [sfactor]
+                    if _dat is not None:
+                        csv_data_i, csv_data_j, disp_str = _dat
+                        csv_data['freq'][label] = csv_data_i
+                        tors_freqs, all_freqs, sfactor = csv_data_j
+                        if tors_freqs is not None:
+                            csv_data['tfreq'][label] = tors_freqs
+                            csv_data['allfreq'][label] = all_freqs
+                            csv_data['scalefactor'][label] = [sfactor]
+                        if disp_str is not None:
+                            disp_dct.update({spc_name: disp_str})
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'geo' in tsk:
-                    csv_data_i = collect.geometry(
+                    csv_data_i, miss_data_i = collect.geometry(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'molden' in tsk:
                     csv_data_i = collect.molden(
@@ -79,16 +108,27 @@ def run_tsk(tsk, spc_dct, run_lst,
                     csv_data[label] = csv_data_i
 
                 elif 'zma' in tsk:
-                    csv_data_i = collect.zmatrix(
+                    csv_data_i, miss_data_i = collect.zmatrix(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
+
+                elif 'torsion' in tsk:
+                    miss_data_i = collect.torsions(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        run_prefix, save_prefix)
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'ene' in tsk:
-                    csv_data_i = collect.energy(
+                    csv_data_i, miss_data_i = collect.energy(
                         spc_name, spc_dct_i, spc_mod_dct_i,
                         proc_keyword_dct, thy_dct, locs, locs_path,
                         cnf_fs, run_prefix, save_prefix)
                     csv_data[label] = csv_data_i
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'enthalpy' in tsk:
                     ret = collect.enthalpy(
@@ -114,6 +154,25 @@ def run_tsk(tsk, spc_dct, run_lst,
                     csv_data_i, chn_basis_ene_dct, spc_array = ret
                     csv_data[label] = csv_data_i
 
+    # Write a report that details what data is missing
+    missing_data = miss_data + ts_miss_data
 
-    # write the csv data into the appropriate file
+    # Write the csv data into the appropriate file
     util.write_csv_data(tsk, csv_data, filelabel, spc_array)
+
+    # Gather data that is provided for each species in files in a dir
+    data_dirs = (('displacements_'+thylabel, disp_dct),)
+    util.write_data_dirs(data_dirs, mdriver_path)
+
+    return missing_data
+
+
+# Task manager/skipper functions
+def _skip_freqs(spc_name, spc_dct_i):
+    """ check if frequencies should be skipped
+    """
+    skip = False
+    if 'ts' not in spc_name:
+        if typ.is_atom(spc_dct_i):
+            skip = True
+    return skip

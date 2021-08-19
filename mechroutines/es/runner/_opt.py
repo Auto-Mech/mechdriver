@@ -35,10 +35,11 @@ def multi_stage_optimization(script_str, run_fs,
         :type retryfail: bool
     """
 
+    ioprinter.info_message(
+        'Running {}-Stage Optimization'.format(len(frozen_coords_lst)))
     for idx, coords in enumerate(frozen_coords_lst):
 
-        ioprinter.info_message(
-            'Stage {} success beginning stage two'.format(idx+1))
+        ioprinter.info_message('Beginning Stage {}...'.format(idx+1))
         success, ret = execute_job(
             job=elstruct.Job.OPTIMIZATION,
             script_str=script_str,
@@ -56,13 +57,12 @@ def multi_stage_optimization(script_str, run_fs,
         if success:
             inf_obj, _, out_str = ret
             geo = elstruct.reader.opt_zmatrix(inf_obj.prog, out_str)
-            print('Success. Moving to next stage...\n')
             if idx+1 != len(frozen_coords_lst):
-                print('Success. Moving to next stage...\n')
+                print('- Success. Moving to next stage...\n')
             else:
-                print('Succes. Finished sequence')
+                print('- Success. Finished sequence')
         else:
-            print('Failure. Exiting multi stage optimization...\n')
+            print('- Failure. Exiting multi-stage optimization...\n')
             break
 
     return success, ret

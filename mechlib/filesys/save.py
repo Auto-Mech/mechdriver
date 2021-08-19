@@ -397,7 +397,7 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
     if any(rotors):
         zma_path = zma_fs[-1].path(zma_locs)
         print(" - Rotors identified from Z-Matrix at {}".format(zma_path))
-        print(" - Saving rotor information at same location")
+        print(" - Saving rotor information at same location.")
         zma_fs[-1].file.torsions.write(rotors, zma_locs)
 
 
@@ -409,6 +409,10 @@ def _save_rings(zma_fs, zma_locs, zrxn=None):
     rings_atoms = automol.zmat.all_rings_atoms(zma, zrxn=zrxn)
     ring_dct = automol.zmat.all_rings_dct(zma, rings_atoms)
     if ring_dct:
+        zma_path = zma_fs[-1].path(zma_locs)
+        print(" - Ring torsions identified from Z-Matrix at {}".format(
+            zma_path))
+        print(" - Saving ring torsions information at same location.")
         zma_fs[-1].file.ring_torsions.write(ring_dct, zma_locs)
 
 
@@ -417,7 +421,8 @@ def _save_reaction(zma_fs, zma_locs, zrxn=None):
     """
 
     if zrxn is not None:
-        print(" - Saving reaction")
+        zma_path = zma_fs[-1].path(zma_locs)
+        print(" - Saving Reaction Class+Graph object at {}".format(zma_path))
         zma_fs[-1].file.reaction.write(zrxn, zma_locs)
 
 

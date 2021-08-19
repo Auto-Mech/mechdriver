@@ -20,7 +20,8 @@ from mechlib.amech_io import printer as ioprinter
 def run(pes_rlst, spc_rlst,
         es_tsk_lst,
         spc_dct, glob_dct, thy_dct,
-        run_prefix, save_prefix):
+        run_prefix, save_prefix,
+        print_debug=False):
     """ Executes all electronic structure tasks.
 
         :param pes_rlst: species from PESs to run
@@ -62,7 +63,7 @@ def run(pes_rlst, spc_rlst,
 
         # Build a TS dictionary and add it to the spc dct if needed
         if (fml != 'SPC' and
-           any(tsk_lst[0] in ('ts', 'all') for tsk_lst in es_tsk_lst)):
+           any(tsk_lst[0] == 'ts' for tsk_lst in es_tsk_lst)):
             ts_dct, ts_queue = parser.spc.ts_dct_from_estsks(
                 pes_idx, es_tsk_lst, run_lst,
                 thy_dct, spc_dct,
@@ -81,7 +82,7 @@ def run(pes_rlst, spc_rlst,
             # Build the queue of species based on user request
             if obj == 'all':
                 obj_queue = parser.rlst.spc_queue(run_lst, fml) + ts_queue
-            if obj == 'spc':
+            elif obj == 'spc':
                 obj_queue = parser.rlst.spc_queue(run_lst, fml)
             elif obj == 'ts':
                 obj_queue = ts_queue
@@ -92,4 +93,5 @@ def run(pes_rlst, spc_rlst,
             for spc_name in obj_queue:
                 run_tsk(tsk, spc_dct, spc_name,
                         thy_dct, es_keyword_dct,
-                        run_prefix, save_prefix)
+                        run_prefix, save_prefix,
+                        print_debug=print_debug)

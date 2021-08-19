@@ -55,7 +55,7 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                           for locs in sym_fs[-1].existing()]
 
             # Obtain the internal symmetry number and end group factors
-            if rotors:
+            if rotors is not None:
                 ioprinter.info_message(
                     ' - Determining internal sym number ',
                     'using sampling routine.')
@@ -78,12 +78,12 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 'No symmetry model requested, ',
                 'setting internal sym factor to 1.0')
             ext_symm = automol.geom.external_symmetry_factor(geo)
-            int_symm = 1.0 
-            # int_symm, endgrp = 1.0, 1.0
+            int_symm = 1.0
 
-        print('sym test:', int_symm, ext_symm)
-        rotor_symms = automol.rotor.symmetries(rotors, flat=True)
-        int_symm = automol.symm.rotor_reduced_symm_factor(int_symm, rotor_symms)
+        if rotors is not None:
+            rotor_symms = automol.rotor.symmetries(rotors, flat=True)
+            int_symm = automol.symm.rotor_reduced_symm_factor(
+                int_symm, rotor_symms)
 
         symm_factor = ext_symm * int_symm
 

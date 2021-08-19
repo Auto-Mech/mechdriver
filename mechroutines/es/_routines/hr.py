@@ -42,8 +42,7 @@ def hindered_rotor_scans(
     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
 
         ioprinter.info_message(
-            'Running Rotor: {}...'.format(tors_names),
-            newline=1)
+            'Running Rotor: {}'.format('-'.join(tors_names)), newline=1)
 
         # Setting the constraints
         constraint_dct = automol.zmat.constraint_dct(

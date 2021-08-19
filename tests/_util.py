@@ -28,6 +28,7 @@ def run_mechdriver(run_template,
     print('inp', tmp_inp_dir)
     print('run', tmp_run_dir)
     print('save', tmp_save_dir)
+    print('run template', run_template)
 
     _fill_template_and_write_file(
         run_template, 'run.dat',
@@ -73,9 +74,9 @@ def _mechdriver_main(tmp_dir):
     kmod_dct, smod_dct = ioparser.models.models_dictionary(
         inp_strs['mod'], thy_dct)
     inp_key_dct = ioparser.run.input_dictionary(inp_strs['run'])
-    pes_idx_dct = ioparser.run.pes_idxs(inp_strs['run'])
-    spc_idx_dct = ioparser.run.spc_idxs(inp_strs['run'])
-    tsk_lst_dct = ioparser.run.tasks(inp_strs['run'], thy_dct)
+    pes_idx_dct, spc_idx_dct = ioparser.run.chem_idxs(inp_strs['run'])
+    tsk_lst_dct = ioparser.run.tasks(
+        inp_strs['run'], inp_strs['mech'], thy_dct)
     spc_dct, glob_dct = ioparser.spc.species_dictionary(
         inp_strs['spc'], inp_strs['dat'], inp_strs['geo'], 'csv')
     pes_dct = ioparser.mech.pes_dictionary(
@@ -106,7 +107,7 @@ def _mechdriver_main(tmp_dir):
             pes_rlst, spc_rlst,
             therm_tsks,
             kmod_dct, smod_dct,
-            spc_dct,
+            spc_dct, thy_dct,
             inp_key_dct['run_prefix'], inp_key_dct['save_prefix'], tmp_dir
         )
         ioprinter.program_exit('thermo')
@@ -142,9 +143,9 @@ def _mechdriver_main(tmp_dir):
         procdriver.run(
             pes_rlst, spc_rlst,
             proc_tsks,
-            spc_dct,
-            kmod_dct, smod_dct, thy_dct,
-            inp_key_dct['run_prefix'], inp_key_dct['save_prefix']
+            spc_dct, thy_dct,
+            kmod_dct, smod_dct,
+            inp_key_dct['run_prefix'], inp_key_dct['save_prefix'], tmp_dir
         )
         ioprinter.program_exit('proc')
 

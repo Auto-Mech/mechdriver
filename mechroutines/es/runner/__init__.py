@@ -11,6 +11,7 @@ from mechroutines.es.runner._run import read_job
 from mechroutines.es.runner._opt import multi_stage_optimization
 from mechroutines.es.runner._par import qchem_params
 from mechroutines.es.runner._par import molpro_opts_mat
+from mechroutines.es.runner._wfn import multireference_calculation_parameters
 from mechroutines.es.runner import scan
 
 
@@ -21,5 +22,6 @@ __all__ = [
     'multi_stage_optimization',
     'qchem_params',
     'molpro_opts_mat',
+    'multireference_calculation_parameters',
     'scan'
 ]

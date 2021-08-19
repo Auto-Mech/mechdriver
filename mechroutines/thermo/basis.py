@@ -63,7 +63,9 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             'Calculating energy for species {}'.format(spc_name), newline=1)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct[spc_name], spc_model_dct_i,
-            run_prefix, save_prefix, saddle='ts' in spc_name)
+            run_prefix, save_prefix,
+            saddle='ts' in spc_name,
+            name=spc_name)
         h_spc = read_energy(
             spc_dct[spc_name], pf_filesystems,
             spc_model_dct_i, run_prefix,
@@ -107,7 +109,9 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
         ioprinter.debug_message('bases energies test:', ich, name)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_model_dct_i,
-            run_prefix, save_prefix, 'ts' in name or 'TS' in name)
+            run_prefix, save_prefix,
+            saddle=('ts' in name or 'TS' in name),
+            name=name)
         ioprinter.info_message(
             'Calculating energy for basis {}...'.format(prname), newline=1)
         h_basis.append(
@@ -145,8 +149,9 @@ def enthalpy_calculation(
     ref_scheme = pes_mod_dct_i['therm_fit']['ref_scheme']
     ref_enes = pes_mod_dct_i['therm_fit']['ref_enes']
 
-    basis_dct, uniref_dct = thermfit.prepare_refs(
+    basis_dct = thermfit.prepare_basis(
         ref_scheme, spc_dct, (spc_name,), zrxn=zrxn)
+    uniref_dct = thermfit.unique_basis_species(basis_dct, spc_dct)
 
     # Get the basis info for the spc of interest
     spc_basis, coeff_basis = basis_dct[spc_name]
@@ -195,8 +200,11 @@ def enthalpy_calculation(
                 ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
         if zrxn is None:
             if ref_scheme != ts_ref_scheme:
-                basis_dct_trs, uniref_dct_trs = thermfit.prepare_refs(
+                basis_dct_trs, uniref_dct_trs = thermfit.prepare_basis(
                     ts_ref_scheme, spc_dct, (spc_name,), zrxn=zrxn)
+                uniref_dct_trs = thermfit.unique_basis_species(
+                    basis_dct_trs, spc_dct)
+
                 spc_basis_trs, coeff_basis_trs = basis_dct_trs[spc_name]
                 ene_basis_trs = []
                 energy_missing = False
