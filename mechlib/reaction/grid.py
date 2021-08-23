@@ -104,6 +104,8 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
     elif series == 'max-n1':
         for idx in range(max_idx+1):
             max_zmas += (scn_save_fs[-1].file.zmatrix.read(locs_lst[idx]),)
+        # Flip list to proceed from max(R) in decreasing order
+        max_zmas = max_zmas[::-1]
 
     return max_zmas
 

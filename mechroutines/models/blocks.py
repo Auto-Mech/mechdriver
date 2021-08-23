@@ -225,6 +225,10 @@ def pst_block(ts_inf_dct, inf_dct_i, inf_dct_j):
 
     elec_levels = automol.combine.electronic_energy_levels(
         inf_dct_i['elec_levels'], inf_dct_j['elec_levels'])
+    print('elec lvels test')
+    print(inf_dct_i['elec_levels'])
+    print(inf_dct_j['elec_levels'])
+    print(elec_levels)
 
     freqs = inf_dct_i['freqs'] + inf_dct_j['freqs']
 

@@ -30,7 +30,6 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):
             _make_channel_label_dct(
                 tsname, rclass, pes_label_dct, chnl_idx, reacs, prods,
                 rwell_mod, pwell_mod))
-        ioprinter.debug_message('pes_label dct', pes_label_dct)
 
     return pes_label_dct
 
@@ -134,6 +133,6 @@ def _make_channel_label_dct(tsname, rclass, label_dct, chn_idx, reacs, prods,
         else:
             fake_wellp_label = label_dct[well_dct_key1]
 
-    label_dct[tsname] = 'B' + str(chn_idx)
+    label_dct[tsname] = 'B' + str(chn_idx+1)
 
     return label_dct
