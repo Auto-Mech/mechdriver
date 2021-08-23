@@ -675,13 +675,18 @@ def hr_tsk(job, spc_dct, spc_name,
     thy_info = tinfo.from_dct(method_dct)
     ini_thy_info = tinfo.from_dct(ini_method_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, spc_info)
+    mod_ini_thy_info = tinfo.modify_orb_label(
+        ini_thy_info, spc_info)
 
     # Set the filesystem objects
     _root = root_locs(spc_dct_i, saddle=saddle, name=spc_name)
     ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_ini_thy_info[1:],
+        **_root)
+    cnf_run_fs, cnf_save_fs = build_fs(
+        run_prefix, save_prefix, 'CONFORMER',
+        thy_locs=mod_thy_info[1:],
         **_root)
 
     cnf_range = es_keyword_dct['cnf_range']
@@ -691,6 +696,12 @@ def hr_tsk(job, spc_dct, spc_name,
         ini_cnf_save_fs, mod_ini_thy_info,
         cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
         print_enes=True)
+    all_run_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
+        cnf_save_fs, mod_thy_info,
+        cnf_range='all')
+    ini_to_run_locs_dct = conformer.fs_confs_dict(
+        cnf_save_fs, all_run_cnf_locs_lst,
+        ini_cnf_save_fs, ini_min_locs_lst)
 
     # ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
     #     ini_cnf_save_fs, mod_ini_thy_info)
@@ -698,9 +709,6 @@ def hr_tsk(job, spc_dct, spc_name,
 
     for ini_min_locs, ini_cnf_save_path in zip(ini_min_locs_lst, ini_path_lst):
 
-        # Create run fs if that directory has been deleted to run the jobs
-        ini_cnf_run_fs[-1].create(ini_min_locs)
-        ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
 
         # Read zma, geo, and torsions
         ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
@@ -711,6 +719,42 @@ def hr_tsk(job, spc_dct, spc_name,
             torsions = automol.rotor.from_data(zma, tors_dct,)
         else:
             torsions = ()
+
+        # Find equivalent conformer in the run filesys, if it doesn't exist
+        # run a single conformer to generate it
+        min_locs = ini_to_run_locs_dct[tuple(ini_min_locs)]
+        if min_locs is None:
+            rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
+            if rid is None:
+                new_rid = autofile.schema.generate_new_ring_id()
+                new_cid = autofile.schema.generate_new_conformer_id()
+                conformer.single_conformer(
+                    zma, spc_info, mod_thy_info,
+                    cnf_run_fs, cnf_save_fs,
+                    script_str, overwrite,
+                    retryfail=retryfail, zrxn=zrxn,
+                    use_locs = (new_rid, new_cid),
+                    **kwargs)
+                min_locs = (new_rid, new_cid)
+            else:
+                new_cid = autofile.schema.generate_new_conformer_id()
+                conformer.single_conformer(
+                    zma, spc_info, mod_thy_info,
+                    cnf_run_fs, cnf_save_fs,
+                    script_str, overwrite,
+                    retryfail=retryfail, zrxn=zrxn,
+                    use_locs=(rid, new_cid),
+                    **kwargs)
+                min_locs = (rid, new_cid)
+        cnf_save_path = cnf_save_fs[-1].path(min_locs)
+        ioprinter.info_message('Same conformer saved at {} and {}'.format(
+            ini_cnf_save_path, cnf_save_path))
+
+        # Create run fs if that directory has been deleted to run the jobs
+        # ini_cnf_run_fs[-1].create(ini_min_locs)
+        # ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
+        cnf_run_fs[-1].create(min_locs)
+        cnf_run_path = cnf_run_fs[-1].path(min_locs)
 
         # Run the task if any torsions exist
         if any(torsions):
@@ -723,8 +767,11 @@ def hr_tsk(job, spc_dct, spc_name,
                     scn = 'SCAN'
             else:
                 scn = 'SCAN'
-            ini_scn_run_fs, ini_scn_save_fs = build_fs(
-                ini_cnf_run_path, ini_cnf_save_path, scn,
+            # ini_scn_run_fs, ini_scn_save_fs = build_fs(
+            #     ini_cnf_run_path, ini_cnf_save_path, scn,
+            #     zma_locs=(0,))
+            scn_run_fs, scn_save_fs = build_fs(
+                cnf_run_path, cnf_save_path, scn,
                 zma_locs=(0,))
 
             if job == 'scan':
@@ -732,7 +779,7 @@ def hr_tsk(job, spc_dct, spc_name,
                 increment = spc_dct_i.get('hind_inc', 30.0*phycon.DEG2RAD)
                 hr.hindered_rotor_scans(
                     zma, spc_info, mod_thy_info,
-                    ini_scn_run_fs, ini_scn_save_fs,
+                    scn_run_fs, scn_save_fs,
                     torsions, tors_model, method_dct,
                     overwrite,
                     saddle=saddle,
@@ -759,8 +806,8 @@ def hr_tsk(job, spc_dct, spc_name,
                     zma, run_tors_names, tors_model)
 
                 # Read and print the potential
-                sp_fs = autofile.fs.single_point(ini_cnf_save_path)
-                ref_ene = sp_fs[-1].file.energy.read(mod_ini_thy_info[1:4])
+                sp_fs = autofile.fs.single_point(cnf_save_path)
+                ref_ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
                 tors_pots, tors_zmas, tors_paths = {}, {}, {}
                 for tors_names, tors_grids in zip(
                         run_tors_names, run_tors_grids):
@@ -768,8 +815,8 @@ def hr_tsk(job, spc_dct, spc_name,
                         zma, const_names, tors_names)
                     pot, _, _, _, zmas, paths = filesys.read.potential(
                         tors_names, tors_grids,
-                        ini_cnf_save_path,
-                        mod_ini_thy_info, ref_ene,
+                        cnf_save_path,
+                        mod_thy_info, ref_ene,
                         constraint_dct,
                         read_zma=True)
                     tors_pots[tors_names] = pot
@@ -785,7 +832,7 @@ def hr_tsk(job, spc_dct, spc_name,
                         'Finding new low energy conformer...', newline=1)
                     new_min_geo = automol.zmat.geometry(new_min_zma)
                     rid = conformer.rng_loc_for_geo(
-                        new_min_geo, ini_cnf_save_fs)
+                        new_min_geo, cnf_save_fs)
                     if rid is None:
                         new_locs = None
                     else:
@@ -793,7 +840,7 @@ def hr_tsk(job, spc_dct, spc_name,
                         new_locs = (rid, cid)
                     conformer.single_conformer(
                         new_min_zma, spc_info, mod_thy_info,
-                        ini_cnf_run_fs, ini_cnf_save_fs,
+                        cnf_run_fs, cnf_save_fs,
                         script_str, overwrite,
                         retryfail=retryfail, zrxn=zrxn,
                         use_locs=new_locs, **kwargs)
@@ -815,15 +862,15 @@ def hr_tsk(job, spc_dct, spc_name,
 
                     # get the scn_locs, maybe get a function?
                     _, scn_locs = scan.scan_locs(
-                        ini_scn_save_fs, tors_names,
+                        scn_save_fs, tors_names,
                         constraint_dct=constraint_dct)
                     for locs in scn_locs:
-                        geo = ini_scn_save_fs[-1].file.geometry.read(locs)
-                        zma = ini_scn_save_fs[-1].file.zmatrix.read(locs)
-                        ini_scn_run_fs[-1].create(locs)
+                        geo = scn_save_fs[-1].file.geometry.read(locs)
+                        zma = scn_save_fs[-1].file.zmatrix.read(locs)
+                        scn_run_fs[-1].create(locs)
                         ES_TSKS[job](
                             zma, geo, spc_info, mod_thy_info,
-                            ini_scn_run_fs, ini_scn_save_fs, locs,
+                            scn_run_fs, scn_save_fs, locs,
                             script_str, overwrite,
                             retryfail=retryfail, **kwargs)
                         ioprinter.obj('vspace')

@@ -23,7 +23,7 @@ from mechroutines.models import _vib as vib
 from mechroutines.models import _flux as flux
 from mechroutines.models import _util as util
 from mechroutines.thermo import basis
-
+import thermfit
 
 # General readers
 def read_spc_data(spc_dct, spc_name,
@@ -390,6 +390,8 @@ def mol_data(spc_name, spc_dct,
             edown_str, collid_freq_str]
     inf_dct = dict(zip(keys, vals))
 
+
+    # thermfit.pf.fake_mess_rrho_partition_function(geom, freqs, 0, [300, 400, 500, 600, 700, 800])
     return inf_dct, chn_basis_ene_dct
 
 

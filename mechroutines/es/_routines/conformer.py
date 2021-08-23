@@ -850,7 +850,7 @@ def _init_geom_is_running(cnf_run_fs):
         inf_obj = run_fs[-1].file.info.read([job])
         status = inf_obj.status
         if status == autofile.schema.RunStatus.RUNNING:
-            start_time = inf_obj.start_end_time
+            start_time = inf_obj.utc_start_time
             current_time = autofile.schema.utc_time()
             if (current_time - start_time).total_seconds() < 3000000:
                 path = cnf_run_fs[-1].path(locs)
@@ -1089,7 +1089,7 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
     match_dct = {}
     for ini_locs in ini_cnf_save_locs_lst:
 
-        match_dct[ini_locs] = None
+        match_dct[tuple(ini_locs)] = None
         # Loop over structs in cnf_save, see if they match the current struct
         inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
         inizma = automol.geom.zmatrix(inigeo)
@@ -1104,7 +1104,7 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 info_message(
                     '- Similar structure found at {}'.format(cnf_save_path))
-                match_dct[ini_locs] = locs
+                match_dct[tuple(ini_locs)] = tuple(locs)
                 break
 
     return match_dct
