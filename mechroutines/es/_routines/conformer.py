@@ -850,7 +850,7 @@ def _init_geom_is_running(cnf_run_fs):
         inf_obj = run_fs[-1].file.info.read([job])
         status = inf_obj.status
         if status == autofile.schema.RunStatus.RUNNING:
-            start_time = inf_obj.start_end_time
+            start_time = inf_obj.utc_start_time
             current_time = autofile.schema.utc_time()
             if (current_time - start_time).total_seconds() < 3000000:
                 path = cnf_run_fs[-1].path(locs)
