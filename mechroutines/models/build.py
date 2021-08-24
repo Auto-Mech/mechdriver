@@ -669,8 +669,7 @@ def tau_data(spc_dct_i,
     rotors = tors.build_rotors(spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
     run_path = filesys.models.make_run_path(pf_filesystems, 'tors')
-    tors_strs = tors.make_hr_strings(
-        rotors, run_path, spc_mod_dct_i)
+    tors_strs = tors.make_hr_strings(rotors)
     [_, hr_str, flux_str, prot_str, _] = tors_strs
 
     # Use model to determine whether to read grads and hessians
