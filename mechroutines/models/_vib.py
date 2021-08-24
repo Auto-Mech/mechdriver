@@ -29,17 +29,18 @@ def full_vib_analysis(
     rotors = tors.build_rotors(
         spc_dct_i, pf_filesystems, spc_mod_dct_i)
 
+    # Squash the rotor potentials as necessary
+    if typ.squash_tors_pot(spc_mod_dct_i):
+        # print('it thinks it is 1dhrfa')
+        for rotor in rotors:
+            for torsion in rotor:
+                torsion.pot = automol.pot.relax_scale(torsion.pot)
+
     if typ.nonrigid_tors(spc_mod_dct_i, rotors):
 
-        # Squash the rotor potentials as necessary
-        if typ.squash_tors_pot(spc_mod_dct_i):
-            # print('it thinks it is 1dhrfa')
-            for rotor in rotors:
-                for torsion in rotor:
-                    torsion.pot = automol.pot.relax_scale(torsion.pot)
-
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info
-        _, hr_str, _, prot_str, _ = tors.make_hr_strings(rotors)
+        tors_strs = tors.make_hr_strings(rotors)
+        [_, hr_str, _, prot_str, _] = tors_strs
         ret = tors_projected_freqs(
             pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
 
@@ -71,7 +72,8 @@ def full_vib_analysis(
                 # for rotor in rotors:
                 #     for _tors in rotor:
                 #         print(_tors.pot)
-                _, hr_str, _, prot_str, _ = tors.make_hr_strings(rotors)
+                tors_strs = tors.make_hr_strings(rotors)
+                [_, hr_str, _, prot_str, _] = tors_strs
                 # print('tors string after scaling',tors_strs)
                 _, _, tors_zpe = tors_projected_freqs_zpe(
                     pf_filesystems, hr_str, prot_str, run_prefix, zrxn=zrxn)
