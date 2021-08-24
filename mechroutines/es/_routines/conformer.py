@@ -1079,37 +1079,6 @@ def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
     return automol.reac.similar_saddle_point_structure(zma, ref_zma, zrxn)
 
 
-def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
-                  ini_cnf_save_fs, ini_cnf_save_locs_lst):
-    """ Assess which structures from the cnf_save_fs currently exist
-        within the ini_cnf_save_fs. Generate a dictionary to connect
-        the two
-    """
-
-    match_dct = {}
-    for ini_locs in ini_cnf_save_locs_lst:
-
-        match_dct[tuple(ini_locs)] = None
-        # Loop over structs in cnf_save, see if they match the current struct
-        inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-        inizma = automol.geom.zmatrix(inigeo)
-        # inizma =  ini_cnf_save_fs[-1].file.zmatrix.read(ini_locs)
-        ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
-        checking('structures', ini_cnf_save_path)
-        for locs in cnf_save_locs_lst:
-            geo = cnf_save_fs[-1].file.geometry.read(locs)
-            zma = automol.geom.zmatrix(geo)
-            if automol.zmat.almost_equal(inizma, zma,
-                                         dist_rtol=0.1, ang_atol=.4):
-                cnf_save_path = cnf_save_fs[-1].path(locs)
-                info_message(
-                    '- Similar structure found at {}'.format(cnf_save_path))
-                match_dct[tuple(ini_locs)] = tuple(locs)
-                break
-
-    return match_dct
-
-
 def unique_fs_ring_confs(
         cnf_save_fs, cnf_locs_lst,
         ini_cnf_save_fs, ini_cnf_locs_lst):

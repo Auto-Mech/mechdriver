@@ -699,7 +699,7 @@ def hr_tsk(job, spc_dct, spc_name,
     all_run_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info,
         cnf_range='all')
-    ini_to_run_locs_dct = conformer.fs_confs_dict(
+    ini_to_run_locs_dct = filesys.models.fs_confs_dict(
         cnf_save_fs, all_run_cnf_locs_lst,
         ini_cnf_save_fs, ini_min_locs_lst)
 
@@ -726,6 +726,9 @@ def hr_tsk(job, spc_dct, spc_name,
             # run a single conformer to generate it
             min_locs = ini_to_run_locs_dct[tuple(ini_min_locs)]
             if min_locs is None:
+                script_str, kwargs = qchem_params(
+                    method_dct, elstruct.Job.OPTIMIZATION)
+                zrxn = spc_dct_i.get('zrxn', None)
                 rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
                 if rid is None:
                     new_rid = autofile.schema.generate_new_ring_id()
@@ -735,7 +738,7 @@ def hr_tsk(job, spc_dct, spc_name,
                         cnf_run_fs, cnf_save_fs,
                         script_str, overwrite,
                         retryfail=retryfail, zrxn=zrxn,
-                        use_locs = (new_rid, new_cid),
+                        use_locs=(new_rid, new_cid),
                         **kwargs)
                     min_locs = (new_rid, new_cid)
                 else:
