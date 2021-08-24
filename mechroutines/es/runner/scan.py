@@ -74,9 +74,8 @@ def run_scan(zma, spc_info, mod_thy_info,
 
     scn_save_fs[1].create([coord_locs])
     inf_obj = autofile.schema.info_objects.scan_branch(
-        dict(zip(coord_locs, coord_grids)))
+        dict(zip(coord_names, coord_grids)))
     scn_save_fs[1].file.info.write(inf_obj, [coord_locs])
-
     # Build the grid of values
     mixed_grid_vals = automol.pot.coords(coord_grids)
     if not reverse_sweep:

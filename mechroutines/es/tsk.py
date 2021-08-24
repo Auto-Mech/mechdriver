@@ -720,44 +720,54 @@ def hr_tsk(job, spc_dct, spc_name,
         else:
             torsions = ()
 
-        # Find equivalent conformer in the run filesys, if it doesn't exist
-        # run a single conformer to generate it
-        min_locs = ini_to_run_locs_dct[tuple(ini_min_locs)]
-        if min_locs is None:
-            rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
-            if rid is None:
-                new_rid = autofile.schema.generate_new_ring_id()
-                new_cid = autofile.schema.generate_new_conformer_id()
-                conformer.single_conformer(
-                    zma, spc_info, mod_thy_info,
-                    cnf_run_fs, cnf_save_fs,
-                    script_str, overwrite,
-                    retryfail=retryfail, zrxn=zrxn,
-                    use_locs = (new_rid, new_cid),
-                    **kwargs)
-                min_locs = (new_rid, new_cid)
-            else:
-                new_cid = autofile.schema.generate_new_conformer_id()
-                conformer.single_conformer(
-                    zma, spc_info, mod_thy_info,
-                    cnf_run_fs, cnf_save_fs,
-                    script_str, overwrite,
-                    retryfail=retryfail, zrxn=zrxn,
-                    use_locs=(rid, new_cid),
-                    **kwargs)
-                min_locs = (rid, new_cid)
-        cnf_save_path = cnf_save_fs[-1].path(min_locs)
-        ioprinter.info_message('Same conformer saved at {} and {}'.format(
-            ini_cnf_save_path, cnf_save_path))
-
-        # Create run fs if that directory has been deleted to run the jobs
-        # ini_cnf_run_fs[-1].create(ini_min_locs)
-        # ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
-        cnf_run_fs[-1].create(min_locs)
-        cnf_run_path = cnf_run_fs[-1].path(min_locs)
-
         # Run the task if any torsions exist
         if any(torsions):
+            # Find equivalent conformer in the run filesys, if it doesn't exist
+            # run a single conformer to generate it
+            min_locs = ini_to_run_locs_dct[tuple(ini_min_locs)]
+            if min_locs is None:
+                rid = conformer.rng_loc_for_geo(geo, cnf_save_fs)
+                if rid is None:
+                    new_rid = autofile.schema.generate_new_ring_id()
+                    new_cid = autofile.schema.generate_new_conformer_id()
+                    conformer.single_conformer(
+                        zma, spc_info, mod_thy_info,
+                        cnf_run_fs, cnf_save_fs,
+                        script_str, overwrite,
+                        retryfail=retryfail, zrxn=zrxn,
+                        use_locs = (new_rid, new_cid),
+                        **kwargs)
+                    min_locs = (new_rid, new_cid)
+                else:
+                    new_cid = autofile.schema.generate_new_conformer_id()
+                    conformer.single_conformer(
+                        zma, spc_info, mod_thy_info,
+                        cnf_run_fs, cnf_save_fs,
+                        script_str, overwrite,
+                        retryfail=retryfail, zrxn=zrxn,
+                        use_locs=(rid, new_cid),
+                        **kwargs)
+                    min_locs = (rid, new_cid)
+            cnf_save_path = cnf_save_fs[-1].path(min_locs)
+            ioprinter.info_message('Same conformer saved at {} and {}'.format(
+                ini_cnf_save_path, cnf_save_path))
+
+            # Create run fs if that directory has been deleted to run the jobs
+            # ini_cnf_run_fs[-1].create(ini_min_locs)
+            # ini_cnf_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
+            cnf_run_fs[-1].create(min_locs)
+            cnf_run_path = cnf_run_fs[-1].path(min_locs)
+
+            # Get the runlvl zma and torsion info
+            zma_save_fs = autofile.fs.zmatrix(cnf_save_path)
+            geo = cnf_save_fs[-1].file.geometry.read(min_locs)
+            zma = zma_save_fs[-1].file.zmatrix.read((0,))
+            if zma_save_fs[-1].file.torsions.exists([0]):
+                tors_dct = zma_save_fs[-1].file.torsions.read([0])
+                torsions = automol.rotor.from_data(zma, tors_dct,)
+            else:
+                torsions = ()
+
             if 'fa' in tors_model:
                 scn = 'CSCAN'
             elif 'f' in tors_model:
