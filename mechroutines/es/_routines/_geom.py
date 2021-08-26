@@ -132,7 +132,7 @@ def _kickoff_saddle(geo, norm_coords, spc_info, mod_thy_info,
         'geo test in kickoff_saddle:',
         automol.geom.string(geo), disp_xyzs)
 
-    geo = automol.geom.displace(geo, disp_xyzs)
+    geo = automol.geom.translate(geo, disp_xyzs)
 
     # Optimize displaced geometry
     if opt_cart:
