@@ -29,7 +29,7 @@ def qchem_params(method_dct, job=None):
     prog = method_dct.get('program', None)
 
     # Build the defaul values
-    ret = INI_PARAM_BUILD_DCT[prog](method_dct, job=job)
+    ret = INI_PARAM_BUILD_DCT[prog](method_dct, prog, job=job)
 
     # Alter with the input method_dct (a massive pain...)
     # opt_kwargs.update(method_dct)
@@ -38,7 +38,7 @@ def qchem_params(method_dct, job=None):
     return ret
 
 
-def _gaussian(method_dct, job=None):
+def _gaussian(method_dct, prog, job=None):
     """ Build kwargs dictionary and BASH submission script for Gaussian jobs.
 
         :param method_dct:
@@ -57,7 +57,7 @@ def _gaussian(method_dct, job=None):
     method = method_dct.get('method')
 
     # Build the submission script string
-    script_str = SCRIPT_DCT['gaussian09']
+    script_str = SCRIPT_DCT[prog]
 
     # Build the options dictionary
     machine_options = ['%NProcShared={}'.format(nprocs)]
@@ -104,7 +104,7 @@ def _gaussian(method_dct, job=None):
     return script_str, kwargs
 
 
-def _molpro(method_dct, job=None):
+def _molpro(method_dct, prog, job=None):
     """ Build kwargs dictionary and BASH submission script for Molpro jobs
 
         :param method_dct:
@@ -129,9 +129,9 @@ def _molpro(method_dct, job=None):
 
     # Build the script string
     if method in ('caspt2c', 'caspt2i'):
-        script_str = SCRIPT_DCT['molpro2015_mppx'].format(nprocs)
+        script_str = SCRIPT_DCT[prog+'_mppx'].format(nprocs)
     else:
-        script_str = SCRIPT_DCT['molpro2015'].format(nprocs)
+        script_str = SCRIPT_DCT[prog].format(nprocs)
 
     # Build the kwargs
     kwargs = {
@@ -139,7 +139,7 @@ def _molpro(method_dct, job=None):
         # 'mol_options': ['no_symmetry'],
         'mol_options': ['nosym'],
     }
-    
+
     corr_options = ['maxit=100']
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         corr_options.append('shift=0.2')
@@ -163,7 +163,7 @@ def _molpro(method_dct, job=None):
     return script_str, kwargs
 
 
-def _psi4(method_dct, job=None):
+def _psi4(method_dct, prog, job=None):
     """ Build kwargs dictionary and BASH submission script for Psi4 jobs
 
         :param method_dct:
@@ -179,7 +179,7 @@ def _psi4(method_dct, job=None):
     memory = method_dct.get('memory', 20)
 
     # Build the submission script string
-    script_str = SCRIPT_DCT['psi4']
+    script_str = SCRIPT_DCT[prog]
 
     # Build the options dictionary
     kwargs = {
@@ -216,6 +216,7 @@ def _psi4(method_dct, job=None):
 INI_PARAM_BUILD_DCT = {
     elstruct.par.Program.GAUSSIAN09: _gaussian,
     elstruct.par.Program.GAUSSIAN16: _gaussian,
+    elstruct.par.Program.MOLPRO2021: _molpro,
     elstruct.par.Program.MOLPRO2015: _molpro,
     elstruct.par.Program.PSI4: _psi4,
 }
