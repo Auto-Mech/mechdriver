@@ -37,7 +37,10 @@ def build_polynomial(spc_name, spc_dct, pf_path, nasa_path,
     formula_str = automol.inchi.formula_string(spc_dct_i['inchi'])
     formula_dct = automol.inchi.formula(spc_dct_i['inchi'])
 
-    if spc_locs_idx is not None:
+    if spc_locs_idx == 'final':
+        hform0 = spc_dct_i['Hfs']['final'][0]
+        spc_label = spc_name
+    elif spc_locs_idx is not None:
         hform0 = spc_dct_i['Hfs'][spc_locs_idx][spc_mod][0]
         spc_label = spc_name  # + '_{:g}'.format(spc_locs_idx)
         # spc_label = spc_name + '_' + spc_locs[1][:5]

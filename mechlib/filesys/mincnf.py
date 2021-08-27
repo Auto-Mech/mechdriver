@@ -60,44 +60,98 @@ def conformer_locators(
         :rtype: (tuple(str, str), str)
     """
 
-    cnf_range, allow_hbnd = _process_cnf_range(cnf_range)
-    zpe_info, sp_info = _process_sort_info(sort_info_lst)
+    def _conformer_locators(
+            cnf_save_fs, mod_thy_info, cnf_range='min',
+            only_hbnds=True, only_nonhbnds=True, zpe_info=None, sp_info=None,
+            print_enes=False, already_counted_locs_lst=()):
 
-    fin_locs_lst, fin_paths_lst = (), ()
+        fin_locs_lst, fin_paths_lst = (), ()
 
-    cnf_locs_lst = cnf_save_fs[-1].existing()
-    if cnf_locs_lst:
-        cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
-            cnf_locs_lst, cnf_save_fs, mod_thy_info,
-            zpe_info=zpe_info, sp_info=sp_info)
-        if not allow_hbnd:
-            cnf_locs_lst, cnf_enes_lst = _remove_hbonded_structures(
-                cnf_save_fs, cnf_locs_lst, cnf_enes_lst)
+        cnf_locs_lst = cnf_save_fs[-1].existing()
         if cnf_locs_lst:
-            if cnf_range == 'min':
-                fin_locs_lst = (cnf_locs_lst[0],)
-            elif cnf_range == 'all':
-                fin_locs_lst = cnf_locs_lst
-            elif 'e' in cnf_range:
-                fin_locs_lst = _erange_locs(cnf_locs_lst, cnf_enes_lst, cnf_range)
-            elif 'n' in cnf_range:
-                fin_locs_lst = _nrange_locs(cnf_locs_lst, cnf_range)
-            elif 'r' in cnf_range:
-                fin_locs_lst = _rrange_locs(cnf_locs_lst, cnf_range)
-    else:
-        print('No conformers located in {}'.format(
-            cnf_save_fs[0].path()))
+            cnf_locs_lst, cnf_enes_lst = _sorted_cnf_lsts(
+                cnf_locs_lst, cnf_save_fs, mod_thy_info,
+                zpe_info=zpe_info, sp_info=sp_info)
+            if only_hbnds:
+                cnf_locs_lst, cnf_enes_lst = _remove_nonhbonded_structures(
+                    cnf_save_fs, cnf_locs_lst, cnf_enes_lst)
+            elif only_nonhbnds:
+                cnf_locs_lst, cnf_enes_lst = _remove_hbonded_structures(
+                    cnf_save_fs, cnf_locs_lst, cnf_enes_lst)
+                
+            if cnf_locs_lst:
+                if cnf_range == 'min':
+                    fin_locs_lst = (cnf_locs_lst[0],)
+                elif cnf_range == 'all':
+                    fin_locs_lst = tuple(cnf_locs_lst)
+                elif 'e' in cnf_range:
+                    fin_locs_lst = tuple(_erange_locs(
+                        cnf_locs_lst, cnf_enes_lst, cnf_range,
+                        already_counted_locs_lst))
+                elif 'n' in cnf_range:
+                    fin_locs_lst = tuple(_nrange_locs(
+                        cnf_locs_lst, cnf_range, already_counted_locs_lst))
+                elif 'r' in cnf_range:
+                    fin_locs_lst = tuple(_rrange_locs(
+                        cnf_locs_lst, cnf_range, already_counted_locs_lst))
+        else:
+            print('No conformers located in {}'.format(
+                cnf_save_fs[0].path()))
 
-    if print_enes:
-        print('{:<16}{:<16}{:<16}'.format('rid', 'cid', 'energy[kcal/mol]'))
-        print('{:<16}{:<16}{:<16}'.format('-------', '-------', '------'))
-    for idx, locs in enumerate(fin_locs_lst):
-        fin_paths_lst += (cnf_save_fs[-1].path(locs),)
         if print_enes:
-            print('{:<16}{:<16}{:<16.2f}'.format(
-                *locs, (cnf_enes_lst[idx] - cnf_enes_lst[0])*phycon.EH2KCAL))
+            header = '\nConformer Ordering'
+            if only_hbnds:
+                header += ' for only hydrogen bonded conformers'
+            if only_nonhbnds:
+                header += ' for only non-hydrogen bonded conformers'
+            elif not only_hbnds:
+                header += ' for all conformers'
+            print(header)
+            print(
+                '{:<16}{:<16}{:<16}'.format('rid', 'cid', 'energy[kcal/mol]'))
+            print(
+                '{:<16}{:<16}{:<16}'.format('-------', '-------', '------'))
+        for idx, locs in enumerate(fin_locs_lst):
+            fin_paths_lst += (cnf_save_fs[-1].path(locs),)
+            if print_enes:
+                print('{:<16}{:<16}{:<16.2f}'.format(
+                    *locs,
+                    (cnf_enes_lst[idx] - cnf_enes_lst[0])*phycon.EH2KCAL))
 
-    return fin_locs_lst, fin_paths_lst
+        return fin_locs_lst, fin_paths_lst
+
+    cnf_range_nohb, cnf_range_hb, cnf_range_any = _process_cnf_range(
+        cnf_range)
+    zpe_info, sp_info = _process_sort_info(sort_info_lst)
+    union_locs_lst, union_paths_lst = (), ()
+
+    if cnf_range_hb is not None:
+        tmp_locs_lst, tmp_paths_lst = _conformer_locators(
+            cnf_save_fs, mod_thy_info, cnf_range=cnf_range_hb,
+            only_hbnds=True, only_nonhbnds=False,
+            zpe_info=zpe_info, sp_info=sp_info, print_enes=print_enes,
+            already_counted_locs_lst=union_locs_lst)
+        union_locs_lst += tmp_locs_lst
+        union_paths_lst += tmp_paths_lst
+    if cnf_range_nohb is not None:
+        tmp_locs_lst, tmp_paths_lst = _conformer_locators(
+            cnf_save_fs, mod_thy_info, cnf_range=cnf_range_nohb,
+            only_hbnds=False, only_nonhbnds=True,
+            zpe_info=zpe_info, sp_info=sp_info, print_enes=print_enes,
+            already_counted_locs_lst=union_locs_lst)
+        union_locs_lst += tmp_locs_lst
+        union_paths_lst += tmp_paths_lst
+
+    if cnf_range_any is not None:
+        tmp_locs_lst, tmp_paths_lst = _conformer_locators(
+            cnf_save_fs, mod_thy_info, cnf_range=cnf_range_any,
+            only_hbnds=False, only_nonhbnds=False,
+            zpe_info=zpe_info, sp_info=sp_info, print_enes=print_enes,
+            already_counted_locs_lst=union_locs_lst)
+        union_locs_lst += tmp_locs_lst
+        union_paths_lst += tmp_paths_lst
+
+    return tuple(union_locs_lst), tuple(union_paths_lst)
 
 
 def _sorted_cnf_lsts(
@@ -108,7 +162,7 @@ def _sorted_cnf_lsts(
         The conformers are sorted such that the energies are sorted
         in ascedning order.
 
-        :param cnf_locs_lst:
+    `    :param cnf_locs_lst:
         :type cnf_locs_lst: tuple(tuple(tuple(str),tuple(str)))
         :param cnf_save_fs: CONF object with save filesys prefix
         :type cnf_save_fs: autofile.fs.conformer obj
@@ -175,7 +229,7 @@ def _sorted_cnf_lsts(
     return cnf_locs_lst, cnf_enes_lst
 
 
-def _erange_locs(cnf_locs, cnf_enes, ethresh):
+def _erange_locs(cnf_locs, cnf_enes, ethresh, ignore_locs_lst=()):
     """ Obtain a list of conformer locators that includes the
         minimum-energy conformer and all conformers that lie
         above it that are within some energy threshold.
@@ -196,12 +250,13 @@ def _erange_locs(cnf_locs, cnf_enes, ethresh):
     for locs, ene in zip(cnf_locs, cnf_enes):
         rel_ene = (ene - min_ene) * phycon.EH2KCAL
         if rel_ene <= thresh:
-            min_cnf_locs.append(locs)
+            if locs not in ignore_locs_lst:
+                min_cnf_locs.append(locs)
 
     return min_cnf_locs
 
 
-def _rrange_locs(cnf_locs, nthresh):
+def _rrange_locs(cnf_locs, nthresh, ignore_locs_lst=()):
     """ Obtain a list of conformer locators that includes the
         minimum-energy conformer and
         above it that are within some energy threshold.
@@ -214,13 +269,14 @@ def _rrange_locs(cnf_locs, nthresh):
     for idx, locs in enumerate(cnf_locs):
         if not list(locs)[0] in used_rids:
             if idx+1 <= thresh:
-                min_cnf_locs.append(locs)
-                used_rids.append(list(locs)[0])
+                if locs not in ignore_locs_lst:
+                    min_cnf_locs.append(locs)
+                    used_rids.append(list(locs)[0])
 
     return min_cnf_locs
 
 
-def _nrange_locs(cnf_locs, nthresh):
+def _nrange_locs(cnf_locs, nthresh, ignore_locs_lst=()):
     """ Obtain a list of up-to N conformer locators where N is the
         number requested by the user. The count (N=1) begins from the
         minimum-energy conformer.
@@ -233,9 +289,12 @@ def _nrange_locs(cnf_locs, nthresh):
     thresh = int(nthresh.split('n')[1])
 
     min_cnf_locs = []
-    for idx, locs in enumerate(cnf_locs):
-        if idx+1 <= thresh:
-            min_cnf_locs.append(locs)
+    idx = 0
+    for locs in cnf_locs:
+        if locs not in ignore_locs_lst:
+            if idx+1 <= thresh:
+                min_cnf_locs.append(locs)
+            idx += 1
 
     return min_cnf_locs
 
@@ -339,14 +398,42 @@ def _remove_hbonded_structures(cnf_save_fs, cnf_locs_lst, cnf_enes_lst):
     return fin_locs_lst, fin_enes_lst
 
 
+def _remove_nonhbonded_structures(cnf_save_fs, cnf_locs_lst, cnf_enes_lst):
+    """ Remove conformer locations for conformers without hydrogen bonds
+    """
+    fin_locs_lst = ()
+    fin_enes_lst = ()
+    for locs, enes in zip(cnf_locs_lst, cnf_enes_lst):
+        if cnf_save_fs[-1].file.geometry.exists(locs):
+            geo = cnf_save_fs[-1].file.geometry.read(locs)
+            if hydrogen_bonded_structure(geo):
+                fin_locs_lst += (locs,)
+                fin_enes_lst += (enes,)
+            else:
+                print('Removing ', locs, ' from list because its not hbonded')
+    return fin_locs_lst, fin_enes_lst
+
+
 def _process_cnf_range(cnf_range):
     """ Split specific info out of cnf_range
     """
-    allow_hbnd = True
+    cnf_range_nohb, cnf_range_hb, cnf_range_any = None, None, None
     if '_noHB' in cnf_range:
-        cnf_range = cnf_range.replace('_noHB', '')
-        allow_hbnd = False
-    return cnf_range, allow_hbnd
+        cnf_range_nohb = cnf_range.replace('_noHB', '')
+    elif '_HB' in cnf_range:
+        cnf_range_hb = cnf_range.replace('_HB', '')
+    elif 'union' in cnf_range:
+        cnf_range = cnf_range.replace('union', '')
+        cnf_range = cnf_range.replace('(', '').replace(')', '')
+        cnf_range = cnf_range.replace(' ', '')
+        cnf_range = cnf_range.split(',')
+        if len(cnf_range) == 3:
+            cnf_range_nohb, cnf_range_hb, cnf_range_any = cnf_range
+        if len(cnf_range) == 2:
+            cnf_range_nohb, cnf_range_hb = cnf_range
+    else:
+        cnf_range_any = cnf_range
+    return cnf_range_nohb, cnf_range_hb, cnf_range_any
 
 
 def _process_sort_info(sort_info_lst):

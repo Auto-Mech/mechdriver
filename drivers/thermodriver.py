@@ -16,7 +16,6 @@
             (2) Run PACC+ThermP to fit thermo NASA polynomials
             (3) Write functional forms to mechanism file
 """
-
 from mechanalyzer.inf import thy as tinfo
 
 from mechroutines.thermo import tsk as thermo_tasks
@@ -109,6 +108,12 @@ def run(pes_rlst, spc_rlst,
             spc_locs_dct, spc_dct, spc_mods, spc_mod_dct,
             ref_scheme, ref_enes, run_prefix, save_prefix)
 
+        # This has to happen down here because the weights rely on
+        # The heats of formation
+        spc_dct = thermo_tasks.produce_boltzmann_weighted_conformers_pf(
+            run_messpf_tsk, spc_locs_dct, spc_dct,
+            thm_paths_dct)
+
         # Write the NASA polynomials in CHEMKIN format
         ckin_nasa_str_dct, ckin_path = thermo_tasks.nasa_polynomial_task(
             mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
@@ -147,7 +152,7 @@ def _set_spc_queue(
 def _set_spc_locs_dct(
         spc_queue, spc_dct, spc_mod_dct_i, run_prefix, save_prefix,
         cnf_range='min', sort_info_lst=None, saddle=False):
-    """ get a dictionary of locs 
+    """ get a dictionary of locs
     """
     spc_locs_dct = {}
     for spc_name in spc_queue:

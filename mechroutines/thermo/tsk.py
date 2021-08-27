@@ -1,5 +1,6 @@
 """ Tasks for THERMODRIVER
 """
+import os
 
 import autorun
 from automol.inchi import formula_string as fstring
@@ -79,14 +80,49 @@ def run_messpf_task(
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0],
                 filename='pf.dat')
             _locs_pfs.append(final_pf)
-        # locs_coeffs = [1./len(spc_locs)]*len(spc_locs)
-        # locs_operators = ['divide']*(len(spc_locs)-1)
-        # final_pf = thermfit.pf.combine(_locs_pfs, locs_coeffs, locs_operators)
-        # writer.mess.output(
-        #     fstring(spc_dct[spc_name]['inchi']),
-        #     final_pf,
-        #     thm_paths_dct[spc_name]['spc_total'][0],
-        #     filename='pf.dat')
+
+
+def produce_boltzmann_weighted_conformers_pf(
+        run_messpf_tsk, spc_locs_dct, spc_dct,
+        thm_paths_dct):
+    """ Combine PFs into final pf
+    """
+    ioprinter.messpf('run_header')
+
+    spc_mods, _ = parser.models.extract_models(run_messpf_tsk)
+
+    for spc_name in spc_locs_dct:
+        ioprinter.message('Run MESSPF: {}'.format(spc_name), newline=1)
+        locs_pfs_arrays = []
+        hf_array = []
+        for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
+            locs_pfs_arrays.append(reader.mess.messpf(
+                thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0]))
+            # TODO: This is the average heat of formation of the various models,
+            # It should actually be based on the coeffs that the pfs are combined with
+            # or something more sophisticated
+            hf_val = 0.
+            for spc_mod in spc_mods:
+                hf_val += spc_dct[spc_name]['Hfs'][idx][spc_mod][0] / len(spc_mods)
+            hf_array.append(hf_val)
+        final_pf = thermfit.pf.boltzmann_pf_combination(locs_pfs_arrays, hf_array)
+        writer.mess.output(
+            fstring(spc_dct[spc_name]['inchi']),
+            final_pf,
+            thm_paths_dct[spc_name]['spc_total'][0],
+            filename='pf.dat')
+        spc_dct[spc_name]['Hfs']['final'] = [min(hf_array)]
+        return spc_dct
+
+
+def _weigh_heat_of_formation(hf_array, weights):
+    """ weight heat of formation of conformers based on the weights
+        determined during the combination of pfs
+    """
+    hf_val = 0.
+    for hf_val_i, weight_i in zip(hf_array, weights):
+        hf_val += weight_i * hf_val_i
+    return hf_val
 
 
 def _get_heat_of_formation(
@@ -186,7 +222,6 @@ def get_heats_of_formation(
                     chn_basis_ene_dct, run_prefix, save_prefix)
                 spc_dct = _add_hf_to_spc_dct(
                     hf0k, spc_dct, spc_name, idx, spc_mod)
-                # TODO Make a combined Hf0K boltmann or something
     return spc_dct
 
 
@@ -196,9 +231,10 @@ def nasa_polynomial_task(
     """ generate the nasa polynomials
     """
     ckin_nasa_str_dct = {}
+    ckin_nasa_str_dct[0] = ''
     ckin_path = output_path('CKIN', prefix=mdriver_path)
     for spc_name in spc_locs_dct:
-        for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
+        for idx, spc_locs in enumerate(spc_locs_dct[spc_name], start=1):
             if idx not in ckin_nasa_str_dct:
                 ckin_nasa_str_dct[idx] = ''
             spc_locs = tuple(spc_locs)
@@ -223,17 +259,19 @@ def nasa_polynomial_task(
                 spc_name, spc_dct,
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0],
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][1],
-                spc_locs_idx=idx, spc_mod=','.join(spc_mods))
+                spc_locs_idx=idx-1, spc_mod=','.join(spc_mods))
             ckin_nasa_str_dct[idx] += '\n\n'
-        # ioprinter.message('for combined rid cids:', spc_locs_dct[spc_name])
-        # ckin_nasa_str += writer.ckin.model_header(
-        #     spc_mods, spc_mod_dct, refscheme=ref_scheme)
-        # ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
-        #     spc_name, spc_dct,
-        #     thm_paths_dct[spc_name]['spc_total'][0],
-        #     thm_paths_dct[spc_name]['spc_total'][1],
-        #     spc_locs=tuple(spc_locs_dct[spc_name][0]), spc_mod=spc_mods[0])
-        # ckin_nasa_str += '\n\n'
             ioprinter.info_message('CKIN NASA STR\n')
             ioprinter.info_message(ckin_nasa_str_dct[idx])
+        ioprinter.message('for combined rid cids:', spc_locs_dct[spc_name])
+        ckin_nasa_str_dct[0] += writer.ckin.model_header(
+            spc_mods, spc_mod_dct, refscheme=ref_scheme)
+        ckin_nasa_str_dct[0] += thmroutines.nasapoly.build_polynomial(
+            spc_name, spc_dct,
+            thm_paths_dct[spc_name]['spc_total'][0],
+            thm_paths_dct[spc_name]['spc_total'][1],
+            spc_locs_idx='final', spc_mod=','.join(spc_mods))
+        ckin_nasa_str_dct[0] += '\n\n'
+        ioprinter.info_message('CKIN NASA STR\n')
+        ioprinter.info_message(ckin_nasa_str_dct[0])
     return ckin_nasa_str_dct, ckin_path
