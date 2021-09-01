@@ -588,7 +588,11 @@ def get_channel_data(reacs, prods, tsname,
 
     # Set up data for TS
     chnl_infs['ts'] = []
-    tsnames = [name for name in spc_dct.keys() if tsname in name]
+    # Get all the possible unique configurations of a transition state
+    _tsname = tsname + '_'
+    tsnames = [name for name in spc_dct.keys()
+               if _tsname in name]
+    
     for name in tsnames:
         inf_dct, model_basis_energy_dct = build.read_ts_data(
             spc_dct, name, reacs, prods,

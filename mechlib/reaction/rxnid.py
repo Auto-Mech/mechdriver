@@ -115,12 +115,11 @@ def _mod_class(class_typ, rxn_info):
         _spin = ''
 
     # Determine if it iss intersystem crossing
-    rxn_muls = rinfo.value(rxn_info, 'mult')
-    is_isc = automol.reac.intersystem_crossing(rxn_muls)
-    print('isc test', is_isc)
+    # rxn_muls = rinfo.value(rxn_info, 'mult')
+    # is_isc = automol.reac.intersystem_crossing(rxn_muls)
 
     return automol.par.reaction_class_from_data(
-        class_typ, _spin, rinfo.radrad(rxn_info), is_isc)
+        class_typ, _spin, rinfo.radrad(rxn_info), False)
 
 
 # from direction (loop over the reactions around split)

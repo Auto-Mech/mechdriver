@@ -97,14 +97,14 @@ def _set_conf_range(print_keyword_dct):
     """ ?
     """
     cnf_range = print_keyword_dct['cnf_range']
-    #if cnf_range == 'all':
-    #    pass
-    #elif cnf_range != 'min':
-    #    cnf_range = 'n{}'.format(cnf_range)
-    #else:
-    #    cnf_range = print_keyword_dct['econfs']
-    #    if cnf_range != 'min':
-    #        cnf_range = 'e{}'.format(cnf_range)
+    # if cnf_range == 'all':
+    #     pass
+    # elif cnf_range != 'min':
+    #     cnf_range = 'n{}'.format(cnf_range)
+    # else:
+    #     cnf_range = print_keyword_dct['econfs']
+    #     if cnf_range != 'min':
+    #         cnf_range = 'e{}'.format(cnf_range)
     return cnf_range
 
 
@@ -133,12 +133,15 @@ def conformer_list(
         thy_locs=mod_thy_info[1:],
         **_root)
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
-        cnf_save_fs, mod_thy_info, cnf_range=cnf_range, sort_info_lst=sort_info_lst)
+        cnf_save_fs, mod_thy_info,
+        cnf_range=cnf_range, sort_info_lst=sort_info_lst)
+
     return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
 
 
 def conformer_list_from_models(
-        spc_name, print_keyword_dct, save_prefix, run_prefix,
+        spc_name, thy_dct, print_keyword_dct,
+        save_prefix, run_prefix,
         spc_dct_i, spc_mod_dct_i):
     """ Create a list of conformers based on the species name
         and model.dat info
@@ -161,7 +164,9 @@ def conformer_list_from_models(
         thy_locs=mod_thy_info[1:],
         **_root)
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
-        cnf_save_fs, mod_thy_info, cnf_range=cnf_range, sort_info_lst=sort_info_lst)
+        cnf_save_fs, mod_thy_info,
+        cnf_range=cnf_range, sort_info_lst=sort_info_lst)
+
     return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
 
 
@@ -356,7 +361,8 @@ def choose_conformers(
     """
     if spc_mod_dct_i is not None:
         ret = conformer_list_from_models(
-            spc_name, proc_keyword_dct, save_prefix, run_prefix,
+            spc_name, thy_dct, proc_keyword_dct,
+            save_prefix, run_prefix,
             spc_dct_i, spc_mod_dct_i)
         cnf_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info = ret
     else:

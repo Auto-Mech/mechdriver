@@ -5,6 +5,7 @@ import copy
 import automol
 import elstruct
 from phydat import act_space
+from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
 
 
@@ -29,8 +30,7 @@ def update_kwargs_for_multireference(kwargs, cas_kwargs):
 
 
 def multireference_calculation_parameters(
-        ref_zma, ts_info, ts_formula, high_mul,
-        rct_ichs, rct_muls,
+        ref_zma, ts_info, rxn_info, high_mul,
         aspace, mod_thy_info):
     """ Prepares a keyword-argument dictionary that can be utilized by the
         elstruct library to perform multireference electronic structure
@@ -53,13 +53,12 @@ def multireference_calculation_parameters(
         num_act_orb, num_act_elc, num_states, guess_str = aspace
         guess_lines = guess_str.splitlines()
         casscf_options = cas_options(
-            ts_info, ts_formula, num_act_elc, num_act_orb, num_states,
+            ts_info, ref_zma, num_act_elc, num_act_orb, num_states,
             add_two_closed=False)
         ioprinter.info_message('Using wfn guess from file...', newline=1)
 
     else:
-        num_act_orb, num_act_elc, num_states = active_space(
-            rct_ichs, rct_muls)
+        num_act_orb, num_act_elc, num_states = active_space(rxn_info)
 
         # Build the elstruct CASSCF options list used to build the wfn guess
         # (1) Build wfn with active space
@@ -67,11 +66,11 @@ def multireference_calculation_parameters(
         cas_opt = []
         cas_opt.append(
             cas_options(
-                ts_info, ts_formula, num_act_elc, num_act_orb, num_states,
+                ts_info, ref_zma, num_act_elc, num_act_orb, num_states,
                 add_two_closed=False))
         cas_opt.append(
             cas_options(
-                ts_info, ts_formula, num_act_elc, num_act_orb, num_states,
+                ts_info, ref_zma, num_act_elc, num_act_orb, num_states,
                 add_two_closed=True))
 
         # Write string that has all the components for building the wfn guess
@@ -96,9 +95,12 @@ def multireference_calculation_parameters(
 
 
 # BUILD THE CASSCF OPTIONS
-def active_space(rct_ichs, rct_muls):
+def active_space(rxn_info):
     """ Determine the active space for the multireference MEP scan
     """
+
+    rct_ichs = rinfo.value(rxn_info, 'inchi')[0]
+    rct_muls = rinfo.value(rxn_info, '')[0]
 
     num_act_orb, num_act_elc, num_states = 0, 0, 1
     for ich, mul in enumerate(zip(rct_ichs, rct_muls)):
@@ -113,13 +115,15 @@ def active_space(rct_ichs, rct_muls):
     return num_act_orb, num_act_elc, num_states
 
 
-def cas_options(ts_info, formula, num_act_elc, num_act_orb, num_states,
+def cas_options(ts_info, ts_zma, num_act_elc, num_act_orb, num_states,
                 add_two_closed=False):
     """ Prepare values prepare cas options for multireference wavefunctions
     """
 
     # Set the number of closed and occupied orbitals
-    elec_cnt = automol.formula.electron_count(formula)
+    fml = automol.zmat.formula(ts_zma)
+    elec_cnt = automol.formula.electron_count(fml)
+
     closed_orb = (elec_cnt - num_act_elc) // 2
     occ_orb = closed_orb + num_act_orb
     if add_two_closed:
