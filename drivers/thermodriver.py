@@ -110,6 +110,7 @@ def run(pes_rlst, spc_rlst,
 
         # This has to happen down here because the weights rely on
         # The heats of formation
+        print('in run_fit_tsk for thermo_driver boltzmann')
         spc_dct = thermo_tasks.produce_boltzmann_weighted_conformers_pf(
             run_messpf_tsk, spc_locs_dct, spc_dct,
             thm_paths_dct)
