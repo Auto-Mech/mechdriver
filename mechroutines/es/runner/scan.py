@@ -33,7 +33,8 @@ def execute_scan(zma, spc_info, mod_thy_info,
 
     # Need a resave option
     _fin = _scan_finished(
-        coord_names, coord_grids, scn_save_fs, constraint_dct=constraint_dct)
+        coord_names, coord_grids, scn_save_fs,
+        constraint_dct=constraint_dct, overwrite=overwrite)
 
     if not _fin:
         run_scan(
@@ -171,7 +172,8 @@ def run_backsteps(
     bad_grid_vals = (filesys.read.identify_bad_point(conv_pot),)
 
     if bad_grid_vals[0] is not None:
-        print('Akima spline identified potential hysteresis at ', bad_grid_vals[0]*phycon.DEG2RAD)
+        print('Akima spline identified potential hysteresis at ',
+              bad_grid_vals[0]*phycon.DEG2RAD)
         passed_bad_point = False
         for idx, rev_grid_vals in enumerate(rev_grid_vals_lst):
 
@@ -429,7 +431,8 @@ def scan_locs(scn_save_fs, coord_names, constraint_dct=None):
     return coord_locs, scn_locs
 
 
-def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
+def _scan_finished(coord_names, coord_grids, scn_save_fs,
+                   constraint_dct=None, overwrite=False):
     """ Assesses if the scan calculations requested by the user have been
         completed by assessing if Z-Matrices exist in the filesystem for
         all grid values of the scan coordinates.
@@ -442,22 +445,29 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs, constraint_dct=None):
         :type scn_save_fs: autofile.fs.scan or autofile.fs.cscan object
         :param constraint_dct: values of coordinates to constrain during scan
         :type constraint_dct: dict[str: float]
+        :param overwrite:
+        :type overwrite: bool
+        :rtype: bool
     """
 
     run_finished = True
 
-    grid_vals = automol.pot.coords(coord_grids)
-    for vals in grid_vals:
+    if not overwrite:
+        grid_vals = automol.pot.coords(coord_grids)
+        for vals in grid_vals:
 
-        # Set the locs for the scan point
-        locs = [coord_names, vals]
-        if constraint_dct is not None:
-            locs = [constraint_dct] + locs
+            # Set the locs for the scan point
+            locs = [coord_names, vals]
+            if constraint_dct is not None:
+                locs = [constraint_dct] + locs
 
-        # Check if ZMA (other info?) exists
-        if not scn_save_fs[-1].file.zmatrix.exists(locs):
-            run_finished = False
-            break
+            # Check if ZMA (other info?) exists
+            if not scn_save_fs[-1].file.zmatrix.exists(locs):
+                run_finished = False
+                break
+    else:
+        run_finished = False
+        ioprinter.message('User elected to overwrite scan')
 
     if run_finished:
         ioprinter.message('Scan saved previously at {}'.format(
