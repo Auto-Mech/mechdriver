@@ -78,7 +78,7 @@ def conformer_locators(
             elif only_nonhbnds:
                 cnf_locs_lst, cnf_enes_lst = _remove_hbonded_structures(
                     cnf_save_fs, cnf_locs_lst, cnf_enes_lst)
-                
+
             if cnf_locs_lst:
                 if cnf_range == 'min':
                     fin_locs_lst = (cnf_locs_lst[0],)
@@ -390,7 +390,16 @@ def _remove_hbonded_structures(cnf_save_fs, cnf_locs_lst, cnf_enes_lst):
     for locs, enes in zip(cnf_locs_lst, cnf_enes_lst):
         if cnf_save_fs[-1].file.geometry.exists(locs):
             geo = cnf_save_fs[-1].file.geometry.read(locs)
-            if not hydrogen_bonded_structure(geo):
+
+            # Try and get a reaction object for transition state
+            zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
+            if zma_fs[-1].file.reaction.exists((0,)):
+                zrxn = zma_fs[-1].file.reaction.read((0,))
+                grxn = automol.reac.relabel_for_geometry(zrxn)
+            else:
+                grxn = None
+
+            if not hydrogen_bonded_structure(geo, grxn=grxn):
                 fin_locs_lst += (locs,)
                 fin_enes_lst += (enes,)
             else:
@@ -406,7 +415,16 @@ def _remove_nonhbonded_structures(cnf_save_fs, cnf_locs_lst, cnf_enes_lst):
     for locs, enes in zip(cnf_locs_lst, cnf_enes_lst):
         if cnf_save_fs[-1].file.geometry.exists(locs):
             geo = cnf_save_fs[-1].file.geometry.read(locs)
-            if hydrogen_bonded_structure(geo):
+
+            # Try and get a reaction object for transition state
+            zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
+            if zma_fs[-1].file.reaction.exists((0,)):
+                zrxn = zma_fs[-1].file.reaction.read((0,))
+                grxn = automol.reac.relabel_for_geometry(zrxn)
+            else:
+                grxn = None
+
+            if hydrogen_bonded_structure(geo, grxn=None):
                 fin_locs_lst += (locs,)
                 fin_enes_lst += (enes,)
             else:

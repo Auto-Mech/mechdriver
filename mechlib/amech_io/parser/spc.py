@@ -145,6 +145,10 @@ def modify_spc_dct(spc_dct, amech_dct, geo_dct):
         spc_dct[spc]['hind_inc'] *= phycon.DEG2RAD
         spc_dct[spc]['geo'] = geo_dct.get(spc, None)
 
+    # Perform similar conversions where needed for glob dct
+    if 'hind_inc' in glob_dct:
+        glob_dct['hind_inc'] *= phycon.DEG2RAD
+
     return spc_dct, glob_dct
 
 

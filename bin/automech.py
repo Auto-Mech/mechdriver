@@ -6,6 +6,7 @@
 """
 
 import sys
+import autofile
 # import argparse
 from mechlib.filesys import prefix_fs
 from mechlib.amech_io import parser as ioparser
@@ -15,6 +16,9 @@ from drivers import esdriver, thermodriver, ktpdriver, transdriver, procdriver
 
 # Set runtime options based on user input
 JOB_PATH = sys.argv[1]  # Add a check to see if [1] exists; path exits
+if len(sys.argv) > 2:
+    if sys.argv[2] == 'safemode_off':
+        autofile.turn_off_safemode()
 
 # Print the header message and host name (probably combine into one function)
 ioprinter.program_header('amech')
@@ -24,8 +28,10 @@ ioprinter.host_name()
 # Parse all of the input
 ioprinter.program_header('inp')
 
+ioprinter.info_message('\nReading files provided in the inp directory...')
 INP_STRS = ioparser.read_amech_input(JOB_PATH)
 
+ioprinter.info_message('\nParsing input files for runtime parameters...')
 THY_DCT = ioparser.thy.theory_dictionary(INP_STRS['thy'])
 KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(
     INP_STRS['mod'], THY_DCT)
@@ -39,6 +45,11 @@ PES_DCT = ioparser.mech.pes_dictionary(
 
 PES_RLST, SPC_RLST = ioparser.rlst.run_lst(
     PES_DCT, SPC_DCT, PES_IDX_DCT, SPC_IDX_DCT)
+
+# Do a check
+ioprinter.info_message('\nFinal check if all required input provided...')
+ioparser.run.check_inputs(
+    TSK_LST_DCT, PES_DCT, KMOD_DCT, SMOD_DCT)
 
 # Build the Run-Save Filesystem Directories
 prefix_fs(INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'])

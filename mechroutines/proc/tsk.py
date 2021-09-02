@@ -37,6 +37,8 @@ def run_tsk(tsk, obj_queue,
         proc_keyword_dct, save_prefix)
     obj_queue, ts_miss_data = util.remove_ts_missing(
         obj_queue, spc_dct)
+    obj_queue = util.remove_radrad_ts(
+        obj_queue, spc_dct)
 
     # Set up lists for reporting missing data
     miss_data = ()
@@ -158,7 +160,7 @@ def run_tsk(tsk, obj_queue,
     missing_data = miss_data + ts_miss_data
 
     # Write the csv data into the appropriate file
-    util.write_csv_data(tsk, csv_data, filelabel, spc_array)
+    util.write_csv_data(tsk, csv_data, filelabel, spc_array, mdriver_path)
 
     # Gather data that is provided for each species in files in a dir
     data_dirs = (('displacements_'+thylabel, disp_dct),)

@@ -294,9 +294,6 @@ def tasks(run_str, mech_str, thy_dct):
         'proc': proc_tsks
     }
 
-    # Check if user provided enough input for requested drivers
-    _chk_input_for_drivers(tsk_dct, mech_str)
-
     return tsk_dct
 
 
@@ -413,13 +410,29 @@ def _split_line(line, num):
     return tsk + [key_dct]  # could convert to empty dct instead of None
 
 
-def _chk_input_for_drivers(tsk_dct, mech_str):
-    """ Check if a mechanism.dat file exists if mechanism task lists present
+# Check a bunch of stuff
+def check_inputs(tsk_dct, pes_dct, pes_mod_dct, spc_mod_dct):
+    """ Check if inputs placed that is required
     """
 
+    # Check if a mechanism has been provided where required
     if tsk_dct['ktp']:
-        if mech_str is None:
+        if pes_mod_dct is None:
             error_message(
-                'kTPDriver Requested. ',
-                'However no mechanism.dat provided. Exiting MechDriver...')
+                'kTPDriver Requested. \n'
+                ' However no kin model provided in models.dat\n'
+                ' Exiting MechDriver...')
             sys.exit()
+        if spc_mod_dct is None:
+            error_message(
+                'kTPDriver Requested. \n'
+                '  However no spc model provided in models.dat\n'
+                '  Exiting MechDriver...')
+            sys.exit()
+        if pes_dct is None:
+            error_message(
+                'kTPDriver Requested. \n'
+                '  However no reaction channels provided in mechanism.dat\n'
+                '  Exiting MechDriver...')
+            sys.exit()
+
