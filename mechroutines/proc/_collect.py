@@ -66,10 +66,15 @@ def geometry(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     if cnf_fs[-1].file.geometry.exists(locs):
         geo = cnf_fs[-1].file.geometry.read(locs)
         sp_fs = autofile.fs.single_point(locs_path)
-        _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
-        comment = 'energy: {0:>15.10f}'.format(_ene)
-        xyz_str = automol.geom.xyz_string(geo, comment=comment)
-        miss_data = None
+        if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
+            _ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+            comment = 'energy: {0:>15.10f}'.format(_ene)
+            xyz_str = automol.geom.xyz_string(geo, comment=comment)
+            miss_data = None
+        else:
+            comment = 'no energy found'
+            xyz_str = automol.geom.xyz_string(geo, comment=comment)
+            miss_data = (spc_name, mod_thy_info, 'energy')
     else:
         xyz_str = '\t -- Missing --'
         miss_data = (spc_name, mod_thy_info, 'geometry')

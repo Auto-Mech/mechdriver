@@ -31,10 +31,13 @@ def pes_dictionary(mech_str, mech_type, spc_dct):
     # Build and print the full sorted PES dict
     if mech_str is not None:
         _, mech_info, _ = parse_mechanism(mech_str, mech_type, spc_dct)
-        srt_mch = sorter.sorting(mech_info, spc_dct, sort_str, isolate_species)
-        pes_dct = srt_mch.return_pes_dct()
-
-        pes.print_pes_channels(pes_dct)
+        if mech_info is not None:
+            srt_mch = sorter.sorting(
+                mech_info, spc_dct, sort_str, isolate_species)
+            pes_dct = srt_mch.return_pes_dct()
+            pes.print_pes_channels(pes_dct)
+        else:
+            pes_dct = None
     else:
         pes_dct = None
 

@@ -93,9 +93,9 @@ def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
     inp_missing = []
     for key, (name, _, req) in INP_FILE.items():
         if inp_str_dct[key] is not None:
-            info_message('Found {} inp directory'.format(name))
+            info_message('  FOUND {}'.format(name))
         else:
-            info_message('\n{} file NOT found in inp directory.'.format(name))
+            info_message('  MISSING {}'.format(name))
             if req:
                 inp_missing.append(name)
 
@@ -113,11 +113,11 @@ def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
     for key, msg, name_dct in inf:
         str_dct = inp_str_dct[key]
         if str_dct:
-            info_message('Found {}:'.format(msg))
+            info_message(' Found {}:'.format(msg))
             for name in str_dct:
                 info_message('-  {}: {}'.format(name, name_dct[name]))
         else:
-            info_message('No {} were found.'.format(msg))
+            info_message('  No {} were found.'.format(msg))
 
 
 # formatters, dont know where to build this

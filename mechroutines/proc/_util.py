@@ -1,12 +1,14 @@
 """ util functions for output driver
 """
 
+import os
 import pandas
 import ioformat
 import automol
 from autofile import io_ as io
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
+from mechanalyzer.inf import rxn as rinfo
 from mechlib import filesys
 from mechlib.amech_io import printer as ioprinter
 
@@ -183,10 +185,12 @@ def set_csv_data(tsk):
     return csv_data
 
 
-def write_csv_data(tsk, csv_data, filelabel, spc_array):
+def write_csv_data(tsk, csv_data, filelabel, spc_array, prefix):
     """ Write the csv data dictionary into the correct type of csv
         or text file
     """
+    if filelabel is not None:
+        filelabel = os.path.join(prefix, filelabel)
     if 'freq' in tsk:
         fin_csv_data = {}
         for key in csv_data['freq']:
@@ -381,6 +385,11 @@ def remove_unstable(spc_queue, spc_dct, thy_dct, spc_mod_dct_i,
         in the save filesystem denoting they are unstable. If so,
         that species is removed from the queue for collection tasks.
     """
+
+    ioprinter.info_message(
+        'Removing unstable species with instab.yaml file in SAVE filesystem',
+        'from queue...\n')
+
     if spc_mod_dct_i is not None:
         thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
     else:
@@ -410,6 +419,9 @@ def remove_ts_missing(obj_queue, spc_dct):
     """ Remove TSs who have no information from the queue and
         include them in the missing data lists
     """
+    ioprinter.info_message(
+        'Removing TS with no zmat.r.yaml file in SAVE filesystem',
+        'from queue...\n')
 
     new_queue = ()
     ts_miss_data = ()
@@ -425,3 +437,27 @@ def remove_ts_missing(obj_queue, spc_dct):
             new_queue += (obj,)
 
     return new_queue, ts_miss_data
+
+
+def remove_radrad_ts(obj_queue, spc_dct):
+    """ Remove TSs who have no information from the queue and
+        include them in the missing data lists
+    """
+
+    ioprinter.info_message(
+        'Removing low-spin radical-radical TS from queue...\n')
+
+    new_queue = ()
+    for obj in obj_queue:
+        if 'ts_' in obj:
+            rxn_info = spc_dct[obj]['rxn_info']
+            ts_mul = rinfo.value(rxn_info, 'tsmult')
+            high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
+            if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:
+                ioprinter.info_message('Removing {} from queue.'.format(obj))
+            else:
+                new_queue += (obj,)
+        else:
+            new_queue += (obj,)
+
+    return new_queue
