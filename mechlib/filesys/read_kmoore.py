@@ -40,7 +40,7 @@ def potential(names, grid_vals, cnf_save_path,
         scn_fs = autofile.fs.scan(zma_path)
     else:
         scn_fs = autofile.fs.cscan(zma_path)
-    print('grid test in read:', grid_coords, grid_vals)
+
     # Read the filesystem
     for idx, vals in enumerate(grid_coords):
 

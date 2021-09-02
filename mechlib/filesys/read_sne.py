@@ -2,11 +2,7 @@
 """
 
 import numpy
-from scipy.interpolate import CubicSpline
-from scipy.interpolate import Akima1DInterpolator
 
-from scipy.interpolate import CubicSpline
-from scipy.interpolate import Akima1DInterpolator
 import automol
 import autofile
 from phydat import phycon
@@ -15,6 +11,8 @@ from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.filesys._build import build_fs
 from mechlib.filesys.mincnf import min_energy_conformer_locators
+from scipy.interpolate import CubicSpline
+from scipy.interpolate import Akima1DInterpolator
 
 
 def potential(names, grid_vals, cnf_save_path,
@@ -25,7 +23,6 @@ def potential(names, grid_vals, cnf_save_path,
     """ Get the potential for a hindered rotor
     """
 
-    # print('potential test:', names)
     # Build initial lists for storing potential energies and Hessians
     # grid_points = automol.pot.points(grid_vals)
     grid_coords = automol.pot.coords(grid_vals)
@@ -40,7 +37,7 @@ def potential(names, grid_vals, cnf_save_path,
         scn_fs = autofile.fs.scan(zma_path)
     else:
         scn_fs = autofile.fs.cscan(zma_path)
-    print('grid test in read:', grid_coords, grid_vals)
+
     # Read the filesystem
     for idx, vals in enumerate(grid_coords):
 
@@ -96,16 +93,12 @@ def potential(names, grid_vals, cnf_save_path,
                 zmas[vals_conv] = None
 
         paths[vals] = scn_fs[-1].path(locs)
+    bad_angle = identify_bad_point(pot)
+    if bad_angle is not None:
+        pot = remove_bad_point(pot, bad_angle)
 
-    # If potential has any terms that are not None, ID and remove bad points
-    if automol.pot.is_nonempty(pot):
-        pot = automol.pot.remove_empty_terms(pot)
-        bad_angle = identify_bad_point(pot)
-        if bad_angle is not None:
-            pot = remove_bad_point(pot, bad_angle)
-            pot = automol.pot.remove_empty_terms(pot)
-    else:
-        pot = {}
+    # Remove None entries
+    pot = {k: v for k, v in pot.items() if v is not None}
 
     return pot, geoms, grads, hessians, zmas, paths
 
@@ -117,7 +110,7 @@ def identify_bad_point(pot, thresh=0.05):
 
     vals_conv = pot.keys()
     step_enes = pot.values()
-
+ 
     # Get the sorted angles
     shifted_angles = []
     for idx, angle in enumerate(vals_conv):
@@ -133,21 +126,21 @@ def identify_bad_point(pot, thresh=0.05):
 
     # For methyl rotors, double the threshold
     if len(shifted_angles) == 4:
-        thresh *= 2
-
+        thresh *= 2 
+        
     # Get the potentials and then sort them according to increasing angle
     step_enes = numpy.array(list(step_enes))
     sorted_idxs = numpy.argsort(shifted_angles)
     sorted_angles = shifted_angles[sorted_idxs]
     sorted_potentials = step_enes[sorted_idxs]
-
+    
     # Fit cubic and Akima splines
     cub_spline = CubicSpline(sorted_angles, sorted_potentials)
     akima_spline = Akima1DInterpolator(sorted_angles, sorted_potentials)
 
     # Evaluate the splines on a fine grid to check for ringing
     fine_grid = numpy.arange(min(sorted_angles), max(sorted_angles), 1)
-    diff = cub_spline(fine_grid) - akima_spline(fine_grid)
+    diff = cub_spline(fine_grid) - akima_spline(fine_grid) 
     max_fine_angle = fine_grid[numpy.argmax(diff)]
     max_norm_diff = max(diff) / max(step_enes)  # normalized by max potential
 
@@ -155,9 +148,9 @@ def identify_bad_point(pot, thresh=0.05):
     bad_angle = None
     if max_norm_diff > thresh:
         max_idxs = numpy.argsort(abs(shifted_angles - max_fine_angle))[:2]
-        suspect_enes = [step_enes[idx] for idx in max_idxs]
+        suspect_enes = [step_enes[idx] for idx in max_idxs]   
         bad_angle = shifted_angles[max_idxs[numpy.argmax(suspect_enes)]]
-        if bad_angle < 0:
+        if bad_angle < 0:  
             bad_angle += 360  # convert back to original angle
         bad_angle += start_angle
 
@@ -166,19 +159,12 @@ def identify_bad_point(pot, thresh=0.05):
 
 def remove_bad_point(pot, bad_angle):
     """ Remove a single bad angle from a potential
-    """
+    """ 
+    bad_tuple = (bad_angle,)  # lazy way; need to get the 2-D value
+    assert pot.get(bad_tuple) is not None, (
+        f'The angle {bad_angle} does not exist in the pot dictionary')
 
-    # Find angle in pot that is within 0.1 degrees of bad_angle
-    # to read the dictionary
-    # Only works for 1D
-    bad_tuple = None
-    for angle in pot.keys():
-        if numpy.isclose(angle, bad_angle, atol=0.1):
-            bad_tuple = (angle,)
-
-    assert bad_tuple is not None, (
-        f'The angle {bad_angle*phycon.DEG2RAD} does not exist in the pot dictionary')
-
+    pot[bad_tuple] = None
     print(f'Removing bad angle at {bad_angle} degrees')
 
     return pot
@@ -231,7 +217,7 @@ def _spherical_conformer(cnf_save_fs):
     return round_geom
 
 
-def energy(filesys, locs, mod_thy_info):
+def energy(filesys, locs, mod_tors_ene_info):
     """ Read the energy from an SP filesystem that is located in some
         root 'filesys object'
     """
@@ -239,8 +225,8 @@ def energy(filesys, locs, mod_thy_info):
     if filesys[-1].exists(locs):
         path = filesys[-1].path(locs)
         sp_fs = autofile.fs.single_point(path)
-        if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
-            ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+        if sp_fs[-1].file.energy.exists(mod_tors_ene_info[1:4]):
+            ene = sp_fs[-1].file.energy.read(mod_tors_ene_info[1:4])
         else:
             ene = None
     else:
@@ -314,7 +300,7 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
         instab_trans = zma_save_fs[-1].file.instability.read(zma_locs)
         zma = zma_save_fs[-1].file.zmatrix.read(zma_locs)
         _instab = (instab_trans, zma)
-        path = zma_save_fs[-1].file.instability.path(zma_locs)
+        path = zma_save_fs[-1].file.zmatrix.path(zma_locs)
     else:
         _instab = None
         path = None

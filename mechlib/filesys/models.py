@@ -24,7 +24,7 @@ def pf_rngs_filesys(spc_dct_i, spc_model_dct_i,
     pf_filesystems['harm'] = set_model_filesys(
         spc_dct_i, spc_model_dct_i['vib']['geolvl'][1][1],
         run_prefix, save_prefix, saddle, name=name, cnf_range='r100')
-    if spc_model_dct_i['symm']['mod'] == 'sampling':
+    if 'mod' in spc_model_dct_i['symm']:
         pf_filesystems['symm'] = set_model_filesys(
             spc_dct_i, spc_model_dct_i['symm']['geolvl'][1][1],
             run_prefix, save_prefix, saddle, name=name, cnf_range='r100')
@@ -308,14 +308,18 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
 
         match_dct[tuple(ini_locs)] = None
         # Loop over structs in cnf_save, see if they match the current struct
-        inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-        inizma = automol.geom.zmatrix(inigeo)
+        # inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+        # inizma = automol.geom.zmatrix(inigeo)
         # inizma =  ini_cnf_save_fs[-1].file.zmatrix.read(ini_locs)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
         ioprinter.checking('structures', ini_cnf_save_path)
+        ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
+        inizma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
         for locs in cnf_save_locs_lst:
-            geo = cnf_save_fs[-1].file.geometry.read(locs)
-            zma = automol.geom.zmatrix(geo)
+            # geo = cnf_save_fs[-1].file.geometry.read(locs)
+            # zma = automol.geom.zmatrix(geo)
+            zma_save_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(locs))
+            zma = zma_save_fs[-1].file.zmatrix.read((0,))
             if automol.zmat.almost_equal(inizma, zma,
                                          dist_rtol=0.1, ang_atol=.4):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
