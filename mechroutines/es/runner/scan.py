@@ -537,7 +537,7 @@ def write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
 
 
 # DERIVED FUNCTION THAT RUNS RUN_SCAN AND SAVE IN TWO DIRECTIONS #
-def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
+def run_two_way_scan(ts_zma, ts_info, mod_thy_info,
                      grid1, grid2, coord_name,
                      scn_run_fs, scn_save_fs,
                      opt_script_str, overwrite,
@@ -555,7 +555,7 @@ def run_two_way_scan(ts_zma, ts_info, mod_var_scn_thy_info,
         execute_scan(
             zma=ts_zma,
             spc_info=ts_info,
-            mod_thy_info=mod_var_scn_thy_info,
+            mod_thy_info=mod_thy_info,
             coord_names=[coord_name],
             coord_grids=[grid],
             scn_run_fs=scn_run_fs,
