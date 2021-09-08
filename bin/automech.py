@@ -19,8 +19,9 @@ JOB_PATH = sys.argv[1]  # Add a check to see if [1] exists; path exits
 if len(sys.argv) > 2:
     if sys.argv[2] == 'safemode_off':
         autofile.turn_off_safemode()
+        ioprinter.info_message('Running with safemode turned OFF...')
 
-# Print the header message and host name (probably combine into one function)
+# Print the header message and host name
 ioprinter.program_header('amech')
 ioprinter.random_cute_animal()
 ioprinter.host_name()
@@ -53,6 +54,8 @@ ioparser.run.check_inputs(
 
 # Build the Run-Save Filesystem Directories
 prefix_fs(INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'])
+
+# Check if any drivers were requested to be run
 
 # Run Drivers Requested by User
 ES_TSKS = TSK_LST_DCT.get('es')
@@ -115,6 +118,12 @@ if PROC_TSKS is not None:
         INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'], JOB_PATH
     )
     ioprinter.program_exit('proc')
+
+# Check if any drivers were requested to be run
+if all(tsks is None
+       for tsks in (ES_TSKS, THERM_TSKS, TRANS_TSKS, KTP_TSKS, PROC_TSKS)):
+    ioprinter.warning_message(
+        'User did not provide (uncommented) driver tasks lists in run.dat')
 
 # Exit Program
 ioprinter.obj('vspace')
