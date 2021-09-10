@@ -40,7 +40,6 @@ def potential(names, grid_vals, cnf_save_path,
         scn_fs = autofile.fs.scan(zma_path)
     else:
         scn_fs = autofile.fs.cscan(zma_path)
-    print('grid test in read:', grid_coords, grid_vals)
     # Read the filesystem
     for idx, vals in enumerate(grid_coords):
 
@@ -249,6 +248,36 @@ def energy(filesys, locs, mod_thy_info):
     return ene
 
 
+def reactions(rxn_info, ini_thy_info, zma_locs, save_prefix):
+    """ Check if reaction exists in the filesystem and has been identified
+    """
+
+    zrxns, zmas = (), ()
+
+    sort_rxn_info = rinfo.sort(rxn_info, scheme='autofile')
+    ts_info = rinfo.ts_info(rxn_info)
+    mod_ini_thy_info = tinfo.modify_orb_label(ini_thy_info, ts_info)
+
+    rxn_fs = autofile.fs.reaction(save_prefix)
+    if rxn_fs[-1].exists(sort_rxn_info):
+        _, ts_save_fs = build_fs(
+            save_prefix, save_prefix, 'TRANSITION STATE',
+            rxn_locs=sort_rxn_info,
+            thy_locs=mod_ini_thy_info[1:])
+        for ts_locs in ts_save_fs[-1].existing():
+            zrxn, zma = reaction(
+                rxn_info, ini_thy_info,
+                zma_locs, save_prefix, ts_locs=ts_locs)
+            if zrxn is not None:
+                zrxns += (zrxn,)
+                zmas += (zma,)
+
+    if not zrxns:
+        zrxns, zmas = None, None
+
+    return zrxns, zmas
+
+
 def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
     """ Check if reaction exists in the filesystem and has been identified
     """
@@ -265,7 +294,6 @@ def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
             save_prefix, save_prefix, 'CONFORMER',
             rxn_locs=sort_rxn_info,
             thy_locs=mod_ini_thy_info[1:],
-            # this needs to be fixed for any case with more than one TS
             ts_locs=ts_locs)
 
         _, ini_min_cnf_path = min_energy_conformer_locators(
@@ -276,9 +304,10 @@ def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
                 zrxn = zma_fs[-1].file.reaction.read(zma_locs)
                 zma = zma_fs[-1].file.zmatrix.read(zma_locs)
 
+        # For barrierless reactions with no conformer
         if zrxn is None:
             _, zma_fs = build_fs(
-                '', save_prefix, 'ZMATRIX',
+                save_prefix, save_prefix, 'ZMATRIX',
                 rxn_locs=sort_rxn_info, ts_locs=ts_locs,
                 thy_locs=mod_ini_thy_info[1:])
 
@@ -298,7 +327,7 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
 
     _, cnf_save_fs = build_fs(
-        '', save_prefix, 'CONFORMER',
+        save_prefix, save_prefix, 'CONFORMER',
         spc_locs=spc_info,
         thy_locs=mod_thy_info[1:])
 

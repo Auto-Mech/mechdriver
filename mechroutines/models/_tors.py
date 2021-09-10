@@ -79,27 +79,21 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
         rotor_zma, all_tors_names, tors_model)
 
     # Recalculate the rotor potential grids using desired increment
-    print('increment test:', increment)
     rotor_grids = automol.rotor.grids(rotors, increment=increment)
-    print('rotor grids after call:', rotor_grids)
 
     for ridx, rotor in enumerate(rotors):
-        print('ridx, rotor test:', ridx, rotor)
         # multi_idx = ridx
 
         for tidx, torsion in enumerate(rotor):
-            print('tidx, test:', tidx, rotor)
             # Read and spline-fit potential
             tors_grid = rotor_grids[ridx][tidx]
             constraint_dct = automol.zmat.constraint_dct(
                 rotor_zma, const_names, (torsion.name,))
-            print('filesys test:', torsion.name, tors_grid, cnf_save_path, mod_tors_ene_info, ref_ene, constraint_dct)
             pot, _, _, _, _, _ = filesys.read.potential(
                 (torsion.name,), (tors_grid,),
                 cnf_save_path,
                 mod_tors_ene_info, ref_ene,
                 constraint_dct)
-            print('pot:',pot)
 
             if pot:
                 fit_pot = automol.pot.fit_1d_potential(
@@ -114,7 +108,6 @@ def _read_potentials(rotors, spc_dct_i, run_path, cnf_save_path,
                 torsion.pot = final_pot
             else:
                 torsion.pot = pot
-            print('final pot:',torsion.pot)
 
     # if multi_idx is not None:
     #     mdhr_name = automol.rotor.names(rotors)[multi_idx]

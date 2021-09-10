@@ -55,8 +55,6 @@ ioparser.run.check_inputs(
 # Build the Run-Save Filesystem Directories
 prefix_fs(INP_KEY_DCT['run_prefix'], INP_KEY_DCT['save_prefix'])
 
-# Check if any drivers were requested to be run
-
 # Run Drivers Requested by User
 ES_TSKS = TSK_LST_DCT.get('es')
 if ES_TSKS is not None:

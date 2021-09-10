@@ -14,7 +14,7 @@ CLA_INP = 'inp/class.csv'
 
 
 def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
-                   id_missing=True):
+                   id_missing=True, re_id=False):
     """ For a given reaction, attempt to identify its reaction class obtain
         the corresponding Z-Matrix reaction object.
 
@@ -37,9 +37,17 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
 
     zmas, rclasses = (), ()
 
-    zrxn, zma = filesys.read.reaction(
-        rxn_info, ini_thy_info, zma_locs, save_prefix)
-    if zrxn is None:
+    # Try and read the reaction from filesys if requested
+    if not re_id:
+        zrxns, zmas = filesys.read.reactions(
+            rxn_info, ini_thy_info, zma_locs, save_prefix)
+        print('    Reading from fileysystem...')
+    else:
+        # unsafe without checking if zrxn id matches what is in save...
+        zrxns = None
+        print('    Requested Reidentification regardless of what is in SAVE')
+
+    if zrxns is None:
         if id_missing:
             print('    Identifying class...')
             zrxns, zmas = _id_reaction(rxn_info)
@@ -47,18 +55,16 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
                 zrxns = 'MISSING-SKIP'
         else:
             zrxns = 'MISSING-ADD'
-    else:
-        zrxns = (zrxn,)
-        zmas = (zma,)
-        print('    Reading from fileysystem...')
 
     if 'MISSING' not in zrxns:
-        rclasses = ()
         for zrxn in zrxns:
             rclasses += (_mod_class(zrxn.class_, rxn_info),)
 
         print('    Reaction class identified as: {}'.format(
             automol.par.string(rclasses[0])))
+
+        print('    There are {} configuration(s) of transition state'.format(
+            len(zrxns)))
 
     return zrxns, zmas, rclasses
 
@@ -76,21 +82,15 @@ def _id_reaction(rxn_info):
 
     zrxn_objs = automol.reac.rxn_objs_from_inchi(
         rct_ichs, prd_ichs, indexing='zma')
-    # zrxns = tuple(obj[0] for obj in zrxn_objs)
-    # zmas = tuple(obj[1] for obj in zrxn_objs)
-    # for objs in zrxn_objs:
-    #     zrxn, zma, _, _ = objs
-    #     zrxns.append(zrxn)
-    #     zmas.append(zma)
-    #     print('zrxn, zma in id:', zrxn, automol.zmat.string(zma))
-    # for now just use first zma until we are properly producing extra zmas
-    if zrxn_objs:
-        zrxns, zmas = [], []
-        zrxns.append(zrxn_objs[0][0])
-        zmas.append(zrxn_objs[0][1])
-    else:
-        zrxns = None
-        zmas = None
+
+    zrxns, zmas = (), ()
+    for objs in zrxn_objs:
+        zrxn, zma, _, _ = objs
+        zrxns += (zrxn,)
+        zmas += (zma,)
+
+    if not zrxns:
+        zrxns, zmas = None, None
 
     return zrxns, zmas
 

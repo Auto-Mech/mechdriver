@@ -116,7 +116,7 @@ def prefix_fs(run_prefix, save_prefix):
                 print('Cannot make directory at path specified in run.dat.')
                 print('Path: {}'.format(prefix))
                 sys.exit()
-            ioprinter.info_message('{}'.format(prefix), indent=1)
+        ioprinter.info_message('{}'.format(prefix), indent=1)
 
 
 def get_zma_locs(zma_fs, spc_dct_i, rxn_ichs=None, wanted_dirn=('forw',)):

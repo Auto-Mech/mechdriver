@@ -210,13 +210,20 @@ def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
             ini_thy_info = tinfo.from_dct(ini_method_dct)
             break
 
+    # Discern if TS should be reidentified
+    re_id = False
+    for tsk_lst in es_tsk_lst:
+        obj, es_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
+        if 'find_ts' in obj:
+            re_id = es_keyword_dct.get('re_id', False)
+
     ts_dct = {}
     for rxn in rxn_lst:
         ts_dct.update(
             ts_dct_sing_chnl(
                 pes_idx, rxn,
                 spc_dct, run_prefix, save_prefix,
-                thy_info=thy_info, ini_thy_info=ini_thy_info)
+                thy_info=thy_info, ini_thy_info=ini_thy_info, re_id=re_id)
         )
 
     # Build the queue
@@ -294,7 +301,7 @@ def ts_dct_from_proctsks(pes_idx, proc_tsk_lst, rxn_lst, spc_mod_dct_i,
 def ts_dct_sing_chnl(pes_idx, reaction,
                      spc_dct, run_prefix, save_prefix,
                      thy_info=None, ini_thy_info=None,
-                     id_missing=True):
+                     id_missing=True, re_id=False):
     """ build dct for single reaction
     """
 
@@ -314,7 +321,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     zma_locs = (0,)
     zrxns, zmas, rclasses = rxnid.build_reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix,
-        id_missing=id_missing)
+        id_missing=id_missing, re_id=re_id)
 
     # Could reverse the spc dct
     if zrxns not in ('MISSING-SKIP', 'MISSING-ADD'):
@@ -346,6 +353,25 @@ def ts_dct_sing_chnl(pes_idx, reaction,
         ts_dct = {}
         print('Skipping reaction as class not given/identified')
 
-    # Add the ts dct to the spc dct here?
-
     return ts_dct
+
+
+def base_tsname(pes_idx, chnl_idx):
+    """ get tsname that precludes the confiuraton number
+    """
+    return 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
+
+
+def tsnames_in_dct(pes_idx, chnl_idx, spc_dct, config_idxs=None):
+    """ Get the names of all configuratons of a transition state
+         for the channel of a PES.
+    """
+    _tsname = 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
+    _tsname = _tsname + '_'
+    if config_idxs is None:
+        _tsnames = tuple(name for name in spc_dct.keys()
+                         if _tsname in name)
+    else:
+        _tsnames = tuple('{}{:G}'.format(_tsname, idx)
+                         for idx in config_idxs)
+    return _tsnames

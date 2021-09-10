@@ -63,7 +63,7 @@ SUPP_OBJS = ('spc', 'ts')
 TSK_KEY_DCT = {
     # Electronic Structure Driver Tasks
     'init_geom': (('spc',), BASE),
-    'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier',)),
+    'find_ts': (('spc', 'ts'), BASE + MREF + ('nobarrier',)),  # 're_id')),
     'conf_pucker': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
     'conf_samp': (('spc', 'ts'), BASE + ('cnf_range', 'sort', 'resave',)),
     'conf_energy': (('spc', 'ts'), BASE + ('cnf_range', 'sort',)),
@@ -131,6 +131,7 @@ TSK_VAL_DCT = {
     'potthresh': ((float,), (), 0.3),
     'rxncoord': ((str,), ('irc', 'auto'), 'auto'),
     'nobarrier': ((str,), ('pst', 'rpvtst', 'vrctst'), None),
+    're_id': ((bool,), (True, False), False),
     # Trans
     'njobs': ((int,), (), 1),
     'nsamp': ((int,), (), 1),
@@ -146,7 +147,7 @@ TSK_VAL_DCT = {
     'spc_model': ((str,), (), None),
     'nprocs': ((int,), (), 10),
     'inpname': ((str,), (), None),
-    'lump_wells': ((bool,), (), False)
+    'lump_wells': ((bool,), (), False),
 }
 # Have nconfs and econfs keywords and combine them to figure out which to use?
 
