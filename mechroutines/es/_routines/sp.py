@@ -57,11 +57,8 @@ def run_energy(zma, geo, spc_info, thy_info,
         sp_run_fs = autofile.fs.high_spin(geo_run_path)
         sp_save_fs = autofile.fs.high_spin(geo_save_path)
 
-    sp_run_fs[-1].create(thy_info[1:4])
     sp_run_path = sp_run_fs[-1].path(thy_info[1:4])
-    sp_save_fs[-1].create(thy_info[1:4])
     sp_save_path = sp_save_fs[-1].path(thy_info[1:4])
-    run_fs = autofile.fs.run(sp_run_path)
 
     # Set input geom
     if geo is not None:
@@ -70,7 +67,6 @@ def run_energy(zma, geo, spc_info, thy_info,
         job_geo = zma
 
     exists = sp_save_fs[-1].file.energy.exists(thy_info[1:4])
-    # _run = need_job((exists, 'energy'), overwrite)
     if not exists:
         ioprinter.info_message(
             'No energy found in save filesys. Running energy...')
@@ -90,6 +86,9 @@ def run_energy(zma, geo, spc_info, thy_info,
         else:
             errs = ()
             optmat = ()
+    
+        sp_run_fs[-1].create(thy_info[1:4])
+        run_fs = autofile.fs.run(sp_run_path)
 
         success, ret = es_runner.execute_job(
             job=elstruct.Job.ENERGY,
@@ -112,6 +111,7 @@ def run_energy(zma, geo, spc_info, thy_info,
             ene = elstruct.reader.energy(inf_obj.prog, inf_obj.method, out_str)
 
             ioprinter.energy(ene)
+            sp_save_fs[-1].create(thy_info[1:4])
             sp_save_fs[-1].file.input.write(inp_str, thy_info[1:4])
             sp_save_fs[-1].file.info.write(inf_obj, thy_info[1:4])
             sp_save_fs[-1].file.energy.write(ene, thy_info[1:4])

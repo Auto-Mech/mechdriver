@@ -7,6 +7,7 @@ import copy
 import automol
 import autorun
 import mess_io
+from mechlib.amech_io.parser.spc import tsnames_in_dct, base_tsname
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.models import blocks
 from mechroutines.models import build
@@ -176,9 +177,6 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, unstable_chnls,
     pes_ene_dct = {}
     conn_lst = tuple()
 
-    # Read all of the energies for all of the species
-
-
     # Set the energy and model for the first reference species
     ioprinter.info_message('\nCalculating reference energy for PES')
     ref_ene = set_reference_ene(
@@ -197,8 +195,9 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, unstable_chnls,
         ioprinter.reading('PES electrion structure data')
         ioprinter.channel(chnl_idx, reacs, prods)
 
-        # Set the TS name and channel model
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
+        # Get the names for all of the configurations of the TS
+        tsname = base_tsname(pes_idx, chnl_idx)
+        tsname_allconfigs = tsnames_in_dct(pes_idx, chnl_idx, spc_dct)
 
         # Obtain all of the species data
         if spc_model not in basis_energy_dct:
@@ -206,7 +205,7 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, unstable_chnls,
 
         # Pass in full ts class
         chnl_infs, chn_basis_ene_dct = get_channel_data(
-            reacs, prods, tsname,
+            reacs, prods, tsname_allconfigs,
             spc_dct, basis_energy_dct[spc_model],
             pes_model_dct_i, spc_model_dct_i,
             run_prefix, save_prefix)
@@ -379,6 +378,7 @@ def _make_channel_mess_strs(tsname, reacs, prods,
         full_dat_dct.update(fake_dct)
 
     # Write MESS string for the inner transition state; append full
+    # Label has to correspond only to base name (ignores configuration)
     ts_label = label_dct[tsname]
     rclass = spc_dct[tsname+'_0']['class']
     sts_str, ts_dat_dct = _make_ts_mess_str(
@@ -478,7 +478,7 @@ def _make_ts_mess_str(chnl_infs, chnl_enes, spc_model_dct_i, ts_class,
         mess_str = mess_io.writer.configs_union(
             mess_strs, ts_enes, tunnel_strs=tunnel_strs)
 
-        ts_str = '\n' + mess_io.writer.barrier(
+        ts_str = '\n' + mess_io.writer.ts_sadpt(
             ts_label, inner_reac_label, inner_prod_label, mess_str)
 
     return ts_str, ts_dat_dct
@@ -557,7 +557,7 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
 
 
 # Data Retriever Functions
-def get_channel_data(reacs, prods, tsname,
+def get_channel_data(reacs, prods, tsname_allconfigs,
                      spc_dct, model_basis_energy_dct,
                      pes_model_dct_i, spc_model_dct_i,
                      run_prefix, save_prefix):
@@ -586,14 +586,9 @@ def get_channel_data(reacs, prods, tsname,
                 run_prefix, save_prefix, model_basis_energy_dct)
             chnl_infs[side].append(chnl_infs_i)
 
-    # Set up data for TS
+    # Get data for all configurations for a TS
     chnl_infs['ts'] = []
-    # Get all the possible unique configurations of a transition state
-    _tsname = tsname + '_'
-    tsnames = [name for name in spc_dct.keys()
-               if _tsname in name]
-    
-    for name in tsnames:
+    for name in tsname_allconfigs:
         inf_dct, model_basis_energy_dct = build.read_ts_data(
             spc_dct, name, reacs, prods,
             pes_model_dct_i, spc_model_dct_i,
@@ -603,7 +598,7 @@ def get_channel_data(reacs, prods, tsname,
     # Set up the info for the wells
     rwell_model = spc_model_dct_i['ts']['rwells']
     pwell_model = spc_model_dct_i['ts']['pwells']
-    rxn_class = spc_dct[tsname+'_0']['class']
+    rxn_class = spc_dct[tsname_allconfigs[0]]['class']
     if need_fake_wells(rxn_class, rwell_model):
         chnl_infs['fake_vdwr'] = copy.deepcopy(chnl_infs['reacs'])
     if need_fake_wells(rxn_class, pwell_model):

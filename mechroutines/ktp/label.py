@@ -2,6 +2,7 @@
   Handle labels
 """
 
+from mechlib.amech_io.parser.spc import tsnames_in_dct, base_tsname
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.models.typ import need_fake_wells
 
@@ -21,9 +22,8 @@ def make_pes_label_dct(rxn_lst, pes_idx, spc_dct, spc_mod_dct_i):
 
         # Get thhe name and class
         chnl_idx, (reacs, prods) = rxn
-        tsname = 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
-        sub_tsname = '{}_{:g}'.format(tsname, 0)
-        rclass = spc_dct[sub_tsname]['class']
+        tsname = base_tsname(pes_idx, chnl_idx)
+        rclass = spc_dct[tsname+'_0']['class']
 
         # Build labels
         pes_label_dct.update(

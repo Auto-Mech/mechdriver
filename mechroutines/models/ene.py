@@ -78,7 +78,6 @@ def electronic_energy(spc_dct_i, pf_filesystems, spc_model_dct_i, conf=None):
             # Build SP filesys
             mod_thy_info = tinfo.modify_orb_label(level, spc_info)
             sp_save_fs = autofile.fs.single_point(cnf_path)
-            sp_save_fs[-1].create(mod_thy_info[1:4])
             # Read the energy
             sp_path = sp_save_fs[-1].path(mod_thy_info[1:4])
             if os.path.exists(sp_path):
