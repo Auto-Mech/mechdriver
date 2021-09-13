@@ -1087,24 +1087,6 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
     return sym_idx
 
 
-def _is_proper_isomer(cnf_save_fs, zma):
-    """ Check if geom is the same isomer as those in the filesys
-    """
-    vma = automol.zmat.var_(zma)
-    if cnf_save_fs[0].file.vmatrix.exists():
-        exist_vma = cnf_save_fs[0].file.vmatrix.read()
-        if vma != exist_vma:
-            warning_message(
-                " - Isomer is not the same as starting isomer. Skipping...")
-            proper_isomer = False
-        else:
-            proper_isomer = True
-    else:
-        proper_isomer = False
-
-    return proper_isomer
-
-
 def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):
     """ Perform a series of checks to assess the viability
         of a transition state geometry prior to saving
