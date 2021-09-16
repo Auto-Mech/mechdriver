@@ -34,16 +34,18 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
         :type save_prefix: str
     """
 
-    zmas, rclasses = (), ()
+    zrxns, zmas, rclasses = None, (), ()
 
     # Try and read the reaction from filesys if requested
     if not re_id:
         zrxns, zmas = filesys.read.reactions(
             rxn_info, ini_thy_info, zma_locs, save_prefix)
-        print('    Reading from fileysystem...')
+        if zrxns is not None:
+            # zrxns = (zrxn,)
+            # zmas = (zma,)
+            print('    Reading from fileysystem...')
     else:
         # unsafe without checking if zrxn id matches what is in save...
-        zrxns = None
         print('    Requested Reidentification regardless of what is in SAVE')
 
     if zrxns is None:
