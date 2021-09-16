@@ -11,7 +11,7 @@ from mechlib.amech_io import printer as ioprinter
 from mechlib import filesys
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
-from mechroutines.es import rpath
+from mechroutines.es.newts import rpath
 
 
 # Functions to assess the status of existing saddle point structures in SAVE
@@ -34,8 +34,8 @@ def read_existing_saddle_points(spc_dct, tsname, savefs_dct, es_keyword_dct):
     # Set zma information for reading
     zma_locs = (spc_dct[tsname].get('zma_idx', 0),)
 
-    zmas = ()
-    for _fs in ('runlvl_cnf_fs', 'inplvl_cnf_fs'):
+    zmas = [None, None]
+    for idx, _fs in enumerate(('runlvl_cnf_fs', 'inplvl_cnf_fs')):
         cnf_fs, cnf_locs = savefs_dct[_fs]
         if cnf_locs:
             zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
@@ -45,11 +45,9 @@ def read_existing_saddle_points(spc_dct, tsname, savefs_dct, es_keyword_dct):
                     ' - Z-Matrix found.')
                 ioprinter.info_message(
                     ' - Reading Z-Matrix from path {}'.format(geo_path))
-                zmas += (zma_fs[-1].file.zmatrix.read(zma_locs),)
-            else:
-                zmas += (None,)
+                zmas[idx] = zma_fs[-1].file.zmatrix.read(zma_locs)
 
-    return zmas
+    return tuple(zmas)
 
 
 def search_required(runlvl_zma, es_keyword_dct):

@@ -86,10 +86,11 @@ def run_tsk(tsk, spc_dct, spc_name,
             hr_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'rpath' in tsk:
-            rpath_tsk(
-                job, spc_dct, spc_name, thy_dct, es_keyword_dct,
-                run_prefix, save_prefix)
+        # elif 'rpath' in tsk:
+        #     rpath_tsk(
+        #         job, spc_dct, spc_name,
+        #         thy_dct, es_keyword_dct,
+        #         run_prefix, save_prefix)
         elif 'find' in tsk:
             findts(
                 spc_dct, spc_name, thy_dct, es_keyword_dct,
@@ -897,127 +898,6 @@ def hr_tsk(job, spc_dct, spc_name,
                         ioprinter.obj('vspace')
         else:
             ioprinter.info_message('No torsional modes in the species')
-
-
-def rpath_tsk(job, spc_dct, spc_name,
-              thy_dct, es_keyword_dct,
-              run_prefix, save_prefix):
-    """ run a scan over the specified torsional coordinates
-
-        :param job:
-        :type job:
-        :param spc_dct:
-        :type spc_dct:
-        :param spc_name:
-        :type spc_name:
-        :param thy_dct:
-        :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure tsk
-        :type es_keyword_dct: dict[str:str]
-        :param run_prefix: root-path to the run-filesystem
-        :type run_prefix: str
-        :param save_prefix: root-path to the save-filesystem
-        :type save_prefix: str
-    """
-
-    # Get dct for specific species task is run for
-    spc_dct_i = spc_dct[spc_name]
-
-    # Set up coordinate name
-    rxn_coord = es_keyword_dct.get('rxn_coord')
-    if rxn_coord == 'auto':
-        coord_name = ['Rn']  # grab from zrxn object
-    else:
-        coord_name = ['IRC']
-
-    # Set the spc_info
-    spc_info = sinfo.from_dct(spc_dct_i)
-
-    # Modify the theory
-    method_dct = thy_dct.get(es_keyword_dct['runlvl'])
-    ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-    thy_info = tinfo.from_dct(method_dct)
-    ini_thy_info = tinfo.from_dct(ini_method_dct)
-    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    mod_ini_thy_info = tinfo.modify_orb_label(
-        ini_thy_info, spc_info)
-
-    # Get options from the dct or es options lst
-    overwrite = es_keyword_dct['overwrite']
-
-    # Set up the script
-    script_str, kwargs = qchem_params(
-        method_dct, elstruct.Job.OPTIMIZATION)
-
-    # Set the filesystem objects
-    # rxn_info = spc_dct_i['rxn_info']
-    # fs_rxn_info = rinfo.sort(rxn_info)
-
-    # New filesystem objects
-    if coord_name == 'irc':
-        _root = root_locs(spc_dct_i, saddle=True)
-        ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
-            run_prefix, save_prefix, 'CONFORMER',
-            thy_locs=mod_ini_thy_info[1:],
-            **_root)
-        ini_loc_info = filesys.mincnf.min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
-        ini_min_locs, ini_pfx_save_path = ini_loc_info
-        ini_cnf_run_fs[-1].create(ini_min_locs)
-        ini_pfx_run_path = ini_cnf_run_fs[-1].path(ini_min_locs)
-
-    else:
-        # ts_info = (ts_num,)
-        ts_info = (0,)
-        ini_ts_run_fs, ini_ts_save_fs = build_fs(
-            run_prefix, save_prefix, 'TS',
-            thy_locs=mod_ini_thy_info[1:],
-            **_root)
-        ini_pfx_run_path = ini_ts_run_fs.path(ts_info)
-        ini_pfx_save_path = ini_ts_save_fs.path(ts_info)
-
-    # Get options from the dct or es options lst
-    overwrite = es_keyword_dct['overwrite']
-
-    ini_scn_run_fs, ini_scn_save_fs = build_fs(
-        ini_pfx_run_path, ini_pfx_save_path, 'SCAN',
-        zma_locs=(0,))
-
-    # ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
-    geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
-    # zma = ini_zma_save_fs[-1].file.zmatrix.read((0,))
-
-    # Run job
-    if job == 'scan':
-        pass
-        # if rxn_coord == 'auto':
-        #     pass
-        # elif rxn_coord == 'irc':
-        #     rpath.irc_scan(
-        #         geo, spc_info, coord_name,
-        #         mod_ini_thy_info, ini_method_dct,
-        #         ini_scn_save_fs, ini_cnf_run_path,
-        #         overwrite)
-
-    elif job in ('energy', 'grad', 'hess'):
-
-        # Script
-        script_str, kwargs = qchem_params(
-            method_dct)
-
-        # Need to put in something with the IRC idxs
-        for locs in ini_scn_save_fs[-1].existing():
-            geo = ini_scn_save_fs[-1].file.geometry.read(locs)
-            ini_scn_run_fs[-1].create(locs)
-            ES_TSKS[job](
-                None, geo, spc_info, mod_thy_info,
-                ini_scn_run_fs, ini_scn_save_fs, locs,
-                script_str, overwrite, **kwargs)
-            ioprinter.obj('vspace')
-
-    elif Gjob == 'infene':
-        Gpass
-        # inf_sep_ene()
 
 
 def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):

@@ -1,11 +1,4 @@
-"""
-  TS Finding algorithms
-
-    2-TS
-    (1) mult. sadpts for TS (comes into task from ID)
-    (2) ring puckering (ID after initial sadpt found)
-    (3) different stereo in migration (ID after sadpt. I think)
-
+""" Set up objects used for TS calculations
 """
 
 import autofile
@@ -200,5 +193,3 @@ def set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
     }
 
     return thy_inf_dct, runfs_dct, savefs_dct
-
-

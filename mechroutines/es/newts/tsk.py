@@ -1,24 +1,19 @@
-"""
-  TS Finding algorithms
+""" TS Finding algorithms
 
-    2-TS
-    (1) mult. sadpts for TS (comes into task from ID)
-    (2) ring puckering (ID after initial sadpt found)
-    (3) different stereo in migration (ID after sadpt. I think)
-
+    Newish approach to eventually integrate
+    - KBM
 """
 
 import automol.par
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
-# from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner import qchem_params
-from mechroutines.es.ts import _sadpt as sadpt
-from mechroutines.es.ts import _irc as irc
-from mechroutines.es.ts import _rpath as rpath
-from mechroutines.es.ts._util import set_thy_inf_dcts
-from mechroutines.es.ts._fs import rpath_fs
+from mechroutines.es.newts import _sadpt as sadpt
+from mechroutines.es.newts import _irc as irc
+from mechroutines.es.newts import _rpath as rpath
+from mechroutines.es.newts._util import set_thy_inf_dcts
+from mechroutines.es.newts._fs import rpath_fs
 
 
 ES_TSKS = {}
@@ -98,9 +93,9 @@ def run_rpvtst(spc_dct, tsname, method_dct, es_keyword_dct,
 
     # If success, IRC from sadpt
     # else IRC from rmax? or just keep scan and move on
-    rpath_tsk(job, spc_dct, tsname,
-              thy_dct, es_keyword_dct,
-              run_prefix, save_prefix)
+    # rpath_tsk(job, spc_dct, tsname,
+    #           thy_dct, es_keyword_dct,
+    #           run_prefix, save_prefix)
 
     return success
 
@@ -230,10 +225,10 @@ def rpath_tsk(job, spc_dct, spc_name,
 
     # Run job
     if job == 'scan':
-
         if 'irc' in scn_alg:
             zmas = irc.launch_point_zmatrices(
-                ts_dct, mod_thy_info, scn_alg, scn_fs, cnf_fs, cnf_locs)
+                ts_dct, mod_thy_info, scn_alg,
+                scn_fs, cnf_fs, cnf_locs)
             for zma in zmas:
                 success = irc.execute_irc(
                     zma, ts_info,
