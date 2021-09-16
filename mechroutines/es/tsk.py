@@ -14,11 +14,13 @@ from mechlib import filesys
 from mechlib.filesys import build_fs
 from mechlib.filesys import root_locs
 from mechlib.amech_io import printer as ioprinter
-from mechroutines.es._ts import findts
 from mechroutines.es._routines import conformer
 from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
-# from mechroutines.es._routines import rpath
+from mechroutines.es._ts import findts
+# from mechroutines.es.newts import findts
+# from mechroutines.es.newts import rpath_tsk
+
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
 
