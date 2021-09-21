@@ -71,7 +71,7 @@ def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
     # Save data from optimization and hessian jobs
     _save_geom(opt_ret, cnf_fs, cnf_locs)
     _save_zmatrix(opt_ret, zma_fs, zma_locs, init_zma=init_zma)
-    _save_energy(opt_ret, sp_fs, thy_locs[1:])
+    _save_energy(opt_ret, sp_fs, thy_locs)
 
     if hess_ret is not None:
         _save_hessian(hess_ret, cnf_fs, cnf_locs)

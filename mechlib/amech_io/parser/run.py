@@ -417,19 +417,21 @@ def check_inputs(tsk_dct, pes_dct, pes_mod_dct, spc_mod_dct):
     """
 
     # Check if a mechanism has been provided where required
-    if tsk_dct['ktp']:
+    if tsk_dct['ktp'] or tsk_dct['thermo']:
         if pes_mod_dct is None:
             error_message(
-                'kTPDriver Requested. \n'
+                'kTPDriver or Thermo Requested. \n'
                 ' However no kin model provided in models.dat\n'
                 ' Exiting MechDriver...')
             sys.exit()
         if spc_mod_dct is None:
             error_message(
-                'kTPDriver Requested. \n'
+                'kTPDriver or Thermo Requested. \n'
                 '  However no spc model provided in models.dat\n'
                 '  Exiting MechDriver...')
             sys.exit()
+
+    if tsk_dct['ktp']:
         if pes_dct is None:
             error_message(
                 'kTPDriver Requested. \n'
