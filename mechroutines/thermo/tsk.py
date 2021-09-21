@@ -99,9 +99,6 @@ def produce_boltzmann_weighted_conformers_pf(
         for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
             locs_pfs_arrays.append(reader.mess.messpf(
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0]))
-            # TODO: This is the average heat of formation of the various models,
-            # It should actually be based on the coeffs that the pfs are combined with
-            # or something more sophisticated
             hf_val = 0.
             for spc_mod in spc_mods:
                 hf_val += spc_dct[spc_name]['Hfs'][idx][spc_mod][0] / len(spc_mods)
