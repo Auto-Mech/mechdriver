@@ -124,7 +124,6 @@ def conformer_list(
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
     sort_info_lst = _set_sort_info_lst(
         print_keyword_dct['sort'], thy_dct, spc_info)
-
     zrxn = spc_dct_i.get('zrxn', None)
     _root = filesys.root_locs(
         spc_dct_i,
@@ -294,7 +293,7 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
             filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
         filelabel += '.csv'
     elif 'geo' in tsk:
-        filelabel = 'molden'
+        filelabel = 'geo'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
             filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
@@ -302,7 +301,7 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
             filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
         filelabel += '.txt'
     elif 'molden' in tsk:
-        filelabel = 'geo'
+        filelabel = 'molden'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
             filelabel += '_{}'.format(proc_keyword_dct['geolvl'])

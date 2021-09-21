@@ -254,7 +254,7 @@ def energy(spc_name, spc_dct_i,
     if _ene is not None:
         miss_data = None
     else:
-        miss_data = (spc_name, mod_thy_info, 'energy')
+        miss_data = (spc_name + '_'.join(locs), mod_thy_info, 'energy')
 
     return [locs_path, _ene], miss_data
 

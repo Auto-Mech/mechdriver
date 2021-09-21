@@ -39,11 +39,11 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
         sym_model = spc_mod_dct_i['symm']['mod']
 
         # Obtain geometry, energy, and symmetry filesystem
-        [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['symm']
-        geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
 
         # Obtain the internal symmetry number using some routine
         if sym_model == 'sampling':
+            [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['symm']
+            geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
             # Obtain the external symssetry number
             ext_symm = automol.geom.external_symmetry_factor(geo)
 
@@ -70,10 +70,17 @@ def symmetry_factor(pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors,
                 geo, int_symm, ext_symm, endgrp)
 
         elif sym_model == 'HCO_model':
+            if zma is not None:
+                geo = automol.zmat.geometry(zma)
+            else:
+                [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['symm']
+                geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
             ret = automol.symm.oxygenated_hydrocarbon_symm_num(geo)
             int_symm, ext_symm = ret
 
         else:
+            [cnf_fs, cnf_path, min_cnf_locs, _, _] = pf_filesystems['symm']
+            geo = cnf_fs[-1].file.geometry.read(min_cnf_locs)
             ioprinter.info_message(
                 'No symmetry model requested, ',
                 'setting internal sym factor to 1.0')
