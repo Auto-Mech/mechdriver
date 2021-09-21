@@ -1133,8 +1133,6 @@ def unique_fs_ring_confs(
         if ini_rid in [locs[0] for locs in uni_ini_rng_locs]:
             uni_ini_rng_locs.append(ini_locs)
             continue
-        # inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
-        # inizma = automol.geom.zmatrix(inigeo)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
         ini_zma_fs = autofile.fs.zmatrix(ini_cnf_save_path)
         inizma = ini_zma_fs[-1].file.zmatrix.read((0,))

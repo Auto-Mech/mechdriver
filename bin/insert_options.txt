@@ -3,9 +3,6 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-
-
-
 save_filesystem: /lcrc/project/PACC/AutoMech/data/save
 input_file: /lcrc/project/PACC/AutoMech/data/save/SPC/C4H10/NNPPMTNAJDCUHE/0/1/UHFFFAOYSA-N/hJUn9NR/CONFS/rljKJA0Vb6S1U/cEjhd7G3KiDFf/geom.inp
 output_file: zmat.zmat
