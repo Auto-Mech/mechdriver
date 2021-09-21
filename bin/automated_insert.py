@@ -3,7 +3,6 @@ usiing a log file
 """
 
 import sys
-import os
 
 import autofile
 import automol
@@ -11,14 +10,11 @@ from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import spc as sinfo
 import elstruct
-import autorun
+from automol.geom import ring_fragments_geometry as _fragment_ring_geo
+from mechlib.filesys import save
 from mechroutines.es._routines.conformer import _saved_cnf_info
 from mechroutines.es._routines.conformer import _sym_unique
-from mechroutines.es._routines.conformer import _save_unique_parsed_conformer
 from mechroutines.es._routines.conformer import _geo_unique
-from mechroutines.es._routines.conformer import _fragment_ring_geo
-from mechroutines.es._routines._sadpt import save_saddle_point
-from mechlib.reaction.rxnid import _id_reaction
 
 THEORY_DCT = {
     'lvl_wbs': {
@@ -138,7 +134,7 @@ def parse_user_locs(insert_dct):
         rid = autofile.schema.generate_new_ring_id()
     if cid is None:
         cid = autofile.schema.generate_new_conformer_id()
-    return (rid, cid)
+    return [rid], [cid], (rid, cid)
 
 
 def parse_user_species(insert_dct):
@@ -493,93 +489,62 @@ def get_zrxn(geo, rxn_info, rxn_class):
 def main(insert_dct):
 
     prefix = read_user_filesystem(insert_dct)
+    # parse method from insert input file
+    thy_info = parse_user_theory(insert_dct)
+    prog, method, basis, _ = thy_info
+
+    hess_job = False
+    zrxn = None
+    zma = None
     # Read in the input and output files that we
     # Are inserting into the filesystem
     inp_str = read_user_file(insert_dct, 'input_file')
     out_str = read_user_file(insert_dct, 'output_file')
-
-    # parse method from insert input file
-    thy_info = parse_user_theory(insert_dct)
-
-    # parse out geo information first, to make sure
-    # user save specifications match output
-    prog, method, basis, _ = thy_info
-    ene = elstruct.reader.energy(prog, method, out_str)
-    geo = elstruct.reader.opt_geometry(prog, out_str)
-    if geo is None:
-        print(
-            'No geometry could be parsed from output' +
-            'Check that the program matches user specied' +
-            ' {}'.format(prog) + ' and method matches' +
-            ' {}'.format(method))
-        sys.exit()
+    output_type = insert_dct['output_type']
+    if output_type == 'geo':
+        geo = automol.geom.from_xyz_string(out_str)
+        ene = float(automol.geom.xyz_string_comment(out_str))
+    elif output_type == 'zma':
+        out_lines = out_str.splitlines()
+        ene = float(out_lines[0])
+        out_str = '\n'.join(out_lines[1:])
+        zma = automol.zmat.from_string(out_str)
+        geo = automol.zmat.geometry(zma)
+    elif output_type == 'optimization':
+        ene = elstruct.reader.energy(prog, method, out_str)
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+        zma = elstruct.reader.opt_zmatrix(prog, out_str)
+        if geo is None:
+            print(
+                'No geometry could be parsed from output' +
+                'Check that the program matches user specied' +
+                ' {}'.format(prog) + ' and method matches' +
+                ' {}'.format(method))
+            sys.exit()
+    elif output_type == 'frequencies':
+        ene = elstruct.reader.energy(prog, method, out_str)
+        geo = elstruct.reader.opt_geometry(prog, out_str)
+        zma = elstruct.reader.opt_zmatrix(prog, out_str)
+        hess_job = True
+        if geo is None:
+            print(
+                'No geometry could be parsed from output' +
+                'Check that the program matches user specied' +
+                ' {}'.format(prog) + ' and method matches' +
+                ' {}'.format(method))
+            sys.exit()
+    if zma is None:
+        zma = automol.geom.zmatrix(geo)
+        geo = automol.zmat.geometry(zma)
 
     # Parse out user specified save location
-    zrxn = None
     if insert_dct['saddle']:
         rxn_info, spc_info, rxn_class = parse_user_reaction(insert_dct)
         zrxn, zma, geo, rxn_info = get_zrxn(geo, rxn_info, rxn_class)
-        # for zrxn_i in zrxns:
-        #     forw_form_key = automol.reac.forming_bond_keys(zrxn_i)
-        #     back_form_key = automol.reac.forming_bond_keys(zrxn_i, rev=True)
-        #     forw_brk_key = automol.reac.breaking_bond_keys(zrxn_i)
-        #     back_brk_key = automol.reac.breaking_bond_keys(zrxn_i, rev=True)
-        #     forward_gra = automol.graph.without_stereo_parities(
-        #         automol.graph.without_dummy_bonds(
-        #             automol.graph.without_fractional_bonds(
-        #                 zrxn_i.forward_ts_graph)))
-        #     forward_gra = automol.graph.add_bonds(forward_gra, forw_form_key)
-        #     backward_gra = automol.graph.without_stereo_parities(
-        #         automol.graph.without_dummy_bonds(
-        #             automol.graph.without_fractional_bonds(
-        #                 zrxn_i.backward_ts_graph)))
-        #     backward_gra = automol.graph.add_bonds(backward_gra, back_form_key)
-        #     if zrxn_i.class_ == 'hydrogen abstraction':
-        #         forward_gra = automol.graph.remove_bonds(forward_gra, forw_brk_key)
-        #         backward_gra = automol.graph.remove_bonds(backward_gra, back_brk_key)
-        #     print('forRXN', automol.graph.string(zrxn_i.forward_ts_graph))
-        #     print('forRXN', automol.graph.string(forward_gra))
-        #     print('bacRXN', automol.graph.string(zrxn_i.backward_ts_graph))
-        #     print('bacRXN', automol.graph.string(backward_gra))
-        #     if forward_gra == automol.geom.graph(geo, stereo=False):
-        #         zrxn = zrxn_i
-        #         zma, _, _ = automol.reac.ts_zmatrix(zrxn, geo)
-        #     elif backward_gra == automol.geom.graph(geo, stereo=False):
-        #         zrxn = automol.reac.reverse(zrxn_i)
-        #         zma, _, _ = automol.reac.ts_zmatrix(zrxn, geo)
-        # if zrxn is None:
-        #     print(
-        #         'Your geometry did not match any of the attempted ' +
-        #         'zrxns, which are the following')
-        #     for zrxn_i in zrxns:
-        #         print(zrxns)
-        #     sys.exit()
-        # # hess = elstruct.reader.hessian(prog, out_str)
-        # Hess = None
-        # If hess is None:
-        #    print(
-        #        'No hessian found in output, cannot save ' +
-        #        'a transition state without a hessian')
-        #    sys.exit()
-        # run_path = insert_dct['run_path']
-        # if run_path is None:
-        #     run_path = os.getcwd()
-        # run_fs = autofile.fs.run(run_path)
-        # freq_run_path = run_fs[-1].path(['hessian'])
-        # run_fs[-1].create(['hessian'])
-        # script_str = autorun.SCRIPT_DCT['projrot']
-        # freqs, _, imags, _ = autorun.projrot.frequencies(
-        #     script_str, freq_run_path, [geo], [[]], [hess])
-        # if len(imags) != 1:
-        #     print(
-        #         'Can only save a transition state that has a single' +
-        #         'imaginary frequency, projrot found the following' +
-        #         'frequencies: ' + ','.join(imags))
-        #     sys.exit()
     else:
         spc_info = parse_user_species(insert_dct)
     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-    locs = parse_user_locs(insert_dct)
+    rng_locs, tors_locs, locs = parse_user_locs(insert_dct)
 
     # Check that the save location matches geo information
     if not insert_dct['saddle']:
@@ -589,10 +554,10 @@ def main(insert_dct):
                 ' info matches the info in user given output')
             sys.exit()
         # Check that the rid/cid info matches the filesystem
-        fs_array, prefix_array = create_species_filesystems(
+        fs_array, _ = create_species_filesystems(
             prefix, spc_info, mod_thy_info, locs=None)
     else:
-        fs_array, prefix_array = create_reaction_filesystems(
+        fs_array, _ = create_reaction_filesystems(
             prefix, rxn_info, mod_thy_info,
             ts_locs=insert_dct['ts_locs'], locs=None)
     cnf_fs = fs_array[-1]
@@ -605,7 +570,8 @@ def main(insert_dct):
     inf_obj = autofile.schema.info_objects.run(
         job=elstruct.Job.OPTIMIZATION, prog=prog, version='',
         method=method, basis=basis, status=autofile.schema.RunStatus.SUCCESS)
-    ret = (inf_obj, inp_str, out_str)
+    inf_obj.utc_end_time = autofile.schema.utc_time()
+    inf_obj.utc_start_time = autofile.schema.utc_time()
     _, saved_geos, saved_enes = _saved_cnf_info(
         cnf_fs, mod_thy_info)
     if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn=zrxn):
@@ -618,7 +584,7 @@ def main(insert_dct):
                 rinf_obj = autofile.schema.info_objects.conformer_trunk(0)
                 rinf_obj.nsamp = 1
             if cnf_fs[1].file.info.exists([locs[0]]):
-                cinf_obj = cnf_fs[1].file.info.read(locs[0])
+                cinf_obj = cnf_fs[1].file.info.read([locs[0]])
                 cnsampd = cinf_obj.nsamp
                 cnsampd += 1
                 cinf_obj.nsamp = cnsampd
@@ -628,21 +594,17 @@ def main(insert_dct):
             cnf_fs[1].create([locs[0]])
             cnf_fs[0].file.info.write(rinf_obj)
             cnf_fs[1].file.info.write(cinf_obj, [locs[0]])
-            hess, freqs, imags = None, None, None
-            if hess is not None and zrxn is not None:
+            hess_ret = None
+            if hess_job:
                 hess_inf_obj = autofile.schema.info_objects.run(
                     job=elstruct.Job.HESSIAN, prog=prog, version='',
                     method=method, basis=basis,
                     status=autofile.schema.RunStatus.SUCCESS)
                 hess_ret = (hess_inf_obj, inp_str, out_str)
-                save_saddle_point(
-                    zrxn, ret, hess_ret, freqs, imags,
-                    mod_thy_info, {'runlvl_cnf_fs': (cnf_fs, None)}, locs,
-                    zma_locs=(0,), zma=zma)
-            else:
-                _save_unique_parsed_conformer(
-                    mod_thy_info, cnf_fs, locs, (geo, zma, ene),
-                    inf_obj, inp_str, zrxn=zrxn, zma_locs=(0,))
+            save_info = (geo, zma, ene, inf_obj, inp_str)
+            save.parsed_conformer(
+                save_info, cnf_fs, mod_thy_info[1:], rng_locs=rng_locs,
+                tors_locs=tors_locs, zrxn=zrxn, hess_ret=hess_ret)
             print(
                 'geometry is now saved at {}'.format(cnf_fs[-1].path(locs)))
     else:
@@ -729,6 +691,7 @@ def parse_script_input(script_input_file):
         'orb_res': None,
         'input_file': None,
         'output_file': None,
+        'output_type': 'optimization',
         'ts_locs': None,
         'ts_mult': None,
         'rxn_class': None,
@@ -808,5 +771,5 @@ def parse_script_input(script_input_file):
 
 if __name__ == '__main__':
     SCRIPT_INPUT_FILE = 'insert_options.txt'
-    insert_dct = parse_script_input(SCRIPT_INPUT_FILE)
-    main(insert_dct)
+    insert_options_dct = parse_script_input(SCRIPT_INPUT_FILE)
+    main(insert_options_dct)
