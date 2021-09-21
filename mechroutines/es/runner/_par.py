@@ -50,7 +50,7 @@ def _gaussian(method_dct, prog, job=None):
 
     # Set the options
     nprocs = method_dct.get('nprocs', 10)
-    memory = method_dct.get('memory', 20)
+    memory = method_dct.get('mem', 20)
     nprocs = nprocs if nprocs is not None else 10
     memory = memory if memory is not None else 20
 
@@ -118,12 +118,12 @@ def _molpro(method_dct, prog, job=None):
     method = method_dct.get('method')
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         nprocs = method_dct.get('nprocs', 4)
-        memory = method_dct.get('memory', 10)
+        memory = method_dct.get('mem', 10)
         nprocs = nprocs if nprocs is not None else 4
         memory = memory if memory is not None else 10
     else:
         nprocs = method_dct.get('nprocs', 4)
-        memory = method_dct.get('memory', 20)
+        memory = method_dct.get('mem', 20)
         nprocs = nprocs if nprocs is not None else 4
         memory = memory if memory is not None else 10
 
@@ -176,7 +176,7 @@ def _psi4(method_dct, prog, job=None):
     # Job unneeded for now
     _, _ = method_dct, job
     method = method_dct.get('method')
-    memory = method_dct.get('memory', 20)
+    memory = method_dct.get('mem', 20)
 
     # Build the submission script string
     script_str = SCRIPT_DCT[prog]

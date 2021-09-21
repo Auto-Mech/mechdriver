@@ -78,7 +78,8 @@ def run_tsk(tsk, obj_queue,
 
             # Loop over conformers
             for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
-                label = spc_name + '_' + '_'.join(locs)
+                label = spc_name + ':' + '_'.join(locs)
+                print(label)
                 if 'freq' in tsk and not _skip_freqs(spc_name, spc_dct_i):
                     _dat, miss_data_i = collect.frequencies(
                         spc_name, spc_dct_i, spc_mod_dct_i,
@@ -100,14 +101,18 @@ def run_tsk(tsk, obj_queue,
                 elif 'geo' in tsk:
                     csv_data_i, miss_data_i = collect.geometry(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
+                    print(csv_data_i)
                     csv_data[label] = csv_data_i
                     if miss_data_i is not None:
                         miss_data += (miss_data_i,)
 
                 elif 'molden' in tsk:
-                    csv_data_i = collect.molden(
+                    csv_data_i, miss_data_i = collect.molden(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
+                    print(csv_data_i)
                     csv_data[label] = csv_data_i
+                    if miss_data_i is not None:
+                        miss_data += (miss_data_i,)
 
                 elif 'zma' in tsk:
                     csv_data_i, miss_data_i = collect.zmatrix(

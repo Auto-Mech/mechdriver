@@ -283,12 +283,14 @@ def single_conformer(zma, spc_info, mod_thy_info,
         filesystem
     """
     skip_job = False
-    if _this_conformer_is_running(zma, cnf_run_fs):
+    if this_conformer_is_running(zma, cnf_run_fs):
         skip_job = True
-    elif _this_conformer_was_run_in_save(zma, cnf_save_fs):
+    elif this_conformer_was_run_in_save(zma, cnf_save_fs):
         skip_job = True
-    elif _this_conformer_was_run_in_run(zma, cnf_run_fs):
-        skip_job = True
+    if not skip_job:
+        run_in_run, sym_locs =this_conformer_was_run_in_run(zma, cnf_run_fs)
+        if run_in_run:
+            skip_job = True
 
     if not skip_job:
         # Build the filesystem
@@ -864,7 +866,7 @@ def _init_geom_is_running(cnf_run_fs):
     return running
 
 
-def _this_conformer_was_run_in_save(zma, cnf_fs):
+def this_conformer_was_run_in_save(zma, cnf_fs):
     running = False
     for locs in cnf_fs[-1].existing(ignore_bad_formats=True):
         cnf_path = cnf_fs[-1].path(locs)
@@ -885,10 +887,13 @@ def _this_conformer_was_run_in_save(zma, cnf_fs):
     return running
 
 
-def _this_conformer_was_run_in_run(zma, cnf_fs):
-    running = False
+def this_conformer_was_run_in_run(zma, cnf_fs):
+    locs_idx = None
     job = elstruct.Job.OPTIMIZATION
-    for locs in cnf_fs[-1].existing(ignore_bad_formats=True):
+
+    sym_locs = []
+    run_locs_lst = cnf_fs[-1].existing(ignore_bad_formats=True)
+    for idx, locs in enumerate(run_locs_lst):
         cnf_path = cnf_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_path)
         run_path = run_fs[-1].path([job])
@@ -905,12 +910,45 @@ def _this_conformer_was_run_in_run(zma, cnf_fs):
                     info_message(
                         'This conformer was already run ' +
                         'in {}.'.format(run_path))
-                    running = True
+                    locs_idx = idx
                     break
-    return running
+    # This is to find if it was not saved becaue its equivalent
+    # to other conformers
+    if locs_idx is not None:
+        out_enes = []
+        out_geos = []
+        for idx, locs in enumerate(run_locs_lst):
+            cnf_path = cnf_fs[-1].path(locs)
+            run_fs = autofile.fs.run(cnf_path)
+            run_path = run_fs[-1].path([job])
+            if run_fs[-1].file.info.exists([job]):
+                inf_obj = run_fs[-1].file.info.read([job])
+                status = inf_obj.status
+                if status == autofile.schema.RunStatus.SUCCESS:
+                    method = inf_obj.method
+                    prog = inf_obj.prog
+                    out_str = run_fs[-1].file.output.read([job])
+                    idx_ene = elstruct.reader.energy(prog, method, out_str)
+                    idx_geo = elstruct.reader.opt_geometry(prog, out_str)
+                    if idx == locs_idx:
+                        out_enes.append(10000)
+                        out_geos.append(None)
+                        ran_ene = idx_ene
+                        ran_geo = idx_geo
+                    else:
+                        out_enes.append(idx_ene)
+                        out_geos.append(idx_geo)
+            else:
+                out_enes.append(10000)
+                out_geos.append(None)
+        for idx, _ in enumerate(out_enes):
+            sym_idx = _sym_unique(ran_geo, ran_ene, [out_geos[idx]], [out_enes[idx]], ethresh=1.0e-5)
+            if sym_idx is not None:
+                sym_locs.append(run_locs_lst[idx])
+    return locs_idx is not None, sym_locs
 
 
-def _this_conformer_is_running(zma, cnf_run_fs):
+def this_conformer_is_running(zma, cnf_run_fs):
     """ Check the RUN filesystem for similar geometry
         submissions that are currently running
     """
@@ -1095,11 +1133,13 @@ def unique_fs_ring_confs(
         if ini_rid in [locs[0] for locs in uni_ini_rng_locs]:
             uni_ini_rng_locs.append(ini_locs)
             continue
-        inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+        # inigeo = ini_cnf_save_fs[-1].file.geometry.read(ini_locs)
+        # inizma = automol.geom.zmatrix(inigeo)
         ini_cnf_save_path = ini_cnf_save_fs[-1].path(ini_locs)
-        inizma = automol.geom.zmatrix(inigeo)
+        ini_zma_fs = autofile.fs.zmatrix(ini_cnf_save_path)
+        inizma = ini_zma_fs[-1].file.zmatrix.read((0,))
+        inigeo = automol.zmat.geometry(inizma)
         checking('structures', ini_cnf_save_path)
-
         # Check to see if a similar ring pucker is in the runlvl filesystem
         found_rid = None
         if ini_rid in rng_dct:
@@ -1117,7 +1157,11 @@ def unique_fs_ring_confs(
                     break
                 if trid in skip_trid:
                     continue
-                geo = cnf_save_fs[-1].file.geometry.read(tlocs)
+                cnf_save_path = cnf_save_fs[-1].path(tlocs)
+                zma_fs = autofile.fs.zmatrix(cnf_save_path)
+                zma = zma_fs[-1].file.zmatrix.read((0,))
+                geo = automol.zmat.geometry(zma)
+                # geo = cnf_save_fs[-1].file.geometry.read(tlocs)
                 frag_geo = automol.geom.ring_fragments_geometry(geo)
                 frag_zma = automol.geom.zmatrix(frag_geo)
                 if automol.zmat.almost_equal(frag_ini_zma, frag_zma,
@@ -1139,8 +1183,9 @@ def unique_fs_ring_confs(
             if rid != found_rid:
                 continue
             cnf_save_path = cnf_save_fs[-1].path(locs)
-            geo = cnf_save_fs[-1].file.geometry.read(locs)
-            zma = automol.geom.zmatrix(geo)
+            zma_fs = autofile.fs.zmatrix(cnf_save_path)
+            zma = zma_fs[-1].file.zmatrix.read((0,))
+            geo = automol.zmat.geometry(zma)
             if automol.zmat.almost_equal(inizma, zma,
                                          dist_rtol=0.1, ang_atol=.4):
                 info_message(

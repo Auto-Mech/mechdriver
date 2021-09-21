@@ -751,6 +751,12 @@ def hr_tsk(job, spc_dct, spc_name,
                         use_locs=(rid, new_cid),
                         **kwargs)
                     min_locs = (rid, new_cid)
+                    save_locs = cnf_save_fs[-1].existing()
+                    if not min_locs in save_locs:
+                        run_in_run, sym_locs_lst = conformer.this_conformer_was_run_in_run(zma, cnf_run_fs)
+                        for sym_locs in sym_locs_lst:
+                            if sym_locs in save_locs:
+                                min_locs = sym_locs
             cnf_save_path = cnf_save_fs[-1].path(min_locs)
             ioprinter.info_message('Same conformer saved at {} and {}'.format(
                 ini_cnf_save_path, cnf_save_path))
