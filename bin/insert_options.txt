@@ -1,17 +1,26 @@
 !!!!! Options for inserting
 !!!!! A conformer into your save filesystem
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
 save_filesystem: /lcrc/project/PACC/AutoMech/data/save
-input_file: /lcrc/project/PACC/AutoMech/data/save/SPC/C4H10/NNPPMTNAJDCUHE/0/1/UHFFFAOYSA-N/hJUn9NR/CONFS/rljKJA0Vb6S1U/cEjhd7G3KiDFf/geom.inp
-output_file: zmat.zmat
-output_type: zma
+input_file: /lcrc/project/PACC/AutoMech/data/run/RXN/C4H7.H2/YXDUXELVDQCLSD/0_0/2_1/UHFFFAOYSA-N/C4H8.H/DRKVSJLYUMWFOU/0_0/1_2/UHFFFAOYSA-N/2/u-ulpJU/TS/00/RUN/OPTI/tmpb.inp
+output_file: /lcrc/project/PACC/AutoMech/data/run/RXN/C4H7.H2/YXDUXELVDQCLSD/0_0/2_1/UHFFFAOYSA-N/C4H8.H/DRKVSJLYUMWFOU/0_0/1_2/UHFFFAOYSA-N/2/u-ulpJU/TS/00/RUN/OPTI/tmpb.log
 
-smiles: CC(C)C
-mult: 1
-charge: 0
+inchi: InChI=1S/C4H8/c1-3-4-2/h3H,1,4H2,2H3 + InChI=1S/H = InChI=1S/C4H7/c1-3-4-2/h3-4H,1H2,2H3 + InChI=1S/H2/h1H
+mult: 1, 2, 2, 1
+charge: 0, 0, 0, 0
+ts_mult: 2
+rxn_class: hydrogen abstraction
 theory: lvl_wbs
+
+
+!input_file: /lcrc/project/PACC/AutoMech/data/save/SPC/C4H10/NNPPMTNAJDCUHE/0/1/UHFFFAOYSA-N/hJUn9NR/CONFS/rljKJA0Vb6S1U/cEjhd7G3KiDFf/geom.inp
+!output_file: zmat.zmat
+!output_type: zma
+
+!smiles: CC(C)C
+!mult: 1
+!charge: 0
+!theory: lvl_wbs
 
 
 
