@@ -249,17 +249,21 @@ def _optimize_molecule(spc_info, zma_init,
         # Recheck connectivity for imag-checked geometry
         if geo is not None:
             conf_found = True
-            if automol.geom.connected(geo):
+            conn = automol.geom.connected(geo)
+            proper_stereo = _inchi_are_same(spc_info[0], geo)
+            if conn and proper_stereo:
                 info_message(
                     'Saving structure as the first conformer...', newline=1)
                 filesys.save.conformer(
                     ret, None, cnf_save_fs, mod_thy_info[1:],
                     rng_locs=(locs[0],), tors_locs=(locs[1],))
             else:
-                info_message('Saving disconnected species...')
-                filesys.save.instability(
-                    zma_init, zma, cnf_save_fs,
-                    rng_locs=(locs[0],), tors_locs=(locs[1],), zma_locs=(0,))
+                if not conn:
+                    info_message('Saving disconnected species...')
+                    filesys.save.instability(
+                        zma_init, zma, cnf_save_fs,
+                        rng_locs=(locs[0],), tors_locs=(locs[1],),
+                        zma_locs=(0,))
         else:
             warning_message('No geom found...', newline=1)
             conf_found = False
