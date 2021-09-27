@@ -1,16 +1,18 @@
 !!!!! Options for inserting
 !!!!! A conformer into your save filesystem
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-save_filesystem: /lcrc/project/PACC/AutoMech/data/save
-input_file: /lcrc/project/PACC/AutoMech/data/run/RXN/C4H7.H2/YXDUXELVDQCLSD/0_0/2_1/UHFFFAOYSA-N/C4H8.H/DRKVSJLYUMWFOU/0_0/1_2/UHFFFAOYSA-N/2/u-ulpJU/TS/00/RUN/OPTI/tmpb.inp
-output_file: /lcrc/project/PACC/AutoMech/data/run/RXN/C4H7.H2/YXDUXELVDQCLSD/0_0/2_1/UHFFFAOYSA-N/C4H8.H/DRKVSJLYUMWFOU/0_0/1_2/UHFFFAOYSA-N/2/u-ulpJU/TS/00/RUN/OPTI/tmpb.log
 
-inchi: InChI=1S/C4H8/c1-3-4-2/h3H,1,4H2,2H3 + InChI=1S/H = InChI=1S/C4H7/c1-3-4-2/h3-4H,1H2,2H3 + InChI=1S/H2/h1H
+save_filesystem: /lcrc/project/PACC/AutoMech/data/save
+input_file: /lcrc/project/PACC/AutoMech/data/run/RXN/C4H7.H2/YXDUXELVDQCLSD/0_0/2_1/UHFFFAOYSA-N/C4H8.H/GKJPXHXONDKVGB/0_0/1_2/BJILWQEISA-N/2/u-ulpJU/TS/00/RUN/OPTI/run.inp
+output_file: /lcrc/project/PACC/AutoMech/data/run/RXN/C4H7.H2/YXDUXELVDQCLSD/0_0/2_1/UHFFFAOYSA-N/C4H8.H/GKJPXHXONDKVGB/0_0/1_2/BJILWQEISA-N/2/u-ulpJU/TS/00/RUN/OPTI/run.out
+
+inchi: InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+ + InChI=1S/H = InChI=1S/C4H7/c1-3-4-2/h3-4H,1H2,2H3 + InChI=1S/H2/h1H
 mult: 1, 2, 2, 1
 charge: 0, 0, 0, 0
 ts_mult: 2
 rxn_class: hydrogen abstraction
 theory: lvl_wbs
+rid: rBrzxaCpU6rj_
 
 
 !input_file: /lcrc/project/PACC/AutoMech/data/save/SPC/C4H10/NNPPMTNAJDCUHE/0/1/UHFFFAOYSA-N/hJUn9NR/CONFS/rljKJA0Vb6S1U/cEjhd7G3KiDFf/geom.inp
@@ -24,20 +26,18 @@ theory: lvl_wbs
 
 
 
-
-
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!! requirements
 ! save filesystem path [save_filesystem]
 ! input file location [input_file]
 ! geometry (xyz file (ene on comment line), zma file (with ene on top line), or ES output) [output_file]
 ! specify which geometry option you used (geo, zma, optimizaiton, frequencies) [output_type]
-! either an inchi or a smiles (comma sep list if a reaction) [inchi], [smiles]
+! either an inchi or a smiles (space sep equation if a reaction) [inchi], [smiles]
 ! multiplicity and charges (comma sep list if a reaction) [mult], [charge]
 ! either [theory] dicionary key or individual [program], [method], [basis], [orb_res]
 
 ! if its a reaction the reaction class and ts mult
+!
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

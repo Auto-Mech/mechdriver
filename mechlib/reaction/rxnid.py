@@ -12,7 +12,6 @@ from mechlib import filesys
 
 CLA_INP = 'inp/class.csv'
 
-
 def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
                    id_missing=True, re_id=False):
     """ For a given reaction, attempt to identify its reaction class obtain

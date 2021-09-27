@@ -499,6 +499,7 @@ def _hess_freqs(geo, geo_save_fs, run_path, save_path, locs, overwrite):
         script_str = autorun.SCRIPT_DCT['projrot']
         rt_freqs, _, rt_imags, _ = autorun.projrot.frequencies(
             script_str, run_path, [geo], [[]], [hess])
+        rt_imags = [-1 * imag_freq for imag_freq in rt_imags]
         freqs = sorted(rt_imags + rt_freqs)
         ioprinter.frequencies(freqs)
         ioprinter.geometry(geo)
