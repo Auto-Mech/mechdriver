@@ -166,7 +166,6 @@ def parse_user_reaction(insert_dct):
     mults = insert_dct['mult']
     chgs = insert_dct['charge']
     rxn_class = insert_dct['rxn_class']
-    # zrxn_file = insert_dct['zrxn_file']
     if ichs is None:
         ichs = [[], []]
         for smi in smis[0]:
@@ -228,11 +227,6 @@ def parse_user_reaction(insert_dct):
         sys.exit()
     rxn_info = rinfo.sort((ichs, rxn_chgs, rxn_muls, ts_mult))
     ts_info = rinfo.ts_info(rxn_info)
-    # if zrxn_file is not None:
-    #     zrxn_str = autofile.io_.read_file(zrxn_file)
-    #     zrxns = [automol.reac.from_string(zrxn_str)]
-    # else:
-    #     zrxns, _ = _id_reaction(rxn_info)
     if rxn_class is None:
         print(
             'Error: user did not specify rxn_class')
@@ -400,11 +394,10 @@ def get_zrxn(geo, rxn_info, rxn_class):
     product_gras = automol.graph.connected_components(product_gras)
     ts_gras = [forward_gra, backward_gra]
     rxn_gras = [reactant_gras, product_gras]
-    rxn_smis = [[], []]
+    rxn_ichs = [[], []]
     for i, side in enumerate(rxn_info[0]):
         for ich in side:
-            rxn_smis[i].append(automol.inchi.smiles(ich))
-    ts_smis = [[], []]
+            rxn_ichs[i].append(ich)
     ts_ichs = [[], []]
     for rgra in reactant_gras:
         try:
@@ -413,7 +406,6 @@ def get_zrxn(geo, rxn_info, rxn_class):
             rich = automol.graph.inchi(rgra)
         rsmi = automol.inchi.smiles(rich)
         ts_ichs[0].append(rich)
-        ts_smis[0].append(rsmi)
     for pgra in product_gras:
         try:
             pich = automol.graph.inchi(pgra, stereo=True)
@@ -421,32 +413,27 @@ def get_zrxn(geo, rxn_info, rxn_class):
             pich = automol.graph.inchi(pgra)
         psmi = automol.inchi.smiles(pich)
         ts_ichs[1].append(pich)
-        ts_smis[1].append(psmi)
     reactant_match = False
     product_match = False
-    if ts_smis[0] == rxn_smis[0]:
+    if ts_ichs[0] == rxn_ichs[0]:
         reactant_match = True
-    elif ts_smis[0][::-1] == rxn_smis[0]:
+    elif ts_ichs[0][::-1] == rxn_ichs[0]:
         ts_ichs[0] = ts_ichs[0][::-1]
-        ts_smis[0] = ts_smis[0][::-1]
         reactant_match = True
     else:
         ts_ichs = ts_ichs[::-1]
-        ts_smis = ts_smis[::-1]
         ts_gras = ts_gras[::-1]
         rxn_gras = rxn_gras[::-1]
-        if ts_smis[0] == rxn_smis[0]:
+        if ts_ichs[0] == rxn_ichs[0]:
             reactant_match = True
-        elif ts_smis[0][::-1] == rxn_smis[0]:
+        elif ts_ichs[0][::-1] == rxn_ichs[0]:
             ts_ichs[0] = ts_ichs[0][::-1]
-            ts_smis[0] = ts_smis[0][::-1]
             reactant_match = True
     if reactant_match:
-        if ts_smis[1] == rxn_smis[1]:
+        if ts_ichs[1] == rxn_ichs[1]:
             product_match = True
-        elif ts_smis[1][::-1] == rxn_smis[-1]:
+        elif ts_ichs[1][::-1] == rxn_ichs[-1]:
             ts_ichs[1] = ts_ichs[1][::-1]
-            ts_smis[1] = ts_smis[1][::-1]
             product_match = True
     if reactant_match and product_match:
         reactant_keys = []
@@ -463,25 +450,11 @@ def get_zrxn(geo, rxn_info, rxn_class):
             std_rxn, zma_keys, dummy_key_dct)
         rxn_info = (ts_ichs, *rxn_info[1:])
         ts_geo = automol.zmat.geometry(ts_zma)
-        # geo_reorder_dct = {}
-        # dummies = []
-        # for dummy in dummy_key_dct.keys():
-        #     add_idx = 1
-        #     for dumm_j in dummies:
-        #         if dummy > dumm_j:
-        #             add_idx += 1 
-        #     dummies.append(dummy + add_idx)
-        # remove_idx = 0
-        # for idx_i, idx_j in enumerate(zma_keys):
-        #     if idx_i in dummies:
-        #         remove_idx -= 1
-        #     else:
-        #         geo_reorder_dct[idx_i + remove_idx] = idx_j
-        # ts_geo = automol.geom.reorder_coordinates(geo, geo_reorder_dct)
     else:
         print(
             'The reactants and products found for the transition state' +
-            'did not match those specified in user input')
+            ' did not match those specified in user input',
+            ts_ichs, rxn_ichs)
         sys.exit()
     return std_zrxn, ts_zma, ts_geo, rxn_info
 
