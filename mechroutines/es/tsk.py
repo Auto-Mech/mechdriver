@@ -86,17 +86,14 @@ def run_tsk(tsk, spc_dct, spc_name,
             hr_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        # elif 'rpath' in tsk:
-        #     rpath_tsk(
-        #         job, spc_dct, spc_name,
-        #         thy_dct, es_keyword_dct,
-        #         run_prefix, save_prefix)
         elif 'find' in tsk:
             findts(
                 spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-
-        # return success # complicated, since success means different thing
+        # elif 'rpath' in tsk:
+        #     rpath_tsk(
+        #         job, spc_dct, spc_name, thy_dct, es_keyword_dct,
+        #         run_prefix, save_prefix)
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
@@ -922,7 +919,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
     if 'ts' in spc_name:
         # Skip all tasks except find_ts
         # if rad-rad TS
-        if tsk != 'find_ts':
+        if tsk not in ('find_ts', 'rpath_scan'):  # generalize to other rpath
             rxn_info = spc_dct[spc_name]['rxn_info']
             ts_mul = rinfo.value(rxn_info, 'tsmult')
             high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')

@@ -14,10 +14,10 @@ from mechroutines.es.runner import qchem_params
 
 
 # Scans along coordinate(s)
-def internal_coordinates_scan(
-        ts_zma, ts_info, zrxn, method_dct,
-        scn_run_fs, scn_save_fs,
-        es_keyword_dct, find_max=True):
+def internal_coordinates_scan(ts_zma, ts_info, zrxn,
+                              method_dct, mref_params,
+                              scn_run_fs, scn_save_fs,
+                              es_keyword_dct, find_max=True):
     """ Scan along the internal coordinates that correspond to the
         reaction coordinate. Additional constraints will be used as needed.
 
@@ -33,12 +33,12 @@ def internal_coordinates_scan(
     mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
     script_str, kwargs = qchem_params(
         method_dct, job=elstruct.Job.OPTIMIZATION)
+    kwargs.update(mref_params)
 
     es_runner.scan.execute_scan(
         zma=ts_zma,
         spc_info=ts_info,
         mod_thy_info=mod_thy_info,
-        thy_save_fs=(),
         coord_names=coord_names,
         coord_grids=coord_grids,
         scn_run_fs=scn_run_fs,
@@ -51,7 +51,6 @@ def internal_coordinates_scan(
         saddle=False,
         constraint_dct=constraint_dct,
         retryfail=False,
-        chkstab=False,
         **kwargs,
     )
 
@@ -66,7 +65,8 @@ def internal_coordinates_scan(
 
 
 # Infinite Separation Energy
-def inf_sep_ene(ts_dct, thy_inf_dct, savefs_dct, runfs_dct, es_keyword_dct):
+def inf_sep_ene(ts_dct, thy_inf_dct, mref_dct,
+                savefs_dct, runfs_dct, es_keyword_dct):
     """ Determine the total electronic energy of two reacting species that
         at infinite separation.
     """

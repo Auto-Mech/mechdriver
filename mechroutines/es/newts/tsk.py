@@ -5,14 +5,14 @@
 """
 
 import automol.par
-from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
+from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner import qchem_params
 from mechroutines.es.newts import _sadpt as sadpt
 from mechroutines.es.newts import _irc as irc
 from mechroutines.es.newts import _rpath as rpath
-from mechroutines.es.newts._util import set_thy_inf_dcts
+from mechroutines.es.newts._util import thy_dcts
 from mechroutines.es.newts._fs import rpath_fs
 
 
@@ -40,10 +40,8 @@ def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
         :type save_prefix: str
     """
 
-    method_dct = thy_dct.get(es_keyword_dct['runlvl'])
-
     # Build necessary objects
-    _, runfs_dct, savefs_dct = set_thy_inf_dcts(
+    thy_inf_dct, thy_method_dct, mref_dct, runfs_dct, savefs_dct = thy_dcts(
         tsname, spc_dct[tsname], thy_dct, es_keyword_dct,
         run_prefix, save_prefix)
 
@@ -53,7 +51,15 @@ def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
     # Calculate all required transition state information
     if search_method == 'sadpt':
         success = run_sadpt(
-            spc_dct, tsname, method_dct, es_keyword_dct,
+            spc_dct, tsname,
+            thy_inf_dct, thy_method_dct, mref_dct,
+            es_keyword_dct,
+            runfs_dct, savefs_dct)
+    elif search_method == 'rpvtst':
+        success = run_rpvtst(
+            spc_dct, tsname,
+            thy_inf_dct, thy_method_dct,
+            es_keyword_dct,
             runfs_dct, savefs_dct)
     elif search_method == 'pst':
         success = run_pst(
@@ -62,7 +68,8 @@ def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
     return success
 
 
-def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
+def run_sadpt(spc_dct, tsname,
+              thy_inf_dct, thy_method_dct, es_keyword_dct,
               runfs_dct, savefs_dct):
     """ Find the saddle-point for a reaction
     """
@@ -71,9 +78,9 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
     run_zma, ini_zma = sadpt.read_existing_saddle_points(
         spc_dct, tsname, savefs_dct, es_keyword_dct)
 
-    if sadpt.search_required(run_zma, savefs_dct, es_keyword_dct):
+    if sadpt.search_required(run_zma, es_keyword_dct):
         success = sadpt.search(ini_zma, spc_dct, tsname,
-                               method_dct, es_keyword_dct,
+                               thy_inf_dct, thy_method_dct, es_keyword_dct,
                                runfs_dct, savefs_dct)
     else:
         success = True
@@ -81,15 +88,22 @@ def run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
     return success
 
 
-def run_rpvtst(spc_dct, tsname, method_dct, es_keyword_dct,
+def run_rpvtst(spc_dct, tsname,
+               thy_inf_dct, thy_method_dct, es_keyword_dct,
                runfs_dct, savefs_dct):
     """ generate a reaction path
+
+        need some way of putting in a different level of theory,
+        maybe switch out the run_sadpt, for its compontnets.
+        sadpt.search could take a level as input
     """
 
     # Try and first locate a saddle point
     print('First attempting to locate a saddle point')
-    success = run_sadpt(spc_dct, tsname, method_dct, es_keyword_dct,
+    success = run_sadpt(spc_dct, tsname,
+                        thy_inf_dct, thy_method_dct, es_keyword_dct,
                         runfs_dct, savefs_dct)
+    print('rpvtst success', success)
 
     # If success, IRC from sadpt
     # else IRC from rmax? or just keep scan and move on
@@ -203,23 +217,23 @@ def rpath_tsk(job, spc_dct, spc_name,
 
     # Get dct for specific species task is run for
     ts_dct = spc_dct[spc_name]
+    ts_info = rinfo.ts_info(ts_dct['rxn_info'])
 
-    # Set the ts_info
-    ts_info = sinfo.from_dct(ts_dct)
+    # Build various thy and filesystem objects
+    thy_inf_dct, thy_method_dct, mref_dct, runfs_dct, savefs_dct = thy_dcts(
+        spc_name, spc_dct[spc_name], thy_dct, es_keyword_dct,
+        run_prefix, save_prefix)
 
-    # Set thy info object
-    method_dct = thy_dct.get(es_keyword_dct['runlvl'])
-    ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
-    thy_info = tinfo.from_dct(method_dct)
-    ini_thy_info = tinfo.from_dct(ini_method_dct)
-    mod_thy_info = tinfo.modify_orb_label(thy_info, ts_info)
-    mod_ini_thy_info = tinfo.modify_orb_label(
-        ini_thy_info, ts_info)
+    mod_thy_info = thy_inf_dct['mod_runlvl']
+    mod_ini_thy_info = thy_inf_dct['mod_inplvl']
+    method_dct = thy_method_dct['mod_runlvl']
+    ini_method_dct = thy_method_dct['mod_inplvl']
+    mref_params = mref_dct['runlvl']
 
     # Build filesys objects
     scn_alg, scn_fs, cnf_fs, cnf_locs = rpath_fs(
         ts_dct, spc_name,
-        mod_ini_thy_info, ts_info,
+        mod_ini_thy_info,
         es_keyword_dct,
         run_prefix, save_prefix)
 
@@ -239,13 +253,12 @@ def rpath_tsk(job, spc_dct, spc_name,
                     break
         else:
             zma, zrxn = ts_dct['zma'], ts_dct['zrxn']
-            rpath.internal_coordinates_scan(
-                zma, ts_info, zrxn, method_dct,
+            _ = rpath.internal_coordinates_scan(
+                zma, ts_info, zrxn,
+                method_dct, mref_params,
                 scn_fs[0], scn_fs[1],
                 es_keyword_dct)
-
     elif job in ('energy', 'grad', 'hess'):
-
         # Set run-time options
         overwrite = es_keyword_dct['overwrite']
         script_str, kwargs = qchem_params(method_dct)
@@ -260,14 +273,9 @@ def rpath_tsk(job, spc_dct, spc_name,
                 ini_scn_run_fs, ini_scn_save_fs, locs,
                 script_str, overwrite, **kwargs)
             ioprinter.obj('vspace')
-
     elif job == 'infene':
-
-        thy_inf_dct, runfs_dct, savefs_dct = set_thy_inf_dcts(
-            spc_name, spc_dct[spc_name], thy_dct, es_keyword_dct,
-            run_prefix, save_prefix)
         rpath.inf_sep_ene(
-            ts_dct, thy_inf_dct,
+            ts_dct, thy_inf_dct, mref_dct,
             savefs_dct, runfs_dct, es_keyword_dct)
 
 
@@ -290,9 +298,8 @@ def _ts_search_method(ts_dct):
     # Set search algorithm to one specified by the user, if specified
     _search_method = ts_dct.get('ts_search')
     if _search_method is not None:
-        _search_method = ts_dct['ts_search']
-        print(('User requested the use of a {} TS finding algorithm' +
-               ts_dct['ts_search'] +
+        print(('User requested the use of TS finding algorithm ' +
+               _search_method +
                '. Using this algorithm for the search'))
     else:
         print('No TS finding algorithm requested by the user.')

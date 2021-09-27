@@ -11,7 +11,7 @@ from mechlib.amech_io import printer as ioprinter
 from mechlib import filesys
 from mechroutines.es import runner as es_runner
 from mechroutines.es.runner import qchem_params
-from mechroutines.es.newts import rpath
+from mechroutines.es.newts import _rpath as rpath
 
 
 # Functions to assess the status of existing saddle point structures in SAVE
@@ -27,20 +27,20 @@ def read_existing_saddle_points(spc_dct, tsname, savefs_dct, es_keyword_dct):
         :rtype: tuple(automol.zmat object)
     """
 
-    ioprinter.info_message(
-        '\nSearching save filesys for guess Z-Matrix calculated',
-        'at {} level...'.format(es_keyword_dct['inplvl']))
-
     # Set zma information for reading
     zma_locs = (spc_dct[tsname].get('zma_idx', 0),)
 
     zmas = [None, None]
-    for idx, _fs in enumerate(('runlvl_cnf_fs', 'inplvl_cnf_fs')):
+    for idx, _fs in enumerate(('runlvl_cnf_tuple', 'inplvl_cnf_tuple')):
+        lvl = 'runlvl' if idx == 0 else 'inplvl'
+        ioprinter.info_message(
+            '\nSearching save filesys for Z-Matrix calculated',
+            'at {} level...'.format(lvl))
         cnf_fs, cnf_locs = savefs_dct[_fs]
-        if cnf_locs:
+        if any(cnf_locs):
             zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
             if zma_fs[-1].file.zmatrix.exists(zma_locs):
-                geo_path = zma_fs[-1].file.zmatrix.exists(zma_locs)
+                geo_path = zma_fs[-1].file.zmatrix.path(zma_locs)
                 ioprinter.info_message(
                     ' - Z-Matrix found.')
                 ioprinter.info_message(
@@ -72,11 +72,11 @@ def search_required(runlvl_zma, es_keyword_dct):
         _run = True
     else:
         if overwrite:
-            print('User specified to overwrite transition state search.'
+            print('\nUser specified to overwrite transition state search.'
                   'Redoing task...')
             _run = True
         else:
-            print('Since transition state found and saved previously,',
+            print('\nSince transition state found and saved previously,',
                   'proceeding to next task.')
             _run = False
 
@@ -85,7 +85,7 @@ def search_required(runlvl_zma, es_keyword_dct):
 
 # Functions to attempt to find, optimize, and save valid saddle point
 def search(ini_zma, spc_dct, tsname,
-           method_dct, es_keyword_dct,
+           thy_inf_dct, thy_method_dct, es_keyword_dct,
            runfs_dct, savefs_dct):
     """ Attempt to locate and optimize a proper transition state.
     """
@@ -99,13 +99,13 @@ def search(ini_zma, spc_dct, tsname,
     if ini_zma is not None:
         guess_zmas = (ini_zma,)
     else:
-        guess_zmas = rpath.internal_coordinate_scan(
+        guess_zmas = rpath.internal_coordinates_scan(
             ts_zma=ts_dct['zma'],
             ts_info=rinfo.ts_info(ts_dct['rxn_info']),
             zrxn=ts_dct['zrxn'],
-            method_dct=method_dct,
-            scn_run_fs=runfs_dct['runlvl_scn_fs'],
-            scn_save_fs=savefs_dct['runlvl_scn_fs'],
+            method_dct=thy_method_dct['runlvl'],
+            scn_run_fs=runfs_dct['runlvl_scn'],
+            scn_save_fs=savefs_dct['runlvl_scn'],
             es_keyword_dct=es_keyword_dct)
 
     # Optimize guess and check if saddle point good to save
@@ -115,16 +115,18 @@ def search(ini_zma, spc_dct, tsname,
                     autofile.schema.generate_new_conformer_id())
 
         opt_ret, hess_ret = optimize_saddle_point(
-            guess_zmas, ts_dct, method_dct,
+            guess_zmas, ts_dct, thy_method_dct['runlvl'],
             runfs_dct, es_keyword_dct,
             cnf_locs)
 
         status = assess_saddle_point(opt_ret, hess_ret,
                                      ts_dct, runfs_dct, cnf_locs)
-        if status == 'good':
+        if status == 'save':
             save_saddle_point(opt_ret, hess_ret,
-                              ts_dct, method_dct, savefs_dct, cnf_locs)
+                              ts_dct, thy_method_dct['runlvl'],
+                              savefs_dct, cnf_locs)
             success = True
+            # print the saddle point
 
     return success
 
@@ -143,7 +145,7 @@ def optimize_saddle_point(guess_zmas, ts_dct,
     overwrite = es_keyword_dct['overwrite']
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
 
-    runlvl_cnf_run_fs = runfs_dct['runlvl_cnf_fs']
+    runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
     run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cnf_locs))
 
     ioprinter.info_message(
@@ -200,10 +202,10 @@ def optimize_saddle_point(guess_zmas, ts_dct,
 # Checker functions
 def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
     """ run things for checking Hessian
+        If successful, Read the geom and energy from the optimization
     """
 
-    # If successful, Read the geom and energy from the optimization
-    success = False
+    status = 'failure'
     if hess_ret is not None:
 
         # Get the physical info used for the checks
@@ -217,7 +219,7 @@ def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
         hess = elstruct.reader.hessian(hess_inf.prog, hess_out_str)
 
         # Set filesys information
-        runlvl_cnf_run_fs = runfs_dct['runlvl_cnf_fs']
+        runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
         run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cnf_locs))
         freq_run_path = run_fs[-1].path(['hessian'])
         run_fs[-1].create(['hessian'])
@@ -241,11 +243,14 @@ def assess_saddle_point(opt_ret, hess_ret, ts_dct, runfs_dct, cnf_locs):
 
         # Set overall success value to return
         if freq_success == 'kick':
-            success = 'kick'
+            status = 'kick'
         else:
-            success = freq_success and ted_success
+            if freq_success and ted_success:
+                status = 'save'
+            else:
+                status = 'failure'
 
-    return success
+    return status
 
 
 def _check_freqs(imags):
@@ -286,11 +291,11 @@ def _check_freqs(imags):
                 'More than one imaginary mode for geometry')
             if kick_imag >= 1:
                 ioprinter.debug_message('Will kickoff to get saddle point')
-                status = 'kickoff'
+                status = 'kick'
             else:
-                status = 'failure'
+                status = False
         elif big_imag == 1:
-            status = 'success'
+            status = True
 
     return status
 
@@ -316,10 +321,10 @@ def _ted_coordinate_check(ted_names, zrxn, zma):
             print('Overlap of coordinates found, possible success')
             success = True
         else:
-            print('NO similarity of coords, likely something is wrong')
+            print('No similarity of coords, likely something is wrong')
             success = False
     else:
-        print('IntDER had some error, skipping TED check')
+        print('INTDER had some error, skipping TED check')
         success = True
 
     return success
@@ -335,8 +340,9 @@ def save_saddle_point(opt_ret, hess_ret,
 
     # Pull info from the dictionaries to save
     zrxn = ts_dct['zrxn']
-    runlvl_cnf_save_fs, _ = savefs_dct['runlvl_cnf_fs']
-    mod_thy_info = method_dct['mod_runlvl']
+    runlvl_cnf_save_fs, _ = savefs_dct['runlvl_cnf_tuple']
+    ts_info = rinfo.ts_info(ts_dct['rxn_info'])
+    mod_thy_info = tinfo.modify_orb_label(tinfo.from_dct(method_dct), ts_info)
 
     # Save initial saddle point conformer
     filesys.save.conformer(

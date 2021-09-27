@@ -22,17 +22,15 @@ def execute_irc(zma, ts_info,
     coord_name = 'IRC'
 
     overwrite = es_keyword_dct['overwrite']
+    retryfail = es_keyword_dct['retryfail']
 
     # Set up run filesys
-    run_fs = autofile.fs.run(ini_scn_run_fs[-1].path([coord_name]))
+    run_fs = autofile.fs.run(ini_scn_run_fs[1].path([coord_name]))
 
     # Run and Read the IRC in the forward and reverse direction
     for direction in directions:
-
-        # Set up the script
         script_str, kwargs = qchem_params(
             ini_method_dct, job=direction)
-
         run_irc(
             zma,
             direction,
@@ -42,6 +40,7 @@ def execute_irc(zma, ts_info,
             ts_info,
             mod_ini_thy_info,
             overwrite,
+            retryfail,
             script_str,
             **kwargs
         )
@@ -62,7 +61,7 @@ def execute_irc(zma, ts_info,
 
 
 def run_irc(zma, irc_job, coord_name, run_fs, ini_scn_save_fs,
-            ts_info, mod_ini_thy_info, overwrite,
+            ts_info, mod_ini_thy_info, overwrite, retryfail,
             opt_script_str, **opt_kwargs):
     """ Run the irc job
     """
@@ -102,7 +101,8 @@ def run_irc(zma, irc_job, coord_name, run_fs, ini_scn_save_fs,
             spc_info=ts_info,
             thy_info=mod_ini_thy_info,
             overwrite=overwrite,
-            **opt_kwargs,
+            retryfail=retryfail,
+            **opt_kwargs
         )
 
 
@@ -115,6 +115,7 @@ def save_irc(irc_job, coord_name,
         job=irc_job,
         run_fs=run_fs,
     )
+    locs_lst = []
     if opt_success is not None:
 
         # Read the IRC output file
@@ -160,11 +161,20 @@ def save_irc(irc_job, coord_name,
             sp_save_fs[-1].file.info.write(inf_obj, mod_ini_thy_info[1:4])
             sp_save_fs[-1].file.energy.write(enes[idx], mod_ini_thy_info[1:4])
 
-        # Build the trajectory file
-        if locs_lst:
-            es_runner.scan.write_traj(
-                coord_name, ini_scn_save_fs, mod_ini_thy_info, locs_lst
-            )
+    update_traj_file(coord_name, ini_scn_save_fs, mod_ini_thy_info)
+
+    return locs_lst
+
+
+def update_traj_file(coord_name, ini_scn_save_fs, mod_ini_thy_info):
+    """ Update the full IRC trajectory file based on what is in SAVE
+        filesystem
+    """
+    saved_locs = ini_scn_save_fs[-1].existing()
+    if saved_locs:
+        es_runner.scan.write_traj(
+            coord_name, ini_scn_save_fs, mod_ini_thy_info, sorted(saved_locs)
+        )
 
 
 def launch_point_zmatrices(ts_dct, mod_thy_info,
@@ -182,7 +192,7 @@ def launch_point_zmatrices(ts_dct, mod_thy_info,
 
     if 'sadpt' in scn_alg:
         _, cnf_save_fs = cnf_fs
-        zma_locs = ts_dct['zma_idx']
+        zma_locs = (ts_dct['zma_idx'],)
         zma_fs = autofile.fs.zmatrix(cnf_save_fs[-1].path(cnf_locs))
         if zma_fs[-1].file.zmatrix.exists(zma_locs):
             geo_path = zma_fs[-1].file.zmatrix.path(zma_locs)

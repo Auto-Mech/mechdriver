@@ -1,19 +1,4 @@
 """ rpath task function
-
-- build to TS/00/ (has Z and CONFS)
-- if scan
-    - if irc
-        - if sadpt exists
-            use sadpt
-        - else:
-            use rmax-1 series
-    - else
-        - take rn scan
-- else:
-    - if irc
-        - build min cnfs, if cnfs get scan fs
-    - else
-        - build z fs
 """
 
 from mechlib import filesys
@@ -21,18 +6,23 @@ from mechlib.filesys import build_fs
 from mechlib.filesys import root_locs
 
 
-def rpath_fs(spc_dct_i, spc_name,
-             mod_ini_thy_info, ts_info,
+def rpath_fs(ts_dct, tsname,
+             mod_ini_thy_info,
              es_keyword_dct,
              run_prefix, save_prefix):
     """ reaction path filesystem
     """
 
     # Set up coordinate name
-    rxn_coord = es_keyword_dct.get('rxn_coord')
+    rxn_coord = es_keyword_dct.get('rxncoord')
+    print('rxn coord', rxn_coord)
+
+    # Get the zma and ts locs
+    zma_locs = (ts_dct['zma_idx'],)
+    ts_locs = (int(tsname.split('_')[-1]),)
 
     # Build filesys object down to TS FS
-    _root = root_locs(spc_dct_i, saddle=True, name=spc_name)
+    _root = root_locs(ts_dct, saddle=True, name=tsname)
     ts_fs = build_fs(
         run_prefix, save_prefix, 'TRANSITION STATE',
         thy_locs=mod_ini_thy_info[1:],
@@ -59,18 +49,19 @@ def rpath_fs(spc_dct_i, spc_name,
             scn_alg = 'irc-sadpt'
         else:
             # Run IRC from series of points {Rmax, Rmax-1, ...}
-            ini_pfx_run_path = ini_ts_run_fs[-1].path(ts_info)
-            ini_pfx_save_path = ini_ts_save_fs[-1].path(ts_info)
+            ini_pfx_run_path = ini_ts_run_fs[-1].path(ts_locs)
+            ini_pfx_save_path = ini_ts_save_fs[-1].path(ts_locs)
             scn_alg = 'irc-rmax'
     else:
         # Run a scan along the requested reaction coordinates
-        ini_pfx_run_path = ini_ts_run_fs[-1].path(ts_info)
-        ini_pfx_save_path = ini_ts_save_fs[-1].path(ts_info)
+        # Have an auto option that just selects the coordinate?
+        ini_pfx_run_path = ini_ts_run_fs[-1].path(ts_locs)
+        ini_pfx_save_path = ini_ts_save_fs[-1].path(ts_locs)
         scn_alg = 'drp'
 
     # Set up the scan filesystem objects using the predefined prefix
     scn_fs = build_fs(
         ini_pfx_run_path, ini_pfx_save_path, 'SCAN',
-        zma_locs=(0,))
+        zma_locs=zma_locs)
 
     return scn_alg, scn_fs, cnf_fs, ini_min_locs
