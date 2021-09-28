@@ -249,17 +249,21 @@ def _optimize_molecule(spc_info, zma_init,
         # Recheck connectivity for imag-checked geometry
         if geo is not None:
             conf_found = True
-            if automol.geom.connected(geo):
+            conn = automol.geom.connected(geo)
+            proper_stereo = _inchi_are_same(spc_info[0], geo)
+            if conn and proper_stereo:
                 info_message(
                     'Saving structure as the first conformer...', newline=1)
                 filesys.save.conformer(
                     ret, None, cnf_save_fs, mod_thy_info[1:],
                     rng_locs=(locs[0],), tors_locs=(locs[1],))
             else:
-                info_message('Saving disconnected species...')
-                filesys.save.instability(
-                    zma_init, zma, cnf_save_fs,
-                    rng_locs=(locs[0],), tors_locs=(locs[1],), zma_locs=(0,))
+                if not conn:
+                    info_message('Saving disconnected species...')
+                    filesys.save.instability(
+                        zma_init, zma, cnf_save_fs,
+                        rng_locs=(locs[0],), tors_locs=(locs[1],),
+                        zma_locs=(0,))
         else:
             warning_message('No geom found...', newline=1)
             conf_found = False
@@ -1085,24 +1089,6 @@ def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
         sym_idx = idx_dct[sym_idx]
 
     return sym_idx
-
-
-def _is_proper_isomer(cnf_save_fs, zma):
-    """ Check if geom is the same isomer as those in the filesys
-    """
-    vma = automol.zmat.var_(zma)
-    if cnf_save_fs[0].file.vmatrix.exists():
-        exist_vma = cnf_save_fs[0].file.vmatrix.read()
-        if vma != exist_vma:
-            warning_message(
-                " - Isomer is not the same as starting isomer. Skipping...")
-            proper_isomer = False
-        else:
-            proper_isomer = True
-    else:
-        proper_isomer = False
-
-    return proper_isomer
 
 
 def _ts_geo_viable(zma, zrxn, cnf_save_fs, mod_thy_info, zma_locs=(0,)):

@@ -15,7 +15,6 @@ def rcts_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
     ini_thy_info = tinfo.from_dct(ini_method_dct)
 
     rct_cnf_fs = ()
-
     for rct_info in rct_infos:
 
         mod_ini_thy_info = tinfo.modify_orb_label(
@@ -32,9 +31,11 @@ def rcts_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
         ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
 
         # Create run fs if that directory has been deleted to run the jobs
-        ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
-
-        rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs,
-                        ini_min_cnf_locs, ini_min_cnf_path),)
+        if any(ini_min_cnf_locs):
+            ini_cnf_run_fs[-1].create(ini_min_cnf_locs)
+            rct_cnf_fs += ((ini_cnf_run_fs, ini_cnf_save_fs,
+                            ini_min_cnf_locs, ini_min_cnf_path),)
+        else:
+            rct_cnf_fs += ((),)
 
     return rct_cnf_fs

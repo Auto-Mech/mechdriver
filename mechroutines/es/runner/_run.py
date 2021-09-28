@@ -104,7 +104,7 @@ def run_job(job, script_str, run_fs,
         :param overwrite: overwrite existing input file with new one and rerun
         :type overwrite: bool
         :param kwargs: additional options for electronic structure job
-        :type kwarfs: dict[str]
+        :type kwargs: dict[str]
     """
 
     assert job in JOB_RUNNER_DCT

@@ -5,6 +5,7 @@ import copy
 import automol
 import elstruct
 from phydat import act_space
+from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
 
@@ -29,9 +30,8 @@ def update_kwargs_for_multireference(kwargs, cas_kwargs):
     return new_kwargs
 
 
-def multireference_calculation_parameters(
-        ref_zma, ts_info, rxn_info, high_mul,
-        aspace, mod_thy_info):
+def multireference_calculation_parameters(zma, spc_info, hs_spc_info,
+                                          aspace, mod_thy_info, rxn_info=None):
     """ Prepares a keyword-argument dictionary that can be utilized by the
         elstruct library to perform multireference electronic structure
         calculations. The function is tasked with preparing two parts:
@@ -49,33 +49,33 @@ def multireference_calculation_parameters(
     """
 
     if aspace is not None:
-
         num_act_orb, num_act_elc, num_states, guess_str = aspace
         guess_lines = guess_str.splitlines()
         casscf_options = cas_options(
-            ts_info, ref_zma, num_act_elc, num_act_orb, num_states,
+            spc_info, zma, num_act_elc, num_act_orb, num_states,
             add_two_closed=False)
         ioprinter.info_message('Using wfn guess from file...', newline=1)
-
     else:
-        num_act_orb, num_act_elc, num_states = active_space(rxn_info)
+        _inf = rxn_info if rxn_info is not None else spc_info
+        typ = 'ts' if rxn_info is not None else 'spc'
+        num_act_orb, num_act_elc, num_states = active_space(
+            _inf, typ=typ)
 
         # Build the elstruct CASSCF options list used to build the wfn guess
         # (1) Build wfn with active space
         # (2) Build wfn with active space + 2 closed orbitals for stability
-        cas_opt = []
-        cas_opt.append(
+        cas_opt = (
             cas_options(
-                ts_info, ref_zma, num_act_elc, num_act_orb, num_states,
-                add_two_closed=False))
-        cas_opt.append(
+                spc_info, zma, num_act_elc, num_act_orb, num_states,
+                add_two_closed=False),
             cas_options(
-                ts_info, ref_zma, num_act_elc, num_act_orb, num_states,
-                add_two_closed=True))
+                spc_info, zma, num_act_elc, num_act_orb, num_states,
+                add_two_closed=True)
+        )
 
         # Write string that has all the components for building the wfn guess
         guess_str = multiref_wavefunction_guess(
-            high_mul, ref_zma, ts_info, mod_thy_info, cas_opt)
+            zma, spc_info, hs_spc_info, mod_thy_info, cas_opt)
         guess_lines = guess_str.splitlines()
 
         # Set casscf options
@@ -95,33 +95,50 @@ def multireference_calculation_parameters(
 
 
 # BUILD THE CASSCF OPTIONS
-def active_space(rxn_info):
+def active_space(info_obj, typ='ts'):
     """ Determine the active space for the multireference MEP scan
     """
 
-    rct_ichs = rinfo.value(rxn_info, 'inchi')[0]
-    rct_muls = rinfo.value(rxn_info, '')[0]
-
-    num_act_orb, num_act_elc, num_states = 0, 0, 1
-    for ich, mul in enumerate(zip(rct_ichs, rct_muls)):
+    def _active_space(ich, mul):
+        """ Determine the active sapce for an InChI string
+        """
         if ich in act_space.DCT:
-            num_act_orb += act_space.DCT[ich][0]
-            num_act_elc += act_space.DCT[ich][1]
-            num_states *= act_space.DCT[ich][2]
+            num_act_orb = act_space.DCT[ich][0]
+            num_act_elc = act_space.DCT[ich][1]
+            num_states = act_space.DCT[ich][2]
         else:
-            num_act_orb += (mul - 1)
-            num_act_elc += (mul - 1)
+            num_act_orb = (mul - 1)
+            num_act_elc = (mul - 1)
+            num_states = 1
 
-    return num_act_orb, num_act_elc, num_states
+        return num_act_orb, num_act_elc, num_states
+
+    if typ == 'spc':
+        ich = sinfo.value(info_obj, 'inchi')
+        mul = sinfo.value(info_obj, 'mult')
+        num_act_orb, num_act_elec, num_states = _active_space(ich, mul)
+    elif typ == 'ts':
+        rct_ichs = rinfo.value(info_obj, 'inchi')[0]
+        rct_muls = rinfo.value(info_obj, 'mult')[0]
+
+        num_act_orb, num_act_elec, num_states = 0, 0, 1
+        for ich, mul in enumerate(zip(rct_ichs, rct_muls)):
+            if ich in act_space.DCT:
+                norb, nelec, nstat = _active_space(ich, mul)
+                num_act_orb += norb
+                num_act_elec += nelec
+                num_states *= nstat
+
+    return num_act_orb, num_act_elec, num_states
 
 
-def cas_options(ts_info, ts_zma, num_act_elc, num_act_orb, num_states,
+def cas_options(zma, spc_info, num_act_elc, num_act_orb, num_states,
                 add_two_closed=False):
     """ Prepare values prepare cas options for multireference wavefunctions
     """
 
     # Set the number of closed and occupied orbitals
-    fml = automol.zmat.formula(ts_zma)
+    fml = automol.zmat.formula(zma)
     elec_cnt = automol.formula.electron_count(fml)
 
     closed_orb = (elec_cnt - num_act_elc) // 2
@@ -130,8 +147,8 @@ def cas_options(ts_info, ts_zma, num_act_elc, num_act_orb, num_states,
         closed_orb -= 2
 
     # Set the spin and charge values for the species
-    spin = ts_info[2] - 1
-    chg = ts_info[1]
+    spin = spc_info[2] - 1
+    chg = spc_info[1]
 
     # Combine into a CASSCF options for elstruct
     cas_opt = (
@@ -149,14 +166,14 @@ def cas_options(ts_info, ts_zma, num_act_elc, num_act_orb, num_states,
 
 
 # CONSTRUCT MULTIREFERENCE WAVEFUNCTION STRINGS FOR COMPLEX GUESSES
-def multiref_wavefunction_guess(high_mul, zma,
-                                spc_info, mod_thy_info,
-                                casscf_options):
+def multiref_wavefunction_guess(zma, spc_info, hs_spc_info,
+                                mod_thy_info, casscf_options):
     """ Prepare wavefunction template for multireference electronic structure calcs
     """
 
     # Set variables for the programs
     [_, charge, mul] = spc_info
+    high_mul = hs_spc_info
     prog, _, basis, _ = mod_thy_info
 
     # Write a string to for high-spin UHF wfn calculation
