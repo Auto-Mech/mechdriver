@@ -4,7 +4,10 @@
 
 import time
 import autofile
+import elstruct
 from phydat import phycon
+import automol.zmat
+import automol.geom
 from automol.geom import hydrogen_bonded_structure
 from mechlib.amech_io import printer as ioprinter
 
@@ -485,3 +488,87 @@ def zpe_from_harmonic_frequencies(
                 cnf_fs[-1].path(locs)))
             zpe = None
     return zpe
+
+
+def this_conformer_was_run_in_run(zma, cnf_fs):
+    locs_idx = None
+    job = elstruct.Job.OPTIMIZATION
+
+    sym_locs = []
+    run_locs_lst = cnf_fs[-1].existing(ignore_bad_formats=True)
+    for idx, locs in enumerate(run_locs_lst):
+        cnf_path = cnf_fs[-1].path(locs)
+        run_fs = autofile.fs.run(cnf_path)
+        run_path = run_fs[-1].path([job])
+        if run_fs[-1].file.info.exists([job]):
+            inf_obj = run_fs[-1].file.info.read([job])
+            status = inf_obj.status
+            if status == autofile.schema.RunStatus.SUCCESS:
+                inp_str = run_fs[-1].file.input.read([job])
+                inp_str = inp_str.replace('=', '')
+                prog = inf_obj.prog
+                inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
+                if automol.zmat.almost_equal(inp_zma, zma,
+                                             dist_rtol=0.018, ang_atol=.2):
+                    ioprinter.info_message(
+                        'This conformer was already run ' +
+                        'in {}.'.format(run_path))
+                    locs_idx = idx
+                    break
+    # This is to find if it was not saved becaue its equivalent
+    # to other conformers
+    if locs_idx is not None:
+        out_enes = []
+        out_geos = []
+        for idx, locs in enumerate(run_locs_lst):
+            cnf_path = cnf_fs[-1].path(locs)
+            run_fs = autofile.fs.run(cnf_path)
+            run_path = run_fs[-1].path([job])
+            if run_fs[-1].file.info.exists([job]):
+                inf_obj = run_fs[-1].file.info.read([job])
+                status = inf_obj.status
+                if status == autofile.schema.RunStatus.SUCCESS:
+                    method = inf_obj.method
+                    prog = inf_obj.prog
+                    out_str = run_fs[-1].file.output.read([job])
+                    idx_ene = elstruct.reader.energy(prog, method, out_str)
+                    idx_geo = elstruct.reader.opt_geometry(prog, out_str)
+                    if idx == locs_idx:
+                        out_enes.append(10000)
+                        out_geos.append(None)
+                        ran_ene = idx_ene
+                        ran_geo = idx_geo
+                    else:
+                        out_enes.append(idx_ene)
+                        out_geos.append(idx_geo)
+            else:
+                out_enes.append(10000)
+                out_geos.append(None)
+        for idx, _ in enumerate(out_enes):
+            sym_idx = _sym_unique(ran_geo, ran_ene, [out_geos[idx]], [out_enes[idx]], ethresh=1.0e-5)
+            if sym_idx is not None:
+                sym_locs.append(run_locs_lst[idx])
+    return locs_idx is not None, sym_locs
+
+
+def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
+    """ Check if a conformer is symmetrically distinct from the
+        existing conformers in the filesystem
+    """
+
+    sym_idx = None
+    new_saved_geos = []
+    idx_dct = {}
+    for i, (sene, sgeo) in enumerate(zip(saved_enes, saved_geos)):
+        if abs(ene - sene) < ethresh:
+            idx_dct[len(new_saved_geos)] = i
+            new_saved_geos.append(sgeo)
+    if new_saved_geos:
+        _, sym_idx = automol.geom.is_unique(
+            geo, new_saved_geos, check_dct={'coulomb': 1e-2})
+
+    if sym_idx is not None:
+        print(' - Structure is not symmetrically unique.')
+        sym_idx = idx_dct[sym_idx]
+
+    return sym_idx
