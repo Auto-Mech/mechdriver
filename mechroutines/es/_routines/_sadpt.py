@@ -58,6 +58,7 @@ def obtain_saddle_point(guess_zmas, ts_dct, method_dct,
     rid = autofile.schema.generate_new_ring_id()
     cid = autofile.schema.generate_new_conformer_id()
     locs = (rid, cid)
+    runlvl_cnf_run_fs[-1].create(locs)
     run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(locs))
 
     # Optimize the saddle point
@@ -231,7 +232,7 @@ def optimize_saddle_point(guess_zmas, ts_info, mod_thy_info,
         if opt_success:
             break
 
-        # frozen_coords_lst = ((), tors_names)
+        # frozen_coords_lst = (tors_names, ())
         # success, opt_ret = es_runner.multi_stage_optimization(
         #     script_str=opt_script_str,
         #     run_fs=run_fs,

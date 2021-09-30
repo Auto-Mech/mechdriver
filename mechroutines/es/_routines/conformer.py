@@ -391,6 +391,7 @@ def conformer_sampling(zma, spc_info, thy_info,
     """
 
     # Check if any saving needs to be done before hand
+    cnf_run_fs[1].create([rid])
     if resave:
         _presamp_save(
             spc_info, cnf_run_fs, cnf_save_fs, thy_info, zrxn=zrxn, rid=rid)
@@ -467,8 +468,9 @@ def conformer_sampling(zma, spc_info, thy_info,
 
         info_message("Run {}/{}".format(samp_idx, tot_samp))
         tors_names = tuple(tors_range_dct.keys())
+        print('two_stage test:', two_stage, tors_names)
         if two_stage and tors_names:
-            frozen_coords_lst = ((), tors_names)
+            frozen_coords_lst = (tors_names, ())
             success, ret = es_runner.multi_stage_optimization(
                 script_str=script_str,
                 run_fs=run_fs,
@@ -620,7 +622,7 @@ def ring_conformer_sampling(
                                for tors_dct in ring_tors_dct.values()
                                for names in tors_dct.keys()))
         if two_stage and tors_names:
-            frozen_coords_lst = ((), tors_names)
+            frozen_coords_lst = (tors_names, ())
             success, ret = es_runner.multi_stage_optimization(
                 script_str=script_str,
                 run_fs=run_fs,
@@ -730,22 +732,24 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
         for locs in cnf_run_fs[-1].existing():
             cnf_run_path = cnf_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(cnf_run_path)
-            print("\nReading from conformer run at {}".format(cnf_run_path))
-
-            # Read the electronic structure optimization job
-            success, ret = es_runner.read_job(
-                job=job, run_fs=run_fs)
-
-            if success:
-                if run_fs[-1].file.zmatrix.exists([job]):
-                    init_zma = run_fs[-1].file.zmatrix.read([job])
-                else:
-                    init_zma = None
-                _save_conformer(
-                    ret, cnf_save_fs, locs, thy_info,
-                    zrxn=zrxn, orig_ich=spc_info[0],
-                    init_zma=init_zma)
-
+            inf_obj = run_fs[-1].file.info.read([job])
+            if inf_obj.status == autofile.schema.RunStatus.SUCCESS:
+                print("\nReading from conformer run at {}".format(cnf_run_path))
+    
+                # Read the electronic structure optimization job
+                success, ret = es_runner.read_job(
+                    job=job, run_fs=run_fs)
+    
+                if success:
+                    if run_fs[-1].file.zmatrix.exists([job]):
+                        init_zma = run_fs[-1].file.zmatrix.read([job])
+                    else:
+                        init_zma = None
+                    _save_conformer(
+                        ret, cnf_save_fs, locs, thy_info,
+                        zrxn=zrxn, orig_ich=spc_info[0],
+                        init_zma=init_zma)
+    
         # Update the conformer trajectory file
         print('')
         filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
@@ -782,6 +786,7 @@ def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
         if _geo_unique(geo, ene, saved_geos, saved_enes, zrxn):
             sym_id = _sym_unique(
                 geo, ene, saved_geos, saved_enes)
+            print('save_conformer locs:', locs, sym_id)
             if sym_id is None:
                 filesys.save.conformer(
                     ret, None, cnf_save_fs, thy_info[1:], zrxn=zrxn,
@@ -994,7 +999,7 @@ def _geo_connected(geo, rxn):
     """
 
     # Determine connectivity (only for minima)
-    if rxn is not None:
+    if rxn is None:
         gra = automol.geom.graph(geo)
         conns = automol.graph.connected_components(gra)
         lconns = len(conns)
