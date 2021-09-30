@@ -86,7 +86,7 @@ def species_dictionary(spc_str, dat_str, geo_dct, spc_type):
         # req_lst = SPC_REQ if 'ts' not in name else SPC_REQ+TS_REQ
         req_lst = SPC_REQ if 'ts' not in name else ()
         val_dct = SPC_VAL_DCT if 'ts' not in name else TS_VAL_DCT
-        check_dct1(dct, val_dct, req_lst, 'Spc-{}'.format(name))
+        check_dct1(dct, val_dct, req_lst, f'Spc-{name}')
 
     return mod_spc_dct, glob_dct
 
@@ -228,9 +228,10 @@ def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
         )
 
     # Build the queue
-    ts_queue = tuple(sadpt for sadpt in ts_dct) if ts_dct else ()
+    # ts_queue = tuple(sadpt for sadpt in ts_dct) if ts_dct else ()
 
-    return ts_dct, ts_queue
+    return ts_dct
+    # return ts_dct, ts_queue
 
 
 def ts_dct_from_ktptsks(pes_idx, rxn_lst, ktp_tsk_lst,
@@ -310,8 +311,8 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     chnl_idx, (reacs, prods) = reaction
 
     rxn_info = rinfo.from_dct(reacs, prods, spc_dct)
-    print('  Preparing for reaction {} = {}'.format(
-        '+'.join(reacs), '+'.join(prods)))
+    rct_str, prd_str = '+'.join(reacs), '+'.join(prods)
+    print(f'  Preparing for reaction {rct_str} = {prd_str}')
 
     # Set the reacs and prods for the desired direction
     reacs, prods = rxnid.set_reaction_direction(
@@ -333,8 +334,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     if zrxns not in ('MISSING-SKIP', 'MISSING-ADD'):
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
-            tsname = 'ts_{:g}_{:g}_{:g}'.format(
-                pes_idx+1, chnl_idx+1, idx)
+            tsname = f'ts_{pes_idx+1:g}_{chnl_idx+1:g}_{idx:g}'
             ts_dct[tsname] = {
                 'zrxn': zrxn,
                 'zma': zma,
