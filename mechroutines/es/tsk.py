@@ -716,7 +716,6 @@ def hr_tsk(job, spc_dct, spc_name,
 
     for ini_min_locs, ini_cnf_save_path in zip(ini_min_locs_lst, ini_path_lst):
 
-
         # Read zma, geo, and torsions
         ini_zma_save_fs = autofile.fs.zmatrix(ini_cnf_save_path)
         geo = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
@@ -759,14 +758,17 @@ def hr_tsk(job, spc_dct, spc_name,
                         **kwargs)
                     min_locs = (rid, new_cid)
                     save_locs = cnf_save_fs[-1].existing()
-                    if not min_locs in save_locs:
-                        run_in_run, sym_locs_lst = filesys.mincnf.this_conformer_was_run_in_run(zma, cnf_run_fs)
+                    if min_locs not in save_locs:
+                        locinf = conformer.this_conformer_was_run_in_run(
+                            zma, cnf_run_fs)
+                        _, sym_locs_lst = locinf
                         for sym_locs in sym_locs_lst:
                             if sym_locs in save_locs:
                                 min_locs = sym_locs
             cnf_save_path = cnf_save_fs[-1].path(min_locs)
-            ioprinter.info_message('Same conformer saved at {} and {}'.format(
-                ini_cnf_save_path, cnf_save_path))
+            ioprinter.info_message(
+                f'Same conformer saved at {ini_cnf_save_path} '
+                f'and {cnf_save_path}')
 
             # Create run fs if that directory has been deleted to run the jobs
             # ini_cnf_run_fs[-1].create(ini_min_locs)
@@ -933,7 +935,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
             if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:
                 skip = True
                 ioprinter.info_message(
-                    'Skipping task because {}'.format(spc_name),
+                    f'Skipping task because {spc_name}',
                     'is a low-spin radical radical reaction')
     else:
         spc_natoms = len(automol.inchi.geometry(spc_dct[spc_name]['inchi']))
@@ -954,8 +956,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
                 skip = (instab is not None)
                 if skip:
                     ioprinter.info_message(
-                        'Found instability file at path {}'.format(path),
-                        newline=1)
+                        f'Found instability file at path {path}', newline=1)
                     ioprinter.info_message(
                         'Skipping task for unstable species...', newline=1)
 
@@ -984,8 +985,8 @@ def _sort_info_lst(sort_str, thy_dct, spc_info):
                     method_dct = thy_dct.get(lvl_key)
                     if method_dct is None:
                         ioprinter.warning_message(
-                            'no {} in theory.dat, not using {} in sorting'.format(
-                                lvl_key, sort_typ_lst[idx]))
+                            f'no {lvl_key} in theory.dat, '
+                            f'not using {sort_typ_lst[idx]} in sorting')
                         continue
                     thy_info = tinfo.from_dct(method_dct)
                     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)

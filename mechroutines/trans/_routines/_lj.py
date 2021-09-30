@@ -70,9 +70,9 @@ def run_onedmin(spc_name,
         epath = etrans_save_fs[-1].file.lennard_jones_epsilon.path(etrans_locs)
         spath = etrans_save_fs[-1].file.lennard_jones_sigma.path(etrans_locs)
         ioprinter.info_message(
-            '- Lennard-Jones epsilon found at path {}'.format(epath))
+            f'- Lennard-Jones epsilon found at path {epath}')
         ioprinter.info_message(
-            '- Lennard-Jones sigma found at path {}'.format(spath))
+            f'- Lennard-Jones sigma found at path {spath}')
 
 
 def _nsamp_needed(etrans_save_fs, etrans_locs, etrans_keyword_dct):

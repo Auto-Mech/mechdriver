@@ -118,8 +118,8 @@ def make_header_str(spc_dct, rxn_lst, pes_idx, temps, pressures):
         'CalculationMethod, WellCutoff, ' +
         'ChemicalEigenvalueMax, ReductionMethod, AtomDistanceMin'
     )
-    ioprinter.debug_message('     {}'.format(keystr1))
-    ioprinter.debug_message('     {}'.format(keystr2))
+    ioprinter.debug_message(f'     {keystr1}')
+    ioprinter.debug_message(f'     {keystr2}')
 
     if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
         well_extend = None
@@ -305,20 +305,20 @@ def _make_channel_mess_strs(tsname, reacs, prods,
         elif _rxn_str_rev in label_dct:
             chn_label = label_dct[_rxn_str_rev]
         else:
-            ioprinter.warning_message('no {} in label dct'.format(_rxn_str))
+            ioprinter.warning_message(f'no {_rxn_str} in label dct')
 
         # Write the strings
         if chn_label not in written_labels:
             written_labels.append(chn_label)
             if len(rgt_names) == 3:
-                bi_str += '\n! {} + {} + {}\n'.format(
-                    rgt_names[0], rgt_names[1], rgt_names[2])
+                bi_str += (
+                    f'\n! {rgt_names[0]} + {rgt_names[1]} + {rgt_names[2]}\n')
                 bi_str += mess_io.writer.dummy(chn_label, zero_ene=rgt_ene)
                 # bi_str += '\n! DUMMY FOR UNSTABLE SPECIES\n'
                 # bi_str += mess_io.writer.dummy(chn_label, zero_ene=None)
             elif len(rgt_names) == 2:
                 # bi_str += mess_io.writer.species_separation_str()
-                bi_str += '\n! {} + {}\n'.format(rgt_names[0], rgt_names[1])
+                bi_str += f'\n! {rgt_names[0]} + {rgt_names[1]}\n'
                 bi_str += mess_io.writer.bimolecular(
                     chn_label, spc_label[0], spc_strs[0],
                     spc_label[1], spc_strs[1], rgt_ene)
@@ -327,7 +327,7 @@ def _make_channel_mess_strs(tsname, reacs, prods,
                 collid_freq_str = rgt_infs[0].get('collid_freq_str', None)
 
                 # well_str += mess_io.writer.species_separation_str()
-                well_str += '\n! {}\n'.format(rgt_names[0])
+                well_str += f'\n! {rgt_names[0]}\n'
                 well_str += mess_io.writer.well(
                     chn_label, spc_strs[0],
                     zero_ene=rgt_ene,
@@ -523,11 +523,10 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
     elif well_dct_key_rev in label_dct:
         fake_well_label = label_dct[well_dct_key_rev]
     else:
-        ioprinter.warning_message(
-            'No label {} in label dict'.format(well_dct_key))
+        ioprinter.warning_message(f'No label {well_dct_key} in label dict')
     # well_str += mess_io.writer.species_separation_str()
-    well_str += '\n! Fake Well for {}\n'.format(
-        '+'.join(chnl[side_idx]))
+    _side_str = '+'.join(chnl[side_idx])
+    well_str += f'\n! Fake Well for {_side_str}\n'
     fake_well, well_dat = blocks.fake_species_block(*fake_inf_dcts)
     well_str += mess_io.writer.well(
         fake_well_label, fake_well, chnl_enes[well_key])
@@ -540,8 +539,7 @@ def _make_fake_mess_strs(chnl, side, fake_inf_dcts,
     elif pst_dct_key_rev in label_dct:
         pst_label = label_dct[pst_dct_key_rev]
     else:
-        ioprinter.debug_message(
-            'No label {} in label dict'.format(pst_dct_key))
+        ioprinter.warning_message(f'No label {pst_dct_key} in label dict')
     pst_ts_str, pst_ts_dat = blocks.pst_block(ts_inf_dct, *fake_inf_dcts)
     ts_str += '\n' + mess_io.writer.ts_sadpt(
         pst_label, side_label, fake_well_label, pst_ts_str,

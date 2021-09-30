@@ -50,7 +50,7 @@ def _conformer_setup(cnf_fs, rng_locs, tors_locs, zma_locs):
 
 
 def _conformer_aux_info(zma_fs, zma_locs, zrxn=None):
-    """ Save rings, rotors, and reaction objects 
+    """ Save rings, rotors, and reaction objects
         into the ZMA fs
     """
     _save_rotors(zma_fs, zma_locs, zrxn=zrxn)
@@ -186,7 +186,7 @@ def instability(conn_zma, disconn_zmas, cnf_save_fs,
 
     # Set and print the save path information
     print(" - Saving...")
-    print(" - Save path: {}".format(cnf_save_path))
+    print(f" - Save path: {cnf_save_path}")
 
 
 def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
@@ -265,8 +265,7 @@ def energy_transfer(etrans_save_fs, etrans_locs,
     # Update the trajectory file
     traj = []
     for geo, eps, sig, ranseed in zip(geoms, epsilons, sigmas, ranseeds):
-        comment = 'Epsilon: {} cm-1   Sigma: {} Ang   RandSeed: {}'.format(
-            eps, sig, ranseed)
+        comment = f'Epsilon: {eps} cm-1  Sigma: {sig} Ang  RandSeed: {ranseed}'
         traj.append((comment, geo))
 
     # Write the info obj add ranseeds to this I think
@@ -334,7 +333,7 @@ def _save_geom_parsed(geo, inf_obj, inp_str, cnf_fs, cnf_locs):
     print('save_geom test:', cnf_locs, cnf_fs)
     cnf_fs[-1].create(cnf_locs)
     cnf_path = cnf_fs[-1].path(cnf_locs)
-    print(" - Saving at {}".format(cnf_path))
+    print(f" - Saving at {cnf_path}")
 
     cnf_fs[-1].file.geometry_info.write(inf_obj, cnf_locs)
     cnf_fs[-1].file.geometry_input.write(inp_str, cnf_locs)
@@ -362,7 +361,7 @@ def _save_grad(ret, cnf_fs, cnf_locs):
 
     cnf_fs[-1].create(cnf_locs)
     cnf_path = cnf_fs[-1].path(cnf_locs)
-    print(" - Saving at {}".format(cnf_path))
+    print(f" - Saving at {cnf_path}")
 
     cnf_fs[-1].file.gradient_info.write(inf_obj, cnf_locs)
     cnf_fs[-1].file.gradient_input.write(inp_str, cnf_locs)
@@ -374,7 +373,7 @@ def _save_zmatrix_parsed(zma, inf_obj, inp_str, zma_fs, zma_locs):
     """
     zma_fs[-1].create(zma_locs)
     zma_path = zma_fs[-1].path(zma_locs)
-    print(" - Saving at {}".format(zma_path))
+    print(f" - Saving at {zma_path}")
 
     zma_fs[-1].file.geometry_info.write(inf_obj, zma_locs)
     zma_fs[-1].file.geometry_input.write(inp_str, zma_locs)
@@ -400,7 +399,7 @@ def _save_energy_parsed(ene, inf_obj, inp_str, sp_fs, sp_locs):
     """
     sp_fs[-1].create(sp_locs)
     sp_path = sp_fs[-1].path(sp_locs)
-    print(" - Saving at {}".format(sp_path))
+    print(f" - Saving at {sp_path}")
 
     sp_fs[-1].file.input.write(inp_str, sp_locs)
     sp_fs[-1].file.info.write(inf_obj, sp_locs)
@@ -423,7 +422,7 @@ def _save_hessian_parsed(hess, freqs, inf_obj, inp_str, cnf_fs, cnf_locs):
     """
     cnf_fs[-1].create(cnf_locs)
     cnf_path = cnf_fs[-1].path(cnf_locs)
-    print(" - Saving at {}".format(cnf_path))
+    print(f" - Saving at {cnf_path}")
 
     cnf_fs[-1].file.hessian_info.write(inf_obj, cnf_locs)
     cnf_fs[-1].file.hessian_input.write(inp_str, cnf_locs)
@@ -453,7 +452,7 @@ def _save_rotors(zma_fs, zma_locs, zrxn=None):
     rotors = automol.rotor.from_zmatrix(zma, zrxn=zrxn)
     if any(rotors):
         zma_path = zma_fs[-1].path(zma_locs)
-        print(" - Rotors identified from Z-Matrix at {}".format(zma_path))
+        print(f" - Rotors identified from Z-Matrix at {zma_path}")
         print(" - Saving rotor information at same location.")
         zma_fs[-1].file.torsions.write(rotors, zma_locs)
 
@@ -467,8 +466,7 @@ def _save_rings(zma_fs, zma_locs, zrxn=None):
     ring_dct = automol.zmat.all_rings_dct(zma, rings_atoms)
     if ring_dct:
         zma_path = zma_fs[-1].path(zma_locs)
-        print(" - Ring torsions identified from Z-Matrix at {}".format(
-            zma_path))
+        print(f" - Ring torsions identified from Z-Matrix at {zma_path}")
         print(" - Saving ring torsions information at same location.")
         zma_fs[-1].file.ring_torsions.write(ring_dct, zma_locs)
 
@@ -479,7 +477,7 @@ def _save_reaction(zma_fs, zma_locs, zrxn=None):
 
     if zrxn is not None:
         zma_path = zma_fs[-1].path(zma_locs)
-        print(" - Saving Reaction Class+Graph object at {}".format(zma_path))
+        print(f" - Saving Reaction Class+Graph object at {zma_path}")
         zma_fs[-1].file.reaction.write(zrxn, zma_locs)
 
 
@@ -495,7 +493,7 @@ def _save_instab(ret, instab_fs):
     # Save the geometry information
     instab_fs[-1].create()
     instab_path = instab_fs[-1].path()
-    print(" - Saving at {}".format(instab_path))
+    print(f" - Saving at {instab_path}")
     instab_fs[-1].file.geometry_info.write(inf_obj)
     instab_fs[-1].file.geometry_input.write(inp_str)
     instab_fs[-1].file.geometry.write(geo)

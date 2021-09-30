@@ -160,11 +160,7 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
         locs_lst_lst.append(locs_lst)
         if enes:
             enes_lst.append(enes)
-    print('enes lst')
-    for x in enes_lst:
-        print(x)
-    print('\n\n')
-    
+
     max_enes = []
     max_locs = []
     for idx_j, enes in enumerate(enes_lst):
@@ -176,10 +172,6 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
                 max_loc = locs_lst_lst[idx_j][idx_i]
         max_enes.append(max_ene)
         max_locs.append(max_loc)
-    print('max enes')
-    print(max_enes)
-    print('max locs')
-    print(max_locs)
 
     min_ene = 10000.
     locs = []
@@ -189,9 +181,7 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
             locs = max_locs[idx_j]
 
     # Use the max locs to determine the max_zma, ret as tuple
-    print('final locs')
     max_locs = locs
-    print(max_locs)
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
 
     return (max_zma,)

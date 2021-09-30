@@ -5,8 +5,6 @@ import numpy
 from scipy.interpolate import CubicSpline
 from scipy.interpolate import Akima1DInterpolator
 
-from scipy.interpolate import CubicSpline
-from scipy.interpolate import Akima1DInterpolator
 import automol
 import autofile
 from phydat import phycon
@@ -29,8 +27,8 @@ def potential(names, grid_vals, cnf_save_path,
     # Build initial lists for storing potential energies and Hessians
     # grid_points = automol.pot.points(grid_vals)
     grid_coords = automol.pot.coords(grid_vals)
-    back_coords = tuple([tuple([
-        val + 4*numpy.pi for val in grid]) for grid in grid_coords])
+    back_coords = tuple(tuple(val + 4*numpy.pi for val in grid)
+                        for grid in grid_coords)
     pot, geoms, grads, hessians, zmas, paths = {}, {}, {}, {}, {}, {}
 
     # Set up filesystem information
@@ -176,7 +174,7 @@ def remove_bad_point(pot, bad_angle):
             bad_tuple = (angle,)
 
     assert bad_tuple is not None, (
-        f'The angle {bad_angle*phycon.DEG2RAD} does not exist in the pot dictionary')
+        f'Angle {bad_angle*phycon.DEG2RAD} does not exist in pot dictionary')
 
     print(f'Removing bad angle at {bad_angle} degrees')
 

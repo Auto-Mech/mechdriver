@@ -148,8 +148,8 @@ def run_backsteps(
 
     # Build the grid of values
     rev_grid_vals_orig_lst = tuple(reversed(mixed_grid_vals_lst))
-    rev_grid_vals_lst = tuple([tuple([
-        val + 4*numpy.pi for val in grid]) for grid in rev_grid_vals_orig_lst])
+    rev_grid_vals_lst = tuple(tuple(val + 4*numpy.pi for val in grid)
+                              for grid in rev_grid_vals_orig_lst)
 
     pot = {}
     for idx, grid_vals in enumerate(mixed_grid_vals_lst):
@@ -249,11 +249,14 @@ def run_backsteps(
             pot = ene - ene_orig
             pot_thresh = -0.1
             if pot > pot_thresh and passed_bad_point:
-                ioprinter.info_message("Reverse Sweep finds a potential {:5.2f} from the forward sweep".format(pot))
+                ioprinter.info_message("Reverse Sweep finds a potential "
+                                       f"{pot:5.2f} from the forward sweep")
                 ioprinter.info_message("...no more backsteps required")
                 break
             else:
-                ioprinter.warning_message("Backstep finds a potential less than forward sweep of {:5.2f} kcal/mol at ".format(pot))
+                ioprinter.warning_message("Backstep finds a potential less "
+                                          "than forward sweep of "
+                                          f"{pot:5.2f} kcal/mol at ")
                 ioprinter.info_message(locs, locs_orig)
                 ioprinter.info_message("...more backsteps required")
 
@@ -416,8 +419,7 @@ def save_scan(scn_run_fs, scn_save_fs, scn_typ,
             # Set run filesys
             run_path = scn_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(run_path)
-            ioprinter.info_message(
-                "Reading from scan run at {}".format(run_path))
+            ioprinter.info_message(f"Reading from scan run at {run_path}")
 
             # Save the structure
             success, ret = read_job(job, run_fs)
@@ -504,8 +506,7 @@ def _scan_finished(coord_names, coord_grids, scn_save_fs,
         ioprinter.message('User elected to overwrite scan')
 
     if run_finished:
-        ioprinter.message('Scan saved previously at {}'.format(
-            scn_save_fs[0].path()))
+        ioprinter.message(f'Scan saved previously at {scn_save_fs[0].path()}')
     else:
         ioprinter.message('Need to run scans')
 
@@ -522,7 +523,7 @@ def _set_job(scn_typ):
     """
 
     assert scn_typ in ('relaxed', 'rigid'), (
-        '{} is not relaxed or rigid'.format(scn_typ)
+        f'{scn_typ} is not relaxed or rigid'
     )
 
     if scn_typ == 'relaxed':
@@ -557,16 +558,13 @@ def write_traj(ini_locs, scn_save_fs, mod_thy_info, locs_lst):
 
     traj = []
     for idxs, ene, geo in zip(idxs_lst, enes, geos):
-        idx_lst = ['{0:.2f}'.format(idx) for idx in idxs]
+        idx_lst = [f'{idx:.2f}' for idx in idxs]
         idx_str = ','.join(idx_lst)
-        comment = (
-            'energy: {:>15.10f}, '.format(ene) +
-            'grid idxs: {}'.format(idx_str)
-        )
+        comment = f'energy: {ene:>15.10f}, grid idxs: {idx_str}'
         traj.append((geo, comment))
 
     traj_path = scn_save_fs[1].file.trajectory.path([ini_locs])
-    print("Updating scan trajectory file at {}".format(traj_path))
+    print(f"Updating scan trajectory file at {traj_path}")
     scn_save_fs[1].file.trajectory.write(traj, [ini_locs])
 
 

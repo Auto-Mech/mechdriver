@@ -50,8 +50,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
     dct_incomplete = False
     for ich, name in ich_name_dct.items():
         if name is None:
-            ioprinter.warning_message(
-                '{} not given in species.csv file'.format(ich))
+            ioprinter.warning_message(f'{ich} not given in species.csv file')
             dct_incomplete = True
     if dct_incomplete:
         ioprinter.error_message('Job ending since basis species not specified')
@@ -60,7 +59,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
     # Get the species energy
     if read_species:
         ioprinter.info_message(
-            'Calculating energy for species {}'.format(spc_name), newline=1)
+            f'Calculating energy for species {spc_name}', newline=1)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct[spc_name], spc_model_dct_i,
             run_prefix, save_prefix,
@@ -71,7 +70,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             spc_model_dct_i, run_prefix,
             read_ene=True, read_zpe=True, saddle='ts' in spc_name)
         if h_spc is None:
-            ioprinter.error_message('No energy found for {}'.format(spc_name))
+            ioprinter.error_message(f'No energy found for {spc_name}')
             sys.exit()
     else:
         h_spc = None
@@ -97,15 +96,13 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             if len(prods) > 1:
                 prod_lbl += '+p1'
             ioprinter.info_message(
-                'Basis Reaction: {}={} 1 1 1 '.format(reac_lbl, prod_lbl))
+                f'Basis Reaction: {reac_lbl}={prod_lbl} 1 1 1 ')
             for i, reac in enumerate(reacs):
                 ioprinter.info_message(
-                    'r{},{},{},{}'.format(
-                        str(i), reac, automol.inchi.smiles(reac), '1'))
+                    f'r{i},{reac},{automol.inchi.smiles(reac)},1')
             for i, prod in enumerate(prods):
                 ioprinter.info_message(
-                    'p{},{},{},{}'.format(
-                        str(i), prod, automol.inchi.smiles(prod), '1'))
+                    f'p{i},{prod},{automol.inchi.smiles(prod)},1')
         ioprinter.debug_message('bases energies test:', ich, name)
         pf_filesystems = filesys.models.pf_filesys(
             spc_dct_i, spc_model_dct_i,
@@ -113,7 +110,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
             saddle=('ts' in name or 'TS' in name),
             name=name)
         ioprinter.info_message(
-            'Calculating energy for basis {}...'.format(prname), newline=1)
+            f'Calculating energy for basis {prname}...', newline=1)
         h_basis.append(
             read_energy(
                 spc_dct_i, pf_filesystems,
@@ -128,7 +125,7 @@ def basis_energy(spc_name, spc_basis, uni_refs_dct, spc_dct,
     for basis_ene, basis_name in zip(h_basis, ich_name_dct.values()):
         if basis_ene is None:
             ioprinter.warning_message(
-                'No energy found for {}'.format(basis_name))
+                f'No energy found for {basis_name}')
             no_ene_cnt += 1
     if no_ene_cnt > 1:
         ioprinter.error_message(

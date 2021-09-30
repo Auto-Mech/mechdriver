@@ -96,7 +96,7 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
                 'Tau sampling complete.')
             break
 
-        ioprinter.info_message("New nsamp is {:d}.".format(nsamp), indent=1)
+        ioprinter.info_message(f"New nsamp is {nsamp:d}.", indent=1)
 
         samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
         tid = autofile.schema.generate_new_tau_id()
@@ -107,7 +107,7 @@ def run_tau(zma, spc_info, thy_info, nsamp, tors_range_dct,
         run_fs = autofile.fs.run(tau_run_prefix)
 
         idx += 1
-        ioprinter.info_message("Run {}/{}".format(idx, nsamp0))
+        ioprinter.info_message(f"Run {idx}/{nsamp0}")
 
         ioprinter.debug_message(
             'Checking if ZMA has high repulsion...', newline=1)

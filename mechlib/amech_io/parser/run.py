@@ -252,7 +252,7 @@ def extract_task(tsk, tsk_lst):
     return tsk_inf
 
 
-def tasks(run_str, mech_str, thy_dct):
+def tasks(run_str, thy_dct):
     """ runstr
     """
 
@@ -388,8 +388,7 @@ def _check_tsks(tsk_lsts, thy_dct):
                 obj_lst = SUPP_OBJS if obj == 'all' else (obj,)
                 for _obj in obj_lst:
                     if _obj not in TSK_KEY_DCT[tsk][0]:
-                        error_message(
-                            'obj {}, not allowed for {}'.format(obj, tsk))
+                        error_message(f'obj {obj}, not allowed for {tsk}')
                         sys.exit()
 
             # Check if keyword values are allowed
@@ -439,4 +438,3 @@ def check_inputs(tsk_dct, pes_dct, pes_mod_dct, spc_mod_dct):
                 '  However no reaction channels provided in mechanism.dat\n'
                 '  Exiting MechDriver...')
             sys.exit()
-

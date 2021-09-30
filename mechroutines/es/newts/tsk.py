@@ -5,7 +5,7 @@
 """
 
 import automol.par
-from mechanalyzer.inf import thy as tinfo
+# from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es.runner import qchem_params

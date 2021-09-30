@@ -1,6 +1,5 @@
 """ Tasks for THERMODRIVER
 """
-import os
 
 import autorun
 from automol.inchi import formula_string as fstring
@@ -57,7 +56,7 @@ def run_messpf_task(
         ioprinter.therm_paths_messpf_run_locations(
             spc_name, spc_locs_dct[spc_name], spc_mods, thm_paths_dct)
         # Run MESSPF for all requested models, combine the PFS at the end
-        ioprinter.message('Run MESSPF: {}'.format(spc_name), newline=1)
+        ioprinter.message(f'Run MESSPF: {spc_name}', newline=1)
         _locs_pfs = []
         for spc_locs in spc_locs_dct[spc_name]:
             _mod_pfs = []
@@ -93,7 +92,7 @@ def produce_boltzmann_weighted_conformers_pf(
     print('starting produce_boltz...')
 
     for spc_name in spc_locs_dct:
-        ioprinter.message('Run MESSPF: {}'.format(spc_name), newline=1)
+        ioprinter.message(f'Run MESSPF: {spc_name}', newline=1)
         locs_pfs_arrays = []
         hf_array = []
         for idx, spc_locs in enumerate(spc_locs_dct[spc_name]):
@@ -101,9 +100,12 @@ def produce_boltzmann_weighted_conformers_pf(
                 thm_paths_dct[spc_name][tuple(spc_locs)]['mod_total'][0]))
             hf_val = 0.
             for spc_mod in spc_mods:
-                hf_val += spc_dct[spc_name]['Hfs'][idx][spc_mod][0] / len(spc_mods)
+                hf_val += (
+                    spc_dct[spc_name]['Hfs'][idx][spc_mod][0] / len(spc_mods)
+                )
             hf_array.append(hf_val)
-        final_pf = thermfit.pf.boltzmann_pf_combination(locs_pfs_arrays, hf_array)
+        final_pf = thermfit.pf.boltzmann_pf_combination(
+            locs_pfs_arrays, hf_array)
         writer.mess.output(
             fstring(spc_dct[spc_name]['inchi']),
             final_pf,
@@ -242,7 +244,7 @@ def nasa_polynomial_task(
             #     # Write the header describing the models used in thermo calcs
             #     ckin_nasa_str += writer.ckin.model_header(
             #         [spc_mod], spc_mod_dct, refscheme=ref_scheme)
-            #     # Build and write the NASA polynomial in CHEMKIN-format string
+            #     # Build and write NASA polynomial in CHEMKIN-format string
             #     # Call dies if you haven't run "write mess" task
             #     ckin_nasa_str += thmroutines.nasapoly.build_polynomial(
             #         spc_name, spc_dct,

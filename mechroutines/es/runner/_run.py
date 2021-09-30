@@ -116,15 +116,15 @@ def run_job(job, script_str, run_fs,
     run_path = run_fs[-1].path([job])
     if overwrite:
         do_run = True
-        print(" - Running {} job at {}".format(job, run_path))
+        print(f" - Running {job} job at {run_path}")
     else:
         if not run_fs[-1].file.info.exists([job]):
             do_run = True
-            print(" - Running {} job at {}".format(job, run_path))
+            print(f" - Running {job} job at {run_path}")
         else:
             inf_obj = run_fs[-1].file.info.read([job])
             if inf_obj.status == autofile.schema.RunStatus.FAILURE:
-                print(" - Found failed {} job at {}".format(job, run_path))
+                print(f" - Found failed {job} job at {run_path}")
                 if retryfail:
                     print(" - Retrying...")
                     do_run = True
@@ -134,11 +134,9 @@ def run_job(job, script_str, run_fs,
             else:
                 do_run = False
                 if inf_obj.status == autofile.schema.RunStatus.SUCCESS:
-                    print(" - Found completed {} job at {}"
-                          .format(job, run_path))
+                    print(f" - Found completed {job} job at {run_path}")
                 else:
-                    print(" - Found running {} job at {}"
-                          .format(job, run_path))
+                    print(f" - Found running {job} job at {run_path}")
                     print(" - Skipping...")
 
     if do_run:

@@ -92,8 +92,8 @@ def _set_sort_info_lst(sort_str, thy_dct, spc_info):
                     method_dct = thy_dct.get(lvl_key)
                     if method_dct is None:
                         ioprinter.warning_message(
-                            'no {} in theory.dat, not using {} in sorting'.format(
-                                lvl_key, sort_typ_lst[idx]))
+                            f'no {lvl_key} in theory.dat, '
+                            f'not using {sort_typ_lst[idx]} in sorting')
                         continue
                     thy_info = tinfo.from_dct(method_dct)
                     mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
@@ -264,13 +264,11 @@ def write_missing_data_report(miss_data):
     miss_data = automol.util.remove_duplicates_with_order(miss_data)
 
     print('\n\n\nMissing Data Requested by the User')
-    print('{0:<20s}{1:<12s}{2:<12s}{3:<12s}'.format(
-        'Name', 'Method', 'Basis', 'Data'))
+    print(f'{"Name":<20s}{"Method":<12s}{"Basis":<12s}{"Data":<12s}')
     for data in miss_data:
         name, thy_info, dat = data
         method, basis = thy_info[1:3]
-        print('{0:<20s}{1:<12s}{2:<12s}{3:<12s}'.format(
-            name, method, basis, dat))
+        print(f'{name:<20s}{method:<12s}{basis:<12s}{dat:<12s}')
 
 
 def write_data_dirs(data_dirs, prefix):
@@ -283,10 +281,10 @@ def write_data_dirs(data_dirs, prefix):
         if string_dct:
             dir_name = ioformat.pathtools.prepare_path(
                 [prefix, name], make=True)
-            print('Writing files into {} directory'.format(dir_name))
+            print(f'Writing files into {dir_name} directory')
             for key, string in string_dct.items():
-                fname = '{}.dat'.format(key)
-                print('Writing file {}'.format(fname))
+                fname = f'{key}.dat'
+                print(f'Writing file {fname}')
                 ioformat.pathtools.write_file(string, dir_name, fname)
 
 
@@ -296,61 +294,61 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
     thylabel = ''  # used for data directory labels (e.g. displacements)
     if 'coeffs' in tsk:
         filelabel = 'coeffs'
-        filelabel += '_{}'.format(model_dct['therm_fit']['ref_scheme'])
+        filelabel += f'_{model_dct["therm_fit"]["ref_scheme"]}'
         filelabel += '.csv'
     elif 'freq' in tsk:
         filelabel = 'freq'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
             thylabel = proc_keyword_dct['geolvl']
-            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
         else:
             thylabel = spc_mod_dct_i['vib']['geolvl'][0]
-            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
         filelabel += '.csv'
     elif 'geo' in tsk:
         filelabel = 'geo'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
-            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
         else:
-            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
         filelabel += '.txt'
     elif 'molden' in tsk:
         filelabel = 'molden'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
-            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
         else:
-            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
         filelabel += '.txt'
     elif 'zma' in tsk:
         filelabel = 'zmat'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
-            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
         if spc_mod_dct_i:
-            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
         filelabel += '.txt'
     elif 'ene' in tsk:
         filelabel = 'ene'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
-            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
-            filelabel += '_{}'.format(proc_keyword_dct['proplvl'])
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
+            filelabel += f'_{proc_keyword_dct["proplvl"]}'
         else:
-            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
-            filelabel += '_{}'.format(spc_mod_dct_i['ene']['lvl1'][0])
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
+            filelabel += f'_m{spc_mod_dct_i["ene"]["lvl1"][0]}'
         filelabel += '.csv'
     elif 'enthalpy' in tsk:
         filelabel = 'enthalpy'
         geolvl = proc_keyword_dct.get('geolvl')
         if geolvl is not None:
-            filelabel += '_{}'.format(proc_keyword_dct['geolvl'])
-            filelabel += '_{}'.format(proc_keyword_dct['proplvl'])
+            filelabel += f'_{proc_keyword_dct["geolvl"]}'
+            filelabel += f'_{proc_keyword_dct["proplvl"]}'
         else:
-            filelabel += '_m{}'.format(spc_mod_dct_i['vib']['geolvl'][0])
-            filelabel += '_{}'.format(spc_mod_dct_i['ene']['lvl1'][0])
+            filelabel += f'_m{spc_mod_dct_i["vib"]["geolvl"][0]}'
+            filelabel += f'_m{spc_mod_dct_i["ene"]["lvl1"][0]}'
         filelabel += '.csv'
     elif 'torsions' in tsk:
         filelabel = None
@@ -425,10 +423,9 @@ def remove_unstable(spc_queue, spc_dct, thy_dct, spc_mod_dct_i,
                 stable_queue += (spc_name,)
             else:
                 ioprinter.info_message(
-                    'Found instability file at path {}'.format(path),
-                    newline=1)
+                    f'Found instability file at path {path}', newline=1)
                 ioprinter.info_message(
-                    'Removing {} from queue'.format(spc_name))
+                    f'Removing {spc_name} from queue')
 
     return stable_queue
 
@@ -472,7 +469,7 @@ def remove_radrad_ts(obj_queue, spc_dct):
             ts_mul = rinfo.value(rxn_info, 'tsmult')
             high_ts_mul = rinfo.ts_mult(rxn_info, rxn_mul='high')
             if rinfo.radrad(rxn_info) and ts_mul != high_ts_mul:
-                ioprinter.info_message('Removing {} from queue.'.format(obj))
+                ioprinter.info_message(f'Removing {obj} from queue.')
             else:
                 new_queue += (obj,)
         else:

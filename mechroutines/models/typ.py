@@ -169,7 +169,7 @@ def is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
 
     if len(rxn_lst) == 1:
         chnl_idx, _ = rxn_lst[0]
-        tsname = 'ts_{:g}_{:g}_0'.format(pes_idx+1, chnl_idx+1)
+        tsname = f'ts_{pes_idx+1:g}_{chnl_idx+1:g}_0'
 
         rxn_class = spc_dct[tsname]['class']
         if (automol.par.typ(rxn_class) ==

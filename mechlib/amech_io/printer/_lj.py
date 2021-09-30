@@ -15,8 +15,6 @@ def lennard_jones_params(sigmas, epsilons):
         :type epsilons: tuple(float)
     """
     if sigmas and epsilons:
-        info_message(
-            '{0:<14s}{1:<16s}'.format('\nSigma (Ang)', 'Epsilon (cm-1)'))
+        info_message(f'{"Sigma (Ang)":<14s}{"Epsilon (cm-1)":<16s}')
         for sig, eps in zip(sigmas, epsilons):
-            info_message(
-                '{0:<14.4f}{1:<16.4f}'.format(sig, eps))
+            info_message(f'{sig:<14.4f}{eps:<16.4f}')

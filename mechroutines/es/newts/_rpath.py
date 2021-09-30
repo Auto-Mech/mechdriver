@@ -71,6 +71,8 @@ def inf_sep_ene(ts_dct, thy_inf_dct, mref_dct,
         at infinite separation.
     """
 
+    _ = mref_dct
+
     # Get info from the reactants
     rct_info = thy_inf_dct['rct_info']
     overwrite = es_keyword_dct['overwrite']
@@ -271,7 +273,7 @@ def _reac_sep_ene(rct_info, rcts_cnf_fs, thy_info,
         else:
             ioprinter.error_message(
                 'Single reference energy job fails',
-                'for {}: '.format(inf),
+                f'for {inf}: ',
                 'Energy needed to evaluate infinite separation energy')
             inf_ene = None
 

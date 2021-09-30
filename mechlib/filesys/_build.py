@@ -50,15 +50,18 @@ def build_fs(run_prefix, save_prefix, end,
 
     _fs = ()
     for prefix in (run_prefix, save_prefix):
-        _fs += (
-            _build_fs(
-                prefix, end,
-                rxn_locs=rxn_locs, spc_locs=spc_locs,
-                thy_locs=thy_locs, ts_locs=ts_locs,
-                cnf_locs=cnf_locs, tau_locs=tau_locs,
-                instab_locs=instab_locs, zma_locs=zma_locs,
-                scn_locs=scn_locs, cscn_locs=cscn_locs),
-        )
+        if prefix is not None:
+            _fs += (
+                _build_fs(
+                    prefix, end,
+                    rxn_locs=rxn_locs, spc_locs=spc_locs,
+                    thy_locs=thy_locs, ts_locs=ts_locs,
+                    cnf_locs=cnf_locs, tau_locs=tau_locs,
+                    instab_locs=instab_locs, zma_locs=zma_locs,
+                    scn_locs=scn_locs, cscn_locs=cscn_locs),
+            )
+        else:
+            _fs += (None,)
 
     return _fs[0], _fs[1]
 
@@ -114,9 +117,9 @@ def prefix_fs(run_prefix, save_prefix):
                 os.mkdir(prefix)
             except FileNotFoundError:
                 print('Cannot make directory at path specified in run.dat.')
-                print('Path: {}'.format(prefix))
+                print(f'Path: {prefix}')
                 sys.exit()
-        ioprinter.info_message('{}'.format(prefix), indent=1)
+        ioprinter.info_message(f'{prefix}', indent=1)
 
 
 def get_zma_locs(zma_fs, spc_dct_i, rxn_ichs=None, wanted_dirn=('forw',)):

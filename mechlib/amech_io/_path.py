@@ -78,7 +78,7 @@ def output_path(dat, make_path=True, print_path=False, prefix=None):
         if not os.path.exists(path):
             os.makedirs(path)
     if print_path:
-        print('output path for {}: {}'.format(dat, path))
+        print(f'output path for {dat}: {path}')
 
     return path
 
@@ -110,7 +110,7 @@ def job_path(prefix, prog, job, fml,
     # Determine the index for the locs if not provided
     if locs_idx is not None:
         assert isinstance(locs_idx, int), (
-            'locs idx {} is not an integer'.format(locs_idx)
+            f'locs idx {locs_idx} is not an integer'
         )
     else:
         locs_idx = random.randint(0, 9999999)
@@ -126,7 +126,7 @@ def job_path(prefix, prog, job, fml,
     if make_path:
         bld_fs[-1].create([job, fml, locs_idx])
     if print_path:
-        print('Path for {}/{} Job:'.format(prog, job))
+        print(f'Path for {prog}/{job} Job:')
         print(bld_path)
 
     return bld_path

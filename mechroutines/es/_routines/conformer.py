@@ -762,7 +762,7 @@ def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
           # Only go through save procedure if conf not in save
           # may need to get geo, ene, etc; maybe make function
     """
-
+    
     saved_locs, saved_geos, saved_enes = _saved_cnf_info(
         cnf_save_fs, thy_info)
 

@@ -105,16 +105,18 @@ def models_dictionary(mod_str, thy_dct):
     # Add defaults, check key-vals, and format each model dicts
     if kin_blocks is not None:
         kin_mod_dct = automol.util.dict_.merge_subdct(
-            ioformat.ptt.keyword_dcts_from_blocks(kin_blocks), keep_subdct=True)
+            ioformat.ptt.keyword_dcts_from_blocks(kin_blocks),
+            keep_subdct=True)
         for mod, dct in kin_mod_dct.items():
             if dct:  # if statement for empty global dcts from above fxn
                 kin_mod_dct[mod] = _kin_model_build(dct)
     else:
         kin_mod_dct = None
 
-    if spc_blocks is not None:    
+    if spc_blocks is not None:
         spc_mod_dct = automol.util.dict_.merge_subdct(
-            ioformat.ptt.keyword_dcts_from_blocks(spc_blocks), keep_subdct=True)
+            ioformat.ptt.keyword_dcts_from_blocks(spc_blocks),
+            keep_subdct=True)
         for mod, dct in spc_mod_dct.items():
             if dct:  # if statement for empty global dcts from above fxn
                 spc_mod_dct[mod] = _spc_model_build(dct, thy_dct)

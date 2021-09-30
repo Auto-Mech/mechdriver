@@ -15,10 +15,11 @@ def therm_paths_messpf_write_locations(
         written for each conformer and model
     """
     info_message('MESSPF location table:')
-    info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-        'species name', 'rid', 'cid', 'model', 'path'))
-    info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-        '============', '=======', '=======', '=======', '=========='))
+    info_message(f'{"species name":<16}'
+                 f'{rid:<16}{cid:<16}{model:<16}{path:<16}')
+    info_message(f'{"============":<16}'
+                 f'{"=======":<16}{"=======":<16}{"=======":<16}'
+                 f'{"============":<16}')
     for spc_locs in spc_locs_lst:
         for spc_mod in spc_mods:
             info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
@@ -32,10 +33,11 @@ def therm_paths_messpf_run_locations(
         for each conformer and model
     """
     info_message('MESSPF location table:')
-    info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-        'species name', 'rid', 'cid', 'model', 'path'))
-    info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
-        '============', '=======', '=======', '======', '=========='))
+    info_message(f'{"species name":<16}'
+                 f'{rid:<16}{cid:<16}{model:<16}{path:<16}')
+    info_message(f'{"============":<16}'
+                 f'{"=======":<16}{"=======":<16}{"=======":<16}'
+                 f'{"============":<16}')
     for spc_locs in spc_locs_lst:
         for spc_mod in spc_mods:
             info_message('{:<16}{:<16}{:<16}{:<16}{:<16}'.format(
@@ -78,7 +80,7 @@ def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_locs_idx, spc_mod):
                 spc_dct[spc_name]['Hfs']['final'][0]
                 * phycon.EH2KCAL)
             info_message(
-                '{}---{}'.format(spc_name, 'boltzmann_weighted_combo'))
+                f'{spc_name}---{"boltzmann_weighted_combo"}')
         else:
             hf0 = (
                 spc_dct[spc_name]['Hfs'][spc_locs_idx-1][spc_mod][0]

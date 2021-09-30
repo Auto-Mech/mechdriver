@@ -113,11 +113,11 @@ def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
     for key, msg, name_dct in inf:
         str_dct = inp_str_dct[key]
         if str_dct:
-            info_message(' Found {}:'.format(msg))
+            info_message(f' Found {msg}:')
             for name in str_dct:
-                info_message('-  {}: {}'.format(name, name_dct[name]))
+                info_message(f'-  {name}: {name_dct[name]}')
         else:
-            info_message('  No {} were found.'.format(msg))
+            info_message(f'  No {msg} were found.')
 
 
 # formatters, dont know where to build this
@@ -141,7 +141,7 @@ def _geometry_dictionary(job_path):
                 spc_name = automol.geom.comment_from_xyz_string(xyz_str)
                 geo = automol.geom.from_xyz_string(xyz_str)
                 if spc_name in geo_dct:
-                    warning_message('Dupilicate xyz geometry for ', spc_name)
+                    warning_message(f'Dupilicate xyz geometry for {spc_name}')
                 geo_dct[spc_name] = geo
                 path_dct[spc_name] = file_name
 
@@ -177,8 +177,8 @@ def _active_space_dictionary(job_path):
                 aspace_str = ioformat.pathtools.read_file(file_path, file_name)
                 spc_name = _comment_name(aspace_str)
                 if spc_name in aspace_dct:
-                    warning_message('Dupilicate active space geometry for ',
-                          spc_name)
+                    warning_message(
+                        f'Dupilicate active space geometry for {spc_name}')
                 aspace_dct[spc_name] = aspace_str
                 path_dct[spc_name] = file_name
 

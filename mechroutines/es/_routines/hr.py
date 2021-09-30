@@ -43,7 +43,7 @@ def hindered_rotor_scans(
     for tors_names, tors_grids in zip(run_tors_names, run_tors_grids):
 
         ioprinter.info_message(
-            'Running Rotor: {}'.format('-'.join(tors_names)), newline=1)
+            f'Running Rotor: {"-".join(tors_names)}', newline=1)
 
         # Setting the constraints
         constraint_dct = automol.zmat.constraint_dct(
@@ -98,7 +98,7 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
     print('\nAssessing the HR potential...')
     for name in tors_pots:
 
-        print('- Rotor {}'.format(name))
+        print(f'- Rotor {name}')
         pots = tors_pots[name].values()
         zmas = tors_zmas[name].values()
         paths = tors_paths[name].values()
@@ -110,8 +110,8 @@ def check_hr_pot(tors_pots, tors_zmas, tors_paths, emax=-0.5, emin=-10.0):
                     new_emin = pot
     if new_min_zma is not None:
         print(' - New minimmum energy ZMA found for torsion')
-        print(' - Ene = {}'.format(new_emin))
-        print(' - Found at path: {}'.format(new_path))
+        print(f' - Ene = {new_emin}')
+        print(f' - Found at path: {new_path}')
         print(automol.zmat.string(new_min_zma))
 
     return new_min_zma

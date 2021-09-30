@@ -39,7 +39,7 @@ def remove_imag(geo, ini_ret, spc_info, method_dct, run_fs,
     while imag and chk_idx < 5:
         chk_idx += 1
         ioprinter.info_message(
-            'Attempting kick off along mode, attempt {}...'.format(chk_idx))
+            f'Attempting kick off along mode, attempt {chk_idx}...')
 
         geo, kick_ret = _kickoff_saddle(
             geo, norm_coords, spc_info, mod_thy_info,

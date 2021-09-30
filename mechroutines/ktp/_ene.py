@@ -24,7 +24,7 @@ def set_reference_ene(rxn_lst, spc_dct,
         'Determining the reference energy for PES...', newline=1)
     ioprinter.info_message(
         ' - Reference species assumed to be the',
-        ' first set of reactants on PES: {}'.format('+'.join(ref_rgts)))
+        f' first set of reactants on PES: {"+".join(ref_rgts)}')
 
     # Get the model for the first reference species
     ref_scheme = pes_model_dct_i['therm_fit']['ref_scheme']
@@ -32,7 +32,7 @@ def set_reference_ene(rxn_lst, spc_dct,
 
     ref_ene_level = spc_model_dct_i['ene']['lvl1'][0]
     ioprinter.info_message(
-        ' - Energy Level for Reference Species: {}'.format(ref_ene_level))
+        f' - Energy Level for Reference Species: {ref_ene_level}')
 
     # Get the elec+zpe energy for the reference species
     ioprinter.info_message('')

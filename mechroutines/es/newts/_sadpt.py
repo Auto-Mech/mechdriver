@@ -35,7 +35,7 @@ def read_existing_saddle_points(spc_dct, tsname, savefs_dct, es_keyword_dct):
         lvl = 'runlvl' if idx == 0 else 'inplvl'
         ioprinter.info_message(
             '\nSearching save filesys for Z-Matrix calculated',
-            'at {} level...'.format(lvl))
+            f'at {lvl} level...')
         cnf_fs, cnf_locs = savefs_dct[_fs]
         if any(cnf_locs):
             zma_fs = autofile.fs.zmatrix(cnf_fs[-1].path(cnf_locs))
@@ -44,7 +44,7 @@ def read_existing_saddle_points(spc_dct, tsname, savefs_dct, es_keyword_dct):
                 ioprinter.info_message(
                     ' - Z-Matrix found.')
                 ioprinter.info_message(
-                    ' - Reading Z-Matrix from path {}'.format(geo_path))
+                    f' - Reading Z-Matrix from path {geo_path}')
                 zmas[idx] = zma_fs[-1].file.zmatrix.read(zma_locs)
 
     return tuple(zmas)
@@ -67,7 +67,7 @@ def search_required(runlvl_zma, es_keyword_dct):
 
     if runlvl_zma is None:
         print('Since no transition state found in filesys',
-              'at {} level,'.format(es_keyword_dct['runlvl']),
+              f'at {es_keyword_dct["runlvl"]} level',
               'proceeding to find it...')
         _run = True
     else:
@@ -89,6 +89,8 @@ def search(ini_zma, spc_dct, tsname,
            runfs_dct, savefs_dct):
     """ Attempt to locate and optimize a proper transition state.
     """
+    # CHECK
+    _ = thy_inf_dct
 
     # Initialize success variable to False
     success = False
@@ -104,6 +106,7 @@ def search(ini_zma, spc_dct, tsname,
             ts_info=rinfo.ts_info(ts_dct['rxn_info']),
             zrxn=ts_dct['zrxn'],
             method_dct=thy_method_dct['runlvl'],
+            mref_params=None,
             scn_run_fs=runfs_dct['runlvl_scn'],
             scn_save_fs=savefs_dct['runlvl_scn'],
             es_keyword_dct=es_keyword_dct)
@@ -149,14 +152,14 @@ def optimize_saddle_point(guess_zmas, ts_dct,
     run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cnf_locs))
 
     ioprinter.info_message(
-        'There are {} guess Z-Matrices'.format(len(guess_zmas)),
+        f'There are {len(guess_zmas)} guess Z-Matrices'
         'to attempt to find saddle point.', newline=1)
 
     # Loop over all the guess zmas to find a TS
     opt_ret, hess_ret = None, None
     for idx, zma in enumerate(guess_zmas):
         ioprinter.info_message(
-            '\nOptimizing guess Z-Matrix {}...'.format(idx+1))
+            f'\nOptimizing guess Z-Matrix {idx+1}...')
 
         # Run the transition state optimization
         script_str, kwargs = qchem_params(
@@ -270,9 +273,9 @@ def _check_freqs(imags):
         for idx, imag in enumerate(imags):
             if imag <= 50.0:
                 ioprinter.warning_message(
-                    'Mode {} {} cm-1 is low,'.format(str(idx+1), imag))
+                    f'Mode {idx+1} {imag} cm-1 is low,')
             elif 50.0 < imag <= 200.0:
-                lowstr = 'Mode {} {} cm-1 is low,'.format(str(idx+1), imag)
+                lowstr = f'Mode {idx+1} {imag} cm-1 is low,'
                 ioprinter.debug_message(
                     lowstr + ' check mode and see if it should be corrected')
                 big_imag += 1
@@ -283,7 +286,7 @@ def _check_freqs(imags):
                 # kick_imag += 1
             else:
                 ioprinter.debug_message(
-                    'Mode {} {} cm-1 likely fine,'.format(str(idx+1), imag))
+                    f'Mode {idx+1} {imag} cm-1 is likely fine,')
                 big_imag += 1
 
         if big_imag > 1:
@@ -313,9 +316,9 @@ def _ted_coordinate_check(ted_names, zrxn, zma):
 
         print('Comparing Z-Matrix Coordinates.')
         tedname_str = ' '.join(ted_names)
-        print('- TED: {}'.format(tedname_str))
+        print(f'- TED: {tedname_str}'.format(tedname_str))
         rname_str = ' '.join(rxn_names)
-        print('- Forming/Breaking Bonds: {}'.format(rname_str))
+        print(f'- Forming/Breaking Bonds: {rname_str}')
 
         if set(ted_names) & set(rxn_names):
             print('Overlap of coordinates found, possible success')

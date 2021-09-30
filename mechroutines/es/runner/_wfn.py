@@ -242,8 +242,8 @@ def wfn_string(ts_info, mod_var_scn_thy_info, inf_sep_ene, cas_kwargs):
     # Set the lines for methods
     method_lines = (
         "if (iterations.ge.0) then",
-        "  {{{},shift=0.25}}".format(method),
-        "  molpro_energy = energy + {}".format(inf_sep_ene),
+        f"  {{{method},shift=0.25}}",
+        f"  molpro_energy = energy + {inf_sep_ene}",
         "else",
         "  molpro_energy = 10.0"
     )
