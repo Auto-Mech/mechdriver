@@ -39,7 +39,11 @@ def multi_stage_optimization(script_str, run_fs,
         'Running {}-Stage Optimization'.format(len(frozen_coords_lst)))
     for idx, coords in enumerate(frozen_coords_lst):
 
+        if idx >= 1:
+            overwrite = True
+
         ioprinter.info_message('Beginning Stage {}...'.format(idx+1))
+        print('idx, coords test:', idx, coords)
         success, ret = execute_job(
             job=elstruct.Job.OPTIMIZATION,
             script_str=script_str,

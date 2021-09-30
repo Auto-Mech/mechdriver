@@ -69,6 +69,7 @@ def conformer(opt_ret, hess_ret, cnf_fs, thy_locs,
         cnf_fs, rng_locs, tors_locs, zma_locs)
 
     # Save data from optimization and hessian jobs
+    print('save in fs:', opt_ret, cnf_fs, cnf_locs)
     _save_geom(opt_ret, cnf_fs, cnf_locs)
     _save_zmatrix(opt_ret, zma_fs, zma_locs, init_zma=init_zma)
     _save_energy(opt_ret, sp_fs, thy_locs)
@@ -331,6 +332,7 @@ def rebuild_zma_from_opt_geo(init_zma, opt_geo):
 def _save_geom_parsed(geo, inf_obj, inp_str, cnf_fs, cnf_locs):
     """ Saving a Cartesian geometry. could be for cnf fs or scn fs
     """
+    print('save_geom test:', cnf_locs, cnf_fs)
     cnf_fs[-1].create(cnf_locs)
     cnf_path = cnf_fs[-1].path(cnf_locs)
     print(" - Saving at {}".format(cnf_path))
