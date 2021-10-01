@@ -31,6 +31,7 @@ def hindered_rotor_scans(
         scn_typ = 'rigid'
         update_guess = False
 
+    #backstep = False
     run_tors_names = automol.rotor.names(rotors)
     run_tors_grids = automol.rotor.grids(rotors, increment=increment)
 

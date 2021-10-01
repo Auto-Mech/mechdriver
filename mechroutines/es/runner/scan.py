@@ -122,6 +122,15 @@ def run_backsteps(
     # Set up info that is constant across the scan
     # i.e., jobtype, frozen_coords
     job = _set_job(scn_typ)
+    mixed_grid_vals_lst = automol.pot.coords(coord_grids)
+    # Hold off on backsteps while original scan is running
+    if _rotor_is_running(
+            mixed_grid_vals_lst, coord_names, constraint_dct, scn_run_fs, job):
+        ioprinter.info_message(
+            'Rotor {} is currently running, wait to backstep'.format(
+                coord_names))
+        return
+
     if constraint_dct is None:
         coord_locs = coord_names
         frozen_coordinates = coord_names
@@ -138,7 +147,6 @@ def run_backsteps(
     scn_save_fs[1].file.info.write(inf_obj, [coord_locs])
 
     # Build the grid of values
-    mixed_grid_vals_lst = automol.pot.coords(coord_grids)
     rev_grid_vals_orig_lst = tuple(reversed(mixed_grid_vals_lst))
     rev_grid_vals_lst = tuple([tuple([
         val + 4*numpy.pi for val in grid]) for grid in rev_grid_vals_orig_lst])
@@ -169,7 +177,7 @@ def run_backsteps(
         conv_grid_vals = (grid_vals[0] * phycon.RAD2DEG,)
         conv_pot[conv_grid_vals] = ene
 
-    bad_grid_vals = (filesys.read.identify_bad_point(conv_pot),)
+    bad_grid_vals = (filesys.read.identify_bad_point(conv_pot, thresh=0.02),)
 
     if bad_grid_vals[0] is not None:
         print('Akima spline identified potential hysteresis at ',
@@ -250,6 +258,30 @@ def run_backsteps(
                 ioprinter.info_message("...more backsteps required")
 
 
+def _rotor_is_running(grid_vals, coord_names, constraint_dct, scn_run_fs, job):
+    """ Is the rotor you requested currently being progressed on?
+    """
+    rotor_is_running = False
+    for vals in grid_vals:
+        locs = [coord_names, vals]
+        if constraint_dct is not None:
+            locs = [constraint_dct] + locs
+        if scn_run_fs[-1].exists(locs):
+            run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
+            if run_fs[-1].file.info.exists([job]):
+                inf_obj = run_fs[-1].file.info.read([job])
+                if inf_obj.status == autofile.schema.RunStatus.RUNNING:
+                    rotor_is_running = True
+                    ioprinter.info_message(
+                        'rotor is running at ', coord_names, locs)
+                    break
+        # else:
+        #            break
+        # This else turns on and off letting the scan run
+        # backward simultaneously to forward
+    return rotor_is_running
+
+
 def _run_scan(guess_zma, spc_info, mod_thy_info,
               coord_names, grid_vals,
               scn_run_fs, scn_save_fs, scn_typ,
@@ -286,63 +318,65 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
     # Set the job
     job = _set_job(scn_typ)
 
-    # Read the energies and Hessians from the filesystem
-    for vals in grid_vals:
+    if not _rotor_is_running(
+            grid_vals, coord_names, constraint_dct, scn_run_fs, job):
+        # Read the energies and Hessians from the filesystem
+        for vals in grid_vals:
 
-        # Set the locs for the scan point
-        locs = [coord_names, vals]
-        if constraint_dct is not None:
-            locs = [constraint_dct] + locs
+            # Set the locs for the scan point
+            locs = [coord_names, vals]
+            if constraint_dct is not None:
+                locs = [constraint_dct] + locs
 
-        # Create the filesys
-        scn_run_fs[-1].create(locs)
-        run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
+            # Create the filesys
+            scn_run_fs[-1].create(locs)
+            run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
 
-        # Build the zma
-        zma = automol.zmat.set_values_by_name(
-            guess_zma, dict(zip(coord_names, vals)),
-            angstrom=False, degree=False)
+            # Build the zma
+            zma = automol.zmat.set_values_by_name(
+                guess_zma, dict(zip(coord_names, vals)),
+                angstrom=False, degree=False)
 
-        # Run an optimization or energy job, as needed.
-        geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
-        if not geo_exists or overwrite:
-            if job == elstruct.Job.OPTIMIZATION:
-                success, ret = execute_job(
-                    job=job,
-                    script_str=script_str,
-                    run_fs=run_fs,
-                    geo=zma,
-                    spc_info=spc_info,
-                    thy_info=mod_thy_info,
-                    overwrite=overwrite,
-                    frozen_coordinates=frozen_coordinates,
-                    errors=errors,
-                    options_mat=options_mat,
-                    retryfail=retryfail,
-                    saddle=saddle,
-                    **kwargs
-                )
+            # Run an optimization or energy job, as needed.
+            geo_exists = scn_save_fs[-1].file.geometry.exists(locs)
+            if not geo_exists or overwrite:
+                if job == elstruct.Job.OPTIMIZATION:
+                    success, ret = execute_job(
+                        job=job,
+                        script_str=script_str,
+                        run_fs=run_fs,
+                        geo=zma,
+                        spc_info=spc_info,
+                        thy_info=mod_thy_info,
+                        overwrite=overwrite,
+                        frozen_coordinates=frozen_coordinates,
+                        errors=errors,
+                        options_mat=options_mat,
+                        retryfail=retryfail,
+                        saddle=saddle,
+                        **kwargs
+                    )
 
-                # Read the output for the zma and geo
-                if success:
-                    opt_zma = filesys.save.read_job_zma(ret, init_zma=zma)
-                    if update_guess:
-                        guess_zma = opt_zma
+                    # Read the output for the zma and geo
+                    if success:
+                        opt_zma = filesys.save.read_job_zma(ret, init_zma=zma)
+                        if update_guess:
+                            guess_zma = opt_zma
 
-            elif job == elstruct.Job.ENERGY:
-                _, _ = execute_job(
-                    job=job,
-                    script_str=script_str,
-                    run_fs=run_fs,
-                    geo=zma,
-                    spc_info=spc_info,
-                    thy_info=mod_thy_info,
-                    overwrite=overwrite,
-                    errors=errors,
-                    options_mat=options_mat,
-                    retryfail=retryfail,
-                    **kwargs
-                )
+                elif job == elstruct.Job.ENERGY:
+                    _, _ = execute_job(
+                        job=job,
+                        script_str=script_str,
+                        run_fs=run_fs,
+                        geo=zma,
+                        spc_info=spc_info,
+                        thy_info=mod_thy_info,
+                        overwrite=overwrite,
+                        errors=errors,
+                        options_mat=options_mat,
+                        retryfail=retryfail,
+                        **kwargs
+                    )
 
 
 def save_scan(scn_run_fs, scn_save_fs, scn_typ,

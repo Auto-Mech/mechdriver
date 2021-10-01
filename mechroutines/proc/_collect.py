@@ -139,7 +139,7 @@ def frequencies(
             freqs, imag, zpe, disps = ret
             if freqs and proc_keyword_dct['scale'] is not None:
                 freqs, zpe = vib.scale_frequencies(
-                    freqs, 0.0, spc_mod_dct_i, scale_method='3c')
+                    freqs, 0.0, spc_mod_dct_i, scale_method=proc_keyword_dct['scale'])
             if saddle:
                 print('Imaginary Frequencies[cm-1]: {}'.format(imag))
                 freqs = (-1*imag,) + freqs

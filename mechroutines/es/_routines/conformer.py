@@ -292,7 +292,7 @@ def single_conformer(zma, spc_info, mod_thy_info,
     elif this_conformer_was_run_in_save(zma, cnf_save_fs):
         skip_job = True
     if not skip_job:
-        run_in_run, sym_locs =this_conformer_was_run_in_run(zma, cnf_run_fs)
+        run_in_run, sym_locs = filesys.mincnf.this_conformer_was_run_in_run(zma, cnf_run_fs)
         if run_in_run:
             skip_job = True
 
@@ -896,67 +896,6 @@ def this_conformer_was_run_in_save(zma, cnf_fs):
                 running = True
                 break
     return running
-
-
-def this_conformer_was_run_in_run(zma, cnf_fs):
-    locs_idx = None
-    job = elstruct.Job.OPTIMIZATION
-
-    sym_locs = []
-    run_locs_lst = cnf_fs[-1].existing(ignore_bad_formats=True)
-    for idx, locs in enumerate(run_locs_lst):
-        cnf_path = cnf_fs[-1].path(locs)
-        run_fs = autofile.fs.run(cnf_path)
-        run_path = run_fs[-1].path([job])
-        if run_fs[-1].file.info.exists([job]):
-            inf_obj = run_fs[-1].file.info.read([job])
-            status = inf_obj.status
-            if status == autofile.schema.RunStatus.SUCCESS:
-                inp_str = run_fs[-1].file.input.read([job])
-                inp_str = inp_str.replace('=', '')
-                prog = inf_obj.prog
-                inp_zma = elstruct.reader.inp_zmatrix(prog, inp_str)
-                if automol.zmat.almost_equal(inp_zma, zma,
-                                             dist_rtol=0.018, ang_atol=.2):
-                    info_message(
-                        'This conformer was already run ' +
-                        'in {}.'.format(run_path))
-                    locs_idx = idx
-                    break
-    # This is to find if it was not saved becaue its equivalent
-    # to other conformers
-    if locs_idx is not None:
-        out_enes = []
-        out_geos = []
-        for idx, locs in enumerate(run_locs_lst):
-            cnf_path = cnf_fs[-1].path(locs)
-            run_fs = autofile.fs.run(cnf_path)
-            run_path = run_fs[-1].path([job])
-            if run_fs[-1].file.info.exists([job]):
-                inf_obj = run_fs[-1].file.info.read([job])
-                status = inf_obj.status
-                if status == autofile.schema.RunStatus.SUCCESS:
-                    method = inf_obj.method
-                    prog = inf_obj.prog
-                    out_str = run_fs[-1].file.output.read([job])
-                    idx_ene = elstruct.reader.energy(prog, method, out_str)
-                    idx_geo = elstruct.reader.opt_geometry(prog, out_str)
-                    if idx == locs_idx:
-                        out_enes.append(10000)
-                        out_geos.append(None)
-                        ran_ene = idx_ene
-                        ran_geo = idx_geo
-                    else:
-                        out_enes.append(idx_ene)
-                        out_geos.append(idx_geo)
-            else:
-                out_enes.append(10000)
-                out_geos.append(None)
-        for idx, _ in enumerate(out_enes):
-            sym_idx = _sym_unique(ran_geo, ran_ene, [out_geos[idx]], [out_enes[idx]], ethresh=1.0e-5)
-            if sym_idx is not None:
-                sym_locs.append(run_locs_lst[idx])
-    return locs_idx is not None, sym_locs
 
 
 def this_conformer_is_running(zma, cnf_run_fs):

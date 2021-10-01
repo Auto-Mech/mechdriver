@@ -9,6 +9,7 @@ from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 from mechanalyzer.inf import rxn as rinfo
 from mechlib.filesys.mincnf import min_energy_conformer_locators
+from mechlib.filesys.mincnf import this_conformer_was_run_in_run
 from mechlib.filesys.mincnf import conformer_locators
 from mechlib.filesys._build import build_fs
 from mechlib.filesys._build import root_locs
@@ -263,13 +264,13 @@ def get_all_tors_locs_lst(
         run_prefix, save_prefix, saddle):
     """get all conformer locations for the torsion method
     """
-    _, tors_save_fs, levelp, _ = _get_prop_fs(
+    tors_run_fs, tors_save_fs, levelp, _ = _get_prop_fs(
         spc_model_dct_i, spc_dct_i, 'tors', None,
         run_prefix, save_prefix, saddle=saddle)
     tors_locs_lst, _ = conformer_locators(
         tors_save_fs, levelp, cnf_range='all')
 
-    return tors_save_fs, tors_locs_lst
+    return tors_run_fs, tors_save_fs, tors_locs_lst
 
 
 def get_matching_tors_locs(
@@ -281,16 +282,28 @@ def get_matching_tors_locs(
     """
     cnf_save_fs, cnf_path, cnf_locs, _, _ = harm_filesys
     if spc_model_dct_i['tors']['geolvl'] != spc_model_dct_i['vib']['geolvl']:
-        tors_save_fs, tors_locs_lst = get_all_tors_locs_lst(
+        tors_run_fs, tors_save_fs, tors_locs_lst = get_all_tors_locs_lst(
             spc_dct_i, spc_model_dct_i, run_prefix, save_prefix, saddle)
         match_dct = fs_confs_dict(
             tors_save_fs, tors_locs_lst, cnf_save_fs, [cnf_locs])
-        match_tors_locs = tuple(match_dct[tuple(cnf_locs)])
-        ioprinter.info_message(
-            'Using {} as the parent conformer location'.format(cnf_path))
-        ioprinter.info_message(
-            'and {} for torsional profiles'.format(
-                tors_save_fs[-1].path(match_tors_locs)))
+        if match_dct[tuple(cnf_locs)] is not None:
+            match_tors_locs = tuple(match_dct[tuple(cnf_locs)])
+            ioprinter.info_message(
+                'Using {} as the parent conformer location'.format(cnf_path))
+            ioprinter.info_message(
+                'and {} for torsional profiles'.format(
+                    tors_save_fs[-1].path(match_tors_locs)))
+        else:
+            cnf_zma_save_fs = autofile.fs.zmatrix(cnf_path)
+            zma = cnf_zma_save_fs[-1].file.zmatrix.read((0,))
+            save_locs = tors_save_fs[-1].existing()
+            _, sym_locs_lst = this_conformer_was_run_in_run(zma, tors_run_fs)
+            for sym_locs in sym_locs_lst:
+                if sym_locs in save_locs:
+                    match_tors_locs = sym_locs
+                    ioprinter.debug_message(
+                        'this conformer had converged to another conformer at {}'.format(
+                            tors_save_fs[-1].path(match_tors_locs)))
     else:
         match_tors_locs = cnf_locs
     return match_tors_locs
@@ -327,5 +340,4 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                     '- Similar structure found at {}'.format(cnf_save_path))
                 match_dct[tuple(ini_locs)] = tuple(locs)
                 break
-
     return match_dct
