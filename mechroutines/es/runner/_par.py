@@ -119,13 +119,9 @@ def _molpro(method_dct, prog, job=None):
     if method in ('caspt2', 'caspt2c', 'caspt2i'):
         nprocs = method_dct.get('nprocs', 4)
         memory = method_dct.get('mem', 10)
-        nprocs = nprocs if nprocs is not None else 4
-        memory = memory if memory is not None else 10
     else:
         nprocs = method_dct.get('nprocs', 4)
         memory = method_dct.get('mem', 20)
-        nprocs = nprocs if nprocs is not None else 4
-        memory = memory if memory is not None else 10
 
     # Build the script string
     if method in ('caspt2c', 'caspt2i'):
