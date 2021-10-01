@@ -122,6 +122,15 @@ def run_backsteps(
     # Set up info that is constant across the scan
     # i.e., jobtype, frozen_coords
     job = _set_job(scn_typ)
+    mixed_grid_vals_lst = automol.pot.coords(coord_grids)
+    # Hold off on backsteps while original scan is running
+    if _rotor_is_running(
+            mixed_grid_vals_lst, coord_names, constraint_dct, scn_run_fs, job):
+        ioprinter.info_message(
+            'Rotor {} is currently running, wait to backstep'.format(
+                coord_names))
+        return
+
     if constraint_dct is None:
         coord_locs = coord_names
         frozen_coordinates = coord_names
@@ -138,7 +147,6 @@ def run_backsteps(
     scn_save_fs[1].file.info.write(inf_obj, [coord_locs])
 
     # Build the grid of values
-    mixed_grid_vals_lst = automol.pot.coords(coord_grids)
     rev_grid_vals_orig_lst = tuple(reversed(mixed_grid_vals_lst))
     rev_grid_vals_lst = tuple([tuple([
         val + 4*numpy.pi for val in grid]) for grid in rev_grid_vals_orig_lst])
@@ -250,6 +258,30 @@ def run_backsteps(
                 ioprinter.info_message("...more backsteps required")
 
 
+def _rotor_is_running(grid_vals, coord_names, constraint_dct, scn_run_fs, job):
+    """ Is the rotor you requested currently being progressed on?
+    """
+    rotor_is_running = False
+    for vals in grid_vals:
+        locs = [coord_names, vals]
+        if constraint_dct is not None:
+            locs = [constraint_dct] + locs
+        if scn_run_fs[-1].exists(locs):
+            run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
+            if run_fs[-1].file.info.exists([job]):
+                inf_obj = run_fs[-1].file.info.read([job])
+                if inf_obj.status == autofile.schema.RunStatus.RUNNING:
+                    rotor_is_running = True
+                    ioprinter.info_message(
+                        'rotor is running at ', coord_names, locs)
+                    break
+        # else:
+        #            break
+        # This else turns on and off letting the scan run
+        # backward simultaneously to forward
+    return rotor_is_running
+
+
 def _run_scan(guess_zma, spc_info, mod_thy_info,
               coord_names, grid_vals,
               scn_run_fs, scn_save_fs, scn_typ,
@@ -286,23 +318,8 @@ def _run_scan(guess_zma, spc_info, mod_thy_info,
     # Set the job
     job = _set_job(scn_typ)
 
-    rotor_is_running = False
-    for vals in grid_vals:
-        locs = [coord_names, vals]
-        if constraint_dct is not None:
-            locs = [constraint_dct] + locs
-        if scn_run_fs[-1].exists(locs):
-            run_fs = autofile.fs.run(scn_run_fs[-1].path(locs))
-            if run_fs[-1].file.info.exists([job]):
-                inf_obj = run_fs[-1].file.info.read([job])
-                if inf_obj.status == autofile.schema.RunStatus.RUNNING:
-                    rotor_is_running = True
-                    ioprinter.info_message(
-                        'rotor is running at ', coord_names, locs)
-                    break
-        else:
-                    break
-    if not rotor_is_running:
+    if not _rotor_is_running(
+            grid_vals, coord_names, constraint_dct, scn_run_fs, job):
         # Read the energies and Hessians from the filesystem
         for vals in grid_vals:
 
