@@ -82,26 +82,69 @@ def _id_reaction(rxn_info, thy_info, save_prefix):
     if any(rct_geos) and any(prd_geos):
         zrxn_objs = automol.reac.rxn_objs_from_geometry(
             rct_geos, prd_geos, indexing='zma')
-        print('Reaction ID from geometries from SAVE filesys')
+        print('    Reaction ID from geometries from SAVE filesys')
     else:
         rxn_ichs = rinfo.value(rxn_info, 'inchi')
         rct_ichs, prd_ichs = rxn_ichs[0], rxn_ichs[1]
 
         zrxn_objs = automol.reac.rxn_objs_from_inchi(
             rct_ichs, prd_ichs, indexing='zma')
-        print('Reaction ID from geometries from input InChIs')
+        print('    Reaction ID from geometries from input InChIs')
 
-    # Parse out the zrxns and zmas into a list
+    # Loop over the found reaction objects, add and assess the stereochemistry
     zrxns, zmas = (), ()
-    for objs in zrxn_objs:
-        zrxn, zma, _, _ = objs
+    for obj_set in zrxn_objs:
+        zrxn, zma, _, _ = obj_set
         zrxns += (zrxn,)
         zmas += (zma,)
+        # srxn_obj_set = _add_stereo(obj_set)
+        # if srxn_obj_set is not None:
+        #     zrxn, zma, _, _ = srxn_obj_set
+        #     zrxns += (szrxn,)
+        #     zmas += (zma,)
 
     if not zrxns:
         zrxns, zmas = None, None
 
     return zrxns, zmas
+
+
+def _add_stereo(rxn_obj_set):
+    """ add rxn and stereo to the reaction object and check them
+
+        :param rxn_obj_set
+
+        # The stereo must be inconsistent -- reflect coordinates for the
+        # products (Only guaranteed to work for this particular reaction)
+        # What happens if there is no consistency in the reaction, e.g. R->S
+        # Just get None a second time?
+    """
+
+    # Unpack the reaction object
+    rxn, ts_geo, rct_geos, prd_geos = rxn_obj_set
+
+    print('Assessing the stereochemistry of the reaction')
+    print(rxn)
+
+    # We do this instead:
+    srxn, order = automol.reac.add_stereo_from_unordered_geometries(
+        rxn, rct_geos, prd_geos)
+    if srxn is None:
+        print('Failed to add stereo, trying again with reflected prd coords')
+        prd_geos = list(map(automol.geom.reflect_coordinates, prd_geos))
+        srxn, order = automol.reac.add_stereo_from_unordered_geometries(
+            rxn, rct_geos, prd_geos)
+    print(srxn)
+    print(order)
+
+    if srxn is None:
+        print('No valid stereochemistry conversion allowed')
+        print('Check the stereochem of your reactants and products')
+        srxn_obj = (srxn, ts_geo, rct_geos, prd_geos)
+    else:
+        srxn_obj = None
+
+    return srxn_obj
 
 
 def _mod_class(class_typ, rxn_info):
