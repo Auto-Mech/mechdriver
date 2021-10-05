@@ -71,6 +71,7 @@ def inf_sep_ene(ts_dct, thy_inf_dct, mref_dct,
         at infinite separation.
     """
 
+    # not sure what to do here
     _ = mref_dct
 
     # Get info from the reactants

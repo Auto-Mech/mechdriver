@@ -58,7 +58,7 @@ def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
     elif search_method == 'rpvtst':
         success = run_rpvtst(
             spc_dct, tsname,
-            thy_inf_dct, thy_method_dct,
+            thy_inf_dct, thy_method_dct, mref_dct,
             es_keyword_dct,
             runfs_dct, savefs_dct)
     elif search_method == 'pst':
@@ -69,18 +69,20 @@ def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
 
 
 def run_sadpt(spc_dct, tsname,
-              thy_inf_dct, thy_method_dct, es_keyword_dct,
+              thy_inf_dct, thy_method_dct, mref_dct,
+              es_keyword_dct,
               runfs_dct, savefs_dct):
     """ Find the saddle-point for a reaction
     """
 
     # Check filesystem for existing zmatrixes
     run_zma, ini_zma = sadpt.read_existing_saddle_points(
-        spc_dct, tsname, savefs_dct, es_keyword_dct)
+        spc_dct, tsname, savefs_dct)
 
     if sadpt.search_required(run_zma, es_keyword_dct):
         success = sadpt.search(ini_zma, spc_dct, tsname,
-                               thy_inf_dct, thy_method_dct, es_keyword_dct,
+                               thy_inf_dct, thy_method_dct, mref_dct,
+                               es_keyword_dct,
                                runfs_dct, savefs_dct)
     else:
         success = True
@@ -89,7 +91,8 @@ def run_sadpt(spc_dct, tsname,
 
 
 def run_rpvtst(spc_dct, tsname,
-               thy_inf_dct, thy_method_dct, es_keyword_dct,
+               thy_inf_dct, thy_method_dct, mref_dct,
+               es_keyword_dct,
                runfs_dct, savefs_dct):
     """ generate a reaction path
 
@@ -101,7 +104,8 @@ def run_rpvtst(spc_dct, tsname,
     # Try and first locate a saddle point
     print('First attempting to locate a saddle point')
     success = run_sadpt(spc_dct, tsname,
-                        thy_inf_dct, thy_method_dct, es_keyword_dct,
+                        thy_inf_dct, thy_method_dct, mref_dct,
+                        es_keyword_dct,
                         runfs_dct, savefs_dct)
     print('rpvtst success', success)
 

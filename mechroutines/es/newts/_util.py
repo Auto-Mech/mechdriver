@@ -190,8 +190,9 @@ def thy_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 aspace, mod_vsp2lvl_thy_info)
 
     # Get the conformer filesys for the reactants
-    _rcts_cnf_fs = rcts_cnf_fs(
-        rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
+    _rcts_cnf_fs = rcts_cnf_fs(rct_info, thy_info, run_prefix, save_prefix)
+    # _rcts_cnf_fs = rcts_cnf_fs(
+    #     rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
 
     thy_inf_dct = {
         'inplvl': ini_thy_info,

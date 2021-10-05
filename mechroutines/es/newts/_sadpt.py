@@ -15,7 +15,7 @@ from mechroutines.es.newts import _rpath as rpath
 
 
 # Functions to assess the status of existing saddle point structures in SAVE
-def read_existing_saddle_points(spc_dct, tsname, savefs_dct, es_keyword_dct):
+def read_existing_saddle_points(spc_dct, tsname, savefs_dct):
     """ Searches for and reads out, if present, the Z-matrix for a
         conformer of the saddle-point in the SAVE filesystem for
         the electronic structure method specified in the
@@ -85,7 +85,8 @@ def search_required(runlvl_zma, es_keyword_dct):
 
 # Functions to attempt to find, optimize, and save valid saddle point
 def search(ini_zma, spc_dct, tsname,
-           thy_inf_dct, thy_method_dct, es_keyword_dct,
+           thy_inf_dct, thy_method_dct, mref_dct,
+           es_keyword_dct,
            runfs_dct, savefs_dct):
     """ Attempt to locate and optimize a proper transition state.
     """
@@ -106,7 +107,7 @@ def search(ini_zma, spc_dct, tsname,
             ts_info=rinfo.ts_info(ts_dct['rxn_info']),
             zrxn=ts_dct['zrxn'],
             method_dct=thy_method_dct['runlvl'],
-            mref_params=None,
+            mref_params=mref_dct['runlvl'],
             scn_run_fs=runfs_dct['runlvl_scn'],
             scn_save_fs=savefs_dct['runlvl_scn'],
             es_keyword_dct=es_keyword_dct)
@@ -118,7 +119,8 @@ def search(ini_zma, spc_dct, tsname,
                     autofile.schema.generate_new_conformer_id())
 
         opt_ret, hess_ret = optimize_saddle_point(
-            guess_zmas, ts_dct, thy_method_dct['runlvl'],
+            guess_zmas, ts_dct,
+            thy_method_dct['runlvl'], mref_dct['runlvl'],
             runfs_dct, es_keyword_dct,
             cnf_locs)
 
@@ -135,8 +137,8 @@ def search(ini_zma, spc_dct, tsname,
 
 
 def optimize_saddle_point(guess_zmas, ts_dct,
-                          method_dct, runfs_dct,
-                          es_keyword_dct,
+                          method_dct, mref_kwargs,
+                          runfs_dct, es_keyword_dct,
                           cnf_locs):
     """ Optimize the transition state structure obtained from the grid search
     """
@@ -149,6 +151,7 @@ def optimize_saddle_point(guess_zmas, ts_dct,
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
 
     runlvl_cnf_run_fs = runfs_dct['runlvl_cnf']
+    runlvl_cnf_run_fs[-1].create(cnf_locs)
     run_fs = autofile.fs.run(runlvl_cnf_run_fs[-1].path(cnf_locs))
 
     ioprinter.info_message(
@@ -164,6 +167,8 @@ def optimize_saddle_point(guess_zmas, ts_dct,
         # Run the transition state optimization
         script_str, kwargs = qchem_params(
             method_dct, job=elstruct.Job.OPTIMIZATION)
+        kwargs.update(mref_kwargs)
+
         opt_success, opt_ret = es_runner.execute_job(
             job='optimization',
             script_str=script_str,
