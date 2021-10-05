@@ -5,7 +5,6 @@ Write and Read MESS files for Rates
 import importlib
 import copy
 import automol
-import autorun
 import mess_io
 from mechlib.amech_io.parser.spc import tsnames_in_dct, base_tsname
 from mechlib.amech_io import printer as ioprinter
@@ -23,76 +22,9 @@ from mechroutines.ktp._ene import sum_channel_enes
 BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
 
 
-# Input string writer
-def make_messrate_str(pes_idx, rxn_lst,
-                      pes_model, spc_model,
-                      spc_dct,
-                      pes_model_dct, spc_model_dct,
-                      unstab_chnls, label_dct,
-                      mess_path, run_prefix, save_prefix,
-                      make_lump_well_inp=False):
-    """ Reads and processes all information in the save filesys for
-        all species on the PES that are required for MESS rate calculations,
-        as specified by the model dictionaries built from user input.
-
-        :param pes_idx:
-        :type pes_idx: int
-        :param rxn_lst:
-        :type rxn_lst:
-        :param pes_model: model for PES conditions for rates from user input
-        :type pes_model: str
-        :param spc_model: model for partition fxns for rates from user input
-        :type spc_model: str
-        :param mess_path: path to write mess file (change since pfx given?)
-    """
-
-    pes_model_dct_i = pes_model_dct[pes_model]
-    spc_model_dct_i = spc_model_dct[spc_model]
-
-    # Write the strings for the MESS input file
-    globkey_str = make_header_str(
-        spc_dct, rxn_lst, pes_idx,
-        temps=pes_model_dct_i['rate_temps'],
-        pressures=pes_model_dct_i['pressures'])
-
-    # Write the energy transfer section strings for MESS file
-    etransfer = pes_model_dct_i['glob_etransfer']
-    energy_trans_str = make_global_etrans_str(
-        rxn_lst, spc_dct, etransfer)
-
-    # Write the MESS strings for all the PES channels
-    rxn_chan_str, dats, _, _ = make_pes_mess_str(
-        spc_dct, rxn_lst, pes_idx, unstab_chnls,
-        run_prefix, save_prefix, label_dct,
-        pes_model_dct_i, spc_model_dct_i, spc_model)
-
-    # Write MESS input string; make second string with well lumping if needed
-    mess_inp_str = mess_io.writer.messrates_inp_str(
-        globkey_str, rxn_chan_str,
-        energy_trans_str=energy_trans_str, well_lump_str=None)
-    if (not is_abstraction_pes(spc_dct, rxn_lst, pes_idx) and
-       make_lump_well_inp):
-        print('User requested well lumping scheme')
-        script_str = autorun.SCRIPT_DCT['messrate']
-        mess_inp_str = autorun.mess.well_lumped_input_file(
-            script_str, mess_path,
-            pes_model_dct_i['lump_pressure'],
-            pes_model_dct_i['lump_temp'],
-            mess_inp_str,
-            aux_dct=dats,
-            input_name='mess.inp',  # need dif name for this?
-            output_names=('mess.aux',))
-
-    # Write the MESS file into the filesystem
-    ioprinter.obj('line_plus')
-    ioprinter.writing('MESS input file', mess_path)
-    ioprinter.debug_message('MESS Input:\n\n'+mess_inp_str)
-
-    return mess_inp_str, dats
-
-
 # Headers
-def make_header_str(spc_dct, rxn_lst, pes_idx, temps, pressures):
+def make_header_str(spc_dct, rxn_lst, pes_idx,
+                    temps, pressures, float_type):
     """ Built the head of the MESS input file that contains various global
         keywords used for running rate calculations.
 
@@ -128,7 +60,11 @@ def make_header_str(spc_dct, rxn_lst, pes_idx, temps, pressures):
         ioprinter.debug_message('Including WellExtend in MESS input')
 
     header_str = mess_io.writer.global_rates_input(
-        temps, pressures, excess_ene_temp=None, well_extend=well_extend)
+        temps, pressures,
+        reduction_method='',
+        well_extension=well_extend,
+        excess_ene_temp=None,
+        float_type=float_type)
 
     return header_str
 

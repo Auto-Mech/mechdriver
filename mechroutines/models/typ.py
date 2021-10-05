@@ -147,6 +147,15 @@ def treat_tunnel(ts_mod, rxn_class):
     return treat
 
 
+def can_use_well_extension(spc_dct, rxn_lst, pes_idx, well_extension_value):
+    """ Decide if the well-extenson method can be used.
+    """
+    return (
+        not is_abstraction_pes(spc_dct, rxn_lst, pes_idx) and
+        well_extension_value
+    )
+
+
 def is_atom(spc_dct_i):
     """ Determine if the species is an atom by using the information
         provided in its data dictionary of the overall species dictionary.

@@ -16,6 +16,8 @@ MODKIN_VAL_DCT = {
     'pressures': ((tuple,), (), None),
     'rate_temps': ((tuple,), (), None),
     'thermo_temps': ((tuple,), (), None),
+    'well_extension_pressure': ((int, float), (), 1.0),
+    'well_extension_temp': ((int, float), (), 600.0),
     'temp_unit': ((str,), (), 'K'),
     'pressure_unit': ((str,), (), 'atm'),
     'rate_fit': {

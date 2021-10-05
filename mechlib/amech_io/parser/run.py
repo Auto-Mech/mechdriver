@@ -103,9 +103,10 @@ TSK_KEY_DCT = {
     'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
     'write_mess': ((), ('kin_model', 'spc_model', 'overwrite',
-                        'lump_wells', 'cnf_range', 'sort')),
+                        'use_well_extension', 'float_precision'
+                        'cnf_range', 'sort')),
     'run_mess': ((), ('kin_model', 'spc_model', 'nprocs',
-                      'inpname', 'cnf_range', 'sort')),
+                      'cnf_range', 'sort')),
     'run_fits': ((), ('kin_model', 'cnf_range', 'sort')),
 }
 
@@ -147,8 +148,9 @@ TSK_VAL_DCT = {
     'kin_model': ((str,), (), None),
     'spc_model': ((str,), (), None),
     'nprocs': ((int,), (), 10),
-    'inpname': ((str,), (), None),
-    'lump_wells': ((bool,), (), False),
+    'use_well_extension': ((bool,), (), False),
+    'linked_pes': ((tuple,), (), None),
+    'float_precision': ((str,), ('double', 'quadruple'), 'double'),
 }
 # Have nconfs and econfs keywords and combine them to figure out which to use?
 

@@ -10,6 +10,31 @@ from mechanalyzer.inf import spc as sinfo
 
 
 # Set paths to MESS jobs
+def rate_paths(pes_dct, run_prefix):
+    """ Set up the path for saveing the input and output of
+        MESSRATE calculations
+
+        Run different types of directories (1 PES)
+            - fml-base: Standard base rate calculations (use idx)
+            - fml-wext: Well-Extended base calculations (use 10*idx)
+    """
+
+    rate_path_dct = {}
+    for pes_inf in pes_dct:
+        pes_fml, pes_idx, subpes_idx = pes_inf
+
+        idx1 = f'{pes_idx}-{subpes_idx}-BASE'
+        idx2 = f'{pes_idx}-{subpes_idx}-WEXT'
+        rate_path_dct[pes_inf] = {
+            'base': job_path(
+                run_prefix, 'MESS', 'RATE', pes_fml, locs_idx=idx1),
+            'wext': job_path(
+                run_prefix, 'MESS', 'RATE', pes_fml, locs_idx=idx2)
+        }
+
+    return rate_path_dct
+
+
 def thermo_paths(spc_dct, spc_locs_dct, spc_mods, run_prefix):
     """ Set up the path for saving the pf input and output.
         Placed in a MESSPF, NASA dirs high in run filesys.
