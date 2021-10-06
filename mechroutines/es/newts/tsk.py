@@ -19,9 +19,36 @@ from mechroutines.es.newts._fs import rpath_fs
 ES_TSKS = {}
 
 
-# Task Functions for finding transition states
-def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
+# Main callable function
+def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
            run_prefix, save_prefix):
+    """ run TS task
+    """
+
+    # Build necessary objects for transition states
+    thy_inf_dct, thy_method_dct, mref_dct, runfs_dct, savefs_dct = thy_dcts(
+        tsname, spc_dct[tsname], thy_dct, es_keyword_dct,
+        run_prefix, save_prefix)
+
+    # Run the task
+    if 'find' in tsk:
+        _findts(spc_dct, tsname,
+                thy_inf_dct, thy_method_dct, mref_dct,
+                es_keyword_dct,
+                runfs_dct, savefs_dct)
+    elif 'rpath' in tsk:
+        job = tsk.split('_', 1)[1]
+        rpath_tsk(job, spc_dct, tsname,
+                  thy_inf_dct, thy_method_dct, mref_dct,
+                  es_keyword_dct,
+                  runfs_dct, savefs_dct)
+
+
+# Task Functions for finding transition states
+def _findts(spc_dct, tsname,
+            thy_inf_dct, thy_method_dct, mref_dct,
+            es_keyword_dct,
+            runfs_dct, savefs_dct):
     """ Launches one of several TS finding algorithms based on
         the request of the user, or if missing, aspects about the
         reactants and spin-state of the reaction.
@@ -40,10 +67,10 @@ def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
         :type save_prefix: str
     """
 
-    # Build necessary objects
-    thy_inf_dct, thy_method_dct, mref_dct, runfs_dct, savefs_dct = thy_dcts(
-        tsname, spc_dct[tsname], thy_dct, es_keyword_dct,
-        run_prefix, save_prefix)
+    # # Build necessary objects
+    # thy_inf_dct, thy_method_dct, mref_dct, runfs_dct, savefs_dct = thy_dcts(
+    #     tsname, spc_dct[tsname], thy_dct, es_keyword_dct,
+    #     run_prefix, save_prefix)
 
     # Determine the TS finding algorithm to use
     search_method = _ts_search_method(spc_dct[tsname])
@@ -107,13 +134,21 @@ def run_rpvtst(spc_dct, tsname,
                         thy_inf_dct, thy_method_dct, mref_dct,
                         es_keyword_dct,
                         runfs_dct, savefs_dct)
-    print('rpvtst success', success)
+    print('rpvtst (sadpt) success', success)
 
-    # If success, IRC from sadpt
-    # else IRC from rmax? or just keep scan and move on
-    # rpath_tsk(job, spc_dct, tsname,
-    #           thy_dct, es_keyword_dct,
-    #           run_prefix, save_prefix)
+    if success:
+        print('Sadpoint located. Will launch IRC from there')
+    else:
+        print('No sadlpt. Will launch IRC from max of potential')
+
+    # Run rpath task to run a scan along the IRC
+    # Internal logic should allow it to determine if there is sadpt or not
+    # based on what happened in above function call
+    job = 'scan'
+    es_keyword_dct.update({'rxn_coord': 'irc'})
+    rpath_tsk(job, spc_dct, tsname,
+              thy_inf_dct, thy_method_dct, mref_dct, es_keyword_dct,
+              runfs_dct, savefs_dct)
 
     return success
 
@@ -129,7 +164,7 @@ def run_pst(spc_dct, tsname, savefs_dct):
     """
 
     # Obtain necessary objects from various dictionaries
-    zma_save_fs = savefs_dct['runlvl_ts_zma_fs']
+    zma_save_fs = savefs_dct['runlvl_ts_zma']
 
     ts_dct = spc_dct[tsname]
     zrxn, zma = ts_dct['zrxn'], ts_dct['zma']
@@ -138,18 +173,18 @@ def run_pst(spc_dct, tsname, savefs_dct):
     # Save a Z-Matrix and Reaction object if missing
     zma_path = zma_save_fs[-1].path(zma_locs)
     if (
-        not zma_save_fs[-1].file.reaction.exists(zrxn, zma_locs) and
-        not zma_save_fs[-1].file.zmatrix.exists(zma, zma_locs)
+        not zma_save_fs[-1].file.reaction.exists(zma_locs) and
+        not zma_save_fs[-1].file.zmatrix.exists(zma_locs)
     ):
-        print('Saving info required for Phase Space Theory at path',
-              zma_path)
+        print('Saving info required for Phase Space Theory ',
+              f'at path {zma_path}')
 
         zma_save_fs[-1].create(zma_locs)
         zma_save_fs[-1].file.reaction.write(zrxn, zma_locs)
         zma_save_fs[-1].file.zmatrix.write(zma, zma_locs)
     else:
-        print('All info required for Phase Space Theory present at path',
-              zma_path)
+        print('All info required for Phase Space Theory currently saved '
+              f'at path {zma_path}')
 
     return True  # As long as the if-block passes, code should be successful
 
@@ -199,8 +234,8 @@ def run_pst(spc_dct, tsname, savefs_dct):
 
 # Task Functions for calculations involving reaction paths
 def rpath_tsk(job, spc_dct, spc_name,
-              thy_dct, es_keyword_dct,
-              run_prefix, save_prefix):
+              thy_inf_dct, thy_method_dct, mref_dct, es_keyword_dct,
+              runfs_dct, savefs_dct):
     """ run a scan over the specified torsional coordinate
 
         :param job:
@@ -223,10 +258,10 @@ def rpath_tsk(job, spc_dct, spc_name,
     ts_dct = spc_dct[spc_name]
     ts_info = rinfo.ts_info(ts_dct['rxn_info'])
 
-    # Build various thy and filesystem objects
-    thy_inf_dct, thy_method_dct, mref_dct, runfs_dct, savefs_dct = thy_dcts(
-        spc_name, spc_dct[spc_name], thy_dct, es_keyword_dct,
-        run_prefix, save_prefix)
+    # # Build various thy and filesystem objects
+    # thy_inf_dct, thy_method_dct, mref_dct, runfs_dct, savefs_dct = thy_dcts(
+    #     spc_name, spc_dct[spc_name], thy_dct, es_keyword_dct,
+    #     run_prefix, save_prefix)
 
     mod_thy_info = thy_inf_dct['mod_runlvl']
     mod_ini_thy_info = thy_inf_dct['mod_inplvl']
@@ -239,7 +274,8 @@ def rpath_tsk(job, spc_dct, spc_name,
         ts_dct, spc_name,
         mod_ini_thy_info,
         es_keyword_dct,
-        run_prefix, save_prefix)
+        runfs_dct['prefix'], savefs_dct['prefix'])
+    print('alg set test', scn_alg)
 
     # Run job
     if job == 'scan':

@@ -23,6 +23,15 @@ def task_header(tsk, spc_name):
     message('Task:', tsk, spc_name, newline=1)
 
 
+def task_footer():
+    """ a
+    """
+    message(
+        '--- END TASK ----------------------------------------' +
+        '--------------------------------------'
+    )
+
+
 def keyword_list(es_keyword_dct, thy_dct=None):
     """ a
     """

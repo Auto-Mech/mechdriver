@@ -17,10 +17,11 @@ from mechlib import filesys
 from mechroutines.es._routines import _sadpt as sadpt
 
 
-def findts(spc_dct, tsname, thy_dct, es_keyword_dct,
+def findts(tsk, spc_dct, tsname, thy_dct, es_keyword_dct,
            run_prefix, save_prefix):
     """ New run function
     """
+    _ = tsk
 
     method_dct = thy_dct.get(es_keyword_dct['runlvl'])
 

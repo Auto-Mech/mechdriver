@@ -17,7 +17,8 @@ from mechroutines.es.runner import qchem_params
 def internal_coordinates_scan(ts_zma, ts_info, zrxn,
                               method_dct, mref_params,
                               scn_run_fs, scn_save_fs,
-                              es_keyword_dct, find_max=True):
+                              es_keyword_dct,
+                              find_max=True):
     """ Scan along the internal coordinates that correspond to the
         reaction coordinate. Additional constraints will be used as needed.
 
@@ -55,9 +56,11 @@ def internal_coordinates_scan(ts_zma, ts_info, zrxn,
     )
 
     if find_max:
+        include_endpts = False if mref_params else True
+        print('endpt test', include_endpts)
         max_zmas = rxngrid.grid_maximum_zmatrices(
             zrxn.class_, ts_zma, coord_grids, coord_names, scn_save_fs,
-            mod_thy_info, constraint_dct)
+            mod_thy_info, constraint_dct, include_endpts=include_endpts)
     else:
         max_zmas = None
 

@@ -330,7 +330,7 @@ def rebuild_zma_from_opt_geo(init_zma, opt_geo):
 def _save_geom_parsed(geo, inf_obj, inp_str, cnf_fs, cnf_locs):
     """ Saving a Cartesian geometry. could be for cnf fs or scn fs
     """
-    print('save_geom test:', cnf_locs, cnf_fs)
+
     cnf_fs[-1].create(cnf_locs)
     cnf_path = cnf_fs[-1].path(cnf_locs)
     print(f" - Saving at {cnf_path}")

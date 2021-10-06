@@ -19,7 +19,6 @@ from mechroutines.es._routines import hr
 from mechroutines.es._routines import tau
 from mechroutines.es._ts import findts
 # from mechroutines.es.newts import findts
-# from mechroutines.es.newts import rpath_tsk
 
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
@@ -86,14 +85,12 @@ def run_tsk(tsk, spc_dct, spc_name,
             hr_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        elif 'find' in tsk:
+        elif 'find' in tsk or 'rpath' in tsk:
             findts(
-                spc_dct, spc_name, thy_dct, es_keyword_dct,
+                tsk, spc_dct, spc_name, thy_dct, es_keyword_dct,
                 run_prefix, save_prefix)
-        # elif 'rpath' in tsk:
-        #     rpath_tsk(
-        #         job, spc_dct, spc_name, thy_dct, es_keyword_dct,
-        #         run_prefix, save_prefix)
+
+    ioprinter.task_footer()
 
 
 # FUNCTIONS FOR SAMPLING AND SCANS #
@@ -108,7 +105,7 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
         :type spc_name: str
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-val pairs for electronic structure task
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
@@ -602,7 +599,7 @@ def tau_tsk(job, spc_dct, spc_name,
             hess_cnt = 0
             for locs in tau_save_fs.existing():
                 ioprinter.info_message(
-                    'HESS Number {}'.format(hess_cnt+1), newline=1)
+                    f'HESS Number {hess_cnt+1}', newline=1)
                 if db_style == 'directory':
                     geo_save_path = tau_save_fs[-1].path(locs)
                     if tau_save_fs[-1].file.hessian.exists(locs):
@@ -653,7 +650,7 @@ def hr_tsk(job, spc_dct, spc_name,
         :type spc_name:
         :param thy_dct:
         :type thy_dct:
-        :param es_keyword_dct: keyword-value pairs for electronic structure task
+        :param es_keyword_dct: keyword-val pairs for electronic structure task
         :type es_keyword_dct: dict[str:str]
         :param run_prefix: root-path to the run-filesystem
         :type run_prefix: str
@@ -685,7 +682,7 @@ def hr_tsk(job, spc_dct, spc_name,
 
     # Set the filesystem objects
     _root = root_locs(spc_dct_i, saddle=saddle, name=spc_name)
-    ini_cnf_run_fs, ini_cnf_save_fs = build_fs(
+    _, ini_cnf_save_fs = build_fs(
         run_prefix, save_prefix, 'CONFORMER',
         thy_locs=mod_ini_thy_info[1:],
         **_root)
@@ -961,7 +958,7 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
                         'Skipping task for unstable species...', newline=1)
 
     return skip
-        
+
 
 def _sort_info_lst(sort_str, thy_dct, spc_info):
     """ Return the levels to sort conformers by if zpve or sp

@@ -100,8 +100,10 @@ def search(ini_zma, spc_dct, tsname,
     ts_dct = spc_dct[tsname]
 
     if ini_zma is not None:
+        # Use the zma from the ini level as a guess
         guess_zmas = (ini_zma,)
     else:
+        # Generate a guess zma by scanning along rxncoord and finding max
         guess_zmas = rpath.internal_coordinates_scan(
             ts_zma=ts_dct['zma'],
             ts_info=rinfo.ts_info(ts_dct['rxn_info']),
