@@ -39,7 +39,7 @@ def set_reference_ene(rxn_lst, spc_dct,
     hf0k = 0.0
     for rgt in ref_rgts:
 
-        ioprinter.info_message(' - Calculating energy for {}...'.format(rgt))
+        ioprinter.info_message(f' - Calculating energy for {rgt}...')
         basis_dct = thermfit.prepare_basis(
             ref_scheme, spc_dct, (rgt,))
         uniref_dct = thermfit.unique_basis_species(basis_dct, spc_dct)

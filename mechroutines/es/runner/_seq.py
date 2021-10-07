@@ -14,10 +14,7 @@ note: options (`opts_dct`) are a subset of keyword arguments (`kwargs_dct`)
 
 import itertools
 import warnings
-try:
-    from collections.abc import Sequence as _Sequence
-except ImportError:
-    from collections import Sequence as _Sequence
+from collections.abc import Sequence as _Sequence
 import automol
 import elstruct
 import autofile

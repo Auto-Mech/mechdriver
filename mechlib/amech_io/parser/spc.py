@@ -334,7 +334,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     if zrxns not in ('MISSING-SKIP', 'MISSING-ADD'):
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
-            tsname = f'ts_{pes_idx+1:g}_{chnl_idx+1:g}_{idx:g}'
+            tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
             ts_dct[tsname] = {
                 'zrxn': zrxn,
                 'zma': zma,
@@ -351,8 +351,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }
     elif zrxns == 'MISSING-ADD':
-        tsname = 'ts_{:g}_{:g}_{:g}'.format(
-            pes_idx+1, chnl_idx+1, 0)
+        tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_0'
         ts_dct = {}
         ts_dct[tsname] = {'missdata': ini_thy_info}
         # print('TS not found in filesystem')
@@ -366,19 +365,18 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 def base_tsname(pes_idx, chnl_idx):
     """ get tsname that precludes the confiuraton number
     """
-    return 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
+    return f'ts_{pes_idx+1:d}_{chnl_idx+1:d}'
 
 
 def tsnames_in_dct(pes_idx, chnl_idx, spc_dct, config_idxs=None):
     """ Get the names of all configuratons of a transition state
          for the channel of a PES.
     """
-    _tsname = 'ts_{:g}_{:g}'.format(pes_idx+1, chnl_idx+1)
+    _tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}'
     _tsname = _tsname + '_'
     if config_idxs is None:
         _tsnames = tuple(name for name in spc_dct.keys()
                          if _tsname in name)
     else:
-        _tsnames = tuple('{}{:G}'.format(_tsname, idx)
-                         for idx in config_idxs)
+        _tsnames = tuple(f'{_tsname}{idx}' for idx in config_idxs)
     return _tsnames

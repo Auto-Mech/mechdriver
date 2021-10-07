@@ -156,7 +156,7 @@ def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
                 break
 
     # Read and fit rates; write to ckin string
-    mess_path = rate_paths_dct[pes_inf]['']  # Have to get well_ext or base, write function
+    mess_path = rate_paths_dct[pes_inf]['']  # get well_ext/base, write fxn
     ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
 
     ckin_dct = ratefit.fit.fit_ktp_dct(

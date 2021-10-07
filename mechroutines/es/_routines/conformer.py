@@ -140,15 +140,15 @@ def _obtain_ini_geom(spc_dct_i, ini_cnf_save_fs,
             ini_cnf_save_fs, mod_ini_thy_info)
         if ini_path:
             geo_init = ini_cnf_save_fs[-1].file.geometry.read(ini_min_locs)
+            path = ini_cnf_save_fs[-1].path(ini_min_locs)
             info_message(
-                'Getting inital geometry from inplvl at path',
-                '{}'.format(ini_cnf_save_fs[-1].path(ini_min_locs)))
+                f'Getting inital geometry from inplvl at path {path}')
     else:
         debug_message(
             'Removing original conformer save data for instability')
         for locs in ini_cnf_save_fs[-1].existing():
             cnf_path = ini_cnf_save_fs[-1].path(locs)
-            debug_message('Removing {}'.format(cnf_path))
+            debug_message(f'Removing {cnf_path}')
             shutil.rmtree(cnf_path)
 
     if geo_init is None:
@@ -292,7 +292,8 @@ def single_conformer(zma, spc_info, mod_thy_info,
     elif this_conformer_was_run_in_save(zma, cnf_save_fs):
         skip_job = True
     if not skip_job:
-        run_in_run, sym_locs = filesys.mincnf.this_conformer_was_run_in_run(zma, cnf_run_fs)
+        run_in_run, _ = filesys.mincnf.this_conformer_was_run_in_run(
+            zma, cnf_run_fs)
         if run_in_run:
             skip_job = True
 
@@ -414,7 +415,7 @@ def conformer_sampling(zma, spc_info, thy_info,
 
     if nsamp-nsampd > 0:
         info_message(
-            'Running {} samples...'.format(nsamp-nsampd), newline=1)
+            f'Running {nsamp-nsampd} samples...', newline=1)
     samp_idx = 1
     samp_attempt_idx = 1
     while True:
@@ -427,7 +428,7 @@ def conformer_sampling(zma, spc_info, thy_info,
             break
         if samp_attempt_idx == brk_tot_samp:
             info_message(
-                'Max sample num: 5*{} attempted, ending search'.format(nsamp),
+                f'Max sample num: 5*{nsamp} attempted, ending search',
                 'Run again if more samples desired.')
             break
 
@@ -450,8 +451,8 @@ def conformer_sampling(zma, spc_info, thy_info,
                 warning_message('Structure has high repulsion.')
                 warning_message(
                     'Sums of intramol LJ potential interactions [kcal/mol]:',
-                    'Ref:{:.2f}, Test:{:.2f}, Diff:{:.2f}'.format(
-                        ref_pot, samp_pot, samp_pot-ref_pot))
+                    f'Ref:{ref_pot:.2f}, Test:{samp_pot:.2f}, '
+                    f'Diff:{samp_pot-ref_pot:.2f}')
                 warning_message(
                     'Generating new sample Z-Matrix')
             samp_zma, = automol.zmat.samples(zma, 1, tors_range_dct)
@@ -466,7 +467,7 @@ def conformer_sampling(zma, spc_info, thy_info,
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
 
-        info_message("Run {}/{}".format(samp_idx, tot_samp))
+        info_message(f"Run {samp_idx}/{tot_samp}")
         tors_names = tuple(tors_range_dct.keys())
         print('two_stage test:', two_stage, tors_names)
         if two_stage and tors_names:
@@ -595,7 +596,7 @@ def ring_conformer_sampling(
 
     if nsamp-nsampd > 0:
         info_message(
-            'Running {} samples...'.format(nsamp-nsampd), newline=1)
+            f'Running {nsamp-nsampd} samples...', newline=1)
     samp_idx = 1
 
     for samp_zma in unique_zmas:
@@ -617,7 +618,7 @@ def ring_conformer_sampling(
         cnf_run_path = cnf_run_fs[-1].path(locs)
         run_fs = autofile.fs.run(cnf_run_path)
 
-        info_message("\nSample {}/{}".format(samp_idx, tot_samp))
+        info_message(f"\nSample {samp_idx}/{tot_samp}")
         tors_names = tuple(set(names
                                for tors_dct in ring_tors_dct.values()
                                for names in tors_dct.keys()))
@@ -735,12 +736,12 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
             if run_fs[-1].file.info.exists([job]):
                 inf_obj = run_fs[-1].file.info.read([job])
                 if inf_obj.status == autofile.schema.RunStatus.SUCCESS:
-                    print("\nReading from conformer run at {}".format(cnf_run_path))
-        
+                    print(f"\nReading from conformer run at {cnf_run_path}")
+
                     # Read the electronic structure optimization job
                     success, ret = es_runner.read_job(
                         job=job, run_fs=run_fs)
-        
+
                     if success:
                         if run_fs[-1].file.zmatrix.exists([job]):
                             init_zma = run_fs[-1].file.zmatrix.read([job])
@@ -750,7 +751,7 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
                             ret, cnf_save_fs, locs, thy_info,
                             zrxn=zrxn, orig_ich=spc_info[0],
                             init_zma=init_zma)
-    
+
         # Update the conformer trajectory file
         print('')
         filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
@@ -762,7 +763,7 @@ def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
           # Only go through save procedure if conf not in save
           # may need to get geo, ene, etc; maybe make function
     """
-    
+
     saved_locs, saved_geos, saved_enes = _saved_cnf_info(
         cnf_save_fs, thy_info)
 
@@ -825,8 +826,7 @@ def _saved_cnf_info(cnf_save_fs, mod_thy_info):
             found_saved_geos.append(saved_geos[idx])
         else:
             info_message(
-                'No energy saved in single point directory for {}'
-                .format(path))
+                f'No energy saved in single point directory for {path}')
             # geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
             #     mod_thy_info[1:4])
             geo_inf_obj = cnf_save_fs[-1].file.geometry_info.read(
@@ -834,12 +834,11 @@ def _saved_cnf_info(cnf_save_fs, mod_thy_info):
             geo_end_time = geo_inf_obj.utc_end_time
             current_time = autofile.schema.utc_time()
             if (current_time - geo_end_time).total_seconds() < 120:
-                wait_time = 120 - (current_time - geo_end_time).total_seconds()
+                last_time = (current_time - geo_end_time).total_seconds()
+                wait_time = 120 - last_time
                 info_message(
-                    'Geo was saved in the last ' +
-                    '{:3.2f} seconds, waiting for {:3.2f} seconds'.format(
-                        (current_time - geo_end_time).total_seconds(),
-                        wait_time))
+                    f'Geo was saved in the last {last_time:3.2f} seconds, '
+                    f'waiting for {wait_time:3.2f} seconds')
                 time.sleep(wait_time)
                 if sp_save_fs[-1].file.energy.exists(mod_thy_info[1:4]):
                     found_saved_enes.append(sp_save_fs[-1].file.energy.read(
@@ -866,19 +865,20 @@ def _init_geom_is_running(cnf_run_fs):
         if status == autofile.schema.RunStatus.RUNNING:
             start_time = inf_obj.utc_start_time
             current_time = autofile.schema.utc_time()
-            if (current_time - start_time).total_seconds() < 3000000:
+            _time = (current_time - start_time).total_seconds()
+            if _time < 3000000:
                 path = cnf_run_fs[-1].path(locs)
                 info_message(
-                    'init_geom was started in the last ' +
-                    '{:3.4f} hours in {}.'.format(
-                        (current_time - start_time).total_seconds()/3600.,
-                        path))
+                    'init_geom was started in the last '
+                    f'{_time/3600:3.4f} hours in {path}.')
                 running = True
                 break
     return running
 
 
 def this_conformer_was_run_in_save(zma, cnf_fs):
+    """ Assess if a conformer was run in save
+    """
     running = False
     for locs in cnf_fs[-1].existing(ignore_bad_formats=True):
         cnf_path = cnf_fs[-1].path(locs)
@@ -892,8 +892,7 @@ def this_conformer_was_run_in_save(zma, cnf_fs):
             if automol.zmat.almost_equal(inp_zma, zma,
                                          dist_rtol=0.018, ang_atol=.2):
                 info_message(
-                    'This conformer was already run ' +
-                    'in {}.'.format(cnf_path))
+                    'This conformer was already run in {cnf_path}.')
                 running = True
                 break
     return running
@@ -927,7 +926,7 @@ def this_conformer_is_running(zma, cnf_run_fs):
                         _hr = (current_time - start_time).total_seconds()/3600.
                         info_message(
                             'This conformer was started in the last ' +
-                            '{:3.4f} hours in {}.'.format(_hr, run_path))
+                            f'{_hr:3.4f} hours in {run_path}.')
                         running = True
                         break
     return running
@@ -991,12 +990,12 @@ def _inchi_are_same(orig_ich, geo):
     same = False
     ich = automol.geom.inchi(geo)
     assert automol.inchi.is_complete(orig_ich), (
-        'the inchi {} orig_ich is not complete'.format(orig_ich))
+        f'the inchi {orig_ich} orig_ich is not complete')
     if ich == orig_ich:
         same = True
     if not same:
         warning_message(
-            " - new inchi {} not the same as old {}".format(ich, orig_ich))
+            f" - new inchi {ich} not the same as old {orig_ich}")
 
     return same
 
@@ -1008,9 +1007,9 @@ def _check_old_inchi(orig_ich, seen_geos, saved_locs, cnf_save_fs):
     for i, geoi in enumerate(seen_geos):
         if not orig_ich == automol.geom.inchi(geoi):
             smi = automol.geom.smiles(geoi)
+            path = cnf_save_fs[-1].path(saved_locs[i])
             error_message(
-                'inchi do not match for {} at {}'.format(
-                    smi, cnf_save_fs[-1].path(saved_locs[i])))
+                f'inchi do not match for {smi} at {path}')
 
 
 def _sym_unique(geo, ene, saved_geos, saved_enes, ethresh=1.0e-5):
@@ -1120,7 +1119,7 @@ def unique_fs_ring_confs(
             if automol.zmat.almost_equal(inizma, zma,
                                          dist_rtol=0.1, ang_atol=.4):
                 info_message(
-                    '- Similar structure found at {}'.format(cnf_save_path))
+                    f'- Similar structure found at {cnf_save_path}')
                 found = True
                 break
 
@@ -1158,7 +1157,7 @@ def unique_fs_confs(cnf_save_fs, cnf_save_locs_lst,
                                          dist_rtol=0.1, ang_atol=.4):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 info_message(
-                    '- Similar structure found at {}'.format(cnf_save_path))
+                    f'- Similar structure found at {cnf_save_path}')
                 found = True
                 break
 
@@ -1196,5 +1195,5 @@ def rng_loc_for_geo(geo, cnf_save_fs):
                                      # dist_rtol=0.15, ang_atol=.45):
             rid = locs[0]
             break
-    
+
     return rid

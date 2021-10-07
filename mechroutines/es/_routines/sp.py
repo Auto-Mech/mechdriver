@@ -3,7 +3,7 @@
     electronic structure method.A
 
     * Maybe put long description from run_energy here
-    
+
     ** no reason to pass the geo and zma since the functions have the fs
        and locs and can therefore read them. the geo and zma are unneeded
 """

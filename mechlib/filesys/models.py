@@ -133,7 +133,7 @@ def set_model_filesys(spc_dct_i, level,
             cnf_run_fs[-1].create(min_locs)
         min_rngs_locs = min_rngs_locs_lst[0]
         min_rngs_path = min_rngs_path_lst[0]
-        ioprinter.warning_message('Only returning the first location in this list')
+        ioprinter.warning_message('Only returning first location in this list')
     # Create run fs if that directory has been deleted to run the jobs
 
     return [cnf_save_fs, min_rngs_path, min_rngs_locs, '', cnf_run_fs]
@@ -247,7 +247,7 @@ def _get_prop_fs(
     levelp = tinfo.modify_orb_label(level, spc_info)
     mod_info_lst = []
     if sort_info_lst is not None:
-        for idx, info in enumerate(sort_info_lst):
+        for info in sort_info_lst:
             if info is not None:
                 mod_info_lst.append(tinfo.modify_orb_label(info, spc_info))
             else:
@@ -293,11 +293,11 @@ def get_matching_tors_locs(
             tors_save_fs, tors_locs_lst, cnf_save_fs, [cnf_locs])
         if match_dct[tuple(cnf_locs)] is not None:
             match_tors_locs = tuple(match_dct[tuple(cnf_locs)])
+            match_path = tors_save_fs[-1].path(match_tors_locs)
             ioprinter.info_message(
-                'Using {} as the parent conformer location'.format(cnf_path))
+                f'Using {cnf_path} as the parent conformer location')
             ioprinter.info_message(
-                'and {} for torsional profiles'.format(
-                    tors_save_fs[-1].path(match_tors_locs)))
+                f'and {match_path} for torsional profiles')
         else:
             cnf_zma_save_fs = autofile.fs.zmatrix(cnf_path)
             zma = cnf_zma_save_fs[-1].file.zmatrix.read((0,))
@@ -306,9 +306,10 @@ def get_matching_tors_locs(
             for sym_locs in sym_locs_lst:
                 if sym_locs in save_locs:
                     match_tors_locs = sym_locs
+                    match_path = tors_save_fs[-1].path(match_tors_locs)
                     ioprinter.debug_message(
-                        'this conformer had converged to another conformer at {}'.format(
-                            tors_save_fs[-1].path(match_tors_locs)))
+                        'this conformer had converged to another conformer at'
+                        f'{match_path}')
     else:
         match_tors_locs = cnf_locs
     return match_tors_locs
