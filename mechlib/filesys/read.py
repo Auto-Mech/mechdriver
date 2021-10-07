@@ -239,10 +239,13 @@ def energy(filesys, locs, mod_thy_info):
         sp_fs = autofile.fs.single_point(path)
         if sp_fs[-1].file.energy.exists(mod_thy_info[1:4]):
             ene = sp_fs[-1].file.energy.read(mod_thy_info[1:4])
+            # ioprinter.debug_message('sp_path', sp_fs[-1].path(thy_info))
         else:
             ene = None
+            # ioprinter.info_message('No scan energy')
     else:
         ene = None
+        # ioprinter.info_message('No scan energy')
 
     return ene
 

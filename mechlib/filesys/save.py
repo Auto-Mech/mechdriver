@@ -189,7 +189,7 @@ def instability(conn_zma, disconn_zmas, cnf_save_fs,
     print(f" - Save path: {cnf_save_path}")
 
 
-def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
+def flux(vrc_ret, vrc_fs, vrc_locs=(0,)):
     """ Save the VaReCoF flux and input
     """
 
@@ -201,9 +201,6 @@ def flux(vrc_ret, ts_save_fs, ts_locs=(0,), vrc_locs=(0,)):
     flux_str = ''
 
     # Save the files
-    ts_save_path = ts_save_fs[-1].path(ts_locs)
-
-    vrc_fs = autofile.fs.vrctst(ts_save_path)
     vrc_fs[-1].create(vrc_locs)
     vrc_fs[-1].file.vrctst_tst.write(tst_str, vrc_locs)
     vrc_fs[-1].file.vrctst_divsur.write(divsur_str, vrc_locs)
