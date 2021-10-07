@@ -343,7 +343,7 @@ def fs_confs_dict(cnf_save_fs, cnf_save_locs_lst,
                                          dist_rtol=0.1, ang_atol=.4):
                 cnf_save_path = cnf_save_fs[-1].path(locs)
                 ioprinter.info_message(
-                    '- Similar structure found at {}'.format(cnf_save_path))
+                    f'- Similar structure found at {cnf_save_path}')
                 match_dct[tuple(ini_locs)] = tuple(locs)
                 break
     return match_dct

@@ -93,9 +93,9 @@ def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
     inp_missing = []
     for key, (name, _, req) in INP_FILE.items():
         if inp_str_dct[key] is not None:
-            info_message('  FOUND {}'.format(name))
+            info_message(f'  FOUND {name}')
         else:
-            info_message('  MISSING {}'.format(name))
+            info_message(f'  MISSING {name}')
             if req:
                 inp_missing.append(name)
 

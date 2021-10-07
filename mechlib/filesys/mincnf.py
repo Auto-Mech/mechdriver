@@ -559,6 +559,8 @@ def zpe_from_harmonic_frequencies(
 
 
 def this_conformer_was_run_in_run(zma, cnf_fs):
+    """ Assess if this conformer was run in RUN.
+    """
     locs_idx = None
     job = elstruct.Job.OPTIMIZATION
 
@@ -580,7 +582,7 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                                              dist_rtol=0.018, ang_atol=.2):
                     ioprinter.info_message(
                         'This conformer was already run ' +
-                        'in {}.'.format(run_path))
+                        f'in {run_path}.')
                     locs_idx = idx
                     break
     # This is to find if it was not saved becaue its equivalent
@@ -613,7 +615,9 @@ def this_conformer_was_run_in_run(zma, cnf_fs):
                 out_enes.append(10000)
                 out_geos.append(None)
         for idx, _ in enumerate(out_enes):
-            sym_idx = _sym_unique(ran_geo, ran_ene, [out_geos[idx]], [out_enes[idx]], ethresh=1.0e-5)
+            sym_idx = _sym_unique(
+                ran_geo, ran_ene,
+                [out_geos[idx]], [out_enes[idx]], ethresh=1.0e-5)
             if sym_idx is not None:
                 sym_locs.append(run_locs_lst[idx])
     return locs_idx is not None, sym_locs
