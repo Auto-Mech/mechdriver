@@ -265,8 +265,8 @@ def rpath_tsk(job, spc_dct, spc_name,
 
     mod_thy_info = thy_inf_dct['mod_runlvl']
     mod_ini_thy_info = thy_inf_dct['mod_inplvl']
-    method_dct = thy_method_dct['mod_runlvl']
-    ini_method_dct = thy_method_dct['mod_inplvl']
+    method_dct = thy_method_dct['runlvl']
+    ini_method_dct = thy_method_dct['inplvl']
     mref_params = mref_dct['runlvl']
 
     # Build filesys objects

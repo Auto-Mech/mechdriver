@@ -56,7 +56,7 @@ def internal_coordinates_scan(ts_zma, ts_info, zrxn,
     )
 
     if find_max:
-        include_endpts = False if mref_params else True
+        include_endpts = not mref_params
         print('endpt test', include_endpts)
         max_zmas = rxngrid.grid_maximum_zmatrices(
             zrxn.class_, ts_zma, coord_grids, coord_names, scn_save_fs,
