@@ -73,6 +73,25 @@ def _lst_for_pes(pes_dct, run_pes_idxs):
     return red_pes_dct
 
 
+def pes_groups(pes_dct, pes_grp_idxs):
+    """ Group the PES into ordered lists to handle multiPES effects
+    """
+
+    # Need to build a group for PESs
+
+
+    pes_grps = ()
+    for idxs in pes_grp_idxs:
+        grp = ()
+        for idx in idxs:
+            for (form, pidx, sidx), chnls in pes_dct.items():
+                if idx == pidx:
+                    grp += (idx,)
+        pes_grps += (grp,)
+
+    return pes_grps
+
+
 def spc_queue(runlst, fml):
     """ Build spc queue from the reaction lst for the drivers.
 
