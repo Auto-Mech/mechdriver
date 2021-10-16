@@ -2,21 +2,29 @@
 """
 
 import os
+import tempfile
 
 import thermfit
 import automol
 import autofile
+import mess_io
+import autorun
 from mechanalyzer.inf import spc as sinfo
 from mechanalyzer.inf import thy as tinfo
 
 from mechlib import filesys
-from mechlib.amech_io.printer import reading
+import mechlib.amech_io.printer as ioprinter
+from mechlib.amech_io import reader
 from mechroutines.models import _vib as vib
 from mechroutines.models import _tors as tors
 from mechroutines.models import ene
 from mechroutines.thermo import basis
 from mechroutines.proc import _util as util
 
+from mechroutines.models import _rot as rot
+from mechroutines.models import _symm as symm
+from mechroutines.models import _vib as vib
+from mechroutines.models import build, blocks
 
 def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     """collect a zmatrix
@@ -247,7 +255,7 @@ def energy(spc_name, spc_dct_i,
         if os.path.exists(sp_path):
             if sp_save_fs[-1].file.energy.exists(
                     mod_thy_info[1:4]):
-                reading('Energy', sp_path)
+                ioprinter.reading('Energy', sp_path)
                 _ene = sp_save_fs[-1].file.energy.read(
                     mod_thy_info[1:4])
 
@@ -273,7 +281,7 @@ def enthalpy(
     pf_filesystems = filesys.models.pf_filesys(
         spc_dct_i, spc_mod_dct_i,
         run_prefix, save_prefix,
-        name=spc_name, saddle=saddle)
+        name=spc_name, saddle=saddle, spc_locs=locs)
     # print(pf_filesystems)
     ene_abs = ene.read_energy(
         spc_dct_i, pf_filesystems, spc_mod_dct_i,
@@ -298,4 +306,85 @@ def enthalpy(
         [locs_path, ene_abs, hf0k, *coeff_array],
         chn_basis_ene_dct,
         spc_array
+    )
+
+
+def pf(
+        spc_name, spc_dct_i, spc_mod_dct_i,
+        pes_mod_dct_i,
+        locs, locs_path,
+        cnf_fs, run_prefix, save_prefix):
+    """ collect enthalpies
+    """
+
+    zrxn = spc_dct_i.get('zrxn')
+    saddle = bool(zrxn)
+    miss_data = None
+
+    # print('spc_mod_dct_i', spc_mod_dct_i)
+    pf_filesystems = filesys.models.pf_filesys(
+        spc_dct_i, spc_mod_dct_i,
+        run_prefix, save_prefix,
+        name=spc_name, saddle=saddle, spc_locs=locs)
+    geom = rot.read_geom(pf_filesystems)
+    rotors = tors.build_rotors(
+        spc_dct_i, pf_filesystems, spc_mod_dct_i)
+    freqs, imag, zpe, _, tors_strs, _, _, _ = vib.full_vib_analysis(
+        spc_dct_i, pf_filesystems, spc_mod_dct_i,
+        run_prefix, zrxn=zrxn)
+    allr_str = tors_strs[0]
+
+    zma = None
+    sym_factor = symm.symmetry_factor(
+        pf_filesystems, spc_mod_dct_i, spc_dct_i, rotors, grxn=zrxn, zma=zma)
+    elec_levels = spc_dct_i['elec_levels']
+
+    keys = ['writer', 'geom', 'sym_factor', 'freqs', 'imag', 'elec_levels',
+            'mess_hr_str', 'mdhr_dat',
+            'xmat', 'rovib_coups', 'rot_dists',
+            'ene_chnlvl', 'ene_reflvl', 'zpe_chnlvl', 'ene_tsref',
+            'edown_str', 'collid_freq_str']
+    vals = ['species_block', geom, sym_factor, freqs, imag, elec_levels,
+            allr_str, None,
+            None, None, None,
+            None, None, zpe, None,
+            None, None]
+    inf_dct = dict(zip(keys, vals))
+
+    temps = pes_mod_dct_i['therm_temps']
+    globkey_str = mess_io.writer.global_pf_input(
+        temperatures=temps,
+        rel_temp_inc=0.001,
+        atom_dist_min=0.6
+    )
+    mess_writer = getattr(blocks, inf_dct['writer'])
+    mess_block, dat_str_dct = mess_writer(inf_dct)
+    if inf_dct['writer'] == 'tau_block':
+        zero_energy = None
+    else:
+        zero_energy = inf_dct['zpe_chnlvl']
+
+    spc_str = mess_io.writer.species(
+        spc_label=spc_name,
+        spc_data=mess_block,
+        zero_ene=zero_energy
+    )
+
+    # Combine the strings together to create full MESS input file string
+    # tempfile.tempdir = "./messpf_temp"
+    #file_path = '/home/elliott/projects/AutoMech/RO2QOOH/all_conformers/all/temp'
+    with tempfile.TemporaryDirectory() as file_path:
+        messpf_inp_str = mess_io.writer.messpf_inp_str(globkey_str, spc_str)
+        autorun.write_input(
+            file_path,
+            messpf_inp_str,
+            aux_dct=dat_str_dct,
+            input_name='pf.inp')
+        autorun.run_script(
+            autorun.SCRIPT_DCT['messpf'],
+            file_path)
+        pf_arrays = reader.mess.messpf(
+            file_path)
+    return (
+        pf_arrays, miss_data
     )

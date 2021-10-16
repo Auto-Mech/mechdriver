@@ -12,7 +12,7 @@ from mechroutines.proc import _collect as collect
 def run_tsk(tsk, obj_queue,
             proc_keyword_dct,
             spc_dct, thy_dct,
-            spc_mod_dct_i, model_dct,
+            spc_mod_dct_i, pes_mod_dct_i,
             run_prefix, save_prefix, mdriver_path):
     """ run a proc tess task
     for generating a list of conformer or tau sampling geometries
@@ -26,9 +26,9 @@ def run_tsk(tsk, obj_queue,
     # Setup csv data dictionary for specific task
     csv_data = util.set_csv_data(tsk)
     filelabel, thylabel = util.get_file_label(
-        tsk, model_dct, proc_keyword_dct, spc_mod_dct_i)
+        tsk, pes_mod_dct_i, proc_keyword_dct, spc_mod_dct_i)
     chn_basis_ene_dct = {}
-    spc_array = []
+    col_array = []
 
     # Exclude unstable species
     # These species break certain checks (e.g. no ene exists for geo collect)
@@ -58,9 +58,9 @@ def run_tsk(tsk, obj_queue,
         if 'coeffs' in tsk:
             label = spc_name
             csv_data_i, spc_array = collect.coeffs(
-                spc_name, spc_dct, model_dct, spc_array)
+                spc_name, spc_dct, pes_mod_dct_i, spc_array)
             csv_data[label] = csv_data_i
-
+            col_array = spc_array
         # All other tasks require filesystem information
         else:
             # unpack spc and level info for conformers
@@ -78,8 +78,11 @@ def run_tsk(tsk, obj_queue,
 
             # Loop over conformers
             for locs, locs_path in zip(rng_cnf_locs_lst, rng_cnf_locs_path):
+
+                miss_data_i = None
                 label = spc_name + ':' + '_'.join(locs)
                 print(label)
+
                 if 'freq' in tsk and not _skip_freqs(spc_name, spc_dct_i):
                     _dat, miss_data_i = collect.frequencies(
                         spc_name, spc_dct_i, spc_mod_dct_i,
@@ -95,38 +98,28 @@ def run_tsk(tsk, obj_queue,
                             csv_data['scalefactor'][label] = [sfactor]
                         if disp_str is not None:
                             disp_dct.update({spc_name: disp_str})
-                    if miss_data_i is not None:
-                        miss_data += (miss_data_i,)
 
                 elif 'geo' in tsk:
                     csv_data_i, miss_data_i = collect.geometry(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     print(csv_data_i)
                     csv_data[label] = csv_data_i
-                    if miss_data_i is not None:
-                        miss_data += (miss_data_i,)
 
                 elif 'molden' in tsk:
                     csv_data_i, miss_data_i = collect.molden(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     print(csv_data_i)
                     csv_data[label] = csv_data_i
-                    if miss_data_i is not None:
-                        miss_data += (miss_data_i,)
 
                 elif 'zma' in tsk:
                     csv_data_i, miss_data_i = collect.zmatrix(
                         spc_name, locs, locs_path, cnf_fs, mod_thy_info)
                     csv_data[label] = csv_data_i
-                    if miss_data_i is not None:
-                        miss_data += (miss_data_i,)
 
                 elif 'torsion' in tsk:
                     miss_data_i = collect.torsions(
                         spc_name, spc_dct_i, spc_mod_dct_i,
                         run_prefix, save_prefix)
-                    if miss_data_i is not None:
-                        miss_data += (miss_data_i,)
 
                 elif 'ene' in tsk:
                     csv_data_i, miss_data_i = collect.energy(
@@ -134,21 +127,20 @@ def run_tsk(tsk, obj_queue,
                         proc_keyword_dct, thy_dct, locs, locs_path,
                         cnf_fs, run_prefix, save_prefix)
                     csv_data[label] = csv_data_i
-                    if miss_data_i is not None:
-                        miss_data += (miss_data_i,)
 
                 elif 'enthalpy' in tsk:
                     ret = collect.enthalpy(
                         spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
-                        model_dct, chn_basis_ene_dct, spc_array,
+                        pes_mod_dct_i, chn_basis_ene_dct, spc_array,
                         locs, locs_path, cnf_fs, run_prefix, save_prefix)
                     csv_data_i, chn_basis_ene_dct, spc_array = ret
                     csv_data[label] = csv_data_i
+                    col_array = spc_array
 
                 elif 'entropy' in tsk:
                     ret = collect.enthalpy(
                         spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
-                        model_dct, chn_basis_ene_dct, spc_array,
+                        pes_mod_dct_i, chn_basis_ene_dct, spc_array,
                         locs, locs_path, cnf_fs, run_prefix, save_prefix)
                     csv_data_i, chn_basis_ene_dct, spc_array = ret
                     csv_data[label] = csv_data_i
@@ -156,16 +148,29 @@ def run_tsk(tsk, obj_queue,
                 elif 'heat' in tsk:
                     ret = collect.enthalpy(
                         spc_name, spc_dct, spc_dct_i, spc_mod_dct_i,
-                        model_dct, chn_basis_ene_dct, spc_array,
+                        pes_mod_dct_i, chn_basis_ene_dct, spc_array,
                         locs, locs_path, cnf_fs, run_prefix, save_prefix)
                     csv_data_i, chn_basis_ene_dct, spc_array = ret
                     csv_data[label] = csv_data_i
+
+                elif 'pf' in tsk:
+                    ret = collect.pf(
+                        spc_name, spc_dct_i, spc_mod_dct_i,
+                        pes_mod_dct_i, locs, locs_path,
+                        cnf_fs, run_prefix, save_prefix)
+                    csv_data_i, miss_data_i = ret
+                    csv_data[label] = csv_data_i[1]
+                    col_array = csv_data_i[0]
+
+                if miss_data_i is not None:
+                    miss_data += (miss_data_i,)
+
 
     # Write a report that details what data is missing
     missing_data = miss_data + ts_miss_data
 
     # Write the csv data into the appropriate file
-    util.write_csv_data(tsk, csv_data, filelabel, spc_array, mdriver_path)
+    util.write_csv_data(tsk, csv_data, filelabel, col_array, mdriver_path)
 
     # Gather data that is provided for each species in files in a dir
     data_dirs = (('displacements_'+thylabel, disp_dct),)
