@@ -168,9 +168,13 @@ def _set_spc_locs_dct(
 def _sort_info_lst(sort_str, thy_dct):
     """ Return the levels to sort conformers by if zpve or sp
         levels were assigned in input
+
+        if we ask for zpe(lvl_wbs),sp(lvl_b2t),gibbs(700)
+        out sort_info_lst will be [('gaussian', 'wb97xd', '6-31*', 'RU'),
+        ('gaussian', 'b2plypd3', 'cc-pvtz', 'RU'), None, None, 700.]
     """
-    sort_lvls = [None, None]
-    sort_typ_lst = ['zpe', 'sp']
+    sort_lvls = [None, None, None, None, None]
+    sort_typ_lst = ['freqs', 'sp', 'enthalpy', 'entropy' 'gibbs']
     if sort_str is not None:
         for sort_param in sort_str.split(','):
             idx = None
@@ -179,12 +183,15 @@ def _sort_info_lst(sort_str, thy_dct):
                     lvl_key = sort_str.split(typ_str + '(')[1].split(')')[0]
                     idx = typ_idx
             if idx is not None:
-                method_dct = thy_dct.get(lvl_key)
-                if method_dct is None:
-                    ioprinter.warning_message(
-                        'no {} in theory.dat, not using {} in sorting'.format(
-                            lvl_key, sort_typ_lst[idx]))
-                    continue
-                thy_info = tinfo.from_dct(method_dct)
-                sort_lvls[idx] = thy_info
+                if idx < 2:
+                    method_dct = thy_dct.get(lvl_key)
+                    if method_dct is None:
+                        ioprinter.warning_message(
+                            'no {} in theory.dat, not using {} in sorting'.format(
+                                lvl_key, sort_typ_lst[idx]))
+                        continue
+                    thy_info = tinfo.from_dct(method_dct)
+                    sort_lvls[idx] = thy_info
+                else:
+                    sort_lvls[idx] = float(lvl_key)
     return sort_lvls
