@@ -99,6 +99,7 @@ TSK_KEY_DCT = {
     'zmatrix': (('spc', 'ts'), PRNT),
     'torsions': (('spc', 'ts'), PRNT),
     'enthalpy': (('spc', 'ts'), PRNT),
+    'pf': (('spc', 'ts'), PRNT),
     'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
     'write_mess': ((), ('kin_model', 'spc_model', 'overwrite',
