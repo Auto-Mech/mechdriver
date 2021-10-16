@@ -200,7 +200,7 @@ def enthalpy_calculation(
                 ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
         if zrxn is None:
             if ref_scheme != ts_ref_scheme:
-                basis_dct_trs, uniref_dct_trs = thermfit.prepare_basis(
+                basis_dct_trs = thermfit.prepare_basis(
                     ts_ref_scheme, spc_dct, (spc_name,), zrxn=zrxn)
                 uniref_dct_trs = thermfit.unique_basis_species(
                     basis_dct_trs, spc_dct)

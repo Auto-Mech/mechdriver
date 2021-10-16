@@ -284,7 +284,6 @@ def mol_data(spc_name, spc_dct,
     """
 
     spc_dct_i = spc_dct[spc_name]
-    print('spc_name test:', spc_name, spc_dct_i)
     ene_chnlvl = None
     ene_reflvl = None
     zpe = None

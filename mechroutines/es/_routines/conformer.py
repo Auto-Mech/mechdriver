@@ -732,23 +732,24 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
         for locs in cnf_run_fs[-1].existing():
             cnf_run_path = cnf_run_fs[-1].path(locs)
             run_fs = autofile.fs.run(cnf_run_path)
-            inf_obj = run_fs[-1].file.info.read([job])
-            if inf_obj.status == autofile.schema.RunStatus.SUCCESS:
-                print("\nReading from conformer run at {}".format(cnf_run_path))
-    
-                # Read the electronic structure optimization job
-                success, ret = es_runner.read_job(
-                    job=job, run_fs=run_fs)
-    
-                if success:
-                    if run_fs[-1].file.zmatrix.exists([job]):
-                        init_zma = run_fs[-1].file.zmatrix.read([job])
-                    else:
-                        init_zma = None
-                    _save_conformer(
-                        ret, cnf_save_fs, locs, thy_info,
-                        zrxn=zrxn, orig_ich=spc_info[0],
-                        init_zma=init_zma)
+            if run_fs[-1].file.info.exists([job]):
+                inf_obj = run_fs[-1].file.info.read([job])
+                if inf_obj.status == autofile.schema.RunStatus.SUCCESS:
+                    print("\nReading from conformer run at {}".format(cnf_run_path))
+        
+                    # Read the electronic structure optimization job
+                    success, ret = es_runner.read_job(
+                        job=job, run_fs=run_fs)
+        
+                    if success:
+                        if run_fs[-1].file.zmatrix.exists([job]):
+                            init_zma = run_fs[-1].file.zmatrix.read([job])
+                        else:
+                            init_zma = None
+                        _save_conformer(
+                            ret, cnf_save_fs, locs, thy_info,
+                            zrxn=zrxn, orig_ich=spc_info[0],
+                            init_zma=init_zma)
     
         # Update the conformer trajectory file
         print('')
@@ -1190,7 +1191,9 @@ def rng_loc_for_geo(geo, cnf_save_fs):
             break
         frag_locs_zma = automol.geom.zmatrix(frag_locs_geo)
         if automol.zmat.almost_equal(frag_locs_zma, frag_zma,
-                                     dist_rtol=0.15, ang_atol=.45):
+                                     dist_rtol=150., ang_atol=45.):
+                                     # for now set to include all ring puckering
+                                     # dist_rtol=0.15, ang_atol=.45):
             rid = locs[0]
             break
     
