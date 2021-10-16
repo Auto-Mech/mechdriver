@@ -304,6 +304,7 @@ def conformer_tsk(job, spc_dct, spc_name,
     elif job == 'opt':
 
         cnf_range = es_keyword_dct['cnf_range']
+        hbond_cutoffs = spc_dct_i['hbond_cutoffs']
         cnf_sort_info_lst = _sort_info_lst(
             es_keyword_dct['sort'], thy_dct, spc_info)
 
@@ -318,6 +319,7 @@ def conformer_tsk(job, spc_dct, spc_name,
         ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info,
             cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+            hbond_cutoffs=hbond_cutoffs,
             print_enes=True)
 
         # Truncate the list of the ini confs
@@ -364,7 +366,8 @@ def conformer_tsk(job, spc_dct, spc_name,
         # print all geometres within cnfrange
         rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             cnf_save_fs, mod_thy_info,
-            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst)
+            cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+            hbond_cutoffs=hbond_cutoffs)
         for locs in rng_cnf_locs_lst:
             geo = cnf_save_fs[-1].file.geometry.read(locs)
             ioprinter.geometry(geo)
@@ -372,12 +375,14 @@ def conformer_tsk(job, spc_dct, spc_name,
     elif job in ('energy', 'grad', 'hess', 'vpt2', 'prop'):
 
         cnf_range = es_keyword_dct['cnf_range']
+        hbond_cutoffs = spc_dct_i['hbond_cutoffs']
         cnf_sort_info_lst = _sort_info_lst(
             es_keyword_dct['sort'], thy_dct, spc_info)
 
         ini_rng_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
             ini_cnf_save_fs, mod_ini_thy_info,
             cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+            hbond_cutoffs=hbond_cutoffs,
             print_enes=True)
 
         # Check if locs exist, kill if it doesn't
@@ -690,11 +695,13 @@ def hr_tsk(job, spc_dct, spc_name,
         **_root)
 
     cnf_range = es_keyword_dct['cnf_range']
+    hbond_cutoffs = spc_dct_i['hbond_cutoffs']
     cnf_sort_info_lst = _sort_info_lst(
         es_keyword_dct['sort'], thy_dct, spc_info)
     ini_min_locs_lst, ini_path_lst = filesys.mincnf.conformer_locators(
         ini_cnf_save_fs, mod_ini_thy_info,
         cnf_range=cnf_range, sort_info_lst=cnf_sort_info_lst,
+        hbond_cutoffs=hbond_cutoffs,
         print_enes=True)
     all_run_cnf_locs_lst, _ = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info,
@@ -958,9 +965,13 @@ def skip_task(tsk, spc_dct, spc_name, thy_dct, es_keyword_dct, save_prefix):
 def _sort_info_lst(sort_str, thy_dct, spc_info):
     """ Return the levels to sort conformers by if zpve or sp
         levels were assigned in input
+
+        if we ask for zpe(lvl_wbs),sp(lvl_b2t),gibbs(700)
+        out sort_info_lst will be [('gaussian', 'wb97xd', '6-31*', 'RU'),
+        ('gaussian', 'b2plypd3', 'cc-pvtz', 'RU'), None, None, 700.]
     """
-    sort_lvls = [None, None]
-    sort_typ_lst = ['zpe', 'sp']
+    sort_lvls = [None, None, None, None, None]
+    sort_typ_lst = ['freqs', 'sp', 'enthalpy', 'entropy', 'gibbs']
     if sort_str is not None:
         for sort_param in sort_str.split(','):
             idx = None
@@ -969,13 +980,16 @@ def _sort_info_lst(sort_str, thy_dct, spc_info):
                     lvl_key = sort_str.split(typ_str + '(')[1].split(')')[0]
                     idx = typ_idx
             if idx is not None:
-                method_dct = thy_dct.get(lvl_key)
-                if method_dct is None:
-                    ioprinter.warning_message(
-                        'no {} in theory.dat, not using {} in sorting'.format(
-                            lvl_key, sort_typ_lst[idx]))
-                    continue
-                thy_info = tinfo.from_dct(method_dct)
-                mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-                sort_lvls[idx] = mod_thy_info
+                if idx < 2:
+                    method_dct = thy_dct.get(lvl_key)
+                    if method_dct is None:
+                        ioprinter.warning_message(
+                            'no {} in theory.dat, not using {} in sorting'.format(
+                                lvl_key, sort_typ_lst[idx]))
+                        continue
+                    thy_info = tinfo.from_dct(method_dct)
+                    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+                    sort_lvls[idx] = mod_thy_info
+                else:
+                    sort_lvls[idx] = float(lvl_key)
     return sort_lvls

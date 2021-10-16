@@ -184,7 +184,7 @@ def remove_bad_point(pot, bad_angle):
 
 
 # Single data point readers
-def geometry(cnf_save_fs, mod_thy_info, conf='sphere'):
+def geometry(cnf_save_fs, mod_thy_info, conf='sphere', hbond_cutoffs=None):
     """ get the geometry
     """
 
@@ -192,19 +192,20 @@ def geometry(cnf_save_fs, mod_thy_info, conf='sphere'):
 
     # Read the file system
     if conf == 'minimum':
-        geom = _min_energy_conformer(cnf_save_fs, mod_thy_info)
+        geom = _min_energy_conformer(
+            cnf_save_fs, mod_thy_info, hbond_cutoffs=hbond_cutoffs)
     elif conf == 'sphere':
         geom = _spherical_conformer(cnf_save_fs)
 
     return geom
 
 
-def _min_energy_conformer(cnf_save_fs, mod_thy_info):
+def _min_energy_conformer(cnf_save_fs, mod_thy_info, hbond_cutoffs=None):
     """ Reads the minimum-energy conformer from the save FileSystem
     """
 
     ini_loc_info = min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info)
+        cnf_save_fs, mod_thy_info, hbond_cutoffs=hbond_cutoffs)
     locs, path = ini_loc_info
     if path:
         min_conf = cnf_save_fs[-1].file.geometry.read(locs)
@@ -278,7 +279,9 @@ def reactions(rxn_info, ini_thy_info, zma_locs, save_prefix):
     return zrxns, zmas
 
 
-def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
+def reaction(
+        rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,),
+        hbond_cutoffs=None):
     """ Check if reaction exists in the filesystem and has been identified
     """
 
@@ -297,7 +300,7 @@ def reaction(rxn_info, ini_thy_info, zma_locs, save_prefix, ts_locs=(0,)):
             ts_locs=ts_locs)
 
         _, ini_min_cnf_path = min_energy_conformer_locators(
-            cnf_save_fs, mod_ini_thy_info)
+            cnf_save_fs, mod_ini_thy_info, hbond_cutoffs=hbond_cutoffs)
         if ini_min_cnf_path:
             zma_fs = autofile.fs.zmatrix(ini_min_cnf_path)
             if zma_fs[-1].file.reaction.exists(zma_locs):
@@ -332,8 +335,9 @@ def instability_transformation(spc_dct, spc_name, thy_info, save_prefix,
         thy_locs=mod_thy_info[1:])
 
     # Check if any locs exist first?
+    hbond_cutoffs=spc_dct[spc_name]['hbond_cutoffs']
     ini_loc_info = min_energy_conformer_locators(
-        cnf_save_fs, mod_thy_info)
+        cnf_save_fs, mod_thy_info, hbond_cutoffs=hbond_cutoffs)
     _, min_cnf_path = ini_loc_info
 
     zma_save_fs = autofile.fs.zmatrix(min_cnf_path)

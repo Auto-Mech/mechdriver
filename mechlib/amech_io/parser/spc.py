@@ -32,6 +32,7 @@ SPC_VAL_DCT = {
     'sym_factor': ((float,), (), None),
     'kickoff': ((tuple,), (), (True, (0.1, False))),
     'hind_inc': ((float,), (), 30.0),
+    'hbond_cutoffs': ((tuple,), (), (4.55, 1.92)),
     'mc_nsamp': ((tuple,), (), (True, 12, 1, 3, 100, 25)),
     'tau_nsamp': ((tuple,), (), (True, 12, 1, 3, 100, 25)),
     'smin': ((float,), (), None),
@@ -319,9 +320,14 @@ def ts_dct_sing_chnl(pes_idx, reaction,
 
     # Obtain the reaction object for the reaction
     zma_locs = (0,)
+    # is there a better way to get this hbond param out of spc_dct and does
+    # it matter in getting the mincofs to build the reaction if we bother
+    # to include it?
+    # hbond_cutoffs = spc_dct[reacs[0]]['hbond_cutoffs']
     zrxns, zmas, rclasses = rxnid.build_reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix,
         id_missing=id_missing, re_id=re_id)
+    # , hbond_cutoffs=hbond_cutoffs)
 
     # Could reverse the spc dct
     if zrxns not in ('MISSING-SKIP', 'MISSING-ADD'):
@@ -340,6 +346,7 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'mult': rinfo.value(rxn_info, 'tsmult'),
                 'elec_levels': ((0.0, rinfo.value(rxn_info, 'tsmult')),),
                 'hind_inc': 30.0*phycon.DEG2RAD,
+                'hbond_cutoffs': (4.55, 1.92),
                 'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }

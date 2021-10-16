@@ -391,8 +391,6 @@ def mol_data(spc_name, spc_dct,
             edown_str, collid_freq_str]
     inf_dct = dict(zip(keys, vals))
 
-
-    # thermfit.pf.fake_mess_rrho_partition_function(geom, freqs, 0, [300, 400, 500, 600, 700, 800])
     return inf_dct, chn_basis_ene_dct
 
 

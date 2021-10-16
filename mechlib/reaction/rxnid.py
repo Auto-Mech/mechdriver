@@ -207,7 +207,8 @@ def reaction_energy(rxn_info, sp_thy_info, geo_thy_info, save_prefix):
     return rxn_ene
 
 
-def reagent_energies(rgt, rxn_info, sp_thy_info, geo_thy_info, save_prefix):
+def reagent_energies(
+        rgt, rxn_info, sp_thy_info, geo_thy_info, save_prefix):
     """ reagent energies """
 
     assert rgt in ('reacs', 'prods')

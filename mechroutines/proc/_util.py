@@ -71,10 +71,15 @@ def _default_es_levels(print_keyword_dct):
 
 
 def _set_sort_info_lst(sort_str, thy_dct, spc_info):
+    """ Return the levels to sort conformers by if zpve or sp
+        levels were assigned in input
+
+        if we ask for zpe(lvl_wbs),sp(lvl_b2t),gibbs(700)
+        out sort_info_lst will be [('gaussian', 'wb97xd', '6-31*', 'RU'),
+        ('gaussian', 'b2plypd3', 'cc-pvtz', 'RU'), None, None, 700.]
     """
-    """
-    sort_lvls = [None, None]
-    sort_typ_lst = ['zpe', 'sp']
+    sort_lvls = [None, None, None, None, None]
+    sort_typ_lst = ['freqs', 'sp', 'enthalpy', 'entropy', 'gibbs']
     if sort_str is not None:
         for sort_param in sort_str.split(','):
             idx = None
@@ -83,15 +88,18 @@ def _set_sort_info_lst(sort_str, thy_dct, spc_info):
                     lvl_key = sort_str.split(typ_str + '(')[1].split(')')[0]
                     idx = typ_idx
             if idx is not None:
-                method_dct = thy_dct.get(lvl_key)
-                if method_dct is None:
-                    print(
-                        'no {} in theory.dat, not using {} in sorting'.format(
-                            lvl_key, sort_typ_lst[idx]))
-                    continue
-                thy_info = tinfo.from_dct(method_dct)
-                mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
-                sort_lvls[idx] = mod_thy_info
+                if idx < 2:
+                    method_dct = thy_dct.get(lvl_key)
+                    if method_dct is None:
+                        ioprinter.warning_message(
+                            'no {} in theory.dat, not using {} in sorting'.format(
+                                lvl_key, sort_typ_lst[idx]))
+                        continue
+                    thy_info = tinfo.from_dct(method_dct)
+                    mod_thy_info = tinfo.modify_orb_label(thy_info, spc_info)
+                    sort_lvls[idx] = mod_thy_info
+                else:
+                    sort_lvls[idx] = float(lvl_key)
     return sort_lvls
 
 
@@ -118,6 +126,7 @@ def conformer_list(
     """
     # conformer range
     cnf_range = _set_conf_range(print_keyword_dct)
+    hbond_cutoffs = spc_dct_i['hbond_cutoffs']
     # thy_info build
     thy_info = tinfo.from_dct(thy_dct.get(print_keyword_dct.get('geolvl')))
     spc_info = sinfo.from_dct(spc_dct_i)
@@ -135,7 +144,7 @@ def conformer_list(
         **_root)
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info,
-        cnf_range=cnf_range, sort_info_lst=sort_info_lst)
+        cnf_range=cnf_range, sort_info_lst=sort_info_lst, hbond_cutoffs=hbond_cutoffs)
 
     return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
 
@@ -149,6 +158,7 @@ def conformer_list_from_models(
     """
     # conformer range
     cnf_range = _set_conf_range(print_keyword_dct)
+    hbond_cutoffs = spc_dct_i['hbond_cutoffs']
 
     # thy_info build
     thy_info = spc_mod_dct_i['vib']['geolvl'][1][1]
@@ -166,7 +176,7 @@ def conformer_list_from_models(
         **_root)
     rng_cnf_locs_lst, rng_cnf_locs_path = filesys.mincnf.conformer_locators(
         cnf_save_fs, mod_thy_info,
-        cnf_range=cnf_range, sort_info_lst=sort_info_lst)
+        cnf_range=cnf_range, sort_info_lst=sort_info_lst, hbond_cutoffs=hbond_cutoffs)
 
     return cnf_save_fs, rng_cnf_locs_lst, rng_cnf_locs_path, mod_thy_info
 
@@ -184,7 +194,7 @@ def set_csv_data(tsk):
     return csv_data
 
 
-def write_csv_data(tsk, csv_data, filelabel, spc_array, prefix):
+def write_csv_data(tsk, csv_data, filelabel, col_array, prefix):
     """ Write the csv data dictionary into the correct type of csv
         or text file
     """
@@ -231,13 +241,19 @@ def write_csv_data(tsk, csv_data, filelabel, spc_array, prefix):
             csv_data, orient='index',
             columns=[
                 'Path', 'ZPVE+Energy [A.U.]', 'Hf (0 K) [kcal/mol]',
-                *spc_array])
+                *col_array])
         dframe.to_csv(filelabel, float_format='%.6f')
     if 'coeffs' in tsk:
         dframe = pandas.DataFrame.from_dict(
             csv_data, orient='index',
             columns=[
-                *spc_array])
+                *col_array])
+        dframe.to_csv(filelabel, float_format='%.2f')
+    elif 'pf' in tsk:
+        dframe = pandas.DataFrame.from_dict(
+            csv_data, orient='index',
+            columns=[
+                *col_array])
         dframe.to_csv(filelabel, float_format='%.2f')
 
 
@@ -338,6 +354,9 @@ def get_file_label(tsk, model_dct, proc_keyword_dct, spc_mod_dct_i):
         filelabel += '.csv'
     elif 'torsions' in tsk:
         filelabel = None
+    elif 'pf' in tsk:
+        filelabel = 'pf_global'
+        filelabel += '.csv'
     return filelabel, thylabel
 
 

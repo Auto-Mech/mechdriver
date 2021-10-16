@@ -7,7 +7,9 @@ from mechlib.filesys._build import build_fs
 from mechlib.filesys.mincnf import min_energy_conformer_locators
 
 
-def rcts_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
+def rcts_cnf_fs(
+        rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix,
+        cnf_range='min', hbond_cutoffs=None):
     """ set reactant filesystem stuff
     """
 
@@ -27,7 +29,8 @@ def rcts_cnf_fs(rct_infos, thy_dct, es_keyword_dct, run_prefix, save_prefix):
             thy_locs=mod_ini_thy_info[1:])
 
         ini_loc_info = min_energy_conformer_locators(
-            ini_cnf_save_fs, mod_ini_thy_info)
+            ini_cnf_save_fs, mod_ini_thy_info,
+            cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs)
         ini_min_cnf_locs, ini_min_cnf_path = ini_loc_info
 
         # Create run fs if that directory has been deleted to run the jobs

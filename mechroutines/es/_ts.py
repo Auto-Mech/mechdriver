@@ -333,8 +333,11 @@ def _set_thy_inf_dcts(tsname, ts_dct, thy_dct, es_keyword_dct,
                 vsp2lvl_thy_info, hs_info)
 
     # Get the conformer filesys for the reactants
+    # cnf_range = es_keyword_dct['cnf_range']
+    # hbond_cutoffs = ts_dct['hbond_cutoffs']
     _rcts_cnf_fs = rcts_cnf_fs(
         rct_info, thy_dct, es_keyword_dct, run_prefix, save_prefix)
+        # cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs)
 
     thy_inf_dct = {
         'inplvl': ini_thy_info,
