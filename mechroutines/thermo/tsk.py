@@ -109,7 +109,6 @@ def produce_boltzmann_weighted_conformers_pf(
             final_pf,
             thm_paths_dct[spc_name]['spc_total'][0],
             filename='pf.dat')
-        print('made it here to min(hf_array)')
         spc_dct[spc_name]['Hfs']['final'] = [min(hf_array)]
     return spc_dct
 
@@ -233,7 +232,6 @@ def nasa_polynomial_task(
     ckin_nasa_str_dct[0] = ''
     ckin_path = output_path('CKIN', prefix=mdriver_path)
     for spc_name in spc_locs_dct:
-        print('spc dct name test:', spc_name, spc_dct[spc_name]['Hfs'])
         for idx, spc_locs in enumerate(spc_locs_dct[spc_name], start=1):
             if idx not in ckin_nasa_str_dct:
                 ckin_nasa_str_dct[idx] = ''

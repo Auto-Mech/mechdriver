@@ -37,11 +37,8 @@ def full_vib_analysis(
         if typ.squash_tors_pot(spc_mod_dct_i):
             # print('it thinks it is 1dhrfa')
             for rotor in rotors:
-                print ('rotor:', rotor)
                 for torsion in rotor:
-                    print ('torsion:', torsion, torsion.pot)
                     torsion.pot = automol.pot.relax_scale(torsion.pot)
-                    print ('torsion potential:', torsion.pot)
     if typ.nonrigid_tors(spc_mod_dct_i, rotors):
 
         # Build initial MESS+ProjRot HindRot strings; calc. projected freq info

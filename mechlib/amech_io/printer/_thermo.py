@@ -55,12 +55,12 @@ def print_thermo(spc_dct, ckin_nasa_str, spc_locs_dct, spc_locs_idx, spc_mod):
 
     nasa7_params_all = chemkin_io.parser.thermo.create_spc_nasa7_dct(
         ckin_nasa_str)
-    #templist = (
-    #    298.15, 300, 400, 500, 600, 700, 800,
-    #    900, 1000, 1100, 1200, 1300, 1400, 1500)
     templist = (
-        298.15, 300, 400, 500, 600,  800,
-        1000, 1500, 2000, 2500, 3000)
+        298.15, 300, 400, 500, 600, 700, 800,
+        900, 1000, 1100, 1200, 1300, 1400, 1500)
+    # templist = (
+    #     298.15, 300, 400, 500, 600,  800,
+    #     1000, 1500, 2000, 2500, 3000)
     info_message(
         'SPECIES            H0f(0 K)  H0f(298 K) in kcal/mol:')
     info_message(
