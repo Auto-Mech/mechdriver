@@ -1,4 +1,4 @@
-name: mechdriver-env
+name: mechdriver-env2
 
 channels:
     - auto-mech
@@ -28,7 +28,8 @@ dependencies:
     - psi4::psi4
     - rdkit::rdkit
     - openbabel::openbabel
-    - conda-forge::qcelemental
+    - psi4::pydantic=1.3
+    - psi4::qcelemental
     - auto-mech::autochem
     - auto-mech::autoio-base
     - auto-mech::x2z
@@ -36,7 +37,7 @@ dependencies:
     - auto-mech::onedmin
     - auto-mech::projrot
     - auto-mech::pac99
-    - auto-mech::thermp
+    - auto-mech::thermp=0.1.0
     - auto-mech::autoio-interfaces
     - auto-mech::autofile
     - auto-mech::mechanalyzer
