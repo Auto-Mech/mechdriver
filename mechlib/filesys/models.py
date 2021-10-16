@@ -117,17 +117,18 @@ def set_model_filesys(spc_dct_i, level,
         thy_locs=levelp[1:],
         **_root)
 
+    hbond_cutoffs = spc_dct_i['hbond_cutoffs']
     if cnf_range == 'specified':
         min_rngs_locs = spc_locs
         min_rngs_path = cnf_save_fs[-1].path(min_rngs_locs)
         cnf_run_fs[-1].create(min_rngs_locs)
     elif cnf_range == 'min':
         min_rngs_locs, min_rngs_path = min_energy_conformer_locators(
-            cnf_save_fs, levelp)
+            cnf_save_fs, levelp, hbond_cutoffs=hbond_cutoffs)
         cnf_run_fs[-1].create(min_rngs_locs)
     else:
         min_rngs_locs_lst, min_rngs_path_lst = conformer_locators(
-            cnf_save_fs, levelp, cnf_range=cnf_range)
+            cnf_save_fs, levelp, cnf_range=cnf_range, hbond_cutoffs=hbond_cutoffs)
         for min_locs in min_rngs_locs_lst:
             cnf_run_fs[-1].create(min_locs)
         min_rngs_locs = min_rngs_locs_lst[0]
@@ -214,15 +215,17 @@ def get_spc_locs_lst(
         spc_model_dct_i, spc_dct_i, 'vib', sort_info_lst,
         run_prefix, save_prefix, saddle=saddle, name=name)
 
+    hbond_cutoffs = spc_dct_i['hbond_cutoffs']
     if cnf_range == 'min':
         min_locs, _ = min_energy_conformer_locators(
-            cnf_save_fs, levelp)
+            cnf_save_fs, levelp, hbond_cutoffs=hbond_cutoffs)
         cnf_run_fs[-1].create(min_locs)
         min_locs_lst = [min_locs]
     else:
         min_locs_lst, _ = conformer_locators(
             cnf_save_fs, levelp, cnf_range=cnf_range,
-            sort_info_lst=mod_info_lst, print_enes=True)
+            sort_info_lst=mod_info_lst, print_enes=True,
+            hbond_cutoffs=hbond_cutoffs)
         for min_locs in min_locs_lst:
             cnf_run_fs[-1].create(min_locs)
 
@@ -267,8 +270,10 @@ def get_all_tors_locs_lst(
     tors_run_fs, tors_save_fs, levelp, _ = _get_prop_fs(
         spc_model_dct_i, spc_dct_i, 'tors', None,
         run_prefix, save_prefix, saddle=saddle)
+    hbond_cutoffs = spc_dct_i['hbond_cutoffs']
     tors_locs_lst, _ = conformer_locators(
-        tors_save_fs, levelp, cnf_range='all')
+        tors_save_fs, levelp, cnf_range='all',
+        hbond_cutoffs=hbond_cutoffs)
 
     return tors_run_fs, tors_save_fs, tors_locs_lst
 

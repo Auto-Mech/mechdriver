@@ -1193,5 +1193,5 @@ def rng_loc_for_geo(geo, cnf_save_fs):
                                      dist_rtol=0.15, ang_atol=.45):
             rid = locs[0]
             break
-
+    
     return rid
