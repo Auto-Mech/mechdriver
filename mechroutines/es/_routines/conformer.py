@@ -668,7 +668,7 @@ def ring_conformer_sampling(
 def _calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
     """ Determine the number of samples to od
     """
-
+    ntaudof = None
     if not any(tors_names):
         info_message(
             " - No torsional coordinates. Setting nsamp to 1.")
@@ -688,6 +688,9 @@ def _calc_nsamp(tors_names, nsamp_par, zma, zrxn=None):
         tors_ranges = tuple((0, 2*numpy.pi) for tors in tors_names)
         tors_range_dct = dict(zip(tors_names, tors_ranges))
 
+    print('test')
+    print(tors_range_dct)
+    print(ntaudof)
     return nsamp, tors_range_dct
 
 

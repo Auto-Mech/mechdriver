@@ -127,8 +127,7 @@ def run_backsteps(
     if _rotor_is_running(
             mixed_grid_vals_lst, coord_names, constraint_dct, scn_run_fs, job):
         ioprinter.info_message(
-            'Rotor {} is currently running, wait to backstep'.format(
-                coord_names))
+            f'Rotor {coord_names} is currently running, wait to backstep')
         return
 
     if constraint_dct is None:
@@ -248,17 +247,23 @@ def run_backsteps(
             ene_orig = ene_orig * phycon.EH2KCAL
             pot = ene - ene_orig
             pot_thresh = -0.1
-            if pot > pot_thresh and passed_bad_point:
+
+            # Print status message about backstop
+            no_backstep_required = (pot > pot_thresh and passed_bad_point)
+            if no_backstep_required:
                 ioprinter.info_message("Reverse Sweep finds a potential "
                                        f"{pot:5.2f} from the forward sweep")
                 ioprinter.info_message("...no more backsteps required")
-                break
             else:
                 ioprinter.warning_message("Backstep finds a potential less "
                                           "than forward sweep of "
                                           f"{pot:5.2f} kcal/mol at ")
                 ioprinter.info_message(locs, locs_orig)
                 ioprinter.info_message("...more backsteps required")
+
+            # Break loop if no backstep is required
+            if no_backstep_required:
+                break
 
 
 def _rotor_is_running(grid_vals, coord_names, constraint_dct, scn_run_fs, job):

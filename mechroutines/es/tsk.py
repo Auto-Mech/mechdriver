@@ -76,7 +76,7 @@ def run_tsk(tsk, spc_dct, spc_name,
         elif 'conf' in tsk:
             conformer_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
-                run_prefix, save_prefix)
+                run_prefix, save_prefix, print_debug=print_debug)
         elif 'tau' in tsk:
             tau_tsk(
                 job, spc_dct, spc_name, thy_dct, es_keyword_dct,
@@ -144,7 +144,7 @@ def geom_init(spc_dct, spc_name, thy_dct, es_keyword_dct,
 
 def conformer_tsk(job, spc_dct, spc_name,
                   thy_dct, es_keyword_dct,
-                  run_prefix, save_prefix):
+                  run_prefix, save_prefix, print_debug=False):
     """ Prepares and executes all electronic structure tasks that
         generate information for species and transition state conformers.
         This includes sampling and optimization procedures to generate
@@ -255,8 +255,10 @@ def conformer_tsk(job, spc_dct, spc_name,
             cnf_run_fs, cnf_save_fs, rid,
             script_str, overwrite,
             nsamp_par=mc_nsamp,
-            tors_names=tors_names, zrxn=zrxn,
-            two_stage=two_stage, retryfail=retryfail, resave=resave,
+            tors_names=tors_names,
+            zrxn=zrxn, two_stage=two_stage,
+            retryfail=retryfail, resave=resave,
+            repulsion_thresh=40.0, print_debug=print_debug,
             **kwargs)
 
     elif job == 'pucker':

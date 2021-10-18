@@ -120,14 +120,14 @@ def run(pes_rlst, spc_rlst,
             mdriver_path, spc_locs_dct, thm_paths_dct, spc_dct,
             spc_mod_dct, spc_mods, ref_scheme)
 
-        for idx in ckin_nasa_str_dct:
+        for idx, nasa_str in ckin_nasa_str_dct.items():
             ioprinter.print_thermo(
-                spc_dct, ckin_nasa_str_dct[idx],
+                spc_dct, nasa_str,
                 spc_locs_dct, idx, spc_mods[0])
 
             # Write all of the NASA polynomial strings
             writer.ckin.write_nasa_file(
-                ckin_nasa_str_dct[idx], ckin_path, idx=idx)
+                nasa_str, ckin_path, idx=idx)
 
 
 def _set_spc_queue(
@@ -187,8 +187,8 @@ def _sort_info_lst(sort_str, thy_dct):
                     method_dct = thy_dct.get(lvl_key)
                     if method_dct is None:
                         ioprinter.warning_message(
-                            'no {} in theory.dat, not using {} in sorting'.format(
-                                lvl_key, sort_typ_lst[idx]))
+                            f'no {lvl_key} in theory.dat, '
+                            f'not using {sort_typ_lst[idx]} in sorting')
                         continue
                     thy_info = tinfo.from_dct(method_dct)
                     sort_lvls[idx] = thy_info

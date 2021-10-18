@@ -33,29 +33,31 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
     """
 
     zrxns, zmas, rclasses = None, (), ()
+    status = 'MISSING'
 
     # Try and read the reaction from filesys if requested
     if not re_id:
         zrxns, zmas = filesys.read.reactions(
             rxn_info, ini_thy_info, zma_locs, save_prefix)
-        if zrxns is not None:
-            # zrxns = (zrxn,)
-            # zmas = (zma,)
-            print('    Reading from fileysystem...')
+        status = 'FOUND' if zrxns is not None else 'MISSING'
+        print('    Reading from fileysystem...')
     else:
         # unsafe without checking if zrxn id matches what is in save...
         print('    Requested Reidentification regardless of what is in SAVE')
 
-    if zrxns is None:
+    print(status, zrxns)
+
+    # Try and identify reaction if not rxn obj found
+    if status == 'MISSING':
         if id_missing:
             print('    Identifying class...')
             zrxns, zmas = _id_reaction(rxn_info, ini_thy_info, save_prefix)
-            if zrxns is None:
-                zrxns = 'MISSING-SKIP'
+            status = 'FOUND' if zrxns is not None else 'MISSING-SKIP'
         else:
-            zrxns = 'MISSING-ADD'
+            status = 'MISSING-ADD'
 
-    if 'MISSING' not in zrxns:
+    # Build a tuple with the full description of the reaction class, if ID'd
+    if status not in ('MISSING-SKIP', 'MISSING-ADD'):
         for zrxn in zrxns:
             rclasses += (_mod_class(zrxn.class_, rxn_info),)
 
@@ -64,7 +66,7 @@ def build_reaction(rxn_info, ini_thy_info, zma_locs, save_prefix,
         print(f'    There are {len(zrxns)} '
               'configuration(s) of transition state')
 
-    return zrxns, zmas, rclasses
+    return zrxns, zmas, rclasses, status
 
 
 def _id_reaction(rxn_info, thy_info, save_prefix):
