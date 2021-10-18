@@ -15,7 +15,8 @@ from mechroutines.ktp.rates import make_global_etrans_str
 from mechroutines.ktp.rates import make_pes_mess_str
 
 
-def write_messrate_task(pes_inf, rxn_lst, tsk_key_dct,
+def write_messrate_task(pesgrp_num, pes_inf, rxn_lst,
+                        tsk_key_dct, pes_param_dct,
                         spc_dct,
                         pes_model_dct, spc_model_dct,
                         unstab_chnls, label_dct,
@@ -45,10 +46,11 @@ def write_messrate_task(pes_inf, rxn_lst, tsk_key_dct,
 
     # Write the strings for the MESS input file
     globkey_str = make_header_str(
-        spc_dct, rxn_lst, pes_idx,
+        spc_dct, rxn_lst, pes_idx, pesgrp_num,
+        pes_param_dct, label_dct,
         pes_model_dct_i['rate_temps'],
         pes_model_dct_i['pressures'],
-        tsk_key_dct['float_type'])
+        tsk_key_dct['float_precision'])
 
     # Write the energy transfer section strings for MESS file
     etransfer = pes_model_dct_i['glob_etransfer']
@@ -57,8 +59,8 @@ def write_messrate_task(pes_inf, rxn_lst, tsk_key_dct,
 
     # Write the MESS strings for all the PES channels
     rxn_chan_str, dats, _, _ = make_pes_mess_str(
-        spc_dct, rxn_lst, pes_idx, unstab_chnls,
-        run_prefix, save_prefix, label_dct,
+        spc_dct, rxn_lst, pes_idx, pesgrp_num, unstab_chnls,
+        run_prefix, save_prefix, label_dct, pes_param_dct,
         pes_model_dct_i, spc_model_dct_i, spc_mod)
 
     # Write base MESS input string into the RUN filesystem
@@ -113,19 +115,18 @@ def run_messrate_task(rate_paths_dct, pes_inf):
 
         Need an overwrite task
     """
-
-    for path_dct in rate_paths_dct[pes_inf]:
-        for typ in ('wext', 'base'):
-            path = path_dct[typ]
-            mess_inp = os.path.join(path, 'mess.inp')
-            mess_out = os.path.join(path, 'mess.out')
-            if os.path.exists(mess_inp) and not os.path.exists(mess_out):
-                ioprinter.obj('vspace')
-                ioprinter.obj('line_dash')
-                ioprinter.info_message(f'Found MESS input file at {path}')
-                ioprinter.running('MESS input file')
-                autorun.run_script(autorun.SCRIPT_DCT['messrate'], path)
-                break
+    path_dct = rate_paths_dct[pes_inf]
+    for typ in ('wext', 'base'):
+        path = path_dct[typ]
+        mess_inp = os.path.join(path, 'mess.inp')
+        mess_out = os.path.join(path, 'mess.out')
+        if os.path.exists(mess_inp) and not os.path.exists(mess_out):
+            ioprinter.obj('vspace')
+            ioprinter.obj('line_dash')
+            ioprinter.info_message(f'Found MESS input file at {path}')
+            ioprinter.running('MESS input file')
+            autorun.run_script(autorun.SCRIPT_DCT['messrate'], path)
+            break
 
 
 def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
@@ -148,17 +149,25 @@ def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
         'Fitting Rate Constants for PES to Functional Forms', newline=1)
 
     # Set the MESS path to either well-extended or base
-    for path_dct in rate_paths_dct[pes_inf]:
-        for typ in ('wext', 'base'):
-            mess_path = path_dct[typ]
-            mess_out = os.path.join(mess_path, 'mess.out')
-            if os.path.exists(mess_out):
-                break
+    path_dct = rate_paths_dct[pes_inf]
+    for typ in ('wext', 'base'):
+        mess_path = path_dct[typ]
+        mess_out = os.path.join(mess_path, 'mess.out')
+        if os.path.exists(mess_out):
+            break
 
     # Read and fit rates; write to ckin string
-    mess_path = rate_paths_dct[pes_inf]['']  # get well_ext/base, write fxn
+    base_mess_path = rate_paths_dct[pes_inf]['base']
+    wext_mess_path = rate_paths_dct[pes_inf]['wext']
+    if os.path.exists(wext_mess_path):
+        mess_path = wext_mess_path
+    else:
+        mess_path = base_mess_path
     ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
 
+    # Read the ktp dct
+
+    # Fit the ktp dct
     ckin_dct = ratefit.fit.fit_ktp_dct(
         mess_path=mess_path,
         inp_fit_method=ratefit_dct['fit_method'],

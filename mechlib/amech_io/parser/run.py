@@ -103,7 +103,7 @@ TSK_KEY_DCT = {
     'coeffs': (('spc', 'ts'), ()),
     # KTP/Therm
     'write_mess': ((), ('kin_model', 'spc_model', 'overwrite',
-                        'use_well_extension', 'float_precision'
+                        'use_well_extension', 'float_precision',
                         'cnf_range', 'sort')),
     'run_mess': ((), ('kin_model', 'spc_model', 'nprocs',
                       'cnf_range', 'sort')),

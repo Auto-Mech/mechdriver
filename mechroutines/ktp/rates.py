@@ -18,12 +18,16 @@ from mechroutines.models.typ import is_abstraction_pes
 from mechroutines.ktp._ene import set_reference_ene
 from mechroutines.ktp._ene import sum_channel_enes
 
+from mechroutines.ktp._newstuff import energy_dist_params
+from mechroutines.ktp._newstuff import set_prod_density_param
+
 
 BLOCK_MODULE = importlib.import_module('mechroutines.models.blocks')
 
 
 # Headers
-def make_header_str(spc_dct, rxn_lst, pes_idx,
+def make_header_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
+                    pes_param_dct, label_dct,
                     temps, pressures, float_type):
     """ Built the head of the MESS input file that contains various global
         keywords used for running rate calculations.
@@ -53,17 +57,26 @@ def make_header_str(spc_dct, rxn_lst, pes_idx,
     ioprinter.debug_message(f'     {keystr1}')
     ioprinter.debug_message(f'     {keystr2}')
 
+    # Set the well extension energy thresh
     if is_abstraction_pes(spc_dct, rxn_lst, pes_idx):
         well_extend = None
     else:
         well_extend = 'auto'
         ioprinter.debug_message('Including WellExtend in MESS input')
 
+    # Set other parameters
+    # Need the PES number to pull the correct params out of lists
+    ped_spc_lst, hot_enes_dct, micro_out_params = energy_dist_params(
+        pesgrp_num, pes_param_dct, label_dct, enes=(10.0, 20.0, 30.0))
+
     header_str = mess_io.writer.global_rates_input(
         temps, pressures,
         calculation_method='well-reduction',
         well_extension=well_extend,
+        ped_spc_lst=ped_spc_lst,
+        hot_enes_dct=hot_enes_dct,
         excess_ene_temp=None,
+        micro_out_params=micro_out_params,
         float_type=float_type)
 
     return header_str
@@ -98,8 +111,9 @@ def make_global_etrans_str(rxn_lst, spc_dct, etrans_dct):
 
 
 # Reaction Channel Writers for the PES
-def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, unstable_chnls,
-                      run_prefix, save_prefix, label_dct,
+def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, pesgrp_num,
+                      unstable_chnls,
+                      run_prefix, save_prefix, label_dct, pes_param_dct,
                       pes_model_dct_i, spc_model_dct_i,
                       spc_model):
     """ Write all the MESS input file strings for the reaction channels
@@ -153,8 +167,9 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, unstable_chnls,
 
         # Write the mess strings for all spc on the channel
         mess_strs, dat_str_dct, written_labels = _make_channel_mess_strs(
-            tsname, reacs, prods, spc_dct, label_dct, written_labels,
-            chnl_infs, chnl_enes, spc_model_dct_i,
+            tsname, reacs, prods, pesgrp_num,
+            spc_dct, label_dct, written_labels,
+            pes_param_dct, chnl_infs, chnl_enes, spc_model_dct_i,
             unstable_chnl=(chnl_idx in unstable_chnls))
 
         # Append to full MESS strings
@@ -175,9 +190,10 @@ def make_pes_mess_str(spc_dct, rxn_lst, pes_idx, unstable_chnls,
     return rxn_chan_str, full_dat_str_dct, pes_ene_dct, conn_lst
 
 
-def _make_channel_mess_strs(tsname, reacs, prods,
+def _make_channel_mess_strs(tsname, reacs, prods, pesgrp_num,
                             spc_dct, label_dct, written_labels,
-                            chnl_infs, chnl_enes, spc_model_dct_i,
+                            pes_param_dct, chnl_infs, chnl_enes,
+                            spc_model_dct_i,
                             unstable_chnl=False):
     """ For each reaction channel on the PES: take all of the pre-read and
         pre-processed information from the save filesys for the
@@ -253,11 +269,20 @@ def _make_channel_mess_strs(tsname, reacs, prods,
                 # bi_str += '\n! DUMMY FOR UNSTABLE SPECIES\n'
                 # bi_str += mess_io.writer.dummy(chn_label, zero_ene=None)
             elif len(rgt_names) == 2:
+                # Determine if product densities should be calc'd
+                if side == 'prods':
+                    calc_dens = set_prod_density_param(
+                        rgt_names, pesgrp_num, pes_param_dct)
+                else:
+                    calc_dens = (False, False)
+
                 # bi_str += mess_io.writer.species_separation_str()
                 bi_str += f'\n! {rgt_names[0]} + {rgt_names[1]}\n'
                 bi_str += mess_io.writer.bimolecular(
                     chn_label, spc_label[0], spc_strs[0],
-                    spc_label[1], spc_strs[1], rgt_ene)
+                    spc_label[1], spc_strs[1], rgt_ene,
+                    calc_spc1_density=calc_dens[0],
+                    calc_spc2_density=calc_dens[1])
             else:
                 edown_str = rgt_infs[0].get('edown_str', None)
                 collid_freq_str = rgt_infs[0].get('collid_freq_str', None)

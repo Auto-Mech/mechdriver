@@ -52,6 +52,8 @@ TS_VAL_DCT = {
     'active': ((str,), (), None),
     'ts_search': ((str,), (), None),
     'ts_idx': ((int,), (), 0)
+    # vrc_dct = autorun.varecof.VRC_DCT
+    # machine_dct = {}
 }
 TS_VAL_DCT.update(SPC_VAL_DCT)
 
@@ -202,8 +204,8 @@ def ts_dct_from_estsks(pes_idx, es_tsk_lst, rxn_lst, thy_dct,
     # Build the ts_dct
     ts_dct = {}
     for tsk_lst in es_tsk_lst:
-        obj, es_keyword_dct = tsk_lst[:-1], tsk_lst[-1]
-        if 'ts' in obj:
+        obj, es_keyword_dct = tsk_lst[0], tsk_lst[-1]
+        if obj in ('ts', 'all'):
             # want print for task list
             method_dct = thy_dct.get(es_keyword_dct['runlvl'])
             ini_method_dct = thy_dct.get(es_keyword_dct['inplvl'])
@@ -325,13 +327,13 @@ def ts_dct_sing_chnl(pes_idx, reaction,
     # it matter in getting the mincofs to build the reaction if we bother
     # to include it?
     # hbond_cutoffs = spc_dct[reacs[0]]['hbond_cutoffs']
-    zrxns, zmas, rclasses = rxnid.build_reaction(
+    zrxns, zmas, rclasses, status = rxnid.build_reaction(
         rxn_info, ini_thy_info, zma_locs, save_prefix,
         id_missing=id_missing, re_id=re_id)
     # , hbond_cutoffs=hbond_cutoffs)
 
     # Could reverse the spc dct
-    if zrxns not in ('MISSING-SKIP', 'MISSING-ADD'):
+    if status not in ('MISSING-SKIP', 'MISSING-ADD'):
         ts_dct = {}
         for idx, (zrxn, zma, cls) in enumerate(zip(zrxns, zmas, rclasses)):
             tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_{idx:d}'
@@ -350,12 +352,11 @@ def ts_dct_sing_chnl(pes_idx, reaction,
                 'class': cls,
                 'rxn_fs': reaction_fs(run_prefix, save_prefix, rxn_info)
             }
-    elif zrxns == 'MISSING-ADD':
+    elif status == 'MISSING-ADD':
         tsname = f'ts_{pes_idx+1:d}_{chnl_idx+1:d}_0'
         ts_dct = {}
         ts_dct[tsname] = {'missdata': ini_thy_info}
-        # print('TS not found in filesystem')
-    elif zrxns == 'MISSING-SKIP':
+    elif status == 'MISSING-SKIP':
         ts_dct = {}
         print('Skipping reaction as class not given/identified')
 

@@ -30,19 +30,19 @@ ioprinter.host_name()
 ioprinter.program_header('inp')
 
 ioprinter.info_message('\nReading files provided in the inp directory...')
-INP_STRS = ioparser.read_amech_input(JOB_PATH)
+INPUT = ioparser.read_amech_input(JOB_PATH)
 
 ioprinter.info_message('\nParsing input files for runtime parameters...')
-THY_DCT = ioparser.thy.theory_dictionary(INP_STRS['thy'])
+THY_DCT = ioparser.thy.theory_dictionary(INPUT['thy'])
 KMOD_DCT, SMOD_DCT = ioparser.models.models_dictionary(
-    INP_STRS['mod'], THY_DCT)
-INP_KEY_DCT = ioparser.run.input_dictionary(INP_STRS['run'])
-PES_IDX_DCT, SPC_IDX_DCT = ioparser.run.chem_idxs(INP_STRS['run'])
-TSK_LST_DCT = ioparser.run.tasks(INP_STRS['run'], THY_DCT)
+    INPUT['mod'], THY_DCT)
+INP_KEY_DCT = ioparser.run.input_dictionary(INPUT['run'])
+PES_IDX_DCT, SPC_IDX_DCT = ioparser.run.chem_idxs(INPUT['run'])
+TSK_LST_DCT = ioparser.run.tasks(INPUT['run'], THY_DCT)
 SPC_DCT, GLOB_DCT = ioparser.spc.species_dictionary(
-    INP_STRS['spc'], INP_STRS['dat'], INP_STRS['geo'], 'csv')
+    INPUT['spc'], INPUT['dat'], INPUT['geo'], 'csv')
 PES_DCT = ioparser.mech.pes_dictionary(
-    INP_STRS['mech'], 'chemkin', SPC_DCT)
+    INPUT['mech'], 'chemkin', SPC_DCT)
 
 PES_RLST, SPC_RLST = ioparser.rlst.run_lst(
     PES_DCT, SPC_DCT, PES_IDX_DCT, SPC_IDX_DCT)
@@ -97,7 +97,7 @@ KTP_TSKS = TSK_LST_DCT.get('ktp')
 if KTP_TSKS is not None:
     ioprinter.program_header('ktp')
     ktpdriver.run(
-        PES_RLST,
+        PES_RLST, INPUT['pesgrp'],
         KTP_TSKS,
         SPC_DCT, GLOB_DCT,
         KMOD_DCT, SMOD_DCT,

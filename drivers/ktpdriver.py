@@ -12,13 +12,14 @@
 """
 
 from mechroutines.ktp import tsk as ktp_tasks
+from mechroutines.ktp import label as ktp_label
 from mechlib.amech_io import parser
 from mechlib.amech_io import rate_paths
 from mechlib.amech_io import printer as ioprinter
 from mechlib.reaction import split_unstable_pes
 
 
-def run(pes_rlst,
+def run(pes_rlst, pes_grp_dct,
         ktp_tsk_lst,
         spc_dct, glob_dct,
         pes_mod_dct, spc_mod_dct,
@@ -53,57 +54,72 @@ def run(pes_rlst,
     run_rate_tsk = parser.run.extract_task('run_mess', ktp_tsk_lst)
     run_fit_tsk = parser.run.extract_task('run_fits', ktp_tsk_lst)
 
-    rate_paths_dct = rate_paths(pes_rlst)
+    # Group the PESs into lists
+    pes_grps_rlst = parser.rlst.pes_groups(pes_rlst, pes_grp_dct)
 
     # --------------------------------------- #
     # LOOP OVER ALL OF THE SUBPES in PES_RLST #
     # --------------------------------------- #
 
-    for pes_inf, rxn_lst in pes_rlst.items():
+    print('pes groups')
+    print(pes_grps_rlst)
 
-        # ---------------------------------------------- #
-        # PREPARE INFORMATION TO PASS TO KTPDRIVER TASKS #
-        # ---------------------------------------------- #
+    for (pes_grp_rlst, pes_param_dct) in pes_grps_rlst:
 
-        # Set objects
-        pes_fml, pes_idx, _ = pes_inf
-        label_dct = None
+        print('WORKING ON PES GROUP NUM')
+        print('\n\n')
+        print(pes_grp_rlst)
+        print(pes_param_dct)
 
-        # Print PES Channels that are being run
-        ioprinter.runlst(pes_inf, rxn_lst)
+        # Generate the paths needed for MESSRATE calculations
+        rate_paths_dct = rate_paths(pes_grp_rlst, run_prefix)
 
-        # --------------------------------- #
-        # RUN THE REQUESTED KTPDRIVER TASKS #
-        # --------------------------------- #
+        for pesgrp_num, (pes_inf, rxn_lst) in enumerate(pes_grp_rlst.items()):
 
-        # Write the MESS file
-        if write_rate_tsk is not None:
-            tsk_key_dct = write_rate_tsk[-1]
-            spc_dct, rxn_lst, instab_chnls, label_dct = _process(
-                run_fit_tsk, ktp_tsk_lst, pes_idx, rxn_lst,
-                spc_mod_dct, spc_dct, glob_dct,
-                run_prefix, save_prefix)
-            ktp_tasks.write_messrate_str(
-                pes_inf, rxn_lst, tsk_key_dct,
-                spc_dct,
-                pes_mod_dct, spc_mod_dct,
-                instab_chnls, label_dct,
-                rate_paths_dct, run_prefix, save_prefix)
+            # ---------------------------------------------- #
+            # PREPARE INFORMATION TO PASS TO KTPDRIVER TASKS #
+            # ---------------------------------------------- #
 
-        # Run mess to produce rates (currently nothing from tsk lst keys used)
-        if run_rate_tsk is not None:
-            ktp_tasks.run_messrate_task(rate_paths_dct, pes_inf)
+            # Set objects
+            _, pes_idx, _ = pes_inf
+            label_dct = None
 
-        # Fit rate output to functional forms; write parameters to ChemKin file
-        if run_fit_tsk is not None:
-            if label_dct is None:
-                spc_dct, rxn_lst, _, label_dct = _process(
+            # Print PES Channels that are being run
+            ioprinter.runlst(pes_inf, rxn_lst)
+
+            # --------------------------------- #
+            # RUN THE REQUESTED KTPDRIVER TASKS #
+            # --------------------------------- #
+
+            # Write the MESS file
+            if write_rate_tsk is not None:
+                tsk_key_dct = write_rate_tsk[-1]
+                spc_dct, rxn_lst, instab_chnls, label_dct = _process(
                     run_fit_tsk, ktp_tsk_lst, pes_idx, rxn_lst,
                     spc_mod_dct, spc_dct, glob_dct,
                     run_prefix, save_prefix)
-            ktp_tasks.run_fits_task(
-                pes_fml, rate_paths_dct, mdriver_path,
-                label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct)
+                ktp_tasks.write_messrate_task(
+                    pesgrp_num, pes_inf, rxn_lst,
+                    tsk_key_dct, pes_param_dct,
+                    spc_dct,
+                    pes_mod_dct, spc_mod_dct,
+                    instab_chnls, label_dct,
+                    rate_paths_dct, run_prefix, save_prefix)
+
+            # Run mess to produce rates (urrently nothing from tsk lst used)
+            if run_rate_tsk is not None:
+                ktp_tasks.run_messrate_task(rate_paths_dct, pes_inf)
+
+            # Fit rates to functional forms; write parameters to ChemKin file
+            if run_fit_tsk is not None:
+                if label_dct is None:
+                    spc_dct, rxn_lst, _, label_dct = _process(
+                        run_fit_tsk, ktp_tsk_lst, pes_idx, rxn_lst,
+                        spc_mod_dct, spc_dct, glob_dct,
+                        run_prefix, save_prefix)
+                ktp_tasks.run_fits_task(
+                    pes_inf, rate_paths_dct, mdriver_path,
+                    label_dct, pes_mod_dct, spc_mod_dct, tsk_key_dct)
 
 
 # ------- #
@@ -135,7 +151,7 @@ def _process(tsk, ktp_tsk_lst, pes_idx, rxn_lst,
         rxn_lst, spc_dct, spc_mod_dct_i, save_prefix)
 
     # Build the MESS label idx dictionary for the PES
-    label_dct = ktproutines.label.make_pes_label_dct(
+    label_dct = ktp_label.make_pes_label_dct(
         chkd_rxn_lst, pes_idx, spc_dct, spc_mod_dct_i)
 
     return spc_dct, chkd_rxn_lst, instab_chnls, label_dct
