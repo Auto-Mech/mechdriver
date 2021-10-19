@@ -4,7 +4,7 @@
 import autofile
 import elstruct
 import automol
-from mechanalyzer.inf import rxn as rinfo
+# from mechanalyzer.inf import rxn as rinfo
 from mechanalyzer.inf import thy as tinfo
 from mechlib.reaction import grid as rxngrid
 from mechlib.amech_io import printer as ioprinter
@@ -68,14 +68,11 @@ def internal_coordinates_scan(ts_zma, ts_info, zrxn,
 
 
 # Infinite Separation Energy
-def inf_sep_ene(ts_dct, thy_inf_dct, mref_dct,
+def inf_sep_ene(ts_dct, thy_inf_dct, mref_params,
                 savefs_dct, runfs_dct, es_keyword_dct):
     """ Determine the total electronic energy of two reacting species that
         at infinite separation.
     """
-
-    # not sure what to do here
-    _ = mref_dct
 
     # Get info from the reactants
     rct_info = thy_inf_dct['rct_info']
@@ -97,22 +94,23 @@ def inf_sep_ene(ts_dct, thy_inf_dct, mref_dct,
     radrad = False
     if radrad:
         ts_zma, zrxn = ts_dct['zma'], ts_dct['zrxn']
-        rxn_info = ts_dct['rxn_info']
-        aspace = ts_dct['active']
+        # rxn_info = ts_dct['rxn_info']
+        # aspace = ts_dct['active']
 
-        ts_info = rinfo.ts_info(rxn_info)
+        # ts_info = rinfo.ts_info(rxn_info)
         hs_ts_info = thy_inf_dct['hs_var_scnlvl']
-        mod_thy_info = thy_inf_dct['mod_vscnlvl_thy_info']
+        # mod_thy_info = thy_inf_dct['mod_vscnlvl_thy_info']
 
         # Build grid and names appropriate for reaction type
         names, _, grids, _ = automol.reac.build_scan_info(zrxn, ts_zma)
         far_locs = [[names[0]], [grids[0]]]
 
-        cas_kwargs = es_runner.multireference_calculation_parameters(
-            ts_zma, ts_info, hs_ts_info, rxn_info,
-            aspace, mod_thy_info)
+        # cas_kwargs = es_runner.multireference_calculation_parameters(
+        #     ts_zma, ts_info, hs_ts_info, rxn_info,
+        #     aspace, mod_thy_info)
+        cas_kwargs = mref_params['var_scnlvl']
 
-        _multiref_inf_sep_ene(
+        _inf_sep_ene = _multiref_inf_sep_ene(
             hs_ts_info, ts_zma,
             rct_info, rcts_cnf_fs,
             var_sp1_thy_info, var_sp2_thy_info,
@@ -122,9 +120,16 @@ def inf_sep_ene(ts_dct, thy_inf_dct, mref_dct,
             **cas_kwargs)
     else:
         ini_thy_info = thy_inf_dct['vscnlvl_thy_info']
-        _singleref_inf_sep_ene(
+        _inf_sep_ene = _singleref_inf_sep_ene(
             rct_info, rcts_cnf_fs,
             ini_thy_info, overwrite)
+
+    if _inf_sep_ene is not None:
+        ioprinter.energy(_inf_sep_ene)
+    else:
+        ioprinter.warning_message('Infinite separation ene not computed')
+
+    return _inf_sep_ene
 
 
 def _multiref_inf_sep_ene(hs_info, ref_zma,

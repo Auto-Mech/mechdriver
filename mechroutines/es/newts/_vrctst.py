@@ -7,9 +7,9 @@ from phydat import phycon
 import varecof_io
 import elstruct
 import autorun
+from mechanalyzer.inf import rxn as rinfo
 from mechlib.amech_io import printer as ioprinter
 from mechlib import filesys
-from mechanalyzer.inf import rxn as rinfo
 from mechroutines.es.runner import scan
 from mechroutines.es.runner import qchem_params
 from mechroutines.es._routines import sp
@@ -18,7 +18,7 @@ from mechroutines.es.newts import _rpath as rpath
 
 # CENTRAL FUNCTION TO WRITE THE VARECOF INPUT FILES AND RUN THE PROGRAM
 def calc_vrctst_flux(ts_dct,
-                     thy_inf_dct, mref_params,
+                     thy_inf_dct, thy_method_dct, mref_params,
                      es_keyword_dct,
                      runfs_dct, savefs_dct):
     """ Set up n VRC-TST calculations to get the flux file
@@ -27,6 +27,8 @@ def calc_vrctst_flux(ts_dct,
     # Build VRC-TST stuff
     vrc_fs = runfs_dct['vrctst']
     vrc_path = vrc_fs[-1].path((0,))
+    vrc_dct = autorun.varecof.VRC_DCT  # need code to input one
+    machine_dct = {}  # how to do this when on a node
 
     # Get a bunch of info that describes the grid
     scan_inf_dct = _scan_inf_dct(ts_dct, savefs_dct)
@@ -34,7 +36,7 @@ def calc_vrctst_flux(ts_dct,
     # Calculate the correction potential along the MEP
     inf_sep_ene, npot, zma_for_inp = _build_correction_potential(
         ts_dct, scan_inf_dct,
-        thy_inf_dct, mref_params,
+        thy_inf_dct, thy_method_dct, mref_params,
         es_keyword_dct,
         runfs_dct, savefs_dct,
         vrc_dct, vrc_path)
@@ -116,7 +118,8 @@ def _build_correction_potential(ts_dct, scan_inf_dct,
 
     # Obtain the energy at infinite separation
     inf_sep_ene = rpath.inf_sep_ene(
-        ts_dct, thy_inf_dct, savefs_dct, runfs_dct, es_keyword_dct)
+        ts_dct, thy_inf_dct, mref_params,
+        savefs_dct, runfs_dct, es_keyword_dct)
 
     # Read the values for the correction potential from filesystem
     potentials, pot_labels, zma_for_inp = _read_potentials(
@@ -133,7 +136,7 @@ def _build_correction_potential(ts_dct, scan_inf_dct,
 
     # Set zma if needed
     if zma_for_inp is None:
-        zma_for_inp = ref_zma
+        zma_for_inp = ts_dct['zma']
 
     return inf_sep_ene, len(potentials), zma_for_inp
 
