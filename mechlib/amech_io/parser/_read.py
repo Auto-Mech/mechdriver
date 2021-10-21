@@ -132,7 +132,7 @@ def _check_input_avail(inp_str_dct, gname_dct, aname_dct):
 # handle auxiliary data files
 def _pes_grp_dct(pes_grp_str):
     """ Parse the auxiliary file to handleget the info from the file
-    
+
         out dict[(pes_grp_idx_lst] = pes_grp_params
         where params read from input and
         pes_grp_idx_lst = {{pes_idx1, subpes_idx1}, ...}
@@ -146,7 +146,8 @@ def _pes_grp_dct(pes_grp_str):
         # Need to convert idxs from 1-idx to 0-idx
         ret_grp_dct = {}
         for dct in grp_dct.values():
-            # idxs = frozenset({(int(x[0])-1, int(x[1])-1) for x in dct['idxs']})
+            # idxs = frozenset({(int(x[0])-1, int(x[1])-1)
+            #                  for x in dct['idxs']})
             idxs = tuple((int(x[0])-1, int(x[1])-1) for x in dct['idxs'])
             ret_grp_dct[idxs] = {key: dct[key] for key in dct.keys()
                                  if key != 'idxs'}

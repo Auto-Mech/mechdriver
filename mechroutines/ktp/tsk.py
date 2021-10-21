@@ -164,6 +164,7 @@ def run_fits_task(pes_inf, rate_paths_dct, mdriver_path,
     else:
         mess_path = base_mess_path
     ratefit_dct = pes_mod_dct[pes_mod]['rate_fit']
+    print(f'Fitting rates from {mess_path}')
 
     # Read the ktp dct
 
