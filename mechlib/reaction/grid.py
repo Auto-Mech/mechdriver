@@ -87,7 +87,8 @@ def _find_max_1d(typ, grid, ts_zma, scan_name,
         mod_thy_info, constraint_dct)
 
     # Get the index where the max energy is found
-    max_idx = automol.pot.find_max1d(enes_lst, include_endpts=include_endpts)
+    max_idx = automol.pot.find_max1d(
+        enes_lst, max_type='global', include_endpts=include_endpts)
 
     if max_idx is not None:
         print(f'Found maximum at {locs_lst[max_idx]}')
@@ -147,12 +148,12 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
     # Find the maximum along the 2D grid
     enes_lst = []
     locs_lst_lst = []
-    for grid_val_j in grid1:
+    for grid_val_j in grid2:
         locs_list = []
-        for grid_val_i in grid2:
+        for grid_val_i in grid1:
             if constraint_dct is None:
                 locs_list.append([[scan_name1, scan_name2],
-                                  [grid_val_j, grid_val_i]])
+                                  [grid_val_i, grid_val_j]])
             else:
                 locs_list.append([constraint_dct, [scan_name1, scan_name2],
                                   [grid_val_i, grid_val_j]])
@@ -174,10 +175,16 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
     for idx_j, enes in enumerate(enes_lst):
         max_ene = -10000.
         max_loc = ''
-        for idx_i, ene in enumerate(enes):
-            if ene > max_ene:
-                max_ene = ene
-                max_loc = locs_lst_lst[idx_j][idx_i]
+        # Search for the maximum along each idx (coord) to find the max
+        # that precludes the endpts (maybe we just find the innermost?)
+        max_idx = automol.pot.find_max1d(
+           enes, max_type='innermost', include_endpts=True)
+        max_ene = enes[max_idx]
+        max_loc = locs_lst_lst[idx_j][max_idx]
+        # for idx_i, ene in enumerate(enes):
+        #     if ene > max_ene:
+        #         max_ene = ene
+        #         max_loc = locs_lst_lst[idx_j][idx_i]
         max_enes.append(max_ene)
         max_locs.append(max_loc)
 
@@ -188,9 +195,28 @@ def _find_max_2d(grid1, grid2, scan_name1, scan_name2,
             min_ene = ene
             locs = max_locs[idx_j]
 
+    print('locs lst')
+    for idx_j, _locs in enumerate(locs_lst_lst):
+        print(idx_j, _locs)
+    print('enes lst')
+    for idx_j, enes in enumerate(enes_lst):
+        print(idx_j, enes)
+
+    print('max enes')
+    for idx_j, ene in enumerate(max_enes):
+        print(ene)
+
     # Use the max locs to determine the max_zma, ret as tuple
     max_locs = locs
     max_zma = scn_save_fs[-1].file.zmatrix.read(max_locs)
+    
+    print('max locs')
+    print(max_locs)
+
+    max_geo = automol.zmat.geometry(max_zma)
+    max_geo_str = automol.geom.string(max_geo)
+    print('guess')
+    print(max_geo_str)
 
     return (max_zma,)
 

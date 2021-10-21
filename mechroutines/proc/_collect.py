@@ -15,16 +15,15 @@ from mechanalyzer.inf import thy as tinfo
 from mechlib import filesys
 import mechlib.amech_io.printer as ioprinter
 from mechlib.amech_io import reader
+from mechroutines.models import _rot as rot
 from mechroutines.models import _vib as vib
 from mechroutines.models import _tors as tors
+from mechroutines.models import _symm as symm
 from mechroutines.models import ene
+from mechroutines.models import blocks
 from mechroutines.thermo import basis
 from mechroutines.proc import _util as util
 
-from mechroutines.models import _rot as rot
-from mechroutines.models import _symm as symm
-from mechroutines.models import _vib as vib
-from mechroutines.models import build, blocks
 
 def zmatrix(spc_name, locs, locs_path, cnf_fs, mod_thy_info):
     """collect a zmatrix
@@ -146,7 +145,8 @@ def frequencies(
             freqs, imag, zpe, disps = ret
             if freqs and proc_keyword_dct['scale'] is not None:
                 freqs, zpe = vib.scale_frequencies(
-                    freqs, 0.0, spc_mod_dct_i, scale_method=proc_keyword_dct['scale'])
+                    freqs, 0.0, spc_mod_dct_i,
+                    scale_method=proc_keyword_dct['scale'])
             if saddle:
                 print(f'Imaginary Frequencies[cm-1]: {imag}')
                 freqs = (-1*imag,) + freqs
