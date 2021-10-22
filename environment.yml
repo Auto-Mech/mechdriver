@@ -13,6 +13,7 @@ dependencies:
     - auto-mech::autochem
     - auto-mech::autoio-interfaces
     - auto-mech::autofile
+    - auto-mech::mechanalyzer
     - auto-mech::x2z
     - auto-mech::mess
     - auto-mech::onedmin
@@ -23,11 +24,15 @@ dependencies:
     - psi4::psi4
     - rdkit::rdkit
     - openbabel::openbabel
-    - conda-forge::python=3.9
-    - conda-forge::numpy=1.21.2
-    - conda-forge::scipy=1.7.1
+    # - conda-forge::python=3.9
+    # - conda-forge::numpy=1.21.2
+    # - conda-forge::scipy=1.7.1
+    - conda-forge::python=3.7
+    - conda-forge::numpy=1.15.4
+    - conda-forge::scipy=1.5.0
     - conda-forge::pyyaml
     - conda-forge::mako
+    - conda-forge::python-igraph
     - conda-forge::networkx
     - conda-forge::matplotlib
     - conda-forge::pytest
