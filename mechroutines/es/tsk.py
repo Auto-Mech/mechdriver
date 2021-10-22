@@ -406,7 +406,8 @@ def conformer_tsk(job, spc_dct, spc_name,
                 zma, geo, spc_info, mod_thy_info,
                 ini_cnf_run_fs, ini_cnf_save_fs, ini_locs,
                 script_str, overwrite,
-                retryfail=retryfail, **kwargs)
+                retryfail=retryfail, method_dct=method_dct,
+                **kwargs)
 
 
 def tau_tsk(job, spc_dct, spc_name,

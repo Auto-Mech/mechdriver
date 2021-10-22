@@ -15,7 +15,8 @@ import autorun
 from phydat import phycon, symm
 from mechlib.amech_io import printer as ioprinter
 from mechroutines.es import runner as es_runner
-
+from mechroutines.es.runner._par import qchem_params
+from mechroutines.es._routines.conformer import save_conformer
 
 # _JSON_SAVE = ['TAU']
 _JSON_SAVE = []
@@ -24,7 +25,7 @@ _JSON_SAVE = []
 def run_energy(zma, geo, spc_info, thy_info,
                geo_run_fs, geo_save_fs, locs,
                script_str, overwrite,
-               retryfail=True, highspin=False, **kwargs):
+               retryfail=True, method_dct=None, highspin=False, **kwargs):
     """ Assesses if an electronic energy exists in the CONFS/SP/THY layer
         of the save filesys for a species at the specified level of theory.
         If an energy does not exist, or if a user requests overwrite,
@@ -129,7 +130,7 @@ def run_energy(zma, geo, spc_info, thy_info,
 def run_gradient(zma, geo, spc_info, thy_info,
                  geo_run_fs, geo_save_fs, locs,
                  script_str, overwrite,
-                 retryfail=True, **kwargs):
+                 retryfail=True, method_dct=None, **kwargs):
     """ Determine the gradient for the geometry in the given location
     """
 
@@ -206,10 +207,60 @@ def run_gradient(zma, geo, spc_info, thy_info,
         ioprinter.info_message('Species is an atom. Skipping gradient task.')
 
 
+def rerun_hessian_and_opt(
+        zma, geo, spc_info, thy_info,
+        geo_run_fs, geo_save_fs, locs,
+        script_str, overwrite,
+        retryfail=True, method_dct=None):
+
+    """ Perform a tight opt of a geometry and run the hessian.
+        Resave all of its info.
+    """
+    # Set the run filesystem information
+    geo_run_path = geo_run_fs[-1].path(locs)
+    geo_save_path = geo_save_fs[-1].path(locs)
+    run_fs = autofile.fs.run(geo_run_path)
+    script_str, kwargs = qchem_params(
+        method_dct, job='optfreq')
+
+    success, ret = es_runner.execute_job(
+        job=elstruct.Job.HESSIAN,
+        script_str=script_str,
+        run_fs=run_fs,
+        geo=zma,
+        spc_info=spc_info,
+        thy_info=thy_info,
+        overwrite=overwrite,
+        retryfail=retryfail,
+        **kwargs,
+    )
+
+    if success:
+        inf_obj, inp_str, out_str = ret
+
+        save_conformer(
+            ret, geo_save_fs, locs, thy_info,  orig_ich=spc_info[0],
+            init_zma=zma)
+
+        ioprinter.info_message(" - Reading hessian from output...")
+        hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+        geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
+        geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
+        geo_save_fs[-1].file.hessian.write(hess, locs)
+        ioprinter.info_message(
+            " - Save path: {}".format(geo_save_path))
+
+        if thy_info[0] == 'gaussian09':
+            _hess_grad(inf_obj.prog, out_str, geo_save_fs,
+                       geo_save_path, locs, overwrite)
+        _hess_freqs(geo, geo_save_fs,
+                    geo_run_path, geo_save_path, locs, overwrite)
+
+
 def run_hessian(zma, geo, spc_info, thy_info,
                 geo_run_fs, geo_save_fs, locs,
                 script_str, overwrite,
-                retryfail=True, **kwargs):
+                retryfail=True, method_dct=None, **kwargs):
     """ Determine the hessian for the geometry in the given location
     """
 
@@ -264,25 +315,43 @@ def run_hessian(zma, geo, spc_info, thy_info,
                 inf_obj, inp_str, out_str = ret
 
                 ioprinter.info_message(" - Reading hessian from output...")
-                hess = elstruct.reader.hessian(inf_obj.prog, out_str)
+                hfrqs = elstruct.reader.harmonic_frequencies(
+                    inf_obj.prog, out_str)
+                n_neg_freqs = len(
+                    list(filter(lambda x: (x < 0), hfrqs)))
+                if n_neg_freqs > 0:
+                    ioprinter.info_message('Too many negative freqs', hfrqs)
+                    rinf_obj = run_fs[-1].file.info.read([elstruct.Job.HESSIAN])
+                    rinf_obj.status = autofile.schema.RunStatus.FAILURE
+                    run_fs[-1].file.info.write(rinf_obj, [elstruct.Job.HESSIAN])
+                    ioprinter.info_message(
+                        'Performing a tightopt, superfine to fix it')
+                    rerun_hessian_and_opt(
+                        zma, geo, spc_info, thy_info,
+                        geo_run_fs, geo_save_fs, locs,
+                        script_str, overwrite,
+                        retryfail=retryfail, method_dct=method_dct)
 
-                ioprinter.info_message(" - Saving Hessian...")
-                if _json_database(geo_save_path):
-                    geo_save_fs[-1].json.hessian_info.write(inf_obj, locs)
-                    geo_save_fs[-1].json.hessian_input.write(inp_str, locs)
-                    geo_save_fs[-1].json.hessian.write(hess, locs)
                 else:
-                    geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
-                    geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
-                    geo_save_fs[-1].file.hessian.write(hess, locs)
-                ioprinter.info_message(
-                    f" - Save path: {geo_save_path}")
+                    hess = elstruct.reader.hessian(inf_obj.prog, out_str)
 
-                if thy_info[0] == 'gaussian09':
-                    _hess_grad(inf_obj.prog, out_str, geo_save_fs,
-                               geo_save_path, locs, overwrite)
-                _hess_freqs(geo, geo_save_fs,
-                            geo_run_path, geo_save_path, locs, overwrite)
+                    ioprinter.info_message(" - Saving Hessian...")
+                    if _json_database(geo_save_path):
+                        geo_save_fs[-1].json.hessian_info.write(inf_obj, locs)
+                        geo_save_fs[-1].json.hessian_input.write(inp_str, locs)
+                        geo_save_fs[-1].json.hessian.write(hess, locs)
+                    else:
+                        geo_save_fs[-1].file.hessian_info.write(inf_obj, locs)
+                        geo_save_fs[-1].file.hessian_input.write(inp_str, locs)
+                        geo_save_fs[-1].file.hessian.write(hess, locs)
+                    ioprinter.info_message(
+                        " - Save path: {}".format(geo_save_path))
+
+                    if thy_info[0] == 'gaussian09':
+                        _hess_grad(inf_obj.prog, out_str, geo_save_fs,
+                                   geo_save_path, locs, overwrite)
+                    _hess_freqs(geo, geo_save_fs,
+                                geo_run_path, geo_save_path, locs, overwrite)
 
         else:
             ioprinter.existing_path('Hessian', geo_save_path)
@@ -297,7 +366,7 @@ def run_hessian(zma, geo, spc_info, thy_info,
 def run_vpt2(zma, geo, spc_info, thy_info,
              geo_run_fs, geo_save_fs, locs,
              script_str, overwrite,
-             retryfail=True, **kwargs):
+             retryfail=True, method_dct=None, **kwargs):
     """ Perform vpt2 analysis for the geometry in the given location
     """
 
@@ -392,7 +461,7 @@ def run_vpt2(zma, geo, spc_info, thy_info,
 def run_prop(zma, geo, spc_info, thy_info,
              geo_run_fs, geo_save_fs, locs,
              script_str, overwrite,
-             retryfail=True, **kwargs):
+             retryfail=True, method_dct=None, **kwargs):
     """ Determine the properties in the given location
     """
 
