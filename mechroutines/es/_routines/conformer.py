@@ -500,7 +500,7 @@ def conformer_sampling(zma, spc_info, thy_info,
 
         # save function added here
         if success:
-            _save_conformer(
+            save_conformer(
                 ret, cnf_save_fs, locs, thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=True,
                 init_zma=samp_zma)
@@ -652,7 +652,7 @@ def ring_conformer_sampling(
 
         # save function added here
         if success:
-            _save_conformer(
+            save_conformer(
                 ret, cnf_save_fs, locs, thy_info,
                 zrxn=zrxn, orig_ich=spc_info[0], rid_traj=False,
                 init_zma=samp_zma)
@@ -750,7 +750,7 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
                             init_zma = run_fs[-1].file.zmatrix.read([job])
                         else:
                             init_zma = None
-                        _save_conformer(
+                        save_conformer(
                             ret, cnf_save_fs, locs, thy_info,
                             zrxn=zrxn, orig_ich=spc_info[0],
                             init_zma=init_zma)
@@ -760,22 +760,26 @@ def _presamp_save(spc_info, cnf_run_fs, cnf_save_fs,
         filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
 
 
-def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
-                    orig_ich='', rid_traj=False, init_zma=None):
+def save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
+                   orig_ich='', rid_traj=False, init_zma=None):
     """ save the conformers that have been found so far
           # Only go through save procedure if conf not in save
           # may need to get geo, ene, etc; maybe make function
     """
 
     saved_locs, saved_geos, saved_enes = _saved_cnf_info(
-        cnf_save_fs, thy_info)
+        cnf_save_fs, thy_info, locs)
 
     inf_obj, _, out_str = ret
     prog = inf_obj.prog
     method = inf_obj.method
     ene = elstruct.reader.energy(prog, method, out_str)
     geo = elstruct.reader.opt_geometry(prog, out_str)
-    zma = filesys.save.read_job_zma(ret, init_zma=init_zma)
+    zma = None
+    if init_zma is not None:
+        zma = filesys.save.read_zma_from_geo(init_zma, geo)
+    if zma is None:
+        zma = filesys.save.read_job_zma(ret, init_zma=init_zma)
 
     # Assess if geometry is properly connected
     viable = _geo_connected(geo, zrxn)
@@ -809,11 +813,12 @@ def _save_conformer(ret, cnf_save_fs, locs, thy_info, zrxn=None,
         filesys.mincnf.traj_sort(cnf_save_fs, thy_info, rid=rid)
 
 
-def _saved_cnf_info(cnf_save_fs, mod_thy_info):
+def _saved_cnf_info(cnf_save_fs, mod_thy_info, orig_locs):
     """ get the locs, geos and enes for saved conformers
     """
 
     saved_locs = list(cnf_save_fs[-1].existing())
+    saved_locs = [locs for locs in saved_locs if not locs == orig_locs]
     saved_geos = [cnf_save_fs[-1].file.geometry.read(locs)
                   for locs in saved_locs]
     found_saved_locs = []

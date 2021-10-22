@@ -275,6 +275,17 @@ def energy_transfer(etrans_save_fs, etrans_locs,
 
 # Job readers
 # Constituent functions for saving various bits of information
+def read_zma_from_geo(init_zma, geo):
+    """ trys to read a zma from a job and does processing on it as needed
+        (1) update init zma (in output) using opt geo (in outpt)
+    """
+    zma = None
+    if init_zma is not None:
+        print('Resetting ZMA coords using opt geoms...')
+        zma = rebuild_zma_from_opt_geo(init_zma, geo)
+    return zma
+
+
 def read_job_zma(ret, init_zma=None, rebuild=False):
     """ trys to read a zma from a job and does processing on it as needed
 

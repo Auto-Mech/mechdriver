@@ -66,6 +66,10 @@ def _gaussian(method_dct, prog, job=None):
     if not gen_lines:
         if elstruct.par.Method.is_dft(method):
             gen_lines = {1: ['# int=ultrafine']}
+        
+    if job == 'optfreq':
+        gen_lines = {1: ['# int=superfine', '# Opt=Tight']}
+        job = elstruct.Job.OPTIMIZATION
 
     kwargs = {
         'memory': memory,
